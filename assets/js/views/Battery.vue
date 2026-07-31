@@ -3,11 +3,18 @@
 		<TopHeader :title="$t('batterySettings.modalTitle')" />
 		<div class="row">
 			<main class="col-12">
-				<template v-if="batteryAvailable">
+				<BatteryExperimental v-if="experimental" />
+				<template v-else-if="batteryAvailable">
 					<h3 class="fw-normal my-4">
 						{{ $t("batterySettings.usageTab") }}
 					</h3>
-					<BatteryUsageSettings style="max-width: 950px" v-bind="batteryUsageProps" />
+					<BatteryUsageSettings
+						:buffer-soc="state.bufferSoc"
+						:priority-soc="state.prioritySoc"
+						:buffer-start-soc="state.bufferStartSoc"
+						:battery-discharge-control="state.batteryDischargeControl"
+						:battery="state.battery"
+					/>
 					<template v-if="gridChargeVisible">
 						<hr class="my-5" />
 						<h3 class="fw-normal my-4 mt-5">
@@ -28,10 +35,10 @@
 import { defineComponent } from "vue";
 import Header from "../components/Top/Header.vue";
 import BatteryUsageSettings from "../components/Battery/BatteryUsageSettings.vue";
+import BatteryExperimental from "../components/Battery/BatteryExperimental.vue";
 import SmartCostLimit from "../components/Tariff/SmartCostLimit.vue";
 import store from "../store";
 import settings from "../settings";
-import collector from "../mixins/collector";
 import { SMART_COST_TYPE } from "../types/evcc";
 
 export default defineComponent({
@@ -39,21 +46,21 @@ export default defineComponent({
 	components: {
 		TopHeader: Header,
 		BatteryUsageSettings,
+		BatteryExperimental,
 		SmartCostLimit,
 	},
-	mixins: [collector],
 	head() {
 		return { title: this.$t("batterySettings.modalTitle") };
 	},
 	computed: {
+		experimental(): boolean {
+			return !!store.state.experimental;
+		},
 		state() {
 			return store.state;
 		},
 		batteryAvailable() {
 			return (this.state.battery?.devices?.length ?? 0) > 0;
-		},
-		batteryUsageProps() {
-			return this.collectProps(BatteryUsageSettings, this.state);
 		},
 		gridChargePossible() {
 			const devices = this.state.battery?.devices ?? [];

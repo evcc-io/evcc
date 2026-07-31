@@ -44,7 +44,6 @@ params:
     advanced: true
   - name: password
     advanced: true
-    mask: true
   - name: cache
     default: 5s
   - preset: battery-params

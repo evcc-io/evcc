@@ -10,10 +10,26 @@ params:
       generic: API Key
   - name: token
     required: true
+  - name: apiversion
+    type: choice
+    choice: ["2", "3"]
+    default: "2"
+    description:
+      en: API version
+      de: API-Version
   - preset: vehicle-common
+  - preset: vehicle-online
 render: |
   type: custom
   {{ include "vehicle-common" . }}
+  {{- if eq .apiversion "3" }}
+  soc:
+    source: http
+    uri: https://api.evnotify.de/logs/{{ urlEncode .akey }}/last-sync
+    headers:
+      Authorization: {{ .akey }} {{ .token }}
+    jq: .socDisplay
+  {{- else }}
   soc:
     source: http
     uri: https://app.evnotify.de/soc?akey={{ urlEncode .akey }}&token={{ urlEncode .token }}
@@ -28,3 +44,5 @@ render: |
       source: http
       uri: https://app.evnotify.de/extended?akey={{ urlEncode .akey }}&token={{ urlEncode .token }}
       jq: .charging
+  {{- end }}
+  {{ include "vehicle-features" . }}

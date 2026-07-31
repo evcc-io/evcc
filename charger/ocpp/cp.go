@@ -16,6 +16,7 @@ import (
 
 type CP struct {
 	mu          sync.RWMutex
+	cs          *CS // central system this charge point is registered with
 	log         *util.Logger
 	onceConnect sync.Once
 	onceMonitor sync.Once
@@ -43,8 +44,9 @@ type CP struct {
 	connectors map[int]*Connector
 }
 
-func NewChargePoint(log *util.Logger, id string) *CP {
+func NewChargePoint(log *util.Logger, cs *CS, id string) *CP {
 	return &CP{
+		cs:  cs,
 		log: log,
 		id:  id,
 
@@ -171,7 +173,7 @@ func (cp *CP) onTransportConnect() {
 
 		cp.log.DEBUG.Printf("proactively triggering BootNotification")
 
-		if err := Instance().TriggerMessage(
+		if err := cp.cs.TriggerMessage(
 			cp.id,
 			func(conf *remotetrigger.TriggerMessageConfirmation, err error) {
 				if err != nil {

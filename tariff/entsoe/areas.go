@@ -149,12 +149,12 @@ func Area(typ AreaType, name string) (string, error) {
 	suffix := fmt.Sprintf(" (%s)", name)
 
 	for code, names := range zones {
-		if code == name {
+		if strings.EqualFold(code, name) {
 			return code, nil
 		}
 
 		for _, n := range names {
-			if n == name || n == combined || strings.HasSuffix(n, suffix) {
+			if strings.EqualFold(n, name) || strings.EqualFold(n, combined) || strings.HasSuffix(strings.ToUpper(n), strings.ToUpper(suffix)) {
 				return code, nil
 			}
 		}

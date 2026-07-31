@@ -1,0 +1,169 @@
+template: anker-solix-solarbank-max-ac
+products:
+  - brand: Anker
+    description:
+      generic: SOLIX Solarbank Max AC
+capabilities:
+  - battery-control
+requirements:
+  description:
+    de: |
+      Die Modbus-TCP-Schnittstelle muss in der Anker-App freigeschaltet werden.
+    en: |
+      The Modbus TCP interface must be enabled in the Anker app.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 1
+  - name: maxacpower
+  - preset: battery-params
+  - name: maxchargepower
+    default: 2500
+  - name: watchdog
+    default: 60s
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10012 # Grid Power (W, positive = import, negative = export)
+      type: input
+      decode: int32
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: calc
+    add:
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 10002 # PV Power (W)
+          type: input
+          decode: int32
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 10004 # Thirdparty PV Power (W)
+          type: input
+          decode: int32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10018 # Total PV Generation (kWh)
+      type: input
+      decode: uint32
+    scale: 0.1
+  maxacpower: {{ .maxacpower }}
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10008 # Battery Power (W, positive = discharging, negative = charging)
+      type: input
+      decode: int32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10264 # Battery Total Discharge Energy (kWh)
+      type: input
+      decode: uint32
+    scale: 0.1
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10262 # Battery Total Charge Energy (kWh)
+      type: input
+      decode: uint32
+    scale: 0.1
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 10014 # SOC (%)
+      type: input
+      decode: uint16
+  batterymode:
+    source: watchdog
+    timeout: {{ .watchdog }}
+    reset: 1
+    set:
+      source: switch
+      switch:
+        - case: 1 # normal
+          set:
+            source: sequence
+            set:
+              - source: const
+                value: 0
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10071
+                    type: writemultiple
+                    encoding: int32
+              - source: const
+                value: 0 # self_consumption
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10064
+                    type: writesingle
+                    encoding: uint16
+        - case: 2 # hold
+          set:
+            source: sequence
+            set:
+              - source: const
+                value: 3 # third_party_control
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10064
+                    type: writesingle
+                    encoding: uint16
+              - source: const
+                value: 0
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10071
+                    type: writemultiple
+                    encoding: int32
+        - case: 3 # charge
+          set:
+            source: sequence
+            set:
+              - source: const
+                value: 3 # third_party_control
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10064
+                    type: writesingle
+                    encoding: uint16
+              - source: const
+                value: -{{ .maxchargepower }}
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10071
+                    type: writemultiple
+                    encoding: int32
+  {{- include "battery-params" . }}
+  {{- end }}

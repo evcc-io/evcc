@@ -1,0 +1,160 @@
+template: iobroker
+products:
+  - brand: ioBroker
+group: generic
+requirements:
+  evcc: ["skiptest"]
+  description:
+    de: |
+      Auf der verwendeten ioBroker Instanz muss der `rest-api` adapter (nicht `simple-api`) installiert sein. 
+      Authentifiziert werden kann nur mittels `basic` authentication. Wird kein Passwort angegeben, so wird keine Authentifizierung durchgeführt.
+      Bei der Angabe der Entities für die einzelnen Messwerte ist darauf zu achten, dass diese korrekt URL-Encoded sind.
+      So wird aus `shelly.0.SHEM-3#8CAAB561991E#1.Total.ConsumedPower  shelly.0.SHEM-3%238CAAB561991E%231.Total.ConsumedPower`
+    en: |
+      The `rest-api` adapter (not `simple-api`) must be installed on the ioBroker instance being used.
+      Authentication can only be performed using `basic` authentication. If no password is provided, no authentication will be performed. 
+      When specifying the entities for the individual measured values, ensure that they are correctly URL-encoded.
+      For example, `shelly.0.SHEM-3#8CAAB561991E#1.Total.ConsumedPower` becomes `shelly.0.SHEM-3%238CAAB561991E%231.Total.ConsumedPower`
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery", "charge"]
+  - name: uri
+    required: true
+    description:
+      en: The full uri of the host to query
+      de: Der vollständige URI der ioBroker Instanz
+    example: https://iobroker.homelab.lan:8082
+  - name: cache
+  - name: user
+  - name: password
+  - name: power
+    description:
+      de: Leistung
+      en: Power
+    unit: W
+    type: string
+  - name: soc
+    description:
+      de: Ladestand
+      en: State of Charge
+    unit: "%"
+    type: string
+  - name: energy
+    description:
+      de: Zählerstand
+      en: Meter reading
+    unit: kWh
+    type: string
+    advanced: true
+  - name: currentL1
+    description:
+      de: L1 Stromstärke
+      en: L1 current
+    unit: A
+    type: string
+    advanced: true
+  - name: currentL2
+    description:
+      de: L2 Stromstärke
+      en: L2 current
+    unit: A
+    type: string
+    advanced: true
+  - name: currentL3
+    description:
+      de: L3 Stromstärke
+      en: L3 current
+    unit: A
+    type: string
+    advanced: true
+  - preset: battery-params
+  - name: capacity
+  - name: minsoc
+  - name: maxsoc
+  - name: maxchargepower
+  - name: maxdischargepower
+  - name: maxacpower
+render: |
+  type: custom
+  {{- if .power }}
+  power:
+    source: http
+    headers:
+    - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .power }}/plain
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+    cache: {{ .cache }}
+  {{- end }}
+  {{- if .soc }}
+  soc:
+      source: http
+      headers:
+       - accept: text/plain;charset=UTF-8
+      uri: {{ .uri }}/rest-api/v1/state/{{ .soc }}/plain
+      {{- if .user }}
+      auth:
+        type: basic
+        user: {{ .user }}
+        password: {{ .password }}
+      {{- end }}
+      cache: {{ .cache }}
+  {{- end }}
+  {{- if .energy }}
+  energy:
+      source: http
+      headers:
+       - accept: text/plain;charset=UTF-8
+      uri: {{ .uri }}/rest-api/v1/state/{{ .energy }}/plain      
+      cache: {{ .cache }}
+      {{- if .user }}
+      auth:
+        type: basic
+        user: {{ .user }}
+        password: {{ .password }}
+      {{- end }}
+  {{- end }}
+  {{- if .currentL1 }}
+  currents:
+    - source: http
+      headers:
+       - accept: text/plain;charset=UTF-8
+      uri: {{ .uri }}/rest-api/v1/state/{{ .currentL1 }}/plain
+      cache: {{ .cache }}
+      {{- if .user }}
+      auth:
+        type: basic
+        user: {{ .user }}
+        password: {{ .password }}
+      {{- end }}
+    {{- if .currentL2 }}
+    - source: http
+      headers:
+       - accept: text/plain;charset=UTF-8
+      uri: {{ .uri }}/rest-api/v1/state/{{ .currentL2 }}/plain
+      cache: {{ .cache }}
+      {{- if .user }}
+      auth:
+        type: basic
+        user: {{ .user }}
+        password: {{ .password }}
+      {{- end }}
+    {{- end }}
+    {{- if .currentL3 }}
+    - source: http
+      headers:
+       - accept: text/plain;charset=UTF-8
+      uri: {{ .uri }}/rest-api/v1/state/{{ .currentL3 }}/plain
+      cache: {{ .cache }}
+      {{- if .user }}
+      auth:
+        type: basic
+        user: {{ .user }}
+        password: {{ .password }}
+      {{- end }}
+    {{- end }}
+  {{- end }}

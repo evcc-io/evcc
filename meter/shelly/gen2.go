@@ -232,7 +232,10 @@ func (c *gen2) TotalEnergy() (float64, error) {
 
 	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
-		return res.Aenergy.Total / 1000, err
+		// https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/Switch#status
+		// NOTE: ret_aenergy - the active energy added to this container is also added to aenergy container.
+		// All the consumed energy is collected in aenergy regardless of the direction(consumed or returned) of the active energy.
+		return max(0, res.Aenergy.Total-res.Ret_Aenergy.Total) / 1000, err
 
 	default:
 		return 0, fmt.Errorf("unknown shelly model: %s", c.model)
@@ -330,6 +333,11 @@ func (c *gen2) hasEM1Endpoint() bool {
 
 func (c *gen2) hasEMEndpoint() bool {
 	return c.hasMethod("EM.GetStatus")
+}
+
+// IsThreePhase reports whether the device is a three-phase energy meter
+func (c *gen2) IsThreePhase() bool {
+	return c.hasEMEndpoint()
 }
 
 // Gen2+ models using EM1.GetStatus endpoint for power and EM1Data.GetStatus for energy

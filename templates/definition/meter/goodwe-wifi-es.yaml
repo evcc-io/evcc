@@ -17,29 +17,29 @@ render: |
   power:
     source: aa55udp
     host: {{ or .host .uri }}
-    register: 29964
-    count: 2
-    decode: int32be
+    register:
+      address: 29964
+      decode: int32
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: aa55udp
     host: {{ or .host .uri }}
-    register: 29958
-    count: 2
-    decode: int32be
+    register:
+      address: 29958
+      decode: int32
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
     source: aa55udp
     host: {{ or .host .uri }}
-    register: 29970
-    count: 2
-    decode: int32be
+    register:
+      address: 29970
+      decode: int32
   soc:
     source: aa55udp
     host: {{ or .host .uri }}
-    register: 29966
-    count: 1
-    decode: uint16be
+    register:
+      address: 29966
+      decode: uint16
   {{- end }}

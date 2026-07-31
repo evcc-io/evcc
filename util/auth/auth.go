@@ -9,8 +9,11 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/sethvargo/go-password/password"
 	"golang.org/x/crypto/bcrypt"
 )
+
+const ApiKeyPrefix = "evcc_"
 
 const admin = "admin"
 
@@ -29,10 +32,14 @@ type Auth interface {
 	SetAdminPassword(string) error
 	IsAdminPasswordValid(string) bool
 	GenerateJwtToken(time.Duration) (string, error)
-	ValidateJwtToken(string) (bool, error)
+	ValidateJwtToken(string) bool
 	IsAdminPasswordConfigured() bool
 	SetAuthMode(AuthMode)
 	GetAuthMode() AuthMode
+
+	SetApiKey() (string, error)
+	IsApiKeyConfigured() bool
+	ValidateApiKey(string) bool
 }
 
 type auth struct {
@@ -64,6 +71,7 @@ func (a *auth) getAdminPasswordHash() string {
 func (a *auth) RemoveAdminPassword() {
 	a.settings.SetString(keys.AdminPassword, "")
 	a.settings.SetString(keys.JwtSecret, "")
+	a.settings.SetString(keys.ApiKey, "")
 }
 
 // IsAdminPasswordConfigured checks if the admin password is already set
@@ -136,21 +144,17 @@ func (a *auth) GenerateJwtToken(lifetime time.Duration) (string, error) {
 }
 
 // ValidateJwtToken validates the given JWT token
-func (a *auth) ValidateJwtToken(tokenString string) (bool, error) {
+func (a *auth) ValidateJwtToken(tokenString string) bool {
 	jwtSecret, err := a.getJwtSecret()
 	if err != nil {
-		return false, err
+		return false
 	}
 
-	// read token
 	var claims jwt.RegisteredClaims
-	if _, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (any, error) {
+	_, err = jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (any, error) {
 		return jwtSecret, nil
-	}, jwt.WithSubject(admin)); err != nil {
-		return false, err
-	}
-
-	return true, nil
+	}, jwt.WithSubject(admin))
+	return err == nil
 }
 
 func (a *auth) SetAuthMode(authMode AuthMode) {
@@ -159,4 +163,36 @@ func (a *auth) SetAuthMode(authMode AuthMode) {
 
 func (a *auth) GetAuthMode() AuthMode {
 	return a.authMode
+}
+
+// IsApiKeyConfigured reports whether an API key has been generated
+func (a *auth) IsApiKeyConfigured() bool {
+	hash, _ := a.settings.String(keys.ApiKey)
+	return hash != ""
+}
+
+// SetApiKey generates a new API key, stores its hash, and returns the cleartext key
+func (a *auth) SetApiKey() (string, error) {
+	secret, err := password.Generate(30, 6, 0, false, false)
+	if err != nil {
+		return "", err
+	}
+	key := ApiKeyPrefix + secret
+
+	hashed, err := bcrypt.GenerateFromPassword([]byte(key), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+
+	a.settings.SetString(keys.ApiKey, string(hashed))
+	return key, nil
+}
+
+// ValidateApiKey returns true if the given token matches the stored key
+func (a *auth) ValidateApiKey(token string) bool {
+	hash, err := a.settings.String(keys.ApiKey)
+	if err != nil || hash == "" {
+		return false
+	}
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(token)) == nil
 }

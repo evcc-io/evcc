@@ -1,5 +1,5 @@
 <template>
-	<div class="mb-5">
+	<div>
 		<div v-for="(_battery, index) in evopt.res.batteries" :key="index" class="mb-3">
 			<div class="mb-2" style="font-size: 0.875rem; font-weight: bold">
 				{{ getBatteryTitle(index) }}

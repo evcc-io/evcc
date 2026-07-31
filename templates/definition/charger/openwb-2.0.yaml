@@ -30,7 +30,6 @@ params:
     port: 1502
     id: 1
   - name: connector
-    default: 1
   - name: phases1p3p
     type: bool
     description:

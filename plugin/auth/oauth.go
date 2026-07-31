@@ -146,7 +146,7 @@ func NewOAuth(ctx context.Context, name, device string, oc *oauth2.Config, opts 
 	}
 	o.onlineC = onlineC
 
-	o.onlineC <- token.Valid()
+	o.setOnline(token.Valid())
 
 	// add instance
 	addInstance(o.subject, o)
@@ -172,7 +172,7 @@ func (o *OAuth) Token() (*oauth2.Token, error) {
 		// force logout
 		if strings.Contains(err.Error(), "invalid_") && settings.Exists(o.subject) {
 			o.token = nil
-			o.onlineC <- false
+			o.setOnline(false)
 			settings.Delete(o.subject)
 		}
 
@@ -199,7 +199,16 @@ func (o *OAuth) updateToken(token *oauth2.Token) {
 
 	o.token = token
 
-	o.onlineC <- token.Valid()
+	o.setOnline(token.Valid())
+}
+
+// setOnline signals the auth handler without blocking; the value is only a
+// wakeup. A blocking send under o.mu would deadlock via Authenticated()->Token().
+func (o *OAuth) setOnline(online bool) {
+	select {
+	case o.onlineC <- online:
+	default:
+	}
 }
 
 // HandleCallback implements api.AuthProvider.
@@ -272,7 +281,7 @@ func (o *OAuth) Logout() error {
 	defer o.mu.Unlock()
 
 	o.token = nil
-	o.onlineC <- false
+	o.setOnline(false)
 
 	return nil
 }

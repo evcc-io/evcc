@@ -1,5 +1,6 @@
 import type { AxiosResponse } from "axios";
 import sleep from "@/utils/sleep";
+import { ADMIN_PASSWORD_REQUIRED } from "../DeviceModal/index";
 import { reportValidityInModal } from "./reportValidityInModal";
 
 export type TestState = {
@@ -36,6 +37,10 @@ export const performTest = async (
   const startTime = Date.now();
   try {
     const res = await api();
+    if (res.status === ADMIN_PASSWORD_REQUIRED) {
+      state.isUnknown = true; // not testable until the admin password is provided
+      return false;
+    }
     state.isError = false;
     state.error = null;
     state.errorLine = null;

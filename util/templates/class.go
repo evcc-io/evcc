@@ -12,4 +12,5 @@ const (
 	Loadpoint
 	Circuit
 	Messenger
+	Hems
 )

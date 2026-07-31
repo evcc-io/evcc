@@ -32,8 +32,9 @@ func DayAheadPricesRequest(domain string, duration time.Duration) *http.Request 
 		"DocumentType": {string(ProcessTypeDayAhead)},
 		"In_Domain":    {domain},
 		"Out_Domain":   {domain},
-		"PeriodStart":  {now.Format(numericDateFormat)},
-		"PeriodEnd":    {now.Add(duration).Format(numericDateFormat)},
+		// PeriodStart/PeriodEnd must be UTC: the numeric date format carries no timezone.
+		"PeriodStart": {now.UTC().Format(numericDateFormat)},
+		"PeriodEnd":   {now.Add(duration).UTC().Format(numericDateFormat)},
 	}
 
 	uri := BaseURI + "?" + params.Encode()
@@ -52,13 +53,16 @@ type Rate struct {
 // GetTsPriceData accepts a set of TimeSeries data entries, and
 // returns a sorted array of Rate based on the timestamp of each data entry.
 func GetTsPriceData(ts []TimeSeries, resolution ResolutionType) ([]Rate, error) {
-	var res []Rate
+	// ENTSO-E may publish multiple TimeSeries for the same interval, distinguished by
+	// classificationSequence position; keep only the lowest position per interval.
+	type interval struct {
+		start, end time.Time
+	}
+
+	best := make(map[interval]TimeSeriesPeriod)
+	position := make(map[interval]int)
 
 	for _, ts := range ts {
-		if ts.ClassificationSequenceAttributeInstanceComponentPosition > 1 {
-			continue
-		}
-
 		if unit := ts.PriceMeasureUnitName; unit != "MWH" {
 			return nil, fmt.Errorf("%w: invalid unit: %s", ErrInvalidData, unit)
 		}
@@ -68,13 +72,23 @@ func GetTsPriceData(ts []TimeSeries, resolution ResolutionType) ([]Rate, error) 
 				continue
 			}
 
-			data, err := ExtractPeriodPriceData(&period)
-			if err != nil {
-				return nil, err
-			}
+			key := interval{period.TimeInterval.Start.Time, period.TimeInterval.End.Time}
 
-			res = append(res, data...)
+			if pos, ok := position[key]; !ok || ts.ClassificationSequenceAttributeInstanceComponentPosition < pos {
+				best[key] = period
+				position[key] = ts.ClassificationSequenceAttributeInstanceComponentPosition
+			}
 		}
+	}
+
+	var res []Rate
+	for _, period := range best {
+		data, err := ExtractPeriodPriceData(&period)
+		if err != nil {
+			return nil, err
+		}
+
+		res = append(res, data...)
 	}
 
 	if len(res) == 0 {

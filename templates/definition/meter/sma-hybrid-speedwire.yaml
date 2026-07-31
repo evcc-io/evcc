@@ -1,0 +1,31 @@
+template: sma-hybrid-speedwire
+products:
+  - brand: SMA
+    description:
+      de: Smart Energy Hybrid-Wechselrichter (Speedwire)
+      en: Smart Energy Hybrid Inverter (Speedwire)
+requirements:
+  description:
+    de: |
+      Für aktive Batteriesteuerung den Modbus-basierten Eintrag SMA Smart Energy Hybrid Wechselrichter verwenden.
+    en: |
+      For active battery control use the Modbus-based SMA Smart Energy Hybrid Inverter template instead.
+  evcc: ["skiptest"]
+params:
+  - name: usage
+    choice: ["pv", "battery", "grid"]
+  - name: host
+  - name: password
+    help:
+      en: Password for user group Standard
+      de: Passwort für Benutzergruppe Benutzer
+  - preset: battery-params
+render: |
+  type: sma
+  usage: {{ .usage }}
+  dc: true
+  uri: {{ .host }} # IP address or hostname
+  password: {{ .password }} # optional
+  {{- if eq .usage "battery" }}
+  {{- include "battery-params" . }}
+  {{- end }}

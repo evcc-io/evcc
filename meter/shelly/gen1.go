@@ -144,6 +144,12 @@ func (c *gen1) ReturnEnergy() (float64, error) {
 	return c.energy(energy) / 1000, nil
 }
 
+// IsThreePhase reports whether the device is a three-phase energy meter.
+func (c *gen1) IsThreePhase() bool {
+	res, err := c.status.Get()
+	return err == nil && len(res.EMeters) == 3
+}
+
 // gen1Energy in kWh
 func (c *gen1) energy(energy float64) float64 {
 	// Gen 1 Shelly EM devices are providing Watt hours, Gen 1 Shelly PM devices are providing Watt minutes

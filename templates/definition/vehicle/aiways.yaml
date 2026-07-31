@@ -3,8 +3,10 @@ products:
   - brand: Aiways
 params:
   - preset: vehicle-base
+  - preset: vehicle-online
   - name: vin
     required: true
 render: |
   type: aiways
   {{ include "vehicle-base" . }}
+  {{ include "vehicle-features" . }}

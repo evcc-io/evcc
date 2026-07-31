@@ -121,6 +121,12 @@ func runDump(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	for id, name := range site.Meters.ConsumerMetersRef {
+		if name != "" {
+			d.DumpWithHeader(fmt.Sprintf("consumer %d: %s", id+1, name), handle(name, config.Meters()))
+		}
+	}
+
 	for _, v := range site.Vehicles().Instances() {
 		d.DumpWithHeader(fmt.Sprintf("vehicle: %s", v.GetTitle()), v)
 	}

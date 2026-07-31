@@ -39,6 +39,7 @@ func getLoadpointDynamicConfig(lp loadpoint.API) loadpoint.DynamicConfig {
 		SmartFeedInPriorityLimit: lp.GetSmartFeedInPriorityLimit(),
 		Thresholds:               lp.GetThresholds(),
 		Soc:                      lp.GetSocConfig(),
+		UI:                       lp.GetUI(),
 		PlanEnergy:               planEnergy,
 		PlanTime:                 planTime,
 		PlanStrategy:             lp.GetPlanStrategy(),
@@ -188,7 +189,9 @@ func newLoadpointHandler() http.HandlerFunc {
 
 		setConfigDirty()
 
-		w.WriteHeader(http.StatusOK)
+		jsonWrite(w, struct {
+			ID int `json:"id"`
+		}{ID: conf.ID})
 	}
 }
 

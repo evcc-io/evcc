@@ -55,7 +55,7 @@
 					/>
 					<div class="text-end small text-gray mt-1">
 						<a
-							:href="`${docsPrefix()}/docs/reference/configuration/messaging#msg`"
+							:href="`${docsPrefix()}/docs/notifications#placeholders`"
 							target="_blank"
 							class="text-gray"
 						>
@@ -82,6 +82,7 @@ const EVENT_PARAMS: Record<MESSAGING_EVENTS, Record<string, string>> = {
 	start: { mode: "${mode}" },
 	stop: { chargedEnergy: "${chargedEnergy:%.1fk}", chargeDuration: "${chargeDuration}" },
 	planoverrun: { vehicleTitle: "{{ if .vehicleTitle }} {{ .vehicleTitle }} {{end}}" },
+	suggestion: { suggestionTitle: "${suggestionTitle}", suggestionAction: "${suggestionAction}" },
 	guest: {},
 };
 

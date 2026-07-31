@@ -91,26 +91,36 @@ export default defineComponent({
 	methods: {
 		handleShow() {
 			this.$emit("open");
+			this.isModalVisible = true;
 		},
 		handleShown() {
 			this.$emit("opened");
 			if (this.autofocus) {
 				this.$nextTick(() => {
-					const firstInput =
-						this.$refs["modalBody"]?.querySelector("input, select, button");
+					const modalBody = this.$refs["modalBody"];
+					// don't steal focus if user already interacts with the modal content
+					if (modalBody?.contains(document.activeElement)) {
+						return;
+					}
+					const firstInput = modalBody?.querySelector("input, select, button");
 					if (firstInput instanceof HTMLElement) {
 						firstInput.focus();
 					}
 				});
 			}
-			this.isModalVisible = true;
+			// bootstrap removes the attribute on show, Vue only rewrites it on state change
+			(this.$refs["modal"] as HTMLElement)?.setAttribute("aria-hidden", "false");
 		},
 		handleHide() {
 			this.$emit("close");
+			this.isModalVisible = false;
 		},
 		handleHidden() {
+			// stale event from a previous close, modal was reopened while still fading out
+			if (this.isModalVisible) {
+				return;
+			}
 			this.$emit("closed");
-			this.isModalVisible = false;
 			if (this.configModalName) {
 				if (onModalHidden(this.configModalName)) {
 					this.$emit("dismiss");

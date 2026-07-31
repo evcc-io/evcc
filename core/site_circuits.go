@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/samber/lo"
 )
 
@@ -19,8 +21,6 @@ type circuitStruct struct {
 	Current    *float64 `json:"current,omitempty"`
 	MaxPower   float64  `json:"maxPower,omitempty"`
 	MaxCurrent float64  `json:"maxCurrent,omitempty"`
-	Dimmed     *bool    `json:"dimmed,omitempty"`
-	Curtailed  *bool    `json:"curtailed,omitempty"`
 }
 
 // publishCircuits returns a list of circuit titles
@@ -44,8 +44,6 @@ func (site *Site) publishCircuits() {
 			Power:      instance.GetChargePower(),
 			MaxPower:   instance.GetMaxPower(),
 			MaxCurrent: instance.GetMaxCurrent(),
-			Dimmed:     instance.Dimmed(),
-			Curtailed:  instance.Curtailed(),
 		}
 
 		if instance.GetMaxCurrent() > 0 {
@@ -58,10 +56,15 @@ func (site *Site) publishCircuits() {
 	site.publish(keys.Circuits, res)
 }
 
-func (site *Site) dimMeters(dim *bool) error {
-	if dim == nil {
+// dimMeters applies the HEMS dim state to all dimmable aux and ext meters.
+// Devices are only queried when the state changes or after a failed attempt.
+func (site *Site) dimMeters(dim bool) error {
+	if site.dimmed != nil && *site.dimmed == dim {
 		return nil
 	}
+
+	// invalidate until successfully applied
+	site.dimmed = nil
 
 	var errs error
 	for _, dev := range slices.Concat(site.auxMeters, site.extMeters) {
@@ -70,55 +73,71 @@ func (site *Site) dimMeters(dim *bool) error {
 			continue
 		}
 
-		if dimmed, err := m.Dimmed(); err == nil {
-			if *dim == dimmed {
-				continue
-			}
-		} else {
-			if !errors.Is(err, api.ErrNotAvailable) {
-				errs = errors.Join(errs, fmt.Errorf("%s dimmed: %w", dev.Config().Name, err))
-			}
+		// unreadable state: apply unconditionally
+		dimmed, err := backoff.RetryWithData(m.Dimmed, modbus.Backoff())
+		if err != nil && !errors.Is(err, api.ErrNotAvailable) {
+			errs = errors.Join(errs, fmt.Errorf("%s dimmed: %w", deviceTitleOrName(dev), err))
+			continue
+		}
+		if err == nil && dim == dimmed {
 			continue
 		}
 
-		if err := m.Dim(*dim); err == nil {
-			site.log.DEBUG.Printf("%s dim: %t", dev.Config().Name, *dim)
+		if err := m.Dim(dim); err == nil {
+			site.log.DEBUG.Printf("%s dim: %t", deviceTitleOrName(dev), dim)
 		} else if !errors.Is(err, api.ErrNotAvailable) {
-			errs = errors.Join(errs, fmt.Errorf("%s dim: %w", dev.Config().Name, err))
+			errs = errors.Join(errs, fmt.Errorf("%s dim: %w", deviceTitleOrName(dev), err))
 		}
+	}
+
+	if errs == nil {
+		site.dimmed = &dim
 	}
 
 	return errs
 }
 
-func (site *Site) curtailPV(curtail *bool) error {
-	if curtail == nil {
+// curtailPV applies the HEMS curtailment percent to all curtailable pv or grid meters.
+// Devices are only queried when the percent changes or after a failed attempt.
+func (site *Site) curtailPV(percent *int) error {
+	if percent == nil || site.curtailPercent != nil && *site.curtailPercent == *percent {
 		return nil
 	}
 
+	// invalidate until successfully applied
+	site.curtailPercent = nil
+
+	meters := slices.Clone(site.pvMeters)
+	if site.gridMeter != nil {
+		meters = append(meters, site.gridMeter)
+	}
+
 	var errs error
-	for _, dev := range site.pvMeters {
+	for _, dev := range meters {
 		m, ok := api.Cap[api.Curtailer](dev.Instance())
 		if !ok {
 			continue
 		}
 
-		if curtailed, err := m.Curtailed(); err == nil {
-			if *curtail == curtailed {
-				continue
-			}
-		} else {
-			if !errors.Is(err, api.ErrNotAvailable) {
-				errs = errors.Join(errs, fmt.Errorf("%s curtailed: %w", dev.Config().Name, err))
-			}
+		// unreadable state: apply unconditionally
+		curtailed, err := backoff.RetryWithData(m.CurtailedPercent, modbus.Backoff())
+		if err != nil && !errors.Is(err, api.ErrNotAvailable) {
+			errs = errors.Join(errs, fmt.Errorf("%s curtailed: %w", deviceTitleOrName(dev), err))
+			continue
+		}
+		if err == nil && curtailed == *percent {
 			continue
 		}
 
-		if err := m.Curtail(*curtail); err == nil {
-			site.log.DEBUG.Printf("%s curtail: %t", dev.Config().Name, *curtail)
+		if err := m.SetCurtailPercent(*percent); err == nil {
+			site.log.DEBUG.Printf("%s curtail: %d%%", deviceTitleOrName(dev), *percent)
 		} else if !errors.Is(err, api.ErrNotAvailable) {
-			errs = errors.Join(errs, fmt.Errorf("%s curtail: %w", dev.Config().Name, err))
+			errs = errors.Join(errs, fmt.Errorf("%s curtail: %w", deviceTitleOrName(dev), err))
 		}
+	}
+
+	if errs == nil {
+		site.curtailPercent = new(*percent)
 	}
 
 	return errs

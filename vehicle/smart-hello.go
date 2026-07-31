@@ -51,11 +51,16 @@ func NewSmartHelloFromConfig(other map[string]any) (api.Vehicle, error) {
 
 	api := hello.NewAPI(log, identity)
 
-	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
-
-	if err == nil {
-		v.Provider = hello.NewProvider(log, api, cc.VIN, cc.Cache)
+	vehicle, err := ensureVehicleEx(cc.VIN, api.Vehicles, func(v hello.Vehicle) (string, error) {
+		return v.VIN, nil
+	})
+	if err != nil {
+		return v, err
 	}
 
-	return v, err
+	api.SetSeries(vehicle.SeriesCodeVs)
+
+	v.Provider = hello.NewProvider(log, api, vehicle.VIN, cc.Cache)
+
+	return v, nil
 }

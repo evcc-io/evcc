@@ -5,9 +5,68 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/types"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/mock/gomock"
 )
+
+// TestSitePowerPriorityAdjustment verifies that sitePower returns the adjustment
+// applied for battery priority below prioritySoc, such that adding it back yields
+// the unadjusted site power for loadpoints with battery boost active (#30541)
+func TestSitePowerPriorityAdjustment(t *testing.T) {
+	const prioritySoc = 50
+
+	for _, tc := range []struct {
+		name                        string
+		soc, power, excessDC        float64 // battery
+		expSitePower, expAdjustment float64
+		expReconstructed            float64 // sitePower + adjustment: the unadjusted site power a boost loadpoint sees
+	}{
+		// battery priority does not apply: no adjustment
+		{"charging above prioritySoc", 80, -2000, 0, -2000, 0, -2000},
+		// battery charge power hidden and residual power forced to 100W:
+		// adding the adjustment back restores the unadjusted -2000W
+		{"charging below prioritySoc", 30, -2000, 0, 100, -2100, -2000},
+		// battery not charging: only the forced residual power applies
+		{"discharging below prioritySoc", 30, 500, 0, 600, -100, 500},
+		// excess DC power can only reach the battery, never the (AC) vehicle, so it
+		// must stay netted out of the reconstructed surplus: of 2000W charging with
+		// 500W un-redirectable DC excess, only 1500W is available to a boost loadpoint
+		{"charging below prioritySoc with excess DC", 30, -2000, 500, 100, -1600, -1500},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			meter := api.NewMockMeter(ctrl)
+			meter.EXPECT().CurrentPower().Return(tc.power, nil).AnyTimes()
+
+			battery := api.NewMockBattery(ctrl)
+			battery.EXPECT().Soc().Return(tc.soc, nil).AnyTimes()
+
+			var bat api.Meter = &struct {
+				api.Meter
+				api.Battery
+			}{
+				Meter:   meter,
+				Battery: battery,
+			}
+
+			site := &Site{
+				log:           util.NewLogger("foo"),
+				batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, bat)},
+				prioritySoc:   prioritySoc,
+			}
+			site.excessDCPower = tc.excessDC
+
+			sitePower, _, _, adjustment, err := site.sitePower(0, 0)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expSitePower, sitePower, "sitePower")
+			assert.Equal(t, tc.expAdjustment, adjustment, "priority adjustment")
+			assert.Equal(t, tc.expReconstructed, sitePower+adjustment, "reconstructed (unadjusted) site power")
+		})
+	}
+}
 
 func TestGreenShare(t *testing.T) {
 	tc := []struct {

@@ -9,9 +9,9 @@ requirements:
     en: Open Source Tesla BLE HTTP Proxy [github.com/wimaha/TeslaBleHttpProxy](https://github.com/wimaha/TeslaBleHttpProxy)
 params:
   - preset: vehicle-common
+  - preset: vehicle-online
   - name: vin
     required: true
-    example: W...
     help:
       de: Erforderlich für BLE-Verbindung
       en: Required for BLE connection
@@ -80,3 +80,4 @@ render: |
       else "A" end)
     timeout: {{ .timeout }}
     cache: 1s
+  {{ include "vehicle-features" . }}

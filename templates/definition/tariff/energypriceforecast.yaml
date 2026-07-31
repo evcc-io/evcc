@@ -17,13 +17,7 @@ params:
     choice: ["DE", "NL", "BE", "DK1", "DK2", "FR"]
     required: true
   - name: currency
-    default: EUR
-    type: choice
-    description:
-      en: Currency
-      de: Währung
     choice: ["EUR", "DKK"]
-    required: true
   - name: horizon
     default: 120
     type: int

@@ -11,10 +11,8 @@ countries: ["DE"]
 params:
   - name: clientid
     example: 476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4
-    required: true
   - name: clientsecret
     example: 476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4a
-    required: true
   - name: contract
     example: 100523456
     description:

@@ -14,7 +14,6 @@ params:
   - name: apiKey
     type: string
     required: true
-    mask: true
     example: pub_dpa_8476c477d8a039529478ebd690d35ddd80e3308ffc
 render: |
   type: custom

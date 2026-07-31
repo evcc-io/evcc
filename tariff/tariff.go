@@ -108,7 +108,9 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 			}
 			return nil
 		}, bo()); err != nil {
-			once.Do(func() { done <- err })
+			if reportError(&once, done, err) {
+				return
+			}
 
 			t.log.ERROR.Println(err)
 			continue
@@ -118,6 +120,10 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 		periodStart := time.Now().Truncate(SlotDuration)
 		if t.typ == api.TariffTypeSolar {
 			periodStart = beginningOfDay()
+		}
+		if t.typ == api.TariffTypeTemperature {
+			// Keep 7 days of historical data (in 15-minute intervals) for temperature correction algorithm
+			periodStart = time.Now().AddDate(0, 0, -7)
 		}
 		mergeRatesAfter(t.data, data, periodStart)
 

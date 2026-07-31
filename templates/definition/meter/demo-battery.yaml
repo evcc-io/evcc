@@ -40,9 +40,7 @@ params:
   - name: maxsoc
     advanced: true
   - name: maxchargepower
-    advanced: true
   - name: maxdischargepower
-    advanced: true
   - name: energy
     description:
       de: Zählerstand

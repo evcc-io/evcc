@@ -1,0 +1,195 @@
+name: PR Build
+
+# Triggered by a maintainer commenting on a pull request:
+#   /build          binaries (amd64/arm64/arm) + multiarch docker
+#   /build amd      linux amd64 only
+#   /build arm      linux arm64 + arm/v6 only
+#   /build docker   multiarch docker image only, no binaries
+# Uploads downloadable binaries and publishes a docker image tagged pr-<number>.
+# The /nightly command lives in command-nightly.yml.
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+
+jobs:
+  prep:
+    name: Prepare
+    # only on PR comments starting with /build, and only from maintainers
+    if: |
+      github.event.issue.pull_request &&
+      startsWith(github.event.comment.body, '/build') &&
+      contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: depot-ubuntu-24.04-arm
+    permissions:
+      contents: read
+      pull-requests: write
+    outputs:
+      sha: ${{ steps.pr.outputs.sha }}
+      archs: ${{ steps.parse.outputs.archs }}
+      platforms: ${{ steps.parse.outputs.platforms }}
+    steps:
+      - name: React to comment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'eyes',
+            });
+
+      - name: Parse target
+        id: parse
+        env:
+          BODY: ${{ github.event.comment.body }}
+        run: |
+          arg=$(printf '%s' "$BODY" | awk '{print $2}' | tr '[:upper:]' '[:lower:]')
+          case "$arg" in
+            amd*)    archs='["amd64"]';              platforms='linux/amd64' ;;
+            arm*)    archs='["arm64","arm"]';        platforms='linux/arm64,linux/arm/v6' ;;
+            docker*) archs='[]';                     platforms='linux/amd64,linux/arm64,linux/arm/v6' ;;
+            *)       archs='["amd64","arm64","arm"]'; platforms='linux/amd64,linux/arm64,linux/arm/v6' ;;
+          esac
+          echo "archs=$archs" >> "$GITHUB_OUTPUT"
+          echo "platforms=$platforms" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve PR head
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sha=$(gh pr view ${{ github.event.issue.number }} --repo ${{ github.repository }} --json headRefOid -q .headRefOid)
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+  binaries:
+    name: Binaries
+    needs: prep
+    if: needs.prep.outputs.archs != '[]'
+    runs-on: depot-ubuntu-24.04-arm
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        arch: ${{ fromJSON(needs.prep.outputs.archs) }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prep.outputs.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: ./.github/actions/build-toolchain
+        with:
+          cache-scope: pr # isolated cache, cannot poison the nightly/main cache
+
+      - name: Build binary
+        env:
+          CGO_ENABLED: 0
+          GOOS: linux
+          GOARCH: ${{ matrix.arch }}
+          GOARM: 6
+          SHA: ${{ needs.prep.outputs.sha }}
+          NUM: ${{ github.event.issue.number }}
+        run: |
+          go build -trimpath -tags release \
+            -ldflags "-X github.com/evcc-io/evcc/util.Version=pr-${NUM}-${SHA:0:7} -X github.com/evcc-io/evcc/util.Commit=${SHA:0:7} -s -w" \
+            -o "evcc-linux-${{ matrix.arch }}" .
+          gzip -9 "evcc-linux-${{ matrix.arch }}"
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v7
+        with:
+          name: evcc-pr-${{ github.event.issue.number }}-linux-${{ matrix.arch }}
+          path: evcc-linux-${{ matrix.arch }}.gz
+          compression-level: 0 # already gzip'd, skip redundant zip compression
+          retention-days: 14
+
+  docker:
+    name: Docker
+    needs: prep
+    runs-on: depot-ubuntu-24.04-arm
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prep.outputs.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Login
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PASS }}
+
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
+
+      - name: Publish
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
+        with:
+          context: .
+          platforms: ${{ needs.prep.outputs.platforms }}
+          push: true
+          tags: evcc/evcc:pr-${{ github.event.issue.number }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  report:
+    name: Report
+    needs: [prep, binaries, docker]
+    if: always() && needs.prep.result == 'success'
+    runs-on: depot-ubuntu-24.04-arm
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Comment result
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const num = context.payload.issue.number;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+
+            const b = '${{ needs.binaries.result }}';
+            const d = '${{ needs.docker.result }}';
+            const ok = d === 'success' && (b === 'success' || b === 'skipped');
+
+            const artifacts = [];
+            if (b === 'success') artifacts.push(`- Binaries: [download artifacts](${runUrl}#artifacts)`);
+            artifacts.push(`- Docker: \`docker pull evcc/evcc:pr-${num}\``);
+
+            const prBody = ok
+              ? [`✅ Build finished.`, '', ...artifacts].join('\n')
+              : `❌ Build failed. See the [run logs](${runUrl}).`;
+            await github.rest.issues.createComment({ owner, repo, issue_number: num, body: prBody });
+
+            if (!ok) return;
+
+            // notify each issue this PR closes (via "fixes #N" keywords) that fresh builds exist
+            const q = `query($owner:String!,$repo:String!,$num:Int!){repository(owner:$owner,name:$repo){pullRequest(number:$num){closingIssuesReferences(first:20){nodes{number}}}}}`;
+            const res = await github.graphql(q, { owner, repo, num });
+            const issues = res.repository.pullRequest.closingIssuesReferences.nodes.map((n) => n.number);
+            for (const issue_number of issues) {
+              const body = [`Test binaries for the fix in #${num} are ready to test:`, '', ...artifacts].join('\n');
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
+
+      - name: Resolve command comment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            // collapse the /build comment as resolved now that the build is done
+            await github.graphql(
+              `mutation($id:ID!){minimizeComment(input:{subjectId:$id,classifier:RESOLVED}){minimizedComment{isMinimized}}}`,
+              { id: context.payload.comment.node_id }
+            );

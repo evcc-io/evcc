@@ -6,12 +6,14 @@ site:
 
 loadpoints:
   - title: Carport
-    charger: easee_charger
+    charger: alfen_charger
 
 chargers:
-  - name: easee_charger
+  # sponsorship-required charger without cloud communication
+  - name: alfen_charger
     type: template
-    template: easee
-    user: test@example.org
-    password: none
-    charger: EH123456
+    template: alfen
+    modbus: tcpip
+    host: localhost
+    port: 502
+    id: 1

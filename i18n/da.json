@@ -19,6 +19,48 @@
     "successCloseTab": "Du kan nu lukke denne fane.",
     "title": "Godkendelsesstatus"
   },
+  "battery": {
+    "card": {
+      "charging": "lader",
+      "discharging": "aflader",
+      "energy": "Energi",
+      "gridCharge": "lader fra nettet",
+      "hold": "afladning låst",
+      "holdCharge": "opladning låst",
+      "ofTotal": "af {total}",
+      "power": "Effekt",
+      "soc": "Batteriniveau"
+    },
+    "combined": "Samlet",
+    "config": {
+      "buffer": "Energi i hjemmets batteri over {soc} kan bruges til at understøtte ladestederne og forsinke frakobling i soltilstand. Start solopladning automatisk {start}.",
+      "bufferNone": "Hjemmets batteri bruges ikke til ladestederne. Sæt en værdi under {soc} for at aktivere støtte.",
+      "bufferStart": {
+        "above": "når batteriet er over {soc}",
+        "full": "når batteriet er fyldt",
+        "never": "kun ved nok overskud"
+      },
+      "bufferTitle": "Batteri som opladningsbuffer",
+      "discharge": "Forhindrer hjemmebatteriet at aflade i hurtig mode og ved planlagt opladning.",
+      "priority": "Hjemmebatteriet har prioritet, mens det er under {soc}. Derefter får ladepunkterne overskuddet.",
+      "priorityNone": "Soloverskud går direkte til ladepunkterne. Sæt en værdi over {soc} for at prioritere hjemmebatteriet.",
+      "priorityTitle": "Hvor sendes overskuddet først hen?"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "opladning fra nettet",
+        "discharge": "Aflader til nettet",
+        "hold": "Bloker afladning",
+        "holdcharge": "Bloker opladning",
+        "normal": "Normal drift"
+      },
+      "empty": "tom",
+      "full": "fyldt",
+      "highest": "Højeste ({value})",
+      "lowest": "Laveste ({value})",
+      "suggestion": "Forslag"
+    }
+  },
   "batterySettings": {
     "batteryLevel": "Batteri-niveau",
     "bufferStart": {
@@ -51,6 +93,26 @@
     "hex": "Hex farve"
   },
   "config": {
+    "adminPassword": {
+      "description": "Script-pluginet udfører en kommando på systemniveau, som kører med de samme rettigheder som evcc-processen. Indtast din administratoradgangskode igen for at fortsætte.",
+      "invalid": "Ugyldig adgangskode. Prøv igen.",
+      "title": "Potentielt farlig handling"
+    },
+    "apiKey": {
+      "description": "Giv scripts og automatiseringsopgaver, såsom planlagte sikkerhedskopier, sikker adgang uden at dele din administratoradgangskode.",
+      "exampleLabel": "Prøv det: Hent en backup med curl",
+      "generate": "Lav en API nøgle",
+      "generateConfirm": "Skriv admin kodeordet for at lave en ny API nøgle.",
+      "keyLabel": "API nøgle",
+      "regenerate": "Opret en ny API-nøgle",
+      "regenerateConfirm": "Skriv admin kodeord for at lave en ny API nøgle.",
+      "regenerateLink": "Lav ny",
+      "regenerateWarning": "At lave en ny nøgle vil gøre den eksisterende ugyldig og enhver automation som benytter den stopper med at virke. Vil du fortsætte?",
+      "revealSuccess": "Den nye API nøgle er klar til brug.",
+      "revealTitle": "API nøgle lavet",
+      "shownOnce": "Nøglen vises kun én gang. Gem den et sikkert sted, da den ikke kan hentes senere.",
+      "title": "API nøgle"
+    },
     "aux": {
       "description": "Enhed, der justerer sit forbrug baseret på tilgængeligt overskud (som smarte vandvarmere). evcc forventer, at denne enhed reducerer sit strømforbrug, hvis det er nødvendigt.",
       "titleAdd": "Tilføj selvregulerende forbrugsenhed",
@@ -105,6 +167,11 @@
       "title": "Belastningsstyring",
       "usableMeters": "Gyldige målerreferencer"
     },
+    "consumer": {
+      "description": "Overvåger mindre enheder, som ikke kan styres, f.eks. køleskab, vaskemaskine osv. Giver et bedre overblik over dit samlede forbrug i hjemmet.",
+      "titleAdd": "Tilføj forbrugsmåler",
+      "titleEdit": "Juster forbrugsmåler"
+    },
     "control": {
       "description": "Standardværdierne er normalt fine. Kun hvis du ved, hvad du gør, kan du ændre dem.",
       "descriptionInterval": "Opdateringsinterval i sekunder. Angiver, hvor ofte evcc aflæser målerdata og justerer opladningen. Standardværdien på 30 sekunder er et sikkert valg. Enheder som køretøjer, ladere og invertere har typisk brug for flere sekunder til at tilpasse deres adfærd. Hvis dine komponenter reagerer hurtigt, kan du anvende lavere værdier. Vi anbefaler kraftigt ikke at gå under 10 sekunder. Hvis du observerer ustabil regulering eller springende effektværdier, bør du vælge et længere interval.",
@@ -140,8 +207,11 @@
       "currency": "Møntenhed",
       "current": "Ström",
       "currentRange": "Strømstyrke",
+      "curtailLimit": "Indfødnings begrænsning",
+      "curtailable": "Kan begrænses",
       "curtailed": "Indfødning begrænset",
       "detected": "Registreret",
+      "dimLimit": "Forbrugsgrænse",
       "dimmed": "Forbrug begrænset",
       "enabled": "Aktiveret",
       "energy": "Energi",
@@ -150,8 +220,6 @@
       "forecast": "Prognose",
       "gridPrice": "God pris",
       "heaterTempLimit": "Opvarmning begrænsning",
-      "hemsActiveLimit": "Aktiv begrænsning",
-      "hemsType": "Kommunikation",
       "identifier": "RFID-identifikator",
       "loginBlocked": "Grænsen for loginforsøg er nået",
       "max": "max",
@@ -166,11 +234,13 @@
       "power": "Effekt",
       "powerRange": "Effekt",
       "price": "Pris",
+      "productionLimited": "Produktionsgrænse",
       "range": "Rækkevidde",
       "returnEnergy": "Energi (baglæns)",
       "singlePhase": "Enkelt fase",
       "soc": "Oplader",
       "solarForecast": "Sol prognose",
+      "switchDevice": "Strømstyring",
       "temp": "Temperatur",
       "topic": "Emne",
       "url": "URL",
@@ -181,10 +251,6 @@
       "A": "A (ikke forbundet)",
       "B": "B (forbundet)",
       "C": "C (oplader)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "via EEBus",
-      "relay": "via Relay"
     },
     "devices": {
       "auxMeter": "Smart forbrugsenhed",
@@ -201,13 +267,21 @@
         "public": "Offentligt certifikat",
         "title": "Certifikater"
       },
+      "configuredDevices": "Konfigurerede enheder",
       "description": "Konfiguration, der gør det muligt for evcc at kommunikere med EEBus-kompatible enheder som ladere eller en styreenhed fra din netoperatør. Al nødvendig initialisering og dannelse af certifikater udføres automatisk ved første opstart.",
       "descriptionAdvanced": "Ingen ændringer nødvendige. Foretag kun ændringer, hvis du virkelig ved, hvad du laver. Hvis du ændrer enten SHIP-id’et eller certifikaterne, skal dine enheder parres igen.",
       "interfaces": "Grænseflader",
       "interfacesHelp": "Begræns de netværksgrænseflader, som EEBus skal bruge, for at undgå kommunikationsproblemer. Lad feltet stå tomt for at bruge alle grænseflader. Én indtastning pr. linje.",
+      "noConfiguredDevices": "Ingen enheder konfigureret af SKI.",
+      "noPairings": "Ingen enheder tilknyttet.",
+      "pairings": "Tilknyttede enheder",
       "port": "Port",
       "portHelp": "Porten, der skal bruges.",
+      "qr": "koblingskode",
+      "qrExplain": "Skan fra en anden EEBus-enhed under installationen for automatisk parring uden manuel indtastning af SKI.",
       "removeConfirm": "Hele EEBus-konfigurationen fjernes. Nye certifikater og identifikatorer genereres ved næste opstart. Er du sikker på, at du vil fortsætte?",
+      "removePairing": "Fjern tilknytning",
+      "removePairingConfirm": "Forbindelsen til enheden brydes, og skal tilknyttes igen. Er du sikker?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Permanent enhedsidentifikator til identifikation i EEBus-netværket.",
       "shipidHelp": "Dette SHIP-id er knyttet til certifikaterne nedenfor.",
@@ -220,9 +294,9 @@
       "title": "Eksperimentel"
     },
     "ext": {
-      "description": "Måler energiforbrug fra enheder, der ikke styres (som f.eks. køleskab eller vaskemaskine), til statistik. Måleren kan også bruges til belastningsstyring, f.eks. i en undergruppe.",
-      "titleAdd": "Tilføj forbrugsmåler",
-      "titleEdit": "Rediger forbrugsmåler"
+      "description": "Overvåger målere, der ikke bruges til regulering eller vises i grænsefladen (undermålere, alternative net- eller solmålere osv.). Data logges og eksporteres ligesom for øvrige målere.",
+      "titleAdd": "Tilføj ekstra måler",
+      "titleEdit": "Rediger ekstra måler"
     },
     "form": {
       "danger": "Pas på",
@@ -260,7 +334,6 @@
       "noFileSelected": "Ingen fil valgt.",
       "off": "slukket",
       "on": "tændt",
-      "password": "Adgangskode",
       "readFromFile": "Læs fra fil",
       "remove": "Fjern",
       "required": "påkrævet",
@@ -282,6 +355,7 @@
       "titleEdit": "Rediger måler for elnettet"
     },
     "hems": {
+      "changeConfirm": "Eksisterende konfiguration slettes. Fortsæt?",
       "csv": {
         "created": "Oprettet",
         "finished": "Afsluttet",
@@ -289,10 +363,13 @@
         "limitpower": "Grænse (kW)",
         "type": "Type"
       },
-      "description": "Effektbegrænsning via eksterne systemer (f.eks. §14a EnWG, §9 EEG-grænseflade eller overordnet energistyringssystem). Fungerer sammen med belastningsstyringsfunktionen.",
-      "downloadCsv": "Download CSV",
+      "customOption": "Brugerdefineret integration",
+      "description": "Effektbegrænsning via eksterne systemer (f.eks. §14a EnWG, §9 EEG-grænseflade eller overordnet energistyringssystem). Fungerer sammen med belastningsstyringsfunktionen. Begrænsning af solproduktionen understøttes også for udvalgte enheder. Den faktiske begrænsningsgrænse skal konfigureres for hver enkelt inverter.",
       "eventsRecorded": "Registrerede {count} netbegrænsningshændelser.",
+      "generic": "Generelle integrationer",
+      "integrations": "Integrationer",
       "lastEvent": "Sidst {timeAgo}.",
+      "template": "Integration",
       "title": "Ekstern grænse"
     },
     "icon": {
@@ -348,8 +425,6 @@
       },
       "defaultModeHelpKeep": "Gemmer den senest valgte tilstand.",
       "defaultModeLabel": "Standardtilstand",
-      "defaultsHint": "Standardtilstand, soladfærd og elektriske detaljer bruger fornuftige standardværdier.",
-      "defaultsHintLink": "Juster indstillinger",
       "delete": "Slet",
       "electricalSubtitle": "Ved tvivl, spørg din elektriker.",
       "electricalTitle": "Elektrisk",
@@ -358,8 +433,11 @@
       "estimateLabel": "Interpoler opladningsniveauet mellem API-opdateringer",
       "maxCurrentHelp": "Skal være større end minimum strømstyrken.",
       "maxCurrentLabel": "Maksimal strømstyrke",
+      "maxTempHelp": "Skal være højere end minimums temperaturen.",
+      "maxTempLabel": "Maksimum temperatur",
       "minCurrentHelp": "Brug kun lavere end 6 A, hvis du er sikker på hvad du gør.",
       "minCurrentLabel": "Minimum strømstyrke",
+      "minTempLabel": "Minimums temperatur",
       "noVehicles": "Ingen køretøjer er konfigureret.",
       "option": {
         "charging": "\"Tilføj ladepunkt",
@@ -384,12 +462,13 @@
       "priorityHelp": "Højere prioriterede får fortrin til solenergioverskud.",
       "priorityLabel": "Prioritet",
       "save": "Gem",
-      "showAllSettings": "Vis alle indstillinger",
       "solarBehaviorCustomHelp": "Definer dine egne aktiverings- og deaktiveringstærskler samt forsinkelser.",
       "solarBehaviorDefaultHelp": "Start efter {enableDelay} af tilstrækkeligt overskud. Stop, når der ikke er nok overskud i {disableDelay}.",
       "solarBehaviorLabel": "Solar",
       "solarModeCustom": "egen",
       "solarModeMaximum": "max solenergi",
+      "temperatureRangeHelp": "Visningsområde for temperaturbjælken. Påvirker ikke styringen.",
+      "temperatureRangeTitle": "Temperatur område",
       "thresholdDisableDelayLabel": "Deaktiver forsinkelse",
       "thresholdDisableHelpInvalid": "Brug en positiv værdi.",
       "thresholdDisableHelpPositive": "Stop, når der bruges mere end {power} fra elnettet i {delay}.",
@@ -424,6 +503,7 @@
     },
     "main": {
       "addAdditional": "Tilføj en ekstra måler",
+      "addConsumer": "Tilføj forbrugsenhed",
       "addGrid": "Tilføj måler til elnet",
       "addLoadpoint": "Tilføj lader eller varmelegeme",
       "addPvBattery": "Tilføj solpanel eller batteri",
@@ -509,12 +589,16 @@
     },
     "meter": {
       "cancel": "Afbryd",
+      "convertToConsumer": {
+        "confirm": "Konverterer denne \"ekstra måler\" til en \"forbrugsenhed\".",
+        "link": "Konverter til forbrugsenhed"
+      },
       "delete": "Slet",
       "generic": "Generiske integrationer",
       "option": {
         "aux": "Tilføj selvregulerende forbrugsenhed",
         "battery": "Tilføj batterimåler",
-        "ext": "Tilføj almindelig forbrugsenhed",
+        "consumer": "Tilføj standardforbrugsenhed",
         "pv": "Tilføj en solenergimåler"
       },
       "save": "Gem",
@@ -525,7 +609,7 @@
       "usage": {
         "aux": "Selvregulerende forbrugsenhed",
         "battery": "Batteri",
-        "charge": "Forbrugsenhed/Lader",
+        "charge": "Lader",
         "grid": "Elnet",
         "label": "Brug",
         "pv": "Produktion"
@@ -596,23 +680,20 @@
       "descriptionHost": "Anvendes til at gøre evcc synlig i det lokale netværk.",
       "descriptionInternalUrl": "Lokal netværksadresse for evcc.",
       "descriptionPort": "Port til webgrænsefladen og API. Du skal opdatere din browser-URL, hvis du ændrer dette.",
-      "descriptionSchema": "Påvirker kun, hvordan URL'er genereres. Valg af HTTPS vil ikke aktivere kryptering.",
       "labelExternalUrl": "Ekstern webadresse",
       "labelHost": "mDNS-værtsnavn",
       "labelInternalUrl": "Intern webadresse",
       "labelPort": "port",
-      "labelSchema": "Skema",
       "title": "Netværk",
       "warningUrlPath": "URL’en kræver som regel ikke en sti. Er du sikker på, at det er rigtigt?"
     },
     "ocpp": {
-      "connectedChargers": "Tilsluttede ladere",
-      "connectionStatus": "Konfigurerede stations-ID’er",
-      "connectionStatusHelp": "Forbindelsesstatus for konfigurerede ladere.",
-      "detectedChargers": "Registrerede stations-ID’er",
-      "detectedHelp": "Disse ladere har forsøgt at forbinde til evcc. For at bruge en lader skal du oprette et loadpoint med dens stations-ID.",
+      "forwardingConfigured": "Videresendelse af OCPP data er konfigureret",
+      "forwardingError": "Fejl ved videresendelse",
+      "forwardingOff": "Videresendelse er ikke konfigureret",
       "noChargers": "Ingen OCPP-ladere fundet.",
-      "noStations": "Ingen stationer tilsluttet",
+      "stations": "Station ID'er",
+      "stationsHelp": "Konfigurerede og fundne OCPP ladere. Udover lokal kontrol kan du videresende beskeder til en ekstern server (f.eks. til regninger).",
       "status": {
         "configured": "Ikke tilsluttet",
         "connected": "Tilsluttet",
@@ -621,6 +702,30 @@
       "title": "OCPP Server",
       "url": "Server URL",
       "urlHelp": "Kopier denne URL til din laders opsætning. Tjek producentens vejledning for detaljer. Laderen tilføjer normalt automatisk sit unikke ID (stations-id) til URL’en. I sjældne tilfælde skal ID’et angives manuelt. Eksempel: {url}"
+    },
+    "ocppforwarder": {
+      "description": "Videresend denne laders OCPP beskeder til en ekstern server (regnings platform, DSO osv.) ud over evcc.",
+      "editTitle": "OCPP videresend",
+      "labelCaCert": "Server certifikat (CA)",
+      "labelCheckInsecure": "Tillad selv-signerede certifikater",
+      "labelInsecure": "Certifikat validerering",
+      "password": "Kodeord",
+      "passwordHelp": "Til HTTP Basic Authentication mod den eksterne server.",
+      "readOnly": {
+        "check": "Bloker kommandoer fra den eksterne server",
+        "help": {
+          "false": "Den eksterne server kan sende kommandoer til laderen via evcc.",
+          "true": "Den eksterne server modtager alle beskeder fra laderen, men kan ikke sende kommandoer. evcc bibeholder eksklusiv kontrol."
+        },
+        "label": "Eksterne kommandoer"
+      },
+      "status": "Status",
+      "upstreamStationId": "Stations ID",
+      "upstreamStationIdHelp": "Laderens ID er sendt til den eksterne server.",
+      "upstreamUrl": "Ekstern server URL",
+      "upstreamUrlHelp": "OCPP WebSocket URL på den eksterne server.",
+      "username": "Brugernavn",
+      "usernameHelp": "Til HTTP Basic Authentication mod den overordnede server."
     },
     "optimizer": {
       "description": "Analyserer sol-prognose, el-priser, og forbrugsmønstre for at optimere batteri og opladning. Data sendes til evcc optimerings-service for at blive beregnet. Aktuelt beregnes og vises data kun, der er ingen styring af enheder endnu.",
@@ -689,6 +794,7 @@
     },
     "section": {
       "additionalMeter": "Tilføj ekstra målere",
+      "consumers": "Forbrugsenheder",
       "general": "Generelle",
       "grid": "Elnettet",
       "integrations": "Integrationer",
@@ -697,6 +803,14 @@
       "services": "Tjenester",
       "system": "System",
       "vehicles": "Køretøjer"
+    },
+    "security": {
+      "authDisabledHint": "Autentificering er deaktiveret. Håndtering af legitimationsoplysninger er ikke tilgængelig.",
+      "description": "Håndtér autentificering og loginoplysninger for denne instans.",
+      "passwordDescription": "Opdater kodeordet som benyttes for at logge ind på konfigurerings UI.",
+      "passwordTitle": "Admin kodeord",
+      "title": "Sikkerhed",
+      "updatePassword": "Opdater kodeord"
     },
     "shm": {
       "cardTitle": "Sunny Home Manager",
@@ -713,14 +827,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Licensnøgle",
-      "activationKeyHint": "Er sendt via email. Findes i {url}.",
       "addToken": "Indtast token",
       "changeToken": "Udskift token",
       "description": "Sponsormodellen hjælper os med at vedligeholde projektet og bæredygtigt bygge nye og spændende funktioner. Som sponsor får du adgang til alle opladning mulighederne.",
       "descriptionToken": "Som GitHub sponsor finder du din token på {url}. For at komme i gang tilbyder vi en {trialToken}.",
-      "email": "Email",
-      "emailHint": "Den email adresse du benyttede for {url}",
       "enterYourToken": "Din Sponsor token",
       "error": "Dit Sponsortoken er ikke gyldigt.",
       "invalid": "ugyldig",
@@ -744,7 +854,6 @@
           "title": "Sikkerhedskopier"
         },
         "cancel": "Afbryd",
-        "confirmWithPassword": "Bekræft handling",
         "description": "Sikkerhedskopier, gendan og nulstil dine data. Nyttig, hvis du vil flytte dine data til et andet system.",
         "note": "Bemærk: Alle ovenstående handlinger påvirker kun dine databasedata. Konfigurationsfilen evcc.yaml forbliver uændret.",
         "reset": {
@@ -849,10 +958,6 @@
         "weekdays": "Ugedage"
       }
     },
-    "tariffs": {
-      "description": "Definer dine energitakster for at beregne omkostningerne ved dine opladningssessioner.",
-      "title": "Tariffer"
-    },
     "telemetry": {
       "description": "Konfigurér datadeling for at hjælpe med at forbedre evcc. Din privatlivsbeskyttelse er vigtig for os, og deltagelse er helt frivillig.",
       "title": "Telemetri"
@@ -897,8 +1002,8 @@
       "co2Saved": "{value} sparet",
       "co2Title": "CO₂ Udledning",
       "configurePriceCo2": "Lær hvordan man indstiller pris og CO₂ data.",
-      "footerLong": "{percent} Solenergi",
-      "footerShort": "{percent} Solenergi",
+      "footerLong": "{percent} solenergi",
+      "footerShort": "{percent} solenergi",
       "indicator": {
         "co2": "CO₂ emission",
         "co2saved": "CO₂ sparet",
@@ -1015,16 +1120,9 @@
   },
   "header": {
     "about": "Om",
-    "authProviders": {
-      "confirmLogout": "Er du sikker på du vil fjerne forbindelsen til {title}?",
-      "loggedOut": "Du er nu logget ud",
-      "success": "Godkendelse med {title} lykkedes. Du kan nu lukke fanen.",
-      "title": "Autorisation status"
-    },
     "blog": "Blog",
     "docs": "Dokumentation",
     "github": "GitHub",
-    "login": "Login til køretøjer",
     "logout": "Log ud",
     "nativeSettings": "Skift server",
     "needHelp": "Brug for hjælp?",
@@ -1119,7 +1217,6 @@
   "loginModal": {
     "cancel": "Afbryd",
     "demoMode": "Login er ikke mulig i demo mode.",
-    "error": "Login mislykkedes: ",
     "iframeHint": "Åbn evcc i en ny fane.",
     "iframeIssue": "Dit kodeord er korrekt, men din browser ser ud til at have droppet godkendelses-cookien. Dette kan ske, hvis du kører evcc i en iframe via HTTP.",
     "invalid": "Ugyldig adgangskode.",
@@ -1132,9 +1229,7 @@
     "chargingPlan": {
       "active": "Aktiv",
       "addRepeatingPlan": "Tilføj plan for gentagelse",
-      "arrivalTab": "Ankomst",
       "day": "Dag",
-      "departureTab": "Afgang",
       "goal": "Opladnings mål",
       "modalTitle": "Lade plan",
       "none": "ingen",
@@ -1158,8 +1253,6 @@
       "strategySettings": "Indstillinger for strategi",
       "time": "Tid",
       "title": "Plan",
-      "titleMinSoc": "Min. ladning",
-      "titleTargetCharge": "Afgang",
       "unsavedChanges": "Der er ændringer som ikke er gemt. Skal de benyttes nu?",
       "update": "Anvend",
       "weekdays": "Dage"
@@ -1172,14 +1265,11 @@
     "energyflow": {
       "battery": "Batteri",
       "batteryCharge": "Batteriet oplades",
+      "batteryChargeHold": "Batteri (opladning blokeret)",
       "batteryDischarge": "Batteriet aflades",
-      "batteryForecastEmpty": "Tømt",
-      "batteryForecastFull": "Fyldt",
-      "batteryForecastNextHigh": "Højdepunkt",
-      "batteryForecastNextLow": "Lavpunkt",
+      "batteryDischargeHold": "Batteri (låst)",
       "batteryGridChargeActive": "Opladning fra elnettet: aktiv",
       "batteryGridChargeLimit": "Opladning fra elnettet: når",
-      "batteryHold": "Batteri (låst)",
       "batteryTooltip": "{energy} af {total} ({soc})",
       "forecast": "Prognose",
       "forecastTooltip": "prognose: resterende solenergi produktion i dag",
@@ -1200,8 +1290,9 @@
       "waitForVehicle": "Klar til at varme…"
     },
     "hemsWarning": {
-      "description": "Opladningen reduceres for ikke at overskride {limit}.",
-      "title": "Ekstern begrænsning:"
+      "consumption": "Forbrug",
+      "feedIn": "Indfødning",
+      "title": "Ekstern begrænsning er aktiv"
     },
     "history": {
       "direction": {
@@ -1212,16 +1303,20 @@
         "grid": {
           "energy": "importeret",
           "returnEnergy": "eksporteret"
+        },
+        "meter": {
+          "energy": "Energi",
+          "returnEnergy": "Energi (eksport)"
         }
       },
-      "downloadCsv": "Download CSV",
       "empty": "Ingen historik i dette tidsinterval.",
       "group": {
         "battery": "Batteri",
+        "consumer": "Forbrug",
         "forecast": "Prognose",
         "grid": "Elnet",
         "loadpoint": "Opladning og opvarmning",
-        "meter": "Forbrug",
+        "meter": "Ekstra målere",
         "pv": "Produktion"
       },
       "otherConsumers": "Andet",
@@ -1258,22 +1353,12 @@
       "batteryUsage": "Husbatteri",
       "currents": "Ladestrøm",
       "default": "standard",
-      "disclaimerHint": "Bemærk:",
-      "limitSoc": {
-        "description": "Opladningsgrænse som benyttes når dette køretøj er forbundet.",
-        "label": "standard opladningsgrænse"
-      },
       "maxCurrent": {
         "label": "Max. Nuværende"
       },
       "minCurrent": {
         "label": "Min. Nuværende"
       },
-      "minSoc": {
-        "description": "Køretøjet bliver „hurtigt” opladet til {0} i solar mode, og fortsætter derefter med solenergioverskuddet. Nyttig til at sikre en minimum rækkevidde selv på mørke dage.",
-        "label": "Min. opladning %"
-      },
-      "onlyForSocBasedCharging": "Disse indstillinger er kun tilgængelig for køretøjer med kendt opladningsniveau.",
       "phasesConfigured": {
         "label": "Faser",
         "no1p3pSupport": "Hvordan er din oplader forbundet?",
@@ -1478,8 +1563,6 @@
       "solarpercentage": "Sol (%)",
       "vehicle": "Køretøj"
     },
-    "csvPeriod": "Download {period} CSV",
-    "csvTotal": "Download total CSV",
     "date": "Start",
     "energy": "Opladet",
     "filter": {
@@ -1495,7 +1578,7 @@
     },
     "groupBy": {
       "loadpoint": "Opladnings punkt",
-      "none": "Total",
+      "none": "Sol",
       "vehicle": "Køretøj"
     },
     "loadpoint": "Ladepunkt",
@@ -1517,7 +1600,7 @@
     "type": {
       "co2": "CO₂",
       "price": "Omkostning",
-      "solar": "Sol"
+      "solar": "Energi"
     },
     "vehicle": "Køretøj"
   },

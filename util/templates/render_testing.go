@@ -38,7 +38,8 @@ func test(t *testing.T, tmpl Template, values map[string]any, cb func(values map
 	cb(values)
 }
 
-func testAuth(other map[string]any) error {
+func testAuth(tmpl Template) error {
+	other := tmpl.Auth
 	if len(other) == 0 {
 		return nil
 	}
@@ -54,7 +55,11 @@ func testAuth(other map[string]any) error {
 
 	params := make(map[string]any)
 	for _, p := range cc.Params {
-		params[p] = "foo"
+		if _, param := tmpl.ParamByName(p); param.Type == TypeBool {
+			params[p] = true
+		} else {
+			params[p] = "foo"
+		}
 	}
 
 	_, err := auth.NewFromConfig(context.TODO(), cc.Type, params)
@@ -94,7 +99,7 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 		values["host"] = "localhost"
 
 		// test auth configuration
-		if err := testAuth(tmpl.Auth); err != nil {
+		if err := testAuth(tmpl); err != nil {
 			t.Error("authorization:", err)
 		}
 

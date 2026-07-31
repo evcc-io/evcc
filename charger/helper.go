@@ -13,9 +13,6 @@ import (
 
 var ErrLoadpointNotInitialized = errors.New("loadpoint not initialized")
 
-// TODO remove when used
-var _ = ensureCharger
-
 // ensureCharger extracts ID from list of IDs returned from `list` function
 func ensureCharger(id string, list func() ([]string, error)) (string, error) {
 	id, err := ensureChargerEx(id, list, func(v string) (string, error) {
