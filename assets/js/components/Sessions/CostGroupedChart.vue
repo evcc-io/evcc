@@ -1,9 +1,9 @@
 <template>
 	<div v-if="chartData.labels.length > 1" class="row">
-		<div class="col-12 col-md-6 mb-3">
+		<div class="col-12 col-md-6 col-lg-12 col-xxl-6 mb-3">
 			<Doughnut :data="chartData" :options="options" />
 		</div>
-		<div class="col-12 col-md-6 d-flex align-items-center">
+		<div class="col-12 col-md-6 col-lg-12 col-xxl-6 d-flex align-items-center">
 			<LegendList :legends="legends" :device-colors="deviceColors" grid />
 		</div>
 	</div>
@@ -94,7 +94,7 @@ export default defineComponent({
 				borderRadius: 10,
 				color: colors.text || "",
 				borderWidth: 3,
-				borderColor: colors.background || "",
+				borderColor: colors.box || "",
 				cutout: "70%",
 				radius: "95%",
 				animation: { duration: 250 },
