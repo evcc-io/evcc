@@ -12,6 +12,8 @@ params:
     id: 247
   - name: maxacpower
   - preset: battery-params
+  - name: maxchargepower
+    required: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
