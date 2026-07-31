@@ -1,0 +1,104 @@
+template: fronius-smart-meter-ip
+products:
+  - brand: Fronius
+    description:
+      generic: Smart Meter IP
+requirements:
+  description:
+    de: |
+      Modbus TCP muss in der Weboberfläche des Zählers aktiviert sein (Einstellungen → Datenschnittstellen → Modbus (TCP und RTU)). Der Zähler wird direkt über seine eigene IP-Adresse ausgelesen, nicht über den Wechselrichter.
+    en: |
+      Modbus TCP must be enabled in the meter's web interface (Settings → Data interfaces → Modbus (TCP and RTU)). The meter is read directly via its own IP address, not through the inverter.
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: host
+  - name: port
+    default: 502
+  - name: id
+    default: 1
+    advanced: true
+render: |
+  type: custom
+  # Fronius Smart Meter IP (63A-1, 63A-3, 5kA-3): standalone LAN/WLAN meter.
+  # SunSpec model 213 (float) on unit 1; 203 (int+sf) listed for firmware variants.
+  power:
+    source: sunspec
+    uri: {{ joinHostPort .host .port }}
+    id: {{ .id }}
+    value:
+      - 203:W
+      - 213:W
+  energy:
+    source: sunspec
+    uri: {{ joinHostPort .host .port }}
+    id: {{ .id }}
+    value:
+      - 203:TotWhImp
+      - 213:TotWhImp
+    scale: 0.001
+  returnenergy:
+    source: sunspec
+    uri: {{ joinHostPort .host .port }}
+    id: {{ .id }}
+    value:
+      - 203:TotWhExp
+      - 213:TotWhExp
+    scale: 0.001
+  currents:
+    - source: sunspec
+      uri: {{ joinHostPort .host .port }}
+      id: {{ .id }}
+      value:
+        - 203:AphA
+        - 213:AphA
+    - source: sunspec
+      uri: {{ joinHostPort .host .port }}
+      id: {{ .id }}
+      value:
+        - 203:AphB
+        - 213:AphB
+    - source: sunspec
+      uri: {{ joinHostPort .host .port }}
+      id: {{ .id }}
+      value:
+        - 203:AphC
+        - 213:AphC
+  voltages:
+    - source: sunspec
+      uri: {{ joinHostPort .host .port }}
+      id: {{ .id }}
+      value:
+        - 203:PhVphA
+        - 213:PhVphA
+    - source: sunspec
+      uri: {{ joinHostPort .host .port }}
+      id: {{ .id }}
+      value:
+        - 203:PhVphB
+        - 213:PhVphB
+    - source: sunspec
+      uri: {{ joinHostPort .host .port }}
+      id: {{ .id }}
+      value:
+        - 203:PhVphC
+        - 213:PhVphC
+  powers:
+    - source: sunspec
+      uri: {{ joinHostPort .host .port }}
+      id: {{ .id }}
+      value:
+        - 203:WphA
+        - 213:WphA
+    - source: sunspec
+      uri: {{ joinHostPort .host .port }}
+      id: {{ .id }}
+      value:
+        - 203:WphB
+        - 213:WphB
+    - source: sunspec
+      uri: {{ joinHostPort .host .port }}
+      id: {{ .id }}
+      value:
+        - 203:WphC
+        - 213:WphC
