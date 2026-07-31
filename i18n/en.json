@@ -42,6 +42,7 @@
       },
       "bufferTitle": "Battery as charging buffer",
       "discharge": "Prevent home battery discharge in fast mode and during planned charging.",
+      "gridDischarge": "Allow home battery to discharge to the grid.",
       "priority": "Home battery has priority while it is below {soc}. Then the charging points receive the surplus.",
       "priorityNone": "Solar surplus goes straight to the charging points. Set a value above {soc} to prioritize the home battery.",
       "priorityTitle": "Where does the surplus go first?"
@@ -119,8 +120,6 @@
       "titleEdit": "Edit Self-Regulating Consumer"
     },
     "battery": {
-      "description": "Experimental battery controls. These features are still being tested and may change or be removed in future versions.",
-      "gridDischarge": "Allow battery to discharge to the grid",
       "title": "Battery",
       "titleAdd": "Add Battery",
       "titleEdit": "Edit Battery"
@@ -379,7 +378,11 @@
       "noEvents": "No events recorded yet.",
       "recordedEvents": "Recorded events",
       "template": "Integration",
-      "title": "External Limit"
+      "title": "External Limit",
+      "type": {
+        "custom": "User-defined integration",
+        "relay": "User-defined integration (relay)"
+      }
     },
     "icon": {
       "change": "change",

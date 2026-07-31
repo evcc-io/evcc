@@ -224,14 +224,12 @@ export default defineComponent({
 		},
 		openChargingPlanModal(loadpointId: string) {
 			const modal = this.$refs["chargingPlanModal"] as
-				| InstanceType<typeof ChargingPlanModal>
-				| undefined;
+				InstanceType<typeof ChargingPlanModal> | undefined;
 			modal?.open(loadpointId);
 		},
 		openSettingsModal(loadpointId: string) {
 			const modal = this.$refs["settingsModal"] as
-				| InstanceType<typeof SettingsModal>
-				| undefined;
+				InstanceType<typeof SettingsModal> | undefined;
 			modal?.open(loadpointId);
 		},
 	},

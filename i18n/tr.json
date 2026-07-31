@@ -273,7 +273,6 @@
       "noFileSelected": "Seçili dosya yok.",
       "off": "kapalı",
       "on": "açık",
-      "password": "Şifre",
       "readFromFile": "Dosyadan oku",
       "remove": "Kaldır",
       "required": "gerekli",
@@ -303,7 +302,6 @@
         "type": "Tür"
       },
       "description": "Harici sistemler tarafından güç sınırlaması (ör. §14a EnWG, §9 EEG arayüzü veya üst düzey enerji yönetim sistemi). Yük yönetimi özelliği ile birlikte çalışır.",
-      "downloadCsv": "CSV'yi indir",
       "eventsRecorded": "{count} şebeke sınırlama etkinliği kaydedildi.",
       "lastEvent": "En son {timeAgo}.",
       "title": "Dış Limit"
@@ -361,8 +359,6 @@
       },
       "defaultModeHelpKeep": "Son seçilen modu korur.",
       "defaultModeLabel": "“Varsayılan şekil”",
-      "defaultsHint": "Varsayılan durum, GES fazlalık davranışı ve elektriksel ayrıntılar mantıklı varsayılan değerleri kullanır.",
-      "defaultsHintLink": "Ayarları düzenle",
       "delete": "“Sil”",
       "electricalSubtitle": "Emin değilsen elektrikçine sor.",
       "electricalTitle": "Elektrik",
@@ -397,7 +393,6 @@
       "priorityHelp": "Öncelikli olanlar güneş enerjisi fazlasına öncelikli erişir.",
       "priorityLabel": "“Öncelik”",
       "save": "“Kaydet”",
-      "showAllSettings": "“Tüm ayarları göster”",
       "solarBehaviorCustomHelp": "Kendi açma, kapama eşiklerini ve gecikmeleri tanımla.",
       "solarBehaviorDefaultHelp": "Yeterli fazlalığın {enableDelay} ardından başla. {disableDelay} için yeterli fazlalık olmadığında dur.",
       "solarBehaviorLabel": "Güneş enerjisi fazlalığı",
@@ -527,7 +522,6 @@
       "option": {
         "aux": "Kendi kendini düzenleyen tüketici ekle",
         "battery": "Pil ölçer ekle",
-        "ext": "Düzenli tüketici ekle",
         "pv": "Güneş ölçer ekle"
       },
       "save": "Kaydet",
@@ -609,26 +603,18 @@
       "descriptionHost": "Yerel ağında evcc'yi duyurmak için kullanılır.",
       "descriptionInternalUrl": "evcc'nin yerel ağ adresi.",
       "descriptionPort": "Web arayüzü ve API için bağlantı noktası. Bunu değiştirirsen tarayıcının URL'sini güncellemen gerekir.",
-      "descriptionSchema": "Yalnızca URL'lerin oluşturuluşunu etkiler. HTTPS'nin seçilmesi şifrelemeyi etkinleştirmez.",
       "labelExternalUrl": "Harici URL",
       "labelHost": "mDNS Ana Bilgisayar Adı",
       "labelInternalUrl": "Dahili URL",
       "labelPort": "Port",
-      "labelSchema": "Şema",
       "title": "Ağ",
       "warningUrlPath": "URL genellikle bir yola ihtiyaç duymaz. Bunun doğru olduğundan emin misin?"
     },
     "ocpp": {
-      "connectedChargers": "Bağlı doldurma cihazları",
-      "connectionStatus": "Yapılandırılmış istasyon kimlikleri",
-      "connectionStatusHelp": "Yapılandırılmış doldurma cihazlarının bağlantı durumu.",
-      "detectedChargers": "Algılanan istasyon kimlikleri",
-      "detectedHelp": "Bu doldurma cihazları evcc'ye bağlanmaya çalıştı. Doldurma cihazını kullanmak için, istasyon kimliği ile bir yükleme noktası oluştur.",
       "forwardingConfigured": "Yönlendirme yapılandırıldı",
       "forwardingError": "Yönlendirme hatası",
       "forwardingOff": "Yönlendirme yapılandırılmadı",
       "noChargers": "OCPP doldurma cihazı algılanamadı.",
-      "noStations": "Bağlı istasyon yok",
       "stations": "İstasyon Kimlikleri",
       "status": {
         "configured": "Bağlı değil",
@@ -861,10 +847,6 @@
         "weekdays": "Hafta günleri"
       }
     },
-    "tariffs": {
-      "description": "Doldurma oturumlarının maliyetlerini hesaplamak için elektrik tarifelerini gir.",
-      "title": "Tarifeler"
-    },
     "telemetry": {
       "description": "evcc'yi iyileştirmek için veri paylaşımını yapılandır. Gizliliğin bizim için önemlidir ve katılım tamamen isteğe bağlıdır.",
       "title": "Uzaktan ölçüm"
@@ -1027,15 +1009,9 @@
   },
   "header": {
     "about": "evcc hakkında",
-    "authProviders": {
-      "confirmLogout": "{title} kesmek istediğine emin misin?",
-      "loggedOut": "Oturum başarıyla kapatıldı",
-      "title": "Onay Durumu"
-    },
     "blog": "Blog",
     "docs": "Belgeler",
     "github": "GitHub",
-    "login": "Araç Girişleri",
     "logout": "Çıkış",
     "nativeSettings": "Ana makine Değiştir",
     "needHelp": "Yardıma mı ihtiyacın var?",
@@ -1130,7 +1106,6 @@
   "loginModal": {
     "cancel": "İptal",
     "demoMode": "Demo modunda oturum açamazsınız.",
-    "error": "Giriş başarısız: ",
     "iframeHint": "evcc'yi yeni bir sekmede aç.",
     "iframeIssue": "Parolan doğru, ancak tarayıcın kimlik doğrulama çerezini reddetti. Bu, evcc'yi HTTP üzerinden bir iframe içinde çalıştırırsan meydana gelebilir.",
     "invalid": "Şifre geçersiz.",
@@ -1216,7 +1191,6 @@
           "returnEnergy": "satıldı"
         }
       },
-      "downloadCsv": "CSV'yi indir",
       "empty": "Bu zaman aralığı için geçmiş verisi yok.",
       "group": {
         "battery": "Batarya",
@@ -1260,14 +1234,12 @@
       "batteryUsage": "“Ev Bataryası”",
       "currents": "Doldurma Akımı",
       "default": "varsayılan",
-      "disclaimerHint": "Not:",
       "maxCurrent": {
         "label": "Azami Akım"
       },
       "minCurrent": {
         "label": "Asgari Akım"
       },
-      "onlyForSocBasedCharging": "Bu seçenekler, sadece doluluk seviyesi bilinen araçlar için açık.",
       "phasesConfigured": {
         "label": "Fazlar",
         "no1p3pSupport": "Doldurma cihazınız nasıl bağlı?",
@@ -1467,8 +1439,6 @@
       "solarpercentage": "Güneş (%)",
       "vehicle": "Araç"
     },
-    "csvPeriod": "{period} CSV olarak indir",
-    "csvTotal": "CSV'nin tamamını indir",
     "date": "Başlangıç",
     "energy": "Doldurulan",
     "filter": {

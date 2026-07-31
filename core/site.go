@@ -69,7 +69,7 @@ type Site struct {
 	// meters
 	circuit        api.Circuit                // Circuit
 	hems           api.HEMS                   // HEMS (set by configureHEMS at boot)
-	gridMeter      api.Meter                  // Grid usage meter
+	gridMeter      config.Device[api.Meter]   // Grid usage meter
 	pvMeters       []config.Device[api.Meter] // PV generation meters
 	batteryMeters  []config.Device[api.Meter] // Battery charging meters
 	extMeters      []config.Device[api.Meter] // External meters - for monitoring only
@@ -206,10 +206,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			return err
 		}
 
-		site.gridMeter = dev.Instance()
-		if site.gridMeter == nil {
-			return errors.New("missing grid meter instance")
-		}
+		site.gridMeter = dev
 
 		me, err := metrics.NewCollector(metrics.Grid, site.Meters.GridMeterRef, metrics.Grid)
 		if err != nil {
@@ -456,7 +453,7 @@ func (site *Site) DumpConfig() {
 	)
 
 	if site.gridMeter != nil {
-		site.log.INFO.Println(meterCapabilities("grid", site.gridMeter))
+		site.log.INFO.Println(meterCapabilities("grid", site.gridMeter.Instance()))
 	}
 
 	if len(site.pvMeters) > 0 {
@@ -864,7 +861,9 @@ func (site *Site) updateGridMeter() error {
 
 	mm := types.Measurement{Name: site.Meters.GridMeterRef}
 
-	if res, err := backoff.RetryWithData(site.gridMeter.CurrentPower, modbus.Backoff()); err == nil {
+	meter := site.gridMeter.Instance()
+
+	if res, err := backoff.RetryWithData(meter.CurrentPower, modbus.Backoff()); err == nil {
 		mm.Power = res
 		site.gridPower = res
 		site.log.DEBUG.Printf("grid power: %.0fW", res)
@@ -873,10 +872,10 @@ func (site *Site) updateGridMeter() error {
 	}
 
 	// grid phase currents (signed)
-	if phaseMeter, ok := api.Cap[api.PhaseCurrents](site.gridMeter); ok {
+	if phaseMeter, ok := api.Cap[api.PhaseCurrents](meter); ok {
 		// grid phase powers
 		var p1, p2, p3 float64
-		if phaseMeter, ok := api.Cap[api.PhasePowers](site.gridMeter); ok {
+		if phaseMeter, ok := api.Cap[api.PhasePowers](meter); ok {
 			var err error // phases needed for signed currents
 			if p1, p2, p3, err = phaseMeter.Powers(); err == nil {
 				mm.Powers = []float64{p1, p2, p3}
@@ -896,7 +895,7 @@ func (site *Site) updateGridMeter() error {
 
 	// grid energy (import); nil when the device has no MeterEnergy capability or the read fails
 	// ignore spurious zero readings (NaN-derived or nightly reset, #30950)
-	if energyMeter, ok := api.Cap[api.MeterEnergy](site.gridMeter); ok {
+	if energyMeter, ok := api.Cap[api.MeterEnergy](meter); ok {
 		if f, err := nonZeroEnergy(energyMeter.TotalEnergy()); err == nil {
 			mm.Energy = &f
 		} else if !errors.Is(err, api.ErrNotAvailable) {
@@ -906,7 +905,7 @@ func (site *Site) updateGridMeter() error {
 
 	// grid return energy (export); nil when the device has no MeterReturnEnergy capability or the read fails
 	// ignore spurious zero readings as above
-	if returnEnergyMeter, ok := api.Cap[api.MeterReturnEnergy](site.gridMeter); ok {
+	if returnEnergyMeter, ok := api.Cap[api.MeterReturnEnergy](meter); ok {
 		if f, err := nonZeroEnergy(returnEnergyMeter.ReturnEnergy()); err == nil {
 			mm.ReturnEnergy = &f
 		} else if !errors.Is(err, api.ErrNotAvailable) {
