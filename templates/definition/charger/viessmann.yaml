@@ -28,7 +28,7 @@ params:
     service: auth/redirecturi
   - name: gateway_serial
     required: true
-    service: viessmann/gateways?clientid={clientid}&redirecturi={redirecturi}
+    service: viessmann/equipment?detail=gateways&clientid={clientid}&redirecturi={redirecturi}
     description:
       de: Gateway Serial
       en: Gateway Serial
@@ -37,7 +37,7 @@ params:
       en: Determined automatically after login. Alternatively enter manually (VitoCare App -> Settings -> Communication module -> Serial number)
   - name: installation_id
     required: true
-    service: viessmann/installations?clientid={clientid}&redirecturi={redirecturi}
+    service: viessmann/equipment?clientid={clientid}&redirecturi={redirecturi}
     description:
       de: Installation ID
       en: Installation ID
