@@ -70,39 +70,6 @@ func TestQueryEnergyUTCFilter(t *testing.T) {
 	require.InDelta(t, 2, res[0].Data[1].ReturnEnergy, 0.001)
 }
 
-func TestQuerySoc(t *testing.T) {
-	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
-	require.NoError(t, SetupSchema())
-
-	bat := entity{Id: 2, Name: "db:12", Group: Battery, Title: "Home"}
-	require.NoError(t, db.Instance.Create(&bat).Error)
-	grid := entity{Id: 3, Name: Grid, Group: Grid}
-	require.NoError(t, db.Instance.Create(&grid).Error)
-
-	loc := time.Now().Location()
-	base := time.Date(2026, 4, 15, 16, 0, 0, 0, loc)
-
-	require.NoError(t, persist(bat, base, 1, 0, new(30.0), false))
-	require.NoError(t, persist(bat, base.Add(time.Hour), 1, 0, new(70.0), false))
-	require.NoError(t, persist(bat, base.Add(2*time.Hour), 1, 0, nil, false)) // no soc: must not win
-	require.NoError(t, persist(grid, base, 1, 0, nil, false))
-
-	// last soc in range
-	res, err := QuerySoc(Battery, base.Add(-time.Hour), base.Add(3*time.Hour))
-	require.NoError(t, err)
-	require.Equal(t, map[string]float64{"Home": 70}, res)
-
-	// range excluding the later slot
-	res, err = QuerySoc(Battery, base.Add(-time.Hour), base.Add(time.Hour))
-	require.NoError(t, err)
-	require.Equal(t, map[string]float64{"Home": 30}, res)
-
-	// other group without soc
-	res, err = QuerySoc(Grid, base.Add(-time.Hour), base.Add(3*time.Hour))
-	require.NoError(t, err)
-	require.Empty(t, res)
-}
-
 func TestQueryEnergyGrouped(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())

@@ -177,16 +177,26 @@ func TestQueryEnergySoc(t *testing.T) {
 	base := time.Date(2026, 4, 15, 16, 0, 0, 0, time.Now().Location())
 	require.NoError(t, persist(e, base, 1, 0, new(80.0), false))
 	require.NoError(t, persist(e, base.Add(15*time.Minute), 1, 0, new(70.0), false))
+	require.NoError(t, persist(e, base.Add(30*time.Minute), 1, 0, nil, false)) // excluded from the average
 
 	from := base.Add(-time.Hour).UTC()
 	to := base.Add(time.Hour).UTC()
 
-	// hourly bucket reports the first slot's snapshot, not an average
-	res, err := QueryEnergy(from, to, "hour", false)
+	// 15m buckets report the slot snapshot
+	res, err := QueryEnergy(from, to, "15m", false)
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	require.Len(t, res[0].Data, 3)
+	require.Equal(t, 80.0, *res[0].Data[0].SocTemp)
+	require.Equal(t, 70.0, *res[0].Data[1].SocTemp)
+	require.Nil(t, res[0].Data[2].SocTemp)
+
+	// coarser buckets report the average of the slots reporting soc
+	res, err = QueryEnergy(from, to, "hour", false)
 	require.NoError(t, err)
 	require.Len(t, res, 1)
 	require.Len(t, res[0].Data, 1)
-	require.Equal(t, 80.0, *res[0].Data[0].SocTemp)
+	require.Equal(t, 75.0, *res[0].Data[0].SocTemp)
 	require.False(t, res[0].IsTemp) // battery: value is soc
 
 	// grouped sums omit the per-entity snapshot

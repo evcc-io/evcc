@@ -67,11 +67,6 @@ func runMetricsBattery(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	socs, err := metrics.QuerySoc(metrics.Battery, from, to)
-	if err != nil {
-		log.FATAL.Fatal(err)
-	}
-
 	totals := metricsBatteryTotals(series)
 	capacities := metricsBatteryCapacities()
 
@@ -79,9 +74,6 @@ func runMetricsBattery(cmd *cobra.Command, args []string) {
 		label := metricsEntityLabel(e)
 
 		t := totals[label]
-		if soc, ok := socs[label]; ok {
-			t.soc = &soc
-		}
 		t.capacity = capacities[e.Name]
 		totals[label] = t
 	}
@@ -119,17 +111,28 @@ func metricsBatteryCapacities() map[string]float64 {
 }
 
 // batteryTotals holds the accumulated charge and discharge energy of a battery
-// plus its last known soc and configured capacity.
+// plus its recorded soc and configured capacity.
 // For a battery entity charge is stored as import energy, discharge as export
 // energy (see core/site.go updateBatteryMeters).
 type batteryTotals struct {
 	charge    float64
 	discharge float64
-	soc       *float64 // last known soc, nil if not recorded
-	capacity  float64  // kWh, zero if not configured
+	socSum    float64
+	socCount  int
+	capacity  float64 // kWh, zero if not configured
 }
 
-// metricsBatteryTotals sums charge and discharge energy per battery title.
+// soc returns the mean soc over the queried slots, nil if none was recorded.
+func (t batteryTotals) soc() *float64 {
+	if t.socCount == 0 {
+		return nil
+	}
+	soc := t.socSum / float64(t.socCount)
+	return &soc
+}
+
+// metricsBatteryTotals sums charge and discharge energy per battery title and
+// collects the soc of each slot.
 func metricsBatteryTotals(series []metrics.Series) map[string]batteryTotals {
 	res := make(map[string]batteryTotals)
 	for _, s := range series {
@@ -140,6 +143,10 @@ func metricsBatteryTotals(series []metrics.Series) map[string]batteryTotals {
 		for _, slot := range s.Data {
 			t.charge += slot.Energy
 			t.discharge += slot.ReturnEnergy
+			if slot.SocTemp != nil {
+				t.socSum += *slot.SocTemp
+				t.socCount++
+			}
 		}
 		res[s.Title] = t
 	}
@@ -163,10 +170,10 @@ func metricsFormatSoc(soc *float64) string {
 }
 
 // metricsWriteBatteryTable renders one row per battery comparing charge and
-// discharge energy plus the last known soc. Efficiency is the discharge/charge
-// ratio, left blank when no energy was charged. For multiple batteries a total
-// row is added where soc is total stored energy over total capacity, left blank
-// unless soc and capacity are known for all of them.
+// discharge energy plus the mean soc. Efficiency is the discharge/charge ratio,
+// left blank when no energy was charged. For multiple batteries a total row is
+// added where soc is total stored energy over total capacity, left blank unless
+// soc and capacity are known for all of them.
 func metricsWriteBatteryTable(w io.Writer, selected []metrics.EntityInfo, totals map[string]batteryTotals) {
 	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(tw, "name\ttitle\tcharge\tdischarge\tefficiency\tsoc")
@@ -181,25 +188,26 @@ func metricsWriteBatteryTable(w io.Writer, selected []metrics.EntityInfo, totals
 		total.charge += t.charge
 		total.discharge += t.discharge
 
-		if t.soc != nil && t.capacity > 0 {
-			stored += *t.soc / 100 * t.capacity
+		if soc := t.soc(); soc != nil && t.capacity > 0 {
+			stored += *soc / 100 * t.capacity
 			total.capacity += t.capacity
 		} else {
 			complete = false
 		}
 
 		fmt.Fprintf(tw, "%s\t%s\t%.3f\t%.3f\t%s\t%s\n",
-			e.Name, metricsEntityLabel(e), t.charge, t.discharge, metricsBatteryEfficiency(t), metricsFormatSoc(t.soc))
+			e.Name, metricsEntityLabel(e), t.charge, t.discharge, metricsBatteryEfficiency(t), metricsFormatSoc(t.soc()))
 	}
 
 	if len(selected) > 1 {
+		var totalSoc *float64
 		if complete && total.capacity > 0 {
 			soc := stored / total.capacity * 100
-			total.soc = &soc
+			totalSoc = &soc
 		}
 
 		fmt.Fprintf(tw, "total\t\t%.3f\t%.3f\t%s\t%s\n",
-			total.charge, total.discharge, metricsBatteryEfficiency(total), metricsFormatSoc(total.soc))
+			total.charge, total.discharge, metricsBatteryEfficiency(total), metricsFormatSoc(totalSoc))
 	}
 
 	tw.Flush()

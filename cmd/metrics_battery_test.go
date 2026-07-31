@@ -12,8 +12,8 @@ import (
 func TestMetricsBatteryTotals(t *testing.T) {
 	series := []metrics.Series{
 		{Group: metrics.Battery, Title: "bat", Data: []metrics.Slot{
-			{Energy: 1.0, ReturnEnergy: 0.4},
-			{Energy: 2.0, ReturnEnergy: 1.6},
+			{Energy: 1.0, ReturnEnergy: 0.4, SocTemp: new(40.0)},
+			{Energy: 2.0, ReturnEnergy: 1.6, SocTemp: new(70.0)},
 		}},
 		// non-battery series must be ignored
 		{Group: metrics.Grid, Title: "grid", Data: []metrics.Slot{
@@ -25,6 +25,7 @@ func TestMetricsBatteryTotals(t *testing.T) {
 	require.Len(t, totals, 1)
 	require.InDelta(t, 3.0, totals["bat"].charge, 0.001)
 	require.InDelta(t, 2.0, totals["bat"].discharge, 0.001)
+	require.InDelta(t, 55.0, *totals["bat"].soc(), 0.001) // mean of both slots
 }
 
 func TestMetricsWriteBatteryTable(t *testing.T) {
@@ -34,8 +35,8 @@ func TestMetricsWriteBatteryTable(t *testing.T) {
 		{Group: metrics.Battery, Name: "db:3"},
 	}
 	totals := map[string]batteryTotals{
-		"Home":      {charge: 10.0, discharge: 9.0, soc: new(50.0), capacity: 10},
-		"Hyper2000": {charge: 4.0, discharge: 3.0, soc: new(80.0), capacity: 5},
+		"Home":      {charge: 10.0, discharge: 9.0, socSum: 50, socCount: 1, capacity: 10},
+		"Hyper2000": {charge: 4.0, discharge: 3.0, socSum: 80, socCount: 1, capacity: 5},
 		// db:3 deliberately absent: no data in the timeframe
 	}
 
@@ -81,8 +82,8 @@ func TestMetricsWriteBatteryTableTotalSoc(t *testing.T) {
 		{Group: metrics.Battery, Name: "db:2", Title: "Garage"},
 	}
 	totals := map[string]batteryTotals{
-		"Home":   {soc: new(50.0), capacity: 10}, // 5 kWh
-		"Garage": {soc: new(80.0), capacity: 5},  // 4 kWh
+		"Home":   {socSum: 40 + 60, socCount: 2, capacity: 10}, // mean 50%, 5 kWh
+		"Garage": {socSum: 80, socCount: 1, capacity: 5},       // 4 kWh
 	}
 
 	var buf bytes.Buffer

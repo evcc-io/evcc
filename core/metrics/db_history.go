@@ -91,8 +91,8 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool, filter ...E
 		IsTemp       bool
 	}
 
-	// soc_temp reports the bucket's first slot; omitted for grouped sums
-	socCols := `, m.soc_temp AS soc_temp, e.is_temp AS is_temp`
+	// soc_temp is averaged over the bucket; omitted for grouped sums
+	socCols := `, AVG(m.soc_temp) AS soc_temp, e.is_temp AS is_temp`
 	if grouped {
 		socCols = ``
 	}
@@ -145,42 +145,6 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool, filter ...E
 			ReturnEnergy: roundEnergy(r.ReturnEnergy),
 			SocTemp:      r.SocTemp,
 		})
-	}
-
-	return res, nil
-}
-
-// QuerySoc returns the last stored soc per entity title of the given group in
-// the given timeframe. Entities without soc data are omitted.
-func QuerySoc(group string, from, to time.Time) (map[string]float64, error) {
-	type row struct {
-		Title string
-		Soc   float64
-	}
-
-	// bare soc_temp column belongs to the MAX(m.ts) row (sqlite bare column rule)
-	tx := db.Instance.Table("meters m").
-		Select(`COALESCE(NULLIF(e.title,''), e.name) AS title, MAX(m.ts), m.soc_temp AS soc`).
-		Joins("JOIN entities e ON m.meter = e.id").
-		Where(`e."group" = ?`, group).
-		Where("m.soc_temp IS NOT NULL").
-		Group("e.id")
-
-	if !from.IsZero() {
-		tx = tx.Where("m.ts >= ?", from.Unix())
-	}
-	if !to.IsZero() {
-		tx = tx.Where("m.ts < ?", to.Unix())
-	}
-
-	var rows []row
-	if err := tx.Scan(&rows).Error; err != nil {
-		return nil, err
-	}
-
-	res := make(map[string]float64, len(rows))
-	for _, r := range rows {
-		res[r.Title] = r.Soc
 	}
 
 	return res, nil
