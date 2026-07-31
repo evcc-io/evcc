@@ -36,6 +36,8 @@ const (
 	ModbusParamHost     = "host"
 	ModbusParamPort     = "port"
 	ModbusParamRTU      = "rtu"
+	ModbusParamDelay    = "delay"
+	ModbusParamTimeout  = "timeout"
 )
 
 const (
@@ -51,6 +53,7 @@ var (
 	ModbusParams = []string{
 		ModbusParamId, ModbusParamDevice, ModbusParamBaudrate, ModbusParamComset,
 		ModbusParamURI, ModbusParamHost, ModbusParamPort, ModbusParamRTU,
+		ModbusParamDelay, ModbusParamTimeout,
 	}
 
 	ModbusConnectionTypes = []string{
@@ -234,6 +237,8 @@ type Param struct {
 	Comset   string `json:",omitempty"` // device specific default for modbus RS485 comset
 	Port     int    `json:",omitempty"` // device specific default for modbus TCPIP port
 	ID       int    `json:",omitempty"` // device specific default for modbus ID
+	Delay    string `json:",omitempty"` // device specific default for modbus delay
+	Timeout  string `json:",omitempty"` // device specific default for modbus timeout
 }
 
 // DefaultValue returns a default or example value depending on the renderMode

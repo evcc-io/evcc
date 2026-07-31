@@ -110,12 +110,12 @@ func NewAmbiboxFromConfig(ctx context.Context, other map[string]any) (api.Charge
 		return nil, api.ErrSponsorRequired
 	}
 
-	return NewAmbibox(ctx, cc.URI, cc.ID, cc.Connector)
+	return NewAmbibox(ctx, cc.TcpSettings, cc.Connector)
 }
 
 // NewAmbibox creates an Ambibox charger
-func NewAmbibox(ctx context.Context, uri string, id uint8, connector int) (*Ambibox, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewAmbibox(ctx context.Context, settings modbus.TcpSettings, connector int) (*Ambibox, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

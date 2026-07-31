@@ -25,6 +25,7 @@ const CURRENCY_SYMBOLS: Record<CURRENCY, string> = {
   ZAR: "R",
   TRY: "₺",
   MYR: "RM",
+  THB: "฿",
 };
 
 // list of currencies where energy price should be displayed in subunits (factor 100)
@@ -72,17 +73,14 @@ export default defineComponent({
       const base = 10 ** precision;
       return (Math.round(num * base) / base).toFixed(precision);
     },
+    getPowerUnit(watt: number): POWER_UNIT {
+      return watt >= 10_000_000 ? POWER_UNIT.MW : watt >= 1000 ? POWER_UNIT.KW : POWER_UNIT.W;
+    },
     fmtW(watt = 0, format = POWER_UNIT.KW, withUnit = true, digits?: number) {
       let unit = format;
       let d = digits;
       if (POWER_UNIT.AUTO === unit) {
-        if (watt >= 10_000_000) {
-          unit = POWER_UNIT.MW;
-        } else if (watt >= 1000 || 0 === watt) {
-          unit = POWER_UNIT.KW;
-        } else {
-          unit = POWER_UNIT.W;
-        }
+        unit = watt === 0 ? POWER_UNIT.KW : this.getPowerUnit(watt);
       }
       let value = watt;
       if (POWER_UNIT.KW === unit) {

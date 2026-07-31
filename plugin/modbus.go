@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	gridx "github.com/grid-x/modbus"
@@ -43,9 +42,7 @@ func NewModbusFromConfig(ctx context.Context, other map[string]any) (Plugin, err
 		Register        modbus.Register
 		Block           modbus.Block
 		Scale           float64
-		Delay           time.Duration
 		ConnectDelay    time.Duration
-		Timeout         time.Duration
 	}{
 		Scale: 1,
 	}
@@ -57,16 +54,10 @@ func NewModbusFromConfig(ctx context.Context, other map[string]any) (Plugin, err
 	modbus.Lock()
 	defer modbus.Unlock()
 
-	conn, err := modbus.NewConnection(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID)
+	conn, err := cc.Settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	// set non-default timeout
-	conn.Timeout(cc.Timeout)
-
-	// set non-default delay
-	conn.Delay(cc.Delay)
 
 	// set non-default connect delay
 	conn.ConnectDelay(cc.ConnectDelay)
@@ -157,12 +148,7 @@ func (m *Modbus) FloatGetter() (func() (f float64, err error), error) {
 			return 0, fmt.Errorf("read failed: %w", err)
 		}
 
-		// a "*nan" sentinel decodes to NaN - the device reports no valid value
-		if res := m.scale * decode(bytes); !math.IsNaN(res) {
-			return res, nil
-		}
-
-		return 0, api.ErrNotAvailable
+		return m.scale * decode(bytes), nil
 	}, nil
 }
 

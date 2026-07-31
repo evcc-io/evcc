@@ -441,8 +441,22 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 	wg.Go(func() {
 		if dev, ok := api.Cap[api.Curtailer](instance); ok {
 			makeResult("curtailable", true, nil)
-			if val, err := dev.Curtailed(); err != nil || val {
-				makeResult("curtailed", true, err)
+			// only reported while actually curtailing
+			if val, err := dev.CurtailedPercent(); err != nil || val < 100 {
+				makeResult("curtailed", val, err)
+			}
+		}
+	})
+
+	wg.Go(func() {
+		if dev, ok := api.Cap[api.HEMS](instance); ok {
+			if power := dev.MaxConsumptionPower(); power != nil && *power > 0 {
+				makeResult("dimLimit", *power, nil)
+			}
+			if percent := dev.CurtailedPercent(); percent != nil && *percent < 100 {
+				if limit := dev.MaxProductionPower(); limit != nil {
+					makeResult("curtailLimit", *limit, nil)
+				}
 			}
 		}
 	})

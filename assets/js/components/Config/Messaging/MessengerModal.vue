@@ -58,7 +58,7 @@ export default defineComponent({
 				},
 				{
 					label: "primary",
-					options: [...products.filter((p: Product) => p.group !== "generic")],
+					options: products.filter((p: Product) => p.group !== "generic"),
 				},
 			];
 		},

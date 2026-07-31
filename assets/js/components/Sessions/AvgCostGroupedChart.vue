@@ -1,9 +1,9 @@
 <template>
 	<div v-if="chartData.labels.length > 1" class="row">
-		<div class="col-12 col-md-6 mb-3">
+		<div class="col-12 col-md-6 col-lg-12 col-xxl-6 mb-3">
 			<PolarArea :data="chartData" :options="options" />
 		</div>
-		<div class="col-12 col-md-6 d-flex align-items-center py-0 py-md-3">
+		<div class="col-12 col-md-6 col-lg-12 col-xxl-6 d-flex align-items-center">
 			<LegendList :legends="legends" :device-colors="deviceColors" grid />
 		</div>
 	</div>
@@ -130,7 +130,7 @@ export default defineComponent({
 						beginAtZero: false,
 						ticks: {
 							color: colors.muted || "",
-							backdropColor: colors.background || "",
+							backdropColor: colors.box || "",
 							font: { size: 10 },
 							callback: this.formatValue,
 							maxTicksLimit: 6,

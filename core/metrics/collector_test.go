@@ -533,3 +533,39 @@ func TestCreateEntityReconcileGuard(t *testing.T) {
 	require.NoError(t, db.Instance.First(&stored, meterRow.Id).Error)
 	require.Equal(t, Meter, stored.Group)
 }
+
+func TestCollectorLastSlotEnergy(t *testing.T) {
+	clk := clock.NewMock() // 1970-01-01 00:00:00 UTC, on a slot boundary
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector(Home, "last", "", WithClock(clk))
+	require.NoError(t, err)
+
+	// nothing persisted yet
+	_, ok := col.LastSlotEnergy()
+	require.False(t, ok)
+
+	// constant 1 kW: crossing into 00:30 persists slot 00:15
+	require.NoError(t, col.AddEnergy(nil, nil, 1e3))
+	clk.Add(15 * time.Minute) // 00:15
+	require.NoError(t, col.AddEnergy(nil, nil, 1e3))
+	clk.Add(15 * time.Minute) // 00:30
+	require.NoError(t, col.AddEnergy(nil, nil, 1e3))
+
+	v, ok := col.LastSlotEnergy()
+	require.True(t, ok)
+	require.InDelta(t, 0.25, v, 1e-10) // kWh
+
+	// mid-slot the previous slot stays the reference
+	clk.Add(5 * time.Minute) // 00:35
+	v, ok = col.LastSlotEnergy()
+	require.True(t, ok)
+	require.InDelta(t, 0.25, v, 1e-10)
+
+	// a recovered slot is excluded
+	require.NoError(t, db.Instance.Model(new(meter)).Where("meter = ? AND ts = ?", col.entity.Id, 15*60).Update("recovered", true).Error)
+	_, ok = col.LastSlotEnergy()
+	require.False(t, ok)
+}

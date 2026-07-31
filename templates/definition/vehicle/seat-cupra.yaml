@@ -29,6 +29,7 @@ params:
     advanced: true
   - name: welcomecharge
     advanced: true
+  - name: streaming
     deprecated: true
   - preset: vehicle-online
 render: |

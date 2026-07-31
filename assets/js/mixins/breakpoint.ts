@@ -37,7 +37,7 @@ export default {
     self.updateBreakpoint();
     window.addEventListener("resize", self.updateBreakpoint);
   },
-  beforeDestroy() {
+  beforeUnmount() {
     const self = this as any;
     window.removeEventListener("resize", self.updateBreakpoint);
   },

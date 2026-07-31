@@ -246,7 +246,7 @@ export default defineComponent({
 			return Math.round(Math.min(maxWidth, Math.max(minWidth, scale * maxWidth)));
 		},
 		options() {
-			// eslint-disable-next-line @typescript-eslint/no-this-alias
+			// oxlint-disable-next-line @typescript-eslint/no-this-alias
 			const vThis = this;
 			return {
 				...commonOptions,
