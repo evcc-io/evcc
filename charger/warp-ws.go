@@ -49,11 +49,15 @@ type WarpWS struct {
 	maxCurrent int64 // input from evcc
 
 	// meter
-	meter    warp.MeterValues
-	meterMap map[int]int
+	meter                    warp.MeterValues
+	meterMap                 map[int]int
+	hasCurrents, hasVoltages bool // meter actually reports per-phase currents/voltages
 
 	// nfc
 	chargeTracker warp.ChargeTrackerCurrentCharge
+
+	// ev (WARP4, ISO 15118)
+	evState *warp.EvState
 
 	// power manager
 	pmState          *warp.PmState
@@ -99,8 +103,14 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		implement.Has(w, implement.PhaseVoltages(w.voltages))
 	}
 
+	// Feature: ISO 15118 (WARP4): vehicle soc and mac exposed via ev/state
+	hasIso15118 := w.hasFeature(warp.FeatureIso15118)
+	if hasIso15118 {
+		implement.Has(w, implement.Battery(w.soc))
+	}
+
 	// Feature: NFC
-	if w.hasFeature(warp.FeatureNfc) {
+	if w.hasFeature(warp.FeatureNfc) || hasIso15118 {
 		implement.Has(w, implement.Identifier(w.identify))
 	}
 
@@ -141,7 +151,7 @@ func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass strin
 	if err != nil {
 		return nil, err
 	}
-	if typ == "warp3" || (typ == "warp2" && emURI != "") {
+	if typ == "warp3" || typ == "warp4" || (typ == "warp2" && emURI != "") {
 		enabled, err := w.disablePhaseAutoSwitch()
 		if err != nil {
 			return nil, err
@@ -284,6 +294,8 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 	switch topic {
 	case "charge_tracker/current_charge":
 		err = json.Unmarshal(payload, &w.chargeTracker)
+	case "ev/state":
+		err = json.Unmarshal(payload, &w.evState)
 	case "evse/external_current":
 		err = json.Unmarshal(payload, &w.evse.ExternalCurrent)
 	case "evse/user_current":
@@ -296,10 +308,11 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 		if !w.hasFeature(warp.FeatureMeterAllValues) || w.hasFeature(warp.FeatureMeters) {
 			return nil
 		}
-		err = json.Unmarshal(payload, &w.meter.TmpValues)
-		if len(w.meter.TmpValues) > 5 {
-			copy(w.meter.Voltages[:], w.meter.TmpValues[:3])
-			copy(w.meter.Currents[:], w.meter.TmpValues[3:6])
+		var values []float64
+		if err = json.Unmarshal(payload, &values); err == nil && len(values) > 5 {
+			copy(w.meter.Voltages[:], values[:3])
+			copy(w.meter.Currents[:], values[3:6])
+			w.hasVoltages, w.hasCurrents = true, true
 		}
 	case "meter/values":
 		if !w.hasFeature(warp.FeatureMeter) || w.hasFeature(warp.FeatureMeters) {
@@ -316,13 +329,14 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 			w.meterMap[id] = i
 		}
 	case metersValuesTopic:
-		if err := json.Unmarshal(payload, &w.meter.TmpValues); err != nil {
+		var values []float64
+		if err := json.Unmarshal(payload, &values); err != nil {
 			return err
 		}
 
 		get := func(id int) (float64, bool) {
-			if idx, ok := w.meterMap[id]; ok && idx < len(w.meter.TmpValues) {
-				return w.meter.TmpValues[idx], true
+			if idx, ok := w.meterMap[id]; ok && idx < len(values) {
+				return values[idx], true
 			}
 			return 0, false
 		}
@@ -337,9 +351,11 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 		for p, ids := range s.Phases {
 			if v, ok := get(ids.CurrentID); ok {
 				w.meter.Currents[p] = v
+				w.hasCurrents = true
 			}
 			if v, ok := get(ids.VoltageID); ok {
 				w.meter.Voltages[p] = v
+				w.hasVoltages = true
 			}
 		}
 	case "power_manager/state":
@@ -424,19 +440,39 @@ func (w *WarpWS) totalEnergy() (float64, error) {
 func (w *WarpWS) currents() (float64, float64, float64, error) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
+	if !w.hasCurrents {
+		return 0, 0, 0, api.ErrNotAvailable
+	}
 	return w.meter.Currents[0], w.meter.Currents[1], w.meter.Currents[2], nil
 }
 
 func (w *WarpWS) voltages() (float64, float64, float64, error) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
+	if !w.hasVoltages {
+		return 0, 0, 0, api.ErrNotAvailable
+	}
 	return w.meter.Voltages[0], w.meter.Voltages[1], w.meter.Voltages[2], nil
 }
 
+// identify prefers the vehicle mac read via ISO 15118 over the RFID tag
 func (w *WarpWS) identify() (string, error) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
+	if w.evState != nil && w.evState.Mac != "" {
+		return w.evState.Mac, nil
+	}
 	return w.chargeTracker.AuthorizationInfo.TagId, nil
+}
+
+// soc implements the api.Battery interface
+func (w *WarpWS) soc() (float64, error) {
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+	if w.evState != nil && w.evState.Soc != nil {
+		return *w.evState.Soc, nil
+	}
+	return 0, api.ErrNotAvailable
 }
 
 func (w *WarpWS) setCurrent(curr int64) error {

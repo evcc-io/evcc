@@ -89,7 +89,7 @@ export default defineComponent({
 			const priceColor = colors.price || "";
 			const exportColor = colors.export || "";
 
-			// eslint-disable-next-line @typescript-eslint/no-this-alias
+			// oxlint-disable-next-line @typescript-eslint/no-this-alias
 			const vThis = this;
 			return {
 				animationDuration: 0,
@@ -117,7 +117,12 @@ export default defineComponent({
 						return tooltipTable(time, rows);
 					},
 				},
-				xAxis: forecastXAxes(this.startDate, this.endDate, this.weekdayShort),
+				xAxis: forecastXAxes(
+					this.startDate,
+					this.endDate,
+					this.hourShort,
+					this.weekdayShort
+				),
 				yAxis: forecastYAxis({
 					...this.yAxisConfig,
 					axisLabel: {

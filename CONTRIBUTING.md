@@ -4,7 +4,7 @@
 
 ### Development environment
 
-Developing evcc requires [Go][1] and [Node][2]. We recommend VSCode with the [Go](https://marketplace.visualstudio.com/items?itemName=golang.Go), [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [Vetur](https://marketplace.visualstudio.com/items?itemName=octref.vetur) extensions.
+Developing evcc requires [Go][1] [Node][2] and [Vite+][3]. We recommend VSCode with the [Go](https://marketplace.visualstudio.com/items?itemName=golang.Go), [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [Vetur](https://marketplace.visualstudio.com/items?itemName=octref.vetur) extensions.
 
 Alternatively, if you use VS Code and [devcontainers](https://code.visualstudio.com/docs/devcontainers/containers), you can use the "Dev containers: Clone repository in container volume" action. This will create a devcontainer with the required toolchain and install the prerequisites as explained below. Wait until the startup log says "Done. Press any key to close the terminal." and check for any errors.
 
@@ -98,8 +98,8 @@ You can adjust the referred configuration as needed to e.g. use your live config
 For frontend development start the Vue toolchain in dev-mode. Open http://127.0.0.1:7071/ to get to the live reloading development server. It pulls its data from port 7070 (see above).
 
 ```sh
-npm install
-npm run dev
+vp install
+vp run dev
 ```
 
 ### Storybook
@@ -107,7 +107,7 @@ npm run dev
 We're using storybook to develop and visualize UI components in different states. Running the command below will open your browser at http://127.0.0.1:6006/.
 
 ```sh
-npm run storybook
+vp run storybook
 ```
 
 ### Integration testing
@@ -116,7 +116,7 @@ We use Playwright for end-to-end integration tests. They start a local evcc inst
 
 ```sh
 make ui build
-npm run playwright
+vp run playwright
 ```
 
 ### Simulating device state
@@ -124,7 +124,7 @@ npm run playwright
 Since we don't want to run tests against real devices or cloud services, we've build a simple simulator that lets you emulated meters, vehicles and loadpoints. The simulators web interface runs on http://localhost:7072.
 
 ```
-npm run simulator
+vp run simulator
 ```
 
 Run an evcc instance that uses simulator data. This configuration runs with a very high refresh interval to speed up testing.
@@ -185,6 +185,7 @@ Note: To ensure the build succeeds after creating new translations, make sure to
 
 [1]: https://go.dev
 [2]: https://nodejs.org/
+[3]: https://viteplus.dev/guide/#install-vp
 
 ## Documentation, Website and iOS/Android App
 

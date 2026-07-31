@@ -6,7 +6,10 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -15,6 +18,39 @@ import (
 func TestEffectiveLimitSoc(t *testing.T) {
 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
 	assert.Equal(t, 100, lp.effectiveLimitSoc())
+}
+
+func TestEffectiveMinSoc(t *testing.T) {
+	config.Reset()
+	t.Cleanup(config.Reset)
+
+	for _, tc := range []struct {
+		loadpoint, vehicle, expected int
+	}{
+		{0, 0, 0},
+		{10, 0, 10},  // loadpoint only
+		{0, 20, 20},  // vehicle only
+		{10, 20, 20}, // vehicle wins
+		{20, 10, 20}, // loadpoint wins
+	} {
+		t.Logf("%+v", tc)
+		config.Reset()
+
+		ctrl := gomock.NewController(t)
+		v := api.NewMockVehicle(ctrl)
+
+		const name = "vehicle"
+		require.NoError(t, config.Vehicles().Add(
+			config.NewStaticDevice(config.Named{Name: name}, api.Vehicle(v)),
+		))
+		settings.SetInt("vehicle."+name+"."+keys.MinSoc, int64(tc.vehicle))
+
+		lp := NewLoadpoint(util.NewLogger("foo"), nil)
+		lp.vehicle = v
+		lp.minSoc = tc.loadpoint
+
+		assert.Equal(t, tc.expected, lp.effectiveMinSoc())
+	}
 }
 
 func TestEffectiveMinMaxCurrent(t *testing.T) {
@@ -93,6 +129,35 @@ func TestEffectivePowerLimiter(t *testing.T) {
 
 	assert.Equal(t, 10.0, lp.effectiveMinCurrent(), "min")
 	assert.Equal(t, 12.0, lp.effectiveMaxCurrent(), "max")
+}
+
+// coarse power-limited charger with fixed request must not yield min > max (#31549)
+func TestEffectivePowerLimiterCoarse(t *testing.T) {
+	Voltage = 230
+	ctrl := gomock.NewController(t)
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	phases := float64(lp.minActivePhases())
+
+	powerLimiter := api.NewMockPowerLimiter(ctrl)
+	// fixed 5.5 A/phase request -> fractional, coarse charger truncates to 5 A
+	power := 230 * phases * 5.5
+	powerLimiter.EXPECT().GetMinMaxPower().Return(power, power, nil).AnyTimes()
+
+	// MockCharger does not implement api.ChargerEx -> coarseCurrent() == true
+	lp.charger = struct {
+		api.Charger
+		api.PowerLimiter
+	}{
+		Charger:      api.NewMockCharger(ctrl),
+		PowerLimiter: powerLimiter,
+	}
+
+	minCurrent := lp.effectiveMinCurrent()
+	maxCurrent := lp.effectiveMaxCurrent()
+	assert.Equal(t, 6.0, minCurrent, "min rounded up to full amps")
+	assert.Equal(t, 6.0, maxCurrent, "max rounded up to full amps")
+	assert.LessOrEqual(t, minCurrent, maxCurrent, "min must not exceed max")
 }
 
 func TestNextPlan(t *testing.T) {

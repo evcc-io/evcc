@@ -562,7 +562,7 @@ func cleanupTariffRef(name string) {
 		return
 	}
 
-	for _, ref := range []*string{&refs.Grid, &refs.FeedIn, &refs.Co2, &refs.Planner} {
+	for _, ref := range []*string{&refs.Grid, &refs.FeedIn, &refs.Co2, &refs.Planner, &refs.Temperature} {
 		if *ref == name {
 			*ref = ""
 		}
@@ -621,6 +621,7 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 				{site.GetBatteryMeterRefs, site.SetBatteryMeterRefs},
 				{site.GetAuxMeterRefs, site.SetAuxMeterRefs},
 				{site.GetExtMeterRefs, site.SetExtMeterRefs},
+				{site.GetConsumerMeterRefs, site.SetConsumerMeterRefs},
 			} {
 				cleanupSiteMeterRef(name, fun.get, fun.set)
 			}
@@ -678,6 +679,12 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 
 		if class == templates.Hems {
 			site.Publish(keys.Hems, HemsStatus(false))
+		}
+
+		// persist immediately to keep cleaned-up refs consistent with device config on unclean shutdown
+		if err := settings.Persist(); err != nil {
+			jsonError(w, http.StatusInternalServerError, err)
+			return
 		}
 
 		res := struct {

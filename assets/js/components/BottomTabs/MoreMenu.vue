@@ -57,6 +57,14 @@
 		<button type="button" class="dropdown-item" @click="openSettingsModal">
 			{{ $t("settings.title") }}
 		</button>
+		<button
+			v-if="hasVehicles"
+			type="button"
+			class="dropdown-item"
+			@click="openVehicleSettingsModal"
+		>
+			{{ $t("main.vehicleSettings.menu") }}
+		</button>
 		<router-link class="dropdown-item" to="/config" active-class="active">
 			<span v-if="showConfigBadge" class="circle-badge me-1" :class="badgeClass"></span>
 			{{ $t("config.main.title") }}
@@ -88,12 +96,13 @@ import {
 import settings from "@/settings";
 import { isUserConfigError } from "@/utils/fatal";
 import { defineComponent, type PropType } from "vue";
-import type { FatalError, Sponsor, EvOpt, AuthProviders } from "@/types/evcc";
+import type { FatalError, Sponsor, EvOpt, AuthProviders, Vehicle } from "@/types/evcc";
 
 export default defineComponent({
 	name: "MoreMenu",
 	props: {
 		open: { type: Boolean, default: false },
+		vehicles: { type: Object as PropType<Record<string, Vehicle>>, default: () => ({}) },
 		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
@@ -155,6 +164,9 @@ export default defineComponent({
 		showLogout() {
 			return !this.authDisabled && isLoggedIn();
 		},
+		hasVehicles() {
+			return Object.keys(this.vehicles).length > 0;
+		},
 	},
 	mounted() {
 		this.onClickOutside = (e: MouseEvent) => {
@@ -188,6 +200,12 @@ export default defineComponent({
 		openAboutModal() {
 			const modal = Modal.getOrCreateInstance(
 				document.getElementById("aboutModal") as HTMLElement
+			);
+			modal.show();
+		},
+		openVehicleSettingsModal() {
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("vehicleSettingsModal") as HTMLElement
 			);
 			modal.show();
 		},

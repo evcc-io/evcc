@@ -87,6 +87,8 @@ params:
     description:
       de: "Bitmask für SG4 im Dimm-Betrieb"
       en: "Bitmask for SG4 in dim mode"
+  - name: cache
+    default: 1s
 render: |
   type: sgready
   power:
@@ -97,27 +99,30 @@ render: |
     scale: 1000
     {{- end}}
   getmode:
-    source: go
-    script: |
-      res := 2 // 0/0 Normal
-      switch {
-      case SG1 == "1" && SG4 == "0": res = 1 // 1/0 Frostschutz
-      case SG4 == "1": res = 3 // x/1 Forcierter Betrieb/Sofortige Ansteuerung
-      }
-      res
-    in:
-    - name: SG1
-      type: string
-      config: 
-        source: http
-        uri: http://{{ .host }}/api/boiler/{{ .sg1 }}
-        jq: '.value[0:1]'
-    - name: SG4
-      type: string
-      config: 
-        source: http
-        uri: http://{{ .host }}/api/boiler/{{ .sg4 }}
-        jq: '.value[0:1]'
+    source: cached
+    cache: {{ .cache }}
+    value:
+      source: go
+      script: |
+        res := 2 // 0/0 Normal
+        switch {
+        case SG1 == "1" && SG4 == "0": res = 1 // 1/0 Frostschutz
+        case SG4 == "1": res = 3 // x/1 Forcierter Betrieb/Sofortige Ansteuerung
+        }
+        res
+      in:
+      - name: SG1
+        type: string
+        config:
+          source: http
+          uri: http://{{ .host }}/api/boiler/{{ .sg1 }}
+          jq: '.value[0:1]'
+      - name: SG4
+        type: string
+        config:
+          source: http
+          uri: http://{{ .host }}/api/boiler/{{ .sg4 }}
+          jq: '.value[0:1]'
   setmode:
     source: switch
     switch:

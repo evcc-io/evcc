@@ -20,7 +20,6 @@ const SAVINGS_INDICATOR = "savings_indicator";
 const SESSIONS_GROUP = "sessions_group";
 const SESSIONS_TYPE = "sessions_type";
 const BATTERY_UNIT = "battery_unit";
-const SETTINGS_SOLAR_ADJUSTED = "settings_solar_adjusted";
 const SETTINGS_PRICE_ZOOM = "settings_price_zoom";
 const SETTINGS_HIDE_FEEDIN = "settings_hide_feedin";
 const LAST_BATTERY_SMART_COST_LIMIT = "last_battery_smart_cost_limit";
@@ -126,7 +125,6 @@ export interface Settings {
   sessionsGroup: string;
   sessionsType: string;
   batteryUnit: string;
-  solarAdjusted: boolean;
   priceZoom: boolean;
   hideFeedin: boolean;
   loadpoints: Record<string, LoadpointSettings>;
@@ -156,7 +154,6 @@ const settings: Settings = reactive({
   sessionsGroup: read(SESSIONS_GROUP),
   sessionsType: read(SESSIONS_TYPE),
   batteryUnit: read(BATTERY_UNIT),
-  solarAdjusted: readBool(SETTINGS_SOLAR_ADJUSTED),
   priceZoom: readBool(SETTINGS_PRICE_ZOOM),
   hideFeedin: readBool(SETTINGS_HIDE_FEEDIN),
   loadpoints: readJSON(LOADPOINTS),
@@ -185,7 +182,6 @@ watch(() => settings.savingsIndicator, save(SAVINGS_INDICATOR));
 watch(() => settings.sessionsGroup, save(SESSIONS_GROUP));
 watch(() => settings.sessionsType, save(SESSIONS_TYPE));
 watch(() => settings.batteryUnit, save(BATTERY_UNIT));
-watch(() => settings.solarAdjusted, saveBool(SETTINGS_SOLAR_ADJUSTED));
 watch(() => settings.priceZoom, saveBool(SETTINGS_PRICE_ZOOM));
 watch(() => settings.hideFeedin, saveBool(SETTINGS_HIDE_FEEDIN));
 watch(() => settings.loadpoints, saveJSON(LOADPOINTS), { deep: true });

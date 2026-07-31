@@ -566,6 +566,16 @@ func (c *EEBus) minMax() (minMax, error) {
 		return zero, nil
 	}
 
+	// IEC61851 EVs can't report their current range, so the EVSE sends generic
+	// defaults (6/16A) that would override the loadpoint config; trust ISO only (#14418)
+	switch comStandard, err := c.cem.EvCC.CommunicationStandard(evEntity); {
+	case err != nil:
+		return zero, eebus.WrapError(err)
+	case comStandard != model.DeviceConfigurationKeyValueStringTypeISO151182ED1 &&
+		comStandard != model.DeviceConfigurationKeyValueStringTypeISO151182ED2:
+		return zero, api.ErrNotAvailable
+	}
+
 	minLimits, maxLimits, _, err := c.cem.OpEV.CurrentLimits(evEntity)
 	if err != nil {
 		return zero, eebus.WrapError(err)

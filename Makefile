@@ -40,10 +40,10 @@ install::
 	go install tool
 
 install-ui::
-	npm ci
+	vp install
 
 ui::
-	npm run build
+	vp run build
 
 assets::
 	go generate ./...
@@ -59,7 +59,7 @@ modernize:
 	go tool modernize -test -fix -stringsbuilder=false -omitzero=false ./...
 
 lint-ui::
-	npm run lint
+	vp run lint
 
 license::
 	go run github.com/google/go-licenses/v2@latest check \
@@ -74,10 +74,10 @@ license::
 	./...
 
 license-ui::
-	npm run license
+	vp run license
 
 test-ui::
-	npm test
+	vp run test
 
 test::
 	@echo "Running testsuite"

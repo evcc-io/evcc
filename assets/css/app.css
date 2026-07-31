@@ -42,6 +42,7 @@
 	--evcc-export-contrast: var(--evcc-dark-yellow);
 	--evcc-price: #ff912fff;
 	--evcc-co2: #00916eff;
+	--evcc-temperature: #1b6fba;
 	--evcc-background: var(--bs-gray-bright);
 	--evcc-box: var(--bs-white);
 	--evcc-box-border: var(--bs-gray-brighter);
@@ -196,6 +197,10 @@ h5 {
 
 .text-co2 {
 	color: var(--evcc-co2) !important;
+}
+
+.text-temperature {
+	color: var(--evcc-temperature) !important;
 }
 
 .text-export {
@@ -738,6 +743,14 @@ html.app .modal-dialog {
 }
 .btn-neutral:hover {
 	outline: revert;
+}
+
+/* selects match :focus-visible on click, CustomSelect sets .focus-ring-visible instead */
+.keyboard-focus-ring:focus-visible,
+.keyboard-focus-ring.focus-ring-visible {
+	outline: var(--bs-focus-ring-width) solid var(--bs-focus-ring-color);
+	outline-offset: 2px;
+	border-radius: var(--bs-border-radius);
 }
 
 .round-box {
