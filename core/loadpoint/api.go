@@ -127,6 +127,10 @@ type API interface {
 	GetPlanEnergy() (time.Time, float64)
 	// SetPlanEnergy sets the charge plan energy
 	SetPlanEnergy(time.Time, float64) error
+	// GetPlanDuration returns the charge plan duration
+	GetPlanDuration() (time.Time, time.Duration)
+	// SetPlanDuration sets the charge plan duration
+	SetPlanDuration(time.Time, time.Duration) error
 	// ClearPlanLock clears the locked plan goal
 	ClearPlanLock()
 	// GetPlanGoal returns the plan goal and if the goal is soc based

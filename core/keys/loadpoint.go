@@ -89,6 +89,7 @@ const (
 	Plan               = "plan"               // charge plan time slots
 	PlanTime           = "planTime"           // charge plan finish time goal
 	PlanEnergy         = "planEnergy"         // charge plan energy goal
+	PlanDuration       = "planDuration"       // charge plan duration goal (seconds)
 	PlanSoc            = "planSoc"            // charge plan soc goal
 	PlanActive         = "planActive"         // charge plan has determined current slot to be an active slot
 	PlanProjectedStart = "planProjectedStart" // charge plan start time (earliest slot)

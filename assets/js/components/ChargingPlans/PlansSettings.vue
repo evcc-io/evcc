@@ -88,6 +88,7 @@ import type {
 	PlanWrapper,
 	StaticSocPlan,
 	StaticEnergyPlan,
+	StaticDurationPlan,
 	PlanResponse,
 	PlanStrategy,
 } from "./types";
@@ -255,6 +256,16 @@ export default defineComponent({
 				params
 			);
 		},
+		async fetchStaticPreviewDuration(
+			plan: StaticDurationPlan
+		): Promise<PlanResponse | undefined> {
+			const timeISO = plan.time.toISOString();
+			const params: Record<string, unknown> = {};
+			return await this.apiFetchPlan(
+				`loadpoints/${this.id}/plan/static/preview/duration/${plan.duration}/${timeISO}`,
+				params
+			);
+		},
 		async apiFetchPlan(
 			url: string,
 			params?: Record<string, unknown>
@@ -286,6 +297,12 @@ export default defineComponent({
 						plan = plan as StaticSocPlan;
 						planRes = await this.fetchStaticPreviewSoc({
 							soc: plan.soc,
+							time: plan.time,
+						});
+					} else if ("duration" in plan) {
+						plan = plan as StaticDurationPlan;
+						planRes = await this.fetchStaticPreviewDuration({
+							duration: plan.duration,
 							time: plan.time,
 						});
 					} else {

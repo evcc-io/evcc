@@ -75,9 +75,9 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 				jsonError(w, http.StatusBadRequest, errors.New("soc planning only available for vehicles with known soc and capacity"))
 				return
 			}
-		case "energy":
+		case "energy", "duration":
 			if lp.SocBasedPlanning() {
-				jsonError(w, http.StatusBadRequest, errors.New("energy planning not available for vehicles with known soc and capacity"))
+				jsonError(w, http.StatusBadRequest, errors.New("energy/duration planning not available for vehicles with known soc and capacity"))
 				return
 			}
 		default:
@@ -86,7 +86,11 @@ func staticPlanPreviewHandler(lp loadpoint.API) http.HandlerFunc {
 		}
 
 		maxPower := lp.EffectiveMaxPower()
+		// duration preview uses the goal (seconds) as run time directly
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
+		if vars["type"] == "duration" {
+			requiredDuration = time.Duration(goal * float64(time.Second))
+		}
 		strategy := lp.EffectivePlanStrategy()
 
 		plan := lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
@@ -142,6 +146,54 @@ func planEnergyHandler(lp loadpoint.API) http.HandlerFunc {
 func planRemoveHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := lp.SetPlanEnergy(time.Time{}, 0); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		jsonWrite(w, struct{}{})
+	}
+}
+
+// planDurationHandler updates plan duration and time
+func planDurationHandler(lp loadpoint.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		ts, err := time.ParseInLocation(time.RFC3339, vars["time"], nil)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		val, err := strconv.ParseFloat(vars["value"], 64)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if err := lp.SetPlanDuration(ts, time.Duration(val*float64(time.Second))); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		ts, duration := lp.GetPlanDuration()
+
+		res := struct {
+			Duration int64     `json:"duration"`
+			Time     time.Time `json:"time"`
+		}{
+			Duration: int64(duration.Seconds()),
+			Time:     ts,
+		}
+
+		jsonWrite(w, res)
+	}
+}
+
+// planDurationRemoveHandler removes the duration plan
+func planDurationRemoveHandler(lp loadpoint.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := lp.SetPlanDuration(time.Time{}, 0); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}

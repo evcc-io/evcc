@@ -90,18 +90,54 @@
 						{{ opt.name }}
 					</option>
 				</select>
-				<select
-					v-else
-					:id="formId('goal')"
-					v-model="selectedEnergy"
-					class="form-select mx-0"
-					data-testid="static-plan-energy"
-					@change="preview()"
-				>
-					<option v-for="opt in energyOptions" :key="opt.energy" :value="opt.energy">
-						{{ opt.text }}
-					</option>
-				</select>
+				<template v-else>
+					<div
+						class="btn-group btn-group-sm d-flex mb-2"
+						role="group"
+						data-testid="static-plan-goaltype"
+					>
+						<button
+							type="button"
+							class="btn"
+							:class="goalType === 'energy' ? 'btn-primary' : 'btn-outline-primary'"
+							@click="setGoalType('energy')"
+						>
+							{{ $t("main.chargingPlan.goalEnergy") }}
+						</button>
+						<button
+							type="button"
+							class="btn"
+							:class="goalType === 'duration' ? 'btn-primary' : 'btn-outline-primary'"
+							@click="setGoalType('duration')"
+						>
+							{{ $t("main.chargingPlan.goalDuration") }}
+						</button>
+					</div>
+					<select
+						v-if="goalType === 'energy'"
+						:id="formId('goal')"
+						v-model="selectedEnergy"
+						class="form-select mx-0"
+						data-testid="static-plan-energy"
+						@change="preview()"
+					>
+						<option v-for="opt in energyOptions" :key="opt.energy" :value="opt.energy">
+							{{ opt.text }}
+						</option>
+					</select>
+					<select
+						v-else
+						:id="formId('goal')"
+						v-model="selectedDuration"
+						class="form-select mx-0"
+						data-testid="static-plan-duration"
+						@change="preview()"
+					>
+						<option v-for="opt in durationOptions" :key="opt.value" :value="opt.value">
+							{{ opt.name }}
+						</option>
+					</select>
+				</template>
 			</div>
 			<div class="col-5 d-lg-none col-form-label">
 				<label :for="formId('active')">
@@ -164,6 +200,7 @@ export default defineComponent({
 		id: [String, Number],
 		soc: Number,
 		energy: Number,
+		duration: Number,
 		time: Date,
 		rangePerSoc: Number,
 		socPerKwh: Number,
@@ -178,6 +215,8 @@ export default defineComponent({
 			selectedTime: null as string | null,
 			selectedSoc: this.soc,
 			selectedEnergy: this.energy,
+			selectedDuration: this.duration,
+			goalType: (this.duration ? "duration" : "energy") as "energy" | "duration",
 			active: false,
 		};
 	},
@@ -212,6 +251,19 @@ export default defineComponent({
 			// remove the first entry (0)
 			return options.slice(1);
 		},
+		durationOptions() {
+			// presets in seconds: 15/30/45min, 1/1.5/2/3/4/5/6h
+			const presets = [900, 1800, 2700, 3600, 5400, 7200, 10800, 14400, 18000, 21600];
+			const selected = Number(this.selectedDuration);
+			const values =
+				selected && !presets.includes(selected)
+					? [...presets, selected].sort((a, b) => a - b)
+					: presets;
+			return values.map((value) => ({ value, name: this.fmtDuration(value, true, "m") }));
+		},
+		originalGoalType(): "energy" | "duration" {
+			return this.duration ? "duration" : "energy";
+		},
 		originalData() {
 			if (this.isNew) {
 				return {};
@@ -220,6 +272,7 @@ export default defineComponent({
 			return {
 				soc: this.soc,
 				energy: this.energy,
+				duration: this.duration,
 				day: this.fmtDayString(t),
 				time: this.fmtTimeString(t),
 			};
@@ -228,10 +281,16 @@ export default defineComponent({
 			const dateChanged =
 				this.originalData.day != this.selectedDay ||
 				this.originalData.time != this.selectedTime;
-			const goalChanged = this.socBasedPlanning
-				? this.originalData.soc != this.selectedSoc
-				: this.originalData.energy != this.selectedEnergy;
-			return dateChanged || goalChanged;
+			let goalChanged;
+			if (this.socBasedPlanning) {
+				goalChanged = this.originalData.soc != this.selectedSoc;
+			} else if (this.goalType === "duration") {
+				goalChanged = this.originalData.duration != this.selectedDuration;
+			} else {
+				goalChanged = this.originalData.energy != this.selectedEnergy;
+			}
+			const typeChanged = !this.socBasedPlanning && this.originalGoalType !== this.goalType;
+			return dateChanged || goalChanged || typeChanged;
 		},
 		isNew() {
 			return !this.time && (!this.soc || !this.energy);
@@ -258,6 +317,12 @@ export default defineComponent({
 				this.selectedEnergy = this.energy;
 			}
 		},
+		duration() {
+			if (this.duration) {
+				this.selectedDuration = this.duration;
+				this.goalType = "duration";
+			}
+		},
 		isNew(value) {
 			this.active = !value;
 		},
@@ -280,6 +345,9 @@ export default defineComponent({
 			}
 			if (!this.selectedEnergy) {
 				this.selectedEnergy = settings.lastEnergyGoal ?? (this.capacity || 10);
+			}
+			if (!this.selectedDuration) {
+				this.selectedDuration = settings.lastDurationGoal ?? 3600;
 			}
 
 			let t = this.time;
@@ -316,6 +384,20 @@ export default defineComponent({
 			}
 			return options;
 		},
+		// goalPayload returns the plan goal for the active goal type
+		goalPayload() {
+			if (this.socBasedPlanning) {
+				return { time: this.selectedDate, soc: this.selectedSoc };
+			}
+			if (this.goalType === "duration") {
+				return { time: this.selectedDate, duration: Number(this.selectedDuration) };
+			}
+			return { time: this.selectedDate, energy: this.selectedEnergy };
+		},
+		setGoalType(type: "energy" | "duration") {
+			this.goalType = type;
+			this.preview();
+		},
 		update() {
 			try {
 				const hours = this.selectedDate.getHours();
@@ -323,24 +405,17 @@ export default defineComponent({
 				settings.lastTargetTime = `${hours}:${minutes}`;
 				settings.lastSocGoal = this.selectedSoc;
 				settings.lastEnergyGoal = this.selectedEnergy;
+				settings.lastDurationGoal = this.selectedDuration;
 			} catch (e) {
 				console.warn(e);
 			}
-			this.$emit("static-plan-updated", {
-				time: this.selectedDate,
-				soc: this.selectedSoc,
-				energy: this.selectedEnergy,
-			});
+			this.$emit("static-plan-updated", this.goalPayload());
 		},
 		preview(force = false) {
 			if (!this.isNew && !force) {
 				return;
 			}
-			this.$emit("plan-preview", {
-				time: this.selectedDate,
-				soc: this.selectedSoc,
-				energy: this.selectedEnergy,
-			});
+			this.$emit("plan-preview", this.goalPayload());
 		},
 		toggle(e: Event) {
 			const { checked } = e.target as HTMLInputElement;

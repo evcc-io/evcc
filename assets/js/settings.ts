@@ -26,6 +26,7 @@ const LAST_BATTERY_SMART_COST_LIMIT = "last_battery_smart_cost_limit";
 const LAST_TARGET_TIME = "last_target_time";
 const LAST_SOC_GOAL = "last_soc_goal";
 const LAST_ENERGY_GOAL = "last_energy_goal";
+const LAST_DURATION_GOAL = "last_duration_goal";
 const CONFIG_CARD_HEIGHTS = "config_card_heights";
 const LAST_ACKNOWLEDGED_VERSION = "last_acknowledged_version";
 
@@ -132,6 +133,7 @@ export interface Settings {
   lastTargetTime: string | null;
   lastSocGoal: number | undefined;
   lastEnergyGoal: number | undefined;
+  lastDurationGoal: number | undefined;
   cardHeights: Record<string, number>;
   lastAcknowledgedVersion: string | undefined;
 }
@@ -161,6 +163,7 @@ const settings: Settings = reactive({
   lastTargetTime: read(LAST_TARGET_TIME),
   lastSocGoal: readNumber(LAST_SOC_GOAL),
   lastEnergyGoal: readNumber(LAST_ENERGY_GOAL),
+  lastDurationGoal: readNumber(LAST_DURATION_GOAL),
   cardHeights: readJSON(CONFIG_CARD_HEIGHTS),
   lastAcknowledgedVersion: read(LAST_ACKNOWLEDGED_VERSION),
 });
@@ -189,6 +192,7 @@ watch(() => settings.lastBatterySmartCostLimit, saveNumber(LAST_BATTERY_SMART_CO
 watch(() => settings.lastTargetTime, save(LAST_TARGET_TIME));
 watch(() => settings.lastSocGoal, saveNumber(LAST_SOC_GOAL));
 watch(() => settings.lastEnergyGoal, saveNumber(LAST_ENERGY_GOAL));
+watch(() => settings.lastDurationGoal, saveNumber(LAST_DURATION_GOAL));
 watch(() => settings.cardHeights, saveJSON(CONFIG_CARD_HEIGHTS), { deep: true });
 watch(() => settings.lastAcknowledgedVersion, save(LAST_ACKNOWLEDGED_VERSION));
 
