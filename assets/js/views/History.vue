@@ -80,7 +80,11 @@
 						:to="displayTo"
 					/>
 					<LegendList
-						v-if="hasEntityLegend(group) || hasForecastLegend(group)"
+						v-if="
+							hasEntityLegend(group) ||
+							hasForecastLegend(group) ||
+							hasSocLegend(group)
+						"
 						class="mt-4 mb-0"
 						:legends="legendsForGroup(group)"
 						:device-colors="deviceColors"
@@ -107,6 +111,7 @@ import type { Legend } from "../components/Sessions/types";
 import type { DeviceColors } from "@/types/evcc";
 import { PERIODS } from "../components/Sessions/types";
 import { GROUP_ORDER, groupColor, hasColorPicker } from "../components/History/groups";
+import { batteryCapacities, totalSocByStart } from "../components/History/soc";
 import colors, { resolveColors, deviceColorMap, darken, batteryColor } from "../colors";
 import LegendList from "../components/Sessions/LegendList.vue";
 import DownloadButton from "../components/Helper/DownloadButton.vue";
@@ -301,6 +306,15 @@ export default defineComponent({
 				s.data.some((slot) => slot.energy !== 0 || slot.returnEnergy !== 0)
 			);
 		},
+		// Mean combined soc over the period, null when it cannot be derived.
+		batterySoc(): number | null {
+			const capacities = batteryCapacities(store.state.battery?.devices ?? []);
+			const values = [
+				...totalSocByStart(this.seriesByGroup["battery"] || [], capacities).values(),
+			];
+			if (!values.length) return null;
+			return values.reduce((acc, v) => acc + v, 0) / values.length;
+		},
 		forecastTotalLabel(): string {
 			const list = this.seriesByGroup["forecast"] || [];
 			let sum = 0;
@@ -369,6 +383,14 @@ export default defineComponent({
 					dim: focused !== null,
 				});
 			}
+			if (this.batterySoc !== null && group === "battery") {
+				list.push({
+					label: this.$t("main.history.soc") as string,
+					color: colors.text || groupColor(group),
+					value: this.fmtPercentage(this.batterySoc),
+					type: "line",
+				});
+			}
 			return list;
 		},
 		onLegendFocus(group: string, legend: Legend) {
@@ -385,6 +407,9 @@ export default defineComponent({
 		},
 		hasForecastLegend(group: string): boolean {
 			return group === "pv" && this.hasForecast && this.effectivePeriod === PERIODS.DAY;
+		},
+		hasSocLegend(group: string): boolean {
+			return group === "battery" && this.batterySoc !== null;
 		},
 		entityLegends(group: string): (Legend & { entityIndex: number })[] {
 			const list = this.displaySeries(group);

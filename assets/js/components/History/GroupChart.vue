@@ -22,12 +22,14 @@ import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import { PERIODS } from "../Sessions/types";
 import { is12hFormat } from "@/units";
 import { hasColorPicker } from "./groups";
+import { batteryCapacities, totalSocByStart } from "./soc";
 
 export interface HistorySlot {
 	start: string;
 	end: string;
 	energy: number;
 	returnEnergy: number;
+	socTemp?: number | null;
 }
 
 export interface HistorySeries {
@@ -58,6 +60,10 @@ const BIDIRECTIONAL_GROUPS: ReadonlySet<string> = new Set(["grid", "battery"]);
 
 // Multiple entities stack into one bar; grid and meter render side-by-side.
 const STACKED_GROUPS: ReadonlySet<string> = new Set(["loadpoint", "consumer", "pv", "battery"]);
+
+// Hidden percentage axis the battery soc line is drawn against. Empty maps onto
+// the zero line, full onto the top of the symmetric energy axis.
+const SOC_AXIS = { type: "value", min: -100, max: 100, show: false };
 
 // Round up to a nice number (5-tick symmetric axis: -L, -L/2, 0, L/2, L).
 function niceCeil(v: number): number {
@@ -229,6 +235,22 @@ export default defineComponent({
 				}
 			}
 			return has;
+		},
+		// Combined soc of the visible batteries, mapped onto the category slots.
+		socValues(): (number | null)[] {
+			const values: (number | null)[] = Array.from(
+				{ length: this.categoryKeys.length },
+				() => null
+			);
+			if (this.group !== "battery") return values;
+
+			const capacities = batteryCapacities(store.state.battery?.devices ?? []);
+			const index = new Map(this.categoryKeys.map((k, i) => [k, i]));
+			for (const [start, soc] of totalSocByStart(this.visibleSeries, capacities)) {
+				const idx = index.get(this.timestampKey(new Date(start).getTime()));
+				if (idx !== undefined) values[idx] = soc;
+			}
+			return values;
 		},
 		entryColors(): string[] {
 			// Picker groups color per entity; pv/battery use darker steps of the group color.
@@ -408,6 +430,23 @@ export default defineComponent({
 				});
 			});
 
+			// Soc line on top of the bars, against the hidden percentage axis.
+			if (this.group === "battery") {
+				const socColor = colors.text || this.color;
+				result.push({
+					id: "soc",
+					name: this.$t("main.history.soc"),
+					type: "line",
+					yAxisIndex: 1,
+					data: this.socValues,
+					smooth: true,
+					symbol: "none",
+					lineStyle: { color: socColor, width: 2, type: "dashed" },
+					itemStyle: { color: socColor },
+					z: 3,
+				});
+			}
+
 			return result;
 		},
 		labelForTimestamp(): (t: number) => string {
@@ -451,6 +490,50 @@ export default defineComponent({
 				return (t) => this.fmtDayMonth(new Date(t));
 			}
 			return (t) => this.fmtMonthYear(new Date(t));
+		},
+		energyYAxis(): Record<string, unknown> {
+			return forecastYAxis({
+				...(this.isBidirectional && this.axisLimit > 0
+					? {
+							min: -this.axisLimit,
+							max: this.axisLimit,
+							interval: this.axisLimit / 2,
+						}
+					: this.useSmallUnit
+						? { max: this.axisLimit, interval: this.axisLimit / 4 }
+						: {}),
+				position: "right",
+				splitNumber: 3,
+				splitLine: {
+					showMinLine: true,
+					showMaxLine: true,
+					lineStyle: { color: colors.border || "" },
+				},
+				name: this.unit,
+				nameLocation: "end",
+				nameGap: 18,
+				nameTextStyle: {
+					color: colors.muted || "",
+					fontFamily: FONT_FAMILY,
+					fontSize: 10,
+					opacity: 0.75,
+					align: "left",
+					// Axis name anchors at the axis line; axis labels have a default
+					// 8px margin, so shift the name right by the same amount to land
+					// flush with the value labels' left edge.
+					padding: [0, 0, 0, 8],
+				},
+				axisLabel: {
+					color: colors.muted || "",
+					hideOverlap: true,
+					formatter: (v: number): string => {
+						const unit = this.useSmallUnit ? POWER_UNIT.W : POWER_UNIT.KW;
+						return this.period === PERIODS.DAY
+							? this.fmtW(v * 1000, unit, false, this.axisDigits)
+							: this.fmtWh(v * 1000, unit, false, this.axisDigits);
+					},
+				},
+			});
 		},
 		chartOption(): Record<string, unknown> {
 			const cats = this.categoryTimestamps;
@@ -561,7 +644,10 @@ export default defineComponent({
 						const nameByIdx = new Map(
 							this.series.map((s, i) => [s.paletteIndex ?? i, s.title])
 						);
-						const showName = this.series.length > 1 && this.focusedEntity === null;
+						const soc = this.socValues[first.dataIndex] ?? null;
+						const showTotal = this.series.length > 1 && this.focusedEntity === null;
+						// a soc row without names would be indistinguishable from an energy row
+						const showName = showTotal || soc != null;
 
 						// one unit for all rows, based on the largest individual value (not the total)
 						const rowValues = indices.map(
@@ -594,7 +680,7 @@ export default defineComponent({
 								values,
 							};
 						});
-						if (showName) {
+						if (showTotal) {
 							const sum = (key: "energy" | "returnEnergy") =>
 								rowValues.reduce((acc, t) => acc + t[key], 0);
 							rows.push({
@@ -602,6 +688,13 @@ export default defineComponent({
 								values: this.isBidirectional
 									? [formatValue(sum("energy")), formatValue(sum("returnEnergy"))]
 									: [formatValue(sum("energy") + sum("returnEnergy"))],
+								total: true,
+							});
+						}
+						if (soc != null) {
+							rows.push({
+								name: this.$t("main.history.soc"),
+								values: [this.fmtPercentage(soc)],
 								total: true,
 							});
 						}
@@ -631,48 +724,7 @@ export default defineComponent({
 						formatter: (_value: string, index: number) => formatLabel(cats[index] ?? 0),
 					},
 				},
-				yAxis: forecastYAxis({
-					...(this.isBidirectional && this.axisLimit > 0
-						? {
-								min: -this.axisLimit,
-								max: this.axisLimit,
-								interval: this.axisLimit / 2,
-							}
-						: this.useSmallUnit
-							? { max: this.axisLimit, interval: this.axisLimit / 4 }
-							: {}),
-					position: "right",
-					splitNumber: 3,
-					splitLine: {
-						showMinLine: true,
-						showMaxLine: true,
-						lineStyle: { color: colors.border || "" },
-					},
-					name: this.unit,
-					nameLocation: "end",
-					nameGap: 18,
-					nameTextStyle: {
-						color: colors.muted || "",
-						fontFamily: FONT_FAMILY,
-						fontSize: 10,
-						opacity: 0.75,
-						align: "left",
-						// Axis name anchors at the axis line; axis labels have a default
-						// 8px margin, so shift the name right by the same amount to land
-						// flush with the value labels' left edge.
-						padding: [0, 0, 0, 8],
-					},
-					axisLabel: {
-						color: colors.muted || "",
-						hideOverlap: true,
-						formatter: (v: number): string => {
-							const unit = this.useSmallUnit ? POWER_UNIT.W : POWER_UNIT.KW;
-							return this.period === PERIODS.DAY
-								? this.fmtW(v * 1000, unit, false, this.axisDigits)
-								: this.fmtWh(v * 1000, unit, false, this.axisDigits);
-						},
-					},
-				}),
+				yAxis: this.group === "battery" ? [this.energyYAxis, SOC_AXIS] : this.energyYAxis,
 				series: this.echartsSeries,
 			};
 		},

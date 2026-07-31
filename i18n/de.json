@@ -1362,6 +1362,7 @@
         "pv": "Erzeugung"
       },
       "otherConsumers": "Andere",
+      "soc": "Ladestand",
       "title": "Historie"
     },
     "loadpoint": {

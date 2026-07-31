@@ -1372,6 +1372,7 @@
         "pv": "Production"
       },
       "otherConsumers": "Others",
+      "soc": "SoC",
       "title": "History"
     },
     "loadpoint": {
