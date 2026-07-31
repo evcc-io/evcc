@@ -22,6 +22,8 @@ params:
   - preset: battery-params
   - name: maxchargepower
     default: 2500
+  - name: maxdischargepower
+    default: 2500
   - name: watchdog
     default: 60s
 render: |
@@ -156,14 +158,80 @@ render: |
                     address: 10064
                     type: writesingle
                     encoding: uint16
+              # register 10071 is range-checked against the device's own rated
+              # max_charge_power (10036), so clamp before writing
+              - source: go
+                in:
+                  - name: rated
+                    type: int
+                    config:
+                      source: cached
+                      cache: 1h # rated max is static
+                      value:
+                        source: modbus
+                        {{- include "modbus" . | indent 22 }}
+                        register:
+                          address: 10036 # Max Charge Power (RO)
+                          type: input
+                          decode: int32
+                out:
+                  - name: power
+                    type: int
+                    config:
+                      source: modbus
+                      {{- include "modbus" . | indent 20 }}
+                      register:
+                        address: 10071
+                        type: writemultiple
+                        encoding: int32
+                script: |
+                  limit := {{ .maxchargepower }}
+                  out := rated
+                  if limit < rated { out = limit }
+                  -out // negative = charge
+        - case: 5 # discharge
+          set:
+            source: sequence
+            set:
               - source: const
-                value: -{{ .maxchargepower }}
+                value: 3 # third_party_control
                 set:
                   source: modbus
                   {{- include "modbus" . | indent 16 }}
                   register:
-                    address: 10071
-                    type: writemultiple
-                    encoding: int32
+                    address: 10064
+                    type: writesingle
+                    encoding: uint16
+              # register 10071 is range-checked against the device's own rated
+              # max_discharge_power (10038), so clamp before writing
+              - source: go
+                in:
+                  - name: rated
+                    type: int
+                    config:
+                      source: cached
+                      cache: 1h # rated max is static
+                      value:
+                        source: modbus
+                        {{- include "modbus" . | indent 22 }}
+                        register:
+                          address: 10038 # Max Discharge Power (RO)
+                          type: input
+                          decode: int32
+                out:
+                  - name: power
+                    type: int
+                    config:
+                      source: modbus
+                      {{- include "modbus" . | indent 20 }}
+                      register:
+                        address: 10071
+                        type: writemultiple
+                        encoding: int32
+                script: |
+                  limit := {{ .maxdischargepower }}
+                  out := rated
+                  if limit < rated { out = limit }
+                  out // positive = discharge
   {{- include "battery-params" . }}
   {{- end }}
