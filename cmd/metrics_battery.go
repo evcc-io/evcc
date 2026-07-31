@@ -7,6 +7,9 @@ import (
 	"text/tabwriter"
 
 	"github.com/evcc-io/evcc/core/metrics"
+	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/templates"
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 )
 
@@ -64,16 +67,66 @@ func runMetricsBattery(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	metricsWriteBatteryTable(os.Stdout, selected, metricsBatteryTotals(series))
+	socs, err := metrics.QuerySoc(metrics.Battery, from, to)
+	if err != nil {
+		log.FATAL.Fatal(err)
+	}
+
+	totals := metricsBatteryTotals(series)
+	capacities := metricsBatteryCapacities()
+
+	for _, e := range selected {
+		label := metricsEntityLabel(e)
+
+		t := totals[label]
+		if soc, ok := socs[label]; ok {
+			t.soc = &soc
+		}
+		t.capacity = capacities[e.Name]
+		totals[label] = t
+	}
+
+	metricsWriteBatteryTable(os.Stdout, selected, totals)
 	fmt.Fprintln(os.Stderr, "\nvalues in kWh")
 }
 
-// batteryTotals holds the accumulated charge and discharge energy of a battery.
+// metricsBatteryCapacities returns the statically configured capacity in kWh per
+// meter name, from the config file and the database. Plugin-provided capacities
+// cannot be resolved without connecting to the device and remain unknown.
+func metricsBatteryCapacities() map[string]float64 {
+	res := make(map[string]float64)
+
+	add := func(name string, other map[string]any) {
+		if v, err := cast.ToFloat64E(other["capacity"]); err == nil && v > 0 {
+			res[name] = v
+		}
+	}
+
+	for _, cc := range conf.Meters {
+		add(cc.Name, cc.Other)
+	}
+
+	configurable, err := config.ConfigurationsByClass(templates.Meter)
+	if err != nil {
+		log.FATAL.Fatal(err)
+	}
+
+	for _, cc := range configurable {
+		add(config.NameForID(cc.ID), cc.Data)
+	}
+
+	return res
+}
+
+// batteryTotals holds the accumulated charge and discharge energy of a battery
+// plus its last known soc and configured capacity.
 // For a battery entity charge is stored as import energy, discharge as export
 // energy (see core/site.go updateBatteryMeters).
 type batteryTotals struct {
 	charge    float64
 	discharge float64
+	soc       *float64 // last known soc, nil if not recorded
+	capacity  float64  // kWh, zero if not configured
 }
 
 // metricsBatteryTotals sums charge and discharge energy per battery title.
@@ -93,23 +146,60 @@ func metricsBatteryTotals(series []metrics.Series) map[string]batteryTotals {
 	return res
 }
 
+// metricsBatteryEfficiency formats the discharge/charge ratio, blank without charge.
+func metricsBatteryEfficiency(t batteryTotals) string {
+	if t.charge <= 0 {
+		return ""
+	}
+	return fmt.Sprintf("%.1f%%", t.discharge/t.charge*100)
+}
+
+// metricsFormatSoc formats a soc value, blank when unknown.
+func metricsFormatSoc(soc *float64) string {
+	if soc == nil {
+		return ""
+	}
+	return fmt.Sprintf("%.1f%%", *soc)
+}
+
 // metricsWriteBatteryTable renders one row per battery comparing charge and
-// discharge energy. Efficiency is the discharge/charge ratio, left blank when
-// no energy was charged.
+// discharge energy plus the last known soc. Efficiency is the discharge/charge
+// ratio, left blank when no energy was charged. For multiple batteries a total
+// row is added where soc is total stored energy over total capacity, left blank
+// unless soc and capacity are known for all of them.
 func metricsWriteBatteryTable(w io.Writer, selected []metrics.EntityInfo, totals map[string]batteryTotals) {
 	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(tw, "name\ttitle\tcharge\tdischarge\tefficiency")
+	fmt.Fprintln(tw, "name\ttitle\tcharge\tdischarge\tefficiency\tsoc")
+
+	var total batteryTotals
+	var stored float64
+	complete := true
 
 	for _, e := range selected {
 		t := totals[metricsEntityLabel(e)]
 
-		efficiency := ""
-		if t.charge > 0 {
-			efficiency = fmt.Sprintf("%.1f%%", t.discharge/t.charge*100)
+		total.charge += t.charge
+		total.discharge += t.discharge
+
+		if t.soc != nil && t.capacity > 0 {
+			stored += *t.soc / 100 * t.capacity
+			total.capacity += t.capacity
+		} else {
+			complete = false
 		}
 
-		fmt.Fprintf(tw, "%s\t%s\t%.3f\t%.3f\t%s\n",
-			e.Name, metricsEntityLabel(e), t.charge, t.discharge, efficiency)
+		fmt.Fprintf(tw, "%s\t%s\t%.3f\t%.3f\t%s\t%s\n",
+			e.Name, metricsEntityLabel(e), t.charge, t.discharge, metricsBatteryEfficiency(t), metricsFormatSoc(t.soc))
+	}
+
+	if len(selected) > 1 {
+		if complete && total.capacity > 0 {
+			soc := stored / total.capacity * 100
+			total.soc = &soc
+		}
+
+		fmt.Fprintf(tw, "total\t\t%.3f\t%.3f\t%s\t%s\n",
+			total.charge, total.discharge, metricsBatteryEfficiency(total), metricsFormatSoc(total.soc))
 	}
 
 	tw.Flush()
