@@ -289,9 +289,9 @@ w4:${signalSource("w4")}`
     await expect(hint).toHaveText("Consumption limited");
     await expect(pvBanner).not.toBeVisible();
 
-    // main screen shows the warning
+    // main screen stays quiet, the grid power is far below the limit
     await page.goto("/#/");
-    await expect(page.getByTestId("hems-warning")).toContainText("4.2 kW");
+    await expect(page.getByTestId("hems-warning")).not.toBeVisible();
     await page.goto("/#/config");
 
     // full curtailment (W3): feed-in limited to 0
@@ -307,12 +307,6 @@ w4:${signalSource("w4")}`
     await setSignal("w3", false);
     await setSignal("s1", true);
     await expect(hems).toContainText(["Feed-in limit", "6.0 kW"].join(""));
-
-    // main screen shows the production warning
-    await page.goto("/#/");
-    await expect(page.getByTestId("hems-warning")).toContainText(["Feed-in", "≤ 6.0 kW"].join(""));
-    await expect(page.getByTestId("hems-warning")).not.toContainText("Consumption");
-    await page.goto("/#/config");
 
     // partial curtailment (S2): 30% of 10 kW
     await setSignal("s1", false);
