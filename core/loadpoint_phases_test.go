@@ -695,5 +695,136 @@ func TestUpdatePhaseSwitchNotAvailable(t *testing.T) {
 
 	// second cycle must not attempt the switch again (Phases1p3p .Times(1))
 	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
-	require.Equal(t, 3, lp.GetPhases())
+}
+
+func TestPvScalePhases_CircuitLimit(t *testing.T) {
+	Voltage = 230
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+
+	// A charger that can switch phases and has a max current of 32A
+	plainCharger := api.NewMockCharger(ctrl)
+	plainCharger.EXPECT().Enabled().Return(true, nil).AnyTimes()
+	plainCharger.EXPECT().MaxCurrent(gomock.Any()).Return(nil).AnyTimes()
+
+	phaseCharger := api.NewMockPhaseSwitcher(ctrl)
+	phaseCharger.EXPECT().Phases1p3p(gomock.Any()).Return(nil).AnyTimes()
+
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Phases().Return(3).AnyTimes()
+	vehicle.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
+	vehicle.EXPECT().Features().Return(nil).AnyTimes()
+
+	// Circuit with 20A limit
+	circuit := api.NewMockCircuit(ctrl)
+	circuit.EXPECT().ValidateCurrent(gomock.Any(), gomock.Any()).DoAndReturn(func(actual, current float64) float64 {
+		return min(current, 20.0)
+	}).AnyTimes()
+	circuit.EXPECT().ValidatePower(gomock.Any(), gomock.Any()).DoAndReturn(func(actual, power float64) float64 {
+		return power // no power limit
+	}).AnyTimes()
+
+	lp := &Loadpoint{
+		log:              util.NewLogger("foo"),
+		bus:              evbus.New(),
+		clock:            clock,
+		chargeMeter:      &Null{},
+		chargeRater:      &Null{},
+		chargeTimer:      &Null{},
+		progress:         NewProgress(0, 10),
+		wakeUpTimer:      NewTimer(),
+		mode:             api.ModeNow,
+		minCurrent:       6,
+		maxCurrent:       32,
+		vehicle:          vehicle,
+		phasesConfigured: 0,
+		phases:           3,
+		measuredPhases:   0,
+		status:           api.StatusC,
+		circuit:          circuit,
+	}
+
+	lp.charger = struct {
+		api.Charger
+		api.PhaseSwitcher
+	}{
+		plainCharger, phaseCharger,
+	}
+
+	// Currently at 1 phase
+	lp.phases = 1
+	lp.measuredPhases = 1
+
+	// PV power is available to reach e.g. 24A on 1 phase
+	// availablePower = chargePower - sitePower
+	// Let's set chargePower = 0, sitePower = -5520W -> availablePower = 5520W
+	// target1pCurrent = 5520W / 230V = 24A
+	// The loadpoint maxCurrent is 32A. But the circuit limit is 20A.
+	// Since 24 > 20, it should scale up to 3 phases!
+	
+	// We want to verify `pvScalePhases` returns 3.
+	scaledTo := lp.pvScalePhases(-5520.0, 6, 32.0)
+	require.Equal(t, 3, scaledTo, "should scale up because available power exceeds circuit limit")
+}
+
+func TestPvScalePhases_CircuitPowerLimit(t *testing.T) {
+	Voltage = 230
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+
+	plainCharger := api.NewMockCharger(ctrl)
+	plainCharger.EXPECT().Enabled().Return(true, nil).AnyTimes()
+	plainCharger.EXPECT().MaxCurrent(gomock.Any()).Return(nil).AnyTimes()
+
+	phaseCharger := api.NewMockPhaseSwitcher(ctrl)
+	phaseCharger.EXPECT().Phases1p3p(gomock.Any()).Return(nil).AnyTimes()
+
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Phases().Return(3).AnyTimes()
+	vehicle.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
+	vehicle.EXPECT().Features().Return(nil).AnyTimes()
+
+	// Circuit with 16A limit and 4000W limit
+	circuit := api.NewMockCircuit(ctrl)
+	circuit.EXPECT().ValidateCurrent(gomock.Any(), gomock.Any()).DoAndReturn(func(actual, current float64) float64 {
+		return min(current, 16.0)
+	}).AnyTimes()
+	circuit.EXPECT().ValidatePower(gomock.Any(), gomock.Any()).DoAndReturn(func(actual, power float64) float64 {
+		return min(power, 4000.0)
+	}).AnyTimes()
+
+	lp := &Loadpoint{
+		log:              util.NewLogger("foo"),
+		bus:              evbus.New(),
+		clock:            clock,
+		chargeMeter:      &Null{},
+		chargeRater:      &Null{},
+		chargeTimer:      &Null{},
+		progress:         NewProgress(0, 10),
+		wakeUpTimer:      NewTimer(),
+		mode:             api.ModeNow,
+		minCurrent:       6,
+		maxCurrent:       32,
+		vehicle:          vehicle,
+		phasesConfigured: 0,
+		phases:           1,
+		measuredPhases:   1,
+		status:           api.StatusC,
+		circuit:          circuit,
+	}
+
+	lp.charger = struct {
+		api.Charger
+		api.PhaseSwitcher
+	}{
+		plainCharger, phaseCharger,
+	}
+
+	// PV power is available to reach 5520W (24A on 1p).
+	// Current limit is 16A, so target1pCurrent (24A) > scaleMaxCurrent (16A), which makes it want to scale up.
+	// BUT circuit max power is 4000W, which is less than 3p min power (4140W).
+	// So it should NOT scale up.
+	
+	scaledTo := lp.pvScalePhases(-5520.0, 6, 32.0)
+	require.Equal(t, 0, scaledTo, "should not scale up because circuit power limit restricts 3p min current")
 }

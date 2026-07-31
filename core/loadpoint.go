@@ -931,20 +931,24 @@ func (lp *Loadpoint) roundedCurrent(current float64) float64 {
 	return current
 }
 
+// actualMaxPhaseCurrent returns the maximum of all phase currents
+func (lp *Loadpoint) actualMaxPhaseCurrent() float64 {
+	if lp.chargeCurrents != nil {
+		return max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
+	}
+	if lp.charging() {
+		return lp.offeredCurrent
+	}
+	return 0
+}
+
 // setLimit applies charger current limits and enables/disables accordingly
 func (lp *Loadpoint) setLimit(current float64) error {
 	current = lp.roundedCurrent(current)
 
 	// apply circuit limits
 	if lp.circuit != nil {
-		var actualCurrent float64
-		if lp.chargeCurrents != nil {
-			actualCurrent = max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
-		} else if lp.charging() {
-			actualCurrent = lp.offeredCurrent
-		}
-
-		currentLimit := lp.circuit.ValidateCurrent(actualCurrent, current)
+		currentLimit := lp.circuit.ValidateCurrent(lp.actualMaxPhaseCurrent(), current)
 
 		activePhases := lp.ActivePhases()
 		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(current, activePhases))
@@ -1461,9 +1465,22 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 		waiting = true
 	}
 
+	scaleMaxCurrent := maxCurrent
+	if lp.circuit != nil {
+		scaleMaxCurrent = lp.circuit.ValidateCurrent(lp.actualMaxPhaseCurrent(), maxCurrent)
+	}
+
 	maxPhases := lp.MaxActivePhases()
 	target1pCurrent := powerToCurrent(availablePower, 1)
-	scalable = maxPhases > 1 && phases < maxPhases && target1pCurrent > maxCurrent
+	scalable = maxPhases > 1 && phases < maxPhases && target1pCurrent > scaleMaxCurrent
+
+	if scalable && lp.circuit != nil {
+		scaledMinPower := currentToPower(minCurrent, maxPhases)
+		scaledMaxPower := lp.circuit.ValidatePower(lp.chargePower, scaledMinPower)
+		if scaledMaxPower < scaledMinPower {
+			scalable = false
+		}
+	}
 
 	// scale up phases
 	if targetCurrent := powerToCurrent(availablePower, maxPhases); targetCurrent >= minCurrent && scalable {
