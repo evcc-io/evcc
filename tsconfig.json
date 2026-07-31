@@ -12,11 +12,6 @@
     "allowJs": true,
     "paths": {
       "@/*": ["./assets/js/*"]
-    },
-    "plugins": [
-      {
-        "name": "typescript-eslint-language-service"
-      }
-    ]
+    }
   }
 }
