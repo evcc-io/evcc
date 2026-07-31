@@ -174,7 +174,7 @@ const COLUMNS_PER_BREAKPOINT = {
 	sm: 3,
 	md: 4,
 	lg: 7,
-	xl: 8,
+	xl: 7,
 	xxl: 9,
 };
 
