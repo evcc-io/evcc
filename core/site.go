@@ -145,6 +145,23 @@ func NewSiteFromConfig(other map[string]any) (*Site, error) {
 	return site, nil
 }
 
+func activeMeters(refs []string) ([]config.Device[api.Meter], error) {
+	var res []config.Device[api.Meter]
+	for _, ref := range refs {
+		dev, err := config.Meters().ByName(ref)
+		if err != nil {
+			return nil, err
+		}
+		if dev.Instance() == nil {
+			continue
+		}
+
+		res = append(res, dev)
+	}
+
+	return res, nil
+}
+
 func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tariff.Tariffs) error {
 	site.loadpoints = loadpoints
 	site.tariffs = tariffs
@@ -175,7 +192,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	tariff := site.GetTariff(api.TariffUsagePlanner)
 
 	// give loadpoints access to vehicles and database
-	for _, lp := range loadpoints {
+	for _, lp := range site.activeLoadpoints() {
 		lp.coordinator = coordinator.NewAdapter(lp, site.coordinator)
 		lp.planner = planner.New(lp.log, tariff)
 
@@ -206,13 +223,17 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			return err
 		}
 
-		site.gridMeter = dev
+		if dev.Instance() == nil {
+			site.log.WARN.Println("missing grid meter instance")
+		} else {
+			site.gridMeter = dev
 
-		me, err := metrics.NewCollector(metrics.Grid, site.Meters.GridMeterRef, metrics.Grid)
-		if err != nil {
-			return err
+			me, err := metrics.NewCollector(metrics.Grid, site.Meters.GridMeterRef, metrics.Grid)
+			if err != nil {
+				return err
+			}
+			site.collectors[site.Meters.GridMeterRef] = me
 		}
-		site.collectors[site.Meters.GridMeterRef] = me
 	}
 
 	// multiple pv
@@ -220,6 +241,9 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		dev, err := config.Meters().ByName(ref)
 		if err != nil {
 			return err
+		}
+		if dev.Instance() == nil {
+			continue
 		}
 		site.pvMeters = append(site.pvMeters, dev)
 
@@ -246,13 +270,13 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.collectors[metrics.Temperature] = tc
 
 	// multiple batteries
-	for _, ref := range site.Meters.BatteryMetersRef {
-		dev, err := config.Meters().ByName(ref)
-		if err != nil {
-			return err
-		}
-		site.batteryMeters = append(site.batteryMeters, dev)
-
+	mm, err := activeMeters(site.Meters.BatteryMetersRef)
+	if err != nil {
+		return err
+	}
+	site.batteryMeters = mm
+	for _, dev := range mm {
+		ref := dev.Config().Name
 		me, err := metrics.NewCollector(metrics.Battery, ref, deviceTitleOrName(dev))
 		if err != nil {
 			return err
@@ -261,13 +285,13 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	}
 
 	// additional meters used only for monitoring
-	for _, ref := range site.Meters.ExtMetersRef {
-		dev, err := config.Meters().ByName(ref)
-		if err != nil {
-			return err
-		}
-		site.extMeters = append(site.extMeters, dev)
-
+	mm, err = activeMeters(site.Meters.ExtMetersRef)
+	if err != nil {
+		return err
+	}
+	site.extMeters = mm
+	for _, dev := range mm {
+		ref := dev.Config().Name
 		me, err := metrics.NewCollector(metrics.Meter, ref, deviceTitleOrName(dev))
 		if err != nil {
 			return err
@@ -276,13 +300,13 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	}
 
 	// auxiliary meters (consumers)
-	for _, ref := range site.Meters.AuxMetersRef {
-		dev, err := config.Meters().ByName(ref)
-		if err != nil {
-			return err
-		}
-		site.auxMeters = append(site.auxMeters, dev)
-
+	mm, err = activeMeters(site.Meters.AuxMetersRef)
+	if err != nil {
+		return err
+	}
+	site.auxMeters = mm
+	for _, dev := range mm {
+		ref := dev.Config().Name
 		me, err := metrics.NewCollector(metrics.Consumer, ref, deviceTitleOrName(dev))
 		if err != nil {
 			return err
@@ -291,13 +315,13 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	}
 
 	// consumer meters
-	for _, ref := range site.Meters.ConsumerMetersRef {
-		dev, err := config.Meters().ByName(ref)
-		if err != nil {
-			return err
-		}
-		site.consumerMeters = append(site.consumerMeters, dev)
-
+	mm, err = activeMeters(site.Meters.ConsumerMetersRef)
+	if err != nil {
+		return err
+	}
+	site.consumerMeters = mm
+	for _, dev := range mm {
+		ref := dev.Config().Name
 		me, err := metrics.NewCollector(metrics.Consumer, ref, deviceTitleOrName(dev))
 		if err != nil {
 			return err
@@ -503,6 +527,10 @@ func (site *Site) DumpConfig() {
 	site.log.INFO.Printf("    solar:     %s", presence[site.GetTariff(api.TariffUsageSolar) != nil])
 
 	for i, lp := range site.loadpoints {
+		if lp == nil {
+			continue
+		}
+
 		lp.log.INFO.Printf("loadpoint %d:", i+1)
 		lp.log.INFO.Printf("  mode:        %s", lp.GetMode())
 
@@ -555,7 +583,7 @@ func (site *Site) publishLoadpoint(id int, key string, val any) {
 
 // clearPlanLocks clears locked plan goals for all loadpoints
 func (site *Site) clearPlanLocks() {
-	for _, lp := range site.Loadpoints() {
+	for _, lp := range site.activeLoadpoints() {
 		lp.ClearPlanLock()
 	}
 }
@@ -1031,7 +1059,7 @@ func (site *Site) updateLoadpoints(rates api.Rates) float64 {
 		sum float64
 	)
 
-	for _, lp := range site.loadpoints {
+	for _, lp := range site.activeLoadpoints() {
 		wg.Go(func() {
 			power := lp.UpdateChargePowerAndCurrents()
 			site.prioritizer.UpdateChargePowerFlexibility(lp, rates)
@@ -1056,7 +1084,7 @@ func (site *Site) reservedPVPower(lp updater) float64 {
 	prio := lp.EffectivePriority()
 
 	var reserved float64
-	for _, other := range site.loadpoints {
+	for _, other := range site.activeLoadpoints() {
 		if other == lp {
 			continue
 		}
@@ -1260,6 +1288,21 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 	lpDevices := config.Loadpoints().Devices()
 
 	for id, lp := range site.loadpoints {
+		// publish name on the loadpoint's behalf — it doesn't know its own
+		if id < len(lpDevices) {
+			site.valueChan <- util.Param{Loadpoint: &id, Key: keys.Name, Val: lpDevices[id].Config().Name}
+		}
+
+		// disabled loadpoint- publish minimal placeholder to keep indexes stable
+		if lp == nil {
+			if id < len(lpDevices) {
+				title, _ := lpDevices[id].Config().Other["title"].(string)
+				site.valueChan <- util.Param{Loadpoint: &id, Key: keys.Title, Val: title}
+			}
+			site.valueChan <- util.Param{Loadpoint: &id, Key: keys.Disabled, Val: true}
+			continue
+		}
+
 		lpUIChan := make(chan util.Param)
 		lpPushChan := make(chan messenger.Event)
 
@@ -1277,11 +1320,6 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 			}
 		}(id)
 
-		// publish name on the loadpoint's behalf — it doesn't know its own
-		if id < len(lpDevices) {
-			site.valueChan <- util.Param{Loadpoint: &id, Key: keys.Name, Val: lpDevices[id].Config().Name}
-		}
-
 		lp.Prepare(site, lpUIChan, lpPushChan, site.lpUpdateChan)
 	}
 }
@@ -1289,15 +1327,16 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 // loopLoadpoints keeps iterating across loadpoints sending the next to the given channel
 func (site *Site) loopLoadpoints(next chan<- updater) {
 	var logOnce sync.Once
+	active := site.activeLoadpoints()
 
 	for {
-		if len(site.loadpoints) == 0 {
+		if len(active) == 0 {
 			logOnce.Do(func() {
 				site.log.INFO.Println("no loadpoints configured, running in meter-only mode")
 			})
 			next <- nil
 		} else {
-			for _, lp := range site.loadpoints {
+			for _, lp := range active {
 				next <- lp
 			}
 		}

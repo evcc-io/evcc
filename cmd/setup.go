@@ -52,7 +52,6 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/libp2p/zeroconf/v2"
-	"github.com/samber/lo"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	vpr "github.com/spf13/viper"
@@ -343,7 +342,7 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 	}()
 
 	var instance T
-	if err == nil {
+	if err == nil && !conf.Disable {
 		instance, err = newFromConf(ctx, typ, other)
 		if err != nil {
 			err = &DeviceError{cc.Name, fmt.Errorf("cannot create %s '%s': %w", typ, cc.Name, err)}
@@ -1141,15 +1140,20 @@ func configureSolarTariffs(confs []config.Typed, deviceNames []string, target *a
 		if len(deviceNames) == 1 {
 			return configureTariff(config.Typed{}, deviceNames[0], target)
 		}
-		tt := make([]api.Tariff, len(deviceNames))
-		for i, name := range deviceNames {
+		var tt []api.Tariff
+		for _, name := range deviceNames {
 			dev, err := config.Tariffs().ByName(name)
 			if err != nil {
 				return fmt.Errorf("tariff device %s not found: %w", name, err)
 			}
-			tt[i] = dev.Instance()
+			// nil instance marks disabled device
+			if instance := dev.Instance(); instance != nil {
+				tt = append(tt, instance)
+			}
 		}
-		*target = tariff.NewCombined(tt)
+		if len(tt) > 0 {
+			*target = tariff.NewCombined(tt)
+		}
 	}
 	return nil
 }
@@ -1204,9 +1208,13 @@ func configureTariffs(conf *globalconfig.Tariffs, names ...string) (*tariff.Tari
 				return nil
 			}
 
-			instance, err := tariffInstance(cc.Name, config.Typed{Type: cc.Type, Other: cc.Other})
-			if err != nil {
-				return err
+			var instance api.Tariff
+			if !conf.Disable {
+				var err error
+				instance, err = tariffInstance(cc.Name, config.Typed{Type: cc.Type, Other: cc.Other})
+				if err != nil {
+					return err
+				}
 			}
 
 			if e := config.Tariffs().Add(config.NewConfigurableDevice(&conf, instance)); e != nil {
@@ -1328,9 +1336,12 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 		errs = append(errs, &ClassError{ClassTariff, err})
 	}
 
-	loadpoints := lo.Map(config.Loadpoints().Devices(), func(dev config.Device[loadpoint.API], _ int) *core.Loadpoint {
-		return dev.Instance().(*core.Loadpoint)
-	})
+	// nil entries mark disabled loadpoints- indexes stay aligned with config order
+	var loadpoints []*core.Loadpoint
+	for _, dev := range config.Loadpoints().Devices() {
+		inst, _ := dev.Instance().(*core.Loadpoint)
+		loadpoints = append(loadpoints, inst)
+	}
 
 	site, err := configureSite(conf.Site, loadpoints, tariffs)
 	if err != nil {
@@ -1367,7 +1378,7 @@ CONTINUE:
 		}
 
 		if slices.ContainsFunc(loadpoints, func(lp *core.Loadpoint) bool {
-			return lp.GetCircuit() == instance
+			return lp != nil && lp.GetCircuit() == instance
 		}) {
 			continue CONTINUE
 		}
@@ -1445,14 +1456,19 @@ func configureLoadpoints(conf globalconfig.All) error {
 			return &DeviceError{cc.Name, err}
 		}
 
-		instance, err := newLoadpoint(idx, cc.Name, static, func(log *util.Logger) coresettings.Settings {
-			return coresettings.NewConfigSettingsAdapter(log, &conf)
-		})
-		if err != nil {
-			err = &DeviceError{cc.Name, err}
+		var instance loadpoint.API
+		if !conf.Disable {
+			lp, e := newLoadpoint(idx, cc.Name, static, func(log *util.Logger) coresettings.Settings {
+				return coresettings.NewConfigSettingsAdapter(log, &conf)
+			})
+			if e != nil {
+				err = &DeviceError{cc.Name, e}
+			} else {
+				instance = lp
+			}
 		}
 
-		dev := config.NewConfigurableDevice[loadpoint.API](&conf, instance)
+		dev := config.NewConfigurableDevice(&conf, instance)
 		if e := config.Loadpoints().Add(dev); e != nil && err == nil {
 			err = &DeviceError{cc.Name, e}
 		}

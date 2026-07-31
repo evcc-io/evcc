@@ -211,6 +211,7 @@ export interface Entity {
   type: string;
   id: number;
   config: Config;
+  deviceDisable?: boolean;
 }
 
 export enum ConfigType {
@@ -252,6 +253,7 @@ export interface LoadpointThreshold {
 export interface ConfigLoadpoint {
   id?: number;
   name?: string;
+  disable?: boolean;
   charger: string;
   meter: string;
   vehicle: string;
@@ -325,6 +327,7 @@ export interface Loadpoint {
   charging: boolean;
   connected: boolean;
   connectedDuration: number;
+  disabled?: boolean;
   disableDelay: number;
   disableThreshold: number;
   effectiveLimitSoc: number;
