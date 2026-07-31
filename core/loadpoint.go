@@ -982,7 +982,7 @@ func (lp *Loadpoint) setLimit(current float64) error {
 			return fmt.Errorf("set charge current limit %.3gA: %w", current, err)
 		}
 
-		lp.log.DEBUG.Printf("set charge current limit: %.3gA", current)
+		lp.log.DEBUG.Printf("set charge current limit: %.3gA (duty cycle: %.1f%%)", current, currentToDutyCycle(current))
 		lp.offeredCurrent = current
 		lp.bus.Publish(evChargeCurrent, current)
 	}
