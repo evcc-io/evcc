@@ -58,15 +58,18 @@ func (h *hycHandler) HandleHoldingRegisters(req *mbserver.HoldingRegistersReques
 	return res, nil
 }
 
+// hycReg returns the absolute address of a connector register
+func hycReg(connector, reg uint16) uint16 {
+	return connector*100 + reg
+}
+
 // hycRegs returns a fully populated connector input block with the given state
 func hycRegs(connector, state uint16) map[uint16]uint16 {
-	base := connector * 100
-
 	regs := make(map[uint16]uint16)
-	for reg := base; reg < base+hycInputLength; reg++ {
-		regs[reg] = 0
+	for reg := range uint16(hycInputLength) {
+		regs[hycReg(connector, reg)] = 0
 	}
-	regs[base+hycRegState] = state
+	regs[hycReg(connector, hycRegState)] = state
 
 	return regs
 }
@@ -161,12 +164,11 @@ func TestAlpitronicStatusReason(t *testing.T) {
 
 func TestAlpitronicMeasurements(t *testing.T) {
 	regs := hycRegs(1, hycStateCharging)
-	regs[104] = 0
-	regs[105] = 11500 // 11500 W
-	regs[106] = 3600  // 1h
-	regs[107] = 1234  // 12.34 kWh
-	regs[108] = 6550  // 65.5 %
-	regs[135] = 18705 // 18.705 kWh
+	regs[hycReg(1, hycRegChargingPower)+1] = 11500      // 11500 W
+	regs[hycReg(1, hycRegChargeTime)] = 3600            // 1h
+	regs[hycReg(1, hycRegChargedEnergy)] = 1234         // 12.34 kWh
+	regs[hycReg(1, hycRegSoC)] = 6550                   // 65.5 %
+	regs[hycReg(1, hycRegTotalChargedEnergy)+3] = 18705 // 18.705 kWh
 
 	wb, _ := hycTestCharger(t, 1, regs)
 
@@ -199,12 +201,12 @@ func TestAlpitronicIdentify(t *testing.T) {
 	require.NoError(t, err)
 	assert.Empty(t, id)
 
-	// vehicle id takes precedence
+	// vehicle id takes precedence over the tag
 	regs := hycRegs(1, hycStateCharging)
-	regs[119] = 0xAABB
-	regs[120] = 0xCCDD
-	regs[121] = 0xEEFF
-	regs[122] = 0x4142
+	regs[hycReg(1, hycRegVID)+1] = 0xAABB
+	regs[hycReg(1, hycRegVID)+2] = 0xCCDD
+	regs[hycReg(1, hycRegVID)+3] = 0xEEFF
+	regs[hycReg(1, hycRegIdTag)] = 0x4142
 
 	wb, _ = hycTestCharger(t, 1, regs)
 
@@ -214,7 +216,7 @@ func TestAlpitronicIdentify(t *testing.T) {
 
 	// tag as fallback
 	regs = hycRegs(1, hycStateCharging)
-	regs[122] = 0x4142
+	regs[hycReg(1, hycRegIdTag)] = 0x4142
 
 	wb, _ = hycTestCharger(t, 1, regs)
 
@@ -242,8 +244,8 @@ func TestAlpitronicEnable(t *testing.T) {
 
 	// 6A -> 4140W, disable -> 0W
 	require.Len(t, h.writes, 2)
-	assert.Equal(t, hycWrite{16, 100, []uint16{0, 4140}}, h.writes[0])
-	assert.Equal(t, hycWrite{16, 100, []uint16{0, 0}}, h.writes[1])
+	assert.Equal(t, hycWrite{16, hycReg(1, hycRegMaxPowerAC), []uint16{0, 4140}}, h.writes[0])
+	assert.Equal(t, hycWrite{16, hycReg(1, hycRegMaxPowerAC), []uint16{0, 0}}, h.writes[1])
 }
 
 func TestAlpitronicMaxCurrent(t *testing.T) {
@@ -262,7 +264,7 @@ func TestAlpitronicMaxCurrent(t *testing.T) {
 
 		require.NoError(t, wb.MaxCurrentMillis(tc.current))
 		require.Len(t, h.writes, 1, "current %v", tc.current)
-		assert.Equal(t, hycWrite{16, 100, tc.args}, h.writes[0], "current %v", tc.current)
+		assert.Equal(t, hycWrite{16, hycReg(1, hycRegMaxPowerAC), tc.args}, h.writes[0], "current %v", tc.current)
 	}
 }
 
@@ -278,8 +280,7 @@ func TestAlpitronicMaxCurrentInvalid(t *testing.T) {
 func TestAlpitronicConnector(t *testing.T) {
 	// second connector reads and writes the 2xx block
 	regs := hycRegs(2, hycStateCharging)
-	regs[204] = 0
-	regs[205] = 50000
+	regs[hycReg(2, hycRegChargingPower)+1] = 50000
 
 	wb, h := hycTestCharger(t, 2, regs)
 
@@ -293,13 +294,13 @@ func TestAlpitronicConnector(t *testing.T) {
 
 	require.NoError(t, wb.Enable(false))
 	require.Len(t, h.writes, 1)
-	assert.Equal(t, uint16(200), h.writes[0].addr)
+	assert.Equal(t, hycReg(2, hycRegMaxPowerAC), h.writes[0].addr)
 }
 
 func TestAlpitronicReadFailure(t *testing.T) {
 	// missing register in the bulk-read block -> IllegalDataAddress propagates
 	regs := hycRegs(1, hycStateCharging)
-	delete(regs, 135)
+	delete(regs, hycReg(1, hycRegTotalChargedEnergy)+3)
 
 	wb, _ := hycTestCharger(t, 1, regs)
 
