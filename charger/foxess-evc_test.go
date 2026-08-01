@@ -399,3 +399,63 @@ func TestFoxESSEVCGetMaxCurrent(t *testing.T) {
 	require.NoError(t, err)
 	assert.InDelta(t, 15.942, current, 0.001)
 }
+
+// setTotalEnergy writes a uint32 value (in 0.1kWh units) across the two registers backing
+// foxRegTotalEnergy, matching the big-endian encoding readUint32 expects
+func setTotalEnergy(regs map[uint16]uint16, v uint32) {
+	regs[foxRegTotalEnergy] = uint16(v >> 16)
+	regs[foxRegTotalEnergy+1] = uint16(v)
+}
+
+func TestFoxESSEVCChargedEnergy(t *testing.T) {
+	regs := map[uint16]uint16{foxRegStatus: foxStatusCharging}
+	setTotalEnergy(regs, 1000) // 100.0 kWh, the charger's lifetime total
+
+	wb, _ := foxTestCharger(t, regs)
+
+	// first read after connecting latches the baseline; session starts at 0
+	energy, err := wb.ChargedEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 0.0, energy)
+
+	// session energy accrues as the lifetime total increases mid-session
+	setTotalEnergy(regs, 1050) // +5.0 kWh
+	energy, err = wb.ChargedEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 5.0, energy)
+
+	// a PV-triggered pause/resume does not touch the lifetime meter, so the session
+	// total keeps accruing normally across it instead of freezing or resetting
+	regs[foxRegStatus] = foxStatusPause
+	_, err = wb.Status()
+	require.NoError(t, err)
+
+	setTotalEnergy(regs, 1080) // +3.0 kWh while paused/resumed
+	regs[foxRegStatus] = foxStatusCharging
+	energy, err = wb.ChargedEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 8.0, energy)
+
+	// a charger restart mid-session can make the lifetime meter jump backwards; the
+	// delta accumulated so far is banked and the baseline restarts from the new reading
+	setTotalEnergy(regs, 10) // meter reset
+	energy, err = wb.ChargedEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 8.0, energy)
+
+	setTotalEnergy(regs, 15) // +0.5 kWh after the restart
+	energy, err = wb.ChargedEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 8.5, energy)
+
+	// the car disconnecting clears the latched session state so the next session
+	// starts from zero again instead of subtracting a stale baseline
+	regs[foxRegStatus] = foxStatusIdle
+	_, err = wb.Status()
+	require.NoError(t, err)
+
+	setTotalEnergy(regs, 20)
+	energy, err = wb.ChargedEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 0.0, energy)
+}
