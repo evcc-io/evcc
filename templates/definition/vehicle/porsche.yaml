@@ -1,11 +1,28 @@
 template: porsche
-deprecated: true
 products:
   - brand: Porsche
+requirements:
+  description:
+    de: |
+      Nach dem Anlegen erscheint in der Konfiguration eine Porsche-Anmeldung.
+      Melde dich dort mit deiner My-Porsche-E-Mail und deinem Passwort an (ggf. mit Captcha).
+    en: |
+      After adding the vehicle a Porsche login appears in the configuration.
+      Sign in there with your My Porsche email and password (a captcha may follow).
 params:
-  - preset: vehicle-base
+  - preset: vehicle-common
   - preset: vehicle-online
+  - name: vin
+    help:
+      de: Optional - leer lassen zur automatischen Erkennung (nur bei einem Fahrzeug im Konto; bei mehreren bitte VIN angeben).
+      en: Optional - leave empty to auto-detect (only with a single vehicle in the account; set the VIN if you have several).
+    example: WP1ZZZ...
+  - name: cache
+    default: 15m
+    advanced: true
 render: |
   type: porsche
-  {{ include "vehicle-base" . }}
+  vin: {{ .vin }}
+  {{ include "vehicle-common" . }}
+  cache: {{ .cache }}
   {{ include "vehicle-features" . }}
