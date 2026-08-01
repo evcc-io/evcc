@@ -63,7 +63,7 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/rest/channel/_sum/GridActivePower
-    cache: {{ .cache }} # collapse repeated reads of the same channel
+    cache: {{ .cache }}
     auth:
       type: basic
       user: x
