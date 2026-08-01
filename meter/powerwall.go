@@ -36,6 +36,15 @@ func init() {
 
 // NewPowerWallFromConfig creates a PowerWall Powerwall Meter from generic config
 func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
+	cc, err := decodePowerWallConfig(other)
+	if err != nil {
+		return nil, err
+	}
+
+	return newPowerWall(cc)
+}
+
+func decodePowerWallConfig(other map[string]any) (powerWallConfig, error) {
 	cc := powerWallConfig{
 		batterySocLimits: batterySocLimits{
 			MinSoc: 20,
@@ -49,15 +58,15 @@ func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
-		return nil, err
+		return cc, err
 	}
 
 	if cc.Usage == "" {
-		return nil, errors.New("missing usage")
+		return cc, errors.New("missing usage")
 	}
 
 	if cc.Password == "" {
-		return nil, errors.New("missing password")
+		return cc, errors.New("missing password")
 	}
 
 	// support default meter names
@@ -68,7 +77,7 @@ func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
 		cc.Usage = "solar"
 	}
 
-	return newPowerWall(cc)
+	return cc, nil
 }
 
 func newPowerWall(cc powerWallConfig) (*PowerWall, error) {
