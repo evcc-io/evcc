@@ -931,8 +931,9 @@ func (lp *Loadpoint) roundedCurrent(current float64) float64 {
 	return current
 }
 
-// actualMaxPhaseCurrent returns the maximum of all phase currents
-func (lp *Loadpoint) actualMaxPhaseCurrent() float64 {
+// actualMaxChargeCurrent returns the maximum of all phase currents.
+// If currents not measured falls back to offered current.
+func (lp *Loadpoint) actualMaxChargeCurrent() float64 {
 	if lp.chargeCurrents != nil {
 		return max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
 	}
@@ -948,7 +949,7 @@ func (lp *Loadpoint) setLimit(current float64) error {
 
 	// apply circuit limits
 	if lp.circuit != nil {
-		currentLimit := lp.circuit.ValidateCurrent(lp.actualMaxPhaseCurrent(), current)
+		currentLimit := lp.circuit.ValidateCurrent(lp.actualMaxChargeCurrent(), current)
 
 		activePhases := lp.ActivePhases()
 		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(current, activePhases))
@@ -1465,14 +1466,13 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 		waiting = true
 	}
 
-	scaleMaxCurrent := maxCurrent
 	if lp.circuit != nil {
-		scaleMaxCurrent = lp.circuit.ValidateCurrent(lp.actualMaxPhaseCurrent(), maxCurrent)
+		maxCurrent = lp.circuit.ValidateCurrent(lp.actualMaxChargeCurrent(), maxCurrent)
 	}
 
 	maxPhases := lp.MaxActivePhases()
 	target1pCurrent := powerToCurrent(availablePower, 1)
-	scalable = maxPhases > 1 && phases < maxPhases && target1pCurrent > scaleMaxCurrent
+	scalable = maxPhases > 1 && phases < maxPhases && target1pCurrent > maxCurrent
 
 	if scalable && lp.circuit != nil {
 		scaledMinPower := currentToPower(minCurrent, maxPhases)
