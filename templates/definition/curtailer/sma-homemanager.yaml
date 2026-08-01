@@ -11,15 +11,26 @@ params:
     help:
       en: ModbusTCP server needs to be enabled.
       de: Der ModbusTCP Server muss aktiviert sein.
+  - name: productionnominalmax
+    type: float
+    unit: Wp
+    required: true
+    description:
+      en: Installed generator power
+      de: Installierte Generatorleistung
+    help:
+      en: Rated generator/module power of the installation (reference value according to § 9 EEG).
+      de: Gesamtnennleistung bzw. Modul- oder Generatorleistung der Anlage (Bezugsgröße nach § 9 EEG).
 render: |
   type: custom
   curtail:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 40016 # Wirkleistungssollwert P in % der maximalen Wirkleistung (PMAX)
+      address: 40016 # Wirkleistungssollwert P (PMAX)
       type: writesingle
       encoding: uint16
+    scale: {{ divf (maxf .productionnominalmax 1) 100 }} # % to W
   curtailed:
     source: error
     error: ErrNotAvailable
