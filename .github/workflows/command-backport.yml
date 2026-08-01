@@ -158,11 +158,14 @@ jobs:
           NUMBER: ${{ github.event.issue.number }}
           ACTOR: ${{ github.event.comment.user.login }}
         run: |
+          # the release line the branch was cut from, 0.313 for release/0.313.1
+          line=$(echo "${TARGET#release/}" | cut -d. -f1,2)
+
           # the pull request is authored by the deploy token, so name the requester
           url=$(gh pr create \
             --base "$TARGET" \
             --head "$BRANCH" \
-            --title "${TARGET#release/} backport: $TITLE" \
+            --title "$line backport: $TITLE" \
             --label backport \
             --assignee "$ACTOR" \
             --body "Backport of #$NUMBER to \`$TARGET\`, requested by @$ACTOR.")
