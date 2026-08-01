@@ -114,6 +114,7 @@ jobs:
             }
 
             core.setOutput('target', target);
+            core.setOutput('branch', `backport/${pr.number}-${target}`);
             core.setOutput('sha', pr.merge_commit_sha);
             core.setOutput('title', pr.title);
 
@@ -126,7 +127,7 @@ jobs:
 
       - name: Cherry-pick
         env:
-          BRANCH: backport/${{ github.event.issue.number }}-${{ steps.pr.outputs.target }}
+          BRANCH: ${{ steps.pr.outputs.branch }}
           SHA: ${{ steps.pr.outputs.sha }}
         run: |
           git config user.name github-actions
@@ -147,7 +148,7 @@ jobs:
         id: create
         env:
           GH_TOKEN: ${{ secrets.RELEASE_DEPLOY_TOKEN }}
-          BRANCH: backport/${{ github.event.issue.number }}-${{ steps.pr.outputs.target }}
+          BRANCH: ${{ steps.pr.outputs.branch }}
           TARGET: ${{ steps.pr.outputs.target }}
           TITLE: ${{ steps.pr.outputs.title }}
           NUMBER: ${{ github.event.issue.number }}
