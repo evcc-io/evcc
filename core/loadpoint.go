@@ -1466,6 +1466,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 		waiting = true
 	}
 
+	// limit max current by circuit when scaling down
 	if lp.circuit != nil {
 		maxCurrent = lp.circuit.ValidateCurrent(lp.actualMaxChargeCurrent(), maxCurrent)
 	}
@@ -1474,6 +1475,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 	target1pCurrent := powerToCurrent(availablePower, 1)
 	scalable = maxPhases > 1 && phases < maxPhases && target1pCurrent > maxCurrent
 
+	// limit max power by circuit when scaling up
 	if scalable && lp.circuit != nil {
 		scaledMinPower := currentToPower(minCurrent, maxPhases)
 		scaledMaxPower := lp.circuit.ValidatePower(lp.chargePower, scaledMinPower)
