@@ -28,6 +28,7 @@ import (
 	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 	"github.com/lorenzodonini/ocpp-go/ocppj"
 	"github.com/lorenzodonini/ocpp-go/ws"
 )
@@ -436,6 +437,7 @@ func drainPendingWithErrors(id string, sc *sidecar) {
 			ErrorCode:        ocppj.GenericError,
 			ErrorDescription: "Upstream OCPP server unavailable",
 		}).MarshalJSON()
+		cs.traceSend(id, "", errFrame)
 		if writeErr := cs.Write(id, errFrame); writeErr != nil {
 			forwarderLog.WARN.Printf("forwarder: send error for pending call %s to %s: %v", msgID, id, writeErr)
 		}
@@ -451,6 +453,7 @@ func drainPendingWithErrors(id string, sc *sidecar) {
 				ErrorCode:        ocppj.GenericError,
 				ErrorDescription: "Upstream OCPP server disconnected",
 			}).MarshalJSON()
+			cs.traceSend(sc.chargerID, "", errFrame)
 			if writeErr := cs.Write(sc.chargerID, errFrame); writeErr != nil {
 				forwarderLog.WARN.Printf("forwarder: send disconnect error for %s to %s: %v", msgID, sc.chargerID, writeErr)
 			}
@@ -654,6 +657,7 @@ func (sc *sidecar) readFromUpstream() {
 			sc.pendingUpstreamCalls[msgID] = struct{}{}
 			sc.pendingUpstreamCallsMu.Unlock()
 
+			cs.traceSend(sc.chargerID, "upstream", msg)
 			if err := cs.Write(sc.chargerID, msg); err != nil {
 				forwarderLog.ERROR.Printf("forwarder: inject upstream call into charger %s: %v", sc.chargerID, err)
 			}
@@ -668,7 +672,16 @@ func (sc *sidecar) readFromUpstream() {
 			sc.pendingChargerCallsMu.Unlock()
 
 			if isChargerCall {
+				// warn on a rejected authorization (StartTransaction/Authorize).
+				// evcc's handler was bypassed, so a non-Accepted status from
+				// upstream silently leaves the charger unable to start - surface
+				// it so a mismatched idtag is diagnosable without a trace.
+				if status, ok := idTagStatusFromResult(msg); ok && status != types.AuthorizationStatusAccepted {
+					forwarderLog.WARN.Printf("forwarder: upstream rejected authorization for %s: idTagInfo.status=%s (does the charger's idtag match an authorized tag on the upstream backend?)", sc.chargerID, status)
+				}
+
 				// relay to charger; its handler was bypassed and it awaits this reply
+				cs.traceSend(sc.chargerID, "upstream", msg)
 				if err := cs.Write(sc.chargerID, msg); err != nil {
 					forwarderLog.ERROR.Printf("forwarder: relay upstream response to charger %s: %v", sc.chargerID, err)
 				}
@@ -817,6 +830,23 @@ func withMessageID(frame []byte, msgID string) ([]byte, error) {
 	}
 	parts[1] = id
 	return json.Marshal(parts)
+}
+
+// idTagStatusFromResult extracts idTagInfo.status from a CALL_RESULT payload
+// (e.g. StartTransaction.conf / Authorize.conf). Returns false when the frame
+// carries no idTagInfo.
+func idTagStatusFromResult(msg []byte) (types.AuthorizationStatus, bool) {
+	var frame []json.RawMessage
+	if err := json.Unmarshal(msg, &frame); err != nil || len(frame) < 3 {
+		return "", false
+	}
+	var payload struct {
+		IdTagInfo *types.IdTagInfo `json:"idTagInfo"`
+	}
+	if err := json.Unmarshal(frame[2], &payload); err != nil || payload.IdTagInfo == nil {
+		return "", false
+	}
+	return payload.IdTagInfo.Status, true
 }
 
 // parseOCPPFrame extracts the message type, id and (for Calls) action from a raw frame.

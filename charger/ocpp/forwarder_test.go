@@ -1,7 +1,9 @@
 package ocpp
 
 import (
+	"bytes"
 	"crypto/tls"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -11,7 +13,9 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
+	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocppj"
+	jww "github.com/spf13/jwalterweatherman"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -31,6 +35,55 @@ func TestForwarderWithMessageID(t *testing.T) {
 
 	_, err = withMessageID([]byte(`{}`), "new-id")
 	assert.Error(t, err)
+}
+
+func TestForwarderIdTagStatusFromResult(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		frame  string
+		status string
+		ok     bool
+	}{
+		{"StartTransaction invalid", `[3,"1",{"idTagInfo":{"status":"Invalid"},"transactionId":42}]`, "Invalid", true},
+		{"StartTransaction accepted", `[3,"1",{"idTagInfo":{"status":"Accepted"},"transactionId":42}]`, "Accepted", true},
+		{"Authorize blocked", `[3,"1",{"idTagInfo":{"status":"Blocked"}}]`, "Blocked", true},
+		{"no idTagInfo", `[3,"1",{"currentTime":"2026-07-30T00:00:00Z"}]`, "", false},
+		{"call not result", `[2,"1","StartTransaction",{"idTag":"evcc"}]`, "", false},
+		{"malformed", `not json`, "", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			status, ok := idTagStatusFromResult([]byte(tc.frame))
+			assert.Equal(t, tc.ok, ok)
+			assert.Equal(t, tc.status, string(status))
+		})
+	}
+}
+
+// newBufferedCS returns a CS whose TRACE output is captured in buf.
+func newBufferedCS(buf *bytes.Buffer) *CS {
+	np := jww.NewNotepad(jww.LevelTrace, jww.LevelTrace, buf, io.Discard, "ocpp", 0)
+	return &CS{log: &util.Logger{Notepad: np}}
+}
+
+func TestForwarderTraceLogging(t *testing.T) {
+	const id = "CP01"
+	frame := []byte(`[2,"1","StartTransaction",{}]`)
+
+	// received frame (e.g. a bypassed relay Call)
+	var recv bytes.Buffer
+	newBufferedCS(&recv).traceRecv(id, frame)
+	assert.Contains(t, recv.String(), "recv CP01: "+string(frame))
+
+	// frame proxied from upstream is clearly marked
+	var up bytes.Buffer
+	newBufferedCS(&up).traceSend(id, "upstream", frame)
+	assert.Contains(t, up.String(), "send CP01 (upstream): "+string(frame))
+
+	// evcc-generated frame carries no origin annotation
+	var evcc bytes.Buffer
+	newBufferedCS(&evcc).traceSend(id, "", frame)
+	assert.Contains(t, evcc.String(), "send CP01: "+string(frame))
+	assert.NotContains(t, evcc.String(), "(upstream)")
 }
 
 // fakeChannel implements ws.Channel for hook tests
