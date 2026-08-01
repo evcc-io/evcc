@@ -48,11 +48,6 @@ func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, api.ErrMissingToken
 	}
 
-	m, err := newPowerWall(local)
-	if err != nil {
-		return nil, err
-	}
-
 	log := util.NewLogger("powerwall").Redact(
 		local.User,
 		local.Password,
@@ -61,6 +56,11 @@ func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
 		cc.Tokens.Access,
 		cc.Tokens.Refresh,
 	)
+	m, err := newPowerWall(log, local)
+	if err != nil {
+		return nil, err
+	}
+
 	energySite, err := teslaEnergySite(log, cc.Credentials.ID, cc.Credentials.Secret, cc.Tokens.Access, cc.Tokens.Refresh, cc.SiteId)
 	if err != nil {
 		return nil, err
@@ -76,9 +76,16 @@ func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
 }
 
 func teslaReserveLimit(limit float64) uint64 {
+	if math.IsNaN(limit) || limit <= 0 {
+		return 0
+	}
+	if limit >= 100 {
+		return 100
+	}
+
 	limitUint := uint64(limit)
 	// Tesla firmware accepts values up to 80 or exactly 100 in this range.
-	if limitUint > 80 && limitUint < 100 {
+	if limitUint > 80 {
 		return 80
 	}
 	return limitUint

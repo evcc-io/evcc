@@ -41,7 +41,8 @@ func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	return newPowerWall(cc)
+	log := util.NewLogger("powerwall").Redact(cc.User, cc.Password)
+	return newPowerWall(log, cc)
 }
 
 func decodePowerWallConfig(other map[string]any) (powerWallConfig, error) {
@@ -80,9 +81,7 @@ func decodePowerWallConfig(other map[string]any) (powerWallConfig, error) {
 	return cc, nil
 }
 
-func newPowerWall(cc powerWallConfig) (*PowerWall, error) {
-	log := util.NewLogger("powerwall").Redact(cc.User, cc.Password)
-
+func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 	httpClient := &http.Client{
 		Transport: request.NewTripper(log, powerwall.DefaultTransport()),
 		Timeout:   time.Second * 2, // Timeout after 2 seconds
@@ -104,7 +103,7 @@ func newPowerWall(cc powerWallConfig) (*PowerWall, error) {
 		implement.Has(m, implement.MeterEnergy(m.totalEnergy))
 	}
 
-	if cc.Usage == "battery" {
+	if m.usage == "battery" {
 		implement.Has(m, implement.Battery(m.batterySoc))
 		implement.May(m, implement.BatterySocLimiter(cc.batterySocLimits.Decorator()))
 		implement.May(m, implement.BatteryPowerLimiter(cc.batteryPowerLimits.Decorator()))
