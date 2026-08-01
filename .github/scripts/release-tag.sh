@@ -16,6 +16,7 @@
 
 set -euo pipefail
 
+# overridden with the repository default branch by the workflow
 MASTER_REF="${MASTER_REF:-origin/master}"
 
 validate() {

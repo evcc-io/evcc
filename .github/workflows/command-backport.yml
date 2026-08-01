@@ -136,7 +136,7 @@ jobs:
           # -m 1 picks the first-parent diff of a merge commit; squashed pull
           # requests are ordinary commits and must not get the flag
           mainline=""
-          if [ "$(git rev-list --parents -n1 "$SHA" | wc -w)" -gt 2 ]; then
+          if git rev-parse --quiet --verify "$SHA^2" >/dev/null; then
             mainline="-m 1"
           fi
 

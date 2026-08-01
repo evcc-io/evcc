@@ -26,6 +26,8 @@ jobs:
       # feature releases must come from master, bugfix releases may come from any
       # branch. only the newest release moves the latest pointers.
       - id: tag
+        env:
+          MASTER_REF: origin/${{ github.event.repository.default_branch }}
         run: .github/scripts/release-tag.sh "${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
 
   call-build-workflow:
