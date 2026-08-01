@@ -32,9 +32,10 @@ type ParamCache struct {
 }
 
 // Snapshot is the value type used for requesting a copy of the cache state.
-// The cache responds once it reaches the parameter's position in the stream,
-// so the copy contains exactly the values published before it.
-type Snapshot chan []Param
+// The cache invokes it once it reaches the parameter's position in the stream,
+// so the copy contains exactly the values published before it. It must not
+// block, the cache cannot stall without backing up the whole value stream.
+type Snapshot func([]Param)
 
 // NewCache creates cache
 func NewParamCache() *ParamCache {
@@ -47,7 +48,7 @@ func NewParamCache() *ParamCache {
 func (c *ParamCache) Run(in <-chan Param) {
 	for p := range in {
 		if snapshot, ok := p.Val.(Snapshot); ok {
-			snapshot <- c.All()
+			snapshot(c.All())
 			continue
 		}
 

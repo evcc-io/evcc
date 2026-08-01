@@ -28,13 +28,13 @@ func TestParamCacheSnapshot(t *testing.T) {
 
 	in <- Param{Key: "before", Val: 1}
 
-	snapshot := make(Snapshot, 1)
-	in <- Param{Val: snapshot}
+	res := make(chan []Param, 1)
+	in <- Param{Val: Snapshot(func(state []Param) { res <- state })}
 
 	// published after the snapshot request, must not be included
 	in <- Param{Key: "after", Val: 2}
 
-	state := <-snapshot
+	state := <-res
 	assert.Len(t, state, 1)
 	assert.Equal(t, "before", state[0].Key)
 }

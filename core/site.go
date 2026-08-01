@@ -1234,19 +1234,19 @@ func (site *Site) prepare() {
 	vehicle.ClearPlanLocks = site.clearPlanLocks
 }
 
-// pushEvent attaches the cache state to the event and sends it to the messenger
-// hub. The snapshot travels the value stream, so it contains exactly the values
-// published before the event was raised.
+// pushEvent queues the event in the value stream. The cache attaches its state
+// when the event reaches its position, so the message renders exactly the
+// values published before the event was raised.
 func (site *Site) pushEvent(ev messenger.Event) {
-	if site.pushChan == nil {
+	pushChan := site.pushChan
+	if pushChan == nil {
 		return
 	}
 
-	snapshot := make(util.Snapshot, 1)
-	site.valueChan <- util.Param{Val: snapshot}
-	ev.State = <-snapshot
-
-	site.pushChan <- ev
+	site.valueChan <- util.Param{Val: util.Snapshot(func(state []util.Param) {
+		ev.State = state
+		pushChan <- ev
+	})}
 }
 
 // Prepare attaches communication channels to site and loadpoints

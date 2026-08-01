@@ -53,6 +53,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/libp2p/zeroconf/v2"
 	"github.com/samber/lo"
+	"github.com/smallnest/chanx"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	vpr "github.com/spf13/viper"
@@ -973,7 +974,7 @@ func configureEEBus(conf *eebus.Config) error {
 	return nil
 }
 
-func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *globalconfig.MessagingEvents, vehicles messenger.Vehicles) (chan messenger.Event, error) {
+func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *globalconfig.MessagingEvents, vehicles messenger.Vehicles) (chan<- messenger.Event, error) {
 	// yaml config from file
 	if len(confMessaging.Events) != 0 || len(confMessaging.Services) != 0 {
 		yamlSource.messaging = globalconfig.YamlSourceFile
@@ -1002,7 +1003,8 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 		}
 	}
 
-	messageChan := make(chan messenger.Event, 1)
+	// events are queued by the value cache, which must not block
+	messageChan := chanx.NewUnboundedChan[messenger.Event](context.Background(), 2)
 
 	var eg errgroup.Group
 
@@ -1022,7 +1024,7 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 	// append devices from database
 	configurable, err := config.ConfigurationsByClass(templates.Messenger)
 	if err != nil {
-		return messageChan, err
+		return messageChan.In, err
 	}
 
 	for _, conf := range configurable {
@@ -1032,7 +1034,7 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 	}
 
 	if err := eg.Wait(); err != nil {
-		return messageChan, &ClassError{ClassMessenger, err}
+		return messageChan.In, &ClassError{ClassMessenger, err}
 	}
 
 	var events globalconfig.MessagingEvents
@@ -1046,7 +1048,7 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 	messageHub, err := messenger.NewHub(events, vehicles)
 
 	if err != nil {
-		return messageChan, fmt.Errorf("failed configuring push services: %w", err)
+		return messageChan.In, fmt.Errorf("failed configuring push services: %w", err)
 	}
 
 	for _, dev := range config.Messengers().Devices() {
@@ -1055,9 +1057,9 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 		}
 	}
 
-	go messageHub.Run(messageChan)
+	go messageHub.Run(messageChan.Out)
 
-	return messageChan, nil
+	return messageChan.In, nil
 }
 
 func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
