@@ -23,7 +23,14 @@
 				/>
 
 				<WelcomeBanner v-if="setupRequired" />
-				<h2 class="my-4">{{ $t("config.section.loadpoints") }}</h2>
+				<h2 class="my-4 d-flex align-items-center gap-2">
+					{{ $t("config.section.loadpoints") }}
+					<AddDeviceButton
+						data-testid="add-loadpoint"
+						:title="$t('config.main.addLoadpoint')"
+						@click="openModal('loadpoint')"
+					/>
+				</h2>
 				<div class="p-0 config-list box-pull-out">
 					<DeviceCard
 						v-for="loadpoint in loadpoints"
@@ -47,15 +54,16 @@
 							<LoadpointIcon v-else />
 						</template>
 					</DeviceCard>
-
-					<NewDeviceButton
-						data-testid="add-loadpoint"
-						:title="$t('config.main.addLoadpoint')"
-						@click="openModal('loadpoint')"
-					/>
 				</div>
 
-				<h2 id="vehicles" class="my-4">{{ $t("config.section.vehicles") }}</h2>
+				<h2 id="vehicles" class="my-4 d-flex align-items-center gap-2">
+					{{ $t("config.section.vehicles") }}
+					<AddDeviceButton
+						data-testid="add-vehicle"
+						:title="$t('config.main.addVehicle')"
+						@click="openModal('vehicle')"
+					/>
+				</h2>
 				<div class="p-0 config-list box-pull-out">
 					<DeviceCard
 						v-for="vehicle in vehicles"
@@ -75,14 +83,16 @@
 							<DeviceTags :tags="deviceTags('vehicle', vehicle.name)" />
 						</template>
 					</DeviceCard>
-					<NewDeviceButton
-						data-testid="add-vehicle"
-						:title="$t('config.main.addVehicle')"
-						@click="openModal('vehicle')"
-					/>
 				</div>
 
-				<h2 class="my-4 mt-5">{{ $t("config.section.consumers") }}</h2>
+				<h2 class="my-4 mt-5 d-flex align-items-center gap-2">
+					{{ $t("config.section.consumers") }}
+					<AddDeviceButton
+						data-testid="add-consumer"
+						:title="$t('config.main.addConsumer')"
+						@click="openModal('meter', { choices: ['consumer', 'aux'] })"
+					/>
+				</h2>
 				<div class="p-0 config-list box-pull-out">
 					<MeterCard
 						v-for="meter in consumerMeters"
@@ -102,14 +112,17 @@
 						:tags="deviceTags('meter', meter.name)"
 						@edit="(type, id) => openModal('meter', { type, id })"
 					/>
-					<NewDeviceButton
-						data-testid="add-consumer"
-						:title="$t('config.main.addConsumer')"
-						@click="openModal('meter', { choices: ['consumer', 'aux'] })"
-					/>
 				</div>
 
-				<h2 class="my-4 mt-5">{{ $t("config.section.grid") }}</h2>
+				<h2 class="my-4 mt-5 d-flex align-items-center gap-2">
+					{{ $t("config.section.grid") }}
+					<AddDeviceButton
+						v-if="!gridMeter"
+						data-testid="add-grid"
+						:title="$t('config.main.addGrid')"
+						@click="openModal('meter', { type: 'grid' })"
+					/>
+				</h2>
 				<div class="p-0 config-list box-pull-out">
 					<MeterCard
 						v-if="gridMeter"
@@ -120,14 +133,14 @@
 						:tags="deviceTags('meter', gridMeter.name)"
 						@edit="(type, id) => openModal('meter', { type, id })"
 					/>
-					<NewDeviceButton
-						v-else
-						:title="$t('config.main.addGrid')"
-						data-testid="add-grid"
-						@click="openModal('meter', { type: 'grid' })"
-					/>
 				</div>
-				<h2 class="my-4 mt-5">{{ $t("config.section.meter") }}</h2>
+				<h2 class="my-4 mt-5 d-flex align-items-center gap-2">
+					{{ $t("config.section.meter") }}
+					<AddDeviceButton
+						:title="$t('config.main.addPvBattery')"
+						@click="openModal('meter', { choices: ['pv', 'battery'] })"
+					/>
+				</h2>
 				<div class="p-0 config-list box-pull-out">
 					<MeterCard
 						v-for="meter in pvMeters"
@@ -148,13 +161,16 @@
 						:tags="deviceTags('meter', meter.name)"
 						@edit="(type, id) => openModal('meter', { type, id })"
 					/>
-					<NewDeviceButton
-						:title="$t('config.main.addPvBattery')"
-						@click="openModal('meter', { choices: ['pv', 'battery'] })"
-					/>
 				</div>
 
-				<h2 class="my-4 mt-5">{{ $t("config.section.additionalMeter") }}</h2>
+				<h2 class="my-4 mt-5 d-flex align-items-center gap-2">
+					{{ $t("config.section.additionalMeter") }}
+					<AddDeviceButton
+						data-testid="add-additional"
+						:title="$t('config.main.addAdditional')"
+						@click="openModal('meter', { type: 'ext' })"
+					/>
+				</h2>
 				<div class="p-0 config-list box-pull-out">
 					<MeterCard
 						v-for="meter in extMeters"
@@ -165,14 +181,23 @@
 						:tags="deviceTags('meter', meter.name)"
 						@edit="(type, id) => openModal('meter', { type, id })"
 					/>
-					<NewDeviceButton
-						data-testid="add-additional"
-						:title="$t('config.main.addAdditional')"
-						@click="openModal('meter', { type: 'ext' })"
-					/>
 				</div>
 
-				<h2 id="tariffs" class="my-4 mt-5">{{ $t("config.tariff.title") }}</h2>
+				<h2 id="tariffs" class="my-4 mt-5 d-flex align-items-center gap-2">
+					{{ $t("config.tariff.title") }}
+					<template v-if="!tariffsYamlSource">
+						<AddDeviceButton
+							v-if="possibleTariffTypes.length"
+							:title="$t('config.tariff.addTariff')"
+							@click="openModal('tariff', { choices: possibleTariffTypes })"
+						/>
+						<AddDeviceButton
+							v-if="possibleForecastTypes.length"
+							:title="$t('config.tariff.addForecast')"
+							@click="openModal('tariff', { choices: possibleForecastTypes })"
+						/>
+					</template>
+				</h2>
 				<div v-if="!!tariffsYamlSource" class="p-0 config-list box-pull-out">
 					<DeviceCard
 						:title="$t('config.tariff.title')"
@@ -211,11 +236,6 @@
 						:currency="currency"
 						@edit="openModal('tariff', { type: 'feedIn', id: feedInTariff.id })"
 					/>
-					<NewDeviceButton
-						v-if="possibleTariffTypes.length"
-						:title="$t('config.tariff.addTariff')"
-						@click="openModal('tariff', { choices: possibleTariffTypes })"
-					/>
 					<TariffCard
 						v-if="co2Tariff"
 						:tariff="co2Tariff"
@@ -252,11 +272,6 @@
 						:tags="deviceTags('tariff', plannerTariff.name)"
 						:currency="currency"
 						@edit="openModal('tariff', { type: 'planner', id: plannerTariff.id })"
-					/>
-					<NewDeviceButton
-						v-if="possibleForecastTypes.length"
-						:title="$t('config.tariff.addForecast')"
-						@click="openModal('tariff', { choices: possibleForecastTypes })"
 					/>
 				</div>
 
@@ -507,7 +522,7 @@ import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/batterythreequarters";
 import "@h2d2/shopicons/es/regular/powersupply";
 import "@h2d2/shopicons/es/regular/receivepayment";
-import NewDeviceButton from "../components/Config/NewDeviceButton.vue";
+import AddDeviceButton from "../components/Config/AddDeviceButton.vue";
 import api from "../api";
 import ChargerModal from "../components/Config/ChargerModal.vue";
 import CircuitsIcon from "../components/MaterialIcon/Circuits.vue";
@@ -602,7 +617,7 @@ import AuthProvidersCard from "../components/Config/AuthProvidersCard.vue";
 export default defineComponent({
 	name: "Config",
 	components: {
-		NewDeviceButton,
+		AddDeviceButton,
 		BackupRestoreModal,
 		ChargerModal,
 		CircuitsIcon,
