@@ -1,5 +1,24 @@
 import { describe, expect, test } from "vite-plus/test";
-import { findLowestSumSlotIndex, isStaticTariff } from "./forecast";
+import { expandForecast, findLowestSumSlotIndex, isStaticTariff } from "./forecast";
+
+describe("expandForecast", () => {
+  test("expands slot shards to milliseconds", () => {
+    expect(expandForecast("forecast.grid", [[1735689600, 1735693200, 0.25]])).toEqual([
+      { start: 1735689600000, end: 1735693200000, value: 0.25 },
+    ]);
+  });
+
+  test("expands the solar timeseries", () => {
+    expect(
+      expandForecast("forecast.solar", { scale: 1, timeseries: [[1735689600, 1000]] })
+    ).toEqual({ scale: 1, timeseries: [{ ts: 1735689600000, val: 1000 }] });
+  });
+
+  test("passes through other keys and empty values", () => {
+    expect(expandForecast("loadpoints.0.charging", true)).toBe(true);
+    expect(expandForecast("forecast.grid", null)).toBe(null);
+  });
+});
 
 describe("findLowestSumSlotIndex", () => {
   test("finds lowest sum with span of 4", () => {

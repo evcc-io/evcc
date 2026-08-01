@@ -33,19 +33,16 @@ function expandSolar(solar: WireSolarDetails): SolarDetails {
 // The API publishes forecast slots as [start, end, value] and solar entries as
 // [ts, val] with timestamps in unix seconds. Expand them to objects with unix
 // milliseconds so components can keep using named fields and `new Date(...)`.
-// State arrives sharded, one key per forecast field, plus the whole object on
-// initial load.
+// Forecast state is sharded, arriving as one key per field.
 export function expandForecast(key: string, value: any): any {
-  if (!key.startsWith("forecast") || !value) return value;
+  if (!value) return value;
 
-  const [, field] = key.split(".");
-  if (SLOT_KEYS.includes(field)) return expandSlots(value);
+  const [prefix, field] = key.split(".");
+  if (prefix !== "forecast") return value;
   if (field === "solar") return expandSolar(value);
-  if (field) return value;
+  if (SLOT_KEYS.includes(field)) return expandSlots(value);
 
-  return Object.fromEntries(
-    Object.entries(value).map(([k, v]) => [k, expandForecast(`forecast.${k}`, v)])
-  );
+  return value;
 }
 
 // return the date in local YYYY-MM-DD format
