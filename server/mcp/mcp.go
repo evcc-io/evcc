@@ -85,11 +85,12 @@ func New(host http.Handler, opt ...Option) (*mcp.Server, error) {
 
 	mcp.AddTool(srv, &mcp.Tool{
 		Name: "fetchDocs",
-		Description: "Read a page of the evcc documentation or website as text. " +
+		Description: "Read a page of the evcc documentation or website as markdown. " +
 			"Only urls on evcc.io are allowed. Use this to look up configuration, supported " +
 			"devices, plugins or error messages instead of answering from memory. " +
 			"Start at https://docs.evcc.io/en for the table of contents, the result lists " +
-			"the links of the page to follow.",
+			"the links of the page to follow. The result is the heading outline plus the cost " +
+			"of the entire page, read on with query=<heading> or details=full.",
 	}, fetchTool(log))
 
 	return srv, nil
