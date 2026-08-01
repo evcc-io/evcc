@@ -74,6 +74,28 @@ GOOS=linux GOARCH=arm GOARM=6 make
 make docker DOCKER_IMAGE=my/docker DOCKER_TAG=0815
 ```
 
+## Releases
+
+Releases are cut by pushing a `MAJOR.MINOR.PATCH` tag. Any other tag is ignored.
+
+Feature releases (`0.313.0`) must be tagged on `master`. The release workflow
+rejects a feature tag that is not reachable from `master`.
+
+Bugfix releases (`0.313.1`) may be tagged on any branch. That allows servicing
+an older release line without shipping everything that has landed on `master`
+since. Only the newest release moves the `latest` pointers, so a bugfix release
+of an older line publishes its artifacts, but leaves the `evcc/evcc:latest`
+docker tag, the homebrew formula, the GitHub latest release, the hassio addon
+and the demo instance untouched.
+
+To move a merged pull request onto a release branch, comment `/backport` on it.
+The pull request has to carry the `bug` label and must not be marked `(BC)`,
+only non-breaking bugfixes are backported.
+The commit is cherry-picked onto the branch of the current release line, e.g.
+`release/0.313`, and a pull request is opened against it. The branch is created
+at the newest tag of that line if it does not exist yet. Pass a branch name,
+`/backport release/0.312`, to service an older line.
+
 ## Debugging in VS Code
 
 ### evcc Core
