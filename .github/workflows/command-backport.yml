@@ -172,7 +172,7 @@ jobs:
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
             const { TARGET, URL, ERROR } = process.env;
             const body = URL
-              ? `✅ Backported to \`${TARGET}\`: ${URL}`
+              ? `✅ Opened backport pull request on \`${TARGET}\`: ${URL}`
               : ERROR
                 ? `❌ ${ERROR}`
                 : `❌ Backport failed, most likely a cherry-pick conflict. See the [run logs](${runUrl}).`;
