@@ -56,6 +56,13 @@ func New(host http.Handler) (*mcp.Server, error) {
 		Description: "Documentation",
 	}, docsTool)
 
+	mcp.AddTool(srv, &mcp.Tool{
+		Name: "fetchDocs",
+		Description: "Read a page of the evcc documentation or website as text. " +
+			"Only urls on evcc.io are allowed. Use this to look up configuration, supported " +
+			"devices, plugins or error messages instead of answering from memory.",
+	}, fetchTool(log))
+
 	return srv, nil
 }
 
