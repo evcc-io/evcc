@@ -161,6 +161,22 @@ func (site *Site) SetExtMeterRefs(ref []string) {
 	settings.SetString(keys.ExtMeters, strings.Join(filterConfigurable(ref), ","))
 }
 
+// GetCurtailerRefs returns the curtailment device references
+func (site *Site) GetCurtailerRefs() []string {
+	site.RLock()
+	defer site.RUnlock()
+	return site.CurtailersRef
+}
+
+// SetCurtailerRefs sets the curtailment device references
+func (site *Site) SetCurtailerRefs(ref []string) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.CurtailersRef = ref
+	settings.SetString(keys.Curtailers, strings.Join(filterConfigurable(ref), ","))
+}
+
 // GetBatterySoc returns the current battery soc
 func (site *Site) GetBatterySoc() float64 {
 	site.RLock()

@@ -3,7 +3,6 @@ products:
   - brand: SMA
     description:
       generic: Sunny Home Manager 2.0 Modbus
-capabilities: ["curtail"]
 params:
   - name: usage
     choice: ["grid"]
@@ -48,13 +47,3 @@ render: |
       type: holding
       decode: int32nan
     scale: 0.001
-  curtail:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 40016 # Wirkleistungssollwert P, in % der maximalen Wirkleistung (PMAX) der PV-Anlage.
-      type: writesingle
-      decode: uint16
-  curtailed:
-    source: error
-    error: ErrNotAvailable

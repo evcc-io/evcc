@@ -14,6 +14,7 @@ var instance struct {
 	chargers   *handler[api.Charger]
 	vehicles   *handler[api.Vehicle]
 	circuits   *handler[api.Circuit]
+	curtailers *handler[api.Curtailer]
 	hems       *handler[hems.API]
 	messengers *handler[api.Messenger]
 	loadpoints *handler[loadpoint.API]
@@ -29,6 +30,7 @@ func Reset() {
 	instance.chargers = &handler[api.Charger]{topic: "charger"}
 	instance.vehicles = &handler[api.Vehicle]{topic: "vehicle"}
 	instance.circuits = &handler[api.Circuit]{topic: "circuit"}
+	instance.curtailers = &handler[api.Curtailer]{topic: "curtailer"}
 	instance.hems = &handler[hems.API]{topic: "hems"}
 	instance.messengers = &handler[api.Messenger]{topic: "messenger"}
 	instance.loadpoints = &handler[loadpoint.API]{topic: "loadpoint"}
@@ -61,6 +63,10 @@ func Messengers() Handler[api.Messenger] {
 
 func Circuits() Handler[api.Circuit] {
 	return instance.circuits
+}
+
+func Curtailers() Handler[api.Curtailer] {
+	return instance.curtailers
 }
 
 func Hems() Handler[hems.API] {

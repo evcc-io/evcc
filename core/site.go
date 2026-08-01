@@ -65,6 +65,7 @@ type Site struct {
 	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
 	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
 	Meters        MetersConfig `mapstructure:"meters"`        // Meter references
+	CurtailersRef []string     `mapstructure:"curtailers"`    // Curtailment device references
 
 	// meters
 	circuit        api.Circuit                // Circuit
@@ -75,6 +76,7 @@ type Site struct {
 	extMeters      []config.Device[api.Meter] // External meters - for monitoring only
 	auxMeters      []config.Device[api.Meter] // Auxiliary meters
 	consumerMeters []config.Device[api.Meter] // Consumer meters
+	curtailers     []config.Device[api.Curtailer]
 
 	// last applied HEMS state, nil until applied or after a failed attempt
 	dimmed         *bool
@@ -305,6 +307,15 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		site.collectors[ref] = me
 	}
 
+	// curtailment devices
+	for _, ref := range site.CurtailersRef {
+		dev, err := config.Curtailers().ByName(ref)
+		if err != nil {
+			return err
+		}
+		site.curtailers = append(site.curtailers, dev)
+	}
+
 	// revert battery mode on shutdown
 	shutdown.Register(func() {
 		if mode := site.GetBatteryMode(); batteryModeModified(mode) {
@@ -353,6 +364,9 @@ func (site *Site) restoreMetersAndTitle() {
 	}
 	if v, err := settings.String(keys.ConsumerMeters); err == nil && v != "" {
 		site.Meters.ConsumerMetersRef = append(site.Meters.ConsumerMetersRef, filterConfigurable(strings.Split(v, ","))...)
+	}
+	if v, err := settings.String(keys.Curtailers); err == nil && v != "" {
+		site.CurtailersRef = append(site.CurtailersRef, filterConfigurable(strings.Split(v, ","))...)
 	}
 }
 

@@ -1,0 +1,20 @@
+## required attributes
+# feed-in limit in percent of nominal production power (0..100, 100 = uncurtailed)
+curtail: # write, plugin
+  source: http
+  uri: http://inverter.local/api/limit?percent={{ .curtail }}
+  method: POST
+curtailed: # read, plugin
+  source: http
+  uri: http://inverter.local/api/limit
+  jq: .percent
+
+## alternative examples
+#curtail:
+#  source: modbus
+#  uri: 192.168.179.200:502
+#  id: 1
+#  register: { type: writesingle, address: 40016, encoding: uint16 }
+#curtailed:
+#  source: error
+#  error: ErrNotAvailable

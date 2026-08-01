@@ -226,6 +226,8 @@ export enum ConfigType {
 export type ConfigVehicle = Entity;
 export type ConfigMessenger = Entity;
 
+export type ConfigCurtailer = Entity;
+
 export interface ConfigHems extends Entity {
   deviceProduct?: string;
 }
@@ -770,7 +772,8 @@ export type DeviceType =
   | "loadpoint"
   | "messenger"
   | "tariff"
-  | "hems";
+  | "hems"
+  | "curtailer";
 export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext" | "consumer";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
 export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar" | "temperature";
@@ -787,6 +790,7 @@ export interface SiteConfig {
   aux: string[] | null;
   ext: string[] | null;
   consumer: string[] | null;
+  curtail: string[] | null;
 }
 
 export type ValueOf<T> = T[keyof T];
