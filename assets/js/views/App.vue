@@ -15,6 +15,9 @@
 		<PasswordModal />
 		<LoginModal v-bind="loginModalProps" />
 		<OfflineIndicator v-bind="offlineIndicatorProps" />
+
+		<!-- app level, so the conversation survives navigation and stays alive while minimized -->
+		<AssistantWidget v-if="assistantConfigured" :context="assistantContext" />
 	</div>
 </template>
 
@@ -28,6 +31,8 @@ import PasswordModal from "../components/Auth/PasswordModal.vue";
 import LoginModal from "../components/Auth/LoginModal.vue";
 import AboutModal from "../components/AboutModal.vue";
 import HelpModal from "../components/HelpModal.vue";
+import AssistantWidget from "../components/Assistant/AssistantWidget.vue";
+import assistantContext from "../components/Assistant/context";
 import collector from "../mixins/collector";
 import vehicleList from "@/utils/vehicleList";
 import { defineComponent } from "vue";
@@ -53,6 +58,7 @@ export default defineComponent({
 		PasswordModal,
 		LoginModal,
 		OfflineIndicator,
+		AssistantWidget,
 	},
 	mixins: [collector],
 	props: {
@@ -83,6 +89,12 @@ export default defineComponent({
 		},
 		vehicleList() {
 			return vehicleList(this.state.vehicles);
+		},
+		assistantConfigured(): boolean {
+			return !!this.state.assistant?.provider;
+		},
+		assistantContext(): string {
+			return assistantContext.value;
 		},
 		globalSettingsProps() {
 			return this.collectProps(GlobalSettingsModal, this.state);

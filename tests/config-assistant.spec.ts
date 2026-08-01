@@ -89,8 +89,47 @@ test.describe("assistant", () => {
     await expect(page.getByTestId("assistant-panel")).toContainText("what is wrong?");
     await expect(page.getByTestId("assistant-panel")).toContainText(/connection refused/i);
 
-    // and on the log page
+    // cursor up/down browses the asked questions
+    const input = page.getByTestId("assistant-input");
+    await input.fill("and now?");
+    await input.press("Enter");
+    await expect(page.getByTestId("assistant-panel")).toContainText("and now?");
+
+    await input.fill("draft");
+    await input.press("ArrowUp");
+    await expect(input).toHaveValue("and now?");
+    await input.press("ArrowUp");
+    await expect(input).toHaveValue("what is wrong?");
+    // oldest entry is the end of the line
+    await input.press("ArrowUp");
+    await expect(input).toHaveValue("what is wrong?");
+    await input.press("ArrowDown");
+    await expect(input).toHaveValue("and now?");
+    // back past the newest entry restores the draft
+    await input.press("ArrowDown");
+    await expect(input).toHaveValue("draft");
+    await input.fill("");
+
+    // escape aborts the running question and hands it back for editing
+    const messages = page.getByTestId("assistant-panel").locator(".message");
+    await expect(messages).toHaveCount(2);
+    await page.route("**/api/assistant/chat", () => {
+      /* never answers */
+    });
+    await input.fill("takes forever");
+    await input.press("Enter");
+    await expect(page.getByTestId("assistant-stop")).toBeVisible();
+    await input.press("Escape");
+    await expect(page.getByTestId("assistant-stop")).toHaveCount(0);
+    await expect(input).toHaveValue("takes forever");
+    await expect(messages).toHaveCount(2);
+    await page.unroute("**/api/assistant/chat");
+    await input.fill("");
+
+    // available on every page, the conversation survives navigation
     await page.goto("/#/log");
-    await expect(page.getByTestId("assistant-open")).toBeVisible();
+    await expect(page.getByTestId("assistant-panel")).toContainText("what is wrong?");
+    await page.goto("/#/");
+    await expect(page.getByTestId("assistant-panel")).toContainText("what is wrong?");
   });
 });
