@@ -54,9 +54,9 @@ params:
       de: FEMS/OpenEMS Standard 60s
       en: FEMS/OpenEMS standard 60s
     usages: ["battery"]
-- preset: battery-params
-- name: cache
-   default: 1s
+  - preset: battery-params
+  - name: cache
+     default: 1s
 render: |
   type: custom
   {{- if eq .usage "grid" }} 
