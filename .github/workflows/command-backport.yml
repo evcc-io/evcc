@@ -8,8 +8,8 @@ name: Backport Command
 # Without an argument the branch of the current release line is used, e.g.
 # `release/0.313`. It is created at the newest tag of that line on first use.
 #
-# The pull request is created with GITHUB_TOKEN, so its checks are created but
-# wait for approval from the pull request page.
+# Pushing and opening the pull request use RELEASE_DEPLOY_TOKEN so its checks
+# start without approval. GITHUB_TOKEN would create them in a pending state.
 
 on:
   issue_comment:
@@ -121,6 +121,8 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ steps.pr.outputs.target }}
+          # persisted for the push below
+          token: ${{ secrets.RELEASE_DEPLOY_TOKEN }}
 
       - name: Cherry-pick
         env:
@@ -144,7 +146,7 @@ jobs:
       - name: Create pull request
         id: create
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_DEPLOY_TOKEN }}
           BRANCH: backport/${{ github.event.issue.number }}-${{ steps.pr.outputs.target }}
           TARGET: ${{ steps.pr.outputs.target }}
           TITLE: ${{ steps.pr.outputs.title }}
