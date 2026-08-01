@@ -2,7 +2,7 @@ template: tesla-powerwall-fleet
 products:
   - brand: Tesla
     description:
-      generic: Powerwall
+      generic: Powerwall (Fleet API)
 capabilities: ["battery-control"]
 requirements:
   description:
