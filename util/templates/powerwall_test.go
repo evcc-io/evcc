@@ -26,13 +26,16 @@ func TestPowerwallTemplates(t *testing.T) {
 	fleet, err := ByName(Meter, "tesla-powerwall-fleet")
 	require.NoError(t, err)
 	fleetConfig, _, err := fleet.RenderResult(RenderModeInstance, map[string]any{
-		"host": "powerwall.local", "password": "secret", "fleetClientId": "client",
-		"fleetAccessToken": "access", "fleetRefreshToken": "refresh",
+		"host": "powerwall.local", "password": "secret", "clientId": "client",
+		"accessToken": "access", "refreshToken": "refresh",
 	})
 	require.NoError(t, err)
 	assert.Contains(t, string(fleetConfig), "type: powerwall-fleet")
 	assert.Contains(t, string(fleetConfig), "usage: battery")
-	for _, name := range []string{"fleetClientId", "fleetAccessToken", "fleetRefreshToken"} {
+	assert.Contains(t, string(fleetConfig), "id: client")
+	assert.Contains(t, string(fleetConfig), "access: access")
+	assert.Contains(t, string(fleetConfig), "refresh: refresh")
+	for _, name := range []string{"clientId", "accessToken", "refreshToken"} {
 		_, param := fleet.ParamByName(name)
 		assert.True(t, param.Required, "%s must be required", name)
 	}

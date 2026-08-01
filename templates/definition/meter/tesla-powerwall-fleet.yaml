@@ -25,23 +25,16 @@ params:
     help:
       en: Password of the user "customer". By default this is the last 5 characters of password stated on the Tesla Gateway.
       de: Passwort des Benutzers "Kunde". Default sind die letzten 5 Zeichen des auf dem Tesla Gateway genannten Passworts.
-  - name: fleetClientId
-    description:
-      generic: Fleet Client ID
-    required: true
+  - name: clientId
     help:
       en: from [developer.tesla.com](https://developer.tesla.com/dashboard).
       de: von [developer.tesla.com](https://developer.tesla.com/dashboard).
-  - name: fleetAccessToken
-    description:
-      generic: Fleet Access Token
+  - name: accessToken
     required: true
     help:
       en: from [myteslamate.com](https://app.myteslamate.com/).
       de: von [myteslamate.com](https://app.myteslamate.com/).
-  - name: fleetRefreshToken
-    description:
-      generic: Fleet Refresh Token
+  - name: refreshToken
     required: true
     help:
       en: from [myteslamate.com](https://app.myteslamate.com/).
@@ -65,10 +58,10 @@ render: |
   user: customer
   password: {{ .password }} # for user 'customer'
   credentials:
-    id: {{ .fleetClientId }}
+    id: {{ .clientId }}
   tokens:
-    access: {{ .fleetAccessToken }}
-    refresh: {{ .fleetRefreshToken }}
+    access: {{ .accessToken }}
+    refresh: {{ .refreshToken }}
   siteId: {{ .siteId }}
   minsoc: {{ .minsoc }}
   maxsoc: {{ .maxsoc }}
