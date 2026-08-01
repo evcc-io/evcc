@@ -162,7 +162,7 @@ jobs:
           url=$(gh pr create \
             --base "$TARGET" \
             --head "$BRANCH" \
-            --title "$TITLE" \
+            --title "${TARGET#release/} backport: $TITLE" \
             --assignee "$ACTOR" \
             --body "Backport of #$NUMBER to \`$TARGET\`, requested by @$ACTOR.")
           echo "url=$url" >> "$GITHUB_OUTPUT"
