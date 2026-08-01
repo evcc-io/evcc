@@ -168,7 +168,7 @@ jobs:
           url=$(gh pr create \
             --base "$TARGET" \
             --head "$BRANCH" \
-            --title "$TITLE ($line backport)" \
+            --title "$TITLE [$line backport]" \
             --label backport \
             --assignee "$ACTOR" \
             --body "")
