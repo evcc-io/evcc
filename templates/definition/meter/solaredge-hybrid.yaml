@@ -293,9 +293,6 @@ render: |
                     type: writemultiple
                     encoding: float32s
             script: |
-              // float64(): the go plugin injects rated via %#v, which drops the decimal
-              // point for whole numbers, making := infer int - forced float64 here to
-              // match the FloatSetter's type assertion
               float64(rated) // unblock charging (holdcharge may have zeroed this); DC-coupled
               // PV charging bypasses the AC stage, so this isn't capped to maxacpower
           - source: go
@@ -325,7 +322,6 @@ render: |
             script: |
               // uncapped by maxacpower like ChargeLimit above: self-consumption mode
               // is self-limiting via load and the inverter's own AC hardware rating.
-              // float64(): := would otherwise infer int for these whole-number values
               limit := float64({{ .maxdischargepower }})
               out := float64(rated)
               if limit < out { out = limit }
@@ -368,9 +364,6 @@ render: |
                     type: writemultiple
                     encoding: float32s
             script: |
-              // float64(): the go plugin injects rated via %#v, which drops the decimal
-              // point for whole numbers, making := infer int - forced float64 here to
-              // match the FloatSetter's type assertion
               float64(rated) // unblock charging (holdcharge may have zeroed this); DC-coupled
               // PV charging bypasses the AC stage, so this isn't capped to maxacpower
           - source: const
@@ -420,9 +413,6 @@ render: |
                     type: writemultiple
                     encoding: float32s
             script: |
-              // float64(): the go plugin injects rated via %#v, which drops the decimal
-              // point for whole numbers, making := infer int - forced float64 here to
-              // match the FloatSetter's type assertion
               float64(rated) // unblock charging (holdcharge may have zeroed this); DC-coupled
               // PV charging bypasses the AC stage, so this isn't capped to maxacpower
           - source: const
@@ -481,7 +471,6 @@ render: |
                     type: writemultiple
                     encoding: float32s
             script: |
-              // float64(): := would otherwise infer int for these whole-number values
               limit := float64({{ .maxdischargepower }})
               out := float64(rated)
               if limit < out { out = limit }
@@ -526,9 +515,6 @@ render: |
                     type: writemultiple
                     encoding: float32s
             script: |
-              // float64(): the go plugin injects rated via %#v, which drops the decimal
-              // point for whole numbers, making := infer int - forced float64 here to
-              // match the FloatSetter's type assertion
               float64(rated) // unblock charging (holdcharge may have zeroed this); DC-coupled
               // PV charging bypasses the AC stage, so this isn't capped to maxacpower
           - source: go
@@ -556,7 +542,6 @@ render: |
                     type: writemultiple
                     encoding: float32s
             script: |
-              // float64(): := would otherwise infer int for these whole-number values
               limit := float64({{ .maxdischargepower }})
               out := float64(rated)
               if limit < out { out = limit }
