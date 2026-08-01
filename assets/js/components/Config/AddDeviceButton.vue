@@ -1,20 +1,21 @@
 <template>
 	<button
 		type="button"
-		class="root d-inline-flex align-items-center justify-content-center rounded-circle"
+		class="root d-inline-flex align-items-center"
 		:title="title"
 		:aria-label="title"
 		@click="$emit('click')"
 	>
-		<shopicon-regular-plus size="s"></shopicon-regular-plus>
+		<AddCircle />
 	</button>
 </template>
 
 <script>
-import "@h2d2/shopicons/es/regular/plus";
+import AddCircle from "../MaterialIcon/AddCircle.vue";
 
 export default {
 	name: "AddDeviceButton",
+	components: { AddCircle },
 	props: {
 		title: String,
 	},
@@ -24,12 +25,10 @@ export default {
 
 <style scoped>
 .root {
-	width: 2rem;
-	height: 2rem;
 	padding: 0;
 	border: none;
-	background-color: var(--evcc-dark-green);
-	color: var(--evcc-background);
+	background: none;
+	color: var(--evcc-dark-green);
 	transition: opacity var(--evcc-transition-fast) linear;
 }
 .root:hover,

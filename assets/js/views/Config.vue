@@ -1320,6 +1320,10 @@ export default defineComponent({
 }) as any;
 </script>
 <style scoped>
+/* sections without devices collapse to their heading */
+.config-list:empty {
+	display: none;
+}
 .config-list {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
