@@ -23,6 +23,7 @@ import {
 import colors, { lighterColor } from "@/colors";
 import formatter from "@/mixins/formatter";
 import chartMixin from "./chartMixin";
+import { robustPriceMax, PRICE_SPIKE_CLIP } from "@/utils/robustPriceMax";
 import type { CURRENCY } from "@/types/evcc";
 import type { ForecastSlot } from "./types";
 
@@ -70,7 +71,9 @@ export default defineComponent({
 				...this.feedinSlots.map((s) => s.value),
 			];
 			const dataMin = Math.min(...values);
-			const dataMax = Math.max(...values);
+			// clip prices above the spike threshold so they don't flatten the everyday
+			// range (spikes clip at the axis max; tooltip shows the real value)
+			const dataMax = robustPriceMax(values, { threshold: PRICE_SPIKE_CLIP });
 			const rangeMin = this.zoom ? dataMin : Math.min(0, dataMin);
 			const rangeMax = Math.max(0, dataMax);
 			const range = rangeMax - rangeMin || 1;
@@ -84,6 +87,14 @@ export default defineComponent({
 				max: Math.ceil(rangeMax / interval) * interval,
 				interval,
 			};
+		},
+		// resolved danger colour used to flag spikes clipped at the axis ceiling
+		spikeColor(): string {
+			if (typeof getComputedStyle === "undefined") return "#dc3545";
+			return (
+				getComputedStyle(document.documentElement).getPropertyValue("--bs-danger").trim() ||
+				"#dc3545"
+			);
 		},
 		chartOption(): Record<string, unknown> {
 			const priceColor = colors.price || "";
@@ -100,7 +111,9 @@ export default defineComponent({
 					trigger: "axis",
 					axisPointer: { type: "line", snap: true, lineStyle: { color: "transparent" } },
 					...tooltipStyle(priceColor, () => this.chart),
-					formatter(params: { value: [string, number]; seriesIndex: number }[]) {
+					formatter(allParams: { value: [string, number]; seriesIndex: number }[]) {
+						// price + feed-in are series 0/1; ignore the spike-marker scatters
+						const params = allParams.filter((s) => s.seriesIndex < 2);
 						const p = params[0];
 						if (!p) return "";
 						const d = new Date(p.value[0]);
@@ -139,11 +152,35 @@ export default defineComponent({
 				series: [
 					this.priceSeries(this.slots, priceColor, this.markPoints),
 					this.priceSeries(this.feedinSlots, exportColor),
+					...this.spikeMarkers(this.slots),
+					...this.spikeMarkers(this.feedinSlots),
 				],
 			};
 		},
 	},
 	methods: {
+		// dots at the axis ceiling flag slots whose price is clipped above the
+		// robust max, so a spike is distinct from a legit top-of-range price
+		spikeMarkers(slots: ForecastSlot[]): Record<string, unknown>[] {
+			const cap = this.yAxisConfig["max"] as number | undefined;
+			if (cap == null) return [];
+			const clipped = slots.filter((s) => s.value > cap);
+			if (!clipped.length) return [];
+			return [
+				{
+					type: "scatter",
+					symbol: "circle",
+					symbolSize: 6,
+					cursor: "default",
+					silent: true,
+					z: 5,
+					data: clipped.map((s) => ({
+						value: [clampStart(s.start, this.startDate), cap],
+					})),
+					itemStyle: { color: this.spikeColor },
+				},
+			];
+		},
 		priceSeries(
 			slots: ForecastSlot[],
 			color: string,

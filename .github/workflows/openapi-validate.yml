@@ -13,7 +13,7 @@ on:
 jobs:
   validate-openapi:
     name: Validate OpenAPI spec
-    runs-on: depot-ubuntu-24.04-arm
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v7

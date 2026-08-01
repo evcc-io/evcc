@@ -6,6 +6,8 @@ __debug_bin*
 *.db
 *.gz
 *.py
+!.github/scripts/*.py
+__pycache__/
 testdata/**/*
 *.log
 *.json

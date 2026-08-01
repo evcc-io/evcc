@@ -66,6 +66,20 @@ func durationSetter(set func(time.Duration) error) func(string) error {
 	return setterFunc(util.ParseDuration, set)
 }
 
+// jsonSetter unmarshals the payload into T (e.g. a slice) and applies it; an
+// empty payload sets the zero value (nil for slices).
+func jsonSetter[T any](set func(T) error) func(string) error {
+	return func(payload string) error {
+		var val T
+		if !isEmpty(payload) {
+			if err := json.Unmarshal([]byte(payload), &val); err != nil {
+				return err
+			}
+		}
+		return set(val)
+	}
+}
+
 func planStrategySetter(set func(api.PlanStrategy) error) func(string) error {
 	return func(payload string) error {
 		var res api.PlanStrategy
