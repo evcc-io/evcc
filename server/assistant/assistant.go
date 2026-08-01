@@ -16,6 +16,12 @@ import (
 // maxIterations limits the tool calling loop
 const maxIterations = 12
 
+// maxHistory bounds the characters of past messages resent with each question,
+// roughly a quarter of that in tokens. The tool definitions sit at the start of
+// the prompt, so a conversation that outgrows the model's context evicts them
+// first and the model silently loses its tools.
+const maxHistory = 4000
+
 // systemPrompt is embedded at build time, edit prompt.txt to change it
 //
 //go:embed prompt.txt
@@ -34,7 +40,8 @@ type Assistant struct {
 	llm     llms.Model
 	client  *mcpsdk.ClientSession
 	server  *mcpsdk.ServerSession
-	tools   []llms.Tool
+	tools   []llms.Tool // offered to the model
+	catalog []llms.Tool // searchable through findTools
 	context string
 }
 
@@ -64,7 +71,7 @@ func newAssistant(ctx context.Context, llm llms.Model, srv *mcpsdk.Server) (*Ass
 		return nil, err
 	}
 
-	tools, err := listTools(ctx, cs)
+	catalog, err := listTools(ctx, cs)
 	if err != nil {
 		cs.Close()
 		ss.Close()
@@ -74,11 +81,12 @@ func newAssistant(ctx context.Context, llm llms.Model, srv *mcpsdk.Server) (*Ass
 	return &Assistant{
 		log: util.NewLogger("assistant"),
 		// tool calls are mcp requests, log them with the mcp transport they trigger
-		mcpLog: util.NewLogger("mcp"),
-		llm:    llm,
-		client: cs,
-		server: ss,
-		tools:  tools,
+		mcpLog:  util.NewLogger("mcp"),
+		llm:     llm,
+		client:  cs,
+		server:  ss,
+		tools:   offeredTools(catalog),
+		catalog: catalog,
 	}, nil
 }
 
@@ -126,6 +134,39 @@ func listTools(ctx context.Context, cs *mcpsdk.ClientSession) ([]llms.Tool, erro
 	}
 }
 
+// trimHistory drops the oldest messages that do not fit the budget. The current
+// question is always kept, even when it exceeds the budget on its own.
+func trimHistory(history []Message, budget int) []Message {
+	if len(history) < 2 {
+		return history
+	}
+
+	// the question is sent no matter its size, older messages have to fit
+	budget -= len(history[len(history)-1].Content)
+
+	for i := len(history) - 2; i >= 0; i-- {
+		if budget -= len(history[i].Content); budget < 0 {
+			return history[i+1:]
+		}
+	}
+
+	return history
+}
+
+// callNames lists the tools a round wants to call. Meta tool calls are logged with
+// their target once resolved, see callTool.
+func callNames(calls []llms.ToolCall) []string {
+	res := make([]string, 0, len(calls))
+
+	for _, tc := range calls {
+		if tc.FunctionCall != nil {
+			res = append(res, tc.FunctionCall.Name)
+		}
+	}
+
+	return res
+}
+
 // Chat answers the conversation, calling tools as needed
 func (a *Assistant) Chat(ctx context.Context, history []Message) (string, error) {
 	prompt := strings.TrimSpace(systemPrompt)
@@ -135,6 +176,11 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (string, error)
 
 	messages := []llms.MessageContent{llms.TextParts(llms.ChatMessageTypeSystem, prompt)}
 
+	if trimmed := trimHistory(history, maxHistory); len(trimmed) < len(history) {
+		a.log.DEBUG.Printf("history trimmed to the last %d of %d messages", len(trimmed), len(history))
+		history = trimmed
+	}
+
 	for _, m := range history {
 		role := llms.ChatMessageTypeHuman
 		if m.Role == "assistant" {
@@ -143,9 +189,13 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (string, error)
 		messages = append(messages, llms.TextParts(role, m.Content))
 	}
 
-	for range maxIterations {
+	a.log.DEBUG.Printf("chat: %d messages, %d tools offered", len(history), len(a.tools))
+	a.log.TRACE.Printf("prompt: %s", prompt)
+
+	for round := range maxIterations {
 		resp, err := a.llm.GenerateContent(ctx, messages, llms.WithTools(a.tools))
 		if err != nil {
+			a.log.ERROR.Println(err)
 			return "", err
 		}
 		if len(resp.Choices) == 0 {
@@ -154,8 +204,12 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (string, error)
 
 		choice := resp.Choices[0]
 		if len(choice.ToolCalls) == 0 {
+			// zero rounds means the model answered from its own knowledge
+			a.log.DEBUG.Printf("answer after %d tool rounds", round)
 			return choice.Content, nil
 		}
+
+		a.log.DEBUG.Printf("tool round %d: %v", round+1, callNames(choice.ToolCalls))
 
 		msg := llms.TextParts(llms.ChatMessageTypeAI, choice.Content)
 		for _, tc := range choice.ToolCalls {
@@ -175,7 +229,10 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (string, error)
 		}
 	}
 
-	return "", fmt.Errorf("exceeded %d tool call rounds", maxIterations)
+	err := fmt.Errorf("exceeded %d tool call rounds", maxIterations)
+	a.log.ERROR.Println(err)
+
+	return "", err
 }
 
 // callTool executes a tool call and returns its textual result. Errors are returned to the model, not to the caller.
@@ -185,22 +242,38 @@ func (a *Assistant) callTool(ctx context.Context, tc llms.ToolCall) string {
 		return "error: missing function call"
 	}
 
+	name := tc.FunctionCall.Name
+
 	var args map[string]any
 	if s := strings.TrimSpace(tc.FunctionCall.Arguments); s != "" {
 		if err := json.Unmarshal([]byte(s), &args); err != nil {
-			a.mcpLog.ERROR.Printf("tool %s invalid arguments: %v", tc.FunctionCall.Name, err)
+			a.mcpLog.ERROR.Printf("tool %s invalid arguments: %v", name, err)
 			return "error: invalid arguments: " + err.Error()
 		}
 	}
 
-	a.mcpLog.DEBUG.Printf("tool %s %v", tc.FunctionCall.Name, args)
+	// the model only sees the meta tools, everything else is reached through them
+	switch name {
+	case findToolsName:
+		a.mcpLog.DEBUG.Printf("%s %v", name, args)
+		return a.findTools(args)
+
+	case callToolName:
+		var err error
+		if name, args, err = dispatchArgs(args); err != nil {
+			a.mcpLog.ERROR.Printf("%s: %v", callToolName, err)
+			return "error: " + err.Error()
+		}
+	}
+
+	a.mcpLog.DEBUG.Printf("tool %s %v", name, args)
 
 	res, err := a.client.CallTool(ctx, &mcpsdk.CallToolParams{
-		Name:      tc.FunctionCall.Name,
+		Name:      name,
 		Arguments: args,
 	})
 	if err != nil {
-		a.mcpLog.ERROR.Printf("tool %s: %v", tc.FunctionCall.Name, err)
+		a.mcpLog.ERROR.Printf("tool %s: %v", name, err)
 		return "error: " + err.Error()
 	}
 
@@ -212,11 +285,19 @@ func (a *Assistant) callTool(ctx context.Context, tc llms.ToolCall) string {
 	}
 
 	if res.IsError {
-		a.mcpLog.ERROR.Printf("tool %s: %s", tc.FunctionCall.Name, sb.String())
+		a.mcpLog.ERROR.Printf("tool %s: %s", name, sb.String())
 		return "error: " + sb.String()
 	}
 
-	a.mcpLog.TRACE.Printf("tool %s result: %s", tc.FunctionCall.Name, sb.String())
+	// openapi tools report the payload separately, the text content wraps it in an
+	// envelope that only costs the model context
+	result := sb.String()
+	if body, ok := structuredBody(res); ok {
+		result = body
+	}
 
-	return sb.String()
+	a.mcpLog.TRACE.Printf("tool %s result: %s", name, result)
+
+	// the model gets the result with long arrays cut down, the log keeps the original
+	return hintEmpty(shorten(result, a.supportsJq(name)), args)
 }
