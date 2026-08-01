@@ -1,0 +1,139 @@
+name: Backport Command
+
+# Triggered by a maintainer commenting `/backport <branch>` on a merged pull
+# request. Cherry-picks the merged commit onto the target branch and opens a
+# pull request against it, so a fix can ship as a bugfix release without
+# pulling in everything that landed on master since.
+#
+# The pull request is created with GITHUB_TOKEN, so its checks have to be
+# started manually (close and reopen) before merging.
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+
+jobs:
+  backport:
+    name: Backport
+    # on any PR comment starting with /backport, only from maintainers
+    if: |
+      github.event.issue.pull_request &&
+      startsWith(github.event.comment.body, '/backport') &&
+      contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: depot-ubuntu-24.04-arm
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: React to comment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'eyes',
+            });
+
+      - name: Resolve pull request
+        id: pr
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const target = context.payload.comment.body.trim().split(/\s+/)[1];
+            // the target ends up in a checkout ref, keep it to plain branch names
+            if (!target || !/^[\w.\-\/]+$/.test(target)) {
+              core.setFailed('usage: /backport <branch>');
+              return;
+            }
+
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.issue.number,
+            });
+            if (!pr.merged) {
+              core.setFailed(`pull request #${pr.number} is not merged`);
+              return;
+            }
+
+            core.setOutput('target', target);
+            core.setOutput('sha', pr.merge_commit_sha);
+            core.setOutput('title', pr.title);
+
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.pr.outputs.target }}
+
+      - name: Cherry-pick
+        env:
+          BRANCH: backport/${{ github.event.issue.number }}-${{ steps.pr.outputs.target }}
+          SHA: ${{ steps.pr.outputs.sha }}
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git switch -c "$BRANCH"
+
+          # -m 1 picks the first-parent diff of a merge commit; squashed pull
+          # requests are ordinary commits and must not get the flag
+          mainline=""
+          if [ "$(git rev-list --parents -n1 "$SHA" | wc -w)" -gt 2 ]; then
+            mainline="-m 1"
+          fi
+
+          git cherry-pick $mainline "$SHA"
+          git push origin "$BRANCH"
+
+      - name: Create pull request
+        id: create
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: backport/${{ github.event.issue.number }}-${{ steps.pr.outputs.target }}
+          TARGET: ${{ steps.pr.outputs.target }}
+          TITLE: ${{ steps.pr.outputs.title }}
+          NUMBER: ${{ github.event.issue.number }}
+        run: |
+          url=$(gh pr create \
+            --base "$TARGET" \
+            --head "$BRANCH" \
+            --title "$TITLE" \
+            --body "Backport of #$NUMBER to \`$TARGET\`.")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Comment result
+        if: always()
+        uses: actions/github-script@v8
+        env:
+          TARGET: ${{ steps.pr.outputs.target }}
+          URL: ${{ steps.create.outputs.url }}
+        with:
+          script: |
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const { TARGET, URL } = process.env;
+            const body = URL
+              ? `✅ Backported to \`${TARGET}\`: ${URL}`
+              : `❌ Backport failed, most likely a cherry-pick conflict. See the [run logs](${runUrl}).`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body,
+            });
+
+      - name: Resolve command comment
+        if: steps.create.outputs.url
+        uses: actions/github-script@v8
+        with:
+          script: |
+            // collapse the /backport comment as resolved now that the pull request exists
+            await github.graphql(
+              `mutation($id:ID!){minimizeComment(input:{subjectId:$id,classifier:RESOLVED}){minimizedComment{isMinimized}}}`,
+              { id: context.payload.comment.node_id }
+            );
