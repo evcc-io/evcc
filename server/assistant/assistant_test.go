@@ -43,6 +43,14 @@ func testServer(t *testing.T) *mcpsdk.Server {
 			}, nil, nil
 		})
 
+	mcpsdk.AddTool(srv, &mcpsdk.Tool{Name: "failing", Description: "always fails"},
+		func(_ context.Context, _ *mcpsdk.CallToolRequest, _ struct{}) (*mcpsdk.CallToolResult, any, error) {
+			return &mcpsdk.CallToolResult{
+				IsError: true,
+				Content: []mcpsdk.Content{&mcpsdk.TextContent{Text: "meter unavailable"}},
+			}, nil, nil
+		})
+
 	return srv
 }
 
@@ -65,8 +73,11 @@ func TestToolLoop(t *testing.T) {
 	defer a.Close()
 
 	// mcp tools are exposed to the model
-	require.Len(t, a.tools, 1)
-	assert.Equal(t, "getSoc", a.tools[0].Function.Name)
+	names := make([]string, 0, len(a.tools))
+	for _, t := range a.tools {
+		names = append(names, t.Function.Name)
+	}
+	assert.ElementsMatch(t, []string{"getSoc", "failing"}, names)
 
 	res, err := a.Chat(ctx, []Message{{Role: "user", Content: "what is the soc?"}})
 	require.NoError(t, err)
@@ -88,11 +99,19 @@ func TestToolError(t *testing.T) {
 	require.NoError(t, err)
 	defer a.Close()
 
-	// unknown tool must not fail the conversation
-	res := a.callTool(ctx, llms.ToolCall{
-		FunctionCall: &llms.FunctionCall{Name: "unknown", Arguments: "{}"},
-	})
-	assert.Contains(t, res, "error:")
+	// all failure modes are surfaced to the model as text, never as an error
+	for _, tc := range []struct {
+		name, args, contains string
+	}{
+		{"unknown", "{}", "error:"},
+		{"getSoc", "{", "error: invalid arguments"},
+		{"failing", "{}", "error: meter unavailable"},
+	} {
+		res := a.callTool(ctx, llms.ToolCall{
+			FunctionCall: &llms.FunctionCall{Name: tc.name, Arguments: tc.args},
+		})
+		assert.Contains(t, res, tc.contains)
+	}
 }
 
 func TestConfigValidate(t *testing.T) {
