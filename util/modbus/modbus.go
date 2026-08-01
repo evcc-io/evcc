@@ -60,16 +60,20 @@ type Settings struct {
 	RTU       *bool         `json:"rtu,omitempty" yaml:",omitempty"`
 	Delay     time.Duration `json:"delay,omitempty" yaml:",omitempty"`
 	Timeout   time.Duration `json:"timeout,omitempty" yaml:",omitempty"`
-	// TLS: when Cert and Key are set, the TCP connection is wrapped in TLS
-	// (Modbus over TLS). If unset, no TLS is used.
-	Cert   string `json:"cert,omitempty" yaml:",omitempty"`
-	Key    string `json:"key,omitempty" yaml:",omitempty"`
-	CACert string `json:"cacert,omitempty" yaml:",omitempty"`
+	// Modbus over TLS (mTLS): PEM-encoded client certificate/key. When set, the
+	// TCP connection is wrapped in TLS. CACert verifies the device certificate,
+	// Insecure skips that verification.
+	ClientCert string `json:"clientcert,omitempty" yaml:",omitempty"`
+	ClientKey  string `json:"clientkey,omitempty" yaml:",omitempty"`
+	CACert     string `json:"cacert,omitempty" yaml:",omitempty"`
+	Insecure   bool   `json:"insecure,omitempty" yaml:",omitempty"`
 }
 
-// TLS reports whether TLS is configured (client certificate present)
-func (s Settings) TLS() bool {
-	return s.Cert != "" && s.Key != ""
+// tlsConfigured reports whether any TLS setting is present. Completeness is
+// validated in tlsConfig, since setting a single field must not silently fall
+// back to an unencrypted connection.
+func (s Settings) tlsConfigured() bool {
+	return s.ClientCert != "" || s.ClientKey != "" || s.CACert != "" || s.Insecure
 }
 
 // Connection creates a modbus connection from the settings, applying delay and timeout.
@@ -80,9 +84,15 @@ func (s Settings) Connection(ctx context.Context, proto ...Protocol) (*Connectio
 		p = proto[0]
 	}
 
-	conn, err := NewConnectionFromSettings(ctx, s, p)
+	physical, err := physicalConnection(ctx, p, s)
 	if err != nil {
 		return nil, err
+	}
+
+	conn := &Connection{
+		slaveID:    s.ID,
+		Connection: physical.Clone(s.ID),
+		logger:     physical.logger,
 	}
 
 	conn.Timeout(s.Timeout)
@@ -195,6 +205,23 @@ func NewConnection(ctx context.Context, uri, device, comset string, baudrate int
 func physicalConnection(ctx context.Context, proto Protocol, cfg Settings) (*meterConnection, error) {
 	if (cfg.Device != "") == (cfg.URI != "") {
 		return nil, errors.New("invalid modbus configuration: must have either uri or device")
+	}
+
+	if cfg.tlsConfigured() {
+		// Modbus/TLS is only defined for MBAP-framed TCP
+		if cfg.Device != "" || proto != Tcp {
+			return nil, errors.New("invalid modbus configuration: tls requires tcp")
+		}
+
+		tlsConfig, err := cfg.tlsConfig()
+		if err != nil {
+			return nil, err
+		}
+
+		// default port 802 (Modbus/TCP Security)
+		uri := util.DefaultPort(cfg.URI, 802)
+
+		return registeredConnection(ctx, uri, Tls, newTLSConn(uri, tlsConfig))
 	}
 
 	if cfg.Device != "" {

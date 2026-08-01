@@ -261,7 +261,15 @@ export default {
 			return (
 				this.rows ||
 				this.array ||
-				["accessToken", "refreshToken", "identifiers", "formula"].includes(this.property)
+				[
+					"accessToken",
+					"refreshToken",
+					"identifiers",
+					"formula",
+					"clientcert",
+					"clientkey",
+					"cacert",
+				].includes(this.property)
 			);
 		},
 		textareaRows() {

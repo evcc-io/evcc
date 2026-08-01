@@ -13,12 +13,15 @@ rtu: true
 # Modbus TCP
 uri: {{ joinHostPort .host .port }}
 rtu: false
-{{- if .cert }}
-# Modbus over TLS (client certificate)
-cert: {{ .cert }}
-key: {{ .key }}
+{{- if .clientcert }}
+# Modbus over TLS (mTLS)
+clientcert: {{ .clientcert }}
+clientkey: {{ .clientkey }}
 {{- if .cacert }}
 cacert: {{ .cacert }}
+{{- end }}
+{{- if .insecure }}
+insecure: true
 {{- end }}
 {{- end }}
 {{- else if or (eq .modbus "udp") .udp }}
