@@ -168,15 +168,20 @@ func TestRepeatedGet(t *testing.T) {
 	url := "http://repeated.test/uncached"
 	t0 := time.Now()
 
-	require.False(t, repeatedGet(url, t0))                           // first sighting
-	require.True(t, repeatedGet(url, t0.Add(500*time.Millisecond)))  // repeated within 1s: warn
-	require.False(t, repeatedGet(url, t0.Add(600*time.Millisecond))) // already warned: silent
+	require.False(t, repeatedGet(1, url, t0))                           // first sighting
+	require.True(t, repeatedGet(2, url, t0.Add(500*time.Millisecond)))  // other plugin within 1s: warn
+	require.False(t, repeatedGet(3, url, t0.Add(600*time.Millisecond))) // already warned: silent
+
+	// the same plugin polling twice is its cadence or a retry, not a missing cache
+	same := "http://repeated.test/same"
+	require.False(t, repeatedGet(1, same, t0))
+	require.False(t, repeatedGet(1, same, t0.Add(500*time.Millisecond)))
 
 	spaced := "http://repeated.test/spaced"
-	require.False(t, repeatedGet(spaced, t0))
-	require.False(t, repeatedGet(spaced, t0.Add(2*time.Second))) // >1s apart: no warn
+	require.False(t, repeatedGet(1, spaced, t0))
+	require.False(t, repeatedGet(2, spaced, t0.Add(2*time.Second))) // >1s apart: no warn
 
 	// query params are part of the key, so cache-busting urls are distinct requests
-	require.False(t, repeatedGet("http://q.test/path?ts=1", t0))
-	require.False(t, repeatedGet("http://q.test/path?ts=2", t0.Add(300*time.Millisecond)))
+	require.False(t, repeatedGet(1, "http://q.test/path?ts=1", t0))
+	require.False(t, repeatedGet(2, "http://q.test/path?ts=2", t0.Add(300*time.Millisecond)))
 }

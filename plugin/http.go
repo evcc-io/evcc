@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/evcc-io/evcc/plugin/pipeline"
@@ -28,6 +29,7 @@ type HTTP struct {
 	pipeline    *pipeline.Pipeline
 	mu          *sync.Mutex
 	log         *util.Logger
+	id          uint64
 }
 
 func init() {
@@ -102,6 +104,7 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, cache time.Dur
 		url:    uri,
 		method: method,
 		log:    log,
+		id:     httpID.Add(1),
 	}
 
 	// build the cache stack without logging so the logging tripper
@@ -229,7 +232,7 @@ func (p *HTTP) request(url string, body string) ([]byte, error) {
 	// warn on uncached GET polling: a repeated roundtrip means neither a configured
 	// cache nor the device's own response headers spared it. cache hits are exempt.
 	if p.method == http.MethodGet && p.mu == nil && resp.Header.Get(httpcache.XFromCache) == "" {
-		if repeatedGet(url, time.Now()) {
+		if repeatedGet(p.id, url, time.Now()) {
 			p.log.WARN.Printf("uncached request repeated within 1s, please report at https://github.com/evcc-io/evcc/issues: %s", url)
 		}
 	}
@@ -246,23 +249,27 @@ func (p *HTTP) request(url string, body string) ([]byte, error) {
 
 type httpAccess struct {
 	last   time.Time
+	id     uint64
 	warned bool
 }
 
 var (
+	httpID     atomic.Uint64
 	httpSeenMu sync.Mutex
 	httpSeen   = make(map[string]httpAccess)
 )
 
-// repeatedGet reports the first time url is fetched again within a second, a sign
-// the response should be cached. It fires once per url to avoid log spam.
-func repeatedGet(url string, now time.Time) bool {
+// repeatedGet reports the first time url is fetched again within a second by a
+// different plugin, a sign the response should be cached. Repeats from the same
+// plugin are its polling cadence or a retry, not a configuration smell.
+// It fires once per url to avoid log spam.
+func repeatedGet(id uint64, url string, now time.Time) bool {
 	httpSeenMu.Lock()
 	defer httpSeenMu.Unlock()
 
 	a, seen := httpSeen[url]
-	warn := seen && !a.warned && now.Sub(a.last) < time.Second
-	httpSeen[url] = httpAccess{last: now, warned: a.warned || warn}
+	warn := seen && !a.warned && a.id != id && now.Sub(a.last) < time.Second
+	httpSeen[url] = httpAccess{last: now, id: id, warned: a.warned || warn}
 	return warn
 }
 
