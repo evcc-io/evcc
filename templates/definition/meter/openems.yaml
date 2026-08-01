@@ -31,8 +31,6 @@ params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: host
-  - name: cache
-    default: 1s
   - name: password
     default: user
     advanced: true
@@ -56,6 +54,8 @@ params:
       de: FEMS/OpenEMS Standard 60s
       en: FEMS/OpenEMS standard 60s
     usages: ["battery"]
+  - name: cache
+    default: 1s
   - preset: battery-params
 render: |
   type: custom
