@@ -91,10 +91,10 @@ and the demo instance untouched.
 To move a merged pull request onto a release branch, comment `/backport` on it.
 The pull request has to carry the `bug` label and must not be marked `(BC)`,
 only non-breaking bugfixes are backported.
-The commit is cherry-picked onto the branch of the current release line, e.g.
-`release/0.313`, and a pull request is opened against it. The branch is created
-at the newest tag of that line if it does not exist yet. Pass a branch name,
-`/backport release/0.312`, to service an older line.
+The commit is cherry-picked onto the branch of the next bugfix release, e.g.
+`release/0.313.1`, and a pull request is opened against it. The branch is
+created at the newest tag of that line if it does not exist yet. Pass a branch
+name, `/backport release/0.312.2`, to service an older line.
 
 ## Debugging in VS Code
 
