@@ -204,3 +204,38 @@ jobs:
           git config user.email github-actions@github.com
           git commit -am "Mirror evcc release"
           git push
+
+  cleanup:
+    name: Delete Release Branch
+    needs:
+      - docker
+      - apt
+    runs-on: depot-ubuntu-24.04-arm
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      # a bugfix release consumes its release branch, e.g. tag 0.313.1 is the tip
+      # of release/0.313.1. Feature releases have no such branch.
+      - env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          branch="release/$TAG"
+
+          head=$(git rev-parse --verify --quiet "origin/$branch") || {
+            echo "::notice::no $branch to delete"
+            exit 0
+          }
+
+          if [ "$head" != "$(git rev-parse "$TAG^{commit}")" ]; then
+            echo "::notice::$branch moved past $TAG, keeping it"
+            exit 0
+          fi
+
+          git push origin --delete "$branch"
