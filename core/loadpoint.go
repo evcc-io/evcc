@@ -1486,7 +1486,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 		waiting = true
 	}
 
-	// limit max current by circuit before comparing against the 1p target
+	// load management may cap the 1p current far below the theoretical maximum
 	if lp.circuit != nil {
 		maxCurrent = lp.circuit.ValidateCurrent(lp.actualMaxChargeCurrent(), maxCurrent)
 	}
