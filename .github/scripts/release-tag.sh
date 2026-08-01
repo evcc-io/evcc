@@ -9,6 +9,9 @@
 # newest release may move the `latest` pointers (docker tag, homebrew formula,
 # GitHub latest release, hassio addon, demo instance).
 #
+# Expects a checkout with `fetch-depth: 0`, which populates both the remote
+# tracking branches and all tags.
+#
 # Run `release-tag.sh --self-test` to exercise the logic in a scratch repository.
 
 set -euo pipefail
@@ -23,15 +26,9 @@ validate() {
 		return 1
 	fi
 
-	if [[ ${BASH_REMATCH[3]} == 0 ]]; then
-		# a tag checkout does not necessarily carry the remote tracking branch
-		git rev-parse --verify --quiet "$MASTER_REF" >/dev/null ||
-			git fetch --quiet --no-tags origin "master:refs/remotes/$MASTER_REF"
-
-		if ! git merge-base --is-ancestor "$tag" "$MASTER_REF"; then
-			echo "::error::feature release '$tag' must be tagged on master" >&2
-			return 1
-		fi
+	if [[ ${BASH_REMATCH[3]} == 0 ]] && ! git merge-base --is-ancestor "$tag" "$MASTER_REF"; then
+		echo "::error::feature release '$tag' must be tagged on master" >&2
+		return 1
 	fi
 
 	local newest

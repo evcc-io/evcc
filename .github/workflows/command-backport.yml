@@ -8,8 +8,8 @@ name: Backport Command
 # Without an argument the branch of the current release line is used, e.g.
 # `release/0.313`. It is created at the newest tag of that line on first use.
 #
-# The pull request is created with GITHUB_TOKEN, so its checks have to be
-# started manually (close and reopen) before merging.
+# The pull request is created with GITHUB_TOKEN, so its checks are created but
+# wait for approval from the pull request page.
 
 on:
   issue_comment:
@@ -86,7 +86,7 @@ jobs:
             let target = context.payload.comment.body.trim().split(/\s+/)[1];
             if (target) {
               // the target ends up in a checkout ref, keep it to plain branch names
-              if (!/^[\w.\-\/]+$/.test(target)) {
+              if (!/^[\w.\-\/]+$/.test(target) || target.includes('..')) {
                 fail('usage: /backport [branch]');
                 return;
               }
