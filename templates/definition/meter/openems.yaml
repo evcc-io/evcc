@@ -56,7 +56,7 @@ params:
     usages: ["battery"]
   - preset: battery-params
   - name: cache
-     default: 1s
+    default: 1s
 render: |
   type: custom
   {{- if eq .usage "grid" }} 
