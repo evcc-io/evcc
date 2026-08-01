@@ -125,7 +125,7 @@
     "assistant": {
       "description": "Beantwortet Fragen zum System und hilft bei Fehlern. Nutzt die eingebauten MCP-Werkzeuge.",
       "helpBaseUrl": "Leer lassen, um den Standard des Anbieters zu verwenden.",
-      "helpModel": "Vorschläge werden angezeigt, es kann jedes vom Anbieter unterstützte Modell eingegeben werden.",
+      "helpModel": "Das Modell muss Tool-Calling unterstützen, sonst werden Antworten erfunden statt aus dem System gelesen.",
       "labelBaseUrl": "API-Endpunkt",
       "labelModel": "Modell",
       "labelProvider": "Anbieter",
