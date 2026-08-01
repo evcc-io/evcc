@@ -8,26 +8,87 @@ import (
 )
 
 func TestNewPowerWallFromConfigValidation(t *testing.T) {
-	_, err := NewPowerWallFromConfig(map[string]any{"password": "secret"})
-	assert.ErrorContains(t, err, "missing usage")
+	tests := []struct {
+		name   string
+		config map[string]any
+		want   string
+	}{
+		{
+			name:   "missing usage",
+			config: map[string]any{"password": "secret"},
+			want:   "missing usage",
+		},
+		{
+			name:   "missing password",
+			config: map[string]any{"usage": "battery"},
+			want:   "missing password",
+		},
+	}
 
-	_, err = NewPowerWallFromConfig(map[string]any{"usage": "battery"})
-	assert.ErrorContains(t, err, "missing password")
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := NewPowerWallFromConfig(tc.config)
+			assert.ErrorContains(t, err, tc.want)
+		})
+	}
 }
 
 func TestNewPowerWallFleetFromConfigValidation(t *testing.T) {
-	_, err := NewPowerWallFleetFromConfig(map[string]any{
-		"usage":    "battery",
-		"password": "secret",
-	})
-	assert.ErrorContains(t, err, "missing client id")
-
-	_, err = NewPowerWallFleetFromConfig(map[string]any{
-		"usage":    "battery",
-		"password": "secret",
-		"credentials": map[string]any{
-			"id": "client",
+	tests := []struct {
+		name         string
+		config       map[string]any
+		want         string
+		wantSentinel error
+	}{
+		{
+			name: "missing client id",
+			config: map[string]any{
+				"usage":    "battery",
+				"password": "secret",
+			},
+			want: "missing client id",
 		},
-	})
-	assert.ErrorIs(t, err, api.ErrMissingToken)
+		{
+			name: "missing tokens",
+			config: map[string]any{
+				"usage":    "battery",
+				"password": "secret",
+				"credentials": map[string]any{
+					"id": "client",
+				},
+			},
+			wantSentinel: api.ErrMissingToken,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := NewPowerWallFleetFromConfig(tc.config)
+			if tc.wantSentinel != nil {
+				assert.ErrorIs(t, err, tc.wantSentinel)
+				return
+			}
+			assert.ErrorContains(t, err, tc.want)
+		})
+	}
+}
+
+func TestTeslaReserveLimit(t *testing.T) {
+	tests := []struct {
+		name  string
+		limit float64
+		want  uint64
+	}{
+		{name: "below cap", limit: 79.9, want: 79},
+		{name: "at cap", limit: 80, want: 80},
+		{name: "unsupported range start", limit: 81, want: 80},
+		{name: "unsupported range end", limit: 99.9, want: 80},
+		{name: "full reserve", limit: 100, want: 100},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, teslaReserveLimit(tc.limit))
+		})
+	}
 }

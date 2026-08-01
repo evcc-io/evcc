@@ -16,7 +16,9 @@ func TestPowerwallTemplates(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(t, string(localConfig), "type: powerwall")
 	assert.NotContains(t, string(localConfig), "credentials:")
-	for _, name := range []string{"fleetClientId", "fleetAccessToken", "fleetRefreshToken"} {
+	assert.NotContains(t, local.Capabilities, CapabilityBatteryControl)
+	assert.Equal(t, Requirements{}, local.Requirements)
+	for _, name := range []string{"fleetClientId", "fleetAccessToken", "fleetRefreshToken", "refreshToken", "siteId"} {
 		_, param := local.ParamByName(name)
 		assert.Empty(t, param.Name)
 	}

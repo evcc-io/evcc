@@ -3,6 +3,7 @@ package meter
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math"
 	"strconv"
 	"time"
@@ -29,20 +30,13 @@ func init() {
 
 // NewPowerWallFleetFromConfig creates a PowerWall meter with Fleet API battery control.
 func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
-	localOther := make(map[string]any, len(other))
-	for key, value := range other {
-		if key != "credentials" && key != "tokens" && key != "siteId" {
-			localOther[key] = value
-		}
-	}
-
-	local, err := decodePowerWallConfig(localOther)
-	if err != nil {
+	cc := fleetConfig{}
+	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	cc := fleetConfig{}
-	if err := util.DecodeOther(other, &cc); err != nil {
+	local, err := decodePowerWallConfig(cc.Other)
+	if err != nil {
 		return nil, err
 	}
 
@@ -75,15 +69,19 @@ func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
 	implement.May(m, implement.BatteryController(local.batterySocLimits.LimitController(func() (float64, error) {
 		return socG(energySite)
 	}, func(limit float64) error {
-		limitUint := uint64(limit)
-		// Tesla firmware accepts values up to 80 or exactly 100 in this range.
-		if limitUint > 80 && limitUint < 100 {
-			limitUint = 80
-		}
-		return energySite.SetBatteryReserve(limitUint)
+		return energySite.SetBatteryReserve(teslaReserveLimit(limit))
 	})))
 
 	return m, nil
+}
+
+func teslaReserveLimit(limit float64) uint64 {
+	limitUint := uint64(limit)
+	// Tesla firmware accepts values up to 80 or exactly 100 in this range.
+	if limitUint > 80 && limitUint < 100 {
+		return 80
+	}
+	return limitUint
 }
 
 func teslaEnergySite(log *util.Logger, clientID, clientSecret, accessToken, refreshToken string, siteId int64) (*teslaclient.EnergySite, error) {
@@ -93,7 +91,7 @@ func teslaEnergySite(log *util.Logger, clientID, clientSecret, accessToken, refr
 		Expiry:       time.Now(),
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create Fleet identity: %w", err)
 	}
 
 	hc := request.NewClient(log)
@@ -104,19 +102,19 @@ func teslaEnergySite(log *util.Logger, clientID, clientSecret, accessToken, refr
 
 	tc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(hc))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create Fleet client: %w", err)
 	}
 
 	region, err := tc.UserRegion()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get Fleet API region: %w", err)
 	}
 	tc.SetBaseUrl(region.FleetApiBaseUrl)
 
 	if siteId == 0 {
 		products, err := tc.Products()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("discover energy sites: %w", err)
 		}
 
 		for _, p := range products {
@@ -139,7 +137,7 @@ func teslaEnergySite(log *util.Logger, clientID, clientSecret, accessToken, refr
 func socG(energySite *teslaclient.EnergySite) (float64, error) {
 	ess, err := energySite.EnergySiteStatus()
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("get energy site status: %w", err)
 	}
 
 	return math.Round(ess.PercentageCharged), nil
