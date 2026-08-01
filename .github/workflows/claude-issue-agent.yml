@@ -29,7 +29,9 @@ jobs:
 
   pr-label:
     name: PR labeling
-    if: github.event_name == 'pull_request_target'
+    # bot PRs (dependabot etc.) are skipped: the action rejects non-human actors
+    # unless allowlisted, and bots already label their own PRs
+    if: github.event_name == 'pull_request_target' && github.event.pull_request.user.type != 'Bot'
     runs-on: ubuntu-latest
     permissions:
       contents: read # read base repo for area classification
