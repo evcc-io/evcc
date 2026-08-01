@@ -163,6 +163,7 @@ jobs:
             --base "$TARGET" \
             --head "$BRANCH" \
             --title "${TARGET#release/} backport: $TITLE" \
+            --label backport \
             --assignee "$ACTOR" \
             --body "Backport of #$NUMBER to \`$TARGET\`, requested by @$ACTOR.")
           echo "url=$url" >> "$GITHUB_OUTPUT"
