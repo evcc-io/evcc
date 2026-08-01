@@ -34,17 +34,15 @@ jobs:
 
     steps:
       - name: React to comment
-        id: react
         uses: actions/github-script@v8
         with:
           script: |
-            const { data } = await github.rest.reactions.createForIssueComment({
+            await github.rest.reactions.createForIssueComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               comment_id: context.payload.comment.id,
               content: 'eyes',
             });
-            core.setOutput('id', data.id);
 
       - name: Resolve target branch
         id: pr
@@ -169,35 +167,20 @@ jobs:
           TARGET: ${{ steps.pr.outputs.target }}
           URL: ${{ steps.create.outputs.url }}
           ERROR: ${{ steps.pr.outputs.error }}
-          REACTION: ${{ steps.react.outputs.id }}
         with:
           script: |
-            const { owner, repo } = context.repo;
-            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
-            const { TARGET, URL, ERROR, REACTION } = process.env;
-
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const { TARGET, URL, ERROR } = process.env;
             const body = URL
               ? `✅ Opened backport pull request on \`${TARGET}\`: ${URL}`
               : ERROR
                 ? `❌ ${ERROR}`
                 : `❌ Backport failed, most likely a cherry-pick conflict. See the [run logs](${runUrl}).`;
             await github.rest.issues.createComment({
-              owner,
-              repo,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
               issue_number: context.payload.issue.number,
               body,
-            });
-
-            // swap the acknowledgement for the outcome
-            const comment_id = context.payload.comment.id;
-            if (REACTION) {
-              await github.rest.reactions.deleteForIssueComment({ owner, repo, comment_id, reaction_id: Number(REACTION) });
-            }
-            await github.rest.reactions.createForIssueComment({
-              owner,
-              repo,
-              comment_id,
-              content: URL ? 'rocket' : 'confused',
             });
 
       - name: Resolve command comment
