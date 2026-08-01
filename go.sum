@@ -152,6 +152,8 @@ github.com/evcc-io/ocpp-go v0.0.0-20260727074919-195c10b8758d h1:UxgSUmwiuVURrma
 github.com/evcc-io/ocpp-go v0.0.0-20260727074919-195c10b8758d/go.mod h1:2kcukDdhui4u730VfnYVWuwzDLgw+mBRGDir/QAyBhg=
 github.com/evcc-io/openapi-mcp v0.6.1-0.20260701153510-26c442199ef4 h1:aGM3NwDsKbnmiaO10ptbvEolRAUThWJEsObiAWFDU/c=
 github.com/evcc-io/openapi-mcp v0.6.1-0.20260701153510-26c442199ef4/go.mod h1:YyOx4zwr6xVUcchAETHERZ+75cZMIrdcjVIZFwBlE1Q=
+github.com/evcc-io/openapi-mcp v0.6.1-0.20260801214504-7023d4167ce3 h1:kHcDoULw/2wtyU4d40aiKOmABsrNIwG2v2cS1saM424=
+github.com/evcc-io/openapi-mcp v0.6.1-0.20260801214504-7023d4167ce3/go.mod h1:YyOx4zwr6xVUcchAETHERZ+75cZMIrdcjVIZFwBlE1Q=
 github.com/evcc-io/optimizer v0.0.0-20260728084523-a51031d7607f h1:mwExmgCCH8ldBLe8qNIXmMy7qT+OTsptXwnI6LQo+mQ=
 github.com/evcc-io/optimizer v0.0.0-20260728084523-a51031d7607f/go.mod h1:cHMeq6GfoXQ8LxqY4LH1wn/hrgYEn+ka5RPI1CF37SY=
 github.com/evcc-io/rct v0.2.0 h1:qjXKI7NKwW5YpEKEb27MwLMBaR4ne2Kd2cPV2PYTKn4=
