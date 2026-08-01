@@ -31,10 +31,8 @@ type ParamCache struct {
 	val map[string]Param
 }
 
-// Snapshot is the value type used for requesting a copy of the cache state.
-// The cache invokes it once it reaches the parameter's position in the stream,
-// so the copy contains exactly the values published before it. It must not
-// block, the cache cannot stall without backing up the whole value stream.
+// Snapshot requests a copy of the cache state at the parameter's position in
+// the stream. It runs on the cache's goroutine and must not block.
 type Snapshot func([]Param)
 
 // NewCache creates cache
