@@ -30,14 +30,17 @@ params:
       en: Password of the user "customer". By default this is the last 5 characters of password stated on the Tesla Gateway.
       de: Passwort des Benutzers "Kunde". Default sind die letzten 5 Zeichen des auf dem Tesla Gateway genannten Passworts.
   - name: clientId
+    required: false
     help:
       en: from [developer.tesla.com](https://developer.tesla.com/dashboard).
       de: von [developer.tesla.com](https://developer.tesla.com/dashboard).
   - name: accessToken
+    required: false
     help:
       en: from [myteslamate.com](https://app.myteslamate.com/).
       de: von [myteslamate.com](https://app.myteslamate.com/).
   - name: refreshToken
+    required: false
     help:
       en: from [myteslamate.com](https://app.myteslamate.com/).
       de: von [myteslamate.com](https://app.myteslamate.com/).
@@ -59,11 +62,13 @@ render: |
   usage: {{ .usage }}
   user: customer
   password: {{ .password }} # for user 'customer'
+  {{- if or .clientId .accessToken .refreshToken }}
   credentials:
     id: {{ .clientId }}
   tokens:
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
+  {{- end }}
   siteId: {{ .siteId }}
   minsoc: {{ .minsoc }}
   maxsoc: {{ .maxsoc }}
