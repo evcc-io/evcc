@@ -61,6 +61,7 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/rest/channel/_sum/GridActivePower
+    cache: 2s # collapse repeated reads of the same channel
     auth:
       type: basic
       user: x
@@ -69,6 +70,7 @@ render: |
   energy:
     source: http
     uri: http://{{ .host }}/rest/channel/_sum/GridBuyActiveEnergy
+    cache: 2s
     auth:
       type: basic
       user: x
@@ -79,6 +81,7 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/rest/channel/_sum/ProductionActivePower
+    cache: 2s
     auth:
       type: basic
       user: x
@@ -87,6 +90,7 @@ render: |
   energy:
     source: http
     uri: http://{{ .host }}/rest/channel/_sum/ProductionActiveEnergy
+    cache: 2s
     auth:
       type: basic
       user: x
@@ -98,6 +102,7 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/rest/channel/_sum/EssDischargePower
+    cache: 2s
     auth:
       type: basic
       user: x
@@ -106,6 +111,7 @@ render: |
   soc:
     source: http
     uri: http://{{ .host }}/rest/channel/_sum/EssSoc
+    cache: 2s
     auth:
       type: basic
       user: x
