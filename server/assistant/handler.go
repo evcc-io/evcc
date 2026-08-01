@@ -29,6 +29,7 @@ type chatResponse struct {
 // The MCP server is built lazily and reused, host serves the internal api requests.
 func ChatHandler(host http.Handler) http.HandlerFunc {
 	server := sync.OnceValues(func() (*mcpsdk.Server, error) {
+		// the full set is searchable, only the meta tools are offered to the model
 		return mcp.New(host)
 	})
 
