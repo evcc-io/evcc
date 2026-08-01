@@ -32,6 +32,7 @@ const (
 	Telemetry          = "telemetry"
 	Optimizer          = "optimizer"
 	Mcp                = "mcp"
+	Assistant          = "assistant"
 	DemoMode           = "demoMode"
 	Remote             = "remote"
 	RemoteClients      = "remoteClients"

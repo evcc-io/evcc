@@ -315,6 +315,22 @@ export interface State {
   mcp?: boolean;
   /** Instance runs in demo mode. */
   demoMode?: boolean;
+  /** Built-in AI assistant configuration. */
+  assistant?: AssistantConfig;
+}
+
+export type AssistantProvider = "openai" | "anthropic" | "ollama" | "custom";
+
+export interface AssistantConfig {
+  provider: AssistantProvider;
+  model?: string;
+  token?: string;
+  baseUrl?: string;
+}
+
+export interface AssistantMessage {
+  role: "user" | "assistant";
+  content: string;
 }
 
 /** Configuration and runtime status of an integration. */

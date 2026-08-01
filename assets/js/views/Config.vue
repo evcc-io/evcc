@@ -421,6 +421,19 @@
 					>
 						<template #icon><McpIcon /></template>
 					</DeviceCard>
+					<DeviceCard
+						v-if="experimental"
+						:title="`${$t('config.assistant.title')} 🧪`"
+						editable
+						:unconfigured="isUnconfigured(assistantTags)"
+						data-testid="assistant"
+						@edit="openModal('assistant')"
+					>
+						<template #icon><AssistantIcon /></template>
+						<template #tags>
+							<DeviceTags :tags="assistantTags" />
+						</template>
+					</DeviceCard>
 				</div>
 
 				<hr class="my-5" />
@@ -480,6 +493,7 @@
 				<TelemetryModal :is-sponsor="isSponsor" :telemetry="telemetry" />
 				<OptimizerModal :is-sponsor="isSponsor" />
 				<McpModal />
+				<AssistantModal @changed="loadDirty" />
 				<ExperimentalModal :experimental="experimental" />
 				<RemoteModal :remote="remote" :is-sponsor="isSponsor" :site-title="siteTitle" />
 				<TitleModal @changed="loadDirty" />
@@ -499,6 +513,7 @@
 				<SponsorModal :error="hasClassError('sponsorship')" @changed="loadDirty" />
 			</div>
 		</div>
+		<AssistantWidget v-if="assistantConfigured" :context="assistantContext" />
 	</div>
 </template>
 
@@ -551,6 +566,9 @@ import OptimizerIcon from "../components/MaterialIcon/Optimizer.vue";
 import OptimizerModal from "../components/Config/OptimizerModal.vue";
 import McpIcon from "../components/MaterialIcon/Mcp.vue";
 import McpModal from "../components/Config/McpModal.vue";
+import AssistantIcon from "../components/MaterialIcon/Assistant.vue";
+import AssistantModal from "../components/Config/AssistantModal.vue";
+import AssistantWidget from "../components/Assistant/AssistantWidget.vue";
 import restart, { performRestart } from "../restart";
 import SponsorModal from "../components/Config/SponsorModal.vue";
 import store from "../store";
@@ -642,6 +660,9 @@ export default defineComponent({
 		OptimizerModal,
 		McpIcon,
 		McpModal,
+		AssistantIcon,
+		AssistantModal,
+		AssistantWidget,
 		SponsorModal,
 		TariffsLegacyModal,
 		TariffCard,
@@ -921,6 +942,19 @@ export default defineComponent({
 		},
 		experimental() {
 			return store.state?.experimental;
+		},
+		assistantConfigured(): boolean {
+			return !!store.state?.assistant?.provider;
+		},
+		assistantTags(): DeviceTags {
+			return { configured: { value: this.assistantConfigured } };
+		},
+		assistantContext(): string {
+			const fatals = store.state?.fatal || [];
+			const errors = fatals.length
+				? `Configuration errors currently shown: ${JSON.stringify(fatals)}`
+				: "No configuration errors are shown.";
+			return `The user is on the evcc configuration page. ${errors}`;
 		},
 		eebus() {
 			return store.state?.eebus;

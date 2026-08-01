@@ -32,6 +32,7 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
 	_ "github.com/joho/godotenv/autoload"
+	mcpsrv "github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/samber/lo"
 	"github.com/spf13/cast"
@@ -387,9 +388,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	if err == nil && isMcp() {
 		router := httpd.Router()
 
-		var handler http.Handler
-		if handler, err = mcp.NewHandler(router); err == nil {
-			router.PathPrefix("/mcp").Handler(handler)
+		var srv *mcpsrv.Server
+		if srv, err = mcp.New(router); err == nil {
+			router.PathPrefix("/mcp").Handler(mcp.Handler(srv))
 		}
 	}
 	if conf.Mcp {
@@ -455,6 +456,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Experimental, Val: isExperimental()}
 	valueChan <- util.Param{Key: keys.Optimizer, Val: isOptimizer()}
 	valueChan <- util.Param{Key: keys.Mcp, Val: isMcp()}
+	valueChan <- util.Param{Key: keys.Assistant, Val: assistantConfig()}
 
 	// run shutdown functions on stop
 	var once sync.Once

@@ -1,4 +1,14 @@
 {
+  "assistant": {
+    "clear": "Clear",
+    "close": "Close assistant",
+    "inputPlaceholder": "Ask a question…",
+    "open": "Open assistant",
+    "placeholder": "Ask about your system, current state or errors shown on this page.",
+    "send": "Send",
+    "thinking": "Thinking…",
+    "title": "AI assistant"
+  },
   "authProviders": {
     "authCode": "Authentication Code",
     "authCodeHelp": "Copy this code and use it in the next step. Valid for {duration}.",
@@ -113,6 +123,21 @@
       "revealTitle": "API Key Created",
       "shownOnce": "This key is shown only once. Store it somewhere safe. You cannot retrieve it later.",
       "title": "API Key"
+    },
+    "assistant": {
+      "description": "Answers questions about your system and helps with errors. Uses the built-in MCP tools.",
+      "labelBaseUrl": "API endpoint",
+      "labelModel": "Model",
+      "labelProvider": "Provider",
+      "labelToken": "API key",
+      "helpBaseUrl": "Leave empty to use the provider default.",
+      "provider": {
+        "anthropic": "Anthropic",
+        "custom": "OpenAI-compatible",
+        "ollama": "Ollama",
+        "openai": "OpenAI"
+      },
+      "title": "AI assistant"
     },
     "aux": {
       "description": "Device that adjusts its consumption based on available surplus (like smart water heaters). evcc expects that this device reduces its power consumption if needed.",
