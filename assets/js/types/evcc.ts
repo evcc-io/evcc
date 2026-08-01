@@ -136,6 +136,21 @@ export interface State {
   optimizerChargingStrategy?: string;
   optimizerChargingStrategies?: string[];
   mcp?: boolean;
+  assistant?: AssistantConfig;
+}
+
+export type AssistantProvider = "openai" | "anthropic" | "ollama" | "custom";
+
+export interface AssistantConfig {
+  provider: AssistantProvider;
+  model?: string;
+  token?: string;
+  baseUrl?: string;
+}
+
+export interface AssistantMessage {
+  role: "user" | "assistant";
+  content: string;
 }
 
 export interface ConfigStatus<C, S> {

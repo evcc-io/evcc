@@ -98,6 +98,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/teslamotors/vehicle-command v0.4.1
 	github.com/tess1o/go-ecoflow v1.1.1-0.20251003083510-2ccc15a17e29
+	github.com/tmc/langchaingo v0.1.14
 	github.com/traefik/yaegi v0.16.1
 	github.com/volkszaehler/mbmd v0.0.0-20260623211432-fb8f9c22f121
 	github.com/warthog618/go-gpiocdev v0.9.1
@@ -149,6 +150,7 @@ require (
 	github.com/cstockton/go-conv v1.0.0 // indirect
 	github.com/d2r2/go-logger v0.0.0-20210606094344-60e9d1233e22 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
+	github.com/dlclark/regexp2 v1.11.0 // indirect
 	github.com/dmarkham/enumer v1.6.3 // indirect
 	github.com/donovanhide/eventsource v0.0.0-20210830082556-c59027999da0 // indirect
 	github.com/dunglas/httpsfv v1.1.0 // indirect
@@ -209,6 +211,7 @@ require (
 	github.com/pascaldekloe/name v1.0.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.4.3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pkoukk/tiktoken-go v0.1.6 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/procfs v0.21.1 // indirect

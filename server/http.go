@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/shm"
 	"github.com/evcc-io/evcc/server/assets"
+	"github.com/evcc-io/evcc/server/assistant"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/remote"
 	"github.com/evcc-io/evcc/server/service"
@@ -335,6 +336,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			keys.Influx:          func() any { return new(globalconfig.Influx) },
 			keys.EEBus:           func() any { return new(eebus.Config) },
 			keys.MessagingEvents: func() any { return new(globalconfig.MessagingEvents) },
+			keys.Assistant:       func() any { return new(assistant.Config) },
 		} {
 			routes["update"+key] = route{Method: "POST", Pattern: "/" + key, HandlerFunc: settingsSetJsonHandler(key, pub, fun)}
 			routes["delete"+key] = route{Method: "DELETE", Pattern: "/" + key, HandlerFunc: settingsDeleteJsonHandler(key, pub, fun())}
@@ -377,6 +379,14 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 		} {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}
+	}
+
+	{ // api/assistant
+		api := api.PathPrefix("/assistant").Subrouter()
+		api.Use(ensureAuthHandler(auth))
+
+		r := route{"POST", "/chat", assistant.ChatHandler(router)}
+		api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 	}
 
 	{ // api/system

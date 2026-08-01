@@ -1,4 +1,14 @@
 {
+  "assistant": {
+    "clear": "Leeren",
+    "close": "Assistent schließen",
+    "inputPlaceholder": "Frage stellen…",
+    "open": "Assistent öffnen",
+    "placeholder": "Frage nach deinem System, dem aktuellen Zustand oder Fehlern auf dieser Seite.",
+    "send": "Senden",
+    "thinking": "Denkt nach…",
+    "title": "KI-Assistent"
+  },
   "authProviders": {
     "authCode": "Autorisierungscode",
     "authCodeHelp": "Kopiere diesen Code und verwende ihn im nächsten Schritt. Gültig für {duration}.",
@@ -111,6 +121,21 @@
       "revealTitle": "API-Schlüssel erstellt",
       "shownOnce": "Dieser Schlüssel wird nur einmal angezeigt. Bewahre ihn sicher auf. Du kannst ihn später nicht erneut abrufen.",
       "title": "API-Schlüssel"
+    },
+    "assistant": {
+      "description": "Beantwortet Fragen zum System und hilft bei Fehlern. Nutzt die eingebauten MCP-Werkzeuge.",
+      "labelBaseUrl": "API-Endpunkt",
+      "labelModel": "Modell",
+      "labelProvider": "Anbieter",
+      "labelToken": "API-Schlüssel",
+      "helpBaseUrl": "Leer lassen, um den Standard des Anbieters zu verwenden.",
+      "provider": {
+        "anthropic": "Anthropic",
+        "custom": "OpenAI-kompatibel",
+        "ollama": "Ollama",
+        "openai": "OpenAI"
+      },
+      "title": "KI-Assistent"
     },
     "aux": {
       "description": "Gerät, das seinen Verbrauch basierend auf verfügbarem Überschuss (z. B. smarter Heizstab) selbstständig anpasst. evcc erwartet, dass dieses Gerät selbstständig seine Leistungsaufnahme reduziert, wenn es notwendig ist.",

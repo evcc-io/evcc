@@ -34,6 +34,7 @@ import (
 	"github.com/evcc-io/evcc/plugin/javascript"
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/server/assistant"
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/server/eebus"
@@ -1503,4 +1504,15 @@ func isOptimizer() bool {
 // isMcp returns if MCP service is enabled
 func isMcp() bool {
 	return isExperimental()
+}
+
+// assistantConfig returns the persisted assistant configuration
+func assistantConfig() assistant.Config {
+	var cfg assistant.Config
+	if settings.Exists(keys.Assistant) {
+		if err := settings.Json(keys.Assistant, &cfg); err != nil {
+			log.ERROR.Printf("assistant config: %v", err)
+		}
+	}
+	return cfg
 }

@@ -17,7 +17,8 @@ import (
 //go:embed openapi.json
 var spec []byte
 
-func NewHandler(host http.Handler) (http.Handler, error) {
+// New creates the evcc MCP server. Tool calls are served by host.
+func New(host http.Handler) (*mcp.Server, error) {
 	log := util.NewLogger("mcp")
 
 	var doc *openapi3.T
@@ -55,11 +56,14 @@ func NewHandler(host http.Handler) (http.Handler, error) {
 		Description: "Documentation",
 	}, docsTool)
 
-	handler := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
+	return srv, nil
+}
+
+// Handler exposes the MCP server via streamable HTTP
+func Handler(srv *mcp.Server) http.Handler {
+	return mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
 		return srv
 	}, nil)
-
-	return handler, nil
 }
 
 func requestHandler(log *util.Logger, handler http.Handler) func(req *http.Request) (*http.Response, error) {
