@@ -317,6 +317,11 @@ Avoid file paths, line numbers, or code listings reproduced from the diff. Inclu
 
 Never state that `go build`, `go vet`, `go test -race`, or `gofmt` pass (or any "all checks/tests green" phrasing). These are non-negotiable givens that must already be fulfilled, not noteworthy results.
 
+## Pull Request CI and Reviews
+
+- After opening or updating a pull request, watch CI until every check has finished. Work is not done while checks are still running. Fix failures on the same branch and keep watching until the run is green.
+- Do not argue with automated review bots such as Sourcery. Either implement the suggestion or resolve the thread. No rebuttal comments.
+
 ## AI Attribution
 
 Work produced by an AI agent must be attributable as such on GitHub. Append the tool's attribution footer to every PR description, issue body, review, and comment written by an agent, for example:
