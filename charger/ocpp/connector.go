@@ -180,6 +180,18 @@ func (conn *Connector) Status() (core.ChargePointStatus, error) {
 	return conn.status.Status, nil
 }
 
+// ChargingByMeter reports whether an active transaction is actually drawing
+// power. It corrects chargers (e.g. Grizzl-E) that keep reporting Suspended*
+// after they start delivering instead of switching to Charging.
+func (conn *Connector) ChargingByMeter() bool {
+	if txn, err := conn.TransactionID(); err != nil || txn == 0 {
+		return false
+	}
+
+	power, err := conn.CurrentPower()
+	return err == nil && power > ChargingPowerThreshold
+}
+
 // NeedsAuthentication checks if local authentication or an initial RemoteStartTransaction is required
 func (conn *Connector) NeedsAuthentication() bool {
 	if !conn.cp.Connected() {

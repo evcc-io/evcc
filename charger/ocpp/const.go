@@ -18,6 +18,13 @@ const (
 // It is a var so tests can shorten it.
 var TriggerBootDelay = 5 * time.Second
 
+// ChargingPowerThreshold is the minimum measured power (W) that counts as an
+// EV actually drawing energy. It sits well above charger standby draw and well
+// below the ~1.4kW a 6A single-phase charge pulls, so it reliably separates a
+// live transaction from an idle one. Used to correct chargers (e.g. Grizzl-E)
+// that keep reporting Suspended* while already delivering.
+const ChargingPowerThreshold = 100 // W
+
 const (
 	// Core profile keys
 	KeyMeterValueSampleInterval        = "MeterValueSampleInterval"

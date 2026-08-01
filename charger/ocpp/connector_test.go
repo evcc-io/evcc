@@ -210,6 +210,30 @@ func (suite *connTestSuite) TestOnStatusNotificationClearsStaleTxn() {
 	suite.True(suite.conn.NeedsAuthentication(), "Preparing after Available should require authentication")
 }
 
+// TestChargingByMeter ensures a live transaction with power flowing is detected
+// as charging, so a charger stuck in Suspended* (e.g. Grizzl-E) is corrected.
+func (suite *connTestSuite) TestChargingByMeter() {
+	suite.conn.cp.connected = true
+
+	// no transaction: not charging even if a stale power value exists
+	suite.conn.measurements[types.MeasurandPowerActiveImport] = types.SampledValue{Value: "2090", Unit: types.UnitOfMeasureW}
+	suite.conn.meterUpdated = suite.clock.Now()
+	suite.False(suite.conn.ChargingByMeter(), "no transaction")
+
+	// active transaction, power flowing
+	suite.conn.txnId = 5268750
+	suite.True(suite.conn.ChargingByMeter(), "active transaction drawing power")
+
+	// active transaction, power below threshold (idle/standby)
+	suite.conn.measurements[types.MeasurandPowerActiveImport] = types.SampledValue{Value: "0", Unit: types.UnitOfMeasureW}
+	suite.False(suite.conn.ChargingByMeter(), "active transaction but no power")
+
+	// active transaction, power flowing but meter stale -> not trusted
+	suite.conn.measurements[types.MeasurandPowerActiveImport] = types.SampledValue{Value: "2090", Unit: types.UnitOfMeasureW}
+	suite.clock.Add(time.Hour)
+	suite.False(suite.conn.ChargingByMeter(), "stale meter")
+}
+
 // TestOnStatusNotificationKeepsActiveTxn ensures that an active transaction is
 // not cleared by transient status notifications other than Available.
 func (suite *connTestSuite) TestOnStatusNotificationKeepsActiveTxn() {
