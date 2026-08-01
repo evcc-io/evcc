@@ -1272,32 +1272,35 @@ export interface Slot {
   selectable?: boolean | null;
 }
 
-/** A forecast value at a point in time. */
+/**
+ * A forecast value at a point in time. Timestamps are unix milliseconds,
+ * expanded from the wire format by expandForecast in utils/forecast.
+ */
 export interface TimeseriesEntry {
   /** Forecast power in W. */
   val: number;
-  /**
-   * Time of the forecast value.
-   * @format date-time
-   */
-  ts: string;
+  /** Time of the forecast value in unix milliseconds. */
+  ts: number;
 }
 
-/** A forecast value for a time slot. */
+/**
+ * A forecast value for a time slot. Timestamps are unix milliseconds,
+ * expanded from the wire format by expandForecast in utils/forecast.
+ */
 export interface ForecastSlot {
-  /**
-   * Start of the time slot.
-   * @format date-time
-   */
-  start: string;
-  /**
-   * End of the time slot.
-   * @format date-time
-   */
-  end: string;
+  /** Start of the time slot in unix milliseconds. */
+  start: number;
+  /** End of the time slot in unix milliseconds. */
+  end: number;
   /** Forecast value of the time slot. Unit depends on the forecast type. */
   value: number;
 }
+
+/** Wire format of a forecast slot: [start, end, value], timestamps in unix seconds. */
+export type WireForecastSlot = [number, number, number];
+
+/** Wire format of a timeseries entry: [ts, val], timestamp in unix seconds. */
+export type WireTimeseriesEntry = [number, number];
 
 /** Expected solar production energy of a day. */
 export interface EnergyByDay {

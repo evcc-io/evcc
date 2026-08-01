@@ -1,10 +1,51 @@
-import type { ForecastSlot, TimeseriesEntry, SolarDetails } from "@/types/evcc";
+import type {
+  ForecastSlot,
+  TimeseriesEntry,
+  SolarDetails,
+  WireForecastSlot,
+  WireTimeseriesEntry,
+} from "@/types/evcc";
 import deepCopy from "./deepClone";
 
 export enum ForecastType {
   Solar = "solar",
   Price = "price",
   Co2 = "co2",
+}
+
+// forecast keys carrying slots; solar is nested and handled separately
+const SLOT_KEYS = ["co2", "feedin", "grid", "planner", "temperature"];
+
+function expandSlots(slots: WireForecastSlot[]): ForecastSlot[] {
+  return slots.map(([start, end, value]) => ({ start: start * 1000, end: end * 1000, value }));
+}
+
+type WireSolarDetails = Omit<SolarDetails, "timeseries"> & { timeseries?: WireTimeseriesEntry[] };
+
+function expandSolar(solar: WireSolarDetails): SolarDetails {
+  const { timeseries, ...rest } = solar;
+  return {
+    ...rest,
+    timeseries: timeseries?.map(([ts, val]) => ({ ts: ts * 1000, val })),
+  };
+}
+
+// The API publishes forecast slots as [start, end, value] and solar entries as
+// [ts, val] with timestamps in unix seconds. Expand them to objects with unix
+// milliseconds so components can keep using named fields and `new Date(...)`.
+// State arrives sharded, one key per forecast field, plus the whole object on
+// initial load.
+export function expandForecast(key: string, value: any): any {
+  if (!key.startsWith("forecast") || !value) return value;
+
+  const [, field] = key.split(".");
+  if (SLOT_KEYS.includes(field)) return expandSlots(value);
+  if (field === "solar") return expandSolar(value);
+  if (field) return value;
+
+  return Object.fromEntries(
+    Object.entries(value).map(([k, v]) => [k, expandForecast(`forecast.${k}`, v)])
+  );
 }
 
 // return the date in local YYYY-MM-DD format
@@ -72,7 +113,7 @@ export function isStaticTariff(slots?: ForecastSlot[]): boolean {
 }
 
 export interface SlotWithValue {
-  start: string | Date;
+  start: string | number | Date;
   value: number;
 }
 

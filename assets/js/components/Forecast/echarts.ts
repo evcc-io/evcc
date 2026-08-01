@@ -31,7 +31,7 @@ export const FONT_FAMILY = "Montserrat, sans-serif";
 
 export function markPointLabel(
   color: string,
-  data: { coord: [string, number]; value: string; label?: { offset?: [number, number] } }[],
+  data: { coord: [number, number]; value: string; label?: { offset?: [number, number] } }[],
   startDate?: Date,
   endDate?: Date
 ) {
@@ -249,8 +249,8 @@ export function forecastYAxis(overrides: Record<string, unknown> = {}) {
   };
 }
 
-export function clampStart(ts: string, startDate: Date): string {
-  return new Date(ts) < startDate ? startDate.toISOString() : ts;
+export function clampStart(ts: number, startDate: Date): number {
+  return Math.max(ts, startDate.getTime());
 }
 
 export function filterForecastSlots(

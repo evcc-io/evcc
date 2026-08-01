@@ -43,8 +43,8 @@ export default defineComponent({
 			}
 			return max;
 		},
-		markPoints(): { coord: [string, number]; value: string }[] {
-			const points: { coord: [string, number]; value: string }[] = [];
+		markPoints(): { coord: [number, number]; value: string }[] {
+			const points: { coord: [number, number]; value: string }[] = [];
 			const days = [
 				{ energy: this.solar?.today?.energy, day: 0 },
 				{ energy: this.solar?.tomorrow?.energy, day: 1 },

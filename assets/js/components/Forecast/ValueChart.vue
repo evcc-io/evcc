@@ -46,7 +46,7 @@ export default defineComponent({
 			return Math.min(0, Math.floor(Math.min(...this.slots.map((s) => s.value))));
 		},
 		markPoints(): {
-			coord: [string, number];
+			coord: [number, number];
 			value: string;
 			label?: Record<string, unknown>;
 		}[] {
@@ -55,7 +55,7 @@ export default defineComponent({
 			const minIdx = minSlotIndex(slots);
 			const maxIdx = maxSlotIndex(slots);
 			const points: {
-				coord: [string, number];
+				coord: [number, number];
 				value: string;
 				label?: Record<string, unknown>;
 			}[] = [];
