@@ -25,8 +25,8 @@ params:
     type: int
     required: true
     help:
-      de: "Kann im VRM Portal oder im RemoteUI ausgelesen werden."
-      en: "Can be read out in VRM portal or via remoteUI."
+      de: "Auf dem GX-Gerät unter Einstellungen / Integrationen / Modbus-TCP-Server / Verfügbare Dienste zu finden."
+      en: "Found on the GX device under Settings / Integrations / Modbus TCP server / Available services."
 render: |
   type: custom
   power:
