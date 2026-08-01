@@ -128,6 +128,13 @@ vp install
 vp run dev
 ```
 
+Start the backend with `--disable-auth` when checking the configuration UI of a
+throw-away instance. Without it the UI asks for an administrator password first.
+
+```sh
+./evcc --config tests/config-with-tariffs.evcc.yaml --disable-auth
+```
+
 ### Storybook
 
 We're using storybook to develop and visualize UI components in different states. Running the command below will open your browser at http://127.0.0.1:6006/.
