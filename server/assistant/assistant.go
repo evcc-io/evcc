@@ -2,6 +2,7 @@ package assistant
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,14 +16,10 @@ import (
 // maxIterations limits the tool calling loop
 const maxIterations = 12
 
-const systemPrompt = `You are the built-in assistant of evcc, a solar charging and home energy management system.
-
-Answer questions about the running system using the provided tools. Always look up live data instead of guessing.
-When asked about errors or misconfiguration, inspect the system state and configuration before answering and name the
-concrete device or setting that is affected.
-
-Only change settings when explicitly asked to. Keep answers short and factual, use markdown, and state values with
-their units. If a tool fails, report what failed rather than inventing an answer.`
+// systemPrompt is embedded at build time, edit prompt.txt to change it
+//
+//go:embed prompt.txt
+var systemPrompt string
 
 // Message is a single chat message
 type Message struct {
@@ -33,6 +30,7 @@ type Message struct {
 // Assistant answers questions about the running system using evcc's MCP tools
 type Assistant struct {
 	log     *util.Logger
+	mcpLog  *util.Logger
 	llm     llms.Model
 	client  *mcpsdk.ClientSession
 	server  *mcpsdk.ServerSession
@@ -74,7 +72,9 @@ func newAssistant(ctx context.Context, llm llms.Model, srv *mcpsdk.Server) (*Ass
 	}
 
 	return &Assistant{
-		log:    util.NewLogger("assistant"),
+		log: util.NewLogger("assistant"),
+		// tool calls are mcp requests, log them with the mcp transport they trigger
+		mcpLog: util.NewLogger("mcp"),
 		llm:    llm,
 		client: cs,
 		server: ss,
@@ -128,7 +128,7 @@ func listTools(ctx context.Context, cs *mcpsdk.ClientSession) ([]llms.Tool, erro
 
 // Chat answers the conversation, calling tools as needed
 func (a *Assistant) Chat(ctx context.Context, history []Message) (string, error) {
-	prompt := systemPrompt
+	prompt := strings.TrimSpace(systemPrompt)
 	if a.context != "" {
 		prompt += "\n\nContext for this conversation:\n" + a.context
 	}
@@ -181,23 +181,26 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (string, error)
 // callTool executes a tool call and returns its textual result. Errors are returned to the model, not to the caller.
 func (a *Assistant) callTool(ctx context.Context, tc llms.ToolCall) string {
 	if tc.FunctionCall == nil {
+		a.mcpLog.ERROR.Println("missing function call")
 		return "error: missing function call"
 	}
 
 	var args map[string]any
 	if s := strings.TrimSpace(tc.FunctionCall.Arguments); s != "" {
 		if err := json.Unmarshal([]byte(s), &args); err != nil {
+			a.mcpLog.ERROR.Printf("tool %s invalid arguments: %v", tc.FunctionCall.Name, err)
 			return "error: invalid arguments: " + err.Error()
 		}
 	}
 
-	a.log.DEBUG.Printf("tool %s %v", tc.FunctionCall.Name, args)
+	a.mcpLog.DEBUG.Printf("tool %s %v", tc.FunctionCall.Name, args)
 
 	res, err := a.client.CallTool(ctx, &mcpsdk.CallToolParams{
 		Name:      tc.FunctionCall.Name,
 		Arguments: args,
 	})
 	if err != nil {
+		a.mcpLog.ERROR.Printf("tool %s: %v", tc.FunctionCall.Name, err)
 		return "error: " + err.Error()
 	}
 
@@ -209,10 +212,11 @@ func (a *Assistant) callTool(ctx context.Context, tc llms.ToolCall) string {
 	}
 
 	if res.IsError {
+		a.mcpLog.ERROR.Printf("tool %s: %s", tc.FunctionCall.Name, sb.String())
 		return "error: " + sb.String()
 	}
 
-	a.log.TRACE.Printf("tool %s result: %s", tc.FunctionCall.Name, sb.String())
+	a.mcpLog.TRACE.Printf("tool %s result: %s", tc.FunctionCall.Name, sb.String())
 
 	return sb.String()
 }
