@@ -96,6 +96,10 @@ The commit is cherry-picked onto the branch of the next bugfix release, e.g.
 created at the newest tag of that line if it does not exist yet. Pass a branch
 name, `/backport release/0.312.2`, to service an older line.
 
+Releasing a bugfix deletes its release branch, since the tag is the branch tip
+and everything on it has shipped. A branch that received further backports after
+the tag is kept.
+
 ## Debugging in VS Code
 
 ### evcc Core
