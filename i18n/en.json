@@ -127,7 +127,7 @@
     "assistant": {
       "description": "Answers questions about your system and helps with errors. Uses the built-in MCP tools.",
       "helpBaseUrl": "Leave empty to use the provider default.",
-      "helpModel": "Suggestions are listed, any model name the provider supports can be entered.",
+      "helpModel": "The model must support tool calling, otherwise answers are made up instead of read from the system.",
       "labelBaseUrl": "API endpoint",
       "labelModel": "Model",
       "labelProvider": "Provider",

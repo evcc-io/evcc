@@ -1,5 +1,5 @@
 <template>
-	<div class="assistant safe-area-inset">
+	<div class="assistant-widget">
 		<button
 			v-if="!open"
 			type="button"
@@ -35,7 +35,7 @@
 				<p v-if="!messages.length" class="text-muted mb-0">
 					{{ $t("assistant.placeholder") }}
 				</p>
-				<div v-for="(m, i) in messages" :key="i" class="message" :class="m.role">
+				<div v-for="(m, i) in messages" :key="i" class="message" :class="`message-${m.role}`">
 					<Markdown v-if="m.role === 'assistant'" :markdown="m.content" />
 					<span v-else>{{ m.content }}</span>
 				</div>
@@ -133,18 +133,12 @@ export default defineComponent({
 </script>
 
 <style scoped>
-@import "../../../css/breakpoints.css";
-.assistant {
+.assistant-widget {
 	position: fixed;
 	right: 1rem;
-	/* clear the mobile tab bar */
-	bottom: calc(5rem + env(safe-area-inset-bottom));
+	/* --bottom-space clears the tab bar, which shares our z-index */
+	bottom: calc(var(--bottom-space) + var(--safe-area-inset-bottom));
 	z-index: 1030;
-}
-@media (--md-and-up) {
-	.assistant {
-		bottom: calc(1rem + env(safe-area-inset-bottom));
-	}
 }
 .fab {
 	width: 3.5rem;
@@ -154,7 +148,7 @@ export default defineComponent({
 }
 .panel {
 	width: min(24rem, calc(100vw - 2rem));
-	height: min(32rem, calc(100vh - 9rem));
+	height: min(32rem, calc(100vh - var(--bottom-space) - 4rem));
 	background-color: var(--evcc-box);
 	border: 1px solid var(--evcc-box-border);
 	border-radius: 1rem;
@@ -176,7 +170,7 @@ export default defineComponent({
 	margin-bottom: 0.75rem;
 	overflow-wrap: anywhere;
 }
-.message.user {
+.message-user {
 	font-weight: bold;
 }
 </style>

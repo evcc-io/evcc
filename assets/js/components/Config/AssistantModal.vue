@@ -84,7 +84,19 @@ const PROVIDERS: Record<AssistantProvider, { models: string[]; baseUrl: string }
 		models: ["claude-opus-5", "claude-sonnet-5", "claude-haiku-4-5"],
 		baseUrl: "",
 	},
-	ollama: { models: ["qwen3", "llama3.2", "gpt-oss"], baseUrl: "http://localhost:11434" },
+	ollama: {
+		models: [
+			"qwen3",
+			"llama3.1",
+			"llama3.2",
+			"mistral-nemo",
+			"gpt-oss",
+			"command-r7b",
+			"granite3.3",
+			"firefunction-v2",
+		],
+		baseUrl: "http://localhost:11434",
+	},
 	custom: { models: [], baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai" },
 };
 

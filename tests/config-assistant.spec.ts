@@ -69,8 +69,19 @@ test.describe("assistant", () => {
     // floating helper appears on the config page
     const open = page.getByTestId("assistant-open");
     await expect(open).toBeVisible();
+    // clicking fails if the tab bar overlaps the button, they share a z-index
     await open.click();
-    await expect(page.getByTestId("assistant-panel")).toBeVisible();
+    const panel = page.getByTestId("assistant-panel");
+    await expect(panel).toBeVisible();
+
+    // panel must clear the bottom tab bar, both sit at the same z-index
+    const clearsTabBar = await page.evaluate(() => {
+      const panel = document.querySelector('[data-testid="assistant-panel"]');
+      const nav = document.querySelector('[data-testid="bottom-tab-bar"]');
+      if (!panel || !nav) return false;
+      return panel.getBoundingClientRect().bottom <= nav.getBoundingClientRect().top;
+    });
+    expect(clearsTabBar).toBe(true);
 
     // question reaches the backend, which reports the unreachable model
     await page.getByTestId("assistant-input").fill("what is wrong?");
