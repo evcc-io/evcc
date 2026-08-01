@@ -28,6 +28,10 @@ func (cp *CP) OnBootNotification(request *core.BootNotificationRequest) (*core.B
 	// mark charge point as ready for communication
 	cp.connect(true)
 
+	// a reboot ends any transaction we still tracked - clear stale state so a
+	// connector reconnecting straight into Preparing can trigger RemoteStart
+	cp.resetTransactions()
+
 	// Notify the reboot monitor (and the initial Setup). The channel is
 	// buffered (size 1) and coalescing: if an older notification is still
 	// queued, drop it so the consumer always re-initializes against the most

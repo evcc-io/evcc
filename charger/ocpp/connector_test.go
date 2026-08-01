@@ -210,6 +210,35 @@ func (suite *connTestSuite) TestOnStatusNotificationClearsStaleTxn() {
 	suite.True(suite.conn.NeedsAuthentication(), "Preparing after Available should require authentication")
 }
 
+// TestOnBootNotificationClearsStaleTxn ensures a transaction left over from
+// before a charge point reboot is cleared on BootNotification, so a connector
+// that reconnects straight into Preparing (never reporting Available, e.g.
+// Grizzl-E) can still trigger RemoteStartTransaction.
+func (suite *connTestSuite) TestOnBootNotificationClearsStaleTxn() {
+	suite.conn.remoteIdTag = "evcc"
+	suite.conn.txnId = 42
+	suite.conn.idTag = "stale"
+
+	// charge point reboots and re-announces itself
+	_, err := suite.cp.OnBootNotification(&core.BootNotificationRequest{
+		ChargePointModel:  "GRM 2024",
+		ChargePointVendor: "UnitedChargers",
+	})
+	suite.NoError(err)
+	suite.Equal(0, suite.conn.txnId, "txnId should be cleared on reboot")
+	suite.Equal("", suite.conn.idTag, "idTag should be cleared on reboot")
+
+	// connector reconnects straight into Preparing, without an Available in
+	// between and without a timestamp (as the Grizzl-E does)
+	_, err = suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+		ConnectorId: 1,
+		Status:      core.ChargePointStatusPreparing,
+		ErrorCode:   core.NoError,
+	})
+	suite.NoError(err)
+	suite.True(suite.conn.NeedsAuthentication(), "Preparing after reboot should require authentication")
+}
+
 // TestOnStatusNotificationKeepsActiveTxn ensures that an active transaction is
 // not cleared by transient status notifications other than Available.
 func (suite *connTestSuite) TestOnStatusNotificationKeepsActiveTxn() {

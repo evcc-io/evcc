@@ -87,6 +87,22 @@ func (cp *CP) connectorByID(id int) *Connector {
 	return cp.connectors[id]
 }
 
+// resetTransactions clears transaction state on all connectors, e.g. after a
+// charge point reboot. Connectors are snapshotted under cp.mu and reset without
+// holding it, mirroring the cp.mu -> conn.mu lock order used elsewhere.
+func (cp *CP) resetTransactions() {
+	cp.mu.RLock()
+	conns := make([]*Connector, 0, len(cp.connectors))
+	for _, conn := range cp.connectors {
+		conns = append(conns, conn)
+	}
+	cp.mu.RUnlock()
+
+	for _, conn := range conns {
+		conn.resetTransaction()
+	}
+}
+
 func (cp *CP) connectorByTransactionID(id int) *Connector {
 	cp.mu.RLock()
 	defer cp.mu.RUnlock()

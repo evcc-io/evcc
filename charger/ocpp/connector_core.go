@@ -41,11 +41,8 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 	}
 
 	// Available means cable unplugged and any prior transaction is stale
-	if applied && request.Status == core.ChargePointStatusAvailable && conn.txnId != 0 {
-		conn.log.DEBUG.Printf("clearing stale transaction %d on Available status", conn.txnId)
-		conn.txnId = 0
-		conn.idTag = ""
-		conn.assumeMeterStopped()
+	if applied && request.Status == core.ChargePointStatusAvailable {
+		conn.clearTransaction("Available status")
 	}
 
 	if conn.isWaitingForAuth() {
@@ -139,6 +136,31 @@ func (conn *Connector) OnStartTransaction(request *core.StartTransactionRequest)
 	}
 
 	return res, nil
+}
+
+// clearTransaction resets transaction state and zeroes reported power.
+// Must be called with conn.mu held. No-op if no transaction is tracked.
+func (conn *Connector) clearTransaction(reason string) {
+	if conn.txnId == 0 {
+		return
+	}
+
+	conn.log.DEBUG.Printf("clearing stale transaction %d on %s", conn.txnId, reason)
+	conn.txnId = 0
+	conn.idTag = ""
+	conn.assumeMeterStopped()
+}
+
+// resetTransaction clears any transaction state after a charge point reboot.
+// A reboot ends every transaction the central system still tracked; without
+// this a stale txnId keeps isWaitingForAuth false and suppresses the automatic
+// RemoteStartTransaction when the connector reconnects straight into Preparing
+// (i.e. never reports Available, e.g. Grizzl-E).
+func (conn *Connector) resetTransaction() {
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+
+	conn.clearTransaction("reboot")
 }
 
 func (conn *Connector) assumeMeterStopped() {
