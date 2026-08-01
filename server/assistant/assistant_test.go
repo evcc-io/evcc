@@ -72,12 +72,9 @@ func TestToolLoop(t *testing.T) {
 	require.NoError(t, err)
 	defer a.Close()
 
-	// mcp tools are exposed to the model
-	names := make([]string, 0, len(a.tools))
-	for _, t := range a.tools {
-		names = append(names, t.Function.Name)
-	}
-	assert.ElementsMatch(t, []string{"getSoc", "failing"}, names)
+	// the model only sees the meta tools, the mcp tools are searchable
+	assert.ElementsMatch(t, []string{findToolsName, callToolName}, toolNames(a.tools))
+	assert.ElementsMatch(t, []string{"getSoc", "failing"}, toolNames(a.catalog))
 
 	res, err := a.Chat(ctx, []Message{{Role: "user", Content: "what is the soc?"}})
 	require.NoError(t, err)
@@ -139,4 +136,53 @@ func TestConfigValidate(t *testing.T) {
 func TestRedacted(t *testing.T) {
 	cfg := Config{Provider: OpenAI, Model: "gpt", Token: "secret", BaseUrl: "http://x"}
 	assert.NotContains(t, cfg.Redacted().(Config).Token, "secret")
+}
+
+func toolNames(tools []llms.Tool) []string {
+	res := make([]string, 0, len(tools))
+	for _, tool := range tools {
+		res = append(res, tool.Function.Name)
+	}
+	return res
+}
+
+// call invokes a tool the way the model would
+func call(t *testing.T, a *Assistant, name, args string) string {
+	t.Helper()
+	return a.callTool(t.Context(), llms.ToolCall{
+		FunctionCall: &llms.FunctionCall{Name: name, Arguments: args},
+	})
+}
+
+func TestFindTools(t *testing.T) {
+	a, err := newAssistant(t.Context(), &fakeLLM{}, testServer(t))
+	require.NoError(t, err)
+	defer a.Close()
+
+	// name and description are searchable
+	assert.Contains(t, call(t, a, findToolsName, `{"query":"soc"}`), "getSoc")
+	assert.Contains(t, call(t, a, findToolsName, `{"query":"vehicle soc"}`), "vehicle soc")
+
+	// the model gets told when nothing matches instead of an empty result
+	assert.Contains(t, call(t, a, findToolsName, `{"query":"nonsense"}`), "no tool matches")
+}
+
+func TestCallToolDispatch(t *testing.T) {
+	a, err := newAssistant(t.Context(), &fakeLLM{}, testServer(t))
+	require.NoError(t, err)
+	defer a.Close()
+
+	const want = "soc of loadpoint 1 is 42"
+
+	// arguments as object and, for weaker models, as json string
+	assert.Equal(t, want, call(t, a, callToolName, `{"name":"getSoc","arguments":{"loadpoint":1}}`))
+	assert.Equal(t, want, call(t, a, callToolName, `{"name":"getSoc","arguments":"{\"loadpoint\":1}"}`))
+
+	// tools found in the catalog remain callable directly
+	assert.Equal(t, want, call(t, a, "getSoc", `{"loadpoint":1}`))
+
+	// failure modes stay text for the model
+	assert.Contains(t, call(t, a, callToolName, `{"arguments":{}}`), "missing tool name")
+	assert.Contains(t, call(t, a, callToolName, `{"name":"nope"}`), "error:")
+	assert.Contains(t, call(t, a, callToolName, `{"name":"getSoc","arguments":"{"}`), "invalid arguments")
 }
