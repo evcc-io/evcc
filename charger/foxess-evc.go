@@ -40,23 +40,19 @@ import (
 // FoxESSEVC charger implementation
 type FoxESSEVC struct {
 	implement.Caps
-	log            *util.Logger
-	conn           *modbus.Connection
-	mu             sync.Mutex // guards the tracked state below against the heartbeat goroutine
-	current        float64    // tracks phase current, 0 if unset
-	enabled        bool       // tracks enabled state
-	phases         int        // tracks phase count; the charger does not report it
-	setpoint       uint16     // last known value of foxRegMaxPower
-	status         uint16     // last known value of foxRegStatus
-	switchable     bool       // charger switches 1p/3p on its own, derived from the power setpoint
-	minPower       uint16     // min supported power
-	maxPower       uint16     // max supported power
-	minCurrent     float64    // min supported current per phase
-	maxCurrent     float64    // max supported current per phase
-	haveEnergyBase bool       // whether energyBase has been latched for the current session
-	energyBase     uint32     // foxRegTotalEnergy reading latched at session start, in register units
-	energyAccum    uint32     // delta banked across meter resets within the current session
-	lastEnergy     uint32     // last successfully read foxRegTotalEnergy value
+	log        *util.Logger
+	conn       *modbus.Connection
+	mu         sync.Mutex // guards the tracked state below against the heartbeat goroutine
+	current    float64    // tracks phase current, 0 if unset
+	enabled    bool       // tracks enabled state
+	phases     int        // tracks phase count; the charger does not report it
+	setpoint   uint16     // last known value of foxRegMaxPower
+	status     uint16     // last known value of foxRegStatus
+	switchable bool       // charger switches 1p/3p on its own, derived from the power setpoint
+	minPower   uint16     // min supported power
+	maxPower   uint16     // max supported power
+	minCurrent float64    // min supported current per phase
+	maxCurrent float64    // max supported current per phase
 }
 
 // Register map per spec §2. Read-only and read/write registers are read with 0x03.
@@ -431,12 +427,6 @@ func (wb *FoxESSEVC) Status() (api.ChargeStatus, error) {
 
 	switch s {
 	case foxStatusIdle:
-		// car disconnected: drop the latched session state so the next connection
-		// starts a fresh session instead of continuing to subtract a stale baseline
-		wb.haveEnergyBase = false
-		wb.energyAccum = 0
-		wb.lastEnergy = 0
-
 		return api.StatusA, nil
 
 	case foxStatusConnect, foxStatusStart, foxStatusPause, foxStatusSwitching, foxStatusFinish:
@@ -578,7 +568,12 @@ func (wb *FoxESSEVC) CurrentPower() (float64, error) {
 
 var _ api.MeterEnergy = (*FoxESSEVC)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface
+// TotalEnergy implements the api.MeterEnergy interface.
+// foxRegTotalEnergy (0x1016) is a cumulative meter reading that never resets, not even across a
+// PV-triggered pause/resume. api.ChargeRater is deliberately not implemented: evcc's generic
+// core wrapper derives session energy from TotalEnergy instead, latching a baseline on session
+// start/resume and zeroing it only on a real disconnect, matching how other Modbus chargers
+// backed by a non-resetting energy register are handled in this repo.
 func (wb *FoxESSEVC) TotalEnergy() (float64, error) {
 	energy, err := wb.readUint32(foxRegTotalEnergy)
 	if err != nil {
@@ -586,44 +581,6 @@ func (wb *FoxESSEVC) TotalEnergy() (float64, error) {
 	}
 
 	return float64(energy) / 10, nil
-}
-
-var _ api.ChargeRater = (*FoxESSEVC)(nil)
-
-// ChargedEnergy implements the api.ChargeRater interface.
-// foxRegSessionEnergy (0x1018) resets to zero as soon as charging stops rather than only when
-// the car disconnects, which froze/reset the reported session total whenever a PV-triggered
-// pause/resume occurred mid-session. foxRegTotalEnergy (0x1016) is a cumulative meter reading
-// that never resets, so session energy is derived by latching its value as a baseline on first
-// use after connecting (see Status, which clears the session state once the car disconnects)
-// and returning the delta on every subsequent call. If the reading ever goes backwards mid-session
-// (e.g. a charger restart), the delta accumulated so far is banked before the baseline restarts,
-// so the session total is not lost.
-func (wb *FoxESSEVC) ChargedEnergy() (float64, error) {
-	energy, err := wb.readUint32(foxRegTotalEnergy)
-	if err != nil {
-		return 0, err
-	}
-
-	wb.mu.Lock()
-	defer wb.mu.Unlock()
-
-	if !wb.haveEnergyBase {
-		wb.energyBase = energy
-		wb.lastEnergy = energy
-		wb.haveEnergyBase = true
-	}
-
-	if energy < wb.energyBase {
-		// meter reset mid-session: bank the delta accumulated up to the last good
-		// reading, then restart the baseline from the new, lower reading
-		wb.energyAccum += wb.lastEnergy - wb.energyBase
-		wb.energyBase = energy
-	}
-
-	wb.lastEnergy = energy
-
-	return float64(wb.energyAccum+energy-wb.energyBase) / 10, nil
 }
 
 var _ api.PhaseCurrents = (*FoxESSEVC)(nil)

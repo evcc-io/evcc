@@ -407,55 +407,25 @@ func setTotalEnergy(regs map[uint16]uint16, v uint32) {
 	regs[foxRegTotalEnergy+1] = uint16(v)
 }
 
-func TestFoxESSEVCChargedEnergy(t *testing.T) {
-	regs := map[uint16]uint16{foxRegStatus: foxStatusCharging}
-	setTotalEnergy(regs, 1000) // 100.0 kWh, the charger's lifetime total
+func TestFoxESSEVCTotalEnergy(t *testing.T) {
+	regs := map[uint16]uint16{}
+	setTotalEnergy(regs, 1234) // 123.4 kWh
 
 	wb, _ := foxTestCharger(t, regs)
 
-	// first read after connecting latches the baseline; session starts at 0
-	energy, err := wb.ChargedEnergy()
-	require.NoError(t, err)
-	assert.Equal(t, 0.0, energy)
+	// this charger deliberately does not implement api.ChargeRater: foxRegTotalEnergy never
+	// resets, not even across a PV-triggered pause/resume, so evcc's generic core wrapper
+	// derives session energy from TotalEnergy instead of a charger-specific implementation
+	_, ok := any(wb).(api.ChargeRater)
+	assert.False(t, ok)
 
-	// session energy accrues as the lifetime total increases mid-session
-	setTotalEnergy(regs, 1050) // +5.0 kWh
-	energy, err = wb.ChargedEnergy()
+	energy, err := wb.TotalEnergy()
 	require.NoError(t, err)
-	assert.Equal(t, 5.0, energy)
+	assert.Equal(t, 123.4, energy)
 
-	// a PV-triggered pause/resume does not touch the lifetime meter, so the session
-	// total keeps accruing normally across it instead of freezing or resetting
-	regs[foxRegStatus] = foxStatusPause
-	_, err = wb.Status()
+	// a PV-triggered pause/resume does not touch this register
+	setTotalEnergy(regs, 1250) // +11.6 kWh
+	energy, err = wb.TotalEnergy()
 	require.NoError(t, err)
-
-	setTotalEnergy(regs, 1080) // +3.0 kWh while paused/resumed
-	regs[foxRegStatus] = foxStatusCharging
-	energy, err = wb.ChargedEnergy()
-	require.NoError(t, err)
-	assert.Equal(t, 8.0, energy)
-
-	// a charger restart mid-session can make the lifetime meter jump backwards; the
-	// delta accumulated so far is banked and the baseline restarts from the new reading
-	setTotalEnergy(regs, 10) // meter reset
-	energy, err = wb.ChargedEnergy()
-	require.NoError(t, err)
-	assert.Equal(t, 8.0, energy)
-
-	setTotalEnergy(regs, 15) // +0.5 kWh after the restart
-	energy, err = wb.ChargedEnergy()
-	require.NoError(t, err)
-	assert.Equal(t, 8.5, energy)
-
-	// the car disconnecting clears the latched session state so the next session
-	// starts from zero again instead of subtracting a stale baseline
-	regs[foxRegStatus] = foxStatusIdle
-	_, err = wb.Status()
-	require.NoError(t, err)
-
-	setTotalEnergy(regs, 20)
-	energy, err = wb.ChargedEnergy()
-	require.NoError(t, err)
-	assert.Equal(t, 0.0, energy)
+	assert.Equal(t, 125.0, energy)
 }
