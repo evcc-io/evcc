@@ -9,6 +9,13 @@
 			@click="open = true"
 		>
 			<AssistantIcon />
+			<!-- the conversation runs on while minimized, so show what happened meanwhile -->
+			<span
+				v-if="pending"
+				class="indicator spinner-border spinner-border-sm"
+				role="status"
+			></span>
+			<span v-else-if="unread" class="indicator dot" data-testid="assistant-unread"></span>
 		</button>
 
 		<div v-else class="panel d-flex flex-column" data-testid="assistant-panel">
@@ -52,14 +59,21 @@
 					v-model="question"
 					class="form-control"
 					:placeholder="$t('assistant.inputPlaceholder')"
-					:disabled="pending"
 					data-testid="assistant-input"
+					@keydown.up.prevent="historyBack"
+					@keydown.down.prevent="historyForward"
+					@keydown.esc.prevent="abort"
 				/>
 				<button
-					type="submit"
-					class="btn btn-primary"
-					:disabled="pending || !question.trim()"
+					v-if="pending"
+					type="button"
+					class="btn btn-outline-primary text-nowrap"
+					data-testid="assistant-stop"
+					@click="abort"
 				>
+					{{ $t("assistant.stop") }}
+				</button>
+				<button v-else type="submit" class="btn btn-primary" :disabled="!question.trim()">
 					{{ $t("assistant.send") }}
 				</button>
 			</form>
@@ -88,12 +102,62 @@ export default defineComponent({
 			question: "",
 			error: "",
 			messages: [] as AssistantMessage[],
+			// asked questions, oldest first, browsed with cursor up/down
+			history: [] as string[],
+			// position in history, -1 while editing the unsent draft
+			historyIndex: -1,
+			draft: "",
+			// answer received while minimized
+			unread: false,
+			controller: null as AbortController | null,
 		};
+	},
+	watch: {
+		open(open: boolean) {
+			if (!open) return;
+			this.unread = false;
+			this.$nextTick(() => (this.$refs["input"] as HTMLInputElement | undefined)?.focus());
+			this.scrollDown();
+		},
 	},
 	methods: {
 		reset() {
+			this.abort();
 			this.messages = [];
 			this.error = "";
+		},
+		// abort cancels the running question, the answer is not awaited any longer
+		abort() {
+			this.controller?.abort();
+		},
+		// historyBack steps to the previous question, keeping the draft for the way back
+		historyBack() {
+			if (this.historyIndex < 0) {
+				if (!this.history.length) return;
+				this.draft = this.question;
+				this.historyIndex = this.history.length;
+			}
+			if (this.historyIndex === 0) return;
+			this.historyIndex--;
+			this.recall(this.history[this.historyIndex]);
+		},
+		// historyForward steps back towards the draft, stopping there
+		historyForward() {
+			if (this.historyIndex < 0) return;
+			this.historyIndex++;
+			if (this.historyIndex >= this.history.length) {
+				this.historyIndex = -1;
+				this.recall(this.draft);
+			} else {
+				this.recall(this.history[this.historyIndex]);
+			}
+		},
+		recall(content: string) {
+			this.question = content;
+			this.$nextTick(() => {
+				const input = this.$refs["input"] as HTMLInputElement | undefined;
+				input?.setSelectionRange(content.length, content.length);
+			});
 		},
 		scrollDown() {
 			this.$nextTick(() => {
@@ -105,26 +169,49 @@ export default defineComponent({
 			const content = this.question.trim();
 			if (!content || this.pending) return;
 
+			if (this.history[this.history.length - 1] !== content) {
+				this.history.push(content);
+			}
+			this.historyIndex = -1;
+			this.draft = "";
+
 			this.question = "";
 			this.error = "";
 			this.messages.push({ role: "user", content });
 			this.pending = true;
 			this.scrollDown();
 
+			const controller = new AbortController();
+			this.controller = controller;
+			const conversation = this.messages;
+
 			try {
 				const res = await api.post(
 					"/assistant/chat",
 					{ messages: this.messages, context: this.context },
-					{ validateStatus: (code) => [200, 400, 412, 500, 502].includes(code) }
+					{
+						signal: controller.signal,
+						validateStatus: (code) => [200, 400, 412, 500, 502].includes(code),
+					}
 				);
 				if (res.status === 200) {
 					this.messages.push({ role: "assistant", content: res.data.content });
+					if (!this.open) this.unread = true;
 				} else {
 					this.error = res.data?.error || res.statusText;
 				}
 			} catch (e: any) {
-				this.error = e.message;
+				if (controller.signal.aborted) {
+					// hand the question back for editing, unless the conversation was cleared meanwhile
+					if (this.messages === conversation) {
+						this.messages.pop();
+						if (!this.question) this.recall(content);
+					}
+				} else {
+					this.error = e.message;
+				}
 			}
+			this.controller = null;
 			this.pending = false;
 			this.scrollDown();
 		},
@@ -141,10 +228,22 @@ export default defineComponent({
 	z-index: 1030;
 }
 .fab {
+	position: relative;
 	width: 3.5rem;
 	height: 3.5rem;
 	border-radius: 50%;
 	box-shadow: 0 0.25rem 1rem var(--evcc-gray-25);
+}
+.indicator {
+	position: absolute;
+	top: 0.4rem;
+	right: 0.4rem;
+}
+.dot {
+	width: 0.625rem;
+	height: 0.625rem;
+	border-radius: 50%;
+	background-color: currentColor;
 }
 .panel {
 	width: min(24rem, calc(100vw - 2rem));

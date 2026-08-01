@@ -513,7 +513,6 @@
 				<SponsorModal :error="hasClassError('sponsorship')" @changed="loadDirty" />
 			</div>
 		</div>
-		<AssistantWidget v-if="assistantConfigured" :context="assistantContext" />
 	</div>
 </template>
 
@@ -568,7 +567,7 @@ import McpIcon from "../components/MaterialIcon/Mcp.vue";
 import McpModal from "../components/Config/McpModal.vue";
 import AssistantIcon from "../components/MaterialIcon/Assistant.vue";
 import AssistantModal from "../components/Config/AssistantModal.vue";
-import AssistantWidget from "../components/Assistant/AssistantWidget.vue";
+import { setAssistantContext } from "../components/Assistant/context";
 import restart, { performRestart } from "../restart";
 import SponsorModal from "../components/Config/SponsorModal.vue";
 import store from "../store";
@@ -662,7 +661,6 @@ export default defineComponent({
 		McpModal,
 		AssistantIcon,
 		AssistantModal,
-		AssistantWidget,
 		SponsorModal,
 		TariffsLegacyModal,
 		TariffCard,
@@ -1039,6 +1037,10 @@ export default defineComponent({
 				this.loadAll();
 			}
 		},
+		assistantContext: {
+			immediate: true,
+			handler: setAssistantContext,
+		},
 	},
 	mounted() {
 		this.isComponentMounted = true;
@@ -1048,6 +1050,7 @@ export default defineComponent({
 	},
 	unmounted() {
 		this.isComponentMounted = false;
+		setAssistantContext("");
 		document.removeEventListener("visibilitychange", this.handleVisibilityChange);
 		if (this.deviceValueTimeout) {
 			clearTimeout(this.deviceValueTimeout);
