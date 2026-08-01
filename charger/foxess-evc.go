@@ -583,6 +583,10 @@ func (wb *FoxESSEVC) TotalEnergy() (float64, error) {
 	return float64(energy) / 10, nil
 }
 
+//
+// removed since broken, see https://github.com/evcc-io/evcc/pull/32371
+// var _ api.ChargeRater = (*FoxESSEVC)(nil)
+
 var _ api.PhaseCurrents = (*FoxESSEVC)(nil)
 
 // Currents implements the api.PhaseCurrents interface
