@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
+	"slices"
 
 	"github.com/evcc-io/evcc/util"
 	openapi2mcp "github.com/evcc-io/openapi-mcp"
@@ -17,9 +18,29 @@ import (
 //go:embed openapi.json
 var spec []byte
 
+// Option configures the server
+type Option func(*options)
+
+type options struct {
+	readOnly bool
+}
+
+// ReadOnly limits the server to tools that only read state. Small models cope
+// badly with the full tool set and it keeps the assistant from changing settings.
+func ReadOnly() Option {
+	return func(o *options) {
+		o.readOnly = true
+	}
+}
+
 // New creates the evcc MCP server. Tool calls are served by host.
-func New(host http.Handler) (*mcp.Server, error) {
+func New(host http.Handler, opt ...Option) (*mcp.Server, error) {
 	log := util.NewLogger("mcp")
+
+	var o options
+	for _, fn := range opt {
+		fn(&o)
+	}
 
 	var doc *openapi3.T
 	if err := json.Unmarshal(spec, &doc); err != nil {
@@ -37,6 +58,12 @@ func New(host http.Handler) (*mcp.Server, error) {
 	}}
 
 	ops := openapi2mcp.ExtractOpenAPIOperations(doc)
+
+	if o.readOnly {
+		ops = slices.DeleteFunc(ops, func(op openapi2mcp.OpenAPIOperation) bool {
+			return op.Method != http.MethodGet
+		})
+	}
 
 	srv := mcp.NewServer(&mcp.Implementation{Name: "evcc", Version: util.Version}, nil)
 
