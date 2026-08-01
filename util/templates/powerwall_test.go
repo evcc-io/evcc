@@ -10,6 +10,11 @@ import (
 func TestPowerwallTemplateOptionalFleetCredentials(t *testing.T) {
 	tmpl, err := ByName(Meter, "tesla-powerwall")
 	require.NoError(t, err)
+	for _, name := range []string{"fleetClientId", "fleetAccessToken", "fleetRefreshToken"} {
+		index, param := tmpl.ParamByName(name)
+		require.NotEqual(t, -1, index, "%s must be defined", name)
+		assert.False(t, param.IsRequired(), "%s must remain optional", name)
+	}
 
 	t.Run("local meter", func(t *testing.T) {
 		rendered, _, err := tmpl.RenderResult(RenderModeInstance, map[string]any{
@@ -23,7 +28,7 @@ func TestPowerwallTemplateOptionalFleetCredentials(t *testing.T) {
 	t.Run("Fleet battery control", func(t *testing.T) {
 		rendered, _, err := tmpl.RenderResult(RenderModeInstance, map[string]any{
 			"usage": "battery", "host": "powerwall.local", "password": "secret",
-			"clientId": "client", "accessToken": "access", "refreshToken": "refresh",
+			"fleetClientId": "client", "fleetAccessToken": "access", "fleetRefreshToken": "refresh",
 		})
 		require.NoError(t, err)
 		assert.Contains(t, string(rendered), "credentials:\n  id: client")
