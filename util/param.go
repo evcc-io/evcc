@@ -31,15 +31,10 @@ type ParamCache struct {
 	val map[string]Param
 }
 
-// flush is the value type used as parameter for flushing the cache.
-// Flushing is implemented by closing the channel. At this time, it is guaranteed
-// that the cache has catched up processing all pending messages.
-type flush chan struct{}
-
-// Flusher returns a new flush channel
-func Flusher() flush {
-	return make(flush)
-}
+// Snapshot is the value type used for requesting a copy of the cache state.
+// The cache responds once it reaches the parameter's position in the stream,
+// so the copy contains exactly the values published before it.
+type Snapshot chan []Param
 
 // NewCache creates cache
 func NewParamCache() *ParamCache {
@@ -51,8 +46,8 @@ func NewParamCache() *ParamCache {
 // Run adds input channel's values to cache
 func (c *ParamCache) Run(in <-chan Param) {
 	for p := range in {
-		if flushC, ok := p.Val.(flush); ok {
-			close(flushC)
+		if snapshot, ok := p.Val.(Snapshot); ok {
+			snapshot <- c.All()
 			continue
 		}
 
