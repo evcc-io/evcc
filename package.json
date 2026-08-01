@@ -51,6 +51,12 @@
     "npm": ">=10.0.0",
     "node": ">=26.0.0"
   },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "version": ">=10.0.0"
+    }
+  },
   "license": "MIT",
   "repository": "github:evcc-io/evcc",
   "devDependencies": {
