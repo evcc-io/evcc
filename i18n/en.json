@@ -126,11 +126,12 @@
     },
     "assistant": {
       "description": "Answers questions about your system and helps with errors. Uses the built-in MCP tools.",
+      "helpBaseUrl": "Leave empty to use the provider default.",
+      "helpModel": "Suggestions are listed, any model name the provider supports can be entered.",
       "labelBaseUrl": "API endpoint",
       "labelModel": "Model",
       "labelProvider": "Provider",
       "labelToken": "API key",
-      "helpBaseUrl": "Leave empty to use the provider default.",
       "provider": {
         "anthropic": "Anthropic",
         "custom": "OpenAI-compatible",

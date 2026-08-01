@@ -49,9 +49,19 @@ test.describe("assistant", () => {
 
     const modal = page.getByTestId("assistant-modal");
     await expectModalVisible(modal);
+
+    // model follows the provider, unless it was typed by hand
+    const model = modal.getByLabel("Model");
+    await expect(model).toHaveValue("gpt-5");
+    await modal.getByLabel("Provider").selectOption("Anthropic");
+    await expect(model).toHaveValue("claude-opus-5");
+    await model.fill("my-own-model");
+    await modal.getByLabel("Provider").selectOption("OpenAI");
+    await expect(model).toHaveValue("my-own-model");
+
     // ollama needs no api key
     await modal.getByLabel("Provider").selectOption("Ollama");
-    await modal.getByLabel("Model").fill("qwen3");
+    await model.fill("qwen3");
     await modal.getByLabel("API endpoint").fill("http://127.0.0.1:1");
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
