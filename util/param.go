@@ -32,7 +32,7 @@ type ParamCache struct {
 }
 
 // Snapshot requests a copy of the cache state at the parameter's position in
-// the stream. It runs on the cache's goroutine and must not block.
+// the stream. It runs on the cache's goroutine and must not block for long.
 type Snapshot func([]Param)
 
 // NewCache creates cache
