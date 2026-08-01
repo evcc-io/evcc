@@ -17,7 +17,7 @@ export default {
 	name: "AddDeviceButton",
 	components: { AddCircle },
 	props: {
-		title: String,
+		title: { type: String, required: true },
 	},
 	emits: ["click"],
 };
