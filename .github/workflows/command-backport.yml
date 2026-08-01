@@ -70,6 +70,11 @@ jobs:
               fail(`pull request #${pr.number} is not labelled \`bug\`, only bugfixes are backported`);
               return;
             }
+            // same marker the changelog uses to group breaking changes
+            if (/\(BC\)/i.test(pr.title)) {
+              fail(`pull request #${pr.number} is a breaking change, it must not go into a bugfix release`);
+              return;
+            }
 
             const compare = (a, b) => {
               const [x, y] = [a, b].map((v) => v.split('.').map(Number));
