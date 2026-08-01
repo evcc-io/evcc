@@ -116,7 +116,7 @@ export default defineComponent({
 		open(open: boolean) {
 			if (!open) return;
 			this.unread = false;
-			this.$nextTick(() => (this.$refs["input"] as HTMLInputElement | undefined)?.focus());
+			this.focusInput();
 			this.scrollDown();
 		},
 	},
@@ -125,6 +125,10 @@ export default defineComponent({
 			this.abort();
 			this.messages = [];
 			this.error = "";
+			this.focusInput();
+		},
+		focusInput() {
+			this.$nextTick(() => (this.$refs["input"] as HTMLInputElement | undefined)?.focus());
 		},
 		// abort cancels the running question, the answer is not awaited any longer
 		abort() {
