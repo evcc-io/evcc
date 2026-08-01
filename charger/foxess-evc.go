@@ -578,17 +578,9 @@ func (wb *FoxESSEVC) TotalEnergy() (float64, error) {
 	return float64(energy) / 10, nil
 }
 
-var _ api.ChargeRater = (*FoxESSEVC)(nil)
-
-// ChargedEnergy implements the api.ChargeRater interface
-func (wb *FoxESSEVC) ChargedEnergy() (float64, error) {
-	energy, err := wb.readUint32(foxRegSessionEnergy)
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(energy) / 10, nil
-}
+//
+// removed since broken, see https://github.com/evcc-io/evcc/pull/32371
+// var _ api.ChargeRater = (*FoxESSEVC)(nil)
 
 var _ api.PhaseCurrents = (*FoxESSEVC)(nil)
 
