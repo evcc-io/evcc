@@ -172,13 +172,10 @@ render: |
               address: 1038 # Battery max. charge power limit, absolute [W]
               type: writemultiple
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
-      - case: 5 # discharge (forced feed-in arbitrage, see api.BatteryDischarge)
+      - case: 5 # discharge (forced feed-in arbitrage)
         set:
           {{- if .maxdischargepower }}
           source: const
-          # positive = discharge (mirrors case 3's charge, which negates via the minus
-          # sign above); the inverter itself enforces its AC rating and feed-in limit
-          # against this register, so no additional clamping is needed here
           value: {{ .maxdischargepower }} # W
           set:
             source: modbus
