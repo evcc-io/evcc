@@ -5,8 +5,8 @@ name: Backport Command
 # pull request against it, so a fix can ship as a bugfix release without
 # pulling in everything that landed on master since.
 #
-# Without an argument the branch of the current release line is used, e.g.
-# `release/0.313`. It is created at the newest tag of that line on first use.
+# Without an argument the branch of the next bugfix release is used, e.g.
+# `release/0.313.1`. It is created at the newest tag of that line on first use.
 #
 # Pushing and opening the pull request use RELEASE_DEPLOY_TOKEN so its checks
 # start without approval. GITHUB_TOKEN would create them in a pending state.
@@ -91,8 +91,9 @@ jobs:
                 return;
               }
             } else {
-              const line = releases[releases.length - 1].split('.').slice(0, 2).join('.');
-              target = `release/${line}`;
+              // named after the bugfix release the branch will produce
+              const [major, minor, patch] = releases[releases.length - 1].split('.').map(Number);
+              target = `release/${major}.${minor}.${patch + 1}`;
             }
 
             // branch off the newest tag of the release line on first backport
@@ -101,7 +102,7 @@ jobs:
             } catch (err) {
               if (err.status !== 404) throw err;
 
-              const line = target.replace(/^release\//, '');
+              const line = target.replace(/^release\//, '').split('.').slice(0, 2).join('.');
               const base = releases.filter((n) => n.startsWith(`${line}.`)).pop();
               if (!base) {
                 fail(`branch \`${target}\` does not exist and no release matches it`);
@@ -129,9 +130,12 @@ jobs:
         env:
           BRANCH: ${{ steps.pr.outputs.branch }}
           SHA: ${{ steps.pr.outputs.sha }}
+          ACTOR: ${{ github.event.comment.user.login }}
+          ACTOR_ID: ${{ github.event.comment.user.id }}
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
+          # the cherry-pick keeps the original author, commit it as the requester
+          git config user.name "$ACTOR"
+          git config user.email "$ACTOR_ID+$ACTOR@users.noreply.github.com"
           git switch -c "$BRANCH"
 
           # -m 1 picks the first-parent diff of a merge commit; squashed pull
@@ -152,12 +156,15 @@ jobs:
           TARGET: ${{ steps.pr.outputs.target }}
           TITLE: ${{ steps.pr.outputs.title }}
           NUMBER: ${{ github.event.issue.number }}
+          ACTOR: ${{ github.event.comment.user.login }}
         run: |
+          # the pull request is authored by the deploy token, so name the requester
           url=$(gh pr create \
             --base "$TARGET" \
             --head "$BRANCH" \
             --title "$TITLE" \
-            --body "Backport of #$NUMBER to \`$TARGET\`.")
+            --assignee "$ACTOR" \
+            --body "Backport of #$NUMBER to \`$TARGET\`, requested by @$ACTOR.")
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
       - name: Comment result
