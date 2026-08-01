@@ -568,12 +568,7 @@ func (wb *FoxESSEVC) CurrentPower() (float64, error) {
 
 var _ api.MeterEnergy = (*FoxESSEVC)(nil)
 
-// TotalEnergy implements the api.MeterEnergy interface.
-// foxRegTotalEnergy (0x1016) is a cumulative meter reading that never resets, not even across a
-// PV-triggered pause/resume. api.ChargeRater is deliberately not implemented: evcc's generic
-// core wrapper derives session energy from TotalEnergy instead, latching a baseline on session
-// start/resume and zeroing it only on a real disconnect, matching how other Modbus chargers
-// backed by a non-resetting energy register are handled in this repo.
+// TotalEnergy implements the api.MeterEnergy interface
 func (wb *FoxESSEVC) TotalEnergy() (float64, error) {
 	energy, err := wb.readUint32(foxRegTotalEnergy)
 	if err != nil {
