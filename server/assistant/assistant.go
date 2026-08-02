@@ -33,6 +33,24 @@ type Message struct {
 	Content string `json:"content"`
 }
 
+// Call is a tool the model asked for
+type Call struct {
+	Name      string `json:"name"`
+	Arguments string `json:"arguments,omitempty"`
+}
+
+// Step is the intermediate work of a single round, shown alongside the answer
+type Step struct {
+	Reasoning string `json:"reasoning,omitempty"`
+	Calls     []Call `json:"calls,omitempty"`
+}
+
+// Result is the answer and how the model arrived at it
+type Result struct {
+	Content string `json:"content"`
+	Steps   []Step `json:"steps,omitempty"`
+}
+
 // Assistant answers questions about the running system using evcc's MCP tools
 type Assistant struct {
 	log     *util.Logger
@@ -153,15 +171,29 @@ func trimHistory(history []Message, budget int) []Message {
 	return history
 }
 
-// callSignatures lists the tools a round wants to call with their arguments. Meta tool
-// calls are logged with their target once resolved, see callTool.
-func callSignatures(calls []llms.ToolCall) []string {
-	res := make([]string, 0, len(calls))
+// roundCalls describes the tools a round wants to call. Meta tool calls carry their
+// target in the arguments, it is resolved in callTool.
+func roundCalls(calls []llms.ToolCall) []Call {
+	res := make([]Call, 0, len(calls))
 
 	for _, tc := range calls {
 		if tc.FunctionCall != nil {
-			res = append(res, tc.FunctionCall.Name+"("+strings.TrimSpace(tc.FunctionCall.Arguments)+")")
+			res = append(res, Call{
+				Name:      tc.FunctionCall.Name,
+				Arguments: strings.TrimSpace(tc.FunctionCall.Arguments),
+			})
 		}
+	}
+
+	return res
+}
+
+// callSignatures renders the calls of a round for the log
+func callSignatures(calls []Call) []string {
+	res := make([]string, 0, len(calls))
+
+	for _, c := range calls {
+		res = append(res, c.Name+"("+c.Arguments+")")
 	}
 
 	return res
@@ -189,7 +221,7 @@ func logArgs(args map[string]any) string {
 }
 
 // Chat answers the conversation, calling tools as needed
-func (a *Assistant) Chat(ctx context.Context, history []Message) (string, error) {
+func (a *Assistant) Chat(ctx context.Context, history []Message) (Result, error) {
 	prompt := strings.TrimSpace(systemPrompt)
 	if a.context != "" {
 		prompt += "\n\nContext for this conversation:\n" + a.context
@@ -214,24 +246,39 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (string, error)
 	a.log.TRACE.Printf("tools offered: %v", toolNames(a.tools))
 	a.log.TRACE.Printf("prompt: %s", prompt)
 
+	var steps []Step
+
+	// keeps a step out of the result when the model reports neither reasoning nor calls
+	addStep := func(step Step) {
+		if step.Reasoning != "" || len(step.Calls) > 0 {
+			steps = append(steps, step)
+		}
+	}
+
 	for round := range maxIterations {
 		resp, err := a.llm.GenerateContent(ctx, messages, llms.WithTools(a.tools))
 		if err != nil {
 			a.log.ERROR.Println(err)
-			return "", err
+			return Result{}, err
 		}
 		if len(resp.Choices) == 0 {
-			return "", errors.New("empty response")
+			return Result{}, errors.New("empty response")
 		}
 
 		choice := resp.Choices[0]
+		reasoning := strings.TrimSpace(choice.ReasoningContent)
+
 		if len(choice.ToolCalls) == 0 {
 			// zero rounds means the model answered from its own knowledge
 			a.log.DEBUG.Printf("answer after %d tool rounds", round)
-			return choice.Content, nil
+			addStep(Step{Reasoning: reasoning})
+
+			return Result{Content: choice.Content, Steps: steps}, nil
 		}
 
-		a.log.DEBUG.Printf("tool round %d: %v", round+1, callSignatures(choice.ToolCalls))
+		calls := roundCalls(choice.ToolCalls)
+		a.log.DEBUG.Printf("tool round %d: %v", round+1, callSignatures(calls))
+		addStep(Step{Reasoning: reasoning, Calls: calls})
 
 		msg := llms.TextParts(llms.ChatMessageTypeAI, choice.Content)
 		for _, tc := range choice.ToolCalls {
@@ -254,7 +301,7 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (string, error)
 	err := fmt.Errorf("exceeded %d tool call rounds", maxIterations)
 	a.log.ERROR.Println(err)
 
-	return "", err
+	return Result{}, err
 }
 
 // callTool executes a tool call and returns its textual result. Errors are returned to the model, not to the caller.

@@ -78,7 +78,11 @@ func TestToolLoop(t *testing.T) {
 
 	res, err := a.Chat(ctx, []Message{{Role: "user", Content: "what is the soc?"}})
 	require.NoError(t, err)
-	assert.Equal(t, "The vehicle is at 42%.", res)
+	assert.Equal(t, "The vehicle is at 42%.", res.Content)
+
+	// the tool round is reported as intermediate work
+	require.Len(t, res.Steps, 1)
+	assert.Equal(t, []Call{{Name: "getSoc", Arguments: `{"loadpoint":1}`}}, res.Steps[0].Calls)
 
 	// second round trip contains the tool result
 	second := llm.seen[1]
@@ -145,6 +149,12 @@ func TestConfigValidate(t *testing.T) {
 	}
 }
 
+func TestCustomWithoutToken(t *testing.T) {
+	// local OpenAI-compatible endpoints need no key, langchaingo rejects an empty token
+	_, err := newLLM(Config{Provider: Custom, Model: "m", BaseUrl: "http://localhost:1234/v1"})
+	require.NoError(t, err)
+}
+
 func TestRedacted(t *testing.T) {
 	cfg := Config{Provider: OpenAI, Model: "gpt", Token: "secret", BaseUrl: "http://x"}
 	assert.NotContains(t, cfg.Redacted().(Config).Token, "secret")
@@ -180,7 +190,9 @@ func TestCallSignatures(t *testing.T) {
 		{FunctionCall: nil},
 	}
 
-	assert.Equal(t, []string{`getSoc({"loadpoint":1})`}, callSignatures(calls))
+	// a call without a function is dropped, it cannot be executed either
+	assert.Equal(t, []Call{{Name: "getSoc", Arguments: `{"loadpoint":1}`}}, roundCalls(calls))
+	assert.Equal(t, []string{`getSoc({"loadpoint":1})`}, callSignatures(roundCalls(calls)))
 	assert.Equal(t, `{"loadpoint":1}`, logArgs(map[string]any{"loadpoint": 1}))
 }
 

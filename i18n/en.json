@@ -6,6 +6,7 @@
     "open": "Open assistant",
     "placeholder": "Ask about your system, current state or errors shown on this page.",
     "send": "Send",
+    "steps": "Thought process ({count})",
     "stop": "Stop",
     "thinking": "Thinking…",
     "title": "AI assistant"
