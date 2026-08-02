@@ -9,6 +9,20 @@ import (
 	"github.com/evcc-io/evcc/server/db/settings"
 )
 
+// assistantToken restores the stored token for the endpoint it was stored for. A
+// request naming another url has to bring its own, the stored one must not leak there.
+func assistantToken(req, stored assistant.Config) string {
+	if req.Token != masked {
+		return req.Token
+	}
+
+	if req.Provider == stored.Provider && req.BaseUrl == stored.BaseUrl {
+		return stored.Token
+	}
+
+	return ""
+}
+
 // assistantModelsHandler lists the models the given endpoint offers. The configuration
 // is posted since it is answered while it is still being edited.
 func assistantModelsHandler(w http.ResponseWriter, r *http.Request) {
@@ -19,12 +33,9 @@ func assistantModelsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// the form sends the masked placeholder for an unchanged token
-	if cfg.Token == masked {
-		var stored assistant.Config
-		if err := settings.Json(keys.Assistant, &stored); err == nil {
-			cfg.Token = stored.Token
-		}
-	}
+	var stored assistant.Config
+	_ = settings.Json(keys.Assistant, &stored)
+	cfg.Token = assistantToken(cfg, stored)
 
 	models, err := assistant.Models(r.Context(), cfg)
 	if err != nil {
