@@ -2,6 +2,8 @@ package assistant
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"testing"
 
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
@@ -91,6 +93,89 @@ func TestToolLoop(t *testing.T) {
 	response, ok := second[3].Parts[0].(llms.ToolCallResponse)
 	require.True(t, ok)
 	assert.Equal(t, "soc of loadpoint 1 is 42", response.Content)
+}
+
+// repeat builds n identical tool calling responses
+func repeat(n int, content string) []*llms.ContentResponse {
+	call := llms.ToolCall{
+		ID:           "1",
+		Type:         "function",
+		FunctionCall: &llms.FunctionCall{Name: "getSoc", Arguments: `{"loadpoint":1}`},
+	}
+
+	res := make([]*llms.ContentResponse, 0, n)
+	for range n {
+		res = append(res, &llms.ContentResponse{
+			Choices: []*llms.ContentChoice{{Content: content, ToolCalls: []llms.ToolCall{call}}},
+		})
+	}
+
+	return res
+}
+
+func TestRepeatedCallsStop(t *testing.T) {
+	llm := &fakeLLM{responses: repeat(maxIterations, "still looking")}
+
+	a, err := newAssistant(t.Context(), llm, testServer(t))
+	require.NoError(t, err)
+	defer a.Close()
+
+	res, err := a.Chat(t.Context(), []Message{{Role: "user", Content: "soc?"}})
+	require.NoError(t, err)
+
+	// the second identical round ends the loop, the answer is what the model said
+	assert.Equal(t, "still looking", res.Content)
+	assert.Len(t, llm.seen, 2)
+	assert.Len(t, res.Steps, 2)
+}
+
+func TestRepeatedCallsWithoutContent(t *testing.T) {
+	llm := &fakeLLM{responses: repeat(maxIterations, "")}
+
+	a, err := newAssistant(t.Context(), llm, testServer(t))
+	require.NoError(t, err)
+	defer a.Close()
+
+	// nothing to answer with, the caller has to see the failure
+	_, err = a.Chat(t.Context(), []Message{{Role: "user", Content: "soc?"}})
+	assert.EqualError(t, err, "repeated tool calls")
+}
+
+func TestExhaustedRoundsAnswer(t *testing.T) {
+	// distinct calls every round, so the loop runs out instead of detecting a stall
+	res := make([]*llms.ContentResponse, 0, maxIterations)
+	for i := range maxIterations {
+		res = append(res, &llms.ContentResponse{Choices: []*llms.ContentChoice{{
+			Content: fmt.Sprintf("checking %d", i),
+			ToolCalls: []llms.ToolCall{{
+				ID:           "1",
+				Type:         "function",
+				FunctionCall: &llms.FunctionCall{Name: "getSoc", Arguments: fmt.Sprintf(`{"loadpoint":%d}`, i)},
+			}},
+		}}})
+	}
+
+	llm := &fakeLLM{responses: res}
+
+	a, err := newAssistant(t.Context(), llm, testServer(t))
+	require.NoError(t, err)
+	defer a.Close()
+
+	out, err := a.Chat(t.Context(), []Message{{Role: "user", Content: "soc?"}})
+	require.NoError(t, err)
+
+	// the rounds are not discarded, the last thing the model said is the answer
+	assert.Equal(t, fmt.Sprintf("checking %d", maxIterations-1), out.Content)
+	assert.Len(t, llm.seen, maxIterations)
+	assert.Len(t, out.Steps, maxIterations)
+}
+
+func TestTruncateResult(t *testing.T) {
+	assert.Equal(t, "short", truncateResult("short"))
+
+	res := truncateResult(strings.Repeat("x", maxToolResult+1))
+	assert.True(t, strings.HasPrefix(res, strings.Repeat("x", maxToolResult)))
+	assert.Contains(t, res, "[truncated")
 }
 
 func TestToolError(t *testing.T) {

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
@@ -21,6 +22,9 @@ const maxIterations = 12
 // the prompt, so a conversation that outgrows the model's context evicts them
 // first and the model silently loses its tools.
 const maxHistory = 4000
+
+// maxToolResult bounds a single tool result handed back to the model
+const maxToolResult = 4000
 
 // systemPrompt is embedded at build time, edit prompt.txt to change it
 //
@@ -247,12 +251,24 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (Result, error)
 	a.log.TRACE.Printf("prompt: %s", prompt)
 
 	var steps []Step
+	var content string
+	var previous []Call
 
 	// keeps a step out of the result when the model reports neither reasoning nor calls
 	addStep := func(step Step) {
 		if step.Reasoning != "" || len(step.Calls) > 0 {
 			steps = append(steps, step)
 		}
+	}
+
+	// the loop stopped without the model concluding, answer with what it produced
+	// rather than discarding every round it took
+	incomplete := func(reason string) (Result, error) {
+		a.log.ERROR.Println(reason)
+		if content == "" {
+			return Result{}, errors.New(reason)
+		}
+		return Result{Content: content, Steps: steps}, nil
 	}
 
 	for round := range maxIterations {
@@ -268,6 +284,10 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (Result, error)
 		choice := resp.Choices[0]
 		reasoning := strings.TrimSpace(choice.ReasoningContent)
 
+		if choice.Content != "" {
+			content = choice.Content
+		}
+
 		if len(choice.ToolCalls) == 0 {
 			// zero rounds means the model answered from its own knowledge
 			a.log.DEBUG.Printf("answer after %d tool rounds", round)
@@ -279,6 +299,12 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (Result, error)
 		calls := roundCalls(choice.ToolCalls)
 		a.log.DEBUG.Printf("tool round %d: %v", round+1, callSignatures(calls))
 		addStep(Step{Reasoning: reasoning, Calls: calls})
+
+		// the same calls again cannot produce a different result, the model is stuck
+		if slices.Equal(calls, previous) {
+			return incomplete("repeated tool calls")
+		}
+		previous = calls
 
 		msg := llms.TextParts(llms.ChatMessageTypeAI, choice.Content)
 		for _, tc := range choice.ToolCalls {
@@ -292,16 +318,22 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (Result, error)
 				Parts: []llms.ContentPart{llms.ToolCallResponse{
 					ToolCallID: tc.ID,
 					Name:       tc.FunctionCall.Name,
-					Content:    a.callTool(ctx, tc),
+					Content:    truncateResult(a.callTool(ctx, tc)),
 				}},
 			})
 		}
 	}
 
-	err := fmt.Errorf("exceeded %d tool call rounds", maxIterations)
-	a.log.ERROR.Println(err)
+	return incomplete(fmt.Sprintf("exceeded %d tool call rounds", maxIterations))
+}
 
-	return Result{}, err
+// truncateResult bounds a single tool result. Unbounded results push the tool
+// definitions out of a small model's context, see maxHistory.
+func truncateResult(s string) string {
+	if len(s) <= maxToolResult {
+		return s
+	}
+	return s[:maxToolResult] + "\n[truncated, ask for less at a time]"
 }
 
 // callTool executes a tool call and returns its textual result. Errors are returned to the model, not to the caller.
