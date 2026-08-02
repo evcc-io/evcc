@@ -43,7 +43,10 @@
 					{{ $t("assistant.placeholder") }}
 				</p>
 				<div v-for="(m, i) in messages" :key="i" class="message" :class="`message-${m.role}`">
-					<Markdown v-if="m.role === 'assistant'" :markdown="m.content" />
+					<template v-if="m.role === 'assistant'">
+						<AssistantSteps :steps="m.steps || []" />
+						<Markdown :markdown="m.content" />
+					</template>
 					<span v-else>{{ m.content }}</span>
 				</div>
 				<div v-if="pending" class="text-muted d-flex align-items-center gap-2">
@@ -84,13 +87,14 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import AssistantIcon from "../MaterialIcon/Assistant.vue";
+import AssistantSteps from "./AssistantSteps.vue";
 import Markdown from "../Config/Markdown.vue";
 import api from "@/api";
 import type { AssistantMessage } from "@/types/evcc";
 
 export default defineComponent({
 	name: "AssistantWidget",
-	components: { AssistantIcon, Markdown },
+	components: { AssistantIcon, AssistantSteps, Markdown },
 	props: {
 		// situational context handed to the model, e.g. the current page and visible errors
 		context: { type: String as PropType<string>, default: "" },
@@ -196,14 +200,22 @@ export default defineComponent({
 			try {
 				const res = await api.post(
 					"/assistant/chat",
-					{ messages: this.messages, context: this.context },
+					// steps are display only, sending them back would bloat every request
+					{
+						messages: this.messages.map(({ role, content }) => ({ role, content })),
+						context: this.context,
+					},
 					{
 						signal: controller.signal,
 						validateStatus: (code) => [200, 400, 412, 500, 502].includes(code),
 					}
 				);
 				if (res.status === 200) {
-					this.messages.push({ role: "assistant", content: res.data.content });
+					this.messages.push({
+						role: "assistant",
+						content: res.data.content,
+						steps: res.data.steps,
+					});
 					if (!this.open) this.unread = true;
 				} else {
 					this.error = res.data?.error || res.statusText;

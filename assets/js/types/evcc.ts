@@ -328,9 +328,21 @@ export interface AssistantConfig {
   baseUrl?: string;
 }
 
+export interface AssistantCall {
+  name: string;
+  arguments?: string;
+}
+
+// AssistantStep is one round of the tool loop, the work done before the answer
+export interface AssistantStep {
+  reasoning?: string;
+  calls?: AssistantCall[];
+}
+
 export interface AssistantMessage {
   role: "user" | "assistant";
   content: string;
+  steps?: AssistantStep[];
 }
 
 /** Configuration and runtime status of an integration. */

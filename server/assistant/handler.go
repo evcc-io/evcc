@@ -21,10 +21,6 @@ type chatRequest struct {
 	Context  string    `json:"context,omitempty"`
 }
 
-type chatResponse struct {
-	Content string `json:"content"`
-}
-
 // ChatHandler answers questions using the configured model and evcc's own MCP tools.
 // The MCP server is built lazily and reused, host serves the internal api requests.
 func ChatHandler(host http.Handler) http.HandlerFunc {
@@ -75,7 +71,7 @@ func ChatHandler(host http.Handler) http.HandlerFunc {
 			return
 		}
 
-		jsonWrite(w, chatResponse{Content: res})
+		jsonWrite(w, res)
 	}
 }
 

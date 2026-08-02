@@ -6,6 +6,7 @@
     "open": "Assistent öffnen",
     "placeholder": "Frage nach deinem System, dem aktuellen Zustand oder Fehlern auf dieser Seite.",
     "send": "Senden",
+    "steps": "Gedankengang ({count})",
     "stop": "Stopp",
     "thinking": "Denkt nach…",
     "title": "KI-Assistent"
