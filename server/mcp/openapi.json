@@ -2550,7 +2550,7 @@
         "operationId": "getState",
         "parameters": [
           {
-            "description": "Filter the state with JQ",
+            "description": "Filter the state with JQ. The keys are top level, the state is not nested under a root key. Query `keys` to list them before filtering, a path that does not exist returns null without an error. Examples: `keys`, `.loadpoints[0]`, `.pv`.",
             "examples": {
               "all": {
                 "summary": "complete state",
@@ -2559,6 +2559,10 @@
               "firstLoadpoint": {
                 "summary": "only first loadpoint",
                 "value": ".loadpoints[0]"
+              },
+              "keys": {
+                "summary": "available top level keys",
+                "value": "keys"
               }
             },
             "in": "query",

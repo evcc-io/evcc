@@ -955,10 +955,17 @@ paths:
       parameters:
         - name: jq
           in: query
-          description: Filter the state with JQ
+          description: >-
+            Filter the state with JQ. The keys are top level, the state is not nested
+            under a root key. Query `keys` to list them before filtering, a path that
+            does not exist returns null without an error. Examples: `keys`,
+            `.loadpoints[0]`, `.pv`.
           schema:
             type: string
           examples:
+            keys:
+              value: keys
+              summary: available top level keys
             all:
               value: .
               summary: complete state
