@@ -1,27 +1,22 @@
 package meter
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"math"
 	"strconv"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/vehicle/tesla"
+	"github.com/evcc-io/evcc/util/tesla"
 	teslaclient "github.com/evcc-io/tesla-proxy-client"
-	"golang.org/x/oauth2"
 )
 
 type fleetConfig struct {
-	Credentials struct{ ID, Secret string }
-	Tokens      struct{ Access, Refresh string }
-	SiteId      int64
-	Other       map[string]any `mapstructure:",remain"`
+	tesla.FleetConfig `mapstructure:",squash"`
+	SiteId            int64
+	Other             map[string]any `mapstructure:",remain"`
 }
 
 func init() {
@@ -40,12 +35,8 @@ func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	if cc.Credentials.ID == "" {
-		return nil, errors.New("missing client id")
-	}
-
-	if cc.Tokens.Access == "" || cc.Tokens.Refresh == "" {
-		return nil, api.ErrMissingToken
+	if err := cc.FleetConfig.Validate(); err != nil {
+		return nil, err
 	}
 
 	log := util.NewLogger("powerwall").Redact(
@@ -61,7 +52,7 @@ func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	energySite, err := teslaEnergySite(log, cc.Credentials.ID, cc.Credentials.Secret, cc.Tokens.Access, cc.Tokens.Refresh, cc.SiteId)
+	energySite, err := teslaEnergySite(log, cc.FleetConfig, cc.SiteId)
 	if err != nil {
 		return nil, err
 	}
@@ -91,32 +82,12 @@ func teslaReserveLimit(limit float64) uint64 {
 	return limitUint
 }
 
-func teslaEnergySite(log *util.Logger, clientID, clientSecret, accessToken, refreshToken string, siteId int64) (*teslaclient.EnergySite, error) {
-	identity, err := tesla.NewIdentity(log, tesla.OAuth2Config(clientID, clientSecret), &oauth2.Token{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		Expiry:       time.Now(),
-	})
+func teslaEnergySite(log *util.Logger, config tesla.FleetConfig, siteId int64) (*teslaclient.EnergySite, error) {
+	fleet, err := config.Client(log)
 	if err != nil {
-		return nil, fmt.Errorf("create Fleet identity: %w", err)
+		return nil, err
 	}
-
-	hc := request.NewClient(log)
-	hc.Transport = &oauth2.Transport{
-		Source: identity,
-		Base:   hc.Transport,
-	}
-
-	tc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(hc))
-	if err != nil {
-		return nil, fmt.Errorf("create Fleet client: %w", err)
-	}
-
-	region, err := tc.UserRegion()
-	if err != nil {
-		return nil, fmt.Errorf("get Fleet API region: %w", err)
-	}
-	tc.SetBaseUrl(region.FleetApiBaseUrl)
+	tc := fleet.Client
 
 	if siteId == 0 {
 		products, err := tc.Products()

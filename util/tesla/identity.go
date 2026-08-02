@@ -14,7 +14,10 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// https://auth.tesla.com/oauth2/v3/.well-known/openid-configuration
+var (
+	mu         sync.Mutex
+	identities = make(map[string]*Identity)
+)
 
 // OAuth2Config is the OAuth2 configuration for authenticating with the Tesla API.
 func OAuth2Config(id, secret string) *oauth2.Config {
@@ -31,6 +34,7 @@ func OAuth2Config(id, secret string) *oauth2.Config {
 	}
 }
 
+// Identity provides a token source for the Tesla API.
 type Identity struct {
 	oauth2.TokenSource
 	mu      sync.Mutex
@@ -39,19 +43,17 @@ type Identity struct {
 	subject string
 }
 
+// NewIdentity creates a Tesla API token source.
 func NewIdentity(log *util.Logger, oc *oauth2.Config, token *oauth2.Token) (oauth2.TokenSource, error) {
-	// serialise instance handling
 	mu.Lock()
 	defer mu.Unlock()
 
-	// determine tesla identity
 	var claims jwt.RegisteredClaims
 	if _, _, err := jwt.NewParser().ParseUnverified(token.AccessToken, &claims); err != nil {
 		return nil, err
 	}
 
-	// reuse identity instance
-	if instance := getInstance(claims.Subject); instance != nil {
+	if instance := identities[claims.Subject]; instance != nil {
 		return instance, nil
 	}
 
@@ -59,13 +61,8 @@ func NewIdentity(log *util.Logger, oc *oauth2.Config, token *oauth2.Token) (oaut
 		token.Expiry = claims.ExpiresAt.Time
 	}
 
-	v := &Identity{
-		log:     log,
-		oc:      oc,
-		subject: claims.Subject,
-	}
+	v := &Identity{log: log, oc: oc, subject: claims.Subject}
 
-	// database token
 	if !token.Valid() {
 		var tok oauth2.Token
 		if err := settings.Json(v.settingsKey(), &tok); err == nil {
@@ -84,9 +81,7 @@ func NewIdentity(log *util.Logger, oc *oauth2.Config, token *oauth2.Token) (oaut
 	}
 
 	v.TokenSource = oauth.RefreshTokenSource(token, v.refreshToken)
-
-	// add instance
-	addInstance(claims.Subject, v)
+	identities[claims.Subject] = v
 
 	return v, nil
 }
@@ -99,7 +94,6 @@ func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 
-	// refresh token source
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(v.log))
 	token, err := v.oc.TokenSource(ctx, token).Token()
 	if err != nil {
