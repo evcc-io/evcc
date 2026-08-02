@@ -21,9 +21,12 @@
   },
   "battery": {
     "card": {
-      "charging": "En charge",
-      "discharging": "En décharge",
+      "charging": "en charge",
+      "discharging": "en décharge",
       "energy": "Energie",
+      "gridCharge": "charge depuis le réseau",
+      "hold": "décharge verrouillée",
+      "holdCharge": "charge verrouillée",
       "ofTotal": "de {total}",
       "power": "Puissance",
       "soc": "Niveau de batterie"
@@ -39,16 +42,18 @@
       },
       "bufferTitle": "Batterie en tant que tampon de charge",
       "discharge": "Empêche la batterie domestique de se décharger en mode rapide pendant une recharge planifiée.",
+      "gridDischarge": "Autoriser la batterie domestique à se décharger vers le réseau.",
       "priority": "La batterie domestique a la priorité tant qu’elle est chargée en dessous de {soc}. Ensuite, les points de charge reçoivent le surplus.",
       "priorityNone": "Le surplus solaire va directement aux points de charge. Définissez une valeur au dessus de {soc} pour prioriser la batterie domestique.",
       "priorityTitle": "Où va le surplus solaire en priorité ?"
     },
     "optimizer": {
       "action": {
-        "charge": "Chargement depuis le réseau",
-        "hold": "Décharge verrouillée",
-        "holdcharge": "Charge en pause",
-        "normal": "Suivre le surplus solaire"
+        "charge": "Charge depuis le réseau",
+        "discharge": "Décharge vers le réseau",
+        "hold": "Eviter la décharge",
+        "holdcharge": "Eviter la charge",
+        "normal": "Opération normale"
       },
       "empty": "vide",
       "full": "pleine",
@@ -115,6 +120,7 @@
       "titleEdit": "Modifier le consommateur auto-régulé"
     },
     "battery": {
+      "title": "Batterie",
       "titleAdd": "Ajouter une batterie domestique",
       "titleEdit": "Modifier batterie"
     },
@@ -140,16 +146,16 @@
       "template": "Fabricant",
       "titleAdd": {
         "charging": "Ajouter un chargeur",
-        "heating": "Ajouter chauffage"
+        "heating": "Ajouter un appareil de chauffage"
       },
       "titleEdit": {
         "charging": "Modifier chargeur",
-        "heating": "Éditer chauffage"
+        "heating": "Modifier l’appareil de chauffage"
       },
       "type": {
         "custom": {
           "charging": "Chargeur personnalisé",
-          "heating": "Chauffage personnalisé"
+          "heating": "Appareil de chauffage personnalisé"
         },
         "heatpump": "Pompe à chaleur personnalisée",
         "sgready": "Pompe à chaleur personnalisée (sg-ready via plugins)",
@@ -185,6 +191,7 @@
     "deviceValue": {
       "activeClients": "Clients actifs",
       "amount": "Montant",
+      "asleep": "en veille",
       "broker": "Courtier",
       "bucket": "Seau",
       "capacity": "Capacité",
@@ -223,6 +230,7 @@
       "no": "non",
       "odometer": "Compteur kilométrique",
       "org": "Organisation",
+      "outdoorTemp": "Température extérieure",
       "phaseCurrents": "Courant",
       "phasePowers": "Puissance",
       "phaseVoltages": "Voltage",
@@ -232,6 +240,7 @@
       "price": "Prix",
       "productionLimited": "Production limitée",
       "range": "Autonomie",
+      "remoteEnabled": "Activé",
       "returnEnergy": "Energie (retournée)",
       "singlePhase": "Monophasé",
       "soc": "Charge",
@@ -361,6 +370,7 @@
       },
       "customOption": "Intégration personnalisée",
       "description": "Limitation de puissance par des systèmes externes (par exemple, §14a de l'EnWG, §9 de l'EEG ou un système de gestion de l'énergie de niveau supérieur). Fonctionne conjointement avec la fonctionnalité de gestion de la charge. La limitation de la production solaire est également prise en charge pour certains appareils. La limite de limitation effective doit être définie lors de la configuration de chaque onduleur.",
+      "download": "Télécharger",
       "eventsRecorded": "Enregistrement de {count} événements liés à la limitation de la grille.",
       "generic": "Intégrations génériques",
       "integrations": "Intégrations",
@@ -501,7 +511,7 @@
       "addAdditional": "Ajouter un compteur supplémentaire",
       "addConsumer": "Ajouter un consommateur",
       "addGrid": "Ajouter un compteur pour le réseau",
-      "addLoadpoint": "Ajouter chargeur ou chauffage",
+      "addLoadpoint": "Ajouter un point de charge ou un chauffage",
       "addPvBattery": "Ajouter du solaire ou une batterie",
       "addTariffs": "Ajouter les tarifs",
       "addVehicle": "Ajouter un véhicule",
