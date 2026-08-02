@@ -167,6 +167,16 @@ func TestFindTools(t *testing.T) {
 	assert.Contains(t, call(t, a, findToolsName, `{"query":"nonsense"}`), "no tool matches")
 }
 
+func TestCallSignatures(t *testing.T) {
+	calls := []llms.ToolCall{
+		{FunctionCall: &llms.FunctionCall{Name: "getSoc", Arguments: `{"loadpoint":1}`}},
+		{FunctionCall: nil},
+	}
+
+	assert.Equal(t, []string{`getSoc({"loadpoint":1})`}, callSignatures(calls))
+	assert.Equal(t, `{"loadpoint":1}`, logArgs(map[string]any{"loadpoint": 1}))
+}
+
 func TestCallToolDispatch(t *testing.T) {
 	a, err := newAssistant(t.Context(), &fakeLLM{}, testServer(t))
 	require.NoError(t, err)

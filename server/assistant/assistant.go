@@ -153,18 +153,28 @@ func trimHistory(history []Message, budget int) []Message {
 	return history
 }
 
-// callNames lists the tools a round wants to call. Meta tool calls are logged with
-// their target once resolved, see callTool.
-func callNames(calls []llms.ToolCall) []string {
+// callSignatures lists the tools a round wants to call with their arguments. Meta tool
+// calls are logged with their target once resolved, see callTool.
+func callSignatures(calls []llms.ToolCall) []string {
 	res := make([]string, 0, len(calls))
 
 	for _, tc := range calls {
 		if tc.FunctionCall != nil {
-			res = append(res, tc.FunctionCall.Name)
+			res = append(res, tc.FunctionCall.Name+"("+strings.TrimSpace(tc.FunctionCall.Arguments)+")")
 		}
 	}
 
 	return res
+}
+
+// logArgs renders tool arguments as json, the map order of %v is not stable
+func logArgs(args map[string]any) string {
+	b, err := json.Marshal(args)
+	if err != nil {
+		return fmt.Sprintf("%v", args)
+	}
+
+	return string(b)
 }
 
 // Chat answers the conversation, calling tools as needed
@@ -209,7 +219,7 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (string, error)
 			return choice.Content, nil
 		}
 
-		a.log.DEBUG.Printf("tool round %d: %v", round+1, callNames(choice.ToolCalls))
+		a.log.DEBUG.Printf("tool round %d: %v", round+1, callSignatures(choice.ToolCalls))
 
 		msg := llms.TextParts(llms.ChatMessageTypeAI, choice.Content)
 		for _, tc := range choice.ToolCalls {
@@ -255,7 +265,7 @@ func (a *Assistant) callTool(ctx context.Context, tc llms.ToolCall) string {
 	// the model only sees the meta tools, everything else is reached through them
 	switch name {
 	case findToolsName:
-		a.mcpLog.DEBUG.Printf("%s %v", name, args)
+		a.mcpLog.DEBUG.Printf("%s %s", name, logArgs(args))
 		return a.findTools(args)
 
 	case callToolName:
@@ -266,7 +276,7 @@ func (a *Assistant) callTool(ctx context.Context, tc llms.ToolCall) string {
 		}
 	}
 
-	a.mcpLog.DEBUG.Printf("tool %s %v", name, args)
+	a.mcpLog.DEBUG.Printf("tool %s %s", name, logArgs(args))
 
 	res, err := a.client.CallTool(ctx, &mcpsdk.CallToolParams{
 		Name:      name,
