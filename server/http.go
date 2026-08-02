@@ -385,8 +385,12 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 		api := api.PathPrefix("/assistant").Subrouter()
 		api.Use(ensureAuthHandler(auth))
 
-		r := route{"POST", "/chat", assistant.ChatHandler(router)}
-		api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+		for _, r := range []route{
+			{"POST", "/chat", assistant.ChatHandler(router)},
+			{"POST", "/models", assistantModelsHandler},
+		} {
+			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
+		}
 	}
 
 	{ // api/system

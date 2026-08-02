@@ -75,6 +75,7 @@
 import { defineComponent } from "vue";
 import JsonModal from "./JsonModal.vue";
 import FormRow from "./FormRow.vue";
+import api from "@/api";
 import type { AssistantConfig, AssistantProvider } from "@/types/evcc";
 
 // suggested models per provider, first entry is the default. free text, any model may be entered
@@ -107,7 +108,13 @@ export default defineComponent({
 	components: { FormRow, JsonModal },
 	emits: ["changed"],
 	data() {
-		return { providers: Object.keys(PROVIDERS) as AssistantProvider[] };
+		return {
+			providers: Object.keys(PROVIDERS) as AssistantProvider[],
+			// models the configured endpoint reports, empty until it answers
+			offered: [] as string[],
+			// endpoint the offered models belong to, so a change refetches
+			offeredFor: "",
+		};
 	},
 	methods: {
 		withDefaults(values?: AssistantConfig): AssistantConfig {
@@ -118,12 +125,32 @@ export default defineComponent({
 			return values.provider !== "ollama";
 		},
 		models(values: AssistantConfig): string[] {
-			return PROVIDERS[values.provider]?.models || [];
+			const suggested = PROVIDERS[values.provider]?.models || [];
+			// the curated ones lead, an endpoint also lists image and embedding models
+			return [...suggested, ...this.offered.filter((m) => !suggested.includes(m))];
+		},
+		// loadModels asks the endpoint what it offers, silently keeping the
+		// suggestions when it cannot be reached or needs a token first
+		async loadModels(values: AssistantConfig) {
+			const key = `${values.provider}|${values.baseUrl || ""}`;
+			if (key === this.offeredFor) return;
+			this.offeredFor = key;
+			this.offered = [];
+
+			try {
+				const res = await api.post("/assistant/models", values);
+				if (Array.isArray(res.data)) this.offered = res.data;
+			} catch {
+				// no suggestions from the endpoint, the curated list remains
+			}
 		},
 		baseUrlExample(values: AssistantConfig): string {
 			return PROVIDERS[values.provider]?.baseUrl || "";
 		},
 		applyDefaults(values: AssistantConfig) {
+			this.offered = [];
+			this.offeredFor = "";
+
 			const provider = PROVIDERS[values.provider];
 			if (!provider) return;
 			// keep a hand-typed model, replace a suggestion that belongs to another provider
