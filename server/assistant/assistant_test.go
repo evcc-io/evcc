@@ -163,6 +163,9 @@ func TestFindTools(t *testing.T) {
 	assert.Contains(t, call(t, a, findToolsName, `{"query":"soc"}`), "getSoc")
 	assert.Contains(t, call(t, a, findToolsName, `{"query":"vehicle soc"}`), "vehicle soc")
 
+	// the schema comes with the result, callTool cannot be built without it
+	assert.Contains(t, call(t, a, findToolsName, `{"query":"soc"}`), `"loadpoint"`)
+
 	// the model gets told when nothing matches instead of an empty result
 	assert.Contains(t, call(t, a, findToolsName, `{"query":"nonsense"}`), "no tool matches")
 }

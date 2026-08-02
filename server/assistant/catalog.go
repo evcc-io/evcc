@@ -110,7 +110,14 @@ func (a *Assistant) findTools(args map[string]any) string {
 
 	var sb strings.Builder
 	for _, tool := range res[:min(len(res), maxFindResults)] {
-		fmt.Fprintf(&sb, "%s: %s\n\n", tool.Function.Name, tool.Function.Description)
+		fmt.Fprintf(&sb, "%s: %s\n", tool.Function.Name, tool.Function.Description)
+
+		// without the schema the model cannot build the arguments for callTool
+		if params, err := json.Marshal(tool.Function.Parameters); err == nil {
+			fmt.Fprintf(&sb, "parameters: %s\n", params)
+		}
+
+		sb.WriteString("\n")
 	}
 
 	if rest := len(res) - maxFindResults; rest > 0 {
