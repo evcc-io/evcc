@@ -22,16 +22,18 @@
 			<div class="head d-flex align-items-center gap-2 px-3 py-2">
 				<AssistantIcon class="flex-shrink-0" />
 				<strong class="flex-grow-1 text-truncate">{{ $t("assistant.title") }}</strong>
-				<button
-					type="button"
-					class="btn btn-sm btn-link px-1"
-					:class="showThinking ? 'text-primary' : 'text-muted'"
-					:aria-pressed="showThinking"
-					data-testid="assistant-thinking-toggle"
-					@click="showThinking = !showThinking"
-				>
-					{{ $t("assistant.showThinking") }}
-				</button>
+				<div class="form-check form-check-reverse m-0">
+					<input
+						id="assistantThinking"
+						v-model="showThinking"
+						class="form-check-input"
+						type="checkbox"
+						data-testid="assistant-thinking-toggle"
+					/>
+					<label class="form-check-label text-muted" for="assistantThinking">
+						{{ $t("assistant.showThinking") }}
+					</label>
+				</div>
 				<button
 					v-if="messages.length"
 					type="button"
