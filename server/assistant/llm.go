@@ -2,12 +2,29 @@ package assistant
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/tmc/langchaingo/llms"
 	"github.com/tmc/langchaingo/llms/anthropic"
-	"github.com/tmc/langchaingo/llms/ollama"
 	"github.com/tmc/langchaingo/llms/openai"
 )
+
+// ollamaDefaultUrl is the local ollama server
+const ollamaDefaultUrl = "http://localhost:11434"
+
+// ollamaUrl points a configured server url at the OpenAI-compatible endpoint
+func ollamaUrl(base string) string {
+	if base == "" {
+		base = ollamaDefaultUrl
+	}
+
+	base = strings.TrimSuffix(base, "/")
+	if !strings.HasSuffix(base, "/v1") {
+		base += "/v1"
+	}
+
+	return base
+}
 
 // newLLM creates the language model for the configured provider
 func newLLM(cfg Config) (llms.Model, error) {
@@ -27,11 +44,10 @@ func newLLM(cfg Config) (llms.Model, error) {
 		return anthropic.New(opts...)
 
 	case Ollama:
-		opts := []ollama.Option{ollama.WithModel(cfg.Model)}
-		if cfg.BaseUrl != "" {
-			opts = append(opts, ollama.WithServerURL(cfg.BaseUrl))
-		}
-		return ollama.New(opts...)
+		// the native ollama binding drops the tools, the OpenAI-compatible endpoint
+		// serves them. Its token is ignored but must not be empty.
+		return openai.New(openai.WithModel(cfg.Model), openai.WithToken("ollama"),
+			openai.WithBaseURL(ollamaUrl(cfg.BaseUrl)))
 
 	default:
 		return nil, fmt.Errorf("invalid provider: %s", cfg.Provider)

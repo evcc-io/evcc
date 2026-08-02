@@ -111,6 +111,18 @@ func TestToolError(t *testing.T) {
 	}
 }
 
+func TestOllamaUrl(t *testing.T) {
+	for base, want := range map[string]string{
+		"":                         "http://localhost:11434/v1",
+		"http://nas:11434":         "http://nas:11434/v1",
+		"http://nas:11434/":        "http://nas:11434/v1",
+		"http://nas:11434/v1":      "http://nas:11434/v1",
+		"https://ollama.local/v1/": "https://ollama.local/v1",
+	} {
+		assert.Equal(t, want, ollamaUrl(base), base)
+	}
+}
+
 func TestConfigValidate(t *testing.T) {
 	for _, tc := range []struct {
 		cfg Config
