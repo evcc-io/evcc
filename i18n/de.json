@@ -42,6 +42,7 @@
       },
       "bufferTitle": "Batterie als Ladepuffer",
       "discharge": "Entladung der Hausbatterie im Schnell-Modus und bei geplantem Laden verhindern.",
+      "gridDischarge": "Die Entladung der Hausbatterie ins Stromnetz zulassen.",
       "priority": "Hausspeicher hat Vorrang, solange er unter {soc} liegt. Dann erhalten die Ladepunkte den Überschuss.",
       "priorityNone": "Sonnenüberschuss geht direkt an die Ladepunkte. Setze einen Wert über {soc}, um den Hausspeicher zu bevorzugen.",
       "priorityTitle": "Wohin geht der Überschuss zuerst?"
@@ -49,6 +50,7 @@
     "optimizer": {
       "action": {
         "charge": "Aus dem Netz laden",
+        "discharge": "Einspeisung ins Netz",
         "hold": "Entladen verhindern",
         "holdcharge": "Laden verhindern",
         "normal": "Normaler Betrieb"
@@ -118,6 +120,7 @@
       "titleEdit": "Intelligenten Verbraucher bearbeiten"
     },
     "battery": {
+      "title": "Batterie",
       "titleAdd": "Batterie hinzufügen",
       "titleEdit": "Batterie bearbeiten"
     },
@@ -256,7 +259,7 @@
     },
     "devices": {
       "auxMeter": "Smarter Verbraucher",
-      "batteryStorage": "Batterie",
+      "batteryStorage": "Batteriespeicher",
       "consumer": "Verbraucher",
       "solarSystem": "PV-Anlage"
     },
@@ -367,6 +370,7 @@
       },
       "customOption": "Benutzerdefinierte Integration",
       "description": "Leistungsbegrenzung durch externe Systeme (z.B. §14a EnWG, §9 EEG Schnittstelle oder übergeordnetes Energiemanagementsystem). Spielt mit dem Lastmanagement Feature zusammen. Das Abregeln der Solarproduktion wird ebenfalls für ausgewählte Geräte unterstützt. Der konkrete Abregelungswert muss in der jeweiligen Wechselrichter-Konfiguration eingestellt werden.",
+      "download": "Download",
       "eventsRecorded": "{count} Netzbegrenzungen gespeichert.",
       "generic": "Generische Integrationen",
       "integrations": "Integrationen",
@@ -588,6 +592,11 @@
           "messageDefault": "Laden beendet: {chargedEnergy}kWh in {chargeDuration}.",
           "title": "Wenn das Laden stoppt",
           "titleDefault": "Ladevorgang beendet"
+        },
+        "suggestion": {
+          "messageDefault": "Optimierungsvorschlag für {suggestionTitle}: Wäre die Optimierungssteuerung aktiv, würde sie jetzt „{suggestionAction}“ anwenden. Dies ist nur ein Hinweis, es wurden keine Änderungen vorgenommen. Experimentell – Feedback ist willkommen unter https://github.com/evcc-io/evcc/issues/31903",
+          "title": "Wenn sich die Empfehlung des Optimierers ändert",
+          "titleDefault": "Vorschlag des Optimierers"
         }
       },
       "eventMessage": "Nachricht",
@@ -1351,6 +1360,7 @@
           "returnEnergy": "Energie (rückwärts)"
         }
       },
+      "download": "Download",
       "empty": "Keine Verlaufsdaten für diesen Zeitraum.",
       "group": {
         "battery": "Batterie",
@@ -1630,6 +1640,8 @@
       "vehicle": "Fahrzeug"
     },
     "date": "Anfang",
+    "download": "Download {period}",
+    "downloadTotal": "Gesamtdownload",
     "energy": "Geladen",
     "filter": {
       "allLoadpoints": "Alle Ladepunkte",

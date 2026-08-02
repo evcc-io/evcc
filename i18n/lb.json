@@ -19,6 +19,49 @@
     "successCloseTab": "Du kannst dësen Tab elo zoumaachen.",
     "title": "Autoriséierungsstatus"
   },
+  "battery": {
+    "card": {
+      "charging": "luet",
+      "discharging": "entluet",
+      "energy": "Energie",
+      "gridCharge": "Luede vum Netz",
+      "hold": "Entluede gespaart",
+      "holdCharge": "Luede gespaart",
+      "ofTotal": "vun {total}",
+      "power": "Leeschtung",
+      "soc": "Luedestand"
+    },
+    "combined": "Combinéiert",
+    "config": {
+      "buffer": "D'Energie vun der Batterie soll iwwert dem {soc} benotzt ginn, fir d'Opluedpunkten z'ënnerstëtzen, an verzögert d'Ofschalten am Solarmodus. Fänkt automatesch un mam Solaroplueden {start}.",
+      "bufferNone": "D'Energie vun der Batterie gëtt net fir d'Opluedpunkte benotzt. Setzt e Wäert ënner {soc} fir d'Ënnerstëtzung z'erméiglechen.",
+      "bufferStart": {
+        "above": "esoubal d'Batterie iwwer {soc} ass",
+        "full": "esoubal d'Batterie voll ass",
+        "never": "nëmme mat genuch Iwwerschoss"
+      },
+      "bufferTitle": "Batterie als Luedpuffer",
+      "discharge": "Verhënnert d'Entluede vun der Batterie am schnelle Modus a wärend dem geplangten Oplueden.",
+      "gridDischarge": "Erlaabt der Batterie sech an d'Netz ze entlueden.",
+      "priority": "D'Batterie huet Prioritéit, soulaang de SOC ënner {soc} ass. Dann kréien d'Opluedpunkten de Rescht.",
+      "priorityNone": "Den Iwwerschoss vun der Solaranlag geet direkt op d'Opluedpunkten. Setzt e Wäert iwwer {soc} fir d'Batterie ze prioriséieren.",
+      "priorityTitle": "Wou geet den Iwwerschoss fir d'éischt hin?"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Aus dem Netz lueden",
+        "discharge": "Entlueden an d'Netz",
+        "hold": "Entluede verhënneren",
+        "holdcharge": "Luede verhënneren",
+        "normal": "Normale Betrib"
+      },
+      "empty": "eidel",
+      "full": "voll",
+      "highest": "Héchststand ({value})",
+      "lowest": "Déifstand ({value})",
+      "suggestion": "Virschlag"
+    }
+  },
   "batterySettings": {
     "batteryLevel": "Luedstand vun der Batterie",
     "bufferStart": {
@@ -77,6 +120,7 @@
       "titleEdit": "Intelligenten Verbraucher beaarbechten"
     },
     "battery": {
+      "title": "Batterie",
       "titleAdd": "Batterie derbäi setzen",
       "titleEdit": "Batterie upassen"
     },
@@ -87,7 +131,7 @@
     "charger": {
       "chargers": "Wallboxen",
       "generic": "Generesch Integratiounen",
-      "heatingdevices": "Heizungsgerät",
+      "heatingdevices": "Heizungsgeräter",
       "ocppConfirmContinue": "Deng Wallbox huet sech nach ni mam evcc verbonnen. Wëlls du wierklech weiderfueren?",
       "ocppConnected": "Verbonnen!",
       "ocppDescription": "evcc huet een agebautenen OCPP-Server. Verfolleg dës Etappen:",
@@ -102,16 +146,16 @@
       "template": "Hiersteller",
       "titleAdd": {
         "charging": "Wallbox derbäi fügen",
-        "heating": "Heizung derbäi fügen"
+        "heating": "Heizungsgerät derbäi fügen"
       },
       "titleEdit": {
         "charging": "Wallbox beaarbechten",
-        "heating": "Heizung beaarbechten"
+        "heating": "Heizungsgerät beaarbechten"
       },
       "type": {
         "custom": {
           "charging": "Benotzerdefinéirt Wallbox",
-          "heating": "Benotzerdefinéirt Heizung"
+          "heating": "Benotzerdefinéirten Heizungsgerät"
         },
         "heatpump": "Benotzerdefinéirt Wärmepompel",
         "sgready": "Benotzerdefinéiert Wärmepompel (sg-ready iwwer Plugins)",
@@ -147,6 +191,7 @@
     "deviceValue": {
       "activeClients": "Aktiv Clienten",
       "amount": "Unzahl",
+      "asleep": "schléift",
       "broker": "Broker",
       "bucket": "Bucket",
       "capacity": "Capacitéit",
@@ -185,6 +230,7 @@
       "no": "nee",
       "odometer": "Kilometerzäler",
       "org": "Organisatioun",
+      "outdoorTemp": "Baussentemperatur",
       "phaseCurrents": "Stroum",
       "phasePowers": "Leeschtung",
       "phaseVoltages": "Spannung",
@@ -194,6 +240,7 @@
       "price": "Präis",
       "productionLimited": "Produktioun limitéiert",
       "range": "Autonomie",
+      "remoteEnabled": "Aktivéiert",
       "returnEnergy": "Energie (réckwäerts)",
       "singlePhase": "Eephaseg",
       "soc": "Luedstand",
@@ -225,15 +272,21 @@
         "public": "Ëffentlecht Zertifikaat",
         "title": "Zertifikater"
       },
+      "configuredDevices": "Konfiguréiert Geräter",
       "description": "Konfiguratioun, déi et dem evcc erlaabt, mat EEBus-kompatiblen Apparater wéi Ladegeräter oder enger Kontroll-Eenheet vun Ärem Netzbetreiber ze kommunizéieren. All relevant Initialiséierung an d'Generéiere vun Zertifikater gëtt beim éischte Start automatesch duerchgefouert.",
       "descriptionAdvanced": "Keng Ännerungen néideg. Maacht Ännerungen nëmmen wann Dir wierklech wësst, wat Dir maacht. Wann Dir entweder d'SHIP-ID oder d'Zertifikater ännert, musst Dir Är Apparater erëm koppelen.",
       "interfaces": "Schnëttstellen",
       "interfacesHelp": "Limitéiert d'Netzwierkschnëttstellen, déi EEBus soll benotzen, fir Kommunikatiounsproblemer ze vermeiden. Loosst d'Feld eidel, fir all Schnëttstellen ze benotzen. Eng Entrée pro Zeil.",
+      "noConfiguredDevices": "Keng per SKI konfiguréiert Geräter.",
+      "noPairings": "Keng gekoppelt Geräter.",
+      "pairings": "Gekoppelt Geräter",
       "port": "Port",
       "portHelp": "De Port, deen ze benotzen ass.",
       "qr": "Kopplungscode",
       "qrExplain": "Wärend der Installatioun no engem aneren EEBus-Apparat scannen, fir en automatesch ze koppelen, ouni den SKI manuell aginn ze mussen.",
       "removeConfirm": "All EEBus-Konfiguratioun gëtt ewechgeholl. Nei Zertifikater a Identifikateuren ginn beim nächsten Start generéiert. Sidd Dir sécher?",
+      "removePairing": "Kopplung ewechhuelen",
+      "removePairingConfirm": "D'Verbindung zum Gerät gëtt getrennt a muss nei gekoppelt ginn. Bass du sécher?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Permanente Apparat-Identifikator fir d'Identifikatioun am EEBus-Netzwierk.",
       "shipidHelp": "Dës SHIP-ID ass mat deenen ënnen genannten Zertifikater verbonnen.",
@@ -317,12 +370,19 @@
       },
       "customOption": "Benotzerdefinéiert Integratioun",
       "description": "Kraaftbegrenzung duerch extern Systemer (z. B. §14a EnWG, §9 EEG-Schnittstell oder e méi héichgestallt Energiemanagementsystem). Arbecht zesumme mat der Laaschtmanagement-Funktioun. D'Begrenzung vun der Solarproduktioun gëtt och fir ausgewielte Geräter ënnerstëtzt. Den tatsächleche Begrenzungswäert muss an der Konfiguratioun vun all Inverter festgeluecht ginn.",
+      "download": "Eroflueden",
       "eventsRecorded": "{count} gespäichert Limitatiounen vum Netz.",
       "generic": "Generesch Integratiounen",
       "integrations": "Integratiounen",
       "lastEvent": "Méi rezent {timeAgo}.",
+      "noEvents": "Nach keng Evenementer opgezeechent.",
+      "recordedEvents": "Opgezeechent Evenementer",
       "template": "Integratioun",
-      "title": "Äusserlech Grenz"
+      "title": "Äusserlech Grenz",
+      "type": {
+        "custom": "Benotzerdefinéiert Integratioun",
+        "relay": "Benotzerdefinéiert Integratioun (Relais)"
+      }
     },
     "icon": {
       "change": "änneren",
@@ -347,17 +407,18 @@
     "loadpoint": {
       "addCharger": {
         "charging": "Wallbox derbäi fügen",
-        "heating": "Heizung derbäi fügen"
+        "heating": "Heizungsgerät derbäi fügen"
       },
       "addMeter": "Zousätzlechen Energiezieler derbäi fügen",
+      "advancedConfig": "Erweidert Konfiguratioun",
       "cancel": "Ofbriechen",
       "chargerError": {
         "charging": "Wallbox muss konfiguréiert sinn.",
-        "heating": "Heizung muss konfiguréiert sinn."
+        "heating": "Heizungsgerät muss konfiguréiert sinn."
       },
       "chargerLabel": {
         "charging": "Wallbox",
-        "heating": "Heizung"
+        "heating": "Heizungsgerät"
       },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Verwennt Stroum vu 6 bis 16 A.",
@@ -371,11 +432,21 @@
       "circuitInvalid": "De Circuit existéiert net",
       "circuitLabel": "Stroumkrees",
       "circuitUnassigned": "net zougewisen",
+      "created": "„{name}“ gouf ugeluecht a verwennt sënnvoll Standardwäerter.",
+      "createdTitle": {
+        "charging": "Luedpunkt erstellt",
+        "heating": "Heizung erstellt"
+      },
+      "creating": {
+        "charging": "Wallbox gespäichert. Opluedpunkt gëtt erstellt …",
+        "heating": "Heizungsgerät gespeächert. Heizung gëtt erstellt …"
+      },
       "defaultModeHelp": {
         "charging": "Luedmodus beim Uschléisse vum Gefier.",
         "heating": "Ass beim Systemstart agestallt."
       },
       "defaultModeHelpKeep": "De leschte Modus deen ausgewielt gouf gëtt bäibehal.",
+      "defaultModeKeep": "bäibehalen",
       "defaultModeLabel": "Standard-Modus",
       "delete": "Läschen",
       "electricalSubtitle": "Wann onsécher sidd, da léiwer den Elektriker froen.",
@@ -393,7 +464,7 @@
       "noVehicles": "Kee Gefier konfiguréiert.",
       "option": {
         "charging": "Luedpunkt derbäi fügen",
-        "heating": "Heizungsgerät derbäi fügen"
+        "heating": "Heizung derbäi fügen"
       },
       "phases1p": "1-phaseg",
       "phases3p": "3-phaseg",
@@ -434,12 +505,12 @@
       "titleAdd": {
         "charging": "Luedepunkt derbäi fügen",
         "heating": "Heizung derbäi fügen",
-        "unknown": "Wallbox oder Heizung derbäi fügen"
+        "unknown": "Opluedpunkt oder Heizung derbäi fügen"
       },
       "titleEdit": {
         "charging": "Luedpunkt beaarbechten",
         "heating": "Heizung beaarbechten",
-        "unknown": "Wallbox oder Heizung beaarbechten"
+        "unknown": "Opluedpunkt oder Heizung beaarbechten"
       },
       "titleExample": {
         "charging": "Garage, Carport, etc.",
@@ -457,7 +528,7 @@
       "addAdditional": "Zousätzlechen Zieler derbäi fügen",
       "addConsumer": "Verbraucher derbäisetzen",
       "addGrid": "Netzzieler derbäi fügen",
-      "addLoadpoint": "Wallbox oder Heizung derbäi fügen",
+      "addLoadpoint": "Opluedpunkt oder Heizung derbäi fügen",
       "addPvBattery": "PV oder Batterie derbäi setzen",
       "addTariffs": "Tariffer derbäi fügen",
       "addVehicle": "Gefier derbäi setzen",
@@ -488,18 +559,18 @@
           "titleDefault": "Gefier schléift"
         },
         "connect": {
-          "messageDefault": "Auto ugeschloss mat {pvPower} kW PV",
-          "title": "Wann een Auto sech verbënnt",
-          "titleDefault": "Auto ass verbonnen"
+          "messageDefault": "Gefier ugeschloss mat {pvPower} kW PV",
+          "title": "Wann ee Gefier sech verbënnt",
+          "titleDefault": "Gefier ass verbonnen"
         },
         "disconnect": {
-          "messageDefault": "Auto no {connectedDuration} getrennt",
-          "title": "Wann een Auto getrennt gëtt",
-          "titleDefault": "Auto getrennt"
+          "messageDefault": "Gefier no {connectedDuration} getrennt",
+          "title": "Wann ee Gefier getrennt gëtt",
+          "titleDefault": "Gefier getrennt"
         },
         "guest": {
           "messageDefault": "Onbekanntent Gefier, Gaascht verbonnen?",
-          "title": "Wann en onbekannten Auto sech verbënnt",
+          "title": "Wann en onbekanntent Gefier sech verbënnt",
           "titleDefault": "Onbekannt Gefier"
         },
         "planoverrun": {
@@ -521,6 +592,11 @@
           "messageDefault": "{chargedEnergy} kWh fäerdeg opgeluede an {chargeDuration}.",
           "title": "Wann d'Oplueden ophält",
           "titleDefault": "Oplueden ofgeschloss"
+        },
+        "suggestion": {
+          "messageDefault": "Optimiséierungsvirschlag fir {suggestionTitle}: wann d'Kontroll vum Optimiséierer aktiv wier, géif en elo '{suggestionAction}' uwenden. Nëmmen als Rotschlag, näischt gouf geännert. Experimentell — Feedback ass wëllkomm bei https://github.com/evcc-io/evcc/issues/31903",
+          "title": "Wann d'Virschlagsaktioun vum Optimiséierer sech ännert",
+          "titleDefault": "Virschlag vum Optimiséierer"
         }
       },
       "eventMessage": "Noriicht",
@@ -576,6 +652,8 @@
       "connectionHintTcpip": "Den Apparat kann direkt per LAN/Wifi duerch evcc konfiguréiert ginn.",
       "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Netzwierk",
+      "delay": "Verspéidung",
+      "delayHint": "Optional Waardezäit virun all Registerzougang. Nëmmen néideg fir lues Apparater.",
       "device": "Numm vum Apparat",
       "deviceHint": "Beispill: /dev/ttyUSB0",
       "host": "IP-Adress oder Hostname",
@@ -586,7 +664,9 @@
       "protocolHintRtu": "Verbindung durch een RS485 zu Ethernet-Adapter ouni Protokoll-Iwwersetzung.",
       "protocolHintTcp": "Apparat huet eng nativ LAN/Wifi-Ënnerstëtzung oder ass duerch en RS485 zu Ethernet-Adapter mat Protokoll-Iwwersetzung verbonnen.",
       "protocolValueRtu": "RTU",
-      "protocolValueTcp": "TCP"
+      "protocolValueTcp": "TCP",
+      "timeout": "Zäitiwwerschreitung",
+      "timeoutHint": "Optional maximal Zäit fir op eng Äntwert vun engem Apparat ofzewaarden."
     },
     "modbusproxy": {
       "add": "Proxy-Verbindung derbäi fügen",
@@ -750,7 +830,7 @@
       "general": "Allgemeng",
       "grid": "Netzuschloss",
       "integrations": "Integratiounen",
-      "loadpoints": "Lueden & Heizen",
+      "loadpoints": "Opluedpunkte & Heizungsgeräter",
       "meter": "PV & Batterie",
       "services": "Servicer",
       "system": "System",
@@ -865,7 +945,8 @@
         "feedIn": "Netzexport-Tarif derbäifügen",
         "grid": "Netzimport-Tarif derbäifügen",
         "planner": "Planner-Previsiounen derbäifügen",
-        "solar": "Solar-Previsiounen derbäifügen"
+        "solar": "Solar-Previsiounen derbäifügen",
+        "temperature": "Eng Temperaturprognos derbäi fügen"
       },
       "planner": {
         "description": "Erweidert Astellung. Normalerweis net néideg, well déi dynamesch Stroumtariffer oder CO₂-Previsiounen automatesch benotzt ginn. Erlaabt eng zousätzlech Datequell, déi nëmmen fir d'Opluedplangung benotzt gëtt, net fir Statistiken a Präisberechnungen.",
@@ -878,6 +959,11 @@
         "titleAdd": "Solarprevisioun derbäifügen",
         "titleEdit": "Solarprevisioun beaarbechten"
       },
+      "temperature": {
+        "description": "Baussen-Temperaturprognos fir Är Plaz. Am Interface ugewisen a gëtt benotzt fir de Heizungsbedarf virauszesoen.",
+        "titleAdd": "Eng Temperaturprognos derbäi fügen",
+        "titleEdit": "Temperaturprognos änneren"
+      },
       "template": "Fournisseur",
       "title": "Tariffer & Previsiounen",
       "titleChoice": "Wat wëlls du derbäisetzen?",
@@ -886,7 +972,8 @@
         "feedIn": "Verkafspräis un d'Netz",
         "grid": "Netzimportspräis",
         "planner": "Planner",
-        "solar": "Solar"
+        "solar": "Solar",
+        "temperature": "Temperaturprognos"
       },
       "zones": {
         "add": "Zone derbäifügen",
@@ -1039,7 +1126,8 @@
       "co2": "Iwwerpréiwt, wéini d'Netzenergie an Ärer Regioun propper ass. Luedpläng ginn optimiséiert fir d'Emissiounen ze reduzéieren an CO₂ anzespueren.",
       "price": "Konfiguréiert Ären dynameschen Stromtarif, fir d'Luedpläng automatesch ze optiméieren an d'Erspuernësser ze berechnen.",
       "setup": "Tariffer a Prognosen opstellen",
-      "solar": "Kuckt déi erwaart Solarproduktioun fir haut an déi nächst Deeg. Et gëtt och an der Zukunft fir d'automatiséiert Luedoptimiséierung benotzt."
+      "solar": "Kuckt déi erwaart Solarproduktioun fir haut an déi nächst Deeg. Et gëtt och an der Zukunft fir d'automatiséiert Luedoptimiséierung benotzt.",
+      "temperature": "Kuckt déierwaart Baussentemperatur fir Äre Standuert. Gëtt benotzt fir den Heizungsbedarf virauszesoen."
     },
     "hideLine": "Linn ausblennen",
     "modalTitle": "Prognose",
@@ -1061,13 +1149,20 @@
     "solarAdjust": "Solarprognose unhand vun de reale Produktionsdaten upassen{percent}.",
     "solarAdjustMedium": "unpassen un déi reell Produktiounsdaten",
     "solarAdjustShort": "upassen",
+    "temperature": {
+      "average": "Moyenne",
+      "range": "Beräich"
+    },
     "type": {
       "co2": "CO₂-Emissiounen",
       "price": "Netzpräis",
-      "solar": "Solar-Productioun"
+      "solar": "Solar-Productioun",
+      "temperature": "Baussentemperatur"
     }
   },
   "general": {
+    "download": "Eroflueden",
+    "none": "keng",
     "note": "Bemierkung:"
   },
   "header": {
@@ -1233,11 +1328,15 @@
       "pv": "Solaranlag",
       "pvExport": "Export an d'Stroumnetz",
       "pvProduction": "Produktioun",
-      "selfConsumption": "eegene Verbrauch"
+      "selfConsumption": "eegene Verbrauch",
+      "toggleDetails": "Detailer vum Energieflux"
     },
     "heatingStatus": {
       "charging": "Wiermen…",
       "connected": "Standby.",
+      "minTemp": "Mindestheizung op {temp}.",
+      "suggestionStartTooltip": "Den Optimiséierer recommandéiert elo ze heizen.",
+      "suggestionStopTooltip": "Den Optimiséierer recommandéiert d'Heizung ze pausen.",
       "vehicleLimit": "Limitt vun der Heizung",
       "waitForVehicle": "Prett fir ze Heizen…"
     },
@@ -1261,6 +1360,7 @@
           "returnEnergy": "Energie (ëmgedréint)"
         }
       },
+      "download": "Eroflueden",
       "empty": "Keng historesch Daten fir dësen Zäitraum.",
       "group": {
         "battery": "Batterie",
@@ -1282,12 +1382,15 @@
       "emission": "Emissioun",
       "fallbackName": "Luedstatioun",
       "finished": "Fäerdeg um",
+      "last24hEnergy": "Lescht 24h",
+      "last7dEnergy": "Lescht 7 Deeg",
       "power": "Leeschtung",
       "price": "Käschten",
       "remaining": "Reschtzäit",
       "remoteDisabledHard": "{source}: Deaktivéiert",
       "remoteDisabledSoft": "{source}: Adaptatiivt PV-Lueden deaktivéiert",
-      "solar": "Sonn"
+      "solar": "Sonn",
+      "todayEnergy": "Haut"
     },
     "loadpointSettings": {
       "batteryBoost": {
@@ -1305,11 +1408,16 @@
       "batteryUsage": "Hausbatterie",
       "currents": "Luedstroum",
       "default": "Standard",
+      "heating": "Heizen",
       "maxCurrent": {
         "label": "Max. Stroum"
       },
       "minCurrent": {
         "label": "Min. Stroum"
+      },
+      "minTemp": {
+        "description": "Ënner {0} ginn och d'Batterie- an d'Netzstroum am Solarmodus benotzt, fir dës Temperatur z'erhalen.",
+        "label": "Min. Temperatur"
       },
       "phasesConfigured": {
         "label": "Phasen",
@@ -1393,6 +1501,20 @@
       "unknown": "Gaascht Gefier",
       "vehicleSoc": "Gelueden"
     },
+    "vehicleSettings": {
+      "connectedTo": "verbonne mat {0}",
+      "description": "Dës Virastellungen ginn ugewannt, wann d'Gefier sech mat enger Opluedstatioun verbënnt.",
+      "editHint": "Füügt Gefierer an {0} derbäi oder ännert se.",
+      "keepAsIs": "Loosst et wéi et ass",
+      "learnMore": "Méi gewuer ginn.",
+      "limitSoc": "Standardlimitt",
+      "menu": "Gefierer",
+      "minSoc": "Minimal Ladung",
+      "minSocDescription": "Schnell op dëse Niveau am Solarmodus oplueden.",
+      "mode": "Standardmodus",
+      "notConnected": "net verbonnen",
+      "title": "Astellunge vum Gefier"
+    },
     "vehicleStatus": {
       "awaitingAuthorization": "Waarden op d'Autorisatioun.",
       "batteryBoost": "Batterie Boost ass aktiv.",
@@ -1419,6 +1541,8 @@
       "pvEnable": "Iwwerschoss verfügbar. Starte geschwënn.",
       "scale1p": "Reduktioun op eng eenzeg Phase.",
       "scale3p": "Erhéije geschwënn op dräi Phasen.",
+      "suggestionStartTooltip": "Den Optimiséierer recommandéiert elo opzelueden.",
+      "suggestionStopTooltip": "Den Optimiséierer recommandéiert d'Oplueden ze pausen.",
       "targetChargeActive": "Luedplanung aktiv. Ageschate Schluss an {duration}.",
       "targetChargePlanned": "Luedpladung fänkt un an {duration} un.",
       "targetChargeWaitForVehicle": "Luedplang ass prett. Waarden op d'Gefier…",
@@ -1516,6 +1640,8 @@
       "vehicle": "Gefier"
     },
     "date": "Ufank",
+    "download": "Eroflueden {period}",
+    "downloadTotal": "Total eroflueden",
     "energy": "Opgelueden",
     "filter": {
       "allLoadpoints": "All Luedstatiounen",
