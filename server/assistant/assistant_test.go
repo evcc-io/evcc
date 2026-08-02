@@ -123,9 +123,11 @@ func TestRepeatedCallsStop(t *testing.T) {
 	res, err := a.Chat(t.Context(), []Message{{Role: "user", Content: "soc?"}})
 	require.NoError(t, err)
 
-	// the second identical round ends the loop, the answer is what the model said
+	// two identical rounds end the loop, a third call without tools produces the answer
 	assert.Equal(t, "still looking", res.Content)
-	assert.Len(t, llm.seen, 2)
+	assert.Len(t, llm.seen, 3)
+	last := llm.seen[2][len(llm.seen[2])-1]
+	assert.Equal(t, llms.ChatMessageTypeHuman, last.Role, "the last call carries the nudge")
 	assert.Len(t, res.Steps, 2)
 }
 
@@ -143,7 +145,7 @@ func TestRepeatedCallsWithoutContent(t *testing.T) {
 
 func TestExhaustedRoundsAnswer(t *testing.T) {
 	// distinct calls every round, so the loop runs out instead of detecting a stall
-	res := make([]*llms.ContentResponse, 0, maxIterations)
+	res := make([]*llms.ContentResponse, 0, maxIterations+1)
 	for i := range maxIterations {
 		res = append(res, &llms.ContentResponse{Choices: []*llms.ContentChoice{{
 			Content: fmt.Sprintf("checking %d", i),
@@ -155,6 +157,11 @@ func TestExhaustedRoundsAnswer(t *testing.T) {
 		}}})
 	}
 
+	// the call without tools concludes from what was gathered
+	res = append(res, &llms.ContentResponse{
+		Choices: []*llms.ContentChoice{{Content: "the soc is 42%"}},
+	})
+
 	llm := &fakeLLM{responses: res}
 
 	a, err := newAssistant(t.Context(), llm, testServer(t))
@@ -164,9 +171,9 @@ func TestExhaustedRoundsAnswer(t *testing.T) {
 	out, err := a.Chat(t.Context(), []Message{{Role: "user", Content: "soc?"}})
 	require.NoError(t, err)
 
-	// the rounds are not discarded, the last thing the model said is the answer
-	assert.Equal(t, fmt.Sprintf("checking %d", maxIterations-1), out.Content)
-	assert.Len(t, llm.seen, maxIterations)
+	// the rounds are not discarded, they are concluded
+	assert.Equal(t, "the soc is 42%", out.Content)
+	assert.Len(t, llm.seen, maxIterations+1)
 	assert.Len(t, out.Steps, maxIterations)
 }
 

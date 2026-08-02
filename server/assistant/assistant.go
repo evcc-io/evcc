@@ -261,13 +261,24 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (Result, error)
 		}
 	}
 
-	// the loop stopped without the model concluding, answer with what it produced
-	// rather than discarding every round it took
+	// the loop stopped without the model concluding. Offering no tools leaves it nothing
+	// to do but answer from what it gathered, which beats reporting the last half thought.
 	incomplete := func(reason string) (Result, error) {
-		a.log.ERROR.Println(reason)
+		a.log.WARN.Printf("%s, answering without tools", reason)
+
+		messages = append(messages, llms.TextParts(llms.ChatMessageTypeHuman,
+			"Answer the question with what you have found so far. Do not call any more tools."))
+
+		if resp, err := a.llm.GenerateContent(ctx, messages); err != nil {
+			a.log.ERROR.Println(err)
+		} else if len(resp.Choices) > 0 && resp.Choices[0].Content != "" {
+			return Result{Content: resp.Choices[0].Content, Steps: steps}, nil
+		}
+
 		if content == "" {
 			return Result{}, errors.New(reason)
 		}
+
 		return Result{Content: content, Steps: steps}, nil
 	}
 
