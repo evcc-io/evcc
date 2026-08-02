@@ -102,6 +102,15 @@ const (
 	hycStateUnavailableConnObj
 )
 
+// a zero power limit makes the station report the connector as unavailable and
+// abort a running session, so charging is inhibited with a limit that is too low
+// for any connector to actually charge- see hycRegMinChargingPowerDC
+const (
+	hycPowerPerAmp = 230 * 3 // W/A on the AC side
+	hycMinPowerAC  = 1547    // W
+	hycMinCurrent  = 2.25    // A, lowest current exceeding hycMinPowerAC
+)
+
 func init() {
 	registry.AddCtx("alpitronic", NewAlpitronicHYCFromConfig)
 }
@@ -139,14 +148,14 @@ func NewAlpitronicHYC(ctx context.Context, settings modbus.TcpSettings, connecto
 	log := util.NewLogger("alpitronic")
 	conn.Logger(log.TRACE)
 
-	return newAlpitronicHYC(conn, connector), nil
+	return newAlpitronicHYC(conn, connector)
 }
 
 // newAlpitronicHYC wires the struct without sponsor gate (also used by tests)
-func newAlpitronicHYC(conn *modbus.Connection, connector uint16) *AlpitronicHYC {
+func newAlpitronicHYC(conn *modbus.Connection, connector uint16) (*AlpitronicHYC, error) {
 	wb := &AlpitronicHYC{
 		conn:      conn,
-		curr:      6,
+		curr:      hycMinCurrent,
 		connector: connector,
 	}
 
@@ -157,7 +166,17 @@ func newAlpitronicHYC(conn *modbus.Connection, connector uint16) *AlpitronicHYC 
 		return wb.conn.ReadInputRegisters(wb.reg(hycRegState), hycInputLength)
 	}, time.Second)
 
-	return wb
+	// seed the current limit from the charger- this also validates the connector
+	b, err := wb.conn.ReadHoldingRegisters(wb.reg(hycRegMaxPowerAC), 2)
+	if err != nil {
+		return nil, err
+	}
+
+	if power := encoding.Uint32(b); power > hycMinPowerAC {
+		wb.curr = float64(power) / hycPowerPerAmp
+	}
+
+	return wb, nil
 }
 
 // hycInput returns the bytes of the given register within the cached input block
@@ -166,9 +185,17 @@ func hycInput(b []byte, reg uint16, n int) []byte {
 	return b[off : off+n]
 }
 
-// setCurrent writes the current limit as power
-func (wb *AlpitronicHYC) setCurrent(current float64) error {
-	power := uint32(current * 230 * 3)
+// hycPower converts a charging current into the AC side power limit
+func hycPower(current float64) uint32 {
+	if current <= 0 {
+		return 0
+	}
+
+	return uint32(current * hycPowerPerAmp)
+}
+
+// setPower writes the connector's power limit
+func (wb *AlpitronicHYC) setPower(power uint32) error {
 	b := make([]byte, 4)
 	encoding.PutUint32(b, power)
 
@@ -229,17 +256,17 @@ func (wb *AlpitronicHYC) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return encoding.Uint32(b) != 0, nil
+	return encoding.Uint32(b) > hycMinPowerAC, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *AlpitronicHYC) Enable(enable bool) error {
-	var c float64
+	power := uint32(hycMinPowerAC)
 	if enable {
-		c = wb.curr
+		power = hycPower(wb.curr)
 	}
 
-	return wb.setCurrent(c)
+	return wb.setPower(power)
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -255,11 +282,11 @@ var _ api.ChargerEx = (*AlpitronicHYC)(nil)
 // the connector power limit written by evcc itself, so using them as upper bound
 // would feed back into the limit. Use the loadpoint's maxcurrent instead.
 func (wb *AlpitronicHYC) MaxCurrentMillis(current float64) error {
-	if current < 6 {
+	if current < hycMinCurrent {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	err := wb.setCurrent(current)
+	err := wb.setPower(hycPower(current))
 	if err == nil {
 		wb.curr = current
 	}

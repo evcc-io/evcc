@@ -86,6 +86,13 @@ var (
 func hycTestCharger(t *testing.T, connector uint16, regs map[uint16]uint16) (*AlpitronicHYC, *hycHandler) {
 	t.Helper()
 
+	return hycTestChargerWithLimit(t, connector, regs, nil)
+}
+
+// hycTestChargerWithLimit additionally seeds the connector's power limit
+func hycTestChargerWithLimit(t *testing.T, connector uint16, regs, holding map[uint16]uint16) (*AlpitronicHYC, *hycHandler) {
+	t.Helper()
+
 	hycOnce.Do(func() {
 		l, err := net.Listen("tcp", "localhost:0")
 		require.NoError(t, err)
@@ -97,14 +104,21 @@ func hycTestCharger(t *testing.T, connector uint16, regs map[uint16]uint16) (*Al
 		hycURI = l.Addr().String()
 	})
 
+	if holding == nil {
+		holding = make(map[uint16]uint16)
+	}
+
 	hycSrvH.input = regs
-	hycSrvH.holding = make(map[uint16]uint16)
+	hycSrvH.holding = holding
 	hycSrvH.writes = nil
 
 	conn, err := modbus.NewConnection(context.Background(), hycURI, "", "", 0, modbus.Tcp, 1)
 	require.NoError(t, err)
 
-	return newAlpitronicHYC(conn, connector), hycSrvH
+	wb, err := newAlpitronicHYC(conn, connector)
+	require.NoError(t, err)
+
+	return wb, hycSrvH
 }
 
 func TestAlpitronicStatus(t *testing.T) {
@@ -242,10 +256,10 @@ func TestAlpitronicEnable(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, enabled)
 
-	// 6A -> 4140W, disable -> 0W
+	// default current -> 1552W, disable -> the station must not see a zero limit
 	require.Len(t, h.writes, 2)
-	assert.Equal(t, hycWrite{16, hycReg(1, hycRegMaxPowerAC), []uint16{0, 4140}}, h.writes[0])
-	assert.Equal(t, hycWrite{16, hycReg(1, hycRegMaxPowerAC), []uint16{0, 0}}, h.writes[1])
+	assert.Equal(t, hycWrite{16, hycReg(1, hycRegMaxPowerAC), []uint16{0, 1552}}, h.writes[0])
+	assert.Equal(t, hycWrite{16, hycReg(1, hycRegMaxPowerAC), []uint16{0, hycMinPowerAC}}, h.writes[1])
 }
 
 func TestAlpitronicMaxCurrent(t *testing.T) {
@@ -254,6 +268,7 @@ func TestAlpitronicMaxCurrent(t *testing.T) {
 		current float64
 		args    []uint16
 	}{
+		{hycMinCurrent, []uint16{0, 1552}}, // lowest accepted current
 		{6, []uint16{0, 4140}},
 		{16, []uint16{0, 11040}},
 		{200, []uint16{138000 >> 16, 138000 & 0xFFFF}},
@@ -268,10 +283,34 @@ func TestAlpitronicMaxCurrent(t *testing.T) {
 	}
 }
 
+func TestAlpitronicSeedCurrent(t *testing.T) {
+	// the default must not read back as disabled
+	assert.Greater(t, hycPower(hycMinCurrent), uint32(hycMinPowerAC))
+
+	// no usable limit set -> default
+	wb, _ := hycTestCharger(t, 1, hycRegs(1, hycStateAvailable))
+	assert.Equal(t, hycMinCurrent, wb.curr)
+
+	// the disabled sentinel must not be taken over
+	holding := map[uint16]uint16{hycReg(1, hycRegMaxPowerAC) + 1: hycMinPowerAC}
+	wb, _ = hycTestChargerWithLimit(t, 1, hycRegs(1, hycStateAvailable), holding)
+	assert.Equal(t, hycMinCurrent, wb.curr)
+
+	// existing limit is adopted, so enabling does not fall back to the default
+	holding = map[uint16]uint16{hycReg(1, hycRegMaxPowerAC) + 1: 11040}
+	wb, h := hycTestChargerWithLimit(t, 1, hycRegs(1, hycStateCharging), holding)
+	assert.Equal(t, 16.0, wb.curr)
+
+	require.NoError(t, wb.Enable(true))
+	require.Len(t, h.writes, 1)
+	assert.Equal(t, hycWrite{16, hycReg(1, hycRegMaxPowerAC), []uint16{0, 11040}}, h.writes[0])
+}
+
 func TestAlpitronicMaxCurrentInvalid(t *testing.T) {
 	wb, h := hycTestCharger(t, 1, hycRegs(1, hycStateCharging))
 
-	assert.Error(t, wb.MaxCurrentMillis(5.9))
+	// anything that does not exceed hycMinPowerAC would read back as disabled
+	assert.Error(t, wb.MaxCurrentMillis(2.24))
 	assert.Error(t, wb.MaxCurrentMillis(0))
 	assert.Error(t, wb.MaxCurrentMillis(-1))
 	assert.Empty(t, h.writes)
