@@ -9,6 +9,7 @@ const mobile = devices["iPhone 12 Mini"].viewport;
 const CONFIG = "plan.evcc.yaml";
 const CONFIG_NO_TARIFF = "basics.evcc.yaml";
 const CONFIG_FIXED_TARIFF = "plan-fixed-tariff.evcc.yaml";
+const CONFIG_CO2 = "battery-settings-co2.evcc.yaml";
 
 test.beforeEach(async () => {
   await start(CONFIG);
@@ -79,11 +80,11 @@ test.describe("basic functionality", async () => {
     await page.getByTestId("static-plan-day").selectOption({ index: 1 });
     await page.getByTestId("static-plan-time").fill("09:30");
     await page.getByTestId("static-plan-soc").selectOption("80%");
-    await page.getByRole("button", { name: "Strategy settings" }).click();
+    await page.getByTestId("plan-strategy").getByRole("link", { name: "cheapest" }).click();
     await expect(page.getByLabel("Late Charging")).toBeVisible();
     await page.getByLabel("Late Charging").selectOption("1 hour");
     await page.getByTestId("static-plan-active").click();
-    await page.getByRole("button", { name: "Close" }).click();
+    await page.getByRole("button", { name: "Close", exact: true }).click();
 
     const tomorrowShort = getWeekday(1, "short");
     await expect(lp1.getByTestId("plan-marker")).toBeVisible();
@@ -654,13 +655,14 @@ test.describe("repeating", async () => {
     await plan.getByRole("checkbox", { name: "Select all" }).click(); // uncheck all
     await plan.getByRole("checkbox", { name: tomorrow }).check();
     await plan.getByTestId("repeating-plan-time").fill("09:20");
-    await modal.getByRole("button", { name: "Strategy settings" }).click();
+    await plan.getByTestId("repeating-plan-weekdays").click(); // close dropdown
+    await modal.getByTestId("plan-strategy").getByRole("link", { name: "cheapest" }).click();
     await expect(modal.getByLabel("Late Charging")).toBeVisible();
     await modal.getByLabel("Late Charging").selectOption("2 hours");
     await plan.getByTestId("repeating-plan-active").click();
     await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
     await expect(modal.getByTestId("target-text")).toContainText("09:20");
-    await modal.getByRole("button", { name: "Close" }).click();
+    await modal.getByRole("button", { name: "Close", exact: true }).click();
     await expect(
       lp1.getByTestId("charging-plan").getByRole("button", { name: `${tomorrowShort} 09:20` })
     ).toBeVisible();
@@ -695,12 +697,37 @@ test.describe("plan strategy", async () => {
     const modal = page.getByTestId("charging-plan-modal");
     await expect(modal.getByTestId("static-plan-active")).toBeVisible();
 
-    // Strategy toggle should be visible but expand to show informational note only
-    await expect(modal.getByRole("button", { name: "Strategy settings" })).toBeVisible();
-    await modal.getByRole("button", { name: "Strategy settings" }).click();
+    // Strategy line shows informational note only, not clickable
+    await expect(modal.getByTestId("plan-strategy")).toContainText("just in time for departure");
+    await expect(modal.getByTestId("plan-strategy").getByRole("link")).toHaveCount(0);
     await expect(modal.getByLabel("Optimization")).not.toBeVisible();
     await expect(modal.getByLabel("Late Charging")).not.toBeVisible();
-    await expect(modal).toContainText("just in time for departure");
+  });
+
+  test("co2 tariff: cleanest instead of cheapest", async ({ page }) => {
+    await restart(CONFIG_CO2);
+    await page.goto("/");
+    const lp1 = await page.getByTestId("loadpoint").first();
+    await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
+    const modal = page.getByTestId("charging-plan-modal");
+
+    await expect(modal.getByTestId("plan-strategy")).toContainText("cleanest");
+
+    // collapsed selects must not be interactive
+    await expect(modal.getByLabel("Optimization")).not.toBeVisible();
+    await expect(modal.getByLabel("Late Charging")).not.toBeVisible();
+
+    await modal.getByTestId("plan-strategy").getByRole("link", { name: "cleanest" }).click();
+
+    const optimization = modal.getByLabel("Optimization");
+    await expect(optimization).toBeVisible();
+    await expect(optimization.getByRole("option", { name: "cleanest" })).toHaveCount(1);
+    await expect(modal.getByTestId("plan-strategy")).toContainText("cleanest slots");
+
+    await optimization.selectOption("continuous");
+    await expect(modal.getByTestId("plan-strategy")).toContainText(
+      "cleanest uninterrupted series"
+    );
   });
 
   test("visible and functional on mobile", async ({ page }) => {
@@ -719,11 +746,11 @@ test.describe("plan strategy", async () => {
 
     const modal = page.getByTestId("charging-plan-modal");
 
-    // Strategy toggle should be visible on mobile
-    await expect(modal.getByRole("button", { name: "Strategy settings" })).toBeVisible();
+    // Strategy summary should be visible on mobile
+    await expect(modal.getByTestId("plan-strategy")).toContainText("cheapest");
 
     // Open strategy panel
-    await modal.getByRole("button", { name: "Strategy settings" }).click();
+    await modal.getByTestId("plan-strategy").getByRole("link", { name: "cheapest" }).click();
 
     // Strategy controls should be visible and functional
     await expect(modal.getByLabel("Optimization")).toBeVisible();

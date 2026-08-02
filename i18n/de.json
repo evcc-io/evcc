@@ -1282,22 +1282,31 @@
       "none": "keiner",
       "optimization": {
         "cheapest": "günstigst",
+        "cheapestDescription": "Wählt die günstigsten Zeitfenster. Kann zu mehreren Starts und Stopps führen.",
+        "cleanest": "sauberst",
+        "cleanestDescription": "Wählt die saubersten Zeitfenster. Kann zu mehreren Starts und Stopps führen.",
         "continuous": "kontinuierlich",
+        "continuousCo2Description": "Wählt die sauberste unterbrechungsfreie Folge von Zeitfenstern.",
+        "continuousPriceDescription": "Wählt die günstigste unterbrechungsfreie Folge von Zeitfenstern.",
         "label": "Optimierung"
       },
       "planNumber": "Plan {number}",
       "precondition": {
-        "description": "Lade {duration} vor Abfahrt zur Batterie-Vorkonditionierung.",
+        "description": "Verlagert einen Teil des Ladens direkt vor die Abfahrt: warme Batterie, weniger Zeit mit hohem Ladestand.",
         "label": "Spätes Laden",
         "optionAll": "alles",
-        "optionNo": "nein"
+        "optionNo": "nein",
+        "summary": "{precondition} vor Abfahrt"
       },
       "remove": "Entfernen",
       "repeating": "wiederholend",
       "repeatingPlans": "Wiederholende Pläne",
       "selectAll": "Alle wählen",
+      "strategy": {
+        "close": "schließen",
+        "label": "Strategie"
+      },
       "strategyDisabledDescription": "Das Laden startet so spät wie möglich und wird rechtzeitig zur Abfahrt abgeschlossen. Mit dynamischen Netzpreisen oder einem CO₂-Tarif stehen hier weitere Optionen zur Verfügung.",
-      "strategySettings": "Strategie-Einstellungen",
       "time": "Zeit",
       "title": "Plan",
       "unsavedChanges": "Ungespeicherte Änderungen vorhanden. Jetzt anwenden?",
