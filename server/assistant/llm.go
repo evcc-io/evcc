@@ -1,6 +1,7 @@
 package assistant
 
 import (
+	"cmp"
 	"fmt"
 	"strings"
 
@@ -30,7 +31,8 @@ func ollamaUrl(base string) string {
 func newLLM(cfg Config) (llms.Model, error) {
 	switch cfg.Provider {
 	case OpenAI, Custom:
-		opts := []openai.Option{openai.WithModel(cfg.Model), openai.WithToken(cfg.Token)}
+		// local OpenAI-compatible servers ignore the token but it must not be empty
+		opts := []openai.Option{openai.WithModel(cfg.Model), openai.WithToken(cmp.Or(cfg.Token, "-"))}
 		if cfg.BaseUrl != "" {
 			opts = append(opts, openai.WithBaseURL(cfg.BaseUrl))
 		}
