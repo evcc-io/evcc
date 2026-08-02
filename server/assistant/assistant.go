@@ -26,6 +26,9 @@ const maxHistory = 4000
 // maxToolResult bounds a single tool result handed back to the model
 const maxToolResult = 4000
 
+// maxRepeats is how often the same call may repeat before the model counts as stuck
+const maxRepeats = 2
+
 // systemPrompt is embedded at build time, edit prompt.txt to change it
 //
 //go:embed prompt.txt
@@ -253,6 +256,7 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (Result, error)
 	var steps []Step
 	var content string
 	var previous []Call
+	var repeats int
 
 	// keeps a step out of the result when the model reports neither reasoning nor calls
 	addStep := func(step Step) {
@@ -320,9 +324,14 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (Result, error)
 		a.log.DEBUG.Printf("tool round %d: %v", round+1, callSignatures(calls))
 		addStep(Step{Reasoning: reasoning, Calls: calls})
 
-		// the same calls again cannot produce a different result, the model is stuck
-		if slices.Equal(calls, previous) {
-			return incomplete("repeated tool calls")
+		// repeating a call once is a retry, doing it over and over is a model stuck in
+		// a loop. Empty calls are not compared, they equal the nil of the first round.
+		if len(calls) > 0 && slices.Equal(calls, previous) {
+			if repeats++; repeats >= maxRepeats {
+				return incomplete("repeated tool calls")
+			}
+		} else {
+			repeats = 0
 		}
 		previous = calls
 
