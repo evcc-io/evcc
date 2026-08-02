@@ -65,6 +65,7 @@
 					type="url"
 					class="form-control"
 					:required="values.provider === 'custom'"
+					@change="loadModels(values)"
 				/>
 			</FormRow>
 		</template>
@@ -118,8 +119,15 @@ export default defineComponent({
 	},
 	methods: {
 		withDefaults(values?: AssistantConfig): AssistantConfig {
-			if (values?.provider) return values;
-			return { ...values, provider: "openai", model: PROVIDERS.openai.models[0] };
+			const res: AssistantConfig = values?.provider
+				? values
+				: { ...values, provider: "openai", model: PROVIDERS.openai.models[0] };
+
+			// the field offers what arrived by the time it is focused, a datalist
+			// does not open once options are added to it
+			this.loadModels(res);
+
+			return res;
 		},
 		needsToken(values: AssistantConfig): boolean {
 			return values.provider !== "ollama";
@@ -158,6 +166,8 @@ export default defineComponent({
 				values.model = provider.models[0] || "";
 			}
 			if (!values.baseUrl) values.baseUrl = provider.baseUrl;
+
+			this.loadModels(values);
 		},
 	},
 });
