@@ -29,10 +29,13 @@
 			>
 				<input
 					id="assistantModel"
-					v-model="values.model"
 					class="form-control"
 					list="assistantModels"
 					required
+					:value="values.model"
+					@input="values.model = ($event.target as HTMLInputElement).value"
+					@focus="clearWhilePicking"
+					@blur="restoreModel(values, $event)"
 				/>
 				<datalist id="assistantModels">
 					<option v-for="model in models(values)" :key="model" :value="model" />
@@ -136,6 +139,15 @@ export default defineComponent({
 			const suggested = PROVIDERS[values.provider]?.models || [];
 			// the curated ones lead, an endpoint also lists image and embedding models
 			return [...suggested, ...this.offered.filter((m) => !suggested.includes(m))];
+		},
+		// a datalist only offers the options matching what is in the field, so the
+		// value steps aside while picking and comes back when nothing was chosen
+		clearWhilePicking(event: FocusEvent) {
+			(event.target as HTMLInputElement).value = "";
+		},
+		restoreModel(values: AssistantConfig, event: FocusEvent) {
+			const input = event.target as HTMLInputElement;
+			if (!input.value) input.value = values.model || "";
 		},
 		// loadModels asks the endpoint what it offers, silently keeping the
 		// suggestions when it cannot be reached or needs a token first
