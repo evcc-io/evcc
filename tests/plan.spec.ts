@@ -80,7 +80,7 @@ test.describe("basic functionality", async () => {
     await page.getByTestId("static-plan-day").selectOption({ index: 1 });
     await page.getByTestId("static-plan-time").fill("09:30");
     await page.getByTestId("static-plan-soc").selectOption("80%");
-    await page.getByTestId("plan-strategy").getByRole("link", { name: "cheapest" }).click();
+    await page.getByTestId("plan-strategy").getByRole("button", { name: "cheapest" }).click();
     await expect(page.getByLabel("Late Charging")).toBeVisible();
     await page.getByLabel("Late Charging").selectOption("1 hour");
     await page.getByTestId("static-plan-active").click();
@@ -656,7 +656,7 @@ test.describe("repeating", async () => {
     await plan.getByRole("checkbox", { name: tomorrow }).check();
     await plan.getByTestId("repeating-plan-time").fill("09:20");
     await plan.getByTestId("repeating-plan-weekdays").click(); // close dropdown
-    await modal.getByTestId("plan-strategy").getByRole("link", { name: "cheapest" }).click();
+    await modal.getByTestId("plan-strategy").getByRole("button", { name: "cheapest" }).click();
     await expect(modal.getByLabel("Late Charging")).toBeVisible();
     await modal.getByLabel("Late Charging").selectOption("2 hours");
     await plan.getByTestId("repeating-plan-active").click();
@@ -699,7 +699,7 @@ test.describe("plan strategy", async () => {
 
     // Strategy line shows informational note only, not clickable
     await expect(modal.getByTestId("plan-strategy")).toContainText("just in time for departure");
-    await expect(modal.getByTestId("plan-strategy").getByRole("link")).toHaveCount(0);
+    await expect(modal.getByTestId("plan-strategy").getByRole("button")).toHaveCount(0);
     await expect(modal.getByLabel("Optimization")).not.toBeVisible();
     await expect(modal.getByLabel("Late Charging")).not.toBeVisible();
   });
@@ -717,7 +717,7 @@ test.describe("plan strategy", async () => {
     await expect(modal.getByLabel("Optimization")).not.toBeVisible();
     await expect(modal.getByLabel("Late Charging")).not.toBeVisible();
 
-    await modal.getByTestId("plan-strategy").getByRole("link", { name: "cleanest" }).click();
+    await modal.getByTestId("plan-strategy").getByRole("button", { name: "cleanest" }).click();
 
     const optimization = modal.getByLabel("Optimization");
     await expect(optimization).toBeVisible();
@@ -750,7 +750,7 @@ test.describe("plan strategy", async () => {
     await expect(modal.getByTestId("plan-strategy")).toContainText("cheapest");
 
     // Open strategy panel
-    await modal.getByTestId("plan-strategy").getByRole("link", { name: "cheapest" }).click();
+    await modal.getByTestId("plan-strategy").getByRole("button", { name: "cheapest" }).click();
 
     // Strategy controls should be visible and functional
     await expect(modal.getByLabel("Optimization")).toBeVisible();

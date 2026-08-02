@@ -4,7 +4,14 @@
 			<span class="text-uppercase evcc-gray">{{ $t("main.chargingPlan.strategy.label") }}:</span>
 			{{ " " }}
 			<span v-if="disabled" class="small">{{ summary }}</span>
-			<a v-else href="#" class="small" @click.prevent="open = true">{{ summary }}</a>
+			<button
+				v-else
+				type="button"
+				class="btn btn-link small p-0 align-baseline text-start"
+				@click="open = true"
+			>
+				{{ summary }}
+			</button>
 		</div>
 		<div v-else class="mb-2">
 			<span class="text-uppercase evcc-gray">{{ $t("main.chargingPlan.strategy.label") }}</span>
