@@ -2,8 +2,7 @@ template: huawei-sun2000
 products:
   - brand: Huawei
     description:
-      de: SUN2000 Einspeisebegrenzung
-      en: SUN2000 Curtailment
+      generic: SUN2000
 requirements:
   description:
     de: |
