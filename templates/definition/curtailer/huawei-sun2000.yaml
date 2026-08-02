@@ -6,14 +6,10 @@ products:
 requirements:
   description:
     de: |
-      Modbus TCP erfordert die Freischaltung in den Kommunikationseinstellungen des Wechselrichters via "Installateur Zugang", siehe [Modbus TCP Aktivierungs-Anleitung](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
-
       Ist am Einspeisepunkt kein Zähler (DDSU/DTSU666 oder SmartPS) vorhanden, wird nicht die Einspeiseleistung begrenzt, sondern die Wechselrichterleistung.
 
       Kommt ein Huawei SmartAssistant (EMMA) zum Einsatz, muss das entsprechende EMMA-Einspeisebegrenzungsgerät verwendet werden.
     en: |
-      Modbus TCP requires activation within the communication settings of the inverter using an "installer account", see [Modbus TCP Activation Guide](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
-
       If no meter (DDSU/DTSU666 or SmartPS) is installed at the feed-in point, the inverter power is limited rather than the feed-in power.
 
       If a Huawei SmartAssistant (EMMA) is used, the corresponding EMMA feed-in limitation device must be used.
