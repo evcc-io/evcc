@@ -1574,11 +1574,15 @@
           {
             "name": "jq",
             "in": "query",
-            "description": "Filter the state with JQ",
+            "description": "Filter the state with JQ. The keys are top level, the state is not nested under a root key. Query `keys` to list them before filtering, a path that does not exist returns null without an error. Examples: `keys`, `.loadpoints[0]`, `.pv`.",
             "schema": {
               "type": "string"
             },
             "examples": {
+              "keys": {
+                "value": "keys",
+                "summary": "available top level keys"
+              },
               "all": {
                 "value": ".",
                 "summary": "complete state"
@@ -4732,6 +4736,35 @@
           }
         }
       },
+      "AssistantProvider": {
+        "type": "string",
+        "enum": [
+          "openai",
+          "anthropic",
+          "ollama",
+          "custom"
+        ]
+      },
+      "AssistantConfig": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "$ref": "#/components/schemas/AssistantProvider"
+          },
+          "model": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string"
+          },
+          "baseUrl": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider"
+        ]
+      },
       "State": {
         "description": "Complete system state as returned by /api/state and pushed via websocket and MQTT. This structure mirrors the internal UI state and carries no compatibility promise. Fields may change or disappear between releases.",
         "type": "object",
@@ -5090,6 +5123,10 @@
           "demoMode": {
             "description": "Instance runs in demo mode.",
             "type": "boolean"
+          },
+          "assistant": {
+            "$ref": "#/components/schemas/AssistantConfig",
+            "description": "Built-in AI assistant configuration."
           }
         },
         "required": [
