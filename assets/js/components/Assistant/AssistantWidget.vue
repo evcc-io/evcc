@@ -23,6 +23,16 @@
 				<AssistantIcon class="flex-shrink-0" />
 				<strong class="flex-grow-1 text-truncate">{{ $t("assistant.title") }}</strong>
 				<button
+					type="button"
+					class="btn btn-sm btn-link px-1"
+					:class="showThinking ? 'text-primary' : 'text-muted'"
+					:aria-pressed="showThinking"
+					data-testid="assistant-thinking-toggle"
+					@click="showThinking = !showThinking"
+				>
+					{{ $t("assistant.showThinking") }}
+				</button>
+				<button
 					v-if="messages.length"
 					type="button"
 					class="btn btn-sm btn-link text-muted px-1"
@@ -44,7 +54,7 @@
 				</p>
 				<div v-for="(m, i) in messages" :key="i" class="message" :class="`message-${m.role}`">
 					<template v-if="m.role === 'assistant'">
-						<AssistantSteps :steps="m.steps || []" />
+						<AssistantSteps v-if="showThinking" :steps="m.steps || []" />
 						<Markdown :markdown="m.content" />
 					</template>
 					<span v-else>{{ m.content }}</span>
@@ -90,6 +100,7 @@ import AssistantIcon from "../MaterialIcon/Assistant.vue";
 import AssistantSteps from "./AssistantSteps.vue";
 import Markdown from "../Config/Markdown.vue";
 import api from "@/api";
+import settings from "@/settings";
 import type { AssistantMessage } from "@/types/evcc";
 
 export default defineComponent({
@@ -122,6 +133,17 @@ export default defineComponent({
 			this.unread = false;
 			this.focusInput();
 			this.scrollDown();
+		},
+	},
+	computed: {
+		// ui only, the steps always arrive and are only shown on request
+		showThinking: {
+			get(): boolean {
+				return settings.assistantThinking;
+			},
+			set(value: boolean) {
+				settings.assistantThinking = value;
+			},
 		},
 	},
 	methods: {
