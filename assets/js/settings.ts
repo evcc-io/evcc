@@ -22,6 +22,7 @@ const SESSIONS_TYPE = "sessions_type";
 const BATTERY_UNIT = "battery_unit";
 const SETTINGS_PRICE_ZOOM = "settings_price_zoom";
 const SETTINGS_HIDE_FEEDIN = "settings_hide_feedin";
+const SETTINGS_ASSISTANT_THINKING = "settings_assistant_thinking";
 const LAST_BATTERY_SMART_COST_LIMIT = "last_battery_smart_cost_limit";
 const LAST_TARGET_TIME = "last_target_time";
 const LAST_SOC_GOAL = "last_soc_goal";
@@ -127,6 +128,7 @@ export interface Settings {
   batteryUnit: string;
   priceZoom: boolean;
   hideFeedin: boolean;
+  assistantThinking: boolean;
   loadpoints: Record<string, LoadpointSettings>;
   lastBatterySmartCostLimit: number | undefined;
   lastTargetTime: string | null;
@@ -156,6 +158,7 @@ const settings: Settings = reactive({
   batteryUnit: read(BATTERY_UNIT),
   priceZoom: readBool(SETTINGS_PRICE_ZOOM),
   hideFeedin: readBool(SETTINGS_HIDE_FEEDIN),
+  assistantThinking: readBool(SETTINGS_ASSISTANT_THINKING),
   loadpoints: readJSON(LOADPOINTS),
   lastBatterySmartCostLimit: readNumber(LAST_BATTERY_SMART_COST_LIMIT),
   lastTargetTime: read(LAST_TARGET_TIME),
@@ -184,6 +187,7 @@ watch(() => settings.sessionsType, save(SESSIONS_TYPE));
 watch(() => settings.batteryUnit, save(BATTERY_UNIT));
 watch(() => settings.priceZoom, saveBool(SETTINGS_PRICE_ZOOM));
 watch(() => settings.hideFeedin, saveBool(SETTINGS_HIDE_FEEDIN));
+watch(() => settings.assistantThinking, saveBool(SETTINGS_ASSISTANT_THINKING));
 watch(() => settings.loadpoints, saveJSON(LOADPOINTS), { deep: true });
 watch(() => settings.lastBatterySmartCostLimit, saveNumber(LAST_BATTERY_SMART_COST_LIMIT));
 watch(() => settings.lastTargetTime, save(LAST_TARGET_TIME));
