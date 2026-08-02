@@ -177,6 +177,39 @@ func TestExhaustedRoundsAnswer(t *testing.T) {
 	assert.Len(t, out.Steps, maxIterations)
 }
 
+func TestEmptyAnswerRetries(t *testing.T) {
+	llm := &fakeLLM{responses: []*llms.ContentResponse{
+		// everything in the reasoning, nothing said out loud
+		{Choices: []*llms.ContentChoice{{Content: "\n\n", ReasoningContent: "the mode is pv"}}},
+		{Choices: []*llms.ContentChoice{{Content: "The mode is pv."}}},
+	}}
+
+	a, err := newAssistant(t.Context(), llm, testServer(t))
+	require.NoError(t, err)
+	defer a.Close()
+
+	res, err := a.Chat(t.Context(), []Message{{Role: "user", Content: "mode?"}})
+	require.NoError(t, err)
+
+	assert.Equal(t, "The mode is pv.", res.Content)
+	assert.Len(t, llm.seen, 2)
+	assert.Equal(t, "the mode is pv", res.Steps[0].Reasoning)
+}
+
+func TestSilentModelFails(t *testing.T) {
+	llm := &fakeLLM{responses: []*llms.ContentResponse{
+		{Choices: []*llms.ContentChoice{{Content: "  "}}},
+		{Choices: []*llms.ContentChoice{{Content: ""}}},
+	}}
+
+	a, err := newAssistant(t.Context(), llm, testServer(t))
+	require.NoError(t, err)
+	defer a.Close()
+
+	_, err = a.Chat(t.Context(), []Message{{Role: "user", Content: "mode?"}})
+	assert.EqualError(t, err, "empty answer")
+}
+
 func TestTruncateResult(t *testing.T) {
 	assert.Equal(t, "short", truncateResult("short"))
 
