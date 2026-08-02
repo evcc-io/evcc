@@ -271,8 +271,10 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (Result, error)
 
 		if resp, err := a.llm.GenerateContent(ctx, messages); err != nil {
 			a.log.ERROR.Println(err)
-		} else if len(resp.Choices) > 0 && resp.Choices[0].Content != "" {
-			return Result{Content: resp.Choices[0].Content, Steps: steps}, nil
+		} else if len(resp.Choices) > 0 {
+			if answer := strings.TrimSpace(resp.Choices[0].Content); answer != "" {
+				return Result{Content: answer, Steps: steps}, nil
+			}
 		}
 
 		if content == "" {
@@ -295,16 +297,23 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (Result, error)
 		choice := resp.Choices[0]
 		reasoning := strings.TrimSpace(choice.ReasoningContent)
 
-		if choice.Content != "" {
-			content = choice.Content
+		answer := strings.TrimSpace(choice.Content)
+		if answer != "" {
+			content = answer
 		}
 
 		if len(choice.ToolCalls) == 0 {
-			// zero rounds means the model answered from its own knowledge
-			a.log.DEBUG.Printf("answer after %d tool rounds", round)
 			addStep(Step{Reasoning: reasoning})
 
-			return Result{Content: choice.Content, Steps: steps}, nil
+			// a model that puts everything into its reasoning has not answered yet
+			if answer == "" {
+				return incomplete("empty answer")
+			}
+
+			// zero rounds means the model answered from its own knowledge
+			a.log.DEBUG.Printf("answer after %d tool rounds", round)
+
+			return Result{Content: answer, Steps: steps}, nil
 		}
 
 		calls := roundCalls(choice.ToolCalls)
