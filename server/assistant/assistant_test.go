@@ -78,6 +78,13 @@ func TestToolLoop(t *testing.T) {
 	assert.ElementsMatch(t, []string{findToolsName, callToolName}, toolNames(a.tools))
 	assert.ElementsMatch(t, []string{"getSoc", "failing"}, toolNames(a.catalog))
 
+	var streamed []Step
+	a.WithSteps(func(step Step) {
+		// the step is handed over while the answer is still being worked on
+		assert.Len(t, llm.responses, 1, "step reported after the last round")
+		streamed = append(streamed, step)
+	})
+
 	res, err := a.Chat(ctx, []Message{{Role: "user", Content: "what is the soc?"}})
 	require.NoError(t, err)
 	assert.Equal(t, "The vehicle is at 42%.", res.Content)
@@ -85,6 +92,7 @@ func TestToolLoop(t *testing.T) {
 	// the tool round is reported as intermediate work
 	require.Len(t, res.Steps, 1)
 	assert.Equal(t, []Call{{Name: "getSoc", Arguments: `{"loadpoint":1}`}}, res.Steps[0].Calls)
+	assert.Equal(t, res.Steps, streamed)
 
 	// second round trip contains the tool result
 	second := llm.seen[1]

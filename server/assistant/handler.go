@@ -21,6 +21,14 @@ type chatRequest struct {
 	Context  string    `json:"context,omitempty"`
 }
 
+// chatEvent is a single line of the ndjson response. Steps are sent as they happen,
+// the result closes the stream. Errors before the first line keep their status code.
+type chatEvent struct {
+	Step   *Step   `json:"step,omitempty"`
+	Result *Result `json:"result,omitempty"`
+	Error  string  `json:"error,omitempty"`
+}
+
 // ChatHandler answers questions using the configured model and evcc's own MCP tools.
 // The MCP server is built lazily and reused, host serves the internal api requests.
 func ChatHandler(host http.Handler) http.HandlerFunc {
@@ -55,8 +63,10 @@ func ChatHandler(host http.Handler) http.HandlerFunc {
 		ctx, cancel := context.WithTimeout(r.Context(), chatTimeout)
 		defer cancel()
 
+		rc := http.NewResponseController(w)
+
 		// model responses outlive the server's default write timeout
-		_ = http.NewResponseController(w).SetWriteDeadline(time.Now().Add(chatTimeout))
+		_ = rc.SetWriteDeadline(time.Now().Add(chatTimeout))
 
 		a, err := New(ctx, cfg, srv)
 		if err != nil {
@@ -65,13 +75,33 @@ func ChatHandler(host http.Handler) http.HandlerFunc {
 		}
 		defer a.Close()
 
-		res, err := a.WithContext(req.Context).Chat(ctx, req.Messages)
+		// the answer takes tool rounds to arrive, the steps are shown while it is worked on
+		w.Header().Set("Content-Type", "application/x-ndjson")
+		enc := json.NewEncoder(w)
+
+		var streamed bool
+		send := func(ev chatEvent) {
+			streamed = true
+			_ = enc.Encode(ev)
+			_ = rc.Flush()
+		}
+
+		res, err := a.WithContext(req.Context).WithSteps(func(step Step) {
+			send(chatEvent{Step: &step})
+		}).Chat(ctx, req.Messages)
+
+		// a model that fails before the first step still gets its status code, afterwards
+		// the response is long committed and the error has to go into the stream
 		if err != nil {
-			jsonError(w, http.StatusBadGateway, err)
+			if !streamed {
+				jsonError(w, http.StatusBadGateway, err)
+				return
+			}
+			send(chatEvent{Error: err.Error()})
 			return
 		}
 
-		jsonWrite(w, res)
+		send(chatEvent{Result: &res})
 	}
 }
 

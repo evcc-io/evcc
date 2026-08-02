@@ -61,9 +61,12 @@
 					</template>
 					<span v-else>{{ m.content }}</span>
 				</div>
-				<div v-if="pending" class="text-muted d-flex align-items-center gap-2">
-					<span class="spinner-border spinner-border-sm" role="status"></span>
-					{{ $t("assistant.thinking") }}
+				<div v-if="pending">
+					<AssistantSteps v-if="showThinking" :steps="liveSteps" />
+					<div class="text-muted d-flex align-items-center gap-2">
+						<span class="spinner-border spinner-border-sm" role="status"></span>
+						{{ $t("assistant.thinking") }}
+					</div>
 				</div>
 				<p v-if="error" class="text-danger mb-0">{{ error }}</p>
 			</div>
@@ -102,8 +105,14 @@ import AssistantIcon from "../MaterialIcon/Assistant.vue";
 import AssistantSteps from "./AssistantSteps.vue";
 import Markdown from "../Config/Markdown.vue";
 import api from "@/api";
+import { openLoginModal } from "@/components/Auth/auth";
 import settings from "@/settings";
-import type { AssistantMessage } from "@/types/evcc";
+import type {
+	AssistantEvent,
+	AssistantMessage,
+	AssistantResult,
+	AssistantStep,
+} from "@/types/evcc";
 
 export default defineComponent({
 	name: "AssistantWidget",
@@ -119,6 +128,8 @@ export default defineComponent({
 			question: "",
 			error: "",
 			messages: [] as AssistantMessage[],
+			// steps of the running question, shown until the answer replaces them
+			liveSteps: [] as AssistantStep[],
 			// asked questions, oldest first, browsed with cursor up/down
 			history: [] as string[],
 			// position in history, -1 while editing the unsent draft
@@ -201,6 +212,26 @@ export default defineComponent({
 				if (log) log.scrollTop = log.scrollHeight;
 			});
 		},
+		// readEvents hands over each ndjson line as it arrives, a line may be split across chunks
+		async readEvents(body: ReadableStream<Uint8Array>, onEvent: (ev: AssistantEvent) => void) {
+			const reader = body.getReader();
+			const decoder = new TextDecoder();
+			let buffer = "";
+
+			for (;;) {
+				const { done, value } = await reader.read();
+				if (done) return;
+
+				buffer += decoder.decode(value, { stream: true });
+				const lines = buffer.split("\n");
+				// the last piece is only complete once its newline arrives
+				buffer = lines.pop() || "";
+
+				for (const line of lines) {
+					if (line.trim()) onEvent(JSON.parse(line));
+				}
+			}
+		},
 		async submit() {
 			const content = this.question.trim();
 			if (!content || this.pending) return;
@@ -213,6 +244,7 @@ export default defineComponent({
 
 			this.question = "";
 			this.error = "";
+			this.liveSteps = [];
 			this.messages.push({ role: "user", content });
 			this.pending = true;
 			this.scrollDown();
@@ -222,27 +254,41 @@ export default defineComponent({
 			const conversation = this.messages;
 
 			try {
-				const res = await api.post(
-					"/assistant/chat",
+				const res = await fetch(`${api.defaults.baseURL}assistant/chat`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
 					// steps are display only, sending them back would bloat every request
-					{
+					body: JSON.stringify({
 						messages: this.messages.map(({ role, content }) => ({ role, content })),
 						context: this.context,
-					},
-					{
-						signal: controller.signal,
-						validateStatus: (code) => [200, 400, 412, 500, 502].includes(code),
-					}
-				);
-				if (res.status === 200) {
-					this.messages.push({
-						role: "assistant",
-						content: res.data.content,
-						steps: res.data.steps,
-					});
-					if (!this.open) this.unread = true;
+					}),
+					signal: controller.signal,
+				});
+
+				if (!res.ok || !res.body) {
+					if (res.status === 401) openLoginModal();
+					const data = await res.json().catch(() => null);
+					this.error = data?.error || res.statusText;
 				} else {
-					this.error = res.data?.error || res.statusText;
+					let result: AssistantResult | undefined;
+
+					await this.readEvents(res.body, (ev) => {
+						if (ev.step) {
+							this.liveSteps.push(ev.step);
+							this.scrollDown();
+						}
+						if (ev.error) this.error = ev.error;
+						if (ev.result) result = ev.result;
+					});
+
+					if (result) {
+						this.messages.push({
+							role: "assistant",
+							content: result.content,
+							steps: result.steps,
+						});
+						if (!this.open) this.unread = true;
+					}
 				}
 			} catch (e: any) {
 				if (controller.signal.aborted) {
