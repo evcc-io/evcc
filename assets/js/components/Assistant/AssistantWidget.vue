@@ -34,7 +34,7 @@
 					type="button"
 					class="btn-close"
 					:aria-label="$t('assistant.close')"
-					@click="open = false"
+					@click="close"
 				></button>
 			</div>
 
@@ -121,6 +121,10 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		// close hides the panel, the conversation keeps running in the background
+		close() {
+			this.open = false;
+		},
 		reset() {
 			this.abort();
 			this.messages = [];
