@@ -2,7 +2,7 @@ template: huawei-sun2000
 products:
   - brand: Huawei
     description:
-      generic: EMMA
+      generic: SmartAssistant (EMMA)
 params:
   - name: modbus
     choice: ["tcpip"]
