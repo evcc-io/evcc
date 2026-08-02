@@ -165,6 +165,18 @@ export interface AssistantMessage {
   steps?: AssistantStep[];
 }
 
+export interface AssistantResult {
+  content: string;
+  steps?: AssistantStep[];
+}
+
+// AssistantEvent is one line of the streamed answer, steps arrive before the result
+export interface AssistantEvent {
+  step?: AssistantStep;
+  result?: AssistantResult;
+  error?: string;
+}
+
 export interface ConfigStatus<C, S> {
   config?: C;
   status?: S;

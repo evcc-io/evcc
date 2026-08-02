@@ -68,6 +68,7 @@ type Assistant struct {
 	tools   []llms.Tool // offered to the model
 	catalog []llms.Tool // searchable through findTools
 	context string
+	onStep  func(Step) // reports a finished round while the answer is still being worked on
 }
 
 // New connects a language model to the given MCP server
@@ -118,6 +119,12 @@ func newAssistant(ctx context.Context, llm llms.Model, srv *mcpsdk.Server) (*Ass
 // WithContext adds situational context, e.g. the ui page the question was asked from
 func (a *Assistant) WithContext(s string) *Assistant {
 	a.context = s
+	return a
+}
+
+// WithSteps reports each round as it finishes, the caller can show the work before the answer
+func (a *Assistant) WithSteps(f func(Step)) *Assistant {
+	a.onStep = f
 	return a
 }
 
@@ -262,6 +269,9 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (Result, error)
 	addStep := func(step Step) {
 		if step.Reasoning != "" || len(step.Calls) > 0 {
 			steps = append(steps, step)
+			if a.onStep != nil {
+				a.onStep(step)
+			}
 		}
 	}
 
