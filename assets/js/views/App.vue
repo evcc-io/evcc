@@ -6,7 +6,8 @@
 			:offline="offline"
 		></router-view>
 
-		<BottomTabBar v-bind="bottomTabBarProps" />
+		<!-- the tab bar shares the assistant's z-index, its menu would open behind the panel -->
+		<BottomTabBar v-bind="bottomTabBarProps" @click="closeAssistant" />
 
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
 		<VehicleSettingsModal :vehicles="vehicleList" :loadpoints="state.uiLoadpoints" />
@@ -17,7 +18,7 @@
 		<OfflineIndicator v-bind="offlineIndicatorProps" />
 
 		<!-- app level, so the conversation survives navigation and stays alive while minimized -->
-		<AssistantWidget v-if="assistantConfigured" :context="assistantContext" />
+		<AssistantWidget v-if="assistantConfigured" ref="assistant" :context="assistantContext" />
 	</div>
 </template>
 
@@ -156,6 +157,12 @@ export default defineComponent({
 		window.removeEventListener("pageshow", this.pageShowHandler);
 	},
 	methods: {
+		closeAssistant() {
+			const assistant = this.$refs["assistant"] as
+				| InstanceType<typeof AssistantWidget>
+				| undefined;
+			assistant?.close();
+		},
 		clearReconnectTimeout() {
 			if (this.reconnectTimeout) {
 				window.clearTimeout(this.reconnectTimeout);
