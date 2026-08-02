@@ -42,6 +42,7 @@
       },
       "bufferTitle": "Kaupiklis kaip įkrovimo buferis",
       "discharge": "Neleiskite iškrauti kaupiklio greituoju režimu ir planuojamo įkrovimo metu.",
+      "gridDischarge": "Leisti kaupikliui išsikrauti į tinklą.",
       "priority": "Kaupiklis turi prioritetą, kol jo įkrova yra mažesnė nei {soc}. Po to įkrovikliai gauna perteklių.",
       "priorityNone": "Saulės energijos perteklius patenka tiesiai į įkroviklius. Nustatykite reikšmę, didesnę nei {soc}, kad pirmenybė būtų teikiama kaupikliui.",
       "priorityTitle": "Kur pirmiausia nukeliaus perteklius?"
@@ -379,7 +380,11 @@
       "noEvents": "Kol kas neužfiksuota jokių įvykių.",
       "recordedEvents": "Įrašyti įvykiai",
       "template": "Integracija",
-      "title": "Išorinė riba"
+      "title": "Išorinė riba",
+      "type": {
+        "custom": "Vartotojo apibrėžta integracija",
+        "relay": "Vartotojo apibrėžta integracija (relė)"
+      }
     },
     "icon": {
       "change": "pakeisti",
