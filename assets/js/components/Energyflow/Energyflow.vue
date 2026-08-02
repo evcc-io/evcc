@@ -513,7 +513,7 @@ export default defineComponent({
 		},
 		batteryGridChargeLimitFmt() {
 			if (!this.batteryGridChargeLimitSet) {
-				return;
+				return undefined;
 			}
 			if (this.smartCostCo2) {
 				return this.fmtCo2Short(this.batteryGridChargeLimit);

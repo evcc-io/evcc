@@ -766,7 +766,13 @@ export interface SelectOption<T> {
 }
 
 export type DeviceType =
-  "charger" | "meter" | "vehicle" | "loadpoint" | "messenger" | "tariff" | "hems";
+  | "charger"
+  | "meter"
+  | "vehicle"
+  | "loadpoint"
+  | "messenger"
+  | "tariff"
+  | "hems";
 export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext" | "consumer";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
 export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar" | "temperature";
