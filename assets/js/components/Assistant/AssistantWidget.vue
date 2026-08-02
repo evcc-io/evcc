@@ -306,6 +306,10 @@ export default defineComponent({
 .head {
 	border-bottom: 1px solid var(--evcc-box-border);
 }
+.log {
+	/* prevent scroll chaining from the conversation to the page behind it */
+	overscroll-behavior: contain;
+}
 .foot {
 	border-top: 1px solid var(--evcc-box-border);
 }
