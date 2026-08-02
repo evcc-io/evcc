@@ -28,7 +28,6 @@ params:
   - preset: battery-params
   - name: defaultmode
     default: 0 # "SelfUse"
-    advanced: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}

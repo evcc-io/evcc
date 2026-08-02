@@ -9,16 +9,15 @@ requirements:
       Requires `access` and `refresh` tokens. These can be generated with command `evcc token [name]`.
 params:
   - preset: vehicle-common
+  - preset: vehicle-online
   - name: user
     required: true
   - name: password
     deprecated: true
   - name: accessToken
     required: true
-    mask: true
   - name: refreshToken
     required: true
-    mask: true
   - name: vin
     example: V...
   - name: cache
@@ -32,3 +31,4 @@ render: |
     refresh: {{ .refreshToken }}
   {{ include "vehicle-common" . }}
   cache: {{ .cache }}
+  {{ include "vehicle-features" . }}

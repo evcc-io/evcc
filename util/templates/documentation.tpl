@@ -77,6 +77,16 @@ requirements: ["{{ join "\", \"" .Requirements }}"]
 description: |
 {{ .RequirementDescription | indent 2 }}
 {{- end }}
+{{- if .Caveats }}
+caveats:
+{{- range .Caveats }}
+  - description: |
+{{ .Description | indent 6 }}
+{{- if .Link }}
+    link: {{ .Link }}
+{{- end }}
+{{- end }}
+{{- end }}
 render:
 {{- if .Usages -}}
 {{- $content := . }}

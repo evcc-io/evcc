@@ -1,5 +1,5 @@
 <template>
-	<div class="mb-4">
+	<div>
 		<div class="table-responsive">
 			<table class="table">
 				<thead>

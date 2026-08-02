@@ -108,6 +108,16 @@ func ConfigurationsByClass(class templates.Class) ([]Config, error) {
 	return res, tx.Error
 }
 
+// ConfigurationByClass returns the single configuration for class, or nil if none
+func ConfigurationByClass(class templates.Class) (*Config, error) {
+	configs, err := ConfigurationsByClass(class)
+	if err != nil || len(configs) == 0 {
+		return nil, err
+	}
+
+	return &configs[0], nil
+}
+
 // ConfigByID returns device by id from the database
 func ConfigByID(id int) (Config, error) {
 	var config Config

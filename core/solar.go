@@ -51,6 +51,11 @@ func solarEnergy(rr api.Rates, from, to time.Time) float64 {
 		panic("from cannot be after to")
 	}
 
+	// no rates- nothing to integrate
+	if len(rr) == 0 {
+		return 0
+	}
+
 	idx, ok := search(rr, from)
 	if !ok {
 		switch {
@@ -58,8 +63,11 @@ func solarEnergy(rr api.Rates, from, to time.Time) float64 {
 			// from is just before or after last entry
 			return 0
 		case idx == 0:
-			// from is before first entry
-			// do nothing- we ignore anything before the first entry
+			// from is before first entry- we ignore anything before the first entry
+			if !rr[0].Start.Before(to) {
+				// the whole interval is before the first entry
+				return 0
+			}
 		default:
 			// from is between two entries
 			r := &rr[idx]

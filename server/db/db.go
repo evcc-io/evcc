@@ -13,6 +13,7 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"gorm.io/gorm"
 	sqlite3 "modernc.org/sqlite"
+	sqlite3lib "modernc.org/sqlite/lib"
 )
 
 var (
@@ -29,13 +30,6 @@ func New(driver, dsn string) (*gorm.DB, error) {
 
 	switch driver {
 	case "sqlite":
-
-		// Example DSNs:
-		//"path/to/database.db"
-		// "~/database.db",
-		// "database.db?cache=shared&journal_mode=WAL"
-		// ":memory:"
-
 		// Split database path and connection parameters
 		dbPath, params, _ := strings.Cut(dsn, "?")
 
@@ -52,18 +46,17 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		filePath = file
 
 		// TODO WAL mode "journal_mode(WAL)", "synchronous(NORMAL)"
-		for _, pragma := range []string{"foreign_keys(1)", "auto_vacuum(INCREMENTAL)"} {
-			// Add busy_timeout pragma if not already present
+		for _, pragma := range []string{"busy_timeout(5000)", "foreign_keys(1)", "auto_vacuum(INCREMENTAL)"} {
+			// add pragma if not already present
 			if short, _, _ := strings.Cut(pragma, "("); strings.Contains(params, "_pragma="+short) {
 				continue
 			}
 
-			// Append '&' if there are existing connection parameters
+			// append '&' if there are existing connection parameters
 			if len(params) > 0 {
 				params += "&"
 			}
 
-			// Add busy_timeout pragma to connection parameters
 			params += "_pragma=" + pragma
 		}
 
@@ -80,9 +73,20 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		return nil, fmt.Errorf("invalid database type: %s not in [sqlite]", driver)
 	}
 
-	return gorm.Open(dialect, &gorm.Config{
+	db, err := gorm.Open(dialect, &gorm.Config{
 		Logger: &Logger{util.NewLogger("db")},
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	// sqlite allows a single writer; serialize on one connection so concurrent
+	// writes wait on busy_timeout instead of failing with SQLITE_BUSY.
+	if sqlDB, err := db.DB(); err == nil {
+		sqlDB.SetMaxOpenConns(1)
+	}
+
+	return db, nil
 }
 
 func NewInstance(driver, dsn string) error {
@@ -111,6 +115,13 @@ func Close() error {
 		return err
 	}
 	return db.Close()
+}
+
+// IsReadonly reports whether err indicates a database file that is not
+// writable by the current user. The code mask covers extended result codes.
+func IsReadonly(err error) bool {
+	var serr *sqlite3.Error
+	return errors.As(err, &serr) && serr.Code()&0xff == sqlite3lib.SQLITE_READONLY
 }
 
 type backuper interface {

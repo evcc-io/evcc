@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { createServiceEndpoints, type TemplateParam } from "./index";
 
 const buildParam = (name: string, service?: string): TemplateParam => ({

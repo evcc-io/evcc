@@ -7,6 +7,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 	"github.com/stretchr/testify/suite"
 )
@@ -25,7 +26,7 @@ type connTestSuite struct {
 func (suite *connTestSuite) SetupTest() {
 	// setup instance
 	Instance()
-	suite.cp = NewChargePoint(util.NewLogger("foo"), "abc")
+	suite.cp = NewChargePoint(util.NewLogger("foo"), instance, "abc")
 	suite.conn, _ = NewConnector(suite.T().Context(), util.NewLogger("foo"), 1, suite.cp, "", Timeout)
 
 	suite.clock = clock.NewMock()
@@ -111,6 +112,33 @@ func (suite *connTestSuite) TestConnectorMeasurementsNoTxn() {
 	suite.Equal(res3, 1.0, "Voltages")
 }
 
+func (suite *connTestSuite) TestConnectorEnergyOnlyNoTxn() {
+	// connected, no txn, only energy register reported (e.g. Mennekes ACU while idle)
+	suite.conn.measurements[types.MeasurandEnergyActiveImportRegister] = types.SampledValue{Value: "1000", Unit: types.UnitOfMeasureWh}
+	suite.conn.meterUpdated = suite.clock.Now()
+
+	// no power measurand but no running txn: report zero instead of ErrNotAvailable
+	res, err := suite.conn.CurrentPower()
+	suite.NoError(err, "CurrentPower")
+	suite.Equal(0.0, res, "CurrentPower")
+
+	// energy is still reported
+	res, err = suite.conn.TotalEnergy()
+	suite.NoError(err, "TotalEnergy")
+	suite.Equal(1.0, res, "TotalEnergy")
+}
+
+func (suite *connTestSuite) TestConnectorEnergyOnlyRunningTxn() {
+	// connected, running txn, only energy register reported and no power yet
+	suite.conn.measurements[types.MeasurandEnergyActiveImportRegister] = types.SampledValue{Value: "1000", Unit: types.UnitOfMeasureWh}
+	suite.conn.meterUpdated = suite.clock.Now()
+	suite.conn.txnId = 1
+
+	// missing power during an active txn must still surface as not available
+	_, err := suite.conn.CurrentPower()
+	suite.Equal(api.ErrNotAvailable, err, "CurrentPower")
+}
+
 func (suite *connTestSuite) TestConnectorMeasurementsRunningTxnOutdated() {
 	// connected, running txn, no meter update since 1 hour
 	suite.addMeasurements()
@@ -150,6 +178,89 @@ func (suite *connTestSuite) TestConnectorMeasurementsRunningTxn() {
 	suite.NoError(err, "Currents")
 	_, _, _, err = suite.conn.Voltages()
 	suite.NoError(err, "Voltages")
+}
+
+// TestOnStatusNotificationClearsStaleTxn ensures that a transaction left over
+// from a previous session (e.g. because the charger never sent StopTransaction,
+// like the Zaptec Go 2 in local OCPP mode) is cleared when the connector
+// returns to Available, so the next Preparing can trigger RemoteStartTransaction.
+func (suite *connTestSuite) TestOnStatusNotificationClearsStaleTxn() {
+	suite.conn.remoteIdTag = "evcc"
+	suite.conn.txnId = 42
+	suite.conn.idTag = "stale"
+
+	_, err := suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+		ConnectorId: 1,
+		Status:      core.ChargePointStatusAvailable,
+		ErrorCode:   core.NoError,
+		Timestamp:   types.NewDateTime(suite.clock.Now()),
+	})
+	suite.NoError(err)
+	suite.Equal(0, suite.conn.txnId, "txnId should be cleared on Available")
+	suite.Equal("", suite.conn.idTag, "idTag should be cleared on Available")
+
+	// next Preparing notification must now satisfy NeedsAuthentication
+	_, err = suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+		ConnectorId: 1,
+		Status:      core.ChargePointStatusPreparing,
+		ErrorCode:   core.NoError,
+		Timestamp:   types.NewDateTime(suite.clock.Now().Add(time.Second)),
+	})
+	suite.NoError(err)
+	suite.True(suite.conn.NeedsAuthentication(), "Preparing after Available should require authentication")
+}
+
+// TestOnStatusNotificationKeepsActiveTxn ensures that an active transaction is
+// not cleared by transient status notifications other than Available.
+func (suite *connTestSuite) TestOnStatusNotificationKeepsActiveTxn() {
+	suite.conn.txnId = 42
+	suite.conn.idTag = "active"
+
+	for _, status := range []core.ChargePointStatus{
+		core.ChargePointStatusCharging,
+		core.ChargePointStatusSuspendedEV,
+		core.ChargePointStatusSuspendedEVSE,
+		core.ChargePointStatusFinishing,
+	} {
+		_, err := suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+			ConnectorId: 1,
+			Status:      status,
+			ErrorCode:   core.NoError,
+			Timestamp:   types.NewDateTime(suite.clock.Now()),
+		})
+		suite.NoError(err)
+		suite.Equalf(42, suite.conn.txnId, "txnId must survive %s", status)
+		suite.Equalf("active", suite.conn.idTag, "idTag must survive %s", status)
+		suite.clock.Add(time.Second)
+	}
+}
+
+// TestOnStatusNotificationKeepsTxnOnIgnoredAvailable ensures we do not clear
+// transaction state when an Available notification is rejected due to an
+// outdated timestamp (i.e. the cached status remains the current one).
+func (suite *connTestSuite) TestOnStatusNotificationKeepsTxnOnIgnoredAvailable() {
+	// prime with a recent Charging status
+	_, err := suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+		ConnectorId: 1,
+		Status:      core.ChargePointStatusCharging,
+		ErrorCode:   core.NoError,
+		Timestamp:   types.NewDateTime(suite.clock.Now()),
+	})
+	suite.NoError(err)
+	suite.conn.txnId = 42
+	suite.conn.idTag = "active"
+
+	// out-of-order Available with an older timestamp must be ignored
+	// and must not clear the running transaction
+	_, err = suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+		ConnectorId: 1,
+		Status:      core.ChargePointStatusAvailable,
+		ErrorCode:   core.NoError,
+		Timestamp:   types.NewDateTime(suite.clock.Now().Add(-time.Minute)),
+	})
+	suite.NoError(err)
+	suite.Equal(42, suite.conn.txnId, "txnId must survive ignored Available")
+	suite.Equal("active", suite.conn.idTag, "idTag must survive ignored Available")
 }
 
 func (suite *connTestSuite) TestOnStopTransactionResetsReportedPower() {

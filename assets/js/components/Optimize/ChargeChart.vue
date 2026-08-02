@@ -1,5 +1,5 @@
 <template>
-	<div class="mb-5">
+	<div>
 		<div class="chart-container my-3">
 			<Chart
 				ref="chartRef"

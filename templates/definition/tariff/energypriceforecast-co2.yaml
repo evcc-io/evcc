@@ -1,0 +1,33 @@
+template: energypriceforecast-co2
+products:
+  - brand: Energy Price Forecast EU
+    description:
+      generic: CO₂
+requirements:
+  description:
+    de: "5 Tage Prognose [energypriceforecast.eu](https://energypriceforecast.eu/de/evcc-strompreis-co2-prognose/)"
+    en: "5 days prognosis [energypriceforecast.eu](https://energypriceforecast.eu)"
+  evcc: ["skiptest"]
+group: co2
+countries: ["DE", "NL", "BE", "DK"]
+params:
+  - name: region
+    example: DE
+    type: choice
+    choice: ["DE", "NL", "BE", "DK1", "DK2"]
+    required: true
+  - name: horizon
+    default: 120
+    type: int
+    unit: h
+    description:
+      en: Forecast horizon
+      de: Prognosehorizont
+    required: true
+render: |
+  type: custom
+  features: ["cacheable"]
+  tariff: co2
+  forecast:
+    source: http
+    uri: https://api.energypriceforecast.eu/api/v1/evcc/tariff?country={{.region}}&type=co2&hours={{.horizon}}

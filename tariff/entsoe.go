@@ -125,14 +125,18 @@ func (t *Entsoe) run(done chan error) {
 				return backoff.Permanent(errors.New("invalid document name: " + doc.XMLName.Local))
 			}
 		}, bo()); err != nil {
-			once.Do(func() { done <- err })
+			if reportError(&once, done, err) {
+				return
+			}
 
 			t.log.ERROR.Println(err)
 			continue
 		}
 
 		if len(tr.TimeSeries) == 0 {
-			once.Do(func() { done <- entsoe.ErrInvalidData })
+			if reportError(&once, done, entsoe.ErrInvalidData) {
+				return
+			}
 			t.log.ERROR.Println(entsoe.ErrInvalidData)
 			continue
 		}
@@ -140,7 +144,9 @@ func (t *Entsoe) run(done chan error) {
 		// extract desired series
 		res, err := entsoe.GetTsPriceData(tr.TimeSeries, entsoe.ResolutionQuarterHour)
 		if err != nil {
-			once.Do(func() { done <- err })
+			if reportError(&once, done, err) {
+				return
+			}
 			t.log.ERROR.Println(err)
 			continue
 		}

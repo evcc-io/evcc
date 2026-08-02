@@ -7,7 +7,7 @@ products:
   - brand: Sunsynk
     description:
       generic: 3p hybrid inverter
-capabilities: ["battery-control"]
+capabilities: ["battery-control", "curtail"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -16,6 +16,7 @@ params:
     baudrate: 9600
     id: 1
   - name: maxacpower
+    required: true
   - name: storageunit
     choice: ["1", "2"]
   - preset: battery-params
@@ -91,6 +92,9 @@ render: |
       address: 625 # Grid side total power
       type: holding
       decode: int16
+    block: # 588-625
+      register: 588
+      count: 38
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -98,9 +102,25 @@ render: |
       address: 522 # "Total_GridBuy_Power Wh"
       type: holding
       decode: uint32s
-    {{- if and (eq .batterytype "hv") (not .firmware1098) }}
+    block: # 516-538
+      register: 516
+      count: 23
+    {{- if or (eq .batterytype "lv") (not .firmware1098) }}
     scale: 0.1
-    {{- end }}      
+    {{- end }}
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 524 # "Total_GridSell_Power Wh"
+      type: holding
+      decode: uint32s
+    block: # 516-538
+      register: 516
+      count: 23
+    {{- if or (eq .batterytype "lv") (not .firmware1098) }}
+    scale: 0.1
+    {{- end }}
   currents:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -108,6 +128,9 @@ render: |
         address: 613 # "Out-of-grid - current A"
         type: holding
         decode: int16
+      block: # 588-625
+        register: 588
+        count: 38
       scale: 0.01
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -115,6 +138,9 @@ render: |
         address: 614 # "Out-of-grid - current B"
         type: holding
         decode: int16
+      block: # 588-625
+        register: 588
+        count: 38
       scale: 0.01
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -122,7 +148,41 @@ render: |
         address: 615 # "Out-of-grid - current C"
         type: holding
         decode: int16
+      block: # 588-625
+        register: 588
+        count: 38
       scale: 0.01
+  voltages:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 598 # Grid voltage L1
+        type: holding
+        decode: uint16
+      block: # 588-625
+        register: 588
+        count: 38
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 599 # Grid voltage L2
+        type: holding
+        decode: uint16
+      block: # 588-625
+        register: 588
+        count: 38
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 600 # Grid voltage L3
+        type: holding
+        decode: uint16
+      block: # 588-625
+        register: 588
+        count: 38
+      scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -134,6 +194,9 @@ render: |
         address: 672 # "PV1 input power"
         type: holding
         decode: uint16
+      block: # 667-675
+        register: 667
+        count: 9
       {{- if eq .batterytype "hv" }}  
       scale: 10
       {{- end }}
@@ -143,6 +206,9 @@ render: |
         address: 673 # "PV2 input power"
         type: holding
         decode: uint16
+      block: # 667-675
+        register: 667
+        count: 9
       {{- if eq .batterytype "hv" }}  
       scale: 10
       {{- end }}
@@ -152,6 +218,9 @@ render: |
         address: 674 # "PV3 input power"
         type: holding
         decode: uint16
+      block: # 667-675
+        register: 667
+        count: 9
       {{- if eq .batterytype "hv" }}  
       scale: 10
       {{- end }}
@@ -161,6 +230,9 @@ render: |
         address: 675 # "PV4 input power"
         type: holding
         decode: uint16
+      block: # 667-675
+        register: 667
+        count: 9
       {{- if eq .batterytype "hv" }}  
       scale: 10
       {{- end }}
@@ -173,6 +245,9 @@ render: |
         decode: int16 # value is part of a signed 32-bit value; high word is at 671 but non-adjacent
                       # NOTE: Only the low 16 bits of GEN power are used here. This is sufficient up to ±32 kW,
                       # which covers existing inverter variants.
+      block: # 667-675
+        register: 667
+        count: 9
     {{- end }}
   energy:
     source: calc
@@ -183,7 +258,10 @@ render: |
         address: 534 # "Total_PV_Power_Wh"
         type: holding
         decode: uint32s
-      {{- if and (eq .batterytype "hv") (not .firmware1098) }}
+      block: # 516-538
+        register: 516
+        count: 23
+      {{- if or (eq .batterytype "lv") (not .firmware1098) }}
       scale: 0.1
       {{- end }}
     {{- if .includegenport }}
@@ -193,11 +271,69 @@ render: |
         address: 537 # "Total_Gen_Power_Wh"
         type: holding
         decode: int32s
-      {{- if and (eq .batterytype "hv") (not .firmware1098) }}
+      block: # 516-538
+        register: 516
+        count: 23
+      {{- if or (eq .batterytype "lv") (not .firmware1098) }}
       scale: 0.1
       {{- end }}
     {{- end }}
   maxacpower: {{ .maxacpower }}
+  # Feed-in curtailment via "Max Sell Power" (register 143, watts). The register is the
+  # device's always-active feed-in ceiling; there is no separate limit-enable register.
+  # "Solar Sell" (register 145) is the owner's export on/off switch and left untouched.
+  # HV models use 10 W units for register 143 (LV: 1 W).
+  curtail: # limit feed-in to the given percent of nominal (100 % = nominal power)
+    source: go
+    in:
+      - name: maxacpower
+        type: int
+        config:
+          source: const
+          value: {{ .maxacpower }}
+    script: |
+      powerlimit := ( maxacpower * curtail ) / 100
+      powerlimit
+    out:
+      - name: powerlimit
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 143 # Max Sell Power (W)
+            type: writemultiple
+            decode: uint16
+          {{- if eq .batterytype "hv" }}
+          scale: 0.1
+          {{- end }}
+  curtailed: # allowed feed-in as percent of nominal, derived from Max Sell Power
+    source: go
+    in:
+      - name: limit
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 143 # Max Sell Power (W)
+            type: holding
+            decode: uint16
+          {{- if eq .batterytype "hv" }}
+          scale: 10
+          {{- end }}
+      - name: maxacpower
+        type: int
+        config:
+          source: const
+          value: {{ .maxacpower }}
+    script: |
+      percent := 100
+      if maxacpower > 0 && limit < maxacpower {
+        // round, the watt conversion does not reproduce the written percent exactly
+        percent = (limit*100 + maxacpower/2) / maxacpower
+      }
+      percent
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -212,6 +348,9 @@ render: |
       {{- end }}
       type: holding
       decode: int16
+    block: # 588-625
+      register: 588
+      count: 38
   {{- if eq .batterytype "hv" }}  
     scale: 10
   {{- end }}
@@ -222,7 +361,23 @@ render: |
       address: 518 # "Total discharge of the battery (Wh)"
       type: holding
       decode: uint32s
-    {{- if and (eq .batterytype "hv") (not .firmware1098) }}
+    block: # 516-538
+      register: 516
+      count: 23
+    {{- if or (eq .batterytype "lv") (not .firmware1098) }}
+    scale: 0.1
+    {{- end }}
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 516 # "Total charge of the battery (Wh)"
+      type: holding
+      decode: uint32s
+    block: # 516-538
+      register: 516
+      count: 23
+    {{- if or (eq .batterytype "lv") (not .firmware1098) }}
     scale: 0.1
     {{- end }}
   soc:
@@ -236,6 +391,9 @@ render: |
       {{- end }}
       type: holding
       decode: uint16
+    block: # 588-625
+      register: 588
+      count: 38
   batterymode:
     source: switch
     switch:

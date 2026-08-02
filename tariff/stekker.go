@@ -90,13 +90,17 @@ func (t *Stekker) run(done chan error) {
 		url := fmt.Sprintf("%s?advanced_view=&region=%s&unit=MWh", stekkerURI, t.region)
 		resp, err := client.Get(url)
 		if err != nil {
-			once.Do(func() { done <- err })
+			if reportError(&once, done, err) {
+				return
+			}
 			t.log.ERROR.Println("http error:", err)
 			continue
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			once.Do(func() { done <- fmt.Errorf("http status %d", resp.StatusCode) })
+			if reportError(&once, done, fmt.Errorf("http status %d", resp.StatusCode)) {
+				return
+			}
 			t.log.ERROR.Printf("http status %d", resp.StatusCode)
 			resp.Body.Close()
 			continue
@@ -105,7 +109,9 @@ func (t *Stekker) run(done chan error) {
 		doc, err := goquery.NewDocumentFromReader(resp.Body)
 		if err != nil {
 			resp.Body.Close()
-			once.Do(func() { done <- err })
+			if reportError(&once, done, err) {
+				return
+			}
 			t.log.ERROR.Println("parse error:", err)
 			continue
 		}
@@ -113,7 +119,9 @@ func (t *Stekker) run(done chan error) {
 
 		val, ok := doc.Find("[data-epex-forecast-graph-data-value]").Attr("data-epex-forecast-graph-data-value")
 		if !ok {
-			once.Do(func() { done <- fmt.Errorf("no forecast attribute found") })
+			if reportError(&once, done, fmt.Errorf("no forecast attribute found")) {
+				return
+			}
 			t.log.ERROR.Println("no forecast attribute found")
 			continue
 		}
@@ -122,7 +130,9 @@ func (t *Stekker) run(done chan error) {
 
 		var data []map[string]any
 		if err := json.Unmarshal([]byte(raw), &data); err != nil {
-			once.Do(func() { done <- err })
+			if reportError(&once, done, err) {
+				return
+			}
 			t.log.ERROR.Println("unmarshal error:", err)
 			continue
 		}

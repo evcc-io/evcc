@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/util/config"
 )
 
@@ -55,10 +56,10 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 func (site *Site) updateBatteryMode(batteryGridChargeActive bool, rate api.Rate) {
 	batteryMode := site.requiredBatteryMode(batteryGridChargeActive, rate)
 
-	// put battery into hold mode when charging is active and circuit dimmed
+	// put battery into hold mode when charging is active and HEMS dimmed
 	fromToCharge := batteryMode == api.BatteryCharge || batteryMode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge
-	if dimmed := circuitDimmed(site.circuit); fromToCharge && dimmed != nil && *dimmed {
-		site.log.DEBUG.Println("battery mode: circuit dimmed")
+	if dimmed := hems.Dimmed(site.hems); fromToCharge && dimmed != nil && *dimmed {
+		site.log.DEBUG.Println("battery mode: HEMS dimmed")
 		batteryMode = api.BatteryHold
 	}
 

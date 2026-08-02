@@ -1,0 +1,89 @@
+template: sunspec-inverter-curtailable
+products:
+  - description:
+      de: SunSpec Wechselrichter (abregelbar)
+      en: SunSpec Inverter (curtailable)
+group: generic
+capabilities: ["curtail"]
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: modbus
+    choice: ["tcpip", "rs485"]
+render: |
+  type: custom
+  power:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value:
+      - 101:W
+      - 111:W
+      - 102:W
+      - 112:W
+      - 103:W
+      - 113:W
+  energy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value:
+      - 101:WH
+      - 111:WH
+      - 102:WH
+      - 112:WH
+      - 103:WH
+      - 113:WH
+    scale: 0.001
+  curtail:
+    source: sequence
+    set:
+      - source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value:
+          - 704:WMaxLimPct
+          - 123:WMaxLimPct
+      - source: switch
+        switch:
+          - case: 100 # Uncurtailed
+            set:
+              source: const
+              value: 0 # Limit disabled
+              set:
+                source: sunspec
+                {{- include "modbus" . | indent 14 }}
+                value:
+                  - 704:WMaxLimPctEna
+                  - 123:WMaxLim_Ena
+        default:
+          source: const
+          value: 1 # Limit enabled
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value:
+              - 704:WMaxLimPctEna
+              - 123:WMaxLim_Ena
+  curtailed: # the limit percentage only applies while the limit is enabled
+    source: go
+    in:
+    - name: ena
+      type: bool
+      config:
+        source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value:
+          - 704:WMaxLimPctEna
+          - 123:WMaxLim_Ena
+    - name: limit
+      type: float
+      config:
+        source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value:
+          - 704:WMaxLimPct
+          - 123:WMaxLimPct
+    script: |
+      percent := 100
+      if ena {
+        percent = int(limit)
+      }
+      percent

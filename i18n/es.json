@@ -39,8 +39,16 @@
     "legendTopAutostart": "Inicio automático",
     "legendTopName": "Carga de vehículos asistida por baterías",
     "legendTopSubline": "cuando la batería de casa sobrepasa {soc}.",
+    "legendTopSublineAbove": "cuando supere {soc}",
+    "legendTopSublineDisabled": "está en {soc}.",
+    "legendTopSublineDisabledState": "deshabilitado",
     "modalTitle": "Batería doméstica",
+    "noBattery": "No hay baterías configuradas.",
     "usageTab": "Uso de la batería"
+  },
+  "colors": {
+    "auto": "Automático",
+    "hex": "Color hexadecimal"
   },
   "config": {
     "aux": {
@@ -105,7 +113,14 @@
       "labelResidualPower": "Fuerza residual",
       "title": "Controlar la conducta"
     },
+    "currency": {
+      "description": "Sirve para mostrar los precios de la energía, los costes y los ahorros según tu tarifa.",
+      "example": "La carga te ha costado {price}. Has ahorrado {amount}.",
+      "label": "Divisa",
+      "title": "Moneda"
+    },
     "deviceValue": {
+      "activeClients": "Clientes activos",
       "amount": "Importe",
       "broker": "Corredor",
       "bucket": "Bucket",
@@ -119,21 +134,26 @@
       "chargedEnergy": "Cargado",
       "co2": "Red de CO₂",
       "configured": "Configurado",
+      "connected": "Conectado",
       "connections": "Conexiones",
       "controllable": "Controlable",
       "currency": "Divisa",
       "current": "Corriente",
       "currentRange": "Corriente",
+      "curtailed": "Vertido limitado",
       "detected": "Detectado",
-      "dimmed": "Atemperado",
+      "dimmed": "Consumo limitado",
       "enabled": "Activado",
       "energy": "Energía",
+      "events": "Eventos",
       "feedinPrice": "Precio de entrada",
+      "forecast": "Previsión",
       "gridPrice": "Precio de red",
       "heaterTempLimit": "Límite del calentador",
-      "hemsActiveLimit": "Límite activo",
-      "hemsType": "Comunicación",
       "identifier": "Identificador RFID",
+      "loginBlocked": "Límite de inicios de sesión alcanzado",
+      "max": "máx.",
+      "messengers": "Servicios",
       "no": "no",
       "odometer": "Cuentakilómetros",
       "org": "Organización",
@@ -143,7 +163,9 @@
       "phases1p3p": "Interruptor de fase",
       "power": "Potencia",
       "powerRange": "Potencia",
+      "price": "Precio",
       "range": "Alcance",
+      "returnEnergy": "Energía (inversa)",
       "singlePhase": "Monofásico",
       "soc": "SoC",
       "solarForecast": "Previsión solar",
@@ -157,10 +179,6 @@
       "A": "A (no conectado)",
       "B": "B (conectado)",
       "C": "C (carga)"
-    },
-    "deviceValueHemsType": {
-      "eebus": "a través de EEBus",
-      "relay": "a través de Relay"
     },
     "devices": {
       "auxMeter": "Consumidor inteligente",
@@ -192,7 +210,7 @@
       "title": "EEBus"
     },
     "experimental": {
-      "description": "Habilitar la interfaz de usuario para funciones que aún se están probando y que pueden cambiar en futuras versiones.",
+      "description": "Permite acceder de forma anticipada a funciones que aún están en pruebas. Pueden ser inestables y cambiar o eliminarse en futuras versiones.",
       "title": "Experimental"
     },
     "ext": {
@@ -212,26 +230,30 @@
       "authPerformHint": "Se abrirá en una nueva pestaña. Vuelve aquí para continuar.",
       "authPrepare": "Prepare la conexión",
       "cancel": "Cancelar",
+      "change": "Cambiar",
       "clear": "Claro",
       "close": "Cerrar",
+      "confirmSave": "Hay cambios sin guardar. ¿Guardar ahora?",
       "copied": "¡Copiado!",
       "copy": "Copiar",
       "customHelp": "Cree un dispositivo definido por el usuario utilizando el sistema de complementos de evcc.",
       "customOption": "Dispositivo definido por el usuario",
       "delete": "Eliminar",
+      "dismiss": "Descartar",
       "docsLink": "Ver documentación.",
       "dragHandle": "Asa de arrastre",
       "dragItem": "Arrastrable: {title}",
       "dragList": "Lista reordenable",
+      "error": "Error",
       "experimental": "Experimental",
       "forceSave": "Guardar de todos modos",
       "fromYamlHint": "Nota: Configurado a través de evcc.yaml. Elimina la entrada del archivo para poder editar aquí.",
       "hideAdvancedSettings": "Ocultar configuración avanzada",
       "invalidFileSelected": "Se ha seleccionado un archivo no válido",
+      "legacy": "heredado",
       "noFileSelected": "No hay ningún archivo seleccionado.",
       "off": "apagar",
       "on": "encender",
-      "password": "Contraseña",
       "readFromFile": "Leer del archivo",
       "remove": "Quitar",
       "required": "requerido",
@@ -261,7 +283,6 @@
         "type": "Tipo"
       },
       "description": "Limitación de potencia por sistemas externos (por ejemplo, §14a EnWG, interfaz §9 EEG o sistema de gestión energética de nivel superior). Funciona junto con la función de gestión de carga.",
-      "downloadCsv": "Descargar CSV",
       "eventsRecorded": "Se registraron {count} eventos de limitación de la red.",
       "lastEvent": "Más reciente {timeAgo}.",
       "title": "Límite externo"
@@ -353,7 +374,6 @@
       "priorityHelp": "Las prioridades más altas obtienen acceso preferencial al excedente solar.",
       "priorityLabel": "Prioridad",
       "save": "Guardar",
-      "showAllSettings": "Mostrar todas las configuraciones",
       "solarBehaviorCustomHelp": "Defina sus propios umbrales y retrasos de activación y desactivación.",
       "solarBehaviorDefaultHelp": "Comience después de {enableDelay} de excedente suficiente. Deténgase cuando no haya suficiente excedente para {disableDelay}.",
       "solarBehaviorLabel": "Solar",
@@ -408,9 +428,73 @@
       "welcomeBannerText": "Empiece por crear al menos un **cargador**, **calentador**, **red**, **solar**, **batería** o **contador adicional**. Si solo desea realizar una prueba, elija un **dispositivo de demostración**.",
       "welcomeBannerTitle": "¡Configuremos su sistema!"
     },
+    "mcp": {
+      "description": "Activa un servidor Model Context Protocol para que asistentes de IA como Claude puedan leer el estado de tu sistema y controlar la carga.",
+      "exampleLabel": "Ejemplo: Claude CLI",
+      "restartHint": "Estará disponible tras reiniciar.",
+      "title": "Servidor MCP",
+      "url": "Endpoint MCP"
+    },
     "messaging": {
-      "description": "Recibe mensajes sobre tus sesiones de carga.",
+      "addMessenger": "Añadir servicio",
+      "description": "Recibe notificaciones sobre tus sesiones de carga.",
+      "event": {
+        "asleep": {
+          "messageDefault": "Carga habilitada, el vehículo {vehicleName} no está cargando.",
+          "title": "Cuando se espera al vehículo",
+          "titleDefault": "Vehículo en reposo"
+        },
+        "connect": {
+          "messageDefault": "Coche conectado con {pvPower} kW FV",
+          "title": "Cuando se conecta un vehículo",
+          "titleDefault": "Vehículo conectado"
+        },
+        "disconnect": {
+          "messageDefault": "Vehículo desconectado tras {connectedDuration}",
+          "title": "Cuando se desconecta el vehículo",
+          "titleDefault": "Vehículo desconectado"
+        },
+        "guest": {
+          "messageDefault": "Vehículo desconocido, ¿se ha conectado un invitado?",
+          "title": "Cuando se conecta un vehículo desconocido",
+          "titleDefault": "Vehículo desconocido"
+        },
+        "planoverrun": {
+          "messageDefault": "{vehicleTitle}: El plan no terminará a tiempo.",
+          "title": "Cuando el plan de carga no va a terminar a tiempo",
+          "titleDefault": "Plan excedido"
+        },
+        "soc": {
+          "messageDefault": "Batería cargada al {vehicleSoc} %",
+          "title": "Actualización del nivel de carga",
+          "titleDefault": "Nivel de carga actualizado"
+        },
+        "start": {
+          "messageDefault": "Carga iniciada en modo {mode}.",
+          "title": "Cuando empieza la carga",
+          "titleDefault": "Carga iniciada en modo {mode}."
+        },
+        "stop": {
+          "messageDefault": "Carga finalizada: {chargedEnergy} kWh en {chargeDuration}.",
+          "title": "Cuando termina la carga",
+          "titleDefault": "Carga finalizada"
+        }
+      },
+      "eventMessage": "Mensaje",
+      "eventTitle": "Título",
+      "events": "Eventos",
+      "legacyWarning": "¡Ya está disponible la nueva configuración de notificaciones! Elimina y guarda esta configuración para usar el nuevo proceso guiado.",
+      "messengers": "Servicios",
+      "seePlaceholders": "ver variables",
       "title": "Notificaciónes"
+    },
+    "messenger": {
+      "custom": "Servicio personalizado",
+      "generic": "Servicio genérico",
+      "primary": "Servicio específico",
+      "template": "Servicio",
+      "titleAdd": "Añadir servicio",
+      "titleEdit": "Editar servicio"
     },
     "meter": {
       "cancel": "Cancelar",
@@ -419,7 +503,6 @@
       "option": {
         "aux": "Añadir consumidor autorregulado",
         "battery": "Añadir medidor de batería",
-        "ext": "Añadir consumidor habitual",
         "pv": "Añadir medidor solar"
       },
       "save": "Guardar",
@@ -501,22 +584,14 @@
       "descriptionHost": "Se utiliza para anunciar evcc en su red local.",
       "descriptionInternalUrl": "Dirección de red local de evcc.",
       "descriptionPort": "Puerto para la interfaz web y la API. Si lo cambia, deberá actualizar la URL de su navegador.",
-      "descriptionSchema": "Solo afecta la forma en que se generan las URL. Seleccionar HTTPS no habilitará el cifrado",
       "labelExternalUrl": "URL externa",
       "labelHost": "Nombre de host mDNS",
       "labelInternalUrl": "URL interna",
       "labelPort": "Puerto",
-      "labelSchema": "Esquema",
       "title": "Red"
     },
     "ocpp": {
-      "connectedChargers": "Cargadores conectados",
-      "connectionStatus": "Identificadores de estación configurados",
-      "connectionStatusHelp": "Estado de conexión de los cargadores configurados.",
-      "detectedChargers": "Identificadores de estación detectados",
-      "detectedHelp": "Estos cargadores han intentado conectarse a evcc. Para utilizar un cargador, cree un punto de carga con su ID de estación.",
       "noChargers": "No se han detectado cargadores OCPP.",
-      "noStations": "No hay estaciones conectadas",
       "status": {
         "configured": "No conectado",
         "connected": "Conectado",
@@ -525,6 +600,12 @@
       "title": "Servidor OCPP",
       "url": "URL del servidor",
       "urlHelp": "Copie esta URL en la configuración de su cargador. Consulte el manual del fabricante para obtener más detalles. Se espera que el cargador añada automáticamente su identificador único (ID de estación) a la URL. En casos excepcionales, es posible que tenga que especificar manualmente el identificador. Ejemplo: `{url}`"
+    },
+    "optimizer": {
+      "description": "Analiza la previsión solar, los precios de la electricidad y tus patrones de consumo para optimizar la estrategia de batería y carga. Los datos se envían al servicio de optimización de evcc para procesarlos. Actualmente solo calcula y muestra los resultados. Aún no controla dispositivos.",
+      "enable": "Activar optimizador",
+      "info": "La entrada del optimizador en el menú puede tardar unos minutos en aparecer. En instalaciones nuevas, evcc puede necesitar hasta 24 horas para recopilar suficientes datos.",
+      "title": "Optimizador"
     },
     "options": {
       "boolean": {
@@ -552,6 +633,22 @@
     "pv": {
       "titleAdd": "Añadir contador solar",
       "titleEdit": "Editar contador solar"
+    },
+    "remote": {
+      "active": "Activo",
+      "addClient": "Añadir cliente",
+      "addClientDescription": "Las credenciales solo se almacenan y verifican localmente en tu instancia de evcc.",
+      "addClientTitle": "Añadir cliente remoto",
+      "clientCreated": "Cliente creado",
+      "clients": "Clientes",
+      "confirmDelete": "¿Eliminar el cliente?",
+      "connected": "Conectado",
+      "createClient": "Crear cliente",
+      "description": "Accede a tu instalación de evcc desde cualquier lugar con la app móvil de evcc. No requiere redirección de puertos ni VPN.",
+      "deviceName": "Nombre del dispositivo",
+      "disconnected": "Desconectado",
+      "done": "Hecho",
+      "enableLabel": "Habilitar acceso remoto"
     },
     "section": {
       "additionalMeter": "Medidores adicionales",
@@ -633,10 +730,6 @@
       "restartRequiredMessage": "Configuración modificada.",
       "restartingDescription": "Espere por favor…",
       "restartingMessage": "Reiniciando evcc."
-    },
-    "tariffs": {
-      "description": "Define tus tarifas energéticas para calcular los costes de tus sesiones de carga.",
-      "title": "Tarifas"
     },
     "telemetry": {
       "description": "Configure el intercambio de datos para ayudar a mejorar evcc. Su privacidad es importante para nosotros y la participación es totalmente opcional.",
@@ -769,7 +862,6 @@
     "blog": "Blog",
     "docs": "Documentación",
     "github": "GitHub",
-    "login": "Registro de vehículos",
     "logout": "Cerrar sesión",
     "nativeSettings": "Cambiar el servidor",
     "needHelp": "¿Necesitas ayuda?",
@@ -864,7 +956,6 @@
   "loginModal": {
     "cancel": "Cancelar",
     "demoMode": "El inicio de sesión no es compatible con el modo demo.",
-    "error": "Error en el inicio de sesion: ",
     "iframeHint": "Abre evcc en una nueva pestaña.",
     "iframeIssue": "Tu contraseña es correcta, pero parece que tu navegador ha eliminado la cookie de autenticación. Esto puede ocurrir si ejecutas evcc en un iframe a través de HTTP.",
     "invalid": "La contraseña no es válida.",
@@ -877,9 +968,7 @@
     "chargingPlan": {
       "active": "Activo",
       "addRepeatingPlan": "Añadir plan recurrente",
-      "arrivalTab": "Llegadas",
       "day": "Día",
-      "departureTab": "Salidas",
       "goal": "Objetivo de la carga",
       "modalTitle": "Plan de carga",
       "none": "ninguno",
@@ -903,8 +992,6 @@
       "strategySettings": "Configuración de la estrategia",
       "time": "Tiempo",
       "title": "Plan",
-      "titleMinSoc": "Carga mínima",
-      "titleTargetCharge": "Partida",
       "unsavedChanges": "Hay cambios sin guardar. ¿Aplicar ahora?",
       "update": "Aplicar",
       "weekdays": "Días"
@@ -913,9 +1000,9 @@
       "battery": "Batería",
       "batteryCharge": "Cargar la batería",
       "batteryDischarge": "Descargar la batería",
+      "batteryDischargeHold": "Batería (bloqueada)",
       "batteryGridChargeActive": "carga de red activa",
       "batteryGridChargeLimit": "carga de la red cuando",
-      "batteryHold": "Batería (bloqueada)",
       "batteryTooltip": "{energy} de {total} ({soc})",
       "forecastTooltip": "Previsión: producción solar restante para hoy",
       "gridImport": "Consumo de red",
@@ -935,7 +1022,6 @@
       "waitForVehicle": "Listo. Esperando el calentador…"
     },
     "hemsWarning": {
-      "description": "Carga reducida para no superar {limit}.",
       "title": "Límite externo:"
     },
     "loadpoint": {
@@ -962,22 +1048,12 @@
       "batteryUsage": "Batería doméstica",
       "currents": "Corriente de carga",
       "default": "defecto",
-      "disclaimerHint": "Nota:",
-      "limitSoc": {
-        "description": "Límite de carga que se utiliza cuando este vehículo está conectado.",
-        "label": "Límite predeterminado"
-      },
       "maxCurrent": {
         "label": "Corriente de carga máxima"
       },
       "minCurrent": {
         "label": "Corriente de carga mínima"
       },
-      "minSoc": {
-        "description": "El vehículo se carga «rápidamente» hasta {0} en modo solar. A continuación, continúa con el excedente solar. Útil para garantizar una autonomía mínima incluso en días más oscuros.",
-        "label": "Carga de min. %"
-      },
-      "onlyForSocBasedCharging": "Estas opciones solo están disponibles para vehículos con un nivel de carga conocido.",
       "phasesConfigured": {
         "label": "Fases",
         "no1p3pSupport": "¿Cómo está conectado tu cargador?",
@@ -1172,8 +1248,6 @@
       "solarpercentage": "Solar (%)",
       "vehicle": "Vehículo"
     },
-    "csvPeriod": "Descargar el {period} CSV",
-    "csvTotal": "Descargar todos los CSV",
     "date": "Comenzar",
     "energy": "Cargado",
     "filter": {

@@ -24,6 +24,8 @@ render: |
   {{- if ne .usage "pv" }}
   power: Power
   energy: Import
+  # removed per https://github.com/evcc-io/evcc/issues/31143
+  # returnenergy: Export
   currents:
     - CurrentL1
     - CurrentL2
@@ -34,7 +36,9 @@ render: |
     - PowerL3
   {{- else }}
   power: -Power
-  energy: Export
+  # removed per https://github.com/evcc-io/evcc/issues/31143
+  # energy: Export
+  returnenergy: Import
   currents:
     - -CurrentL1
     - -CurrentL2

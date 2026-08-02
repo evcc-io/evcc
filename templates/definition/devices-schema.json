@@ -47,6 +47,9 @@
         "requirements": {
           "$ref": "common-schema.json#/definitions/Requirements"
         },
+        "caveats": {
+          "$ref": "common-schema.json#/definitions/Caveats"
+        },
         "params": {
           "type": "array",
           "items": {

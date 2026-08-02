@@ -16,9 +16,7 @@ params:
     type: choice
     choice: ["warmwater", "buffer"]
   - name: watchdog
-    type: duration
     default: 60s
-    advanced: true
 render: |
   type: heatpump
   setmaxpower:

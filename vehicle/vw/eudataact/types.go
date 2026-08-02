@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"slices"
 	"strings"
+	"time"
 )
 
 // brand holds the OIDC client id and state suffix for a VW group brand.
@@ -26,11 +28,6 @@ var brands = map[string]brand{
 	"Cupra":      {"f85e5b69-e3b2-43aa-9c0d-1b7d0e0b576f@apps_vw-dilab_com", "CUPRA"},
 }
 
-// Brands returns the supported brand names
-func Brands() []string {
-	return []string{"Volkswagen", "Audi", "Skoda", "Seat", "Cupra"}
-}
-
 // resolveBrand looks up a brand by name, case-insensitively
 func resolveBrand(name string) (brand, bool) {
 	for k, b := range brands {
@@ -39,6 +36,12 @@ func resolveBrand(name string) (brand, bool) {
 		}
 	}
 	return brand{}, false
+}
+
+// IsBrand reports whether name is a known VW group brand (case-insensitive)
+func IsBrand(name string) bool {
+	_, ok := resolveBrand(name)
+	return ok
 }
 
 // Vehicle is a single entry of the portal vehicle list. VIN and name carry
@@ -70,25 +73,40 @@ func (v Vehicle) Name() string {
 	return ""
 }
 
-// dataset describes a single delivered dataset file
+// dataset describes a single delivered dataset file. Timestamp is the parsed
+// delivery time; it is populated by contentDatasets from the file name or the
+// createdOn field.
 type dataset struct {
-	Name      string `json:"name"`
-	CreatedOn string `json:"createdOn"`
+	Name      string    `json:"name"`
+	CreatedOn time.Time `json:"createdOn"`
 }
 
-// sortKey returns the value used to find the newest dataset
-func (d dataset) sortKey() string {
-	if d.CreatedOn != "" {
-		return d.CreatedOn
-	}
-	return d.Name
-}
-
-// dataPoint is a single decoded telemetry value of a dataset
+// dataPoint is a single data point as delivered in the dataset JSON document.
+// Key is the data point's unique GUID, used when DataFieldName is generic (e.g. "value").
 type dataPoint struct {
-	Key           string `json:"key"`
-	DataFieldName string `json:"dataFieldName"`
-	Value         string `json:"value"`
+	Key           string     `json:"key"`
+	DataFieldName string     `json:"dataFieldName"`
+	Value         string     `json:"value"`
+	TimestampUtc  *time.Time `json:"timestampUtc"`
+}
+
+// point is a decoded data point: its unique GUID (Key), delivered field Name,
+// value, record time and dataset delivery sequence (higher Seq is newer).
+type point struct {
+	Key       string
+	Name      string
+	Value     string
+	Timestamp time.Time
+	Seq       uint64
+}
+
+// id is the point's deduplication and lookup identity: its unique GUID when
+// present, otherwise the (possibly non-unique) field name.
+func (p point) id() string {
+	if p.Key != "" {
+		return p.Key
+	}
+	return p.Name
 }
 
 // datasetFile is the JSON document contained in a dataset zip archive
@@ -99,36 +117,61 @@ type datasetFile struct {
 
 // data field names as delivered in the dataset (see lib/euDataActDictionary.json)
 const (
-	FieldSoc           = "state_of_charge"
-	FieldHvSoc         = "hv_soc"
-	FieldRange         = "cruising_range_combined"
-	FieldRangePrimary  = "cruising_range_primary_engine"
+	// status
+	FieldChargingState                = "charging_state"
+	FieldChargingPlug1ConnectionState = "charging_plug1_connectionstate"
+	FieldCurrentChargeState           = "charging_state_report.current_charge_state"
+	FieldChargingScenario             = "charging_state_report.charging_scenario"
+	FieldPlugState                    = "plug_state"
+
+	// soc
+	FieldSoc                 = "state_of_charge"
+	FieldHvSoc               = "hv_soc"
+	FieldHvBatteryLevelValue = "battery_level_HV.value"
+
+	// target soc
+	FieldTargetSoc           = "settings.target_soc"
+	FieldChargeBcamThreshold = "battery_care_mode.charge_bcam_threshold" // Audi Q4 e-tron battery care mode target soc
+
+	// range
+	FieldRangeCombined       = "cruising_range_combined"
+	FieldRangePrimary        = "cruising_range_primary_engine"
+	FieldRangeSecondary      = "cruising_range_secondary_engine"
+	KeyRangeID3              = "0ca40e18-0564-3eda-bcc0-7aee9ef44f04" // VW ID.3 range
+	KeyBatteryStateReportSoc = "506cb83e-f99f-3af3-bbeb-0429b69a78d9" // VW ID.3 soc
+	KeyEnyaqSoc              = "0a18a053-b4b0-3db1-be44-a6c5dba629b1" // Skoda Enyaq soc
+
+	// odo
 	FieldOdometer      = "mileage"
-	FieldChargingState = "charging_state"
-	FieldPlugState     = "charging_plug1_connectionstate"
-	FieldTargetSoc     = "settings.target_soc"
+	FieldOdometerValue = "mileage.value"
+
+	// time
+	FieldRemainingTime = "remaining_charging_time"
 )
 
-// newestDataset returns the name of the most recent dataset that actually
-// carries content. The portal emits "..._no_content_found.zip" placeholders
-// while the vehicle is asleep, which are skipped.
-func newestDataset(list []dataset) string {
-	var best dataset
+// contentDatasets returns the content datasets, sorted oldest to newest. The
+// portal emits "..._no_content_found.zip" placeholders while the vehicle is
+// asleep; those are skipped.
+func contentDatasets(list []dataset) []dataset {
+	content := make([]dataset, 0, len(list))
 	for _, d := range list {
 		if strings.HasSuffix(strings.ToLower(d.Name), "_no_content_found.zip") {
 			continue
 		}
-		if best.Name == "" || d.sortKey() > best.sortKey() {
-			best = d
-		}
+
+		content = append(content, d)
 	}
-	return best.Name
+
+	slices.SortStableFunc(content, func(a, b dataset) int {
+		return a.CreatedOn.Compare(b.CreatedOn)
+	})
+
+	return content
 }
 
 // parseDataset extracts the inner JSON document from the dataset zip archive and
-// decodes it into a map keyed by the dotted data field name. On duplicate field
-// names the entry with the smallest key uuid wins, matching the adapter.
-func parseDataset(b []byte) (map[string]string, error) {
+// decodes it into its data points.
+func parseDataset(b []byte) ([]point, error) {
 	zr, err := zip.NewReader(bytes.NewReader(b), int64(len(b)))
 	if err != nil {
 		return nil, err
@@ -161,18 +204,45 @@ func parseDataset(b []byte) (map[string]string, error) {
 		return nil, err
 	}
 
-	res := make(map[string]string, len(ds.Data))
-	keys := make(map[string]string, len(ds.Data))
-	for _, p := range ds.Data {
-		if p.DataFieldName == "" {
+	return points(ds.Data), nil
+}
+
+// points decodes data points, keeping the newest entry per id (see point.id).
+func points(data []dataPoint) []point {
+	var res []point
+
+	for _, dp := range data {
+		if dp.Value == "" {
 			continue
 		}
-		if k, ok := keys[p.DataFieldName]; ok && k <= p.Key {
+
+		var ts time.Time
+		if dp.TimestampUtc != nil {
+			ts = *dp.TimestampUtc
+		}
+		p := point{Key: dp.Key, Name: dp.DataFieldName, Value: dp.Value, Timestamp: ts}
+		if p.id() == "" {
 			continue
 		}
-		res[p.DataFieldName] = p.Value
-		keys[p.DataFieldName] = p.Key
+
+		if e := find(res, p.id()); e != nil {
+			// newest wins; on equal timestamps the later entry wins
+			if !e.Timestamp.After(p.Timestamp) {
+				*e = p
+			}
+			continue
+		}
+		res = append(res, p)
 	}
 
-	return res, nil
+	return res
+}
+
+// find returns the data point identified by id, matched by Key first and Name
+// second, or nil if none is present.
+func find(data []point, id string) *point {
+	if i := slices.IndexFunc(data, func(p point) bool { return p.Key == id || p.Name == id }); i >= 0 {
+		return &data[i]
+	}
+	return nil
 }

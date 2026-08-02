@@ -1,0 +1,19 @@
+template: dsmr-ws
+products:
+  - brand: Homey
+    description:
+      generic: Energy Dongle
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: host
+    description:
+      en: Hostname or IP address
+      de: Hostname oder IP-Adresse
+  - name: timeout
+    advanced: true
+    default: 15s
+render: |
+  type: dsmr
+  uri: ws://{{ .host }}/ws
+  timeout: {{ .timeout }}

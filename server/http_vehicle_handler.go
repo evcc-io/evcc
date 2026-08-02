@@ -69,6 +69,35 @@ func limitSocHandler(site site.API) http.HandlerFunc {
 	}
 }
 
+// vehicleModeHandler updates the vehicle charge mode (empty value clears it)
+func vehicleModeHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		v, err := site.Vehicles().ByName(vars["name"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		mode, err := api.ChargeModeString(vars["value"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		v.SetMode(mode)
+
+		res := struct {
+			Mode api.ChargeMode `json:"mode"`
+		}{
+			Mode: v.GetMode(),
+		}
+
+		jsonWrite(w, res)
+	}
+}
+
 // planSocHandler updates plan soc and time
 func planSocHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

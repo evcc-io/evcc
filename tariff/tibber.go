@@ -92,7 +92,9 @@ func (t *Tibber) run(done chan error) {
 			defer cancel()
 			return t.client.Query(ctx, &res, v)
 		}, bo()); err != nil {
-			once.Do(func() { done <- err })
+			if reportError(&once, done, err) {
+				return
+			}
 
 			t.log.ERROR.Println(err)
 			continue

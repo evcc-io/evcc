@@ -41,9 +41,7 @@ params:
       de: veraltet, bei neg. E-Überschuss auf minus
       en: deprecated, set for neg. e-excess to minus
   - name: watchdog
-    type: duration
     default: 60s
-    advanced: true
   - name: firmware
     type: choice
     choice: ["<1.1.3", ">=1.1.3"]
@@ -71,7 +69,7 @@ render: |
     uri: {{ joinHostPort .host .port }}
     id: 1
     register:
-      address: 103 # aktuelle Aufnahmeleistung [E] der WP
+      address: {{ if eq .firmware "<1.1.3" }}103{{ else }}1012{{ end }} # aktuelle Aufnahmeleistung [E] der WP
       type: holding
       decode: int16
   energy:

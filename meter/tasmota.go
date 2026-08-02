@@ -71,6 +71,10 @@ func NewTasmota(uri, user, password, usage string, channels []int, cache time.Du
 		implement.Has(c, implement.PhasePowers(c.powers))
 	}
 
+	if _, err := c.conn.ReturnEnergy(); err == nil {
+		implement.Has(c, implement.MeterReturnEnergy(c.returnEnergy))
+	}
+
 	return c, nil
 }
 
@@ -94,6 +98,11 @@ var _ api.MeterEnergy = (*Tasmota)(nil)
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *Tasmota) TotalEnergy() (float64, error) {
 	return c.conn.TotalEnergy()
+}
+
+// returnEnergy implements the api.MeterReturnEnergy interface
+func (c *Tasmota) returnEnergy() (float64, error) {
+	return c.conn.ReturnEnergy()
 }
 
 // powers implements the api.PhasePowers interface

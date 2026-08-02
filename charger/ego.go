@@ -77,12 +77,12 @@ func NewEgoFromConfig(ctx context.Context, other map[string]any) (api.Charger, e
 		return nil, err
 	}
 
-	return NewEgo(ctx, &cc.embed, cc.URI, cc.ID)
+	return NewEgo(ctx, &cc.embed, cc.TcpSettings)
 }
 
 // NewEgo creates E.G.O. Smart Heater charger
-func NewEgo(ctx context.Context, embed *embed, uri string, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewEgo(ctx context.Context, embed *embed, settings modbus.TcpSettings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

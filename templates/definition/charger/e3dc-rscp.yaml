@@ -27,7 +27,6 @@ params:
     description:
       en: E3DC portal password
       de: E3DC Portal Passwort
-    mask: true
     required: true
   - name: key
     description:

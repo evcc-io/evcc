@@ -1,0 +1,78 @@
+template: ecoflow-powerocean-modbus
+products:
+  - brand: EcoFlow
+    description:
+      generic: PowerOcean Modbus
+requirements:
+  description:
+    de: |
+      Für die lokale Modbus TCP Verbindung muss Modbus am EcoFlow PowerOcean durch den Installateur aktiviert sein.
+    en: |
+      The local Modbus TCP connection requires Modbus to be enabled on the EcoFlow PowerOcean by the installer.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 1
+  - preset: battery-params
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 40521 # Grid power, W
+      type: holding
+      encoding: float32s
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 42161 # Grid import total, kWh
+      type: holding
+      encoding: float32s
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 40523 # Solar power, W
+      type: holding
+      encoding: float32s
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 42257 # Solar yield total, kWh
+      type: holding
+      encoding: float32s
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 40525 # Battery power, W; positive when discharging, negative when charging (raw value inverted via scale -1)
+      type: holding
+      encoding: float32s
+    scale: -1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 42241 # Battery discharged total, kWh
+      type: holding
+      encoding: float32s
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 40527 # Battery state of charge, %
+      type: holding
+      encoding: uint16
+  {{- include "battery-params" . }}
+  {{- end }}

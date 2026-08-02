@@ -17,23 +17,26 @@ params:
     choice:
       [
         "anwb-energie",
-        "atoom-alliantie",
         "budget-energie",
         "coolblue-energie",
         "easyenergy",
         "eneco",
-        "engie",
         "energie-vanons",
         "energyzero",
+        "engie",
+        "essent",
         "frank-energie",
         "frank-energie-slim",
         "hegg",
         "innova",
         "nextenergy",
         "powerpeers",
+        "quatt-energy",
+        "samenom",
         "samsam",
         "tibber",
         "vandebron",
+        "vattenfall",
         "zonneplan",
       ]
     required: true

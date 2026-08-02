@@ -9,23 +9,28 @@ import (
 
 const (
 	// groups
-	Forecast  = "forecast"
-	Battery   = "battery"
-	Grid      = "grid"
-	PV        = "pv"
-	Home      = "home" // meter and group (virtual measurement)
-	Loadpoint = "loadpoint"
-	Meter     = "meter" // generic meter (ext/aux)
+	Forecast    = "forecast"
+	Temperature = "temperature"
+	Battery     = "battery"
+	Grid        = "grid"
+	PV          = "pv"
+	Home        = "home" // meter and group (virtual measurement)
+	Loadpoint   = "loadpoint"
+	Meter       = "meter"    // additional meter (ext, monitoring only)
+	Consumer    = "consumer" // consumer meter (consumers list or aux)
 )
 
 type Collector struct {
-	entity  entity
-	accu    *Accumulator
-	started time.Time
+	entity     entity
+	accu       *Accumulator
+	started    time.Time
+	restored   bool      // meter readings seeded from db
+	lastSlot   time.Time // last persisted slot at restore, for contiguity check
+	statsCache EnergyStats
 }
 
-func NewCollector(group, name string, opt ...func(*Accumulator)) (*Collector, error) {
-	entity, err := createEntity(group, name)
+func NewCollector(group, name, title string, opt ...func(*Accumulator)) (*Collector, error) {
+	entity, err := createEntity(group, name, title)
 	if err != nil {
 		return nil, err
 	}
@@ -35,20 +40,62 @@ func NewCollector(group, name string, opt ...func(*Accumulator)) (*Collector, er
 		accu:   NewAccumulator(opt...),
 	}
 
+	// seed saved readings so the first delta covers the downtime
+	if state := (AccumulatorState{entity.EnergyMeter, entity.ReturnEnergyMeter}); state.CompleteFor(group) {
+		c.accu.Restore(state)
+		c.restored = true
+		// last persisted slot distinguishes a contiguous restart (energy stays
+		// time-correct) from one that skipped whole slots (inflated catchup)
+		var lastTs int64
+		db.Instance.Model(new(meter)).Where("meter = ?", entity.Id).Select("COALESCE(max(ts), 0)").Scan(&lastTs)
+		c.lastSlot = time.Unix(lastTs, 0)
+	}
+
 	return c, nil
 }
 
-func createEntity(group, name string) (entity, error) {
-	entity := entity{
-		Group: group,
-		Name:  name,
+// createEntity ensures the entity row exists and refreshes its title.
+func createEntity(group, name, title string) (entity, error) {
+	// keep history when a meter is regrouped "meter" -> "consumer" (aux, ext convert)
+	if group == Consumer {
+		var prev entity
+		if db.Instance.Where(`"group" = ? AND name = ?`, Meter, name).Limit(1).Find(&prev).RowsAffected > 0 {
+			db.Instance.Model(&prev).UpdateColumn("group", Consumer)
+		}
 	}
 
-	if err := db.Instance.Where(&entity).FirstOrCreate(&entity).Error; err != nil {
-		return entity, err
+	e := entity{Group: group, Name: name}
+
+	if err := db.Instance.Where(&e).Attrs(entity{Title: title}).FirstOrCreate(&e).Error; err != nil {
+		return e, err
 	}
 
-	return entity, nil
+	return e, e.updateTitle(title)
+}
+
+// updateTitle refreshes the entity's stored title if it changed
+func (e *entity) updateTitle(title string) error {
+	if title == "" || e.Title == title {
+		return nil
+	}
+
+	e.Title = title
+	return db.Instance.Model(e).UpdateColumn("title", title).Error
+}
+
+// updateIsTemp refreshes the entity's stored is_temp flag if it changed
+func (e *entity) updateIsTemp(isTemp bool) error {
+	if e.IsTemp == isTemp {
+		return nil
+	}
+
+	e.IsTemp = isTemp
+	return db.Instance.Model(e).UpdateColumn("is_temp", isTemp).Error
+}
+
+// UpdateTitle refreshes the collector entity's stored title if it changed.
+func (c *Collector) UpdateTitle(title string) error {
+	return c.entity.updateTitle(title)
 }
 
 func (c *Collector) process(fun func()) error {
@@ -60,6 +107,11 @@ func (c *Collector) process(fun func()) error {
 
 	switch {
 	case c.started.IsZero():
+		if c.restored {
+			// seeded readings make the mid-slot start complete energy-wise
+			c.started = slotStart
+			return nil
+		}
 		// keep started un-truncated so a mid-slot start stays distinguishable
 		c.started = now
 
@@ -68,11 +120,16 @@ func (c *Collector) process(fun func()) error {
 		// preceding slot boundary - false for the mid-slot first slot and
 		// for a slot reached after a data gap
 		if c.started.Equal(slotStart.Add(-tariff.SlotDuration)) {
-			if err := c.persist(); err != nil {
+			// a restore that skipped whole slots dumps the downtime energy into
+			// this single slot, inflating it - a contiguous restart keeps the
+			// slot's meter delta time-correct, so only the former is recovered
+			recovered := c.restored && !c.started.Equal(c.lastSlot.Add(tariff.SlotDuration))
+			if err := c.persist(recovered); err != nil {
 				return err
 			}
 		}
 
+		c.restored = false // only the first slot inherits recovery energy
 		c.started = slotStart
 
 	default:
@@ -81,63 +138,89 @@ func (c *Collector) process(fun func()) error {
 
 	c.accu.Energy = 0
 	c.accu.ReturnEnergy = 0
-
+	c.accu.SocTemp = nil
 	return nil
 }
 
-func (c *Collector) persist() error {
-	return persist(c.entity, c.started, c.accu.Imported(), c.accu.Exported())
+func (c *Collector) persist(recovered bool) error {
+	if err := persist(c.entity, c.started, c.accu.Energy, c.accu.ReturnEnergy, c.accu.SocTemp, recovered); err != nil {
+		return err
+	}
+
+	// checkpoint meter readings for downtime recovery (scoped write, keeps identity intact)
+	s := c.accu.Snapshot()
+	c.entity.EnergyMeter = s.EnergyMeter
+	c.entity.ReturnEnergyMeter = s.ReturnEnergyMeter
+	return db.Instance.Model(&c.entity).UpdateColumns(map[string]any{
+		"energy_meter":        s.EnergyMeter,
+		"return_energy_meter": s.ReturnEnergyMeter,
+	}).Error
 }
 
-func (c *Collector) ImportProfile(from time.Time) (*[96]float64, error) {
-	return importProfile(c.entity, from)
+// SetSocTemp records the slot-start soc (temperature when isTemp).
+// Advances the slot via process() so it can be used without a prior AddEnergy call.
+func (c *Collector) SetSocTemp(value float64, isTemp bool) error {
+	if err := c.process(func() { c.accu.setSocTemp(value) }); err != nil {
+		return err
+	}
+	return c.entity.updateIsTemp(isTemp)
 }
 
-func (c *Collector) AddImportEnergy(v float64) error {
+func (c *Collector) EnergyProfile(from time.Time) (*[96]float64, error) {
+	return energyProfile(c.entity, from)
+}
+
+// LastSlotEnergy returns the energy in kWh of the most recently completed
+// 15min slot, or false when it has not been persisted (boot, data gap) or
+// contains recovered downtime energy.
+func (c *Collector) LastSlotEnergy() (float64, bool) {
+	ts := c.accu.clock.Now().Truncate(tariff.SlotDuration).Add(-tariff.SlotDuration)
+
+	var m meter
+	if db.Instance.Where("meter = ? AND ts = ? AND COALESCE(recovered, 0) = 0", c.entity.Id, ts.Unix()).Limit(1).Find(&m).RowsAffected == 0 {
+		return 0, false
+	}
+	return m.Energy, true
+}
+
+func (c *Collector) SetEnergyMeterTotal(v float64) error {
 	return c.process(func() {
-		c.accu.AddImportEnergy(v)
+		c.accu.SetEnergyMeterTotal(v)
 	})
 }
 
-func (c *Collector) AddExportEnergy(v float64) error {
+func (c *Collector) SetReturnEnergyMeterTotal(v float64) error {
 	return c.process(func() {
-		c.accu.AddExportEnergy(v)
+		c.accu.SetReturnEnergyMeterTotal(v)
 	})
 }
 
-func (c *Collector) SetImportMeterTotal(v float64) error {
+// AddEnergy adds energy using meter totals if available, falling back to power
+// integration only for directions without an energy meter. A direction that has
+// reported a total before keeps using meter deltas even if a single read fails,
+// so a transient failure is recovered via the next delta and not double-counted.
+func (c *Collector) AddEnergy(energyTotal, returnEnergyTotal *float64, power float64) error {
 	return c.process(func() {
-		c.accu.SetImportMeterTotal(v)
-	})
-}
+		// a direction that ever reported a total is metered, so a nil read is a
+		// transient failure rather than a power-only meter
+		hasEnergyMeter := energyTotal != nil || c.accu.energyMeter != nil
+		hasReturnMeter := returnEnergyTotal != nil || c.accu.returnEnergyMeter != nil
 
-func (c *Collector) SetExportMeterTotal(v float64) error {
-	return c.process(func() {
-		c.accu.SetExportMeterTotal(v)
-	})
-}
-
-// AddEnergy adds energy using meter totals if available, falling back to power integration.
-func (c *Collector) AddEnergy(importTotal, exportTotal *float64, power float64) error {
-	return c.process(func() {
-		switch {
-		case importTotal != nil && exportTotal != nil:
-			c.accu.SetImportMeterTotal(*importTotal)
-			c.accu.SetExportMeterTotal(*exportTotal)
-		case importTotal != nil:
-			// export via power integration (before meter updates clock)
-			if power < 0 {
+		// integrate power for the unmetered direction first, since applying a
+		// meter total advances the accumulator clock
+		if power >= 0 {
+			if !hasEnergyMeter {
 				c.accu.AddPower(power)
 			}
-			c.accu.SetImportMeterTotal(*importTotal)
-		case exportTotal != nil:
-			// import via power integration (before meter updates clock)
-			if power >= 0 {
-				c.accu.AddPower(power)
-			}
-			c.accu.SetExportMeterTotal(*exportTotal)
-		default:
+		} else if !hasReturnMeter {
 			c.accu.AddPower(power)
+		}
+
+		if energyTotal != nil {
+			c.accu.SetEnergyMeterTotal(*energyTotal)
+		}
+		if returnEnergyTotal != nil {
+			c.accu.SetReturnEnergyMeterTotal(*returnEnergyTotal)
 		}
 	})
 }

@@ -49,6 +49,21 @@ func (v *adapter) Name() string {
 	return v.name
 }
 
+// GetMode returns the charge mode
+func (v *adapter) GetMode() api.ChargeMode {
+	if s, err := settings.String(v.key() + keys.Mode); err == nil {
+		return api.ChargeMode(s)
+	}
+	return ""
+}
+
+// SetMode sets the charge mode
+func (v *adapter) SetMode(mode api.ChargeMode) {
+	v.log.DEBUG.Printf("set %s mode: %s", v.name, mode)
+	settings.SetString(v.key()+keys.Mode, string(mode))
+	v.publish()
+}
+
 // GetMinSoc returns the min soc
 func (v *adapter) GetMinSoc() int {
 	if v, err := settings.Int(v.key() + keys.MinSoc); err == nil {

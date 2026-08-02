@@ -3,6 +3,7 @@ package tariff
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -96,9 +97,9 @@ func (t *embed) effectiveCharges(ts time.Time) float64 {
 	hm := fixed.HourMin{Hour: ts.Hour(), Min: ts.Minute()}
 
 	zones := t.chargesZones.ForDayAndMonth(day, month)
-	for j := len(zones) - 1; j >= 0; j-- {
-		if zones[j].Hours.Contains(hm) {
-			return zones[j].Price
+	for _, z := range slices.Backward(zones) {
+		if z.Hours.Contains(hm) {
+			return z.Price
 		}
 	}
 	return t.Charges

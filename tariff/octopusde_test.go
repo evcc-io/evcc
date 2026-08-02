@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	octoDeGql "github.com/evcc-io/evcc/tariff/octopusde/graphql"
+	krakengql "github.com/evcc-io/evcc/tariff/octopuskraken/graphql"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -52,19 +52,19 @@ var t0 = time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC)
 // dynamicAgreement builds an agreement that uses a dynamic tariff:
 // the unitRateForecast field contains two half-hour forecast slots with
 // per-slot prices stored in TimeOfUseProductUnitRateInformation.
-func dynamicAgreement() octoDeGql.Agreement {
+func dynamicAgreement() krakengql.Agreement {
 	t1 := t0
 	t2 := t0.Add(15 * time.Minute)
 	t3 := t2.Add(15 * time.Minute)
-	return octoDeGql.Agreement{
+	return krakengql.Agreement{
 		IsActive: true,
-		UnitRateForecast: []octoDeGql.UnitRateForecast{
+		UnitRateForecast: []krakengql.UnitRateForecast{
 			{
 				ValidFrom: t1,
 				ValidTo:   t2,
-				UnitRateInformation: octoDeGql.ForecastUnitRateInformation{
-					TimeOfUseProductUnitRateInformation: octoDeGql.TimeOfUseProductUnitRateInformation{
-						Rates: []octoDeGql.Rate{
+				UnitRateInformation: krakengql.ForecastUnitRateInformation{
+					TimeOfUseProductUnitRateInformation: krakengql.TimeOfUseProductUnitRateInformation{
+						Rates: []krakengql.Rate{
 							{NetUnitRateCentsPerKwh: "10.50", LatestGrossUnitRateCentsPerKwh: "12.495"},
 						},
 					},
@@ -73,9 +73,9 @@ func dynamicAgreement() octoDeGql.Agreement {
 			{
 				ValidFrom: t2,
 				ValidTo:   t3,
-				UnitRateInformation: octoDeGql.ForecastUnitRateInformation{
-					TimeOfUseProductUnitRateInformation: octoDeGql.TimeOfUseProductUnitRateInformation{
-						Rates: []octoDeGql.Rate{
+				UnitRateInformation: krakengql.ForecastUnitRateInformation{
+					TimeOfUseProductUnitRateInformation: krakengql.TimeOfUseProductUnitRateInformation{
+						Rates: []krakengql.Rate{
 							{NetUnitRateCentsPerKwh: "8.00", LatestGrossUnitRateCentsPerKwh: "9.52"},
 						},
 					},
@@ -86,13 +86,13 @@ func dynamicAgreement() octoDeGql.Agreement {
 }
 
 // simpleAgreement builds an agreement with a single fixed rate covering one year.
-func simpleAgreement() octoDeGql.Agreement {
-	return octoDeGql.Agreement{
+func simpleAgreement() krakengql.Agreement {
+	return krakengql.Agreement{
 		IsActive:  true,
 		ValidFrom: t0,
 		ValidTo:   t0.AddDate(1, 0, 0),
-		UnitRateInformation: octoDeGql.AgreementUnitRateInformation{
-			SimpleProductUnitRateInformation: octoDeGql.SimpleProductUnitRateInformation{
+		UnitRateInformation: krakengql.AgreementUnitRateInformation{
+			SimpleProductUnitRateInformation: krakengql.SimpleProductUnitRateInformation{
 				NetUnitRateCentsPerKwh:         "25.00",
 				LatestGrossUnitRateCentsPerKwh: "29.75",
 			},
@@ -103,17 +103,17 @@ func simpleAgreement() octoDeGql.Agreement {
 // touAgreement builds an agreement with a two-slot time-of-use tariff:
 //   - Day rate  06:00–22:00
 //   - Night rate 22:00–06:00 (wraps past midnight)
-func touAgreement() octoDeGql.Agreement {
-	return octoDeGql.Agreement{
+func touAgreement() krakengql.Agreement {
+	return krakengql.Agreement{
 		IsActive: true,
-		UnitRateInformation: octoDeGql.AgreementUnitRateInformation{
-			TimeOfUseProductUnitRateInformation: octoDeGql.TouAgreementUnitRateInformation{
-				Rates: []octoDeGql.TouRate{
+		UnitRateInformation: krakengql.AgreementUnitRateInformation{
+			TimeOfUseProductUnitRateInformation: krakengql.TouAgreementUnitRateInformation{
+				Rates: []krakengql.TouRate{
 					{
 						TimeslotName:                   "Day",
 						NetUnitRateCentsPerKwh:         "30.00",
 						LatestGrossUnitRateCentsPerKwh: "35.70",
-						TimeslotActivationRules: []octoDeGql.TimeslotActivationRule{
+						TimeslotActivationRules: []krakengql.TimeslotActivationRule{
 							{ActiveFromTime: "06:00:00", ActiveToTime: "22:00:00"},
 						},
 					},
@@ -121,7 +121,7 @@ func touAgreement() octoDeGql.Agreement {
 						TimeslotName:                   "Night",
 						NetUnitRateCentsPerKwh:         "15.00",
 						LatestGrossUnitRateCentsPerKwh: "17.85",
-						TimeslotActivationRules: []octoDeGql.TimeslotActivationRule{
+						TimeslotActivationRules: []krakengql.TimeslotActivationRule{
 							// 22:00 → 06:00 wraps past midnight
 							{ActiveFromTime: "22:00:00", ActiveToTime: "06:00:00"},
 						},

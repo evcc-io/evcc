@@ -36,6 +36,7 @@ type Solax struct {
 	implement.Caps
 	log        *util.Logger
 	conn       *modbus.Connection
+	enabled    bool
 	isLegacyHw bool
 }
 
@@ -95,12 +96,12 @@ func NewSolaxFromConfig(ctx context.Context, other map[string]any, isLegacyHw bo
 		return nil, err
 	}
 
-	return NewSolax(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID, isLegacyHw)
+	return NewSolax(ctx, cc, isLegacyHw)
 }
 
 // NewSolax creates Solax charger
-func NewSolax(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, id uint8, isLegacyHw bool) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, id)
+func NewSolax(ctx context.Context, settings modbus.Settings, isLegacyHw bool) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -176,12 +177,7 @@ func (wb *Solax) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Solax) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(solaxRegDeviceMode, 1)
-	if err != nil {
-		return false, err
-	}
-
-	return binary.BigEndian.Uint16(b) != solaxModeStop, nil
+	return wb.enabled, nil
 }
 
 // Enable implements the api.Charger interface
@@ -192,6 +188,9 @@ func (wb *Solax) Enable(enable bool) error {
 	}
 
 	_, err := wb.conn.WriteSingleRegister(solaxRegCommandControl, cmd)
+	if err == nil {
+		wb.enabled = enable
+	}
 	return err
 }
 

@@ -1,0 +1,26 @@
+template: growatt-min-tlxe
+products:
+  - brand: Growatt
+    description:
+      generic: MIN 3000TL-XE (and similar MIN series)
+params:
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+render: |
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 35
+      type: input
+      decode: int32
+    scale: 0.1
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 55
+      type: input
+      decode: uint32
+    scale: 0.1

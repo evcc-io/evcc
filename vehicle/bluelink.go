@@ -1,6 +1,8 @@
 package vehicle
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -25,16 +27,46 @@ func init() {
 
 // NewHyundaiFromConfig creates a new vehicle
 func NewHyundaiFromConfig(other map[string]any) (api.Vehicle, error) {
-	settings := bluelink.Config{
-		URI:               "https://prd.eu-ccapi.hyundai.com:8080",
-		CCSPServiceID:     "6d477c38-3ca4-4cf3-9557-2a1929a94654",
-		CCSPServiceSecret: "KUy49XxPzLpLuoK0xhBC77W6VXhmtQR9iQhmIFjjoY4IpxsV",
-		CCSPApplicationID: "014d2225-8495-4735-812d-2616334fd15d",
-		Cfb:               "RFtoRq/vDXJmRndoZaZQyfOot7OrIqGVFj96iY2WL3yyH5Z/pUvlUhqmCxD2t+D65SQ=",
-		BasicToken:        "NmQ0NzdjMzgtM2NhNC00Y2YzLTk1NTctMmExOTI5YTk0NjU0OktVeTQ5WHhQekxwTHVvSzB4aEJDNzdXNlZYaG10UVI5aVFobUlGampvWTRJcHhzVg==",
-		PushType:          "GCM",
-		LoginFormHost:     "https://idpconnect-eu.hyundai.com",
-		Brand:             "hyundai",
+	// Decode region early so we can select the right config
+	cc := struct {
+		Region string
+	}{
+		Region: "Europe",
+	}
+	if region, ok := other["region"].(string); ok {
+		cc.Region = strings.TrimSpace(region)
+	}
+
+	var settings bluelink.Config
+	switch strings.ToLower(cc.Region) {
+	case "europe", "":
+		settings = bluelink.Config{
+			URI:               "https://prd.eu-ccapi.hyundai.com:8080",
+			CCSPServiceID:     "6d477c38-3ca4-4cf3-9557-2a1929a94654",
+			CCSPServiceSecret: "KUy49XxPzLpLuoK0xhBC77W6VXhmtQR9iQhmIFjjoY4IpxsV",
+			CCSPApplicationID: "014d2225-8495-4735-812d-2616334fd15d",
+			Cfb:               "RFtoRq/vDXJmRndoZaZQyfOot7OrIqGVFj96iY2WL3yyH5Z/pUvlUhqmCxD2t+D65SQ=",
+			BasicToken:        "NmQ0NzdjMzgtM2NhNC00Y2YzLTk1NTctMmExOTI5YTk0NjU0OktVeTQ5WHhQekxwTHVvSzB4aEJDNzdXNlZYaG10UVI5aVFobUlGampvWTRJcHhzVg==",
+			PushType:          "GCM",
+			LoginFormHost:     "https://idpconnect-eu.hyundai.com",
+			Brand:             "hyundai",
+		}
+	case "australia", "new zealand":
+		settings = bluelink.Config{
+			URI:               bluelink.HyundaiAUBaseURI,
+			CCSPServiceID:     bluelink.HyundaiAUCCSPServiceID,
+			CCSPServiceSecret: "e6fbwHM32YNbhQl0pviaPp3rf4t3S6k91eceA3MJLdbdThCO",
+			CCSPApplicationID: bluelink.HyundaiAUCCSPAppID,
+			Cfb:               bluelink.HyundaiAUCfb,
+			BasicToken:        bluelink.HyundaiAUBasicToken,
+			PushType:          "GCM",
+			LoginFormHost:     bluelink.HyundaiAUBaseURI,
+			TokenURL:          "/api/v1/user/oauth2/token",
+			Brand:             "hyundai",
+			UseBasicAuth:      true,
+		}
+	default:
+		return nil, fmt.Errorf("unknown region: %s", cc.Region)
 	}
 
 	return newBluelinkFromConfig("hyundai", other, settings)
@@ -82,6 +114,7 @@ func newBluelinkFromConfig(brand string, other map[string]any, settings bluelink
 		User, Password string
 		VIN            string
 		Language       string
+		Region         string
 		Expiry         time.Duration
 		Cache          time.Duration
 	}{

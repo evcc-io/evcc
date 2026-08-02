@@ -1,8 +1,6 @@
 import type { StaticPlan, RepeatingPlan, PlanStrategy } from "../components/ChargingPlans/types";
 import type { ForecastSlot, SolarDetails } from "../components/Forecast/types";
 
-export const GRID_CONTROL = "gridcontrol";
-
 // react-native-webview
 interface WebView {
   postMessage: (message: string) => void;
@@ -40,7 +38,14 @@ export interface InfluxConfig {
 }
 
 export interface HemsConfig {
-  type: string;
+  configured: boolean;
+}
+
+export interface HemsStatus {
+  dimmed?: boolean;
+  curtailed?: number; // allowed feed-in percent (0..100 integer), <100 = curtailed
+  maxConsumptionPower?: number;
+  maxProductionPower?: number;
 }
 
 export interface ShmConfig {
@@ -89,14 +94,16 @@ export interface State {
   pv?: Meter[];
   aux?: Meter[];
   ext?: Meter[];
+  consumers?: Meter[];
   tariffs?: ConfigStatus<unknown, unknown>;
   tariffGrid?: number;
   tariffFeedIn?: number;
   tariffCo2?: number;
   tariffSolar?: number;
+  tariffTemperature?: number;
   mqtt?: MqttConfig;
   influx?: InfluxConfig;
-  hems?: ConfigStatus<HemsConfig, unknown>;
+  hems?: ConfigStatus<HemsConfig, HemsStatus>;
   shm?: ShmConfig;
   sponsor?: ConfigStatus<unknown, SponsorStatus>;
   eebus?: ConfigStatus<EebusConfig, EebusStatus>;
@@ -110,9 +117,12 @@ export interface State {
   prioritySoc?: number;
   bufferStartSoc?: number;
   batteryDischargeControl?: boolean;
+  batteryGridDischarge?: boolean; // battery may discharge to grid (experimental)
+  solarAdjusted?: boolean;
   batteryGridChargeLimit?: number | null;
   smartCostAvailable?: boolean;
   smartCostType?: SMART_COST_TYPE;
+  historyUpdated?: string; // ISO timestamp, bumped each 15min metrics persist
   siteTitle?: string;
   deviceColors?: DeviceColorEntry[];
   vehicles: Record<string, Vehicle>;
@@ -121,7 +131,10 @@ export interface State {
   config?: string;
   database?: string;
   ocpp?: Ocpp;
+  ocppforwarder?: ConfigStatus<OcppForwarderRule[], OcppForwarderSession[]>;
   optimizer?: boolean;
+  optimizerChargingStrategy?: string;
+  optimizerChargingStrategies?: string[];
   mcp?: boolean;
 }
 
@@ -135,6 +148,24 @@ export type YamlSource = "file" | "db" | undefined;
 
 export interface OcppConfig {
   port: number;
+}
+
+export interface OcppForwarderRule {
+  stationId: string;
+  upstreamUrl: string;
+  password?: string;
+  upstreamStationId?: string;
+  username?: string;
+  insecure?: boolean;
+  caCert?: string;
+  readOnly?: boolean;
+}
+
+export interface OcppForwarderSession {
+  chargerId: string;
+  upstreamUrl: string;
+  upstreamConnected: boolean;
+  error?: string;
 }
 
 export interface OcppStatus {
@@ -173,8 +204,6 @@ export interface Circuit {
   current?: number;
   maxPower?: number;
   maxCurrent?: number;
-  dimmed?: boolean;
-  curtailed?: boolean;
 }
 
 export interface Entity {
@@ -196,6 +225,10 @@ export enum ConfigType {
 
 export type ConfigVehicle = Entity;
 export type ConfigMessenger = Entity;
+
+export interface ConfigHems extends Entity {
+  deviceProduct?: string;
+}
 
 // Configuration-specific types for device setup/configuration contexts
 export interface ConfigCharger extends Omit<Entity, "type"> {
@@ -246,6 +279,12 @@ export interface ConfigLoadpoint {
     };
     estimate: boolean;
   };
+  ui: LoadpointUi;
+}
+
+export interface LoadpointUi {
+  minTemp: number;
+  maxTemp: number;
 }
 
 export enum SMART_COST_TYPE {
@@ -257,6 +296,11 @@ export enum SMART_COST_TYPE {
 export enum LENGTH_UNIT {
   KM = "km",
   MILES = "mi",
+}
+
+export enum TIME_FORMAT {
+  H12 = "12",
+  H24 = "24",
 }
 
 export interface Loadpoint {
@@ -286,6 +330,7 @@ export interface Loadpoint {
   effectiveLimitSoc: number;
   effectiveMaxCurrent: number;
   effectiveMinCurrent: number;
+  effectiveMinSoc: number;
   effectivePlanId: number;
   effectivePlanSoc: number;
   effectivePlanTime: string | null;
@@ -298,6 +343,7 @@ export interface Loadpoint {
   limitSoc: number;
   maxCurrent: number;
   minCurrent: number;
+  minSoc: number;
   minSocNotReached: boolean;
   mode: CHARGE_MODE;
   offeredCurrent: number;
@@ -315,6 +361,8 @@ export interface Loadpoint {
   priority: number;
   pvAction: PV_ACTION;
   pvRemaining: number;
+  last24hEnergy?: number;
+  last7dEnergy?: number;
   sessionCo2PerKWh: number | null;
   sessionEnergy: number;
   sessionPrice: number | null;
@@ -326,7 +374,9 @@ export interface Loadpoint {
   smartFeedInPriorityActive: boolean;
   smartFeedInPriorityLimit: number | null;
   smartFeedInPriorityNextStart: string | null;
+  suggestion?: LoadpointSuggestion | null;
   title: string;
+  todayEnergy?: number;
   vehicleClimaterActive: boolean | null;
   vehicleDetectionActive: boolean;
   vehicleLimitSoc: number;
@@ -337,6 +387,7 @@ export interface Loadpoint {
   vehicleTitle: string;
   vehicleWelcomeActive: boolean;
   batteryBoostLimit: number;
+  ui?: LoadpointUi;
 }
 
 export interface UiLoadpoint extends Loadpoint {
@@ -391,6 +442,7 @@ export enum CURRENCY {
   ZAR = "ZAR",
   TRY = "TRY",
   MYR = "MYR",
+  THB = "THB",
 }
 
 export enum ICON_SIZE {
@@ -413,6 +465,7 @@ export enum BATTERY_MODE {
   NORMAL = "normal",
   HOLD = "hold",
   CHARGE = "charge",
+  HOLDCHARGE = "holdcharge",
 }
 
 export enum PHASES {
@@ -455,7 +508,9 @@ export type SessionInfoKey =
   | "avgPrice"
   | "price"
   | "emission"
-  | "co2";
+  | "co2"
+  | "last24hEnergy"
+  | "last7dEnergy";
 
 export interface SponsorStatus {
   name?: string;
@@ -548,6 +603,13 @@ export type EebusConfig = {
 
 export type EebusStatus = {
   ski: string;
+  qr?: string;
+};
+
+export type EebusPairing = {
+  ski: string;
+  shipID: string;
+  source: "paired" | "ski";
 };
 
 export type ModbusProxy = {
@@ -567,6 +629,7 @@ export enum MESSAGING_EVENTS {
   GUEST = "guest",
   ASLEEP = "asleep",
   PLANOVERRUN = "planoverrun",
+  SUGGESTION = "suggestion",
 }
 
 export interface MessagingEvent {
@@ -619,14 +682,30 @@ export interface Battery {
   forecast?: BatteryForecast;
 }
 
+export interface BatterySuggestion {
+  action: "normal" | "hold" | "charge" | "holdcharge" | "discharge";
+  charge?: number; // recommended charge power, W
+  discharge?: number; // recommended discharge power, W
+  actionable?: boolean; // suggestion differs from the current operating mode
+}
+
+export interface LoadpointSuggestion {
+  action: "charge" | "stop";
+  charge?: number; // recommended charge power, W
+  discharge?: number; // recommended discharge power, W
+  actionable?: boolean; // suggestion differs from the current operating mode
+}
+
 export interface BatteryMeter extends Meter {
   soc: number;
   controllable: boolean;
   capacity: number; // 0 when not specified
+  suggestion?: BatterySuggestion;
 }
 
 export interface Vehicle {
   name: string;
+  mode?: CHARGE_MODE | "";
   minSoc?: number;
   limitSoc?: number;
   plan?: StaticPlan;
@@ -674,6 +753,7 @@ export interface Forecast {
   solar?: SolarDetails;
   planner?: ForecastSlot[];
   feedin?: ForecastSlot[];
+  temperature?: ForecastSlot[];
 }
 
 export interface SelectOption<T> {
@@ -683,10 +763,17 @@ export interface SelectOption<T> {
   disabled?: boolean;
 }
 
-export type DeviceType = "charger" | "meter" | "vehicle" | "loadpoint" | "messenger" | "tariff";
-export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext";
+export type DeviceType =
+  | "charger"
+  | "meter"
+  | "vehicle"
+  | "loadpoint"
+  | "messenger"
+  | "tariff"
+  | "hems";
+export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext" | "consumer";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
-export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar";
+export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar" | "temperature";
 
 // see https://stackoverflow.com/a/54178819
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
@@ -699,12 +786,14 @@ export interface SiteConfig {
   title: string;
   aux: string[] | null;
   ext: string[] | null;
+  consumer: string[] | null;
 }
 
 export type ValueOf<T> = T[keyof T];
 
 // EvOpt interfaces matching OpenAPI spec exactly
 export interface EvOpt {
+  updated: string;
   req: OptimizationInput;
   res: OptimizationResult;
   details: OptimizationDetails;

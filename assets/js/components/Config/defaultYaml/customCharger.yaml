@@ -23,6 +23,9 @@ maxcurrent: # set maximum charge current in A
 #energy: # meter reading in kWh
 #  source: const
 #  value: 42.5
+#returnenergy: # meter reading in reverse direction in kWh
+#  source: const
+#  value: 12.3
 #identify: # current RFID identifier
 #  source: const
 #  value: "1234567890"

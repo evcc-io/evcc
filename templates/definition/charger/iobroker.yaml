@@ -1,0 +1,171 @@
+template: iobroker
+group: generic
+products:
+  - brand: ioBroker
+    description:
+      generic: Charger
+requirements:
+  evcc: ["skiptest"]
+  description:
+    de: |
+      Auf der verwendeten ioBroker Instanz muss der `rest-api` adapter (nicht `simple-api`) installiert sein. 
+      Authentifiziert werden kann nur mittels `basic` authentication. Wird kein Passwort angegeben, so wird keine Authentifizierung durchgeführt.
+      Bei der Angabe der Entities für die einzelnen Messwerte ist darauf zu achten, dass diese korrekt URL-Encoded sind.
+      So wird aus `shelly.0.SHEM-3#8CAAB561991E#1.Total.ConsumedPower  shelly.0.SHEM-3%238CAAB561991E%231.Total.ConsumedPower`
+    en: |
+      The `rest-api` adapter (not `simple-api`) must be installed on the ioBroker instance being used.
+      Authentication can only be performed using `basic` authentication. If no password is provided, no authentication will be performed. 
+      When specifying the entities for the individual measured values, ensure that they are correctly URL-encoded.
+      For example, `shelly.0.SHEM-3#8CAAB561991E#1.Total.ConsumedPower` becomes `shelly.0.SHEM-3%238CAAB561991E%231.Total.ConsumedPower`
+params:
+  - name: uri
+    required: true
+    description:
+      en: The full uri of the host to query
+      de: Der vollständige URI der ioBroker Instanz
+    example: https://iobroker.homelab.lan:8082
+  - name: cache
+  - name: user
+  - name: password
+  - name: status
+    description:
+      de: Ladezustand (Status A, B, C)
+      en: Charge status (A, B, C)
+    type: string
+    required: true
+  - name: power
+    description:
+      de: Leistung
+      en: Power
+    unit: W
+    type: string
+  - name: enabled
+    description:
+      de: Ladebereit
+      en: Enabled
+    type: string
+    required: true
+  - name: enable
+    description:
+      de: Setze ladebereit
+      en: Set enabled
+    type: string
+    required: true
+  - name: maxcurrent
+    description:
+      de: Setze maximale Stromstärke
+      en: Set maximum amperage
+    type: string
+  - name: maxcurrentmillis
+    description:
+      de: Setze maximale Stromstärke
+      en: Set maximum amperage
+    unit: mA
+    type: string
+    advanced: true
+  - name: phases1p3p
+    description:
+      de: Setze Phasen(1 oder 3)
+      en: Set num phases (1 or 3)
+    type: string
+render: |
+  type: custom
+  {{- if .status }}
+  status:
+    source: http
+    headers:
+     - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .status }}/plain?extraPlain=true
+    cache: {{ .cache }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+  {{- end }}
+  {{- if .power }}
+  power:
+    source: http
+    headers:
+       - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .power }}/plain
+    cache: {{ .cache }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+  {{- end }}
+  {{- if .enabled }}
+  enabled:
+      source: http
+      headers:
+       - accept: text/plain;charset=UTF-8
+      uri: {{ .uri }}/rest-api/v1/state/{{ .enabled }}/plain
+      cache: {{ .cache }}
+      {{- if .user }}
+      auth:
+       type: basic
+       user: {{ .user }}
+       password: {{ .password }}
+      {{- end }}
+  {{- end }}
+  {{- if .enable }}
+  enable:
+    source: http
+    headers:
+       - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .enable }}?value=${enable}    
+    cache: {{ .cache }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+  {{- end }}
+  {{- if .maxcurrent }}
+  maxcurrent:
+    source: http
+    headers:
+       - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .maxcurrent }}?value=${maxcurrent}
+    cache: {{ .cache }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+  {{- end }}
+  {{- if .maxcurrentmillis }}
+  maxcurrentmillis:
+    source: http
+    headers:
+       - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .maxcurrentmillis }}?value=${maxcurrentmillis}
+    cache: {{ .cache }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+  {{- end }}
+  {{- if .phases1p3p }}
+  phases1p3p:
+    source: http
+    headers:
+       - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .phases1p3p }}?value=${phases}
+    cache: {{ .cache }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+  tos: true  
+  {{- end }}

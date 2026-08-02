@@ -19,7 +19,7 @@ const SAVINGS_REGION = "savings_region";
 const SAVINGS_INDICATOR = "savings_indicator";
 const SESSIONS_GROUP = "sessions_group";
 const SESSIONS_TYPE = "sessions_type";
-const SETTINGS_SOLAR_ADJUSTED = "settings_solar_adjusted";
+const BATTERY_UNIT = "battery_unit";
 const SETTINGS_PRICE_ZOOM = "settings_price_zoom";
 const SETTINGS_HIDE_FEEDIN = "settings_hide_feedin";
 const LAST_BATTERY_SMART_COST_LIMIT = "last_battery_smart_cost_limit";
@@ -124,7 +124,7 @@ export interface Settings {
   savingsIndicator: string;
   sessionsGroup: string;
   sessionsType: string;
-  solarAdjusted: boolean;
+  batteryUnit: string;
   priceZoom: boolean;
   hideFeedin: boolean;
   loadpoints: Record<string, LoadpointSettings>;
@@ -153,7 +153,7 @@ const settings: Settings = reactive({
   savingsIndicator: read(SAVINGS_INDICATOR),
   sessionsGroup: read(SESSIONS_GROUP),
   sessionsType: read(SESSIONS_TYPE),
-  solarAdjusted: false, //readBool(SETTINGS_SOLAR_ADJUSTED), # temporarily disable, https://github.com/evcc-io/evcc/issues/29165
+  batteryUnit: read(BATTERY_UNIT),
   priceZoom: readBool(SETTINGS_PRICE_ZOOM),
   hideFeedin: readBool(SETTINGS_HIDE_FEEDIN),
   loadpoints: readJSON(LOADPOINTS),
@@ -181,7 +181,7 @@ watch(() => settings.savingsRegion, save(SAVINGS_REGION));
 watch(() => settings.savingsIndicator, save(SAVINGS_INDICATOR));
 watch(() => settings.sessionsGroup, save(SESSIONS_GROUP));
 watch(() => settings.sessionsType, save(SESSIONS_TYPE));
-watch(() => settings.solarAdjusted, saveBool(SETTINGS_SOLAR_ADJUSTED));
+watch(() => settings.batteryUnit, save(BATTERY_UNIT));
 watch(() => settings.priceZoom, saveBool(SETTINGS_PRICE_ZOOM));
 watch(() => settings.hideFeedin, saveBool(SETTINGS_HIDE_FEEDIN));
 watch(() => settings.loadpoints, saveJSON(LOADPOINTS), { deep: true });

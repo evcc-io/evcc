@@ -13,14 +13,92 @@ requirements:
       das "Modbus"-Protokoll umgestellt werden.
 params:
   - name: usage
-    choice: ["battery"]
+    choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["tcpip"]
     port: 502
     id: 1
+  - name: maxacpower
   - preset: battery-params
 render: |
   type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 535 # Pgrid (S32, W, positive = import)
+      type: input
+      decode: int32
+  currents:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 510 # Igrid R (S16, 0.01 A)
+      type: input
+      decode: int16
+    scale: 0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 511 # Igrid S (S16, 0.01 A)
+      type: input
+      decode: int16
+    scale: 0.01
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 512 # Igrid T (S16, 0.01 A)
+      type: input
+      decode: int16
+    scale: 0.01
+  powers:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 529 # Pgrid R (S32, W)
+      type: input
+      decode: int32
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 531 # Pgrid S (S32, W)
+      type: input
+      decode: int32
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 533 # Pgrid T (S32, W)
+      type: input
+      decode: int32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1020 # Efromgrid total (U32, 0.1 kWh)
+      type: input
+      decode: uint32
+    scale: 0.1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 553 # Ppv (U32, W)
+      type: input
+      decode: uint32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1026 # EPV total (U32, 0.1 kWh)
+      type: input
+      decode: uint32
+    scale: 0.1
+  maxacpower: {{ .maxacpower }}
+  {{- end }}
+  {{- if eq .usage "battery" }}
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -44,3 +122,4 @@ render: |
       decode: uint32
     scale: 0.1
   {{- include "battery-params" . }}
+  {{- end }}

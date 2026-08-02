@@ -1,7 +1,10 @@
 # STEP 1 build ui
-FROM --platform=$BUILDPLATFORM node:24-alpine AS node
+FROM --platform=$BUILDPLATFORM node:26-alpine AS node
 
-RUN apk update && apk add --no-cache make
+RUN apk update && apk add --no-cache make curl bash && curl -fsSL https://vite.plus | bash
+
+# the installer only wires vp into interactive shell rc files, which RUN steps don't source
+ENV PATH="/root/.vite-plus/bin:${PATH}"
 
 WORKDIR /build
 

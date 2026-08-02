@@ -16,6 +16,7 @@ const (
 	MessagingEvents    = "messagingEvents"
 	ModbusProxy        = "modbusproxy"
 	Ocpp               = "ocpp"
+	OcppForwarder      = "ocppforwarder"
 	Tariffs            = "tariffs"
 	TariffRefs         = "tariffRefs"
 	Version            = "version"

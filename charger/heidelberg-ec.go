@@ -64,18 +64,20 @@ func init() {
 func NewHeidelbergECFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := modbus.Settings{
 		ID: 1,
+		// https://github.com/evcc-io/evcc/issues/15437
+		Delay: 100 * time.Millisecond,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewHeidelbergEC(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
+	return NewHeidelbergEC(ctx, cc)
 }
 
 // NewHeidelbergEC creates HeidelbergEC charger
-func NewHeidelbergEC(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
+func NewHeidelbergEC(ctx context.Context, settings modbus.Settings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -92,9 +94,6 @@ func NewHeidelbergEC(ctx context.Context, uri, device, comset string, baudrate i
 		conn:    conn,
 		current: 60, // assume min current
 	}
-
-	// https://github.com/evcc-io/evcc/issues/15437
-	conn.Delay(100 * time.Millisecond)
 
 	// disable standby to prevent comm loss
 	if err := wb.set(hecRegStandbyConfig, hecStandbyDisabled); err != nil {

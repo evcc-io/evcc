@@ -113,12 +113,56 @@
 							{{ fmtCo2Medium(session.co2PerKWh) }}
 						</td>
 					</tr>
-					<tr v-if="session.odometer" data-testid="session-details-odometer">
-						<th>
+					<tr v-if="socRange" data-testid="session-details-soc">
+						<th class="align-baseline">
+							{{ $t("session.soc") }}
+						</th>
+						<td>
+							{{ socRange }}
+						</td>
+					</tr>
+					<tr data-testid="session-details-odometer">
+						<th class="align-middle">
 							{{ $t("session.odometer") }}
 						</th>
 						<td>
-							{{ formatKm(session.odometer) }}
+							<div class="odometer-cell d-flex align-items-center">
+								<div
+									v-if="editingOdometer"
+									class="input-group input-group-sm odometer-input w-auto"
+								>
+									<input
+										ref="odometerInput"
+										v-model="odometerInput"
+										type="number"
+										inputmode="numeric"
+										min="0"
+										class="form-control grow-0 text-end"
+										:aria-label="$t('session.odometer')"
+										aria-describedby="sessionDetailsOdometerUnit"
+										@blur="saveOdometer"
+										@keydown.enter.prevent="saveOdometer"
+										@keydown.esc.stop="cancelOdometer"
+									/>
+									<span id="sessionDetailsOdometerUnit" class="input-group-text">
+										{{ distanceUnitLabel }}
+									</span>
+								</div>
+								<button
+									v-else
+									type="button"
+									class="btn-reset text-decoration-underline"
+									:class="{ 'text-muted': !session.odometer }"
+									:aria-label="$t('session.odometer')"
+									@click="startEditOdometer"
+								>
+									{{
+										session.odometer
+											? formatKm(session.odometer)
+											: $t("session.addOdometer")
+									}}
+								</button>
+							</div>
 						</td>
 					</tr>
 					<tr v-if="session.meterStart" data-testid="session-details-meter">
@@ -173,7 +217,7 @@ import formatter from "@/mixins/formatter";
 import Options from "../Vehicles/Options.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
 import GenericModal from "../Helper/GenericModal.vue";
-import { distanceUnit, distanceValue } from "@/units";
+import { distanceUnit, distanceValue, distanceValueReverse } from "@/units";
 import api from "@/api";
 import { defineComponent, type PropType } from "vue";
 import type { Session } from "./types";
@@ -190,7 +234,17 @@ export default defineComponent({
 		loadpoints: { type: Array as PropType<string[]>, default: () => [] },
 	},
 	emits: ["session-changed"],
+	data() {
+		return {
+			editingOdometer: false,
+			odometerInput: "" as number | string,
+			odometerOriginal: "" as number | string,
+		};
+	},
 	computed: {
+		distanceUnitLabel(): string {
+			return distanceUnit();
+		},
 		chargedEnergy() {
 			return this.session.chargedEnergy * 1e3;
 		},
@@ -204,6 +258,14 @@ export default defineComponent({
 		},
 		solarEnergy() {
 			return this.chargedEnergy * (this.session.solarPercentage / 100);
+		},
+		socRange(): string {
+			const { socStart, socEnd } = this.session;
+			if (socStart == null || socEnd == null) {
+				return "";
+			}
+			const added = socEnd - socStart;
+			return `${this.fmtPercentage(added, 0, true)} (${this.fmtNumber(socStart, 0)} – ${this.fmtPercentage(socEnd, 0)})`;
 		},
 		vehicleOptions(): SelectOption<string>[] {
 			return this.vehicles.map((v) => ({
@@ -230,6 +292,26 @@ export default defineComponent({
 		formatKm(value: number) {
 			return `${this.fmtNumber(distanceValue(value), 0)} ${distanceUnit()}`;
 		},
+		startEditOdometer() {
+			this.odometerInput = this.session.odometer
+				? Math.round(distanceValue(this.session.odometer))
+				: "";
+			this.odometerOriginal = this.odometerInput;
+			this.editingOdometer = true;
+			this.$nextTick(() => (this.$refs["odometerInput"] as HTMLInputElement)?.focus());
+		},
+		cancelOdometer() {
+			this.editingOdometer = false;
+		},
+		async saveOdometer() {
+			if (!this.editingOdometer) return;
+			this.editingOdometer = false;
+			const value = this.odometerInput;
+			if (value === this.odometerOriginal) return;
+			// empty input clears the stored value
+			const odometer = value === "" ? null : distanceValueReverse(Number(value));
+			await this.updateSession({ odometer });
+		},
 		async changeVehicle(title: string) {
 			await this.updateSession({ vehicle: title });
 		},
@@ -239,7 +321,9 @@ export default defineComponent({
 		async changeLoadpoint(title: string) {
 			await this.updateSession({ loadpoint: title });
 		},
-		async updateSession(data: Partial<Session> | { vehicle: null }) {
+		async updateSession(
+			data: Partial<Session> | { vehicle: null } | { odometer: number | null }
+		) {
 			try {
 				await api.put("session/" + this.session.id, data);
 				this.$emit("session-changed");
@@ -267,5 +351,24 @@ export default defineComponent({
 
 .options .loadpoint-name {
 	text-decoration: underline;
+}
+
+.odometer-cell {
+	/* reserve edit-input height so the row doesn't jump between view/edit */
+	min-height: 2rem;
+}
+
+.odometer-input .form-control {
+	/* fit ~7 digits (e.g. 128222) */
+	width: calc(7ch + 1rem);
+	-moz-appearance: textfield;
+	appearance: textfield;
+}
+
+.odometer-input .form-control::-webkit-inner-spin-button,
+.odometer-input .form-control::-webkit-outer-spin-button {
+	-webkit-appearance: none;
+	appearance: none;
+	margin: 0;
 }
 </style>

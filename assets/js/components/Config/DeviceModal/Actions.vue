@@ -1,5 +1,7 @@
 <template>
 	<div>
+		<slot name="before-test"></slot>
+
 		<TestResult
 			v-if="testState"
 			v-bind="testState"
@@ -7,6 +9,8 @@
 			:currency="currency"
 			@test="$emit('test')"
 		/>
+
+		<slot name="after-test"></slot>
 
 		<div class="mt-4 d-flex justify-content-between">
 			<button

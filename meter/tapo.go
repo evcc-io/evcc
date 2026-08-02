@@ -14,7 +14,7 @@ func init() {
 // NewTapoFromConfig creates a tapo meter from generic config
 func NewTapoFromConfig(other map[string]any) (api.Meter, error) {
 	var cc struct {
-		URI      string
+		Host     string
 		User     string
 		Password string
 	}
@@ -27,5 +27,5 @@ func NewTapoFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	return tapo.NewConnection(cc.URI, cc.User, cc.Password)
+	return tapo.NewConnection(cc.Host, cc.User, cc.Password)
 }

@@ -31,7 +31,7 @@
 						<span v-if="status.connected" class="text-primary">
 							{{ $t("config.remote.connected") }}
 						</span>
-						<span v-else class="text-muted small">
+						<span v-else :class="config.enabled ? 'text-danger' : 'small'">
 							{{ $t("config.remote.disconnected") }}
 						</span>
 					</div>
@@ -75,6 +75,7 @@
 			v-else-if="view === 'reveal' && createdClient && status.url"
 			:client="createdClient"
 			:server-url="status.url"
+			:site-title="siteTitle"
 			@done="finishReveal"
 		/>
 	</GenericModal>
@@ -115,6 +116,7 @@ export default defineComponent({
 	props: {
 		remote: { type: Object as () => Remote | undefined, default: undefined },
 		isSponsor: Boolean,
+		siteTitle: String,
 	},
 	data() {
 		return {

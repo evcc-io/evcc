@@ -124,24 +124,19 @@ render: |
       set:
         source: sequence
         set:
+        # Time-1 "battery first" slot: start (3038) and end (3039) time words must be written
+        # in a single FC16 multi-register transaction. The firmware rejects a standalone write
+        # to the end-time register 3039 with modbus exception 0.
+        # value = (start << 16) | end = (8192 << 16) | 5947 = 0x2000173B; bit15=0 -> slot disabled
         - source: const
-          value: 8192
+          value: 536876859
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
               address: 3038
               type: writemultiple
-              decode: uint16
-        - source: const
-          value: 5947
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 3039
-              type: writemultiple
-              decode: uint16
+              decode: uint32
         - source: const
           value: 0
           set:
@@ -155,24 +150,16 @@ render: |
       set:
         source: sequence
         set:
+        # value = (start << 16) | end = (40960 << 16) | 5947 = 0xA000173B; bit15=1 -> slot enabled
         - source: const
-          value: 40960
+          value: 2684360507
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
               address: 3038
               type: writemultiple
-              decode: uint16
-        - source: const
-          value: 5947
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 3039
-              type: writemultiple
-              decode: uint16
+              decode: uint32
         - source: const
           value: 0
           set:
@@ -186,24 +173,16 @@ render: |
       set:
         source: sequence
         set:
+        # value = (start << 16) | end = (40960 << 16) | 5947 = 0xA000173B; bit15=1 -> slot enabled
         - source: const
-          value: 40960
+          value: 2684360507
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
               address: 3038
               type: writemultiple
-              decode: uint16
-        - source: const
-          value: 5947
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 3039
-              type: writemultiple
-              decode: uint16
+              decode: uint32
         - source: const
           value: 1
           set:
@@ -212,6 +191,6 @@ render: |
             register:
               address: 3049
               type: writemultiple
-              decode: uint16 
+              decode: uint16
   {{- include "battery-params" . }}
   {{- end }}

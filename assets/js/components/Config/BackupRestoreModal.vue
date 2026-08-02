@@ -297,16 +297,13 @@ export default defineComponent({
 			return r;
 		},
 		async downloadBackup() {
-			if (dispatchDownload("/api/system/backup", "POST", { password: this.password })) {
+			const headers = { "X-Admin-Password": this.password };
+			if (dispatchDownload("/api/db/backup", headers)) {
 				this.closeConfirmModal();
 				return;
 			}
 			const res = await this.call(
-				api.post(
-					"/system/backup",
-					{ password: this.password },
-					{ responseType: "blob", validateStatus }
-				)
+				api.get("/db/backup", { headers, responseType: "blob", validateStatus })
 			);
 			if (res) {
 				this.closeConfirmModal();
@@ -314,11 +311,13 @@ export default defineComponent({
 			}
 		},
 		async restoreDatabase() {
+			const headers = { "X-Admin-Password": this.password };
 			const formData = new FormData();
-			formData.append("password", this.password);
 			formData.append("file", this.file!);
 
-			const res = await this.call(api.post("/system/restore", formData, { validateStatus }));
+			const res = await this.call(
+				api.post("/db/restore", formData, { headers, validateStatus })
+			);
 
 			if (res) {
 				this.hideBackupRestoreModal = true;
@@ -328,12 +327,9 @@ export default defineComponent({
 			}
 		},
 		async resetDatabase() {
+			const headers = { "X-Admin-Password": this.password };
 			const res = await this.call(
-				api.post(
-					"/system/reset",
-					{ password: this.password, ...this.selectedReset },
-					{ validateStatus }
-				)
+				api.post("/db/reset", this.selectedReset, { headers, validateStatus })
 			);
 
 			if (res) {

@@ -94,7 +94,7 @@ test.describe("battery settings", async () => {
     await page.getByRole("link", { name: "Charge" }).click();
 
     await page.getByTestId("energyflow").click();
-    await expect(discharge).toContainText("Battery (locked)");
+    await expect(discharge).toContainText("Battery (discharge locked)");
     await expect(charge).toContainText("Battery charging");
   });
 });

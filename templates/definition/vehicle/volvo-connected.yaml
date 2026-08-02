@@ -26,6 +26,7 @@ requirements:
       **NOTE:** Volvo enforces re-login every 7 days. Use "hamburger" menu logout/login.
 params:
   - preset: vehicle-common
+  - preset: vehicle-online
   - name: vccapikey
     required: true
     description:
@@ -34,27 +35,20 @@ params:
       en: "from [Volvo Developer App](https://developer.volvocars.com/)."
       de: "aus [Volvo Developer App](https://developer.volvocars.com/)."
   - name: clientId
-    required: true
     help:
       en: "from [Volvo Developer App](https://developer.volvocars.com/)."
       de: "aus [Volvo Developer App](https://developer.volvocars.com/)."
   - name: clientSecret
-    required: true
     help:
       en: "from [Volvo Developer App](https://developer.volvocars.com/)."
       de: "aus [Volvo Developer App](https://developer.volvocars.com/)."
   - name: redirectUri
-    required: true
-    description:
-      generic: Redirect URI
     help:
       en: "Redirect URI of your evcc instance. Must match the redirect URI set in your Volvo Developer App."
       de: "Redirect-URI deiner evcc-Instanz. Muss mit der Redirect-URI übereinstimmen, die in deiner Volvo Developer App festgelegt ist."
     service: auth/redirecturi
-    example: "https://evcc.example.org/providerauth/callback"
   - name: vin
     example: WF0FXX...
-    required: true
   - name: accessToken
     deprecated: true
   - name: refreshToken
@@ -71,3 +65,4 @@ render: |
   redirecturi: {{ .redirectUri }}
   vin: {{ .vin }}
   {{ include "vehicle-common" . }}
+  {{ include "vehicle-features" . }}

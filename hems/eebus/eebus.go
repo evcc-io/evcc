@@ -9,11 +9,16 @@ import (
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/hems/config"
 	"github.com/evcc-io/evcc/hems/smartgrid"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 )
+
+func init() {
+	config.AddCtx("eebus", NewFromConfig)
+}
 
 type EEBus struct {
 	mux sync.RWMutex
@@ -22,8 +27,9 @@ type EEBus struct {
 	*eebus.Connector
 	cs *eebus.ControllableSystem
 
-	root        api.Circuit
+	site        site.API
 	passthrough func(bool) error
+	publishFunc func()
 
 	status        status
 	statusUpdated time.Time
@@ -32,13 +38,14 @@ type EEBus struct {
 
 	smartgridConsumptionId    uint
 	consumptionLimit          ucapi.LoadLimit // LPC-041
-	consumptionLimitActivated time.Time
+	consumptionLimitActivated *time.Time      // nil until first connected, then always set
 	failsafeConsumptionLimit  float64
 
 	smartgridProductionId    uint
-	productionLimit          ucapi.LoadLimit
-	productionLimitActivated time.Time
-	failsafeProductionLimit  *float64
+	productionLimit          ucapi.LoadLimit // feed-in limit (NOT production despite its name)
+	productionLimitActivated *time.Time      // nil until first connected, then always set
+	failsafeProductionLimit  *float64        // feed-in limit (NOT production despite its name)
+	productionNominalMax     float64
 
 	heartbeat *util.Value[struct{}]
 	interval  time.Duration
@@ -63,7 +70,10 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 		Interval    time.Duration
 	}{
 		Limits: Limits{
-			ContractualConsumptionNominalMax:    24800,
+			// contractual max power at the grid connection point reported to the control box
+			// (EEBus LPC, EMS device type). Default: standard 3x35A x 230V house connection.
+			// This is the connection capacity, not the SteuVE Pmin (see failsafe limit below).
+			ContractualConsumptionNominalMax:    24150, // 3 * 35A * 230V
 			FailsafeConsumptionActivePowerLimit: 4200,
 
 			ProductionNominalMax:               0,
@@ -83,28 +93,21 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 		return nil, err
 	}
 
-	// setup grid control circuit
-	gridcontrol, err := smartgrid.SetupCircuit()
+	return NewEEBus(ctx, cc.Ski, cc.Limits, passthroughS, site, cc.Interval)
+}
+
+// NewEEBus creates EEBus HEMS
+func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(bool) error, site site.API, interval time.Duration) (*EEBus, error) {
+	inst, err := eebus.Instance()
 	if err != nil {
 		return nil, err
 	}
 
-	site.SetCircuit(gridcontrol)
-
-	return NewEEBus(ctx, cc.Ski, cc.Limits, passthroughS, gridcontrol, cc.Interval)
-}
-
-// NewEEBus creates EEBus HEMS
-func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(bool) error, root api.Circuit, interval time.Duration) (*EEBus, error) {
-	if eebus.Instance == nil {
-		return nil, errors.New("eebus not configured")
-	}
-
 	c := &EEBus{
 		log:         util.NewLogger("eebus"),
-		root:        root,
+		site:        site,
 		passthrough: passthrough,
-		cs:          eebus.Instance.ControllableSystem(),
+		cs:          inst.ControllableSystem(),
 		Connector:   eebus.NewConnector(),
 		heartbeat:   util.NewValue[struct{}](2 * time.Minute), // LPC-031
 		interval:    interval,
@@ -112,18 +115,19 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 		failsafeDuration:         limits.FailsafeDurationMinimum,
 		failsafeConsumptionLimit: limits.FailsafeConsumptionActivePowerLimit,
 		failsafeProductionLimit:  limits.FailsafeProductionActivePowerLimit,
+		productionNominalMax:     limits.ProductionNominalMax,
 	}
 
 	// simulate a received heartbeat
 	// otherwise a heartbeat timeout is assumed when the state machine is called for the first time
 	c.heartbeat.Set(struct{}{})
 
-	if err := eebus.Instance.RegisterDevice(ski, "", c); err != nil {
+	if err := inst.RegisterDevice(ski, "", c); err != nil {
 		return nil, err
 	}
 
 	if err := c.Wait(ctx); err != nil {
-		eebus.Instance.UnregisterDevice(ski, c)
+		inst.UnregisterDevice(ski, c)
 		return nil, err
 	}
 
@@ -162,10 +166,40 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 	return c, nil
 }
 
+func (c *EEBus) SetUpdated(f func()) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	c.publishFunc = f
+}
+
+// Connect overrides the embedded Connector: on first connect, limit state
+// becomes valid (nil -> known). A later disconnect/reconnect is a no-op here.
+func (c *EEBus) Connect(connected bool) {
+	c.Connector.Connect(connected)
+
+	if !connected {
+		return
+	}
+
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	if c.consumptionLimitActivated == nil {
+		c.consumptionLimitActivated = new(time.Time)
+	}
+	if c.productionLimitActivated == nil {
+		c.productionLimitActivated = new(time.Time)
+	}
+}
+
 func (c *EEBus) Run() {
 	for range time.Tick(c.interval) {
 		if err := c.run(); err != nil {
 			c.log.ERROR.Println(err)
+		}
+
+		if c.publishFunc != nil {
+			c.publishFunc()
 		}
 	}
 }
@@ -213,13 +247,17 @@ func (c *EEBus) run() error {
 	}
 
 	// LPC-914/1
-	if c.consumptionLimitActivated.IsZero() {
+	if !limitActive(c.consumptionLimitActivated) {
 		if c.consumptionLimit.IsActive {
 			c.log.WARN.Println("activating consumption limit")
 			c.setConsumptionLimit(c.consumptionLimit.Value)
 		}
 	} else {
-		if time.Since(c.consumptionLimitActivated) > c.consumptionLimit.Duration {
+		switch {
+		case !c.consumptionLimit.IsActive:
+			c.log.DEBUG.Println("consumption limit released")
+			c.setConsumptionLimit(0)
+		case time.Since(*c.consumptionLimitActivated) > c.consumptionLimit.Duration:
 			c.log.DEBUG.Println("consumption limit duration exceeded")
 			c.setConsumptionLimit(0)
 			c.consumptionLimit.IsActive = false
@@ -227,13 +265,21 @@ func (c *EEBus) run() error {
 	}
 
 	// LPP
-	if c.productionLimitActivated.IsZero() {
+	if !limitActive(c.productionLimitActivated) {
 		if c.productionLimit.IsActive {
+			if c.productionNominalMax <= 0 {
+				return errors.New("production limit received but productionNominalMax is not configured")
+			}
+
 			c.log.WARN.Println("activating production limit")
 			c.setProductionLimit(c.productionLimit.Value, true)
 		}
 	} else {
-		if time.Since(c.productionLimitActivated) > c.productionLimit.Duration {
+		switch {
+		case !c.productionLimit.IsActive:
+			c.log.DEBUG.Println("production limit released")
+			c.setProductionLimit(0, false)
+		case time.Since(*c.productionLimitActivated) > c.productionLimit.Duration:
 			c.log.DEBUG.Println("production limit duration exceeded")
 			c.setProductionLimit(0, false)
 			c.productionLimit.IsActive = false
@@ -243,6 +289,20 @@ func (c *EEBus) run() error {
 	return nil
 }
 
+// limitActive reports whether t denotes a currently active limit: known (non-nil) and non-zero.
+func limitActive(t *time.Time) bool {
+	return t != nil && !t.IsZero()
+}
+
+// activatedAt returns now if active, else a known-but-zero timestamp.
+func activatedAt(active bool) *time.Time {
+	if active {
+		t := time.Now()
+		return &t
+	}
+	return new(time.Time)
+}
+
 func (c *EEBus) setStatus(status status) {
 	c.status = status
 	c.statusUpdated = time.Now()
@@ -250,17 +310,9 @@ func (c *EEBus) setStatus(status status) {
 
 func (c *EEBus) setConsumptionLimit(limit float64) {
 	active := limit > 0
+	c.consumptionLimitActivated = activatedAt(active)
 
-	if active {
-		c.consumptionLimitActivated = time.Now()
-	} else {
-		c.consumptionLimitActivated = time.Time{}
-	}
-
-	c.root.Dim(active)
-	c.root.SetMaxPower(limit)
-
-	if err := smartgrid.UpdateSession(&c.smartgridConsumptionId, smartgrid.Dim, c.root.GetChargePower(), limit, active); err != nil {
+	if err := smartgrid.UpdateSession(&c.smartgridConsumptionId, smartgrid.Dim, c.site.GetGridPower(), limit, active); err != nil {
 		c.log.ERROR.Printf("smartgrid session: %v", err)
 	}
 
@@ -272,17 +324,70 @@ func (c *EEBus) setConsumptionLimit(limit float64) {
 }
 
 func (c *EEBus) setProductionLimit(limit float64, active bool) {
-	if active {
-		c.productionLimitActivated = time.Now()
-	} else {
-		c.productionLimitActivated = time.Time{}
-	}
+	c.productionLimitActivated = activatedAt(active)
 
-	c.root.Curtail(active)
-	// TODO make ProductionNominalMax configurable (Site kWp)
-	// c.root.SetMaxProduction(limit)
-
-	if err := smartgrid.UpdateSession(&c.smartgridProductionId, smartgrid.Curtail, c.root.GetChargePower(), limit, active); err != nil {
+	if err := smartgrid.UpdateSession(&c.smartgridProductionId, smartgrid.Curtail, c.site.GetGridPower(), limit, active); err != nil {
 		c.log.ERROR.Printf("smartgrid session: %v", err)
 	}
+}
+
+var _ api.HEMS = (*EEBus)(nil)
+
+// CurtailedPercent implements api.HEMS, converting the active LPP production
+// limit to an allowed production percent via the configured nominal production power.
+func (c *EEBus) CurtailedPercent() *int {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+
+	// no statement until first connected
+	if c.productionLimitActivated == nil {
+		return nil
+	}
+
+	// without a nominal reference the W limit cannot be expressed as a percent
+	if c.productionNominalMax <= 0 {
+		return nil
+	}
+
+	percent := 100
+	if limitActive(c.productionLimitActivated) {
+		// production limits are negative watts
+		percent = int(-c.productionLimit.Value / c.productionNominalMax * 100)
+	}
+
+	return &percent
+}
+
+// MaxConsumptionPower implements api.HEMS: nil until first connected,
+// else failsafe limit in failsafe, else the active EG-supplied LPC limit, else 0.
+func (c *EEBus) MaxConsumptionPower() *float64 {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+	if c.consumptionLimitActivated == nil {
+		return nil
+	}
+	if !limitActive(c.consumptionLimitActivated) {
+		return new(0.0)
+	}
+	if c.status == StatusFailsafe {
+		return new(c.failsafeConsumptionLimit)
+	}
+	return new(c.consumptionLimit.Value)
+}
+
+// MaxProductionPower implements api.HEMS. Scaffolding only — EEBus does not
+// publish a wattage-typed production cap yet.
+func (c *EEBus) MaxProductionPower() *float64 {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+	if c.productionLimitActivated == nil {
+		return nil
+	}
+	if !limitActive(c.productionLimitActivated) {
+		return new(0.0)
+	}
+	if c.status == StatusFailsafe {
+		return c.failsafeProductionLimit
+	}
+	return new(c.productionLimit.Value)
 }

@@ -1,12 +1,9 @@
 package session
 
 import (
-	"context"
-	"io"
 	"time"
 
-	"github.com/evcc-io/evcc/api"
-	csvutil "github.com/evcc-io/evcc/util/csv"
+	"github.com/evcc-io/evcc/util/export"
 )
 
 // Session is a single charging session
@@ -22,6 +19,8 @@ type Session struct {
 	MeterStop            *float64       `json:"meterStop" csv:"Meter Stop (kWh)" gorm:"column:meter_end_kwh"`
 	ChargedEnergy        float64        `json:"chargedEnergy" csv:"Charged Energy (kWh)" gorm:"column:charged_kwh"`
 	ChargeDuration       *time.Duration `json:"chargeDuration" csv:"Charge Duration" gorm:"column:charge_duration"`
+	SocStart             *float64       `json:"socStart" csv:"SoC Start (%)" gorm:"column:soc_start" format:"int"`
+	SocEnd               *float64       `json:"socEnd" csv:"SoC End (%)" gorm:"column:soc_end" format:"int"`
 	SolarPercentage      *float64       `json:"solarPercentage" csv:"Solar (%)" gorm:"column:solar_percentage"`
 	Price                *float64       `json:"price" csv:"Price" gorm:"column:price"`
 	PricePerKWh          *float64       `json:"pricePerKWh" csv:"Price/kWh" gorm:"column:price_per_kwh"`
@@ -33,11 +32,11 @@ type Session struct {
 // Sessions is a list of sessions
 type Sessions []Session
 
-var _ api.CsvWriter = (*Sessions)(nil)
+var _ export.Writer = (*Sessions)(nil)
 
-// WriteCsv implements the api.CsvWriter interface
-func (t *Sessions) WriteCsv(ctx context.Context, w io.Writer) error {
-	return csvutil.WriteStructSlice(ctx, w, t, csvutil.Config{
+// Write implements the export.Writer interface
+func (t *Sessions) Write(ww export.RowWriter) error {
+	return export.WriteStructSlice(ww, t, export.Config{
 		I18nPrefix: "sessions.csv",
 	})
 }

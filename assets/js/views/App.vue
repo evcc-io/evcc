@@ -9,6 +9,7 @@
 		<BottomTabBar v-bind="bottomTabBarProps" />
 
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
+		<VehicleSettingsModal :vehicles="vehicleList" :loadpoints="state.uiLoadpoints" />
 		<AboutModal v-bind="aboutModalProps" />
 		<HelpModal />
 		<PasswordModal />
@@ -21,12 +22,14 @@
 import store from "../store";
 import BottomTabBar from "../components/BottomTabs/Bar.vue";
 import GlobalSettingsModal from "../components/GlobalSettings/GlobalSettingsModal.vue";
+import VehicleSettingsModal from "../components/Vehicles/SettingsModal.vue";
 import OfflineIndicator from "../components/Footer/OfflineIndicator.vue";
 import PasswordModal from "../components/Auth/PasswordModal.vue";
 import LoginModal from "../components/Auth/LoginModal.vue";
 import AboutModal from "../components/AboutModal.vue";
 import HelpModal from "../components/HelpModal.vue";
 import collector from "../mixins/collector";
+import vehicleList from "@/utils/vehicleList";
 import { defineComponent } from "vue";
 
 // assume offline if not data received for 5 minutes
@@ -45,6 +48,7 @@ export default defineComponent({
 		AboutModal,
 		BottomTabBar,
 		GlobalSettingsModal,
+		VehicleSettingsModal,
 		HelpModal,
 		PasswordModal,
 		LoginModal,
@@ -76,6 +80,9 @@ export default defineComponent({
 		state() {
 			const { state, uiLoadpoints } = store;
 			return { ...state, uiLoadpoints: uiLoadpoints.value };
+		},
+		vehicleList() {
+			return vehicleList(this.state.vehicles);
 		},
 		globalSettingsProps() {
 			return this.collectProps(GlobalSettingsModal, this.state);

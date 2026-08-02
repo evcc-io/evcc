@@ -15,6 +15,15 @@ products:
 capabilities: ["rfid", "1p3p", "meter", "dim"]
 requirements:
   evcc: ["sponsorship"]
+caveats:
+  - description:
+      de: Seltene Energie-Updates können Ladehistorie und Sitzungsstatistik verfälschen.
+      en: Infrequent energy updates can distort charging history and session statistics.
+    link: https://github.com/evcc-io/evcc/issues/20594
+  - description:
+      de: Bei mehreren Ladepunkten in einem Easee-Circuit wirkt die Phasenumschaltung auf alle Ladepunkte.
+      en: With multiple chargers in one Easee circuit, phase switching affects all of them.
+    link: https://github.com/evcc-io/evcc/issues/28859
 params:
   - name: user
     required: true

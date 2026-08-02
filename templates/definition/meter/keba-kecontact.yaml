@@ -26,6 +26,13 @@ render: |
       - 203:TotWhImp
       - 213:TotWhImp
     scale: 0.001
+  returnenergy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value:
+      - 203:TotWhExp
+      - 213:TotWhExp
+    scale: 0.001
   currents:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}

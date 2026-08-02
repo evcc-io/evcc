@@ -146,13 +146,13 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 	implement.May(c, implement.Battery(soc))
 	implement.May(c, implement.SocLimiter(limitsoc))
 
-	// decorate measurements
-	powerG, energyG, err := cc.Energy.Configure(ctx)
+	powerG, energyG, returnG, err := cc.Energy.Configure(ctx)
 	if err != nil {
 		return nil, err
 	}
 	implement.May(c, implement.Meter(powerG))
 	implement.May(c, implement.MeterEnergy(energyG))
+	implement.May(c, implement.MeterReturnEnergy(returnG))
 
 	currentsG, voltagesG, _, err := cc.Phases.Configure(ctx)
 	if err != nil {

@@ -46,7 +46,6 @@ params:
     usages: ["battery"]
     advanced: true
   - name: watchdog
-    type: duration
     default: 60s
     description:
       de: FEMS/OpenEMS Batteriesteuerung API-Timeout
@@ -55,14 +54,16 @@ params:
       de: FEMS/OpenEMS Standard 60s
       en: FEMS/OpenEMS standard 60s
     usages: ["battery"]
-    advanced: true
   - preset: battery-params
+  - name: cache
+    default: 1s
 render: |
   type: custom
   {{- if eq .usage "grid" }} 
   power:
     source: http
     uri: http://{{ .host }}/rest/channel/_sum/GridActivePower
+    cache: {{ .cache }}
     auth:
       type: basic
       user: x
@@ -71,6 +72,7 @@ render: |
   energy:
     source: http
     uri: http://{{ .host }}/rest/channel/_sum/GridBuyActiveEnergy
+    cache: {{ .cache }}
     auth:
       type: basic
       user: x
@@ -81,6 +83,7 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/rest/channel/_sum/ProductionActivePower
+    cache: {{ .cache }}
     auth:
       type: basic
       user: x
@@ -89,6 +92,7 @@ render: |
   energy:
     source: http
     uri: http://{{ .host }}/rest/channel/_sum/ProductionActiveEnergy
+    cache: {{ .cache }}
     auth:
       type: basic
       user: x
@@ -100,6 +104,7 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/rest/channel/_sum/EssDischargePower
+    cache: {{ .cache }}
     auth:
       type: basic
       user: x
@@ -108,6 +113,7 @@ render: |
   soc:
     source: http
     uri: http://{{ .host }}/rest/channel/_sum/EssSoc
+    cache: {{ .cache }}
     auth:
       type: basic
       user: x

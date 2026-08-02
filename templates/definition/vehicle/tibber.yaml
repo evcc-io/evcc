@@ -1,0 +1,48 @@
+template: tibber
+products:
+  - brand: Tibber
+group: generic
+requirements:
+  description:
+    de: |
+      Liest Fahrzeugdaten (Ladestand, Reichweite) über die offizielle Tibber Data API.
+      Benötigt einen OAuth2-Client (Client-ID und Secret), der unter https://data-api.tibber.com/clients/manage angelegt wird.
+      Die unten angezeigte Redirect-URI muss beim Anlegen des Clients hinterlegt werden.
+      Ein Tibber-Stromvertrag ist nicht erforderlich, das Fahrzeug muss im Tibber-Konto verbunden sein.
+    en: |
+      Reads vehicle data (state of charge, range) via the official Tibber Data API.
+      Requires an OAuth2 client (client id and secret) created at https://data-api.tibber.com/clients/manage.
+      Register the redirect URI shown below when creating the client.
+      A Tibber energy contract is not required, the vehicle must be connected in the Tibber account.
+params:
+  - preset: vehicle-common
+  - preset: vehicle-online
+  - name: welcomecharge
+    advanced: true
+  - name: clientid
+  - name: clientsecret
+  - name: redirecturi
+    help:
+      en: "Redirect URI of the evcc instance. Must match the redirect URI set in the Tibber Data API client."
+      de: "Redirect-URI der evcc-Instanz. Muss mit der im Tibber Data API Client hinterlegten Redirect URI übereinstimmen."
+    service: auth/redirecturi
+  - name: vin
+    example: WVW...
+    service: tibber/vehicles?clientid={clientid}&clientsecret={clientsecret}&redirecturi={redirecturi}
+    help:
+      en: Optional, selects the vehicle when the account has more than one.
+      de: Optional, wählt das Fahrzeug aus, wenn das Konto mehrere besitzt.
+  - name: cache
+    default: 15m
+auth:
+  type: tibber
+  params: [clientid, clientsecret, redirecturi]
+render: |
+  type: tibber
+  {{- include "vehicle-common" . }}
+  clientid: {{ .clientid }}
+  clientsecret: {{ .clientsecret }}
+  redirecturi: {{ .redirecturi }}
+  vin: {{ .vin }}
+  cache: {{ .cache }}
+  {{ include "vehicle-features" . }}

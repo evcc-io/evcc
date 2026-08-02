@@ -74,10 +74,10 @@ render: |
   power:
     source: modbus
     uri: {{ joinHostPort .host .port }}
-    id: 247
+    id: {{ .id }}
     register:
       type: holding
-      address: 30035 # Photovoltaic power
+      address: 31035 # PV power (per inverter)
       decode: int32
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
@@ -85,10 +85,10 @@ render: |
   power:
     source: modbus
     uri: {{ joinHostPort .host .port }}
-    id: 247
+    id: {{ .id }}
     register:
       type: holding
-      address: 30037 # Battery power
+      address: 30599 # [ESS] Charge/discharge power (per inverter)
       decode: int32
     scale: -1
   energy:
@@ -96,16 +96,25 @@ render: |
     uri: {{ joinHostPort .host .port }}
     id: {{ .id }}
     register:
-      address: 30574 # Battery accumulated discharge energy
+      address: 30574 # [ESS] Accumulated discharge energy (per inverter)
+      type: holding
+      decode: uint64
+    scale: 0.01
+  returnenergy:
+    source: modbus
+    uri: {{ joinHostPort .host .port }}
+    id: {{ .id }}
+    register:
+      address: 30568 # [ESS] Accumulated charge energy (per inverter)
       type: holding
       decode: uint64
     scale: 0.01
   soc:
     source: modbus
     uri: {{ joinHostPort .host .port }}
-    id: 247
+    id: {{ .id }}
     register:
-      address: 30014 # Energy storage system SOC
+      address: 30601 # [ESS] Battery SOC (per inverter)
       type: holding
       decode: uint16
     scale: 0.1

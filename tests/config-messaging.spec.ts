@@ -42,6 +42,11 @@ test.describe("messaging", async () => {
   start:
     title: Charge started
     msg: Started charging`;
+    // differs from the stored config so saving is an actual change
+    const changedYaml = `events:
+  start:
+    title: Charge started
+    msg: Charging has begun`;
 
     // default content
     const editor = modal.getByTestId("yaml-editor");
@@ -55,7 +60,7 @@ test.describe("messaging", async () => {
 
     // clear and enter valid yaml
     await editorClear(editor);
-    await editorPaste(editor, page, validYaml);
+    await editorPaste(editor, page, changedYaml);
 
     await page.getByRole("button", { name: "Save" }).click();
     await expect(modal.getByTestId("error")).not.toBeVisible();
@@ -109,7 +114,8 @@ test.describe("messaging", async () => {
     // validate connection
     await modal.getByRole("button", { name: "Save", exact: true }).click();
     await expectModalHidden(modal);
-    await expect(card).toContainText(["Events", "1", "Services", "0"].join(""));
+    // start plus the opt-out suggestion event
+    await expect(card).toContainText(["Events", "2", "Services", "0"].join(""));
 
     // restart button appears
     const restartButton = page
@@ -160,7 +166,8 @@ test.describe("messaging", async () => {
     await expect(messengerBox).toHaveText(["#1", "User-defined service"].join(""));
     await modal.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(modal);
-    await expect(card).toContainText(["Events", "0", "Services", "1"].join(""));
+    // suggestion event is enabled by default
+    await expect(card).toContainText(["Events", "1", "Services", "1"].join(""));
 
     await card.getByRole("button", { name: "edit" }).click();
     await expectModalVisible(modal);
@@ -174,6 +181,7 @@ test.describe("messaging", async () => {
     await page.keyboard.press("Escape");
     await expectModalHidden(modal);
 
-    await expect(card).toContainText(["Configured", "no"].join(""));
+    // service gone, saved suggestion event remains
+    await expect(card).toContainText(["Events", "1", "Services", "0"].join(""));
   });
 });

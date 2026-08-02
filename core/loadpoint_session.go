@@ -70,6 +70,10 @@ func (lp *Loadpoint) applyEnergyMetrics(s *session.Session) {
 		s.MeterStop = &meterStop
 	}
 
+	if soc := lp.vehicleSoc; soc > 0 && !lp.chargerHasFeature(api.Heating) {
+		s.SocEnd = &soc
+	}
+
 	s.SolarPercentage = new(lp.energyMetrics.SolarPercentage())
 	s.Price = lp.energyMetrics.Price()
 	s.PricePerKWh = lp.energyMetrics.PricePerKWh()

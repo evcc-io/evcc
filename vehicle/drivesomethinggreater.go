@@ -60,7 +60,7 @@ func NewDriveSomethingGreaterFromConfig(other map[string]any) (api.Vehicle, erro
 
 	if err == nil {
 		v.fromVehicle(vehicle.Name(), 0)
-		v.Provider = eudataact.NewProvider(api, vehicle.Vin(), cc.Cache)
+		v.Provider = eudataact.NewProvider(log, api, vehicle.Vin(), cc.Cache)
 	}
 
 	return v, err

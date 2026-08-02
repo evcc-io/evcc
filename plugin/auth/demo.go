@@ -34,6 +34,7 @@ func NewDemoFromConfig(_ context.Context, other map[string]any) (oauth2.TokenSou
 		Method      string
 		RedirectUri string
 		Secret      string
+		Scope       string // advanced auth param, used by e2e tests
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -70,9 +71,20 @@ func NewDemo(server, method, redirectUri, secret string) (oauth2.TokenSource, er
 	demoInstance.onlineC = onlineC
 
 	// Send initial auth status
-	demoInstance.onlineC <- false
+	demoInstance.setOnline(false)
 
 	return demoInstance, nil
+}
+
+// setOnline notifies the auth handler without blocking; see OAuth.setOnline.
+func (o *demo) setOnline(online bool) {
+	if o.onlineC == nil {
+		return
+	}
+	select {
+	case o.onlineC <- online:
+	default:
+	}
 }
 
 func (o *demo) Token() (*oauth2.Token, error) {
@@ -115,9 +127,7 @@ func (o *demo) Login(state string) (string, *oauth2.DeviceAuthResponse, error) {
 
 func (o *demo) Logout() error {
 	o.token = nil
-	if o.onlineC != nil {
-		o.onlineC <- false
-	}
+	o.setOnline(false)
 	return nil
 }
 
@@ -135,9 +145,7 @@ func (o *demo) HandleCallback(params url.Values) error {
 	}
 
 	// Notify that authentication succeeded
-	if o.onlineC != nil {
-		o.onlineC <- true
-	}
+	o.setOnline(true)
 
 	return nil
 }

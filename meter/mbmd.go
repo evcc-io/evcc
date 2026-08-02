@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
@@ -35,11 +34,10 @@ func NewMbmdFromConfig(ctx context.Context, other map[string]any) (api.Meter, er
 		batterySocLimits   `mapstructure:",squash"`
 		modbus.Settings    `mapstructure:",squash"`
 		Power, Energy, Soc string
+		ReturnEnergy       string
 		Currents           []string
 		Voltages           []string
 		Powers             []string
-		Delay              time.Duration
-		Timeout            time.Duration
 	}{
 		Power: "Power",
 		Settings: modbus.Settings{
@@ -61,16 +59,10 @@ func NewMbmdFromConfig(ctx context.Context, other map[string]any) (api.Meter, er
 	modbus.Lock()
 	defer modbus.Unlock()
 
-	conn, err := modbus.NewConnection(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID)
+	conn, err := cc.Settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	// set non-default timeout
-	conn.Timeout(cc.Timeout)
-
-	// set non-default delay
-	conn.Delay(cc.Delay)
 
 	log := util.NewLogger("modbus")
 	conn.Logger(log.TRACE)
@@ -101,6 +93,15 @@ func NewMbmdFromConfig(ctx context.Context, other map[string]any) (api.Meter, er
 			return nil, fmt.Errorf("invalid measurement for energy: %s", cc.Energy)
 		}
 		implement.Has(m, implement.MeterEnergy(totalEnergy))
+	}
+
+	// decorate return energy
+	if cc.ReturnEnergy != "" {
+		returnEnergy, err := mbmd.deviceOp(ops, cc.ReturnEnergy)
+		if err != nil {
+			return nil, fmt.Errorf("invalid measurement for returnenergy: %s", cc.ReturnEnergy)
+		}
+		implement.Has(m, implement.MeterReturnEnergy(returnEnergy))
 	}
 
 	// decorate soc

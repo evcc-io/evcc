@@ -12,6 +12,9 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/core/metrics"
+	"github.com/evcc-io/evcc/util/export"
+	"github.com/evcc-io/evcc/util/export/csv"
+	"github.com/evcc-io/evcc/util/export/xlsx"
 	"github.com/spf13/cobra"
 )
 
@@ -34,6 +37,8 @@ func init() {
 	metricsDataCmd.Flags().String("aggregate", "hour", "Aggregation interval: 15m, hour, day or month")
 	metricsDataCmd.Flags().String("group", "", "Limit output to an entity group")
 	metricsDataCmd.Flags().Bool("csv", false, "Output CSV instead of a table")
+	metricsDataCmd.Flags().Bool("xlsx", false, "Output XLSX instead of a table")
+	metricsDataCmd.MarkFlagsMutuallyExclusive("csv", "xlsx")
 	metricsDataCmd.MarkFlagsMutuallyExclusive("range", "from")
 	metricsDataCmd.MarkFlagsMutuallyExclusive("range", "to")
 }
@@ -58,9 +63,7 @@ func runMetricsData(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	title := metricsEntityTitle()
-
-	selected, err := metricsSelectEntities(entities, args, group, title)
+	selected, err := metricsSelectEntities(entities, args, group)
 	if err != nil {
 		log.FATAL.Fatal(err)
 	}
@@ -72,23 +75,42 @@ func runMetricsData(cmd *cobra.Command, args []string) {
 
 	byEntity := make(map[string]metrics.Series, len(series))
 	for _, s := range series {
-		byEntity[s.Group+"/"+s.Name] = s
+		byEntity[s.Group+"/"+s.Title] = s
 	}
 
-	if asCSV, _ := cmd.Flags().GetBool("csv"); asCSV {
-		var out metrics.SeriesCSV
+	asCSV, _ := cmd.Flags().GetBool("csv")
+	asXLSX, _ := cmd.Flags().GetBool("xlsx")
+	if asCSV || asXLSX {
+		var out metrics.SeriesExport
+		seen := make(map[string]bool, len(selected))
 		for _, e := range selected {
-			if s, ok := byEntity[e.Group+"/"+e.Name]; ok {
+			key := e.Group + "/" + metricsEntityLabel(e)
+			if seen[key] {
+				continue
+			}
+			seen[key] = true
+			if s, ok := byEntity[key]; ok {
 				out = append(out, s)
 			}
 		}
-		if err := out.WriteCsv(context.Background(), os.Stdout); err != nil {
+
+		var ww export.RowWriter
+		var err error
+		if asXLSX {
+			ww, err = xlsx.New(context.Background(), os.Stdout)
+		} else {
+			ww, err = csv.New(context.Background(), os.Stdout)
+		}
+		if err != nil {
+			log.FATAL.Fatal(err)
+		}
+		if err := out.Write(ww); err != nil {
 			log.FATAL.Fatal(err)
 		}
 		return
 	}
 
-	metricsWriteTable(os.Stdout, selected, byEntity, title, aggregate)
+	metricsWriteTable(os.Stdout, selected, byEntity, aggregate)
 	fmt.Fprintln(os.Stderr, "\nvalues in kWh")
 }
 
@@ -145,7 +167,7 @@ func metricsTimeframe(rangeStr, fromStr, toStr string) (time.Time, time.Time, er
 // metricsSelectEntities resolves the entities to export. Without selectors all
 // entities (optionally limited to a group) are returned in canonical order;
 // explicit selectors match by name or title and preserve the requested order.
-func metricsSelectEntities(entities []metrics.EntityInfo, args []string, group string, title func(group, name string) string) ([]metrics.EntityInfo, error) {
+func metricsSelectEntities(entities []metrics.EntityInfo, args []string, group string) ([]metrics.EntityInfo, error) {
 	if len(args) == 0 {
 		res := make([]metrics.EntityInfo, 0, len(entities))
 		for _, e := range entities {
@@ -164,7 +186,7 @@ func metricsSelectEntities(entities []metrics.EntityInfo, args []string, group s
 	for _, arg := range args {
 		var matched []metrics.EntityInfo
 		for _, e := range entities {
-			if e.Name == arg || title(e.Group, e.Name) == arg {
+			if e.Name == arg || e.Title == arg {
 				matched = append(matched, e)
 			}
 		}
@@ -191,7 +213,7 @@ func metricsTimeLayout(aggregate string) string {
 // metricsWriteTable renders the wide energy table: one row per time slot, one
 // column per entity, plus a second column for the export energy of
 // bidirectional entities (grid, battery).
-func metricsWriteTable(w io.Writer, selected []metrics.EntityInfo, byEntity map[string]metrics.Series, title func(group, name string) string, aggregate string) {
+func metricsWriteTable(w io.Writer, selected []metrics.EntityInfo, byEntity map[string]metrics.Series, aggregate string) {
 	layout := metricsTimeLayout(aggregate)
 
 	type colSpec struct {
@@ -204,10 +226,7 @@ func metricsWriteTable(w io.Writer, selected []metrics.EntityInfo, byEntity map[
 	var specs []colSpec
 
 	for _, e := range selected {
-		label := title(e.Group, e.Name)
-		if label == "" {
-			label = e.Name
-		}
+		label := metricsEntityLabel(e)
 
 		spec := colSpec{entity: e, energyCol: len(header) - 1, returnCol: -1}
 		header = append(header, label)
@@ -236,7 +255,7 @@ func metricsWriteTable(w io.Writer, selected []metrics.EntityInfo, byEntity map[
 	}
 
 	for _, spec := range specs {
-		s, ok := byEntity[spec.entity.Group+"/"+spec.entity.Name]
+		s, ok := byEntity[spec.entity.Group+"/"+metricsEntityLabel(spec.entity)]
 		if !ok {
 			continue
 		}

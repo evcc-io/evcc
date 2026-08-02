@@ -9,7 +9,22 @@
 		@close="onClose"
 		@dismiss="onDismiss"
 	>
-		<div v-if="!loadpointType" class="d-flex flex-column gap-4">
+		<CreateFlowStatus
+			v-if="autoCreate"
+			:in-progress="autoCreateInProgress"
+			:creating-text="$t(`config.loadpoint.creating.${loadpointType}`)"
+			:success-text="$t('config.loadpoint.created', { name: values.title })"
+		>
+			<template #actions>
+				<a href="#" @click.prevent="autoCreate = false">
+					{{ $t("config.loadpoint.advancedConfig") }}
+				</a>
+				<button type="button" class="btn btn-primary" @click="finish">
+					{{ $t("config.general.close") }}
+				</button>
+			</template>
+		</CreateFlowStatus>
+		<div v-else-if="!loadpointType" class="d-flex flex-column gap-4">
 			<NewDeviceButton
 				v-for="t in typeChoices"
 				:key="t"
@@ -90,13 +105,7 @@
 			</div>
 
 			<div v-if="values.charger || !isNew">
-				<p v-if="isNew && !showAllSettings" class="mt-4 mb-0 text-muted">
-					{{ $t("config.loadpoint.defaultsHint") }}
-					<a href="#" @click.prevent="showAllSettings = true">
-						{{ $t("config.loadpoint.defaultsHintLink") }} </a
-					>.
-				</p>
-				<div class="collapsible-wrapper" :class="{ open: !isNew || showAllSettings }">
+				<div class="collapsible-wrapper" :class="{ open: !isNew }">
 					<div class="collapsible-content">
 						<h6 class="mt-4">{{ $t("config.loadpoint.chargingTitle") }}</h6>
 
@@ -114,13 +123,7 @@
 								v-model="values.defaultMode"
 								type="Choice"
 								class="w-100"
-								:choice="[
-									{ key: '', name: '---' },
-									{ key: 'off', name: $t('main.mode.off') },
-									{ key: 'pv', name: $t('main.mode.pv') },
-									{ key: 'minpv', name: $t('main.mode.minpv') },
-									{ key: 'now', name: $t('main.mode.now') },
-								]"
+								:choice="defaultModeOptions"
 							/>
 						</FormRow>
 
@@ -306,7 +309,7 @@
 							/>
 						</FormRow>
 
-						<h6>
+						<h6 v-if="!chargerIsSwitchDevice">
 							{{ $t("config.loadpoint.electricalTitle") }}
 							<small class="text-muted">{{
 								$t("config.loadpoint.electricalSubtitle")
@@ -314,6 +317,7 @@
 						</h6>
 
 						<FormRow
+							v-if="!chargerIsSwitchDevice"
 							id="chargerPower"
 							:label="$t('config.loadpoint.chargerTypeLabel')"
 							:help="
@@ -346,7 +350,10 @@
 							/>
 						</FormRow>
 
-						<div v-if="chargerPower === 'other'" class="row ms-3 mb-5">
+						<div
+							v-if="!chargerIsSwitchDevice && chargerPower === 'other'"
+							class="row ms-3 mb-5"
+						>
 							<FormRow
 								id="loadpointMinCurrent"
 								:label="$t('config.loadpoint.minCurrentLabel')"
@@ -540,6 +547,49 @@
 								<p class="text-muted">{{ $t("config.loadpoint.noVehicles") }}</p>
 							</div>
 						</div>
+
+						<div v-if="chargerIsHeating">
+							<h6>{{ $t("config.loadpoint.temperatureRangeTitle") }}</h6>
+							<p class="text-muted">
+								{{ $t("config.loadpoint.temperatureRangeHelp") }}
+							</p>
+							<div class="row">
+								<FormRow
+									id="loadpointMinTemp"
+									:label="$t('config.loadpoint.minTempLabel')"
+									class="col-sm-6 mb-sm-0"
+								>
+									<PropertyField
+										id="loadpointMinTemp"
+										v-model="values.ui.minTemp"
+										type="Float"
+										unit="°C"
+										size="w-25 w-min-200"
+										class="me-2"
+									/>
+								</FormRow>
+
+								<FormRow
+									id="loadpointMaxTemp"
+									:label="$t('config.loadpoint.maxTempLabel')"
+									class="col-sm-6 mb-sm-0"
+									:help="
+										values.ui.maxTemp <= values.ui.minTemp
+											? $t('config.loadpoint.maxTempHelp')
+											: undefined
+									"
+								>
+									<PropertyField
+										id="loadpointMaxTemp"
+										v-model="values.ui.maxTemp"
+										type="Float"
+										unit="°C"
+										size="w-25 w-min-200"
+										class="me-2"
+									/>
+								</FormRow>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -584,13 +634,16 @@ import api from "@/api";
 import GenericModal from "../Helper/GenericModal.vue";
 import deepClone from "@/utils/deepClone";
 import deepEqual from "@/utils/deepEqual";
+import sleep from "@/utils/sleep";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import DeviceRefBox from "./DeviceRefBox.vue";
 import NewDeviceButton from "./NewDeviceButton.vue";
 import InvalidReferenceAlert from "./InvalidReferenceAlert.vue";
+import CreateFlowStatus from "./CreateFlowStatus.vue";
 import { handleError, customChargerName, createDeviceUtils } from "./DeviceModal";
 import { getModal, openModal, replaceModal, closeModal } from "@/configModal";
 import {
+	CHARGE_MODE,
 	LOADPOINT_TYPE,
 	type DeviceType,
 	type LoadpointType,
@@ -602,6 +655,8 @@ import {
 } from "@/types/evcc";
 
 const nsPerMin = 60 * 1e9;
+
+const { OFF, PV, MINPV, NOW } = CHARGE_MODE;
 
 const defaultValues = {
 	id: undefined,
@@ -618,6 +673,10 @@ const defaultValues = {
 	soc: {
 		poll: { mode: "charging", interval: 60 * nsPerMin },
 		estimate: true,
+	},
+	ui: {
+		minTemp: 0,
+		maxTemp: 100,
 	},
 	vehicle: "",
 	charger: "",
@@ -640,6 +699,7 @@ export default {
 		DeviceRefBox,
 		NewDeviceButton,
 		InvalidReferenceAlert,
+		CreateFlowStatus,
 	},
 	mixins: [formatter],
 	props: {
@@ -658,12 +718,12 @@ export default {
 	data() {
 		return {
 			isModalVisible: false,
-			showAllSettings: false,
 			saving: false,
 			values: deepClone(defaultValues) as ConfigLoadpoint,
 			chargerPower: "11kw",
 			solarMode: "default",
-			created: false,
+			autoCreate: false,
+			autoCreateInProgress: false,
 			tab: "solar",
 			powerUnit: POWER_UNIT,
 		};
@@ -676,7 +736,10 @@ export default {
 			return getModal("loadpoint")?.type as LoadpointType | undefined;
 		},
 		modalTitle() {
-			if (this.isNew) {
+			if (this.autoCreate && !this.autoCreateInProgress) {
+				return this.$t(`config.loadpoint.createdTitle.${this.loadpointType}`);
+			}
+			if (this.isNew || this.autoCreate) {
 				return this.$t(`config.loadpoint.titleAdd.${this.loadpointType || "unknown"}`);
 			}
 			return this.$t(`config.loadpoint.titleEdit.${this.loadpointType || "unknown"}`);
@@ -703,21 +766,24 @@ export default {
 		},
 		chargerStatus() {
 			if (!this.chargerValues || !this.values.charger) {
-				return {};
+				return null;
 			}
-			return this.chargerValues[this.values.charger] || {};
+			return this.chargerValues[this.values.charger] || null;
 		},
 		chargerSupports1p3p() {
-			return this.chargerStatus.phases1p3p?.value || false;
+			return this.chargerStatus?.phases1p3p?.value || false;
 		},
 		chargerIsSinglePhase() {
-			return this.chargerStatus.singlePhase?.value || false;
+			return this.chargerStatus?.singlePhase?.value || false;
 		},
 		chargerIsIntegratedDevice() {
-			return this.chargerStatus.integratedDevice?.value || false;
+			return this.chargerStatus?.integratedDevice?.value || false;
+		},
+		chargerIsSwitchDevice() {
+			return this.chargerStatus?.switchDevice?.value || false;
 		},
 		chargerIsHeating() {
-			return this.chargerStatus.heating?.value === true;
+			return this.chargerStatus?.heating?.value === true;
 		},
 		meterTitle() {
 			const name = this.values.meter;
@@ -750,6 +816,12 @@ export default {
 				{ value: 3, name: this.$t("config.loadpoint.phases3p") },
 			];
 		},
+		defaultModeOptions(): { key: CHARGE_MODE; name: string }[] {
+			// empty option is provided by PropertyField placeholder
+			// switch devices have no current control, so minpv does not apply
+			const modes = this.chargerIsSwitchDevice ? [OFF, PV, NOW] : [OFF, PV, MINPV, NOW];
+			return modes.map((key) => ({ key, name: this.$t(`main.mode.${key}`) }));
+		},
 		showCircuit() {
 			return this.circuits.length > 0 || !!this.values.circuit;
 		},
@@ -758,11 +830,11 @@ export default {
 			return circuit && !this.circuitOptions.some((c) => c.key === circuit);
 		},
 		circuitOptions() {
-			const options = this.circuits.map((c) => ({
+			// empty option is provided by PropertyField placeholder
+			return this.circuits.map((c) => ({
 				key: c.name,
 				name: `${c.config?.title || ""} [${c.name}]`.trim(),
 			}));
-			return [{ key: "", name: "unassigned" }, ...options];
 		},
 		invalidVehicle() {
 			const { vehicle } = this.values;
@@ -800,6 +872,12 @@ export default {
 				}
 			}
 		},
+		id(newId) {
+			// replaceModal swaps the id in place (after create) without a remount
+			if (this.isModalVisible && newId !== undefined && this.values?.id !== newId) {
+				this.loadConfiguration();
+			}
+		},
 		chargerPower(value) {
 			if (value === "11kw") {
 				this.values.minCurrent = 6;
@@ -824,8 +902,8 @@ export default {
 	methods: {
 		reset() {
 			this.values = deepClone(defaultValues);
-			this.created = false;
-			this.showAllSettings = false;
+			this.autoCreate = false;
+			this.autoCreateInProgress = false;
 			this.updatePhases();
 		},
 		async loadConfiguration() {
@@ -865,15 +943,30 @@ export default {
 			}
 		},
 		async create() {
-			this.saving = true;
+			this.autoCreate = true;
+			this.autoCreateInProgress = true;
+			await sleep(1000); // ux pause
 			try {
-				await api.post("config/loadpoints", this.values);
-				this.created = true;
-				this.emitChanged("added");
+				for (let i = 0; !this.chargerStatus && i < 100; i++) {
+					await sleep(50);
+				}
+				const res = await api.post("config/loadpoints", this.values);
+				this.$emit("changed", { action: "added" });
+				// edit mode of the newly loadpoint
+				replaceModal("loadpoint", {
+					id: res.data?.id,
+					type: this.loadpointType || undefined,
+				});
+				this.autoCreateInProgress = false;
 			} catch (e) {
+				this.autoCreate = false;
+				this.autoCreateInProgress = false;
 				handleError(e, "create failed");
 			}
-			this.saving = false;
+		},
+		async finish() {
+			await closeModal({ action: "added" });
+			this.reset();
 		},
 		onOpen() {
 			this.isModalVisible = true;
@@ -882,12 +975,17 @@ export default {
 			this.isModalVisible = false;
 		},
 		async onDismiss() {
-			if (!this.values.id && !this.created) {
+			// closeModal already cleared the route id, so check values.id, not isNew
+			if (!this.values.id && !this.autoCreate) {
 				await this.cleanupDevice("charger", this.values.charger, this.chargers);
 				await this.cleanupDevice("meter", this.values.meter, this.meters);
 				this.$emit("dismissed");
 				this.reset();
+				return;
 			}
+			// keep values so reopening the same loadpoint stays populated
+			this.autoCreate = false;
+			this.autoCreateInProgress = false;
 		},
 		async cleanupDevice(type: DeviceType, name: string, list: { name: string; id: number }[]) {
 			const id = list.find((d) => d.name === name)?.id;
@@ -905,7 +1003,11 @@ export default {
 				type: this.loadpointType || undefined,
 			});
 			if (result.action === "added" && result.name) {
+				const instantCreate = this.isNew && !this.values.charger;
 				this.values.charger = result.name;
+				if (instantCreate) {
+					await this.create();
+				}
 			} else if (result.action === "removed") {
 				this.values.charger = "";
 			}

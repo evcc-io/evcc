@@ -37,10 +37,8 @@ params:
       en: optional product identifier of the energy site, use to override autodectction
       de: optionale Product ID dieser Energy Site, zum Übersteuern der automatischen Erkennung
   - name: minsoc
-    type: int
     advanced: true
   - name: maxsoc
-    type: int
     advanced: true
   - name: maxchargepower
   - name: maxdischargepower

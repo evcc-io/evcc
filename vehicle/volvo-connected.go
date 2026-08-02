@@ -41,10 +41,6 @@ func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]any) (api
 		return nil, errors.New("missing vccapikey")
 	}
 
-	if cc.VIN == "" {
-		return nil, errors.New("missing vin")
-	}
-
 	if err := cc.Credentials.Error(); err != nil {
 		return nil, err
 	}
@@ -59,10 +55,15 @@ func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]any) (api
 
 	api := connected.NewAPI(log, cc.VccApiKey, ts)
 
+	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
+
 	v := &VolvoConnected{
-		embed:    &cc.embed,
-		Provider: connected.NewProvider(api, ts, cc.VIN, cc.Cache),
+		embed: &cc.embed,
 	}
 
-	return v, nil
+	if err == nil {
+		v.Provider = connected.NewProvider(api, ts, cc.VIN, cc.Cache)
+	}
+
+	return v, err
 }

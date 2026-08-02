@@ -7,8 +7,10 @@ requirements:
     en: Requires Subaru Connected Services Account
 params:
   - preset: vehicle-base
+  - preset: vehicle-online
   - name: vin
     example: JF...
 render: |
   type: subaru
   {{ include "vehicle-base" . }}
+  {{ include "vehicle-features" . }}

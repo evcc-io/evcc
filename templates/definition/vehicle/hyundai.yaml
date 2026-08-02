@@ -15,8 +15,17 @@ requirements:
       Manche Modelle (z.B. Kona) schalten bei geringen Ladeströmen (< 8A) intern auf 2 Phasen um. In den Fällen, in denen die Wallbox auch die Phasenströme misst, führt das zu unerwünschten Schwankungen der Ladeleistung. Abhilfe schafft hier, den Mindestladestrom auf 8A zu setzen.
 params:
   - preset: vehicle-base
+  - preset: vehicle-online
   - preset: vehicle-language
+  - name: region
+    default: Europe
+    choice: ["Europe", "Australia", "New Zealand"]
+    description:
+      en: Region your Bluelink account is registered in
+      de: Region, in der dein Bluelink-Konto registriert ist
 render: |
   type: hyundai
+  region: {{ .region }}
   {{ include "vehicle-base" . }}
   {{ include "vehicle-language" . }}
+  {{ include "vehicle-features" . }}

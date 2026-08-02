@@ -1,11 +1,15 @@
 import * as echarts from "echarts/core";
 import colors from "@/colors";
+import escapeHtml from "@/utils/escapeHtml";
 import type { ForecastSlot } from "./types";
 import { BarChart, LineChart } from "echarts/charts";
 import {
   GridComponent,
   TooltipComponent,
   MarkPointComponent,
+  MarkLineComponent,
+  MarkAreaComponent,
+  GraphicComponent,
   AxisPointerComponent,
 } from "echarts/components";
 import { SVGRenderer } from "echarts/renderers";
@@ -17,6 +21,9 @@ echarts.use([
   TooltipComponent,
   AxisPointerComponent,
   MarkPointComponent,
+  MarkLineComponent,
+  MarkAreaComponent,
+  GraphicComponent,
   SVGRenderer,
 ]);
 
@@ -110,11 +117,74 @@ export function tooltipStyle(
   };
 }
 
+export interface TooltipRow {
+  name?: string;
+  values: string[];
+  total?: boolean;
+}
+
+// Shared tooltip: bold date headline, non-bold rows, optional name + value columns.
+export function tooltipTable(head: string, rows: TooltipRow[], headers?: string[]): string {
+  const hasName = rows.some((r) => r.name != null);
+  const valueCols = Math.max(1, ...rows.map((r) => r.values.length));
+  const colCount = (hasName ? 1 : 0) + valueCols;
+  const valClsFn = (i: number): string => {
+    // first of two unnamed value cols
+    if (!hasName && valueCols > 1 && i === 0) return "text-start";
+    // named or multiple cols
+    if (hasName || valueCols > 1) return "text-end ps-3";
+    // lone value
+    return "text-center";
+  };
+  const headerRow = headers?.length
+    ? `<tr>${hasName ? "<td></td>" : ""}${headers
+        .map((h, i) => `<td class="fw-normal tabular ${valClsFn(i)}">${h}</td>`)
+        .join("")}</tr>`
+    : "";
+  const rowHtml = (r: TooltipRow) => {
+    const cls = r.total ? " pt-1" : "";
+    const nameTd = hasName
+      ? `<td class="fw-normal text-start${cls}">${escapeHtml(r.name ?? "")}</td>`
+      : "";
+    const valTds = r.values
+      .map((v, i) => `<td class="fw-normal tabular ${valClsFn(i)}${cls}">${v}</td>`)
+      .join("");
+    return `<tr>${nameTd}${valTds}</tr>`;
+  };
+  const body = rows
+    .filter((r) => !r.total)
+    .map(rowHtml)
+    .join("");
+  const footRows = rows.filter((r) => r.total);
+  const foot = footRows.length
+    ? `<tfoot><tr><td colspan="${colCount}" class="pt-1 border-bottom"></td></tr>${footRows
+        .map(rowHtml)
+        .join("")}</tfoot>`
+    : "";
+  return `<table class="lh-sm"><thead><tr><th colspan="${colCount}" class="fw-bold text-center pb-1">${head}</th></tr></thead><tbody>${headerRow}${body}</tbody>${foot}</table>`;
+}
+
 export function forecastGrid() {
   return { top: 36, right: 16, bottom: 16, left: 24, borderWidth: 0 };
 }
 
-export function forecastXAxes(startDate: Date, endDate: Date, weekdayShort: (d: Date) => string) {
+// common x-axis label styling across time-based charts
+export function xAxisLabelStyle() {
+  return {
+    color: colors.muted || "",
+    fontSize: 14,
+    lineHeight: Math.round(14 * 1.1),
+    margin: 4,
+  };
+}
+
+export function forecastXAxes(
+  startDate: Date | number,
+  endDate: Date | number,
+  hourShort: (d: Date) => string,
+  weekdayShort: (d: Date) => string,
+  stepHours = 4
+) {
   return [
     {
       type: "time",
@@ -123,16 +193,15 @@ export function forecastXAxes(startDate: Date, endDate: Date, weekdayShort: (d: 
       minInterval: 3600 * 1000,
       maxInterval: 3600 * 1000,
       axisLabel: {
-        color: colors.muted,
-        fontSize: 14,
-        lineHeight: Math.round(14 * 1.1),
-        margin: 4,
+        ...xAxisLabelStyle(),
+        hideOverlap: false,
         formatter: (value: number) => {
           const date = new Date(value);
           const h = date.getHours();
-          if (h % 4 !== 0) return "";
-          if (h === 0) return `${h}\n${weekdayShort(date)}`;
-          return `${h}`;
+          if (h % stepHours !== 0) return "";
+          const label = hourShort(date);
+          if (h === 0) return `${label}\n${weekdayShort(date)}`;
+          return label;
         },
       },
       splitLine: { show: false },
@@ -194,7 +263,7 @@ export function filterForecastSlots(
 }
 
 export function minSlotIndex(slots: ForecastSlot[]): number {
-  return slots.reduce((min, s, i) => (s.value < (slots[min]?.value || Infinity) ? i : min), 0);
+  return slots.reduce((min, s, i) => (s.value < (slots[min]?.value ?? Infinity) ? i : min), 0);
 }
 
 export function maxSlotIndex(slots: ForecastSlot[]): number {
