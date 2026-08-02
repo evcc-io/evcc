@@ -123,12 +123,12 @@ func TestRepeatedCallsStop(t *testing.T) {
 	res, err := a.Chat(t.Context(), []Message{{Role: "user", Content: "soc?"}})
 	require.NoError(t, err)
 
-	// two identical rounds end the loop, a third call without tools produces the answer
+	// a repeat is tolerated, the loop ends once the model keeps repeating itself
 	assert.Equal(t, "still looking", res.Content)
-	assert.Len(t, llm.seen, 3)
-	last := llm.seen[2][len(llm.seen[2])-1]
+	assert.Len(t, llm.seen, maxRepeats+2)
+	last := llm.seen[maxRepeats+1][len(llm.seen[maxRepeats+1])-1]
 	assert.Equal(t, llms.ChatMessageTypeHuman, last.Role, "the last call carries the nudge")
-	assert.Len(t, res.Steps, 2)
+	assert.Len(t, res.Steps, maxRepeats+1)
 }
 
 func TestRepeatedCallsWithoutContent(t *testing.T) {
@@ -208,6 +208,33 @@ func TestSilentModelFails(t *testing.T) {
 
 	_, err = a.Chat(t.Context(), []Message{{Role: "user", Content: "mode?"}})
 	assert.EqualError(t, err, "empty answer")
+}
+
+func TestRetryIsNotAStall(t *testing.T) {
+	// the same call once more, then a different one, then the answer
+	res := repeat(2, "checking")
+	res = append(res,
+		&llms.ContentResponse{Choices: []*llms.ContentChoice{{ToolCalls: []llms.ToolCall{{
+			ID:           "2",
+			Type:         "function",
+			FunctionCall: &llms.FunctionCall{Name: "getSoc", Arguments: `{"loadpoint":2}`},
+		}}}}},
+		&llms.ContentResponse{Choices: []*llms.ContentChoice{{Content: "The vehicle is at 42%."}}},
+	)
+
+	llm := &fakeLLM{responses: res}
+
+	a, err := newAssistant(t.Context(), llm, testServer(t))
+	require.NoError(t, err)
+	defer a.Close()
+
+	out, err := a.Chat(t.Context(), []Message{{Role: "user", Content: "soc?"}})
+	require.NoError(t, err)
+
+	// the repeated call did not end the conversation
+	assert.Equal(t, "The vehicle is at 42%.", out.Content)
+	assert.Len(t, llm.seen, 4)
+	assert.Len(t, out.Steps, 3)
 }
 
 func TestTruncateResult(t *testing.T) {
