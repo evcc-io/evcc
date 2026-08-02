@@ -167,6 +167,17 @@ func callSignatures(calls []llms.ToolCall) []string {
 	return res
 }
 
+// toolNames lists the names of the given tools
+func toolNames(tools []llms.Tool) []string {
+	res := make([]string, 0, len(tools))
+
+	for _, tool := range tools {
+		res = append(res, tool.Function.Name)
+	}
+
+	return res
+}
+
 // logArgs renders tool arguments as json, the map order of %v is not stable
 func logArgs(args map[string]any) string {
 	b, err := json.Marshal(args)
@@ -200,6 +211,7 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (string, error)
 	}
 
 	a.log.DEBUG.Printf("chat: %d messages, %d tools offered", len(history), len(a.tools))
+	a.log.TRACE.Printf("tools offered: %v", toolNames(a.tools))
 	a.log.TRACE.Printf("prompt: %s", prompt)
 
 	for round := range maxIterations {

@@ -138,14 +138,6 @@ func TestRedacted(t *testing.T) {
 	assert.NotContains(t, cfg.Redacted().(Config).Token, "secret")
 }
 
-func toolNames(tools []llms.Tool) []string {
-	res := make([]string, 0, len(tools))
-	for _, tool := range tools {
-		res = append(res, tool.Function.Name)
-	}
-	return res
-}
-
 // call invokes a tool the way the model would
 func call(t *testing.T, a *Assistant, name, args string) string {
 	t.Helper()
