@@ -50,8 +50,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
-import type { CURRENCY } from "@/types/evcc";
-import type { ForecastSlot } from "./types";
+import type { CURRENCY, ForecastSlot } from "@/types/evcc";
 import { isStaticTariff } from "@/utils/forecast";
 
 const MAX_HOURS = 96;

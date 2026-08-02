@@ -23,8 +23,7 @@ import {
 import colors, { lighterColor } from "@/colors";
 import formatter from "@/mixins/formatter";
 import chartMixin from "./chartMixin";
-import type { CURRENCY } from "@/types/evcc";
-import type { ForecastSlot } from "./types";
+import type { CURRENCY, ForecastSlot } from "@/types/evcc";
 
 export default defineComponent({
 	name: "PriceChart",

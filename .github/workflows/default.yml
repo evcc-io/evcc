@@ -176,6 +176,9 @@ jobs:
       - name: Install
         run: make install-ui
 
+      - name: OpenAPI
+        run: make openapi
+
       - name: Lint
         run: make lint-ui
 
