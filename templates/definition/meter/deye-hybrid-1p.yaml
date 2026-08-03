@@ -50,7 +50,7 @@ params:
     type: bool
     advanced: true
     description:
-      de: GEN/AUX-Anschluss als zusätzlichen Solar-Eingang verwenden
+      de: GEN/AUX-Anschluss als Solar-Eingang nutzen
       en: Treat GEN/AUX port as additional solar input
     help:
       de: |
