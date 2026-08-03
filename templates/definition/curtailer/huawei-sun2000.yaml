@@ -6,10 +6,14 @@ products:
 requirements:
   description:
     de: |
+      Die Abregelung begrenzt die Einspeiseleistung auf den gewünschten Prozentsatz der maximalen AC-Leistung. Der Wechselrichter begrenzt automatisch die PV-Leistung, um dies zu erreichen.
+
       Ist am Einspeisepunkt kein Zähler (DDSU/DTSU666 oder SmartPS) vorhanden, wird nicht die Einspeiseleistung begrenzt, sondern die Wechselrichterleistung.
 
       Kommt ein Huawei SmartAssistant (EMMA) zum Einsatz, muss das entsprechende EMMA-Einspeisebegrenzungsgerät verwendet werden.
     en: |
+      Curtailment will limit the export power to the desired percentage of the maximum AC power. The inverter will automatically limit the PV power to achieve this.
+
       If no meter (DDSU/DTSU666 or SmartPS) is installed at the feed-in point, the inverter power is limited rather than the feed-in power.
 
       If a Huawei SmartAssistant (EMMA) is used, the corresponding EMMA feed-in limitation device must be used.
