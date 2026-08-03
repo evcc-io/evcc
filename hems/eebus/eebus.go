@@ -63,7 +63,7 @@ type Limits struct {
 	FailsafeConsumptionActivePowerLimit float64
 
 	ProductionNominalMax               float64
-	FailsafeProductionActivePowerLimit *float64
+	FailsafeProductionActivePowerLimit *float64 // nil is unset, 0 is a valid limit
 
 	FailsafeDurationMinimum time.Duration
 }
@@ -77,9 +77,6 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 		Interval    time.Duration
 	}{
 		Limits: Limits{
-			ProductionNominalMax:               0,
-			FailsafeProductionActivePowerLimit: nil, // 0 is a valid limit
-
 			FailsafeDurationMinimum: 2 * time.Hour,
 		},
 		Interval: 10 * time.Second,
