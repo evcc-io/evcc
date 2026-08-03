@@ -150,6 +150,40 @@ func TestRatesForAgreement_Dynamic(t *testing.T) {
 	assert.InDelta(t, 9.52, rates[1].GrossUnitRateCentsPerKwh, 0.001)
 }
 
+// TestRatesForAgreement_DynamicSimpleFallback verifies that a forecast entry falling
+// back to SimpleProductUnitRateInformation (e.g. a slot not yet covered by day-ahead
+// prices) is truncated to its own ValidFrom/ValidTo, not expanded to the whole
+// multi-day planning horizon.
+func TestRatesForAgreement_DynamicSimpleFallback(t *testing.T) {
+	t1 := t0
+	t2 := t0.Add(15 * time.Minute)
+
+	agr := krakengql.Agreement{
+		IsActive: true,
+		UnitRateForecast: []krakengql.UnitRateForecast{
+			{
+				ValidFrom: t1,
+				ValidTo:   t2,
+				UnitRateInformation: krakengql.ForecastUnitRateInformation{
+					SimpleProductUnitRateInformation: krakengql.SimpleProductUnitRateInformation{
+						NetUnitRateCentsPerKwh:         "20.00",
+						LatestGrossUnitRateCentsPerKwh: "23.80",
+					},
+				},
+			},
+		},
+	}
+
+	rates, err := ratesForAgreement(agr, t0)
+	require.NoError(t, err)
+	require.Len(t, rates, 1)
+
+	assert.Equal(t, t1, rates[0].ValidFrom)
+	assert.Equal(t, t2, rates[0].ValidTo)
+	assert.InDelta(t, 20.00, rates[0].NetUnitRateCentsPerKwh, 0.001)
+	assert.InDelta(t, 23.80, rates[0].GrossUnitRateCentsPerKwh, 0.001)
+}
+
 // TestRatesForAgreement_Simple verifies that a simple fixed-rate agreement returns
 // a single RatePeriod capped to the planning horizon (7 days), not the full
 // agreement validity window. This prevents the planner from expanding a multi-year

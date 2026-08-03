@@ -165,7 +165,7 @@ func ratesForAgreement(agr krakengql.Agreement, now time.Time) ([]RatePeriod, er
 
 	// Dynamic tariff: has unitRateForecast entries with per-slot prices
 	if len(agr.UnitRateForecast) > 0 {
-		rates, err := extractForecastRates(agr.UnitRateForecast, horizon)
+		rates, err := extractForecastRates(agr.UnitRateForecast)
 		if err != nil {
 			return nil, err
 		}
@@ -176,7 +176,7 @@ func ratesForAgreement(agr krakengql.Agreement, now time.Time) ([]RatePeriod, er
 
 	// Simple tariff: single fixed rate covering the agreement period
 	if agr.UnitRateInformation.SimpleProductUnitRateInformation.LatestGrossUnitRateCentsPerKwh != "" {
-		return simpleRates(agr.UnitRateInformation.SimpleProductUnitRateInformation, horizon)
+		return simpleRates(agr.UnitRateInformation.SimpleProductUnitRateInformation, horizon.start, horizon.end)
 	}
 
 	// Time of Use tariff: multiple time-slot rates that repeat daily
@@ -188,7 +188,7 @@ func ratesForAgreement(agr krakengql.Agreement, now time.Time) ([]RatePeriod, er
 }
 
 // extractForecastRates converts dynamic-tariff UnitRateForecast entries into RatePeriod values.
-func extractForecastRates(forecasts []krakengql.UnitRateForecast, horizon planningHorizon) ([]RatePeriod, error) {
+func extractForecastRates(forecasts []krakengql.UnitRateForecast) ([]RatePeriod, error) {
 	var rates []RatePeriod
 	for _, forecast := range forecasts {
 		info := forecast.UnitRateInformation
@@ -215,9 +215,11 @@ func extractForecastRates(forecasts []krakengql.UnitRateForecast, horizon planni
 			continue
 		}
 
-		// Forecast that uses SimpleProductUnitRateInformation
+		// Forecast that uses SimpleProductUnitRateInformation: this happens for slots not
+		// yet covered by day-ahead prices, e.g. before the next auction has been published.
+		// Truncate the rate to the forecast entry's own slot, not the whole planning horizon.
 		if info.SimpleProductUnitRateInformation.LatestGrossUnitRateCentsPerKwh != "" {
-			r, err := simpleRates(info.SimpleProductUnitRateInformation, horizon)
+			r, err := simpleRates(info.SimpleProductUnitRateInformation, forecast.ValidFrom, forecast.ValidTo)
 			if err != nil {
 				return nil, err
 			}
@@ -228,8 +230,8 @@ func extractForecastRates(forecasts []krakengql.UnitRateForecast, horizon planni
 }
 
 // simpleRates converts a SimpleProductUnitRateInformation into a single RatePeriod
-// ending at horizon, the pre-computed planning horizon.
-func simpleRates(info krakengql.SimpleProductUnitRateInformation, horizon planningHorizon) ([]RatePeriod, error) {
+// spanning [start,end).
+func simpleRates(info krakengql.SimpleProductUnitRateInformation, start, end time.Time) ([]RatePeriod, error) {
 	netRate, err := parseFloat(info.NetUnitRateCentsPerKwh)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse net unit rate: %w", err)
@@ -239,8 +241,8 @@ func simpleRates(info krakengql.SimpleProductUnitRateInformation, horizon planni
 		return nil, fmt.Errorf("failed to parse gross unit rate: %w", err)
 	}
 	return []RatePeriod{{
-		ValidFrom:                horizon.start,
-		ValidTo:                  horizon.end,
+		ValidFrom:                start,
+		ValidTo:                  end,
 		GrossUnitRateCentsPerKwh: grossRate,
 		NetUnitRateCentsPerKwh:   netRate,
 	}}, nil
