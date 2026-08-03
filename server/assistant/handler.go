@@ -37,8 +37,21 @@ func ChatHandler(host http.Handler) http.HandlerFunc {
 		return mcp.New(host)
 	})
 
+	return chatHandler(ConfiguredConfig, func(ctx context.Context, cfg Config) (*Assistant, error) {
+		srv, err := server()
+		if err != nil {
+			return nil, err
+		}
+
+		return New(ctx, cfg, srv)
+	})
+}
+
+// chatHandler streams the conversation. config reports whether the assistant is
+// configured at all, build creates the one answering this request.
+func chatHandler(config func() (Config, error), build func(context.Context, Config) (*Assistant, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		cfg, err := ConfiguredConfig()
+		cfg, err := config()
 		if err != nil {
 			jsonError(w, http.StatusPreconditionFailed, err)
 			return
@@ -54,12 +67,6 @@ func ChatHandler(host http.Handler) http.HandlerFunc {
 			return
 		}
 
-		srv, err := server()
-		if err != nil {
-			jsonError(w, http.StatusInternalServerError, err)
-			return
-		}
-
 		ctx, cancel := context.WithTimeout(r.Context(), chatTimeout)
 		defer cancel()
 
@@ -68,7 +75,7 @@ func ChatHandler(host http.Handler) http.HandlerFunc {
 		// model responses outlive the server's default write timeout
 		_ = rc.SetWriteDeadline(time.Now().Add(chatTimeout))
 
-		a, err := New(ctx, cfg, srv)
+		a, err := build(ctx, cfg)
 		if err != nil {
 			jsonError(w, http.StatusInternalServerError, err)
 			return
