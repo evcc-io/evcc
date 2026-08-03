@@ -1931,6 +1931,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 	// guard for socEstimator removed by api and keep a local copy in order to avoid race conditions
 	// https://github.com/evcc-io/evcc/issues/16180
 	socEstimator := lp.socEstimator
+	socEstimateVehicle := lp.socEstimateVehicle
 
 	socAndLimit := func(typ string, dev any) (*float64, *int64, error) {
 		var socR *float64
@@ -1995,7 +1996,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		} else {
 			lp.vehicleSoc = socEstimator.Soc(socR, lp.GetChargedEnergy())
 			lp.log.DEBUG.Printf("vehicle soc (estimator): %.0f%%", lp.vehicleSoc)
-			lp.updateSocEstimate(socEstimator, lp.socEstimateVehicle)
+			lp.updateSocEstimate(socEstimator, socEstimateVehicle)
 		}
 	}
 	lp.publish(keys.VehicleSoc, lp.vehicleSoc)
