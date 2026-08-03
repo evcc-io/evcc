@@ -82,12 +82,12 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	logCtx := context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))
 
 	oc := sensonet.Oauth2ConfigForRealm(cc.Realm)
-	token, err := vaillant.Login(logCtx, log, oc, cc.User, cc.Password)
+	ts, err := vaillant.Identity(logCtx, log, oc, cc.Realm, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	conn, err := sensonet.NewConnection(oc.TokenSource(logCtx, token), sensonet.WithHttpClient(request.NewClient(log)))
+	conn, err := sensonet.NewConnection(ts, sensonet.WithHttpClient(request.NewClient(log)))
 	if err != nil {
 		return nil, err
 	}
