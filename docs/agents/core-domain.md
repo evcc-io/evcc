@@ -46,7 +46,7 @@ Site (orchestrator — core/site.go)
 | Mode | Behavior |
 |------|----------|
 | `OFF` | Disabled (unless welcome charge) |
-| `NOW` | Max current immediately |
+| `NOW` | Max current immediately (with a tariff-based plan: only during planned slots) |
 | `MINPV` | Min current when PV surplus; fast if cheap tariff |
 | `PV` | Ramp current proportional to available solar |
 
@@ -134,6 +134,7 @@ Types: `TariffUsageGrid`, `TariffUsageFeedIn`, `TariffUsageCo2`, `TariffUsagePla
 - **Planner** (`core/planner/planner.go`) — finds cheapest time slots for target SOC/energy by deadline
   - `optimalPlan()` — cheapest non-contiguous slots
   - `continuousPlan()` — cheapest continuous window (fallback)
+  - In `NOW` mode with a tariff-based plan, charging is restricted to planned slots; outside them the loadpoint does not charge
 
 ## Key File Locations
 
