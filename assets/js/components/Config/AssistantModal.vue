@@ -15,7 +15,7 @@
 					v-model="values.provider"
 					class="form-select"
 					required
-					@change="applyDefaults(values)"
+					@change="changeProvider(values)"
 				>
 					<option v-for="p in providers" :key="p.provider" :value="p.provider">
 						{{ $t(`config.assistant.provider.${p.provider}`) }}
@@ -68,7 +68,7 @@
 					type="url"
 					class="form-control"
 					:required="needsBaseUrl(values)"
-					@change="loadModels(values)"
+					@change="changeBaseUrl(values)"
 				/>
 			</FormRow>
 		</template>
@@ -163,6 +163,16 @@ export default defineComponent({
 		},
 		baseUrlExample(values: AssistantConfig): string {
 			return this.info(values)?.baseUrl || "";
+		},
+		// the stored token is only sent back to the endpoint it was stored for, so
+		// the field is emptied to show that it has to be filled again
+		changeProvider(values: AssistantConfig) {
+			values.token = "";
+			this.applyDefaults(values);
+		},
+		changeBaseUrl(values: AssistantConfig) {
+			values.token = "";
+			this.loadModels(values);
 		},
 		applyDefaults(values: AssistantConfig) {
 			this.offered = [];
