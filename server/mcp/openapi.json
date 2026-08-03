@@ -3109,9 +3109,11 @@
             "type": "number"
           },
           "last24hEnergy": {
+            "description": "Energy used in the last 24 hours in kWh.",
             "type": "number"
           },
           "last7dEnergy": {
+            "description": "Energy used in the last 7 days in kWh.",
             "type": "number"
           },
           "sessionCo2PerKWh": {
@@ -3181,6 +3183,7 @@
             "type": "string"
           },
           "todayEnergy": {
+            "description": "Energy used since midnight in kWh.",
             "type": "number"
           },
           "vehicleClimaterActive": {
@@ -3444,6 +3447,7 @@
             }
           },
           "temperature": {
+            "description": "Temperature forecast in °C per time slot.",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ForecastSlot"
@@ -4350,9 +4354,11 @@
         "type": "object",
         "properties": {
           "title": {
+            "description": "Device title the color is assigned to.",
             "type": "string"
           },
           "color": {
+            "description": "Assigned color as CSS value.",
             "type": "string"
           }
         },
@@ -4616,10 +4622,12 @@
         "type": "object",
         "properties": {
           "config": {
-            "$ref": "#/components/schemas/OcppConfig"
+            "$ref": "#/components/schemas/OcppConfig",
+            "description": "OCPP server configuration."
           },
           "status": {
-            "$ref": "#/components/schemas/OcppStatus"
+            "$ref": "#/components/schemas/OcppStatus",
+            "description": "OCPP server status."
           }
         },
         "required": [
@@ -4901,6 +4909,7 @@
             "type": "number"
           },
           "tariffTemperature": {
+            "description": "Current outside temperature in °C.",
             "type": "number"
           },
           "mqtt": {
@@ -4988,6 +4997,7 @@
             "type": "boolean"
           },
           "solarAdjusted": {
+            "description": "Solar forecast is adjusted to real production data (experimental).",
             "type": "boolean"
           },
           "batteryGridChargeLimit": {

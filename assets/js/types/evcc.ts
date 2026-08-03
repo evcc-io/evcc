@@ -23,7 +23,12 @@ export type AuthProviders = Record<string, { id: string; authenticated: boolean 
 
 export type DeviceColors = Record<string, string>;
 /** Color assigned to a device for consistent UI display. */
-export type DeviceColorEntry = { title: string; color: string };
+export type DeviceColorEntry = {
+  /** Device title the color is assigned to. */
+  title: string;
+  /** Assigned color as CSS value. */
+  color: string;
+};
 
 /** MQTT integration configuration. */
 export interface MqttConfig {
@@ -227,6 +232,7 @@ export interface State {
   tariffCo2Home?: number;
   /** Current CO₂ emissions of charging in g/kWh, taking the green energy share into account. */
   tariffCo2Loadpoints?: number;
+  /** Current outside temperature in °C. */
   tariffTemperature?: number;
   /** MQTT integration configuration. */
   mqtt?: MqttConfig;
@@ -264,6 +270,7 @@ export interface State {
   batteryDischargeControl?: boolean;
   /** Home battery is allowed to discharge to the grid (experimental). */
   batteryGridDischarge?: boolean;
+  /** Solar forecast is adjusted to real production data (experimental). */
   solarAdjusted?: boolean;
   /** Price or emission limit for charging the home battery from grid. */
   batteryGridChargeLimit?: number | null;
@@ -379,7 +386,9 @@ export interface OcppStatus {
 
 /** OCPP server configuration and status. */
 export interface Ocpp {
+  /** OCPP server configuration. */
   config: OcppConfig;
+  /** OCPP server status. */
   status: OcppStatus;
 }
 
@@ -674,7 +683,9 @@ export interface Loadpoint {
   pvAction: PV_ACTION;
   /** Remaining time until the pending charge start or stop action executes, in seconds. */
   pvRemaining: number;
+  /** Energy used in the last 24 hours in kWh. */
   last24hEnergy?: number;
+  /** Energy used in the last 7 days in kWh. */
   last7dEnergy?: number;
   /** Average CO₂ emissions of the current charging session in g/kWh. */
   sessionCo2PerKWh: number | null;
@@ -708,6 +719,7 @@ export interface Loadpoint {
   suggestion?: LoadpointSuggestion | null;
   /** Loadpoint title for UI display. */
   title: string;
+  /** Energy used since midnight in kWh. */
   todayEnergy?: number;
   /** Climater of the connected vehicle is active. */
   vehicleClimaterActive: boolean | null;
@@ -1319,6 +1331,7 @@ export interface Forecast {
   planner?: ForecastSlot[];
   /** Feed-in rate forecast. Rate per kWh in the configured currency per time slot. */
   feedin?: ForecastSlot[];
+  /** Temperature forecast in °C per time slot. */
   temperature?: ForecastSlot[];
 }
 
