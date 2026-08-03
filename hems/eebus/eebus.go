@@ -124,10 +124,6 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 		productionNominalMax:     limits.ProductionNominalMax,
 	}
 
-	// simulate a received heartbeat
-	// otherwise a heartbeat timeout is assumed when the state machine is called for the first time
-	c.heartbeat.Set(struct{}{})
-
 	if err := inst.RegisterDevice(ski, "", c); err != nil {
 		return nil, err
 	}
@@ -167,6 +163,11 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 		if err := c.cs.CsLPPInterface.SetFailsafeDurationMinimum(c.failsafeDuration, true); err != nil {
 			c.log.ERROR.Println("CS LPP SetFailsafeDurationMinimum:", err)
 		}
+	}
+
+	// LPC-TS-017: start out limited to the failsafe limit until the Energy Guard states one
+	if err := c.run(); err != nil {
+		c.log.ERROR.Println(err)
 	}
 
 	return c, nil
@@ -259,7 +260,7 @@ func (c *EEBus) run() error {
 		// LPC-918/919/920 / LPP-equivalent: leave failsafe. Fall through to the
 		// LPC-914/1 block below, which will apply whatever fresh limit the EG sent
 		// (or release the limit if the EG has not sent an active limit).
-		c.log.DEBUG.Println("leaving failsafe mode")
+		c.log.DEBUG.Println("heartbeat returned- leaving failsafe mode")
 		c.setStatus(StatusNormal)
 
 		c.setConsumptionLimit(0)
