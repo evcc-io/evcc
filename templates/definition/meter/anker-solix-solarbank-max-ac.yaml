@@ -23,7 +23,7 @@ params:
   - name: maxchargepower
     default: 2500
   - name: maxdischargepower
-    default: 2500
+    default: 800
   - name: watchdog
     default: 60s
 render: |
