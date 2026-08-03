@@ -48,16 +48,6 @@ func azureHost(base string) (string, error) {
 	return u.Scheme + "://" + u.Host, nil
 }
 
-// azureUrl points a configured resource or project url at the v1 endpoint
-func azureUrl(base string) (string, error) {
-	host, err := azureHost(base)
-	if err != nil {
-		return "", err
-	}
-
-	return host + azurePath, nil
-}
-
 // ollamaUrl points a configured server url at the OpenAI-compatible endpoint
 func ollamaUrl(base string) string {
 	if base == "" {
@@ -86,12 +76,12 @@ func newLLM(cfg Config) (llms.Model, error) {
 
 	case Azure:
 		// the v1 endpoint speaks plain OpenAI, the deployment name is the model
-		base, err := azureUrl(cfg.BaseUrl)
+		host, err := azureHost(cfg.BaseUrl)
 		if err != nil {
 			return nil, err
 		}
 		return openai.New(openai.WithModel(cfg.Model), openai.WithToken(cfg.Token),
-			openai.WithBaseURL(base), openai.WithHTTPClient(llmClient()))
+			openai.WithBaseURL(host+azurePath), openai.WithHTTPClient(llmClient()))
 
 	case Anthropic:
 		opts := []anthropic.Option{anthropic.WithModel(cfg.Model), anthropic.WithToken(cfg.Token),

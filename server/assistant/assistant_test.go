@@ -287,20 +287,20 @@ func TestOllamaUrl(t *testing.T) {
 	}
 }
 
-func TestAzureUrl(t *testing.T) {
+func TestAzureHost(t *testing.T) {
 	for base, want := range map[string]string{
-		"https://res.openai.azure.com":                        "https://res.openai.azure.com/openai/v1",
-		"https://res.services.ai.azure.com/":                  "https://res.services.ai.azure.com/openai/v1",
-		"https://res.services.ai.azure.com/openai/v1":         "https://res.services.ai.azure.com/openai/v1",
-		"https://res.services.ai.azure.com/api/projects/evcc": "https://res.services.ai.azure.com/openai/v1",
+		"https://res.openai.azure.com":                        "https://res.openai.azure.com",
+		"https://res.services.ai.azure.com/":                  "https://res.services.ai.azure.com",
+		"https://res.services.ai.azure.com/openai/v1":         "https://res.services.ai.azure.com",
+		"https://res.services.ai.azure.com/api/projects/evcc": "https://res.services.ai.azure.com",
 	} {
-		res, err := azureUrl(base)
+		res, err := azureHost(base)
 		require.NoError(t, err, base)
 		assert.Equal(t, want, res, base)
 	}
 
 	for _, base := range []string{"", "res.openai.azure.com"} {
-		_, err := azureUrl(base)
+		_, err := azureHost(base)
 		assert.Error(t, err, base)
 	}
 }
