@@ -254,13 +254,13 @@ export default defineComponent({
 			return value > 1 ? `+${this.fmtPercentage(value)}` : null;
 		},
 		chargingPlanDisabled() {
-			return this.mode && [CHARGE_MODE.OFF, CHARGE_MODE.NOW].includes(this.mode);
+			return this.mode && this.mode === CHARGE_MODE.OFF;
 		},
 		smartCostDisabled() {
-			return this.chargingPlanDisabled;
+			return this.mode && [CHARGE_MODE.OFF, CHARGE_MODE.NOW].includes(this.mode);
 		},
 		smartFeedInPriorityDisabled() {
-			return this.chargingPlanDisabled;
+			return this.mode && [CHARGE_MODE.OFF, CHARGE_MODE.NOW].includes(this.mode);
 		},
 	},
 	watch: {

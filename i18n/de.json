@@ -1456,7 +1456,7 @@
       "inactiveLabel": "Zielzeit",
       "nextPlan": "Nächster Plan",
       "notReachableInTime": "Zielzeit wird {overrun} später erreicht.",
-      "onlyInPvMode": "Ladeplanung ist nur im PV-Modus aktiv.",
+      "onlyInPvMode": "Die Ladeplanung ist nur aktiv, wenn das Laden aktiviert ist.",
       "planDuration": "Ladedauer",
       "planPeriodLabel": "Zeitraum",
       "planPeriodValue": "{start} bis {end}",

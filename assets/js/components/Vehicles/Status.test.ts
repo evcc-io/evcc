@@ -145,7 +145,7 @@ describe("plan", () => {
       { charger: "Connected.", planstart: "Mo 03:00" }
     );
   });
-  test("dont show plan status if plan is disabled (e.g. off, fast mode)", () => {
+  test("dont show plan status if plan is disabled (off mode)", () => {
     expectEntries(
       {
         effectivePlanTime,
@@ -154,6 +154,7 @@ describe("plan", () => {
         charging: true,
         connected: true,
         chargingPlanDisabled: true,
+        mode: "off",
       },
       { charger: "Charging…" }
     );
@@ -165,12 +166,28 @@ describe("plan", () => {
         enabled: true,
         connected: true,
         chargingPlanDisabled: true,
+        mode: "off",
       },
       { charger: "Ready. Waiting for vehicle…" }
     );
     expectEntries(
-      { effectivePlanTime, planProjectedStart, connected: true, chargingPlanDisabled: true },
+      { effectivePlanTime, planProjectedStart, connected: true, chargingPlanDisabled: true, mode: "off" },
       { charger: "Connected." }
+    );
+  });
+  test("show plan status in fast mode", () => {
+    expectEntries(
+      {
+        effectivePlanTime,
+        planProjectedEnd,
+        planActive: true,
+        enabled: true,
+        charging: true,
+        connected: true,
+        chargingPlanDisabled: false,
+        mode: "now",
+      },
+      { charger: "Charging…", planactive: "Mo 06:00" }
     );
   });
 });

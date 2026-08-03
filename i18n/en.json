@@ -1456,7 +1456,7 @@
       "inactiveLabel": "Target time",
       "nextPlan": "Next plan",
       "notReachableInTime": "Goal will be reached {overrun} later.",
-      "onlyInPvMode": "Charging plan only works in solar mode.",
+      "onlyInPvMode": "Charging plan is only active when charging is enabled.",
       "planDuration": "Charging time",
       "planPeriodLabel": "Period",
       "planPeriodValue": "{start} to {end}",
