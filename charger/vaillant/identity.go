@@ -2,6 +2,7 @@ package vaillant
 
 import (
 	"context"
+	"strings"
 	"sync"
 
 	"github.com/WulfgarW/sensonet"
@@ -11,39 +12,36 @@ import (
 )
 
 var (
-	mu     sync.Mutex
-	tokens = make(map[string]oauth2.TokenSource)
-
-	// loginFunc is a seam for testing; production code always uses Login
-	loginFunc = Login
+	mu         sync.Mutex
+	identities = make(map[string]oauth2.TokenSource)
 )
 
 // Identity returns an oauth2 token source shared by all Vaillant chargers on the
-// same myVaillant account, keyed by realm and user. The login is performed once
-// while holding the lock, which serialises concurrent startups so the parallel
-// login flows can no longer clobber each other's session; further chargers on the
-// same account reuse the resulting refreshing token source (#30625).
+// same myVaillant account. The login is performed once while holding the lock,
+// which serialises concurrent startups so the parallel login flows can no longer
+// clobber each other's session (#30625).
 func Identity(log *util.Logger, oc *sensonet.Oauth2Config, realm, user, password string) (oauth2.TokenSource, error) {
+	// serialise instance handling
 	mu.Lock()
 	defer mu.Unlock()
 
-	key := realm + "\x00" + user
-	if ts, ok := tokens[key]; ok {
+	// reuse identity instance
+	subject := "vaillant." + strings.ToLower(realm) + "." + strings.ToLower(user)
+	if ts, ok := identities[subject]; ok {
 		return ts, nil
 	}
 
-	// the shared source outlives the charger that happens to create it, so it must
-	// not capture that charger's context: device creation is bounded by a timeout
-	// which would otherwise cancel the token refresh for everyone on the account
+	// decoupled from the calling charger's context, which is bounded by a timeout
+	// during device creation and would otherwise cancel the shared token refresh
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
 
-	token, err := loginFunc(ctx, log, oc, user, password)
+	token, err := Login(ctx, log, oc, user, password)
 	if err != nil {
 		return nil, err
 	}
 
 	ts := oc.TokenSource(ctx, token)
-	tokens[key] = ts
+	identities[subject] = ts
 
 	return ts, nil
 }
