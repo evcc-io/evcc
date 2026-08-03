@@ -52,8 +52,8 @@ func TestPublishSocAndRange(t *testing.T) {
 	}
 
 	// populate channels
-	x, y, z, w := createChannels(t)
-	attachChannels(lp, x, y, z, w)
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
 
 	assert.Empty(t, lp.socUpdated)
 
@@ -168,8 +168,8 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 		}
 
 		// populate channels
-		w, x, y, z := createChannels(t)
-		attachChannels(lp, w, x, y, z)
+		x, y, z := createChannels(t)
+		attachChannels(lp, x, y, z)
 
 		test := func(t *testing.T) {
 			assert.Equal(t, tc.socPoll, lp.vehicleSocPollAllowed())
@@ -286,8 +286,8 @@ func TestDefaultVehicle(t *testing.T) {
 	lp.defaultVehicle = dflt
 
 	// populate channels
-	w, x, y, z := createChannels(t)
-	attachChannels(lp, w, x, y, z)
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
 
 	title := func(v api.Vehicle) string {
 		if v == nil {
@@ -353,8 +353,8 @@ func TestReidentifyActiveVehicleKeepsMode(t *testing.T) {
 	lp.charger = &idCharger{id: "rfid-1"}
 	lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle}))
 
-	w, x, y, z := createChannels(t)
-	attachChannels(lp, w, x, y, z)
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
 
 	// vehicle already active via a different detection path (e.g. SoC poll)
 	lp.setActiveVehicle(vehicle)
@@ -383,8 +383,8 @@ func TestReassignActiveVehicleKeepsSoc(t *testing.T) {
 
 	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
 
-	w, x, y, z := createChannels(t)
-	attachChannels(lp, w, x, y, z)
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
 
 	// vehicle active, soc read from a prior cycle
 	lp.setActiveVehicle(vehicle)
@@ -421,8 +421,8 @@ func TestDisconnectIntegratedDeviceKeepsMode(t *testing.T) {
 	lp.DefaultMode = api.ModePV
 	lp.setMode(api.ModeOff)
 
-	w, x, y, z := createChannels(t)
-	attachChannels(lp, w, x, y, z)
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
 
 	lp.evVehicleDisconnectHandler()
 

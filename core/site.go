@@ -53,9 +53,9 @@ var _ site.API = (*Site)(nil)
 
 // Site is the main configuration container. A site can host multiple loadpoints.
 type Site struct {
-	valueChan    chan<- util.Param      // client push messages
-	pushChan     chan<- messenger.Event // notification events
-	lpUpdateChan chan *Loadpoint
+	valueChan        chan<- util.Param      // client push messages
+	pushChan         chan<- messenger.Event // notification events
+	lpUpdateChan     chan *Loadpoint
 	vehiclePublisher *vehicle.Publisher
 
 	sync.RWMutex
@@ -1299,7 +1299,7 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 			site.valueChan <- util.Param{Loadpoint: &id, Key: keys.Name, Val: lpDevices[id].Config().Name}
 		}
 
-		lp.Prepare(site, lpUIChan, lpPushChan, site.lpUpdateChan, site.vehiclePublisher)
+		lp.Prepare(site, lpUIChan, lpPushChan, site.lpUpdateChan)
 	}
 }
 

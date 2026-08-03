@@ -681,12 +681,12 @@ func (lp *Loadpoint) defaultMode() {
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
-func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan chan<- messenger.Event, lpChan chan<- *Loadpoint, vehiclePublisher *vehicle.Publisher) {
+func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan chan<- messenger.Event, lpChan chan<- *Loadpoint) {
 	lp.site = site
 	lp.uiChan = uiChan
 	lp.pushChan = pushChan
 	lp.lpChan = lpChan
-	lp.vehiclePublisher = vehiclePublisher
+	lp.vehiclePublisher = site.GetVehiclePublisher()
 
 	// event handlers
 	_ = lp.bus.Subscribe(evChargeStart, lp.evChargeStartHandler)
@@ -2317,5 +2317,4 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	if err != nil {
 		lp.log.ERROR.Println(err)
 	}
-
 }

@@ -10,7 +10,6 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/soc"
-	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
@@ -36,13 +35,12 @@ func (n *Null) ChargeDuration() (time.Duration, error) {
 	return 0, nil
 }
 
-func createChannels(t *testing.T) (chan util.Param, chan messenger.Event, chan *Loadpoint, chan util.Param) {
+func createChannels(t *testing.T) (chan util.Param, chan messenger.Event, chan *Loadpoint) {
 	t.Helper()
 
 	uiChan := make(chan util.Param)
 	pushChan := make(chan messenger.Event)
 	lpChan := make(chan *Loadpoint)
-	vChan := make(chan util.Param)
 
 	log := false
 	go func() {
@@ -60,22 +58,17 @@ func createChannels(t *testing.T) (chan util.Param, chan messenger.Event, chan *
 				if log {
 					t.Log(v)
 				}
-			case v := <-vChan:
-				if log {
-					t.Log(v)
-				}
 			}
 		}
 	}()
 
-	return uiChan, pushChan, lpChan, vChan
+	return uiChan, pushChan, lpChan
 }
 
-func attachChannels(lp *Loadpoint, uiChan chan util.Param, pushChan chan messenger.Event, lpChan chan *Loadpoint, vChan chan util.Param) {
+func attachChannels(lp *Loadpoint, uiChan chan util.Param, pushChan chan messenger.Event, lpChan chan *Loadpoint) {
 	lp.uiChan = uiChan
 	lp.pushChan = pushChan
 	lp.lpChan = lpChan
-	lp.vehiclePublisher = vehicle.NewPublisher(vChan)
 }
 
 func attachListeners(t *testing.T, lp *Loadpoint) {
@@ -88,9 +81,8 @@ func attachListeners(t *testing.T, lp *Loadpoint) {
 		charger.EXPECT().MaxCurrent(int64(lp.minCurrent)).Return(nil)
 	}
 
-	uiChan, pushChan, lpChan, vChan := createChannels(t)
-	publisher := vehicle.NewPublisher(vChan)
-	lp.Prepare(new(Site), uiChan, pushChan, lpChan, publisher)
+	uiChan, pushChan, lpChan := createChannels(t)
+	lp.Prepare(new(Site), uiChan, pushChan, lpChan)
 }
 
 func TestNew(t *testing.T) {

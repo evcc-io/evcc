@@ -6,7 +6,7 @@ import (
 )
 
 type Publisher struct {
-	Ch   chan<- util.Param
+	Ch chan<- util.Param
 }
 
 func NewPublisher(ch chan<- util.Param) *Publisher {
@@ -17,7 +17,7 @@ func (p *Publisher) Publish(key string, val any) {
 	p.Ch <- util.Param{Key: key, Val: val}
 }
 
-func (p *Publisher) PublishAllVehicleData(vSettings []API,  v api.Vehicle) {
+func (p *Publisher) PublishAllVehicleData(vSettings []API, v api.Vehicle) {
 	id := ""
 	for _, s := range vSettings {
 		// TODO: does not work when title gets changed, need to find a better way to identify the vehicle
