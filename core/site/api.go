@@ -10,6 +10,12 @@ type Publisher interface {
 	Publish(key string, val any)
 }
 
+// BatteryOptimizerSocGoals are recurring optimizer reserve goals: keep the
+// battery at each goal's Soc by its Time on the selected Weekdays. Modelled on
+// loadpoint repeating plans (api.RepeatingPlan) so several reserves can be set,
+// e.g. an evening reserve plus a morning-peak reserve. Time and Tz are stored
+// together so the wall-clock time is always interpreted in its own timezone.
+
 // API is the external site API
 type API interface {
 	Publisher
@@ -55,6 +61,8 @@ type API interface {
 	GetBatteryGridChargeLimit() *float64
 	// SetBatteryGridChargeLimit sets the grid charge limit
 	SetBatteryGridChargeLimit(limit *float64) error
+	GetBatteryOptimizerSocGoals() []api.RepeatingPlan
+	SetBatteryOptimizerSocGoals([]api.RepeatingPlan) error
 
 	// GetOptimizerChargingStrategy gets the optimizer grid charging strategy
 	GetOptimizerChargingStrategy() string
@@ -91,6 +99,8 @@ type API interface {
 
 	GetBatteryDischargeControl() bool
 	SetBatteryDischargeControl(bool) error
+	GetOptimizerManualPA() *float64
+	SetOptimizerManualPA(*float64) error
 	GetBatteryGridDischarge() bool
 	SetBatteryGridDischarge(bool) error
 

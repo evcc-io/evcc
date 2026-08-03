@@ -81,12 +81,14 @@ type Site struct {
 	curtailPercent *int
 
 	// battery settings
-	prioritySoc             float64  // prefer battery up to this Soc
-	bufferSoc               float64  // continue charging on battery above this Soc
-	bufferStartSoc          float64  // start charging on battery above this Soc
-	batteryDischargeControl bool     // prevent battery discharge for fast and planned charging
-	batteryGridChargeLimit  *float64 // grid charging limit
-	batteryGridDischarge    bool     // allow battery discharge to grid (experimental)
+	prioritySoc              float64             // prefer battery up to this Soc
+	bufferSoc                float64             // continue charging on battery above this Soc
+	bufferStartSoc           float64             // start charging on battery above this Soc
+	batteryDischargeControl  bool                // prevent battery discharge for fast and planned charging
+	optimizerManualPA        *float64            // optional manual p_a override in currency/kWh
+	batteryGridChargeLimit   *float64            // grid charging limit
+	batteryOptimizerSocGoals []api.RepeatingPlan // recurring optimizer reserve goals (soc + time + tz + weekdays)
+	batteryGridDischarge     bool                // allow battery discharge to grid (experimental)
 
 	// forecast settings
 	solarAdjusted bool // adjust solar forecast to real production data
@@ -378,6 +380,16 @@ func (site *Site) restoreSettings() error {
 	}
 	if v, err := settings.Bool(keys.BatteryDischargeControl); err == nil {
 		if err := site.SetBatteryDischargeControl(v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
+			return err
+		}
+	}
+	if v, err := settings.Float(keys.OptimizerManualPA); err == nil {
+		if err := site.SetOptimizerManualPA(&v); err != nil {
+			return err
+		}
+	}
+	if goals, err := loadBatteryOptimizerSocGoals(); err == nil && len(goals) > 0 {
+		if err := site.SetBatteryOptimizerSocGoals(goals); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
 			return err
 		}
 	}
@@ -1182,7 +1194,7 @@ func (site *Site) update(lp updater) {
 			)
 		}
 
-		site.log.WARN.Println("planner:", msg)
+		site.log.INFO.Println("planner:", msg)
 	}
 
 	// update battery after reading meters to ensure that (modbus) connection is open
@@ -1215,6 +1227,8 @@ func (site *Site) prepare() {
 	site.publish(keys.BufferStartSoc, site.bufferStartSoc)
 	site.publish(keys.BatteryMode, site.batteryMode)
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
+	site.publish(keys.OptimizerManualPA, site.GetOptimizerManualPA())
+	site.publish(keys.BatteryOptimizerSocGoals, site.GetBatteryOptimizerSocGoals())
 	site.publish(keys.BatteryGridDischarge, site.batteryGridDischarge)
 	site.publish(keys.SolarAdjusted, site.solarAdjusted)
 	site.publish(keys.ResidualPower, site.GetResidualPower())
