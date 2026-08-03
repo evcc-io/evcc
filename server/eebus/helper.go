@@ -47,15 +47,12 @@ func Await(write func(func(model.ResultDataType, model.MsgCounterType)) (*model.
 	}
 }
 
-// limitTimeout bounds the retry window for stating a limit to a Controllable
-// System, staying inside the 60s the spec grants the Energy Guard.
+// limitTimeout keeps the retries inside the 60s the spec grants the Energy Guard.
 const limitTimeout = 50 * time.Second
 
-// AssertLimit states the current limit to a Controllable System that just became
-// available. [LPC-913]/[LPP-913] require the Energy Guard to send a heartbeat and a
-// following limit within 60s of connecting. The write runs in the background and is
-// retried: the CS ignores writes not following a heartbeat and may reject them while
-// still in state "init".
+// AssertLimit states the current limit to a newly available Controllable System
+// ([LPC-913]/[LPP-913]). Retried in the background: the CS ignores writes that do
+// not follow a heartbeat and may reject them while still in state "init".
 func AssertLimit(log *util.Logger, write func() error) {
 	go func() {
 		bo := backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(limitTimeout))
