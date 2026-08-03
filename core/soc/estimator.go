@@ -32,6 +32,8 @@ type Estimator struct {
 	prevSoc           float64 // previous vehicle Soc in %
 	prevChargedEnergy float64 // previous charged energy in Wh
 	energyPerSocStep  float64 // Energy per Soc percent in Wh
+	fetchedSoc        float64 // last soc received from the vehicle
+	chargedEnergy     float64 // last charged energy seen, in Wh
 }
 
 // NewEstimator creates new estimator
@@ -97,12 +99,14 @@ func remainingChargeEnergy(targetSoc int, vehicleSoc, virtualCapacity float64) f
 func (s *Estimator) Soc(fetchedSoc *float64, chargedEnergy float64) float64 {
 	if fetchedSoc != nil {
 		s.vehicleSoc = *fetchedSoc
+		s.fetchedSoc = *fetchedSoc
 	} else {
 		s.log.WARN.Printf("missing vehicle soc- ignored by estimator")
 	}
 
 	socDelta := s.vehicleSoc - s.prevSoc
-	energyDelta := max(chargedEnergy, 0) - s.prevChargedEnergy
+	s.chargedEnergy = max(chargedEnergy, 0)
+	energyDelta := s.chargedEnergy - s.prevChargedEnergy
 
 	if socDelta != 0 || energyDelta < 0 { // soc value change or unexpected energy reset
 		if s.initialSoc == 0 {

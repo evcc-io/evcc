@@ -96,6 +96,9 @@ const (
 	PlanOverrun        = "planOverrun"        // charge plan goal not reachable in time
 	PlanStrategy       = "planStrategy"       // charge plan strategy (precondition, continuous)
 
+	// soc estimate
+	SocEstimate = "socEstimate" // persisted soc estimator anchor (per vehicle)
+
 	// repeating plans
 	RepeatingPlans = "repeatingPlans" // key to access all repeating plans in db
 

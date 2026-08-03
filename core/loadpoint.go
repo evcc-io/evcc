@@ -151,6 +151,9 @@ type Loadpoint struct {
 	coordinator    coordinator.API
 	socEstimator   *soc.Estimator
 
+	// name of the vehicle the persisted soc estimate belongs to
+	socEstimateVehicle string
+
 	// charge planning
 	planner          *planner.Planner
 	planTime         time.Time        // time goal
@@ -1992,6 +1995,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		} else {
 			lp.vehicleSoc = socEstimator.Soc(socR, lp.GetChargedEnergy())
 			lp.log.DEBUG.Printf("vehicle soc (estimator): %.0f%%", lp.vehicleSoc)
+			lp.updateSocEstimate(socEstimator, lp.socEstimateVehicle)
 		}
 	}
 	lp.publish(keys.VehicleSoc, lp.vehicleSoc)

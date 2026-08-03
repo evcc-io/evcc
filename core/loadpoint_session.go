@@ -60,6 +60,11 @@ func (lp *Loadpoint) createSession() {
 
 	// energy
 	lp.energyMetrics.Reset()
+
+	// after the reset, never before: the persisted anchor is measured against
+	// this counter and setActiveVehicle always runs ahead of createSession
+	lp.restoreSocEstimate()
+
 	lp.energyMetrics.Publish("session", lp)
 	lp.publish(keys.ChargedEnergy, lp.GetChargedEnergy())
 }
