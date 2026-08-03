@@ -342,7 +342,7 @@ func TestConfigValidate(t *testing.T) {
 }
 
 func TestCustomWithoutToken(t *testing.T) {
-	// local OpenAI-compatible endpoints need no key, langchaingo rejects an empty token
+	// local OpenAI-compatible endpoints need no key, the client rejects an empty token
 	_, err := newLLM(t.Context(), Config{Provider: Custom, Model: "m", BaseUrl: "http://localhost:1234/v1"})
 	require.NoError(t, err)
 }

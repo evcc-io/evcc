@@ -99,28 +99,29 @@ func newAssistant(ctx context.Context, llm model.ToolCallingChatModel, srv *mcps
 		return nil, err
 	}
 
-	catalog, err := listTools(ctx, cs)
-	if err != nil {
+	// every step from here owns both sessions until the assistant does
+	fail := func(err error) (*Assistant, error) {
 		cs.Close()
 		ss.Close()
 		return nil, err
+	}
+
+	catalog, err := listTools(ctx, cs)
+	if err != nil {
+		return fail(err)
 	}
 
 	tools := offeredTools(catalog)
 
 	infos, err := toolInfos(tools)
 	if err != nil {
-		cs.Close()
-		ss.Close()
-		return nil, err
+		return fail(err)
 	}
 
 	// WithTools returns a new instance, the bare one answers the concluding call
 	bound, err := llm.WithTools(infos)
 	if err != nil {
-		cs.Close()
-		ss.Close()
-		return nil, err
+		return fail(err)
 	}
 
 	return &Assistant{
