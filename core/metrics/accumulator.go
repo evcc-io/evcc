@@ -13,9 +13,14 @@ type Accumulator struct {
 	updated           time.Time
 	energyMeter       *float64 // kWh
 	returnEnergyMeter *float64 // kWh
-	Energy            float64  `json:"energy"`       // kWh
-	ReturnEnergy      float64  `json:"returnEnergy"` // kWh
-	SocTemp           *float64 `json:"socTemp,omitempty"`
+	// power-integrated energy the meter counter has not confirmed yet. A counter
+	// coarser than a slot's energy would otherwise leave slots empty and dump the
+	// whole jump into the slot it happens to tick in
+	pendingEnergy       float64  // kWh
+	pendingReturnEnergy float64  // kWh
+	Energy              float64  `json:"energy"`       // kWh
+	ReturnEnergy        float64  `json:"returnEnergy"` // kWh
+	SocTemp             *float64 `json:"socTemp,omitempty"`
 }
 
 // AccumulatorState is the resumable meter-reading checkpoint of an Accumulator.
@@ -92,11 +97,17 @@ func (m *Accumulator) SetEnergyMeterTotal(v float64) {
 	}()
 
 	if m.energyMeter == nil {
+		// the counter's history starts here, earlier integration is not its business
+		m.pendingEnergy = 0
 		return
 	}
 
 	if v >= *m.energyMeter {
-		m.Energy += v - *m.energyMeter
+		// the counter is the truth - book only what integration has not booked
+		// already and carry the rest into the following slots
+		delta := v - *m.energyMeter
+		m.Energy += max(0, delta-m.pendingEnergy)
+		m.pendingEnergy = max(0, m.pendingEnergy-delta)
 	}
 }
 
@@ -108,11 +119,14 @@ func (m *Accumulator) SetReturnEnergyMeterTotal(v float64) {
 	}()
 
 	if m.returnEnergyMeter == nil {
+		m.pendingReturnEnergy = 0
 		return
 	}
 
 	if v >= *m.returnEnergyMeter {
-		m.ReturnEnergy += v - *m.returnEnergyMeter
+		delta := v - *m.returnEnergyMeter
+		m.ReturnEnergy += max(0, delta-m.pendingReturnEnergy)
+		m.pendingReturnEnergy = max(0, m.pendingReturnEnergy-delta)
 	}
 }
 
@@ -138,12 +152,21 @@ func (m *Accumulator) AddReturnEnergy(v float64) {
 	m.ReturnEnergy += v
 }
 
-// AddPower adds the given power in W, calculating the energy based on the time since the last update
+// AddPower adds the given power in W, calculating the energy based on the time
+// since the last update. For a metered direction the energy is provisional and
+// gets netted against the next counter delta.
 func (m *Accumulator) AddPower(v float64) {
+	if m.updated.IsZero() {
+		m.updated = m.clock.Now()
+		return
+	}
+
 	since := v * m.clock.Since(m.updated).Hours() / 1e3
 	if v >= 0 {
 		m.AddEnergy(since)
+		m.pendingEnergy += since
 	} else {
 		m.AddReturnEnergy(-since)
+		m.pendingReturnEnergy -= since
 	}
 }

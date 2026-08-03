@@ -195,26 +195,16 @@ func (c *Collector) SetReturnEnergyMeterTotal(v float64) error {
 	})
 }
 
-// AddEnergy adds energy using meter totals if available, falling back to power
-// integration only for directions without an energy meter. A direction that has
-// reported a total before keeps using meter deltas even if a single read fails,
-// so a transient failure is recovered via the next delta and not double-counted.
+// AddEnergy integrates power and reconciles it against the meter totals. A
+// metered direction books integrated energy provisionally, so its 15min slots
+// follow the power curve even when the counter resolution is coarser than a
+// slot's energy, while the total stays counter-exact. A failed or missing
+// energy read needs no special case: the next delta nets out what integration
+// already booked, so nothing is double-counted.
 func (c *Collector) AddEnergy(energyTotal, returnEnergyTotal *float64, power float64) error {
 	return c.process(func() {
-		// a direction that ever reported a total is metered, so a nil read is a
-		// transient failure rather than a power-only meter
-		hasEnergyMeter := energyTotal != nil || c.accu.energyMeter != nil
-		hasReturnMeter := returnEnergyTotal != nil || c.accu.returnEnergyMeter != nil
-
-		// integrate power for the unmetered direction first, since applying a
-		// meter total advances the accumulator clock
-		if power >= 0 {
-			if !hasEnergyMeter {
-				c.accu.AddPower(power)
-			}
-		} else if !hasReturnMeter {
-			c.accu.AddPower(power)
-		}
+		// integrate first, since applying a meter total advances the accumulator clock
+		c.accu.AddPower(power)
 
 		if energyTotal != nil {
 			c.accu.SetEnergyMeterTotal(*energyTotal)

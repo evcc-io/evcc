@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"math"
 	"testing"
 	"time"
 
@@ -192,9 +193,9 @@ func TestCollectorRecoversAfterFullMeterFailure(t *testing.T) {
 
 // TestCollectorRecoversAfterFailedEnergyRead verifies energy accounting when a
 // meter's energy total read fails for one cycle while power keeps reporting
-// (collectMeters passes a nil energy total but a valid power). A metered
-// direction skips power integration on the failed read and recovers the gap via
-// the next meter delta, so the failed interval is not double-counted.
+// (collectMeters passes a nil energy total but a valid power). The failed
+// interval is integrated from power and netted against the next meter delta,
+// so it is neither lost nor double-counted.
 func TestCollectorRecoversAfterFailedEnergyRead(t *testing.T) {
 	clock := clock.NewMock()
 
@@ -214,11 +215,11 @@ func TestCollectorRecoversAfterFailedEnergyRead(t *testing.T) {
 	require.NoError(t, col.AddEnergy(new(10.05), nil, 1e3))
 	require.InDelta(t, 0.05, col.accu.Energy, 1e-9)
 
-	// energy read fails (nil) while power is still reported: the gap is not
-	// power-integrated because the meter has reported a total before
+	// energy read fails (nil) while power is still reported: the gap is
+	// integrated provisionally
 	clock.Add(3 * time.Minute)
 	require.NoError(t, col.AddEnergy(nil, nil, 1e3))
-	require.InDelta(t, 0.05, col.accu.Energy, 1e-9)
+	require.InDelta(t, 0.10, col.accu.Energy, 1e-9)
 
 	// recovered read: meter advanced to 10.15 (real 0.10 kWh since last good read)
 	clock.Add(3 * time.Minute)
@@ -227,6 +228,39 @@ func TestCollectorRecoversAfterFailedEnergyRead(t *testing.T) {
 	// 9 min @ 1 kW = 0.15 kWh delivered (meter 10.00 -> 10.15). The recovery
 	// delta (10.15 - 10.05) captures the gap exactly, without double-counting.
 	require.InDelta(t, 0.15, col.accu.Energy, 1e-9)
+}
+
+// TestCollectorCoarseEnergyMeter verifies that a meter whose energy counter is
+// coarser than a slot's energy still yields one plausible value per slot rather
+// than alternating empty and double slots.
+// https://github.com/evcc-io/evcc/issues/32324
+func TestCollectorCoarseEnergyMeter(t *testing.T) {
+	clk := clock.NewMock() // 1970-01-01 00:00:00 UTC, on a slot boundary
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector(PV, "coarse", "", WithClock(clk))
+	require.NoError(t, err)
+
+	// 2 kW constant is 0.5 kWh per slot, below the counter's full-kWh
+	// resolution: it only ticks every other slot
+	const power = 2e3
+	const base = 53740.0
+
+	for range 8 * 15 { // 8 slots at 1min interval
+		total := base + math.Trunc(power*float64(clk.Now().Unix())/3600/1e3)
+		clk.Add(time.Minute)
+		require.NoError(t, col.AddEnergy(&total, nil, power))
+	}
+
+	var slots []meter
+	require.NoError(t, db.Instance.Where("meter = ?", col.entity.Id).Order("ts").Find(&slots).Error)
+	require.NotEmpty(t, slots)
+
+	for _, s := range slots {
+		require.InDelta(t, 0.5, s.Energy, 0.15, "slot %d must carry a plausible energy", s.Timestamp)
+	}
 }
 
 // TestCollectorSkipsPartialFirstSlot verifies that the first slot, joined
