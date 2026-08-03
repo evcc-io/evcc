@@ -186,17 +186,14 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 	case lpc.UseCaseSupportUpdate:
 		c.mu.Lock()
 		// use most specific selector
-		adopted := c.egLpcEntity == nil || len(entity.Address().Entity) < len(c.egLpcEntity.Address().Entity)
-		if adopted {
+		if c.egLpcEntity == nil || len(entity.Address().Entity) < len(c.egLpcEntity.Address().Entity) {
 			c.egLpcEntity = entity
-		}
-		dim := c.dimmed
-		c.mu.Unlock()
 
-		// [LPC-913]: state the limit to the newly available CS
-		if adopted {
+			// [LPC-913]: state the limit to the newly available CS
+			dim := c.dimmed
 			eebus.AssertLimit(c.log, func() error { return c.Dim(dim) })
 		}
+		c.mu.Unlock()
 	}
 }
 
