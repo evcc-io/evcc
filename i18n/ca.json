@@ -24,6 +24,9 @@
       "charging": "Carregant",
       "discharging": "Descarregant",
       "energy": "Energia",
+      "gridCharge": "Carrega de la xarxa elècrtica",
+      "hold": "descàrrega bloquejada",
+      "holdCharge": "càrrega bloquejada",
       "ofTotal": "de {total}",
       "power": "Energia",
       "soc": "Nivell de bateria"
@@ -36,7 +39,10 @@
         "above": "quan la bateria es troba per sobre de {soc}",
         "full": "quan la bateria està plena",
         "never": "només amb suficient excedent"
-      }
+      },
+      "bufferTitle": "Bateria com a buffer de càrrega",
+      "discharge": "Evita la descàrrega de la bateria de casa en mode ràpid i durant càrregues planificades.",
+      "gridDischarge": "Permet a la bateria de casa exportar a la xarxa elèctrica."
     }
   },
   "batterySettings": {

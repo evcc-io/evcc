@@ -77,7 +77,7 @@ export default defineComponent({
 		chartOption(): Record<string, unknown> {
 			const color = this.color;
 
-			// oxlint-disable-next-line @typescript-eslint/no-this-alias
+			// oxlint-disable-next-line typescript/no-this-alias
 			const vThis = this;
 			return {
 				animationDuration: 0,

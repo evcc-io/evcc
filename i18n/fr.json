@@ -21,9 +21,12 @@
   },
   "battery": {
     "card": {
-      "charging": "En charge",
-      "discharging": "En décharge",
+      "charging": "en charge",
+      "discharging": "en décharge",
       "energy": "Energie",
+      "gridCharge": "charge depuis le réseau",
+      "hold": "décharge verrouillée",
+      "holdCharge": "charge verrouillée",
       "ofTotal": "de {total}",
       "power": "Puissance",
       "soc": "Niveau de batterie"
@@ -39,16 +42,18 @@
       },
       "bufferTitle": "Batterie en tant que tampon de charge",
       "discharge": "Empêche la batterie domestique de se décharger en mode rapide pendant une recharge planifiée.",
+      "gridDischarge": "Autoriser la batterie domestique à se décharger vers le réseau.",
       "priority": "La batterie domestique a la priorité tant qu’elle est chargée en dessous de {soc}. Ensuite, les points de charge reçoivent le surplus.",
       "priorityNone": "Le surplus solaire va directement aux points de charge. Définissez une valeur au dessus de {soc} pour prioriser la batterie domestique.",
       "priorityTitle": "Où va le surplus solaire en priorité ?"
     },
     "optimizer": {
       "action": {
-        "charge": "Chargement depuis le réseau",
-        "hold": "Décharge verrouillée",
-        "holdcharge": "Charge en pause",
-        "normal": "Suivre le surplus solaire"
+        "charge": "Charge depuis le réseau",
+        "discharge": "Décharge vers le réseau",
+        "hold": "Eviter la décharge",
+        "holdcharge": "Eviter la charge",
+        "normal": "Opération normale"
       },
       "empty": "vide",
       "full": "pleine",
@@ -115,6 +120,7 @@
       "titleEdit": "Modifier le consommateur auto-régulé"
     },
     "battery": {
+      "title": "Batterie",
       "titleAdd": "Ajouter une batterie domestique",
       "titleEdit": "Modifier batterie"
     },
@@ -140,16 +146,16 @@
       "template": "Fabricant",
       "titleAdd": {
         "charging": "Ajouter un chargeur",
-        "heating": "Ajouter chauffage"
+        "heating": "Ajouter un appareil de chauffage"
       },
       "titleEdit": {
         "charging": "Modifier chargeur",
-        "heating": "Éditer chauffage"
+        "heating": "Modifier l’appareil de chauffage"
       },
       "type": {
         "custom": {
           "charging": "Chargeur personnalisé",
-          "heating": "Chauffage personnalisé"
+          "heating": "Appareil de chauffage personnalisé"
         },
         "heatpump": "Pompe à chaleur personnalisée",
         "sgready": "Pompe à chaleur personnalisée (sg-ready via plugins)",
@@ -185,6 +191,7 @@
     "deviceValue": {
       "activeClients": "Clients actifs",
       "amount": "Montant",
+      "asleep": "en veille",
       "broker": "Courtier",
       "bucket": "Seau",
       "capacity": "Capacité",
@@ -223,6 +230,7 @@
       "no": "non",
       "odometer": "Compteur kilométrique",
       "org": "Organisation",
+      "outdoorTemp": "Température extérieure",
       "phaseCurrents": "Courant",
       "phasePowers": "Puissance",
       "phaseVoltages": "Voltage",
@@ -232,6 +240,7 @@
       "price": "Prix",
       "productionLimited": "Production limitée",
       "range": "Autonomie",
+      "remoteEnabled": "Activé",
       "returnEnergy": "Energie (retournée)",
       "singlePhase": "Monophasé",
       "soc": "Charge",
@@ -361,12 +370,19 @@
       },
       "customOption": "Intégration personnalisée",
       "description": "Limitation de puissance par des systèmes externes (par exemple, §14a de l'EnWG, §9 de l'EEG ou un système de gestion de l'énergie de niveau supérieur). Fonctionne conjointement avec la fonctionnalité de gestion de la charge. La limitation de la production solaire est également prise en charge pour certains appareils. La limite de limitation effective doit être définie lors de la configuration de chaque onduleur.",
+      "download": "Télécharger",
       "eventsRecorded": "Enregistrement de {count} événements liés à la limitation de la grille.",
       "generic": "Intégrations génériques",
       "integrations": "Intégrations",
       "lastEvent": "Le plus récent {timeAgo}.",
+      "noEvents": "Aucun événement n'a encore été enregistré.",
+      "recordedEvents": "Événements enregistrés",
       "template": "Intégration",
-      "title": "Limite externe"
+      "title": "Limite externe",
+      "type": {
+        "custom": "Intégration définie par l'utilisateur",
+        "relay": "Intégration définie par l'utilisateur (relais)"
+      }
     },
     "icon": {
       "change": "changer",
@@ -391,17 +407,18 @@
     "loadpoint": {
       "addCharger": {
         "charging": "Ajouter un chargeur",
-        "heating": "Ajouter chauffage"
+        "heating": "Ajouter un dispositif de chauffage"
       },
       "addMeter": "Ajouter un compteur dédié pour l'énergie",
+      "advancedConfig": "Configuration avancée",
       "cancel": "Annuler",
       "chargerError": {
         "charging": "Il est nécessaire de configurer un chargeur.",
-        "heating": "La configuration d'un chauffage est nécessaire."
+        "heating": "Il est indispensable de configurer un dispositif de chauffage."
       },
       "chargerLabel": {
         "charging": "Chargeur",
-        "heating": "Chauffage"
+        "heating": "Dispositif de chauffage"
       },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Utilisera des courants de 6 à 16 A.",
@@ -415,11 +432,21 @@
       "circuitInvalid": "Le circuit n'existe pas",
       "circuitLabel": "Circuit",
       "circuitUnassigned": "non assigné",
+      "created": "« {name} » a été créé et utilise des paramètres par défaut adaptés.",
+      "createdTitle": {
+        "charging": "Point de recharge créé",
+        "heating": "Chauffage créé"
+      },
+      "creating": {
+        "charging": "Chargeur enregistré. Création d'un point de recharge…",
+        "heating": "Dispositif de chauffage enregistré. Création du chauffage…"
+      },
       "defaultModeHelp": {
         "charging": "Mode de charge lors de la connexion du véhicule.",
         "heating": "Est défini lors du démarrage du système."
       },
       "defaultModeHelpKeep": "Conserver le dernier mode sélectionné.",
+      "defaultModeKeep": "laisser tel quel",
       "defaultModeLabel": "Mode par défaut",
       "delete": "Supprimer",
       "electricalSubtitle": "En cas de doute, demandez à votre électricien.",
@@ -437,7 +464,7 @@
       "noVehicles": "Aucun véhicule configuré.",
       "option": {
         "charging": "Ajouter un point de charge",
-        "heating": "Ajouter un dispositif de chauffage"
+        "heating": "Ajouter un chauffage"
       },
       "phases1p": "Monophasé",
       "phases3p": "Triphasé",
@@ -477,13 +504,13 @@
       "thresholdEnableLabel": "Seuil d’activation (W)",
       "titleAdd": {
         "charging": "Ajouter point de charge",
-        "heating": "Ajouter dispositif de chauffage",
-        "unknown": "Ajouter chargeur ou chauffage"
+        "heating": "Ajouter chauffage",
+        "unknown": "Ajouter une borne de recharge ou un chauffage"
       },
       "titleEdit": {
         "charging": "Modifier point de charge",
-        "heating": "Éditer dispositif de chauffage",
-        "unknown": "Editer chargeur ou chauffage"
+        "heating": "Modifier le chauffage",
+        "unknown": "Modifier un point de recharge ou un chauffage"
       },
       "titleExample": {
         "charging": "Garage, Carport, etc.",
@@ -501,7 +528,7 @@
       "addAdditional": "Ajouter un compteur supplémentaire",
       "addConsumer": "Ajouter un consommateur",
       "addGrid": "Ajouter un compteur pour le réseau",
-      "addLoadpoint": "Ajouter chargeur ou chauffage",
+      "addLoadpoint": "Ajouter un point de charge ou un chauffage",
       "addPvBattery": "Ajouter du solaire ou une batterie",
       "addTariffs": "Ajouter les tarifs",
       "addVehicle": "Ajouter un véhicule",
@@ -565,6 +592,11 @@
           "messageDefault": "Charge de {chargedEnergy}kWh terminée en {chargeDuration}.",
           "title": "Fin de la charge",
           "titleDefault": "Charge terminée"
+        },
+        "suggestion": {
+          "messageDefault": "Suggestion de l'optimiseur pour {suggestionTitle} : si le contrôle de l'optimiseur était activé, il appliquerait « {suggestionAction} » dès maintenant. Il s'agit uniquement d'une recommandation ; aucune modification n'a été effectuée. Fonctionnalité expérimentale — n'hésitez pas à nous faire part de vos commentaires à l'adresse https://github.com/evcc-io/evcc/issues/31903",
+          "title": "Lorsque l'action recommandée par l'optimiseur change",
+          "titleDefault": "Suggestion de l'optimiseur"
         }
       },
       "eventMessage": "Message",
@@ -620,6 +652,8 @@
       "connectionHintTcpip": "L'appareil est accessible via le réseau (LAN/WiFi).",
       "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Réseau",
+      "delay": "Retard",
+      "delayHint": "Temps d'attente facultatif avant chaque accès au registre. Nécessaire uniquement pour les périphériques lents.",
       "device": "Nom de l’appareil",
       "deviceHint": "Exemple : /dev/ttyUSB0",
       "host": "Adresse IP ou nom d’hôte",
@@ -630,7 +664,9 @@
       "protocolHintRtu": "Connexion via un adaptateur RS485 vers Ethernet sans traduction de protocole.",
       "protocolHintTcp": "L'appareil dispose d'un support LAN/Wifi natif ou est connecté via un adaptateur RS485 vers Ethernet avec traduction de protocole.",
       "protocolValueRtu": "RTU",
-      "protocolValueTcp": "TCP"
+      "protocolValueTcp": "TCP",
+      "timeout": "Délai d'attente",
+      "timeoutHint": "Durée maximale facultative d'attente d'une réponse de l'appareil."
     },
     "modbusproxy": {
       "add": "Ajouter une connexion proxy",
@@ -794,7 +830,7 @@
       "general": "Général",
       "grid": "Réseau électrique",
       "integrations": "Intégrations",
-      "loadpoints": "Charge et chauffage",
+      "loadpoints": "Bornes de recharge et chauffages",
       "meter": "Solaire & Batterie",
       "services": "Services",
       "system": "Système",
@@ -909,7 +945,8 @@
         "feedIn": "Ajouter un tarif d'exportation vers le réseau",
         "grid": "Ajouter un tarif pour l’import du réseau",
         "planner": "Ajouter prévisions du planificateur",
-        "solar": "Ajouter prévisions solaires"
+        "solar": "Ajouter prévisions solaires",
+        "temperature": "Ajouter les prévisions de température"
       },
       "planner": {
         "description": "Paramètre avancé. Généralement superflu, car les tarifs d'électricité dynamiques et les prévisions de CO₂ sont utilisés automatiquement. Active une source de données supplémentaire qui n'est utilisée que pour la planification de la recharge, et non pour les statistiques et les calculs de prix.",
@@ -922,6 +959,11 @@
         "titleAdd": "Ajouter prévisions solaires",
         "titleEdit": "Modifier les prévisions solaires"
       },
+      "temperature": {
+        "description": "Prévisions de température extérieure pour votre localité. Affichées dans l'interface et utilisées pour estimer les besoins en chauffage.",
+        "titleAdd": "Ajouter les prévisions de température",
+        "titleEdit": "Modifier les prévisions de température"
+      },
       "template": "Fournisseur",
       "title": "Tarifs & prévisions",
       "titleChoice": "Que voulez-vous rajouter ?",
@@ -930,7 +972,8 @@
         "feedIn": "Prix de rachat par le réseau",
         "grid": "Prix d’import du réseau",
         "planner": "Planificateur",
-        "solar": "Solaire"
+        "solar": "Solaire",
+        "temperature": "Prévisions de température"
       },
       "zones": {
         "add": "Ajouter une zone",
@@ -1083,7 +1126,8 @@
       "co2": "Découvrez quand l'électricité du réseau dans votre région est verte. Les plans de recharge seront optimisés pour réduire les émissions et calculeront les économies de CO₂ réalisées.",
       "price": "Configurez votre tarif d'électricité dynamique pour optimiser automatiquement vos plans de recharge et calculer vos économies.",
       "setup": "Définir les tarifs et les prévisions",
-      "solar": "Consultez les prévisions de production solaire pour aujourd'hui et les prochains jours. Ces données serviront également, à l'avenir, à optimiser automatiquement la recharge."
+      "solar": "Consultez les prévisions de production solaire pour aujourd'hui et les prochains jours. Ces données serviront également, à l'avenir, à optimiser automatiquement la recharge.",
+      "temperature": "Consultez la température extérieure prévue pour votre localité. Cette donnée sert à prévoir les besoins en chauffage."
     },
     "hideLine": "cacher la ligne",
     "modalTitle": "Prévisions",
@@ -1105,13 +1149,20 @@
     "solarAdjust": "Ajuster la prévision solaire se basant sur la production réelle{percent}.",
     "solarAdjustMedium": "ajustement des données réelles",
     "solarAdjustShort": "ajuster",
+    "temperature": {
+      "average": "Moyenne",
+      "range": "Plage"
+    },
     "type": {
       "co2": "Émissions de CO₂",
       "price": "Prix du réseau",
-      "solar": "Production solaire"
+      "solar": "Production solaire",
+      "temperature": "Température extérieure"
     }
   },
   "general": {
+    "download": "Télécharger",
+    "none": "aucun",
     "note": "Remarque :"
   },
   "header": {
@@ -1277,11 +1328,15 @@
       "pv": "Système photovoltaïque",
       "pvExport": "Export du surplus",
       "pvProduction": "Production",
-      "selfConsumption": "Auto-consommation"
+      "selfConsumption": "Auto-consommation",
+      "toggleDetails": "Détails sur les flux d'énergie"
     },
     "heatingStatus": {
       "charging": "Chauffage…",
       "connected": "En attente.",
+      "minTemp": "Chauffage minimal jusqu'à {temp}.",
+      "suggestionStartTooltip": "L'optimiseur recommande d'allumer le chauffage dès maintenant.",
+      "suggestionStopTooltip": "L'Optimiseur recommande d'interrompre le chauffage.",
       "vehicleLimit": "Limite de chauffage",
       "waitForVehicle": "Prêt à chauffer…"
     },
@@ -1305,6 +1360,7 @@
           "returnEnergy": "Énergie (inversée)"
         }
       },
+      "download": "Télécharger",
       "empty": "Pas de données historiques pour cette intervalle de temps.",
       "group": {
         "battery": "Batterie",
@@ -1326,12 +1382,15 @@
       "emission": "Emission",
       "fallbackName": "Point de chargement",
       "finished": "Heure de fin",
+      "last24hEnergy": "24 dernières heures",
+      "last7dEnergy": "7 derniers jours",
       "power": "Puissance",
       "price": "Coût",
       "remaining": "Temps restant",
       "remoteDisabledHard": "{source} : désactivée",
       "remoteDisabledSoft": "{source} : charge solaire adaptative désactivée",
-      "solar": "Solaire"
+      "solar": "Solaire",
+      "todayEnergy": "Aujourd'hui"
     },
     "loadpointSettings": {
       "batteryBoost": {
@@ -1349,11 +1408,16 @@
       "batteryUsage": "Batterie domestique",
       "currents": "Courant de charge",
       "default": "défaut",
+      "heating": "Chauffage",
       "maxCurrent": {
         "label": "Courant max."
       },
       "minCurrent": {
         "label": "Courant min."
+      },
+      "minTemp": {
+        "description": "En dessous de {0}, la batterie et le réseau électrique sont également utilisés en mode solaire pour maintenir cette température.",
+        "label": "Température minimale"
       },
       "phasesConfigured": {
         "label": "Phases",
@@ -1437,6 +1501,20 @@
       "unknown": "Véhicule invité",
       "vehicleSoc": "Charge"
     },
+    "vehicleSettings": {
+      "connectedTo": "connecté à {0}",
+      "description": "Ces paramètres par défaut s'appliquent lorsque le véhicule se connecte à une borne de recharge.",
+      "editHint": "Ajouter ou modifier des véhicules dans {0}.",
+      "keepAsIs": "Garder tel quel",
+      "learnMore": "En savoir plus.",
+      "limitSoc": "Limite par défaut",
+      "menu": "Véhicules",
+      "minSoc": "Recharge minimum",
+      "minSocDescription": "Recharge rapide jusqu'à ce niveau en mode solaire.",
+      "mode": "Mode par défaut",
+      "notConnected": "non connecté",
+      "title": "Paramètres du véhicule"
+    },
     "vehicleStatus": {
       "awaitingAuthorization": "En attente d’autorisation.",
       "batteryBoost": "Boost Batterie actif.",
@@ -1463,6 +1541,8 @@
       "pvEnable": "Surplus disponible. Démarrage imminent.",
       "scale1p": "Charge réduite en monophasé imminente.",
       "scale3p": "Charge augmentée en triphasé imminente.",
+      "suggestionStartTooltip": "L'optimiseur recommande de recharger la batterie dès maintenant.",
+      "suggestionStopTooltip": "L'optimiseur recommande d'interrompre la recharge.",
       "targetChargeActive": "Plan de charge actif. Fin estimée dans {duration}.",
       "targetChargePlanned": "Le plan de charge démarre dans {duration}.",
       "targetChargeWaitForVehicle": "Plan de charge prêt. Attente du véhicule…",
@@ -1560,6 +1640,8 @@
       "vehicle": "Véhicule"
     },
     "date": "Début",
+    "download": "Télécharger {period}",
+    "downloadTotal": "Téléchargement total",
     "energy": "Chargé",
     "filter": {
       "allLoadpoints": "tous les points de charge",

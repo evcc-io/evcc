@@ -61,7 +61,6 @@
   "license": "MIT",
   "repository": "github:evcc-io/evcc",
   "devDependencies": {
-    "@jest/types": "^30.4.1",
     "@playwright/test": "^1.62.0",
     "@redocly/openapi-core": "^2.38.0",
     "@storybook/vue3": "^10.4.4",
