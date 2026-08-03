@@ -86,7 +86,7 @@ func RemainingChargeEnergy(targetSoc int, vehicleSoc, capacity float64) float64 
 }
 
 func remainingChargeEnergy(targetSoc, vehicleSoc, virtualCapacity float64) float64 {
-	return max(0, (targetSoc-vehicleSoc)/100*virtualCapacity/1e3)
+	return max(0, targetSoc-vehicleSoc) / 100 * max(0, virtualCapacity) / 1e3
 }
 
 // Soc replaces the api.Vehicle.Soc interface to take charged energy into account

@@ -81,6 +81,22 @@ func TestSocEstimation(t *testing.T) {
 	}
 }
 
+func TestMissingSoc(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Capacity().Return(8.5)
+
+	ce := NewEstimator(util.NewLogger("foo"), vehicle)
+
+	soc := 20.0
+	assert.Equal(t, 20.0, ce.Soc(&soc, 0))
+	assert.Equal(t, 21.0, ce.Soc(&soc, 100))
+
+	// missing soc keeps the estimate and must not corrupt the sampled state
+	assert.Equal(t, 21.0, ce.Soc(nil, 200))
+	assert.Equal(t, 22.0, ce.Soc(&soc, 200))
+}
+
 func TestImprovedEstimatorRemainingChargeDuration(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	vehicle := api.NewMockVehicle(ctrl)
