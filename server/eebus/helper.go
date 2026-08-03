@@ -6,9 +6,11 @@ import (
 	"log"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	eebusapi "github.com/enbility/eebus-go/api"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 )
 
 func WrapError(err error) error {
@@ -43,6 +45,24 @@ func Await(write func(func(model.ResultDataType, model.MsgCounterType)) (*model.
 	case <-time.After(WriteTimeout):
 		return errors.New("write result timeout")
 	}
+}
+
+// limitTimeout bounds the retry window for stating a limit to a Controllable
+// System, staying inside the 60s the spec grants the Energy Guard.
+const limitTimeout = 50 * time.Second
+
+// AssertLimit states the current limit to a Controllable System that just became
+// available. [LPC-913]/[LPP-913] require the Energy Guard to send a heartbeat and a
+// following limit within 60s of connecting. The write runs in the background and is
+// retried: the CS ignores writes not following a heartbeat and may reject them while
+// still in state "init".
+func AssertLimit(log *util.Logger, write func() error) {
+	go func() {
+		bo := backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(limitTimeout))
+		if err := backoff.Retry(write, bo); err != nil {
+			log.DEBUG.Printf("assert limit: %v", err)
+		}
+	}()
 }
 
 func LogEntities(log *log.Logger, actor string, uc eebusapi.UseCaseInterface) {

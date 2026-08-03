@@ -74,11 +74,19 @@ func (c *EEBus) maUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface) {
 
 func (c *EEBus) egLpcUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 
 	// prefer the shallowest (device-level) entity
-	if c.egLpcEntity == nil || len(entity.Address().Entity) < len(c.egLpcEntity.Address().Entity) {
+	adopted := c.egLpcEntity == nil || len(entity.Address().Entity) < len(c.egLpcEntity.Address().Entity)
+	if adopted {
 		c.egLpcEntity = entity
+	}
+	dim := c.dimmed
+
+	c.mu.Unlock()
+
+	// [LPC-913]: state the limit to the newly available CS
+	if adopted {
+		eebus.AssertLimit(c.log, func() error { return c.Dim(dim) })
 	}
 }
 
@@ -88,10 +96,18 @@ func (c *EEBus) egLpcUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface)
 
 func (c *EEBus) egLppUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 
 	// prefer the shallowest (device-level) entity
-	if c.egLppEntity == nil || len(entity.Address().Entity) < len(c.egLppEntity.Address().Entity) {
+	adopted := c.egLppEntity == nil || len(entity.Address().Entity) < len(c.egLppEntity.Address().Entity)
+	if adopted {
 		c.egLppEntity = entity
+	}
+	percent := c.curtailPercent
+
+	c.mu.Unlock()
+
+	// [LPP-913]: state the limit to the newly available CS
+	if adopted {
+		eebus.AssertLimit(c.log, func() error { return c.SetCurtailPercent(percent) })
 	}
 }

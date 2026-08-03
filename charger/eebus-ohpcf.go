@@ -43,6 +43,8 @@ type EEBusOHPCF struct {
 	egLpcEntity spineapi.EntityRemoteInterface
 	enabled     bool
 	reboosting  bool
+	// last limit written, re-stated when the device (re-)connects
+	dimmed bool
 
 	connector *eebus.Connector
 }
@@ -184,10 +186,17 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 	case lpc.UseCaseSupportUpdate:
 		c.mu.Lock()
 		// use most specific selector
-		if c.egLpcEntity == nil || len(entity.Address().Entity) < len(c.egLpcEntity.Address().Entity) {
+		adopted := c.egLpcEntity == nil || len(entity.Address().Entity) < len(c.egLpcEntity.Address().Entity)
+		if adopted {
 			c.egLpcEntity = entity
 		}
+		dim := c.dimmed
 		c.mu.Unlock()
+
+		// [LPC-913]: state the limit to the newly available CS
+		if adopted {
+			eebus.AssertLimit(c.log, func() error { return c.Dim(dim) })
+		}
 	}
 }
 
@@ -405,9 +414,17 @@ func (c *EEBusOHPCF) Dim(dim bool) error {
 	}
 
 	// TODO: change api.Dimmer to make the limit configurable; use a fixed 0W safe limit for now
-	return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
+	if err := eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: 0, IsActive: dim}, cb)
-	})
+	}); err != nil {
+		return err
+	}
+
+	c.mu.Lock()
+	c.dimmed = dim
+	c.mu.Unlock()
+
+	return nil
 }
 
 // apply issues the command to align the optional consumption with the on/off
