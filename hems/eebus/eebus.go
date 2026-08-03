@@ -58,6 +58,7 @@ type EEBus struct {
 const failsafeReleaseTimeout = 2 * time.Minute
 
 type Limits struct {
+	// contractual max power at the grid connection point, not the SteuVE Pmin
 	ContractualConsumptionNominalMax    float64
 	FailsafeConsumptionActivePowerLimit float64
 
@@ -76,12 +77,6 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 		Interval    time.Duration
 	}{
 		Limits: Limits{
-			// contractual max power at the grid connection point reported to the control box
-			// (EEBus LPC, EMS device type). Default: standard 3x35A x 230V house connection.
-			// This is the connection capacity, not the SteuVE Pmin (see failsafe limit below).
-			ContractualConsumptionNominalMax:    24150, // 3 * 35A * 230V
-			FailsafeConsumptionActivePowerLimit: 4200,
-
 			ProductionNominalMax:               0,
 			FailsafeProductionActivePowerLimit: nil, // 0 is a valid limit
 
@@ -138,8 +133,10 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 	eebus.LogEntities(c.log.DEBUG, "CS LPP", c.cs.CsLPPInterface)
 
 	// set initial values
-	if err := c.cs.CsLPCInterface.SetConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
-		c.log.ERROR.Println("CS LPC SetConsumptionNominalMax:", err)
+	if limits.ContractualConsumptionNominalMax > 0 {
+		if err := c.cs.CsLPCInterface.SetConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
+			c.log.ERROR.Println("CS LPC SetConsumptionNominalMax:", err)
+		}
 	}
 	if c.failsafeConsumptionLimit > 0 {
 		if err := c.cs.CsLPCInterface.SetFailsafeConsumptionActivePowerLimit(c.failsafeConsumptionLimit, true); err != nil {
