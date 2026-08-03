@@ -110,7 +110,7 @@ jobs:
 
       - uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version: 1.27.0-rc.2 # TODO go-version-file: go.mod once 1.27 is released
         id: go
 
       - name: Patch ASN1

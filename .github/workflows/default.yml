@@ -22,7 +22,7 @@ jobs:
 
       - uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version: 1.27.0-rc.2 # TODO go-version-file: go.mod once 1.27 is released
           cache: false # avoid cache thrashing
         id: go
 
@@ -62,7 +62,7 @@ jobs:
 
       - uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version: 1.27.0-rc.2 # TODO go-version-file: go.mod once 1.27 is released
           cache: false
         id: go
 
@@ -100,7 +100,7 @@ jobs:
 
       - uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version: 1.27.0-rc.2 # TODO go-version-file: go.mod once 1.27 is released
           cache: false
         id: go
 
@@ -131,7 +131,7 @@ jobs:
 
       - uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version: 1.27.0-rc.2 # TODO go-version-file: go.mod once 1.27 is released
           cache: false # avoid cache thrashing
         id: go
 
@@ -151,6 +151,9 @@ jobs:
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9
         with:
           version: latest
+          # TODO drop once a release binary is built with 1.27: the prebuilt
+          # binary refuses a go.mod targeting a newer Go than it was built with
+          install-mode: goinstall
           args: --timeout 5m
 
       - name: License
@@ -219,7 +222,7 @@ jobs:
 
       - uses: actions/setup-go@v7
         with:
-          go-version-file: go.mod
+          go-version: 1.27.0-rc.2 # TODO go-version-file: go.mod once 1.27 is released
           cache: false
         id: go
 
