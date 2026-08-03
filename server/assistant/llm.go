@@ -34,9 +34,8 @@ func llmClient() *http.Client {
 	}
 }
 
-// azurePath is the OpenAI-compatible v1 endpoint of a Foundry resource, it
-// needs no api version
-const azurePath = "/openai/v1"
+// azureApiVersion is the GA data plane version, recent enough for tool calling
+const azureApiVersion = "2024-10-21"
 
 // azureHost reduces a configured resource or project url to its origin, the
 // portal shows either and neither is the inference endpoint
@@ -79,7 +78,7 @@ func newLLM(ctx context.Context, cfg Config) (model.ToolCallingChatModel, error)
 		})
 
 	case Azure:
-		// the v1 endpoint speaks plain OpenAI, the deployment name is the model
+		// the model is the deployment name, it goes into the url
 		host, err := azureHost(cfg.BaseUrl)
 		if err != nil {
 			return nil, err
@@ -88,8 +87,13 @@ func newLLM(ctx context.Context, cfg Config) (model.ToolCallingChatModel, error)
 		return openai.NewChatModel(ctx, &openai.ChatModelConfig{
 			Model:      cfg.Model,
 			APIKey:     cfg.Token,
-			BaseURL:    host + azurePath,
+			BaseURL:    host,
+			ByAzure:    true,
+			APIVersion: azureApiVersion,
 			HTTPClient: llmClient(),
+			// the configured deployment name is used as is, the default mapper
+			// strips dots and would miss a deployment like gpt-5.6-luna
+			AzureModelMapperFunc: func(model string) string { return model },
 		})
 
 	case Anthropic:
