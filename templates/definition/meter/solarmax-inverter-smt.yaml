@@ -19,6 +19,4 @@ render: |
       type: holding
       decode: uint32
     scale: 0.1
-  # no energy: register 4129 (Total) only resolves whole kWh. Below 4 kW that is
-  # coarser than a 15min history slot, leaving slots empty while the counter
-  # jumps in the next one. Power integration is more accurate here. See #32324
+  # energy removed: register 4129 (Total) only resolves whole kWh (#32497)
