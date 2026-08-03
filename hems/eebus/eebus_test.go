@@ -134,9 +134,8 @@ func TestRun_HeartbeatReturned_AppliesFreshLimit(t *testing.T) {
 	assertProductionLimit(t, c, false)
 }
 
-// TestRun_HeartbeatReturned_NoLimitWrite covers LPC-916/LPC-921: a returning
-// heartbeat alone does not end the failsafe state - the EG must state a limit.
-// Without one the failsafe limit is kept for another 120s before going unlimited.
+// TestRun_HeartbeatReturned_NoLimitWrite covers LPC-916/LPC-921: a returning heartbeat
+// alone does not end failsafe - without a following limit write it is kept for 120s.
 func TestRun_HeartbeatReturned_NoLimitWrite(t *testing.T) {
 	c := newTestEEBus(t)
 
@@ -158,6 +157,24 @@ func TestRun_HeartbeatReturned_NoLimitWrite(t *testing.T) {
 	assert.Equal(t, StatusNormal, c.status)
 	assertConsumptionLimit(t, c, 0)
 	assertProductionLimit(t, c, false)
+}
+
+// TestRun_FailsafeReentry covers LPC-921 on a second failsafe cycle: a heartbeat
+// that returned during an earlier cycle must not end the new one.
+func TestRun_FailsafeReentry(t *testing.T) {
+	c := newTestEEBus(t)
+	c.heartbeatReturned = time.Now().Add(-2 * failsafeReleaseTimeout) // stale, earlier cycle
+
+	// heartbeat missing -> failsafe
+	require.NoError(t, c.run())
+	require.Equal(t, StatusFailsafe, c.status)
+
+	// heartbeat back without a limit write -> the 120s window restarts
+	c.heartbeat.Set(struct{}{})
+
+	require.NoError(t, c.run())
+	assert.Equal(t, StatusFailsafe, c.status, "stale heartbeat return must not end the new cycle")
+	assertConsumptionLimit(t, c, testFailsafeConsumption)
 }
 
 // TestRun_ProductionLimitReleasedEarly verifies that an active production limit
@@ -221,9 +238,8 @@ func TestRun_ConsumptionLimitReleasedEarly(t *testing.T) {
 	assertConsumptionLimit(t, c, 0)
 }
 
-// TestRun_LimitWithoutDuration covers the APCL_DUR_02 message combination: a limit
-// stated without a duration does not expire. eebus-go reports Duration 0 when the EG
-// sends no time period, which used to expire the limit on the very next tick.
+// TestRun_LimitWithoutDuration covers APCL_DUR_02: a limit stated without a duration
+// does not expire - eebus-go reports Duration 0 when the EG sends no time period.
 func TestRun_LimitWithoutDuration(t *testing.T) {
 	c := newTestEEBus(t)
 	c.heartbeat.Set(struct{}{})
@@ -235,8 +251,7 @@ func TestRun_LimitWithoutDuration(t *testing.T) {
 	assertConsumptionLimit(t, c, 3000)
 	assertProductionLimit(t, c, true)
 
-	// still applied on the following ticks
-	require.NoError(t, c.run())
+	// still applied on the following tick
 	require.NoError(t, c.run())
 	assertConsumptionLimit(t, c, 3000)
 	assertProductionLimit(t, c, true)

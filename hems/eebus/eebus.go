@@ -218,11 +218,15 @@ func (c *EEBus) run() error {
 
 	_, heartbeatErr := c.heartbeat.Get()
 
+	// the LPC-921 release window only runs while the heartbeat is back
+	if heartbeatErr != nil {
+		c.heartbeatReturned = time.Time{}
+	}
+
 	// LPC-911 / LPP-911: heartbeat lost while operating, enter failsafe.
 	if heartbeatErr != nil && c.status != StatusFailsafe {
 		c.log.WARN.Println("missing heartbeat- entering failsafe mode")
 		c.setStatus(StatusFailsafe)
-		c.heartbeatReturned = time.Time{}
 
 		c.setConsumptionLimit(c.failsafeConsumptionLimit)
 
@@ -239,7 +243,6 @@ func (c *EEBus) run() error {
 			// LPC-921 / LPP-921: still no heartbeat - keep applying the failsafe
 			// limit. The failsafe limit is our self-determined protective default
 			// for the Unlimited-autonomous state.
-			c.heartbeatReturned = time.Time{}
 			return nil
 		}
 
@@ -394,8 +397,8 @@ func (c *EEBus) MaxConsumptionPower() *float64 {
 	return new(c.consumptionLimit.Value)
 }
 
-// MaxProductionPower implements api.HEMS. Scaffolding only — EEBus does not
-// publish a wattage-typed production cap yet.
+// MaxProductionPower implements api.HEMS: nil until first connected,
+// else failsafe limit in failsafe, else the active EG-supplied LPP limit, else 0.
 func (c *EEBus) MaxProductionPower() *float64 {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
