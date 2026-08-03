@@ -22,7 +22,7 @@ const (
 
 // Config is the assistant configuration
 type Config struct {
-	Provider Provider `json:"provider"`
+	Provider Provider `json:"provider,omitempty"`
 	Model    string   `json:"model"`
 	Token    string   `json:"token,omitempty"`
 	BaseUrl  string   `json:"baseUrl,omitempty"`

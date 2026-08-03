@@ -331,7 +331,8 @@ export interface AssistantProviderInfo {
 }
 
 export interface AssistantConfig {
-  provider: AssistantProvider;
+  /** Unset while the assistant is not configured. */
+  provider?: AssistantProvider;
   model?: string;
   token?: string;
   baseUrl?: string;
