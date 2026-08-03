@@ -22,6 +22,7 @@ func init() {
 
 type EEBus struct {
 	mux sync.RWMutex
+	ctx context.Context // device lifetime, aborts Run
 	log *util.Logger
 
 	*eebus.Connector
@@ -104,6 +105,7 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 	}
 
 	c := &EEBus{
+		ctx:         ctx,
 		log:         util.NewLogger("eebus"),
 		site:        site,
 		passthrough: passthrough,
@@ -192,8 +194,18 @@ func (c *EEBus) Connect(connected bool) {
 	}
 }
 
+// Run applies limits until the device context is cancelled
 func (c *EEBus) Run() {
-	for range time.Tick(c.interval) {
+	tick := time.NewTicker(c.interval)
+	defer tick.Stop()
+
+	for {
+		select {
+		case <-c.ctx.Done():
+			return
+		case <-tick.C:
+		}
+
 		if err := c.run(); err != nil {
 			c.log.ERROR.Println(err)
 		}

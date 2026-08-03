@@ -1,6 +1,7 @@
 package eebus
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -40,7 +41,9 @@ func newTestEEBus(t *testing.T) *EEBus {
 
 	failsafeProduction := testFailsafeProduction
 	return &EEBus{
+		ctx:                      t.Context(),
 		log:                      util.NewLogger("test"),
+		interval:                 time.Millisecond,
 		site:                     &stubSite{},
 		Connector:                eebus.NewConnector(),
 		heartbeat:                util.NewValue[struct{}](time.Hour),
@@ -226,4 +229,28 @@ func TestEEBusEdgeTriggered(t *testing.T) {
 
 	require.Equal(t, 1, calls, "passthrough must fire once on the edge, not every tick")
 	assertConsumptionLimit(t, c, 3000)
+}
+
+// TestRunAborts verifies the run loop terminates when the device context is
+// cancelled instead of ticking for the lifetime of the process.
+func TestRunAborts(t *testing.T) {
+	c := newTestEEBus(t)
+	c.interval = time.Hour // only the context can end the loop
+
+	ctx, cancel := context.WithCancel(t.Context())
+	c.ctx = ctx
+
+	done := make(chan struct{})
+	go func() {
+		c.Run()
+		close(done)
+	}()
+
+	cancel()
+
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("Run did not return on cancelled context")
+	}
 }
