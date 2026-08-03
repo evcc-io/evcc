@@ -43,7 +43,7 @@ type EEBusOHPCF struct {
 	egLpcEntity spineapi.EntityRemoteInterface
 	enabled     bool
 	reboosting  bool
-	dimmed        bool // last limit written, re-stated on reconnect
+	dimmed      bool // last limit written, re-stated on reconnect
 
 	connector *eebus.Connector
 }
