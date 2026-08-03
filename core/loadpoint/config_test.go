@@ -23,3 +23,15 @@ func TestSplitConfigUI(t *testing.T) {
 	assert.Equal(t, 45.0, dynamic.UI.MaxTemp)
 	assert.NotContains(t, other, "ui")
 }
+
+func TestSplitConfigPriority(t *testing.T) {
+	payload := map[string]any{
+		"priority": 3,
+	}
+
+	dynamic, other, err := SplitConfig(payload)
+	require.NoError(t, err)
+
+	assert.Equal(t, 3, dynamic.Priority)
+	assert.NotContains(t, other, "priority")
+}
