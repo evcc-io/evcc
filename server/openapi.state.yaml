@@ -280,14 +280,13 @@ components:
       properties:
         provider:
           $ref: "#/components/schemas/AssistantProvider"
+          description: Unset while the assistant is not configured.
         model:
           type: string
         token:
           type: string
         baseUrl:
           type: string
-      required:
-        - provider
     AssistantProvider:
       type: string
       enum:

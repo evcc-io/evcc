@@ -4751,7 +4751,8 @@
         "type": "object",
         "properties": {
           "provider": {
-            "$ref": "#/components/schemas/AssistantProvider"
+            "$ref": "#/components/schemas/AssistantProvider",
+            "description": "Unset while the assistant is not configured."
           },
           "model": {
             "type": "string"
@@ -4762,10 +4763,7 @@
           "baseUrl": {
             "type": "string"
           }
-        },
-        "required": [
-          "provider"
-        ]
+        }
       },
       "State": {
         "description": "Complete system state as returned by /api/state and pushed via websocket and MQTT. This structure mirrors the internal UI state and carries no compatibility promise. Fields may change or disappear between releases.",
