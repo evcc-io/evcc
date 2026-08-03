@@ -69,6 +69,8 @@ license::
 	--ignore github.com/evcc-io/evcc/node_modules \
 	--ignore github.com/cespare/xxhash \
 	--ignore github.com/coder/websocket \
+	--ignore github.com/cloudwego/eino-ext/components/model/openai \
+	--ignore github.com/cloudwego/eino-ext/libs/acl/openai \
 	--ignore github.com/cronokirby/saferith \
 	--ignore github.com/modern-go/reflect2 \
 	--ignore github.com/prometheus/client_golang \
