@@ -2,6 +2,7 @@ package vaillant
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -90,4 +91,31 @@ func TestIdentitySameUserDifferentRealms(t *testing.T) {
 
 	require.EqualValues(t, 2, *calls, "expected independent logins per realm")
 	require.False(t, de == at, "expected separate token sources per realm")
+}
+
+// a failed login must not be cached, otherwise a temporary outage would keep the
+// account unusable until evcc is restarted
+func TestIdentityFailedLoginIsRetried(t *testing.T) {
+	stubLogin(t)
+
+	errLogin := errors.New("login failed")
+	loginFunc = func(_ context.Context, _ *util.Logger, _ *sensonet.Oauth2Config, _, _ string) (*oauth2.Token, error) {
+		return nil, errLogin
+	}
+
+	oc := sensonet.Oauth2ConfigForRealm(sensonet.REALM_GERMANY)
+	log := util.NewLogger("test")
+
+	_, err := Identity(log, oc, sensonet.REALM_GERMANY, "user@example.com", "secret")
+	require.ErrorIs(t, err, errLogin)
+	require.Empty(t, tokens, "failed login must not be cached")
+
+	// the next attempt succeeds once the account is reachable again
+	loginFunc = func(_ context.Context, _ *util.Logger, _ *sensonet.Oauth2Config, user, _ string) (*oauth2.Token, error) {
+		return &oauth2.Token{AccessToken: user}, nil
+	}
+
+	ts, err := Identity(log, oc, sensonet.REALM_GERMANY, "user@example.com", "secret")
+	require.NoError(t, err)
+	require.NotNil(t, ts)
 }
