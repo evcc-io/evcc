@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
-	"github.com/tmc/langchaingo/llms"
 )
 
 // maxElements is the number of array elements kept per array in a tool result.
@@ -116,7 +115,7 @@ func shortenValue(v any) (any, int) {
 // supportsJq reports whether the tool accepts a jq filter to select what it returns
 func (a *Assistant) supportsJq(name string) bool {
 	for _, tool := range a.catalog {
-		if tool.Function.Name != name {
+		if tool.Name != name {
 			continue
 		}
 		return hasProperty(tool, "jq")
@@ -125,13 +124,8 @@ func (a *Assistant) supportsJq(name string) bool {
 	return false
 }
 
-func hasProperty(tool llms.Tool, name string) bool {
-	params, ok := tool.Function.Parameters.(map[string]any)
-	if !ok {
-		return false
-	}
-
-	props, ok := params["properties"].(map[string]any)
+func hasProperty(t tool, name string) bool {
+	props, ok := t.Parameters["properties"].(map[string]any)
 	if !ok {
 		return false
 	}

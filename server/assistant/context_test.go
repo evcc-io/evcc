@@ -3,23 +3,21 @@ package assistant
 import (
 	"testing"
 
+	"github.com/cloudwego/eino/schema"
 	"github.com/stretchr/testify/assert"
-	"github.com/tmc/langchaingo/llms"
 )
 
 func TestContextChars(t *testing.T) {
-	msgs := []llms.MessageContent{
-		llms.TextParts(llms.ChatMessageTypeSystem, "1234567890"),
-		{Role: llms.ChatMessageTypeAI, Parts: []llms.ContentPart{
-			llms.ToolCall{FunctionCall: &llms.FunctionCall{Name: "ab", Arguments: "cde"}},
-		}},
-		{Role: llms.ChatMessageTypeTool, Parts: []llms.ContentPart{
-			llms.ToolCallResponse{Name: "ab", Content: "1234"},
-		}},
+	msgs := []*schema.Message{
+		schema.SystemMessage("1234567890"),
+		schema.AssistantMessage("", []schema.ToolCall{
+			{Function: schema.FunctionCall{Name: "ab", Arguments: "cde"}},
+		}),
+		schema.ToolMessage("1234", "id", schema.WithToolName("ab")),
 	}
-	assert.Equal(t, 10+5+6, contextChars(msgs, nil))
+	assert.Equal(t, 10+5+4+2, contextChars(msgs, nil))
 
-	tools := []llms.Tool{{Function: &llms.FunctionDefinition{Name: "x", Description: "yz", Parameters: map[string]any{}}}}
+	tools := []tool{{Name: "x", Description: "yz", Parameters: map[string]any{}}}
 	// name + description + "{}"
 	assert.Equal(t, 3+2, contextChars(nil, tools))
 }

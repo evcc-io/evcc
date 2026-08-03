@@ -6,10 +6,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cloudwego/eino/components/model"
+	"github.com/cloudwego/eino/schema"
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tmc/langchaingo/llms"
 )
 
 type socInput struct {
@@ -18,19 +19,24 @@ type socInput struct {
 
 // fakeLLM replays canned responses and records the messages it was given
 type fakeLLM struct {
-	responses []*llms.ContentResponse
-	seen      [][]llms.MessageContent
+	responses []*schema.Message
+	seen      [][]*schema.Message
 }
 
-func (f *fakeLLM) GenerateContent(_ context.Context, messages []llms.MessageContent, _ ...llms.CallOption) (*llms.ContentResponse, error) {
+func (f *fakeLLM) Generate(_ context.Context, messages []*schema.Message, _ ...model.Option) (*schema.Message, error) {
 	f.seen = append(f.seen, messages)
 	res := f.responses[0]
 	f.responses = f.responses[1:]
 	return res, nil
 }
 
-func (f *fakeLLM) Call(context.Context, string, ...llms.CallOption) (string, error) {
+func (f *fakeLLM) Stream(context.Context, []*schema.Message, ...model.Option) (*schema.StreamReader[*schema.Message], error) {
 	panic("not implemented")
+}
+
+// WithTools returns the same replay, the recorded messages are what matters
+func (f *fakeLLM) WithTools([]*schema.ToolInfo) (model.ToolCallingChatModel, error) {
+	return f, nil
 }
 
 func testServer(t *testing.T) *mcpsdk.Server {
@@ -59,15 +65,15 @@ func testServer(t *testing.T) *mcpsdk.Server {
 func TestToolLoop(t *testing.T) {
 	ctx := t.Context()
 
-	toolCall := llms.ToolCall{
-		ID:           "1",
-		Type:         "function",
-		FunctionCall: &llms.FunctionCall{Name: "getSoc", Arguments: `{"loadpoint":1}`},
+	toolCall := schema.ToolCall{
+		ID:       "1",
+		Type:     "function",
+		Function: schema.FunctionCall{Name: "getSoc", Arguments: `{"loadpoint":1}`},
 	}
 
-	llm := &fakeLLM{responses: []*llms.ContentResponse{
-		{Choices: []*llms.ContentChoice{{ToolCalls: []llms.ToolCall{toolCall}}}},
-		{Choices: []*llms.ContentChoice{{Content: "The vehicle is at 42%."}}},
+	llm := &fakeLLM{responses: []*schema.Message{
+		schema.AssistantMessage("", []schema.ToolCall{toolCall}),
+		schema.AssistantMessage("The vehicle is at 42%.", nil),
 	}}
 
 	a, err := newAssistant(ctx, llm, testServer(t))
@@ -98,24 +104,22 @@ func TestToolLoop(t *testing.T) {
 	second := llm.seen[1]
 	require.Len(t, second, 4) // system, user, assistant tool call, tool response
 
-	response, ok := second[3].Parts[0].(llms.ToolCallResponse)
-	require.True(t, ok)
+	response := second[3]
+	assert.Equal(t, schema.Tool, response.Role)
 	assert.Equal(t, "soc of loadpoint 1 is 42", response.Content)
 }
 
 // repeat builds n identical tool calling responses
-func repeat(n int, content string) []*llms.ContentResponse {
-	call := llms.ToolCall{
-		ID:           "1",
-		Type:         "function",
-		FunctionCall: &llms.FunctionCall{Name: "getSoc", Arguments: `{"loadpoint":1}`},
+func repeat(n int, content string) []*schema.Message {
+	call := schema.ToolCall{
+		ID:       "1",
+		Type:     "function",
+		Function: schema.FunctionCall{Name: "getSoc", Arguments: `{"loadpoint":1}`},
 	}
 
-	res := make([]*llms.ContentResponse, 0, n)
+	res := make([]*schema.Message, 0, n)
 	for range n {
-		res = append(res, &llms.ContentResponse{
-			Choices: []*llms.ContentChoice{{Content: content, ToolCalls: []llms.ToolCall{call}}},
-		})
+		res = append(res, schema.AssistantMessage(content, []schema.ToolCall{call}))
 	}
 
 	return res
@@ -135,7 +139,7 @@ func TestRepeatedCallsStop(t *testing.T) {
 	assert.Equal(t, "still looking", res.Content)
 	assert.Len(t, llm.seen, maxRepeats+2)
 	last := llm.seen[maxRepeats+1][len(llm.seen[maxRepeats+1])-1]
-	assert.Equal(t, llms.ChatMessageTypeHuman, last.Role, "the last call carries the nudge")
+	assert.Equal(t, schema.User, last.Role, "the last call carries the nudge")
 	assert.Len(t, res.Steps, maxRepeats+1)
 }
 
@@ -153,22 +157,17 @@ func TestRepeatedCallsWithoutContent(t *testing.T) {
 
 func TestExhaustedRoundsAnswer(t *testing.T) {
 	// distinct calls every round, so the loop runs out instead of detecting a stall
-	res := make([]*llms.ContentResponse, 0, maxIterations+1)
+	res := make([]*schema.Message, 0, maxIterations+1)
 	for i := range maxIterations {
-		res = append(res, &llms.ContentResponse{Choices: []*llms.ContentChoice{{
-			Content: fmt.Sprintf("checking %d", i),
-			ToolCalls: []llms.ToolCall{{
-				ID:           "1",
-				Type:         "function",
-				FunctionCall: &llms.FunctionCall{Name: "getSoc", Arguments: fmt.Sprintf(`{"loadpoint":%d}`, i)},
-			}},
-		}}})
+		res = append(res, schema.AssistantMessage(fmt.Sprintf("checking %d", i), []schema.ToolCall{{
+			ID:       "1",
+			Type:     "function",
+			Function: schema.FunctionCall{Name: "getSoc", Arguments: fmt.Sprintf(`{"loadpoint":%d}`, i)},
+		}}))
 	}
 
 	// the call without tools concludes from what was gathered
-	res = append(res, &llms.ContentResponse{
-		Choices: []*llms.ContentChoice{{Content: "the soc is 42%"}},
-	})
+	res = append(res, schema.AssistantMessage("the soc is 42%", nil))
 
 	llm := &fakeLLM{responses: res}
 
@@ -186,10 +185,10 @@ func TestExhaustedRoundsAnswer(t *testing.T) {
 }
 
 func TestEmptyAnswerRetries(t *testing.T) {
-	llm := &fakeLLM{responses: []*llms.ContentResponse{
+	llm := &fakeLLM{responses: []*schema.Message{
 		// everything in the reasoning, nothing said out loud
-		{Choices: []*llms.ContentChoice{{Content: "\n\n", ReasoningContent: "the mode is pv"}}},
-		{Choices: []*llms.ContentChoice{{Content: "The mode is pv."}}},
+		{Role: schema.Assistant, Content: "\n\n", ReasoningContent: "the mode is pv"},
+		schema.AssistantMessage("The mode is pv.", nil),
 	}}
 
 	a, err := newAssistant(t.Context(), llm, testServer(t))
@@ -205,9 +204,9 @@ func TestEmptyAnswerRetries(t *testing.T) {
 }
 
 func TestSilentModelFails(t *testing.T) {
-	llm := &fakeLLM{responses: []*llms.ContentResponse{
-		{Choices: []*llms.ContentChoice{{Content: "  "}}},
-		{Choices: []*llms.ContentChoice{{Content: ""}}},
+	llm := &fakeLLM{responses: []*schema.Message{
+		schema.AssistantMessage("  ", nil),
+		schema.AssistantMessage("", nil),
 	}}
 
 	a, err := newAssistant(t.Context(), llm, testServer(t))
@@ -222,12 +221,12 @@ func TestRetryIsNotAStall(t *testing.T) {
 	// the same call once more, then a different one, then the answer
 	res := repeat(2, "checking")
 	res = append(res,
-		&llms.ContentResponse{Choices: []*llms.ContentChoice{{ToolCalls: []llms.ToolCall{{
-			ID:           "2",
-			Type:         "function",
-			FunctionCall: &llms.FunctionCall{Name: "getSoc", Arguments: `{"loadpoint":2}`},
-		}}}}},
-		&llms.ContentResponse{Choices: []*llms.ContentChoice{{Content: "The vehicle is at 42%."}}},
+		schema.AssistantMessage("", []schema.ToolCall{{
+			ID:       "2",
+			Type:     "function",
+			Function: schema.FunctionCall{Name: "getSoc", Arguments: `{"loadpoint":2}`},
+		}}),
+		schema.AssistantMessage("The vehicle is at 42%.", nil),
 	)
 
 	llm := &fakeLLM{responses: res}
@@ -268,8 +267,8 @@ func TestToolError(t *testing.T) {
 		{"getSoc", "{", "error: invalid arguments"},
 		{"failing", "{}", "error: meter unavailable"},
 	} {
-		res := a.callTool(ctx, llms.ToolCall{
-			FunctionCall: &llms.FunctionCall{Name: tc.name, Arguments: tc.args},
+		res := a.callTool(ctx, schema.ToolCall{
+			Function: schema.FunctionCall{Name: tc.name, Arguments: tc.args},
 		})
 		assert.Contains(t, res, tc.contains)
 	}
@@ -310,7 +309,7 @@ func TestProviders(t *testing.T) {
 
 	// every provider the ui offers must be one newLLM knows
 	for _, info := range res {
-		_, err := newLLM(Config{Provider: info.Provider, Model: "m", Token: "t", BaseUrl: "http://x"})
+		_, err := newLLM(t.Context(), Config{Provider: info.Provider, Model: "m", Token: "t", BaseUrl: "http://x"})
 		assert.NoError(t, err, info.Provider)
 	}
 
@@ -344,7 +343,7 @@ func TestConfigValidate(t *testing.T) {
 
 func TestCustomWithoutToken(t *testing.T) {
 	// local OpenAI-compatible endpoints need no key, langchaingo rejects an empty token
-	_, err := newLLM(Config{Provider: Custom, Model: "m", BaseUrl: "http://localhost:1234/v1"})
+	_, err := newLLM(t.Context(), Config{Provider: Custom, Model: "m", BaseUrl: "http://localhost:1234/v1"})
 	require.NoError(t, err)
 }
 
@@ -356,8 +355,8 @@ func TestRedacted(t *testing.T) {
 // call invokes a tool the way the model would
 func call(t *testing.T, a *Assistant, name, args string) string {
 	t.Helper()
-	return a.callTool(t.Context(), llms.ToolCall{
-		FunctionCall: &llms.FunctionCall{Name: name, Arguments: args},
+	return a.callTool(t.Context(), schema.ToolCall{
+		Function: schema.FunctionCall{Name: name, Arguments: args},
 	})
 }
 
@@ -378,9 +377,9 @@ func TestFindTools(t *testing.T) {
 }
 
 func TestCallSignatures(t *testing.T) {
-	calls := []llms.ToolCall{
-		{FunctionCall: &llms.FunctionCall{Name: "getSoc", Arguments: `{"loadpoint":1}`}},
-		{FunctionCall: nil},
+	calls := []schema.ToolCall{
+		{Function: schema.FunctionCall{Name: "getSoc", Arguments: `{"loadpoint":1}`}},
+		{Function: schema.FunctionCall{}},
 	}
 
 	// a call without a function is dropped, it cannot be executed either

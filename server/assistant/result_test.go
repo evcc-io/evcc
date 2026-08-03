@@ -12,7 +12,6 @@ import (
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tmc/langchaingo/llms"
 )
 
 func TestShorten(t *testing.T) {
@@ -107,11 +106,11 @@ func TestOfferedTools(t *testing.T) {
 	// an empty catalog leaves only the meta tools
 	assert.ElementsMatch(t, []string{findToolsName, callToolName}, toolNames(offeredTools(nil)))
 
-	catalog := []llms.Tool{
-		{Function: &llms.FunctionDefinition{Name: "setLoadpointMode"}},
-		{Function: &llms.FunctionDefinition{Name: "getState"}},
-		{Function: &llms.FunctionDefinition{Name: "fetchDocs"}},
-		{Function: &llms.FunctionDefinition{Name: "docs"}},
+	catalog := []tool{
+		{Name: "setLoadpointMode"},
+		{Name: "getState"},
+		{Name: "fetchDocs"},
+		{Name: "docs"},
 	}
 
 	// state and documentation join the meta tools, the rest stays searchable

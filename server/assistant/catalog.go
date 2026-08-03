@@ -7,8 +7,41 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/tmc/langchaingo/llms"
+	"github.com/cloudwego/eino/schema"
+	"github.com/eino-contrib/jsonschema"
 )
+
+// tool describes a tool to the model, independent of the model library
+type tool struct {
+	Name        string
+	Description string
+	Parameters  map[string]any
+}
+
+// toolInfos renders the tools for the model
+func toolInfos(tools []tool) ([]*schema.ToolInfo, error) {
+	res := make([]*schema.ToolInfo, 0, len(tools))
+
+	for _, t := range tools {
+		b, err := json.Marshal(t.Parameters)
+		if err != nil {
+			return nil, err
+		}
+
+		var js jsonschema.Schema
+		if err := json.Unmarshal(b, &js); err != nil {
+			return nil, err
+		}
+
+		res = append(res, &schema.ToolInfo{
+			Name:        t.Name,
+			Desc:        t.Description,
+			ParamsOneOf: schema.NewParamsOneOfByJSONSchema(&js),
+		})
+	}
+
+	return res, nil
+}
 
 // The full tool set costs more context than a local model has to spare. Instead of
 // offering every tool, the model searches a catalog and dispatches by name, which
@@ -27,57 +60,51 @@ const (
 var directTools = []string{"getState", "fetchDocs"}
 
 // metaTools reach every tool that is not offered directly
-var metaTools = []llms.Tool{
+var metaTools = []tool{
 	{
-		Type: "function",
-		Function: &llms.FunctionDefinition{
-			Name: findToolsName,
-			Description: "Search the tools that read and control this evcc system, for anything " +
-				"the tools above cannot answer. Returns the name, description and parameters of " +
-				"the matching tools. Search e.g. for 'charging mode', 'battery' or 'plan', then " +
-				"call the tool you found with " + callToolName + ".",
-			Parameters: map[string]any{
-				"type": "object",
-				"properties": map[string]any{
-					"query": map[string]any{
-						"type":        "string",
-						"description": "What you are looking for, e.g. 'charging mode'",
-					},
+		Name: findToolsName,
+		Description: "Search the tools that read and control this evcc system, for anything " +
+			"the tools above cannot answer. Returns the name, description and parameters of " +
+			"the matching tools. Search e.g. for 'charging mode', 'battery' or 'plan', then " +
+			"call the tool you found with " + callToolName + ".",
+		Parameters: map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"query": map[string]any{
+					"type":        "string",
+					"description": "What you are looking for, e.g. 'charging mode'",
 				},
-				"required": []string{"query"},
 			},
+			"required": []string{"query"},
 		},
 	},
 	{
-		Type: "function",
-		Function: &llms.FunctionDefinition{
-			Name:        callToolName,
-			Description: "Call one of the tools returned by " + findToolsName + ".",
-			Parameters: map[string]any{
-				"type": "object",
-				"properties": map[string]any{
-					"name": map[string]any{
-						"type":        "string",
-						"description": "Name of the tool to call",
-					},
-					"arguments": map[string]any{
-						"type":        "object",
-						"description": "Arguments as described by the tool",
-					},
+		Name:        callToolName,
+		Description: "Call one of the tools returned by " + findToolsName + ".",
+		Parameters: map[string]any{
+			"type": "object",
+			"properties": map[string]any{
+				"name": map[string]any{
+					"type":        "string",
+					"description": "Name of the tool to call",
 				},
-				"required": []string{"name"},
+				"arguments": map[string]any{
+					"type":        "object",
+					"description": "Arguments as described by the tool",
+				},
 			},
+			"required": []string{"name"},
 		},
 	},
 }
 
 // offeredTools returns the tools the model sees: the meta tools plus the few that
 // are worth their context, the catalog holds the rest
-func offeredTools(catalog []llms.Tool) []llms.Tool {
+func offeredTools(catalog []tool) []tool {
 	res := slices.Clone(metaTools)
 
 	for _, tool := range catalog {
-		if slices.Contains(directTools, tool.Function.Name) {
+		if slices.Contains(directTools, tool.Name) {
 			res = append(res, tool)
 		}
 	}
@@ -90,15 +117,15 @@ func (a *Assistant) findTools(args map[string]any) string {
 	query, _ := args["query"].(string)
 	terms := strings.Fields(strings.ToLower(query))
 
-	var byName, byDescription []llms.Tool
+	var byName, byDescription []tool
 
 	for _, tool := range a.catalog {
-		name := strings.ToLower(tool.Function.Name)
+		name := strings.ToLower(tool.Name)
 
 		switch {
 		case matchesAll(name, terms):
 			byName = append(byName, tool)
-		case matchesAll(name+" "+strings.ToLower(tool.Function.Description), terms):
+		case matchesAll(name+" "+strings.ToLower(tool.Description), terms):
 			byDescription = append(byDescription, tool)
 		}
 	}
@@ -110,10 +137,10 @@ func (a *Assistant) findTools(args map[string]any) string {
 
 	var sb strings.Builder
 	for _, tool := range res[:min(len(res), maxFindResults)] {
-		fmt.Fprintf(&sb, "%s: %s\n", tool.Function.Name, tool.Function.Description)
+		fmt.Fprintf(&sb, "%s: %s\n", tool.Name, tool.Description)
 
 		// without the schema the model cannot build the arguments for callTool
-		if params, err := json.Marshal(tool.Function.Parameters); err == nil {
+		if params, err := json.Marshal(tool.Parameters); err == nil {
 			fmt.Fprintf(&sb, "parameters: %s\n", params)
 		}
 

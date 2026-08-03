@@ -2,18 +2,19 @@ package assistant
 
 import (
 	"cmp"
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/cloudwego/eino-ext/components/model/claude"
+	"github.com/cloudwego/eino-ext/components/model/openai"
+	"github.com/cloudwego/eino/components/model"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"github.com/tmc/langchaingo/llms"
-	"github.com/tmc/langchaingo/llms/anthropic"
-	"github.com/tmc/langchaingo/llms/openai"
 )
 
 // ollamaDefaultUrl is the local ollama server
@@ -21,6 +22,9 @@ const ollamaDefaultUrl = "http://localhost:11434"
 
 // llmTimeout covers a slow model working through a tool loop
 const llmTimeout = 2 * time.Minute
+
+// anthropicMaxTokens bounds an answer, the api requires a limit
+const anthropicMaxTokens = 4096
 
 // llmClient traces the model requests like any other device connection
 func llmClient() *http.Client {
@@ -63,16 +67,16 @@ func ollamaUrl(base string) string {
 }
 
 // newLLM creates the language model for the configured provider
-func newLLM(cfg Config) (llms.Model, error) {
+func newLLM(ctx context.Context, cfg Config) (model.ToolCallingChatModel, error) {
 	switch cfg.Provider {
 	case OpenAI, Custom:
 		// local OpenAI-compatible servers ignore the token but it must not be empty
-		opts := []openai.Option{openai.WithModel(cfg.Model), openai.WithToken(cmp.Or(cfg.Token, "-")),
-			openai.WithHTTPClient(llmClient())}
-		if cfg.BaseUrl != "" {
-			opts = append(opts, openai.WithBaseURL(cfg.BaseUrl))
-		}
-		return openai.New(opts...)
+		return openai.NewChatModel(ctx, &openai.ChatModelConfig{
+			Model:      cfg.Model,
+			APIKey:     cmp.Or(cfg.Token, "-"),
+			BaseURL:    cfg.BaseUrl,
+			HTTPClient: llmClient(),
+		})
 
 	case Azure:
 		// the v1 endpoint speaks plain OpenAI, the deployment name is the model
@@ -80,22 +84,36 @@ func newLLM(cfg Config) (llms.Model, error) {
 		if err != nil {
 			return nil, err
 		}
-		return openai.New(openai.WithModel(cfg.Model), openai.WithToken(cfg.Token),
-			openai.WithBaseURL(host+azurePath), openai.WithHTTPClient(llmClient()))
+
+		return openai.NewChatModel(ctx, &openai.ChatModelConfig{
+			Model:      cfg.Model,
+			APIKey:     cfg.Token,
+			BaseURL:    host + azurePath,
+			HTTPClient: llmClient(),
+		})
 
 	case Anthropic:
-		opts := []anthropic.Option{anthropic.WithModel(cfg.Model), anthropic.WithToken(cfg.Token),
-			anthropic.WithHTTPClient(llmClient())}
-		if cfg.BaseUrl != "" {
-			opts = append(opts, anthropic.WithBaseURL(cfg.BaseUrl))
+		cc := &claude.Config{
+			Model:      cfg.Model,
+			APIKey:     cfg.Token,
+			MaxTokens:  anthropicMaxTokens,
+			HTTPClient: llmClient(),
 		}
-		return anthropic.New(opts...)
+		if cfg.BaseUrl != "" {
+			cc.BaseURL = &cfg.BaseUrl
+		}
+
+		return claude.NewChatModel(ctx, cc)
 
 	case Ollama:
 		// the native ollama binding drops the tools, the OpenAI-compatible endpoint
 		// serves them. Its token is ignored but must not be empty.
-		return openai.New(openai.WithModel(cfg.Model), openai.WithToken("ollama"),
-			openai.WithBaseURL(ollamaUrl(cfg.BaseUrl)), openai.WithHTTPClient(llmClient()))
+		return openai.NewChatModel(ctx, &openai.ChatModelConfig{
+			Model:      cfg.Model,
+			APIKey:     "ollama",
+			BaseURL:    ollamaUrl(cfg.BaseUrl),
+			HTTPClient: llmClient(),
+		})
 
 	default:
 		return nil, fmt.Errorf("invalid provider: %s", cfg.Provider)

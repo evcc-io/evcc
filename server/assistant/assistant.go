@@ -9,9 +9,10 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/cloudwego/eino/components/model"
+	"github.com/cloudwego/eino/schema"
 	"github.com/evcc-io/evcc/util"
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
-	"github.com/tmc/langchaingo/llms"
 )
 
 // maxIterations limits the tool calling loop
@@ -62,25 +63,26 @@ type Result struct {
 type Assistant struct {
 	log     *util.Logger
 	mcpLog  *util.Logger
-	llm     llms.Model
+	llm     model.ToolCallingChatModel
+	bound   model.BaseChatModel // llm with the offered tools attached
 	client  *mcpsdk.ClientSession
 	server  *mcpsdk.ServerSession
-	tools   []llms.Tool // offered to the model
-	catalog []llms.Tool // searchable through findTools
+	tools   []tool // offered to the model
+	catalog []tool // searchable through findTools
 	context string
 	onStep  func(Step) // reports a finished round while the answer is still being worked on
 }
 
 // New connects a language model to the given MCP server
 func New(ctx context.Context, cfg Config, srv *mcpsdk.Server) (*Assistant, error) {
-	llm, err := newLLM(cfg)
+	llm, err := newLLM(ctx, cfg)
 	if err != nil {
 		return nil, err
 	}
 	return newAssistant(ctx, llm, srv)
 }
 
-func newAssistant(ctx context.Context, llm llms.Model, srv *mcpsdk.Server) (*Assistant, error) {
+func newAssistant(ctx context.Context, llm model.ToolCallingChatModel, srv *mcpsdk.Server) (*Assistant, error) {
 	ct, st := mcpsdk.NewInMemoryTransports()
 
 	// server must be connected before the client initializes the session
@@ -104,14 +106,32 @@ func newAssistant(ctx context.Context, llm llms.Model, srv *mcpsdk.Server) (*Ass
 		return nil, err
 	}
 
+	tools := offeredTools(catalog)
+
+	infos, err := toolInfos(tools)
+	if err != nil {
+		cs.Close()
+		ss.Close()
+		return nil, err
+	}
+
+	// WithTools returns a new instance, the bare one answers the concluding call
+	bound, err := llm.WithTools(infos)
+	if err != nil {
+		cs.Close()
+		ss.Close()
+		return nil, err
+	}
+
 	return &Assistant{
 		log: util.NewLogger("assistant"),
 		// tool calls are mcp requests, log them with the mcp transport they trigger
 		mcpLog:  util.NewLogger("mcp"),
 		llm:     llm,
+		bound:   bound,
 		client:  cs,
 		server:  ss,
-		tools:   offeredTools(catalog),
+		tools:   tools,
 		catalog: catalog,
 	}, nil
 }
@@ -134,8 +154,8 @@ func (a *Assistant) Close() {
 	a.server.Close()
 }
 
-func listTools(ctx context.Context, cs *mcpsdk.ClientSession) ([]llms.Tool, error) {
-	var res []llms.Tool
+func listTools(ctx context.Context, cs *mcpsdk.ClientSession) ([]tool, error) {
+	var res []tool
 
 	for params := new(mcpsdk.ListToolsParams); ; {
 		list, err := cs.ListTools(ctx, params)
@@ -144,18 +164,15 @@ func listTools(ctx context.Context, cs *mcpsdk.ClientSession) ([]llms.Tool, erro
 		}
 
 		for _, t := range list.Tools {
-			schema, ok := t.InputSchema.(map[string]any)
+			params, ok := t.InputSchema.(map[string]any)
 			if !ok {
-				schema = map[string]any{"type": "object"}
+				params = map[string]any{"type": "object"}
 			}
 
-			res = append(res, llms.Tool{
-				Type: "function",
-				Function: &llms.FunctionDefinition{
-					Name:        t.Name,
-					Description: t.Description,
-					Parameters:  schema,
-				},
+			res = append(res, tool{
+				Name:        t.Name,
+				Description: t.Description,
+				Parameters:  params,
 			})
 		}
 
@@ -187,16 +204,19 @@ func trimHistory(history []Message, budget int) []Message {
 
 // roundCalls describes the tools a round wants to call. Meta tool calls carry their
 // target in the arguments, it is resolved in callTool.
-func roundCalls(calls []llms.ToolCall) []Call {
+func roundCalls(calls []schema.ToolCall) []Call {
 	res := make([]Call, 0, len(calls))
 
 	for _, tc := range calls {
-		if tc.FunctionCall != nil {
-			res = append(res, Call{
-				Name:      tc.FunctionCall.Name,
-				Arguments: strings.TrimSpace(tc.FunctionCall.Arguments),
-			})
+		// a nameless call cannot be executed either
+		if tc.Function.Name == "" {
+			continue
 		}
+
+		res = append(res, Call{
+			Name:      tc.Function.Name,
+			Arguments: strings.TrimSpace(tc.Function.Arguments),
+		})
 	}
 
 	return res
@@ -214,11 +234,11 @@ func callSignatures(calls []Call) []string {
 }
 
 // toolNames lists the names of the given tools
-func toolNames(tools []llms.Tool) []string {
+func toolNames(tools []tool) []string {
 	res := make([]string, 0, len(tools))
 
 	for _, tool := range tools {
-		res = append(res, tool.Function.Name)
+		res = append(res, tool.Name)
 	}
 
 	return res
@@ -241,7 +261,7 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (Result, error)
 		prompt += "\n\nContext for this conversation:\n" + a.context
 	}
 
-	messages := []llms.MessageContent{llms.TextParts(llms.ChatMessageTypeSystem, prompt)}
+	messages := []*schema.Message{schema.SystemMessage(prompt)}
 
 	if trimmed := trimHistory(history, maxHistory); len(trimmed) < len(history) {
 		a.log.DEBUG.Printf("history trimmed to the last %d of %d messages", len(trimmed), len(history))
@@ -249,11 +269,11 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (Result, error)
 	}
 
 	for _, m := range history {
-		role := llms.ChatMessageTypeHuman
 		if m.Role == "assistant" {
-			role = llms.ChatMessageTypeAI
+			messages = append(messages, schema.AssistantMessage(m.Content, nil))
+		} else {
+			messages = append(messages, schema.UserMessage(m.Content))
 		}
-		messages = append(messages, llms.TextParts(role, m.Content))
 	}
 
 	a.log.DEBUG.Printf("chat: %d messages, %d tools offered", len(history), len(a.tools))
@@ -280,15 +300,15 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (Result, error)
 	incomplete := func(reason string) (Result, error) {
 		a.log.WARN.Printf("%s, answering without tools", reason)
 
-		messages = append(messages, llms.TextParts(llms.ChatMessageTypeHuman,
+		messages = append(messages, schema.UserMessage(
 			"Answer the question with what you have found so far. Do not call any more tools."))
 
 		a.logContext(messages, nil)
 
-		if resp, err := a.llm.GenerateContent(ctx, messages); err != nil {
+		if resp, err := a.llm.Generate(ctx, messages); err != nil {
 			a.log.ERROR.Println(err)
-		} else if len(resp.Choices) > 0 {
-			if answer := strings.TrimSpace(resp.Choices[0].Content); answer != "" {
+		} else if resp != nil {
+			if answer := strings.TrimSpace(resp.Content); answer != "" {
 				return Result{Content: answer, Steps: steps}, nil
 			}
 		}
@@ -303,24 +323,23 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (Result, error)
 	for round := range maxIterations {
 		a.logContext(messages, a.tools)
 
-		resp, err := a.llm.GenerateContent(ctx, messages, llms.WithTools(a.tools))
+		resp, err := a.bound.Generate(ctx, messages)
 		if err != nil {
 			a.log.ERROR.Println(err)
 			return Result{}, err
 		}
-		if len(resp.Choices) == 0 {
+		if resp == nil {
 			return Result{}, errors.New("empty response")
 		}
 
-		choice := resp.Choices[0]
-		reasoning := strings.TrimSpace(choice.ReasoningContent)
+		reasoning := strings.TrimSpace(resp.ReasoningContent)
 
-		answer := strings.TrimSpace(choice.Content)
+		answer := strings.TrimSpace(resp.Content)
 		if answer != "" {
 			content = answer
 		}
 
-		if len(choice.ToolCalls) == 0 {
+		if len(resp.ToolCalls) == 0 {
 			addStep(Step{Reasoning: reasoning})
 
 			// a model that puts everything into its reasoning has not answered yet
@@ -334,7 +353,7 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (Result, error)
 			return Result{Content: answer, Steps: steps}, nil
 		}
 
-		calls := roundCalls(choice.ToolCalls)
+		calls := roundCalls(resp.ToolCalls)
 		a.log.DEBUG.Printf("tool round %d: %v", round+1, callSignatures(calls))
 		addStep(Step{Reasoning: reasoning, Calls: calls})
 
@@ -349,21 +368,11 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (Result, error)
 		}
 		previous = calls
 
-		msg := llms.TextParts(llms.ChatMessageTypeAI, choice.Content)
-		for _, tc := range choice.ToolCalls {
-			msg.Parts = append(msg.Parts, tc)
-		}
-		messages = append(messages, msg)
+		messages = append(messages, schema.AssistantMessage(resp.Content, resp.ToolCalls))
 
-		for _, tc := range choice.ToolCalls {
-			messages = append(messages, llms.MessageContent{
-				Role: llms.ChatMessageTypeTool,
-				Parts: []llms.ContentPart{llms.ToolCallResponse{
-					ToolCallID: tc.ID,
-					Name:       tc.FunctionCall.Name,
-					Content:    truncateResult(a.callTool(ctx, tc)),
-				}},
-			})
+		for _, tc := range resp.ToolCalls {
+			messages = append(messages, schema.ToolMessage(
+				truncateResult(a.callTool(ctx, tc)), tc.ID, schema.WithToolName(tc.Function.Name)))
 		}
 	}
 
@@ -380,16 +389,15 @@ func truncateResult(s string) string {
 }
 
 // callTool executes a tool call and returns its textual result. Errors are returned to the model, not to the caller.
-func (a *Assistant) callTool(ctx context.Context, tc llms.ToolCall) string {
-	if tc.FunctionCall == nil {
+func (a *Assistant) callTool(ctx context.Context, tc schema.ToolCall) string {
+	name := tc.Function.Name
+	if name == "" {
 		a.mcpLog.ERROR.Println("missing function call")
 		return "error: missing function call"
 	}
 
-	name := tc.FunctionCall.Name
-
 	var args map[string]any
-	if s := strings.TrimSpace(tc.FunctionCall.Arguments); s != "" {
+	if s := strings.TrimSpace(tc.Function.Arguments); s != "" {
 		if err := json.Unmarshal([]byte(s), &args); err != nil {
 			a.mcpLog.ERROR.Printf("tool %s invalid arguments: %v", name, err)
 			return "error: invalid arguments: " + err.Error()
