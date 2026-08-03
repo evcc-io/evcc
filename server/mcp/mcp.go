@@ -70,6 +70,7 @@ func New(host http.Handler, opt ...Option) (*mcp.Server, error) {
 	openapi2mcp.RegisterOpenAPITools(srv, ops, doc, &openapi2mcp.ToolGenOptions{
 		TagFilter: []string{
 			"general",
+			"state",
 			"tariffs",
 			"loadpoints",
 			"vehicles",
