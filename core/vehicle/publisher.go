@@ -18,15 +18,7 @@ func (p *Publisher) Publish(key string, val any) {
 }
 
 func (p *Publisher) PublishAllVehicleData(vSettings []API, v api.Vehicle) {
-	id := ""
-	for _, s := range vSettings {
-		// TODO: does not work when title gets changed, need to find a better way to identify the vehicle
-		if v.GetTitle() == s.Instance().GetTitle() {
-			id = s.Name()
-			break
-		}
-	}
-
+	id := findVehicleID(vSettings, v)
 	if id == "" {
 		return
 	}
@@ -45,30 +37,22 @@ func (p *Publisher) PublishAllVehicleData(vSettings []API, v api.Vehicle) {
 
 	// Range
 	if r, ok := api.Cap[api.VehicleRange](v); ok {
-		if val, err := r.Range(); err == nil {
-			p.Publish(prefix+"range", val)
-		}
+		p.publishIf(prefix+"range", func() (any, error) { return r.Range() })
 	}
 
 	// Odometer
 	if o, ok := api.Cap[api.VehicleOdometer](v); ok {
-		if val, err := o.Odometer(); err == nil {
-			p.Publish(prefix+"odometer", val)
-		}
+		p.publishIf(prefix+"odometer", func() (any, error) { return o.Odometer() })
 	}
 
 	// Finish Timer
 	if ft, ok := api.Cap[api.VehicleFinishTimer](v); ok {
-		if val, err := ft.FinishTime(); err == nil {
-			p.Publish(prefix+"finishTime", val)
-		}
+		p.publishIf(prefix+"finishTime", func() (any, error) { return ft.FinishTime() })
 	}
 
 	// Climater
 	if cl, ok := api.Cap[api.VehicleClimater](v); ok {
-		if val, err := cl.Climater(); err == nil {
-			p.Publish(prefix+"climater", val)
-		}
+		p.publishIf(prefix+"climater", func() (any, error) { return cl.Climater() })
 	}
 
 	// Position
@@ -78,4 +62,19 @@ func (p *Publisher) PublishAllVehicleData(vSettings []API, v api.Vehicle) {
 			p.Publish(prefix+"longitude", lon)
 		}
 	}
+}
+
+func (p *Publisher) publishIf(key string, get func() (any, error)) {
+	if val, err := get(); err == nil {
+		p.Publish(key, val)
+	}
+}
+
+func findVehicleID(vSettings []API, v api.Vehicle) string {
+	for _, s := range vSettings {
+		if v.GetTitle() == s.Instance().GetTitle() {
+			return s.Name()
+		}
+	}
+	return ""
 }

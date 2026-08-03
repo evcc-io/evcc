@@ -787,7 +787,9 @@ func testConfigHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 		if class == templates.Vehicle {
 			if v, ok := instance.(api.Vehicle); ok {
 				pub := site.GetVehiclePublisher()
-				pub.PublishAllVehicleData(site.Vehicles().Settings(), v)
+				if pub != nil {
+					pub.PublishAllVehicleData(site.Vehicles().Settings(), v)
+				}
 			}
 		}
 	}
