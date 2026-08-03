@@ -98,9 +98,21 @@ export default defineComponent({
 			return "bg-darker-green";
 		},
 	},
+	mounted() {
+		document.addEventListener("click", this.closeOnClickOutside, true);
+	},
+	unmounted() {
+		document.removeEventListener("click", this.closeOnClickOutside, true);
+	},
 	methods: {
 		toggleMenu() {
 			this.open = !this.open;
+		},
+		// the tab item wraps both toggle and menu, clicks inside are handled by them
+		closeOnClickOutside(e: MouseEvent) {
+			if (this.open && !this.$el.contains(e.target as Node)) {
+				this.open = false;
+			}
 		},
 	},
 });
