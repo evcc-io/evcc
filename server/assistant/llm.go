@@ -1,7 +1,6 @@
 package assistant
 
 import (
-	"cmp"
 	"context"
 	"fmt"
 	"net/http"
@@ -69,10 +68,10 @@ func ollamaUrl(base string) string {
 func newLLM(ctx context.Context, cfg Config) (model.ToolCallingChatModel, error) {
 	switch cfg.Provider {
 	case OpenAI, Custom:
-		// local OpenAI-compatible servers ignore the token but it must not be empty
+		// a local OpenAI-compatible server needs no key, an empty one sends no header
 		return openai.NewChatModel(ctx, &openai.ChatModelConfig{
 			Model:      cfg.Model,
-			APIKey:     cmp.Or(cfg.Token, "-"),
+			APIKey:     cfg.Token,
 			BaseURL:    cfg.BaseUrl,
 			HTTPClient: llmClient(),
 		})
@@ -110,11 +109,10 @@ func newLLM(ctx context.Context, cfg Config) (model.ToolCallingChatModel, error)
 		return claude.NewChatModel(ctx, cc)
 
 	case Ollama:
-		// the native ollama binding drops the tools, the OpenAI-compatible endpoint
-		// serves them. Its token is ignored but must not be empty.
+		// the native ollama binding drops the tools, the OpenAI-compatible
+		// endpoint serves them and needs no key
 		return openai.NewChatModel(ctx, &openai.ChatModelConfig{
 			Model:      cfg.Model,
-			APIKey:     "ollama",
 			BaseURL:    ollamaUrl(cfg.BaseUrl),
 			HTTPClient: llmClient(),
 		})
