@@ -2667,9 +2667,8 @@
         "type": "string",
         "enum": [
           "off",
-          "now",
-          "minpv",
-          "pv"
+          "smart",
+          "now"
         ]
       },
       "Rate": {
@@ -2732,6 +2731,15 @@
         "required": [
           "continuous",
           "precondition"
+        ]
+      },
+      "AlwaysCharge": {
+        "description": "Always charge state. Smart mode charges continuously at least at minimum power.",
+        "type": "string",
+        "enum": [
+          "off",
+          "on",
+          "once"
         ]
       },
       "ChargerStatusReason": {
@@ -2815,6 +2823,10 @@
           "name": {
             "description": "Unique loadpoint identifier used in API routes and configuration.",
             "type": "string"
+          },
+          "alwaysCharge": {
+            "$ref": "#/components/schemas/AlwaysCharge",
+            "description": "Always charge state. Smart mode charges continuously at least at minimum power."
           },
           "batteryBoost": {
             "description": "Battery boost is active. When enabled, home battery power is used for fast charging.",
@@ -3234,6 +3246,7 @@
         },
         "required": [
           "name",
+          "alwaysCharge",
           "batteryBoost",
           "chargeDuration",
           "chargePower",

@@ -32,11 +32,13 @@ test.describe("loadpoint", async () => {
 });
 
 test.describe("integrated device", async () => {
-  test("no Min+Solar mode for switch device", async ({ page }) => {
+  test("switch device modes without always charge option", async ({ page }) => {
     const lp = page.getByTestId("loadpoint").first();
     const mode = lp.getByTestId("mode");
-    await expect(mode.getByRole("button", { name: "Solar", exact: true })).toBeVisible();
-    await expect(mode.getByRole("button", { name: "Min+Solar" })).toHaveCount(0);
+    await expect(mode.getByRole("button", { name: "Off", exact: true })).toBeVisible();
+    await expect(mode.getByRole("button", { name: "Smart", exact: true })).toBeVisible();
+    await expect(mode.getByRole("button", { name: "On", exact: true })).toBeVisible();
+    await expect(mode.getByTestId("always-charge-toggle")).toHaveCount(0);
   });
 
   test("min temperature", async ({ page }) => {

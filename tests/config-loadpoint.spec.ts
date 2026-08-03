@@ -329,13 +329,13 @@ test.describe("charging loadpoint", async () => {
     // change on main ui
     await page.goto("/");
     await expect(page.getByRole("button", { name: "Off" })).toHaveClass(/active/);
-    await page.getByRole("button", { name: "Solar", exact: true }).click();
+    await page.getByRole("button", { name: "Smart", exact: true }).click();
     await page.waitForLoadState("networkidle");
-    await expect(page.getByRole("button", { name: "Solar", exact: true })).toHaveClass(/active/);
+    await expect(page.getByRole("button", { name: "Smart", exact: true })).toHaveClass(/active/);
 
     await restart();
     await page.reload();
-    await expect(page.getByRole("button", { name: "Solar", exact: true })).toHaveClass(/active/);
+    await expect(page.getByRole("button", { name: "Smart", exact: true })).toHaveClass(/active/);
 
     // change default mode in config to fast
     await page.goto("/#/config");
@@ -602,8 +602,7 @@ power:
 
     await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
     const modeSelect = lpModal.getByLabel("Default mode");
-    await expect(modeSelect.getByRole("option", { name: "Solar", exact: true })).toHaveCount(1);
-    await expect(modeSelect.getByRole("option", { name: "Min+Solar" })).toHaveCount(0);
+    await expect(modeSelect.getByRole("option", { name: "Smart", exact: true })).toHaveCount(1);
 
     await expect(lpModal.getByText("Electrics")).toHaveCount(0);
     await expect(lpModal.getByText("Charger type", { exact: true })).toHaveCount(0);

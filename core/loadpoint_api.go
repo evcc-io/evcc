@@ -168,6 +168,20 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 
 	lp.log.DEBUG.Printf("set charge mode: %s", string(mode))
 
+	// normalize deprecated aliases; must happen before the change check since
+	// pv/minpv carry an always charge side effect even when mode stays smart
+	switch mode {
+	case api.ModePV, api.ModeMinPV:
+		if !lp.chargerHasFeature(api.SwitchDevice) && !lp.chargerHasFeature(api.Continuous) {
+			ac := api.AlwaysChargeOff
+			if mode == api.ModeMinPV {
+				ac = api.AlwaysChargeOn
+			}
+			lp.setAlwaysCharge(ac)
+		}
+		mode = api.ModeSmart
+	}
+
 	// apply immediately
 	if lp.mode != mode {
 		lp.setMode(mode)
@@ -181,12 +195,58 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 			lp.resetPhaseTimer()
 			lp.resetPVTimer()
 			lp.setPlanActive(false)
-		case api.ModeMinPV:
-			lp.resetPVTimer()
+		case api.ModeSmart:
+			if lp.alwaysCharge.Active() {
+				lp.resetPVTimer()
+			}
 		}
 
 		lp.requestUpdate()
 	}
+}
+
+// GetAlwaysCharge returns the always charge state
+func (lp *Loadpoint) GetAlwaysCharge() api.AlwaysCharge {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.alwaysCharge
+}
+
+// setAlwaysCharge sets the always charge state (no mutex)
+func (lp *Loadpoint) setAlwaysCharge(ac api.AlwaysCharge) {
+	if lp.alwaysCharge == ac {
+		return
+	}
+
+	lp.alwaysCharge = ac
+	lp.publish(keys.AlwaysCharge, ac)
+
+	// once is session-scoped and not persisted
+	persisted := api.AlwaysChargeOff
+	if ac == api.AlwaysChargeOn {
+		persisted = api.AlwaysChargeOn
+	}
+	lp.settings.SetString(keys.AlwaysCharge, string(persisted))
+
+	if ac.Active() {
+		lp.resetPVTimer()
+	}
+	lp.requestUpdate()
+}
+
+// SetAlwaysCharge sets the always charge state
+func (lp *Loadpoint) SetAlwaysCharge(ac api.AlwaysCharge) error {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if lp.chargerHasFeature(api.SwitchDevice) || lp.chargerHasFeature(api.Continuous) {
+		return errors.New("always charge is not supported by this charger")
+	}
+
+	lp.log.DEBUG.Println("set always charge:", ac)
+	lp.setAlwaysCharge(ac)
+
+	return nil
 }
 
 // GetDefaultMode returns the default charge mode
@@ -654,8 +714,8 @@ func (lp *Loadpoint) SetBatteryBoost(enable bool) error {
 	lp.Lock()
 	defer lp.Unlock()
 
-	if enable && lp.mode != api.ModePV && lp.mode != api.ModeMinPV {
-		return errors.New("battery boost is only available in PV modes")
+	if enable && lp.mode != api.ModeSmart {
+		return errors.New("battery boost is only available in smart mode")
 	}
 
 	lp.log.DEBUG.Println("set battery boost:", enable)
@@ -715,11 +775,11 @@ func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 		return 0
 	}
 
-	if mode == api.ModePV {
+	if mode == api.ModeSmart && !lp.GetAlwaysCharge().Active() {
 		return lp.GetChargePower()
 	}
 
-	// MinPV mode: a charger without current control (switch socket or heatpump) cannot release power.
+	// always charge: a charger without current control (switch socket or heatpump) cannot release power.
 	if lp.chargerHasFeature(api.SwitchDevice) || lp.chargerHasFeature(api.Continuous) {
 		return 0
 	}

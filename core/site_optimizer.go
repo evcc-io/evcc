@@ -780,16 +780,13 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 		// forced max charging
 		demand = continuousDemand(lp, minLen)
 
-	case api.ModeMinPV:
-		// forced min charging
-		demand = continuousDemand(lp, minLen)
+	case api.ModeSmart:
+		if lp.GetAlwaysCharge().Active() {
+			// forced min charging
+			demand = continuousDemand(lp, minLen)
+		}
 		// add smartcost limit and plan goal, if configured
 		demand = applySmartCostLimit(lp, demand, grid, minLen)
-		site.applyPlanGoal(lp, &bat, minLen)
-
-	case api.ModePV:
-		// add smartcost limit and plan goal, if configured
-		demand = applySmartCostLimit(lp, nil, grid, minLen)
 		site.applyPlanGoal(lp, &bat, minLen)
 	}
 
@@ -869,7 +866,7 @@ func continuousDemand(lp loadpoint.API, minLen int) []float32 {
 	}
 
 	pwr := lp.EffectiveMaxPower()
-	if lp.GetMode() == api.ModeMinPV {
+	if lp.GetMode() == api.ModeSmart {
 		pwr = lp.EffectiveMinPower()
 	}
 
@@ -883,13 +880,14 @@ func continuousDemand(lp loadpoint.API, minLen int) []float32 {
 func loadpointProfile(lp loadpoint.API, minLen int) []float64 {
 	mode := lp.GetMode()
 	status := lp.GetStatus()
+	minActive := mode == api.ModeSmart && lp.GetAlwaysCharge().Active()
 
-	if status != api.StatusC || (mode != api.ModeMinPV && mode != api.ModeNow) {
+	if status != api.StatusC || (!minActive && mode != api.ModeNow) {
 		return nil
 	}
 
 	power := lp.GetChargePower()
-	if minP := lp.EffectiveMinPower(); mode == api.ModeMinPV && minP < power {
+	if minP := lp.EffectiveMinPower(); minActive && minP < power {
 		power = minP
 	}
 
@@ -1130,7 +1128,7 @@ func applySmartCostLimit(lp loadpoint.API, demand []float32, grid api.Rates, min
 		if grid[i].Value <= *costLimit {
 			demand[i] = float32(maxPower / slotsPerHour)
 		}
-		// else: keep existing demand (either 0 or minPower from ModeMinPV)
+		// else: keep existing demand (either 0 or minPower from always charge)
 	}
 
 	return demand

@@ -656,7 +656,7 @@ import {
 
 const nsPerMin = 60 * 1e9;
 
-const { OFF, PV, MINPV, NOW } = CHARGE_MODE;
+const { OFF, SMART, NOW } = CHARGE_MODE;
 
 const defaultValues = {
 	id: undefined,
@@ -818,9 +818,7 @@ export default {
 		},
 		defaultModeOptions(): { key: CHARGE_MODE; name: string }[] {
 			// empty option is provided by PropertyField placeholder
-			// switch devices have no current control, so minpv does not apply
-			const modes = this.chargerIsSwitchDevice ? [OFF, PV, NOW] : [OFF, PV, MINPV, NOW];
-			return modes.map((key) => ({ key, name: this.$t(`main.mode.${key}`) }));
+			return [OFF, SMART, NOW].map((key) => ({ key, name: this.$t(`main.mode.${key}`) }));
 		},
 		showCircuit() {
 			return this.circuits.length > 0 || !!this.values.circuit;
@@ -910,6 +908,10 @@ export default {
 			try {
 				const res = await api.get(`config/loadpoints/${this.id}`);
 				this.values = deepClone(res.data);
+				// display deprecated pv/minpv default modes as smart
+				if (["pv", "minpv"].includes(this.values.defaultMode)) {
+					this.values.defaultMode = SMART;
+				}
 				this.updateChargerPower();
 				this.updateSolarMode();
 				this.updatePhases();

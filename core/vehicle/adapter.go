@@ -52,7 +52,16 @@ func (v *adapter) Name() string {
 // GetMode returns the charge mode
 func (v *adapter) GetMode() api.ChargeMode {
 	if s, err := settings.String(v.key() + keys.Mode); err == nil {
-		return api.ChargeMode(s)
+		mode, err := api.ChargeModeString(s)
+		if err != nil {
+			return ""
+		}
+		// migrate deprecated values
+		if mode == api.ModePV || mode == api.ModeMinPV {
+			mode = api.ModeSmart
+			v.SetMode(mode)
+		}
+		return mode
 	}
 	return ""
 }

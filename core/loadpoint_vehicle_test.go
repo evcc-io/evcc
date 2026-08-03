@@ -261,7 +261,7 @@ func TestVehicleDetectByID(t *testing.T) {
 func TestDefaultVehicle(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	mode := api.ModePV
+	mode := api.ModeSmart
 	current := 66.6
 
 	dflt := api.NewMockVehicle(ctrl)
@@ -358,7 +358,7 @@ func TestReidentifyActiveVehicleKeepsMode(t *testing.T) {
 
 	// vehicle already active via a different detection path (e.g. SoC poll)
 	lp.setActiveVehicle(vehicle)
-	assert.Equal(t, api.ModePV, lp.GetMode(), "mode after first identification")
+	assert.Equal(t, api.ModeSmart, lp.GetMode(), "mode after first identification")
 
 	// user/system escalates to now in between
 	lp.SetMode(api.ModeNow)

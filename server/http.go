@@ -196,6 +196,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 
 		routes := map[string]route{
 			"mode":                      {"POST", "/mode/{value:[a-z]+}", handler(eapi.ChargeModeString, pass(lp.SetMode), lp.GetMode)},
+			"alwaysCharge":              {"POST", "/alwayscharge/{value:[a-z]+}", handler(eapi.AlwaysChargeString, lp.SetAlwaysCharge, lp.GetAlwaysCharge)},
 			"limitsoc":                  {"POST", "/limitsoc/{value:[0-9]+}", intHandler(pass(lp.SetLimitSoc), lp.GetLimitSoc)},
 			"mintemp":                   {"POST", "/mintemp/{value:[0-9]+}", intHandler(pass(lp.SetMinSoc), lp.GetMinSoc)},
 			"limitenergy":               {"POST", "/limitenergy/{value:[0-9.]+}", floatHandler(pass(lp.SetLimitEnergy), lp.GetLimitEnergy)},

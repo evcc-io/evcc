@@ -119,7 +119,7 @@ import { vehicleHasSoc, vehicleNotReachable } from "@/uiLoadpoints";
 import { CHARGE_MODE, type SelectOption, type UiLoadpoint, type Vehicle } from "@/types/evcc";
 import { defineComponent, type PropType } from "vue";
 
-const { OFF, PV, MINPV, NOW } = CHARGE_MODE;
+const { OFF, SMART, NOW } = CHARGE_MODE;
 
 export default defineComponent({
 	name: "VehicleSettingsModal",
@@ -141,7 +141,7 @@ export default defineComponent({
 		modeOptions(): SelectOption<string>[] {
 			return [
 				{ value: "", name: this.$t("main.vehicleSettings.keepAsIs") },
-				...[OFF, PV, MINPV, NOW].map((mode) => ({
+				...[OFF, SMART, NOW].map((mode) => ({
 					value: mode,
 					name: this.$t(`main.mode.${mode}`),
 				})),
