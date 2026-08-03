@@ -159,6 +159,26 @@ func TestRun_HeartbeatReturned_NoLimitWrite(t *testing.T) {
 	assertProductionLimit(t, c, false)
 }
 
+// TestRun_StartsInFailsafe covers LPC-TS-017: with no Energy Guard heard from yet the
+// CS starts out limited to the failsafe limit and leaves once the EG states one.
+func TestRun_StartsInFailsafe(t *testing.T) {
+	c := newTestEEBus(t) // no heartbeat seeded, like a fresh NewEEBus
+
+	require.NoError(t, c.run())
+	require.Equal(t, StatusFailsafe, c.status)
+	assertConsumptionLimit(t, c, testFailsafeConsumption)
+	assertProductionLimit(t, c, true)
+
+	// the EG shows up and states a limit
+	c.heartbeat.Set(struct{}{})
+	c.consumptionLimit = ucapi.LoadLimit{Value: 3000, IsActive: true}
+	c.limitReceived = time.Now()
+
+	require.NoError(t, c.run())
+	assert.Equal(t, StatusNormal, c.status)
+	assertConsumptionLimit(t, c, 3000)
+}
+
 // TestRun_FailsafeReentry covers LPC-921 on a second failsafe cycle: a heartbeat
 // that returned during an earlier cycle must not end the new one.
 func TestRun_FailsafeReentry(t *testing.T) {
