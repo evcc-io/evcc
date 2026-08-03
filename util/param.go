@@ -2,8 +2,10 @@ package util
 
 import (
 	"maps"
+	"reflect"
 	"slices"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/evcc-io/evcc/util/encode"
@@ -12,6 +14,7 @@ import (
 // Param is the broadcast channel data type
 type Param struct {
 	Loadpoint *int
+	Vehicle   *string
 	Key       string
 	Val       any
 }
@@ -20,6 +23,8 @@ type Param struct {
 func (p Param) UniqueID() string {
 	if p.Loadpoint != nil {
 		return strconv.Itoa(*p.Loadpoint) + "." + p.Key
+	} else if p.Vehicle != nil {
+		return *p.Vehicle + "." + p.Key
 	}
 
 	return p.Key
@@ -63,17 +68,25 @@ func (c *ParamCache) State(enc encode.Encoder) map[string]any {
 
 	res := make(map[string]any)
 	lps := make(map[int]map[string]any)
+	vDyn := make(map[string]map[string]any)
 
 	for _, param := range c.val {
-		if param.Loadpoint == nil {
-			res[param.Key] = enc.Encode(param.Val)
-		} else {
+		if param.Loadpoint != nil {
 			lp, ok := lps[*param.Loadpoint]
 			if !ok {
 				lp = make(map[string]any)
 				lps[*param.Loadpoint] = lp
 			}
 			lp[param.Key] = enc.Encode(param.Val)
+		} else if param.Vehicle != nil {
+			v, ok := vDyn[*param.Vehicle]
+			if !ok {
+				v = make(map[string]any)
+				vDyn[*param.Vehicle] = v
+			}
+			v[param.Key] = enc.Encode(param.Val)
+		} else {
+			res[param.Key] = enc.Encode(param.Val)
 		}
 	}
 
@@ -83,6 +96,8 @@ func (c *ParamCache) State(enc encode.Encoder) map[string]any {
 		loadpoints[id] = lp
 	}
 	res["loadpoints"] = loadpoints
+
+	MergeVehicleState(res, vDyn)
 
 	return res
 }
@@ -113,4 +128,52 @@ func (c *ParamCache) Get(key string) Param {
 	}
 
 	return Param{}
+}
+
+func MergeVehicleState(res map[string]any, vehiclesDyn map[string]map[string]any) {
+	vm := convertVehicleStructMap(res["vehicles"])
+	res["vehicles"] = vm
+
+	for vid, dyn := range vehiclesDyn {
+		vcfg, ok := vm[vid].(map[string]any)
+		if !ok {
+			vcfg = make(map[string]any)
+			vm[vid] = vcfg
+		}
+
+		for k, v := range dyn {
+			vcfg[k] = v
+		}
+	}
+}
+
+func convertVehicleStructMap(in any) map[string]any {
+	out := make(map[string]any)
+
+	rv := reflect.ValueOf(in)
+	for _, key := range rv.MapKeys() {
+		v := rv.MapIndex(key)
+
+		// struct → map[string]any
+		m := make(map[string]any)
+		st := v.Interface()
+
+		sv := reflect.ValueOf(st)
+		stt := sv.Type()
+
+		for i := 0; i < stt.NumField(); i++ {
+			field := stt.Field(i)
+			name := field.Name
+			value := sv.Field(i).Interface()
+
+			// nur exportierte Felder
+			if field.PkgPath == "" {
+				m[strings.ToLower(name[:1])+name[1:]] = value
+			}
+		}
+
+		out[key.String()] = m
+	}
+
+	return out
 }

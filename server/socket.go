@@ -159,6 +159,8 @@ func (h *SocketHub) broadcast(p util.Param) {
 	k := p.Key
 	if p.Loadpoint != nil {
 		k = "loadpoints." + p.UniqueID()
+	} else if p.Vehicle != nil {
+		k = "vehicles." + *p.Vehicle + "." + p.Key
 	}
 
 	// Sharder splits data into chunks
