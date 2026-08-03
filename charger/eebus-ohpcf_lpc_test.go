@@ -29,6 +29,7 @@ func newOHPCFEGCharger(t *testing.T) (*EEBusOHPCF, *egmocks.EgLPCInterface, spin
 	entity := spinemocks.NewEntityRemoteInterface(t)
 
 	c := &EEBusOHPCF{
+		ctx:         t.Context(),
 		log:         util.NewLogger("eebus-ohpcf-test"),
 		eg:          &eebus.EnergyGuard{EgLPCInterface: lpc},
 		egLpcEntity: entity,

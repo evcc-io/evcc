@@ -1,6 +1,7 @@
 package eebus
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -52,10 +53,11 @@ const limitTimeout = 50 * time.Second
 
 // AssertLimit states the current limit to a newly available Controllable System
 // ([LPC-913]/[LPP-913]). Blocks while retrying- the CS ignores writes that do not
-// follow a heartbeat and may reject them while still in state "init".
-func AssertLimit(log *util.Logger, write func() error) {
+// follow a heartbeat and may reject them while still in state "init". Retrying
+// stops when ctx is cancelled, i.e. when the device is gone.
+func AssertLimit(ctx context.Context, log *util.Logger, write func() error) {
 	bo := backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(limitTimeout))
-	if err := backoff.Retry(write, bo); err != nil {
+	if err := backoff.Retry(write, backoff.WithContext(bo, ctx)); err != nil && ctx.Err() == nil {
 		log.DEBUG.Printf("assert limit: %v", err)
 	}
 }
