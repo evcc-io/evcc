@@ -196,22 +196,19 @@ func (c *EEBus) Connect(connected bool) {
 
 // Run applies limits until the device context is cancelled
 func (c *EEBus) Run() {
-	tick := time.NewTicker(c.interval)
-	defer tick.Stop()
-
-	for {
+	for tick := time.Tick(c.interval); ; {
 		select {
+		case <-tick:
+			if err := c.run(); err != nil {
+				c.log.ERROR.Println(err)
+			}
+
+			if c.publishFunc != nil {
+				c.publishFunc()
+			}
+
 		case <-c.ctx.Done():
 			return
-		case <-tick.C:
-		}
-
-		if err := c.run(); err != nil {
-			c.log.ERROR.Println(err)
-		}
-
-		if c.publishFunc != nil {
-			c.publishFunc()
 		}
 	}
 }
