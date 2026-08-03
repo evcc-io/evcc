@@ -60,7 +60,6 @@
   "license": "MIT",
   "repository": "github:evcc-io/evcc",
   "devDependencies": {
-    "@jest/types": "^30.4.1",
     "@playwright/test": "^1.62.0",
     "@storybook/vue3": "^10.4.4",
     "@storybook/vue3-vite": "^10.5.5",
