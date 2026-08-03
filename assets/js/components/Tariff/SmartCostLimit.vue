@@ -24,8 +24,7 @@ import { defineComponent, type PropType } from "vue";
 import api from "@/api";
 import { setLoadpointLastSmartCostLimit } from "@/uiLoadpoints";
 import settings from "@/settings";
-import { type CURRENCY, SMART_COST_TYPE } from "@/types/evcc";
-import { type ForecastSlot } from "../Forecast/types";
+import { type CURRENCY, type ForecastSlot, SMART_COST_TYPE } from "@/types/evcc";
 
 export default defineComponent({
 	name: "SmartCostLimit",
