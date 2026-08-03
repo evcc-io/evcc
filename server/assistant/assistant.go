@@ -314,6 +314,7 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (Result, error)
 
 		choice := resp.Choices[0]
 		reasoning := strings.TrimSpace(choice.ReasoningContent)
+		a.log.TRACE.Printf("round %d: %d chars of reasoning", round+1, len(reasoning))
 
 		answer := strings.TrimSpace(choice.Content)
 		if answer != "" {
