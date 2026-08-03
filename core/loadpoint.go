@@ -24,6 +24,7 @@ import (
 	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/core/soc"
+	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/core/wrapper"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
@@ -80,13 +81,14 @@ type Task = func()
 // Loadpoint is responsible for controlling charge depending on
 // Soc needs and power availability.
 type Loadpoint struct {
-	clock    clock.Clock // mockable time
-	bus      evbus.Bus   // event bus
-	site     site.API
-	pushChan chan<- messenger.Event // notifications
-	uiChan   chan<- util.Param      // client push messages
-	lpChan   chan<- *Loadpoint      // update requests
-	log      *util.Logger
+	clock            clock.Clock // mockable time
+	bus              evbus.Bus   // event bus
+	site             site.API
+	pushChan         chan<- messenger.Event // notifications
+	uiChan           chan<- util.Param      // client push messages
+	vehiclePublisher *vehicle.Publisher     // vehicle push messages
+	lpChan           chan<- *Loadpoint      // update requests
+	log              *util.Logger
 
 	rwMutex      atomic.Int64 // count reentrant RWMutex
 	sync.RWMutex              // guard status
@@ -679,11 +681,12 @@ func (lp *Loadpoint) defaultMode() {
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
-func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan chan<- messenger.Event, lpChan chan<- *Loadpoint) {
+func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan chan<- messenger.Event, lpChan chan<- *Loadpoint, vChan chan<- util.Param) {
 	lp.site = site
 	lp.uiChan = uiChan
 	lp.pushChan = pushChan
 	lp.lpChan = lpChan
+	lp.vehiclePublisher = vehicle.NewPublisher(vChan)
 
 	// event handlers
 	_ = lp.bus.Subscribe(evChargeStart, lp.evChargeStartHandler)
@@ -2187,6 +2190,24 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	// initial update of connected state matches charger status
 	lp.publishSocAndRange()
 
+	if lp.vehiclePublisher != nil && lp.vehicle != nil {
+		vName := ""
+		for _, s := range lp.site.Vehicles().Settings() {
+			v, err := lp.site.Vehicles().ByName(s.Name())
+			if err != nil {
+				break
+			}
+			if lp.vehicle.GetTitle() == v.Instance().GetTitle() {
+				vName = s.Name()
+				break
+			}
+		}
+		if vName != "" {
+			// publish ALL vehicle data to MQTT/WebSocket
+			vehicle.PublishAllVehicleData(lp.vehicle, lp.vehiclePublisher, vName)
+		}
+	}
+
 	// sync settings with charger
 	if err := lp.syncCharger(); err != nil {
 		lp.log.ERROR.Println(err)
@@ -2309,4 +2330,5 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	if err != nil {
 		lp.log.ERROR.Println(err)
 	}
+
 }

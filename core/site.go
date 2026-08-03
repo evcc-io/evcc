@@ -1297,7 +1297,7 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 			site.valueChan <- util.Param{Loadpoint: &id, Key: keys.Name, Val: lpDevices[id].Config().Name}
 		}
 
-		lp.Prepare(site, lpUIChan, lpPushChan, site.lpUpdateChan)
+		lp.Prepare(site, lpUIChan, lpPushChan, site.lpUpdateChan, site.valueChan)
 	}
 }
 

@@ -326,6 +326,10 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 		case p.Loadpoint != nil:
 			id := *p.Loadpoint + 1
 			topic = fmt.Sprintf("%s/loadpoints/%d/%s", m.root, id, p.Key)
+		case strings.HasPrefix(p.Key, "vehicles."):
+			// vehicles.<name>-<key>
+			key := strings.Replace(p.Key, ".", "/", 3)
+			topic = fmt.Sprintf("%s/%s", m.root, key)
 		case p.Key == "vehicles":
 			topic = fmt.Sprintf("%s/vehicles", m.root)
 		default:
