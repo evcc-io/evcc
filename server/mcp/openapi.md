@@ -1156,13 +1156,13 @@ Returns the complete state of the system. This structure is used by the UI and a
 
 | Name | Type | Description |
 |------|------|-------------|
-| jq | string | Filter the state with JQ. The keys are top level, the state is not nested under a root key. Query `keys` to list them before filtering, a path that does not exist returns null without an error. Examples: `keys`, `.loadpoints[0]`, `.pv`. |
+| jq | string | Filter the state with JQ. The keys are top level, the state is not nested under a root key. Start with `keys` to see what the state holds and filter from there, a path that does not exist returns null without an error. Pass `.` for the complete state, it is large. Examples: `keys`, `.loadpoints[0]`, `.pv`. |
 
 **Example call:**
 
 ```json
 call getState {
-  "jq": "example"
+  "jq": "keys"
 }
 ```
 
