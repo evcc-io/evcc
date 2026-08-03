@@ -72,7 +72,21 @@ render: |
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 150 # Grid voltage (V)
+        address: 150 # Grid voltage L1 (V)
+        type: holding
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 150 # Grid voltage L2 (V)
+        type: holding
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 150 # Grid voltage L3 (V)
         type: holding
         decode: uint16
       scale: 0.1
@@ -80,7 +94,21 @@ render: |
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
-        address: 160 # Grid current (A)
+        address: 160 # Grid current L1 (A)
+        type: holding
+        decode: int16
+      scale: 0.01
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 160 # Grid current L2 (A)
+        type: holding
+        decode: int16
+      scale: 0.01
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 160 # Grid current L3 (A)
         type: holding
         decode: int16
       scale: 0.01
