@@ -23,6 +23,7 @@ import (
 // Uses MPC (Monitoring & Power Consumption) for all other cases (default)
 // Additionally supports LPC (Limitation of Power Consumption) and LPP (Limitation of Power Production)
 type EEBus struct {
+	ctx context.Context // device lifetime, aborts limit retries
 	log *util.Logger
 
 	connector *eebus.Connector
@@ -114,6 +115,7 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 	}
 
 	c := &EEBus{
+		ctx:            ctx,
 		log:            util.NewLogger("eebus-" + useCase),
 		ma:             ma,
 		eg:             inst.EnergyGuard(),
