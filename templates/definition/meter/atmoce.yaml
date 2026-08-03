@@ -425,7 +425,7 @@ render: |
               address: 60324 # Grid Maximum Export Power (kW * 1000)
               type: writemultiple
               encoding: uint32
-  curtailed:
+  curtailed: # the power limit is expressed as percent of nominal discharge power
     source: go
     in:
       - name: limit
@@ -437,7 +437,18 @@ render: |
             address: 60324 # Grid Maximum Export Power (kW * 1000)
             type: holding
             decode: uint32
-    script: limit != 0xFFFFFFFF
+      - name: maxdischargepower
+        type: int
+        config:
+          source: const
+          value: {{ .maxdischargepower }}
+    script: |
+      percent := 100
+      if limit != 0xFFFFFFFF && maxdischargepower > 0 {
+        // round, the watt conversion does not reproduce the written percent exactly
+        percent = (limit*100 + maxdischargepower/2) / maxdischargepower
+      }
+      percent
   dim:
     source: ifelse
     if:
