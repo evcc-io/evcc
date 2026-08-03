@@ -73,9 +73,9 @@
 			<template v-if="newVersionAvailable">
 				<hr />
 				<h6>{{ $t("footer.version.modalNextRelease") }}</h6>
-				<!-- eslint-disable vue/no-v-html -->
+				<!-- oxlint-disable vue/no-v-html -->
 				<div v-if="releaseNotes" class="release-notes" v-html="cleanedReleaseNotes"></div>
-				<!-- eslint-enable vue/no-v-html -->
+				<!-- oxlint-enable vue/no-v-html -->
 				<p v-else>
 					{{ $t("footer.version.modalNoReleaseNotes") }}
 					<a :href="releaseNotesUrl(availableVersion)">GitHub</a>.

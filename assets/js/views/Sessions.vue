@@ -65,12 +65,7 @@
 					</IconSelectGroup>
 				</div>
 
-				<Card
-					:title="historyTitle"
-					:subtitle="historySubTitle"
-					edge-to-edge
-					class="box-pull-out mb-4"
-				>
+				<Card :title="historyTitle" :subtitle="historySubTitle" edge-to-edge class="mb-4">
 					<EnergyHistoryChart
 						v-if="activeType === types.SOLAR"
 						:sessions="currentSessions"
@@ -90,10 +85,10 @@
 						:period="period"
 					/>
 				</Card>
-				<div v-if="showExtraCharts" class="box-pull-out">
-					<div class="row align-items-start">
+				<div v-if="showExtraCharts">
+					<div class="row">
 						<div class="col-12 col-lg-6 mb-4">
-							<Card :title="firstExtraTitle" edge-to-edge>
+							<Card :title="firstExtraTitle" edge-to-edge class="h-100">
 								<div v-if="activeType === types.SOLAR">
 									<SolarYearChart
 										v-if="showSolarYearChart"
@@ -121,7 +116,7 @@
 							</Card>
 						</div>
 						<div class="col-12 col-lg-6 mb-4">
-							<Card :title="secondExtraTitle" edge-to-edge>
+							<Card :title="secondExtraTitle" edge-to-edge class="h-100">
 								<EnergyGroupedChart
 									v-if="activeType === types.SOLAR"
 									:sessions="currentSessions"
@@ -143,12 +138,7 @@
 					</div>
 				</div>
 
-				<Card
-					v-if="showTable"
-					:title="$t('sessions.overview')"
-					edge-to-edge
-					class="box-pull-out mb-4"
-				>
+				<Card v-if="showTable" :title="$t('sessions.overview')" edge-to-edge class="mb-4">
 					<SessionTable
 						:sessions="currentSessions"
 						:vehicleFilter="vehicleFilter"

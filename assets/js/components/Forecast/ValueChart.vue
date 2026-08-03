@@ -22,7 +22,7 @@ import {
 import colors from "@/colors";
 import formatter from "@/mixins/formatter";
 import chartMixin from "./chartMixin";
-import type { ForecastSlot } from "./types";
+import type { ForecastSlot } from "@/types/evcc";
 
 export type ValueChartType = "co2" | "temperature";
 
@@ -77,7 +77,7 @@ export default defineComponent({
 		chartOption(): Record<string, unknown> {
 			const color = this.color;
 
-			// eslint-disable-next-line @typescript-eslint/no-this-alias
+			// oxlint-disable-next-line typescript/no-this-alias
 			const vThis = this;
 			return {
 				animationDuration: 0,

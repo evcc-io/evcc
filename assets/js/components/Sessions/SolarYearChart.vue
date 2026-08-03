@@ -180,7 +180,7 @@ export default defineComponent({
 						ticks: {
 							stepSize: 20,
 							color: colors.muted,
-							backdropColor: colors.background,
+							backdropColor: colors.box,
 							font: { size: 10 },
 							callback: (value: number) => this.fmtPercentage(value, 0),
 						},

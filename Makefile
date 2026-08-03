@@ -31,7 +31,7 @@ CURRDIR := $(shell pwd)
 
 default:: ui build
 
-all:: clean install install-ui ui assets lint test-ui lint-ui test build
+all:: clean install install-ui ui assets openapi lint test-ui lint-ui test build
 
 clean::
 	rm -rf dist/
@@ -40,13 +40,16 @@ install::
 	go install tool
 
 install-ui::
-	npm ci
+	vp install
 
 ui::
-	npm run build
+	vp run build
 
 assets::
 	go generate ./...
+
+openapi::
+	vp run openapi
 
 docs::
 	go generate github.com/evcc-io/evcc/util/templates/...
@@ -59,7 +62,7 @@ modernize:
 	go tool modernize -test -fix -stringsbuilder=false -omitzero=false ./...
 
 lint-ui::
-	npm run lint
+	vp run lint
 
 license::
 	go run github.com/google/go-licenses/v2@latest check \
@@ -74,10 +77,10 @@ license::
 	./...
 
 license-ui::
-	npm run license
+	vp run license
 
 test-ui::
-	npm test
+	vp run test
 
 test::
 	@echo "Running testsuite"

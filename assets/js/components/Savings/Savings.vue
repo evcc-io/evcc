@@ -115,9 +115,7 @@
 														moneySaved,
 														currency,
 														false
-													)} ${fmtCurrencySymbol(currency)} ${$t(
-														'footer.savings.moneySaved'
-													)}`
+													)} ${fmtCurrencySymbol(currency)} ${$t('footer.savings.moneySaved')}`
 												: ''
 										"
 									/>
@@ -131,11 +129,7 @@
 										unit="g/kWh"
 										:sub1="
 											region && co2Configured
-												? `${fmtNumber(
-														co2Saved,
-														0,
-														'kilogram'
-													)} ${$t('footer.savings.co2Saved')}`
+												? `${fmtNumber(co2Saved, 0, 'kilogram')} ${$t('footer.savings.co2Saved')}`
 												: ''
 										"
 									/>

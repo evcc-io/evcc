@@ -186,7 +186,7 @@
 import type { PropType } from "vue";
 import QRCode from "qrcode";
 import "@h2d2/shopicons/es/regular/trash";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// oxlint-disable-next-line typescript/no-unused-vars
 import type { EebusConfig, EebusPairing, EebusStatus, YamlSource } from "@/types/evcc";
 import api from "@/api";
 import JsonModal from "./JsonModal.vue";

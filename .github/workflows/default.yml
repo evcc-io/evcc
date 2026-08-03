@@ -20,7 +20,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
           cache: false # avoid cache thrashing
@@ -60,7 +60,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
           cache: false
@@ -76,10 +76,10 @@ jobs:
             ${{ runner.os }}-go-build-
             ${{ runner.os }}-go-
 
-      - uses: actions/setup-node@v6
+      - uses: voidzero-dev/setup-vp@v1
         with:
           node-version: "26"
-          cache: "npm"
+          cache: true
 
       - run: mkdir dist && touch dist/empty
 
@@ -98,7 +98,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
           cache: false
@@ -129,7 +129,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
           cache: false # avoid cache thrashing
@@ -168,13 +168,16 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-node@v6
+      - uses: voidzero-dev/setup-vp@v1
         with:
           node-version: "26"
-          cache: "npm"
+          cache: true
 
       - name: Install
         run: make install-ui
+
+      - name: OpenAPI
+        run: make openapi
 
       - name: Lint
         run: make lint-ui
@@ -214,7 +217,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
           cache: false
@@ -230,10 +233,10 @@ jobs:
             ${{ runner.os }}-go-integration-
             ${{ runner.os }}-go-
 
-      - uses: actions/setup-node@v6
+      - uses: voidzero-dev/setup-vp@v1
         with:
           node-version: "26"
-          cache: "npm"
+          cache: true
 
       - name: Build UI
         run: make install-ui ui
@@ -254,11 +257,11 @@ jobs:
 
       - name: Install Playwright (browsers + deps)
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
+        run: vpx playwright install --with-deps chromium
         timeout-minutes: 5
 
       - name: Run tests
-        run: npx playwright test
+        run: vpx playwright test
         timeout-minutes: 20
         env:
           TZ: Europe/Berlin

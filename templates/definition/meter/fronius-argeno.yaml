@@ -1,0 +1,41 @@
+template: fronius-argeno
+products:
+  - brand: Fronius
+    description:
+      generic: Argeno
+requirements:
+  description:
+    de: |
+      Modbus TCP muss am Wechselrichter aktiviert sein (Konfiguration → Kommunikation → Ethernet → Modbus TCP/UDP). Für den Netzzähler siehe Template „Fronius Smart Meter IP" — der Argeno nutzt den Smart Meter IP als eigenständiges Netzwerkgerät.
+    en: |
+      Modbus TCP must be enabled on the inverter (Configuration → Communication → Ethernet → Modbus TCP/UDP). For the grid meter see the "Fronius Smart Meter IP" template — the Argeno uses the Smart Meter IP as a standalone network device.
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: host
+  - name: port
+    default: 502
+  - name: maxacpower
+render: |
+  type: custom
+  # Fronius Argeno: AC output via SunSpec inverter model 113 (float, primary)
+  # on unit 1; 103 (int+sf) as fallback for potential firmware variants. Unlike GEN24, PV must NOT be
+  # read from model 160 DC channels: the Argeno's modular power stages report
+  # only a fraction of plant output there (verified on-site: 160-based read
+  # showed 6.5 kW while actual AC output was 31.7 kW).
+  power:
+    source: sunspec
+    uri: {{ joinHostPort .host .port }}
+    id: 1
+    value:
+      - 113:W
+      - 103:W
+  energy:
+    source: sunspec
+    uri: {{ joinHostPort .host .port }}
+    id: 1
+    value:
+      - 113:WH
+      - 103:WH
+    scale: 0.001
+  maxacpower: {{ .maxacpower }} # W

@@ -13,6 +13,7 @@ import (
 
 // HomeAssistant charger implementation
 type HomeAssistant struct {
+	*embed
 	implement.Caps
 	conn       *homeassistant.Connection
 	status     string
@@ -29,6 +30,7 @@ func init() {
 // NewHomeAssistantFromConfig creates a HomeAssistant charger from generic config
 func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 	var cc struct {
+		embed                `mapstructure:",squash"`
 		homeassistant.Config `mapstructure:",squash"`
 		Status               string   // required - sensor for charge status
 		StatusA              string   // optional - custom states mapped to status A
@@ -74,6 +76,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 	}
 
 	c := &HomeAssistant{
+		embed:      &cc.embed,
 		Caps:       implement.New(),
 		conn:       conn,
 		status:     cc.Status,

@@ -1,5 +1,5 @@
 import { mount, config } from "@vue/test-utils";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import Status from "./Status.vue";
 import { CURRENCY } from "@/types/evcc";
 import en from "../../../../i18n/en.json";
