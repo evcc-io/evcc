@@ -58,12 +58,11 @@ type EEBus struct {
 const failsafeReleaseTimeout = 2 * time.Minute
 
 type Limits struct {
-	// contractual max power at the grid connection point, not the SteuVE Pmin
 	ContractualConsumptionNominalMax    float64
 	FailsafeConsumptionActivePowerLimit float64
 
 	ProductionNominalMax               float64
-	FailsafeProductionActivePowerLimit *float64 // nil is unset, 0 is a valid limit
+	FailsafeProductionActivePowerLimit *float64
 
 	FailsafeDurationMinimum time.Duration
 }
