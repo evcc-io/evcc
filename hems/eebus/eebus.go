@@ -162,11 +162,6 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 		}
 	}
 
-	// LPC-TS-017: start out limited to the failsafe limit until the Energy Guard states one
-	if err := c.run(); err != nil {
-		c.log.ERROR.Println(err)
-	}
-
 	return c, nil
 }
 
@@ -197,7 +192,8 @@ func (c *EEBus) Connect(connected bool) {
 }
 
 func (c *EEBus) Run() {
-	for range time.Tick(c.interval) {
+	// LPC-TS-017: the first run applies the failsafe limit until the Energy Guard states one
+	for tick := time.Tick(c.interval); ; <-tick {
 		if err := c.run(); err != nil {
 			c.log.ERROR.Println(err)
 		}
