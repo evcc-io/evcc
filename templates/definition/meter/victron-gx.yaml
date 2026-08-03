@@ -18,7 +18,7 @@ params:
   - name: host
   - name: port
     default: 502
-  - name: meterid
+  - name: id
     description:
       en: Meter Modbus unit id
       de: Zähler Modbus Unit-ID
@@ -34,21 +34,21 @@ render: |
     add:
     - source: modbus
       uri: {{ joinHostPort .host .port }}
-      id: {{ .meterid }}
+      id: {{ .id }}
       register:
         address: 3900 # L1 power
         type: input
         decode: int16
     - source: modbus
       uri: {{ joinHostPort .host .port }}
-      id: {{ .meterid }}
+      id: {{ .id }}
       register:
         address: 3901 # L2 power
         type: input
         decode: int16
     - source: modbus
       uri: {{ joinHostPort .host .port }}
-      id: {{ .meterid }}
+      id: {{ .id }}
       register:
         address: 3902 # L3 power
         type: input
@@ -58,7 +58,7 @@ render: |
     add:
     - source: modbus
       uri: {{ joinHostPort .host .port }}
-      id: {{ .meterid }}
+      id: {{ .id }}
       register:
         address: 3916 # L1 energy forward
         type: input
@@ -66,7 +66,7 @@ render: |
       scale: 0.01
     - source: modbus
       uri: {{ joinHostPort .host .port }}
-      id: {{ .meterid }}
+      id: {{ .id }}
       register:
         address: 3918 # L2 energy forward
         type: input
@@ -74,7 +74,7 @@ render: |
       scale: 0.01
     - source: modbus
       uri: {{ joinHostPort .host .port }}
-      id: {{ .meterid }}
+      id: {{ .id }}
       register:
         address: 3920 # L3 energy forward
         type: input
@@ -83,7 +83,7 @@ render: |
   currents:
     - source: modbus
       uri: {{ joinHostPort .host .port }}
-      id: {{ .meterid }}
+      id: {{ .id }}
       register:
         address: 3911 # L1 current
         type: input
@@ -91,7 +91,7 @@ render: |
       scale: 0.1
     - source: modbus
       uri: {{ joinHostPort .host .port }}
-      id: {{ .meterid }}
+      id: {{ .id }}
       register:
         address: 3913 # L2 current
         type: input
@@ -99,7 +99,7 @@ render: |
       scale: 0.1
     - source: modbus
       uri: {{ joinHostPort .host .port }}
-      id: {{ .meterid }}
+      id: {{ .id }}
       register:
         address: 3915 # L3 current
         type: input
@@ -108,7 +108,7 @@ render: |
   voltages:
     - source: modbus
       uri: {{ joinHostPort .host .port }}
-      id: {{ .meterid }}
+      id: {{ .id }}
       register:
         address: 3910 # L1 voltage
         type: input
@@ -116,7 +116,7 @@ render: |
       scale: 0.1
     - source: modbus
       uri: {{ joinHostPort .host .port }}
-      id: {{ .meterid }}
+      id: {{ .id }}
       register:
         address: 3912 # L2 voltage
         type: input
@@ -124,7 +124,7 @@ render: |
       scale: 0.1
     - source: modbus
       uri: {{ joinHostPort .host .port }}
-      id: {{ .meterid }}
+      id: {{ .id }}
       register:
         address: 3914 # L3 voltage
         type: input
