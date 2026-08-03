@@ -56,6 +56,7 @@ type Site struct {
 	valueChan    chan<- util.Param      // client push messages
 	pushChan     chan<- messenger.Event // notification events
 	lpUpdateChan chan *Loadpoint
+	vehiclePublisher *vehicle.Publisher
 
 	sync.RWMutex
 	log *util.Logger
@@ -1260,6 +1261,7 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 
 	// use ch.In for writing
 	site.valueChan = ch.In
+	site.vehiclePublisher = vehicle.NewPublisher(ch.In)
 
 	// use ch.Out for reading
 	go func() {
@@ -1297,7 +1299,7 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 			site.valueChan <- util.Param{Loadpoint: &id, Key: keys.Name, Val: lpDevices[id].Config().Name}
 		}
 
-		lp.Prepare(site, lpUIChan, lpPushChan, site.lpUpdateChan, site.valueChan)
+		lp.Prepare(site, lpUIChan, lpPushChan, site.lpUpdateChan, site.vehiclePublisher)
 	}
 }
 
@@ -1343,4 +1345,8 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 			return
 		}
 	}
+}
+
+func (site *Site) GetVehiclePublisher() *vehicle.Publisher {
+	return site.vehiclePublisher
 }

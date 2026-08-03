@@ -3,6 +3,7 @@ package site
 import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/vehicle"
 )
 
 // publisher gives access to the site's publish function
@@ -13,6 +14,8 @@ type Publisher interface {
 // API is the external site API
 type API interface {
 	Publisher
+
+	GetVehiclePublisher() *vehicle.Publisher
 
 	Loadpoints() []loadpoint.API
 	Vehicles() Vehicles

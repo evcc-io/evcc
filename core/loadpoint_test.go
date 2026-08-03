@@ -89,7 +89,8 @@ func attachListeners(t *testing.T, lp *Loadpoint) {
 	}
 
 	uiChan, pushChan, lpChan, vChan := createChannels(t)
-	lp.Prepare(new(Site), uiChan, pushChan, lpChan, vChan)
+	publisher := vehicle.NewPublisher(vChan)
+	lp.Prepare(new(Site), uiChan, pushChan, lpChan, publisher)
 }
 
 func TestNew(t *testing.T) {

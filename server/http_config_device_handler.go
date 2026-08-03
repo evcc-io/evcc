@@ -784,5 +784,11 @@ func testConfigHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 		defer probeCancel()
 
 		jsonWrite(w, testInstance(probeCtx, instance))
+		if class == templates.Vehicle {
+			if v, ok := instance.(api.Vehicle); ok {
+				pub := site.GetVehiclePublisher()
+				pub.PublishAllVehicleData(site.Vehicles().Settings(), v)
+			}
+		}
 	}
 }

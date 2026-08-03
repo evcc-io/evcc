@@ -1,10 +1,12 @@
 package vehicle
 
-import "github.com/evcc-io/evcc/util"
-import "github.com/evcc-io/evcc/api"
+import (
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+)
 
 type Publisher struct {
-	Ch chan<- util.Param
+	Ch   chan<- util.Param
 }
 
 func NewPublisher(ch chan<- util.Param) *Publisher {
@@ -15,53 +17,65 @@ func (p *Publisher) Publish(key string, val any) {
 	p.Ch <- util.Param{Key: key, Val: val}
 }
 
-func PublishAllVehicleData(v api.Vehicle, pub *Publisher, id string) {
-    prefix := "vehicles." + id + "."
+func (p *Publisher) PublishAllVehicleData(vSettings []API,  v api.Vehicle) {
+	id := ""
+	for _, s := range vSettings {
+		// TODO: does not work when title gets changed, need to find a better way to identify the vehicle
+		if v.GetTitle() == s.Instance().GetTitle() {
+			id = s.Name()
+			break
+		}
+	}
 
-    // Battery SOC
-    if soc, err := v.Soc(); err == nil {
-        pub.Publish(prefix+"soc", soc)
-    }
+	if id == "" {
+		return
+	}
 
-    // Battery Capacity
-    if cap := v.Capacity(); cap > 0 {
-        pub.Publish(prefix+"capacity", cap)
-    }
+	prefix := "vehicles." + id + "."
 
-    // Range
-    if r, ok := api.Cap[api.VehicleRange](v); ok {
-        if val, err := r.Range(); err == nil {
-            pub.Publish(prefix+"range", val)
-        }
-    }
+	// Battery SOC
+	if soc, err := v.Soc(); err == nil {
+		p.Publish(prefix+"soc", soc)
+	}
 
-    // Odometer
-    if o, ok := api.Cap[api.VehicleOdometer](v); ok {
-        if val, err := o.Odometer(); err == nil {
-            pub.Publish(prefix+"odometer", val)
-        }
-    }
+	// Battery Capacity
+	if cap := v.Capacity(); cap > 0 {
+		p.Publish(prefix+"capacity", cap)
+	}
 
-    // Finish Timer
-    if ft, ok := api.Cap[api.VehicleFinishTimer](v); ok {
-        if val, err := ft.FinishTime(); err == nil {
-            pub.Publish(prefix+"finishTime", val)
-        }
-    }
+	// Range
+	if r, ok := api.Cap[api.VehicleRange](v); ok {
+		if val, err := r.Range(); err == nil {
+			p.Publish(prefix+"range", val)
+		}
+	}
 
-    // Climater
-    if cl, ok := api.Cap[api.VehicleClimater](v); ok {
-        if val, err := cl.Climater(); err == nil {
-            pub.Publish(prefix+"climater", val)
-        }
-    }
+	// Odometer
+	if o, ok := api.Cap[api.VehicleOdometer](v); ok {
+		if val, err := o.Odometer(); err == nil {
+			p.Publish(prefix+"odometer", val)
+		}
+	}
 
-    // Position
-    if pos, ok := api.Cap[api.VehiclePosition](v); ok {
-        if lat, lon, err := pos.Position(); err == nil {
-            pub.Publish(prefix+"latitude", lat)
-            pub.Publish(prefix+"longitude", lon)
-        }
-    }
+	// Finish Timer
+	if ft, ok := api.Cap[api.VehicleFinishTimer](v); ok {
+		if val, err := ft.FinishTime(); err == nil {
+			p.Publish(prefix+"finishTime", val)
+		}
+	}
+
+	// Climater
+	if cl, ok := api.Cap[api.VehicleClimater](v); ok {
+		if val, err := cl.Climater(); err == nil {
+			p.Publish(prefix+"climater", val)
+		}
+	}
+
+	// Position
+	if pos, ok := api.Cap[api.VehiclePosition](v); ok {
+		if lat, lon, err := pos.Position(); err == nil {
+			p.Publish(prefix+"latitude", lat)
+			p.Publish(prefix+"longitude", lon)
+		}
+	}
 }
-

@@ -681,12 +681,12 @@ func (lp *Loadpoint) defaultMode() {
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
-func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan chan<- messenger.Event, lpChan chan<- *Loadpoint, vChan chan<- util.Param) {
+func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan chan<- messenger.Event, lpChan chan<- *Loadpoint, vehiclePublisher *vehicle.Publisher) {
 	lp.site = site
 	lp.uiChan = uiChan
 	lp.pushChan = pushChan
 	lp.lpChan = lpChan
-	lp.vehiclePublisher = vehicle.NewPublisher(vChan)
+	lp.vehiclePublisher = vehiclePublisher
 
 	// event handlers
 	_ = lp.bus.Subscribe(evChargeStart, lp.evChargeStartHandler)
@@ -2191,21 +2191,8 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 	lp.publishSocAndRange()
 
 	if lp.vehiclePublisher != nil && lp.vehicle != nil {
-		vName := ""
-		for _, s := range lp.site.Vehicles().Settings() {
-			v, err := lp.site.Vehicles().ByName(s.Name())
-			if err != nil {
-				break
-			}
-			if lp.vehicle.GetTitle() == v.Instance().GetTitle() {
-				vName = s.Name()
-				break
-			}
-		}
-		if vName != "" {
-			// publish ALL vehicle data to MQTT/WebSocket
-			vehicle.PublishAllVehicleData(lp.vehicle, lp.vehiclePublisher, vName)
-		}
+		// publish ALL vehicle data to MQTT/WebSocket
+		lp.vehiclePublisher.PublishAllVehicleData(lp.site.Vehicles().Settings(), lp.vehicle)
 	}
 
 	// sync settings with charger
