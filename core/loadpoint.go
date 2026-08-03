@@ -2242,7 +2242,12 @@ func (lp *Loadpoint) Update(sitePower, batteryBoostPower float64, consumption, f
 
 	// immediate charging- must be placed after limits are evaluated
 	case mode == api.ModeNow:
-		err = lp.fastCharging()
+		// with a tariff-based plan, charge only during planned slots
+		if lp.planner != nil && !lp.EffectivePlanTime().IsZero() && !plannerActive {
+			err = lp.setLimit(0)
+		} else {
+			err = lp.fastCharging()
+		}
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		// cheap tariff

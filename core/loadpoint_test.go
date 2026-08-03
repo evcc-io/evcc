@@ -8,6 +8,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/messenger"
@@ -33,6 +34,22 @@ func (n *Null) ChargedEnergy() (float64, error) {
 
 func (n *Null) ChargeDuration() (time.Duration, error) {
 	return 0, nil
+}
+
+// rates creates hourly tariff rates starting at start
+func rates(prices []float64, start time.Time) api.Rates {
+	res := make(api.Rates, 0, len(prices))
+
+	for i, v := range prices {
+		slotStart := start.Add(time.Duration(i) * time.Hour)
+		res = append(res, api.Rate{
+			Start: slotStart,
+			End:   slotStart.Add(time.Hour),
+			Value: v,
+		})
+	}
+
+	return res
 }
 
 func createChannels(t *testing.T) (chan util.Param, chan messenger.Event, chan *Loadpoint) {
@@ -464,6 +481,109 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	charger.EXPECT().Enable(true).Return(nil)
 	lp.Update(-500, 0, nil, nil, false, false, 0, nil, nil, nil)
 	ctrl.Finish()
+}
+
+func TestNowModeWithPlan(t *testing.T) {
+	const planEnergy = 6 // kWh, ~30min at 16A/3p
+
+	tc := []struct {
+		desc    string
+		prices  []float64 // hourly tariff rates starting at now
+		plan    bool      // set an energy-based plan
+		planner bool      // create the planner from the tariff
+		expect  func(h *api.MockCharger)
+	}{
+		{
+			desc:    "no plan charges at max",
+			prices:  []float64{10, 20, 20},
+			planner: true,
+			expect: func(h *api.MockCharger) {
+				h.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
+			},
+		},
+		{
+			desc:    "plan outside slot does not charge",
+			prices:  []float64{20, 10, 20}, // cheap slot starts in 1h
+			plan:    true,
+			planner: true,
+			expect: func(h *api.MockCharger) {
+				h.EXPECT().Enable(false).Return(nil)
+			},
+		},
+		{
+			desc:    "plan inside slot charges at max",
+			prices:  []float64{10, 20, 20}, // cheap slot starts immediately
+			plan:    true,
+			planner: true,
+			expect: func(h *api.MockCharger) {
+				h.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
+			},
+		},
+		{
+			desc:    "plan without planner charges at max",
+			prices:  []float64{10, 20, 20},
+			plan:    true,
+			planner: false,
+			expect: func(h *api.MockCharger) {
+				h.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
+			},
+		},
+	}
+
+	for _, tc := range tc {
+		t.Run(tc.desc, func(t *testing.T) {
+			now := time.Now()
+
+			clock := clock.NewMock()
+			clock.Set(now.Add(time.Minute))
+
+			ctrl := gomock.NewController(t)
+			charger := api.NewMockCharger(ctrl)
+			vehicle := api.NewMockVehicle(ctrl)
+			expectVehiclePublish(vehicle)
+
+			lp := &Loadpoint{
+				log:         util.NewLogger("foo"),
+				bus:         evbus.New(),
+				clock:       clock,
+				settings:    settings.NewDatabaseSettingsAdapter("foo"),
+				charger:     charger,
+				chargeMeter: &Null{},            // silence nil panics
+				chargeRater: &Null{},            // silence nil panics
+				chargeTimer: &Null{},            // silence nil panics
+				progress:    NewProgress(0, 10), // silence nil panics
+				wakeUpTimer: NewTimer(),         // silence nil panics
+				minCurrent:  minA,
+				maxCurrent:  maxA,
+				vehicle:     vehicle,
+				mode:        api.ModeNow,
+			}
+
+			if tc.planner {
+				trf := api.NewMockTariff(ctrl)
+				trf.EXPECT().Rates().AnyTimes().Return(rates(tc.prices, now), nil)
+				lp.planner = planner.New(lp.log, trf)
+			}
+
+			attachListeners(t, lp)
+
+			lp.enabled = true
+			lp.offeredCurrent = minA
+			lp.status = api.StatusC
+
+			if tc.plan {
+				lp.setPlanEnergy(now.Add(3*time.Hour), planEnergy)
+			}
+
+			vehicle.EXPECT().Soc().Return(85.0, nil)
+			charger.EXPECT().Status().Return(api.StatusC, nil)
+			charger.EXPECT().Enabled().Return(lp.enabled, nil)
+			tc.expect(charger)
+			lp.Update(500, 0, nil, nil, false, false, 0, nil, nil, nil)
+
+			ctrl.Finish()
+		})
+	}
 }
 
 func TestSetModeAndSocAtDisconnect(t *testing.T) {
