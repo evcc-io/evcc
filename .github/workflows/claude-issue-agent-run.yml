@@ -65,7 +65,7 @@ jobs:
             actions: read
           # analyze mode gets read + comment + api tools only; triage/fix
           # additionally get Edit/Write + git/PR tools to actually make and push a
-          # fix (fix mode also gets gh api to resolve its invoking comment). Task
+          # fix (analyze/fix need gh api to read their invoking comment). Task
           # is blocked in all modes so the agent can't offload work to a
           # background sub-agent and exit before it returns. All modes get read-only
           # git log and gh pr view/diff to trace a regression to its pull request.
@@ -180,13 +180,20 @@ jobs:
 
             If MODE is "fix", do NOT label or edit issue metadata.
 
-            If MODE is "analyze" or "fix", always resolve the invoking comment by
-            minimizing it as resolved once you posted your reply in step 2, whatever
-            that reply says. An answer, a request for more information, or an
-            explanation why you could not analyze or fix it all count:
-            gh api graphql -f query='mutation($id:ID!){minimizeComment(input:{classifier:RESOLVED,subjectId:$id}){minimizedComment{isMinimized}}}' -f id='${{ inputs.comment_node_id }}'
-            The command has been answered either way, so it must not stay open.
-            Only skip this if you posted no reply at all.
+            Do not minimize or otherwise touch the invoking comment, the workflow
+            resolves it once you are done.
 
             Follow the repository's AGENTS.md conventions for commit/PR style. Do not
             force-push and do not touch unrelated files.
+
+      # the agent posts its result as a comment, so the command has been answered
+      # whatever that result was. only a failed run leaves it open, there is no
+      # answer then
+      - name: Resolve invoking comment
+        if: inputs.comment_node_id != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_ID: ${{ inputs.comment_node_id }}
+        run: |
+          gh api graphql -f id="$NODE_ID" -f query='
+            mutation($id:ID!){minimizeComment(input:{subjectId:$id,classifier:RESOLVED}){minimizedComment{isMinimized}}}'
