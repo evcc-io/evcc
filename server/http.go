@@ -387,6 +387,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 		for _, r := range []route{
 			{"POST", "/chat", assistant.ChatHandler(router)},
+			{"GET", "/providers", assistantProvidersHandler},
 			{"POST", "/models", assistantModelsHandler},
 		} {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)

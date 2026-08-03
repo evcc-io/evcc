@@ -321,6 +321,15 @@ export interface State {
 
 export type AssistantProvider = "openai" | "anthropic" | "azure" | "ollama" | "custom";
 
+// AssistantProviderInfo describes a provider to the config ui, served by the backend
+export interface AssistantProviderInfo {
+  provider: AssistantProvider;
+  models?: string[];
+  baseUrl?: string;
+  needsToken: boolean;
+  needsBaseUrl: boolean;
+}
+
 export interface AssistantConfig {
   provider: AssistantProvider;
   model?: string;

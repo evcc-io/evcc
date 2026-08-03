@@ -23,6 +23,11 @@ func assistantToken(req, stored assistant.Config) string {
 	return ""
 }
 
+// assistantProvidersHandler describes the supported providers to the config ui
+func assistantProvidersHandler(w http.ResponseWriter, r *http.Request) {
+	jsonWrite(w, assistant.Providers())
+}
+
 // assistantModelsHandler lists the models the given endpoint offers. The configuration
 // is posted since it is answered while it is still being edited.
 func assistantModelsHandler(w http.ResponseWriter, r *http.Request) {

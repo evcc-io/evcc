@@ -17,8 +17,8 @@
 					required
 					@change="applyDefaults(values)"
 				>
-					<option v-for="p in providers" :key="p" :value="p">
-						{{ $t(`config.assistant.provider.${p}`) }}
+					<option v-for="p in providers" :key="p.provider" :value="p.provider">
+						{{ $t(`config.assistant.provider.${p.provider}`) }}
 					</option>
 				</select>
 			</FormRow>
@@ -80,36 +80,7 @@ import { defineComponent } from "vue";
 import JsonModal from "./JsonModal.vue";
 import FormRow from "./FormRow.vue";
 import api from "@/api";
-import type { AssistantConfig, AssistantProvider } from "@/types/evcc";
-
-// suggested models per provider, first entry is the default. free text, any model may be entered
-const PROVIDERS: Record<AssistantProvider, { models: string[]; baseUrl: string }> = {
-	openai: { models: ["gpt-5", "gpt-5-mini", "gpt-4.1", "gpt-4o-mini"], baseUrl: "" },
-	anthropic: {
-		models: ["claude-opus-5", "claude-sonnet-5", "claude-haiku-4-5"],
-		baseUrl: "",
-	},
-	azure: {
-		models: [],
-		baseUrl: "https://my-resource.services.ai.azure.com",
-	},
-	ollama: {
-		models: [
-			"qwen3",
-			"llama3.1",
-			"llama3.2",
-			"mistral-nemo",
-			"gpt-oss",
-			"command-r7b",
-			"granite3.3",
-			"firefunction-v2",
-		],
-		baseUrl: "http://localhost:11434",
-	},
-	custom: { models: [], baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai" },
-};
-
-const SUGGESTED = Object.values(PROVIDERS).flatMap(({ models }) => models);
+import type { AssistantConfig, AssistantProviderInfo } from "@/types/evcc";
 
 export default defineComponent({
 	name: "AssistantModal",
@@ -117,18 +88,37 @@ export default defineComponent({
 	emits: ["changed"],
 	data() {
 		return {
-			providers: Object.keys(PROVIDERS) as AssistantProvider[],
+			// the backend owns the provider list, its defaults and its mandatory fields
+			providers: [] as AssistantProviderInfo[],
+			// values being edited, so defaults can be applied once the list arrived
+			editing: null as AssistantConfig | null,
 			// models the configured endpoint reports, empty until it answers
 			offered: [] as string[],
 			// endpoint the offered models belong to, so a change refetches
 			offeredFor: "",
 		};
 	},
+	created() {
+		this.loadProviders();
+	},
 	methods: {
+		async loadProviders() {
+			const res = await api.get("/assistant/providers");
+			if (!Array.isArray(res.data)) return;
+			this.providers = res.data;
+			// the config may have been read before the list arrived
+			if (this.editing && !this.editing.model) this.applyDefaults(this.editing);
+		},
+		info(values: AssistantConfig): AssistantProviderInfo | undefined {
+			return this.providers.find((p) => p.provider === values.provider);
+		},
 		withDefaults(values?: AssistantConfig): AssistantConfig {
 			const res: AssistantConfig = values?.provider
 				? values
-				: { ...values, provider: "openai", model: PROVIDERS.openai.models[0] };
+				: { ...values, provider: "openai", model: "" };
+			this.editing = res;
+
+			if (!res.model) this.applyDefaults(res);
 
 			// the field offers what arrived by the time it is focused, a datalist
 			// does not open once options are added to it
@@ -137,14 +127,13 @@ export default defineComponent({
 			return res;
 		},
 		needsToken(values: AssistantConfig): boolean {
-			return values.provider !== "ollama";
+			return this.info(values)?.needsToken ?? true;
 		},
-		// these address an endpoint of their own, the others have a default
 		needsBaseUrl(values: AssistantConfig): boolean {
-			return values.provider === "custom" || values.provider === "azure";
+			return this.info(values)?.needsBaseUrl ?? false;
 		},
 		models(values: AssistantConfig): string[] {
-			const suggested = PROVIDERS[values.provider]?.models || [];
+			const suggested = this.info(values)?.models || [];
 			// the curated ones lead, an endpoint also lists image and embedding models
 			return [...suggested, ...this.offered.filter((m) => !suggested.includes(m))];
 		},
@@ -173,19 +162,20 @@ export default defineComponent({
 			}
 		},
 		baseUrlExample(values: AssistantConfig): string {
-			return PROVIDERS[values.provider]?.baseUrl || "";
+			return this.info(values)?.baseUrl || "";
 		},
 		applyDefaults(values: AssistantConfig) {
 			this.offered = [];
 			this.offeredFor = "";
 
-			const provider = PROVIDERS[values.provider];
-			if (!provider) return;
+			const info = this.info(values);
+			if (!info) return;
 			// keep a hand-typed model, replace a suggestion that belongs to another provider
-			if (!values.model || SUGGESTED.includes(values.model)) {
-				values.model = provider.models[0] || "";
+			const suggested = this.providers.flatMap((p) => p.models || []);
+			if (!values.model || suggested.includes(values.model)) {
+				values.model = info.models?.[0] || "";
 			}
-			if (!values.baseUrl) values.baseUrl = provider.baseUrl;
+			if (!values.baseUrl) values.baseUrl = info.baseUrl || "";
 
 			this.loadModels(values);
 		},

@@ -3,7 +3,6 @@ package assistant
 import (
 	"errors"
 	"fmt"
-	"slices"
 
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
@@ -21,8 +20,6 @@ const (
 	Custom    Provider = "custom" // any OpenAI-compatible endpoint
 )
 
-var providers = []Provider{OpenAI, Anthropic, Azure, Ollama, Custom}
-
 // Config is the assistant configuration
 type Config struct {
 	Provider Provider `json:"provider"`
@@ -38,17 +35,17 @@ func (c Config) Redacted() any {
 }
 
 func (c Config) validate() error {
-	if !slices.Contains(providers, c.Provider) {
+	info, ok := providerInfo(c.Provider)
+	if !ok {
 		return fmt.Errorf("invalid provider: %s", c.Provider)
 	}
 	if c.Model == "" {
 		return errors.New("missing model")
 	}
-	// both address an endpoint of their own, there is no default to fall back to
-	if slices.Contains([]Provider{Custom, Azure}, c.Provider) && c.BaseUrl == "" {
+	if info.NeedsBaseUrl && c.BaseUrl == "" {
 		return errors.New("missing base url")
 	}
-	if c.Provider != Ollama && c.Provider != Custom && c.Token == "" {
+	if info.NeedsToken && c.Token == "" {
 		return errors.New("missing token")
 	}
 	return nil

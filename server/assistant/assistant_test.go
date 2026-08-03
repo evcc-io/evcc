@@ -305,6 +305,19 @@ func TestAzureUrl(t *testing.T) {
 	}
 }
 
+func TestProviders(t *testing.T) {
+	res := Providers()
+
+	// every provider the ui offers must be one newLLM knows
+	for _, info := range res {
+		_, err := newLLM(Config{Provider: info.Provider, Model: "m", Token: "t", BaseUrl: "http://x"})
+		assert.NoError(t, err, info.Provider)
+	}
+
+	// the hosted ones lead, azure is the most special of them
+	assert.Equal(t, Azure, res[len(res)-1].Provider)
+}
+
 func TestConfigValidate(t *testing.T) {
 	for _, tc := range []struct {
 		cfg Config
