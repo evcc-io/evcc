@@ -283,6 +283,8 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (Result, error)
 		messages = append(messages, llms.TextParts(llms.ChatMessageTypeHuman,
 			"Answer the question with what you have found so far. Do not call any more tools."))
 
+		a.logContext(messages, nil)
+
 		if resp, err := a.llm.GenerateContent(ctx, messages); err != nil {
 			a.log.ERROR.Println(err)
 		} else if len(resp.Choices) > 0 {
@@ -299,6 +301,8 @@ func (a *Assistant) Chat(ctx context.Context, history []Message) (Result, error)
 	}
 
 	for round := range maxIterations {
+		a.logContext(messages, a.tools)
+
 		resp, err := a.llm.GenerateContent(ctx, messages, llms.WithTools(a.tools))
 		if err != nil {
 			a.log.ERROR.Println(err)
