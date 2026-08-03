@@ -189,8 +189,7 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 			c.egLpcEntity = entity
 
 			// [LPC-913]: state the limit to the newly available CS
-			dim := c.dimmed
-			go eebus.AssertLimit(c.log, func() error { return c.Dim(dim) })
+			go eebus.AssertLimit(c.log, func() error { return c.Dim(c.lastDimmed()) })
 		}
 		c.mu.Unlock()
 	}
@@ -215,6 +214,13 @@ func (c *EEBusOHPCF) lastEnabled() bool {
 	defer c.mu.RUnlock()
 
 	return c.enabled
+}
+
+func (c *EEBusOHPCF) lastDimmed() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	return c.dimmed
 }
 
 // ohpcfStatus maps the compressor process state to a charge status: running is

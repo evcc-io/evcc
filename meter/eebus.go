@@ -170,6 +170,20 @@ func eebusReadValue[T any](uc eebusapi.UseCaseBaseInterface, entity spineapi.Ent
 	return res, nil
 }
 
+func (c *EEBus) lastDimmed() bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	return c.dimmed
+}
+
+func (c *EEBus) lastCurtailPercent() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	return c.curtailPercent
+}
+
 func (c *EEBus) readValue(scenario uint, update func(entity spineapi.EntityRemoteInterface) (float64, error)) (float64, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()

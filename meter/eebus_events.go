@@ -81,8 +81,7 @@ func (c *EEBus) egLpcUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface)
 		c.egLpcEntity = entity
 
 		// [LPC-913]: state the limit to the newly available CS
-		dim := c.dimmed
-		go eebus.AssertLimit(c.log, func() error { return c.Dim(dim) })
+		go eebus.AssertLimit(c.log, func() error { return c.Dim(c.lastDimmed()) })
 	}
 }
 
@@ -99,7 +98,6 @@ func (c *EEBus) egLppUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface)
 		c.egLppEntity = entity
 
 		// [LPP-913]: state the limit to the newly available CS
-		percent := c.curtailPercent
-		go eebus.AssertLimit(c.log, func() error { return c.SetCurtailPercent(percent) })
+		go eebus.AssertLimit(c.log, func() error { return c.SetCurtailPercent(c.lastCurtailPercent()) })
 	}
 }
