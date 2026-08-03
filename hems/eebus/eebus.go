@@ -22,6 +22,7 @@ func init() {
 
 type EEBus struct {
 	mux sync.RWMutex
+	ctx context.Context // device lifetime, aborts Run
 	log *util.Logger
 
 	*eebus.Connector
@@ -101,6 +102,7 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 	}
 
 	c := &EEBus{
+		ctx:         ctx,
 		log:         util.NewLogger("eebus"),
 		site:        site,
 		passthrough: passthrough,
@@ -187,15 +189,22 @@ func (c *EEBus) Connect(connected bool) {
 	}
 }
 
+// Run applies limits until the device context is cancelled
 func (c *EEBus) Run() {
 	// LPC-TS-017: the first run applies the failsafe limit until the Energy Guard states one
-	for tick := time.Tick(c.interval); ; <-tick {
+	for tick := time.Tick(c.interval); ; {
 		if err := c.run(); err != nil {
 			c.log.ERROR.Println(err)
 		}
 
 		if c.publishFunc != nil {
 			c.publishFunc()
+		}
+
+		select {
+		case <-tick:
+		case <-c.ctx.Done():
+			return
 		}
 	}
 }
