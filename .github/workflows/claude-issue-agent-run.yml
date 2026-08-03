@@ -176,17 +176,17 @@ jobs:
                cannot determine the correct change with confidence, do NOT open a
                PR — explain why in your step 2 comment instead.
 
-            If MODE is "analyze", do NOT label, edit, or open PRs. Instead, ONLY after
-            you posted a CONCLUSIVE answer in step 2 (not a request for more info),
-            resolve the invoking comment by minimizing it as resolved:
-            gh api graphql -f query='mutation($id:ID!){minimizeComment(input:{classifier:RESOLVED,subjectId:$id}){minimizedComment{isMinimized}}}' -f id='${{ inputs.comment_node_id }}'
-            If you instead asked for more information, do NOT minimize it.
+            If MODE is "analyze", do NOT label, edit, or open PRs.
 
-            If MODE is "fix", do NOT label or edit issue metadata. Instead, ONLY
-            after you successfully opened a fix PR in step 5, resolve the invoking
-            comment the same way:
+            If MODE is "fix", do NOT label or edit issue metadata.
+
+            If MODE is "analyze" or "fix", always resolve the invoking comment by
+            minimizing it as resolved once you posted your reply in step 2, whatever
+            that reply says. An answer, a request for more information, or an
+            explanation why you could not analyze or fix it all count:
             gh api graphql -f query='mutation($id:ID!){minimizeComment(input:{classifier:RESOLVED,subjectId:$id}){minimizedComment{isMinimized}}}' -f id='${{ inputs.comment_node_id }}'
-            If you did not open a PR, do NOT minimize it.
+            The command has been answered either way, so it must not stay open.
+            Only skip this if you posted no reply at all.
 
             Follow the repository's AGENTS.md conventions for commit/PR style. Do not
             force-push and do not touch unrelated files.

@@ -198,11 +198,12 @@ jobs:
             });
 
       - name: Resolve command comment
-        if: steps.create.outputs.url
+        if: always()
         uses: actions/github-script@v8
         with:
           script: |
-            // collapse the /backport comment as resolved now that the pull request exists
+            // collapse the /backport comment as resolved, the result was reported
+            // back as a comment either way
             await github.graphql(
               `mutation($id:ID!){minimizeComment(input:{subjectId:$id,classifier:RESOLVED}){minimizedComment{isMinimized}}}`,
               { id: context.payload.comment.node_id }
