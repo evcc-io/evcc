@@ -36,8 +36,7 @@ type EEBus struct {
 	egLpcEntity spineapi.EntityRemoteInterface
 	egLppEntity spineapi.EntityRemoteInterface
 
-	// last limits written, re-stated on reconnect
-	dimmed         bool
+	dimmed         bool // last limits written, re-stated on reconnect// last limits written, re-stated on reconnect
 	curtailPercent int
 }
 
