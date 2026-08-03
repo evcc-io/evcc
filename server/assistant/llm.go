@@ -3,9 +3,14 @@ package assistant
 import (
 	"cmp"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"github.com/tmc/langchaingo/llms"
 	"github.com/tmc/langchaingo/llms/anthropic"
 	"github.com/tmc/langchaingo/llms/openai"
@@ -13,6 +18,17 @@ import (
 
 // ollamaDefaultUrl is the local ollama server
 const ollamaDefaultUrl = "http://localhost:11434"
+
+// llmTimeout covers a slow model working through a tool loop
+const llmTimeout = 2 * time.Minute
+
+// llmClient traces the model requests like any other device connection
+func llmClient() *http.Client {
+	return &http.Client{
+		Timeout:   llmTimeout,
+		Transport: request.NewTripper(util.NewLogger("assistant"), transport.Default()),
+	}
+}
 
 // azurePath is the OpenAI-compatible v1 endpoint of a Foundry resource, it
 // needs no api version
@@ -61,7 +77,8 @@ func newLLM(cfg Config) (llms.Model, error) {
 	switch cfg.Provider {
 	case OpenAI, Custom:
 		// local OpenAI-compatible servers ignore the token but it must not be empty
-		opts := []openai.Option{openai.WithModel(cfg.Model), openai.WithToken(cmp.Or(cfg.Token, "-"))}
+		opts := []openai.Option{openai.WithModel(cfg.Model), openai.WithToken(cmp.Or(cfg.Token, "-")),
+			openai.WithHTTPClient(llmClient())}
 		if cfg.BaseUrl != "" {
 			opts = append(opts, openai.WithBaseURL(cfg.BaseUrl))
 		}
@@ -74,10 +91,11 @@ func newLLM(cfg Config) (llms.Model, error) {
 			return nil, err
 		}
 		return openai.New(openai.WithModel(cfg.Model), openai.WithToken(cfg.Token),
-			openai.WithBaseURL(base))
+			openai.WithBaseURL(base), openai.WithHTTPClient(llmClient()))
 
 	case Anthropic:
-		opts := []anthropic.Option{anthropic.WithModel(cfg.Model), anthropic.WithToken(cfg.Token)}
+		opts := []anthropic.Option{anthropic.WithModel(cfg.Model), anthropic.WithToken(cfg.Token),
+			anthropic.WithHTTPClient(llmClient())}
 		if cfg.BaseUrl != "" {
 			opts = append(opts, anthropic.WithBaseURL(cfg.BaseUrl))
 		}
@@ -87,7 +105,7 @@ func newLLM(cfg Config) (llms.Model, error) {
 		// the native ollama binding drops the tools, the OpenAI-compatible endpoint
 		// serves them. Its token is ignored but must not be empty.
 		return openai.New(openai.WithModel(cfg.Model), openai.WithToken("ollama"),
-			openai.WithBaseURL(ollamaUrl(cfg.BaseUrl)))
+			openai.WithBaseURL(ollamaUrl(cfg.BaseUrl)), openai.WithHTTPClient(llmClient()))
 
 	default:
 		return nil, fmt.Errorf("invalid provider: %s", cfg.Provider)
