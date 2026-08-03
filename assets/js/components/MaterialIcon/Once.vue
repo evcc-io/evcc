@@ -18,7 +18,7 @@ import { defineComponent } from "vue";
 import icon from "@/mixins/icon";
 
 export default defineComponent({
-	name: "AlwaysChargeOnce",
+	name: "Once",
 	mixins: [icon],
 	props: {
 		filled: Boolean,

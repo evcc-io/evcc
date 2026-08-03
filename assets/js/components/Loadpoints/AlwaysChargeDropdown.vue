@@ -19,7 +19,7 @@
 					:aria-pressed="isOnce"
 					@click="toggleOnce"
 				>
-					<AlwaysChargeOnceIcon :filled="isOnce" />
+					<OnceIcon :filled="isOnce" />
 				</button>
 				<div class="form-check form-switch m-0">
 					<input
@@ -40,14 +40,14 @@
 import { defineComponent } from "vue";
 import { ALWAYS_CHARGE, type Timeout } from "@/types/evcc";
 import AlwaysChargeIcon from "../MaterialIcon/AlwaysCharge.vue";
-import AlwaysChargeOnceIcon from "../MaterialIcon/AlwaysChargeOnce.vue";
+import OnceIcon from "../MaterialIcon/Once.vue";
 import formatter from "@/mixins/formatter";
 
 const { OFF, ON, ONCE } = ALWAYS_CHARGE;
 
 export default defineComponent({
 	name: "AlwaysChargeDropdown",
-	components: { AlwaysChargeIcon, AlwaysChargeOnceIcon },
+	components: { AlwaysChargeIcon, OnceIcon },
 	mixins: [formatter],
 	props: {
 		alwaysCharge: { type: String, default: OFF },
