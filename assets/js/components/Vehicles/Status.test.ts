@@ -154,7 +154,6 @@ describe("plan", () => {
         charging: true,
         connected: true,
         chargingPlanDisabled: true,
-        mode: "off",
       },
       { charger: "Charging…" }
     );
@@ -166,12 +165,11 @@ describe("plan", () => {
         enabled: true,
         connected: true,
         chargingPlanDisabled: true,
-        mode: "off",
       },
       { charger: "Ready. Waiting for vehicle…" }
     );
     expectEntries(
-      { effectivePlanTime, planProjectedStart, connected: true, chargingPlanDisabled: true, mode: "off" },
+      { effectivePlanTime, planProjectedStart, connected: true, chargingPlanDisabled: true },
       { charger: "Connected." }
     );
   });
@@ -185,7 +183,6 @@ describe("plan", () => {
         charging: true,
         connected: true,
         chargingPlanDisabled: false,
-        mode: "now",
       },
       { charger: "Charging…", planactive: "Mo 06:00" }
     );
