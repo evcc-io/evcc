@@ -4741,6 +4741,7 @@
         "enum": [
           "openai",
           "anthropic",
+          "azure",
           "ollama",
           "custom"
         ]

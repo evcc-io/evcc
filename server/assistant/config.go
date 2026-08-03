@@ -16,11 +16,12 @@ type Provider string
 const (
 	OpenAI    Provider = "openai"
 	Anthropic Provider = "anthropic"
+	Azure     Provider = "azure" // Azure OpenAI, the model is the deployment name
 	Ollama    Provider = "ollama"
 	Custom    Provider = "custom" // any OpenAI-compatible endpoint
 )
 
-var providers = []Provider{OpenAI, Anthropic, Ollama, Custom}
+var providers = []Provider{OpenAI, Anthropic, Azure, Ollama, Custom}
 
 // Config is the assistant configuration
 type Config struct {
@@ -43,7 +44,8 @@ func (c Config) validate() error {
 	if c.Model == "" {
 		return errors.New("missing model")
 	}
-	if c.Provider == Custom && c.BaseUrl == "" {
+	// both address an endpoint of their own, there is no default to fall back to
+	if slices.Contains([]Provider{Custom, Azure}, c.Provider) && c.BaseUrl == "" {
 		return errors.New("missing base url")
 	}
 	if c.Provider != Ollama && c.Provider != Custom && c.Token == "" {

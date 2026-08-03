@@ -3,6 +3,7 @@ package assistant
 import (
 	"cmp"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/tmc/langchaingo/llms"
@@ -12,6 +13,34 @@ import (
 
 // ollamaDefaultUrl is the local ollama server
 const ollamaDefaultUrl = "http://localhost:11434"
+
+// azurePath is the OpenAI-compatible v1 endpoint of a Foundry resource, it
+// needs no api version
+const azurePath = "/openai/v1"
+
+// azureHost reduces a configured resource or project url to its origin, the
+// portal shows either and neither is the inference endpoint
+func azureHost(base string) (string, error) {
+	u, err := url.Parse(base)
+	if err != nil {
+		return "", err
+	}
+	if u.Scheme == "" || u.Host == "" {
+		return "", fmt.Errorf("invalid base url: %s", base)
+	}
+
+	return u.Scheme + "://" + u.Host, nil
+}
+
+// azureUrl points a configured resource or project url at the v1 endpoint
+func azureUrl(base string) (string, error) {
+	host, err := azureHost(base)
+	if err != nil {
+		return "", err
+	}
+
+	return host + azurePath, nil
+}
 
 // ollamaUrl points a configured server url at the OpenAI-compatible endpoint
 func ollamaUrl(base string) string {
@@ -37,6 +66,15 @@ func newLLM(cfg Config) (llms.Model, error) {
 			opts = append(opts, openai.WithBaseURL(cfg.BaseUrl))
 		}
 		return openai.New(opts...)
+
+	case Azure:
+		// the v1 endpoint speaks plain OpenAI, the deployment name is the model
+		base, err := azureUrl(cfg.BaseUrl)
+		if err != nil {
+			return nil, err
+		}
+		return openai.New(openai.WithModel(cfg.Model), openai.WithToken(cfg.Token),
+			openai.WithBaseURL(base))
 
 	case Anthropic:
 		opts := []anthropic.Option{anthropic.WithModel(cfg.Model), anthropic.WithToken(cfg.Token)}

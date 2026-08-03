@@ -60,14 +60,14 @@
 				:label="$t('config.assistant.labelBaseUrl')"
 				:help="$t('config.assistant.helpBaseUrl')"
 				:example="baseUrlExample(values)"
-				:optional="values.provider !== 'custom'"
+				:optional="!needsBaseUrl(values)"
 			>
 				<input
 					id="assistantBaseUrl"
 					v-model="values.baseUrl"
 					type="url"
 					class="form-control"
-					:required="values.provider === 'custom'"
+					:required="needsBaseUrl(values)"
 					@change="loadModels(values)"
 				/>
 			</FormRow>
@@ -88,6 +88,10 @@ const PROVIDERS: Record<AssistantProvider, { models: string[]; baseUrl: string }
 	anthropic: {
 		models: ["claude-opus-5", "claude-sonnet-5", "claude-haiku-4-5"],
 		baseUrl: "",
+	},
+	azure: {
+		models: [],
+		baseUrl: "https://my-resource.services.ai.azure.com",
 	},
 	ollama: {
 		models: [
@@ -134,6 +138,10 @@ export default defineComponent({
 		},
 		needsToken(values: AssistantConfig): boolean {
 			return values.provider !== "ollama";
+		},
+		// these address an endpoint of their own, the others have a default
+		needsBaseUrl(values: AssistantConfig): boolean {
+			return values.provider === "custom" || values.provider === "azure";
 		},
 		models(values: AssistantConfig): string[] {
 			const suggested = PROVIDERS[values.provider]?.models || [];

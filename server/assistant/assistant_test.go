@@ -287,6 +287,24 @@ func TestOllamaUrl(t *testing.T) {
 	}
 }
 
+func TestAzureUrl(t *testing.T) {
+	for base, want := range map[string]string{
+		"https://res.openai.azure.com":                        "https://res.openai.azure.com/openai/v1",
+		"https://res.services.ai.azure.com/":                  "https://res.services.ai.azure.com/openai/v1",
+		"https://res.services.ai.azure.com/openai/v1":         "https://res.services.ai.azure.com/openai/v1",
+		"https://res.services.ai.azure.com/api/projects/evcc": "https://res.services.ai.azure.com/openai/v1",
+	} {
+		res, err := azureUrl(base)
+		require.NoError(t, err, base)
+		assert.Equal(t, want, res, base)
+	}
+
+	for _, base := range []string{"", "res.openai.azure.com"} {
+		_, err := azureUrl(base)
+		assert.Error(t, err, base)
+	}
+}
+
 func TestConfigValidate(t *testing.T) {
 	for _, tc := range []struct {
 		cfg Config
@@ -297,6 +315,8 @@ func TestConfigValidate(t *testing.T) {
 		{Config{Provider: Ollama, Model: "qwen3"}, true},
 		{Config{Provider: Custom, Model: "m"}, false},
 		{Config{Provider: Custom, Model: "m", BaseUrl: "http://x"}, true},
+		{Config{Provider: Azure, Model: "m", Token: "t"}, false},
+		{Config{Provider: Azure, Model: "m", Token: "t", BaseUrl: "https://res.services.ai.azure.com"}, true},
 		{Config{Provider: "bogus", Model: "m", Token: "t"}, false},
 		{Config{Provider: Anthropic, Token: "t"}, false},
 	} {

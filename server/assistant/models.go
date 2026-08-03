@@ -37,6 +37,16 @@ func modelsRequest(ctx context.Context, cfg Config) (*http.Request, error) {
 		}
 		headers["Authorization"] = "Bearer " + cfg.Token
 
+	case Azure:
+		// the v1 endpoint lists every model of the catalog, only a deployment
+		// can be addressed. the authoring api answers this version only
+		host, err := azureHost(cfg.BaseUrl)
+		if err != nil {
+			return nil, err
+		}
+		headers["Authorization"] = "Bearer " + cfg.Token
+		return request.New(http.MethodGet, host+"/openai/deployments?api-version=2023-03-15-preview", nil, headers)
+
 	case Anthropic:
 		if base == "" {
 			base = anthropicUrl

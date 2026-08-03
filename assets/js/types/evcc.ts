@@ -319,7 +319,7 @@ export interface State {
   assistant?: AssistantConfig;
 }
 
-export type AssistantProvider = "openai" | "anthropic" | "ollama" | "custom";
+export type AssistantProvider = "openai" | "anthropic" | "azure" | "ollama" | "custom";
 
 export interface AssistantConfig {
   provider: AssistantProvider;

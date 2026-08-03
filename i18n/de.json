@@ -136,6 +136,7 @@
       "labelToken": "API-Schlüssel",
       "provider": {
         "anthropic": "Anthropic",
+        "azure": "Azure OpenAI",
         "custom": "OpenAI-kompatibel",
         "ollama": "Ollama",
         "openai": "OpenAI"
