@@ -788,6 +788,40 @@
         "C": "C (charging)"
       }
     },
+    "priority": {
+      "basis": {
+        "energy": "Energy demand (kWh)",
+        "percent": "Charge level (%)"
+      },
+      "basisDescription": {
+        "energy": "Vehicles are compared by the energy they still need, based on their battery capacity.",
+        "percent": "Vehicles are compared by their charge level in percent."
+      },
+      "description": "Define which charging points and heaters get solar surplus first. Higher tiers are served before lower ones.",
+      "descriptionHysteresis": "Priority only changes when the difference exceeds this value. Avoids constant switching.",
+      "descriptionStrategy": "Within one tier the strategy decides.",
+      "labelBasis": "Basis",
+      "labelHysteresis": "Hysteresis",
+      "labelStrategy": "Strategy",
+      "order": {
+        "addTier": "Add tier",
+        "description": "Drag an entry to change its priority.",
+        "high": "High",
+        "low": "Low. 0 is default",
+        "tier": "Tier {tier}"
+      },
+      "strategy": {
+        "deficit": "Biggest need first",
+        "none": "First wins",
+        "soc": "Emptiest first"
+      },
+      "strategyDescription": {
+        "deficit": "The vehicle that needs the most energy to reach its charging goal is served first.",
+        "none": "Whoever starts charging first keeps the surplus.",
+        "soc": "The vehicle with the lowest charge level is served first."
+      },
+      "title": "Priority"
+    },
     "pv": {
       "titleAdd": "Add Solar Meter",
       "titleEdit": "Edit Solar Meter"
