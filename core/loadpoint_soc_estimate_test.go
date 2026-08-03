@@ -48,7 +48,16 @@ func TestSocEstimatePlausible(t *testing.T) {
 
 	for _, tc := range tc {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.plausible, tc.se.plausible(eps, now))
+			ok, reason := tc.se.plausible(eps, now)
+			assert.Equal(t, tc.plausible, ok)
+
+			// a rejection has to say why — the reason is what an operator sees
+			// when diagnosing a soc jump after a restart
+			if ok {
+				assert.Empty(t, reason)
+			} else {
+				assert.NotEmpty(t, reason)
+			}
 		})
 	}
 }

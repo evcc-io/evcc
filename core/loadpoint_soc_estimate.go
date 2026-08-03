@@ -44,22 +44,25 @@ func (se socEstimate) offset(energyPerSocStep float64) float64 {
 	return se.EnergySinceAnchor / energyPerSocStep
 }
 
-// plausible reports whether the record may be restored.
+// plausible reports whether the record may be restored, and why not if it may
+// not — the reason ends up in the log, where it is the difference between "the
+// estimate was never stored" and "it was stored and rejected" when someone
+// reports a soc jump after a restart.
 //
 // There is deliberately no check against the vehicle's current reading here:
 // at restore time none has been fetched yet, and none is needed. Restore()
 // seeds prevSoc with the anchor, so a first poll that reads a changed value
 // takes the estimator's rebase branch and drops the offset by itself.
-func (se socEstimate) plausible(energyPerSocStep float64, now time.Time) bool {
+func (se socEstimate) plausible(energyPerSocStep float64, now time.Time) (bool, string) {
 	switch {
 	case se.EnergySinceAnchor <= 0:
-		return false
+		return false, "no energy since the anchor"
 	case now.Sub(se.Updated) > socEstimateMaxAge:
-		return false
+		return false, fmt.Sprintf("last updated %v ago", now.Sub(se.Updated).Truncate(time.Minute))
 	case se.offset(energyPerSocStep) > socEstimateMaxOffset:
-		return false
+		return false, fmt.Sprintf("implied offset %.0f%% exceeds %.0f%%", se.offset(energyPerSocStep), socEstimateMaxOffset)
 	default:
-		return true
+		return true, ""
 	}
 }
 
@@ -127,10 +130,12 @@ func (lp *Loadpoint) restoreSocEstimate() {
 
 	se, ok := loadSocEstimate(lp.socEstimateVehicle)
 	if !ok {
+		lp.log.DEBUG.Printf("soc estimate: no record for %s", lp.socEstimateVehicle)
 		return
 	}
 
-	if !se.plausible(estimator.EnergyPerSocStep(), lp.clock.Now()) {
+	if ok, reason := se.plausible(estimator.EnergyPerSocStep(), lp.clock.Now()); !ok {
+		lp.log.DEBUG.Printf("soc estimate discarded: %s", reason)
 		return
 	}
 
