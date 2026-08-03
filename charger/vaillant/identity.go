@@ -6,6 +6,7 @@ import (
 
 	"github.com/WulfgarW/sensonet"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
 
@@ -22,7 +23,7 @@ var (
 // while holding the lock, which serialises concurrent startups so the parallel
 // login flows can no longer clobber each other's session; further chargers on the
 // same account reuse the resulting refreshing token source (#30625).
-func Identity(ctx context.Context, log *util.Logger, oc *sensonet.Oauth2Config, realm, user, password string) (oauth2.TokenSource, error) {
+func Identity(log *util.Logger, oc *sensonet.Oauth2Config, realm, user, password string) (oauth2.TokenSource, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -30,6 +31,11 @@ func Identity(ctx context.Context, log *util.Logger, oc *sensonet.Oauth2Config, 
 	if ts, ok := tokens[key]; ok {
 		return ts, nil
 	}
+
+	// the shared source outlives the charger that happens to create it, so it must
+	// not capture that charger's context: device creation is bounded by a timeout
+	// which would otherwise cancel the token refresh for everyone on the account
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
 
 	token, err := loginFunc(ctx, log, oc, user, password)
 	if err != nil {

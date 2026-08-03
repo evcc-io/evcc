@@ -33,7 +33,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/samber/lo"
-	"golang.org/x/oauth2"
 )
 
 func init() {
@@ -79,10 +78,9 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	}
 
 	log := util.NewLogger("vaillant").Redact(cc.User, cc.Password)
-	logCtx := context.WithValue(ctx, oauth2.HTTPClient, request.NewClient(log))
 
 	oc := sensonet.Oauth2ConfigForRealm(cc.Realm)
-	ts, err := vaillant.Identity(logCtx, log, oc, cc.Realm, cc.User, cc.Password)
+	ts, err := vaillant.Identity(log, oc, cc.Realm, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
