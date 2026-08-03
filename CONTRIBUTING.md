@@ -4,11 +4,11 @@
 
 ### Development environment
 
-Developing evcc requires [Go][1] [Node][2] and [Vite+][3]. We recommend VSCode with the [Go](https://marketplace.visualstudio.com/items?itemName=golang.Go), [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [Vetur](https://marketplace.visualstudio.com/items?itemName=octref.vetur) extensions.
+Developing evcc requires [Go][1] [Node][2] and [Vite+][3]. We recommend VSCode with the [Go](https://marketplace.visualstudio.com/items?itemName=golang.Go), [Oxc](https://marketplace.visualstudio.com/items?itemName=oxc.oxc-vscode) and [Vue](https://marketplace.visualstudio.com/items?itemName=Vue.volar) extensions.
 
 Alternatively, if you use VS Code and [devcontainers](https://code.visualstudio.com/docs/devcontainers/containers), you can use the "Dev containers: Clone repository in container volume" action. This will create a devcontainer with the required toolchain and install the prerequisites as explained below. Wait until the startup log says "Done. Press any key to close the terminal." and check for any errors.
 
-We use linters (golangci-lint, Prettier) to keep a coherent source code formatting. It's recommended to use the format-on-save feature of your editor. You can manually reformat your code by running:
+We use linters (golangci-lint, oxlint/oxfmt via Vite+) to keep a coherent source code formatting. It's recommended to use the format-on-save feature of your editor. You can manually reformat your code by running:
 
 ```sh
 make lint
