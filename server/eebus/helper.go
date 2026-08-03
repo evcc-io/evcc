@@ -51,16 +51,13 @@ func Await(write func(func(model.ResultDataType, model.MsgCounterType)) (*model.
 const limitTimeout = 50 * time.Second
 
 // AssertLimit states the current limit to a newly available Controllable System
-// ([LPC-913]/[LPP-913]). Retried in the background: the CS ignores writes that do
-// not follow a heartbeat and may reject them while still in state "init".
-// Returns immediately, so it may be called while holding the caller's lock.
+// ([LPC-913]/[LPP-913]). Blocks while retrying- the CS ignores writes that do not
+// follow a heartbeat and may reject them while still in state "init".
 func AssertLimit(log *util.Logger, write func() error) {
-	go func() {
-		bo := backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(limitTimeout))
-		if err := backoff.Retry(write, bo); err != nil {
-			log.DEBUG.Printf("assert limit: %v", err)
-		}
-	}()
+	bo := backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(limitTimeout))
+	if err := backoff.Retry(write, bo); err != nil {
+		log.DEBUG.Printf("assert limit: %v", err)
+	}
 }
 
 func LogEntities(log *log.Logger, actor string, uc eebusapi.UseCaseInterface) {

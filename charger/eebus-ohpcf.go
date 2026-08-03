@@ -190,7 +190,7 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 
 			// [LPC-913]: state the limit to the newly available CS
 			dim := c.dimmed
-			eebus.AssertLimit(c.log, func() error { return c.Dim(dim) })
+			go eebus.AssertLimit(c.log, func() error { return c.Dim(dim) })
 		}
 		c.mu.Unlock()
 	}
