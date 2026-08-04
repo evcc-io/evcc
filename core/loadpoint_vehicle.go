@@ -224,6 +224,7 @@ func (lp *Loadpoint) unpublishVehicleIdentity() {
 // unpublishVehicle resets published vehicle data
 func (lp *Loadpoint) unpublishVehicle() {
 	lp.vehicleSoc = 0
+	lp.vehicleRange = 0
 
 	lp.publish(keys.VehicleClimaterActive, nil)
 	lp.publish(keys.VehicleSoc, 0.0)

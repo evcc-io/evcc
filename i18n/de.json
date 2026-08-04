@@ -1582,6 +1582,7 @@
   },
   "session": {
     "addOdometer": "Wert eintragen",
+    "addedRange": "Geladene Reichweite",
     "cancel": "Abbrechen",
     "co2": "CO₂",
     "date": "Zeitraum",
@@ -1597,6 +1598,7 @@
     "title": "Ladevorgang"
   },
   "sessions": {
+    "addedRange": "Reichweite",
     "avgPower": "⌀ Leistung",
     "avgPrice": "⌀ Preis",
     "chargeDuration": "Ladedauer",
@@ -1622,6 +1624,7 @@
     },
     "co2": "⌀ CO₂",
     "csv": {
+      "addedrange": "Geladene Reichweite (km)",
       "chargedenergy": "Energie (kWh)",
       "chargeduration": "Ladedauer",
       "co2perkwh": "CO₂/kWh",
