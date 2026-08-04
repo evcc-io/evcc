@@ -172,13 +172,10 @@ func (t *Tunnel) setError(err error) {
 }
 
 // Error returns the last connection error, if any.
-func (t *Tunnel) Error() string {
+func (t *Tunnel) Error() error {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	if t.lastErr != nil {
-		return t.lastErr.Error()
-	}
-	return ""
+	return t.lastErr
 }
 
 // IsConnected returns whether the tunnel is currently connected.

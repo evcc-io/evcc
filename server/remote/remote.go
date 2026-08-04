@@ -35,7 +35,7 @@ type Remote struct {
 	publisher   chan<- util.Param
 	lastSeen    map[string]time.Time // persisted: username → last activity
 	connected   map[string]int       // in-memory: active connection count per user
-	lastError   string               // last connect/registration error, published to UI
+	lastError   error                // last connect/registration error, published to UI
 }
 
 // New creates a new Remote manager, loads persisted settings, and connects if enabled.
@@ -136,16 +136,13 @@ func (r *Remote) disconnect() {
 		r.tunnel.Close()
 		r.tunnel = nil
 	}
-	r.lastError = ""
+	r.lastError = nil
 }
 
 // setError records a connect error and publishes it to the UI.
 func (r *Remote) setError(err error) {
 	r.mu.Lock()
-	r.lastError = ""
-	if err != nil {
-		r.lastError = err.Error()
-	}
+	r.lastError = err
 	r.mu.Unlock()
 
 	r.publish()
@@ -212,9 +209,14 @@ func (r *Remote) ConfigStatus() globalconfig.ConfigStatus {
 	connected := r.tunnel != nil && r.tunnel.IsConnected()
 	loginBlocked := r.tunnel != nil && r.tunnel.LoginBlocked()
 
-	errMsg := r.lastError
-	if errMsg == "" && r.tunnel != nil {
-		errMsg = r.tunnel.Error()
+	lastErr := r.lastError
+	if lastErr == nil && r.tunnel != nil {
+		lastErr = r.tunnel.Error()
+	}
+
+	var errMsg string
+	if lastErr != nil {
+		errMsg = lastErr.Error()
 	}
 
 	return globalconfig.ConfigStatus{
