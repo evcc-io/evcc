@@ -4127,6 +4127,10 @@
             "additionalProperties": {
               "type": "string"
             }
+          },
+          "error": {
+            "description": "Last connection error.",
+            "type": "string"
           }
         },
         "required": [
