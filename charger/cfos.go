@@ -124,7 +124,7 @@ func (wb *CfosPowerBrain) Status() (api.ChargeStatus, error) {
 	case 2: // laden
 		return api.StatusC, nil
 	case 5: // Temperaturüberschreitung
-		return "Temperaturüberschreitung", nil
+		return api.StatusNone, errors.New("temperature exceeded")
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", b[1])
 	}
