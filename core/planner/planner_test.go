@@ -2,6 +2,7 @@ package planner
 
 import (
 	"slices"
+	"sync"
 	"testing"
 	"time"
 
@@ -644,4 +645,27 @@ func TestPlanOverrunWarnOnce(t *testing.T) {
 	// reachable target resets the warn state
 	p.Plan(time.Hour, 0, clock.Now().Add(2*time.Hour), false)
 	assert.True(t, p.overrunWarned.IsZero())
+}
+
+// TestPlanConcurrent covers the overrun warning state: Plan is called both from
+// the control loop and from the API handlers, so it must be safe to share- run
+// with -race. The unreachable target drives the warn-once bookkeeping.
+func TestPlanConcurrent(t *testing.T) {
+	clock := clock.NewMock()
+
+	p := &Planner{
+		log:   util.NewLogger("foo"),
+		clock: clock,
+	}
+
+	var wg sync.WaitGroup
+	for range 4 {
+		wg.Go(func() {
+			for range 200 {
+				p.Plan(time.Hour, 0, clock.Now().Add(-time.Hour), false)
+				p.Plan(time.Hour, 0, clock.Now().Add(2*time.Hour), false)
+			}
+		})
+	}
+	wg.Wait()
 }

@@ -33,9 +33,3 @@ func (l *CapacityLedger) Reserve(plan api.Rates, power float64) {
 		}
 	}
 }
-
-// CanHost reports whether the slot containing t can still grant minPower.
-// Semi-continuous: a charger runs at >= minPower or off (evcc-io/optimizer#91).
-func (l *CapacityLedger) CanHost(t time.Time, minPower float64) bool {
-	return l.Available(t) >= minPower
-}

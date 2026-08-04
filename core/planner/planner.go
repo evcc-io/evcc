@@ -2,6 +2,7 @@ package planner
 
 import (
 	"slices"
+	"sync"
 	"time"
 
 	"github.com/benbjohnson/clock"
@@ -16,6 +17,8 @@ type Planner struct {
 	clock  clock.Clock // mockable time
 	tariff api.Tariff
 
+	// Plan is called from both the control loop and the API handlers
+	mu            sync.Mutex
 	overrunWarned time.Time // target last warned as unreachable, avoids per-cycle spam
 }
 
@@ -114,6 +117,20 @@ func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
 	return res
 }
 
+// warnOverrun records target as warned and reports whether that was a change,
+// so an unreachable target is logged once instead of on every cycle.
+func (t *Planner) warnOverrun(target time.Time) bool {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	if t.overrunWarned.Equal(target) {
+		return false
+	}
+	t.overrunWarned = target
+
+	return !target.IsZero()
+}
+
 func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime time.Time, continuous bool) api.Rates {
 	if t == nil || requiredDuration <= 0 {
 		return nil
@@ -125,15 +142,14 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	if latestStart.Before(now) {
 		// goal missed: required duration no longer fits before the target, so
 		// charging will overrun. warn once per target to avoid per-cycle spam.
-		if !t.overrunWarned.Equal(targetTime) {
+		if t.warnOverrun(targetTime) {
 			t.log.WARN.Printf("planner: target not reachable in time - need %v but only %v until %v",
 				requiredDuration.Round(time.Second), t.clock.Until(targetTime).Round(time.Second), targetTime.Local())
-			t.overrunWarned = targetTime
 		}
 		latestStart = now
 		targetTime = latestStart.Add(requiredDuration)
 	} else {
-		t.overrunWarned = time.Time{}
+		t.warnOverrun(time.Time{})
 	}
 
 	// simplePlan only considers time, but not cost
