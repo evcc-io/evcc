@@ -13,6 +13,8 @@ const (
 	Priority          = "priority"         // priority
 	MinCurrent        = "minCurrent"       // min current
 	MaxCurrent        = "maxCurrent"       // max current
+	MinCurrent1p      = "minCurrent1p"     // min current, 1p override (0 = use minCurrent)
+	MaxCurrent1p      = "maxCurrent1p"     // max current, 1p override (0 = use maxCurrent)
 	MinSoc            = "minSoc"           // min soc (heating: min temperature)
 	MinSocNotReached  = "minSocNotReached" // min soc not reached
 	LimitSoc          = "limitSoc"         // limit soc

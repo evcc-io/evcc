@@ -441,6 +441,7 @@
         "charging": "Wallbox gespeichert. Ladepunkt wird erstellt …",
         "heating": "Heizgerät gespeichert. Heizung wird erstellt …"
       },
+      "current1pHelp": "Optionale Grenzwerte für einphasiges Laden. Leer lassen, um den regulären Strombereich zu verwenden.",
       "defaultModeHelp": {
         "charging": "Lademodus beim Anschließen des Fahrzeugs.",
         "heating": "Wird beim Systemstart gesetzt."
@@ -454,10 +455,13 @@
       "energyMeterHelp": "Zusätzlicher Zähler, wenn die Wallbox keinen integrierten hat.",
       "energyMeterLabel": "Energiezähler",
       "estimateLabel": "Ladestand zwischen API-Updates interpolieren",
+      "maxCurrent1pHelp": "Muss größer als der einphasige Mindeststrom sein.",
+      "maxCurrent1pLabel": "Maximaler Strom (1-phasig)",
       "maxCurrentHelp": "Muss größer als der Mindeststrom sein.",
       "maxCurrentLabel": "Maximaler Strom",
       "maxTempHelp": "Muss größer als die Mindesttemperatur sein.",
       "maxTempLabel": "Maximaltemperatur",
+      "minCurrent1pLabel": "Minimaler Strom (1-phasig)",
       "minCurrentHelp": "Gehe nur unter 6 A, wenn du weißt, was du tust.",
       "minCurrentLabel": "Minimaler Strom",
       "minTempLabel": "Mindesttemperatur",

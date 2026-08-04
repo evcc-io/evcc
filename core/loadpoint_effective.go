@@ -146,9 +146,14 @@ func (lp *Loadpoint) SocBasedPlanning() bool {
 	return lp.socBasedPlanning()
 }
 
-// effectiveMinCurrent returns the effective min current
+// effectiveMinCurrent returns the effective min current for the active phases
 func (lp *Loadpoint) effectiveMinCurrent() float64 {
-	lpMin := lp.getMinCurrent()
+	return lp.effectiveMinCurrentFor(lp.activePhases())
+}
+
+// effectiveMinCurrentFor returns the effective min current for the given phases
+func (lp *Loadpoint) effectiveMinCurrentFor(phases int) float64 {
+	lpMin := lp.getMinCurrentFor(phases)
 	var vehicleMin, chargerMin float64
 
 	if v := lp.GetVehicle(); v != nil {
@@ -186,9 +191,14 @@ func (lp *Loadpoint) effectiveMinCurrent() float64 {
 	}
 }
 
-// effectiveMaxCurrent returns the effective max current
+// effectiveMaxCurrent returns the effective max current for the active phases
 func (lp *Loadpoint) effectiveMaxCurrent() float64 {
-	maxCurrent := lp.getMaxCurrent()
+	return lp.effectiveMaxCurrentFor(lp.activePhases())
+}
+
+// effectiveMaxCurrentFor returns the effective max current for the given phases
+func (lp *Loadpoint) effectiveMaxCurrentFor(phases int) float64 {
+	maxCurrent := lp.getMaxCurrentFor(phases)
 
 	if v := lp.GetVehicle(); v != nil {
 		if res, ok := v.OnIdentified().GetMaxCurrent(); ok && res > 0 {
@@ -269,7 +279,8 @@ func (lp *Loadpoint) EffectiveStepPower() float64 {
 func (lp *Loadpoint) EffectiveMinPower() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
-	return Voltage * lp.effectiveMinCurrent() * float64(lp.minActivePhases())
+	phases := lp.minActivePhases()
+	return Voltage * lp.effectiveMinCurrentFor(phases) * float64(phases)
 }
 
 // EffectiveMaxPower returns the effective max power taking vehicle capabilities,
@@ -287,7 +298,8 @@ func (lp *Loadpoint) EffectiveMaxPower() float64 {
 
 // effectiveMaxPower returns the effective max power taking vehicle capabilities and phase scaling into account
 func (lp *Loadpoint) effectiveMaxPower() float64 {
-	res := Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())
+	phases := lp.maxActivePhases()
+	res := Voltage * lp.effectiveMaxCurrentFor(phases) * float64(phases)
 	if lp.vehicle != nil {
 		if maxPower, ok := lp.vehicle.OnIdentified().GetMaxPower(); ok {
 			return min(maxPower, res)

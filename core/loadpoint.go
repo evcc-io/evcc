@@ -117,6 +117,8 @@ type Loadpoint struct {
 	priority                 int      // Priority
 	minCurrent               float64  // PV mode: start current	Min+PV mode: min current
 	maxCurrent               float64  // Max allowed current. Physically ensured by the charger
+	minCurrent1p             float64  // 1p override for minCurrent, 0 = use minCurrent
+	maxCurrent1p             float64  // 1p override for maxCurrent, 0 = use maxCurrent
 	phasesConfigured         int      // Charger configured phase mode 0/1/3
 	limitSoc                 int      // Session limit for soc
 	limitEnergy              float64  // Session limit for energy
@@ -360,6 +362,12 @@ func (lp *Loadpoint) restoreSettings() {
 	}
 	if v, err := lp.settings.Float(keys.MaxCurrent); err == nil && v > 0 {
 		lp.setMaxCurrent(v)
+	}
+	if v, err := lp.settings.Float(keys.MinCurrent1p); err == nil && v > 0 {
+		lp.setMinCurrent1p(v)
+	}
+	if v, err := lp.settings.Float(keys.MaxCurrent1p); err == nil && v > 0 {
+		lp.setMaxCurrent1p(v)
 	}
 	if v, err := lp.settings.Int(keys.LimitSoc); err == nil && v > 0 {
 		lp.setLimitSoc(int(v))
@@ -702,6 +710,9 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publish(keys.Priority, lp.GetPriority())
 	lp.publish(keys.MinCurrent, lp.GetMinCurrent())
 	lp.publish(keys.MaxCurrent, lp.GetMaxCurrent())
+	minCurrent1p, maxCurrent1p := lp.GetCurrents1p()
+	lp.publish(keys.MinCurrent1p, minCurrent1p)
+	lp.publish(keys.MaxCurrent1p, maxCurrent1p)
 
 	lp.publish(keys.EnableThreshold, lp.Enable.Threshold)
 	lp.publish(keys.DisableThreshold, lp.Disable.Threshold)
@@ -1399,7 +1410,7 @@ func (lp *Loadpoint) fastCharging() error {
 		phases := 3
 
 		// load management limit active
-		if !lp.circuitAllowsPhases(3, lp.effectiveMinCurrent()) {
+		if !lp.circuitAllowsPhases(3, lp.effectiveMinCurrentFor(3)) {
 			phases = 1
 		}
 
@@ -1427,7 +1438,7 @@ func (lp *Loadpoint) minCharging() error {
 }
 
 // pvScalePhases switches phases if necessary and returns number of phases switched to
-func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) int {
+func (lp *Loadpoint) pvScalePhases(sitePower float64) int {
 	phases := lp.GetPhases()
 
 	// observed phase state inconsistency
@@ -1446,6 +1457,8 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 	activePhases := lp.ActivePhases()
 	availablePower := lp.chargePower - sitePower
 	scalable := activePhases > 1 && lp.phasesConfigured < 3
+
+	minCurrent := lp.effectiveMinCurrentFor(activePhases)
 
 	if scalable {
 		insufficient := (sitePower > 0 || !lp.enabled) && powerToCurrent(availablePower, activePhases) < minCurrent
@@ -1486,21 +1499,25 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 		waiting = true
 	}
 
+	// scaling up is only justified once the 1p limits are exhausted
+	max1pCurrent := lp.effectiveMaxCurrentFor(1)
+
 	// load management may cap the 1p current far below the theoretical maximum
 	if lp.circuit != nil {
-		maxCurrent = lp.circuit.ValidateCurrent(lp.actualMaxChargeCurrent(), maxCurrent)
+		max1pCurrent = lp.circuit.ValidateCurrent(lp.actualMaxChargeCurrent(), max1pCurrent)
 	}
 
 	maxPhases := lp.MaxActivePhases()
 	target1pCurrent := powerToCurrent(availablePower, 1)
+	minCurrentMaxPhases := lp.effectiveMinCurrentFor(maxPhases)
 
 	// scaling up is pointless unless load management allows min current and power on maxPhases
-	scalable = maxPhases > 1 && phases < maxPhases && target1pCurrent > maxCurrent &&
-		maxCurrent >= minCurrent && lp.circuitAllowsPhases(maxPhases, minCurrent)
+	scalable = maxPhases > 1 && phases < maxPhases && target1pCurrent > max1pCurrent &&
+		max1pCurrent >= lp.effectiveMinCurrentFor(1) && lp.circuitAllowsPhases(maxPhases, minCurrentMaxPhases)
 
 	// scale up phases
-	if targetCurrent := powerToCurrent(availablePower, maxPhases); targetCurrent >= minCurrent && scalable {
-		lp.log.DEBUG.Printf("available power %.0fW > %.0fW min %dp threshold", availablePower, float64(maxPhases)*Voltage*minCurrent, maxPhases)
+	if targetCurrent := powerToCurrent(availablePower, maxPhases); targetCurrent >= minCurrentMaxPhases && scalable {
+		lp.log.DEBUG.Printf("available power %.0fW > %.0fW min %dp threshold", availablePower, float64(maxPhases)*Voltage*minCurrentMaxPhases, maxPhases)
 
 		if !lp.charging() { // scale immediately if not charging
 			lp.phaseTimer = elapsed
@@ -1607,7 +1624,13 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	// switch phases up/down
 	var scaledTo int
 	if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() {
-		scaledTo = lp.pvScalePhases(sitePower, minCurrent, maxCurrent)
+		scaledTo = lp.pvScalePhases(sitePower)
+
+		// limits are phase-dependent
+		if scaledTo > 0 {
+			minCurrent = lp.effectiveMinCurrentFor(scaledTo)
+			maxCurrent = lp.effectiveMaxCurrentFor(scaledTo)
+		}
 	}
 
 	// calculate target charge current from delta power and actual current

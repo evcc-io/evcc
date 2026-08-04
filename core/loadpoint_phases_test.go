@@ -178,7 +178,11 @@ func testScale(t *testing.T, lp *Loadpoint, sitePower float64, direction string,
 		// scale-up should only execute when the 1p max current is exceeded
 		// we're testing this here and remove the upscale expectation for the following test below 1p max current
 		if maxAmp := -sitePower / Voltage; maxAmp < maxA {
-			if scaled := lp.pvScalePhases(sitePower, minA, maxAmp-0.0001); scaled != 3 {
+			lp.maxCurrent = maxAmp - 0.0001
+			scaled := lp.pvScalePhases(sitePower)
+			lp.maxCurrent = maxA
+
+			if scaled != 3 {
 				t.Errorf("%v act=%d max=%d missing scale %s at reduced max current %.1fA", tc, act, max, direction, maxAmp)
 			}
 
@@ -187,7 +191,7 @@ func testScale(t *testing.T, lp *Loadpoint, sitePower float64, direction string,
 		}
 	}
 
-	scaled := lp.pvScalePhases(sitePower, minA, maxA)
+	scaled := lp.pvScalePhases(sitePower)
 
 	if strings.Contains(testExpectation, testDirection) {
 		if scaled == 0 {
@@ -425,7 +429,7 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			charger.MockPhaseSwitcher.EXPECT().Phases1p3p(tc.toPhases).Return(nil)
 		}
 
-		res := lp.pvScalePhases(tc.sitePower, minA, maxA)
+		res := lp.pvScalePhases(tc.sitePower)
 
 		require.Equal(t, tc.res, res, tc.desc)
 		require.Equal(t, tc.toPhases, lp.phases, tc.desc)
@@ -698,6 +702,60 @@ func TestUpdatePhaseSwitchNotAvailable(t *testing.T) {
 	require.Equal(t, 3, lp.GetPhases())
 }
 
+func TestPvScalePhases1pMaxCurrent(t *testing.T) {
+	Voltage = 230
+
+	for _, tc := range []struct {
+		desc           string
+		maxCurrent1p   float64
+		sitePower      float64
+		expectedPhases int
+	}{
+		// 4600W available equals 20A on 1p, 5060W equals 22A
+		{"1p limit not exceeded", 20, -4600, 0},
+		{"1p limit exceeded", 20, -5060, 3},
+		{"no 1p limit", 0, -5060, 0},
+	} {
+		t.Run(tc.desc, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			plainCharger := api.NewMockCharger(ctrl)
+			plainCharger.EXPECT().Enabled().Return(true, nil).AnyTimes()
+			plainCharger.EXPECT().Enable(gomock.Any()).Return(nil).AnyTimes()
+			plainCharger.EXPECT().MaxCurrent(gomock.Any()).Return(nil).AnyTimes()
+
+			phaseCharger := api.NewMockPhaseSwitcher(ctrl)
+			phaseCharger.EXPECT().Phases1p3p(gomock.Any()).Return(nil).AnyTimes()
+
+			lp := &Loadpoint{
+				log:            util.NewLogger("foo"),
+				bus:            evbus.New(),
+				clock:          clock.NewMock(),
+				chargeMeter:    &Null{},
+				chargeRater:    &Null{},
+				chargeTimer:    &Null{},
+				progress:       NewProgress(0, 10),
+				wakeUpTimer:    NewTimer(),
+				mode:           api.ModeNow,
+				minCurrent:     6,
+				maxCurrent:     32,
+				maxCurrent1p:   tc.maxCurrent1p,
+				phases:         1,
+				measuredPhases: 1,
+				status:         api.StatusC,
+				charger: struct {
+					*api.MockCharger
+					*api.MockPhaseSwitcher
+				}{plainCharger, phaseCharger},
+			}
+
+			require.Equal(t, tc.expectedPhases, lp.pvScalePhases(tc.sitePower))
+
+			ctrl.Finish()
+		})
+	}
+}
+
 func TestPvScalePhasesCircuitLimits(t *testing.T) {
 	Voltage = 230
 
@@ -773,7 +831,7 @@ func TestPvScalePhasesCircuitLimits(t *testing.T) {
 				}{plainCharger, phaseCharger},
 			}
 
-			require.Equal(t, tc.expectedPhases, lp.pvScalePhases(tc.sitePower, lp.minCurrent, lp.maxCurrent))
+			require.Equal(t, tc.expectedPhases, lp.pvScalePhases(tc.sitePower))
 
 			ctrl.Finish()
 		})

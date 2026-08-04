@@ -1,6 +1,7 @@
 package core
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"time"
@@ -750,6 +751,20 @@ func (lp *Loadpoint) getMinCurrent() float64 {
 	return lp.minCurrent
 }
 
+// getMinCurrentFor returns the min loadpoint current for the given phases
+func (lp *Loadpoint) getMinCurrentFor(phases int) float64 {
+	if lp.uses1pCurrent(phases) && lp.minCurrent1p > 0 {
+		return lp.minCurrent1p
+	}
+	return lp.minCurrent
+}
+
+// uses1pCurrent returns true if the 1p current overrides apply for the given phases
+func (lp *Loadpoint) uses1pCurrent(phases int) bool {
+	// without phase switching the regular limits are the 1p limits
+	return phases == 1 && lp.hasPhaseSwitching()
+}
+
 // setMinCurrent sets the min loadpoint current (no mutex)
 func (lp *Loadpoint) setMinCurrent(current float64) {
 	lp.minCurrent = current
@@ -786,6 +801,14 @@ func (lp *Loadpoint) getMaxCurrent() float64 {
 	return lp.maxCurrent
 }
 
+// getMaxCurrentFor returns the max loadpoint current for the given phases
+func (lp *Loadpoint) getMaxCurrentFor(phases int) float64 {
+	if lp.uses1pCurrent(phases) && lp.maxCurrent1p > 0 {
+		return lp.maxCurrent1p
+	}
+	return lp.maxCurrent
+}
+
 // setMaxCurrent sets the max loadpoint current
 func (lp *Loadpoint) setMaxCurrent(current float64) {
 	lp.maxCurrent = current
@@ -808,6 +831,53 @@ func (lp *Loadpoint) SetMaxCurrent(current float64) error {
 	}
 
 	return nil
+}
+
+// GetCurrents1p returns the 1p min/max current overrides (0 = use minCurrent/maxCurrent)
+func (lp *Loadpoint) GetCurrents1p() (float64, float64) {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.minCurrent1p, lp.maxCurrent1p
+}
+
+// SetCurrents1p sets the 1p min/max current overrides (0 = use minCurrent/maxCurrent)
+func (lp *Loadpoint) SetCurrents1p(minCurrent, maxCurrent float64) error {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if minCurrent < 0 || maxCurrent < 0 {
+		return errors.New("current must not be negative")
+	}
+
+	// unset values fall back to the regular limits
+	if cmp.Or(minCurrent, lp.minCurrent) > cmp.Or(maxCurrent, lp.maxCurrent) {
+		return errors.New("1p min current must be smaller or equal than 1p max current")
+	}
+
+	if minCurrent != lp.minCurrent1p {
+		lp.log.DEBUG.Println("set 1p min current:", minCurrent)
+		lp.setMinCurrent1p(minCurrent)
+	}
+	if maxCurrent != lp.maxCurrent1p {
+		lp.log.DEBUG.Println("set 1p max current:", maxCurrent)
+		lp.setMaxCurrent1p(maxCurrent)
+	}
+
+	return nil
+}
+
+// setMinCurrent1p sets the 1p min current override (no mutex)
+func (lp *Loadpoint) setMinCurrent1p(current float64) {
+	lp.minCurrent1p = current
+	lp.publish(keys.MinCurrent1p, lp.minCurrent1p)
+	lp.settings.SetFloat(keys.MinCurrent1p, lp.minCurrent1p)
+}
+
+// setMaxCurrent1p sets the 1p max current override (no mutex)
+func (lp *Loadpoint) setMaxCurrent1p(current float64) {
+	lp.maxCurrent1p = current
+	lp.publish(keys.MaxCurrent1p, lp.maxCurrent1p)
+	lp.settings.SetFloat(keys.MaxCurrent1p, lp.maxCurrent1p)
 }
 
 // IsFastChargingActive indicates if fast charging with maximum power is active

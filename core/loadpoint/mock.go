@@ -263,6 +263,21 @@ func (mr *MockAPIMockRecorder) GetCircuitRef() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCircuitRef", reflect.TypeOf((*MockAPI)(nil).GetCircuitRef))
 }
 
+// GetCurrents1p mocks base method.
+func (m *MockAPI) GetCurrents1p() (float64, float64) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCurrents1p")
+	ret0, _ := ret[0].(float64)
+	ret1, _ := ret[1].(float64)
+	return ret0, ret1
+}
+
+// GetCurrents1p indicates an expected call of GetCurrents1p.
+func (mr *MockAPIMockRecorder) GetCurrents1p() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrents1p", reflect.TypeOf((*MockAPI)(nil).GetCurrents1p))
+}
+
 // GetDefaultMode mocks base method.
 func (m *MockAPI) GetDefaultMode() api.ChargeMode {
 	m.ctrl.T.Helper()
@@ -829,6 +844,20 @@ func (m *MockAPI) SetCircuitRef(arg0 string) {
 func (mr *MockAPIMockRecorder) SetCircuitRef(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCircuitRef", reflect.TypeOf((*MockAPI)(nil).SetCircuitRef), arg0)
+}
+
+// SetCurrents1p mocks base method.
+func (m *MockAPI) SetCurrents1p(arg0, arg1 float64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetCurrents1p", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetCurrents1p indicates an expected call of SetCurrents1p.
+func (mr *MockAPIMockRecorder) SetCurrents1p(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetCurrents1p", reflect.TypeOf((*MockAPI)(nil).SetCurrents1p), arg0, arg1)
 }
 
 // SetDefaultMode mocks base method.

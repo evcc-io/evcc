@@ -397,6 +397,44 @@
 							</FormRow>
 						</div>
 
+						<div v-if="showCurrent1p" class="row ms-3 mb-5">
+							<FormRow
+								id="loadpointMinCurrent1p"
+								:label="$t('config.loadpoint.minCurrent1pLabel')"
+								class="col-sm-6 mb-sm-0"
+								:help="$t('config.loadpoint.current1pHelp')"
+							>
+								<PropertyField
+									id="loadpointMinCurrent1p"
+									v-model="values.minCurrent1p"
+									type="Float"
+									unit="A"
+									size="w-25 w-min-200"
+									class="me-2"
+								/>
+							</FormRow>
+
+							<FormRow
+								id="loadpointMaxCurrent1p"
+								:label="$t('config.loadpoint.maxCurrent1pLabel')"
+								class="col-sm-6 mb-sm-0"
+								:help="
+									invalidCurrent1p
+										? $t('config.loadpoint.maxCurrent1pHelp')
+										: undefined
+								"
+							>
+								<PropertyField
+									id="loadpointMaxCurrent1p"
+									v-model="values.maxCurrent1p"
+									type="Float"
+									unit="A"
+									size="w-25 w-min-200"
+									class="me-2"
+								/>
+							</FormRow>
+						</div>
+
 						<template v-if="!chargerIsSinglePhase">
 							<FormRow
 								v-if="chargerSupports1p3p"
@@ -821,6 +859,13 @@ export default {
 			// switch devices have no current control, so minpv does not apply
 			const modes = this.chargerIsSwitchDevice ? [OFF, PV, NOW] : [OFF, PV, MINPV, NOW];
 			return modes.map((key) => ({ key, name: this.$t(`main.mode.${key}`) }));
+		},
+		showCurrent1p() {
+			return this.chargerSupports1p3p && !this.chargerIsSwitchDevice;
+		},
+		invalidCurrent1p() {
+			const { minCurrent1p, maxCurrent1p } = this.values;
+			return !!minCurrent1p && !!maxCurrent1p && maxCurrent1p < minCurrent1p;
 		},
 		showCircuit() {
 			return this.circuits.length > 0 || !!this.values.circuit;

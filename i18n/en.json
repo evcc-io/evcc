@@ -441,6 +441,7 @@
         "charging": "Charger saved. Creating charging point …",
         "heating": "Heating device saved. Creating heater …"
       },
+      "current1pHelp": "Optional limits while charging on one phase. Leave empty to use the regular current range.",
       "defaultModeHelp": {
         "charging": "Charging mode when connecting the vehicle.",
         "heating": "Is set when on system start."
@@ -454,10 +455,13 @@
       "energyMeterHelp": "Additional meter if the charger doesn't have an integrated one.",
       "energyMeterLabel": "Energy meter",
       "estimateLabel": "Interpolate charge level between API updates",
+      "maxCurrent1pHelp": "Must be greater than 1-phase minimum current.",
+      "maxCurrent1pLabel": "Maximum current (1-phase)",
       "maxCurrentHelp": "Must be greater than minimum current.",
       "maxCurrentLabel": "Maximum current",
       "maxTempHelp": "Must be greater than minimum temperature.",
       "maxTempLabel": "Maximum temperature",
+      "minCurrent1pLabel": "Minimum current (1-phase)",
       "minCurrentHelp": "Only go below 6 A if you know what you're doing.",
       "minCurrentLabel": "Minimum current",
       "minTempLabel": "Minimum temperature",

@@ -99,6 +99,7 @@ func TestEffectiveMinMaxCurrent(t *testing.T) {
 				MaxCurrent: tc.vehicleMax,
 			}
 			vehicle.EXPECT().OnIdentified().Return(ac).AnyTimes()
+			vehicle.EXPECT().Phases().Return(0).AnyTimes()
 
 			lp.vehicle = vehicle
 		}
@@ -106,6 +107,29 @@ func TestEffectiveMinMaxCurrent(t *testing.T) {
 		assert.Equal(t, tc.effectiveMin, lp.effectiveMinCurrent(), "min")
 		assert.Equal(t, tc.effectiveMax, lp.effectiveMaxCurrent(), "max")
 	}
+}
+
+func TestEffectiveCurrent1p(t *testing.T) {
+	Voltage = 230
+	ctrl := gomock.NewController(t)
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.charger = struct {
+		*api.MockCharger
+		*api.MockPhaseSwitcher
+	}{api.NewMockCharger(ctrl), api.NewMockPhaseSwitcher(ctrl)}
+
+	lp.minCurrent1p = 10
+	lp.maxCurrent1p = 20
+
+	assert.Equal(t, 10.0, lp.effectiveMinCurrentFor(1), "1p min")
+	assert.Equal(t, 20.0, lp.effectiveMaxCurrentFor(1), "1p max")
+	assert.Equal(t, 6.0, lp.effectiveMinCurrentFor(3), "3p min")
+	assert.Equal(t, 16.0, lp.effectiveMaxCurrentFor(3), "3p max")
+
+	// min power uses the 1p limit, max power the 3p limit
+	assert.Equal(t, 230*10.0, lp.EffectiveMinPower(), "min power")
+	assert.Equal(t, 3*230*16.0, lp.EffectiveMaxPower(), "max power")
 }
 
 func TestEffectivePowerLimiter(t *testing.T) {
