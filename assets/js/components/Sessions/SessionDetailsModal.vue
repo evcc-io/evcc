@@ -121,7 +121,7 @@
 							{{ socRange }}
 						</td>
 					</tr>
-					<tr v-if="session.addedRange" data-testid="session-details-added-range">
+					<tr v-if="session.addedRange != null" data-testid="session-details-added-range">
 						<th class="align-baseline">
 							{{ $t("session.addedRange") }}
 						</th>
