@@ -963,6 +963,8 @@ export type RemoteStatus = {
   loginBlocked: boolean;
   /** Last remote activity per client, keyed by username. RFC3339 timestamps. */
   lastSeen?: Record<string, string>;
+  /** Last connection error. */
+  error?: string;
 };
 
 export type RemoteClient = {
