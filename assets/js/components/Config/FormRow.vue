@@ -1,4 +1,4 @@
-<!-- eslint-disable vue/no-v-html -->
+<!-- oxlint-disable vue/no-v-html -->
 <template>
 	<div class="mb-4">
 		<label :for="id">

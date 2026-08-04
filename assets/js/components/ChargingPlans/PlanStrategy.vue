@@ -96,8 +96,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
-import { SMART_COST_TYPE } from "@/types/evcc";
-import type { PlanStrategy } from "./types";
+import { SMART_COST_TYPE, type PlanStrategy } from "@/types/evcc";
 
 export default defineComponent({
 	name: "ChargingPlanStrategy",
