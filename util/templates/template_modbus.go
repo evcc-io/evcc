@@ -25,12 +25,9 @@ func (t *Template) ModbusParams(modbusType string, values map[string]any) {
 		return
 	}
 
-	// check if the modbus params are already added
-	if index, _ := t.ParamByName("id"); index >= 0 {
-		return
-	}
-
-	// skip params the template already defines (e.g. deprecated delay, timeout)
+	// skip params the template already defines (deprecated delay and timeout, or
+	// one declared to override its help text). This also makes repeated calls
+	// idempotent, since everything appended below is found again.
 	modbusParams := slices.DeleteFunc(slices.Clone(ConfigDefaults.Modbus.Types[values[ParamModbus].(string)].Params), func(p Param) bool {
 		i, _ := t.ParamByName(p.Name)
 		return i >= 0

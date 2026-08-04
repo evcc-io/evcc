@@ -51,6 +51,39 @@ func TestModbusTemplateUserIDOverridesTemplate(t *testing.T) {
 	}
 }
 
+// TestModbusParamHelpOverride verifies that a template may declare a modbus
+// param to override its help text: it keeps that help, still inherits the
+// definition's default, and does not suppress the remaining modbus params.
+func TestModbusParamHelpOverride(t *testing.T) {
+	ConfigDefaults.Load()
+
+	tmpl := &Template{
+		Params: []Param{
+			{Name: ParamModbus, Choice: []string{ModbusChoiceTCPIP}},
+			{Name: ModbusParamId, Help: TextLanguage{EN: "unit id of the meter"}},
+		},
+	}
+	require.NoError(t, tmpl.UpdateModbusParamsWithDefaults())
+
+	_, id := tmpl.ParamByName(ModbusParamId)
+	assert.Equal(t, "unit id of the meter", id.Help.EN, "template help must survive")
+	assert.Equal(t, "1", id.Default, "default must be inherited from the modbus definition")
+
+	// the declared id must not stop host/port from being added
+	values := map[string]any{ParamModbus: ModbusChoiceTCPIP}
+	tmpl.ModbusParams("", values)
+
+	for _, name := range []string{ModbusParamId, "host", ModbusParamPort} {
+		i, _ := tmpl.ParamByName(name)
+		assert.GreaterOrEqual(t, i, 0, "missing modbus param %s", name)
+	}
+
+	// adding is idempotent
+	before := len(tmpl.Params)
+	tmpl.ModbusParams("", values)
+	assert.Equal(t, before, len(tmpl.Params), "repeated call must not duplicate params")
+}
+
 // TestWallbeTemplateCoveredByPhoenix verifies the BC migration: a config that
 // still references the removed `wallbe` templates is transparently routed to
 // the phoenix-ev-eth template via the `covers:` directive, while still

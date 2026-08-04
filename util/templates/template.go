@@ -63,6 +63,16 @@ func (t *Template) UpdateModbusParamsWithDefaults() error {
 	}
 
 	t.Params[idx] = modbusParam
+
+	// a template may declare a modbus param itself to override its help text.
+	// Inherit the definition's default so it only has to state the override -
+	// the displayed label keeps coming from the UI's translations.
+	for _, def := range ConfigDefaults.Modbus.Definitions {
+		if i, own := t.ParamByName(def.Name); i >= 0 && own.Default == "" {
+			t.Params[i].Default = def.Default
+		}
+	}
+
 	return nil
 }
 

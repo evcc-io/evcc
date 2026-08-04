@@ -32,8 +32,29 @@ export type Template = {
 
 export type TemplateParamUsage = "vehicle" | "battery" | "grid" | "pv" | "charger" | "aux" | "ext";
 
+// modbus params the Modbus/ModbusAdvanced components render themselves. A
+// template may declare one to override its help text.
+export const MODBUS_FIELDS = [
+  "id",
+  "host",
+  "port",
+  "device",
+  "baudrate",
+  "comset",
+  "delay",
+  "timeout",
+];
+
+// modbusHelpOverrides collects the help texts a template provides for fields the
+// modbus components render themselves, keyed by param name
+export const modbusHelpOverrides = (params: TemplateParam[]): Record<string, string> =>
+  Object.fromEntries(
+    params.filter((p) => p.Help && MODBUS_FIELDS.includes(p.Name)).map((p) => [p.Name, p.Help!])
+  );
+
 export type TemplateParam = {
   Name: string;
+  Help?: string;
   Required: boolean;
   Advanced: boolean;
   Deprecated: boolean;

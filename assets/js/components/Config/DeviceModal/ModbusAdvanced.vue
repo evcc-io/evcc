@@ -2,7 +2,7 @@
 	<FormRow
 		:id="formId('modbusTimeout')"
 		:label="$t('config.modbus.timeout')"
-		:help="$t('config.modbus.timeoutHint')"
+		:help="helpOverrides['timeout'] || $t('config.modbus.timeoutHint')"
 	>
 		<PropertyField
 			:id="formId('modbusTimeout')"
@@ -16,7 +16,7 @@
 	<FormRow
 		:id="formId('modbusDelay')"
 		:label="$t('config.modbus.delay')"
-		:help="$t('config.modbus.delayHint')"
+		:help="helpOverrides['delay'] || $t('config.modbus.delayHint')"
 	>
 		<PropertyField
 			:id="formId('modbusDelay')"
@@ -31,6 +31,7 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
+import type { PropType } from "vue";
 import FormRow from "../FormRow.vue";
 import PropertyField from "../PropertyField.vue";
 
@@ -41,6 +42,8 @@ export default defineComponent({
 		componentId: { type: String, required: true },
 		delay: [Number, String],
 		timeout: [Number, String],
+		// per-field help texts a template overrides, keyed by modbus param name
+		helpOverrides: { type: Object as PropType<Record<string, string>>, default: () => ({}) },
 	},
 	emits: ["update:delay", "update:timeout"],
 	methods: {

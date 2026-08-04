@@ -38,7 +38,12 @@
 			</label>
 		</div>
 	</FormRow>
-	<FormRow v-if="!hideModbusId" id="modbusId" :label="$t('config.modbus.id')">
+	<FormRow
+		v-if="!hideModbusId"
+		id="modbusId"
+		:label="$t('config.modbus.id')"
+		:help="helpOverrides['id']"
+	>
 		<PropertyField
 			id="modbusId"
 			property="id"
@@ -53,7 +58,7 @@
 		<FormRow
 			:id="formId('modbusHost')"
 			:label="$t('config.modbus.host')"
-			:help="$t('config.modbus.hostHint')"
+			:help="helpOverrides['host'] || $t('config.modbus.hostHint')"
 		>
 			<PropertyField
 				:id="formId('modbusHost')"
@@ -65,7 +70,11 @@
 				@update:model-value="(v) => $emit('update:host', v)"
 			/>
 		</FormRow>
-		<FormRow :id="formId('modbusPort')" :label="$t('config.modbus.port')">
+		<FormRow
+			:id="formId('modbusPort')"
+			:label="$t('config.modbus.port')"
+			:help="helpOverrides['port']"
+		>
 			<PropertyField
 				:id="formId('modbusPort')"
 				property="port"
@@ -120,7 +129,7 @@
 		<FormRow
 			:id="formId('modbusDevice')"
 			:label="$t('config.modbus.device')"
-			:help="$t('config.modbus.deviceHint')"
+			:help="helpOverrides['device'] || $t('config.modbus.deviceHint')"
 			data-testid="modbus-device"
 		>
 			<PropertyField
@@ -133,7 +142,11 @@
 				:service-values="deviceServiceValues"
 			/>
 		</FormRow>
-		<FormRow :id="formId('modbusBaudrate')" :label="$t('config.modbus.baudrate')">
+		<FormRow
+			:id="formId('modbusBaudrate')"
+			:label="$t('config.modbus.baudrate')"
+			:help="helpOverrides['baudrate']"
+		>
 			<PropertyField
 				:id="formId('modbusBaudrate')"
 				property="baudrate"
@@ -145,7 +158,11 @@
 				@update:model-value="(v) => $emit('update:baudrate', parseInt(v))"
 			/>
 		</FormRow>
-		<FormRow :id="formId('modbusComset')" :label="$t('config.modbus.comset')">
+		<FormRow
+			:id="formId('modbusComset')"
+			:label="$t('config.modbus.comset')"
+			:help="helpOverrides['comset']"
+		>
 			<PropertyField
 				:id="formId('modbusComset')"
 				property="comset"
@@ -196,6 +213,8 @@ export default defineComponent({
 		defaultComset: String,
 		defaultBaudrate: Number,
 		hideModbusId: Boolean,
+		// per-field help texts a template overrides, keyed by modbus param name
+		helpOverrides: { type: Object as PropType<Record<string, string>>, default: () => ({}) },
 	},
 	emits: [
 		"update:modbus",

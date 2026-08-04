@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { createServiceEndpoints, type TemplateParam } from "./index";
+import { createServiceEndpoints, modbusHelpOverrides, type TemplateParam } from "./index";
 
 const buildParam = (name: string, service?: string): TemplateParam => ({
   Name: name,
@@ -7,6 +7,27 @@ const buildParam = (name: string, service?: string): TemplateParam => ({
   Advanced: false,
   Deprecated: false,
   Service: service,
+});
+
+describe("modbusHelpOverrides", () => {
+  const withHelp = (name: string, help?: string): TemplateParam => ({
+    ...buildParam(name),
+    Help: help,
+  });
+
+  it("collects help for modbus fields only", () => {
+    expect(
+      modbusHelpOverrides([
+        withHelp("id", "unit id of the meter"),
+        withHelp("timeout", "be patient"),
+        withHelp("storageunit", "not a modbus field"),
+      ])
+    ).toEqual({ id: "unit id of the meter", timeout: "be patient" });
+  });
+
+  it("skips modbus fields without help", () => {
+    expect(modbusHelpOverrides([withHelp("id"), withHelp("host", "")])).toEqual({});
+  });
 });
 
 describe("createServiceEndpoints", () => {

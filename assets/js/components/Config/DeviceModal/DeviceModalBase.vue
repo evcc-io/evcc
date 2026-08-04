@@ -138,6 +138,7 @@
 								:defaultBaudrate="modbus.Baudrate"
 								:defaultPort="modbus.Port"
 								:capabilities="modbusCapabilities"
+								:help-overrides="modbusHelpOverrides"
 							/>
 
 							<PropertyEntry
@@ -157,6 +158,7 @@
 										v-model:delay="values['delay']"
 										v-model:timeout="values['timeout']"
 										component-id="device"
+										:help-overrides="modbusHelpOverrides"
 									/>
 									<PropertyEntry
 										v-for="param in advancedParams"
@@ -243,6 +245,8 @@ import {
 	createDeviceUtils,
 	fetchServiceValues,
 	ADMIN_PASSWORD_REQUIRED,
+	MODBUS_FIELDS,
+	modbusHelpOverrides,
 } from "./index";
 import deepEqual from "@/utils/deepEqual";
 
@@ -365,6 +369,8 @@ export default defineComponent({
 			const filtered = params.filter(
 				(p) =>
 					!this.customFields.includes(p.Name) &&
+					// the modbus components render these themselves
+					!(this.modbus && MODBUS_FIELDS.includes(p.Name)) &&
 					(p.Usages ? p.Usages.includes(this.deviceType as any) : true)
 			);
 
@@ -400,6 +406,9 @@ export default defineComponent({
 		},
 		modbusCapabilities() {
 			return (this.modbus?.Choice || []) as ModbusCapability[];
+		},
+		modbusHelpOverrides(): Record<string, string> {
+			return modbusHelpOverrides((this.template?.Params || []) as TemplateParam[]);
 		},
 		modbusDefaults() {
 			return {
