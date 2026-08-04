@@ -183,7 +183,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 44002 # Remote Active Power, int32 across 44002 (high word) and 44003 (low word)
+                address: 44002 # Remote Active Power
                 type: writemultiple
                 encoding: int32
       - case: 3 # charge - force battery charge
@@ -223,7 +223,7 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 44002 # Remote Active Power, int32 across 44002 (high word) and 44003 (low word)
+                address: 44002 # Remote Active Power
                 type: writemultiple
                 encoding: int32
   {{- include "battery-params" . }}
