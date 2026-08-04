@@ -20,6 +20,7 @@ package charger
 import (
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
@@ -123,7 +124,7 @@ func (wb *CfosPowerBrain) Status() (api.ChargeStatus, error) {
 		return api.StatusB, nil
 	case 2: // laden
 		return api.StatusC, nil
-	case 5:
+	case 5: // Übertemperatur
 		return api.StatusNone, errors.New("temperature exceeded")
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", b[1])
