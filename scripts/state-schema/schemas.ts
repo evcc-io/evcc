@@ -20,6 +20,12 @@ const RENAME: Record<string, string> = {
   MODBUS_BAUDRATE: "ModbusBaudrate",
   MODBUS_COMSET: "ModbusComset",
   MODBUS_PROXY_READONLY: "ModbusProxyReadonly",
+  // the wire types describe the API payload, the expanded UI variants keep the
+  // plain names in evcc.ts but are not part of the schema
+  WireForecast: "Forecast",
+  WireForecastSlot: "ForecastSlot",
+  WireTimeseriesEntry: "TimeseriesEntry",
+  WireSolarDetails: "SolarDetails",
 };
 
 const VALID_NAME = /^[a-zA-Z0-9._-]+$/;
@@ -112,6 +118,13 @@ function normalizeNullables(schema: AnySchema): void {
       } else {
         node.allOf = rest;
       }
+    }
+    // openapi 3.0 cannot express tuple positions, document tuples as
+    // fixed-length uniform arrays; positional meaning lives in the description
+    if (Array.isArray(node.items)) {
+      const types = [...new Set(node.items.map((item: AnySchema) => item.type))];
+      if (types.length !== 1) throw new Error(`tuple with mixed item types not supported`);
+      node.items = { type: types[0] };
     }
     // openapi 3.0 has no `const`, use a single-value enum
     if ("const" in node) {

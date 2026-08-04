@@ -160,8 +160,11 @@ export interface State {
   apiReady?: boolean;
   /** Charging locations. One entry per configured loadpoint. */
   loadpoints: Loadpoint[];
+  // typed as the wire format for schema generation; at runtime the store
+  // expands slots to Forecast objects (expandForecast in utils/forecast),
+  // so consumers cast to the expanded Forecast type
   /** Price, CO₂ and solar production forecasts. */
-  forecast: Forecast;
+  forecast: WireForecast;
   /** Configured currency for all monetary values. */
   currency?: CURRENCY;
   /** Fatal startup errors. */
@@ -1296,11 +1299,33 @@ export interface ForecastSlot {
   value: number;
 }
 
-/** Wire format of a forecast slot: [start, end, value], timestamps in unix seconds. */
+/** A forecast time slot as [start, end, value] array. Start and end are unix seconds. Value unit depends on the forecast type. */
 export type WireForecastSlot = [number, number, number];
 
-/** Wire format of a timeseries entry: [ts, val], timestamp in unix seconds. */
+/** A forecast value at a point in time as [ts, val] array. ts is unix seconds, val is power in W. */
 export type WireTimeseriesEntry = [number, number];
+
+/** Solar production forecast. */
+export interface WireSolarDetails extends Omit<SolarDetails, "timeseries"> {
+  /** Expected production power over time. */
+  timeseries?: WireTimeseriesEntry[];
+}
+
+/** Price, CO₂ and solar production forecasts. */
+export interface WireForecast {
+  /** Grid price forecast. Price per kWh in the configured currency per time slot. */
+  grid?: WireForecastSlot[];
+  /** CO₂ emission forecast in g/kWh per time slot. */
+  co2?: WireForecastSlot[];
+  /** Solar production forecast. */
+  solar?: WireSolarDetails;
+  /** Charging cost forecast used by the plan optimizer per time slot. */
+  planner?: WireForecastSlot[];
+  /** Feed-in rate forecast. Rate per kWh in the configured currency per time slot. */
+  feedin?: WireForecastSlot[];
+  /** Temperature forecast in °C per time slot. */
+  temperature?: WireForecastSlot[];
+}
 
 /** Expected solar production energy of a day. */
 export interface EnergyByDay {

@@ -1,5 +1,5 @@
 import { reactive } from "vue";
-import type { State } from "./types/evcc";
+import type { Forecast, State } from "./types/evcc";
 import { convertToUiLoadpoints } from "./uiLoadpoints";
 import { useDebouncedComputed } from "./utils/useDebouncedComputed";
 import { expandForecast } from "./utils/forecast";
@@ -28,7 +28,11 @@ function setProperty(obj: object, props: string[], value: any) {
   setProperty(obj[prop], props, value);
 }
 
-const initialState: State = {
+// State types the forecast in wire format for schema generation, update()
+// expands it via expandForecast, so the store carries the expanded Forecast
+export type UiState = Omit<State, "forecast"> & { forecast: Forecast };
+
+const initialState: UiState = {
   offline: false,
   loadpoints: [],
   vehicles: {},
@@ -45,7 +49,7 @@ const uiLoadpoints = useDebouncedComputed(
 );
 
 export interface Store {
-  state: State; // raw state from websocket
+  state: UiState; // raw state from websocket, forecast expanded
   uiLoadpoints: typeof uiLoadpoints;
   offline(value: boolean): void;
   update(msg: any): void;
