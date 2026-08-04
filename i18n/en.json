@@ -1296,14 +1296,13 @@
         "label": "Late Charging",
         "optionAll": "everything",
         "optionNo": "no",
-        "summary": "{precondition} before departure"
+        "summary": "{precondition} before"
       },
       "remove": "Remove",
       "repeating": "repeating",
       "repeatingPlans": "Repeating plans",
       "selectAll": "Select all",
       "strategy": {
-        "close": "close",
         "label": "Strategy"
       },
       "strategyDisabledDescription": "Charging starts as late as possible to finish just in time for departure. With dynamic grid prices or CO₂ tariff, more options are available here.",

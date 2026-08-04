@@ -1296,14 +1296,13 @@
         "label": "Spätes Laden",
         "optionAll": "alles",
         "optionNo": "nein",
-        "summary": "{precondition} vor Abfahrt"
+        "summary": "{precondition} vorher"
       },
       "remove": "Entfernen",
       "repeating": "wiederholend",
       "repeatingPlans": "Wiederholende Pläne",
       "selectAll": "Alle wählen",
       "strategy": {
-        "close": "schließen",
         "label": "Strategie"
       },
       "strategyDisabledDescription": "Das Laden startet so spät wie möglich und wird rechtzeitig zur Abfahrt abgeschlossen. Mit dynamischen Netzpreisen oder einem CO₂-Tarif stehen hier weitere Optionen zur Verfügung.",

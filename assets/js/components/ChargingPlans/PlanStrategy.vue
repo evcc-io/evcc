@@ -1,27 +1,23 @@
 <template>
 	<div data-testid="plan-strategy" class="mb-5 mb-lg-4">
-		<div v-if="!open">
-			<span class="text-uppercase evcc-gray">{{ $t("main.chargingPlan.strategy.label") }}:</span>
-			{{ " " }}
-			<span v-if="disabled" class="small">{{ summary }}</span>
+		<div :class="{ 'mb-2': open }">
+			<div v-if="disabled">
+				<span class="fw-bold evcc-gray">{{ $t("main.chargingPlan.strategy.label") }}:</span>
+				{{ " " }}
+				<span class="small">{{ summary }}</span>
+			</div>
 			<button
 				v-else
 				type="button"
-				class="btn btn-link small p-0 align-baseline text-start"
-				@click="open = true"
+				class="btn btn-link btn-sm text-gray p-0 border-0 d-flex align-items-center text-start"
+				:class="{ 'text-primary': open }"
+				@click="open = !open"
 			>
-				{{ summary }}
-			</button>
-		</div>
-		<div v-else class="mb-2">
-			<span class="text-uppercase evcc-gray">{{ $t("main.chargingPlan.strategy.label") }}</span>
-			{{ " " }}
-			<button
-				type="button"
-				class="btn btn-link small p-0 align-baseline ms-1"
-				@click="open = false"
-			>
-				{{ $t("main.chargingPlan.strategy.close") }}
+				<span class="fw-bold">
+					{{ $t("main.chargingPlan.strategy.label") }}<span v-if="!open">:</span>
+				</span>
+				<span v-if="!open" class="ms-1">{{ summary }}</span>
+				<DropdownIcon class="icon flex-shrink-0" :class="{ iconUp: open }" />
 			</button>
 		</div>
 		<div class="collapsible-wrapper" :class="{ open }">
@@ -97,9 +93,11 @@
 import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
 import { SMART_COST_TYPE, type PlanStrategy } from "@/types/evcc";
+import DropdownIcon from "../MaterialIcon/Dropdown.vue";
 
 export default defineComponent({
 	name: "ChargingPlanStrategy",
+	components: { DropdownIcon },
 	mixins: [formatter],
 	props: {
 		id: [String, Number],
@@ -213,5 +211,12 @@ export default defineComponent({
 .ring-space {
 	padding: 0.5rem;
 	margin: -0.5rem;
+}
+.icon {
+	transform: rotate(0deg);
+	transition: transform var(--evcc-transition-medium) ease;
+}
+.iconUp {
+	transform: rotate(-180deg);
 }
 </style>
