@@ -1055,30 +1055,29 @@ func (site *Site) reservedPVPower(lp updater) float64 {
 // circuit with another planning loadpoint, so their plans do not overcommit it.
 // Loadpoints without contention keep planning independently (sharedPlan cleared).
 func (site *Site) computeSharedPlans(rates api.Rates) {
-	// clear last cycle's assignments
-	for _, lp := range site.loadpoints {
-		lp.setSharedPlan(nil)
+	type request struct {
+		lp  *Loadpoint
+		req planner.SharedPlanRequest
 	}
 
-	// without a tariff the independent path handles simple target charging
-	if len(rates) == 0 {
-		return
-	}
-
-	// group planning loadpoints by circuit
-	byCircuit := map[api.Circuit][]*Loadpoint{}
-	for _, lp := range site.loadpoints {
-		if c := lp.GetCircuit(); c != nil {
-			if _, ok := lp.sharedPlanRequest(); ok {
-				byCircuit[c] = append(byCircuit[c], lp)
+	// group planning loadpoints by circuit- without a tariff the independent path applies
+	byCircuit := map[api.Circuit][]request{}
+	if len(rates) > 0 {
+		for _, lp := range site.loadpoints {
+			if c := lp.GetCircuit(); c != nil {
+				if req, ok := lp.sharedPlanRequest(); ok {
+					byCircuit[c] = append(byCircuit[c], request{lp, req})
+				}
 			}
 		}
 	}
 
 	now := time.Now()
-	for c, lps := range byCircuit {
+	plans := make(map[*Loadpoint]*sharedPlan)
+
+	for c, rr := range byCircuit {
 		// power-limited circuit with contention only
-		if len(lps) < 2 {
+		if len(rr) < 2 {
 			continue
 		}
 		budget := circuitMaxPower(c)
@@ -1086,15 +1085,23 @@ func (site *Site) computeSharedPlans(rates api.Rates) {
 			continue
 		}
 
-		reqs := make([]planner.SharedPlanRequest, len(lps))
-		for i, lp := range lps {
-			reqs[i], _ = lp.sharedPlanRequest()
+		reqs := make([]planner.SharedPlanRequest, len(rr))
+		for i, r := range rr {
+			reqs[i] = r.req
 		}
 
-		plans := planner.AllocateShared(now, budget, rates, reqs)
-		for i, lp := range lps {
-			lp.setSharedPlan(plans[i])
+		for i, p := range planner.AllocateShared(now, budget, rates, reqs) {
+			plans[rr[i].lp] = &sharedPlan{
+				rates:    p,
+				target:   reqs[i].TargetTime,
+				duration: reqs[i].RequiredDuration,
+			}
 		}
+	}
+
+	// assign in one pass, clearing loadpoints that are no longer contended
+	for _, lp := range site.loadpoints {
+		lp.setSharedPlan(plans[lp])
 	}
 }
 

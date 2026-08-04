@@ -91,28 +91,49 @@ Root gap: plans optimise against the tariff and clamp only to the circuit's
       a throttled loadpoint charges slower than `maxPower` assumed, so its plan
       eventually overruns.
 
-### Phase 1 — Deterministic priority-aware clamp (Option C) — dropped
+### Phase 1 — Deterministic priority-aware clamp (Option C)
 
-Reordering the round-robin update sequence by priority was tried and reverted:
-it does not help. Updates are round-robin (one loadpoint per tick) and also
-event-driven (`lpUpdateChan`), and the clamp reacts to *measured* power, so in
-steady state allocation is order-independent and the reorder is a near no-op.
+Reordering the round-robin update sequence by priority was tried first and
+reverted: it does not help. Updates are round-robin (one loadpoint per tick) and
+also event-driven (`lpUpdateChan`), and the clamp reacts to *measured* power, so
+in steady state allocation is order-independent and the reorder is a near no-op.
 
-Priority must instead drive **planner allocation** (Phase 2): plan loadpoints in
-priority order against the shared-capacity ledger. The round-robin control
-sequence stays untouched.
+The clamp itself is what has to become rank-aware, and it now is:
+
+- [x] `api.CircuitLoad` gains `GetRank()` and `GetDeadlineDemand()`. Rank is
+      `EffectivePriority` plus a tier — `rankForced` (ModeNow/minSoc) beats
+      `rankPlanActive` beats plain priority. Deadline demand is the power and
+      per-phase current a *connected, deadline-bound* loadpoint still needs
+      (`EffectiveMaxPower - chargePower`); it is zero otherwise, so ordinary
+      loadpoints never hold each other back.
+- [x] `Circuit.Update` stores the load list; `ValidatePower`/`ValidateCurrent`
+      take the asking load and subtract the unmet deadline demand of
+      strictly-higher-ranked loads on the same circuit (walking `GetParent`, so a
+      shared parent arbitrates across children too).
+- [x] The reservation only ever *reduces* the asking load. A higher-ranked load
+      claims the freed headroom on its own next update, so the circuit stays
+      within its limit at every point in time — no optimistic reclaim.
+- [x] Tests (`TestRankReservation`, `TestRankReservationParent`): a lower-ranked
+      load yields exactly the reservation, a higher-ranked one is unaffected,
+      equal ranks never reserve against each other, and the reservation applies
+      on a shared parent circuit.
+
+This is what makes Phase 2 sound: the ledger allocates in descending rank, and
+the runtime clamp now enforces that same order, so a plan's assumed share and
+the share it actually gets agree.
 
 ### Phase 2 — Capacity ledger + priority-ordered planning (Option B)
-- [x] Per-slot residual-capacity ledger (`planner.CapacityLedger`): `Available`,
-      `Reserve`, and `CanHost` (semi-continuous min-power gate). Single circuit,
-      static budget for now; parent/child tree still TODO.
+- [x] Per-slot residual-capacity ledger (`planner.CapacityLedger`): `Available`
+      and `Reserve`. Single circuit, static budget for now; parent/child tree
+      still TODO.
 - [x] `planner.planCapped` (per-slot power cap): with `avail==nil` it is the old
       full-power duration accounting (`optimalPlan` delegates, behaviour
       unchanged); with a cap a slot delivers `min(maxPower, avail)` and is skipped
       below `minPower`, so a power-limited slot counts proportionally less and the
       plan spills into more slots. Not yet wired into `Plan` (needs the ledger).
 - [x] Allocation algorithm (`planner.AllocateShared`): builds a `CapacityLedger`,
-      orders `SharedPlanRequest`s forced-first then priority-desc, plans each with
+      orders `SharedPlanRequest`s by descending `Rank` — the same
+      `api.CircuitLoad.GetRank()` the Phase 1 clamp enforces — plans each with
       `planCapped` against the residual, and reserves its actual per-slot draw.
 - [x] Semi-continuous `EffectiveMinPower` chunks: a loadpoint is scheduled only
       where `>= minPower` is free (`planCapped` skip); `evcc-io/optimizer#91` rule.
@@ -120,7 +141,9 @@ sequence stays untouched.
       full-power loadpoints can't share, small ones do, forced beats priority.
 - [x] Live wiring (`site.computeSharedPlans`): each cycle the site groups
       planning loadpoints by circuit, calls `AllocateShared`, and stores each
-      plan on the loadpoint (`setSharedPlan`); `GetPlan` returns it when set.
+      plan on the loadpoint (`setSharedPlan`, mutex-guarded) together with the
+      target and duration it was computed for; `GetPlan` returns it only for
+      exactly that goal, so `/plan/preview` still plans its hypothetical target.
       Only power-limited circuits with 2+ contending loadpoints are allocated;
       single/no-circuit, precondition, continuous and no-tariff cases keep the
       independent path. The reactive circuit clamp remains the safety backstop.

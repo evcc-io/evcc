@@ -15,15 +15,21 @@ func TestGetPlanUsesSharedPlan(t *testing.T) {
 	lp.planner = planner.New(util.NewLogger("foo"), nil)
 
 	now := time.Now()
-	shared := api.Rates{{Start: now, End: now.Add(time.Hour)}}
-	lp.setSharedPlan(shared)
+	target := now.Add(2 * time.Hour)
+	rates := api.Rates{{Start: now, End: now.Add(time.Hour)}}
+	lp.setSharedPlan(&sharedPlan{rates: rates, target: target, duration: time.Hour})
 
 	// GetPlan returns the site-assigned shared plan verbatim
-	assert.Equal(t, shared, lp.GetPlan(now.Add(2*time.Hour), time.Hour, 0, false))
+	assert.Equal(t, rates, lp.GetPlan(target, time.Hour, 0, false))
+
+	// a preview for a different goal must not be answered with the shared plan,
+	// otherwise /plan/preview returns the committed plan instead (#31902)
+	assert.NotEqual(t, rates, lp.GetPlan(target.Add(time.Hour), time.Hour, 0, false), "different target")
+	assert.NotEqual(t, rates, lp.GetPlan(target, 2*time.Hour, 0, false), "different duration")
 
 	// cleared -> falls back to the independent path (simple plan, not the shared one)
 	lp.setSharedPlan(nil)
-	assert.NotEqual(t, shared, lp.GetPlan(now.Add(2*time.Hour), time.Hour, 0, false))
+	assert.NotEqual(t, rates, lp.GetPlan(target, time.Hour, 0, false))
 }
 
 func TestSharedPlanRequestNoGoal(t *testing.T) {

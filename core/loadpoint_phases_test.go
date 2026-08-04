@@ -618,11 +618,11 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 				minPower3p := Voltage * 6 * 3
 
 				// fastCharging call to ValidatePower
-				circuit.EXPECT().ValidatePower(tc.chargePower, minPower3p).Return(tc.availableCircuitPower)
+				circuit.EXPECT().ValidatePower(lp, tc.chargePower, minPower3p).Return(tc.availableCircuitPower)
 
 				// setLimit calls
-				circuit.EXPECT().ValidateCurrent(gomock.Any(), lp.maxCurrent).Return(lp.maxCurrent)
-				circuit.EXPECT().ValidatePower(tc.chargePower, float64(tc.expectedPhases)*Voltage*lp.maxCurrent).Return(float64(tc.expectedPhases) * Voltage * lp.maxCurrent)
+				circuit.EXPECT().ValidateCurrent(lp, gomock.Any(), lp.maxCurrent).Return(lp.maxCurrent)
+				circuit.EXPECT().ValidatePower(lp, tc.chargePower, float64(tc.expectedPhases)*Voltage*lp.maxCurrent).Return(float64(tc.expectedPhases) * Voltage * lp.maxCurrent)
 			}
 
 			plainCharger.EXPECT().Enabled().Return(true, nil).AnyTimes()

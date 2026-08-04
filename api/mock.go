@@ -1108,31 +1108,31 @@ func (mr *MockCircuitMockRecorder) Update(arg0 any) *gomock.Call {
 }
 
 // ValidateCurrent mocks base method.
-func (m *MockCircuit) ValidateCurrent(old, new float64) float64 {
+func (m *MockCircuit) ValidateCurrent(load CircuitLoad, old, new float64) float64 {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ValidateCurrent", old, new)
+	ret := m.ctrl.Call(m, "ValidateCurrent", load, old, new)
 	ret0, _ := ret[0].(float64)
 	return ret0
 }
 
 // ValidateCurrent indicates an expected call of ValidateCurrent.
-func (mr *MockCircuitMockRecorder) ValidateCurrent(old, new any) *gomock.Call {
+func (mr *MockCircuitMockRecorder) ValidateCurrent(load, old, new any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateCurrent", reflect.TypeOf((*MockCircuit)(nil).ValidateCurrent), old, new)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateCurrent", reflect.TypeOf((*MockCircuit)(nil).ValidateCurrent), load, old, new)
 }
 
 // ValidatePower mocks base method.
-func (m *MockCircuit) ValidatePower(old, new float64) float64 {
+func (m *MockCircuit) ValidatePower(load CircuitLoad, old, new float64) float64 {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ValidatePower", old, new)
+	ret := m.ctrl.Call(m, "ValidatePower", load, old, new)
 	ret0, _ := ret[0].(float64)
 	return ret0
 }
 
 // ValidatePower indicates an expected call of ValidatePower.
-func (mr *MockCircuitMockRecorder) ValidatePower(old, new any) *gomock.Call {
+func (mr *MockCircuitMockRecorder) ValidatePower(load, old, new any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatePower", reflect.TypeOf((*MockCircuit)(nil).ValidatePower), old, new)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatePower", reflect.TypeOf((*MockCircuit)(nil).ValidatePower), load, old, new)
 }
 
 // MockDimmer is a mock of Dimmer interface.

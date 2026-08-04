@@ -42,8 +42,8 @@ func TestAllocateShared(t *testing.T) {
 	t.Run("full-power loadpoints cannot share a slot", func(t *testing.T) {
 		// two 11kW loadpoints on an 11kW circuit -> must take different slots
 		reqs := []SharedPlanRequest{
-			{Priority: 0, MaxPower: 11000, MinPower: minP, RequiredDuration: time.Hour, TargetTime: target},
-			{Priority: 0, MaxPower: 11000, MinPower: minP, RequiredDuration: time.Hour, TargetTime: target},
+			{Rank: 0, MaxPower: 11000, MinPower: minP, RequiredDuration: time.Hour, TargetTime: target},
+			{Rank: 0, MaxPower: 11000, MinPower: minP, RequiredDuration: time.Hour, TargetTime: target},
 		}
 		plans := AllocateShared(start, 11000, rates(), reqs)
 		require.Len(t, plans, 2)
@@ -56,8 +56,8 @@ func TestAllocateShared(t *testing.T) {
 	t.Run("small loadpoints share a slot", func(t *testing.T) {
 		// two 3.7kW loadpoints on 11kW -> both fit the same cheapest slot
 		reqs := []SharedPlanRequest{
-			{Priority: 0, MaxPower: 3700, MinPower: minP, RequiredDuration: time.Hour, TargetTime: target},
-			{Priority: 0, MaxPower: 3700, MinPower: minP, RequiredDuration: time.Hour, TargetTime: target},
+			{Rank: 0, MaxPower: 3700, MinPower: minP, RequiredDuration: time.Hour, TargetTime: target},
+			{Rank: 0, MaxPower: 3700, MinPower: minP, RequiredDuration: time.Hour, TargetTime: target},
 		}
 		plans := AllocateShared(start, 11000, rates(), reqs)
 		assert.True(t, plans[0][0].Start.Equal(plans[1][0].Start), "should share the cheapest slot")
@@ -72,8 +72,8 @@ func TestAllocateShared(t *testing.T) {
 		cheapStart := cheap[2].Start
 
 		reqs := []SharedPlanRequest{
-			{Priority: 9, MaxPower: 11000, MinPower: minP, RequiredDuration: time.Hour, TargetTime: target}, // high prio
-			{Forced: true, Priority: 0, MaxPower: 11000, MinPower: minP, RequiredDuration: time.Hour, TargetTime: target},
+			{Rank: 9, MaxPower: 11000, MinPower: minP, RequiredDuration: time.Hour, TargetTime: target},    // high prio
+			{Rank: 2000, MaxPower: 11000, MinPower: minP, RequiredDuration: time.Hour, TargetTime: target}, // forced tier
 		}
 		plans := AllocateShared(start, 11000, cheap, reqs)
 		// forced (index 1) grabs the cheapest slot ahead of the high-priority peer

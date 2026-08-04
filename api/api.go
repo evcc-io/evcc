@@ -262,6 +262,11 @@ type CircuitMeasurements interface {
 type CircuitLoad interface {
 	CircuitMeasurements
 	GetCircuit() Circuit
+	// GetRank orders loads competing for circuit capacity, higher wins
+	GetRank() int
+	// GetDeadlineDemand is the power and per-phase current a deadline-bound load
+	// still needs to meet its target, both zero if it has no deadline to meet
+	GetDeadlineDemand() (power, current float64)
 }
 
 // Circuit defines the load control domain
@@ -278,8 +283,8 @@ type Circuit interface {
 	SetMaxPower(float64)
 	SetMaxCurrent(float64)
 	Update([]CircuitLoad) error
-	ValidateCurrent(old, new float64) float64
-	ValidatePower(old, new float64) float64
+	ValidateCurrent(load CircuitLoad, old, new float64) float64
+	ValidatePower(load CircuitLoad, old, new float64) float64
 }
 
 // HEMS exposes the runtime state of the home energy management system.

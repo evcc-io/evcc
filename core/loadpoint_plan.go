@@ -112,9 +112,10 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration, preconditio
 		return nil
 	}
 
-	// use the circuit-aware plan when the site computed one for this cycle
-	if lp.sharedPlan != nil {
-		return lp.sharedPlan
+	// use the circuit-aware plan when the site computed one for exactly this goal.
+	// preview requests carry a different target or duration and are planned below.
+	if sp := lp.getSharedPlan(); sp != nil && sp.target.Equal(targetTime) && sp.duration == requiredDuration {
+		return sp.rates
 	}
 
 	lp.log.TRACE.Printf("plan: creating plan with continuous=%v, precondition=%v, duration=%v, target=%v",
@@ -123,8 +124,23 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration, preconditio
 	return lp.planner.Plan(requiredDuration, precondition, targetTime, continuous)
 }
 
+// sharedPlan is a circuit-aware plan together with the goal it was computed for
+type sharedPlan struct {
+	rates    api.Rates
+	target   time.Time
+	duration time.Duration
+}
+
+func (lp *Loadpoint) getSharedPlan() *sharedPlan {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.sharedPlan
+}
+
 // setSharedPlan stores a circuit-aware plan computed by the site (nil clears it).
-func (lp *Loadpoint) setSharedPlan(plan api.Rates) {
+func (lp *Loadpoint) setSharedPlan(plan *sharedPlan) {
+	lp.Lock()
+	defer lp.Unlock()
 	lp.sharedPlan = plan
 }
 
@@ -150,8 +166,7 @@ func (lp *Loadpoint) sharedPlanRequest() (planner.SharedPlanRequest, bool) {
 	}
 
 	return planner.SharedPlanRequest{
-		Forced:           lp.IsFastChargingActive(),
-		Priority:         lp.EffectivePriority(),
+		Rank:             lp.GetRank(),
 		MaxPower:         maxPower,
 		MinPower:         lp.EffectiveMinPower(),
 		RequiredDuration: requiredDuration,

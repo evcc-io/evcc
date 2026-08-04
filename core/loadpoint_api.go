@@ -957,3 +957,42 @@ func (lp *Loadpoint) GetCircuit() api.Circuit {
 
 	return lp.circuit
 }
+
+// circuit arbitration tiers, added to the loadpoint priority. Priority is a small
+// user-set number, so the tiers dominate: forced beats plan-active beats priority.
+const (
+	rankPlanActive = 1000
+	rankForced     = 2000
+)
+
+// rankTier returns the deadline tier used for circuit arbitration
+func (lp *Loadpoint) rankTier() int {
+	lp.RLock()
+	defer lp.RUnlock()
+
+	switch {
+	case lp.mode == api.ModeNow || lp.minSocNotReached():
+		return rankForced
+	case lp.planActive:
+		return rankPlanActive
+	default:
+		return 0
+	}
+}
+
+// GetRank implements api.CircuitLoad, ordering loads competing for circuit capacity
+func (lp *Loadpoint) GetRank() int {
+	return lp.rankTier() + lp.EffectivePriority()
+}
+
+// GetDeadlineDemand implements api.CircuitLoad. Only a connected loadpoint with a
+// deadline reserves capacity, so ordinary loadpoints never hold each other back.
+func (lp *Loadpoint) GetDeadlineDemand() (float64, float64) {
+	if lp.rankTier() == 0 || !lp.connected() {
+		return 0, 0
+	}
+
+	power := max(0, lp.EffectiveMaxPower()-lp.GetChargePower())
+
+	return power, powerToCurrent(power, lp.ActivePhases())
+}

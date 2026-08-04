@@ -37,6 +37,8 @@ type Circuit struct {
 	current float64
 	power   float64
 
+	loads []api.CircuitLoad // all site loads, for rank-aware arbitration
+
 	hems api.HEMS // only set on the root circuit, supplies the HEMS consumption cap
 
 	currentUpdated time.Time
@@ -316,6 +318,10 @@ func (c *Circuit) updateMeters() error {
 }
 
 func (c *Circuit) Update(loadpoints []api.CircuitLoad) (err error) {
+	c.mu.Lock()
+	c.loads = loadpoints
+	c.mu.Unlock()
+
 	maxPower := c.GetMaxPower()
 	maxCurrent := c.GetMaxCurrent()
 
@@ -365,18 +371,55 @@ func (c *Circuit) GetMaxPhaseCurrent() float64 {
 	return c.current
 }
 
+// drawsThrough reports whether load draws its power through circuit c
+func drawsThrough(c api.Circuit, load api.CircuitLoad) bool {
+	for lc := load.GetCircuit(); lc != nil; lc = lc.GetParent() {
+		if lc == c {
+			return true
+		}
+	}
+	return false
+}
+
+// reserved returns the power and current that higher-ranked loads on this circuit
+// still need to meet their deadline but are not yet drawing. Reserving it makes
+// arbitration deterministic by rank instead of by whoever asks first: the load
+// asking here yields, and the higher-ranked load claims the headroom on its own
+// next update. Reserving (rather than reclaiming optimistically) keeps the
+// circuit within its limit at every point in time.
+func (c *Circuit) reserved(load api.CircuitLoad) (power, current float64) {
+	c.mu.RLock()
+	loads := c.loads
+	c.mu.RUnlock()
+
+	rank := load.GetRank()
+
+	for _, l := range loads {
+		if l == load || l.GetRank() <= rank || !drawsThrough(c, l) {
+			continue
+		}
+
+		p, i := l.GetDeadlineDemand()
+		power += p
+		current += i
+	}
+
+	return power, current
+}
+
 // ValidatePower validates power request
-func (c *Circuit) ValidatePower(old, new float64) float64 {
+func (c *Circuit) ValidatePower(load api.CircuitLoad, old, new float64) float64 {
 	if maxPower := c.effectiveMaxPower(); maxPower != 0 {
+		reserved, _ := c.reserved(load)
 		delta := max(0, new-old)
-		potential := maxPower - c.power
+		potential := maxPower - c.power - reserved
 
 		if delta > potential {
 			capped := min(new, max(0, old+potential))
-			c.log.DEBUG.Printf("validate power: %.0fW + (%.0fW -> %.0fW) > %.0fW capped at %.0fW", c.power, old, new, maxPower, capped)
+			c.log.DEBUG.Printf("validate power: %.0fW + (%.0fW -> %.0fW) > %.0fW - %.0fW reserved, capped at %.0fW", c.power, old, new, maxPower, reserved, capped)
 			new = capped
 		} else {
-			c.log.TRACE.Printf("validate power: %.0fW + (%.0fW -> %.0fW) <= %.0fW ok", c.power, old, new, maxPower)
+			c.log.TRACE.Printf("validate power: %.0fW + (%.0fW -> %.0fW) <= %.0fW - %.0fW reserved ok", c.power, old, new, maxPower, reserved)
 		}
 	}
 
@@ -384,21 +427,22 @@ func (c *Circuit) ValidatePower(old, new float64) float64 {
 		return new
 	}
 
-	return c.parent.ValidatePower(old, new)
+	return c.parent.ValidatePower(load, old, new)
 }
 
 // ValidateCurrent validates current request
-func (c *Circuit) ValidateCurrent(old, new float64) float64 {
+func (c *Circuit) ValidateCurrent(load api.CircuitLoad, old, new float64) float64 {
 	if maxCurrent := c.GetMaxCurrent(); maxCurrent != 0 {
+		_, reserved := c.reserved(load)
 		delta := max(0, new-old)
-		potential := maxCurrent - c.current
+		potential := maxCurrent - c.current - reserved
 
 		if delta > potential {
 			capped := min(new, max(0, old+potential))
-			c.log.DEBUG.Printf("validate current: %.3gA + (%.3gA -> %.3gA) > %.3gA capped at %.3gA", c.current, old, new, maxCurrent, capped)
+			c.log.DEBUG.Printf("validate current: %.3gA + (%.3gA -> %.3gA) > %.3gA - %.3gA reserved, capped at %.3gA", c.current, old, new, maxCurrent, reserved, capped)
 			new = capped
 		} else {
-			c.log.TRACE.Printf("validate current: %.3gA + (%.3gA -> %.3gA) <= %.3gA ok", c.current, old, new, maxCurrent)
+			c.log.TRACE.Printf("validate current: %.3gA + (%.3gA -> %.3gA) <= %.3gA - %.3gA reserved ok", c.current, old, new, maxCurrent, reserved)
 		}
 	}
 
@@ -406,5 +450,5 @@ func (c *Circuit) ValidateCurrent(old, new float64) float64 {
 		return new
 	}
 
-	return c.parent.ValidateCurrent(old, new)
+	return c.parent.ValidateCurrent(load, old, new)
 }

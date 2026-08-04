@@ -10,8 +10,10 @@ import (
 
 // SharedPlanRequest is one loadpoint's input for circuit-aware allocation.
 type SharedPlanRequest struct {
-	Forced           bool // minSoc/ModeNow: reserved before cost optimisation
-	Priority         int
+	// Rank is the loadpoint's circuit arbitration rank (api.CircuitLoad.GetRank).
+	// Allocating in the same order the circuit clamp enforces at runtime keeps the
+	// plan's assumed share and the share it actually gets in agreement.
+	Rank             int
 	MaxPower         float64
 	MinPower         float64 // effectiveMinPower, semi-continuous floor
 	RequiredDuration time.Duration
@@ -19,26 +21,19 @@ type SharedPlanRequest struct {
 }
 
 // AllocateShared plans loadpoints sharing one circuit against a per-slot power
-// budget: forced first, then descending priority, each scheduled only where its
-// MinPower fits and reserving its actual draw. Returns one plan per request, in
-// input order. Clamped to [now, target] per request; single circuit + static budget.
+// budget in descending rank, each scheduled only where its MinPower fits and
+// reserving its actual draw. Returns one plan per request, in input order.
+// Clamped to [now, target] per request; single circuit + static budget.
 func AllocateShared(now time.Time, budget float64, rates api.Rates, reqs []SharedPlanRequest) []api.Rates {
 	ledger := NewCapacityLedger(budget, tariff.SlotDuration)
 
-	// plan forced first, then highest priority, keeping input order for the result
+	// plan the highest rank first, keeping input order for the result
 	order := make([]int, len(reqs))
 	for i := range order {
 		order[i] = i
 	}
 	slices.SortStableFunc(order, func(a, b int) int {
-		x, y := reqs[a], reqs[b]
-		if x.Forced != y.Forced {
-			if x.Forced {
-				return -1
-			}
-			return 1
-		}
-		return y.Priority - x.Priority
+		return reqs[b].Rank - reqs[a].Rank
 	})
 
 	plans := make([]api.Rates, len(reqs))

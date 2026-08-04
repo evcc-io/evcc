@@ -17,6 +17,20 @@ type circuitTest struct {
 	old, new, res float64
 }
 
+// stubLoad is a CircuitLoad with directly settable arbitration inputs
+type stubLoad struct {
+	circuit                api.Circuit
+	rank                   int
+	power, current         float64
+	demandPower, demandCur float64
+}
+
+func (l *stubLoad) GetChargePower() float64               { return l.power }
+func (l *stubLoad) GetMaxPhaseCurrent() float64           { return l.current }
+func (l *stubLoad) GetCircuit() api.Circuit               { return l.circuit }
+func (l *stubLoad) GetRank() int                          { return l.rank }
+func (l *stubLoad) GetDeadlineDemand() (float64, float64) { return l.demandPower, l.demandCur }
+
 func circuitTests() []circuitTest {
 	return []circuitTest{
 		// no load
@@ -92,7 +106,7 @@ func TestCircuitPower(t *testing.T) {
 		cm2.EXPECT().CurrentPower().Return(tc.c2, nil)
 		require.NoError(t, pc.Update(nil))
 
-		assert.Equal(t, tc.res, c1.ValidatePower(tc.old, tc.new), tc)
+		assert.Equal(t, tc.res, c1.ValidatePower(&stubLoad{circuit: c1}, tc.old, tc.new), tc)
 
 		ctrl.Finish()
 	}
@@ -134,7 +148,7 @@ func TestCircuitCurrents(t *testing.T) {
 		cm2.MockPhaseCurrents.EXPECT().Currents().Return(tc.c2, tc.c2, tc.c2, nil)
 		require.NoError(t, pc.Update(nil))
 
-		assert.Equal(t, tc.res, c1.ValidateCurrent(tc.old, tc.new), tc)
+		assert.Equal(t, tc.res, c1.ValidateCurrent(&stubLoad{circuit: c1}, tc.old, tc.new), tc)
 
 		ctrl.Finish()
 	}
@@ -169,7 +183,74 @@ func TestHEMSConsumptionClamp(t *testing.T) {
 				c.hems = hems
 			}
 
-			assert.Equal(t, tc.want, c.ValidatePower(0, tc.request))
+			assert.Equal(t, tc.want, c.ValidatePower(&stubLoad{circuit: c}, 0, tc.request))
 		})
 	}
 }
+
+// TestRankReservation verifies that circuit capacity is arbitrated by rank instead
+// of by whoever asks first: a lower-ranked load must leave room for the unmet
+// deadline demand of a higher-ranked load on the same circuit.
+func TestRankReservation(t *testing.T) {
+	log := util.NewLogger("foo")
+
+	c, err := New(log, "root", 16, 10000, nil, 0)
+	require.NoError(t, err)
+
+	low := &stubLoad{circuit: c, rank: 0}
+	high := &stubLoad{circuit: c, rank: rankForced}
+	require.NoError(t, c.Update([]api.CircuitLoad{low, high}))
+
+	// no deadline anywhere- the low-ranked load may use the whole circuit
+	assert.Equal(t, 10000.0, c.ValidatePower(low, 0, 10000))
+	assert.Equal(t, 16.0, c.ValidateCurrent(low, 0, 16))
+
+	// the high-ranked load needs 6000W / 9A more than it draws
+	high.demandPower, high.demandCur = 6000, 9
+
+	assert.Equal(t, 4000.0, c.ValidatePower(low, 0, 10000), "low rank must leave the reservation free")
+	assert.Equal(t, 7.0, c.ValidateCurrent(low, 0, 16), "low rank must leave the reservation free")
+
+	// the high-ranked load itself never reserves against itself
+	assert.Equal(t, 10000.0, c.ValidatePower(high, 0, 10000))
+	assert.Equal(t, 16.0, c.ValidateCurrent(high, 0, 16))
+
+	// the reservation stacks with load already measured on the circuit
+	low.power, low.current = 2000, 4
+	require.NoError(t, c.Update([]api.CircuitLoad{low, high}))
+	assert.Equal(t, 2000.0, c.ValidatePower(low, 0, 10000), "measured load and reservation both apply")
+	assert.Equal(t, 3.0, c.ValidateCurrent(low, 0, 16), "measured load and reservation both apply")
+
+	// equal rank does not reserve, otherwise both would starve each other
+	low.rank = rankForced
+	assert.Equal(t, 8000.0, c.ValidatePower(low, 0, 10000))
+}
+
+// TestRankReservationParent verifies the reservation also applies on a parent
+// circuit, where the competing loads hang off different children.
+func TestRankReservationParent(t *testing.T) {
+	log := util.NewLogger("foo")
+
+	pc, err := New(log, "root", 0, 10000, nil, 0)
+	require.NoError(t, err)
+	c1, err := New(log, "c1", 0, 10000, nil, 0)
+	require.NoError(t, err)
+	c2, err := New(log, "c2", 0, 10000, nil, 0)
+	require.NoError(t, err)
+	require.NoError(t, c1.setParent(pc))
+	require.NoError(t, c2.setParent(pc))
+
+	low := &stubLoad{circuit: c1, rank: 0}
+	high := &stubLoad{circuit: c2, rank: rankPlanActive, demandPower: 6000}
+	require.NoError(t, pc.Update([]api.CircuitLoad{low, high}))
+
+	// c1 alone has room, but the shared parent must hold 6000W for the plan
+	assert.Equal(t, 4000.0, c1.ValidatePower(low, 0, 10000))
+}
+
+// rank tiers mirroring core.rankPlanActive/rankForced, kept local to avoid an
+// import cycle between core and core/circuit
+const (
+	rankPlanActive = 1000
+	rankForced     = 2000
+)

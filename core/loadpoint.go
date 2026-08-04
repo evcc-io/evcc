@@ -158,7 +158,7 @@ type Loadpoint struct {
 	planActive       bool             // charge plan exists and has a currently active slot
 	planOverrunSent  bool             // notification has been sent already
 	planLocked       PlanLock         // locked plan
-	sharedPlan       api.Rates        // circuit-aware plan set by the site, nil = plan independently
+	sharedPlan       *sharedPlan      // circuit-aware plan set by the site, nil = plan independently
 
 	// cached state
 	status         api.ChargeStatus // Charger status
@@ -942,10 +942,10 @@ func (lp *Loadpoint) setLimit(current float64) error {
 			actualCurrent = lp.offeredCurrent
 		}
 
-		currentLimit := lp.circuit.ValidateCurrent(actualCurrent, current)
+		currentLimit := lp.circuit.ValidateCurrent(lp, actualCurrent, current)
 
 		activePhases := lp.ActivePhases()
-		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(current, activePhases))
+		powerLimit := lp.circuit.ValidatePower(lp, lp.chargePower, currentToPower(current, activePhases))
 		currentLimitViaPower := powerToCurrent(powerLimit, activePhases)
 
 		current = lp.roundedCurrent(min(currentLimit, currentLimitViaPower))
@@ -1378,7 +1378,7 @@ func (lp *Loadpoint) fastCharging() error {
 		// load management limit active
 		if lp.circuit != nil {
 			minPower3p := currentToPower(lp.effectiveMinCurrent(), 3)
-			if powerLimit := lp.circuit.ValidatePower(lp.chargePower, minPower3p); powerLimit < minPower3p {
+			if powerLimit := lp.circuit.ValidatePower(lp, lp.chargePower, minPower3p); powerLimit < minPower3p {
 				phases = 1
 				lp.log.DEBUG.Printf("fast charging: scaled to 1p to match %.0fW available circuit power", powerLimit)
 			}
