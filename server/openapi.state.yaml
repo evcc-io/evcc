@@ -630,17 +630,15 @@ components:
           items:
             $ref: "#/components/schemas/ForecastSlot"
     ForecastSlot:
-      description: A forecast value for a time slot.
+      description: A forecast value for a time slot. Timestamps are unix milliseconds, expanded from the wire format by expandForecast in utils/forecast.
       type: object
       properties:
         start:
-          description: Start of the time slot.
-          type: string
-          format: date-time
+          description: Start of the time slot in unix milliseconds.
+          type: number
         end:
-          description: End of the time slot.
-          type: string
-          format: date-time
+          description: End of the time slot in unix milliseconds.
+          type: number
         value:
           description: Forecast value of the time slot. Unit depends on the forecast type.
           type: number
@@ -1767,16 +1765,15 @@ components:
         - chargedKWh
         - solarPercentage
     TimeseriesEntry:
-      description: A forecast value at a point in time.
+      description: A forecast value at a point in time. Timestamps are unix milliseconds, expanded from the wire format by expandForecast in utils/forecast.
       type: object
       properties:
         val:
           description: Forecast power in W.
           type: number
         ts:
-          description: Time of the forecast value.
-          type: string
-          format: date-time
+          description: Time of the forecast value in unix milliseconds.
+          type: number
       required:
         - val
         - ts
