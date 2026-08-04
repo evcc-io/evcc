@@ -23,6 +23,7 @@ import (
 // Uses MPC (Monitoring & Power Consumption) for all other cases (default)
 // Additionally supports LPC (Limitation of Power Consumption) and LPP (Limitation of Power Production)
 type EEBus struct {
+	ctx context.Context // device lifetime, aborts limit retries
 	log *util.Logger
 
 	connector *eebus.Connector
@@ -35,6 +36,9 @@ type EEBus struct {
 	maEntity    spineapi.EntityRemoteInterface
 	egLpcEntity spineapi.EntityRemoteInterface
 	egLppEntity spineapi.EntityRemoteInterface
+
+	dimmed         bool // last limits written, re-stated on reconnect// last limits written, re-stated on reconnect
+	curtailPercent int
 }
 
 // maScenarios holds the spec scenario numbers for the active monitoring use case.
@@ -111,12 +115,14 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 	}
 
 	c := &EEBus{
-		log:       util.NewLogger("eebus-" + useCase),
-		ma:        ma,
-		eg:        inst.EnergyGuard(),
-		mm:        mm,
-		scenarios: scenarios,
-		connector: eebus.NewConnector(),
+		ctx:            ctx,
+		log:            util.NewLogger("eebus-" + useCase),
+		ma:             ma,
+		eg:             inst.EnergyGuard(),
+		mm:             mm,
+		scenarios:      scenarios,
+		connector:      eebus.NewConnector(),
+		curtailPercent: 100,
 	}
 
 	if err := inst.RegisterDevice(ski, ip, c); err != nil {
@@ -164,6 +170,20 @@ func eebusReadValue[T any](uc eebusapi.UseCaseBaseInterface, entity spineapi.Ent
 	}
 
 	return res, nil
+}
+
+func (c *EEBus) lastDimmed() bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	return c.dimmed
+}
+
+func (c *EEBus) lastCurtailPercent() int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	return c.curtailPercent
 }
 
 func (c *EEBus) readValue(scenario uint, update func(entity spineapi.EntityRemoteInterface) (float64, error)) (float64, error) {
@@ -258,9 +278,17 @@ func (c *EEBus) Dim(dim bool) error {
 		return api.ErrNotAvailable
 	}
 
-	return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
+	if err := eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: value, IsActive: dim}, cb)
-	})
+	}); err != nil {
+		return err
+	}
+
+	c.mu.Lock()
+	c.dimmed = dim
+	c.mu.Unlock()
+
+	return nil
 }
 
 var _ api.Curtailer = (*EEBus)(nil)
@@ -311,7 +339,15 @@ func (c *EEBus) SetCurtailPercent(percent int) error {
 		}
 	}
 
-	return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
+	if err := eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 		return c.eg.EgLPPInterface.WriteProductionLimit(entity, ucapi.LoadLimit{Value: value, IsActive: curtail}, cb)
-	})
+	}); err != nil {
+		return err
+	}
+
+	c.mu.Lock()
+	c.curtailPercent = percent
+	c.mu.Unlock()
+
+	return nil
 }

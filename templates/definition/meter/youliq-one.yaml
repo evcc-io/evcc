@@ -1,0 +1,69 @@
+template: youliq-one
+products:
+  - brand: Youliq
+    description:
+      generic: One
+capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Lokaler Zugriff auf den Youliq One Speicher per HTTPS API. Das Gerät verwendet ein selbstsigniertes Zertifikat.
+    en: |
+      Local access to the Youliq One battery storage via HTTPS API. The device uses a self-signed certificate.
+params:
+  - name: usage
+    choice: ["battery"]
+  - name: host
+  - name: cache
+    default: 5s
+  - preset: battery-params
+  - name: capacity
+    default: 10.24
+  - name: maxchargepower
+    default: 2000
+render: |
+  type: custom
+  power:
+    source: http
+    uri: https://{{ .host }}/api/v1/device/live-data
+    insecure: true
+    jq: .ac_inverter_power_w
+    scale: -1
+    cache: {{ .cache }}
+  soc:
+    source: http
+    uri: https://{{ .host }}/api/v1/device/live-data
+    insecure: true
+    jq: .state_of_charge_percent
+    cache: {{ .cache }}
+  batterymode:
+    source: switch
+    switch:
+      - case: 1 # normal
+        set:
+          source: http
+          uri: https://{{ .host }}/api/v1/device/config
+          insecure: true
+          method: PATCH
+          headers:
+            - content-type: application/json
+          body: '{"operating_mode":"pv_surplus"}'
+      - case: 2 # hold
+        set:
+          source: http
+          uri: https://{{ .host }}/api/v1/device/config
+          insecure: true
+          method: PATCH
+          headers:
+            - content-type: application/json
+          body: '{"operating_mode":"manual_setpoint","inverter_manual_setpoint_w":0}'
+      - case: 3 # charge
+        set:
+          source: http
+          uri: https://{{ .host }}/api/v1/device/config
+          insecure: true
+          method: PATCH
+          headers:
+            - content-type: application/json
+          body: '{"operating_mode":"manual_setpoint","inverter_manual_setpoint_w":{{ .maxchargepower }}}'
+  {{- include "battery-params" . }}

@@ -30,8 +30,8 @@ github.com/andig/gosunspec v0.0.0-20260705113727-6d585e133512 h1:1y8dS4GaBB9WUu/
 github.com/andig/gosunspec v0.0.0-20260705113727-6d585e133512/go.mod h1:c6P6szcR+ROkqZruOR4f6qbDKFjZX6OitPpj+yJ/r8k=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e h1:m/NTP3JWpR7M0ljLxiQU4fzR25jjhe1LDtxLMNcoNJQ=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e/go.mod h1:4VtYzTm//oUipwvO3yh0g/udTE7pYJM+U/kyAuFDsgM=
-github.com/andig/spine-go v0.7.1-0.20260729105813-e3e33d07b702 h1:aSME6GPyu2LeTp282plM4nrCFBwBiNnnjWxuAIYGnhs=
-github.com/andig/spine-go v0.7.1-0.20260729105813-e3e33d07b702/go.mod h1:ddWZU5BQGyzRGF20Z7rUKFFzbCp+cfu9mZgYtOMW/fM=
+github.com/andig/spine-go v0.7.1-0.20260804073026-f9a8d8e8fd18 h1:FVKqjwJJLo8vV47jXt1lNN4EVJXCyV3LSTNFt9eeimU=
+github.com/andig/spine-go v0.7.1-0.20260804073026-f9a8d8e8fd18/go.mod h1:ddWZU5BQGyzRGF20Z7rUKFFzbCp+cfu9mZgYtOMW/fM=
 github.com/andybalholm/cascadia v1.3.3 h1:AG2YHrzJIm4BZ19iwJ/DAua6Btl3IwJX+VI4kktS1LM=
 github.com/andybalholm/cascadia v1.3.3/go.mod h1:xNd9bqTn98Ln4DwST8/nG+H0yuB8Hmgu1YHNnWw0GeA=
 github.com/antihax/optional v1.0.0 h1:xK2lYat7ZLaVVcIuj82J8kIro4V6kDe0AUDFboUCwcg=

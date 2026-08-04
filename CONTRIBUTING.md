@@ -4,11 +4,11 @@
 
 ### Development environment
 
-Developing evcc requires [Go][1] [Node][2] and [Vite+][3]. We recommend VSCode with the [Go](https://marketplace.visualstudio.com/items?itemName=golang.Go), [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [Vetur](https://marketplace.visualstudio.com/items?itemName=octref.vetur) extensions.
+Developing evcc requires [Go][1] [Node][2] and [Vite+][3]. We recommend VSCode with the [Go](https://marketplace.visualstudio.com/items?itemName=golang.Go), [Oxc](https://marketplace.visualstudio.com/items?itemName=oxc.oxc-vscode) and [Vue](https://marketplace.visualstudio.com/items?itemName=Vue.volar) extensions.
 
 Alternatively, if you use VS Code and [devcontainers](https://code.visualstudio.com/docs/devcontainers/containers), you can use the "Dev containers: Clone repository in container volume" action. This will create a devcontainer with the required toolchain and install the prerequisites as explained below. Wait until the startup log says "Done. Press any key to close the terminal." and check for any errors.
 
-We use linters (golangci-lint, Prettier) to keep a coherent source code formatting. It's recommended to use the format-on-save feature of your editor. You can manually reformat your code by running:
+We use linters (golangci-lint, oxlint/oxfmt via Vite+) to keep a coherent source code formatting. It's recommended to use the format-on-save feature of your editor. You can manually reformat your code by running:
 
 ```sh
 make lint
@@ -74,6 +74,32 @@ GOOS=linux GOARCH=arm GOARM=6 make
 make docker DOCKER_IMAGE=my/docker DOCKER_TAG=0815
 ```
 
+## Releases
+
+Releases are cut by pushing a `MAJOR.MINOR.PATCH` tag. Any other tag is ignored.
+
+Feature releases (`0.313.0`) must be tagged on `master`. The release workflow
+rejects a feature tag that is not reachable from `master`.
+
+Bugfix releases (`0.313.1`) may be tagged on any branch. That allows servicing
+an older release line without shipping everything that has landed on `master`
+since. Only the newest release moves the `latest` pointers, so a bugfix release
+of an older line publishes its artifacts, but leaves the `evcc/evcc:latest`
+docker tag, the homebrew formula, the GitHub latest release, the hassio addon
+and the demo instance untouched.
+
+To move a merged pull request onto a release branch, comment `/backport` on it.
+The pull request has to carry the `bug` label and must not be marked `(BC)`,
+only non-breaking bugfixes are backported.
+The commit is cherry-picked onto the branch of the next bugfix release, e.g.
+`release/0.313.1`, and a pull request is opened against it. The branch is
+created at the newest tag of that line if it does not exist yet. Pass a branch
+name, `/backport release/0.312.2`, to service an older line.
+
+Releasing a bugfix deletes its release branch, since the tag is the branch tip
+and everything on it has shipped. A branch that received further backports after
+the tag is kept.
+
 ## Debugging in VS Code
 
 ### evcc Core
@@ -100,6 +126,13 @@ For frontend development start the Vue toolchain in dev-mode. Open http://127.0.
 ```sh
 vp install
 vp run dev
+```
+
+Start the backend with `--disable-auth` when checking the configuration UI of a
+throw-away instance. Without it the UI asks for an administrator password first.
+
+```sh
+./evcc --config tests/config-with-tariffs.evcc.yaml --disable-auth
 ```
 
 ### Storybook

@@ -12,12 +12,11 @@ import (
 
 func TestRemainingChargeDuration(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	charger := api.NewMockCharger(ctrl)
 	vehicle := api.NewMockVehicle(ctrl)
 	// 8.5 kWh userBatCap => 10 kWh virtualBatCap (at 85% efficiency)
 	vehicle.EXPECT().Capacity().Return(float64(8.5))
 
-	ce := NewEstimator(util.NewLogger("foo"), charger, vehicle)
+	ce := NewEstimator(util.NewLogger("foo"), vehicle)
 	ce.vehicleSoc = 20.0
 
 	chargePower := 1000.0
@@ -29,19 +28,13 @@ func TestRemainingChargeDuration(t *testing.T) {
 }
 
 func TestSocEstimation(t *testing.T) {
-	type chargerStruct struct {
-		*api.MockCharger
-		*api.MockBattery
-	}
-
 	ctrl := gomock.NewController(t)
 	vehicle := api.NewMockVehicle(ctrl)
-	charger := &chargerStruct{api.NewMockCharger(ctrl), api.NewMockBattery(ctrl)}
 
 	// 8.5 kWh user battery capacity is converted to initial value of 10 kWh virtual capacity (at 85% efficiency)
 	vehicle.EXPECT().Capacity().Return(8.5).AnyTimes()
 
-	ce := NewEstimator(util.NewLogger("foo"), charger, vehicle)
+	ce := NewEstimator(util.NewLogger("foo"), vehicle)
 
 	tc := []struct {
 		chargedEnergy   float64
@@ -76,7 +69,7 @@ func TestSocEstimation(t *testing.T) {
 
 		// validate soc/capacity estimate
 		assert.Equal(t, tc.estimatedSoc, soc, "estimated soc")
-		assert.Equal(t, tc.virtualCapacity, ce.virtualCapacity, "virtual capacity")
+		assert.Equal(t, tc.virtualCapacity, ce.virtualCapacity(), "virtual capacity")
 
 		// validate duration estimate
 		chargePower := 1e3
@@ -88,9 +81,24 @@ func TestSocEstimation(t *testing.T) {
 	}
 }
 
+func TestMissingSoc(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Capacity().Return(8.5)
+
+	ce := NewEstimator(util.NewLogger("foo"), vehicle)
+
+	soc := 20.0
+	assert.Equal(t, 20.0, ce.Soc(&soc, 0))
+	assert.Equal(t, 21.0, ce.Soc(&soc, 100))
+
+	// missing soc keeps the estimate and must not corrupt the sampled state
+	assert.Equal(t, 21.0, ce.Soc(nil, 200))
+	assert.Equal(t, 22.0, ce.Soc(&soc, 200))
+}
+
 func TestImprovedEstimatorRemainingChargeDuration(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	charger := api.NewMockCharger(ctrl)
 	vehicle := api.NewMockVehicle(ctrl)
 
 	// https://github.com/evcc-io/evcc/pull/7510#issuecomment-1512688548
@@ -117,7 +125,7 @@ func TestImprovedEstimatorRemainingChargeDuration(t *testing.T) {
 
 		vehicle.EXPECT().Capacity().Return(tc.capacity)
 
-		ce := NewEstimator(util.NewLogger("foo"), charger, vehicle)
+		ce := NewEstimator(util.NewLogger("foo"), vehicle)
 		ce.vehicleSoc = tc.soc
 
 		assert.Equal(t, tc.duration, ce.RemainingChargeDuration(tc.targetsoc, tc.chargePower))

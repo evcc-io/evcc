@@ -627,10 +627,8 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	site.publishSuggestions()
 
 	// notify on actionable suggestion changes (advisory only, see #31903)
-	if site.pushChan != nil {
-		for _, ev := range site.diffSuggestions(site.pendingSuggestions(details.BatteryDetails)) {
-			site.pushChan <- ev
-		}
+	for _, ev := range site.diffSuggestions(site.pendingSuggestions(details.BatteryDetails)) {
+		site.pushEvent(ev)
 	}
 
 	return nil

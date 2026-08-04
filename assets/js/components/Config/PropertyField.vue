@@ -252,7 +252,7 @@ export default {
 		},
 		useLazyBinding() {
 			// avoid conversion loop issues
-			return this.pricePerKWh;
+			return this.inputType === "number";
 		},
 		icons() {
 			return this.property === "icon";
@@ -386,6 +386,8 @@ export default {
 			return val;
 		},
 		onFieldChange(e) {
+			// unparsable input (e.g. locale decimal separator mismatch)
+			if (e.target.validity?.badInput) return;
 			this.value = this.coerceValue(e.target.value);
 		},
 		onFieldInput(e) {

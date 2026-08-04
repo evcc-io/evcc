@@ -174,7 +174,7 @@ const COLUMNS_PER_BREAKPOINT = {
 	sm: 3,
 	md: 4,
 	lg: 7,
-	xl: 8,
+	xl: 7,
 	xxl: 9,
 };
 
@@ -259,6 +259,13 @@ export default defineComponent({
 					total: this.chargeDuration,
 					value: (session) => session.chargeDuration,
 					format: (value) => this.fmtDurationNs(value, false, "h"),
+				},
+				{
+					name: "addedRange",
+					unit: distanceUnit(),
+					total: this.addedRange,
+					value: (session) => session.addedRange || null,
+					format: (value) => `+${this.fmtNumber(distanceValue(value), 0)}`,
 				},
 				{
 					name: "odometer",
@@ -362,6 +369,11 @@ export default defineComponent({
 		},
 		chargeDuration() {
 			return this.filteredSessions.reduce((total, s) => total + s.chargeDuration, 0);
+		},
+		addedRange() {
+			const sessions = this.filteredSessions.filter((s) => s.addedRange != null);
+			if (!sessions.length) return null;
+			return sessions.reduce((total, s) => total + (s.addedRange || 0), 0);
 		},
 		price() {
 			return this.filteredSessions.reduce((total, s) => total + (s.price || 0), 0);
