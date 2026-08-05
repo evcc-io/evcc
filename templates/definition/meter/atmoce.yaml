@@ -24,7 +24,7 @@ params:
     service: modbus/read?address=60027&type=holding&encoding=uint32&scale=1&resulttype=int&{modbus}
   - preset: battery-minmaxsoc
   - name: minsoc
-    required: true
+    advanced: true
     default: 10
   - name: maxsoc
     advanced: true
@@ -33,7 +33,7 @@ params:
     type: choice
     choice: ["<01.01.00.28.15", ">=01.01.00.28.15"]
     default: "<01.01.00.28.15"
-    advanced: true
+    required: true
     description:
       de: Firmware-Version
       en: Firmware version
