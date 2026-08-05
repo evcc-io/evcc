@@ -24,7 +24,7 @@ params:
     service: modbus/read?address=60027&type=holding&encoding=uint32&scale=1&resulttype=int&{modbus}
   - preset: battery-minmaxsoc
   - name: minsoc
-    advanced: true
+    required: true
     default: 10
   - name: maxsoc
     advanced: true
