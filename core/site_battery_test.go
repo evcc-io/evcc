@@ -6,9 +6,11 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -40,6 +42,77 @@ func TestBatterySocRetainOnReadError(t *testing.T) {
 	site.updateBatteryMeters()
 
 	assert.Equal(t, 84.0, site.battery.Soc, "soc retained when the read fails")
+}
+
+// the discharge limit must be reported as-is: sitePower already nets out the
+// battery's current power, so netting it out here again would count it twice
+func TestBatteryDischargeLimit(t *testing.T) {
+	plainMeter := func(t *testing.T, power float64) api.Meter {
+		t.Helper()
+		meter := api.NewMockMeter(gomock.NewController(t))
+		meter.EXPECT().CurrentPower().Return(power, nil).AnyTimes()
+		return meter
+	}
+
+	limitedMeter := func(t *testing.T, power, charge, discharge float64) api.Meter {
+		t.Helper()
+		return &struct {
+			api.Meter
+			api.BatteryPowerLimiter
+		}{
+			Meter:               plainMeter(t, power),
+			BatteryPowerLimiter: implement.BatteryPowerLimiter(func() (float64, float64) { return charge, discharge }),
+		}
+	}
+
+	newSite := func(meters ...api.Meter) *Site {
+		devs := make([]config.Device[api.Meter], 0, len(meters))
+		for _, m := range meters {
+			devs = append(devs, config.NewStaticDevice(config.Named{}, m))
+		}
+		return &Site{log: util.NewLogger("foo"), batteryMeters: devs}
+	}
+
+	t.Run("no battery", func(t *testing.T) {
+		site := newSite()
+		site.updateBatteryMeters()
+		assert.Nil(t, site.batteryDischargeLimit)
+	})
+
+	// the limit must not be reduced by what the battery currently delivers,
+	// sitePower already accounts for that
+	t.Run("limit unaffected by current power", func(t *testing.T) {
+		for _, power := range []float64{0, 800, -500} {
+			site := newSite(limitedMeter(t, power, 2500, 800))
+			site.updateBatteryMeters()
+
+			require.NotNil(t, site.batteryDischargeLimit)
+			assert.Equal(t, power, site.battery.Power)
+			assert.Equal(t, 800.0, *site.batteryDischargeLimit, "battery power %.0fW", power)
+		}
+	})
+
+	t.Run("limits are summed", func(t *testing.T) {
+		site := newSite(limitedMeter(t, 0, 2500, 800), limitedMeter(t, 0, 1000, 1200))
+		site.updateBatteryMeters()
+
+		require.NotNil(t, site.batteryDischargeLimit)
+		assert.Equal(t, 2000.0, *site.batteryDischargeLimit)
+	})
+
+	t.Run("unknown limit yields nil", func(t *testing.T) {
+		site := newSite(limitedMeter(t, 0, 2500, 800), plainMeter(t, 0))
+		site.updateBatteryMeters()
+
+		assert.Nil(t, site.batteryDischargeLimit, "a battery without a limit must disable the check")
+	})
+
+	t.Run("zero limit yields nil", func(t *testing.T) {
+		site := newSite(limitedMeter(t, 0, 2500, 0))
+		site.updateBatteryMeters()
+
+		assert.Nil(t, site.batteryDischargeLimit, "an unreadable limit must disable the check")
+	})
 }
 
 func TestApplyBatteryMode(t *testing.T) {
