@@ -1280,6 +1280,7 @@
       "goal": "Charging goal",
       "modalTitle": "Charging Plan",
       "none": "none",
+      "once": "once",
       "optimization": {
         "cheapest": "cheapest",
         "cheapestDescription": "Selects the cheapest slots. May result in multiple starts and stops.",

@@ -8,6 +8,9 @@
 			<span class="text-uppercase fs-6">
 				{{ `${$t("main.chargingPlan.planNumber", { number: "#1" })}` }}
 			</span>
+			<small>
+				{{ $t("main.chargingPlan.once") }}
+			</small>
 		</h5>
 
 		<div class="row d-none d-lg-flex mb-2">

@@ -488,23 +488,23 @@ test.describe("repeating", async () => {
 
     // with multiple plans, preview shows first plan
     await page.waitForLoadState("networkidle");
-    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Preview plan #1");
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Preview plan: #1");
     await expect(modal.getByTestId("target-text")).toContainText("09:00");
 
     // activate #1 - should show next plan #1
     await modal.getByTestId("static-plan-active").click();
-    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #1");
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan: #1");
     await expect(modal.getByTestId("target-text")).toContainText("09:00");
 
     // deactivate #1, activate #2 - should show next plan #2
     await modal.getByTestId("static-plan-active").click();
     await modal.getByTestId("repeating-plan-active").click();
-    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan: #2");
     await expect(modal.getByTestId("target-text")).toContainText("11:11");
 
     // back to preview if no active plan
     await modal.getByTestId("repeating-plan-active").click();
-    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Preview plan #1");
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Preview plan: #1");
     await expect(modal.getByTestId("target-text")).toContainText("9:00");
   });
 
@@ -551,7 +551,7 @@ test.describe("repeating", async () => {
     await page.waitForLoadState("networkidle");
 
     // specific weekday and time
-    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan: #2");
     await expect(modal.getByTestId("target-text")).toContainText("Thu 09:22");
   });
 
@@ -600,12 +600,12 @@ test.describe("repeating", async () => {
     await plan3.getByTestId("repeating-plan-active").click();
 
     // check next plans
-    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #3");
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan: #3");
     await expect(modal.getByTestId("target-text")).toContainText("9:10");
 
     // disable plan #3
     await plan3.getByTestId("repeating-plan-active").click();
-    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan: #2");
     await expect(modal.getByTestId("target-text")).toContainText("9:20");
 
     // change plan #2 to yesterday
@@ -614,13 +614,13 @@ test.describe("repeating", async () => {
     await days2.getByRole("checkbox", { name: yesterday }).click(); // check
     await days2.click(); // close
     // no changes yet
-    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan: #2");
     await expect(modal.getByTestId("target-text")).toContainText("9:20");
 
     // apply
     await plan2.getByTestId("repeating-plan-apply").click();
     await expect(plan2.getByTestId("repeating-plan-apply")).not.toBeVisible();
-    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #1");
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan: #1");
     await expect(modal.getByTestId("target-text")).toContainText("9:30");
 
     // set lower targets than vehicle soc (50%)
@@ -660,7 +660,7 @@ test.describe("repeating", async () => {
     await expect(modal.getByLabel("Late Charging")).toBeVisible();
     await modal.getByLabel("Late Charging").selectOption("2 hours");
     await plan.getByTestId("repeating-plan-active").click();
-    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan: #2");
     await expect(modal.getByTestId("target-text")).toContainText("09:20");
     await modal.getByRole("button", { name: "Close", exact: true }).click();
     await expect(
@@ -681,7 +681,7 @@ test.describe("repeating", async () => {
       .getByRole("button", { name: `${tomorrowShort} 09:20` })
       .click();
     await expect(modal.getByTestId("plan-entry")).toHaveCount(2);
-    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan #2");
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText("Next plan: #2");
     await expect(modal.getByTestId("target-text")).toContainText("09:20");
     await expect(modal.getByLabel("Late Charging")).toHaveValue("7200");
   });

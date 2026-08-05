@@ -1280,6 +1280,7 @@
       "goal": "Ladeziel",
       "modalTitle": "Ladeplanung",
       "none": "keiner",
+      "once": "einmalig",
       "optimization": {
         "cheapest": "günstigst",
         "cheapestDescription": "Wählt die günstigsten Zeitfenster. Kann zu mehreren Starts und Stopps führen.",

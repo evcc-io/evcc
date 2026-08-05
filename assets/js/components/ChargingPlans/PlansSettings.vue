@@ -48,7 +48,7 @@
 				<span v-if="!multiplePlans">
 					{{ $t(`main.targetCharge.${noActivePlan ? "preview" : "currentPlan"}`) }}
 				</span>
-				<span v-else-if="noActivePlan">{{ $t("main.targetCharge.preview") }} #1</span>
+				<span v-else-if="noActivePlan">{{ $t("main.targetCharge.preview") }}: #1</span>
 				<span v-else-if="alreadyReached">{{ $t("main.targetCharge.goalReached") }}</span>
 				<span v-else>{{ nextPlanTitle }}</span>
 			</div>
@@ -160,7 +160,7 @@ export default defineComponent({
 			return this.plan.duration === 0;
 		},
 		nextPlanTitle(): string {
-			return `${this.$t("main.targetCharge.nextPlan")} #${this.nextPlanId}`;
+			return `${this.$t("main.targetCharge.nextPlan")}: #${this.nextPlanId}`;
 		},
 		strategyDisabled(): boolean {
 			// options only make sense if there are variable prices
