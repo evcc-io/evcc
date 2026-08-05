@@ -1274,7 +1274,7 @@
   },
   "main": {
     "alwaysCharge": {
-      "description": "nie pausieren, min. {current} A",
+      "description": "keine Unterbrechungen, min. {current} A",
       "label": "Dauerhaft laden",
       "once": "bis Ladeende",
       "onceTip": "Nur für diese Ladung",

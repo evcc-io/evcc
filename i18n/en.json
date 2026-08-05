@@ -1274,7 +1274,7 @@
   },
   "main": {
     "alwaysCharge": {
-      "description": "never pause, min {current} A",
+      "description": "no interruptions, min {current} A",
       "label": "Always charge",
       "once": "until end of session",
       "onceTip": "Only for this session",
