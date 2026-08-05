@@ -36,23 +36,23 @@ render: |
       uri: {{ joinHostPort .host .port }}
       id: {{ .id }}
       register:
-        address: 3900 # L1 power
+        address: 3924 # L1 power
         type: input
-        decode: int16
+        decode: int32
     - source: modbus
       uri: {{ joinHostPort .host .port }}
       id: {{ .id }}
       register:
-        address: 3901 # L2 power
+        address: 3926 # L2 power
         type: input
-        decode: int16
+        decode: int32
     - source: modbus
       uri: {{ joinHostPort .host .port }}
       id: {{ .id }}
       register:
-        address: 3902 # L3 power
+        address: 3928 # L3 power
         type: input
-        decode: int16
+        decode: int32
   energy:
     source: calc
     add:
