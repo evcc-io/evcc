@@ -71,7 +71,7 @@ render: |
       address: 60184 # Cumulative Electricity Purchase Volume (kWh * 100)
       type: holding
       decode: uint64
-    block: # 60160-60188
+    block: # 60160-60189
       register: 60160
       count: 30
     scale: 0.01
@@ -82,7 +82,7 @@ render: |
       address: 60178 # Cumulative Electricity Sales Volume (kWh * 100)
       type: holding
       decode: uint64
-    block: # 60160-60188
+    block: # 60160-60189
       register: 60160
       count: 30
     scale: 0.01
@@ -168,7 +168,7 @@ render: |
       address: 60160 # Cumulative Photovoltaic Power Generation (kWh * 100)
       type: holding
       decode: uint64
-    block: # 60160-60188
+    block: # 60160-60189
       register: 60160
       count: 30
     scale: 0.01
@@ -262,7 +262,7 @@ render: |
       address: 60172 # Cumulative Energy Storage Discharging Capacity (kWh * 100)
       type: holding
       decode: uint64
-    block: # 60160-60188
+    block: # 60160-60189
       register: 60160
       count: 30
     scale: 0.01
@@ -273,7 +273,7 @@ render: |
       address: 60166 # Cumulative Energy Storage Charging Capacity (kWh * 100)
       type: holding
       decode: uint64
-    block: # 60160-60188
+    block: # 60160-60189
       register: 60160
       count: 30
     scale: 0.01
