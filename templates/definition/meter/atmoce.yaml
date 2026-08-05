@@ -364,9 +364,8 @@ render: |
                       decode: uint16
           - case: 4 # holdcharge -> No charging
             set:
-              {{- if eq .firmware ">=01.01.00.28.15" }}
               source: const
-              value: 2
+              value: {{ if eq .firmware "<01.01.00.28.15" }}99{{ else }}2{{ end }}
               set:
                 source: modbus
                 {{- include "modbus" . | indent 14 }}
@@ -374,10 +373,6 @@ render: |
                   address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
                   type: writeholding
                   decode: uint16
-              {{- else }}
-              source: sleep
-              duration: 0s
-              {{- end }}
           - case: 5 # discharge -> Enable grid discharging with minimum target soc
             set:
               source: sequence
