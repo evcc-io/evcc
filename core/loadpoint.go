@@ -174,6 +174,7 @@ type Loadpoint struct {
 
 	// charge progress
 	vehicleSoc              float64       // Vehicle or charger soc
+	vehicleRange            int64         // Vehicle range in km
 	chargeDuration          time.Duration // Charge duration
 	connectedDuration       time.Duration // Connection duration
 	energyMetrics           EnergyMetrics // Stats for charged energy by session
@@ -1979,6 +1980,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 		if vs, ok := api.Cap[api.VehicleRange](lp.GetVehicle()); ok {
 			if rng, err := vs.Range(); err == nil {
 				lp.log.DEBUG.Printf("vehicle range: %dkm", rng)
+				lp.vehicleRange = rng
 				lp.publish(keys.VehicleRange, rng)
 			} else if !loadpoint.AcceptableError(err) {
 				lp.log.ERROR.Printf("vehicle range: %v", err)
