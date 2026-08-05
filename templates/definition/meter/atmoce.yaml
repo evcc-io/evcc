@@ -60,6 +60,9 @@ render: |
       address: 60073 # Grid Active Power (kW * 1000)
       type: holding
       decode: int32
+    block: # 60069-60074
+      register: 60069
+      count: 6
     scale: 1
   energy:
     source: modbus
@@ -68,6 +71,9 @@ render: |
       address: 60184 # Cumulative Electricity Purchase Volume (kWh * 100)
       type: holding
       decode: uint64
+    block: # 60160-60188
+      register: 60160
+      count: 30
     scale: 0.01
   returnenergy:
     source: modbus
@@ -76,6 +82,9 @@ render: |
       address: 60178 # Cumulative Electricity Sales Volume (kWh * 100)
       type: holding
       decode: uint64
+    block: # 60160-60188
+      register: 60160
+      count: 30
     scale: 0.01
   currents:
   - source: modbus
@@ -84,6 +93,9 @@ render: |
       address: 60090 # Phase A Grid Current (A * 100)
       type: holding
       decode: int16
+    block: # 60089-60095
+      register: 60089
+      count: 7
     scale: 0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -91,6 +103,9 @@ render: |
       address: 60092 # Phase B Grid Current (A * 100)
       type: holding
       decode: int16
+    block: # 60089-60095
+      register: 60089
+      count: 7
     scale: 0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -98,6 +113,9 @@ render: |
       address: 60094 # Phase C Grid Current (A * 100)
       type: holding
       decode: int16
+    block: # 60089-60095
+      register: 60089
+      count: 7
     scale: 0.01
   voltages:
   - source: modbus
@@ -106,6 +124,9 @@ render: |
       address: 60089 # Phase A Grid Voltage (V * 10)
       type: holding
       decode: uint16
+    block: # 60089-60095
+      register: 60089
+      count: 7
     scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -113,6 +134,9 @@ render: |
       address: 60091 # Phase B Grid Voltage (V * 10)
       type: holding
       decode: uint16
+    block: # 60089-60095
+      register: 60089
+      count: 7
     scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -120,6 +144,9 @@ render: |
       address: 60093 # Phase C Grid Voltage (V * 10)
       type: holding
       decode: uint16
+    block: # 60089-60095
+      register: 60089
+      count: 7
     scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
@@ -130,6 +157,9 @@ render: |
       address: 60069 # Photovoltaic Power Output (kW * 1000)
       type: holding
       decode: uint32
+    block: # 60069-60074
+      register: 60069
+      count: 6
     scale: 1
   energy:
     source: modbus
@@ -138,6 +168,9 @@ render: |
       address: 60160 # Cumulative Photovoltaic Power Generation (kWh * 100)
       type: holding
       decode: uint64
+    block: # 60160-60188
+      register: 60160
+      count: 30
     scale: 0.01
   maxacpower: {{ .maxacpower }}
   {{- if not ( eq .firmware "<01.01.00.28.15" ) }}
@@ -218,6 +251,9 @@ render: |
       address: 60071 # Energy Storage Charging/Discharging Power (kW * 1000)
       type: holding
       decode: int32
+    block: # 60069-60074
+      register: 60069
+      count: 6
     scale: 1
   energy:
     source: modbus
@@ -226,6 +262,9 @@ render: |
       address: 60172 # Cumulative Energy Storage Discharging Capacity (kWh * 100)
       type: holding
       decode: uint64
+    block: # 60160-60188
+      register: 60160
+      count: 30
     scale: 0.01
   returnenergy:
     source: modbus
@@ -234,6 +273,9 @@ render: |
       address: 60166 # Cumulative Energy Storage Charging Capacity (kWh * 100)
       type: holding
       decode: uint64
+    block: # 60160-60188
+      register: 60160
+      count: 30
     scale: 0.01
   maxchargepower:
     source: modbus
@@ -258,6 +300,9 @@ render: |
       address: 60095 # Energy Storage SOC (%)
       type: holding
       decode: uint16
+    block: # 60089-60095
+      register: 60089
+      count: 7
     scale: 1
   batterymode:
     source: sequence
