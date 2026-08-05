@@ -366,8 +366,8 @@ func (c *gen2) IsThreePhase() bool {
 	return c.hasEMEndpoint()
 }
 
-// Reversed reports whether the device-side "Reverse power measurement" setting is enabled
-func (c *gen2) Reversed() bool {
+// IsReversed reports whether the device-side "Reverse power measurement" setting is enabled
+func (c *gen2) IsReversed() bool {
 	return c.reversed
 }
 

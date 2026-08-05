@@ -144,8 +144,8 @@ func (c *gen1) ReturnEnergy() (float64, error) {
 	return c.energy(energy) / 1000, nil
 }
 
-// Reversed reports whether the device reverses its measurement direction. Gen1 devices cannot.
-func (c *gen1) Reversed() bool {
+// IsReversed reports whether the device reverses its measurement direction. Gen1 devices cannot.
+func (c *gen1) IsReversed() bool {
 	return false
 }
 
