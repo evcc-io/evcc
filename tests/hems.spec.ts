@@ -106,10 +106,43 @@ maxconsumptionpower:
     await expect(hemsModal).toContainText("Configured via evcc.yaml");
     await expect(hemsModal.getByLabel("Integration")).not.toBeVisible();
     await expect(hemsModal.getByTestId("yaml-editor")).not.toBeVisible();
-    await expect(hemsModal.getByRole("button", { name: "Save" })).not.toBeVisible();
+    // device save is hidden, only the export limit form keeps its save button
+    await expect(hemsModal.getByRole("button", { name: "Save" })).toHaveCount(1);
+    await expect(
+      hemsModal.getByTestId("grid-export-limit").getByRole("button", { name: "Save" })
+    ).toBeVisible();
 
     await hemsModal.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(hemsModal);
+  });
+
+  test("grid export limit", async ({ page }) => {
+    await start(CONFIG);
+    await page.goto("/#/config");
+
+    await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
+    const hemsModal = page.getByTestId("hems-modal");
+    await expectModalVisible(hemsModal);
+
+    const section = hemsModal.getByTestId("grid-export-limit");
+    const saveButton = section.getByRole("button", { name: "Save" });
+    await expect(saveButton).toBeDisabled();
+
+    await section.getByRole("spinbutton").fill("7000");
+    await expect(saveButton).toBeEnabled();
+    await saveButton.click();
+    // state roundtrip disables the button again
+    await expect(saveButton).toBeDisabled();
+
+    await hemsModal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(hemsModal);
+
+    // persisted across restart
+    await restart(CONFIG);
+    await page.reload();
+    await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(hemsModal);
+    await expect(section.getByRole("spinbutton")).toHaveValue("7000");
   });
 
   test("user-defined relay drives external limit without circuits", async ({ page }) => {

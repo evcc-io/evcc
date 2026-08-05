@@ -274,6 +274,20 @@ func TestOptimizerChargingStrategy(t *testing.T) {
 	assert.Equal(t, "attenuate_grid_peaks", site.GetOptimizerChargingStrategy())
 }
 
+func TestGridExportLimit(t *testing.T) {
+	site := &Site{log: util.NewLogger("foo")}
+
+	// disabled by default
+	assert.Equal(t, 0.0, site.GetGridExportLimit())
+
+	// negative value rejected, limit unchanged
+	require.Error(t, site.SetGridExportLimit(-1))
+	assert.Equal(t, 0.0, site.GetGridExportLimit())
+
+	require.NoError(t, site.SetGridExportLimit(7000))
+	assert.Equal(t, 7000.0, site.GetGridExportLimit())
+}
+
 func TestBlendMeasured(t *testing.T) {
 	slots := []float64{100, 100, 100, 100, 100, 100}
 	blendMeasured(slots, 200, 4)

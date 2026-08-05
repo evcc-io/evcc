@@ -16,7 +16,7 @@
 		@added="onAdded"
 		@updated="onUpdated"
 		@removed="onRemoved"
-		@open="loadSessions"
+		@open="onOpen"
 		@close="$emit('close')"
 	>
 		<template v-if="id !== undefined && !fromYaml" #template-action>
@@ -38,6 +38,33 @@
 					{{ $t("config.general.docsLink") }}
 				</a>
 			</p>
+			<div class="mb-4" data-testid="grid-export-limit">
+				<h6 class="mb-3">{{ $t("config.hems.exportLimit") }}</h6>
+				<p>{{ $t("config.hems.exportLimitDescription") }}</p>
+				<form class="d-flex gap-2" @submit.prevent="saveExportLimit">
+					<div class="input-group input-width">
+						<input
+							id="hemsExportLimit"
+							v-model.number="exportLimit"
+							type="number"
+							min="0"
+							step="100"
+							:placeholder="$t('config.hems.exportLimitDisabled')"
+							aria-describedby="hemsExportLimitUnit"
+							class="form-control text-end"
+						/>
+						<span id="hemsExportLimitUnit" class="input-group-text">W</span>
+					</div>
+					<button
+						type="submit"
+						class="btn btn-outline-secondary"
+						:disabled="exportLimitUnchanged"
+					>
+						{{ $t("config.general.save") }}
+					</button>
+				</form>
+				<hr class="mt-4 mb-0" />
+			</div>
 			<div v-if="configured" class="mb-4" data-testid="grid-sessions">
 				<h6 class="mb-3">{{ $t("config.hems.recordedEvents") }}</h6>
 				<div class="events-box rounded p-3">
@@ -73,6 +100,7 @@ import { customTemplateOption, type TemplateGroup } from "./DeviceModal/Template
 import customHemsYaml from "./defaultYaml/customHems.yaml?raw";
 import relayHemsYaml from "./defaultYaml/relayHems.yaml?raw";
 import api from "../../api";
+import store from "@/store";
 import { docsPrefix } from "@/i18n";
 import DownloadButton from "../Helper/DownloadButton.vue";
 import formatter from "../../mixins/formatter";
@@ -102,6 +130,7 @@ export default defineComponent({
 			initialValues,
 			sessions: [] as Array<{ created: string }>,
 			changing: false,
+			exportLimit: null as number | null,
 		};
 	},
 	computed: {
@@ -127,8 +156,25 @@ export default defineComponent({
 		docsLink(): string {
 			return `${docsPrefix()}/docs/external-limit`;
 		},
+		serverExportLimit(): number {
+			return store.state?.gridExportLimit || 0;
+		},
+		exportLimitUnchanged(): boolean {
+			return (this.exportLimit || 0) === this.serverExportLimit;
+		},
 	},
 	methods: {
+		onOpen() {
+			this.exportLimit = this.serverExportLimit || null;
+			this.loadSessions();
+		},
+		async saveExportLimit() {
+			try {
+				await api.post(`gridexportlimit/${this.exportLimit || 0}`);
+			} catch (e) {
+				console.error(e);
+			}
+		},
 		downloadHref(): string {
 			const params = new URLSearchParams({ lang: this.$i18n?.locale });
 			return `./api/gridsessions?${params.toString()}`;
@@ -197,5 +243,8 @@ export default defineComponent({
 <style scoped>
 .events-box {
 	background: var(--evcc-background);
+}
+.input-width {
+	max-width: 180px;
 }
 </style>

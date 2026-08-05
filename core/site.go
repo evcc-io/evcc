@@ -88,6 +88,9 @@ type Site struct {
 	batteryGridChargeLimit  *float64 // grid charging limit
 	batteryGridDischarge    bool     // allow battery discharge to grid (experimental)
 
+	// grid settings
+	gridExportLimit float64 // static grid export power limit in W, 0 = disabled
+
 	// forecast settings
 	solarAdjusted bool // adjust solar forecast to real production data
 
@@ -393,6 +396,11 @@ func (site *Site) restoreSettings() error {
 	}
 	if v, err := settings.Float(keys.BatteryGridChargeLimit); err == nil {
 		if err := site.SetBatteryGridChargeLimit(&v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
+			return err
+		}
+	}
+	if v, err := settings.Float(keys.GridExportLimit); err == nil {
+		if err := site.SetGridExportLimit(v); err != nil {
 			return err
 		}
 	}
@@ -1218,6 +1226,7 @@ func (site *Site) prepare() {
 	site.publish(keys.BatteryGridDischarge, site.batteryGridDischarge)
 	site.publish(keys.SolarAdjusted, site.solarAdjusted)
 	site.publish(keys.ResidualPower, site.GetResidualPower())
+	site.publish(keys.GridExportLimit, site.GetGridExportLimit())
 	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))
 	site.publish(keys.SmartFeedInPriorityAvailable, site.isDynamicTariff(api.TariffUsageFeedIn))
 
