@@ -26,8 +26,8 @@ func TestShellyCurrentPowerForUsage(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			m := &Shelly{usage: tc.usage}
-			assert.Equal(t, tc.want, m.currentPowerForUsage(tc.power, tc.signed, tc.reversed))
+			m := &Shelly{usage: tc.usage, signed: tc.signed, reversed: tc.reversed}
+			assert.Equal(t, tc.want, m.currentPowerForUsage(tc.power))
 		})
 	}
 }
