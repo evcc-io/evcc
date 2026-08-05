@@ -28,6 +28,10 @@ type Gen2Methods struct {
 	Methods []string
 }
 
+type Gen2Config struct {
+	Reverse bool
+}
+
 type Gen2SwitchStatus struct {
 	Output  bool
 	Apower  float64
@@ -84,6 +88,7 @@ type gen2 struct {
 	switchchannel int
 	model         string
 	methods       []string
+	reversed      bool
 	switchstatus  util.Cacheable[Gen2SwitchStatus]
 	em1status     func() (Gen2EM1Status, error)
 	em1data       func() (Gen2EM1Data, error)
@@ -139,6 +144,27 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 	} else {
 		c.switchstatus = util.ResettableCached(apiCall[Gen2SwitchStatus](c, c.switchchannel, "Switch.GetStatus"), cache)
 	}
+	// device-side "Reverse power measurement" setting (requires restart, hence static)
+	var cfgMethod string
+	cfgChannel := channel
+	switch {
+	case c.hasEM1Endpoint():
+		cfgMethod = "EM1.GetConfig"
+	case c.hasMethod("PM1.GetStatus"):
+		cfgMethod = "PM1.GetConfig"
+	case c.hasMethod("Switch.GetStatus"):
+		cfgMethod = "Switch.GetConfig"
+		cfgChannel = c.switchchannel
+	}
+
+	if cfgMethod != "" {
+		var cfg Gen2Config
+		if err := c.execCmd(cfgChannel, cfgMethod, &cfg); err != nil {
+			return nil, err
+		}
+		c.reversed = cfg.Reverse
+	}
+
 	c.em1status = util.Cached(apiCall[Gen2EM1Status](c, channel, "EM1.GetStatus"), cache)
 	c.em1data = util.Cached(apiCall[Gen2EM1Data](c, channel, "EM1Data.GetStatus"), cache)
 	c.emstatus = util.Cached(apiCall[Gen2EMStatus](c, channel, "EM.GetStatus"), cache)
@@ -338,6 +364,11 @@ func (c *gen2) hasEMEndpoint() bool {
 // IsThreePhase reports whether the device is a three-phase energy meter
 func (c *gen2) IsThreePhase() bool {
 	return c.hasEMEndpoint()
+}
+
+// Reversed reports whether the device-side "Reverse power measurement" setting is enabled
+func (c *gen2) Reversed() bool {
+	return c.reversed
 }
 
 // Gen2+ models using EM1.GetStatus endpoint for power and EM1Data.GetStatus for energy

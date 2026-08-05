@@ -144,6 +144,11 @@ func (c *gen1) ReturnEnergy() (float64, error) {
 	return c.energy(energy) / 1000, nil
 }
 
+// Reversed reports whether the device reverses its measurement direction. Gen1 devices cannot.
+func (c *gen1) Reversed() bool {
+	return false
+}
+
 // IsThreePhase reports whether the device is a three-phase energy meter.
 func (c *gen1) IsThreePhase() bool {
 	res, err := c.status.Get()
