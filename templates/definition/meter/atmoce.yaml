@@ -383,9 +383,8 @@ render: |
         set:
           source: sequence
           set:
-            {{- if eq .firmware ">=01.01.00.28.15" }}
             - source: const
-              value: 2
+              value: {{ if eq .firmware "<01.01.00.28.15" }}99{{ else }}2{{ end }}
               set:
                 source: modbus
                 {{- include "modbus" . | indent 14 }}
@@ -393,6 +392,7 @@ render: |
                   address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
                   type: writemultiple
                   decode: uint16
+            {{- if eq .firmware ">=01.01.00.28.15" }}
             - source: const
               value: 0 # Set charge limit to 0W
               set:
@@ -411,9 +411,6 @@ render: |
                   address: 60320 # Energy Storage Maximum Discharging Power (kW * 1000)
                   type: writemultiple
                   decode: uint32
-            {{- else }}
-            - source: sleep
-              duration: 0s
             {{- end }}
   {{- if not ( eq .firmware "<01.01.00.28.15" ) }}
   curtail:
