@@ -1,8 +1,14 @@
-template: huawei-sun2000
+template: huawei-emma
 products:
   - brand: Huawei
     description:
       generic: SmartAssistant (EMMA)
+requirements:
+  description:
+    de: |
+      Die Abregelung begrenzt die Einspeiseleistung auf den gewünschten Prozentsatz der maximalen AC-Leistung. Der Wechselrichter begrenzt automatisch die PV-Leistung, um dies zu erreichen.
+    en: |
+      Curtailment will limit the export power to the desired percentage of the maximum AC power. The inverter will automatically limit the PV power to achieve this.
 params:
   - name: modbus
     choice: ["tcpip"]
