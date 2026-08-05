@@ -1,0 +1,24 @@
+template: heidelbridge
+products:
+  - description:
+      generic: HeidelBridge
+capabilities: ["mA", "meter"]
+requirements:
+  description:
+    de: Benötigt HeidelBridge (ESP32 Gateway) mit aktivierter MQTT-Schnittstelle. Siehe [github.com/BorisBrock/HeidelBridge](https://github.com/BorisBrock/HeidelBridge).
+    en: Requires HeidelBridge (ESP32 gateway) with the MQTT interface enabled. See [github.com/BorisBrock/HeidelBridge](https://github.com/BorisBrock/HeidelBridge).
+  evcc: ["sponsorship"]
+params:
+  - preset: mqtt
+  - name: topic
+    default: HeidelBridge
+    description:
+      de: Gerätename
+      en: Device name
+    help:
+      de: In der HeidelBridge konfigurierter Gerätename (MQTT Topic-Präfix).
+      en: Device name configured in HeidelBridge (MQTT topic prefix).
+render: |
+  type: heidelbridge
+  {{- include "mqtt" . }}
+  topic: {{ .topic }}
