@@ -96,11 +96,12 @@ func (c *Shelly) currentPowerForUsage(power float64, signed, reversed bool) floa
 	if c.usage != "pv" {
 		return power
 	}
-	if signed {
-		if reversed {
-			return power
-		}
+	switch {
+	case !signed:
+		return math.Abs(power)
+	case reversed:
+		return power
+	default:
 		return -power
 	}
-	return math.Abs(power)
 }
