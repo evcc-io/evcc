@@ -38,8 +38,8 @@
 					{{ $t("config.general.docsLink") }}
 				</a>
 			</p>
-			<div class="mb-4" data-testid="grid-export-limit">
-				<h6 class="mb-3">{{ $t("config.hems.exportLimit") }}</h6>
+			<div v-if="experimental" class="mb-4" data-testid="grid-export-limit">
+				<h6 class="mb-3">{{ $t("config.hems.exportLimit") }} 🧪</h6>
 				<p>{{ $t("config.hems.exportLimitDescription") }}</p>
 				<form class="d-flex gap-2" @submit.prevent="saveExportLimit">
 					<div class="input-group input-width">
@@ -155,6 +155,9 @@ export default defineComponent({
 		},
 		docsLink(): string {
 			return `${docsPrefix()}/docs/external-limit`;
+		},
+		experimental(): boolean {
+			return store.state?.experimental === true;
 		},
 		serverExportLimit(): number {
 			return store.state?.gridExportLimit || 0;

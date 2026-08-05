@@ -106,11 +106,7 @@ maxconsumptionpower:
     await expect(hemsModal).toContainText("Configured via evcc.yaml");
     await expect(hemsModal.getByLabel("Integration")).not.toBeVisible();
     await expect(hemsModal.getByTestId("yaml-editor")).not.toBeVisible();
-    // device save is hidden, only the export limit form keeps its save button
-    await expect(hemsModal.getByRole("button", { name: "Save" })).toHaveCount(1);
-    await expect(
-      hemsModal.getByTestId("grid-export-limit").getByRole("button", { name: "Save" })
-    ).toBeVisible();
+    await expect(hemsModal.getByRole("button", { name: "Save" })).not.toBeVisible();
 
     await hemsModal.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(hemsModal);
@@ -120,11 +116,26 @@ maxconsumptionpower:
     await start(CONFIG);
     await page.goto("/#/config");
 
-    await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     const hemsModal = page.getByTestId("hems-modal");
-    await expectModalVisible(hemsModal);
-
     const section = hemsModal.getByTestId("grid-export-limit");
+
+    // hidden without experimental
+    await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(hemsModal);
+    await expect(section).not.toBeVisible();
+    await hemsModal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(hemsModal);
+
+    // enable experimental
+    await page.getByTestId("generalconfig-experimental").getByRole("button", { name: "edit" }).click();
+    const experimentalModal = page.getByTestId("experimental-modal");
+    await expectModalVisible(experimentalModal);
+    await experimentalModal.getByLabel("Enable experimental features.").click();
+    await experimentalModal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(experimentalModal);
+
+    await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(hemsModal);
     const saveButton = section.getByRole("button", { name: "Save" });
     await expect(saveButton).toBeDisabled();
 
