@@ -157,7 +157,7 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 		cfgChannel = c.switchchannel
 	}
 
-	if cfgMethod != "" {
+	if c.hasMethod(cfgMethod) {
 		var cfg Gen2Config
 		if err := c.execCmd(cfgChannel, cfgMethod, &cfg); err != nil {
 			return nil, err
