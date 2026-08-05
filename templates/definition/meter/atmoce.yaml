@@ -153,7 +153,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 60322 # Photovoltaic Maximum Power (kW * 1000)
-              type: writemultiple
+              type: writeholdings
               encoding: uint32
     default:
       source: go
@@ -174,7 +174,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 60322 # Photovoltaic Maximum Power (kW * 1000)
-              type: writemultiple
+              type: writeholdings
               encoding: uint32
   curtailed: # the power limit is expressed as percent of nominal AC power
     source: go
@@ -273,7 +273,7 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
-                  type: writemultiple
+                  type: writeholding
                   decode: uint16
           - case: 2 # hold -> No discharging
             set:
@@ -284,7 +284,7 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
-                  type: writemultiple
+                  type: writeholding
                   decode: uint16
           - case: 3 # charge -> Enable grid charging with maximum target soc (will be stopped by evcc)
             set:
@@ -297,7 +297,7 @@ render: |
                     {{- include "modbus" . | indent 18 }}
                     register:
                       address: 60312 # Energy Storage Forced Charging/Discharging Target SOC (%)
-                      type: writemultiple
+                      type: writeholding
                       decode: uint16
                 - source: const
                   value: 0
@@ -306,7 +306,7 @@ render: |
                     {{- include "modbus" . | indent 18 }}
                     register:
                       address: 60311 # Energy Storage Forced Charging/Discharging Mode (0 = Target SOC, 1 = Charging/discharging duration)
-                      type: writemultiple
+                      type: writeholding
                       decode: uint16
                 - source: const
                   value: 0
@@ -315,7 +315,7 @@ render: |
                     {{- include "modbus" . | indent 18 }}
                     register:
                       address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
-                      type: writemultiple
+                      type: writeholding
                       decode: uint16
           - case: 4 # holdcharge -> No charging
             set:
@@ -327,7 +327,7 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
-                  type: writemultiple
+                  type: writeholding
                   decode: uint16
               {{- else }}
               source: sleep
@@ -344,7 +344,7 @@ render: |
                     {{- include "modbus" . | indent 18 }}
                     register:
                       address: 60312 # Energy Storage Forced Charging/Discharging Target SOC (%)
-                      type: writemultiple
+                      type: writeholding
                       decode: uint16
                 - source: const
                   value: 0
@@ -353,7 +353,7 @@ render: |
                     {{- include "modbus" . | indent 18 }}
                     register:
                       address: 60311 # Energy Storage Forced Charging/Discharging Mode (0 = Target SOC, 1 = Charging/discharging duration)
-                      type: writemultiple
+                      type: writeholding
                       decode: uint16
                 - source: const
                   value: 1
@@ -362,7 +362,7 @@ render: |
                     {{- include "modbus" . | indent 18 }}
                     register:
                       address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
-                      type: writemultiple
+                      type: writeholding
                       decode: uint16
       {{- if eq .firmware ">=01.01.00.28.15" }}
       - source: switch
@@ -378,7 +378,7 @@ render: |
                     {{- include "modbus" . | indent 18 }}
                     register:
                       address: 60318 # Energy Storage Maximum Charging Power (kW * 1000)
-                      type: writemultiple
+                      type: writeholdings
                       decode: uint32
                 - source: const
                   value: 0 # Set discharge limit to 0W
@@ -387,7 +387,7 @@ render: |
                     {{- include "modbus" . | indent 18 }}
                     register:
                       address: 60320 # Energy Storage Maximum Discharging Power (kW * 1000)
-                      type: writemultiple
+                      type: writeholdings
                       decode: uint32
           - case: 4 # holdcharge -> No charging
             set:
@@ -400,7 +400,7 @@ render: |
                     {{- include "modbus" . | indent 18 }}
                     register:
                       address: 60318 # Energy Storage Maximum Charging Power (kW * 1000)
-                      type: writemultiple
+                      type: writeholdings
                       decode: uint32
                 - source: const
                   value: 0xFFFFFFFF # No limit
@@ -409,7 +409,7 @@ render: |
                     {{- include "modbus" . | indent 18 }}
                     register:
                       address: 60320 # Energy Storage Maximum Discharging Power (kW * 1000)
-                      type: writemultiple
+                      type: writeholdings
                       decode: uint32
         default:
           source: sequence
@@ -421,7 +421,7 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 60318 # Energy Storage Maximum Charging Power (kW * 1000)
-                  type: writemultiple
+                  type: writeholdings
                   decode: uint32
             - source: const
               value: 0xFFFFFFFF # No limit
@@ -430,7 +430,7 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 60320 # Energy Storage Maximum Discharging Power (kW * 1000)
-                  type: writemultiple
+                  type: writeholdings
                   decode: uint32
       {{- end }}
   {{- if not ( eq .firmware "<01.01.00.28.15" ) }}
@@ -446,7 +446,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 60324 # Grid Maximum Export Power (kW * 1000)
-              type: writemultiple
+              type: writeholdings
               encoding: uint32
     default:
       source: go
@@ -467,7 +467,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 60324 # Grid Maximum Export Power (kW * 1000)
-              type: writemultiple
+              type: writeholdings
               encoding: uint32
   curtailed: # the power limit is expressed as percent of nominal discharge power
     source: go
@@ -506,7 +506,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 60326 # Grid Maximum Import Power (kW * 1000)
-            type: writemultiple
+            type: writeholdings
             encoding: uint32
     else:
       source: convert
@@ -519,7 +519,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 60326 # Grid Maximum Import Power (kW * 1000)
-            type: writemultiple
+            type: writeholdings
             encoding: uint32
   dimmed:
     source: go
