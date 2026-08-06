@@ -47,6 +47,7 @@ type Keba struct {
 	regEnable    uint16
 	energyFactor float64
 	state1p      uint32
+	phases       int // last requested phases, 0 if phase switching is unavailable
 }
 
 const (
@@ -145,6 +146,10 @@ func NewKebaFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		if source := binary.BigEndian.Uint32(b); source == 3 {
 			implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
 			implement.Has(wb, implement.PhaseGetter(wb.getPhases))
+
+			if wb.phases, err = wb.getPhases(); err != nil {
+				return nil, fmt.Errorf("phases: %w", err)
+			}
 		}
 	}
 
@@ -285,6 +290,13 @@ func (wb *Keba) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *Keba) Enable(enable bool) error {
+	// restore the phase state before enabling
+	if enable && wb.phases != 0 {
+		if err := wb.writePhases(wb.phases); err != nil {
+			return err
+		}
+	}
+
 	var u uint16
 	if enable {
 		if wb.regEnable == kebaRegMaxCurrent {
@@ -296,8 +308,16 @@ func (wb *Keba) Enable(enable bool) error {
 		}
 	}
 
-	_, err := wb.conn.WriteSingleRegister(wb.regEnable, u)
-	return err
+	if _, err := wb.conn.WriteSingleRegister(wb.regEnable, u); err != nil {
+		return err
+	}
+
+	// release the external phase switch relay to save its standby power
+	if !enable && wb.phases != 0 {
+		return wb.writePhases(1)
+	}
+
+	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -372,14 +392,23 @@ func (wb *Keba) identify() (string, error) {
 	return id, nil
 }
 
-// phases1p3p implements the api.PhaseSwitcher interface
-func (wb *Keba) phases1p3p(phases int) error {
+func (wb *Keba) writePhases(phases int) error {
 	var u uint16
 	if phases == 3 {
 		u = 1
 	}
 
 	_, err := wb.conn.WriteSingleRegister(kebaRegTriggerPhase, u)
+	return err
+}
+
+// phases1p3p implements the api.PhaseSwitcher interface
+func (wb *Keba) phases1p3p(phases int) error {
+	err := wb.writePhases(phases)
+	if err == nil {
+		wb.phases = phases
+	}
+
 	return err
 }
 
