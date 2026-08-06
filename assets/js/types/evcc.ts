@@ -1272,32 +1272,11 @@ export interface Slot {
   selectable?: boolean | null;
 }
 
-/** A forecast value at a point in time. */
-export interface TimeseriesEntry {
-  /** Forecast power in W. */
-  val: number;
-  /**
-   * Time of the forecast value.
-   * @format date-time
-   */
-  ts: string;
-}
+/** A forecast time slot as [start, end, value] array. Start and end are unix seconds. Value unit depends on the forecast type. */
+export type ForecastSlot = [number, number, number];
 
-/** A forecast value for a time slot. */
-export interface ForecastSlot {
-  /**
-   * Start of the time slot.
-   * @format date-time
-   */
-  start: string;
-  /**
-   * End of the time slot.
-   * @format date-time
-   */
-  end: string;
-  /** Forecast value of the time slot. Unit depends on the forecast type. */
-  value: number;
-}
+/** A forecast value at a point in time as [ts, val] array. ts is unix seconds, val is power in W. */
+export type TimeseriesEntry = [number, number];
 
 /** Expected solar production energy of a day. */
 export interface EnergyByDay {
@@ -1335,6 +1314,33 @@ export interface Forecast {
   feedin?: ForecastSlot[];
   /** Temperature forecast in °C per time slot. */
   temperature?: ForecastSlot[];
+}
+
+// Ui* variants of the forecast wire types, expanded to objects with unix
+// milliseconds by expandForecast in utils/forecast
+
+export interface UiTimeseriesEntry {
+  ts: number;
+  val: number;
+}
+
+export interface UiForecastSlot {
+  start: number;
+  end: number;
+  value: number;
+}
+
+export interface UiSolarDetails extends Omit<SolarDetails, "timeseries"> {
+  timeseries?: UiTimeseriesEntry[];
+}
+
+export interface UiForecast {
+  grid?: UiForecastSlot[];
+  co2?: UiForecastSlot[];
+  solar?: UiSolarDetails;
+  planner?: UiForecastSlot[];
+  feedin?: UiForecastSlot[];
+  temperature?: UiForecastSlot[];
 }
 
 export interface SelectOption<T> {
