@@ -105,6 +105,8 @@ render: |
       decode: float32s
   {{- end }}
   {{- if eq .usage "battery" }}
+  # Input and holding registers are separate address spaces: 6064 reads "Energy from battery"
+  # as input but writes "Battery Power Reference" as holding, likewise 6000.
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -117,7 +119,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 6064 # Energy from battery (kWh)
+      address: 6064 # Energy from battery (input, kWh)
       type: input
       decode: float32s
   returnenergy:
@@ -141,8 +143,9 @@ render: |
       address: 6008 # Rated capacity of all connected batteries (kWh)
       type: input
       decode: float32s
-  # Battery Mode 0 hands control back to the EnergyHub's own optimization, mode 1
-  # follows Battery Power Reference. The reference has to be written before the mode.
+  # Battery Mode 0 hands control back to the EnergyHub's own optimization, mode 1 follows
+  # Battery Power Reference. The reference has to be written before the mode. Setpoints are
+  # given in W and scaled to the register's kW unit.
   batterymode:
     source: switch
     switch:
@@ -162,12 +165,12 @@ render: |
         source: sequence
         set:
         - source: const
-          value: 0 # W, neither charge nor discharge
+          value: 0 # neither charge nor discharge
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 6064 # Battery Power Reference (kW)
+              address: 6064 # Battery Power Reference (holding, kW)
               type: writemultiple
               encoding: float32s
             scale: 0.001
@@ -177,7 +180,7 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 6000 # Battery Mode
+              address: 6000 # Battery Mode (holding)
               type: writemultiple
               encoding: uint16
     - case: 3 # charge
@@ -186,12 +189,12 @@ render: |
         source: sequence
         set:
         - source: const
-          value: -{{ .maxchargepower }} # W, negative implies charging
+          value: -{{ .maxchargepower }} # negative implies charging
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 6064 # Battery Power Reference (kW)
+              address: 6064 # Battery Power Reference (holding, kW)
               type: writemultiple
               encoding: float32s
             scale: 0.001
@@ -201,7 +204,7 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 6000 # Battery Mode
+              address: 6000 # Battery Mode (holding)
               type: writemultiple
               encoding: uint16
         {{- else }}
