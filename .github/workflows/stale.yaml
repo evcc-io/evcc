@@ -33,4 +33,4 @@ jobs:
           days-before-pr-stale: -1
           days-before-pr-close: -1
           exempt-issue-labels: "pinned,security,backlog"
-          close-issue-message: "Closing since the requested feedback was not provided. Please comment if you can still provide it and we'll reopen."
+          close-issue-message: "Closing since the requested feedback was not provided. You can still comment with requested feedback and we'll reopen."
