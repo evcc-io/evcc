@@ -950,7 +950,7 @@ paths:
       summary: System state
       description: "Returns the complete state of the system. This structure is used by the UI and also published via websocket and MQTT. It can be filtered by JQ to only return a subset of the data. Note: the response mirrors the internal UI state and carries no compatibility promise. Fields may change or disappear between releases."
       externalDocs:
-        url: https://docs.evcc.io/integrations/rest-api
+        url: https://docs.evcc.io/en/reference/state
       tags:
         - state
       parameters:
