@@ -454,6 +454,7 @@ params:
       generic: Token
   - name: interval
     type: duration
+    unit: hour
     description:
       de: Intervall
       en: Interval
@@ -489,6 +490,7 @@ params:
       en: Battery storage unit index
       de: Nummer des Batteriespeichers
   - name: delay
+    type: duration
     description:
       en: Delay
       de: Verzögerung

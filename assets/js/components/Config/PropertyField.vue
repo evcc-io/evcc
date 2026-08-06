@@ -138,6 +138,7 @@ import VehicleIcon from "../VehicleIcon";
 import SelectGroup from "../Helper/SelectGroup.vue";
 import PropertyZonesField from "./PropertyZonesField.vue";
 import formatter from "@/mixins/formatter";
+import parseGoDuration, { displayFactors } from "@/utils/parseGoDuration";
 
 const NS_PER_SECOND = 1000000000;
 
@@ -297,7 +298,7 @@ export default {
 			return this.choice.length > 0 || this.chargeModes;
 		},
 		durationFactor() {
-			return this.unit === "minute" ? 60 : 1;
+			return displayFactors[this.unit] ?? 1;
 		},
 		selectOptions() {
 			if (this.chargeModes) {
@@ -343,8 +344,15 @@ export default {
 					return Array.isArray(this.modelValue) ? this.modelValue.join("\n") : "";
 				}
 
-				if (this.type === "Duration" && typeof this.modelValue === "number") {
-					return this.modelValue / this.durationFactor / NS_PER_SECOND;
+				if (this.type === "Duration") {
+					const ns =
+						typeof this.modelValue === "string"
+							? parseGoDuration(this.modelValue)
+							: this.modelValue;
+					if (typeof ns === "number") {
+						return ns / this.durationFactor / NS_PER_SECOND;
+					}
+					return "";
 				}
 
 				if (this.pricePerKWh) {

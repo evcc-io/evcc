@@ -28,6 +28,7 @@
 /* oxlint-disable vue/prop-name-casing */
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
+import { goDurationToUnit } from "@/utils/parseGoDuration";
 
 export default {
 	name: "PropertyEntry",
@@ -66,8 +67,11 @@ export default {
 			return this.Description === this.Help ? undefined : this.Help;
 		},
 		example() {
-			// hide example text since config ui doesnt use go duration format (e.g. 5m)
-			return this.Type === "Duration" ? undefined : this.Example;
+			if (this.Type === "Duration") {
+				const value = this.Example ? goDurationToUnit(this.Example, this.Unit) : null;
+				return value === null ? undefined : String(value);
+			}
+			return this.Example;
 		},
 	},
 };
