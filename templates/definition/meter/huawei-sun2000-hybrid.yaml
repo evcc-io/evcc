@@ -13,7 +13,7 @@ requirements:
 
       Netz und Batterie erfordern den Huawei Smart Power Sensor (DDSU/DTSU666 oder SmartPS).
 
-      Mehrere LUNA2000-Türme am selben SUN2000-Wechselrichter werden als eine logische Batterie konfiguriert.
+      Mehrere LUNA2000-Türme am selben SUN2000-Wechselrichter werden als eine einzige logische Batterie konfiguriert.
 
       Die Abregelung begrenzt die Einspeiseleistung auf den gewünschten Prozentsatz der maximalen AC-Leistung. Der Wechselrichter begrenzt automatisch die PV-Leistung, um dies zu erreichen.
     en: |
