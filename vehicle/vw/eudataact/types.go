@@ -132,6 +132,10 @@ const (
 	// target soc
 	FieldTargetSoc           = "settings.target_soc"
 	FieldChargeBcamThreshold = "battery_care_mode.charge_bcam_threshold" // Audi Q4 e-tron battery care mode target soc
+	FieldBcamActivation      = "setting.bcam_activation"                 // only equals target soc while battery care mode is active
+
+	// battery care mode activation values (see FieldBcamActivation)
+	BcamActivationActivated = "BCAM_ACTIVATION_ACTIVATED"
 
 	// range
 	FieldRangeCombined       = "cruising_range_combined"
