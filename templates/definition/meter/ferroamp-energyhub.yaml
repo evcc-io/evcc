@@ -1,0 +1,213 @@
+template: ferroamp-energyhub
+products:
+  - brand: Ferroamp
+    description:
+      generic: EnergyHub
+capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Modbus TCP muss vom Installateur oder vom Ferroamp-Support für den EnergyHub freigeschaltet werden.
+      Die Schnittstelle ist ausschließlich über die Ethernet-Schnittstelle des EnergyHub erreichbar.
+      Die Netzwerte werden über die externen Stromwandler (CTs) am Netzanschlusspunkt gemessen.
+    en: |
+      Modbus TCP has to be enabled for the EnergyHub by the installer or Ferroamp support.
+      The interface is only reachable via the EnergyHub's Ethernet interface.
+      Grid values are measured by the external current transformers (CTs) at the grid connection point.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 1
+  - preset: battery-minmaxsoc
+  - preset: battery-power
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 3100 # Grid Active Power (kW)
+      type: input
+      decode: float32s
+    scale: 1000
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 3068 # Energy Imported From Grid (kWh)
+      type: input
+      decode: float32s
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 3064 # Energy Exported To Grid (kWh)
+      type: input
+      decode: float32s
+  currents:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 3112 # Grid Active Current L1 (Arms)
+        type: input
+        decode: float32s
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 3116 # Grid Active Current L2 (Arms)
+        type: input
+        decode: float32s
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 3120 # Grid Active Current L3 (Arms)
+        type: input
+        decode: float32s
+  voltages:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 2032 # Grid Voltage L1 (Vrms)
+        type: input
+        decode: float32s
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 2036 # Grid Voltage L2 (Vrms)
+        type: input
+        decode: float32s
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 2040 # Grid Voltage L3 (Vrms)
+        type: input
+        decode: float32s
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 5100 # Solar Output Power (kW)
+      type: input
+      decode: float32s
+    scale: 1000
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 5064 # Energy produced (kWh)
+      type: input
+      decode: float32s
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 6100 # Battery Output Power (kW), negative implies charging
+      type: input
+      decode: float32s
+    scale: 1000
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 6064 # Energy from battery (kWh)
+      type: input
+      decode: float32s
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 6068 # Energy to battery (kWh)
+      type: input
+      decode: float32s
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 6016 # State of Charge (%)
+      type: input
+      decode: float32s
+  capacity:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 6008 # Rated capacity of all connected batteries (kWh)
+      type: input
+      decode: float32s
+  # Battery Mode 0 hands control back to the EnergyHub's own optimization, mode 1
+  # follows Battery Power Reference. The reference has to be written before the mode.
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: const
+        value: 0 # default mode
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 6000 # Battery Mode
+            type: writemultiple
+            encoding: uint16
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # W, neither charge nor discharge
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 6064 # Battery Power Reference (kW)
+              type: writemultiple
+              encoding: float32s
+            scale: 0.001
+        - source: const
+          value: 1 # power mode
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 6000 # Battery Mode
+              type: writemultiple
+              encoding: uint16
+    - case: 3 # charge
+      set:
+        {{- if .maxchargepower }}
+        source: sequence
+        set:
+        - source: const
+          value: -{{ .maxchargepower }} # W, negative implies charging
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 6064 # Battery Power Reference (kW)
+              type: writemultiple
+              encoding: float32s
+            scale: 0.001
+        - source: const
+          value: 1 # power mode
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 6000 # Battery Mode
+              type: writemultiple
+              encoding: uint16
+        {{- else }}
+        source: error
+        error: ErrNotAvailable
+        {{- end }}
+  {{- include "battery-minmaxsoc" . }}
+  {{- include "battery-power" . }}
+  {{- end }}
