@@ -228,19 +228,38 @@ func (site *Site) setSuggestions(batteries map[string]types.Suggestion, loadpoin
 // The actionable flag is evaluated on read since the battery mode changes between
 // optimizer runs.
 func (site *Site) batterySuggestion(name string) *types.Suggestion {
-	mode := site.GetBatteryMode().String()
-
 	site.RLock()
 	defer site.RUnlock()
 
+	return site.batterySuggestionLocked(name)
+}
+
+// batterySuggestionLocked requires the site lock to be held
+func (site *Site) batterySuggestionLocked(name string) *types.Suggestion {
 	s, ok := site.batterySuggestions[name]
 	if !ok {
 		return nil
 	}
 
-	s.Actionable = s.Action != mode
+	s.Actionable = s.Action != site.batteryMode.String()
 
 	return &s
+}
+
+// batteryDevices returns the cached battery measurements
+func (site *Site) batteryDevices() []types.Measurement {
+	site.RLock()
+	defer site.RUnlock()
+
+	return site.battery.Devices
+}
+
+// setBatteryForecast replaces the forecast applied on each publish
+func (site *Site) setBatteryForecast(forecast *types.BatteryForecast) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.batteryForecast = forecast
 }
 
 // loadpointSuggestion returns the optimizer suggestion for the given loadpoint.
@@ -275,7 +294,7 @@ func (site *Site) publishSuggestions() {
 // optimizer result is stale
 func (site *Site) clearSuggestions() {
 	site.setSuggestions(nil, nil)
-	site.battery.Forecast = nil
+	site.setBatteryForecast(nil)
 
 	site.publishBattery()
 	site.publishSuggestions()
@@ -384,7 +403,7 @@ func (site *Site) optimizerUpdateAsync() {
 		}
 	}()
 
-	err = site.optimizerUpdate(site.battery.Devices)
+	err = site.optimizerUpdate(site.batteryDevices())
 }
 
 func (site *Site) optimizerUpdate(battery []types.Measurement) error {
@@ -619,7 +638,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	site.publish("evopt-batteries", batteries)
 
 	site.setSuggestions(suggestions, lpSuggestions)
-	site.battery.Forecast = site.addBatteryForecastTotals(req.Batteries, resp.JSON200.Batteries)
+	site.setBatteryForecast(site.addBatteryForecastTotals(req.Batteries, resp.JSON200.Batteries))
 
 	site.publishBattery()
 

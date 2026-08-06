@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -113,6 +114,7 @@ type Site struct {
 	batteryModeExternal      api.BatteryMode             // Battery mode (external, runtime only, not persisted)
 	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
 	batterySuggestions       map[string]types.Suggestion // Optimizer suggestions by battery meter name
+	batteryForecast          *types.BatteryForecast      // Optimizer battery soc forecast
 	loadpointSuggestions     map[int]types.Suggestion    // Optimizer suggestions by loadpoint id
 	suggestionActions        map[string]string           // last notified actionable optimizer action by device key
 }
@@ -707,10 +709,12 @@ func (site *Site) updateBatteryMeters() {
 		mm[i].Controllable = new(controllable)
 	}
 
+	batterySoc, batteryCapacity := site.battery.Soc, site.battery.Capacity
+
 	// retain the last known soc when every battery read failed this cycle, so a
 	// transient meter error does not report the pack as empty (0%)
 	if lo.EveryBy(mm, func(m types.Measurement) bool { return m.Soc == nil }) {
-		site.log.WARN.Printf("battery soc: read failed, keeping last %.0f%%", site.battery.Soc)
+		site.log.WARN.Printf("battery soc: read failed, keeping last %.0f%%", batterySoc)
 	} else {
 		var batterySocAcc float64
 		var totalCapacity float64
@@ -725,14 +729,14 @@ func (site *Site) updateBatteryMeters() {
 			totalCapacity = lo.SumBy(mm, func(m types.Measurement) float64 { return *m.Capacity })
 		}
 
-		site.battery.Soc = math.Min(100, batterySocAcc/totalCapacity)
-		site.battery.Capacity = totalCapacity
+		batterySoc = math.Min(100, batterySocAcc/totalCapacity)
+		batteryCapacity = totalCapacity
 	}
 
-	site.battery.Power = lo.SumBy(mm, func(m types.Measurement) float64 {
+	batteryPower := lo.SumBy(mm, func(m types.Measurement) float64 {
 		return m.Power
 	})
-	site.battery.Energy = lo.SumBy(mm, func(m types.Measurement) float64 {
+	batteryEnergy := lo.SumBy(mm, func(m types.Measurement) float64 {
 		if m.Energy == nil {
 			return 0
 		}
@@ -740,11 +744,17 @@ func (site *Site) updateBatteryMeters() {
 	})
 
 	if len(site.batteryMeters) > 1 {
-		site.log.DEBUG.Printf("battery power: %.0fW", site.battery.Power)
-		site.log.DEBUG.Printf("battery soc: %.0f%%", math.Round(site.battery.Soc))
+		site.log.DEBUG.Printf("battery power: %.0fW", batteryPower)
+		site.log.DEBUG.Printf("battery soc: %.0f%%", math.Round(batterySoc))
 	}
 
+	site.Lock()
+	site.battery.Soc = batterySoc
+	site.battery.Capacity = batteryCapacity
+	site.battery.Power = batteryPower
+	site.battery.Energy = batteryEnergy
 	site.battery.Devices = mm
+	site.Unlock()
 
 	// accumulate per-battery energy (charging = import, discharging = export — from battery POV toward grid root)
 	for i, dev := range site.batteryMeters {
@@ -764,13 +774,23 @@ func (site *Site) updateBatteryMeters() {
 	site.publishBattery()
 }
 
-// publishBattery applies the optimizer suggestions and publishes the battery state
+// publishBattery applies the optimizer suggestions and forecast and publishes
+// the battery state. It is called from the optimizer goroutine, too, hence it
+// only reads the cached state and stamps a copy for publishing.
 func (site *Site) publishBattery() {
-	for i, d := range site.battery.Devices {
-		site.battery.Devices[i].Suggestion = site.batterySuggestion(d.Name)
+	site.RLock()
+
+	battery := site.battery
+	battery.Forecast = site.batteryForecast
+	battery.Devices = slices.Clone(site.battery.Devices)
+
+	for i, d := range battery.Devices {
+		battery.Devices[i].Suggestion = site.batterySuggestionLocked(d.Name)
 	}
 
-	site.publish(keys.Battery, site.battery)
+	site.RUnlock()
+
+	site.publish(keys.Battery, battery)
 }
 
 func sumOfSocs(mm []types.Measurement) float64 {

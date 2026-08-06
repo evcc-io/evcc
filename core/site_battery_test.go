@@ -2,10 +2,12 @@ package core
 
 import (
 	"errors"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
@@ -40,6 +42,44 @@ func TestBatterySocRetainOnReadError(t *testing.T) {
 	site.updateBatteryMeters()
 
 	assert.Equal(t, 84.0, site.battery.Soc, "soc retained when the read fails")
+}
+
+// TestBatteryStateConcurrentAccess guards the cached battery state against
+// concurrent access: the site update loop writes it while the asynchronous
+// optimizer publishes it.
+func TestBatteryStateConcurrentAccess(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	meter := api.NewMockMeter(ctrl)
+	meter.EXPECT().CurrentPower().Return(1e3, nil).AnyTimes()
+
+	site := &Site{
+		log:           util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, api.Meter(meter))},
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	// site update loop
+	go func() {
+		defer wg.Done()
+		for range 100 {
+			site.updateBatteryMeters()
+		}
+	}()
+
+	// optimizer goroutine
+	go func() {
+		defer wg.Done()
+		for range 100 {
+			site.setBatteryForecast(new(types.BatteryForecast))
+			site.publishBattery()
+			site.GetBatterySoc()
+		}
+	}()
+
+	wg.Wait()
 }
 
 func TestApplyBatteryMode(t *testing.T) {
