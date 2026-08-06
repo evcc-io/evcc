@@ -1019,6 +1019,13 @@ func (lp *Loadpoint) setLimit(current float64) error {
 
 		lp.bus.Publish(evChargeCurrent, current)
 
+		// release the phase switch relay when disabling (https://github.com/evcc-io/evcc/discussions/32176)
+		if !enabled && lp.phasesConfigured == 0 && lp.hasPhaseSwitching() {
+			if err := lp.scalePhases(1); err != nil && !errors.Is(err, api.ErrNotAvailable) {
+				lp.log.ERROR.Println(err)
+			}
+		}
+
 		// start/stop vehicle wake-up timer
 		if enabled {
 			lp.startWakeUpTimer()

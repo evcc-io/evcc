@@ -779,3 +779,44 @@ func TestPvScalePhasesCircuitLimits(t *testing.T) {
 		})
 	}
 }
+
+// TestScalePhasesOnDisable validates that disabling releases the phase switch relay
+func TestScalePhasesOnDisable(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	plainCharger := api.NewMockCharger(ctrl)
+	phaseCharger := api.NewMockPhaseSwitcher(ctrl)
+
+	plainCharger.EXPECT().Enabled().Return(true, nil).AnyTimes()
+	plainCharger.EXPECT().MaxCurrent(gomock.Any()).Return(nil).AnyTimes()
+	plainCharger.EXPECT().Enable(false).Return(nil)
+	phaseCharger.EXPECT().Phases1p3p(1).Return(nil)
+
+	lp := &Loadpoint{
+		log:            util.NewLogger("foo"),
+		bus:            evbus.New(),
+		clock:          clock.NewMock(),
+		chargeMeter:    &Null{},
+		chargeRater:    &Null{},
+		chargeTimer:    &Null{},
+		progress:       NewProgress(0, 10),
+		wakeUpTimer:    NewTimer(),
+		mode:           api.ModePV,
+		minCurrent:     minA,
+		maxCurrent:     maxA,
+		phases:         3,
+		enabled:        true,
+		offeredCurrent: minA,
+		status:         api.StatusC,
+		charger: struct {
+			*api.MockCharger
+			*api.MockPhaseSwitcher
+		}{plainCharger, phaseCharger},
+	}
+
+	attachListeners(t, lp)
+
+	require.NoError(t, lp.setLimit(0))
+	require.Equal(t, 1, lp.GetPhases())
+}
