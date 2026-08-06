@@ -22,7 +22,7 @@ import {
 import colors from "@/colors";
 import formatter from "@/mixins/formatter";
 import chartMixin from "./chartMixin";
-import type { ForecastSlot } from "@/types/evcc";
+import type { UiForecastSlot } from "@/types/evcc";
 
 export type ValueChartType = "co2" | "temperature";
 
@@ -31,13 +31,13 @@ export default defineComponent({
 	mixins: [formatter, chartMixin],
 	props: {
 		type: { type: String as PropType<ValueChartType>, required: true },
-		rates: { type: Array as PropType<ForecastSlot[]>, required: true },
+		rates: { type: Array as PropType<UiForecastSlot[]>, required: true },
 	},
 	computed: {
 		color(): string {
 			return (this.type === "co2" ? colors.co2 : colors.temperature) || "";
 		},
-		slots(): ForecastSlot[] {
+		slots(): UiForecastSlot[] {
 			return filterForecastSlots(this.rates, this.startDate, this.endDate);
 		},
 		yMin(): number {

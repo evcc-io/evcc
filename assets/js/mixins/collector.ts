@@ -1,20 +1,20 @@
 import { defineComponent } from "vue";
-import type { UiState } from "@/store";
+import type { State } from "@/types/evcc";
 
 export default defineComponent({
   methods: {
     // collect all target component properties from current instance
-    collectProps(component: any, state?: UiState) {
+    collectProps(component: any, state?: State) {
       const data: Record<string, any> = {};
       for (const prop in component.props) {
-        const p = prop as keyof UiState;
+        const p = prop as keyof State;
         // check in optional state
         if (state && p in state) {
           data[p] = state[p];
         }
         // check in current instance
         if (p in this) {
-          data[p] = (this as Partial<UiState>)[p];
+          data[p] = (this as Partial<State>)[p];
         }
       }
       return data;

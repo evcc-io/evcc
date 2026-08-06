@@ -1,7 +1,7 @@
 import * as echarts from "echarts/core";
 import colors from "@/colors";
 import escapeHtml from "@/utils/escapeHtml";
-import type { ForecastSlot } from "@/types/evcc";
+import type { UiForecastSlot } from "@/types/evcc";
 import { BarChart, LineChart } from "echarts/charts";
 import {
   GridComponent,
@@ -254,19 +254,19 @@ export function clampStart(ts: number, startDate: Date): number {
 }
 
 export function filterForecastSlots(
-  slots: ForecastSlot[],
+  slots: UiForecastSlot[],
   startDate: Date,
   endDate: Date
-): ForecastSlot[] {
+): UiForecastSlot[] {
   if (!Array.isArray(slots)) return [];
   return slots.filter((s) => new Date(s.end) > startDate && new Date(s.start) <= endDate);
 }
 
-export function minSlotIndex(slots: ForecastSlot[]): number {
+export function minSlotIndex(slots: UiForecastSlot[]): number {
   return slots.reduce((min, s, i) => (s.value < (slots[min]?.value ?? Infinity) ? i : min), 0);
 }
 
-export function maxSlotIndex(slots: ForecastSlot[]): number {
+export function maxSlotIndex(slots: UiForecastSlot[]): number {
   return slots.reduce((max, s, i) => (s.value > (slots[max]?.value || 0) ? i : max), 0);
 }
 

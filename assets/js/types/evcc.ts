@@ -160,11 +160,8 @@ export interface State {
   apiReady?: boolean;
   /** Charging locations. One entry per configured loadpoint. */
   loadpoints: Loadpoint[];
-  // typed as the wire format for schema generation; at runtime the store
-  // expands slots to Forecast objects (expandForecast in utils/forecast),
-  // so consumers cast to the expanded Forecast type
   /** Price, CO₂ and solar production forecasts. */
-  forecast: WireForecast;
+  forecast: Forecast;
   /** Configured currency for all monetary values. */
   currency?: CURRENCY;
   /** Fatal startup errors. */
@@ -1275,57 +1272,11 @@ export interface Slot {
   selectable?: boolean | null;
 }
 
-/**
- * A forecast value at a point in time. Timestamps are unix milliseconds,
- * expanded from the wire format by expandForecast in utils/forecast.
- */
-export interface TimeseriesEntry {
-  /** Forecast power in W. */
-  val: number;
-  /** Time of the forecast value in unix milliseconds. */
-  ts: number;
-}
-
-/**
- * A forecast value for a time slot. Timestamps are unix milliseconds,
- * expanded from the wire format by expandForecast in utils/forecast.
- */
-export interface ForecastSlot {
-  /** Start of the time slot in unix milliseconds. */
-  start: number;
-  /** End of the time slot in unix milliseconds. */
-  end: number;
-  /** Forecast value of the time slot. Unit depends on the forecast type. */
-  value: number;
-}
-
 /** A forecast time slot as [start, end, value] array. Start and end are unix seconds. Value unit depends on the forecast type. */
-export type WireForecastSlot = [number, number, number];
+export type ForecastSlot = [number, number, number];
 
 /** A forecast value at a point in time as [ts, val] array. ts is unix seconds, val is power in W. */
-export type WireTimeseriesEntry = [number, number];
-
-/** Solar production forecast. */
-export interface WireSolarDetails extends Omit<SolarDetails, "timeseries"> {
-  /** Expected production power over time. */
-  timeseries?: WireTimeseriesEntry[];
-}
-
-/** Price, CO₂ and solar production forecasts. */
-export interface WireForecast {
-  /** Grid price forecast. Price per kWh in the configured currency per time slot. */
-  grid?: WireForecastSlot[];
-  /** CO₂ emission forecast in g/kWh per time slot. */
-  co2?: WireForecastSlot[];
-  /** Solar production forecast. */
-  solar?: WireSolarDetails;
-  /** Charging cost forecast used by the plan optimizer per time slot. */
-  planner?: WireForecastSlot[];
-  /** Feed-in rate forecast. Rate per kWh in the configured currency per time slot. */
-  feedin?: WireForecastSlot[];
-  /** Temperature forecast in °C per time slot. */
-  temperature?: WireForecastSlot[];
-}
+export type TimeseriesEntry = [number, number];
 
 /** Expected solar production energy of a day. */
 export interface EnergyByDay {
@@ -1363,6 +1314,33 @@ export interface Forecast {
   feedin?: ForecastSlot[];
   /** Temperature forecast in °C per time slot. */
   temperature?: ForecastSlot[];
+}
+
+// Ui* variants of the forecast wire types, expanded to objects with unix
+// milliseconds by expandForecast in utils/forecast
+
+export interface UiTimeseriesEntry {
+  ts: number;
+  val: number;
+}
+
+export interface UiForecastSlot {
+  start: number;
+  end: number;
+  value: number;
+}
+
+export interface UiSolarDetails extends Omit<SolarDetails, "timeseries"> {
+  timeseries?: UiTimeseriesEntry[];
+}
+
+export interface UiForecast {
+  grid?: UiForecastSlot[];
+  co2?: UiForecastSlot[];
+  solar?: UiSolarDetails;
+  planner?: UiForecastSlot[];
+  feedin?: UiForecastSlot[];
+  temperature?: UiForecastSlot[];
 }
 
 export interface SelectOption<T> {

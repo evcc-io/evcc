@@ -23,22 +23,22 @@ import {
 import colors, { lighterColor } from "@/colors";
 import formatter from "@/mixins/formatter";
 import chartMixin from "./chartMixin";
-import type { CURRENCY, ForecastSlot } from "@/types/evcc";
+import type { CURRENCY, UiForecastSlot } from "@/types/evcc";
 
 export default defineComponent({
 	name: "PriceChart",
 	mixins: [formatter, chartMixin],
 	props: {
-		grid: { type: Array as PropType<ForecastSlot[]>, required: true },
-		feedin: { type: Array as PropType<ForecastSlot[]> },
+		grid: { type: Array as PropType<UiForecastSlot[]>, required: true },
+		feedin: { type: Array as PropType<UiForecastSlot[]> },
 		currency: { type: String as PropType<CURRENCY> },
 		zoom: { type: Boolean, default: false },
 	},
 	computed: {
-		slots(): ForecastSlot[] {
+		slots(): UiForecastSlot[] {
 			return filterForecastSlots(this.grid, this.startDate, this.endDate);
 		},
-		feedinSlots(): ForecastSlot[] {
+		feedinSlots(): UiForecastSlot[] {
 			return this.feedin
 				? filterForecastSlots(this.feedin, this.startDate, this.endDate)
 				: [];
@@ -144,7 +144,7 @@ export default defineComponent({
 	},
 	methods: {
 		priceSeries(
-			slots: ForecastSlot[],
+			slots: UiForecastSlot[],
 			color: string,
 			points?: { coord: [number, number]; value: string }[]
 		): Record<string, unknown> {

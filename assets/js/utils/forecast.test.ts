@@ -2,21 +2,27 @@ import { describe, expect, test } from "vite-plus/test";
 import { expandForecast, findLowestSumSlotIndex, isStaticTariff } from "./forecast";
 
 describe("expandForecast", () => {
-  test("expands slot shards to milliseconds", () => {
-    expect(expandForecast("forecast.grid", [[1735689600, 1735693200, 0.25]])).toEqual([
+  test("expands slots to milliseconds", () => {
+    expect(expandForecast({ grid: [[1735689600, 1735693200, 0.25]] }).grid).toEqual([
       { start: 1735689600000, end: 1735693200000, value: 0.25 },
     ]);
   });
 
   test("expands the solar timeseries", () => {
-    expect(
-      expandForecast("forecast.solar", { scale: 1, timeseries: [[1735689600, 1000]] })
-    ).toEqual({ scale: 1, timeseries: [{ ts: 1735689600000, val: 1000 }] });
+    expect(expandForecast({ solar: { scale: 1, timeseries: [[1735689600, 1000]] } }).solar).toEqual(
+      { scale: 1, timeseries: [{ ts: 1735689600000, val: 1000 }] }
+    );
   });
 
-  test("passes through other keys and empty values", () => {
-    expect(expandForecast("loadpoints.0.charging", true)).toBe(true);
-    expect(expandForecast("forecast.grid", null)).toBe(null);
+  test("handles missing input", () => {
+    expect(expandForecast(undefined)).toEqual({
+      grid: undefined,
+      co2: undefined,
+      solar: undefined,
+      planner: undefined,
+      feedin: undefined,
+      temperature: undefined,
+    });
   });
 });
 

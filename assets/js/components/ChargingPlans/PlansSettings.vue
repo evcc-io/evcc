@@ -83,7 +83,7 @@ import { debounceLeading } from "@/utils/debounceLeading";
 import { defineComponent, type PropType } from "vue";
 import type {
 	CURRENCY,
-	Forecast,
+	UiForecast,
 	PlanResponse,
 	PlanStrategy,
 	PlanWrapper,
@@ -124,7 +124,7 @@ export default defineComponent({
 		vehicle: Object as PropType<Vehicle>,
 		vehicleLimitSoc: Number,
 		planOverrun: Number,
-		forecast: Object as PropType<Forecast>,
+		forecast: Object as PropType<UiForecast>,
 	},
 	emits: [
 		"static-plan-removed",

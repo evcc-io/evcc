@@ -1,9 +1,11 @@
 import type {
+  Forecast,
   ForecastSlot,
-  TimeseriesEntry,
   SolarDetails,
-  WireForecastSlot,
-  WireTimeseriesEntry,
+  UiForecast,
+  UiForecastSlot,
+  UiTimeseriesEntry,
+  UiSolarDetails,
 } from "@/types/evcc";
 import deepCopy from "./deepClone";
 
@@ -13,16 +15,12 @@ export enum ForecastType {
   Co2 = "co2",
 }
 
-// forecast keys carrying slots; solar is nested and handled separately
-const SLOT_KEYS = ["co2", "feedin", "grid", "planner", "temperature"];
-
-function expandSlots(slots: WireForecastSlot[]): ForecastSlot[] {
-  return slots.map(([start, end, value]) => ({ start: start * 1000, end: end * 1000, value }));
+function expandSlots(slots?: ForecastSlot[]): UiForecastSlot[] | undefined {
+  return slots?.map(([start, end, value]) => ({ start: start * 1000, end: end * 1000, value }));
 }
 
-type WireSolarDetails = Omit<SolarDetails, "timeseries"> & { timeseries?: WireTimeseriesEntry[] };
-
-function expandSolar(solar: WireSolarDetails): SolarDetails {
+function expandSolar(solar?: SolarDetails): UiSolarDetails | undefined {
+  if (!solar) return undefined;
   const { timeseries, ...rest } = solar;
   return {
     ...rest,
@@ -33,16 +31,16 @@ function expandSolar(solar: WireSolarDetails): SolarDetails {
 // The API publishes forecast slots as [start, end, value] and solar entries as
 // [ts, val] with timestamps in unix seconds. Expand them to objects with unix
 // milliseconds so components can keep using named fields and `new Date(...)`.
-// Forecast state is sharded, arriving as one key per field.
-export function expandForecast(key: string, value: any): any {
-  if (!value) return value;
-
-  const [prefix, field] = key.split(".");
-  if (prefix !== "forecast") return value;
-  if (field === "solar") return expandSolar(value);
-  if (SLOT_KEYS.includes(field)) return expandSlots(value);
-
-  return value;
+export function expandForecast(forecast?: Forecast): UiForecast {
+  const { grid, co2, solar, planner, feedin, temperature } = forecast ?? {};
+  return {
+    grid: expandSlots(grid),
+    co2: expandSlots(co2),
+    solar: expandSolar(solar),
+    planner: expandSlots(planner),
+    feedin: expandSlots(feedin),
+    temperature: expandSlots(temperature),
+  };
 }
 
 // return the date in local YYYY-MM-DD format
@@ -55,9 +53,9 @@ function toDayString(date: Date): string {
 
 // return only slots that are on a given date, ignores slots that are in the past
 export function filterEntriesByDate(
-  entries: TimeseriesEntry[],
+  entries: UiTimeseriesEntry[],
   dayString: string
-): TimeseriesEntry[] {
+): UiTimeseriesEntry[] {
   const now = new Date();
   return entries.filter(({ ts }) => {
     const isPast = new Date(ts) < now;
@@ -74,7 +72,7 @@ export function dayStringByOffset(day: number): string {
 }
 
 // return the highest slot for a given day (0 = today, 1 = tomorrow, etc.)
-export function highestSlotIndexByDay(entries: TimeseriesEntry[], day: number = 0): number {
+export function highestSlotIndexByDay(entries: UiTimeseriesEntry[], day: number = 0): number {
   const dayString = dayStringByOffset(day);
   const dayEntries = filterEntriesByDate(entries, dayString);
   const sortedEntries = dayEntries.sort((a, b) => b.val - a.val);
@@ -83,7 +81,7 @@ export function highestSlotIndexByDay(entries: TimeseriesEntry[], day: number = 
   return entries.findIndex((entry) => entry.ts === highestEntry.ts);
 }
 
-export function adjustedSolar(solar?: SolarDetails): SolarDetails | undefined {
+export function adjustedSolar(solar?: UiSolarDetails): UiSolarDetails | undefined {
   if (!solar?.scale) return solar;
 
   const { scale } = solar;
@@ -103,7 +101,7 @@ export function adjustedSolar(solar?: SolarDetails): SolarDetails | undefined {
   return result;
 }
 
-export function isStaticTariff(slots?: ForecastSlot[]): boolean {
+export function isStaticTariff(slots?: UiForecastSlot[]): boolean {
   if (!Array.isArray(slots) || slots.length === 0) return false;
   const firstValue = slots[0].value;
   return slots.every((slot) => slot.value === firstValue);
