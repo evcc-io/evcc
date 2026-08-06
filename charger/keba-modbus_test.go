@@ -39,6 +39,12 @@ func (h *kebaHandler) HandleHoldingRegisters(req *mbserver.HoldingRegistersReque
 	return res, nil
 }
 
+func (h *kebaHandler) reg(addr uint16) uint16 {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return h.regs[addr]
+}
+
 // shared mock server: mbserver.Stop() races its accept goroutine, so the server
 // is started once and never stopped; handler state is reset per test
 var (
@@ -47,8 +53,9 @@ var (
 	kebaSrvH = &kebaHandler{RequestHandler: new(mbserver.DummyHandler)}
 )
 
-// kebaTestCharger returns a P30 with external phase switching connected to the mock server
-func kebaTestCharger(t *testing.T, phases int) (*Keba, *kebaHandler) {
+// kebaTestCharger returns a P30 connected to the mock server, charging on the given
+// number of phases and optionally offering external phase switching
+func kebaTestCharger(t *testing.T, phases int, switchable bool) (*Keba, *kebaHandler) {
 	t.Helper()
 
 	kebaOnce.Do(func() {
@@ -62,6 +69,7 @@ func kebaTestCharger(t *testing.T, phases int) (*Keba, *kebaHandler) {
 		kebaURI = l.Addr().String()
 	})
 
+	// P30 reports 3p as 1 in the upper phase state register
 	var state uint16
 	if phases == 3 {
 		state = 1
@@ -81,45 +89,38 @@ func kebaTestCharger(t *testing.T, phases int) (*Keba, *kebaHandler) {
 		conn:         conn,
 		regEnable:    kebaRegEnable,
 		energyFactor: 1e4,
-		phases:       phases,
+	}
+
+	if switchable {
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 	}
 
 	return wb, kebaSrvH
 }
 
-func (h *kebaHandler) reg(addr uint16) uint16 {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-	return h.regs[addr]
-}
-
 // TestKebaEnablePhases verifies that the external phase switch relay is released
-// while disabled and restored on enable, see discussion #32176
+// on disable, see discussion #32176
 func TestKebaEnablePhases(t *testing.T) {
-	wb, h := kebaTestCharger(t, 3)
+	tc := []struct {
+		name       string
+		phases     int
+		switchable bool
+		enable     bool
+		expected   uint16
+	}{
+		{"3p disable releases relay", 3, true, false, 0},
+		{"3p enable keeps relay", 3, true, true, 1},
+		{"1p disable is a no-op", 1, true, false, 0},
+		{"3p without phase switching is untouched", 3, false, false, 1},
+	}
 
-	require.NoError(t, wb.Enable(false))
-	require.Equal(t, uint16(0), h.reg(kebaRegTriggerPhase), "relay must be released on disable")
-	require.Equal(t, 3, wb.phases, "requested phases must be retained")
+	for _, tc := range tc {
+		t.Run(tc.name, func(t *testing.T) {
+			wb, h := kebaTestCharger(t, tc.phases, tc.switchable)
 
-	require.NoError(t, wb.Enable(true))
-	require.Equal(t, uint16(1), h.reg(kebaRegTriggerPhase), "relay must be restored on enable")
-
-	// a 1p charger stays 1p
-	wb, h = kebaTestCharger(t, 1)
-
-	require.NoError(t, wb.Enable(true))
-	require.Equal(t, uint16(0), h.reg(kebaRegTriggerPhase))
-	require.NoError(t, wb.Enable(false))
-	require.Equal(t, uint16(0), h.reg(kebaRegTriggerPhase))
-}
-
-// TestKebaEnableWithoutPhaseSwitching verifies the phase register is untouched
-// when the charger has no external phase switching
-func TestKebaEnableWithoutPhaseSwitching(t *testing.T) {
-	wb, h := kebaTestCharger(t, 0)
-	h.regs[kebaRegTriggerPhase] = 1
-
-	require.NoError(t, wb.Enable(false))
-	require.Equal(t, uint16(1), h.reg(kebaRegTriggerPhase))
+			require.NoError(t, wb.Enable(tc.enable))
+			require.Equal(t, tc.expected, h.reg(kebaRegTriggerPhase))
+		})
+	}
 }

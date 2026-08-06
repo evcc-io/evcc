@@ -47,7 +47,6 @@ type Keba struct {
 	regEnable    uint16
 	energyFactor float64
 	state1p      uint32
-	phases       int // last requested phases, 0 if phase switching is unavailable
 }
 
 const (
@@ -302,8 +301,15 @@ func (wb *Keba) Enable(enable bool) error {
 	}
 
 	// release the external phase switch relay to save its standby power
-	if !enable && wb.phases == 3 {
-		return wb.writePhases(1)
+	if _, ok := api.Cap[api.PhaseSwitcher](wb); ok && !enable {
+		phases, err := wb.getPhases()
+		if err != nil {
+			return err
+		}
+
+		if phases == 3 {
+			return wb.phases1p3p(1)
+		}
 	}
 
 	return nil
@@ -381,23 +387,14 @@ func (wb *Keba) identify() (string, error) {
 	return id, nil
 }
 
-func (wb *Keba) writePhases(phases int) error {
+// phases1p3p implements the api.PhaseSwitcher interface
+func (wb *Keba) phases1p3p(phases int) error {
 	var u uint16
 	if phases == 3 {
 		u = 1
 	}
 
 	_, err := wb.conn.WriteSingleRegister(kebaRegTriggerPhase, u)
-	return err
-}
-
-// phases1p3p implements the api.PhaseSwitcher interface
-func (wb *Keba) phases1p3p(phases int) error {
-	err := wb.writePhases(phases)
-	if err == nil {
-		wb.phases = phases
-	}
-
 	return err
 }
 
