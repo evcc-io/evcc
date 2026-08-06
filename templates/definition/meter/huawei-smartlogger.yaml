@@ -82,7 +82,7 @@ render: |
     register:
       address: 40428 # Active power adjustment by percentage (0-100 %)
       type: writesingle
-      encoding: uint16
+      encoding: int16
     scale: 10
   curtailed:
     source: go
@@ -95,7 +95,7 @@ render: |
         register:
           address: 40428
           type: holding
-          decode: uint32
+          decode: int16
         scale: 0.1
     script: |
       curtailed := true
