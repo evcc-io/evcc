@@ -38,6 +38,7 @@
 				:installed="installed"
 				:commit="commit"
 				:available-version="availableVersion"
+				:custom-brand="customBrand"
 			/>
 		</div>
 	</nav>
@@ -85,6 +86,7 @@ export default defineComponent({
 		installed: String,
 		commit: String,
 		availableVersion: String,
+		customBrand: String,
 	},
 	computed: {
 		hidden() {

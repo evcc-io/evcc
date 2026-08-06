@@ -10,6 +10,11 @@ declare global {
       version: string;
       commit: string;
       customCss: string;
+      customLogo: string;
+      customBrand: string;
+      customWebsite: string;
+      customEmail: string;
+      customPhone: string;
     };
   }
   interface Window {

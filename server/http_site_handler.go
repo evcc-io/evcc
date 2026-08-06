@@ -41,7 +41,13 @@ func getPreferredLanguage(header string) string {
 	return base.String()
 }
 
-func indexHandler(customCss bool) http.HandlerFunc {
+// jsEscape returns s escaped for embedding in a double-quoted JS string literal
+func jsEscape(s string) string {
+	b, _ := json.Marshal(s)
+	return string(b[1 : len(b)-1])
+}
+
+func indexHandler(custom Customization) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
@@ -63,10 +69,15 @@ func indexHandler(customCss bool) http.HandlerFunc {
 		defaultLang := getPreferredLanguage(r.Header.Get("Accept-Language"))
 
 		if err := t.Execute(w, map[string]any{
-			"Version":     util.Version,
-			"Commit":      util.Commit,
-			"DefaultLang": defaultLang,
-			"CustomCss":   customCss,
+			"Version":       util.Version,
+			"Commit":        util.Commit,
+			"DefaultLang":   defaultLang,
+			"CustomCss":     custom.Css != "",
+			"CustomLogo":    custom.LogoLight != "",
+			"CustomBrand":   jsEscape(custom.Brand),
+			"CustomWebsite": jsEscape(custom.Website),
+			"CustomEmail":   jsEscape(custom.Email),
+			"CustomPhone":   jsEscape(custom.Phone),
 		}); err != nil {
 			log.ERROR.Println("httpd: failed to render main page:", err.Error())
 		}

@@ -46,8 +46,19 @@ type HTTPd struct {
 	*http.Server
 }
 
+// Customization contains white-label settings for the UI
+type Customization struct {
+	Css       string
+	LogoLight string
+	LogoDark  string
+	Brand     string
+	Website   string
+	Email     string
+	Phone     string
+}
+
 // NewHTTPd creates HTTP server with configured routes for loadpoint
-func NewHTTPd(addr string, hub *SocketHub, customCssFile string) *HTTPd {
+func NewHTTPd(addr string, hub *SocketHub, custom Customization) *HTTPd {
 	router := mux.NewRouter().StrictSlash(true)
 
 	log := util.NewLogger("httpd")
@@ -79,21 +90,43 @@ func NewHTTPd(addr string, hub *SocketHub, customCssFile string) *HTTPd {
 		})
 	})
 
-	if customCssFile != "" {
-		log.WARN.Printf("❗ using custom CSS: %s", customCssFile)
-		if _, err := os.Stat(customCssFile); os.IsNotExist(err) {
-			log.FATAL.Fatalf("custom CSS file does not exist: %s", customCssFile)
-		}
-		static.HandleFunc("/custom.css", func(w http.ResponseWriter, r *http.Request) {
+	serveCustomFile := func(path, file string) {
+		static.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 			// disable caching
 			w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
 			w.Header().Set("Pragma", "no-cache")
 			w.Header().Set("Expires", "0")
-			http.ServeFile(w, r, customCssFile)
+			http.ServeFile(w, r, file)
 		})
 	}
 
-	static.HandleFunc("/", indexHandler(customCssFile != ""))
+	if custom.Css != "" {
+		log.WARN.Printf("❗ using custom CSS: %s", custom.Css)
+		if _, err := os.Stat(custom.Css); os.IsNotExist(err) {
+			log.FATAL.Fatalf("custom CSS file does not exist: %s", custom.Css)
+		}
+		serveCustomFile("/custom.css", custom.Css)
+	}
+
+	if (custom.LogoLight == "") != (custom.LogoDark == "") {
+		log.FATAL.Fatal("custom logo requires both light and dark variants")
+	}
+
+	for path, file := range map[string]string{
+		"/custom-logo-light": custom.LogoLight,
+		"/custom-logo-dark":  custom.LogoDark,
+	} {
+		if file == "" {
+			continue
+		}
+		log.WARN.Printf("❗ using custom logo: %s", file)
+		if _, err := os.Stat(file); os.IsNotExist(err) {
+			log.FATAL.Fatalf("custom logo file does not exist: %s", file)
+		}
+		serveCustomFile(path, file)
+	}
+
+	static.HandleFunc("/", indexHandler(custom))
 	for _, dir := range []string{"assets", "meta"} {
 		static.PathPrefix("/" + dir).Handler(http.FileServer(http.FS(assets.Web)))
 	}

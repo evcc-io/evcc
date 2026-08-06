@@ -11,7 +11,7 @@
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
 		<VehicleSettingsModal :vehicles="vehicleList" :loadpoints="state.uiLoadpoints" />
 		<AboutModal v-bind="aboutModalProps" />
-		<HelpModal />
+		<HelpModal :custom-email="custom.email" />
 		<PasswordModal />
 		<LoginModal v-bind="loginModalProps" />
 		<OfflineIndicator v-bind="offlineIndicatorProps" />
@@ -74,6 +74,17 @@ export default defineComponent({
 		version() {
 			return store.state.version;
 		},
+		custom() {
+			// unresolved [[.Xyz]] template placeholders (vite dev server) count as unset
+			const str = (value: string) => (value?.startsWith("[[") ? "" : value);
+			return {
+				logo: window.evcc.customLogo === "true",
+				brand: str(window.evcc.customBrand),
+				website: str(window.evcc.customWebsite),
+				email: str(window.evcc.customEmail),
+				phone: str(window.evcc.customPhone),
+			};
+		},
 		showRoutes() {
 			return this.state.startupCompleted;
 		},
@@ -97,6 +108,11 @@ export default defineComponent({
 			return {
 				installed: window.evcc.version,
 				commit: window.evcc.commit,
+				customLogo: this.custom.logo,
+				customBrand: this.custom.brand,
+				customWebsite: this.custom.website,
+				customEmail: this.custom.email,
+				customPhone: this.custom.phone,
 				...this.collectProps(AboutModal, this.state),
 			};
 		},
@@ -104,6 +120,7 @@ export default defineComponent({
 			return {
 				installed: window.evcc.version,
 				commit: window.evcc.commit,
+				customBrand: this.custom.brand,
 				...this.collectProps(BottomTabBar, this.state),
 			};
 		},
