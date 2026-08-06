@@ -8,7 +8,6 @@ import (
 
 	"github.com/andig/mbserver"
 	"github.com/evcc-io/evcc/api/implement"
-	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/stretchr/testify/require"
 )
@@ -82,13 +81,11 @@ func kebaTestCharger(t *testing.T, phases int, switchable bool) (*Keba, *kebaHan
 	conn, err := modbus.NewConnection(context.Background(), kebaURI, "", "", 0, modbus.Tcp, 255)
 	require.NoError(t, err)
 
+	// state1p stays 0, the P30 encoding of single phase
 	wb := &Keba{
-		embed:        new(embed),
-		Caps:         implement.New(),
-		log:          util.NewLogger("keba"),
-		conn:         conn,
-		regEnable:    kebaRegEnable,
-		energyFactor: 1e4,
+		Caps:      implement.New(),
+		conn:      conn,
+		regEnable: kebaRegEnable,
 	}
 
 	if switchable {
