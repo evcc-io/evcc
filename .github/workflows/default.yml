@@ -177,7 +177,8 @@ jobs:
         run: make install-ui
 
       - name: OpenAPI
-        run: make openapi
+        # backport release tags may not have the openapi target yet
+        run: if grep -q '^openapi' Makefile; then make openapi; fi
 
       - name: Lint
         run: make lint-ui
