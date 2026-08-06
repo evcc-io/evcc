@@ -18,6 +18,7 @@ type Event struct {
 	Loadpoint  *int // optional loadpoint id
 	Event      string
 	Attributes map[string]any // optional event-specific template attributes
+	State      []util.Param   // cache state at the time the event was raised
 }
 
 type Vehicles interface {
@@ -29,12 +30,11 @@ type Vehicles interface {
 type Hub struct {
 	definitions globalconfig.MessagingEvents
 	sender      []api.Messenger
-	cache       *util.ParamCache
 	vehicles    Vehicles
 }
 
 // NewHub creates push hub with definitions and receiver
-func NewHub(cc globalconfig.MessagingEvents, vv Vehicles, cache *util.ParamCache) (*Hub, error) {
+func NewHub(cc globalconfig.MessagingEvents, vv Vehicles) (*Hub, error) {
 	// keep only enabled events
 	filtered := make(globalconfig.MessagingEvents, len(cc))
 
@@ -56,7 +56,6 @@ func NewHub(cc globalconfig.MessagingEvents, vv Vehicles, cache *util.ParamCache
 
 	h := &Hub{
 		definitions: filtered,
-		cache:       cache,
 		vehicles:    vv,
 	}
 
@@ -77,8 +76,8 @@ func (h *Hub) apply(ev Event, tmpl string) (string, error) {
 		attr["loadpoint"] = *ev.Loadpoint + 1
 	}
 
-	// get all values from cache
-	for _, p := range h.cache.All() {
+	// get all values from the event's cache state
+	for _, p := range ev.State {
 		if p.Loadpoint == nil || ev.Loadpoint == p.Loadpoint {
 			val := p.Val
 
@@ -114,7 +113,7 @@ func (h *Hub) apply(ev Event, tmpl string) (string, error) {
 }
 
 // Run is the Hub's main publishing loop
-func (h *Hub) Run(events <-chan Event, valueChan chan<- util.Param) {
+func (h *Hub) Run(events <-chan Event) {
 	log := util.NewLogger("push")
 
 	for ev := range events {
@@ -126,11 +125,6 @@ func (h *Hub) Run(events <-chan Event, valueChan chan<- util.Param) {
 		if !ok {
 			continue
 		}
-
-		// let cache catch up, refs https://github.com/evcc-io/evcc/pull/445
-		flushC := util.Flusher()
-		valueChan <- util.Param{Val: flushC}
-		<-flushC
 
 		title, err := h.apply(ev, definition.Title)
 		if err != nil {

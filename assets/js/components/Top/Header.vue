@@ -27,7 +27,8 @@ export default defineComponent({
 	methods: {
 		requestAuthProvider(providerId: string) {
 			const navigationArea = this.$refs["navigationArea"] as
-				InstanceType<typeof TopNavigationArea> | undefined;
+				| InstanceType<typeof TopNavigationArea>
+				| undefined;
 			navigationArea?.requestAuthProvider(providerId);
 		},
 	},

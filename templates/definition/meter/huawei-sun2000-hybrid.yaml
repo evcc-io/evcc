@@ -9,15 +9,19 @@ capabilities: ["battery-control", "curtail", "dim"]
 requirements:
   description:
     de: |
+      Modbus TCP erfordert die Freischaltung in den Kommunikationseinstellungen des Wechselrichters via "Installateur Zugang", siehe [Modbus TCP Aktivierungs-Anleitung](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
+
       Netz und Batterie erfordern den Huawei Smart Power Sensor (DDSU/DTSU666 oder SmartPS).
 
-      Modbus TCP erfordert die Freischaltung in den Kommunikationseinstellungen des Wechselrichters via "Installateur Zugang", siehe [Modbus TCP Aktivierungs-Anleitung](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
+      Mehrere LUNA2000-Türme am selben SUN2000-Wechselrichter werden als eine einzige logische Batterie konfiguriert.
 
       Die Abregelung begrenzt die Einspeiseleistung auf den gewünschten Prozentsatz der maximalen AC-Leistung. Der Wechselrichter begrenzt automatisch die PV-Leistung, um dies zu erreichen.
     en: |
+      Modbus TCP requires activation within the communication settings of the inverter using an "installer account", see [Modbus TCP Activation Guide](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
+
       Grid and Battery require the Huawei Smart Power Sensor (DDSU/DTSU666 or SmartPS).
 
-      Modbus TCP requires activation within the communication settings of the inverter using an "installer account", see [Modbus TCP Activation Guide](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
+      Multiple LUNA2000 towers connected to the same SUN2000 inverter are configured as a single logical battery.
 
       Curtailment will limit the export power to the desired percentage of the maximum AC power. The inverter will automatically limit the PV power to achieve this.
 caveats:

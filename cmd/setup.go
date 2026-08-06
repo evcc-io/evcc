@@ -973,7 +973,7 @@ func configureEEBus(conf *eebus.Config) error {
 	return nil
 }
 
-func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *globalconfig.MessagingEvents, vehicles messenger.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan messenger.Event, error) {
+func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *globalconfig.MessagingEvents, vehicles messenger.Vehicles) (chan messenger.Event, error) {
 	// yaml config from file
 	if len(confMessaging.Events) != 0 || len(confMessaging.Services) != 0 {
 		yamlSource.messaging = globalconfig.YamlSourceFile
@@ -1002,7 +1002,8 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 		}
 	}
 
-	messageChan := make(chan messenger.Event, 1)
+	// events are queued by the value cache, keep enough slack to not stall it
+	messageChan := make(chan messenger.Event, 16)
 
 	var eg errgroup.Group
 
@@ -1043,7 +1044,7 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 		events = confMessaging.Events
 	}
 
-	messageHub, err := messenger.NewHub(events, vehicles, cache)
+	messageHub, err := messenger.NewHub(events, vehicles)
 
 	if err != nil {
 		return messageChan, fmt.Errorf("failed configuring push services: %w", err)
@@ -1055,7 +1056,7 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 		}
 	}
 
-	go messageHub.Run(messageChan, valueChan)
+	go messageHub.Run(messageChan)
 
 	return messageChan, nil
 }

@@ -220,7 +220,7 @@ export default defineComponent({
 		// Which category slots carry a bar, so hover can skip empty slots.
 		slotsWithData(): boolean[] {
 			const index = new Map(this.categoryKeys.map((k, i) => [k, i]));
-			const has = new Array(this.categoryKeys.length).fill(false);
+			const has = Array.from({ length: this.categoryKeys.length }, () => false);
 			for (const s of this.visibleSeries) {
 				for (const slot of s.data) {
 					if (slot.energy <= 0 && slot.returnEnergy <= 0) continue;
@@ -264,7 +264,10 @@ export default defineComponent({
 
 			// Always render overlay slot (line series) so series structure is stable;
 			// data is all-null when toggled off. Prepend so it renders BEHIND bars.
-			const overlayValues: (number | null)[] = new Array(cats.length).fill(null);
+			const overlayValues: (number | null)[] = Array.from(
+				{ length: cats.length },
+				() => null
+			);
 			if (this.showOverlay && this.overlay.length) {
 				for (const s of this.overlay) {
 					for (const slot of s.data) {
@@ -297,8 +300,14 @@ export default defineComponent({
 			const energyByEntity: (number | null)[][] = [];
 			const returnEnergyByEntity: (number | null)[][] = [];
 			this.series.forEach((s, i) => {
-				const energyValues: (number | null)[] = new Array(cats.length).fill(null);
-				const returnEnergyValues: (number | null)[] = new Array(cats.length).fill(null);
+				const energyValues: (number | null)[] = Array.from(
+					{ length: cats.length },
+					() => null
+				);
+				const returnEnergyValues: (number | null)[] = Array.from(
+					{ length: cats.length },
+					() => null
+				);
 				const hidden =
 					this.focusedEntity !== null && this.focusedEntity !== (s.paletteIndex ?? i);
 				if (!hidden) {
@@ -315,8 +324,8 @@ export default defineComponent({
 			});
 			// Per slot: index of the topmost (largest i) entity with a non-zero
 			// value. -1 = no entity has data at that slot.
-			const topEnergyPerSlot: number[] = new Array(cats.length).fill(-1);
-			const topReturnEnergyPerSlot: number[] = new Array(cats.length).fill(-1);
+			const topEnergyPerSlot: number[] = Array.from({ length: cats.length }, () => -1);
+			const topReturnEnergyPerSlot: number[] = Array.from({ length: cats.length }, () => -1);
 			for (let i = 0; i < this.series.length; i++) {
 				for (let idx = 0; idx < cats.length; idx++) {
 					if ((energyByEntity[i]![idx] ?? 0) > 0) topEnergyPerSlot[idx] = i;
@@ -350,7 +359,9 @@ export default defineComponent({
 				// top entity doesn't drop the rounding; a focused entity is solo.
 				const stableIdx = s.paletteIndex ?? i;
 				const energyData: (
-					number | null | { value: number; itemStyle: { borderRadius: number[] } }
+					| number
+					| null
+					| { value: number; itemStyle: { borderRadius: number[] } }
 				)[] = energyValues.map((v, idx) => {
 					if (v == null) return v;
 					const isTop =
@@ -361,7 +372,9 @@ export default defineComponent({
 					return { value: v, itemStyle: { borderRadius: [radius, radius, 0, 0] } };
 				});
 				const returnEnergyData: (
-					number | null | { value: number; itemStyle: { borderRadius: number[] } }
+					| number
+					| null
+					| { value: number; itemStyle: { borderRadius: number[] } }
 				)[] = returnEnergyValues.map((v, idx) => {
 					if (v == null) return v;
 					const isBottom =
@@ -486,7 +499,7 @@ export default defineComponent({
 							if (p.value == null) continue;
 							hasBar = true;
 							if (typeof p.value === "number" && p.value > 0) {
-								if (/-energy$/.test(p.seriesId)) sum += p.value;
+								if (p.seriesId.endsWith("-energy")) sum += p.value;
 							}
 						}
 						let x = point[0] - w / 2;
