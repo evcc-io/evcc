@@ -18,16 +18,23 @@ import (
 	"github.com/sandrolain/httpcache"
 )
 
+type httpErrorMapping struct {
+	pipeline.Settings `mapstructure:",squash"`
+	Values            map[string]string
+}
+
 // HTTP implements HTTP request provider
 type HTTP struct {
 	*getter
 	*request.Helper
-	url, method string
-	headers     map[string]string
-	body        string
-	pipeline    *pipeline.Pipeline
-	mu          *sync.Mutex
-	log         *util.Logger
+	url, method   string
+	headers       map[string]string
+	body          string
+	pipeline      *pipeline.Pipeline
+	errorPipeline *pipeline.Pipeline
+	errorValues   map[string]error
+	mu            *sync.Mutex
+	log           *util.Logger
 }
 
 func init() {
@@ -43,6 +50,7 @@ func NewHTTPPluginFromConfig(ctx context.Context, other map[string]any) (Plugin,
 		Headers           map[string]string
 		Body              string
 		pipeline.Settings `mapstructure:",squash"`
+		Error             httpErrorMapping `mapstructure:"error"`
 		Scale             float64
 		Insecure          bool
 		Auth              Auth
@@ -91,6 +99,26 @@ func NewHTTPPluginFromConfig(ctx context.Context, other map[string]any) (Plugin,
 		return nil, err
 	}
 	p.pipeline = pipe
+
+	if len(cc.Error.Values) > 0 {
+		errorPipeline, err := pipeline.New(log, cc.Error.Settings)
+		if err != nil {
+			return nil, fmt.Errorf("invalid error pipeline: %w", err)
+		}
+
+		errorValues := make(map[string]error, len(cc.Error.Values))
+		for value, target := range cc.Error.Values {
+			mapped := knownErrors([]byte(target))
+			if mapped == nil {
+				return nil, fmt.Errorf("unknown error mapping target: %s", target)
+			}
+
+			errorValues[value] = mapped
+		}
+
+		p.errorPipeline = errorPipeline
+		p.errorValues = errorValues
+	}
 
 	return p, nil
 }
@@ -206,6 +234,23 @@ func (p *HTTP) WithHeaders(headers map[string]string) *HTTP {
 	return p
 }
 
+// mappedError converts a configured value from an HTTP error response
+// into a known EVCC error.
+func (p *HTTP) mappedError(value []byte) error {
+	if p.errorPipeline == nil || len(p.errorValues) == 0 {
+		return nil
+	}
+
+	mappedValue, err := p.errorPipeline.Process(value)
+	if err != nil {
+		// Preserve the original HTTP error when the error payload
+		// cannot be processed.
+		return nil
+	}
+
+	return p.errorValues[string(mappedValue)]
+}
+
 // request executes the configured request or returns the cached value
 func (p *HTTP) request(url string, body string) ([]byte, error) {
 	var b io.Reader
@@ -229,6 +274,8 @@ func (p *HTTP) request(url string, body string) ([]byte, error) {
 	val, err := request.ReadBody(resp)
 	if err != nil {
 		if err2 := knownErrors(val); err2 != nil {
+			err = err2
+		} else if err2 := p.mappedError(val); err2 != nil {
 			err = err2
 		}
 

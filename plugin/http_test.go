@@ -1,12 +1,14 @@
 package plugin
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
@@ -200,4 +202,49 @@ func TestRepeatedGet(t *testing.T) {
 	// query params are part of the key, so cache-busting urls are distinct requests
 	require.False(t, repeatedGet("http://q.test/path?ts=1", t0))
 	require.False(t, repeatedGet("http://q.test/path?ts=2", t0.Add(300*time.Millisecond)))
+}
+
+func TestHttpErrorMapping(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusServiceUnavailable)
+		_, _ = w.Write([]byte(`{
+			"response": {
+				"result": false,
+				"reason": "vehicle is sleeping"
+			}
+		}`))
+	}))
+	defer srv.Close()
+
+	p, err := NewHTTPPluginFromConfig(context.Background(), map[string]any{
+		"uri": srv.URL,
+		"error": map[string]any{
+			"jq": ".response.reason",
+			"values": map[string]string{
+				"vehicle is sleeping": "ErrAsleep",
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	getter, err := p.(*HTTP).StringGetter()
+	require.NoError(t, err)
+
+	_, err = getter()
+	require.ErrorIs(t, err, api.ErrAsleep)
+}
+
+func TestHttpErrorMappingUnknownTarget(t *testing.T) {
+	_, err := NewHTTPPluginFromConfig(context.Background(), map[string]any{
+		"uri": "http://example.test",
+		"error": map[string]any{
+			"jq": ".error",
+			"values": map[string]string{
+				"whatever": "ErrUnknown",
+			},
+		},
+	})
+
+	require.ErrorContains(t, err, "unknown error mapping target: ErrUnknown")
 }
