@@ -146,10 +146,6 @@ func NewKebaFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		if source := binary.BigEndian.Uint32(b); source == 3 {
 			implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
 			implement.Has(wb, implement.PhaseGetter(wb.getPhases))
-
-			if wb.phases, err = wb.getPhases(); err != nil {
-				return nil, fmt.Errorf("phases: %w", err)
-			}
 		}
 	}
 
@@ -290,13 +286,6 @@ func (wb *Keba) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *Keba) Enable(enable bool) error {
-	// restore the phase state before enabling
-	if enable && wb.phases != 0 {
-		if err := wb.writePhases(wb.phases); err != nil {
-			return err
-		}
-	}
-
 	var u uint16
 	if enable {
 		if wb.regEnable == kebaRegMaxCurrent {
@@ -313,7 +302,7 @@ func (wb *Keba) Enable(enable bool) error {
 	}
 
 	// release the external phase switch relay to save its standby power
-	if !enable && wb.phases != 0 {
+	if !enable && wb.phases == 3 {
 		return wb.writePhases(1)
 	}
 
