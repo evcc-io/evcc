@@ -23,6 +23,10 @@ params:
     id: 1
   - preset: battery-minmaxsoc
   - preset: battery-power
+  - name: maxchargepower
+    required: true
+  - name: maxdischargepower
+    required: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -105,8 +109,8 @@ render: |
       decode: float32s
   {{- end }}
   {{- if eq .usage "battery" }}
-  # Input and holding registers are separate address spaces: 6064 reads "Energy from battery"
-  # as input but writes "Battery Power Reference" as holding, likewise 6000.
+  # Input and holding registers are separate address spaces: 6064 reads charged energy as
+  # input but writes "Battery Power Reference" as holding, likewise 6000.
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -115,18 +119,21 @@ render: |
       type: input
       decode: float32s
     scale: 1000
+  # The spec labels 6064 as discharge and 6068 as charge, but the device does the
+  # opposite: 6064 accumulates while charging and the lifetime totals only yield a
+  # plausible round-trip efficiency this way round.
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 6064 # Energy from battery (input, kWh)
+      address: 6068 # discharged energy (input, kWh)
       type: input
       decode: float32s
   returnenergy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 6068 # Energy to battery (kWh)
+      address: 6064 # charged energy (input, kWh)
       type: input
       decode: float32s
   soc:
@@ -185,11 +192,10 @@ render: |
               encoding: uint16
     - case: 3 # charge
       set:
-        {{- if .maxchargepower }}
         source: sequence
         set:
         - source: const
-          value: -{{ .maxchargepower }} # negative implies charging
+          value: {{ mul .maxchargepower -1 }} # negative implies charging
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
@@ -207,10 +213,6 @@ render: |
               address: 6000 # Battery Mode (holding)
               type: writemultiple
               encoding: uint16
-        {{- else }}
-        source: error
-        error: ErrNotAvailable
-        {{- end }}
   {{- include "battery-minmaxsoc" . }}
   {{- include "battery-power" . }}
   {{- end }}
