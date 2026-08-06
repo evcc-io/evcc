@@ -8,7 +8,7 @@
 				</div>
 
 				<!-- Help Type Selection -->
-				<div class="mb-5">
+				<div v-if="!emailMode" class="mb-5">
 					<h5 class="mb-3">{{ $t("issue.helpType.title") }}</h5>
 					<div class="row g-3">
 						<div class="col-12 col-md-6">
@@ -60,7 +60,7 @@
 						</h4>
 					</div>
 
-					<p class="text-muted mb-4">
+					<p v-if="!emailMode" class="text-muted mb-4">
 						🇬🇧 Please write your issue in English so everyone can participate.
 					</p>
 
@@ -94,7 +94,7 @@
 									required
 								></textarea>
 							</div>
-							<div class="mb-4">
+							<div v-if="!emailMode" class="mb-4">
 								<label for="stepsToReproduce" class="form-label">
 									{{ $t("issue.stepsToReproduce") }} *
 								</label>
@@ -148,6 +148,11 @@
 							</div>
 							<div class="text-end">
 								<small class="text-muted">* required</small>
+							</div>
+							<div v-if="emailMode" class="d-flex justify-content-end mt-4">
+								<button type="submit" class="btn btn-primary">
+									{{ buttonText }}
+								</button>
 							</div>
 						</div>
 
@@ -289,11 +294,21 @@
 									</p>
 								</template>
 							</IssueAdditionalItem>
+
+							<div v-if="emailMode" class="d-flex justify-content-end mt-4">
+								<button
+									type="button"
+									class="btn btn-outline-primary"
+									@click="downloadDebugFile"
+								>
+									{{ $t("issue.downloadButton") }}
+								</button>
+							</div>
 						</div>
 					</div>
 
 					<!-- Essential Section Actions -->
-					<div class="d-flex justify-content-end gap-3 mb-5">
+					<div v-if="!emailMode" class="d-flex justify-content-end gap-3 mb-5">
 						<button type="submit" class="btn" :class="buttonClass">
 							{{ buttonText }}
 						</button>
@@ -304,6 +319,7 @@
 
 		<!-- Issue Summary Modal -->
 		<SummaryModal
+			v-if="!emailMode"
 			:help-type="helpType"
 			:button-class="buttonClass"
 			:issue-data="issueData"
@@ -324,6 +340,7 @@ import api from "@/api";
 import store from "@/store";
 import { LOG_LEVELS, DEFAULT_LOG_LEVEL } from "@/utils/log";
 import { formatJson } from "@/components/Issue/format";
+import { generateMailtoUrl, generateDebugFile } from "@/components/Issue/template";
 import type { HelpType, IssueData } from "@/components/Issue/types";
 import type { State } from "@/types/evcc";
 
@@ -387,6 +404,12 @@ export default defineComponent({
 		return { title: this.$t("issue.title") };
 	},
 	computed: {
+		customEmail(): string {
+			return window.evcc?.customEmail ?? "";
+		},
+		emailMode(): boolean {
+			return !!this.customEmail;
+		},
 		versionString(): string {
 			return `v${store.state.version || ""}`;
 		},
@@ -463,7 +486,11 @@ export default defineComponent({
 	methods: {
 		// Type-dependent translation helper
 		$tt(key: string): string {
-			const suffix = this.helpType === "discussion" ? "Discussion" : "Issue";
+			const suffix = this.emailMode
+				? "Email"
+				: this.helpType === "discussion"
+					? "Discussion"
+					: "Issue";
 			return this.$t(`${key}${suffix}`);
 		},
 
@@ -603,10 +630,26 @@ export default defineComponent({
 		},
 
 		handleFormSubmit() {
+			if (this.emailMode) {
+				window.location.href = generateMailtoUrl(this.customEmail, this.issueData);
+				return;
+			}
 			const modalElement = document.getElementById("issueSummaryModal") as HTMLElement;
 			if (modalElement) {
 				Modal.getOrCreateInstance(modalElement).show();
 			}
+		},
+
+		downloadDebugFile() {
+			const blob = new Blob([generateDebugFile(this.issueData, this.sections)], {
+				type: "text/plain",
+			});
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement("a");
+			a.href = url;
+			a.download = `evcc-debug-${this.versionString}.txt`;
+			a.click();
+			URL.revokeObjectURL(url);
 		},
 
 		clearSessionStorage() {

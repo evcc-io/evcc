@@ -56,6 +56,24 @@ test.describe("customization", async () => {
     await expect(email).toHaveAttribute("href", "mailto:support@example.com");
   });
 
+  test("issue page uses email flow", async ({ page }) => {
+    await page.goto("/#/issue");
+
+    // github-only elements gone
+    await expect(page.getByRole("radio")).toHaveCount(0);
+    await expect(page.getByLabel("Steps to Reproduce")).toHaveCount(0);
+    await expect(page.getByText("Please write your issue in English")).toHaveCount(0);
+
+    await expect(page.getByRole("button", { name: "Send request" })).toBeVisible();
+
+    const downloadButton = page.getByRole("button", { name: "Download debug information" });
+    await expect(downloadButton).toBeVisible();
+    const downloadPromise = page.waitForEvent("download");
+    await downloadButton.click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toMatch(/^evcc-debug-v.+\.txt$/);
+  });
+
   test("help modal shows contact button instead of github discussions", async ({ page }) => {
     await page.goto("/");
     const menu = await openMoreMenu(page);

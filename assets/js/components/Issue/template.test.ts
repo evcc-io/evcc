@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vite-plus/test";
-import { generateGitHubContent } from "./template";
+import { generateGitHubContent, generateMailtoUrl, generateDebugFile } from "./template";
 import type { IssueData, Sections } from "./types";
 
 describe("Issue Utils", () => {
@@ -121,6 +121,42 @@ Linux/amd64, MST -07:00`);
       expect(result.body).not.toContain("## Configuration");
       expect(result.body).not.toContain("## System State");
       expect(result.body).not.toContain("## Logs");
+    });
+  });
+
+  describe("generateMailtoUrl", () => {
+    it("generates plaintext mailto url without steps or diagnostics", () => {
+      const url = generateMailtoUrl("support@example.com", mockIssueData);
+
+      expect(url).toContain("mailto:support@example.com?subject=Test%20Issue&body=");
+      const body = decodeURIComponent(url.split("&body=")[1]);
+      expect(body).toBe(`This is a test description
+
+Version: v1.0.0
+
+System: Linux/amd64, MST -07:00`);
+    });
+
+    it("truncates description to fit mailto length limit", () => {
+      const longIssue: IssueData = { ...mockIssueData, description: "x".repeat(5000) };
+
+      const url = generateMailtoUrl("support@example.com", longIssue);
+
+      expect(url.length).toBeLessThanOrEqual(1800);
+      expect(decodeURIComponent(url)).toContain("Version: v1.0.0");
+    });
+  });
+
+  describe("generateDebugFile", () => {
+    it("contains version, system and enabled sections", () => {
+      const content = generateDebugFile(mockIssueData, mockSections);
+
+      expect(content).toContain("# evcc debug information");
+      expect(content).toContain("Version: v1.0.0");
+      expect(content).toContain("System: Linux/amd64, MST -07:00");
+      expect(content).toContain("## Configuration (YAML)");
+      expect(content).toContain("## Logs");
+      expect(content).not.toContain("## System State");
     });
   });
 });

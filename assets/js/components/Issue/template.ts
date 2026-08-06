@@ -3,6 +3,8 @@ import type { IssueData, Sections, GitHubContent, Template, HelpType } from "./t
 // Constants
 const PLACEHOLDER = "⚠️  RETURN TO EVCC TAB → COPY STEP 2 → PASTE HERE";
 const MAX_BODY_LENGTH = 8000;
+// mail clients and browsers truncate long mailto urls (Windows caps at ~2000 chars)
+const MAX_MAILTO_LENGTH = 1800;
 
 function toString(sections: Template): string {
   return sections
@@ -66,6 +68,33 @@ function generateAdditional(sections: Sections): string {
   }
 
   return toString(result);
+}
+
+// Generates mailto url with plaintext body; diagnostics travel as file attachment instead
+export function generateMailtoUrl(email: string, issue: IssueData): string {
+  const build = (description: string) => {
+    const body = toString([
+      description,
+      `Version: ${issue.version}`,
+      `System: ${issue.system}, ${issue.timezone}`,
+    ]);
+    return `mailto:${email}?subject=${encodeURIComponent(issue.title)}&body=${encodeURIComponent(body)}`;
+  };
+
+  let description = issue.description;
+  while (build(description).length > MAX_MAILTO_LENGTH && description.length > 0) {
+    description = description.slice(0, -100);
+  }
+  return build(description);
+}
+
+// Generates text file content with selected diagnostics for manual mail attachment
+export function generateDebugFile(issue: IssueData, sections: Sections): string {
+  return toString([
+    "# evcc debug information",
+    [`Version: ${issue.version}`, `System: ${issue.system}, ${issue.timezone}`],
+    generateAdditional(sections),
+  ]);
 }
 
 // Generates GitHub URL for issues or discussions
