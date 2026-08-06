@@ -47,13 +47,17 @@ import GenericModal from "../Helper/GenericModal.vue";
 import PlansSettings from "./PlansSettings.vue";
 import api from "@/api";
 import type {
+	CURRENCY,
+	Forecast,
 	PlanStrategy,
 	RepeatingPlan,
+	SMART_COST_TYPE,
 	StaticEnergyPlan,
 	StaticPlan,
 	StaticSocPlan,
-} from "./types";
-import type { CURRENCY, Forecast, SMART_COST_TYPE, UiLoadpoint, Vehicle } from "@/types/evcc";
+	UiLoadpoint,
+	Vehicle,
+} from "@/types/evcc";
 
 export default defineComponent({
 	name: "ChargingPlanModal",

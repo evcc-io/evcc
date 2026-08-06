@@ -6,6 +6,8 @@ release:
     owner: evcc-io
     name: evcc
   mode: replace
+  # bugfix releases of an older line are published, but do not become "latest"
+  make_latest: '{{ envOrDefault "MAKE_LATEST" "true" }}'
 
 builds:
   - id: evcc
@@ -65,6 +67,8 @@ snapshot:
 
 changelog:
   sort: asc
+  # drop the marker the backport command appends to the pull request title
+  format: '{{ .SHA }} {{ reReplaceAll ` \[\d+\.\d+ backport\]` .Message "" }}'
   filters:
     exclude:
       - "^chore"
@@ -119,7 +123,8 @@ nfpms:
       postremove: ./packaging/scripts/postremove.sh
 
 brews:
-  - repository:
+  - skip_upload: '{{ if eq (envOrDefault "MAKE_LATEST" "true") "true" }}false{{ else }}true{{ end }}'
+    repository:
       owner: evcc-io
       name: homebrew-tap
     commit_author:

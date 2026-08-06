@@ -19,6 +19,49 @@
     "successCloseTab": "U kunt dit tabblad nu sluiten.",
     "title": "Autorisatiestatus"
   },
+  "battery": {
+    "card": {
+      "charging": "laadt op",
+      "discharging": "ontlaadt",
+      "energy": "Energie",
+      "gridCharge": "laden met netstroom",
+      "hold": "ontladen gesperd",
+      "holdCharge": "opladen gesperd",
+      "ofTotal": "van {total}",
+      "power": "Vermogen",
+      "soc": "Batterij niveau"
+    },
+    "combined": "Gecombineerd",
+    "config": {
+      "buffer": "Energie in de thuisbatterij boven {soc} mag gebruikt worden om laadpunten te ondersteunen en stelt het uitschakelen van laadpunten uit in zonladen modus. Start het zonladen automatisch {start}.",
+      "bufferNone": "Energie in de thuisbatterij wordt niet gebruikt voor de laadpunten. Stel een waarde onder {soc} in om dit in te schakelen.",
+      "bufferStart": {
+        "above": "eens de batterij boven {soc} is",
+        "full": "eens de batterij volledig vol is",
+        "never": "enkel met voldoende overschot"
+      },
+      "bufferTitle": "Batterij als laadbuffer",
+      "discharge": "Blokkeer het ontladen van de thuisbatterij in snelle modus en bij gepland laden.",
+      "gridDischarge": "Sta ontladen van de batterij naar het net toe.",
+      "priority": "Thuisbatterij heeft voorrang tot {soc} gehaald wordt. Na het behalen van het ingestelde percentage gaat het overschot naar de laadpunten.",
+      "priorityNone": "Zon-overschot gaat rechtstreeks naar de laadpunten. Stel een waarde boven {soc} in om de thuisbatterij voorrang te geven.",
+      "priorityTitle": "Voorrangsregeling voor zon-overschot"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Laden met netstroom",
+        "discharge": "Ontladen naar het net",
+        "hold": "Verhinder ontladen",
+        "holdcharge": "Verhinder ontladen",
+        "normal": "Normale werking"
+      },
+      "empty": "leeg",
+      "full": "vol",
+      "highest": "Hoogste ({value})",
+      "lowest": "Laagste ({value})",
+      "suggestion": "Suggestie"
+    }
+  },
   "batterySettings": {
     "batteryLevel": "Batterijniveau",
     "bufferStart": {
@@ -51,6 +94,11 @@
     "hex": "Hex kleur"
   },
   "config": {
+    "adminPassword": {
+      "description": "De script-plugin voert een systeem-niveau commando uit met dezelfde machtigingen als het evcc process. Voer het beheerderswachtwoord in om verder te gaan.",
+      "invalid": "Ongeldig wachtwoord. Probeer opnieuw.",
+      "title": "Mogelijk gevaarlijke operatie"
+    },
     "apiKey": {
       "description": "Geef scripts en automatiseringen zoals geplande backups veilige toegang zonder het admin wachtwoord te delen.",
       "exampleLabel": "Probeer het: download een backup met curl",
@@ -72,6 +120,7 @@
       "titleEdit": "Zelfregulerende verbruiker bewerken"
     },
     "battery": {
+      "title": "Batterij",
       "titleAdd": "Voeg batterij toe",
       "titleEdit": "Batterij aanpassen"
     },
@@ -120,6 +169,11 @@
       "title": "Load Balancing",
       "usableMeters": "Bruikbare meterreferenties"
     },
+    "consumer": {
+      "description": "Verschaft inzicht in kleinere, niet aanstuurbare apparaten (koelkasten, wasmachines, ...). Dit geeft een mooier overzicht van het verbruik in een huishouden.",
+      "titleAdd": "Voeg meter voor een verbruiker toe",
+      "titleEdit": "Bewerk meter van een verbruiker"
+    },
     "control": {
       "description": "Normaalgesproken zijn de standaardwaardes in orde. Pas deze alleen aan als je weet wat je doet.",
       "descriptionInterval": "Updatecyclus in seconden. Bepaalt hoe vaak evcc metergegevens uitleest en het laadproces aanpast. De standaardwaarde van 30 seconden is een veilige keuze. Apparaten zoals voertuigen, autoladers en omvormers hebben doorgaans enkele seconden nodig om hun gedrag aan te passen. Als uw componenten snel reageren, kunt u lagere waarden gebruiken. We raden ten zeerste af om onder de 10 seconden te gaan. Als u onregelmatig regelgedrag of verspringende vermogenswaarden opmerkt, kies dan een groter interval.",
@@ -137,6 +191,7 @@
     "deviceValue": {
       "activeClients": "Actieve clients",
       "amount": "Aantal",
+      "asleep": "niet actief",
       "broker": "Agent",
       "bucket": "Bucket",
       "capacity": "Capaciteit",
@@ -175,6 +230,7 @@
       "no": "nee",
       "odometer": "Kilometerstand",
       "org": "Organisatie",
+      "outdoorTemp": "Buitentemperatuur",
       "phaseCurrents": "Stroom",
       "phasePowers": "Vermogen",
       "phaseVoltages": "Spanning",
@@ -184,10 +240,12 @@
       "price": "Prijs",
       "productionLimited": "Productie limiet",
       "range": "Actieradius",
+      "remoteEnabled": "Ingeschakeld",
       "returnEnergy": "Energie (teruglevering)",
       "singlePhase": "Monofase",
       "soc": "Laden",
       "solarForecast": "Voorspelling van zonne-energie",
+      "switchDevice": "Stroomsterkte regeling",
       "temp": "Temperatuur",
       "topic": "Onderwerp",
       "url": "URL",
@@ -214,13 +272,21 @@
         "public": "Publiek certificaat",
         "title": "Certificaten"
       },
+      "configuredDevices": "Geconfigureerde apparaten",
       "description": "Configuratie waarmee evcc kan communiceren met EEBus-compatibele apparaten zoals laders of apparatuur van je netbeheerder. Alle relevante initialisatie en het genereren van een certificaat wordt automatisch uitgevoerd bij de eerste start.",
       "descriptionAdvanced": "Geen wijzigingen nodig. Voer alleen wijzigingen door als je echt weet wat je doet. Als je de SHIP-ID of de certificaten wijzigt, moet u uw apparaten opnieuw koppelen.",
       "interfaces": "Interfaces",
       "interfacesHelp": "Beperk de netwerkinterfaces die EEBus mag gebruiken om communicatieproblemen te voorkomen. Laat het veld leeg om alle interfaces te gebruiken. Eén invoer per regel.",
+      "noConfiguredDevices": "Geen apparaten geconfigureerd via SKI.",
+      "noPairings": "Geen gekoppelde apparaten.",
+      "pairings": "Gekoppelde apparaten",
       "port": "Poort",
       "portHelp": "De te gebruiken poort.",
+      "qr": "Code voor koppeling",
+      "qrExplain": "Scan vanaf een andere EEBus apparaat gedurende installatie om automatisch te koppelen, zonder het SKI manueel in te voeren.",
       "removeConfirm": "Alle EEBus-configuratie wordt verwijderd. Nieuwe certificaten en identificatiecodes worden gegenereerd bij de volgende opstart. Weet u het zeker?",
+      "removePairing": "Verwijder koppeling",
+      "removePairingConfirm": "Het apparaat wordt ontkoppeld en zal terug opnieuw gekoppeld moeten worden. Ben je zeker?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Permanente apparaat identificatiecode voor identificatie in het EEBus-netwerk.",
       "shipidHelp": "Deze SHIP-ID is gekoppeld aan de onderstaande certificaten.",
@@ -294,6 +360,7 @@
       "titleEdit": "Bewerk netmeter"
     },
     "hems": {
+      "changeConfirm": "Bestaande configuratie wordt verwijderd. Verdergaan?",
       "csv": {
         "created": "Aangemaakt",
         "finished": "Voltooid",
@@ -301,8 +368,12 @@
         "limitpower": "Limiet (kW)",
         "type": "Type"
       },
+      "customOption": "Door de gebruiker aangemaakte integratie",
       "description": "Vermogensbeperking door externe systemen (bijv. §14a EnWG, §9 EEG-interface of hoger niveau energiebeheersysteem). Werkt samen met de functie voor Load Balancing.",
+      "download": "Download",
       "eventsRecorded": "{count} gebeurtenissen met rasterbeperkingen geregistreerd.",
+      "generic": "Algemene integraties",
+      "integrations": "integraties",
       "lastEvent": "Meest recent {timeAgo}.",
       "title": "Externe limiet"
     },

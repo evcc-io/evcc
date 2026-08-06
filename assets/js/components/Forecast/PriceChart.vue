@@ -24,8 +24,7 @@ import colors, { lighterColor } from "@/colors";
 import formatter from "@/mixins/formatter";
 import chartMixin from "./chartMixin";
 import { robustPriceMax, PRICE_SPIKE_CLIP } from "@/utils/robustPriceMax";
-import type { CURRENCY } from "@/types/evcc";
-import type { ForecastSlot } from "./types";
+import type { CURRENCY, ForecastSlot } from "@/types/evcc";
 
 export default defineComponent({
 	name: "PriceChart",
@@ -100,7 +99,7 @@ export default defineComponent({
 			const priceColor = colors.price || "";
 			const exportColor = colors.export || "";
 
-			// oxlint-disable-next-line @typescript-eslint/no-this-alias
+			// oxlint-disable-next-line typescript/no-this-alias
 			const vThis = this;
 			return {
 				animationDuration: 0,

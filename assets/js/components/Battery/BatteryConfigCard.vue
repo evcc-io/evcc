@@ -165,11 +165,10 @@ import "@h2d2/shopicons/es/regular/lightning";
 import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
 import api from "@/api";
-import { CURRENCY, type Battery } from "@/types/evcc";
+import { CURRENCY, type Battery, type RepeatingPlan } from "@/types/evcc";
 import Card from "../Helper/Card.vue";
 import InlineSocSelect from "./InlineSocSelect.vue";
 import PlansRepeatingSettings from "../ChargingPlans/PlansRepeatingSettings.vue";
-import type { RepeatingPlan } from "../ChargingPlans/types";
 
 // Battery usage controls for the experimental page. The logic is intentionally duplicated
 // from the classic BatteryUsageSettings.vue (slated for removal) so the two can diverge

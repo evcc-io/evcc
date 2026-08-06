@@ -931,20 +931,25 @@ func (lp *Loadpoint) roundedCurrent(current float64) float64 {
 	return current
 }
 
+// actualMaxChargeCurrent returns the maximum of all phase currents.
+// If currents not measured falls back to offered current.
+func (lp *Loadpoint) actualMaxChargeCurrent() float64 {
+	if lp.chargeCurrents != nil {
+		return max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
+	}
+	if lp.charging() {
+		return lp.offeredCurrent
+	}
+	return 0
+}
+
 // setLimit applies charger current limits and enables/disables accordingly
 func (lp *Loadpoint) setLimit(current float64) error {
 	current = lp.roundedCurrent(current)
 
 	// apply circuit limits
 	if lp.circuit != nil {
-		var actualCurrent float64
-		if lp.chargeCurrents != nil {
-			actualCurrent = max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
-		} else if lp.charging() {
-			actualCurrent = lp.offeredCurrent
-		}
-
-		currentLimit := lp.circuit.ValidateCurrent(actualCurrent, current)
+		currentLimit := lp.circuit.ValidateCurrent(lp.actualMaxChargeCurrent(), current)
 
 		activePhases := lp.ActivePhases()
 		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(current, activePhases))
@@ -1372,18 +1377,30 @@ func (lp *Loadpoint) scalePhases(phases int) error {
 	return nil
 }
 
+// circuitAllowsPhases checks if the circuit power limit allows charging at minCurrent on phases
+func (lp *Loadpoint) circuitAllowsPhases(phases int, minCurrent float64) bool {
+	if lp.circuit == nil {
+		return true
+	}
+
+	minPower := currentToPower(minCurrent, phases)
+	powerLimit := lp.circuit.ValidatePower(lp.chargePower, minPower)
+	if powerLimit < minPower {
+		lp.log.DEBUG.Printf("available circuit power %.0fW < %.0fW min %dp power", powerLimit, minPower, phases)
+		return false
+	}
+
+	return true
+}
+
 // fastCharging scales to 3p if available and sets maximum current
 func (lp *Loadpoint) fastCharging() error {
 	if lp.hasPhaseSwitching() {
 		phases := 3
 
 		// load management limit active
-		if lp.circuit != nil {
-			minPower3p := currentToPower(lp.effectiveMinCurrent(), 3)
-			if powerLimit := lp.circuit.ValidatePower(lp.chargePower, minPower3p); powerLimit < minPower3p {
-				phases = 1
-				lp.log.DEBUG.Printf("fast charging: scaled to 1p to match %.0fW available circuit power", powerLimit)
-			}
+		if !lp.circuitAllowsPhases(3, lp.effectiveMinCurrent()) {
+			phases = 1
 		}
 
 		// ignore api.ErrNotAvailable: the phase switch could not be performed
@@ -1428,12 +1445,20 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 	var waiting bool
 	activePhases := lp.ActivePhases()
 	availablePower := lp.chargePower - sitePower
-	scalable := (sitePower > 0 || !lp.enabled) && activePhases > 1 && lp.phasesConfigured < 3
+	scalable := activePhases > 1 && lp.phasesConfigured < 3
+
+	if scalable {
+		insufficient := (sitePower > 0 || !lp.enabled) && powerToCurrent(availablePower, activePhases) < minCurrent
+		if insufficient {
+			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
+		}
+
+		// scaling down also frees load management headroom for min power on activePhases
+		scalable = insufficient || !lp.circuitAllowsPhases(activePhases, minCurrent)
+	}
 
 	// scale down phases
-	if targetCurrent := powerToCurrent(availablePower, activePhases); targetCurrent < minCurrent && scalable {
-		lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
-
+	if scalable {
 		if !lp.charging() { // scale immediately if not charging
 			lp.phaseTimer = elapsed
 		}
@@ -1461,9 +1486,17 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 		waiting = true
 	}
 
+	// load management may cap the 1p current far below the theoretical maximum
+	if lp.circuit != nil {
+		maxCurrent = lp.circuit.ValidateCurrent(lp.actualMaxChargeCurrent(), maxCurrent)
+	}
+
 	maxPhases := lp.MaxActivePhases()
 	target1pCurrent := powerToCurrent(availablePower, 1)
-	scalable = maxPhases > 1 && phases < maxPhases && target1pCurrent > maxCurrent
+
+	// scaling up is pointless unless load management allows min current and power on maxPhases
+	scalable = maxPhases > 1 && phases < maxPhases && target1pCurrent > maxCurrent &&
+		maxCurrent >= minCurrent && lp.circuitAllowsPhases(maxPhases, minCurrent)
 
 	// scale up phases
 	if targetCurrent := powerToCurrent(availablePower, maxPhases); targetCurrent >= minCurrent && scalable {
