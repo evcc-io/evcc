@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"math"
 	"testing"
 	"time"
 
@@ -312,11 +313,18 @@ func TestForcedBatteryChargeCircuitOverload(t *testing.T) {
 			}
 		}
 
+		powerHeadroom := math.MaxFloat64
+		if tc.maxPower > 0 {
+			powerHeadroom = tc.maxPower - tc.power
+		}
+		currentHeadroom := math.MaxFloat64
+		if tc.maxCurrent > 0 {
+			currentHeadroom = tc.maxCurrent - tc.current
+		}
+
 		circuit := api.NewMockCircuit(ctrl)
-		circuit.EXPECT().GetMaxPower().Return(tc.maxPower).AnyTimes()
-		circuit.EXPECT().GetChargePower().Return(tc.power).AnyTimes()
-		circuit.EXPECT().GetMaxCurrent().Return(tc.maxCurrent).AnyTimes()
-		circuit.EXPECT().GetMaxPhaseCurrent().Return(tc.current).AnyTimes()
+		circuit.EXPECT().PowerHeadroom().Return(powerHeadroom).AnyTimes()
+		circuit.EXPECT().CurrentHeadroom().Return(currentHeadroom).AnyTimes()
 		circuit.EXPECT().HasMeter().Return(tc.hasMeter).AnyTimes()
 
 		site := &Site{

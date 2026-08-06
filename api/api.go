@@ -280,6 +280,14 @@ type Circuit interface {
 	Update([]CircuitLoad) error
 	ValidateCurrent(old, new float64) float64
 	ValidatePower(old, new float64) float64
+	// PowerHeadroom returns the remaining power budget before the circuit's
+	// power limit (HEMS-clamped, root circuit only) is exceeded. Negative
+	// when already exceeded, math.MaxFloat64 when unlimited.
+	PowerHeadroom() float64
+	// CurrentHeadroom returns the remaining current budget before the
+	// circuit's current limit is exceeded. Negative when already exceeded,
+	// math.MaxFloat64 when unlimited.
+	CurrentHeadroom() float64
 }
 
 // HEMS exposes the runtime state of the home energy management system.

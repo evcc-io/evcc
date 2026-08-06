@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/hems/hems"
@@ -96,15 +95,16 @@ func (site *Site) circuitOverloaded() bool {
 		return false
 	}
 
-	maxPower := c.GetMaxPower()
-	if power := c.GetChargePower() + site.anticipatedBatteryChargePower(c.HasMeter()); circuit.Exceeds(power, maxPower) {
-		site.log.DEBUG.Printf("battery mode: circuit overloaded: %.0fW > %.0fW", power, maxPower)
+	anticipated := site.anticipatedBatteryChargePower(c.HasMeter())
+	if headroom := c.PowerHeadroom(); headroom < anticipated {
+		site.log.DEBUG.Printf("battery mode: circuit overloaded: %.0fW anticipated charge > %.0fW headroom", anticipated, headroom)
 		return true
 	}
 
-	maxCurrent := c.GetMaxCurrent()
-	if current := c.GetMaxPhaseCurrent(); circuit.Exceeds(current, maxCurrent) {
-		site.log.DEBUG.Printf("battery mode: circuit overloaded: %.3gA > %.3gA", current, maxCurrent)
+	// current is only measured, not anticipated - a current-limited circuit is caught
+	// reactively once the battery has already started drawing, not ahead of it
+	if headroom := c.CurrentHeadroom(); headroom < 0 {
+		site.log.DEBUG.Printf("battery mode: circuit overloaded: %.3gA over current limit", -headroom)
 		return true
 	}
 
