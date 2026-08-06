@@ -1565,7 +1565,7 @@
         "summary": "System state",
         "description": "Returns the complete state of the system. This structure is used by the UI and also published via websocket and MQTT. It can be filtered by JQ to only return a subset of the data. Note: the response mirrors the internal UI state and carries no compatibility promise. Fields may change or disappear between releases.",
         "externalDocs": {
-          "url": "https://docs.evcc.io/integrations/rest-api"
+          "url": "https://docs.evcc.io/en/reference/state"
         },
         "tags": [
           "state"
@@ -3326,29 +3326,13 @@
         ]
       },
       "ForecastSlot": {
-        "description": "A forecast value for a time slot.",
-        "type": "object",
-        "properties": {
-          "start": {
-            "description": "Start of the time slot.",
-            "type": "string",
-            "format": "date-time"
-          },
-          "end": {
-            "description": "End of the time slot.",
-            "type": "string",
-            "format": "date-time"
-          },
-          "value": {
-            "description": "Forecast value of the time slot. Unit depends on the forecast type.",
-            "type": "number"
-          }
+        "description": "A forecast time slot as [start, end, value] array. Start and end are unix seconds. Value unit depends on the forecast type.",
+        "type": "array",
+        "items": {
+          "type": "number"
         },
-        "required": [
-          "start",
-          "end",
-          "value"
-        ]
+        "minItems": 3,
+        "maxItems": 3
       },
       "EnergyByDay": {
         "description": "Expected solar production energy of a day.",
@@ -3369,23 +3353,13 @@
         ]
       },
       "TimeseriesEntry": {
-        "description": "A forecast value at a point in time.",
-        "type": "object",
-        "properties": {
-          "val": {
-            "description": "Forecast power in W.",
-            "type": "number"
-          },
-          "ts": {
-            "description": "Time of the forecast value.",
-            "type": "string",
-            "format": "date-time"
-          }
+        "description": "A forecast value at a point in time as [ts, val] array. ts is unix seconds, val is power in W.",
+        "type": "array",
+        "items": {
+          "type": "number"
         },
-        "required": [
-          "val",
-          "ts"
-        ]
+        "minItems": 2,
+        "maxItems": 2
       },
       "SolarDetails": {
         "description": "Solar production forecast.",
@@ -4133,6 +4107,10 @@
             "additionalProperties": {
               "type": "string"
             }
+          },
+          "error": {
+            "description": "Last connection error.",
+            "type": "string"
           }
         },
         "required": [

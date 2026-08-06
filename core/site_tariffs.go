@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/jinzhu/now"
+	"github.com/samber/lo"
 )
 
 type solarDetails struct {
@@ -23,6 +24,20 @@ type solarDetails struct {
 type dailyDetails struct {
 	Yield    float64 `json:"energy"`
 	Complete bool    `json:"complete"`
+}
+
+// forecastRates publishes rates as [start, end, value] with the timestamps in
+// unix seconds. The forecast is the largest payload evcc sends and RFC3339
+// timestamps are two thirds of it.
+func forecastRates(rr api.Rates) [][]float64 {
+	// keep nil for empty rates: shards are published without omitempty
+	if len(rr) == 0 {
+		return nil
+	}
+
+	return lo.Map(rr, func(r api.Rate, _ int) []float64 {
+		return []float64{float64(r.Start.Unix()), float64(r.End.Unix()), r.Value}
+	})
 }
 
 // greenShare returns
@@ -101,18 +116,18 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 
 	fc := struct {
-		Co2         api.Rates     `json:"co2,omitempty"`
-		FeedIn      api.Rates     `json:"feedin,omitempty"`
-		Grid        api.Rates     `json:"grid,omitempty"`
-		Planner     api.Rates     `json:"planner,omitempty"`
+		Co2         [][]float64   `json:"co2,omitempty"`
+		FeedIn      [][]float64   `json:"feedin,omitempty"`
+		Grid        [][]float64   `json:"grid,omitempty"`
+		Planner     [][]float64   `json:"planner,omitempty"`
 		Solar       *solarDetails `json:"solar,omitempty"`
-		Temperature api.Rates     `json:"temperature,omitempty"`
+		Temperature [][]float64   `json:"temperature,omitempty"`
 	}{
-		Co2:         tariff.Rates(site.GetTariff(api.TariffUsageCo2)),
-		FeedIn:      tariff.Rates(site.GetTariff(api.TariffUsageFeedIn)),
-		Planner:     tariff.Rates(site.GetTariff(api.TariffUsagePlanner)),
-		Grid:        tariff.Rates(site.GetTariff(api.TariffUsageGrid)),
-		Temperature: tariff.Rates(site.GetTariff(api.TariffUsageTemperature)),
+		Co2:         forecastRates(tariff.Rates(site.GetTariff(api.TariffUsageCo2))),
+		FeedIn:      forecastRates(tariff.Rates(site.GetTariff(api.TariffUsageFeedIn))),
+		Planner:     forecastRates(tariff.Rates(site.GetTariff(api.TariffUsagePlanner))),
+		Grid:        forecastRates(tariff.Rates(site.GetTariff(api.TariffUsageGrid))),
+		Temperature: forecastRates(tariff.Rates(site.GetTariff(api.TariffUsageTemperature))),
 	}
 
 	// calculate adjusted solar rates

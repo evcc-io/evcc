@@ -113,6 +113,13 @@ function normalizeNullables(schema: AnySchema): void {
         node.allOf = rest;
       }
     }
+    // openapi 3.0 cannot express tuple positions, document tuples as
+    // fixed-length uniform arrays; positional meaning lives in the description
+    if (Array.isArray(node.items)) {
+      const types = [...new Set(node.items.map((item: AnySchema) => item.type))];
+      if (types.length !== 1) throw new Error(`tuple with mixed item types not supported`);
+      node.items = { type: types[0] };
+    }
     // openapi 3.0 has no `const`, use a single-value enum
     if ("const" in node) {
       node.enum = [node.const];

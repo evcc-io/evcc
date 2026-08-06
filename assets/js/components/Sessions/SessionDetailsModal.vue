@@ -121,6 +121,12 @@
 							{{ socRange }}
 						</td>
 					</tr>
+					<tr v-if="session.addedRange != null" data-testid="session-details-added-range">
+						<th class="align-baseline">
+							{{ $t("session.addedRange") }}
+						</th>
+						<td>+{{ formatKm(session.addedRange) }}</td>
+					</tr>
 					<tr data-testid="session-details-odometer">
 						<th class="align-middle">
 							{{ $t("session.odometer") }}
