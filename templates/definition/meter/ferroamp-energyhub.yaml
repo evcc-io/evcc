@@ -158,15 +158,29 @@ render: |
     switch:
     - case: 1 # normal
       set:
-        source: const
-        value: 0 # default mode
+        source: sequence
         set:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 6000 # Battery Mode
-            type: writemultiple
-            encoding: uint16
+        # mode first: it hands control back immediately and makes the stale reference
+        # inert, so a failed second write cannot leave the battery stuck
+        - source: const
+          value: 0 # default mode
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 6000 # Battery Mode (holding)
+              type: writemultiple
+              encoding: uint16
+        - source: const
+          value: 0 # clear the setpoint left over from a forced charge
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 6064 # Battery Power Reference (holding, kW)
+              type: writemultiple
+              encoding: float32s
+            scale: 0.001
     - case: 2 # hold
       set:
         source: sequence
