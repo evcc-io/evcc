@@ -51,18 +51,30 @@ render: |
     jq: .response.response.charge_state.battery_level
     timeout: {{ .timeout }}
     cache: 1s
+    error:
+      jq: .response.reason
+      values:
+        vehicle is sleeping: ErrAsleep
   getmaxcurrent:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
     jq: .response.response.charge_state.charge_amps
     timeout: {{ .timeout }}
     cache: 1s
+    error:
+      jq: .response.reason
+      values:
+        vehicle is sleeping: ErrAsleep
   limitsoc:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
     jq: .response.response.charge_state.charge_limit_soc
     timeout: {{ .timeout }}
     cache: 1s
+    error:
+      jq: .response.reason
+      values:
+        vehicle is sleeping: ErrAsleep
   range:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
@@ -70,6 +82,10 @@ render: |
     scale: 1.60934
     timeout: {{ .timeout }}
     cache: 1s
+    error:
+      jq: .response.reason
+      values:
+        vehicle is sleeping: ErrAsleep
   status:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
@@ -80,4 +96,8 @@ render: |
       else "A" end)
     timeout: {{ .timeout }}
     cache: 1s
+    error:
+      jq: .response.reason
+      values:
+        vehicle is sleeping: ErrAsleep
   {{ include "vehicle-features" . }}
