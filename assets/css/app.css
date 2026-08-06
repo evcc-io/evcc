@@ -847,7 +847,7 @@ input::-webkit-date-and-time-value {
 .collapsible-wrapper {
 	display: grid;
 	grid-template-rows: 0fr;
-	transition: grid-template-rows var(--evcc-transition-fast) ease 0.2s;
+	transition: grid-template-rows var(--evcc-transition-fast) ease var(--evcc-transition-fast);
 }
 
 .collapsible-wrapper.open {
@@ -858,12 +858,19 @@ input::-webkit-date-and-time-value {
 .collapsible-content {
 	overflow: hidden;
 	opacity: 0;
-	transition: opacity 0.2s ease;
+	/* keep hidden content non-interactive and out of the a11y tree */
+	visibility: hidden;
+	transition:
+		opacity var(--evcc-transition-fast) ease,
+		visibility var(--evcc-transition-fast) ease;
 }
 
 .collapsible-wrapper.open .collapsible-content {
 	opacity: 1;
-	transition: opacity var(--evcc-transition-fast) ease 0.2s;
+	visibility: visible;
+	transition:
+		opacity var(--evcc-transition-fast) ease var(--evcc-transition-fast),
+		visibility var(--evcc-transition-fast) ease var(--evcc-transition-fast);
 }
 
 .sticky-bottom {
