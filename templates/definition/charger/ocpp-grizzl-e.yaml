@@ -1,0 +1,33 @@
+template: ocpp-grizzl-e
+products:
+  - brand: Grizzl-E
+    description:
+      generic: Mini Connect
+capabilities: ["dim"]
+requirements:
+  description:
+    en: The charger needs to have the OCPP feature enabled. Contact Grizzl-e support if it is not.
+      Change the OCPP configuration via the web UI on the charger, pointing it to ws://<evcc>:8887.
+      Leave "Data" empty and keep "Station ID" and "Auth key" as-is.
+      Configure an OCPP forwarder in evcc with upstream server URL
+      wss://ocpp.unitedchargers.com/ocpp1.6 and username and password matching the settings in the
+      charger OCPP configuration. Block commands from the upstream server in the advanced
+      configuration.
+      The charger will ignore any current limit less than 7 A, so make sure you configure 7 A as
+      the minimum charge current. Additionally, it only supports whole integer charging currents,
+      therefore you will need to configure your vehicle with "1A current control" set to "yes".
+      "Start remote transaction" will be overridden to "yes".
+
+      Tested only with the Grizzl-E Mini Connect, but may work with others as well.
+  evcc: ["sponsorship", "skiptest"]
+params:
+  - preset: ocpp
+render: |
+  {{ include "ocpp" . }}
+  stacklevelzero: true
+  {{- if ne .remotestart "true" }}
+  remotestart: true # force remotestart
+  {{- end }}
+  {{- if not .idtag }}
+  idtag: uc_default_auth # UnitedChargers backend authorizes this tag; other tags are rejected as Invalid
+  {{- end }}
