@@ -1626,7 +1626,10 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryBoostPo
 	targetCurrent := max(effectiveCurrent+deltaCurrent, 0)
 
 	// in MinPV mode or under special conditions return at least minCurrent
-	if battery := batteryStart || batteryBuffered && lp.charging(); (mode == api.ModeMinPV || battery) && targetCurrent < minCurrent {
+	// MinPV only guarantees minCurrent when bufferSoc is not configured or battery is above bufferSoc
+	bufferActive := lp.site != nil && lp.site.GetBufferSoc() > 0
+	minPVGuarantee := mode == api.ModeMinPV && (!bufferActive || batteryBuffered)
+	if battery := batteryStart || batteryBuffered && lp.charging(); (minPVGuarantee || battery) && targetCurrent < minCurrent {
 		lp.log.DEBUG.Printf("pv charge current: min %.3gA > %.3gA (%.0fW @ %dp, battery: %t)", minCurrent, targetCurrent, sitePower, activePhases, battery)
 		return minCurrent
 	}
