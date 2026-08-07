@@ -92,6 +92,14 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 		return map[bool]api.BatteryMode{false: s, true: api.BatteryUnknown}[batMode == s]
 	}
 
+	// grid charge and grid discharge are driven by independent limits against different
+	// rates (buy vs feed-in), so both can be active at once, e.g. a low buy price and a
+	// high feed-in price at the same time. Charge wins - it protects against a costly
+	// double round-trip (buying to then immediately sell) - and is logged for visibility.
+	if batteryGridChargeActive && batteryGridDischargeActive && site.batteryConfigured() {
+		site.log.WARN.Println("battery mode: grid charge and grid discharge both active, charge takes priority")
+	}
+
 	switch {
 	case !site.batteryConfigured():
 		res = api.BatteryUnknown
@@ -104,8 +112,10 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 			res = extMode
 		}
 	case batteryGridChargeActive:
+		// takes priority over grid discharge - see conflict check above
 		res = keepUnlessModified(api.BatteryCharge)
 	case site.dischargeControlActive(rate):
+		// EV/house priority: hold wins over feed-in discharge
 		res = keepUnlessModified(api.BatteryHold)
 	case batteryGridDischargeActive:
 		res = keepUnlessModified(api.BatteryDischarge)

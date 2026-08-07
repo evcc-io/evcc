@@ -220,6 +220,7 @@ func TestRequiredBatteryMode(t *testing.T) {
 		t.Logf("%+v", tc)
 
 		s := &Site{
+			log:           util.NewLogger("foo"),
 			batteryMeters: []config.Device[api.Meter]{nil},
 			batteryMode:   tc.mode,
 		}
