@@ -1,58 +1,86 @@
 <template>
-	<div class="collapsible-wrapper" :class="{ open: show }">
-		<div class="collapsible-content pb-3">
-			<div v-if="disabled" class="row mb-4">
-				<div class="small text-muted">
-					<strong class="text-primary">{{ $t("general.note") }}</strong>
-					{{ $t("main.chargingPlan.strategyDisabledDescription") }}
-				</div>
+	<div data-testid="plan-strategy" class="mb-5 mb-lg-4">
+		<div :class="{ 'mb-2': open }">
+			<div v-if="disabled">
+				<span class="fw-bold evcc-gray">{{ $t("main.chargingPlan.strategy.label") }}:</span>
+				{{ " " }}
+				<span class="small">{{ summary }}</span>
 			</div>
-			<div v-else class="row">
-				<div class="col-12 col-sm-6 col-lg-3 offset-lg-3 mb-3">
-					<div class="row">
-						<label :for="formId('continuous')" class="col-form-label col-5 col-sm-12">
-							{{ $t("main.chargingPlan.optimization.label") }}
-						</label>
-						<div class="col-7 col-sm-12">
-							<select
-								:id="formId('continuous')"
-								v-model="localContinuous"
-								class="form-select"
-								@change="updateStrategy"
-							>
-								<option :value="false">
-									{{ $t("main.chargingPlan.optimization.cheapest") }}
-								</option>
-								<option :value="true">
-									{{ $t("main.chargingPlan.optimization.continuous") }}
-								</option>
-							</select>
-						</div>
+			<button
+				v-else
+				type="button"
+				class="btn btn-link btn-sm text-gray p-0 border-0 d-flex align-items-center text-start"
+				:class="{ 'text-primary': open }"
+				@click="open = !open"
+			>
+				<span class="fw-bold">
+					{{ $t("main.chargingPlan.strategy.label") }}<span v-if="!open">:</span>
+				</span>
+				<span v-if="!open" class="ms-1">{{ summary }}</span>
+				<DropdownIcon class="icon flex-shrink-0" :class="{ iconUp: open }" />
+			</button>
+		</div>
+		<div class="collapsible-wrapper" :class="{ open }">
+			<div class="collapsible-content ring-space">
+				<div v-if="disabled" class="row mb-4">
+					<div class="small text-muted">
+						<strong class="text-primary">{{ $t("general.note") }}</strong>
+						{{ $t("main.chargingPlan.strategyDisabledDescription") }}
 					</div>
 				</div>
-				<div class="col-sm-6 col-lg-3 mb-3">
-					<div class="row">
-						<label :for="formId('precondition')" class="col-form-label col-5 col-sm-12">
-							{{ $t("main.chargingPlan.precondition.label") }}
-						</label>
-						<div class="col-7 col-sm-12">
-							<select
-								:id="formId('precondition')"
-								v-model="localPrecondition"
-								class="form-select"
-								@change="updateStrategy"
-							>
-								<option :value="0">
-									{{ $t("main.chargingPlan.precondition.optionNo") }}
-								</option>
-								<option
-									v-for="opt in preconditionOptions"
-									:key="opt.value"
-									:value="opt.value"
+				<div v-else class="row">
+					<div class="col-12 col-lg-6 mb-3">
+						<div class="row">
+							<label :for="formId('continuous')" class="col-form-label col-5 col-lg-12">
+								{{ $t("main.chargingPlan.optimization.label") }}
+							</label>
+							<div class="col-7 col-lg-12">
+								<select
+									:id="formId('continuous')"
+									v-model="localContinuous"
+									class="form-select"
+									@change="updateStrategy"
 								>
-									{{ opt.name }}
-								</option>
-							</select>
+									<option :value="false">
+										{{ $t(`main.chargingPlan.optimization.${cheapestKey}`) }}
+									</option>
+									<option :value="true">
+										{{ $t("main.chargingPlan.optimization.continuous") }}
+									</option>
+								</select>
+							</div>
+						</div>
+						<div class="small text-muted mt-1">
+							{{ optimizationDescription }}
+						</div>
+					</div>
+					<div class="col-12 col-lg-6 mb-3">
+						<div class="row">
+							<label :for="formId('precondition')" class="col-form-label col-5 col-lg-12">
+								{{ $t("main.chargingPlan.precondition.label") }}
+							</label>
+							<div class="col-7 col-lg-12">
+								<select
+									:id="formId('precondition')"
+									v-model="localPrecondition"
+									class="form-select"
+									@change="updateStrategy"
+								>
+									<option :value="0">
+										{{ $t("main.chargingPlan.precondition.optionNo") }}
+									</option>
+									<option
+										v-for="opt in preconditionOptions"
+										:key="opt.value"
+										:value="opt.value"
+									>
+										{{ opt.name }}
+									</option>
+								</select>
+							</div>
+						</div>
+						<div class="small text-muted mt-1">
+							{{ $t("main.chargingPlan.precondition.description") }}
 						</div>
 					</div>
 				</div>
@@ -62,28 +90,63 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
-import type { PlanStrategy } from "@/types/evcc";
+import { SMART_COST_TYPE, type PlanStrategy } from "@/types/evcc";
+import DropdownIcon from "../MaterialIcon/Dropdown.vue";
 
 export default defineComponent({
 	name: "ChargingPlanStrategy",
+	components: { DropdownIcon },
 	mixins: [formatter],
 	props: {
 		id: [String, Number],
-		show: Boolean,
 		precondition: { type: Number, default: 0 },
 		continuous: { type: Boolean, default: false },
 		disabled: Boolean,
+		smartCostType: String as PropType<SMART_COST_TYPE>,
 	},
 	emits: ["update"],
 	data() {
 		return {
+			open: false,
 			localPrecondition: this.precondition,
 			localContinuous: this.continuous,
 		};
 	},
 	computed: {
+		isCo2(): boolean {
+			return this.smartCostType === SMART_COST_TYPE.CO2;
+		},
+		cheapestKey(): string {
+			return this.isCo2 ? "cleanest" : "cheapest";
+		},
+		summary(): string {
+			if (this.disabled) {
+				return this.$t("main.chargingPlan.strategyDisabledDescription");
+			}
+			const parts = [
+				this.$t(
+					`main.chargingPlan.optimization.${this.continuous ? "continuous" : this.cheapestKey}`
+				),
+			];
+			if (this.precondition) {
+				parts.push(
+					this.$t("main.chargingPlan.precondition.summary", {
+						precondition: this.fmtDurationLong(this.precondition),
+					})
+				);
+			}
+			return parts.join(", ");
+		},
+		optimizationDescription(): string {
+			const variant = this.localContinuous
+				? this.isCo2
+					? "continuousCo2"
+					: "continuousPrice"
+				: this.cheapestKey;
+			return this.$t(`main.chargingPlan.optimization.${variant}Description`);
+		},
 		preconditionOptions() {
 			const HOUR = 60 * 60;
 			const QUARTER_HOUR = 0.25 * HOUR;
@@ -142,3 +205,18 @@ export default defineComponent({
 	},
 });
 </script>
+
+<style scoped>
+/* overflow-hidden would clip the select focus rings */
+.ring-space {
+	padding: 0.5rem;
+	margin: -0.5rem;
+}
+.icon {
+	transform: rotate(0deg);
+	transition: transform var(--evcc-transition-medium) ease;
+}
+.iconUp {
+	transform: rotate(-180deg);
+}
+</style>

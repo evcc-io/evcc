@@ -105,7 +105,7 @@ func NewHTTPd(addr string, hub *SocketHub, customCssFile string) *HTTPd {
 			Addr:         addr,
 			Handler:      router,
 			ReadTimeout:  5 * time.Second,
-			WriteTimeout: 10 * time.Second,
+			WriteTimeout: 30 * time.Second,
 			IdleTimeout:  120 * time.Second,
 			ErrorLog:     log.ERROR,
 		},

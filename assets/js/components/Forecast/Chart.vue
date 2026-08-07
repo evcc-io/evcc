@@ -42,7 +42,7 @@ import "chartjs-adapter-dayjs-4/dist/chartjs-adapter-dayjs-4.esm";
 import { registerChartComponents, commonOptions } from "../Sessions/chartConfig";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import colors, { lighterColor } from "@/colors";
-import type { CURRENCY, ForecastSlot, SolarDetails, TimeseriesEntry } from "@/types/evcc";
+import type { CURRENCY, UiForecastSlot, UiSolarDetails, UiTimeseriesEntry } from "@/types/evcc";
 import { ForecastType, highestSlotIndexByDay } from "@/utils/forecast";
 
 registerChartComponents([
@@ -64,9 +64,9 @@ export default defineComponent({
 	components: { Bar },
 	mixins: [formatter],
 	props: {
-		grid: { type: Array as PropType<ForecastSlot[]> },
-		solar: { type: Object as PropType<SolarDetails> },
-		co2: { type: Array as PropType<ForecastSlot[]> },
+		grid: { type: Array as PropType<UiForecastSlot[]> },
+		solar: { type: Object as PropType<UiSolarDetails> },
+		co2: { type: Array as PropType<UiForecastSlot[]> },
 		currency: { type: String as PropType<CURRENCY> },
 		selected: { type: String as PropType<ForecastType> },
 	},
@@ -452,7 +452,7 @@ export default defineComponent({
 			now.setMilliseconds(0);
 			this.startDate = now;
 		},
-		filterSlots(slots: ForecastSlot[] = []) {
+		filterSlots(slots: UiForecastSlot[] = []) {
 			if (!slots) {
 				return undefined;
 			}
@@ -462,7 +462,7 @@ export default defineComponent({
 					new Date(slot.end) >= this.startDate && new Date(slot.start) <= this.endDate
 			);
 		},
-		filterEntries(entries: TimeseriesEntry[] = []) {
+		filterEntries(entries: UiTimeseriesEntry[] = []) {
 			return entries.filter(
 				(entry) =>
 					new Date(entry.ts) >= this.startDate && new Date(entry.ts) <= this.endDate
@@ -491,7 +491,7 @@ export default defineComponent({
 				}, 100);
 			}
 		},
-		yMax(slots: ForecastSlot[] = []): number | undefined {
+		yMax(slots: UiForecastSlot[] = []): number | undefined {
 			const max = this.maxValue(slots);
 			if (!max) return undefined;
 			const fixedValues = slots.every((slot) => slot.value === max);
@@ -499,29 +499,29 @@ export default defineComponent({
 			const topSpace = fixedValues ? 3 : 1.15;
 			return max * topSpace;
 		},
-		yMaxEntry(entries: TimeseriesEntry[] = [], scale: number = 1): number | undefined {
+		yMaxEntry(entries: UiTimeseriesEntry[] = [], scale: number = 1): number | undefined {
 			const maxValue = this.maxEntryValue(entries);
 			if (!maxValue) return undefined;
 			// use scale and unscaled to determine max scale
 			return Math.max(maxValue * scale, maxValue) * 1.15;
 		},
-		maxIndex(slots: ForecastSlot[] = []) {
+		maxIndex(slots: UiForecastSlot[] = []) {
 			return slots.reduce((max, slot, index) => {
 				return slot.value > (slots[max]?.value || 0) ? index : max;
 			}, 0);
 		},
-		minIndex(slots: ForecastSlot[] = []) {
+		minIndex(slots: UiForecastSlot[] = []) {
 			return slots.reduce((min, slot, index) => {
 				return slot.value < (slots[min]?.value || 0) ? index : min;
 			}, 0);
 		},
-		maxValue(slots: ForecastSlot[] = []) {
+		maxValue(slots: UiForecastSlot[] = []) {
 			return slots[this.maxIndex(slots)]?.value || null;
 		},
-		maxEntryValue(entries: TimeseriesEntry[] = []) {
+		maxEntryValue(entries: UiTimeseriesEntry[] = []) {
 			return entries[this.maxEntryIndex(entries)]?.val || null;
 		},
-		maxEntryIndex(entries: TimeseriesEntry[] = []) {
+		maxEntryIndex(entries: UiTimeseriesEntry[] = []) {
 			return entries.reduce((max, entry, index) => {
 				return entry.val > (entries[max]?.val || 0) ? index : max;
 			}, 0);

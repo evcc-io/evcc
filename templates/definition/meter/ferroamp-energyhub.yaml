@@ -1,0 +1,232 @@
+template: ferroamp-energyhub
+products:
+  - brand: Ferroamp
+    description:
+      generic: EnergyHub
+capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Modbus TCP muss vom Installateur oder vom Ferroamp-Support für den EnergyHub freigeschaltet werden.
+      Die Schnittstelle ist ausschließlich über die Ethernet-Schnittstelle des EnergyHub erreichbar.
+      Die Netzwerte werden über die externen Stromwandler (CTs) am Netzanschlusspunkt gemessen.
+    en: |
+      Modbus TCP has to be enabled for the EnergyHub by the installer or Ferroamp support.
+      The interface is only reachable via the EnergyHub's Ethernet interface.
+      Grid values are measured by the external current transformers (CTs) at the grid connection point.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 1
+  - preset: battery-minmaxsoc
+  - preset: battery-power
+  - name: maxchargepower
+    required: true
+  - name: maxdischargepower
+    required: true
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 3100 # Grid Active Power (kW)
+      type: input
+      decode: float32s
+    scale: 1000
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 3068 # Energy Imported From Grid (kWh)
+      type: input
+      decode: float32s
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 3064 # Energy Exported To Grid (kWh)
+      type: input
+      decode: float32s
+  currents:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 3112 # Grid Active Current L1 (Arms)
+        type: input
+        decode: float32s
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 3116 # Grid Active Current L2 (Arms)
+        type: input
+        decode: float32s
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 3120 # Grid Active Current L3 (Arms)
+        type: input
+        decode: float32s
+  voltages:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 2032 # Grid Voltage L1 (Vrms)
+        type: input
+        decode: float32s
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 2036 # Grid Voltage L2 (Vrms)
+        type: input
+        decode: float32s
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 2040 # Grid Voltage L3 (Vrms)
+        type: input
+        decode: float32s
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 5100 # Solar Output Power (kW)
+      type: input
+      decode: float32s
+    scale: 1000
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 5064 # Energy produced (kWh)
+      type: input
+      decode: float32s
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  # Input and holding registers are separate address spaces: 6064 reads charged energy as
+  # input but writes "Battery Power Reference" as holding, likewise 6000.
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 6100 # Battery Output Power (kW), negative implies charging
+      type: input
+      decode: float32s
+    scale: 1000
+  # The spec labels 6064 as discharge and 6068 as charge, but the device does the
+  # opposite: 6064 accumulates while charging and the lifetime totals only yield a
+  # plausible round-trip efficiency this way round.
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 6068 # discharged energy (input, kWh)
+      type: input
+      decode: float32s
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 6064 # charged energy (input, kWh)
+      type: input
+      decode: float32s
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 6016 # State of Charge (%)
+      type: input
+      decode: float32s
+  capacity:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 6008 # Rated capacity of all connected batteries (kWh)
+      type: input
+      decode: float32s
+  # Battery Mode 0 hands control back to the EnergyHub's own optimization, mode 1 follows
+  # Battery Power Reference. The reference has to be written before the mode. Setpoints are
+  # given in W and scaled to the register's kW unit.
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        # mode first: it hands control back immediately and makes the stale reference
+        # inert, so a failed second write cannot leave the battery stuck
+        - source: const
+          value: 0 # default mode
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 6000 # Battery Mode (holding)
+              type: writemultiple
+              encoding: uint16
+        - source: const
+          value: 0 # clear the setpoint left over from a forced charge
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 6064 # Battery Power Reference (holding, kW)
+              type: writemultiple
+              encoding: float32s
+            scale: 0.001
+    - case: 2 # hold
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # neither charge nor discharge
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 6064 # Battery Power Reference (holding, kW)
+              type: writemultiple
+              encoding: float32s
+            scale: 0.001
+        - source: const
+          value: 1 # power mode
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 6000 # Battery Mode (holding)
+              type: writemultiple
+              encoding: uint16
+    - case: 3 # charge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ mul .maxchargepower -1 }} # negative implies charging
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 6064 # Battery Power Reference (holding, kW)
+              type: writemultiple
+              encoding: float32s
+            scale: 0.001
+        - source: const
+          value: 1 # power mode
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 6000 # Battery Mode (holding)
+              type: writemultiple
+              encoding: uint16
+  {{- include "battery-minmaxsoc" . }}
+  {{- include "battery-power" . }}
+  {{- end }}

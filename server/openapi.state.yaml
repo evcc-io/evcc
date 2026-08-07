@@ -633,24 +633,12 @@ components:
           items:
             $ref: "#/components/schemas/ForecastSlot"
     ForecastSlot:
-      description: A forecast value for a time slot.
-      type: object
-      properties:
-        start:
-          description: Start of the time slot.
-          type: string
-          format: date-time
-        end:
-          description: End of the time slot.
-          type: string
-          format: date-time
-        value:
-          description: Forecast value of the time slot. Unit depends on the forecast type.
-          type: number
-      required:
-        - start
-        - end
-        - value
+      description: A forecast time slot as [start, end, value] array. Start and end are unix seconds. Value unit depends on the forecast type.
+      type: array
+      items:
+        type: number
+      minItems: 3
+      maxItems: 3
     GenericConfigStatus:
       description: Configuration and runtime status of an integration. Structure depends on configuration.
       type: object
@@ -1770,19 +1758,12 @@ components:
         - chargedKWh
         - solarPercentage
     TimeseriesEntry:
-      description: A forecast value at a point in time.
-      type: object
-      properties:
-        val:
-          description: Forecast power in W.
-          type: number
-        ts:
-          description: Time of the forecast value.
-          type: string
-          format: date-time
-      required:
-        - val
-        - ts
+      description: A forecast value at a point in time as [ts, val] array. ts is unix seconds, val is power in W.
+      type: array
+      items:
+        type: number
+      minItems: 2
+      maxItems: 2
     Vehicle:
       description: A configured vehicle.
       type: object
