@@ -306,6 +306,7 @@
     "form": {
       "danger": "Achtung",
       "deprecated": "veraltet",
+      "durationUnit": "Zeiteinheit für {label}",
       "example": "Beispiel",
       "optional": "optional"
     },

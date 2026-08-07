@@ -31,12 +31,12 @@ test("decimal input with german separator", async ({ page }) => {
   await modal.getByRole("button", { name: "Show advanced settings" }).click();
 
   // comma accepted as decimal separator
-  const timeout = modal.getByLabel("Timeout");
+  const timeout = modal.getByRole("spinbutton", { name: "Timeout" });
   await timeout.pressSequentially("0,5");
   await expect(timeout).toHaveValue("0.5");
 
   // intermediate zeros survive typing
-  const delay = modal.getByLabel("Delay");
+  const delay = modal.getByRole("spinbutton", { name: "Delay" });
   await delay.pressSequentially("0.004");
   await expect(delay).toHaveValue("0.004");
   await delay.blur();
