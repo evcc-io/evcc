@@ -3,7 +3,9 @@ package shelly
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
+	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -122,6 +124,25 @@ func TestSwitchEnergy(t *testing.T) {
 			total, ret := switchEnergy(res)
 			assert.Equal(t, tc.total, total, "total energy")
 			assert.Equal(t, tc.ret, ret, "return energy")
+
+			// same values through the endpoint dispatch
+			c := &gen2{
+				methods: []string{"Switch.GetStatus"},
+				switchstatus: util.ResettableCached(func() (Gen2SwitchStatus, error) {
+					return res, nil
+				}, time.Minute),
+				retAenergy: res.Ret_Aenergy != nil,
+			}
+
+			assert.Equal(t, tc.hasReturnReg, c.HasReturnEnergy(), "HasReturnEnergy")
+
+			totalEnergy, err := c.TotalEnergy()
+			require.NoError(t, err)
+			assert.Equal(t, tc.total, totalEnergy, "TotalEnergy")
+
+			returnEnergy, err := c.ReturnEnergy()
+			require.NoError(t, err)
+			assert.Equal(t, tc.ret, returnEnergy, "ReturnEnergy")
 		})
 	}
 }
