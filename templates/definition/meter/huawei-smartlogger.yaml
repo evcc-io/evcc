@@ -63,7 +63,7 @@ render: |
     id: 0
     uri: {{ joinHostPort .host .port }}
     register:
-      address: 40521 # Active power
+      address: 40521 # Input power
       type: holding
       decode: int32
   energy:
@@ -71,10 +71,10 @@ render: |
     id: 0
     uri: {{ joinHostPort .host .port }}
     register:
-      address: 40560 # E-Total
+      address: 40446 # Accumulated PV energy yield
       type: holding
-      decode: uint32
-    scale: 0.1
+      decode: int64
+    scale: 0.01
   maxacpower: {{ .maxacpower }}
   curtail:
     source: modbus
