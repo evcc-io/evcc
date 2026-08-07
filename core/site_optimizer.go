@@ -448,7 +448,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		ftSlots := scaleAndPrune(solarEnergy, scale, minLen)
 
 		// decay the scale derived from measured vs forecasted energy of the last completed slot
-		if pv, fcst := site.measuredSlotEnergy(site.Meters.PVMetersRef...), site.measuredSlotEnergy(metrics.Forecast)*scale; pv > 0 && fcst > 0 {
+		if pv, fcst := site.measuredSlotEnergy(site.pvMeterRefs()...), site.measuredSlotEnergy(metrics.Forecast)*scale; pv > 0 && fcst > 0 {
 			orig := slices.Clone(ftSlots[:min(optimizerDecaySlots, len(ftSlots))])
 			blendScale(ftSlots, pv/fcst, optimizerDecaySlots)
 			site.log.DEBUG.Printf("optimizer: pv slots updated with scale %.2f: %.0f -> %.0f", pv/fcst, orig, ftSlots[:len(orig)])

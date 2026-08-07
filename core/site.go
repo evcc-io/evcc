@@ -678,11 +678,22 @@ func (site *Site) updatePvMeters() {
 
 	// persist per-meter PV energy slots (used for history and forecast scaling)
 	for i, dev := range site.pvMeters {
-		c := site.collectors[dev.Config().Name]
+		c, ok := site.collectors[dev.Config().Name]
+		if !ok {
+			continue
+		}
 		if err := c.AddEnergy(mm[i].Energy, mm[i].ReturnEnergy, mm[i].Power); err != nil {
 			site.log.ERROR.Printf("persist pv %d energy: %v", i+1, err)
 		}
 	}
+}
+
+// pvMeterRefs returns the config names of the active pv meters. Derived from the devices
+// rather than site.Meters.PVMetersRef, which a live device deletion may already have pruned.
+func (site *Site) pvMeterRefs() []string {
+	return lo.Map(site.pvMeters, func(dev config.Device[api.Meter], _ int) string {
+		return dev.Config().Name
+	})
 }
 
 // updateBatteryMeters updates battery meters
@@ -881,7 +892,11 @@ func (site *Site) updateGridMeter() error {
 		return nil
 	}
 
-	mm := types.Measurement{Name: site.Meters.GridMeterRef}
+	// the meter's own config name- site.Meters.GridMeterRef may already have been
+	// cleared by a live device deletion while the cached device keeps polling (#32605)
+	ref := site.gridMeter.Config().Name
+
+	mm := types.Measurement{Name: ref}
 
 	meter := site.gridMeter.Instance()
 
@@ -935,10 +950,10 @@ func (site *Site) updateGridMeter() error {
 		}
 	}
 
-	// keyed by the meter's stable config name, not site.Meters.GridMeterRef which
-	// may already have been cleared by a live device deletion (#32605)
-	if c, ok := site.collectors[site.gridMeter.Config().Name]; ok {
-		c.AddEnergy(mm.Energy, mm.ReturnEnergy, mm.Power)
+	if c, ok := site.collectors[ref]; ok {
+		if err := c.AddEnergy(mm.Energy, mm.ReturnEnergy, mm.Power); err != nil {
+			site.log.ERROR.Printf("persist grid energy: %v", err)
+		}
 	}
 
 	site.publish(keys.Grid, mm)
