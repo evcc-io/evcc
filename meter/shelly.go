@@ -55,7 +55,11 @@ func NewShellyFromConfig(other map[string]any) (api.Meter, error) {
 			total, ret = ret, total
 		}
 		implement.Has(c, implement.MeterEnergy(total))
-		implement.Has(c, implement.MeterReturnEnergy(ret))
+
+		// without a return register the second reading is a constant zero
+		if c.conn.HasReturnEnergy() {
+			implement.Has(c, implement.MeterReturnEnergy(ret))
+		}
 	}
 
 	if phases, ok := c.conn.Generation.(shelly.Phases); ok {
