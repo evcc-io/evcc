@@ -37,6 +37,7 @@ import formatter from "@/mixins/formatter";
 import colors from "@/colors";
 import LegendList from "../Sessions/LegendList.vue";
 import type { Legend } from "../Sessions/types";
+import { touchDismissPlugin } from "../Sessions/chartConfig";
 
 ChartJS.register(
 	CategoryScale,
@@ -48,7 +49,8 @@ ChartJS.register(
 	PointElement,
 	Title,
 	Tooltip,
-	ChartLegendPlugin
+	ChartLegendPlugin,
+	touchDismissPlugin
 );
 
 export default defineComponent({

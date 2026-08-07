@@ -11,6 +11,7 @@ import {
 	FONT_FAMILY,
 	forecastGrid,
 	forecastYAxis,
+	registerTouchTooltipReset,
 	tooltipStyle,
 	tooltipTable,
 	xAxisLabelStyle,
@@ -719,6 +720,7 @@ export default defineComponent({
 		const zr = this.chart.getZr();
 		zr.on("mousemove", this.onChartMouseMove);
 		zr.on("globalout", this.clearHighlight);
+		registerTouchTooltipReset(this.chart, el, this.clearHighlight);
 		this.mediaQuery = window.matchMedia("(max-width: 575.98px)");
 		this.isMobile = this.mediaQuery.matches;
 		this.mediaQuery.addEventListener("change", this.onMediaChange);

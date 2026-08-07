@@ -117,6 +117,20 @@ export function tooltipStyle(
   };
 }
 
+// hide tooltip when finger lifts; mouse hover unchanged
+export function registerTouchTooltipReset(
+  chart: Pick<echarts.ECharts, "dispatchAction">,
+  el: HTMLElement,
+  onReset?: () => void
+) {
+  const reset = () => {
+    chart.dispatchAction({ type: "hideTip" });
+    onReset?.();
+  };
+  el.addEventListener("touchend", reset);
+  el.addEventListener("touchcancel", reset);
+}
+
 export interface TooltipRow {
   name?: string;
   values: string[];
