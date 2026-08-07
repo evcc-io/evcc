@@ -1223,7 +1223,10 @@
     "additionalContext": "Additional context",
     "additionalContextPlaceholder": "Any additional information that might be helpful...\n- Configuration details\n- What you tried\n- Environment details",
     "createButtonDiscussion": "Start GitHub Discussion...",
+    "createButtonEmail": "Send request by email",
     "createButtonIssue": "Create GitHub Issue...",
+    "downloadButton": "Download debug information",
+    "downloadHint": "Attach this file to your email if more information is needed.",
     "description": "Your installation is not working as expected? Use this page to get help or report issues. Provide enough detail to help us understand and reproduce the problem, while keeping your description concise, clear and easy to follow.",
     "helpType": {
       "discussion": "Need help with my setup",
@@ -1236,6 +1239,7 @@
     "issueTitle": "Title",
     "stepsToReproduce": "Steps to reproduce",
     "subTitleDiscussion": "Describe your problem",
+    "subTitleEmail": "Describe your problem",
     "subTitleIssue": "Describe the issue",
     "summary": {
       "confirmationButtonDiscussion": "Start GitHub Discussion",
