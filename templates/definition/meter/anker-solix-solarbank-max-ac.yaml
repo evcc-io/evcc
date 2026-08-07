@@ -18,10 +18,11 @@ params:
     choice: ["tcpip"]
     port: 502
     id: 1
-  - name: maxacpower
   - preset: battery-params
   - name: maxchargepower
     default: 2500
+  - name: maxdischargepower
+    default: 800
   - name: watchdog
     default: 60s
 render: |
@@ -59,7 +60,6 @@ render: |
       type: input
       decode: uint32
     scale: 0.1
-  maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -157,7 +157,30 @@ render: |
                     type: writesingle
                     encoding: uint16
               - source: const
-                value: -{{ .maxchargepower }}
+                value: {{ .maxchargepower }}
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10071
+                    type: writemultiple
+                    encoding: int32
+                  scale: -1 # negative = charge
+        - case: 5 # discharge
+          set:
+            source: sequence
+            set:
+              - source: const
+                value: 3 # third_party_control
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10064
+                    type: writesingle
+                    encoding: uint16
+              - source: const
+                value: {{ .maxdischargepower }} # positive = discharge
                 set:
                   source: modbus
                   {{- include "modbus" . | indent 16 }}
