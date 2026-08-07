@@ -172,7 +172,7 @@ func (site *Site) GetBatterySoc() float64 {
 func (site *Site) GetBatteryMaxDischargePower() float64 {
 	site.RLock()
 	defer site.RUnlock()
-	return site.battery.MaxDischargePower
+	return site.batteryMaxDischargePower
 }
 
 // Loadpoints returns the loadpoints as api interfaces

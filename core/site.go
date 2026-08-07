@@ -112,6 +112,7 @@ type Site struct {
 	excessDCPower            float64                     // PV excess DC charge power (hybrid only)
 	auxPower                 float64                     // Aux power
 	battery                  types.BatteryState          // Battery cached and published state
+	batteryMaxDischargePower float64                     // Max discharge power of all battery meters
 	batteryMode              api.BatteryMode             // Battery mode (runtime only, not persisted)
 	batteryModeExternal      api.BatteryMode             // Battery mode (external, runtime only, not persisted)
 	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
@@ -692,6 +693,7 @@ func (site *Site) updateBatteryMeters() {
 
 	mm := site.collectMeters("battery", site.batteryMeters)
 
+	var maxDischargePower float64
 	for i, dev := range site.batteryMeters {
 		meter := dev.Instance()
 
@@ -711,25 +713,18 @@ func (site *Site) updateBatteryMeters() {
 			}
 		}
 
-		if bpl, ok := api.Cap[api.BatteryPowerLimiter](meter); ok {
+		if bpl, ok := api.Cap[api.BatteryPowerLimiter](dev.Instance()); ok && maxDischargePower >= 0 {
 			_, discharge := bpl.GetPowerLimits()
-			mm[i].MaxDischargePower = &discharge
+			maxDischargePower += discharge
+		} else {
+			maxDischargePower = -1 // any battery without a limit disables the cap
 		}
 
 		_, controllable := api.Cap[api.BatteryController](meter)
 		mm[i].Controllable = new(controllable)
 	}
 
-	var maxDischargePower float64
-	for _, m := range mm {
-		// only consider max discharge power if all battery meters provide it, otherwise ignore
-		if m.MaxDischargePower == nil {
-			maxDischargePower = 0
-			break
-		}
-		maxDischargePower += *m.MaxDischargePower
-	}
-	site.battery.MaxDischargePower = maxDischargePower
+	site.batteryMaxDischargePower = max(0, maxDischargePower)
 
 	// retain the last known soc when every battery read failed this cycle, so a
 	// transient meter error does not report the pack as empty (0%)
