@@ -12,7 +12,7 @@
 			@click="openAboutModal"
 		>
 			<span v-if="showVersionBadge" class="circle-badge me-1 bg-darker-green"></span>
-			<span>evcc</span>
+			<span>{{ customBrand || "evcc" }}</span>
 			<span class="ms-2 text-muted small">{{ versionLabel }}</span>
 			<shopicon-regular-gift
 				v-if="newVersionAvailable"
@@ -112,6 +112,7 @@ export default defineComponent({
 		installed: String,
 		commit: String,
 		availableVersion: String,
+		customBrand: String,
 	},
 	emits: ["close"],
 	data() {

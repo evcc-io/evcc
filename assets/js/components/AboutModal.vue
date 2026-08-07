@@ -1,9 +1,21 @@
 <template>
 	<GenericModal id="aboutModal" :size="modalSize" @opened="acknowledge">
 		<template #title>
-			<a :href="websiteUrl" target="_blank" rel="noopener noreferrer"
-				><Logo class="about-logo"
-			/></a>
+			<a :href="websiteUrl" target="_blank" rel="noopener noreferrer">
+				<template v-if="customLogo">
+					<img
+						:src="'./custom-logo-light'"
+						class="about-logo custom-logo custom-logo--light"
+						:alt="customBrand || 'evcc'"
+					/>
+					<img
+						:src="'./custom-logo-dark'"
+						class="about-logo custom-logo custom-logo--dark"
+						:alt="customBrand || 'evcc'"
+					/>
+				</template>
+				<Logo v-else class="about-logo" />
+			</a>
 		</template>
 		<div v-if="updateStarted">
 			<p>{{ $t("footer.version.modalUpdateStarted") }}</p>
@@ -64,6 +76,18 @@
 							<a :href="websiteUrl" target="_blank" rel="noopener noreferrer">
 								{{ websiteDomain }}
 							</a>
+						</td>
+					</tr>
+					<tr v-if="customPhone">
+						<th>{{ $t("footer.version.labelPhone") }}</th>
+						<td>
+							<a :href="phoneUrl">{{ customPhone }}</a>
+						</td>
+					</tr>
+					<tr v-if="customEmail">
+						<th>{{ $t("footer.version.labelEmail") }}</th>
+						<td>
+							<a :href="`mailto:${customEmail}`">{{ customEmail }}</a>
 						</td>
 					</tr>
 				</tbody>
@@ -157,6 +181,11 @@ export default defineComponent({
 		hasUpdater: Boolean,
 		uploadMessage: String,
 		uploadProgress: Number,
+		customLogo: Boolean,
+		customBrand: String,
+		customWebsite: String,
+		customEmail: String,
+		customPhone: String,
 	},
 	data() {
 		return {
@@ -175,10 +204,14 @@ export default defineComponent({
 			return getReleaseName(this.installed, this.commit);
 		},
 		websiteUrl() {
-			return EVCC_WEBSITE;
+			return this.customWebsite || EVCC_WEBSITE;
 		},
 		websiteDomain() {
-			return extractDomain(EVCC_WEBSITE);
+			return extractDomain(this.websiteUrl);
+		},
+		phoneUrl() {
+			// strip separators for RFC 3966 tel: uri
+			return `tel:${(this.customPhone || "").replace(/[^+\d]/g, "")}`;
 		},
 		githubRepoUrl() {
 			return GITHUB_REPO;
@@ -227,6 +260,22 @@ export default defineComponent({
 <style scoped>
 .about-logo {
 	height: 2.5rem;
+}
+.custom-logo {
+	height: 4rem;
+	width: auto;
+	max-width: 100%;
+	object-fit: contain;
+	object-position: left;
+}
+.custom-logo--dark {
+	display: none;
+}
+:root.dark .custom-logo--light {
+	display: none;
+}
+:root.dark .custom-logo--dark {
+	display: inline;
 }
 .about-table th {
 	padding-right: 1rem;

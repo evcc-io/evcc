@@ -1099,6 +1099,8 @@
     "version": {
       "availableLong": "new version available",
       "community": "evcc community",
+      "labelEmail": "Email",
+      "labelPhone": "Phone",
       "labelRelease": "Release",
       "labelVersion": "Version",
       "labelWebsite": "Website",
@@ -1181,6 +1183,7 @@
     "sessions": "Charging Sessions"
   },
   "help": {
+    "contactButton": "Contact us",
     "discussionsButton": "GitHub discussions",
     "documentationButton": "Documentation",
     "issueButton": "Report a problem",
