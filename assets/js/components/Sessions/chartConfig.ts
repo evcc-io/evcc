@@ -3,6 +3,7 @@ import {
   Tooltip,
   type ChartComponentLike,
   type ChartType,
+  type Plugin,
   type Point,
   type TooltipItem,
 } from "chart.js";
@@ -19,6 +20,22 @@ Chart.defaults.font.family = window
   .getPropertyValue("--bs-font-sans-serif");
 Chart.defaults.font.size = 14;
 Chart.defaults.layout.padding = 0;
+
+// hide tooltip when finger lifts; mouse hover unchanged
+export const touchDismissPlugin: Plugin = {
+  id: "touchDismiss",
+  afterInit(chart) {
+    const dismiss = () => {
+      if (!chart.ctx) return; // destroyed
+      chart.setActiveElements([]);
+      chart.tooltip?.setActiveElements([], { x: 0, y: 0 });
+      chart.update();
+    };
+    chart.canvas.addEventListener("touchend", dismiss);
+    chart.canvas.addEventListener("touchcancel", dismiss);
+  },
+};
+Chart.register(touchDismissPlugin);
 
 // Custom tooltip positioners
 (Tooltip.positioners as any)["center"] = function () {

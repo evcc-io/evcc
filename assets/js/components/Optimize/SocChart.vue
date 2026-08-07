@@ -41,8 +41,17 @@ import type { EvoptData } from "./TimeSeriesDataTable.vue";
 import type { CURRENCY, BatteryDetail } from "@/types/evcc";
 import formatter from "@/mixins/formatter";
 import colors from "@/colors";
+import { touchDismissPlugin } from "../Sessions/chartConfig";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, ChartLegendPlugin);
+ChartJS.register(
+	CategoryScale,
+	LinearScale,
+	BarElement,
+	Title,
+	Tooltip,
+	ChartLegendPlugin,
+	touchDismissPlugin
+);
 
 export default defineComponent({
 	name: "SocChart",
