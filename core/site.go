@@ -46,7 +46,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 // updater abstracts the Loadpoint implementation for testing
 type updater interface {
 	loadpoint.API
-	Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64, dim *bool)
+	Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, batteryDischargeLimit *float64, greenShare float64, effectivePrice, effectiveCo2 *float64, dim *bool)
 }
 
 var _ site.API = (*Site)(nil)
@@ -112,6 +112,7 @@ type Site struct {
 	excessDCPower            float64                     // PV excess DC charge power (hybrid only)
 	auxPower                 float64                     // Aux power
 	battery                  types.BatteryState          // Battery cached and published state
+	batteryDischargeLimit    *float64                    // Aggregated max battery discharge power, nil if any battery does not publish one
 	batteryMode              api.BatteryMode             // Battery mode (runtime only, not persisted)
 	batteryModeExternal      api.BatteryMode             // Battery mode (external, runtime only, not persisted)
 	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
@@ -692,8 +693,26 @@ func (site *Site) updateBatteryMeters() {
 
 	mm := site.collectMeters("battery", site.batteryMeters)
 
+	// aggregated discharge limit, only usable if every battery publishes one.
+	// This is the plain limit: sitePower already nets out what the battery
+	// contributes right now, so subtracting its power here would count it twice.
+	var dischargeLimit float64
+	limited := true
+
 	for i, dev := range site.batteryMeters {
 		meter := dev.Instance()
+
+		if limited {
+			if m, ok := api.Cap[api.BatteryPowerLimiter](meter); ok {
+				if _, discharge := m.GetPowerLimits(); discharge > 0 {
+					dischargeLimit += discharge
+				} else {
+					limited = false
+				}
+			} else {
+				limited = false
+			}
+		}
 
 		// battery soc and capacity
 		if m, ok := api.Cap[api.Battery](meter); ok {
@@ -713,6 +732,11 @@ func (site *Site) updateBatteryMeters() {
 
 		_, controllable := api.Cap[api.BatteryController](meter)
 		mm[i].Controllable = new(controllable)
+	}
+
+	site.batteryDischargeLimit = nil
+	if limited {
+		site.batteryDischargeLimit = new(dischargeLimit)
 	}
 
 	// retain the last known soc when every battery read failed this cycle, so a
@@ -1165,6 +1189,7 @@ func (site *Site) update(lp updater) {
 
 			lp.Update(
 				sitePower, max(0, site.battery.Power), consumption, feedin, batteryBuffered, batteryStart,
+				site.batteryDischargeLimit,
 				greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
 				hems.Dimmed(site.hems),
 			)
