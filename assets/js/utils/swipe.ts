@@ -1,7 +1,6 @@
 interface SwipeOptions {
   onSwipeLeft?: () => void;
   onSwipeRight?: () => void;
-  ignoreSelector?: string;
   minDistance?: number;
   maxDuration?: number;
 }
@@ -119,8 +118,7 @@ export function attachSwipeHandler(el: HTMLElement, options: SwipeOptions): () =
       ignored = true;
       return;
     }
-    const target = e.target as Element | null;
-    ignored = !!(options.ignoreSelector && target?.closest(options.ignoreSelector));
+    ignored = false;
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     startTime = Date.now();
@@ -139,11 +137,13 @@ export function attachSwipeHandler(el: HTMLElement, options: SwipeOptions): () =
     else options.onSwipeRight?.();
   };
 
-  el.addEventListener("touchstart", onTouchStart, { passive: true });
-  el.addEventListener("touchend", onTouchEnd, { passive: true });
+  // capture phase, so the touch tooltip gate's stopPropagation on chart elements
+  // cannot starve the swipe detection
+  el.addEventListener("touchstart", onTouchStart, { capture: true, passive: true });
+  el.addEventListener("touchend", onTouchEnd, { capture: true, passive: true });
 
   return () => {
-    el.removeEventListener("touchstart", onTouchStart);
-    el.removeEventListener("touchend", onTouchEnd);
+    el.removeEventListener("touchstart", onTouchStart, { capture: true });
+    el.removeEventListener("touchend", onTouchEnd, { capture: true });
   };
 }
