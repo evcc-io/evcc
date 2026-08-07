@@ -2,6 +2,7 @@ package shelly
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 	"time"
 
@@ -145,4 +146,24 @@ func TestSwitchEnergy(t *testing.T) {
 			assert.Equal(t, tc.ret, returnEnergy, "ReturnEnergy")
 		})
 	}
+}
+
+// a failed read yields the zero status, whose ret_aenergy register is nil too
+func TestSwitchEnergyReadError(t *testing.T) {
+	c := &gen2{
+		methods: []string{"Switch.GetStatus"},
+		switchstatus: util.ResettableCached(func() (Gen2SwitchStatus, error) {
+			return Gen2SwitchStatus{}, errors.New("offline")
+		}, time.Minute),
+	}
+
+	require.NotPanics(t, func() {
+		total, err := c.TotalEnergy()
+		require.Error(t, err)
+		assert.Zero(t, total)
+
+		ret, err := c.ReturnEnergy()
+		require.Error(t, err)
+		assert.Zero(t, ret)
+	})
 }

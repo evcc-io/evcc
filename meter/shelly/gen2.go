@@ -178,8 +178,9 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 		c.reversed = cfg.Reverse
 	}
 
-	// plain plugs omit ret_aenergy entirely- probe the (cached) status once
-	if c.hasSwitchEndpoint() {
+	// plain plugs omit ret_aenergy entirely- probe the (cached) status once. Only
+	// relevant when the switch endpoint is the one serving energy, see HasReturnEnergy.
+	if !c.hasEM1Endpoint() && !c.hasEMEndpoint() && c.hasSwitchEndpoint() {
 		res, err := c.switchstatus.Get()
 		if err != nil {
 			return nil, err
