@@ -38,15 +38,15 @@ func TestBoostPower(t *testing.T) {
 	// No max discharge power limit
 	s.maxDischargePower = 0
 	// EffectiveMaxPower will be 230 * 16 * 3 = 11040
-	delta := lp.boostPower(0)
-	assert.Equal(t, 11040.0, delta)
+	res := lp.boostPower(0)
+	assert.Equal(t, 11040.0, res)
 	assert.Equal(t, boostContinue, lp.batteryBoost)
 
 	// With max discharge power limit
 	s.maxDischargePower = 5000
 	lp.batteryBoost = boostStart
-	delta = lp.boostPower(0)
-	assert.Equal(t, 5000.0, delta)
+	res = lp.boostPower(0)
+	assert.Equal(t, 5000.0, res)
 	assert.Equal(t, boostContinue, lp.batteryBoost)
 
 	// boostContinue with limit
@@ -57,28 +57,28 @@ func TestBoostPower(t *testing.T) {
 	// delta = 790
 	// delta = min(790, max(0, 5000 - 0)) = 790
 	// res = 0 + 790 + 0 = 790
-	delta = lp.boostPower(0)
-	assert.Equal(t, 790.0, delta)
+	res = lp.boostPower(0)
+	assert.Equal(t, 790.0, res)
 
 	// boostContinue at limit
 	// delta = min(790, max(0, 5000 - 5000)) = 0
 	// res = 5000 + 0 + 0 = 5000
-	delta = lp.boostPower(5000)
-	assert.Equal(t, 5000.0, delta)
+	res = lp.boostPower(5000)
+	assert.Equal(t, 5000.0, res)
 
 	// boostContinue over limit
 	// delta = min(790, max(0, 5000 - 6000)) = 0
 	// res = 6000 + 0 + 0 = 6000
-	delta = lp.boostPower(6000)
-	assert.Equal(t, 6000.0, delta)
+	res = lp.boostPower(6000)
+	assert.Equal(t, 6000.0, res)
 
 	// boostStart while battery is charging (negative power)
 	// battery charging at 2000W, limit is 5000W
 	// max discharge capacity = 5000 - (-2000) = 7000W
 	// res = max(0, -2000) + 7000 + 0 = 7000W
 	lp.batteryBoost = boostStart
-	delta = lp.boostPower(-2000)
-	assert.Equal(t, 7000.0, delta)
+	res = lp.boostPower(-2000)
+	assert.Equal(t, 7000.0, res)
 
 	// boostContinue while battery is charging (negative power)
 	// limit is 50W (less than the standard 790W delta)
@@ -87,7 +87,7 @@ func TestBoostPower(t *testing.T) {
 	s.maxDischargePower = 50
 	s.residualPower = 0 // base delta = 100 + 690 = 790
 	lp.batteryBoost = boostContinue
-	delta = lp.boostPower(-2000)
+	res = lp.boostPower(-2000)
 	// res = max(0, -2000) + 790 + 0 = 790W
-	assert.Equal(t, 790.0, delta)
+	assert.Equal(t, 790.0, res)
 }

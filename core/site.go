@@ -713,7 +713,7 @@ func (site *Site) updateBatteryMeters() {
 			}
 		}
 
-		if bpl, ok := api.Cap[api.BatteryPowerLimiter](dev.Instance()); ok && maxDischargePower >= 0 {
+		if bpl, ok := api.Cap[api.BatteryPowerLimiter](meter); ok && maxDischargePower >= 0 {
 			_, discharge := bpl.GetPowerLimits()
 			maxDischargePower += discharge
 		} else {
@@ -724,7 +724,10 @@ func (site *Site) updateBatteryMeters() {
 		mm[i].Controllable = new(controllable)
 	}
 
+	// written from the meter goroutine, read via GetBatteryMaxDischargePower
+	site.Lock()
 	site.batteryMaxDischargePower = max(0, maxDischargePower)
+	site.Unlock()
 
 	// retain the last known soc when every battery read failed this cycle, so a
 	// transient meter error does not report the pack as empty (0%)
