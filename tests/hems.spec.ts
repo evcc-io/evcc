@@ -138,6 +138,9 @@ maxconsumptionpower:
     await expectModalVisible(hemsModal);
     const toggle = section.getByRole("switch", { name: "Grid export limit" });
     const input = section.getByRole("spinbutton", { name: "Grid export limit" });
+    const staticTab = hemsModal.getByRole("link", { name: "Static limits" });
+
+    await staticTab.click();
 
     // initially off, input collapsed
     await expect(toggle).not.toBeChecked();
@@ -158,6 +161,7 @@ maxconsumptionpower:
     await page.reload();
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(hemsModal);
+    await staticTab.click();
     await expect(toggle).toBeChecked();
     await expect(input).toHaveValue("7000");
 

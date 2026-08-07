@@ -10,6 +10,7 @@
 		:is-yaml-input-type="isYamlInputType"
 		:on-template-change="handleTemplateChange"
 		:hide-template-fields="fromYaml"
+		:show-main-content="!experimental || activeTab === 'dynamic'"
 		:hide-delete="true"
 		:hide-info="true"
 		:keep-open-on-remove="true"
@@ -31,13 +32,37 @@
 				<shopicon-regular-edit size="s" class="flex-shrink-0"></shopicon-regular-edit>
 			</button>
 		</template>
-		<template #description>
+		<template #pre-content>
 			<p class="mt-0 mb-4">
 				{{ $t("config.hems.description") }}
 				<a :href="docsLink" target="_blank" rel="noopener">
 					{{ $t("config.general.docsLink") }}
 				</a>
 			</p>
+			<ul v-if="experimental" class="nav nav-tabs mb-4">
+				<li class="nav-item">
+					<a
+						class="nav-link"
+						:class="{ active: activeTab === 'dynamic' }"
+						href="#"
+						@click.prevent="activeTab = 'dynamic'"
+					>
+						{{ $t("config.hems.dynamicLimits") }}
+					</a>
+				</li>
+				<li class="nav-item">
+					<a
+						class="nav-link"
+						:class="{ active: activeTab === 'static' }"
+						href="#"
+						@click.prevent="activeTab = 'static'"
+					>
+						{{ $t("config.hems.staticLimits") }} 🧪
+					</a>
+				</li>
+			</ul>
+		</template>
+		<template #description>
 			<div v-if="configured" class="mb-4" data-testid="grid-sessions">
 				<h6 class="mb-3">{{ $t("config.hems.recordedEvents") }}</h6>
 				<div class="events-box rounded p-3">
@@ -60,9 +85,8 @@
 				{{ $t("config.general.fromYamlHint") }}
 			</p>
 		</template>
-		<template v-if="experimental" #post-content>
+		<template v-if="experimental && activeTab === 'static'" #post-content>
 			<div data-testid="grid-export-limit">
-				<hr class="mb-4" />
 				<div class="form-check form-switch">
 					<input
 						id="hemsExportLimitEnabled"
@@ -74,7 +98,7 @@
 						@change="toggleExportLimit"
 					/>
 					<label for="hemsExportLimitEnabled" class="form-check-label">
-						{{ $t("config.hems.exportLimit") }} 🧪
+						{{ $t("config.hems.exportLimit") }}
 					</label>
 					<div class="ps-2">
 						<p class="text-muted small mb-2">
@@ -160,6 +184,7 @@ export default defineComponent({
 			exportLimit: null as number | null,
 			exportLimitEnabled: false,
 			exportLimitState: null as SavingState,
+			activeTab: "dynamic" as "dynamic" | "static",
 		};
 	},
 	computed: {
@@ -203,6 +228,7 @@ export default defineComponent({
 			this.exportLimit = this.serverExportLimit || null;
 			this.exportLimitEnabled = this.serverExportLimit > 0;
 			this.exportLimitState = null;
+			this.activeTab = "dynamic";
 			this.loadSessions();
 		},
 		onExportLimitInput() {
