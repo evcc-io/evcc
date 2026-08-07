@@ -41,13 +41,42 @@ func getPreferredLanguage(header string) string {
 	return base.String()
 }
 
-// jsEscape returns s escaped for embedding in a double-quoted JS string literal
-func jsEscape(s string) string {
-	b, _ := json.Marshal(s)
-	return string(b[1 : len(b)-1])
+// globalsJsHandler serves version and ui customization as window.evcc globals
+func globalsJsHandler(custom Customization) http.HandlerFunc {
+	globals := struct {
+		Version    string `json:"version"`
+		Commit     string `json:"commit"`
+		CustomCss  bool   `json:"customCss"`
+		CustomLogo bool   `json:"customLogo"`
+		Brand      string `json:"customBrand"`
+		Website    string `json:"customWebsite"`
+		Email      string `json:"customEmail"`
+		Phone      string `json:"customPhone"`
+	}{
+		Version:    util.Version,
+		Commit:     util.Commit,
+		CustomCss:  custom.Css != "",
+		CustomLogo: custom.LogoLight != "",
+		Brand:      custom.Brand,
+		Website:    custom.Website,
+		Email:      custom.Email,
+		Phone:      custom.Phone,
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=UTF-8")
+		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+
+		if _, err := w.Write([]byte("window.evcc = ")); err != nil {
+			return
+		}
+		if err := json.NewEncoder(w).Encode(globals); err != nil {
+			log.ERROR.Println("httpd: failed to render globals:", err.Error())
+		}
+	}
 }
 
-func indexHandler(custom Customization) http.HandlerFunc {
+func indexHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
@@ -69,15 +98,8 @@ func indexHandler(custom Customization) http.HandlerFunc {
 		defaultLang := getPreferredLanguage(r.Header.Get("Accept-Language"))
 
 		if err := t.Execute(w, map[string]any{
-			"Version":       util.Version,
-			"Commit":        util.Commit,
-			"DefaultLang":   defaultLang,
-			"CustomCss":     custom.Css != "",
-			"CustomLogo":    custom.LogoLight != "",
-			"CustomBrand":   jsEscape(custom.Brand),
-			"CustomWebsite": jsEscape(custom.Website),
-			"CustomEmail":   jsEscape(custom.Email),
-			"CustomPhone":   jsEscape(custom.Phone),
+			"Version":     util.Version,
+			"DefaultLang": defaultLang,
 		}); err != nil {
 			log.ERROR.Println("httpd: failed to render main page:", err.Error())
 		}

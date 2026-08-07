@@ -126,7 +126,8 @@ func NewHTTPd(addr string, hub *SocketHub, custom Customization) *HTTPd {
 		serveCustomFile(path, file)
 	}
 
-	static.HandleFunc("/", indexHandler(custom))
+	static.HandleFunc("/globals.js", globalsJsHandler(custom))
+	static.HandleFunc("/", indexHandler())
 	for _, dir := range []string{"assets", "meta"} {
 		static.PathPrefix("/" + dir).Handler(http.FileServer(http.FS(assets.Web)))
 	}

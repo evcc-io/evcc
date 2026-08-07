@@ -6,11 +6,11 @@ interface WebView {
 declare global {
   interface Window {
     app: any;
-    evcc: {
+    evcc?: {
       version: string;
       commit: string;
-      customCss: string;
-      customLogo: string;
+      customCss: boolean;
+      customLogo: boolean;
       customBrand: string;
       customWebsite: string;
       customEmail: string;

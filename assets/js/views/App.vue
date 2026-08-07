@@ -75,14 +75,12 @@ export default defineComponent({
 			return store.state.version;
 		},
 		custom() {
-			// unresolved [[.Xyz]] template placeholders (vite dev server) count as unset
-			const str = (value: string) => (value?.startsWith("[[") ? "" : value);
 			return {
-				logo: window.evcc.customLogo === "true",
-				brand: str(window.evcc.customBrand),
-				website: str(window.evcc.customWebsite),
-				email: str(window.evcc.customEmail),
-				phone: str(window.evcc.customPhone),
+				logo: window.evcc?.customLogo ?? false,
+				brand: window.evcc?.customBrand ?? "",
+				website: window.evcc?.customWebsite ?? "",
+				email: window.evcc?.customEmail ?? "",
+				phone: window.evcc?.customPhone ?? "",
 			};
 		},
 		showRoutes() {
@@ -106,8 +104,8 @@ export default defineComponent({
 		},
 		aboutModalProps() {
 			return {
-				installed: window.evcc.version,
-				commit: window.evcc.commit,
+				installed: window.evcc?.version,
+				commit: window.evcc?.commit,
 				customLogo: this.custom.logo,
 				customBrand: this.custom.brand,
 				customWebsite: this.custom.website,
@@ -118,8 +116,8 @@ export default defineComponent({
 		},
 		bottomTabBarProps() {
 			return {
-				installed: window.evcc.version,
-				commit: window.evcc.commit,
+				installed: window.evcc?.version,
+				commit: window.evcc?.commit,
 				customBrand: this.custom.brand,
 				...this.collectProps(BottomTabBar, this.state),
 			};
