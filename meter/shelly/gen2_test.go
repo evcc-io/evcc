@@ -80,3 +80,48 @@ func TestUnmarshalGen2StatusResponse(t *testing.T) {
 		assert.Equal(t, 0, parseAddOnSwitchID(channel, res))
 	}
 }
+
+func TestSwitchEnergy(t *testing.T) {
+	tests := []struct {
+		name         string
+		status       string
+		total, ret   float64
+		hasReturnReg bool
+	}{
+		{
+			// Shelly Plug S Gen3 as pv meter, https://github.com/evcc-io/evcc/issues/32213
+			// no ret_aenergy register: aenergy is production, swapping it would report 0
+			name:   "plug without reverse metering",
+			status: `{"id":0,"source":"init","output":true,"apower":399.2,"voltage":240.8,"current":1.886,"aenergy":{"total":2574466.629,"by_minute":[7200.069,6121.044,5088.795],"minute_ts":1786033200},"temperature":{"tC":46.3,"tF":115.4}}`,
+			total:  2574.466629,
+		},
+		{
+			// aenergy holds both directions, so import is the difference
+			name:         "switch with reverse metering",
+			status:       `{"id":0,"output":true,"apower":-350,"aenergy":{"total":10000},"ret_aenergy":{"total":4000}}`,
+			total:        6,
+			ret:          4,
+			hasReturnReg: true,
+		},
+		{
+			// pure production: everything lands in ret_aenergy, import must not go negative
+			name:         "switch measuring return only",
+			status:       `{"id":0,"output":true,"aenergy":{"total":4000},"ret_aenergy":{"total":4000}}`,
+			ret:          4,
+			hasReturnReg: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var res Gen2SwitchStatus
+			require.NoError(t, json.Unmarshal([]byte(tc.status), &res))
+
+			assert.Equal(t, tc.hasReturnReg, res.Ret_Aenergy != nil, "ret_aenergy presence")
+
+			total, ret := switchEnergy(res)
+			assert.Equal(t, tc.total, total, "total energy")
+			assert.Equal(t, tc.ret, ret, "return energy")
+		})
+	}
+}

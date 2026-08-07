@@ -40,9 +40,21 @@ type Gen2SwitchStatus struct {
 	Aenergy struct {
 		Total float64
 	}
-	Ret_Aenergy struct {
+	// nil on devices without reverse energy metering- they omit the register entirely
+	Ret_Aenergy *struct {
 		Total float64
 	}
+}
+
+// switchEnergy splits the switch registers into import and return energy (kWh).
+// https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/Switch#status
+// NOTE: energy added to ret_aenergy is also added to aenergy, so aenergy holds
+// both directions. Without the register aenergy is import only.
+func switchEnergy(res Gen2SwitchStatus) (total, ret float64) {
+	if res.Ret_Aenergy == nil {
+		return res.Aenergy.Total / 1000, 0
+	}
+	return max(0, res.Aenergy.Total-res.Ret_Aenergy.Total) / 1000, res.Ret_Aenergy.Total / 1000
 }
 
 type Gen2EMStatus struct {
@@ -89,6 +101,7 @@ type gen2 struct {
 	model         string
 	methods       []string
 	reversed      bool
+	retAenergy    bool
 	switchstatus  util.Cacheable[Gen2SwitchStatus]
 	em1status     func() (Gen2EM1Status, error)
 	em1data       func() (Gen2EM1Data, error)
@@ -163,6 +176,15 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 			return nil, err
 		}
 		c.reversed = cfg.Reverse
+	}
+
+	// plain plugs omit ret_aenergy entirely- probe the (cached) status once
+	if c.hasSwitchEndpoint() {
+		res, err := c.switchstatus.Get()
+		if err != nil {
+			return nil, err
+		}
+		c.retAenergy = res.Ret_Aenergy != nil
 	}
 
 	c.em1status = util.Cached(apiCall[Gen2EM1Status](c, channel, "EM1.GetStatus"), cache)
@@ -258,10 +280,8 @@ func (c *gen2) TotalEnergy() (float64, error) {
 
 	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
-		// https://shelly-api-docs.shelly.cloud/gen2/ComponentsAndServices/Switch#status
-		// NOTE: ret_aenergy - the active energy added to this container is also added to aenergy container.
-		// All the consumed energy is collected in aenergy regardless of the direction(consumed or returned) of the active energy.
-		return max(0, res.Aenergy.Total-res.Ret_Aenergy.Total) / 1000, err
+		total, _ := switchEnergy(res)
+		return total, err
 
 	default:
 		return 0, fmt.Errorf("unknown shelly model: %s", c.model)
@@ -281,7 +301,8 @@ func (c *gen2) ReturnEnergy() (float64, error) {
 
 	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
-		return res.Ret_Aenergy.Total / 1000, err
+		_, ret := switchEnergy(res)
+		return ret, err
 
 	default:
 		return 0, fmt.Errorf("unknown shelly model: %s", c.model)
@@ -369,6 +390,18 @@ func (c *gen2) IsThreePhase() bool {
 // IsReversed reports whether the device-side "Reverse power measurement" setting is enabled
 func (c *gen2) IsReversed() bool {
 	return c.reversed
+}
+
+// HasReturnEnergy reports whether the device measures energy in the return direction
+func (c *gen2) HasReturnEnergy() bool {
+	switch {
+	case c.hasEM1Endpoint(), c.hasEMEndpoint():
+		return true
+	case c.hasSwitchEndpoint():
+		return c.retAenergy
+	default:
+		return false
+	}
 }
 
 // Gen2+ models using EM1.GetStatus endpoint for power and EM1Data.GetStatus for energy

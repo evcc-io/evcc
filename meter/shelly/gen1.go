@@ -149,6 +149,11 @@ func (c *gen1) IsReversed() bool {
 	return false
 }
 
+// HasReturnEnergy reports whether the device measures energy in the return direction
+func (c *gen1) HasReturnEnergy() bool {
+	return true
+}
+
 // IsThreePhase reports whether the device is a three-phase energy meter.
 func (c *gen1) IsThreePhase() bool {
 	res, err := c.status.Get()
