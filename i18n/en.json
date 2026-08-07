@@ -306,6 +306,7 @@
     "form": {
       "danger": "Danger",
       "deprecated": "deprecated",
+      "durationUnit": "Time unit for {label}",
       "example": "Example",
       "optional": "optional"
     },

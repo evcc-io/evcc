@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vite-plus/test";
-import parseGoDuration, { goDurationToUnit } from "./parseGoDuration";
+import parseGoDuration, { goDurationToUnit, goDurationUnit, toGoDuration } from "./goDuration";
 
 describe("parseGoDuration", () => {
   test("parses single unit", () => {
@@ -38,5 +38,39 @@ describe("goDurationToUnit", () => {
     expect(goDurationToUnit("90s", "minute")).toBe(1.5);
     expect(goDurationToUnit("3h", "hour")).toBe(3);
     expect(goDurationToUnit("6", "hour")).toBeNull();
+  });
+});
+
+describe("toGoDuration", () => {
+  test("formats value with unit suffix", () => {
+    expect(toGoDuration(6, "hour")).toBe("6h");
+    expect(toGoDuration(90, "second")).toBe("90s");
+    expect(toGoDuration(30, "minute")).toBe("30m");
+    expect(toGoDuration(1.5, "hour")).toBe("1.5h");
+    expect(toGoDuration(0.1, "second")).toBe("0.1s");
+    expect(toGoDuration(0)).toBe("0s");
+    expect(toGoDuration(5, "fortnight")).toBe("5s");
+  });
+
+  test("roundtrips through parseGoDuration", () => {
+    expect(parseGoDuration(toGoDuration(6, "hour"))).toBe(6 * 3.6e12);
+    expect(parseGoDuration(toGoDuration(1.5, "minute"))).toBe(90e9);
+  });
+});
+
+describe("goDurationUnit", () => {
+  test("detects single-unit strings", () => {
+    expect(goDurationUnit("12h")).toBe("hour");
+    expect(goDurationUnit("90s")).toBe("second");
+    expect(goDurationUnit("30m")).toBe("minute");
+    expect(goDurationUnit("1.5h")).toBe("hour");
+  });
+
+  test("null for composite, numbers, empty", () => {
+    expect(goDurationUnit("1h30m")).toBeNull();
+    expect(goDurationUnit("")).toBeNull();
+    expect(goDurationUnit(15000000000)).toBeNull();
+    expect(goDurationUnit("6")).toBeNull();
+    expect(goDurationUnit("500ms")).toBeNull();
   });
 });

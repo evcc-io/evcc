@@ -33,31 +33,31 @@ test.describe("duration fields", async () => {
     await expectModalVisible(modal);
     await modal.getByLabel("Manufacturer").selectOption("Duration Demo Meter");
 
-    await expect(modal.getByLabel("Short duration")).toHaveValue("30");
-    await expect(modal.getByText("Example: 10", { exact: true })).toBeVisible();
-    await expect(modal.getByText("seconds")).toBeVisible();
-    await expect(modal.getByLabel("Long duration")).toHaveValue("3");
-    await expect(modal.getByText("hours")).toBeVisible();
+    await expect(modal.getByRole("spinbutton", { name: "Short duration" })).toHaveValue("30");
+    await expect(modal.getByText("Example: 10 seconds", { exact: true })).toBeVisible();
+    await expect(modal.getByLabel("Time unit for Short duration")).toHaveValue("second");
+    await expect(modal.getByRole("spinbutton", { name: "Long duration" })).toHaveValue("3");
+    await expect(modal.getByLabel("Time unit for Long duration")).toHaveValue("hour");
 
-    await modal.getByLabel("Long duration").fill("6");
+    await modal.getByRole("spinbutton", { name: "Long duration" }).fill("6");
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
 
     await restart(undefined, templateFlags);
     await page.reload();
 
-    // edited value (stored as nanoseconds) and untouched default (stored as string)
+    // edited value and untouched default are both stored as duration strings
     const reopened = await openGridMeterModal(page);
-    await expect(reopened.getByLabel("Long duration")).toHaveValue("6");
-    await expect(reopened.getByLabel("Short duration")).toHaveValue("30");
+    await expect(reopened.getByRole("spinbutton", { name: "Long duration" })).toHaveValue("6");
+    await expect(reopened.getByRole("spinbutton", { name: "Short duration" })).toHaveValue("30");
   });
 
   test("existing values as string and nanoseconds", async ({ page }) => {
     await start(undefined, "config-duration-values.sql", templateFlags);
 
     const modal = await openGridMeterModal(page);
-    await expect(modal.getByLabel("Long duration")).toHaveValue("12");
-    await expect(modal.getByLabel("Short duration")).toHaveValue("15");
+    await expect(modal.getByRole("spinbutton", { name: "Long duration" })).toHaveValue("12");
+    await expect(modal.getByRole("spinbutton", { name: "Short duration" })).toHaveValue("15");
 
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
@@ -66,7 +66,29 @@ test.describe("duration fields", async () => {
     await page.reload();
 
     const reopened = await openGridMeterModal(page);
-    await expect(reopened.getByLabel("Long duration")).toHaveValue("12");
-    await expect(reopened.getByLabel("Short duration")).toHaveValue("15");
+    await expect(reopened.getByRole("spinbutton", { name: "Long duration" })).toHaveValue("12");
+    await expect(reopened.getByRole("spinbutton", { name: "Short duration" })).toHaveValue("15");
+  });
+
+  test("unit switching keeps number", async ({ page }) => {
+    await start(undefined, "config-duration-values.sql", templateFlags);
+
+    // stored "12h" drives the unit, ns number falls back to template default
+    const modal = await openGridMeterModal(page);
+    await expect(modal.getByLabel("Time unit for Long duration")).toHaveValue("hour");
+    await expect(modal.getByLabel("Time unit for Short duration")).toHaveValue("second");
+
+    await modal.getByLabel("Time unit for Long duration").selectOption("minutes");
+    await expect(modal.getByRole("spinbutton", { name: "Long duration" })).toHaveValue("12");
+    await modal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(modal);
+
+    await restart(undefined, templateFlags);
+    await page.reload();
+
+    // stored "12m" restores the selected unit
+    const reopened = await openGridMeterModal(page);
+    await expect(reopened.getByRole("spinbutton", { name: "Long duration" })).toHaveValue("12");
+    await expect(reopened.getByLabel("Time unit for Long duration")).toHaveValue("minute");
   });
 });

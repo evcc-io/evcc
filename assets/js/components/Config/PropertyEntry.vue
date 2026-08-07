@@ -28,11 +28,13 @@
 /* oxlint-disable vue/prop-name-casing */
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
-import { goDurationToUnit } from "@/utils/parseGoDuration";
+import formatter from "@/mixins/formatter";
+import { goDurationToUnit, goDurationUnit } from "@/utils/goDuration";
 
 export default {
 	name: "PropertyEntry",
 	components: { FormRow, PropertyField },
+	mixins: [formatter],
 	props: {
 		id: String,
 		Name: String,
@@ -67,11 +69,11 @@ export default {
 			return this.Description === this.Help ? undefined : this.Help;
 		},
 		example() {
-			if (this.Type === "Duration") {
-				const value = this.Example ? goDurationToUnit(this.Example, this.Unit) : null;
-				return value === null ? undefined : String(value);
-			}
-			return this.Example;
+			// show duration example in its own unit, field unit is user-changeable
+			const unit = this.Type === "Duration" ? goDurationUnit(this.Example) : null;
+			if (!unit) return this.Example;
+			const value = goDurationToUnit(this.Example, unit);
+			return `${value} ${this.fmtDurationUnit(value, unit)}`;
 		},
 	},
 };
