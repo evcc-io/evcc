@@ -586,6 +586,16 @@ small {
 .dark .form-switch .form-check-input:checked {
 	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%2328293e'/%3e%3c/svg%3e");
 }
+/* hide number input spinners */
+input[type="number"] {
+	appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
 /* fix desktop safari formatting */
 input::-webkit-datetime-edit {
 	display: block;
@@ -871,6 +881,12 @@ input::-webkit-date-and-time-value {
 	transition:
 		opacity var(--evcc-transition-fast) ease var(--evcc-transition-fast),
 		visibility var(--evcc-transition-fast) ease var(--evcc-transition-fast);
+}
+
+/* clearance so overflow-hidden containers don't clip focus rings */
+.ring-space {
+	padding: 0.5rem;
+	margin: -0.5rem;
 }
 
 .sticky-bottom {
