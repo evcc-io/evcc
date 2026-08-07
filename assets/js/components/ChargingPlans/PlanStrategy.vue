@@ -207,11 +207,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* overflow-hidden would clip the select focus rings */
-.ring-space {
-	padding: 0.5rem;
-	margin: -0.5rem;
-}
 .icon {
 	transform: rotate(0deg);
 	transition: transform var(--evcc-transition-medium) ease;

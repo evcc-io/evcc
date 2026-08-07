@@ -136,14 +136,19 @@ maxconsumptionpower:
 
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(hemsModal);
-    const saveButton = section.getByRole("button", { name: "Save" });
-    await expect(saveButton).toBeDisabled();
+    const toggle = section.getByRole("switch", { name: "Grid export limit" });
+    const input = section.getByRole("spinbutton", { name: "Grid export limit" });
 
-    await section.getByRole("spinbutton").fill("7000");
-    await expect(saveButton).toBeEnabled();
-    await saveButton.click();
-    // state roundtrip disables the button again
-    await expect(saveButton).toBeDisabled();
+    // initially off, input collapsed
+    await expect(toggle).not.toBeChecked();
+    await expect(input).not.toBeVisible();
+
+    // enable, set value, commit via Enter
+    await toggle.click();
+    await expect(input).toBeVisible();
+    await input.fill("7000");
+    await input.press("Enter");
+    await expect(section.getByText("Saved.")).toBeVisible();
 
     await hemsModal.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(hemsModal);
@@ -153,7 +158,12 @@ maxconsumptionpower:
     await page.reload();
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(hemsModal);
-    await expect(section.getByRole("spinbutton")).toHaveValue("7000");
+    await expect(toggle).toBeChecked();
+    await expect(input).toHaveValue("7000");
+
+    // switch off removes limit, collapse is the feedback
+    await toggle.click();
+    await expect(input).not.toBeVisible();
   });
 
   test("user-defined relay drives external limit without circuits", async ({ page }) => {

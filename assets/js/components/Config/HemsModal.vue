@@ -38,33 +38,6 @@
 					{{ $t("config.general.docsLink") }}
 				</a>
 			</p>
-			<div v-if="experimental" class="mb-4" data-testid="grid-export-limit">
-				<h6 class="mb-3">{{ $t("config.hems.exportLimit") }} 🧪</h6>
-				<p>{{ $t("config.hems.exportLimitDescription") }}</p>
-				<form class="d-flex gap-2" @submit.prevent="saveExportLimit">
-					<div class="input-group input-width">
-						<input
-							id="hemsExportLimit"
-							v-model.number="exportLimit"
-							type="number"
-							min="0"
-							step="100"
-							:placeholder="$t('config.hems.exportLimitDisabled')"
-							aria-describedby="hemsExportLimitUnit"
-							class="form-control text-end"
-						/>
-						<span id="hemsExportLimitUnit" class="input-group-text">W</span>
-					</div>
-					<button
-						type="submit"
-						class="btn btn-outline-secondary"
-						:disabled="exportLimitUnchanged"
-					>
-						{{ $t("config.general.save") }}
-					</button>
-				</form>
-				<hr class="mt-4 mb-0" />
-			</div>
 			<div v-if="configured" class="mb-4" data-testid="grid-sessions">
 				<h6 class="mb-3">{{ $t("config.hems.recordedEvents") }}</h6>
 				<div class="events-box rounded p-3">
@@ -87,6 +60,57 @@
 				{{ $t("config.general.fromYamlHint") }}
 			</p>
 		</template>
+		<template v-if="experimental" #post-content>
+			<div data-testid="grid-export-limit">
+				<hr class="mb-4" />
+				<div class="form-check form-switch">
+					<input
+						id="hemsExportLimitEnabled"
+						class="form-check-input"
+						type="checkbox"
+						role="switch"
+						:checked="exportLimitEnabled"
+						:disabled="exportLimitState === 'saving'"
+						@change="toggleExportLimit"
+					/>
+					<label for="hemsExportLimitEnabled" class="form-check-label">
+						{{ $t("config.hems.exportLimit") }} 🧪
+					</label>
+					<div class="ps-2">
+						<p class="text-muted small mb-2">
+							{{ $t("config.hems.exportLimitHint") }}
+						</p>
+						<div class="collapsible-wrapper" :class="{ open: exportLimitEnabled }">
+							<div class="collapsible-content ring-space">
+								<div class="d-flex align-items-center gap-2">
+									<div class="input-group input-width">
+										<input
+											id="hemsExportLimit"
+											v-model.number="exportLimit"
+											type="number"
+											min="0"
+											:aria-label="$t('config.hems.exportLimit')"
+											aria-describedby="hemsExportLimitUnit"
+											class="form-control text-end"
+											@input="onExportLimitInput"
+											@blur="commitExportLimit"
+											@keydown.enter.prevent="commitExportLimit"
+										/>
+										<span id="hemsExportLimitUnit" class="input-group-text">
+											W
+										</span>
+									</div>
+									<SavingIndicator :state="exportLimitState" />
+								</div>
+								<div class="form-text evcc-gray mb-2">
+									{{ $t("config.hems.exportLimitDescription") }}
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</template>
 	</DeviceModalBase>
 </template>
 
@@ -103,10 +127,13 @@ import api from "../../api";
 import store from "@/store";
 import { docsPrefix } from "@/i18n";
 import DownloadButton from "../Helper/DownloadButton.vue";
+import SavingIndicator, { type SavingState } from "../Helper/SavingIndicator.vue";
 import formatter from "../../mixins/formatter";
 
 // selector value for the relay variant; both variants save as type custom
 const RELAY_OPTION = "relay";
+
+let exportLimitTimer: ReturnType<typeof setTimeout> | undefined;
 
 const initialValues = {
 	type: ConfigType.Template,
@@ -118,7 +145,7 @@ const initialValues = {
 
 export default defineComponent({
 	name: "HemsModal",
-	components: { DeviceModalBase, DownloadButton },
+	components: { DeviceModalBase, DownloadButton, SavingIndicator },
 	mixins: [formatter],
 	props: {
 		yamlSource: String as PropType<YamlSource>,
@@ -131,6 +158,8 @@ export default defineComponent({
 			sessions: [] as Array<{ created: string }>,
 			changing: false,
 			exportLimit: null as number | null,
+			exportLimitEnabled: false,
+			exportLimitState: null as SavingState,
 		};
 	},
 	computed: {
@@ -166,15 +195,41 @@ export default defineComponent({
 			return (this.exportLimit || 0) === this.serverExportLimit;
 		},
 	},
+	beforeUnmount() {
+		clearTimeout(exportLimitTimer);
+	},
 	methods: {
 		onOpen() {
 			this.exportLimit = this.serverExportLimit || null;
+			this.exportLimitEnabled = this.serverExportLimit > 0;
+			this.exportLimitState = null;
 			this.loadSessions();
 		},
-		async saveExportLimit() {
+		onExportLimitInput() {
+			clearTimeout(exportLimitTimer);
+			exportLimitTimer = setTimeout(this.commitExportLimit, 2000);
+		},
+		commitExportLimit() {
+			clearTimeout(exportLimitTimer);
+			if (this.exportLimitState === "saving" || this.exportLimitUnchanged) return;
+			this.postExportLimit(this.exportLimit || 0);
+		},
+		toggleExportLimit($event: Event) {
+			const { checked } = $event.target as HTMLInputElement;
+			this.exportLimitEnabled = checked;
+			this.exportLimitState = null;
+			if (!checked) {
+				this.exportLimit = null;
+				this.commitExportLimit();
+			}
+		},
+		async postExportLimit(value: number) {
+			this.exportLimitState = "saving";
 			try {
-				await api.post(`gridexportlimit/${this.exportLimit || 0}`);
+				await api.post(`gridexportlimit/${value}`);
+				this.exportLimitState = "saved";
 			} catch (e) {
+				this.exportLimitState = null;
 				console.error(e);
 			}
 		},
