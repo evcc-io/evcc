@@ -935,7 +935,11 @@ func (site *Site) updateGridMeter() error {
 		}
 	}
 
-	site.collectors[site.Meters.GridMeterRef].AddEnergy(mm.Energy, mm.ReturnEnergy, mm.Power)
+	// keyed by the meter's stable config name, not site.Meters.GridMeterRef which
+	// may already have been cleared by a live device deletion (#32605)
+	if c, ok := site.collectors[site.gridMeter.Config().Name]; ok {
+		c.AddEnergy(mm.Energy, mm.ReturnEnergy, mm.Power)
+	}
 
 	site.publish(keys.Grid, mm)
 
