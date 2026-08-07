@@ -207,7 +207,7 @@ test.describe("default mode", async () => {
     const mode = page.getByTestId("loadpoint").first().getByTestId("mode");
 
     // per-vehicle default modes
-    await setDefaultMode(page, "blauer e-Golf", "Solar");
+    await setDefaultMode(page, "blauer e-Golf", "Smart");
     await setDefaultMode(page, "grüner Honda e", "Fast");
 
     // switching vehicles applies the vehicle's default mode
@@ -215,7 +215,7 @@ test.describe("default mode", async () => {
     await expect(mode.getByRole("button", { name: "Fast" })).toHaveClass(/active/);
 
     await switchVehicle(page, "blauer e-Golf");
-    await expect(mode.getByRole("button", { name: "Solar", exact: true })).toHaveClass(/active/);
+    await expect(mode.getByRole("button", { name: "Smart", exact: true })).toHaveClass(/active/);
   });
 });
 

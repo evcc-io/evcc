@@ -864,7 +864,7 @@ func (c *Easee) updateSmartCharging() {
 	}
 
 	mode := c.lp.GetMode()
-	isSmartCharging := mode == api.ModePV || mode == api.ModeMinPV
+	isSmartCharging := mode == api.ModeSmart
 
 	c.mux.Lock()
 	updateNeeded := c.opMode != easee.ModeDisconnected && isSmartCharging != c.smartCharging

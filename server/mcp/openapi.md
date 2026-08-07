@@ -638,6 +638,28 @@ call removeLoadpointVehicle {
 }
 ```
 
+## setLoadpointAlwaysCharge
+
+Updates the always charge state. When active, smart mode charges continuously at least at minimum power. The once state resets when the vehicle is disconnected.
+
+**Tags:** loadpoints
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| alwaysCharge | string | Always charge state. Smart mode charges continuously at least at minimum power. |
+| id | integer | Loadpoint index starting at 1 |
+
+**Example call:**
+
+```json
+call setLoadpointAlwaysCharge {
+  "alwaysCharge": "off",
+  "id": 1
+}
+```
+
 ## setLoadpointBatteryBoost
 
 Enable or disable battery boost. When active, the maximum available home battery power is added until the home battery is drained to configured SoC limit. Note: boost will not work while the battery is on hold (e.g. during fast charging or planned charging with discharge prevention enabled).
@@ -893,14 +915,14 @@ Changes the charging behavior of the loadpoint.
 | Name | Type | Description |
 |------|------|-------------|
 | id | integer | Loadpoint index starting at 1 |
-| mode | string | Charging mode. |
+| mode | string | Charging behavior. The values `pv` and `minpv` are deprecated aliases: `pv` maps to `smart`, `minpv` maps to `smart` with always charge enabled. |
 
 **Example call:**
 
 ```json
 call setLoadpointMode {
   "id": 1,
-  "mode": "off"
+  "mode": "smart"
 }
 ```
 
@@ -1326,14 +1348,14 @@ Sets the charge mode applied when this vehicle becomes active on a loadpoint.
 
 | Name | Type | Description |
 |------|------|-------------|
-| mode | string | Charging mode. |
+| mode | string | Charging behavior. The values `pv` and `minpv` are deprecated aliases: `pv` maps to `smart`, `minpv` maps to `smart` with always charge enabled. |
 | name | string | Vehicle name |
 
 **Example call:**
 
 ```json
 call setVehicleMode {
-  "mode": "off",
+  "mode": "smart",
   "name": "vehicle_1"
 }
 ```

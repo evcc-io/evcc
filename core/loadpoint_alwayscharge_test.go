@@ -1,0 +1,75 @@
+package core
+
+import (
+	"testing"
+
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/settings"
+	"github.com/evcc-io/evcc/util"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+type featureCharger struct {
+	api.Charger
+	features []api.Feature
+}
+
+func (c *featureCharger) Features() []api.Feature { return c.features }
+
+func TestSetModeLegacyAliases(t *testing.T) {
+	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
+
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	// minpv maps to smart and enables always charge
+	lp.SetMode(api.ModeMinPV)
+	assert.Equal(t, api.ModeSmart, lp.GetMode())
+	assert.Equal(t, api.AlwaysChargeOn, lp.GetAlwaysCharge())
+
+	// smart leaves always charge untouched
+	lp.SetMode(api.ModeOff)
+	lp.SetMode(api.ModeSmart)
+	assert.Equal(t, api.AlwaysChargeOn, lp.GetAlwaysCharge())
+
+	// pv maps to smart and disables always charge, even when mode is already smart
+	lp.SetMode(api.ModePV)
+	assert.Equal(t, api.ModeSmart, lp.GetMode())
+	assert.Equal(t, api.AlwaysChargeOff, lp.GetAlwaysCharge())
+
+	// mode change does not clear always charge
+	require.NoError(t, lp.SetAlwaysCharge(api.AlwaysChargeOnce))
+	lp.SetMode(api.ModeNow)
+	assert.Equal(t, api.AlwaysChargeOnce, lp.GetAlwaysCharge())
+}
+
+func TestSetModeLegacyAliasesSwitchDevice(t *testing.T) {
+	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
+	lp.charger = &featureCharger{features: []api.Feature{api.SwitchDevice}}
+
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	// no current control: minpv maps to smart without always charge
+	lp.SetMode(api.ModeMinPV)
+	assert.Equal(t, api.ModeSmart, lp.GetMode())
+	assert.Equal(t, api.AlwaysChargeOff, lp.GetAlwaysCharge())
+
+	assert.Error(t, lp.SetAlwaysCharge(api.AlwaysChargeOn))
+}
+
+func TestAlwaysChargeOnceResetsOnDisconnect(t *testing.T) {
+	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
+
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	require.NoError(t, lp.SetAlwaysCharge(api.AlwaysChargeOnce))
+	lp.evVehicleDisconnectHandler()
+	assert.Equal(t, api.AlwaysChargeOff, lp.GetAlwaysCharge())
+
+	require.NoError(t, lp.SetAlwaysCharge(api.AlwaysChargeOn))
+	lp.evVehicleDisconnectHandler()
+	assert.Equal(t, api.AlwaysChargeOn, lp.GetAlwaysCharge())
+}

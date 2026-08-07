@@ -19,7 +19,8 @@ func TestLoadpointProfile(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	lp := loadpoint.NewMockAPI(ctrl)
-	lp.EXPECT().GetMode().Return(api.ModeMinPV).AnyTimes()
+	lp.EXPECT().GetMode().Return(api.ModeSmart).AnyTimes()
+	lp.EXPECT().GetAlwaysCharge().Return(api.AlwaysChargeOn).AnyTimes()
 	lp.EXPECT().GetStatus().Return(api.StatusC).AnyTimes()
 	lp.EXPECT().GetChargePower().Return(10000.0).AnyTimes()   //  10 kW
 	lp.EXPECT().EffectiveMinPower().Return(1000.0).AnyTimes() //   1 kW

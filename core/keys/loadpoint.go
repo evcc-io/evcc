@@ -6,6 +6,7 @@ const (
 	Title             = "title"            // loadpoint title
 	Mode              = "mode"             // charge mode
 	DefaultMode       = "defaultMode"      // default charge mode
+	AlwaysCharge      = "alwaysCharge"     // smart mode: charge continuously at least at min power (off/on/once)
 	Charger           = "charger"          // charger ref
 	Meter             = "meter"            // meter ref
 	Circuit           = "circuit"          // circuit ref

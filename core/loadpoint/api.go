@@ -70,6 +70,10 @@ type API interface {
 	GetMode() api.ChargeMode
 	// SetMode sets the charge mode
 	SetMode(api.ChargeMode)
+	// GetAlwaysCharge returns the always charge state
+	GetAlwaysCharge() api.AlwaysCharge
+	// SetAlwaysCharge sets the always charge state
+	SetAlwaysCharge(api.AlwaysCharge) error
 	// GetDefaultMode returns the default charge mode (for reset)
 	GetDefaultMode() api.ChargeMode
 	// SetDefaultMode sets the default charge mode (for reset)

@@ -385,7 +385,7 @@ func (s *SEMP) planningRequest(id int, lp loadpoint.API) (res PlanningRequest) {
 	// remaining max demand duration in seconds
 	chargeRemainingDuration := lp.GetRemainingDuration()
 	latestEnd := int(chargeRemainingDuration / time.Second)
-	if mode == api.ModeMinPV || mode == api.ModePV || latestEnd <= 0 {
+	if mode == api.ModeSmart || latestEnd <= 0 {
 		latestEnd = 24 * 3600
 	}
 
@@ -399,7 +399,7 @@ func (s *SEMP) planningRequest(id int, lp loadpoint.API) (res PlanningRequest) {
 	}
 
 	minEnergy := maxEnergy
-	if mode == api.ModePV {
+	if mode == api.ModeSmart && !lp.GetAlwaysCharge().Active() {
 		minEnergy = 0
 	}
 

@@ -74,7 +74,7 @@ test.describe("basic functionality", async () => {
     await expect(lp1.getByText("Loadpoint", { exact: true })).toBeVisible();
 
     await lp1.getByTestId("limit-soc").getByRole("combobox").selectOption("90%");
-    await lp1.getByRole("button", { name: "Solar", exact: true }).click();
+    await lp1.getByRole("button", { name: "Smart", exact: true }).click();
     await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
 
     await page.getByTestId("static-plan-day").selectOption({ index: 1 });
