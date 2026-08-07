@@ -881,7 +881,6 @@ func (site *Site) updateGridMeter() error {
 		return nil
 	}
 
-	// the meter's own name- GridMeterRef may already be cleared by a live deletion
 	mm := types.Measurement{Name: site.gridMeter.Config().Name}
 
 	meter := site.gridMeter.Instance()
@@ -936,8 +935,6 @@ func (site *Site) updateGridMeter() error {
 		}
 	}
 
-	// keyed by the meter's stable config name, not site.Meters.GridMeterRef which
-	// may already have been cleared by a live device deletion (#32605)
 	if c, ok := site.collectors[site.gridMeter.Config().Name]; ok {
 		c.AddEnergy(mm.Energy, mm.ReturnEnergy, mm.Power)
 	}
