@@ -51,9 +51,10 @@ render: |
       token: {{ .apikey }}
     jq: |
       [.values[] |
+        # timestamp marks the end of the interval- values are the average power of the preceding 15 minutes
         {
-          start: (.timestamp),
-          end:   (.timestamp | fromdateiso8601 + 900 | todateiso8601 ),
+          start: (.timestamp | fromdateiso8601 - 900 | todateiso8601 ),
+          end:   (.timestamp),
           value: (.pv_power | round )
         }
       ] | tostring
