@@ -253,3 +253,66 @@ func TestForcedBatteryChargeLimits(t *testing.T) {
 		ctrl.Finish()
 	}
 }
+
+func TestForcedBatteryDischargeLimits(t *testing.T) {
+	reserve := 20.0
+
+	for _, tc := range []struct {
+		internal, expected api.BatteryMode
+		soc                float64
+	}{
+		{api.BatteryUnknown, api.BatteryDischarge, 50},
+		{api.BatteryUnknown, api.BatteryHold, 10},
+
+		{api.BatteryNormal, api.BatteryDischarge, 50},
+		{api.BatteryNormal, api.BatteryHold, 10},
+
+		{api.BatteryHold, api.BatteryDischarge, 50},
+		{api.BatteryHold, api.BatteryHold, 10}, // TODO make this api.BatteryUnknown
+
+		{api.BatteryDischarge, api.BatteryUnknown, 50},
+		// steady-state re-validation while discharging: mode already Discharge and
+		// unchanged (BatteryUnknown from keepUnlessModified), reserve reached mid-cycle.
+		// Regression test for the bot review on #31995: applyBatteryMode must still be
+		// invoked here to catch the reserve, not just while charging.
+		{api.BatteryDischarge, api.BatteryHold, 10},
+	} {
+		t.Logf("%+v", tc)
+
+		ctrl := gomock.NewController(t)
+
+		var bat api.Meter
+		batSoc := api.NewMockBattery(ctrl)
+		batCon := api.NewMockBatteryController(ctrl)
+		batSocLimit := api.NewMockBatterySocLimiter(ctrl)
+
+		bat = &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatterySocLimiter
+		}{
+			Meter:             bat,
+			Battery:           batSoc,
+			BatteryController: batCon,
+			BatterySocLimiter: batSocLimit,
+		}
+
+		site := &Site{
+			log:           util.NewLogger("foo"),
+			batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, bat)},
+			batteryMode:   tc.internal,
+		}
+
+		batSoc.EXPECT().Soc().Return(tc.soc, nil).Times(1)
+		batSocLimit.EXPECT().GetSocLimits().Return(reserve, 0.0).Times(1)
+
+		if tc.expected != api.BatteryUnknown {
+			batCon.EXPECT().SetBatteryMode(tc.expected).Times(1)
+		}
+
+		site.updateBatteryMode(false, true, api.Rate{})
+
+		ctrl.Finish()
+	}
+}
