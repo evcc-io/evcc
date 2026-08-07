@@ -1,5 +1,5 @@
 import { defineComponent, markRaw } from "vue";
-import { echarts, registerTouchTooltipReset } from "./echarts";
+import { echarts, registerTouchTooltip } from "./echarts";
 import "./chartStyles.css";
 
 // chartOption is provided by each consuming component's computed
@@ -63,7 +63,7 @@ export default defineComponent({
       this.chart.on("hideTip", () => {
         this.tooltipVisible = false;
       });
-      registerTouchTooltipReset(this.chart, el, () => (this.tooltipVisible = false));
+      registerTouchTooltip(this.chart, el, () => (this.tooltipVisible = false));
     },
   },
 });

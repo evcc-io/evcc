@@ -35,7 +35,7 @@ import formatter from "@/mixins/formatter";
 import colors from "@/colors";
 import LegendList from "../Sessions/LegendList.vue";
 import type { Legend } from "../Sessions/types";
-import { touchDismissPlugin } from "../Sessions/chartConfig";
+import "../Sessions/chartConfig";
 
 const tension = 0;
 
@@ -47,8 +47,7 @@ ChartJS.register(
 	PointElement,
 	Title,
 	Tooltip,
-	ChartLegendPlugin,
-	touchDismissPlugin
+	ChartLegendPlugin
 );
 
 export default defineComponent({
