@@ -1,6 +1,7 @@
 package cloud
 
 import (
+	"context"
 	"crypto/tls"
 	_ "embed"
 	"net"
@@ -30,9 +31,21 @@ func Connection() (*grpc.ClientConn, error) {
 	creds := credentials.NewTLS(&tls.Config{
 		ServerName: host,
 	})
+
+	// bypass grpc's own DNS resolution, which hands pick_first a single
+	// pre-resolved address per attempt with no dual-stack fallback if that
+	// address family is unreachable. Using a plain net.Dialer with the
+	// hostname instead enables Go's built-in Happy Eyeballs (RFC 6555),
+	// so a broken/absent IPv6 route no longer breaks the connection when
+	// IPv4 works fine (and vice versa).
+	dialer := &net.Dialer{}
+
 	// close idle connection shortly after startup auth instead of churning against the server's idle close
-	conn, err = grpc.NewClient(hostport,
+	conn, err = grpc.NewClient("passthrough:///"+hostport,
 		grpc.WithTransportCredentials(creds),
+		grpc.WithContextDialer(func(ctx context.Context, addr string) (net.Conn, error) {
+			return dialer.DialContext(ctx, "tcp", addr)
+		}),
 		grpc.WithIdleTimeout(5*time.Second),
 	)
 
