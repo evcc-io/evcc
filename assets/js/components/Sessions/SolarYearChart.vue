@@ -185,7 +185,7 @@ export default defineComponent({
 							: {}),
 					})),
 					radius: "72%",
-					nameGap: 12,
+					axisNameGap: 12,
 					splitNumber: 5,
 					axisName: { color: colors.muted || "", fontSize: 14 },
 					axisLine: { show: false },
