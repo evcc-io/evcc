@@ -69,6 +69,8 @@ type API interface {
 	GetGridPower() float64
 	GetResidualPower() float64
 	SetResidualPower(float64) error
+	GetGridExportLimit() float64
+	SetGridExportLimit(float64) error
 
 	//
 	// tariffs and costs

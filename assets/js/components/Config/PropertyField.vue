@@ -252,7 +252,7 @@ export default {
 		},
 		useLazyBinding() {
 			// avoid conversion loop issues
-			return this.pricePerKWh;
+			return this.inputType === "number";
 		},
 		icons() {
 			return this.property === "icon";
@@ -386,6 +386,8 @@ export default {
 			return val;
 		},
 		onFieldChange(e) {
+			// unparsable input (e.g. locale decimal separator mismatch)
+			if (e.target.validity?.badInput) return;
 			this.value = this.coerceValue(e.target.value);
 		},
 		onFieldInput(e) {
@@ -407,14 +409,6 @@ export default {
 </script>
 
 <style scoped>
-input[type="number"] {
-	appearance: textfield;
-}
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button {
-	-webkit-appearance: none;
-	margin: 0;
-}
 .w-min-100 {
 	min-width: min(100px, 100%);
 }

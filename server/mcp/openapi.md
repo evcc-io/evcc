@@ -216,13 +216,13 @@ Directly controls the mode of all controllable batteries. evcc behavior like 'pr
 
 | Name | Type | Description |
 |------|------|-------------|
-| batteryMode | string | Battery mode |
+| batteryMode | string | Battery operation mode. |
 
 **Example call:**
 
 ```json
 call setExternalBatteryMode {
-  "batteryMode": "normal"
+  "batteryMode": "unknown"
 }
 ```
 
@@ -384,26 +384,6 @@ call setSolarAdjusted {
 }
 ```
 
-## getState
-
-Returns the complete state of the system. This structure is used by the UI. It can be filtered by JQ to only return a subset of the data.
-
-**Tags:** general
-
-**Arguments:**
-
-| Name | Type | Description |
-|------|------|-------------|
-| jq | string | Filter the state with JQ |
-
-**Example call:**
-
-```json
-call getState {
-  "jq": "example"
-}
-```
-
 ## removeGlobalSmartCostLimit
 
 Convenience method to remove limit for all loadpoints at once. Value is applied to each individual loadpoint.
@@ -453,6 +433,26 @@ Convenience method to set smart feed-in priority limit for all loadpoints at onc
 ```json
 call setGlobalSmartFeedInPriorityLimit {
   "cost": 123.45
+}
+```
+
+## setGridExportLimit
+
+Set the static grid export power limit in W used as optimizer constraint. 0 disables the limit. An active HEMS curtailment takes precedence.
+
+**Tags:** general
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| power | number | Power in W |
+
+**Example call:**
+
+```json
+call setGridExportLimit {
+  "power": 2500
 }
 ```
 
@@ -1163,6 +1163,26 @@ Update vehicle, loadpoint or odometer of a charging session. Only provided field
 call updateSession {
   "id": 1,
   "requestBody": "..."
+}
+```
+
+## getState
+
+Returns the complete state of the system. This structure is used by the UI and also published via websocket and MQTT. It can be filtered by JQ to only return a subset of the data. Note: the response mirrors the internal UI state and carries no compatibility promise. Fields may change or disappear between releases.
+
+**Tags:** state
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| jq | string | Filter the state with JQ |
+
+**Example call:**
+
+```json
+call getState {
+  "jq": "example"
 }
 ```
 

@@ -88,6 +88,9 @@ type Site struct {
 	batteryGridChargeLimit  *float64 // grid charging limit
 	batteryGridDischarge    bool     // allow battery discharge to grid (experimental)
 
+	// grid settings
+	gridExportLimit float64 // static grid export power limit in W, 0 = disabled
+
 	// forecast settings
 	solarAdjusted bool // adjust solar forecast to real production data
 
@@ -393,6 +396,11 @@ func (site *Site) restoreSettings() error {
 	}
 	if v, err := settings.Float(keys.BatteryGridChargeLimit); err == nil {
 		if err := site.SetBatteryGridChargeLimit(&v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
+			return err
+		}
+	}
+	if v, err := settings.Float(keys.GridExportLimit); err == nil {
+		if err := site.SetGridExportLimit(v); err != nil {
 			return err
 		}
 	}
@@ -1234,6 +1242,7 @@ func (site *Site) prepare() {
 	site.publish(keys.BatteryGridDischarge, site.batteryGridDischarge)
 	site.publish(keys.SolarAdjusted, site.solarAdjusted)
 	site.publish(keys.ResidualPower, site.GetResidualPower())
+	site.publish(keys.GridExportLimit, site.GetGridExportLimit())
 	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))
 	site.publish(keys.SmartFeedInPriorityAvailable, site.isDynamicTariff(api.TariffUsageFeedIn))
 
@@ -1248,6 +1257,21 @@ func (site *Site) prepare() {
 	site.publishTariffs(0, 0)
 	vehicle.Publish = site.publishVehicles
 	vehicle.ClearPlanLocks = site.clearPlanLocks
+}
+
+// pushEvent queues the event in the value stream. The cache attaches its state
+// when the event reaches its position, so the message renders exactly the
+// values published before the event was raised.
+func (site *Site) pushEvent(ev messenger.Event) {
+	pushChan := site.pushChan
+	if pushChan == nil {
+		return
+	}
+
+	site.valueChan <- util.Param{Val: util.Snapshot(func(state []util.Param) {
+		ev.State = state
+		pushChan <- ev
+	})}
 }
 
 // Prepare attaches communication channels to site and loadpoints
@@ -1288,7 +1312,7 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 					site.valueChan <- param
 				case ev := <-lpPushChan:
 					ev.Loadpoint = &id
-					pushChan <- ev
+					site.pushEvent(ev)
 				}
 			}
 		}(id)

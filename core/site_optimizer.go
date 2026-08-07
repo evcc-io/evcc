@@ -486,8 +486,14 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		}
 	}
 
-	// soft grid feed-in cap from active HEMS curtailment (e.g. German 70% rule):
-	// export is capped at this power, excess PV is curtailed instead of exported
+	// static grid export limit configured in the UI: export is capped at this
+	// power, excess PV is curtailed instead of exported
+	if limit := site.GetGridExportLimit(); limit > 0 {
+		req.Grid.PMaxExp = float32(limit)
+	}
+
+	// soft grid feed-in cap from active HEMS curtailment (e.g. German 70% rule)
+	// wins over the static limit while active
 	if curtailed := hems.Curtailed(site.hems); curtailed != nil && *curtailed {
 		if pMaxExp := site.hems.MaxProductionPower(); pMaxExp != nil {
 			req.Grid.PMaxExp = float32(*pMaxExp)
@@ -627,10 +633,8 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	site.publishSuggestions()
 
 	// notify on actionable suggestion changes (advisory only, see #31903)
-	if site.pushChan != nil {
-		for _, ev := range site.diffSuggestions(site.pendingSuggestions(details.BatteryDetails)) {
-			site.pushChan <- ev
-		}
+	for _, ev := range site.diffSuggestions(site.pendingSuggestions(details.BatteryDetails)) {
+		site.pushEvent(ev)
 	}
 
 	return nil

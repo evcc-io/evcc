@@ -371,12 +371,17 @@
       "customOption": "User-defined integration",
       "description": "Power limitation by external systems (e.g. §14a EnWG, §9 EEG interface or higher-level energy management system). Works together with the load management feature. Curtailing solar production is also supported for selected devices. The actual curtailment limit must be set on each inverter configuration.",
       "download": "Download",
+      "dynamicLimits": "Dynamic limits",
       "eventsRecorded": "Recorded {count} grid limitation events.",
+      "exportLimit": "Grid export limit",
+      "exportLimitDescription": "The battery optimizer respects this limit to avoid solar losses. An active curtailment signal from a dynamic limit integration takes precedence.",
+      "exportLimitHint": "Static feed-in limit at the grid connection point.",
       "generic": "Generic integrations",
       "integrations": "Integrations",
       "lastEvent": "Most recent {timeAgo}.",
       "noEvents": "No events recorded yet.",
       "recordedEvents": "Recorded events",
+      "staticLimits": "Static limits",
       "template": "Integration",
       "title": "External Limit",
       "type": {
@@ -1280,24 +1285,33 @@
       "goal": "Charging goal",
       "modalTitle": "Charging Plan",
       "none": "none",
+      "once": "once",
       "optimization": {
         "cheapest": "cheapest",
+        "cheapestDescription": "Selects the cheapest slots. May result in multiple starts and stops.",
+        "cleanest": "cleanest",
+        "cleanestDescription": "Selects the cleanest slots. May result in multiple starts and stops.",
         "continuous": "continuous",
+        "continuousCo2Description": "Selects the cleanest uninterrupted series of slots.",
+        "continuousPriceDescription": "Selects the cheapest uninterrupted series of slots.",
         "label": "Optimization"
       },
       "planNumber": "Plan {number}",
       "precondition": {
-        "description": "Charge {duration} before departure for battery preconditioning.",
+        "description": "Moves part of the charging right before departure: warm battery, less time at high charge level.",
         "label": "Late Charging",
         "optionAll": "everything",
-        "optionNo": "no"
+        "optionNo": "no",
+        "summary": "{precondition} before"
       },
       "remove": "Remove",
       "repeating": "repeating",
       "repeatingPlans": "Repeating plans",
       "selectAll": "Select all",
+      "strategy": {
+        "label": "Strategy"
+      },
       "strategyDisabledDescription": "Charging starts as late as possible to finish just in time for departure. With dynamic grid prices or CO₂ tariff, more options are available here.",
-      "strategySettings": "Strategy settings",
       "time": "Time",
       "title": "Plan",
       "unsavedChanges": "There are unsaved changes. Apply now?",
@@ -1582,6 +1596,7 @@
   },
   "session": {
     "addOdometer": "Add value",
+    "addedRange": "Added range",
     "cancel": "Cancel",
     "co2": "CO₂",
     "date": "Period",
@@ -1592,11 +1607,12 @@
     "meterstop": "Meter stop",
     "odometer": "Mileage",
     "price": "Cost",
-    "soc": "Vehicle SoC",
+    "soc": "Charge",
     "started": "Started",
     "title": "Charging Session"
   },
   "sessions": {
+    "addedRange": "Range",
     "avgPower": "⌀ Power",
     "avgPrice": "⌀ Price",
     "chargeDuration": "Duration",
@@ -1622,6 +1638,7 @@
     },
     "co2": "⌀ CO₂",
     "csv": {
+      "addedrange": "Added range (km)",
       "chargedenergy": "Energy (kWh)",
       "chargeduration": "Duration",
       "co2perkwh": "CO₂/kWh",

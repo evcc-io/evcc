@@ -98,7 +98,7 @@ import type {
 	Timeout,
 	Vehicle,
 	BATTERY_MODE,
-	Forecast,
+	UiForecast,
 	CURRENCY,
 } from "@/types/evcc";
 import ChargingPlanModal from "../ChargingPlans/ChargingPlanModal.vue";
@@ -123,7 +123,7 @@ export default defineComponent({
 		batteryConfigured: Boolean,
 		batterySoc: Number,
 		batteryMode: String as PropType<BATTERY_MODE>,
-		forecast: Object as PropType<Forecast>,
+		forecast: Object as PropType<UiForecast>,
 	},
 	emits: ["id-changed"],
 	data() {

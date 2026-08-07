@@ -163,7 +163,7 @@ export default defineComponent({
 		},
 		options() {
 			// capture vue component this to be used in chartjs callbacks
-			// oxlint-disable-next-line @typescript-eslint/no-this-alias
+			// oxlint-disable-next-line typescript/no-this-alias
 			const vThis = this;
 			return {
 				...commonOptions,
