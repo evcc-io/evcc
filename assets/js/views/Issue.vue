@@ -67,7 +67,7 @@
 					<!-- Two Column Layout -->
 					<div class="row mb-5 g-5">
 						<!-- Left Column: Form Fields -->
-						<div class="col-12 col-lg-6">
+						<div class="col-12 col-lg-6 pe-lg-5">
 							<div class="mb-4">
 								<label for="issueTitle" class="form-label">
 									{{ $t("issue.issueTitle") }} *
@@ -78,6 +78,7 @@
 									type="text"
 									class="form-control"
 									placeholder="Brief description of the problem"
+									:maxlength="titleMaxLength"
 									required
 								/>
 							</div>
@@ -89,10 +90,16 @@
 									id="issueDescription"
 									v-model="issue.description"
 									class="form-control"
-									rows="6"
+									:rows="emailMode ? 12 : 6"
 									placeholder="Describe what you expected to happen and what actually happened..."
+									:maxlength="descriptionMaxLength"
 									required
 								></textarea>
+								<div v-if="descriptionMaxLength" class="text-end">
+									<small class="text-muted">
+										{{ issue.description.length }} / {{ descriptionMaxLength }}
+									</small>
+								</div>
 							</div>
 							<div v-if="!emailMode" class="mb-4">
 								<label for="stepsToReproduce" class="form-label">
@@ -157,7 +164,8 @@
 						</div>
 
 						<!-- Right Column: Toggleable Sections -->
-						<div class="col-12 col-lg-6">
+						<div class="col-12 col-lg-6 ps-lg-5">
+							<hr class="d-lg-none mt-0 mb-5" />
 							<div class="mb-4">
 								<h5>{{ $t("issue.additional.title") }}</h5>
 								<p class="text-muted small">
@@ -295,14 +303,17 @@
 								</template>
 							</IssueAdditionalItem>
 
-							<div v-if="emailMode" class="d-flex justify-content-end mt-4">
-								<button
-									type="button"
-									class="btn btn-outline-primary"
-									@click="downloadDebugFile"
-								>
-									{{ $t("issue.downloadButton") }}
-								</button>
+							<div v-if="emailMode" class="mt-4">
+								<p class="text-muted small">{{ $t("issue.downloadHint") }}</p>
+								<div class="d-flex justify-content-end">
+									<button
+										type="button"
+										class="btn btn-outline-primary"
+										@click="downloadDebugFile"
+									>
+										{{ $t("issue.downloadButton") }}
+									</button>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -340,7 +351,12 @@ import api from "@/api";
 import store from "@/store";
 import { LOG_LEVELS, DEFAULT_LOG_LEVEL } from "@/utils/log";
 import { formatJson } from "@/components/Issue/format";
-import { generateMailtoUrl, generateDebugFile } from "@/components/Issue/template";
+import {
+	generateMailtoUrl,
+	generateDebugFile,
+	MAX_MAIL_TITLE_LENGTH,
+	MAX_MAIL_DESCRIPTION_LENGTH,
+} from "@/components/Issue/template";
 import type { HelpType, IssueData } from "@/components/Issue/types";
 import type { State } from "@/types/evcc";
 
@@ -409,6 +425,12 @@ export default defineComponent({
 		},
 		emailMode(): boolean {
 			return !!this.customEmail;
+		},
+		titleMaxLength(): number | undefined {
+			return this.emailMode ? MAX_MAIL_TITLE_LENGTH : undefined;
+		},
+		descriptionMaxLength(): number | undefined {
+			return this.emailMode ? MAX_MAIL_DESCRIPTION_LENGTH : undefined;
 		},
 		versionString(): string {
 			return `v${store.state.version || ""}`;

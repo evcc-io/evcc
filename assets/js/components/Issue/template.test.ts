@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vite-plus/test";
-import { generateGitHubContent, generateMailtoUrl, generateDebugFile } from "./template";
+import {
+  generateGitHubContent,
+  generateMailtoUrl,
+  generateDebugFile,
+  MAX_MAIL_TITLE_LENGTH,
+  MAX_MAIL_DESCRIPTION_LENGTH,
+} from "./template";
 import type { IssueData, Sections } from "./types";
 
 describe("Issue Utils", () => {
@@ -137,13 +143,19 @@ Version: v1.0.0
 System: Linux/amd64, MST -07:00`);
     });
 
-    it("truncates description to fit mailto length limit", () => {
-      const longIssue: IssueData = { ...mockIssueData, description: "x".repeat(5000) };
+    it("stays below the windows mailto limit at maximum input length", () => {
+      // umlaut-dense german text, each umlaut costs 6 chars percent-encoded
+      const text = "Fehlermeldung: Ladepunkt überprüfen, Zählerstände größer als üblich. ";
+      const fill = (length: number) =>
+        text.repeat(Math.ceil(length / text.length)).slice(0, length);
 
-      const url = generateMailtoUrl("support@example.com", longIssue);
+      const url = generateMailtoUrl("support@installer-example.com", {
+        ...mockIssueData,
+        title: fill(MAX_MAIL_TITLE_LENGTH),
+        description: fill(MAX_MAIL_DESCRIPTION_LENGTH),
+      });
 
-      expect(url.length).toBeLessThanOrEqual(1800);
-      expect(decodeURIComponent(url)).toContain("Version: v1.0.0");
+      expect(url.length).toBeLessThan(2000);
     });
   });
 

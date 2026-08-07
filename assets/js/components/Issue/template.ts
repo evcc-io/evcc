@@ -3,8 +3,10 @@ import type { IssueData, Sections, GitHubContent, Template, HelpType } from "./t
 // Constants
 const PLACEHOLDER = "⚠️  RETURN TO EVCC TAB → COPY STEP 2 → PASTE HERE";
 const MAX_BODY_LENGTH = 8000;
-// mail clients and browsers truncate long mailto urls (Windows caps at ~2000 chars)
-const MAX_MAILTO_LENGTH = 1800;
+// windows shell silently truncates mailto urls at ~2000 chars; input limits keep
+// the percent-encoded url below that even for umlaut-heavy text
+export const MAX_MAIL_TITLE_LENGTH = 100;
+export const MAX_MAIL_DESCRIPTION_LENGTH = 600;
 
 function toString(sections: Template): string {
   return sections
@@ -72,20 +74,13 @@ function generateAdditional(sections: Sections): string {
 
 // Generates mailto url with plaintext body; diagnostics travel as file attachment instead
 export function generateMailtoUrl(email: string, issue: IssueData): string {
-  const build = (description: string) => {
-    const body = toString([
-      description,
-      `Version: ${issue.version}`,
-      `System: ${issue.system}, ${issue.timezone}`,
-    ]);
-    return `mailto:${email}?subject=${encodeURIComponent(issue.title)}&body=${encodeURIComponent(body)}`;
-  };
+  const body = toString([
+    issue.description,
+    `Version: ${issue.version}`,
+    `System: ${issue.system}, ${issue.timezone}`,
+  ]);
 
-  let description = issue.description;
-  while (build(description).length > MAX_MAILTO_LENGTH && description.length > 0) {
-    description = description.slice(0, -100);
-  }
-  return build(description);
+  return `mailto:${email}?subject=${encodeURIComponent(issue.title)}&body=${encodeURIComponent(body)}`;
 }
 
 // Generates text file content with selected diagnostics for manual mail attachment

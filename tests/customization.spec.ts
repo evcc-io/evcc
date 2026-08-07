@@ -64,7 +64,10 @@ test.describe("customization", async () => {
     await expect(page.getByLabel("Steps to Reproduce")).toHaveCount(0);
     await expect(page.getByText("Please write your issue in English")).toHaveCount(0);
 
-    await expect(page.getByRole("button", { name: "Send request" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Send request by email" })).toBeVisible();
+    await expect(
+      page.getByText("Attach this file to your email if more information is needed.")
+    ).toBeVisible();
 
     const downloadButton = page.getByRole("button", { name: "Download debug information" });
     await expect(downloadButton).toBeVisible();
