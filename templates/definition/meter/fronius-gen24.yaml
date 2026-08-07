@@ -6,6 +6,9 @@ products:
   - brand: Fronius
     description:
       generic: Primo GEN24 Plus
+  - brand: Fronius
+    description:
+      generic: Verto Plus
 capabilities: ["battery-control"]
 requirements:
   description:
@@ -31,6 +34,15 @@ params:
       generic: Integer
     deprecated: true
   - name: maxacpower
+  - name: mppt3
+    type: bool
+    default: false
+    description:
+      de: Dritter PV-Eingang
+      en: Third PV input
+    help:
+      de: "Wechselrichter mit drei PV-Eingängen (z. B. Verto): Speicher liegt auf SunSpec-Modul 4/5 statt 3/4."
+      en: "Inverters with three PV inputs (e.g. Verto): storage is at SunSpec module 4/5 instead of 3/4."
   - preset: battery-params
   - name: maxchargerate
 render: |
@@ -154,6 +166,12 @@ render: |
       uri: {{ joinHostPort .host .port }}
       id: 1
       value: 160:2:DCW # mppt 2
+    {{- if eq .mppt3 "true" }}
+    - source: sunspec
+      uri: {{ joinHostPort .host .port }}
+      id: 1
+      value: 160:3:DCW # mppt 3
+    {{- end }}
   energy:
     source: calc
     add:
@@ -167,32 +185,42 @@ render: |
       id: 1
       value: 160:2:DCWH # mppt 2
       scale: 0.001
+    {{- if eq .mppt3 "true" }}
+    - source: sunspec
+      uri: {{ joinHostPort .host .port }}
+      id: 1
+      value: 160:3:DCWH # mppt 3
+      scale: 0.001
+    {{- end }}
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
+  {{- /* storage modules follow the PV inputs: charge/discharge at 3/4 (two MPPTs) or 4/5 (three MPPTs, e.g. Verto) */}}
+  {{- $cha := "3" }}{{- $dis := "4" }}
+  {{- if eq .mppt3 "true" }}{{- $cha = "4" }}{{- $dis = "5" }}{{- end }}
   power:
     source: calc
     add:
     - source: sunspec
       uri: {{ joinHostPort .host .port }}
       id: 1
-      value: 160:3:DCW # mppt 3 charge
+      value: 160:{{ $cha }}:DCW # storage charge
       scale: -1
     - source: sunspec
       uri: {{ joinHostPort .host .port }}
       id: 1
-      value: 160:4:DCW # mppt 4 discharge
+      value: 160:{{ $dis }}:DCW # storage discharge
   energy:
     source: sunspec
     uri: {{ joinHostPort .host .port }}
     id: 1
-    value: 160:4:DCWH # mppt 4 (discharge)
+    value: 160:{{ $dis }}:DCWH # storage (discharge)
     scale: 0.001
   returnenergy:
     source: sunspec
     uri: {{ joinHostPort .host .port }}
     id: 1
-    value: 160:3:DCWH # mppt 3 (charge)
+    value: 160:{{ $cha }}:DCWH # storage (charge)
     scale: 0.001
   soc:
     source: sunspec
