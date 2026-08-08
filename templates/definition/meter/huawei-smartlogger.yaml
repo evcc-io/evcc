@@ -3,7 +3,7 @@ products:
   - brand: Huawei
     description:
       generic: SmartLogger
-capabilities: ["battery-control"]
+capabilities: ["battery-control", "curtail"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -76,6 +76,33 @@ render: |
       decode: int64
     scale: 0.01
   maxacpower: {{ .maxacpower }}
+  curtail:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 40428 # Active power adjustment by percentage (0-100 %)
+      type: writesingle
+      encoding: int16
+    scale: 10
+  curtailed:
+    source: go
+    in:
+    - name: percent
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 40428
+          type: holding
+          decode: int16
+        scale: 0.1
+    script: |
+      curtailed := true
+      if percent == 100 {
+        curtailed = false
+      }
+      curtailed
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
