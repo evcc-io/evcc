@@ -188,6 +188,12 @@
       "label": "Currency",
       "title": "Currency"
     },
+    "curtailer": {
+      "description": "Device that limits feed-in on request of the grid operator (§ 9 EEG). Configured separately from the grid meter.",
+      "title": "Curtailment",
+      "titleAdd": "Add Curtailment Device",
+      "titleEdit": "Edit Curtailment Device"
+    },
     "deviceValue": {
       "activeClients": "Active clients",
       "amount": "Amount",
@@ -533,6 +539,7 @@
     "main": {
       "addAdditional": "Add additional meter",
       "addConsumer": "Add consumer",
+      "addCurtailer": "Add curtailment device",
       "addGrid": "Add grid meter",
       "addLoadpoint": "Add charging point or heater",
       "addPvBattery": "Add solar or battery",

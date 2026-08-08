@@ -25,6 +25,8 @@ type API interface {
 	// Config
 	GetGridMeterRef() string
 	SetGridMeterRef(string)
+	GetCurtailerRefs() []string
+	SetCurtailerRefs([]string)
 	GetPVMeterRefs() []string
 	SetPVMeterRefs([]string)
 	GetBatteryMeterRefs() []string
