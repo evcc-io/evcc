@@ -132,7 +132,6 @@ func TestSwitchEnergy(t *testing.T) {
 				switchstatus: util.ResettableCached(func() (Gen2SwitchStatus, error) {
 					return res, nil
 				}, time.Minute),
-				retAenergy: res.Ret_Aenergy != nil,
 			}
 
 			assert.Equal(t, tc.hasReturnReg, c.HasReturnEnergy(), "HasReturnEnergy")

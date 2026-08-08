@@ -101,7 +101,6 @@ type gen2 struct {
 	model         string
 	methods       []string
 	reversed      bool
-	retAenergy    bool
 	switchstatus  util.Cacheable[Gen2SwitchStatus]
 	em1status     func() (Gen2EM1Status, error)
 	em1data       func() (Gen2EM1Data, error)
@@ -176,16 +175,6 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 			return nil, err
 		}
 		c.reversed = cfg.Reverse
-	}
-
-	// plain plugs omit ret_aenergy entirely- probe the (cached) status once. Only
-	// relevant when the switch endpoint is the one serving energy, see HasReturnEnergy.
-	if !c.hasEM1Endpoint() && !c.hasEMEndpoint() && c.hasSwitchEndpoint() {
-		res, err := c.switchstatus.Get()
-		if err != nil {
-			return nil, err
-		}
-		c.retAenergy = res.Ret_Aenergy != nil
 	}
 
 	c.em1status = util.Cached(apiCall[Gen2EM1Status](c, channel, "EM1.GetStatus"), cache)
@@ -393,13 +382,15 @@ func (c *gen2) IsReversed() bool {
 	return c.reversed
 }
 
-// HasReturnEnergy reports whether the device measures energy in the return direction
+// HasReturnEnergy reports whether the device measures energy in the return direction.
+// Plain plugs omit ret_aenergy entirely, so the (cached) status decides.
 func (c *gen2) HasReturnEnergy() bool {
 	switch {
 	case c.hasEM1Endpoint(), c.hasEMEndpoint():
 		return true
 	case c.hasSwitchEndpoint():
-		return c.retAenergy
+		res, err := c.switchstatus.Get()
+		return err == nil && res.Ret_Aenergy != nil
 	default:
 		return false
 	}
