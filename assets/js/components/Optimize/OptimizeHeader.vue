@@ -132,6 +132,7 @@ const STRATEGY_LABELS: Record<string, string> = {
 const STATUS_TOOLTIP =
 	"The optimizer result:<br><br>" +
 	"<strong>Optimal</strong>: the best plan was found.<br>" +
+	"<strong>Feasible</strong>: a usable plan was found, but not proven optimal.<br>" +
 	"<strong>Infeasible</strong>: the constraints cannot all be met.<br>" +
 	"<strong>Not solved</strong>: optimization hasn't finished yet.";
 
