@@ -34,6 +34,14 @@ render: |
       type: holding
       decode: int64
     scale: 0.01
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 32357 # Positive active electricity
+      type: holding
+      decode: int64
+    scale: 0.01
   currents:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
