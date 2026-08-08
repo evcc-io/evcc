@@ -90,6 +90,7 @@ render: |
       decode: uint16
     scale: 1
     {{- end }}
+  batterymodes: ["normal", "hold", "charge", "holdcharge"]
   batterymode:
     source: switch
     switch:

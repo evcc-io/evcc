@@ -109,7 +109,10 @@ func NewE3dc(cfg rscp.ClientConfig, usage templates.Usage, dischargeLimit uint32
 	if usage == templates.UsageBattery {
 		implement.May(m, implement.BatteryCapacity(capacity))
 		implement.Has(m, implement.Battery(m.batterySoc))
-		implement.Has(m, implement.BatteryController(m.setBatteryMode))
+		implement.Has(m, implement.BatteryController(
+			implement.BatteryModes(api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge),
+			m.setBatteryMode,
+		))
 	}
 
 	return m, nil

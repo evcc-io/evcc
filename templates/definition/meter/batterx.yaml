@@ -52,6 +52,7 @@ render: |
     timeout: 1s
     jq: .["1074"].["1"]
   {{- if ne .capacity "" }}
+  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: switch
     switch:

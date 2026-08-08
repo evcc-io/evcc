@@ -98,6 +98,7 @@ render: |
       address: 32104 # Battery SOC (%)
       type: holding
       decode: uint16
+  batterymodes: ["normal", "hold", "charge", "holdcharge"]
   batterymode:
     source: switch
     switch:
