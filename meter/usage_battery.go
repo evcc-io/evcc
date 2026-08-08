@@ -144,23 +144,22 @@ func (m *batterySocLimits) Decorator() func() (float64, float64) {
 	}
 }
 
-// batteryModesSocLimit are the modes implementable via soc limit
-var batteryModesSocLimit = implement.BatteryModes(api.BatteryNormal, api.BatteryHold, api.BatteryCharge)
+// batteryModesDefault are the modes implementable via soc limit. They are also the
+// fallback for configs that don't declare their modes.
+var batteryModesDefault = []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}
 
-// batteryModes parses the configured mode names. It defaults to normal/hold/charge
-// for configs that don't declare them.
+var batteryModesSocLimit = implement.BatteryModes(batteryModesDefault...)
+
+// batteryModes parses the configured mode names
 func batteryModes(names []string) ([]api.BatteryMode, error) {
 	if len(names) == 0 {
-		return []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}, nil
+		return batteryModesDefault, nil
 	}
 
 	res := make([]api.BatteryMode, 0, len(names))
 	for _, name := range names {
 		mode, err := api.BatteryModeString(strings.TrimSpace(name))
-		if err != nil {
-			return nil, err
-		}
-		if mode == api.BatteryUnknown {
+		if err != nil || mode == api.BatteryUnknown {
 			return nil, fmt.Errorf("invalid battery mode: %s", name)
 		}
 		res = append(res, mode)

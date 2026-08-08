@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/homeassistant"
+	"github.com/samber/lo"
 )
 
 func init() {
@@ -100,15 +101,10 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 					return nil, fmt.Errorf("battery mode entity must be a script: %s", entity)
 				}
 			}
-
-			var supported []api.BatteryMode
-			for _, mode := range []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge} {
-				if modes[mode] != "" {
-					supported = append(supported, mode)
-				}
-			}
-
-			implement.Has(m, implement.BatteryController(implement.BatteryModes(supported...), batteryModeController(conn, modes)))
+			implement.Has(m, implement.BatteryController(
+				implement.BatteryModes(configuredBatteryModes(modes)...),
+				batteryModeController(conn, modes),
+			))
 		} else if cc.ModeNormal != "" {
 			return nil, errors.New("modeNormal alone has no effect; configure modeHold and/or modeCharge")
 		}
@@ -146,6 +142,13 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 	implement.May(m, implement.MaxACPowerGetter(cc.pvMaxACPower.Decorator()))
 
 	return m, nil
+}
+
+// configuredBatteryModes returns the modes with a backing entity
+func configuredBatteryModes(modes map[api.BatteryMode]string) []api.BatteryMode {
+	return lo.Filter(batteryModesDefault, func(mode api.BatteryMode, _ int) bool {
+		return modes[mode] != ""
+	})
 }
 
 // batteryModeController returns a BatteryController function that activates

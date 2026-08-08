@@ -79,18 +79,12 @@ func TestBatteryModes(t *testing.T) {
 func switchCases(v any, res map[int]struct{}) {
 	switch v := v.(type) {
 	case map[string]any:
-		for key, val := range v {
-			if key == "switch" {
-				if cases, ok := val.([]any); ok {
-					for _, c := range cases {
-						if c, ok := c.(map[string]any); ok {
-							if i, err := cast.ToIntE(c["case"]); err == nil {
-								res[i] = struct{}{}
-							}
-						}
-					}
-				}
+		if c, ok := v["case"]; ok {
+			if i, err := cast.ToIntE(c); err == nil {
+				res[i] = struct{}{}
 			}
+		}
+		for _, val := range v {
 			switchCases(val, res)
 		}
 	case []any:

@@ -83,8 +83,7 @@ type CurrentGetter interface {
 	GetMaxCurrent() (float64, error)
 }
 
-// BatteryController optionally allows to control home battery (dis)charging behavior.
-// BatteryModes returns the modes the device actually supports.
+// BatteryController optionally allows to control home battery (dis)charging behavior
 type BatteryController interface {
 	BatteryModes() []BatteryMode
 	SetBatteryMode(BatteryMode) error

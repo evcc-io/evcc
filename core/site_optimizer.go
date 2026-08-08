@@ -894,7 +894,6 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 
 	instance := dev.Instance()
 
-	// grid charge/discharge are per-battery capabilities, not a site-wide assumption
 	ctrl, controllable := api.Cap[api.BatteryController](instance)
 	if controllable {
 		bat.ChargeFromGrid = slices.Contains(ctrl.BatteryModes(), api.BatteryCharge)
