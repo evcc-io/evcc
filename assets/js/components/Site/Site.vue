@@ -2,7 +2,7 @@
 	<div class="d-flex flex-column site safe-area-inset">
 		<div class="container px-4 top-area">
 			<TopHeader :title="headerTitle" :notifications="notifications" />
-			<HemsWarning :status="hems?.status" />
+			<HemsWarning :status="hems?.status" :grid-power="gridPower" />
 			<Energyflow v-if="!setupRequired && !hasFatalError" v-bind="energyflow" />
 		</div>
 		<div class="d-flex flex-column justify-content-between content-area">
