@@ -809,8 +809,11 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 
 // clearDemandWhenFull zeroes the charge demand from the slot the accumulated energy fills the
 // vehicle. The optimizer drops the demand at s_max anyway, but pays two binaries per slot to
-// detect it, so slots that cannot bind are worth not asking about. Losses are accounted for,
-// which places the cut no earlier than the vehicle can actually be full.
+// detect it, so slots that cannot bind are worth not asking about. Losses are accounted for.
+//
+// The cut assumes the demand is met every slot. A grid import limit can throttle charging below
+// it, moving the real fill point later than the estimate - the next request corrects that from
+// the measured soc, and the near slots are never affected because the cut sits a full charge away.
 func clearDemandWhenFull(demand []float32, headroom float32) []float32 {
 	res := slices.Clone(demand)
 
