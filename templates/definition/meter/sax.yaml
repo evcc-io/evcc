@@ -57,6 +57,7 @@ render: |
       address: 46 # SOC[%] des Speichers 
       type: holding
       decode: uint16
+  batterymodes: ["normal", "hold"]
   batterymode:
     source: watchdog
     timeout: {{ .watchdog }}

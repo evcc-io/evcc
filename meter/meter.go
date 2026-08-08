@@ -33,6 +33,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		Soc                   *plugin.Config // optional
 		LimitSoc              *plugin.Config // optional
 		BatteryMode           *plugin.Config // optional
+		BatteryModes          []string       // optional, modes supported by batteryMode
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -103,7 +104,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 				return nil, err
 			}
 
-			implement.Has(m, implement.BatteryController(limitController))
+			implement.Has(m, implement.BatteryController(batteryModesSocLimit, limitController))
 
 		case cc.BatteryMode != nil:
 			modeS, err := cc.BatteryMode.IntSetter(ctx, "batteryMode")
@@ -111,7 +112,12 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 				return nil, fmt.Errorf("battery mode: %w", err)
 			}
 
-			implement.Has(m, implement.BatteryController(func(mode api.BatteryMode) error {
+			modes, err := batteryModes(cc.BatteryModes)
+			if err != nil {
+				return nil, fmt.Errorf("battery modes: %w", err)
+			}
+
+			implement.Has(m, implement.BatteryController(implement.BatteryModes(modes...), func(mode api.BatteryMode) error {
 				return modeS(int64(mode))
 			}))
 		}

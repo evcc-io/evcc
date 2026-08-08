@@ -2,8 +2,11 @@ package meter
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
@@ -139,6 +142,31 @@ func (m *batterySocLimits) Decorator() func() (float64, float64) {
 	return func() (float64, float64) {
 		return m.MinSoc, m.MaxSoc
 	}
+}
+
+// batteryModesSocLimit are the modes implementable via soc limit
+var batteryModesSocLimit = implement.BatteryModes(api.BatteryNormal, api.BatteryHold, api.BatteryCharge)
+
+// batteryModes parses the configured mode names. It defaults to normal/hold/charge
+// for configs that don't declare them.
+func batteryModes(names []string) ([]api.BatteryMode, error) {
+	if len(names) == 0 {
+		return []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}, nil
+	}
+
+	res := make([]api.BatteryMode, 0, len(names))
+	for _, name := range names {
+		mode, err := api.BatteryModeString(strings.TrimSpace(name))
+		if err != nil {
+			return nil, err
+		}
+		if mode == api.BatteryUnknown {
+			return nil, fmt.Errorf("invalid battery mode: %s", name)
+		}
+		res = append(res, mode)
+	}
+
+	return res, nil
 }
 
 // LimitController returns an api.BatteryController decorator

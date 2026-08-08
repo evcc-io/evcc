@@ -120,6 +120,7 @@ render: |
       password: {{ .password }}
     jq: (.value // 0)
   {{- if .battery }}
+  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: watchdog
     timeout: {{ .watchdog }} # re-write at timeout/2

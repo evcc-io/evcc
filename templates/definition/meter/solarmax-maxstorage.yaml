@@ -58,6 +58,7 @@ render: |
       address: 122 # Batterie Soc
       type: input
       decode: int16
+  batterymodes: ["normal", "hold"]
   batterymode:
     source: watchdog
     timeout: {{ .watchdog }}

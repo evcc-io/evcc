@@ -92,6 +92,7 @@ render: |
       address: 10014 # SOC (%)
       type: input
       decode: uint16
+  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: watchdog
     timeout: {{ .watchdog }}

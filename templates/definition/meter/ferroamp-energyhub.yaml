@@ -153,6 +153,7 @@ render: |
   # Battery Mode 0 hands control back to the EnergyHub's own optimization, mode 1 follows
   # Battery Power Reference. The reference has to be written before the mode. Setpoints are
   # given in W and scaled to the register's kW unit.
+  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: switch
     switch:

@@ -36,6 +36,7 @@ render: |
     insecure: true
     jq: .state_of_charge_percent
     cache: {{ .cache }}
+  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: switch
     switch:

@@ -123,6 +123,7 @@ render: |
       address: 0x2000 # Battery SOC
       type: holding
       decode: uint16
+  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: switch
     switch:

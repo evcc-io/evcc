@@ -378,6 +378,7 @@ render: |
     block: # 588-625
       register: 588
       count: 38
+  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: switch
     switch:

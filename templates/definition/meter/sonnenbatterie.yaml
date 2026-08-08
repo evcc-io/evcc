@@ -59,6 +59,7 @@ render: |
     cache: {{ .cache }}
     jq: .USOC
   {{- if .token }}
+  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: switch
     switch:

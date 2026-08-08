@@ -115,6 +115,7 @@ render: |
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     value: 802:SoC # 802 battery control
+  batterymodes: ["normal", "hold", "charge", "holdcharge"]
   batterymode:
     source: watchdog
     timeout: {{ .watchdog }} # re-write at timeout/2
