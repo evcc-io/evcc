@@ -373,12 +373,17 @@
       "customOption": "Lietotāja definēta integrācija",
       "description": "Jaudas ierobežošana no ārējām sistēmām (piem. §14a EnWG §9 EEG saskarne vai augstāka līmeņa enerģijas pārvaldības sistēma). Darbojas kopā ar slodzes pārvaldības funkciju. Saules ražošanas ierobežošana ir pieejama arī atlasītām ierīcēm. Faktiskais atdeves ierobežojums jāiestata katrā invertora konfigurācijā.",
       "download": "Lejupielādēt",
+      "dynamicLimits": "Dinamiskie ierobežojumi",
       "eventsRecorded": "Saglabāti {count} tīkla ierobežošanas notikumi.",
+      "exportLimit": "Atdeves tīklā ierobežojums",
+      "exportLimitDescription": "Akumulatora optimizētājs ievēro šo ierobežojumu, lai novērstu saules enerģijas zudumus. Aktīvs ierobežošanas signāls no dinamisko ierobežojumu integrācijas ir prioritārs.",
+      "exportLimitHint": "Statisks atdeves ierobežojums pieslēguma punktā tīklam.",
       "generic": "Vispārīgās integrācijas",
       "integrations": "Integrācijas",
       "lastEvent": "Pēdējais pirms {timeAgo}.",
       "noEvents": "Vēl nav reģistrēts neviens notikums.",
       "recordedEvents": "Reģistrētie notikumi",
+      "staticLimits": "Statiskie ierobežojumi",
       "template": "Integrācija",
       "title": "Ārējais ierobežojums",
       "type": {
@@ -1282,22 +1287,32 @@
       "goal": "Uzlādes mērķis",
       "modalTitle": "Uzlādes plāns",
       "none": "nav",
+      "once": "vienu reizi",
       "optimization": {
         "cheapest": "lētākais",
+        "cheapestDescription": "Atlasa vislētākos laika posmus. Var rasties vairākas uzlādes pauzes un atsākšanas.",
+        "cleanest": "vistīrākā",
+        "cleanestDescription": "Atlasa viszaļākos laika posmus. Var izraisīt vairākas uzlādes pārtraukumus.",
         "continuous": "nepārtraukts",
+        "continuousCo2Description": "Atlasa nepārtrauktu vistīrāko laika posmu virkni.",
+        "continuousPriceDescription": "Atlasa nepārtrauktu vislētāko laika posmu virkni.",
         "label": "Optimizācija"
       },
       "planNumber": "Plāns {number}",
       "precondition": {
-        "description": "Uzlādēt {duration} pirms izbraukšanas akumulatora priekškondicionēšanai.",
+        "description": "Daļu no uzlādes veic tieši pirms izbraukšanas: slitāks akumulators, mazāk laika ar augstu uzlādes līmeni.",
         "label": "Vēlā uzlāde",
         "optionAll": "viss",
-        "optionNo": "nē"
+        "optionNo": "nē",
+        "summary": "{precondition} pirms"
       },
       "remove": "Noņemt",
       "repeating": "atkārtojošs",
       "repeatingPlans": "Atkārtojošie plāni",
       "selectAll": "Izvēlēties visus",
+      "strategy": {
+        "label": "Stratēģija"
+      },
       "strategyDisabledDescription": "Uzlāde sākas cik vien vēlu iespējams, lai pabeigtu tieši pirms izbraukšanas. Ar dinamiskiem tīkla tarifiem vai CO₂ tarifu šeit ir pieejamas papildus iespējas.",
       "strategySettings": "Stratēģijas iestatījumi",
       "time": "Laiks",
@@ -1584,6 +1599,7 @@
   },
   "session": {
     "addOdometer": "Pievienot vērtību",
+    "addedRange": "Pievienotais nobraukums",
     "cancel": "Atcelt",
     "co2": "CO₂",
     "date": "Periods",
@@ -1594,11 +1610,12 @@
     "meterstop": "Skaitītāja beigas",
     "odometer": "Nobraukums",
     "price": "Izmaksas",
-    "soc": "Transp. uzlādes līmenis",
+    "soc": "Uzlāde",
     "started": "Sākts",
     "title": "Uzlādes sesija"
   },
   "sessions": {
+    "addedRange": "Diapazons",
     "avgPower": "⌀ Jauda",
     "avgPrice": "⌀ Cena",
     "chargeDuration": "Ilgums",
@@ -1624,6 +1641,7 @@
     },
     "co2": "⌀ CO₂",
     "csv": {
+      "addedrange": "Pievienotais nobraukums (km)",
       "chargedenergy": "Enerģija (kWh)",
       "chargeduration": "Ilgums",
       "co2perkwh": "CO₂/kWh",
