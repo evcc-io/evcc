@@ -1582,6 +1582,7 @@
   },
   "session": {
     "addOdometer": "Ajouter une valeur",
+    "addedRange": "Autonomie ajoutée",
     "cancel": "Annuler",
     "co2": "CO₂",
     "date": "Période",
@@ -1592,11 +1593,12 @@
     "meterstop": "Fin du Compteur",
     "odometer": "Kilométrage",
     "price": "Coût",
-    "soc": "Etat de Charge du véhicule",
+    "soc": "Charge",
     "started": "Démarré",
     "title": "Session de charge"
   },
   "sessions": {
+    "addedRange": "Autonomie",
     "avgPower": "Puissance ⌀",
     "avgPrice": "Prix ⌀",
     "chargeDuration": "Durée",
@@ -1622,6 +1624,7 @@
     },
     "co2": "CO₂ ⌀",
     "csv": {
+      "addedrange": "Autonomie ajoutée (km)",
       "chargedenergy": "Énergie (kWh)",
       "chargeduration": "Durée",
       "co2perkwh": "CO₂/kWh",
