@@ -628,8 +628,10 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	}
 
 	// reset session
-	lp.SetLimitSoc(0)
-	lp.SetLimitEnergy(0)
+	if !lp.chargerHasFeature(api.IntegratedDevice) {
+		lp.SetLimitSoc(0)
+		lp.SetLimitEnergy(0)
+	}
 
 	// mark plan slot as inactive
 	// this will force a deletion of an outdated plan once plan time is expired in GetPlan()
