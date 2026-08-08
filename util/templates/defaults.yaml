@@ -67,6 +67,40 @@ params:
       de: E-Mail-Adresse
       en: Email address
     example: "user@example.com"
+  - name: clientcert
+    description:
+      de: Client-Zertifikat
+      en: Client certificate
+    help:
+      de: PEM-kodiertes Zertifikat zur Authentisierung gegenüber dem Gerät (mTLS)
+      en: PEM encoded certificate used to authenticate against the device (mTLS)
+    advanced: true
+  - name: clientkey
+    description:
+      de: Privater Schlüssel
+      en: Private key
+    help:
+      de: PEM-kodierter privater Schlüssel zum Client-Zertifikat
+      en: PEM encoded private key matching the client certificate
+    advanced: true
+    mask: true
+  - name: cacert
+    description:
+      de: CA-Zertifikat
+      en: CA certificate
+    help:
+      de: PEM-kodiertes CA-Zertifikat zur Prüfung des Gerätezertifikats
+      en: PEM encoded CA certificate used to verify the device certificate
+    advanced: true
+  - name: insecure
+    description:
+      de: Zertifikatsprüfung überspringen
+      en: Skip certificate verification
+    help:
+      de: Gerätezertifikat nicht prüfen. Nötig bei selbstsignierten Zertifikaten.
+      en: Do not verify the device certificate. Required for self-signed certificates.
+    type: bool
+    advanced: true
   - name: capacity
     unit: kWh
     description:

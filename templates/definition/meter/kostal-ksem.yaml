@@ -9,6 +9,13 @@ params:
   - name: modbus
     choice: ["tcpip"]
     id: 71
+  - name: clientcert
+    help:
+      de: Nur nötig, wenn im KSEM Modbus/TLS aktiviert ist. Dann Port auf 802 setzen. Das Zertifikat wird beim ersten (fehlschlagenden) Verbindungsversuch im KSEM unter "Modbus Einstellungen" -> "Zertifikate" zur Freigabe angeboten.
+      en: Only needed if Modbus/TLS is enabled in the KSEM. Set the port to 802 in that case. The certificate is offered for approval in the KSEM under "Modbus Settings" -> "Certificates" after the first (failing) connection attempt.
+  - name: clientkey
+  - name: cacert
+  - name: insecure
 render: |
   type: custom
   # sunspec model 203 (int+sf)/ 213 (float) meter
