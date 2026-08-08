@@ -210,6 +210,7 @@ export default {
 				case "solarForecast":
 				case "dimLimit":
 				case "curtailLimit":
+				case "exportLimit":
 					return this.fmtW(value);
 				case "energy":
 				case "returnEnergy":
