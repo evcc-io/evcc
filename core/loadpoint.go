@@ -628,8 +628,6 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	}
 
 	// reset session
-	// skip for integrated devices: the "disconnect" here is just the socket
-	// being switched off, not a vehicle being unplugged - keep the user's limit (#32622)
 	if !lp.chargerHasFeature(api.IntegratedDevice) {
 		lp.SetLimitSoc(0)
 		lp.SetLimitEnergy(0)
