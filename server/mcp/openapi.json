@@ -3189,6 +3189,11 @@
             "nullable": true,
             "format": "date-time"
           },
+          "solarShare": {
+            "description": "Required solar share, from 0 to 1.",
+            "type": "number",
+            "nullable": true
+          },
           "suggestion": {
             "description": "Charging suggestion from the battery optimizer.",
             "nullable": true,
@@ -3326,6 +3331,7 @@
           "smartFeedInPriorityActive",
           "smartFeedInPriorityLimit",
           "smartFeedInPriorityNextStart",
+          "solarShare",
           "title",
           "vehicleClimaterActive",
           "vehicleDetectionActive",

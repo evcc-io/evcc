@@ -882,3 +882,49 @@ func TestBatteryBoostHold(t *testing.T) {
 	// which is what keeps the sitePower priority adjustment applied to the loadpoint
 	assert.NotEqual(t, boostDisabled, lp.GetBatteryBoost(), "hold is active")
 }
+
+// TestPVSolarShareOverridesThresholds verifies the pv enable/disable points are
+// derived from solarShare and that the legacy threshold config is then ignored.
+func TestPVSolarShareOverridesThresholds(t *testing.T) {
+	Voltage = 100
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	// legacy thresholds are deliberately hostile: on their own they would
+	// enable (sitePower <= 5000) and disable (sitePower >= -5000) in every case
+	newLp := func(share float64, enabled bool) *Loadpoint {
+		lp := &Loadpoint{
+			log:            util.NewLogger("foo"),
+			clock:          clock.NewMock(),
+			charger:        api.NewMockCharger(ctrl),
+			minCurrent:     minA,
+			maxCurrent:     maxA,
+			phases:         3,
+			measuredPhases: 3,
+			Enable:         loadpoint.ThresholdConfig{Threshold: 5000},
+			Disable:        loadpoint.ThresholdConfig{Threshold: -5000},
+			solarShare:     &share,
+		}
+		lp.status = api.StatusC
+		lp.enabled = enabled
+		return lp
+	}
+
+	minPower := newLp(1, false).EffectiveMinPower()
+
+	// enable: share 1.0 requires the full min power as surplus
+	assert.Equal(t, minA, newLp(1, false).pvMaxCurrent(api.ModePV, -minPower, 0, false, false),
+		"should enable at full surplus")
+	assert.Equal(t, 0.0, newLp(1, false).pvMaxCurrent(api.ModePV, -minPower+100, 0, false, false),
+		"must not enable below surplus despite enable threshold 5000")
+
+	// enable: share 0.5 accepts half the min power from grid
+	assert.Equal(t, minA, newLp(0.5, false).pvMaxCurrent(api.ModePV, -minPower/2, 0, false, false),
+		"should enable at half surplus")
+
+	// disable: share 1.0 derives threshold 0, so feed-in keeps charging
+	assert.Equal(t, minA, newLp(1, true).pvMaxCurrent(api.ModePV, -500, 0, false, false),
+		"must not disable while feeding in despite disable threshold -5000")
+	assert.Equal(t, 0.0, newLp(1, true).pvMaxCurrent(api.ModePV, 100, 0, false, false),
+		"should disable on grid draw")
+}
