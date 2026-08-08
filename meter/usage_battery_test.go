@@ -2,10 +2,16 @@ package meter
 
 import (
 	"context"
+	"regexp"
+	"slices"
+	"strings"
 	"testing"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/templates"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 )
 
 func TestBatteryCapacity(t *testing.T) {
@@ -51,6 +57,75 @@ func TestBatteryCapacity(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, g)
 		require.Equal(t, 12.5, g())
+	}
+}
+
+func TestBatteryModes(t *testing.T) {
+	// unset defaults to the modes evcc assumed before batterymodes existed
+	modes, err := batteryModes(nil)
+	require.NoError(t, err)
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}, modes)
+
+	modes, err = batteryModes([]string{"normal", " hold ", "holdcharge"})
+	require.NoError(t, err)
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryHoldCharge}, modes)
+
+	_, err = batteryModes([]string{"sell"})
+	require.Error(t, err)
+
+	_, err = batteryModes([]string{"unknown"})
+	require.Error(t, err)
+}
+
+// TestTemplateBatteryModes guards the declared batterymodes against the switch
+// cases they mirror
+func TestTemplateBatteryModes(t *testing.T) {
+	caseModes := map[string]api.BatteryMode{
+		"1": api.BatteryNormal,
+		"2": api.BatteryHold,
+		"3": api.BatteryCharge,
+		"4": api.BatteryHoldCharge,
+	}
+
+	caseRE := regexp.MustCompile(`^\s*- case: (\d+)`)
+	indent := func(s string) int { return len(s) - len(strings.TrimLeft(s, " ")) }
+
+	for _, tmpl := range templates.ByClass(templates.Meter) {
+		lines := strings.Split(tmpl.Render, "\n")
+
+		var declared []string
+		var cases []api.BatteryMode
+
+		for i, line := range lines {
+			if _, after, ok := strings.Cut(line, "batterymodes: "); ok {
+				require.NoError(t, yaml.Unmarshal([]byte(after), &declared), tmpl.Template)
+			}
+
+			if strings.TrimSpace(line) != "batterymode:" {
+				continue
+			}
+
+			// scan until the next key at batterymode's own indentation
+			for _, line := range lines[i+1:] {
+				if strings.TrimSpace(line) != "" && indent(line) <= indent(lines[i]) {
+					break
+				}
+				if m := caseRE.FindStringSubmatch(line); m != nil {
+					// nested switches repeat cases, the supported set is their union
+					if mode, ok := caseModes[m[1]]; ok && !slices.Contains(cases, mode) {
+						cases = append(cases, mode)
+					}
+				}
+			}
+		}
+
+		if len(cases) == 0 {
+			continue // no switch-based batterymode
+		}
+
+		modes, err := batteryModes(declared)
+		require.NoError(t, err, tmpl.Template)
+		require.ElementsMatch(t, cases, modes, "%s: batterymodes must match the switch cases", tmpl.Template)
 	}
 }
 

@@ -117,6 +117,7 @@ render: |
         address: 46611 # Minimum SoC OnGrid
         type: writesingle
         decode: uint16
+  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: watchdog
     timeout: 30s

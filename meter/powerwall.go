@@ -162,7 +162,7 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 	}
 
 	if batteryControl {
-		implement.May(m, implement.BatteryController(batterySocLimits.LimitController(m.socG, func(limit float64) error {
+		implement.May(m, implement.BatteryController(batteryModesSocLimit, batterySocLimits.LimitController(m.socG, func(limit float64) error {
 			// Handle Tesla firmware 25.18.4 restrictions:
 			// Values between 81-99% are not allowed, only ≤80% or exactly 100%
 			limitUint := uint64(limit)

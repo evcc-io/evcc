@@ -47,6 +47,7 @@ render: |
     source: http
     uri: http://{{ .host }}:8484/getdevdata.cgi?device=4&sn={{ .serial }}
     jq: .soc
+  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: switch
     switch:

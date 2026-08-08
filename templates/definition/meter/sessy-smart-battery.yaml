@@ -95,6 +95,7 @@ render: |
       scale: 0.001
       cache: {{ .cache }}
       timeout: 10s
+  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: switch
     switch:

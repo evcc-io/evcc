@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -173,6 +174,11 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 		}
 
 		if mode != api.BatteryUnknown {
+			if !slices.Contains(batCtrl.BatteryModes(), mode) {
+				site.log.DEBUG.Printf("battery %s does not support mode: %s", deviceTitleOrName(dev), mode)
+				continue
+			}
+
 			if err := batCtrl.SetBatteryMode(mode); err == nil {
 				site.log.DEBUG.Printf("set battery %s mode: %s", deviceTitleOrName(dev), mode)
 			} else if !errors.Is(err, api.ErrNotAvailable) {

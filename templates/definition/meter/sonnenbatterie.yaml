@@ -55,6 +55,7 @@ render: |
     uri: http://{{ .host }}:{{ .port }}/api/v1/status
     jq: .USOC
   {{- if .token }}
+  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: switch
     switch:

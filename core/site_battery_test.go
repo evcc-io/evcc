@@ -57,6 +57,7 @@ func TestApplyBatteryMode(t *testing.T) {
 
 		var bat api.Meter
 		batCon := api.NewMockBatteryController(ctrl)
+		batCon.EXPECT().BatteryModes().Return([]api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}).AnyTimes()
 
 		bat = &struct {
 			api.Meter
@@ -142,6 +143,7 @@ func TestExternalBatteryModeChange(t *testing.T) {
 
 		var bat api.Meter
 		batCon := api.NewMockBatteryController(ctrl)
+		batCon.EXPECT().BatteryModes().Return([]api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}).AnyTimes()
 
 		bat = &struct {
 			api.Meter
@@ -221,6 +223,7 @@ func TestForcedBatteryChargeLimits(t *testing.T) {
 		var bat api.Meter
 		batSoc := api.NewMockBattery(ctrl)
 		batCon := api.NewMockBatteryController(ctrl)
+		batCon.EXPECT().BatteryModes().Return([]api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}).AnyTimes()
 		batSocLimit := api.NewMockBatterySocLimiter(ctrl)
 
 		bat = &struct {

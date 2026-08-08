@@ -85,7 +85,7 @@ func NewLgEss(uri, usage, registration, password string, cache time.Duration, ba
 		implement.May(m, implement.BatterySocLimiter(batterySocLimits.Decorator()))
 
 		if version, err := conn.GetFirmwareVersion(); err == nil && version >= 7430 {
-			implement.Has(m, implement.BatteryController(m.batteryMode(batterySocLimits)))
+			implement.Has(m, implement.BatteryController(batteryModesSocLimit, m.batteryMode(batterySocLimits)))
 		}
 	}
 

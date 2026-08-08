@@ -100,7 +100,15 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 					return nil, fmt.Errorf("battery mode entity must be a script: %s", entity)
 				}
 			}
-			implement.Has(m, implement.BatteryController(batteryModeController(conn, modes)))
+
+			var supported []api.BatteryMode
+			for _, mode := range []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge} {
+				if modes[mode] != "" {
+					supported = append(supported, mode)
+				}
+			}
+
+			implement.Has(m, implement.BatteryController(implement.BatteryModes(supported...), batteryModeController(conn, modes)))
 		} else if cc.ModeNormal != "" {
 			return nil, errors.New("modeNormal alone has no effect; configure modeHold and/or modeCharge")
 		}

@@ -117,6 +117,7 @@ render: |
       address: 3171 # SOC
       type: input
       decode: uint16
+  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: switch
     switch:

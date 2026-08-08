@@ -65,6 +65,7 @@ render: |
     uri: http://{{ .host }}:{{ .port }}/rest/devices/battery
     cache: {{ .cache }}
     jq: .M30 # SOC relative to usable capacity (.M05 # display SOC)
+  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     # use a sequence to propagate resets to the watchdog
     source: sequence
