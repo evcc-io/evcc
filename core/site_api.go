@@ -44,7 +44,7 @@ func (site *Site) Optimize() error {
 		return api.ErrNotAvailable
 	}
 
-	go site.optimizerUpdateAsync()
+	go site.optimizerUpdateAsync(optimizerDebounce)
 	return nil
 }
 
@@ -369,7 +369,7 @@ func (site *Site) SetGridExportLimit(power float64) error {
 		site.publish(keys.GridExportLimit, power)
 
 		// re-run the optimizer so the new limit takes effect immediately
-		site.triggerOptimizer()
+		go site.optimizerUpdateAsync(0)
 	}
 
 	return nil
@@ -519,7 +519,7 @@ func (site *Site) SetOptimizerChargingStrategy(strategy string) error {
 		site.publish(keys.OptimizerChargingStrategy, strategy)
 
 		// re-run the optimizer so the new strategy takes effect immediately
-		site.triggerOptimizer()
+		go site.optimizerUpdateAsync(0)
 	}
 
 	return nil
