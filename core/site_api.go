@@ -44,7 +44,7 @@ func (site *Site) Optimize() error {
 		return api.ErrNotAvailable
 	}
 
-	go site.optimizerUpdateAsync()
+	go site.optimizerUpdateAsync(optimizerDebounce)
 	return nil
 }
 
@@ -166,6 +166,13 @@ func (site *Site) GetBatterySoc() float64 {
 	site.RLock()
 	defer site.RUnlock()
 	return site.battery.Soc
+}
+
+// GetBatteryMaxDischargePower returns the current battery max discharge power
+func (site *Site) GetBatteryMaxDischargePower() float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryMaxDischargePower
 }
 
 // Loadpoints returns the loadpoints as api interfaces
@@ -336,6 +343,38 @@ func (site *Site) SetResidualPower(power float64) error {
 	return nil
 }
 
+// GetGridExportLimit returns the static grid export power limit in W (0 = disabled)
+func (site *Site) GetGridExportLimit() float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.gridExportLimit
+}
+
+// SetGridExportLimit sets the static grid export power limit in W (0 = disabled)
+func (site *Site) SetGridExportLimit(power float64) error {
+	if power < 0 {
+		return fmt.Errorf("invalid grid export limit: %g", power)
+	}
+
+	site.Lock()
+	changed := site.gridExportLimit != power
+	if changed {
+		site.gridExportLimit = power
+	}
+	site.Unlock()
+
+	if changed {
+		site.log.DEBUG.Println("set grid export limit:", power)
+		settings.SetFloat(keys.GridExportLimit, power)
+		site.publish(keys.GridExportLimit, power)
+
+		// re-run the optimizer so the new limit takes effect immediately
+		go site.optimizerUpdateAsync(0)
+	}
+
+	return nil
+}
+
 // GetTariff returns the respective tariff if configured or nil
 func (site *Site) GetTariff(tariff api.TariffUsage) api.Tariff {
 	site.RLock()
@@ -480,7 +519,7 @@ func (site *Site) SetOptimizerChargingStrategy(strategy string) error {
 		site.publish(keys.OptimizerChargingStrategy, strategy)
 
 		// re-run the optimizer so the new strategy takes effect immediately
-		site.triggerOptimizer()
+		go site.optimizerUpdateAsync(0)
 	}
 
 	return nil

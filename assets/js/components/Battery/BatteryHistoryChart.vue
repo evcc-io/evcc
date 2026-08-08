@@ -9,6 +9,7 @@ import {
 	FONT_FAMILY,
 	forecastXAxes,
 	forecastYAxis,
+	registerTouchTooltip,
 	tooltipStyle,
 	tooltipTable,
 	type TooltipRow,
@@ -241,6 +242,7 @@ export default defineComponent({
 		const el = this.$refs["chartEl"] as HTMLElement;
 		this.chart = markRaw(echarts.init(el));
 		this.chart.setOption(this.chartOption);
+		registerTouchTooltip(this.chart, el);
 		this.$nextTick(() => this.updateGraphic());
 		window.addEventListener("resize", this.resize);
 		// initial render done here (not via the watcher), so paging animates from the first click

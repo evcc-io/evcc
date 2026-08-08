@@ -100,6 +100,9 @@ components:
         residualPower:
           description: Configured grid operating point in W. Positive values maintain grid import.
           type: number
+        gridExportLimit:
+          description: Static grid export power limit in W used as optimizer constraint, 0 = disabled. An active HEMS curtailment takes precedence.
+          type: number
         greenShareHome:
           description: Share of green energy in home consumption, between 0 and 1.
           type: number

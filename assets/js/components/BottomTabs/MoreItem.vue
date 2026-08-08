@@ -21,6 +21,7 @@
 				:installed="installed"
 				:commit="commit"
 				:available-version="availableVersion"
+				:custom-brand="customBrand"
 				@close="open = false"
 			/>
 		</template>
@@ -52,6 +53,7 @@ export default defineComponent({
 		installed: String,
 		commit: String,
 		availableVersion: String,
+		customBrand: String,
 	},
 	data() {
 		return { open: false };

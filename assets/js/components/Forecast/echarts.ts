@@ -1,5 +1,6 @@
 import * as echarts from "echarts/core";
 import colors from "@/colors";
+import { attachTouchTooltipGate } from "@/utils/swipe";
 import escapeHtml from "@/utils/escapeHtml";
 import type { UiForecastSlot } from "@/types/evcc";
 import { BarChart, LineChart } from "echarts/charts";
@@ -115,6 +116,18 @@ export function tooltipStyle(
       color: colors.background,
     },
   };
+}
+
+// touch tooltips: show on dwell, follow the finger, hide when it lifts; mouse hover unchanged
+export function registerTouchTooltip(
+  chart: Pick<echarts.ECharts, "dispatchAction">,
+  el: HTMLElement,
+  onReset?: () => void
+) {
+  attachTouchTooltipGate(el, () => {
+    chart.dispatchAction({ type: "hideTip" });
+    onReset?.();
+  });
 }
 
 export interface TooltipRow {

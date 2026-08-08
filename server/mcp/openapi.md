@@ -436,6 +436,26 @@ call setGlobalSmartFeedInPriorityLimit {
 }
 ```
 
+## setGridExportLimit
+
+Set the static grid export power limit in W used as optimizer constraint. 0 disables the limit. An active HEMS curtailment takes precedence.
+
+**Tags:** general
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| power | number | Power in W |
+
+**Example call:**
+
+```json
+call setGridExportLimit {
+  "power": 2500
+}
+```
+
 ## assignLoadpointVehicle
 
 Assigns vehicle to loadpoint.

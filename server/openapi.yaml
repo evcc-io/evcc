@@ -752,6 +752,18 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+  /gridexportlimit/{power}:
+    post:
+      operationId: setGridExportLimit
+      summary: Set grid export limit
+      description: "Set the static grid export power limit in W used as optimizer constraint. 0 disables the limit. An active HEMS curtailment takes precedence."
+      tags:
+        - general
+      parameters:
+        - $ref: "#/components/parameters/power"
+      responses:
+        "200":
+          $ref: "#/components/responses/NumberResult"
   /solaradjusted/{enable}:
     post:
       operationId: setSolarAdjusted
