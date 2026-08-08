@@ -1,6 +1,7 @@
 package circuit
 
 import (
+	"math"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
@@ -172,4 +173,59 @@ func TestHEMSConsumptionClamp(t *testing.T) {
 			assert.Equal(t, tc.want, c.ValidatePower(0, tc.request))
 		})
 	}
+}
+
+// TestPowerHeadroomHEMSClamp guards that PowerHeadroom respects the HEMS
+// consumption clamp the same way ValidatePower already does - forced
+// battery charging must not be allowed to push a circuit over a HEMS-
+// imposed limit that's tighter than the configured maxPower.
+func TestPowerHeadroomHEMSClamp(t *testing.T) {
+	log := util.NewLogger("foo")
+
+	c, err := New(log, "root", 0, 5000, nil, 0)
+	require.NoError(t, err)
+	c.power = 4000
+
+	assert.Equal(t, 1000.0, c.PowerHeadroom(), "no hems: headroom against maxPower")
+
+	ctrl := gomock.NewController(t)
+	hemsLimit := 4200.0
+	hems := api.NewMockHEMS(ctrl)
+	hems.EXPECT().MaxConsumptionPower().Return(&hemsLimit).AnyTimes()
+	c.hems = hems
+
+	assert.Equal(t, 200.0, c.PowerHeadroom(), "hems tighter than maxPower: headroom against hems limit")
+}
+
+func TestPowerHeadroom(t *testing.T) {
+	log := util.NewLogger("foo")
+
+	unlimited, err := New(log, "root", 0, 0, nil, 0)
+	require.NoError(t, err)
+	unlimited.power = 9000
+	assert.Equal(t, math.MaxFloat64, unlimited.PowerHeadroom(), "unconfigured maxPower is unlimited")
+
+	over, err := New(log, "root", 0, 5000, nil, 0)
+	require.NoError(t, err)
+	over.power = 6000
+	assert.Equal(t, -1000.0, over.PowerHeadroom(), "already exceeded: negative headroom")
+}
+
+func TestCurrentHeadroom(t *testing.T) {
+	log := util.NewLogger("foo")
+
+	unlimited, err := New(log, "root", 0, 0, nil, 0)
+	require.NoError(t, err)
+	unlimited.current = 32
+	assert.Equal(t, math.MaxFloat64, unlimited.CurrentHeadroom(), "unconfigured maxCurrent is unlimited")
+
+	under, err := New(log, "root", 16, 0, nil, 0)
+	require.NoError(t, err)
+	under.current = 10
+	assert.Equal(t, 6.0, under.CurrentHeadroom())
+
+	over, err := New(log, "root", 16, 0, nil, 0)
+	require.NoError(t, err)
+	over.current = 20
+	assert.Equal(t, -4.0, over.CurrentHeadroom(), "already exceeded: negative headroom")
 }

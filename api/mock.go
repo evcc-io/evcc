@@ -935,6 +935,20 @@ func (m *MockCircuit) EXPECT() *MockCircuitMockRecorder {
 	return m.recorder
 }
 
+// CurrentHeadroom mocks base method.
+func (m *MockCircuit) CurrentHeadroom() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CurrentHeadroom")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// CurrentHeadroom indicates an expected call of CurrentHeadroom.
+func (mr *MockCircuitMockRecorder) CurrentHeadroom() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CurrentHeadroom", reflect.TypeOf((*MockCircuit)(nil).CurrentHeadroom))
+}
+
 // GetChargePower mocks base method.
 func (m *MockCircuit) GetChargePower() float64 {
 	m.ctrl.T.Helper()
@@ -1031,6 +1045,20 @@ func (m *MockCircuit) HasMeter() bool {
 func (mr *MockCircuitMockRecorder) HasMeter() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasMeter", reflect.TypeOf((*MockCircuit)(nil).HasMeter))
+}
+
+// PowerHeadroom mocks base method.
+func (m *MockCircuit) PowerHeadroom() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PowerHeadroom")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// PowerHeadroom indicates an expected call of PowerHeadroom.
+func (mr *MockCircuitMockRecorder) PowerHeadroom() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PowerHeadroom", reflect.TypeOf((*MockCircuit)(nil).PowerHeadroom))
 }
 
 // RegisterChild mocks base method.

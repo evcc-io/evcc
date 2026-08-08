@@ -315,18 +315,23 @@ func (c *Circuit) updateMeters() error {
 	return nil
 }
 
+// exceeds reports if value exceeds a configured, i.e. non-zero limit
+func exceeds(value, limit float64) bool {
+	return limit != 0 && value > limit
+}
+
 func (c *Circuit) Update(loadpoints []api.CircuitLoad) (err error) {
 	maxPower := c.GetMaxPower()
 	maxCurrent := c.GetMaxCurrent()
 
 	defer func() {
-		if maxPower != 0 && c.power > maxPower {
+		if exceeds(c.power, maxPower) {
 			c.log.WARN.Printf("over power detected: %.0fW > %.0fW", c.power, maxPower)
 		} else {
 			c.log.DEBUG.Printf("power: %.0fW", c.power)
 		}
 
-		if maxCurrent != 0 && c.current > maxCurrent {
+		if exceeds(c.current, maxCurrent) {
 			c.log.WARN.Printf("over current detected: %.3gA > %.3gA", c.current, maxCurrent)
 		} else {
 			c.log.DEBUG.Printf("current: %.3gA", c.current)
@@ -353,6 +358,28 @@ func (c *Circuit) Update(loadpoints []api.CircuitLoad) (err error) {
 	}
 
 	return nil
+}
+
+// PowerHeadroom returns the remaining power budget before the circuit's
+// power limit (HEMS-clamped, root circuit only) is exceeded. Negative when
+// already exceeded, math.MaxFloat64 when unlimited.
+func (c *Circuit) PowerHeadroom() float64 {
+	maxPower := c.effectiveMaxPower()
+	if maxPower <= 0 {
+		return math.MaxFloat64
+	}
+	return maxPower - c.power
+}
+
+// CurrentHeadroom returns the remaining current budget before the circuit's
+// current limit is exceeded. Negative when already exceeded,
+// math.MaxFloat64 when unlimited.
+func (c *Circuit) CurrentHeadroom() float64 {
+	maxCurrent := c.GetMaxCurrent()
+	if maxCurrent <= 0 {
+		return math.MaxFloat64
+	}
+	return maxCurrent - c.current
 }
 
 // GetChargePower returns the actual power

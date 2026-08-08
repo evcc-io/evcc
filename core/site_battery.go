@@ -56,8 +56,15 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 func (site *Site) updateBatteryMode(batteryGridChargeActive bool, rate api.Rate) {
 	batteryMode := site.requiredBatteryMode(batteryGridChargeActive, rate)
 
-	// put battery into hold mode when charging is active and HEMS dimmed
-	fromToCharge := batteryMode == api.BatteryCharge || batteryMode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge
+	fromToCharge := site.chargingOrContinuing(batteryMode)
+
+	// circuit overload: normal mode permits discharging, which relieves the circuit
+	if fromToCharge && site.circuitOverloaded() {
+		batteryMode = api.BatteryNormal
+	}
+
+	// HEMS dimmed: comply by stopping the charge without discharging the banked grid energy.
+	// Checked last, so dimming takes precedence over a circuit overload.
 	if dimmed := hems.Dimmed(site.hems); fromToCharge && dimmed != nil && *dimmed {
 		site.log.DEBUG.Println("battery mode: HEMS dimmed")
 		batteryMode = api.BatteryHold
@@ -73,6 +80,58 @@ func (site *Site) updateBatteryMode(batteryGridChargeActive bool, rate api.Rate)
 			site.log.ERROR.Println("battery mode:", err)
 		}
 	}
+}
+
+// chargingOrContinuing reports if the given mode starts charging or continues an active charge
+func (site *Site) chargingOrContinuing(mode api.BatteryMode) bool {
+	return mode == api.BatteryCharge || mode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge
+}
+
+// circuitOverloaded checks if the root circuit's limits are or would be exceeded. Only the root
+// circuit is considered since forced battery charging draws through the grid connection point.
+func (site *Site) circuitOverloaded() bool {
+	c := site.circuit
+	if c == nil {
+		return false
+	}
+
+	anticipated := site.anticipatedBatteryChargePower(c.HasMeter())
+	if headroom := c.PowerHeadroom(); headroom < anticipated {
+		site.log.DEBUG.Printf("battery mode: circuit overloaded: %.0fW anticipated charge > %.0fW headroom", anticipated, headroom)
+		return true
+	}
+
+	// current is only measured, not anticipated - a current-limited circuit is caught
+	// reactively once the battery has already started drawing, not ahead of it
+	if headroom := c.CurrentHeadroom(); headroom < 0 {
+		site.log.DEBUG.Printf("battery mode: circuit overloaded: %.3gA over current limit", -headroom)
+		return true
+	}
+
+	return false
+}
+
+// anticipatedBatteryChargePower is the max AC power controllable batteries are assumed to charge at.
+// A metered circuit already measures the actual charge power, so only the remaining headroom is added.
+func (site *Site) anticipatedBatteryChargePower(metered bool) float64 {
+	var res float64
+	for _, dev := range site.batteryMeters {
+		meter := dev.Instance()
+
+		if !api.HasCap[api.BatteryController](meter) {
+			continue
+		}
+
+		if m, ok := api.Cap[api.MaxACPowerGetter](meter); ok {
+			res += m.MaxACPower()
+		}
+	}
+
+	if metered {
+		res = max(0, res-max(0, -site.battery.Power))
+	}
+
+	return res
 }
 
 // requiredBatteryMode determines required battery mode based on grid charge and rate
