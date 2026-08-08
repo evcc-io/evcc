@@ -31,7 +31,10 @@
 				<div v-else class="row">
 					<div class="col-12 col-lg-6 mb-3">
 						<div class="row">
-							<label :for="formId('continuous')" class="col-form-label col-5 col-lg-12">
+							<label
+								:for="formId('continuous')"
+								class="col-form-label col-5 col-lg-12"
+							>
 								{{ $t("main.chargingPlan.optimization.label") }}
 							</label>
 							<div class="col-7 col-lg-12">
@@ -56,7 +59,10 @@
 					</div>
 					<div class="col-12 col-lg-6 mb-3">
 						<div class="row">
-							<label :for="formId('precondition')" class="col-form-label col-5 col-lg-12">
+							<label
+								:for="formId('precondition')"
+								class="col-form-label col-5 col-lg-12"
+							>
 								{{ $t("main.chargingPlan.precondition.label") }}
 							</label>
 							<div class="col-7 col-lg-12">
