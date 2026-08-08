@@ -614,9 +614,7 @@
     "chargingPlan": {
       "active": "启用",
       "addRepeatingPlan": "添加重复计划",
-      "arrivalTab": "抵达",
       "day": "日期",
-      "departureTab": "离开",
       "goal": "充电目标",
       "modalTitle": "充电计划",
       "none": "无",
@@ -633,8 +631,6 @@
       "selectAll": "全选",
       "time": "时间",
       "title": "计划",
-      "titleMinSoc": "最小充电量",
-      "titleTargetCharge": "出发时间",
       "unsavedChanges": "有未保存的更改。是否立即应用？",
       "update": "应用",
       "weekdays": "天数"
@@ -688,19 +684,11 @@
       "currents": "充电电流",
       "default": "默认",
       "disclaimerHint": "注意：",
-      "limitSoc": {
-        "description": "连接此车辆时使用的充电上限。",
-        "label": "默认上限"
-      },
       "maxCurrent": {
         "label": "最大电流"
       },
       "minCurrent": {
         "label": "最小电流"
-      },
-      "minSoc": {
-        "description": "在太阳能模式下，车辆将“快速”充电至 {0}，然后继续使用太阳能余电充电。这有助于确保即使在光照不足的日子也能达到最低续航里程。",
-        "label": "最小电量 %"
       },
       "onlyForSocBasedCharging": "这些选项仅适用于已知充电量的车辆。",
       "phasesConfigured": {

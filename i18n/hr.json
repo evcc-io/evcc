@@ -860,9 +860,7 @@
     "chargingPlan": {
       "active": "Aktivno",
       "addRepeatingPlan": "Dodaj ponavljajući plan",
-      "arrivalTab": "Dolazak",
       "day": "Dan",
-      "departureTab": "Odlazak",
       "goal": "Cilj punjenja",
       "modalTitle": "Plan punjenja",
       "none": "nema, dodaj",
@@ -886,8 +884,6 @@
       "strategySettings": "Postavke strategije",
       "time": "Vrijeme",
       "title": "Plan",
-      "titleMinSoc": "Min. punjenje",
-      "titleTargetCharge": "Odlazak",
       "unsavedChanges": "Postoje promjene koje nisu spremljene. Spremiti odmah?",
       "update": "Primijeni",
       "weekdays": "Dani"
@@ -945,19 +941,11 @@
       "currents": "Struja punjenja",
       "default": "zadano",
       "disclaimerHint": "Napomena:",
-      "limitSoc": {
-        "description": "Ograničenje punjenja koje se koristi kada je ovo vozilo spojeno.",
-        "label": "Zadano ograničenje"
-      },
       "maxCurrent": {
         "label": "Maksimalna struja punjenja"
       },
       "minCurrent": {
         "label": "Minimalna struja punjenja"
-      },
-      "minSoc": {
-        "description": "Vozilo se puni „brzo” na {0} u solarnom modusu. Zatim se nastavlja puniti sa solarnim viškom. Korisno za osiguravanje minimalnog raspona čak i u danima s manje sunca.",
-        "label": "Min. % punjenja"
       },
       "onlyForSocBasedCharging": "Navedene opcije dostupne samo za vozila s poznatom razinom napunjenosti baterije.",
       "phasesConfigured": {

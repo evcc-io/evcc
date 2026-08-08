@@ -117,6 +117,7 @@ export interface State {
   prioritySoc?: number;
   bufferStartSoc?: number;
   batteryDischargeControl?: boolean;
+  batteryGridDischarge?: boolean; // battery may discharge to grid (experimental)
   solarAdjusted?: boolean;
   batteryGridChargeLimit?: number | null;
   smartCostAvailable?: boolean;
@@ -627,6 +628,7 @@ export enum MESSAGING_EVENTS {
   GUEST = "guest",
   ASLEEP = "asleep",
   PLANOVERRUN = "planoverrun",
+  SUGGESTION = "suggestion",
 }
 
 export interface MessagingEvent {
@@ -680,7 +682,7 @@ export interface Battery {
 }
 
 export interface BatterySuggestion {
-  action: "normal" | "hold" | "charge" | "holdcharge";
+  action: "normal" | "hold" | "charge" | "holdcharge" | "discharge";
   charge?: number; // recommended charge power, W
   discharge?: number; // recommended discharge power, W
   actionable?: boolean; // suggestion differs from the current operating mode

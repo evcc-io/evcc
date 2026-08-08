@@ -1121,9 +1121,7 @@
     "chargingPlan": {
       "active": "アクティブ",
       "addRepeatingPlan": "繰り返しプランを追加",
-      "arrivalTab": "到着",
       "day": "日",
-      "departureTab": "出発",
       "goal": "充電目標",
       "modalTitle": "充電プラン",
       "none": "なし",
@@ -1147,8 +1145,6 @@
       "strategySettings": "戦略設定",
       "time": "時間",
       "title": "プラン",
-      "titleMinSoc": "最小充電",
-      "titleTargetCharge": "出発",
       "unsavedChanges": "保存されていない変更があります。今すぐ適用しますか？",
       "update": "適用",
       "weekdays": "日"
@@ -1243,19 +1239,11 @@
       "currents": "充電電流",
       "default": "デフォルト",
       "disclaimerHint": "注：",
-      "limitSoc": {
-        "description": "この車両が接続されたときに使用される充電制限。",
-        "label": "デフォルト制限"
-      },
       "maxCurrent": {
         "label": "最大電流"
       },
       "minCurrent": {
         "label": "最小電流"
-      },
-      "minSoc": {
-        "description": "太陽光モード時、車両はまず „高速” で {0} まで充電されます。その後は太陽光の余剰電力で充電を継続します。日照の少ない日でも最低限の航続距離を確保するのに役立ちます。",
-        "label": "最小充電 %"
       },
       "onlyForSocBasedCharging": "これらのオプションは、バッテリー残量が取得できている車両でのみ利用可能です。",
       "phasesConfigured": {

@@ -3,28 +3,28 @@ package relay
 import (
 	"testing"
 
-	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/hems/hems"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// stubSite implements site.API for testing — only GetGridPower is exercised.
-type stubSite struct {
-	site.API
-}
+// TestCurtailmentNotConfigured verifies that relay never makes a curtailment
+// statement, and that an active relay dims to maxPower.
+func TestCurtailmentNotConfigured(t *testing.T) {
+	c := new(Relay)
 
-func (s *stubSite) GetGridPower() float64 { return 0 }
+	// relay never makes a curtailment statement
+	assert.Nil(t, c.CurtailedPercent())
+	assert.Nil(t, c.MaxProductionPower())
+	assert.Nil(t, hems.Curtailed(c))
 
-// TestRelayNoNilState verifies MaxConsumptionPower is always determinable (w1
-// is mandatory) — NewRelay reads it once so the state is valid immediately.
-func TestRelayNoNilState(t *testing.T) {
-	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	// active relay dims to maxPower
+	c.maxPower = 1e3
+	require.NoError(t, c.setConsumptionLimit(c.maxPower))
+	assert.Equal(t, new(1e3), c.MaxConsumptionPower())
+	assert.Equal(t, new(true), hems.Dimmed(c))
 
-	off := func() (bool, error) { return false, nil }
-	c, err := NewRelay(&stubSite{}, off, nil, 1000, 0)
-	require.NoError(t, err)
-
-	require.NotNil(t, c.MaxConsumptionPower())
-	require.Equal(t, 0.0, *c.MaxConsumptionPower())
-	require.Nil(t, c.MaxProductionPower()) // scaffolding only, always nil
+	// curtailment statement unaffected by relay activity
+	assert.Nil(t, c.CurtailedPercent())
+	assert.Nil(t, hems.Curtailed(c))
 }

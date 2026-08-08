@@ -8,7 +8,15 @@
 		data-testid="energyflow"
 		@click="toggleDetails"
 	>
-		<div class="row">
+		<div
+			class="row keyboard-focus-ring"
+			:role="detailsAlwaysOpen ? undefined : 'button'"
+			:tabindex="detailsAlwaysOpen ? undefined : 0"
+			:aria-expanded="detailsAlwaysOpen ? undefined : detailsOpen"
+			:aria-label="detailsAlwaysOpen ? undefined : $t('main.energyflow.toggleDetails')"
+			@keydown.enter.prevent="toggleDetails"
+			@keydown.space.prevent="toggleDetails"
+		>
 			<Visualization
 				class="col-12 mb-3 mb-md-4"
 				:gridImport="gridImport"
@@ -33,6 +41,7 @@
 			class="details"
 			:style="{ height: detailsHeight }"
 			:class="{ 'details--ready': ready }"
+			:inert="!detailsOpen && !detailsAlwaysOpen"
 		>
 			<div ref="detailsInner" class="details-inner row">
 				<div class="col-12 d-flex justify-content-between pt-2 mb-4">

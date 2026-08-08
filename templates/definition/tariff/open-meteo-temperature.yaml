@@ -20,7 +20,7 @@ render: |
   tariff: temperature
   forecast:
     source: http
-    uri: https://api.open-meteo.com/v1/forecast?latitude={{ .lat }}&longitude={{ .lon }}&minutely_15=temperature_2m&past_days=7&forecast_days=3&timezone=UTC
+    uri: https://api.open-meteo.com/v1/forecast?latitude={{ .lat }}&longitude={{ .lon }}&minutely_15=temperature_2m&past_days=7&forecast_days=5&timezone=UTC
     jq: |
       [ .minutely_15.time as $times
         | .minutely_15.temperature_2m as $temps

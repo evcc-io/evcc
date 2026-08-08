@@ -151,7 +151,13 @@
 							/>
 
 							<PropertyCollapsible>
-								<template v-if="advancedParams.length" #advanced>
+								<template v-if="advancedParams.length || modbus" #advanced>
+									<ModbusAdvanced
+										v-if="modbus"
+										v-model:delay="values['delay']"
+										v-model:timeout="values['timeout']"
+										component-id="device"
+									/>
 									<PropertyEntry
 										v-for="param in advancedParams"
 										:id="`${deviceType}Param${param.Name}`"
@@ -208,6 +214,7 @@ import ErrorMessage from "../../Helper/ErrorMessage.vue";
 import PropertyEntry from "../PropertyEntry.vue";
 import PropertyCollapsible from "../PropertyCollapsible.vue";
 import Modbus from "./Modbus.vue";
+import ModbusAdvanced from "./ModbusAdvanced.vue";
 import DeviceModalActions from "./Actions.vue";
 import Markdown from "../Markdown.vue";
 import SponsorTokenRequired from "./SponsorTokenRequired.vue";
@@ -250,6 +257,7 @@ export default defineComponent({
 		PropertyEntry,
 		PropertyCollapsible,
 		Modbus,
+		ModbusAdvanced,
 		DeviceModalActions,
 		Markdown,
 		SponsorTokenRequired,
