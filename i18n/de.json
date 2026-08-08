@@ -219,6 +219,7 @@
       "enabled": "Ladebereit",
       "energy": "Energie",
       "events": "Ereignisse",
+      "exportLimit": "Einspeiselimit",
       "feedinPrice": "Einspeisevergütung",
       "forecast": "Vorhersage",
       "gridPrice": "Netzpreis",
