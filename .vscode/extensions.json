@@ -3,7 +3,6 @@
     "Vue.volar",
     "vitest.explorer",
     "golang.go",
-    "esbenp.prettier-vscode",
     "yoavbls.pretty-ts-errors",
     "VoidZero.vite-plus-extension-pack"
   ]
