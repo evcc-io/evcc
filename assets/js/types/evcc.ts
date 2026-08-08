@@ -24,10 +24,7 @@ declare global {
 }
 
 /** Status of configured vehicle authentication providers, keyed by provider name. */
-export type AuthProviders = Record<
-  string,
-  { id: string; authenticated: boolean }
->;
+export type AuthProviders = Record<string, { id: string; authenticated: boolean }>;
 
 export type DeviceColors = Record<string, string>;
 /** Color assigned to a device for consistent UI display. */
@@ -131,13 +128,7 @@ export interface FatalError {
 }
 
 export type StatisticsPeriod = "30d" | "365d" | "thisYear" | "total";
-export type StatisticsIndicator =
-  | "none"
-  | "solar"
-  | "price"
-  | "savings"
-  | "co2"
-  | "co2saved";
+export type StatisticsIndicator = "none" | "solar" | "price" | "savings" | "co2" | "co2saved";
 
 /** Aggregated charging statistics for a time period. */
 export interface StatisticsData {
@@ -378,10 +369,7 @@ export interface OcppForwarderRule {
 }
 
 /** OCPP forwarder rules and upstream connection status. */
-export interface OcppForwarder extends ConfigStatus<
-  OcppForwarderRule[],
-  OcppForwarderSession[]
-> {}
+export interface OcppForwarder extends ConfigStatus<OcppForwarderRule[], OcppForwarderSession[]> {}
 
 /** Connection status of an OCPP forwarder rule. */
 export interface OcppForwarderSession {
@@ -1377,22 +1365,9 @@ export type DeviceType =
   | "messenger"
   | "tariff"
   | "hems";
-export type MeterType =
-  | "grid"
-  | "pv"
-  | "battery"
-  | "charge"
-  | "aux"
-  | "ext"
-  | "consumer";
+export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext" | "consumer";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
-export type TariffType =
-  | "grid"
-  | "feedIn"
-  | "co2"
-  | "planner"
-  | "solar"
-  | "temperature";
+export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar" | "temperature";
 
 // see https://stackoverflow.com/a/54178819
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
@@ -1454,7 +1429,6 @@ export interface TimeSeries {
 // Solver status enum
 export enum OptimizationStatus {
   OPTIMAL = "Optimal",
-  FEASIBLE = "Feasible",
   INFEASIBLE = "Infeasible",
   UNBOUNDED = "Unbounded",
   UNDEFINED = "Undefined",
