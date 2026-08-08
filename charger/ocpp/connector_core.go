@@ -48,19 +48,26 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 		conn.assumeMeterStopped()
 	}
 
+	// leaving Preparing status ends the current auth cycle
+	if applied && request.Status != core.ChargePointStatusPreparing {
+		conn.remoteStarted = false
+	}
+
 	if conn.isWaitingForAuth() {
-		if conn.remoteIdTag != "" {
-			// dispatch asynchronously: RemoteStartTransactionRequest issues a
-			// synchronous CS→CP request whose response is read by this same
-			// goroutine, so a blocking call would deadlock the WebSocket read
-			// loop (cf. ocpp_test_handler.go).
+		switch {
+		case conn.remoteIdTag == "":
+			conn.log.DEBUG.Printf("waiting for local authentication")
+
+		case !conn.remoteStarted:
+			// guard against re-firing on repeated Preparing notifications
+			conn.remoteStarted = true
+
+			// dispatch asynchronously
 			go func(idTag string) {
 				if err := conn.RemoteStartTransactionRequest(idTag); err != nil {
 					conn.log.ERROR.Printf("RemoteStartTransaction: %v", err)
 				}
 			}(conn.remoteIdTag)
-		} else {
-			conn.log.DEBUG.Printf("waiting for local authentication")
 		}
 	}
 
