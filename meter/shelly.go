@@ -49,15 +49,18 @@ func NewShellyFromConfig(other map[string]any) (api.Meter, error) {
 	// making their totals unsuitable for bidirectional grid metering.
 	if !(c.usage == "grid" && c.conn.IsThreePhase()) {
 		total, ret := c.conn.TotalEnergy, c.conn.ReturnEnergy
+
+		hasReturn := c.conn.HasReturnEnergy()
+
 		// production is measured in return direction, unless the device has no return
 		// register at all or already reverses the direction itself
-		if c.usage == "pv" && c.conn.HasReturnEnergy() && !c.conn.IsReversed() {
+		if c.usage == "pv" && hasReturn && !c.conn.IsReversed() {
 			total, ret = ret, total
 		}
 		implement.Has(c, implement.MeterEnergy(total))
 
 		// without a return register the second reading is a constant zero
-		if c.conn.HasReturnEnergy() {
+		if hasReturn {
 			implement.Has(c, implement.MeterReturnEnergy(ret))
 		}
 	}
