@@ -1584,6 +1584,7 @@
   },
   "session": {
     "addOdometer": "Įrašyti skaičių",
+    "addedRange": "Įkrautas atstumas",
     "cancel": "Atšaukti",
     "co2": "CO₂",
     "date": "Periodas",
@@ -1594,11 +1595,12 @@
     "meterstop": "Skaitiklis pabaiga",
     "odometer": "Odometras",
     "price": "Išlaidos",
-    "soc": "Automobilio įkrova",
+    "soc": "Įkrova",
     "started": "Pradėta",
     "title": "Įkrovimo sesija"
   },
   "sessions": {
+    "addedRange": "Atstumas",
     "avgPower": "⌀ Galia",
     "avgPrice": "⌀ Kaina",
     "chargeDuration": "Trukmė",
@@ -1624,6 +1626,7 @@
     },
     "co2": "⌀ CO₂",
     "csv": {
+      "addedrange": "Įkrautas atstumas (km)",
       "chargedenergy": "Energija (kWh)",
       "chargeduration": "Trukmė",
       "co2perkwh": "CO₂/kWh",
