@@ -2,16 +2,13 @@ package meter
 
 import (
 	"context"
-	"regexp"
-	"slices"
-	"strings"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/templates"
+	"github.com/spf13/cast"
 	"github.com/stretchr/testify/require"
-	"go.yaml.in/yaml/v4"
 )
 
 func TestBatteryCapacity(t *testing.T) {
@@ -77,56 +74,70 @@ func TestBatteryModes(t *testing.T) {
 	require.Error(t, err)
 }
 
-// TestTemplateBatteryModes guards the declared batterymodes against the switch
-// cases they mirror
-func TestTemplateBatteryModes(t *testing.T) {
-	caseModes := map[string]api.BatteryMode{
-		"1": api.BatteryNormal,
-		"2": api.BatteryHold,
-		"3": api.BatteryCharge,
-		"4": api.BatteryHoldCharge,
-	}
-
-	caseRE := regexp.MustCompile(`^\s*- case: (\d+)`)
-	indent := func(s string) int { return len(s) - len(strings.TrimLeft(s, " ")) }
-
-	for _, tmpl := range templates.ByClass(templates.Meter) {
-		lines := strings.Split(tmpl.Render, "\n")
-
-		var declared []string
-		var cases []api.BatteryMode
-
-		for i, line := range lines {
-			if _, after, ok := strings.Cut(line, "batterymodes: "); ok {
-				require.NoError(t, yaml.Unmarshal([]byte(after), &declared), tmpl.Template)
-			}
-
-			if strings.TrimSpace(line) != "batterymode:" {
-				continue
-			}
-
-			// scan until the next key at batterymode's own indentation
-			for _, line := range lines[i+1:] {
-				if strings.TrimSpace(line) != "" && indent(line) <= indent(lines[i]) {
-					break
-				}
-				if m := caseRE.FindStringSubmatch(line); m != nil {
-					// nested switches repeat cases, the supported set is their union
-					if mode, ok := caseModes[m[1]]; ok && !slices.Contains(cases, mode) {
-						cases = append(cases, mode)
+// switchCases collects the switch case values below v. Nested switches repeat
+// cases, so the result is their union.
+func switchCases(v any, res map[int]struct{}) {
+	switch v := v.(type) {
+	case map[string]any:
+		for key, val := range v {
+			if key == "switch" {
+				if cases, ok := val.([]any); ok {
+					for _, c := range cases {
+						if c, ok := c.(map[string]any); ok {
+							if i, err := cast.ToIntE(c["case"]); err == nil {
+								res[i] = struct{}{}
+							}
+						}
 					}
 				}
 			}
+			switchCases(val, res)
+		}
+	case []any:
+		for _, val := range v {
+			switchCases(val, res)
+		}
+	}
+}
+
+// TestTemplateBatteryModes guards the declared batterymodes against the switch
+// cases they mirror
+func TestTemplateBatteryModes(t *testing.T) {
+	caseModes := map[int]api.BatteryMode{
+		1: api.BatteryNormal,
+		2: api.BatteryHold,
+		3: api.BatteryCharge,
+		4: api.BatteryHoldCharge,
+	}
+
+	templates.TestClass(t, templates.Meter, func(t *testing.T, values map[string]any) {
+		t.Helper()
+
+		instance, err := templates.RenderInstance(templates.Meter, values)
+		if err != nil {
+			return // covered by TestTemplates
 		}
 
+		cases := make(map[int]struct{})
+		switchCases(instance.Other["batterymode"], cases)
 		if len(cases) == 0 {
-			continue // no switch-based batterymode
+			return // no switch-based batterymode
 		}
+
+		expected := make([]api.BatteryMode, 0, len(cases))
+		for c := range cases {
+			mode, ok := caseModes[c]
+			require.True(t, ok, "unmapped battery mode case: %d", c)
+			expected = append(expected, mode)
+		}
+
+		var declared []string
+		require.NoError(t, util.DecodeOther(instance.Other["batterymodes"], &declared))
 
 		modes, err := batteryModes(declared)
-		require.NoError(t, err, tmpl.Template)
-		require.ElementsMatch(t, cases, modes, "%s: batterymodes must match the switch cases", tmpl.Template)
-	}
+		require.NoError(t, err)
+		require.ElementsMatch(t, expected, modes, "batterymodes must match the switch cases")
+	})
 }
 
 func TestBatterySocLimits(t *testing.T) {
