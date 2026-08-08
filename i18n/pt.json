@@ -30,6 +30,36 @@
       "ofTotal": "de {total}",
       "power": "Potência",
       "soc": "Nível da bateria"
+    },
+    "combined": "Combinado",
+    "config": {
+      "buffer": "A energia da bateria doméstica acima de {soc} pode ser utilizada para alimentar os pontos de carregamento e retardar o desligamento no modo solar. Iniciar o carregamento solar automaticamente {start}.",
+      "bufferNone": "A energia da bateria doméstica não é utilizada para os pontos de carregamento. Defina um valor inferior a {soc} para ativar esta funcionalidade.",
+      "bufferStart": {
+        "above": "assim que a bateria estiver acima de {soc}",
+        "full": "assim que a bateria estiver cheia",
+        "never": "apenas se houver excedente suficiente"
+      },
+      "bufferTitle": "Bateria como reserva de carga",
+      "discharge": "Evite a descarga da bateria doméstica no modo rápido e durante o carregamento programado.",
+      "gridDischarge": "Permitir que a bateria doméstica descarregue para a rede elétrica.",
+      "priority": "A bateria doméstica tem prioridade enquanto o seu nível de carga (SOC) estiver abaixo de {soc}. Depois, os pontos de carregamento recebem o excedente.",
+      "priorityNone": "O excedente de energia solar é encaminhado diretamente para os pontos de carregamento. Defina um valor superior a {soc} para dar prioridade à bateria doméstica.",
+      "priorityTitle": "Para onde vai o excedente em primeiro lugar?"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Carregar a partir da rede elétrica",
+        "discharge": "Descarga para a rede",
+        "hold": "Evitar a descarga",
+        "holdcharge": "Impedir o carregamento",
+        "normal": "Funcionamento normal"
+      },
+      "empty": "vazio",
+      "full": "cheio",
+      "highest": "Mais elevado ({valor})",
+      "lowest": "Mais baixo ({valor})",
+      "suggestion": "Sugestão"
     }
   },
   "batterySettings": {
@@ -90,6 +120,7 @@
       "titleEdit": "Editar Equipamento com capacidade de auto-ajuste de consumos"
     },
     "battery": {
+      "title": "Bateria",
       "titleAdd": "Adicionar Bateria",
       "titleEdit": "Editar Bateria"
     },
@@ -115,16 +146,16 @@
       "template": "Fabricante",
       "titleAdd": {
         "charging": "Adicionar Carregador",
-        "heating": "Adicionar aquecedor"
+        "heating": "Adicionar dispositivo de aquecimento"
       },
       "titleEdit": {
         "charging": "Editar Carregador",
-        "heating": "Editar o aquecimento"
+        "heating": "Editar dispositivo de aquecimento"
       },
       "type": {
         "custom": {
           "charging": "Carregador personalizado",
-          "heating": "Aquecimento personalizado"
+          "heating": "Dispositivo de aquecimento definido pelo utilizador"
         },
         "heatpump": "Bomba de calor personalizada",
         "sgready": "Bomba de calor personalizada (sg-ready via plugins)",
@@ -160,6 +191,7 @@
     "deviceValue": {
       "activeClients": "Clientes ativos",
       "amount": "Quantidade",
+      "asleep": "a dormir",
       "broker": "Broker",
       "bucket": "Bucket",
       "capacity": "Capacidade",
@@ -198,6 +230,7 @@
       "no": "não",
       "odometer": "Totalizador Km",
       "org": "Organização",
+      "outdoorTemp": "Temperatura exterior",
       "phaseCurrents": "Corrente",
       "phasePowers": "Energia",
       "phaseVoltages": "Voltagem",
@@ -207,6 +240,7 @@
       "price": "Preço",
       "productionLimited": "Produção limitada",
       "range": "Autonomia",
+      "remoteEnabled": "Ativado",
       "returnEnergy": "Energia (inversa)",
       "singlePhase": "Monofásico",
       "soc": "Carga",
@@ -238,15 +272,21 @@
         "public": "Certificado publico",
         "title": "Certificados"
       },
+      "configuredDevices": "Dispositivos configurados",
       "description": "Configuração que permite o evcc comunicar com outros dispositivos compatíveis com EEBus, como carregadores ou unidades de controlo do operador de rede. Toda a inicialização e geração de certificados é feita automaticamente na primeira inicialização.",
       "descriptionAdvanced": "Não são necessárias alterações. Somente altere se souber realmente o que está a fazer. Se mudar quer o SHIP-id ou os certificados, terá que emparelhar novamente os seus dispositivos.",
       "interfaces": "Interfaces",
       "interfacesHelp": "Limitar as interfaces que o EEBus pode usar para evitar problemas de comunicação. Deixar em branco para usar todas as interfaces. Um entrada por linha.",
+      "noConfiguredDevices": "Não existem dispositivos configurados pela SKI.",
+      "noPairings": "Não existem dispositivos emparelhados.",
+      "pairings": "Dispositivos emparelhados",
       "port": "Porta",
       "portHelp": "Porta a usar.",
       "qr": "Código de emparelhamento",
       "qrExplain": "Durante a instalação, procure outro dispositivo EEBus para emparelhar automaticamente, sem ter de introduzir manualmente o SKI.",
       "removeConfirm": "Toda a configuração EEBus será eliminada. Serão gerados novos certificados e identificadores na próxima inicialização. Tem a certeza?",
+      "removePairing": "Remover emparelhamento",
+      "removePairingConfirm": "O dispositivo será desligado e terá de ser emparelhado novamente. Tem a certeza?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Identificador permanente do dispositivo a ser usado dentro da rede EEBus.",
       "shipidHelp": "Este SHIP-ID está vinculado ao certificado abaixo.",
@@ -330,12 +370,19 @@
       },
       "customOption": "Integração definida pelo utilizador",
       "description": "Limitação de potência por sistemas externos (por exemplo, §14a da EnWG, interface §9 da EEG ou sistema de gestão de energia de nível superior). Funciona em conjunto com a funcionalidade de gestão de carga. A redução da produção solar também é suportada para determinados dispositivos. O limite de redução efetivo deve ser definido na configuração de cada inversor.",
+      "download": "Descarregar",
       "eventsRecorded": "Registou {count} eventos de limitação da rede.",
       "generic": "Integrações genéricas",
       "integrations": "Integrações",
       "lastEvent": "Mais recente {timeAgo}.",
+      "noEvents": "Ainda não há eventos registados.",
+      "recordedEvents": "Eventos registados",
       "template": "Integração",
-      "title": "Limite externo"
+      "title": "Limite externo",
+      "type": {
+        "custom": "Integração definida pelo utilizador",
+        "relay": "Integração definida pelo utilizador (relé)"
+      }
     },
     "icon": {
       "change": "alterar",
@@ -360,9 +407,10 @@
     "loadpoint": {
       "addCharger": {
         "charging": "Adicionar Carregador",
-        "heating": "Adicionar aquecedor"
+        "heating": "Adicionar dispositivo de aquecimento"
       },
       "addMeter": "Adicionar contador de energia dedicado",
+      "advancedConfig": "Configuração avançada",
       "cancel": "Cancelar",
       "chargerError": {
         "charging": "É necessário configurar um carregador.",
@@ -370,7 +418,7 @@
       },
       "chargerLabel": {
         "charging": "Carregador",
-        "heating": "Aquecedor"
+        "heating": "Dispositivo de aquecimento"
       },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Utilização de uma gama de correntes de 6 a 16 A.",
@@ -384,11 +432,21 @@
       "circuitInvalid": "O circuito não existe",
       "circuitLabel": "Circuito",
       "circuitUnassigned": "não atribuído",
+      "created": "O «{name}» foi criado e utiliza valores predefinidos adequados.",
+      "createdTitle": {
+        "charging": "Ponto de carregamento criado",
+        "heating": "Aquecedor criado"
+      },
+      "creating": {
+        "charging": "Carregador guardado. A criar ponto de carregamento…",
+        "heating": "Dispositivo de aquecimento guardado. A criar o aquecedor…"
+      },
       "defaultModeHelp": {
         "charging": "Modo de carregamento ao ligar o veículo.",
         "heating": "É definido no arranque do sistema."
       },
       "defaultModeHelpKeep": "Mantém o último modo selecionado.",
+      "defaultModeKeep": "manter tal como está",
       "defaultModeLabel": "Modo predefinido",
       "delete": "Apagar",
       "electricalSubtitle": "Em caso de dúvida, pergunte ao seu eletricista.",
@@ -406,7 +464,7 @@
       "noVehicles": "Nenhum veículo configurado.",
       "option": {
         "charging": "Adicionar um ponto de carga",
-        "heating": "Adicionar dispositivo de aquecimento"
+        "heating": "Adicionar aquecedor"
       },
       "phases1p": "Monofásico",
       "phases3p": "Trifásico",
@@ -446,13 +504,13 @@
       "thresholdEnableLabel": "Ativar a energia da Rede",
       "titleAdd": {
         "charging": "Adicionar ponto de carregamento",
-        "heating": "Adicionar dispositivo de aquecimento",
-        "unknown": "Adicionar carregador ou aquecedor"
+        "heating": "Adicionar aquecedor",
+        "unknown": "Adicionar ponto de carregamento ou aquecedor"
       },
       "titleEdit": {
         "charging": "Editar ponto de carregamento",
-        "heating": "Editar dispositivo de aquecimento",
-        "unknown": "Editar carregador ou aquecedor"
+        "heating": "Editar aquecedor",
+        "unknown": "Editar ponto de carregamento ou aquecedor"
       },
       "titleExample": {
         "charging": "Garagem, Carport, etc.",
@@ -470,7 +528,7 @@
       "addAdditional": "Adicionar Contador adicional",
       "addConsumer": "Adicionar consumidor",
       "addGrid": "Adicionar Contador de Rede",
-      "addLoadpoint": "Adicionar carregador ou aquecedor",
+      "addLoadpoint": "Adicionar ponto de carregamento ou aquecedor",
       "addPvBattery": "Adicionar solar ou bateria",
       "addTariffs": "Adicionar tarifário(s)",
       "addVehicle": "Adicionar veículo",
