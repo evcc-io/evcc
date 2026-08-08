@@ -5,19 +5,13 @@
 			<!-- Primary goal -->
 			<div class="field col-12 col-md-6 col-lg-3">
 				<div class="field-head">
-					<div
-						class="field-label small text-uppercase fw-bold evcc-gray"
-					>
+					<div class="field-label small text-uppercase fw-bold evcc-gray">
 						Primary goal
 					</div>
-					<div class="field-caption small evcc-gray mt-1">
-						always, fixed
-					</div>
+					<div class="field-caption small evcc-gray mt-1">always, fixed</div>
 				</div>
 				<div class="field-value gap-2">
-					<span class="large fw-bold text-lowercase evcc-default-text"
-						>Lowest cost</span
-					>
+					<span class="large fw-bold text-lowercase evcc-default-text">Lowest cost</span>
 					<LockIcon class="value-icon" />
 				</div>
 			</div>
@@ -25,14 +19,10 @@
 			<!-- Secondary goal (only interactive setting) -->
 			<div class="field col-12 col-md-6 col-lg-3">
 				<div class="field-head">
-					<div
-						class="field-label small text-uppercase fw-bold evcc-gray"
-					>
+					<div class="field-label small text-uppercase fw-bold evcc-gray">
 						Secondary goal
 					</div>
-					<div class="field-caption small evcc-gray mt-1">
-						only on a tie
-					</div>
+					<div class="field-caption small evcc-gray mt-1">only on a tie</div>
 				</div>
 				<div class="field-value gap-2">
 					<CustomSelect
@@ -52,18 +42,10 @@
 			<!-- Result -->
 			<div class="field col-12 col-md-6 col-lg-3">
 				<div class="field-head">
-					<div
-						class="field-label small text-uppercase fw-bold evcc-gray"
-					>
-						Result
-					</div>
+					<div class="field-label small text-uppercase fw-bold evcc-gray">Result</div>
 					<div class="field-caption small evcc-gray mt-1">
-						<span v-if="relativeTime" class="tabular"
-							>{{ relativeTime }},
-						</span>
-						<span
-							v-if="pending"
-							class="updating fw-bold text-decoration-underline"
+						<span v-if="relativeTime" class="tabular">{{ relativeTime }}, </span>
+						<span v-if="pending" class="updating fw-bold text-decoration-underline"
 							>updating…</span
 						>
 						<button
@@ -78,10 +60,9 @@
 				</div>
 				<div class="field-value gap-2">
 					<StatusIndicator :variant="statusVariant">
-						<span
-							class="large fw-bold text-lowercase evcc-default-text"
-							>{{ status }}</span
-						>
+						<span class="large fw-bold text-lowercase evcc-default-text">{{
+							status
+						}}</span>
 					</StatusIndicator>
 					<span
 						ref="statusInfo"
@@ -98,9 +79,7 @@
 			<!-- Net grid cost -->
 			<div class="field col-12 col-md-6 col-lg-3">
 				<div class="field-head">
-					<div
-						class="field-label small text-uppercase fw-bold evcc-gray"
-					>
+					<div class="field-label small text-uppercase fw-bold evcc-gray">
 						Net grid cost
 					</div>
 					<div class="field-caption small evcc-gray mt-1">
@@ -171,17 +150,11 @@ export default defineComponent({
 	mixins: [formatter, minuteTicker],
 	props: {
 		updated: { type: String, default: "" },
-		status: {
-			type: String as PropType<OptimizationStatus>,
-			default: undefined,
-		},
+		status: { type: String as PropType<OptimizationStatus>, default: undefined },
 		netCost: { type: Number, default: 0 },
 		horizonHours: { type: Number, default: 0 },
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
-		chargingStrategies: {
-			type: Array as PropType<string[]>,
-			default: () => [],
-		},
+		chargingStrategies: { type: Array as PropType<string[]>, default: () => [] },
 		selectedStrategy: { type: String, default: "" },
 		pending: { type: Boolean, default: false },
 	},
@@ -199,14 +172,11 @@ export default defineComponent({
 			}));
 		},
 		secondaryGoalLabel(): string {
-			return (
-				STRATEGY_LABELS[this.selectedStrategy] || this.selectedStrategy
-			);
+			return STRATEGY_LABELS[this.selectedStrategy] || this.selectedStrategy;
 		},
 		relativeTime(): string {
 			if (!this.updated) return "";
-			const elapsed =
-				new Date(this.updated).getTime() - this.everyMinute.getTime();
+			const elapsed = new Date(this.updated).getTime() - this.everyMinute.getTime();
 			if (Math.abs(elapsed) < 60 * 1000) return "just now";
 			return this.fmtTimeAgo(elapsed);
 		},
@@ -237,17 +207,11 @@ export default defineComponent({
 	},
 	methods: {
 		onStrategyChange(e: Event) {
-			this.$emit(
-				"change-strategy",
-				(e.target as HTMLSelectElement).value,
-			);
+			this.$emit("change-strategy", (e.target as HTMLSelectElement).value);
 		},
 		initTooltips() {
 			const items: [Element | undefined, string][] = [
-				[
-					this.$refs["statusInfo"] as Element | undefined,
-					STATUS_TOOLTIP,
-				],
+				[this.$refs["statusInfo"] as Element | undefined, STATUS_TOOLTIP],
 				[this.$refs["costInfo"] as Element | undefined, COST_TOOLTIP],
 			];
 			for (const [el, title] of items) {
@@ -257,7 +221,7 @@ export default defineComponent({
 						new Tooltip(el, {
 							title: `<div class="text-start">${title}</div>`,
 							html: true,
-						}),
+						})
 					);
 				}
 			}
