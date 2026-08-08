@@ -125,15 +125,8 @@ render: |
       switch:
       - case: 1 # normal
         set:
-          source: const
-          value: 0 # W (set once to reset from forced charge)
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 1034 # Battery charge power (DC) setpoint, absolute [W]
-              type: writemultiple
-              encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+          source: sleep
+          duration: 0s # no-op
       - case: 2 # hold
         set:
           source: const
@@ -172,5 +165,21 @@ render: |
               address: 1038 # Battery max. charge power limit, absolute [W]
               type: writemultiple
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+      - case: 5 # discharge (forced feed-in arbitrage)
+        set:
+          {{- if .maxdischargepower }}
+          source: const
+          value: {{ .maxdischargepower }} # W
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1034 # Battery charge power (DC) setpoint, absolute [W]
+              type: writemultiple
+              encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+          {{- else }}
+          source: error
+          error: ErrNotAvailable
+          {{- end }}
   {{- include "battery-params" . }}
   {{- end }}
