@@ -59,7 +59,7 @@ func NewSolcastFromConfig(other map[string]any) (api.Tariff, error) {
 		site:   cc.Site,
 		Helper: request.NewHelper(log),
 		fromTo: cc.FromTo,
-		data:   util.NewMonitor[api.Rates](2 * cc.Interval),
+		data:   util.NewMonitor[api.Rates](2*cc.Interval + cc.FromTo.MaxInactive()),
 	}
 
 	t.Client.Transport = transport.BearerAuth(cc.Token, t.Client.Transport)
