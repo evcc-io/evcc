@@ -800,10 +800,30 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 	}
 
 	if demand != nil {
-		bat.PDemand = prorate(demand, firstSlotDuration)
+		// after prorate, so the shortened first slot counts with the energy it really carries
+		bat.PDemand = clearDemandWhenFull(prorate(demand, firstSlotDuration), bat.SMax-bat.SInitial)
 	}
 
 	return bat, detail
+}
+
+// clearDemandWhenFull zeroes the charge demand from the slot the accumulated energy fills the
+// vehicle. The optimizer drops the demand at s_max anyway, but pays two binaries per slot to
+// detect it, so slots that cannot bind are worth not asking about. Losses are accounted for,
+// which places the cut no earlier than the vehicle can actually be full.
+func clearDemandWhenFull(demand []float32, headroom float32) []float32 {
+	res := slices.Clone(demand)
+
+	var acc float32
+	for i, d := range res {
+		if acc >= headroom {
+			res[i] = 0
+			continue
+		}
+		acc += d * eta
+	}
+
+	return res
 }
 
 func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measurement, grid api.Rates, minLen int, firstSlotDuration time.Duration) (optimizer.BatteryConfig, batteryDetail) {
