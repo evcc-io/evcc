@@ -10,8 +10,16 @@ requirements:
   description:
     de: |
       Einmalige Warmwasserbereitung. Das Gerät entscheidet eigenständig, ob die Wärmepumpe oder die elektrische Zusatzheizung (falls vorhanden) genutzt wird.
+
+      Hinweis: Im Auslieferungszustand kann zur Warmwasserbereitung auch der Heizwasser-Durchlauferhitzer (elektrische Zusatzheizung, „Heizstab") automatisch zuschalten. Um das zu vermeiden, die Freigabe der elektrischen Zusatzheizung für die Warmwasserbereitung vom Fachbetrieb sperren lassen (Parameter „Freigabe Heizwasser-Durchlauferhitzer") oder — sofern verfügbar — in der ViCare-App den Warmwasser-Modus „Effizient" wählen.
+
+      Optional können Leistungs- und Temperaturwerte ausgelesen werden. Das setzt Datenpunkte der One-Base-/E3-Gerätegeneration voraus (z. B. Vitocal 25x, getestet mit Vitocal 250-A). Welche Datenpunkte ein Gerät liefert, ist geräteabhängig und lässt sich über die [Viessmann API](https://developer.viessmann-climatesolutions.com/) am Feature-Endpunkt der Anlage ablesen. Für unterstützte Geräte die Option „Leistungs- und Temperaturwerte auslesen" aktivieren.
     en: |
       One-time hot water preparation. The device automatically decides whether to use the heat pump or the auxiliary electric heater (if available).
+
+      Note: in the factory configuration, hot water preparation may also automatically activate the built-in electric booster heater ("Heizwasser-Durchlauferhitzer"). To avoid this, have your heating contractor lock the approval of the electric booster heater for hot water preparation (parameter "Freigabe Heizwasser-Durchlauferhitzer"), or — where available — select the "Efficient" hot water mode in the ViCare app.
+
+      Optionally, power and temperature readings can be enabled. This requires data points of the One Base/E3 device generation (e.g. Vitocal 25x, tested with a Vitocal 250-A). Which data points a device provides is device-specific and can be inspected via the [Viessmann API](https://developer.viessmann-climatesolutions.com/) feature endpoint of the installation. For supported devices, enable the "Read power and temperature values" option.
 params:
   - name: user
     deprecated: true
@@ -143,6 +151,25 @@ params:
       de: normalerweise `0`
       en: typically `0`
     default: 0
+  - name: measurements
+    required: true
+    type: bool
+    default: false
+    description:
+      de: Leistungs- und Temperaturwerte auslesen
+      en: Read power and temperature values
+    help:
+      de: Liest die aktuelle elektrische Leistungsaufnahme und die Warmwassertemperatur aus. Aktivieren, wenn das Gerät diese Datenpunkte liefert (One-Base-/E3-Generation, z. B. Vitocal 25x); die Verfügbarkeit lässt sich am Feature-Endpunkt der API ablesen. Standardmäßig deaktiviert, damit sich bestehende Installationen beim Update nicht ändern.
+      en: Reads the current electrical power consumption and the domestic hot water temperature. Enable if the device provides these data points (One Base/E3 generation, e.g. Vitocal 25x); availability can be checked via the API feature endpoint. Disabled by default so existing installations are unchanged on upgrade.
+  - name: uri
+    advanced: true
+    default: https://api.viessmann-climatesolutions.com/iot/v2
+    description:
+      de: API-Basis-URL
+      en: API base URL
+    help:
+      de: Nur ändern, falls Viessmann die API-Domain erneut umzieht oder ein Proxy verwendet wird
+      en: Only change if Viessmann moves the API domain again or a proxy is used
   - name: target_temperature
     deprecated: true
     description:
@@ -158,17 +185,22 @@ auth:
   type: viessmann
   params: [clientid, redirecturi, gateway_serial]
 render: |
+  {{- $device := printf "%s/features/installations/%s/gateways/%s/devices/%s" .uri .installation_id .gateway_serial .device_id }}
   type: sgready
   getmode:
     source: http
-    uri: https://api.viessmann-climatesolutions.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge
-    cache: 2s # to prevent making two identical requests straight after each other for "getmode"
+    # Read the whole device feature list in ONE request. All GET readers below use
+    # this exact same URL, so evcc's shared HTTP cache serves them from a single API
+    # call per cache window. The Viessmann API has a strict daily request quota
+    # (shared with the ViCare app); per-feature polling exhausts it (HTTP 429).
+    uri: {{ $device }}/features
+    cache: 120s # ~720 requests/day; raise further if you still hit 429
     auth:
       source: viessmann
       clientid: {{ .clientid }}
       redirecturi: {{ .redirecturi }}
       gateway_serial: {{ .gateway_serial }}
-    jq: '.data.properties.active.value | if . == false then 2 elif . == true then 3 else . end'
+    jq: '.data[] | select(.feature == "heating.dhw.oneTimeCharge") | .properties.active.value | if . == false then 2 elif . == true then 3 else . end'
     # false -> oneTimeCharge is disabled -> normal mode -> 2
     # true -> oneTimeCharge is enabled -> boost mode -> 3
   setmode:
@@ -181,7 +213,7 @@ render: |
       - case: 2 # normal
         set:
           source: http
-          uri: https://api.viessmann-climatesolutions.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/deactivate
+          uri: {{ $device }}/features/heating.dhw.oneTimeCharge/commands/deactivate
           method: POST 
           headers:  
             - content-type: application/json
@@ -195,7 +227,7 @@ render: |
       - case: 3 # boost
         set:
           source: http
-          uri: https://api.viessmann-climatesolutions.com/iot/v2/features/installations/{{.installation_id}}/gateways/{{.gateway_serial}}/devices/{{.device_id}}/features/heating.dhw.oneTimeCharge/commands/activate
+          uri: {{ $device }}/features/heating.dhw.oneTimeCharge/commands/activate
           method: POST 
           headers:  
             - content-type: application/json
@@ -210,4 +242,44 @@ render: |
         set:
           source: error
           error: ErrNotAvailable
+  {{- if eq .measurements "true" }}
+  power:
+    # heating.power.consumption.current reports the real electrical input power in kW.
+    # Reading it replaces evcc's fallback estimate (current * phases * voltage), which
+    # wrongly assumed a full electric-heater draw when no meter was configured.
+    # Same URL + cache as getmode -> served from the shared cached feature list.
+    source: http
+    uri: {{ $device }}/features
+    cache: 120s
+    auth:
+      source: viessmann
+      clientid: {{ .clientid }}
+      redirecturi: {{ .redirecturi }}
+      gateway_serial: {{ .gateway_serial }}
+    jq: '.data[] | select(.feature == "heating.power.consumption.current") | .properties.value.value * 1000' # kW -> W
+  temp:
+    # heating.dhw.sensors.temperature.dhwCylinder: domestic hot water temperature (°C).
+    # The device controls one-time DHW charging, so the hot water tank is the natural
+    # temperature to display on the loadpoint gauge.
+    source: http
+    uri: {{ $device }}/features
+    cache: 120s
+    auth:
+      source: viessmann
+      clientid: {{ .clientid }}
+      redirecturi: {{ .redirecturi }}
+      gateway_serial: {{ .gateway_serial }}
+    jq: '.data[] | select(.feature == "heating.dhw.sensors.temperature.dhwCylinder") | .properties.value.value'
+  limittemp:
+    # heating.dhw.temperature.main: configured DHW target temperature (°C).
+    source: http
+    uri: {{ $device }}/features
+    cache: 120s
+    auth:
+      source: viessmann
+      clientid: {{ .clientid }}
+      redirecturi: {{ .redirecturi }}
+      gateway_serial: {{ .gateway_serial }}
+    jq: '.data[] | select(.feature == "heating.dhw.temperature.main") | .properties.value.value'
+  {{- end }}
   {{ include "heatpumpswitch" . }}
