@@ -4,13 +4,16 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/gorilla/mux"
+	"github.com/samber/lo"
 )
 
 type PlanResponse struct {
@@ -26,6 +29,71 @@ type PlanPreviewResponse struct {
 	Duration int64     `json:"duration"`
 	Plan     api.Rates `json:"plan"`
 	Power    float64   `json:"power"`
+}
+
+// metaPlanHandler returns the current plan
+func metaPlanHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var res struct {
+			MetaPlan   PlanPreviewResponse `json:"metaPlan"`
+			Loadpoints []PlanResponse      `json:"loadpoints"`
+		}
+
+		var totalDuration time.Duration
+
+		for _, lp := range site.Loadpoints() {
+			maxPower := lp.EffectiveMaxPower()
+			planTime := lp.EffectivePlanTime()
+			id := lp.EffectivePlanId()
+
+			goal, _ := lp.GetPlanGoal()
+			requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
+
+			res.Loadpoints = append(res.Loadpoints, PlanResponse{
+				PlanId:   id,
+				PlanTime: planTime,
+				Duration: int64(requiredDuration.Seconds()),
+				Power:    maxPower,
+			})
+
+			totalDuration += requiredDuration
+		}
+
+		latestEnd := lo.MinBy(res.Loadpoints, func(a, b PlanResponse) bool {
+			return a.PlanTime.Before(b.PlanTime)
+		}).PlanTime
+
+		for i := 0; i < len(res.Loadpoints); i++ {
+			for j := i + 1; j < len(res.Loadpoints); j++ {
+				lpi := res.Loadpoints[i]
+				lpj := res.Loadpoints[j]
+
+				maxStart := slices.MaxFunc([]time.Time{
+					lpi.PlanTime.Add(-time.Duration(lpi.Duration) * time.Second),
+					lpj.PlanTime.Add(-time.Duration(lpj.Duration) * time.Second)},
+					time.Time.Compare)
+				minEnd := slices.MinFunc([]time.Time{lpi.PlanTime, lpj.PlanTime}, time.Time.Compare)
+
+				// add overlapping ranges to total require duration
+				if d := minEnd.Sub(maxStart); d > 0 {
+					totalDuration += d
+				}
+			}
+		}
+
+		tariff := site.GetTariff(api.TariffUsagePlanner)
+		planner := planner.New(util.NewLogger("meta-plan"), tariff)
+
+		metaPlan := planner.Plan(totalDuration, 0, latestEnd)
+
+		res.MetaPlan = PlanPreviewResponse{
+			PlanTime: latestEnd,
+			Duration: int64(totalDuration.Seconds()),
+			Plan:     metaPlan,
+		}
+
+		jsonWrite(w, res)
+	}
 }
 
 // planHandler returns the current plan
