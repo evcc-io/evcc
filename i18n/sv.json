@@ -42,6 +42,7 @@
       },
       "bufferTitle": "Batteriet som laddningsbuffert",
       "discharge": "Förhindra att hemmabatteriet laddas ur i snabbläge och under planerad laddning.",
+      "gridDischarge": "Tillåt hemmabatteriet att återmata till nätet.",
       "priority": "Hemmabatteriet har prioritet så länge det är under {soc}. Därefter får billaddarna överskottet.",
       "priorityNone": "Solelens överskott går direkt till billaddarna. Ställ in ett värde över {soc} för att prioritera hemmabatteriet.",
       "priorityTitle": "Vart ska överskottet gå i första hand?"
@@ -49,9 +50,10 @@
     "optimizer": {
       "action": {
         "charge": "Laddning från nätet",
-        "hold": "Urladdning spärrad",
-        "holdcharge": "Laddning pausad",
-        "normal": "Vid solelöverskott"
+        "discharge": "Återmata till nätet",
+        "hold": "Blockera urladdning",
+        "holdcharge": "Blockera laddning",
+        "normal": "Normal drift"
       },
       "empty": "tom",
       "full": "full",
@@ -118,6 +120,7 @@
       "titleEdit": "Ändra enhet som själv anpassar förbrukning"
     },
     "battery": {
+      "title": "Batteri",
       "titleAdd": "Lägg till batteri",
       "titleEdit": "Ändra batteri"
     },
@@ -188,6 +191,7 @@
     "deviceValue": {
       "activeClients": "Aktiva klienter",
       "amount": "Belopp",
+      "asleep": "sover",
       "broker": "Broker",
       "bucket": "Bucket",
       "capacity": "Kapacitet",
@@ -226,6 +230,7 @@
       "no": "nej",
       "odometer": "Mätarställning",
       "org": "Organisation",
+      "outdoorTemp": "Temperatur ute",
       "phaseCurrents": "Ström",
       "phasePowers": "Effekt",
       "phaseVoltages": "Spänning",
@@ -235,6 +240,7 @@
       "price": "Pris",
       "productionLimited": "Produktion begränsad",
       "range": "Räckvidd",
+      "remoteEnabled": "Aktiverad",
       "returnEnergy": "Energi (retur)",
       "singlePhase": "En-fas",
       "soc": "Laddnivå",
@@ -300,6 +306,7 @@
     "form": {
       "danger": "Fara",
       "deprecated": "utfasad",
+      "durationUnit": "Tidsenhet för {label}",
       "example": "Exempel",
       "optional": "valfritt"
     },
@@ -364,7 +371,10 @@
       },
       "customOption": "Användardefinerad integration",
       "description": "Effektbegränsning genom externa system (t.ex. §14a EnWG, §9 EEG-gränssnitt eller överordnat energihanteringssystem). Fungerar tillsammans med lasthanteringsfunktionen. Begränsning av solproduktion stöds även för valda enheter. Den faktiska begränsningsnivån måste ställas in i konfigurationen för varje växelriktare.",
+      "download": "Ladda hem",
+      "dynamicLimits": "Dynamisk begränsning",
       "eventsRecorded": "Registrerade {count} händelser med nätbegränsning.",
+      "exportLimit": "Nätets exportbegränsning",
       "generic": "Generiska integrationer",
       "integrations": "Integrationer",
       "lastEvent": "Senaste {timeAgo}.",
@@ -397,6 +407,7 @@
         "heating": "Lägg till värmekälla"
       },
       "addMeter": "Lägg till dedikerad energimätare",
+      "advancedConfig": "Avancerade inställningar",
       "cancel": "Avbryt",
       "chargerError": {
         "charging": "Konfigurering av laddare krävs.",
@@ -418,11 +429,21 @@
       "circuitInvalid": "Kretsen saknas",
       "circuitLabel": "Krets",
       "circuitUnassigned": "ej vald",
+      "created": "“{name}” skapades och använder förnuftiga standardvärden.",
+      "createdTitle": {
+        "charging": "Laddpunkt skapades",
+        "heating": "Värmare skapad"
+      },
+      "creating": {
+        "charging": "Laddare sparad. Skapar laddpunkt …",
+        "heating": "Värmare sparad. Skapar värmare …"
+      },
       "defaultModeHelp": {
         "charging": "Laddningsläge vid anslutning till fordon.",
         "heating": "Ställs in vid systemstart."
       },
       "defaultModeHelpKeep": "Använder senast valda läge.",
+      "defaultModeKeep": "behåll",
       "defaultModeLabel": "Standardinställning",
       "delete": "Radera",
       "electricalSubtitle": "Om du är osäker, kontakta elektriker.",
@@ -440,7 +461,7 @@
       "noVehicles": "Inga fordon är konfigurerade.",
       "option": {
         "charging": "Lägg till laddplats",
-        "heating": "Lägg till värmningsenhet"
+        "heating": "Lägg till värmare"
       },
       "phases1p": "1-fas",
       "phases3p": "3-fas",
@@ -480,13 +501,13 @@
       "thresholdEnableLabel": "Anslut elnätet",
       "titleAdd": {
         "charging": "Lägg till laddplats",
-        "heating": "Lägg till värmningsenhet",
-        "unknown": "Lägg till laddare eller värmekälla"
+        "heating": "Lägg till värmare",
+        "unknown": "Lägg till laddare eller värmare"
       },
       "titleEdit": {
         "charging": "Redigera laddare",
-        "heating": "Ändra värmekälla",
-        "unknown": "Ändra laddare eller värmekälla"
+        "heating": "Ändra värmare",
+        "unknown": "Ändra laddare eller värmare"
       },
       "titleExample": {
         "charging": "Garage, Carport, etc.",
@@ -504,7 +525,7 @@
       "addAdditional": "Lägg till ytterligare mätare",
       "addConsumer": "Lägg till förbrukare",
       "addGrid": "Lägg till elmätare",
-      "addLoadpoint": "Lägg till laddare eller värmekälla",
+      "addLoadpoint": "Lägg till laddare eller värmare",
       "addPvBattery": "Lägg till solceller eller batteri",
       "addTariffs": "Lägg till tariffer",
       "addVehicle": "Lägg till fordon",
@@ -535,14 +556,14 @@
           "titleDefault": "Fordonet sover"
         },
         "connect": {
-          "messageDefault": "Bil ansluten {pvPower}kW",
-          "title": "När en bil ansluts",
-          "titleDefault": "Bil ansluten"
+          "messageDefault": "Fordon ansluten {pvPower}kW",
+          "title": "När ett fordon ansluts",
+          "titleDefault": "Fordon anslutet"
         },
         "disconnect": {
-          "messageDefault": "Bil frånkopplad efter {connectedDuration}",
-          "title": "När en bil frånkopplas",
-          "titleDefault": "Bil frånkopplad"
+          "messageDefault": "Fordon frånkopplad efter {connectedDuration}",
+          "title": "När ett fordon frånkopplas",
+          "titleDefault": "Fordon frånkopplad"
         },
         "guest": {
           "messageDefault": "Okänt fordon, gäst inkopplad?",
@@ -568,6 +589,9 @@
           "messageDefault": "Laddning klar, {chargedEnergy}kWh på {chargeDuration}.",
           "title": "När laddning stoppar",
           "titleDefault": "Laddning klar"
+        },
+        "suggestion": {
+          "messageDefault": "Optimeringsförslag for {suggestionTitle}: om optimeringsstyrning var aktiv '{suggestionAction}' nu. Detta är bara ett förslag, inget har ändrats. Experimentellt — feedback mottages gärna https://github.com/evcc-io/evcc/issues/31903"
         }
       },
       "eventMessage": "Meddelande",
