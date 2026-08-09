@@ -1,7 +1,6 @@
 {
   "recommendations": [
     "Vue.volar",
-    "vitest.explorer",
     "golang.go",
     "yoavbls.pretty-ts-errors",
     "VoidZero.vite-plus-extension-pack"
