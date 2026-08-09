@@ -300,8 +300,10 @@ func (wb *Keba) Enable(enable bool) error {
 		return err
 	}
 
-	// switch back to 1p to avoid the phase switch relay's standby consumption
-	if !enable && api.HasCap[api.PhaseSwitcher](wb) {
+	// switch back to 1p to avoid the phase switch relay's standby consumption.
+	// requires the phase getter, else the core cannot observe the phases we
+	// changed behind its back.
+	if !enable && api.HasCap[api.PhaseSwitcher](wb) && api.HasCap[api.PhaseGetter](wb) {
 		return wb.phases1p3p(1)
 	}
 
