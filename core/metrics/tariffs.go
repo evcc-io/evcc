@@ -45,7 +45,8 @@ func TariffUsages() []string {
 
 // DeleteTariffs removes the persisted values in [from,to). An empty usage drops
 // the entire row, otherwise only that usage is cleared. Both bounds are
-// required, a full wipe is /api/db/reset.
+// required, a full wipe is /api/db/reset. The count is the number of affected
+// rows; rows dropped by the cleanup are a subset of the cleared ones.
 func DeleteTariffs(from, to time.Time, usage string) (int64, error) {
 	if from.IsZero() || to.IsZero() {
 		return 0, errors.New("missing from/to")
