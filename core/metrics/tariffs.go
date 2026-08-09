@@ -3,8 +3,8 @@ package metrics
 import (
 	"errors"
 	"fmt"
-	"maps"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/server/db"
@@ -30,18 +30,11 @@ func init() {
 	})
 }
 
-// tariffColumns maps the api usage parameter to the tariffs table column
-var tariffColumns = map[string]string{
-	"grid":        "grid",
-	"feedin":      "feedin",
-	"co2":         "co2",
-	"temperature": "temperature",
-}
+// ErrInvalidUsage is returned for an unknown tariff usage
+var ErrInvalidUsage = errors.New("invalid usage")
 
-// TariffUsages returns the deletable tariff usages
-func TariffUsages() []string {
-	return slices.Sorted(maps.Keys(tariffColumns))
-}
+// tariffUsages are the deletable usages, named after their table column
+var tariffUsages = []string{"grid", "feedin", "co2", "temperature"}
 
 // DeleteTariffs removes the persisted values in [from,to). An empty usage drops
 // the entire row, otherwise only that usage is cleared. Both bounds are
@@ -61,14 +54,14 @@ func DeleteTariffs(from, to time.Time, usage string) (int64, error) {
 		return res.RowsAffected, res.Error
 	}
 
-	col, ok := tariffColumns[usage]
-	if !ok {
-		return 0, fmt.Errorf("invalid usage: %s", usage)
+	// guards the column interpolated below
+	if !slices.Contains(tariffUsages, usage) {
+		return 0, fmt.Errorf("%w: %s (valid: %s)", ErrInvalidUsage, usage, strings.Join(tariffUsages, ", "))
 	}
 
 	res := inRange().Model(new(tariffValue)).
-		Where(col+" IS NOT NULL").
-		Update(col, gorm.Expr("NULL"))
+		Where(usage+" IS NOT NULL").
+		Update(usage, gorm.Expr("NULL"))
 	if res.Error != nil {
 		return 0, res.Error
 	}

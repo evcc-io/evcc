@@ -74,8 +74,10 @@ func TestDeleteTariffs(t *testing.T) {
 	_, err := DeleteTariffs(base, time.Time{}, "")
 	require.Error(t, err)
 
+	// unknown usage never reaches the column interpolation
 	_, err = DeleteTariffs(base, base.Add(time.Hour), "unknown")
-	require.Error(t, err)
+	require.ErrorIs(t, err, ErrInvalidUsage)
+	require.Equal(t, int64(4), count())
 
 	// clearing one usage keeps the row as long as another value remains
 	rows, err := DeleteTariffs(base, base.Add(30*time.Minute), "grid")

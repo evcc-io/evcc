@@ -2,10 +2,7 @@ package server
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
-	"slices"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/core/metrics"
@@ -77,15 +74,13 @@ func deleteTariffsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	usage := r.URL.Query().Get("usage")
-	if usage != "" && !slices.Contains(metrics.TariffUsages(), usage) {
-		jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid usage: %s (valid: %s)", usage, strings.Join(metrics.TariffUsages(), ", ")))
-		return
-	}
-
-	rows, err := metrics.DeleteTariffs(from, to, usage)
+	rows, err := metrics.DeleteTariffs(from, to, r.URL.Query().Get("usage"))
 	if err != nil {
-		jsonError(w, http.StatusInternalServerError, err)
+		status := http.StatusInternalServerError
+		if errors.Is(err, metrics.ErrInvalidUsage) {
+			status = http.StatusBadRequest
+		}
+		jsonError(w, status, err)
 		return
 	}
 

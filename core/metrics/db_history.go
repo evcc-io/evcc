@@ -156,15 +156,8 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool, filter ...E
 	}
 
 	if len(filter) > 0 {
-		f := filter[0]
-		if f.Group != "" {
-			tx = tx.Where(`e."group" = ?`, f.Group)
-		}
-		if f.Name != "" {
-			tx = tx.Where("e.name = ?", f.Name)
-		}
-		if f.Title != "" {
-			tx = tx.Where("e.title = ?", f.Title)
+		if sub := entityQuery(filter[0]); sub != nil {
+			tx = tx.Where("m.meter IN (?)", sub)
 		}
 	}
 
