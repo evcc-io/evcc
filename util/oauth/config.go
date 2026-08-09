@@ -1,4 +1,4 @@
-package vehicle
+package oauth
 
 import (
 	"errors"
