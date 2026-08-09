@@ -266,6 +266,62 @@ call setResidualPower {
 }
 ```
 
+## deleteEnergyMetrics
+
+Deletes recorded energy slots in the given time range, optionally narrowed by entity. Filter parameters match /history/energy, so the same request can be previewed there before deleting. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt.
+
+**Tags:** db
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| X-Admin-Password | string | Admin password (required for session auth, not needed for API key) |
+| from | string | Start time, inclusive (RFC3339) |
+| group | string | Filter by entity group |
+| name | string | Filter by entity name |
+| title | string | Filter by entity title |
+| to | string | End time, exclusive (RFC3339) |
+
+**Example call:**
+
+```json
+call deleteEnergyMetrics {
+  "X-Admin-Password": "example",
+  "from": "2026-07-01T00:00:00Z",
+  "group": "forecast",
+  "name": "db:8",
+  "title": "Battery",
+  "to": "2026-07-02T00:00:00Z"
+}
+```
+
+## deleteTariffMetrics
+
+Deletes recorded tariff values in the given time range. Without usage the entire record is removed, otherwise only that usage is cleared and records left without any value are removed. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt.
+
+**Tags:** db
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| X-Admin-Password | string | Admin password (required for session auth, not needed for API key) |
+| from | string | Start time, inclusive (RFC3339) |
+| to | string | End time, exclusive (RFC3339) |
+| usage | string | Limit deletion to a single tariff usage |
+
+**Example call:**
+
+```json
+call deleteTariffMetrics {
+  "X-Admin-Password": "example",
+  "from": "2026-07-01T00:00:00Z",
+  "to": "2026-07-02T00:00:00Z",
+  "usage": "co2"
+}
+```
+
 ## downloadBackup
 
 Downloads the SQLite database as a backup file. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt.
