@@ -25,35 +25,14 @@ type PowerWall struct {
 type powerWallConfig struct {
 	URI, Usage, User, Password string
 	Cache                      time.Duration
+	SiteId                     int64  // Fleet API only, deprecated for the local meter
 	RefreshToken_              string `mapstructure:"refreshToken"` // TODO deprecated
-	SiteId_                    int64  `mapstructure:"siteId"`       // TODO deprecated
 	batterySocLimits           `mapstructure:",squash"`
 	batteryPowerLimits         `mapstructure:",squash"`
 }
 
-func init() {
-	registry.Add("tesla", NewPowerWallFromConfig)
-	registry.Add("powerwall", NewPowerWallFromConfig)
-}
-
-// NewPowerWallFromConfig creates a PowerWall Powerwall Meter from generic config
-func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
-	cc, err := decodePowerWallConfig(other)
-	if err != nil {
-		return nil, err
-	}
-
-	log := util.NewLogger("powerwall").Redact(cc.User, cc.Password)
-
-	if cc.RefreshToken_ != "" {
-		log.WARN.Println("refreshToken is deprecated, use the Powerwall (Fleet API) template for battery control")
-	}
-
-	return newPowerWall(log, cc)
-}
-
-func decodePowerWallConfig(other map[string]any) (powerWallConfig, error) {
-	cc := powerWallConfig{
+func defaultPowerWallConfig() powerWallConfig {
+	return powerWallConfig{
 		batterySocLimits: batterySocLimits{
 			MinSoc: 20,
 			MaxSoc: 95,
@@ -64,17 +43,16 @@ func decodePowerWallConfig(other map[string]any) (powerWallConfig, error) {
 		},
 		Cache: time.Second,
 	}
+}
 
-	if err := util.DecodeOther(other, &cc); err != nil {
-		return cc, err
-	}
-
+// validate checks required parameters and maps legacy usage names
+func (cc *powerWallConfig) validate() error {
 	if cc.Usage == "" {
-		return cc, errors.New("missing usage")
+		return errors.New("missing usage")
 	}
 
 	if cc.Password == "" {
-		return cc, errors.New("missing password")
+		return errors.New("missing password")
 	}
 
 	// support default meter names
@@ -85,7 +63,32 @@ func decodePowerWallConfig(other map[string]any) (powerWallConfig, error) {
 		cc.Usage = "solar"
 	}
 
-	return cc, nil
+	return nil
+}
+
+func init() {
+	registry.Add("tesla", NewPowerWallFromConfig)
+	registry.Add("powerwall", NewPowerWallFromConfig)
+}
+
+// NewPowerWallFromConfig creates a PowerWall Powerwall Meter from generic config
+func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
+	cc := defaultPowerWallConfig()
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	if err := cc.validate(); err != nil {
+		return nil, err
+	}
+
+	log := util.NewLogger("powerwall").Redact(cc.User, cc.Password)
+
+	if cc.RefreshToken_ != "" {
+		log.WARN.Println("refreshToken is deprecated, use the Powerwall (Fleet API) template for battery control")
+	}
+
+	return newPowerWall(log, cc)
 }
 
 func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {

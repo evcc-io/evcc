@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -34,7 +35,18 @@ func TestNewPowerWallFromConfigValidation(t *testing.T) {
 	}
 }
 
-func TestDecodePowerWallConfigLegacyUsage(t *testing.T) {
+// decodePowerWallConfig mirrors the decoding done by the meter constructors
+func decodePowerWallConfig(t *testing.T, other map[string]any) powerWallConfig {
+	t.Helper()
+
+	cc := defaultPowerWallConfig()
+	require.NoError(t, util.DecodeOther(other, &cc))
+	require.NoError(t, cc.validate())
+
+	return cc
+}
+
+func TestPowerWallConfigLegacyUsage(t *testing.T) {
 	tests := []struct {
 		usage string
 		want  string
@@ -45,22 +57,20 @@ func TestDecodePowerWallConfigLegacyUsage(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.usage, func(t *testing.T) {
-			config, err := decodePowerWallConfig(map[string]any{
+			cc := decodePowerWallConfig(t, map[string]any{
 				"usage":    tc.usage,
 				"password": "secret",
 			})
-			require.NoError(t, err)
-			assert.Equal(t, tc.want, config.Usage)
+			assert.Equal(t, tc.want, cc.Usage)
 		})
 	}
 }
 
-func TestDecodePowerWallConfigDeprecatedParams(t *testing.T) {
-	_, err := decodePowerWallConfig(map[string]any{
+func TestPowerWallConfigDeprecatedParams(t *testing.T) {
+	decodePowerWallConfig(t, map[string]any{
 		"usage": "battery", "password": "secret",
 		"refreshToken": "token", "siteId": 123,
 	})
-	require.NoError(t, err)
 }
 
 func TestNewPowerWallFleetFromConfigValidation(t *testing.T) {

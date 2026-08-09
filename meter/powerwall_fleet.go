@@ -14,9 +14,8 @@ import (
 )
 
 type fleetConfig struct {
+	powerWallConfig          `mapstructure:",squash"`
 	vehicle.TeslaFleetConfig `mapstructure:",squash"`
-	SiteId                   int64
-	Other                    map[string]any `mapstructure:",remain"`
 }
 
 func init() {
@@ -25,13 +24,12 @@ func init() {
 
 // NewPowerWallFleetFromConfig creates a PowerWall meter with Fleet API battery control.
 func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
-	var cc fleetConfig
+	cc := fleetConfig{powerWallConfig: defaultPowerWallConfig()}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	local, err := decodePowerWallConfig(cc.Other)
-	if err != nil {
+	if err := cc.validate(); err != nil {
 		return nil, err
 	}
 
@@ -40,14 +38,14 @@ func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
 	}
 
 	log := util.NewLogger("powerwall").Redact(
-		local.User,
-		local.Password,
+		cc.User,
+		cc.Password,
 		cc.Credentials.ID,
 		cc.Credentials.Secret,
 		cc.Tokens.Access,
 		cc.Tokens.Refresh,
 	)
-	m, err := newPowerWall(log, local)
+	m, err := newPowerWall(log, cc.powerWallConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +55,7 @@ func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	implement.May(m, implement.BatteryController(local.batterySocLimits.LimitController(func() (float64, error) {
+	implement.May(m, implement.BatteryController(cc.batterySocLimits.LimitController(func() (float64, error) {
 		return socG(energySite)
 	}, func(limit float64) error {
 		return energySite.SetBatteryReserve(teslaReserveLimit(limit))
