@@ -408,6 +408,7 @@ components:
         - hold
         - charge
         - holdcharge
+        - discharge
     BatterySuggestion:
       description: Battery optimizer suggestion for a home battery.
       type: object
