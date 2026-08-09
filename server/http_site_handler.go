@@ -45,7 +45,6 @@ func getPreferredLanguage(header string) string {
 func globalsJsHandler(custom Customization) http.HandlerFunc {
 	globals := struct {
 		Version    string `json:"version"`
-		Commit     string `json:"commit"`
 		CustomCss  bool   `json:"customCss"`
 		CustomLogo bool   `json:"customLogo"`
 		Brand      string `json:"customBrand"`
@@ -54,7 +53,6 @@ func globalsJsHandler(custom Customization) http.HandlerFunc {
 		Phone      string `json:"customPhone"`
 	}{
 		Version:    util.Version,
-		Commit:     util.Commit,
 		CustomCss:  custom.Css != "",
 		CustomLogo: custom.LogoLight != "",
 		Brand:      custom.Brand,

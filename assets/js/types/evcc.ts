@@ -8,7 +8,6 @@ declare global {
     app: any;
     evcc?: {
       version: string;
-      commit: string;
       customCss: boolean;
       customLogo: boolean;
       customBrand: string;
