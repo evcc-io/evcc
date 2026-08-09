@@ -110,7 +110,6 @@ export default defineComponent({
 		authDisabled: Boolean,
 		evopt: { type: Object as PropType<EvOpt>, required: false },
 		installed: String,
-		commit: String,
 		availableVersion: String,
 		customBrand: String,
 	},
@@ -144,7 +143,7 @@ export default defineComponent({
 			return "bg-warning";
 		},
 		versionLabel() {
-			return getShortVersion(this.installed || "", this.commit);
+			return getShortVersion(this.installed || "");
 		},
 		newVersionAvailable() {
 			return isNewVersionAvailable(this.installed, this.availableVersion);
