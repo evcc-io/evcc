@@ -296,8 +296,16 @@ func (wb *Keba) Enable(enable bool) error {
 		}
 	}
 
-	_, err := wb.conn.WriteSingleRegister(wb.regEnable, u)
-	return err
+	if _, err := wb.conn.WriteSingleRegister(wb.regEnable, u); err != nil {
+		return err
+	}
+
+	// switch back to 1p to avoid the phase switch relay's standby consumption
+	if !enable && api.HasCap[api.PhaseSwitcher](wb) {
+		return wb.phases1p3p(1)
+	}
+
+	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
