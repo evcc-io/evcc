@@ -36,25 +36,14 @@
 						<td v-if="development">---</td>
 						<td v-else>
 							<div class="d-flex flex-wrap column-gap-2 align-items-baseline">
-								<span class="text-nowrap">
-									<a
-										:href="releaseNotesUrl(installed)"
-										target="_blank"
-										rel="noopener noreferrer"
-									>
-										v{{ installed }}
-									</a>
-									<template v-if="nightly">
-										(<a
-											:href="githubCommitUrl"
-											target="_blank"
-											rel="noopener noreferrer"
-											><span class="font-monospace">{{
-												shortCommit
-											}}</span></a
-										>)
-									</template>
-								</span>
+								<a
+									class="text-nowrap"
+									:href="nightly ? githubCommitUrl : releaseNotesUrl(installed)"
+									target="_blank"
+									rel="noopener noreferrer"
+								>
+									v{{ installed }}
+								</a>
 								<span
 									v-if="!nightly && !newVersionAvailable"
 									class="text-muted text-nowrap"
@@ -162,7 +151,7 @@ import {
 	isDevelopment,
 	isNightly,
 	getReleaseName,
-	shortCommit,
+	commitFromVersion,
 	isNewVersionAvailable,
 } from "@/utils/version";
 import { defineComponent } from "vue";
@@ -175,7 +164,6 @@ export default defineComponent({
 	components: { GenericModal, Logo },
 	props: {
 		installed: { type: String, default: "" },
-		commit: String,
 		availableVersion: String,
 		releaseNotes: String,
 		hasUpdater: Boolean,
@@ -198,10 +186,10 @@ export default defineComponent({
 			return isDevelopment(this.installed);
 		},
 		nightly() {
-			return isNightly(this.installed, this.commit);
+			return isNightly(this.installed);
 		},
 		releaseName() {
-			return getReleaseName(this.installed, this.commit);
+			return getReleaseName(this.installed);
 		},
 		websiteUrl() {
 			return this.customWebsite || EVCC_WEBSITE;
@@ -219,11 +207,8 @@ export default defineComponent({
 		githubDependenciesUrl() {
 			return `${GITHUB_REPO}/network/dependencies`;
 		},
-		shortCommit() {
-			return shortCommit(this.commit);
-		},
 		githubCommitUrl() {
-			return `${GITHUB_REPO}/commit/${this.commit}`;
+			return `${GITHUB_REPO}/commit/${commitFromVersion(this.installed)}`;
 		},
 		modalSize() {
 			return this.newVersionAvailable ? undefined : "sm";

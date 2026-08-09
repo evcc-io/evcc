@@ -18,12 +18,20 @@ func (m *mockBatteryPowerLimiter) GetPowerLimits() (float64, float64) {
 	return m.charge, m.discharge
 }
 
+func (m *mockBatteryPowerLimiter) Soc() (float64, error) {
+	return 50, nil
+}
+
 type mockMeter struct {
 	api.Meter
 }
 
 func (m *mockMeter) CurrentPower() (float64, error) {
 	return 0, nil
+}
+
+func (m *mockMeter) Soc() (float64, error) {
+	return 50, nil
 }
 
 func TestBatteryMaxDischargePowerAggregation(t *testing.T) {
@@ -52,4 +60,55 @@ func TestBatteryMaxDischargePowerAggregation(t *testing.T) {
 
 	site.updateBatteryMeters()
 	assert.Equal(t, 5000.0, site.GetBatteryMaxDischargePower())
+}
+
+type mockBatterySocLimiter struct {
+	api.Meter
+	soc, min, max float64
+}
+
+func (m *mockBatterySocLimiter) Soc() (float64, error) {
+	return m.soc, nil
+}
+
+func (m *mockBatterySocLimiter) GetSocLimits() (float64, float64) {
+	return m.min, m.max
+}
+
+type mockLimiter struct {
+	mockBatterySocLimiter
+	discharge float64
+}
+
+func (m *mockLimiter) GetPowerLimits() (float64, float64) {
+	return 0, m.discharge
+}
+
+func TestBatteryMaxDischargePowerWithMinSoc(t *testing.T) {
+	site := &Site{
+		log: util.NewLogger("foo"),
+	}
+
+	// one battery empty (soc <= min), one normal
+	m1 := &mockLimiter{mockBatterySocLimiter: mockBatterySocLimiter{Meter: &mockMeter{}, soc: 10, min: 20}, discharge: 2000}
+	m2 := &mockLimiter{mockBatterySocLimiter: mockBatterySocLimiter{Meter: &mockMeter{}, soc: 50, min: 20}, discharge: 3000}
+
+	site.batteryMeters = []config.Device[api.Meter]{
+		config.NewStaticDevice[api.Meter](config.Named{Name: "bat1"}, m1),
+		config.NewStaticDevice[api.Meter](config.Named{Name: "bat2"}, m2),
+	}
+
+	site.updateBatteryMeters()
+	// Only m2 should contribute
+	assert.Equal(t, 3000.0, site.GetBatteryMaxDischargePower())
+
+	// Both empty
+	m3 := &mockLimiter{mockBatterySocLimiter: mockBatterySocLimiter{Meter: &mockMeter{}, soc: 15, min: 20}, discharge: 3000}
+	site.batteryMeters = []config.Device[api.Meter]{
+		config.NewStaticDevice[api.Meter](config.Named{Name: "bat1"}, m1),
+		config.NewStaticDevice[api.Meter](config.Named{Name: "bat3"}, m3),
+	}
+
+	site.updateBatteryMeters()
+	assert.Equal(t, 0.0, site.GetBatteryMaxDischargePower())
 }
