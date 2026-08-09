@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/vehicle/mercedes"
 )
 
@@ -28,7 +29,7 @@ func init() {
 func newMercedesFromConfig(brand string, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed    `mapstructure:",squash"`
-		Tokens   Tokens
+		Tokens   oauth.Tokens
 		User     string
 		Account_ string `mapstructure:"account"` // TODO deprecated
 		VIN      string

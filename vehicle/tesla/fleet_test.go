@@ -1,16 +1,17 @@
-package vehicle
+package tesla
 
 import (
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTeslaFleetConfigValidate(t *testing.T) {
+func TestFleetConfigValidate(t *testing.T) {
 	tests := []struct {
 		name     string
-		config   TeslaFleetConfig
+		config   FleetConfig
 		want     string
 		sentinel error
 	}{
@@ -20,24 +21,24 @@ func TestTeslaFleetConfigValidate(t *testing.T) {
 		},
 		{
 			name: "missing tokens",
-			config: TeslaFleetConfig{
-				Credentials: ClientCredentials{ID: "client"},
+			config: FleetConfig{
+				Credentials: oauth.ClientCredentials{ID: "client"},
 			},
 			sentinel: api.ErrMissingToken,
 		},
 		{
 			name: "missing refresh token",
-			config: TeslaFleetConfig{
-				Credentials: ClientCredentials{ID: "client"},
-				Tokens:      Tokens{Access: "access"},
+			config: FleetConfig{
+				Credentials: oauth.ClientCredentials{ID: "client"},
+				Tokens:      oauth.Tokens{Access: "access"},
 			},
 			sentinel: api.ErrMissingToken,
 		},
 		{
 			name: "valid",
-			config: TeslaFleetConfig{
-				Credentials: ClientCredentials{ID: "client"},
-				Tokens:      Tokens{Access: "access", Refresh: "refresh"},
+			config: FleetConfig{
+				Credentials: oauth.ClientCredentials{ID: "client"},
+				Tokens:      oauth.Tokens{Access: "access", Refresh: "refresh"},
 			},
 		},
 	}

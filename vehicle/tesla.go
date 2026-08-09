@@ -26,13 +26,13 @@ func init() {
 // NewTeslaFromConfig creates a new vehicle
 func NewTeslaFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
-		embed            `mapstructure:",squash"`
-		TeslaFleetConfig `mapstructure:",squash"`
-		VIN              string
-		CommandProxy     string
-		ProxyToken       string
-		Cache            time.Duration
-		Timeout          time.Duration
+		embed             `mapstructure:",squash"`
+		tesla.FleetConfig `mapstructure:",squash"`
+		VIN               string
+		CommandProxy      string
+		ProxyToken        string
+		Cache             time.Duration
+		Timeout           time.Duration
 	}{
 		CommandProxy: tesla.ProxyBaseUrl,
 		Cache:        interval,
@@ -43,7 +43,7 @@ func NewTeslaFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	if err := cc.TeslaFleetConfig.Validate(); err != nil {
+	if err := cc.FleetConfig.Validate(); err != nil {
 		return nil, err
 	}
 
@@ -52,7 +52,7 @@ func NewTeslaFromConfig(other map[string]any) (api.Vehicle, error) {
 		cc.Credentials.ID, cc.Credentials.Secret,
 	)
 
-	fleet, err := cc.TeslaFleetConfig.Client(log)
+	fleet, err := cc.FleetConfig.Client(log)
 	if err != nil {
 		return nil, err
 	}
