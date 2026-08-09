@@ -81,7 +81,7 @@ func runDump(cmd *cobra.Command, args []string) {
 			"CfgFile":    file,
 			"CfgError":   errorString(err),
 			"CfgContent": redacted,
-			"Version":    util.Version,
+			"Version":    util.FormattedVersion(),
 		})
 
 		fmt.Println(out.String())

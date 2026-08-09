@@ -65,7 +65,7 @@ const rootName = "evcc"
 var rootCmd = &cobra.Command{
 	Use:     rootName,
 	Short:   "evcc - open source solar charging",
-	Version: util.Version,
+	Version: util.FormattedVersion(),
 	Run:     runRoot,
 	// always allow Ctrl-C in child commands
 	PersistentPreRun:  allowCtrlC,
@@ -177,7 +177,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	runAsService = true
 
 	// print version
-	log.INFO.Printf("evcc %s", util.Version)
+	log.INFO.Printf("evcc %s", util.FormattedVersion())
 
 	// load config and re-configure logging after reading config file
 	var err error
@@ -455,7 +455,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Remote, Val: remoteAccess.ConfigStatus()}
 
 	// publish system infos
-	valueChan <- util.Param{Key: keys.Version, Val: util.Version}
+	valueChan <- util.Param{Key: keys.Version, Val: util.FormattedVersion()}
 	valueChan <- util.Param{Key: keys.Config, Val: viper.ConfigFileUsed()}
 	valueChan <- util.Param{Key: keys.Database, Val: db.FilePath()}
 	valueChan <- util.Param{Key: keys.System, Val: util.System()}
