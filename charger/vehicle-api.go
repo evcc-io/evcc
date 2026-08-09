@@ -1,13 +1,17 @@
 package charger
 
 import (
+	"encoding/json"
 	"errors"
 	"math"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 // VehicleApi is a charger implementation that uses the vehicle api
@@ -49,6 +53,28 @@ func NewVehicleApiFromConfig(other map[string]any) (api.Charger, error) {
 	return c, nil
 }
 
+// asleep maps a vehicle api's sleeping response to api.ErrAsleep so the loadpoint
+// can trigger the existing wake-up logic. Proxies like TeslaBleHttpProxy answer
+// HTTP 503 with a json body stating the reason.
+func asleep(err error) error {
+	var se *request.StatusError
+	if !errors.As(err, &se) || !se.HasStatus(http.StatusServiceUnavailable) {
+		return err
+	}
+
+	var res struct {
+		Response struct {
+			Reason string
+		}
+	}
+
+	if json.Unmarshal(se.Body(), &res) == nil && strings.Contains(strings.ToLower(res.Response.Reason), "sleep") {
+		return api.ErrAsleep
+	}
+
+	return err
+}
+
 // isVehicleAtHome checks if the vehicle is within the geofence (if enabled)
 func (c *VehicleApi) isVehicleAtHome(vehicle api.Vehicle) (bool, error) {
 	if !c.geofenceEnabled {
@@ -62,7 +88,7 @@ func (c *VehicleApi) isVehicleAtHome(vehicle api.Vehicle) (bool, error) {
 
 	lat, lon, err := v.Position()
 	if err != nil {
-		return false, err
+		return false, asleep(err)
 	}
 
 	return c.distance(lat, lon) <= c.radius, nil
@@ -82,8 +108,8 @@ func (c *VehicleApi) Status() (api.ChargeStatus, error) {
 	// Check if vehicle is at the charger (trying to use geofencing)
 	atHome, err := c.isVehicleAtHome(vehicle)
 	if err != nil {
-		// vehicle asleep: position unavailable, assume previously known location is still valid
-		// and report as connected so loadpoint can trigger wake-up via Enable()
+		// position unknown while asleep: report connected so the loadpoint wakes the
+		// vehicle, the geofence is re-evaluated once it responds again
 		if errors.Is(err, api.ErrAsleep) {
 			return api.StatusB, nil
 		}
@@ -109,9 +135,8 @@ func (c *VehicleApi) Status() (api.ChargeStatus, error) {
 
 	status, err := v.Status()
 	if err != nil {
-		// vehicle asleep: report as connected (StatusB) so loadpoint's setLimit/Enable
-		// path can trigger wake-up via the existing Resurrector logic
-		if errors.Is(err, api.ErrAsleep) {
+		// asleep: report connected so the loadpoint's setLimit path can wake the vehicle
+		if errors.Is(asleep(err), api.ErrAsleep) {
 			return api.StatusB, nil
 		}
 		return api.StatusNone, err
@@ -152,7 +177,7 @@ func (c *VehicleApi) Enable(enable bool) error {
 	}
 
 	if err := v.ChargeEnable(enable); err != nil {
-		return err
+		return asleep(err)
 	}
 
 	c.enabled = enable
@@ -174,7 +199,7 @@ func (c *VehicleApi) MaxCurrent(current int64) error {
 		return nil
 	}
 
-	return v.MaxCurrent(current)
+	return asleep(v.MaxCurrent(current))
 }
 
 var _ api.Resurrector = (*VehicleApi)(nil)
