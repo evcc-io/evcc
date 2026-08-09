@@ -40,6 +40,10 @@ func (c FleetConfig) Validate() error {
 
 // Client creates a Tesla Fleet API client for the configured account
 func (c FleetConfig) Client(log *util.Logger) (*FleetClient, error) {
+	if err := c.Validate(); err != nil {
+		return nil, err
+	}
+
 	token, err := c.Tokens.Token()
 	if err != nil {
 		return nil, err

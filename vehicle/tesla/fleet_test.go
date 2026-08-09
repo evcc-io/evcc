@@ -4,9 +4,16 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/stretchr/testify/assert"
 )
+
+// Client must reject an incomplete config before opening any connection
+func TestFleetClientValidates(t *testing.T) {
+	_, err := FleetConfig{}.Client(util.NewLogger("tesla"))
+	assert.ErrorContains(t, err, "missing client id")
+}
 
 func TestFleetConfigValidate(t *testing.T) {
 	tests := []struct {
