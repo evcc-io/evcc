@@ -25,7 +25,7 @@ func init() {
 
 // NewPowerWallFleetFromConfig creates a PowerWall meter with Fleet API battery control.
 func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
-	cc := fleetConfig{}
+	var cc fleetConfig
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
