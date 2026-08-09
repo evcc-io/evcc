@@ -33,7 +33,7 @@ func getUserAgent() string {
 		}
 	}
 
-	return fmt.Sprintf("evcc/%s hasura/go-graphql-client/%s", util.FormattedVersion(), graphqlClientVersion)
+	return fmt.Sprintf("evcc/%s hasura/go-graphql-client/%s", util.Version, graphqlClientVersion)
 }
 
 func baseVersion(v string) string {

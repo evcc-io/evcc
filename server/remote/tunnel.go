@@ -93,7 +93,7 @@ func (t *Tunnel) connect(ctx context.Context) (bool, error) {
 		HTTPHeader: http.Header{
 			"Authorization":   []string{"Bearer " + t.token},
 			"X-Sponsor-Token": []string{sponsor.Token},
-			"User-Agent":      []string{"evcc/" + util.FormattedVersion()},
+			"User-Agent":      []string{"evcc/" + util.Version},
 		},
 	})
 	if err != nil {

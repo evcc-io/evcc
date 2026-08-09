@@ -149,7 +149,7 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	// add evcc user agent
 	if req.Header.Get("User-Agent") == "" {
 		req = req.Clone(req.Context())
-		req.Header.Set("User-Agent", "evcc/"+util.FormattedVersion())
+		req.Header.Set("User-Agent", "evcc/"+util.Version)
 	}
 
 	// dump without headers

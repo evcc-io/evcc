@@ -55,7 +55,7 @@ func runDiscuss(cmd *cobra.Command, args []string) {
 		"CfgFile":    file,
 		"CfgError":   errorString(cfgErr),
 		"CfgContent": redacted,
-		"Version":    util.FormattedVersion(),
+		"Version":    util.Version,
 	})
 
 	body := out.String()

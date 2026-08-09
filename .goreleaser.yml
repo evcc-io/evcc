@@ -63,7 +63,8 @@ checksum:
   name_template: "checksums.txt"
 
 snapshot:
-  version_template: "{{ .Tag }}-next"
+  # semver pre-release of the upcoming version
+  version_template: "{{ incminor .Version }}-dev-{{ .ShortCommit }}"
 
 changelog:
   sort: asc
