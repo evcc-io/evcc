@@ -53,19 +53,23 @@ func (site *Site) SetBatteryMode(batMode api.BatteryMode) {
 	}
 }
 
+// fromTo reports whether the battery is entering, holding or leaving mode m:
+// either m is requested, or nothing is requested and the battery is already in m.
+func (site *Site) fromTo(requested, m api.BatteryMode) bool {
+	return requested == m || requested == api.BatteryUnknown && site.batteryMode == m
+}
+
 func (site *Site) updateBatteryMode(batteryGridChargeActive, batteryGridDischargeActive bool, rate api.Rate) {
 	batteryMode := site.requiredBatteryMode(batteryGridChargeActive, batteryGridDischargeActive, rate)
 
 	// put battery into hold mode when charging is active and HEMS dimmed
-	fromToCharge := batteryMode == api.BatteryCharge || batteryMode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge
-	if dimmed := hems.Dimmed(site.hems); fromToCharge && dimmed != nil && *dimmed {
+	if dimmed := hems.Dimmed(site.hems); site.fromTo(batteryMode, api.BatteryCharge) && dimmed != nil && *dimmed {
 		site.log.DEBUG.Println("battery mode: HEMS dimmed")
 		batteryMode = api.BatteryHold
 	}
 
 	// put battery into hold mode when discharging to grid and HEMS curtailed production
-	fromToDischarge := batteryMode == api.BatteryDischarge || batteryMode == api.BatteryUnknown && site.batteryMode == api.BatteryDischarge
-	if curtailed := hems.Curtailed(site.hems); fromToDischarge && curtailed != nil && *curtailed {
+	if curtailed := hems.Curtailed(site.hems); site.fromTo(batteryMode, api.BatteryDischarge) && curtailed != nil && *curtailed {
 		site.log.DEBUG.Println("battery mode: HEMS curtailed")
 		batteryMode = api.BatteryHold
 	}
@@ -179,8 +183,8 @@ func (site *Site) batterySocLimitReached(dev config.Device[api.Meter], discharge
 // is decided per device, so one battery reaching its bound does not force the
 // others into hold.
 func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
-	fromToCharge := mode == api.BatteryCharge || mode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge
-	fromToDischarge := mode == api.BatteryDischarge || mode == api.BatteryUnknown && site.batteryMode == api.BatteryDischarge
+	fromToCharge := site.fromTo(mode, api.BatteryCharge)
+	fromToDischarge := site.fromTo(mode, api.BatteryDischarge)
 
 	for _, dev := range site.batteryMeters {
 		meter := dev.Instance()
