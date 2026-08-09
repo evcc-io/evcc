@@ -7,7 +7,7 @@ GIT_TAG := $(shell test -d .git && git describe --abbrev=0 --tags)
 GIT_DIST := $(shell test -n "$(GIT_TAG)" && git rev-list --count $(GIT_TAG)..HEAD)
 NEXT_TAG = $(shell echo $(GIT_TAG) | awk -F. -v b='$(BUMP)' '{if (b == "patch") $$NF++; else {$$2++; $$3=0}} 1' OFS=.)
 # untagged builds are semver pre-releases of the upcoming version
-TAG_NAME ?= $(if $(filter-out 0,$(GIT_DIST)),$(NEXT_TAG)-dev-$(SHA),$(GIT_TAG))
+TAG_NAME ?= $(if $(filter-out 0,$(GIT_DIST)),$(NEXT_TAG)-dev+$(SHA),$(GIT_TAG))
 COMMIT := $(SHA)
 # hide commit for releases
 ifeq ($(RELEASE),1)

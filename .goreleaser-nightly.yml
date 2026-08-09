@@ -57,7 +57,7 @@ checksum:
 
 snapshot:
   # semver pre-release of the upcoming version
-  version_template: "{{ incminor .Version }}-dev-{{ .ShortCommit }}"
+  version_template: "{{ incminor .Version }}-dev+{{ .ShortCommit }}"
 
 changelog:
   sort: asc
