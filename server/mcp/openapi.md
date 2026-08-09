@@ -106,6 +106,12 @@ Remove battery grid charge limit.
 
 **Tags:** battery
 
+## removeBatteryGridDischargeLimit
+
+Remove battery grid discharge limit.
+
+**Tags:** battery
+
 ## setBatteryDischargeControl
 
 Prevent home battery discharge during vehicle fast charging.
@@ -163,6 +169,26 @@ Allow the home battery to discharge to the grid (experimental).
 ```json
 call setBatteryGridDischarge {
   "enable": "true"
+}
+```
+
+## setBatteryGridDischargeLimit
+
+Discharge home battery to grid when the feed-in price is at or above the threshold. Requires a feed-in tariff. Ignored otherwise.
+
+**Tags:** battery
+
+**Arguments:**
+
+| Name | Type | Description |
+|------|------|-------------|
+| cost | number | Cost limit in configured currency (default EUR) or CO2 limit in g/kWh |
+
+**Example call:**
+
+```json
+call setBatteryGridDischargeLimit {
+  "cost": 123.45
 }
 ```
 
