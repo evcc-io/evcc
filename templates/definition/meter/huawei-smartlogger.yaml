@@ -95,7 +95,7 @@ render: |
   curtailed:
     source: go
     in:
-    - name: percent
+    - name: limit
       type: int
       config:
         source: modbus
@@ -106,11 +106,11 @@ render: |
           decode: int16
         scale: 0.1
     script: |
-      curtailed := true
-      if percent == 100 {
-        curtailed = false
+      percent := int(limit)
+      if percent > 100 {
+        percent = 100
       }
-      curtailed
+      percent
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
