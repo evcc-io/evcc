@@ -302,10 +302,7 @@ func (wb *Voltie) Status() (api.ChargeStatus, error) {
 // voltieStateError describes an EVSE state the charger cannot charge in,
 // adding the stop reason reported by the MCU where one is available
 func voltieStateError(b []byte, state uint16) error {
-	desc, ok := voltieStates[state]
-	if !ok {
-		desc = "unknown state"
-	}
+	desc := voltieStateName(state)
 
 	reason := voltieUint16(b, voltieOffStopReason)
 	if reason == 0 {
@@ -473,7 +470,7 @@ func (wb *Voltie) Diagnose() {
 
 	if b, err := wb.statusG.Get(); err == nil {
 		state := voltieUint16(b, voltieOffStatus)
-		fmt.Printf("\tStatus:\t\t0x%02X (%s)\n", state, voltieStates[state])
+		fmt.Printf("\tStatus:\t\t0x%02X (%s)\n", state, voltieStateName(state))
 		fmt.Printf("\tAuto start:\t%d\n", voltieUint16(b, voltieOffAutoStart))
 		fmt.Printf("\tCharging:\t%d\n", voltieUint16(b, voltieOffCharging))
 		fmt.Printf("\tPhases:\t\t%d\n", voltieUint16(b, voltieOffPhases))
@@ -489,6 +486,16 @@ func (wb *Voltie) Diagnose() {
 		fmt.Printf("\tTemperature:\t%d °C MCU, %d °C power board\n",
 			voltieInt16(b, voltieOffTempMcu), voltieInt16(b, voltieOffTempPower))
 	}
+}
+
+// voltieStateName describes an EVSE state, falling back for states the
+// firmware may add in the future
+func voltieStateName(state uint16) string {
+	if desc, ok := voltieStates[state]; ok {
+		return desc
+	}
+
+	return "unknown state"
 }
 
 // voltieUint16 returns the unsigned register at the given block offset
