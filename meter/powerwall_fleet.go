@@ -22,7 +22,7 @@ func init() {
 	registry.Add("powerwall-fleet", NewPowerWallFleetFromConfig)
 }
 
-// NewPowerWallFleetFromConfig creates a PowerWall meter with Fleet API battery control.
+// NewPowerWallFleetFromConfig creates a PowerWall meter with Fleet API battery control
 func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
 	cc := fleetConfig{powerWallConfig: defaultPowerWallConfig()}
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -56,7 +56,12 @@ func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
 	}
 
 	implement.May(m, implement.BatteryController(cc.batterySocLimits.LimitController(func() (float64, error) {
-		return socG(energySite)
+		ess, err := energySite.EnergySiteStatus()
+		if err != nil {
+			return 0, fmt.Errorf("get energy site status: %w", err)
+		}
+
+		return math.Round(ess.PercentageCharged), nil
 	}, func(limit float64) error {
 		return energySite.SetBatteryReserve(teslaReserveLimit(limit))
 	})))
@@ -106,13 +111,4 @@ func teslaEnergySite(log *util.Logger, config tesla.FleetConfig, siteId int64) (
 	log.Redact(strconv.FormatInt(siteId, 10))
 
 	return tc.EnergySite(siteId)
-}
-
-func socG(energySite *teslaclient.EnergySite) (float64, error) {
-	ess, err := energySite.EnergySiteStatus()
-	if err != nil {
-		return 0, fmt.Errorf("get energy site status: %w", err)
-	}
-
-	return math.Round(ess.PercentageCharged), nil
 }
