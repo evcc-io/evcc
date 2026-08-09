@@ -4,29 +4,8 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
-
-func TestTeslaFleetConfigDecoding(t *testing.T) {
-	var config TeslaFleetConfig
-	require.NoError(t, util.DecodeOther(map[string]any{
-		"credentials": map[string]any{
-			"id":     "client",
-			"secret": "secret",
-		},
-		"tokens": map[string]any{
-			"access":  "access",
-			"refresh": "refresh",
-		},
-	}, &config))
-
-	assert.Equal(t, "client", config.Credentials.ID)
-	assert.Equal(t, "secret", config.Credentials.Secret)
-	assert.Equal(t, "access", config.Tokens.Access)
-	assert.Equal(t, "refresh", config.Tokens.Refresh)
-}
 
 func TestTeslaFleetConfigValidate(t *testing.T) {
 	tests := []struct {

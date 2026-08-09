@@ -29,7 +29,7 @@ type TeslaFleetClient struct {
 // Validate checks that the required Tesla Fleet API credentials are configured
 func (c TeslaFleetConfig) Validate() error {
 	if c.Credentials.ID == "" {
-		return errors.New("missing client id")
+		return errors.New("missing client id, see https://docs.evcc.io/en/docs/devices/vehicles#tesla")
 	}
 	if c.Tokens.Access == "" || c.Tokens.Refresh == "" {
 		return api.ErrMissingToken

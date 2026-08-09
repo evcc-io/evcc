@@ -66,20 +66,18 @@ func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
 	return m, nil
 }
 
+// teslaReserveLimit clamps the reserve to values accepted by Tesla firmware: up to 80 or exactly 100
 func teslaReserveLimit(limit float64) uint64 {
-	if math.IsNaN(limit) || limit <= 0 {
+	switch {
+	case limit >= 100:
+		return 100
+	case limit > 80:
+		return 80
+	case limit > 0:
+		return uint64(limit)
+	default: // negative or NaN
 		return 0
 	}
-	if limit >= 100 {
-		return 100
-	}
-
-	limitUint := uint64(limit)
-	// Tesla firmware accepts values up to 80 or exactly 100 in this range.
-	if limitUint > 80 {
-		return 80
-	}
-	return limitUint
 }
 
 func teslaEnergySite(log *util.Logger, config vehicle.TeslaFleetConfig, siteId int64) (*teslaclient.EnergySite, error) {
