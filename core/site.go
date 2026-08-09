@@ -715,8 +715,18 @@ func (site *Site) updateBatteryMeters() {
 		}
 
 		if bpl, ok := api.Cap[api.BatteryPowerLimiter](meter); ok && maxDischargePower >= 0 {
-			_, discharge := bpl.GetPowerLimits()
-			maxDischargePower += discharge
+			var empty bool
+			if bsl, ok := api.Cap[api.BatterySocLimiter](meter); ok {
+				minSoc, _ := bsl.GetSocLimits()
+				if mm[i].Soc != nil && *mm[i].Soc <= minSoc {
+					empty = true
+				}
+			}
+
+			if !empty {
+				_, discharge := bpl.GetPowerLimits()
+				maxDischargePower += discharge
+			}
 		} else {
 			maxDischargePower = -1 // any battery without a limit disables the cap
 		}
