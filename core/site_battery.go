@@ -63,6 +63,13 @@ func (site *Site) updateBatteryMode(batteryGridChargeActive, batteryGridDischarg
 		batteryMode = api.BatteryHold
 	}
 
+	// put battery into hold mode when discharging to grid and HEMS curtailed production
+	fromToDischarge := batteryMode == api.BatteryDischarge || batteryMode == api.BatteryUnknown && site.batteryMode == api.BatteryDischarge
+	if curtailed := hems.Curtailed(site.hems); fromToDischarge && curtailed != nil && *curtailed {
+		site.log.DEBUG.Println("battery mode: HEMS curtailed")
+		batteryMode = api.BatteryHold
+	}
+
 	// NOTE: applyBatteryMode is always called when charge or discharge mode is active to
 	// validate max soc / min soc reserve
 	if modeChanged := batteryMode != api.BatteryUnknown; modeChanged || site.batteryMode == api.BatteryCharge || site.batteryMode == api.BatteryDischarge {
@@ -93,14 +100,6 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 		return map[bool]api.BatteryMode{false: s, true: api.BatteryUnknown}[batMode == s]
 	}
 
-	// grid charge and grid discharge are driven by independent limits against different
-	// rates (buy vs feed-in), so both can be active at once, e.g. a low buy price and a
-	// high feed-in price at the same time. Charge wins - it protects against a costly
-	// double round-trip (buying to then immediately sell) - and is logged for visibility.
-	if batteryGridChargeActive && batteryGridDischargeActive && site.batteryConfigured() {
-		site.log.WARN.Println("battery mode: grid charge and grid discharge both active, charge takes priority")
-	}
-
 	switch {
 	case !site.batteryConfigured():
 		res = api.BatteryUnknown
@@ -113,7 +112,13 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 			res = extMode
 		}
 	case batteryGridChargeActive:
-		// takes priority over grid discharge - see conflict check above
+		// grid charge and grid discharge are driven by independent limits against different
+		// rates (buy vs feed-in), so both can be active at once, e.g. a low buy price and a
+		// high feed-in price at the same time. Charge wins - it protects against a costly
+		// double round-trip (buying to then immediately sell) - and is logged once on entry.
+		if batteryGridDischargeActive && batMode != api.BatteryCharge {
+			site.log.WARN.Println("battery mode: grid charge and grid discharge both active, charge takes priority")
+		}
 		res = keepUnlessModified(api.BatteryCharge)
 	case site.dischargeControlActive(rate):
 		// EV/house priority: hold wins over feed-in discharge
@@ -130,9 +135,7 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 // batterySocLimitReached reports whether the battery has reached the soc bound
 // that should stop the requested mode: the max soc when charging, or the min
 // soc reserve when discharging to grid. A configured limit of 0 disables the
-// respective check (max is also disabled at 100). Returns api.ErrNotAvailable
-// when the device advertises soc limits but exposes no soc reading, so the
-// caller can skip the check rather than fail the whole battery mode update.
+// respective check (max is also disabled at 100).
 func (site *Site) batterySocLimitReached(dev config.Device[api.Meter], discharge bool) (bool, error) {
 	meter := dev.Instance()
 
@@ -143,7 +146,7 @@ func (site *Site) batterySocLimitReached(dev config.Device[api.Meter], discharge
 
 	batSoc, ok := api.Cap[api.Battery](meter)
 	if !ok {
-		return false, api.ErrNotAvailable
+		return false, errors.New("battery with soc limits must have soc")
 	}
 
 	soc, err := batSoc.Soc()
@@ -151,18 +154,18 @@ func (site *Site) batterySocLimitReached(dev config.Device[api.Meter], discharge
 		return false, err
 	}
 
-	min, max := batLimiter.GetSocLimits()
+	minSoc, maxSoc := batLimiter.GetSocLimits()
 
 	if discharge {
-		if min > 0 && soc <= min {
-			site.log.DEBUG.Printf("battery %s: reserve soc reached (%.0f <= %.0f)", deviceTitleOrName(dev), soc, min)
+		if minSoc > 0 && soc <= minSoc {
+			site.log.DEBUG.Printf("battery %s: reserve soc reached (%.0f <= %.0f)", deviceTitleOrName(dev), soc, minSoc)
 			return true, nil
 		}
 		return false, nil
 	}
 
-	if max > 0 && max < 100 && soc >= max {
-		site.log.DEBUG.Printf("battery %s: limit soc reached (%.0f >= %.0f)", deviceTitleOrName(dev), soc, max)
+	if maxSoc > 0 && maxSoc < 100 && soc >= maxSoc {
+		site.log.DEBUG.Printf("battery %s: limit soc reached (%.0f >= %.0f)", deviceTitleOrName(dev), soc, maxSoc)
 		return true, nil
 	}
 

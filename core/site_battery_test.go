@@ -316,3 +316,37 @@ func TestForcedBatteryDischargeLimits(t *testing.T) {
 		ctrl.Finish()
 	}
 }
+
+// TestBatteryDischargeHemsCurtailed ensures grid discharge is held back while the
+// grid operator curtails production.
+func TestBatteryDischargeHemsCurtailed(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	var bat api.Meter
+	batCon := api.NewMockBatteryController(ctrl)
+
+	bat = &struct {
+		api.Meter
+		api.BatteryController
+	}{
+		Meter:             bat,
+		BatteryController: batCon,
+	}
+
+	curtailed := 60
+	hems := api.NewMockHEMS(ctrl)
+	hems.EXPECT().CurtailedPercent().Return(&curtailed).AnyTimes()
+	hems.EXPECT().MaxConsumptionPower().Return(nil).AnyTimes()
+
+	site := &Site{
+		log:           util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, bat)},
+		hems:          hems,
+	}
+
+	batCon.EXPECT().SetBatteryMode(api.BatteryHold).Times(1)
+
+	site.updateBatteryMode(false, true, api.Rate{})
+
+	ctrl.Finish()
+}
