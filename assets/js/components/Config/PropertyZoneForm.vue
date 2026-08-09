@@ -215,5 +215,4 @@ export default {
 .w-min-200 {
 	min-width: min(200px, 100%);
 }
-
 </style>
