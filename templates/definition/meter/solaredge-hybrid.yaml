@@ -23,6 +23,7 @@ params:
     port: 1502
   - name: maxacpower
     required: true
+    usages: ["pv"]
   - preset: battery-params
   - name: maxdischargepower
     default: 5000
