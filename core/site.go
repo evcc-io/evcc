@@ -1220,7 +1220,10 @@ func (site *Site) update(lp updater) {
 	site.publish(keys.BatteryGridChargeActive, batteryGridChargeActive)
 
 	// grid discharge (feed-in arbitrage) uses the feed-in rate, not the grid rate
-	feedinRate, _ := feedin.At(time.Now())
+	feedinRate, err := feedin.At(time.Now())
+	if feedin != nil && err != nil {
+		site.log.WARN.Printf("feed-in: no matching rate for: %s", time.Now().Format(time.RFC3339))
+	}
 	batteryGridDischargeActive := site.batteryGridDischargeActive(feedinRate)
 	site.publish(keys.BatteryGridDischargeActive, batteryGridDischargeActive)
 
