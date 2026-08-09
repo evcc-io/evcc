@@ -101,6 +101,12 @@ type EVECUBEUnitConfigRequest struct {
 	Values map[string]any `json:"values"`
 }
 
+// EVECUBEStatusRequest is the request body for /api/status POST
+type EVECUBEStatusRequest struct {
+	ConnectorID int  `json:"connectorId"`
+	Enable      bool `json:"enable"`
+}
+
 // NewEVECUBEFromConfig creates a EVECUBE charger from generic config
 func NewEVECUBEFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
@@ -254,6 +260,9 @@ func (wb *EVECUBE) Enabled() (bool, error) {
 func (wb *EVECUBE) Enable(enable bool) error {
 	var current int64
 	if enable {
+		if err := wb.setConnectorEnabled(true); err != nil {
+			return err
+		}
 		current = wb.currentLimit
 	}
 
@@ -269,6 +278,37 @@ func (wb *EVECUBE) MaxCurrent(current int64) error {
 	wb.currentLimit = current
 
 	return wb.setValue(fmt.Sprintf("MaxCurrent_%d", wb.connector), current)
+}
+
+// setConnectorEnabled enables or disables a connector via the status API
+func (wb *EVECUBE) setConnectorEnabled(enable bool) error {
+	reqBody := EVECUBEStatusRequest{
+		ConnectorID: wb.connector,
+		Enable:      enable,
+	}
+
+	data, err := json.Marshal(reqBody)
+	if err != nil {
+		return err
+	}
+
+	uri := fmt.Sprintf("%s/api/status", wb.uri)
+	req, err := request.New(
+		http.MethodPost,
+		uri,
+		strings.NewReader(string(data)),
+		request.JSONEncoding,
+	)
+	if err != nil {
+		return err
+	}
+
+	if wb.user != "" {
+		req.SetBasicAuth(wb.user, wb.pass)
+	}
+
+	var resp map[string]any
+	return wb.DoJSON(req, &resp)
 }
 
 // setValue sets a named value via admin API
