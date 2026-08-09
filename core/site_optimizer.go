@@ -599,8 +599,9 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		Details: details,
 	})
 
-	if resp.JSON200.Status != optimizer.Optimal {
-		return errors.New(string(resp.JSON200.Status))
+	// feasible results are usable, they are just not proven optimal
+	if status := resp.JSON200.Status; status != optimizer.Optimal && status != optimizer.Feasible {
+		return errors.New(string(status))
 	}
 
 	site.applyOptimizerResult(req, details.BatteryDetails, *resp.JSON200)
