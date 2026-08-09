@@ -1,6 +1,10 @@
 package metrics
 
 import (
+	"errors"
+	"fmt"
+	"maps"
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/server/db"
@@ -24,6 +28,56 @@ func init() {
 	db.Register(func(_ *gorm.DB) error {
 		return db.Instance.AutoMigrate(new(tariffValue))
 	})
+}
+
+// tariffColumns maps the api usage parameter to the tariffs table column
+var tariffColumns = map[string]string{
+	"grid":        "grid",
+	"feedin":      "feedin",
+	"co2":         "co2",
+	"temperature": "temperature",
+}
+
+// TariffUsages returns the deletable tariff usages
+func TariffUsages() []string {
+	return slices.Sorted(maps.Keys(tariffColumns))
+}
+
+// DeleteTariffs removes the persisted values in [from,to). An empty usage drops
+// the entire row, otherwise only that usage is cleared. Both bounds are
+// required, a full wipe is /api/db/reset.
+func DeleteTariffs(from, to time.Time, usage string) (int64, error) {
+	if from.IsZero() || to.IsZero() {
+		return 0, errors.New("missing from/to")
+	}
+
+	inRange := func() *gorm.DB {
+		return db.Instance.Where("ts >= ? AND ts < ?", from.Unix(), to.Unix())
+	}
+
+	if usage == "" {
+		res := inRange().Delete(new(tariffValue))
+		return res.RowsAffected, res.Error
+	}
+
+	col, ok := tariffColumns[usage]
+	if !ok {
+		return 0, fmt.Errorf("invalid usage: %s", usage)
+	}
+
+	res := inRange().Model(new(tariffValue)).
+		Where(col+" IS NOT NULL").
+		Update(col, gorm.Expr("NULL"))
+	if res.Error != nil {
+		return 0, res.Error
+	}
+
+	// drop the rows that no longer hold any value
+	err := inRange().
+		Where("grid IS NULL AND feedin IS NULL AND co2 IS NULL AND temperature IS NULL").
+		Delete(new(tariffValue)).Error
+
+	return res.RowsAffected, err
 }
 
 // PersistTariffs stores the tariff values at the given 15min boundary, nil values omitted
