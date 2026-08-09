@@ -55,6 +55,14 @@ func TestDecodePowerWallConfigLegacyUsage(t *testing.T) {
 	}
 }
 
+func TestDecodePowerWallConfigDeprecatedParams(t *testing.T) {
+	_, err := decodePowerWallConfig(map[string]any{
+		"usage": "battery", "password": "secret",
+		"refreshToken": "token", "siteId": 123,
+	})
+	require.NoError(t, err)
+}
+
 func TestNewPowerWallFleetFromConfigValidation(t *testing.T) {
 	tests := []struct {
 		name         string

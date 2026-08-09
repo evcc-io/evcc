@@ -25,6 +25,8 @@ type PowerWall struct {
 type powerWallConfig struct {
 	URI, Usage, User, Password string
 	Cache                      time.Duration
+	RefreshToken_              string `mapstructure:"refreshToken"` // TODO deprecated
+	SiteId_                    int64  `mapstructure:"siteId"`       // TODO deprecated
 	batterySocLimits           `mapstructure:",squash"`
 	batteryPowerLimits         `mapstructure:",squash"`
 }
@@ -42,6 +44,11 @@ func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
 	}
 
 	log := util.NewLogger("powerwall").Redact(cc.User, cc.Password)
+
+	if cc.RefreshToken_ != "" {
+		log.WARN.Println("refreshToken is deprecated, use the Powerwall (Fleet API) template for battery control")
+	}
+
 	return newPowerWall(log, cc)
 }
 

@@ -1,4 +1,4 @@
-package tesla
+package vehicle
 
 import (
 	"testing"
@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFleetConfigDecoding(t *testing.T) {
-	var config FleetConfig
+func TestTeslaFleetConfigDecoding(t *testing.T) {
+	var config TeslaFleetConfig
 	require.NoError(t, util.DecodeOther(map[string]any{
 		"credentials": map[string]any{
 			"id":     "client",
@@ -28,10 +28,10 @@ func TestFleetConfigDecoding(t *testing.T) {
 	assert.Equal(t, "refresh", config.Tokens.Refresh)
 }
 
-func TestFleetConfigValidate(t *testing.T) {
+func TestTeslaFleetConfigValidate(t *testing.T) {
 	tests := []struct {
 		name     string
-		config   FleetConfig
+		config   TeslaFleetConfig
 		want     string
 		sentinel error
 	}{
@@ -41,24 +41,24 @@ func TestFleetConfigValidate(t *testing.T) {
 		},
 		{
 			name: "missing tokens",
-			config: FleetConfig{
-				Credentials: struct{ ID, Secret string }{ID: "client"},
+			config: TeslaFleetConfig{
+				Credentials: ClientCredentials{ID: "client"},
 			},
 			sentinel: api.ErrMissingToken,
 		},
 		{
 			name: "missing refresh token",
-			config: FleetConfig{
-				Credentials: struct{ ID, Secret string }{ID: "client"},
-				Tokens:      struct{ Access, Refresh string }{Access: "access"},
+			config: TeslaFleetConfig{
+				Credentials: ClientCredentials{ID: "client"},
+				Tokens:      Tokens{Access: "access"},
 			},
 			sentinel: api.ErrMissingToken,
 		},
 		{
 			name: "valid",
-			config: FleetConfig{
-				Credentials: struct{ ID, Secret string }{ID: "client"},
-				Tokens:      struct{ Access, Refresh string }{Access: "access", Refresh: "refresh"},
+			config: TeslaFleetConfig{
+				Credentials: ClientCredentials{ID: "client"},
+				Tokens:      Tokens{Access: "access", Refresh: "refresh"},
 			},
 		},
 	}

@@ -7,7 +7,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	teslaapi "github.com/evcc-io/evcc/util/tesla"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/evcc-io/evcc/vehicle/tesla"
 	teslaclient "github.com/evcc-io/tesla-proxy-client"
@@ -27,13 +26,13 @@ func init() {
 // NewTeslaFromConfig creates a new vehicle
 func NewTeslaFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
-		embed                `mapstructure:",squash"`
-		teslaapi.FleetConfig `mapstructure:",squash"`
-		VIN                  string
-		CommandProxy         string
-		ProxyToken           string
-		Cache                time.Duration
-		Timeout              time.Duration
+		embed            `mapstructure:",squash"`
+		TeslaFleetConfig `mapstructure:",squash"`
+		VIN              string
+		CommandProxy     string
+		ProxyToken       string
+		Cache            time.Duration
+		Timeout          time.Duration
 	}{
 		CommandProxy: tesla.ProxyBaseUrl,
 		Cache:        interval,
@@ -44,7 +43,7 @@ func NewTeslaFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	if err := cc.FleetConfig.Validate(); err != nil {
+	if err := cc.TeslaFleetConfig.Validate(); err != nil {
 		return nil, err
 	}
 
@@ -53,7 +52,7 @@ func NewTeslaFromConfig(other map[string]any) (api.Vehicle, error) {
 		cc.Credentials.ID, cc.Credentials.Secret,
 	)
 
-	fleet, err := cc.FleetConfig.Client(log)
+	fleet, err := cc.TeslaFleetConfig.Client(log)
 	if err != nil {
 		return nil, err
 	}

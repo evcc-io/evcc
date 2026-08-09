@@ -9,14 +9,14 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/tesla"
+	"github.com/evcc-io/evcc/vehicle"
 	teslaclient "github.com/evcc-io/tesla-proxy-client"
 )
 
 type fleetConfig struct {
-	tesla.FleetConfig `mapstructure:",squash"`
-	SiteId            int64
-	Other             map[string]any `mapstructure:",remain"`
+	vehicle.TeslaFleetConfig `mapstructure:",squash"`
+	SiteId                   int64
+	Other                    map[string]any `mapstructure:",remain"`
 }
 
 func init() {
@@ -35,7 +35,7 @@ func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	if err := cc.FleetConfig.Validate(); err != nil {
+	if err := cc.TeslaFleetConfig.Validate(); err != nil {
 		return nil, err
 	}
 
@@ -52,7 +52,7 @@ func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	energySite, err := teslaEnergySite(log, cc.FleetConfig, cc.SiteId)
+	energySite, err := teslaEnergySite(log, cc.TeslaFleetConfig, cc.SiteId)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func teslaReserveLimit(limit float64) uint64 {
 	return limitUint
 }
 
-func teslaEnergySite(log *util.Logger, config tesla.FleetConfig, siteId int64) (*teslaclient.EnergySite, error) {
+func teslaEnergySite(log *util.Logger, config vehicle.TeslaFleetConfig, siteId int64) (*teslaclient.EnergySite, error) {
 	fleet, err := config.Client(log)
 	if err != nil {
 		return nil, err

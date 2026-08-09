@@ -1,33 +1,33 @@
-package tesla
+package vehicle
 
 import (
 	"context"
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/vehicle/tesla"
 	teslaclient "github.com/evcc-io/tesla-proxy-client"
 	"golang.org/x/oauth2"
 )
 
-// FleetConfig contains Tesla Fleet API credentials and tokens.
-type FleetConfig struct {
-	Credentials struct{ ID, Secret string }
-	Tokens      struct{ Access, Refresh string }
+// TeslaFleetConfig contains Tesla Fleet API credentials and tokens
+type TeslaFleetConfig struct {
+	Credentials ClientCredentials
+	Tokens      Tokens
 }
 
-// FleetClient provides authenticated access to the Tesla Fleet API.
-type FleetClient struct {
+// TeslaFleetClient provides authenticated access to the Tesla Fleet API
+type TeslaFleetClient struct {
 	Client     *teslaclient.Client
 	HTTPClient *http.Client
 }
 
-// Validate checks that the required Tesla Fleet API credentials are configured.
-func (c FleetConfig) Validate() error {
+// Validate checks that the required Tesla Fleet API credentials are configured
+func (c TeslaFleetConfig) Validate() error {
 	if c.Credentials.ID == "" {
 		return errors.New("missing client id")
 	}
@@ -38,13 +38,14 @@ func (c FleetConfig) Validate() error {
 	return nil
 }
 
-// Client creates a Tesla Fleet API client for the configured account.
-func (c FleetConfig) Client(log *util.Logger) (*FleetClient, error) {
-	identity, err := NewIdentity(log, OAuth2Config(c.Credentials.ID, c.Credentials.Secret), &oauth2.Token{
-		AccessToken:  c.Tokens.Access,
-		RefreshToken: c.Tokens.Refresh,
-		Expiry:       time.Now(),
-	})
+// Client creates a Tesla Fleet API client for the configured account
+func (c TeslaFleetConfig) Client(log *util.Logger) (*TeslaFleetClient, error) {
+	token, err := c.Tokens.Token()
+	if err != nil {
+		return nil, err
+	}
+
+	identity, err := tesla.NewIdentity(log, tesla.OAuth2Config(c.Credentials.ID, c.Credentials.Secret), token)
 	if err != nil {
 		return nil, fmt.Errorf("create Fleet identity: %w", err)
 	}
@@ -63,5 +64,5 @@ func (c FleetConfig) Client(log *util.Logger) (*FleetClient, error) {
 	}
 	tc.SetBaseUrl(region.FleetApiBaseUrl)
 
-	return &FleetClient{Client: tc, HTTPClient: hc}, nil
+	return &TeslaFleetClient{Client: tc, HTTPClient: hc}, nil
 }
