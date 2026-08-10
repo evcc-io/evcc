@@ -1086,9 +1086,7 @@ func (site *Site) extractHeaterProfiles() (tempProfile, weeklyProfile []float64)
 			default:
 				site.log.DEBUG.Printf("heater profile: loadpoint %d: temperature strategy, no data (%v)", i, err)
 			}
-		}
-
-		if hasFeature(lp.charger, api.DemandProfileWeekly) {
+		} else if hasFeature(lp.charger, api.DemandProfileWeekly) {
 			profile, err := lp.chargeEnergy.EnergyProfileWeekday()
 			switch {
 			case err == nil:
