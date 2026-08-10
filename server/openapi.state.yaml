@@ -1060,10 +1060,12 @@ components:
         - chargerFeatureClimaterDisabled
         - chargerFeatureCoarseCurrent
         - chargerFeatureContinuous
+        - chargerFeatureDailyTemperature
         - chargerFeatureHeating
         - chargerFeatureIntegratedDevice
         - chargerFeatureOffline
         - chargerFeatureRetryable
+        - chargerFeatureSameWeekday
         - chargerFeatureStreaming
         - chargerFeatureSwitchDevice
         - chargerFeatureWakeUpDisabled
