@@ -170,7 +170,9 @@ export default defineComponent({
 			const fmtBarValue = (value: number) =>
 				isPrice ? this.fmtMoney(value, this.currency, true, true) : this.fmtGrams(value);
 			const fmtLineValue = (value: number) =>
-				isPrice ? this.fmtPricePerKWh(value, this.currency, false) : this.fmtCo2Medium(value);
+				isPrice
+					? this.fmtPricePerKWh(value, this.currency, false)
+					: this.fmtCo2Medium(value);
 			const barDatasets = datasets.filter((d) => d.type === "bar");
 			const stackData = roundedStackData(barDatasets, labels.length);
 			const line = datasets.find((d) => d.type === "line");

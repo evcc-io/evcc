@@ -51,9 +51,7 @@ export default defineComponent({
 			}
 
 			// stable alphabetical order so entries don't jump between periods
-			const entries = Object.entries(aggregatedData).sort((a, b) =>
-				a[0].localeCompare(b[0])
-			);
+			const entries = Object.entries(aggregatedData).sort((a, b) => a[0].localeCompare(b[0]));
 			const labels = entries.map(([label]) =>
 				this.groupBy === GROUPS.NONE ? this.$t(`sessions.group.${label}`) : label
 			);
@@ -99,4 +97,3 @@ export default defineComponent({
 	},
 });
 </script>
-
