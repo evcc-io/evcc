@@ -26,6 +26,12 @@ jobs:
           cache: false # avoid cache thrashing
         id: go
 
+      - uses: actions/cache/restore@v6
+        with:
+          path: ~/.cache/go-build
+          key: ${{ runner.os }}-gobuild-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-gobuild-
+
       - name: Install tools
         run: make install
 
@@ -56,6 +62,12 @@ jobs:
           cache: false
         id: go
 
+      - uses: actions/cache/restore@v6
+        with:
+          path: ~/.cache/go-build
+          key: ${{ runner.os }}-gobuild-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-gobuild-
+
       - uses: voidzero-dev/setup-vp@v1
         with:
           node-version: "26"
@@ -65,6 +77,13 @@ jobs:
 
       - name: Build
         run: make build
+
+      # trial: unconditional save so the second run of this branch sees a hit
+      - name: Save Go build cache
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.cache/go-build
+          key: ${{ runner.os }}-gobuild-${{ github.sha }}
 
   test:
     name: Test
@@ -83,6 +102,12 @@ jobs:
           go-version-file: go.mod
           cache: false
         id: go
+
+      - uses: actions/cache/restore@v6
+        with:
+          path: ~/.cache/go-build
+          key: ${{ runner.os }}-gobuild-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-gobuild-
 
       - name: Test
         run: mkdir dist && touch dist/empty && make test
@@ -104,6 +129,12 @@ jobs:
           go-version-file: go.mod
           cache: false # avoid cache thrashing
         id: go
+
+      - uses: actions/cache/restore@v6
+        with:
+          path: ~/.cache/go-build
+          key: ${{ runner.os }}-gobuild-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-gobuild-
 
       - run: mkdir dist && touch dist/empty
 
@@ -183,6 +214,12 @@ jobs:
           go-version-file: go.mod
           cache: false
         id: go
+
+      - uses: actions/cache/restore@v6
+        with:
+          path: ~/.cache/go-build
+          key: ${{ runner.os }}-gobuild-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-gobuild-
 
       - uses: voidzero-dev/setup-vp@v1
         with:
