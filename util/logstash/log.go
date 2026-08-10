@@ -1,11 +1,11 @@
 package logstash
 
 import (
+	"bytes"
 	"container/ring"
 	"io"
 	"maps"
 	"slices"
-	"strings"
 	"sync"
 
 	jww "github.com/spf13/jwalterweatherman"
@@ -93,12 +93,11 @@ func New(size int) *logger {
 var _ io.Writer = (*logger)(nil)
 
 func (l *logger) Write(p []byte) (n int, err error) {
-	s := string(p)
-	if strings.HasPrefix(s, "[cache ]") {
+	if bytes.HasPrefix(p, []byte("[cache ]")) {
 		return len(p), nil
 	}
 
-	e := element(s)
+	e := element(p)
 	_, level := e.areaLevel()
 
 	l.mu.Lock()
