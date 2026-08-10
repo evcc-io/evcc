@@ -107,7 +107,7 @@ render: |
         scale: 0.1
     script: |
       percent := int(limit)
-      if percent > 100 {
+      if percent > 100 || percent < 0 {
         percent = 100
       }
       percent
