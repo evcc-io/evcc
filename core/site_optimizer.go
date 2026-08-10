@@ -994,8 +994,8 @@ func unmodelledPower(lp loadpoint.API) float64 {
 
 // homeProfile returns the home base load in Wh
 func (site *Site) homeProfile(minLen int) ([]float64, error) {
-	// base load (excludes loadpoints) - averaged over last 30 days
-	gt_base, err := site.collectors[metrics.Home].EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -30))
+	// base load (excludes loadpoints) - avg of same weekday over past 4 weeks
+	gt_base, err := site.collectors[metrics.Home].EnergyProfileWeekday()
 	if err != nil {
 		return nil, err
 	}
