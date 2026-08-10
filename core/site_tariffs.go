@@ -198,11 +198,15 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 		Complete: !last.Before(eot.AddDate(0, 0, 1)),
 	}
 
-	if r, err := solar.At(time.Now()); err == nil {
-		if err := site.collectors[metrics.Forecast].AddEnergy(nil, nil, r.Value); err != nil {
+	// integrate the published curve between updates instead of sampling it, so
+	// the persisted history matches the forecast the UI draws
+	sampled := time.Now()
+	if last := site.forecastSampled; !last.IsZero() && sampled.After(last) {
+		if err := site.collectors[metrics.Forecast].AddEnergyDelta(solarEnergy(solar, last, sampled) / 1e3); err != nil {
 			site.log.ERROR.Printf("solar forecast collector: %v", err)
 		}
 	}
+	site.forecastSampled = sampled
 
 	if r, err := tariff.At(site.GetTariff(api.TariffUsageTemperature), time.Now()); err == nil {
 		if err := site.collectors[metrics.Temperature].SetSocTemp(r.Value, true); err != nil {

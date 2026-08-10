@@ -569,3 +569,31 @@ func TestCollectorLastSlotEnergy(t *testing.T) {
 	_, ok = col.LastSlotEnergy()
 	require.False(t, ok)
 }
+
+func TestCollectorAddEnergyDelta(t *testing.T) {
+	clock := clock.NewMock()
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector("delta", "delta", "", WithClock(clock))
+	require.NoError(t, err)
+
+	// first delta seeds the accumulator clock
+	require.NoError(t, col.AddEnergyDelta(1))
+	require.Equal(t, 0.0, col.accu.Energy)
+
+	clock.Add(5 * time.Minute)
+	require.NoError(t, col.AddEnergyDelta(0.25))
+	clock.Add(5 * time.Minute)
+	require.NoError(t, col.AddEnergyDelta(0.25))
+	require.Equal(t, 0.5, col.accu.Energy)
+
+	// negative delta accumulates as return energy
+	require.NoError(t, col.AddEnergyDelta(-0.1))
+	require.Equal(t, 0.1, col.accu.ReturnEnergy)
+
+	clock.Add(15 * time.Minute)
+	require.NoError(t, col.AddEnergyDelta(0.25))
+	require.Equal(t, 0.0, col.accu.Energy) // accumulator reset after slot boundary
+}
