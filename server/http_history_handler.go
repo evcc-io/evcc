@@ -3,11 +3,13 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/locale"
 	"golang.org/x/text/language"
 )
@@ -76,6 +78,14 @@ func energyHistoryHandler(w http.ResponseWriter, r *http.Request) {
 		exportResult(ctx, w, format, metrics.SeriesExport(res), historyFilename(from, aggregate))
 		return
 	}
+
+	// past periods are immutable; current period only changes at the next slot
+	slot := time.Now().Truncate(tariff.SlotDuration)
+	maxAge := time.Until(slot.Add(tariff.SlotDuration))
+	if !to.IsZero() && to.Before(slot) {
+		maxAge = time.Hour
+	}
+	w.Header().Set("Cache-Control", fmt.Sprintf("private, max-age=%d", int(maxAge.Seconds())))
 
 	jsonWrite(w, res)
 }
