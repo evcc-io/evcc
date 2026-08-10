@@ -509,13 +509,18 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 
 	var batteries []optimizerBattery
 
+	// uncontrollable load of loadpoints that cannot be modelled as storage
+	unmodelled := make([]float64, minLen)
+
 	for id, lp := range site.Loadpoints() {
 		// ignore disconnected loadpoints, including StatusNone
 		if s := lp.GetStatus(); s != api.StatusB && s != api.StatusC {
 			continue
 		}
 
+		// unknown vehicle capacity: account for the consumption as uncontrollable load
 		if v := lp.GetVehicle(); v == nil || v.Capacity() == 0 {
+			addUnmodelledLoad(unmodelled, lp)
 			continue
 		}
 
@@ -523,6 +528,15 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		if cfg, detail := site.loadpointRequest(lp, minLen, firstSlotDuration, grid); cfg.CMax > 0 {
 			detail.loadpoint = &id
 			batteries = append(batteries, optimizerBattery{cfg, detail})
+		}
+	}
+
+	// home profile subtracts all loadpoint power, so unmodelled loadpoints would
+	// leave the optimizer planning against surplus that is already consumed
+	if sum := lo.Sum(unmodelled); sum > 0 {
+		site.log.DEBUG.Printf("optimizer: home slots updated with %.0fWh unmodelled loadpoint load", sum)
+		for i, v := range prorate(unmodelled, firstSlotDuration) {
+			req.TimeSeries.Gt[i] += v
 		}
 	}
 
@@ -955,6 +969,35 @@ func loadpointProfile(lp loadpoint.API, minLen int) []float64 {
 	}
 
 	return res
+}
+
+// addUnmodelledLoad adds a connected loadpoint's uncontrollable load in Wh per
+// slot. Used for loadpoints that cannot be modelled as storage because the
+// vehicle capacity is unknown.
+//
+// Only the near slots are covered: without a capacity there is no fill point, so
+// the load decays into the forecast like other measured values instead of being
+// asserted over the entire horizon.
+func addUnmodelledLoad(slots []float64, lp loadpoint.API) {
+	power := lp.GetChargePower()
+
+	// minpv keeps drawing at least min power while the vehicle is connected,
+	// even before the charge meter has caught up
+	if lp.GetMode() == api.ModeMinPV && lp.GetStatus() == api.StatusC {
+		power = max(power, lp.EffectiveMinPower())
+	}
+
+	if power <= 0 {
+		return
+	}
+
+	// decay from the current power into zero
+	load := make([]float64, len(slots))
+	blendMeasured(load, power/slotsPerHour, optimizerDecaySlots)
+
+	for i, v := range load {
+		slots[i] += v
+	}
 }
 
 // homeProfile returns the home base load in Wh

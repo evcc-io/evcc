@@ -69,6 +69,45 @@ func TestAsTimestamps(t *testing.T) {
 	}, got)
 }
 
+func TestAddUnmodelledLoad(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	newLp := func(mode api.ChargeMode, status api.ChargeStatus, power, minPower float64) loadpoint.API {
+		lp := loadpoint.NewMockAPI(ctrl)
+		lp.EXPECT().GetMode().Return(mode).AnyTimes()
+		lp.EXPECT().GetStatus().Return(status).AnyTimes()
+		lp.EXPECT().GetChargePower().Return(power).AnyTimes()
+		lp.EXPECT().EffectiveMinPower().Return(minPower).AnyTimes()
+		return lp
+	}
+
+	// pv mode: measured 4kW decays into zero over 4 slots
+	slots := make([]float64, 6)
+	addUnmodelledLoad(slots, newLp(api.ModePV, api.StatusC, 4000, 1380))
+	assert.Equal(t, []float64{1000, 750, 500, 250, 0, 0}, slots)
+
+	// minpv mode: min power applies before the charge meter caught up
+	slots = make([]float64, 6)
+	addUnmodelledLoad(slots, newLp(api.ModeMinPV, api.StatusC, 0, 4000))
+	assert.Equal(t, []float64{1000, 750, 500, 250, 0, 0}, slots)
+
+	// minpv floor does not lower the measured power
+	slots = make([]float64, 6)
+	addUnmodelledLoad(slots, newLp(api.ModeMinPV, api.StatusC, 4000, 1000))
+	assert.Equal(t, []float64{1000, 750, 500, 250, 0, 0}, slots)
+
+	// connected but not charging: minpv floor only applies in status C
+	slots = make([]float64, 6)
+	addUnmodelledLoad(slots, newLp(api.ModeMinPV, api.StatusB, 0, 4000))
+	assert.Equal(t, make([]float64, 6), slots)
+
+	// loads of multiple loadpoints add up
+	slots = make([]float64, 6)
+	addUnmodelledLoad(slots, newLp(api.ModePV, api.StatusC, 4000, 0))
+	addUnmodelledLoad(slots, newLp(api.ModePV, api.StatusC, 4000, 0))
+	assert.Equal(t, []float64{2000, 1500, 1000, 500, 0, 0}, slots)
+}
+
 func TestBatteryForecastSocExtremes(t *testing.T) {
 	for _, tc := range []struct {
 		name      string
