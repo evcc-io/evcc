@@ -16,9 +16,8 @@ type mockSite struct {
 	optimized         int
 }
 
-func (m *mockSite) Optimize() error {
+func (m *mockSite) Optimize() {
 	m.optimized++
-	return nil
 }
 
 func (m *mockSite) GetBatteryMaxDischargePower() float64 {

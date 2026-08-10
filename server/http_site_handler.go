@@ -191,6 +191,14 @@ func getHandler[T any](get func() T) http.HandlerFunc {
 	}
 }
 
+// callHandler invokes an api function without result
+func callHandler(fun func()) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fun()
+		jsonWrite(w, nil)
+	}
+}
+
 // updateSmartCostLimit sets the smart cost limit globally
 func updateSmartCostLimit(site site.API, setLimit func(loadpoint.API, *float64)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
