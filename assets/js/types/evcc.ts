@@ -8,7 +8,6 @@ declare global {
     app: any;
     evcc?: {
       version: string;
-      commit: string;
       customCss: boolean;
       customLogo: boolean;
       customBrand: string;
@@ -1434,6 +1433,7 @@ export interface TimeSeries {
 // Solver status enum
 export enum OptimizationStatus {
   OPTIMAL = "Optimal",
+  FEASIBLE = "Feasible",
   INFEASIBLE = "Infeasible",
   UNBOUNDED = "Unbounded",
   UNDEFINED = "Undefined",

@@ -45,7 +45,6 @@ func getPreferredLanguage(header string) string {
 func globalsJsHandler(custom Customization) http.HandlerFunc {
 	globals := struct {
 		Version    string `json:"version"`
-		Commit     string `json:"commit"`
 		CustomCss  bool   `json:"customCss"`
 		CustomLogo bool   `json:"customLogo"`
 		Brand      string `json:"customBrand"`
@@ -54,7 +53,6 @@ func globalsJsHandler(custom Customization) http.HandlerFunc {
 		Phone      string `json:"customPhone"`
 	}{
 		Version:    util.Version,
-		Commit:     util.Commit,
 		CustomCss:  custom.Css != "",
 		CustomLogo: custom.LogoLight != "",
 		Brand:      custom.Brand,
@@ -190,6 +188,14 @@ func durationHandler(set func(time.Duration) error, get func() time.Duration) ht
 func getHandler[T any](get func() T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		jsonWrite(w, get())
+	}
+}
+
+// callHandler invokes an api function without result
+func callHandler(fun func()) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fun()
+		jsonWrite(w, nil)
 	}
 }
 

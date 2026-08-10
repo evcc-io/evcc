@@ -13,6 +13,11 @@ type mockSite struct {
 	site.API
 	maxDischargePower float64
 	residualPower     float64
+	optimized         int
+}
+
+func (m *mockSite) Optimize() {
+	m.optimized++
 }
 
 func (m *mockSite) GetBatteryMaxDischargePower() float64 {

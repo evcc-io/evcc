@@ -13,7 +13,6 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/config"
-	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/samber/lo"
 )
 
@@ -39,13 +38,8 @@ func filterConfigurable(ref []string) []string {
 }
 
 // Optimize updates the optimizer
-func (site *Site) Optimize() error {
-	if !sponsor.IsAuthorized() || !optimizerEnabled() {
-		return api.ErrNotAvailable
-	}
-
-	go site.optimizerUpdateAsync()
-	return nil
+func (site *Site) Optimize() {
+	go site.optimizerUpdateAsync(0)
 }
 
 // GetTitle returns the title
@@ -369,7 +363,7 @@ func (site *Site) SetGridExportLimit(power float64) error {
 		site.publish(keys.GridExportLimit, power)
 
 		// re-run the optimizer so the new limit takes effect immediately
-		site.triggerOptimizer()
+		go site.optimizerUpdateAsync(0)
 	}
 
 	return nil
@@ -550,7 +544,7 @@ func (site *Site) SetOptimizerChargingStrategy(strategy string) error {
 		site.publish(keys.OptimizerChargingStrategy, strategy)
 
 		// re-run the optimizer so the new strategy takes effect immediately
-		site.triggerOptimizer()
+		go site.optimizerUpdateAsync(0)
 	}
 
 	return nil
