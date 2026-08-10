@@ -228,9 +228,10 @@ func (lp *Loadpoint) EffectiveMinSoc() int {
 func (lp *Loadpoint) effectiveMinSoc() int {
 	minSoc := lp.minSoc
 
-	// loadpoint and vehicle min soc are independent limits- honor both
+	// loadpoint, vehicle and forecast min soc are independent limits- honor all
 	if v := lp.GetVehicle(); v != nil {
-		minSoc = max(minSoc, vehicle.Settings(lp.log, v).GetMinSoc())
+		settings := vehicle.Settings(lp.log, v)
+		minSoc = max(minSoc, settings.GetMinSoc(), vehicle.GetSolarMinSoc(settings.Name()))
 	}
 
 	return minSoc

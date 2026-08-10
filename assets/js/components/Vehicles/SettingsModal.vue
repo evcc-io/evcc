@@ -93,6 +93,25 @@
 							</option>
 						</select>
 					</SettingsFormRow>
+					<SettingsFormRow
+						v-if="vehicle.solarMinSoc"
+						:id="fieldId(vehicle, 'solarMinSoc')"
+						:label="$t('main.vehicleSettings.solarMinSoc')"
+						:description="$t('main.vehicleSettings.solarMinSocDescription')"
+					>
+						<div :id="fieldId(vehicle, 'solarMinSoc')" class="form-control-plaintext pt-1">
+							{{ fmtPercentage(vehicle.solarMinSoc) }}
+						</div>
+					</SettingsFormRow>
+					<SettingsFormRow
+						v-if="effectiveMinSoc(vehicle)"
+						:id="fieldId(vehicle, 'effectiveMinSoc')"
+						:label="$t('main.vehicleSettings.effectiveMinSoc')"
+					>
+						<div :id="fieldId(vehicle, 'effectiveMinSoc')" class="form-control-plaintext pt-1">
+							{{ fmtPercentage(effectiveMinSoc(vehicle)) }}
+						</div>
+					</SettingsFormRow>
 				</template>
 			</div>
 			<p class="mb-0 border-top pt-4">
@@ -163,6 +182,9 @@ export default defineComponent({
 		},
 		connectedLoadpoint(vehicle: Vehicle): UiLoadpoint | undefined {
 			return this.loadpoints.find((lp) => lp.vehicleName === vehicle.name && lp.connected);
+		},
+		effectiveMinSoc(vehicle: Vehicle): number {
+			return this.connectedLoadpoint(vehicle)?.effectiveMinSoc ?? 0;
 		},
 		socSupported(vehicle: Vehicle): boolean {
 			const loadpoint = this.connectedLoadpoint(vehicle);

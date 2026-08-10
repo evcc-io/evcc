@@ -7,6 +7,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -23,15 +24,18 @@ func TestEffectiveLimitSoc(t *testing.T) {
 func TestEffectiveMinSoc(t *testing.T) {
 	config.Reset()
 	t.Cleanup(config.Reset)
+	t.Cleanup(func() { vehicle.SolarMinSoc = nil })
 
 	for _, tc := range []struct {
-		loadpoint, vehicle, expected int
+		loadpoint, vehicle, solar, expected int
 	}{
-		{0, 0, 0},
-		{10, 0, 10},  // loadpoint only
-		{0, 20, 20},  // vehicle only
-		{10, 20, 20}, // vehicle wins
-		{20, 10, 20}, // loadpoint wins
+		{0, 0, 0, 0},
+		{10, 0, 0, 10},   // loadpoint only
+		{0, 20, 0, 20},   // vehicle only
+		{0, 0, 30, 30},   // forecast only
+		{10, 20, 30, 30}, // forecast wins
+		{30, 20, 10, 30}, // loadpoint wins
+		{10, 30, 20, 30}, // vehicle wins
 	} {
 		t.Logf("%+v", tc)
 		config.Reset()
@@ -44,6 +48,7 @@ func TestEffectiveMinSoc(t *testing.T) {
 			config.NewStaticDevice(config.Named{Name: name}, api.Vehicle(v)),
 		))
 		settings.SetInt("vehicle."+name+"."+keys.MinSoc, int64(tc.vehicle))
+		vehicle.SolarMinSoc = func(string) int { return tc.solar }
 
 		lp := NewLoadpoint(util.NewLogger("foo"), nil)
 		lp.vehicle = v

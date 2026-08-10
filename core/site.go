@@ -91,7 +91,8 @@ type Site struct {
 	gridExportLimit float64 // static grid export power limit in W, 0 = disabled
 
 	// forecast settings
-	solarAdjusted bool // adjust solar forecast to real production data
+	solarAdjusted bool              // adjust solar forecast to real production data
+	solarMinSoc   solarMinSocPolicy // derive vehicle minimum soc from solar forecast
 
 	// optimizer settings
 	optimizerChargingStrategy string // optimizer grid charging strategy
@@ -325,8 +326,11 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	site := &Site{
-		log:        util.NewLogger("site"),
-		Voltage:    230, // V
+		log:     util.NewLogger("site"),
+		Voltage: 230, // V
+		solarMinSoc: solarMinSocPolicy{SolarMinSocStatus: api.SolarMinSocStatus{
+			SolarMinSocConfig: defaultSolarMinSocConfig(),
+		}},
 		collectors: make(map[string]*metrics.Collector),
 	}
 
@@ -408,6 +412,13 @@ func (site *Site) restoreSettings() error {
 	}
 	if v, err := settings.Bool(keys.SolarAdjusted); err == nil {
 		site.SetSolarAdjusted(v)
+	}
+	conf := defaultSolarMinSocConfig()
+	if err := settings.Json(keys.SolarMinSoc, &conf); err != nil {
+		conf = defaultSolarMinSocConfig()
+	}
+	if err := site.solarMinSoc.configure(conf); err != nil {
+		return fmt.Errorf("solar minimum soc: %w", err)
 	}
 	if v, err := settings.String(keys.OptimizerChargingStrategy); err == nil && v != "" {
 		if err := site.SetOptimizerChargingStrategy(v); err != nil {
@@ -1108,6 +1119,7 @@ func (site *Site) reservedPVPower(lp updater) float64 {
 
 func (site *Site) update(lp updater) {
 	site.log.DEBUG.Println("----")
+	site.updateSolarMinSoc()
 
 	// smart cost and battery mode handling
 	consumption, err := site.tariffRates(api.TariffUsagePlanner)
@@ -1251,6 +1263,7 @@ func (site *Site) prepare() {
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
 	site.publish(keys.BatteryGridDischarge, site.batteryGridDischarge)
 	site.publish(keys.SolarAdjusted, site.solarAdjusted)
+	site.publish(keys.SolarMinSoc, site.solarMinSoc.SolarMinSocStatus)
 	site.publish(keys.ResidualPower, site.GetResidualPower())
 	site.publish(keys.GridExportLimit, site.GetGridExportLimit())
 	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))
@@ -1267,6 +1280,7 @@ func (site *Site) prepare() {
 	site.publishTariffs(0, 0)
 	vehicle.Publish = site.publishVehicles
 	vehicle.ClearPlanLocks = site.clearPlanLocks
+	vehicle.SolarMinSoc = site.solarMinSocForVehicle
 }
 
 // pushEvent queues the event in the value stream. The cache attaches its state

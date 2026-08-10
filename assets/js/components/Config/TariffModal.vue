@@ -49,6 +49,10 @@
 				/>
 			</FormRow>
 		</template>
+
+		<template v-if="tariffType === 'solar' && !isNew" #post-content>
+			<SolarMinSocConfig />
+		</template>
 	</DeviceModalBase>
 </template>
 
@@ -58,6 +62,7 @@ import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
 import NewDeviceButton from "./NewDeviceButton.vue";
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
+import SolarMinSocConfig from "./SolarMinSocConfig.vue";
 import { ConfigType, CURRENCY, type TariffType } from "@/types/evcc";
 import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
 import type { Product, DeviceValues } from "./DeviceModal";
@@ -82,6 +87,7 @@ export default defineComponent({
 		NewDeviceButton,
 		FormRow,
 		PropertyField,
+		SolarMinSocConfig,
 	},
 	props: {
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },

@@ -346,6 +346,8 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"remoteclients":      {"GET", "/remote/clients", remoteClientsHandler(remoteAccess)},
 			"createremoteclient": {"POST", "/remote/clients", createRemoteClientHandler(remoteAccess)},
 			"deleteremoteclient": {"DELETE", "/remote/clients", deleteRemoteClientHandler(remoteAccess)},
+			"solarminsoc":        {"GET", "/solar-min-soc", solarMinSocConfigHandler(site)},
+			"updatesolarminsoc":  {"PUT", "/solar-min-soc", solarMinSocConfigHandler(site)},
 		}
 
 		// yaml handlers

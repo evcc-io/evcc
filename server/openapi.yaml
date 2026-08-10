@@ -776,6 +776,39 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/BooleanResult"
+  /config/solar-min-soc:
+    get:
+      operationId: getSolarMinSocConfig
+      summary: Get forecast-based vehicle minimum charge configuration
+      tags:
+        - general
+      responses:
+        "200":
+          description: Configuration and current forecast state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SolarMinSocStatus"
+    put:
+      operationId: setSolarMinSocConfig
+      summary: Set forecast-based vehicle minimum charge configuration
+      tags:
+        - general
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SolarMinSocConfig"
+      responses:
+        "200":
+          description: Updated configuration and current forecast state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SolarMinSocStatus"
+        "400":
+          description: Invalid thresholds, vehicle name, or minimum charge value
   /smartfeedinprioritylimit:
     delete:
       operationId: removeGlobalSmartFeedInPriorityLimit
@@ -1555,6 +1588,38 @@ paths:
           description: Invalid parameters or database offline
 components:
   schemas:
+    SolarMinSocVehicleConfig:
+      type: object
+      required: [low, medium, high]
+      properties:
+        low:
+          type: integer
+          minimum: 0
+          maximum: 100
+        medium:
+          type: integer
+          minimum: 0
+          maximum: 100
+        high:
+          type: integer
+          minimum: 0
+          maximum: 100
+    SolarMinSocConfig:
+      type: object
+      required: [enabled, lowThreshold, mediumThreshold, vehicles]
+      properties:
+        enabled:
+          type: boolean
+        lowThreshold:
+          type: number
+          minimum: 0
+        mediumThreshold:
+          type: number
+          exclusiveMinimum: 0
+        vehicles:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/SolarMinSocVehicleConfig"
     ChangePassword:
       type: object
       properties:

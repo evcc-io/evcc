@@ -278,6 +278,8 @@ export interface State {
   batteryGridDischarge?: boolean;
   /** Solar forecast is adjusted to real production data (experimental). */
   solarAdjusted?: boolean;
+  /** Forecast-based vehicle minimum SoC configuration and current state. */
+  solarMinSoc?: SolarMinSocStatus;
   /** Price or emission limit for charging the home battery from grid. */
   batteryGridChargeLimit?: number | null;
   /** Home battery is currently charged from grid. */
@@ -1226,6 +1228,8 @@ export interface Vehicle {
   mode?: CHARGE_MODE | "";
   /** Minimum SoC in %. Vehicle is fast-charged until this level is reached. */
   minSoc?: number;
+  /** Forecast-derived minimum SoC in %. */
+  solarMinSoc?: number;
   /** SoC limit in %. Charging stops when reached. */
   limitSoc?: number;
   /** Charging plan with a fixed target time and SoC or energy goal. */
@@ -1242,6 +1246,18 @@ export interface Vehicle {
   capacity?: number;
   /** Vehicle icon name for UI display. */
   icon?: string;
+}
+
+export interface SolarMinSocStatus {
+  enabled: boolean;
+  lowThreshold: number;
+  mediumThreshold: number;
+  vehicles: Record<string, { low: number; medium: number; high: number }>;
+  availableVehicles: { name: string; title: string }[];
+  available: boolean;
+  forecastEnergy: number;
+  state?: "low" | "medium" | "high";
+  updated?: string;
 }
 
 export type Timeout = ReturnType<typeof setInterval> | null;

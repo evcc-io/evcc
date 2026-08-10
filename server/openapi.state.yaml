@@ -203,6 +203,9 @@ components:
         solarAdjusted:
           description: Solar forecast is adjusted to real production data (experimental).
           type: boolean
+        solarMinSoc:
+          $ref: "#/components/schemas/SolarMinSocStatus"
+          description: Forecast-based vehicle minimum SoC configuration and current state.
         batteryGridChargeLimit:
           description: Price or emission limit for charging the home battery from grid.
           type: number
@@ -1654,6 +1657,62 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/TimeseriesEntry"
+    SolarMinSocStatus:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        lowThreshold:
+          type: number
+        mediumThreshold:
+          type: number
+        vehicles:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              low:
+                type: number
+              medium:
+                type: number
+              high:
+                type: number
+            required:
+              - low
+              - medium
+              - high
+        availableVehicles:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              title:
+                type: string
+            required:
+              - name
+              - title
+        available:
+          type: boolean
+        forecastEnergy:
+          type: number
+        state:
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+        updated:
+          type: string
+      required:
+        - enabled
+        - lowThreshold
+        - mediumThreshold
+        - vehicles
+        - availableVehicles
+        - available
+        - forecastEnergy
     Sponsor:
       description: Sponsorship status.
       type: object
@@ -1780,6 +1839,9 @@ components:
                 - ""
         minSoc:
           description: Minimum SoC in %. Vehicle is fast-charged until this level is reached.
+          type: number
+        solarMinSoc:
+          description: Forecast-derived minimum SoC in %.
           type: number
         limitSoc:
           description: SoC limit in %. Charging stops when reached.

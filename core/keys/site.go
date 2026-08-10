@@ -54,6 +54,7 @@ const (
 
 	// forecast settings
 	SolarAdjusted = "solarAdjusted"
+	SolarMinSoc   = "solarMinSoc"
 
 	// optimizer
 	OptimizerChargingStrategy   = "optimizerChargingStrategy"

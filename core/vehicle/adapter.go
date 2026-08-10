@@ -19,6 +19,17 @@ var Publish func()
 // ClearPlanLocks clears locked plan goals across all loadpoints
 var ClearPlanLocks func()
 
+// SolarMinSoc returns the forecast-derived minimum soc for a vehicle.
+var SolarMinSoc func(string) int
+
+// GetSolarMinSoc returns the forecast-derived minimum soc for a vehicle.
+func GetSolarMinSoc(name string) int {
+	if SolarMinSoc != nil {
+		return SolarMinSoc(name)
+	}
+	return 0
+}
+
 type adapter struct {
 	log         *util.Logger
 	name        string

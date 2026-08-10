@@ -1298,6 +1298,59 @@
         }
       }
     },
+    "/config/solar-min-soc": {
+      "get": {
+        "operationId": "getSolarMinSocConfig",
+        "summary": "Get forecast-based vehicle minimum charge configuration",
+        "tags": [
+          "general"
+        ],
+        "responses": {
+          "200": {
+            "description": "Configuration and current forecast state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolarMinSocStatus"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "setSolarMinSocConfig",
+        "summary": "Set forecast-based vehicle minimum charge configuration",
+        "tags": [
+          "general"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SolarMinSocConfig"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated configuration and current forecast state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolarMinSocStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid thresholds, vehicle name, or minimum charge value"
+          }
+        }
+      }
+    },
     "/smartfeedinprioritylimit": {
       "delete": {
         "operationId": "removeGlobalSmartFeedInPriorityLimit",
@@ -2544,6 +2597,59 @@
   },
   "components": {
     "schemas": {
+      "SolarMinSocVehicleConfig": {
+        "type": "object",
+        "required": [
+          "low",
+          "medium",
+          "high"
+        ],
+        "properties": {
+          "low": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "medium": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "high": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          }
+        }
+      },
+      "SolarMinSocConfig": {
+        "type": "object",
+        "required": [
+          "enabled",
+          "lowThreshold",
+          "mediumThreshold",
+          "vehicles"
+        ],
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "lowThreshold": {
+            "type": "number",
+            "minimum": 0
+          },
+          "mediumThreshold": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "vehicles": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SolarMinSocVehicleConfig"
+            }
+          }
+        }
+      },
       "ChangePassword": {
         "type": "object",
         "properties": {
@@ -4503,6 +4609,86 @@
           "power"
         ]
       },
+      "SolarMinSocStatus": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "lowThreshold": {
+            "type": "number"
+          },
+          "mediumThreshold": {
+            "type": "number"
+          },
+          "vehicles": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "low": {
+                  "type": "number"
+                },
+                "medium": {
+                  "type": "number"
+                },
+                "high": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "low",
+                "medium",
+                "high"
+              ]
+            }
+          },
+          "availableVehicles": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "title"
+              ]
+            }
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "forecastEnergy": {
+            "type": "number"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "updated": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "enabled",
+          "lowThreshold",
+          "mediumThreshold",
+          "vehicles",
+          "availableVehicles",
+          "available",
+          "forecastEnergy"
+        ]
+      },
       "SmartCostType": {
         "description": "Type of the smart charging limit.",
         "type": "string",
@@ -4620,6 +4806,10 @@
           },
           "minSoc": {
             "description": "Minimum SoC in %. Vehicle is fast-charged until this level is reached.",
+            "type": "number"
+          },
+          "solarMinSoc": {
+            "description": "Forecast-derived minimum SoC in %.",
             "type": "number"
           },
           "limitSoc": {
@@ -5166,6 +5356,10 @@
           "solarAdjusted": {
             "description": "Solar forecast is adjusted to real production data (experimental).",
             "type": "boolean"
+          },
+          "solarMinSoc": {
+            "$ref": "#/components/schemas/SolarMinSocStatus",
+            "description": "Forecast-based vehicle minimum SoC configuration and current state."
           },
           "batteryGridChargeLimit": {
             "description": "Price or emission limit for charging the home battery from grid.",

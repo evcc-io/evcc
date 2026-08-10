@@ -965,6 +965,23 @@
         "titleAdd": "Add Solar Forecast",
         "titleEdit": "Edit Solar Forecast"
       },
+      "solarMinSoc": {
+        "current": "Next 72 hours: {energy} kWh, {state} forecast",
+        "description": "Raise each vehicle's minimum charge according to the expected solar production during the next 72 hours. The manual minimum charge remains the lower bound.",
+        "enabled": "Adjust vehicle minimum charge from forecast",
+        "lowThreshold": "Low below",
+        "mediumThreshold": "Medium below",
+        "socError": "Minimum charge must be between 0 and 100%.",
+        "state": {
+          "high": "high",
+          "low": "low",
+          "medium": "medium"
+        },
+        "thresholdError": "The low threshold must be zero or greater and below the medium threshold.",
+        "title": "Forecast-based vehicle minimum charge",
+        "unavailable": "A complete 72-hour forecast is not available yet.",
+        "vehicle": "Vehicle"
+      },
       "temperature": {
         "description": "Outdoor temperature forecast for your location. Displayed in the interface and used to predict heating demand.",
         "titleAdd": "Add Temperature Forecast",
@@ -1531,10 +1548,13 @@
       "learnMore": "Learn more.",
       "limitSoc": "Default limit",
       "menu": "Vehicles",
+      "effectiveMinSoc": "Effective minimum charge",
       "minSoc": "Minimum charge",
       "minSocDescription": "Fast charge to this level in solar mode.",
       "mode": "Default mode",
       "notConnected": "not connected",
+      "solarMinSoc": "Forecast minimum charge",
+      "solarMinSocDescription": "Calculated from the solar production forecast for the next 72 hours.",
       "title": "Vehicle Settings"
     },
     "vehicleStatus": {

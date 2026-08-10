@@ -965,6 +965,23 @@
         "titleAdd": "Solar-Vorhersage hinzufügen",
         "titleEdit": "Solar-Vorhersage bearbeiten"
       },
+      "solarMinSoc": {
+        "current": "Nächste 72 Stunden: {energy} kWh, {state} Vorhersage",
+        "description": "Erhöhe die minimale Ladung jedes Fahrzeugs abhängig von der erwarteten Solarproduktion der nächsten 72 Stunden. Die manuelle minimale Ladung bleibt die Untergrenze.",
+        "enabled": "Minimale Fahrzeugladung an Vorhersage anpassen",
+        "lowThreshold": "Niedrig unter",
+        "mediumThreshold": "Mittel unter",
+        "socError": "Die minimale Ladung muss zwischen 0 und 100 % liegen.",
+        "state": {
+          "high": "hohe",
+          "low": "niedrige",
+          "medium": "mittlere"
+        },
+        "thresholdError": "Der niedrige Grenzwert muss mindestens null und kleiner als der mittlere Grenzwert sein.",
+        "title": "Vorhersagebasierte minimale Fahrzeugladung",
+        "unavailable": "Eine vollständige 72-Stunden-Vorhersage ist noch nicht verfügbar.",
+        "vehicle": "Fahrzeug"
+      },
       "temperature": {
         "description": "Vorhersage der Außentemperatur am Standort. Wird in der Oberfläche angezeigt und für die Prognose des Heizbedarfs verwendet.",
         "titleAdd": "Temperatur-Vorhersage hinzufügen",
@@ -1531,10 +1548,13 @@
       "learnMore": "Mehr erfahren.",
       "limitSoc": "Standardlimit",
       "menu": "Fahrzeuge",
+      "effectiveMinSoc": "Wirksame minimale Ladung",
       "minSoc": "Minimale Ladung",
       "minSocDescription": "Wird im PV-Modus schnell bis zu diesem Wert geladen.",
       "mode": "Standardmodus",
       "notConnected": "nicht verbunden",
+      "solarMinSoc": "Minimale Ladung aus Vorhersage",
+      "solarMinSocDescription": "Wird aus der Solarproduktionsprognose für die nächsten 72 Stunden berechnet.",
       "title": "Fahrzeugeinstellungen"
     },
     "vehicleStatus": {

@@ -24,6 +24,7 @@ type vehicleStruct struct {
 	Phases         int                 `json:"phases,omitempty"`
 	Mode           api.ChargeMode      `json:"mode,omitempty"`
 	MinSoc         int                 `json:"minSoc,omitempty"`
+	SolarMinSoc    int                 `json:"solarMinSoc,omitempty"`
 	LimitSoc       int                 `json:"limitSoc,omitempty"`
 	MinCurrent     float64             `json:"minCurrent,omitempty"`
 	MaxCurrent     float64             `json:"maxCurrent,omitempty"`
@@ -62,6 +63,7 @@ func (site *Site) publishVehicles() {
 			Phases:         instance.Phases(),
 			Mode:           v.GetMode(),
 			MinSoc:         v.GetMinSoc(),
+			SolarMinSoc:    vehicle.GetSolarMinSoc(v.Name()),
 			LimitSoc:       v.GetLimitSoc(),
 			MinCurrent:     ac.MinCurrent,
 			MaxCurrent:     ac.MaxCurrent,

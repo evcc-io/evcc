@@ -87,6 +87,8 @@ type API interface {
 	GetSolarAdjusted() bool
 	// SetSolarAdjusted sets if the solar forecast is adjusted to real production data
 	SetSolarAdjusted(bool)
+	GetSolarMinSoc() api.SolarMinSocStatus
+	SetSolarMinSoc(api.SolarMinSocConfig) error
 
 	//
 	// battery control
