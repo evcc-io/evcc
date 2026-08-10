@@ -23,7 +23,7 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-          cache: false # avoid cache thrashing
+          cache: true
         id: go
 
       - name: Install tools
@@ -53,7 +53,7 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-          cache: false
+          cache: true
         id: go
 
       - uses: voidzero-dev/setup-vp@v1
@@ -81,7 +81,7 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-          cache: false
+          cache: true
         id: go
 
       - name: Test
@@ -102,7 +102,7 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-          cache: false # avoid cache thrashing
+          cache: true
         id: go
 
       - run: mkdir dist && touch dist/empty
@@ -181,7 +181,7 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-          cache: false
+          cache: true
         id: go
 
       - uses: voidzero-dev/setup-vp@v1
