@@ -509,8 +509,8 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 
 	var batteries []optimizerBattery
 
-	// uncontrollable load of loadpoints that cannot be modelled as storage
-	unmodelled := make([]float64, minLen)
+	// uncontrollable power of loadpoints that cannot be modelled as storage
+	var unmodelled float64
 
 	for id, lp := range site.Loadpoints() {
 		// ignore disconnected loadpoints, including StatusNone
@@ -520,7 +520,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 
 		// unknown vehicle capacity: account for the consumption as uncontrollable load
 		if v := lp.GetVehicle(); v == nil || v.Capacity() == 0 {
-			addUnmodelledLoad(unmodelled, lp)
+			unmodelled += unmodelledPower(lp)
 			continue
 		}
 
@@ -532,10 +532,16 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	}
 
 	// home profile subtracts all loadpoint power, so unmodelled loadpoints would
-	// leave the optimizer planning against surplus that is already consumed
-	if sum := lo.Sum(unmodelled); sum > 0 {
-		site.log.DEBUG.Printf("optimizer: home slots updated with %.0fWh unmodelled loadpoint load", sum)
-		for i, v := range prorate(unmodelled, firstSlotDuration) {
+	// leave the optimizer planning against surplus that is already consumed. Their
+	// forecast is zero, so the measured power only decays into the near slots -
+	// without a capacity there is no fill point to assert it any further.
+	if unmodelled > 0 {
+		load := make([]float64, minLen)
+		blendMeasured(load, unmodelled/slotsPerHour, optimizerDecaySlots)
+
+		site.log.DEBUG.Printf("optimizer: home slots updated with unmodelled %.0fW loadpoint load: %.0f", unmodelled, load[:min(optimizerDecaySlots, len(load))])
+
+		for i, v := range prorate(load, firstSlotDuration) {
 			req.TimeSeries.Gt[i] += v
 		}
 	}
@@ -971,14 +977,9 @@ func loadpointProfile(lp loadpoint.API, minLen int) []float64 {
 	return res
 }
 
-// addUnmodelledLoad adds a connected loadpoint's uncontrollable load in Wh per
-// slot. Used for loadpoints that cannot be modelled as storage because the
-// vehicle capacity is unknown.
-//
-// Only the near slots are covered: without a capacity there is no fill point, so
-// the load decays into the forecast like other measured values instead of being
-// asserted over the entire horizon.
-func addUnmodelledLoad(slots []float64, lp loadpoint.API) {
+// unmodelledPower returns the uncontrollable power of a connected loadpoint that
+// cannot be modelled as storage because the vehicle capacity is unknown
+func unmodelledPower(lp loadpoint.API) float64 {
 	power := lp.GetChargePower()
 
 	// minpv keeps drawing at least min power while the vehicle is connected,
@@ -987,17 +988,7 @@ func addUnmodelledLoad(slots []float64, lp loadpoint.API) {
 		power = max(power, lp.EffectiveMinPower())
 	}
 
-	if power <= 0 {
-		return
-	}
-
-	// decay from the current power into zero
-	load := make([]float64, len(slots))
-	blendMeasured(load, power/slotsPerHour, optimizerDecaySlots)
-
-	for i, v := range load {
-		slots[i] += v
-	}
+	return max(0, power)
 }
 
 // homeProfile returns the home base load in Wh
