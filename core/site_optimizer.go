@@ -1036,10 +1036,10 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 		}
 	}
 
-	// DemandProfileWeekly: same-weekday-last-week actual profile, tiled as-is
+	// DemandProfileSameWeekday: same-weekday-last-week actual profile, tiled as-is
 	if len(weeklyProfile) > 0 {
 		p := tileAndTrim(weeklyProfile, minLen)
-		site.log.DEBUG.Printf("home profile: adding weekly demand profile with %d slots", len(p))
+		site.log.DEBUG.Printf("home profile: adding same-weekday demand profile with %d slots", len(p))
 		for i := range gt_final {
 			if i < len(p) {
 				gt_final[i] += p[i]
@@ -1066,7 +1066,7 @@ func tileAndTrim(profile []float64, minLen int) []float64 {
 
 // extractHeaterProfiles returns aggregated per-strategy heating profiles.
 // tempProfile: loadpoints with DemandProfileDailyTemperature (daily avg, scaled by outdoor temp).
-// weeklyProfile: loadpoints with DemandProfileWeekly (same weekday last week).
+// weeklyProfile: loadpoints with DemandProfileSameWeekday (same weekday last week).
 func (site *Site) extractHeaterProfiles() (tempProfile, weeklyProfile []float64) {
 	var tempProfiles, weeklyProfiles [][]float64
 
@@ -1086,16 +1086,16 @@ func (site *Site) extractHeaterProfiles() (tempProfile, weeklyProfile []float64)
 			default:
 				site.log.DEBUG.Printf("heater profile: loadpoint %d: temperature strategy, no data (%v)", i, err)
 			}
-		} else if hasFeature(lp.charger, api.DemandProfileWeekly) {
+		} else if hasFeature(lp.charger, api.DemandProfileSameWeekday) {
 			profile, err := lp.chargeEnergy.EnergyProfileWeekday()
 			switch {
 			case err == nil:
-				site.log.DEBUG.Printf("heater profile: loadpoint %d: weekly strategy, %d slots", i, len(profile))
+				site.log.DEBUG.Printf("heater profile: loadpoint %d: same-weekday strategy, %d slots", i, len(profile))
 				weeklyProfiles = append(weeklyProfiles, profile[:])
 			case errors.Is(err, metrics.ErrIncomplete):
-				site.log.DEBUG.Printf("heater profile: loadpoint %d: weekly strategy, insufficient data", i)
+				site.log.DEBUG.Printf("heater profile: loadpoint %d: same-weekday strategy, insufficient data", i)
 			default:
-				site.log.DEBUG.Printf("heater profile: loadpoint %d: weekly strategy, no data (%v)", i, err)
+				site.log.DEBUG.Printf("heater profile: loadpoint %d: same-weekday strategy, no data (%v)", i, err)
 			}
 		}
 	}
@@ -1106,7 +1106,7 @@ func (site *Site) extractHeaterProfiles() (tempProfile, weeklyProfile []float64)
 	}
 	if len(weeklyProfiles) > 0 {
 		weeklyProfile = sumProfiles(weeklyProfiles)
-		site.log.DEBUG.Printf("heater profile: aggregated %d weekly loadpoint(s)", len(weeklyProfiles))
+		site.log.DEBUG.Printf("heater profile: aggregated %d same-weekday loadpoint(s)", len(weeklyProfiles))
 	}
 
 	return tempProfile, weeklyProfile
