@@ -138,8 +138,6 @@ jobs:
           platforms: ${{ needs.prep.outputs.platforms }}
           push: true
           tags: evcc/evcc:pr-${{ github.event.issue.number }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
   report:
     name: Report
