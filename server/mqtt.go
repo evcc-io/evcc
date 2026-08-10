@@ -89,6 +89,16 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload any) {
 		return
 	}
 
+	if mm, ok := payload.(api.StructMarshaler); ok {
+		d, err := mm.MarshalStruct()
+		if err != nil {
+			m.log.ERROR.Printf("marshal struct: %v", err)
+			return
+		}
+		payload = d
+		// fallthrough, the unwrapped value is still checked below
+	}
+
 	if mm, ok := payload.(api.BytesMarshaler); ok {
 		if b, err := mm.MarshalBytes(); err == nil {
 			m.publishSingleValue(topic, retained, string(b))
@@ -96,16 +106,6 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload any) {
 			m.log.ERROR.Printf("marshal bytes: %v", err)
 		}
 		return
-	}
-
-	if mm, ok := payload.(api.StructMarshaler); ok {
-		if d, err := mm.MarshalStruct(); err != nil {
-			m.log.ERROR.Printf("marshal struct: %v", err)
-			return
-		} else {
-			payload = d
-			// fallthrough
-		}
 	}
 
 	switch typ := reflect.TypeOf(payload); typ.Kind() {
