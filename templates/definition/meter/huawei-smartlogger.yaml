@@ -88,7 +88,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 40428 # Active power adjustment by percentage (0-100 %)
+      address: 40428 # Active power [–100%, 100%] - a negative value indicates the limit for active power supplied from the grid to the ESS
       type: writesingle
       encoding: int16
     scale: 10
@@ -101,7 +101,7 @@ render: |
         source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
-          address: 40428
+          address: 40428 # Active power [–100%, 100%] - a negative value indicates the limit for active power supplied from the grid to the ESS
           type: holding
           decode: int16
         scale: 0.1
