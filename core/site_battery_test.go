@@ -350,3 +350,20 @@ func TestBatteryDischargeHemsCurtailed(t *testing.T) {
 
 	ctrl.Finish()
 }
+
+// TestBatteryGridDischargeEvFastCharging ensures grid discharge is held back while an EV
+// is fast charging, regardless of the (opt-in, off by default) batteryDischargeControl
+// toggle - forcing the battery to sell while an EV needs a fast charge is a materially
+// worse outcome than the toggle's original, softer self-consumption case.
+func TestBatteryGridDischargeEvFastCharging(t *testing.T) {
+	lp := &Loadpoint{status: api.StatusC, mode: api.ModeNow}
+
+	site := &Site{
+		log:           util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{nil},
+		loadpoints:    []*Loadpoint{lp},
+	}
+
+	res := site.requiredBatteryMode(false, true, api.Rate{})
+	assert.Equal(t, api.BatteryHold, res, "expected discharge to be held back for a fast charging EV")
+}

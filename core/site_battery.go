@@ -124,8 +124,11 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 			site.log.WARN.Println("battery mode: grid charge and grid discharge both active, charge takes priority")
 		}
 		res = keepUnlessModified(api.BatteryCharge)
-	case site.dischargeControlActive(rate):
-		// EV/house priority: hold wins over feed-in discharge
+	case site.dischargeControlActive(rate) || (batteryGridDischargeActive && site.evFastChargingActive()):
+		// EV/house priority: hold wins over feed-in discharge. Fast charging always wins here
+		// regardless of batteryDischargeControl - forcing the battery to sell while an EV needs
+		// a fast charge is a materially worse outcome than the toggle's original (softer,
+		// passive self-consumption) case.
 		res = keepUnlessModified(api.BatteryHold)
 	case batteryGridDischargeActive:
 		res = keepUnlessModified(api.BatteryDischarge)
@@ -254,6 +257,19 @@ func (site *Site) dischargeControlActive(rate api.Rate) bool {
 	for _, lp := range site.Loadpoints() {
 		smartCostActive := site.smartCostActive(lp, rate)
 		if lp.GetStatus() == api.StatusC && (smartCostActive || lp.IsFastChargingActive()) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// evFastChargingActive reports whether any loadpoint is fast charging, independent of
+// batteryDischargeControl. Used to keep the battery from selling to grid while an EV
+// needs a fast charge, regardless of whether the (opt-in) discharge control toggle is set.
+func (site *Site) evFastChargingActive() bool {
+	for _, lp := range site.Loadpoints() {
+		if lp.GetStatus() == api.StatusC && lp.IsFastChargingActive() {
 			return true
 		}
 	}
