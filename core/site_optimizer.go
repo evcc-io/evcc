@@ -3,9 +3,12 @@ package core
 import (
 	"cmp"
 	"context"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"hash/fnv"
+	"math"
 	"net/http"
 	"os"
 	"slices"
@@ -38,7 +41,16 @@ var (
 	mu               sync.Mutex
 	optimizerUpdated time.Time
 	optimizerPending atomic.Bool // a trigger arrived while a run held the lock; re-run afterwards
+
+	optimizerTariffHash  uint64 // fingerprint of the planner+feedin rates last seen by the update loop
+	optimizerTariffDirty bool   // the tariffs changed and a re-run is due (persists across cycles until it fires)
 )
+
+// optimizerTariffInterval rate-limits tariff-change-driven optimizer runs. A new
+// planner/feedin price push (MQTT, every few minutes) re-runs the optimizer, but at
+// most once per interval so a burst of updates - or the planner and feedin tariffs
+// refreshing in separate update cycles - collapses into a single run.
+const optimizerTariffInterval = 4 * time.Minute
 
 // optimizerChargingStrategies are the valid grid charging strategies; the first
 // entry is the default and preserves the previous hard-coded behavior.
@@ -80,6 +92,29 @@ func (site *Site) rerunIfPending() {
 	if optimizerPending.Swap(false) {
 		site.triggerOptimizer()
 	}
+}
+
+// optimizerTariffsChanged reports whether the planner or feedin tariff rates
+// changed since the last call, updating the stored fingerprint. These are the
+// optimizer's price inputs (import via planner, export via feedin). A new price
+// push (e.g. over MQTT) flips the rate values; a slot boundary prunes past rates
+// - either way the fingerprint changes. Called once per site update cycle.
+func (site *Site) optimizerTariffsChanged() bool {
+	h := fnv.New64a()
+	var buf [16]byte
+	for _, u := range []api.TariffUsage{api.TariffUsagePlanner, api.TariffUsageFeedIn} {
+		for _, r := range tariff.Rates(site.GetTariff(u)) {
+			binary.LittleEndian.PutUint64(buf[0:8], uint64(r.Start.UnixNano()))
+			binary.LittleEndian.PutUint64(buf[8:16], math.Float64bits(r.Value))
+			_, _ = h.Write(buf[:])
+		}
+		_, _ = h.Write([]byte{0xff}) // separator so planner/feedin boundaries can't alias
+	}
+
+	sum := h.Sum64()
+	changed := sum != optimizerTariffHash
+	optimizerTariffHash = sum
+	return changed
 }
 
 // optimizerResult wraps the optimizer publish payload to implement BytesMarshaler.

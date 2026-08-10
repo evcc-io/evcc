@@ -54,6 +54,40 @@ func TestOptimizerTriggerNotDroppedDuringRun(t *testing.T) {
 	assert.False(t, optimizerPending.Load(), "rerunIfPending must consume the pending flag")
 }
 
+// fakeRatesTariff is a minimal api.Tariff returning fixed rates for tests.
+type fakeRatesTariff struct{ rates api.Rates }
+
+func (f *fakeRatesTariff) Rates() (api.Rates, error) { return f.rates, nil }
+func (f *fakeRatesTariff) Type() api.TariffType      { return api.TariffTypePriceForecast }
+
+// TestOptimizerTariffsChanged verifies the planner/feedin rate fingerprint detects
+// a price change and reports no change when the rates are identical, so the
+// update loop only re-runs the optimizer when its price inputs actually move.
+func TestOptimizerTariffsChanged(t *testing.T) {
+	start := time.Now().Truncate(time.Hour)
+	rate := func(v float64) api.Rates {
+		return api.Rates{{Start: start, End: start.Add(tariff.SlotDuration), Value: v}}
+	}
+
+	planner := &fakeRatesTariff{rates: rate(0.20)}
+	feedin := &fakeRatesTariff{rates: rate(0.10)}
+	site := &Site{log: util.NewLogger("test"), tariffs: &tariff.Tariffs{Planner: planner, FeedIn: feedin}}
+
+	optimizerTariffHash = 0
+	t.Cleanup(func() { optimizerTariffHash = 0 })
+
+	site.optimizerTariffsChanged() // prime the fingerprint
+	assert.False(t, site.optimizerTariffsChanged(), "identical rates should report unchanged")
+
+	planner.rates = rate(0.21)
+	assert.True(t, site.optimizerTariffsChanged(), "changed planner rate should report changed")
+	assert.False(t, site.optimizerTariffsChanged(), "re-reading the changed planner rate should report unchanged")
+
+	feedin.rates = rate(0.11)
+	assert.True(t, site.optimizerTariffsChanged(), "changed feedin rate should report changed")
+	assert.False(t, site.optimizerTariffsChanged(), "re-reading the changed feedin rate should report unchanged")
+}
+
 func TestLoadpointProfile(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
