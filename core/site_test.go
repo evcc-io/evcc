@@ -188,8 +188,11 @@ func TestRequiredBatteryMode(t *testing.T) {
 		gridChargeActive bool
 		mode, res        api.BatteryMode
 	}{
-		{false, api.BatteryUnknown, api.BatteryUnknown}, // ignore
-		{false, api.BatteryNormal, api.BatteryUnknown},  // ignore
+		// not yet initialized (runtime-only field, starts at zero value): push Normal once so
+		// a configured reserve (minsoc) reaches the device even if grid charge/discharge
+		// control never activate (#32653)
+		{false, api.BatteryUnknown, api.BatteryNormal},
+		{false, api.BatteryNormal, api.BatteryUnknown}, // ignore
 		{false, api.BatteryHold, api.BatteryNormal},
 		{false, api.BatteryCharge, api.BatteryNormal},
 

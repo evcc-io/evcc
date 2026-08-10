@@ -107,7 +107,11 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 		res = keepUnlessModified(api.BatteryCharge)
 	case site.dischargeControlActive(rate):
 		res = keepUnlessModified(api.BatteryHold)
-	case batteryModeModified(batMode):
+	case batteryModeModified(batMode) || batMode == api.BatteryUnknown:
+		// batMode == Unknown covers the not-yet-initialized case: site.batteryMode is
+		// runtime-only and starts at its zero value, so without this a site that never
+		// triggers grid charge or discharge control would never call applyBatteryMode and
+		// so never push a configured battery's reserve (minsoc) to the device.
 		res = api.BatteryNormal
 	}
 

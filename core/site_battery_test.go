@@ -46,8 +46,10 @@ func TestApplyBatteryMode(t *testing.T) {
 	for _, tc := range []struct {
 		internal, expected api.BatteryMode
 	}{
-		{api.BatteryUnknown, api.BatteryUnknown}, // no change required
-		{api.BatteryNormal, api.BatteryUnknown},  // no change required
+		// not yet initialized: push Normal once so a configured reserve (minsoc) reaches
+		// the device even if grid charge/discharge control never activate (#32653)
+		{api.BatteryUnknown, api.BatteryNormal},
+		{api.BatteryNormal, api.BatteryUnknown}, // no change required
 		{api.BatteryHold, api.BatteryNormal},
 		{api.BatteryCharge, api.BatteryNormal},
 	} {
@@ -89,7 +91,8 @@ func TestRequiredExternalBatteryMode(t *testing.T) {
 	for _, tc := range []struct {
 		internal, external, new api.BatteryMode
 	}{
-		{api.BatteryUnknown, api.BatteryUnknown, api.BatteryUnknown},
+		// not yet initialized: push Normal once (#32653)
+		{api.BatteryUnknown, api.BatteryUnknown, api.BatteryNormal},
 		{api.BatteryUnknown, api.BatteryNormal, api.BatteryNormal},
 		{api.BatteryUnknown, api.BatteryCharge, api.BatteryCharge},
 
@@ -120,7 +123,8 @@ func TestExternalBatteryModeChange(t *testing.T) {
 	for _, tc := range []struct {
 		internal, external, expected api.BatteryMode
 	}{
-		{api.BatteryUnknown, api.BatteryUnknown, api.BatteryUnknown},
+		// not yet initialized: push Normal once (#32653)
+		{api.BatteryUnknown, api.BatteryUnknown, api.BatteryNormal},
 		{api.BatteryUnknown, api.BatteryNormal, api.BatteryNormal},
 		{api.BatteryUnknown, api.BatteryCharge, api.BatteryCharge},
 
