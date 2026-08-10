@@ -158,11 +158,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* overflow-hidden would clip the vehicle select focus ring */
-.ring-space {
-	padding: 0.5rem;
-	margin: -0.5rem;
-}
 .vehicle-name {
 	text-decoration-color: var(--evcc-gray);
 }

@@ -725,9 +725,7 @@ test.describe("plan strategy", async () => {
     await expect(modal.getByTestId("plan-strategy")).toContainText("cleanest slots");
 
     await optimization.selectOption("continuous");
-    await expect(modal.getByTestId("plan-strategy")).toContainText(
-      "cleanest uninterrupted series"
-    );
+    await expect(modal.getByTestId("plan-strategy")).toContainText("cleanest uninterrupted series");
   });
 
   test("visible and functional on mobile", async ({ page }) => {

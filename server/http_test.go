@@ -15,7 +15,7 @@ import (
 func TestWriteTimeout(t *testing.T) {
 	timeout := 200 * time.Millisecond
 
-	srv := NewHTTPd("", nil, "")
+	srv := NewHTTPd("", nil, Customization{})
 	srv.WriteTimeout = timeout
 
 	srv.Router().HandleFunc("/slow", func(w http.ResponseWriter, r *http.Request) {
