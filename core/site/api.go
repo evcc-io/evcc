@@ -48,6 +48,7 @@ type API interface {
 
 	GetBatterySoc() float64
 	GetBatteryMaxDischargePower() *float64
+	GetBatteryMode() api.BatteryMode
 	GetPrioritySoc() float64
 	SetPrioritySoc(float64) error
 	GetBufferSoc() float64

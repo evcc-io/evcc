@@ -1616,6 +1616,22 @@ func (lp *Loadpoint) boostPower(batteryPower float64) float64 {
 	return res
 }
 
+// batteryCoversStart checks if the battery can supply the power still missing to reach
+// minCurrent. Without a discharge limit the battery is assumed to cover any demand.
+func (lp *Loadpoint) batteryCoversStart(sitePower, minCurrent, effectiveCurrent float64, activePhases int) bool {
+	limit := lp.site.GetBatteryMaxDischargePower()
+	if limit == nil {
+		return true
+	}
+
+	if batteryModeModified(lp.site.GetBatteryMode()) {
+		return false
+	}
+
+	// sitePower nets out the battery and already contains what the loadpoint draws
+	return currentToPower(minCurrent-effectiveCurrent, activePhases)+sitePower <= *limit
+}
+
 // pvMaxCurrent calculates the maximum target current for PV mode
 func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryPower float64, batteryBuffered, batteryStart bool) float64 {
 	// read only once to simplify testing
@@ -1644,6 +1660,11 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryPower f
 	}
 	deltaCurrent := powerToCurrent(-sitePower, activePhases)
 	targetCurrent := max(effectiveCurrent+deltaCurrent, 0)
+
+	// battery assist only decides whether to start, it does not revoke a running session
+	if boost := lp.GetBatteryBoost(); batteryStart && !lp.enabled && (boost == boostDisabled || boost == boostHold) {
+		batteryStart = lp.batteryCoversStart(sitePower, minCurrent, effectiveCurrent, activePhases)
+	}
 
 	// in MinPV mode or under special conditions return at least minCurrent
 	if battery := batteryStart || batteryBuffered && lp.charging() || lp.GetBatteryBoost() == boostContinue; (mode == api.ModeMinPV || battery) && targetCurrent < minCurrent {

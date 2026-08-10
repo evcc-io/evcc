@@ -13,6 +13,7 @@ type mockSite struct {
 	site.API
 	maxDischargePower *float64
 	residualPower     float64
+	batteryMode       api.BatteryMode
 	optimized         int
 }
 
@@ -26,6 +27,10 @@ func (m *mockSite) GetBatteryMaxDischargePower() *float64 {
 
 func (m *mockSite) GetResidualPower() float64 {
 	return m.residualPower
+}
+
+func (m *mockSite) GetBatteryMode() api.BatteryMode {
+	return m.batteryMode
 }
 
 func TestBoostPower(t *testing.T) {
