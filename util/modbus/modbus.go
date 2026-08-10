@@ -104,8 +104,9 @@ type meterConnection struct {
 	proto Protocol
 	refs  int // count of references; first connection has ref count 0
 
-	// largest value requested by any of the sharing logical connections
-	settings     sync.Mutex
+	// mu guards the largest delay and timeout values requested by any of the
+	// sharing logical connections
+	mu           sync.Mutex
 	delay        time.Duration
 	connectDelay time.Duration
 	timeout      time.Duration
@@ -115,23 +116,23 @@ type meterConnection struct {
 
 // setDelay applies the delay if larger than the current value
 func (c *meterConnection) setDelay(delay time.Duration) {
-	c.settings.Lock()
-	defer c.settings.Unlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	c.delay = max(c.delay, delay)
 }
 
 func (c *meterConnection) getDelay() time.Duration {
-	c.settings.Lock()
-	defer c.settings.Unlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	return c.delay
 }
 
 // setConnectDelay applies the connect delay if larger than the current value
 func (c *meterConnection) setConnectDelay(delay time.Duration) {
-	c.settings.Lock()
-	defer c.settings.Unlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	if delay > c.connectDelay {
 		c.connectDelay = delay
@@ -141,8 +142,8 @@ func (c *meterConnection) setConnectDelay(delay time.Duration) {
 
 // setTimeout applies the timeout if larger than the current value
 func (c *meterConnection) setTimeout(timeout time.Duration) {
-	c.settings.Lock()
-	defer c.settings.Unlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	if timeout > c.timeout {
 		c.timeout = timeout
