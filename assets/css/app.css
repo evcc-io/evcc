@@ -889,14 +889,6 @@ input::-webkit-date-and-time-value {
 	margin: -0.5rem;
 }
 
-/* square chart area for round charts (doughnut, polar, radar), consistent size across cards */
-.round-chart {
-	width: 100%;
-	max-width: 420px;
-	aspect-ratio: 1;
-	margin-inline: auto;
-}
-
 .sticky-bottom {
 	bottom: calc(var(--tab-bar-height) + 0.25rem);
 }

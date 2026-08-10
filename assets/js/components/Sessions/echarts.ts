@@ -1,4 +1,5 @@
 import colors from "@/colors";
+import "./roundChart.css";
 import { echarts, FONT_FAMILY, tooltipStyle, tooltipTable } from "../Forecast/echarts";
 import { PieChart, RadarChart } from "echarts/charts";
 import { PolarComponent, RadarComponent } from "echarts/components";
