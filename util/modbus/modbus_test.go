@@ -1,11 +1,54 @@
 package modbus
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 )
+
+// TestConnectionRefs ensures the physical connection is kept until the context
+// of the last sharing connection is done
+func TestConnectionRefs(t *testing.T) {
+	key := "localhost:15021"
+
+	ctx1, cancel1 := context.WithCancel(t.Context())
+	ctx2, cancel2 := context.WithCancel(t.Context())
+
+	for _, ctx := range []context.Context{ctx1, ctx2} {
+		_, err := Settings{URI: key, ID: 1}.Connection(ctx)
+		require.NoError(t, err)
+	}
+
+	refs := func() (int, bool) {
+		mu.Lock()
+		defer mu.Unlock()
+
+		conn, ok := connections[key]
+		if !ok {
+			return 0, false
+		}
+		return conn.refs, true
+	}
+
+	r, ok := refs()
+	require.True(t, ok)
+	require.Equal(t, 1, r)
+
+	// first context done releases its reference only
+	cancel1()
+	require.Eventually(t, func() bool {
+		r, ok := refs()
+		return ok && r == 0
+	}, time.Second, 10*time.Millisecond)
+
+	cancel2()
+	require.Eventually(t, func() bool {
+		_, ok := refs()
+		return !ok
+	}, time.Second, 10*time.Millisecond)
+}
 
 // TestSharedSettings ensures the largest delay and timeout wins for all
 // connections sharing the same physical connection
