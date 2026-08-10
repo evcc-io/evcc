@@ -35,9 +35,6 @@ const (
 
 	// batteryPower is the default power of the battery in W
 	batteryPower = 6000
-
-	// optimizerDebounce limits how often on-demand optimizer runs execute
-	optimizerDebounce = 2 * time.Minute
 )
 
 // optimizerChargingStrategies are the valid grid charging strategies; the first
