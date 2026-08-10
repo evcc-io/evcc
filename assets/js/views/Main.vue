@@ -2,6 +2,7 @@
 	<Site
 		:notifications="notifications"
 		v-bind="state"
+		:forecast="uiForecast"
 		:selected-loadpoint-index="selectedLoadpointIndex"
 	/>
 </template>
@@ -21,6 +22,11 @@ export default defineComponent({
 	},
 	data() {
 		return store;
+	},
+	computed: {
+		uiForecast() {
+			return store.uiForecast.value;
+		},
 	},
 	head() {
 		const title = store.state.siteTitle;

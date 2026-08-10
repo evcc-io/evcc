@@ -21,6 +21,7 @@ type Session struct {
 	ChargeDuration       *time.Duration `json:"chargeDuration" csv:"Charge Duration" gorm:"column:charge_duration"`
 	SocStart             *float64       `json:"socStart" csv:"SoC Start (%)" gorm:"column:soc_start" format:"int"`
 	SocEnd               *float64       `json:"socEnd" csv:"SoC End (%)" gorm:"column:soc_end" format:"int"`
+	AddedRange           *float64       `json:"addedRange" csv:"Added Range (km)" gorm:"column:added_range" format:"int"`
 	SolarPercentage      *float64       `json:"solarPercentage" csv:"Solar (%)" gorm:"column:solar_percentage"`
 	Price                *float64       `json:"price" csv:"Price" gorm:"column:price"`
 	PricePerKWh          *float64       `json:"pricePerKWh" csv:"Price/kWh" gorm:"column:price_per_kwh"`

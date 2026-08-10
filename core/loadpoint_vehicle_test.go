@@ -44,7 +44,7 @@ func TestPublishSocAndRange(t *testing.T) {
 		chargeMeter:  &Null{}, // silence nil panics
 		chargeRater:  &Null{}, // silence nil panics
 		chargeTimer:  &Null{}, // silence nil panics
-		socEstimator: soc.NewEstimator(log, charger, vehicle),
+		socEstimator: soc.NewEstimator(log, vehicle),
 		minCurrent:   minA,
 		maxCurrent:   maxA,
 		phases:       1,
@@ -188,7 +188,7 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 
 		t.Run(tc.name+" wo/estimator", test)
 
-		lp.socEstimator = soc.NewEstimator(log, tc.charger, tc.vehicle)
+		lp.socEstimator = soc.NewEstimator(log, tc.vehicle)
 		t.Run(tc.name+" w/estimator", test)
 	}
 }

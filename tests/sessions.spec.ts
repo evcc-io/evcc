@@ -55,11 +55,15 @@ test.describe("basics", async () => {
     await expect(page.getByTestId("sessions-nodata")).toHaveCount(0);
     await expect(page.getByRole("table")).toBeVisible();
     await expect(page.getByTestId("sessions-head")).toHaveCount(1);
-    await expect(page.getByTestId("sessions-head").locator("th")).toHaveCount(10);
+    await expect(page.getByTestId("sessions-head").locator("th")).toHaveCount(11);
 
     await expect(page.getByTestId("sessions-head-energy")).toContainText("ChargedkWh");
     await expect(page.getByTestId("sessions-foot-energy")).toBeVisible();
     await expect(page.getByTestId("sessions-foot-energy")).toHaveText("20.0");
+
+    await expect(page.getByTestId("sessions-head-addedRange")).toContainText("Rangekm");
+    await expect(page.getByTestId("sessions-foot-addedRange")).toBeVisible();
+    await expect(page.getByTestId("sessions-foot-addedRange")).toHaveText("+80");
 
     await expect(page.getByTestId("sessions-head-solar")).toContainText("Solar%");
     await expect(page.getByTestId("sessions-foot-solar")).toBeVisible();
@@ -251,9 +255,9 @@ test.describe("columns desktop", async () => {
     await page.setViewportSize({ width: 800, height: 800 });
     await page.goto("/#/sessions?year=2023&month=3");
     await expect(
-      page.getByTestId("sessions-head-avgPrice").locator("option[value=odometer]")
+      page.getByTestId("sessions-head-price").locator("option[value=odometer]")
     ).toHaveCount(1);
-    await page.getByTestId("sessions-head-avgPrice").getByRole("combobox").selectOption("odometer");
+    await page.getByTestId("sessions-head-price").getByRole("combobox").selectOption("odometer");
     await expect(page.getByTestId("sessions-head-odometer")).toBeVisible();
     await expect(page.getByTestId("sessions-entry").nth(0)).toContainText("12,345");
     await expect(page.getByTestId("sessions-foot-odometer")).toHaveText("");
@@ -391,6 +395,7 @@ test.describe("session details", async () => {
     await expect(modal.getByTestId("session-details-solar")).toContainText("0.0% (0.0 kWh)");
     await expect(modal.getByTestId("session-details-price")).toContainText("2.50 € 50.0 ct/kWh");
     await expect(modal.getByTestId("session-details-co2")).toHaveCount(0);
+    await expect(modal.getByTestId("session-details-added-range")).toContainText("+25 km");
     await expect(modal.getByTestId("session-details-odometer")).toContainText("Add value");
     await expect(modal.getByTestId("session-details-meter")).toHaveCount(0);
     await expect(modal.getByTestId("session-details-delete")).toContainText("Delete");
@@ -413,6 +418,7 @@ test.describe("session details", async () => {
     await expect(modal.getByTestId("session-details-price")).toContainText("2.00 € 20.0 ct/kWh");
     await expect(modal.getByTestId("session-details-co2")).toContainText("3 kg");
     await expect(modal.getByTestId("session-details-co2")).toContainText("300 g/kWh");
+    await expect(modal.getByTestId("session-details-added-range")).toContainText("+60 km");
     await expect(modal.getByTestId("session-details-odometer")).toContainText("12,345 km");
   });
 

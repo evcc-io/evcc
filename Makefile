@@ -31,7 +31,7 @@ CURRDIR := $(shell pwd)
 
 default:: ui build
 
-all:: clean install install-ui ui assets lint test-ui lint-ui test build
+all:: clean install install-ui ui assets openapi lint test-ui lint-ui test build
 
 clean::
 	rm -rf dist/
@@ -47,6 +47,9 @@ ui::
 
 assets::
 	go generate ./...
+
+openapi::
+	vp run openapi
 
 docs::
 	go generate github.com/evcc-io/evcc/util/templates/...
