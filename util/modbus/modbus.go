@@ -104,8 +104,6 @@ type meterConnection struct {
 	proto Protocol
 	refs  int // count of references; first connection has ref count 0
 
-	// mu guards the largest delay and timeout values requested by any of the
-	// sharing logical connections
 	mu           sync.Mutex
 	delay        time.Duration
 	connectDelay time.Duration
