@@ -1066,7 +1066,7 @@ func tileAndTrim(profile []float64, minLen int) []float64 {
 
 // extractHeaterProfiles returns aggregated per-strategy heating profiles.
 // tempProfile: loadpoints with DemandProfileDailyTemperature (daily avg, scaled by outdoor temp).
-// weeklyProfile: loadpoints with DemandProfileSameWeekday (same weekday last week).
+// weeklyProfile: loadpoints with DemandProfileSameWeekday (avg of same weekday, past 4 weeks).
 func (site *Site) extractHeaterProfiles() (tempProfile, weeklyProfile []float64) {
 	var tempProfiles, weeklyProfiles [][]float64
 

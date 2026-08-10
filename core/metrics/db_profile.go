@@ -63,28 +63,24 @@ func energyProfile(entity entity, from time.Time) (*[96]float64, error) {
 	return (*[96]float64)(res), nil
 }
 
-// energyProfileWeekday returns the actual 96-slot 15min energy profile (kWh) for the
-// same weekday as now, taken from 7 days ago. No averaging — one day is the forecast.
-// Returns ErrIncomplete if fewer than 96 slots are present for that day.
+// energyProfileWeekday returns a 96-slot 15min average energy profile (kWh) for the
+// same weekday as today, averaged across the past 4 occurrences (28 days).
+// Groups by time-of-day slot. Returns ErrIncomplete if fewer than 96 slots are present.
 func energyProfileWeekday(entity entity) (*[96]float64, error) {
 	database, err := db.Instance.DB()
 	if err != nil {
 		return nil, err
 	}
 
-	// same weekday, 7 days back: covers exactly 00:00–23:45 of that day
 	weekdayNum := int(time.Now().Weekday()) // 0=Sunday
-	rows, err := database.Query(`SELECT ts, COALESCE(energy, 0) AS energy
+	from := time.Now().AddDate(0, 0, -28)
+	rows, err := database.Query(`SELECT min(ts) AS ts, COALESCE(avg(energy), 0) AS energy
 		FROM meters
-		WHERE meter = ? AND COALESCE(recovered, 0) = 0
+		WHERE meter = ? AND ts >= ? AND COALESCE(recovered, 0) = 0
 		  AND strftime('%w', ts, 'unixepoch', 'localtime') = ?
-		  AND ts >= ?
-		  AND ts < ?
-		ORDER BY ts ASC`,
-		entity.Id,
-		weekdayNum,
-		time.Now().AddDate(0, 0, -7).Truncate(24*time.Hour).Unix(),
-		time.Now().AddDate(0, 0, -6).Truncate(24*time.Hour).Unix(),
+		GROUP BY strftime("%H:%M", ts, 'unixepoch', 'localtime')
+		ORDER BY strftime("%H:%M", ts, 'unixepoch', 'localtime') ASC`,
+		entity.Id, from.Unix(), weekdayNum,
 	)
 	if err != nil {
 		return nil, err
@@ -103,7 +99,7 @@ func energyProfileWeekday(entity entity) (*[96]float64, error) {
 		}
 
 		// interpolate single missing value
-		if !prev.IsZero() && time.Time(ts).Sub(prev) == 2*tariff.SlotDuration {
+		if time.Time(ts).Sub(prev) == 2*tariff.SlotDuration {
 			res = append(res, (val+res[len(res)-1])/2)
 		}
 		prev = time.Time(ts)
