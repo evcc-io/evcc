@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"math"
 	"time"
 
@@ -12,6 +13,24 @@ import (
 	"github.com/jinzhu/now"
 	"github.com/samber/lo"
 )
+
+// forecastDetails is the published forecast payload. It implements BytesMarshaler
+// so MQTT sends a single JSON message instead of decomposing every slot into an
+// individual topic (several thousand messages per update).
+type forecastDetails struct {
+	Co2         [][]float64   `json:"co2,omitempty"`
+	FeedIn      [][]float64   `json:"feedin,omitempty"`
+	Grid        [][]float64   `json:"grid,omitempty"`
+	Planner     [][]float64   `json:"planner,omitempty"`
+	Solar       *solarDetails `json:"solar,omitempty"`
+	Temperature [][]float64   `json:"temperature,omitempty"`
+}
+
+var _ api.BytesMarshaler = (*forecastDetails)(nil)
+
+func (fc forecastDetails) MarshalBytes() ([]byte, error) {
+	return json.Marshal(fc)
+}
 
 type solarDetails struct {
 	Scale            float64      `json:"scale"`                      // scale factor yield/forecasted today, 1 if unscaled
@@ -115,14 +134,7 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 		site.publish(keys.TariffCo2Loadpoints, v)
 	}
 
-	fc := struct {
-		Co2         [][]float64   `json:"co2,omitempty"`
-		FeedIn      [][]float64   `json:"feedin,omitempty"`
-		Grid        [][]float64   `json:"grid,omitempty"`
-		Planner     [][]float64   `json:"planner,omitempty"`
-		Solar       *solarDetails `json:"solar,omitempty"`
-		Temperature [][]float64   `json:"temperature,omitempty"`
-	}{
+	fc := forecastDetails{
 		Co2:         forecastRates(tariff.Rates(site.GetTariff(api.TariffUsageCo2))),
 		FeedIn:      forecastRates(tariff.Rates(site.GetTariff(api.TariffUsageFeedIn))),
 		Planner:     forecastRates(tariff.Rates(site.GetTariff(api.TariffUsagePlanner))),
