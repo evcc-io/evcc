@@ -70,9 +70,11 @@ func (t *Template) ModbusValues(renderMode int, values map[string]any) {
 
 		for _, p := range typeParams {
 			// don't overwrite custom values. Params the template deprecated in favour
-			// of the modbus definition are pre-populated with an empty default value.
-			if v, ok := values[p.Name]; ok && v != nil && v != "" {
-				continue
+			// of the modbus definition are pre-populated with an empty string default.
+			if v := values[p.Name]; v != nil {
+				if s, ok := v.(string); !ok || s != "" {
+					continue
+				}
 			}
 
 			values[p.Name] = p.DefaultValue(renderMode)
