@@ -124,7 +124,8 @@ func (t *solarTestSuite) TestSolarEnergyAdditive() {
 	total := solarEnergy(rr, from, to)
 	t.Positive(total)
 
-	for _, splits := range []int{2, 3, 7, 13, 97} {
+	// 11 splits are 30min apart and land on every knot
+	for _, splits := range []int{2, 3, 7, 11, 13, 97} {
 		step := to.Sub(from) / time.Duration(splits)
 
 		var sum float64
