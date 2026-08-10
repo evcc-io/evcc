@@ -42,12 +42,7 @@ type buffer struct {
 }
 
 func newBuffer(size int) *buffer {
-	b := &buffer{
-		data: ring.New(1),
-		size: size,
-	}
-	b.length = b.data.Len() // keep length in sync with the initial ring
-	return b
+	return &buffer{data: ring.New(1), size: size, length: 1}
 }
 
 func (b *buffer) add(e entry) {
@@ -92,7 +87,7 @@ func New(size int) *logger {
 
 var _ io.Writer = (*logger)(nil)
 
-func (l *logger) Write(p []byte) (n int, err error) {
+func (l *logger) Write(p []byte) (int, error) {
 	if bytes.HasPrefix(p, []byte("[cache ]")) {
 		return len(p), nil
 	}
@@ -118,9 +113,9 @@ func (l *logger) Size() int64 {
 	defer l.mu.RUnlock()
 
 	var size int64
-	count := func(e entry) { size += int64(len(e.text)) }
-	l.trace.visit(count)
-	l.other.visit(count)
+	sum := func(e entry) { size += int64(len(e.text)) }
+	l.trace.visit(sum)
+	l.other.visit(sum)
 
 	return size
 }
@@ -147,20 +142,22 @@ func (l *logger) All(areas []string, level jww.Threshold, count int) []string {
 
 	all := len(areas) == 0 && level == jww.LevelTrace
 
-	var trace, other []entry
-	filter := func(dst *[]entry) func(entry) {
-		return func(e entry) {
+	matching := func(b *buffer) []entry {
+		var res []entry
+		b.visit(func(e entry) {
 			if all || e.text.match(areas, level) {
-				*dst = append(*dst, e)
+				res = append(res, e)
 			}
-		}
+		})
+		return res
 	}
 
 	// trace entries can only match when trace is requested
+	var trace []entry
 	if level == jww.LevelTrace {
-		l.trace.visit(filter(&trace))
+		trace = matching(l.trace)
 	}
-	l.other.visit(filter(&other))
+	other := matching(l.other)
 
 	// both buffers are chronologically ordered, merge them by sequence
 	res := make([]string, 0, len(trace)+len(other))
