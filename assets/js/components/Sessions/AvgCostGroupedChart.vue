@@ -75,6 +75,7 @@ export default defineComponent({
 		chartOption(): Record<string, unknown> {
 			const { labels, data, colors: entryColors } = this.chartData;
 			return {
+				animation: false,
 				textStyle: { fontFamily: FONT_FAMILY },
 				tooltip: {
 					trigger: "item",
@@ -96,7 +97,6 @@ export default defineComponent({
 				radiusAxis: {
 					min: 0,
 					splitNumber: 4,
-					animation: false,
 					axisLine: { show: false },
 					axisTick: { show: false },
 					splitLine: { lineStyle: { color: colors.border || "" } },

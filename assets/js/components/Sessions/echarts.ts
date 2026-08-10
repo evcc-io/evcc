@@ -53,8 +53,7 @@ export function doughnutOption(
 	getChart: () => ChartSize
 ) {
 	return {
-		animationDuration: 250,
-		animationDurationUpdate: 250,
+		animation: false,
 		textStyle: { fontFamily: FONT_FAMILY },
 		tooltip: {
 			trigger: "item",
