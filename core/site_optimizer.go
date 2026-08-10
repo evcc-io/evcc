@@ -1024,7 +1024,7 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	gt_final := make([]float64, len(res))
 	copy(gt_final, res)
 
-	// DemandProfileTemperature: daily-averaged profile scaled by outdoor temp forecast
+	// DemandProfileDailyTemperature: daily-averaged profile scaled by outdoor temp forecast
 	if len(tempProfile) > 0 {
 		p := tileAndTrim(tempProfile, minLen)
 		site.log.DEBUG.Printf("home profile: applying temperature correction to %d slots", len(p))
@@ -1065,7 +1065,7 @@ func tileAndTrim(profile []float64, minLen int) []float64 {
 }
 
 // extractHeaterProfiles returns aggregated per-strategy heating profiles.
-// tempProfile: loadpoints with DemandProfileTemperature (daily avg, scaled by outdoor temp).
+// tempProfile: loadpoints with DemandProfileDailyTemperature (daily avg, scaled by outdoor temp).
 // weeklyProfile: loadpoints with DemandProfileWeekly (same weekday last week).
 func (site *Site) extractHeaterProfiles() (tempProfile, weeklyProfile []float64) {
 	var tempProfiles, weeklyProfiles [][]float64
@@ -1075,7 +1075,7 @@ func (site *Site) extractHeaterProfiles() (tempProfile, weeklyProfile []float64)
 			continue
 		}
 
-		if hasFeature(lp.charger, api.DemandProfileTemperature) {
+		if hasFeature(lp.charger, api.DemandProfileDailyTemperature) {
 			profile, err := lp.chargeEnergy.EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -7))
 			switch {
 			case err == nil:
