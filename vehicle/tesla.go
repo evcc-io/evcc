@@ -2,7 +2,6 @@ package vehicle
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -11,7 +10,6 @@ import (
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/evcc-io/evcc/vehicle/tesla"
 	teslaclient "github.com/evcc-io/tesla-proxy-client"
-	"golang.org/x/oauth2"
 )
 
 // Tesla is an api.Vehicle implementation for Tesla cars using the official Tesla vehicle-command api.
@@ -28,14 +26,13 @@ func init() {
 // NewTeslaFromConfig creates a new vehicle
 func NewTeslaFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
-		embed        `mapstructure:",squash"`
-		Credentials  ClientCredentials
-		Tokens       Tokens
-		VIN          string
-		CommandProxy string
-		ProxyToken   string
-		Cache        time.Duration
-		Timeout      time.Duration
+		embed             `mapstructure:",squash"`
+		tesla.FleetConfig `mapstructure:",squash"`
+		VIN               string
+		CommandProxy      string
+		ProxyToken        string
+		Cache             time.Duration
+		Timeout           time.Duration
 	}{
 		CommandProxy: tesla.ProxyBaseUrl,
 		Cache:        interval,
@@ -46,12 +43,7 @@ func NewTeslaFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	if cc.Credentials.ID == "" {
-		return nil, errors.New("missing client id, see https://docs.evcc.io/en/docs/devices/vehicles#tesla")
-	}
-
-	token, err := cc.Tokens.Token()
-	if err != nil {
+	if err := cc.FleetConfig.Validate(); err != nil {
 		return nil, err
 	}
 
@@ -60,28 +52,11 @@ func NewTeslaFromConfig(other map[string]any) (api.Vehicle, error) {
 		cc.Credentials.ID, cc.Credentials.Secret,
 	)
 
-	identity, err := tesla.NewIdentity(log, tesla.OAuth2Config(cc.Credentials.ID, cc.Credentials.Secret), token)
+	fleet, err := cc.FleetConfig.Client(log)
 	if err != nil {
 		return nil, err
 	}
-
-	hc := request.NewClient(log)
-	hc.Transport = &oauth2.Transport{
-		Source: identity,
-		Base:   hc.Transport,
-	}
-
-	tc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(hc))
-	if err != nil {
-		return nil, err
-	}
-
-	// validate base url
-	region, err := tc.UserRegion()
-	if err != nil {
-		return nil, err
-	}
-	tc.SetBaseUrl(region.FleetApiBaseUrl)
+	tc := fleet.Client
 
 	vehicle, err := ensureVehicleEx(
 		cc.VIN, tc.Vehicles,
@@ -99,7 +74,7 @@ func NewTeslaFromConfig(other map[string]any) (api.Vehicle, error) {
 		Decorator: transport.DecorateHeaders(map[string]string{
 			"X-Authorization": "Bearer " + cc.ProxyToken,
 		}),
-		Base: hc.Transport,
+		Base: fleet.HTTPClient.Transport,
 	}
 
 	tcc, err := teslaclient.NewClient(context.Background(), teslaclient.WithClient(pc))

@@ -127,7 +127,10 @@ maxconsumptionpower:
     await expectModalHidden(hemsModal);
 
     // enable experimental
-    await page.getByTestId("generalconfig-experimental").getByRole("button", { name: "edit" }).click();
+    await page
+      .getByTestId("generalconfig-experimental")
+      .getByRole("button", { name: "edit" })
+      .click();
     const experimentalModal = page.getByTestId("experimental-modal");
     await expectModalVisible(experimentalModal);
     await experimentalModal.getByLabel("Enable experimental features.").click();
