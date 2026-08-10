@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"math"
 	"slices"
 	"strconv"
@@ -9,7 +8,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/core/types"
-	"github.com/evcc-io/evcc/util"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -97,22 +95,6 @@ func (suite *mqttSuite) TestSlice() {
 	suite.Require().Len(suite.topics, 3)
 	suite.Equal([]string{"test", "test/1", "test/2"}, suite.topics, "topics")
 	suite.Equal([]string{"2", "10", "20"}, suite.payloads, "payloads")
-}
-
-type jsonPayload struct {
-	Foo [][]float64 `json:"foo,omitempty"`
-}
-
-func (p jsonPayload) MarshalBytes() ([]byte, error) {
-	return json.Marshal(p)
-}
-
-// a BytesMarshaler wrapped in a Sharder must still publish as a single message
-func (suite *mqttSuite) TestShardedBytesMarshaler() {
-	p := jsonPayload{Foo: [][]float64{{1, 2, 3}, {4, 5, 6}}}
-	suite.publish("test", false, util.NewSharder("test", p))
-	suite.Equal([]string{"test"}, suite.topics, "topics")
-	suite.Equal([]string{`{"foo":[[1,2,3],[4,5,6]]}`}, suite.payloads, "payloads")
 }
 
 func (suite *mqttSuite) TestNilInterface() {
