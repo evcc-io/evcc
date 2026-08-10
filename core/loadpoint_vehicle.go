@@ -180,9 +180,7 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 		lp.unpublishVehicle()
 
 		// vehicle change alters the loadpoint's optimizer profile
-		if lp.site != nil {
-			_ = lp.site.Optimize()
-		}
+		lp.triggerOptimizer()
 	}
 
 	// publish effective values

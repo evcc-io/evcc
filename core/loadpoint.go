@@ -636,6 +636,16 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	// mark plan slot as inactive
 	// this will force a deletion of an outdated plan once plan time is expired in GetPlan()
 	lp.setPlanActive(false)
+
+	// disconnect removes the loadpoint's demand
+	lp.triggerOptimizer()
+}
+
+// triggerOptimizer re-runs the optimizer when the loadpoint's profile changed
+func (lp *Loadpoint) triggerOptimizer() {
+	if lp.site != nil {
+		_ = lp.site.Optimize()
+	}
 }
 
 // evVehicleSocProgressHandler sends external start event
