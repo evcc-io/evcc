@@ -79,12 +79,8 @@ func energyHistoryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// past periods are immutable; current period only changes at the next slot
-	slot := time.Now().Truncate(tariff.SlotDuration)
-	maxAge := time.Until(slot.Add(tariff.SlotDuration))
-	if !to.IsZero() && to.Before(slot) {
-		maxAge = time.Hour
-	}
+	// data only changes at the next slot boundary
+	maxAge := time.Until(time.Now().Truncate(tariff.SlotDuration).Add(tariff.SlotDuration))
 	w.Header().Set("Cache-Control", fmt.Sprintf("private, max-age=%d", int(maxAge.Seconds())))
 
 	jsonWrite(w, res)
