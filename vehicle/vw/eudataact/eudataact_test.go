@@ -76,6 +76,8 @@ func TestStatusChargingScenario(t *testing.T) {
 		{"CHARGING_SCENARIO_OFF", api.StatusA},
 		// case-insensitivity: mixed-case value should behave like its uppercased equivalent
 		{"Charging_Scenario_Off", api.StatusA},
+		// an error scenario still implies the vehicle is plugged in (see #32689)
+		{"ERROR_CHARGING_SYSTEM", api.StatusB},
 	}
 
 	for _, tc := range tc {

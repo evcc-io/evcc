@@ -173,6 +173,9 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		// the car reports finished if it's plugged in but not charging
 		case strings.HasSuffix(upper, "_FINISHED"):
 			status = api.StatusB
+		// a charging error still implies the vehicle is plugged in (see #32689)
+		case strings.HasPrefix(upper, "ERROR_"):
+			status = api.StatusB
 		}
 	}
 
