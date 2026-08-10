@@ -105,6 +105,7 @@ type meterConnection struct {
 	refs  int // count of references; first connection has ref count 0
 
 	// largest value requested by any of the sharing logical connections
+	settings     sync.Mutex
 	delay        time.Duration
 	connectDelay time.Duration
 	timeout      time.Duration
@@ -114,23 +115,23 @@ type meterConnection struct {
 
 // setDelay applies the delay if larger than the current value
 func (c *meterConnection) setDelay(delay time.Duration) {
-	mu.Lock()
-	defer mu.Unlock()
+	c.settings.Lock()
+	defer c.settings.Unlock()
 
 	c.delay = max(c.delay, delay)
 }
 
 func (c *meterConnection) getDelay() time.Duration {
-	mu.Lock()
-	defer mu.Unlock()
+	c.settings.Lock()
+	defer c.settings.Unlock()
 
 	return c.delay
 }
 
 // setConnectDelay applies the connect delay if larger than the current value
 func (c *meterConnection) setConnectDelay(delay time.Duration) {
-	mu.Lock()
-	defer mu.Unlock()
+	c.settings.Lock()
+	defer c.settings.Unlock()
 
 	if delay > c.connectDelay {
 		c.connectDelay = delay
@@ -140,8 +141,8 @@ func (c *meterConnection) setConnectDelay(delay time.Duration) {
 
 // setTimeout applies the timeout if larger than the current value
 func (c *meterConnection) setTimeout(timeout time.Duration) {
-	mu.Lock()
-	defer mu.Unlock()
+	c.settings.Lock()
+	defer c.settings.Unlock()
 
 	if timeout > c.timeout {
 		c.timeout = timeout
