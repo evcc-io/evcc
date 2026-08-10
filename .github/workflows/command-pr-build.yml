@@ -115,6 +115,7 @@ jobs:
     runs-on: depot-ubuntu-24.04-arm
     permissions:
       contents: read
+      id-token: write # depot OIDC
     steps:
       - uses: actions/checkout@v7
         with:
@@ -128,12 +129,13 @@ jobs:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
 
-      - name: Setup Buildx
-        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4
+      - name: Setup Depot
+        uses: depot/setup-action@v1
 
       - name: Publish
-        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
+        uses: depot/build-push-action@v1
         with:
+          project: ${{ vars.DEPOT_PROJECT_ID }}
           context: .
           platforms: ${{ needs.prep.outputs.platforms }}
           push: true
