@@ -26,15 +26,6 @@ jobs:
           cache: false # avoid cache thrashing
         id: go
 
-      # shared cache, written by the Build job on master only
-      - uses: actions/cache/restore@v6
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: ${{ runner.os }}-go-
-
       - name: Install tools
         run: make install
 
@@ -65,16 +56,6 @@ jobs:
           cache: false
         id: go
 
-      # single writer of the shared cache all other jobs restore from
-      - uses: actions/cache/restore@v6
-        id: go-cache
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: ${{ runner.os }}-go-
-
       - uses: voidzero-dev/setup-vp@v1
         with:
           node-version: "26"
@@ -84,17 +65,6 @@ jobs:
 
       - name: Build
         run: make build
-
-      # PR caches are only visible to their own PR, so writing them wastes the
-      # repo cache budget and evicts the master entry every job falls back to
-      - name: Save Go cache
-        if: github.ref == 'refs/heads/master' && steps.go-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v6
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
 
   test:
     name: Test
@@ -113,15 +83,6 @@ jobs:
           go-version-file: go.mod
           cache: false
         id: go
-
-      # shared cache, written by the Build job on master only
-      - uses: actions/cache/restore@v6
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: ${{ runner.os }}-go-
 
       - name: Test
         run: mkdir dist && touch dist/empty && make test
@@ -143,15 +104,6 @@ jobs:
           go-version-file: go.mod
           cache: false # avoid cache thrashing
         id: go
-
-      # shared cache, written by the Build job on master only
-      - uses: actions/cache/restore@v6
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: ${{ runner.os }}-go-
 
       - run: mkdir dist && touch dist/empty
 
@@ -231,15 +183,6 @@ jobs:
           go-version-file: go.mod
           cache: false
         id: go
-
-      # shared cache, written by the Build job on master only
-      - uses: actions/cache/restore@v6
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: ${{ runner.os }}-go-
 
       - uses: voidzero-dev/setup-vp@v1
         with:
