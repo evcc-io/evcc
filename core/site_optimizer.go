@@ -11,7 +11,6 @@ import (
 	"os"
 	"slices"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -20,6 +19,7 @@ import (
 	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/hems/hems"
+	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/request"
@@ -30,18 +30,20 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-var (
-	eta          = float32(0.9)  // efficiency of the battery charging/discharging
-	batteryPower = float32(6000) // default power of the battery in W
+const (
+	// eta is the efficiency of the battery charging/discharging
+	eta = 0.9
 
-	mu               sync.Mutex
-	optimizerUpdated time.Time
+	// batteryPower is the default power of the battery in W
+	batteryPower = 6000
 )
 
 // optimizerChargingStrategies are the valid grid charging strategies; the first
 // entry is the default and preserves the previous hard-coded behavior.
 var optimizerChargingStrategies = []string{
 	string(optimizer.OptimizerStrategyChargingStrategyChargeBeforeExport),
+	string(optimizer.OptimizerStrategyChargingStrategyAttenuateDemandPeaks),
+	string(optimizer.OptimizerStrategyChargingStrategyAttenuateFeedinPeaks),
 	string(optimizer.OptimizerStrategyChargingStrategyAttenuateGridPeaks),
 	string(optimizer.OptimizerStrategyChargingStrategyNone),
 }
@@ -50,23 +52,6 @@ const defaultOptimizerChargingStrategy = string(optimizer.OptimizerStrategyCharg
 
 // optimizerDecaySlots is the number of slots over which measured values decay into the forecast
 const optimizerDecaySlots = 4
-
-// triggerOptimizer re-runs the optimizer immediately so a changed setting takes
-// effect without waiting for the next slot. It is a no-op when the optimizer is
-// not active or a run is already in progress; the running update reflects the
-// change on its next slot.
-func (site *Site) triggerOptimizer() {
-	if !sponsor.IsAuthorized() || !optimizerEnabled() {
-		return
-	}
-	if !mu.TryLock() {
-		return
-	}
-	optimizerUpdated = time.Time{} // bypass the slot/debounce gate
-	mu.Unlock()
-
-	go site.optimizerUpdateAsync()
-}
 
 // optimizerResult wraps the optimizer publish payload to implement BytesMarshaler.
 // This ensures publishComplex serializes it as a single JSON message instead of
@@ -102,7 +87,34 @@ type batteryDetail struct {
 	Capacity float64     `json:"capacity,omitempty"`
 
 	loadpoint    *int // originating loadpoint id for loadpoint/vehicle entries
-	controllable bool // battery exposes a controller; only these get suggestions
+	controllable bool // device can act on suggestions
+}
+
+// batteryKey and loadpointKey build the canonical device keys used for
+// suggestion routing and notifications
+func batteryKey(name string) string { return "battery:" + name }
+func loadpointKey(id int) string    { return fmt.Sprintf("loadpoint:%d", id) }
+
+// key identifies the device across optimizer runs; an empty key means the
+// device can't act on a suggestion.
+func (d batteryDetail) key() string {
+	switch {
+	case d.Type == batteryTypeBattery:
+		return batteryKey(d.Name)
+	case d.loadpoint != nil:
+		return loadpointKey(*d.loadpoint)
+	default:
+		return ""
+	}
+}
+
+// currentAction returns the device's current operating mode for suggestion
+// comparison. Must only be called for devices with a non-empty key.
+func (d batteryDetail) currentAction(site *Site) string {
+	if d.Type == batteryTypeBattery {
+		return site.GetBatteryMode().String()
+	}
+	return loadpointCurrentAction(site.loadpoints[*d.loadpoint])
 }
 
 type batteryResult struct {
@@ -120,12 +132,44 @@ const (
 	actionCharge = "charge"
 )
 
+// actionDischarge is the battery-to-grid discharge advisory. It has no matching
+// api.BatteryMode, so it always reads as actionable.
+const actionDischarge = "discharge"
+
+// evSuggestion notifies when the optimizer's advisory action for a device changes
+const evSuggestion = "suggestion"
+
+// pendingSuggestion pairs a device's current-run suggestion with the
+// notification event to emit if it represents an actionable change.
+type pendingSuggestion struct {
+	suggestion types.Suggestion
+	event      messenger.Event
+}
+
+// suggestionEvent builds the notification event for a device suggestion
+func suggestionEvent(detail batteryDetail, s types.Suggestion) messenger.Event {
+	ev := messenger.Event{Event: evSuggestion, Attributes: map[string]any{
+		"suggestionAction": s.Action,
+		"suggestionTitle":  detail.Title,
+	}}
+
+	switch {
+	case detail.Type == batteryTypeBattery:
+		ev.Attributes["suggestionName"] = detail.Name
+	case detail.loadpoint != nil:
+		id := *detail.loadpoint
+		ev.Loadpoint = &id
+	}
+
+	return ev
+}
+
 // currentSlotSuggestion maps the optimizer's first-slot corner result onto an advisory action.
 // Because the optimization is linear, the first slot is at an operating-range extreme, so it
 // maps cleanly onto the discrete battery mode / loadpoint intent that control would later apply.
 // An idle battery is interpreted from the grid flow: importing means discharge is withheld
 // (hold), exporting means charging is withheld (holdcharge).
-func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gridImporting, gridExporting bool, slotHours float64, current string) types.Suggestion {
+func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gridImporting, gridExporting bool, slotHours float64) types.Suggestion {
 	if slotHours <= 0 || len(res.ChargingPower) == 0 || len(res.DischargingPower) == 0 {
 		return types.Suggestion{}
 	}
@@ -147,6 +191,9 @@ func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gr
 		case idle && gridExporting:
 			// idle while exporting: surplus is exported instead of charged
 			s.Action = api.BatteryHoldCharge.String()
+		case discharge > suggestionThreshold && gridExporting:
+			// discharging while exporting means battery-to-grid discharge
+			s.Action = actionDischarge
 		default:
 			s.Action = api.BatteryNormal.String()
 		}
@@ -155,9 +202,6 @@ func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gr
 	} else {
 		s.Action = actionStop
 	}
-
-	// actionable when the suggested action differs from the current operating mode
-	s.Actionable = s.Action != current
 
 	return s
 }
@@ -177,38 +221,121 @@ func loadpointCurrentAction(lp *Loadpoint) string {
 	return actionStop
 }
 
-// setBatterySuggestions replaces the suggestions applied on each battery publish
-func (site *Site) setBatterySuggestions(suggestions map[string]types.Suggestion) {
+// setSuggestions replaces the suggestions applied on each publish
+func (site *Site) setSuggestions(suggestions map[string]types.Suggestion) {
 	site.Lock()
 	defer site.Unlock()
 
-	site.batterySuggestions = suggestions
+	site.suggestions = suggestions
 }
 
-// batterySuggestion returns the optimizer suggestion for the given battery meter
-func (site *Site) batterySuggestion(name string) *types.Suggestion {
+// suggestion returns the optimizer suggestion for the given device key.
+// The actionable flag is evaluated on read against the device's current
+// action since that changes between optimizer runs.
+func (site *Site) suggestion(key, currentAction string) *types.Suggestion {
 	site.RLock()
-	defer site.RUnlock()
+	s, ok := site.suggestions[key]
+	site.RUnlock()
 
-	if s, ok := site.batterySuggestions[name]; ok {
-		return &s
+	if !ok {
+		return nil
 	}
-	return nil
+
+	s.Actionable = s.Action != currentAction
+
+	return &s
 }
 
-// clearSuggestions removes all suggestions when the optimizer result is stale
-func (site *Site) clearSuggestions() {
-	site.setBatterySuggestions(nil)
-	site.publishBattery()
-
-	for id := range site.Loadpoints() {
-		site.publishLoadpoint(id, keys.Suggestion, nil)
+// publishSuggestions publishes the loadpoints' suggestions
+func (site *Site) publishSuggestions() {
+	for id, lp := range site.loadpoints {
+		var val any
+		if s := site.suggestion(loadpointKey(id), loadpointCurrentAction(lp)); s != nil {
+			val = *s
+		}
+		site.publishLoadpoint(id, keys.Suggestion, val)
 	}
+}
+
+// clearSuggestions removes all suggestions and the battery forecast when the
+// optimizer result is stale
+func (site *Site) clearSuggestions() {
+	site.setSuggestions(nil)
+	site.battery.Forecast = nil
+
+	site.publishBattery()
+	site.publishSuggestions()
+
+	site.Lock()
+	site.suggestionActions = nil
+	site.Unlock()
+}
+
+// pendingSuggestions collects the stored suggestions with their actionable flag
+// evaluated against the devices' current operating mode
+func (site *Site) pendingSuggestions(details []batteryDetail) map[string]pendingSuggestion {
+	pending := make(map[string]pendingSuggestion, len(details))
+
+	for _, detail := range details {
+		key := detail.key()
+		if key == "" {
+			continue
+		}
+
+		s := site.suggestion(key, detail.currentAction(site))
+		if s == nil {
+			continue
+		}
+
+		pending[key] = pendingSuggestion{suggestion: *s, event: suggestionEvent(detail, *s)}
+	}
+
+	return pending
+}
+
+// diffSuggestions updates the tracked actionable optimizer suggestions and
+// returns the events to send for devices whose actionable action changed since
+// the last run. Non-actionable or vanished devices are pruned so a later
+// actionable change re-notifies.
+func (site *Site) diffSuggestions(pending map[string]pendingSuggestion) []messenger.Event {
+	site.Lock()
+	defer site.Unlock()
+
+	if site.suggestionActions == nil {
+		site.suggestionActions = make(map[string]string)
+	}
+
+	// prune devices that are gone or no longer actionable
+	for key := range site.suggestionActions {
+		if p, ok := pending[key]; !ok || !p.suggestion.Actionable {
+			delete(site.suggestionActions, key)
+		}
+	}
+
+	var events []messenger.Event
+	for key, p := range pending {
+		if !p.suggestion.Actionable || site.suggestionActions[key] == p.suggestion.Action {
+			continue
+		}
+		site.suggestionActions[key] = p.suggestion.Action
+		events = append(events, p.event)
+	}
+	return events
 }
 
 type requestDetails struct {
 	Timestamps     []time.Time     `json:"timestamp"`
 	BatteryDetails []batteryDetail `json:"batteryDetails"`
+}
+
+// optimizerBattery pairs a battery request entry with its device detail
+type optimizerBattery struct {
+	cfg    optimizer.BatteryConfig
+	detail batteryDetail
+}
+
+func optimizerURI() string {
+	return cmp.Or(os.Getenv("OPTIMIZER_URI"), OPTIMIZER_URI)
 }
 
 const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
@@ -217,13 +344,25 @@ const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
 // startup); the slot gate is left open so the next cycle retries.
 var errOptimizerNotReady = errors.New("battery measurements not ready")
 
-func (site *Site) optimizerUpdateAsync() {
-	if !mu.TryLock() {
+// optimizerUpdateAsync runs the optimizer unless the last run is younger than
+// minAge. Pass 0 to force a run, e.g. when a changed setting should take effect
+// without waiting for the next slot. It is a no-op when the optimizer is not
+// active or a run is already in progress; the running update reflects the
+// change on its next slot.
+func (site *Site) optimizerUpdateAsync(minAge time.Duration) {
+	if !sponsor.IsAuthorized() || !optimizerEnabled() {
 		return
 	}
-	defer mu.Unlock()
 
-	if time.Since(optimizerUpdated) < 2*time.Minute {
+	if !site.optimizerMu.TryLock() {
+		return
+	}
+	defer site.optimizerMu.Unlock()
+
+	if minAge == 0 {
+		// keep the gate open so a not-ready run is retried on the next cycle
+		site.optimizerUpdated = time.Time{}
+	} else if time.Since(site.optimizerUpdated) < minAge {
 		return
 	}
 
@@ -239,7 +378,7 @@ func (site *Site) optimizerUpdateAsync() {
 			return
 		}
 
-		optimizerUpdated = time.Now()
+		site.optimizerUpdated = time.Now()
 
 		if err != nil {
 			site.log.ERROR.Println("optimizer:", err)
@@ -252,7 +391,12 @@ func (site *Site) optimizerUpdateAsync() {
 	err = site.optimizerUpdate(site.battery.Devices)
 }
 
-func (site *Site) optimizerUpdate(battery []types.Measurement) error {
+// optimizerRequest assembles the optimizer request and the matching device
+// details from tariffs, home profile, loadpoints and battery meters
+func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.OptimizationInput, requestDetails, error) {
+	var req optimizer.OptimizationInput
+	var details requestDetails
+
 	solarTariff := site.GetTariff(api.TariffUsageSolar)
 	solar := currentRates(solarTariff)
 
@@ -265,17 +409,16 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		minLen = min(minLen, len(solar))
 	}
 
-	uri := cmp.Or(os.Getenv("OPTIMIZER_URI"), OPTIMIZER_URI)
-	if uri == OPTIMIZER_URI {
+	if optimizerURI() == OPTIMIZER_URI {
 		// limit to 2 days for sake of performance
 		minLen = min(2*96, minLen)
 	}
 
 	if expectedSlots := 8; minLen < expectedSlots {
 		if solarTariff != nil {
-			return fmt.Errorf("not enough forecast slots for meaningful optimization: %d < %d (grid=%d, feedIn=%d, solar=%d)", minLen, expectedSlots, len(grid), len(feedIn), len(solar))
+			return req, details, fmt.Errorf("not enough forecast slots for meaningful optimization: %d < %d (grid=%d, feedIn=%d, solar=%d)", minLen, expectedSlots, len(grid), len(feedIn), len(solar))
 		}
-		return fmt.Errorf("not enough forecast slots for meaningful optimization: %d < %d (grid=%d, feedIn=%d)", minLen, expectedSlots, len(grid), len(feedIn))
+		return req, details, fmt.Errorf("not enough forecast slots for meaningful optimization: %d < %d (grid=%d, feedIn=%d)", minLen, expectedSlots, len(grid), len(feedIn))
 	}
 
 	now := time.Now()
@@ -291,7 +434,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 
 	gt, err := site.homeProfile(minLen)
 	if err != nil {
-		return err
+		return req, details, err
 	}
 
 	// blend measured energy of the last metrics slot into the first slots
@@ -306,7 +449,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	if solarTariff != nil && len(solar) > 0 {
 		solarEnergy, err := solarRatesToEnergy(solar)
 		if err != nil {
-			return err
+			return req, details, err
 		}
 
 		scale := site.effectiveSolarScale()
@@ -321,7 +464,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		ft = prorate(ftSlots, firstSlotDuration)
 	}
 
-	req := optimizer.OptimizationInput{
+	req = optimizer.OptimizationInput{
 		Strategy: optimizer.OptimizerStrategy{
 			ChargingStrategy:    optimizer.OptimizerStrategyChargingStrategy(site.GetOptimizerChargingStrategy()),
 			DischargingStrategy: optimizer.OptimizerStrategyDischargingStrategyDischargeBeforeImport,
@@ -340,7 +483,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	// end of horizon Wh value
 	pa := lo.Min(req.TimeSeries.PN) * eta * 0.99
 
-	details := requestDetails{
+	details = requestDetails{
 		Timestamps: asTimestamps(dt, now),
 	}
 
@@ -351,19 +494,24 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		}
 	}
 
-	// soft grid feed-in cap from active HEMS curtailment (e.g. German 70% rule):
-	// export is capped at this power, excess PV is curtailed instead of exported
+	// static grid export limit configured in the UI: export is capped at this
+	// power, excess PV is curtailed instead of exported
+	if limit := site.GetGridExportLimit(); limit > 0 {
+		req.Grid.PMaxExp = float32(limit)
+	}
+
+	// soft grid feed-in cap from active HEMS curtailment (e.g. German 70% rule)
+	// wins over the static limit while active
 	if curtailed := hems.Curtailed(site.hems); curtailed != nil && *curtailed {
 		if pMaxExp := site.hems.MaxProductionPower(); pMaxExp != nil {
 			req.Grid.PMaxExp = float32(*pMaxExp)
 		}
 	}
 
-	add := func(battery optimizer.BatteryConfig, detail batteryDetail) {
-		battery.PA = pa
-		req.Batteries = append(req.Batteries, battery)
-		details.BatteryDetails = append(details.BatteryDetails, detail)
-	}
+	var batteries []optimizerBattery
+
+	// uncontrollable power of loadpoints that cannot be modelled as storage
+	var unmodelled float64
 
 	for id, lp := range site.Loadpoints() {
 		// ignore disconnected loadpoints, including StatusNone
@@ -371,14 +519,31 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 			continue
 		}
 
+		// unknown vehicle capacity: account for the consumption as uncontrollable load
 		if v := lp.GetVehicle(); v == nil || v.Capacity() == 0 {
+			unmodelled += unmodelledPower(lp)
 			continue
 		}
 
 		// skip disabled loadpoints
-		if req, detail := site.loadpointRequest(lp, minLen, firstSlotDuration, grid); req.CMax > 0 {
+		if cfg, detail := site.loadpointRequest(lp, minLen, firstSlotDuration, grid); cfg.CMax > 0 {
 			detail.loadpoint = &id
-			add(req, detail)
+			batteries = append(batteries, optimizerBattery{cfg, detail})
+		}
+	}
+
+	// home profile subtracts all loadpoint power, so unmodelled loadpoints would
+	// leave the optimizer planning against surplus that is already consumed. Their
+	// forecast is zero, so the measured power only decays into the near slots -
+	// without a capacity there is no fill point to assert it any further.
+	if unmodelled > 0 {
+		load := make([]float64, minLen)
+		blendMeasured(load, unmodelled/slotsPerHour, optimizerDecaySlots)
+
+		site.log.DEBUG.Printf("optimizer: home slots updated with unmodelled %.0fW loadpoint load: %.0f", unmodelled, load[:min(optimizerDecaySlots, len(load))])
+
+		for i, v := range prorate(load, firstSlotDuration) {
+			req.TimeSeries.Gt[i] += v
 		}
 	}
 
@@ -393,7 +558,23 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 			continue
 		}
 
-		add(site.batteryRequest(dev, b, grid, minLen, firstSlotDuration))
+		cfg, detail := site.batteryRequest(dev, b, grid, minLen, firstSlotDuration)
+		batteries = append(batteries, optimizerBattery{cfg, detail})
+	}
+
+	for _, b := range batteries {
+		b.cfg.PA = pa
+		req.Batteries = append(req.Batteries, b.cfg)
+		details.BatteryDetails = append(details.BatteryDetails, b.detail)
+	}
+
+	return req, details, nil
+}
+
+func (site *Site) optimizerUpdate(battery []types.Measurement) error {
+	req, details, err := site.optimizerRequest(battery)
+	if err != nil {
+		return err
 	}
 
 	if len(req.Batteries) == 0 {
@@ -408,7 +589,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	httpClient := request.NewClient(site.log)
 	httpClient.Timeout = 90 * time.Second
 
-	apiClient, err := optimizer.NewClientWithResponses(uri, optimizer.WithHTTPClient(httpClient))
+	apiClient, err := optimizer.NewClientWithResponses(optimizerURI(), optimizer.WithHTTPClient(httpClient))
 	if err != nil {
 		return err
 	}
@@ -427,10 +608,8 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		return apiError(resp)
 	}
 
-	if resp.JSON200.Status != optimizer.Optimal {
-		return errors.New(string(resp.JSON200.Status))
-	}
-
+	// publish before the status check so the optimizer page stays available
+	// for diagnosing non-optimal results
 	site.publish("evopt", optimizerResult{
 		Updated: time.Now(),
 		Req:     req,
@@ -438,69 +617,65 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		Details: details,
 	})
 
-	slotHours := firstSlotDuration.Hours()
-	gridImporting := len(resp.JSON200.GridImport) > 0 && resp.JSON200.GridImport[0] > 0
-	gridExporting := len(resp.JSON200.GridExport) > 0 && resp.JSON200.GridExport[0] > 0
+	// feasible results are usable, they are just not proven optimal
+	if status := resp.JSON200.Status; status != optimizer.Optimal && status != optimizer.Feasible {
+		return errors.New(string(status))
+	}
+
+	site.applyOptimizerResult(req, details.BatteryDetails, *resp.JSON200)
+
+	return nil
+}
+
+// applyOptimizerResult maps the optimizer response onto suggestions, battery
+// forecast and notifications
+func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details []batteryDetail, res optimizer.OptimizationResult) {
+	slotHours := (time.Duration(req.TimeSeries.Dt[0]) * time.Second).Hours()
+	gridImporting := len(res.GridImport) > 0 && res.GridImport[0] > 0
+	gridExporting := len(res.GridExport) > 0 && res.GridExport[0] > 0
 
 	var batteries []batteryResult
 	suggestions := make(map[string]types.Suggestion, len(req.Batteries))
-	lpSuggestions := make(map[int]types.Suggestion)
 
 	for i, batReq := range req.Batteries {
-		batResp := resp.JSON200.Batteries[i]
-		detail := details.BatteryDetails[i]
+		batRes := res.Batteries[i]
+		detail := details[i]
 
-		batResult := batteryResult{
+		batteries = append(batteries, batteryResult{
 			batteryDetail: detail,
-			Full: matchSoc(batResp.StateOfCharge, func(soc float32) bool {
+			Full: matchSoc(batRes.StateOfCharge, func(soc float32) bool {
 				return soc >= batReq.SMax
 			}),
-			Empty: matchSoc(batResp.StateOfCharge, func(soc float32) bool {
+			Empty: matchSoc(batRes.StateOfCharge, func(soc float32) bool {
 				return soc <= batReq.SMin
 			}),
-		}
+		})
 
-		batteries = append(batteries, batResult)
-
-		// current operating mode to detect an actionable change
-		var current string
-		if detail.Type == batteryTypeBattery {
-			current = site.GetBatteryMode().String()
-		} else if detail.loadpoint != nil {
-			current = loadpointCurrentAction(site.loadpoints[*detail.loadpoint])
-		}
-
-		suggestion := currentSlotSuggestion(detail, batResp, gridImporting, gridExporting, slotHours, current)
+		suggestion := currentSlotSuggestion(detail, batRes, gridImporting, gridExporting, slotHours)
 		if suggestion.Action == "" {
 			continue
 		}
-		if detail.Type == batteryTypeBattery {
-			// uncontrollable batteries can't act on a suggestion
-			if detail.controllable {
-				suggestions[detail.Name] = suggestion
-			}
-		} else if detail.loadpoint != nil {
-			lpSuggestions[*detail.loadpoint] = suggestion
+
+		// uncontrollable devices can't act on a suggestion
+		if key := detail.key(); key != "" && detail.controllable {
+			suggestions[key] = suggestion
 		}
 	}
 
 	site.publish("evopt-batteries", batteries)
 
-	site.setBatterySuggestions(suggestions)
-	site.battery.Forecast = site.addBatteryForecastTotals(req.Batteries, resp.JSON200.Batteries)
+	site.setSuggestions(suggestions)
+	site.battery.Forecast = site.addBatteryForecastTotals(req.Batteries, res.Batteries)
 
 	site.publishBattery()
 
 	// publish for all loadpoints so suggestions of dropped-out loadpoints clear
-	for id := range site.Loadpoints() {
-		var val any
-		if s, ok := lpSuggestions[id]; ok {
-			val = s
-		}
-		site.publishLoadpoint(id, keys.Suggestion, val)
-	}
+	site.publishSuggestions()
 
-	return nil
+	// notify on actionable suggestion changes (advisory only, see #31903)
+	for _, ev := range site.diffSuggestions(site.pendingSuggestions(details)) {
+		site.pushEvent(ev)
+	}
 }
 
 func (site *Site) addBatteryForecastTotals(req []optimizer.BatteryConfig, resp []optimizer.BatteryResult) *types.BatteryForecast {
@@ -547,7 +722,8 @@ type batteryForecastSlot struct {
 // The Limit flag indicates whether the SOC reached the configured SMax (for
 // the highest point) or SMin (for the lowest point) boundary - in which case
 // the battery is forecasted to become fully charged or empty.
-// Returns nil for either point when no home battery is present.
+// Returns nil for either point when no home battery is present or when the
+// battery already is at the respective limit.
 func batteryForecastSocExtremes(req []optimizer.BatteryConfig, resp []optimizer.BatteryResult) (*batteryForecastSlot, *batteryForecastSlot) {
 	homeIndices := lo.FilterMap(req, func(b optimizer.BatteryConfig, i int) (int, bool) {
 		return i, b.SCapacity > 0
@@ -577,6 +753,14 @@ func batteryForecastSocExtremes(req []optimizer.BatteryConfig, resp []optimizer.
 		}
 	}
 
+	// battery is already at the limit - announcing it will become full/empty is pointless
+	if high != nil && high.limit && high.slot == 0 {
+		high = nil
+	}
+	if low != nil && low.limit && low.slot == 0 {
+		low = nil
+	}
+
 	return high, low
 }
 
@@ -595,8 +779,9 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 	}
 
 	detail := batteryDetail{
-		Type:  batteryTypeLoadpoint,
-		Title: lp.GetTitle(),
+		Type:         batteryTypeLoadpoint,
+		Title:        lp.GetTitle(),
+		controllable: true,
 	}
 
 	// vehicle
@@ -654,10 +839,33 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 	}
 
 	if demand != nil {
-		bat.PDemand = prorate(demand, firstSlotDuration)
+		// after prorate, so the shortened first slot counts with the energy it really carries
+		bat.PDemand = clearDemandWhenFull(prorate(demand, firstSlotDuration), bat.SMax-bat.SInitial)
 	}
 
 	return bat, detail
+}
+
+// clearDemandWhenFull zeroes the charge demand from the slot the accumulated energy fills the
+// vehicle. The optimizer drops the demand at s_max anyway, but pays two binaries per slot to
+// detect it, so slots that cannot bind are worth not asking about. Losses are accounted for.
+//
+// The cut assumes the demand is met every slot. A grid import limit can throttle charging below
+// it, moving the real fill point later than the estimate - the next request corrects that from
+// the measured soc, and the near slots are never affected because the cut sits a full charge away.
+func clearDemandWhenFull(demand []float32, headroom float32) []float32 {
+	res := slices.Clone(demand)
+
+	var acc float32
+	for i, d := range res {
+		if acc >= headroom {
+			res[i] = 0
+			continue
+		}
+		acc += d * eta
+	}
+
+	return res
 }
 
 func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measurement, grid api.Rates, minLen int, firstSlotDuration time.Duration) (optimizer.BatteryConfig, batteryDetail) {
@@ -674,6 +882,7 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 	controllable := api.HasCap[api.BatteryController](instance)
 	if controllable {
 		bat.ChargeFromGrid = true
+		bat.DischargeToGrid = site.GetBatteryGridDischarge()
 	}
 
 	if m, ok := api.Cap[api.BatteryPowerLimiter](instance); ok {
@@ -767,6 +976,20 @@ func loadpointProfile(lp loadpoint.API, minLen int) []float64 {
 	}
 
 	return res
+}
+
+// unmodelledPower returns the uncontrollable power of a connected loadpoint that
+// cannot be modelled as storage because the vehicle capacity is unknown
+func unmodelledPower(lp loadpoint.API) float64 {
+	power := lp.GetChargePower()
+
+	// minpv keeps drawing at least min power while the vehicle is connected,
+	// even before the charge meter has caught up
+	if lp.GetMode() == api.ModeMinPV && lp.GetStatus() == api.StatusC {
+		power = max(power, lp.EffectiveMinPower())
+	}
+
+	return max(0, power)
 }
 
 // homeProfile returns the home base load in Wh

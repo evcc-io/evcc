@@ -180,8 +180,8 @@ func (d *dumper) Dump(name string, v any) {
 
 	if v, ok := api.Cap[api.Curtailer](v); ok {
 		d.measureTime(w, "Curtailed", func() (string, error) {
-			curtailed, err := v.Curtailed()
-			return fmt.Sprintf("%t", curtailed), err
+			percent, err := v.CurtailedPercent()
+			return fmt.Sprintf("%d%%", percent), err
 		})
 	}
 

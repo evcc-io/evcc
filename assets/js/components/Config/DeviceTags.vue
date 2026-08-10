@@ -210,6 +210,7 @@ export default {
 				case "solarForecast":
 				case "dimLimit":
 				case "curtailLimit":
+				case "exportLimit":
 					return this.fmtW(value);
 				case "energy":
 				case "returnEnergy":
@@ -241,6 +242,11 @@ export default {
 					return `${this.fmtW(value[0])} / ${this.fmtW(value[1])}`;
 				case "currentRange":
 					return `${this.fmtNumber(value[0], 1)} A / ${this.fmtNumber(value[1], 1)} A`;
+				case "curtailed":
+					// devices report the allowed feed-in percent, the hems a plain flag
+					return typeof value === "number"
+						? this.fmtPercentage(value, 0)
+						: this.$t(`config.deviceValue.${value ? "yes" : "no"}`);
 				case "controllable":
 				case "curtailable":
 				case "phases1p3p":
@@ -249,7 +255,6 @@ export default {
 				case "configured":
 				case "connected":
 				case "dimmed":
-				case "curtailed":
 				case "loginBlocked":
 				case "remoteEnabled":
 					return value

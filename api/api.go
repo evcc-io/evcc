@@ -208,8 +208,8 @@ type Dimmer interface {
 
 // Curtailer provides EEG §9 curtailment
 type Curtailer interface {
-	Curtailed() (bool, error)    // curtailed if feed-in is limited to less than nominal (<100%)
-	SetCurtailPercent(int) error // limit feed-in to the given percent of nominal (0..100, 100 = uncurtailed)
+	CurtailedPercent() (int, error) // feed-in limit as percent of nominal (0..100, 100 = uncurtailed)
+	SetCurtailPercent(int) error    // limit feed-in to the given percent of nominal (0..100, 100 = uncurtailed)
 }
 
 // ChargeController allows to start/stop the charging session on the vehicle side

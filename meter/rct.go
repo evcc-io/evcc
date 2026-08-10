@@ -141,9 +141,10 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 			return m.conn.Write(rct.BufVControlPowerReduction, floatVal(float64(percent)/100))
 		}
 
-		curtailed := func() (bool, error) {
+		curtailed := func() (int, error) {
 			r, err := m.queryFloat(rct.BufVControlPowerReduction)
-			return r != 1, err
+			// round, the float32 round-trip does not reproduce the written percent exactly
+			return int(math.Round(r * 100)), err
 		}
 
 		implement.Has(m, implement.Curtailer(curtailed, curtail))

@@ -20,7 +20,9 @@
 			:priority-soc="state.prioritySoc"
 			:buffer-start-soc="state.bufferStartSoc"
 			:battery-discharge-control="state.batteryDischargeControl"
+			:battery-grid-discharge="state.batteryGridDischarge"
 			:battery="state.battery"
+			:experimental="state.experimental"
 		/>
 
 		<Card
@@ -115,8 +117,8 @@ export default defineComponent({
 			return this.gridChargePossible || this.gridChargeLimit !== null;
 		},
 		gridChargeTariff() {
-			const { forecast, smartCostType } = this.state;
-			return smartCostType === SMART_COST_TYPE.CO2 ? forecast?.co2 : forecast?.grid;
+			const { co2, grid } = store.uiForecast.value;
+			return this.state.smartCostType === SMART_COST_TYPE.CO2 ? co2 : grid;
 		},
 		smartCostLimitProps() {
 			return {

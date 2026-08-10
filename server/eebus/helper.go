@@ -1,18 +1,21 @@
 package eebus
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	eebusapi "github.com/enbility/eebus-go/api"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 )
 
 func WrapError(err error) error {
-	if errors.Is(err, eebusapi.ErrDataNotAvailable) {
+	if errors.Is(err, eebusapi.ErrDataNotAvailable) || errors.Is(err, eebusapi.ErrDataInvalid) {
 		return api.ErrNotAvailable
 	}
 	return err
@@ -42,6 +45,20 @@ func Await(write func(func(model.ResultDataType, model.MsgCounterType)) (*model.
 		return nil
 	case <-time.After(WriteTimeout):
 		return errors.New("write result timeout")
+	}
+}
+
+// limitTimeout keeps the retries inside the 60s the spec grants the Energy Guard.
+const limitTimeout = 50 * time.Second
+
+// AssertLimit states the current limit to a newly available Controllable System
+// ([LPC-913]/[LPP-913]). Blocks while retrying- the CS ignores writes that do not
+// follow a heartbeat and may reject them while still in state "init". Retrying
+// stops when ctx is cancelled, i.e. when the device is gone.
+func AssertLimit(ctx context.Context, log *util.Logger, write func() error) {
+	bo := backoff.NewExponentialBackOff(backoff.WithMaxElapsedTime(limitTimeout))
+	if err := backoff.Retry(write, backoff.WithContext(bo, ctx)); err != nil && ctx.Err() == nil {
+		log.DEBUG.Printf("assert limit: %v", err)
 	}
 }
 

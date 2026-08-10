@@ -1,7 +1,8 @@
 import * as echarts from "echarts/core";
 import colors from "@/colors";
+import { attachTouchTooltipGate } from "@/utils/swipe";
 import escapeHtml from "@/utils/escapeHtml";
-import type { ForecastSlot } from "./types";
+import type { UiForecastSlot } from "@/types/evcc";
 import { BarChart, LineChart } from "echarts/charts";
 import {
   GridComponent,
@@ -31,7 +32,7 @@ export const FONT_FAMILY = "Montserrat, sans-serif";
 
 export function markPointLabel(
   color: string,
-  data: { coord: [string, number]; value: string; label?: { offset?: [number, number] } }[],
+  data: { coord: [number, number]; value: string; label?: { offset?: [number, number] } }[],
   startDate?: Date,
   endDate?: Date
 ) {
@@ -84,6 +85,8 @@ export function tooltipStyle(
 ) {
   return {
     confine: true,
+    // re-show after hide would otherwise slide in from the stale position
+    transitionDuration: 0,
     backgroundColor: color,
     borderColor: color,
     borderWidth: 0,
@@ -117,9 +120,22 @@ export function tooltipStyle(
   };
 }
 
+// touch tooltips: show on dwell, follow the finger, hide when it lifts; mouse hover unchanged
+export function registerTouchTooltip(
+  chart: Pick<echarts.ECharts, "dispatchAction">,
+  el: HTMLElement,
+  onReset?: () => void
+) {
+  attachTouchTooltipGate(el, () => {
+    chart.dispatchAction({ type: "hideTip" });
+    onReset?.();
+  });
+}
+
 export interface TooltipRow {
   name?: string;
   values: string[];
+  total?: boolean;
 }
 
 // Shared tooltip: bold date headline, non-bold rows, optional name + value columns.
@@ -127,28 +143,40 @@ export function tooltipTable(head: string, rows: TooltipRow[], headers?: string[
   const hasName = rows.some((r) => r.name != null);
   const valueCols = Math.max(1, ...rows.map((r) => r.values.length));
   const colCount = (hasName ? 1 : 0) + valueCols;
-  // No name col + two value cols: first col left-aligned, second right-aligned.
-  // Otherwise: lone value centers, multiple/named columns right-align.
   const valClsFn = (i: number): string => {
-    if (!hasName && valueCols > 1 && i === 0) return "fw-normal text-start";
-    if (hasName || valueCols > 1) return "fw-normal text-end ps-3";
-    return "fw-normal text-center";
+    // first of two unnamed value cols
+    if (!hasName && valueCols > 1 && i === 0) return "text-start";
+    // named or multiple cols
+    if (hasName || valueCols > 1) return "text-end ps-3";
+    // lone value
+    return "text-center";
   };
   const headerRow = headers?.length
     ? `<tr>${hasName ? "<td></td>" : ""}${headers
-        .map((h, i) => `<td class="${valClsFn(i)}">${h}</td>`)
+        .map((h, i) => `<td class="fw-normal tabular ${valClsFn(i)}">${h}</td>`)
         .join("")}</tr>`
     : "";
+  const rowHtml = (r: TooltipRow) => {
+    const cls = r.total ? " pt-1" : "";
+    const nameTd = hasName
+      ? `<td class="fw-normal text-start${cls}">${escapeHtml(r.name ?? "")}</td>`
+      : "";
+    const valTds = r.values
+      .map((v, i) => `<td class="fw-normal tabular ${valClsFn(i)}${cls}">${v}</td>`)
+      .join("");
+    return `<tr>${nameTd}${valTds}</tr>`;
+  };
   const body = rows
-    .map((r) => {
-      const nameTd = hasName
-        ? `<td class="fw-normal text-start">${escapeHtml(r.name ?? "")}</td>`
-        : "";
-      const valTds = r.values.map((v, i) => `<td class="${valClsFn(i)}">${v}</td>`).join("");
-      return `<tr>${nameTd}${valTds}</tr>`;
-    })
+    .filter((r) => !r.total)
+    .map(rowHtml)
     .join("");
-  return `<table class="lh-sm"><thead><tr><th colspan="${colCount}" class="fw-bold text-center">${head}</th></tr></thead><tbody>${headerRow}${body}</tbody></table>`;
+  const footRows = rows.filter((r) => r.total);
+  const foot = footRows.length
+    ? `<tfoot><tr><td colspan="${colCount}" class="pt-1 border-bottom"></td></tr>${footRows
+        .map(rowHtml)
+        .join("")}</tfoot>`
+    : "";
+  return `<table class="lh-sm"><thead><tr><th colspan="${colCount}" class="fw-bold text-center pb-1">${head}</th></tr></thead><tbody>${headerRow}${body}</tbody>${foot}</table>`;
 }
 
 export function forecastGrid() {
@@ -236,24 +264,24 @@ export function forecastYAxis(overrides: Record<string, unknown> = {}) {
   };
 }
 
-export function clampStart(ts: string, startDate: Date): string {
-  return new Date(ts) < startDate ? startDate.toISOString() : ts;
+export function clampStart(ts: number, startDate: Date): number {
+  return Math.max(ts, startDate.getTime());
 }
 
 export function filterForecastSlots(
-  slots: ForecastSlot[],
+  slots: UiForecastSlot[],
   startDate: Date,
   endDate: Date
-): ForecastSlot[] {
+): UiForecastSlot[] {
   if (!Array.isArray(slots)) return [];
   return slots.filter((s) => new Date(s.end) > startDate && new Date(s.start) <= endDate);
 }
 
-export function minSlotIndex(slots: ForecastSlot[]): number {
+export function minSlotIndex(slots: UiForecastSlot[]): number {
   return slots.reduce((min, s, i) => (s.value < (slots[min]?.value ?? Infinity) ? i : min), 0);
 }
 
-export function maxSlotIndex(slots: ForecastSlot[]): number {
+export function maxSlotIndex(slots: UiForecastSlot[]): number {
   return slots.reduce((max, s, i) => (s.value > (slots[max]?.value || 0) ? i : max), 0);
 }
 

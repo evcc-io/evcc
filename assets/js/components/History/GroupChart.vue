@@ -5,19 +5,20 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, markRaw, type PropType } from "vue";
+import { defineComponent, type PropType } from "vue";
 import {
-	echarts,
 	FONT_FAMILY,
 	forecastGrid,
 	forecastYAxis,
 	tooltipStyle,
 	tooltipTable,
 	xAxisLabelStyle,
+	type TooltipRow,
 } from "../Forecast/echarts";
 import colors, { resolveColors, deviceColorMap, darken, batteryColor, setAlpha } from "@/colors";
 import store from "@/store";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
+import echartsChart from "@/mixins/echartsChart";
 import { PERIODS } from "../Sessions/types";
 import { is12hFormat } from "@/units";
 import { hasColorPicker } from "./groups";
@@ -69,7 +70,7 @@ function niceCeil(v: number): number {
 
 export default defineComponent({
 	name: "GroupChart",
-	mixins: [formatter],
+	mixins: [formatter, echartsChart],
 	props: {
 		group: { type: String, required: true },
 		color: { type: String, required: true },
@@ -84,7 +85,6 @@ export default defineComponent({
 		to: { type: Date, required: true },
 	},
 	data(): {
-		chart: echarts.ECharts | null;
 		isMobile: boolean;
 		mediaQuery: MediaQueryList | null;
 		previousFocusedEntity: number | null;
@@ -93,7 +93,6 @@ export default defineComponent({
 		activeSlot: number | null;
 	} {
 		return {
-			chart: null,
 			isMobile: false,
 			mediaQuery: null,
 			previousFocusedEntity: this.focusedEntity as number | null,
@@ -219,7 +218,7 @@ export default defineComponent({
 		// Which category slots carry a bar, so hover can skip empty slots.
 		slotsWithData(): boolean[] {
 			const index = new Map(this.categoryKeys.map((k, i) => [k, i]));
-			const has = new Array(this.categoryKeys.length).fill(false);
+			const has = Array.from({ length: this.categoryKeys.length }, () => false);
 			for (const s of this.visibleSeries) {
 				for (const slot of s.data) {
 					if (slot.energy <= 0 && slot.returnEnergy <= 0) continue;
@@ -263,7 +262,10 @@ export default defineComponent({
 
 			// Always render overlay slot (line series) so series structure is stable;
 			// data is all-null when toggled off. Prepend so it renders BEHIND bars.
-			const overlayValues: (number | null)[] = new Array(cats.length).fill(null);
+			const overlayValues: (number | null)[] = Array.from(
+				{ length: cats.length },
+				() => null
+			);
 			if (this.showOverlay && this.overlay.length) {
 				for (const s of this.overlay) {
 					for (const slot of s.data) {
@@ -296,8 +298,14 @@ export default defineComponent({
 			const energyByEntity: (number | null)[][] = [];
 			const returnEnergyByEntity: (number | null)[][] = [];
 			this.series.forEach((s, i) => {
-				const energyValues: (number | null)[] = new Array(cats.length).fill(null);
-				const returnEnergyValues: (number | null)[] = new Array(cats.length).fill(null);
+				const energyValues: (number | null)[] = Array.from(
+					{ length: cats.length },
+					() => null
+				);
+				const returnEnergyValues: (number | null)[] = Array.from(
+					{ length: cats.length },
+					() => null
+				);
 				const hidden =
 					this.focusedEntity !== null && this.focusedEntity !== (s.paletteIndex ?? i);
 				if (!hidden) {
@@ -314,8 +322,8 @@ export default defineComponent({
 			});
 			// Per slot: index of the topmost (largest i) entity with a non-zero
 			// value. -1 = no entity has data at that slot.
-			const topEnergyPerSlot: number[] = new Array(cats.length).fill(-1);
-			const topReturnEnergyPerSlot: number[] = new Array(cats.length).fill(-1);
+			const topEnergyPerSlot: number[] = Array.from({ length: cats.length }, () => -1);
+			const topReturnEnergyPerSlot: number[] = Array.from({ length: cats.length }, () => -1);
 			for (let i = 0; i < this.series.length; i++) {
 				for (let idx = 0; idx < cats.length; idx++) {
 					if ((energyByEntity[i]![idx] ?? 0) > 0) topEnergyPerSlot[idx] = i;
@@ -489,7 +497,7 @@ export default defineComponent({
 							if (p.value == null) continue;
 							hasBar = true;
 							if (typeof p.value === "number" && p.value > 0) {
-								if (/-energy$/.test(p.seriesId)) sum += p.value;
+								if (p.seriesId.endsWith("-energy")) sum += p.value;
 							}
 						}
 						let x = point[0] - w / 2;
@@ -528,12 +536,6 @@ export default defineComponent({
 						if (!first) return "";
 						const ts = cats[first.dataIndex];
 						const head = ts != null ? tooltipDate(ts) : "";
-						const formatValue = (v: number) => {
-							const watts = Math.abs(v) * 1000;
-							return this.period === PERIODS.DAY
-								? this.fmtW(watts, POWER_UNIT.AUTO)
-								: this.fmtWh(watts, POWER_UNIT.AUTO);
-						};
 
 						// Collect energy/returnEnergy values per entity from this slot's params.
 						const totals = new Map<number, { energy: number; returnEnergy: number }>();
@@ -559,8 +561,29 @@ export default defineComponent({
 						);
 						const showName = this.series.length > 1 && this.focusedEntity === null;
 
-						const rows = indices.map((i) => {
-							const t = totals.get(i) ?? { energy: 0, returnEnergy: 0 };
+						// one unit for all rows, based on the largest individual value (not the total)
+						const rowValues = indices.map(
+							(i) => totals.get(i) ?? { energy: 0, returnEnergy: 0 }
+						);
+						const unit = this.getPowerUnit(
+							Math.max(
+								0,
+								...rowValues.flatMap((t) =>
+									this.isBidirectional
+										? [t.energy, t.returnEnergy]
+										: [t.energy + t.returnEnergy]
+								)
+							) * 1000
+						);
+						const formatValue = (v: number) => {
+							const watts = Math.abs(v) * 1000;
+							return this.period === PERIODS.DAY
+								? this.fmtW(watts, unit)
+								: this.fmtWh(watts, unit);
+						};
+
+						const rows: TooltipRow[] = indices.map((i, idx) => {
+							const t = rowValues[idx] ?? { energy: 0, returnEnergy: 0 };
 							const values = this.isBidirectional
 								? [formatValue(t.energy), formatValue(t.returnEnergy)]
 								: [formatValue(t.energy + t.returnEnergy)];
@@ -569,6 +592,17 @@ export default defineComponent({
 								values,
 							};
 						});
+						if (showName) {
+							const sum = (key: "energy" | "returnEnergy") =>
+								rowValues.reduce((acc, t) => acc + t[key], 0);
+							rows.push({
+								name: this.$t("sessions.total"),
+								values: this.isBidirectional
+									? [formatValue(sum("energy")), formatValue(sum("returnEnergy"))]
+									: [formatValue(sum("energy") + sum("returnEnergy"))],
+								total: true,
+							});
+						}
 						return tooltipTable(head, rows, this.directionHeaders ?? undefined);
 					},
 				},
@@ -641,61 +675,50 @@ export default defineComponent({
 			};
 		},
 	},
-	watch: {
-		chartOption: {
-			handler() {
-				const opt = (this as unknown as WithChartOption).chartOption;
-				const focusChanged = this.previousFocusedEntity !== this.focusedEntity;
-				const periodChanged = this.previousPeriod !== this.period;
-				// Fingerprint the set of series IDs in their render order so we can
-				// detect when entities are added or removed (e.g. a filtered loadpoint
-				// re-appears after navigating to a new day).
-				const newSeriesKey = (opt["series"] as Array<{ id?: string }>)
-					.map((s) => s.id ?? "")
-					.join(",");
-				// Full reset on period/composition change — replaceMerge re-appends
-				// re-introduced series at the end and flips stack order. Otherwise
-				// partial update lets stable IDs animate value transitions.
-				const fullReset = periodChanged || newSeriesKey !== this.previousSeriesKey;
-				this.chart?.setOption(
-					fullReset
-						? opt
-						: {
-								animation: !focusChanged,
-								xAxis: opt["xAxis"],
-								yAxis: opt["yAxis"],
-								series: opt["series"],
-								tooltip: opt["tooltip"],
-							},
-					fullReset ? { notMerge: true } : { replaceMerge: ["series", "yAxis"] }
-				);
-				this.previousFocusedEntity = this.focusedEntity as number | null;
-				this.previousPeriod = this.period as PERIODS;
-				this.previousSeriesKey = newSeriesKey;
-			},
-			deep: true,
-		},
-	},
 	mounted() {
-		const el = this.$refs["chartEl"] as HTMLElement;
-		this.chart = markRaw(echarts.init(el));
-		this.chart.setOption((this as unknown as WithChartOption).chartOption);
-		const zr = this.chart.getZr();
-		zr.on("mousemove", this.onChartMouseMove);
-		zr.on("globalout", this.clearHighlight);
+		const zr = this.chart?.getZr();
+		zr?.on("mousemove", this.onChartMouseMove);
+		zr?.on("globalout", this.clearHighlight);
 		this.mediaQuery = window.matchMedia("(max-width: 575.98px)");
 		this.isMobile = this.mediaQuery.matches;
 		this.mediaQuery.addEventListener("change", this.onMediaChange);
-		window.addEventListener("resize", this.resize);
 	},
 	beforeUnmount() {
-		window.removeEventListener("resize", this.resize);
 		this.mediaQuery?.removeEventListener("change", this.onMediaChange);
-		this.chart?.dispose();
 	},
 	methods: {
-		resize() {
-			this.chart?.resize();
+		applyChartOption() {
+			const opt = (this as unknown as WithChartOption).chartOption;
+			const focusChanged = this.previousFocusedEntity !== this.focusedEntity;
+			const periodChanged = this.previousPeriod !== this.period;
+			// Fingerprint the set of series IDs in their render order so we can
+			// detect when entities are added or removed (e.g. a filtered loadpoint
+			// re-appears after navigating to a new day).
+			const newSeriesKey = (opt["series"] as Array<{ id?: string }>)
+				.map((s) => s.id ?? "")
+				.join(",");
+			// Full reset on period/composition change — replaceMerge re-appends
+			// re-introduced series at the end and flips stack order. Otherwise
+			// partial update lets stable IDs animate value transitions.
+			const fullReset = periodChanged || newSeriesKey !== this.previousSeriesKey;
+			this.chart?.setOption(
+				fullReset
+					? opt
+					: {
+							animation: !focusChanged,
+							xAxis: opt["xAxis"],
+							yAxis: opt["yAxis"],
+							series: opt["series"],
+							tooltip: opt["tooltip"],
+						},
+				fullReset ? { notMerge: true } : { replaceMerge: ["series", "yAxis"] }
+			);
+			this.previousFocusedEntity = this.focusedEntity as number | null;
+			this.previousPeriod = this.period as PERIODS;
+			this.previousSeriesKey = newSeriesKey;
+		},
+		onTouchTooltipReset() {
+			this.clearHighlight();
 		},
 		// highlight hovered slot, dim rest. manual because built-in axis highlight hard-codes notBlur
 		onChartMouseMove(e: { offsetX: number; offsetY: number }) {

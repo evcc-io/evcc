@@ -11,7 +11,7 @@
 		<GlobalSettingsModal v-bind="globalSettingsProps" />
 		<VehicleSettingsModal :vehicles="vehicleList" :loadpoints="state.uiLoadpoints" />
 		<AboutModal v-bind="aboutModalProps" />
-		<HelpModal />
+		<HelpModal :custom-email="custom.email" />
 		<PasswordModal />
 		<LoginModal v-bind="loginModalProps" />
 		<OfflineIndicator v-bind="offlineIndicatorProps" />
@@ -74,6 +74,15 @@ export default defineComponent({
 		version() {
 			return store.state.version;
 		},
+		custom() {
+			return {
+				logo: window.evcc?.customLogo ?? false,
+				brand: window.evcc?.customBrand ?? "",
+				website: window.evcc?.customWebsite ?? "",
+				email: window.evcc?.customEmail ?? "",
+				phone: window.evcc?.customPhone ?? "",
+			};
+		},
 		showRoutes() {
 			return this.state.startupCompleted;
 		},
@@ -95,15 +104,19 @@ export default defineComponent({
 		},
 		aboutModalProps() {
 			return {
-				installed: window.evcc.version,
-				commit: window.evcc.commit,
+				installed: window.evcc?.version,
+				customLogo: this.custom.logo,
+				customBrand: this.custom.brand,
+				customWebsite: this.custom.website,
+				customEmail: this.custom.email,
+				customPhone: this.custom.phone,
 				...this.collectProps(AboutModal, this.state),
 			};
 		},
 		bottomTabBarProps() {
 			return {
-				installed: window.evcc.version,
-				commit: window.evcc.commit,
+				installed: window.evcc?.version,
+				customBrand: this.custom.brand,
 				...this.collectProps(BottomTabBar, this.state),
 			};
 		},

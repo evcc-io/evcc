@@ -1,5 +1,5 @@
 import { mount, config } from "@vue/test-utils";
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from "vite-plus/test";
 import formatter, { POWER_UNIT } from "./formatter";
 import * as units from "../units";
 import { defineComponent } from "vue";
@@ -53,6 +53,16 @@ describe("fmtW", () => {
     expect(fmt.fmtW(12345, POWER_UNIT.W, true, 0)).eq("12.345 W");
     expect(fmt.fmtW(12345, POWER_UNIT.W, true, 1)).eq("12.345,0 W");
     expect(fmt.fmtW(12345, POWER_UNIT.W, true, 2)).eq("12.345,00 W");
+  });
+});
+
+describe("getPowerUnit", () => {
+  test("should pick unit based on largest value", () => {
+    expect(fmt.getPowerUnit(0)).eq(POWER_UNIT.W);
+    expect(fmt.getPowerUnit(999)).eq(POWER_UNIT.W);
+    expect(fmt.getPowerUnit(1000)).eq(POWER_UNIT.KW);
+    expect(fmt.getPowerUnit(9_999_999)).eq(POWER_UNIT.KW);
+    expect(fmt.getPowerUnit(10_000_000)).eq(POWER_UNIT.MW);
   });
 });
 

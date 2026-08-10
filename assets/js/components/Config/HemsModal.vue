@@ -10,13 +10,14 @@
 		:is-yaml-input-type="isYamlInputType"
 		:on-template-change="handleTemplateChange"
 		:hide-template-fields="fromYaml"
+		:show-main-content="!experimental || activeTab === 'dynamic'"
 		:hide-delete="true"
 		:hide-info="true"
 		:keep-open-on-remove="true"
 		@added="onAdded"
 		@updated="onUpdated"
 		@removed="onRemoved"
-		@open="loadSessions"
+		@open="onOpen"
 		@close="$emit('close')"
 	>
 		<template v-if="id !== undefined && !fromYaml" #template-action>
@@ -31,13 +32,37 @@
 				<shopicon-regular-edit size="s" class="flex-shrink-0"></shopicon-regular-edit>
 			</button>
 		</template>
-		<template #description>
+		<template #pre-content>
 			<p class="mt-0 mb-4">
 				{{ $t("config.hems.description") }}
 				<a :href="docsLink" target="_blank" rel="noopener">
 					{{ $t("config.general.docsLink") }}
 				</a>
 			</p>
+			<ul v-if="experimental" class="nav nav-tabs mb-4">
+				<li class="nav-item">
+					<a
+						class="nav-link"
+						:class="{ active: activeTab === 'dynamic' }"
+						href="#"
+						@click.prevent="activeTab = 'dynamic'"
+					>
+						{{ $t("config.hems.dynamicLimits") }}
+					</a>
+				</li>
+				<li class="nav-item">
+					<a
+						class="nav-link"
+						:class="{ active: activeTab === 'static' }"
+						href="#"
+						@click.prevent="activeTab = 'static'"
+					>
+						{{ $t("config.hems.staticLimits") }} 🧪
+					</a>
+				</li>
+			</ul>
+		</template>
+		<template #description>
 			<div v-if="configured" class="mb-4" data-testid="grid-sessions">
 				<h6 class="mb-3">{{ $t("config.hems.recordedEvents") }}</h6>
 				<div class="events-box rounded p-3">
@@ -60,6 +85,56 @@
 				{{ $t("config.general.fromYamlHint") }}
 			</p>
 		</template>
+		<template v-if="experimental && activeTab === 'static'" #post-content>
+			<div data-testid="grid-export-limit">
+				<div class="form-check form-switch">
+					<input
+						id="hemsExportLimitEnabled"
+						class="form-check-input"
+						type="checkbox"
+						role="switch"
+						:checked="exportLimitEnabled"
+						:disabled="exportLimitState === 'saving'"
+						@change="toggleExportLimit"
+					/>
+					<label for="hemsExportLimitEnabled" class="form-check-label">
+						{{ $t("config.hems.exportLimit") }}
+					</label>
+					<div class="ps-2">
+						<p class="text-muted small mb-2">
+							{{ $t("config.hems.exportLimitHint") }}
+						</p>
+						<div class="collapsible-wrapper" :class="{ open: exportLimitEnabled }">
+							<div class="collapsible-content ring-space">
+								<div class="d-flex align-items-center gap-2">
+									<div class="input-group input-width">
+										<input
+											id="hemsExportLimit"
+											v-model.number="exportLimit"
+											type="number"
+											min="0"
+											:aria-label="$t('config.hems.exportLimit')"
+											aria-describedby="hemsExportLimitUnit"
+											class="form-control text-end"
+											@input="onExportLimitInput"
+											@blur="commitExportLimit"
+											@keydown.enter.prevent="commitExportLimit"
+										/>
+										<span id="hemsExportLimitUnit" class="input-group-text">
+											W
+										</span>
+									</div>
+									<SavingIndicator :state="exportLimitState" />
+								</div>
+								<div class="form-text evcc-gray mb-2">
+									{{ $t("config.hems.exportLimitDescription") }}
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</template>
 	</DeviceModalBase>
 </template>
 
@@ -71,10 +146,18 @@ import { ConfigType, type YamlSource } from "@/types/evcc";
 import { type DeviceValues } from "./DeviceModal";
 import { customTemplateOption, type TemplateGroup } from "./DeviceModal/TemplateSelector.vue";
 import customHemsYaml from "./defaultYaml/customHems.yaml?raw";
+import relayHemsYaml from "./defaultYaml/relayHems.yaml?raw";
 import api from "../../api";
+import store from "@/store";
 import { docsPrefix } from "@/i18n";
 import DownloadButton from "../Helper/DownloadButton.vue";
+import SavingIndicator, { type SavingState } from "../Helper/SavingIndicator.vue";
 import formatter from "../../mixins/formatter";
+
+// selector value for the relay variant; both variants save as type custom
+const RELAY_OPTION = "relay";
+
+let exportLimitTimer: ReturnType<typeof setTimeout> | undefined;
 
 const initialValues = {
 	type: ConfigType.Template,
@@ -86,7 +169,7 @@ const initialValues = {
 
 export default defineComponent({
 	name: "HemsModal",
-	components: { DeviceModalBase, DownloadButton },
+	components: { DeviceModalBase, DownloadButton, SavingIndicator },
 	mixins: [formatter],
 	props: {
 		yamlSource: String as PropType<YamlSource>,
@@ -98,6 +181,10 @@ export default defineComponent({
 			initialValues,
 			sessions: [] as Array<{ created: string }>,
 			changing: false,
+			exportLimit: null as number | null,
+			exportLimitEnabled: false,
+			exportLimitState: null as SavingState,
+			activeTab: "dynamic" as "dynamic" | "static",
 		};
 	},
 	computed: {
@@ -123,8 +210,55 @@ export default defineComponent({
 		docsLink(): string {
 			return `${docsPrefix()}/docs/external-limit`;
 		},
+		experimental(): boolean {
+			return store.state?.experimental === true;
+		},
+		serverExportLimit(): number {
+			return store.state?.gridExportLimit || 0;
+		},
+		exportLimitUnchanged(): boolean {
+			return (this.exportLimit || 0) === this.serverExportLimit;
+		},
+	},
+	beforeUnmount() {
+		clearTimeout(exportLimitTimer);
 	},
 	methods: {
+		onOpen() {
+			this.exportLimit = this.serverExportLimit || null;
+			this.exportLimitEnabled = this.serverExportLimit > 0;
+			this.exportLimitState = null;
+			this.activeTab = "dynamic";
+			this.loadSessions();
+		},
+		onExportLimitInput() {
+			clearTimeout(exportLimitTimer);
+			exportLimitTimer = setTimeout(this.commitExportLimit, 2000);
+		},
+		commitExportLimit() {
+			clearTimeout(exportLimitTimer);
+			if (this.exportLimitState === "saving" || this.exportLimitUnchanged) return;
+			this.postExportLimit(this.exportLimit || 0);
+		},
+		toggleExportLimit($event: Event) {
+			const { checked } = $event.target as HTMLInputElement;
+			this.exportLimitEnabled = checked;
+			this.exportLimitState = null;
+			if (!checked) {
+				this.exportLimit = null;
+				this.commitExportLimit();
+			}
+		},
+		async postExportLimit(value: number) {
+			this.exportLimitState = "saving";
+			try {
+				await api.post(`gridexportlimit/${value}`);
+				this.exportLimitState = "saved";
+			} catch (e) {
+				this.exportLimitState = null;
+				console.error(e);
+			}
+		},
 		downloadHref(): string {
 			const params = new URLSearchParams({ lang: this.$i18n?.locale });
 			return `./api/gridsessions?${params.toString()}`;
@@ -147,7 +281,10 @@ export default defineComponent({
 			return [
 				{
 					label: "generic",
-					options: [customTemplateOption(this.$t("config.hems.customOption"))],
+					options: [
+						customTemplateOption(this.$t("config.hems.type.custom")),
+						customTemplateOption(this.$t("config.hems.type.relay"), RELAY_OPTION),
+					],
 				},
 				{
 					label: "integrations",
@@ -156,12 +293,12 @@ export default defineComponent({
 			];
 		},
 		isYamlInputType(type: ConfigType): boolean {
-			return type === ConfigType.Custom;
+			return type === ConfigType.Custom || (type as string) === RELAY_OPTION;
 		},
 		handleTemplateChange(value: string, values: DeviceValues) {
-			if (value === ConfigType.Custom) {
+			if (this.isYamlInputType(value as ConfigType)) {
 				values.type = ConfigType.Custom;
-				values.yaml = customHemsYaml;
+				values.yaml = value === RELAY_OPTION ? relayHemsYaml : customHemsYaml;
 			}
 		},
 		onAdded(name: string) {
@@ -190,5 +327,8 @@ export default defineComponent({
 <style scoped>
 .events-box {
 	background: var(--evcc-background);
+}
+.input-width {
+	max-width: 180px;
 }
 </style>

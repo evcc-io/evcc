@@ -328,7 +328,7 @@ import {
 	type Battery,
 	type Meter,
 	type CURRENCY,
-	type Forecast,
+	type UiForecast,
 	type UiLoadpoint,
 } from "@/types/evcc";
 
@@ -371,7 +371,7 @@ export default defineComponent({
 		prioritySoc: { type: Number },
 		bufferSoc: { type: Number },
 		bufferStartSoc: { type: Number },
-		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
+		forecast: { type: Object as PropType<UiForecast>, default: () => ({}) },
 	},
 	data: () => {
 		return {
@@ -466,14 +466,9 @@ export default defineComponent({
 			return Math.max(0, this.gridPower * -1);
 		},
 		powerUnit() {
-			const watt = Math.max(this.gridImport, this.selfPv, this.selfBattery, this.pvExport);
-			if (watt >= 1_000_000) {
-				return POWER_UNIT.MW;
-			} else if (watt >= 1000) {
-				return POWER_UNIT.KW;
-			} else {
-				return POWER_UNIT.W;
-			}
+			return this.getPowerUnit(
+				Math.max(this.gridImport, this.selfPv, this.selfBattery, this.pvExport)
+			);
 		},
 		inPower() {
 			return this.gridImport + this.pvProduction + this.batteryDischarge;
@@ -518,7 +513,7 @@ export default defineComponent({
 		},
 		batteryGridChargeLimitFmt() {
 			if (!this.batteryGridChargeLimitSet) {
-				return;
+				return undefined;
 			}
 			if (this.smartCostCo2) {
 				return this.fmtCo2Short(this.batteryGridChargeLimit);

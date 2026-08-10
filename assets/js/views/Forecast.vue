@@ -173,7 +173,7 @@ export default defineComponent({
 	},
 	computed: {
 		forecast() {
-			return store.state?.forecast || {};
+			return store.uiForecast.value;
 		},
 		forecastAvailable() {
 			return !!(
