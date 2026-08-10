@@ -28,7 +28,13 @@ jobs:
           password: ${{ secrets.DOCKER_PASS }}
 
       - name: Setup Buildx
+        id: buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4
+
+      - name: Restore build cache
+        uses: ./.github/actions/docker-cache
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
 
       - name: Define tags
         id: meta
