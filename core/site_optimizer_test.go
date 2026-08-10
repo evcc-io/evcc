@@ -69,6 +69,33 @@ func TestAsTimestamps(t *testing.T) {
 	}, got)
 }
 
+func TestUnmodelledPower(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	for _, tc := range []struct {
+		name            string
+		mode            api.ChargeMode
+		status          api.ChargeStatus
+		power, minPower float64
+		expected        float64
+	}{
+		{"pv charging", api.ModePV, api.StatusC, 4000, 1380, 4000},
+		{"pv connected", api.ModePV, api.StatusB, 0, 1380, 0},
+		{"minpv floor before meter caught up", api.ModeMinPV, api.StatusC, 0, 4000, 4000},
+		{"minpv floor must not lower measured", api.ModeMinPV, api.StatusC, 4000, 1000, 4000},
+		{"minpv floor only applies while charging", api.ModeMinPV, api.StatusB, 0, 4000, 0},
+		{"negative measurement clamped", api.ModePV, api.StatusC, -100, 0, 0},
+	} {
+		lp := loadpoint.NewMockAPI(ctrl)
+		lp.EXPECT().GetMode().Return(tc.mode).AnyTimes()
+		lp.EXPECT().GetStatus().Return(tc.status).AnyTimes()
+		lp.EXPECT().GetChargePower().Return(tc.power).AnyTimes()
+		lp.EXPECT().EffectiveMinPower().Return(tc.minPower).AnyTimes()
+
+		assert.Equal(t, tc.expected, unmodelledPower(lp), tc.name)
+	}
+}
+
 func TestBatteryForecastSocExtremes(t *testing.T) {
 	for _, tc := range []struct {
 		name      string
