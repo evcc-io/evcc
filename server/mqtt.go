@@ -84,6 +84,16 @@ func mqttTagAttribute(attr string, f reflect.StructField) bool {
 }
 
 func (m *MQTT) publishComplex(topic string, retained bool, payload any) {
+	// unwrap first so the wrapped value is still checked for the marshalers below
+	if mm, ok := payload.(api.StructMarshaler); ok {
+		d, err := mm.MarshalStruct()
+		if err != nil {
+			m.log.ERROR.Printf("marshal struct: %v", err)
+			return
+		}
+		payload = d
+	}
+
 	if _, ok := payload.(fmt.Stringer); ok || payload == nil {
 		m.publishSingleValue(topic, retained, payload)
 		return
@@ -96,16 +106,6 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload any) {
 			m.log.ERROR.Printf("marshal bytes: %v", err)
 		}
 		return
-	}
-
-	if mm, ok := payload.(api.StructMarshaler); ok {
-		if d, err := mm.MarshalStruct(); err != nil {
-			m.log.ERROR.Printf("marshal struct: %v", err)
-			return
-		} else {
-			payload = d
-			// fallthrough
-		}
 	}
 
 	switch typ := reflect.TypeOf(payload); typ.Kind() {
