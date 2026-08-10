@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -26,10 +27,14 @@ func newMGCPMeter(t *testing.T) (*EEBus, *mgcpmocks.MaMGCPInterface, spineapi.En
 	entity := spinemocks.NewEntityRemoteInterface(t)
 
 	c := &EEBus{
-		log: util.NewLogger("eebus-mgcp-test"),
-		ma:  eebus.NewEntity[measurements](mm),
+		log:       util.NewLogger("eebus-mgcp-test"),
+		ma:        eebus.NewEntity[measurements](mm),
+		scenarios: mgcpScenarios,
 	}
 	c.ma.Set(entity)
+
+	// entity announces every scenario unless a test overrides it
+	mm.EXPECT().IsScenarioAvailableAtEntity(entity, mock.Anything).Return(true).Maybe()
 
 	return c, mm, entity
 }
@@ -189,6 +194,23 @@ func TestMGCP_SCE6_ACVoltage(t *testing.T) {
 // Availability gating: an unannounced scenario or unconnected entity yields
 // ErrNotAvailable — the MA must not invent a value for an unsupported data point.
 func TestMGCP_ScenarioGating(t *testing.T) {
+	t.Run("scenario_not_announced", func(t *testing.T) {
+		// own mocks: the shared helper announces every scenario
+		mm := mgcpmocks.NewMaMGCPInterface(t)
+		entity := spinemocks.NewEntityRemoteInterface(t)
+		mm.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.MGCPPower).Return(false)
+
+		c := &EEBus{
+			log:       util.NewLogger("eebus-mgcp-test"),
+			ma:        eebus.NewEntity[measurements](mm),
+			scenarios: mgcpScenarios,
+		}
+		c.ma.Set(entity)
+
+		_, err := c.CurrentPower()
+		assert.ErrorIs(t, err, api.ErrNotAvailable)
+	})
+
 	t.Run("entity_not_connected", func(t *testing.T) {
 		c, _, _ := newMGCPMeter(t)
 		c.ma.Set(nil) // GCP not (yet) connected

@@ -35,6 +35,9 @@ func newOHPCFEGCharger(t *testing.T) (*EEBusOHPCF, *egmocks.EgLPCInterface, spin
 	}
 	c.lpc.Set(entity)
 
+	// entity announces every scenario unless a test overrides it
+	lpc.EXPECT().IsScenarioAvailableAtEntity(entity, mock.Anything).Return(true).Maybe()
+
 	return c, lpc, entity
 }
 
@@ -162,4 +165,33 @@ func TestOHPCF_LPC_Dimmed_Discard(t *testing.T) {
 			assert.ErrorIs(t, err, api.ErrNotAvailable)
 		})
 	}
+}
+
+// Dim/Dimmed are gated: no announced LPC scenario, or no connected entity →
+// ErrNotAvailable.
+func TestOHPCF_LPC_Gating(t *testing.T) {
+	t.Run("scenario_not_announced", func(t *testing.T) {
+		// own mocks: the shared helper announces every scenario
+		lpc := egmocks.NewEgLPCInterface(t)
+		entity := spinemocks.NewEntityRemoteInterface(t)
+		lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(false)
+
+		c := &EEBusOHPCF{
+			log: util.NewLogger("eebus-ohpcf-test"),
+			lpc: eebus.NewEntity[ucapi.EgLPCInterface](lpc),
+		}
+		c.lpc.Set(entity)
+
+		assert.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
+
+		_, err := c.Dimmed()
+		assert.ErrorIs(t, err, api.ErrNotAvailable)
+	})
+
+	t.Run("entity_not_connected", func(t *testing.T) {
+		c, _, _ := newOHPCFEGCharger(t)
+		c.lpc.Set(nil)
+
+		assert.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
+	})
 }

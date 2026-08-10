@@ -13,8 +13,11 @@ import (
 )
 
 // newTestOHPCF returns a charger without any use case implementation, so all
-// entities remain empty
-func newTestOHPCF() *EEBusOHPCF {
+// entities remain empty. eebus-go ships no CemOHPCFInterface mock, so reaching
+// a use case call panics rather than failing an expectation.
+func newTestOHPCF(t *testing.T) *EEBusOHPCF {
+	t.Helper()
+
 	cem := new(eebus.CustomerEnergyManagement)
 	ma := new(eebus.MonitoringAppliance)
 	eg := new(eebus.EnergyGuard)
@@ -30,7 +33,7 @@ func newTestOHPCF() *EEBusOHPCF {
 // methods accessing the compressor entity must error when it is absent,
 // so a missing compressor is not mistaken for an idle device.
 func TestEEBusOHPCFNotConnected(t *testing.T) {
-	c := newTestOHPCF()
+	c := newTestOHPCF(t)
 
 	status, err := c.Status()
 	require.ErrorIs(t, err, eebus.ErrNotConnected)
@@ -98,15 +101,17 @@ func TestOHPCFControlAction(t *testing.T) {
 	}
 }
 
-// while disabled a consumption-state update must not attempt to apply (avoids
-// acting on a stale intent, #31549). The compressor entity is recorded by the
-// use case support update, not by data events.
+// the compressor entity is latched from data events too: heat pumps stream
+// flexibility data without necessarily announcing the use case with scenarios.
+// While disabled the event must still not apply (stale intent, #31549) - an
+// apply would call the mocked use case and fail the test.
 func TestOHPCFUseCaseEventConsumptionStateDisabled(t *testing.T) {
-	c := newTestOHPCF()
+	c := newTestOHPCF(t)
 	entity := spinemocks.NewEntityRemoteInterface(t)
 
 	c.UseCaseEvent(nil, entity, ohpcf.DataUpdateConsumptionState)
 
-	_, err := c.ohpcf.Required()
-	assert.ErrorIs(t, err, eebus.ErrNotConnected)
+	recorded, err := c.ohpcf.Required()
+	require.NoError(t, err)
+	assert.Equal(t, entity, recorded)
 }

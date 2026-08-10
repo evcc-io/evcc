@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -23,10 +24,14 @@ func newMPCMeter(t *testing.T) (*EEBus, *mpcmocks.MaMPCInterface, spineapi.Entit
 	entity := spinemocks.NewEntityRemoteInterface(t)
 
 	c := &EEBus{
-		log: util.NewLogger("eebus-mpc-test"),
-		ma:  eebus.NewEntity[measurements](mm),
+		log:       util.NewLogger("eebus-mpc-test"),
+		ma:        eebus.NewEntity[measurements](mm),
+		scenarios: mpcScenarios,
 	}
 	c.ma.Set(entity)
+
+	// entity announces every scenario unless a test overrides it
+	mm.EXPECT().IsScenarioAvailableAtEntity(entity, mock.Anything).Return(true).Maybe()
 
 	return c, mm, entity
 }

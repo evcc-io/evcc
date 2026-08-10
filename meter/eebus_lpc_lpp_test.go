@@ -38,6 +38,10 @@ func newEGMeter(t *testing.T) (*EEBus, *egmocks.EgLPCInterface, *egmocks.EgLPPIn
 	c.lpc.Set(entity)
 	c.lpp.Set(entity)
 
+	// entity announces every scenario unless a test overrides it
+	lpc.EXPECT().IsScenarioAvailableAtEntity(entity, mock.Anything).Return(true).Maybe()
+	lpp.EXPECT().IsScenarioAvailableAtEntity(entity, mock.Anything).Return(true).Maybe()
+
 	return c, lpc, lpp, entity
 }
 
@@ -300,4 +304,63 @@ func TestLPC_LPP_NonCoverage(t *testing.T) {
 			t.Skip("not applicable: covered by eebus-go or the evcc HEMS/charger, not the grid meter")
 		})
 	}
+}
+
+// Dim/Dimmed are gated: no announced LPC scenario, or no connected entity →
+// ErrNotAvailable. A compatible entity type does not imply limit support.
+func TestLPC_Gating(t *testing.T) {
+	t.Run("scenario_not_announced", func(t *testing.T) {
+		// own mocks: the shared helper announces every scenario
+		lpc := egmocks.NewEgLPCInterface(t)
+		entity := spinemocks.NewEntityRemoteInterface(t)
+		lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(false)
+
+		c := &EEBus{
+			log: util.NewLogger("eebus-eg-test"),
+			lpc: eebus.NewEntity[ucapi.EgLPCInterface](lpc),
+		}
+		c.lpc.Set(entity)
+
+		assert.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
+
+		_, err := c.Dimmed()
+		assert.ErrorIs(t, err, api.ErrNotAvailable)
+	})
+
+	t.Run("entity_not_connected", func(t *testing.T) {
+		c, _, _, _ := newEGMeter(t)
+		c.lpc.Set(nil)
+
+		assert.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
+	})
+}
+
+// SetCurtailPercent/CurtailedPercent are gated the same way as Dim.
+func TestLPP_Gating(t *testing.T) {
+	t.Run("scenario_not_announced", func(t *testing.T) {
+		// own mocks: the shared helper announces every scenario
+		lpp := egmocks.NewEgLPPInterface(t)
+		entity := spinemocks.NewEntityRemoteInterface(t)
+		lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPLimit).Return(false)
+
+		c := &EEBus{
+			log: util.NewLogger("eebus-eg-test"),
+			lpp: eebus.NewEntity[ucapi.EgLPPInterface](lpp),
+		}
+		c.lpp.Set(entity)
+
+		// 100 = release, so the write is reached without first reading the
+		// (ungated) nominal max the proportional limit would need
+		assert.ErrorIs(t, c.SetCurtailPercent(100), api.ErrNotAvailable)
+
+		_, err := c.CurtailedPercent()
+		assert.ErrorIs(t, err, api.ErrNotAvailable)
+	})
+
+	t.Run("entity_not_connected", func(t *testing.T) {
+		c, _, _, _ := newEGMeter(t)
+		c.lpp.Set(nil)
+
+		assert.ErrorIs(t, c.SetCurtailPercent(0), api.ErrNotAvailable)
+	})
 }
