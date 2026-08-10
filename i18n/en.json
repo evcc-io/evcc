@@ -219,6 +219,7 @@
       "enabled": "Enabled",
       "energy": "Energy",
       "events": "Events",
+      "exportLimit": "Grid export limit",
       "feedinPrice": "Feed-in price",
       "forecast": "Forecast",
       "gridPrice": "Grid price",
@@ -306,6 +307,7 @@
     "form": {
       "danger": "Danger",
       "deprecated": "deprecated",
+      "durationUnit": "Time unit for {label}",
       "example": "Example",
       "optional": "optional"
     },

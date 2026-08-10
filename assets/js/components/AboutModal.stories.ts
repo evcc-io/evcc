@@ -47,7 +47,6 @@ export default {
   component: AboutModal,
   argTypes: {
     installed: { control: "text" },
-    commit: { control: "text" },
     availableVersion: { control: "text" },
     releaseNotes: { control: "text" },
     hasUpdater: { control: "boolean" },
@@ -95,9 +94,7 @@ StableUpdateWithUpdater.args = {
 
 export const Nightly = Template.bind({});
 Nightly.args = {
-  installed: "0.303.1",
-  commit: "5ce7be4a9f3b2c1d",
-  availableVersion: "0.303.1",
+  installed: "0.304.0-dev+5ce7be4",
 };
 
 export const DevBuild = Template.bind({});
