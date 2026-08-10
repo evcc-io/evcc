@@ -69,8 +69,9 @@ func (t *Template) ModbusValues(renderMode int, values map[string]any) {
 		typeParams := modbusConfig.Types[iface].Params
 
 		for _, p := range typeParams {
-			// don't overwrite custom values
-			if values[p.Name] != nil {
+			// don't overwrite custom values. Params the template deprecated in favour
+			// of the modbus definition are pre-populated with an empty default value.
+			if v, ok := values[p.Name]; ok && v != nil && v != "" {
 				continue
 			}
 

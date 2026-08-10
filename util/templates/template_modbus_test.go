@@ -51,6 +51,41 @@ func TestModbusTemplateUserIDOverridesTemplate(t *testing.T) {
 	}
 }
 
+// TestModbusTemplateDeprecatedParams verifies that device-specific modbus delay and
+// timeout defaults are applied even if the template deprecated its own param of the
+// same name in favour of the modbus definition.
+func TestModbusTemplateDeprecatedParams(t *testing.T) {
+	tc := []struct {
+		name, modbus string
+	}{
+		{"huawei-sun2000-inverter", "tcpip"}, // deprecated timeout
+		{"wattsonic", "rs485tcpip"},          // deprecated delay
+	}
+
+	for _, tc := range tc {
+		for _, mode := range []int{RenderModeInstance, RenderModeDocs, RenderModeUnitTest} {
+			t.Run(tc.name+"/"+renderModeNames[mode], func(t *testing.T) {
+				tmpl, err := ByName(Meter, tc.name)
+				require.NoError(t, err)
+
+				_, modbusParam := tmpl.ParamByName(ParamModbus)
+				require.NotEmpty(t, modbusParam.Delay+modbusParam.Timeout, "template must define a modbus delay or timeout")
+
+				_, values, err := tmpl.RenderResult(mode, map[string]any{
+					"usage":  tmpl.Usages()[0],
+					"modbus": tc.modbus,
+					"host":   "192.168.0.8",
+					"port":   502,
+				})
+				require.NoError(t, err)
+
+				assert.Equal(t, modbusParam.Delay, values[ModbusParamDelay])
+				assert.Equal(t, modbusParam.Timeout, values[ModbusParamTimeout])
+			})
+		}
+	}
+}
+
 // TestWallbeTemplateCoveredByPhoenix verifies the BC migration: a config that
 // still references the removed `wallbe` templates is transparently routed to
 // the phoenix-ev-eth template via the `covers:` directive, while still
