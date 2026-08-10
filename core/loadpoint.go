@@ -573,6 +573,9 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 
 	// reset energy-based charging plan offset
 	lp.planEnergyOffset = 0
+
+	// connect adds the loadpoint's demand
+	lp.triggerOptimizer()
 }
 
 // evVehicleDisconnectHandler sends external start event
@@ -644,7 +647,7 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 // triggerOptimizer re-runs the optimizer when the loadpoint's profile changed
 func (lp *Loadpoint) triggerOptimizer() {
 	if lp.site != nil {
-		_ = lp.site.Optimize()
+		lp.site.Optimize()
 	}
 }
 
