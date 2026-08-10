@@ -173,7 +173,7 @@ func (c *EEBus) TotalEnergy() (float64, error) {
 	return c.ma.Read(measurements.EnergyConsumed, c.scenarios.energy)
 }
 
-func (c *EEBus) readPhases(update func(mm measurements, entity spineapi.EntityRemoteInterface) ([]float64, error), scenario uint) (float64, float64, float64, error) {
+func (c *EEBus) readPhases(scenario uint, update func(mm measurements, entity spineapi.EntityRemoteInterface) ([]float64, error)) (float64, float64, float64, error) {
 	res, err := c.ma.Read(update, scenario)
 	if err != nil {
 		return 0, 0, 0, err
@@ -197,13 +197,13 @@ func (c *EEBus) readPhases(update func(mm measurements, entity spineapi.EntityRe
 var _ api.PhaseCurrents = (*EEBus)(nil)
 
 func (c *EEBus) Currents() (float64, float64, float64, error) {
-	return c.readPhases(measurements.CurrentPerPhase, c.scenarios.currents)
+	return c.readPhases(c.scenarios.currents, measurements.CurrentPerPhase)
 }
 
 var _ api.PhaseVoltages = (*EEBus)(nil)
 
 func (c *EEBus) Voltages() (float64, float64, float64, error) {
-	return c.readPhases(measurements.VoltagePerPhase, c.scenarios.voltages)
+	return c.readPhases(c.scenarios.voltages, measurements.VoltagePerPhase)
 }
 
 var _ api.Dimmer = (*EEBus)(nil)
