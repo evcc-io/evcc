@@ -990,7 +990,6 @@ func unmodelledPower(lp loadpoint.API) float64 {
 	return max(0, power)
 }
 
-
 // measuredSlotEnergy returns the summed energy in Wh of the last completed
 // metrics slot for the given collector refs, 0 when not available
 func (site *Site) measuredSlotEnergy(refs ...string) float64 {
