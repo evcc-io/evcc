@@ -41,5 +41,5 @@ func (m *pvMaxACPowerCtx) Decorator(ctx context.Context) func() float64 {
 	if get == nil {
 		return nil
 	}
-	return staticCapacity(get())
+	return staticFloat(get())
 }
