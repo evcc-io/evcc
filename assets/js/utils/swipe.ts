@@ -48,6 +48,9 @@ export function attachTouchTooltipGate(el: HTMLElement, hide: () => void): () =>
     const touch = e.touches[0];
     if (!touch) return;
     e.stopPropagation();
+    // WebKit long-press jumps selection to the nearest selectable content
+    // outside the chart; block selection page-wide for the gesture
+    document.body.classList.add("user-select-none");
     shown = false;
     latched = false;
     x = touch.clientX;
@@ -84,11 +87,9 @@ export function attachTouchTooltipGate(el: HTMLElement, hide: () => void): () =>
     if (e.cancelable) e.preventDefault();
     if (timer) clearTimeout(timer);
     shown = false;
+    document.body.classList.remove("user-select-none");
     hide();
   };
-
-  // long-press must not start text selection of chart or tooltip content
-  el.classList.add("user-select-none");
 
   el.addEventListener("touchstart", onTouchStart, { capture: true, passive: true });
   el.addEventListener("touchmove", onTouchMove, { capture: true, passive: true });
@@ -97,7 +98,7 @@ export function attachTouchTooltipGate(el: HTMLElement, hide: () => void): () =>
 
   return () => {
     if (timer) clearTimeout(timer);
-    el.classList.remove("user-select-none");
+    document.body.classList.remove("user-select-none");
     el.removeEventListener("touchstart", onTouchStart, { capture: true });
     el.removeEventListener("touchmove", onTouchMove, { capture: true });
     el.removeEventListener("touchend", onTouchEnd, { capture: true });

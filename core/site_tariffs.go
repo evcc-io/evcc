@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"math"
 	"time"
 
@@ -13,12 +14,29 @@ import (
 	"github.com/samber/lo"
 )
 
+// forecastSeries and solarDetails implement BytesMarshaler so MQTT publishes one
+// json message per forecast key instead of decomposing every slot into its own
+// topic (several thousand messages per update).
+type forecastSeries [][]float64
+
+var _ api.BytesMarshaler = (*forecastSeries)(nil)
+
+func (s forecastSeries) MarshalBytes() ([]byte, error) {
+	return json.Marshal(s)
+}
+
 type solarDetails struct {
-	Scale            float64      `json:"scale"`                      // scale factor yield/forecasted today, 1 if unscaled
-	Today            dailyDetails `json:"today,omitempty"`            // tomorrow
-	Tomorrow         dailyDetails `json:"tomorrow,omitempty"`         // tomorrow
-	DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow,omitempty"` // day after tomorrow
-	Timeseries       timeseries   `json:"timeseries,omitempty"`       // timeseries of forecasted energy
+	Scale            float64      `json:"scale"`                // scale factor yield/forecasted today, 1 if unscaled
+	Today            dailyDetails `json:"today"`                // tomorrow
+	Tomorrow         dailyDetails `json:"tomorrow"`             // tomorrow
+	DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow"`     // day after tomorrow
+	Timeseries       timeseries   `json:"timeseries,omitempty"` // timeseries of forecasted energy
+}
+
+var _ api.BytesMarshaler = (*solarDetails)(nil)
+
+func (d solarDetails) MarshalBytes() ([]byte, error) {
+	return json.Marshal(d)
 }
 
 type dailyDetails struct {
@@ -29,7 +47,7 @@ type dailyDetails struct {
 // forecastRates publishes rates as [start, end, value] with the timestamps in
 // unix seconds. The forecast is the largest payload evcc sends and RFC3339
 // timestamps are two thirds of it.
-func forecastRates(rr api.Rates) [][]float64 {
+func forecastRates(rr api.Rates) forecastSeries {
 	// keep nil for empty rates: shards are published without omitempty
 	if len(rr) == 0 {
 		return nil
@@ -116,12 +134,12 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 
 	fc := struct {
-		Co2         [][]float64   `json:"co2,omitempty"`
-		FeedIn      [][]float64   `json:"feedin,omitempty"`
-		Grid        [][]float64   `json:"grid,omitempty"`
-		Planner     [][]float64   `json:"planner,omitempty"`
-		Solar       *solarDetails `json:"solar,omitempty"`
-		Temperature [][]float64   `json:"temperature,omitempty"`
+		Co2         forecastSeries `json:"co2,omitempty"`
+		FeedIn      forecastSeries `json:"feedin,omitempty"`
+		Grid        forecastSeries `json:"grid,omitempty"`
+		Planner     forecastSeries `json:"planner,omitempty"`
+		Solar       *solarDetails  `json:"solar,omitempty"`
+		Temperature forecastSeries `json:"temperature,omitempty"`
 	}{
 		Co2:         forecastRates(tariff.Rates(site.GetTariff(api.TariffUsageCo2))),
 		FeedIn:      forecastRates(tariff.Rates(site.GetTariff(api.TariffUsageFeedIn))),
