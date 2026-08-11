@@ -42,7 +42,8 @@ var (
 	optimizerUpdated time.Time
 	optimizerPending atomic.Bool // a trigger arrived while a run held the lock; re-run afterwards
 
-	optimizerTariffHash uint64 // fingerprint of the planner+feedin rates last seen by the update loop
+	optimizerTariffHash  uint64 // fingerprint of the planner+feedin rates last seen by the update loop
+	optimizerTariffDirty bool   // a tariff change is pending; deferred one cycle so planner+feedin settle
 )
 
 // optimizerChargingStrategies are the valid grid charging strategies; the first
