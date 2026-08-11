@@ -251,7 +251,12 @@ jobs:
         with:
           persist-credentials: false
 
+      # setup-go puts ImageOS in the cache key, and GitHub's arm image reports
+      # ubuntu24-arm64 where Depot's reports ubuntu24. Without the override the
+      # warmed entry never matches the key a fork run looks for
       - uses: actions/setup-go@v7
+        env:
+          ImageOS: ubuntu24
         with:
           go-version-file: go.mod
         id: go
