@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -19,11 +20,11 @@ type fleetConfig struct {
 }
 
 func init() {
-	registry.Add("powerwall-fleet", NewPowerWallFleetFromConfig)
+	registry.AddCtx("powerwall-fleet", NewPowerWallFleetFromConfig)
 }
 
 // NewPowerWallFleetFromConfig creates a PowerWall meter with Fleet API battery control
-func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
+func NewPowerWallFleetFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := fleetConfig{powerWallConfig: defaultPowerWallConfig()}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -45,7 +46,7 @@ func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
 		cc.Tokens.Access,
 		cc.Tokens.Refresh,
 	)
-	m, err := newPowerWall(log, cc.powerWallConfig)
+	m, err := newPowerWall(ctx, log, cc.powerWallConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +56,7 @@ func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	implement.May(m, implement.BatteryController(cc.batterySocLimits.LimitController(func() (float64, error) {
+	controller, err := cc.batterySocLimitsCtx.LimitController(ctx, func() (float64, error) {
 		ess, err := energySite.EnergySiteStatus()
 		if err != nil {
 			return 0, fmt.Errorf("get energy site status: %w", err)
@@ -64,7 +65,12 @@ func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
 		return math.Round(ess.PercentageCharged), nil
 	}, func(limit float64) error {
 		return energySite.SetBatteryReserve(teslaReserveLimit(limit))
-	})))
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	implement.May(m, implement.BatteryController(controller))
 
 	return m, nil
 }

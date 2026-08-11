@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -27,17 +28,14 @@ type powerWallConfig struct {
 	Cache                      time.Duration
 	SiteId                     int64  // Fleet API only, deprecated for the local meter
 	RefreshToken_              string `mapstructure:"refreshToken"` // TODO deprecated
-	batterySocLimits           `mapstructure:",squash"`
-	batteryPowerLimits         `mapstructure:",squash"`
+	batteryCapacityCtx         `mapstructure:",squash"`
+	batterySocLimitsCtx        `mapstructure:",squash"`
+	batteryPowerLimitsCtx      `mapstructure:",squash"`
 }
 
 func defaultPowerWallConfig() powerWallConfig {
 	return powerWallConfig{
-		batterySocLimits: batterySocLimits{
-			MinSoc: 20,
-			MaxSoc: 95,
-		},
-		batteryPowerLimits: batteryPowerLimits{
+		batteryPowerLimitsCtx: batteryPowerLimitsCtx{
 			MaxChargePower:    4600,
 			MaxDischargePower: 4600,
 		},
@@ -67,12 +65,12 @@ func (cc *powerWallConfig) validate() error {
 }
 
 func init() {
-	registry.Add("tesla", NewPowerWallFromConfig)
-	registry.Add("powerwall", NewPowerWallFromConfig)
+	registry.AddCtx("tesla", NewPowerWallFromConfig)
+	registry.AddCtx("powerwall", NewPowerWallFromConfig)
 }
 
 // NewPowerWallFromConfig creates a PowerWall Powerwall Meter from generic config
-func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
+func NewPowerWallFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	cc := defaultPowerWallConfig()
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -88,10 +86,10 @@ func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
 		log.WARN.Println("refreshToken is deprecated, use the Powerwall (Fleet API) template for battery control")
 	}
 
-	return newPowerWall(log, cc)
+	return newPowerWall(ctx, log, cc)
 }
 
-func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
+func newPowerWall(ctx context.Context, log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 	httpClient := &http.Client{
 		Transport: request.NewTripper(log, powerwall.DefaultTransport()),
 		Timeout:   time.Second * 2, // Timeout after 2 seconds
@@ -114,18 +112,56 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 	}
 
 	if m.usage == "battery" {
-		implement.Has(m, implement.Battery(m.batterySoc))
-		implement.May(m, implement.BatterySocLimiter(cc.batterySocLimits.Decorator()))
-		implement.May(m, implement.BatteryPowerLimiter(cc.batteryPowerLimits.Decorator()))
-
-		res, err := m.client.GetSystemStatus()
+		capacity, err := cc.batteryCapacityCtx.Decorator(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		implement.Has(m, implement.BatteryCapacity(func() float64 {
-			return res.NominalFullPackEnergy / 1e3
-		}))
+		minG, maxG, err := cc.batterySocLimitsCtx.getters(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		if minG == nil {
+			opG := util.Cached(client.GetOperation, cc.Cache)
+			minG = func() float64 {
+				op, err := opG()
+				if err != nil {
+					return 0
+				}
+				return op.BackupReservePercent
+			}
+		}
+
+		if maxG == nil {
+			maxG = func() float64 { return 100 }
+		}
+
+		socLimiter := func() (float64, float64) {
+			return minG(), maxG()
+		}
+
+		powerLimiter, err := cc.batteryPowerLimitsCtx.Decorator(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		implement.Has(m, implement.Battery(m.batterySoc))
+		implement.May(m, implement.BatterySocLimiter(socLimiter))
+		implement.May(m, implement.BatteryPowerLimiter(powerLimiter))
+
+		if capacity != nil {
+			implement.Has(m, implement.BatteryCapacity(capacity))
+		} else {
+			res, err := m.client.GetSystemStatus()
+			if err != nil {
+				return nil, err
+			}
+
+			implement.Has(m, implement.BatteryCapacity(func() float64 {
+				return res.NominalFullPackEnergy / 1e3
+			}))
+		}
 	}
 
 	return m, nil
