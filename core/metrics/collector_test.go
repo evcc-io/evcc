@@ -579,7 +579,7 @@ func TestCollectorAddEnergyDelta(t *testing.T) {
 	col, err := NewCollector("delta", "delta", "", WithClock(clock))
 	require.NoError(t, err)
 
-	// first delta seeds the accumulator clock
+	// first delta is dropped- it has no interval to belong to yet
 	require.NoError(t, col.AddEnergyDelta(1))
 	require.Equal(t, 0.0, col.accu.Energy)
 

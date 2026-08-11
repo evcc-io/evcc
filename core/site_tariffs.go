@@ -237,7 +237,8 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 		Complete: !last.Before(eot.AddDate(0, 0, 1)),
 	}
 
-	if err := site.collectors[metrics.Forecast].AddEnergyDelta(site.forecastSlotEnergy(solar, time.Now())); err != nil {
+	completed := site.forecastSlotEnergy(solar, time.Now())
+	if err := site.collectors[metrics.Forecast].AddEnergyDelta(completed); err != nil {
 		site.log.ERROR.Printf("solar forecast collector: %v", err)
 	}
 

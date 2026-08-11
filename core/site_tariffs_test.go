@@ -12,7 +12,7 @@ import (
 )
 
 func TestForecastSlotEnergy(t *testing.T) {
-	slot := time.Now().Truncate(tariff.SlotDuration)
+	slot := time.Unix(1735689600, 0).Truncate(tariff.SlotDuration)
 	rate := func(i int, power float64) api.Rate {
 		return api.Rate{
 			Start: slot.Add(time.Duration(i) * tariff.SlotDuration),
