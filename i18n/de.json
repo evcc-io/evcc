@@ -1536,6 +1536,7 @@
       "keepAsIs": "Beibehalten",
       "learnMore": "Mehr erfahren.",
       "limitSoc": "Standardlimit",
+      "limitSocDescription": "Wird beim Anschließen des Fahrzeugs angewendet.",
       "menu": "Fahrzeuge",
       "minSoc": "Minimale Ladung",
       "minSocDescription": "Wird im PV-Modus schnell bis zu diesem Wert geladen.",
