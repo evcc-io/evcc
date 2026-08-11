@@ -143,19 +143,30 @@ func newPowerWall(ctx context.Context, log *util.Logger, cc powerWallConfig) (*P
 		}
 
 		if capacity == nil || powerLimiter == nil {
-			res, err := m.client.GetSystemStatus()
+			statusG := util.Cached(client.GetSystemStatus, cc.Cache)
+
+			// validate connectivity and gate power limiter capability
+			res, err := statusG()
 			if err != nil {
 				return nil, err
 			}
 
 			if capacity == nil {
 				capacity = func() float64 {
+					res, err := statusG()
+					if err != nil {
+						return 0
+					}
 					return res.NominalFullPackEnergy / 1e3
 				}
 			}
 
 			if powerLimiter == nil && res.MaxApparentPower > 0 {
 				powerLimiter = func() (float64, float64) {
+					res, err := statusG()
+					if err != nil {
+						return 0, 0
+					}
 					return res.MaxApparentPower, res.MaxApparentPower
 				}
 			}
