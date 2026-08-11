@@ -1,6 +1,13 @@
 # build vars
-TAG_NAME ?= $(shell test -d .git && git describe --abbrev=0 --tags)
+# part of the latest tag incremented for untagged builds: minor or patch
+BUMP ?= minor
 SHA ?= $(shell test -d .git && git rev-parse --short HEAD)
+GIT_TAG := $(shell test -d .git && git describe --abbrev=0 --tags)
+# commits since the latest tag, empty or 0 means the commit is tagged
+GIT_DIST := $(shell test -n "$(GIT_TAG)" && git rev-list --count $(GIT_TAG)..HEAD)
+NEXT_TAG = $(shell echo $(GIT_TAG) | awk -F. -v b='$(BUMP)' '{ if (b == "patch") { m = $$2; p = $$3 + 1 } else { m = $$2 + 1; p = 0 }; print $$1 "." m "." p }')
+# untagged builds are semver pre-releases of the upcoming version
+TAG_NAME ?= $(if $(filter-out 0,$(GIT_DIST)),$(NEXT_TAG)-dev+$(SHA),$(GIT_TAG))
 COMMIT := $(SHA)
 # hide commit for releases
 ifeq ($(RELEASE),1)
@@ -31,7 +38,7 @@ CURRDIR := $(shell pwd)
 
 default:: ui build
 
-all:: clean install install-ui ui assets lint test-ui lint-ui test build
+all:: clean install install-ui ui assets openapi lint test-ui lint-ui test build
 
 clean::
 	rm -rf dist/
@@ -40,13 +47,16 @@ install::
 	go install tool
 
 install-ui::
-	npm ci
+	vp install
 
 ui::
-	npm run build
+	vp run build
 
 assets::
 	go generate ./...
+
+openapi::
+	vp run openapi
 
 docs::
 	go generate github.com/evcc-io/evcc/util/templates/...
@@ -59,7 +69,7 @@ modernize:
 	go tool modernize -test -fix -stringsbuilder=false -omitzero=false ./...
 
 lint-ui::
-	npm run lint
+	vp run lint
 
 license::
 	go run github.com/google/go-licenses/v2@latest check \
@@ -74,10 +84,10 @@ license::
 	./...
 
 license-ui::
-	npm run license
+	vp run license
 
 test-ui::
-	npm test
+	vp run test
 
 test::
 	@echo "Running testsuite"

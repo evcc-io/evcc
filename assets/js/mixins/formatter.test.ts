@@ -1,5 +1,5 @@
 import { mount, config } from "@vue/test-utils";
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from "vite-plus/test";
 import formatter, { POWER_UNIT } from "./formatter";
 import * as units from "../units";
 import { defineComponent } from "vue";

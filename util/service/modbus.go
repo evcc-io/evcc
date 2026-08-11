@@ -68,8 +68,8 @@ func modbusRead(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// Create cache key from connection string and register address
-	cacheKey := fmt.Sprintf("%s:%s:%d", query.URI, query.Device, query.Address)
+	// Cache per exact request: distinct id/encoding/scale/resulttype must not share a converted value
+	cacheKey := req.URL.Query().Encode()
 
 	// Check cache first
 	mu.RLock()

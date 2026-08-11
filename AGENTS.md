@@ -14,13 +14,14 @@ This file provides guidance to AI coding agents when working with code in this r
 - `make build` - build Go binary only
 - `make ui` - build UI assets only
 - `make install` - install Go tools and dependencies
-- `make install-ui` - install Node.js dependencies (`npm ci`)
+- `make install-ui` - install Node.js dependencies (`vp install`)
 - `make test` - run Go tests
 - `make test-ui` - run frontend tests
 - `make lint` - run Go linting (golangci-lint)
 - `make lint-ui` - run frontend linting
-- `npm run dev` - start Vue dev server (http://127.0.0.1:7071)
-- `npm run playwright` - run integration tests
+- `vp run dev` - start Vue dev server (http://127.0.0.1:7071)
+- `vp run playwright` - run integration tests
+- `evcc --config [file] --disable-auth` - run a throw-away instance for UI checks without password setup
 - `evcc --template-type [type] --template [file]` - test device templates
 - `make docs` - generate template documentation
 
@@ -28,15 +29,15 @@ This file provides guidance to AI coding agents when working with code in this r
 
 Deep documentation on specific subsystems is available in `docs/agents/`. Load what you need based on the task:
 
-| File | When to load |
-|------|-------------|
-| [Core Domain](docs/agents/core-domain.md) | Control loop, loadpoint logic, PV surplus, charge modes, tariffs, interfaces |
-| [Hardware Integrations](docs/agents/hardware-integrations.md) | Charger/meter/vehicle implementations, adding new devices |
-| [Easee Architecture](docs/agents/easee-architecture.md) | Easee charger (REST+SignalR, async correlation, concurrency) |
-| [OCPP Forwarder](docs/agents/ocpp-forwarder.md) | OCPP proxy/forwarder (sidecar relay to upstream OCPP server, read-only mode) |
-| [Plugin System](docs/agents/plugin-system.md) | Plugin layer (HTTP, MQTT, Modbus, SunSpec, JS) |
-| [Web UI & API](docs/agents/web-ui-api.md) | REST API, WebSocket, Vue frontend, authentication |
-| [API Security](docs/agents/api-security.md) | Auth modes, JWT/API key/session, two-tier checks, credential storage |
+| File                                                          | When to load                                                                 |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| [Core Domain](docs/agents/core-domain.md)                     | Control loop, loadpoint logic, PV surplus, charge modes, tariffs, interfaces |
+| [Hardware Integrations](docs/agents/hardware-integrations.md) | Charger/meter/vehicle implementations, adding new devices                    |
+| [Easee Architecture](docs/agents/easee-architecture.md)       | Easee charger (REST+SignalR, async correlation, concurrency)                 |
+| [OCPP Forwarder](docs/agents/ocpp-forwarder.md)               | OCPP proxy/forwarder (sidecar relay to upstream OCPP server, read-only mode) |
+| [Plugin System](docs/agents/plugin-system.md)                 | Plugin layer (HTTP, MQTT, Modbus, SunSpec, JS)                               |
+| [Web UI & API](docs/agents/web-ui-api.md)                     | REST API, WebSocket, Vue frontend, authentication                            |
+| [API Security](docs/agents/api-security.md)                   | Auth modes, JWT/API key/session, two-tier checks, credential storage         |
 
 ### Loading guide by task type
 
@@ -98,7 +99,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 
 ## Comment Style
 
-- Prefer self-documenting code over comments; comment the *why*, not the *what*
+- Prefer self-documenting code over comments; comment the _why_, not the _what_
 - Default to no comment. Only add one for a non-obvious constraint, invariant, workaround, or surprising behavior. Keep it to one line, two if necessary
 - Skip refs to the current task, PR, issue, or caller ("added for X flow", "see #1234"). Git history covers that
 - Exception: Go exported identifiers follow godoc convention. Short `// FuncName does X` summary starting with the identifier name
@@ -122,7 +123,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - `_enumer.go` - generated enum code
 - `*_decorators.go` - generated decorator pattern implementations
 - Validate interface implementations: `var _ Interface = (*Type)(nil)`
-- Capabilities: register via `implement.Has`/`May` only when a capability is *conditional* (runtime/config detection, e.g. `if cp.PhaseSwitching { implement.Has(...) }`). For capabilities present on every code path, declare a plain exported method plus `var _ api.Interface = (*Type)(nil)` instead. `api.Cap` resolves static methods via direct type assertion, so unconditional `implement.Has` is redundant. A type with no conditional capabilities needs neither the `implement.Caps` embed nor `implement.New()`
+- Capabilities: register via `implement.Has`/`May` only when a capability is _conditional_ (runtime/config detection, e.g. `if cp.PhaseSwitching { implement.Has(...) }`). For capabilities present on every code path, declare a plain exported method plus `var _ api.Interface = (*Type)(nil)` instead. `api.Cap` resolves static methods via direct type assertion, so unconditional `implement.Has` is redundant. A type with no conditional capabilities needs neither the `implement.Caps` embed nor `implement.New()`
 
 ### Error Handling
 
@@ -236,9 +237,9 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 ### Essential Commands
 
 - Must build before testing executing playwright `make ui build` since it uses the binary. For manual testing assets are build and reloaded automatically (vite dev).
-- Run tests: `npm run playwright` or `npx playwright test`
-- Debug: `npx playwright test --debug`
-- Specific test: `npx playwright test tests/config-loadpoint.spec.ts`
+- Run tests: `vp run playwright` or `vpx playwright test`
+- Debug: `vpx playwright test --debug`
+- Specific test: `vpx playwright test tests/config-loadpoint.spec.ts`
 
 ### Selector Strategy
 
@@ -270,7 +271,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Device types: chargers, meters, vehicles, tariffs
 - Plugin protocols: Modbus, HTTP, MQTT, JavaScript, Go
 - Define device capabilities and configuration in templates at `templates/definition/[type]/`
-- Don't restate param properties that `util/templates/defaults.yaml` already defines for that param name. Properties (description, help, type, unit, default, example, required, advanced, mask, private, usages, …) are inherited from defaults; only specify a property in a template to give it a *different* value. Restating the same value is redundant duplication: reference the param by `name` alone.
+- Don't restate param properties that `util/templates/defaults.yaml` already defines for that param name. Properties (description, help, type, unit, default, example, required, advanced, mask, private, usages, …) are inherited from defaults; only specify a property in a template to give it a _different_ value. Restating the same value is redundant duplication: reference the param by `name` alone.
 - Test templates: `evcc --template-type [type] --template [file]`
 - Update docs after template changes: `make docs`
 - When implementing or debugging against a third-party device library (eebus-go/ship/spine-go, ocpp-go, modbus/SunSpec), consult the library's current upstream documentation before coding rather than relying on recalled API details
@@ -316,6 +317,11 @@ Structure PR descriptions in this order. No headlines. Be concise.
 Avoid file paths, line numbers, or code listings reproduced from the diff. Include a code snippet only when it conveys the contract (event shape, API signature) more clearly than prose. No testing checklists, no co-author footers.
 
 Never state that `go build`, `go vet`, `go test -race`, or `gofmt` pass (or any "all checks/tests green" phrasing). These are non-negotiable givens that must already be fulfilled, not noteworthy results.
+
+## Pull Request CI and Reviews
+
+- After opening or updating a pull request, watch CI until every check has finished. Work is not done while checks are still running. Fix failures on the same branch and keep watching until the run is green.
+- Do not argue with automated review bots such as Sourcery. Either implement the suggestion or resolve the thread. No rebuttal comments.
 
 ## AI Attribution
 

@@ -875,14 +875,18 @@ export default defineComponent({
 			return store.state?.hems;
 		},
 		hemsTags(): DeviceTags {
+			const result: DeviceTags = {};
+			const exportLimit = store.state?.gridExportLimit || 0;
+			if (exportLimit > 0) {
+				result["exportLimit"] = { value: exportLimit };
+			}
 			if (this.hemsDevices.length === 0 && !this.hems?.config?.configured) {
-				return { configured: { value: false } };
+				return exportLimit > 0 ? result : { configured: { value: false } };
 			}
 			const status = store.state?.hems?.status;
 			if (!status) {
-				return { configured: { value: true } };
+				return { ...result, configured: { value: true } };
 			}
-			const result: DeviceTags = {};
 			if (status.dimmed && status.maxConsumptionPower) {
 				result["dimLimit"] = {
 					value: status.maxConsumptionPower,

@@ -10,6 +10,7 @@ import (
 
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util/export"
+	"gorm.io/gorm"
 )
 
 // Slot represents an aggregated energy time slot
@@ -60,6 +61,47 @@ type EnergyFilter struct {
 	Group string
 	Name  string
 	Title string
+}
+
+// entityQuery returns a subquery selecting the ids of the matching entities,
+// nil for an empty filter.
+func entityQuery(f EnergyFilter) *gorm.DB {
+	if f.Group == "" && f.Name == "" && f.Title == "" {
+		return nil
+	}
+
+	tx := db.Instance.Model(new(entity)).Select("id")
+	if f.Group != "" {
+		tx = tx.Where(`"group" = ?`, f.Group)
+	}
+	if f.Name != "" {
+		tx = tx.Where("name = ?", f.Name)
+	}
+	if f.Title != "" {
+		tx = tx.Where("title = ?", f.Title)
+	}
+
+	return tx
+}
+
+// DeleteEnergy removes the slots in [from,to), narrowed to the matching
+// entities. Both bounds are required, a full wipe is /api/db/reset.
+func DeleteEnergy(from, to time.Time, filter ...EnergyFilter) (int64, error) {
+	if from.IsZero() || to.IsZero() {
+		return 0, errors.New("missing from/to")
+	}
+
+	tx := db.Instance.Where("ts >= ? AND ts < ?", from.Unix(), to.Unix())
+
+	if len(filter) > 0 {
+		if sub := entityQuery(filter[0]); sub != nil {
+			tx = tx.Where("meter IN (?)", sub)
+		}
+	}
+
+	res := tx.Delete(new(meter))
+
+	return res.RowsAffected, res.Error
 }
 
 // QueryEnergy returns aggregated energy data, per title or per group.
@@ -114,15 +156,8 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool, filter ...E
 	}
 
 	if len(filter) > 0 {
-		f := filter[0]
-		if f.Group != "" {
-			tx = tx.Where(`e."group" = ?`, f.Group)
-		}
-		if f.Name != "" {
-			tx = tx.Where("e.name = ?", f.Name)
-		}
-		if f.Title != "" {
-			tx = tx.Where("e.title = ?", f.Title)
+		if sub := entityQuery(filter[0]); sub != nil {
+			tx = tx.Where("m.meter IN (?)", sub)
 		}
 	}
 

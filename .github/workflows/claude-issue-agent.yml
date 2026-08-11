@@ -29,7 +29,13 @@ jobs:
 
   pr-label:
     name: PR labeling
-    if: github.event_name == 'pull_request_target'
+    # bot PRs (dependabot etc.) are skipped: the action rejects non-human actors
+    # unless allowlisted, and bots already label their own PRs. backports are
+    # skipped as well, they carry the backport label and nothing else
+    if: |
+      github.event_name == 'pull_request_target' &&
+      github.event.pull_request.user.type != 'Bot' &&
+      !startsWith(github.event.pull_request.head.ref, 'backport/')
     runs-on: ubuntu-latest
     permissions:
       contents: read # read base repo for area classification

@@ -205,6 +205,7 @@
 				</DeviceModalActions>
 			</template>
 		</form>
+		<slot name="post-content" :values="values"></slot>
 	</GenericModal>
 </template>
 

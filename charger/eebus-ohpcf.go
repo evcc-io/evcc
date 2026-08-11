@@ -43,6 +43,7 @@ type EEBusOHPCF struct {
 	egLpcEntity spineapi.EntityRemoteInterface
 	enabled     bool
 	reboosting  bool
+	dimmed      bool // last limit written, re-stated on reconnect
 
 	connector *eebus.Connector
 }
@@ -186,6 +187,9 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 		// use most specific selector
 		if c.egLpcEntity == nil || len(entity.Address().Entity) < len(c.egLpcEntity.Address().Entity) {
 			c.egLpcEntity = entity
+
+			// [LPC-913]: state the limit to the newly available CS
+			go eebus.AssertLimit(c.ctx, c.log, func() error { return c.Dim(c.lastDimmed()) })
 		}
 		c.mu.Unlock()
 	}
@@ -210,6 +214,13 @@ func (c *EEBusOHPCF) lastEnabled() bool {
 	defer c.mu.RUnlock()
 
 	return c.enabled
+}
+
+func (c *EEBusOHPCF) lastDimmed() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	return c.dimmed
 }
 
 // ohpcfStatus maps the compressor process state to a charge status: running is
@@ -405,9 +416,17 @@ func (c *EEBusOHPCF) Dim(dim bool) error {
 	}
 
 	// TODO: change api.Dimmer to make the limit configurable; use a fixed 0W safe limit for now
-	return eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
+	if err := eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: 0, IsActive: dim}, cb)
-	})
+	}); err != nil {
+		return err
+	}
+
+	c.mu.Lock()
+	c.dimmed = dim
+	c.mu.Unlock()
+
+	return nil
 }
 
 // apply issues the command to align the optional consumption with the on/off

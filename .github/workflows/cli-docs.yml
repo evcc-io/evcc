@@ -22,15 +22,20 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
+
+      - uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version: "26"
+          cache: true
 
       - name: Generate CLI docs
         run: mkdir dist && touch dist/empty && go run main.go gendoc ./cli-docs
 
       - name: Format
-        run: npx prettier@3.9.4 --no-config --write "./cli-docs/**/*.md"
+        run: vp fmt "./cli-docs/**/*.md"
 
       - name: Deploy CLI docs to docs repo
         uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4

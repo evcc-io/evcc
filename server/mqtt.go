@@ -218,6 +218,7 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 		{"batteryGridDischarge", boolSetter(site.SetBatteryGridDischarge)},
 		{"prioritySoc", floatSetter(site.SetPrioritySoc)},
 		{"residualPower", floatSetter(site.SetResidualPower)},
+		{"gridExportLimit", floatSetter(site.SetGridExportLimit)},
 		{"solarAdjusted", boolSetter(pass(site.SetSolarAdjusted))},
 		{"smartCostLimit", floatPtrSetter(pass(func(limit *float64) {
 			for _, lp := range site.ActiveLoadpoints() {

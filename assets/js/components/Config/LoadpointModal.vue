@@ -192,6 +192,7 @@
 											id="loadpointEnableDelay"
 											v-model="values.thresholds.enable.delay"
 											type="Duration"
+											legacy-duration
 											unit="minute"
 											size="w-25 w-min-200"
 											required
@@ -255,6 +256,7 @@
 											id="loadpointDisableDelay"
 											v-model="values.thresholds.disable.delay"
 											type="Duration"
+											legacy-duration
 											unit="minute"
 											size="w-25 w-min-200"
 											required
@@ -519,6 +521,7 @@
 										id="loadpointPollInterval"
 										v-model="values.soc.poll.interval"
 										type="Duration"
+										legacy-duration
 										unit="minute"
 										size="w-25 w-min-200"
 										class="me-2"

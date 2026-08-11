@@ -74,6 +74,12 @@ func (lp *Loadpoint) applyEnergyMetrics(s *session.Session) {
 		s.SocEnd = &soc
 	}
 
+	// added range by linear projection from current range and soc delta
+	if rng := float64(lp.vehicleRange); rng > 0 && s.SocStart != nil && s.SocEnd != nil && *s.SocEnd > *s.SocStart {
+		added := rng * (*s.SocEnd - *s.SocStart) / *s.SocEnd
+		s.AddedRange = &added
+	}
+
 	s.SolarPercentage = new(lp.energyMetrics.SolarPercentage())
 	s.Price = lp.energyMetrics.Price()
 	s.PricePerKWh = lp.energyMetrics.PricePerKWh()

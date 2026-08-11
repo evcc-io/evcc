@@ -328,7 +328,7 @@ import {
 	type Battery,
 	type Meter,
 	type CURRENCY,
-	type Forecast,
+	type UiForecast,
 	type UiLoadpoint,
 } from "@/types/evcc";
 
@@ -371,7 +371,7 @@ export default defineComponent({
 		prioritySoc: { type: Number },
 		bufferSoc: { type: Number },
 		bufferStartSoc: { type: Number },
-		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
+		forecast: { type: Object as PropType<UiForecast>, default: () => ({}) },
 	},
 	data: () => {
 		return {
@@ -513,7 +513,7 @@ export default defineComponent({
 		},
 		batteryGridChargeLimitFmt() {
 			if (!this.batteryGridChargeLimitSet) {
-				return;
+				return undefined;
 			}
 			if (this.smartCostCo2) {
 				return this.fmtCo2Short(this.batteryGridChargeLimit);

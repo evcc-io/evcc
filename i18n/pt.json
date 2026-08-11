@@ -19,6 +19,19 @@
     "successCloseTab": "Pode agora fechar esta guia.",
     "title": "Estado da autorização"
   },
+  "battery": {
+    "card": {
+      "charging": "carregando",
+      "discharging": "descarregando",
+      "energy": "Energia",
+      "gridCharge": "carga da rede",
+      "hold": "descarga bloqueada",
+      "holdCharge": "carga bloqueada",
+      "ofTotal": "de {total}",
+      "power": "Potência",
+      "soc": "Nível da bateria"
+    }
+  },
   "batterySettings": {
     "batteryLevel": "Carga da bateria",
     "bufferStart": {

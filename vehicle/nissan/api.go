@@ -66,6 +66,18 @@ func (v *API) BatteryStatus(vin, version string) (StatusResponse, error) {
 	var res StatusResponse
 	err := v.GetJSON(uri, &res)
 
+	if err == nil {
+		res.Updated = time.Time{}
+
+		if version == "v1" && res.LastUpdateTime != nil {
+			res.Updated = res.LastUpdateTime.Time
+		}
+
+		if version == "v2" && res.Timestamp != nil {
+			res.Updated = time.Now()
+		}
+	}
+
 	return res, err
 }
 

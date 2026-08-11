@@ -1,6 +1,6 @@
 <template>
 	<ul
-		class="root p-0 d-flex flex-wrap column-gap-4 row-gap-2"
+		class="root p-0 m-0 d-flex flex-wrap column-gap-4 row-gap-2"
 		:class="{
 			'root--small-equal-widths': smallEqualWidths,
 			'root--grid': grid,
@@ -50,7 +50,7 @@
 			<div
 				v-for="value in valueList(legend.value)"
 				:key="value"
-				class="text-muted text-nowrap legend-value text-end"
+				class="text-muted text-nowrap legend-value text-end tabular"
 			>
 				{{ value }}
 			</div>
