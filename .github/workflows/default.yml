@@ -132,6 +132,15 @@ jobs:
       - name: Install
         run: make install-ui
 
+      - name: Restore vp task cache
+        id: vp-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: node_modules/.vite/task-cache
+          key: ${{ runner.os }}-${{ runner.arch }}-vp-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-vp-
+
       - name: OpenAPI
         # backport release tags may not have the openapi target yet
         run: if grep -q '^openapi' Makefile; then make openapi; fi
@@ -147,6 +156,14 @@ jobs:
 
       - name: Build UI
         run: make ui
+
+      - name: Save vp task cache
+        # avoid cache thrashing by nightly and pull requests
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: actions/cache/save@v6
+        with:
+          path: node_modules/.vite/task-cache
+          key: ${{ steps.vp-cache.outputs.cache-primary-key }}
 
       - name: Cache dist
         # avoid cache thrashing by nightly

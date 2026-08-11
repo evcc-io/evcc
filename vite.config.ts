@@ -10,6 +10,11 @@ const frontendPort = Number(process.env.VITE_PORT) || 7071;
 const backendUrl = `http://localhost:${Number(process.env.VITE_BACKEND_PORT) || 7070}`;
 
 export default defineConfig({
+  run: {
+    cache: {
+      scripts: true,
+    },
+  },
   staged: {
     "*": "vp check --fix",
   },
