@@ -96,3 +96,45 @@ func TestBoostPower(t *testing.T) {
 	// res = max(0, -2000) + 790 + 0 = 790W
 	assert.Equal(t, 790.0, res)
 }
+
+type phaseSwitchCharger struct {
+	api.Charger
+}
+
+func (phaseSwitchCharger) Phases1p3p(int) error { return nil }
+
+func TestBoostPowerPhaseSwitch(t *testing.T) {
+	Voltage = 230
+	lp := &Loadpoint{
+		log:              util.NewLogger("lp"),
+		status:           api.StatusC,
+		charger:          phaseSwitchCharger{},
+		batteryBoost:     boostContinue,
+		minCurrent:       6,
+		maxCurrent:       16,
+		phases:           1,
+		phasesConfigured: 3,
+	}
+	s := &mockSite{}
+	lp.site = s
+
+	// boostContinue on 1p with phase switching: delta must cover the gap
+	// between 1p@16A (3680W) and 3p@6A (4140W) = 460W, plus the
+	// base delta (100W) and coarse step power (1p: 230W)
+	s.maxDischargePower = 0
+	s.residualPower = 0
+	res := lp.boostPower(0)
+	// delta = 100 (base) + 230 (step@1p) + 460 (gap) = 790
+	// res = 0 + 790 + 0 = 790
+	assert.Equal(t, 790.0, res)
+	// verify gap alone exceeds the 3p minimum threshold
+	// available_power ≈ chargePower(3680) + boostReturn(790) = 4470 > 4140
+	assert.Greater(t, Voltage*16+res, Voltage*6*3, "boost must bridge 1p-3p gap")
+
+	// already on 3p: no phase gap added, only base + step
+	lp.phases = 3
+	res = lp.boostPower(0)
+	// delta = 100 + 690 (step@3p) = 790
+	assert.Equal(t, 790.0, res)
+}
+

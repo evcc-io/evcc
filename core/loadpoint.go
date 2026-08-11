@@ -1590,6 +1590,14 @@ func (lp *Loadpoint) boostPower(batteryPower float64) float64 {
 		delta += lp.EffectiveStepPower()
 	}
 
+	// bridge the power gap between 1p max and 3p min so pvScalePhases can trigger a scale-up
+	if lp.hasPhaseSwitching() {
+		if activePhases, maxPhases := lp.ActivePhases(), lp.MaxActivePhases(); activePhases < maxPhases {
+			gap := lp.EffectiveMinPower()*float64(maxPhases) - lp.EffectiveMaxPower()/float64(maxPhases)*float64(activePhases)
+			delta += max(0, gap)
+		}
+	}
+
 	// start boosting by setting maximum power
 	if boost == boostStart {
 		delta = lp.EffectiveMaxPower()
