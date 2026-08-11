@@ -234,3 +234,50 @@ jobs:
           name: playwright-test-results
           path: test-results/
           retention-days: 2
+
+  warm-fork-cache:
+    name: Warm fork cache
+    # fork pull requests cannot use Depot's cache and fall back to the GitHub one,
+    # which only master can seed for them. Must not run on a Depot runner, those
+    # write to Depot's cache instead
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-24.04-arm
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+        id: go
+
+      - uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version: "26"
+          cache: true
+
+      - name: Build UI
+        run: make install-ui ui
+
+      - name: Build Go
+        run: make build
+
+      - name: Get Playwright version
+        run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').packages['node_modules/@playwright/test'].version)")" >> $GITHUB_ENV
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v6
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
+
+      - name: Install Playwright (browsers + deps)
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: vpx playwright install --with-deps chromium
+        timeout-minutes: 5
