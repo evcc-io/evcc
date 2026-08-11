@@ -248,6 +248,10 @@ func (site *Site) suggestion(key, currentAction string) *types.Suggestion {
 // publishSuggestions publishes the loadpoints' suggestions
 func (site *Site) publishSuggestions() {
 	for id, lp := range site.loadpoints {
+		if lp == nil {
+			continue
+		}
+
 		var val any
 		if s := site.suggestion(loadpointKey(id), loadpointCurrentAction(lp)); s != nil {
 			val = *s
