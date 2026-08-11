@@ -10,7 +10,6 @@ params:
     choice: ["pv"]
   - name: modbus
     choice: ["tcpip", "rs485"]
-  - name: maxacpower
 render: |
   type: custom
   power:

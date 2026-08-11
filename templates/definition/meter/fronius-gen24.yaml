@@ -31,6 +31,7 @@ params:
       generic: Integer
     deprecated: true
   - name: maxacpower
+    deprecated: true # read from nameplate
   - preset: battery-params
   - name: maxchargerate
 render: |
