@@ -3,6 +3,11 @@ products:
   - brand: Sungrow
     description:
       generic: SG Series Inverter
+caveats:
+  - description:
+      de: Der Wechselrichter meldet den PV-Ertrag nur in 1-kWh-Schritten. Statistische Daten werden dadurch grob dargestellt.
+      en: The inverter reports PV yield only in 1 kWh steps. This results in coarse statistical data.
+    link: https://github.com/evcc-io/evcc/issues/32711
 params:
   - name: usage
     choice: ["grid", "pv"]
