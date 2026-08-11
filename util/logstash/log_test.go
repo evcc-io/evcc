@@ -45,7 +45,7 @@ func TestTraceBudget(t *testing.T) {
 
 	log.Write([]byte(s2))
 	for i := range 100 {
-		log.Write([]byte(fmt.Sprintf("[mqtt  ] TRACE send %d", i)))
+		log.Write(fmt.Appendf(nil, "[mqtt  ] TRACE send %d", i))
 	}
 
 	assert.Equal(t, []string{s2}, log.All(nil, jww.LevelDebug, 0))

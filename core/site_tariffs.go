@@ -26,11 +26,11 @@ func (s forecastSeries) MarshalBytes() ([]byte, error) {
 }
 
 type solarDetails struct {
-	Scale            float64      `json:"scale"`                      // scale factor yield/forecasted today, 1 if unscaled
-	Today            dailyDetails `json:"today,omitempty"`            // tomorrow
-	Tomorrow         dailyDetails `json:"tomorrow,omitempty"`         // tomorrow
-	DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow,omitempty"` // day after tomorrow
-	Timeseries       timeseries   `json:"timeseries,omitempty"`       // timeseries of forecasted energy
+	Scale            float64      `json:"scale"`                // scale factor yield/forecasted today, 1 if unscaled
+	Today            dailyDetails `json:"today"`                // tomorrow
+	Tomorrow         dailyDetails `json:"tomorrow"`             // tomorrow
+	DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow"`     // day after tomorrow
+	Timeseries       timeseries   `json:"timeseries,omitempty"` // timeseries of forecasted energy
 }
 
 var _ api.BytesMarshaler = (*solarDetails)(nil)
