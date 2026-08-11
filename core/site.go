@@ -645,11 +645,10 @@ func (site *Site) updatePvMeters() {
 
 		if m, ok := api.Cap[api.MaxACPowerGetter](meter); ok {
 			// unknown rating (0) must not turn the entire production into excess DC
-			if maxACPower := m.MaxACPower(); maxACPower > 0 {
-				if dc := power - maxACPower; dc > 0 {
-					mm[i].ExcessDCPower = dc
-					site.log.DEBUG.Printf("pv %d excess DC: %.0fW", i+1, dc)
-				}
+			if maxACPower := m.MaxACPower(); maxACPower > 0 && power > maxACPower {
+				dc := power - maxACPower
+				mm[i].ExcessDCPower = dc
+				site.log.DEBUG.Printf("pv %d excess DC: %.0fW", i+1, dc)
 			}
 		}
 	}
