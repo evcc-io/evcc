@@ -102,10 +102,8 @@ type Site struct {
 	prioritizer *prioritizer.Prioritizer // Power budgets
 	stats       *Stats                   // Stats
 
-	collectors     map[string]*metrics.Collector // keyed by meter ref
-	tariffSlot     time.Time                     // last persisted tariff slot
-	forecastSlot   time.Time                     // last sampled solar forecast slot
-	forecastEnergy float64                       // kWh expected in forecastSlot, sampled at its start
+	collectors map[string]*metrics.Collector // keyed by meter ref
+	tariffSlot time.Time                     // last persisted tariff slot
 
 	// cached state
 	gridPower                float64                     // Grid power

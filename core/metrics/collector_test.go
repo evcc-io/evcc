@@ -570,26 +570,33 @@ func TestCollectorLastSlotEnergy(t *testing.T) {
 	require.False(t, ok)
 }
 
-func TestCollectorAddEnergyDelta(t *testing.T) {
-	clock := clock.NewMock()
+func TestCollectorSetEnergy(t *testing.T) {
+	clk := clock.NewMock()
 
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
-	col, err := NewCollector("delta", "delta", "", WithClock(clock))
+	col, err := NewCollector(Forecast, "set", "", WithClock(clk))
 	require.NoError(t, err)
 
-	// first delta is dropped- it has no interval to belong to yet
-	require.NoError(t, col.AddEnergyDelta(1))
-	require.Equal(t, 0.0, col.accu.Energy)
+	// repeated sets within a slot are idempotent
+	require.NoError(t, col.SetEnergy(1))
+	require.Equal(t, 1.0, col.accu.Energy)
+	clk.Add(5 * time.Minute)
+	require.NoError(t, col.SetEnergy(1))
+	require.Equal(t, 1.0, col.accu.Energy)
 
-	clock.Add(5 * time.Minute)
-	require.NoError(t, col.AddEnergyDelta(0.25))
-	clock.Add(5 * time.Minute)
-	require.NoError(t, col.AddEnergyDelta(0.25))
-	require.Equal(t, 0.5, col.accu.Energy)
+	// a revised value replaces it rather than accumulating
+	clk.Add(5 * time.Minute) // 00:10
+	require.NoError(t, col.SetEnergy(1.5))
+	require.Equal(t, 1.5, col.accu.Energy)
 
-	clock.Add(15 * time.Minute)
-	require.NoError(t, col.AddEnergyDelta(0.25))
-	require.Equal(t, 0.0, col.accu.Energy) // accumulator reset after slot boundary
+	// crossing the boundary persists the value last set in the completed slot
+	clk.Add(5 * time.Minute) // 00:15
+	require.NoError(t, col.SetEnergy(2))
+	require.Equal(t, 2.0, col.accu.Energy)
+
+	v, ok := col.LastSlotEnergy()
+	require.True(t, ok)
+	require.Equal(t, 1.5, v)
 }

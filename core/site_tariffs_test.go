@@ -21,21 +21,16 @@ func TestForecastSlotEnergy(t *testing.T) {
 		}
 	}
 
-	site := new(Site)
 	rr := api.Rates{rate(0, 4000), rate(1, 8000)}
 
-	// first slot has no completed predecessor
-	assert.Equal(t, 0.0, site.forecastSlotEnergy(rr, slot))
+	// 4kW * 15min, identical anywhere inside the slot
+	assert.Equal(t, 1.0, forecastSlotEnergy(rr, slot))
+	assert.Equal(t, 1.0, forecastSlotEnergy(rr, slot.Add(time.Minute)))
 
-	// repeat ticks within the slot don't re-sample
-	assert.Equal(t, 0.0, site.forecastSlotEnergy(rr, slot.Add(time.Minute)))
+	assert.Equal(t, 2.0, forecastSlotEnergy(rr, slot.Add(tariff.SlotDuration)))
 
-	// slot 0 completes with the energy sampled at its start, 4kW * 15min
-	assert.Equal(t, 1.0, site.forecastSlotEnergy(rr, slot.Add(tariff.SlotDuration)))
-
-	// beyond the forecast horizon slot 1 still completes
-	assert.Equal(t, 2.0, site.forecastSlotEnergy(rr, slot.Add(2*tariff.SlotDuration)))
-	assert.Equal(t, 0.0, site.forecastSlotEnergy(rr, slot.Add(3*tariff.SlotDuration)))
+	// beyond the forecast horizon
+	assert.Equal(t, 0.0, forecastSlotEnergy(rr, slot.Add(2*tariff.SlotDuration)))
 }
 
 func TestForecastRates(t *testing.T) {

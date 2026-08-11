@@ -183,12 +183,17 @@ func (c *Collector) LastSlotEnergy() (float64, bool) {
 	return m.Energy, true
 }
 
-// AddEnergyDelta adds energy in kWh for sources that yield energy directly
-// rather than power.
-func (c *Collector) AddEnergyDelta(energy float64) error {
-	return c.process(func() {
-		c.accu.AddEnergy(energy)
-	})
+// SetEnergy overwrites the current slot's energy in kWh for sources that yield
+// the slot total rather than a delta. Repeated calls within a slot are
+// idempotent, so the caller needs no tick bookkeeping of its own.
+func (c *Collector) SetEnergy(energy float64) error {
+	// advance the slot first- the completed slot keeps the value it was last set to
+	if err := c.process(func() {}); err != nil {
+		return err
+	}
+
+	c.accu.Energy = energy
+	return nil
 }
 
 func (c *Collector) SetEnergyMeterTotal(v float64) error {
