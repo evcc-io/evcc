@@ -19,6 +19,49 @@
     "successCloseTab": "Możesz teraz zamknąć tę kartę.",
     "title": "Status autoryzacji"
   },
+  "battery": {
+    "card": {
+      "charging": "ładowanie",
+      "discharging": "rozładowywanie",
+      "energy": "Energia",
+      "gridCharge": "ładowanie sieciowe",
+      "hold": "rozładowywanie zablokowane",
+      "holdCharge": "ładowanie zablokowane",
+      "ofTotal": "z {total}",
+      "power": "Moc",
+      "soc": "Poziom naładowania magazynu"
+    },
+    "combined": "Łącznie",
+    "config": {
+      "buffer": "Energia z domowego magazynu energii powyżej {soc} może być wykorzystana do zasilania punktów obciążenia i opóźnień w wyłączaniu w trybie solarnym. Automatyczne uruchamianie ładowania słonecznego {start}.",
+      "bufferNone": "Energia z domowego magazynu energii nie jest wykorzystywana do zasilania punktów obciążenia. Ustaw wartość poniżej {soc}, aby włączyć obsługę.",
+      "bufferStart": {
+        "above": "gdy magazyn energii ma powyżej {soc}",
+        "full": "gdy magazyn energii jest pełen",
+        "never": "tylko z wystarczającą nadwyżką"
+      },
+      "bufferTitle": "Magazyn energii jako bufor ładowania",
+      "discharge": "Zapobiegaj rozładowywaniu domowego magazynu energii w trybie szybkim i w zaplanowanym ładowaniu.",
+      "gridDischarge": "Pozwól na rozładowywanie domowego magazynu energii do sieci.",
+      "priority": "Domowy magazyn energii ma priorytet, gdy jego stan jest poniżej {soc}. Wtedy punkty obciążenia otrzymują nadwyżkę.",
+      "priorityNone": "Nadwyżka energii słonecznej trafia bezpośrednio do punktów obciążenia. Ustaw wartość powyżej {soc}, aby nadać priorytet domowemu magazynowi energii.",
+      "priorityTitle": "Gdzie najpierw trafia nadwyżka?"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Ładowanie z sieci",
+        "discharge": "Rozładowywanie do sieci",
+        "hold": "Zapobiegaj rozładowywaniu",
+        "holdcharge": "Zapobiegaj ładowaniu",
+        "normal": "Normalna praca"
+      },
+      "empty": "pusty",
+      "full": "pełny",
+      "highest": "Najwyższa ({value})",
+      "lowest": "Najniższa ({value})",
+      "suggestion": "Sugestia"
+    }
+  },
   "batterySettings": {
     "batteryLevel": "Stan naładowania magazynu energii",
     "bufferStart": {
@@ -28,7 +71,7 @@
     },
     "capacity": "{energy} z {total}",
     "control": "Kontrola akumulatora",
-    "discharge": "Zapobiegaj rozładowaniu w trybie szybkim i zaplanowanym ładowaniu.",
+    "discharge": "Zapobiegaj rozładowywaniu w trybie szybkim i zaplanowanym ładowaniu.",
     "disclaimerHint": "Uwaga:",
     "disclaimerText": "Te ustawienia mają wpływ tylko na tryb solarny. Sposób ładowania jest odpowiednio dostosowywany.",
     "gridChargeTab": "Ładowanie z sieci",
