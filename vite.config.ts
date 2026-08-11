@@ -29,7 +29,7 @@ export default defineConfig({
         command:
           "cross-env TZ=Europe/Berlin NODE_OPTIONS=--no-experimental-webstorage vp test",
         // vitest keeps its own result cache below node_modules
-        input: [{ auto: true }, "!**/node_modules/.vite/**"],
+        input: [{ auto: true }, "!**/node_modules/.vite/vitest/**"],
       },
     },
   },
