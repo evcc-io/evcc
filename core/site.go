@@ -111,7 +111,7 @@ type Site struct {
 	excessDCPower            float64                     // PV excess DC charge power (hybrid only)
 	auxPower                 float64                     // Aux power
 	battery                  types.BatteryState          // Battery cached and published state
-	batteryMaxDischargePower float64                     // Max discharge power of all battery meters
+	batteryMaxDischargePower *float64                    // Max discharge power of all battery meters
 	batteryMode              api.BatteryMode             // Battery mode (runtime only, not persisted)
 	batteryModeExternal      api.BatteryMode             // Battery mode (external, runtime only, not persisted)
 	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
@@ -765,7 +765,11 @@ func (site *Site) updateBatteryMeters() {
 
 	// written from the meter goroutine, read via GetBatteryMaxDischargePower
 	site.Lock()
-	site.batteryMaxDischargePower = max(0, maxDischargePower)
+	if maxDischargePower >= 0 {
+		site.batteryMaxDischargePower = &maxDischargePower
+	} else {
+		site.batteryMaxDischargePower = nil
+	}
 	site.Unlock()
 
 	// retain the last known soc when every battery read failed this cycle, so a
