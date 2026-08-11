@@ -188,15 +188,12 @@ func (site *Site) persistTariffs() {
 	}
 }
 
-// forecastSlotEnergy is the energy expected in the slot covering now, treating
-// the forecast power as constant across the slot. Beyond the forecast horizon
-// it is zero.
+// forecastSlotEnergy is the energy expected in the slot covering now, integrated
+// the same way as the published forecast so the persisted history matches the
+// curve the UI draws. Beyond the forecast horizon it is zero.
 func forecastSlotEnergy(solar api.Rates, now time.Time) float64 {
-	r, err := solar.At(now.Truncate(tariff.SlotDuration))
-	if err != nil {
-		return 0
-	}
-	return r.Value * tariff.SlotDuration.Hours() / 1e3
+	slot := now.Truncate(tariff.SlotDuration)
+	return solarEnergy(solar, slot, slot.Add(tariff.SlotDuration)) / 1e3
 }
 
 func (site *Site) solarDetails(solar api.Rates) solarDetails {

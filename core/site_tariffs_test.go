@@ -23,11 +23,13 @@ func TestForecastSlotEnergy(t *testing.T) {
 
 	rr := api.Rates{rate(0, 4000), rate(1, 8000)}
 
-	// 4kW * 15min, identical anywhere inside the slot
-	assert.Equal(t, 1.0, forecastSlotEnergy(rr, slot))
-	assert.Equal(t, 1.0, forecastSlotEnergy(rr, slot.Add(time.Minute)))
+	// trapezoidal like the published curve, (4kW + 8kW) / 2 * 15min,
+	// and identical anywhere inside the slot
+	assert.Equal(t, 1.5, forecastSlotEnergy(rr, slot))
+	assert.Equal(t, 1.5, forecastSlotEnergy(rr, slot.Add(time.Minute)))
 
-	assert.Equal(t, 2.0, forecastSlotEnergy(rr, slot.Add(tariff.SlotDuration)))
+	// the last sample has no successor to integrate towards, as for the daily totals
+	assert.Equal(t, 0.0, forecastSlotEnergy(rr, slot.Add(tariff.SlotDuration)))
 
 	// beyond the forecast horizon
 	assert.Equal(t, 0.0, forecastSlotEnergy(rr, slot.Add(2*tariff.SlotDuration)))
