@@ -1,22 +1,22 @@
 {
   "authProviders": {
-    "authCode": "Código de autorização",
+    "authCode": "Código de autenticação",
     "authCodeHelp": "Copie este código e utilize-o na próxima etapa. Válido por {duration}.",
     "authorizationFailed": "A autorização falhou",
-    "authorizationRequired": "Autorização necessária",
-    "authorizationSuccessful": "Autorização bem-sucedida",
-    "buttonConnect": "Conectar-se ao {provider}",
-    "buttonDisconnect": "Desconectar",
-    "confirmLogout": "Tem a certeza de que deseja desconectar {title}?",
-    "connect": "conectar",
-    "disconnect": "desconectar",
+    "authorizationRequired": "Necessário autorização",
+    "authorizationSuccessful": "Autorização com sucesso",
+    "buttonConnect": "Ligar-se ao {provider}",
+    "buttonDisconnect": "Desligar",
+    "confirmLogout": "Tem a certeza de que deseja desligar {title}?",
+    "connect": "Ligar",
+    "disconnect": "Desligar",
     "loggedOut": "Sessão encerrada com sucesso",
     "logoutFailed": "Não foi possível sair da conta",
     "modalDescriptionLogin": "Conclua o processo de autorização para estabelecer a ligação com {provider}.",
     "modalDescriptionLogout": "Isso irá desconectar a sua conta {provider} e remover o acesso aos seus dados.",
-    "success": "{title} está agora conectado e pronto a ser utilizado.",
-    "successCloseModal": "Agora pode fechar esta caixa de diálogo.",
-    "successCloseTab": "Pode agora fechar esta guia.",
+    "success": "{title} está agora ligado e pronto a ser utilizado.",
+    "successCloseModal": "Pode fechar esta caixa de diálogo.",
+    "successCloseTab": "Pode fechar esta guia.",
     "title": "Estado da autorização"
   },
   "battery": {
@@ -45,7 +45,7 @@
       "gridDischarge": "Permitir que a bateria doméstica descarregue para a rede elétrica.",
       "priority": "A bateria doméstica tem prioridade enquanto o seu nível de carga (SOC) estiver abaixo de {soc}. Depois, os pontos de carregamento recebem o excedente.",
       "priorityNone": "O excedente de energia solar é encaminhado diretamente para os pontos de carregamento. Defina um valor superior a {soc} para dar prioridade à bateria doméstica.",
-      "priorityTitle": "Para onde vai o excedente em primeiro lugar?"
+      "priorityTitle": "Para onde vai o excedente primeiro?"
     },
     "optimizer": {
       "action": {
@@ -101,7 +101,7 @@
     },
     "apiKey": {
       "description": "Conceda acesso seguro a scripts e tarefas de automatização, como cópias de segurança programadas, sem partilhar a sua palavra-passe de administrador.",
-      "exampleLabel": "Experimenta: faz o download de uma cópia de segurança com o curl",
+      "exampleLabel": "Experimente: faça o download de uma cópia de segurança com o curl",
       "generate": "Gerar chave API",
       "generateConfirm": "Introduza a sua palavra-passe de administrador para gerar uma nova chave API.",
       "keyLabel": "Chave API",
@@ -141,7 +141,7 @@
       "ocppStep1": "Configure o seu carregador para utilizar o evcc como servidor OCPP.",
       "ocppStep2": "Aguarde até que o carregador se conecte ao evcc.",
       "ocppStep3": "Continue e conclua a configuração.",
-      "ocppWaiting": "Aguardando conexão",
+      "ocppWaiting": "A aguardar ligação",
       "switchsockets": "Tomadas comandadas",
       "template": "Fabricante",
       "titleAdd": {
@@ -185,13 +185,13 @@
     "currency": {
       "description": "Utilizado para definir os preços, custos e poupanças de energia com base na sua tarifa.",
       "example": "O preço cobrado foi {price}. Economizou {amount}.",
-      "label": "Câmbio",
-      "title": "Câmbio"
+      "label": "Moeda",
+      "title": "Moeda"
     },
     "deviceValue": {
       "activeClients": "Clientes ativos",
       "amount": "Quantidade",
-      "asleep": "a dormir",
+      "asleep": "em repouso",
       "broker": "Broker",
       "bucket": "Bucket",
       "capacity": "Capacidade",
@@ -219,6 +219,7 @@
       "enabled": "Ativado",
       "energy": "Energia",
       "events": "Eventos",
+      "exportLimit": "Limite de injeção na Rede",
       "feedinPrice": "Preço de injeção na rede",
       "forecast": "Previsões",
       "gridPrice": "Preço da Rede",
@@ -228,7 +229,7 @@
       "max": "max",
       "messengers": "Serviços",
       "no": "não",
-      "odometer": "Totalizador Km",
+      "odometer": "Conta Quilómetros",
       "org": "Organização",
       "outdoorTemp": "Temperatura exterior",
       "phaseCurrents": "Corrente",
@@ -305,14 +306,14 @@
     },
     "form": {
       "danger": "Perigo",
-      "deprecated": "obsoleto",
+      "deprecated": "descontinuado",
       "durationUnit": "Unidade de tempo para {label}",
       "example": "Exemplo",
       "optional": "opcional"
     },
     "general": {
       "applyAndClose": "Aplicar e fechar",
-      "authPerform": "Se conectar a {provider}",
+      "authPerform": "Ligar-se a {provider}",
       "authPerformHint": "Será aberto numa nova janela. Volte aqui para continuar.",
       "authPrepare": "Preparar a ligação",
       "cancel": "Cancelar",
