@@ -43,14 +43,8 @@ var (
 	optimizerPending atomic.Bool // a trigger arrived while a run held the lock; re-run afterwards
 
 	optimizerTariffHash  uint64 // fingerprint of the planner+feedin rates last seen by the update loop
-	optimizerTariffDirty bool   // the tariffs changed and a re-run is due (persists across cycles until it fires)
+	optimizerTariffDirty bool   // a tariff change is pending; deferred one cycle so planner+feedin settle
 )
-
-// optimizerTariffInterval rate-limits tariff-change-driven optimizer runs. A new
-// planner/feedin price push (MQTT, every few minutes) re-runs the optimizer, but at
-// most once per interval so a burst of updates - or the planner and feedin tariffs
-// refreshing in separate update cycles - collapses into a single run.
-const optimizerTariffInterval = 4 * time.Minute
 
 // optimizerChargingStrategies are the valid grid charging strategies; the first
 // entry is the default and preserves the previous hard-coded behavior.
