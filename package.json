@@ -3,7 +3,6 @@
   "description": "evcc UI",
   "author": "evcc-io",
   "scripts": {
-    "build": "vp build",
     "lint": "vp run lint:format && vp run lint:lint && vp run lint:tsc && vp run lint:i18n",
     "lint:format": "vp fmt assets tests i18n --write && vp fmt '**/*.{yaml,sh}' --write",
     "lint:lint": "vp lint --fix --max-warnings=0",

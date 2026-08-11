@@ -15,6 +15,11 @@ export default defineConfig({
       scripts: true,
     },
     tasks: {
+      build: {
+        command: "vp build",
+        // node_modules layout differs between jobs that ran vitest and those that did not
+        input: [{ auto: true }, "!**/node_modules/**"],
+      },
       openapi: {
         command: "tsx scripts/state-schema/index.ts",
         // generated schema is an output, not an input
