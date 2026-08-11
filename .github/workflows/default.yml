@@ -201,8 +201,20 @@ jobs:
           node-version: "26"
           cache: true
 
+      - name: Install
+        run: make install-ui
+
+      - name: Restore vp task cache
+        # restore only, the UI job owns saving the cache
+        uses: actions/cache/restore@v6
+        with:
+          path: node_modules/.vite/task-cache
+          key: ${{ runner.os }}-${{ runner.arch }}-vp-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-vp-
+
       - name: Build UI
-        run: make install-ui ui
+        run: make ui
 
       - name: Build Go
         run: make build
