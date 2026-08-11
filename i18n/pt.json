@@ -57,8 +57,8 @@
       },
       "empty": "vazio",
       "full": "cheio",
-      "highest": "Mais elevado ({valor})",
-      "lowest": "Mais baixo ({valor})",
+      "highest": "Mais elevado ({value})",
+      "lowest": "Mais baixo ({value})",
       "suggestion": "Sugestão"
     }
   },
@@ -1311,7 +1311,7 @@
         "label": "Carga tardia",
         "optionAll": "tudo",
         "optionNo": "não",
-        "summary": "{pré-condição} antes de"
+        "summary": "{precondition} antes de"
       },
       "remove": "Apagar",
       "repeating": "recorrente",
