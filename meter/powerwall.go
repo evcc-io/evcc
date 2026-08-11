@@ -35,10 +35,6 @@ type powerWallConfig struct {
 
 func defaultPowerWallConfig() powerWallConfig {
 	return powerWallConfig{
-		batteryPowerLimitsCtx: batteryPowerLimitsCtx{
-			MaxChargePower:    4600,
-			MaxDischargePower: 4600,
-		},
 		Cache: time.Second,
 	}
 }
@@ -146,22 +142,29 @@ func newPowerWall(ctx context.Context, log *util.Logger, cc powerWallConfig) (*P
 			return nil, err
 		}
 
-		implement.Has(m, implement.Battery(m.batterySoc))
-		implement.May(m, implement.BatterySocLimiter(socLimiter))
-		implement.May(m, implement.BatteryPowerLimiter(powerLimiter))
-
-		if capacity != nil {
-			implement.Has(m, implement.BatteryCapacity(capacity))
-		} else {
+		if capacity == nil || powerLimiter == nil {
 			res, err := m.client.GetSystemStatus()
 			if err != nil {
 				return nil, err
 			}
 
-			implement.Has(m, implement.BatteryCapacity(func() float64 {
-				return res.NominalFullPackEnergy / 1e3
-			}))
+			if capacity == nil {
+				capacity = func() float64 {
+					return res.NominalFullPackEnergy / 1e3
+				}
+			}
+
+			if powerLimiter == nil && res.MaxApparentPower > 0 {
+				powerLimiter = func() (float64, float64) {
+					return res.MaxApparentPower, res.MaxApparentPower
+				}
+			}
 		}
+
+		implement.Has(m, implement.Battery(m.batterySoc))
+		implement.May(m, implement.BatterySocLimiter(socLimiter))
+		implement.May(m, implement.BatteryPowerLimiter(powerLimiter))
+		implement.Has(m, implement.BatteryCapacity(capacity))
 	}
 
 	return m, nil
