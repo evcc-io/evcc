@@ -948,19 +948,21 @@ func (site *Site) updateMeters() error {
 	}
 
 	if sponsor.IsAuthorized() && optimizerEnabled() {
+		// refresh the fingerprint every cycle so a change is never missed
+		tariffsChanged := site.optimizerTariffsChanged()
 		switch {
-		case site.optimizerTariffsChanged():
-			// a planner/feedin price changed. The two tariffs publish on separate
-			// MQTT topics that evcc reads independently, so defer the run one
-			// cycle instead of running now on a half-updated pair: mark it pending
-			// and let both settle. A change in either cycle keeps it pending.
-			optimizerTariffDirty = true
 		case optimizerTariffDirty:
-			// tariffs changed last cycle and are stable now - run once, so planner
-			// and feedin are always consistent within a single run. triggerOptimizer
-			// is single-flight (queues exactly one re-run if a run is in progress).
+			// a price change was pending from the previous cycle: run it now,
+			// before re-arming, so a continuous stream of updates can't defer the
+			// run indefinitely (and starve the backstop). The run reads the latest
+			// planner+feedin at execution time, so a change also landing this
+			// cycle is captured, and both separate MQTT topics are consistent.
 			optimizerTariffDirty = false
 			site.triggerOptimizer()
+		case tariffsChanged:
+			// first change of a burst: defer one cycle so planner and feedin
+			// (separate MQTT topics) both settle, then run via the case above.
+			optimizerTariffDirty = true
 		case time.Since(optimizerUpdated) >= tariff.SlotDuration:
 			// backstop: re-run each slot even when the tariffs are static
 			go site.optimizerUpdateAsync()
