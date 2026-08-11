@@ -24,9 +24,9 @@
       "charging": "lader",
       "discharging": "aflader",
       "energy": "Energi",
-      "gridCharge": "opladning fra nettet",
+      "gridCharge": "netladning",
       "hold": "afladning låst",
-      "holdCharge": "opladning låst",
+      "holdCharge": "ladning låst",
       "ofTotal": "af {total}",
       "power": "Effekt",
       "soc": "Batteriniveau"
