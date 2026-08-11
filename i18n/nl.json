@@ -306,6 +306,7 @@
     "form": {
       "danger": "Pas op",
       "deprecated": "verouderd",
+      "durationUnit": "tijdseenheid voor {label}",
       "example": "Voorbeeld",
       "optional": "optioneel"
     },
@@ -371,6 +372,7 @@
       "customOption": "Door de gebruiker aangemaakte integratie",
       "description": "Vermogensbeperking door externe systemen (bijv. §14a EnWG, §9 EEG-interface of hoger niveau energiebeheersysteem). Werkt samen met de functie voor Load Balancing. Sommige meters ondersteunen ook curtailment van de zonne-energieopbrengst. Het curtailmentlimiet moet op elke omvormerconfiguratie ingesteld worden.",
       "download": "Download",
+      "dynamicLimits": "Dynamische limieten",
       "eventsRecorded": "{count} gebeurtenissen met rasterbeperkingen geregistreerd.",
       "generic": "Algemene integraties",
       "integrations": "integraties",
