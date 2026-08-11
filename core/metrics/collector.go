@@ -103,6 +103,12 @@ func (c *Collector) process(fun func()) error {
 
 	fun()
 
+	return c.advanceSlot(now)
+}
+
+// advanceSlot persists and resets the accumulator when now has entered a new
+// slot, leaving it untouched within the current one.
+func (c *Collector) advanceSlot(now time.Time) error {
 	slotStart := now.Truncate(tariff.SlotDuration)
 
 	switch {
@@ -181,6 +187,19 @@ func (c *Collector) LastSlotEnergy() (float64, bool) {
 		return 0, false
 	}
 	return m.Energy, true
+}
+
+// SetEnergy overwrites the current slot's energy in kWh for sources that yield
+// the slot total rather than a delta. Repeated calls within a slot are
+// idempotent, so the caller needs no tick bookkeeping of its own.
+func (c *Collector) SetEnergy(energy float64) error {
+	// advance first- the completed slot keeps the value it was last set to
+	if err := c.advanceSlot(c.accu.clock.Now()); err != nil {
+		return err
+	}
+
+	c.accu.Energy = energy
+	return nil
 }
 
 func (c *Collector) SetEnergyMeterTotal(v float64) error {
