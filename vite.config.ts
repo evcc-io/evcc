@@ -10,6 +10,29 @@ const frontendPort = Number(process.env.VITE_PORT) || 7071;
 const backendUrl = `http://localhost:${Number(process.env.VITE_BACKEND_PORT) || 7070}`;
 
 export default defineConfig({
+  run: {
+    cache: {
+      scripts: true,
+    },
+    tasks: {
+      build: {
+        command: "vp build",
+        // node_modules layout differs between jobs that ran vitest and those that did not
+        input: [{ auto: true }, "!**/node_modules/**"],
+      },
+      openapi: {
+        command: "tsx scripts/state-schema/index.ts",
+        // generated schema is an output, not an input
+        input: [{ auto: true }, "!server/openapi.state.yaml"],
+      },
+      test: {
+        command:
+          "cross-env TZ=Europe/Berlin NODE_OPTIONS=--no-experimental-webstorage vp test",
+        // vitest keeps its own result cache below node_modules
+        input: [{ auto: true }, "!**/node_modules/.vite/**"],
+      },
+    },
+  },
   staged: {
     "*": "vp check --fix",
   },
