@@ -163,7 +163,7 @@ render: |
       id: 1
       value: 160:3:DCWH # mppt 3
       scale: 0.001
-  maxacpower: {{ .maxacpower }} # W
+  {{- include "sunspec-maxacpower-uri" . }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:

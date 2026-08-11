@@ -96,5 +96,5 @@ render: |
         percent = int(limit)
       }
       percent
-  maxacpower: {{ .maxacpower }}
+  {{- include "sunspec-maxacpower" . }}
   {{- end }}

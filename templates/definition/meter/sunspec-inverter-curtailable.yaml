@@ -10,6 +10,7 @@ params:
     choice: ["pv"]
   - name: modbus
     choice: ["tcpip", "rs485"]
+  - name: maxacpower
 render: |
   type: custom
   power:
@@ -87,3 +88,4 @@ render: |
         percent = int(limit)
       }
       percent
+  {{- include "sunspec-maxacpower" . }}

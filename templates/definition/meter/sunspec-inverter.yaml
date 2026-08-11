@@ -9,6 +9,7 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["tcpip", "rs485"]
+  - name: maxacpower
   - preset: battery-params
 render: |
   type: custom
@@ -153,6 +154,7 @@ render: |
       - 103:WH
       - 113:WH
     scale: 0.001
+  {{- include "sunspec-maxacpower" . }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:

@@ -74,7 +74,7 @@ render: |
       type: holding
       encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
     scale: 0.001 # Wh -> kWh
-  maxacpower: {{ .maxacpower }} # W
+  {{- include "sunspec-maxacpower" . }}
   # feed-in curtailment via active power limit (SunSpec model 123, WMaxLimPct @ 40217).
   # written as a single register (fn 06); the Plenticore rejects write multiple (fn 16) here.
   # WMaxLim_Ena (register 40221) is enabled by default and left to the inverter

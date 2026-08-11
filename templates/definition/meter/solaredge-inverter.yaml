@@ -17,6 +17,7 @@ params:
     choice: ["tcpip", "rs485"]
     id: 1
     port: 1502
+  - name: maxacpower
   - name: timeout
     deprecated: true
 render: |
@@ -149,4 +150,5 @@ render: |
         percent = 100
       }
       percent
+  {{- include "sunspec-maxacpower" . }}
   {{- end }}
