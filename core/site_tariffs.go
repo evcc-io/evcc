@@ -188,6 +188,27 @@ func (site *Site) persistTariffs() {
 	}
 }
 
+// forecastSlotEnergy samples the expected energy of the current slot once at
+// its start, treating the forecast power as constant across the slot. It
+// returns the energy sampled for the slot that just completed, which the
+// collector persists- a forecast revised in hindsight cannot change a past slot.
+func (site *Site) forecastSlotEnergy(solar api.Rates, now time.Time) float64 {
+	slot := now.Truncate(tariff.SlotDuration)
+	if !slot.After(site.forecastSlot) {
+		return 0
+	}
+	site.forecastSlot = slot
+
+	completed := site.forecastEnergy
+	site.forecastEnergy = 0
+
+	if r, err := solar.At(slot); err == nil {
+		site.forecastEnergy = r.Value * tariff.SlotDuration.Hours() / 1e3
+	}
+
+	return completed
+}
+
 func (site *Site) solarDetails(solar api.Rates) solarDetails {
 	res := solarDetails{
 		Timeseries: solarTimeseries(solar),
@@ -216,15 +237,9 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 		Complete: !last.Before(eot.AddDate(0, 0, 1)),
 	}
 
-	// integrate the published curve between updates instead of sampling it, so
-	// the persisted history matches the forecast the UI draws
-	sampled := time.Now()
-	if last := site.forecastSampled; !last.IsZero() && sampled.After(last) {
-		if err := site.collectors[metrics.Forecast].AddEnergyDelta(solarEnergy(solar, last, sampled) / 1e3); err != nil {
-			site.log.ERROR.Printf("solar forecast collector: %v", err)
-		}
+	if err := site.collectors[metrics.Forecast].AddEnergyDelta(site.forecastSlotEnergy(solar, time.Now())); err != nil {
+		site.log.ERROR.Printf("solar forecast collector: %v", err)
 	}
-	site.forecastSampled = sampled
 
 	if r, err := tariff.At(site.GetTariff(api.TariffUsageTemperature), time.Now()); err == nil {
 		if err := site.collectors[metrics.Temperature].SetSocTemp(r.Value, true); err != nil {

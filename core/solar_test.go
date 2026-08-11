@@ -112,27 +112,3 @@ func TestSolarEnergyNoRates(t *testing.T) {
 	assert.Equal(t, 0.0, solarEnergy(api.Rates{}, now, now.Add(time.Hour)))
 	assert.Equal(t, 0.0, solarEnergy(nil, now, now.Add(time.Hour)))
 }
-
-// the persisted forecast history sums the energy of the intervals between
-// updates, so solarEnergy must be additive across arbitrary split points
-func (t *solarTestSuite) TestSolarEnergyAdditive() {
-	// kinked curve- a straight ramp would hide wrong-neighbour interpolation
-	rr := api.Rates{t.rate(0, 0), t.rate(1, 3000), t.rate(2, 1000), t.rate(3, 2000), t.rate(4, 0)}
-
-	from := t.clock.Now().Add(-30 * time.Minute)
-	to := t.clock.Now().Add(5 * time.Hour)
-	total := solarEnergy(rr, from, to)
-	t.Positive(total)
-
-	// 11 splits are 30min apart and land on every knot
-	for _, splits := range []int{2, 3, 7, 11, 13, 97} {
-		step := to.Sub(from) / time.Duration(splits)
-
-		var sum float64
-		for i := range splits {
-			sum += solarEnergy(rr, from.Add(time.Duration(i)*step), from.Add(time.Duration(i+1)*step))
-		}
-
-		t.InDelta(total, sum, 1e-9, "%d splits", splits)
-	}
-}

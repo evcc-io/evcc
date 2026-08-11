@@ -183,15 +183,11 @@ func (c *Collector) LastSlotEnergy() (float64, bool) {
 	return m.Energy, true
 }
 
-// AddEnergyDelta adds pre-integrated energy in kWh for sources that yield
-// energy directly rather than power.
+// AddEnergyDelta adds energy in kWh for sources that yield energy directly
+// rather than power.
 func (c *Collector) AddEnergyDelta(energy float64) error {
 	return c.process(func() {
-		if energy >= 0 {
-			c.accu.AddEnergy(energy)
-		} else {
-			c.accu.AddReturnEnergy(-energy)
-		}
+		c.accu.AddEnergy(energy)
 	})
 }
 
