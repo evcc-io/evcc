@@ -17,8 +17,8 @@ requirements:
   evcc: ["sponsorship"]
 caveats:
   - description:
-      de: Seltene Energie-Updates können Ladehistorie und Sitzungsstatistik verfälschen.
-      en: Infrequent energy updates can distort charging history and session statistics.
+      de: Geladene Energie wird teils stark verzögert gemeldet. Das kann Ladehistorie, Sonnenanteil und Sitzungsstatistik verfälschen.
+      en: Charged energy is reported with significant delay. This can distort charging history, solar share and session statistics.
     link: https://github.com/evcc-io/evcc/issues/20594
   - description:
       de: Bei mehreren Ladepunkten in einem Easee-Circuit wirkt die Phasenumschaltung auf alle Ladepunkte.
