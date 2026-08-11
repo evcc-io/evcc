@@ -219,6 +219,7 @@
       "enabled": "Aktiveret",
       "energy": "Energi",
       "events": "Begivenheder",
+      "exportLimit": "Eksportgrænse til nettet",
       "feedinPrice": "Indfødningstarif",
       "forecast": "Prognose",
       "gridPrice": "God pris",
@@ -306,6 +307,7 @@
     "form": {
       "danger": "Pas på",
       "deprecated": "forældet",
+      "durationUnit": "Tidsenhed for {label}",
       "example": "Eksempel",
       "optional": "valgfrit"
     },
@@ -371,12 +373,17 @@
       "customOption": "Brugerdefineret integration",
       "description": "Effektbegrænsning via eksterne systemer (f.eks. §14a EnWG, §9 EEG-grænseflade eller overordnet energistyringssystem). Fungerer sammen med belastningsstyringsfunktionen. Begrænsning af solproduktionen understøttes også for udvalgte enheder. Den faktiske begrænsningsgrænse skal konfigureres for hver enkelt inverter.",
       "download": "Download",
+      "dynamicLimits": "Dynamisk grænse",
       "eventsRecorded": "Registrerede {count} netbegrænsningshændelser.",
+      "exportLimit": "Eksportgrænse til nettet",
+      "exportLimitDescription": "Batterioptimeringen respekterer denne grænse for at undgå tab af solenergi. En aktivt begrænsning fra en integration med en dynamisk grænse har forrang.",
+      "exportLimitHint": "Statisk grænse for indfødning ved nettilslutningspunktet.",
       "generic": "Generelle integrationer",
       "integrations": "Integrationer",
       "lastEvent": "Sidst {timeAgo}.",
       "noEvents": "Endnu ingen begivenheder gemt.",
       "recordedEvents": "Gemte begivenheder",
+      "staticLimits": "Statisk grænse",
       "template": "Integration",
       "title": "Ekstern grænse",
       "type": {
@@ -1094,6 +1101,8 @@
     "version": {
       "availableLong": "ny version tilgængelig",
       "community": "evcc-fællesskabet",
+      "labelEmail": "Email",
+      "labelPhone": "Telefon",
       "labelRelease": "Udgivet",
       "labelVersion": "Version",
       "labelWebsite": "Hjemmeside",
@@ -1176,6 +1185,7 @@
     "sessions": "Opladnings sessioner"
   },
   "help": {
+    "contactButton": "Kontakt os",
     "discussionsButton": "GitHub diskussioner",
     "documentationButton": "Dokumentation",
     "issueButton": "Indberet et problem",
@@ -1215,8 +1225,11 @@
     "additionalContext": "Supplerende oplysninger",
     "additionalContextPlaceholder": "Eventuelle yderligere oplysninger, der kan være nyttige...\"\n- Konfigurationsdetaljer\n- Hvad du har prøvet\n- Platform- og systemoplysninger",
     "createButtonDiscussion": "Start en GitHub diskussion...",
+    "createButtonEmail": "Send anmodning via e-mail",
     "createButtonIssue": "Opret GitHub-issue…",
     "description": "Virker din installation ikke som forventet? Brug denne side til at få hjælp eller rapportere problemer. Giv tilstrækkelige oplysninger, så vi kan forstå og genskabe problemet, samtidig med at din beskrivelse holdes kort, klar og let at følge.",
+    "downloadButton": "Download debug information",
+    "downloadHint": "Tilføj denne fil til e-mailen hvis mere information er nødvendig.",
     "helpType": {
       "discussion": "Har brug for hjælp til min opsætning",
       "discussionDescription": "Diskussioner i fællesskabet giver svar.",
@@ -1228,6 +1241,7 @@
     "issueTitle": "Titel",
     "stepsToReproduce": "Trin til at genskabe problemet",
     "subTitleDiscussion": "Beskriv dit problem",
+    "subTitleEmail": "Beskriv problemet",
     "subTitleIssue": "Beskriv problemet",
     "summary": {
       "confirmationButtonDiscussion": "Start en GitHub-diskussion",
@@ -1280,22 +1294,32 @@
       "goal": "Opladnings mål",
       "modalTitle": "Lade plan",
       "none": "ingen",
+      "once": "èn gang",
       "optimization": {
         "cheapest": "billigst",
+        "cheapestDescription": "Vælger de billigste tidspunkter. Kan medføre flere start og stop.",
+        "cleanest": "renest",
+        "cleanestDescription": "Vælger de reneste tidsrum. Kan medføre flere start og stop.",
         "continuous": "kontinuerlig",
+        "continuousCo2Description": "Vælger det reneste sammenhængende tidsrum.",
+        "continuousPriceDescription": "Vælger det billigste sammenhængende tidsrum.",
         "label": "Optimering"
       },
       "planNumber": "Plan {number}",
       "precondition": {
-        "description": "Oplad {duration} før afgang til batterikonditionering.",
+        "description": "Flytter en del af opladningen til lige før afgang: Varmt batteri og mindre tid ved høj ladestand.",
         "label": "Sen opladning",
         "optionAll": "alt",
-        "optionNo": "nej"
+        "optionNo": "nej",
+        "summary": "{precondition} før"
       },
       "remove": "Fjern",
       "repeating": "Gentager",
       "repeatingPlans": "Gentager plan",
       "selectAll": "Vælg alt",
+      "strategy": {
+        "label": "Strategi"
+      },
       "strategyDisabledDescription": "Opladningen påbegyndes så sent som muligt og afsluttes præcis ved afgang. Med dynamiske elpriser eller CO₂-tariffer er der flere valgmuligheder.",
       "strategySettings": "Indstillinger for strategi",
       "time": "Tid",
@@ -1582,6 +1606,7 @@
   },
   "session": {
     "addOdometer": "Tilføj distance",
+    "addedRange": "Tilføjet range",
     "cancel": "Afbryd",
     "co2": "CO2",
     "date": "Tidsrum",
@@ -1592,11 +1617,12 @@
     "meterstop": "Meter slut",
     "odometer": "Kilometerstand",
     "price": "Omkostning",
-    "soc": "Køretøjets SoC",
+    "soc": "Opladning",
     "started": "Startet",
     "title": "Lade session"
   },
   "sessions": {
+    "addedRange": "Rækkevidde",
     "avgPower": "⌀ Effekt",
     "avgPrice": "⌀ pris",
     "chargeDuration": "Varighed",
@@ -1622,6 +1648,7 @@
     },
     "co2": "⌀ CO₂",
     "csv": {
+      "addedrange": "Tilføjet rækkevidde (km)",
       "chargedenergy": "Energi (kWh)",
       "chargeduration": "Varighed",
       "co2perkwh": "CO₂/kWh",
