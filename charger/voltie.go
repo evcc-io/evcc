@@ -111,7 +111,6 @@ const (
 	voltieStateA = 0x01 // not connected
 	voltieStateB = 0x02 // connected, ready
 	voltieStateC = 0x03 // charging
-	voltieStateD = 0x04 // charging, ventilation required
 )
 
 var voltieStates = map[uint16]string{
@@ -370,14 +369,15 @@ func (wb *Voltie) Status() (api.ChargeStatus, error) {
 }
 
 // voltieChargeStatus maps an EVSE state to a charge status. States the charger
-// cannot charge in have no mapping.
+// cannot charge in have no mapping, including state D: a vehicle requiring
+// ventilation is treated as an error rather than a charging state.
 func voltieChargeStatus(state uint16) (api.ChargeStatus, bool) {
 	switch state {
 	case voltieStateA:
 		return api.StatusA, true
 	case voltieStateB:
 		return api.StatusB, true
-	case voltieStateC, voltieStateD:
+	case voltieStateC:
 		return api.StatusC, true
 	default:
 		return api.StatusNone, false

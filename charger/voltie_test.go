@@ -79,7 +79,7 @@ func TestVoltieStatus(t *testing.T) {
 		{0x01, 10, api.StatusA, ""},
 		{0x02, 4, api.StatusB, ""},
 		{0x03, 0, api.StatusC, ""},
-		{0x04, 0, api.StatusC, ""},
+		{0x04, 0, api.StatusNone, "vehicle state D, charging with ventilation (0x04)"},
 		{0x06, 5, api.StatusNone, "GFCI fault (0x06): GFCI sensor tripped"},
 		{0x0D, 0, api.StatusNone, "vehicle state E, vehicle error (0x0D)"},
 		{0x13, 7, api.StatusNone, "booting (0x13): firmware restart"},
