@@ -2640,7 +2640,8 @@
           },
           "mediumThreshold": {
             "type": "number",
-            "exclusiveMinimum": 0
+            "minimum": 0,
+            "exclusiveMinimum": true
           },
           "vehicles": {
             "type": "object",

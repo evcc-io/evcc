@@ -113,30 +113,9 @@
 <script lang="ts">
 import { defineComponent } from "vue";
 import api from "@/api";
+import type { SolarMinSocStatus } from "@/types/evcc";
 
-type ForecastState = "low" | "medium" | "high";
-
-interface VehicleConfig {
-	low: number;
-	medium: number;
-	high: number;
-}
-
-interface AvailableVehicle {
-	name: string;
-	title: string;
-}
-
-interface SolarMinSocStatus {
-	enabled: boolean;
-	lowThreshold: number;
-	mediumThreshold: number;
-	vehicles: Record<string, VehicleConfig>;
-	availableVehicles: AvailableVehicle[];
-	available: boolean;
-	forecastEnergy: number;
-	state?: ForecastState;
-}
+type ForecastState = NonNullable<SolarMinSocStatus["state"]>;
 
 const emptyStatus = (): SolarMinSocStatus => ({
 	enabled: false,

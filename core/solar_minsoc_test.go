@@ -72,10 +72,16 @@ func TestSolarMinSocPolicyRetainsLastValidForecast(t *testing.T) {
 }
 
 func TestSolarMinSocAvailableVehicles(t *testing.T) {
-	status := NewSite().GetSolarMinSoc()
+	site := NewSite()
+	site.solarMinSoc.AvailableVehicles = []api.SolarMinSocVehicle{{Name: "stale"}}
+
+	status := site.GetSolarMinSoc()
 
 	assert.NotNil(t, status.AvailableVehicles)
 	assert.Empty(t, status.AvailableVehicles)
+
+	status.AvailableVehicles = append(status.AvailableVehicles, api.SolarMinSocVehicle{Name: "caller"})
+	assert.Empty(t, site.GetSolarMinSoc().AvailableVehicles)
 }
 
 func TestValidateSolarMinSocConfig(t *testing.T) {

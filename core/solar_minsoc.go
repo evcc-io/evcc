@@ -116,11 +116,14 @@ func solarMinSocForecastComplete(rates api.Rates, now time.Time) bool {
 }
 
 func (site *Site) GetSolarMinSoc() api.SolarMinSocStatus {
+	vehicles := site.Vehicles().Settings()
+
 	site.RLock()
 	status := site.solarMinSoc.SolarMinSocStatus
 	site.RUnlock()
 
-	for _, vehicle := range site.Vehicles().Settings() {
+	status.AvailableVehicles = make([]api.SolarMinSocVehicle, 0, len(vehicles))
+	for _, vehicle := range vehicles {
 		status.AvailableVehicles = append(status.AvailableVehicles, api.SolarMinSocVehicle{
 			Name:  vehicle.Name(),
 			Title: vehicle.Instance().GetTitle(),
