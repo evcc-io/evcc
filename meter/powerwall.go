@@ -124,13 +124,9 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 
 		implement.Has(m, implement.Battery(m.batterySoc))
 
+		// capacity only degrades over time, reading it once is enough
 		implement.Has(m, implement.BatteryCapacity(func() float64 {
-			res, err := statusG()
-			if err != nil {
-				log.ERROR.Println("battery capacity:", err)
-				return 0
-			}
-			return res.NominalFullPackEnergy / 1e3
+			return status.NominalFullPackEnergy / 1e3
 		}))
 
 		// backup reserve is the lower discharge limit, the powerwall has no upper soc limit
