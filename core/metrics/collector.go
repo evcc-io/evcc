@@ -173,11 +173,12 @@ func (c *Collector) SetSocTemp(value float64, isTemp bool) error {
 }
 
 func (c *Collector) EnergyProfile(from time.Time) (*[96]float64, error) {
-	return energyProfile(c.entity, from)
+	return energyProfileFiltered(c.entity, from, nil)
 }
 
-func (c *Collector) EnergyProfileWeekday(from time.Time) (*[96]float64, error) {
-	return energyProfileWeekday(c.entity, from)
+func (c *Collector) EnergyProfileWeekday(from time.Time, weekday time.Weekday) (*[96]float64, error) {
+	wd := int(weekday)
+	return energyProfileFiltered(c.entity, from, &wd)
 }
 
 // LastSlotEnergy returns the energy in kWh of the most recently completed

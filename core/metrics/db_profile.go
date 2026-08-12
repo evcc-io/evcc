@@ -10,19 +10,6 @@ import (
 
 var ErrIncomplete = errors.New("meter profile incomplete")
 
-// energyProfile returns a 96-slot 15min average meter profile in kWh, averaged
-// over [from, now) by time-of-day. Returns ErrIncomplete for fewer than 96 slots.
-func energyProfile(entity entity, from time.Time) (*[96]float64, error) {
-	return energyProfileFiltered(entity, from, nil)
-}
-
-// energyProfileWeekday returns a 96-slot 15min average energy profile (kWh) for the
-// same weekday as today, averaged across all its occurrences in [from, now).
-func energyProfileWeekday(entity entity, from time.Time) (*[96]float64, error) {
-	weekday := int(time.Now().Weekday()) // 0=Sunday
-	return energyProfileFiltered(entity, from, &weekday)
-}
-
 // energyProfileFiltered queries the 96-slot profile, optionally restricted to a
 // single weekday (strftime %w, 0=Sunday).
 func energyProfileFiltered(entity entity, from time.Time, weekday *int) (*[96]float64, error) {

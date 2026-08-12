@@ -33,7 +33,8 @@ func TestEnergyProfileWeekday(t *testing.T) {
 		}
 	}
 
-	res, err := energyProfileWeekday(e, now.BeginningOfDay().AddDate(0, 0, -28))
+	weekday := int(today)
+	res, err := energyProfileFiltered(e, now.BeginningOfDay().AddDate(0, 0, -28), &weekday)
 	require.NoError(t, err)
 
 	// only same-weekday slots must be averaged
