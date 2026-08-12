@@ -1,7 +1,6 @@
 package core
 
 import (
-	"fmt"
 	"math"
 	"slices"
 	"time"
@@ -23,9 +22,6 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	}
 
 	res := tileAndTrim(base[:], minLen)
-	if len(res) < minLen {
-		return nil, fmt.Errorf("minimum home profile length %d is less than required %d", len(res), minLen)
-	}
 
 	// heating loadpoints add their demand profile on top
 	for _, lp := range site.loadpoints {
@@ -124,7 +120,13 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 		h := ts.UTC().Hour()
 
 		tFuture, ok := forecast[ts]
-		if !ok || pastCount[h] == 0 || tFuture >= heatingStopThreshold {
+		if !ok || pastCount[h] == 0 {
+			continue
+		}
+
+		// heating stops once it is warm enough outside
+		if tFuture >= heatingStopThreshold {
+			res[i] = 0
 			continue
 		}
 
@@ -140,16 +142,13 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 	return res
 }
 
-// tileAndTrim repeats profile until it covers minLen slots, then trims and aligns to now.
+// tileAndTrim returns minLen slots of the repeating daily profile, starting at the current 15min slot.
 func tileAndTrim(profile []float64, minLen int) []float64 {
-	slots := make([]float64, 0, minLen+1)
-	for len(slots) <= minLen+24*4 { // allow for prorating first day
-		slots = append(slots, profile...)
-	}
+	firstSlot := int(time.Now().Truncate(tariff.SlotDuration).Sub(now.BeginningOfDay()) / tariff.SlotDuration)
 
-	res := profileSlotsFromNow(slots)
-	if len(res) > minLen {
-		res = res[:minLen]
+	res := make([]float64, minLen)
+	for i := range res {
+		res[i] = profile[(firstSlot+i)%len(profile)]
 	}
 
 	return res
@@ -160,10 +159,4 @@ func addProfile(dst, src []float64) {
 	for i := range min(len(dst), len(src)) {
 		dst[i] += src[i]
 	}
-}
-
-// profileSlotsFromNow strips slots before now, aligning the profile to the current 15min slot.
-func profileSlotsFromNow(profile []float64) []float64 {
-	firstSlot := int(time.Now().Truncate(tariff.SlotDuration).Sub(now.BeginningOfDay()) / tariff.SlotDuration)
-	return profile[firstSlot:]
 }
