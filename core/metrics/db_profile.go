@@ -10,22 +10,42 @@ import (
 
 var ErrIncomplete = errors.New("meter profile incomplete")
 
-// energyProfile returns a 15min average meter profile in kWh, averaged across all
-// days in [from, now). Groups by time-of-day (96 slots). Returns ErrIncomplete if
-// fewer than 96 slots are present.
+// energyProfile returns a 96-slot 15min average meter profile in kWh, averaged
+// over [from, now) by time-of-day. Returns ErrIncomplete for fewer than 96 slots.
 func energyProfile(entity entity, from time.Time) (*[96]float64, error) {
-	db, err := db.Instance.DB()
+	return energyProfileFiltered(entity, from, nil)
+}
+
+// energyProfileWeekday returns a 96-slot 15min average energy profile (kWh) for the
+// same weekday as today, averaged across the past 4 occurrences (28 days).
+func energyProfileWeekday(entity entity) (*[96]float64, error) {
+	weekday := int(time.Now().Weekday()) // 0=Sunday
+	return energyProfileFiltered(entity, time.Now().AddDate(0, 0, -28), weekday)
+}
+
+// energyProfileFiltered queries the 96-slot profile, optionally restricted to a
+// single weekday (strftime %w, 0=Sunday).
+func energyProfileFiltered(entity entity, from time.Time, weekday any) (*[96]float64, error) {
+	database, err := db.Instance.DB()
 	if err != nil {
 		return nil, err
 	}
 
+	args := []any{entity.Id, from.Unix()}
+
+	var weekdayFilter string
+	if weekday != nil {
+		weekdayFilter = ` AND strftime('%w', ts, 'unixepoch', 'localtime') = ?`
+		args = append(args, weekday)
+	}
+
 	// COALESCE guards against legacy rows with NULL energy
-	rows, err := db.Query(`SELECT min(ts) AS ts, COALESCE(avg(energy), 0) AS energy
+	rows, err := database.Query(`SELECT min(ts) AS ts, COALESCE(avg(energy), 0) AS energy
 		FROM meters
-		WHERE meter = ? AND ts >= ? AND COALESCE(recovered, 0) = 0
-		GROUP BY strftime("%H:%M", ts, 'unixepoch', 'localtime')
-		ORDER BY strftime("%H:%M", ts, 'unixepoch', 'localtime') ASC`,
-		entity.Id, from.Unix(),
+		WHERE meter = ? AND ts >= ? AND COALESCE(recovered, 0) = 0`+weekdayFilter+`
+		GROUP BY strftime('%H:%M', ts, 'unixepoch', 'localtime')
+		ORDER BY strftime('%H:%M', ts, 'unixepoch', 'localtime') ASC`,
+		args...,
 	)
 	if err != nil {
 		return nil, err
@@ -44,61 +64,6 @@ func energyProfile(entity entity, from time.Time) (*[96]float64, error) {
 		}
 
 		// interpolate single missing value, maybe due to regular restarts?
-		if time.Time(ts).Sub(prev) == 2*tariff.SlotDuration {
-			res = append(res, (val+res[len(res)-1])/2)
-		}
-		prev = time.Time(ts)
-
-		res = append(res, val)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	if len(res) != 96 {
-		return nil, ErrIncomplete
-	}
-
-	return (*[96]float64)(res), nil
-}
-
-// energyProfileWeekday returns a 96-slot 15min average energy profile (kWh) for the
-// same weekday as today, averaged across the past 4 occurrences (28 days).
-// Groups by time-of-day slot. Returns ErrIncomplete if fewer than 96 slots are present.
-func energyProfileWeekday(entity entity) (*[96]float64, error) {
-	database, err := db.Instance.DB()
-	if err != nil {
-		return nil, err
-	}
-
-	weekdayNum := int(time.Now().Weekday()) // 0=Sunday
-	from := time.Now().AddDate(0, 0, -28)
-	rows, err := database.Query(`SELECT min(ts) AS ts, COALESCE(avg(energy), 0) AS energy
-		FROM meters
-		WHERE meter = ? AND ts >= ? AND COALESCE(recovered, 0) = 0
-		  AND strftime('%w', ts, 'unixepoch', 'localtime') = ?
-		GROUP BY strftime("%H:%M", ts, 'unixepoch', 'localtime')
-		ORDER BY strftime("%H:%M", ts, 'unixepoch', 'localtime') ASC`,
-		entity.Id, from.Unix(), weekdayNum,
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var prev time.Time
-	res := make([]float64, 0, 96)
-
-	for rows.Next() {
-		var ts SqlTime
-		var val float64
-
-		if err := rows.Scan(&ts, &val); err != nil {
-			return nil, err
-		}
-
-		// interpolate single missing value
 		if time.Time(ts).Sub(prev) == 2*tariff.SlotDuration {
 			res = append(res, (val+res[len(res)-1])/2)
 		}

@@ -69,31 +69,11 @@ func TestApplyTemperatureCorrection(t *testing.T) {
 	assert.Greater(t, result[0], result[4], "first hour should be higher than second hour")
 }
 
-func TestSumProfiles(t *testing.T) {
-	tc := []struct {
-		name     string
-		profiles [][]float64
-		expected []float64
-	}{
-		{
-			name: "two profiles same length",
-			profiles: [][]float64{
-				{1.0, 2.0, 3.0},
-				{4.0, 5.0, 6.0},
-			},
-			expected: []float64{5.0, 7.0, 9.0},
-		},
-		{
-			name:     "empty profiles",
-			profiles: [][]float64{},
-			expected: nil,
-		},
-	}
+func TestAddProfile(t *testing.T) {
+	dst := []float64{1, 2, 3}
+	addProfile(dst, []float64{4, 5, 6, 7})
+	assert.Equal(t, []float64{5, 7, 9}, dst)
 
-	for _, tc := range tc {
-		t.Run(tc.name, func(t *testing.T) {
-			result := sumProfiles(tc.profiles)
-			assert.Equal(t, tc.expected, result)
-		})
-	}
+	addProfile(dst, []float64{1})
+	assert.Equal(t, []float64{6, 7, 9}, dst)
 }
