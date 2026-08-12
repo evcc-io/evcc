@@ -85,6 +85,8 @@ export function tooltipStyle(
 ) {
   return {
     confine: true,
+    // re-show after hide would otherwise slide in from the stale position
+    transitionDuration: 0,
     backgroundColor: color,
     borderColor: color,
     borderWidth: 0,

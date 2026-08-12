@@ -25,23 +25,18 @@ type PowerWall struct {
 type powerWallConfig struct {
 	URI, Usage, User, Password string
 	Cache                      time.Duration
-	SiteId                     int64  // Fleet API only, deprecated for the local meter
-	RefreshToken_              string `mapstructure:"refreshToken"` // TODO deprecated
-	batterySocLimits           `mapstructure:",squash"`
-	batteryPowerLimits         `mapstructure:",squash"`
+	SiteId                     int64   // Fleet API only, deprecated for the local meter
+	RefreshToken_              string  `mapstructure:"refreshToken"` // TODO deprecated
+	MinSoc                     float64 // Fleet API only, backup reserve restored in normal mode
+	MaxSoc_                    any     `mapstructure:"maxsoc"`            // TODO deprecated
+	MaxChargePower_            any     `mapstructure:"maxchargepower"`    // TODO deprecated
+	MaxDischargePower_         any     `mapstructure:"maxdischargepower"` // TODO deprecated
 }
 
 func defaultPowerWallConfig() powerWallConfig {
 	return powerWallConfig{
-		batterySocLimits: batterySocLimits{
-			MinSoc: 20,
-			MaxSoc: 95,
-		},
-		batteryPowerLimits: batteryPowerLimits{
-			MaxChargePower:    4600,
-			MaxDischargePower: 4600,
-		},
-		Cache: time.Second,
+		Cache:  time.Second,
+		MinSoc: 20,
 	}
 }
 
@@ -114,18 +109,36 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 	}
 
 	if m.usage == "battery" {
-		implement.Has(m, implement.Battery(m.batterySoc))
-		implement.May(m, implement.BatterySocLimiter(cc.batterySocLimits.Decorator()))
-		implement.May(m, implement.BatteryPowerLimiter(cc.batteryPowerLimits.Decorator()))
+		opG := util.Cached(client.GetOperation, cc.Cache)
 
-		res, err := m.client.GetSystemStatus()
+		// capacity and power limits are static, reading them validates connectivity
+		status, err := client.GetSystemStatus()
 		if err != nil {
 			return nil, err
 		}
 
+		implement.Has(m, implement.Battery(m.batterySoc))
+
 		implement.Has(m, implement.BatteryCapacity(func() float64 {
-			return res.NominalFullPackEnergy / 1e3
+			return status.NominalFullPackEnergy / 1e3
 		}))
+
+		// backup reserve is the lower discharge limit, the powerwall has no upper soc limit
+		implement.Has(m, implement.BatterySocLimiter(func() (float64, float64) {
+			op, err := opG()
+			if err != nil {
+				log.ERROR.Println("battery soc limits:", err)
+				return 0, 100
+			}
+			return op.BackupReservePercent, 100
+		}))
+
+		if status.MaxApparentPower > 0 {
+			// inverter apparent power applies to charging and discharging alike
+			implement.Has(m, implement.BatteryPowerLimiter(func() (float64, float64) {
+				return status.MaxApparentPower, status.MaxApparentPower
+			}))
+		}
 	}
 
 	return m, nil
