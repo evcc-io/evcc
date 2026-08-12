@@ -172,5 +172,6 @@ func TestVoltieMaxCurrentBounds(t *testing.T) {
 	assert.Error(t, wb.MaxCurrentMillis(5.9))
 	assert.Error(t, wb.MaxCurrentMillis(0))
 	assert.Error(t, wb.MaxCurrentMillis(-1))
-	assert.Error(t, wb.MaxCurrentMillis(66))
+	assert.Error(t, wb.MaxCurrentMillis(32.1), "above the charger's ampacity")
+	assert.Error(t, wb.MaxCurrentMillis(66), "would overflow the INT16 register")
 }

@@ -21,7 +21,6 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
-	"math"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -94,6 +93,11 @@ const (
 	voltieRegAutoStart    = 0x000B
 	voltieRegChargeEnable = 0x000C
 	voltieRegCurrent      = 0x0014
+
+	// the charger's ampacity range [A]. The current limit register is typed
+	// INT16, so the milliampere value must stay below the sign boundary.
+	voltieMinCurrent = 6
+	voltieMaxCurrent = 32
 
 	// firmware that fixes the Modbus slave address checks and rejects FC16
 	voltieMinFirmware = 350
@@ -168,6 +172,8 @@ var voltieStopReasons = map[uint16]string{
 	18:  "over current",
 	21:  "over humidity",
 	22:  "wrong phase order on the input",
+	100: "not enough free building current available (dynamic load management)",
+	101: "not enough solar current available (eco/green mode)",
 	102: "grid voltage is not high enough (grid-controlled mode)",
 	103: "charge current limit set to zero",
 	104: "no MID meter available",
@@ -350,12 +356,11 @@ var _ api.ChargerEx = (*Voltie)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *Voltie) MaxCurrentMillis(current float64) error {
-	ma := current * 1e3
-	if current < 6 || ma > math.MaxUint16 {
+	if current < voltieMinCurrent || current > voltieMaxCurrent {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	_, err := wb.conn.WriteSingleRegister(voltieRegCurrent, uint16(ma))
+	_, err := wb.conn.WriteSingleRegister(voltieRegCurrent, uint16(current*1e3))
 	if err == nil {
 		wb.statusG.Reset()
 	}
