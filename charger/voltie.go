@@ -78,14 +78,12 @@ const (
 	voltieRegDlmEffective = 0x0015 // INT16 effective DLM mode
 
 	// meter block
-	voltieRegVoltages  = 0x2000 // 3x INT32 phase voltage [mV]
-	voltieRegCurrents  = 0x2006 // 3x INT32 phase charging current [mA]
-	voltieRegDuration  = 0x200C // INT32 charge duration [s]
-	voltieRegEnergy    = 0x200E // INT32 charged energy in session [Ws]
-	voltieRegPower     = 0x2010 // INT32 charging power [W]
-	voltieRegCapacity  = 0x2012 // INT32 instantaneous current capacity [mA]
-	voltieRegTempMcu   = 0x2014 // INT16 MCU temperature [°C]
-	voltieRegTempPower = 0x2015 // INT16 power board temperature [°C]
+	voltieRegVoltages = 0x2000 // 3x INT32 phase voltage [mV]
+	voltieRegCurrents = 0x2006 // 3x INT32 phase charging current [mA]
+	voltieRegDuration = 0x200C // INT32 charge duration [s]
+	voltieRegEnergy   = 0x200E // INT32 charged energy in session [Ws]
+	voltieRegPower    = 0x2010 // INT32 charging power [W]
+	voltieRegCapacity = 0x2012 // INT32 instantaneous current capacity [mA]
 
 	// the charger's ampacity range [A]. The current limit register is typed
 	// INT16, so the milliampere value must stay below the sign boundary.
@@ -509,7 +507,5 @@ func (wb *Voltie) Diagnose() {
 
 	if b, err := wb.read(wb.meter); err == nil {
 		fmt.Printf("\tCapacity:\t%d mA\n", voltieU32(wb.meter, b, voltieRegCapacity))
-		fmt.Printf("\tTemperature:\t%d °C MCU, %d °C power board\n",
-			int16(voltieU16(wb.meter, b, voltieRegTempMcu)), int16(voltieU16(wb.meter, b, voltieRegTempPower)))
 	}
 }
