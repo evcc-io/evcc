@@ -87,10 +87,6 @@ func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
 }
 
 func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
-	if cc.MaxSoc_ != nil || cc.MaxChargePower_ != nil || cc.MaxDischargePower_ != nil {
-		log.WARN.Println("maxsoc, maxchargepower and maxdischargepower are deprecated, values are read from the device")
-	}
-
 	httpClient := &http.Client{
 		Transport: request.NewTripper(log, powerwall.DefaultTransport()),
 		Timeout:   time.Second * 2, // Timeout after 2 seconds
