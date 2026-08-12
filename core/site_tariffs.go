@@ -26,11 +26,11 @@ func (s forecastSeries) MarshalBytes() ([]byte, error) {
 }
 
 type solarDetails struct {
-	Scale            float64      `json:"scale"`                      // scale factor yield/forecasted today, 1 if unscaled
-	Today            dailyDetails `json:"today,omitempty"`            // tomorrow
-	Tomorrow         dailyDetails `json:"tomorrow,omitempty"`         // tomorrow
-	DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow,omitempty"` // day after tomorrow
-	Timeseries       timeseries   `json:"timeseries,omitempty"`       // timeseries of forecasted energy
+	Scale            float64      `json:"scale"`                // scale factor yield/forecasted today, 1 if unscaled
+	Today            dailyDetails `json:"today"`                // tomorrow
+	Tomorrow         dailyDetails `json:"tomorrow"`             // tomorrow
+	DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow"`     // day after tomorrow
+	Timeseries       timeseries   `json:"timeseries,omitempty"` // timeseries of forecasted energy
 }
 
 var _ api.BytesMarshaler = (*solarDetails)(nil)
@@ -188,6 +188,14 @@ func (site *Site) persistTariffs() {
 	}
 }
 
+// forecastSlotEnergy is the energy expected in the slot covering now, integrated
+// the same way as the published forecast so the persisted history matches the
+// curve the UI draws. Beyond the forecast horizon it is zero.
+func forecastSlotEnergy(solar api.Rates, now time.Time) float64 {
+	slot := now.Truncate(tariff.SlotDuration)
+	return solarEnergy(solar, slot, slot.Add(tariff.SlotDuration)) / 1e3
+}
+
 func (site *Site) solarDetails(solar api.Rates) solarDetails {
 	res := solarDetails{
 		Timeseries: solarTimeseries(solar),
@@ -216,10 +224,8 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 		Complete: !last.Before(eot.AddDate(0, 0, 1)),
 	}
 
-	if r, err := solar.At(time.Now()); err == nil {
-		if err := site.collectors[metrics.Forecast].AddEnergy(nil, nil, r.Value); err != nil {
-			site.log.ERROR.Printf("solar forecast collector: %v", err)
-		}
+	if err := site.collectors[metrics.Forecast].SetEnergy(forecastSlotEnergy(solar, time.Now())); err != nil {
+		site.log.ERROR.Printf("solar forecast collector: %v", err)
 	}
 
 	if r, err := tariff.At(site.GetTariff(api.TariffUsageTemperature), time.Now()); err == nil {

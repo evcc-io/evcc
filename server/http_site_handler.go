@@ -215,7 +215,7 @@ func updateSmartCostLimit(site site.API, setLimit func(loadpoint.API, *float64))
 			val = &f
 		}
 
-		for _, lp := range site.Loadpoints() {
+		for _, lp := range site.ActiveLoadpoints() {
 			setLimit(lp, val)
 		}
 

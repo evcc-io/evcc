@@ -146,8 +146,8 @@ github.com/enbility/zeroconf/v2 v2.0.0-20240920094356-be1cae74fda6 h1:XOYvxKtT1o
 github.com/enbility/zeroconf/v2 v2.0.0-20240920094356-be1cae74fda6/go.mod h1:BszP9qFV14mPXgyIREbgIdQtWxbAj3OKqvK02HihMoM=
 github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea h1:F6eyC8V8wvc3ranlsR4coAls+OPBkVvxyX0a2VqdlPc=
 github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea/go.mod h1:swrNGAVgI1r/3d/sEKE7qgujdRR9aHVPYKyc3gvpVTc=
-github.com/evcc-io/ocpp-go v0.0.0-20260727074919-195c10b8758d h1:UxgSUmwiuVURrmaFzBdYLobuRUwBIMRmH4sFjG0kemU=
-github.com/evcc-io/ocpp-go v0.0.0-20260727074919-195c10b8758d/go.mod h1:2kcukDdhui4u730VfnYVWuwzDLgw+mBRGDir/QAyBhg=
+github.com/evcc-io/ocpp-go v0.0.0-20260812074841-a8aa5fef8a9e h1:NHimNp7oIn4YERnF9ZL8LqYABq6nGU47LO0cNiyxgOQ=
+github.com/evcc-io/ocpp-go v0.0.0-20260812074841-a8aa5fef8a9e/go.mod h1:2kcukDdhui4u730VfnYVWuwzDLgw+mBRGDir/QAyBhg=
 github.com/evcc-io/openapi-mcp v0.6.1-0.20260701153510-26c442199ef4 h1:aGM3NwDsKbnmiaO10ptbvEolRAUThWJEsObiAWFDU/c=
 github.com/evcc-io/openapi-mcp v0.6.1-0.20260701153510-26c442199ef4/go.mod h1:YyOx4zwr6xVUcchAETHERZ+75cZMIrdcjVIZFwBlE1Q=
 github.com/evcc-io/optimizer v0.0.0-20260808185529-a50b33da38e5 h1:cwp3NABx+XDPoBji5Yk/H59ZDJxpDdzg+da9UvMFFUg=
@@ -551,8 +551,8 @@ github.com/vmihailenco/msgpack/v5 v5.4.1 h1:cQriyiUvjTwOHg8QZaPihLWeRAAVoCpE00IU
 github.com/vmihailenco/msgpack/v5 v5.4.1/go.mod h1:GaZTsDaehaPpQVyxrf5mtQlH+pc21PIudVV/E3rRQok=
 github.com/vmihailenco/tagparser/v2 v2.0.0 h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g=
 github.com/vmihailenco/tagparser/v2 v2.0.0/go.mod h1:Wri+At7QHww0WTrCBeu4J6bNtoV6mEfg5OIWRZA9qds=
-github.com/volkszaehler/mbmd v0.0.0-20260803093438-96221ccf34be h1:q0kgjSngsgSWiKGhLNOfUJDO76+Ctx31f5Y50MO3Bf4=
-github.com/volkszaehler/mbmd v0.0.0-20260803093438-96221ccf34be/go.mod h1:hx00iJeEiVti6jY7HwLIiShGWdjAAxY7vDdhx/Ys1ys=
+github.com/volkszaehler/mbmd v0.0.0-20260812141656-4304ad77c56f h1:R7By5B362tuEUTxImAyq5oUoH9kBIO1coIk94dNW2BI=
+github.com/volkszaehler/mbmd v0.0.0-20260812141656-4304ad77c56f/go.mod h1:hx00iJeEiVti6jY7HwLIiShGWdjAAxY7vDdhx/Ys1ys=
 github.com/warthog618/go-gpiocdev v0.9.1 h1:pwHPaqjJfhCipIQl78V+O3l9OKHivdRDdmgXYbmhuCI=
 github.com/warthog618/go-gpiocdev v0.9.1/go.mod h1:dN3e3t/S2aSNC+hgigGE/dBW8jE1ONk9bDSEYfoPyl8=
 github.com/warthog618/go-gpiosim v0.1.1 h1:MRAEv+T+itmw+3GeIGpQJBfanUVyg0l3JCTwHtwdre4=
