@@ -5,11 +5,25 @@ products:
       generic: Charger
 capabilities: ["mA", "meter", "dim"]
 requirements:
+  description:
+    de: Modbus muss in der Voltie App im Modbus-Konfigurationsbildschirm auf "TCP" gestellt werden; die dort eingestellte Slave-Adresse (Standard 11) muss mit der ID übereinstimmen. Der Kommunikations-Timeout regelt die Ladung nach Verbindungsverlust auf 0 A herunter, er muss daher auf 0 gesetzt (deaktiviert) oder größer als das evcc-Aktualisierungsintervall gewählt werden. Benötigt EVSE-Firmware 350 oder neuer und Ladegerät-Software 1.3.40 oder neuer.
+    en: Modbus must be set to "TCP" on the Modbus config screen of the Voltie app, and the slave address configured there (default 11) must match the ID. The communication timeout reduces the charging current to 0 A after a loss of communication, so it has to be set to 0 (disabled) or to a value larger than the evcc update interval. Requires EVSE firmware 350 or later and charger software 1.3.40 or later.
   evcc: ["sponsorship"]
+caveats:
+  - description:
+      de: Der Auto-Start des Ladegeräts wird beim Start von evcc dauerhaft deaktiviert und muss nach dem Entfernen von evcc in der Voltie App wieder eingeschaltet werden.
+      en: The charger's auto start mode is disabled persistently when evcc starts and has to be switched back on in the Voltie app after evcc is removed.
+  - description:
+      de: Das Modbus-TCP-Gateway leitet höchstens zwei Transaktionen pro Sekunde weiter. Kürzere Abfrageintervalle führen zu Zeitüberschreitungen, nicht zu aktuelleren Daten.
+      en: The Modbus TCP gateway forwards at most two transactions per second. Shorter polling intervals produce timeouts rather than fresher data.
 params:
   - name: modbus
     choice: ["tcpip"]
-    id: 1
+    id: 11
+  - name: cache
+    advanced: true
+    default: 1s
 render: |
   type: voltie
   {{- include "modbus" . }}
+  cache: {{ .cache }}
