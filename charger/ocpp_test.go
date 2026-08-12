@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -74,7 +75,7 @@ func (suite *ocppTestSuite) TearDownSuite() {
 	suite.logger.close()
 }
 
-func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) (ocpp16.ChargePoint, *ocppj.Client) {
+func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) (ocpp16.ChargePoint, *ocppj.Client, func()) {
 	// Buffered generously: the handlers in ocpp_test_handler.go send to
 	// triggerC synchronously (via defer) on the charge point's WebSocket
 	// read-loop goroutine. If that send blocks, the read loop cannot deliver
@@ -104,6 +105,12 @@ func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) (ocpp16
 	// with on shutdown, so closing it could panic on `send on closed channel`.
 	done := make(chan struct{})
 	finished := make(chan struct{})
+
+	// mu keeps the drain from talking to a stopped charge point; it still
+	// consumes triggerC afterwards so the read loop never blocks on a full buffer
+	var mu sync.Mutex
+	var stopped bool
+
 	go func() {
 		defer close(finished)
 		for {
@@ -111,15 +118,26 @@ func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) (ocpp16
 			case <-done:
 				return
 			case msg := <-handler.triggerC:
-				suite.handleTrigger(cp, connectorId, msg)
+				mu.Lock()
+				if !stopped {
+					suite.handleTrigger(cp, connectorId, msg)
+				}
+				mu.Unlock()
 			}
 		}
 	}()
 
-	suite.T().Cleanup(func() {
+	// quiesce the drain before disconnecting: stopping the charge point while a
+	// request is in flight closes the dispatcher channel it is sending on
+	stop := sync.OnceFunc(func() {
+		mu.Lock()
+		stopped = true
+		mu.Unlock()
+
 		if cp.IsConnected() {
 			cp.Stop()
 		}
+
 		close(done)
 		// wait for the drain goroutine to fully exit before the test method
 		// returns: handleTrigger logs via suite.T(), which panics if called
@@ -127,7 +145,9 @@ func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) (ocpp16
 		<-finished
 	})
 
-	return cp, endpoint
+	suite.T().Cleanup(stop)
+
+	return cp, endpoint, stop
 }
 
 func (suite *ocppTestSuite) handleTrigger(cp ocpp16.ChargePoint, connectorId int, msg remotetrigger.MessageTrigger) {
@@ -162,7 +182,7 @@ func (suite *ocppTestSuite) handleTrigger(cp ocpp16.ChargePoint, connectorId int
 
 func (suite *ocppTestSuite) TestConnect() {
 	// 1st charge point- remote
-	cp1, _ := suite.startChargePoint("test-1", 1)
+	cp1, _, _ := suite.startChargePoint("test-1", 1)
 	suite.Require().NoError(cp1.Start(ocppTestUrl))
 	suite.Require().True(cp1.IsConnected())
 
@@ -211,7 +231,7 @@ func (suite *ocppTestSuite) TestConnect() {
 	}
 
 	// 2nd charge point - remote
-	cp2, _ := suite.startChargePoint("test-2", 1)
+	cp2, _, stopCp2 := suite.startChargePoint("test-2", 1)
 	suite.Require().NoError(cp2.Start(ocppTestUrl))
 	suite.Require().True(cp2.IsConnected())
 
@@ -229,12 +249,12 @@ func (suite *ocppTestSuite) TestConnect() {
 	}
 
 	// error on unconfigured 2nd charge point
-	cp3, _ := suite.startChargePoint("unconfigured", 1)
+	cp3, _, _ := suite.startChargePoint("unconfigured", 1)
 	_, err = cp3.BootNotification("model", "vendor")
 	suite.Require().Error(err)
 
 	// disconnect charge point
-	cp2.Stop()
+	stopCp2()
 	suite.Require().False(cp2.IsConnected())
 
 	t := time.NewTimer(100 * time.Millisecond)
@@ -253,7 +273,7 @@ WAIT_DISCONNECT:
 
 func (suite *ocppTestSuite) TestAutoStart() {
 	// 1st charge point- remote
-	cp1, _ := suite.startChargePoint("test-3", 1)
+	cp1, _, _ := suite.startChargePoint("test-3", 1)
 	suite.Require().NoError(cp1.Start(ocppTestUrl))
 	suite.Require().True(cp1.IsConnected())
 
@@ -293,7 +313,7 @@ func (suite *ocppTestSuite) TestAutoStart() {
 
 func (suite *ocppTestSuite) TestTimeout() {
 	// 1st charge point- remote
-	cp1, ocppjClient := suite.startChargePoint("test-4", 1)
+	cp1, ocppjClient, _ := suite.startChargePoint("test-4", 1)
 	suite.Require().NoError(cp1.Start(ocppTestUrl))
 	suite.Require().True(cp1.IsConnected())
 
