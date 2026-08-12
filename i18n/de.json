@@ -846,6 +846,7 @@
       "meter": "PV & Batterie",
       "services": "Dienste",
       "system": "System",
+      "unusedChargers": "Ungenutzte Wallboxen & Heizgeräte",
       "vehicles": "Fahrzeuge"
     },
     "security": {

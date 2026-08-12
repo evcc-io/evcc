@@ -57,6 +57,29 @@
 					/>
 				</div>
 
+				<template v-if="unusedChargers.length">
+					<h2 class="my-4 mt-5">{{ $t("config.section.unusedChargers") }}</h2>
+					<div class="p-0 config-list box-pull-out">
+						<DeviceCard
+							v-for="charger in unusedChargers"
+							:id="`charger_${charger.name}`"
+							:key="charger.name"
+							:title="charger.config?.title || charger.name"
+							:name="charger.name"
+							editable
+							:error="hasDeviceError('charger', charger.name)"
+							data-testid="unused-charger"
+							@edit="
+								openModal('charger', { id: charger.id, type: chargerType(charger) })
+							"
+						>
+							<template #tags>
+								<DeviceTags :tags="deviceTags('charger', charger.name)" />
+							</template>
+						</DeviceCard>
+					</div>
+				</template>
+
 				<h2 id="vehicles" class="my-4">{{ $t("config.section.vehicles") }}</h2>
 				<div class="p-0 config-list box-pull-out">
 					<DeviceCard
@@ -610,7 +633,7 @@ import type {
 	Notification,
 	Remote,
 } from "@/types/evcc";
-import { ConfigType, CURRENCY } from "@/types/evcc";
+import { ConfigType, CURRENCY, LOADPOINT_TYPE } from "@/types/evcc";
 import { circuitTree, type CircuitNode } from "@/utils/circuits";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
@@ -968,6 +991,14 @@ export default defineComponent({
 				return { amount: { value: config.length } };
 			}
 			return { configured: { value: false } };
+		},
+		// chargers no loadpoint uses; leftovers of an interrupted loadpoint setup,
+		// only reachable here since chargers are otherwise edited from their loadpoint
+		unusedChargers(): ConfigCharger[] {
+			return this.chargers.filter(
+				(charger) =>
+					charger.id >= 0 && !this.loadpoints.some((lp) => lp.charger === charger.name)
+			);
 		},
 		// maps an OCPP station id to its loadpoint title (fallback: charger title)
 		stationTitles(): Record<string, string> {
@@ -1349,6 +1380,9 @@ export default defineComponent({
 		hasClassError(className: string) {
 			const fatals = store.state?.fatal || [];
 			return fatals.some((fatal) => fatal.class === className);
+		},
+		chargerType(charger: ConfigCharger) {
+			return charger.config?.["heating"] ? LOADPOINT_TYPE.HEATING : LOADPOINT_TYPE.CHARGING;
 		},
 		chargerIcon(chargerName: string) {
 			const charger = this.chargers.find((c) => c.name === chargerName);

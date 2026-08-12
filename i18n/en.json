@@ -846,6 +846,7 @@
       "meter": "Solar & Battery",
       "services": "Services",
       "system": "System",
+      "unusedChargers": "Unused Chargers & Heating Devices",
       "vehicles": "Vehicles"
     },
     "security": {
