@@ -1048,6 +1048,9 @@ func optimizerEnabled() bool {
 
 // sitePowerResult is the outcome of the site power calculation
 type sitePowerResult struct {
+	// measured state, including the estimates for missing meters
+	state siteState
+
 	// net power exported by the site minus a residual margin
 	// (negative values mean grid: export, battery: charging)
 	power float64
@@ -1063,10 +1066,8 @@ type sitePowerResult struct {
 	priorityAdjustment float64
 }
 
-// sitePower calculates the site power balance from the cached measurement state
+// sitePower calculates the site power balance from the measured state
 func (site *Site) sitePower(state siteState, totalChargePower, flexiblePower float64) sitePowerResult {
-	gridPower, pvPower := state.gridPower, state.pvPower
-
 	// ensure safe default for residual power
 	residualPower := site.GetResidualPower()
 
@@ -1076,8 +1077,8 @@ func (site *Site) sitePower(state siteState, totalChargePower, flexiblePower flo
 
 	// allow using PV as estimate for grid power
 	if site.gridMeter == nil {
-		gridPower = totalChargePower - pvPower
-		site.publish(keys.Grid, types.Measurement{Power: gridPower})
+		state.gridPower = totalChargePower - state.pvPower
+		site.publish(keys.Grid, types.Measurement{Power: state.gridPower})
 	}
 
 	// sitePower adjustment applied for battery priority
@@ -1091,15 +1092,15 @@ func (site *Site) sitePower(state siteState, totalChargePower, flexiblePower flo
 
 	// allow using grid and charge as estimate for pv power
 	if site.pvMeters == nil {
-		pvPower = max(0, totalChargePower-gridPower+residualPower)
-		site.log.DEBUG.Printf("pv power: %.0fW", pvPower)
-		site.publish(keys.PvPower, pvPower)
+		state.pvPower = max(0, totalChargePower-state.gridPower+residualPower)
+		site.log.DEBUG.Printf("pv power: %.0fW", state.pvPower)
+		site.publish(keys.PvPower, state.pvPower)
 	}
 
 	// retain the estimates for the api getters and the green share
 	if site.gridMeter == nil || site.pvMeters == nil {
 		site.Lock()
-		site.gridPower, site.pvPower = gridPower, pvPower
+		site.gridPower, site.pvPower = state.gridPower, state.pvPower
 		site.Unlock()
 	}
 
@@ -1124,7 +1125,7 @@ func (site *Site) sitePower(state siteState, totalChargePower, flexiblePower flo
 		}
 	}
 
-	sitePower := gridPower + batteryPower + excessDCPower + residualPower - state.auxPower - flexiblePower
+	sitePower := state.gridPower + batteryPower + excessDCPower + residualPower - state.auxPower - flexiblePower
 
 	// handle priority
 	var flexStr string
@@ -1135,6 +1136,7 @@ func (site *Site) sitePower(state siteState, totalChargePower, flexiblePower flo
 	site.log.DEBUG.Printf("site power: %.0fW"+flexStr, sitePower)
 
 	return sitePowerResult{
+		state:              state,
 		power:              sitePower,
 		batteryBuffered:    batteryBuffered,
 		batteryStart:       batteryStart,
@@ -1211,7 +1213,6 @@ func (site *Site) update(lp updater) {
 	site.updateCircuits()
 	site.applyHemsLimits()
 
-	// read meters into the cached measurement state
 	if state, err := site.updateMeters(); err != nil {
 		site.log.ERROR.Println(err)
 	} else {
@@ -1243,9 +1244,7 @@ func (site *Site) updatePower(lp updater, state siteState, totalChargePower floa
 	}
 
 	res := site.sitePower(state, totalChargePower, flexiblePower)
-
-	// the estimates are applied to the cached state, hence re-read
-	state = site.state()
+	state = res.state
 
 	// ignore negative pvPower values as that means it is not an energy source but consumption
 	homePower := state.gridPower + max(0, state.pvPower) + state.battery.Power - totalChargePower
