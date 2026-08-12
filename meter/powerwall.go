@@ -113,11 +113,10 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 	}
 
 	if m.usage == "battery" {
-		statusG := util.Cached(client.GetSystemStatus, cc.Cache)
 		opG := util.Cached(client.GetOperation, cc.Cache)
 
-		// validate connectivity and gate power limiter capability
-		status, err := statusG()
+		// capacity and power limits are static, reading them validates connectivity
+		status, err := client.GetSystemStatus()
 		if err != nil {
 			return nil, err
 		}
@@ -141,12 +140,7 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 		if status.MaxApparentPower > 0 {
 			// inverter apparent power applies to charging and discharging alike
 			implement.Has(m, implement.BatteryPowerLimiter(func() (float64, float64) {
-				res, err := statusG()
-				if err != nil {
-					log.ERROR.Println("battery power limits:", err)
-					return 0, 0
-				}
-				return res.MaxApparentPower, res.MaxApparentPower
+				return status.MaxApparentPower, status.MaxApparentPower
 			}))
 		}
 	}
