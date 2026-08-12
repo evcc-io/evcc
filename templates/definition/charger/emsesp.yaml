@@ -13,8 +13,8 @@ capabilities: ["meter", "dim"]
 group: heating
 requirements:
   description:
-    de: "Eingebunden via [emsesp.org](https://emsesp.org/)"
-    en: "Integrated via [emsesp.org](https://emsesp.org/)"
+    de: "Eingebunden via [emsesp.org](https://emsesp.org/). Weitere Hinweise zur Einrichtung von Bosch- und Buderus-Wärmepumpen: [bosch-buderus-wp.github.io](https://bosch-buderus-wp.github.io/docs/smarthome/evcc)"
+    en: "Integrated via [emsesp.org](https://emsesp.org/). Additional setup guidance for Bosch and Buderus heat pumps: [bosch-buderus-wp.github.io](https://bosch-buderus-wp.github.io/docs/smarthome/evcc)"
 #   evcc: ["sponsorship"]
 params:
   - name: host
@@ -45,6 +45,16 @@ params:
     description:
       de: "SG4-Eingang"
       en: "SG4 input"
+  - name: powercontrol
+    advanced: true
+    type: choice
+    choice: ["pvmaxcomp"]
+    description:
+      de: "Leistungssteuerung"
+      en: "Power limitation"
+    help:
+      de: "EMS-ESP Entity zur Begrenzung der maximalen Kompressorleistung (kW) bei PV-Überschuss. Nur für Geräte, die eine solche Entity unterstützen (z. B. Bosch Compress 7000i/7001i/8800i AW)."
+      en: "EMS-ESP entity to limit the maximum compressor power (kW) at PV surplus. Only for devices that support such an entity (e.g. Bosch Compress 7000i/7001i/8800i AW)."
   - name: value_normal_sg4
     advanced: true
     type: string
@@ -187,7 +197,25 @@ render: |
             - content-type: application/json
             - authorization: Bearer {{ .token}}
           body: >
-            { "value" : "{{ .value_dim_sg4 }}" }    
+            { "value" : "{{ .value_dim_sg4 }}" }
+  {{- if .powercontrol }}
+  setmaxpower:
+    source: go
+    script: |
+      kw := float64(maxpower) / 1000.0
+      kw
+    out:
+    - name: value
+      type: float
+      config:
+        source: http
+        uri: http://{{ .host }}/api/boiler/{{ .powercontrol }}
+        method: POST
+        headers:
+          - content-type: application/json
+          - authorization: Bearer {{ .token }}
+        body: '{ "value": ${value} }'
+  {{- end }}
   {{- if .tempsource }}
   temp:
     source: http
