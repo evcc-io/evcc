@@ -446,6 +446,9 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		site.log.DEBUG.Printf("optimizer: home slots updated with measured %.0fWh: %.0f -> %.0f", v, orig, gt[:len(orig)])
 	}
 
+	// heating loadpoints add their forecast demand on top of the measured base load
+	heaters := site.addHeatingDemand(gt, minLen)
+
 	// allow empty solar forecast
 	ft := lo.RepeatBy(minLen, func(i int) float32 { return float32(0) })
 	if solarTariff != nil && len(solar) > 0 {
@@ -518,6 +521,11 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	for id, lp := range site.ActiveLoadpoints() {
 		// ignore disconnected loadpoints, including StatusNone
 		if s := lp.GetStatus(); s != api.StatusB && s != api.StatusC {
+			continue
+		}
+
+		// heating loadpoints are already accounted for by their demand forecast
+		if heaters[lp] {
 			continue
 		}
 

@@ -88,12 +88,3 @@ func TestTileAndTrim(t *testing.T) {
 	assert.Equal(t, float64(firstSlot), res[0], "starts at the current slot")
 	assert.Equal(t, res[0], res[96], "wraps after a full day")
 }
-
-func TestAddProfile(t *testing.T) {
-	dst := []float64{1, 2, 3}
-	addProfile(dst, []float64{4, 5, 6, 7})
-	assert.Equal(t, []float64{5, 7, 9}, dst)
-
-	addProfile(dst, []float64{1})
-	assert.Equal(t, []float64{6, 7, 9}, dst)
-}

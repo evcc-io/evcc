@@ -17,10 +17,10 @@ func energyProfile(entity entity, from time.Time) (*[96]float64, error) {
 }
 
 // energyProfileWeekday returns a 96-slot 15min average energy profile (kWh) for the
-// same weekday as today, averaged across the past 4 occurrences (28 days).
-func energyProfileWeekday(entity entity) (*[96]float64, error) {
+// same weekday as today, averaged across all its occurrences in [from, now).
+func energyProfileWeekday(entity entity, from time.Time) (*[96]float64, error) {
 	weekday := int(time.Now().Weekday()) // 0=Sunday
-	return energyProfileFiltered(entity, time.Now().AddDate(0, 0, -28), &weekday)
+	return energyProfileFiltered(entity, from, &weekday)
 }
 
 // energyProfileFiltered queries the 96-slot profile, optionally restricted to a

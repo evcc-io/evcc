@@ -3071,6 +3071,10 @@
             "description": "Heating device demand forecast uses daily average profile scaled by outdoor temperature.",
             "type": "boolean"
           },
+          "chargerFeatureDemandProfileSameWeekday": {
+            "description": "Heating device demand forecast uses same-weekday average over past 4 weeks.",
+            "type": "boolean"
+          },
           "chargerFeatureHeating": {
             "description": "Charger is a heating device. SoC values represent temperature in degrees.",
             "type": "boolean"
@@ -3085,10 +3089,6 @@
           },
           "chargerFeatureRetryable": {
             "description": "Vehicle API calls are retried on failure.",
-            "type": "boolean"
-          },
-          "chargerFeatureDemandProfileSameWeekday": {
-            "description": "Heating device demand forecast uses same-weekday average over past 4 weeks.",
             "type": "boolean"
           },
           "chargerFeatureStreaming": {
@@ -3442,11 +3442,11 @@
           "chargerFeatureCoarseCurrent",
           "chargerFeatureContinuous",
           "chargerFeatureDemandProfileDailyTemperature",
+          "chargerFeatureDemandProfileSameWeekday",
           "chargerFeatureHeating",
           "chargerFeatureIntegratedDevice",
           "chargerFeatureOffline",
           "chargerFeatureRetryable",
-          "chargerFeatureDemandProfileSameWeekday",
           "chargerFeatureStreaming",
           "chargerFeatureSwitchDevice",
           "chargerFeatureWakeUpDisabled",

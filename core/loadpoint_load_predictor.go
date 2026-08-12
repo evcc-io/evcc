@@ -17,14 +17,15 @@ func (lp *Loadpoint) demandProfile() (*[96]float64, bool) {
 
 	// daily avg scaled by outdoor temp
 	correct := lp.chargerHasFeature(api.DemandProfileDailyTemperature)
+	from := now.BeginningOfDay().AddDate(0, 0, -28)
 
 	switch {
 	case correct:
-		profile, err = lp.chargeEnergy.EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -7))
+		profile, err = lp.chargeEnergy.EnergyProfile(from)
 
 	// avg of same weekday over past 4 weeks, used as-is
 	case lp.chargerHasFeature(api.DemandProfileSameWeekday):
-		profile, err = lp.chargeEnergy.EnergyProfileWeekday()
+		profile, err = lp.chargeEnergy.EnergyProfileWeekday(from)
 
 	default:
 		return nil, false

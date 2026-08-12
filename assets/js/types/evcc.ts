@@ -577,6 +577,8 @@ export interface Loadpoint {
   chargerFeatureContinuous: boolean;
   /** Heating device demand forecast uses daily average profile scaled by outdoor temperature. */
   chargerFeatureDemandProfileDailyTemperature: boolean;
+  /** Heating device demand forecast uses same-weekday average over past 4 weeks. */
+  chargerFeatureDemandProfileSameWeekday: boolean;
   /** Charger is a heating device. SoC values represent temperature in degrees. */
   chargerFeatureHeating: boolean;
   /** Charger is an always-connected device without vehicles and charging sessions, like a heat pump. */
@@ -585,8 +587,6 @@ export interface Loadpoint {
   chargerFeatureOffline: boolean;
   /** Vehicle API calls are retried on failure. */
   chargerFeatureRetryable: boolean;
-  /** Heating device demand forecast uses same-weekday average over past 4 weeks. */
-  chargerFeatureDemandProfileSameWeekday: boolean;
   /** The connected vehicle pushes data updates instead of being polled. */
   chargerFeatureStreaming: boolean;
   /** Charger is a switchable device without current control, like a heat pump or switch socket. */

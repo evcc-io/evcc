@@ -176,8 +176,8 @@ func (c *Collector) EnergyProfile(from time.Time) (*[96]float64, error) {
 	return energyProfile(c.entity, from)
 }
 
-func (c *Collector) EnergyProfileWeekday() (*[96]float64, error) {
-	return energyProfileWeekday(c.entity)
+func (c *Collector) EnergyProfileWeekday(from time.Time) (*[96]float64, error) {
+	return energyProfileWeekday(c.entity, from)
 }
 
 // LastSlotEnergy returns the energy in kWh of the most recently completed

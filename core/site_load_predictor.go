@@ -6,25 +6,37 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/jinzhu/now"
 	"github.com/samber/lo"
 )
 
-// homeProfile returns the predicted home load in Wh for minLen 15min slots starting now.
-// Base load is the same-weekday avg (past 4 weeks), heating loadpoints add their demand profile on top.
+// homeProfile returns the predicted home base load in Wh for minLen 15min slots
+// starting now, using the same-weekday avg over the past 4 weeks.
 func (site *Site) homeProfile(minLen int) ([]float64, error) {
-	// base load (excludes loadpoints) - avg of same weekday over past 4 weeks
-	base, err := site.collectors[metrics.Home].EnergyProfileWeekday()
+	// base load excludes loadpoints
+	base, err := site.collectors[metrics.Home].EnergyProfileWeekday(now.BeginningOfDay().AddDate(0, 0, -28))
 	if err != nil {
 		return nil, err
 	}
 
-	res := tileAndTrim(base[:], minLen)
+	// convert to Wh
+	return lo.Map(tileAndTrim(base[:], minLen), func(v float64, _ int) float64 { return v * 1e3 }), nil
+}
 
-	// heating loadpoints add their demand profile on top
+// addHeatingDemand adds the forecast demand of all heating loadpoints to the home load
+// in Wh and returns the loadpoints that contributed. Must be applied after blending the
+// measured home energy, which does not contain loadpoint power.
+func (site *Site) addHeatingDemand(gt []float64, minLen int) map[loadpoint.API]bool {
+	var res map[loadpoint.API]bool
+
 	for _, lp := range site.loadpoints {
+		if lp == nil {
+			continue
+		}
+
 		profile, correct := lp.demandProfile()
 		if profile == nil {
 			continue
@@ -35,11 +47,17 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 			p = site.applyTemperatureCorrection(p)
 		}
 
-		addProfile(res, p)
+		for i := range min(len(gt), len(p)) {
+			gt[i] += p[i] * 1e3
+		}
+
+		if res == nil {
+			res = make(map[loadpoint.API]bool)
+		}
+		res[lp] = true
 	}
 
-	// convert to Wh
-	return lo.Map(res, func(v float64, _ int) float64 { return v * 1e3 }), nil
+	return res
 }
 
 // applyTemperatureCorrection adjusts heating load based on temperature forecast:
@@ -119,11 +137,4 @@ func tileAndTrim(profile []float64, minLen int) []float64 {
 	}
 
 	return res
-}
-
-// addProfile adds src to dst element-wise, limited to the shorter of both.
-func addProfile(dst, src []float64) {
-	for i := range min(len(dst), len(src)) {
-		dst[i] += src[i]
-	}
 }
