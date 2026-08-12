@@ -27,56 +27,56 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 		return nil, fmt.Errorf("minimum home profile length %d is less than required %d", len(res), minLen)
 	}
 
-	tempProfile, sameWeekdayProfile := site.extractHeaterProfiles()
+	// heating loadpoints add their demand profile on top
+	for _, lp := range site.loadpoints {
+		profile, correct := lp.demandProfile()
+		if profile == nil {
+			continue
+		}
 
-	// DemandProfileDailyTemperature: daily-averaged profile scaled by outdoor temp forecast
-	if len(tempProfile) > 0 {
-		addProfile(res, site.applyTemperatureCorrection(tileAndTrim(tempProfile, minLen)))
-	}
+		p := tileAndTrim(profile[:], minLen)
+		if correct {
+			p = site.applyTemperatureCorrection(p)
+		}
 
-	// DemandProfileSameWeekday: avg of same weekday over past 4 weeks, tiled as-is
-	if len(sameWeekdayProfile) > 0 {
-		addProfile(res, tileAndTrim(sameWeekdayProfile, minLen))
+		addProfile(res, p)
 	}
 
 	// convert to Wh
 	return lo.Map(res, func(v float64, _ int) float64 { return v * 1e3 }), nil
 }
 
-// extractHeaterProfiles returns the aggregated heating profiles of all heating
-// loadpoints, split by their demand profile strategy.
-func (site *Site) extractHeaterProfiles() (tempProfile, sameWeekdayProfile []float64) {
-	for i, lp := range site.loadpoints {
-		if lp.chargeEnergy == nil || !hasFeature(lp.charger, api.Heating) {
-			continue
-		}
-
-		target := &sameWeekdayProfile
-		fetch := lp.chargeEnergy.EnergyProfileWeekday
-
-		switch {
-		case hasFeature(lp.charger, api.DemandProfileDailyTemperature):
-			target = &tempProfile
-			fetch = func() (*[96]float64, error) {
-				return lp.chargeEnergy.EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -7))
-			}
-		case !hasFeature(lp.charger, api.DemandProfileSameWeekday):
-			continue
-		}
-
-		profile, err := fetch()
-		if err != nil {
-			site.log.DEBUG.Printf("heater profile: loadpoint %d: %v", i, err)
-			continue
-		}
-
-		if *target == nil {
-			*target = make([]float64, len(profile))
-		}
-		addProfile(*target, profile[:])
+// demandProfile returns the heating demand profile of a heating loadpoint and whether
+// it needs to be scaled by the outdoor temperature forecast. Returns nil when unavailable.
+func (lp *Loadpoint) demandProfile() (*[96]float64, bool) {
+	if lp.chargeEnergy == nil || !lp.chargerHasFeature(api.Heating) {
+		return nil, false
 	}
 
-	return tempProfile, sameWeekdayProfile
+	var profile *[96]float64
+	var err error
+
+	// daily avg scaled by outdoor temp
+	correct := lp.chargerHasFeature(api.DemandProfileDailyTemperature)
+
+	switch {
+	case correct:
+		profile, err = lp.chargeEnergy.EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -7))
+
+	// avg of same weekday over past 4 weeks, used as-is
+	case lp.chargerHasFeature(api.DemandProfileSameWeekday):
+		profile, err = lp.chargeEnergy.EnergyProfileWeekday()
+
+	default:
+		return nil, false
+	}
+
+	if err != nil {
+		lp.log.DEBUG.Printf("demand profile: %v", err)
+		return nil, false
+	}
+
+	return profile, correct
 }
 
 // applyTemperatureCorrection adjusts heating load based on temperature forecast:
