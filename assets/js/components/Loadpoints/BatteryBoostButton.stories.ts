@@ -28,8 +28,18 @@ interface RowConfig {
 const rows: RowConfig[] = [
   { label: "Ready (limit 0)", batteryBoost: false, batteryBoostLimit: 0, mode: CHARGE_MODE.SMART },
   { label: "Enabled (limit 0)", batteryBoost: true, batteryBoostLimit: 0, mode: CHARGE_MODE.SMART },
-  { label: "Ready (limit 50)", batteryBoost: false, batteryBoostLimit: 50, mode: CHARGE_MODE.SMART },
-  { label: "Enabled (limit 50)", batteryBoost: true, batteryBoostLimit: 50, mode: CHARGE_MODE.SMART },
+  {
+    label: "Ready (limit 50)",
+    batteryBoost: false,
+    batteryBoostLimit: 50,
+    mode: CHARGE_MODE.SMART,
+  },
+  {
+    label: "Enabled (limit 50)",
+    batteryBoost: true,
+    batteryBoostLimit: 50,
+    mode: CHARGE_MODE.SMART,
+  },
   { label: "Disabled", batteryBoost: false, batteryBoostLimit: 50, mode: CHARGE_MODE.OFF },
 ];
 

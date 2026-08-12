@@ -1,10 +1,7 @@
 <template>
 	<div class="panel" data-testid="always-charge-dropdown">
 		<div class="d-flex align-items-center gap-3">
-			<AlwaysChargeIcon
-				class="icon flex-shrink-0"
-				:class="{ active: isActive }"
-			/>
+			<AlwaysChargeIcon class="icon flex-shrink-0" :class="{ active: isActive }" />
 			<div class="flex-grow-1 overflow-hidden">
 				<div class="fw-bold text-truncate">{{ $t("main.alwaysCharge.label") }}</div>
 				<div class="subline" :class="{ hint: !!hint }">{{ subline }}</div>
