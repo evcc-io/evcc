@@ -127,6 +127,7 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 		implement.Has(m, implement.BatteryCapacity(func() float64 {
 			res, err := statusG()
 			if err != nil {
+				log.ERROR.Println("battery capacity:", err)
 				return 0
 			}
 			return res.NominalFullPackEnergy / 1e3
@@ -136,6 +137,7 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 		implement.Has(m, implement.BatterySocLimiter(func() (float64, float64) {
 			op, err := opG()
 			if err != nil {
+				log.ERROR.Println("battery soc limits:", err)
 				return 0, 100
 			}
 			return op.BackupReservePercent, 100
@@ -146,6 +148,7 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 			implement.Has(m, implement.BatteryPowerLimiter(func() (float64, float64) {
 				res, err := statusG()
 				if err != nil {
+					log.ERROR.Println("battery power limits:", err)
 					return 0, 0
 				}
 				return res.MaxApparentPower, res.MaxApparentPower
