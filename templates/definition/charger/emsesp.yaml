@@ -53,8 +53,8 @@ params:
       de: "Leistungssteuerung"
       en: "Power limitation"
     help:
-      de: "EMS-ESP Entity zur Begrenzung der maximalen Kompressorleistung (kW) bei PV-Überschuss. Nur für Geräte, die eine solche Entity unterstützen (z. B. Bosch Compress 7000i/7001i/8800i AW)."
-      en: "EMS-ESP entity to limit the maximum compressor power (kW) at PV surplus. Only for devices that support such an entity (e.g. Bosch Compress 7000i/7001i/8800i AW)."
+      de: "EMS-ESP Entity zur Begrenzung der maximalen Kompressorleistung (kW) bei PV-Überschuss. Bestätigt für eine Bosch Compress 8800i AW; ob andere Geräte diese Entity unterstützen, ist nicht bekannt."
+      en: "EMS-ESP entity to limit the maximum compressor power (kW) at PV surplus. Confirmed on a Bosch Compress 8800i AW; whether other devices support this entity is unknown."
   - name: value_normal_sg4
     advanced: true
     type: string
@@ -202,7 +202,9 @@ render: |
   setmaxpower:
     source: go
     script: |
-      kw := float64(maxpower) / 1000.0
+      // round to the entity's 0.1 kW resolution instead of relying on firmware truncation
+      dkw := (maxpower + 50) / 100
+      kw := float64(dkw) / 10.0
       kw
     out:
     - name: value
