@@ -264,7 +264,7 @@ tool (
 
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea
 
-replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20260727074919-195c10b8758d
+replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20260812074841-a8aa5fef8a9e
 
 replace github.com/enbility/spine-go => github.com/andig/spine-go v0.7.1-0.20260804073026-f9a8d8e8fd18
 
