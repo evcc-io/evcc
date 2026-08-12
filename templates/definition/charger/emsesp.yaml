@@ -11,10 +11,6 @@ products:
       generic: SG Ready
 capabilities: ["meter", "dim"]
 group: heating
-requirements:
-  description:
-    de: "Eingebunden via [emsesp.org](https://emsesp.org/). Weitere Hinweise zur Einrichtung von Bosch- und Buderus-Wärmepumpen: [bosch-buderus-wp.github.io](https://bosch-buderus-wp.github.io/docs/smarthome/evcc)"
-    en: "Integrated via [emsesp.org](https://emsesp.org/). Additional setup guidance for Bosch and Buderus heat pumps: [bosch-buderus-wp.github.io](https://bosch-buderus-wp.github.io/docs/smarthome/evcc)"
 #   evcc: ["sponsorship"]
 params:
   - name: host
@@ -53,8 +49,8 @@ params:
       de: "Leistungssteuerung"
       en: "Power limitation"
     help:
-      de: "EMS-ESP Entity zur Begrenzung der maximalen Kompressorleistung (kW) bei PV-Überschuss. Bestätigt für eine Bosch Compress 8800i AW; ob andere Geräte diese Entity unterstützen, ist nicht bekannt."
-      en: "EMS-ESP entity to limit the maximum compressor power (kW) at PV surplus. Confirmed on a Bosch Compress 8800i AW; whether other devices support this entity is unknown."
+      de: "EMS-ESP Entity zur Begrenzung der maximalen Kompressorleistung (kW) bei PV-Überschuss."
+      en: "EMS-ESP entity to limit the maximum compressor power (kW) at PV surplus."
   - name: value_normal_sg4
     advanced: true
     type: string
