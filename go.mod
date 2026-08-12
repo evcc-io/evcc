@@ -98,7 +98,7 @@ require (
 	github.com/teslamotors/vehicle-command v0.4.1
 	github.com/tess1o/go-ecoflow v1.1.1-0.20251003083510-2ccc15a17e29
 	github.com/traefik/yaegi v0.16.1
-	github.com/volkszaehler/mbmd v0.0.0-20260803093438-96221ccf34be
+	github.com/volkszaehler/mbmd v0.0.0-20260812141656-4304ad77c56f
 	github.com/warthog618/go-gpiocdev v0.9.1
 	github.com/xuri/excelize/v2 v2.11.0
 	gitlab.com/bboehmke/sunny v0.17.0
