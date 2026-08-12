@@ -124,7 +124,6 @@ func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 
 		implement.Has(m, implement.Battery(m.batterySoc))
 
-		// capacity only degrades over time, reading it once is enough
 		implement.Has(m, implement.BatteryCapacity(func() float64 {
 			return status.NominalFullPackEnergy / 1e3
 		}))
