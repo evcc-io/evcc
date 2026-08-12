@@ -200,23 +200,14 @@ render: |
             { "value" : "{{ .value_dim_sg4 }}" }
   {{- if .powercontrol }}
   setmaxpower:
-    source: go
-    script: |
-      // round to the entity's 0.1 kW resolution instead of relying on firmware truncation
-      dkw := (maxpower + 50) / 100
-      kw := float64(dkw) / 10.0
-      kw
-    out:
-    - name: value
-      type: float
-      config:
-        source: http
-        uri: http://{{ .host }}/api/boiler/{{ .powercontrol }}
-        method: POST
-        headers:
-          - content-type: application/json
-          - authorization: Bearer {{ .token }}
-        body: '{ "value": ${value} }'
+    source: http
+    uri: http://{{ .host }}/api/boiler/{{ .powercontrol }}
+    method: POST
+    headers:
+      - content-type: application/json
+      - authorization: Bearer {{ .token }}
+    # truncate to the entity's 0.1 kW resolution
+    body: '{ "value": {{ `{{ divf (div .maxpower 100) 10 }}` }} }'
   {{- end }}
   {{- if .tempsource }}
   temp:
