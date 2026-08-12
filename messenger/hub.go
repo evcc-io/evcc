@@ -2,6 +2,7 @@ package messenger
 
 import (
 	"fmt"
+	"maps"
 	"reflect"
 	"strings"
 	"text/template"
@@ -105,9 +106,7 @@ func (h *Hub) apply(ev Event, tmpl string) (string, error) {
 	}
 
 	// event-specific attributes override cache values
-	for k, v := range ev.Attributes {
-		attr[k] = v
-	}
+	maps.Copy(attr, ev.Attributes)
 
 	return util.ReplaceFormatted(tmpl, attr)
 }

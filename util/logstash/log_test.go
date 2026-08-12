@@ -1,6 +1,7 @@
 package logstash
 
 import (
+	"fmt"
 	"testing"
 
 	jww "github.com/spf13/jwalterweatherman"
@@ -21,7 +22,7 @@ func TestLog(t *testing.T) {
 	log.Write([]byte(s2))
 	log.Write([]byte(s3))
 
-	idx := log.data
+	trace, other := log.trace.data, log.other.data
 
 	assert.Equal(t, []string{s1, s2, s3}, log.All(nil, jww.LevelTrace, 0))
 	assert.Equal(t, []string{s1, s2, s3}, log.All([]string{}, jww.LevelTrace, 0))
@@ -32,13 +33,27 @@ func TestLog(t *testing.T) {
 
 	assert.Equal(t, []string{}, log.All(nil, jww.LevelFatal, 0))
 
-	assert.Equal(t, idx, log.data, "data should not be changed after All() call")
+	assert.Same(t, trace, log.trace.data, "data should not be changed after All() call")
+	assert.Same(t, other, log.other.data, "data should not be changed after All() call")
 	assert.Equal(t, []string{"test1", "test2"}, log.Areas())
+}
+
+// TestTraceBudget verifies that a flood of trace lines cannot evict non-trace
+// entries, which is what made the log view show mqtt/httpd only (#32673).
+func TestTraceBudget(t *testing.T) {
+	log := New(3)
+
+	log.Write([]byte(s2))
+	for i := range 100 {
+		log.Write(fmt.Appendf(nil, "[mqtt  ] TRACE send %d", i))
+	}
+
+	assert.Equal(t, []string{s2}, log.All(nil, jww.LevelDebug, 0))
+	assert.Equal(t, []string{"mqtt", "test2"}, log.Areas())
 }
 
 // TestRingGrowsThenCaps writes more lines than the configured size and verifies
 // the ring grows up to size and then keeps only the most recent size entries.
-// This guards the grow/cap accounting in Write (length tracked in O(1)).
 func TestRingGrowsThenCaps(t *testing.T) {
 	const size = 3
 	log := New(size)
@@ -61,28 +76,27 @@ func TestRingGrowsThenCaps(t *testing.T) {
 }
 
 // TestRingSkipCacheLinesDoesNotGrow verifies that "[cache ]" lines take the
-// early-return path: they are not stored and must neither grow the ring nor the
-// length counter, which has to stay in sync with data.Len().
+// early-return path and neither grow the ring nor the length counter.
 func TestRingSkipCacheLinesDoesNotGrow(t *testing.T) {
 	log := New(3)
 
 	// grow the ring past a single node first, so a stray cursor advance on the
-	// cache path would actually be observable (Next() on a 1-node ring is a no-op)
+	// cache path would actually be observable
 	log.Write([]byte(s1))
 	log.Write([]byte(s2))
 
 	stored := log.All(nil, jww.LevelTrace, 0)
-	lenBefore := log.length
-	cursorBefore := log.data
+	lenBefore := log.trace.length
+	cursorBefore := log.trace.data
 
 	for range 10 {
 		log.Write([]byte("[cache ] cache line"))
 	}
 
 	assert.Equal(t, stored, log.All(nil, jww.LevelTrace, 0), "cache lines must not change stored content")
-	assert.Equal(t, log.data.Len(), log.length, "length counter must stay in sync with the ring")
-	assert.Equal(t, lenBefore, log.length, "cache lines must not grow the ring")
-	assert.Same(t, cursorBefore, log.data, "cache lines must not advance the write cursor")
+	assert.Equal(t, log.trace.data.Len(), log.trace.length, "length counter must stay in sync with the ring")
+	assert.Equal(t, lenBefore, log.trace.length, "cache lines must not grow the ring")
+	assert.Same(t, cursorBefore, log.trace.data, "cache lines must not advance the write cursor")
 }
 
 func BenchmarkLog(b *testing.B) {

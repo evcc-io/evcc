@@ -103,9 +103,9 @@ export default function setupRouter(i18n: VueI18nInstance) {
           return {
             month: month ? parseInt(month as string, 10) : undefined,
             year: year ? parseInt(year as string, 10) : undefined,
-            period,
-            loadpointFilter: loadpoint,
-            vehicleFilter: vehicle,
+            period: period ?? undefined,
+            loadpointFilter: loadpoint ?? undefined,
+            vehicleFilter: vehicle ?? undefined,
           };
         },
       },
@@ -128,7 +128,7 @@ export default function setupRouter(i18n: VueI18nInstance) {
             day: day ? parseInt(day as string, 10) : undefined,
             month: month ? parseInt(month as string, 10) : undefined,
             year: year ? parseInt(year as string, 10) : undefined,
-            period,
+            period: period ?? undefined,
           };
         },
       },
