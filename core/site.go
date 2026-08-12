@@ -1097,13 +1097,6 @@ func (site *Site) sitePower(state siteState, totalChargePower, flexiblePower flo
 		site.publish(keys.PvPower, state.pvPower)
 	}
 
-	// retain the estimates for the api getters and the green share
-	if site.gridMeter == nil || site.pvMeters == nil {
-		site.Lock()
-		site.gridPower, site.pvPower = state.gridPower, state.pvPower
-		site.Unlock()
-	}
-
 	// honour battery priority
 	batteryPower := state.battery.Power
 	excessDCPower := state.excessDCPower
@@ -1245,6 +1238,13 @@ func (site *Site) updatePower(lp updater, state siteState, totalChargePower floa
 
 	res := site.sitePower(state, totalChargePower, flexiblePower)
 	state = res.state
+
+	// retain the estimates for the api getters and the green share
+	if site.gridMeter == nil || site.pvMeters == nil {
+		site.Lock()
+		site.gridPower, site.pvPower = state.gridPower, state.pvPower
+		site.Unlock()
+	}
 
 	// ignore negative pvPower values as that means it is not an energy source but consumption
 	homePower := state.gridPower + max(0, state.pvPower) + state.battery.Power - totalChargePower
