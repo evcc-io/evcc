@@ -30,6 +30,7 @@ import (
 	"github.com/evcc-io/evcc/util/cloud"
 	"github.com/evcc-io/evcc/util/machine"
 	"github.com/golang-jwt/jwt/v5"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -45,6 +46,9 @@ func machineID() string {
 }
 
 const unavailable = "sponsorship unavailable"
+
+// startupTimeout leaves the network time to settle at boot; grpc retries dialing with backoff until deadline
+const startupTimeout = 30 * time.Second
 
 func IsAuthorized() bool {
 	mu.RLock()
@@ -98,10 +102,10 @@ func ConfigureSponsorship(token string) error {
 
 	client := pb.NewAuthClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), startupTimeout)
 	defer cancel()
 
-	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token, MachineId: machineID()})
+	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token, MachineId: machineID()}, grpc.WaitForReady(true))
 	if err == nil && res.Authorized {
 		Subject = res.Subject
 		ExpiresAt = res.ExpiresAt.AsTime()
@@ -133,7 +137,7 @@ func redactToken(token string) string {
 
 type Status struct {
 	Name        string    `json:"name"`
-	ExpiresAt   time.Time `json:"expiresAt,omitempty"`
+	ExpiresAt   time.Time `json:"expiresAt"`
 	ExpiresSoon bool      `json:"expiresSoon,omitempty"`
 	Token       string    `json:"token,omitempty"`
 }

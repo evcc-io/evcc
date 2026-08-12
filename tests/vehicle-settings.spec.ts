@@ -145,9 +145,12 @@ test.describe("limitSoc", async () => {
     await page.goto("/");
 
     const modal = await openVehicleSettings(page);
-    await vehicleRow(modal, "blauer e-Golf")
-      .getByRole("combobox", { name: "Default limit" })
-      .selectOption("80");
+    const limitSoc = vehicleRow(modal, "blauer e-Golf").getByRole("combobox", {
+      name: "Default limit",
+    });
+    await expect(limitSoc).toHaveValue("100");
+    await expect(limitSoc.getByRole("option", { name: "none" })).toHaveCount(0);
+    await limitSoc.selectOption("80");
     await closeModal(page);
     await expect(page.getByTestId("limit-soc-value")).toContainText("80%");
     await page.waitForLoadState("networkidle");

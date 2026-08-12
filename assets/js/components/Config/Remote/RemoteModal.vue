@@ -35,6 +35,11 @@
 							{{ $t("config.remote.disconnected") }}
 						</span>
 					</div>
+					<ErrorMessage
+						v-if="config.enabled"
+						:error="status.error ?? null"
+						class="mt-2 mb-0"
+					/>
 				</div>
 			</div>
 

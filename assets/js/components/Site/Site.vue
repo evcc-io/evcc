@@ -80,7 +80,7 @@ import type {
 	Battery,
 	Meter,
 	CURRENCY,
-	Forecast,
+	UiForecast,
 	Notification,
 	ConfigStatus,
 	HemsConfig,
@@ -147,7 +147,7 @@ export default defineComponent({
 		smartCostAvailable: Boolean,
 		smartFeedInPriorityAvailable: Boolean,
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
-		forecast: Object as PropType<Forecast>,
+		forecast: Object as PropType<UiForecast>,
 		hems: Object as PropType<ConfigStatus<HemsConfig, HemsStatus>>,
 		evopt: { type: Object as PropType<EvOpt> },
 	},
@@ -159,7 +159,7 @@ export default defineComponent({
 			return store.uiLoadpoints.value || [];
 		},
 		orderedVisibleLoadpoints() {
-			return this.loadpoints.filter((lp) => lp.visible);
+			return this.loadpoints.filter((lp) => lp.visible && !lp.disabled);
 		},
 		batterySoc() {
 			return this.battery?.soc;

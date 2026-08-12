@@ -121,6 +121,12 @@
 							{{ socRange }}
 						</td>
 					</tr>
+					<tr v-if="session.addedRange != null" data-testid="session-details-added-range">
+						<th class="align-baseline">
+							{{ $t("session.addedRange") }}
+						</th>
+						<td>+{{ formatKm(session.addedRange) }}</td>
+					</tr>
 					<tr data-testid="session-details-odometer">
 						<th class="align-middle">
 							{{ $t("session.odometer") }}
@@ -361,14 +367,5 @@ export default defineComponent({
 .odometer-input .form-control {
 	/* fit ~7 digits (e.g. 128222) */
 	width: calc(7ch + 1rem);
-	-moz-appearance: textfield;
-	appearance: textfield;
-}
-
-.odometer-input .form-control::-webkit-inner-spin-button,
-.odometer-input .form-control::-webkit-outer-spin-button {
-	-webkit-appearance: none;
-	appearance: none;
-	margin: 0;
 }
 </style>

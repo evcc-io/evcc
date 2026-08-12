@@ -120,6 +120,18 @@ function daysInMonth(year: number, month: number) {
 	return new Date(year, month, 0).getDate();
 }
 
+function shiftPeriod(period: PERIODS, from: Date, offset: number): Date {
+	switch (period) {
+		case PERIODS.DAY:
+			return new Date(from.getFullYear(), from.getMonth(), from.getDate() + offset);
+		case PERIODS.YEAR:
+			return new Date(from.getFullYear() + offset, 0, 1);
+		case PERIODS.MONTH:
+		default:
+			return new Date(from.getFullYear(), from.getMonth() + offset, 1);
+	}
+}
+
 export default defineComponent({
 	name: "History",
 	components: {
@@ -204,18 +216,7 @@ export default defineComponent({
 			}
 		},
 		to(): Date {
-			switch (this.effectivePeriod) {
-				case PERIODS.DAY: {
-					const d = new Date(this.from);
-					d.setDate(d.getDate() + 1);
-					return d;
-				}
-				case PERIODS.YEAR:
-					return new Date(this.effectiveYear + 1, 0, 1);
-				case PERIODS.MONTH:
-				default:
-					return new Date(this.effectiveYear, this.effectiveMonth, 1);
-			}
+			return shiftPeriod(this.effectivePeriod, this.from, 1);
 		},
 		aggregate(): string {
 			switch (this.effectivePeriod) {
@@ -466,27 +467,43 @@ export default defineComponent({
 		},
 		async fetchData() {
 			this.loading = true;
+			const requestKey = this.fetchKey;
 			const requestFrom = this.from;
 			const requestTo = this.to;
 			const requestPeriod = this.effectivePeriod;
 			try {
-				const res = await api.get("history/energy", {
-					params: {
-						from: requestFrom.toISOString(),
-						to: requestTo.toISOString(),
-						aggregate: this.aggregate,
-						grouped: false,
-					},
-				});
+				const res = await this.fetchEnergy(requestFrom, requestTo);
+				// a newer request superseded this one
+				if (requestKey !== this.fetchKey) return;
 				this.rawSeries = res.data || [];
 				this.displayFrom = requestFrom;
 				this.displayTo = requestTo;
 				this.displayPeriod = requestPeriod;
+				this.prefetchAdjacent();
 			} catch (e) {
 				console.error("Failed to load energy history", e);
 				// keep previous data on error
 			} finally {
-				this.loading = false;
+				if (requestKey === this.fetchKey) this.loading = false;
+			}
+		},
+		fetchEnergy(from: Date, to: Date) {
+			return api.get("history/energy", {
+				params: {
+					from: from.toISOString(),
+					to: to.toISOString(),
+					aggregate: this.aggregate,
+					grouped: false,
+				},
+			});
+		},
+		// warm the browser http cache for the prev/next period
+		prefetchAdjacent() {
+			for (const offset of [-1, 1]) {
+				const from = shiftPeriod(this.effectivePeriod, this.from, offset);
+				const to = shiftPeriod(this.effectivePeriod, this.from, offset + 1);
+				if (from > new Date() || to <= this.startDate) continue;
+				this.fetchEnergy(from, to).catch(() => {});
 			}
 		},
 		buildBaseQuery(): Record<string, string | undefined> {

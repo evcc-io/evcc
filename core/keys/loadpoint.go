@@ -4,6 +4,7 @@ const (
 	// loadpoint settings
 	Name              = "name"             // loadpoint name (config identifier)
 	Title             = "title"            // loadpoint title
+	Disabled          = "disabled"         // loadpoint disabled via config
 	Mode              = "mode"             // charge mode
 	DefaultMode       = "defaultMode"      // default charge mode
 	AlwaysCharge      = "alwaysCharge"     // smart mode: charge continuously at least at min power (off/on/once)

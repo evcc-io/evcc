@@ -82,6 +82,8 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 		select {
 		case <-t.data.Done():
 			if !t.fromTo.IsActive(time.Now().Hour()) {
+				// keep cached forecast alive while fetching is paused
+				mergeRatesAfter(t.data, nil, beginningOfDay())
 				continue
 			}
 		default:

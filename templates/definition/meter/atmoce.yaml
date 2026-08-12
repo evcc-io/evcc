@@ -22,22 +22,18 @@ params:
     id: 1
   - name: maxacpower
     service: modbus/read?address=60027&type=holding&encoding=uint32&scale=1&resulttype=int&{modbus}
-  - preset: battery-params
-  - name: capacity
-    service: modbus/read?address=60031&type=holding&encoding=uint32&scale=0.001&resulttype=int&{modbus}
+  - preset: battery-minmaxsoc
   - name: minsoc
     advanced: true
     default: 10
   - name: maxsoc
     advanced: true
     default: 100
-  - name: maxdischargepower
-    service: modbus/read?address=60029&type=holding&encoding=uint32&scale=1&resulttype=int&{modbus}
   - name: firmware
     type: choice
     choice: ["<01.01.00.28.15", ">=01.01.00.28.15"]
     default: "<01.01.00.28.15"
-    advanced: true
+    required: true
     description:
       de: Firmware-Version
       en: Firmware version
@@ -48,6 +44,12 @@ params:
       en: |
         Firmware 01.01.00.28.15 and higher allows for correct hold/holdcharge functionality, dimming and curtailing.
         Older versions only support hold function without (dis)charge.
+  - name: capacity
+    deprecated: true
+  - name: maxchargepower
+    deprecated: true
+  - name: maxdischargepower
+    deprecated: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -201,6 +203,14 @@ render: |
   {{- end }}
   {{- end }}
   {{- if eq .usage "battery" }}
+  capacity:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 60031 # Energy Storage Capacity (kWh * 1000)
+      type: holding
+      decode: uint32
+    scale: 0.001
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -225,6 +235,22 @@ render: |
       type: holding
       decode: uint64
     scale: 0.01
+  maxchargepower:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 60029 # Rated Energy Storage Power (kW * 1000)
+      type: holding
+      decode: uint32
+    scale: 0.75 # 75% of rated energy storage power
+  maxdischargepower:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 60029 # Rated Energy Storage Power (kW * 1000)
+      type: holding
+      decode: uint32
+    scale: 1
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -357,9 +383,8 @@ render: |
         set:
           source: sequence
           set:
-            {{- if eq .firmware ">=01.01.00.28.15" }}
             - source: const
-              value: 2
+              value: {{ if eq .firmware "<01.01.00.28.15" }}99{{ else }}2{{ end }}
               set:
                 source: modbus
                 {{- include "modbus" . | indent 14 }}
@@ -367,6 +392,7 @@ render: |
                   address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
                   type: writemultiple
                   decode: uint16
+            {{- if eq .firmware ">=01.01.00.28.15" }}
             - source: const
               value: 0 # Set charge limit to 0W
               set:
@@ -385,9 +411,6 @@ render: |
                   address: 60320 # Energy Storage Maximum Discharging Power (kW * 1000)
                   type: writemultiple
                   decode: uint32
-            {{- else }}
-            - source: sleep
-              duration: 0s
             {{- end }}
   {{- if not ( eq .firmware "<01.01.00.28.15" ) }}
   curtail:
@@ -491,5 +514,5 @@ render: |
             decode: uint32
     script: limit == 0
   {{- end }}
-  {{- include "battery-params" . }}
+  {{- include "battery-minmaxsoc" . }}
   {{- end }}
