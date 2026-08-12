@@ -145,4 +145,3 @@ func TestBoostPowerPhaseSwitch(t *testing.T) {
 	// delta = 100 + 690 (step@3p) = 790
 	assert.Equal(t, 790.0, res)
 }
-
