@@ -116,7 +116,7 @@ test.describe("ocpp", () => {
     await page.goto("/#/config");
 
     // Open loadpoint modal and select charging point type
-    await page.getByRole("button", { name: "Add charger or heater" }).click();
+    await page.getByRole("button", { name: "Add charging point or heater" }).click();
     const lpModal = page.getByTestId("loadpoint-modal");
     await expectModalVisible(lpModal);
     await lpModal.getByRole("button", { name: "Charging point" }).click();

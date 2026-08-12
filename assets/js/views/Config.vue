@@ -16,6 +16,7 @@
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.general") }}</h2>
 				<GeneralConfig
+					class="box-pull-out"
 					:experimental="experimental"
 					:sponsor-error="hasClassError('sponsorship')"
 					@site-changed="siteChanged"
@@ -23,7 +24,7 @@
 
 				<WelcomeBanner v-if="setupRequired" />
 				<h2 class="my-4">{{ $t("config.section.loadpoints") }}</h2>
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<DeviceCard
 						v-for="loadpoint in loadpoints"
 						:id="`loadpoint_${loadpoint.name}`"
@@ -32,8 +33,10 @@
 						:name="loadpoint.name"
 						:editable="!!loadpoint.id"
 						:error="hasDeviceError('loadpoint', loadpoint.name)"
+						:disabled="!!loadpoint.disable"
 						data-testid="loadpoint"
 						@edit="openModal('loadpoint', { id: loadpoint.id })"
+						@enable="handleDisable('loadpoint', loadpoint.id!, false)"
 					>
 						<template #tags>
 							<DeviceTags :tags="loadpointTags(loadpoint)" />
@@ -54,8 +57,8 @@
 					/>
 				</div>
 
-				<h2 class="my-4">{{ $t("config.section.vehicles") }}</h2>
-				<div class="p-0 config-list">
+				<h2 id="vehicles" class="my-4">{{ $t("config.section.vehicles") }}</h2>
+				<div class="p-0 config-list box-pull-out">
 					<DeviceCard
 						v-for="vehicle in vehicles"
 						:id="`vehicle_${vehicle.name}`"
@@ -64,8 +67,10 @@
 						:name="vehicle.name"
 						:editable="vehicle.id >= 0"
 						:error="hasDeviceError('vehicle', vehicle.name)"
+						:disabled="!!vehicle.deviceDisable"
 						data-testid="vehicle"
 						@edit="openModal('vehicle', { id: vehicle.id })"
+						@enable="handleDisable('vehicle', vehicle.id, false)"
 					>
 						<template #icon>
 							<VehicleIcon :name="vehicle.config?.icon" />
@@ -81,8 +86,37 @@
 					/>
 				</div>
 
+				<h2 class="my-4 mt-5">{{ $t("config.section.consumers") }}</h2>
+				<div class="p-0 config-list box-pull-out">
+					<MeterCard
+						v-for="meter in consumerMeters"
+						:key="meter.name"
+						:meter="meter"
+						meter-type="consumer"
+						:has-error="hasDeviceError('meter', meter.name)"
+						:tags="deviceTags('meter', meter.name)"
+						@edit="(type, id) => openModal('meter', { type, id })"
+						@enable="handleDisable('meter', meter.id, false)"
+					/>
+					<MeterCard
+						v-for="meter in auxMeters"
+						:key="meter.name"
+						:meter="meter"
+						meter-type="aux"
+						:has-error="hasDeviceError('meter', meter.name)"
+						:tags="deviceTags('meter', meter.name)"
+						@edit="(type, id) => openModal('meter', { type, id })"
+						@enable="handleDisable('meter', meter.id, false)"
+					/>
+					<NewDeviceButton
+						data-testid="add-consumer"
+						:title="$t('config.main.addConsumer')"
+						@click="openModal('meter', { choices: ['consumer', 'aux'] })"
+					/>
+				</div>
+
 				<h2 class="my-4 mt-5">{{ $t("config.section.grid") }}</h2>
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<MeterCard
 						v-if="gridMeter"
 						:meter="gridMeter"
@@ -91,6 +125,7 @@
 						:has-error="hasDeviceError('meter', gridMeter.name)"
 						:tags="deviceTags('meter', gridMeter.name)"
 						@edit="(type, id) => openModal('meter', { type, id })"
+						@enable="handleDisable('meter', gridMeter.id, false)"
 					/>
 					<NewDeviceButton
 						v-else
@@ -100,7 +135,7 @@
 					/>
 				</div>
 				<h2 class="my-4 mt-5">{{ $t("config.section.meter") }}</h2>
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<MeterCard
 						v-for="meter in pvMeters"
 						:key="meter.name"
@@ -110,6 +145,7 @@
 						:tags="deviceTags('meter', meter.name)"
 						:banner="meterBanner(meter.name)"
 						@edit="(type, id) => openModal('meter', { type, id })"
+						@enable="handleDisable('meter', meter.id, false)"
 					/>
 					<MeterCard
 						v-for="meter in batteryMeters"
@@ -119,6 +155,7 @@
 						:has-error="hasDeviceError('meter', meter.name)"
 						:tags="deviceTags('meter', meter.name)"
 						@edit="(type, id) => openModal('meter', { type, id })"
+						@enable="handleDisable('meter', meter.id, false)"
 					/>
 					<NewDeviceButton
 						:title="$t('config.main.addPvBattery')"
@@ -127,16 +164,7 @@
 				</div>
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.additionalMeter") }}</h2>
-				<div class="p-0 config-list">
-					<MeterCard
-						v-for="meter in auxMeters"
-						:key="meter.name"
-						:meter="meter"
-						meter-type="aux"
-						:has-error="hasDeviceError('meter', meter.name)"
-						:tags="deviceTags('meter', meter.name)"
-						@edit="(type, id) => openModal('meter', { type, id })"
-					/>
+				<div class="p-0 config-list box-pull-out">
 					<MeterCard
 						v-for="meter in extMeters"
 						:key="meter.name"
@@ -145,15 +173,17 @@
 						:has-error="hasDeviceError('meter', meter.name)"
 						:tags="deviceTags('meter', meter.name)"
 						@edit="(type, id) => openModal('meter', { type, id })"
+						@enable="handleDisable('meter', meter.id, false)"
 					/>
 					<NewDeviceButton
+						data-testid="add-additional"
 						:title="$t('config.main.addAdditional')"
-						@click="openModal('meter', { choices: ['aux', 'ext'] })"
+						@click="openModal('meter', { type: 'ext' })"
 					/>
 				</div>
 
 				<h2 id="tariffs" class="my-4 mt-5">{{ $t("config.tariff.title") }}</h2>
-				<div v-if="!!tariffsYamlSource" class="p-0 config-list">
+				<div v-if="!!tariffsYamlSource" class="p-0 config-list box-pull-out">
 					<DeviceCard
 						:title="$t('config.tariff.title')"
 						:editable="tariffsYamlSource === 'db'"
@@ -172,7 +202,7 @@
 						</template>
 					</DeviceCard>
 				</div>
-				<div v-else class="p-0 config-list">
+				<div v-else class="p-0 config-list box-pull-out">
 					<TariffCard
 						v-if="gridTariff"
 						:tariff="gridTariff"
@@ -181,6 +211,7 @@
 						:tags="deviceTags('tariff', gridTariff.name)"
 						:currency="currency"
 						@edit="openModal('tariff', { type: 'grid', id: gridTariff.id })"
+						@enable="handleDisable('tariff', gridTariff.id, false)"
 					/>
 					<TariffCard
 						v-if="feedInTariff"
@@ -190,6 +221,7 @@
 						:tags="deviceTags('tariff', feedInTariff.name)"
 						:currency="currency"
 						@edit="openModal('tariff', { type: 'feedIn', id: feedInTariff.id })"
+						@enable="handleDisable('tariff', feedInTariff.id, false)"
 					/>
 					<NewDeviceButton
 						v-if="possibleTariffTypes.length"
@@ -202,8 +234,8 @@
 						tariff-type="co2"
 						:has-error="hasDeviceError('tariff', co2Tariff.name)"
 						:tags="deviceTags('tariff', co2Tariff.name)"
-						:currency="currency"
 						@edit="openModal('tariff', { type: 'co2', id: co2Tariff.id })"
+						@enable="handleDisable('tariff', co2Tariff.id, false)"
 					/>
 					<TariffCard
 						v-for="tariff in solarTariffs"
@@ -214,6 +246,17 @@
 						:tags="deviceTags('tariff', tariff.name)"
 						:currency="currency"
 						@edit="openModal('tariff', { type: 'solar', id: tariff.id })"
+						@enable="handleDisable('tariff', tariff.id, false)"
+					/>
+					<TariffCard
+						v-if="temperatureTariff"
+						:tariff="temperatureTariff"
+						tariff-type="temperature"
+						:has-error="hasDeviceError('tariff', temperatureTariff.name)"
+						:tags="deviceTags('tariff', temperatureTariff.name)"
+						@edit="
+							openModal('tariff', { type: 'temperature', id: temperatureTariff.id })
+						"
 					/>
 					<TariffCard
 						v-if="plannerTariff"
@@ -223,6 +266,7 @@
 						:tags="deviceTags('tariff', plannerTariff.name)"
 						:currency="currency"
 						@edit="openModal('tariff', { type: 'planner', id: plannerTariff.id })"
+						@enable="handleDisable('tariff', plannerTariff.id, false)"
 					/>
 					<NewDeviceButton
 						v-if="possibleForecastTypes.length"
@@ -233,7 +277,7 @@
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.integrations") }}</h2>
 
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<AuthProvidersCard
 						:providers="authProviders"
 						data-testid="auth-providers"
@@ -300,6 +344,20 @@
 						</template>
 					</DeviceCard>
 					<DeviceCard
+						:title="$t('config.hems.title')"
+						editable
+						:error="hasClassError('hems')"
+						:unconfigured="isUnconfigured(hemsTags)"
+						data-testid="hems"
+						@edit="openModal('hems')"
+					>
+						<template #icon><HemsIcon /></template>
+						<template #tags>
+							<p v-if="hemsLabel" class="my-2 fw-bold">{{ hemsLabel }}</p>
+							<DeviceTags :tags="hemsTags" />
+						</template>
+					</DeviceCard>
+					<DeviceCard
 						:title="$t('config.modbusproxy.title')"
 						editable
 						:error="hasClassError('modbusproxy')"
@@ -310,19 +368,6 @@
 						<template #icon><ModbusProxyIcon /></template>
 						<template #tags>
 							<DeviceTags :tags="modbusproxyTags" />
-						</template>
-					</DeviceCard>
-					<DeviceCard
-						:title="$t('config.hems.title')"
-						editable
-						:error="hasClassError('hems')"
-						:unconfigured="isUnconfigured(hemsTags)"
-						data-testid="hems"
-						@edit="openModal('hems')"
-					>
-						<template #icon><HemsIcon /></template>
-						<template #tags>
-							<DeviceTags :tags="hemsTags" />
 						</template>
 					</DeviceCard>
 					<DeviceCard
@@ -354,7 +399,7 @@
 				</div>
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.services") }}</h2>
-				<div class="p-0 config-list">
+				<div class="p-0 config-list box-pull-out">
 					<DeviceCard
 						:title="$t('config.ocpp.title')"
 						editable
@@ -396,7 +441,10 @@
 				<hr class="my-5" />
 
 				<h2 class="my-4 mt-5">{{ $t("config.section.system") }}</h2>
-				<div data-testid="config-system" class="round-box p-4 d-flex gap-4 flex-wrap">
+				<div
+					data-testid="config-system"
+					class="round-box box-pull-out p-4 d-flex gap-4 flex-wrap"
+				>
 					<router-link to="/log" class="btn btn-outline-secondary">
 						{{ $t("config.system.logs") }}
 					</router-link>
@@ -425,26 +473,43 @@
 					:hasDeviceError="hasDeviceError"
 					@changed="loadpointChanged"
 					@dismissed="loadpointDismissed"
+					@disable="({ id, disable }) => handleDisable('loadpoint', id, disable)"
 				/>
-				<VehicleModal :is-sponsor="isSponsor" @vehicle-changed="vehicleChanged" />
-				<MeterModal :is-sponsor="isSponsor" @changed="meterChanged" />
+				<VehicleModal
+					:is-sponsor="isSponsor"
+					@vehicle-changed="vehicleChanged"
+					@disable="({ id, disable }) => handleDisable('vehicle', id, disable)"
+				/>
+				<MeterModal
+					:is-sponsor="isSponsor"
+					@changed="meterChanged"
+					@disable="({ id, disable }) => handleDisable('meter', id, disable)"
+				/>
 				<ChargerModal :is-sponsor="isSponsor" :ocpp="ocpp" @changed="chargerChanged" />
 				<InfluxModal @changed="loadDirty" />
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
 				<ControlModal @changed="loadDirty" />
-				<HemsModal :yamlSource="hems?.yamlSource" @changed="loadDirty" />
+				<HemsModal
+					:id="hemsDevices[0]?.id"
+					:yamlSource="hems?.yamlSource"
+					@changed="hemsChanged"
+				/>
 				<ShmModal @changed="loadDirty" />
 				<MessagingLegacyModal @changed="loadDirty" />
 				<MessagingModal :messengers="messengers" @changed="loadDirty" />
 				<MessengerModal @changed="messengerChanged" />
 				<TariffsLegacyModal @changed="loadDirty" />
-				<TariffModal :currency="currency" @changed="tariffChanged" />
+				<TariffModal
+					:currency="currency"
+					@changed="tariffChanged"
+					@disable="({ id, disable }) => handleDisable('tariff', id, disable)"
+				/>
 				<TelemetryModal :is-sponsor="isSponsor" :telemetry="telemetry" />
 				<OptimizerModal :is-sponsor="isSponsor" />
 				<McpModal />
 				<ExperimentalModal :experimental="experimental" />
-				<RemoteModal :remote="remote" :is-sponsor="isSponsor" />
+				<RemoteModal :remote="remote" :is-sponsor="isSponsor" :site-title="siteTitle" />
 				<TitleModal @changed="loadDirty" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
 				<CircuitsModal :gridMeter="gridMeter" :extMeters="extMeters" @changed="loadDirty" />
@@ -500,6 +565,7 @@ import MessengerModal from "@/components/Config/Messaging/MessengerModal.vue";
 import MessagingLegacyModal from "@/components/Config/Messaging/MessagingLegacyModal.vue";
 import MeterModal from "../components/Config/MeterModal.vue";
 import MeterCard from "../components/Config/MeterCard.vue";
+import { createDeviceUtils } from "../components/Config/DeviceModal";
 import { openModal, type ModalResult } from "@/configModal";
 import ModbusProxyIcon from "../components/MaterialIcon/ModbusProxy.vue";
 import ModbusProxyModal from "../components/Config/ModbusProxyModal.vue";
@@ -532,6 +598,7 @@ import type {
 	ConfigVehicle,
 	ConfigCircuit,
 	ConfigMessenger,
+	ConfigHems,
 	ConfigLoadpoint,
 	ConfigMeter,
 	Timeout,
@@ -543,7 +610,7 @@ import type {
 	Notification,
 	Remote,
 } from "@/types/evcc";
-import { CURRENCY } from "@/types/evcc";
+import { ConfigType, CURRENCY } from "@/types/evcc";
 import { circuitTree, type CircuitNode } from "@/utils/circuits";
 
 type DeviceValuesMap = Record<DeviceType, Record<string, any>>;
@@ -634,6 +701,7 @@ export default defineComponent({
 			loadpoints: [] as ConfigLoadpoint[],
 			chargers: [] as ConfigCharger[],
 			circuits: [] as ConfigCircuit[],
+			hemsDevices: [] as ConfigHems[],
 			tariffs: [] as any[], // ConfigTariff[] - tariff device entities
 			tariffRefs: {
 				grid: "",
@@ -641,6 +709,7 @@ export default defineComponent({
 				co2: "",
 				planner: "",
 				solar: [] as string[],
+				temperature: "",
 			},
 			site: {
 				grid: "",
@@ -649,6 +718,7 @@ export default defineComponent({
 				title: "",
 				aux: null as string[] | null,
 				ext: null as string[] | null,
+				consumer: null as string[] | null,
 			} as SiteConfig,
 			deviceValueTimeout: null as Timeout,
 			deviceValues: {
@@ -705,6 +775,9 @@ export default defineComponent({
 			const names = this.site?.ext;
 			return this.getMetersByNames(names);
 		},
+		consumerMeters() {
+			return this.getMetersByNames(this.site?.consumer);
+		},
 		gridTariff() {
 			const name = this.tariffRefs?.grid;
 			return name ? this.tariffs.find((t) => t.name === name) : null;
@@ -721,6 +794,10 @@ export default defineComponent({
 			const name = this.tariffRefs?.planner;
 			return name ? this.tariffs.find((t) => t.name === name) : null;
 		},
+		temperatureTariff() {
+			const name = this.tariffRefs?.temperature;
+			return name ? this.tariffs.find((t) => t.name === name) : null;
+		},
 		solarTariffs() {
 			const names = this.tariffRefs?.solar || [];
 			return names.map((name) => this.tariffs.find((t) => t.name === name)).filter(Boolean);
@@ -735,16 +812,19 @@ export default defineComponent({
 			const types: TariffType[] = [];
 			if (!this.co2Tariff) types.push("co2");
 			types.push("solar"); // Solar can have multiple
+			if (!this.temperatureTariff) types.push("temperature");
 			if (!this.plannerTariff) types.push("planner");
 			return types;
 		},
 		tariffTags(): DeviceTags {
-			const { tariffGrid, tariffFeedIn, tariffCo2, tariffSolar } = store.state;
+			const { tariffGrid, tariffFeedIn, tariffCo2, tariffSolar, tariffTemperature } =
+				store.state;
 			if (
 				tariffGrid === undefined &&
 				tariffFeedIn === undefined &&
 				tariffCo2 === undefined &&
-				tariffSolar === undefined
+				tariffSolar === undefined &&
+				tariffTemperature === undefined
 			) {
 				return { configured: { value: false } };
 			}
@@ -753,6 +833,7 @@ export default defineComponent({
 				feedinPrice: {},
 				co2: {},
 				solarForecast: {},
+				outdoorTemp: {},
 			};
 			if (tariffGrid) {
 				tags.gridPrice = { value: tariffGrid };
@@ -765,6 +846,9 @@ export default defineComponent({
 			}
 			if (tariffSolar) {
 				tags.solarForecast = { value: tariffSolar };
+			}
+			if (tariffTemperature !== undefined) {
+				tags.outdoorTemp = { value: tariffTemperature };
 			}
 			return tags;
 		},
@@ -791,15 +875,18 @@ export default defineComponent({
 			return store.state?.hems;
 		},
 		hemsTags(): DeviceTags {
-			const type = this.hems?.config?.type;
-			const status = store.state?.hems?.status;
-			if (!type && !status) {
-				return { configured: { value: false } };
-			}
-			if (!status) {
-				return { configured: { value: true } };
-			}
 			const result: DeviceTags = {};
+			const exportLimit = store.state?.gridExportLimit || 0;
+			if (exportLimit > 0) {
+				result["exportLimit"] = { value: exportLimit };
+			}
+			if (this.hemsDevices.length === 0 && !this.hems?.config?.configured) {
+				return exportLimit > 0 ? result : { configured: { value: false } };
+			}
+			const status = store.state?.hems?.status;
+			if (!status) {
+				return { ...result, configured: { value: true } };
+			}
 			if (status.dimmed && status.maxConsumptionPower) {
 				result["dimLimit"] = {
 					value: status.maxConsumptionPower,
@@ -808,16 +895,23 @@ export default defineComponent({
 			} else if (status.dimmed !== undefined) {
 				result["dimmed"] = { value: status.dimmed };
 			}
-			if (status.curtailed && status.maxProductionPower !== undefined) {
+			if ((status.curtailed ?? 100) < 100 && status.maxProductionPower !== undefined) {
 				result["curtailLimit"] = {
 					value: status.maxProductionPower,
 					warning: true,
 				};
 			} else if (status.curtailed !== undefined) {
-				result["curtailed"] = { value: status.curtailed };
+				result["curtailed"] = { value: status.curtailed < 100 };
 			}
 
 			return result;
+		},
+		hemsLabel(): string {
+			const dev = this.hemsDevices[0];
+			if (!dev) return "";
+			if (dev.deviceProduct) return dev.deviceProduct;
+			if (dev.type === ConfigType.Custom) return this.$t("config.hems.customOption");
+			return "";
 		},
 		remote(): Remote | undefined {
 			return store.state?.remote;
@@ -828,13 +922,16 @@ export default defineComponent({
 				return { configured: { value: false } };
 			}
 			const tags: DeviceTags = {
-				enabled: { value: remote.config?.enabled },
-				connected: { value: remote.status?.connected },
+				remoteEnabled: { value: remote.config?.enabled },
+				connected: {
+					value: remote.status?.connected,
+					error: remote.config?.enabled && !remote.status?.connected,
+				},
 			};
 			if (remote.status?.loginBlocked) {
 				tags["loginBlocked"] = { value: true, error: true };
 			}
-			if (remote.status?.connected) {
+			if (remote.config?.enabled) {
 				const lastSeen = remote.status?.lastSeen;
 				const count = lastSeen
 					? Object.keys(lastSeen).filter((u) => isRemoteClientActive(lastSeen, u)).length
@@ -959,6 +1056,30 @@ export default defineComponent({
 		isUnconfigured(tags: DeviceTags): boolean {
 			return tags["configured"]?.value === false;
 		},
+		async handleDisable(deviceClass: DeviceType, id: number, disable: boolean) {
+			const promptKey = disable
+				? "config.general.confirmDisable"
+				: "config.general.confirmEnable";
+			if (!window.confirm(this.$t(promptKey))) return;
+			const refresh: Partial<Record<DeviceType, () => void>> = {
+				meter: () => this.meterChanged({ action: "updated" }),
+				tariff: () => this.tariffChanged({ action: "updated" }),
+				vehicle: () => this.vehicleChanged(),
+				loadpoint: () => this.loadpointChanged(),
+			};
+			try {
+				if (deviceClass === "loadpoint") {
+					const { data } = await api.get(`config/loadpoints/${id}`);
+					await api.put(`config/loadpoints/${id}`, { ...data, disable });
+				} else {
+					await createDeviceUtils(deviceClass).disable(id, disable);
+				}
+				refresh[deviceClass]?.();
+				await this.loadDirty();
+			} catch (e) {
+				console.error("disable failed", e);
+			}
+		},
 		handleVisibilityChange() {
 			this.isPageVisible = document.visibilityState === "visible";
 			if (this.isPageVisible) {
@@ -977,6 +1098,7 @@ export default defineComponent({
 			await this.loadMessengers();
 			await this.loadTariffs();
 			await this.loadTariffRefs();
+			await this.loadHems();
 			await this.loadDirty();
 			this.updateValues();
 		},
@@ -1002,6 +1124,9 @@ export default defineComponent({
 		},
 		async loadMeters() {
 			this.meters = (await this.loadConfig("devices/meter")) || [];
+		},
+		async loadHems() {
+			this.hemsDevices = (await this.loadConfig("devices/hems")) || [];
 		},
 		async loadCircuits() {
 			this.circuits = (await this.loadConfig("devices/circuit")) || [];
@@ -1066,6 +1191,22 @@ export default defineComponent({
 						this.site.ext.push(name);
 						this.saveSite(type);
 						break;
+					case "consumer":
+						if (!this.site.consumer) this.site.consumer = [];
+						this.site.consumer.push(name);
+						this.saveSite("consumer");
+						break;
+				}
+			}
+
+			// Converted: move ext meter to consumer (history is reconciled on restart)
+			if (result.action === "converted") {
+				const name = this.meters.find((m) => m.id === result.id)?.name;
+				if (name) {
+					const ext = (this.site.ext || []).filter((n) => n !== name);
+					const consumer = [...(this.site.consumer || []), name];
+					await api.put("/config/site", { ext, consumer });
+					await this.loadSite();
 				}
 			}
 
@@ -1083,6 +1224,10 @@ export default defineComponent({
 			await this.loadChargers();
 			await this.loadDirty();
 			this.updateValues();
+		},
+		async hemsChanged() {
+			await this.loadHems();
+			await this.loadDirty();
 		},
 		async loadpointChanged() {
 			await this.loadLoadpoints();
@@ -1167,6 +1312,7 @@ export default defineComponent({
 				} as Record<DeviceType, any[]>;
 				for (const type in devices) {
 					for (const device of devices[type as DeviceType]) {
+						if (device.deviceDisable) continue;
 						if (this.isComponentMounted && this.isPageVisible) {
 							await this.updateDeviceValue(type as DeviceType, device.name);
 						}
@@ -1183,7 +1329,8 @@ export default defineComponent({
 			return this.deviceValues[type][id] || {};
 		},
 		meterBanner(name: string): string | undefined {
-			return this.deviceTags("meter", name)["curtailed"]?.value
+			// the tag is only present while curtailing, a zero percent limit is still one
+			return this.deviceTags("meter", name)["curtailed"]?.value !== undefined
 				? this.$t("config.deviceValue.productionLimited")
 				: undefined;
 		},
@@ -1219,8 +1366,13 @@ export default defineComponent({
 .config-list {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-	grid-gap: 2rem;
+	grid-gap: 1rem;
 	margin-bottom: 5rem;
+}
+@media (min-width: 576px) {
+	.config-list {
+		grid-gap: 2rem;
+	}
 }
 .wip {
 	opacity: 0.2 !important;

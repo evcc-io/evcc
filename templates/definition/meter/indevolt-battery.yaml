@@ -12,6 +12,7 @@ products:
   - brand: Indevolt
     description:
       generic: PowerFlex 3000 AC
+capabilities: ["battery-control"]
 requirements:
   description:
     de: |
@@ -41,6 +42,11 @@ params:
   - name: cache
     default: 5s
   - preset: battery-params
+  - name: maxchargepower
+    default: 2400
+    help:
+      en: Maximum charge power (W). Valid range 50-3000, depending on your device.
+      de: Maximale Ladeleistung (W). Gültiger Bereich 50-3000, abhängig von Ihrem Gerät.
 render: |
   {{- define "auth" }}
   {{- if .user }}
@@ -69,25 +75,88 @@ render: |
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
+    # cJSON Point 6000 — Battery Power (W, Float)
+    # Positive = charging, negative = discharging (matches evcc convention).
     source: http
     uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config={{ urlEncode `{"t":[6000]}` }}
     method: POST
     {{- include "auth" . | indent 2 }}
-    jq: ."6000" # Battery Power (W); ggf. scale: -1 falls Vorzeichen invertiert
+    jq: ."6000"
     cache: {{ .cache }}
   soc:
+    # cJSON Point 6002 = Battery SOC Total (%, Float)
     source: http
     uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config={{ urlEncode `{"t":[6002]}` }}
     method: POST
     {{- include "auth" . | indent 2 }}
-    jq: ."6002" # Battery SOC (%)
+    jq: ."6002"
     cache: {{ .cache }}
   energy:
+    # cJSON Point 6007 — Battery Total Discharging Energy (kWh, Num)
     source: http
     uri: http://{{ .host }}:8080/rpc/Indevolt.GetData?config={{ urlEncode `{"t":[6007]}` }}
     method: POST
     {{- include "auth" . | indent 2 }}
-    jq: ."6007" # Battery Total Discharging Energy (kWh)
+    jq: ."6007"
     cache: {{ .cache }}
+  batterymode:
+    source: switch
+    switch:
+      - case: 1 # normal
+        set:
+          source: sequence
+          set:
+            # Step 1: Set Mode to Self-consumed Prioritized (47005=1), which is the default for this battery
+            - source: http
+              uri: "http://{{ .host }}:8080/rpc/Indevolt.SetData?config={\"f\":16,\"t\":47005,\"v\":[1]}"
+              method: POST
+              {{- include "auth" . | indent 14 }}
+              jq: .result
+            # Step 2: Also Set Grid Charging Setting to Disable (1143=0) to enable normal operation
+            - source: http
+              uri: "http://{{ .host }}:8080/rpc/Indevolt.SetData?config={\"f\":16,\"t\":1143,\"v\":[0]}"
+              method: POST
+              {{- include "auth" . | indent 14 }}
+              jq: .result
+      - case: 2 # hold power
+        set:
+          source: sequence
+          set:
+            # Step 1: Set Mode to Real-time control (47005=4), which is necessary to write State Setting (Step 2)
+            - source: http
+              uri: "http://{{ .host }}:8080/rpc/Indevolt.SetData?config={\"f\":16,\"t\":47005,\"v\":[4]}"
+              method: POST
+              {{- include "auth" . | indent 14 }}
+              jq: .result
+            # Step 2: Set State Setting to Standby (47015=0), additionally adjusting power and SOC to valid values to avoid API rejections
+            # API validity: documented ranges are power 50 to 2400 W (47016)
+            - source: http
+              uri: "http://{{ .host }}:8080/rpc/Indevolt.SetData?config={\"f\":16,\"t\":47015,\"v\":[0,50,{{ .minsoc }}]}"
+              method: POST
+              {{- include "auth" . | indent 14 }}
+              jq: .result
+      - case: 3 # charge
+        set:
+          source: sequence
+          set:
+            # Step 1: Set Mode to Real-time control (47005=4), which is necessary to write State Setting (Step 3)
+            - source: http
+              uri: "http://{{ .host }}:8080/rpc/Indevolt.SetData?config={\"f\":16,\"t\":47005,\"v\":[4]}"
+              method: POST
+              {{- include "auth" . | indent 14 }}
+              jq: .result
+            # Step 2: Set Grid Charging Setting to Charging (1143=1)
+            - source: http
+              uri: "http://{{ .host }}:8080/rpc/Indevolt.SetData?config={\"f\":16,\"t\":1143,\"v\":[1]}"
+              method: POST
+              {{- include "auth" . | indent 14 }}
+              jq: .result
+            # Step 3: Set State Setting to Charging (47015=1), additionally adjusting power and SOC to valid values, which is required by the API
+            - source: http
+              uri: "http://{{ .host }}:8080/rpc/Indevolt.SetData?config={\"f\":16,\"t\":47015,\"v\":[1,{{ .maxchargepower }},{{ .maxsoc }}]}"
+              method: POST
+              {{- include "auth" . | indent 14 }}
+              jq: .result
+    
   {{- include "battery-params" . }}
   {{- end }}

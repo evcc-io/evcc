@@ -6,7 +6,9 @@ products:
       generic: MyŠkoda
 params:
   - preset: vehicle-base
-  - preset: vehicle-climater
+  - name: welcomecharge
+    advanced: true
+  - preset: vehicle-online
   - name: timeout
 render: |
   type: skoda

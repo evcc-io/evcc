@@ -1,6 +1,8 @@
 package site
 
 import (
+	"iter"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 )
@@ -15,8 +17,9 @@ type API interface {
 	Publisher
 
 	Loadpoints() []loadpoint.API
+	ActiveLoadpoints() iter.Seq2[int, loadpoint.API]
 	Vehicles() Vehicles
-	Optimize() error
+	Optimize()
 
 	// Meta
 	GetTitle() string
@@ -33,6 +36,8 @@ type API interface {
 	SetAuxMeterRefs([]string)
 	GetExtMeterRefs() []string
 	SetExtMeterRefs([]string)
+	GetConsumerMeterRefs() []string
+	SetConsumerMeterRefs([]string)
 
 	// circuits
 	GetCircuit() api.Circuit
@@ -42,6 +47,7 @@ type API interface {
 	//
 
 	GetBatterySoc() float64
+	GetBatteryMaxDischargePower() *float64
 	GetPrioritySoc() float64
 	SetPrioritySoc(float64) error
 	GetBufferSoc() float64
@@ -66,6 +72,8 @@ type API interface {
 	GetGridPower() float64
 	GetResidualPower() float64
 	SetResidualPower(float64) error
+	GetGridExportLimit() float64
+	SetGridExportLimit(float64) error
 
 	//
 	// tariffs and costs
@@ -75,11 +83,22 @@ type API interface {
 	GetTariff(api.TariffUsage) api.Tariff
 
 	//
+	// forecast
+	//
+
+	// GetSolarAdjusted returns if the solar forecast is adjusted to real production data
+	GetSolarAdjusted() bool
+	// SetSolarAdjusted sets if the solar forecast is adjusted to real production data
+	SetSolarAdjusted(bool)
+
+	//
 	// battery control
 	//
 
 	GetBatteryDischargeControl() bool
 	SetBatteryDischargeControl(bool) error
+	GetBatteryGridDischarge() bool
+	SetBatteryGridDischarge(bool) error
 
 	//
 	// battery control external

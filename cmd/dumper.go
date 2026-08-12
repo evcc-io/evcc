@@ -163,8 +163,8 @@ func (d *dumper) Dump(name string, v any) {
 
 	if v, ok := api.Cap[api.BatteryPowerLimiter](v); ok {
 		charge, discharge := v.GetPowerLimits()
-		fmt.Fprintf(w, "Charge power:\t%.0fW\t\t\n", charge)
-		fmt.Fprintf(w, "Discharge power:\t%.0fW\t\t\n", discharge)
+		fmt.Fprintf(w, "Max charge power:\t%.0fW\t\t\n", charge)
+		fmt.Fprintf(w, "Max discharge power:\t%.0fW\t\t\n", discharge)
 	}
 
 	if v, ok := api.Cap[api.MaxACPowerGetter](v); ok {
@@ -180,8 +180,8 @@ func (d *dumper) Dump(name string, v any) {
 
 	if v, ok := api.Cap[api.Curtailer](v); ok {
 		d.measureTime(w, "Curtailed", func() (string, error) {
-			curtailed, err := v.Curtailed()
-			return fmt.Sprintf("%t", curtailed), err
+			percent, err := v.CurtailedPercent()
+			return fmt.Sprintf("%d%%", percent), err
 		})
 	}
 

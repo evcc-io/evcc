@@ -1,9 +1,6 @@
 package util
 
-import (
-	"fmt"
-	"runtime"
-)
+import "runtime"
 
 const DevVersion = "0.0.0"
 
@@ -15,10 +12,8 @@ var (
 	Commit = ""
 )
 
+// FormattedVersion returns the version, untagged builds carry the commit as build metadata
 func FormattedVersion() string {
-	if Commit != "" {
-		return fmt.Sprintf("%s (%s)", Version, Commit)
-	}
 	return Version
 }
 

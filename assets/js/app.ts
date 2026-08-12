@@ -1,14 +1,29 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../css/app.css";
+import Dropdown from "bootstrap/js/dist/dropdown";
 import { createApp, defineComponent, h } from "vue";
 import { VueHeadMixin, createHead } from "@unhead/vue/client";
 import App from "./views/App.vue";
 import setupRouter from "./router.ts";
 import setupI18n from "./i18n.ts";
 import { watchThemeChanges } from "./theme.ts";
+import { applyUrlSettings } from "./urlSettings.ts";
 import { appDetection, sendToApp } from "./utils/native";
 import store from "./store";
 import type { Notification } from "./types/evcc";
+
+// keep dropdown menus out of the fixed bottom tab bar and safe-area inset
+Dropdown.Default.popperConfig = (defaultConfig) => {
+  const bottom = document.querySelector<HTMLElement>(".bottom-tab-bar")?.offsetHeight ?? 0;
+  return {
+    ...defaultConfig,
+    modifiers: [
+      ...(defaultConfig.modifiers ?? []),
+      { name: "flip", options: { padding: { bottom } } },
+      { name: "preventOverflow", options: { padding: { bottom } } },
+    ],
+  };
+};
 
 // lazy load smoothscroll polyfill. mainly for safari < 15.4
 if (!window.CSS.supports("scroll-behavior", "smooth")) {
@@ -74,19 +89,22 @@ const app = createApp(
   })
 );
 
+applyUrlSettings();
+
 const i18n = setupI18n();
 const head = createHead();
+const router = setupRouter(i18n.global);
 
 app.use(i18n);
-app.use(setupRouter(i18n.global));
+app.use(router);
 app.use(head);
 app.mixin(VueHeadMixin);
 window.app = app.mount("#app");
 
 watchThemeChanges();
-appDetection();
+appDetection(router);
 
-if (window.evcc.customCss === "true") {
+if (window.evcc?.customCss) {
   const link = document.createElement("link");
   link.href = `./custom.css`;
   link.rel = "stylesheet";

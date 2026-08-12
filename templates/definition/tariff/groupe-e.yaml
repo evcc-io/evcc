@@ -11,6 +11,7 @@ params:
   - preset: tariff-base
 render: |
   type: custom
+  features: ["cacheable"]
   {{ include "tariff-base" . }}
   forecast:
     source: http

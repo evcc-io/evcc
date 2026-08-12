@@ -188,9 +188,23 @@ func (v *API) login() error {
 		return errors.New(resp.Status)
 	}
 
+	final := resp.Request.URL
+
+	// VW periodically interjects an optional marketing consent page after an
+	// otherwise successful login. Skip it without consenting (#29760).
+	if cb, err := vwidentity.MarketingConsentCallback(final); err != nil {
+		return err
+	} else if cb != nil {
+		resp, err = v.Get(cb.String())
+		if err != nil {
+			return err
+		}
+		resp.Body.Close()
+		final = resp.Request.URL
+	}
+
 	// a successful login lands on the portal; a remaining signin/consent url means
 	// the user has not completed the one-time browser consent and vehicle linking
-	final := resp.Request.URL
 	if strings.Contains(final.Path, "signin-service") || strings.Contains(final.Path, "/consent") || strings.Contains(final.Path, "/error") {
 		return api.UrlError(
 			fmt.Sprintf("login did not complete- open the portal and confirm consent: %s", final),
@@ -254,7 +268,7 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 
 	// the response is either a bare array or wrapped in {"vehicles": [...]}
 	var arr []Vehicle
-	if err := json.Unmarshal(b, &arr); err == nil && len(arr) > 0 {
+	if err := json.Unmarshal(b, &arr); err == nil && len(b) > 0 {
 		return arr, nil
 	}
 

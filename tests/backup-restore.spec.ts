@@ -153,8 +153,8 @@ test.describe("backup and restore", async () => {
     const backupConfirmModal = page.getByTestId("backup-restore-confirm-modal");
     await expectModalVisible(backupConfirmModal);
     await backupConfirmModal.getByRole("button", { name: "Download backup" }).click();
-    await expectModalHidden(backupConfirmModal);
     const download = await downloadPromise;
+    await expectModalHidden(backupConfirmModal);
     await expectModalVisible(backupModal);
     await backupModal.locator(".btn-close").click();
     await expectModalHidden(backupModal);

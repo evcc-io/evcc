@@ -43,9 +43,11 @@ params:
   - name: currency
     choice: ["DKK", "EUR", "NOK", "PLN", "RON", "SEK"]
   - preset: tariff-base
+  - preset: tariff-features
 render: |
   type: custom
   {{ include "tariff-base" . }}
+  {{ include "tariff-features" . }}
   forecast:
     source: go
     script: |

@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/server/db"
@@ -48,7 +49,7 @@ var (
 	log           = util.NewLogger("main")
 	cfgFile       string
 	cfgDatabase   string
-	customCssFile string
+	customization server.Customization
 	ignoreEmpty   = ""                                      // ignore empty keys
 	ignoreLogs    = []string{"log"}                         // ignore log messages, including warn/error
 	ignoreMqtt    = []string{"log", "auth", "releaseNotes"} // excessive size may crash certain brokers
@@ -103,7 +104,15 @@ func init() {
 
 	rootCmd.Flags().Bool(flagDisableAuth, false, flagDisableAuthDescription)
 	rootCmd.Flags().Bool(flagDemoMode, false, flagDemoModeDescription)
-	rootCmd.Flags().StringVar(&customCssFile, flagCustomCss, "", flagCustomCssDescription)
+
+	// UI customization, flags default to environment variables
+	rootCmd.Flags().StringVar(&customization.Css, flagCustomCss, os.Getenv("EVCC_CUSTOM_CSS"), flagCustomCssDescription)
+	rootCmd.Flags().StringVar(&customization.LogoLight, flagCustomLogoLight, os.Getenv("EVCC_CUSTOM_LOGO_LIGHT"), flagCustomLogoLightDescription)
+	rootCmd.Flags().StringVar(&customization.LogoDark, flagCustomLogoDark, os.Getenv("EVCC_CUSTOM_LOGO_DARK"), flagCustomLogoDarkDescription)
+	rootCmd.Flags().StringVar(&customization.Brand, flagCustomBrand, os.Getenv("EVCC_CUSTOM_BRAND"), flagCustomBrandDescription)
+	rootCmd.Flags().StringVar(&customization.Website, flagCustomWebsite, os.Getenv("EVCC_CUSTOM_WEBSITE"), flagCustomWebsiteDescription)
+	rootCmd.Flags().StringVar(&customization.Email, flagCustomEmail, os.Getenv("EVCC_CUSTOM_EMAIL"), flagCustomEmailDescription)
+	rootCmd.Flags().StringVar(&customization.Phone, flagCustomPhone, os.Getenv("EVCC_CUSTOM_PHONE"), flagCustomPhoneDescription)
 }
 
 // initConfig reads in config file and ENV variables if set
@@ -200,28 +209,39 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan := make(chan util.Param, 64)
 	go tee.Run(valueChan)
 
-	// start OCPP server
-	ocppCS := ocpp.Instance()
-	ocppCS.SetUpdated(func() {
-		// republish when OCPP state updates
-		valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.ConfigStatus{
-			Config: ocpp.CurrentConfig(),
-			Status: ocpp.GetStatus(),
-		}}
-	})
-	log.INFO.Printf("OCPP local url:    ws://127.0.0.1:%d/<stationId>", conf.Ocpp.Port)
-	if ocpp.ExternalUrl() != "" {
-		log.INFO.Printf("OCPP external url: %s/<stationId>", ocpp.ExternalUrl())
-	}
-	// register the callback even with no rules so runtime additions are pushed
-	ocpp.SetForwarderUpdated(func() {
-		valueChan <- util.Param{Key: keys.OcppForwarder, Val: globalconfig.ConfigStatus{
-			Config: lo.Map(ocpp.ForwarderRules(), func(r ocpp.ForwarderRule, _ int) ocpp.ForwarderRule { return r.Redacted() }),
-			Status: ocpp.GetForwarderStatus(),
-		}}
-	})
-	if ocpp.ForwarderEnabled() {
-		log.INFO.Printf("OCPP forwarder:    %d rule(s) active", len(ocpp.ForwarderRules()))
+	// start OCPP and EEBus servers (skipped in degraded mode where setup failed,
+	// so a misconfigured instance serves only the offline UI)
+	if err == nil {
+		cs, ocppErr := ocpp.Instance()
+		if ocppErr != nil {
+			log.ERROR.Println("ocpp:", ocppErr)
+		} else {
+			cs.SetUpdated(func() {
+				// republish when OCPP state updates
+				valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.ConfigStatus{
+					Config: ocpp.CurrentConfig(),
+					Status: ocpp.GetStatus(),
+				}}
+			})
+			log.INFO.Printf("OCPP local url:    ws://127.0.0.1:%d/<stationId>", conf.Ocpp.Port)
+			if ocpp.ExternalUrl() != "" {
+				log.INFO.Printf("OCPP external url: %s/<stationId>", ocpp.ExternalUrl())
+			}
+		}
+		// register the callback even with no rules so runtime additions are pushed
+		ocpp.SetForwarderUpdated(func() {
+			valueChan <- util.Param{Key: keys.OcppForwarder, Val: globalconfig.ConfigStatus{
+				Config: lo.Map(ocpp.ForwarderRules(), func(r ocpp.ForwarderRule, _ int) ocpp.ForwarderRule { return r.Redacted() }),
+				Status: ocpp.GetForwarderStatus(),
+			}}
+		})
+		if ocpp.ForwarderEnabled() {
+			log.INFO.Printf("OCPP forwarder:    %d rule(s) active", len(ocpp.ForwarderRules()))
+		}
+
+		if _, eebusErr := eebus.Instance(); eebusErr != nil {
+			log.ERROR.Println("eebus:", eebusErr)
+		}
 	}
 
 	// value cache
@@ -230,7 +250,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// create web server
 	socketHub := server.NewSocketHub()
-	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub, customCssFile)
+	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub, customization)
 
 	// start serving in background, watch for “routine‐only” errors
 	go func() {
@@ -342,28 +362,32 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// start HEMS server
+	var hemsInstance hems.API
 	if err == nil {
-		if hems, errConf := configureHEMS(&conf.HEMS, site); errConf == nil && hems != nil {
+		hemsInstance, err = configureHEMS(&conf.HEMS, site)
+		if err != nil {
+			err = wrapErrorWithClass(ClassHEMS, err)
+		} else if hemsInstance != nil {
 			// republish when HEMS state updates
-			hems.SetUpdated(func() {
+			hemsInstance.SetUpdated(func() {
 				valueChan <- util.Param{Key: keys.Hems, Val: globalconfig.ConfigStatus{
-					Config:     conf.HEMS.Redacted(),
+					Config: struct {
+						Configured bool `json:"configured"`
+					}{hemsInstance != nil},
 					YamlSource: yamlSource.hems,
 					Status: struct {
 						Dimmed              *bool    `json:"dimmed,omitempty"`
-						Curtailed           *bool    `json:"curtailed,omitempty"`
-						MaxConsumptionPower float64  `json:"maxConsumptionPower,omitempty"`
+						Curtailed           *int     `json:"curtailed,omitempty"`
+						MaxConsumptionPower *float64 `json:"maxConsumptionPower,omitempty"`
 						MaxProductionPower  *float64 `json:"maxProductionPower,omitempty"`
 					}{
-						Dimmed:              hems.Dimmed(),
-						Curtailed:           hems.Curtailed(),
-						MaxConsumptionPower: hems.MaxConsumptionPower(),
-						MaxProductionPower:  hems.MaxProductionPower(),
+						Dimmed:              hems.Dimmed(hemsInstance),
+						Curtailed:           hemsInstance.CurtailedPercent(),
+						MaxConsumptionPower: hemsInstance.MaxConsumptionPower(),
+						MaxProductionPower:  hemsInstance.MaxProductionPower(),
 					},
 				}}
 			})
-		} else {
-			err = wrapErrorWithClass(ClassHEMS, errConf)
 		}
 	}
 
@@ -383,7 +407,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// setup messaging
 	var pushChan chan messenger.Event
 	if err == nil {
-		pushChan, err = configureMessengers(&conf.Messaging, &conf.MessagingEvents, site.Vehicles(), valueChan, cache)
+		pushChan, err = configureMessengers(&conf.Messaging, &conf.MessagingEvents, site.Vehicles())
 		err = wrapErrorWithClass(ClassMessenger, err)
 	}
 
@@ -418,7 +442,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}}
 
 	valueChan <- util.Param{Key: keys.Hems, Val: globalconfig.ConfigStatus{
-		Config:     conf.HEMS.Redacted(),
+		Config: struct {
+			Configured bool `json:"configured"`
+		}{hemsInstance != nil},
 		YamlSource: yamlSource.hems,
 	}}
 	valueChan <- util.Param{Key: keys.Tariffs, Val: globalconfig.ConfigStatus{

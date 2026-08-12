@@ -28,8 +28,9 @@ requirements:
       vehicle.vehicle.travelledDistance
       ```
 
-      Aktualisierung der Daten erfolgt einmalig bei Neustart und wenn Streamingdaten eingehen. Dies ist ausschließlich der Fall,
-      wenn das Fahrzeug aktiv Daten erzeugt.
+      Aktualisierung der Daten erfolgt einmalig bei Neustart und wenn Streamingdaten eingehen. Dies ist ausschließlich der Fall, wenn das Fahrzeug aktiv Daten erzeugt.
+
+      Sollte die Fahrzeugerkennung nicht zuverlässig funktionieren, sollte `welcomecharge` (Laden bei Verbindung) aktiviert werden.
     en: |
       Requires CarData activation in BMW/Mini portal. The following data points need to be configured for streaming access (the availability of data points may vary depending on the vehicle model):
 
@@ -51,6 +52,8 @@ requirements:
       ```
 
       Data will be updated on restart and when received using streaming. This only happens when the vehicle actively creates new updates.
+
+      In case the vehicle detection does not work reliably, `welcomecharge` (charge on connection) should be enabled.
 params:
   - preset: vehicle-common
   - name: vin

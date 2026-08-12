@@ -145,7 +145,7 @@ test.describe("vehicles", async () => {
     await expect(vehicleModal.getByLabel("Battery capacity")).toBeVisible();
 
     await page.getByRole("button", { name: "Show advanced settings" }).click();
-    await expect(vehicleModal.getByLabel("Default charging mode")).toBeVisible();
+    await expect(vehicleModal.getByLabel("Default charging mode")).not.toBeVisible(); // deprecated
     await expect(vehicleModal.getByLabel("Maximum number of phases")).toBeVisible();
     await expect(vehicleModal.getByLabel("Minimum current")).toBeVisible();
     await expect(vehicleModal.getByLabel("Maximum current")).toBeVisible();
@@ -154,7 +154,7 @@ test.describe("vehicles", async () => {
     await expect(vehicleModal.getByLabel("RFID identification")).toBeVisible();
 
     await page.getByRole("button", { name: "Hide advanced settings" }).click();
-    await expect(vehicleModal.getByLabel("Default charging mode")).not.toBeVisible();
+    await expect(vehicleModal.getByLabel("Maximum number of phases")).not.toBeVisible();
 
     // polestar template
     await vehicleModal.getByLabel("Manufacturer").selectOption("Polestar");
@@ -165,7 +165,30 @@ test.describe("vehicles", async () => {
 
     await page.getByRole("button", { name: "Show advanced settings" }).click();
     await expect(vehicleModal.getByLabel("Cache optional")).toBeVisible();
-    await expect(vehicleModal.getByLabel("Default charging mode")).toBeVisible();
+    await expect(vehicleModal.getByLabel("Default charging mode")).not.toBeVisible(); // deprecated
+  });
+
+  test("migrate deprecated mode property to default mode setting", async ({ page }) => {
+    await start("config-one-lp.evcc.yaml", "vehicle-mode-migrate.sql");
+
+    await page.goto("/");
+
+    const lp = page.getByTestId("loadpoint").first();
+    await lp.getByTestId("change-vehicle").locator("select").selectOption("Grey Car");
+
+    // migrated mode is applied on vehicle selection
+    await expect(lp.getByTestId("mode").getByRole("button", { name: "Fast" })).toHaveClass(
+      /active/
+    );
+
+    const moreTab = page.getByTestId("tab-more");
+    await moreTab.click();
+    await moreTab.getByRole("button", { name: "Vehicles" }).click();
+    const modal = page.getByTestId("vehicle-settings-modal");
+    await expectModalVisible(modal);
+    await expect(
+      modal.getByRole("group", { name: "Grey Car" }).getByRole("combobox", { name: "Default mode" })
+    ).toHaveValue("now");
   });
 
   test("save and restore rfid identifiers", async ({ page }) => {

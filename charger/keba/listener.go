@@ -101,7 +101,7 @@ func (l *Listener) listen() {
 		}
 
 		body := strings.TrimSpace(string(b[:read]))
-		l.log.TRACE.Printf("recv from %s %v", addr.String(), body)
+		l.log.TRACE.Printf("recv %s: %v", addr.String(), body)
 
 		msg := UDPMsg{
 			Addr:    addr.String(),

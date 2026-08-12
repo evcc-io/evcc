@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"math"
 	"time"
 
@@ -10,19 +11,51 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/jinzhu/now"
+	"github.com/samber/lo"
 )
 
+// forecastSeries and solarDetails implement BytesMarshaler so MQTT publishes one
+// json message per forecast key instead of decomposing every slot into its own
+// topic (several thousand messages per update).
+type forecastSeries [][]float64
+
+var _ api.BytesMarshaler = (*forecastSeries)(nil)
+
+func (s forecastSeries) MarshalBytes() ([]byte, error) {
+	return json.Marshal(s)
+}
+
 type solarDetails struct {
-	Scale            *float64     `json:"scale,omitempty"`            // scale factor yield/forecasted today
-	Today            dailyDetails `json:"today,omitempty"`            // tomorrow
-	Tomorrow         dailyDetails `json:"tomorrow,omitempty"`         // tomorrow
-	DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow,omitempty"` // day after tomorrow
-	Timeseries       timeseries   `json:"timeseries,omitempty"`       // timeseries of forecasted energy
+	Scale            float64      `json:"scale"`                // scale factor yield/forecasted today, 1 if unscaled
+	Today            dailyDetails `json:"today"`                // tomorrow
+	Tomorrow         dailyDetails `json:"tomorrow"`             // tomorrow
+	DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow"`     // day after tomorrow
+	Timeseries       timeseries   `json:"timeseries,omitempty"` // timeseries of forecasted energy
+}
+
+var _ api.BytesMarshaler = (*solarDetails)(nil)
+
+func (d solarDetails) MarshalBytes() ([]byte, error) {
+	return json.Marshal(d)
 }
 
 type dailyDetails struct {
 	Yield    float64 `json:"energy"`
 	Complete bool    `json:"complete"`
+}
+
+// forecastRates publishes rates as [start, end, value] with the timestamps in
+// unix seconds. The forecast is the largest payload evcc sends and RFC3339
+// timestamps are two thirds of it.
+func forecastRates(rr api.Rates) forecastSeries {
+	// keep nil for empty rates: shards are published without omitempty
+	if len(rr) == 0 {
+		return nil
+	}
+
+	return lo.Map(rr, func(r api.Rate, _ int) []float64 {
+		return []float64{float64(r.Start.Unix()), float64(r.End.Unix()), r.Value}
+	})
 }
 
 // greenShare returns
@@ -84,6 +117,9 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	if v, err := tariff.Now(site.GetTariff(api.TariffUsageSolar)); err == nil {
 		site.publish(keys.TariffSolar, v)
 	}
+	if v, err := tariff.Now(site.GetTariff(api.TariffUsageTemperature)); err == nil {
+		site.publish(keys.TariffTemperature, v)
+	}
 	if v := site.effectivePrice(greenShareHome); v != nil {
 		site.publish(keys.TariffPriceHome, v)
 	}
@@ -98,16 +134,18 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 
 	fc := struct {
-		Co2     api.Rates     `json:"co2,omitempty"`
-		FeedIn  api.Rates     `json:"feedin,omitempty"`
-		Grid    api.Rates     `json:"grid,omitempty"`
-		Planner api.Rates     `json:"planner,omitempty"`
-		Solar   *solarDetails `json:"solar,omitempty"`
+		Co2         forecastSeries `json:"co2,omitempty"`
+		FeedIn      forecastSeries `json:"feedin,omitempty"`
+		Grid        forecastSeries `json:"grid,omitempty"`
+		Planner     forecastSeries `json:"planner,omitempty"`
+		Solar       *solarDetails  `json:"solar,omitempty"`
+		Temperature forecastSeries `json:"temperature,omitempty"`
 	}{
-		Co2:     tariff.Rates(site.GetTariff(api.TariffUsageCo2)),
-		FeedIn:  tariff.Rates(site.GetTariff(api.TariffUsageFeedIn)),
-		Planner: tariff.Rates(site.GetTariff(api.TariffUsagePlanner)),
-		Grid:    tariff.Rates(site.GetTariff(api.TariffUsageGrid)),
+		Co2:         forecastRates(tariff.Rates(site.GetTariff(api.TariffUsageCo2))),
+		FeedIn:      forecastRates(tariff.Rates(site.GetTariff(api.TariffUsageFeedIn))),
+		Planner:     forecastRates(tariff.Rates(site.GetTariff(api.TariffUsagePlanner))),
+		Grid:        forecastRates(tariff.Rates(site.GetTariff(api.TariffUsageGrid))),
+		Temperature: forecastRates(tariff.Rates(site.GetTariff(api.TariffUsageTemperature))),
 	}
 
 	// calculate adjusted solar rates
@@ -116,6 +154,46 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 
 	site.publish(keys.Forecast, util.NewSharder(keys.Forecast, fc))
+
+	site.persistTariffs()
+}
+
+// persistTariffs stores tariff values once per 15min boundary. Like the meter
+// collectors it is driven by the update loop, skipping the partial boot slot.
+func (site *Site) persistTariffs() {
+	slot := time.Now().Truncate(tariff.SlotDuration)
+
+	last := site.tariffSlot
+	site.tariffSlot = slot
+
+	// skip repeat ticks within the slot and the partial boot slot
+	if last.IsZero() || !slot.After(last) {
+		return
+	}
+
+	value := func(u api.TariffUsage) *float64 {
+		if r, err := tariff.At(site.GetTariff(u), slot); err == nil {
+			return &r.Value
+		}
+		return nil
+	}
+
+	if err := metrics.PersistTariffs(slot,
+		value(api.TariffUsageGrid),
+		value(api.TariffUsageFeedIn),
+		value(api.TariffUsageCo2),
+		value(api.TariffUsageTemperature),
+	); err != nil {
+		site.log.ERROR.Printf("persist tariffs: %v", err)
+	}
+}
+
+// forecastSlotEnergy is the energy expected in the slot covering now, integrated
+// the same way as the published forecast so the persisted history matches the
+// curve the UI draws. Beyond the forecast horizon it is zero.
+func forecastSlotEnergy(solar api.Rates, now time.Time) float64 {
+	slot := now.Truncate(tariff.SlotDuration)
+	return solarEnergy(solar, slot, slot.Add(tariff.SlotDuration)) / 1e3
 }
 
 func (site *Site) solarDetails(solar api.Rates) solarDetails {
@@ -146,17 +224,28 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 		Complete: !last.Before(eot.AddDate(0, 0, 1)),
 	}
 
-	if r, err := solar.At(time.Now()); err == nil {
-		if err := site.collectors[metrics.Forecast].AddEnergy(nil, nil, r.Value); err != nil {
-			site.log.ERROR.Printf("solar forecast collector: %v", err)
+	if err := site.collectors[metrics.Forecast].SetEnergy(forecastSlotEnergy(solar, time.Now())); err != nil {
+		site.log.ERROR.Printf("solar forecast collector: %v", err)
+	}
+
+	if r, err := tariff.At(site.GetTariff(api.TariffUsageTemperature), time.Now()); err == nil {
+		if err := site.collectors[metrics.Temperature].SetSocTemp(r.Value, true); err != nil {
+			site.log.ERROR.Printf("temperature collector soc_temp: %v", err)
 		}
 	}
 
-	if scale := site.solarScale(); scale != 1 {
-		res.Scale = &scale
-	}
+	res.Scale = site.solarScale()
 
 	return res
+}
+
+// effectiveSolarScale returns the solar forecast scale if forecast adjustment
+// is enabled, 1 otherwise.
+func (site *Site) effectiveSolarScale() float64 {
+	if !site.GetSolarAdjusted() {
+		return 1
+	}
+	return site.solarScale()
 }
 
 // solarScale returns the ratio of produced solar energy to forecasted solar
@@ -185,7 +274,7 @@ func (site *Site) solarScale() float64 {
 	}
 
 	const minEnergy = 0.5 // kWh
-	if fcst <= 0 || pv+fcst <= minEnergy {
+	if fcst <= 0 || pv <= minEnergy {
 		return 1
 	}
 

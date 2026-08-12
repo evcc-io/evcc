@@ -10,6 +10,7 @@ import {
 	FONT_FAMILY,
 	markPointLabel,
 	tooltipStyle,
+	tooltipTable,
 	forecastGrid,
 	forecastXAxes,
 	forecastYAxis,
@@ -18,17 +19,17 @@ import colors, { lighterColor } from "@/colors";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import chartMixin from "./chartMixin";
 import { highestSlotIndexByDay } from "@/utils/forecast";
-import type { SolarDetails, TimeseriesEntry } from "./types";
+import type { UiSolarDetails, UiTimeseriesEntry } from "@/types/evcc";
 
 export default defineComponent({
 	name: "SolarChart",
 	mixins: [formatter, chartMixin],
 	props: {
-		solar: { type: Object as PropType<SolarDetails> },
-		rawSolar: { type: Object as PropType<SolarDetails> },
+		solar: { type: Object as PropType<UiSolarDetails> },
+		rawSolar: { type: Object as PropType<UiSolarDetails> },
 	},
 	computed: {
-		entries(): TimeseriesEntry[] {
+		entries(): UiTimeseriesEntry[] {
 			return (this.solar?.timeseries || []).filter(
 				(e) => new Date(e.ts) >= this.startDate && new Date(e.ts) <= this.endDate
 			);
@@ -42,8 +43,8 @@ export default defineComponent({
 			}
 			return max;
 		},
-		markPoints(): { coord: [string, number]; value: string }[] {
-			const points: { coord: [string, number]; value: string }[] = [];
+		markPoints(): { coord: [number, number]; value: string }[] {
+			const points: { coord: [number, number]; value: string }[] = [];
 			const days = [
 				{ energy: this.solar?.today?.energy, day: 0 },
 				{ energy: this.solar?.tomorrow?.energy, day: 1 },
@@ -83,10 +84,17 @@ export default defineComponent({
 						if (!p) return "";
 						const d = new Date(p.value[0]);
 						const time = `${this.weekdayShort(d)} ${this.fmtHourMinute(d)}`;
-						return `${time}<br/>${this.fmtW(p.value[1], POWER_UNIT.AUTO)}`;
+						return tooltipTable(time, [
+							{ values: [this.fmtW(p.value[1], POWER_UNIT.AUTO)] },
+						]);
 					},
 				},
-				xAxis: forecastXAxes(this.startDate, this.endDate, this.weekdayShort),
+				xAxis: forecastXAxes(
+					this.startDate,
+					this.endDate,
+					this.hourShort,
+					this.weekdayShort
+				),
 				yAxis: forecastYAxis({
 					max: (value: { max: number }) => {
 						const m = Math.max(value.max, this.combinedMax);

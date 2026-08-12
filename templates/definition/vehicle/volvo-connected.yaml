@@ -26,7 +26,7 @@ requirements:
       **NOTE:** Volvo enforces re-login every 7 days. Use "hamburger" menu logout/login.
 params:
   - preset: vehicle-common
-  - preset: vehicle-climater
+  - preset: vehicle-online
   - name: vccapikey
     required: true
     description:
@@ -49,7 +49,6 @@ params:
     service: auth/redirecturi
   - name: vin
     example: WF0FXX...
-    required: true
   - name: accessToken
     deprecated: true
   - name: refreshToken

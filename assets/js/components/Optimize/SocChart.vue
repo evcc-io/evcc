@@ -1,5 +1,5 @@
 <template>
-	<div class="mb-5">
+	<div>
 		<div v-for="(_battery, index) in evopt.res.batteries" :key="index" class="mb-3">
 			<div class="mb-2" style="font-size: 0.875rem; font-weight: bold">
 				{{ getBatteryTitle(index) }}
@@ -41,6 +41,7 @@ import type { EvoptData } from "./TimeSeriesDataTable.vue";
 import type { CURRENCY, BatteryDetail } from "@/types/evcc";
 import formatter from "@/mixins/formatter";
 import colors from "@/colors";
+import "../Sessions/chartConfig";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, ChartLegendPlugin);
 

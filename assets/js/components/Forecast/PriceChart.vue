@@ -11,6 +11,7 @@ import {
 	FONT_FAMILY,
 	markPointLabel,
 	tooltipStyle,
+	tooltipTable,
 	forecastGrid,
 	forecastXAxes,
 	forecastYAxis,
@@ -22,33 +23,32 @@ import {
 import colors, { lighterColor } from "@/colors";
 import formatter from "@/mixins/formatter";
 import chartMixin from "./chartMixin";
-import type { CURRENCY } from "@/types/evcc";
-import type { ForecastSlot } from "./types";
+import type { CURRENCY, UiForecastSlot } from "@/types/evcc";
 
 export default defineComponent({
 	name: "PriceChart",
 	mixins: [formatter, chartMixin],
 	props: {
-		grid: { type: Array as PropType<ForecastSlot[]>, required: true },
-		feedin: { type: Array as PropType<ForecastSlot[]> },
+		grid: { type: Array as PropType<UiForecastSlot[]>, required: true },
+		feedin: { type: Array as PropType<UiForecastSlot[]> },
 		currency: { type: String as PropType<CURRENCY> },
 		zoom: { type: Boolean, default: false },
 	},
 	computed: {
-		slots(): ForecastSlot[] {
+		slots(): UiForecastSlot[] {
 			return filterForecastSlots(this.grid, this.startDate, this.endDate);
 		},
-		feedinSlots(): ForecastSlot[] {
+		feedinSlots(): UiForecastSlot[] {
 			return this.feedin
 				? filterForecastSlots(this.feedin, this.startDate, this.endDate)
 				: [];
 		},
-		markPoints(): { coord: [string, number]; value: string }[] {
+		markPoints(): { coord: [number, number]; value: string }[] {
 			const slots = this.slots;
 			if (!slots.length) return [];
 			const minIdx = minSlotIndex(slots);
 			const maxIdx = maxSlotIndex(slots);
-			const points: { coord: [string, number]; value: string }[] = [];
+			const points: { coord: [number, number]; value: string }[] = [];
 			if (slots[minIdx]) {
 				points.push({
 					coord: [clampStart(slots[minIdx]!.start, this.startDate), slots[minIdx]!.value],
@@ -88,7 +88,7 @@ export default defineComponent({
 			const priceColor = colors.price || "";
 			const exportColor = colors.export || "";
 
-			// eslint-disable-next-line @typescript-eslint/no-this-alias
+			// oxlint-disable-next-line typescript/no-this-alias
 			const vThis = this;
 			return {
 				animationDuration: 0,
@@ -104,26 +104,24 @@ export default defineComponent({
 						if (!p) return "";
 						const d = new Date(p.value[0]);
 						const time = `${vThis.weekdayShort(d)} ${vThis.fmtHourMinute(d)}`;
-						const lines = [time];
 						const showLabels = params.length > 1;
 						const labels = [
 							vThis.$t("main.energyflow.gridImport"),
 							vThis.$t("main.energyflow.pvExport"),
 						];
-						for (const s of params) {
-							const price = vThis.fmtPricePerKWh(
-								s.value[1],
-								vThis.currency,
-								true,
-								true
-							);
-							const label = showLabels ? `${labels[s.seriesIndex]}: ` : "";
-							lines.push(`${label}${price}`);
-						}
-						return lines.join("<br/>");
+						const rows = params.map((s) => ({
+							name: showLabels ? labels[s.seriesIndex] : undefined,
+							values: [vThis.fmtPricePerKWh(s.value[1], vThis.currency, true, true)],
+						}));
+						return tooltipTable(time, rows);
 					},
 				},
-				xAxis: forecastXAxes(this.startDate, this.endDate, this.weekdayShort),
+				xAxis: forecastXAxes(
+					this.startDate,
+					this.endDate,
+					this.hourShort,
+					this.weekdayShort
+				),
 				yAxis: forecastYAxis({
 					...this.yAxisConfig,
 					axisLabel: {
@@ -146,9 +144,9 @@ export default defineComponent({
 	},
 	methods: {
 		priceSeries(
-			slots: ForecastSlot[],
+			slots: UiForecastSlot[],
 			color: string,
-			points?: { coord: [string, number]; value: string }[]
+			points?: { coord: [number, number]; value: string }[]
 		): Record<string, unknown> {
 			const avg = slots.length ? slots.reduce((a, s) => a + s.value, 0) / slots.length : 0;
 			const gradientDown = avg >= 0;

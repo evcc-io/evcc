@@ -11,7 +11,7 @@ export interface ModalEntry {
 }
 
 export interface ModalResult {
-  action: "added" | "updated" | "removed" | "cancelled";
+  action: "added" | "updated" | "removed" | "converted" | "cancelled";
   name?: string;
   id?: number;
   type?: string;
@@ -312,6 +312,11 @@ export function topModal(): ModalEntry | undefined {
 
 export function isTopModal(name: string): boolean {
   return topModal()?.name === name;
+}
+
+export function isNestedIn(name: string): boolean {
+  const idx = configModal.stack.findIndex((m) => m.name === name);
+  return idx >= 0 && idx < configModal.stack.length - 1;
 }
 
 export default configModal;

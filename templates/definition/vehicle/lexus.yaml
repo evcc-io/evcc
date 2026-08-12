@@ -9,7 +9,7 @@ requirements:
       Requires Lexus Link+ Connected Services Account.
 params:
   - preset: vehicle-common
-  - preset: vehicle-climater
+  - preset: vehicle-online
   - name: user
     required: true
   - name: password

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect } from "vite-plus/test";
 import { formatJson } from "./format";
 
 describe("formatJson", () => {
@@ -106,6 +106,26 @@ describe("formatJson", () => {
   "items": [
     {"baz":123,"foo":"bar"},
     {"id":1,"num":456,"qux":"test"}
+  ]
+}`);
+  });
+
+  it("sorts template first inside nested config of array items", () => {
+    const obj = {
+      charger: [
+        {
+          config: { host: "192.168.1.1", template: "tesla" },
+          name: "db:1",
+          type: "template",
+          id: 1,
+        },
+      ],
+    };
+    const result = formatJson(obj, ["charger"]);
+
+    expect(result).toBe(`{
+  "charger": [
+    {"id":1,"name":"db:1","type":"template","config":{"template":"tesla","host":"192.168.1.1"}}
   ]
 }`);
   });

@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/util/config"
 )
 
@@ -57,7 +58,7 @@ func (site *Site) updateBatteryMode(batteryGridChargeActive bool, rate api.Rate)
 
 	// put battery into hold mode when charging is active and HEMS dimmed
 	fromToCharge := batteryMode == api.BatteryCharge || batteryMode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge
-	if dimmed := hemsDimmed(site.hems); fromToCharge && dimmed != nil && *dimmed {
+	if dimmed := hems.Dimmed(site.hems); fromToCharge && dimmed != nil && *dimmed {
 		site.log.DEBUG.Println("battery mode: HEMS dimmed")
 		batteryMode = api.BatteryHold
 	}
@@ -207,7 +208,7 @@ func (site *Site) dischargeControlActive(rate api.Rate) bool {
 		return false
 	}
 
-	for _, lp := range site.Loadpoints() {
+	for _, lp := range site.activeLoadpoints() {
 		smartCostActive := site.smartCostActive(lp, rate)
 		if lp.GetStatus() == api.StatusC && (smartCostActive || lp.IsFastChargingActive()) {
 			return true

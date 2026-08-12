@@ -8,18 +8,30 @@ import (
 
 // Measurement is the device measurements struct
 type Measurement struct {
-	Name          string    `json:"name,omitempty"`
-	Title         string    `json:"title,omitempty"`
-	Icon          string    `json:"icon,omitempty"`
-	Power         float64   `json:"power"`
-	Energy        *float64  `json:"energy,omitempty"`
-	ReturnEnergy  *float64  `json:"returnEnergy,omitempty"`
-	Powers        []float64 `json:"powers,omitempty"`
-	Currents      []float64 `json:"currents,omitempty"`
-	ExcessDCPower float64   `json:"excessdcpower,omitempty"`
-	Capacity      *float64  `json:"capacity,omitempty"`
-	Soc           *float64  `json:"soc,omitempty"`
-	Controllable  *bool     `json:"controllable,omitempty"`
+	Name          string      `json:"name,omitempty"`
+	Title         string      `json:"title,omitempty"`
+	Icon          string      `json:"icon,omitempty"`
+	Power         float64     `json:"power"`
+	Energy        *float64    `json:"energy,omitempty"`
+	ReturnEnergy  *float64    `json:"returnEnergy,omitempty"`
+	Powers        []float64   `json:"powers,omitempty"`
+	Currents      []float64   `json:"currents,omitempty"`
+	ExcessDCPower float64     `json:"excessdcpower,omitempty"`
+	Capacity      *float64    `json:"capacity,omitempty"`
+	Soc           *float64    `json:"soc,omitempty"`
+	Controllable  *bool       `json:"controllable,omitempty"`
+	Suggestion    *Suggestion `json:"suggestion,omitempty"`
+}
+
+// Suggestion is the optimizer's advisory action for the current slot
+type Suggestion struct {
+	// Action is the recommended action for the current slot.
+	// home battery: normal|hold|charge|holdcharge; loadpoint/vehicle: charge|stop
+	Action    string  `json:"action"`
+	Charge    float64 `json:"charge"`    // recommended charge power, W
+	Discharge float64 `json:"discharge"` // recommended discharge power, W
+	// Actionable indicates the suggestion differs from the current operating mode.
+	Actionable bool `json:"actionable"`
 }
 
 type BatteryForecast struct {

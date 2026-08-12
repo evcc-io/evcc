@@ -157,7 +157,10 @@ func TestEasee_waitForChargerEnabledState(t *testing.T) {
 
 		if tc.updateState { // simulate state changes
 			go func() {
+				// opMode is read under the lock by inExpectedOpMode
+				e.mux.Lock()
 				e.opMode = easee.ModeCharging // transition to charging
+				e.mux.Unlock()
 				if tc.sendObs {
 					e.obsC <- easee.Observation{
 						ID: easee.CHARGER_OP_MODE,
@@ -197,7 +200,10 @@ func TestEasee_waitForDynamicChargerCurrent(t *testing.T) {
 
 		if tc.updateState { // simulate state changes
 			go func() {
+				// dynamicChargerCurrent is read under the lock by waitForDynamicChargerCurrent
+				e.mux.Lock()
 				e.dynamicChargerCurrent = 32 // transition to 32A
+				e.mux.Unlock()
 				if tc.sendObs {
 					e.obsC <- easee.Observation{
 						ID:       easee.DYNAMIC_CHARGER_CURRENT,
@@ -744,6 +750,68 @@ func TestDetermineCircuit(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.wantCircuit, e.circuit)
+			}
+		})
+	}
+}
+
+func TestEasee_Enable_clampsCurrentOnChargeStart(t *testing.T) {
+	const chargerID = "TESTTEST"
+
+	tests := []struct {
+		name        string
+		current     float64
+		expectClamp bool
+	}{
+		{"6A clamped to 7A", 6, true},
+		{"7A unchanged", 7, false},
+		{"10A unchanged", 10, false},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			e := newEasee()
+			e.charger = chargerID
+			e.current = tc.current
+			e.dynamicChargerCurrent = tc.current
+			e.opMode = easee.ModeAwaitingAuthentication
+			e.authorize = true
+			e.chargerEnabled = true // skip the "enable charger once" path
+
+			httpmock.ActivateNonDefault(e.Client)
+			defer httpmock.DeactivateAndReset()
+
+			var callOrder []string
+
+			// Mock POST charger settings (DCC clamp)
+			settingsURI := fmt.Sprintf("%s/chargers/%s/settings", easee.API, chargerID)
+			httpmock.RegisterResponder(http.MethodPost, settingsURI, func(req *http.Request) (*http.Response, error) {
+				callOrder = append(callOrder, "settings")
+				return httpmock.NewStringResponse(202, "[]"), nil
+			})
+
+			// Mock POST start_charging command
+			startURI := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, chargerID, easee.ChargeStart)
+			httpmock.RegisterResponder(http.MethodPost, startURI, func(req *http.Request) (*http.Response, error) {
+				callOrder = append(callOrder, "start")
+				// Transition to expected state for waitForChargerEnabledState(true)
+				e.mux.Lock()
+				e.opMode = easee.ModeAwaitingStart
+				e.mux.Unlock()
+				return httpmock.NewStringResponse(200, ""), nil
+			})
+
+			err := e.Enable(true)
+			assert.NoError(t, err)
+
+			if tc.expectClamp {
+				assert.Equal(t, []string{"settings", "start"}, callOrder,
+					"DCC clamp should be sent before ChargeStart")
+				assert.Equal(t, 7.0, e.current, "current should be clamped to 7")
+			} else {
+				assert.Equal(t, []string{"start"}, callOrder,
+					"no DCC clamp should be sent")
+				assert.Equal(t, tc.current, e.current, "current should be unchanged")
 			}
 		})
 	}

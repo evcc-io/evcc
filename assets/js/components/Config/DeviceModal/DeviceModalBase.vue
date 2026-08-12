@@ -11,7 +11,7 @@
 		@visibilitychange="handleVisibilityChange"
 	>
 		<template #header-actions>
-			<DeviceInfoButton v-if="id" :id="id" />
+			<DeviceInfoButton v-if="id && !hideInfo" :id="id" />
 		</template>
 		<form ref="form" class="container mx-0 px-0">
 			<slot name="pre-content" :values="values"></slot>
@@ -30,7 +30,11 @@
 					:product-name="productName"
 					:groups="computedTemplateOptions"
 					@change="handleTemplateChange"
-				/>
+				>
+					<template v-if="$slots['template-action']" #action>
+						<slot name="template-action" />
+					</template>
+				</TemplateSelector>
 
 				<p v-if="showDeprecatedWarning" class="text-danger">
 					{{ $t("config.general.typeDeprecated", { type: values.type }) }}
@@ -52,7 +56,7 @@
 
 					<div v-if="authRequired">
 						<PropertyEntry
-							v-for="param in authParams"
+							v-for="param in authNormalParams"
 							:id="`${deviceType}Param${param.Name}`"
 							:key="param.Name"
 							v-bind="param"
@@ -60,6 +64,19 @@
 							:service-values="serviceValues[param.Name]"
 							:currency="currency"
 						/>
+						<PropertyCollapsible v-if="authAdvancedParams.length">
+							<template #advanced>
+								<PropertyEntry
+									v-for="param in authAdvancedParams"
+									:id="`${deviceType}Param${param.Name}`"
+									:key="param.Name"
+									v-bind="param"
+									v-model="values[param.Name]"
+									:service-values="serviceValues[param.Name]"
+									:currency="currency"
+								/>
+							</template>
+						</PropertyCollapsible>
 
 						<div v-if="auth.code">
 							<hr class="my-5" />
@@ -134,7 +151,13 @@
 							/>
 
 							<PropertyCollapsible>
-								<template v-if="advancedParams.length" #advanced>
+								<template v-if="advancedParams.length || modbus" #advanced>
+									<ModbusAdvanced
+										v-if="modbus"
+										v-model:delay="values['delay']"
+										v-model:timeout="values['timeout']"
+										component-id="device"
+									/>
 									<PropertyEntry
 										v-for="param in advancedParams"
 										:id="`${deviceType}Param${param.Name}`"
@@ -156,6 +179,8 @@
 				<DeviceModalActions
 					v-if="showActions"
 					:is-deletable="isDeletable"
+					:is-disabled="isDisabled"
+					:can-disable="canDisable"
 					:test-state="test"
 					:is-saving="saving"
 					:is-succeeded="succeeded"
@@ -165,9 +190,22 @@
 					@save="handleSave"
 					@remove="handleRemove"
 					@test="testManually"
-				/>
+					@disable="handleDisable"
+				>
+					<template #before-test>
+						<AdminPasswordPrompt
+							v-if="adminPasswordRequired"
+							v-model:password="adminPasswordValue"
+							:invalid="adminPasswordInvalid"
+						/>
+					</template>
+					<template #after-test>
+						<slot name="after-test" :values="values"></slot>
+					</template>
+				</DeviceModalActions>
 			</template>
 		</form>
+		<slot name="post-content" :values="values"></slot>
 	</GenericModal>
 </template>
 
@@ -175,11 +213,12 @@
 import { defineComponent, type PropType } from "vue";
 import GenericModal from "../../Helper/GenericModal.vue";
 import DeviceInfoButton from "./DeviceInfoButton.vue";
-import { closeModal } from "@/configModal";
+import { closeModal, isNestedIn } from "@/configModal";
 import ErrorMessage from "../../Helper/ErrorMessage.vue";
 import PropertyEntry from "../PropertyEntry.vue";
 import PropertyCollapsible from "../PropertyCollapsible.vue";
 import Modbus from "./Modbus.vue";
+import ModbusAdvanced from "./ModbusAdvanced.vue";
 import DeviceModalActions from "./Actions.vue";
 import Markdown from "../Markdown.vue";
 import SponsorTokenRequired from "./SponsorTokenRequired.vue";
@@ -190,6 +229,7 @@ import AuthConnectButton from "../AuthConnectButton.vue";
 import { initialTestState, performTest } from "../utils/test";
 import { reportValidityInModal } from "../utils/reportValidityInModal";
 import { initialAuthState, prepareAuthLogin } from "../utils/authProvider";
+import AdminPasswordPrompt from "@/components/Auth/AdminPasswordPrompt.vue";
 import sleep from "@/utils/sleep";
 import { ConfigType } from "@/types/evcc";
 import type { DeviceType, Timeout } from "@/types/evcc";
@@ -206,6 +246,7 @@ import {
 	applyDefaultsFromTemplate,
 	createDeviceUtils,
 	fetchServiceValues,
+	ADMIN_PASSWORD_REQUIRED,
 } from "./index";
 import deepEqual from "@/utils/deepEqual";
 
@@ -220,6 +261,7 @@ export default defineComponent({
 		PropertyEntry,
 		PropertyCollapsible,
 		Modbus,
+		ModbusAdvanced,
 		DeviceModalActions,
 		Markdown,
 		SponsorTokenRequired,
@@ -227,6 +269,7 @@ export default defineComponent({
 		YamlEntry,
 		AuthCodeDisplay,
 		AuthConnectButton,
+		AdminPasswordPrompt,
 	},
 	props: {
 		deviceType: { type: String as PropType<DeviceType>, required: true },
@@ -262,8 +305,8 @@ export default defineComponent({
 		isTypeDeprecated: Function as PropType<(type: ConfigType) => boolean>,
 		// Optional: provide template options from parent (to avoid circular dependency)
 		provideTemplateOptions: Function as PropType<(products: Product[]) => TemplateGroup[]>,
-		// Optional: handle template change (receives event and values, allows setting values.yaml)
-		onTemplateChange: Function as PropType<(e: Event, values: DeviceValues) => void>,
+		// Optional: handle template change (receives selected value and values, allows setting values.yaml)
+		onTemplateChange: Function as PropType<(value: string, values: DeviceValues) => void>,
 		// Optional: default template to select when opening modal for new devices
 		defaultTemplate: String,
 		// Optional: callback after configuration is loaded (receives values)
@@ -272,11 +315,19 @@ export default defineComponent({
 		externalTemplate: String as PropType<string | null>,
 		// Optional: hide template fields, e.g. because ocpp step was not completed
 		hideTemplateFields: { type: Boolean, default: false },
+		// Optional: keep modal open after a remove (singletons want to re-enter create mode)
+		keepOpenOnRemove: { type: Boolean, default: false },
+		// Optional: hide the bottom-right delete button (e.g. when delete is offered inline)
+		hideDelete: { type: Boolean, default: false },
+		// Optional: hide the info button in the header (e.g. for singleton devices like hems)
+		hideInfo: { type: Boolean, default: false },
 	},
 	emits: [
 		"added",
 		"updated",
 		"removed",
+		"disable",
+		"open",
 		"close",
 		"template-changed",
 		"update:externalTemplate",
@@ -296,6 +347,9 @@ export default defineComponent({
 			test: initialTestState(),
 			serviceValues: {} as Record<string, string[]>,
 			serviceValuesTimer: null as Timeout | null,
+			adminPasswordValue: "",
+			adminPasswordRequired: false,
+			adminPasswordInvalid: false,
 		};
 	},
 	computed: {
@@ -329,6 +383,12 @@ export default defineComponent({
 		authParams() {
 			const { params = [] } = this.template?.Auth ?? {};
 			return this.templateParams.filter((p) => params.includes(p.Name));
+		},
+		authNormalParams() {
+			return this.authParams.filter((p: TemplateParam) => !p.Advanced && !p.Deprecated);
+		},
+		authAdvancedParams() {
+			return this.authParams.filter((p: TemplateParam) => p.Advanced || p.Deprecated);
 		},
 		normalParams() {
 			return this.templateParams.filter((p) => !p.Advanced && !p.Deprecated);
@@ -399,7 +459,13 @@ export default defineComponent({
 			return this.id === undefined;
 		},
 		isDeletable() {
-			return !this.isNew;
+			return !this.isNew && !this.hideDelete;
+		},
+		isDisabled() {
+			return Boolean(this.values.deviceDisable);
+		},
+		canDisable(): boolean {
+			return !isNestedIn("loadpoint");
 		},
 		showActions() {
 			// explicitly hide template fields (ocpp step 1)
@@ -429,7 +495,13 @@ export default defineComponent({
 			return this.template?.Auth && !this.auth.ok;
 		},
 		authValuesMissing() {
-			return this.template?.Auth && Object.values(this.authValues).some((value) => !value);
+			const authParamNames: string[] = this.template?.Auth?.params ?? [];
+			return (
+				authParamNames.length > 0 &&
+				this.templateParams
+					.filter((p: TemplateParam) => authParamNames.includes(p.Name) && p.Required)
+					.some((p: TemplateParam) => !this.values[p.Name])
+			);
 		},
 		authValues() {
 			const params = this.template?.Auth?.params ?? [];
@@ -457,6 +529,20 @@ export default defineComponent({
 					// For new devices, apply defaults immediately (e.g., default icons based on meter type)
 					this.applyDefaults();
 				}
+			}
+		},
+		id(newVal, oldVal) {
+			if (!this.isModalVisible) return;
+			// id arrived after open (async lookup) → load existing device
+			if (newVal !== undefined && oldVal === undefined) {
+				this.loadConfiguration();
+				return;
+			}
+			// id removed while modal stays open → reset to create mode
+			if (newVal === undefined && oldVal !== undefined) {
+				this.reset();
+				this.templateName = null;
+				this.succeeded = false;
 			}
 		},
 		templateName(newValue, oldValue) {
@@ -517,9 +603,14 @@ export default defineComponent({
 				if (this.test.isError || this.test.isSuccess) {
 					this.test = initialTestState();
 				}
+				this.adminPasswordRequired = false;
+				this.adminPasswordInvalid = false;
 				this.updateServiceValues();
 			},
 			deep: true,
+		},
+		adminPasswordValue() {
+			this.adminPasswordInvalid = false;
 		},
 		authValues: {
 			handler() {
@@ -565,6 +656,9 @@ export default defineComponent({
 				}
 				if (device.deviceIcon !== undefined) {
 					this.values.deviceIcon = device.deviceIcon;
+				}
+				if (device.deviceDisable !== undefined) {
+					this.values.deviceDisable = device.deviceDisable;
 				}
 				this.applyDefaults();
 				this.templateName = this.values.template;
@@ -670,22 +764,35 @@ export default defineComponent({
 
 			this.saving = true;
 			try {
-				const { name } = await this.device.create(this.apiData, force);
+				const res = await this.device.create(this.apiData, force, this.adminPasswordValue);
+				this.applyAdminPasswordState(res.status);
+				if (res.status === ADMIN_PASSWORD_REQUIRED) {
+					this.saving = false;
+					return;
+				}
 				this.saving = false;
 				this.succeeded = true;
 				await sleep(500);
-				this.$emit("added", name);
-				await closeModal({ action: "added", name });
+				this.$emit("added", res.data.name);
+				await closeModal({ action: "added", name: res.data.name });
 			} catch (e) {
-				handleError(e, "create failed");
 				this.saving = false;
+				handleError(e, "create failed");
 			}
 		},
 		async testManually() {
 			await performTest(this.test, this.testDevice, this.$refs["form"] as HTMLFormElement);
 		},
 		async testDevice() {
-			return this.device.test(this.id, this.apiData);
+			const res = await this.device.test(this.id, this.apiData, this.adminPasswordValue);
+			this.applyAdminPasswordState(res.status);
+			return res;
+		},
+		// reveal the admin password field when required, flag it invalid if a password was already sent
+		applyAdminPasswordState(status: number) {
+			this.adminPasswordRequired = status === ADMIN_PASSWORD_REQUIRED;
+			this.adminPasswordInvalid =
+				status === ADMIN_PASSWORD_REQUIRED && !!this.adminPasswordValue;
 		},
 		async update(force = false) {
 			if (this.test.isUnknown && !force) {
@@ -700,39 +807,60 @@ export default defineComponent({
 			}
 			this.saving = true;
 			try {
-				await this.device.update(this.id!, this.apiData, force);
+				const res = await this.device.update(
+					this.id!,
+					this.apiData,
+					force,
+					this.adminPasswordValue
+				);
+				this.applyAdminPasswordState(res.status);
+				if (res.status === ADMIN_PASSWORD_REQUIRED) {
+					this.saving = false;
+					return;
+				}
 				this.saving = false;
 				this.succeeded = true;
 				await sleep(500);
 				this.$emit("updated");
 				await closeModal({ action: "updated" });
 			} catch (e) {
+				this.saving = false;
 				console.error("update failed", e);
 				handleError(e, "update failed");
-				this.saving = false;
 			}
 		},
 		async remove() {
 			try {
 				await this.device.remove(this.id!);
 				this.$emit("removed");
+				if (this.keepOpenOnRemove) {
+					return;
+				}
 				await closeModal({ action: "removed" });
 			} catch (e) {
 				handleError(e, "remove failed");
 			}
 		},
+		async handleDisable(disable: boolean) {
+			if (this.id === undefined) return;
+			this.$emit("disable", { id: this.id, disable });
+			await closeModal();
+		},
 		handleOpen() {
 			this.isModalVisible = true;
+			this.$emit("open");
+			this.adminPasswordRequired = false;
+			this.adminPasswordInvalid = false;
 		},
 		handleClose() {
 			this.$emit("close");
 			this.isModalVisible = false;
 		},
-		handleTemplateChange(e: Event) {
+		handleTemplateChange(value: string | null) {
 			// ensure this triggers after tempateName watcher
 			this.$nextTick(() => {
-				if (this.onTemplateChange) {
-					this.onTemplateChange(e, this.values);
+				if (this.onTemplateChange && value !== null) {
+					this.onTemplateChange(value, this.values);
 				}
 			});
 		},

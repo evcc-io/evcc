@@ -1,0 +1,17 @@
+template: ambibox
+products:
+  - brand: Ambibox
+    description:
+      generic: ambiCHARGE Home
+capabilities: ["iso151182", "mA", "meter"]
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 1
+  - name: connector
+render: |
+  type: ambibox
+  {{- include "modbus" . }}
+  connector: {{ .connector }}

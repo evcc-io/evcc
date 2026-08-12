@@ -3,6 +3,7 @@ package core
 import (
 	"errors"
 	"fmt"
+	"iter"
 	"slices"
 	"strings"
 	"time"
@@ -13,7 +14,6 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/config"
-	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/samber/lo"
 )
 
@@ -39,13 +39,8 @@ func filterConfigurable(ref []string) []string {
 }
 
 // Optimize updates the optimizer
-func (site *Site) Optimize() error {
-	if !sponsor.IsAuthorized() || !optimizerEnabled() {
-		return api.ErrNotAvailable
-	}
-
-	go site.optimizerUpdateAsync()
-	return nil
+func (site *Site) Optimize() {
+	go site.optimizerUpdateAsync(0)
 }
 
 // GetTitle returns the title
@@ -129,6 +124,22 @@ func (site *Site) SetAuxMeterRefs(ref []string) {
 	settings.SetString(keys.AuxMeters, strings.Join(filterConfigurable(ref), ","))
 }
 
+// GetConsumerMeterRefs returns the ConsumerMeterRef
+func (site *Site) GetConsumerMeterRefs() []string {
+	site.RLock()
+	defer site.RUnlock()
+	return site.Meters.ConsumerMetersRef
+}
+
+// SetConsumerMeterRefs sets the ConsumerMeterRef
+func (site *Site) SetConsumerMeterRefs(ref []string) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.Meters.ConsumerMetersRef = ref
+	settings.SetString(keys.ConsumerMeters, strings.Join(filterConfigurable(ref), ","))
+}
+
 // GetExtMeterRefs returns the ExtMeterRef
 func (site *Site) GetExtMeterRefs() []string {
 	site.RLock()
@@ -152,9 +163,36 @@ func (site *Site) GetBatterySoc() float64 {
 	return site.battery.Soc
 }
 
-// Loadpoints returns the loadpoints as api interfaces
+// GetBatteryMaxDischargePower returns the current battery max discharge power
+func (site *Site) GetBatteryMaxDischargePower() *float64 {
+	site.RLock()
+	defer site.RUnlock()
+	if site.batteryMaxDischargePower == nil {
+		return nil
+	}
+	return new(*site.batteryMaxDischargePower)
+}
+
+// Loadpoints returns the loadpoints as api interfaces.
+// Disabled loadpoints are returned as nil to keep indexes stable.
 func (site *Site) Loadpoints() []loadpoint.API {
-	return lo.Map(site.loadpoints, func(lp *Loadpoint, _ int) loadpoint.API { return lp })
+	return lo.Map(site.loadpoints, func(lp *Loadpoint, _ int) loadpoint.API {
+		if lp == nil {
+			return nil
+		}
+		return lp
+	})
+}
+
+// ActiveLoadpoints yields enabled loadpoints with their stable index
+func (site *Site) ActiveLoadpoints() iter.Seq2[int, loadpoint.API] {
+	return func(yield func(int, loadpoint.API) bool) {
+		for id, lp := range site.loadpoints {
+			if lp != nil && !yield(id, lp) {
+				return
+			}
+		}
+	}
 }
 
 func (site *Site) hasMeters() bool {
@@ -162,12 +200,17 @@ func (site *Site) hasMeters() bool {
 }
 
 func (site *Site) IsConfigured() bool {
-	return len(site.loadpoints) > 0 || site.hasMeters()
+	return slices.ContainsFunc(site.loadpoints, func(lp *Loadpoint) bool { return lp != nil }) || site.hasMeters()
+}
+
+// activeLoadpoints returns the non-disabled loadpoints
+func (site *Site) activeLoadpoints() []*Loadpoint {
+	return lo.Filter(site.loadpoints, func(lp *Loadpoint, _ int) bool { return lp != nil })
 }
 
 // loadpointsAsCircuitDevices returns the loadpoints as circuit devices
 func (site *Site) loadpointsAsCircuitDevices() []api.CircuitLoad {
-	return lo.Map(site.loadpoints, func(lp *Loadpoint, _ int) api.CircuitLoad { return lp })
+	return lo.Map(site.activeLoadpoints(), func(lp *Loadpoint, _ int) api.CircuitLoad { return lp })
 }
 
 // Vehicles returns the site vehicles
@@ -320,6 +363,38 @@ func (site *Site) SetResidualPower(power float64) error {
 	return nil
 }
 
+// GetGridExportLimit returns the static grid export power limit in W (0 = disabled)
+func (site *Site) GetGridExportLimit() float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.gridExportLimit
+}
+
+// SetGridExportLimit sets the static grid export power limit in W (0 = disabled)
+func (site *Site) SetGridExportLimit(power float64) error {
+	if power < 0 {
+		return fmt.Errorf("invalid grid export limit: %g", power)
+	}
+
+	site.Lock()
+	changed := site.gridExportLimit != power
+	if changed {
+		site.gridExportLimit = power
+	}
+	site.Unlock()
+
+	if changed {
+		site.log.DEBUG.Println("set grid export limit:", power)
+		settings.SetFloat(keys.GridExportLimit, power)
+		site.publish(keys.GridExportLimit, power)
+
+		// re-run the optimizer so the new limit takes effect immediately
+		go site.optimizerUpdateAsync(0)
+	}
+
+	return nil
+}
+
 // GetTariff returns the respective tariff if configured or nil
 func (site *Site) GetTariff(tariff api.TariffUsage) api.Tariff {
 	site.RLock()
@@ -352,6 +427,54 @@ func (site *Site) SetBatteryDischargeControl(val bool) error {
 	}
 
 	return nil
+}
+
+// GetBatteryGridDischarge returns whether the battery may discharge to grid (experimental)
+func (site *Site) GetBatteryGridDischarge() bool {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryGridDischarge
+}
+
+// SetBatteryGridDischarge sets whether the battery may discharge to grid (experimental)
+func (site *Site) SetBatteryGridDischarge(val bool) error {
+	site.log.DEBUG.Println("set battery grid discharge:", val)
+
+	if !site.hasBatteryControl() {
+		return ErrBatteryControlNotAvailable
+	}
+
+	site.Lock()
+	defer site.Unlock()
+
+	if site.batteryGridDischarge != val {
+		site.batteryGridDischarge = val
+		settings.SetBool(keys.BatteryGridDischarge, val)
+		site.publish(keys.BatteryGridDischarge, val)
+	}
+
+	return nil
+}
+
+// GetSolarAdjusted returns if the solar forecast is adjusted to real production data
+func (site *Site) GetSolarAdjusted() bool {
+	site.RLock()
+	defer site.RUnlock()
+	return site.solarAdjusted
+}
+
+// SetSolarAdjusted sets if the solar forecast is adjusted to real production data
+func (site *Site) SetSolarAdjusted(val bool) {
+	site.log.DEBUG.Println("set solar adjusted:", val)
+
+	site.Lock()
+	defer site.Unlock()
+
+	if site.solarAdjusted != val {
+		site.solarAdjusted = val
+		settings.SetBool(keys.SolarAdjusted, val)
+		site.publish(keys.SolarAdjusted, val)
+	}
 }
 
 func (site *Site) GetBatteryGridChargeLimit() *float64 {
@@ -416,7 +539,7 @@ func (site *Site) SetOptimizerChargingStrategy(strategy string) error {
 		site.publish(keys.OptimizerChargingStrategy, strategy)
 
 		// re-run the optimizer so the new strategy takes effect immediately
-		site.triggerOptimizer()
+		go site.optimizerUpdateAsync(0)
 	}
 
 	return nil

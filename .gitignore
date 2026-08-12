@@ -18,6 +18,7 @@ testdata/**/*
 !assets/js/**/*.yaml
 !package*.json
 !evcc.dist.yaml
+!server/openapi.state.yaml
 !.coderabbit.yaml
 !tests/**/*.evcc.yaml
 !tests/**/*.tpl.yaml
@@ -50,3 +51,5 @@ asset-stats.html
 /evcc.db
 /tsconfig.tsbuildinfo
 *storybook.log
+/graphify-out/
+.graphifyignore

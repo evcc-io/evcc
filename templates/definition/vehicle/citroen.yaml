@@ -9,7 +9,7 @@ requirements:
       Requires `access` and `refresh` tokens. These can be generated with command `evcc token [name]`.
 params:
   - preset: vehicle-common
-  - preset: vehicle-climater
+  - preset: vehicle-online
   - name: user
     required: true
   - name: password

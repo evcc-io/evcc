@@ -1,0 +1,53 @@
+template: octopus-it
+products:
+  - brand: Octopus Energy
+    description:
+      de: Italien
+      en: Italy
+countries: ["IT"]
+group: generic
+requirements:
+  evcc: ["skiptest"]
+  description:
+    de: |
+      Liest Fahrzeugdaten (Ladestand, Zielladestand) über die Octopus Energy Italy Kraken API.
+      Das Fahrzeug bzw. die Wallbox muss im Octopus-Konto (Intelligent Octopus) verbunden sein.
+    en: |
+      Reads vehicle data (state of charge, target soc) via the Octopus Energy Italy Kraken API.
+      The vehicle or charge point must be connected in the Octopus account (Intelligent Octopus).
+params:
+  - preset: vehicle-common
+  - preset: vehicle-online
+  - name: welcomecharge
+    advanced: true
+  - name: email
+    required: true
+  - name: password
+    required: true
+  - name: accountnumber
+    example: "A-12345678"
+    description:
+      en: Account Number
+      de: Kundennummer
+    help:
+      en: Account when several are linked (e.g. A-12345678).
+      de: Konto, wenn mehrere verknüpft sind (z.B. A-12345678).
+  - name: device
+    description:
+      en: Vehicle
+      de: Fahrzeug
+    service: octopus-it/devices?email={email}&password={password}&accountnumber={accountnumber}
+    help:
+      en: Vehicle when the account has more than one.
+      de: Fahrzeug, wenn das Konto mehrere besitzt.
+  - name: cache
+    default: 15m
+render: |
+  type: octopus-it
+  {{- include "vehicle-common" . }}
+  email: {{ .email }}
+  password: {{ .password }}
+  accountnumber: {{ .accountnumber }}
+  device: {{ .device }}
+  cache: {{ .cache }}
+  {{ include "vehicle-features" . }}

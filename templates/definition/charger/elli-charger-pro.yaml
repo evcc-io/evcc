@@ -39,6 +39,7 @@ params:
   - preset: eebus
   - name: ip
 render: |
+  type: eebus-evse
   {{ include "eebus" . }}
   meter: true
   chargedEnergy: false

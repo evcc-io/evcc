@@ -6,7 +6,7 @@ products:
       generic: FordConnect (Legacy)
 params:
   - preset: vehicle-common
-  - preset: vehicle-climater
+  - preset: vehicle-online
   - name: clientid
     description:
       generic: FordConnect API Client ID

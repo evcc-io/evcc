@@ -6,8 +6,8 @@ products:
 capabilities: ["battery-control"]
 requirements:
   description:
-    de: Für Batteriesteuerung muss über den Solarmax Support die Funktion "Connectivity+" freigeschaltet werden. Verfügbar ab Software 3.4.4. Ohne Freischaltung bleibt die Funktion ohne Wirkung. Netzladung ist generell nicht verfügbar.
-    en: For batter control, the "Connectivity+" function must be activated via the Solarmax support. Available from software version 3.4.4. Without activation, the function remains without effect. Grid charging is generally not available.
+    de: Für Batteriesteuerung muss über den Solarmax Support die Funktion "Connectivity+" freigeschaltet werden. Verfügbar ab Software 3.4.4. Ohne Freischaltung bleibt die Funktion ohne Wirkung.
+    en: For batter control, the "Connectivity+" function must be activated via the Solarmax support. Available from software version 3.4.4. Without activation, the function remains without effect.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -132,9 +132,5 @@ render: |
                 address: 142
                 type: writemultiple
                 decode: int16
-      - case: 3 # charge (not implemented)
-        set:
-          source: error
-          error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

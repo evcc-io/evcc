@@ -29,6 +29,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/ocpp"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -43,6 +44,7 @@ type OCPP struct {
 	phases  int
 	enabled bool
 	current float64
+	lp      loadpoint.API
 
 	stackLevelZero      bool
 	profileKindRelative bool
@@ -139,9 +141,14 @@ func NewOCPP(ctx context.Context,
 ) (*OCPP, error) {
 	log := util.NewLogger(fmt.Sprintf("%s-%d", cmp.Or(id, "ocpp"), connector))
 
-	cp, err := ocpp.Instance().RegisterChargepoint(id,
+	cs, err := ocpp.Instance()
+	if err != nil {
+		return nil, err
+	}
+
+	cp, err := cs.RegisterChargepoint(id,
 		func() *ocpp.CP {
-			return ocpp.NewChargePoint(log, id)
+			return ocpp.NewChargePoint(log, cs, id)
 		},
 		func(cp *ocpp.CP) error {
 			log.DEBUG.Printf("waiting for chargepoint: %v", connectTimeout)
@@ -313,6 +320,14 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 	period := types.NewChargingSchedulePeriod(0, current)
 
 	if c.cp.ChargingRateUnit == types.ChargingRateUnitWatts {
+		// c.phases is only set via the phase switcher; fall back to the loadpoint phases
+		if phases == 0 && c.lp != nil {
+			phases = c.lp.GetPhases()
+		}
+		// OCPP assumes phases == 3 if not set
+		if phases == 0 {
+			phases = 3
+		}
 		period = types.NewChargingSchedulePeriod(0, math.Trunc(230.0*current*float64(phases)))
 	} else {
 		// OCPP assumes phases == 3 if not set
@@ -434,4 +449,11 @@ func (c *OCPP) Diagnose() {
 			fmt.Printf("\t\t%s (%s): %s\n", opt.Key, rw[opt.Readonly], *opt.Value)
 		}
 	}
+}
+
+var _ loadpoint.Controller = (*OCPP)(nil)
+
+// LoadpointControl implements loadpoint.Controller
+func (c *OCPP) LoadpointControl(lp loadpoint.API) {
+	c.lp = lp
 }

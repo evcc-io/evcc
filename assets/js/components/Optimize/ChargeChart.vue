@@ -1,5 +1,5 @@
 <template>
-	<div class="mb-5">
+	<div>
 		<div class="chart-container my-3">
 			<Chart
 				ref="chartRef"
@@ -37,6 +37,7 @@ import formatter from "@/mixins/formatter";
 import colors from "@/colors";
 import LegendList from "../Sessions/LegendList.vue";
 import type { Legend } from "../Sessions/types";
+import "../Sessions/chartConfig";
 
 ChartJS.register(
 	CategoryScale,

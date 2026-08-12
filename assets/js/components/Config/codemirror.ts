@@ -1,6 +1,13 @@
 // Separate module so YamlEditor.vue can dynamic-import it, keeping CodeMirror out of the main chunk.
 import { EditorState, Compartment, StateField, StateEffect } from "@codemirror/state";
-import { EditorView, lineNumbers, keymap, Decoration, type DecorationSet } from "@codemirror/view";
+import {
+  EditorView,
+  lineNumbers,
+  keymap,
+  drawSelection,
+  Decoration,
+  type DecorationSet,
+} from "@codemirror/view";
 import {
   indentOnInput,
   foldGutter,
@@ -71,6 +78,7 @@ export function createEditor(opts: EditorOptions): EditorController {
     extensions: [
       lineNumbers(),
       foldGutter(),
+      drawSelection(),
       history(),
       bracketMatching(),
       yaml(),

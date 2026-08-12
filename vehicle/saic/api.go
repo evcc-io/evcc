@@ -19,16 +19,24 @@ const (
 	RegionAU = "https://gateway-mg-au.soimt.com/api.app/v1/"
 )
 
+// request states; a valid result implies no background poll is running
+type reqState int
+
+const (
+	stateInvalid reqState = iota // no pending value, no background poll
+	stateValid                   // a background value is pending, return once
+	stateRunning                 // background poll in progress
+)
+
 // API is an api.Vehicle implementation for SAIC cars
 type API struct {
 	*request.Helper
 	identity *Identity
 	log      *util.Logger
 
-	mu      sync.Mutex
-	running bool                  // background refresh in progress
-	valid   bool                  // result holds a valid response
-	result  requests.ChargeStatus // last valid response
+	mu     sync.Mutex
+	state  reqState
+	result requests.ChargeStatus // pending background response
 }
 
 // NewAPI creates a new vehicle
@@ -47,21 +55,28 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 	return v
 }
 
-// store saves a valid response and clears the running flag
+// store saves a background response to be returned exactly once
 func (v *API) store(res requests.ChargeStatus) {
 	v.mu.Lock()
 	defer v.mu.Unlock()
-	v.result, v.valid, v.running = res, true, false
+	v.result, v.state = res, stateValid
 }
 
-// last returns the last valid response, or ErrMustRetry until one is available
-func (v *API) last() (requests.ChargeStatus, error) {
+// take returns a pending value once, or ErrMustRetry while a poll runs. query
+// is true when neither applies and the caller must start a new request.
+func (v *API) take() (requests.ChargeStatus, error, bool) {
 	v.mu.Lock()
 	defer v.mu.Unlock()
-	if v.valid {
-		return v.result, nil
+
+	switch v.state {
+	case stateValid:
+		v.state = stateInvalid
+		return v.result, nil, false
+	case stateRunning:
+		return requests.ChargeStatus{}, api.ErrMustRetry, false
+	default:
+		return requests.ChargeStatus{}, nil, true
 	}
-	return v.result, api.ErrMustRetry
 }
 
 func (v *API) doRepeatedRequest(path string, event_id string) error {
@@ -88,20 +103,21 @@ func (v *API) doRepeatedRequest(path string, event_id string) error {
 
 // repeatRequest polls for the deferred answer in the background
 func (v *API) repeatRequest(path string, event_id string) {
-	// always clear running so a future query can start
-	defer func() {
-		v.mu.Lock()
-		v.running = false
-		v.mu.Unlock()
-	}()
-
 	for count := range 20 {
 		time.Sleep(2 * time.Second)
 		v.log.TRACE.Printf("repeated query %d", count)
+		// success stores the value (stateValid); a hard error stops the loop
 		if err := v.doRepeatedRequest(path, event_id); err != api.ErrMustRetry {
-			return
+			break
 		}
 	}
+
+	// reset so the next query starts fresh unless a value was stored
+	v.mu.Lock()
+	if v.state == stateRunning {
+		v.state = stateInvalid
+	}
+	v.mu.Unlock()
 }
 
 func doRequest[T any](v *API, req *http.Request, result *requests.Answer[T]) (string, error) {
@@ -176,13 +192,9 @@ func (v *API) Wakeup(vin string) error {
 func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 	var zero requests.ChargeStatus
 
-	// refresh in progress, return last known value
-	v.mu.Lock()
-	running := v.running
-	v.mu.Unlock()
-	if running {
-		v.log.TRACE.Printf("query running")
-		return v.last()
+	// return a pending background value once, or keep retrying while a poll runs
+	if res, err, query := v.take(); !query {
+		return res, err
 	}
 
 	token, err := v.identity.Token()
@@ -209,7 +221,7 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 
 	if event_id == "" {
 		v.log.TRACE.Printf("answer without event id")
-		return v.last()
+		return zero, api.ErrMustRetry
 	}
 
 	req, _ = requests.CreateRequest(
@@ -224,15 +236,15 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 	// answer not yet available, keep polling in the background
 	if _, err = doRequest(v, req, &res); err == api.ErrMustRetry {
 		v.mu.Lock()
-		v.running = true
+		v.state = stateRunning
 		v.mu.Unlock()
 		v.log.TRACE.Printf("no answer yet, continuing in background")
 		go v.repeatRequest(path, event_id)
-		return v.last()
+		return zero, api.ErrMustRetry
 	} else if err != nil {
 		return zero, err
 	}
 
-	v.store(res.Data)
+	// fresh answer - returned directly, so it is consumed and not stored
 	return res.Data, nil
 }

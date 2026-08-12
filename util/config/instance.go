@@ -4,6 +4,7 @@ import (
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/hems/hems"
 )
 
 var bus = evbus.New()
@@ -13,6 +14,7 @@ var instance struct {
 	chargers   *handler[api.Charger]
 	vehicles   *handler[api.Vehicle]
 	circuits   *handler[api.Circuit]
+	hems       *handler[hems.API]
 	messengers *handler[api.Messenger]
 	loadpoints *handler[loadpoint.API]
 	tariffs    *handler[api.Tariff]
@@ -27,6 +29,7 @@ func Reset() {
 	instance.chargers = &handler[api.Charger]{topic: "charger"}
 	instance.vehicles = &handler[api.Vehicle]{topic: "vehicle"}
 	instance.circuits = &handler[api.Circuit]{topic: "circuit"}
+	instance.hems = &handler[hems.API]{topic: "hems"}
 	instance.messengers = &handler[api.Messenger]{topic: "messenger"}
 	instance.loadpoints = &handler[loadpoint.API]{topic: "loadpoint"}
 	instance.tariffs = &handler[api.Tariff]{topic: "tariff"}
@@ -60,6 +63,10 @@ func Circuits() Handler[api.Circuit] {
 	return instance.circuits
 }
 
+func Hems() Handler[hems.API] {
+	return instance.hems
+}
+
 func Loadpoints() Handler[loadpoint.API] {
 	return instance.loadpoints
 }
@@ -72,7 +79,10 @@ func Tariffs() Handler[api.Tariff] {
 func Instances[T any](devices []Device[T]) []T {
 	res := make([]T, 0, len(devices))
 	for _, dev := range devices {
-		res = append(res, dev.Instance())
+		// skip disabled devices without instance
+		if inst := dev.Instance(); any(inst) != nil {
+			res = append(res, inst)
+		}
 	}
 	return res
 }

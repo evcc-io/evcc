@@ -3,6 +3,7 @@ products:
   - brand: Huawei
     description:
       generic: EMMA
+capabilities: ["curtail"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -120,6 +121,75 @@ render: |
       type: holding
       decode: uint64nan
     scale: 0.01
+  curtail:
+    source: sequence
+    set:
+    # allowed feed-in power as percent of nominal (0-100 %)
+    - source: modbus
+      id: 0
+      uri: {{ joinHostPort .host .port }}
+      register:
+        address: 40109 # Maximum grid feed-in power (0-100 %)
+        type: writesingle
+        encoding: uint16
+      scale: 10
+    # power control mode at grid connection point: 7 = percentage limit while curtailed, 0 = unlimited at 100%
+    - source: switch
+      switch:
+        - case: 100 # uncurtailed
+          set:
+            source: const
+            value: 0 # Unlimited
+            set:
+              source: modbus
+              id: 0
+              uri: {{ joinHostPort .host .port }}
+              register:
+                address: 40100 # Power control mode at grid connection point
+                type: writesingle
+                encoding: uint16
+      default:
+        source: const
+        value: 7 # Power-limited grid connection (%)
+        set:
+          source: modbus
+          id: 0
+          uri: {{ joinHostPort .host .port }}
+          register:
+            address: 40100 # Power control mode at grid connection point
+            type: writesingle
+            encoding: uint16
+  curtailed:
+    source: go
+    in:
+    - name: mode
+      type: int
+      config:
+        source: modbus
+        id: 0
+        uri: {{ joinHostPort .host .port }}
+        register:
+          address: 40100 # Power control mode at grid connection point (0=no curtailment)
+          type: holding
+          decode: uint16
+    - name: percent
+      type: int
+      config:
+        source: modbus
+        id: 0
+        uri: {{ joinHostPort .host .port }}
+        register:
+          address: 40109 # Maximum grid feed-in power (0-100 %)
+          type: holding
+          decode: uint16
+        scale: 0.1
+    # the percentage register is only meaningful while a limit mode is active
+    script: |
+      limit := percent
+      if mode != 7 {
+        limit = 100
+      }
+      limit
   {{- end }}
   {{- if eq .usage "battery" }}
   power:

@@ -31,11 +31,19 @@ type DynamicConfig struct {
 	BatteryBoostLimit        int       `json:"batteryBoostLimit"`
 	LimitEnergy              float64   `json:"limitEnergy"`
 	LimitSoc                 int       `json:"limitSoc"`
+	MinSoc                   int       `json:"minSoc"`
 
 	PlanStrategy api.PlanStrategy `json:"planStrategy"`
 
 	Thresholds ThresholdsConfig `json:"thresholds"`
 	Soc        SocConfig        `json:"soc"`
+	UI         UIConfig         `json:"ui"`
+}
+
+// UIConfig holds display-only settings. Not used in control logic.
+type UIConfig struct {
+	MinTemp float64 `json:"minTemp"`
+	MaxTemp float64 `json:"maxTemp"`
 }
 
 func SplitConfig(payload map[string]any) (DynamicConfig, map[string]any, error) {
@@ -68,9 +76,11 @@ func (payload DynamicConfig) Apply(lp API) error {
 	lp.SetBatteryBoostLimit(payload.BatteryBoostLimit)
 	lp.SetLimitEnergy(payload.LimitEnergy)
 	lp.SetLimitSoc(payload.LimitSoc)
+	lp.SetMinSoc(payload.MinSoc)
 
 	// TODO mode warning
 	lp.SetSocConfig(payload.Soc)
+	lp.SetUI(payload.UI)
 
 	mode, err := api.ChargeModeString(payload.DefaultMode)
 	if err == nil {
