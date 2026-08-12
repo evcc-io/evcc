@@ -81,7 +81,7 @@ render: |
     source: http
     headers:
     - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .power }}/plain
+    uri: {{ .uri }}/v1/state/{{ .power }}/plain
     {{- if .user }}
     auth:
       type: basic
@@ -95,7 +95,7 @@ render: |
       source: http
       headers:
        - accept: text/plain;charset=UTF-8
-      uri: {{ .uri }}/rest-api/v1/state/{{ .soc }}/plain
+      uri: {{ .uri }}/v1/state/{{ .soc }}/plain
       {{- if .user }}
       auth:
         type: basic
@@ -109,7 +109,7 @@ render: |
       source: http
       headers:
        - accept: text/plain;charset=UTF-8
-      uri: {{ .uri }}/rest-api/v1/state/{{ .energy }}/plain      
+      uri: {{ .uri }}/v1/state/{{ .energy }}/plain
       cache: {{ .cache }}
       {{- if .user }}
       auth:
@@ -123,7 +123,7 @@ render: |
     - source: http
       headers:
        - accept: text/plain;charset=UTF-8
-      uri: {{ .uri }}/rest-api/v1/state/{{ .currentL1 }}/plain
+      uri: {{ .uri }}/v1/state/{{ .currentL1 }}/plain
       cache: {{ .cache }}
       {{- if .user }}
       auth:
@@ -135,7 +135,7 @@ render: |
     - source: http
       headers:
        - accept: text/plain;charset=UTF-8
-      uri: {{ .uri }}/rest-api/v1/state/{{ .currentL2 }}/plain
+      uri: {{ .uri }}/v1/state/{{ .currentL2 }}/plain
       cache: {{ .cache }}
       {{- if .user }}
       auth:
@@ -148,7 +148,7 @@ render: |
     - source: http
       headers:
        - accept: text/plain;charset=UTF-8
-      uri: {{ .uri }}/rest-api/v1/state/{{ .currentL3 }}/plain
+      uri: {{ .uri }}/v1/state/{{ .currentL3 }}/plain
       cache: {{ .cache }}
       {{- if .user }}
       auth:

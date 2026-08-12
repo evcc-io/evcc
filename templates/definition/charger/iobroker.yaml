@@ -75,7 +75,7 @@ render: |
     source: http
     headers:
      - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .status }}/plain?extraPlain=true
+    uri: {{ .uri }}/v1/state/{{ .status }}/plain?extraPlain=true
     cache: {{ .cache }}
     {{- if .user }}
     auth:
@@ -89,7 +89,7 @@ render: |
     source: http
     headers:
        - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .power }}/plain
+    uri: {{ .uri }}/v1/state/{{ .power }}/plain
     cache: {{ .cache }}
     {{- if .user }}
     auth:
@@ -103,7 +103,7 @@ render: |
       source: http
       headers:
        - accept: text/plain;charset=UTF-8
-      uri: {{ .uri }}/rest-api/v1/state/{{ .enabled }}/plain
+      uri: {{ .uri }}/v1/state/{{ .enabled }}/plain
       cache: {{ .cache }}
       {{- if .user }}
       auth:
@@ -117,7 +117,7 @@ render: |
     source: http
     headers:
        - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .enable }}?value=${enable}    
+    uri: {{ .uri }}/v1/state/{{ .enable }}?value=${enable}
     cache: {{ .cache }}
     {{- if .user }}
     auth:
@@ -131,7 +131,7 @@ render: |
     source: http
     headers:
        - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .maxcurrent }}?value=${maxcurrent}
+    uri: {{ .uri }}/v1/state/{{ .maxcurrent }}?value=${maxcurrent}
     cache: {{ .cache }}
     {{- if .user }}
     auth:
@@ -145,7 +145,7 @@ render: |
     source: http
     headers:
        - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .maxcurrentmillis }}?value=${maxcurrentmillis}
+    uri: {{ .uri }}/v1/state/{{ .maxcurrentmillis }}?value=${maxcurrentmillis}
     cache: {{ .cache }}
     {{- if .user }}
     auth:
@@ -159,7 +159,7 @@ render: |
     source: http
     headers:
        - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .phases1p3p }}?value=${phases}
+    uri: {{ .uri }}/v1/state/{{ .phases1p3p }}?value=${phases}
     cache: {{ .cache }}
     {{- if .user }}
     auth:
