@@ -780,8 +780,8 @@ func (site *Site) updateBatteryMeters() {
 		mm[i].Controllable = new(controllable)
 	}
 
-	// every battery read failed this cycle - retain the last known soc so that a
-	// transient meter error does not report the pack as empty (0%)
+	// retain the last known soc when all reads failed, so that a transient
+	// meter error does not report the pack as empty (0%)
 	socFailed := lo.EveryBy(mm, func(m types.Measurement) bool { return m.Soc == nil })
 
 	// written from the meter goroutine, read via state and GetBatteryMaxDischargePower
@@ -1048,19 +1048,18 @@ func optimizerEnabled() bool {
 
 // sitePowerResult is the outcome of the site power calculation
 type sitePowerResult struct {
-	// power is the net power exported by the site minus a residual margin
+	// net power exported by the site minus a residual margin
 	// (negative values mean grid: export, battery: charging)
 	power float64
 
-	// batteryBuffered indicates that the battery buffer can be used for charging
+	// battery buffer can be used for charging
 	batteryBuffered bool
 
-	// batteryStart indicates that charging may start off the battery
+	// charging may start off the battery
 	batteryStart bool
 
-	// priorityAdjustment is the adjustment applied to power for battery priority
-	// below prioritySoc; adding it back restores the unadjusted site power for a
-	// loadpoint that takes priority over the battery (battery boost)
+	// adjustment applied for battery priority below prioritySoc; adding it back
+	// restores the unadjusted site power for a battery-boosting loadpoint
 	priorityAdjustment float64
 }
 
@@ -1235,8 +1234,7 @@ func (site *Site) update(lp updater) {
 	site.stats.Update(site)
 }
 
-// updatePower calculates the site power balance from the measured state and
-// updates the given loadpoint
+// updatePower calculates the site power balance and updates the given loadpoint
 func (site *Site) updatePower(lp updater, state siteState, totalChargePower float64, consumption, feedin api.Rates) {
 	// prioritize if possible
 	var flexiblePower float64
