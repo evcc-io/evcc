@@ -186,71 +186,38 @@ type Voltie struct {
 	info   modbus.Block
 }
 
-// voltieBlockReader decodes registers out of a fetched block payload by their
-// register address. Decoding errors are collected and checked once by the
-// caller, so a register outside the block cannot pass unnoticed.
-type voltieBlockReader struct {
-	block   modbus.Block
-	payload []byte
-	err     error
-}
-
-func (r *voltieBlockReader) registers(addr, count uint16) []byte {
-	if r.err != nil {
-		return make([]byte, 2*count)
-	}
-
-	b, err := r.block.Extract(modbus.RegisterOperation{Addr: addr, Length: count}, r.payload)
-	if err != nil {
-		r.err = err
-		return make([]byte, 2*count)
-	}
-
-	return b
-}
-
-func (r *voltieBlockReader) u16(addr uint16) uint16 {
-	return binary.BigEndian.Uint16(r.registers(addr, 1))
-}
-
-func (r *voltieBlockReader) i16(addr uint16) int16 {
-	return int16(r.u16(addr))
-}
-
-func (r *voltieBlockReader) u32(addr uint16) uint32 {
-	return binary.BigEndian.Uint32(r.registers(addr, 2))
-}
-
-func (r *voltieBlockReader) i32(addr uint16) int32 {
-	return int32(r.u32(addr))
-}
-
-// serial decodes a 64 bit serial number, which is sent least-significant word
-// first unlike the 32 bit metering values
-func (r *voltieBlockReader) serial(addr uint16) uint64 {
-	b := r.registers(addr, voltieSerialRegCount)
-
-	var res uint64
-	for i := range voltieSerialRegCount {
-		res |= uint64(binary.BigEndian.Uint16(b[2*i:])) << (16 * i)
-	}
-
-	return res
-}
-
 // read fetches a register block through the shared bulk read cache, so all
 // values taken from the same block within a poll cycle cost one request
-func (wb *Voltie) read(block modbus.Block) (*voltieBlockReader, error) {
+func (wb *Voltie) read(block modbus.Block) ([]byte, error) {
 	key := fmt.Sprintf("%s/holding/%d/%d", wb.conn.Addr(), block.Register, block.Count)
 
 	payload, _, err := wb.cache.Fetch(key, func() ([]byte, error) {
 		return wb.conn.ReadHoldingRegisters(block.Register, block.Count)
 	})
-	if err != nil {
-		return nil, err
+
+	return payload, err
+}
+
+// voltieSerial decodes a 64 bit serial number, which is sent least-significant
+// word first unlike the 32 bit metering values
+func voltieSerial(b []byte, off int) uint64 {
+	var res uint64
+	for i := range voltieSerialRegCount {
+		res |= uint64(binary.BigEndian.Uint16(b[off+2*i:])) << (16 * i)
 	}
 
-	return &voltieBlockReader{block: block, payload: payload}, nil
+	return res
+}
+
+// voltieU16 returns the register at addr within a cached block payload
+func voltieU16(block modbus.Block, b []byte, addr uint16) uint16 {
+	return binary.BigEndian.Uint16(b[block.ByteOffset(addr):])
+}
+
+// voltieU32 returns the 32 bit value at addr within a cached block payload,
+// most-significant word first
+func voltieU32(block modbus.Block, b []byte, addr uint16) uint32 {
+	return binary.BigEndian.Uint32(b[block.ByteOffset(addr):])
 }
 
 func init() {
@@ -301,8 +268,8 @@ func NewVoltie(ctx context.Context, settings modbus.TcpSettings, cache time.Dura
 		meter:  modbus.Block{Register: voltieRegMeterBlock, Count: voltieLenMeterBlock},
 	}
 
-	if r, err := wb.read(wb.info); err == nil {
-		if fw := r.u16(voltieRegFirmware); r.err == nil && fw < voltieMinFirmware {
+	if b, err := wb.read(wb.info); err == nil {
+		if fw := voltieU16(wb.info, b, voltieRegFirmware); fw < voltieMinFirmware {
 			log.WARN.Printf("firmware %d is outdated, Modbus TCP requires %d or later", fw, voltieMinFirmware)
 		}
 	}
@@ -318,24 +285,18 @@ func NewVoltie(ctx context.Context, settings modbus.TcpSettings, cache time.Dura
 // must not start a session on its own while evcc is in control, and its own
 // load management would silently cap the current requested by evcc.
 func (wb *Voltie) checkSettings() error {
-	r, err := wb.read(wb.status)
+	b, err := wb.read(wb.status)
 	if err != nil {
 		return err
 	}
 
-	dlm := r.u16(voltieRegDlmEffective)
-	autoStart := r.u16(voltieRegAutoStart)
-	if r.err != nil {
-		return r.err
-	}
-
-	if dlm != 0 {
+	if dlm := voltieU16(wb.status, b, voltieRegDlmEffective); dlm != 0 {
 		wb.log.WARN.Printf("charger-side load management is active (mode %d) and will cap the requested current", dlm)
 	}
 
 	// the auto start setting is persisted in the charger's EEPROM and stays off
 	// after evcc is removed, so it is only written when actually enabled
-	if autoStart == 0 {
+	if voltieU16(wb.status, b, voltieRegAutoStart) == 0 {
 		return nil
 	}
 
@@ -351,64 +312,45 @@ func (wb *Voltie) checkSettings() error {
 
 // Status implements the api.Charger interface
 func (wb *Voltie) Status() (api.ChargeStatus, error) {
-	r, err := wb.read(wb.status)
+	b, err := wb.read(wb.status)
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	state := r.u16(voltieRegStatus)
-	if r.err != nil {
-		return api.StatusNone, r.err
-	}
-
-	if status, ok := voltieChargeStatus(state); ok {
-		return status, nil
-	}
-
-	return api.StatusNone, voltieStateError(r, state)
-}
-
-// voltieChargeStatus maps an EVSE state to a charge status. States the charger
-// cannot charge in have no mapping, including state D: a vehicle requiring
-// ventilation is treated as an error rather than a charging state.
-func voltieChargeStatus(state uint16) (api.ChargeStatus, bool) {
-	switch state {
+	switch state := voltieU16(wb.status, b, voltieRegStatus); state {
 	case voltieStateA:
-		return api.StatusA, true
+		return api.StatusA, nil
 	case voltieStateB:
-		return api.StatusB, true
+		return api.StatusB, nil
 	case voltieStateC:
-		return api.StatusC, true
+		return api.StatusC, nil
 	default:
-		return api.StatusNone, false
+		// any other state, including D where the vehicle requires ventilation,
+		// is reported as an error together with the MCU's stop reason
+		desc, ok := voltieStates[state]
+		if !ok {
+			desc = "unknown state"
+		}
+
+		if reason := voltieU16(wb.status, b, voltieRegStopReason); reason != 0 {
+			if txt, ok := voltieStopReasons[reason]; ok {
+				return api.StatusNone, fmt.Errorf("%s (0x%02X): %s", desc, state, txt)
+			}
+			return api.StatusNone, fmt.Errorf("%s (0x%02X): stop reason %d", desc, state, reason)
+		}
+
+		return api.StatusNone, fmt.Errorf("%s (0x%02X)", desc, state)
 	}
-}
-
-// voltieStateError describes an EVSE state the charger cannot charge in,
-// adding the stop reason reported by the MCU where one is available
-func voltieStateError(r *voltieBlockReader, state uint16) error {
-	desc := voltieStateName(state)
-
-	reason := r.u16(voltieRegStopReason)
-	if reason == 0 {
-		return fmt.Errorf("%s (0x%02X)", desc, state)
-	}
-
-	if txt, ok := voltieStopReasons[reason]; ok {
-		return fmt.Errorf("%s (0x%02X): %s", desc, state, txt)
-	}
-
-	return fmt.Errorf("%s (0x%02X): stop reason %d", desc, state, reason)
 }
 
 // Enabled implements the api.Charger interface
 func (wb *Voltie) Enabled() (bool, error) {
-	r, err := wb.read(wb.status)
+	b, err := wb.read(wb.status)
 	if err != nil {
 		return false, err
 	}
 
-	return r.u16(voltieRegChargeEnable) != 0, r.err
+	return voltieU16(wb.status, b, voltieRegChargeEnable) != 0, nil
 }
 
 // Enable implements the api.Charger interface
@@ -451,133 +393,123 @@ var _ api.CurrentGetter = (*Voltie)(nil)
 
 // GetMaxCurrent implements the api.CurrentGetter interface
 func (wb *Voltie) GetMaxCurrent() (float64, error) {
-	r, err := wb.read(wb.status)
+	b, err := wb.read(wb.status)
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(r.u16(voltieRegCurrent)) / 1e3, r.err
+	return float64(voltieU16(wb.status, b, voltieRegCurrent)) / 1e3, nil
 }
 
 var _ api.Meter = (*Voltie)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *Voltie) CurrentPower() (float64, error) {
-	r, err := wb.read(wb.meter)
+	b, err := wb.read(wb.meter)
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(r.i32(voltieRegPower)), r.err
+	return float64(int32(voltieU32(wb.meter, b, voltieRegPower))), nil
 }
 
 var _ api.ChargeRater = (*Voltie)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (wb *Voltie) ChargedEnergy() (float64, error) {
-	r, err := wb.read(wb.meter)
+	b, err := wb.read(wb.meter)
 	if err != nil {
 		return 0, err
 	}
 
-	return float64(r.u32(voltieRegEnergy)) / 3.6e6, r.err // Ws to kWh
+	return float64(voltieU32(wb.meter, b, voltieRegEnergy)) / 3.6e6, nil // Ws to kWh
 }
 
 var _ api.ChargeTimer = (*Voltie)(nil)
 
 // ChargeDuration implements the api.ChargeTimer interface
 func (wb *Voltie) ChargeDuration() (time.Duration, error) {
-	r, err := wb.read(wb.meter)
+	b, err := wb.read(wb.meter)
 	if err != nil {
 		return 0, err
 	}
 
-	return time.Duration(r.u32(voltieRegDuration)) * time.Second, r.err
+	return time.Duration(voltieU32(wb.meter, b, voltieRegDuration)) * time.Second, nil
 }
 
 var _ api.PhaseCurrents = (*Voltie)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *Voltie) Currents() (float64, float64, float64, error) {
-	r, err := wb.read(wb.meter)
+	b, err := wb.read(wb.meter)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
 	var res [3]float64
 	for i := range res {
-		res[i] = float64(r.u32(voltieRegCurrents+uint16(2*i))) / 1e3 // mA to A
+		res[i] = float64(voltieU32(wb.meter, b, voltieRegCurrents+uint16(2*i))) / 1e3 // mA to A
 	}
 
-	return res[0], res[1], res[2], r.err
+	return res[0], res[1], res[2], nil
 }
 
 var _ api.PhaseVoltages = (*Voltie)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (wb *Voltie) Voltages() (float64, float64, float64, error) {
-	r, err := wb.read(wb.meter)
+	b, err := wb.read(wb.meter)
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
 	var res [3]float64
 	for i := range res {
-		res[i] = float64(r.u32(voltieRegVoltages+uint16(2*i))) / 1e3 // mV to V
+		res[i] = float64(voltieU32(wb.meter, b, voltieRegVoltages+uint16(2*i))) / 1e3 // mV to V
 	}
 
-	return res[0], res[1], res[2], r.err
+	return res[0], res[1], res[2], nil
 }
 
 var _ api.PhaseGetter = (*Voltie)(nil)
 
 // GetPhases implements the api.PhaseGetter interface
 func (wb *Voltie) GetPhases() (int, error) {
-	r, err := wb.read(wb.status)
+	b, err := wb.read(wb.status)
 	if err != nil {
 		return 0, err
 	}
 
-	return int(r.u16(voltieRegPhases)), r.err
+	return int(voltieU16(wb.status, b, voltieRegPhases)), nil
 }
 
 var _ api.Diagnosis = (*Voltie)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *Voltie) Diagnose() {
-	if r, err := wb.read(wb.info); err == nil {
-		fmt.Printf("\tCharger ID:\t%d\n", r.u16(voltieRegChargerID))
-		fmt.Printf("\tFirmware:\t%d\n", r.u16(voltieRegFirmware))
-		fmt.Printf("\tMCU serial:\t%d\n", r.serial(voltieRegMcuSerial))
-		fmt.Printf("\tPower serial:\t%d\n", r.serial(voltieRegHpowSerial))
+	if b, err := wb.read(wb.info); err == nil {
+		fmt.Printf("\tCharger ID:\t%d\n", voltieU16(wb.info, b, voltieRegChargerID))
+		fmt.Printf("\tFirmware:\t%d\n", voltieU16(wb.info, b, voltieRegFirmware))
+		fmt.Printf("\tMCU serial:\t%d\n", voltieSerial(b, wb.info.ByteOffset(voltieRegMcuSerial)))
+		fmt.Printf("\tPower serial:\t%d\n", voltieSerial(b, wb.info.ByteOffset(voltieRegHpowSerial)))
 	}
 
-	if r, err := wb.read(wb.status); err == nil {
-		state := r.u16(voltieRegStatus)
-		fmt.Printf("\tStatus:\t\t0x%02X (%s)\n", state, voltieStateName(state))
-		fmt.Printf("\tAuto start:\t%d\n", r.u16(voltieRegAutoStart))
-		fmt.Printf("\tCharging:\t%d\n", r.u16(voltieRegCharging))
-		fmt.Printf("\tPhases:\t\t%d\n", r.u16(voltieRegPhases))
-		fmt.Printf("\tDLM mode:\t%d set, %d effective\n", r.u16(voltieRegDlmSet), r.u16(voltieRegDlmEffective))
-		fmt.Printf("\tCurrent limit:\t%d mA\n", r.u16(voltieRegCurrent))
+	if b, err := wb.read(wb.status); err == nil {
+		state := voltieU16(wb.status, b, voltieRegStatus)
+		fmt.Printf("\tStatus:\t\t0x%02X (%s)\n", state, voltieStates[state])
+		fmt.Printf("\tAuto start:\t%d\n", voltieU16(wb.status, b, voltieRegAutoStart))
+		fmt.Printf("\tCharging:\t%d\n", voltieU16(wb.status, b, voltieRegCharging))
+		fmt.Printf("\tPhases:\t\t%d\n", voltieU16(wb.status, b, voltieRegPhases))
+		fmt.Printf("\tDLM mode:\t%d set, %d effective\n", voltieU16(wb.status, b, voltieRegDlmSet), voltieU16(wb.status, b, voltieRegDlmEffective))
+		fmt.Printf("\tCurrent limit:\t%d mA\n", voltieU16(wb.status, b, voltieRegCurrent))
 
-		reason := r.u16(voltieRegStopReason)
+		reason := voltieU16(wb.status, b, voltieRegStopReason)
 		fmt.Printf("\tStop reason:\t%d (%s)\n", reason, voltieStopReasons[reason])
 	}
 
-	if r, err := wb.read(wb.meter); err == nil {
-		fmt.Printf("\tCapacity:\t%d mA\n", r.u32(voltieRegCapacity))
+	if b, err := wb.read(wb.meter); err == nil {
+		fmt.Printf("\tCapacity:\t%d mA\n", voltieU32(wb.meter, b, voltieRegCapacity))
 		fmt.Printf("\tTemperature:\t%d °C MCU, %d °C power board\n",
-			r.i16(voltieRegTempMcu), r.i16(voltieRegTempPower))
+			int16(voltieU16(wb.meter, b, voltieRegTempMcu)), int16(voltieU16(wb.meter, b, voltieRegTempPower)))
 	}
-}
-
-// voltieStateName describes an EVSE state, falling back for states the
-// firmware may add in the future
-func voltieStateName(state uint16) string {
-	if desc, ok := voltieStates[state]; ok {
-		return desc
-	}
-
-	return "unknown state"
 }
