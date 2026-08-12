@@ -137,7 +137,6 @@ func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) (ocpp16
 		if cp.IsConnected() {
 			cp.Stop()
 		}
-
 		close(done)
 		// wait for the drain goroutine to fully exit before the test method
 		// returns: handleTrigger logs via suite.T(), which panics if called
