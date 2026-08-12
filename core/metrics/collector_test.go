@@ -569,3 +569,34 @@ func TestCollectorLastSlotEnergy(t *testing.T) {
 	_, ok = col.LastSlotEnergy()
 	require.False(t, ok)
 }
+
+func TestCollectorSetEnergy(t *testing.T) {
+	clk := clock.NewMock()
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector(Forecast, "set", "", WithClock(clk))
+	require.NoError(t, err)
+
+	// repeated sets within a slot are idempotent
+	require.NoError(t, col.SetEnergy(1))
+	require.Equal(t, 1.0, col.accu.Energy)
+	clk.Add(5 * time.Minute)
+	require.NoError(t, col.SetEnergy(1))
+	require.Equal(t, 1.0, col.accu.Energy)
+
+	// a revised value replaces it rather than accumulating
+	clk.Add(5 * time.Minute) // 00:10
+	require.NoError(t, col.SetEnergy(1.5))
+	require.Equal(t, 1.5, col.accu.Energy)
+
+	// crossing the boundary persists the value last set in the completed slot
+	clk.Add(5 * time.Minute) // 00:15
+	require.NoError(t, col.SetEnergy(2))
+	require.Equal(t, 2.0, col.accu.Energy)
+
+	v, ok := col.LastSlotEnergy()
+	require.True(t, ok)
+	require.Equal(t, 1.5, v)
+}

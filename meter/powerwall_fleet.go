@@ -55,7 +55,10 @@ func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	implement.May(m, implement.BatteryController(cc.batterySocLimits.LimitController(func() (float64, error) {
+	// charge mode raises the reserve to full, normal mode restores the configured minimum
+	limits := batterySocLimits{MinSoc: cc.MinSoc, MaxSoc: 100}
+
+	implement.Has(m, implement.BatteryController(limits.LimitController(func() (float64, error) {
 		ess, err := energySite.EnergySiteStatus()
 		if err != nil {
 			return 0, fmt.Errorf("get energy site status: %w", err)

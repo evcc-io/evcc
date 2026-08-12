@@ -5,9 +5,11 @@
 		:name="meter.name"
 		:editable="!!meter.id"
 		:error="hasError"
+		:disabled="!!meter.deviceDisable"
 		:banner="banner"
 		:data-testid="meterType"
 		@edit="$emit('edit', meterType, meter.id)"
+		@enable="$emit('enable')"
 	>
 		<template #icon>
 			<VehicleIcon v-if="isVehicleIcon" :name="iconName" />
@@ -57,7 +59,7 @@ export default {
 			type: String,
 		},
 	},
-	emits: ["edit"],
+	emits: ["edit", "enable"],
 	computed: {
 		cardTitle() {
 			if (this.title) {

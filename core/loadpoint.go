@@ -1613,9 +1613,9 @@ func (lp *Loadpoint) boostPower(batteryPower float64) float64 {
 		}
 	}
 
-	if maxDischargePower := lp.site.GetBatteryMaxDischargePower(); maxDischargePower > 0 {
+	if maxDischargePower := lp.site.GetBatteryMaxDischargePower(); maxDischargePower != nil {
 		// limit delta to what the battery can still provide
-		delta = min(delta, max(0, maxDischargePower-batteryPower))
+		delta = min(delta, max(0, *maxDischargePower-batteryPower))
 	}
 
 	res := max(0, batteryPower) + delta + lp.site.GetResidualPower()

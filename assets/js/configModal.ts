@@ -314,4 +314,9 @@ export function isTopModal(name: string): boolean {
   return topModal()?.name === name;
 }
 
+export function isNestedIn(name: string): boolean {
+  const idx = configModal.stack.findIndex((m) => m.name === name);
+  return idx >= 0 && idx < configModal.stack.length - 1;
+}
+
 export default configModal;
