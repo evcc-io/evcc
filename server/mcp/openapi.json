@@ -3025,6 +3025,86 @@
           "precondition"
         ]
       },
+      "SolarMinSocStatus": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "lowThreshold": {
+            "type": "number"
+          },
+          "mediumThreshold": {
+            "type": "number"
+          },
+          "vehicles": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "low": {
+                  "type": "number"
+                },
+                "medium": {
+                  "type": "number"
+                },
+                "high": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "low",
+                "medium",
+                "high"
+              ]
+            }
+          },
+          "availableVehicles": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "title"
+              ]
+            }
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "forecastEnergy": {
+            "type": "number"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "updated": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "enabled",
+          "lowThreshold",
+          "mediumThreshold",
+          "vehicles",
+          "availableVehicles",
+          "available",
+          "forecastEnergy"
+        ]
+      },
       "ChargerStatusReason": {
         "description": "Reason why the charger is waiting.",
         "type": "string",
@@ -4607,86 +4687,6 @@
         },
         "required": [
           "power"
-        ]
-      },
-      "SolarMinSocStatus": {
-        "type": "object",
-        "properties": {
-          "enabled": {
-            "type": "boolean"
-          },
-          "lowThreshold": {
-            "type": "number"
-          },
-          "mediumThreshold": {
-            "type": "number"
-          },
-          "vehicles": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "object",
-              "properties": {
-                "low": {
-                  "type": "number"
-                },
-                "medium": {
-                  "type": "number"
-                },
-                "high": {
-                  "type": "number"
-                }
-              },
-              "required": [
-                "low",
-                "medium",
-                "high"
-              ]
-            }
-          },
-          "availableVehicles": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "type": "string"
-                },
-                "title": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "name",
-                "title"
-              ]
-            }
-          },
-          "available": {
-            "type": "boolean"
-          },
-          "forecastEnergy": {
-            "type": "number"
-          },
-          "state": {
-            "type": "string",
-            "enum": [
-              "low",
-              "medium",
-              "high"
-            ]
-          },
-          "updated": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "enabled",
-          "lowThreshold",
-          "mediumThreshold",
-          "vehicles",
-          "availableVehicles",
-          "available",
-          "forecastEnergy"
         ]
       },
       "SmartCostType": {

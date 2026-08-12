@@ -161,7 +161,10 @@ export default defineComponent({
 	},
 	computed: {
 		validationError(): string {
-			if (this.config.lowThreshold < 0 || this.config.lowThreshold >= this.config.mediumThreshold) {
+			if (
+				this.config.lowThreshold < 0 ||
+				this.config.lowThreshold >= this.config.mediumThreshold
+			) {
 				return this.$t("config.tariff.solarMinSoc.thresholdError");
 			}
 			for (const values of Object.values(this.config.vehicles)) {

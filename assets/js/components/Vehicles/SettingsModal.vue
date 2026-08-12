@@ -99,7 +99,10 @@
 						:label="$t('main.vehicleSettings.solarMinSoc')"
 						:description="$t('main.vehicleSettings.solarMinSocDescription')"
 					>
-						<div :id="fieldId(vehicle, 'solarMinSoc')" class="form-control-plaintext pt-1">
+						<div
+							:id="fieldId(vehicle, 'solarMinSoc')"
+							class="form-control-plaintext pt-1"
+						>
 							{{ fmtPercentage(vehicle.solarMinSoc) }}
 						</div>
 					</SettingsFormRow>
@@ -108,7 +111,10 @@
 						:id="fieldId(vehicle, 'effectiveMinSoc')"
 						:label="$t('main.vehicleSettings.effectiveMinSoc')"
 					>
-						<div :id="fieldId(vehicle, 'effectiveMinSoc')" class="form-control-plaintext pt-1">
+						<div
+							:id="fieldId(vehicle, 'effectiveMinSoc')"
+							class="form-control-plaintext pt-1"
+						>
 							{{ fmtPercentage(effectiveMinSoc(vehicle)) }}
 						</div>
 					</SettingsFormRow>

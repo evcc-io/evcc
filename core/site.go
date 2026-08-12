@@ -329,7 +329,8 @@ func NewSite() *Site {
 		log:     util.NewLogger("site"),
 		Voltage: 230, // V
 		solarMinSoc: solarMinSocPolicy{SolarMinSocStatus: api.SolarMinSocStatus{
-			SolarMinSocConfig: defaultSolarMinSocConfig(),
+			SolarMinSocConfig:  defaultSolarMinSocConfig(),
+			AvailableVehicles: make([]api.SolarMinSocVehicle, 0),
 		}},
 		collectors: make(map[string]*metrics.Collector),
 	}

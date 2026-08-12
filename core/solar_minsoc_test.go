@@ -71,6 +71,13 @@ func TestSolarMinSocPolicyRetainsLastValidForecast(t *testing.T) {
 	assert.Equal(t, updated, policy.Updated)
 }
 
+func TestSolarMinSocAvailableVehicles(t *testing.T) {
+	status := NewSite().GetSolarMinSoc()
+
+	assert.NotNil(t, status.AvailableVehicles)
+	assert.Empty(t, status.AvailableVehicles)
+}
+
 func TestValidateSolarMinSocConfig(t *testing.T) {
 	conf := defaultSolarMinSocConfig()
 	conf.LowThreshold = 15

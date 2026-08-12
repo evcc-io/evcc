@@ -788,7 +788,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SolarMinSocStatus"
+                $ref: "./openapi.state.yaml#/components/schemas/SolarMinSocStatus"
     put:
       operationId: setSolarMinSocConfig
       summary: Set forecast-based vehicle minimum charge configuration
@@ -806,7 +806,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SolarMinSocStatus"
+                $ref: "./openapi.state.yaml#/components/schemas/SolarMinSocStatus"
         "400":
           description: Invalid thresholds, vehicle name, or minimum charge value
   /smartfeedinprioritylimit:
