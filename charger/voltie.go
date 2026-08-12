@@ -435,10 +435,8 @@ func (wb *Voltie) ChargeDuration() (time.Duration, error) {
 	return time.Duration(voltieU32(wb.meter, b, voltieRegDuration)) * time.Second, nil
 }
 
-var _ api.PhaseCurrents = (*Voltie)(nil)
-
-// Currents implements the api.PhaseCurrents interface
-func (wb *Voltie) Currents() (float64, float64, float64, error) {
+// getPhaseValues returns 3 sequential 32 bit values from the meter block, scaled from milli units
+func (wb *Voltie) getPhaseValues(reg uint16) (float64, float64, float64, error) {
 	b, err := wb.read(wb.meter)
 	if err != nil {
 		return 0, 0, 0, err
@@ -446,27 +444,24 @@ func (wb *Voltie) Currents() (float64, float64, float64, error) {
 
 	var res [3]float64
 	for i := range res {
-		res[i] = float64(voltieU32(wb.meter, b, voltieRegCurrents+uint16(2*i))) / 1e3 // mA to A
+		res[i] = float64(voltieU32(wb.meter, b, reg+uint16(2*i))) / 1e3
 	}
 
 	return res[0], res[1], res[2], nil
+}
+
+var _ api.PhaseCurrents = (*Voltie)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (wb *Voltie) Currents() (float64, float64, float64, error) {
+	return wb.getPhaseValues(voltieRegCurrents)
 }
 
 var _ api.PhaseVoltages = (*Voltie)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (wb *Voltie) Voltages() (float64, float64, float64, error) {
-	b, err := wb.read(wb.meter)
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	var res [3]float64
-	for i := range res {
-		res[i] = float64(voltieU32(wb.meter, b, voltieRegVoltages+uint16(2*i))) / 1e3 // mV to V
-	}
-
-	return res[0], res[1], res[2], nil
+	return wb.getPhaseValues(voltieRegVoltages)
 }
 
 var _ api.PhaseGetter = (*Voltie)(nil)
