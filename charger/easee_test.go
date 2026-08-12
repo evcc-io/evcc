@@ -161,7 +161,6 @@ func TestEasee_waitForChargerEnabledState(t *testing.T) {
 				e.mux.Lock()
 				e.opMode = easee.ModeCharging // transition to charging
 				e.mux.Unlock()
-
 				if tc.sendObs {
 					e.obsC <- easee.Observation{
 						ID: easee.CHARGER_OP_MODE,
@@ -205,7 +204,6 @@ func TestEasee_waitForDynamicChargerCurrent(t *testing.T) {
 				e.mux.Lock()
 				e.dynamicChargerCurrent = 32 // transition to 32A
 				e.mux.Unlock()
-
 				if tc.sendObs {
 					e.obsC <- easee.Observation{
 						ID:       easee.DYNAMIC_CHARGER_CURRENT,
