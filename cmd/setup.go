@@ -316,19 +316,13 @@ func staticInstance[T any](typ string, cc config.Named, newFromConf newFromConfF
 	return err
 }
 
-// nameForConfig returns a sensible log name for a (custom) configurable device,
-// qualifying the generic db:<id> with the configured title where available
-func nameForConfig(conf *config.Config) string {
+// loggerForConfig creates a logger with sensible name for (custom) configurable device
+func loggerForConfig(conf *config.Config) *util.Logger {
 	res := conf.Named().Name
 	if t := conf.Title; t != "" && t != res {
 		res += "-" + t
 	}
-	return res
-}
-
-// loggerForConfig creates a logger with sensible name for (custom) configurable device
-func loggerForConfig(conf *config.Config) *util.Logger {
-	return util.NewLogger(nameForConfig(conf))
+	return util.NewLogger(res)
 }
 
 func configurableInstance[T any](typ string, conf *config.Config, newFromConf newFromConfFunc[T], h config.Handler[T]) error {
@@ -1218,7 +1212,7 @@ func configureTariffs(conf *globalconfig.Tariffs, names ...string) (*tariff.Tari
 			var instance api.Tariff
 			if !conf.Disable {
 				var err error
-				instance, err = tariffInstance(nameForConfig(&conf), config.Typed{Type: cc.Type, Other: cc.Other})
+				instance, err = tariffInstance(cc.Name, config.Typed{Type: cc.Type, Other: cc.Other})
 				if err != nil {
 					return err
 				}
