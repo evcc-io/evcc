@@ -29,7 +29,7 @@ func TestNewPowerWallFromConfigValidation(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := NewPowerWallFromConfig(t.Context(), tc.config)
+			_, err := NewPowerWallFromConfig(tc.config)
 			assert.ErrorContains(t, err, tc.want)
 		})
 	}
@@ -103,7 +103,7 @@ func TestNewPowerWallFleetFromConfigValidation(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := NewPowerWallFleetFromConfig(t.Context(), tc.config)
+			_, err := NewPowerWallFleetFromConfig(tc.config)
 			if tc.wantSentinel != nil {
 				assert.ErrorIs(t, err, tc.wantSentinel)
 				return

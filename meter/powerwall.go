@@ -1,7 +1,6 @@
 package meter
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -26,16 +25,18 @@ type PowerWall struct {
 type powerWallConfig struct {
 	URI, Usage, User, Password string
 	Cache                      time.Duration
-	SiteId                     int64  // Fleet API only, deprecated for the local meter
-	RefreshToken_              string `mapstructure:"refreshToken"` // TODO deprecated
-	batteryCapacityCtx         `mapstructure:",squash"`
-	batterySocLimitsCtx        `mapstructure:",squash"`
-	batteryPowerLimitsCtx      `mapstructure:",squash"`
+	SiteId                     int64   // Fleet API only, deprecated for the local meter
+	RefreshToken_              string  `mapstructure:"refreshToken"` // TODO deprecated
+	MinSoc                     float64 // Fleet API only, backup reserve restored in normal mode
+	MaxSoc_                    any     `mapstructure:"maxsoc"`            // TODO deprecated
+	MaxChargePower_            any     `mapstructure:"maxchargepower"`    // TODO deprecated
+	MaxDischargePower_         any     `mapstructure:"maxdischargepower"` // TODO deprecated
 }
 
 func defaultPowerWallConfig() powerWallConfig {
 	return powerWallConfig{
-		Cache: time.Second,
+		Cache:  time.Second,
+		MinSoc: 20,
 	}
 }
 
@@ -61,12 +62,12 @@ func (cc *powerWallConfig) validate() error {
 }
 
 func init() {
-	registry.AddCtx("tesla", NewPowerWallFromConfig)
-	registry.AddCtx("powerwall", NewPowerWallFromConfig)
+	registry.Add("tesla", NewPowerWallFromConfig)
+	registry.Add("powerwall", NewPowerWallFromConfig)
 }
 
 // NewPowerWallFromConfig creates a PowerWall Powerwall Meter from generic config
-func NewPowerWallFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
+func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
 	cc := defaultPowerWallConfig()
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -82,10 +83,14 @@ func NewPowerWallFromConfig(ctx context.Context, other map[string]any) (api.Mete
 		log.WARN.Println("refreshToken is deprecated, use the Powerwall (Fleet API) template for battery control")
 	}
 
-	return newPowerWall(ctx, log, cc)
+	return newPowerWall(log, cc)
 }
 
-func newPowerWall(ctx context.Context, log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
+func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
+	if cc.MaxSoc_ != nil || cc.MaxChargePower_ != nil || cc.MaxDischargePower_ != nil {
+		log.WARN.Println("maxsoc, maxchargepower and maxdischargepower are deprecated, values are read from the device")
+	}
+
 	httpClient := &http.Client{
 		Transport: request.NewTripper(log, powerwall.DefaultTransport()),
 		Timeout:   time.Second * 2, // Timeout after 2 seconds
@@ -108,74 +113,44 @@ func newPowerWall(ctx context.Context, log *util.Logger, cc powerWallConfig) (*P
 	}
 
 	if m.usage == "battery" {
-		capacity, err := cc.batteryCapacityCtx.Decorator(ctx)
+		statusG := util.Cached(client.GetSystemStatus, cc.Cache)
+		opG := util.Cached(client.GetOperation, cc.Cache)
+
+		// validate connectivity and gate power limiter capability
+		status, err := statusG()
 		if err != nil {
 			return nil, err
-		}
-
-		minG, maxG, err := cc.batterySocLimitsCtx.getters(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		if minG == nil {
-			opG := util.Cached(client.GetOperation, cc.Cache)
-			minG = func() float64 {
-				op, err := opG()
-				if err != nil {
-					return 0
-				}
-				return op.BackupReservePercent
-			}
-		}
-
-		if maxG == nil {
-			maxG = func() float64 { return 100 }
-		}
-
-		socLimiter := func() (float64, float64) {
-			return minG(), maxG()
-		}
-
-		powerLimiter, err := cc.batteryPowerLimitsCtx.Decorator(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		if capacity == nil || powerLimiter == nil {
-			statusG := util.Cached(client.GetSystemStatus, cc.Cache)
-
-			// validate connectivity and gate power limiter capability
-			res, err := statusG()
-			if err != nil {
-				return nil, err
-			}
-
-			if capacity == nil {
-				capacity = func() float64 {
-					res, err := statusG()
-					if err != nil {
-						return 0
-					}
-					return res.NominalFullPackEnergy / 1e3
-				}
-			}
-
-			if powerLimiter == nil && res.MaxApparentPower > 0 {
-				powerLimiter = func() (float64, float64) {
-					res, err := statusG()
-					if err != nil {
-						return 0, 0
-					}
-					return res.MaxApparentPower, res.MaxApparentPower
-				}
-			}
 		}
 
 		implement.Has(m, implement.Battery(m.batterySoc))
-		implement.May(m, implement.BatterySocLimiter(socLimiter))
-		implement.May(m, implement.BatteryPowerLimiter(powerLimiter))
-		implement.Has(m, implement.BatteryCapacity(capacity))
+
+		implement.Has(m, implement.BatteryCapacity(func() float64 {
+			res, err := statusG()
+			if err != nil {
+				return 0
+			}
+			return res.NominalFullPackEnergy / 1e3
+		}))
+
+		// backup reserve is the lower discharge limit, the powerwall has no upper soc limit
+		implement.Has(m, implement.BatterySocLimiter(func() (float64, float64) {
+			op, err := opG()
+			if err != nil {
+				return 0, 100
+			}
+			return op.BackupReservePercent, 100
+		}))
+
+		if status.MaxApparentPower > 0 {
+			// inverter apparent power applies to charging and discharging alike
+			implement.Has(m, implement.BatteryPowerLimiter(func() (float64, float64) {
+				res, err := statusG()
+				if err != nil {
+					return 0, 0
+				}
+				return res.MaxApparentPower, res.MaxApparentPower
+			}))
+		}
 	}
 
 	return m, nil

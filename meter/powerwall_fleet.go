@@ -1,7 +1,6 @@
 package meter
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -20,11 +19,11 @@ type fleetConfig struct {
 }
 
 func init() {
-	registry.AddCtx("powerwall-fleet", NewPowerWallFleetFromConfig)
+	registry.Add("powerwall-fleet", NewPowerWallFleetFromConfig)
 }
 
 // NewPowerWallFleetFromConfig creates a PowerWall meter with Fleet API battery control
-func NewPowerWallFleetFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
+func NewPowerWallFleetFromConfig(other map[string]any) (api.Meter, error) {
 	cc := fleetConfig{powerWallConfig: defaultPowerWallConfig()}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -46,7 +45,7 @@ func NewPowerWallFleetFromConfig(ctx context.Context, other map[string]any) (api
 		cc.Tokens.Access,
 		cc.Tokens.Refresh,
 	)
-	m, err := newPowerWall(ctx, log, cc.powerWallConfig)
+	m, err := newPowerWall(log, cc.powerWallConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +55,10 @@ func NewPowerWallFleetFromConfig(ctx context.Context, other map[string]any) (api
 		return nil, err
 	}
 
-	controller, err := cc.batterySocLimitsCtx.LimitController(ctx, func() (float64, error) {
+	// charge mode raises the reserve to full, normal mode restores the configured minimum
+	limits := batterySocLimits{MinSoc: cc.MinSoc, MaxSoc: 100}
+
+	implement.Has(m, implement.BatteryController(limits.LimitController(func() (float64, error) {
 		ess, err := energySite.EnergySiteStatus()
 		if err != nil {
 			return 0, fmt.Errorf("get energy site status: %w", err)
@@ -65,12 +67,7 @@ func NewPowerWallFleetFromConfig(ctx context.Context, other map[string]any) (api
 		return math.Round(ess.PercentageCharged), nil
 	}, func(limit float64) error {
 		return energySite.SetBatteryReserve(teslaReserveLimit(limit))
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	implement.May(m, implement.BatteryController(controller))
+	})))
 
 	return m, nil
 }

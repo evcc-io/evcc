@@ -46,7 +46,18 @@ params:
     help:
       en: optional product identifier of the energy site, use to override autodetection
       de: optionale Product ID dieser Energy Site, zum Übersteuern der automatischen Erkennung
-  - preset: battery-params
+  - name: minsoc
+    default: 20
+    advanced: true
+    help:
+      de: Backup-Reserve, die evcc im Normalbetrieb wiederherstellt
+      en: Backup reserve evcc restores in normal operation
+  - name: maxsoc
+    deprecated: true
+  - name: maxchargepower
+    deprecated: true
+  - name: maxdischargepower
+    deprecated: true
 render: |
   type: powerwall-fleet
   uri: {{ .host }}
@@ -59,4 +70,4 @@ render: |
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
   siteId: {{ .siteId }}
-  {{- include "battery-params" . }}
+  minsoc: {{ .minsoc }}

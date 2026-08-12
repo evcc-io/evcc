@@ -16,11 +16,17 @@ params:
     deprecated: true
   - name: siteId
     deprecated: true
-  - preset: battery-params
+  - name: minsoc
+    deprecated: true
+  - name: maxsoc
+    deprecated: true
+  - name: maxchargepower
+    deprecated: true
+  - name: maxdischargepower
+    deprecated: true
 render: |
   type: powerwall
   uri: {{ .host }}
   usage: {{ .usage }}
   user: customer
   password: {{ .password }} # for user 'customer'
-  {{- include "battery-params" . }}
