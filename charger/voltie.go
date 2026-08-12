@@ -543,7 +543,10 @@ func (wb *Voltie) Voltages() (float64, float64, float64, error) {
 
 // phases1p3p implements the api.PhaseSwitcher interface. The register is only
 // writable on chargers manufactured from 2026, which carry an HPOW108 power
-// board; other hardware rejects the write.
+// board; other hardware rejects the write with exception 0x03, as does a relay
+// or EEPROM error. The hardware generation cannot be detected up front: the
+// serial numbers exposed over Modbus are the MCU and power board serials, not
+// the charger serial that carries the generation prefix.
 func (wb *Voltie) phases1p3p(phases int) error {
 	if phases != 1 && phases != 3 {
 		return fmt.Errorf("invalid phases: %d", phases)
@@ -571,7 +574,7 @@ func (wb *Voltie) phases1p3p(phases int) error {
 		}
 
 		if _, err = wb.conn.WriteSingleRegister(voltieRegSinglePhase, u); err != nil {
-			err = fmt.Errorf("%w (phase switching requires a charger manufactured from 2026)", err)
+			err = fmt.Errorf("switch phases: %w", err)
 		}
 
 		wb.cache.Clear()
