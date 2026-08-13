@@ -12,6 +12,7 @@ requirements:
 params:
   - name: modbus
     choice: ["tcpip"]
+    id: 0
 render: |
   type: custom
   curtail:
@@ -19,8 +20,7 @@ render: |
     set:
     # allowed feed-in power as percent of nominal (0-100 %)
     - source: modbus
-      id: 0
-      uri: {{ joinHostPort .host .port }}
+      {{- include "modbus" . | indent 4 }}
       register:
         address: 40109 # Maximum grid feed-in power (0-100 %)
         type: writesingle
@@ -35,8 +35,7 @@ render: |
             value: 0 # Unlimited
             set:
               source: modbus
-              id: 0
-              uri: {{ joinHostPort .host .port }}
+              {{- include "modbus" . | indent 12 }}
               register:
                 address: 40100 # Power control mode at grid connection point
                 type: writesingle
@@ -46,8 +45,7 @@ render: |
         value: 7 # Power-limited grid connection (%)
         set:
           source: modbus
-          id: 0
-          uri: {{ joinHostPort .host .port }}
+          {{- include "modbus" . | indent 8 }}
           register:
             address: 40100 # Power control mode at grid connection point
             type: writesingle
@@ -59,8 +57,7 @@ render: |
       type: int
       config:
         source: modbus
-        id: 0
-        uri: {{ joinHostPort .host .port }}
+        {{- include "modbus" . | indent 6 }}
         register:
           address: 40100 # Power control mode at grid connection point (0=no curtailment)
           type: holding
@@ -69,8 +66,7 @@ render: |
       type: int
       config:
         source: modbus
-        id: 0
-        uri: {{ joinHostPort .host .port }}
+        {{- include "modbus" . | indent 6 }}
         register:
           address: 40109 # Maximum grid feed-in power (0-100 %)
           type: holding
