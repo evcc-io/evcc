@@ -41,7 +41,40 @@ func getPreferredLanguage(header string) string {
 	return base.String()
 }
 
-func indexHandler(customCss bool) http.HandlerFunc {
+// globalsJsHandler serves version and ui customization as window.evcc globals
+func globalsJsHandler(custom Customization) http.HandlerFunc {
+	globals := struct {
+		Version    string `json:"version"`
+		CustomCss  bool   `json:"customCss"`
+		CustomLogo bool   `json:"customLogo"`
+		Brand      string `json:"customBrand"`
+		Website    string `json:"customWebsite"`
+		Email      string `json:"customEmail"`
+		Phone      string `json:"customPhone"`
+	}{
+		Version:    util.Version,
+		CustomCss:  custom.Css != "",
+		CustomLogo: custom.LogoLight != "",
+		Brand:      custom.Brand,
+		Website:    custom.Website,
+		Email:      custom.Email,
+		Phone:      custom.Phone,
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=UTF-8")
+		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+
+		if _, err := w.Write([]byte("window.evcc = ")); err != nil {
+			return
+		}
+		if err := json.NewEncoder(w).Encode(globals); err != nil {
+			log.ERROR.Println("httpd: failed to render globals:", err.Error())
+		}
+	}
+}
+
+func indexHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
@@ -64,9 +97,7 @@ func indexHandler(customCss bool) http.HandlerFunc {
 
 		if err := t.Execute(w, map[string]any{
 			"Version":     util.Version,
-			"Commit":      util.Commit,
 			"DefaultLang": defaultLang,
-			"CustomCss":   customCss,
 		}); err != nil {
 			log.ERROR.Println("httpd: failed to render main page:", err.Error())
 		}
@@ -160,6 +191,14 @@ func getHandler[T any](get func() T) http.HandlerFunc {
 	}
 }
 
+// callHandler invokes an api function without result
+func callHandler(fun func()) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fun()
+		jsonWrite(w, nil)
+	}
+}
+
 // updateSmartCostLimit sets the smart cost limit globally
 func updateSmartCostLimit(site site.API, setLimit func(loadpoint.API, *float64)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -176,7 +215,7 @@ func updateSmartCostLimit(site site.API, setLimit func(loadpoint.API, *float64))
 			val = &f
 		}
 
-		for _, lp := range site.Loadpoints() {
+		for _, lp := range site.ActiveLoadpoints() {
 			setLimit(lp, val)
 		}
 

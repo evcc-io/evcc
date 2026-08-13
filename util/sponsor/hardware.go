@@ -22,7 +22,7 @@ import (
 
 	"github.com/evcc-io/evcc/api/proto/pb"
 	"github.com/evcc-io/evcc/util/cloud"
-	"github.com/evcc-io/evcc/util/request"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -34,7 +34,7 @@ func checkHardware(vendor string, metadata map[string]string) string {
 		return unavailable
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), startupTimeout)
 	defer cancel()
 
 	client := pb.NewAuthClient(conn)
@@ -42,7 +42,7 @@ func checkHardware(vendor string, metadata map[string]string) string {
 		MachineId: machineID(),
 		Vendor:    vendor,
 		Metadata:  metadata,
-	})
+	}, grpc.WaitForReady(true))
 
 	if err == nil && res.Authorized {
 		return res.Subject

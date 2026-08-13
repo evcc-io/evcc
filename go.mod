@@ -8,18 +8,17 @@ require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/PanterSoft/comlynx-go v0.1.0
 	github.com/PuerkitoBio/goquery v1.12.0
-	github.com/WulfgarW/sensonet v0.0.7
+	github.com/WulfgarW/sensonet v0.0.8
 	github.com/andig/go-powerwall v0.3.0
 	github.com/andig/gosunspec v0.0.0-20260705113727-6d585e133512
 	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
-	github.com/aws/aws-sdk-go-v2 v1.43.2
-	github.com/aws/aws-sdk-go-v2/config v1.32.33
-	github.com/aws/aws-sdk-go-v2/credentials v1.19.32
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.36.2
+	github.com/aws/aws-sdk-go-v2 v1.43.4
+	github.com/aws/aws-sdk-go-v2/config v1.32.35
+	github.com/aws/aws-sdk-go-v2/credentials v1.19.34
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.36.4
 	github.com/basgys/goxml2json v1.1.0
 	github.com/benbjohnson/clock v1.3.5
-	github.com/bogosj/tesla v1.3.2-0.20250818120641-a31b7b6396c9
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/cli/browser v1.3.0
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21
@@ -33,14 +32,14 @@ require (
 	github.com/enbility/ship-go v0.6.1-0.20260720110450-0aa90f64ac76
 	github.com/enbility/spine-go v0.7.1-0.20260629113257-b3bcc643f323
 	github.com/evcc-io/openapi-mcp v0.6.1-0.20260701153510-26c442199ef4
-	github.com/evcc-io/optimizer v0.0.0-20260728084523-a51031d7607f
+	github.com/evcc-io/optimizer v0.0.0-20260808185529-a50b33da38e5
 	github.com/evcc-io/rct v0.2.0
 	github.com/evcc-io/tesla-proxy-client v0.0.0-20260722080120-05ada06c7368
 	github.com/fatih/structs v1.1.0
-	github.com/getkin/kin-openapi v0.145.0
+	github.com/getkin/kin-openapi v0.146.0
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
 	github.com/go-playground/validator/v10 v10.30.3
-	github.com/go-telegram/bot v1.22.0
+	github.com/go-telegram/bot v1.23.0
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/godbus/dbus/v5 v5.2.2
 	github.com/gokrazy/updater v0.0.0-20260620140544-0a84d8ab3878
@@ -69,17 +68,17 @@ require (
 	github.com/koron/go-ssdp v0.9.1
 	github.com/korylprince/ipnetgen v1.0.1
 	github.com/libp2p/zeroconf/v2 v2.2.0
-	github.com/libtnb/sqlite v1.2.1
+	github.com/libtnb/sqlite v1.2.2
 	github.com/lorenzodonini/ocpp-go v0.19.0
 	github.com/lunixbochs/struc v0.0.0-20241101090106-8d528fa2c543
 	github.com/mabunixda/wattpilot v1.8.5
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/modelcontextprotocol/go-sdk v1.7.0
 	github.com/muka/go-bluetooth v0.0.0-20240701044517-04c4f09c514e
-	github.com/nicholas-fedor/shoutrrr v0.16.3
+	github.com/nicholas-fedor/shoutrrr v0.17.0
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
 	github.com/olekukonko/tablewriter v1.1.4
-	github.com/philippseith/signalr v0.8.0
+	github.com/philippseith/signalr v0.11.0
 	github.com/prometheus-community/pro-bing v0.9.1
 	github.com/prometheus/client_golang v1.24.1
 	github.com/prometheus/common v0.70.1
@@ -99,7 +98,7 @@ require (
 	github.com/teslamotors/vehicle-command v0.4.1
 	github.com/tess1o/go-ecoflow v1.1.1-0.20251003083510-2ccc15a17e29
 	github.com/traefik/yaegi v0.16.1
-	github.com/volkszaehler/mbmd v0.0.0-20260623211432-fb8f9c22f121
+	github.com/volkszaehler/mbmd v0.0.0-20260812141656-4304ad77c56f
 	github.com/warthog618/go-gpiocdev v0.9.1
 	github.com/xuri/excelize/v2 v2.11.0
 	gitlab.com/bboehmke/sunny v0.17.0
@@ -107,7 +106,7 @@ require (
 	go.uber.org/mock v0.6.0
 	go.yaml.in/yaml/v4 v4.0.0-rc.6
 	golang.org/x/crypto v0.54.0
-	golang.org/x/crypto/x509roots/fallback v0.0.0-20260723152544-d701c51f7e4e
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20260804050112-5ed494470b06
 	golang.org/x/exp v0.0.0-20260727155853-b88d891fe743
 	golang.org/x/net v0.57.0
 	golang.org/x/oauth2 v0.36.0
@@ -117,7 +116,7 @@ require (
 	google.golang.org/grpc v1.83.0
 	google.golang.org/protobuf v1.36.11
 	gorm.io/gorm v1.31.2
-	modernc.org/sqlite v1.55.0
+	modernc.org/sqlite v1.56.0
 )
 
 require (
@@ -126,17 +125,17 @@ require (
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/antihax/optional v1.0.0 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.33 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.33 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.33 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.34 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.14 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.33 // indirect
-	github.com/aws/aws-sdk-go-v2/service/signin v1.5.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.33.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.38.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.45.2 // indirect
-	github.com/aws/smithy-go v1.27.5 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.35 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.35 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.35 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.36 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.15 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.35 // indirect
+	github.com/aws/aws-sdk-go-v2/service/signin v1.5.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.33.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.38.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.45.4 // indirect
+	github.com/aws/smithy-go v1.27.6 // indirect
 	github.com/azihsoyn/rijndael256 v0.0.0-20200316065338-d14eefa2b66b // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.1 // indirect
@@ -164,7 +163,7 @@ require (
 	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a // indirect
 	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
-	github.com/go-logfmt/logfmt v0.6.0 // indirect
+	github.com/go-logfmt/logfmt v0.6.1 // indirect
 	github.com/go-openapi/jsonpointer v0.22.5 // indirect
 	github.com/go-openapi/swag/jsonname v0.25.5 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
@@ -213,8 +212,8 @@ require (
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/procfs v0.21.1 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
-	github.com/quic-go/quic-go v0.60.0 // indirect
-	github.com/quic-go/webtransport-go v0.11.1 // indirect
+	github.com/quic-go/quic-go v0.61.0 // indirect
+	github.com/quic-go/webtransport-go v0.12.0 // indirect
 	github.com/relvacode/iso8601 v1.6.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/richardlehane/mscfb v1.0.7 // indirect
@@ -250,7 +249,7 @@ require (
 	gopkg.in/go-playground/validator.v9 v9.30.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	modernc.org/libc v1.74.1 // indirect
+	modernc.org/libc v1.74.4 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 )
@@ -258,7 +257,6 @@ require (
 tool (
 	github.com/dmarkham/enumer
 	github.com/evcc-io/evcc/cmd/implement
-	github.com/evcc-io/openapi-mcp/cmd/openapi-mcp
 	github.com/gokrazy/tools/cmd/gok
 	go.uber.org/mock/mockgen
 	golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize
@@ -266,7 +264,7 @@ tool (
 
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea
 
-replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20260727074919-195c10b8758d
+replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20260812074841-a8aa5fef8a9e
 
 replace github.com/enbility/spine-go => github.com/andig/spine-go v0.7.1-0.20260804073026-f9a8d8e8fd18
 

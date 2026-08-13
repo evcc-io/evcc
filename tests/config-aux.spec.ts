@@ -125,7 +125,7 @@ energy:
     await expect(restResult).toContainText("Status: unknown");
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: successful");
-    await expect(restResult).toContainText(["Power", "0.3 kW"].join(""));
+    await expect(restResult).toContainText(["Power", "300 W"].join(""));
     await expect(restResult).toContainText(["Energy", "4.2 kWh"].join(""));
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);

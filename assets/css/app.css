@@ -311,6 +311,23 @@ a:hover {
 	--bs-btn-line-height: 2;
 }
 
+.btn-pill {
+	--bs-btn-bg: var(--bs-body-bg);
+	--bs-btn-color: var(--evcc-default-text);
+	--bs-btn-border-color: var(--evcc-gray-50);
+	--bs-btn-hover-bg: var(--bs-body-bg);
+	--bs-btn-hover-color: var(--evcc-default-text);
+	--bs-btn-hover-border-color: var(--evcc-default-text);
+	--bs-btn-active-bg: var(--bs-body-bg);
+	--bs-btn-active-color: var(--evcc-default-text);
+	--bs-btn-active-border-color: var(--evcc-default-text);
+	white-space: nowrap;
+	text-transform: uppercase;
+	font-weight: bold;
+	font-size: 0.75rem;
+	border-radius: 50rem;
+}
+
 .btn-outline-secondary {
 	--bs-btn-color: var(--evcc-default-text);
 	--bs-btn-border-color: var(--evcc-default-text);
@@ -586,6 +603,16 @@ small {
 .dark .form-switch .form-check-input:checked {
 	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%2328293e'/%3e%3c/svg%3e");
 }
+/* hide number input spinners */
+input[type="number"] {
+	appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
 /* fix desktop safari formatting */
 input::-webkit-datetime-edit {
 	display: block;
@@ -847,7 +874,7 @@ input::-webkit-date-and-time-value {
 .collapsible-wrapper {
 	display: grid;
 	grid-template-rows: 0fr;
-	transition: grid-template-rows var(--evcc-transition-fast) ease 0.2s;
+	transition: grid-template-rows var(--evcc-transition-fast) ease var(--evcc-transition-fast);
 }
 
 .collapsible-wrapper.open {
@@ -858,12 +885,25 @@ input::-webkit-date-and-time-value {
 .collapsible-content {
 	overflow: hidden;
 	opacity: 0;
-	transition: opacity 0.2s ease;
+	/* keep hidden content non-interactive and out of the a11y tree */
+	visibility: hidden;
+	transition:
+		opacity var(--evcc-transition-fast) ease,
+		visibility var(--evcc-transition-fast) ease;
 }
 
 .collapsible-wrapper.open .collapsible-content {
 	opacity: 1;
-	transition: opacity var(--evcc-transition-fast) ease 0.2s;
+	visibility: visible;
+	transition:
+		opacity var(--evcc-transition-fast) ease var(--evcc-transition-fast),
+		visibility var(--evcc-transition-fast) ease var(--evcc-transition-fast);
+}
+
+/* clearance so overflow-hidden containers don't clip focus rings */
+.ring-space {
+	padding: 0.5rem;
+	margin: -0.5rem;
 }
 
 .sticky-bottom {
