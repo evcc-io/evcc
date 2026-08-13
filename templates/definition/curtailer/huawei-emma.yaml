@@ -6,9 +6,9 @@ products:
 requirements:
   description:
     de: |
-      Die Abregelung begrenzt die Einspeiseleistung auf den gewünschten Prozentsatz der maximalen AC-Leistung. Der Wechselrichter begrenzt automatisch die PV-Leistung, um dies zu erreichen.
+      Die Abregelung begrenzt die Einspeiseleistung auf den gewünschten Prozentsatz der maximalen AC-Leistung der angeschlossenen Wechselrichter.
     en: |
-      Curtailment will limit the export power to the desired percentage of the maximum AC power. The inverter will automatically limit the PV power to achieve this.
+      Curtailment limits feed-in power to the desired percentage of the maximum AC power of the connected inverters.
 params:
   - name: modbus
     choice: ["tcpip"]
