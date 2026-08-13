@@ -202,30 +202,31 @@ render: |
   # GoodWe only has a single, global feed-in limit for the whole system (registers 47509/47510),
   # there is no per-string curtailment.
   curtail: # limit feed-in to given percent of nominal (100 % = maxacpower)
-    source: sequence
-    set:
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 47510 # Feed-in power limit, W
-        type: writesingle
-        encoding: uint16
-      scale: {{ divf (maxf .maxacpower 1) 100 }} # % to W
-    - source: switch
-      switch:
-      - case: 100 # uncurtailed
-        set:
-          source: const
-          value: 0 # disable limit
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 47509 # Feed-in power limit enable
-              type: writesingle
-              encoding: uint16
-      default:
+    source: switch
+    switch:
+    - case: 100 # uncurtailed
+      set:
         source: const
+        value: 0 # disable limit
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47509 # Feed-in power limit enable
+            type: writesingle
+            encoding: uint16
+    default:
+      source: sequence
+      set:
+      # write the limit before enabling it, the device must not apply a stale value
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 47510 # Feed-in power limit, W
+          type: writesingle
+          encoding: uint16
+        scale: {{ divf (maxf .maxacpower 1) 100 }} # % to W
+      - source: const
         value: 1 # enable limit
         set:
           source: modbus
