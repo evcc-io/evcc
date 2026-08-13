@@ -20,10 +20,12 @@ package charger
 import (
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -48,6 +50,11 @@ import (
 //
 // Only function code 0x06 (write single register) is accepted for writes;
 // 0x10 (write multiple) is rejected with exception 0x01.
+//
+// Firmware 352 extends both register blocks with phase switching, the
+// communication timeout, the hardware current limit, lifetime energy and the
+// phase powers. Those capabilities are only offered when the charger reports
+// that firmware, and the block read lengths follow the firmware as well.
 
 const (
 	// register blocks fetched in bulk
@@ -57,6 +64,10 @@ const (
 	voltieLenStatusBlock = 12 // 0x000A..0x0015
 	voltieRegMeterBlock  = 0x2000
 	voltieLenMeterBlock  = 22 // 0x2000..0x2015
+
+	// firmware 352 extends both blocks
+	voltieLenStatusBlockExt = 15 // 0x000A..0x0018
+	voltieLenMeterBlockExt  = 30 // 0x2000..0x201D
 
 	// identification block. The 64 bit serial numbers are sent
 	// least-significant word first, unlike the metering values.
@@ -71,11 +82,20 @@ const (
 	voltieRegAutoStart    = 0x000B // INT16 auto start enabled
 	voltieRegChargeEnable = 0x000C // INT16 charging enabled
 	voltieRegCharging     = 0x000D // INT16 charging
-	voltieRegPhases       = 0x000E // INT16 number of phases in use
+	// 0x000E counts the phases with mains voltage present on the input, not the
+	// phases the vehicle charges on: on a three-phase supply it stays 3 even in
+	// forced single phase mode, so it can only answer api.PhaseGetter once the
+	// forced single phase register has been checked
+	voltieRegPhases       = 0x000E // INT16 phases with mains voltage present
 	voltieRegDlmSet       = 0x000F // INT16 stored DLM mode
 	voltieRegStopReason   = 0x0012 // INT16 charge stop reason
 	voltieRegCurrent      = 0x0014 // INT16 software current limit [mA]
 	voltieRegDlmEffective = 0x0015 // INT16 effective DLM mode
+
+	// status block, firmware 352
+	voltieRegSinglePhase  = 0x0016 // INT16 forced single phase
+	voltieRegQueryTimeout = 0x0017 // INT16 communication timeout [s]
+	voltieRegMaxCurrent   = 0x0018 // INT16 hardware current limit [mA]
 
 	// meter block
 	voltieRegVoltages = 0x2000 // 3x INT32 phase voltage [mV]
@@ -85,6 +105,10 @@ const (
 	voltieRegPower    = 0x2010 // INT32 charging power [W]
 	voltieRegCapacity = 0x2012 // INT32 instantaneous current capacity [mA]
 
+	// meter block, firmware 352
+	voltieRegTotalEnergy = 0x2016 // INT32 lifetime energy [Wh]
+	voltieRegPowers      = 0x2018 // 3x INT32 phase power [W]
+
 	// the charger's ampacity range [A]. The current limit register is typed
 	// INT16, so the milliampere value must stay below the sign boundary.
 	voltieMinCurrent = 6
@@ -92,6 +116,21 @@ const (
 
 	// firmware that fixes the Modbus slave address checks and rejects FC16
 	voltieMinFirmware = 350
+
+	// firmware that adds phase switching, the communication timeout, the
+	// hardware current limit, lifetime energy and the phase powers
+	voltieExtFirmware = 352
+
+	// the L2/L3 contactor must not be switched under load, so the firmware
+	// rejects a phase switch while charging and holds the contactor for up to
+	// 500ms of arc suppression after charging is disabled
+	voltiePhaseSwitchWait  = 500 * time.Millisecond
+	voltiePhaseSwitchTries = 6
+
+	// evcc's default update interval, used to judge whether the charger's
+	// communication timeout would cut the current between polls. The driver
+	// cannot read the configured interval.
+	voltieDefaultInterval = 30
 
 	// the charger's documented default slave address
 	voltieDefaultSlaveID = 11
@@ -104,7 +143,8 @@ const (
 	voltieDelay = 500 * time.Millisecond
 )
 
-// EVSE states, see the "EVSE states" chapter of the Modbus API documentation
+// EVSE states. The names follow the charger's own error-state documentation, so a
+// user sees the same wording in evcc as on the charger display and in its app.
 const (
 	voltieStateA = 0x01 // not connected
 	voltieStateB = 0x02 // connected, ready
@@ -117,23 +157,22 @@ var voltieStates = map[uint16]string{
 	0x02: "vehicle state B, connected",
 	0x03: "vehicle state C, charging",
 	0x04: "vehicle state D, charging with ventilation",
-	0x05: "diode check failed",
-	0x06: "GFCI fault",
-	0x07: "bad ground",
-	0x08: "relay stuck",
-	0x09: "GFI self-test failure",
+	0x05: "control signal (CP)",
+	0x06: "residual current detected",
+	0x07: "no grounding",
+	0x08: "stuck relay",
+	0x09: "residual current sensor test failed",
 	0x0A: "over temperature",
 	0x0B: "over current",
-	0x0C: "hardware fault (voltage, current or temperature sensor)",
-	0x0D: "vehicle state E, vehicle error",
+	0x0C: "I²C bus fault",
+	0x0D: "vehicle fault (state E)",
 	0x0E: "over humidity",
-	0x0F: "input power phase misconnected",
-	0x10: "overvoltage on the grid",
-	0x11: "undervoltage on the grid",
+	0x0F: "phase misconnected",
+	0x10: "overvoltage",
+	0x11: "undervoltage on AC supply",
 	0x12: "charger disabled, not functioning",
 	0x13: "booting",
-	0x14: "no MID meter detected",
-	0x15: "power board unidentified",
+	0x15: "unknown power board",
 	0x18: "state undetermined",
 	0x19: "uploading VoltieMeter firmware",
 }
@@ -142,46 +181,47 @@ var voltieStates = map[uint16]string{
 // chapter. Reasons 23..31 originate in the charger's control software and are
 // not reported through Modbus.
 var voltieStopReasons = map[uint16]string{
+	0:   "none, charging in progress",
 	1:   "unspecified reason",
 	2:   "preset charge duration reached",
 	3:   "preset energy amount charged",
 	4:   "stopped by the user",
-	5:   "GFCI sensor tripped",
+	5:   "error: residual current detected",
 	6:   "charger disabled, out of order",
 	7:   "firmware restart",
 	8:   "charger in sleep mode, out of order",
-	9:   "no voltage on the output (ground continuity or relay error)",
+	9:   "error: no voltage on the output (ground continuity or relay error)",
 	10:  "vehicle disconnected",
 	11:  "vehicle not accepting charge",
-	12:  "power board I2C bus fault",
-	13:  "GFCI self test failed",
-	14:  "over temperature",
-	15:  "diode error",
-	16:  "PE-N over-voltage",
-	17:  "relay stuck",
-	18:  "over current",
-	21:  "over humidity",
-	22:  "wrong phase order on the input",
+	12:  "error: I²C bus fault",
+	13:  "error: residual current sensor test failed",
+	14:  "error: over temperature",
+	15:  "error: control signal (CP)",
+	17:  "error: stuck relay",
+	18:  "error: over current",
+	21:  "error: over humidity",
+	22:  "error: phase misconnected",
 	100: "not enough free building current available (dynamic load management)",
 	101: "not enough solar current available (eco/green mode)",
 	102: "grid voltage is not high enough (grid-controlled mode)",
 	103: "charge current limit set to zero",
-	104: "no MID meter available",
-	105: "overvoltage",
-	106: "vehicle error",
-	107: "undervoltage",
+	105: "error: overvoltage",
+	106: "error: vehicle fault",
+	107: "error: undervoltage on AC supply",
 	108: "vehicle in state D while state D is disabled",
-	109: "power board unidentified",
+	109: "error: unknown power board",
 }
 
 // Voltie is an api.Charger implementation for Voltie wallboxes
 type Voltie struct {
+	implement.Caps
 	conn   *modbus.Connection
 	log    *util.Logger
 	cache  *modbus.Cache
 	status modbus.Block
 	meter  modbus.Block
 	info   modbus.Block
+	ext    bool // firmware provides the extended register blocks
 }
 
 // read fetches a register block through the shared bulk read cache, so all
@@ -258,6 +298,7 @@ func NewVoltie(ctx context.Context, settings modbus.TcpSettings, cache time.Dura
 	conn.Logger(log.TRACE)
 
 	wb := &Voltie{
+		Caps:   implement.New(),
 		conn:   conn,
 		log:    log,
 		cache:  modbus.NewCache(cache),
@@ -266,14 +307,33 @@ func NewVoltie(ctx context.Context, settings modbus.TcpSettings, cache time.Dura
 		meter:  modbus.Block{Register: voltieRegMeterBlock, Count: voltieLenMeterBlock},
 	}
 
+	// the register blocks grew with firmware 352, so the read lengths follow the
+	// firmware: reading past the end of a block yields exception 0x02
 	if b, err := wb.read(wb.info); err == nil {
-		if fw := voltieU16(wb.info, b, voltieRegFirmware); fw < voltieMinFirmware {
+		fw := voltieU16(wb.info, b, voltieRegFirmware)
+
+		switch {
+		case fw < voltieMinFirmware:
 			log.WARN.Printf("firmware %d is outdated, Modbus TCP requires %d or later", fw, voltieMinFirmware)
+		case fw >= voltieExtFirmware:
+			wb.ext = true
+			wb.status.Count = voltieLenStatusBlockExt
+			wb.meter.Count = voltieLenMeterBlockExt
+		default:
+			log.DEBUG.Printf("firmware %d predates %d, phase switching, lifetime energy, phase powers and the current limits are unavailable", fw, voltieExtFirmware)
 		}
 	}
 
 	if err := wb.checkSettings(); err != nil {
 		return nil, err
+	}
+
+	if wb.ext {
+		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
+		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
+		implement.Has(wb, implement.PhasePowers(wb.powers))
+		implement.Has(wb, implement.CurrentLimiter(wb.getMinMaxCurrent))
 	}
 
 	return wb, nil
@@ -290,6 +350,14 @@ func (wb *Voltie) checkSettings() error {
 
 	if dlm := voltieU16(wb.status, b, voltieRegDlmEffective); dlm != 0 {
 		wb.log.WARN.Printf("charger-side load management is active (mode %d) and will cap the requested current", dlm)
+	}
+
+	// the charger cuts the current to 0 A when Modbus communication stops for
+	// longer than its timeout. 0 and 255 disable the watchdog.
+	if wb.ext {
+		if to := voltieU16(wb.status, b, voltieRegQueryTimeout); to > 0 && to < 255 && to <= voltieDefaultInterval {
+			wb.log.WARN.Printf("the charger reduces the current to 0 A after %ds without Modbus communication; set the timeout to 0 in the Voltie app or above the evcc update interval", to)
+		}
 	}
 
 	// the auto start setting is persisted in the charger's EEPROM and stays off
@@ -435,8 +503,9 @@ func (wb *Voltie) ChargeDuration() (time.Duration, error) {
 	return time.Duration(voltieU32(wb.meter, b, voltieRegDuration)) * time.Second, nil
 }
 
-// getPhaseValues returns 3 sequential 32 bit values from the meter block, scaled from milli units
-func (wb *Voltie) getPhaseValues(reg uint16) (float64, float64, float64, error) {
+// getPhaseValues returns 3 sequential 32 bit values from the meter block, divided
+// by divisor. The voltages and currents are in milli units, the powers in watts.
+func (wb *Voltie) getPhaseValues(reg uint16, divisor float64) (float64, float64, float64, error) {
 	b, err := wb.read(wb.meter)
 	if err != nil {
 		return 0, 0, 0, err
@@ -444,7 +513,7 @@ func (wb *Voltie) getPhaseValues(reg uint16) (float64, float64, float64, error) 
 
 	var res [3]float64
 	for i := range res {
-		res[i] = float64(voltieU32(wb.meter, b, reg+uint16(2*i))) / 1e3
+		res[i] = float64(voltieU32(wb.meter, b, reg+uint16(2*i))) / divisor
 	}
 
 	return res[0], res[1], res[2], nil
@@ -454,26 +523,143 @@ var _ api.PhaseCurrents = (*Voltie)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (wb *Voltie) Currents() (float64, float64, float64, error) {
-	return wb.getPhaseValues(voltieRegCurrents)
+	return wb.getPhaseValues(voltieRegCurrents, 1e3)
 }
 
 var _ api.PhaseVoltages = (*Voltie)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
 func (wb *Voltie) Voltages() (float64, float64, float64, error) {
-	return wb.getPhaseValues(voltieRegVoltages)
+	return wb.getPhaseValues(voltieRegVoltages, 1e3)
 }
 
-var _ api.PhaseGetter = (*Voltie)(nil)
+// phases1p3p implements the api.PhaseSwitcher interface. The register is only
+// writable on chargers manufactured from 2026, which carry an HPOW108 power
+// board; other hardware rejects the write with exception 0x03, as does a relay
+// or EEPROM error. The hardware generation cannot be detected up front: the
+// serial numbers exposed over Modbus are the MCU and power board serials, not
+// the charger serial that carries the generation prefix.
+func (wb *Voltie) phases1p3p(phases int) error {
+	if phases != 1 && phases != 3 {
+		return fmt.Errorf("invalid phases: %d", phases)
+	}
 
-// GetPhases implements the api.PhaseGetter interface
-func (wb *Voltie) GetPhases() (int, error) {
+	b, err := wb.read(wb.status)
+	if err != nil {
+		return err
+	}
+
+	// the L2/L3 contactor must not be switched under load, so charging is paused
+	// and the contactor given time to open before the switch
+	resume := voltieU16(wb.status, b, voltieRegChargeEnable) != 0
+	if resume {
+		if err := wb.Enable(false); err != nil {
+			return fmt.Errorf("pause before phase switch: %w", err)
+		}
+	}
+
+	err = wb.awaitContactorOpen()
+	if err == nil {
+		var u uint16
+		if phases == 1 {
+			u = 1
+		}
+
+		if _, err = wb.conn.WriteSingleRegister(voltieRegSinglePhase, u); err != nil {
+			err = fmt.Errorf("switch phases: %w", err)
+		}
+
+		wb.cache.Clear()
+	}
+
+	// restore the previous state even when the switch failed
+	if resume {
+		err = errors.Join(err, wb.Enable(true))
+	}
+
+	return err
+}
+
+// awaitContactorOpen waits until the charger reports that charging has stopped,
+// which is the condition the firmware checks before allowing a phase switch
+func (wb *Voltie) awaitContactorOpen() error {
+	for i := range voltiePhaseSwitchTries {
+		if i > 0 {
+			time.Sleep(voltiePhaseSwitchWait)
+		}
+
+		wb.cache.Clear()
+
+		b, err := wb.read(wb.status)
+		if err != nil {
+			return err
+		}
+
+		if voltieU16(wb.status, b, voltieRegCharging) == 0 {
+			return nil
+		}
+	}
+
+	return errors.New("charging did not stop, cannot switch phases")
+}
+
+// getPhases implements the api.PhaseGetter interface, reporting the phases the
+// vehicle can charge on. The forced single phase register decides first: the
+// phase register 0x000E cannot answer on its own because it counts the phases
+// with mains voltage on the input, so on a three-phase supply it stays 3 even
+// while the L2/L3 relay is open. It is the better answer in the normal case
+// though, where it keeps a charger wired to a single-phase supply from being
+// reported as three-phase.
+func (wb *Voltie) getPhases() (int, error) {
 	b, err := wb.read(wb.status)
 	if err != nil {
 		return 0, err
 	}
 
-	return int(voltieU16(wb.status, b, voltieRegPhases)), nil
+	if voltieU16(wb.status, b, voltieRegSinglePhase) != 0 {
+		return 1, nil
+	}
+
+	if phases := int(voltieU16(wb.status, b, voltieRegPhases)); phases >= 1 && phases <= 3 {
+		return phases, nil
+	}
+
+	return 3, nil
+}
+
+// totalEnergy implements the api.MeterEnergy interface. The counter is updated
+// when the session ends, so it does not move while charging.
+func (wb *Voltie) totalEnergy() (float64, error) {
+	b, err := wb.read(wb.meter)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(voltieU32(wb.meter, b, voltieRegTotalEnergy)) / 1e3, nil // Wh to kWh
+}
+
+// powers implements the api.PhasePowers interface
+func (wb *Voltie) powers() (float64, float64, float64, error) {
+	return wb.getPhaseValues(voltieRegPowers, 1)
+}
+
+// getMinMaxCurrent implements the api.CurrentLimiter interface. The maximum is
+// the ampacity set by the potentiometer on the EVSE board; the cable's proximity
+// pilot rating is deliberately not included by the firmware.
+func (wb *Voltie) getMinMaxCurrent() (float64, float64, error) {
+	b, err := wb.read(wb.status)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	// an unset or implausible potentiometer reading must not shrink the limit
+	// below the J1772 minimum or raise it above what MaxCurrentMillis accepts
+	max := float64(voltieU16(wb.status, b, voltieRegMaxCurrent)) / 1e3
+	if max < voltieMinCurrent || max > voltieMaxCurrent {
+		max = voltieMaxCurrent
+	}
+
+	return voltieMinCurrent, max, nil
 }
 
 var _ api.Diagnosis = (*Voltie)(nil)
@@ -498,9 +684,23 @@ func (wb *Voltie) Diagnose() {
 
 		reason := voltieU16(wb.status, b, voltieRegStopReason)
 		fmt.Printf("\tStop reason:\t%d (%s)\n", reason, voltieStopReasons[reason])
+
+		if wb.ext {
+			fmt.Printf("\tSingle phase:\t%d\n", voltieU16(wb.status, b, voltieRegSinglePhase))
+			fmt.Printf("\tQuery timeout:\t%d s\n", voltieU16(wb.status, b, voltieRegQueryTimeout))
+			fmt.Printf("\tMax capacity:\t%d mA\n", voltieU16(wb.status, b, voltieRegMaxCurrent))
+		}
 	}
 
 	if b, err := wb.read(wb.meter); err == nil {
 		fmt.Printf("\tCapacity:\t%d mA\n", voltieU32(wb.meter, b, voltieRegCapacity))
+
+		if wb.ext {
+			fmt.Printf("\tLifetime:\t%d Wh\n", voltieU32(wb.meter, b, voltieRegTotalEnergy))
+			fmt.Printf("\tPhase power:\t%d W, %d W, %d W\n",
+				voltieU32(wb.meter, b, voltieRegPowers),
+				voltieU32(wb.meter, b, voltieRegPowers+2),
+				voltieU32(wb.meter, b, voltieRegPowers+4))
+		}
 	}
 }
