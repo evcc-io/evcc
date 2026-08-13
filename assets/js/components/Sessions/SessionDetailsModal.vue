@@ -319,16 +319,21 @@ export default defineComponent({
 			await this.updateSession({ odometer });
 		},
 		async changeVehicle(title: string) {
-			await this.updateSession({ vehicle: title });
+			// odometer reading belongs to the previously assigned vehicle
+			await this.updateSession({ vehicle: title, odometer: null });
 		},
 		async removeVehicle() {
-			await this.updateSession({ vehicle: "" });
+			await this.updateSession({ vehicle: "", odometer: null });
 		},
 		async changeLoadpoint(title: string) {
 			await this.updateSession({ loadpoint: title });
 		},
 		async updateSession(
-			data: Partial<Session> | { vehicle: null } | { odometer: number | null }
+			data:
+				| Partial<Session>
+				| { vehicle: string | null; odometer: number | null }
+				| { vehicle: null }
+				| { odometer: number | null }
 		) {
 			try {
 				await api.put("session/" + this.session.id, data);
