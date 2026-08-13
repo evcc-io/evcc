@@ -1127,7 +1127,9 @@ func (site *Site) reservedPVPower(lp updater) float64 {
 			continue
 		}
 		if other.EffectivePriority() > prio && other.PvChargeStarting() {
-			reserved += other.EffectiveMaxPower()
+			// min power is what the loadpoint needs to start, reserving its max
+			// power would starve this loadpoint beyond that (#32778)
+			reserved += other.EffectiveMinPower()
 		}
 	}
 
