@@ -12,6 +12,8 @@ params:
     baudrate: 9600
     id: 247
   - name: maxacpower
+    required: true
+    usages: ["pv"]
   - name: battery
     default: 1
     type: choice
@@ -202,26 +204,13 @@ render: |
   curtail: # limit feed-in to given percent of nominal (100 % = maxacpower)
     source: sequence
     set:
-    - source: go
-      in:
-      - name: maxacpower
-        type: int
-        config:
-          source: const
-          value: {{ .maxacpower }}
-      script: |
-        powerlimit := ( maxacpower * curtail ) / 100
-        powerlimit
-      out:
-      - name: powerlimit
-        type: int
-        config:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 47510 # Feed-in power limit, W
-            type: writesingle
-            encoding: uint16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 47510 # Feed-in power limit, W
+        type: writesingle
+        encoding: uint16
+      scale: {{ divf (maxf .maxacpower 1) 100 }} # % to W
     - source: switch
       switch:
       - case: 100 # uncurtailed
@@ -258,7 +247,7 @@ render: |
           type: holding
           decode: uint16
     - name: w
-      type: int
+      type: float
       config:
         source: modbus
         {{- include "modbus" . | indent 6 }}
@@ -266,17 +255,16 @@ render: |
           address: 47510 # Feed-in power limit, W
           type: holding
           decode: uint16
-    - name: maxacpower
-      type: int
-      config:
-        source: const
-        value: {{ .maxacpower }}
     script: |
-      percent := 100
-      if ena != 0 && maxacpower > 0 {
-        percent = w * 100 / maxacpower
+      percent := 100.0
+      if ena != 0 {
+        percent = w * 100 / {{ maxf .maxacpower 1 }}
       }
-      percent
+      p := int(percent + 0.5)
+      if p > 100 {
+        p = 100
+      }
+      p
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
