@@ -164,10 +164,13 @@ func (site *Site) GetBatterySoc() float64 {
 }
 
 // GetBatteryMaxDischargePower returns the current battery max discharge power
-func (site *Site) GetBatteryMaxDischargePower() float64 {
+func (site *Site) GetBatteryMaxDischargePower() *float64 {
 	site.RLock()
 	defer site.RUnlock()
-	return site.batteryMaxDischargePower
+	if site.batteryMaxDischargePower == nil {
+		return nil
+	}
+	return new(*site.batteryMaxDischargePower)
 }
 
 // Loadpoints returns the loadpoints as api interfaces.

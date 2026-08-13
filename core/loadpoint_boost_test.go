@@ -11,7 +11,7 @@ import (
 
 type mockSite struct {
 	site.API
-	maxDischargePower float64
+	maxDischargePower *float64
 	residualPower     float64
 	optimized         int
 }
@@ -20,7 +20,7 @@ func (m *mockSite) Optimize() {
 	m.optimized++
 }
 
-func (m *mockSite) GetBatteryMaxDischargePower() float64 {
+func (m *mockSite) GetBatteryMaxDischargePower() *float64 {
 	return m.maxDischargePower
 }
 
@@ -40,15 +40,22 @@ func TestBoostPower(t *testing.T) {
 	s := &mockSite{}
 	lp.site = s
 
-	// No max discharge power limit
-	s.maxDischargePower = 0
+	// No max discharge power limit (nil)
+	s.maxDischargePower = nil
 	// EffectiveMaxPower will be 230 * 16 * 3 = 11040
 	res := lp.boostPower(0)
 	assert.Equal(t, 11040.0, res)
 	assert.Equal(t, boostContinue, lp.batteryBoost)
 
+	// Discharge power limit is 0W (battery empty)
+	s.maxDischargePower = new(float64)
+	lp.batteryBoost = boostStart
+	res = lp.boostPower(0)
+	assert.Equal(t, 0.0, res)
+
 	// With max discharge power limit
-	s.maxDischargePower = 5000
+	limit5000 := 5000.0
+	s.maxDischargePower = &limit5000
 	lp.batteryBoost = boostStart
 	res = lp.boostPower(0)
 	assert.Equal(t, 5000.0, res)
@@ -89,7 +96,8 @@ func TestBoostPower(t *testing.T) {
 	// limit is 50W (less than the standard 790W delta)
 	// without raw negative power, delta would be restricted to 50W
 	// with raw negative power (-2000W), headroom is 2050W, so delta is allowed to be 790W
-	s.maxDischargePower = 50
+	limit50 := 50.0
+	s.maxDischargePower = &limit50
 	s.residualPower = 0 // base delta = 100 + 690 = 790
 	lp.batteryBoost = boostContinue
 	res = lp.boostPower(-2000)
