@@ -132,12 +132,19 @@ func (wb *OpenWB20) HandleRfidReset() {
 
 // Status implements the api.Charger interface
 func (wb *OpenWB20) Status() (api.ChargeStatus, error) {
-	if b, err := wb.conn.ReadInputRegisters(wb.base+openwbRegCharging, 1); err != nil || binary.BigEndian.Uint16(b) == 1 {
+	b, err := wb.conn.ReadInputRegisters(wb.base+openwbRegCharging, 1)
+	if err != nil {
+		return wb.laststatus, err
+	}
+	if binary.BigEndian.Uint16(b) == 1 {
 		wb.laststatus = api.StatusC
 		return api.StatusC, err
 	}
-
-	if b, err := wb.conn.ReadInputRegisters(wb.base+openwbRegPlugged, 1); err != nil || binary.BigEndian.Uint16(b) == 1 {
+	b, err = wb.conn.ReadInputRegisters(wb.base+openwbRegPlugged, 1)
+	if err != nil {
+		return wb.laststatus, err
+	}
+	if binary.BigEndian.Uint16(b) == 1 {
 		wb.laststatus = api.StatusB
 		return api.StatusB, err
 	}
@@ -264,7 +271,7 @@ func (wb *OpenWB20) WakeUp() error {
 func (wb *OpenWB20) identify() (string, error) {
 	b, err := wb.conn.ReadInputRegisters(wb.base+openwbRegRfid, 10)
 	if err != nil {
-		return "", err
+		return wb.lastidentify, err
 	}
 	return bytesAsString(b), nil
 }
