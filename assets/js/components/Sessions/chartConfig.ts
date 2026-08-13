@@ -3,10 +3,12 @@ import {
   Tooltip,
   type ChartComponentLike,
   type ChartType,
+  type Plugin,
   type Point,
   type TooltipItem,
 } from "chart.js";
 import colors from "@/colors";
+import { attachTouchTooltipGate } from "@/utils/swipe";
 import type { Context } from "chartjs-plugin-datalabels";
 // Register common components
 export function registerChartComponents(components: ChartComponentLike[]) {
@@ -19,6 +21,20 @@ Chart.defaults.font.family = window
   .getPropertyValue("--bs-font-sans-serif");
 Chart.defaults.font.size = 14;
 Chart.defaults.layout.padding = 0;
+
+// touch tooltips: show on dwell, follow the finger, hide when it lifts; mouse hover unchanged
+const touchDismissPlugin: Plugin = {
+  id: "touchDismiss",
+  afterInit(chart) {
+    attachTouchTooltipGate(chart.canvas.parentElement ?? chart.canvas, () => {
+      if (!chart.ctx) return; // destroyed
+      chart.setActiveElements([]);
+      chart.tooltip?.setActiveElements([], { x: 0, y: 0 });
+      chart.update();
+    });
+  },
+};
+Chart.register(touchDismissPlugin);
 
 // Custom tooltip positioners
 (Tooltip.positioners as any)["center"] = function () {

@@ -49,12 +49,12 @@ RUN --mount=type=cache,target=${GOMODCACHE} go mod download
 COPY Makefile .
 COPY cmd/implement/ cmd/implement/
 COPY api/ api/
-RUN --mount=type=cache,target=${GOMODCACHE} make install
+RUN --mount=type=cache,target=${GOMODCACHE} --mount=type=cache,target=${GOCACHE} make install
 
 # prepare
 COPY . .
 RUN make patch-asn1
-RUN --mount=type=cache,target=${GOMODCACHE} make assets
+RUN --mount=type=cache,target=${GOMODCACHE} --mount=type=cache,target=${GOCACHE} make assets
 
 # copy ui
 COPY --from=node /build/dist /build/dist

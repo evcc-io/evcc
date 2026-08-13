@@ -1,7 +1,7 @@
 <template>
 	<div v-if="chartData.labels.length > 1" class="row">
 		<div class="col-12 col-md-6 col-lg-12 col-xxl-6 mb-3">
-			<PolarArea :data="chartData" :options="options" />
+			<div ref="chartEl" class="round-chart"></div>
 		</div>
 		<div class="col-12 col-md-6 col-lg-12 col-xxl-6 d-flex align-items-center">
 			<LegendList :legends="legends" :device-colors="deviceColors" grid />
@@ -11,21 +11,18 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
-import { PolarArea } from "vue-chartjs";
-import { RadialLinearScale, ArcElement, Legend, Tooltip, type TooltipItem } from "chart.js";
-import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig.ts";
+import { FONT_FAMILY, topBottomCenterPosition, tooltipStyle, tooltipTable } from "./echarts";
+import echartsChart from "@/mixins/echartsChart";
 import formatter from "@/mixins/formatter";
 import colors, { dimColor } from "@/colors";
 import LegendList from "./LegendList.vue";
 import { GROUPS, type Session } from "./types.ts";
 import type { DeviceColors } from "@/types/evcc";
 
-registerChartComponents([RadialLinearScale, ArcElement, Legend, Tooltip]);
-
 export default defineComponent({
 	name: "SolarGroupedChart",
-	components: { PolarArea, LegendList },
-	mixins: [formatter],
+	components: { LegendList },
+	mixins: [formatter, echartsChart],
 	props: {
 		sessions: { type: Array as PropType<Session[]>, default: () => [] },
 		groupBy: {
@@ -36,8 +33,7 @@ export default defineComponent({
 		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
 	},
 	computed: {
-		chartData() {
-			console.log("update solar grouped data");
+		chartData(): { labels: string[]; data: number[]; colors: string[] } {
 			const aggregatedData: Record<string, { grid: number; self: number }> = {};
 
 			this.sessions.forEach((session) => {
@@ -52,83 +48,76 @@ export default defineComponent({
 				aggregatedData[groupKey].grid += grid;
 			});
 
-			// Sort the data by total energy in descending order
-			const sortedEntries = Object.entries(aggregatedData).sort(
-				(a, b) => b[1].grid + b[1].self - (a[1].grid + a[1].self)
+			// stable alphabetical order so entries don't jump between periods
+			const sortedEntries = Object.entries(aggregatedData).sort((a, b) =>
+				a[0].localeCompare(b[0])
 			);
 			const labels = sortedEntries.map(([label]) => label);
 			const data = sortedEntries.map(([, value]) => {
 				const total = value.grid + value.self;
-				const selfPercentage = (value.self / total) * 100;
-				return selfPercentage;
+				return (value.self / total) * 100;
 			});
+			const entryColors = labels.map((label) => this.colorMappings[this.groupBy][label]);
 
-			const borderColors = labels.map((label) => this.colorMappings[this.groupBy][label]);
-			const backgroundColors = borderColors.map((color) => dimColor(color));
+			return { labels, data, colors: entryColors };
+		},
+		legends() {
+			const { labels, data, colors: entryColors } = this.chartData;
+			return labels.map((label, index) => ({
+				label,
+				color: entryColors[index],
+				value: this.fmtPercentage(data[index] as number, 1),
+				id: label || undefined,
+			}));
+		},
+		chartOption(): Record<string, unknown> {
+			const { labels, data, colors: entryColors } = this.chartData;
 			return {
-				labels: labels,
-				datasets: [
+				animation: false,
+				textStyle: { fontFamily: FONT_FAMILY },
+				tooltip: {
+					trigger: "item",
+					...tooltipStyle(colors.text || ""),
+					position: topBottomCenterPosition(() => this.chart),
+					formatter: (params: { name: string; value: number }) =>
+						tooltipTable(params.name, [
+							{ values: [this.fmtPercentage(params.value, 1)] },
+						]),
+				},
+				polar: { radius: "95%" },
+				angleAxis: { type: "category", data: labels, show: false, startAngle: 90 },
+				radiusAxis: {
+					min: 0,
+					max: 100,
+					interval: 25,
+					axisLine: { show: false },
+					axisTick: { show: false },
+					splitLine: { lineStyle: { color: colors.border || "" } },
+					axisLabel: {
+						fontSize: 10,
+						color: colors.muted || "",
+						backgroundColor: colors.box || "",
+						padding: [1, 3],
+					},
+				},
+				series: [
 					{
-						data: data,
-						borderColor: borderColors,
-						backgroundColor: backgroundColors,
+						type: "bar",
+						coordinateSystem: "polar",
+						barCategoryGap: "0%",
+						data: data.map((value, i) => ({
+							value,
+							itemStyle: {
+								color: dimColor(entryColors[i]),
+								borderColor: entryColors[i],
+								borderWidth: 3,
+								// round outer corners only, sharp apex at the center
+								borderRadius: [0, 0, 8, 8],
+							},
+						})),
 					},
 				],
 			};
-		},
-		legends() {
-			const dataset = this.chartData.datasets[0]!;
-			return this.chartData.labels.map((label, index) => {
-				const dataValue = dataset.data[index] as number;
-				return {
-					label: label,
-					color: dataset.borderColor[index],
-					value: this.fmtPercentage(dataValue, 1),
-					id: label || undefined,
-				};
-			});
-		},
-		options() {
-			return {
-				...commonOptions,
-				locale: this.$i18n?.locale,
-				aspectRatio: 1,
-				borderRadius: 8,
-				borderWidth: 3,
-				color: colors.text,
-				spacing: 0,
-				radius: "100%",
-				plugins: {
-					...commonOptions.plugins,
-					tooltip: {
-						...commonOptions.plugins.tooltip,
-						axis: "r",
-						position: "topBottomCenter",
-						callbacks: {
-							title: () => null,
-							label: (tooltipItem: TooltipItem<"polarArea">) => {
-								const { label, dataset, dataIndex } = tooltipItem;
-								const d = dataset.data[dataIndex] as number;
-
-								return label + ": " + this.fmtPercentage(d, 1);
-							},
-							labelColor: tooltipLabelColor(true),
-						},
-					},
-				},
-				scales: {
-					r: {
-						min: 0,
-						max: 100,
-						ticks: {
-							stepSize: 25,
-							color: colors.muted,
-							backdropColor: colors.box,
-						},
-						grid: { color: colors.border },
-					},
-				},
-			} as any;
 		},
 	},
 });

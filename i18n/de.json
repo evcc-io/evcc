@@ -219,6 +219,7 @@
       "enabled": "Ladebereit",
       "energy": "Energie",
       "events": "Ereignisse",
+      "exportLimit": "Einspeiselimit",
       "feedinPrice": "Einspeisevergütung",
       "forecast": "Vorhersage",
       "gridPrice": "Netzpreis",
@@ -306,6 +307,7 @@
     "form": {
       "danger": "Achtung",
       "deprecated": "veraltet",
+      "durationUnit": "Zeiteinheit für {label}",
       "example": "Beispiel",
       "optional": "optional"
     },
@@ -318,17 +320,22 @@
       "change": "Ändern",
       "clear": "Löschen",
       "close": "Schließen",
+      "confirmDisable": "Dieses Gerät deaktivieren? Es wird nach dem nächsten Neustart ignoriert.",
+      "confirmEnable": "Dieses Gerät wieder aktivieren?",
       "confirmSave": "Es gibt ungespeicherte Änderungen. Jetzt speichern?",
       "copied": "Kopiert!",
       "copy": "Kopieren",
       "customHelp": "Erstelle ein benutzerdefiniertes Gerät mit evcc's Plugin-System.",
       "customOption": "Benutzerdefiniertes Gerät",
       "delete": "Löschen",
+      "disable": "Deaktivieren",
+      "disabled": "deaktiviert",
       "dismiss": "Ausblenden",
       "docsLink": "Siehe Dokumentation.",
       "dragHandle": "Verschieben",
       "dragItem": "Verschiebbar: {title}",
       "dragList": "Sortierbare Liste",
+      "enable": "Aktivieren",
       "error": "Fehler",
       "experimental": "Experimentell",
       "forceSave": "Trotzdem speichern",
@@ -371,12 +378,17 @@
       "customOption": "Benutzerdefinierte Integration",
       "description": "Leistungsbegrenzung durch externe Systeme (z.B. §14a EnWG, §9 EEG Schnittstelle oder übergeordnetes Energiemanagementsystem). Spielt mit dem Lastmanagement Feature zusammen. Das Abregeln der Solarproduktion wird ebenfalls für ausgewählte Geräte unterstützt. Der konkrete Abregelungswert muss in der jeweiligen Wechselrichter-Konfiguration eingestellt werden.",
       "download": "Download",
+      "dynamicLimits": "Dynamische Limits",
       "eventsRecorded": "{count} Netzbegrenzungen gespeichert.",
+      "exportLimit": "Einspeiselimit",
+      "exportLimitDescription": "Der Batterie-Optimierer berücksichtigt dieses Limit um Solarverluste zu vermeiden. Eine aktive Abregelung durch eine Integration der dynamischen Limits hat Vorrang.",
+      "exportLimitHint": "Statische Einspeisegrenze am Netzanschlusspunkt.",
       "generic": "Generische Integrationen",
       "integrations": "Integrationen",
       "lastEvent": "Letzter Eintrag {timeAgo}.",
       "noEvents": "Es wurden noch keine Ereignisse aufgezeichnet.",
       "recordedEvents": "Aufgezeichnete Ereignisse",
+      "staticLimits": "Statische Limits",
       "template": "Integration",
       "title": "Externe Begrenzung",
       "type": {
@@ -1094,6 +1106,8 @@
     "version": {
       "availableLong": "neue Version verfügbar",
       "community": "evcc Community",
+      "labelEmail": "E-Mail",
+      "labelPhone": "Telefon",
       "labelRelease": "Release",
       "labelVersion": "Version",
       "labelWebsite": "Website",
@@ -1161,9 +1175,12 @@
     }
   },
   "general": {
+    "back": "Zurück",
     "download": "Download",
+    "error": "Fehler",
     "none": "keine",
-    "note": "Hinweis:"
+    "note": "Hinweis:",
+    "warning": "Warnung"
   },
   "header": {
     "about": "Über",
@@ -1176,6 +1193,7 @@
     "sessions": "Ladevorgänge"
   },
   "help": {
+    "contactButton": "Kontakt aufnehmen",
     "discussionsButton": "GitHub Discussions",
     "documentationButton": "Dokumentation",
     "issueButton": "Problem melden",
@@ -1215,7 +1233,10 @@
     "additionalContext": "Zusätzlicher Kontext",
     "additionalContextPlaceholder": "Alle zusätzlichen Informationen, die hilfreich sein könnten...\n- Konfigurationsdetails\n- Was du versucht hast\n- Umgebungsdetails",
     "createButtonDiscussion": "GitHub Diskussion starten...",
+    "createButtonEmail": "Anfrage per E-Mail senden",
     "createButtonIssue": "GitHub Issue erstellen...",
+    "downloadButton": "Debug-Informationen herunterladen",
+    "downloadHint": "Hänge diese Datei an deine E-Mail an, falls weitere Informationen benötigt werden.",
     "description": "Deine Installation funktioniert nicht wie erwartet? Nutze diese Seite um Hilfe zu bekommen oder Probleme zu melden. Gib genügend Details an, damit wir das Problem verstehen und reproduzieren können. Halte deine Beschreibung prägnant, klar und leicht verständlich.",
     "helpType": {
       "discussion": "Brauche Hilfe bei meiner Einrichtung",
@@ -1228,6 +1249,7 @@
     "issueTitle": "Titel",
     "stepsToReproduce": "Schritte zur Reproduktion",
     "subTitleDiscussion": "Beschreibe dein Problem",
+    "subTitleEmail": "Beschreibe dein Problem",
     "subTitleIssue": "Beschreibe das Problem",
     "summary": {
       "confirmationButtonDiscussion": "GitHub Diskussion starten",
@@ -1522,6 +1544,7 @@
       "keepAsIs": "Beibehalten",
       "learnMore": "Mehr erfahren.",
       "limitSoc": "Standardlimit",
+      "limitSocDescription": "Wird beim Anschließen des Fahrzeugs angewendet.",
       "menu": "Fahrzeuge",
       "minSoc": "Minimale Ladung",
       "minSocDescription": "Wird im PV-Modus schnell bis zu diesem Wert geladen.",
@@ -1715,6 +1738,7 @@
       "label": "Sprache"
     },
     "loadpoints": {
+      "disabledDevice": "deaktiviert",
       "help": "Reihenfolge und Sichtbarkeit für die Benutzeroberfläche ändern.",
       "hide": "{title} ausblenden",
       "label": "Ladepunkte",
