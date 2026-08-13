@@ -139,7 +139,7 @@
 						@edit="openModal('curtailer', { id: curtailer.id })"
 					>
 						<template #icon>
-							<shopicon-regular-sun></shopicon-regular-sun>
+							<CurtailIcon />
 						</template>
 						<template #tags>
 							<DeviceTags :tags="deviceTags('curtailer', curtailer.name)" />
@@ -562,6 +562,7 @@ import CircuitTags from "../components/Config/CircuitTags.vue";
 import collector from "../mixins/collector";
 import ControlModal from "../components/Config/ControlModal.vue";
 import CurtailerModal from "../components/Config/CurtailerModal.vue";
+import CurtailIcon from "../components/MaterialIcon/Curtail.vue";
 import DeviceCard from "../components/Config/DeviceCard.vue";
 import DeviceTags from "../components/Config/DeviceTags.vue";
 import EebusIcon from "../components/MaterialIcon/Eebus.vue";
@@ -659,6 +660,7 @@ export default defineComponent({
 		CircuitTags,
 		ControlModal,
 		CurtailerModal,
+		CurtailIcon,
 		DeviceCard,
 		DeviceTags,
 		EebusIcon,
