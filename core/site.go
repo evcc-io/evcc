@@ -395,7 +395,7 @@ func (site *Site) restoreMetersAndTitle() {
 		site.Meters.ConsumerMetersRef = append(site.Meters.ConsumerMetersRef, filterConfigurable(strings.Split(v, ","))...)
 	}
 	if v, err := settings.String(keys.Curtailers); err == nil && v != "" {
-		site.CurtailersRef = append(site.CurtailersRef, filterConfigurable(strings.Split(v, ","))...)
+		site.CurtailersRef = append(site.CurtailersRef, filterConfigurableCurtailers(strings.Split(v, ","))...)
 	}
 }
 

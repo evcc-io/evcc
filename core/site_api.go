@@ -24,18 +24,23 @@ var (
 	ErrBatteryControlNotAvailable = errors.New("battery control not available")
 )
 
-// isConfigurable checks if the meter is configurable
-func isConfigurable(ref string) bool {
-	dev, _ := config.Meters().ByName(ref)
-	_, ok := dev.(config.ConfigurableDevice[api.Meter])
-	return ok
+// filterConfigurableDevices filters references to configurable devices of the given handler
+func filterConfigurableDevices[T any](h config.Handler[T], ref []string) []string {
+	return lo.Filter(ref, func(ref string, _ int) bool {
+		dev, _ := h.ByName(ref)
+		_, ok := dev.(config.ConfigurableDevice[T])
+		return ok
+	})
 }
 
 // filterConfigurable filters configurable meters
 func filterConfigurable(ref []string) []string {
-	return lo.Filter(ref, func(ref string, _ int) bool {
-		return isConfigurable(ref)
-	})
+	return filterConfigurableDevices(config.Meters(), ref)
+}
+
+// filterConfigurableCurtailers filters configurable curtailment devices
+func filterConfigurableCurtailers(ref []string) []string {
+	return filterConfigurableDevices(config.Curtailers(), ref)
 }
 
 // Optimize updates the optimizer
@@ -169,7 +174,7 @@ func (site *Site) SetCurtailerRefs(ref []string) {
 	defer site.Unlock()
 
 	site.CurtailersRef = ref
-	settings.SetString(keys.Curtailers, strings.Join(filterConfigurable(ref), ","))
+	settings.SetString(keys.Curtailers, strings.Join(filterConfigurableCurtailers(ref), ","))
 }
 
 // GetBatterySoc returns the current battery soc
