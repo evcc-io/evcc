@@ -800,6 +800,43 @@ html.app .modal-dialog {
 	}
 }
 
+/* in-place fade-swipe between two views (Vue transition classes, e.g. config list>detail) */
+.fade-swap-left-enter-active,
+.fade-swap-left-leave-active,
+.fade-swap-right-enter-active,
+.fade-swap-right-leave-active {
+	transition:
+		opacity 150ms ease,
+		transform 150ms ease;
+}
+/* leaving view overlaps the entering one instead of pushing it down;
+   ancestor must be position:relative and unpadded, or the view jumps when going absolute */
+.fade-swap-left-leave-active,
+.fade-swap-right-leave-active {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+}
+.fade-swap-left-enter-from,
+.fade-swap-left-leave-to {
+	opacity: 0;
+	transform: translateX(-1rem);
+}
+.fade-swap-right-enter-from,
+.fade-swap-right-leave-to {
+	opacity: 0;
+	transform: translateX(1rem);
+}
+@media (prefers-reduced-motion: reduce) {
+	.fade-swap-left-enter-active,
+	.fade-swap-left-leave-active,
+	.fade-swap-right-enter-active,
+	.fade-swap-right-leave-active {
+		transition: none;
+	}
+}
+
 .round-box--error {
 	box-shadow: 0 0 0.5rem var(--bs-danger);
 	border: 1px solid var(--bs-danger);

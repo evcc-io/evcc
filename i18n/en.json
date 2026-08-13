@@ -842,8 +842,8 @@
       "general": "General",
       "grid": "Grid",
       "integrations": "Integrations",
-      "loadpoints": "Charging points & Heaters",
-      "meter": "Solar & Battery",
+      "loadpoints": "Charging points & heaters",
+      "meter": "Solar & battery",
       "services": "Services",
       "system": "System",
       "vehicles": "Vehicles"
@@ -977,7 +977,7 @@
         "titleEdit": "Edit Temperature Forecast"
       },
       "template": "Provider",
-      "title": "Tariffs & Forecasts",
+      "title": "Tariffs & forecasts",
       "titleChoice": "What Do You Want To Add?",
       "type": {
         "co2": "CO₂ Intensity",
@@ -1175,9 +1175,12 @@
     }
   },
   "general": {
+    "back": "Back",
     "download": "Download",
+    "error": "Error",
     "none": "none",
-    "note": "Note:"
+    "note": "Note:",
+    "warning": "Warning"
   },
   "header": {
     "about": "About",
