@@ -173,6 +173,21 @@ func (i *iCurrentGetter) GetMaxCurrent() (float64, error) {
 	return i.currentGetter0()
 }
 
+func CurrentLimiter(currentLimiter0 func() (float64, float64, error)) api.CurrentLimiter {
+	if currentLimiter0 == nil {
+		return nil
+	}
+	return &iCurrentLimiter{currentLimiter0}
+}
+
+type iCurrentLimiter struct {
+	currentLimiter0 func() (float64, float64, error)
+}
+
+func (i *iCurrentLimiter) GetMinMaxCurrent() (float64, float64, error) {
+	return i.currentLimiter0()
+}
+
 func Curtailer(curtailer0 func() (int, error), curtailer1 func(int) error) api.Curtailer {
 	if curtailer0 == nil || curtailer1 == nil {
 		return nil
