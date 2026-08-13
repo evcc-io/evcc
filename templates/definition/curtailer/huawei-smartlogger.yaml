@@ -12,6 +12,7 @@ requirements:
 params:
   - name: modbus
     choice: ["tcpip"]
+    id: 0
 render: |
   type: custom
   curtail:
