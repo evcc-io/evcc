@@ -21,5 +21,5 @@ func TestFilterConfigurableCurtailers(t *testing.T) {
 	t.Cleanup(func() { _ = config.Curtailers().Delete(name) })
 
 	require.Equal(t, []string{name}, filterConfigurableCurtailers([]string{name}))
-	require.Empty(t, filterConfigurable([]string{name}), "curtailer must not resolve as meter")
+	require.Empty(t, filterConfigurableMeter([]string{name}), "curtailer must not resolve as meter")
 }

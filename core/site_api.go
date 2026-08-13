@@ -33,8 +33,8 @@ func filterConfigurableDevices[T any](h config.Handler[T], ref []string) []strin
 	})
 }
 
-// filterConfigurable filters configurable meters
-func filterConfigurable(ref []string) []string {
+// filterConfigurableMeter filters configurable meters
+func filterConfigurableMeter(ref []string) []string {
 	return filterConfigurableDevices(config.Meters(), ref)
 }
 
@@ -94,7 +94,7 @@ func (site *Site) SetPVMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.PVMetersRef = ref
-	settings.SetString(keys.PvMeters, strings.Join(filterConfigurable(ref), ","))
+	settings.SetString(keys.PvMeters, strings.Join(filterConfigurableMeter(ref), ","))
 }
 
 // GetBatteryMeterRefs returns the BatteryMeterRef
@@ -110,7 +110,7 @@ func (site *Site) SetBatteryMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.BatteryMetersRef = ref
-	settings.SetString(keys.BatteryMeters, strings.Join(filterConfigurable(ref), ","))
+	settings.SetString(keys.BatteryMeters, strings.Join(filterConfigurableMeter(ref), ","))
 }
 
 // GetAuxMeterRefs returns the AuxMeterRef
@@ -126,7 +126,7 @@ func (site *Site) SetAuxMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.AuxMetersRef = ref
-	settings.SetString(keys.AuxMeters, strings.Join(filterConfigurable(ref), ","))
+	settings.SetString(keys.AuxMeters, strings.Join(filterConfigurableMeter(ref), ","))
 }
 
 // GetConsumerMeterRefs returns the ConsumerMeterRef
@@ -142,7 +142,7 @@ func (site *Site) SetConsumerMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.ConsumerMetersRef = ref
-	settings.SetString(keys.ConsumerMeters, strings.Join(filterConfigurable(ref), ","))
+	settings.SetString(keys.ConsumerMeters, strings.Join(filterConfigurableMeter(ref), ","))
 }
 
 // GetExtMeterRefs returns the ExtMeterRef
@@ -158,7 +158,7 @@ func (site *Site) SetExtMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.ExtMetersRef = ref
-	settings.SetString(keys.ExtMeters, strings.Join(filterConfigurable(ref), ","))
+	settings.SetString(keys.ExtMeters, strings.Join(filterConfigurableMeter(ref), ","))
 }
 
 // GetCurtailerRefs returns the curtailment device references

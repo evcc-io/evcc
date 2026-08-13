@@ -459,7 +459,9 @@ export enum ConfigType {
 export type ConfigVehicle = Entity;
 export type ConfigMessenger = Entity;
 
-export type ConfigCurtailer = Entity;
+export interface ConfigCurtailer extends Entity {
+  deviceTitle?: string;
+}
 
 export interface ConfigHems extends Entity {
   deviceProduct?: string;

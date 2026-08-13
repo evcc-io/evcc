@@ -55,6 +55,7 @@ test.describe("issue creation", () => {
 
     // Create a Shelly meter with username (to test private data redaction)
     await page.getByRole("button", { name: "Add grid meter" }).click();
+    await page.getByTestId("meter-modal").getByRole("button", { name: "Add grid meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
     await meterModal.getByLabel("Manufacturer").selectOption("Shelly 1PM");

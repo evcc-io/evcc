@@ -57,6 +57,7 @@ test.describe("onboarding", async () => {
 
     // create grid meter
     await page.getByRole("button", { name: "Add grid meter" }).click();
+    await page.getByTestId("meter-modal").getByRole("button", { name: "Add grid meter" }).click();
     const gridModal = page.getByTestId("meter-modal");
     await expectModalVisible(gridModal);
     await gridModal.getByLabel("Manufacturer").selectOption("Demo meter");

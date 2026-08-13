@@ -26,6 +26,7 @@ async function login(page: Page) {
 
 async function addCustomGridMeter(page: Page, yaml: string) {
   await page.getByRole("button", { name: "Add grid meter" }).click();
+  await page.getByTestId("meter-modal").getByRole("button", { name: "Add grid meter" }).click();
   const modal = page.getByTestId("meter-modal");
   await expectModalVisible(modal);
   await modal.getByLabel("Manufacturer").selectOption("User-defined device");

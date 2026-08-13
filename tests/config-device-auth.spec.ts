@@ -39,6 +39,7 @@ test.describe("config device auth", async () => {
 
     // create a grid meter with auth
     await page.getByRole("button", { name: "Add grid meter" }).click();
+    await page.getByTestId("meter-modal").getByRole("button", { name: "Add grid meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
     await meterModal.getByLabel("Manufacturer").selectOption("Auth Demo Meter");
@@ -139,6 +140,7 @@ test.describe("config device auth", async () => {
 
     // open the grid meter modal and prepare auth
     await page.getByRole("button", { name: "Add grid meter" }).click();
+    await page.getByTestId("meter-modal").getByRole("button", { name: "Add grid meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
     await meterModal.getByLabel("Manufacturer").selectOption("Auth Demo Meter");
@@ -172,6 +174,7 @@ test.describe("config device auth", async () => {
     await page.goto("/#/config");
 
     await page.getByRole("button", { name: "Add grid meter" }).click();
+    await page.getByTestId("meter-modal").getByRole("button", { name: "Add grid meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
     await meterModal.getByLabel("Manufacturer").selectOption("Auth Demo Meter");
@@ -191,6 +194,7 @@ test.describe("config device auth", async () => {
 
     // create a grid meter with device-code auth
     await page.getByRole("button", { name: "Add grid meter" }).click();
+    await page.getByTestId("meter-modal").getByRole("button", { name: "Add grid meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
     await meterModal.getByLabel("Manufacturer").selectOption("Auth Demo Meter");
@@ -213,6 +217,7 @@ test.describe("config device auth", async () => {
     await page.goto("/#/config");
 
     await page.getByRole("button", { name: "Add grid meter" }).click();
+    await page.getByTestId("meter-modal").getByRole("button", { name: "Add grid meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
     await meterModal.getByLabel("Manufacturer").selectOption("Auth Demo Meter");
@@ -252,6 +257,7 @@ test.describe("config device auth", async () => {
 
     // create a grid meter with auth
     await page.getByRole("button", { name: "Add grid meter" }).click();
+    await page.getByTestId("meter-modal").getByRole("button", { name: "Add grid meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
     await meterModal.getByLabel("Manufacturer").selectOption("Auth Demo Meter");
@@ -289,6 +295,7 @@ test.describe("config device auth", async () => {
 
     // create a grid meter with auth and prepare connection
     await page.getByRole("button", { name: "Add grid meter" }).click();
+    await page.getByTestId("meter-modal").getByRole("button", { name: "Add grid meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
     await meterModal.getByLabel("Manufacturer").selectOption("Auth Demo Meter");

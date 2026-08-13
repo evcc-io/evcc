@@ -127,6 +127,7 @@ test.describe("fatal config handling", async () => {
 
     // create grid meter
     await page.getByRole("button", { name: "Add grid meter" }).click();
+    await page.getByTestId("meter-modal").getByRole("button", { name: "Add grid meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
     await meterModal.getByLabel("Manufacturer").selectOption("Shelly 1PM");
     await meterModal.getByLabel("IP address or hostname").fill(simulatorHost());

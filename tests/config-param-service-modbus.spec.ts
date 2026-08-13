@@ -24,6 +24,7 @@ test.afterAll(async () => {
 async function openMeterModal(page: Page) {
   await page.goto("/#/config");
   await page.getByRole("button", { name: "Add grid meter" }).click();
+  await page.getByTestId("meter-modal").getByRole("button", { name: "Add grid meter" }).click();
   const meterModal = page.getByTestId("meter-modal");
   await expectModalVisible(meterModal);
   await meterModal.getByLabel("Manufacturer").selectOption("Service Modbus Test Meter");

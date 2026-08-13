@@ -135,6 +135,7 @@
 						:title="curtailerTitle(curtailer)"
 						:editable="!!curtailer.id"
 						:error="hasDeviceError('curtailer', curtailer.name)"
+						:banner="curtailmentBanner('curtailer', curtailer.name)"
 						data-testid="curtailer"
 						@edit="openModal('curtailer', { id: curtailer.id })"
 					>
@@ -160,7 +161,7 @@
 						meter-type="pv"
 						:has-error="hasDeviceError('meter', meter.name)"
 						:tags="deviceTags('meter', meter.name)"
-						:banner="meterBanner(meter.name)"
+						:banner="curtailmentBanner('meter', meter.name)"
 						@edit="(type, id) => openModal('meter', { type, id })"
 						@enable="handleDisable('meter', meter.id, false)"
 					/>
@@ -1314,7 +1315,11 @@ export default defineComponent({
 			}
 		},
 		curtailerTitle(curtailer: ConfigCurtailer): string {
-			return curtailer.config?.template || this.$t("config.curtailer.title");
+			return (
+				curtailer.deviceTitle ||
+				curtailer.config?.template ||
+				this.$t("config.curtailer.title")
+			);
 		},
 		async curtailerChanged(result: ModalResult) {
 			if (result.action === "added" && result.name) {
@@ -1388,9 +1393,9 @@ export default defineComponent({
 		deviceTags(type: DeviceType, id: string) {
 			return this.deviceValues[type][id] || {};
 		},
-		meterBanner(name: string): string | undefined {
+		curtailmentBanner(type: DeviceType, name: string): string | undefined {
 			// the tag is only present while curtailing, a zero percent limit is still one
-			return this.deviceTags("meter", name)["curtailed"]?.value !== undefined
+			return this.deviceTags(type, name)["curtailed"]?.value !== undefined
 				? this.$t("config.deviceValue.productionLimited")
 				: undefined;
 		},

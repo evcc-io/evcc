@@ -380,19 +380,19 @@ func (site *Site) restoreMetersAndTitle() {
 		site.Meters.GridMeterRef = v
 	}
 	if v, err := settings.String(keys.PvMeters); err == nil && v != "" {
-		site.Meters.PVMetersRef = append(site.Meters.PVMetersRef, filterConfigurable(strings.Split(v, ","))...)
+		site.Meters.PVMetersRef = append(site.Meters.PVMetersRef, filterConfigurableMeter(strings.Split(v, ","))...)
 	}
 	if v, err := settings.String(keys.BatteryMeters); err == nil && v != "" {
-		site.Meters.BatteryMetersRef = append(site.Meters.BatteryMetersRef, filterConfigurable(strings.Split(v, ","))...)
+		site.Meters.BatteryMetersRef = append(site.Meters.BatteryMetersRef, filterConfigurableMeter(strings.Split(v, ","))...)
 	}
 	if v, err := settings.String(keys.ExtMeters); err == nil && v != "" {
-		site.Meters.ExtMetersRef = append(site.Meters.ExtMetersRef, filterConfigurable(strings.Split(v, ","))...)
+		site.Meters.ExtMetersRef = append(site.Meters.ExtMetersRef, filterConfigurableMeter(strings.Split(v, ","))...)
 	}
 	if v, err := settings.String(keys.AuxMeters); err == nil && v != "" {
-		site.Meters.AuxMetersRef = append(site.Meters.AuxMetersRef, filterConfigurable(strings.Split(v, ","))...)
+		site.Meters.AuxMetersRef = append(site.Meters.AuxMetersRef, filterConfigurableMeter(strings.Split(v, ","))...)
 	}
 	if v, err := settings.String(keys.ConsumerMeters); err == nil && v != "" {
-		site.Meters.ConsumerMetersRef = append(site.Meters.ConsumerMetersRef, filterConfigurable(strings.Split(v, ","))...)
+		site.Meters.ConsumerMetersRef = append(site.Meters.ConsumerMetersRef, filterConfigurableMeter(strings.Split(v, ","))...)
 	}
 	if v, err := settings.String(keys.Curtailers); err == nil && v != "" {
 		site.CurtailersRef = append(site.CurtailersRef, filterConfigurableCurtailers(strings.Split(v, ","))...)
