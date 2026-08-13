@@ -29,8 +29,8 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 // addHeatingDemand adds the forecast demand of all heating loadpoints to the home load
 // in Wh and returns the loadpoints that contributed. Must be applied after blending the
 // measured home energy, which does not contain loadpoint power.
-func (site *Site) addHeatingDemand(gt []float64, minLen int) map[loadpoint.API]bool {
-	var res map[loadpoint.API]bool
+func (site *Site) addHeatingDemand(gt []float64, minLen int) []loadpoint.API {
+	var res []loadpoint.API
 
 	for _, lp := range site.loadpoints {
 		if lp == nil {
@@ -51,10 +51,7 @@ func (site *Site) addHeatingDemand(gt []float64, minLen int) map[loadpoint.API]b
 			gt[i] += p[i] * 1e3
 		}
 
-		if res == nil {
-			res = make(map[loadpoint.API]bool)
-		}
-		res[lp] = true
+		res = append(res, lp)
 	}
 
 	return res

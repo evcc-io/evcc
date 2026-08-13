@@ -525,7 +525,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		}
 
 		// heating loadpoints are already accounted for by their demand forecast
-		if heaters[lp] {
+		if slices.Contains(heaters, lp) {
 			continue
 		}
 
