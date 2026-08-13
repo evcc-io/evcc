@@ -69,6 +69,33 @@ func TestAsTimestamps(t *testing.T) {
 	}, got)
 }
 
+func TestUnmodelledPower(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	for _, tc := range []struct {
+		name            string
+		mode            api.ChargeMode
+		status          api.ChargeStatus
+		power, minPower float64
+		expected        float64
+	}{
+		{"pv charging", api.ModePV, api.StatusC, 4000, 1380, 4000},
+		{"pv connected", api.ModePV, api.StatusB, 0, 1380, 0},
+		{"minpv floor before meter caught up", api.ModeMinPV, api.StatusC, 0, 4000, 4000},
+		{"minpv floor must not lower measured", api.ModeMinPV, api.StatusC, 4000, 1000, 4000},
+		{"minpv floor only applies while charging", api.ModeMinPV, api.StatusB, 0, 4000, 0},
+		{"negative measurement clamped", api.ModePV, api.StatusC, -100, 0, 0},
+	} {
+		lp := loadpoint.NewMockAPI(ctrl)
+		lp.EXPECT().GetMode().Return(tc.mode).AnyTimes()
+		lp.EXPECT().GetStatus().Return(tc.status).AnyTimes()
+		lp.EXPECT().GetChargePower().Return(tc.power).AnyTimes()
+		lp.EXPECT().EffectiveMinPower().Return(tc.minPower).AnyTimes()
+
+		assert.Equal(t, tc.expected, unmodelledPower(lp), tc.name)
+	}
+}
+
 func TestBatteryForecastSocExtremes(t *testing.T) {
 	for _, tc := range []struct {
 		name      string
@@ -274,6 +301,20 @@ func TestOptimizerChargingStrategy(t *testing.T) {
 	assert.Equal(t, "attenuate_grid_peaks", site.GetOptimizerChargingStrategy())
 }
 
+func TestGridExportLimit(t *testing.T) {
+	site := &Site{log: util.NewLogger("foo")}
+
+	// disabled by default
+	assert.Equal(t, 0.0, site.GetGridExportLimit())
+
+	// negative value rejected, limit unchanged
+	require.Error(t, site.SetGridExportLimit(-1))
+	assert.Equal(t, 0.0, site.GetGridExportLimit())
+
+	require.NoError(t, site.SetGridExportLimit(7000))
+	assert.Equal(t, 7000.0, site.GetGridExportLimit())
+}
+
 func TestBlendMeasured(t *testing.T) {
 	slots := []float64{100, 100, 100, 100, 100, 100}
 	blendMeasured(slots, 200, 4)
@@ -341,40 +382,49 @@ func TestSuggestionActionable(t *testing.T) {
 		batteryMode: api.BatteryNormal,
 		loadpoints:  []*Loadpoint{lp},
 	}
-	site.setSuggestions(
-		map[string]types.Suggestion{"bat": {Action: api.BatteryCharge.String()}},
-		map[int]types.Suggestion{0: {Action: actionCharge}},
-	)
+	site.setSuggestions(map[string]types.Suggestion{
+		batteryKey("bat"): {Action: api.BatteryCharge.String()},
+		loadpointKey(0):   {Action: actionCharge},
+	})
+
+	batterySuggestion := func(name string) *types.Suggestion {
+		return site.suggestion(batteryKey(name), site.GetBatteryMode().String())
+	}
+	loadpointSuggestion := func(id int) *types.Suggestion {
+		return site.suggestion(loadpointKey(id), loadpointCurrentAction(lp))
+	}
 
 	// battery mode differs from suggestion
-	s := site.batterySuggestion("bat")
+	s := batterySuggestion("bat")
 	require.NotNil(t, s)
 	assert.True(t, s.Actionable)
 
 	site.batteryMode = api.BatteryCharge
-	assert.False(t, site.batterySuggestion("bat").Actionable)
+	assert.False(t, batterySuggestion("bat").Actionable)
 
-	assert.Nil(t, site.batterySuggestion("unknown"))
+	assert.Nil(t, batterySuggestion("unknown"))
 
 	// loadpoint stopped, suggestion is to charge
-	s = site.loadpointSuggestion(0)
+	s = loadpointSuggestion(0)
 	require.NotNil(t, s)
 	assert.True(t, s.Actionable)
 
 	// loadpoint charging matches the suggestion
 	lp.enabled = true
 	lp.status = api.StatusC
-	assert.False(t, site.loadpointSuggestion(0).Actionable)
+	assert.False(t, loadpointSuggestion(0).Actionable)
 
-	assert.Nil(t, site.loadpointSuggestion(1))
+	assert.Nil(t, loadpointSuggestion(1))
 }
 
 func TestSuggestionEvent(t *testing.T) {
 	id := 2
 
 	// battery: no loadpoint id, carries name
-	key, ev := suggestionEvent(batteryDetail{Type: batteryTypeBattery, Name: "home", Title: "Home"}, types.Suggestion{Action: api.BatteryCharge.String()})
-	assert.Equal(t, "battery:home", key)
+	detail := batteryDetail{Type: batteryTypeBattery, Name: "home", Title: "Home"}
+	assert.Equal(t, "battery:home", detail.key())
+
+	ev := suggestionEvent(detail, types.Suggestion{Action: api.BatteryCharge.String()})
 	assert.Nil(t, ev.Loadpoint)
 	assert.Equal(t, evSuggestion, ev.Event)
 	assert.Equal(t, api.BatteryCharge.String(), ev.Attributes["suggestionAction"])
@@ -382,18 +432,23 @@ func TestSuggestionEvent(t *testing.T) {
 	assert.Equal(t, "Home", ev.Attributes["suggestionTitle"])
 
 	// loadpoint: carries id, no name
-	key, ev = suggestionEvent(batteryDetail{Type: batteryTypeVehicle, loadpoint: &id, Title: "Garage"}, types.Suggestion{Action: actionCharge})
-	assert.Equal(t, "loadpoint:2", key)
+	detail = batteryDetail{Type: batteryTypeVehicle, loadpoint: &id, Title: "Garage"}
+	assert.Equal(t, "loadpoint:2", detail.key())
+
+	ev = suggestionEvent(detail, types.Suggestion{Action: actionCharge})
 	require.NotNil(t, ev.Loadpoint)
 	assert.Equal(t, id, *ev.Loadpoint)
 	assert.NotContains(t, ev.Attributes, "suggestionName")
+
+	// vehicle without loadpoint can't act on a suggestion
+	assert.Empty(t, batteryDetail{Type: batteryTypeVehicle}.key())
 }
 
 func TestDiffSuggestions(t *testing.T) {
 	site := &Site{}
 
 	pending := func(s types.Suggestion) map[string]pendingSuggestion {
-		_, ev := suggestionEvent(batteryDetail{loadpoint: new(int)}, s)
+		ev := suggestionEvent(batteryDetail{loadpoint: new(int)}, s)
 		return map[string]pendingSuggestion{"loadpoint:0": {suggestion: s, event: ev}}
 	}
 

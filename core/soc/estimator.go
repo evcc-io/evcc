@@ -10,123 +10,122 @@ import (
 const (
 	ChargeEfficiency = 0.85 // assume 85% charge efficiency
 
-	minChargePower = 1000.0  // Lowest charge power (just before vehicle stops charging at 100%)
-	maxChargePower = 50000.0 // default 50 kW
-	maxChargeSoc   = 50.0    // default 50%
-	minChargeSoc   = 100.0
+	minChargePower = 1000.0  // charge power at 100% soc (just before the vehicle stops charging)
+	maxChargePower = 50000.0 // charge power up to maxChargeSoc
+	maxChargeSoc   = 50.0    // soc up to which maxChargePower is available
 
-	gradient = (minChargePower - maxChargePower) / (minChargeSoc - maxChargeSoc)
+	// power reduction per soc percent above maxChargeSoc
+	powerPerSoc = (maxChargePower - minChargePower) / (100 - maxChargeSoc)
 )
 
 // Estimator provides vehicle soc and charge duration
 // Vehicle Soc can be estimated to provide more granularity
 type Estimator struct {
-	log     *util.Logger
-	charger api.Charger
-	vehicle api.Vehicle
+	log *util.Logger
 
-	virtualCapacity   float64 // estimated virtual vehicle capacity in Wh
-	vehicleSoc        float64 // estimated vehicle Soc
-	initialSoc        float64 // first received valid vehicle Soc
-	initialEnergy     float64 // energy counter at first valid Soc
-	prevSoc           float64 // previous vehicle Soc in %
-	prevChargedEnergy float64 // previous charged energy in Wh
-	energyPerSocStep  float64 // Energy per Soc percent in Wh
+	capacity          float64 // vehicle capacity in Wh
+	energyPerSocStep  float64 // energy per soc percent in Wh
+	vehicleSoc        float64 // estimated vehicle soc in %
+	initialSoc        float64 // first received valid vehicle soc in %
+	initialEnergy     float64 // energy counter at first valid soc in Wh
+	prevSoc           float64 // vehicle soc at last soc change in %
+	prevChargedEnergy float64 // charged energy at last soc change in Wh
 }
 
 // NewEstimator creates new estimator
-func NewEstimator(log *util.Logger, charger api.Charger, vehicle api.Vehicle) *Estimator {
-	s := &Estimator{
-		log:     log,
-		charger: charger,
-		vehicle: vehicle,
+func NewEstimator(log *util.Logger, vehicle api.Vehicle) *Estimator {
+	capacity := vehicle.Capacity() * 1e3
+
+	return &Estimator{
+		log:              log,
+		capacity:         capacity,
+		energyPerSocStep: capacity / ChargeEfficiency / 100, // initial gradient taking efficiency into account
 	}
+}
 
-	s.virtualCapacity = s.vehicle.Capacity() * 1e3 / ChargeEfficiency // initial capacity taking efficiency into account
-	s.energyPerSocStep = s.virtualCapacity / 100
-
-	return s
+// virtualCapacity returns the estimated capacity in Wh, never below the vehicle's physical capacity
+func (s *Estimator) virtualCapacity() float64 {
+	return max(s.capacity, s.energyPerSocStep*100)
 }
 
 // RemainingChargeDuration returns the estimated remaining duration
 func (s *Estimator) RemainingChargeDuration(targetSoc, chargePower float64) time.Duration {
-	return remainingChargeDuration(targetSoc, chargePower, s.vehicleSoc, s.virtualCapacity)
+	return remainingChargeDuration(targetSoc, chargePower, s.vehicleSoc, s.virtualCapacity())
 }
 
-func RemainingChargeDuration(targetSoc, chargePower, vehicleSoc, virtualCapacity float64) time.Duration {
-	return remainingChargeDuration(targetSoc, chargePower, vehicleSoc, virtualCapacity*1e3/ChargeEfficiency)
+func RemainingChargeDuration(targetSoc, chargePower, vehicleSoc, capacity float64) time.Duration {
+	return remainingChargeDuration(targetSoc, chargePower, vehicleSoc, capacity*1e3/ChargeEfficiency)
 }
 
 func remainingChargeDuration(targetSoc, chargePower, vehicleSoc, virtualCapacity float64) time.Duration {
-	// Relativer Reduktionspunkt
-	rrp := (chargePower-minChargePower)/gradient + minChargeSoc
+	// soc above which charge power starts to taper off
+	taperSoc := 100 - (chargePower-minChargePower)/powerPerSoc
 
-	var t1, t2 float64
+	var hours float64
 
-	// Zeit von vehicleSoc bis Reduktionspunkt (linear)
-	if vehicleSoc < rrp {
-		t1 = (min(float64(targetSoc), rrp) - vehicleSoc) / minChargeSoc * virtualCapacity / chargePower
+	// below the taper point the vehicle charges at full power
+	if vehicleSoc < taperSoc {
+		hours += (min(targetSoc, taperSoc) - vehicleSoc) / 100 * virtualCapacity / chargePower
 	}
 
-	// Zeit von Reduktionspunkt bis targetSoc (degressiv)
-	if float64(targetSoc) > rrp {
-		t2 = (float64(targetSoc) - max(vehicleSoc, rrp)) / minChargeSoc * virtualCapacity / ((chargePower-minChargePower)/2 + minChargePower)
+	// above the taper point power decreases linearly towards minChargePower
+	if targetSoc > taperSoc {
+		hours += (targetSoc - max(vehicleSoc, taperSoc)) / 100 * virtualCapacity / ((chargePower + minChargePower) / 2)
 	}
 
-	return max(0, time.Duration(float64(time.Hour)*(t1+t2))).Round(time.Second)
+	return max(0, time.Duration(float64(time.Hour)*hours)).Round(time.Second)
 }
 
 // RemainingChargeEnergy returns the remaining charge energy in kWh
 func (s *Estimator) RemainingChargeEnergy(targetSoc int) float64 {
-	return remainingChargeEnergy(targetSoc, s.vehicleSoc, s.virtualCapacity)
+	return remainingChargeEnergy(float64(targetSoc), s.vehicleSoc, s.virtualCapacity())
 }
 
 func RemainingChargeEnergy(targetSoc int, vehicleSoc, capacity float64) float64 {
-	return remainingChargeEnergy(targetSoc, vehicleSoc, capacity*1e3/ChargeEfficiency)
+	return remainingChargeEnergy(float64(targetSoc), vehicleSoc, capacity*1e3/ChargeEfficiency)
 }
 
-func remainingChargeEnergy(targetSoc int, vehicleSoc, virtualCapacity float64) float64 {
-	percentRemaining := float64(targetSoc) - vehicleSoc
-	if percentRemaining <= 0 || virtualCapacity <= 0 {
-		return 0
-	}
-	return percentRemaining / 100 * virtualCapacity / 1e3
+func remainingChargeEnergy(targetSoc, vehicleSoc, virtualCapacity float64) float64 {
+	return max(0, targetSoc-vehicleSoc) / 100 * max(0, virtualCapacity) / 1e3
 }
 
 // Soc replaces the api.Vehicle.Soc interface to take charged energy into account
 func (s *Estimator) Soc(fetchedSoc *float64, chargedEnergy float64) float64 {
-	if fetchedSoc != nil {
-		s.vehicleSoc = *fetchedSoc
-	} else {
-		s.log.WARN.Printf("missing vehicle soc- ignored by estimator")
+	if fetchedSoc == nil {
+		s.log.WARN.Println("missing vehicle soc- ignored by estimator")
+		return s.vehicleSoc
 	}
 
-	socDelta := s.vehicleSoc - s.prevSoc
-	energyDelta := max(chargedEnergy, 0) - s.prevChargedEnergy
+	chargedEnergy = max(chargedEnergy, 0)
+	socDelta := *fetchedSoc - s.prevSoc
+	energyDelta := chargedEnergy - s.prevChargedEnergy
 
-	if socDelta != 0 || energyDelta < 0 { // soc value change or unexpected energy reset
-		if s.initialSoc == 0 {
-			s.initialSoc = s.vehicleSoc
-			s.initialEnergy = chargedEnergy
-		}
-
-		socDiff := s.vehicleSoc - s.initialSoc
-		energyDiff := chargedEnergy - s.initialEnergy
-
-		// recalculate gradient, wh per soc %
-		if socDiff > 10 && energyDiff > 0 {
-			s.energyPerSocStep = energyDiff / socDiff
-			s.virtualCapacity = max(s.vehicle.Capacity()*1e3, s.energyPerSocStep*100)
-			s.log.DEBUG.Printf("soc gradient updated: soc: %.1f%%, socDiff: %.1f%%, energyDiff: %.0fWh, energyPerSocStep: %.1fWh, virtualCapacity: %.0fWh", s.vehicleSoc, socDiff, energyDiff, s.energyPerSocStep, s.virtualCapacity)
-		}
-
-		// sample charged energy at soc change, reset energy delta
-		s.prevChargedEnergy = max(chargedEnergy, 0)
-		s.prevSoc = s.vehicleSoc
-	} else {
+	// no soc change and no energy reset: interpolate soc from charged energy
+	if socDelta == 0 && energyDelta >= 0 {
 		s.vehicleSoc = min(*fetchedSoc+energyDelta/s.energyPerSocStep, 100)
 		s.log.DEBUG.Printf("soc estimated: %.2f%% (vehicle: %.2f%%)", s.vehicleSoc, *fetchedSoc)
+		return s.vehicleSoc
 	}
+
+	s.vehicleSoc = *fetchedSoc
+
+	if s.initialSoc == 0 {
+		s.initialSoc = s.vehicleSoc
+		s.initialEnergy = chargedEnergy
+	}
+
+	socDiff := s.vehicleSoc - s.initialSoc
+	energyDiff := chargedEnergy - s.initialEnergy
+
+	// recalculate gradient, wh per soc %
+	if socDiff > 10 && energyDiff > 0 {
+		s.energyPerSocStep = energyDiff / socDiff
+		s.log.DEBUG.Printf("soc gradient updated: soc: %.1f%%, socDiff: %.1f%%, energyDiff: %.0fWh, energyPerSocStep: %.1fWh, virtualCapacity: %.0fWh", s.vehicleSoc, socDiff, energyDiff, s.energyPerSocStep, s.virtualCapacity())
+	}
+
+	// sample charged energy at soc change
+	s.prevSoc = s.vehicleSoc
+	s.prevChargedEnergy = chargedEnergy
 
 	return s.vehicleSoc
 }

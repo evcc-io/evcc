@@ -1,1 +1,3 @@
 .github/workflows/*.lock.yml linguist-generated=true merge=ours
+server/openapi.state.yaml linguist-generated=true
+server/mcp/openapi.json linguist-generated=true

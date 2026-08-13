@@ -614,7 +614,7 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 			// cleanup references
 			for _, dev := range h.Devices() {
 				lp := dev.Instance()
-				if lp.GetChargerRef() == config.NameForID(id) {
+				if lp != nil && lp.GetChargerRef() == config.NameForID(id) {
 					lp.SetChargerRef("")
 				}
 			}
@@ -644,7 +644,7 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 
 			for _, dev := range h.Devices() {
 				lp := dev.Instance()
-				if lp.GetMeterRef() == name {
+				if lp != nil && lp.GetMeterRef() == name {
 					lp.SetMeterRef("")
 				}
 			}
@@ -655,7 +655,7 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 			// cleanup references
 			for _, dev := range h.Devices() {
 				lp := dev.Instance()
-				if lp.GetDefaultVehicleRef() == config.NameForID(id) {
+				if lp != nil && lp.GetDefaultVehicleRef() == config.NameForID(id) {
 					lp.SetDefaultVehicleRef("")
 				}
 			}
@@ -666,7 +666,7 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 			// cleanup references
 			for _, dev := range h.Devices() {
 				lp := dev.Instance()
-				if lp.GetCircuitRef() == config.NameForID(id) {
+				if lp != nil && lp.GetCircuitRef() == config.NameForID(id) {
 					lp.SetCircuitRef("")
 				}
 			}

@@ -3,10 +3,8 @@
   "description": "evcc UI",
   "author": "evcc-io",
   "scripts": {
-    "build": "vp build",
-    "test": "cross-env TZ=Europe/Berlin NODE_OPTIONS=--no-experimental-webstorage vp test",
     "lint": "vp run lint:format && vp run lint:lint && vp run lint:tsc && vp run lint:i18n",
-    "lint:format": "vp fmt assets tests **/*.{yaml,sh} i18n/*.json --write",
+    "lint:format": "vp fmt assets tests i18n --write && vp fmt '**/*.{yaml,sh}' --write",
     "lint:lint": "vp lint --fix --max-warnings=0",
     "lint:tsc": "vue-tsc --noEmit",
     "lint:i18n": "tsx i18n/check.ts",
@@ -60,8 +58,8 @@
   "license": "MIT",
   "repository": "github:evcc-io/evcc",
   "devDependencies": {
-    "@jest/types": "^30.4.1",
     "@playwright/test": "^1.62.0",
+    "@redocly/openapi-core": "^2.38.0",
     "@storybook/vue3": "^10.4.4",
     "@storybook/vue3-vite": "^10.5.5",
     "@types/body-parser": "^1.19.6",
@@ -77,6 +75,8 @@
     "@vue/compiler-sfc": "^3.5.38",
     "@vue/test-utils": "^2.4.11",
     "@vue/tsconfig": "^0.9.1",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
     "body-parser": "^2.3.0",
     "cross-env": "^10.1.0",
     "happy-dom": "^20.11.1",
@@ -86,6 +86,7 @@
     "rollup-plugin-visualizer": "^7.0.1",
     "storybook": "^10.5.5",
     "terser": "^5.49.0",
+    "ts-json-schema-generator": "^2.9.0",
     "tsx": "^4.23.1",
     "typescript": "^5.9.3",
     "vite": "npm:@voidzero-dev/vite-plus-core@0.2.6",
@@ -94,6 +95,7 @@
     "vue-tsc": "^3.3.8",
     "wait-on": "^9.1.0",
     "ws": "^8.21.1",
+    "yaml": "^2.9.0",
     "vite-plus": "0.2.6"
   },
   "overrides": {

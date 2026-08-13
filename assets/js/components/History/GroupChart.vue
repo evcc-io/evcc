@@ -5,9 +5,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, markRaw, type PropType } from "vue";
+import { defineComponent, type PropType } from "vue";
 import {
-	echarts,
 	FONT_FAMILY,
 	forecastGrid,
 	forecastYAxis,
@@ -19,6 +18,7 @@ import {
 import colors, { resolveColors, deviceColorMap, darken, batteryColor, setAlpha } from "@/colors";
 import store from "@/store";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
+import echartsChart from "@/mixins/echartsChart";
 import { PERIODS } from "../Sessions/types";
 import { is12hFormat } from "@/units";
 import { hasColorPicker } from "./groups";
@@ -70,7 +70,7 @@ function niceCeil(v: number): number {
 
 export default defineComponent({
 	name: "GroupChart",
-	mixins: [formatter],
+	mixins: [formatter, echartsChart],
 	props: {
 		group: { type: String, required: true },
 		color: { type: String, required: true },
@@ -85,7 +85,6 @@ export default defineComponent({
 		to: { type: Date, required: true },
 	},
 	data(): {
-		chart: echarts.ECharts | null;
 		isMobile: boolean;
 		mediaQuery: MediaQueryList | null;
 		previousFocusedEntity: number | null;
@@ -94,7 +93,6 @@ export default defineComponent({
 		activeSlot: number | null;
 	} {
 		return {
-			chart: null,
 			isMobile: false,
 			mediaQuery: null,
 			previousFocusedEntity: this.focusedEntity as number | null,
@@ -677,61 +675,50 @@ export default defineComponent({
 			};
 		},
 	},
-	watch: {
-		chartOption: {
-			handler() {
-				const opt = (this as unknown as WithChartOption).chartOption;
-				const focusChanged = this.previousFocusedEntity !== this.focusedEntity;
-				const periodChanged = this.previousPeriod !== this.period;
-				// Fingerprint the set of series IDs in their render order so we can
-				// detect when entities are added or removed (e.g. a filtered loadpoint
-				// re-appears after navigating to a new day).
-				const newSeriesKey = (opt["series"] as Array<{ id?: string }>)
-					.map((s) => s.id ?? "")
-					.join(",");
-				// Full reset on period/composition change — replaceMerge re-appends
-				// re-introduced series at the end and flips stack order. Otherwise
-				// partial update lets stable IDs animate value transitions.
-				const fullReset = periodChanged || newSeriesKey !== this.previousSeriesKey;
-				this.chart?.setOption(
-					fullReset
-						? opt
-						: {
-								animation: !focusChanged,
-								xAxis: opt["xAxis"],
-								yAxis: opt["yAxis"],
-								series: opt["series"],
-								tooltip: opt["tooltip"],
-							},
-					fullReset ? { notMerge: true } : { replaceMerge: ["series", "yAxis"] }
-				);
-				this.previousFocusedEntity = this.focusedEntity as number | null;
-				this.previousPeriod = this.period as PERIODS;
-				this.previousSeriesKey = newSeriesKey;
-			},
-			deep: true,
-		},
-	},
 	mounted() {
-		const el = this.$refs["chartEl"] as HTMLElement;
-		this.chart = markRaw(echarts.init(el));
-		this.chart.setOption((this as unknown as WithChartOption).chartOption);
-		const zr = this.chart.getZr();
-		zr.on("mousemove", this.onChartMouseMove);
-		zr.on("globalout", this.clearHighlight);
+		const zr = this.chart?.getZr();
+		zr?.on("mousemove", this.onChartMouseMove);
+		zr?.on("globalout", this.clearHighlight);
 		this.mediaQuery = window.matchMedia("(max-width: 575.98px)");
 		this.isMobile = this.mediaQuery.matches;
 		this.mediaQuery.addEventListener("change", this.onMediaChange);
-		window.addEventListener("resize", this.resize);
 	},
 	beforeUnmount() {
-		window.removeEventListener("resize", this.resize);
 		this.mediaQuery?.removeEventListener("change", this.onMediaChange);
-		this.chart?.dispose();
 	},
 	methods: {
-		resize() {
-			this.chart?.resize();
+		applyChartOption() {
+			const opt = (this as unknown as WithChartOption).chartOption;
+			const focusChanged = this.previousFocusedEntity !== this.focusedEntity;
+			const periodChanged = this.previousPeriod !== this.period;
+			// Fingerprint the set of series IDs in their render order so we can
+			// detect when entities are added or removed (e.g. a filtered loadpoint
+			// re-appears after navigating to a new day).
+			const newSeriesKey = (opt["series"] as Array<{ id?: string }>)
+				.map((s) => s.id ?? "")
+				.join(",");
+			// Full reset on period/composition change — replaceMerge re-appends
+			// re-introduced series at the end and flips stack order. Otherwise
+			// partial update lets stable IDs animate value transitions.
+			const fullReset = periodChanged || newSeriesKey !== this.previousSeriesKey;
+			this.chart?.setOption(
+				fullReset
+					? opt
+					: {
+							animation: !focusChanged,
+							xAxis: opt["xAxis"],
+							yAxis: opt["yAxis"],
+							series: opt["series"],
+							tooltip: opt["tooltip"],
+						},
+				fullReset ? { notMerge: true } : { replaceMerge: ["series", "yAxis"] }
+			);
+			this.previousFocusedEntity = this.focusedEntity as number | null;
+			this.previousPeriod = this.period as PERIODS;
+			this.previousSeriesKey = newSeriesKey;
+		},
+		onTouchTooltipReset() {
+			this.clearHighlight();
 		},
 		// highlight hovered slot, dim rest. manual because built-in axis highlight hard-codes notBlur
 		onChartMouseMove(e: { offsetX: number; offsetY: number }) {
