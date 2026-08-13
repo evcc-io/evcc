@@ -1,0 +1,132 @@
+template: victron-gx
+products:
+  - brand: Victron
+    description:
+      de: AC-Zähler am GX-Gerät
+      en: AC load meter on GX device
+requirements:
+  description:
+    de: |
+      Für zusätzliche Zähler, die am GX-Gerät angeschlossen sind und dort als AC-Verbraucher (`com.victronenergy.acload`) erscheinen.
+      Netz-, PV- und Batteriemessung wird vom Template `Victron Energy` abgedeckt.
+    en: |
+      For additional meters attached to the GX device that appear as AC load (`com.victronenergy.acload`).
+      Grid, PV and battery measurement is covered by the `Victron Energy` template.
+params:
+  - name: usage
+    choice: ["aux", "charge"]
+  - name: host
+  - name: port
+    default: 502
+  - name: id
+    description:
+      en: Meter Modbus unit id
+      de: Zähler Modbus Unit-ID
+    type: int
+    required: true
+    help:
+      de: "Auf dem GX-Gerät unter Einstellungen / Integrationen / Modbus-TCP-Server / Verfügbare Dienste zu finden."
+      en: "Found on the GX device under Settings / Integrations / Modbus TCP server / Available services."
+render: |
+  type: custom
+  power:
+    source: calc
+    add:
+    - source: modbus
+      uri: {{ joinHostPort .host .port }}
+      id: {{ .id }}
+      register:
+        address: 3924 # L1 power
+        type: input
+        decode: int32
+    - source: modbus
+      uri: {{ joinHostPort .host .port }}
+      id: {{ .id }}
+      register:
+        address: 3926 # L2 power
+        type: input
+        decode: int32
+    - source: modbus
+      uri: {{ joinHostPort .host .port }}
+      id: {{ .id }}
+      register:
+        address: 3928 # L3 power
+        type: input
+        decode: int32
+  energy:
+    source: calc
+    add:
+    - source: modbus
+      uri: {{ joinHostPort .host .port }}
+      id: {{ .id }}
+      register:
+        address: 3916 # L1 energy forward
+        type: input
+        decode: uint32
+      scale: 0.01
+    - source: modbus
+      uri: {{ joinHostPort .host .port }}
+      id: {{ .id }}
+      register:
+        address: 3918 # L2 energy forward
+        type: input
+        decode: uint32
+      scale: 0.01
+    - source: modbus
+      uri: {{ joinHostPort .host .port }}
+      id: {{ .id }}
+      register:
+        address: 3920 # L3 energy forward
+        type: input
+        decode: uint32
+      scale: 0.01
+  currents:
+    - source: modbus
+      uri: {{ joinHostPort .host .port }}
+      id: {{ .id }}
+      register:
+        address: 3911 # L1 current
+        type: input
+        decode: int16
+      scale: 0.1
+    - source: modbus
+      uri: {{ joinHostPort .host .port }}
+      id: {{ .id }}
+      register:
+        address: 3913 # L2 current
+        type: input
+        decode: int16
+      scale: 0.1
+    - source: modbus
+      uri: {{ joinHostPort .host .port }}
+      id: {{ .id }}
+      register:
+        address: 3915 # L3 current
+        type: input
+        decode: int16
+      scale: 0.1
+  voltages:
+    - source: modbus
+      uri: {{ joinHostPort .host .port }}
+      id: {{ .id }}
+      register:
+        address: 3910 # L1 voltage
+        type: input
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      uri: {{ joinHostPort .host .port }}
+      id: {{ .id }}
+      register:
+        address: 3912 # L2 voltage
+        type: input
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      uri: {{ joinHostPort .host .port }}
+      id: {{ .id }}
+      register:
+        address: 3914 # L3 voltage
+        type: input
+        decode: uint16
+      scale: 0.1

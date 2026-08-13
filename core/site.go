@@ -34,7 +34,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/modbus"
-	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
 	"github.com/samber/lo"
 	"github.com/smallnest/chanx"
@@ -46,7 +45,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 // updater abstracts the Loadpoint implementation for testing
 type updater interface {
 	loadpoint.API
-	Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64, dim *bool)
+	Update(sitePower, batteryPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64, dim *bool)
 }
 
 var _ site.API = (*Site)(nil)
@@ -93,6 +92,9 @@ type Site struct {
 	batteryGridChargeLimit  *float64 // grid charging limit
 	batteryGridDischarge    bool     // allow battery discharge to grid (experimental)
 
+	// grid settings
+	gridExportLimit float64 // static grid export power limit in W, 0 = disabled
+
 	// forecast settings
 	solarAdjusted bool // adjust solar forecast to real production data
 
@@ -114,12 +116,15 @@ type Site struct {
 	excessDCPower            float64                     // PV excess DC charge power (hybrid only)
 	auxPower                 float64                     // Aux power
 	battery                  types.BatteryState          // Battery cached and published state
+	batteryMaxDischargePower *float64                    // Max discharge power of all battery meters
 	batteryMode              api.BatteryMode             // Battery mode (runtime only, not persisted)
 	batteryModeExternal      api.BatteryMode             // Battery mode (external, runtime only, not persisted)
 	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
-	batterySuggestions       map[string]types.Suggestion // Optimizer suggestions by battery meter name
-	loadpointSuggestions     map[int]types.Suggestion    // Optimizer suggestions by loadpoint id
+	suggestions              map[string]types.Suggestion // Optimizer suggestions by device key
 	suggestionActions        map[string]string           // last notified actionable optimizer action by device key
+
+	optimizerMu      sync.Mutex // guards optimizer runs
+	optimizerUpdated time.Time  // last optimizer run, guarded by optimizerMu
 }
 
 // MetersConfig contains the site's meter configuration
@@ -155,6 +160,23 @@ func NewSiteFromConfig(other map[string]any) (*Site, error) {
 	return site, nil
 }
 
+func activeMeters(refs []string) ([]config.Device[api.Meter], error) {
+	var res []config.Device[api.Meter]
+	for _, ref := range refs {
+		dev, err := config.Meters().ByName(ref)
+		if err != nil {
+			return nil, err
+		}
+		if dev.Instance() == nil {
+			continue
+		}
+
+		res = append(res, dev)
+	}
+
+	return res, nil
+}
+
 func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tariff.Tariffs) error {
 	site.loadpoints = loadpoints
 	site.tariffs = tariffs
@@ -185,7 +207,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	tariff := site.GetTariff(api.TariffUsagePlanner)
 
 	// give loadpoints access to vehicles and database
-	for _, lp := range loadpoints {
+	for _, lp := range site.activeLoadpoints() {
 		lp.coordinator = coordinator.NewAdapter(lp, site.coordinator)
 		lp.planner = planner.New(lp.log, tariff)
 
@@ -216,13 +238,17 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 			return err
 		}
 
-		site.gridMeter = dev
+		if dev.Instance() == nil {
+			site.log.WARN.Println("missing grid meter instance")
+		} else {
+			site.gridMeter = dev
 
-		me, err := metrics.NewCollector(metrics.Grid, site.Meters.GridMeterRef, metrics.Grid)
-		if err != nil {
-			return err
+			me, err := metrics.NewCollector(metrics.Grid, site.Meters.GridMeterRef, metrics.Grid)
+			if err != nil {
+				return err
+			}
+			site.collectors[site.Meters.GridMeterRef] = me
 		}
-		site.collectors[site.Meters.GridMeterRef] = me
 	}
 
 	// multiple pv
@@ -230,6 +256,9 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		dev, err := config.Meters().ByName(ref)
 		if err != nil {
 			return err
+		}
+		if dev.Instance() == nil {
+			continue
 		}
 		site.pvMeters = append(site.pvMeters, dev)
 
@@ -256,13 +285,13 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.collectors[metrics.Temperature] = tc
 
 	// multiple batteries
-	for _, ref := range site.Meters.BatteryMetersRef {
-		dev, err := config.Meters().ByName(ref)
-		if err != nil {
-			return err
-		}
-		site.batteryMeters = append(site.batteryMeters, dev)
-
+	mm, err := activeMeters(site.Meters.BatteryMetersRef)
+	if err != nil {
+		return err
+	}
+	site.batteryMeters = mm
+	for _, dev := range mm {
+		ref := dev.Config().Name
 		me, err := metrics.NewCollector(metrics.Battery, ref, deviceTitleOrName(dev))
 		if err != nil {
 			return err
@@ -271,13 +300,13 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	}
 
 	// additional meters used only for monitoring
-	for _, ref := range site.Meters.ExtMetersRef {
-		dev, err := config.Meters().ByName(ref)
-		if err != nil {
-			return err
-		}
-		site.extMeters = append(site.extMeters, dev)
-
+	mm, err = activeMeters(site.Meters.ExtMetersRef)
+	if err != nil {
+		return err
+	}
+	site.extMeters = mm
+	for _, dev := range mm {
+		ref := dev.Config().Name
 		me, err := metrics.NewCollector(metrics.Meter, ref, deviceTitleOrName(dev))
 		if err != nil {
 			return err
@@ -286,13 +315,13 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	}
 
 	// auxiliary meters (consumers)
-	for _, ref := range site.Meters.AuxMetersRef {
-		dev, err := config.Meters().ByName(ref)
-		if err != nil {
-			return err
-		}
-		site.auxMeters = append(site.auxMeters, dev)
-
+	mm, err = activeMeters(site.Meters.AuxMetersRef)
+	if err != nil {
+		return err
+	}
+	site.auxMeters = mm
+	for _, dev := range mm {
+		ref := dev.Config().Name
 		me, err := metrics.NewCollector(metrics.Consumer, ref, deviceTitleOrName(dev))
 		if err != nil {
 			return err
@@ -301,13 +330,13 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	}
 
 	// consumer meters
-	for _, ref := range site.Meters.ConsumerMetersRef {
-		dev, err := config.Meters().ByName(ref)
-		if err != nil {
-			return err
-		}
-		site.consumerMeters = append(site.consumerMeters, dev)
-
+	mm, err = activeMeters(site.Meters.ConsumerMetersRef)
+	if err != nil {
+		return err
+	}
+	site.consumerMeters = mm
+	for _, dev := range mm {
+		ref := dev.Config().Name
 		me, err := metrics.NewCollector(metrics.Consumer, ref, deviceTitleOrName(dev))
 		if err != nil {
 			return err
@@ -425,6 +454,11 @@ func (site *Site) restoreSettings() error {
 			return err
 		}
 	}
+	if v, err := settings.Float(keys.GridExportLimit); err == nil {
+		if err := site.SetGridExportLimit(v); err != nil {
+			return err
+		}
+	}
 	if v, err := settings.Bool(keys.SolarAdjusted); err == nil {
 		site.SetSolarAdjusted(v)
 	}
@@ -532,6 +566,10 @@ func (site *Site) DumpConfig() {
 	site.log.INFO.Printf("    solar:     %s", presence[site.GetTariff(api.TariffUsageSolar) != nil])
 
 	for i, lp := range site.loadpoints {
+		if lp == nil {
+			continue
+		}
+
 		lp.log.INFO.Printf("loadpoint %d:", i+1)
 		lp.log.INFO.Printf("  mode:        %s", lp.GetMode())
 
@@ -584,7 +622,7 @@ func (site *Site) publishLoadpoint(id int, key string, val any) {
 
 // clearPlanLocks clears locked plan goals for all loadpoints
 func (site *Site) clearPlanLocks() {
-	for _, lp := range site.Loadpoints() {
+	for _, lp := range site.activeLoadpoints() {
 		lp.ClearPlanLock()
 	}
 }
@@ -713,6 +751,7 @@ func (site *Site) updateBatteryMeters() {
 
 	mm := site.collectMeters("battery", site.batteryMeters)
 
+	var maxDischargePower float64
 	for i, dev := range site.batteryMeters {
 		meter := dev.Instance()
 
@@ -732,9 +771,35 @@ func (site *Site) updateBatteryMeters() {
 			}
 		}
 
+		if bpl, ok := api.Cap[api.BatteryPowerLimiter](meter); ok && maxDischargePower >= 0 {
+			var empty bool
+			if bsl, ok := api.Cap[api.BatterySocLimiter](meter); ok {
+				minSoc, _ := bsl.GetSocLimits()
+				if mm[i].Soc != nil && *mm[i].Soc <= minSoc {
+					empty = true
+				}
+			}
+
+			if !empty {
+				_, discharge := bpl.GetPowerLimits()
+				maxDischargePower += discharge
+			}
+		} else {
+			maxDischargePower = -1 // any battery without a limit disables the cap
+		}
+
 		_, controllable := api.Cap[api.BatteryController](meter)
 		mm[i].Controllable = new(controllable)
 	}
+
+	// written from the meter goroutine, read via GetBatteryMaxDischargePower
+	site.Lock()
+	if maxDischargePower >= 0 {
+		site.batteryMaxDischargePower = &maxDischargePower
+	} else {
+		site.batteryMaxDischargePower = nil
+	}
+	site.Unlock()
 
 	// retain the last known soc when every battery read failed this cycle, so a
 	// transient meter error does not report the pack as empty (0%)
@@ -795,8 +860,9 @@ func (site *Site) updateBatteryMeters() {
 
 // publishBattery applies the optimizer suggestions and publishes the battery state
 func (site *Site) publishBattery() {
+	mode := site.GetBatteryMode().String()
 	for i, d := range site.battery.Devices {
-		site.battery.Devices[i].Suggestion = site.batterySuggestion(d.Name)
+		site.battery.Devices[i].Suggestion = site.suggestion(batteryKey(d.Name), mode)
 	}
 
 	site.publish(keys.Battery, site.battery)
@@ -888,7 +954,7 @@ func (site *Site) updateGridMeter() error {
 		return nil
 	}
 
-	mm := types.Measurement{Name: site.Meters.GridMeterRef}
+	mm := types.Measurement{Name: site.gridMeter.Config().Name}
 
 	meter := site.gridMeter.Instance()
 
@@ -942,7 +1008,9 @@ func (site *Site) updateGridMeter() error {
 		}
 	}
 
-	site.collectors[site.Meters.GridMeterRef].AddEnergy(mm.Energy, mm.ReturnEnergy, mm.Power)
+	if c, ok := site.collectors[site.gridMeter.Config().Name]; ok {
+		c.AddEnergy(mm.Energy, mm.ReturnEnergy, mm.Power)
+	}
 
 	site.publish(keys.Grid, mm)
 
@@ -964,9 +1032,7 @@ func (site *Site) updateMeters() error {
 		return err
 	}
 
-	if sponsor.IsAuthorized() && optimizerEnabled() && time.Since(optimizerUpdated) >= tariff.SlotDuration {
-		go site.optimizerUpdateAsync()
-	}
+	go site.optimizerUpdateAsync(tariff.SlotDuration)
 
 	return nil
 }
@@ -1060,7 +1126,7 @@ func (site *Site) updateLoadpoints(rates api.Rates) float64 {
 		sum float64
 	)
 
-	for _, lp := range site.loadpoints {
+	for _, lp := range site.activeLoadpoints() {
 		wg.Go(func() {
 			power := lp.UpdateChargePowerAndCurrents()
 			site.prioritizer.UpdateChargePowerFlexibility(lp, rates)
@@ -1085,7 +1151,7 @@ func (site *Site) reservedPVPower(lp updater) float64 {
 	prio := lp.EffectivePriority()
 
 	var reserved float64
-	for _, other := range site.loadpoints {
+	for _, other := range site.activeLoadpoints() {
 		if other == lp {
 			continue
 		}
@@ -1185,7 +1251,7 @@ func (site *Site) update(lp updater) {
 			}
 
 			lp.Update(
-				sitePower, max(0, site.battery.Power), consumption, feedin, batteryBuffered, batteryStart,
+				sitePower, site.battery.Power, consumption, feedin, batteryBuffered, batteryStart,
 				greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
 				hems.Dimmed(site.hems),
 			)
@@ -1250,6 +1316,7 @@ func (site *Site) prepare() {
 	site.publish(keys.PriorityStrategy, site.GetPriorityStrategy())
 	site.publish(keys.PriorityBasis, site.GetPriorityBasis())
 	site.publish(keys.PriorityHysteresis, site.GetPriorityHysteresis())
+	site.publish(keys.GridExportLimit, site.GetGridExportLimit())
 	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))
 	site.publish(keys.SmartFeedInPriorityAvailable, site.isDynamicTariff(api.TariffUsageFeedIn))
 
@@ -1264,6 +1331,21 @@ func (site *Site) prepare() {
 	site.publishTariffs(0, 0)
 	vehicle.Publish = site.publishVehicles
 	vehicle.ClearPlanLocks = site.clearPlanLocks
+}
+
+// pushEvent queues the event in the value stream. The cache attaches its state
+// when the event reaches its position, so the message renders exactly the
+// values published before the event was raised.
+func (site *Site) pushEvent(ev messenger.Event) {
+	pushChan := site.pushChan
+	if pushChan == nil {
+		return
+	}
+
+	site.valueChan <- util.Param{Val: util.Snapshot(func(state []util.Param) {
+		ev.State = state
+		pushChan <- ev
+	})}
 }
 
 // Prepare attaches communication channels to site and loadpoints
@@ -1292,6 +1374,21 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 	lpDevices := config.Loadpoints().Devices()
 
 	for id, lp := range site.loadpoints {
+		// publish name on the loadpoint's behalf — it doesn't know its own
+		if id < len(lpDevices) {
+			site.valueChan <- util.Param{Loadpoint: &id, Key: keys.Name, Val: lpDevices[id].Config().Name}
+		}
+
+		// disabled loadpoint- publish minimal placeholder to keep indexes stable
+		if lp == nil {
+			if id < len(lpDevices) {
+				title, _ := lpDevices[id].Config().Other["title"].(string)
+				site.valueChan <- util.Param{Loadpoint: &id, Key: keys.Title, Val: title}
+			}
+			site.valueChan <- util.Param{Loadpoint: &id, Key: keys.Disabled, Val: true}
+			continue
+		}
+
 		lpUIChan := make(chan util.Param)
 		lpPushChan := make(chan messenger.Event)
 
@@ -1304,15 +1401,10 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 					site.valueChan <- param
 				case ev := <-lpPushChan:
 					ev.Loadpoint = &id
-					pushChan <- ev
+					site.pushEvent(ev)
 				}
 			}
 		}(id)
-
-		// publish name on the loadpoint's behalf — it doesn't know its own
-		if id < len(lpDevices) {
-			site.valueChan <- util.Param{Loadpoint: &id, Key: keys.Name, Val: lpDevices[id].Config().Name}
-		}
 
 		lp.Prepare(site, lpUIChan, lpPushChan, site.lpUpdateChan)
 	}
@@ -1321,15 +1413,16 @@ func (site *Site) Prepare(valueChan chan<- util.Param, pushChan chan<- messenger
 // loopLoadpoints keeps iterating across loadpoints sending the next to the given channel
 func (site *Site) loopLoadpoints(next chan<- updater) {
 	var logOnce sync.Once
+	active := site.activeLoadpoints()
 
 	for {
-		if len(site.loadpoints) == 0 {
+		if len(active) == 0 {
 			logOnce.Do(func() {
 				site.log.INFO.Println("no loadpoints configured, running in meter-only mode")
 			})
 			next <- nil
 		} else {
-			for _, lp := range site.loadpoints {
+			for _, lp := range active {
 				next <- lp
 			}
 		}

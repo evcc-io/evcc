@@ -1,6 +1,7 @@
 package eebus
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -40,7 +41,9 @@ func newTestEEBus(t *testing.T) *EEBus {
 
 	failsafeProduction := testFailsafeProduction
 	return &EEBus{
+		ctx:                      t.Context(),
 		log:                      util.NewLogger("test"),
+		interval:                 time.Millisecond,
 		site:                     &stubSite{},
 		Connector:                eebus.NewConnector(),
 		heartbeat:                util.NewValue[struct{}](time.Hour),
@@ -103,7 +106,7 @@ func TestRun_HeartbeatLost_EntersFailsafe(t *testing.T) {
 // unprotected until heartbeat returned.
 func TestRun_FailsafeStaysOnMissingHeartbeat(t *testing.T) {
 	c := newTestEEBus(t)
-	c.status = StatusFailsafe
+	c.setStatus(StatusFailsafe)
 	// statusUpdated set in the past beyond failsafeDuration to verify we do not
 	// exit failsafe based on the duration alone.
 	c.statusUpdated = time.Now().Add(-2 * testFailsafeDuration)
@@ -114,7 +117,7 @@ func TestRun_FailsafeStaysOnMissingHeartbeat(t *testing.T) {
 }
 
 // TestRun_HeartbeatReturned_AppliesFreshLimit covers LPC-918/919/920: when
-// heartbeat is restored and an EG limit is pending, evcc must leave failsafe
+// heartbeat is restored and the EG has written a limit, evcc must leave failsafe
 // immediately and apply the freshly received limit. The previous code waited
 // for failsafeDuration to elapse and then dropped to a zero limit, ignoring
 // the fresh value.
@@ -122,10 +125,10 @@ func TestRun_HeartbeatReturned_AppliesFreshLimit(t *testing.T) {
 	const freshLimit = 3000.0
 
 	c := newTestEEBus(t)
-	c.status = StatusFailsafe
-	c.statusUpdated = time.Now() // well within failsafeDuration
+	c.setStatus(StatusFailsafe)
 	c.heartbeat.Set(struct{}{})
 	c.consumptionLimit = ucapi.LoadLimit{Value: freshLimit, IsActive: true}
+	c.limitReceived = time.Now()
 
 	require.NoError(t, c.run())
 	assert.Equal(t, StatusNormal, c.status)
@@ -134,19 +137,67 @@ func TestRun_HeartbeatReturned_AppliesFreshLimit(t *testing.T) {
 	assertProductionLimit(t, c, false)
 }
 
-// TestRun_HeartbeatReturned_NoFreshLimit covers the LPC-918 release case:
-// heartbeat restored but EG has no active limit pending -> exit to normal,
-// no limit applied.
-func TestRun_HeartbeatReturned_NoFreshLimit(t *testing.T) {
+// TestRun_HeartbeatReturned_NoLimitWrite covers LPC-916/LPC-921: a returning heartbeat
+// alone does not end failsafe - without a following limit write it is kept for 120s.
+func TestRun_HeartbeatReturned_NoLimitWrite(t *testing.T) {
 	c := newTestEEBus(t)
-	c.status = StatusFailsafe
+
+	// heartbeat missing -> failsafe
+	require.NoError(t, c.run())
+	require.Equal(t, StatusFailsafe, c.status)
+
+	// heartbeat back, but the EG has not stated a limit
 	c.heartbeat.Set(struct{}{})
-	c.consumptionLimit = ucapi.LoadLimit{IsActive: false}
+
+	require.NoError(t, c.run())
+	assert.Equal(t, StatusFailsafe, c.status, "heartbeat without a following limit must not end failsafe")
+	assertConsumptionLimit(t, c, testFailsafeConsumption)
+
+	// LPC-921: no limit write within 120s -> unlimited
+	c.heartbeatReturned = time.Now().Add(-2 * failsafeReleaseTimeout)
 
 	require.NoError(t, c.run())
 	assert.Equal(t, StatusNormal, c.status)
 	assertConsumptionLimit(t, c, 0)
 	assertProductionLimit(t, c, false)
+}
+
+// TestRun_StartsInFailsafe covers LPC-TS-017: with no Energy Guard heard from yet the
+// CS starts out limited to the failsafe limit and leaves once the EG states one.
+func TestRun_StartsInFailsafe(t *testing.T) {
+	c := newTestEEBus(t) // no heartbeat seeded, like a fresh NewEEBus
+
+	require.NoError(t, c.run())
+	require.Equal(t, StatusFailsafe, c.status)
+	assertConsumptionLimit(t, c, testFailsafeConsumption)
+	assertProductionLimit(t, c, true)
+
+	// the EG shows up and states a limit
+	c.heartbeat.Set(struct{}{})
+	c.consumptionLimit = ucapi.LoadLimit{Value: 3000, IsActive: true}
+	c.limitReceived = time.Now()
+
+	require.NoError(t, c.run())
+	assert.Equal(t, StatusNormal, c.status)
+	assertConsumptionLimit(t, c, 3000)
+}
+
+// TestRun_FailsafeReentry covers LPC-921 on a second failsafe cycle: a heartbeat
+// that returned during an earlier cycle must not end the new one.
+func TestRun_FailsafeReentry(t *testing.T) {
+	c := newTestEEBus(t)
+	c.heartbeatReturned = time.Now().Add(-2 * failsafeReleaseTimeout) // stale, earlier cycle
+
+	// heartbeat missing -> failsafe
+	require.NoError(t, c.run())
+	require.Equal(t, StatusFailsafe, c.status)
+
+	// heartbeat back without a limit write -> the 120s window restarts
+	c.heartbeat.Set(struct{}{})
+
+	require.NoError(t, c.run())
+	assert.Equal(t, StatusFailsafe, c.status, "stale heartbeat return must not end the new cycle")
+	assertConsumptionLimit(t, c, testFailsafeConsumption)
 }
 
 // TestRun_ProductionLimitReleasedEarly verifies that an active production limit
@@ -210,6 +261,39 @@ func TestRun_ConsumptionLimitReleasedEarly(t *testing.T) {
 	assertConsumptionLimit(t, c, 0)
 }
 
+// TestRun_LimitWithoutDuration covers APCL_DUR_02: a limit stated without a duration
+// does not expire - eebus-go reports Duration 0 when the EG sends no time period.
+func TestRun_LimitWithoutDuration(t *testing.T) {
+	c := newTestEEBus(t)
+	c.heartbeat.Set(struct{}{})
+
+	c.consumptionLimit = ucapi.LoadLimit{Value: 3000, IsActive: true}
+	c.productionLimit = ucapi.LoadLimit{Value: -1000, IsActive: true}
+
+	require.NoError(t, c.run())
+	assertConsumptionLimit(t, c, 3000)
+	assertProductionLimit(t, c, true)
+
+	// still applied on the following tick
+	require.NoError(t, c.run())
+	assertConsumptionLimit(t, c, 3000)
+	assertProductionLimit(t, c, true)
+}
+
+// TestMaxProductionPower verifies the api.HEMS export cap is a positive wattage,
+// while LPP states its limits as negative watts.
+func TestMaxProductionPower(t *testing.T) {
+	c := newTestEEBus(t)
+	c.heartbeat.Set(struct{}{})
+	c.productionLimit = ucapi.LoadLimit{Value: -1000, IsActive: true}
+
+	require.NoError(t, c.run())
+
+	power := c.MaxProductionPower()
+	require.NotNil(t, power)
+	assert.Equal(t, 1000.0, *power)
+}
+
 // TestEEBusEdgeTriggered verifies that applying a limit (passthrough) only
 // happens on a genuine transition, not on every steady-state run().
 func TestEEBusEdgeTriggered(t *testing.T) {
@@ -226,4 +310,28 @@ func TestEEBusEdgeTriggered(t *testing.T) {
 
 	require.Equal(t, 1, calls, "passthrough must fire once on the edge, not every tick")
 	assertConsumptionLimit(t, c, 3000)
+}
+
+// TestRunAborts verifies the run loop terminates when the device context is
+// cancelled instead of ticking for the lifetime of the process.
+func TestRunAborts(t *testing.T) {
+	c := newTestEEBus(t)
+	c.interval = time.Hour // only the context can end the loop
+
+	ctx, cancel := context.WithCancel(t.Context())
+	c.ctx = ctx
+
+	done := make(chan struct{})
+	go func() {
+		c.Run()
+		close(done)
+	}()
+
+	cancel()
+
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("Run did not return on cancelled context")
+	}
 }

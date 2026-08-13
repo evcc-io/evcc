@@ -274,6 +274,8 @@ func (t *Template) RenderProxyWithValues(values map[string]any, lang string) ([]
 				t.Params[index].Value = p.yamlQuote(v)
 			case int:
 				t.Params[index].Value = strconv.Itoa(v)
+			case float64, float32:
+				t.Params[index].Value = formatValue(v)
 			}
 		}
 	}
@@ -306,6 +308,20 @@ func (t *Template) RenderProxyWithValues(values map[string]any, lang string) ([]
 	err = tmpl.Execute(out, data)
 
 	return bytes.TrimSpace(out.Bytes()), err
+}
+
+// formatValue renders a parameter value for yaml. JSON numbers arrive as float64,
+// which %v would render in exponential notation for large values, e.g. a ten digit
+// serial number. Those are no longer parseable as integers.
+func formatValue(val any) string {
+	switch v := val.(type) {
+	case float64:
+		return strconv.FormatFloat(v, 'f', -1, 64)
+	case float32:
+		return strconv.FormatFloat(float64(v), 'f', -1, 32)
+	default:
+		return fmt.Sprintf("%v", val)
+	}
 }
 
 // RenderResult renders the result template to instantiate the proxy
@@ -383,7 +399,7 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 				// prevent rendering nil interfaces as "<nil>" string
 				var s string
 				if val != nil {
-					s = p.yamlQuote(fmt.Sprintf("%v", val))
+					s = p.yamlQuote(formatValue(val))
 				}
 
 				// validate required fields from yaml

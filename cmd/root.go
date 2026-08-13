@@ -49,7 +49,7 @@ var (
 	log           = util.NewLogger("main")
 	cfgFile       string
 	cfgDatabase   string
-	customCssFile string
+	customization server.Customization
 	ignoreEmpty   = ""                                      // ignore empty keys
 	ignoreLogs    = []string{"log"}                         // ignore log messages, including warn/error
 	ignoreMqtt    = []string{"log", "auth", "releaseNotes"} // excessive size may crash certain brokers
@@ -104,7 +104,15 @@ func init() {
 
 	rootCmd.Flags().Bool(flagDisableAuth, false, flagDisableAuthDescription)
 	rootCmd.Flags().Bool(flagDemoMode, false, flagDemoModeDescription)
-	rootCmd.Flags().StringVar(&customCssFile, flagCustomCss, "", flagCustomCssDescription)
+
+	// UI customization, flags default to environment variables
+	rootCmd.Flags().StringVar(&customization.Css, flagCustomCss, os.Getenv("EVCC_CUSTOM_CSS"), flagCustomCssDescription)
+	rootCmd.Flags().StringVar(&customization.LogoLight, flagCustomLogoLight, os.Getenv("EVCC_CUSTOM_LOGO_LIGHT"), flagCustomLogoLightDescription)
+	rootCmd.Flags().StringVar(&customization.LogoDark, flagCustomLogoDark, os.Getenv("EVCC_CUSTOM_LOGO_DARK"), flagCustomLogoDarkDescription)
+	rootCmd.Flags().StringVar(&customization.Brand, flagCustomBrand, os.Getenv("EVCC_CUSTOM_BRAND"), flagCustomBrandDescription)
+	rootCmd.Flags().StringVar(&customization.Website, flagCustomWebsite, os.Getenv("EVCC_CUSTOM_WEBSITE"), flagCustomWebsiteDescription)
+	rootCmd.Flags().StringVar(&customization.Email, flagCustomEmail, os.Getenv("EVCC_CUSTOM_EMAIL"), flagCustomEmailDescription)
+	rootCmd.Flags().StringVar(&customization.Phone, flagCustomPhone, os.Getenv("EVCC_CUSTOM_PHONE"), flagCustomPhoneDescription)
 }
 
 // initConfig reads in config file and ENV variables if set
@@ -242,7 +250,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// create web server
 	socketHub := server.NewSocketHub()
-	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub, customCssFile)
+	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub, customization)
 
 	// start serving in background, watch for “routine‐only” errors
 	go func() {
@@ -399,7 +407,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// setup messaging
 	var pushChan chan messenger.Event
 	if err == nil {
-		pushChan, err = configureMessengers(&conf.Messaging, &conf.MessagingEvents, site.Vehicles(), valueChan, cache)
+		pushChan, err = configureMessengers(&conf.Messaging, &conf.MessagingEvents, site.Vehicles())
 		err = wrapErrorWithClass(ClassMessenger, err)
 	}
 

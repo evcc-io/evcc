@@ -54,6 +54,9 @@ const (
 	PriorityBasis      = "priorityBasis"      // priority strategy basis (percent, energy)
 	PriorityHysteresis = "priorityHysteresis" // priority sub-ordering deadband (soc-% or kWh per basis, 0 = off)
 
+	// grid settings
+	GridExportLimit = "gridExportLimit"
+
 	// forecast settings
 	SolarAdjusted = "solarAdjusted"
 

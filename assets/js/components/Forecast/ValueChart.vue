@@ -22,7 +22,7 @@ import {
 import colors from "@/colors";
 import formatter from "@/mixins/formatter";
 import chartMixin from "./chartMixin";
-import type { ForecastSlot } from "./types";
+import type { UiForecastSlot } from "@/types/evcc";
 
 export type ValueChartType = "co2" | "temperature";
 
@@ -31,13 +31,13 @@ export default defineComponent({
 	mixins: [formatter, chartMixin],
 	props: {
 		type: { type: String as PropType<ValueChartType>, required: true },
-		rates: { type: Array as PropType<ForecastSlot[]>, required: true },
+		rates: { type: Array as PropType<UiForecastSlot[]>, required: true },
 	},
 	computed: {
 		color(): string {
 			return (this.type === "co2" ? colors.co2 : colors.temperature) || "";
 		},
-		slots(): ForecastSlot[] {
+		slots(): UiForecastSlot[] {
 			return filterForecastSlots(this.rates, this.startDate, this.endDate);
 		},
 		yMin(): number {
@@ -46,7 +46,7 @@ export default defineComponent({
 			return Math.min(0, Math.floor(Math.min(...this.slots.map((s) => s.value))));
 		},
 		markPoints(): {
-			coord: [string, number];
+			coord: [number, number];
 			value: string;
 			label?: Record<string, unknown>;
 		}[] {
@@ -55,7 +55,7 @@ export default defineComponent({
 			const minIdx = minSlotIndex(slots);
 			const maxIdx = maxSlotIndex(slots);
 			const points: {
-				coord: [string, number];
+				coord: [number, number];
 				value: string;
 				label?: Record<string, unknown>;
 			}[] = [];
@@ -77,7 +77,7 @@ export default defineComponent({
 		chartOption(): Record<string, unknown> {
 			const color = this.color;
 
-			// eslint-disable-next-line @typescript-eslint/no-this-alias
+			// oxlint-disable-next-line typescript/no-this-alias
 			const vThis = this;
 			return {
 				animationDuration: 0,

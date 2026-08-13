@@ -489,6 +489,7 @@ params:
       en: Battery storage unit index
       de: Nummer des Batteriespeichers
   - name: delay
+    type: duration
     description:
       en: Delay
       de: Verzögerung

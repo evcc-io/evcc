@@ -1,7 +1,8 @@
 import * as echarts from "echarts/core";
 import colors from "@/colors";
+import { attachTouchTooltipGate } from "@/utils/swipe";
 import escapeHtml from "@/utils/escapeHtml";
-import type { ForecastSlot } from "./types";
+import type { UiForecastSlot } from "@/types/evcc";
 import { BarChart, LineChart } from "echarts/charts";
 import {
   GridComponent,
@@ -31,7 +32,7 @@ export const FONT_FAMILY = "Montserrat, sans-serif";
 
 export function markPointLabel(
   color: string,
-  data: { coord: [string, number]; value: string; label?: { offset?: [number, number] } }[],
+  data: { coord: [number, number]; value: string; label?: { offset?: [number, number] } }[],
   startDate?: Date,
   endDate?: Date
 ) {
@@ -84,6 +85,8 @@ export function tooltipStyle(
 ) {
   return {
     confine: true,
+    // re-show after hide would otherwise slide in from the stale position
+    transitionDuration: 0,
     backgroundColor: color,
     borderColor: color,
     borderWidth: 0,
@@ -115,6 +118,18 @@ export function tooltipStyle(
       color: colors.background,
     },
   };
+}
+
+// touch tooltips: show on dwell, follow the finger, hide when it lifts; mouse hover unchanged
+export function registerTouchTooltip(
+  chart: Pick<echarts.ECharts, "dispatchAction">,
+  el: HTMLElement,
+  onReset?: () => void
+) {
+  attachTouchTooltipGate(el, () => {
+    chart.dispatchAction({ type: "hideTip" });
+    onReset?.();
+  });
 }
 
 export interface TooltipRow {
@@ -249,24 +264,24 @@ export function forecastYAxis(overrides: Record<string, unknown> = {}) {
   };
 }
 
-export function clampStart(ts: string, startDate: Date): string {
-  return new Date(ts) < startDate ? startDate.toISOString() : ts;
+export function clampStart(ts: number, startDate: Date): number {
+  return Math.max(ts, startDate.getTime());
 }
 
 export function filterForecastSlots(
-  slots: ForecastSlot[],
+  slots: UiForecastSlot[],
   startDate: Date,
   endDate: Date
-): ForecastSlot[] {
+): UiForecastSlot[] {
   if (!Array.isArray(slots)) return [];
   return slots.filter((s) => new Date(s.end) > startDate && new Date(s.start) <= endDate);
 }
 
-export function minSlotIndex(slots: ForecastSlot[]): number {
+export function minSlotIndex(slots: UiForecastSlot[]): number {
   return slots.reduce((min, s, i) => (s.value < (slots[min]?.value ?? Infinity) ? i : min), 0);
 }
 
-export function maxSlotIndex(slots: ForecastSlot[]): number {
+export function maxSlotIndex(slots: UiForecastSlot[]): number {
   return slots.reduce((max, s, i) => (s.value > (slots[max]?.value || 0) ? i : max), 0);
 }
 

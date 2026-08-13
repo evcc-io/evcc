@@ -380,7 +380,11 @@
       "noEvents": "Vēl nav reģistrēts neviens notikums.",
       "recordedEvents": "Reģistrētie notikumi",
       "template": "Integrācija",
-      "title": "Ārējais ierobežojums"
+      "title": "Ārējais ierobežojums",
+      "type": {
+        "custom": "Lietotāja definēta integrācija",
+        "relay": "Lietotāja definēta integrācija (relejs)"
+      }
     },
     "icon": {
       "change": "mainīt",

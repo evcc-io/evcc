@@ -1,6 +1,8 @@
 package eebus
 
 import (
+	"time"
+
 	eebusapi "github.com/enbility/eebus-go/api"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/enbility/eebus-go/usecases/cs/lpc"
@@ -128,6 +130,7 @@ func (c *EEBus) updateConsumptionLimit() {
 	defer c.mux.Unlock()
 
 	c.consumptionLimit = limit
+	c.limitReceived = time.Now()
 }
 
 func (c *EEBus) updateProductionLimit() {
@@ -141,6 +144,7 @@ func (c *EEBus) updateProductionLimit() {
 	defer c.mux.Unlock()
 
 	c.productionLimit = limit
+	c.limitReceived = time.Now()
 }
 
 func (c *EEBus) consumptionWriteApprovalRequired() {
@@ -155,6 +159,7 @@ func (c *EEBus) consumptionWriteApprovalRequired() {
 
 		c.mux.Lock()
 		c.consumptionLimit = limit
+		c.limitReceived = time.Now()
 		c.mux.Unlock()
 	}
 }
@@ -170,6 +175,7 @@ func (c *EEBus) productionWriteApprovalRequired() {
 		c.cs.CsLPPInterface.ApproveOrDenyProductionLimit(msg, true, "")
 		c.mux.Lock()
 		c.productionLimit = limit
+		c.limitReceived = time.Now()
 		c.mux.Unlock()
 	}
 }

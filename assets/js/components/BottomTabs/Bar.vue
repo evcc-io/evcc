@@ -36,8 +36,8 @@
 				:auth-disabled="authDisabled"
 				:evopt="evopt"
 				:installed="installed"
-				:commit="commit"
 				:available-version="availableVersion"
+				:custom-brand="customBrand"
 			/>
 		</div>
 	</nav>
@@ -51,15 +51,7 @@ import BatteryIcon from "../Energyflow/BatteryIcon.vue";
 import Item from "./Item.vue";
 import MoreItem from "./MoreItem.vue";
 import { defineComponent, type PropType } from "vue";
-import type {
-	FatalError,
-	Forecast,
-	Sponsor,
-	EvOpt,
-	AuthProviders,
-	Battery,
-	Vehicle,
-} from "@/types/evcc";
+import type { FatalError, Sponsor, EvOpt, AuthProviders, Battery, Vehicle } from "@/types/evcc";
 
 export default defineComponent({
 	name: "BottomTabBar",
@@ -74,7 +66,6 @@ export default defineComponent({
 		battery: { type: Object as PropType<Battery> },
 		batteryGridChargeActive: Boolean,
 		batteryMode: { type: String as PropType<string> },
-		forecast: { type: Object as PropType<Forecast> },
 		vehicles: { type: Object as PropType<Record<string, Vehicle>>, default: () => ({}) },
 		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
@@ -85,8 +76,8 @@ export default defineComponent({
 		startupCompleted: Boolean,
 		evopt: { type: Object as PropType<EvOpt>, required: false },
 		installed: String,
-		commit: String,
 		availableVersion: String,
+		customBrand: String,
 	},
 	computed: {
 		hidden() {

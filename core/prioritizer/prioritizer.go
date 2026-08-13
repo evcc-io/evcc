@@ -3,6 +3,7 @@ package prioritizer
 import (
 	"fmt"
 	"math"
+	"strings"
 	"sync"
 
 	"github.com/evcc-io/evcc/api"
@@ -58,19 +59,19 @@ func (p *Prioritizer) GetChargePowerFlexibility(lp loadpoint.API) float64 {
 
 	var (
 		reduceBy float64
-		msg      string
+		msg      strings.Builder
 	)
 
 	for other, power := range p.demand {
 		otherScore := other.EffectivePriorityScore(strategy, basis)
 		if score-otherScore > band && power > 0 {
 			reduceBy += power
-			msg += fmt.Sprintf("%.0fW from %s at prio %.2f, ", power, other.GetTitle(), otherScore)
+			msg.WriteString(fmt.Sprintf("%.0fW from %s at prio %.2f, ", power, other.GetTitle(), otherScore))
 		}
 	}
 
 	if p.log != nil && reduceBy > 0 {
-		p.log.DEBUG.Printf("lp %s at prio %.2f gets additional %stotal %.0fW\n", lp.GetTitle(), score, msg, reduceBy)
+		p.log.DEBUG.Printf("lp %s at prio %.2f gets additional %stotal %.0fW\n", lp.GetTitle(), score, msg.String(), reduceBy)
 	}
 
 	return reduceBy

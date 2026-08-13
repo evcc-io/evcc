@@ -1,7 +1,10 @@
 # STEP 1 build ui
 FROM --platform=$BUILDPLATFORM node:26-alpine AS node
 
-RUN apk update && apk add --no-cache make
+RUN apk update && apk add --no-cache make curl bash && curl -fsSL https://vite.plus | bash
+
+# the installer only wires vp into interactive shell rc files, which RUN steps don't source
+ENV PATH="/root/.vite-plus/bin:${PATH}"
 
 WORKDIR /build
 
@@ -45,14 +48,13 @@ RUN --mount=type=cache,target=${GOMODCACHE} go mod download
 # install tools
 COPY Makefile .
 COPY cmd/implement/ cmd/implement/
-COPY cmd/openapi/ cmd/openapi/
 COPY api/ api/
-RUN --mount=type=cache,target=${GOMODCACHE} make install
+RUN --mount=type=cache,target=${GOMODCACHE} --mount=type=cache,target=${GOCACHE} make install
 
 # prepare
 COPY . .
 RUN make patch-asn1
-RUN --mount=type=cache,target=${GOMODCACHE} make assets
+RUN --mount=type=cache,target=${GOMODCACHE} --mount=type=cache,target=${GOCACHE} make assets
 
 # copy ui
 COPY --from=node /build/dist /build/dist

@@ -65,10 +65,6 @@ func NewAccumulator(opt ...func(*Accumulator)) *Accumulator {
 	return m
 }
 
-func (m *Accumulator) Updated() time.Time {
-	return m.updated
-}
-
 func (m *Accumulator) String() string {
 	b := new(bytes.Buffer)
 	fmt.Fprintf(b, "Accumulated: %.3fkWh energy, %.3fkWh return energy, updated: %v", m.Energy, m.ReturnEnergy, m.updated.Truncate(time.Second))
