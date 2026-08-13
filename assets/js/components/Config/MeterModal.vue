@@ -223,6 +223,11 @@ export default defineComponent({
 			}
 		},
 		selectType(type: string) {
+			// curtailment is a device class of its own
+			if (type === "curtailer") {
+				replaceModal("curtailer");
+				return;
+			}
 			replaceModal("meter", { id: this.id, type: type as MeterType });
 		},
 		provideTemplateOptions(products: Product[]): TemplateGroup[] {

@@ -59,6 +59,7 @@ test.describe("reset", async () => {
     await page.getByTestId("add-grid").click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
+    await meterModal.getByRole("button", { name: "Add grid meter" }).click();
     await meterModal.getByLabel("Manufacturer").selectOption("Demo meter");
     await meterModal.getByLabel("Power").fill("2000");
     await meterModal.getByRole("button", { name: "Save" }).click();
@@ -131,6 +132,7 @@ test.describe("backup and restore", async () => {
     await page.getByTestId("add-grid").click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
+    await meterModal.getByRole("button", { name: "Add grid meter" }).click();
     await meterModal.getByLabel("Manufacturer").selectOption("Demo meter");
     await meterModal.getByLabel("Power").fill("2000");
     await meterModal.getByRole("button", { name: "Save" }).click();

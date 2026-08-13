@@ -127,12 +127,6 @@
 						@edit="(type, id) => openModal('meter', { type, id })"
 						@enable="handleDisable('meter', gridMeter.id, false)"
 					/>
-					<NewDeviceButton
-						v-else
-						:title="$t('config.main.addGrid')"
-						data-testid="add-grid"
-						@click="openModal('meter', { type: 'grid' })"
-					/>
 					<DeviceCard
 						v-for="curtailer in curtailerDevices"
 						:id="`curtailer_${curtailer.name}`"
@@ -152,9 +146,9 @@
 						</template>
 					</DeviceCard>
 					<NewDeviceButton
-						:title="$t('config.main.addCurtailer')"
-						data-testid="add-curtailer"
-						@click="openModal('curtailer')"
+						:title="$t(gridMeter ? 'config.main.addCurtailer' : 'config.main.addGrid')"
+						data-testid="add-grid"
+						@click="addGridDevice"
 					/>
 				</div>
 				<h2 class="my-4 mt-5">{{ $t("config.section.meter") }}</h2>
@@ -1308,6 +1302,14 @@ export default defineComponent({
 		async messengerChanged() {
 			this.loadMessengers();
 			this.loadDirty();
+		},
+		addGridDevice() {
+			// only one grid meter is possible, offer the choice while none exists
+			if (this.gridMeter) {
+				openModal("curtailer");
+			} else {
+				openModal("meter", { choices: ["grid", "curtailer"] });
+			}
 		},
 		curtailerTitle(curtailer: ConfigCurtailer): string {
 			return curtailer.config?.template || this.$t("config.curtailer.title");

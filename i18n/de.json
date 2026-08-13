@@ -546,7 +546,7 @@
       "addAdditional": "Zusätzlichen Zähler hinzufügen",
       "addConsumer": "Verbraucher hinzufügen",
       "addCurtailer": "Einspeisebegrenzung hinzufügen",
-      "addGrid": "Netzzähler hinzufügen",
+      "addGrid": "Netzzähler oder Einspeisebegrenzung hinzufügen",
       "addLoadpoint": "Ladepunkt oder Heizung hinzufügen",
       "addPvBattery": "PV oder Speicher hinzufügen",
       "addTariffs": "Tarife hinzufügen",
@@ -646,6 +646,8 @@
         "aux": "Selbstregelnden Verbraucher hinzufügen",
         "battery": "Hausbatterie hinzufügen",
         "consumer": "Regulären Verbraucher hinzufügen",
+        "curtailer": "Einspeisebegrenzung hinzufügen",
+        "grid": "Netzzähler hinzufügen",
         "pv": "PV-Anlage hinzufügen"
       },
       "save": "Speichern",

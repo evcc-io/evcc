@@ -546,7 +546,7 @@
       "addAdditional": "Add additional meter",
       "addConsumer": "Add consumer",
       "addCurtailer": "Add curtailment device",
-      "addGrid": "Add grid meter",
+      "addGrid": "Add grid meter or grid curtailment",
       "addLoadpoint": "Add charging point or heater",
       "addPvBattery": "Add solar or battery",
       "addTariffs": "Add tariffs",
@@ -646,6 +646,8 @@
         "aux": "Add self-regulating consumer",
         "battery": "Add battery meter",
         "consumer": "Add regular consumer",
+        "curtailer": "Add grid curtailment",
+        "grid": "Add grid meter",
         "pv": "Add solar meter"
       },
       "save": "Save",
