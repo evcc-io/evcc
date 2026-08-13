@@ -502,6 +502,8 @@
       "solarBehaviorLabel": "Solar",
       "solarModeCustom": "custom",
       "solarModeMaximum": "maximum solar",
+      "solarShareNote": "The solar share slider in the user settings is disabled while watt thresholds are set. {0} and save to enable it.",
+      "solarShareReset": "Remove thresholds",
       "temperatureRangeHelp": "Display range for the temperature bar. Does not affect control.",
       "temperatureRangeTitle": "Temperature range",
       "thresholdDisableDelayLabel": "Disable delay",
@@ -1461,10 +1463,14 @@
       },
       "smartCostCheap": "Cheap Grid Charging",
       "smartCostClean": "Clean Grid Charging",
+      "solar": "Surplus Charging",
       "solarShare": {
-        "description": "Share of the minimum charging power that must come from solar. 100% starts on full surplus only, lower values accept grid power. Replaces the enable/disable thresholds while set.",
-        "label": "Solar share",
-        "off": "off"
+        "description": "At least {share} of the minimum charging power must come from solar.",
+        "descriptionZero": "Charging starts as soon as some surplus is available.",
+        "label": "Solar Share",
+        "thresholdsHint": "Power-based charging thresholds are configured. Remove them to use this slider.",
+        "thresholdsHintYaml": "Power-based charging thresholds are configured. Remove the enable/disable thresholds from this loadpoint in your evcc.yaml to use this slider.",
+        "thresholdsLink": "Edit configuration"
       },
       "title": "Settings {0}",
       "vehicle": "Vehicle"

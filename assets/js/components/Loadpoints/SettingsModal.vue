@@ -31,6 +31,49 @@
 				:tariff="forecast?.feedin"
 				class="mt-2 mb-4"
 			/>
+			<h6>
+				{{ $t("main.loadpointSettings.solar") }}
+			</h6>
+			<div class="mb-3 row">
+				<label :for="formId('solarshare')" class="col-sm-4 col-form-label pt-0 pt-sm-2">
+					{{ $t("main.loadpointSettings.solarShare.label") }}
+				</label>
+				<div
+					class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center gap-2"
+					:class="{ 'opacity-50': thresholdsConfigured }"
+				>
+					<shopicon-regular-powersupply
+						class="solar-share-icon"
+					></shopicon-regular-powersupply>
+					<input
+						:id="formId('solarshare')"
+						v-model.number="selectedSolarShare"
+						type="range"
+						class="form-range"
+						min="0"
+						max="100"
+						step="10"
+						:disabled="thresholdsConfigured"
+						@change="setSolarShare"
+					/>
+					<shopicon-regular-sun class="solar-share-icon"></shopicon-regular-sun>
+				</div>
+				<div class="col-sm-8 offset-sm-4 mt-1">
+					<small class="text-muted">
+						<template v-if="thresholdsConfigured && loadpointConfigRoute">
+							{{ $t("main.loadpointSettings.solarShare.thresholdsHint") }}
+							<router-link :to="loadpointConfigRoute" @click="closeModal">
+								{{ $t("main.loadpointSettings.solarShare.thresholdsLink") }}
+							</router-link>
+						</template>
+						<template v-else-if="thresholdsConfigured">
+							{{ $t("main.loadpointSettings.solarShare.thresholdsHintYaml") }}
+						</template>
+						<template v-else>{{ solarShareDescription }}</template>
+					</small>
+				</div>
+			</div>
+
 			<LoadpointSettingsBatteryBoost
 				v-if="batteryBoostAvailable"
 				v-bind="batteryBoostProps"
@@ -67,32 +110,6 @@
 								selectedMinTemp ? fmtTemperature(selectedMinTemp) : "x °C",
 							])
 						}}
-					</small>
-				</div>
-			</div>
-			<div class="mb-3 row">
-				<label :for="formId('solarshare')" class="col-sm-4 col-form-label pt-0 pt-sm-2">
-					{{ $t("main.loadpointSettings.solarShare.label") }}
-				</label>
-				<div class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center">
-					<select
-						:id="formId('solarshare')"
-						v-model.number="selectedSolarShare"
-						class="form-select form-select-sm"
-						@change="setSolarShare"
-					>
-						<option
-							v-for="{ value, name } in solarShareOptions"
-							:key="value"
-							:value="value"
-						>
-							{{ name }}
-						</option>
-					</select>
-				</div>
-				<div class="col-sm-8 offset-sm-4 mt-1">
-					<small class="text-muted">
-						{{ $t("main.loadpointSettings.solarShare.description") }}
 					</small>
 				</div>
 			</div>
@@ -198,6 +215,8 @@ import SettingsBatteryBoost from "./SettingsBatteryBoost.vue";
 import { defineComponent, type PropType } from "vue";
 import { PHASES, CURRENCY, SMART_COST_TYPE, type UiForecast, type UiLoadpoint } from "@/types/evcc";
 import api from "@/api";
+import "@h2d2/shopicons/es/regular/powersupply";
+import "@h2d2/shopicons/es/regular/sun";
 
 const V = 230;
 
@@ -212,9 +231,6 @@ const insertSorted = (arr: number[], num: number) => {
 
 // TODO: add max physical current to loadpoint (config ui) and only allow user to select values in side that range (main ui, here)
 const MAX_CURRENT = 64;
-
-// sentinel for "no solar share configured" (legacy enable/disable thresholds apply)
-const SOLAR_SHARE_OFF = -1;
 
 const { AUTO, THREE_PHASES, ONE_PHASE } = PHASES;
 
@@ -245,7 +261,7 @@ export default defineComponent({
 			selectedMinCurrent: undefined as number | undefined,
 			selectedMinTemp: undefined as number | undefined,
 			selectedPhases: undefined as number | undefined,
-			selectedSolarShare: SOLAR_SHARE_OFF as number,
+			selectedSolarShare: 100,
 			isModalVisible: false,
 		};
 	},
@@ -328,20 +344,26 @@ export default defineComponent({
 			return this.batteryConfigured;
 		},
 		solarShare() {
-			return this.loadpoint?.solarShare ?? null;
+			return this.loadpoint?.solarShare ?? 1;
 		},
-		solarShareOptions() {
-			const values = range(100, 0, -10).reverse();
-			// ensure a configured value outside the 10% steps stays selectable
-			const current = this.solarSharePercent();
-			if (current !== SOLAR_SHARE_OFF && !values.includes(current)) {
-				values.push(current);
-				values.sort((a, b) => a - b);
+		thresholdsConfigured() {
+			return !!(this.loadpoint?.enableThreshold || this.loadpoint?.disableThreshold);
+		},
+		loadpointConfigRoute() {
+			// only db-configured loadpoints ("db:<id>") have a config modal
+			const name = this.loadpoint?.name;
+			if (!name?.startsWith("db:")) {
+				return null;
 			}
-			return [
-				{ value: SOLAR_SHARE_OFF, name: this.$t("main.loadpointSettings.solarShare.off") },
-				...values.map((value) => ({ value, name: this.fmtPercentage(value) })),
-			];
+			return { path: "/config", query: { loadpoint: name.slice(3) } };
+		},
+		solarShareDescription(): string {
+			if (this.selectedSolarShare === 0) {
+				return this.$t("main.loadpointSettings.solarShare.descriptionZero");
+			}
+			return this.$t("main.loadpointSettings.solarShare.description", {
+				share: this.fmtPercentage(this.selectedSolarShare),
+			});
 		},
 	},
 	watch: {
@@ -373,7 +395,7 @@ export default defineComponent({
 			modalRef?.open();
 		},
 		solarSharePercent() {
-			return this.solarShare === null ? SOLAR_SHARE_OFF : Math.round(this.solarShare * 100);
+			return Math.round(this.solarShare * 100);
 		},
 		apiPath(func: string) {
 			return "loadpoints/" + this.id + "/" + func;
@@ -397,11 +419,10 @@ export default defineComponent({
 			api.post(this.apiPath("phases") + "/" + this.selectedPhases);
 		},
 		setSolarShare() {
-			if (this.selectedSolarShare === SOLAR_SHARE_OFF) {
-				api.delete(this.apiPath("solarshare"));
-			} else {
-				api.post(this.apiPath("solarshare") + "/" + this.selectedSolarShare / 100);
-			}
+			api.post(this.apiPath("solarshare") + "/" + this.selectedSolarShare / 100);
+		},
+		closeModal() {
+			(this.$refs["modal"] as InstanceType<typeof GenericModal> | undefined)?.close();
 		},
 		setBatteryBoostLimit(limit: number) {
 			api.post(this.apiPath("batteryboostlimit") + "/" + limit);
@@ -435,5 +456,10 @@ export default defineComponent({
 
 .custom-select-inline {
 	display: inline-block !important;
+}
+
+.solar-share-icon {
+	width: 24px;
+	flex: 0 0 auto;
 }
 </style>

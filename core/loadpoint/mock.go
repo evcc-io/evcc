@@ -658,10 +658,10 @@ func (mr *MockAPIMockRecorder) GetSocConfig() *gomock.Call {
 }
 
 // GetSolarShare mocks base method.
-func (m *MockAPI) GetSolarShare() *float64 {
+func (m *MockAPI) GetSolarShare() float64 {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSolarShare")
-	ret0, _ := ret[0].(*float64)
+	ret0, _ := ret[0].(float64)
 	return ret0
 }
 
@@ -1096,7 +1096,7 @@ func (mr *MockAPIMockRecorder) SetSocConfig(soc any) *gomock.Call {
 }
 
 // SetSolarShare mocks base method.
-func (m *MockAPI) SetSolarShare(share *float64) {
+func (m *MockAPI) SetSolarShare(share float64) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetSolarShare", share)
 }

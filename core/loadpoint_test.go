@@ -169,6 +169,7 @@ func TestUpdatePowerZero(t *testing.T) {
 			minCurrent:  minA,
 			maxCurrent:  maxA,
 			phases:      1,
+			solarShare:  1,
 			status:      tc.status, // no status change
 		}
 
@@ -317,6 +318,7 @@ func TestPVHysteresis(t *testing.T) {
 				maxCurrent:     maxA,
 				phases:         phases,
 				measuredPhases: phases,
+				solarShare:     1,
 				Enable: loadpoint.ThresholdConfig{
 					Threshold: tc.enable,
 					Delay:     dt,
@@ -365,6 +367,7 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 		maxCurrent:     maxA,
 		phases:         phases,
 		measuredPhases: phases,
+		solarShare:     1,
 	}
 
 	// not connected, test PV mode logic  short-circuited
@@ -747,6 +750,7 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 			charger:     charger,
 			minCurrent:  minA,
 			maxCurrent:  maxA,
+			solarShare:  1,
 			Disable: loadpoint.ThresholdConfig{
 				Delay: dt,
 			},
@@ -883,16 +887,14 @@ func TestBatteryBoostHold(t *testing.T) {
 	assert.NotEqual(t, boostDisabled, lp.GetBatteryBoost(), "hold is active")
 }
 
-// TestPVSolarShareOverridesThresholds verifies the pv enable/disable points are
-// derived from solarShare and that the legacy threshold config is then ignored.
-func TestPVSolarShareOverridesThresholds(t *testing.T) {
+// TestPVSolarShare verifies the pv enable/disable points derived from solarShare
+// and that manually configured thresholds take precedence over the solar share.
+func TestPVSolarShare(t *testing.T) {
 	Voltage = 100
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	// legacy thresholds are deliberately hostile: on their own they would
-	// enable (sitePower <= 5000) and disable (sitePower >= -5000) in every case
-	newLp := func(share float64, enabled bool) *Loadpoint {
+	newLp := func(share float64, enabled bool, enableT, disableT float64) *Loadpoint {
 		lp := &Loadpoint{
 			log:            util.NewLogger("foo"),
 			clock:          clock.NewMock(),
@@ -901,30 +903,46 @@ func TestPVSolarShareOverridesThresholds(t *testing.T) {
 			maxCurrent:     maxA,
 			phases:         3,
 			measuredPhases: 3,
-			Enable:         loadpoint.ThresholdConfig{Threshold: 5000},
-			Disable:        loadpoint.ThresholdConfig{Threshold: -5000},
-			solarShare:     &share,
+			Enable:         loadpoint.ThresholdConfig{Threshold: enableT},
+			Disable:        loadpoint.ThresholdConfig{Threshold: disableT},
+			solarShare:     share,
 		}
 		lp.status = api.StatusC
 		lp.enabled = enabled
 		return lp
 	}
 
-	minPower := newLp(1, false).EffectiveMinPower()
+	minPower := newLp(1, false, 0, 0).EffectiveMinPower()
 
 	// enable: share 1.0 requires the full min power as surplus
-	assert.Equal(t, minA, newLp(1, false).pvMaxCurrent(api.ModePV, -minPower, 0, false, false),
+	assert.Equal(t, minA, newLp(1, false, 0, 0).pvMaxCurrent(api.ModePV, -minPower, 0, false, false),
 		"should enable at full surplus")
-	assert.Equal(t, 0.0, newLp(1, false).pvMaxCurrent(api.ModePV, -minPower+100, 0, false, false),
-		"must not enable below surplus despite enable threshold 5000")
+	assert.Equal(t, 0.0, newLp(1, false, 0, 0).pvMaxCurrent(api.ModePV, -minPower+100, 0, false, false),
+		"must not enable below full surplus")
 
 	// enable: share 0.5 accepts half the min power from grid
-	assert.Equal(t, minA, newLp(0.5, false).pvMaxCurrent(api.ModePV, -minPower/2, 0, false, false),
+	assert.Equal(t, minA, newLp(0.5, false, 0, 0).pvMaxCurrent(api.ModePV, -minPower/2, 0, false, false),
 		"should enable at half surplus")
 
+	// enable: share 0 starts as soon as there is no grid import
+	assert.Equal(t, minA, newLp(0, false, 0, 0).pvMaxCurrent(api.ModePV, 0, 0, false, false),
+		"should enable without surplus")
+
 	// disable: share 1.0 derives threshold 0, so feed-in keeps charging
-	assert.Equal(t, minA, newLp(1, true).pvMaxCurrent(api.ModePV, -500, 0, false, false),
-		"must not disable while feeding in despite disable threshold -5000")
-	assert.Equal(t, 0.0, newLp(1, true).pvMaxCurrent(api.ModePV, 100, 0, false, false),
+	assert.Equal(t, minA, newLp(1, true, 0, 0).pvMaxCurrent(api.ModePV, -500, 0, false, false),
+		"must not disable while feeding in")
+	assert.Equal(t, 0.0, newLp(1, true, 0, 0).pvMaxCurrent(api.ModePV, 100, 0, false, false),
 		"should disable on grid draw")
+
+	// disable: share 0.5 tolerates grid import up to half the min power
+	assert.Equal(t, minA, newLp(0.5, true, 0, 0).pvMaxCurrent(api.ModePV, minPower/2-100, 0, false, false),
+		"must not disable within allowed grid import")
+	assert.Equal(t, 0.0, newLp(0.5, true, 0, 0).pvMaxCurrent(api.ModePV, minPower/2+100, 0, false, false),
+		"should disable above allowed grid import")
+
+	// configured thresholds take precedence over solar share
+	assert.Equal(t, minA, newLp(1, false, 5000, 0).pvMaxCurrent(api.ModePV, 4000, 0, false, false),
+		"enable threshold should apply despite solar share")
+	assert.Equal(t, minA, newLp(1, true, 0, 5000).pvMaxCurrent(api.ModePV, 100, 0, false, false),
+		"disable threshold should apply despite solar share")
 }

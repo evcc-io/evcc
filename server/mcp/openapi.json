@@ -3360,8 +3360,7 @@
           },
           "solarShare": {
             "description": "Required solar share, from 0 to 1.",
-            "type": "number",
-            "nullable": true
+            "type": "number"
           },
           "suggestion": {
             "description": "Charging suggestion from the battery optimizer.",

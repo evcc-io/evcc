@@ -292,6 +292,18 @@
 									}}
 								</div>
 							</div>
+
+							<div v-if="thresholdsSet" class="form-text evcc-gray mt-4">
+								<i18n-t
+									keypath="config.loadpoint.solarShareNote"
+									tag="span"
+									scope="global"
+								>
+									<a href="#" @click.prevent="resetThresholds">
+										{{ $t("config.loadpoint.solarShareReset") }}
+									</a>
+								</i18n-t>
+							</div>
 						</div>
 
 						<FormRow
@@ -750,6 +762,10 @@ export default {
 		id(): number | undefined {
 			return getModal("loadpoint")?.id;
 		},
+		thresholdsSet(): boolean {
+			const { enable, disable } = this.values.thresholds;
+			return enable.threshold !== 0 || disable.threshold !== 0;
+		},
 		selectedType(): LoadpointType | undefined {
 			return getModal("loadpoint")?.type as LoadpointType | undefined;
 		},
@@ -921,6 +937,10 @@ export default {
 		},
 	},
 	methods: {
+		resetThresholds() {
+			this.values.thresholds.enable.threshold = 0;
+			this.values.thresholds.disable.threshold = 0;
+		},
 		reset() {
 			this.values = deepClone(defaultValues);
 			this.autoCreate = false;

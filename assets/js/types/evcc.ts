@@ -730,7 +730,7 @@ export interface Loadpoint {
    */
   smartFeedInPriorityNextStart: string | null;
   /** Required solar share, from 0 to 1. */
-  solarShare: number | null;
+  solarShare: number;
   /** Charging suggestion from the battery optimizer. */
   suggestion?: LoadpointSuggestion | null;
   /** Loadpoint title for UI display. */

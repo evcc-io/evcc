@@ -193,9 +193,9 @@ type API interface {
 	SetSmartCostLimit(limit *float64)
 
 	// GetSolarShare gets the solar share
-	GetSolarShare() *float64
+	GetSolarShare() float64
 	// SetSolarShare sets the solar share
-	SetSolarShare(share *float64)
+	SetSolarShare(share float64)
 	// GetSmartFeedInPriorityLimit return the smart feed-in limit
 	GetSmartFeedInPriorityLimit() *float64
 	// SetSmartFeedInPriorityLimit sets the smart feed-in limit

@@ -122,7 +122,7 @@ type Loadpoint struct {
 	limitEnergy              float64  // Session limit for energy
 	minSoc                   int      // Forced charging below this soc (heating: temperature), 0=disabled
 	smartCostLimit           *float64 // always charge if consumption cost is below this value
-	solarShare               *float64 // pv-mode enable/disable derived from solar share instead of thresholds
+	solarShare               float64  // share of min charging power that must be solar in pv mode (0..1)
 	smartFeedInPriorityLimit *float64 // prevent charging if feed-in cost is above this value
 	batteryBoost             int      // battery boost state
 	batteryBoostLimit        int      // battery boost soc limit (0-100, 100=disabled)
@@ -311,6 +311,7 @@ func NewLoadpoint(log *util.Logger, settings settings.Settings) *Loadpoint {
 		minCurrent:        6,   // A
 		maxCurrent:        16,  // A
 		batteryBoostLimit: 100, // disabled
+		solarShare:        1,   // full surplus
 		Soc: loadpoint.SocConfig{
 			Poll: loadpoint.PollConfig{
 				Interval: pollInterval,
@@ -376,7 +377,7 @@ func (lp *Loadpoint) restoreSettings() {
 		lp.SetSmartCostLimit(&v)
 	}
 	if v, err := lp.settings.Float(keys.SolarShare); err == nil {
-		lp.SetSolarShare(&v)
+		lp.SetSolarShare(v)
 	}
 	if v, err := lp.settings.Float(keys.SmartFeedInPriorityLimit); err == nil {
 		lp.SetSmartFeedInPriorityLimit(&v)
@@ -1621,19 +1622,26 @@ func (lp *Loadpoint) boostPower(batteryPower float64) float64 {
 	return res
 }
 
-// pvDisableThreshold returns the pv disable switch point, derived from the solar share when set
-func (lp *Loadpoint) pvDisableThreshold(solarShare *float64) float64 {
-	if solarShare == nil {
+// customThresholds indicates manually configured enable/disable thresholds that take precedence over the solar share
+func (lp *Loadpoint) customThresholds() bool {
+	return lp.Enable.Threshold != 0 || lp.Disable.Threshold != 0
+}
+
+// pvDisableThreshold returns the pv disable switch point, derived from the solar share
+// unless custom thresholds are configured
+func (lp *Loadpoint) pvDisableThreshold() float64 {
+	if lp.customThresholds() {
 		return lp.Disable.Threshold
 	}
-	return (*solarShare - 1) * lp.EffectiveMinPower()
+	// allow grid import for the non-solar part of the min power
+	return (1 - lp.GetSolarShare()) * lp.EffectiveMinPower()
 }
 
 // pvEnableDecision returns the pv enable switch point and whether charging should start,
-// derived from the solar share when set
-func (lp *Loadpoint) pvEnableDecision(solarShare *float64, targetCurrent, minCurrent, sitePower float64) (float64, bool) {
-	if solarShare != nil {
-		threshold := -*solarShare * lp.EffectiveMinPower()
+// derived from the solar share unless custom thresholds are configured
+func (lp *Loadpoint) pvEnableDecision(targetCurrent, minCurrent, sitePower float64) (float64, bool) {
+	if !lp.customThresholds() {
+		threshold := -lp.GetSolarShare() * lp.EffectiveMinPower()
 		return threshold, sitePower <= threshold
 	}
 
@@ -1679,9 +1687,6 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryPower f
 
 	lp.log.DEBUG.Printf("pv charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, activePhases)
 
-	// solar share overrides the enable/disable thresholds when set (nil = inactive)
-	solarShare := lp.GetSolarShare()
-
 	if mode == api.ModePV && lp.enabled && targetCurrent < minCurrent {
 		projectedSitePower := sitePower
 		if lp.hasPhaseSwitching() && !lp.phaseTimer.IsZero() {
@@ -1690,7 +1695,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryPower f
 			projectedSitePower -= Voltage * minCurrent * float64(activePhases-1)
 		}
 
-		disableThreshold := lp.pvDisableThreshold(solarShare)
+		disableThreshold := lp.pvDisableThreshold()
 
 		// kick off disable sequence, unless climater keep-alive is holding
 		// charging at minCurrent — otherwise the "pausing soon" badge would
@@ -1729,7 +1734,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryPower f
 	}
 
 	if mode == api.ModePV && !lp.enabled {
-		enableThreshold, shouldEnable := lp.pvEnableDecision(solarShare, targetCurrent, minCurrent, sitePower)
+		enableThreshold, shouldEnable := lp.pvEnableDecision(targetCurrent, minCurrent, sitePower)
 
 		// kick off enable sequence
 		if shouldEnable {
