@@ -433,8 +433,12 @@ render: |
         - name: maxdischargepower
           type: int
           config:
-            source: const
-            value: {{ .maxdischargepower }}
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 60029 # Rated Energy Storage Power (kW * 1000)
+              type: holding
+              decode: uint32
       script: |
         powerlimit := ( maxdischargepower * curtail ) / 100
         powerlimit
@@ -463,8 +467,12 @@ render: |
       - name: maxdischargepower
         type: int
         config:
-          source: const
-          value: {{ .maxdischargepower }}
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 60029 # Rated Energy Storage Power (kW * 1000)
+            type: holding
+            decode: uint32
     script: |
       percent := 100
       if limit != 0xFFFFFFFF && maxdischargepower > 0 {
