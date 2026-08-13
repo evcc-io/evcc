@@ -13,7 +13,6 @@ params:
     id: 247
   - name: maxacpower
     required: true
-    usages: ["pv"]
   - name: battery
     default: 1
     type: choice
