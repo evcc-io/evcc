@@ -130,7 +130,7 @@ func TestAlpitronicStatus(t *testing.T) {
 		{hycStateAvailable, api.StatusA, false},
 		{hycStatePreparingTagIdReady, api.StatusA, false}, // authorized, nothing plugged in yet
 		{hycStatePreparingEVReady, api.StatusB, false},
-		{hycStateCharging, api.StatusC, false},
+		{hycStateCharging, api.StatusB, false}, // charging while disabled, see below
 		{hycStateSuspendedEV, api.StatusB, false},
 		{hycStateSuspendedEVSE, api.StatusB, false},
 		{hycStateFinishing, api.StatusB, false},
@@ -153,6 +153,14 @@ func TestAlpitronicStatus(t *testing.T) {
 		}
 		assert.Equal(t, tc.status, status, "state %d", tc.state)
 	}
+
+	// charging while enabled
+	holding := map[uint16]uint16{hycReg(1, hycRegMaxPowerAC) + 1: 11040}
+	wb, _ := hycTestChargerWithLimit(t, 1, hycRegs(1, hycStateCharging), holding)
+
+	status, err := wb.Status()
+	require.NoError(t, err)
+	assert.Equal(t, api.StatusC, status)
 }
 
 func TestAlpitronicStatusReason(t *testing.T) {
@@ -178,9 +186,8 @@ func TestAlpitronicStatusReason(t *testing.T) {
 
 func TestAlpitronicMeasurements(t *testing.T) {
 	regs := hycRegs(1, hycStateCharging)
-	regs[hycReg(1, hycRegChargingPower)+1] = 11500      // 11500 W
+	regs[hycReg(1, hycRegPowerAbsorptionAC)+1] = 11500  // 11500 W
 	regs[hycReg(1, hycRegChargeTime)] = 3600            // 1h
-	regs[hycReg(1, hycRegChargedEnergy)] = 1234         // 12.34 kWh
 	regs[hycReg(1, hycRegSoC)] = 6550                   // 65.5 %
 	regs[hycReg(1, hycRegTotalChargedEnergy)+3] = 18705 // 18.705 kWh
 
@@ -193,10 +200,6 @@ func TestAlpitronicMeasurements(t *testing.T) {
 	dur, err := wb.ChargeDuration()
 	require.NoError(t, err)
 	assert.Equal(t, time.Hour, dur)
-
-	charged, err := wb.ChargedEnergy()
-	require.NoError(t, err)
-	assert.Equal(t, 12.34, charged)
 
 	soc, err := wb.Soc()
 	require.NoError(t, err)
@@ -319,9 +322,10 @@ func TestAlpitronicMaxCurrentInvalid(t *testing.T) {
 func TestAlpitronicConnector(t *testing.T) {
 	// second connector reads and writes the 2xx block
 	regs := hycRegs(2, hycStateCharging)
-	regs[hycReg(2, hycRegChargingPower)+1] = 50000
+	regs[hycReg(2, hycRegPowerAbsorptionAC)+1] = 50000
 
-	wb, h := hycTestCharger(t, 2, regs)
+	holding := map[uint16]uint16{hycReg(2, hycRegMaxPowerAC) + 1: 50000}
+	wb, h := hycTestChargerWithLimit(t, 2, regs, holding)
 
 	status, err := wb.Status()
 	require.NoError(t, err)
