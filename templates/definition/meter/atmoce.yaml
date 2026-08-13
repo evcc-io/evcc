@@ -156,18 +156,31 @@ render: |
               type: writemultiple
               encoding: uint32
     default:
-      source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 60322 # Photovoltaic Maximum Power (kW * 1000)
-        type: writemultiple
-        encoding: uint32
-      scale: {{ divf (maxf .maxacpower 1) 100 }} # % to W
+      source: go
+      in:
+        - name: maxacpower
+          type: int
+          config:
+            source: const
+            value: {{ .maxacpower }}
+      script: |
+        powerlimit := ( maxacpower * curtail ) / 100
+        powerlimit
+      out:
+        - name: powerlimit
+          type: int
+          config:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 60322 # Photovoltaic Maximum Power (kW * 1000)
+              type: writemultiple
+              encoding: uint32
   curtailed: # the power limit is expressed as percent of nominal AC power
     source: go
     in:
       - name: limit
-        type: float
+        type: int
         config:
           source: modbus
           {{- include "modbus" . | indent 8 }}
@@ -175,16 +188,18 @@ render: |
             address: 60322 # Photovoltaic Maximum Power (kW * 1000)
             type: holding
             decode: uint32
+      - name: maxacpower
+        type: int
+        config:
+          source: const
+          value: {{ .maxacpower }}
     script: |
-      p := 100
-      if limit != 0xFFFFFFFF {
+      percent := 100
+      if limit != 0xFFFFFFFF && maxacpower > 0 {
         // round, the watt conversion does not reproduce the written percent exactly
-        p = int(limit*100/{{ maxf .maxacpower 1 }} + 0.5)
-        if p > 100 {
-          p = 100
-        }
+        percent = (limit*100 + maxacpower/2) / maxacpower
       }
-      p
+      percent
   {{- end }}
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -413,18 +428,31 @@ render: |
               type: writemultiple
               encoding: uint32
     default:
-      source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 60324 # Grid Maximum Export Power (kW * 1000)
-        type: writemultiple
-        encoding: uint32
-      scale: {{ divf (maxf .maxdischargepower 1) 100 }} # % to W
+      source: go
+      in:
+        - name: maxdischargepower
+          type: int
+          config:
+            source: const
+            value: {{ .maxdischargepower }}
+      script: |
+        powerlimit := ( maxdischargepower * curtail ) / 100
+        powerlimit
+      out:
+        - name: powerlimit
+          type: int
+          config:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 60324 # Grid Maximum Export Power (kW * 1000)
+              type: writemultiple
+              encoding: uint32
   curtailed: # the power limit is expressed as percent of nominal discharge power
     source: go
     in:
       - name: limit
-        type: float
+        type: int
         config:
           source: modbus
           {{- include "modbus" . | indent 8 }}
@@ -432,16 +460,18 @@ render: |
             address: 60324 # Grid Maximum Export Power (kW * 1000)
             type: holding
             decode: uint32
+      - name: maxdischargepower
+        type: int
+        config:
+          source: const
+          value: {{ .maxdischargepower }}
     script: |
-      p := 100
-      if limit != 0xFFFFFFFF {
+      percent := 100
+      if limit != 0xFFFFFFFF && maxdischargepower > 0 {
         // round, the watt conversion does not reproduce the written percent exactly
-        p = int(limit*100/{{ maxf .maxdischargepower 1 }} + 0.5)
-        if p > 100 {
-          p = 100
-        }
+        percent = (limit*100 + maxdischargepower/2) / maxdischargepower
       }
-      p
+      percent
   dim:
     source: ifelse
     if:
