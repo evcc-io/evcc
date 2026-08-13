@@ -224,14 +224,6 @@ type Voltie struct {
 	ext    bool // firmware provides the extended register blocks
 }
 
-// voltieCurrentLimiter adapts a function to api.CurrentLimiter, for which the
-// implement package provides no constructor
-type voltieCurrentLimiter func() (float64, float64, error)
-
-func (f voltieCurrentLimiter) GetMinMaxCurrent() (float64, float64, error) {
-	return f()
-}
-
 // read fetches a register block through the shared bulk read cache, so all
 // values taken from the same block within a poll cycle cost one request
 func (wb *Voltie) read(block modbus.Block) ([]byte, error) {
@@ -341,7 +333,7 @@ func NewVoltie(ctx context.Context, settings modbus.TcpSettings, cache time.Dura
 		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
 		implement.Has(wb, implement.PhasePowers(wb.powers))
-		implement.Has[api.CurrentLimiter](wb, voltieCurrentLimiter(wb.getMinMaxCurrent))
+		implement.Has(wb, implement.CurrentLimiter(wb.getMinMaxCurrent))
 	}
 
 	return wb, nil
