@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
@@ -14,11 +15,13 @@ import (
 // OpenWB20 charger implementation
 type OpenWB20 struct {
 	implement.Caps
-	conn       *modbus.Connection
-	enabled    bool
-	curr       uint16
-	base       uint16
-	laststatus api.ChargeStatus
+	conn         *modbus.Connection
+	enabled      bool
+	curr         uint16
+	base         uint16
+	laststatus   api.ChargeStatus
+	lastidentify string
+	lastidtime   time.Time
 }
 
 const (
@@ -92,14 +95,39 @@ func NewOpenWB20(ctx context.Context, settings modbus.TcpSettings, connector uin
 	conn.Logger(log.TRACE)
 
 	wb := &OpenWB20{
-		Caps:       implement.New(),
-		conn:       conn,
-		curr:       6 * 100,
-		base:       (connector - 1) * 100,
-		laststatus: api.StatusNone,
+		Caps:         implement.New(),
+		conn:         conn,
+		curr:         6 * 100,
+		base:         (connector - 1) * 100,
+		laststatus:   api.StatusNone,
+		lastidentify: "",
+		lastidtime:   time.Unix(0, 0),
 	}
 
 	return wb, nil
+}
+
+func (wb *OpenWB20) HandleRfidReset() {
+	if wb.laststatus != api.StatusA {
+		wb.conn.WriteSingleRegister(wb.base+openwbRegResetRfid, 1) // Reset RFID on disconnect
+		return
+	}
+	new_id, _ := wb.identify()
+	if new_id == "" {
+		wb.lastidentify = ""
+		wb.lastidtime = time.Unix(0, 0)
+		return
+	}
+	if wb.lastidentify != new_id {
+		wb.lastidentify = new_id
+		wb.lastidtime = time.Now()
+		return
+	}
+	if wb.lastidtime != time.Unix(0, 0) && time.Since(wb.lastidtime) > 2*time.Minute {
+		wb.conn.WriteSingleRegister(wb.base+openwbRegResetRfid, 1) // Reset RFID after timeout
+		wb.lastidentify = ""
+		wb.lastidtime = time.Unix(0, 0)
+	}
 }
 
 // Status implements the api.Charger interface
@@ -113,9 +141,7 @@ func (wb *OpenWB20) Status() (api.ChargeStatus, error) {
 		wb.laststatus = api.StatusB
 		return api.StatusB, err
 	}
-	if wb.laststatus != api.StatusA {
-		wb.conn.WriteSingleRegister(wb.base+openwbRegResetRfid, 1) // Reset RFID on disconnect
-	}
+	wb.HandleRfidReset()
 	wb.laststatus = api.StatusA
 	return api.StatusA, nil
 }
