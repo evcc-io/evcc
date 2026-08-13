@@ -41,6 +41,7 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}:{{ .port }}/api/v1/status
+    cache: 2s
   {{- if eq .usage "grid" }}
     jq: .GridFeedIn_W
     scale: -1 # reverse direction
@@ -53,6 +54,7 @@ render: |
   soc:
     source: http
     uri: http://{{ .host }}:{{ .port }}/api/v1/status
+    cache: 2s
     jq: .USOC
   {{- if .token }}
   batterymode:
