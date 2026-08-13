@@ -6,10 +6,14 @@ interface WebView {
 declare global {
   interface Window {
     app: any;
-    evcc: {
+    evcc?: {
       version: string;
-      commit: string;
-      customCss: string;
+      customCss: boolean;
+      customLogo: boolean;
+      customBrand: string;
+      customWebsite: string;
+      customEmail: string;
+      customPhone: string;
     };
   }
   interface Window {
@@ -210,6 +214,8 @@ export interface State {
   homePower?: number;
   /** Configured grid operating point in W. Positive values maintain grid import. */
   residualPower?: number;
+  /** Static grid export power limit in W used as optimizer constraint, 0 = disabled. An active HEMS curtailment takes precedence. */
+  gridExportLimit?: number;
   /** Share of green energy in home consumption, between 0 and 1. */
   greenShareHome?: number;
   /** Share of green energy used for charging, between 0 and 1. */
@@ -437,6 +443,7 @@ export interface Entity {
   type: string;
   id: number;
   config: Config;
+  deviceDisable?: boolean;
 }
 
 export enum ConfigType {
@@ -478,6 +485,7 @@ export interface LoadpointThreshold {
 export interface ConfigLoadpoint {
   id?: number;
   name?: string;
+  disable?: boolean;
   charger: string;
   meter: string;
   vehicle: string;
@@ -597,6 +605,8 @@ export interface Loadpoint {
   connected: boolean;
   /** Duration since the vehicle was connected, in seconds. */
   connectedDuration: number;
+  /** Loadpoint is disabled via configuration. */
+  disabled?: boolean;
   /** Delay before charging stops in solar mode, in seconds. */
   disableDelay: number;
   /** Grid draw power above which charging stops in solar mode, in W. */
@@ -1422,6 +1432,7 @@ export interface TimeSeries {
 // Solver status enum
 export enum OptimizationStatus {
   OPTIMAL = "Optimal",
+  FEASIBLE = "Feasible",
   INFEASIBLE = "Infeasible",
   UNBOUNDED = "Unbounded",
   UNDEFINED = "Undefined",

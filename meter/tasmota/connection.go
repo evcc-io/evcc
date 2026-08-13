@@ -43,7 +43,7 @@ func NewConnection(uri, user, password string, channels []int, cache time.Durati
 		used[c] = true
 	}
 
-	log := util.NewLogger("tasmota")
+	log := util.NewLogger("tasmota").Redact(user, password)
 	c := &Connection{
 		Helper:   request.NewHelper(log),
 		uri:      util.DefaultScheme(strings.TrimRight(uri, "/"), "http"),
@@ -55,28 +55,33 @@ func NewConnection(uri, user, password string, channels []int, cache time.Durati
 	c.Client.Transport = request.NewTripper(log, transport.Insecure())
 
 	c.statusSnsG = util.ResettableCached(func() (StatusSNSResponse, error) {
-		parameters := url.Values{
-			"user":     {c.user},
-			"password": {c.password},
-			"cmnd":     {"Status 8"},
-		}
 		var res StatusSNSResponse
-		err := c.GetJSON(fmt.Sprintf("%s/cm?%s", c.uri, parameters.Encode()), &res)
+		err := c.cmd("Status 8", &res)
 		return res, err
 	}, cache)
 
 	c.statusStsG = util.ResettableCached(func() (StatusSTSResponse, error) {
-		parameters := url.Values{
-			"user":     {c.user},
-			"password": {c.password},
-			"cmnd":     {"Status 0"},
-		}
 		var res StatusSTSResponse
-		err := c.GetJSON(fmt.Sprintf("%s/cm?%s", c.uri, parameters.Encode()), &res)
+		err := c.cmd("Status 0", &res)
 		return res, err
 	}, cache)
 
 	return c, nil
+}
+
+// cmd executes a Tasmota command, masking the password in returned errors
+func (c *Connection) cmd(cmnd string, res any) error {
+	parameters := url.Values{
+		"user":     {c.user},
+		"password": {c.password},
+		"cmnd":     {cmnd},
+	}
+
+	err := c.GetJSON(fmt.Sprintf("%s/cm?%s", c.uri, parameters.Encode()), res)
+	if err != nil && c.password != "" {
+		return errors.New(strings.ReplaceAll(err.Error(), url.QueryEscape(c.password), "***"))
+	}
+	return err
 }
 
 // channelExists checks the existence of the configured relay channel interface
@@ -123,14 +128,8 @@ func (c *Connection) Enable(enable bool) error {
 			cmd = fmt.Sprintf("Power%d on", channel)
 		}
 
-		parameters := url.Values{
-			"user":     {c.user},
-			"password": {c.password},
-			"cmnd":     {cmd},
-		}
-
 		var res PowerResponse
-		if err := c.GetJSON(fmt.Sprintf("%s/cm?%s", c.uri, parameters.Encode()), &res); err != nil {
+		if err := c.cmd(cmd, &res); err != nil {
 			return err
 		}
 

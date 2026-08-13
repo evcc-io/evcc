@@ -178,6 +178,9 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 	// re-assigning the same default vehicle on reconnect must keep a known soc.
 	if prev != v {
 		lp.unpublishVehicle()
+
+		// vehicle change alters the loadpoint's optimizer profile
+		lp.triggerOptimizer()
 	}
 
 	// publish effective values

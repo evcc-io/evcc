@@ -1258,6 +1258,26 @@
         }
       }
     },
+    "/gridexportlimit/{power}": {
+      "post": {
+        "operationId": "setGridExportLimit",
+        "summary": "Set grid export limit",
+        "description": "Set the static grid export power limit in W used as optimizer constraint. 0 disables the limit. An active HEMS curtailment takes precedence.",
+        "tags": [
+          "general"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/power"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        }
+      }
+    },
     "/solaradjusted/{enable}": {
       "post": {
         "operationId": "setSolarAdjusted",
@@ -2224,6 +2244,171 @@
         }
       }
     },
+    "/db/metrics/energy": {
+      "delete": {
+        "operationId": "deleteEnergyMetrics",
+        "summary": "Delete energy metrics",
+        "description": "Deletes recorded energy slots in the given time range, optionally narrowed by entity. Filter parameters match /history/energy, so the same request can be previewed there before deleting. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt.",
+        "tags": [
+          "db"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/adminPassword"
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "description": "Start time, inclusive (RFC3339)",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "example": "2026-07-01T00:00:00Z"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "description": "End time, exclusive (RFC3339)",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "example": "2026-07-02T00:00:00Z"
+            }
+          },
+          {
+            "name": "group",
+            "in": "query",
+            "description": "Filter by entity group",
+            "schema": {
+              "type": "string",
+              "example": "forecast",
+              "enum": [
+                "forecast",
+                "battery",
+                "grid",
+                "pv",
+                "home",
+                "loadpoint",
+                "meter",
+                "consumer",
+                "temperature"
+              ]
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Filter by entity name",
+            "schema": {
+              "type": "string",
+              "example": "db:8"
+            }
+          },
+          {
+            "name": "title",
+            "in": "query",
+            "description": "Filter by entity title",
+            "schema": {
+              "type": "string",
+              "example": "Battery"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Deleted"
+          },
+          "400": {
+            "description": "Invalid parameters or database offline"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/db/metrics/tariffs": {
+      "delete": {
+        "operationId": "deleteTariffMetrics",
+        "summary": "Delete tariff metrics",
+        "description": "Deletes recorded tariff values in the given time range. Without usage the entire record is removed, otherwise only that usage is cleared and records left without any value are removed. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt.",
+        "tags": [
+          "db"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/adminPassword"
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "description": "Start time, inclusive (RFC3339)",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "example": "2026-07-01T00:00:00Z"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "description": "End time, exclusive (RFC3339)",
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "example": "2026-07-02T00:00:00Z"
+            }
+          },
+          {
+            "name": "usage",
+            "in": "query",
+            "description": "Limit deletion to a single tariff usage",
+            "schema": {
+              "type": "string",
+              "example": "co2",
+              "enum": [
+                "grid",
+                "feedin",
+                "co2",
+                "temperature"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Deleted"
+          },
+          "400": {
+            "description": "Invalid parameters or database offline"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
     "/history/energy": {
       "get": {
         "operationId": "getEnergyHistory",
@@ -2947,6 +3132,10 @@
           "connectedDuration": {
             "description": "Duration since the vehicle was connected, in seconds.",
             "type": "number"
+          },
+          "disabled": {
+            "description": "Loadpoint is disabled via configuration.",
+            "type": "boolean"
           },
           "disableDelay": {
             "description": "Delay before charging stops in solar mode, in seconds.",
@@ -4842,6 +5031,10 @@
             "description": "Configured grid operating point in W. Positive values maintain grid import.",
             "type": "number"
           },
+          "gridExportLimit": {
+            "description": "Static grid export power limit in W used as optimizer constraint, 0 = disabled. An active HEMS curtailment takes precedence.",
+            "type": "number"
+          },
           "greenShareHome": {
             "description": "Share of green energy in home consumption, between 0 and 1.",
             "type": "number"
@@ -5272,6 +5465,22 @@
       }
     },
     "responses": {
+      "Deleted": {
+        "description": "Success - number of deleted records",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "deleted": {
+                  "type": "integer",
+                  "example": 96
+                }
+              }
+            }
+          }
+        }
+      },
       "NanoSecondsResult": {
         "description": "Success - Number result - Unit is **nanoseconds**",
         "content": {

@@ -4,6 +4,7 @@ const (
 	// loadpoint settings
 	Name              = "name"             // loadpoint name (config identifier)
 	Title             = "title"            // loadpoint title
+	Disabled          = "disabled"         // loadpoint disabled via config
 	Mode              = "mode"             // charge mode
 	DefaultMode       = "defaultMode"      // default charge mode
 	Charger           = "charger"          // charger ref
