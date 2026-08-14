@@ -32,9 +32,6 @@ params:
       en: For forced charging of the battery. Venus A 1200 W, Venus D 2200 W
   - name: maxdischargepower
     required: true
-    help:
-      de: Für erzwungenes Entladen des Speichers ins Netz (Einspeise-Arbitrage). Modellabhängig, siehe Datenblatt.
-      en: For forced discharging of the battery to the grid (feed-in arbitrage). Model-specific, see datasheet.
   - name: work_mode_normal
     default: 1
     advanced: true
