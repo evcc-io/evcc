@@ -24,6 +24,7 @@ type EcoFlow struct {
 	dataG  func() (*ecoflow.GetCmdResponse, error)
 
 	power, batterySoc string
+	controllable      bool
 }
 
 func init() {
@@ -72,12 +73,12 @@ func NewEcoFlowFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, fmt.Errorf("invalid region: %s", cc.Region)
 	}
 
-	return NewEcoFlow(cc.AccessKey, cc.SecretKey, cc.Serial, cc.Usage, uri, cc.Power, cc.Soc, cc.Cache, cc.batteryCapacity.Decorator(), cc.batterySocLimits.Decorator(), cc.batteryPowerLimits.Decorator())
+	return NewEcoFlow(cc.AccessKey, cc.SecretKey, cc.Serial, cc.Usage, uri, cc.Power, cc.Soc, cc.Cache, cc.batteryCapacity.Decorator(), cc.batterySocLimits, cc.batteryPowerLimits.Decorator())
 }
 
 // NewEcoFlow constructs the EcoFlow struct
 func NewEcoFlow(accessKey, secretKey, serial, usage, uri string,
-	power, soc string, cache time.Duration, capacity func() float64, batterySocLimits, batteryPowerLimits func() (float64, float64)) (*EcoFlow, error) {
+	power, soc string, cache time.Duration, capacity func() float64, batterySocLimits batterySocLimits, batteryPowerLimits func() (float64, float64)) (*EcoFlow, error) {
 	log := util.NewLogger("ecoflow").Redact(accessKey, secretKey, serial)
 
 	m := &EcoFlow{
@@ -98,8 +99,14 @@ func NewEcoFlow(accessKey, secretKey, serial, usage, uri string,
 	if usage == "battery" {
 		implement.Has(m, implement.Battery(m.soc))
 		implement.May(m, implement.BatteryCapacity(capacity))
-		implement.May(m, implement.BatterySocLimiter(batterySocLimits))
+		implement.May(m, implement.BatterySocLimiter(batterySocLimits.Decorator()))
 		implement.May(m, implement.BatteryPowerLimiter(batteryPowerLimits))
+
+		// the backup reserve command is Stream-specific, the PowerOcean template shares this meter type
+		if batterySocLimits.MinSoc > 0 && batterySocLimits.MaxSoc > 0 && soc == "cmsBattSoc" {
+			m.controllable = true
+			implement.Has(m, implement.BatteryController(batterySocLimits.LimitController(m.soc, m.setBackupReserve)))
+		}
 	}
 
 	return m, nil
@@ -114,6 +121,9 @@ func (m *EcoFlow) getData() (*ecoflow.GetCmdResponse, error) {
 
 	if m.usage == "battery" {
 		params = append(params, m.batterySoc)
+	}
+	if m.controllable {
+		params = append(params, "cmsMinDsgSoc")
 	}
 
 	return m.client.GetDeviceParameters(ctx, m.serial, params)
@@ -158,4 +168,31 @@ func (m *EcoFlow) soc() (float64, error) {
 	}
 
 	return ecoflowValue(response.Data, m.batterySoc)
+}
+
+func (m *EcoFlow) setBackupReserve(limit float64) error {
+	// the device requires the reserve to exceed its discharge limit by 3, so clamp rather than let
+	// the write fail: refusing normal mode would strand the battery at the previous, higher reserve
+	if res, err := m.dataG(); err == nil {
+		if lo, err := ecoflowValue(res.Data, "cmsMinDsgSoc"); err == nil {
+			limit = min(100, max(limit, lo+3))
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// cfgBackupReverseSoc is the vendor's spelling of the backup reserve
+	res, err := m.client.SetDeviceParameter(ctx, map[string]any{
+		"sn": m.serial, "cmdId": 17, "cmdFunc": 254,
+		"dirDest": 1, "dirSrc": 1, "dest": 2, "needAck": true,
+		"params": map[string]any{"cfgBackupReverseSoc": int(limit)},
+	})
+	if err != nil {
+		return err
+	}
+	if res.Code != "0" {
+		return fmt.Errorf("%s (%s)", res.Message, res.Code)
+	}
+	return nil
 }
