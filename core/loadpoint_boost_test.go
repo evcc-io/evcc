@@ -28,6 +28,14 @@ func (m *mockSite) GetResidualPower() float64 {
 	return m.residualPower
 }
 
+func (m *mockSite) GetPriorityStrategy() api.PriorityStrategy {
+	return api.PriorityNone
+}
+
+func (m *mockSite) GetPriorityBasis() api.PriorityBasis {
+	return api.PriorityBasisPercent
+}
+
 func TestBoostPower(t *testing.T) {
 	Voltage = 230
 	lp := &Loadpoint{
