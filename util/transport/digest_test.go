@@ -129,21 +129,45 @@ func TestDigestPreemptive(t *testing.T) {
 }
 
 // TestDigestNonRfcAlgorithm covers servers advertising SHA256 instead of the
-// RFC 7616 compliant SHA-256
+// RFC 7616 compliant SHA-256. The non-RFC spelling takes a separate challenge
+// path, so it has to reuse challenges just the same.
 func TestDigestNonRfcAlgorithm(t *testing.T) {
 	for _, algorithm := range []string{"SHA-256", "SHA256"} {
 		t.Run(algorithm, func(t *testing.T) {
 			dev, client, uri := testDigestClient(t, algorithm)
 
-			resp, err := client.Get(uri)
-			require.NoError(t, err)
-			defer resp.Body.Close()
-
-			assert.Equal(t, http.StatusOK, resp.StatusCode)
+			for i := 0; i < 3; i++ {
+				resp, err := client.Get(uri)
+				require.NoError(t, err, "request %d", i)
+				resp.Body.Close()
+				require.Equal(t, http.StatusOK, resp.StatusCode, "request %d", i)
+			}
 
 			dev.mu.Lock()
 			defer dev.mu.Unlock()
 			assert.Equal(t, algorithm, dev.seenAlg, "client must echo the announced algorithm")
+			assert.Equal(t, 1, dev.challenges)
+			assert.Equal(t, 1, dev.unauth)
+			assert.Equal(t, []int{1, 2, 3}, dev.ncSeen)
 		})
 	}
+}
+
+// TestDigestWrongPassword asserts a rejected response surfaces to the caller
+// instead of being retried until the device throttles us.
+func TestDigestWrongPassword(t *testing.T) {
+	dev, _, uri := testDigestClient(t, "SHA-256")
+	client := &http.Client{Transport: Digest(digestUser, "wrong", nil)}
+
+	resp, err := client.Get(uri)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusForbidden, resp.StatusCode)
+
+	dev.mu.Lock()
+	defer dev.mu.Unlock()
+	assert.Equal(t, 1, dev.challenges, "a rejected response must not be retried")
+	assert.Equal(t, 1, dev.unauth)
+	assert.Empty(t, dev.ncSeen)
 }
