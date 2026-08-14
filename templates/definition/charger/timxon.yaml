@@ -1,0 +1,15 @@
+template: timxon
+products:
+  - brand: TIMXON
+capabilities: ["meter", "dim"]
+params:
+  - name: modbus
+    choice: ["tcpip", "rs485"]
+  - name: connector
+    type: choice
+    choice: ["1", "2"]
+    default: "1"
+render: |
+  type: timxon
+  {{- include "modbus" . }}
+  connector: {{ .connector }}
