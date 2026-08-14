@@ -263,7 +263,7 @@ func (site *Site) solarScale() float64 {
 const (
 	solarScaleWindow     = 30  // trailing window of days to consider
 	solarScaleMinSamples = 14  // minimum daily ratios before applying a scale
-	solarScalePercentile = 0.5 // percentile of the daily ratio distribution to use
+	solarScalePercentile = 0.6 // percentile of the daily ratio distribution to use
 	solarScaleMinEnergy  = 0.5 // kWh, skip dark days where the ratio is noise
 )
 
