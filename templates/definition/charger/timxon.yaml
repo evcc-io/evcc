@@ -4,6 +4,7 @@ products:
 capabilities: ["meter", "dim"]
 params:
   - name: modbus
+    type: choice
     choice: ["tcpip", "rs485"]
   - name: connector
     type: choice
