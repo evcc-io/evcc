@@ -347,7 +347,13 @@ func (site *Site) querySolarScalePercentile(bod time.Time) (float64, error) {
 		if day == today || f <= solarScaleMinEnergy {
 			continue
 		}
-		ratios = append(ratios, pv[day]/f)
+		// a day missing from pv entirely (PV metering outage) is not the same as a
+		// genuine zero-production reading and must not be treated as ratio 0
+		p, ok := pv[day]
+		if !ok {
+			continue
+		}
+		ratios = append(ratios, p/f)
 	}
 
 	scale, ok := percentileOf(ratios, solarScalePercentile, solarScaleMinSamples)
