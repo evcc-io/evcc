@@ -6,6 +6,7 @@
 		:data-testid="`${name}-modal`"
 		:size="modalSize"
 		:config-modal-name="name"
+		:prevent-dismiss="dirty"
 		@open="handleOpen"
 		@close="handleClose"
 		@visibilitychange="handleVisibilityChange"
@@ -344,6 +345,7 @@ export default defineComponent({
 			succeeded: false,
 			loadingTemplate: false,
 			values: { ...this.initialValues } as DeviceValues,
+			baseline: JSON.stringify({ ...this.initialValues }),
 			test: initialTestState(),
 			serviceValues: {} as Record<string, string[]>,
 			serviceValuesTimer: null as Timeout | null,
@@ -355,6 +357,9 @@ export default defineComponent({
 	computed: {
 		device() {
 			return createDeviceUtils(this.deviceType);
+		},
+		dirty(): boolean {
+			return JSON.stringify(this.values) !== this.baseline;
 		},
 		modalSize(): string | undefined {
 			return this.showYamlInput ? "xl" : undefined;
@@ -641,7 +646,11 @@ export default defineComponent({
 			this.values = { ...this.initialValues } as DeviceValues;
 			this.test = initialTestState();
 			this.resetAuthStatus();
+			this.rebaseline();
 			this.$emit("reset");
+		},
+		rebaseline() {
+			this.baseline = JSON.stringify(this.values);
 		},
 		async loadConfiguration() {
 			try {
@@ -667,17 +676,23 @@ export default defineComponent({
 				if (this.onConfigurationLoaded) {
 					this.onConfigurationLoaded(this.values);
 				}
+				this.rebaseline();
 				this.checkAuthStatus();
 			} catch (e) {
 				console.error(e);
 			}
 		},
 		applyDefaults() {
+			// late-arriving defaults must not mark a clean form dirty
+			const wasClean = !this.dirty;
 			applyDefaultsFromTemplate(this.template, this.values);
 
 			// Allow parent to apply custom defaults
 			if (this.applyCustomDefaults) {
 				this.applyCustomDefaults(this.template, this.values);
+			}
+			if (wasClean) {
+				this.rebaseline();
 			}
 		},
 		async loadProducts() {
@@ -901,7 +916,12 @@ export default defineComponent({
 			const param = this.templateParams.find((p) => p.Name === paramName);
 			// Only auto-apply if exactly one value is returned, field is empty, and field is required
 			if (values?.length === 1 && !this.values[paramName] && param?.Required) {
+				// debounced auto-fill must not mark a clean form dirty
+				const wasClean = !this.dirty;
 				this.values[paramName] = values[0];
+				if (wasClean) {
+					this.rebaseline();
+				}
 			}
 		},
 	},
