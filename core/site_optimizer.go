@@ -805,9 +805,10 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 
 	if vt := v.GetTitle(); vt != "" {
 		if detail.Title != "" {
-			detail.Title += " – "
+			detail.Title += " (" + vt + ")"
+		} else {
+			detail.Title = vt
 		}
-		detail.Title += vt
 	}
 
 	// find vehicle name/id
