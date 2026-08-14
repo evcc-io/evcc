@@ -100,7 +100,9 @@ export function adjustedSolar(solar?: UiSolarDetails): UiSolarDetails | undefine
     });
   }
 
-  result.scale = 1 / scale; // invert to allow back-adjustment
+  // invert to allow back-adjustment - only valid for today's data, since
+  // tomorrow/dayAfterTomorrow were never scaled in the first place
+  result.scale = 1 / scale;
 
   return result;
 }
