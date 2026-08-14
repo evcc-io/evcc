@@ -1061,15 +1061,20 @@ func (lp *Loadpoint) charging() bool {
 func (lp *Loadpoint) PvChargeStarting() bool {
 	lp.RLock()
 	enabled := lp.enabled
-	pvTimerRunning := !lp.pvTimer.IsZero()
+	pvTimer := lp.pvTimer
 	lp.RUnlock()
 
 	if lp.GetMode() != api.ModePV || !lp.connected() || lp.chargeGoalReached(enabled) {
 		return false
 	}
 
-	// enable timer running (not yet enabled)
-	return !enabled && pvTimerRunning
+	if enabled || pvTimer.IsZero() {
+		return false
+	}
+
+	// a timer restarting on every surplus dip never starts the loadpoint, hence
+	// only claim surplus once it has survived half of the enable delay (#32778)
+	return lp.clock.Since(pvTimer) >= lp.GetEnableDelay()/2
 }
 
 // chargeGoalReached reports whether the loadpoint will not draw more: enabled
