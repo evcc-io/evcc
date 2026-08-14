@@ -129,7 +129,8 @@ func TestBoostPowerPhaseSwitch(t *testing.T) {
 	// boostContinue on 1p with phase switching: delta must cover the gap
 	// between 1p@16A (3680W) and 3p@6A (4140W) = 460W, plus the
 	// base delta (100W) and coarse step power (1p: 230W)
-	s.maxDischargePower = nil
+	limit := 10000.0
+	s.maxDischargePower = &limit
 	s.residualPower = 0
 	res := lp.boostPower(0)
 	// delta = 100 (base) + 230 (step@1p) + 460 (gap) = 790
