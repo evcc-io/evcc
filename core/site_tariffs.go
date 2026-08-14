@@ -275,8 +275,22 @@ const (
 // single day's weather noise onto the whole horizon. The current (partial) day is
 // excluded so it cannot skew the ratio. Returns 1 when there is not enough history, so
 // fresh installations are not adjusted on thin data.
+//
+// The result only depends on completed days, so it cannot change within a day. It is
+// cached accordingly instead of being recomputed on every optimizer run.
 func (site *Site) solarScalePercentile() float64 {
-	from := now.BeginningOfDay().AddDate(0, 0, -solarScaleWindow)
+	bod := now.BeginningOfDay()
+
+	site.Lock()
+	defer site.Unlock()
+
+	if site.solarScaleCacheDay.Equal(bod) {
+		return site.solarScaleCache
+	}
+	site.solarScaleCacheDay = bod
+	site.solarScaleCache = 1 // fallback if the query below returns early
+
+	from := bod.AddDate(0, 0, -solarScaleWindow)
 	series, err := metrics.QueryEnergy(from, time.Now(), "day", true)
 	if err != nil {
 		site.log.ERROR.Printf("solar scale percentile: %v", err)
@@ -300,7 +314,7 @@ func (site *Site) solarScalePercentile() float64 {
 		}
 	}
 
-	today := now.BeginningOfDay().Format("2006-01-02")
+	today := bod.Format("2006-01-02")
 	ratios := make([]float64, 0, len(fcst))
 	for day, f := range fcst {
 		if day == today || f <= solarScaleMinEnergy {
@@ -314,6 +328,7 @@ func (site *Site) solarScalePercentile() float64 {
 		return 1
 	}
 	site.log.DEBUG.Printf("solar scale P%.0f over %d days = %.3f", solarScalePercentile*100, len(ratios), scale)
+	site.solarScaleCache = scale
 	return scale
 }
 

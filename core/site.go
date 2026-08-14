@@ -120,6 +120,9 @@ type Site struct {
 
 	optimizerMu      sync.Mutex // guards optimizer runs
 	optimizerUpdated time.Time  // last optimizer run, guarded by optimizerMu
+
+	solarScaleCache    float64   // cached solarScalePercentile result, valid for solarScaleCacheDay
+	solarScaleCacheDay time.Time // day the cached solar scale was computed for
 }
 
 // MetersConfig contains the site's meter configuration
