@@ -81,18 +81,22 @@ export function highestSlotIndexByDay(entries: UiTimeseriesEntry[], day: number 
   return entries.findIndex((entry) => entry.ts === highestEntry.ts);
 }
 
+// scale is derived from today's actual production vs. forecast, so it's only
+// applied to today - extrapolating it to tomorrow/day-after would assume
+// today's over/under-performance carries over, which isn't a given.
 export function adjustedSolar(solar?: UiSolarDetails): UiSolarDetails | undefined {
   if (!solar?.scale) return solar;
 
   const { scale } = solar;
   const result = deepCopy(solar);
+  const todayString = dayStringByOffset(0);
 
   if (result.today) result.today.energy *= scale;
-  if (result.tomorrow) result.tomorrow.energy *= scale;
-  if (result.dayAfterTomorrow) result.dayAfterTomorrow.energy *= scale;
   if (result.timeseries) {
     result.timeseries.forEach((entry) => {
-      entry.val *= scale;
+      if (toDayString(new Date(entry.ts)) === todayString) {
+        entry.val *= scale;
+      }
     });
   }
 

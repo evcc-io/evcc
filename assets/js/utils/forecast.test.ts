@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vite-plus/test";
-import { expandForecast, findLowestSumSlotIndex, isStaticTariff } from "./forecast";
+import { adjustedSolar, expandForecast, findLowestSumSlotIndex, isStaticTariff } from "./forecast";
 
 describe("expandForecast", () => {
   test("expands slots to milliseconds", () => {
@@ -106,5 +106,40 @@ describe("isStaticTariff", () => {
       { start: 1735691400000, end: 1735692300000, value: 0.25 },
     ];
     expect(isStaticTariff(slots)).toBe(false);
+  });
+});
+
+describe("adjustedSolar", () => {
+  test("returns input unchanged when scale is missing", () => {
+    const solar = { today: { energy: 100, complete: true } };
+    expect(adjustedSolar(solar)).toEqual(solar);
+  });
+
+  test("scales today but leaves tomorrow/dayAfterTomorrow untouched", () => {
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const solar = {
+      scale: 2,
+      today: { energy: 100, complete: true },
+      tomorrow: { energy: 200, complete: true },
+      dayAfterTomorrow: { energy: 300, complete: true },
+      timeseries: [
+        { ts: today.getTime(), val: 10 },
+        { ts: tomorrow.getTime(), val: 20 },
+      ],
+    };
+
+    const result = adjustedSolar(solar);
+
+    expect(result?.today?.energy).toBe(200);
+    expect(result?.tomorrow?.energy).toBe(200);
+    expect(result?.dayAfterTomorrow?.energy).toBe(300);
+    expect(result?.timeseries).toEqual([
+      { ts: today.getTime(), val: 20 },
+      { ts: tomorrow.getTime(), val: 20 },
+    ]);
+    expect(result?.scale).toBe(0.5);
   });
 });
