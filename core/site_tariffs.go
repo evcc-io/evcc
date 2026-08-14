@@ -2,6 +2,7 @@ package core
 
 import (
 	"math"
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -215,20 +216,20 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 	return res
 }
 
-// effectiveSolarScale returns the solar forecast scale if forecast adjustment
-// is enabled, 1 otherwise.
+// effectiveSolarScale returns the solar forecast scale used to adjust the
+// optimizer's solar input if forecast adjustment is enabled, 1 otherwise.
 func (site *Site) effectiveSolarScale() float64 {
 	if !site.GetSolarAdjusted() {
 		return 1
 	}
-	return site.solarScale()
+	return site.solarScalePercentile()
 }
 
 // solarScale returns the ratio of produced solar energy to forecasted solar
-// energy for the current day, queried from the metrics database. Used to
-// adjust forecasts when PV is consistently under-/over-producing relative
-// to the forecast. Returns 1.0 when not enough data is available to make
-// the ratio meaningful.
+// energy for the current day, queried from the metrics database. This is
+// display-only (solarDetails.Scale): it grows monotonically over the day and
+// is dominated by today's weather, so it must not be projected onto future
+// days. See solarScalePercentile for the value actually fed to the optimizer.
 func (site *Site) solarScale() float64 {
 	series, err := metrics.QueryEnergy(now.BeginningOfDay(), time.Now(), "day", true)
 	if err != nil {
@@ -257,6 +258,74 @@ func (site *Site) solarScale() float64 {
 	scale := pv / fcst
 	site.log.DEBUG.Printf("solar forecast: produced %.3fkWh, forecasted %.3fkWh, scale %.3f", pv, fcst, scale)
 	return scale
+}
+
+const (
+	solarScaleWindow     = 30  // trailing window of days to consider
+	solarScaleMinSamples = 14  // minimum daily ratios before applying a scale
+	solarScalePercentile = 0.5 // percentile of the daily ratio distribution to use
+	solarScaleMinEnergy  = 0.5 // kWh, skip dark days where the ratio is noise
+)
+
+// solarScalePercentile returns the solarScalePercentile-th percentile of the daily
+// produced/forecasted solar ratio over a trailing window of solarScaleWindow completed
+// days. Unlike solarScale (today's ratio, display-only) this is robust against
+// single-day forecast outliers: it captures the systematic installation bias (soiling,
+// shading, model error) that legitimately applies to future days, without projecting a
+// single day's weather noise onto the whole horizon. The current (partial) day is
+// excluded so it cannot skew the ratio. Returns 1 when there is not enough history, so
+// fresh installations are not adjusted on thin data.
+func (site *Site) solarScalePercentile() float64 {
+	from := now.BeginningOfDay().AddDate(0, 0, -solarScaleWindow)
+	series, err := metrics.QueryEnergy(from, time.Now(), "day", true)
+	if err != nil {
+		site.log.ERROR.Printf("solar scale percentile: %v", err)
+		return 1
+	}
+
+	pv := map[string]float64{}
+	fcst := map[string]float64{}
+	for _, s := range series {
+		var m map[string]float64
+		switch s.Group {
+		case metrics.PV:
+			m = pv
+		case metrics.Forecast:
+			m = fcst
+		default:
+			continue
+		}
+		for _, d := range s.Data {
+			m[d.Start.Format("2006-01-02")] = d.Energy
+		}
+	}
+
+	today := now.BeginningOfDay().Format("2006-01-02")
+	ratios := make([]float64, 0, len(fcst))
+	for day, f := range fcst {
+		if day == today || f <= solarScaleMinEnergy {
+			continue
+		}
+		ratios = append(ratios, pv[day]/f)
+	}
+
+	scale, ok := percentileOf(ratios, solarScalePercentile, solarScaleMinSamples)
+	if !ok {
+		return 1
+	}
+	site.log.DEBUG.Printf("solar scale P%.0f over %d days = %.3f", solarScalePercentile*100, len(ratios), scale)
+	return scale
+}
+
+// percentileOf returns the p-th percentile (0..1) of values by nearest-rank on the
+// sorted series, or false when fewer than minSamples are present.
+func percentileOf(values []float64, p float64, minSamples int) (float64, bool) {
+	if len(values) < minSamples {
+		return 0, false
+	}
+	s := slices.Clone(values)
+	slices.Sort(s)
+	return s[int(p*float64(len(s)-1))], true
 }
 
 func (site *Site) isDynamicTariff(usage api.TariffUsage) bool {
