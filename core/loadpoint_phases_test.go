@@ -566,6 +566,7 @@ func TestMinChargingPhaseScaling(t *testing.T) {
 			err := lp.minCharging()
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedPhases, lp.phases, tc.desc)
+			require.True(t, lp.phaseTimer.IsZero(), "phase timer must not remain active")
 
 			ctrl.Finish()
 		})
@@ -579,14 +580,16 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 		desc                  string
 		phasesConfigured      int
 		activePhases          int
+		measuredPhases        int
 		chargePower           float64
 		status                api.ChargeStatus
 		availableCircuitPower float64 // ValidatePower return for 3p request
 		expectedPhases        int
 		noCircuit             bool
 		phaseSwitchInProgress bool
+		phaseTimerRunning     bool
 	}{
-		{desc: "no circuit", activePhases: 3, phasesConfigured: 0, status: api.StatusB, chargePower: 0, expectedPhases: 3, noCircuit: true},
+		{desc: "no circuit", activePhases: 3, phasesConfigured: 0, status: api.StatusB, chargePower: 0, expectedPhases: 3, noCircuit: true, phaseTimerRunning: true},
 
 		{desc: "fixed 1p, 1p active", activePhases: 1, phasesConfigured: 1, status: api.StatusB, chargePower: 0, availableCircuitPower: 11040, expectedPhases: 1},
 		{desc: "fixed 1p, 3p active", activePhases: 3, phasesConfigured: 1, status: api.StatusB, chargePower: 0, availableCircuitPower: 11040, expectedPhases: 1},
@@ -606,7 +609,11 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 
 		{desc: "edge case: staying at 1p at 3p minimum plus buffer - 1", phasesConfigured: 0, activePhases: 1, status: api.StatusB, chargePower: 0, availableCircuitPower: 4140*1.1 - 1, expectedPhases: 1},
 
-		{desc: "phase switch in progress", phasesConfigured: 0, activePhases: 1, status: api.StatusB, chargePower: 0, availableCircuitPower: 11040, expectedPhases: 1, phaseSwitchInProgress: true},
+		{desc: "phase switch in progress", phasesConfigured: 0, activePhases: 1, status: api.StatusB, chargePower: 0, availableCircuitPower: 11040, expectedPhases: 1, phaseSwitchInProgress: true, phaseTimerRunning: true},
+
+		// measured phases must not be mistaken for the enabled phase count
+		{desc: "2p vehicle on 3p, low limit", phasesConfigured: 0, activePhases: 3, measuredPhases: 2, status: api.StatusC, chargePower: 3680, availableCircuitPower: 3680, expectedPhases: 1},
+		{desc: "1p vehicle on 3p, high limit", phasesConfigured: 0, activePhases: 3, measuredPhases: 1, status: api.StatusC, chargePower: 3680, availableCircuitPower: 11040, expectedPhases: 3},
 	}
 
 	for _, tc := range tc {
@@ -622,6 +629,7 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 			lp.Enable.Delay = time.Minute
 			lp.phasesConfigured = tc.phasesConfigured
 			lp.phases = tc.activePhases
+			lp.measuredPhases = tc.measuredPhases
 			lp.chargePower = tc.chargePower
 			lp.status = tc.status
 			lp.offeredCurrent = 0 // ensure MaxCurrent is called
@@ -629,6 +637,11 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 
 			if tc.phaseSwitchInProgress {
 				lp.phasesSwitched = clck.Now()
+			}
+
+			// a pending pv scale timer must not survive fast charging
+			if tc.phaseTimerRunning {
+				lp.phaseTimer = clck.Now()
 			}
 
 			plainCharger := api.NewMockCharger(ctrl)
@@ -677,6 +690,7 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 			}
 
 			require.Equal(t, tc.expectedPhases, lp.phases, tc.desc)
+			require.True(t, lp.phaseTimer.IsZero(), "phase timer must not remain active")
 
 			ctrl.Finish()
 		})
