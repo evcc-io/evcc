@@ -32,7 +32,7 @@ require (
 	github.com/enbility/ship-go v0.6.1-0.20260720110450-0aa90f64ac76
 	github.com/enbility/spine-go v0.7.1-0.20260629113257-b3bcc643f323
 	github.com/evcc-io/openapi-mcp v0.6.1-0.20260701153510-26c442199ef4
-	github.com/evcc-io/optimizer v0.0.0-20260808102051-bc47435b4068
+	github.com/evcc-io/optimizer v0.0.0-20260808185529-a50b33da38e5
 	github.com/evcc-io/rct v0.2.0
 	github.com/evcc-io/tesla-proxy-client v0.0.0-20260722080120-05ada06c7368
 	github.com/fatih/structs v1.1.0
@@ -78,7 +78,7 @@ require (
 	github.com/nicholas-fedor/shoutrrr v0.17.0
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
 	github.com/olekukonko/tablewriter v1.1.4
-	github.com/philippseith/signalr v0.10.1-0.20260806083734-d62f30bf7a90
+	github.com/philippseith/signalr v0.11.0
 	github.com/prometheus-community/pro-bing v0.9.1
 	github.com/prometheus/client_golang v1.24.1
 	github.com/prometheus/common v0.70.1
@@ -98,7 +98,7 @@ require (
 	github.com/teslamotors/vehicle-command v0.4.1
 	github.com/tess1o/go-ecoflow v1.1.1-0.20251003083510-2ccc15a17e29
 	github.com/traefik/yaegi v0.16.1
-	github.com/volkszaehler/mbmd v0.0.0-20260803093438-96221ccf34be
+	github.com/volkszaehler/mbmd v0.0.0-20260812141656-4304ad77c56f
 	github.com/warthog618/go-gpiocdev v0.9.1
 	github.com/xuri/excelize/v2 v2.11.0
 	gitlab.com/bboehmke/sunny v0.17.0
@@ -257,7 +257,6 @@ require (
 tool (
 	github.com/dmarkham/enumer
 	github.com/evcc-io/evcc/cmd/implement
-	github.com/evcc-io/openapi-mcp/cmd/openapi-mcp
 	github.com/gokrazy/tools/cmd/gok
 	go.uber.org/mock/mockgen
 	golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize
@@ -265,7 +264,7 @@ tool (
 
 replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250501165638-8b6f1fbdb7ea
 
-replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20260727074919-195c10b8758d
+replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20260812074841-a8aa5fef8a9e
 
 replace github.com/enbility/spine-go => github.com/andig/spine-go v0.7.1-0.20260804073026-f9a8d8e8fd18
 

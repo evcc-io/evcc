@@ -35,9 +35,6 @@ const (
 
 	// batteryPower is the default power of the battery in W
 	batteryPower = 6000
-
-	// optimizerDebounce limits how often on-demand optimizer runs execute
-	optimizerDebounce = 2 * time.Minute
 )
 
 // optimizerChargingStrategies are the valid grid charging strategies; the first
@@ -251,6 +248,10 @@ func (site *Site) suggestion(key, currentAction string) *types.Suggestion {
 // publishSuggestions publishes the loadpoints' suggestions
 func (site *Site) publishSuggestions() {
 	for id, lp := range site.loadpoints {
+		if lp == nil {
+			continue
+		}
+
 		var val any
 		if s := site.suggestion(loadpointKey(id), loadpointCurrentAction(lp)); s != nil {
 			val = *s
@@ -512,13 +513,18 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 
 	var batteries []optimizerBattery
 
-	for id, lp := range site.Loadpoints() {
+	// uncontrollable power of loadpoints that cannot be modelled as storage
+	var unmodelled float64
+
+	for id, lp := range site.ActiveLoadpoints() {
 		// ignore disconnected loadpoints, including StatusNone
 		if s := lp.GetStatus(); s != api.StatusB && s != api.StatusC {
 			continue
 		}
 
+		// unknown vehicle capacity: account for the consumption as uncontrollable load
 		if v := lp.GetVehicle(); v == nil || v.Capacity() == 0 {
+			unmodelled += unmodelledPower(lp)
 			continue
 		}
 
@@ -526,6 +532,21 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		if cfg, detail := site.loadpointRequest(lp, minLen, firstSlotDuration, grid); cfg.CMax > 0 {
 			detail.loadpoint = &id
 			batteries = append(batteries, optimizerBattery{cfg, detail})
+		}
+	}
+
+	// home profile subtracts all loadpoint power, so unmodelled loadpoints would
+	// leave the optimizer planning against surplus that is already consumed. Their
+	// forecast is zero, so the measured power only decays into the near slots -
+	// without a capacity there is no fill point to assert it any further.
+	if unmodelled > 0 {
+		load := make([]float64, minLen)
+		blendMeasured(load, unmodelled/slotsPerHour, optimizerDecaySlots)
+
+		site.log.DEBUG.Printf("optimizer: home slots updated with unmodelled %.0fW loadpoint load: %.0f", unmodelled, load[:min(optimizerDecaySlots, len(load))])
+
+		for i, v := range prorate(load, firstSlotDuration) {
+			req.TimeSeries.Gt[i] += v
 		}
 	}
 
@@ -784,9 +805,10 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 
 	if vt := v.GetTitle(); vt != "" {
 		if detail.Title != "" {
-			detail.Title += " – "
+			detail.Title += " (" + vt + ")"
+		} else {
+			detail.Title = vt
 		}
-		detail.Title += vt
 	}
 
 	// find vehicle name/id
@@ -958,6 +980,20 @@ func loadpointProfile(lp loadpoint.API, minLen int) []float64 {
 	}
 
 	return res
+}
+
+// unmodelledPower returns the uncontrollable power of a connected loadpoint that
+// cannot be modelled as storage because the vehicle capacity is unknown
+func unmodelledPower(lp loadpoint.API) float64 {
+	power := lp.GetChargePower()
+
+	// minpv keeps drawing at least min power while the vehicle is connected,
+	// even before the charge meter has caught up
+	if lp.GetMode() == api.ModeMinPV && lp.GetStatus() == api.StatusC {
+		power = max(power, lp.EffectiveMinPower())
+	}
+
+	return max(0, power)
 }
 
 // homeProfile returns the home base load in Wh
