@@ -281,20 +281,47 @@ const (
 func (site *Site) solarScalePercentile() float64 {
 	bod := now.BeginningOfDay()
 
+	if cached, hit := site.readSolarScaleCache(bod); hit {
+		return cached
+	}
+
+	// query and compute outside the lock: metrics.QueryEnergy is a synchronous DB
+	// call and must not block concurrent Site Get*/Set* API calls. A concurrent
+	// cache miss may run this twice on the same day; both converge on the same
+	// result, so the duplicate work is harmless.
+	scale, err := site.querySolarScalePercentile(bod)
+	if err != nil {
+		site.log.ERROR.Printf("solar scale percentile: %v", err)
+		return 1 // do not cache: retry on the next call instead of poisoning the day
+	}
+
+	site.writeSolarScaleCache(bod, scale)
+
+	return scale
+}
+
+// readSolarScaleCache returns the cached solar scale and whether it is valid for bod.
+func (site *Site) readSolarScaleCache(bod time.Time) (float64, bool) {
+	site.RLock()
+	defer site.RUnlock()
+	return site.solarScaleCache, site.solarScaleCacheDay.Equal(bod)
+}
+
+// writeSolarScaleCache stores scale as valid for bod.
+func (site *Site) writeSolarScaleCache(bod time.Time, scale float64) {
 	site.Lock()
 	defer site.Unlock()
-
-	if site.solarScaleCacheDay.Equal(bod) {
-		return site.solarScaleCache
-	}
 	site.solarScaleCacheDay = bod
-	site.solarScaleCache = 1 // fallback if the query below returns early
+	site.solarScaleCache = scale
+}
 
+// querySolarScalePercentile does the actual metrics query and percentile calculation
+// for solarScalePercentile, given the current beginning-of-day boundary.
+func (site *Site) querySolarScalePercentile(bod time.Time) (float64, error) {
 	from := bod.AddDate(0, 0, -solarScaleWindow)
 	series, err := metrics.QueryEnergy(from, time.Now(), "day", true)
 	if err != nil {
-		site.log.ERROR.Printf("solar scale percentile: %v", err)
-		return 1
+		return 0, err
 	}
 
 	pv := map[string]float64{}
@@ -325,11 +352,10 @@ func (site *Site) solarScalePercentile() float64 {
 
 	scale, ok := percentileOf(ratios, solarScalePercentile, solarScaleMinSamples)
 	if !ok {
-		return 1
+		return 1, nil
 	}
 	site.log.DEBUG.Printf("solar scale P%.0f over %d days = %.3f", solarScalePercentile*100, len(ratios), scale)
-	site.solarScaleCache = scale
-	return scale
+	return scale, nil
 }
 
 // percentileOf returns the p-th percentile (0..1) of values by nearest-rank on the
