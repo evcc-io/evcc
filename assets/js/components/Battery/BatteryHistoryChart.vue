@@ -3,9 +3,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, markRaw, type PropType } from "vue";
+import { defineComponent, type PropType } from "vue";
 import {
-	echarts,
 	FONT_FAMILY,
 	forecastXAxes,
 	forecastYAxis,
@@ -15,10 +14,10 @@ import {
 } from "../Forecast/echarts";
 import colors, { dimColor, setAlpha, batteryColor } from "@/colors";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
+import echartsChart from "@/mixins/echartsChart";
 import { is12hFormat } from "@/units";
 import type { SocPoint, BatterySeries } from "./types";
 
-type EChartsType = ReturnType<typeof echarts.init>;
 type Point = [number, number];
 
 const GRID = { top: 10, right: 36, bottom: 34, left: 0 };
@@ -45,7 +44,7 @@ function hatchPattern(color: string) {
 
 export default defineComponent({
 	name: "BatteryHistoryChart",
-	mixins: [formatter],
+	mixins: [formatter, echartsChart],
 	props: {
 		batteries: { type: Array as PropType<BatterySeries[]>, default: () => [] },
 		mode: { type: String as PropType<"soc" | "energy">, default: "soc" },
@@ -57,7 +56,6 @@ export default defineComponent({
 	},
 	data() {
 		return {
-			chart: null as EChartsType | null,
 			previousMode: "soc" as string,
 			prevWinStart: 0,
 			prevWinEnd: 0,
@@ -199,51 +197,9 @@ export default defineComponent({
 			return [hourAxis, dayAxis];
 		},
 	},
-	watch: {
-		chartOption: {
-			handler() {
-				const modeChanged = this.previousMode !== this.mode;
-				const windowChanged =
-					this.prevWinStart !== this.winStart || this.prevWinEnd !== this.winEnd;
-
-				// a running slide re-renders from the latest chartOption every frame, so data that
-				// loads mid-slide is picked up automatically. only intervene if the target changed.
-				if (this.slideRaf && !windowChanged && !modeChanged) return;
-
-				// animate only on real paging (dayOffset change); forecast arrival and clock
-				// advance also shift the window but must not trigger the slide
-				const paging =
-					this.hasRendered && !modeChanged && this.dayOffset !== this.prevDayOffset;
-				const fromStart = this.prevWinStart;
-				const fromEnd = this.prevWinEnd;
-
-				this.cancelSlide();
-				this.previousMode = this.mode;
-				this.prevWinStart = this.winStart;
-				this.prevWinEnd = this.winEnd;
-				this.prevDayOffset = this.dayOffset;
-
-				if (paging) {
-					this.slideWindow(fromStart, fromEnd, this.winStart, this.winEnd);
-				} else {
-					this.chart?.setOption(
-						{ ...this.chartOption, animation: false },
-						modeChanged ? { notMerge: true } : { replaceMerge: ["series"] }
-					);
-					this.hasRendered = true;
-					this.$nextTick(() => this.updateGraphic());
-				}
-			},
-			deep: true,
-		},
-	},
 	mounted() {
-		const el = this.$refs["chartEl"] as HTMLElement;
-		this.chart = markRaw(echarts.init(el));
-		this.chart.setOption(this.chartOption);
 		this.$nextTick(() => this.updateGraphic());
-		window.addEventListener("resize", this.resize);
-		// initial render done here (not via the watcher), so paging animates from the first click
+		// initial render done in the mixin (not via the watcher), so paging animates from the first click
 		this.hasRendered = true;
 		this.prevWinStart = this.winStart;
 		this.prevWinEnd = this.winEnd;
@@ -251,11 +207,42 @@ export default defineComponent({
 		this.previousMode = this.mode;
 	},
 	beforeUnmount() {
-		window.removeEventListener("resize", this.resize);
 		this.cancelSlide();
-		this.chart?.dispose();
 	},
 	methods: {
+		applyChartOption() {
+			const modeChanged = this.previousMode !== this.mode;
+			const windowChanged =
+				this.prevWinStart !== this.winStart || this.prevWinEnd !== this.winEnd;
+
+			// a running slide re-renders from the latest chartOption every frame, so data that
+			// loads mid-slide is picked up automatically. only intervene if the target changed.
+			if (this.slideRaf && !windowChanged && !modeChanged) return;
+
+			// animate only on real paging (dayOffset change); forecast arrival and clock
+			// advance also shift the window but must not trigger the slide
+			const paging =
+				this.hasRendered && !modeChanged && this.dayOffset !== this.prevDayOffset;
+			const fromStart = this.prevWinStart;
+			const fromEnd = this.prevWinEnd;
+
+			this.cancelSlide();
+			this.previousMode = this.mode;
+			this.prevWinStart = this.winStart;
+			this.prevWinEnd = this.winEnd;
+			this.prevDayOffset = this.dayOffset;
+
+			if (paging) {
+				this.slideWindow(fromStart, fromEnd, this.winStart, this.winEnd);
+			} else {
+				this.chart?.setOption(
+					{ ...this.chartOption, animation: false },
+					modeChanged ? { notMerge: true } : { replaceMerge: ["series"] }
+				);
+				this.hasRendered = true;
+				this.$nextTick(() => this.updateGraphic());
+			}
+		},
 		// stable echarts series id per battery/part; single source for building and tooltip lookup
 		seriesId(id: string, part: "hist" | "fc"): string {
 			return `${this.mode}-${id}-${part}`;

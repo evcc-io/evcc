@@ -1,11 +1,9 @@
-import { defineComponent, markRaw } from "vue";
-import { echarts } from "./echarts";
+import { defineComponent } from "vue";
+import echartsChart from "@/mixins/echartsChart";
 import "./chartStyles.css";
 
-// chartOption is provided by each consuming component's computed
-type WithChartOption = { chartOption: Record<string, unknown> };
-
 export default defineComponent({
+  mixins: [echartsChart],
   props: {
     chartWidth: { type: Number, required: true },
     endDate: { type: Date, required: true },
@@ -13,23 +11,15 @@ export default defineComponent({
   },
   emits: ["scroll"],
   data(): {
-    chart: echarts.ECharts | null;
     startDate: Date;
     tooltipVisible: boolean;
   } {
     return {
-      chart: null,
       tooltipVisible: false,
       startDate: new Date(),
     };
   },
   watch: {
-    chartOption: {
-      handler() {
-        this.chart?.setOption((this as unknown as WithChartOption).chartOption);
-      },
-      deep: true,
-    },
     scrollLeft(val: number) {
       const el = this.$refs["scrollEl"] as HTMLElement;
       if (el && Math.abs(el.scrollLeft - val) > 1) {
@@ -37,12 +27,9 @@ export default defineComponent({
       }
     },
   },
-  mounted() {
+  created() {
+    // before the first chart render so chartOption sees the rounded date
     this.updateStartDate();
-    this.initChart();
-  },
-  beforeUnmount() {
-    this.chart?.dispose();
   },
   methods: {
     updateStartDate() {
@@ -53,22 +40,16 @@ export default defineComponent({
     onScroll(e: Event) {
       this.$emit("scroll", (e.target as HTMLElement).scrollLeft);
     },
-    initChart() {
-      const el = this.$refs["chartEl"] as HTMLElement;
-      this.chart = markRaw(echarts.init(el));
-      this.chart.setOption((this as unknown as WithChartOption).chartOption);
-      this.chart.on("showTip", () => {
+    onChartInit() {
+      this.chart?.on("showTip", () => {
         this.tooltipVisible = true;
       });
-      this.chart.on("hideTip", () => {
+      this.chart?.on("hideTip", () => {
         this.tooltipVisible = false;
       });
-      const resetTouch = () => {
-        this.chart?.dispatchAction({ type: "hideTip" });
-        this.tooltipVisible = false;
-      };
-      el.addEventListener("touchend", resetTouch);
-      el.addEventListener("touchcancel", resetTouch);
+    },
+    onTouchTooltipReset() {
+      this.tooltipVisible = false;
     },
   },
 });

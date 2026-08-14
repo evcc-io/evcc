@@ -42,6 +42,7 @@
       },
       "bufferTitle": "Batterie als Ladepuffer",
       "discharge": "Entladung der Hausbatterie im Schnell-Modus und bei geplantem Laden verhindern.",
+      "gridDischarge": "Die Entladung der Hausbatterie ins Stromnetz zulassen.",
       "priority": "Hausspeicher hat Vorrang, solange er unter {soc} liegt. Dann erhalten die Ladepunkte den Überschuss.",
       "priorityNone": "Sonnenüberschuss geht direkt an die Ladepunkte. Setze einen Wert über {soc}, um den Hausspeicher zu bevorzugen.",
       "priorityTitle": "Wohin geht der Überschuss zuerst?"
@@ -49,6 +50,7 @@
     "optimizer": {
       "action": {
         "charge": "Aus dem Netz laden",
+        "discharge": "Einspeisung ins Netz",
         "hold": "Entladen verhindern",
         "holdcharge": "Laden verhindern",
         "normal": "Normaler Betrieb"
@@ -118,6 +120,7 @@
       "titleEdit": "Intelligenten Verbraucher bearbeiten"
     },
     "battery": {
+      "title": "Batterie",
       "titleAdd": "Batterie hinzufügen",
       "titleEdit": "Batterie bearbeiten"
     },
@@ -216,6 +219,7 @@
       "enabled": "Ladebereit",
       "energy": "Energie",
       "events": "Ereignisse",
+      "exportLimit": "Einspeiselimit",
       "feedinPrice": "Einspeisevergütung",
       "forecast": "Vorhersage",
       "gridPrice": "Netzpreis",
@@ -256,7 +260,7 @@
     },
     "devices": {
       "auxMeter": "Smarter Verbraucher",
-      "batteryStorage": "Batterie",
+      "batteryStorage": "Batteriespeicher",
       "consumer": "Verbraucher",
       "solarSystem": "PV-Anlage"
     },
@@ -303,6 +307,7 @@
     "form": {
       "danger": "Achtung",
       "deprecated": "veraltet",
+      "durationUnit": "Zeiteinheit für {label}",
       "example": "Beispiel",
       "optional": "optional"
     },
@@ -315,17 +320,22 @@
       "change": "Ändern",
       "clear": "Löschen",
       "close": "Schließen",
+      "confirmDisable": "Dieses Gerät deaktivieren? Es wird nach dem nächsten Neustart ignoriert.",
+      "confirmEnable": "Dieses Gerät wieder aktivieren?",
       "confirmSave": "Es gibt ungespeicherte Änderungen. Jetzt speichern?",
       "copied": "Kopiert!",
       "copy": "Kopieren",
       "customHelp": "Erstelle ein benutzerdefiniertes Gerät mit evcc's Plugin-System.",
       "customOption": "Benutzerdefiniertes Gerät",
       "delete": "Löschen",
+      "disable": "Deaktivieren",
+      "disabled": "deaktiviert",
       "dismiss": "Ausblenden",
       "docsLink": "Siehe Dokumentation.",
       "dragHandle": "Verschieben",
       "dragItem": "Verschiebbar: {title}",
       "dragList": "Sortierbare Liste",
+      "enable": "Aktivieren",
       "error": "Fehler",
       "experimental": "Experimentell",
       "forceSave": "Trotzdem speichern",
@@ -367,12 +377,18 @@
       },
       "customOption": "Benutzerdefinierte Integration",
       "description": "Leistungsbegrenzung durch externe Systeme (z.B. §14a EnWG, §9 EEG Schnittstelle oder übergeordnetes Energiemanagementsystem). Spielt mit dem Lastmanagement Feature zusammen. Das Abregeln der Solarproduktion wird ebenfalls für ausgewählte Geräte unterstützt. Der konkrete Abregelungswert muss in der jeweiligen Wechselrichter-Konfiguration eingestellt werden.",
+      "download": "Download",
+      "dynamicLimits": "Dynamische Limits",
       "eventsRecorded": "{count} Netzbegrenzungen gespeichert.",
+      "exportLimit": "Einspeiselimit",
+      "exportLimitDescription": "Der Batterie-Optimierer berücksichtigt dieses Limit um Solarverluste zu vermeiden. Eine aktive Abregelung durch eine Integration der dynamischen Limits hat Vorrang.",
+      "exportLimitHint": "Statische Einspeisegrenze am Netzanschlusspunkt.",
       "generic": "Generische Integrationen",
       "integrations": "Integrationen",
       "lastEvent": "Letzter Eintrag {timeAgo}.",
       "noEvents": "Es wurden noch keine Ereignisse aufgezeichnet.",
       "recordedEvents": "Aufgezeichnete Ereignisse",
+      "staticLimits": "Statische Limits",
       "template": "Integration",
       "title": "Externe Begrenzung",
       "type": {
@@ -588,6 +604,11 @@
           "messageDefault": "Laden beendet: {chargedEnergy}kWh in {chargeDuration}.",
           "title": "Wenn das Laden stoppt",
           "titleDefault": "Ladevorgang beendet"
+        },
+        "suggestion": {
+          "messageDefault": "Optimierungsvorschlag für {suggestionTitle}: Wäre die Optimierungssteuerung aktiv, würde sie jetzt „{suggestionAction}“ anwenden. Dies ist nur ein Hinweis, es wurden keine Änderungen vorgenommen. Experimentell – Feedback ist willkommen unter https://github.com/evcc-io/evcc/issues/31903",
+          "title": "Wenn sich die Empfehlung des Optimierers ändert",
+          "titleDefault": "Vorschlag des Optimierers"
         }
       },
       "eventMessage": "Nachricht",
@@ -1085,6 +1106,8 @@
     "version": {
       "availableLong": "neue Version verfügbar",
       "community": "evcc Community",
+      "labelEmail": "E-Mail",
+      "labelPhone": "Telefon",
       "labelRelease": "Release",
       "labelVersion": "Version",
       "labelWebsite": "Website",
@@ -1152,9 +1175,12 @@
     }
   },
   "general": {
+    "back": "Zurück",
     "download": "Download",
+    "error": "Fehler",
     "none": "keine",
-    "note": "Hinweis:"
+    "note": "Hinweis:",
+    "warning": "Warnung"
   },
   "header": {
     "about": "Über",
@@ -1167,6 +1193,7 @@
     "sessions": "Ladevorgänge"
   },
   "help": {
+    "contactButton": "Kontakt aufnehmen",
     "discussionsButton": "GitHub Discussions",
     "documentationButton": "Dokumentation",
     "issueButton": "Problem melden",
@@ -1206,7 +1233,10 @@
     "additionalContext": "Zusätzlicher Kontext",
     "additionalContextPlaceholder": "Alle zusätzlichen Informationen, die hilfreich sein könnten...\n- Konfigurationsdetails\n- Was du versucht hast\n- Umgebungsdetails",
     "createButtonDiscussion": "GitHub Diskussion starten...",
+    "createButtonEmail": "Anfrage per E-Mail senden",
     "createButtonIssue": "GitHub Issue erstellen...",
+    "downloadButton": "Debug-Informationen herunterladen",
+    "downloadHint": "Hänge diese Datei an deine E-Mail an, falls weitere Informationen benötigt werden.",
     "description": "Deine Installation funktioniert nicht wie erwartet? Nutze diese Seite um Hilfe zu bekommen oder Probleme zu melden. Gib genügend Details an, damit wir das Problem verstehen und reproduzieren können. Halte deine Beschreibung prägnant, klar und leicht verständlich.",
     "helpType": {
       "discussion": "Brauche Hilfe bei meiner Einrichtung",
@@ -1219,6 +1249,7 @@
     "issueTitle": "Titel",
     "stepsToReproduce": "Schritte zur Reproduktion",
     "subTitleDiscussion": "Beschreibe dein Problem",
+    "subTitleEmail": "Beschreibe dein Problem",
     "subTitleIssue": "Beschreibe das Problem",
     "summary": {
       "confirmationButtonDiscussion": "GitHub Diskussion starten",
@@ -1271,24 +1302,33 @@
       "goal": "Ladeziel",
       "modalTitle": "Ladeplanung",
       "none": "keiner",
+      "once": "einmalig",
       "optimization": {
         "cheapest": "günstigst",
+        "cheapestDescription": "Wählt die günstigsten Zeitfenster. Kann zu mehreren Starts und Stopps führen.",
+        "cleanest": "sauberst",
+        "cleanestDescription": "Wählt die saubersten Zeitfenster. Kann zu mehreren Starts und Stopps führen.",
         "continuous": "kontinuierlich",
+        "continuousCo2Description": "Wählt die sauberste unterbrechungsfreie Folge von Zeitfenstern.",
+        "continuousPriceDescription": "Wählt die günstigste unterbrechungsfreie Folge von Zeitfenstern.",
         "label": "Optimierung"
       },
       "planNumber": "Plan {number}",
       "precondition": {
-        "description": "Lade {duration} vor Abfahrt zur Batterie-Vorkonditionierung.",
+        "description": "Verlagert einen Teil des Ladens direkt vor die Abfahrt: warme Batterie, weniger Zeit mit hohem Ladestand.",
         "label": "Spätes Laden",
         "optionAll": "alles",
-        "optionNo": "nein"
+        "optionNo": "nein",
+        "summary": "{precondition} vorher"
       },
       "remove": "Entfernen",
       "repeating": "wiederholend",
       "repeatingPlans": "Wiederholende Pläne",
       "selectAll": "Alle wählen",
+      "strategy": {
+        "label": "Strategie"
+      },
       "strategyDisabledDescription": "Das Laden startet so spät wie möglich und wird rechtzeitig zur Abfahrt abgeschlossen. Mit dynamischen Netzpreisen oder einem CO₂-Tarif stehen hier weitere Optionen zur Verfügung.",
-      "strategySettings": "Strategie-Einstellungen",
       "time": "Zeit",
       "title": "Plan",
       "unsavedChanges": "Ungespeicherte Änderungen vorhanden. Jetzt anwenden?",
@@ -1351,6 +1391,7 @@
           "returnEnergy": "Energie (rückwärts)"
         }
       },
+      "download": "Download",
       "empty": "Keine Verlaufsdaten für diesen Zeitraum.",
       "group": {
         "battery": "Batterie",
@@ -1498,6 +1539,7 @@
       "keepAsIs": "Beibehalten",
       "learnMore": "Mehr erfahren.",
       "limitSoc": "Standardlimit",
+      "limitSocDescription": "Wird beim Anschließen des Fahrzeugs angewendet.",
       "menu": "Fahrzeuge",
       "minSoc": "Minimale Ladung",
       "minSocDescription": "Wird im PV-Modus schnell bis zu diesem Wert geladen.",
@@ -1572,6 +1614,7 @@
   },
   "session": {
     "addOdometer": "Wert eintragen",
+    "addedRange": "Geladene Reichweite",
     "cancel": "Abbrechen",
     "co2": "CO₂",
     "date": "Zeitraum",
@@ -1587,6 +1630,7 @@
     "title": "Ladevorgang"
   },
   "sessions": {
+    "addedRange": "Reichweite",
     "avgPower": "⌀ Leistung",
     "avgPrice": "⌀ Preis",
     "chargeDuration": "Ladedauer",
@@ -1612,6 +1656,7 @@
     },
     "co2": "⌀ CO₂",
     "csv": {
+      "addedrange": "Geladene Reichweite (km)",
       "chargedenergy": "Energie (kWh)",
       "chargeduration": "Ladedauer",
       "co2perkwh": "CO₂/kWh",
@@ -1630,6 +1675,8 @@
       "vehicle": "Fahrzeug"
     },
     "date": "Anfang",
+    "download": "Download {period}",
+    "downloadTotal": "Gesamtdownload",
     "energy": "Geladen",
     "filter": {
       "allLoadpoints": "Alle Ladepunkte",
@@ -1686,6 +1733,7 @@
       "label": "Sprache"
     },
     "loadpoints": {
+      "disabledDevice": "deaktiviert",
       "help": "Reihenfolge und Sichtbarkeit für die Benutzeroberfläche ändern.",
       "hide": "{title} ausblenden",
       "label": "Ladepunkte",

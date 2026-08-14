@@ -219,6 +219,7 @@
       "enabled": "Enabled",
       "energy": "Energy",
       "events": "Events",
+      "exportLimit": "Grid export limit",
       "feedinPrice": "Feed-in price",
       "forecast": "Forecast",
       "gridPrice": "Grid price",
@@ -306,6 +307,7 @@
     "form": {
       "danger": "Danger",
       "deprecated": "deprecated",
+      "durationUnit": "Time unit for {label}",
       "example": "Example",
       "optional": "optional"
     },
@@ -318,17 +320,22 @@
       "change": "Change",
       "clear": "Clear",
       "close": "Close",
+      "confirmDisable": "Disable this device? It will be ignored after the next restart.",
+      "confirmEnable": "Enable this device again?",
       "confirmSave": "There are unsaved changes. Save now?",
       "copied": "Copied!",
       "copy": "Copy",
       "customHelp": "Create a user-defined device using evcc's plugin system.",
       "customOption": "User-defined device",
       "delete": "Delete",
+      "disable": "Disable",
+      "disabled": "disabled",
       "dismiss": "Dismiss",
       "docsLink": "See documentation.",
       "dragHandle": "Drag handle",
       "dragItem": "Draggable: {title}",
       "dragList": "Reorderable list",
+      "enable": "Enable",
       "error": "Error",
       "experimental": "Experimental",
       "forceSave": "Save anyway",
@@ -371,12 +378,17 @@
       "customOption": "User-defined integration",
       "description": "Power limitation by external systems (e.g. §14a EnWG, §9 EEG interface or higher-level energy management system). Works together with the load management feature. Curtailing solar production is also supported for selected devices. The actual curtailment limit must be set on each inverter configuration.",
       "download": "Download",
+      "dynamicLimits": "Dynamic limits",
       "eventsRecorded": "Recorded {count} grid limitation events.",
+      "exportLimit": "Grid export limit",
+      "exportLimitDescription": "The battery optimizer respects this limit to avoid solar losses. An active curtailment signal from a dynamic limit integration takes precedence.",
+      "exportLimitHint": "Static feed-in limit at the grid connection point.",
       "generic": "Generic integrations",
       "integrations": "Integrations",
       "lastEvent": "Most recent {timeAgo}.",
       "noEvents": "No events recorded yet.",
       "recordedEvents": "Recorded events",
+      "staticLimits": "Static limits",
       "template": "Integration",
       "title": "External Limit",
       "type": {
@@ -830,8 +842,8 @@
       "general": "General",
       "grid": "Grid",
       "integrations": "Integrations",
-      "loadpoints": "Charging points & Heaters",
-      "meter": "Solar & Battery",
+      "loadpoints": "Charging points & heaters",
+      "meter": "Solar & battery",
       "services": "Services",
       "system": "System",
       "vehicles": "Vehicles"
@@ -965,7 +977,7 @@
         "titleEdit": "Edit Temperature Forecast"
       },
       "template": "Provider",
-      "title": "Tariffs & Forecasts",
+      "title": "Tariffs & forecasts",
       "titleChoice": "What Do You Want To Add?",
       "type": {
         "co2": "CO₂ Intensity",
@@ -1094,6 +1106,8 @@
     "version": {
       "availableLong": "new version available",
       "community": "evcc community",
+      "labelEmail": "Email",
+      "labelPhone": "Phone",
       "labelRelease": "Release",
       "labelVersion": "Version",
       "labelWebsite": "Website",
@@ -1161,9 +1175,12 @@
     }
   },
   "general": {
+    "back": "Back",
     "download": "Download",
+    "error": "Error",
     "none": "none",
-    "note": "Note:"
+    "note": "Note:",
+    "warning": "Warning"
   },
   "header": {
     "about": "About",
@@ -1176,6 +1193,7 @@
     "sessions": "Charging Sessions"
   },
   "help": {
+    "contactButton": "Contact us",
     "discussionsButton": "GitHub discussions",
     "documentationButton": "Documentation",
     "issueButton": "Report a problem",
@@ -1215,7 +1233,10 @@
     "additionalContext": "Additional context",
     "additionalContextPlaceholder": "Any additional information that might be helpful...\n- Configuration details\n- What you tried\n- Environment details",
     "createButtonDiscussion": "Start GitHub Discussion...",
+    "createButtonEmail": "Send request by email",
     "createButtonIssue": "Create GitHub Issue...",
+    "downloadButton": "Download debug information",
+    "downloadHint": "Attach this file to your email if more information is needed.",
     "description": "Your installation is not working as expected? Use this page to get help or report issues. Provide enough detail to help us understand and reproduce the problem, while keeping your description concise, clear and easy to follow.",
     "helpType": {
       "discussion": "Need help with my setup",
@@ -1228,6 +1249,7 @@
     "issueTitle": "Title",
     "stepsToReproduce": "Steps to reproduce",
     "subTitleDiscussion": "Describe your problem",
+    "subTitleEmail": "Describe your problem",
     "subTitleIssue": "Describe the issue",
     "summary": {
       "confirmationButtonDiscussion": "Start GitHub Discussion",
@@ -1280,24 +1302,33 @@
       "goal": "Charging goal",
       "modalTitle": "Charging Plan",
       "none": "none",
+      "once": "once",
       "optimization": {
         "cheapest": "cheapest",
+        "cheapestDescription": "Selects the cheapest slots. May result in multiple starts and stops.",
+        "cleanest": "cleanest",
+        "cleanestDescription": "Selects the cleanest slots. May result in multiple starts and stops.",
         "continuous": "continuous",
+        "continuousCo2Description": "Selects the cleanest uninterrupted series of slots.",
+        "continuousPriceDescription": "Selects the cheapest uninterrupted series of slots.",
         "label": "Optimization"
       },
       "planNumber": "Plan {number}",
       "precondition": {
-        "description": "Charge {duration} before departure for battery preconditioning.",
+        "description": "Moves part of the charging right before departure: warm battery, less time at high charge level.",
         "label": "Late Charging",
         "optionAll": "everything",
-        "optionNo": "no"
+        "optionNo": "no",
+        "summary": "{precondition} before"
       },
       "remove": "Remove",
       "repeating": "repeating",
       "repeatingPlans": "Repeating plans",
       "selectAll": "Select all",
+      "strategy": {
+        "label": "Strategy"
+      },
       "strategyDisabledDescription": "Charging starts as late as possible to finish just in time for departure. With dynamic grid prices or CO₂ tariff, more options are available here.",
-      "strategySettings": "Strategy settings",
       "time": "Time",
       "title": "Plan",
       "unsavedChanges": "There are unsaved changes. Apply now?",
@@ -1508,6 +1539,7 @@
       "keepAsIs": "Keep as is",
       "learnMore": "Learn more.",
       "limitSoc": "Default limit",
+      "limitSocDescription": "Applied when the vehicle is connected.",
       "menu": "Vehicles",
       "minSoc": "Minimum charge",
       "minSocDescription": "Fast charge to this level in solar mode.",
@@ -1582,6 +1614,7 @@
   },
   "session": {
     "addOdometer": "Add value",
+    "addedRange": "Added range",
     "cancel": "Cancel",
     "co2": "CO₂",
     "date": "Period",
@@ -1592,11 +1625,12 @@
     "meterstop": "Meter stop",
     "odometer": "Mileage",
     "price": "Cost",
-    "soc": "Vehicle SoC",
+    "soc": "Charge",
     "started": "Started",
     "title": "Charging Session"
   },
   "sessions": {
+    "addedRange": "Range",
     "avgPower": "⌀ Power",
     "avgPrice": "⌀ Price",
     "chargeDuration": "Duration",
@@ -1622,6 +1656,7 @@
     },
     "co2": "⌀ CO₂",
     "csv": {
+      "addedrange": "Added range (km)",
       "chargedenergy": "Energy (kWh)",
       "chargeduration": "Duration",
       "co2perkwh": "CO₂/kWh",
@@ -1698,6 +1733,7 @@
       "label": "Language"
     },
     "loadpoints": {
+      "disabledDevice": "disabled",
       "help": "Change order and visibility for the UI.",
       "hide": "Hide {title}",
       "label": "Charging points",

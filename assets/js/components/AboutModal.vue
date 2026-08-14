@@ -1,9 +1,21 @@
 <template>
 	<GenericModal id="aboutModal" :size="modalSize" @opened="acknowledge">
 		<template #title>
-			<a :href="websiteUrl" target="_blank" rel="noopener noreferrer"
-				><Logo class="about-logo"
-			/></a>
+			<a :href="websiteUrl" target="_blank" rel="noopener noreferrer">
+				<template v-if="customLogo">
+					<img
+						:src="'./custom-logo-light'"
+						class="about-logo custom-logo custom-logo--light"
+						:alt="customBrand || 'evcc'"
+					/>
+					<img
+						:src="'./custom-logo-dark'"
+						class="about-logo custom-logo custom-logo--dark"
+						:alt="customBrand || 'evcc'"
+					/>
+				</template>
+				<Logo v-else class="about-logo" />
+			</a>
 		</template>
 		<div v-if="updateStarted">
 			<p>{{ $t("footer.version.modalUpdateStarted") }}</p>
@@ -24,25 +36,14 @@
 						<td v-if="development">---</td>
 						<td v-else>
 							<div class="d-flex flex-wrap column-gap-2 align-items-baseline">
-								<span class="text-nowrap">
-									<a
-										:href="releaseNotesUrl(installed)"
-										target="_blank"
-										rel="noopener noreferrer"
-									>
-										v{{ installed }}
-									</a>
-									<template v-if="nightly">
-										(<a
-											:href="githubCommitUrl"
-											target="_blank"
-											rel="noopener noreferrer"
-											><span class="font-monospace">{{
-												shortCommit
-											}}</span></a
-										>)
-									</template>
-								</span>
+								<a
+									class="text-nowrap"
+									:href="nightly ? githubCommitUrl : releaseNotesUrl(installed)"
+									target="_blank"
+									rel="noopener noreferrer"
+								>
+									v{{ installed }}
+								</a>
 								<span
 									v-if="!nightly && !newVersionAvailable"
 									class="text-muted text-nowrap"
@@ -66,6 +67,18 @@
 							</a>
 						</td>
 					</tr>
+					<tr v-if="customPhone">
+						<th>{{ $t("footer.version.labelPhone") }}</th>
+						<td>
+							<a :href="phoneUrl">{{ customPhone }}</a>
+						</td>
+					</tr>
+					<tr v-if="customEmail">
+						<th>{{ $t("footer.version.labelEmail") }}</th>
+						<td>
+							<a :href="`mailto:${customEmail}`">{{ customEmail }}</a>
+						</td>
+					</tr>
 				</tbody>
 			</table>
 
@@ -73,9 +86,9 @@
 			<template v-if="newVersionAvailable">
 				<hr />
 				<h6>{{ $t("footer.version.modalNextRelease") }}</h6>
-				<!-- eslint-disable vue/no-v-html -->
+				<!-- oxlint-disable vue/no-v-html -->
 				<div v-if="releaseNotes" class="release-notes" v-html="cleanedReleaseNotes"></div>
-				<!-- eslint-enable vue/no-v-html -->
+				<!-- oxlint-enable vue/no-v-html -->
 				<p v-else>
 					{{ $t("footer.version.modalNoReleaseNotes") }}
 					<a :href="releaseNotesUrl(availableVersion)">GitHub</a>.
@@ -138,7 +151,7 @@ import {
 	isDevelopment,
 	isNightly,
 	getReleaseName,
-	shortCommit,
+	commitFromVersion,
 	isNewVersionAvailable,
 } from "@/utils/version";
 import { defineComponent } from "vue";
@@ -151,12 +164,16 @@ export default defineComponent({
 	components: { GenericModal, Logo },
 	props: {
 		installed: { type: String, default: "" },
-		commit: String,
 		availableVersion: String,
 		releaseNotes: String,
 		hasUpdater: Boolean,
 		uploadMessage: String,
 		uploadProgress: Number,
+		customLogo: Boolean,
+		customBrand: String,
+		customWebsite: String,
+		customEmail: String,
+		customPhone: String,
 	},
 	data() {
 		return {
@@ -169,16 +186,20 @@ export default defineComponent({
 			return isDevelopment(this.installed);
 		},
 		nightly() {
-			return isNightly(this.installed, this.commit);
+			return isNightly(this.installed);
 		},
 		releaseName() {
-			return getReleaseName(this.installed, this.commit);
+			return getReleaseName(this.installed);
 		},
 		websiteUrl() {
-			return EVCC_WEBSITE;
+			return this.customWebsite || EVCC_WEBSITE;
 		},
 		websiteDomain() {
-			return extractDomain(EVCC_WEBSITE);
+			return extractDomain(this.websiteUrl);
+		},
+		phoneUrl() {
+			// strip separators for RFC 3966 tel: uri
+			return `tel:${(this.customPhone || "").replace(/[^+\d]/g, "")}`;
 		},
 		githubRepoUrl() {
 			return GITHUB_REPO;
@@ -186,11 +207,8 @@ export default defineComponent({
 		githubDependenciesUrl() {
 			return `${GITHUB_REPO}/network/dependencies`;
 		},
-		shortCommit() {
-			return shortCommit(this.commit);
-		},
 		githubCommitUrl() {
-			return `${GITHUB_REPO}/commit/${this.commit}`;
+			return `${GITHUB_REPO}/commit/${commitFromVersion(this.installed)}`;
 		},
 		modalSize() {
 			return this.newVersionAvailable ? undefined : "sm";
@@ -227,6 +245,22 @@ export default defineComponent({
 <style scoped>
 .about-logo {
 	height: 2.5rem;
+}
+.custom-logo {
+	height: 4rem;
+	width: auto;
+	max-width: 100%;
+	object-fit: contain;
+	object-position: left;
+}
+.custom-logo--dark {
+	display: none;
+}
+:root.dark .custom-logo--light {
+	display: none;
+}
+:root.dark .custom-logo--dark {
+	display: inline;
 }
 .about-table th {
 	padding-right: 1rem;

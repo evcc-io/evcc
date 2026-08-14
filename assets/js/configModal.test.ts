@@ -71,5 +71,6 @@ describe("extractQueryString", () => {
     expect(extractQueryString("/config")).toBe("");
     expect(extractQueryString("/#/config?meter=1")).toBe("meter=1");
     expect(extractQueryString("/config?meter=1&vehicle=2")).toBe("meter=1&vehicle=2");
+    expect(extractQueryString("/config?meter=1#vehicles")).toBe("meter=1");
   });
 });

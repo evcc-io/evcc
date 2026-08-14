@@ -44,7 +44,7 @@ func TestPublishSocAndRange(t *testing.T) {
 		chargeMeter:  &Null{}, // silence nil panics
 		chargeRater:  &Null{}, // silence nil panics
 		chargeTimer:  &Null{}, // silence nil panics
-		socEstimator: soc.NewEstimator(log, charger, vehicle),
+		socEstimator: soc.NewEstimator(log, vehicle),
 		minCurrent:   minA,
 		maxCurrent:   maxA,
 		phases:       1,
@@ -188,7 +188,7 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 
 		t.Run(tc.name+" wo/estimator", test)
 
-		lp.socEstimator = soc.NewEstimator(log, tc.charger, tc.vehicle)
+		lp.socEstimator = soc.NewEstimator(log, tc.vehicle)
 		t.Run(tc.name+" w/estimator", test)
 	}
 }
@@ -397,6 +397,36 @@ func TestReassignActiveVehicleKeepsSoc(t *testing.T) {
 	// switching to no vehicle still clears it
 	lp.setActiveVehicle(nil)
 	assert.Equal(t, 0.0, lp.vehicleSoc, "soc must clear on vehicle change")
+}
+
+// TestActiveVehicleChangeTriggersOptimizer ensures the optimizer is re-run when
+// the detected vehicle changes, as the loadpoint profile depends on it.
+func TestActiveVehicleChangeTriggersOptimizer(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().GetTitle().Return("target").AnyTimes()
+	vehicle.EXPECT().Icon().Return("").AnyTimes()
+	vehicle.EXPECT().Capacity().AnyTimes()
+	vehicle.EXPECT().Phases().AnyTimes()
+	vehicle.EXPECT().OnIdentified().AnyTimes()
+
+	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
+	s := new(mockSite)
+	lp.site = s
+
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	lp.setActiveVehicle(vehicle)
+	assert.Equal(t, 1, s.optimized, "vehicle detected")
+
+	// re-assigning the same vehicle is not a change
+	lp.setActiveVehicle(vehicle)
+	assert.Equal(t, 1, s.optimized, "same vehicle re-assigned")
+
+	lp.setActiveVehicle(nil)
+	assert.Equal(t, 2, s.optimized, "vehicle removed")
 }
 
 // integratedDeviceCharger is a minimal charger advertising the IntegratedDevice feature.
