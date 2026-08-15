@@ -12,6 +12,10 @@ params:
     choice: ["tcpip", "rs485"]
   - name: maxchargerate
   - preset: battery-params
+  - name: maxchargepower
+    deprecated: true
+  - name: maxdischargepower
+    deprecated: true
 render: |
   {{- if eq .usage "battery" }}
   type: custom
@@ -125,5 +129,5 @@ render: |
             source: sunspec
             {{- include "modbus" . | indent 10 }}
             value: 124:0:InOutWRte_RvrtTms
-  {{- include "battery-params" . }}
+  {{- include "battery-params-sunspec" . }}
   {{- end }}

@@ -11,6 +11,10 @@ params:
   - name: modbus
     choice: ["tcpip", "rs485"]
   - preset: battery-params
+  - name: maxchargepower
+    deprecated: true
+  - name: maxdischargepower
+    deprecated: true
 render: |
   {{- if eq .usage "battery" }}
   type: custom
@@ -26,5 +30,5 @@ render: |
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     value: 802:SoCRsvMin
-  {{- include "battery-params" . }}
+  {{- include "battery-params-sunspec" . }}
   {{- end }}

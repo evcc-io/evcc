@@ -12,6 +12,10 @@ params:
     choice: ["tcpip", "rs485"]
   - name: maxacpower
   - preset: battery-params
+  - name: maxchargepower
+    deprecated: true
+  - name: maxdischargepower
+    deprecated: true
 render: |
   type: custom
   # sunspec model 203 (int+sf)/ 213 (float) meter
@@ -135,5 +139,5 @@ render: |
     value:
       - 124:ChaState
       - 802:SoC
-  {{- include "battery-params" . }}
+  {{- include "battery-params-sunspec" . }}
   {{- end }}

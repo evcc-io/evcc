@@ -32,6 +32,10 @@ params:
     deprecated: true
   - name: maxacpower
   - preset: battery-params
+  - name: maxchargepower
+    deprecated: true
+  - name: maxdischargepower
+    deprecated: true
   - name: maxchargerate
 render: |
   type: custom
@@ -330,5 +334,5 @@ render: |
             uri: {{ .host }}:{{ .port }}
             id: 1
             value: 124:0:InWRte
-  {{- include "battery-params" . }}
+  {{- include "battery-params-sunspec" . }}
   {{- end }}

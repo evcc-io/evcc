@@ -10,6 +10,10 @@ params:
   - name: modbus
     choice: ["tcpip", "rs485"]
   - preset: battery-params
+  - name: maxchargepower
+    deprecated: true
+  - name: maxdischargepower
+    deprecated: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -171,5 +175,5 @@ render: |
     value:
       - 124:ChaState
       - 802:SoC
-  {{- include "battery-params" . }}
+  {{- include "battery-params-sunspec" . }}
   {{- end }}

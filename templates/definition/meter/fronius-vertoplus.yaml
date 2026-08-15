@@ -20,6 +20,10 @@ params:
   - name: maxacpower
   - name: maxchargerate
   - preset: battery-params
+  - name: maxchargepower
+    deprecated: true
+  - name: maxdischargepower
+    deprecated: true
 render: |
   type: custom
   # sunspec model 20x (int+sf)/ 21x (float) meter
@@ -277,5 +281,5 @@ render: |
             uri: {{ .host }}:{{ .port }}
             id: 1
             value: 124:0:InWRte
-  {{- include "battery-params" . }}
+  {{- include "battery-params-sunspec" . }}
   {{- end }}
