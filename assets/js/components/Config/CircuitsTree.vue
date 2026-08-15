@@ -57,9 +57,11 @@
 import type { PropType } from "vue";
 import type { RecursiveCircuit } from "./CircuitsModal.vue";
 import DeviceRefBox from "./DeviceRefBox.vue";
+import formatter from "@/mixins/formatter.ts";
 
 export default {
 	name: "CircuitsTree",
+	mixins: [formatter],
 	components: { DeviceRefBox },
 	props: {
 		circuitsTree: {
@@ -85,8 +87,8 @@ export default {
 			if (!this.circuitsTree) return "";
 			const { power, current } = this.circuitsTree;
 			const parts: string[] = [];
-			if (power != null) parts.push(`${(power / 1000).toFixed(1)} kW`);
-			if (current != null) parts.push(`${current} A`);
+			if (power !== undefined) parts.push(this.fmtW(power));
+			if (current !== undefined) parts.push(`${current} A`);
 			return parts.join(" · ");
 		},
 	},
