@@ -397,3 +397,74 @@ func TestLoginCCIUsesBundleFromConfigPassword(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "config-bundle-ccs", token.AccessToken)
 }
+
+// TestLoginCCIFallsBackToPasswordLoginWhenPersistedBundleUnusable covers a
+// persisted bundle that is both expired and has no refresh token (so
+// tokenOrRefresh cannot recover it): loginCCI must not get stuck on that
+// stale settings-DB state, but fall back to the full password login instead.
+// Note this is a genuinely fresh login, not a refresh - so, unlike
+// TestRefreshCCI, the device id is NOT carried over from the stale bundle;
+// loginCCIPassword always generates a new one for a fresh interactive login.
+func TestLoginCCIFallsBackToPasswordLoginWhenPersistedBundleUnusable(t *testing.T) {
+	priv, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+
+	const password = "s3cret-Passw0rd!"
+
+	loginMux := http.NewServeMux()
+	loginMux.HandleFunc("/auth/api/v2/user/oauth2/authorize", okHandler)
+	loginMux.HandleFunc("/auth/api/v1/accounts/certs", certsHandler(priv))
+	loginMux.HandleFunc("/auth/account/signin", func(w http.ResponseWriter, r *http.Request) {
+		require.NoError(t, r.ParseForm())
+		ciphertext, err := hex.DecodeString(r.FormValue("password"))
+		require.NoError(t, err)
+		plain, err := rsa.DecryptPKCS1v15(rand.Reader, priv, ciphertext)
+		require.NoError(t, err)
+		assert.Equal(t, password, string(plain))
+
+		w.Header().Set("Location", "https://oneapp.kia.com/redirect?code=testcode&state=ccsp")
+		w.WriteHeader(http.StatusFound)
+	})
+	loginSrv := httptest.NewServer(loginMux)
+	defer loginSrv.Close()
+
+	cciMux := http.NewServeMux()
+	cciMux.HandleFunc("/domain/api/v1/auth/token", func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"accessToken": "fresh-cci-access", "refreshToken": "fresh-cci-refresh",
+			"nonCcsToken": "fresh-non-ccs", "exchangeableAccessToken": "fresh-exch-access",
+			"exchangeableRefreshToken": "fresh-exch-refresh", "nonCcsRefreshToken": "fresh-non-ccs-refresh",
+			"idToken": "fresh-id", "expiresIn": 3599,
+		})
+	})
+	cciMux.HandleFunc("/domain/api/v1/auth/token-exchange", func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"accessToken": "fresh-ccs-token",
+			"expiresTime": time.Now().Add(time.Hour).UnixMilli(),
+		})
+	})
+	cciSrv := httptest.NewServer(cciMux)
+	defer cciSrv.Close()
+
+	identity := newTestIdentity(t, loginSrv.URL, cciSrv.URL)
+
+	// Persist a bundle that is both expired and unrefreshable (no
+	// RefreshToken), simulating stale/corrupted settings-DB state.
+	stale := cciBundle{
+		AccessToken:  "stale-ccs-token",
+		RefreshToken: "", // tokenOrRefresh must fail here rather than attempt a refresh
+		Expiry:       time.Now().Add(-time.Hour),
+		DeviceID:     "stale-device-id",
+	}
+	require.NoError(t, settings.SetJson(identity.settingsKey(), stale))
+
+	token, err := identity.loginCCI(password)
+	require.NoError(t, err)
+	assert.Equal(t, "fresh-ccs-token", token.AccessToken)
+	assert.NotEqual(t, "stale-ccs-token", token.AccessToken)
+
+	var persisted cciBundle
+	require.NoError(t, settings.Json(identity.settingsKey(), &persisted))
+	assert.Equal(t, "fresh-ccs-token", persisted.AccessToken)
+	assert.NotEqual(t, "stale-device-id", persisted.DeviceID, "a fresh login must not carry over the stale bundle's device id")
+}

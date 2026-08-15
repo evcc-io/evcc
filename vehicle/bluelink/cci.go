@@ -320,8 +320,7 @@ func (v *Identity) loginCCIPassword(password string) (*oauth2.Token, error) {
 	signinResp.Body.Close()
 
 	if signinResp.StatusCode != http.StatusFound {
-		return nil, fmt.Errorf("signin failed: HTTP %d — check username and password (%s)",
-			signinResp.StatusCode, truncate(string(signinBody), 200))
+		return nil, signinFailureError(signinResp.StatusCode, string(signinBody))
 	}
 
 	location := signinResp.Header.Get("Location")
@@ -338,7 +337,10 @@ func (v *Identity) loginCCIPassword(password string) (*oauth2.Token, error) {
 			if desc == "" {
 				desc = "unknown"
 			}
-			return nil, fmt.Errorf("authentication rejected: %s — check username and password", desc)
+			if looksCredentialRelated(desc) {
+				return nil, fmt.Errorf("authentication rejected: %s — check username and password", desc)
+			}
+			return nil, fmt.Errorf("authentication rejected: %s — this may indicate a server-side issue rather than incorrect credentials", desc)
 		case strings.Contains(location, "/web/v1/user/authorization"):
 			return nil, errors.New("account consent required: please log in via the manufacturer app or browser once to accept the terms, then retry")
 		case strings.Contains(location, "authorize"):
@@ -541,6 +543,15 @@ const ccsExpiryFallback = time.Hour
 // genuinely long-lived token).
 const ccsExpiryPlausibleWindow = 24 * time.Hour
 
+// isPlausibleCCSExpiry reports whether t is far enough in the future to not
+// immediately trigger a refresh, but not absurdly far out (which would
+// indicate a unit/parsing error rather than a genuinely long-lived token).
+// Kept separate from parseCCSExpiry so "is this plausible" (policy) stays
+// decoupled from "which unit is this" (unit detection).
+func isPlausibleCCSExpiry(now, t time.Time) bool {
+	return t.After(now) && t.Before(now.Add(ccsExpiryPlausibleWindow))
+}
+
 // parseCCSExpiry interprets the token-exchange response's expiresTime field.
 // The upstream hyundai_kia_connect_api reference treats it as a millisecond
 // epoch, but a live test against the real Kia backend showed a token
@@ -559,29 +570,24 @@ func parseCCSExpiry(expiresTime int64) time.Time {
 	}
 
 	now := time.Now()
-	plausible := func(t time.Time) bool {
-		return t.After(now) && t.Before(now.Add(ccsExpiryPlausibleWindow))
-	}
 
-	if ms := time.UnixMilli(expiresTime); plausible(ms) {
+	if ms := time.UnixMilli(expiresTime); isPlausibleCCSExpiry(now, ms) {
 		return ms
 	}
-	if sec := time.Unix(expiresTime, 0); plausible(sec) {
+	if sec := time.Unix(expiresTime, 0); isPlausibleCCSExpiry(now, sec) {
 		return sec
 	}
 
 	return now.Add(ccsExpiryFallback)
 }
 
-// cciHeaders builds the headers required by the CCI API
-// (cci-api-eu.{hyundai,kia}.com). cciAccessToken/nonCcsToken/exchangeableToken
-// are optional (pass "" when not yet available, e.g. for the initial code
-// exchange); contentType selects a JSON body vs. the bodyless requests that
-// carry all state via query parameters and headers.
-func (v *Identity) cciHeaders(deviceID, cciAccessToken, nonCcsToken, exchangeableToken, contentType string) map[string]string {
+// cciBaseHeaders builds the static per-device/per-client headers required by
+// the CCI API (cci-api-eu.{hyundai,kia}.com) - everything that doesn't depend
+// on the current auth/exchange state.
+func (v *Identity) cciBaseHeaders(deviceID string) map[string]string {
 	c := v.config.CCI
 
-	headers := map[string]string{
+	return map[string]string{
 		"client-id":                         c.PackageID,
 		"client-name":                       c.ClientName,
 		"client-version":                    cciClientVersion,
@@ -596,22 +602,42 @@ func (v *Identity) cciHeaders(deviceID, cciAccessToken, nonCcsToken, exchangeabl
 		"Accept-Language":                   v.language,
 		"User-Agent":                        cciMobileUserAgent,
 	}
+}
 
+// cciAuthHeaders adds the auth-token headers to h, when available.
+// cciAccessToken/nonCcsToken/exchangeableToken are optional (pass "" when not
+// yet available, e.g. for the initial code exchange).
+func cciAuthHeaders(h map[string]string, cciAccessToken, nonCcsToken, exchangeableToken string) {
 	if nonCcsToken != "" {
-		headers["Authentication"] = nonCcsToken
+		h["Authentication"] = nonCcsToken
 	}
 	if cciAccessToken != "" {
-		headers["authorization"] = "Bearer " + strings.TrimPrefix(strings.TrimSpace(cciAccessToken), "Bearer ")
+		h["authorization"] = "Bearer " + strings.TrimPrefix(strings.TrimSpace(cciAccessToken), "Bearer ")
 	}
 	if exchangeableToken != "" {
-		headers["exchangeable-token"] = exchangeableToken
-		headers["non-ccs-token"] = nonCcsToken
+		h["exchangeable-token"] = exchangeableToken
+		h["non-ccs-token"] = nonCcsToken
 	}
+}
+
+// cciBodyHeaders adds the content-type/content-length header to h: a JSON
+// body when contentType is given, or the bodyless requests that carry all
+// state via query parameters and headers otherwise.
+func cciBodyHeaders(h map[string]string, contentType string) {
 	if contentType != "" {
-		headers["Content-Type"] = contentType
+		h["Content-Type"] = contentType
 	} else {
-		headers["Content-Length"] = "0"
+		h["Content-Length"] = "0"
 	}
+}
+
+// cciHeaders builds the full set of headers required by the CCI API,
+// combining the static client headers with the auth and body headers for the
+// current request.
+func (v *Identity) cciHeaders(deviceID, cciAccessToken, nonCcsToken, exchangeableToken, contentType string) map[string]string {
+	headers := v.cciBaseHeaders(deviceID)
+	cciAuthHeaders(headers, cciAccessToken, nonCcsToken, exchangeableToken)
+	cciBodyHeaders(headers, contentType)
 
 	return headers
 }
@@ -664,4 +690,34 @@ func truncate(s string, n int) string {
 		return s[:n]
 	}
 	return s
+}
+
+// looksCredentialRelated reports whether a signin error message actually
+// talks about credentials, as opposed to some other kind of failure.
+func looksCredentialRelated(s string) bool {
+	s = strings.ToLower(s)
+	for _, kw := range []string{"password", "credential", "invalid_grant", "invalid_user", "username", "login"} {
+		if strings.Contains(s, kw) {
+			return true
+		}
+	}
+	return false
+}
+
+// signinFailureError phrases a non-302 signin response. Unlike the "302 to
+// an error location" case handled by the caller (which is how a real Kia/
+// Hyundai wrong-password rejection is normally surfaced), a raw non-302
+// status at this stage is structurally different and more often indicates a
+// transport/server-side problem - rate limiting, a WAF layer other than the
+// one checked in step 1, or an API change - than incorrect credentials. Only
+// blame credentials when the response actually looks like an auth rejection
+// (HTTP 401, or a body that explicitly talks about credentials); otherwise
+// phrase it as an unexpected response so users/operators don't waste time
+// re-checking a password that was never the problem.
+func signinFailureError(statusCode int, body string) error {
+	body = truncate(body, 200)
+	if statusCode == http.StatusUnauthorized || looksCredentialRelated(body) {
+		return fmt.Errorf("signin failed: HTTP %d — check username and password (%s)", statusCode, body)
+	}
+	return fmt.Errorf("signin failed: unexpected HTTP %d response (%s) — this may indicate a server-side issue or API change rather than incorrect credentials", statusCode, body)
 }
