@@ -215,6 +215,88 @@ func TestNextPlan(t *testing.T) {
 	}
 }
 
+func TestNextVehiclePlanBaseline(t *testing.T) {
+	config.Reset()
+	t.Cleanup(config.Reset)
+
+	ctrl := gomock.NewController(t)
+	v := api.NewMockVehicle(ctrl)
+	v.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
+	v.EXPECT().Phases().Return(0).AnyTimes()
+	v.EXPECT().Capacity().Return(float64(50)).AnyTimes()
+	v.EXPECT().Features().Return(nil).AnyTimes()
+
+	const name = "test-vehicle"
+	require.NoError(t, config.Vehicles().Add(
+		config.NewStaticDevice(config.Named{Name: name}, api.Vehicle(v)),
+	))
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.vehicle = v
+
+	t.Run("no vehicle plans set", func(t *testing.T) {
+		ts, soc, id := lp.nextVehiclePlan()
+		assert.True(t, ts.IsZero())
+		assert.Equal(t, 0, soc)
+		assert.Equal(t, 0, id)
+	})
+
+	t.Run("static plan active", func(t *testing.T) {
+		targetTime := time.Now().Add(5 * time.Hour).Truncate(time.Second)
+		settings.SetTime("vehicle."+name+"."+keys.PlanTime, targetTime)
+		settings.SetInt("vehicle."+name+"."+keys.PlanSoc, 80)
+
+		ts, soc, id := lp.nextVehiclePlan()
+		assert.Equal(t, 80, soc)
+		assert.Equal(t, 1, id)
+		assert.WithinDuration(t, targetTime, ts, time.Second)
+	})
+
+	t.Run("repeating plan inactive or invalid ignored", func(t *testing.T) {
+		settings.SetTime("vehicle."+name+"."+keys.PlanTime, time.Time{})
+		settings.SetInt("vehicle."+name+"."+keys.PlanSoc, 0)
+
+		// Set inactive repeating plan
+		rp := []api.RepeatingPlan{
+			{
+				Weekdays: []int{0, 1, 2, 3, 4, 5, 6},
+				Time:     "08:00",
+				Tz:       "UTC",
+				Soc:      90,
+				Active:   false,
+			},
+		}
+		require.NoError(t, settings.SetJson("vehicle."+name+"."+keys.RepeatingPlans, rp))
+
+		ts, soc, id := lp.nextVehiclePlan()
+		assert.True(t, ts.IsZero())
+		assert.Equal(t, 0, soc)
+		assert.Equal(t, 0, id)
+	})
+
+	t.Run("active repeating plan returns next occurrence", func(t *testing.T) {
+		settings.SetTime("vehicle."+name+"."+keys.PlanTime, time.Time{})
+		settings.SetInt("vehicle."+name+"."+keys.PlanSoc, 0)
+
+		// Set active repeating plan
+		rp := []api.RepeatingPlan{
+			{
+				Weekdays: []int{0, 1, 2, 3, 4, 5, 6},
+				Time:     "08:00",
+				Tz:       "UTC",
+				Soc:      85,
+				Active:   true,
+			},
+		}
+		require.NoError(t, settings.SetJson("vehicle."+name+"."+keys.RepeatingPlans, rp))
+
+		ts, soc, id := lp.nextVehiclePlan()
+		assert.Equal(t, 85, soc)
+		assert.Equal(t, 2, id)
+		assert.False(t, ts.IsZero())
+	})
+}
+
 func TestPlanLocking(t *testing.T) {
 	clk := clock.NewMock()
 	now := clk.Now()
