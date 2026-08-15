@@ -74,3 +74,51 @@ func TestRun_ProductionLimit_DurationSurvivesRefresh(t *testing.T) {
 	require.NoError(t, c.run())
 	assertProductionLimit(t, c, true)
 }
+
+// TestRun_ConsumptionLimit_RefreshBeforeActivation covers the other branch of the
+// restart: before run() has applied the limit there is no clock to restart, so the
+// duration is measured from the activation that follows.
+func TestRun_ConsumptionLimit_RefreshBeforeActivation(t *testing.T) {
+	const (
+		limit = 4200.0
+		total = time.Hour
+	)
+
+	c := activeEEBus(t)
+
+	// two notifications arrive before the next tick
+	c.setConsumptionLimitData(ucapi.LoadLimit{Duration: total, IsActive: true, Value: limit})
+	c.setConsumptionLimitData(ucapi.LoadLimit{Duration: total, IsActive: true, Value: limit})
+	require.False(t, limitActive(c.consumptionLimitActivated), "limit is not applied yet")
+
+	require.NoError(t, c.run())
+	assertConsumptionLimit(t, c, limit)
+
+	// the clock starts at activation, not at the first notification
+	*c.consumptionLimitActivated = time.Now().Add(-30 * time.Minute)
+
+	require.NoError(t, c.run())
+	assertConsumptionLimit(t, c, limit)
+}
+
+// TestRun_ConsumptionLimit_RefreshWhileReleased verifies a released limit is not
+// resurrected by a refresh that keeps it inactive.
+func TestRun_ConsumptionLimit_RefreshWhileReleased(t *testing.T) {
+	c := activeEEBus(t)
+	c.setConsumptionLimitData(ucapi.LoadLimit{Duration: time.Hour, IsActive: true, Value: 4200})
+
+	require.NoError(t, c.run())
+	require.True(t, limitActive(c.consumptionLimitActivated))
+
+	// EG withdraws the limit
+	c.setConsumptionLimitData(ucapi.LoadLimit{IsActive: false})
+	require.NoError(t, c.run())
+	assertConsumptionLimit(t, c, 0)
+
+	// a further inactive refresh keeps it released
+	c.setConsumptionLimitData(ucapi.LoadLimit{IsActive: false})
+	require.False(t, limitActive(c.consumptionLimitActivated))
+
+	require.NoError(t, c.run())
+	assertConsumptionLimit(t, c, 0)
+}
