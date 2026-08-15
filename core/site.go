@@ -35,6 +35,7 @@ import (
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/telemetry"
+	"github.com/jinzhu/now"
 	"github.com/samber/lo"
 	"github.com/smallnest/chanx"
 	"golang.org/x/sync/errgroup"
@@ -121,8 +122,7 @@ type Site struct {
 	optimizerMu      sync.Mutex // guards optimizer runs
 	optimizerUpdated time.Time  // last optimizer run, guarded by optimizerMu
 
-	solarScaleCache    float64   // cached solarScalePercentile result, valid for solarScaleCacheDay
-	solarScaleCacheDay time.Time // day the cached solar scale was computed for
+	solarScaleCached func() (float64, error) // util.Cached wrapper around querySolarScalePercentile
 }
 
 // MetersConfig contains the site's meter configuration
@@ -356,6 +356,11 @@ func NewSite() *Site {
 		Voltage:    230, // V
 		collectors: make(map[string]*metrics.Collector),
 	}
+
+	// the result only depends on completed days, so it cannot change within a day
+	site.solarScaleCached = util.Cached(func() (float64, error) {
+		return site.querySolarScalePercentile(now.BeginningOfDay())
+	}, 24*time.Hour)
 
 	return site
 }

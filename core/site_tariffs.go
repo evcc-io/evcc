@@ -27,7 +27,7 @@ func (s forecastSeries) MarshalBytes() ([]byte, error) {
 }
 
 type solarDetails struct {
-	Scale            float64      `json:"scale"`                // scale factor yield/forecasted today, 1 if unscaled
+	Scale            float64      `json:"scale"`                // trailing percentile solar scale factor, 1 if unscaled
 	Today            dailyDetails `json:"today"`                // tomorrow
 	Tomorrow         dailyDetails `json:"tomorrow"`             // tomorrow
 	DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow"`     // day after tomorrow
@@ -267,40 +267,12 @@ const (
 // The result only depends on completed days, so it cannot change within a day. It is
 // cached accordingly instead of being recomputed on every optimizer run.
 func (site *Site) solarScalePercentile() float64 {
-	bod := now.BeginningOfDay()
-
-	if cached, hit := site.readSolarScaleCache(bod); hit {
-		return cached
-	}
-
-	// query and compute outside the lock: metrics.QueryEnergy is a synchronous DB
-	// call and must not block concurrent Site Get*/Set* API calls. A concurrent
-	// cache miss may run this twice on the same day; both converge on the same
-	// result, so the duplicate work is harmless.
-	scale, err := site.querySolarScalePercentile(bod)
+	scale, err := site.solarScaleCached()
 	if err != nil {
 		site.log.ERROR.Printf("solar scale percentile: %v", err)
-		return 1 // do not cache: retry on the next call instead of poisoning the day
+		return 1
 	}
-
-	site.writeSolarScaleCache(bod, scale)
-
 	return scale
-}
-
-// readSolarScaleCache returns the cached solar scale and whether it is valid for bod.
-func (site *Site) readSolarScaleCache(bod time.Time) (float64, bool) {
-	site.RLock()
-	defer site.RUnlock()
-	return site.solarScaleCache, site.solarScaleCacheDay.Equal(bod)
-}
-
-// writeSolarScaleCache stores scale as valid for bod.
-func (site *Site) writeSolarScaleCache(bod time.Time, scale float64) {
-	site.Lock()
-	defer site.Unlock()
-	site.solarScaleCacheDay = bod
-	site.solarScaleCache = scale
 }
 
 // querySolarScalePercentile does the actual metrics query and percentile calculation
@@ -335,7 +307,7 @@ func (site *Site) querySolarScalePercentile(bod time.Time) (float64, error) {
 		// skip today (partial) and dark days where the ratio is noise. The threshold
 		// applies to production as well: a near-zero yield against a healthy forecast
 		// is a fault (snow, soiling, inverter or metering outage), not a bias that
-		// should be projected onto the next 30 days.
+		// should be projected onto the next solarScaleWindow days.
 		if p := pv[day]; day != today && f > solarScaleMinEnergy && p > solarScaleMinEnergy {
 			ratios = append(ratios, p/f)
 		}
