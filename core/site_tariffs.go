@@ -235,7 +235,7 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 		}
 	}
 
-	res.Scale = site.solarScale()
+	res.Scale = site.solarScalePercentile()
 
 	return res
 }
@@ -249,56 +249,20 @@ func (site *Site) effectiveSolarScale() float64 {
 	return site.solarScalePercentile()
 }
 
-// solarScale returns the ratio of produced solar energy to forecasted solar
-// energy for the current day, queried from the metrics database. This is
-// display-only (solarDetails.Scale): it grows monotonically over the day and
-// is dominated by today's weather, so it must not be projected onto future
-// days. See solarScalePercentile for the value actually fed to the optimizer.
-func (site *Site) solarScale() float64 {
-	series, err := metrics.QueryEnergy(now.BeginningOfDay(), time.Now(), "day", true)
-	if err != nil {
-		site.log.ERROR.Printf("solar forecast scale: %v", err)
-		return 1
-	}
-
-	var pv, fcst float64
-	for _, s := range series {
-		if len(s.Data) == 0 {
-			continue
-		}
-		switch s.Group {
-		case metrics.PV:
-			pv = s.Data[0].Energy
-		case metrics.Forecast:
-			fcst = s.Data[0].Energy
-		}
-	}
-
-	const minEnergy = 0.5 // kWh
-	if fcst <= 0 || pv <= minEnergy {
-		return 1
-	}
-
-	scale := pv / fcst
-	site.log.DEBUG.Printf("solar forecast: produced %.3fkWh, forecasted %.3fkWh, scale %.3f", pv, fcst, scale)
-	return scale
-}
-
 const (
 	solarScaleWindow     = 30  // trailing window of days to consider
 	solarScaleMinSamples = 14  // minimum daily ratios before applying a scale
 	solarScalePercentile = 0.6 // percentile of the daily ratio distribution to use
-	solarScaleMinEnergy  = 0.5 // kWh, skip dark days where the ratio is noise
+	solarScaleMinEnergy  = 0.5 // kWh, skip days where either side is too small for a meaningful ratio
 )
 
 // solarScalePercentile returns the solarScalePercentile-th percentile of the daily
 // produced/forecasted solar ratio over a trailing window of solarScaleWindow completed
-// days. Unlike solarScale (today's ratio, display-only) this is robust against
-// single-day forecast outliers: it captures the systematic installation bias (soiling,
-// shading, model error) that legitimately applies to future days, without projecting a
-// single day's weather noise onto the whole horizon. The current (partial) day is
-// excluded so it cannot skew the ratio. Returns 1 when there is not enough history, so
-// fresh installations are not adjusted on thin data.
+// days. It is robust against single-day forecast outliers: it captures the systematic
+// installation bias (soiling, shading, model error) that legitimately applies to future
+// days, without projecting a single day's weather noise onto the whole horizon. The
+// current (partial) day is excluded so it cannot skew the ratio. Returns 1 when there is
+// not enough history, so fresh installations are not adjusted on thin data.
 //
 // The result only depends on completed days, so it cannot change within a day. It is
 // cached accordingly instead of being recomputed on every optimizer run.
@@ -368,16 +332,13 @@ func (site *Site) querySolarScalePercentile(bod time.Time) (float64, error) {
 	today := bod.Format("2006-01-02")
 	ratios := make([]float64, 0, len(fcst))
 	for day, f := range fcst {
-		if day == today || f <= solarScaleMinEnergy {
-			continue
+		// skip today (partial) and dark days where the ratio is noise. The threshold
+		// applies to production as well: a near-zero yield against a healthy forecast
+		// is a fault (snow, soiling, inverter or metering outage), not a bias that
+		// should be projected onto the next 30 days.
+		if p := pv[day]; day != today && f > solarScaleMinEnergy && p > solarScaleMinEnergy {
+			ratios = append(ratios, p/f)
 		}
-		// a day missing from pv entirely (PV metering outage) is not the same as a
-		// genuine zero-production reading and must not be treated as ratio 0
-		p, ok := pv[day]
-		if !ok {
-			continue
-		}
-		ratios = append(ratios, p/f)
 	}
 
 	scale, ok := percentileOf(ratios, solarScalePercentile, solarScaleMinSamples)
