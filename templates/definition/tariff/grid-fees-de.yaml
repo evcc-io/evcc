@@ -1,0 +1,227 @@
+template: grid-fees-de
+products:
+  - description:
+      de: Netzentgelte §14a EnWG (Modul 3)
+      en: Grid fees §14a EnWG (module 3)
+requirements:
+  description:
+    de: |
+      Zeitvariable Netzentgelte nach §14a EnWG Modul 3, Netto-Preise der Preisblätter 2026.
+      Datenquelle: [github.com/ScumbagSteve/Grid-fees](https://github.com/ScumbagSteve/Grid-fees).
+    en: |
+      Time-variable grid fees according to §14a EnWG module 3, net prices of the 2026 price sheets.
+      Data source: [github.com/ScumbagSteve/Grid-fees](https://github.com/ScumbagSteve/Grid-fees).
+group: price
+countries: ["DE"]
+params:
+  - name: gridoperator
+    type: choice
+    required: true
+    default: Bayernwerk Netz GmbH
+    description:
+      de: Netzbetreiber
+      en: Grid operator
+    choice:
+      - Bayernwerk Netz GmbH
+      - E.DIS Netz GmbH
+      - ENERVIE Vernetzt GmbH
+      - Energienetze Offenbach GmbH
+      - Energieversorgung Halle Netz GmbH
+      - FairNetz GmbH
+      - N-ERGIE Netz GmbH
+      - Netze Duisburg GmbH
+      - Netze ODR GmbH
+      - Pfalzwerke Netz AG
+      - Regensburg Netz GmbH
+      - Schleswig-Holstein Netz AG
+      - Stadtwerke Bad Bramstedt Netz GmbH
+      - Stadtwerke Elmshorn
+      - Stadtwerke Husum Netz GmbH
+      - Stuttgart Netze GmbH
+      - WEMAG Netz GmbH
+      - badenovaNETZE GmbH
+      - e-netz Südhessen AG
+      - inetz GmbH
+      - swa Netze GmbH
+  - preset: tariff-base
+render: |
+  type: fixed
+  {{- if eq .gridoperator "Bayernwerk Netz GmbH" }}
+  price: 0.0472
+  zones:
+    - price: 0.0047
+      hours: 10-15
+      months: Apr-Sep
+    - price: 0.0903
+      hours: 17-22
+      months: Apr-Sep
+  {{- else if eq .gridoperator "E.DIS Netz GmbH" }}
+  price: 0.0547
+  zones:
+    - price: 0.0055
+      hours: 00:00-05:00,23:30-00:00
+      months: Jan-Mar,Oct-Dec
+    - price: 0.088
+      hours: 10:15-12:00,16:45-20:15
+      months: Jan-Mar,Oct-Dec
+  {{- else if eq .gridoperator "ENERVIE Vernetzt GmbH" }}
+  price: 0.0683
+  zones:
+    - price: 0.0273
+      hours: 00:00-04:00
+    - price: 0.0966
+      hours: 18:00-21:00
+  {{- else if eq .gridoperator "Energienetze Offenbach GmbH" }}
+  price: 0.0587
+  zones:
+    - price: 0.0235
+      hours: 02:00-06:00
+      months: Jan-Mar,Oct-Dec
+    - price: 0.081
+      hours: 17:00-20:00
+      months: Jan-Mar,Oct-Dec
+  {{- else if eq .gridoperator "Energieversorgung Halle Netz GmbH" }}
+  price: 0.0686
+  zones:
+    - price: 0.0172
+      hours: 01:45-07:00
+    - price: 0.095
+      hours: 16:45-19:45
+  {{- else if eq .gridoperator "FairNetz GmbH" }}
+  price: 0.0816
+  zones:
+    - price: 0.0204
+      hours: 00:00-04:00,10:00-14:00
+    - price: 0.1187
+      hours: 17:00-22:00
+  {{- else if eq .gridoperator "N-ERGIE Netz GmbH" }}
+  price: 0.0596
+  zones:
+    - price: 0.0238
+      hours: 00:00-06:00,12:00-14:15,23:00-00:00
+    - price: 0.1177
+      hours: 18:00-21:00
+  {{- else if eq .gridoperator "Netze Duisburg GmbH" }}
+  price: 0.0694
+  zones:
+    - price: 0.0209
+      hours: 00:00-06:00
+      months: Jan-Mar,Oct-Dec
+    - price: 0.0977
+      hours: 14:15-18:45
+      months: Jan-Mar,Oct-Dec
+  {{- else if eq .gridoperator "Netze ODR GmbH" }}
+  price: 0.0587
+  zones:
+    - price: 0.0235
+      hours: 11:00-17:00
+      months: Apr-Sep
+    - price: 0.1018
+      hours: 00:00-05:00,22:00-00:00
+      months: Apr-Sep
+  {{- else if eq .gridoperator "Pfalzwerke Netz AG" }}
+  price: 0.063
+  zones:
+    - price: 0.0252
+      hours: 01:00-05:00
+    - price: 0.0707
+      hours: 11:00-13:30,18:00-21:00
+  {{- else if eq .gridoperator "Regensburg Netz GmbH" }}
+  price: 0.0505
+  zones:
+    - price: 0.0202
+      hours: 02:15-05:00
+      months: Jan-Mar,Oct-Dec
+    - price: 0.0531
+      hours: 09:00-20:30
+      months: Jan-Mar,Oct-Dec
+  {{- else if eq .gridoperator "Schleswig-Holstein Netz AG" }}
+  price: 0.064
+  zones:
+    - price: 0.0064
+      hours: 00:00-05:00,22:00-00:00
+      months: Jan-Mar,Oct-Dec
+    - price: 0.0832
+      hours: 09:00-14:00,17:00-21:00
+      months: Jan-Mar,Oct-Dec
+  {{- else if eq .gridoperator "Stadtwerke Bad Bramstedt Netz GmbH" }}
+  price: 0.0664
+  zones:
+    - price: 0.0133
+      hours: 00:00-07:00,22:00-00:00
+    - price: 0.0982
+      hours: 18:00-22:00
+  {{- else if eq .gridoperator "Stadtwerke Elmshorn" }}
+  price: 0.0855
+  zones:
+    - price: 0.0342
+      hours: 01:00-05:00
+      months: Jul-Dec
+    - price: 0.121
+      hours: 17:00-19:30
+      months: Jul-Dec
+  {{- else if eq .gridoperator "Stadtwerke Husum Netz GmbH" }}
+  price: 0.0615
+  zones:
+    - price: 0.0123
+      hours: 01:00-07:00
+    - price: 0.1012
+      hours: 16:00-19:00
+  {{- else if eq .gridoperator "Stuttgart Netze GmbH" }}
+  price: 0.1016
+  zones:
+    - price: 0.0152
+      hours: 02:00-05:00
+      months: Jan-Mar,Oct-Dec
+    - price: 0.1481
+      hours: 17:00-21:15
+      months: Jan-Mar,Oct-Dec
+  {{- else if eq .gridoperator "WEMAG Netz GmbH" }}
+  price: 0.0513
+  zones:
+    - price: 0.0195
+      hours: 00:00-06:00,21:00-00:00
+      months: Jan-Mar,Oct-Dec
+    - price: 0.077
+      hours: 07:00-11:00,17:00-20:00
+      months: Jan-Mar,Oct-Dec
+  {{- else if eq .gridoperator "badenovaNETZE GmbH" }}
+  price: 0.0729
+  zones:
+    - price: 0.0251
+      hours: 00:00-07:30,22:30-00:00
+      months: Jan-Mar,Oct-Dec
+    - price: 0.0875
+      hours: 08:00-21:00
+      months: Jan-Mar,Oct-Dec
+  {{- else if eq .gridoperator "e-netz Südhessen AG" }}
+  price: 0.0563
+  zones:
+    - price: 0.0153
+      hours: 00:00-06:00
+      months: Jan-Mar,Oct-Dec
+    - price: 0.0738
+      hours: 18:00-22:00
+      months: Jan-Mar,Oct-Dec
+  {{- else if eq .gridoperator "inetz GmbH" }}
+  price: 0.0599
+  zones:
+    - price: 0.024
+      hours: 01:30-04:15
+      months: Jan-Mar,Oct-Dec
+    - price: 0.0756
+      hours: 17:00-19:00
+      months: Jan-Mar,Oct-Dec
+  {{- else if eq .gridoperator "swa Netze GmbH" }}
+  price: 0.0607
+  zones:
+    - price: 0.0243
+      hours: 01:30-05:00
+      months: Jan-Mar,Oct-Dec
+    - price: 0.094
+      hours: 17:00-19:00
+      months: Jan-Mar,Oct-Dec
+  {{- else }}
+  {{ fail (printf "unknown grid operator: %s" .gridoperator) }}
+  {{- end }}
+  {{ include "tariff-base" . }}
