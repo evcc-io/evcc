@@ -41,7 +41,6 @@
 
 <script lang="ts">
 import JsonModal from "./JsonModal.vue";
-import defaultYaml from "./defaultYaml/circuits.yaml?raw";
 import type { ConfigMeter } from "@/types/evcc";
 import type { PropType } from "vue";
 import type { Circuit } from "@/types/evcc";
@@ -63,9 +62,6 @@ export default {
 		},
 	},
 	emits: ["changed"],
-	data() {
-		return { defaultYaml: defaultYaml.trim() };
-	},
 	methods: {
 		circuitsTree(
 			circuits: Record<string, RecursiveCircuit>,

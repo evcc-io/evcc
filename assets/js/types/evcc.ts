@@ -1367,7 +1367,8 @@ export type DeviceType =
   | "loadpoint"
   | "messenger"
   | "tariff"
-  | "hems";
+  | "hems"
+  | "circuit";
 export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext" | "consumer";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
 export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar" | "temperature";

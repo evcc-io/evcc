@@ -13,11 +13,7 @@
 					<span class="tree-knick" />
 				</span>
 			</template>
-			<DeviceRefBox
-				compact
-				class="flex-grow-1"
-				@edit="$emit('edit', circuitsTree)"
-			>
+			<DeviceRefBox compact class="flex-grow-1" @edit="">
 				<span class="d-flex align-items-center gap-2">
 					<span class="fw-bold">{{ circuitsTree?.title }}</span>
 					<span class="ms-auto evcc-gray value">{{
@@ -45,10 +41,18 @@
 				<span class="tree-line tree-line--half" />
 				<span class="tree-knick" />
 			</span>
-			<span class="d-flex align-items-center gap-2 evcc-gray add-link">
-				<shopicon-regular-plus size="xs"></shopicon-regular-plus>
-				<span>Add sub-circuit</span>
-			</span>
+			<button
+				type="button"
+				class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 evcc-gray"
+				tabindex="0"
+				@click=""
+			>
+				<shopicon-regular-plus
+					size="s"
+					class="flex-shrink-0"
+				></shopicon-regular-plus>
+				Add sub-circuit
+			</button>
 		</div>
 	</div>
 </template>
@@ -58,6 +62,7 @@ import type { PropType } from "vue";
 import type { RecursiveCircuit } from "./CircuitsModal.vue";
 import DeviceRefBox from "./DeviceRefBox.vue";
 import formatter from "@/mixins/formatter.ts";
+import { openModal } from "@/configModal.ts";
 
 export default {
 	name: "CircuitsTree",
@@ -79,6 +84,11 @@ export default {
 		isLast: { type: Boolean, default: false },
 	},
 	emits: ["edit"],
+	methods: {
+		async openCircuit(id?: number) {
+			await openModal("circuit", { id });
+		},
+	},
 	computed: {
 		childGuides(): boolean[] {
 			return this.depth === 0 ? [] : [...this.guides, !this.isLast];
