@@ -17,6 +17,7 @@ import (
 // EcoFlow represents the EcoFlow  meter
 type EcoFlow struct {
 	implement.Caps
+	log    *util.Logger
 	usage  string
 	serial string
 	cache  time.Duration
@@ -83,6 +84,7 @@ func NewEcoFlow(accessKey, secretKey, serial, usage, uri string,
 
 	m := &EcoFlow{
 		Caps:   implement.New(),
+		log:    log,
 		serial: serial,
 		usage:  usage,
 		cache:  cache,
@@ -170,13 +172,21 @@ func (m *EcoFlow) soc() (float64, error) {
 	return ecoflowValue(response.Data, m.batterySoc)
 }
 
+// ecoflowReserveLimit clamps the reserve above the discharge limit, which the device requires it
+// to exceed by 3
+func ecoflowReserveLimit(limit, lo float64) float64 {
+	return min(100, max(limit, lo+3))
+}
+
 func (m *EcoFlow) setBackupReserve(limit float64) error {
-	// the device requires the reserve to exceed its discharge limit by 3, so clamp rather than let
-	// the write fail: refusing normal mode would strand the battery at the previous, higher reserve
-	if res, err := m.dataG(); err == nil {
-		if lo, err := ecoflowValue(res.Data, "cmsMinDsgSoc"); err == nil {
-			limit = min(100, max(limit, lo+3))
-		}
+	// clamp rather than let the write fail: refusing normal mode would strand the battery at the
+	// previous, higher reserve. On a failed read the device rejects an invalid value itself.
+	if res, err := m.dataG(); err != nil {
+		m.log.WARN.Printf("backup reserve: %v", err)
+	} else if lo, err := ecoflowValue(res.Data, "cmsMinDsgSoc"); err != nil {
+		m.log.WARN.Printf("backup reserve: discharge limit: %v", err)
+	} else {
+		limit = ecoflowReserveLimit(limit, lo)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
