@@ -1,63 +1,99 @@
 <template>
-	<YamlModal
+	<JsonModal
+		id="circuitsModal"
 		name="circuits"
 		:title="$t('config.circuits.title')"
 		:description="$t('config.circuits.description')"
 		docs="/docs/features/loadmanagement"
-		:defaultYaml="defaultYaml"
-		removeKey="circuits"
 		endpoint="/config/circuits"
+		state-key="circuits"
+		data-testid="circuits-modal"
+		disable-remove
 		@changed="$emit('changed')"
 	>
-		<template #extra>
-			<p class="my-2 small">
-				{{ $t("config.circuits.usableMeters") }}:
-				<code v-for="meter in usableMeters" :key="meter.name" class="ms-1 meter">
-					{{ meter.name }}<span v-if="meter.title" class="ms-1">({{ meter.title }})</span>
-				</code>
-			</p>
+		<template #default="{ values }: { values: Record<string, Circuit> }">
+			{{ values }}
+			<div
+				v-if="Object.keys(values).length === 0 || true"
+				class="onboarding"
+			>
+				<p class="evcc-gray">
+					No circuits configured. Start with a main circuit that
+					represents your grid connection.
+				</p>
+				<button
+					type="button"
+					class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 mx-auto"
+					tabindex="0"
+					@click=""
+				>
+					<shopicon-regular-plus
+						size="s"
+						class="flex-shrink-0"
+					></shopicon-regular-plus>
+					Add main circuit
+				</button>
+			</div>
+			<CircuitsTree :circuitsTree="circuitsTree(values)" />
 		</template>
-	</YamlModal>
+	</JsonModal>
 </template>
 
 <script lang="ts">
-import YamlModal from "./YamlModal.vue";
+import JsonModal from "./JsonModal.vue";
 import defaultYaml from "./defaultYaml/circuits.yaml?raw";
 import type { ConfigMeter } from "@/types/evcc";
 import type { PropType } from "vue";
+import type { Circuit } from "@/types/evcc";
+import CircuitsTree from "./CircuitsTree.vue";
+import deepClone from "@/utils/deepClone.ts";
+
+export interface RecursiveCircuit extends Circuit {
+	circuitChilds?: RecursiveCircuit[];
+}
 
 export default {
 	name: "CircuitsModal",
-	components: { YamlModal },
+	components: { JsonModal, CircuitsTree },
 	props: {
 		gridMeter: { type: Object as PropType<ConfigMeter>, default: null },
-		extMeters: { type: Array as PropType<ConfigMeter[]>, default: () => [] },
+		extMeters: {
+			type: Array as PropType<ConfigMeter[]>,
+			default: () => [],
+		},
 	},
 	emits: ["changed"],
 	data() {
 		return { defaultYaml: defaultYaml.trim() };
 	},
-	computed: {
-		usableMeters() {
-			const result = [];
-			if (this.gridMeter) {
-				result.push({ name: this.gridMeter.name, title: this.$t("config.grid.title") });
-			}
-			if (this.extMeters) {
-				result.push(
-					...this.extMeters.map((m) => ({
-						name: m.name,
-						title: m.deviceTitle || m.deviceProduct || m.config["template"] || m.type,
-					}))
-				);
-			}
-			return result;
+	methods: {
+		circuitsTree(
+			circuits: Record<string, RecursiveCircuit>,
+		): RecursiveCircuit | undefined {
+			let nodes = deepClone(circuits);
+
+			let root: RecursiveCircuit | undefined;
+			Object.entries(nodes).forEach(([_, node]) => {
+				const parent = node.parent ? nodes[node.parent] : undefined;
+				if (parent) {
+					parent.circuitChilds ??= [];
+					parent.circuitChilds.push(node);
+				} else {
+					// found the root
+					root = node;
+				}
+			});
+
+			return root;
 		},
 	},
 };
 </script>
 <style scoped>
-.meter:not(:last-child)::after {
-	content: ",";
+.onboarding {
+	border: 1px dashed var(--evcc-gray-25);
+	border-radius: 12px;
+	padding: 20px;
+	text-align: center;
 }
 </style>
