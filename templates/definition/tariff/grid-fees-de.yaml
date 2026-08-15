@@ -50,11 +50,11 @@ render: |
   price: 0.0472
   zones:
     - price: 0.0047
-      hours: 10-15
-      months: Apr-Sep
+      hours: 10:00-15:00
+      months: Apr-Jun,Jul-Sep
     - price: 0.0903
-      hours: 17-22
-      months: Apr-Sep
+      hours: 17:00-22:00
+      months: Apr-Jun,Jul-Sep
   {{- else if eq .gridoperator "E.DIS Netz GmbH" }}
   price: 0.0547
   zones:
