@@ -13,7 +13,7 @@
 					<span class="tree-knick" />
 				</span>
 			</template>
-			<DeviceRefBox compact class="flex-grow-1" @edit="">
+			<DeviceRefBox compact class="flex-grow-1" @edit="openCircuit(circuitsTree?.id)">
 				<span class="d-flex align-items-center gap-2">
 					<span class="fw-bold">{{ circuitsTree?.title }}</span>
 					<span class="ms-auto evcc-gray value">{{
@@ -30,7 +30,6 @@
 			:depth="depth + 1"
 			:guides="childGuides"
 			:is-last="false"
-			@edit="$emit('edit', $event)"
 		/>
 
 		<div class="d-flex align-items-stretch row-spacing">
@@ -45,7 +44,7 @@
 				type="button"
 				class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 evcc-gray"
 				tabindex="0"
-				@click=""
+				@click="openCircuit()"
 			>
 				<shopicon-regular-plus
 					size="s"
@@ -83,7 +82,6 @@ export default {
 		guides: { type: Array as PropType<boolean[]>, default: () => [] },
 		isLast: { type: Boolean, default: false },
 	},
-	emits: ["edit"],
 	methods: {
 		async openCircuit(id?: number) {
 			await openModal("circuit", { id });

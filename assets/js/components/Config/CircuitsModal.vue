@@ -12,10 +12,7 @@
 		@changed="$emit('changed')"
 	>
 		<template #default="{ values }: { values: Record<string, Circuit> }">
-			<div
-				v-if="Object.keys(values).length === 0"
-				class="onboarding"
-			>
+			<div v-if="Object.keys(values).length === 0" class="onboarding">
 				<p class="evcc-gray">
 					No circuits configured. Start with a main circuit that
 					represents your grid connection.
@@ -46,6 +43,7 @@ import deepClone from "@/utils/deepClone.ts";
 import { openModal } from "@/configModal.ts";
 
 export interface RecursiveCircuit extends Circuit {
+	id?: number;
 	circuitChilds?: RecursiveCircuit[];
 }
 
@@ -60,7 +58,8 @@ export default {
 			let nodes = deepClone(circuits);
 
 			let root: RecursiveCircuit | undefined;
-			Object.entries(nodes).forEach(([_, node]) => {
+			Object.entries(nodes).forEach(([id, node]) => {
+				node.id = parseInt(id.split(":")[1]);
 				const parent = node.parent ? nodes[node.parent] : undefined;
 				if (parent) {
 					parent.circuitChilds ??= [];
