@@ -21,6 +21,7 @@ This file provides guidance to AI coding agents when working with code in this r
 - `make lint-ui` - run frontend linting
 - `vp run dev` - start Vue dev server (http://127.0.0.1:7071)
 - `vp run playwright` - run integration tests
+- `build`, `openapi` and `test` are cached tasks in `vite.config.ts`, run through `vp run`
 - `evcc --config [file] --disable-auth` - run a throw-away instance for UI checks without password setup
 - `evcc --template-type [type] --template [file]` - test device templates
 - `make docs` - generate template documentation

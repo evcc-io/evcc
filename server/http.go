@@ -197,7 +197,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 		"deletesession":           {"DELETE", "/session/{id:[0-9]+}", deleteSessionHandler},
 		"gridsessions":            {"GET", "/gridsessions", gridSessionsHandler},
 		"energyhistory":           {"GET", "/history/energy", energyHistoryHandler},
-		"optimize":                {"POST", "/optimize", getHandler(site.Optimize)},
+		"optimize":                {"POST", "/optimize", callHandler(site.Optimize)},
 		"telemetry2":              {"POST", "/settings/telemetry/{value:[01truefalse]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
 		"devicecolors":            {"PUT", "/devicecolors", updateDeviceColor(site)},
 
@@ -226,7 +226,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 
 	// loadpoint api
 	// TODO any loadpoint
-	for id, lp := range site.Loadpoints() {
+	for id, lp := range site.ActiveLoadpoints() {
 		api := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id+1)).Subrouter()
 
 		routes := map[string]route{
@@ -438,9 +438,11 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 		api.Use(ensureDbAuth(auth))
 
 		routes := map[string]route{
-			"backup":  {"GET", "/backup", getBackup()},
-			"restore": {"POST", "/restore", restoreDatabase(shutdown)},
-			"reset":   {"POST", "/reset", resetDatabase(shutdown)},
+			"backup":        {"GET", "/backup", getBackup()},
+			"restore":       {"POST", "/restore", restoreDatabase(shutdown)},
+			"reset":         {"POST", "/reset", resetDatabase(shutdown)},
+			"deleteenergy":  {"DELETE", "/metrics/energy", deleteEnergyHandler},
+			"deletetariffs": {"DELETE", "/metrics/tariffs", deleteTariffsHandler},
 		}
 
 		for _, r := range routes {

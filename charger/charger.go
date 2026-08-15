@@ -33,7 +33,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		embed                               `mapstructure:",squash"`
 		Status, Enable, Enabled, MaxCurrent plugin.Config
 		MaxCurrentMillis                    *plugin.Config
-		Identify, Phases1p3p                *plugin.Config
+		Identify, Phases1p3p, GetPhases     *plugin.Config
 		Wakeup                              *plugin.Config
 		Soc                                 *plugin.Config
 		LimitSoc                            *plugin.Config
@@ -97,6 +97,19 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 
 		implement.Has(c, implement.PhaseSwitcher(func(phases int) error {
 			return phases1p3pS(int64(phases))
+		}))
+	}
+
+	// decorate phase getter
+	if cc.GetPhases != nil {
+		getPhasesG, err := cc.GetPhases.IntGetter(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("getphases: %w", err)
+		}
+
+		implement.Has(c, implement.PhaseGetter(func() (int, error) {
+			v, err := getPhasesG()
+			return int(v), err
 		}))
 	}
 

@@ -573,6 +573,9 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 
 	// reset energy-based charging plan offset
 	lp.planEnergyOffset = 0
+
+	// connect adds the loadpoint's demand
+	lp.triggerOptimizer()
 }
 
 // evVehicleDisconnectHandler sends external start event
@@ -636,6 +639,16 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	// mark plan slot as inactive
 	// this will force a deletion of an outdated plan once plan time is expired in GetPlan()
 	lp.setPlanActive(false)
+
+	// disconnect removes the loadpoint's demand
+	lp.triggerOptimizer()
+}
+
+// triggerOptimizer re-runs the optimizer when the loadpoint's profile changed
+func (lp *Loadpoint) triggerOptimizer() {
+	if lp.site != nil {
+		lp.site.Optimize()
+	}
 }
 
 // evVehicleSocProgressHandler sends external start event
@@ -1048,15 +1061,20 @@ func (lp *Loadpoint) charging() bool {
 func (lp *Loadpoint) PvChargeStarting() bool {
 	lp.RLock()
 	enabled := lp.enabled
-	pvTimerRunning := !lp.pvTimer.IsZero()
+	pvTimer := lp.pvTimer
 	lp.RUnlock()
 
 	if lp.GetMode() != api.ModePV || !lp.connected() || lp.chargeGoalReached(enabled) {
 		return false
 	}
 
-	// enable timer running (not yet enabled)
-	return !enabled && pvTimerRunning
+	if enabled || pvTimer.IsZero() {
+		return false
+	}
+
+	// a timer restarting on every surplus dip never starts the loadpoint, hence
+	// only claim surplus once it has survived half of the enable delay (#32778)
+	return lp.clock.Since(pvTimer) >= lp.GetEnableDelay()/2
 }
 
 // chargeGoalReached reports whether the loadpoint will not draw more: enabled
@@ -1577,6 +1595,16 @@ func (lp *Loadpoint) boostPower(batteryPower float64) float64 {
 		delta += lp.EffectiveStepPower()
 	}
 
+	// bridge the power gap between 1p max and 3p min so pvScalePhases can trigger a scale-up
+	if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() && lp.site.GetBatteryMaxDischargePower() != nil {
+		if activePhases, maxPhases := lp.ActivePhases(), lp.MaxActivePhases(); activePhases < maxPhases &&
+			lp.circuitAllowsPhases(maxPhases, lp.effectiveMinCurrent()) {
+			// max power actually achievable on the active phases
+			activeMaxPower := min(lp.EffectiveMaxPower(), Voltage*lp.effectiveMaxCurrent()*float64(activePhases))
+			delta += max(0, lp.EffectiveMinPower()*float64(maxPhases)-activeMaxPower)
+		}
+	}
+
 	// start boosting by setting maximum power
 	if boost == boostStart {
 		delta = lp.EffectiveMaxPower()
@@ -1592,9 +1620,9 @@ func (lp *Loadpoint) boostPower(batteryPower float64) float64 {
 		}
 	}
 
-	if maxDischargePower := lp.site.GetBatteryMaxDischargePower(); maxDischargePower > 0 {
+	if maxDischargePower := lp.site.GetBatteryMaxDischargePower(); maxDischargePower != nil {
 		// limit delta to what the battery can still provide
-		delta = min(delta, max(0, maxDischargePower-batteryPower))
+		delta = min(delta, max(0, *maxDischargePower-batteryPower))
 	}
 
 	res := max(0, batteryPower) + delta + lp.site.GetResidualPower()

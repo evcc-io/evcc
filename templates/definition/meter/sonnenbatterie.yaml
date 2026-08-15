@@ -34,6 +34,8 @@ params:
     choice: ["self-consumption", "time-of-use"]
     default: self-consumption
     required: true
+  - name: cache
+    default: 1s
   - name: chargepower
     deprecated: true
 render: |
@@ -41,6 +43,7 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}:{{ .port }}/api/v1/status
+    cache: {{ .cache }}
   {{- if eq .usage "grid" }}
     jq: .GridFeedIn_W
     scale: -1 # reverse direction
@@ -53,6 +56,7 @@ render: |
   soc:
     source: http
     uri: http://{{ .host }}:{{ .port }}/api/v1/status
+    cache: {{ .cache }}
     jq: .USOC
   {{- if .token }}
   batterymode:

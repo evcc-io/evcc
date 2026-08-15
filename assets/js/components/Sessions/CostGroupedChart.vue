@@ -1,7 +1,7 @@
 <template>
 	<div v-if="chartData.labels.length > 1" class="row">
 		<div class="col-12 col-md-6 col-lg-12 col-xxl-6 mb-3">
-			<Doughnut :data="chartData" :options="options" />
+			<div ref="chartEl" class="round-chart"></div>
 		</div>
 		<div class="col-12 col-md-6 col-lg-12 col-xxl-6 d-flex align-items-center">
 			<LegendList :legends="legends" :device-colors="deviceColors" grid />
@@ -10,29 +10,18 @@
 </template>
 
 <script lang="ts">
-import { Doughnut } from "vue-chartjs";
-import {
-	DoughnutController,
-	ArcElement,
-	LinearScale,
-	Legend,
-	Tooltip,
-	type TooltipItem,
-} from "chart.js";
-import LegendList from "./LegendList.vue";
-import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
-import formatter from "@/mixins/formatter";
-import colors from "@/colors";
-import { TYPES, GROUPS, type Session } from "./types";
 import { defineComponent, type PropType } from "vue";
+import { doughnutOption } from "./echarts";
+import echartsChart from "@/mixins/echartsChart";
+import LegendList from "./LegendList.vue";
+import formatter from "@/mixins/formatter";
+import { TYPES, GROUPS, type Session } from "./types";
 import { CURRENCY, type DeviceColors } from "@/types/evcc";
-
-registerChartComponents([DoughnutController, ArcElement, LinearScale, Legend, Tooltip]);
 
 export default defineComponent({
 	name: "CostGroupedChart",
-	components: { Doughnut, LegendList },
-	mixins: [formatter],
+	components: { LegendList },
+	mixins: [formatter, echartsChart],
 	props: {
 		sessions: { type: Array as PropType<Session[]>, default: () => [] },
 		groupBy: {
@@ -45,8 +34,7 @@ export default defineComponent({
 		costType: { type: String as PropType<TYPES>, default: TYPES.PRICE },
 	},
 	computed: {
-		chartData() {
-			console.log(`update ${this.costType} grouped data`);
+		chartData(): { labels: string[]; data: number[]; colors: string[] } {
 			const aggregatedData: Record<string, number> = {};
 
 			this.sessions.forEach((session) => {
@@ -62,58 +50,37 @@ export default defineComponent({
 				}
 			});
 
-			const sortedEntries = Object.entries(aggregatedData).sort((a, b) => b[1] - a[1]);
+			// stable alphabetical order so entries don't jump between periods
+			const sortedEntries = Object.entries(aggregatedData).sort((a, b) =>
+				a[0].localeCompare(b[0])
+			);
 			const labels = sortedEntries.map(([label]) => label);
 			const data = sortedEntries.map(([, value]) => value);
-			const backgroundColor = labels.map((label) => this.colorMappings[this.groupBy][label]);
+			const entryColors = labels.map((label) => this.colorMappings[this.groupBy][label]);
 
-			return {
-				labels: labels,
-				datasets: [{ data, backgroundColor }],
-			};
+			return { labels, data, colors: entryColors };
 		},
 		legends() {
-			const dataset = this.chartData.datasets[0]!;
-			const total = dataset.data.reduce((acc, curr) => acc + curr, 0);
+			const { labels, data, colors: entryColors } = this.chartData;
+			const total = data.reduce((acc, curr) => acc + curr, 0);
 			const fmtShare = (value: number) => this.fmtPercentage((100 / total) * value, 1);
-			return this.chartData.labels.map((label, index) => {
-				const dataValue = dataset.data[index] as number;
+			return labels.map((label, index) => {
+				const dataValue = data[index] as number;
 				return {
-					label: label,
-					color: dataset.backgroundColor[index],
+					label,
+					color: entryColors[index],
 					value: [this.formatValue(dataValue), fmtShare(dataValue)],
 					id: label || undefined,
 				};
 			});
 		},
-		options() {
-			return {
-				...commonOptions,
-				locale: this.$i18n?.locale,
-				aspectRatio: 1,
-				borderRadius: 10,
-				color: colors.text || "",
-				borderWidth: 3,
-				borderColor: colors.box || "",
-				cutout: "70%",
-				radius: "95%",
-				animation: { duration: 250 },
-				plugins: {
-					...commonOptions.plugins,
-					tooltip: {
-						...commonOptions.plugins.tooltip,
-						axis: "r",
-						position: "center",
-						callbacks: {
-							label: (tooltipItem: TooltipItem<"doughnut">) =>
-								this.formatValue(
-									tooltipItem.dataset.data[tooltipItem.dataIndex] || 0
-								),
-							labelColor: tooltipLabelColor(false),
-						},
-					},
-				},
-			} as any;
+		chartOption(): Record<string, unknown> {
+			const { labels, data, colors: entryColors } = this.chartData;
+			return doughnutOption(
+				labels.map((name, i) => ({ name, value: data[i]!, color: entryColors[i]! })),
+				this.formatValue,
+				() => this.chart
+			);
 		},
 	},
 	methods: {

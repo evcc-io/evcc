@@ -8,7 +8,6 @@ declare global {
     app: any;
     evcc?: {
       version: string;
-      commit: string;
       customCss: boolean;
       customLogo: boolean;
       customBrand: string;
@@ -444,6 +443,7 @@ export interface Entity {
   type: string;
   id: number;
   config: Config;
+  deviceDisable?: boolean;
 }
 
 export enum ConfigType {
@@ -485,6 +485,7 @@ export interface LoadpointThreshold {
 export interface ConfigLoadpoint {
   id?: number;
   name?: string;
+  disable?: boolean;
   charger: string;
   meter: string;
   vehicle: string;
@@ -604,6 +605,8 @@ export interface Loadpoint {
   connected: boolean;
   /** Duration since the vehicle was connected, in seconds. */
   connectedDuration: number;
+  /** Loadpoint is disabled via configuration. */
+  disabled?: boolean;
   /** Delay before charging stops in solar mode, in seconds. */
   disableDelay: number;
   /** Grid draw power above which charging stops in solar mode, in W. */
@@ -1429,6 +1432,7 @@ export interface TimeSeries {
 // Solver status enum
 export enum OptimizationStatus {
   OPTIMAL = "Optimal",
+  FEASIBLE = "Feasible",
   INFEASIBLE = "Infeasible",
   UNBOUNDED = "Unbounded",
   UNDEFINED = "Undefined",
