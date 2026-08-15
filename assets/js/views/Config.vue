@@ -538,7 +538,8 @@
 				<RemoteModal :remote="remote" :is-sponsor="isSponsor" :site-title="siteTitle" />
 				<TitleModal @changed="loadDirty" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
-				<CircuitsModal :gridMeter="gridMeter" :extMeters="extMeters" @changed="loadDirty" />
+				<CircuitsModal @changed="loadDirty" />
+				<CircuitModal @changed="circuitChanged"/>
 				<EebusModal
 					:status="eebus?.status"
 					:yamlSource="eebus?.yamlSource"
@@ -678,6 +679,7 @@ import PasswordModal from "../components/Auth/PasswordModal.vue";
 import SecurityModal from "../components/Config/Security/SecurityModal.vue";
 import ApiKeyModal from "../components/Config/Security/ApiKeyModal.vue";
 import AuthProvidersCard from "../components/Config/AuthProvidersCard.vue";
+import CircuitModal from "@/components/Config/CircuitModal.vue";
 
 export default defineComponent({
 	name: "Config",
@@ -689,6 +691,7 @@ export default defineComponent({
 		ConfigSectionNav,
 		CircuitsIcon,
 		CircuitsModal,
+		CircuitModal,
 		CircuitTags,
 		ControlModal,
 		DeviceCard,
@@ -1462,6 +1465,10 @@ export default defineComponent({
 		},
 		async messengerChanged() {
 			this.loadMessengers();
+			this.loadDirty();
+		},
+		async circuitChanged() {
+			this.loadCircuits();
 			this.loadDirty();
 		},
 		siteChanged() {

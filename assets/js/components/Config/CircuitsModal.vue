@@ -12,9 +12,8 @@
 		@changed="$emit('changed')"
 	>
 		<template #default="{ values }: { values: Record<string, Circuit> }">
-			{{ values }}
 			<div
-				v-if="Object.keys(values).length === 0 || true"
+				v-if="Object.keys(values).length === 0"
 				class="onboarding"
 			>
 				<p class="evcc-gray">
@@ -25,7 +24,7 @@
 					type="button"
 					class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 mx-auto"
 					tabindex="0"
-					@click=""
+					@click="openCircuit()"
 				>
 					<shopicon-regular-plus
 						size="s"
@@ -41,11 +40,10 @@
 
 <script lang="ts">
 import JsonModal from "./JsonModal.vue";
-import type { ConfigMeter } from "@/types/evcc";
-import type { PropType } from "vue";
 import type { Circuit } from "@/types/evcc";
 import CircuitsTree from "./CircuitsTree.vue";
 import deepClone from "@/utils/deepClone.ts";
+import { openModal } from "@/configModal.ts";
 
 export interface RecursiveCircuit extends Circuit {
 	circuitChilds?: RecursiveCircuit[];
@@ -54,13 +52,6 @@ export interface RecursiveCircuit extends Circuit {
 export default {
 	name: "CircuitsModal",
 	components: { JsonModal, CircuitsTree },
-	props: {
-		gridMeter: { type: Object as PropType<ConfigMeter>, default: null },
-		extMeters: {
-			type: Array as PropType<ConfigMeter[]>,
-			default: () => [],
-		},
-	},
 	emits: ["changed"],
 	methods: {
 		circuitsTree(
@@ -81,6 +72,9 @@ export default {
 			});
 
 			return root;
+		},
+		async openCircuit() {
+			await openModal("circuit");
 		},
 	},
 };
