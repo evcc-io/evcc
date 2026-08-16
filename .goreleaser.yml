@@ -71,8 +71,6 @@ snapshot:
 
 changelog:
   sort: asc
-  # drop the marker the backport command appends to the pull request title
-  format: '{{ .SHA }} {{ reReplaceAll ` \[\d+\.\d+ backport\]` .Message "" }}'
   filters:
     exclude:
       - "^chore"
@@ -131,6 +129,9 @@ brews:
     repository:
       owner: evcc-io
       name: homebrew-tap
+      branch: "{{ .ProjectName }}-{{ .Version }}"
+      pull_request:
+        enabled: true
     commit_author:
       name: andig
       email: info@evcc.io
