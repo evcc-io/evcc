@@ -1,4 +1,5 @@
 import { xAxisLabelStyle } from "../Forecast/echarts";
+import colors from "@/colors";
 import type { BatteryDetail } from "@/types/evcc";
 
 // loadpoint part of a vehicle entry title: "Carport (blue e-Golf)" → "Carport"
@@ -19,22 +20,35 @@ export function slotTimes(timestamp: string, dt: number[]): number[] {
   return res;
 }
 
-// category x axis over slot times, labels at full hours every 4h (6h on mobile)
-export function slotXAxis(times: number[]) {
+export function isMidnight(time?: number): boolean {
+  if (time === undefined) return false;
+  const d = new Date(time);
+  return d.getHours() === 0 && d.getMinutes() === 0;
+}
+
+// category x axis over slot times, labels at full hours every 4h (6h on mobile),
+// day boundaries as split line with the weekday shown at 00:00
+export function slotXAxis(times: number[], weekdayShort: (d: Date) => string) {
   const step = window.innerWidth < 576 ? 6 : 4;
   return {
     type: "category",
     data: times.map(String),
     axisLine: { show: false },
     axisTick: { show: false },
-    splitLine: { show: false },
+    splitLine: {
+      show: true,
+      // split lines sit at the left edge of their slot
+      interval: (index: number) => index > 0 && isMidnight(times[index]),
+      lineStyle: { color: colors.muted || "", type: "solid" },
+    },
     axisLabel: {
       ...xAxisLabelStyle(),
       interval: 0,
       formatter: (value: string) => {
         const d = new Date(Number(value));
         if (d.getMinutes() !== 0 || d.getHours() % step !== 0) return "";
-        return String(d.getHours());
+        const label = String(d.getHours());
+        return d.getHours() === 0 ? `${label}\n${weekdayShort(d)}` : label;
       },
     },
   };
