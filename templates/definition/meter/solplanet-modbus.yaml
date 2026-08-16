@@ -3,15 +3,18 @@ products:
   - brand: Solplanet
     description:
       generic: Hybrid inverter (Modbus TCP)
+  - brand: KACO
+    description:
+      generic: Blueplanet Hybrid NH3 (Modbus TCP)
 requirements:
   description:
     de: |
-      Nur für Wechselrichter mit eigenem Modbus-TCP-Ethernet-Port (z.B. ASW-TH Serie, Port eth 5&6), Protokoll AISWEI "MB001_ASW GEN-Modbus" V2.1.7.
+      Nur für Wechselrichter mit eigenem Modbus-TCP-Ethernet-Port (z.B. ASW-TH Serie, KACO Blueplanet Hybrid NH3, Port eth 5&6), Protokoll AISWEI "MB001_ASW GEN-Modbus" V2.1.7.
       Ältere Geräte ohne diesen Port benötigen stattdessen das `solplanet-ai-dongle` Template.
       Die Import-/Export-Zählerstände des Netzzählers (46443/46445) werden von dieser Firmware nicht über Modbus TCP bereitgestellt.
       Bei zwei Batteriepaketen (BMS1 + BMS2) je einen Batteriezähler mit Batteriespeichernummer 1 und 2 anlegen.
     en: |
-      Only for inverters with a dedicated Modbus TCP ethernet port (e.g. ASW-TH series, port eth 5&6), protocol AISWEI "MB001_ASW GEN-Modbus" V2.1.7.
+      Only for inverters with a dedicated Modbus TCP ethernet port (e.g. ASW-TH series, KACO Blueplanet Hybrid NH3, port eth 5&6), protocol AISWEI "MB001_ASW GEN-Modbus" V2.1.7.
       Older devices without that port need the `solplanet-ai-dongle` template instead.
       The grid meter import/export energy counters (46443/46445) are not exposed over Modbus TCP by this firmware.
       With two battery packs (BMS1 + BMS2) add one battery meter each, using battery number 1 and 2.
@@ -33,7 +36,6 @@ params:
       en: Battery number
   - preset: battery-params
   - name: maxchargepower
-    default: 5000 # fixed charge power, as in solplanet-ai-dongle
     required: true
 render: |
   type: custom
