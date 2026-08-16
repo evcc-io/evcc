@@ -92,3 +92,49 @@ func TestTimeseriesMarshal(t *testing.T) {
 		})
 	}
 }
+
+func TestPercentileOf(t *testing.T) {
+	// n values of v
+	fill := func(n int, v float64) []float64 {
+		s := make([]float64, n)
+		for i := range s {
+			s[i] = v
+		}
+		return s
+	}
+
+	t.Run("too few samples returns false", func(t *testing.T) {
+		_, ok := percentileOf(nil, 0.5, solarScaleMinSamples)
+		assert.False(t, ok)
+
+		_, ok = percentileOf(fill(solarScaleMinSamples-1, 0.9), 0.5, solarScaleMinSamples)
+		assert.False(t, ok)
+	})
+
+	t.Run("stable cluster", func(t *testing.T) {
+		v, ok := percentileOf(fill(20, 0.9), 0.5, solarScaleMinSamples)
+		assert.True(t, ok)
+		assert.InDelta(t, 0.9, v, 0.001)
+	})
+
+	// P50 rejects outlier days for free: a broken forecast feed (recent ratio
+	// ~2.3) and a metering outage (ratio ~0.16) do not move the result as
+	// long as they stay a minority of the window.
+	t.Run("outlier days do not move P50", func(t *testing.T) {
+		ratios := fill(20, 0.9)                   // healthy installation bias
+		ratios = append(ratios, fill(4, 2.3)...)  // broken forecast feed
+		ratios = append(ratios, fill(8, 0.16)...) // metering outage
+
+		v, ok := percentileOf(ratios, 0.5, solarScaleMinSamples)
+		assert.True(t, ok)
+		assert.InDelta(t, 0.9, v, 0.001)
+	})
+
+	t.Run("higher percentile shifts toward the upper tail", func(t *testing.T) {
+		ratios := append(fill(15, 0.8), fill(15, 1.2)...)
+
+		p50, _ := percentileOf(ratios, 0.5, solarScaleMinSamples)
+		p90, _ := percentileOf(ratios, 0.9, solarScaleMinSamples)
+		assert.Less(t, p50, p90)
+	})
+}
