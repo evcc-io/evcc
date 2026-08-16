@@ -78,7 +78,7 @@ jobs:
       - name: Publish
         uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.18.0
         with:
-          project: 0zz60925dv
+          project: ${{ secrets.DEPOT_PROJECT_ID }}
           context: .
           platforms: linux/amd64,linux/arm64,linux/arm/v6
           push: true
