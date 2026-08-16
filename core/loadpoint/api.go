@@ -219,8 +219,6 @@ type API interface {
 	GetRemainingDuration() time.Duration
 	// GetRemainingEnergy is the remaining charge energy in kWh
 	GetRemainingEnergy() float64
-	// GetChargedEnergy returns session charge energy in Wh
-	GetChargedEnergy() float64
 
 	//
 	// vehicles

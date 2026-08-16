@@ -522,9 +522,8 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 			continue
 		}
 
-		// no vehicle capacity and no session energy limit to model against:
-		// account for the consumption as uncontrollable load
-		if v := lp.GetVehicle(); v == nil || (v.Capacity() == 0 && lp.GetLimitEnergy() == 0) {
+		// unknown vehicle capacity: account for the consumption as uncontrollable load
+		if v := lp.GetVehicle(); v == nil || v.Capacity() == 0 {
 			unmodelled += unmodelledPower(lp)
 			continue
 		}
@@ -791,22 +790,18 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 	// vehicle
 	v := lp.GetVehicle()
 
-	capacity := v.Capacity() // kWh
-	soc := lp.GetSoc()       // percent
-
-	// without capacity or soc there is no battery state to model, but a session energy
-	// limit still bounds the charge- use charged energy as state (see remainingLimitEnergy)
-	if limit := lp.GetLimitEnergy(); limit > 0 && (capacity == 0 || soc == 0) {
-		bat.SInitial = float32(lp.GetChargedEnergy())    // Wh
-		bat.SMax = max(bat.SInitial, float32(limit*1e3)) // prevent infeasible if limit already exceeded
-	} else {
-		maxSoc := capacity * float64(lp.EffectiveLimitSoc()) * 10 // Wh
-		bat.SInitial = float32(capacity * soc * 10)               // Wh
-		bat.SMax = max(bat.SInitial, float32(maxSoc))             // prevent infeasible if current soc above maximum
+	maxSoc := v.Capacity() * 1e3 // Wh
+	if v := lp.EffectiveLimitSoc(); v > 0 {
+		maxSoc *= float64(v) / 100
+	} else if v := lp.GetLimitEnergy(); v > 0 {
+		maxSoc = v * 1e3
 	}
 
+	bat.SInitial = float32(v.Capacity() * lp.GetSoc() * 10) // Wh
+	bat.SMax = max(bat.SInitial, float32(maxSoc))           // prevent infeasible if current soc above maximum
+
 	detail.Type = batteryTypeVehicle
-	detail.Capacity = capacity
+	detail.Capacity = v.Capacity()
 
 	if vt := v.GetTitle(); vt != "" {
 		if detail.Title != "" {
