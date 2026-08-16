@@ -144,9 +144,20 @@ export default defineComponent({
 		gridDischargeLimit(): number | null {
 			return this.state.batteryGridDischargeLimit ?? null;
 		},
-		// the limit is inert unless the experimental grid discharge setting is on
+		// needs a dynamic feed-in tariff, the grid price is irrelevant here
+		gridDischargePossible(): boolean {
+			return (
+				this.devices.some(({ controllable }) => controllable) &&
+				!!this.state.smartFeedInPriorityAvailable
+			);
+		},
+		// the limit is inert unless the experimental grid discharge setting is on. a
+		// limit that is already set stays reachable so it can be removed
 		gridDischargeVisible(): boolean {
-			return !!this.state.batteryGridDischarge;
+			return (
+				!!this.state.batteryGridDischarge &&
+				(this.gridDischargePossible || this.gridDischargeLimit !== null)
+			);
 		},
 		smartFeedInPriorityProps() {
 			return {
@@ -154,7 +165,7 @@ export default defineComponent({
 				lastLimit: settings.lastBatteryGridDischargeLimit,
 				currency: this.state.currency || CURRENCY.EUR,
 				tariff: store.uiForecast.value.feedin,
-				possible: this.gridChargePossible && !!this.state.smartFeedInPriorityAvailable,
+				possible: this.gridDischargePossible,
 			};
 		},
 	},

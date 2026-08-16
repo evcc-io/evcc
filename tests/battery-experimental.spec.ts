@@ -111,6 +111,10 @@ test.describe("experimental battery page", async () => {
 
     await gridDischarge.click();
     await expect(gridDischarge).toBeChecked();
-    await expect(card.getByTestId("battery-grid-discharge-limit")).toBeVisible();
+
+    // the card carries a working limit control, not just its heading
+    const limit = card.getByTestId("battery-grid-discharge-limit");
+    await expect(limit).toBeVisible();
+    await expect(limit.getByRole("combobox")).toBeVisible();
   });
 });

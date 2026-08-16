@@ -56,3 +56,9 @@ tariffs:
         price: 0.05
       - hours: 17-21
         price: 0.5
+  feedin:
+    type: fixed
+    price: 0.06
+    zones:
+      - hours: 11-14
+        price: 0.28
