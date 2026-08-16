@@ -165,8 +165,10 @@
       }
     },
     "circuit": {
+      "parentCircuit": "Parent circuit",
       "titleAdd": "Add circuit",
       "titleEdit": "Edit circuit",
+      "titleLabel": "Title",
       "template": "Circuit",
       "generic": "Generic circuit",
       "custom": "User-defined circuit",

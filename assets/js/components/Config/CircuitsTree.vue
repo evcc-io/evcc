@@ -25,6 +25,7 @@
 			:depth="depth + 1"
 			:guides="childGuides"
 			:is-last="false"
+			:on-add-sub="onAddSub"
 		/>
 
 		<div class="d-flex align-items-stretch row-spacing">
@@ -39,7 +40,7 @@
 				type="button"
 				class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 evcc-gray"
 				tabindex="0"
-				@click="openCircuit()"
+				@click="addSub"
 			>
 				<shopicon-regular-plus size="s" class="flex-shrink-0"></shopicon-regular-plus>
 				Add sub-circuit
@@ -73,11 +74,18 @@ export default {
 		 */
 		guides: { type: Array as PropType<boolean[]>, default: () => [] },
 		isLast: { type: Boolean, default: false },
+		onAddSub: {
+			type: Function as PropType<(parent?: string) => void>,
+			required: true,
+		},
 	},
 	methods: {
 		async openCircuit(name?: string) {
-			const id = parseInt(name?.split(":")[1] || "-1"); // TODO: where to get the id from?
+			const id = parseInt(name?.split(":")[1] || "-1");
 			await openModal("circuit", { id });
+		},
+		addSub() {
+			this.onAddSub(this.circuitsTree?.name);
 		},
 	},
 	computed: {

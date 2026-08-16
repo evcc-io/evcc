@@ -539,8 +539,8 @@
 				<TitleModal @changed="loadDirty" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
 				<CircuitsLegacyModal @changed="loadDirty" />
-				<CircuitsModal @changed="loadDirty" />
-				<CircuitModal @changed="circuitChanged" />
+				<CircuitsModal :on-add-sub="addSubCircuit" @changed="loadDirty" />
+				<CircuitModal ref="circuitModal" @changed="circuitChanged" />
 				<EebusModal
 					:status="eebus?.status"
 					:yamlSource="eebus?.yamlSource"
@@ -1246,6 +1246,13 @@ export default defineComponent({
 		}
 	},
 	methods: {
+		addSubCircuit(parent?: string) {
+			const modal = this.$refs["circuitModal"] as
+				| InstanceType<typeof CircuitModal>
+				| undefined;
+			modal?.setParentCircuit(parent);
+			openModal("circuit");
+		},
 		isUnconfigured(tags: DeviceTags): boolean {
 			return tags["configured"]?.value === false;
 		},

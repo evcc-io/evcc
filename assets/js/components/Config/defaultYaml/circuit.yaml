@@ -1,6 +1,4 @@
 name: main # unique name, used as reference, e.g. as parent in other circuits
-title: Main Circuit # used in the UI
 maxcurrent: 63 # 63A main circuit breaker (optional)
 maxPower: 30000 # 30kW (optional)
 meter: grid # associated meter to monitor the power consumption (optional)
-parent: # no parent, this is the root circuit

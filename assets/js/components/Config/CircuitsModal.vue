@@ -12,13 +12,10 @@
 		@changed="$emit('changed')"
 	>
 		<template #default="{ values }: { values: State['circuits'] }">
-			<div
-				v-if="Object.keys(values?.config || {}).length === 0"
-				class="onboarding"
-			>
+			<div v-if="Object.keys(values?.config || {}).length === 0" class="onboarding">
 				<p class="evcc-gray">
-					No circuits configured. Start with a main circuit that
-					represents your grid connection.
+					No circuits configured. Start with a main circuit that represents your grid
+					connection.
 				</p>
 				<button
 					type="button"
@@ -26,14 +23,15 @@
 					tabindex="0"
 					@click="openCircuit()"
 				>
-					<shopicon-regular-plus
-						size="s"
-						class="flex-shrink-0"
-					></shopicon-regular-plus>
+					<shopicon-regular-plus size="s" class="flex-shrink-0"></shopicon-regular-plus>
 					Add main circuit
 				</button>
 			</div>
-			<CircuitsTree v-else :circuitsTree="circuitTree(values?.config)" />
+			<CircuitsTree
+				v-else
+				:circuitsTree="circuitTree(values?.config)"
+				:on-add-sub="onAddSub"
+			/>
 		</template>
 	</JsonModal>
 </template>
@@ -44,11 +42,18 @@ import type { State } from "@/types/evcc";
 import CircuitsTree from "./CircuitsTree.vue";
 import { openModal } from "@/configModal.ts";
 import { circuitTree } from "@/utils/circuits.ts";
+import type { PropType } from "vue";
 
 export default {
 	name: "CircuitsModal",
 	components: { JsonModal, CircuitsTree },
 	emits: ["changed"],
+	props: {
+		onAddSub: {
+			type: Function as PropType<(parent?: string) => void>,
+			required: true,
+		},
+	},
 	methods: {
 		circuitTree,
 		async openCircuit() {

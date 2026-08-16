@@ -7,20 +7,51 @@
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
 		:on-template-change="handleTemplateChange"
+		:filter-template-params="filterTemplateParams"
 		@added="$emit('changed', $event)"
 		@updated="$emit('changed')"
 		@removed="$emit('changed')"
-	></DeviceModalBase>
+	>
+		<template #before-template="{ values }">
+			<FormRow id="circuitParamDeviceTitle" :label="$t('config.circuit.titleLabel')">
+				<PropertyField
+					id="circuitParamDeviceTitle"
+					v-model.trim="values.deviceTitle"
+					type="String"
+					size="w-100"
+					class="me-2"
+					required
+				/>
+			</FormRow>
+			<FormRow
+				v-if="values.parent || parentCircuit"
+				id="circuitParamDeviceParentCircuit"
+				:label="$t('config.circuit.parentCircuit')"
+			>
+				<PropertyField
+					id="circuitParamDeviceParentCircuit"
+					:model-value.trim="values.parent ?? parentCircuit"
+					@update:model-value.trim="values.parent"
+					type="String"
+					size="w-100"
+					class="me-2"
+					disabled
+				/>
+			</FormRow>
+		</template>
+	</DeviceModalBase>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
 import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
-import type { DeviceValues, Product } from "./DeviceModal";
+import type { DeviceValues, Product, TemplateParam } from "./DeviceModal";
 import { type TemplateGroup, customTemplateOption } from "./DeviceModal/TemplateSelector.vue";
 import { ConfigType } from "@/types/evcc";
 import defaultCircuitYaml from "./defaultYaml/circuit.yaml?raw";
 import { getModal } from "@/configModal";
+import FormRow from "./FormRow.vue";
+import PropertyField from "./PropertyField.vue";
 
 const initialValues = {
 	type: ConfigType.Template,
@@ -31,11 +62,14 @@ export default defineComponent({
 	name: "CircuitModal",
 	components: {
 		DeviceModalBase,
+		FormRow,
+		PropertyField,
 	},
 	emits: ["changed"],
 	data() {
 		return {
 			initialValues,
+			parentCircuit: undefined as string | undefined,
 		};
 	},
 	computed: {
@@ -47,6 +81,9 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		setParentCircuit(parentCircuit?: string) {
+			this.parentCircuit = parentCircuit;
+		},
 		provideTemplateOptions(products: Product[]): TemplateGroup[] {
 			return [
 				{
@@ -67,6 +104,9 @@ export default defineComponent({
 				values.type = ConfigType.Custom;
 				values.yaml = defaultCircuitYaml;
 			}
+		},
+		filterTemplateParams(params: TemplateParam[]): TemplateParam[] {
+			return params.filter((p) => p.Name !== "parent");
 		},
 	},
 });
