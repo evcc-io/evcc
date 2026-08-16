@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -206,7 +207,7 @@ func (m *EcoFlow) setBackupReserve(limit float64) error {
 	res, err := m.client.SetDeviceParameter(ctx, map[string]any{
 		"sn": m.serial, "cmdId": 17, "cmdFunc": 254,
 		"dirDest": 1, "dirSrc": 1, "dest": 2, "needAck": true,
-		"params": map[string]any{"cfgBackupReverseSoc": int(limit)},
+		"params": map[string]any{"cfgBackupReverseSoc": int(math.Round(limit))},
 	})
 	if err != nil {
 		return err
