@@ -116,6 +116,9 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 		if extMode != batMode {
 			res = extMode
 		}
+	case site.Automatic() && site.unmodelledCharging():
+		// the suggestion ignores loads the optimizer cannot model as storage
+		res = keepUnlessModified(api.BatteryHold)
 	case site.Automatic():
 		// optimizer decides, replacing grid charge limit and discharge control
 		if mode, ok := site.batterySuggestionMode(); ok {
@@ -142,6 +145,23 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 	}
 
 	return res
+}
+
+// unmodelledCharging reports a loadpoint charging at full power that the optimizer
+// cannot model as storage (unknown vehicle capacity, see optimizerRequest). Its
+// battery suggestion does not account for that load, so the battery must be held.
+func (site *Site) unmodelledCharging() bool {
+	for _, lp := range site.activeLoadpoints() {
+		if v := lp.GetVehicle(); v != nil && v.Capacity() > 0 {
+			continue
+		}
+
+		if lp.GetStatus() == api.StatusC && lp.IsFastChargingActive() {
+			return true
+		}
+	}
+
+	return false
 }
 
 // batterySuggestionMode returns the optimizer's mode for the first controllable battery.

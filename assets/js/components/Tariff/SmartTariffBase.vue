@@ -4,6 +4,9 @@
 		<p>
 			{{ description }}
 		</p>
+		<p v-if="disabledHint" class="text-muted" data-testid="smart-tariff-disabled-hint">
+			{{ disabledHint }}
+		</p>
 		<div class="row mb-3 align-items-center" style="max-width: 1000px">
 			<label :for="formId" class="col-sm-4 col-form-label pt-0 pt-sm-2">
 				{{ limitLabel }}
@@ -18,6 +21,7 @@
 								class="form-check-input"
 								type="checkbox"
 								role="switch"
+								:disabled="!!disabledHint"
 								:aria-label="$t('smartCost.enable')"
 								@change="toggleActive"
 							/>
@@ -28,6 +32,7 @@
 						v-model.number="selectedLimit"
 						class="form-select form-select-sm"
 						:class="{ disabled: !active }"
+						:disabled="!!disabledHint"
 						:aria-label="limitLabel"
 						@change="changeLimit"
 					>
@@ -114,6 +119,7 @@ export default defineComponent({
 		currency: String as PropType<CURRENCY>,
 		applyAll: Boolean,
 		possible: Boolean,
+		disabledHint: String,
 		tariff: Array,
 		formId: String,
 		title: String,

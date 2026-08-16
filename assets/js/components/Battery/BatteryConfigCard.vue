@@ -80,6 +80,7 @@
 					class="form-check-input"
 					type="checkbox"
 					role="switch"
+					:disabled="optimizerAutomatic"
 					@change="changeDischargeControl"
 				/>
 				<label class="form-check-label" for="batteryDischarge">
@@ -110,6 +111,7 @@ import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
 import api from "@/api";
 import type { Battery } from "@/types/evcc";
+import store from "@/store";
 import Card from "../Helper/Card.vue";
 import InlineSocSelect from "./InlineSocSelect.vue";
 
@@ -135,6 +137,9 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		optimizerAutomatic(): boolean {
+			return !!store.state?.optimizerAutomatic;
+		},
 		chargeSubtitle(): string {
 			return `${this.$t("battery.card.soc")} ${this.fmtSoc(this.batterySoc)}`;
 		},
