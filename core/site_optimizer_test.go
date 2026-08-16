@@ -29,6 +29,40 @@ func TestLoadpointProfile(t *testing.T) {
 	require.Equal(t, []float64{250, 250, 250, 250, 250, 250, 250, 50}, loadpointProfile(lp, 8))
 }
 
+func TestApplyPrecondition(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	lp := loadpoint.NewMockAPI(ctrl)
+	lp.EXPECT().EffectiveMaxPower().Return(8000.0).AnyTimes() // 2 kWh per slot
+
+	// no precondition configured
+	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{}).Times(1)
+	assert.Nil(t, applyPrecondition(lp, nil, 8))
+
+	// no plan
+	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: time.Hour}).Times(1)
+	lp.EXPECT().EffectivePlanTime().Return(time.Time{}).Times(1)
+	assert.Nil(t, applyPrecondition(lp, nil, 8))
+
+	// plan in 1h, 40min precondition: slots 1 (10min) and 2, 3 (full)
+	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(time.Hour)).Times(1)
+	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: 40 * time.Minute}).Times(1)
+	res := applyPrecondition(lp, nil, 8)
+	require.Len(t, res, 8)
+	assert.InDeltaSlice(t, []float32{0, 2000. / 1.5, 2000, 2000, 0, 0, 0, 0}, res, 1)
+
+	// existing demand is kept where higher
+	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(time.Hour)).Times(1)
+	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: 30 * time.Minute}).Times(1)
+	res = applyPrecondition(lp, []float32{3000, 3000, 3000, 3000, 0, 0, 0, 0}, 8)
+	assert.InDeltaSlice(t, []float32{3000, 3000, 3000, 3000, 0, 0, 0, 0}, res, 1)
+
+	// plan beyond horizon
+	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(24 * time.Hour)).Times(1)
+	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: time.Hour}).Times(1)
+	assert.Nil(t, applyPrecondition(lp, nil, 8))
+}
+
 func TestLoadpointCurrentAction(t *testing.T) {
 	for _, tc := range []struct {
 		name    string
@@ -284,6 +318,54 @@ func TestBatteryRequestSocLimitsClamp(t *testing.T) {
 		assert.Equal(t, float32(2000), req.SMin)
 		assert.Equal(t, float32(10000), req.SMax)
 	})
+}
+
+// charge goal for vehicles with and without known capacity/soc, see #32890
+func TestLoadpointRequestChargeGoal(t *testing.T) {
+	site := &Site{log: util.NewLogger("foo")}
+
+	for _, tc := range []struct {
+		name                  string
+		capacity, soc         float64 // kWh, percent
+		limitSoc              int     // percent
+		limitEnergy, charged  float64 // kWh, Wh
+		wantInitial, wantSMax float32 // Wh
+	}{
+		{"soc limit", 50, 20, 80, 0, 0, 10000, 40000},
+		{"no capacity, energy limit", 0, 0, 100, 10, 0, 0, 10000},
+		{"no capacity, energy limit partially charged", 0, 0, 100, 10, 4000, 4000, 10000},
+		{"no capacity, limit exceeded", 0, 0, 100, 10, 11000, 11000, 11000},
+		{"capacity but no soc, energy limit", 50, 0, 100, 10, 0, 0, 10000},
+		{"capacity but no soc, no energy limit", 50, 0, 100, 0, 0, 0, 50000},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			v := api.NewMockVehicle(ctrl)
+			v.EXPECT().Capacity().Return(tc.capacity).AnyTimes()
+			v.EXPECT().GetTitle().Return("").AnyTimes()
+
+			lp := loadpoint.NewMockAPI(ctrl)
+			lp.EXPECT().GetVehicle().Return(v).AnyTimes()
+			lp.EXPECT().GetSoc().Return(tc.soc).AnyTimes()
+			lp.EXPECT().EffectiveLimitSoc().Return(tc.limitSoc).AnyTimes()
+			lp.EXPECT().GetLimitEnergy().Return(tc.limitEnergy).AnyTimes()
+			lp.EXPECT().GetChargedEnergy().Return(tc.charged).AnyTimes()
+			lp.EXPECT().GetTitle().Return("lp").AnyTimes()
+			lp.EXPECT().EffectiveMinPower().Return(1380.0).AnyTimes()
+			lp.EXPECT().EffectiveMaxPower().Return(11000.0).AnyTimes()
+			lp.EXPECT().GetMode().Return(api.ModePV).AnyTimes()
+			lp.EXPECT().GetStatus().Return(api.StatusB).AnyTimes()
+			lp.EXPECT().GetSmartCostLimit().Return(nil).AnyTimes()
+			lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{}).AnyTimes()
+			lp.EXPECT().GetPlanGoal().Return(0.0, false).AnyTimes()
+
+			req, _ := site.loadpointRequest(lp, 8, 15*time.Minute, nil)
+
+			assert.Equal(t, tc.wantInitial, req.SInitial)
+			assert.Equal(t, tc.wantSMax, req.SMax)
+		})
+	}
 }
 
 func TestOptimizerChargingStrategy(t *testing.T) {

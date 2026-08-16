@@ -2,7 +2,7 @@ template: goodwe-hybrid
 products:
   - brand: GoodWe
     description:
-      generic: ET/EH/BH/BT Hybrid Inverter
+      generic: ET/EH/BH/BT/ESA Hybrid Inverter
 capabilities: ["battery-control", "curtail"]
 params:
   - name: usage
