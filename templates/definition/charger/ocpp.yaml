@@ -3,6 +3,9 @@ products:
   - description:
       de: OCPP 1.6J kompatibel
       en: OCPP 1.6J compatible
+  - brand: Ocular
+    description:
+      generic: IQ Home
 group: generic
 capabilities: ["mA", "rfid", "1p3p", "dim"]
 requirements:
