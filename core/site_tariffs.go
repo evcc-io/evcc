@@ -252,7 +252,7 @@ func (site *Site) effectiveSolarScale() float64 {
 const (
 	solarScaleWindow     = 30  // trailing window of days to consider
 	solarScaleMinSamples = 14  // minimum daily ratios before applying a scale
-	solarScalePercentile = 0.6 // percentile of the daily ratio distribution to use
+	solarScalePercentile = 0.5 // percentile of the daily ratio distribution to use
 	solarScaleMinEnergy  = 0.5 // kWh, skip days where either side is too small for a meaningful ratio
 )
 
@@ -270,7 +270,6 @@ const (
 func (site *Site) solarScale() float64 {
 	scale, err := site.solarScaleCached()
 	if err != nil {
-		site.log.ERROR.Printf("solar scale percentile: %v", err)
 		return 1
 	}
 	return scale
@@ -285,8 +284,8 @@ func (site *Site) querySolarScale(bod time.Time) (float64, error) {
 		return 0, err
 	}
 
-	pv := map[string]float64{}
-	fcst := map[string]float64{}
+	pv := make(map[string]float64, solarScaleWindow)
+	fcst := make(map[string]float64, solarScaleWindow)
 	for _, s := range series {
 		var m map[string]float64
 		switch s.Group {

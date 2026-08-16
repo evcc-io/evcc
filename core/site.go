@@ -359,7 +359,11 @@ func NewSite() *Site {
 
 	// the result only depends on completed days, so it cannot change within a day
 	site.solarScaleCached = util.Cached(func() (float64, error) {
-		return site.querySolarScale(now.BeginningOfDay())
+		scale, err := site.querySolarScale(now.BeginningOfDay())
+		if err != nil {
+			site.log.ERROR.Printf("solar scale percentile: %v, falling back to unadjusted forecast", err)
+		}
+		return scale, err
 	}, 24*time.Hour)
 
 	return site
