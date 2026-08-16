@@ -122,7 +122,7 @@ type Site struct {
 	optimizerMu      sync.Mutex // guards optimizer runs
 	optimizerUpdated time.Time  // last optimizer run, guarded by optimizerMu
 
-	solarScaleCached func() (float64, error) // util.Cached wrapper around querySolarScalePercentile
+	solarScaleCached func() (float64, error) // util.Cached wrapper around querySolarScale
 }
 
 // MetersConfig contains the site's meter configuration
@@ -359,7 +359,7 @@ func NewSite() *Site {
 
 	// the result only depends on completed days, so it cannot change within a day
 	site.solarScaleCached = util.Cached(func() (float64, error) {
-		return site.querySolarScalePercentile(now.BeginningOfDay())
+		return site.querySolarScale(now.BeginningOfDay())
 	}, 24*time.Hour)
 
 	return site

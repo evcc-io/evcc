@@ -235,7 +235,7 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 		}
 	}
 
-	res.Scale = site.solarScalePercentile()
+	res.Scale = site.solarScale()
 
 	return res
 }
@@ -246,7 +246,7 @@ func (site *Site) effectiveSolarScale() float64 {
 	if !site.GetSolarAdjusted() {
 		return 1
 	}
-	return site.solarScalePercentile()
+	return site.solarScale()
 }
 
 const (
@@ -256,7 +256,7 @@ const (
 	solarScaleMinEnergy  = 0.5 // kWh, skip days where either side is too small for a meaningful ratio
 )
 
-// solarScalePercentile returns the solarScalePercentile-th percentile of the daily
+// solarScale returns the solarScalePercentile-th percentile of the daily
 // produced/forecasted solar ratio over a trailing window of solarScaleWindow completed
 // days. It is robust against single-day forecast outliers: it captures the systematic
 // installation bias (soiling, shading, model error) that legitimately applies to future
@@ -266,7 +266,7 @@ const (
 //
 // The result only depends on completed days, so it cannot change within a day. It is
 // cached accordingly instead of being recomputed on every optimizer run.
-func (site *Site) solarScalePercentile() float64 {
+func (site *Site) solarScale() float64 {
 	scale, err := site.solarScaleCached()
 	if err != nil {
 		site.log.ERROR.Printf("solar scale percentile: %v", err)
@@ -275,9 +275,9 @@ func (site *Site) solarScalePercentile() float64 {
 	return scale
 }
 
-// querySolarScalePercentile does the actual metrics query and percentile calculation
-// for solarScalePercentile, given the current beginning-of-day boundary.
-func (site *Site) querySolarScalePercentile(bod time.Time) (float64, error) {
+// querySolarScale does the actual metrics query and percentile calculation
+// for solarScale, given the current beginning-of-day boundary.
+func (site *Site) querySolarScale(bod time.Time) (float64, error) {
 	from := bod.AddDate(0, 0, -solarScaleWindow)
 	series, err := metrics.QueryEnergy(from, time.Now(), "day", true)
 	if err != nil {
