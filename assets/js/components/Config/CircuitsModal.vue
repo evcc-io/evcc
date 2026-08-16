@@ -27,7 +27,7 @@
 					Add main circuit
 				</button>
 			</div>
-			<CircuitsTree v-else :circuitsTree="circuitsTree(values)" />
+			<CircuitsTree v-else :circuitsTree="circuitTree(values)" />
 		</template>
 	</JsonModal>
 </template>
@@ -36,37 +36,15 @@
 import JsonModal from "./JsonModal.vue";
 import type { Circuit } from "@/types/evcc";
 import CircuitsTree from "./CircuitsTree.vue";
-import deepClone from "@/utils/deepClone.ts";
 import { openModal } from "@/configModal.ts";
-
-export interface RecursiveCircuit extends Circuit {
-	id?: number;
-	circuitChilds?: RecursiveCircuit[];
-}
+import { circuitTree } from "@/utils/circuits.ts";
 
 export default {
 	name: "CircuitsModal",
 	components: { JsonModal, CircuitsTree },
 	emits: ["changed"],
 	methods: {
-		circuitsTree(circuits: Record<string, RecursiveCircuit>): RecursiveCircuit | undefined {
-			let nodes = deepClone(circuits);
-
-			let root: RecursiveCircuit | undefined;
-			Object.entries(nodes).forEach(([id, node]) => {
-				node.id = parseInt(id.split(":")[1]);
-				const parent = node.parent ? nodes[node.parent] : undefined;
-				if (parent) {
-					parent.circuitChilds ??= [];
-					parent.circuitChilds.push(node);
-				} else {
-					// found the root
-					root = node;
-				}
-			});
-
-			return root;
-		},
+		circuitTree,
 		async openCircuit() {
 			await openModal("circuit");
 		},

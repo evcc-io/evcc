@@ -10,7 +10,7 @@
 					<span class="tree-knick" />
 				</span>
 			</template>
-			<DeviceRefBox compact class="flex-grow-1" @edit="openCircuit(circuitsTree?.id)">
+			<DeviceRefBox compact class="flex-grow-1" @edit="openCircuit(circuitsTree?.name)">
 				<span class="d-flex align-items-center gap-2">
 					<span class="fw-bold">{{ circuitsTree?.title }}</span>
 					<span class="ms-auto evcc-gray value">{{ valueLabel }}</span>
@@ -19,7 +19,7 @@
 		</div>
 
 		<CircuitsTree
-			v-for="child in circuitsTree?.circuitChilds"
+			v-for="child in circuitsTree?.children"
 			:key="child.title"
 			:circuits-tree="child"
 			:depth="depth + 1"
@@ -50,10 +50,10 @@
 
 <script lang="ts">
 import type { PropType } from "vue";
-import type { RecursiveCircuit } from "./CircuitsModal.vue";
 import DeviceRefBox from "./DeviceRefBox.vue";
 import formatter from "@/mixins/formatter.ts";
 import { openModal } from "@/configModal.ts";
+import type { CircuitNode } from "@/utils/circuits.ts";
 
 export default {
 	name: "CircuitsTree",
@@ -61,7 +61,7 @@ export default {
 	components: { DeviceRefBox },
 	props: {
 		circuitsTree: {
-			type: Object as PropType<RecursiveCircuit>,
+			type: Object as PropType<CircuitNode>,
 		},
 		/** Nesting depth from root (0 = root, no indentation/lines). */
 		depth: { type: Number, default: 0 },
@@ -75,7 +75,8 @@ export default {
 		isLast: { type: Boolean, default: false },
 	},
 	methods: {
-		async openCircuit(id?: number) {
+		async openCircuit(name?: string) {
+			const id = parseInt(name?.split(":")[1] || "-1"); // TODO: where to get the id from?
 			await openModal("circuit", { id });
 		},
 	},

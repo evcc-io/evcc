@@ -1205,7 +1205,7 @@ export default defineComponent({
 				authDisabled: this.authDisabled,
 			};
 		},
-		circuitsRoot(): CircuitNode | null {
+		circuitsRoot(): CircuitNode | undefined {
 			return circuitTree(store.state?.circuits?.config || {});
 		},
 		hemsDimmed(): boolean {
