@@ -1122,9 +1122,14 @@ func currentRates(tariff api.Tariff) api.Rates {
 }
 
 // optimizerHorizon is the timeframe the hosted optimizer is limited to for sake
-// of performance: 48 hours plus the remainder of that day
+// of performance: 48 hours, extended to the end of that day. In the early hours
+// the extension would add almost a full day, hence it only applies past 6:00.
 func optimizerHorizon(t time.Time) time.Time {
-	return now.With(t.Add(48 * time.Hour)).EndOfDay()
+	horizon := t.Add(48 * time.Hour)
+	if t.Hour() < 6 {
+		return horizon
+	}
+	return now.With(horizon).EndOfDay()
 }
 
 // slotsUntil limits maxLen to the slots starting before the given horizon

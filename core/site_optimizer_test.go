@@ -37,6 +37,10 @@ func TestOptimizerHorizon(t *testing.T) {
 	// 48h plus end of day
 	assert.Equal(t, time.Date(2025, 1, 3, 23, 59, 59, int(time.Second-time.Nanosecond), time.Local), horizon)
 
+	// before 6:00 the day is not extended
+	assert.Equal(t, time.Date(2025, 1, 3, 5, 30, 0, 0, time.Local),
+		optimizerHorizon(time.Date(2025, 1, 1, 5, 30, 0, 0, time.Local)))
+
 	rates := make(api.Rates, 0, 4*96)
 	for slot := ts.Truncate(tariff.SlotDuration); len(rates) < cap(rates); slot = slot.Add(tariff.SlotDuration) {
 		rates = append(rates, api.Rate{Start: slot, End: slot.Add(tariff.SlotDuration)})
