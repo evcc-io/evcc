@@ -129,9 +129,6 @@ brews:
     repository:
       owner: evcc-io
       name: homebrew-tap
-      branch: "{{ .ProjectName }}-{{ .Version }}"
-      pull_request:
-        enabled: true
     commit_author:
       name: andig
       email: info@evcc.io
