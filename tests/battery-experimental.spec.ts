@@ -95,4 +95,17 @@ test.describe("experimental battery page", async () => {
     await discharge.click();
     await expect(discharge).toBeChecked();
   });
+
+  // the grid discharge limit is API-only for now. whatever control it gets must stay
+  // hidden while the experimental grid discharge switch is off, where the limit is inert
+  test("battery config: no grid discharge limit while grid discharge is off", async ({ page }) => {
+    await page.goto("/#/battery");
+    const card = page.getByTestId("battery-experimental");
+    await expect(card).toBeVisible();
+
+    const gridDischarge = page.getByRole("switch", { name: /discharge to the grid/ });
+    await expect(gridDischarge).not.toBeChecked();
+
+    await expect(card.getByTestId("battery-grid-discharge-limit")).toHaveCount(0);
+  });
 });
