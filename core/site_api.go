@@ -22,6 +22,9 @@ var _ site.API = (*Site)(nil)
 var (
 	ErrBatteryNotConfigured       = errors.New("battery not configured")
 	ErrBatteryControlNotAvailable = errors.New("battery control not available")
+
+	// ErrOptimizerAutomatic marks settings the optimizer decides on its own
+	ErrOptimizerAutomatic = errors.New("not available in automatic mode")
 )
 
 // isConfigurable checks if the meter is configurable
@@ -411,6 +414,14 @@ func (site *Site) GetBatteryDischargeControl() bool {
 
 // SetBatteryDischargeControl sets the battery control mode (no discharge only)
 func (site *Site) SetBatteryDischargeControl(val bool) error {
+	if site.Automatic() {
+		return ErrOptimizerAutomatic
+	}
+
+	return site.setBatteryDischargeControl(val)
+}
+
+func (site *Site) setBatteryDischargeControl(val bool) error {
 	site.log.DEBUG.Println("set battery discharge control:", val)
 
 	if !site.hasBatteryControl() {
@@ -484,6 +495,14 @@ func (site *Site) GetBatteryGridChargeLimit() *float64 {
 }
 
 func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
+	if site.Automatic() {
+		return ErrOptimizerAutomatic
+	}
+
+	return site.setBatteryGridChargeLimit(val)
+}
+
+func (site *Site) setBatteryGridChargeLimit(val *float64) error {
 	site.log.DEBUG.Println("set grid charge limit:", printPtr("%.1f", val))
 
 	if !site.hasBatteryControl() {

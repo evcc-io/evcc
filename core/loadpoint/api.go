@@ -190,11 +190,11 @@ type API interface {
 	// GetSmartCostLimit return the smart cost limit
 	GetSmartCostLimit() *float64
 	// SetSmartCostLimit sets the smart cost limit
-	SetSmartCostLimit(limit *float64)
+	SetSmartCostLimit(limit *float64) error
 	// GetSmartFeedInPriorityLimit return the smart feed-in limit
 	GetSmartFeedInPriorityLimit() *float64
 	// SetSmartFeedInPriorityLimit sets the smart feed-in limit
-	SetSmartFeedInPriorityLimit(limit *float64)
+	SetSmartFeedInPriorityLimit(limit *float64) error
 
 	//
 	// power and energy

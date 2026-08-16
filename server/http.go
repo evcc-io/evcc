@@ -167,11 +167,11 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 	))
 
 	// site api
-	smartCostLimit := func(lp loadpoint.API, limit *float64) {
-		lp.SetSmartCostLimit(limit)
+	smartCostLimit := func(lp loadpoint.API, limit *float64) error {
+		return lp.SetSmartCostLimit(limit)
 	}
-	smartFeedInPriorityLimit := func(lp loadpoint.API, limit *float64) {
-		lp.SetSmartFeedInPriorityLimit(limit)
+	smartFeedInPriorityLimit := func(lp loadpoint.API, limit *float64) error {
+		return lp.SetSmartFeedInPriorityLimit(limit)
 	}
 
 	routes := map[string]route{
@@ -249,10 +249,10 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 			"enableDelay":               {"POST", "/enable/delay/{value:[0-9]+}", durationHandler(pass(lp.SetEnableDelay), lp.GetEnableDelay)},
 			"disableThreshold":          {"POST", "/disable/threshold/{value:-?[0-9.]+}", floatHandler(pass(lp.SetDisableThreshold), lp.GetDisableThreshold)},
 			"disableDelay":              {"POST", "/disable/delay/{value:[0-9]+}", durationHandler(pass(lp.SetDisableDelay), lp.GetDisableDelay)},
-			"smartCost":                 {"POST", "/smartcostlimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
-			"smartCostDelete":           {"DELETE", "/smartcostlimit", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
-			"smartFeedInPriority":       {"POST", "/smartfeedinprioritylimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartFeedInPriorityLimit), lp.GetSmartFeedInPriorityLimit)},
-			"smartFeedInPriorityDelete": {"DELETE", "/smartfeedinprioritylimit", floatPtrHandler(pass(lp.SetSmartFeedInPriorityLimit), lp.GetSmartFeedInPriorityLimit)},
+			"smartCost":                 {"POST", "/smartcostlimit/{value:-?[0-9.]+}", floatPtrHandler(lp.SetSmartCostLimit, lp.GetSmartCostLimit)},
+			"smartCostDelete":           {"DELETE", "/smartcostlimit", floatPtrHandler(lp.SetSmartCostLimit, lp.GetSmartCostLimit)},
+			"smartFeedInPriority":       {"POST", "/smartfeedinprioritylimit/{value:-?[0-9.]+}", floatPtrHandler(lp.SetSmartFeedInPriorityLimit, lp.GetSmartFeedInPriorityLimit)},
+			"smartFeedInPriorityDelete": {"DELETE", "/smartfeedinprioritylimit", floatPtrHandler(lp.SetSmartFeedInPriorityLimit, lp.GetSmartFeedInPriorityLimit)},
 			"priority":                  {"POST", "/priority/{value:[0-9]+}", intHandler(pass(lp.SetPriority), lp.GetPriority)},
 			"batteryBoost":              {"POST", "/batteryboost/{value:[01truefalse]+}", boolHandler(lp.SetBatteryBoost, func() bool { return lp.GetBatteryBoost() > 0 })},
 			"batteryBoostLimit":         {"POST", "/batteryboostlimit/{value:[0-9]+}", intHandler(pass(lp.SetBatteryBoostLimit), lp.GetBatteryBoostLimit)},
@@ -342,6 +342,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler(pub)},
 			"experimental":       {"POST", "/experimental/{value:[01truefalse]+}", boolHandler(setExperimental(pub), getExperimental)},
 			"optimizer":          {"POST", "/optimizer/{value:[01truefalse]+}", boolHandler(setOptimizer(pub), getOptimizer)},
+			"optimizerAutomatic": {"POST", "/optimizerautomatic/{value:[01truefalse]+}", boolHandler(setOptimizerAutomatic(pub, site), getOptimizerAutomatic)},
 			"remote":             {"POST", "/remote/{value:[01truefalse]+}", boolHandler(remoteAccess.Enable, remoteAccess.Enabled)},
 			"remoteclients":      {"GET", "/remote/clients", remoteClientsHandler(remoteAccess)},
 			"createremoteclient": {"POST", "/remote/clients", createRemoteClientHandler(remoteAccess)},

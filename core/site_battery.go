@@ -103,6 +103,14 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 		if extMode != batMode {
 			res = extMode
 		}
+	case site.Automatic():
+		// optimizer decides, replacing grid charge limit and discharge control
+		if mode, ok := site.batterySuggestionMode(); ok {
+			res = keepUnlessModified(mode)
+		} else if batteryModeModified(batMode) {
+			// no suggestion: release the battery
+			res = api.BatteryNormal
+		}
 	case batteryGridChargeActive:
 		res = keepUnlessModified(api.BatteryCharge)
 	case site.dischargeControlActive(rate):
@@ -112,6 +120,34 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive bool, rate api.Rat
 	}
 
 	return res
+}
+
+// batterySuggestionMode returns the optimizer's mode for the first controllable battery.
+// TODO apply per battery once the site tracks more than a single battery mode
+func (site *Site) batterySuggestionMode() (api.BatteryMode, bool) {
+	for _, dev := range site.batteryMeters {
+		if dev == nil {
+			continue
+		}
+
+		name := dev.Config().Name
+
+		s := site.suggestion(batteryKey(name), site.GetBatteryMode().String())
+		if s == nil {
+			continue
+		}
+
+		mode, err := api.BatteryModeString(s.Action)
+		if err != nil {
+			// discharging to grid has no matching battery mode
+			site.log.DEBUG.Printf("battery %s: cannot apply suggestion %s", name, s.Action)
+			return api.BatteryNormal, true
+		}
+
+		return mode, true
+	}
+
+	return api.BatteryUnknown, false
 }
 
 // batteryMaxSocReached checks is battery has exceed max soc limit

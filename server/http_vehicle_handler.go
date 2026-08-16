@@ -126,6 +126,8 @@ func planSocHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
+		site.Optimize()
+
 		ts, soc = v.GetPlanSoc()
 
 		res := struct {
@@ -192,6 +194,8 @@ func addRepeatingPlansHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
+		site.Optimize()
+
 		jsonWrite(w, res)
 	}
 }
@@ -211,6 +215,8 @@ func planSocRemoveHandler(site site.API) http.HandlerFunc {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
+
+		site.Optimize()
 
 		jsonWrite(w, struct{}{})
 	}
