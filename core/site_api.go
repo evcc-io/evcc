@@ -427,8 +427,13 @@ func (site *Site) GetTariff(tariff api.TariffUsage) api.Tariff {
 	return site.tariffs.Get(tariff)
 }
 
-// GetBatteryDischargeControl returns the battery control mode (no discharge only)
+// GetBatteryDischargeControl returns the battery control mode (no discharge only).
+// The optimizer replaces it in automatic mode, so it reads as disabled.
 func (site *Site) GetBatteryDischargeControl() bool {
+	if site.Automatic() {
+		return false
+	}
+
 	site.RLock()
 	defer site.RUnlock()
 	return site.batteryDischargeControl
@@ -515,7 +520,12 @@ func (site *Site) SetSolarAdjusted(val bool) {
 	}
 }
 
+// The optimizer replaces the limit in automatic mode, so it reads as unset.
 func (site *Site) GetBatteryGridChargeLimit() *float64 {
+	if site.Automatic() {
+		return nil
+	}
+
 	site.RLock()
 	defer site.RUnlock()
 	return site.batteryGridChargeLimit
