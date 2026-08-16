@@ -8,7 +8,9 @@ export interface CircuitNode extends Circuit {
 
 // circuitTree builds a tree from published circuit data.
 // Returns the root node or undefined if empty.
-export function circuitTree(circuits: Record<string, CircuitNode>): CircuitNode | undefined {
+export function circuitTree(circuits?: Record<string, CircuitNode>): CircuitNode | undefined {
+  if (circuits === undefined) return;
+
   let nodes = deepClone(circuits);
   let root: CircuitNode | undefined;
 

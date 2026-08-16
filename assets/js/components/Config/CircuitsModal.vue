@@ -11,11 +11,14 @@
 		disable-remove
 		@changed="$emit('changed')"
 	>
-		<template #default="{ values }: { values: Record<string, Circuit> }">
-			<div v-if="Object.keys(values).length === 0" class="onboarding">
+		<template #default="{ values }: { values: State['circuits'] }">
+			<div
+				v-if="Object.keys(values?.config || {}).length === 0"
+				class="onboarding"
+			>
 				<p class="evcc-gray">
-					No circuits configured. Start with a main circuit that represents your grid
-					connection.
+					No circuits configured. Start with a main circuit that
+					represents your grid connection.
 				</p>
 				<button
 					type="button"
@@ -23,18 +26,21 @@
 					tabindex="0"
 					@click="openCircuit()"
 				>
-					<shopicon-regular-plus size="s" class="flex-shrink-0"></shopicon-regular-plus>
+					<shopicon-regular-plus
+						size="s"
+						class="flex-shrink-0"
+					></shopicon-regular-plus>
 					Add main circuit
 				</button>
 			</div>
-			<CircuitsTree v-else :circuitsTree="circuitTree(values)" />
+			<CircuitsTree v-else :circuitsTree="circuitTree(values?.config)" />
 		</template>
 	</JsonModal>
 </template>
 
 <script lang="ts">
 import JsonModal from "./JsonModal.vue";
-import type { Circuit } from "@/types/evcc";
+import type { State } from "@/types/evcc";
 import CircuitsTree from "./CircuitsTree.vue";
 import { openModal } from "@/configModal.ts";
 import { circuitTree } from "@/utils/circuits.ts";
