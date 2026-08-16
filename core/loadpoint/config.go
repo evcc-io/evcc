@@ -1,6 +1,8 @@
 package loadpoint
 
 import (
+	"cmp"
+	"errors"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -71,9 +73,13 @@ func SplitConfig(payload map[string]any) (DynamicConfig, map[string]any, error) 
 func (payload DynamicConfig) Apply(lp API) error {
 	lp.SetTitle(payload.Title)
 	lp.SetPriority(payload.Priority)
-	lp.SetSmartCostLimit(payload.SmartCostLimit)
-	lp.SetSmartFeedInPriorityLimit(payload.SmartFeedInPriorityLimit)
+	// limits the optimizer controls are rejected, the remaining config still applies
+	limitErr := errors.Join(
+		lp.SetSmartCostLimit(payload.SmartCostLimit),
+		lp.SetSmartFeedInPriorityLimit(payload.SmartFeedInPriorityLimit),
+	)
 	lp.SetSolarShare(payload.SolarShare)
+
 	lp.SetThresholds(payload.Thresholds)
 	lp.SetPlanEnergy(payload.PlanTime, payload.PlanEnergy)
 	lp.SetPlanStrategy(payload.PlanStrategy)
@@ -122,5 +128,5 @@ func (payload DynamicConfig) Apply(lp API) error {
 		}
 	}
 
-	return err
+	return cmp.Or(err, limitErr)
 }
