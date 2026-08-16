@@ -376,6 +376,22 @@ func TestPvScalePhasesTimer(t *testing.T) {
 		{"3/0->1, not enough power, not charging", 3, 0, 0, 1, 1, func(lp *Loadpoint) {
 			lp.status = api.StatusB
 		}},
+		// vehicle stops drawing while a scale-down is pending: complete it (#32815)
+		{"3/3->1, surplus below 3p min, scale1p pending, vehicle stopped", 3, 3, -1.5 * Voltage * minA, 1, 1, func(lp *Loadpoint) {
+			lp.status = api.StatusB
+			lp.enabled = true
+			lp.phaseTimer = lp.clock.Now()
+		}},
+		// idle vehicle without pending scale-down: don't scale on fluctuating surplus (#32815)
+		{"3/3->1, surplus below 3p min, no timer, vehicle idle", 3, 3, -1.5 * Voltage * minA, 3, 0, func(lp *Loadpoint) {
+			lp.status = api.StatusB
+			lp.enabled = true
+		}},
+		// same surplus while charging: vehicle is not utilizing the offered current (#9581)
+		{"3/3->1, surplus below 3p min, charging", 3, 3, -1.5 * Voltage * minA, 3, 0, func(lp *Loadpoint) {
+			lp.phaseTimer = elapsed
+			lp.enabled = true
+		}},
 		// switch up from 1p/0p while not yet charging
 		{"1/0->3, enough power, not charging", 1, 0, -3 * Voltage * minA, 3, 3, func(lp *Loadpoint) {
 			lp.status = api.StatusB

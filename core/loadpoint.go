@@ -1469,7 +1469,11 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 	scalable := activePhases > 1 && lp.phasesConfigured < 3
 
 	if scalable {
-		insufficient := (sitePower > 0 || !lp.enabled) && powerToCurrent(availablePower, activePhases) < minCurrent
+		// negative site power while charging means the vehicle is not utilizing the offered
+		// current (#9581) - unless it stopped drawing with a scale-down already pending (#32815)
+		pending := !lp.charging() && !lp.phaseTimer.IsZero()
+
+		insufficient := (sitePower > 0 || !lp.enabled || pending) && powerToCurrent(availablePower, activePhases) < minCurrent
 		if insufficient {
 			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
 		}
