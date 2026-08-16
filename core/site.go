@@ -122,7 +122,8 @@ type Site struct {
 	suggestionsUpdated       time.Time                   // time the suggestions were applied
 	suggestionActions        map[string]string           // last notified actionable optimizer action by device key
 
-	optimizerMu sync.Mutex // guards optimizer runs
+	optimizerMu      sync.Mutex // guards optimizer runs
+	optimizerUpdated time.Time  // last optimizer run, guarded by optimizerMu
 
 	solarScaleCached func() (float64, error) // util.Cached wrapper around querySolarScale
 }
@@ -1513,7 +1514,7 @@ func (site *Site) loopLoadpoints(next chan<- updater) {
 
 	for {
 		// one optimizer run per loadpoint cycle
-		go site.optimizerUpdateAsync()
+		go site.optimizerUpdateAsync(false)
 
 		if len(active) == 0 {
 			logOnce.Do(func() {

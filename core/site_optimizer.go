@@ -360,13 +360,16 @@ func optimizerURI() string {
 const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
 
 // errOptimizerNotReady means battery measurements aren't available yet (e.g. at
-// startup); the next cycle retries.
+// startup); the slot gate is left open so the next cycle retries.
 var errOptimizerNotReady = errors.New("battery measurements not ready")
 
-// optimizerUpdateAsync runs the optimizer. It is a no-op when the optimizer is
-// not active or a run is already in progress; the running update reflects any
-// changed setting on its next run.
-func (site *Site) optimizerUpdateAsync() {
+// optimizerUpdateAsync runs the optimizer. In automatic mode it runs on every
+// loadpoint cycle since the loadpoint gate needs a fresh result, while advisory
+// suggestions only need one run per slot. Pass force to run regardless, e.g.
+// when a changed setting should take effect immediately. It is a no-op when the
+// optimizer is not active or a run is already in progress; the running update
+// reflects the change on its next run.
+func (site *Site) optimizerUpdateAsync(force bool) {
 	if !sponsor.IsAuthorized() || !optimizerEnabled() {
 		return
 	}
@@ -376,6 +379,13 @@ func (site *Site) optimizerUpdateAsync() {
 	}
 	defer site.optimizerMu.Unlock()
 
+	if force {
+		// keep the gate open so a not-ready run is retried on the next cycle
+		site.optimizerUpdated = time.Time{}
+	} else if !site.Automatic() && time.Since(site.optimizerUpdated) < tariff.SlotDuration {
+		return
+	}
+
 	var err error
 
 	defer func() {
@@ -383,7 +393,14 @@ func (site *Site) optimizerUpdateAsync() {
 			err = fmt.Errorf("panic %v", r)
 		}
 
-		if err != nil && !errors.Is(err, errOptimizerNotReady) {
+		// not ready yet: keep the gate open for an immediate retry next cycle
+		if errors.Is(err, errOptimizerNotReady) {
+			return
+		}
+
+		site.optimizerUpdated = time.Now()
+
+		if err != nil {
 			site.log.ERROR.Println("optimizer:", err)
 
 			// stale advice must not linger
