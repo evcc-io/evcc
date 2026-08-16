@@ -27,30 +27,29 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       type: input
-      address: 1793 # 0x0701 Total grid power, 1 W
-      decode: int16
-
+      address: 1792 # 0x0700 Total grid power, 1 W
+      decode: int32
   currents:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         type: input
         address: 2095 # 0x082F L1 current, 0.01 A
-        decode: uint16
+        decode: int16
       scale: 0.01
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         type: input
         address: 2096 # 0x0830 L2 current, 0.01 A
-        decode: uint16
+        decode: int16
       scale: 0.01
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         type: input
         address: 2097 # 0x0831 L3 current, 0.01 A
-        decode: uint16
+        decode: int16
       scale: 0.01
   {{- end }}
 
