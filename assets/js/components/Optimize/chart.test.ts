@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { isMidnight, slotXAxis } from "./chart";
 
 // 15min slots starting at the given local hour
