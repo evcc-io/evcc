@@ -194,21 +194,20 @@ func (v *Identity) loginCCIPassword(password string) (*oauth2.Token, error) {
 		return nil, fmt.Errorf("signin failed: HTTP %d (%s)", signinResp.StatusCode, request.Truncate(string(signinBody)))
 	}
 
-	location := signinResp.Header.Get("Location")
-	loc, err := url.Parse(location)
+	loc, err := signinResp.Location()
 	if err != nil {
-		return nil, fmt.Errorf("signin returned unparseable redirect: %w", err)
+		return nil, fmt.Errorf("signin returned no valid redirect: %w", err)
 	}
 
 	code := loc.Query().Get("code")
 	if code == "" {
 		switch {
-		case strings.Contains(location, "/web/v1/user/authorization"):
+		case strings.Contains(loc.Path, "/web/v1/user/authorization"):
 			return nil, errors.New("account consent required: log in via the manufacturer app once to accept the terms, then retry")
 		case loc.Query().Get("error_description") != "":
 			return nil, fmt.Errorf("signin rejected: %s", loc.Query().Get("error_description"))
 		default:
-			return nil, fmt.Errorf("unexpected redirect after signin: %s", request.Truncate(location))
+			return nil, fmt.Errorf("unexpected redirect after signin: %s", request.Truncate(loc.String()))
 		}
 	}
 
