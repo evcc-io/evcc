@@ -26,14 +26,15 @@ params:
   - name: battery
     type: choice
     choice: [1, 2]
-    default: 1
+    required: true
     usages: ["battery"]
     description:
       de: Batteriespeichernummer
       en: Battery number
   - preset: battery-params
   - name: maxchargepower
-    default: 5000
+    default: 5000 # fixed charge power, as in solplanet-ai-dongle
+    required: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -129,14 +130,14 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: {{ if eq .battery "1" }}1618{{ else }}1751{{ end }} # 31619/31752 BMS1/2 battery power
+      address: {{ if eq .battery "2" }}1751{{ else }}1618{{ end }} # 31752/31619 BMS2/1 battery power
       type: input
       decode: int32
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: {{ if eq .battery "1" }}1621{{ else }}1754{{ end }} # 31622/31755 BMS1/2 battery SoC
+      address: {{ if eq .battery "2" }}1754{{ else }}1621{{ end }} # 31755/31622 BMS2/1 battery SoC
       type: input
       decode: uint16
   batterymode:
