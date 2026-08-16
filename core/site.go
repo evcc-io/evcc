@@ -122,7 +122,8 @@ type Site struct {
 	optimizerMu      sync.Mutex // guards optimizer runs
 	optimizerUpdated time.Time  // last optimizer run, guarded by optimizerMu
 
-	solarScaleCached func() (float64, error) // util.Cached wrapper around querySolarScale
+	solarScaleCached       func() (float64, error) // util.Cached wrapper around querySolarScale
+	consumptionScaleCached func() (float64, error) // util.Cached wrapper around queryConsumptionScale
 }
 
 // MetersConfig contains the site's meter configuration
@@ -362,6 +363,14 @@ func NewSite() *Site {
 		scale, err := site.querySolarScale(now.BeginningOfDay())
 		if err != nil {
 			site.log.ERROR.Printf("solar scale percentile: %v, falling back to unadjusted forecast", err)
+		}
+		return scale, err
+	}, 24*time.Hour)
+
+	site.consumptionScaleCached = util.Cached(func() (float64, error) {
+		scale, err := site.queryConsumptionScale(now.BeginningOfDay())
+		if err != nil {
+			site.log.ERROR.Printf("consumption scale percentile: %v, falling back to unadjusted forecast", err)
 		}
 		return scale, err
 	}, 24*time.Hour)

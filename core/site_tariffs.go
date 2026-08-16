@@ -45,6 +45,13 @@ type dailyDetails struct {
 	Complete bool    `json:"complete"`
 }
 
+// consumptionDetails reports the data-driven scale applied to the home
+// consumption forecast, for display in the forecast view.
+type consumptionDetails struct {
+	Scale    float64 `json:"scale"`    // trailing percentile consumption scale factor, 1 if unscaled
+	Coverage float64 `json:"coverage"` // share of days the scale is sized to cover (0..1)
+}
+
 // forecastRates publishes rates as [start, end, value] with the timestamps in
 // unix seconds. The forecast is the largest payload evcc sends and RFC3339
 // timestamps are two thirds of it.
@@ -135,12 +142,13 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	}
 
 	fc := struct {
-		Co2         forecastSeries `json:"co2,omitempty"`
-		FeedIn      forecastSeries `json:"feedin,omitempty"`
-		Grid        forecastSeries `json:"grid,omitempty"`
-		Planner     forecastSeries `json:"planner,omitempty"`
-		Solar       *solarDetails  `json:"solar,omitempty"`
-		Temperature forecastSeries `json:"temperature,omitempty"`
+		Co2         forecastSeries      `json:"co2,omitempty"`
+		Consumption *consumptionDetails `json:"consumption,omitempty"`
+		FeedIn      forecastSeries      `json:"feedin,omitempty"`
+		Grid        forecastSeries      `json:"grid,omitempty"`
+		Planner     forecastSeries      `json:"planner,omitempty"`
+		Solar       *solarDetails       `json:"solar,omitempty"`
+		Temperature forecastSeries      `json:"temperature,omitempty"`
 	}{
 		Co2:         forecastRates(tariff.Rates(site.GetTariff(api.TariffUsageCo2))),
 		FeedIn:      forecastRates(tariff.Rates(site.GetTariff(api.TariffUsageFeedIn))),
@@ -152,6 +160,11 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	// calculate adjusted solar rates
 	if solar := tariff.Rates(site.GetTariff(api.TariffUsageSolar)); len(solar) > 0 {
 		fc.Solar = new(site.solarDetails(solar))
+	}
+
+	// data-driven consumption scale (only when it adds reserve)
+	if scale := site.consumptionScale(); scale > 1 {
+		fc.Consumption = &consumptionDetails{Scale: scale, Coverage: consumptionScalePercentile}
 	}
 
 	site.publish(keys.Forecast, util.NewSharder(keys.Forecast, fc))
@@ -249,6 +262,17 @@ func (site *Site) effectiveSolarScale() float64 {
 	return site.solarScale()
 }
 
+// effectiveConsumptionScale returns the consumption scale if forecast adjustment is
+// enabled, 1 otherwise - gated on the same GetSolarAdjusted switch as
+// effectiveSolarScale, since both are measured-data adjustments to the optimizer's
+// forecast the user opts into together.
+func (site *Site) effectiveConsumptionScale() float64 {
+	if !site.GetSolarAdjusted() {
+		return 1
+	}
+	return site.consumptionScale()
+}
+
 const (
 	solarScaleWindow     = 30  // trailing window of days to consider
 	solarScaleMinSamples = 14  // minimum daily ratios before applying a scale
@@ -319,6 +343,97 @@ func (site *Site) querySolarScale(bod time.Time) (float64, error) {
 	}
 	site.log.DEBUG.Printf("solar scale P%.0f over %d days = %.3f", solarScalePercentile*100, len(ratios), scale)
 	return scale, nil
+}
+
+const (
+	consumptionScaleWindow     = 90   // trailing window of days for the percentile
+	consumptionScaleBaseline   = 30   // days averaged for the per-day baseline (matches homeProfile window)
+	consumptionScalePercentile = 0.80 // plan to cover this share of days
+	consumptionScaleMinSamples = 14   // minimum ratio samples before applying a scale
+)
+
+// consumptionScale returns a multiplier (>= 1) for the forecast home consumption so
+// the optimizer sizes the battery with reserve for spontaneous loads. It is the
+// consumptionScalePercentile of the daily ratio between actual consumption and its
+// own trailing consumptionScaleBaseline-day mean (the baseline homeProfile forecasts
+// from), over the last consumptionScaleWindow days. Unlike solarScale (a ratio between
+// two independent series) this compares each day against its own trailing mean; it is
+// floored at 1 so it never plans for less than the forecast. Returns 1 when there is
+// not enough history.
+//
+// The result only depends on completed days, so it cannot change within a day. It is
+// cached accordingly instead of being recomputed on every optimizer run.
+func (site *Site) consumptionScale() float64 {
+	scale, err := site.consumptionScaleCached()
+	if err != nil {
+		return 1
+	}
+	return scale
+}
+
+// queryConsumptionScale does the actual metrics query and percentile calculation for
+// consumptionScale, given the current beginning-of-day boundary.
+func (site *Site) queryConsumptionScale(bod time.Time) (float64, error) {
+	from := bod.AddDate(0, 0, -(consumptionScaleWindow + consumptionScaleBaseline))
+	series, err := metrics.QueryEnergy(from, time.Now(), "day", true)
+	if err != nil {
+		return 0, err
+	}
+
+	var daily []metrics.Slot
+	for _, s := range series {
+		if s.Group == metrics.Home {
+			daily = s.Data
+			break
+		}
+	}
+	slices.SortFunc(daily, func(a, b metrics.Slot) int { return a.Start.Compare(b.Start) })
+
+	// drop the current (partial) day so it does not depress the ratios
+	if today := bod.Format("2006-01-02"); len(daily) > 0 && daily[len(daily)-1].Start.Format("2006-01-02") == today {
+		daily = daily[:len(daily)-1]
+	}
+
+	energies := make([]float64, len(daily))
+	for i, d := range daily {
+		energies[i] = d.Energy
+	}
+
+	scale, samples := consumptionScaleFromDaily(energies)
+	if scale != 1 {
+		site.log.DEBUG.Printf("consumption scale P%.0f over %d days = %.3f", consumptionScalePercentile*100, samples, scale)
+	}
+	return scale, nil
+}
+
+// consumptionScaleFromDaily computes the scale factor from a chronological series of
+// daily home consumption. It is the consumptionScalePercentile of the ratio between
+// each day and its trailing consumptionScaleBaseline-day mean, floored at 1. Returns
+// (1, 0) when there is not enough history to be meaningful.
+func consumptionScaleFromDaily(daily []float64) (scale float64, samples int) {
+	if len(daily) < consumptionScaleBaseline+consumptionScaleMinSamples {
+		return 1, 0
+	}
+
+	ratios := make([]float64, 0, len(daily)-consumptionScaleBaseline)
+	for i := consumptionScaleBaseline; i < len(daily); i++ {
+		var sum float64
+		for _, v := range daily[i-consumptionScaleBaseline : i] {
+			sum += v
+		}
+		if mean := sum / consumptionScaleBaseline; mean > 0 {
+			ratios = append(ratios, daily[i]/mean)
+		}
+	}
+	if len(ratios) == 0 {
+		return 1, 0
+	}
+
+	scale, ok := percentileOf(ratios, consumptionScalePercentile, consumptionScaleMinSamples)
+	if !ok {
+		return 1, 0
+	}
+	return math.Max(1, scale), len(ratios)
 }
 
 // percentileOf returns the p-th percentile (0..1) of values by nearest-rank on the

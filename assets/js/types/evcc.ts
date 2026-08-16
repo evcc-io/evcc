@@ -1310,6 +1310,14 @@ export interface SolarDetails {
   timeseries?: TimeseriesEntry[];
 }
 
+/** Data-driven scale applied to the home consumption forecast. */
+export interface ConsumptionDetails {
+  /** Correction factor applied to the forecast based on past consumption (>= 1). */
+  scale: number;
+  /** Share of days the scale is sized to cover (0..1). */
+  coverage: number;
+}
+
 /** Price, CO₂ and solar production forecasts. */
 export interface Forecast {
   /** Grid price forecast. Price per kWh in the configured currency per time slot. */
@@ -1318,6 +1326,8 @@ export interface Forecast {
   co2?: ForecastSlot[];
   /** Solar production forecast. */
   solar?: SolarDetails;
+  /** Data-driven scale applied to the home consumption forecast. */
+  consumption?: ConsumptionDetails;
   /** Charging cost forecast used by the plan optimizer per time slot. */
   planner?: ForecastSlot[];
   /** Feed-in rate forecast. Rate per kWh in the configured currency per time slot. */
@@ -1348,6 +1358,7 @@ export interface UiForecast {
   grid?: UiForecastSlot[];
   co2?: UiForecastSlot[];
   solar?: UiSolarDetails;
+  consumption?: ConsumptionDetails;
   planner?: UiForecastSlot[];
   feedin?: UiForecastSlot[];
   temperature?: UiForecastSlot[];

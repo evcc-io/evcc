@@ -93,6 +93,48 @@ func TestTimeseriesMarshal(t *testing.T) {
 	}
 }
 
+func TestConsumptionScaleFromDaily(t *testing.T) {
+	rep := func(v float64, n int) []float64 {
+		s := make([]float64, n)
+		for i := range s {
+			s[i] = v
+		}
+		return s
+	}
+
+	t.Run("insufficient history yields no scale", func(t *testing.T) {
+		scale, samples := consumptionScaleFromDaily(rep(10, consumptionScaleBaseline+consumptionScaleMinSamples-1))
+		assert.Equal(t, 1.0, scale)
+		assert.Equal(t, 0, samples)
+	})
+
+	t.Run("constant consumption gives scale 1", func(t *testing.T) {
+		// every day equals its trailing mean, so all ratios are 1
+		scale, samples := consumptionScaleFromDaily(rep(10, consumptionScaleBaseline+consumptionScaleMinSamples))
+		assert.Equal(t, 1.0, scale)
+		assert.Equal(t, consumptionScaleMinSamples, samples)
+	})
+
+	t.Run("declining consumption is floored at 1", func(t *testing.T) {
+		// each day below its trailing mean -> ratios < 1 -> floored
+		daily := make([]float64, 60)
+		for i := range daily {
+			daily[i] = float64(200 - i)
+		}
+		scale, samples := consumptionScaleFromDaily(daily)
+		assert.Equal(t, 1.0, scale)
+		assert.Positive(t, samples)
+	})
+
+	t.Run("higher recent consumption yields scale > 1", func(t *testing.T) {
+		// 30 baseline days low, then a sustained higher level -> ratios > 1
+		daily := append(rep(10, consumptionScaleBaseline), rep(15, 30)...)
+		scale, samples := consumptionScaleFromDaily(daily)
+		assert.Greater(t, scale, 1.0)
+		assert.Equal(t, 30, samples)
+	})
+}
+
 func TestPercentileOf(t *testing.T) {
 	// n values of v
 	fill := func(n int, v float64) []float64 {

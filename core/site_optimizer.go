@@ -1025,9 +1025,10 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 		res = res[:minLen]
 	}
 
-	// convert to Wh
+	// convert to Wh, applying the data-driven consumption scale
+	scale := site.effectiveConsumptionScale()
 	return lo.Map(res, func(v float64, i int) float64 {
-		return v * 1e3
+		return v * 1e3 * scale
 	}), nil
 }
 
