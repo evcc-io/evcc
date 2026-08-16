@@ -217,7 +217,8 @@ func loadpointCurrentAction(lp *Loadpoint) string {
 }
 
 // suggestionMaxAge invalidates suggestions of a stalled optimizer. Runs happen
-// once per slot, so twice that means the optimizer is no longer keeping up.
+// once per loadpoint update cycle, so two slots without a result mean the
+// optimizer is no longer keeping up.
 const suggestionMaxAge = 2 * tariff.SlotDuration
 
 // setSuggestions replaces the suggestions applied on each publish
@@ -359,15 +360,13 @@ func optimizerURI() string {
 const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
 
 // errOptimizerNotReady means battery measurements aren't available yet (e.g. at
-// startup); the slot gate is left open so the next cycle retries.
+// startup); the next cycle retries.
 var errOptimizerNotReady = errors.New("battery measurements not ready")
 
-// optimizerUpdateAsync runs the optimizer unless the last run is younger than
-// minAge. Pass 0 to force a run, e.g. when a changed setting should take effect
-// without waiting for the next slot. It is a no-op when the optimizer is not
-// active or a run is already in progress; the running update reflects the
-// change on its next slot.
-func (site *Site) optimizerUpdateAsync(minAge time.Duration) {
+// optimizerUpdateAsync runs the optimizer. It is a no-op when the optimizer is
+// not active or a run is already in progress; the running update reflects any
+// changed setting on its next run.
+func (site *Site) optimizerUpdateAsync() {
 	if !sponsor.IsAuthorized() || !optimizerEnabled() {
 		return
 	}
@@ -377,13 +376,6 @@ func (site *Site) optimizerUpdateAsync(minAge time.Duration) {
 	}
 	defer site.optimizerMu.Unlock()
 
-	if minAge == 0 {
-		// keep the gate open so a not-ready run is retried on the next cycle
-		site.optimizerUpdated = time.Time{}
-	} else if time.Since(site.optimizerUpdated) < minAge {
-		return
-	}
-
 	var err error
 
 	defer func() {
@@ -391,14 +383,7 @@ func (site *Site) optimizerUpdateAsync(minAge time.Duration) {
 			err = fmt.Errorf("panic %v", r)
 		}
 
-		// not ready yet: keep the gate open for an immediate retry next cycle
-		if errors.Is(err, errOptimizerNotReady) {
-			return
-		}
-
-		site.optimizerUpdated = time.Now()
-
-		if err != nil {
+		if err != nil && !errors.Is(err, errOptimizerNotReady) {
 			site.log.ERROR.Println("optimizer:", err)
 
 			// stale advice must not linger
