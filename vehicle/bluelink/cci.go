@@ -340,23 +340,18 @@ func (v *Identity) exchangeCCSToken(deviceID, cciAccessToken, nonCcsToken, excha
 	}
 
 	var res struct {
-		AccessToken    string `json:"accessToken"`
-		CcsAccessToken string `json:"ccsAccessToken"`
-		ExpiresTime    int64  `json:"expiresTime"` // unix seconds
+		AccessToken string `json:"accessToken"`
+		ExpiresTime int64  `json:"expiresTime"` // unix seconds
 	}
 	if err := v.DoJSON(req, &res); err != nil {
 		return "", time.Time{}, fmt.Errorf("ccs token exchange failed: %w", err)
 	}
 
-	token := res.AccessToken
-	if token == "" {
-		token = res.CcsAccessToken
-	}
-	if token == "" {
+	if res.AccessToken == "" {
 		return "", time.Time{}, errors.New("ccs token exchange returned no access token")
 	}
 
-	return token, parseCCSExpiry(res.ExpiresTime), nil
+	return res.AccessToken, parseCCSExpiry(res.ExpiresTime), nil
 }
 
 const (
