@@ -71,8 +71,6 @@ snapshot:
 
 changelog:
   sort: asc
-  # drop the marker the backport command appends to the pull request title
-  format: '{{ .SHA }} {{ reReplaceAll ` \[\d+\.\d+ backport\]` .Message "" }}'
   filters:
     exclude:
       - "^chore"
