@@ -94,7 +94,7 @@ func (v *Identity) loginCCIPassword(password string) (*oauth2.Token, error) {
 	c := v.config.CCI
 	deviceID := uuid.NewString()
 
-	v.log.INFO.Println("cci: logging in via OneApp/CCI password login")
+	v.log.DEBUG.Println("cci: logging in via OneApp/CCI password login")
 
 	jar, err := cookiejar.New(nil)
 	if err != nil {
@@ -224,7 +224,7 @@ func (v *Identity) loginCCIPassword(password string) (*oauth2.Token, error) {
 	}
 
 	v.persistBundle(bundle)
-	v.log.INFO.Println("cci: login successful")
+	v.log.DEBUG.Println("cci: login successful")
 
 	return bundle.token(), nil
 }
@@ -372,7 +372,7 @@ func parseCCSExpiry(expiresTime int64) time.Time {
 }
 
 // cciHeaders builds the headers required by the CCI API. The token parameters
-// are empty before the initial code exchange, contentType for bodyless requests.
+// are empty before the initial code exchange, contentType for bodyless requests
 func (v *Identity) cciHeaders(deviceID, cciAccessToken, nonCcsToken, exchangeableToken, contentType string) map[string]string {
 	c := v.config.CCI
 
@@ -405,8 +405,6 @@ func (v *Identity) cciHeaders(deviceID, cciAccessToken, nonCcsToken, exchangeabl
 
 	if contentType != "" {
 		headers["Content-Type"] = contentType
-	} else {
-		headers["Content-Length"] = "0"
 	}
 
 	return headers
