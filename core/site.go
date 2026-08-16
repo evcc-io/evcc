@@ -123,8 +123,7 @@ type Site struct {
 	suggestionActions        map[string]string           // last notified actionable optimizer action by device key
 	lastOptimizerSolve       *optimizerSolve             // last successful solve, reapplied to newer slots by the control cycle
 
-	optimizerMu      sync.Mutex // guards optimizer runs
-	optimizerUpdated time.Time  // last optimizer run, guarded by optimizerMu
+	optimizerMu sync.Mutex // guards optimizer runs
 
 	solarScaleCached func() (float64, error) // util.Cached wrapper around querySolarScale
 }
@@ -1279,7 +1278,6 @@ func (site *Site) update(lp updater) {
 			// don't resurrect the pre-disable solve on re-enable
 			site.setLastOptimizerSolve(nil)
 		}
-		go site.optimizerUpdateAsync(tariff.SlotDuration)
 
 		site.updatePower(lp, state, totalChargePower, consumption, feedin)
 	}
@@ -1516,6 +1514,9 @@ func (site *Site) loopLoadpoints(next chan<- updater) {
 	active := site.activeLoadpoints()
 
 	for {
+		// one optimizer run per loadpoint cycle
+		go site.optimizerUpdateAsync()
+
 		if len(active) == 0 {
 			logOnce.Do(func() {
 				site.log.INFO.Println("no loadpoints configured, running in meter-only mode")
