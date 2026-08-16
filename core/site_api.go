@@ -19,8 +19,9 @@ import (
 var _ site.API = (*Site)(nil)
 
 var (
-	ErrBatteryNotConfigured       = errors.New("battery not configured")
-	ErrBatteryControlNotAvailable = errors.New("battery control not available")
+	ErrBatteryNotConfigured             = errors.New("battery not configured")
+	ErrBatteryControlNotAvailable       = errors.New("battery control not available")
+	ErrBatteryGridDischargeNotAvailable = errors.New("battery grid discharge not available")
 )
 
 // isConfigurable checks if the meter is configurable
@@ -419,12 +420,18 @@ func (site *Site) SetBatteryGridDischarge(val bool) error {
 	}
 
 	site.Lock()
-	defer site.Unlock()
-
-	if site.batteryGridDischarge != val {
+	changed := site.batteryGridDischarge != val
+	if changed {
 		site.batteryGridDischarge = val
 		settings.SetBool(keys.BatteryGridDischarge, val)
 		site.publish(keys.BatteryGridDischarge, val)
+	}
+	site.Unlock()
+
+	// the limit is meaningless without the opt-in. drop it rather than leave it stored
+	// and published where nothing can act on it and the ui cannot reach it
+	if changed && !val {
+		return site.SetBatteryGridDischargeLimit(nil)
 	}
 
 	return nil
@@ -493,6 +500,11 @@ func (site *Site) SetBatteryGridDischargeLimit(val *float64) error {
 
 	if !site.hasBatteryControl() {
 		return ErrBatteryControlNotAvailable
+	}
+
+	// a limit can only be set while the opt-in is on, so it can never outlive it
+	if val != nil && !site.GetBatteryGridDischarge() {
+		return ErrBatteryGridDischargeNotAvailable
 	}
 
 	site.Lock()

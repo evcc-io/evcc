@@ -384,3 +384,34 @@ func TestBatteryGridDischargeActive(t *testing.T) {
 	site.batteryGridDischarge = true
 	assert.True(t, site.batteryGridDischargeActive(rate), "expected limit to act once grid discharge is enabled")
 }
+
+// TestBatteryGridDischargeLimitRequiresOptIn ensures a limit cannot outlive the
+// experimental grid discharge setting: it is refused while the setting is off and
+// dropped when the setting is turned off.
+func TestBatteryGridDischargeLimitRequiresOptIn(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	var bat api.Meter = &struct {
+		api.Meter
+		api.BatteryController
+	}{
+		BatteryController: api.NewMockBatteryController(ctrl),
+	}
+
+	site := &Site{
+		log:           util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, bat)},
+	}
+
+	limit := 0.2
+
+	assert.ErrorIs(t, site.SetBatteryGridDischargeLimit(&limit), ErrBatteryGridDischargeNotAvailable)
+	assert.Nil(t, site.GetBatteryGridDischargeLimit(), "expected limit to be refused while grid discharge is disabled")
+
+	assert.NoError(t, site.SetBatteryGridDischarge(true))
+	assert.NoError(t, site.SetBatteryGridDischargeLimit(&limit))
+	assert.Equal(t, &limit, site.GetBatteryGridDischargeLimit())
+
+	assert.NoError(t, site.SetBatteryGridDischarge(false))
+	assert.Nil(t, site.GetBatteryGridDischargeLimit(), "expected limit to be dropped with grid discharge")
+}

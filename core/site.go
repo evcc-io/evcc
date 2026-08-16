@@ -407,7 +407,9 @@ func (site *Site) restoreSettings() error {
 			return err
 		}
 	}
-	if v, err := settings.Float(keys.BatteryGridDischargeLimit); err == nil {
+	// restored after keys.BatteryGridDischarge above - a stored limit stays dormant
+	// while the opt-in is off
+	if v, err := settings.Float(keys.BatteryGridDischargeLimit); err == nil && site.GetBatteryGridDischarge() {
 		if err := site.SetBatteryGridDischargeLimit(&v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
 			return err
 		}
