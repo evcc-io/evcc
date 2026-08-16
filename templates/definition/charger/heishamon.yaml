@@ -1,0 +1,65 @@
+template: heishamon
+products:
+  - brand: Panasonic
+    description:
+      generic: Aquarea (HeishaMon)
+capabilities: ["meter"]
+group: heating
+requirements:
+  description:
+    de: |
+      Warmwasserbereitung einer Panasonic Aquarea Wärmepumpe über [HeishaMon](https://github.com/HeishaMon/HeishaMon).
+
+      Voraussetzung ist ein konfigurierter MQTT Broker. Das Schreiben von Befehlen erfordert die Optional-PCB-Emulation von HeishaMon (`SetOptionalPCB`), im Listen-Only-Betrieb kann die Wärmepumpe nur gelesen werden.
+    en: |
+      Domestic hot water of a Panasonic Aquarea heat pump via [HeishaMon](https://github.com/HeishaMon/HeishaMon).
+
+      Requires a configured MQTT broker. Writing commands requires HeishaMon's optional PCB emulation (`SetOptionalPCB`), in listen-only mode the heat pump can only be read.
+params:
+  - name: topic
+    default: panasonic_heat_pump
+    description:
+      de: MQTT Topic
+      en: MQTT topic
+    help:
+      de: Basis-Topic von HeishaMon
+      en: Base topic of HeishaMon
+  - name: timeout
+    advanced: true
+    type: duration
+    default: 5m
+  - preset: switchsocket
+  - name: heating
+    advanced: true
+    type: bool
+    default: true
+  - name: integrateddevice
+    advanced: true
+    type: bool
+    default: true
+  - name: icon
+    advanced: true
+    default: heatpump
+render: |
+  type: switchsocket
+  enabled:
+    source: mqtt
+    topic: {{ .topic }}/main/Force_DHW_State
+    timeout: {{ .timeout }}
+  enable:
+    source: mqtt
+    topic: {{ .topic }}/commands/SetForceDHW
+    payload: ${enable:%d}
+  power:
+    source: mqtt
+    topic: {{ .topic }}/main/DHW_Power_Consumption
+    timeout: {{ .timeout }}
+  temp:
+    source: mqtt
+    topic: {{ .topic }}/main/DHW_Temp
+    timeout: {{ .timeout }}
+  limittemp:
+    source: mqtt
+    topic: {{ .topic }}/main/DHW_Target_Temp
+    timeout: {{ .timeout }}
+  {{ include "switchsocket" . }}
