@@ -3,9 +3,6 @@ products:
   - brand: Solplanet
     description:
       generic: Hybrid inverter (Modbus TCP)
-  - brand: KACO
-    description:
-      generic: Blueplanet Hybrid NH3 (Modbus TCP)
 requirements:
   description:
     de: |
