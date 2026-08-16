@@ -2,7 +2,8 @@ package definition
 
 import "embed"
 
-// class folders contain device definitions (*.yaml) and include-only templates (*.tpl)
-//
-//go:embed charger meter vehicle tariff messenger circuit hems
+//go:embed charger/*.yaml meter/*.yaml vehicle/*.yaml tariff/*.yaml messenger/*.yaml circuit/*.yaml hems/*.yaml
 var YamlTemplates embed.FS
+
+//go:embed */*.tpl
+var TemplateIncludes embed.FS

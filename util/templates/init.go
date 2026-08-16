@@ -7,7 +7,6 @@ import (
 	"io/fs"
 	"os"
 	"slices"
-	"strings"
 	"sync"
 	"text/template"
 
@@ -41,7 +40,7 @@ func init() {
 	baseTmpl = template.Must(FuncMap(template.New("base")).ParseFS(includeFS, "includes/*.tpl"))
 
 	for _, class := range []Class{Charger, Meter, Vehicle, Tariff, Messenger, Circuit, Hems} {
-		if err := loadIncludes(definition.YamlTemplates, class); err != nil {
+		if err := loadIncludes(definition.TemplateIncludes, class); err != nil {
 			panic(err)
 		}
 		load(class)
@@ -128,7 +127,7 @@ func load(class Class) {
 		if err != nil {
 			return err
 		}
-		if d.IsDir() || !strings.HasSuffix(filepath, ".yaml") {
+		if d.IsDir() {
 			return nil
 		}
 
