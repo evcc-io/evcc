@@ -78,9 +78,7 @@ func testCCIConfig() *CCIConfig {
 }
 
 // TestLoginUsesLegacyWhenCCIIsNil covers brands without CCI support (Genesis
-// EU, Hyundai AU): Login must always use the unmodified legacy refreshToken
-// path, regardless of whether the password happens to look like a legacy
-// token or a real account password.
+// EU, Hyundai AU): Login must always use the unmodified legacy refreshToken path
 func TestLoginUsesLegacyWhenCCIIsNil(t *testing.T) {
 	for _, tt := range []struct {
 		name     string
@@ -109,14 +107,10 @@ func TestLoginUsesLegacyWhenCCIIsNil(t *testing.T) {
 	}
 }
 
-// TestLoginUsesLegacyWhenPasswordLooksLikeLegacyToken covers a CCI-capable
-// brand (Kia/Hyundai EU) where the configured password still has the shape
-// of a legacy refresh_token: this must keep using the unmodified legacy
-// path, not the CCI one, for users who still hold a valid pre-block token.
-// The CCI endpoint is deliberately left unreachable - if the code mistakenly
-// routed there, this test would fail with a connection error instead of the
-// expected legacy access token.
-func TestLoginUsesLegacyWhenPasswordLooksLikeLegacyToken(t *testing.T) {
+// TestLoginPrefersLegacyToken covers a CCI-capable brand whose configured
+// password is still a valid legacy refresh_token: the CCI path must not be used
+// (its endpoint is left unreachable, so routing there would fail the test)
+func TestLoginPrefersLegacyToken(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/auth/api/v2/user/oauth2/token", legacyTokenHandler("legacy-access-2", "legacy-refresh-2"))
 	loginSrv := httptest.NewServer(mux)
@@ -134,14 +128,8 @@ func TestLoginUsesLegacyWhenPasswordLooksLikeLegacyToken(t *testing.T) {
 	assert.Equal(t, "legacy-access-2", token.AccessToken)
 }
 
-// TestLoginUsesCCIAndWiresRefreshCCI covers a CCI-capable brand with a real
-// account password: Login must perform the full CCI login and wire
-// TokenSource to refreshCCI (not the legacy refreshToken) for subsequent
-// refreshes. The mock CCS exchange deliberately returns a token that expires
-// in 5s, which lands inside oauth2's default 10s expiry buffer - so the very
-// next Token() call is guaranteed to trigger exactly one refresh, and
-// asserting it hit the CCI refresh endpoint (rather than the legacy one, or
-// none at all) confirms the wiring without needing internal hooks.
+// TestLoginUsesCCIAndWiresRefreshCCI covers a CCI-capable brand with an account
+// password: Login must fall back to the CCI login and wire TokenSource to refreshCCI
 func TestLoginUsesCCIAndWiresRefreshCCI(t *testing.T) {
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	require.NoError(t, err)
@@ -174,15 +162,12 @@ func TestLoginUsesCCIAndWiresRefreshCCI(t *testing.T) {
 		})
 	})
 	cciMux.HandleFunc("/domain/api/v1/auth/token-exchange", func(w http.ResponseWriter, _ *http.Request) {
-		// The first (login) exchange deliberately returns a token that
-		// expires in 5s - inside oauth2's default 10s expiry buffer, so it's
-		// already considered invalid by the time the test asks for it. Every
-		// later (post-refresh) exchange returns a long-lived token instead,
-		// so refreshing settles after exactly one round-trip.
-		resp := map[string]any{"accessToken": "ccs-token-2", "expiresTime": time.Now().Add(time.Hour).UnixMilli()}
+		// the first (login) exchange returns a token expiring inside oauth2's
+		// 10s buffer, so the next Token() call triggers exactly one refresh
+		resp := map[string]any{"accessToken": "ccs-token-2", "expiresTime": time.Now().Add(time.Hour).Unix()}
 		if atomic.AddInt32(&exchangeCalls, 1) == 1 {
 			resp["accessToken"] = "ccs-token-1"
-			resp["expiresTime"] = time.Now().Add(5 * time.Second).UnixMilli()
+			resp["expiresTime"] = time.Now().Add(5 * time.Second).Unix()
 		}
 		_ = json.NewEncoder(w).Encode(resp)
 	})
@@ -202,10 +187,8 @@ func TestLoginUsesCCIAndWiresRefreshCCI(t *testing.T) {
 
 	require.NoError(t, identity.Login("user@example.com", "s3cret-Passw0rd!", "en", "kia"))
 
-	// The freshly issued token is already inside the expiry buffer, so this
-	// very first Token() call is guaranteed to trigger exactly one refresh.
-	// Asserting it hit the CCI refresh endpoint (rather than the legacy one,
-	// or none at all) confirms TokenSource is wired to refreshCCI.
+	// the freshly issued token is inside the expiry buffer, so this Token()
+	// call must trigger exactly one refresh against the CCI endpoint
 	token, err := identity.Token()
 	require.NoError(t, err)
 	assert.Equal(t, "ccs-token-2", token.AccessToken)
@@ -215,31 +198,6 @@ func TestLoginUsesCCIAndWiresRefreshCCI(t *testing.T) {
 	_, err = identity.Token()
 	require.NoError(t, err)
 	assert.EqualValues(t, 1, atomic.LoadInt32(&refreshCalls), "unexpected additional refresh")
-}
-
-// TestLoginUsesCCIBundleFromPasswordField covers the cci1: compound-bundle
-// password: Login must use it directly via the CCI path without contacting
-// the login or CCI servers at all (both are left unreachable here; a valid,
-// non-expired bundle needs no network calls).
-func TestLoginUsesCCIBundleFromPasswordField(t *testing.T) {
-	deviceSrv := httptest.NewServer(http.HandlerFunc(deviceIDHandler))
-	defer deviceSrv.Close()
-
-	identity := newLoginTestIdentity(t, unreachable, deviceSrv.URL, unreachable, testCCIConfig())
-
-	valid := cciBundle{
-		AccessToken:  "bundle-ccs-token",
-		RefreshToken: "bundle-refresh",
-		Expiry:       time.Now().Add(time.Hour),
-		DeviceID:     "device-bundle",
-	}
-	password := encodeCCIBundleForTest(t, valid)
-
-	require.NoError(t, identity.Login("user@example.com", password, "en", "kia"))
-
-	token, err := identity.Token()
-	require.NoError(t, err)
-	assert.Equal(t, "bundle-ccs-token", token.AccessToken)
 }
 
 // TestLoginPropagatesLegacyError covers the legacy path: a failure there must
@@ -260,9 +218,8 @@ func TestLoginPropagatesLegacyError(t *testing.T) {
 	assert.True(t, strings.HasPrefix(err.Error(), "login failed:"), "got: %s", err.Error())
 }
 
-// TestLoginPropagatesCCIError covers the CCI path: a failure there (here, the
-// WAF-block detection from step 1) must also surface prefixed with
-// "login failed: ", the same convention as the legacy path.
+// TestLoginPropagatesCCIError covers the CCI path: a failure there must surface
+// prefixed with "login failed: ", the same convention as the legacy path
 func TestLoginPropagatesCCIError(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/auth/api/v2/user/oauth2/authorize", func(w http.ResponseWriter, _ *http.Request) {

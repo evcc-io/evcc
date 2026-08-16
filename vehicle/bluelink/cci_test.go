@@ -10,7 +10,6 @@ import (
 	"math/big"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 	"time"
 
@@ -60,13 +59,6 @@ func newTestIdentity(t *testing.T, loginURL, cciURL string) *Identity {
 	return identity
 }
 
-func encodeCCIBundleForTest(t *testing.T, b cciBundle) string {
-	t.Helper()
-	raw, err := json.Marshal(b)
-	require.NoError(t, err)
-	return cciBundlePrefix + base64.RawURLEncoding.EncodeToString(raw)
-}
-
 func jwkParam(b []byte) string {
 	return base64.RawURLEncoding.EncodeToString(b)
 }
@@ -85,35 +77,8 @@ func certsHandler(priv *rsa.PrivateKey) http.HandlerFunc {
 	}
 }
 
-func TestLooksLikeLegacyRefreshToken(t *testing.T) {
-	tests := []struct {
-		name     string
-		password string
-		want     bool
-	}{
-		{"legacy 48-char token", strings.Repeat("A", 48), true},
-		{"empty", "", false},
-		{"cci bundle prefix", cciBundlePrefix + "abc", false},
-		{"cci-style 87-char refresh token", strings.Repeat("a", 87), false},
-		// Regression: a real account password is often short too (legacy
-		// tokens are ~48 chars), so length alone is not a safe discriminator
-		// - it must also fail on character class (lowercase/symbols).
-		{"short real-world password", "s3cret-Passw0rd!", false},
-		{"short real-world password 2", "MyKiaPassword123", false},
-		{"lowercase-only short string", strings.Repeat("a", 48), false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.want, looksLikeLegacyRefreshToken(tt.password))
-		})
-	}
-}
-
-// TestParseCCSExpiry is a regression test for a bug found in a live test
-// against the real Kia backend: a fresh CCS token was treated as already
-// expired immediately after login, causing a refresh round-trip on every
-// single API call instead of roughly once an hour. Root cause was
-// interpreting expiresTime as milliseconds when it may actually be seconds.
+// TestParseCCSExpiry is a regression test for a bug found against the real Kia
+// backend: an expiresTime read in the wrong unit makes every token look expired
 func TestParseCCSExpiry(t *testing.T) {
 	now := time.Now()
 
@@ -124,8 +89,8 @@ func TestParseCCSExpiry(t *testing.T) {
 	}{
 		{"zero falls back to default", 0, ccsExpiryFallback + time.Minute},
 		{"negative falls back to default", -1, ccsExpiryFallback + time.Minute},
-		{"plausible millisecond epoch", now.Add(time.Hour).UnixMilli(), 2 * time.Hour},
-		{"plausible second epoch (the bug)", now.Add(time.Hour).Unix(), 2 * time.Hour},
+		{"second epoch", now.Add(time.Hour).Unix(), 2 * time.Hour},
+		{"millisecond epoch falls back to default", now.Add(time.Hour).UnixMilli(), ccsExpiryFallback + time.Minute},
 		{"implausible value falls back to default", 123, ccsExpiryFallback + time.Minute},
 	}
 	for _, tt := range tests {
@@ -135,44 +100,6 @@ func TestParseCCSExpiry(t *testing.T) {
 			assert.True(t, got.Before(now.Add(tt.wantWithin)), "expiry too far out, got %v", got)
 		})
 	}
-}
-
-func TestCCIBundleTokenRoundTrip(t *testing.T) {
-	b := cciBundle{
-		AccessToken:              "ccs-access",
-		RefreshToken:             "cci-refresh",
-		Expiry:                   time.Now().Add(time.Hour).Truncate(time.Second),
-		DeviceID:                 "device-123",
-		CCIAccessToken:           "cci-access",
-		ExchangeableToken:        "exch-token",
-		ExchangeableRefreshToken: "exch-refresh",
-		NonCcsToken:              "non-ccs",
-		NonCcsRefreshToken:       "non-ccs-refresh",
-		IDToken:                  "id-token",
-	}
-
-	token := b.token()
-	assert.Equal(t, b.AccessToken, token.AccessToken)
-	assert.Equal(t, b.RefreshToken, token.RefreshToken)
-	assert.True(t, b.Expiry.Equal(token.Expiry))
-
-	got := bundleFromToken(token)
-	assert.Equal(t, b, got)
-}
-
-func TestDecodeCCIBundle(t *testing.T) {
-	b := cciBundle{AccessToken: "a", RefreshToken: "r", DeviceID: "d"}
-	s := encodeCCIBundleForTest(t, b)
-
-	got, ok := decodeCCIBundle(s)
-	require.True(t, ok)
-	assert.Equal(t, b, got)
-
-	_, ok = decodeCCIBundle("not-a-bundle")
-	assert.False(t, ok)
-
-	_, ok = decodeCCIBundle(cciBundlePrefix + "!!!not-base64!!!")
-	assert.False(t, ok)
 }
 
 func TestLoginCCIPasswordSuccess(t *testing.T) {
@@ -226,7 +153,7 @@ func TestLoginCCIPasswordSuccess(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"accessToken": "ccs-token-1",
-			"expiresTime": time.Now().Add(time.Hour).UnixMilli(),
+			"expiresTime": time.Now().Add(time.Hour).Unix(),
 		})
 	})
 	cciSrv := httptest.NewServer(cciMux)
@@ -240,10 +167,10 @@ func TestLoginCCIPasswordSuccess(t *testing.T) {
 	assert.Equal(t, "ccs-token-1", token.AccessToken)
 	assert.Equal(t, "cci-refresh-1", token.RefreshToken)
 	assert.True(t, token.Valid())
-	assert.Equal(t, "cci-access-1", cciExtraString(token, extraCCIAccessToken))
-	assert.Equal(t, "exch-access-1", cciExtraString(token, extraExchangeableToken))
-	assert.Equal(t, "non-ccs-1", cciExtraString(token, extraNonCcsToken))
-	assert.NotEmpty(t, cciExtraString(token, extraDeviceID))
+	assert.Equal(t, "cci-access-1", identity.bundle.CCIAccessToken)
+	assert.Equal(t, "exch-access-1", identity.bundle.ExchangeableToken)
+	assert.Equal(t, "non-ccs-1", identity.bundle.NonCcsToken)
+	assert.NotEmpty(t, identity.bundle.DeviceID)
 
 	// persisted so a restart can reuse/refresh it instead of logging in again
 	var persisted cciBundle
@@ -333,7 +260,7 @@ func TestRefreshCCI(t *testing.T) {
 		assert.Equal(t, "Bearer cci-access-2", r.Header.Get("authorization"))
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"accessToken": "ccs-token-2",
-			"expiresTime": time.Now().Add(time.Hour).UnixMilli(),
+			"expiresTime": time.Now().Add(time.Hour).Unix(),
 		})
 	})
 	cciSrv := httptest.NewServer(cciMux)
@@ -354,7 +281,9 @@ func TestRefreshCCI(t *testing.T) {
 		IDToken:                  "old-id",
 	}
 
-	newToken, err := identity.refreshCCI(old.token())
+	identity.bundle = old
+
+	newToken, err := identity.refreshCCI(nil)
 	require.NoError(t, err)
 	assert.Equal(t, "ccs-token-2", newToken.AccessToken)
 	assert.Equal(t, "cci-refresh-2", newToken.RefreshToken)
@@ -382,29 +311,9 @@ func TestLoginCCIUsesPersistedBundleWithoutContactingServer(t *testing.T) {
 	assert.Equal(t, "still-valid-ccs", token.AccessToken)
 }
 
-func TestLoginCCIUsesBundleFromConfigPassword(t *testing.T) {
-	identity := newTestIdentity(t, unreachable, unreachable)
-
-	valid := cciBundle{
-		AccessToken:  "config-bundle-ccs",
-		RefreshToken: "config-bundle-refresh",
-		Expiry:       time.Now().Add(time.Hour),
-		DeviceID:     "device-config",
-	}
-	password := encodeCCIBundleForTest(t, valid)
-
-	token, err := identity.loginCCI(password)
-	require.NoError(t, err)
-	assert.Equal(t, "config-bundle-ccs", token.AccessToken)
-}
-
 // TestLoginCCIFallsBackToPasswordLoginWhenPersistedBundleUnusable covers a
-// persisted bundle that is both expired and has no refresh token (so
-// tokenOrRefresh cannot recover it): loginCCI must not get stuck on that
-// stale settings-DB state, but fall back to the full password login instead.
-// Note this is a genuinely fresh login, not a refresh - so, unlike
-// TestRefreshCCI, the device id is NOT carried over from the stale bundle;
-// loginCCIPassword always generates a new one for a fresh interactive login.
+// persisted bundle that is expired and unrefreshable: loginCCI must not get
+// stuck on that stale state but fall back to the full password login
 func TestLoginCCIFallsBackToPasswordLoginWhenPersistedBundleUnusable(t *testing.T) {
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	require.NoError(t, err)
@@ -440,7 +349,7 @@ func TestLoginCCIFallsBackToPasswordLoginWhenPersistedBundleUnusable(t *testing.
 	cciMux.HandleFunc("/domain/api/v1/auth/token-exchange", func(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"accessToken": "fresh-ccs-token",
-			"expiresTime": time.Now().Add(time.Hour).UnixMilli(),
+			"expiresTime": time.Now().Add(time.Hour).Unix(),
 		})
 	})
 	cciSrv := httptest.NewServer(cciMux)
@@ -448,13 +357,11 @@ func TestLoginCCIFallsBackToPasswordLoginWhenPersistedBundleUnusable(t *testing.
 
 	identity := newTestIdentity(t, loginSrv.URL, cciSrv.URL)
 
-	// Persist a bundle that is both expired and unrefreshable (no
-	// RefreshToken), simulating stale/corrupted settings-DB state.
+	// stale/corrupted settings state: expired and no refresh token
 	stale := cciBundle{
-		AccessToken:  "stale-ccs-token",
-		RefreshToken: "", // tokenOrRefresh must fail here rather than attempt a refresh
-		Expiry:       time.Now().Add(-time.Hour),
-		DeviceID:     "stale-device-id",
+		AccessToken: "stale-ccs-token",
+		Expiry:      time.Now().Add(-time.Hour),
+		DeviceID:    "stale-device-id",
 	}
 	require.NoError(t, settings.SetJson(identity.settingsKey(), stale))
 

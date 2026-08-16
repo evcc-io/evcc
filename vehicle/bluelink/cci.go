@@ -5,7 +5,6 @@ import (
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -13,7 +12,6 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"regexp"
 	"strings"
 	"time"
 
@@ -23,12 +21,8 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// CCIConfig holds the OneApp/CCI login parameters for brands where the
-// legacy IDPConnect authorize endpoint is blocked by Hyundai's WAF (as of
-// 2026-08, see https://github.com/Hyundai-Kia-Connect/hyundai_kia_connect_api/issues/1273).
-// It is only set for EU Kia/Hyundai — Genesis EU and Hyundai AU are not
-// WAF-affected and keep using the legacy authorize/refresh flow unchanged
-// (Config.CCI == nil for those brands).
+// CCIConfig holds the OneApp/CCI login parameters. Only set for EU Kia/Hyundai,
+// where the legacy IDPConnect authorize endpoint is WAF-blocked.
 type CCIConfig struct {
 	OneAppClientID       string // OneApp OAuth2 client_id (not on the WAF block list)
 	OneAppRedirectURI    string
@@ -40,24 +34,18 @@ type CCIConfig struct {
 }
 
 const (
-	cciClientVersion    = "1.3.3"
-	cciMobileUserAgent  = "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19_CCS_APP_AOS"
-	cciBundlePrefix     = "cci1:" // marks a compound CCI token bundle in the config `password` field
-	cciSettingsKeyFmt   = "bluelink-cci.%s.%s"
-	cciTimezoneLocation = "Europe/Berlin"
+	cciClientVersion   = "1.3.3"
+	cciMobileUserAgent = "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19_CCS_APP_AOS"
+	cciSettingsKeyFmt  = "bluelink-cci.%s.%s"
 )
 
-// cciBundle is the full CCI/CCS token state needed to authenticate against the
-// legacy ccapi:8080 vehicle/control endpoints (AccessToken) and to refresh
-// without repeating the full password login (all other fields). It is used
-// both as the persistence format (server/db/settings, keyed per brand+user)
-// and as the wire format for a compound bundle string that a user can paste
-// directly into the `password` config field (see decodeCCIBundle).
+// cciBundle is the CCI/CCS token state. AccessToken is the CCS token used on
+// the legacy ccapi endpoints, the remaining fields are required to refresh it.
 type cciBundle struct {
-	AccessToken              string    `json:"access_token"`  // CCS token (no "Bearer " prefix) — used for the legacy vehicle API
+	AccessToken              string    `json:"access_token"`  // CCS token (no "Bearer " prefix)
 	RefreshToken             string    `json:"refresh_token"` // CCI refresh token
 	Expiry                   time.Time `json:"expiry"`        // CCS token expiry
-	DeviceID                 string    `json:"device_id"`     // stable client-device-id used for all CCI calls of this session
+	DeviceID                 string    `json:"device_id"`     // client-device-id used for all CCI calls
 	CCIAccessToken           string    `json:"cci_access_token"`
 	ExchangeableToken        string    `json:"exchangeable_token"`
 	ExchangeableRefreshToken string    `json:"exchangeable_refresh_token"`
@@ -66,161 +54,42 @@ type cciBundle struct {
 	IDToken                  string    `json:"id_token"`
 }
 
-// extra keys used to carry the cciBundle fields through oauth2.Token.Extra,
-// so the existing oauth.RefreshTokenSource (which only knows about
-// AccessToken/RefreshToken/Expiry) can be reused unchanged for the CCI flow.
-const (
-	extraDeviceID                 = "device_id"
-	extraCCIAccessToken           = "cci_access_token"
-	extraExchangeableToken        = "exchangeable_token"
-	extraExchangeableRefreshToken = "exchangeable_refresh_token"
-	extraNonCcsToken              = "non_ccs_token"
-	extraNonCcsRefreshToken       = "non_ccs_refresh_token"
-	extraIDToken                  = "id_token"
-)
-
-// token converts the bundle into an oauth2.Token, carrying the CCI-specific
-// fields in Extra so they survive a round-trip through oauth.RefreshTokenSource.
 func (b cciBundle) token() *oauth2.Token {
-	t := &oauth2.Token{
+	return &oauth2.Token{
 		AccessToken:  b.AccessToken,
 		RefreshToken: b.RefreshToken,
 		Expiry:       b.Expiry,
 	}
-
-	return t.WithExtra(map[string]any{
-		extraDeviceID:                 b.DeviceID,
-		extraCCIAccessToken:           b.CCIAccessToken,
-		extraExchangeableToken:        b.ExchangeableToken,
-		extraExchangeableRefreshToken: b.ExchangeableRefreshToken,
-		extraNonCcsToken:              b.NonCcsToken,
-		extraNonCcsRefreshToken:       b.NonCcsRefreshToken,
-		extraIDToken:                  b.IDToken,
-	})
 }
 
-func cciExtraString(token *oauth2.Token, key string) string {
-	s, _ := token.Extra(key).(string)
-	return s
-}
-
-// bundleFromToken is the inverse of cciBundle.token().
-func bundleFromToken(token *oauth2.Token) cciBundle {
-	return cciBundle{
-		AccessToken:              token.AccessToken,
-		RefreshToken:             token.RefreshToken,
-		Expiry:                   token.Expiry,
-		DeviceID:                 cciExtraString(token, extraDeviceID),
-		CCIAccessToken:           cciExtraString(token, extraCCIAccessToken),
-		ExchangeableToken:        cciExtraString(token, extraExchangeableToken),
-		ExchangeableRefreshToken: cciExtraString(token, extraExchangeableRefreshToken),
-		NonCcsToken:              cciExtraString(token, extraNonCcsToken),
-		NonCcsRefreshToken:       cciExtraString(token, extraNonCcsRefreshToken),
-		IDToken:                  cciExtraString(token, extraIDToken),
-	}
-}
-
-// decodeCCIBundle decodes a compound CCI token bundle from the config
-// `password` field. Wire format: "cci1:" + base64url(json(cciBundle)) with no
-// padding. This lets a user who has already obtained a CCI token set with an
-// external tool configure evcc without ever storing their live account
-// password, mirroring how the pre-existing legacy refresh_token worked.
-func decodeCCIBundle(s string) (cciBundle, bool) {
-	if !strings.HasPrefix(s, cciBundlePrefix) {
-		return cciBundle{}, false
-	}
-
-	raw, err := base64.RawURLEncoding.DecodeString(strings.TrimPrefix(s, cciBundlePrefix))
-	if err != nil {
-		return cciBundle{}, false
-	}
-
-	var b cciBundle
-	if err := json.Unmarshal(raw, &b); err != nil {
-		return cciBundle{}, false
-	}
-
-	return b, true
-}
-
-// legacyRefreshTokenPattern matches the shape evcc has always accepted here:
-// an opaque legacy IDPConnect refresh_token, historically 48 uppercase
-// letters/digits (hyundai_kia_connect_api uses the exact `^[A-Z0-9]{48}$`);
-// widened slightly to 40-60 chars to tolerate minor length variance across
-// brands/regions. Note this is a *character-class* check, not just a length
-// check: a real account password virtually always contains lowercase letters
-// and/or symbols, which this pattern rejects, so it is never misclassified
-// as a legacy token merely for being short.
-var legacyRefreshTokenPattern = regexp.MustCompile(`^[A-Z0-9]{40,60}$`)
-
-// looksLikeLegacyRefreshToken reports whether password has the shape of a
-// legacy IDPConnect refresh_token (see legacyRefreshTokenPattern). This keeps
-// the behaviour for every user who still holds a valid pre-block legacy
-// refresh_token completely unchanged, while routing anything else (a real
-// account password, or a cci1: bundle) to the CCI-capable path.
-func looksLikeLegacyRefreshToken(password string) bool {
-	return legacyRefreshTokenPattern.MatchString(password)
-}
-
-// settingsKey returns the server/db/settings key under which the CCI token
-// bundle for this identity is persisted, mirroring the pattern used by e.g.
-// vehicle/tesla and vehicle/mercedes for their OAuth2 tokens.
+// settingsKey returns the settings key the CCI token bundle is persisted under
 func (v *Identity) settingsKey() string {
 	return fmt.Sprintf(cciSettingsKeyFmt, v.config.Brand, v.user)
 }
 
-// loginCCI obtains a usable CCS access token for EU Kia/Hyundai via the
-// OneApp/CCI flow. Priority order:
-//  1. a token bundle persisted from a prior login/refresh (server/db/settings) —
-//     avoids hitting the login endpoint (and its stricter rate limiting/WAF)
-//     on every evcc restart.
-//  2. a CCI token bundle supplied directly in the password field (see
-//     decodeCCIBundle) — lets users who don't want evcc to hold their live
-//     account password generate the bundle once with an external tool.
-//  3. a full interactive username+password login.
+// loginCCI obtains a CCS access token via the OneApp/CCI flow, preferring a
+// bundle persisted from an earlier login over a fresh password login
 func (v *Identity) loginCCI(password string) (*oauth2.Token, error) {
-	var persisted cciBundle
-	if err := settings.Json(v.settingsKey(), &persisted); err == nil {
-		if token, err := v.tokenOrRefresh(persisted); err == nil {
-			v.log.DEBUG.Println("cci: using persisted token from database")
+	if err := settings.Json(v.settingsKey(), &v.bundle); err == nil {
+		if token := v.bundle.token(); token.Valid() {
+			v.log.DEBUG.Println("cci: using persisted token")
 			return token, nil
-		} else {
-			v.log.WARN.Printf("cci: persisted token invalid or refresh failed, falling back: %v", err)
 		}
-	}
 
-	if bundle, ok := decodeCCIBundle(password); ok {
-		token, err := v.tokenOrRefresh(bundle)
-		if err != nil {
-			return nil, fmt.Errorf("cci token bundle in config is invalid or expired: %w", err)
+		if v.bundle.RefreshToken != "" {
+			token, err := v.refreshCCI(nil)
+			if err == nil {
+				return token, nil
+			}
+			v.log.WARN.Printf("cci: refreshing persisted token failed: %v", err)
 		}
-		return token, nil
 	}
 
 	return v.loginCCIPassword(password)
 }
 
-// tokenOrRefresh returns the bundle's token directly if still valid, otherwise
-// refreshes it.
-func (v *Identity) tokenOrRefresh(bundle cciBundle) (*oauth2.Token, error) {
-	token := bundle.token()
-	if token.Valid() {
-		return token, nil
-	}
-	if token.RefreshToken == "" {
-		return nil, errors.New("no refresh token available")
-	}
-	return v.refreshCCI(token)
-}
-
-// loginCCIPassword performs the OneApp/CCI headless password login (EU
-// Kia/Hyundai). It bypasses the legacy IDPConnect authorize endpoint, which
-// is WAF-blocked for the legacy client_id. Steps:
-//  1. GET  {LoginFormHost}/auth/api/v2/user/oauth2/authorize (OneApp client_id — not WAF-blocked)
-//  2. GET  {LoginFormHost}/auth/api/v1/accounts/certs        (RSA public key for password encryption)
-//  3. POST {LoginFormHost}/auth/account/signin                (RSA-encrypted password, redirect not followed)
-//  4. POST {CCI.APIURL}/domain/api/v1/auth/token              (auth code -> CCI token set)
-//  5. POST {CCI.APIURL}/domain/api/v1/auth/token-exchange     (CCI token -> CCS token, usable on legacy ccapi:8080)
+// loginCCIPassword performs the headless OneApp/CCI password login: authorize,
+// fetch RSA cert, signin, exchange the auth code for CCI and then CCS tokens
 func (v *Identity) loginCCIPassword(password string) (*oauth2.Token, error) {
 	c := v.config.CCI
 	deviceID := uuid.NewString()
@@ -237,8 +106,7 @@ func (v *Identity) loginCCIPassword(password string) (*oauth2.Token, error) {
 		v.Client.CheckRedirect = nil
 	}()
 
-	// Step 1: authorize. The OneApp client_id is not on the WAF block list, so
-	// this succeeds where the legacy client_id's authorize is rejected.
+	// the OneApp client_id is not on the WAF block list
 	authURL := fmt.Sprintf(
 		"%s/auth/api/v2/user/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s&lang=en&state=ccsp&country=de",
 		v.config.LoginFormHost, c.OneAppClientID, c.OneAppRedirectURI,
@@ -259,11 +127,14 @@ func (v *Identity) loginCCIPassword(password string) (*oauth2.Token, error) {
 
 	if strings.Contains(strings.ToLower(string(authBody)), "abusing") ||
 		strings.Contains(authResp.Request.URL.String(), "/error?status=400") {
-		return nil, errors.New("login blocked: IDPConnect authorize rejected the request ('abusing request'). " +
-			"This is a server-side WAF block, not a credentials problem")
+		return nil, errors.New("authorize rejected as 'abusing request' — server-side WAF block, not a credentials problem")
 	}
 
-	// Step 2: RSA public key used to encrypt the password for signin.
+	if authResp.StatusCode >= http.StatusBadRequest {
+		return nil, fmt.Errorf("authorize failed: HTTP %d (%s)", authResp.StatusCode, request.Truncate(string(authBody)))
+	}
+
+	// rsa public key used to encrypt the password for signin
 	certReq, err := request.New(http.MethodGet, v.config.LoginFormHost+"/auth/api/v1/accounts/certs", nil, map[string]string{
 		"User-Agent": cciMobileUserAgent,
 		"Accept":     request.JSONContent,
@@ -288,8 +159,6 @@ func (v *Identity) loginCCIPassword(password string) (*oauth2.Token, error) {
 		return nil, fmt.Errorf("encrypting password failed: %w", err)
 	}
 
-	// Step 3: signin with the RSA-encrypted password. The auth code arrives in
-	// the Location header of the 302 response, so redirects must not be followed.
 	data := url.Values{
 		"client_id":             {c.OneAppClientID},
 		"encryptedPassword":     {"true"},
@@ -311,8 +180,10 @@ func (v *Identity) loginCCIPassword(password string) (*oauth2.Token, error) {
 		return nil, err
 	}
 
+	// the auth code arrives in the Location header, so redirects must not be followed
 	v.Client.CheckRedirect = request.DontFollow
 	signinResp, err := v.Client.Do(signinReq)
+	v.Client.CheckRedirect = nil
 	if err != nil {
 		return nil, err
 	}
@@ -320,7 +191,7 @@ func (v *Identity) loginCCIPassword(password string) (*oauth2.Token, error) {
 	signinResp.Body.Close()
 
 	if signinResp.StatusCode != http.StatusFound {
-		return nil, signinFailureError(signinResp.StatusCode, string(signinBody))
+		return nil, fmt.Errorf("signin failed: HTTP %d (%s)", signinResp.StatusCode, request.Truncate(string(signinBody)))
 	}
 
 	location := signinResp.Header.Get("Location")
@@ -332,59 +203,38 @@ func (v *Identity) loginCCIPassword(password string) (*oauth2.Token, error) {
 	code := loc.Query().Get("code")
 	if code == "" {
 		switch {
-		case strings.Contains(strings.ToLower(location), "error"):
-			desc := loc.Query().Get("error_description")
-			if desc == "" {
-				desc = "unknown"
-			}
-			if looksCredentialRelated(desc) {
-				return nil, fmt.Errorf("authentication rejected: %s — check username and password", desc)
-			}
-			return nil, fmt.Errorf("authentication rejected: %s — this may indicate a server-side issue rather than incorrect credentials", desc)
 		case strings.Contains(location, "/web/v1/user/authorization"):
-			return nil, errors.New("account consent required: please log in via the manufacturer app or browser once to accept the terms, then retry")
-		case strings.Contains(location, "authorize"):
-			return nil, errors.New("authentication failed — returned to login page, check username and password")
+			return nil, errors.New("account consent required: log in via the manufacturer app once to accept the terms, then retry")
+		case loc.Query().Get("error_description") != "":
+			return nil, fmt.Errorf("signin rejected: %s", loc.Query().Get("error_description"))
 		default:
-			return nil, fmt.Errorf("unexpected redirect after signin: %s", truncate(location, 250))
+			return nil, fmt.Errorf("unexpected redirect after signin: %s", request.Truncate(location))
 		}
 	}
 
-	// Step 4: exchange the authorization code for the CCI token set.
 	bundle, err := v.exchangeCCIToken(deviceID, code)
 	if err != nil {
 		return nil, err
 	}
 	bundle.DeviceID = deviceID
 
-	// Step 5: exchange the CCI access token for a CCS token, accepted by the
-	// legacy ccapi:8080 vehicle/control endpoints.
-	ccsToken, ccsValidUntil, err := v.exchangeCCSToken(deviceID, bundle.CCIAccessToken, bundle.NonCcsToken, bundle.ExchangeableToken)
+	bundle.AccessToken, bundle.Expiry, err = v.exchangeCCSToken(deviceID, bundle.CCIAccessToken, bundle.NonCcsToken, bundle.ExchangeableToken)
 	if err != nil {
 		return nil, err
 	}
-	bundle.AccessToken = ccsToken
-	bundle.Expiry = ccsValidUntil
 
-	if err := settings.SetJson(v.settingsKey(), bundle); err != nil {
-		v.log.WARN.Printf("cci: persisting token failed: %v", err)
-	}
-
+	v.persistBundle(bundle)
 	v.log.INFO.Println("cci: login successful")
 
 	return bundle.token(), nil
 }
 
-// refreshCCI refreshes the CCI token set via cci-api-eu/.../v2/auth/token-refresh
-// (the full CCI token set is required in the request body), then re-exchanges
-// the CCS token. Called automatically by oauth.RefreshTokenSource whenever the
-// current CCS token has expired.
-func (v *Identity) refreshCCI(token *oauth2.Token) (*oauth2.Token, error) {
+// refreshCCI refreshes the CCI token set and re-exchanges the CCS token. The
+// token set lives on the Identity, so the passed oauth2 token is ignored.
+func (v *Identity) refreshCCI(_ *oauth2.Token) (*oauth2.Token, error) {
 	v.log.DEBUG.Println("cci: refreshing token")
 
-	bundle := bundleFromToken(token)
-
-	c := v.config.CCI
+	bundle := v.bundle
 	headers := v.cciHeaders(bundle.DeviceID, bundle.CCIAccessToken, bundle.NonCcsToken, bundle.ExchangeableToken, request.JSONContent)
 
 	body := map[string]string{
@@ -397,115 +247,91 @@ func (v *Identity) refreshCCI(token *oauth2.Token) (*oauth2.Token, error) {
 		"idToken":                  bundle.IDToken,
 	}
 
-	uri := c.APIURL + "/domain/api/v2/auth/token-refresh"
+	uri := v.config.CCI.APIURL + "/domain/api/v2/auth/token-refresh"
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(body), headers)
 	if err != nil {
 		return nil, err
 	}
 
-	var res struct {
-		AccessToken              string `json:"accessToken"`
-		RefreshToken             string `json:"refreshToken"`
-		NonCcsToken              string `json:"nonCcsToken"`
-		ExchangeableAccessToken  string `json:"exchangeableAccessToken"`
-		ExchangeableRefreshToken string `json:"exchangeableRefreshToken"`
-		NonCcsRefreshToken       string `json:"nonCcsRefreshToken"`
-		IDToken                  string `json:"idToken"`
-	}
+	var res cciTokenResponse
 	if err := v.DoJSON(req, &res); err != nil {
 		return nil, fmt.Errorf("cci token refresh failed: %w", err)
 	}
 
-	if res.AccessToken != "" {
-		bundle.CCIAccessToken = res.AccessToken
-	}
-	if res.RefreshToken != "" {
-		bundle.RefreshToken = res.RefreshToken
-	}
-	if res.NonCcsToken != "" {
-		bundle.NonCcsToken = res.NonCcsToken
-	}
-	if res.ExchangeableAccessToken != "" {
-		bundle.ExchangeableToken = res.ExchangeableAccessToken
-	}
-	if res.ExchangeableRefreshToken != "" {
-		bundle.ExchangeableRefreshToken = res.ExchangeableRefreshToken
-	}
-	if res.NonCcsRefreshToken != "" {
-		bundle.NonCcsRefreshToken = res.NonCcsRefreshToken
-	}
-	if res.IDToken != "" {
-		bundle.IDToken = res.IDToken
-	}
+	res.apply(&bundle)
 
-	// Note: the upstream reference implementation additionally inspects a
-	// Set-Cookie: t=<token> response header for an updated exchangeable
-	// token. That is a supplementary/optional signal (the JSON body above is
-	// the primary source) and is intentionally not replicated here to keep
-	// this port simple; revisit if refreshes are observed to go stale despite
-	// a 200 response.
-
-	ccsToken, ccsValidUntil, err := v.exchangeCCSToken(bundle.DeviceID, bundle.CCIAccessToken, bundle.NonCcsToken, bundle.ExchangeableToken)
+	bundle.AccessToken, bundle.Expiry, err = v.exchangeCCSToken(bundle.DeviceID, bundle.CCIAccessToken, bundle.NonCcsToken, bundle.ExchangeableToken)
 	if err != nil {
 		return nil, err
 	}
-	bundle.AccessToken = ccsToken
-	bundle.Expiry = ccsValidUntil
 
-	if err := settings.SetJson(v.settingsKey(), bundle); err != nil {
-		v.log.WARN.Printf("cci: persisting refreshed token failed: %v", err)
-	}
-
+	v.persistBundle(bundle)
 	v.log.DEBUG.Println("cci: refresh successful")
 
 	return bundle.token(), nil
 }
 
+func (v *Identity) persistBundle(bundle cciBundle) {
+	v.bundle = bundle
+	if err := settings.SetJson(v.settingsKey(), bundle); err != nil {
+		v.log.WARN.Printf("cci: persisting token failed: %v", err)
+	}
+}
+
+// cciTokenResponse is the response of the CCI token and token-refresh endpoints
+type cciTokenResponse struct {
+	AccessToken              string `json:"accessToken"`
+	RefreshToken             string `json:"refreshToken"`
+	NonCcsToken              string `json:"nonCcsToken"`
+	ExchangeableAccessToken  string `json:"exchangeableAccessToken"`
+	ExchangeableRefreshToken string `json:"exchangeableRefreshToken"`
+	NonCcsRefreshToken       string `json:"nonCcsRefreshToken"`
+	IDToken                  string `json:"idToken"`
+}
+
+// apply copies the non-empty response fields into bundle, keeping unchanged ones
+func (res cciTokenResponse) apply(bundle *cciBundle) {
+	for _, f := range []struct {
+		val string
+		dst *string
+	}{
+		{res.AccessToken, &bundle.CCIAccessToken},
+		{res.RefreshToken, &bundle.RefreshToken},
+		{res.NonCcsToken, &bundle.NonCcsToken},
+		{res.ExchangeableAccessToken, &bundle.ExchangeableToken},
+		{res.ExchangeableRefreshToken, &bundle.ExchangeableRefreshToken},
+		{res.NonCcsRefreshToken, &bundle.NonCcsRefreshToken},
+		{res.IDToken, &bundle.IDToken},
+	} {
+		if f.val != "" {
+			*f.dst = f.val
+		}
+	}
+}
+
 // exchangeCCIToken exchanges an authorization code for the CCI token set
-// (step 4 of the login flow).
 func (v *Identity) exchangeCCIToken(deviceID, code string) (cciBundle, error) {
-	c := v.config.CCI
-
-	uri := c.APIURL + "/domain/api/v1/auth/token?code=" + url.QueryEscape(code)
-	headers := v.cciHeaders(deviceID, "", "", "", "")
-
-	req, err := request.New(http.MethodPost, uri, nil, headers)
+	uri := v.config.CCI.APIURL + "/domain/api/v1/auth/token?code=" + url.QueryEscape(code)
+	req, err := request.New(http.MethodPost, uri, nil, v.cciHeaders(deviceID, "", "", "", ""))
 	if err != nil {
 		return cciBundle{}, err
 	}
 
-	var res struct {
-		AccessToken              string `json:"accessToken"`
-		RefreshToken             string `json:"refreshToken"`
-		NonCcsToken              string `json:"nonCcsToken"`
-		ExchangeableAccessToken  string `json:"exchangeableAccessToken"`
-		ExchangeableRefreshToken string `json:"exchangeableRefreshToken"`
-		NonCcsRefreshToken       string `json:"nonCcsRefreshToken"`
-		IDToken                  string `json:"idToken"`
-	}
+	var res cciTokenResponse
 	if err := v.DoJSON(req, &res); err != nil {
 		return cciBundle{}, fmt.Errorf("cci token exchange failed: %w", err)
 	}
 
-	return cciBundle{
-		RefreshToken:             res.RefreshToken,
-		CCIAccessToken:           res.AccessToken,
-		ExchangeableToken:        res.ExchangeableAccessToken,
-		ExchangeableRefreshToken: res.ExchangeableRefreshToken,
-		NonCcsToken:              res.NonCcsToken,
-		NonCcsRefreshToken:       res.NonCcsRefreshToken,
-		IDToken:                  res.IDToken,
-	}, nil
+	var bundle cciBundle
+	res.apply(&bundle)
+
+	return bundle, nil
 }
 
-// exchangeCCSToken exchanges a CCI access token for a CCS token (step 5 of
-// the login flow, and the final step of every refresh). The CCS token is
-// accepted by the legacy ccapi:8080 vehicle/control endpoints as the Bearer
-// access_token, unchanged from how evcc has always used it.
+// exchangeCCSToken exchanges a CCI access token for a CCS token, which the
+// legacy ccapi vehicle/control endpoints accept as Bearer access_token
 func (v *Identity) exchangeCCSToken(deviceID, cciAccessToken, nonCcsToken, exchangeableToken string) (string, time.Time, error) {
-	c := v.config.CCI
-
-	uri := c.APIURL + "/domain/api/v1/auth/token-exchange?serviceType=CCS"
+	uri := v.config.CCI.APIURL + "/domain/api/v1/auth/token-exchange?serviceType=CCS"
 	headers := v.cciHeaders(deviceID, cciAccessToken, nonCcsToken, exchangeableToken, "")
 
 	req, err := request.New(http.MethodPost, uri, nil, headers)
@@ -516,7 +342,7 @@ func (v *Identity) exchangeCCSToken(deviceID, cciAccessToken, nonCcsToken, excha
 	var res struct {
 		AccessToken    string `json:"accessToken"`
 		CcsAccessToken string `json:"ccsAccessToken"`
-		ExpiresTime    int64  `json:"expiresTime"` // epoch, unit unconfirmed - see parseCCSExpiry
+		ExpiresTime    int64  `json:"expiresTime"` // unix seconds
 	}
 	if err := v.DoJSON(req, &res); err != nil {
 		return "", time.Time{}, fmt.Errorf("ccs token exchange failed: %w", err)
@@ -533,61 +359,29 @@ func (v *Identity) exchangeCCSToken(deviceID, cciAccessToken, nonCcsToken, excha
 	return token, parseCCSExpiry(res.ExpiresTime), nil
 }
 
-// ccsExpiryFallback is used whenever expiresTime is absent or doesn't parse to
-// a plausible near-future timestamp.
-const ccsExpiryFallback = time.Hour
+const (
+	ccsExpiryFallback    = time.Hour      // used when expiresTime is missing or implausible
+	ccsExpiryMaxValidity = 24 * time.Hour // upper bound of a plausible expiry
+)
 
-// ccsExpiryPlausibleWindow bounds what counts as a "plausible" expiry: far
-// enough in the future to not immediately trigger a refresh, but not
-// absurdly far out (which would indicate a unit/parsing error rather than a
-// genuinely long-lived token).
-const ccsExpiryPlausibleWindow = 24 * time.Hour
-
-// isPlausibleCCSExpiry reports whether t is far enough in the future to not
-// immediately trigger a refresh, but not absurdly far out (which would
-// indicate a unit/parsing error rather than a genuinely long-lived token).
-// Kept separate from parseCCSExpiry so "is this plausible" (policy) stays
-// decoupled from "which unit is this" (unit detection).
-func isPlausibleCCSExpiry(now, t time.Time) bool {
-	return t.After(now) && t.Before(now.Add(ccsExpiryPlausibleWindow))
-}
-
-// parseCCSExpiry interprets the token-exchange response's expiresTime field.
-// The upstream hyundai_kia_connect_api reference treats it as a millisecond
-// epoch, but a live test against the real Kia backend showed a token
-// considered immediately expired right after a fresh login - i.e. every
-// subsequent API call triggered a full refresh round-trip instead of roughly
-// one per hour. That symptom is consistent with expiresTime actually being a
-// *second* epoch (interpreting ~10-digit second values as milliseconds lands
-// in January 1970). To be robust either way - and to never again let a
-// units mismatch silently produce an always-expired token - this tries the
-// millisecond interpretation first, falls back to seconds, and if neither
-// lands in a plausible near-future window, ignores the field entirely and
-// uses a safe fixed default instead of risking a refresh storm.
+// parseCCSExpiry interprets the token-exchange expiresTime, falling back to a
+// fixed lifetime rather than risking an always-expired token
 func parseCCSExpiry(expiresTime int64) time.Time {
-	if expiresTime <= 0 {
-		return time.Now().Add(ccsExpiryFallback)
-	}
-
 	now := time.Now()
 
-	if ms := time.UnixMilli(expiresTime); isPlausibleCCSExpiry(now, ms) {
-		return ms
-	}
-	if sec := time.Unix(expiresTime, 0); isPlausibleCCSExpiry(now, sec) {
-		return sec
+	if t := time.Unix(expiresTime, 0); t.After(now) && t.Before(now.Add(ccsExpiryMaxValidity)) {
+		return t
 	}
 
 	return now.Add(ccsExpiryFallback)
 }
 
-// cciBaseHeaders builds the static per-device/per-client headers required by
-// the CCI API (cci-api-eu.{hyundai,kia}.com) - everything that doesn't depend
-// on the current auth/exchange state.
-func (v *Identity) cciBaseHeaders(deviceID string) map[string]string {
+// cciHeaders builds the headers required by the CCI API. The token parameters
+// are empty before the initial code exchange, contentType for bodyless requests.
+func (v *Identity) cciHeaders(deviceID, cciAccessToken, nonCcsToken, exchangeableToken, contentType string) map[string]string {
 	c := v.config.CCI
 
-	return map[string]string{
+	headers := map[string]string{
 		"client-id":                         c.PackageID,
 		"client-name":                       c.ClientName,
 		"client-version":                    cciClientVersion,
@@ -597,66 +391,34 @@ func (v *Identity) cciBaseHeaders(deviceID string) map[string]string {
 		"client-device-model":               "iPhone",
 		"client-notification-provider-type": c.NotificationProvider,
 		"locale":                            strings.ToUpper(v.language),
-		"timezone":                          cciTimezoneOffset(),
+		"timezone":                          time.Now().Format("-07:00"),
 		"Accept":                            request.JSONContent,
 		"Accept-Language":                   v.language,
 		"User-Agent":                        cciMobileUserAgent,
 	}
-}
 
-// cciAuthHeaders adds the auth-token headers to h, when available.
-// cciAccessToken/nonCcsToken/exchangeableToken are optional (pass "" when not
-// yet available, e.g. for the initial code exchange).
-func cciAuthHeaders(h map[string]string, cciAccessToken, nonCcsToken, exchangeableToken string) {
 	if nonCcsToken != "" {
-		h["Authentication"] = nonCcsToken
+		headers["Authentication"] = nonCcsToken
 	}
 	if cciAccessToken != "" {
-		h["authorization"] = "Bearer " + strings.TrimPrefix(strings.TrimSpace(cciAccessToken), "Bearer ")
+		headers["authorization"] = "Bearer " + strings.TrimPrefix(strings.TrimSpace(cciAccessToken), "Bearer ")
 	}
 	if exchangeableToken != "" {
-		h["exchangeable-token"] = exchangeableToken
-		h["non-ccs-token"] = nonCcsToken
+		headers["exchangeable-token"] = exchangeableToken
+		headers["non-ccs-token"] = nonCcsToken
 	}
-}
 
-// cciBodyHeaders adds the content-type/content-length header to h: a JSON
-// body when contentType is given, or the bodyless requests that carry all
-// state via query parameters and headers otherwise.
-func cciBodyHeaders(h map[string]string, contentType string) {
 	if contentType != "" {
-		h["Content-Type"] = contentType
+		headers["Content-Type"] = contentType
 	} else {
-		h["Content-Length"] = "0"
+		headers["Content-Length"] = "0"
 	}
-}
-
-// cciHeaders builds the full set of headers required by the CCI API,
-// combining the static client headers with the auth and body headers for the
-// current request.
-func (v *Identity) cciHeaders(deviceID, cciAccessToken, nonCcsToken, exchangeableToken, contentType string) map[string]string {
-	headers := v.cciBaseHeaders(deviceID)
-	cciAuthHeaders(headers, cciAccessToken, nonCcsToken, exchangeableToken)
-	cciBodyHeaders(headers, contentType)
 
 	return headers
 }
 
-// cciTimezoneOffset returns the current UTC offset of the CCI home region
-// (Central Europe) as "+HH:MM"/"-HH:MM", falling back to the local system
-// timezone if the tzdata for Europe/Berlin is unavailable.
-func cciTimezoneOffset() string {
-	loc, err := time.LoadLocation(cciTimezoneLocation)
-	if err != nil {
-		loc = time.Local
-	}
-	return time.Now().In(loc).Format("-07:00")
-}
-
 // encryptCCIPassword RSA/PKCS1v15-encrypts password using the JWK public key
-// (base64url-encoded modulus/exponent, as returned by the CCI
-// /accounts/certs endpoint) and returns the ciphertext as a lowercase hex
-// string, as required by the signin endpoint's encryptedPassword=true mode.
+// returned by the /accounts/certs endpoint and hex-encodes the ciphertext
 func encryptCCIPassword(nb64, eb64, password string) (string, error) {
 	nBytes, err := base64.RawURLEncoding.DecodeString(strings.TrimRight(nb64, "="))
 	if err != nil {
@@ -683,41 +445,4 @@ func encryptCCIPassword(nb64, eb64, password string) (string, error) {
 	}
 
 	return hex.EncodeToString(ciphertext), nil
-}
-
-func truncate(s string, n int) string {
-	if len(s) > n {
-		return s[:n]
-	}
-	return s
-}
-
-// looksCredentialRelated reports whether a signin error message actually
-// talks about credentials, as opposed to some other kind of failure.
-func looksCredentialRelated(s string) bool {
-	s = strings.ToLower(s)
-	for _, kw := range []string{"password", "credential", "invalid_grant", "invalid_user", "username", "login"} {
-		if strings.Contains(s, kw) {
-			return true
-		}
-	}
-	return false
-}
-
-// signinFailureError phrases a non-302 signin response. Unlike the "302 to
-// an error location" case handled by the caller (which is how a real Kia/
-// Hyundai wrong-password rejection is normally surfaced), a raw non-302
-// status at this stage is structurally different and more often indicates a
-// transport/server-side problem - rate limiting, a WAF layer other than the
-// one checked in step 1, or an API change - than incorrect credentials. Only
-// blame credentials when the response actually looks like an auth rejection
-// (HTTP 401, or a body that explicitly talks about credentials); otherwise
-// phrase it as an unexpected response so users/operators don't waste time
-// re-checking a password that was never the problem.
-func signinFailureError(statusCode int, body string) error {
-	body = truncate(body, 200)
-	if statusCode == http.StatusUnauthorized || looksCredentialRelated(body) {
-		return fmt.Errorf("signin failed: HTTP %d — check username and password (%s)", statusCode, body)
-	}
-	return fmt.Errorf("signin failed: unexpected HTTP %d response (%s) — this may indicate a server-side issue or API change rather than incorrect credentials", statusCode, body)
 }

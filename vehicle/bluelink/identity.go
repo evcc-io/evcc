@@ -44,10 +44,8 @@ type Config struct {
 	Brand             string
 	TokenURL          string
 	UseBasicAuth      bool
-	// CCI holds the OneApp/CCI login parameters for brands affected by the
-	// IDPConnect WAF block on the legacy authorize endpoint (EU Kia/Hyundai).
-	// nil for brands that still use the legacy authorize/refresh flow
-	// unchanged (Genesis EU, Hyundai AU).
+	// CCI is set for brands affected by the IDPConnect WAF block on the legacy
+	// authorize endpoint (EU Kia/Hyundai), nil for Genesis EU and Hyundai AU
 	CCI *CCIConfig
 }
 
@@ -60,6 +58,7 @@ type Identity struct {
 	deviceID string
 	user     string
 	language string
+	bundle   cciBundle
 	oauth2.TokenSource
 }
 
@@ -162,7 +161,7 @@ func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	return util.TokenWithExpiry(&res), err
 }
 
-func (v *Identity) Login(user, password, language, brand string) (err error) {
+func (v *Identity) Login(user, password, language, brand string) error {
 	if user == "" || password == "" {
 		return api.ErrMissingCredentials
 	}
@@ -178,33 +177,32 @@ func (v *Identity) Login(user, password, language, brand string) (err error) {
 	v.user = user
 	v.language = language
 
-	var token *oauth2.Token
+	refresher := v.refreshToken
 
-	// CCI-capable brands (EU Kia/Hyundai) additionally accept a plaintext
-	// account password or a compound CCI token bundle in the password field
-	// (see loginCCI). Everyone else — and anyone still holding a legacy
-	// refresh_token shaped password, even on a CCI-capable brand — keeps
-	// using exactly the pre-existing legacy refresh_token-only flow below.
-	if v.config.CCI != nil && !looksLikeLegacyRefreshToken(password) {
-		token, err = v.loginCCI(password)
-		if err != nil {
-			return fmt.Errorf("login failed: %w", err)
-		}
-		v.TokenSource = oauth.RefreshTokenSource(token, v.refreshCCI)
-	} else {
-		token, err = v.refreshToken(&oauth2.Token{RefreshToken: password})
-		if err != nil {
-			return fmt.Errorf("login failed: %w", err)
-		}
-		v.TokenSource = oauth.RefreshTokenSource(token, v.refreshToken)
+	token, err := v.refreshToken(&oauth2.Token{RefreshToken: password})
+	if err == nil && !token.Valid() {
+		err = errors.New("no access token")
 	}
+
+	// CCI-capable brands (EU Kia/Hyundai) additionally accept the account
+	// password, as generating a legacy refresh_token is WAF-blocked
+	if err != nil && v.config.CCI != nil {
+		refresher = v.refreshCCI
+		token, err = v.loginCCI(password)
+	}
+
+	if err != nil {
+		return fmt.Errorf("login failed: %w", err)
+	}
+
+	v.TokenSource = oauth.RefreshTokenSource(token, refresher)
 
 	v.deviceID, err = v.getDeviceID()
 	if err != nil {
 		return fmt.Errorf("error getting device id: %w", err)
 	}
 
-	return err
+	return nil
 }
 
 // Request decorates requests with authorization headers
