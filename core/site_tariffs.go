@@ -256,13 +256,14 @@ const (
 	solarScaleMinEnergy  = 0.5 // kWh, skip days where either side is too small for a meaningful ratio
 )
 
-// solarScale returns the solarScalePercentile-th percentile of the daily
-// produced/forecasted solar ratio over a trailing window of solarScaleWindow completed
-// days. It is robust against single-day forecast outliers: it captures the systematic
-// installation bias (soiling, shading, model error) that legitimately applies to future
-// days, without projecting a single day's weather noise onto the whole horizon. The
-// current (partial) day is excluded so it cannot skew the ratio. Returns 1 when there is
-// not enough history, so fresh installations are not adjusted on thin data.
+// solarScale computes a scale factor for the solar forecast by sorting the daily
+// produced/forecasted solar ratio over a trailing window of completed days and
+// picking the value at a configured percentile (window: solarScaleWindow,
+// percentile: solarScalePercentile). This captures the installation's systematic
+// bias (soiling, shading, model error) instead of a single day's weather noise.
+// The current (partial) day is excluded; returns 1 when there is not enough history.
+//
+// Depends only on completed days, so it's cached instead of recomputed per run.
 //
 // The result only depends on completed days, so it cannot change within a day. It is
 // cached accordingly instead of being recomputed on every optimizer run.
