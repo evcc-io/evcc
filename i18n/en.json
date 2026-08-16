@@ -164,8 +164,17 @@
         "switchsocket": "User-defined switch socket"
       }
     },
+    "circuit": {
+      "titleAdd": "Add circuit",
+      "titleEdit": "Edit circuit",
+      "template": "Circuit",
+      "generic": "Generic circuit",
+      "custom": "User-defined circuit",
+      "primary": "Specific circuit"
+    },
     "circuits": {
       "description": "Ensures, that the sum of all loadpoints connected to a circuit does not exceed the configured power and current limits. Circuits can be nested to build a hierarchy.",
+      "legacyWarning": "New circuits configuration available! Remove and save your configuration here to use the new guided process.",
       "title": "Load Management",
       "usableMeters": "Usable meter references"
     },
