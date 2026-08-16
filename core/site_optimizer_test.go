@@ -29,6 +29,40 @@ func TestLoadpointProfile(t *testing.T) {
 	require.Equal(t, []float64{250, 250, 250, 250, 250, 250, 250, 50}, loadpointProfile(lp, 8))
 }
 
+func TestApplyPrecondition(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	lp := loadpoint.NewMockAPI(ctrl)
+	lp.EXPECT().EffectiveMaxPower().Return(8000.0).AnyTimes() // 2 kWh per slot
+
+	// no precondition configured
+	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{}).Times(1)
+	assert.Nil(t, applyPrecondition(lp, nil, 8))
+
+	// no plan
+	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: time.Hour}).Times(1)
+	lp.EXPECT().EffectivePlanTime().Return(time.Time{}).Times(1)
+	assert.Nil(t, applyPrecondition(lp, nil, 8))
+
+	// plan in 1h, 40min precondition: slots 1 (10min) and 2, 3 (full)
+	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(time.Hour)).Times(1)
+	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: 40 * time.Minute}).Times(1)
+	res := applyPrecondition(lp, nil, 8)
+	require.Len(t, res, 8)
+	assert.InDeltaSlice(t, []float32{0, 2000. / 1.5, 2000, 2000, 0, 0, 0, 0}, res, 1)
+
+	// existing demand is kept where higher
+	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(time.Hour)).Times(1)
+	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: 30 * time.Minute}).Times(1)
+	res = applyPrecondition(lp, []float32{3000, 3000, 3000, 3000, 0, 0, 0, 0}, 8)
+	assert.InDeltaSlice(t, []float32{3000, 3000, 3000, 3000, 0, 0, 0, 0}, res, 1)
+
+	// plan beyond horizon
+	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(24 * time.Hour)).Times(1)
+	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: time.Hour}).Times(1)
+	assert.Nil(t, applyPrecondition(lp, nil, 8))
+}
+
 func TestLoadpointCurrentAction(t *testing.T) {
 	for _, tc := range []struct {
 		name    string
