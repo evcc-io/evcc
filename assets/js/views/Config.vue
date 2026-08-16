@@ -349,7 +349,7 @@
 						</DeviceCard>
 						<DeviceCard
 							:title="`${$t('config.circuits.title')}`"
-							editable
+							:editable="circuitsYamlSource !== 'file'"
 							:error="hasClassError('circuit')"
 							:unconfigured="isUnconfigured(circuitsTags)"
 							:banner="
