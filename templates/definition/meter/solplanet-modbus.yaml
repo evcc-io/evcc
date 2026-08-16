@@ -78,7 +78,7 @@ render: |
             set:
               source: const
               value: 0
-              set: &enable
+              set:
                 source: modbus
                 {{- include "modbus" . | indent 14 }}
                 register:
@@ -88,7 +88,13 @@ render: |
         default:
           source: const
           value: 1
-          set: *enable
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 4000
+              type: writesingle
+              encoding: uint16
   curtailed: # the power limit only applies while active power control is enabled
     source: go
     in:
@@ -153,7 +159,7 @@ render: |
           set:
             - source: const
               value: 4 # custom
-              set: &mode
+              set:
                 source: modbus
                 {{- include "modbus" . | indent 14 }}
                 register:
@@ -162,7 +168,7 @@ render: |
                   encoding: uint16
             - source: const
               value: 0
-              set: &setpoint
+              set:
                 source: modbus
                 {{- include "modbus" . | indent 14 }}
                 register:
@@ -175,9 +181,21 @@ render: |
           set:
             - source: const
               value: 4
-              set: *mode
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 1103
+                  type: writesingle
+                  encoding: uint16
             - source: const
               value: {{ mul .maxchargepower -1 }}
-              set: *setpoint
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 1152
+                  type: writesingle
+                  encoding: int16
   {{- include "battery-params" . }}
   {{- end }}
