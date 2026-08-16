@@ -264,6 +264,9 @@ components:
         optimizer:
           description: Battery optimizer is enabled.
           type: boolean
+        optimizerAutomatic:
+          description: Optimizer controls the devices instead of only advising.
+          type: boolean
         optimizerChargingStrategy:
           description: Selected battery optimizer charging strategy.
           type: string
