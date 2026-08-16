@@ -12,7 +12,7 @@ requirements:
 
       Voraussetzung ist ein konfigurierter MQTT Broker. Das Schreiben von Befehlen erfordert die Optional-PCB-Emulation von HeishaMon (`SetOptionalPCB`), im Listen-Only-Betrieb kann die Wärmepumpe nur gelesen werden.
     en: |
-      Domestic hot water of a Panasonic Aquarea heat pump via [HeishaMon](https://github.com/HeishaMon/HeishaMon).
+      Domestic hot water for a Panasonic Aquarea heat pump via [HeishaMon](https://github.com/HeishaMon/HeishaMon).
 
       Requires a configured MQTT broker. Writing commands requires HeishaMon's optional PCB emulation (`SetOptionalPCB`), in listen-only mode the heat pump can only be read.
 params:
