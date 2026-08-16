@@ -28,18 +28,6 @@ params:
     advanced: true
     type: duration
     default: 5m
-  - preset: switchsocket
-  - name: heating
-    advanced: true
-    type: bool
-    default: true
-  - name: integrateddevice
-    advanced: true
-    type: bool
-    default: true
-  - name: icon
-    advanced: true
-    default: heatpump
 render: |
   type: switchsocket
   enabled:
@@ -62,4 +50,9 @@ render: |
     source: mqtt
     topic: {{ .topic }}/main/DHW_Target_Temp
     timeout: {{ .timeout }}
-  {{ include "switchsocket" . }}
+  standbypower: 15
+  features:
+    - switchdevice
+    - integrateddevice
+    - heating
+  icon: heatpump
