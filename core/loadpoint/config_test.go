@@ -23,16 +23,3 @@ func TestSplitConfigUI(t *testing.T) {
 	assert.Equal(t, 45.0, dynamic.UI.MaxTemp)
 	assert.NotContains(t, other, "ui")
 }
-
-func TestSplitConfigMode(t *testing.T) {
-	// "mode" is persisted alongside the static config by the settings adapter
-	payload := map[string]any{
-		"mode": "pv",
-	}
-
-	dynamic, other, err := SplitConfig(payload)
-	require.NoError(t, err)
-
-	assert.Equal(t, "pv", dynamic.Mode)
-	assert.NotContains(t, other, "mode")
-}

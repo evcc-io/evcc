@@ -18,7 +18,6 @@ type StaticConfig struct {
 type DynamicConfig struct {
 	// dynamic config
 	Title                    string    `json:"title"`
-	Mode                     string    `json:"mode"`
 	DefaultMode              string    `json:"defaultMode"`
 	Priority                 int       `json:"priority"`
 	PhasesConfigured         int       `json:"phasesConfigured"`
@@ -82,12 +81,6 @@ func (payload DynamicConfig) Apply(lp API) error {
 	// TODO mode warning
 	lp.SetSocConfig(payload.Soc)
 	lp.SetUI(payload.UI)
-
-	if payload.Mode != "" {
-		if mode, err := api.ChargeModeString(payload.Mode); err == nil {
-			lp.SetMode(mode)
-		}
-	}
 
 	mode, err := api.ChargeModeString(payload.DefaultMode)
 	if err == nil {
