@@ -323,6 +323,8 @@ export interface State {
   ocppforwarder?: OcppForwarder;
   /** Battery optimizer is enabled. */
   optimizer?: boolean;
+  /** Optimizer controls the devices instead of only advising. */
+  optimizerAutomatic?: boolean;
   /** Selected battery optimizer charging strategy. */
   optimizerChargingStrategy?: string;
   /** Available battery optimizer charging strategies. */

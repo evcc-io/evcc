@@ -34,6 +34,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
 	"github.com/jinzhu/now"
 	"github.com/samber/lo"
@@ -118,6 +119,7 @@ type Site struct {
 	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
 	batteryModeApplied       map[string]api.BatteryMode  // Battery mode last applied per battery meter
 	suggestions              map[string]types.Suggestion // Optimizer suggestions by device key
+	suggestionsUpdated       time.Time                   // time the suggestions were applied
 	suggestionActions        map[string]string           // last notified actionable optimizer action by device key
 
 	optimizerMu      sync.Mutex // guards optimizer runs
@@ -465,7 +467,7 @@ func (site *Site) restoreSettings() error {
 		}
 	}
 	if v, err := settings.Bool(keys.BatteryDischargeControl); err == nil {
-		if err := site.SetBatteryDischargeControl(v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
+		if err := site.setBatteryDischargeControl(v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
 			return err
 		}
 	}
@@ -480,7 +482,7 @@ func (site *Site) restoreSettings() error {
 		}
 	}
 	if v, err := settings.Float(keys.BatteryGridChargeLimit); err == nil {
-		if err := site.SetBatteryGridChargeLimit(&v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
+		if err := site.setBatteryGridChargeLimit(&v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
 			return err
 		}
 	}
@@ -1105,6 +1107,12 @@ func optimizerEnabled() bool {
 	exp, _ := settings.Bool(keys.Experimental)
 	opt, _ := settings.Bool(keys.Optimizer)
 	return exp && opt
+}
+
+// Automatic returns true if the optimizer controls the devices instead of only advising
+func (site *Site) Automatic() bool {
+	auto, _ := settings.Bool(keys.OptimizerAutomatic)
+	return auto && optimizerEnabled() && sponsor.IsAuthorized()
 }
 
 // sitePowerResult is the outcome of the site power calculation

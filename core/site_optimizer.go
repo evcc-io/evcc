@@ -216,12 +216,17 @@ func loadpointCurrentAction(lp *Loadpoint) string {
 	return actionStop
 }
 
+// suggestionMaxAge invalidates suggestions of a stalled optimizer. Runs happen
+// once per slot, so twice that means the optimizer is no longer keeping up.
+const suggestionMaxAge = 2 * tariff.SlotDuration
+
 // setSuggestions replaces the suggestions applied on each publish
 func (site *Site) setSuggestions(suggestions map[string]types.Suggestion) {
 	site.Lock()
 	defer site.Unlock()
 
 	site.suggestions = suggestions
+	site.suggestionsUpdated = time.Now()
 }
 
 // setBatteryForecast replaces the battery forecast of the cached state
@@ -238,9 +243,10 @@ func (site *Site) setBatteryForecast(forecast *types.BatteryForecast) {
 func (site *Site) suggestion(key, currentAction string) *types.Suggestion {
 	site.RLock()
 	s, ok := site.suggestions[key]
+	stale := time.Since(site.suggestionsUpdated) > suggestionMaxAge
 	site.RUnlock()
 
-	if !ok {
+	if !ok || stale {
 		return nil
 	}
 
@@ -249,18 +255,23 @@ func (site *Site) suggestion(key, currentAction string) *types.Suggestion {
 	return &s
 }
 
-// publishSuggestions publishes the loadpoints' suggestions
+// publishSuggestions publishes the loadpoints' suggestions and hands them to the
+// loadpoints, where they act as start/stop gate while the optimizer is in control
 func (site *Site) publishSuggestions() {
 	for id, lp := range site.loadpoints {
 		if lp == nil {
 			continue
 		}
 
+		s := site.suggestion(loadpointKey(id), loadpointCurrentAction(lp))
+
 		var val any
-		if s := site.suggestion(loadpointKey(id), loadpointCurrentAction(lp)); s != nil {
+		if s != nil {
 			val = *s
 		}
 		site.publishLoadpoint(id, keys.Suggestion, val)
+
+		lp.setSuggestion(s)
 	}
 }
 

@@ -27,6 +27,25 @@
 				</label>
 			</div>
 		</div>
+		<div v-if="enabled" class="form-check form-switch my-3">
+			<input
+				id="optimizerAutomatic"
+				:checked="automatic"
+				class="form-check-input"
+				type="checkbox"
+				role="switch"
+				:disabled="!isSponsor"
+				@change="changeAutomatic"
+			/>
+			<div class="form-check-label">
+				<label for="optimizerAutomatic">
+					{{ $t("config.optimizer.automatic") }}
+				</label>
+				<div class="text-muted small">
+					{{ $t("config.optimizer.automaticHint") }}
+				</div>
+			</div>
+		</div>
 		<p v-if="enabled && !hasEvopt" class="text-muted small mt-2">
 			{{ $t("config.optimizer.info") }}
 		</p>
@@ -58,6 +77,9 @@ export default defineComponent({
 		enabled(): boolean {
 			return !!store.state?.optimizer;
 		},
+		automatic(): boolean {
+			return !!store.state?.optimizerAutomatic;
+		},
 		hasEvopt(): boolean {
 			return !!store.state?.evopt;
 		},
@@ -67,9 +89,15 @@ export default defineComponent({
 	},
 	methods: {
 		async change(e: Event) {
+			await this.post(`config/optimizer/${(e.target as HTMLInputElement).checked}`);
+		},
+		async changeAutomatic(e: Event) {
+			await this.post(`config/optimizerautomatic/${(e.target as HTMLInputElement).checked}`);
+		},
+		async post(url: string) {
 			try {
 				this.error = null;
-				await api.post(`config/optimizer/${(e.target as HTMLInputElement).checked}`);
+				await api.post(url);
 			} catch (err) {
 				const e = err as AxiosError<{ error: string }>;
 				this.error = e.response?.data?.error || e.message;

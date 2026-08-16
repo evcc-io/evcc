@@ -23,6 +23,7 @@ import (
 	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/core/soc"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/core/wrapper"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
@@ -164,6 +165,10 @@ type Loadpoint struct {
 	planActive       bool             // charge plan exists and has a currently active slot
 	planOverrunSent  bool             // notification has been sent already
 	planLocked       PlanLock         // locked plan
+
+	// optimizer
+	suggestion        *types.Suggestion // optimizer suggestion for the current slot
+	suggestionUpdated time.Time         // time the suggestion was received
 
 	// cached state
 	status         api.ChargeStatus // Charger status
@@ -404,13 +409,13 @@ func (lp *Loadpoint) restoreSettings() {
 		lp.setLimitEnergy(v)
 	}
 	if v, err := lp.settings.Float(keys.SmartCostLimit); err == nil {
-		lp.SetSmartCostLimit(&v)
+		lp.setSmartCostLimit(&v)
 	}
 	if v, err := lp.settings.Float(keys.SolarShare); err == nil {
 		lp.SetSolarShare(v)
 	}
 	if v, err := lp.settings.Float(keys.SmartFeedInPriorityLimit); err == nil {
-		lp.SetSmartFeedInPriorityLimit(&v)
+		lp.setSmartFeedInPriorityLimit(&v)
 	}
 	if v, err := lp.settings.Int(keys.BatteryBoostLimit); err == nil {
 		lp.SetBatteryBoostLimit(int(v))
@@ -2376,6 +2381,11 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 	// update and publish plan without being short-circuited by modes etc.
 	plannerActive := lp.plannerActive()
 
+	// the optimizer schedules the plan itself, the planner only backstops it
+	if lp.optimizerControlled() {
+		plannerActive = lp.planDeadlineCritical()
+	}
+
 	// update and publish min soc not reached state
 	minSocNotReached := lp.minSocNotReached()
 	lp.publish(keys.MinSocNotReached, minSocNotReached)
@@ -2421,6 +2431,12 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 		err = lp.fastCharging()
 
 	case mode == api.ModeSmart:
+		// optimizer decides start/stop, replacing the price limits
+		if s := lp.gate(); s != nil {
+			err = lp.optimizerCharging(s, mode)
+			break
+		}
+
 		// cheap tariff
 		if smartCostActive {
 			rate, _ := consumption.At(time.Now())
