@@ -117,7 +117,7 @@ render: |
         method: POST
         uri: http://{{ .host }}/write
         headers:
-          Content-Type: application/json
+          - Content-Type: application/json
         # GS must be reset explicitly: MM (zero feed-in regulation) and GS (manual
         # setpoint) are independent, so a leftover GS would keep grid charging.
         body: '{"state":{"MM":1,"GS":0}}'
@@ -127,7 +127,7 @@ render: |
         method: POST
         uri: http://{{ .host }}/write
         headers:
-          Content-Type: application/json
+          - Content-Type: application/json
         body: '{"state":{"MM":0,"GS":0}}'
     - case: 3 # charges
       set:
@@ -135,7 +135,7 @@ render: |
         method: POST
         uri: http://{{ .host }}/write
         headers:
-          Content-Type: application/json
+          - Content-Type: application/json
         # GS < 0 means grid import / grid charging
         body: '{"state":{"MM":0,"GS":-{{ .maxchargepower | int }}}}'
   {{- include "battery-capacity" . }}
