@@ -14,10 +14,13 @@ requirements:
 
       Diese Credentials erhalten Sie über die EcoFlow Developer Console nach der Registrierung Ihrer Anwendung.
 
-      Zur Batteriesteuerung wird die Backup Reserve auf minsoc bzw. maxsoc gesetzt. Das Gerät
-      verlangt, dass die Backup Reserve das Entladelimit um 3 übersteigt. Der Standardwert
-      minsoc: 10 passt damit zu einem Entladelimit von 7 in der EcoFlow App. Setzen Sie entweder
-      das Entladelimit auf höchstens 7, oder minsoc auf Entladelimit plus 3.
+      Für die aktive Batteriesteuerung muss `maxsoc` gesetzt werden. Im Normalbetrieb wird die
+      Backup Reserve auf `minsoc` gesetzt, beim Netzladen auf `maxsoc`.
+
+      **Achtung**: Die aktive Batteriesteuerung überschreibt die in der EcoFlow App eingestellte
+      Backup Reserve. Das Gerät verlangt, dass die Backup Reserve das Entladelimit um 3 übersteigt,
+      niedrigere Werte für `minsoc` werden angehoben. Ohne `minsoc` entlädt die Batterie bis zum
+      Entladelimit des Geräts.
     en: |
       To use the EcoFlow Stream meter you need:
       - A valid Access Key from the EcoFlow Developer Console
@@ -26,10 +29,13 @@ requirements:
 
       These credentials can be obtained through the EcoFlow Developer Console after registering your application.
 
-      Battery control sets the Backup Reserve to minsoc or maxsoc. The device requires the Backup
-      Reserve to exceed the discharge limit by 3, so the minsoc: 10 default matches a discharge
-      limit of 7 in the EcoFlow app. Either keep the discharge limit at 7 or below, or set minsoc
-      to the discharge limit plus 3.
+      For active battery control, `maxsoc` must be set. In normal operation the Backup Reserve is
+      set to `minsoc`, for grid charging to `maxsoc`.
+
+      **Note**: Active battery control overwrites the Backup Reserve configured in the EcoFlow app.
+      The device requires the Backup Reserve to exceed the discharge limit by 3, lower `minsoc`
+      values are raised accordingly. Without `minsoc` the battery discharges down to the device's
+      own discharge limit.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -64,10 +70,6 @@ params:
   - name: cache
     default: 30s
   - preset: battery-params
-  - name: minsoc
-    default: 10
-  - name: maxsoc
-    default: 100
 render: |
   type: ecoflow
   accesskey: {{ .accesskey }}

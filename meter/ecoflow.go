@@ -23,9 +23,9 @@ type EcoFlow struct {
 	cache  time.Duration
 	client *ecoflow.Client
 	dataG  func() (*ecoflow.GetCmdResponse, error)
+	limitG func() (float64, error)
 
 	power, batterySoc string
-	controllable      bool
 }
 
 func init() {
@@ -105,8 +105,8 @@ func NewEcoFlow(accessKey, secretKey, serial, usage, uri string,
 		implement.May(m, implement.BatteryPowerLimiter(batteryPowerLimits))
 
 		// the backup reserve command is Stream-specific, the PowerOcean template shares this meter type
-		if batterySocLimits.MinSoc > 0 && batterySocLimits.MaxSoc > 0 && soc == "cmsBattSoc" {
-			m.controllable = true
+		if soc == "cmsBattSoc" && batterySocLimits.MaxSoc > 0 {
+			m.limitG = util.Cached(m.dischargeLimit, cache)
 			implement.Has(m, implement.BatteryController(batterySocLimits.LimitController(m.soc, m.setBackupReserve)))
 		}
 	}
@@ -123,9 +123,6 @@ func (m *EcoFlow) getData() (*ecoflow.GetCmdResponse, error) {
 
 	if m.usage == "battery" {
 		params = append(params, m.batterySoc)
-	}
-	if m.controllable {
-		params = append(params, "cmsMinDsgSoc")
 	}
 
 	return m.client.GetDeviceParameters(ctx, m.serial, params)
@@ -178,15 +175,28 @@ func ecoflowReserveLimit(limit, lo float64) float64 {
 	return min(100, max(limit, lo+3))
 }
 
+// dischargeLimit reads the device's discharge limit (cmsMinDsgSoc), set in the EcoFlow app and
+// polled separately from getData so a rejected quota can't degrade the power and soc readings
+func (m *EcoFlow) dischargeLimit() (float64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	res, err := m.client.GetDeviceParameters(ctx, m.serial, []string{"cmsMinDsgSoc"})
+	if err != nil {
+		return 0, err
+	}
+
+	return ecoflowValue(res.Data, "cmsMinDsgSoc")
+}
+
 func (m *EcoFlow) setBackupReserve(limit float64) error {
 	// clamp rather than let the write fail: refusing normal mode would strand the battery at the
 	// previous, higher reserve. On a failed read the device rejects an invalid value itself.
-	if res, err := m.dataG(); err != nil {
-		m.log.WARN.Printf("backup reserve: %v", err)
-	} else if lo, err := ecoflowValue(res.Data, "cmsMinDsgSoc"); err != nil {
+	if lo, err := m.limitG(); err != nil {
 		m.log.WARN.Printf("backup reserve: discharge limit: %v", err)
-	} else {
-		limit = ecoflowReserveLimit(limit, lo)
+	} else if clamped := ecoflowReserveLimit(limit, lo); clamped != limit {
+		m.log.DEBUG.Printf("backup reserve: raised %.0f to %.0f, below discharge limit %.0f", limit, clamped, lo)
+		limit = clamped
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -200,6 +210,9 @@ func (m *EcoFlow) setBackupReserve(limit float64) error {
 	})
 	if err != nil {
 		return err
+	}
+	if res == nil {
+		return errors.New("empty response")
 	}
 	if res.Code != "0" {
 		return fmt.Errorf("%s (%s)", res.Message, res.Code)
