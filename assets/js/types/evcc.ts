@@ -265,7 +265,7 @@ export interface State {
   /** Update interval of the control loop in seconds. */
   interval?: number;
   /** Load management circuits, keyed by circuit name. */
-  circuits?: Record<string, Circuit>;
+  circuits?: ConfigStatus<Record<string, Circuit>, unknown>;
   /** Battery buffer SoC in %. Energy above this level may be used for charging in solar mode. */
   bufferSoc?: number;
   /** Battery priority SoC in %. Home battery is charged first while below this level. */

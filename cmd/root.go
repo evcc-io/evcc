@@ -515,7 +515,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 		httpd.RegisterSiteHandlers(site)
 
 		go func() {
-			site.Run(stopC, conf.Interval)
+			site.Run(stopC, conf.Interval, yamlSource.circuits)
 		}()
 	}
 

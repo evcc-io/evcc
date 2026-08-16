@@ -14,8 +14,8 @@
 		<template #default="{ values }: { values: Record<string, Circuit> }">
 			<div v-if="Object.keys(values).length === 0" class="onboarding">
 				<p class="evcc-gray">
-					No circuits configured. Start with a main circuit that
-					represents your grid connection.
+					No circuits configured. Start with a main circuit that represents your grid
+					connection.
 				</p>
 				<button
 					type="button"
@@ -23,14 +23,11 @@
 					tabindex="0"
 					@click="openCircuit()"
 				>
-					<shopicon-regular-plus
-						size="s"
-						class="flex-shrink-0"
-					></shopicon-regular-plus>
+					<shopicon-regular-plus size="s" class="flex-shrink-0"></shopicon-regular-plus>
 					Add main circuit
 				</button>
 			</div>
-			<CircuitsTree :circuitsTree="circuitsTree(values)" />
+			<CircuitsTree v-else :circuitsTree="circuitsTree(values)" />
 		</template>
 	</JsonModal>
 </template>
@@ -52,9 +49,7 @@ export default {
 	components: { JsonModal, CircuitsTree },
 	emits: ["changed"],
 	methods: {
-		circuitsTree(
-			circuits: Record<string, RecursiveCircuit>,
-		): RecursiveCircuit | undefined {
+		circuitsTree(circuits: Record<string, RecursiveCircuit>): RecursiveCircuit | undefined {
 			let nodes = deepClone(circuits);
 
 			let root: RecursiveCircuit | undefined;

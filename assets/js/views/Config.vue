@@ -358,7 +358,7 @@
 									: undefined
 							"
 							data-testid="circuits"
-							@edit="openModal('circuits')"
+							@edit="openCircuitsModal"
 						>
 							<template #icon><CircuitsIcon /></template>
 							<template #tags>
@@ -538,8 +538,9 @@
 				<RemoteModal :remote="remote" :is-sponsor="isSponsor" :site-title="siteTitle" />
 				<TitleModal @changed="loadDirty" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
+				<CircuitsLegacyModal @changed="loadDirty" />
 				<CircuitsModal @changed="loadDirty" />
-				<CircuitModal @changed="circuitChanged"/>
+				<CircuitModal @changed="circuitChanged" />
 				<EebusModal
 					:status="eebus?.status"
 					:yamlSource="eebus?.yamlSource"
@@ -680,6 +681,7 @@ import SecurityModal from "../components/Config/Security/SecurityModal.vue";
 import ApiKeyModal from "../components/Config/Security/ApiKeyModal.vue";
 import AuthProvidersCard from "../components/Config/AuthProvidersCard.vue";
 import CircuitModal from "@/components/Config/CircuitModal.vue";
+import CircuitsLegacyModal from "@/components/Config/CircuitsLegacyModal.vue";
 
 export default defineComponent({
 	name: "Config",
@@ -690,6 +692,7 @@ export default defineComponent({
 		ConfigSection,
 		ConfigSectionNav,
 		CircuitsIcon,
+		CircuitsLegacyModal,
 		CircuitsModal,
 		CircuitModal,
 		CircuitTags,
@@ -1168,6 +1171,9 @@ export default defineComponent({
 			});
 			return map;
 		},
+		circuitsYamlSource() {
+			return store.state.circuits?.yamlSource;
+		},
 		messagingTags(): DeviceTags {
 			if (this.messagingUiConfigured) {
 				const events = store.state?.messagingEvents || [];
@@ -1200,7 +1206,7 @@ export default defineComponent({
 			};
 		},
 		circuitsRoot(): CircuitNode | null {
-			return circuitTree(store.state?.circuits || {});
+			return circuitTree(store.state?.circuits?.config || {});
 		},
 		hemsDimmed(): boolean {
 			// only consumption limits matter for circuits, curtailment affects feed-in
@@ -1458,6 +1464,10 @@ export default defineComponent({
 			await this.loadTariffRefs();
 			await this.loadDirty();
 			this.updateValues();
+		},
+		openCircuitsModal() {
+			const modalName = this.circuitsYamlSource === "db" ? "circuitslegacy" : "circuits";
+			openModal(modalName);
 		},
 		openMessagingModal() {
 			const modalName = this.messagingYamlSource === "db" ? "messaginglegacy" : "messaging";

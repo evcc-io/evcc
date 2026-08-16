@@ -7,6 +7,7 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/modbus"
@@ -24,7 +25,7 @@ type circuitStruct struct {
 }
 
 // publishCircuits returns a list of circuit titles
-func (site *Site) publishCircuits() {
+func (site *Site) publishCircuits(circuitsYamlsource globalconfig.YamlSource) {
 	cc := config.Circuits().Devices()
 	res := make(map[string]circuitStruct, len(cc))
 
@@ -53,7 +54,10 @@ func (site *Site) publishCircuits() {
 		res[c.Config().Name] = data
 	}
 
-	site.publish(keys.Circuits, res)
+	site.publish(keys.Circuits, globalconfig.ConfigStatus{
+		Config: res,
+		YamlSource: circuitsYamlsource,
+	})
 }
 
 // dimMeters applies the HEMS dim state to all dimmable aux and ext meters.

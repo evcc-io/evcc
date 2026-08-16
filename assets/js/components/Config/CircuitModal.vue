@@ -17,10 +17,7 @@
 import { defineComponent } from "vue";
 import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
 import type { DeviceValues, Product } from "./DeviceModal";
-import {
-	type TemplateGroup,
-	customTemplateOption,
-} from "./DeviceModal/TemplateSelector.vue";
+import { type TemplateGroup, customTemplateOption } from "./DeviceModal/TemplateSelector.vue";
 import { ConfigType } from "@/types/evcc";
 import defaultCircuitYaml from "./defaultYaml/circuit.yaml?raw";
 import { getModal } from "@/configModal";
@@ -55,17 +52,13 @@ export default defineComponent({
 				{
 					label: "generic",
 					options: [
-						...products.filter(
-							(p: Product) => p.group === "generic",
-						),
+						...products.filter((p: Product) => p.group === "generic"),
 						customTemplateOption(this.$t("config.circuit.custom")),
 					],
 				},
 				{
 					label: "primary",
-					options: products.filter(
-						(p: Product) => p.group !== "generic",
-					),
+					options: products.filter((p: Product) => p.group !== "generic"),
 				},
 			];
 		},
