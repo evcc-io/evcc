@@ -128,6 +128,9 @@ export default defineComponent({
 				currency: this.state.currency || CURRENCY.EUR,
 				tariff: this.gridChargeTariff,
 				possible: this.gridChargePossible,
+				disabledHint: this.state.optimizerAutomatic
+					? this.$t("config.optimizer.controlled")
+					: "",
 			};
 		},
 	},

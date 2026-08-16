@@ -921,8 +921,13 @@ func (lp *Loadpoint) StartVehicleDetection() {
 	lp.startVehicleDetection()
 }
 
-// GetSmartCostLimit gets the smart cost limit
+// GetSmartCostLimit gets the smart cost limit. The optimizer replaces it in
+// automatic mode, so it reads as unset and none of its consumers apply it.
 func (lp *Loadpoint) GetSmartCostLimit() *float64 {
+	if lp.optimizerControlled() {
+		return nil
+	}
+
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.smartCostLimit
@@ -931,7 +936,13 @@ func (lp *Loadpoint) GetSmartCostLimit() *float64 {
 // SetSmartCostLimit sets the smart cost limit
 func (lp *Loadpoint) SetSmartCostLimit(val *float64) error {
 	if lp.optimizerControlled() {
-		return ErrOptimizerAutomatic
+		// the getter reads nil in automatic mode- a config round-trip writing it
+		// back must not discard the stored limit
+		if val != nil {
+			return ErrOptimizerAutomatic
+		}
+
+		return nil
 	}
 
 	lp.setSmartCostLimit(val)
@@ -953,8 +964,13 @@ func (lp *Loadpoint) setSmartCostLimit(val *float64) {
 	}
 }
 
-// GetSmartFeedInPriorityLimit gets the smart feed-in limit
+// GetSmartFeedInPriorityLimit gets the smart feed-in limit. The optimizer
+// replaces it in automatic mode, so it reads as unset.
 func (lp *Loadpoint) GetSmartFeedInPriorityLimit() *float64 {
+	if lp.optimizerControlled() {
+		return nil
+	}
+
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.smartFeedInPriorityLimit
@@ -963,7 +979,11 @@ func (lp *Loadpoint) GetSmartFeedInPriorityLimit() *float64 {
 // SetSmartFeedInPriorityLimit sets the smart cost feed-in
 func (lp *Loadpoint) SetSmartFeedInPriorityLimit(val *float64) error {
 	if lp.optimizerControlled() {
-		return ErrOptimizerAutomatic
+		if val != nil {
+			return ErrOptimizerAutomatic
+		}
+
+		return nil
 	}
 
 	lp.setSmartFeedInPriorityLimit(val)

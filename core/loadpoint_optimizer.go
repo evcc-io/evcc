@@ -15,10 +15,16 @@ func (lp *Loadpoint) setSuggestion(s *types.Suggestion) {
 }
 
 // optimizerControlled indicates that the optimizer decides for this loadpoint.
-// Heating devices and switch sockets cannot be modelled and keep their limits.
+// Heating devices and switch sockets cannot be modelled and keep their limits,
+// as do vehicles without known capacity- optimizerRequest skips them, too.
 func (lp *Loadpoint) optimizerControlled() bool {
-	return lp.site != nil && lp.site.Automatic() &&
-		!lp.chargerHasFeature(api.Heating) && !lp.chargerHasFeature(api.IntegratedDevice)
+	if lp.site == nil || !lp.site.Automatic() ||
+		lp.chargerHasFeature(api.Heating) || lp.chargerHasFeature(api.IntegratedDevice) {
+		return false
+	}
+
+	v := lp.GetVehicle()
+	return v != nil && v.Capacity() > 0
 }
 
 // gate returns the optimizer's start/stop decision for the current slot,
@@ -52,18 +58,21 @@ func (lp *Loadpoint) planDeadlineCritical() bool {
 		return false
 	}
 
-	remaining := lp.clock.Until(planTime)
+	required := lp.GetPlanRequiredDuration(goal, lp.EffectiveMaxPower())
 
-	return remaining > 0 && lp.GetPlanRequiredDuration(goal, lp.EffectiveMaxPower()) >= remaining
+	// past the plan time the goal was missed- keep charging like plannerActive does
+	if remaining := lp.clock.Until(planTime); remaining > 0 {
+		return required >= remaining
+	}
+
+	return required > 0
 }
 
 // optimizerCharging applies the optimizer's start/stop decision. Current and
 // phases remain the loadpoint's decision.
-func (lp *Loadpoint) optimizerCharging(s *types.Suggestion, mode api.ChargeMode) error {
-	defer func() {
-		lp.resetPhaseTimer()
-		lp.elapsePVTimer() // let PV mode disable immediately afterwards
-	}()
+func (lp *Loadpoint) optimizerCharging(s *types.Suggestion, mode api.ChargeMode, welcomeCharge bool) error {
+	lp.resetPhaseTimer()
+	lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
 	if s.Action == actionCharge {
 		lp.log.DEBUG.Printf("optimizer: charge (%.0fW)", s.Charge)
@@ -74,6 +83,19 @@ func (lp *Loadpoint) optimizerCharging(s *types.Suggestion, mode api.ChargeMode)
 	if mode == api.ModeMinPV {
 		lp.log.DEBUG.Println("optimizer: stop, keeping minimum power")
 		return lp.minCharging()
+	}
+
+	// without welcome charge the vehicle never reports identity and soc, leaving
+	// it unmodelled- the optimizer would then keep asking to stop
+	if welcomeCharge {
+		lp.log.DEBUG.Println("optimizer: stop, welcome charge")
+		lp.resetPVTimer()
+		return lp.setLimit(lp.effectiveMinCurrent())
+	}
+
+	if lp.vehicleClimateActive() {
+		lp.log.DEBUG.Println("optimizer: stop, climate active")
+		return lp.setLimit(lp.effectiveMinCurrent())
 	}
 
 	lp.log.DEBUG.Println("optimizer: stop")

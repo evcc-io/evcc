@@ -59,6 +59,9 @@ func automaticLoadpoint(t *testing.T, mode api.ChargeMode, automatic bool) (*Loa
 		mode:        mode,
 	}
 
+	// only vehicles with known capacity can be modelled by the optimizer
+	lp.vehicle = modelledVehicle(ctrl)
+
 	attachListeners(t, lp)
 
 	// attachListeners assigns a real site
@@ -68,6 +71,20 @@ func automaticLoadpoint(t *testing.T, mode api.ChargeMode, automatic bool) (*Loa
 	charger.EXPECT().Enabled().Return(true, nil)
 
 	return lp, charger, ctrl
+}
+
+// modelledVehicle returns a vehicle the optimizer can model as storage
+func modelledVehicle(ctrl *gomock.Controller) api.Vehicle {
+	v := api.NewMockVehicle(ctrl)
+	v.EXPECT().Capacity().Return(50.0).AnyTimes()
+	v.EXPECT().Phases().Return(0).AnyTimes()
+	v.EXPECT().Features().Return(nil).AnyTimes()
+	v.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
+	v.EXPECT().GetTitle().Return("").AnyTimes()
+	v.EXPECT().Icon().Return("").AnyTimes()
+	v.EXPECT().Identifiers().Return(nil).AnyTimes()
+	v.EXPECT().Soc().Return(50.0, nil).AnyTimes()
+	return v
 }
 
 func TestOptimizerGate(t *testing.T) {
@@ -148,10 +165,14 @@ func TestSmartCostLimitUnavailable(t *testing.T) {
 		settings: coresettings.NewDatabaseSettingsAdapter("test"),
 	}
 	lp.site = &mockSite{automatic: true}
+	lp.vehicle = modelledVehicle(gomock.NewController(t))
 
 	assert.ErrorIs(t, lp.SetSmartCostLimit(&limit), ErrOptimizerAutomatic)
 	assert.ErrorIs(t, lp.SetSmartFeedInPriorityLimit(&limit), ErrOptimizerAutomatic)
 	assert.Nil(t, lp.GetSmartCostLimit())
+
+	// clearing is a no-op, so a config round-trip does not discard the stored limit
+	assert.NoError(t, lp.SetSmartCostLimit(nil))
 
 	// loadpoints the optimizer cannot model keep their limits
 	lp.charger = struct {
@@ -161,6 +182,13 @@ func TestSmartCostLimitUnavailable(t *testing.T) {
 
 	assert.NoError(t, lp.SetSmartCostLimit(&limit))
 	assert.Equal(t, &limit, lp.GetSmartCostLimit())
+
+	// a vehicle without known capacity cannot be modelled either
+	lp.charger = nil
+	lp.vehicle = nil
+
+	assert.NoError(t, lp.SetSmartFeedInPriorityLimit(&limit))
+	assert.Equal(t, &limit, lp.GetSmartFeedInPriorityLimit())
 }
 
 type featureCharger struct {

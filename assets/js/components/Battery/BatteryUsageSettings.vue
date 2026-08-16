@@ -189,12 +189,16 @@
 					class="form-check-input"
 					type="checkbox"
 					role="switch"
+					:disabled="optimizerAutomatic"
 					@change="changeDischargeControl"
 				/>
 				<div class="form-check-label">
 					<label for="batteryDischargeControl">
 						{{ $t("batterySettings.discharge") }}
 					</label>
+					<div v-if="optimizerAutomatic" class="text-muted small">
+						{{ $t("config.optimizer.controlled") }}
+					</div>
 				</div>
 			</div>
 		</div>
@@ -210,6 +214,7 @@ import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import api from "@/api";
 import { defineComponent, type PropType } from "vue";
 import type { Battery } from "@/types/evcc";
+import store from "@/store";
 
 export default defineComponent({
 	name: "BatteryUsageSettings",
@@ -230,6 +235,9 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		optimizerAutomatic(): boolean {
+			return !!store.state?.optimizerAutomatic;
+		},
 		batterySoc() {
 			return this.battery?.soc ?? 0;
 		},

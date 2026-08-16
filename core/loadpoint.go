@@ -655,7 +655,9 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	lp.triggerOptimizer()
 }
 
-// triggerOptimizer re-runs the optimizer when the loadpoint's profile changed
+// triggerOptimizer re-runs the optimizer when the loadpoint's profile changed.
+// A burst of setters, e.g. on disconnect, is coalesced by optimizerUpdateAsync's
+// TryLock- only the first call gets through while a run is in flight.
 func (lp *Loadpoint) triggerOptimizer() {
 	if lp.site != nil {
 		lp.site.Optimize()
@@ -2220,12 +2222,15 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 
 	mode := lp.GetMode()
 	lp.publish(keys.Mode, mode)
+	lp.publish(keys.OptimizerControlled, lp.optimizerControlled())
 
 	// update and publish plan without being short-circuited by modes etc.
 	plannerActive := lp.plannerActive()
 
-	// the optimizer schedules the plan itself, the planner only backstops it
-	if lp.optimizerControlled() {
+	// the optimizer schedules the plan itself, the planner only backstops it.
+	// A stalled optimizer has no suggestion and releases the planner again.
+	suggestion := lp.gate()
+	if suggestion != nil {
 		plannerActive = lp.planDeadlineCritical()
 	}
 
@@ -2276,8 +2281,8 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		// optimizer decides start/stop, replacing the price limits
-		if s := lp.gate(); s != nil {
-			err = lp.optimizerCharging(s, mode)
+		if suggestion != nil {
+			err = lp.optimizerCharging(suggestion, mode, welcomeCharge)
 			break
 		}
 
