@@ -282,7 +282,7 @@ export interface State {
   batteryGridChargeLimit?: number | null;
   /** Home battery is currently charged from grid. */
   batteryGridChargeActive?: boolean;
-  /** Feed-in price limit for discharging the home battery to the grid. */
+  /** Feed-in price limit for discharging the home battery to the grid (experimental). */
   batteryGridDischargeLimit?: number | null;
   /** Home battery is currently discharged to the grid. */
   batteryGridDischargeActive?: boolean;

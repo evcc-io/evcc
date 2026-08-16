@@ -367,3 +367,20 @@ func TestBatteryGridDischargeEvFastCharging(t *testing.T) {
 	res := site.requiredBatteryMode(false, true, api.Rate{})
 	assert.Equal(t, api.BatteryHold, res, "expected discharge to be held back for a fast charging EV")
 }
+
+// TestBatteryGridDischargeActive ensures the limit only acts once the experimental
+// grid discharge setting is enabled.
+func TestBatteryGridDischargeActive(t *testing.T) {
+	limit := 0.2
+	rate := api.Rate{Value: 0.3}
+
+	site := &Site{
+		log:                       util.NewLogger("foo"),
+		batteryGridDischargeLimit: &limit,
+	}
+
+	assert.False(t, site.batteryGridDischargeActive(rate), "expected limit to be inert while grid discharge is disabled")
+
+	site.batteryGridDischarge = true
+	assert.True(t, site.batteryGridDischargeActive(rate), "expected limit to act once grid discharge is enabled")
+}

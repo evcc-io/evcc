@@ -244,7 +244,13 @@ func (site *Site) batteryGridChargeActive(rate api.Rate) bool {
 
 // batteryGridDischargeActive is the feed-in counterpart of batteryGridChargeActive:
 // discharge to grid when the feed-in rate is at or above the configured limit.
+// The experimental grid discharge setting is the opt-in for both the optimizer's
+// planning and the limit acting here.
 func (site *Site) batteryGridDischargeActive(rate api.Rate) bool {
+	if !site.GetBatteryGridDischarge() {
+		return false
+	}
+
 	limit := site.GetBatteryGridDischargeLimit()
 	return limit != nil && !rate.IsZero() && rate.Value >= *limit
 }

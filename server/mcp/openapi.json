@@ -351,7 +351,7 @@
       "delete": {
         "operationId": "removeBatteryGridDischargeLimit",
         "summary": "Remove battery grid discharge limit",
-        "description": "Remove battery grid discharge limit.",
+        "description": "Remove battery grid discharge limit (experimental).",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/features/battery"
         },
@@ -369,7 +369,7 @@
       "post": {
         "operationId": "setBatteryGridDischargeLimit",
         "summary": "Set battery grid discharge limit",
-        "description": "Discharge home battery to grid when the feed-in price is at or above the threshold. Requires a feed-in tariff. Ignored otherwise.",
+        "description": "Discharge home battery to grid when the feed-in price is at or above the threshold (experimental). Requires a feed-in tariff and the battery grid discharge setting. Ignored otherwise.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/features/battery"
         },
@@ -5219,7 +5219,7 @@
             "type": "boolean"
           },
           "batteryGridDischargeLimit": {
-            "description": "Feed-in price limit for discharging the home battery to the grid.",
+            "description": "Feed-in price limit for discharging the home battery to the grid (experimental).",
             "type": "number",
             "nullable": true
           },

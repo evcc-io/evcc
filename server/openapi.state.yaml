@@ -211,7 +211,7 @@ components:
           description: Home battery is currently charged from grid.
           type: boolean
         batteryGridDischargeLimit:
-          description: Feed-in price limit for discharging the home battery to the grid.
+          description: Feed-in price limit for discharging the home battery to the grid (experimental).
           type: number
           nullable: true
         batteryGridDischargeActive:
