@@ -116,6 +116,14 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 		if extMode != batMode {
 			res = extMode
 		}
+	case site.Automatic():
+		// optimizer decides, replacing grid charge limit and discharge control
+		if mode, ok := site.batterySuggestionMode(); ok {
+			res = keepUnlessModified(mode)
+		} else if batteryModeModified(batMode) {
+			// no suggestion: release the battery
+			res = api.BatteryNormal
+		}
 	case batteryGridChargeActive:
 		// independent limits (buy vs feed-in rate) can both be active at once;
 		// charge wins to avoid buying and immediately selling
@@ -134,6 +142,32 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 	}
 
 	return res
+}
+
+// batterySuggestionMode returns the optimizer's mode for the first controllable battery.
+// TODO apply per battery once the site tracks more than a single battery mode
+func (site *Site) batterySuggestionMode() (api.BatteryMode, bool) {
+	for _, dev := range site.batteryMeters {
+		if dev == nil {
+			continue
+		}
+
+		s := site.suggestion(batteryKey(dev.Config().Name), site.GetBatteryMode().String())
+		if s == nil {
+			continue
+		}
+
+		mode, err := api.BatteryModeString(s.Action)
+		if err != nil {
+			// unknown action, release the battery
+			site.log.DEBUG.Printf("battery %s: cannot apply suggestion %s", deviceTitleOrName(dev), s.Action)
+			return api.BatteryNormal, true
+		}
+
+		return mode, true
+	}
+
+	return api.BatteryUnknown, false
 }
 
 // batterySocLimitReached reports whether the battery has reached the soc bound
