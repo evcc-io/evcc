@@ -28,6 +28,8 @@ type Template struct {
 	Caveats      []Caveat       `json:",omitempty"` // known device limitations
 	Params       []Param        `json:",omitempty"`
 	Render       string         `json:"-"` // rendering template
+
+	class Class // class the template is registered for
 }
 
 // UpdateParamWithDefaults adds default values to specific param name entries
@@ -422,7 +424,13 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 		}
 	}
 
-	tmpl, err := FuncMap(template.Must(baseTmpl.Clone())).Parse(t.Render)
+	// class-local includes take precedence over the global ones
+	base, ok := classTmpl[t.class]
+	if !ok {
+		base = baseTmpl
+	}
+
+	tmpl, err := FuncMap(template.Must(base.Clone())).Parse(t.Render)
 	if err != nil {
 		return nil, res, err
 	}

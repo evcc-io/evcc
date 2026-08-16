@@ -1,0 +1,34 @@
+package templates
+
+import (
+	"testing"
+	"testing/fstest"
+
+	"github.com/stretchr/testify/require"
+)
+
+func TestClassLocalIncludes(t *testing.T) {
+	fsys := fstest.MapFS{
+		"loadpoint/local" + IncludeExt: &fstest.MapFile{
+			Data: []byte(`{{ define "local" }}power: {{ .foo }}{{ end }}`),
+		},
+	}
+
+	require.NoError(t, loadIncludes(fsys, Loadpoint))
+	require.Contains(t, classTmpl, Loadpoint)
+
+	tmpl := Template{
+		class:  Loadpoint,
+		Params: []Param{{Name: "foo", Default: "bar"}},
+		Render: "type: custom\n{{ include \"local\" . }}",
+	}
+
+	b, _, err := tmpl.RenderResult(RenderModeInstance, map[string]any{})
+	require.NoError(t, err)
+	require.Equal(t, "type: custom\npower: bar", string(b))
+
+	// class-local includes are not visible to other classes
+	tmpl.class = Meter
+	_, _, err = tmpl.RenderResult(RenderModeInstance, map[string]any{})
+	require.Error(t, err)
+}

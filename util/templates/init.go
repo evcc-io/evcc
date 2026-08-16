@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"os"
 	"slices"
+	"strings"
 	"sync"
 	"text/template"
 
@@ -15,12 +16,18 @@ import (
 	"go.yaml.in/yaml/v4"
 )
 
+// IncludeExt is the file extension of class-local, include-only templates
+const IncludeExt = ".tpl"
+
 var (
 	//go:embed includes/*.tpl
 	includeFS embed.FS
 
 	// baseTmpl holds all included template definitions
 	baseTmpl *template.Template
+
+	// classTmpl holds baseTmpl plus the class-local include definitions
+	classTmpl = make(map[Class]*template.Template)
 
 	templates       = make(map[Class][]Template)
 	ConfigDefaults  configDefaults
@@ -34,8 +41,28 @@ func init() {
 	baseTmpl = template.Must(FuncMap(template.New("base")).ParseFS(includeFS, "includes/*.tpl"))
 
 	for _, class := range []Class{Charger, Meter, Vehicle, Tariff, Messenger, Circuit, Hems} {
+		if err := loadIncludes(definition.YamlTemplates, class); err != nil {
+			panic(err)
+		}
 		load(class)
 	}
+}
+
+// loadIncludes parses the class-local include-only templates
+func loadIncludes(fsys fs.FS, class Class) error {
+	files, err := fs.Glob(fsys, class.String()+"/*"+IncludeExt)
+	if err != nil || len(files) == 0 {
+		return err
+	}
+
+	tmpl, err := FuncMap(template.Must(baseTmpl.Clone())).ParseFS(fsys, files...)
+	if err != nil {
+		return fmt.Errorf("processing %s includes failed: %w", class, err)
+	}
+
+	classTmpl[class] = tmpl
+
+	return nil
 }
 
 // Register adds a template file to the registry
@@ -58,6 +85,7 @@ func register(class Class, tmpl Template) error {
 		return fmt.Errorf("duplicate template name: %s", tmpl.Template)
 	}
 
+	tmpl.class = class
 	templates[class] = append(templates[class], tmpl)
 
 	return nil
@@ -100,7 +128,7 @@ func load(class Class) {
 		if err != nil {
 			return err
 		}
-		if d.IsDir() {
+		if d.IsDir() || !strings.HasSuffix(filepath, ".yaml") {
 			return nil
 		}
 
