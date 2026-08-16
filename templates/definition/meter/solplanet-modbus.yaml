@@ -9,12 +9,12 @@ requirements:
       Nur für Wechselrichter mit eigenem Modbus-TCP-Ethernet-Port (z.B. ASW-TH Serie, Port eth 5&6), Protokoll AISWEI "MB001_ASW GEN-Modbus" V2.1.7.
       Ältere Geräte ohne diesen Port benötigen stattdessen das `solplanet-ai-dongle` Template.
       Die Import-/Export-Zählerstände des Netzzählers (46443/46445) werden von dieser Firmware nicht über Modbus TCP bereitgestellt.
-      Bei zwei Batteriepaketen (BMS1 + BMS2) die Option "Zweites Batteriepaket" aktivieren, sonst wird nur BMS1 erfasst.
+      Bei zwei Batteriepaketen (BMS1 + BMS2) je einen Batteriezähler mit Batteriespeichernummer 1 und 2 anlegen.
     en: |
       Only for inverters with a dedicated Modbus TCP ethernet port (e.g. ASW-TH series, port eth 5&6), protocol AISWEI "MB001_ASW GEN-Modbus" V2.1.7.
       Older devices without that port need the `solplanet-ai-dongle` template instead.
       The grid meter import/export energy counters (46443/46445) are not exposed over Modbus TCP by this firmware.
-      With two battery packs (BMS1 + BMS2) enable the "second battery pack" option, otherwise only BMS1 is counted.
+      With two battery packs (BMS1 + BMS2) add one battery meter each, using battery number 1 and 2.
 capabilities: ["battery-control", "curtail"]
 params:
   - name: usage
@@ -23,21 +23,21 @@ params:
     choice: ["tcpip"]
     port: 502
     id: 1
-  - name: battery2
-    type: bool
-    advanced: true
+  - name: battery
+    type: choice
+    choice: [1, 2]
+    default: 1
     usages: ["battery"]
     description:
-      de: Zweites Batteriepaket (BMS2)
-      en: Second battery pack (BMS2)
-    help:
-      de: Aktivieren wenn ein zweites Batteriepaket installiert ist. Kapazität als Summe beider Pakete angeben.
-      en: Enable if a second battery pack is installed. Enter the capacity as the sum of both packs.
+      de: Batteriespeichernummer
+      en: Battery number
   - preset: battery-params
+  - name: maxchargepower
+    default: 5000
 render: |
   type: custom
   {{- if eq .usage "grid" }}
-  power: # power (W)
+  power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -46,14 +46,14 @@ render: |
       decode: int32
   {{- end }}
   {{- if eq .usage "pv" }}
-  power: # power (W)
+  power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 1600 # 31601 PV total power
       type: input
       decode: uint32
-  energy: # energy (kWh)
+  energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
@@ -64,38 +64,31 @@ render: |
   curtail: # allowed feed-in power as percent of nominal
     source: sequence
     set:
-      # 45403 active power set (%Pn * 100)
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
-          address: 5402
+          address: 5402 # 45403 active power set (%Pn * 100)
           type: writesingle
           encoding: uint16
         scale: 100
-      # 44001 active power control: disabled at 100% (unlimited), enabled while curtailed
+      # active power control: disabled at 100% (unlimited), enabled while curtailed
       - source: switch
         switch:
           - case: 100 # uncurtailed
             set:
               source: const
               value: 0
-              set:
+              set: &enable
                 source: modbus
                 {{- include "modbus" . | indent 14 }}
                 register:
-                  address: 4000
+                  address: 4000 # 44001 active power control function
                   type: writesingle
                   encoding: uint16
         default:
           source: const
           value: 1
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 4000
-              type: writesingle
-              encoding: uint16
+          set: *enable
   curtailed: # the power limit only applies while active power control is enabled
     source: go
     in:
@@ -105,7 +98,7 @@ render: |
           source: modbus
           {{- include "modbus" . | indent 8 }}
           register:
-            address: 4000 # 44001 active power control function
+            address: 4000
             type: holding
             decode: uint16
       - name: percent
@@ -114,7 +107,7 @@ render: |
           source: modbus
           {{- include "modbus" . | indent 8 }}
           register:
-            address: 5402 # 45403 active power set (%Pn * 100)
+            address: 5402
             type: holding
             decode: uint16
           scale: 0.01
@@ -126,56 +119,20 @@ render: |
       res
   {{- end }}
   {{- if eq .usage "battery" }}
-  power: # power (W)
-    {{- if .battery2 }}
-    source: calc
-    add:
-      - source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          address: 1618 # 31619 BMS1 battery power
-          type: input
-          decode: int32
-      - source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          address: 1751 # 31752 BMS2 battery power
-          type: input
-          decode: int32
-    {{- else }}
+  power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 1618 # 31619 BMS1 battery power
+      address: {{ if eq .battery "1" }}1618{{ else }}1751{{ end }} # 31619/31752 BMS1/2 battery power
       type: input
       decode: int32
-    {{- end }}
-  soc: # state of charge (%)
-    {{- if .battery2 }}
-    source: calc # mean of both packs
-    add:
-      - source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          address: 1621 # 31622 BMS1 battery SoC
-          type: input
-          decode: uint16
-        scale: 0.5
-      - source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          address: 1754 # 31755 BMS2 battery SoC
-          type: input
-          decode: uint16
-        scale: 0.5
-    {{- else }}
+  soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 1621 # 31622 BMS1 battery SoC
+      address: {{ if eq .battery "1" }}1621{{ else }}1754{{ end }} # 31622/31755 BMS1/2 battery SoC
       type: input
       decode: uint16
-    {{- end }}
   batterymode:
     source: switch
     switch:
@@ -190,7 +147,7 @@ render: |
               address: 1103 # 41104 battery working mode
               type: writesingle
               encoding: uint16
-      - case: 2 # hold - custom mode, 0 W
+      - case: 2 # hold
         set:
           source: sequence
           set:
@@ -209,18 +166,18 @@ render: |
                 source: modbus
                 {{- include "modbus" . | indent 14 }}
                 register:
-                  address: 1152 # 41153 charge/discharge power (negative charges)
+                  address: 1152 # 41153 charge/discharge power, negative charges
                   type: writesingle
                   encoding: int16
-      - case: 3 # charge - custom mode, max charge power
+      - case: 3 # charge
         set:
           source: sequence
           set:
             - source: const
-              value: 4 # custom
+              value: 4
               set: *mode
             - source: const
-              value: {{ mul .maxchargepower -1 }} # negative implies charging
+              value: {{ mul .maxchargepower -1 }}
               set: *setpoint
   {{- include "battery-params" . }}
   {{- end }}
