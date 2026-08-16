@@ -84,7 +84,6 @@ func register(class Class, tmpl Template) error {
 		return fmt.Errorf("duplicate template name: %s", tmpl.Template)
 	}
 
-	tmpl.class = class
 	templates[class] = append(templates[class], tmpl)
 
 	return nil

@@ -22,17 +22,15 @@ func TestClassLocalIncludes(t *testing.T) {
 	require.NotContains(t, classTmpl, Circuit)
 
 	tmpl := Template{
-		class:  Loadpoint,
 		Params: []Param{{Name: "foo", Default: "bar"}},
 		Render: "type: custom\n{{ include \"local\" . }}",
 	}
 
-	b, _, err := tmpl.RenderResult(RenderModeInstance, map[string]any{})
+	b, _, err := tmpl.RenderResult(Loadpoint, RenderModeInstance, map[string]any{})
 	require.NoError(t, err)
 	require.Equal(t, "type: custom\npower: bar", string(b))
 
 	// class-local includes are not visible to other classes
-	tmpl.class = Meter
-	_, _, err = tmpl.RenderResult(RenderModeInstance, map[string]any{})
+	_, _, err = tmpl.RenderResult(Circuit, RenderModeInstance, map[string]any{})
 	require.Error(t, err)
 }

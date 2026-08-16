@@ -77,7 +77,7 @@ func TestVehicleFeatureParamsConsistent(t *testing.T) {
 			values["template"] = tmpl.Template
 			values[feat] = true
 
-			if _, _, err := tmpl.RenderResult(templates.RenderModeInstance, values); err != nil {
+			if _, _, err := tmpl.RenderResult(templates.Vehicle, templates.RenderModeInstance, values); err != nil {
 				t.Errorf("%s: feature %q must stay a declared param: %v", tmpl.Template, feat, err)
 			}
 		}
