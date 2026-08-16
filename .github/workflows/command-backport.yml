@@ -157,18 +157,15 @@ jobs:
           TITLE: ${{ steps.pr.outputs.title }}
           ACTOR: ${{ github.event.comment.user.login }}
         run: |
-          # the release line the branch was cut from, 0.313 for release/0.313.1
-          line=$(echo "${TARGET#release/}" | cut -d. -f1,2)
-
           # the pull request is authored by the deploy token, so assign the
           # requester. the body stays empty, squashing it would carry the text
           # into the release branch as the commit description.
-          # the marker trails the title so the changelog filters and groups still
-          # see the original prefix, goreleaser strips it from the release notes
+          # the title stays untouched so the changelog filters and groups still
+          # see the original prefix, the backport label identifies the pull request
           url=$(gh pr create \
             --base "$TARGET" \
             --head "$BRANCH" \
-            --title "$TITLE [$line backport]" \
+            --title "$TITLE" \
             --label backport \
             --assignee "$ACTOR" \
             --body "")
