@@ -673,6 +673,8 @@ export interface Loadpoint {
   mode: CHARGE_MODE;
   /** Current offered to the vehicle in A. */
   offeredCurrent: number;
+  /** Optimizer decides start/stop for this loadpoint, replacing the price limits. */
+  optimizerControlled: boolean;
   /** Pending phase switching action in solar mode. */
   phaseAction: PHASE_ACTION;
   /** Remaining time until the pending phase switching action executes, in seconds. */

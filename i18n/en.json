@@ -790,6 +790,7 @@
     "optimizer": {
       "automatic": "Automatic mode",
       "automaticHint": "The optimizer starts and stops charging and controls the home battery. Price limits and charging plan slots are replaced by its decision. Off and fast charging stay yours, as do loadpoints it cannot control.",
+      "controlled": "Controlled by the optimizer in automatic mode.",
       "description": "Analyzes solar forecast, electricity prices, and your consumption patterns to optimize battery and charging strategy. Data is sent to the evcc optimization service for processing. Calculates and visualizes, and in automatic mode also controls your devices.",
       "enable": "Enable Optimizer",
       "info": "It may take a few minutes for the optimizer menu entry to become visible. For new installations, it may take up to 24 hours until evcc has collected enough data.",

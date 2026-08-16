@@ -925,6 +925,9 @@ components:
         offeredCurrent:
           description: Current offered to the vehicle in A.
           type: number
+        optimizerControlled:
+          description: Optimizer decides start/stop for this loadpoint, replacing the price limits.
+          type: boolean
         phaseAction:
           $ref: "#/components/schemas/PhaseAction"
           description: Pending phase switching action in solar mode.
@@ -1124,6 +1127,7 @@ components:
         - minSocNotReached
         - mode
         - offeredCurrent
+        - optimizerControlled
         - phaseAction
         - phaseRemaining
         - phasesActive
