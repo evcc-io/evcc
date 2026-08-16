@@ -17,6 +17,10 @@ func TestClassLocalIncludes(t *testing.T) {
 	require.NoError(t, loadIncludes(fsys, Loadpoint))
 	require.Contains(t, classTmpl, Loadpoint)
 
+	// class without include files
+	require.NoError(t, loadIncludes(fsys, Circuit))
+	require.NotContains(t, classTmpl, Circuit)
+
 	tmpl := Template{
 		class:  Loadpoint,
 		Params: []Param{{Name: "foo", Default: "bar"}},
