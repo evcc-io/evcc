@@ -320,6 +320,51 @@ func TestBatteryRequestSocLimitsClamp(t *testing.T) {
 	})
 }
 
+// charge goal for vehicles with and without known capacity/soc, see #32890
+func TestLoadpointRequestChargeGoal(t *testing.T) {
+	site := &Site{log: util.NewLogger("foo")}
+
+	for _, tc := range []struct {
+		name                  string
+		capacity, soc         float64 // kWh, percent
+		limitSoc              int     // percent
+		limitEnergy           float64 // kWh
+		wantInitial, wantSMax float32 // Wh
+	}{
+		{"soc limit", 50, 20, 80, 0, 10000, 40000},
+		{"no capacity, energy limit", 0, 0, 100, 10, 0, 10000},
+		{"capacity but no soc, energy limit", 50, 0, 100, 10, 0, 10000},
+		{"capacity but no soc, no energy limit", 50, 0, 100, 0, 0, 50000},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			v := api.NewMockVehicle(ctrl)
+			v.EXPECT().Capacity().Return(tc.capacity).AnyTimes()
+			v.EXPECT().GetTitle().Return("").AnyTimes()
+
+			lp := loadpoint.NewMockAPI(ctrl)
+			lp.EXPECT().GetVehicle().Return(v).AnyTimes()
+			lp.EXPECT().GetSoc().Return(tc.soc).AnyTimes()
+			lp.EXPECT().EffectiveLimitSoc().Return(tc.limitSoc).AnyTimes()
+			lp.EXPECT().GetLimitEnergy().Return(tc.limitEnergy).AnyTimes()
+			lp.EXPECT().GetTitle().Return("lp").AnyTimes()
+			lp.EXPECT().EffectiveMinPower().Return(1380.0).AnyTimes()
+			lp.EXPECT().EffectiveMaxPower().Return(11000.0).AnyTimes()
+			lp.EXPECT().GetMode().Return(api.ModePV).AnyTimes()
+			lp.EXPECT().GetStatus().Return(api.StatusB).AnyTimes()
+			lp.EXPECT().GetSmartCostLimit().Return(nil).AnyTimes()
+			lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{}).AnyTimes()
+			lp.EXPECT().GetPlanGoal().Return(0.0, false).AnyTimes()
+
+			req, _ := site.loadpointRequest(lp, 8, 15*time.Minute, nil)
+
+			assert.Equal(t, tc.wantInitial, req.SInitial)
+			assert.Equal(t, tc.wantSMax, req.SMax)
+		})
+	}
+}
+
 func TestOptimizerChargingStrategy(t *testing.T) {
 	site := &Site{log: util.NewLogger("foo")}
 
