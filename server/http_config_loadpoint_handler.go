@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/gorilla/mux"
 )
 
@@ -119,8 +120,9 @@ func loadpointConfig(dev config.Device[loadpoint.API]) (loadpointFullConfig, err
 			return loadpointFullConfig{}, err
 		}
 
+		// non-strict: runtime settings (mode, ...) are persisted alongside the config
 		var static loadpoint.StaticConfig
-		if err := util.DecodeOther(staticMap, &static); err != nil {
+		if err := mapstructure.Decode(staticMap, &static); err != nil {
 			return loadpointFullConfig{}, err
 		}
 
