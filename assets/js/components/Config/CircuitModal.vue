@@ -11,6 +11,7 @@
 		@added="$emit('changed', $event)"
 		@updated="$emit('changed')"
 		@removed="$emit('changed')"
+		@close="handleClose"
 	>
 		<template #before-template="{ values }">
 			<FormRow id="circuitParamDeviceTitle" :label="$t('config.circuit.titleLabel')">
@@ -24,14 +25,13 @@
 				/>
 			</FormRow>
 			<FormRow
-				v-if="values.parent || parentCircuit"
+				v-if="values.parent"
 				id="circuitParamDeviceParentCircuit"
 				:label="$t('config.circuit.parentCircuit')"
 			>
 				<PropertyField
 					id="circuitParamDeviceParentCircuit"
 					:model-value.trim="values.parent ?? parentCircuit"
-					@update:model-value.trim="values.parent"
 					type="String"
 					size="w-100"
 					class="me-2"
@@ -53,11 +53,6 @@ import { getModal } from "@/configModal";
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 
-const initialValues = {
-	type: ConfigType.Template,
-	template: null,
-};
-
 export default defineComponent({
 	name: "CircuitModal",
 	components: {
@@ -68,11 +63,17 @@ export default defineComponent({
 	emits: ["changed"],
 	data() {
 		return {
-			initialValues,
 			parentCircuit: undefined as string | undefined,
 		};
 	},
 	computed: {
+		initialValues(): DeviceValues {
+			return {
+				type: ConfigType.Template,
+				template: null,
+				parent: this.parentCircuit,
+			};
+		},
 		id(): number | undefined {
 			return getModal("circuit")?.id;
 		},
@@ -107,6 +108,10 @@ export default defineComponent({
 		},
 		filterTemplateParams(params: TemplateParam[]): TemplateParam[] {
 			return params.filter((p) => p.Name !== "parent");
+		},
+		handleClose() {
+			console.log("reset value to undefined");
+			this.parentCircuit = undefined;
 		},
 	},
 });

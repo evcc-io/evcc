@@ -539,7 +539,11 @@
 				<TitleModal @changed="loadDirty" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
 				<CircuitsLegacyModal @changed="loadDirty" />
-				<CircuitsModal :on-add-sub="addSubCircuit" @changed="loadDirty" />
+				<CircuitsModal
+					:circuits="circuits"
+					:on-add-sub="addSubCircuit"
+					@changed="loadDirty"
+				/>
 				<CircuitModal ref="circuitModal" @changed="circuitChanged" />
 				<EebusModal
 					:status="eebus?.status"
@@ -1206,7 +1210,7 @@ export default defineComponent({
 			};
 		},
 		circuitsRoot(): CircuitNode | undefined {
-			return circuitTree(store.state?.circuits?.config || {});
+			return circuitTree(this.circuits);
 		},
 		hemsDimmed(): boolean {
 			// only consumption limits matter for circuits, curtailment affects feed-in

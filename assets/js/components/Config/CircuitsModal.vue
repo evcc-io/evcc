@@ -11,8 +11,8 @@
 		disable-remove
 		@changed="$emit('changed')"
 	>
-		<template #default="{ values }: { values: State['circuits'] }">
-			<div v-if="Object.keys(values?.config || {}).length === 0" class="onboarding">
+		<template #default>
+			<div v-if="circuits.length === 0" class="onboarding">
 				<p class="evcc-gray">
 					No circuits configured. Start with a main circuit that represents your grid
 					connection.
@@ -27,18 +27,14 @@
 					Add main circuit
 				</button>
 			</div>
-			<CircuitsTree
-				v-else
-				:circuitsTree="circuitTree(values?.config)"
-				:on-add-sub="onAddSub"
-			/>
+			<CircuitsTree v-else :circuitsTree="circuitTree(circuits)" :on-add-sub="onAddSub" />
 		</template>
 	</JsonModal>
 </template>
 
 <script lang="ts">
 import JsonModal from "./JsonModal.vue";
-import type { State } from "@/types/evcc";
+import type { ConfigCircuit } from "@/types/evcc";
 import CircuitsTree from "./CircuitsTree.vue";
 import { openModal } from "@/configModal.ts";
 import { circuitTree } from "@/utils/circuits.ts";
@@ -49,6 +45,7 @@ export default {
 	components: { JsonModal, CircuitsTree },
 	emits: ["changed"],
 	props: {
+		circuits: { type: Array as PropType<ConfigCircuit[]>, required: true },
 		onAddSub: {
 			type: Function as PropType<(parent?: string) => void>,
 			required: true,

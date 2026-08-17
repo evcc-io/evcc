@@ -12,7 +12,7 @@
 			</template>
 			<DeviceRefBox compact class="flex-grow-1" @edit="openCircuit(circuitsTree?.name)">
 				<span class="d-flex align-items-center gap-2">
-					<span class="fw-bold">{{ circuitsTree?.title }}</span>
+					<span class="fw-bold">{{ circuitsTree?.deviceTitle }}</span>
 					<span class="ms-auto evcc-gray value">{{ valueLabel }}</span>
 				</span>
 			</DeviceRefBox>
@@ -20,7 +20,7 @@
 
 		<CircuitsTree
 			v-for="child in circuitsTree?.children"
-			:key="child.title"
+			:key="child.deviceTitle"
 			:circuits-tree="child"
 			:depth="depth + 1"
 			:guides="childGuides"
@@ -94,10 +94,10 @@ export default {
 		},
 		valueLabel(): string {
 			if (!this.circuitsTree) return "";
-			const { power, current } = this.circuitsTree;
+			const { maxpower, maxcurrent } = this.circuitsTree.config;
 			const parts: string[] = [];
-			if (power !== undefined) parts.push(this.fmtW(power));
-			if (current !== undefined) parts.push(`${current} A`);
+			if (maxpower !== undefined) parts.push(this.fmtW(maxpower as number));
+			if (maxcurrent !== undefined) parts.push(`${maxcurrent} A`);
 			return parts.join(" · ");
 		},
 	},

@@ -1,30 +1,28 @@
-import type { Circuit } from "../types/evcc";
+import type { ConfigCircuit } from "../types/evcc";
 import deepClone from "./deepClone";
 
-export interface CircuitNode extends Circuit {
-  name?: string;
+export interface CircuitNode extends ConfigCircuit {
   children?: CircuitNode[];
 }
 
 // circuitTree builds a tree from published circuit data.
 // Returns the root node or undefined if empty.
-export function circuitTree(circuits?: Record<string, CircuitNode>): CircuitNode | undefined {
-  if (circuits === undefined) return;
+export function circuitTree(circuits?: CircuitNode[]): CircuitNode | undefined {
+  const nodes = deepClone(circuits ?? []);
+  const nodesByName = new Map(nodes.map((node) => [node.name, node]));
 
-  let nodes = deepClone(circuits);
   let root: CircuitNode | undefined;
 
-  Object.entries(nodes).forEach(([name, node]) => {
-    node.name = name;
-    const parent = node.parent ? nodes[node.parent] : undefined;
+  for (const node of nodes) {
+    const parent = node.config.parent ? nodesByName.get(node.config.parent as string) : undefined;
+
     if (parent) {
       parent.children ??= [];
       parent.children.push(node);
     } else {
-      // found the root
       root = node;
     }
-  });
+  }
 
   return root;
 }

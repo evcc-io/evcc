@@ -438,11 +438,11 @@ export interface Circuit {
   maxCurrent?: number;
 }
 
-export interface Entity {
+export interface Entity<C = never> {
   name: string;
   type: string;
   id: number;
-  config: Config;
+  config: Config | C;
   deviceDisable?: boolean;
 }
 
@@ -475,7 +475,15 @@ export interface ConfigMeter extends Entity {
   deviceIcon?: string;
 }
 
-export type ConfigCircuit = Entity;
+export interface ConfigCircuit extends Entity<{
+  maxcurrent: number;
+  maxpower: number;
+  parent: string;
+}> {
+  deviceProduct: string;
+  deviceTitle?: string;
+  type: ConfigType;
+}
 
 export interface LoadpointThreshold {
   delay: number;
