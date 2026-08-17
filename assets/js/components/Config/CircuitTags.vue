@@ -5,24 +5,21 @@
 			<p class="my-2 fw-bold">{{ node.title }}</p>
 			<DeviceTags :tags="circuitTags(node)" />
 		</div>
-		<CircuitTags
-			v-if="node.children?.length"
-			:nodes="node.children"
-			:depth="depth + 1"
-		/>
+		<CircuitTags v-if="node.children?.length" :nodes="node.children" :depth="depth + 1" />
 	</template>
 </template>
 
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import DeviceTags from "./DeviceTags.vue";
-import type { CircuitNode, CircuitWithName } from "../../utils/circuits";
+import type { CircuitNode } from "../../utils/circuits";
+import type { Circuit } from "@/types/evcc.ts";
 
 export default defineComponent({
 	name: "CircuitTags",
 	components: { DeviceTags },
 	props: {
-		nodes: { type: Array as PropType<CircuitNode<CircuitWithName>[]>, required: true },
+		nodes: { type: Array as PropType<CircuitNode<Circuit>[]>, required: true },
 		depth: { type: Number, default: 0 },
 	},
 	computed: {
@@ -31,7 +28,7 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		circuitTags(node: CircuitNode<CircuitWithName>) {
+		circuitTags(node: CircuitNode<Circuit>) {
 			const result: Record<string, object> = {};
 			const p = node.power || 0;
 			if (node.maxPower) {

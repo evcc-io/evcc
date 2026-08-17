@@ -1,8 +1,7 @@
 import type { ConfigCircuit, Circuit } from "../types/evcc";
 import deepClone from "./deepClone";
 
-export type CircuitWithName = Circuit & { name: string };
-type CircuitInput = ConfigCircuit | CircuitWithName;
+type CircuitInput = ConfigCircuit | Circuit;
 
 export type CircuitNode<T extends CircuitInput> = T & {
   children?: CircuitNode<T>[];

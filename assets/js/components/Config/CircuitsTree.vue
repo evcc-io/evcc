@@ -55,6 +55,7 @@ import DeviceRefBox from "./DeviceRefBox.vue";
 import formatter from "@/mixins/formatter.ts";
 import { openModal } from "@/configModal.ts";
 import type { CircuitNode } from "@/utils/circuits.ts";
+import type { ConfigCircuit } from "@/types/evcc.ts";
 
 export default {
 	name: "CircuitsTree",
@@ -62,7 +63,7 @@ export default {
 	components: { DeviceRefBox },
 	props: {
 		circuitsTree: {
-			type: Object as PropType<CircuitNode>,
+			type: Object as PropType<CircuitNode<ConfigCircuit>>,
 		},
 		/** Nesting depth from root (0 = root, no indentation/lines). */
 		depth: { type: Number, default: 0 },

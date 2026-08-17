@@ -422,6 +422,8 @@ export interface Config {
 
 /** A load management circuit limiting power and current of its assigned loadpoints. */
 export interface Circuit {
+  /** Circuit name for UI display. */
+  name?: string;
   /** Circuit title for UI display. */
   title?: string;
   /** Circuit icon name for UI display. */
