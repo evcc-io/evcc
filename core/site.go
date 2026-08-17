@@ -1054,9 +1054,9 @@ func (site *Site) sitePower(totalChargePower, flexiblePower float64) (float64, b
 		residualPower = 100 // W
 	}
 
-	// allow using grid and charge as estimate for pv power
+	// allow using grid, charge and battery power as estimate for pv power
 	if site.pvMeters == nil {
-		site.pvPower = totalChargePower - site.gridPower + residualPower
+		site.pvPower = totalChargePower - site.gridPower - site.battery.Power + residualPower
 		if site.pvPower < 0 {
 			site.pvPower = 0
 		}
