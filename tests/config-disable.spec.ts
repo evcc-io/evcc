@@ -59,6 +59,21 @@ test.describe("disable / enable", async () => {
     await page.reload();
     await createLoadpoint(page, "Garage");
 
+    // restart to bring both loadpoints live
+    await restart();
+    await page.reload();
+
+    // switch charge mode on dashboard; runtime setting is persisted next to the loadpoint config
+    await page.goto("/");
+    const modeButton = page
+      .getByTestId("loadpoint")
+      .nth(0)
+      .getByTestId("mode")
+      .getByRole("button", { name: "Fast" });
+    await modeButton.click();
+    await expect(modeButton).toHaveClass(/active/);
+    await page.goto("/#/config");
+
     const target = page.getByTestId("loadpoint").nth(0);
 
     await toggleLoadpointDisable(page, 0, "Disable");
@@ -66,10 +81,11 @@ test.describe("disable / enable", async () => {
     // card shows disabled state
     await expect(disabledBadge(target)).toBeVisible();
 
-    // restart, no fatal
+    // restart, no fatal, both loadpoints still listed
     await restart();
     await page.reload();
     await expectNoFatal(page);
+    await expect(page.getByTestId("loadpoint")).toHaveCount(2);
     await expect(disabledBadge(target)).toBeVisible();
 
     // re-enable by clicking the disabled card
