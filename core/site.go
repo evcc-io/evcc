@@ -110,14 +110,18 @@ type Site struct {
 	// cached measurement state, guarded by RWMutex
 	siteState
 
-	batteryMaxDischargePower *float64                    // Max discharge power of all battery meters
-	batteryMode              api.BatteryMode             // Battery mode (runtime only, not persisted)
-	batteryModeExternal      api.BatteryMode             // Battery mode (external, runtime only, not persisted)
-	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
-	batteryModeApplied       map[string]api.BatteryMode  // Battery mode last applied per battery meter
-	suggestions              map[string]types.Suggestion // Optimizer suggestions by device key
-	suggestionsUpdated       time.Time                   // time the suggestions were applied
-	suggestionActions        map[string]string           // last notified actionable optimizer action by device key
+	batteryMaxDischargePower *float64                   // Max discharge power of all battery meters
+	batteryMode              api.BatteryMode            // Battery mode (runtime only, not persisted)
+	batteryModeExternal      api.BatteryMode            // Battery mode (external, runtime only, not persisted)
+	batteryModeExternalTimer time.Time                  // Battery mode timer for external control
+	batteryModeApplied       map[string]api.BatteryMode // Battery mode last applied per battery meter
+
+	batteryChargePowerLimit              *float64                    // Battery charge power limit (last applied, runtime only, not persisted)
+	batteryChargePowerLimitExternal      *float64                    // Battery charge power limit (external, runtime only, not persisted)
+	batteryChargePowerLimitExternalTimer time.Time                   // Battery charge power limit timer for external control
+	suggestions                          map[string]types.Suggestion // Optimizer suggestions by device key
+	suggestionsUpdated                   time.Time                   // time the suggestions were applied
+	suggestionActions                    map[string]string           // last notified actionable optimizer action by device key
 
 	optimizerMu      sync.Mutex // guards optimizer runs
 	optimizerUpdated time.Time  // last optimizer run, guarded by optimizerMu
@@ -358,6 +362,15 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		if mode := site.GetBatteryMode(); batteryModeModified(mode) {
 			if err := site.applyBatteryMode(api.BatteryNormal); err != nil {
 				site.log.ERROR.Println("battery mode:", err)
+			}
+		}
+	})
+
+	// release battery charge power limit on shutdown
+	shutdown.Register(func() {
+		if site.GetBatteryChargePowerLimit() != nil {
+			if err := site.applyBatteryChargePowerLimit(nil); err != nil {
+				site.log.ERROR.Println("battery charge power limit:", err)
 			}
 		}
 	})
@@ -1243,6 +1256,7 @@ func (site *Site) update(lp updater) {
 	batteryGridChargeActive := site.batteryGridChargeActive(rate)
 	site.publish(keys.BatteryGridChargeActive, batteryGridChargeActive)
 	site.updateBatteryMode(batteryGridChargeActive, rate)
+	site.updateBatteryChargePowerLimit()
 
 	// re-evaluate against the updated loadpoint state
 	site.publishSuggestions()

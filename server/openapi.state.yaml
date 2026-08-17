@@ -210,6 +210,14 @@ components:
         batteryGridChargeActive:
           description: Home battery is currently charged from grid.
           type: boolean
+        batteryChargePowerLimit:
+          description: Charge power limit in W currently applied to the home battery (experimental).
+          type: number
+          nullable: true
+        batteryChargePowerLimitExternal:
+          description: Externally requested home battery charge power limit in W (experimental). Resets after 60s unless refreshed.
+          type: number
+          nullable: true
         smartCostAvailable:
           description: A dynamic grid price or CO₂ forecast is configured.
           type: boolean

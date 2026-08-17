@@ -51,6 +51,11 @@ const (
 	flagBatteryModeWait            = "battery-mode-wait"
 	flagBatteryModeWaitDescription = "Wait given duration during which potential watchdogs are active"
 
+	flagChargePowerLimit            = "charge-power-limit"
+	flagChargePowerLimitDescription = "Set battery charge power limit in W (experimental)"
+	flagReleaseChargePowerLimit     = "release-charge-power-limit"
+	flagReleaseChargePowerLimitDesc = "Release battery charge power limit (experimental)"
+
 	flagCurrent            = "current"
 	flagCurrentDescription = "Set maximum current"
 

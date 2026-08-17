@@ -66,6 +66,9 @@ const (
 	// external battery control
 	BatteryModeExternal = "batteryModeExternal"
 
+	BatteryChargePowerLimit         = "batteryChargePowerLimit"
+	BatteryChargePowerLimitExternal = "batteryChargePowerLimitExternal"
+
 	// smart charging
 	SmartCostAvailable           = "smartCostAvailable"           // smart cost available
 	SmartFeedInPriorityAvailable = "smartFeedInPriorityAvailable" // smart feed-in priority available

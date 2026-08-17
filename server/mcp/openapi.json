@@ -347,6 +347,44 @@
         }
       }
     },
+    "/batterychargepowerlimit": {
+      "delete": {
+        "operationId": "removeBatteryChargePowerLimit",
+        "summary": "Remove external battery charge power limit",
+        "description": "Releases the charge power cap and restores the device's maximum charge power. Experimental feature.",
+        "tags": [
+          "battery"
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NullResult"
+          }
+        }
+      }
+    },
+    "/batterychargepowerlimit/{power}": {
+      "post": {
+        "operationId": "setBatteryChargePowerLimit",
+        "summary": "Set external battery charge power limit",
+        "description": "Caps the charge power of all controllable batteries in W, e.g. to follow a smoothed charging curve or to reserve storage headroom ahead of a feed-in limit. Only applied while the battery mode allows charging (not in hold/holdcharge). The limit resets after 60s — the external system has to call this endpoint regularly. Requires experimental features to be enabled.",
+        "tags": [
+          "battery"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/chargePowerLimit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          },
+          "400": {
+            "description": "Invalid value, experimental features disabled, or no battery supports charge power limiting"
+          }
+        }
+      }
+    },
     "/batterymode": {
       "delete": {
         "operationId": "disableExternalBatteryControl",
@@ -5193,6 +5231,16 @@
             "description": "Home battery is currently charged from grid.",
             "type": "boolean"
           },
+          "batteryChargePowerLimit": {
+            "description": "Charge power limit in W currently applied to the home battery (experimental).",
+            "type": "number",
+            "nullable": true
+          },
+          "batteryChargePowerLimitExternal": {
+            "description": "Externally requested home battery charge power limit in W (experimental). Resets after 60s unless refreshed.",
+            "type": "number",
+            "nullable": true
+          },
           "smartCostAvailable": {
             "description": "A dynamic grid price or CO₂ forecast is configured.",
             "type": "boolean"
@@ -5453,6 +5501,17 @@
         "required": true,
         "schema": {
           "$ref": "#/components/schemas/BatteryMode"
+        }
+      },
+      "chargePowerLimit": {
+        "name": "power",
+        "description": "Maximum battery charge power in W",
+        "example": 1500,
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "number",
+          "minimum": 0
         }
       },
       "costLimit": {

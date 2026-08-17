@@ -7,7 +7,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,PowerLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,MeterReturnEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Dimmer,HEMS,Tariff
+//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,PowerLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,MeterReturnEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatteryChargePowerLimiter,BatterySocLimiter,Circuit,Dimmer,HEMS,Tariff
 
 // Meter provides total active power in W
 type Meter interface {
@@ -86,6 +86,12 @@ type CurrentGetter interface {
 // BatteryController optionally allows to control home battery (dis)charging behavior
 type BatteryController interface {
 	SetBatteryMode(BatteryMode) error
+}
+
+// BatteryChargePowerLimiter optionally allows capping home battery charge power in W.
+// A nil limit releases the cap and restores the device's maximum charge power.
+type BatteryChargePowerLimiter interface {
+	SetBatteryChargePowerLimit(power *float64) error
 }
 
 // Charger provides current charging status and enable/disable charging

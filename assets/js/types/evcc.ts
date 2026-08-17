@@ -282,6 +282,10 @@ export interface State {
   batteryGridChargeLimit?: number | null;
   /** Home battery is currently charged from grid. */
   batteryGridChargeActive?: boolean;
+  /** Charge power limit in W currently applied to the home battery (experimental). */
+  batteryChargePowerLimit?: number | null;
+  /** Externally requested home battery charge power limit in W (experimental). Resets after 60s unless refreshed. */
+  batteryChargePowerLimitExternal?: number | null;
   /** A dynamic grid price or CO₂ forecast is configured. */
   smartCostAvailable?: boolean;
   /** Type of the smart charging limit, price based or emission based. */

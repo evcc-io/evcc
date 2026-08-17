@@ -31,6 +31,18 @@ func (site *Site) hasBatteryControl() bool {
 	return false
 }
 
+func (site *Site) hasBatteryChargePowerLimitControl() bool {
+	for _, dev := range site.batteryMeters {
+		meter := dev.Instance()
+
+		if api.HasCap[api.BatteryChargePowerLimiter](meter) {
+			return true
+		}
+	}
+
+	return false
+}
+
 // setBatteryMode sets the battery mode
 func (site *Site) setBatteryMode(batMode api.BatteryMode) {
 	site.batteryMode = batMode
@@ -252,6 +264,61 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 	}
 
 	return nil
+}
+
+// batteryChargingPossible reports whether the battery mode allows charging at all.
+// Hold and HoldCharge both mean "don't charge", so a positive charge power cap is meaningless there.
+func batteryChargingPossible(mode api.BatteryMode) bool {
+	return mode != api.BatteryHold && mode != api.BatteryHoldCharge
+}
+
+// setBatteryChargePowerLimit sets the applied battery charge power limit
+func (site *Site) setBatteryChargePowerLimit(limit *float64) {
+	site.batteryChargePowerLimit = limit
+	site.publish(keys.BatteryChargePowerLimit, limit)
+}
+
+// applyBatteryChargePowerLimit applies the charge power limit to each battery
+func (site *Site) applyBatteryChargePowerLimit(limit *float64) error {
+	for _, dev := range site.batteryMeters {
+		meter := dev.Instance()
+
+		limiter, ok := api.Cap[api.BatteryChargePowerLimiter](meter)
+		if !ok {
+			continue
+		}
+
+		if err := limiter.SetBatteryChargePowerLimit(limit); err != nil && !errors.Is(err, api.ErrNotAvailable) {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// updateBatteryChargePowerLimit applies the external battery charge power limit, scoped to modes
+// where charging is possible, and avoids redundant device writes when nothing has changed
+func (site *Site) updateBatteryChargePowerLimit() {
+	site.Lock()
+	var required *float64
+	if ext := site.batteryChargePowerLimitExternal; ext != nil && batteryChargingPossible(site.batteryMode) {
+		required = ext
+	}
+	changed := !ptrValueEqual(site.batteryChargePowerLimit, required)
+	site.Unlock()
+
+	if !changed {
+		return
+	}
+
+	if err := site.applyBatteryChargePowerLimit(required); err != nil {
+		site.log.ERROR.Println("battery charge power limit:", err)
+		return
+	}
+
+	site.Lock()
+	site.setBatteryChargePowerLimit(required)
+	site.Unlock()
 }
 
 func (site *Site) tariffRates(usage api.TariffUsage) (api.Rates, error) {

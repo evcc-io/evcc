@@ -274,12 +274,48 @@ func (m *ModbusSunspec) FloatSetter(_ string) (func(float64) error, error) {
 		switch typ {
 		case typelabel.Float32:
 			point.SetFloat32(float32(val))
+		case typelabel.Bitfield16, typelabel.Bitfield32, typelabel.Enum16, typelabel.Enum32,
+			typelabel.Int16, typelabel.Int32, typelabel.Int64,
+			typelabel.Uint16, typelabel.Uint32, typelabel.Uint64:
+			return writeIntPoint(block, m.op.Point, point, typ, int64(math.Round(val)))
 		default:
 			return fmt.Errorf("invalid point type: %s", typ)
 		}
 
 		return block.Write(m.op.Point)
 	}, nil
+}
+
+// writeIntPoint sets an integer-family point to val (already scaled) and writes the block.
+// Shared by IntSetter and FloatSetter (the latter for percent/rate registers, e.g. SunSpec
+// model 124 OutWRte/InWRte, that are int16-typed but naturally addressed as a float in W).
+func writeIntPoint(block sunspec.Block, opPoint string, point sunspec.Point, typ string, val int64) error {
+	switch typ {
+	case typelabel.Bitfield16:
+		point.SetBitfield16(sunspec.Bitfield16(val))
+	case typelabel.Bitfield32:
+		point.SetBitfield32(sunspec.Bitfield32(val))
+	case typelabel.Enum16:
+		point.SetEnum16(sunspec.Enum16(val))
+	case typelabel.Enum32:
+		point.SetEnum32(sunspec.Enum32(val))
+	case typelabel.Int16:
+		point.SetValue(int16(val))
+	case typelabel.Int32:
+		point.SetValue(int32(val))
+	case typelabel.Int64:
+		point.SetValue(val)
+	case typelabel.Uint16:
+		point.SetValue(uint16(val))
+	case typelabel.Uint32:
+		point.SetValue(uint32(val))
+	case typelabel.Uint64:
+		point.SetValue(uint64(val))
+	default:
+		return fmt.Errorf("invalid point type: %s", typ)
+	}
+
+	return block.Write(opPoint)
 }
 
 var _ IntSetter = (*Modbus)(nil)
@@ -303,34 +339,7 @@ func (m *ModbusSunspec) IntSetter(_ string) (func(int64) error, error) {
 		m.device.mu.Lock()
 		defer m.device.mu.Unlock()
 
-		val = int64(float64(val) * m.scale)
-
-		// SetValue is used to include the scale factor when writing
-		switch typ {
-		case typelabel.Bitfield16:
-			point.SetBitfield16(sunspec.Bitfield16(val))
-		case typelabel.Bitfield32:
-			point.SetBitfield32(sunspec.Bitfield32(val))
-		case typelabel.Enum16:
-			point.SetEnum16(sunspec.Enum16(val))
-		case typelabel.Enum32:
-			point.SetEnum32(sunspec.Enum32(val))
-		case typelabel.Int16:
-			point.SetValue(int16(val))
-		case typelabel.Int32:
-			point.SetValue(int32(val))
-		case typelabel.Int64:
-			point.SetValue(val)
-		case typelabel.Uint16:
-			point.SetValue(uint16(val))
-		case typelabel.Uint32:
-			point.SetValue(uint32(val))
-		case typelabel.Uint64:
-			point.SetValue(uint64(val))
-		default:
-			return fmt.Errorf("invalid point type: %s", typ)
-		}
-
-		return block.Write(m.op.Point)
+		// scale factor is included when writing
+		return writeIntPoint(block, m.op.Point, point, typ, int64(float64(val)*m.scale))
 	}, nil
 }

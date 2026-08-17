@@ -233,6 +233,7 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 			}
 			return site.SetBatteryModeExternal(*m)
 		})},
+		{"batteryChargePowerLimit", floatPtrSetter(site.SetBatteryChargePowerLimitExternal)},
 	} {
 		if err := m.Handler.ListenSetter(topic+"/"+s.topic, s.fun); err != nil {
 			return err

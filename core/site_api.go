@@ -22,6 +22,7 @@ var _ site.API = (*Site)(nil)
 var (
 	ErrBatteryNotConfigured       = errors.New("battery not configured")
 	ErrBatteryControlNotAvailable = errors.New("battery control not available")
+	ErrExperimentalNotEnabled     = errors.New("experimental features not enabled")
 
 	// ErrOptimizerAutomatic marks settings the optimizer decides on its own
 	ErrOptimizerAutomatic = errors.New("not available in automatic mode")
@@ -632,6 +633,86 @@ func (site *Site) batteryModeWatchdogExpired() bool {
 
 	if elapsed > time.Minute && !site.batteryModeExternalTimer.IsZero() {
 		site.SetBatteryModeExternal(api.BatteryUnknown)
+		return true
+	}
+
+	return false
+}
+
+// GetBatteryChargePowerLimit returns the currently applied battery charge power limit
+func (site *Site) GetBatteryChargePowerLimit() *float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryChargePowerLimit
+}
+
+// GetBatteryChargePowerLimitExternal returns the external battery charge power limit
+func (site *Site) GetBatteryChargePowerLimitExternal() *float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryChargePowerLimitExternal
+}
+
+// SetBatteryChargePowerLimitExternal sets the external battery charge power limit.
+// A nil limit releases the cap; a negative limit is rejected.
+func (site *Site) SetBatteryChargePowerLimitExternal(limit *float64) error {
+	site.log.DEBUG.Println("set external battery charge power limit:", printPtr("%.0f", limit))
+
+	if limit != nil && *limit < 0 {
+		return errors.New("battery charge power limit must not be negative")
+	}
+
+	// experimental feature: releasing (nil) stays allowed so an already-applied limit
+	// can always be cleared, even after experimental mode has been switched off again
+	if limit != nil {
+		if experimental, _ := settings.Bool(keys.Experimental); !experimental {
+			return ErrExperimentalNotEnabled
+		}
+	}
+
+	if !site.hasBatteryChargePowerLimitControl() {
+		return ErrBatteryControlNotAvailable
+	}
+
+	site.Lock()
+	defer site.Unlock()
+
+	disable := limit == nil
+
+	if !ptrValueEqual(site.batteryChargePowerLimitExternal, limit) {
+		site.batteryChargePowerLimitExternal = limit
+		site.publish(keys.BatteryChargePowerLimitExternal, limit)
+
+		// start watchdog if not running
+		if !disable && site.batteryChargePowerLimitExternalTimer.IsZero() {
+			go func() {
+				for range time.Tick(time.Second) {
+					if site.batteryChargePowerLimitWatchdogExpired() {
+						return
+					}
+				}
+			}()
+		}
+	}
+
+	// reset timer
+	if disable {
+		site.batteryChargePowerLimitExternalTimer = time.Time{}
+	} else {
+		site.batteryChargePowerLimitExternalTimer = time.Now()
+	}
+
+	return nil
+}
+
+func (site *Site) batteryChargePowerLimitWatchdogExpired() bool {
+	site.RLock()
+	elapsed := time.Since(site.batteryChargePowerLimitExternalTimer)
+	timerZero := site.batteryChargePowerLimitExternalTimer.IsZero()
+	site.RUnlock()
+
+	if elapsed > time.Minute && !timerZero {
+		site.SetBatteryChargePowerLimitExternal(nil)
 		return true
 	}
 

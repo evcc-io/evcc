@@ -110,4 +110,11 @@ type API interface {
 	GetBatteryModeExternal() api.BatteryMode
 	// SetBatteryModeExternal sets the external battery mode
 	SetBatteryModeExternal(api.BatteryMode) error
+
+	// GetBatteryChargePowerLimit returns the currently applied battery charge power limit
+	GetBatteryChargePowerLimit() *float64
+	// GetBatteryChargePowerLimitExternal returns the external battery charge power limit
+	GetBatteryChargePowerLimitExternal() *float64
+	// SetBatteryChargePowerLimitExternal sets the external battery charge power limit
+	SetBatteryChargePowerLimitExternal(limit *float64) error
 }

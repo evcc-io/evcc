@@ -37,6 +37,17 @@ type typeStruct struct {
 }
 
 func getTypeImport(t reflect.Type) string {
+	// unnamed composite types (e.g. *float64, []byte) carry no Name/PkgPath,
+	// so unwrap them and qualify the element type instead
+	if t.Name() == "" {
+		switch t.Kind() {
+		case reflect.Pointer:
+			return "*" + getTypeImport(t.Elem())
+		case reflect.Slice:
+			return "[]" + getTypeImport(t.Elem())
+		}
+	}
+
 	n := t.Name()
 	if n == "" {
 		// unnamed type, e.g. []string
@@ -64,6 +75,7 @@ func generate(out io.Writer) error {
 	for _, typ := range []reflect.Type{
 		reflect.TypeFor[api.Battery](),
 		reflect.TypeFor[api.BatteryCapacity](),
+		reflect.TypeFor[api.BatteryChargePowerLimiter](),
 		reflect.TypeFor[api.BatteryController](),
 		reflect.TypeFor[api.BatteryPowerLimiter](),
 		reflect.TypeFor[api.BatterySocLimiter](),

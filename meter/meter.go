@@ -2,6 +2,7 @@ package meter
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
@@ -27,12 +28,14 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		pvMaxACPowerCtx `mapstructure:",squash"`
 
 		// battery
-		batteryCapacityCtx    `mapstructure:",squash"`
-		batterySocLimitsCtx   `mapstructure:",squash"`
-		batteryPowerLimitsCtx `mapstructure:",squash"`
-		Soc                   *plugin.Config // optional
-		LimitSoc              *plugin.Config // optional
-		BatteryMode           *plugin.Config // optional
+		batteryCapacityCtx     `mapstructure:",squash"`
+		batterySocLimitsCtx    `mapstructure:",squash"`
+		batteryPowerLimitsCtx  `mapstructure:",squash"`
+		Soc                    *plugin.Config // optional
+		LimitSoc               *plugin.Config // optional
+		BatteryMode            *plugin.Config // optional
+		LimitChargePower       *plugin.Config // optional
+		LimitChargePowerEnable *plugin.Config // optional, see wiring below
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -113,6 +116,51 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 
 			implement.Has(m, implement.BatteryController(func(mode api.BatteryMode) error {
 				return modeS(int64(mode))
+			}))
+		}
+
+		// charge power limit is orthogonal to mode/limit-soc control, hence not part of the switch above
+		if cc.LimitChargePower != nil {
+			maxChargePowerG, err := resolveFloat(ctx, cc.batteryPowerLimitsCtx.MaxChargePower)
+			if err != nil {
+				return nil, err
+			}
+			if maxChargePowerG == nil {
+				return nil, errors.New("battery charge power limit requires maxchargepower")
+			}
+
+			limitChargePowerS, err := cc.LimitChargePower.FloatSetter(ctx, "limitChargePower")
+			if err != nil {
+				return nil, fmt.Errorf("battery charge power limit: %w", err)
+			}
+
+			// LimitChargePowerEnable is optional: some devices (e.g. SunSpec model 124, where the
+			// rate register also governs discharge) need an explicit enable/disable gate so releasing
+			// the limit can fully disengage rate control rather than merely writing the max value.
+			// Devices with a genuinely standalone charge-power register can omit it.
+			var enableS func(int64) error
+			if cc.LimitChargePowerEnable != nil {
+				enableS, err = cc.LimitChargePowerEnable.IntSetter(ctx, "limitChargePowerEnable")
+				if err != nil {
+					return nil, fmt.Errorf("battery charge power limit enable: %w", err)
+				}
+			}
+
+			implement.Has(m, implement.BatteryChargePowerLimiter(func(power *float64) error {
+				if power == nil {
+					if enableS != nil {
+						return enableS(0)
+					}
+					return limitChargePowerS(maxChargePowerG())
+				}
+
+				if enableS != nil {
+					if err := enableS(1); err != nil {
+						return err
+					}
+				}
+
+				return limitChargePowerS(min(max(*power, 0), maxChargePowerG()))
 			}))
 		}
 

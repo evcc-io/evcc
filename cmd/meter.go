@@ -22,6 +22,8 @@ func init() {
 
 	meterCmd.Flags().StringP(flagBatteryMode, "b", "", flagBatteryModeDescription)
 	meterCmd.Flags().DurationP(flagBatteryModeWait, "w", 0, flagBatteryModeWaitDescription)
+	meterCmd.Flags().Float64(flagChargePowerLimit, -1, flagChargePowerLimitDescription)
+	meterCmd.Flags().Bool(flagReleaseChargePowerLimit, false, flagReleaseChargePowerLimitDesc)
 	meterCmd.Flags().Bool(flagDiagnose, false, flagDiagnoseDescription)
 	meterCmd.Flags().IntP(flagCurtail, "u", -1, flagCurtailDescription)
 	meterCmd.Flags().IntP(flagDim, "m", -1, flagDimDescription)
@@ -71,6 +73,24 @@ func runMeter(cmd *cobra.Command, args []string) {
 			if d, err := cmd.Flags().GetDuration(flagBatteryModeWait); d > 0 && err == nil {
 				log.INFO.Println("waiting for:", d)
 				time.Sleep(d)
+			}
+		}
+	}
+
+	var chargePowerLimit *float64
+	if val, err := cmd.Flags().GetFloat64(flagChargePowerLimit); err == nil && val >= 0 {
+		chargePowerLimit = &val
+	}
+	release, _ := cmd.Flags().GetBool(flagReleaseChargePowerLimit)
+
+	if chargePowerLimit != nil || release {
+		flagUsed = true
+
+		for _, v := range config.Instances(meters) {
+			if l, ok := api.Cap[api.BatteryChargePowerLimiter](v); ok {
+				if err := l.SetBatteryChargePowerLimit(chargePowerLimit); err != nil {
+					log.FATAL.Fatalln("set battery charge power limit:", err)
+				}
 			}
 		}
 	}

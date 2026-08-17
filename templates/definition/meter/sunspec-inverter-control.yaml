@@ -128,5 +128,39 @@ render: |
     default:
       source: error
       error: ErrNotAvailable
+  {{- if .maxchargepower }}
+  limitchargepower: # model 124: charge power cap in W, written as % of maxchargepower
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 124:0:OutWRte
+    scale: {{ divf -100.0 .maxchargepower }}
+  limitchargepowerenable: # model 124
+    source: switch
+    switch:
+    - case: 1 # enable rate control
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 2
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 124:0:StorCtl_Mod
+        - source: const
+          value: 0 # s, disable device-side auto-revert; evcc watchdog owns refresh
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 124:0:InOutWRte_RvrtTms
+    - case: 0 # disable: restore uncontrolled self-consumption (does not touch ChaGriSet)
+      set:
+        source: const
+        value: 0
+        set:
+          source: sunspec
+          {{- include "modbus" . | indent 8 }}
+          value: 124:0:StorCtl_Mod
+  {{- end }}
   {{- include "battery-params" . }}
   {{- end }}
