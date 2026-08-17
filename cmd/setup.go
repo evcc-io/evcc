@@ -538,9 +538,13 @@ func configureVehicles(static []config.Named, names ...string) error {
 				}
 			}
 
-			instance, err := vehicleInstance(cc)
-			if err != nil {
-				return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
+			var instance api.Vehicle
+			if !conf.Disable {
+				var err error
+				instance, err = vehicleInstance(cc)
+				if err != nil {
+					return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
+				}
 			}
 
 			mu.Lock()
