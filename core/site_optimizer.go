@@ -1106,7 +1106,8 @@ func optimizerHorizon(t time.Time) time.Time {
 	if t.Hour() < 6 {
 		return horizon
 	}
-	return now.With(horizon).EndOfDay()
+	y, m, d := horizon.Date()
+	return time.Date(y, m, d, 23, 59, 59, int(time.Second-time.Nanosecond), horizon.Location())
 }
 
 // slotsUntil limits maxLen to the slots starting before the given horizon
