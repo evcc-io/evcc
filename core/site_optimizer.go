@@ -413,8 +413,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	}
 
 	if optimizerURI() == OPTIMIZER_URI {
-		// limit to 2 days for sake of performance
-		minLen = min(2*96, minLen)
+		minLen = slotsUntil(grid, optimizerHorizon(time.Now()), minLen)
 	}
 
 	if expectedSlots := 8; minLen < expectedSlots {
@@ -1125,6 +1124,27 @@ func currentRates(tariff api.Tariff) api.Rates {
 	return lo.Filter(rates, func(slot api.Rate, _ int) bool {
 		return slot.End.After(now)
 	})
+}
+
+// optimizerHorizon is the timeframe the hosted optimizer is limited to for sake
+// of performance: 48 hours, extended to the end of that day. In the early hours
+// the extension would add almost a full day, hence it only applies past 6:00.
+func optimizerHorizon(t time.Time) time.Time {
+	horizon := t.Add(48 * time.Hour)
+	if t.Hour() < 6 {
+		return horizon
+	}
+	return now.With(horizon).EndOfDay()
+}
+
+// slotsUntil limits maxLen to the slots starting before the given horizon
+func slotsUntil(rates api.Rates, horizon time.Time, maxLen int) int {
+	if i := slices.IndexFunc(rates[:min(maxLen, len(rates))], func(slot api.Rate) bool {
+		return slot.Start.After(horizon)
+	}); i >= 0 {
+		return i
+	}
+	return maxLen
 }
 
 func timeSteps(minLen int, now time.Time) []int {

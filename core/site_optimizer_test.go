@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/types"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	optimizer "github.com/evcc-io/optimizer/client"
@@ -27,6 +28,30 @@ func TestLoadpointProfile(t *testing.T) {
 
 	// expected slots: 0.25 kWh...
 	require.Equal(t, []float64{250, 250, 250, 250, 250, 250, 250, 50}, loadpointProfile(lp, 8))
+}
+
+func TestOptimizerHorizon(t *testing.T) {
+	ts := time.Date(2025, 1, 1, 10, 30, 0, 0, time.Local)
+	horizon := optimizerHorizon(ts)
+
+	// 48h plus end of day
+	assert.Equal(t, time.Date(2025, 1, 3, 23, 59, 59, int(time.Second-time.Nanosecond), time.Local), horizon)
+
+	// before 6:00 the day is not extended
+	assert.Equal(t, time.Date(2025, 1, 3, 5, 30, 0, 0, time.Local),
+		optimizerHorizon(time.Date(2025, 1, 1, 5, 30, 0, 0, time.Local)))
+
+	rates := make(api.Rates, 0, 4*96)
+	for slot := ts.Truncate(tariff.SlotDuration); len(rates) < cap(rates); slot = slot.Add(tariff.SlotDuration) {
+		rates = append(rates, api.Rate{Start: slot, End: slot.Add(tariff.SlotDuration)})
+	}
+
+	// 4 days of slots from 10:30, capped at the last slot of Jan 3rd
+	assert.Equal(t, 246, slotsUntil(rates, horizon, len(rates)))
+	assert.Equal(t, time.Date(2025, 1, 3, 23, 45, 0, 0, time.Local), rates[245].Start)
+
+	// shorter forecast is not extended
+	assert.Equal(t, 8, slotsUntil(rates, horizon, 8))
 }
 
 func TestApplyPrecondition(t *testing.T) {
