@@ -476,8 +476,8 @@ export interface ConfigMeter extends Entity {
 }
 
 export interface ConfigCircuit extends Entity<{
-  maxcurrent: number;
-  maxpower: number;
+  maxcurrent?: number;
+  maxpower?: number;
   parent: string;
 }> {
   deviceProduct: string;
