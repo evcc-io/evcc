@@ -82,6 +82,9 @@ func runMeter(cmd *cobra.Command, args []string) {
 		chargePowerLimit = &val
 	}
 	release, _ := cmd.Flags().GetBool(flagReleaseChargePowerLimit)
+	if release {
+		chargePowerLimit = nil // release always wins over a simultaneously given limit
+	}
 
 	if chargePowerLimit != nil || release {
 		flagUsed = true

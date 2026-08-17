@@ -139,6 +139,41 @@ func TestExternalBatteryChargePowerLimitWatchdog(t *testing.T) {
 	ctrl.Finish()
 }
 
+// TestBatteryChargePowerLimitWatchdogStopsOnManualRelease guards against a goroutine leak:
+// once the limit is released manually (e.g. via DELETE), the timer is zeroed and the watchdog
+// goroutine must stop polling instead of ticking forever without ever expiring.
+func TestBatteryChargePowerLimitWatchdogStopsOnManualRelease(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	limiter := api.NewMockBatteryChargePowerLimiter(ctrl)
+	var bat api.Meter = &struct {
+		api.Meter
+		api.BatteryChargePowerLimiter
+	}{
+		BatteryChargePowerLimiter: limiter,
+	}
+
+	site := &Site{
+		log:           util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, bat)},
+	}
+
+	settings.SetBool(keys.Experimental, true)
+	defer settings.SetBool(keys.Experimental, false)
+
+	assert.NoError(t, site.SetBatteryChargePowerLimitExternal(new(500.0)))
+	assert.False(t, site.batteryChargePowerLimitExternalTimer.IsZero())
+
+	// manual release, well within the 60s window
+	assert.NoError(t, site.SetBatteryChargePowerLimitExternal(nil))
+	assert.True(t, site.batteryChargePowerLimitExternalTimer.IsZero())
+
+	// the watchdog goroutine must observe expiry (and exit) immediately, not after 60s
+	assert.True(t, site.batteryChargePowerLimitWatchdogExpired())
+
+	ctrl.Finish()
+}
+
 func TestSetBatteryChargePowerLimitExternalRejectsNegative(t *testing.T) {
 	site := &Site{
 		log:           util.NewLogger("foo"),

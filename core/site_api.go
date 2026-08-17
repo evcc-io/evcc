@@ -711,7 +711,11 @@ func (site *Site) batteryChargePowerLimitWatchdogExpired() bool {
 	timerZero := site.batteryChargePowerLimitExternalTimer.IsZero()
 	site.RUnlock()
 
-	if elapsed > time.Minute && !timerZero {
+	if timerZero {
+		return true
+	}
+
+	if elapsed > time.Minute {
 		site.SetBatteryChargePowerLimitExternal(nil)
 		return true
 	}
