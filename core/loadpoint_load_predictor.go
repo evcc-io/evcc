@@ -17,13 +17,13 @@ func (lp *Loadpoint) demandProfile(from time.Time) (*[96]float64, bool) {
 	var err error
 
 	// daily avg scaled by outdoor temp
-	temp := lp.chargerHasFeature(api.DemandProfileDailyTemperature)
+	temp := lp.chargerHasFeature(api.PredictorProfileTemperature)
 
 	switch {
 	case temp:
 		profile, err = lp.chargeEnergy.EnergyProfile(from)
 
-	case lp.chargerHasFeature(api.DemandProfileSameWeekday):
+	case lp.chargerHasFeature(api.PredictorProfileWeekday):
 		profile, err = lp.chargeEnergy.EnergyProfileWeekday(time.Now().Weekday())
 
 	default:

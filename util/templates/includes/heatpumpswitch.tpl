@@ -2,9 +2,9 @@
 features:
 - continuous
 {{- if eq .tempsource "warmwater" }}
-- demandprofilesameweekday
+- predictorprofileweekday
 {{- else }}
-- demandprofiledailytemperature
+- predictorprofiletemperature
 {{- end }}
 - heating
 - integrateddevice

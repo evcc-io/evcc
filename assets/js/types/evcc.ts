@@ -576,9 +576,9 @@ export interface Loadpoint {
   /** Charger is a heating device where disabled means normal operation. */
   chargerFeatureContinuous: boolean;
   /** Heating device demand forecast uses daily average profile scaled by outdoor temperature. */
-  chargerFeatureDemandProfileDailyTemperature: boolean;
+  chargerFeaturePredictorProfileTemperature: boolean;
   /** Heating device demand forecast uses same-weekday average over past 4 weeks. */
-  chargerFeatureDemandProfileSameWeekday: boolean;
+  chargerFeaturePredictorProfileWeekday: boolean;
   /** Charger is a heating device. SoC values represent temperature in degrees. */
   chargerFeatureHeating: boolean;
   /** Charger is an always-connected device without vehicles and charging sessions, like a heat pump. */
