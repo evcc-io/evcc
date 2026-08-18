@@ -480,19 +480,6 @@ components:
           type: number
       required:
         - power
-    ConsumptionDetails:
-      description: Data-driven scale applied to the home consumption forecast.
-      type: object
-      properties:
-        scale:
-          description: Correction factor applied to the forecast based on past consumption (>= 1).
-          type: number
-        coverage:
-          description: Share of days the scale is sized to cover (0..1).
-          type: number
-      required:
-        - scale
-        - coverage
     Currency:
       description: Currency in ISO 4217 format.
       type: string
@@ -630,9 +617,6 @@ components:
         solar:
           $ref: "#/components/schemas/SolarDetails"
           description: Solar production forecast.
-        consumption:
-          $ref: "#/components/schemas/ConsumptionDetails"
-          description: Data-driven scale applied to the home consumption forecast.
         planner:
           description: Charging cost forecast used by the plan optimizer per time slot.
           type: array

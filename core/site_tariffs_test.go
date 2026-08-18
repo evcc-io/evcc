@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/metrics"
+	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -93,45 +95,64 @@ func TestTimeseriesMarshal(t *testing.T) {
 	}
 }
 
-func TestConsumptionScaleFromDaily(t *testing.T) {
-	rep := func(v float64, n int) []float64 {
-		s := make([]float64, n)
-		for i := range s {
-			s[i] = v
+// TestQueryConsumptionSignal exercises the gate that consumptionSignalDecay's
+// pure-math tests can't reach: no history yet, no scale applied.
+func TestQueryConsumptionSignal(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, metrics.SetupSchema())
+
+	site := NewSite()
+	col, err := metrics.NewCollector(metrics.Home, metrics.Home, metrics.Home)
+	require.NoError(t, err)
+	site.collectors[metrics.Home] = col
+
+	sig, err := site.queryConsumptionSignal()
+	require.NoError(t, err)
+	assert.Equal(t, 1.0, sig)
+}
+
+func TestConsumptionSignalDecay(t *testing.T) {
+	t.Run("no deviation gives the unscaled forecast", func(t *testing.T) {
+		assert.InDelta(t, 1, consumptionSignalDecay(1, 0), 1e-9)
+		assert.InDelta(t, 1, consumptionSignalDecay(1, 191), 1e-9)
+	})
+
+	t.Run("first slot returns the input signal unchanged, above and below baseline", func(t *testing.T) {
+		for _, sig := range []float64{consumptionSignalMin, 0.7, 1.2, consumptionSignalMax} {
+			assert.InDelta(t, sig, consumptionSignalDecay(sig, 0), 1e-9)
 		}
-		return s
-	}
-
-	t.Run("insufficient history yields no scale", func(t *testing.T) {
-		scale, samples := consumptionScaleFromDaily(rep(10, consumptionScaleBaseline+consumptionScaleMinSamples-1))
-		assert.Equal(t, 1.0, scale)
-		assert.Equal(t, 0, samples)
 	})
 
-	t.Run("constant consumption gives scale 1", func(t *testing.T) {
-		// every day equals its trailing mean, so all ratios are 1
-		scale, samples := consumptionScaleFromDaily(rep(10, consumptionScaleBaseline+consumptionScaleMinSamples))
-		assert.Equal(t, 1.0, scale)
-		assert.Equal(t, consumptionScaleMinSamples, samples)
+	t.Run("after 24h, exactly consumptionSignalPhiDay of the deviation remains", func(t *testing.T) {
+		sig := 1.4
+		want := 1 + consumptionSignalPhiDay*(sig-1)
+		assert.InDelta(t, want, consumptionSignalDecay(sig, 24*4), 1e-9) // 96 slots = 24h
 	})
 
-	t.Run("declining consumption is floored at 1", func(t *testing.T) {
-		// each day below its trailing mean -> ratios < 1 -> floored
-		daily := make([]float64, 60)
-		for i := range daily {
-			daily[i] = float64(200 - i)
+	t.Run("deviation decays monotonically towards 1 over the horizon, above and below baseline", func(t *testing.T) {
+		for _, sig := range []float64{1.3, 0.7} {
+			prev := consumptionSignalDecay(sig, 0)
+			for i := 1; i <= 192; i++ { // 48h at 15min slots
+				cur := consumptionSignalDecay(sig, i)
+				if sig > 1 {
+					assert.LessOrEqual(t, cur, prev)
+				} else {
+					assert.GreaterOrEqual(t, cur, prev)
+				}
+				prev = cur
+			}
+			// never overshoots past 1
+			if sig > 1 {
+				assert.GreaterOrEqual(t, prev, 1.0)
+			} else {
+				assert.LessOrEqual(t, prev, 1.0)
+			}
 		}
-		scale, samples := consumptionScaleFromDaily(daily)
-		assert.Equal(t, 1.0, scale)
-		assert.Positive(t, samples)
 	})
 
-	t.Run("higher recent consumption yields scale > 1", func(t *testing.T) {
-		// 30 baseline days low, then a sustained higher level -> ratios > 1
-		daily := append(rep(10, consumptionScaleBaseline), rep(15, 30)...)
-		scale, samples := consumptionScaleFromDaily(daily)
-		assert.Greater(t, scale, 1.0)
-		assert.Equal(t, 30, samples)
+	t.Run("decay approaches 1 far into the horizon", func(t *testing.T) {
+		// geometric decay, never fully zero: 0.41^5 ~= 0.0116 of the original deviation left after 5 days
+		assert.InDelta(t, 1, consumptionSignalDecay(1.5, 480), 0.01)
 	})
 }
 
