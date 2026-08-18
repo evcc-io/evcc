@@ -154,6 +154,9 @@ var _ api.ChargeController = (*Provider)(nil)
 
 // ChargeEnable implements the api.ChargeController interface
 func (v *Provider) ChargeEnable(enable bool) error {
-	action := map[bool]string{true: ActionStart, false: ActionStop}
-	return v.action(action[enable])
+	action := ActionStop
+	if enable {
+		action = ActionStart
+	}
+	return v.action(action)
 }
