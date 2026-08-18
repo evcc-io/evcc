@@ -191,11 +191,13 @@ func (m *EcoFlow) dischargeLimit() (float64, error) {
 }
 
 func (m *EcoFlow) setBackupReserve(limit float64) error {
-	// clamp rather than let the write fail: refusing normal mode would strand the battery at the
-	// previous, higher reserve. On a failed read the device rejects an invalid value itself.
-	if lo, err := m.limitG(); err != nil {
-		m.log.WARN.Printf("backup reserve: discharge limit: %v", err)
-	} else if clamped := ecoflowReserveLimit(limit, lo); clamped != limit {
+	lo, err := m.limitG()
+	if err != nil {
+		return fmt.Errorf("discharge limit: %w", err)
+	}
+
+	// device requires the reserve to exceed the discharge limit by 3
+	if clamped := ecoflowReserveLimit(limit, lo); clamped != limit {
 		m.log.DEBUG.Printf("backup reserve: raised %.0f to %.0f, below discharge limit %.0f", limit, clamped, lo)
 		limit = clamped
 	}
@@ -213,7 +215,7 @@ func (m *EcoFlow) setBackupReserve(limit float64) error {
 		return err
 	}
 	if res == nil {
-		return errors.New("empty response")
+		return api.ErrTimeout
 	}
 	if res.Code != "0" {
 		return fmt.Errorf("%s (%s)", res.Message, res.Code)
