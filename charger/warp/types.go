@@ -23,6 +23,10 @@ type EvseUserEnabled struct {
 	Enabled bool `json:"enabled"`
 }
 
+type EvsePhaseAutoSwitch struct {
+	Enabled bool `json:"enabled"`
+}
+
 type Evse struct {
 	State           EvseState
 	ExternalCurrent EvseExternalCurrent
