@@ -253,7 +253,8 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 		}
 		lp.defaultVehicle = dev.Instance()
 		if lp.defaultVehicle == nil {
-			return lp, errors.New("missing default vehicle instance")
+			// disabled vehicle
+			lp.log.DEBUG.Printf("default vehicle '%s' is disabled", lp.VehicleRef)
 		}
 	}
 
