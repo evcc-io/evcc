@@ -219,6 +219,7 @@
       "enabled": "Ageschalt",
       "energy": "Energie",
       "events": "Evenementer",
+      "exportLimit": "Limitt vum Netz-Export",
       "feedinPrice": "Präis fir anzespeisen",
       "forecast": "Previsioun",
       "gridPrice": "Netz Präis",
@@ -306,6 +307,7 @@
     "form": {
       "danger": "Oppassen",
       "deprecated": "obsolet",
+      "durationUnit": "Zäiteenheet fir {label}",
       "example": "Beispill",
       "optional": "optionell"
     },
@@ -371,12 +373,17 @@
       "customOption": "Benotzerdefinéiert Integratioun",
       "description": "Kraaftbegrenzung duerch extern Systemer (z. B. §14a EnWG, §9 EEG-Schnittstell oder e méi héichgestallt Energiemanagementsystem). Arbecht zesumme mat der Laaschtmanagement-Funktioun. D'Begrenzung vun der Solarproduktioun gëtt och fir ausgewielte Geräter ënnerstëtzt. Den tatsächleche Begrenzungswäert muss an der Konfiguratioun vun all Inverter festgeluecht ginn.",
       "download": "Eroflueden",
+      "dynamicLimits": "Dynamesch Limitten",
       "eventsRecorded": "{count} gespäichert Limitatiounen vum Netz.",
+      "exportLimit": "Limitt vum Netz-Export",
+      "exportLimitDescription": "De Batterieoptimiséierer respektéiert dës Limitte fir Solarveeloschter ze vermeiden. En aktiven Ofschalt-Signal aus enger dynamescher Limitt-Integratioun huet Prioritéit.",
+      "exportLimitHint": "Statesche Einspeise-Limitt um Netzuschlosspunkt.",
       "generic": "Generesch Integratiounen",
       "integrations": "Integratiounen",
       "lastEvent": "Méi rezent {timeAgo}.",
       "noEvents": "Nach keng Evenementer opgezeechent.",
       "recordedEvents": "Opgezeechent Evenementer",
+      "staticLimits": "Statesch Limitte",
       "template": "Integratioun",
       "title": "Äusserlech Grenz",
       "type": {
@@ -1094,6 +1101,8 @@
     "version": {
       "availableLong": "nei Versioun verfügbar",
       "community": "evcc Communautéit",
+      "labelEmail": "E-Mail",
+      "labelPhone": "Telefon",
       "labelRelease": "Verëffentlechung",
       "labelVersion": "Versioun",
       "labelWebsite": "Websäit",
@@ -1176,6 +1185,7 @@
     "sessions": "Opluedsessiounen"
   },
   "help": {
+    "contactButton": "Kontaktéiert eis",
     "discussionsButton": "GitHub Diskussiounen",
     "documentationButton": "Dokumentatioun",
     "issueButton": "Problem mellen",
@@ -1215,8 +1225,11 @@
     "additionalContext": "Zousätzleche Kontext",
     "additionalContextPlaceholder": "All zousätzlech Informatiounen, déi hëllefräich kéinte sinn...\n- Konfiguratiounsdetailer\n- Wat Dir probéiert hutt\n- Ëmfelddetailer",
     "createButtonDiscussion": "GitHub Diskussioun starten...",
+    "createButtonEmail": "Ufro per E-Mail schécken",
     "createButtonIssue": "GitHub Issue erstellen...",
     "description": "Funktionéiert Är Installatioun net wéi erwaart? Benotzt dës Säit fir Hëllef ze kréien oder Problemer ze mellen. Gitt genuch Detailer fir eis ze hëllefen de Problem ze verstoen a reproduzéieren, wärend Är Beschreiwung präzis, kloer an einfach ze verstoen ass.",
+    "downloadButton": "Debug-Informatioun eroflueden",
+    "downloadHint": "Füügt dës Datei bei Är E-Mail derbäi, wa méi Informatiounen néideg sinn.",
     "helpType": {
       "discussion": "Brauch Hëllef mat menger Installatioun",
       "discussionDescription": "Gemeinschaftsdiskussiounen liwweren Äntwerten.",
@@ -1228,6 +1241,7 @@
     "issueTitle": "Titel",
     "stepsToReproduce": "Schrëtt fir de Problem ze reproduzéieren",
     "subTitleDiscussion": "Beschreif däi Problem",
+    "subTitleEmail": "Beschreif däi Problem",
     "subTitleIssue": "Beschreif de Problem",
     "summary": {
       "confirmationButtonDiscussion": "GitHub Diskussioun starten",
@@ -1280,24 +1294,33 @@
       "goal": "Luedzil",
       "modalTitle": "Luedplanifikatioun",
       "none": "keng",
+      "once": "eemol",
       "optimization": {
         "cheapest": "am bëllegsten",
+        "cheapestDescription": "Wielt déi bëllegst Slots aus. Kann zu méi Starten a Stoppe féieren.",
+        "cleanest": "am proppersten",
+        "cleanestDescription": "Wielt déi propperst Slots aus. Kann zu méi Starts a Stops féieren.",
         "continuous": "kontinuéierlech",
+        "continuousCo2Description": "Wielt déi propperest onënnerbrach Serie vu Slots.",
+        "continuousPriceDescription": "Wielt déi bëllegst onënnerbrach Serie vu Slots aus.",
         "label": "Optimisatioun"
       },
       "planNumber": "Planifkatioun {number}",
       "precondition": {
-        "description": "Luetzäit {duration} virum Fortfuere fir Batterie-Prekonditionéierung.",
+        "description": "Verleeë e Deel vum Opluede direkt virum Depart: waarm Batterie, manner Zäit op engem héijen Opluede-Niveau.",
         "label": "Verspéit Lueden",
         "optionAll": "Alles",
-        "optionNo": "Nee"
+        "optionNo": "Nee",
+        "summary": "{precondition} virdrun"
       },
       "remove": "Ewechhuelen",
       "repeating": "widderhuelend",
       "repeatingPlans": "Widderhuelend Planifikatiounen",
       "selectAll": "All auswielen",
+      "strategy": {
+        "label": "Strategie"
+      },
       "strategyDisabledDescription": "D'Laden fänkt sou spéit wéi méiglech un, fir grad rechtzäiteg virum Depart ofzeschléissen. Mat dynamesche Netzpräisser oder engem CO₂-Tarif stinn hei nach méi Optiounen zur Verfügung.",
-      "strategySettings": "Strategie-Astellungen",
       "time": "Zäit",
       "title": "Planifikatioun",
       "unsavedChanges": "Net gespäichert Ännerungen leie vir. Elo uwennen?",
@@ -1582,6 +1605,7 @@
   },
   "session": {
     "addOdometer": "Wäert derbäisetzen",
+    "addedRange": "Zousätzlech Autonomie",
     "cancel": "Ofbriechen",
     "co2": "CO₂",
     "date": "Zäitraum",
@@ -1592,11 +1616,12 @@
     "meterstop": "Last Meter Liesung",
     "odometer": "Kilometerzähler",
     "price": "Käschten",
-    "soc": "Gefier-SoC",
+    "soc": "Ladung",
     "started": "Startzeit",
     "title": "Charging Sessioun"
   },
   "sessions": {
+    "addedRange": "Autonomie",
     "avgPower": "⌀ Leeschtung",
     "avgPrice": "⌀ Präis",
     "chargeDuration": "Oplueddauer",
@@ -1622,6 +1647,7 @@
     },
     "co2": "⌀ CO₂",
     "csv": {
+      "addedrange": "Zousätzlech Distanz (km)",
       "chargedenergy": "Energie (kWh)",
       "chargeduration": "Oplueddauer",
       "co2perkwh": "CO₂/kWh",

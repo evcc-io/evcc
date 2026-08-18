@@ -15,16 +15,17 @@ requirements:
 group: solar
 
 params:
-  - name: site_id
-    description:
-      en: Site ID
-      de: Standort-ID
-    required: true
   - name: apikey
     description:
       en: pvnode API key
       de: pvnode API Key
     required: true
+  - name: site_id
+    description:
+      en: Site ID
+      de: Standort-ID
+    required: true
+    service: http/get?uri=https://api.pvnode.com/v2/sites/&token={apikey}&jq=[.[].id]
   - name: forecast_days
     description:
       en: Forecast days
