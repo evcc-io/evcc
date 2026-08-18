@@ -29,9 +29,9 @@ params:
   - preset: vehicle-features
 render: |
   type: mini
-  {{ include "vehicle-base" . }}
+  {{ include "base" . }}
   {{- if ne .region "EU" }}
   region: {{ .region }}
   {{- end }}
   hcaptcha: {{ .hcaptcha }}
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}
