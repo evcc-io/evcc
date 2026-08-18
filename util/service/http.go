@@ -15,15 +15,15 @@ import (
 
 func init() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /values", httpValues)
+	mux.HandleFunc("GET /get", httpGet)
 
 	service.Register("http", mux)
 }
 
-// httpValues reads uri and extracts the choices using the jq query, driving
+// httpGet reads uri and extracts the choices using the jq query, driving
 // selection of remote resources in templates. The config UI polls while the
 // form is filled, hence a rejected request yields an empty list.
-func httpValues(w http.ResponseWriter, req *http.Request) {
+func httpGet(w http.ResponseWriter, req *http.Request) {
 	q := req.URL.Query()
 
 	uri := q.Get("uri")

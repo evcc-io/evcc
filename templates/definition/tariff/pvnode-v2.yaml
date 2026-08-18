@@ -25,7 +25,7 @@ params:
       en: Site ID
       de: Standort-ID
     required: true
-    service: http/values?uri=https://api.pvnode.com/v2/sites/&token={apikey}&jq=[.[].id]
+    service: http/get?uri=https://api.pvnode.com/v2/sites/&token={apikey}&jq=[.[].id]
   - name: forecast_days
     description:
       en: Forecast days
