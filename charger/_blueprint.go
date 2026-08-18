@@ -112,8 +112,8 @@ func (wb *Blueprint) Currents() (float64, float64, float64, error) {
 var _ api.Identifier = (*Blueprint)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *Blueprint) Identify() ([]string, error) {
-	return nil, api.ErrNotAvailable
+func (wb *Blueprint) Identify() (string, error) {
+	return "", api.ErrNotAvailable
 }
 
 var _ api.PhaseSwitcher = (*Blueprint)(nil)
