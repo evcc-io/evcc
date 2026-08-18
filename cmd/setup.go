@@ -444,11 +444,7 @@ func configureChargers(static []config.Named, names ...string) error {
 	return eg.Wait()
 }
 
-func vehicleInstance(cc config.Named, disable bool) (api.Vehicle, error) {
-	if disable {
-		return nil, nil
-	}
-
+func vehicleInstance(cc config.Named) (api.Vehicle, error) {
 	ctx := util.WithLogger(context.TODO(), util.NewLogger(cc.Name))
 
 	typ, other, err := config.CustomDevice(cc.Type, cc.Other)
@@ -498,7 +494,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 		}
 
 		eg.Go(func() error {
-			instance, err := vehicleInstance(cc, false)
+			instance, err := vehicleInstance(cc)
 			if err != nil {
 				return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
 			}
@@ -542,9 +538,14 @@ func configureVehicles(static []config.Named, names ...string) error {
 				}
 			}
 
-			instance, err := vehicleInstance(cc, conf.Disable)
-			if err != nil {
-				return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
+			// disabled vehicles are not instantiated
+			var instance api.Vehicle
+			if !conf.Disable {
+				var err error
+				instance, err = vehicleInstance(cc)
+				if err != nil {
+					return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
+				}
 			}
 
 			mu.Lock()
