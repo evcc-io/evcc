@@ -21,8 +21,8 @@
   },
   "battery": {
     "card": {
-      "charging": "Carregant",
-      "discharging": "Descarregant",
+      "charging": "carregant",
+      "discharging": "descarregant",
       "energy": "Energia",
       "gridCharge": "Carrega de la xarxa elècrtica",
       "hold": "descàrrega bloquejada",
@@ -42,18 +42,39 @@
       },
       "bufferTitle": "Bateria com a buffer de càrrega",
       "discharge": "Evita la descàrrega de la bateria de casa en mode ràpid i durant càrregues planificades.",
-      "gridDischarge": "Permet a la bateria de casa exportar a la xarxa elèctrica."
+      "gridDischarge": "Permet a la bateria de casa exportar a la xarxa elèctrica.",
+      "priority": "La bateria de casa té prioritat mentre estigui per sota de {soc}. Llavors la bateria rep els excedents.",
+      "priorityNone": "Els excedents van directament al punt de càrrega. Marca el valor per sobre del qual {soc}, per a prioritzar la bateria de casa.",
+      "priorityTitle": "On va primer l'excedent?"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Carrega de la xarxa",
+        "discharge": "Descarrega a la xarxa",
+        "hold": "Evita la descàrrega",
+        "holdcharge": "Evita la càrrega",
+        "normal": "Operació normal"
+      },
+      "empty": "buida",
+      "full": "plena",
+      "highest": "Màxim ({value})",
+      "lowest": "Mínim ({value})",
+      "suggestion": "Suggeriment"
     }
   },
   "batterySettings": {
     "batteryLevel": "Nivell de bateria",
     "bufferStart": {
+      "above": "quan per sobre de {soc}.",
       "full": "quan gairebé ple {soc}.",
       "never": "només amb prous excedents."
     },
     "capacity": "{energy} de {total}",
+    "control": "Control de la bateria",
+    "discharge": "Evita descàrrega en mode ràpid i càrrega planificada.",
     "disclaimerHint": "Nota:",
     "disclaimerText": "aquests paràmetres només afecten el mode solar. El comportament de càrrega s'ajusta en conseqüència.",
+    "gridChargeTab": "Carregant de la xarxa",
     "legendBottomName": "prioritat de la casa",
     "legendBottomSubline": "fins que arriba a {soc}.",
     "legendMiddleName": "primer, el vehicle",
@@ -61,7 +82,217 @@
     "legendTopAutostart": "s'inicia automaticament",
     "legendTopName": "càrrega soportada per bateria",
     "legendTopSubline": "quan la bateria de casa està per sobre {soc}.",
-    "modalTitle": "Configuració bateria"
+    "legendTopSublineAbove": "quan per sobre de {soc}",
+    "legendTopSublineDisabled": "és {soc}.",
+    "legendTopSublineDisabledState": "deshabilitat",
+    "modalTitle": "Configuració bateria",
+    "noBattery": "No hi ha bateries configurades.",
+    "usageTab": "Ús de la bateria"
+  },
+  "colors": {
+    "auto": "Vehicle",
+    "hex": "Color en hexadecimal"
+  },
+  "config": {
+    "adminPassword": {
+      "description": "L'script del complement, executa una comanda a nivell de sistema que s'executa amb els permisos del procés de evcc. Torna a entrar la contrasenya d'administrador per a continuar.",
+      "invalid": "Contrasenya invalida. Si us plau, torna-ho a provar.",
+      "title": "Operació potencialment perillosa"
+    },
+    "apiKey": {
+      "description": "Dona als scripts i les automatitzacions tasques com accés segur a copies de seguretat programades sense compartir el password d'administrador.",
+      "exampleLabel": "Prova-ho: descarrega una copia de seguretat amb curl",
+      "generate": "Genera una clau API",
+      "generateConfirm": "Entra el teu password d'administrador per a generar una nova clau API.",
+      "keyLabel": "Clau API",
+      "regenerate": "Regenera la clau API",
+      "regenerateConfirm": "Introdueix el teu password d'administrador per a regenerar la clau API.",
+      "regenerateLink": "Regenerar",
+      "regenerateWarning": "Regenerar invalidarà laclau existent i qualsevol automatització que la utilitzi deixarà de funcionar. Continuar?",
+      "revealSuccess": "La teva nou clau API està llesta per a ser utilitzada.",
+      "revealTitle": "Creada clau API",
+      "shownOnce": "Aquesta clau es mostra tant sols una vegada. Guarda-la en un lloc segur. No la podràs tornar a consultar despés.",
+      "title": "Clau API"
+    },
+    "aux": {
+      "description": "Dispositiu que ajusta el seu consum basat en l'excedent disponible (com petits calentadors d'aigua). evcc espera que aquest dispositiu redueixi el seu consum si és necessari.",
+      "titleAdd": "Afegeix un consumidor que s'autoregula",
+      "titleEdit": "Edita un consumidor que s'autoregula"
+    },
+    "battery": {
+      "title": "Bateria",
+      "titleAdd": "Afegir Bateria",
+      "titleEdit": "Editar Bateria"
+    },
+    "charge": {
+      "titleAdd": "Afegir mesurador de consum",
+      "titleEdit": "Editar mesurador de consum"
+    },
+    "charger": {
+      "chargers": "Carregadors d'EV",
+      "generic": "Integracions genèriques",
+      "heatingdevices": "Dispositius escalfadors",
+      "ocppConfirmContinue": "El teu carregador no s'ha encara connectat a evcc. Estàs segur de continuar?",
+      "ocppConnected": "Connectat!",
+      "ocppDescription": "evcc té un servidor OCPP incorporat. Seguiu aquestes passes:",
+      "ocppHelp": "Copia aquesta URL en la configuració del carregador. Comprova el manual del fabricant per als detalls. S'espera que el carregador afegeixi automàticament el seu identificador únic (ID de l'estació) a la URL. En casos estranys, pot ser que tu hagis d'afegir manualment l'identificador. Exemple: `{url}`",
+      "ocppLabel": "URL del servidor OCPP",
+      "ocppNextStep": "Següent pas",
+      "ocppStep1": "Configura el teu carregador per a utilitzar evcc com a servidor OCPP.",
+      "ocppStep2": "Espera que el teu carregador es connecti a evcc.",
+      "ocppStep3": "Continua i completa la configuració.",
+      "ocppWaiting": "Esperant a connectar-se",
+      "switchsockets": "Endolls controlables",
+      "template": "Fabricant",
+      "titleAdd": {
+        "charging": "Afegir carregador",
+        "heating": "Afegir dispositiu de calefacció"
+      },
+      "titleEdit": {
+        "charging": "Editar carregador",
+        "heating": "Editar dispositiu de calefacció"
+      },
+      "type": {
+        "custom": {
+          "charging": "Carregador definit per l'usuari",
+          "heating": "Dispositiu de calefacció definit per l'usuari"
+        },
+        "heatpump": "Bomba de calor definida per l'usuari",
+        "sgready": "Bomba de calor definida per l'usuari (amb funció sg-ready a traves de complements)",
+        "sgready-boost": "Bomba de calor definida per l'usuari (amb funció sg-ready-boost, obsolet)",
+        "sgready-relay": "Bomba de calor definida per l'usuari (amb funció sg-ready a traves de relés)",
+        "switchsocket": "Endoll controlable definit per l'usuari"
+      }
+    },
+    "circuits": {
+      "description": "Assegura, que la suma de totes les càrregues connectades al circuit no excedeix els límits de potència i corrent. Els circuits es poden imbricar per a crear jerarquies.",
+      "title": "Control de càrregues",
+      "usableMeters": "Referències del mesuradors utilitzables"
+    },
+    "consumer": {
+      "description": "Segueix dispositius petits, no controlables (rentadora, nevera, ...). Dona una millor visió general del consum de la vivenda.",
+      "titleAdd": "Afegir mesuradors de potència",
+      "titleEdit": "Editar mesuradors de potència"
+    },
+    "control": {
+      "description": "Normalment els valors per defecte són correctes. Canvia'ls només si saps els que estàs fent.",
+      "descriptionInterval": "Cicle d'actualització en segons. Defineix la freqüència amb la que evcc llegeix les dades del comptador i ajusta la càrrega. El valor per defecte de 30 segons és una opció segura. Els dispositius com vehicles, carregadors i inversors solen necessitar alguns segons per a ajustar el seu comportament. Si els teus components reaccionen ràpidament, pot utilitzar valors més baixos. No recomanem en cap cas baixar dels 10 segons. Si s'observa un comportament erràtic o valors de potència irregulars, incrementi l'interval.",
+      "descriptionResidualPower": "Canvia el punt de funcionament del bucle de control. Si tens una bateria a la instal·lació, es recomana establir almenys un valor de 100 W. D'aquesta manera la bateria tindrà una lleugera prioritat vers la xarxa elèctrica.",
+      "labelInterval": "Interval d'actualització",
+      "labelResidualPower": "Potència residual",
+      "title": "Configuració del control"
+    },
+    "currency": {
+      "description": "Utilitzat per a conformar el cost de l'energia, els costos i estalvis segons la teva tarifa.",
+      "example": "La càrrega ha costat {price}. Has estalviat {amount}.",
+      "label": "Divisa",
+      "title": "Moneda"
+    },
+    "deviceValue": {
+      "activeClients": "Clients actius",
+      "amount": "Import",
+      "asleep": "adormit",
+      "broker": "Broker",
+      "bucket": "Bucket",
+      "capacity": "Capacitat",
+      "chargeStatus": "Estat",
+      "chargeStatusA": "no connectat",
+      "chargeStatusB": "connectat",
+      "chargeStatusC": "carregant",
+      "chargeStatusE": "sense energia",
+      "chargeStatusF": "error",
+      "chargedEnergy": "Carregat",
+      "co2": "Xarxa de CO₂",
+      "configured": "Configurat",
+      "connected": "Connectat",
+      "connections": "Connexions",
+      "controllable": "Controlable",
+      "currency": "Divisa",
+      "current": "Corrent",
+      "currentRange": "Corrent",
+      "curtailLimit": "Limit de injecció",
+      "curtailable": "Reduïble",
+      "curtailed": "Injecció limitada",
+      "detected": "Detectat",
+      "dimLimit": "Límit de consum",
+      "dimmed": "Consum limitat",
+      "enabled": "Habilitat",
+      "energy": "Energia",
+      "events": "Esdeveniment",
+      "exportLimit": "Límit d'exportació a xarxa",
+      "feedinPrice": "Preu d'injecció a la xarxa",
+      "forecast": "Previsió",
+      "gridPrice": "Preu de l'energia de la xarxa",
+      "heaterTempLimit": "Límit de l'escalfador",
+      "identifier": "Identificador RFID",
+      "loginBlocked": "Límit d'intent d'inici de sessió assolit",
+      "max": "màxim",
+      "messengers": "Serveis",
+      "no": "no",
+      "odometer": "Comptaquilòmetres",
+      "org": "Organització",
+      "outdoorTemp": "Temperatura exterior",
+      "phaseCurrents": "Corrent",
+      "phasePowers": "Potència",
+      "phaseVoltages": "Voltatge",
+      "phases1p3p": "Interruptor de fase",
+      "power": "Potència",
+      "powerRange": "Potència",
+      "price": "Preu",
+      "productionLimited": "Producció limitada",
+      "range": "Rang",
+      "remoteEnabled": "Habilitat",
+      "returnEnergy": "Energia (inversa)",
+      "singlePhase": "Monofàsic",
+      "soc": "Càrrega",
+      "solarForecast": "Previsió solar",
+      "switchDevice": "Control de corrent",
+      "temp": "Temperatura",
+      "topic": "Tema",
+      "url": "URL",
+      "vehicleLimitSoc": "Límit de càrrega",
+      "yes": "si"
+    },
+    "deviceValueChargeStatus": {
+      "A": "A (no connectat)",
+      "B": "B (connectat)",
+      "C": "C (carregant)"
+    },
+    "devices": {
+      "auxMeter": "Consumidor intel·ligent",
+      "batteryStorage": "Emmagatzematge en bateria",
+      "consumer": "Consumidor",
+      "solarSystem": "Sistema solar"
+    },
+    "editor": {
+      "loading": "Carregant editor YAML…"
+    },
+    "eebus": {
+      "certificate": {
+        "private": "Clau privada",
+        "public": "Certificat públic",
+        "title": "Certificats"
+      },
+      "configuredDevices": "Dispositius configurats",
+      "description": "Configuració que permet a evcc comunicar-se amb dispositius compatibles EEBus, com carregadors o una unitat de control de l'operador de xarxa. Tota la inicialització i generació de certificats es realitza automàticament en iniciar el sistema.",
+      "descriptionAdvanced": "No és necessari realitzar canvis. Només fes-los si saps realment què estàs fent. Si modifiques el SHIP-id o els certificats, tindràs que tornar a aparellar els dispositius.",
+      "interfaces": "Interfícies",
+      "interfacesHelp": "Límit d'interfícies de la xarxa EEBus per a evitar problemes de comunicació. Deixar en blanc en cas d'utilitzar totes les interfícies. Una entrada per línia.",
+      "noConfiguredDevices": "Cap dispositiu configurat per SKI.",
+      "noPairings": "Cap dispositiu aparellat.",
+      "pairings": "Dispositius aparellats",
+      "port": "Port",
+      "portHelp": "El port a utilitzar.",
+      "qr": "Codi d'enllaç",
+      "qrExplain": "Escanejar des d'un altre dispositiu EEBus durant la instal·lació per a enllaçar automàticament, sense entrar el codi SKI manualment.",
+      "removeConfirm": "Tota la configuració EEBus s'eliminarà. Es crearan nous certificats i identificadors en el pròxim inici. N'estàs segur?",
+      "removePairing": "Borrar enllaç",
+      "removePairingConfirm": "El dispositiu es desconnectarà i s'haurà d'aparellar una altre vegada. N'estàs segur?",
+      "shipid": "SHIP-ID",
+      "shipidExplain": "Identificador permanent del dispositiu per a la seva identificació en la xarxa EEBus.",
+      "shipidHelp": "Aquest SHIP-ID està enllaçat amb els certificats que es mostren a continuació.",
+      "ski": "SKI"
+    }
   },
   "footer": {
     "community": {
@@ -73,7 +304,7 @@
       "greenShareSub2": "fotovoltàica i emmagatzematge de bateries",
       "power": "potencia de carrega",
       "powerSub1": "{activeClients} de {totalClients} usuaris",
-      "powerSub2": "carregant...",
+      "powerSub2": "carregant.",
       "tabTitle": "Comunitat en viu"
     },
     "savings": {
@@ -91,7 +322,7 @@
       "confetti": "¿Vols una mica de confeti?",
       "confettiPromise": "També hi ha adhesius i confeti digital",
       "sticker": "...o adhesius de evcc?",
-      "supportUs": "La nostre missió: fer que repostar del sol sigui la norma. Ajuda'ns i dona suport econòmic a evcc!",
+      "supportUs": "La nostre missió: fer que repostar del sol sigui la norma. Ajuda'ns i dona suport econòmic a evcc.",
       "thanks": "Gràcies pel teu patrocini, {sponsor}! Això ens ajudarà a continuar desenvolupant evcc.",
       "titleNoSponsor": "Dona'ns suport",
       "titleSponsor": "Ets un seguidor"
@@ -111,7 +342,7 @@
       "modalTitle": "Actualitzacions disponibles",
       "modalUpdate": "Instal·lar",
       "modalUpdateNow": "Instal·lar ara",
-      "modalUpdateStarted": "Després de l'actualització, evcc es reiniciarà.",
+      "modalUpdateStarted": "Inicint la nova versió de evcc…",
       "modalUpdateStatusStart": "Instal·lació iniciada:"
     }
   },
@@ -134,7 +365,7 @@
       "cancel": "Cancel·lar",
       "confirm": "¡Sí, reinicia!",
       "description": "Sota circumstàncies normals no hauria de ser necessari reiniciar. Considereu sisplau la possibilitat de reportar un error si necessiteu reiniciar-lo regularment.",
-      "disclaimer": "Nota: evcc es pararà i dependrà del sistema operatiu per reiniciar el servei",
+      "disclaimer": "Nota: evcc es pararà i dependrà del sistema operatiu per reiniciar el servei.",
       "modalTitle": "¿Segur que vols tornar començar?"
     },
     "restartButton": "Reiniciar",
@@ -163,7 +394,7 @@
     "loadpoint": {
       "avgPrice": "Preu ⌀",
       "charged": "Carregat",
-      "co2": "CO₂ ⌀",
+      "co2": "⌀ CO₂",
       "duration": "Duració",
       "fallbackName": "Punt de càrrega",
       "power": "Potència",
@@ -234,7 +465,7 @@
     "vehicle": {
       "addVehicle": "Afegir un vehicle",
       "changeVehicle": "Canvia de vehicle",
-      "detectionActive": "Reconeixent vehicle...",
+      "detectionActive": "Reconeixent vehicle…",
       "fallbackName": "Vehicle",
       "moreActions": "Més accions",
       "none": "Cap vehicle",
@@ -243,7 +474,7 @@
       "vehicleSoc": "Nivell de càrrega"
     },
     "vehicleStatus": {
-      "charging": "Carregant...",
+      "charging": "Carregant…",
       "cheapEnergyCharging": "Energia barata disponible. Carregant...",
       "cleanEnergyCharging": "Energia neta disponible. Carregant...",
       "climating": "Precondicionament detectat.",
@@ -256,9 +487,9 @@
       "scale3p": "Augmentant la càrrega trifàsica en {remaining}...",
       "targetChargeActive": "Càrrega objectiu activa. Finalització estimada en {duration}.",
       "targetChargePlanned": "La càrrega objectiu comença en {duration}.",
-      "targetChargeWaitForVehicle": "Càrrega objectiu llesta. Esperar vehicle.",
+      "targetChargeWaitForVehicle": "Pla de càrrega enllestit. Esperant vehicle…",
       "vehicleLimitReached": "Límit de vehicle {soc} assolit.",
-      "waitForVehicle": "A punt per carregar. Esperant vehicle."
+      "waitForVehicle": "A punt per carregar. Esperant vehicle…"
     },
     "vehicles": "Estacionament"
   },
@@ -309,7 +540,7 @@
   "settings": {
     "hiddenFeatures": {
       "label": "En proves",
-      "value": "Mostra les característiques experimentals de la interfície d'usuari."
+      "value": "Mostra les funcions experimentals."
     },
     "language": {
       "auto": "Automàtic",
@@ -340,10 +571,10 @@
   },
   "smartCost": {
     "activeHours": "{active} de {total}",
-    "activeHoursLabel": "Hores funcionant",
+    "activeHoursLabel": "Temps de funcionament",
     "co2Label": "Emissions de CO₂",
     "co2Limit": "Límit de CO₂",
-    "loadpointDescription": "Habilita temporalment la càrrega ràpida en mode solar",
+    "loadpointDescription": "Habilita temporalment la càrrega ràpida en mode solar.",
     "modalTitle": "Xarxa intel·ligent de càrrega",
     "none": "cap",
     "priceLabel": "Preu de l'energia",
