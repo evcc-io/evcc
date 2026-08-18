@@ -201,40 +201,60 @@ func TestVehicleDetectByID(t *testing.T) {
 
 	type testcase struct {
 		string
-		id, i1, i2 string
-		res        api.Vehicle
-		prepare    func(testcase)
+		ids     []string
+		i1, i2  string
+		res     api.Vehicle
+		match   string
+		prepare func(testcase)
 	}
 	tc := []testcase{
-		{"1/_/_->0", "1", "", "", nil, func(tc testcase) {
+		{"1/_/_->0", []string{"1"}, "", "", nil, "", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return(nil)
 			v2.EXPECT().Identifiers().Return(nil)
 			v1.EXPECT().Identifiers().Return(nil)
 			v2.EXPECT().Identifiers().Return(nil)
 		}},
-		{"1/1/2->1", "1", "1", "2", v1, func(tc testcase) {
+		{"1/1/2->1", []string{"1"}, "1", "2", v1, "1", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 		}},
-		{"2/1/2->2", "2", "1", "2", v2, func(tc testcase) {
+		{"2/1/2->2", []string{"2"}, "1", "2", v2, "2", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 		}},
-		{"11/1*/2->1", "11", "1*", "2", v1, func(tc testcase) {
+		{"11/1*/2->1", []string{"11"}, "1*", "2", v1, "11", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			// v2.EXPECT().Identifiers().Return([]string{tc.i2})
 		}},
-		{"22/1*/2*->2", "22", "1*", "2*", v2, func(tc testcase) {
+		{"22/1*/2*->2", []string{"22"}, "1*", "2*", v2, "22", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 		}},
-		{"2/_/*->2", "2", "", "*", v2, func(tc testcase) {
+		{"2/_/*->2", []string{"2"}, "", "*", v2, "2", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return(nil)
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 			v1.EXPECT().Identifiers().Return(nil)
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+		}},
+		// second identity matches, e.g. rfid tag and vehicle id
+		{"x,2/1/2->2", []string{"x", "2"}, "1", "2", v2, "2", func(tc testcase) {
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+		}},
+		// wildcard matches the second identity
+		{"x,22/1/2*->2", []string{"x", "22"}, "1", "2*", v2, "22", func(tc testcase) {
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 		}},
 	}
@@ -252,8 +272,12 @@ func TestVehicleDetectByID(t *testing.T) {
 			tc.prepare(tc)
 		}
 
-		if res := lp.selectVehicleByID(tc.id); tc.res != res {
+		res, match := lp.selectVehicleByID(tc.ids...)
+		if tc.res != res {
 			t.Errorf("expected %v, got %v", tc.res, res)
+		}
+		if tc.match != match {
+			t.Errorf("expected match %q, got %q", tc.match, match)
 		}
 	}
 }
@@ -332,7 +356,7 @@ func (c *idCharger) Status() (api.ChargeStatus, error) { return api.StatusB, nil
 func (c *idCharger) Enabled() (bool, error)            { return false, nil }
 func (c *idCharger) Enable(bool) error                 { return nil }
 func (c *idCharger) MaxCurrent(int64) error            { return nil }
-func (c *idCharger) Identify() (string, error)         { return c.id, nil }
+func (c *idCharger) Identify() ([]string, error)       { return []string{c.id}, nil }
 
 // TestReidentifyActiveVehicleKeepsMode is a regression test for #31499:
 // re-identifying the already-active vehicle must not reapply its default mode.

@@ -358,10 +358,10 @@ func (wb *Keba) currents() (float64, float64, float64, error) {
 }
 
 // identify implements the api.Identifier interface
-func (wb *Keba) identify() (string, error) {
+func (wb *Keba) identify() ([]string, error) {
 	b, err := wb.conn.ReadHoldingRegisters(kebaRegRfid, 2)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	id := hex.EncodeToString(b)
@@ -369,7 +369,7 @@ func (wb *Keba) identify() (string, error) {
 		id = ""
 	}
 
-	return id, nil
+	return []string{id}, nil
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface

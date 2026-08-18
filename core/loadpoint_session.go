@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -48,8 +49,10 @@ func (lp *Loadpoint) createSession() {
 	}
 
 	if c, ok := api.Cap[api.Identifier](lp.charger); ok {
-		if id, err := c.Identify(); err == nil {
-			lp.session.Identifier = id
+		if ids, err := c.Identify(); err == nil {
+			if idx := slices.IndexFunc(ids, func(id string) bool { return id != "" }); idx >= 0 {
+				lp.session.Identifier = ids[idx]
+			}
 		}
 	}
 
