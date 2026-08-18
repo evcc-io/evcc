@@ -325,7 +325,7 @@ func formatValue(val any) string {
 }
 
 // RenderResult renders the result template to instantiate the proxy
-func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, map[string]any, error) {
+func (t *Template) RenderResult(class Class, renderMode int, other map[string]any) ([]byte, map[string]any, error) {
 	values := t.Defaults(renderMode)
 	if err := mergeMaps(other, values); err != nil {
 		return nil, values, err
@@ -422,7 +422,13 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 		}
 	}
 
-	tmpl, err := FuncMap(template.Must(baseTmpl.Clone())).Parse(t.Render)
+	// class-local includes take precedence over the global ones
+	base, ok := classTmpl[class]
+	if !ok {
+		base = baseTmpl
+	}
+
+	tmpl, err := FuncMap(template.Must(base.Clone())).Parse(t.Render)
 	if err != nil {
 		return nil, res, err
 	}

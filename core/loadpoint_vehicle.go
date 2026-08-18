@@ -3,6 +3,7 @@ package core
 import (
 	"errors"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -59,63 +60,79 @@ func (lp *Loadpoint) identifyVehicle() {
 		return
 	}
 
-	id, err := identifier.Identify()
+	ids, err := identifier.Identify()
 	if err != nil {
 		lp.log.ERROR.Println("charger vehicle id:", err)
 		return
 	}
 
-	if lp.vehicleIdentifier == id {
+	ids = slices.DeleteFunc(ids, func(id string) bool { return id == "" })
+
+	// vehicle removed
+	if len(ids) == 0 {
+		lp.setVehicleIdentifier("")
 		return
 	}
 
-	// vehicle found or removed
+	// identity unchanged
+	if slices.Contains(ids, lp.vehicleIdentifier) {
+		return
+	}
+
+	lp.log.DEBUG.Println("charger vehicle id:", strings.Join(ids, ", "))
+
+	// the charger may report multiple identities, e.g. rfid tag and vehicle id
+	vehicle, id := lp.selectVehicleByID(ids...)
+	if id == "" {
+		id = ids[0]
+	}
+
 	lp.setVehicleIdentifier(id)
 
-	if id != "" {
-		lp.log.DEBUG.Println("charger vehicle id:", id)
+	if vehicle != nil {
+		lp.stopVehicleDetection()
 
-		if vehicle := lp.selectVehicleByID(id); vehicle != nil {
-			lp.stopVehicleDetection()
-
-			// already active via a different detection path - avoid reapplying its mode
-			if lp.GetVehicle() != vehicle {
-				lp.setActiveVehicle(vehicle)
-			}
+		// already active via a different detection path - avoid reapplying its mode
+		if lp.GetVehicle() != vehicle {
+			lp.setActiveVehicle(vehicle)
 		}
 	}
 }
 
-// selectVehicleByID selects the vehicle with the given ID
-func (lp *Loadpoint) selectVehicleByID(id string) api.Vehicle {
+// selectVehicleByID selects the vehicle matching any of the given IDs and returns the matching ID
+func (lp *Loadpoint) selectVehicleByID(ids ...string) (api.Vehicle, string) {
 	vehicles := lp.coordinatedVehicles()
 
 	// find exact match
-	for _, vehicle := range vehicles {
-		for _, vid := range vehicle.Identifiers() {
-			if strings.EqualFold(id, vid) {
-				return vehicle
+	for _, id := range ids {
+		for _, vehicle := range vehicles {
+			if slices.ContainsFunc(vehicle.Identifiers(), func(vid string) bool {
+				return strings.EqualFold(id, vid)
+			}) {
+				return vehicle, id
 			}
 		}
 	}
 
 	// find placeholder match
-	for _, vehicle := range vehicles {
-		for _, vid := range vehicle.Identifiers() {
-			// case insensitive match
-			re, err := regexp.Compile("(?i)" + strings.ReplaceAll(vid, "*", ".*?"))
-			if err != nil {
-				lp.log.ERROR.Printf("vehicle id: %v", err)
-				continue
-			}
+	for _, id := range ids {
+		for _, vehicle := range vehicles {
+			if slices.ContainsFunc(vehicle.Identifiers(), func(vid string) bool {
+				// case insensitive match
+				re, err := regexp.Compile("(?i)" + strings.ReplaceAll(vid, "*", ".*?"))
+				if err != nil {
+					lp.log.ERROR.Printf("vehicle id: %v", err)
+					return false
+				}
 
-			if re.MatchString(id) {
-				return vehicle
+				return re.MatchString(id)
+			}) {
+				return vehicle, id
 			}
 		}
 	}
 
-	return nil
+	return nil, ""
 }
 
 // setActiveVehicle assigns currently active vehicle, configures soc estimator

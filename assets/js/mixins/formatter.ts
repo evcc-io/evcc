@@ -74,7 +74,8 @@ export default defineComponent({
       return (Math.round(num * base) / base).toFixed(precision);
     },
     getPowerUnit(watt: number): POWER_UNIT {
-      return watt >= 10_000_000 ? POWER_UNIT.MW : watt >= 1000 ? POWER_UNIT.KW : POWER_UNIT.W;
+      const abs = Math.abs(watt);
+      return abs >= 10_000_000 ? POWER_UNIT.MW : abs >= 1000 ? POWER_UNIT.KW : POWER_UNIT.W;
     },
     fmtW(watt = 0, format = POWER_UNIT.KW, withUnit = true, digits?: number) {
       let unit = format;

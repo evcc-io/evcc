@@ -20,10 +20,22 @@ package sponsor
 // SOFTWARE.
 
 import (
+	"os"
+	"strings"
+
 	i2c "github.com/d2r2/go-i2c"
 )
 
 const hemspro = "hemspro"
+
+// deviceSerial returns the device tree serial number or empty string
+func deviceSerial() string {
+	b, err := os.ReadFile("/sys/firmware/devicetree/base/serial-number")
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(strings.Trim(string(b), "\x00"))
+}
 
 // checkHemsPro checks if the hardware is a supported HEMS Pro device and returns sponsor subject
 func checkHemsPro() string {
@@ -49,5 +61,7 @@ func checkHemsPro() string {
 	}
 
 	// I2C succeeded — verify with server
-	return checkHardware(hemspro, nil)
+	return checkHardware(hemspro, map[string]string{
+		"serial": deviceSerial(),
+	})
 }

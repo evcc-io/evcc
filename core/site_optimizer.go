@@ -413,8 +413,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	}
 
 	if optimizerURI() == OPTIMIZER_URI {
-		// limit to 2 days for sake of performance
-		minLen = min(2*96, minLen)
+		minLen = slotsUntil(grid, optimizerHorizon(time.Now()), minLen)
 	}
 
 	if expectedSlots := 8; minLen < expectedSlots {
@@ -522,8 +521,9 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 			continue
 		}
 
-		// unknown vehicle capacity: account for the consumption as uncontrollable load
-		if v := lp.GetVehicle(); v == nil || v.Capacity() == 0 {
+		// no vehicle capacity and no session energy limit to model against:
+		// account for the consumption as uncontrollable load
+		if v := lp.GetVehicle(); v == nil || (v.Capacity() == 0 && lp.GetLimitEnergy() == 0) {
 			unmodelled += unmodelledPower(lp)
 			continue
 		}
@@ -790,24 +790,29 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 	// vehicle
 	v := lp.GetVehicle()
 
-	maxSoc := v.Capacity() * 1e3 // Wh
-	if v := lp.EffectiveLimitSoc(); v > 0 {
-		maxSoc *= float64(v) / 100
-	} else if v := lp.GetLimitEnergy(); v > 0 {
-		maxSoc = v * 1e3
+	capacity := v.Capacity() // kWh
+	soc := lp.GetSoc()       // percent
+
+	// without capacity or soc there is no battery state to model, but a session energy
+	// limit still bounds the charge- use charged energy as state (see remainingLimitEnergy)
+	if limit := lp.GetLimitEnergy(); limit > 0 && (capacity == 0 || soc == 0) {
+		bat.SInitial = float32(lp.GetChargedEnergy())    // Wh
+		bat.SMax = max(bat.SInitial, float32(limit*1e3)) // prevent infeasible if limit already exceeded
+	} else {
+		maxSoc := capacity * float64(lp.EffectiveLimitSoc()) * 10 // Wh
+		bat.SInitial = float32(capacity * soc * 10)               // Wh
+		bat.SMax = max(bat.SInitial, float32(maxSoc))             // prevent infeasible if current soc above maximum
 	}
 
-	bat.SInitial = float32(v.Capacity() * lp.GetSoc() * 10) // Wh
-	bat.SMax = max(bat.SInitial, float32(maxSoc))           // prevent infeasible if current soc above maximum
-
 	detail.Type = batteryTypeVehicle
-	detail.Capacity = v.Capacity()
+	detail.Capacity = capacity
 
 	if vt := v.GetTitle(); vt != "" {
 		if detail.Title != "" {
-			detail.Title += " – "
+			detail.Title += " (" + vt + ")"
+		} else {
+			detail.Title = vt
 		}
-		detail.Title += vt
 	}
 
 	// find vehicle name/id
@@ -831,13 +836,15 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 	case api.ModeMinPV:
 		// forced min charging
 		demand = continuousDemand(lp, minLen)
-		// add smartcost limit and plan goal, if configured
+		// add smartcost limit, precondition and plan goal, if configured
 		demand = applySmartCostLimit(lp, demand, grid, minLen)
+		demand = applyPrecondition(lp, demand, minLen)
 		site.applyPlanGoal(lp, &bat, minLen)
 
 	case api.ModePV:
-		// add smartcost limit and plan goal, if configured
+		// add smartcost limit, precondition and plan goal, if configured
 		demand = applySmartCostLimit(lp, nil, grid, minLen)
+		demand = applyPrecondition(lp, demand, minLen)
 		site.applyPlanGoal(lp, &bat, minLen)
 	}
 
@@ -1119,6 +1126,27 @@ func currentRates(tariff api.Tariff) api.Rates {
 	})
 }
 
+// optimizerHorizon is the timeframe the hosted optimizer is limited to for sake
+// of performance: 48 hours, extended to the end of that day. In the early hours
+// the extension would add almost a full day, hence it only applies past 6:00.
+func optimizerHorizon(t time.Time) time.Time {
+	horizon := t.Add(48 * time.Hour)
+	if t.Hour() < 6 {
+		return horizon
+	}
+	return now.With(horizon).EndOfDay()
+}
+
+// slotsUntil limits maxLen to the slots starting before the given horizon
+func slotsUntil(rates api.Rates, horizon time.Time, maxLen int) int {
+	if i := slices.IndexFunc(rates[:min(maxLen, len(rates))], func(slot api.Rate) bool {
+		return slot.Start.After(horizon)
+	}); i >= 0 {
+		return i
+	}
+	return maxLen
+}
+
 func timeSteps(minLen int, now time.Time) []int {
 	res := make([]int, 0, minLen)
 
@@ -1216,6 +1244,50 @@ func applySmartCostLimit(lp loadpoint.API, demand []float32, grid api.Rates, min
 			demand[i] = float32(maxPower / slotsPerHour)
 		}
 		// else: keep existing demand (either 0 or minPower from ModeMinPV)
+	}
+
+	return demand
+}
+
+// applyPrecondition forces max charging power during the planner's precondition window
+// ("late charging"), i.e. the last precondition duration before the plan time
+func applyPrecondition(lp loadpoint.API, demand []float32, minLen int) []float32 {
+	precondition := lp.EffectivePlanStrategy().Precondition
+	if precondition <= 0 {
+		return demand
+	}
+
+	ts := lp.EffectivePlanTime()
+	if ts.IsZero() {
+		return demand
+	}
+
+	// TODO precise slot placement
+	end := time.Until(ts)
+	start := end - precondition
+	if end <= 0 {
+		return demand
+	}
+
+	first := max(int(start/tariff.SlotDuration), 0)
+	if first >= minLen {
+		return demand
+	}
+
+	if demand == nil {
+		demand = make([]float32, minLen)
+	}
+
+	energy := float32(lp.EffectiveMaxPower() / slotsPerHour)
+
+	for i := first; i < minLen; i++ {
+		slotStart := time.Duration(i) * tariff.SlotDuration
+		overlap := min(end, slotStart+tariff.SlotDuration) - max(start, slotStart)
+		if overlap <= 0 {
+			break
+		}
+
+		demand[i] = max(demand[i], energy*float32(overlap)/float32(tariff.SlotDuration))
 	}
 
 	return demand
