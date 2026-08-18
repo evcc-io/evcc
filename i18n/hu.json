@@ -858,7 +858,6 @@
       },
       "planNumber": "Terv {number}",
       "precondition": {
-        "description": "Töltse {duration} indulás előtt az akkumulátor előkondícionálásához.",
         "label": "Késleltetett Töltés",
         "optionAll": "minden",
         "optionNo": "nem"
@@ -868,7 +867,6 @@
       "repeatingPlans": "Ismétlődő tervek",
       "selectAll": "Összes kiválasztása",
       "strategyDisabledDescription": "A töltés a lehető legkésőbb kezdődik, hogy pontosan az indulás előtt befejeződjön. Dinamikus hálózati árak vagy CO₂-tarifa esetén itt több lehetőség áll rendelkezésre.",
-      "strategySettings": "Stratégiai beállítások",
       "time": "Idő",
       "title": "Terv",
       "unsavedChanges": "Vannak nem mentett módosítások. Alkalmazza most?",

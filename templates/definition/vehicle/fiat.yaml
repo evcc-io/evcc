@@ -13,8 +13,8 @@ params:
   - preset: vehicle-features
 render: |
   type: fiat
-  {{ include "vehicle-base" . }}
+  {{ include "base" . }}
   {{- if .pin }}
   pin: {{ .pin }} # mandatory to wake up, deep refresh Soc & start/stop charge
   {{- end }}
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}

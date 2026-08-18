@@ -14,7 +14,7 @@ params:
     default: 0.081
 render: |
   type: custom
-  {{ include "tariff-base" . }}
+  {{ include "base" . }}
   forecast:
     source: http
     uri: https://api.bkw.ch/api/dyntariffs/v1/tariffs
