@@ -23,7 +23,7 @@ func (lp *Loadpoint) demandProfile(from time.Time) (*[96]float64, bool) {
 	case temp:
 		profile, err = lp.chargeEnergy.EnergyProfile(from)
 
-	case lp.chargerHasFeature(api.PredictorProfileWeekday):
+	case lp.chargerHasFeature(api.PredictorProfileSameWeekday):
 		profile, err = lp.chargeEnergy.EnergyProfileWeekday(time.Now().Weekday())
 
 	default:

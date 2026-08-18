@@ -578,7 +578,7 @@ export interface Loadpoint {
   /** Heating device demand forecast uses daily average profile scaled by outdoor temperature. */
   chargerFeaturePredictorProfileTemperature: boolean;
   /** Heating device demand forecast uses same-weekday average over past 4 weeks. */
-  chargerFeaturePredictorProfileWeekday: boolean;
+  chargerFeaturePredictorProfileSameWeekday: boolean;
   /** Charger is a heating device. SoC values represent temperature in degrees. */
   chargerFeatureHeating: boolean;
   /** Charger is an always-connected device without vehicles and charging sessions, like a heat pump. */

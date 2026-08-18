@@ -3071,7 +3071,7 @@
             "description": "Heating device demand forecast uses daily average profile scaled by outdoor temperature.",
             "type": "boolean"
           },
-          "chargerFeaturePredictorProfileWeekday": {
+          "chargerFeaturePredictorProfileSameWeekday": {
             "description": "Heating device demand forecast uses same-weekday average over past 4 weeks.",
             "type": "boolean"
           },
@@ -3442,7 +3442,7 @@
           "chargerFeatureCoarseCurrent",
           "chargerFeatureContinuous",
           "chargerFeaturePredictorProfileTemperature",
-          "chargerFeaturePredictorProfileWeekday",
+          "chargerFeaturePredictorProfileSameWeekday",
           "chargerFeatureHeating",
           "chargerFeatureIntegratedDevice",
           "chargerFeatureOffline",
