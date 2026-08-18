@@ -22,6 +22,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -373,15 +374,18 @@ func (wb *AlpitronicHYC) Identify() ([]string, error) {
 		return nil, err
 	}
 
-	if vid := hycInput(b, hycRegVID, 8); !allZero(vid) {
-		return []string{hex.EncodeToString(vid)}, nil
-	}
+	var res []string
 
+	// the idTag register holds the rfid uid as null-padded ascii string
 	if idTag := hycInput(b, hycRegIdTag, 20); !allZero(idTag) {
-		return []string{hex.EncodeToString(idTag)}, nil
+		res = append(res, strings.ToLower(strings.TrimRight(string(idTag), "\x00")))
 	}
 
-	return nil, nil
+	if vid := hycInput(b, hycRegVID, 8); !allZero(vid) {
+		res = append(res, hex.EncodeToString(vid))
+	}
+
+	return res, nil
 }
 
 var _ api.Battery = (*AlpitronicHYC)(nil)
