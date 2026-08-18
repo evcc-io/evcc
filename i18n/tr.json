@@ -19,6 +19,31 @@
     "successCloseTab": "Artık bu sekmeyi kapatabilirsin.",
     "title": "Yetkilendirme Durumu"
   },
+  "battery": {
+    "card": {
+      "charging": "şarj oluyor",
+      "discharging": "pilden çalışıyor",
+      "energy": "Enerji",
+      "gridCharge": "şebekeden şarj",
+      "hold": "bataryadan kullanım kapalı",
+      "holdCharge": "şarj olma kilitli",
+      "power": "Güç",
+      "soc": "Batarya seviyesi"
+    },
+    "combined": "Birleşik",
+    "config": {
+      "gridDischarge": "Ev tipi bataryanın şebekeye deşarj olmasına izin verin.",
+      "priorityNone": "Güneş enerjisi fazlası doğrudan şarj noktalarına aktarılır. Ev bataryasına öncelik vermek için {soc} değerinin üzerinde bir ayar yapın.",
+      "priorityTitle": "Fazla akım ilk nereye gitsin?"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Şebekeden şarj",
+        "discharge": "Şebekeye deşarj",
+        "hold": "Pil kullanımını önle"
+      }
+    }
+  },
   "batterySettings": {
     "batteryLevel": "Doluluk oranı",
     "bufferStart": {
