@@ -232,17 +232,17 @@ func (wb *OpenWBPro) Phases1p3p(phases int) error {
 var _ api.Identifier = (*OpenWBPro)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *OpenWBPro) Identify() (string, error) {
+func (wb *OpenWBPro) Identify() ([]string, error) {
 	res, err := wb.statusG.Get()
 	if err != nil || res.VehicleID == "--" {
-		return "", err
+		return nil, err
 	}
 
 	if res.VehicleID != "" {
-		return res.VehicleID, nil
+		return []string{res.VehicleID}, nil
 	}
 
-	return res.RfidTag, nil
+	return []string{res.RfidTag}, nil
 }
 
 func (wb *OpenWBPro) wakeup() error {

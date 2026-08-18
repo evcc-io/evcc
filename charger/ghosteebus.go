@@ -113,10 +113,10 @@ func NewGhostEEBus(ctx context.Context, ski, ip, user, password string, hasMeter
 var _ api.Identifier = (*GhostEEBus)(nil)
 
 // Identify implements api.Identifier, preferring RFID over EEBUS identification
-func (wb *GhostEEBus) Identify() (string, error) {
+func (wb *GhostEEBus) Identify() ([]string, error) {
 	if wb.hasRFID {
-		if id, err := wb.identify(); err == nil && id != "" {
-			return id, nil
+		if ids, err := wb.identify(); err == nil && len(ids) > 0 && ids[0] != "" {
+			return ids, nil
 		}
 	}
 	return wb.EEBus.Identify()
@@ -215,8 +215,8 @@ func (wb *GhostEEBus) getPhases() (int, error) {
 }
 
 // identify implements RFID identification via REST API.
-func (wb *GhostEEBus) identify() (string, error) {
+func (wb *GhostEEBus) identify() ([]string, error) {
 	var res ghostone.RfidCardLastRead
 	err := wb.GetJSON(wb.uri+"/rfid-cards/last-read", &res)
-	return res.UUID, err
+	return []string{res.UUID}, err
 }

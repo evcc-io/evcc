@@ -504,7 +504,7 @@ func (wb *BenderCC) getPhases() (int, error) {
 }
 
 // identify implements the api.Identifier interface
-func (wb *BenderCC) identify() (string, error) {
+func (wb *BenderCC) identify() ([]string, error) {
 	if !wb.legacy && !wb.mennekes4 {
 		b, err := wb.conn.ReadHoldingRegisters(bendRegSmartVehicleDetected, 1)
 		if err == nil && binary.BigEndian.Uint16(b) != 0 {
@@ -512,16 +512,16 @@ func (wb *BenderCC) identify() (string, error) {
 		}
 
 		if id := bytesAsString(b); id != "" || err != nil {
-			return id, err
+			return []string{id}, err
 		}
 	}
 
 	b, err := wb.conn.ReadHoldingRegisters(bendRegUserID, 10)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return bytesAsString(b), nil
+	return []string{bytesAsString(b)}, nil
 }
 
 // soc implements the api.Battery interface

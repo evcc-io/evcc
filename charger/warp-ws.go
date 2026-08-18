@@ -456,13 +456,13 @@ func (w *WarpWS) voltages() (float64, float64, float64, error) {
 }
 
 // identify prefers the vehicle mac read via ISO 15118 over the RFID tag
-func (w *WarpWS) identify() (string, error) {
+func (w *WarpWS) identify() ([]string, error) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
 	if w.evState != nil && w.evState.Mac != "" {
-		return w.evState.Mac, nil
+		return []string{w.evState.Mac}, nil
 	}
-	return w.chargeTracker.AuthorizationInfo.TagId, nil
+	return []string{w.chargeTracker.AuthorizationInfo.TagId}, nil
 }
 
 // soc implements the api.Battery interface

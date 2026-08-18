@@ -252,7 +252,7 @@ func TestVehicleDetectByID(t *testing.T) {
 			tc.prepare(tc)
 		}
 
-		if res := lp.selectVehicleByID(tc.id); tc.res != res {
+		if res, _ := lp.selectVehicleByID(tc.id); tc.res != res {
 			t.Errorf("expected %v, got %v", tc.res, res)
 		}
 	}
@@ -332,7 +332,7 @@ func (c *idCharger) Status() (api.ChargeStatus, error) { return api.StatusB, nil
 func (c *idCharger) Enabled() (bool, error)            { return false, nil }
 func (c *idCharger) Enable(bool) error                 { return nil }
 func (c *idCharger) MaxCurrent(int64) error            { return nil }
-func (c *idCharger) Identify() (string, error)         { return c.id, nil }
+func (c *idCharger) Identify() ([]string, error)       { return []string{c.id}, nil }
 
 // TestReidentifyActiveVehicleKeepsMode is a regression test for #31499:
 // re-identifying the already-active vehicle must not reapply its default mode.

@@ -367,21 +367,21 @@ func (wb *AlpitronicHYC) TotalEnergy() (float64, error) {
 var _ api.Identifier = (*AlpitronicHYC)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *AlpitronicHYC) Identify() (string, error) {
+func (wb *AlpitronicHYC) Identify() ([]string, error) {
 	b, err := wb.inputG()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if vid := hycInput(b, hycRegVID, 8); !allZero(vid) {
-		return hex.EncodeToString(vid), nil
+		return []string{hex.EncodeToString(vid)}, nil
 	}
 
 	if idTag := hycInput(b, hycRegIdTag, 20); !allZero(idTag) {
-		return hex.EncodeToString(idTag), nil
+		return []string{hex.EncodeToString(idTag)}, nil
 	}
 
-	return "", nil
+	return nil, nil
 }
 
 var _ api.Battery = (*AlpitronicHYC)(nil)

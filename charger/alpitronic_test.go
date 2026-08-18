@@ -229,7 +229,7 @@ func TestAlpitronicIdentify(t *testing.T) {
 
 	id, err = wb.Identify()
 	require.NoError(t, err)
-	assert.Equal(t, "0000aabbccddeeff", id)
+	assert.Equal(t, []string{"0000aabbccddeeff"}, id)
 
 	// tag as fallback
 	regs = hycRegs(1, hycStateCharging)
@@ -239,7 +239,7 @@ func TestAlpitronicIdentify(t *testing.T) {
 
 	id, err = wb.Identify()
 	require.NoError(t, err)
-	assert.Equal(t, "4142"+strings.Repeat("0", 36), id)
+	assert.Equal(t, []string{"4142" + strings.Repeat("0", 36)}, id)
 }
 
 func TestAlpitronicEnable(t *testing.T) {
