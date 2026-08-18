@@ -1,4 +1,5 @@
 template: open-meteo-temperature
+link: https://open-meteo.com
 products:
   - brand: Open-Meteo Temperature
 requirements:

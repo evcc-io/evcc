@@ -1,4 +1,5 @@
 template: nordpool
+link: https://www.nordpoolgroup.com/en/services/power-market-data-services/day-ahead-market-data/
 products:
   - brand: Nordpool
     description:
