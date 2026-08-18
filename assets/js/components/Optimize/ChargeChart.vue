@@ -1,14 +1,6 @@
 <template>
 	<div>
-		<div class="chart-container my-3">
-			<Chart
-				ref="chartRef"
-				type="bar"
-				:data="chartData"
-				:options="chartOptions"
-				:height="300"
-			/>
-		</div>
+		<div ref="chartEl" class="charge-chart my-3"></div>
 		<LegendList :legends="legends" :device-colors="deviceColors" />
 	</div>
 </template>
@@ -16,48 +8,28 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import {
-	Chart as ChartJS,
-	CategoryScale,
-	LinearScale,
-	BarController,
-	LineController,
-	BarElement,
-	LineElement,
-	PointElement,
-	Title,
-	Tooltip,
-	Legend as ChartLegendPlugin,
-	type ChartOptions,
-	type ChartData,
-} from "chart.js";
-import { Chart } from "vue-chartjs";
+	FONT_FAMILY,
+	forecastYAxis,
+	tooltipStyle,
+	tooltipTable,
+	type TooltipRow,
+} from "../Forecast/echarts";
 import type { EvoptData } from "./TimeSeriesDataTable.vue";
-import type { CURRENCY, BatteryDetail, DeviceColors } from "@/types/evcc";
+import type { BatteryDetail, DeviceColors } from "@/types/evcc";
 import formatter from "@/mixins/formatter";
+import echartsChart from "@/mixins/echartsChart";
 import colors from "@/colors";
 import LegendList from "../Sessions/LegendList.vue";
 import type { Legend } from "../Sessions/types";
+import { slotTimes, slotXAxis, formatSlotRange, whToKW, loadpointTitle } from "./chart";
 
-ChartJS.register(
-	CategoryScale,
-	LinearScale,
-	BarController,
-	LineController,
-	BarElement,
-	LineElement,
-	PointElement,
-	Title,
-	Tooltip,
-	ChartLegendPlugin
-);
+const GRID_LABEL = "Grid Power";
+const SOLAR_LABEL = "Solar Forecast";
 
 export default defineComponent({
 	name: "ChargeChart",
-	components: {
-		Chart,
-		LegendList,
-	},
-	mixins: [formatter],
+	components: { LegendList },
+	mixins: [formatter, echartsChart],
 	props: {
 		evopt: {
 			type: Object as PropType<EvoptData>,
@@ -71,10 +43,6 @@ export default defineComponent({
 			type: String,
 			default: "",
 		},
-		currency: {
-			type: String as PropType<CURRENCY>,
-			required: true,
-		},
 		batteryColors: {
 			type: Array as PropType<string[]>,
 			default: () => [],
@@ -82,343 +50,176 @@ export default defineComponent({
 		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
 	},
 	computed: {
-		timeLabels(): string[] {
-			const startTime = new Date(this.timestamp);
-			return this.evopt.req.time_series.dt.map((_, index) => {
-				// Calculate cumulative time from dt array
-				let cumulativeSeconds = 0;
-				for (let i = 0; i < index; i++) {
-					cumulativeSeconds += this.evopt.req.time_series.dt[i] || 0;
-				}
-
-				const currentTime = new Date(startTime.getTime() + cumulativeSeconds * 1000);
-				const hour = currentTime.getHours();
-				const minute = currentTime.getMinutes();
-
-				// Only show labels at exact hour boundaries divisible by 4
-				if (minute === 0 && hour % 4 === 0) {
-					return hour.toString();
-				}
-				return "";
+		consumptionLabel(): string {
+			return this.$t("main.history.group.consumer");
+		},
+		consumptionColor(): string {
+			return colors.muted || "";
+		},
+		// stack and legend order: loadpoints first, then batteries
+		entryOrder(): number[] {
+			const batteries: number[] = [];
+			const vehicles: number[] = [];
+			this.batteryDetails.forEach((d, i) =>
+				(d.type === "battery" ? batteries : vehicles).push(i)
+			);
+			return [...vehicles, ...batteries];
+		},
+		times(): number[] {
+			return slotTimes(this.timestamp, this.evopt.req.time_series.dt);
+		},
+		gridPower(): number[] {
+			const gridImport = this.evopt.res.grid_import || [];
+			const gridExport = this.evopt.res.grid_export || [];
+			return gridImport.map((imp, i) => {
+				const importKW = this.toKW(imp, i);
+				const exportKW = this.toKW(gridExport[i] || 0, i);
+				return importKW > 0 ? importKW : -exportKW;
 			});
 		},
-		chartData(): ChartData {
-			const datasets: any[] = [];
-
-			// 1. Grid power data (import/export)
-			datasets.push(...this.getGridPowerDatasets());
-
-			// 2. Solar Forecast
-			datasets.push(...this.getSolarDatasets());
-
-			// 3. Household Demand (power)
-			datasets.push(...this.getHouseholdDatasets());
-
-			// 4. Battery power data
-			datasets.push(...this.getBatteryPowerDatasets());
-
-			return {
-				labels: this.timeLabels,
-				datasets: datasets,
-			};
+		chartSeries(): Record<string, unknown>[] {
+			const series: Record<string, unknown>[] = [
+				{
+					name: GRID_LABEL,
+					type: "line",
+					z: 4,
+					data: this.gridPower,
+					showSymbol: false,
+					smooth: 0.2,
+					lineStyle: { color: colors.grid || "", width: 2 },
+					itemStyle: { color: colors.grid || "" },
+					emphasis: { disabled: true },
+				},
+				{
+					name: SOLAR_LABEL,
+					type: "line",
+					z: 4,
+					data: this.evopt.req.time_series.ft.map(this.toKW),
+					showSymbol: false,
+					smooth: 0.2,
+					lineStyle: { color: colors.self || "", width: 3 },
+					itemStyle: { color: colors.self || "" },
+					emphasis: { disabled: true },
+				},
+				{
+					name: this.consumptionLabel,
+					type: "bar",
+					stack: "charge",
+					data: this.evopt.req.time_series.gt.map(this.toKW),
+					itemStyle: { color: this.consumptionColor },
+					emphasis: { disabled: true },
+				},
+			];
+			this.entryOrder.forEach((index) => {
+				const battery = this.evopt.res.batteries[index];
+				if (!battery) return;
+				// charging positive, discharging negative; one of both is always zero
+				const power = battery.charging_power.map((charging, i) => {
+					const chargingKW = this.toKW(charging, i);
+					const dischargingKW = this.toKW(battery.discharging_power[i] || 0, i);
+					return chargingKW > 0 ? chargingKW : -dischargingKW;
+				});
+				series.push({
+					name: this.getBatteryTitle(index),
+					type: "bar",
+					stack: "charge",
+					data: power,
+					itemStyle: { color: this.batteryColors[index] },
+					emphasis: { disabled: true },
+				});
+			});
+			return series;
 		},
-		chartOptions(): ChartOptions {
+		chartOption(): Record<string, unknown> {
 			return {
-				responsive: true,
-				maintainAspectRatio: false,
-				color: colors.text || "",
 				animation: false,
-				interaction: {
-					mode: "index",
-					intersect: false,
-				},
-				hover: {
-					mode: "index",
-					intersect: false,
-				},
-				elements: {
-					point: {
-						radius: 0, // Hide points by default
-						hoverRadius: 6, // Show points on hover
+				textStyle: { fontFamily: FONT_FAMILY },
+				grid: { top: 10, right: 36, bottom: 34, left: 0, borderWidth: 0 },
+				tooltip: {
+					trigger: "axis",
+					axisPointer: {
+						type: "line",
+						lineStyle: { color: colors.muted || "", opacity: 0.4 },
 					},
+					// no chart anchor: category-axis values are scalars, convertToPixel
+					// would choke on them; follow the pointer instead
+					...tooltipStyle(colors.text || ""),
+					formatter: this.tooltipFormatter,
 				},
-				plugins: {
-					title: { display: false },
-					legend: { display: false },
-					tooltip: {
-						backgroundColor: "#000000cc",
-						boxPadding: 5,
-						usePointStyle: false,
-						borderWidth: 0.00001,
-						mode: "index",
-						intersect: false,
-						callbacks: {
-							title: (context) => {
-								const index = context[0]?.dataIndex;
-								return this.formatTimeRange(index ?? 0);
-							},
-							label: (context) => {
-								const label = context.dataset.label || "";
-								const value = context.parsed.y ?? 0;
-								// Special handling for Grid Power
-								if (label === "Grid Power") {
-									if (value > 0) {
-										return `Grid Import: ${this.formatValue(Math.abs(value))} kW`;
-									} else if (value < 0) {
-										return `Grid Export: ${this.formatValue(Math.abs(value))} kW`;
-									} else {
-										return `Grid: 0 kW`;
-									}
-								}
-								// Power axis (kW)
-								return `${label}: ${this.formatValue(value)} kW`;
-							},
-						},
+				xAxis: slotXAxis(this.times, this.weekdayShort),
+				yAxis: forecastYAxis({
+					min: undefined,
+					position: "right",
+					splitNumber: 5,
+					axisLabel: {
+						color: colors.muted || "",
+						formatter: (v: number) => this.fmtNumber(v, 0),
 					},
-					datalabels: {
-						display: false,
-					},
-				},
-				scales: {
-					x: {
-						title: {
-							display: false,
-						},
-						stacked: true,
-						grid: {
-							display: true,
-							drawOnChartArea: true,
-							drawTicks: true,
-							color: "transparent",
-							tickLength: 4,
-						},
-						ticks: {
-							autoSkip: false,
-							maxRotation: 0,
-							minRotation: 0,
-							callback: (_value, index) => {
-								const startTime = new Date(this.timestamp);
-
-								// Calculate cumulative time from dt array
-								let cumulativeSeconds = 0;
-								for (let i = 0; i < index; i++) {
-									cumulativeSeconds += this.evopt.req.time_series.dt[i] || 0;
-								}
-
-								const currentTime = new Date(
-									startTime.getTime() + cumulativeSeconds * 1000
-								);
-								const hour = currentTime.getHours();
-								const minute = currentTime.getMinutes();
-
-								// Show ticks at exact hour boundaries
-								if (minute === 0) {
-									// Show labels only at hours divisible by 4
-									const step = window.innerWidth < 576 ? 6 : 4;
-									if (hour % step === 0) {
-										return hour.toString();
-									}
-									// Show tick but no label for other hours
-									return "";
-								}
-								// Return undefined to skip this tick entirely
-								return undefined;
-							},
-						},
-					},
-					y: {
-						type: "linear",
-						position: "left",
-						title: {
-							display: true,
-							text: "Power (kW)",
-						},
-						stacked: true,
-						grid: {
-							drawOnChartArea: true,
-							color: colors.border || "",
-							lineWidth: 1,
-						},
-						// Keep scales purely based on values, no fixed boundaries
-					},
-				},
+				}),
+				series: this.chartSeries,
 			};
 		},
 		legends(): Legend[] {
-			const batteryTitles = new Set(
-				(this.evopt?.res?.batteries || []).map((_, i) => this.getBatteryTitle(i))
-			);
-			return this.chartData.datasets
-				.filter((dataset) => !dataset.hidden)
-				.map((dataset) => {
-					const label = dataset.label || "";
-					const isLine = dataset.type === "line";
-
-					return {
-						label,
-						color: (dataset.backgroundColor || dataset.borderColor) as string,
-						value: "", // Required by Legend type, but not used in this context
-						type: isLine ? "line" : "area",
-						id: batteryTitles.has(label) ? label : undefined,
-					};
+			const legends: Legend[] = [
+				{ label: GRID_LABEL, color: colors.grid || "", value: "", type: "line" },
+				{ label: SOLAR_LABEL, color: colors.self || "", value: "", type: "line" },
+				{
+					label: this.consumptionLabel,
+					color: this.consumptionColor,
+					value: "",
+					type: "area",
+				},
+			];
+			this.entryOrder.forEach((i) => {
+				const detail = this.batteryDetails[i];
+				if (!detail) return;
+				legends.push({
+					label: this.getBatteryTitle(i),
+					color: this.batteryColors[i] || "",
+					value: "",
+					type: "area",
+					id: detail.type === "vehicle" ? loadpointTitle(detail) : undefined,
 				});
+			});
+			return legends;
 		},
 	},
 	methods: {
-		getSolarDatasets() {
-			return [
-				{
-					label: "Solar Forecast",
-					data: this.evopt.req.time_series.ft.map(this.convertWhToKW),
-					borderColor: colors.self,
-					backgroundColor: colors.self,
-					fill: false,
-					tension: 0.2,
-					borderJoinStyle: "round",
-					borderCapStyle: "round",
-					pointRadius: 0,
-					pointHoverRadius: 6,
-					borderWidth: 3,
-					yAxisID: "y",
-					type: "line" as const,
-					stack: "solar",
-				},
-			];
+		toKW(wh: number, index: number): number {
+			return whToKW(wh, this.evopt.req.time_series.dt[index] || 0);
 		},
-		getBatteryPowerDatasets() {
-			const datasets: any[] = [];
-
-			if (this.evopt.res.batteries?.length > 0) {
-				this.evopt.res.batteries.forEach((battery, index) => {
-					// Use passed battery colors (same as SoC)
-					const baseColor = this.batteryColors[index];
-
-					// Combined charging/discharging power as one line (same color as SoC)
-					// Charging = positive, Discharging = negative
-					const combinedPower = battery.charging_power.map((chargingPower, timeIndex) => {
-						const dischargingPower = battery.discharging_power[timeIndex] || 0;
-						const chargingKW = this.convertWhToKW(chargingPower, timeIndex);
-						const dischargingKW = this.convertWhToKW(dischargingPower, timeIndex);
-
-						// Return charging as positive, discharging as negative
-						// One should be zero, the other should have the value
-						return chargingKW > 0 ? chargingKW : -dischargingKW;
-					});
-
-					datasets.push({
-						label: this.getBatteryTitle(index),
-						data: combinedPower,
-						backgroundColor: baseColor,
-						borderWidth: 0,
-						yAxisID: "y",
-						type: "bar" as const,
-						stack: "charge",
-					});
-				});
-			}
-
-			return datasets;
-		},
-		getHouseholdDatasets() {
-			const householdPower = this.evopt.req.time_series.gt.map(this.convertWhToKW);
-
-			// Use the next color in the palette after all battery colors
-			const batteryCount = this.batteryColors.length;
-			const householdColor = colors.palette[batteryCount % colors.palette.length];
-
-			return [
-				{
-					label: "Household",
-					data: householdPower,
-					backgroundColor: householdColor,
-					borderWidth: 0,
-					yAxisID: "y",
-					type: "bar" as const,
-					stack: "charge",
-				},
-			];
-		},
-
-		getGridPowerDatasets() {
-			const datasets: any[] = [];
-
-			// Get grid import and export data
-			const gridImport = this.evopt.res.grid_import || [];
-			const gridExport = this.evopt.res.grid_export || [];
-
-			// Combine grid import and export into a single line
-			// Grid import is positive, grid export is negative (one is always zero)
-			const gridPower = gridImport.map((importValue, index) => {
-				const exportValue = gridExport[index] || 0;
-				const importKW = this.convertWhToKW(importValue, index);
-				const exportKW = this.convertWhToKW(exportValue, index);
-				// Return import as positive, export as negative
-				return importKW > 0 ? importKW : -exportKW;
-			});
-
-			datasets.push({
-				label: "Grid Power",
-				data: gridPower,
-				borderColor: "#666666", // Dark gray
-				backgroundColor: "#666666", // Dark gray
-				fill: false,
-				tension: 0.2,
-				borderWidth: 2, // Same thickness as price chart lines
-				pointRadius: 0,
-				pointHoverRadius: 6,
-				yAxisID: "y",
-				type: "line" as const,
-				stack: "grid",
-			});
-
-			return datasets;
-		},
-
-		convertWhToKW(wh: number, index: number): number {
-			// Convert Wh to kW by normalizing against time duration
-			// Power (kW) = Energy (Wh) / Time (h) / 1000
-			const dtSeconds = this.evopt.req.time_series.dt[index] || 0;
-			const hours = dtSeconds / 3600; // Convert seconds to hours
-			return wh / hours / 1000;
-		},
-
-		formatValue: (value: number): string => {
+		formatValue(value: number): string {
 			return value.toFixed(2);
 		},
-
 		getBatteryTitle(index: number): string {
 			const detail = this.batteryDetails[index];
 			return detail ? detail.title || detail.name : `Battery ${index + 1}`;
 		},
-
-		formatTimeRange(index: number): string {
-			const startTime = new Date(this.timestamp);
-
-			// Calculate cumulative time from dt array
-			let cumulativeSeconds = 0;
-			for (let i = 0; i < index; i++) {
-				cumulativeSeconds += this.evopt.req.time_series.dt[i] || 0;
-			}
-
-			const slotStart = new Date(startTime.getTime() + cumulativeSeconds * 1000);
-			const slotDuration = this.evopt.req.time_series.dt[index] || 0;
-			const slotEnd = new Date(slotStart.getTime() + slotDuration * 1000);
-
-			const formatTime = (date: Date): string => {
-				const hours = date.getHours().toString().padStart(2, "0");
-				const minutes = date.getMinutes().toString().padStart(2, "0");
-				return `${hours}:${minutes}`;
-			};
-
-			return `${formatTime(slotStart)} - ${formatTime(slotEnd)}`;
+		tooltipFormatter(
+			params: { dataIndex: number; seriesName?: string; value?: number }[]
+		): string {
+			const arr = Array.isArray(params) ? params : [params];
+			if (!arr.length) return "";
+			const dt = this.evopt.req.time_series.dt;
+			const head = formatSlotRange(this.times, dt, arr[0]!.dataIndex);
+			const rows: TooltipRow[] = arr
+				.filter((p) => p.value != null && !Number.isNaN(p.value))
+				.map((p) => {
+					const value = p.value as number;
+					if (p.seriesName === GRID_LABEL) {
+						const name = value > 0 ? "Grid Import" : value < 0 ? "Grid Export" : "Grid";
+						return { name, values: [`${this.formatValue(Math.abs(value))} kW`] };
+					}
+					return { name: p.seriesName, values: [`${this.formatValue(value)} kW`] };
+				});
+			return tooltipTable(head, rows);
 		},
 	},
 });
 </script>
 
 <style scoped>
-.chart-container {
-	position: relative;
+.charge-chart {
 	height: 300px;
 	width: 100%;
 }

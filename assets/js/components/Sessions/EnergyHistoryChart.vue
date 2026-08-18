@@ -1,106 +1,57 @@
 <template>
 	<div>
-		<div style="position: relative; height: 300px" class="my-3">
-			<Bar :data="chartData" :options="options" />
-		</div>
+		<div ref="chartEl" class="chart my-3"></div>
 		<LegendList :legends="legends" :device-colors="deviceColors" />
 	</div>
 </template>
 
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
-import { Bar } from "vue-chartjs";
 import {
-	BarController,
-	BarElement,
-	CategoryScale,
-	LinearScale,
-	Legend,
-	Tooltip,
-	type ChartData,
-	type ScriptableContext,
-	type TooltipModel,
-	type TooltipItem,
-} from "chart.js";
-import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
+	FONT_FAMILY,
+	forecastGrid,
+	forecastYAxis,
+	roundedStackData,
+	tooltipStyle,
+	tooltipTable,
+	xAxisLabelStyle,
+	type TooltipRow,
+} from "./echarts";
+import historyChart from "./historyChart";
 import LegendList from "./LegendList.vue";
-import formatter, { POWER_UNIT } from "@/mixins/formatter";
+import { POWER_UNIT } from "@/mixins/formatter";
 import colors from "@/colors";
-import { GROUPS, PERIODS, type Session } from "./types";
+import { GROUPS } from "./types";
 import type { DeviceColors } from "@/types/evcc";
 
-registerChartComponents([BarController, BarElement, CategoryScale, LinearScale, Legend, Tooltip]);
+interface Dataset {
+	label: string;
+	color: string;
+	data: number[];
+}
 
 export default defineComponent({
 	name: "EnergyHistoryChart",
-	components: { Bar, LegendList },
-	mixins: [formatter],
+	components: { LegendList },
+	mixins: [historyChart],
 	props: {
-		sessions: { type: Array as PropType<Session[]>, default: () => [] },
 		groupBy: { type: String as PropType<GROUPS>, default: GROUPS.NONE },
-		period: { type: String as PropType<PERIODS>, default: PERIODS.TOTAL },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
 		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
 	},
 	computed: {
-		firstDay() {
-			if (this.sessions.length === 0) {
-				return null;
-			}
-			return new Date(this.sessions[0]!.created);
-		},
-		month() {
-			return (this.firstDay?.getMonth() || 0) + 1;
-		},
-		year() {
-			return this.firstDay?.getFullYear() || 0;
-		},
-		lastDay() {
-			if (this.sessions.length === 0) {
-				return null;
-			}
-			return new Date(this.sessions[this.sessions.length - 1]!.created);
-		},
-		chartData(): ChartData<"bar", number[], unknown> {
-			console.log("update energy history data");
+		chartData(): { labels: string[]; datasets: Dataset[] } {
 			const result: Record<number, Record<string, number>> = {};
 			const groups: Set<string> = new Set();
 
-			if (this.firstDay && this.lastDay) {
-				//const lastDay = new Date(this.year, this.month, 0);
-				//const daysInMonth = this.lastDay.getDate();
-				let xFrom, xTo;
-				if (this.period === PERIODS.TOTAL) {
-					xFrom = this.firstDay.getFullYear();
-					xTo = this.lastDay.getFullYear();
-				} else if (this.period === PERIODS.YEAR) {
-					xFrom = 1;
-					xTo = 12;
-				} else {
-					xFrom = 1;
-					xTo = new Date(
-						this.lastDay.getFullYear(),
-						this.lastDay.getMonth() + 1,
-						0
-					).getDate();
-				}
-
-				// initialize result with empty arrays
-				for (let i = xFrom; i <= xTo; i++) {
+			const range = this.bucketRange;
+			if (range) {
+				for (let i = range[0]; i <= range[1]; i++) {
 					result[i] = {};
 				}
 
-				// Populate with actual data
 				this.sessions.forEach((session) => {
-					let index;
-					const date = new Date(session.created);
-					if (this.period === PERIODS.MONTH) {
-						index = date.getDate();
-					} else if (this.period === PERIODS.YEAR) {
-						index = date.getMonth() + 1;
-					} else {
-						index = date.getFullYear();
-					}
+					const index = this.bucketIndex(new Date(session.created));
 
 					if (this.groupBy === GROUPS.NONE) {
 						groups.add("grid");
@@ -120,40 +71,31 @@ export default defineComponent({
 				});
 			}
 
-			const datasets = Array.from(groups).map((group) => {
+			// stable alphabetical order so entries don't jump between periods
+			const sortedGroups = Array.from(groups).sort((a, b) => a.localeCompare(b));
+
+			const datasets = sortedGroups.map((group) => {
 				const colorGroup = this.groupBy === GROUPS.NONE ? "solar" : this.groupBy;
-				const backgroundColor = this.colorMappings[colorGroup][group];
+				const color = this.colorMappings[colorGroup][group];
 				const label =
 					this.groupBy === GROUPS.NONE ? this.$t(`sessions.group.${group}`) : group;
-
 				return {
-					backgroundColor,
+					color,
 					label,
 					data: Object.values(result).map((day) => day[group] || 0),
-					borderRadius: (context: ScriptableContext<"bar">) => {
-						const threshold = 0.04; // 400 Wh
-						const { dataIndex, datasetIndex } = context;
-						const currentValue = context.dataset.data[dataIndex] as number;
-						const previousValuesExist = context.chart.data.datasets
-							.slice(datasetIndex + 1)
-							.some((dataset: any) => (dataset?.data[dataIndex] || 0) > threshold);
-						return currentValue > threshold && !previousValuesExist
-							? { topLeft: 10, topRight: 10, bottomLeft: 0, bottomRight: 0 }
-							: { topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0 };
-					},
 				};
 			});
 
 			return {
 				labels: Object.keys(result),
-				datasets: datasets,
+				datasets,
 			};
 		},
 		legends() {
 			const pickable = this.groupBy !== GROUPS.NONE;
 			return this.chartData.datasets.map((dataset) => ({
-				label: dataset.label || "",
-				color: dataset.backgroundColor,
+				label: dataset.label,
+				color: dataset.color,
 				value: this.fmtWh(
 					dataset.data.reduce((acc, curr) => acc + curr, 0) * 1e3,
 					POWER_UNIT.AUTO
@@ -161,103 +103,92 @@ export default defineComponent({
 				id: pickable ? dataset.label || undefined : undefined,
 			}));
 		},
-		options() {
-			// capture vue component this to be used in chartjs callbacks
-			// eslint-disable-next-line @typescript-eslint/no-this-alias
-			const vThis = this;
+		chartOption(): Record<string, unknown> {
+			const { labels, datasets } = this.chartData;
+			const head = this.tooltipHead;
+			const stackData = roundedStackData(datasets, labels.length);
 			return {
-				...commonOptions,
-				locale: this.$i18n?.locale,
-				color: colors.text,
-				borderSkipped: false,
-				maxBarThickness: 40,
 				animation: false,
-				plugins: {
-					...commonOptions.plugins,
-					tooltip: {
-						...commonOptions.plugins.tooltip,
-						axis: "x",
-						positioner: (context: TooltipModel<"bar">) => {
-							const { chart, tooltipPosition } = context;
-							const { tooltip } = chart;
-							const { width, height } = tooltip || {};
-							const { x, y } = tooltipPosition(false);
-							const { innerWidth, innerHeight } = window;
-
-							return {
-								x: Math.min(x ?? 0, innerWidth - (width ?? 0)),
-								y: Math.min(y ?? 0, innerHeight - (height ?? 0)),
-							};
-						},
-						callbacks: {
-							title: (tooltipItem: TooltipItem<"bar">[]) => {
-								const { label } = tooltipItem[0] || { label: "" };
-								if (this.period === PERIODS.TOTAL) {
-									return label;
-								} else if (this.period === PERIODS.YEAR) {
-									const date = new Date(this.year, Number(label) - 1, 1);
-									return this.fmtMonth(date, false);
-								} else {
-									const date = new Date(this.year, this.month - 1, Number(label));
-									return this.fmtDayMonth(date);
-								}
-							},
-							label: (tooltipItem: TooltipItem<"bar">) => {
-								const datasetLabel = tooltipItem.dataset.label || "";
-								const value =
-									(tooltipItem.dataset.data[tooltipItem.dataIndex] as number) ||
-									0;
-								return value
-									? `${datasetLabel}: ${this.fmtWh(value * 1e3, POWER_UNIT.AUTO)}`
-									: null;
-							},
-							labelColor: tooltipLabelColor(false),
-							labelPointStyle() {
-								return {
-									pointStyle: "circle",
-								};
-							},
-						},
-						itemSort(a: TooltipItem<"bar">, b: TooltipItem<"bar">) {
-							return b.datasetIndex - a.datasetIndex;
-						},
+				textStyle: { fontFamily: FONT_FAMILY },
+				grid: { ...forecastGrid(), left: 0, right: 36 },
+				tooltip: {
+					trigger: "axis",
+					axisPointer: { type: "shadow", shadowStyle: { color: "transparent" } },
+					...tooltipStyle(colors.text || ""),
+					// read values from chartData, rendered series hide tiny top slivers
+					formatter: (params: { dataIndex: number }[]) => {
+						const idx = params?.[0]?.dataIndex;
+						if (idx == null) return "";
+						const rows: TooltipRow[] = [];
+						const values = datasets.map((d) => d.data[idx] || 0).filter((v) => v > 0);
+						if (!values.length) return "";
+						const unit = this.getPowerUnit(Math.max(...values) * 1000);
+						// top of stack first
+						[...datasets].reverse().forEach((dataset) => {
+							const value = dataset.data[idx] || 0;
+							if (!value) return;
+							rows.push({
+								name: datasets.length > 1 ? dataset.label : undefined,
+								values: [this.fmtWh(value * 1e3, unit)],
+							});
+						});
+						return tooltipTable(head(labels[idx] ?? ""), rows);
 					},
 				},
-				scales: {
-					x: {
-						stacked: true,
-						border: { display: false },
-						grid: { display: false },
-						ticks: {
-							color: colors.muted,
-							callback(value: number) {
-								return vThis.period === PERIODS.YEAR
-									? vThis.fmtMonth(new Date(vThis.year, value, 1), true)
-									: (this as any).getLabelForValue(value);
-							},
-						},
-					},
-					y: {
-						stacked: true,
-						border: { display: false },
-						grid: { color: colors.border },
-						title: {
-							text: "kWh",
-							display: true,
-							color: colors.muted,
-						},
-						ticks: {
-							callback: (value: number) =>
-								this.fmtWh(value * 1e3, POWER_UNIT.KW, false, 0),
-							color: colors.muted,
-							maxTicksLimit: 6,
-						},
-						position: "right",
-						min: 0,
+				xAxis: {
+					type: "category",
+					data: labels,
+					axisLine: { show: false },
+					axisTick: { show: false },
+					splitLine: { show: false },
+					axisLabel: {
+						...xAxisLabelStyle(),
+						formatter: this.xAxisLabel,
 					},
 				},
-			} as any;
+				yAxis: forecastYAxis({
+					position: "right",
+					min: 0,
+					splitLine: {
+						showMinLine: true,
+						showMaxLine: true,
+						lineStyle: { color: colors.border || "" },
+					},
+					name: "kWh",
+					nameLocation: "end",
+					nameGap: 18,
+					nameTextStyle: {
+						color: colors.muted || "",
+						fontFamily: FONT_FAMILY,
+						fontSize: 10,
+						opacity: 0.75,
+						align: "left",
+						// align with the value labels' left edge (8px default label margin)
+						padding: [0, 0, 0, 8],
+					},
+					axisLabel: {
+						color: colors.muted || "",
+						hideOverlap: true,
+						formatter: (v: number) => this.fmtWh(v * 1e3, POWER_UNIT.KW, false, 0),
+					},
+				}),
+				series: datasets.map((dataset, i) => ({
+					name: dataset.label,
+					type: "bar",
+					stack: "energy",
+					barMaxWidth: 40,
+					itemStyle: { color: dataset.color },
+					data: stackData[i],
+				})),
+			};
 		},
 	},
 });
 </script>
+
+<style scoped>
+.chart {
+	width: 100%;
+	height: 300px;
+}
+</style>

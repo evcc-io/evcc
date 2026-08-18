@@ -22,22 +22,18 @@ params:
     id: 1
   - name: maxacpower
     service: modbus/read?address=60027&type=holding&encoding=uint32&scale=1&resulttype=int&{modbus}
-  - preset: battery-params
-  - name: capacity
-    service: modbus/read?address=60031&type=holding&encoding=uint32&scale=0.001&resulttype=int&{modbus}
+  - preset: battery-minmaxsoc
   - name: minsoc
     advanced: true
     default: 10
   - name: maxsoc
     advanced: true
     default: 100
-  - name: maxdischargepower
-    service: modbus/read?address=60029&type=holding&encoding=uint32&scale=1&resulttype=int&{modbus}
   - name: firmware
     type: choice
     choice: ["<01.01.00.28.15", ">=01.01.00.28.15"]
     default: "<01.01.00.28.15"
-    advanced: true
+    required: true
     description:
       de: Firmware-Version
       en: Firmware version
@@ -48,6 +44,12 @@ params:
       en: |
         Firmware 01.01.00.28.15 and higher allows for correct hold/holdcharge functionality, dimming and curtailing.
         Older versions only support hold function without (dis)charge.
+  - name: capacity
+    deprecated: true
+  - name: maxchargepower
+    deprecated: true
+  - name: maxdischargepower
+    deprecated: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -82,6 +84,9 @@ render: |
       address: 60090 # Phase A Grid Current (A * 100)
       type: holding
       decode: int16
+    block: # 60089-60094
+      register: 60089
+      count: 6
     scale: 0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -89,6 +94,9 @@ render: |
       address: 60092 # Phase B Grid Current (A * 100)
       type: holding
       decode: int16
+    block: # 60089-60094
+      register: 60089
+      count: 6
     scale: 0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -96,6 +104,9 @@ render: |
       address: 60094 # Phase C Grid Current (A * 100)
       type: holding
       decode: int16
+    block: # 60089-60094
+      register: 60089
+      count: 6
     scale: 0.01
   voltages:
   - source: modbus
@@ -104,6 +115,9 @@ render: |
       address: 60089 # Phase A Grid Voltage (V * 10)
       type: holding
       decode: uint16
+    block: # 60089-60094
+      register: 60089
+      count: 6
     scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -111,6 +125,9 @@ render: |
       address: 60091 # Phase B Grid Voltage (V * 10)
       type: holding
       decode: uint16
+    block: # 60089-60094
+      register: 60089
+      count: 6
     scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -118,6 +135,9 @@ render: |
       address: 60093 # Phase C Grid Voltage (V * 10)
       type: holding
       decode: uint16
+    block: # 60089-60094
+      register: 60089
+      count: 6
     scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
@@ -201,6 +221,14 @@ render: |
   {{- end }}
   {{- end }}
   {{- if eq .usage "battery" }}
+  capacity:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 60031 # Energy Storage Capacity (kWh * 1000)
+      type: holding
+      decode: uint32
+    scale: 0.001
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -225,6 +253,22 @@ render: |
       type: holding
       decode: uint64
     scale: 0.01
+  maxchargepower:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 60029 # Rated Energy Storage Power (kW * 1000)
+      type: holding
+      decode: uint32
+    scale: 0.75 # 75% of rated energy storage power
+  maxdischargepower:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 60029 # Rated Energy Storage Power (kW * 1000)
+      type: holding
+      decode: uint32
+    scale: 1
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -357,9 +401,8 @@ render: |
         set:
           source: sequence
           set:
-            {{- if eq .firmware ">=01.01.00.28.15" }}
             - source: const
-              value: 2
+              value: {{ if eq .firmware "<01.01.00.28.15" }}99{{ else }}2{{ end }}
               set:
                 source: modbus
                 {{- include "modbus" . | indent 14 }}
@@ -367,6 +410,7 @@ render: |
                   address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
                   type: writemultiple
                   decode: uint16
+            {{- if eq .firmware ">=01.01.00.28.15" }}
             - source: const
               value: 0 # Set charge limit to 0W
               set:
@@ -385,59 +429,8 @@ render: |
                   address: 60320 # Energy Storage Maximum Discharging Power (kW * 1000)
                   type: writemultiple
                   decode: uint32
-            {{- else }}
-            - source: sleep
-              duration: 0s
             {{- end }}
   {{- if not ( eq .firmware "<01.01.00.28.15" ) }}
-  curtail:
-    source: switch
-    switch:
-      - case: 100 # No curtailment
-        set:
-          source: const
-          value: 0xFFFFFFFF # No limit
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 60324 # Grid Maximum Export Power (kW * 1000)
-              type: writemultiple
-              encoding: uint32
-    default:
-      source: go
-      in:
-        - name: maxdischargepower
-          type: int
-          config:
-            source: const
-            value: {{ .maxdischargepower }}
-      script: |
-        powerlimit := ( maxdischargepower * curtail ) / 100
-        powerlimit
-      out:
-        - name: powerlimit
-          type: int
-          config:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 60324 # Grid Maximum Export Power (kW * 1000)
-              type: writemultiple
-              encoding: uint32
-  curtailed:
-    source: go
-    in:
-      - name: limit
-        type: int
-        config:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 60324 # Grid Maximum Export Power (kW * 1000)
-            type: holding
-            decode: uint32
-    script: limit != 0xFFFFFFFF
   dim:
     source: ifelse
     if:
@@ -480,5 +473,5 @@ render: |
             decode: uint32
     script: limit == 0
   {{- end }}
-  {{- include "battery-params" . }}
+  {{- include "battery-minmaxsoc" . }}
   {{- end }}

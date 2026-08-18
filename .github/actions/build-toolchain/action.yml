@@ -18,10 +18,10 @@ runs:
         go-version-file: go.mod
         cache: false # managed explicitly below to keep the scoped namespaces
 
-    - uses: actions/setup-node@v6
+    - uses: voidzero-dev/setup-vp@v1
       with:
         node-version: "26"
-        cache: "npm"
+        cache: true
 
     # Writes are namespaced by cache-scope so a PR build cannot poison the
     # shared "main" cache; PRs still read it through the fallback restore-key.

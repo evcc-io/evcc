@@ -30,8 +30,8 @@ params:
   - preset: tariff-features
 render: |
   type: custom
-  {{ include "tariff-base" . }}
-  {{ include "tariff-features" . }}
+  {{ include "base" . }}
+  {{ include "features" . }}
   forecast:
     source: http
     uri: https://api.energypriceforecast.eu/api/v1/evcc/tariff?country={{.region}}&type=grid&currency={{.currency}}&hours={{.horizon}}

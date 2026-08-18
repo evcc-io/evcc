@@ -6,6 +6,8 @@ release:
     owner: evcc-io
     name: evcc
   mode: replace
+  # bugfix releases of an older line are published, but do not become "latest"
+  make_latest: '{{ envOrDefault "MAKE_LATEST" "true" }}'
 
 builds:
   - id: evcc
@@ -14,7 +16,8 @@ builds:
       - -trimpath
       - -tags=release
     ldflags:
-      - -X github.com/evcc-io/evcc/util.Version={{ .Version }} -s -w
+      # the package version carries a timestamp for ordering, the reported version does not
+      - -X github.com/evcc-io/evcc/util.Version={{ if .IsSnapshot }}{{ incminor .Tag }}-dev+{{ .ShortCommit }}{{ else }}{{ .Version }}{{ end }} -s -w
     env:
       - CGO_ENABLED=0
     goos:
@@ -57,11 +60,27 @@ archives:
 universal_binaries:
   - replace: true
 
+notarize:
+  macos:
+    - enabled: '{{ isEnvSet "MACOS_SIGN_P12" }}'
+      sign:
+        certificate: "{{ .Env.MACOS_SIGN_P12 }}"
+        password: "{{ .Env.MACOS_SIGN_PASSWORD }}"
+      notarize:
+        issuer_id: "{{ .Env.MACOS_NOTARY_ISSUER_ID }}"
+        key_id: "{{ .Env.MACOS_NOTARY_KEY_ID }}"
+        key: "{{ .Env.MACOS_NOTARY_KEY }}"
+        wait: true
+        timeout: 20m
+
 checksum:
   name_template: "checksums.txt"
 
 snapshot:
-  version_template: "{{ .Tag }}-next"
+  # semver pre-release of the upcoming version. The timestamp makes the package
+  # version increase monotonically: apt compares it numerically, while the commit
+  # alone would sort randomly.
+  version_template: "{{ incminor .Version }}-dev.{{ .Timestamp }}+{{ .ShortCommit }}"
 
 changelog:
   sort: asc
@@ -118,22 +137,15 @@ nfpms:
       preremove: ./packaging/scripts/preremove.sh
       postremove: ./packaging/scripts/postremove.sh
 
-brews:
-  - repository:
+homebrew_casks:
+  - skip_upload: '{{ if eq (envOrDefault "MAKE_LATEST" "true") "true" }}false{{ else }}true{{ end }}'
+    repository:
       owner: evcc-io
       name: homebrew-tap
     commit_author:
       name: andig
       email: info@evcc.io
-    directory: Formula
     homepage: "https://evcc.io"
     description: "Sonne tanken ☀️🚘"
-    license: "MIT"
-    test: |
-      system "#{bin}/evcc --version"
-    service: |
-      run [opt_bin/"evcc"]
-      working_dir HOMEBREW_PREFIX
-      keep_alive true
-      log_path var/"log/evcc.log"
-      error_log_path var/"log/evcc.log"
+    binaries:
+      - evcc

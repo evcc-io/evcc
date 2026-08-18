@@ -13,7 +13,7 @@ jobs:
 
     permissions:
       contents: read
-      actions: read
+      id-token: write # depot OIDC
 
     steps:
       - uses: actions/checkout@v7
@@ -22,21 +22,16 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Get dist from cache
-        uses: actions/cache/restore@v6
-        id: cache-dist
-        with:
-          path: dist
-          key: ${{ runner.os }}-${{ github.sha }}-dist
-
       - name: Login
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
 
-      - name: Setup Buildx
-        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
+      # depot builders keep the Dockerfile's cache mounts on their own volumes,
+      # so they need neither buildx nor the cache dance
+      - name: Setup Depot
+        uses: depot/setup-action@15c09a5f77a0840ad4bce955686522a257853461 # v1.7.1
 
       - name: Define tags
         id: meta
@@ -48,14 +43,13 @@ jobs:
             type=raw,value=nightly.{{date 'YYYYMMDD'}}-{{sha}}
 
       - name: Publish
-        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
+        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.18.0
         with:
+          project: ${{ secrets.DEPOT_PROJECT_ID }}
           context: .
           platforms: linux/amd64,linux/arm64,linux/arm/v6
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Delete old nightly.* tags
         run: |

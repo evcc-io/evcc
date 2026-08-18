@@ -23,6 +23,6 @@ params:
 render: |
   type: porsche
   vin: {{ .vin }}
-  {{ include "vehicle-common" . }}
+  {{ include "common" . }}
   cache: {{ .cache }}
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}

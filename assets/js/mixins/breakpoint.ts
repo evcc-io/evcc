@@ -1,18 +1,20 @@
 export type Breakpoint = "xs" | "sm" | "md" | "lg" | "xl" | "xxl";
 
-interface BreakpointDef {
-  name: Breakpoint;
-  maxWidth: number;
-}
+// bootstrap breakpoints, value = last width still inside
+export const MAX_WIDTH: Record<Breakpoint, number> = {
+  xs: 575,
+  sm: 767,
+  md: 991,
+  lg: 1199,
+  xl: 1399,
+  xxl: Infinity,
+};
 
-const BREAKPOINTS: BreakpointDef[] = [
-  { name: "xs", maxWidth: 575 },
-  { name: "sm", maxWidth: 767 },
-  { name: "md", maxWidth: 991 },
-  { name: "lg", maxWidth: 1199 },
-  { name: "xl", maxWidth: 1399 },
-  { name: "xxl", maxWidth: Infinity },
-];
+const BREAKPOINTS = Object.entries(MAX_WIDTH) as [Breakpoint, number][];
+
+export function isMobileWidth(width: number = window.innerWidth): boolean {
+  return width <= MAX_WIDTH.sm;
+}
 
 export default {
   data() {
@@ -24,9 +26,9 @@ export default {
     updateBreakpoint(): void {
       const width: number = window.innerWidth;
       const self = this as any;
-      for (const bp of BREAKPOINTS) {
-        if (width <= bp.maxWidth) {
-          self.breakpoint = bp.name;
+      for (const [name, maxWidth] of BREAKPOINTS) {
+        if (width <= maxWidth) {
+          self.breakpoint = name;
           return;
         }
       }
@@ -37,7 +39,7 @@ export default {
     self.updateBreakpoint();
     window.addEventListener("resize", self.updateBreakpoint);
   },
-  beforeDestroy() {
+  beforeUnmount() {
     const self = this as any;
     window.removeEventListener("resize", self.updateBreakpoint);
   },

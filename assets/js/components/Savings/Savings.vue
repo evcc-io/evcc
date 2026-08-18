@@ -115,9 +115,7 @@
 														moneySaved,
 														currency,
 														false
-													)} ${fmtCurrencySymbol(currency)} ${$t(
-														'footer.savings.moneySaved'
-													)}`
+													)} ${fmtCurrencySymbol(currency)} ${$t('footer.savings.moneySaved')}`
 												: ''
 										"
 									/>
@@ -131,11 +129,7 @@
 										unit="g/kWh"
 										:sub1="
 											region && co2Configured
-												? `${fmtNumber(
-														co2Saved,
-														0,
-														'kilogram'
-													)} ${$t('footer.savings.co2Saved')}`
+												? `${fmtNumber(co2Saved, 0, 'kilogram')} ${$t('footer.savings.co2Saved')}`
 												: ''
 										"
 									/>
@@ -274,7 +268,7 @@ import settings from "@/settings.ts";
 import { defineComponent, type PropType } from "vue";
 import type {
 	CURRENCY,
-	Forecast,
+	UiForecast,
 	StatisticsIndicator,
 	StatisticsPeriod,
 	SelectOption,
@@ -299,7 +293,7 @@ export default defineComponent({
 		sponsor: Object as PropType<SponsorType>,
 		currency: String as PropType<CURRENCY>,
 		telemetry: Boolean,
-		forecast: Object as PropType<Forecast>,
+		forecast: Object as PropType<UiForecast>,
 		tariffGrid: Number,
 	},
 	data() {
