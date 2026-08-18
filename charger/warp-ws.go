@@ -91,18 +91,6 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, err
 	}
 
-	// Feature: Meter -> Meter is legacy API, Meters is the new API
-	if w.hasFeature(warp.FeatureMeter) || w.hasFeature(warp.FeatureMeters) {
-		implement.Has(w, implement.Meter(w.currentPower))
-		implement.Has(w, implement.MeterEnergy(w.totalEnergy))
-	}
-
-	// Feature: Meters | MeterAllValues
-	if w.hasFeature(warp.FeatureMeters) || w.hasFeature(warp.FeatureMeterAllValues) {
-		implement.Has(w, implement.PhaseCurrents(w.currents))
-		implement.Has(w, implement.PhaseVoltages(w.voltages))
-	}
-
 	// Feature: ISO 15118 (WARP4): vehicle soc and mac exposed via ev/state
 	hasIso15118 := w.hasFeature(warp.FeatureIso15118)
 	if hasIso15118 {
@@ -308,21 +296,6 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 		err = json.Unmarshal(payload, &w.evse.UserEnabled)
 	case "evse/state":
 		err = json.Unmarshal(payload, &w.evse.State)
-	case "meter/all_values":
-		if !w.hasFeature(warp.FeatureMeterAllValues) || w.hasFeature(warp.FeatureMeters) {
-			return nil
-		}
-		var values []float64
-		if err = json.Unmarshal(payload, &values); err == nil && len(values) > 5 {
-			copy(w.meter.Voltages[:], values[:3])
-			copy(w.meter.Currents[:], values[3:6])
-			w.hasVoltages, w.hasCurrents = true, true
-		}
-	case "meter/values":
-		if !w.hasFeature(warp.FeatureMeter) || w.hasFeature(warp.FeatureMeters) {
-			return nil
-		}
-		err = json.Unmarshal(payload, &w.meter)
 	case metersValueIDsTopic:
 		var ids []int
 		if err = json.Unmarshal(payload, &ids); err != nil {
