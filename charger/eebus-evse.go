@@ -526,13 +526,20 @@ func (c *EEBus) Identify() ([]string, error) {
 		return nil, nil
 	}
 
-	if identification, err := c.cem.EvCC.Identifications(evEntity); err == nil && len(identification) > 0 {
-		// return the first identification for now
-		// later this could be multiple, e.g. MAC Address and PCID
-		return []string{identification[0].Value}, nil
+	identification, err := c.cem.EvCC.Identifications(evEntity)
+	if err != nil {
+		return nil, nil
 	}
 
-	return nil, nil
+	// may be multiple, e.g. MAC address and PCID
+	var res []string
+	for _, i := range identification {
+		if i.Value != "" {
+			res = append(res, i.Value)
+		}
+	}
+
+	return res, nil
 }
 
 var _ api.Battery = (*EEBus)(nil)

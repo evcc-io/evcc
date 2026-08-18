@@ -234,15 +234,19 @@ var _ api.Identifier = (*OpenWBPro)(nil)
 // Identify implements the api.Identifier interface
 func (wb *OpenWBPro) Identify() ([]string, error) {
 	res, err := wb.statusG.Get()
-	if err != nil || res.VehicleID == "--" {
+	if err != nil {
 		return nil, err
 	}
 
-	if res.VehicleID != "" {
-		return []string{res.VehicleID}, nil
+	var ids []string
+	if res.VehicleID != "" && res.VehicleID != "--" {
+		ids = append(ids, res.VehicleID)
+	}
+	if res.RfidTag != "" {
+		ids = append(ids, res.RfidTag)
 	}
 
-	return []string{res.RfidTag}, nil
+	return ids, nil
 }
 
 func (wb *OpenWBPro) wakeup() error {

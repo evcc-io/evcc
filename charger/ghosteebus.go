@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
@@ -112,14 +113,22 @@ func NewGhostEEBus(ctx context.Context, ski, ip, user, password string, hasMeter
 
 var _ api.Identifier = (*GhostEEBus)(nil)
 
-// Identify implements api.Identifier, preferring RFID over EEBUS identification
+// Identify implements api.Identifier, reporting RFID before EEBUS identification
 func (wb *GhostEEBus) Identify() ([]string, error) {
+	var res []string
+
 	if wb.hasRFID {
-		if ids, err := wb.identify(); err == nil && len(ids) > 0 && ids[0] != "" {
-			return ids, nil
+		if ids, err := wb.identify(); err == nil {
+			res = append(res, ids...)
 		}
 	}
-	return wb.EEBus.Identify()
+
+	ids, err := wb.EEBus.Identify()
+	if err != nil {
+		return nil, err
+	}
+
+	return slices.DeleteFunc(append(res, ids...), func(id string) bool { return id == "" }), nil
 }
 
 // getJSONCtx executes a context-aware GET request and decodes the JSON response.

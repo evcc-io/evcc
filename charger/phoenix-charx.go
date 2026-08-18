@@ -273,8 +273,9 @@ func (wb *PhoenixCharx) Identify() ([]string, error) {
 		return nil, err
 	}
 
-	if res := bytesAsString(b); res != "" {
-		return []string{res}, nil
+	var ids []string
+	if evid := bytesAsString(b); evid != "" {
+		ids = append(ids, evid)
 	}
 
 	b, err = wb.conn.ReadHoldingRegisters(wb.register(charxRegRfid), 10)
@@ -282,7 +283,11 @@ func (wb *PhoenixCharx) Identify() ([]string, error) {
 		return nil, err
 	}
 
-	return []string{bytesAsString(b)}, nil
+	if rfid := bytesAsString(b); rfid != "" {
+		ids = append(ids, rfid)
+	}
+
+	return ids, nil
 }
 
 var _ api.Diagnosis = (*PhoenixCharx)(nil)
