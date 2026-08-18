@@ -14,7 +14,7 @@ requirements:
       Configure the SEMP base URL (`http://<charger-host>/SEMP`) and the device ID of the charger.
       IMPORTANT: The charger must NOT be registered directly as a consumer in the Sunny Home Manager / Sunny Portal at the same time!
 
-      Setup on the "SMA EV Charger 22":
+      Setup on the "SMA EV Charger":
       1. Set the rotary switch on the wallbox to PV/Eco charging.
       2. Deactivate the wallbox in the Sunny Portal (it can be added back via evcc later).
       3. Set "Operation with grid connection point meter" to "Yes" and set up a meter (SMA Sunny Home Manager 2 or Energy Meter) under "Configuration -> Parameters -> Meter configuration". This is required for the SEMP interface to be enabled.
@@ -26,7 +26,7 @@ requirements:
       Konfiguriere die SEMP Basis-URL (`http://<charger-host>/SEMP`) und die Geräte-ID des Chargers.
       WICHTIG: Der Charger darf NICHT gleichzeitig im Sunny Home Manager bzw. im Sunny Portal direkt als Verbraucher registriert sein!
 
-      Einrichtung beim "SMA EV Charger 22":
+      Einrichtung beim "SMA EV Charger":
       1. Drehschalter an der Wallbox auf PV/Eco-Laden stellen.
       2. Wallbox im Sunny Portal deaktivieren (kann später über evcc wieder hinzugefügt werden).
       3. "Betrieb mit Netzanschlusspunktzähler" auf "Ja" stellen und einen Zähler einrichten über "Konfiguration -> Parameter -> Zählerkonfiguration" (SMA Sunny Home Manager 2 oder Energy Meter). Erst dadurch wird die SEMP-Schnittstelle freigegeben.
