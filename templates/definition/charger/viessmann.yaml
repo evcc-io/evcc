@@ -11,13 +11,9 @@ requirements:
     de: |
       Einmalige Warmwasserbereitung. Das Gerät entscheidet eigenständig, ob die Wärmepumpe oder die elektrische Zusatzheizung (falls vorhanden) genutzt wird.
 
-      Hinweis: Im Auslieferungszustand kann zur Warmwasserbereitung auch der Heizwasser-Durchlauferhitzer (elektrische Zusatzheizung, „Heizstab") automatisch zuschalten. Um das zu vermeiden, die Freigabe der elektrischen Zusatzheizung für die Warmwasserbereitung vom Fachbetrieb sperren lassen (Parameter „Freigabe Heizwasser-Durchlauferhitzer") oder — sofern verfügbar — in der ViCare-App den Warmwasser-Modus „Effizient" wählen.
-
       Optional können Leistungs- und Temperaturwerte ausgelesen werden. Das setzt Datenpunkte der One-Base-/E3-Gerätegeneration voraus (z. B. Vitocal 25x, getestet mit Vitocal 250-A). Welche Datenpunkte ein Gerät liefert, ist geräteabhängig und lässt sich über die [Viessmann API](https://developer.viessmann-climatesolutions.com/) am Feature-Endpunkt der Anlage ablesen. Für unterstützte Geräte die Option „Leistungs- und Temperaturwerte auslesen" aktivieren.
     en: |
       One-time hot water preparation. The device automatically decides whether to use the heat pump or the auxiliary electric heater (if available).
-
-      Note: in the factory configuration, hot water preparation may also automatically activate the built-in electric booster heater ("Heizwasser-Durchlauferhitzer"). To avoid this, have your heating contractor lock the approval of the electric booster heater for hot water preparation (parameter "Freigabe Heizwasser-Durchlauferhitzer"), or — where available — select the "Efficient" hot water mode in the ViCare app.
 
       Optionally, power and temperature readings can be enabled. This requires data points of the One Base/E3 device generation (e.g. Vitocal 25x, tested with a Vitocal 250-A). Which data points a device provides is device-specific and can be inspected via the [Viessmann API](https://developer.viessmann-climatesolutions.com/) feature endpoint of the installation. For supported devices, enable the "Read power and temperature values" option.
 params:
@@ -194,7 +190,7 @@ render: |
     # call per cache window. The Viessmann API has a strict daily request quota
     # (shared with the ViCare app); per-feature polling exhausts it (HTTP 429).
     uri: {{ $device }}/features
-    cache: 120s # ~720 requests/day; raise further if you still hit 429
+    cache: 60s # Viessmann has implementet a rate limit, if you see a http 429 in the logs you can increase the value.
     auth:
       source: viessmann
       clientid: {{ .clientid }}
