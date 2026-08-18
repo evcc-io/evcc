@@ -203,5 +203,5 @@ func (wb *OpenWbNative) gpioSwitchPhases(phases int) error {
 
 // Identify implements the api.Identifier interface
 func (wb *OpenWbNative) identify() ([]string, error) {
-	return wb.rfId.Get(), nil
+	return []string{wb.rfId.Get()}, nil
 }
