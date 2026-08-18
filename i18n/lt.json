@@ -120,8 +120,6 @@
       "titleEdit": "Redaguoti Savireguliuojantį vartotoją"
     },
     "battery": {
-      "description": "Eksperimentiniai kaupiklio valdikliai. Šios funkcijos vis dar testuojamos ir gali būti pakeistos arba pašalintos būsimose versijose.",
-      "gridDischarge": "Leiskite kaupikliui išsikrauti į tinklą",
       "title": "Kaupiklis",
       "titleAdd": "Pridėti kaupiklį",
       "titleEdit": "Redaguoti kaupiklį"
@@ -1331,7 +1329,6 @@
         "label": "Strategija"
       },
       "strategyDisabledDescription": "Įkrovimas pradedamas kuo vėliau, kad būtų baigtas prieš pat išvykimą. Jei naudojate 15 minučių biržos planą (arba CO₂ tarifą), čia galite rinktis iš daugiau variantų.",
-      "strategySettings": "Strategijos pasirinkimai",
       "time": "Laikas",
       "title": "Planas",
       "unsavedChanges": "Yra neišsaugotų pakeitimų. Išsaugoti dabar?",

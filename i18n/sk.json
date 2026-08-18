@@ -120,8 +120,6 @@
       "titleEdit": "Upraviť samoregulačný spotrebič"
     },
     "battery": {
-      "description": "Experimentálne ovládanie batérie. Tieto funkcie sa testujú a môžu sa zmeniť alebo byť odstránené v budúcich verziách.",
-      "gridDischarge": "Umožniť batérií vybíjanie do siete",
       "title": "Batéria",
       "titleAdd": "Pridať batériu",
       "titleEdit": "Upraviť batériu"
@@ -1331,7 +1329,6 @@
         "label": "Stratégia"
       },
       "strategyDisabledDescription": "Nabíjanie začína čo najneskôr, aby sa skončilo presne včas pred odchodom. S dynamickými sieťovými cenami alebo tarifom CO₂ je tu viac možností k dispozícii.",
-      "strategySettings": "Nastavenie stratégie",
       "time": "Čas",
       "title": "Plán",
       "unsavedChanges": "Existujú neuložené zmeny. Uložiť teraz?",

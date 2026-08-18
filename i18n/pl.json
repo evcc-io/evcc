@@ -1113,7 +1113,6 @@
       },
       "planNumber": "Plan {number}",
       "precondition": {
-        "description": "Naładuj {duration} przed wyjazdem dla wstępnego kondycjonowania akumulatora.",
         "label": "Późniejsze ładowanie",
         "optionAll": "wszystko",
         "optionNo": "nie"
@@ -1123,7 +1122,6 @@
       "repeatingPlans": "Powtarzające się plany",
       "selectAll": "Wybierz wszystko",
       "strategyDisabledDescription": "Ładowanie rozpoczyna się jak najpóźniej, aby zakończyć się tuż przed wyjazdem. Dzięki dynamicznym cenom energii elektrycznej lub taryfie CO₂ dostępnych jest więcej opcji.",
-      "strategySettings": "Ustawienia strategii",
       "time": "Czas",
       "title": "Plan",
       "unsavedChanges": "Są niezapisane zmiany. Zastosować teraz?",

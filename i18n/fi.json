@@ -1319,7 +1319,7 @@
         "label": "Viimehetken lataus",
         "optionAll": "koko latausmäärä",
         "optionNo": "ei",
-        "summary": "{precondiation} ennen"
+        "summary": "{precondition} ennen"
       },
       "remove": "Poista",
       "repeating": "toistetaan",
@@ -1329,7 +1329,6 @@
         "label": "Strategia"
       },
       "strategyDisabledDescription": "Lataus aloitetaan mahdollisimman myöhään, jotta se valmistuu juuri ennen lähtöä. Jos dynaaminen sähköverkkohinnoittelu tai CO₂-tariffit ovat asetetut, on tässä tarjolla enemmän valintoja.",
-      "strategySettings": "Strategiamääritykset",
       "time": "Aika",
       "title": "Suunnitelma",
       "unsavedChanges": "Tallentamattomia muutoksia. Asetetaanko nyt?",
@@ -1389,7 +1388,7 @@
         },
         "meter": {
           "energy": "Energia",
-          "returnEnergy": "Energia {reverse}"
+          "returnEnergy": "Energia (käänteinen)"
         }
       },
       "download": "Lataa",

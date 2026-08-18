@@ -1214,7 +1214,6 @@
       },
       "planNumber": "Piano {number}",
       "precondition": {
-        "description": "Carica {duration} prima della partenza per pre-condizionare la batteria.",
         "label": "Carica ritardata",
         "optionAll": "tutto",
         "optionNo": "no"
@@ -1224,7 +1223,6 @@
       "repeatingPlans": "Piani ricorrenti",
       "selectAll": "Seleziona tutti",
       "strategyDisabledDescription": "La ricarica inizia il più tardi possibile per terminare appena in tempo per la partenza. Con i prezzi dinamici della rete elettrica o la tariffa CO₂, sono disponibili ulteriori opzioni.",
-      "strategySettings": "Impostazioni strategia",
       "time": "Ora",
       "title": "Piano",
       "unsavedChanges": "Ci sono modifiche non salvate. Vuoi salvarle adesso?",

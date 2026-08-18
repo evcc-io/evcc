@@ -120,8 +120,6 @@
       "titleEdit": "Rediģēt pašregulējošu patērētāju"
     },
     "battery": {
-      "description": "Eksperimentāla akumulatora vadība. Šīs funkcijas vēl tiek testētas un var tikt mainītas vai noņemtas nākamajās versijās.",
-      "gridDischarge": "Atļaut akumulatora izlādi tīklā",
       "title": "Akumulators",
       "titleAdd": "Pievienot akumulatoru",
       "titleEdit": "Rediģēt akumulatoru"
@@ -1331,7 +1329,6 @@
         "label": "Stratēģija"
       },
       "strategyDisabledDescription": "Uzlāde sākas cik vien vēlu iespējams, lai pabeigtu tieši pirms izbraukšanas. Ar dinamiskiem tīkla tarifiem vai CO₂ tarifu šeit ir pieejamas papildus iespējas.",
-      "strategySettings": "Stratēģijas iestatījumi",
       "time": "Laiks",
       "title": "Plāns",
       "unsavedChanges": "Ir nesaglabātas izmaiņas. Piemērot tagad?",

@@ -1329,7 +1329,6 @@
         "label": "Strategi"
       },
       "strategyDisabledDescription": "Laddningen startar så sent som möjligt för att avslutas precis i tid före avfärd. Med dynamiska elpriser eller CO₂-avgifter finns fler möjligheter här.",
-      "strategySettings": "Strategiinställningar",
       "time": "Tid",
       "title": "Plan",
       "unsavedChanges": "Det finns ej sparade ändringar. Spara nu?",
