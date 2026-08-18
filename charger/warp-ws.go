@@ -133,22 +133,6 @@ func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass strin
 		w.pm = w.Connection
 	}
 
-	// Phase Auto Switching needs to be disabled for WARP3 and WARP2 + EM
-	// Necessary if charging 1p only vehicles
-	typ, err := w.getWarpType()
-	if err != nil {
-		return nil, err
-	}
-	if typ == "warp3" || typ == "warp4" || (typ == "warp2" && emURI != "") {
-		enabled, err := w.disablePhaseAutoSwitch()
-		if err != nil {
-			return nil, err
-		}
-		if enabled {
-			w.log.WARN.Println("disabled WARP phase auto switching")
-		}
-	}
-
 	wsURI, err := parseURI(w.URI)
 	if err != nil {
 		return nil, err
@@ -296,6 +280,23 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 		err = json.Unmarshal(payload, &w.evse.UserEnabled)
 	case "evse/state":
 		err = json.Unmarshal(payload, &w.evse.State)
+	case "evse/phase_auto_switch":
+		// Phase Auto Switching needs to be disabled WARP2 or newer
+		// Necessary if charging 1p only vehicles
+		var auto_switch warp.EvsePhaseAutoSwitch
+		if err = json.Unmarshal(payload, &auto_switch); err != nil {
+			return err
+		}
+
+		if auto_switch.Enabled {
+			// A bit ugly, but we don't want to hold the mutex while sending an HTTP request.
+			w.mu.Unlock()
+			err = w.disablePhaseAutoSwitch()
+			w.mu.Lock()
+			if err == nil {
+				w.log.WARN.Println("disabled WARP phase auto switching")
+			}
+		}
 	case metersValueIDsTopic:
 		var ids []int
 		if err = json.Unmarshal(payload, &ids); err != nil {
@@ -465,20 +466,11 @@ func (w *WarpWS) setCurrent(curr int64) error {
 	return err
 }
 
-func (w *WarpWS) disablePhaseAutoSwitch() (bool, error) {
+func (w *WarpWS) disablePhaseAutoSwitch() error {
 	uri := fmt.Sprintf("%s/evse/phase_auto_switch", w.URI)
-	var state struct {
-		Enabled bool `json:"enabled"`
-	}
-	if err := w.GetJSON(uri, &state); err != nil {
-		return false, err
-	}
-	if !state.Enabled {
-		return false, nil
-	}
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]bool{"enabled": false}), request.JSONEncoding)
 	_, err := w.Do(req)
-	return true, err
+	return err
 }
 
 func (w *WarpWS) postPhasesWanted(phases int) error {
@@ -559,11 +551,4 @@ func (w *WarpWS) ensurePmState() (warp.PmState, error) {
 	w.pmState = &res
 	w.mu.Unlock()
 	return res, nil
-}
-
-func (w *WarpWS) getWarpType() (string, error) {
-	var res warp.Name
-	uri := fmt.Sprintf("%s/info/name", w.URI)
-	err := w.GetJSON(uri, &res)
-	return res.WarpType, err
 }
