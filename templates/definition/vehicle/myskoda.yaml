@@ -31,7 +31,7 @@ render: |
   type: myskoda
   vin: {{ .vin }}
   apikey: {{ .apikey }}
-  {{- if .sandbox }}
+  {{- if eq .sandbox "true" }}
   sandbox: true
   {{- end }}
   {{ include "common" . }}
