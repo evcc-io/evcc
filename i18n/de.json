@@ -1235,9 +1235,9 @@
     "createButtonDiscussion": "GitHub Diskussion starten...",
     "createButtonEmail": "Anfrage per E-Mail senden",
     "createButtonIssue": "GitHub Issue erstellen...",
+    "description": "Deine Installation funktioniert nicht wie erwartet? Nutze diese Seite um Hilfe zu bekommen oder Probleme zu melden. Gib genügend Details an, damit wir das Problem verstehen und reproduzieren können. Halte deine Beschreibung prägnant, klar und leicht verständlich.",
     "downloadButton": "Debug-Informationen herunterladen",
     "downloadHint": "Hänge diese Datei an deine E-Mail an, falls weitere Informationen benötigt werden.",
-    "description": "Deine Installation funktioniert nicht wie erwartet? Nutze diese Seite um Hilfe zu bekommen oder Probleme zu melden. Gib genügend Details an, damit wir das Problem verstehen und reproduzieren können. Halte deine Beschreibung prägnant, klar und leicht verständlich.",
     "helpType": {
       "discussion": "Brauche Hilfe bei meiner Einrichtung",
       "discussionDescription": "Community-Diskussionen bieten Antworten.",
@@ -1625,7 +1625,7 @@
     "meterstop": "Endzählerstand",
     "odometer": "Kilometerstand",
     "price": "Kosten",
-    "soc": "Ladestand",
+    "soc": "Ladung",
     "started": "Startzeit",
     "title": "Ladevorgang"
   },
