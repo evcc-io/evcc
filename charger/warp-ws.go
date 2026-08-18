@@ -91,20 +91,8 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, err
 	}
 
-	// Feature: ISO 15118 (WARP4): vehicle soc and mac exposed via ev/state
-	hasIso15118 := w.hasFeature(warp.FeatureIso15118)
-	if hasIso15118 {
-		implement.Has(w, implement.Battery(w.soc))
-	}
-
-	// Feature: NFC
-	if w.hasFeature(warp.FeatureNfc) || hasIso15118 {
-		implement.Has(w, implement.Identifier(w.identify))
-	}
-
-	// Feature: Phase Switching
-	// only setup phase switching methods if power manager endpoint is set
-	if (w.hasFeature(warp.FeaturePhaseSwitch) || cc.EnergyManagerURI != "") && w.pm != nil {
+	// If the energy manager URI is set, use the energy manager for phase switching.
+	if cc.EnergyManagerURI != "" {
 		implement.Has(w, implement.PhaseSwitcher(w.phases1p3p))
 		implement.Has(w, implement.PhaseGetter(w.getPhases))
 	}
@@ -121,10 +109,6 @@ func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass strin
 		log:        log,
 		meterIndex: meterIndex,
 		meterMap:   map[int]int{},
-	}
-
-	if err := w.GetJSON(fmt.Sprintf("%s/info/features", w.URI), &w.features); err != nil {
-		return nil, err
 	}
 
 	if emURI != "" {
@@ -297,6 +281,25 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 				w.log.WARN.Println("disabled WARP phase auto switching")
 			}
 		}
+	case "info/features":
+		err = json.Unmarshal(payload, &w.features)
+
+		// Feature: ISO 15118 (WARP4): vehicle soc and mac exposed via ev/state
+		hasIso15118 := w.hasFeature(warp.FeatureIso15118)
+		if hasIso15118 {
+			implement.Has(w, implement.Battery(w.soc))
+		}
+
+		// Feature: NFC
+		if w.hasFeature(warp.FeatureNfc) || hasIso15118 {
+			implement.Has(w, implement.Identifier(w.identify))
+		}
+
+		if w.hasFeature(warp.FeaturePhaseSwitch) {
+			implement.Has(w, implement.PhaseSwitcher(w.phases1p3p))
+			implement.Has(w, implement.PhaseGetter(w.getPhases))
+		}
+
 	case metersValueIDsTopic:
 		var ids []int
 		if err = json.Unmarshal(payload, &ids); err != nil {
