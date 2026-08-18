@@ -55,5 +55,5 @@ params:
 render: |
   type: stekker
   region: {{ .region }}
-  {{ include "tariff-base" . }}
-  {{ include "tariff-features" . }}
+  {{ include "base" . }}
+  {{ include "features" . }}

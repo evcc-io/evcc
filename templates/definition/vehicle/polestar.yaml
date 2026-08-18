@@ -10,5 +10,5 @@ params:
     example: LPSVS...
 render: |
   type: polestar-grpc
-  {{ include "vehicle-base" . }}
-  {{ include "vehicle-features" . }}
+  {{ include "base" . }}
+  {{ include "features" . }}

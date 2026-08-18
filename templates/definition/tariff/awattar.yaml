@@ -13,4 +13,4 @@ params:
 render: |
   type: awattar
   region: {{ .region }}
-  {{ include "tariff-base" . }}
+  {{ include "base" . }}
