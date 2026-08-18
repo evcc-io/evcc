@@ -95,8 +95,8 @@ func TestTimeseriesMarshal(t *testing.T) {
 	}
 }
 
-// TestQueryConsumptionSignal exercises the gate that consumptionSignalDecay's
-// pure-math tests can't reach: no history yet, no scale applied.
+// TestQueryConsumptionSignal checks a fresh install with no consumption history yet:
+// the signal should come back unscaled.
 func TestQueryConsumptionSignal(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, metrics.SetupSchema())

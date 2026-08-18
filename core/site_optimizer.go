@@ -440,10 +440,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		return req, details, err
 	}
 
-	// blend measured energy of the last metrics slot into the first slots. At i=0 this
-	// fully replaces gt[0] (weight 1), including whatever consumptionSignal decay
-	// homeProfile applied to it - the two corrections don't compose, the measured
-	// value wins outright for that slot.
+	// blend measured energy of the last metrics slot into the first slots
 	if v := site.measuredSlotEnergy(metrics.Home); v > 0 {
 		orig := slices.Clone(gt[:min(optimizerDecaySlots, len(gt))])
 		blendMeasured(gt, v, optimizerDecaySlots)
@@ -1029,13 +1026,7 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	}
 
 	// convert to Wh, applying the data-driven consumption signal, decaying per slot
-	// towards 1 over the horizon (see consumptionSignalDecay). Read once here rather
-	// than per slot below - effectiveConsumptionSignal reads a util.Cached value that
-	// does not change within a single optimizer run.
 	sig := site.effectiveConsumptionSignal()
-	if sig != 1 {
-		site.log.DEBUG.Printf("optimizer: home consumption signal %.3f for the next slot, decaying towards 1 over the horizon", sig)
-	}
 	return lo.Map(res, func(v float64, i int) float64 {
 		return v * 1e3 * consumptionSignalDecay(sig, i)
 	}), nil
