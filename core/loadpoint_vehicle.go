@@ -106,10 +106,10 @@ func (lp *Loadpoint) selectVehicleByID(ids ...string) (api.Vehicle, string) {
 	// find exact match
 	for _, id := range ids {
 		for _, vehicle := range vehicles {
-			for _, vid := range vehicle.Identifiers() {
-				if strings.EqualFold(id, vid) {
-					return vehicle, id
-				}
+			if slices.ContainsFunc(vehicle.Identifiers(), func(vid string) bool {
+				return strings.EqualFold(id, vid)
+			}) {
+				return vehicle, id
 			}
 		}
 	}
@@ -117,17 +117,17 @@ func (lp *Loadpoint) selectVehicleByID(ids ...string) (api.Vehicle, string) {
 	// find placeholder match
 	for _, id := range ids {
 		for _, vehicle := range vehicles {
-			for _, vid := range vehicle.Identifiers() {
+			if slices.ContainsFunc(vehicle.Identifiers(), func(vid string) bool {
 				// case insensitive match
 				re, err := regexp.Compile("(?i)" + strings.ReplaceAll(vid, "*", ".*?"))
 				if err != nil {
 					lp.log.ERROR.Printf("vehicle id: %v", err)
-					continue
+					return false
 				}
 
-				if re.MatchString(id) {
-					return vehicle, id
-				}
+				return re.MatchString(id)
+			}) {
+				return vehicle, id
 			}
 		}
 	}
