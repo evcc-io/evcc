@@ -5,6 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/tariff"
+	"github.com/jinzhu/now"
 )
 
 const (
@@ -178,7 +179,7 @@ func (c *Collector) EnergyProfile(from time.Time) (*[96]float64, error) {
 
 func (c *Collector) EnergyProfileWeekday(weekday time.Weekday) (*[96]float64, error) {
 	wd := int(weekday)
-	from := time.Now().Truncate(24*time.Hour).AddDate(0, 0, -28)
+	from := now.BeginningOfDay().AddDate(0, 0, -28)
 	return energyProfileFiltered(c.entity, from, &wd)
 }
 
