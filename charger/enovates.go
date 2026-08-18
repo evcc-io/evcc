@@ -233,13 +233,13 @@ func (wb *Enovates) Voltages() (float64, float64, float64, error) {
 var _ api.Identifier = (*Enovates)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *Enovates) Identify() (string, error) {
+func (wb *Enovates) Identify() ([]string, error) {
 	b, err := wb.conn.ReadHoldingRegisters(enovatesRegToken, 16)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return trimModbusString(b), nil
+	return []string{trimModbusString(b)}, nil
 }
 
 var _ api.Diagnosis = (*Enovates)(nil)

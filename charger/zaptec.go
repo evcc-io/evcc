@@ -444,17 +444,17 @@ func (c *Zaptec) switchPhases(phases int) error {
 var _ api.Identifier = (*Zaptec)(nil)
 
 // Identify implements the api.Identifier interface
-func (c *Zaptec) Identify() (string, error) {
+func (c *Zaptec) Identify() ([]string, error) {
 	res, err := c.statusG.Get()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if id := res.ObservationByID(zaptec.ChargerCurrentUserUuid); id != nil {
-		return id.ValueAsString, nil
+		return []string{id.ValueAsString}, nil
 	}
 
-	return "", nil
+	return nil, nil
 }
 
 func (c *Zaptec) installation() (zaptec.Installation, error) {

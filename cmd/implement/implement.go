@@ -38,6 +38,10 @@ type typeStruct struct {
 
 func getTypeImport(t reflect.Type) string {
 	n := t.Name()
+	if n == "" {
+		// unnamed type, e.g. []string
+		return t.String()
+	}
 	if p := t.PkgPath(); p != "" {
 		if s := strings.Split(p, "github.com/evcc-io/evcc/"); len(s) == 2 {
 			return fmt.Sprintf("%s.%s", s[1], n)
