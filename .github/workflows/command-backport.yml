@@ -57,11 +57,33 @@ jobs:
               core.setFailed(message);
             };
 
-            const { data: pr } = await github.rest.pulls.get({
-              owner,
-              repo,
-              pull_number: context.payload.issue.number,
-            });
+            // the command is usually posted right before hitting merge, so give the
+            // pull request time to land instead of failing on the race
+            const deadline = Date.now() + 5 * 60 * 1000;
+            let pr;
+            for (;;) {
+              try {
+                ({ data: pr } = await github.rest.pulls.get({
+                  owner,
+                  repo,
+                  pull_number: context.payload.issue.number,
+                }));
+                // a closed pull request will never merge, no point in waiting it out
+                if (pr.merged || pr.state === 'closed') {
+                  break;
+                }
+              } catch (err) {
+                // a blip while polling must not fail the command, but a request that
+                // is still failing when the time is up is a real error
+                if (Date.now() >= deadline) {
+                  throw err;
+                }
+              }
+              if (Date.now() >= deadline) {
+                break;
+              }
+              await new Promise((resolve) => setTimeout(resolve, 15000));
+            }
             if (!pr.merged) {
               fail(`pull request #${pr.number} is not merged`);
               return;
