@@ -133,56 +133,64 @@ func NewPlugchoice(uri, uuid, identity string, connector int, token string, cach
 	return c, nil
 }
 
+// conn returns the configured connector from the cached status response
+func (c *Plugchoice) conn() (plugchoice.Connector, error) {
+	res, err := c.statusG.Get()
+	if err != nil {
+		return plugchoice.Connector{}, err
+	}
+
+	for _, conn := range res.Data.Connectors {
+		if conn.ConnectorID == c.connector {
+			return conn, nil
+		}
+	}
+
+	return plugchoice.Connector{}, fmt.Errorf("connector with ID %d not found", c.connector)
+}
+
 // Status implements the api.Charger interface
 func (c *Plugchoice) Status() (api.ChargeStatus, error) {
-	res, err := c.statusG.Get()
+	conn, err := c.conn()
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	// Find the connector with the specified connector
-	for _, connector := range res.Data.Connectors {
-		if connector.ConnectorID == c.connector {
-			// Map the status codes as per specifications
-			switch status := connector.Status; status {
-			case core.ChargePointStatusAvailable:
-				return api.StatusA, nil
-			case core.ChargePointStatusPreparing, core.ChargePointStatusSuspendedEVSE, core.ChargePointStatusSuspendedEV, core.ChargePointStatusFinishing:
-				return api.StatusB, nil
-			case core.ChargePointStatusCharging:
-				return api.StatusC, nil
-			default:
-				return api.StatusNone, fmt.Errorf("invalid status: %s", status)
-			}
-		}
+	// Map the status codes as per specifications
+	switch status := conn.Status; status {
+	case core.ChargePointStatusAvailable:
+		return api.StatusA, nil
+	case core.ChargePointStatusPreparing, core.ChargePointStatusSuspendedEVSE, core.ChargePointStatusSuspendedEV, core.ChargePointStatusFinishing:
+		return api.StatusB, nil
+	case core.ChargePointStatusCharging:
+		return api.StatusC, nil
+	default:
+		return api.StatusNone, fmt.Errorf("invalid status: %s", status)
 	}
-
-	return api.StatusNone, fmt.Errorf("connector with ID %d not found", c.connector)
 }
 
 // Enabled implements the api.Charger interface
 func (c *Plugchoice) Enabled() (bool, error) {
-	res, err := c.statusG.Get()
+	conn, err := c.conn()
 	if err != nil {
 		return false, err
 	}
 
-	// Find the connector with the specified connector
-	for _, connector := range res.Data.Connectors {
-		if connector.ConnectorID == c.connector {
-			// Check status for enabled state
-			switch status := connector.Status; status {
-			case core.ChargePointStatusCharging, core.ChargePointStatusSuspendedEV:
-				return true, nil
-			case core.ChargePointStatusSuspendedEVSE:
-				return false, nil
-			default:
-				return c.enabled, nil
-			}
-		}
+	// Check status for enabled state
+	switch conn.Status {
+	case core.ChargePointStatusCharging, core.ChargePointStatusSuspendedEV:
+		return true, nil
+	case core.ChargePointStatusSuspendedEVSE:
+		return false, nil
 	}
 
-	return false, fmt.Errorf("connector with ID %d not found", c.connector)
+	// status is inconclusive- prefer the limit actually applied by the backend over
+	// the locally cached state which misses any change made outside of evcc
+	if conn.CurrentLimit != nil {
+		return *conn.CurrentLimit > 0, nil
+	}
+
+	return c.enabled, nil
 }
 
 // Enable implements the api.Charger interface
@@ -233,26 +241,61 @@ func (c *Plugchoice) MaxCurrent(current int64) error {
 	return err
 }
 
+var _ api.CurrentGetter = (*Plugchoice)(nil)
+
+// GetMaxCurrent implements the api.CurrentGetter interface
+func (c *Plugchoice) GetMaxCurrent() (float64, error) {
+	conn, err := c.conn()
+	if err != nil {
+		return 0, err
+	}
+
+	if conn.CurrentLimit == nil {
+		return 0, api.ErrNotAvailable
+	}
+
+	return float64(*conn.CurrentLimit), nil
+}
+
+// active returns true if the connector may currently be delivering power
+func (c *Plugchoice) active() (bool, error) {
+	conn, err := c.conn()
+	if err != nil {
+		return false, err
+	}
+
+	return conn.Status == core.ChargePointStatusCharging, nil
+}
+
+// parsePlugchoiceValue parses a measurement, handling surrounding whitespace
+// (e.g. " 0.0") and missing values ("-")
+func parsePlugchoiceValue(s string) (float64, error) {
+	s = strings.TrimSpace(s)
+	if s == "-" {
+		return 0, nil
+	}
+
+	return strconv.ParseFloat(s, 64)
+}
+
 var _ api.Meter = (*Plugchoice)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Plugchoice) CurrentPower() (float64, error) {
+	// meter values are only sampled during a transaction, hence the API may keep
+	// serving the last known values- suppress them unless a session is active
+	if active, err := c.active(); err != nil || !active {
+		return 0, err
+	}
+
 	res, err := c.powerG.Get()
 	if err != nil {
 		return 0, err
 	}
 
-	// the API may return values with surrounding whitespace (e.g. " 0.0")
-	kwVal := strings.TrimSpace(res.KW)
-
-	// Handle the case where power value is "-"
-	if kwVal == "-" {
-		return 0, nil
-	}
-
-	kw, err := strconv.ParseFloat(kwVal, 64)
+	kw, err := parsePlugchoiceValue(res.KW)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("parsing power: %w", err)
 	}
 
 	return kw * 1000, nil // Convert kW to W
@@ -262,39 +305,24 @@ var _ api.PhaseCurrents = (*Plugchoice)(nil)
 
 // Currents implements the api.PhaseCurrents interface
 func (c *Plugchoice) Currents() (float64, float64, float64, error) {
+	if active, err := c.active(); err != nil || !active {
+		return 0, 0, 0, err
+	}
+
 	res, err := c.powerG.Get()
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	// Helper function to parse current values, handling "-" as 0
-	parsePhaseValue := func(val string, phase string) (float64, error) {
-		// the API may return values with surrounding whitespace (e.g. " 0.0")
-		val = strings.TrimSpace(val)
-		if val == "-" {
-			return 0, nil
-		}
-		res, err := strconv.ParseFloat(val, 64)
+	var currents [3]float64
+	for i, v := range []string{res.L1, res.L2, res.L3} {
+		f, err := parsePlugchoiceValue(v)
 		if err != nil {
-			return 0, fmt.Errorf("parsing %s current: %w", phase, err)
+			return 0, 0, 0, fmt.Errorf("parsing L%d current: %w", i+1, err)
 		}
-		return res, nil
+
+		currents[i] = f
 	}
 
-	l1, err := parsePhaseValue(res.L1, "L1")
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	l2, err := parsePhaseValue(res.L2, "L2")
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	l3, err := parsePhaseValue(res.L3, "L3")
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	return l1, l2, l3, nil
+	return currents[0], currents[1], currents[2], nil
 }

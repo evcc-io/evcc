@@ -61,8 +61,11 @@ type Connector struct {
 	Error       core.ChargePointErrorCode `json:"error"`
 	ErrorInfo   string                    `json:"error_info"`
 	MaxAmperage int                       `json:"max_amperage"`
-	CreatedAt   string                    `json:"created_at"`
-	UpdatedAt   string                    `json:"updated_at"`
+	// CurrentLimit is the limit currently applied by the backend, nil if not reported
+	CurrentLimit          *int   `json:"current_limit"`
+	CurrentLimitManagedBy string `json:"current_limit_managed_by"`
+	CreatedAt             string `json:"created_at"`
+	UpdatedAt             string `json:"updated_at"`
 }
 
 // PowerResponse is the power usage response
