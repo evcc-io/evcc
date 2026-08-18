@@ -108,6 +108,30 @@ func TestPlugchoiceEnabled(t *testing.T) {
 	}
 }
 
+func TestPlugchoiceStatusReason(t *testing.T) {
+	tc := []struct {
+		status   core.ChargePointStatus
+		expected api.Reason
+	}{
+		{core.ChargePointStatusPreparing, api.ReasonWaitingForAuthorization},
+		{core.ChargePointStatusFinishing, api.ReasonDisconnectRequired},
+		{core.ChargePointStatusAvailable, api.ReasonUnknown},
+		{core.ChargePointStatusCharging, api.ReasonUnknown},
+		{core.ChargePointStatusSuspendedEV, api.ReasonUnknown},
+		{core.ChargePointStatusSuspendedEVSE, api.ReasonUnknown},
+	}
+
+	for _, tc := range tc {
+		t.Run(string(tc.status), func(t *testing.T) {
+			c := newPlugchoiceFixture(plugchoice.Connector{Status: tc.status}, plugchoice.PowerResponse{})
+
+			reason, err := c.StatusReason()
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, reason)
+		})
+	}
+}
+
 func TestPlugchoiceGetMaxCurrent(t *testing.T) {
 	c := newPlugchoiceFixture(plugchoice.Connector{CurrentLimit: lo.ToPtr(16)}, plugchoice.PowerResponse{})
 	current, err := c.GetMaxCurrent()

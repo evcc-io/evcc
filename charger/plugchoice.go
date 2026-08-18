@@ -169,6 +169,25 @@ func (c *Plugchoice) Status() (api.ChargeStatus, error) {
 	}
 }
 
+var _ api.StatusReasoner = (*Plugchoice)(nil)
+
+// StatusReason implements the api.StatusReasoner interface
+func (c *Plugchoice) StatusReason() (api.Reason, error) {
+	conn, err := c.conn()
+	if err != nil {
+		return api.ReasonUnknown, err
+	}
+
+	switch conn.Status {
+	case core.ChargePointStatusPreparing:
+		return api.ReasonWaitingForAuthorization, nil
+	case core.ChargePointStatusFinishing:
+		return api.ReasonDisconnectRequired, nil
+	default:
+		return api.ReasonUnknown, nil
+	}
+}
+
 // Enabled implements the api.Charger interface
 func (c *Plugchoice) Enabled() (bool, error) {
 	conn, err := c.conn()
