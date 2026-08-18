@@ -34,8 +34,8 @@ params:
       de: Gateway Serial
       en: Gateway Serial
     help:
-      de: Seriennummer des VitoConnect modul (VitoCare App -> Einstellungen -> Kommunikationsmodul -> Seriennummer)
-      en: VitoConnect serial number (VitoCare App -> Settings -> Communication module -> Serial number)
+      de: Seriennummer des VitoConnect modul (ViCare App -> Einstellungen -> Kommunikationsmodul -> Seriennummer)
+      en: VitoConnect serial number (ViCare app -> Settings -> Communication module -> Serial number)
   - name: installation_id
     required: true
     description:

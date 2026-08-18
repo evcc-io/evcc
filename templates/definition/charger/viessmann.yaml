@@ -37,8 +37,8 @@ params:
       de: Gateway Serial
       en: Gateway Serial
     help:
-      de: Wird nach der Anmeldung automatisch ermittelt. Alternativ manuell eintragen (VitoCare App -> Einstellungen -> Kommunikationsmodul -> Seriennummer)
-      en: Determined automatically after login. Alternatively enter manually (VitoCare App -> Settings -> Communication module -> Serial number)
+      de: Wird nach der Anmeldung automatisch ermittelt. Alternativ manuell eintragen (ViCare App -> Einstellungen -> Kommunikationsmodul -> Seriennummer)
+      en: Determined automatically after login. Alternatively enter manually (ViCare app -> Settings -> Communication module -> Serial number)
   - name: installation_id
     required: true
     service: viessmann/equipment?clientid={clientid}&redirecturi={redirecturi}
