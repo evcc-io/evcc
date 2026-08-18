@@ -7,21 +7,21 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/vehicle/skoda/publicapi"
+	"github.com/evcc-io/evcc/vehicle/myskoda"
 )
 
-// SkodaPublic is an api.Vehicle implementation for the MyŠkoda public api
-type SkodaPublic struct {
+// MySkoda is an api.Vehicle implementation for the MyŠkoda public api
+type MySkoda struct {
 	*embed
-	*publicapi.Provider
+	*myskoda.Provider
 }
 
 func init() {
-	registry.Add("skoda-public", NewSkodaPublicFromConfig)
+	registry.Add("myskoda", NewMySkodaFromConfig)
 }
 
-// NewSkodaPublicFromConfig creates a new vehicle
-func NewSkodaPublicFromConfig(other map[string]any) (api.Vehicle, error) {
+// NewMySkodaFromConfig creates a new vehicle
+func NewMySkodaFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed   `mapstructure:",squash"`
 		VIN     string
@@ -46,14 +46,14 @@ func NewSkodaPublicFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, errors.New("missing vin")
 	}
 
-	log := util.NewLogger("skoda-public").Redact(cc.ApiKey, cc.VIN)
+	log := util.NewLogger("myskoda").Redact(cc.ApiKey, cc.VIN)
 
-	uri := publicapi.BaseURI
+	uri := myskoda.BaseURI
 	if cc.Sandbox {
-		uri = publicapi.SandboxURI
+		uri = myskoda.SandboxURI
 	}
 
-	apiC := publicapi.NewAPI(log, uri, cc.ApiKey)
+	apiC := myskoda.NewAPI(log, uri, cc.ApiKey)
 	apiC.Client.Timeout = cc.Timeout
 
 	// validate api key and vin, use vehicle name as title
@@ -62,12 +62,12 @@ func NewSkodaPublicFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	v := &SkodaPublic{
+	v := &MySkoda{
 		embed: &cc.embed,
 	}
 	v.fromVehicle(res.Vehicle.Name, 0)
 
-	v.Provider = publicapi.NewProvider(apiC, cc.VIN, cc.Cache)
+	v.Provider = myskoda.NewProvider(apiC, cc.VIN, cc.Cache)
 
 	return v, nil
 }

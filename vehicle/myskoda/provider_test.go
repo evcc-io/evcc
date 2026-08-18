@@ -1,4 +1,4 @@
-package publicapi
+package myskoda
 
 import (
 	"encoding/json"
