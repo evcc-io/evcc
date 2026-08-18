@@ -30,20 +30,22 @@ params:
     service: auth/redirecturi
   - name: gateway_serial
     required: true
+    service: viessmann/equipment?detail=gateways&clientid={clientid}&redirecturi={redirecturi}
     description:
       de: Gateway Serial
       en: Gateway Serial
     help:
-      de: Seriennummer des VitoConnect modul (ViCare App -> Einstellungen -> Kommunikationsmodul -> Seriennummer)
-      en: VitoConnect serial number (ViCare app -> Settings -> Communication module -> Serial number)
+      de: Wird nach der Anmeldung automatisch ermittelt. Alternativ manuell eintragen (ViCare App -> Einstellungen -> Kommunikationsmodul -> Seriennummer)
+      en: Determined automatically after login. Alternatively enter manually (ViCare app -> Settings -> Communication module -> Serial number)
   - name: installation_id
     required: true
+    service: viessmann/equipment?clientid={clientid}&redirecturi={redirecturi}
     description:
       de: Installation ID
       en: Installation ID
     help:
-      de: Ermittlung wie beim Viessmann Wärmepumpen-Charger-Template beschrieben (equipment/installations).
-      en: Determine as described in the Viessmann heat pump charger template (equipment/installations).
+      de: Wird nach der Anmeldung automatisch ermittelt.
+      en: Determined automatically after login.
   - name: device_id
     required: true
     description:
@@ -75,7 +77,7 @@ render: |
     # (the Viessmann API has a strict daily quota shared with the ViCare app).
     source: http
     uri: {{ $device }}/features
-    cache: 120s
+    cache: 60s
     auth:
       source: viessmann
       clientid: {{ .clientid }}
@@ -86,7 +88,7 @@ render: |
     # heating.dhw.sensors.temperature.dhwCylinder: domestic hot water temperature (°C).
     source: http
     uri: {{ $device }}/features
-    cache: 120s
+    cache: 60s
     auth:
       source: viessmann
       clientid: {{ .clientid }}

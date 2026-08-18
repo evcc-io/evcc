@@ -102,10 +102,14 @@ export function handleError(e: any, msg: string) {
 export function applyDefaultsFromTemplate(template: Template | null, values: DeviceValues) {
   const params = template?.Params || [];
   params.forEach((p) => {
-    if (p.Default && !values[p.Name]) {
+    if (p.Type === "Bool") {
+      if (values[p.Name] === undefined) {
+        // template defaults arrive as strings; a real boolean keeps the
+        // "field is empty" checks (e.g. service auto-fill) working
+        values[p.Name] = p.Default === "true";
+      }
+    } else if (p.Default && !values[p.Name]) {
       values[p.Name] = p.Default;
-    } else if (p.Type === "Bool" && values[p.Name] === undefined) {
-      values[p.Name] = false; // initialize
     }
   });
 }
@@ -161,6 +165,12 @@ export function flattenDeviceConfig(dev: any): Record<string, any> {
   }
   return flat;
 }
+
+// service endpoints return string values; coerce them to the param's declared type
+export const coerceServiceValue = (
+  param: TemplateParam | undefined,
+  value: string
+): string | boolean => (param?.Type === "Bool" ? value === "true" : value);
 
 export async function loadServiceValues(path: string) {
   try {

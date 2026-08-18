@@ -11,11 +11,11 @@ requirements:
     de: |
       Einmalige Warmwasserbereitung. Das Gerät entscheidet eigenständig, ob die Wärmepumpe oder die elektrische Zusatzheizung (falls vorhanden) genutzt wird.
 
-      Optional können Leistungs- und Temperaturwerte ausgelesen werden. Das setzt Datenpunkte der One-Base-/E3-Gerätegeneration voraus (z. B. Vitocal 25x, getestet mit Vitocal 250-A). Welche Datenpunkte ein Gerät liefert, ist geräteabhängig und lässt sich über die [Viessmann API](https://developer.viessmann-climatesolutions.com/) am Feature-Endpunkt der Anlage ablesen. Für unterstützte Geräte die Option „Leistungs- und Temperaturwerte auslesen" aktivieren.
+      Optional können Leistungs- und Temperaturwerte ausgelesen werden. Das setzt Datenpunkte der One-Base-/E3-Gerätegeneration voraus (z. B. Vitocal 25x, getestet mit Vitocal 250-A). Welche Datenpunkte ein Gerät liefert, ist geräteabhängig und lässt sich über die [Viessmann API](https://developer.viessmann-climatesolutions.com/) am Feature-Endpunkt der Anlage ablesen. Die Option „Leistungs- und Temperaturwerte auslesen" wird nach der Anmeldung automatisch vorbelegt, wenn das Gerät die Datenpunkte liefert.
     en: |
       One-time hot water preparation. The device automatically decides whether to use the heat pump or the auxiliary electric heater (if available).
 
-      Optionally, power and temperature readings can be enabled. This requires data points of the One Base/E3 device generation (e.g. Vitocal 25x, tested with a Vitocal 250-A). Which data points a device provides is device-specific and can be inspected via the [Viessmann API](https://developer.viessmann-climatesolutions.com/) feature endpoint of the installation. For supported devices, enable the "Read power and temperature values" option.
+      Optionally, power and temperature readings can be enabled. This requires data points of the One Base/E3 device generation (e.g. Vitocal 25x, tested with a Vitocal 250-A). Which data points a device provides is device-specific and can be inspected via the [Viessmann API](https://developer.viessmann-climatesolutions.com/) feature endpoint of the installation. The "Read power and temperature values" option is pre-set automatically after login if the device provides the data points.
 params:
   - name: user
     deprecated: true
@@ -151,12 +151,13 @@ params:
     required: true
     type: bool
     default: false
+    service: viessmann/measurements?clientid={clientid}&redirecturi={redirecturi}&gateway_serial={gateway_serial}&installation_id={installation_id}&device_id={device_id}
     description:
       de: Leistungs- und Temperaturwerte auslesen
       en: Read power and temperature values
     help:
-      de: Liest die aktuelle elektrische Leistungsaufnahme und die Warmwassertemperatur aus. Aktivieren, wenn das Gerät diese Datenpunkte liefert (One-Base-/E3-Generation, z. B. Vitocal 25x); die Verfügbarkeit lässt sich am Feature-Endpunkt der API ablesen. Standardmäßig deaktiviert, damit sich bestehende Installationen beim Update nicht ändern.
-      en: Reads the current electrical power consumption and the domestic hot water temperature. Enable if the device provides these data points (One Base/E3 generation, e.g. Vitocal 25x); availability can be checked via the API feature endpoint. Disabled by default so existing installations are unchanged on upgrade.
+      de: Liest die aktuelle elektrische Leistungsaufnahme und die Warmwassertemperatur aus. Wird nach der Anmeldung automatisch anhand der vom Gerät gemeldeten Datenpunkte vorbelegt (One-Base-/E3-Generation, z. B. Vitocal 25x). Standardmäßig deaktiviert, damit sich bestehende Installationen beim Update nicht ändern.
+      en: Reads the current electrical power consumption and the domestic hot water temperature. Pre-set automatically after login based on the data points the device reports (One Base/E3 generation, e.g. Vitocal 25x). Disabled by default so existing installations are unchanged on upgrade.
   - name: uri
     advanced: true
     default: https://api.viessmann-climatesolutions.com/iot/v2
@@ -190,7 +191,7 @@ render: |
     # call per cache window. The Viessmann API has a strict daily request quota
     # (shared with the ViCare app); per-feature polling exhausts it (HTTP 429).
     uri: {{ $device }}/features
-    cache: 60s # Viessmann has implementet a rate limit, if you see a http 429 in the logs you can increase the value.
+    cache: 60s # one shared request/minute stays well within the daily quota; increase on HTTP 429
     auth:
       source: viessmann
       clientid: {{ .clientid }}
@@ -246,7 +247,7 @@ render: |
     # Same URL + cache as getmode -> served from the shared cached feature list.
     source: http
     uri: {{ $device }}/features
-    cache: 120s
+    cache: 60s
     auth:
       source: viessmann
       clientid: {{ .clientid }}
@@ -259,7 +260,7 @@ render: |
     # temperature to display on the loadpoint gauge.
     source: http
     uri: {{ $device }}/features
-    cache: 120s
+    cache: 60s
     auth:
       source: viessmann
       clientid: {{ .clientid }}
@@ -270,7 +271,7 @@ render: |
     # heating.dhw.temperature.main: configured DHW target temperature (°C).
     source: http
     uri: {{ $device }}/features
-    cache: 120s
+    cache: 60s
     auth:
       source: viessmann
       clientid: {{ .clientid }}
