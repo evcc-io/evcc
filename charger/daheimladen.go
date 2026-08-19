@@ -380,7 +380,7 @@ func (wb *DaheimLaden) checkStation() error {
 	if s == "" {
 		return api.ErrSponsorRequired
 	}
-	
+
 	for _, r := range s {
 		if r < 0x20 || r > 0x7e {
 			return api.ErrSponsorRequired
