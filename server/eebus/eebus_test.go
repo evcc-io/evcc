@@ -95,6 +95,6 @@ func TestPairingDeniedOnlyWhenConfigured(t *testing.T) {
 	c.ServicePairingDetailUpdate(identity, detail)
 
 	service.EXPECT().CancelPairing(identity).Once()
-	c.configured.Store(true)
+	c.configured = true
 	c.ServicePairingDetailUpdate(identity, detail)
 }

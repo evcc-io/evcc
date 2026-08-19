@@ -7,7 +7,6 @@ import (
 	"slices"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"dario.cat/mergo"
@@ -86,7 +85,7 @@ type EEBus struct {
 
 	// configured is set once device configuration has finished. Until then, an
 	// unknown ski may still belong to a device that is not configured yet.
-	configured atomic.Bool
+	configured bool
 
 	ski string
 
@@ -118,9 +117,13 @@ func Instance() (*EEBus, error) {
 // being configured is not yet registered, and denying it would lock the remote
 // service out until the next restart.
 func ConfigComplete() {
-	if instance != nil {
-		instance.configured.Store(true)
+	if instance == nil {
+		return
 	}
+
+	instance.mux.Lock()
+	defer instance.mux.Unlock()
+	instance.configured = true
 }
 
 func GetStatus() any {
@@ -580,7 +583,7 @@ func (c *EEBus) ServicePairingDetailUpdate(identity shipapi.ServiceIdentity, det
 	defer c.mux.Unlock()
 
 	if clients, ok := c.clients[identity.SKI]; !ok || len(clients) == 0 {
-		if !c.configured.Load() {
+		if !c.configured {
 			// device configuration is still running- leave the request pending
 			// instead of denying a ski that is about to be registered
 			c.log.DEBUG.Printf("pairing request from %s while configuring, left pending", identity.SKI)
