@@ -276,14 +276,19 @@ func (c *Plugchoice) GetMaxCurrent() (float64, error) {
 	return float64(*conn.CurrentLimit), nil
 }
 
-// active returns true if the connector may currently be delivering power
+// active returns true if a transaction is running on the connector
 func (c *Plugchoice) active() (bool, error) {
 	conn, err := c.conn()
 	if err != nil {
 		return false, err
 	}
 
-	return conn.Status == core.ChargePointStatusCharging, nil
+	switch conn.Status {
+	case core.ChargePointStatusCharging, core.ChargePointStatusSuspendedEV, core.ChargePointStatusSuspendedEVSE:
+		return true, nil
+	default:
+		return false, nil
+	}
 }
 
 // parsePlugchoiceValue parses a measurement, handling surrounding whitespace
@@ -302,7 +307,7 @@ var _ api.Meter = (*Plugchoice)(nil)
 // CurrentPower implements the api.Meter interface
 func (c *Plugchoice) CurrentPower() (float64, error) {
 	// meter values are only sampled during a transaction, hence the API may keep
-	// serving the last known values- suppress them unless a session is active
+	// serving the last known values once it has ended- suppress those
 	if active, err := c.active(); err != nil || !active {
 		return 0, err
 	}

@@ -36,7 +36,7 @@ func newPlugchoiceFixture(conn plugchoice.Connector, power plugchoice.PowerRespo
 func TestPlugchoiceMetering(t *testing.T) {
 	// the API only receives meter values during a transaction and may keep serving
 	// the last known sample afterwards
-	stale := plugchoice.PowerResponse{KW: "7.4", L1: "10.7", L2: "10.7", L3: "10.7"}
+	sample := plugchoice.PowerResponse{KW: "7.4", L1: "10.7", L2: "10.7", L3: "10.7"}
 
 	tc := []struct {
 		name     string
@@ -45,16 +45,17 @@ func TestPlugchoiceMetering(t *testing.T) {
 		expPower float64
 		expL1    float64
 	}{
-		{"charging", core.ChargePointStatusCharging, stale, 7400, 10.7},
+		{"charging", core.ChargePointStatusCharging, sample, 7400, 10.7},
 		// session started outside of evcc, so Enable() was never called
 		{"charging, single phase", core.ChargePointStatusCharging,
 			plugchoice.PowerResponse{KW: "3.6", L1: "16.0", L2: "-", L3: " 0.0"}, 3600, 16},
-		// not charging- stale values must not be reported
-		{"suspended by ev", core.ChargePointStatusSuspendedEV, stale, 0, 0},
-		{"preparing", core.ChargePointStatusPreparing, stale, 0, 0},
-		{"available", core.ChargePointStatusAvailable, stale, 0, 0},
-		{"finishing", core.ChargePointStatusFinishing, stale, 0, 0},
-		{"suspended by evse", core.ChargePointStatusSuspendedEVSE, stale, 0, 0},
+		// sampling continues while the transaction is suspended
+		{"suspended by ev", core.ChargePointStatusSuspendedEV, sample, 7400, 10.7},
+		{"suspended by evse", core.ChargePointStatusSuspendedEVSE, sample, 7400, 10.7},
+		// no transaction- stale values must not be reported
+		{"preparing", core.ChargePointStatusPreparing, sample, 0, 0},
+		{"available", core.ChargePointStatusAvailable, sample, 0, 0},
+		{"finishing", core.ChargePointStatusFinishing, sample, 0, 0},
 	}
 
 	for _, tc := range tc {
