@@ -42,6 +42,21 @@ type MeterValues struct {
 	Voltages  [3]float64
 }
 
+//go:generate go tool enumer -type Mvid -trimprefix Mvid -transform whitespace
+type Mvid int
+
+// See https://github.com/Tinkerforge/esp32-firmware/blob/master/software/src/modules/meters/meter_value_id.csv
+const (
+	MvidPower     Mvid = 74
+	MvidEnergy    Mvid = 209
+	MvidCurrentL1 Mvid = 13
+	MvidCurrentL2 Mvid = 17
+	MvidCurrentL3 Mvid = 21
+	MvidVoltageL1 Mvid = 1
+	MvidVoltageL2 Mvid = 2
+	MvidVoltageL3 Mvid = 3
+)
+
 type Name struct {
 	Name        string `json:"name"`
 	WarpType    string `json:"type"`
@@ -49,33 +64,13 @@ type Name struct {
 	Uid         string `json:"uid"`
 }
 
-type PhasePair struct {
-	CurrentID int
-	VoltageID int
-}
-
-type MeterSchema struct {
-	PowerID     int
-	EnergyAbsID int
-	Phases      [3]PhasePair
-}
-
-// Value IDs based on Tinkerforge's meter_value_id.csv
-var DefaultSchema = MeterSchema{
-	PowerID:     74,  // Power Im-Ex Sum L1 L2 L3
-	EnergyAbsID: 209, // Energy Im Sum L1 L2 L3
-	Phases: [3]PhasePair{
-		{CurrentID: 13, VoltageID: 1}, // Current L1 Im-Ex Sum, Voltage L1-N
-		{CurrentID: 17, VoltageID: 2}, // Current L2 Im-Ex Sum, Voltage L2-N
-		{CurrentID: 21, VoltageID: 3}, // Current L3 Im-Ex Sum, Voltage L3-N
-	},
-}
-
 // WARP4 only: vehicle data read via ISO 15118; soc is null and mac is empty while unknown
 type EvState struct {
 	Soc *float64 `json:"soc"`
 	Mac string   `json:"mac"`
 }
+
+type FloatWithNaN float64
 
 type ChargeTrackerCurrentCharge struct {
 	AuthorizationInfo struct {

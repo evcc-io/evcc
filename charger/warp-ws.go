@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"net/url"
 	"path"
@@ -49,9 +50,10 @@ type WarpWS struct {
 	maxCurrent int64 // input from evcc
 
 	// meter
-	meter                    warp.MeterValues
-	meterMap                 map[int]int
-	hasCurrents, hasVoltages bool // meter actually reports per-phase currents/voltages
+	// warp.MvidValues() is the list of meter value IDs that are of interest for EVCC.
+	// indices maps those IDs to the index in the meters/X/values API.
+	indices map[warp.Mvid]int
+	values  map[warp.Mvid]float64
 
 	// nfc
 	chargeTracker warp.ChargeTrackerCurrentCharge
@@ -108,7 +110,8 @@ func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass strin
 		Caps:       implement.New(),
 		log:        log,
 		meterIndex: meterIndex,
-		meterMap:   map[int]int{},
+		indices:    make(map[warp.Mvid]int, len(warp.MvidValues())),
+		values:     make(map[warp.Mvid]float64, len(warp.MvidValues())),
 	}
 
 	if emURI != "" {
@@ -301,42 +304,48 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 		}
 
 	case metersValueIDsTopic:
-		var ids []int
+		var ids []warp.Mvid
 		if err = json.Unmarshal(payload, &ids); err != nil {
 			return err
 		}
-		w.meterMap = make(map[int]int, len(ids))
-		for i, id := range ids {
-			w.meterMap[id] = i
+
+		for _, needle := range warp.MvidValues() {
+			w.indices[needle] = -1
+
+			for idx, hay := range ids {
+				if hay == needle {
+					w.indices[needle] = idx
+					break
+				}
+			}
+		}
+
+		if w.indices[warp.MvidPower] != -1 {
+			implement.Has(w, implement.Meter(w.currentPower))
+		}
+
+		if w.indices[warp.MvidEnergy] != -1 {
+			implement.Has(w, implement.MeterEnergy(w.totalEnergy))
+		}
+
+		if w.indices[warp.MvidCurrentL1] != -1 && w.indices[warp.MvidCurrentL2] != -1 && w.indices[warp.MvidCurrentL3] != -1 {
+			implement.Has(w, implement.PhaseCurrents(w.currents))
+		}
+
+		if w.indices[warp.MvidVoltageL1] != -1 && w.indices[warp.MvidVoltageL2] != -1 && w.indices[warp.MvidVoltageL3] != -1 {
+			implement.Has(w, implement.PhaseVoltages(w.voltages))
 		}
 	case metersValuesTopic:
-		var values []float64
+		var values []warp.FloatWithNaN
 		if err := json.Unmarshal(payload, &values); err != nil {
 			return err
 		}
 
-		get := func(id int) (float64, bool) {
-			if idx, ok := w.meterMap[id]; ok && idx < len(values) {
-				return values[idx], true
-			}
-			return 0, false
-		}
-
-		s := warp.DefaultSchema
-		if v, ok := get(s.PowerID); ok {
-			w.meter.Power = v
-		}
-		if v, ok := get(s.EnergyAbsID); ok {
-			w.meter.EnergyAbs = v
-		}
-		for p, ids := range s.Phases {
-			if v, ok := get(ids.CurrentID); ok {
-				w.meter.Currents[p] = v
-				w.hasCurrents = true
-			}
-			if v, ok := get(ids.VoltageID); ok {
-				w.meter.Voltages[p] = v
-				w.hasVoltages = true
+		for mvid, idx := range w.indices {
+			if idx >= 0 && idx < len(values) {
+				w.values[mvid] = float64(values[idx])
+			} else {
+				w.values[mvid] = math.NaN()
 			}
 		}
 	case "power_manager/state":
@@ -409,31 +418,49 @@ func (w *WarpWS) StatusReason() (api.Reason, error) {
 func (w *WarpWS) currentPower() (float64, error) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
-	return w.meter.Power, nil
+
+	if math.IsNaN(w.values[warp.MvidPower]) {
+		return 0, api.ErrNotAvailable
+	}
+
+	return w.values[warp.MvidPower], nil
 }
 
 func (w *WarpWS) totalEnergy() (float64, error) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
-	return w.meter.EnergyAbs, nil
+
+	if math.IsNaN(w.values[warp.MvidEnergy]) {
+		return 0, api.ErrNotAvailable
+	}
+
+	return w.values[warp.MvidEnergy], nil
 }
 
 func (w *WarpWS) currents() (float64, float64, float64, error) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
-	if !w.hasCurrents {
+
+	if math.IsNaN(w.values[warp.MvidCurrentL1]) ||
+		math.IsNaN(w.values[warp.MvidCurrentL2]) ||
+		math.IsNaN(w.values[warp.MvidCurrentL3]) {
 		return 0, 0, 0, api.ErrNotAvailable
 	}
-	return w.meter.Currents[0], w.meter.Currents[1], w.meter.Currents[2], nil
+
+	return w.values[warp.MvidCurrentL1], w.values[warp.MvidCurrentL2], w.values[warp.MvidCurrentL3], nil
 }
 
 func (w *WarpWS) voltages() (float64, float64, float64, error) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
-	if !w.hasVoltages {
+
+	if math.IsNaN(w.values[warp.MvidVoltageL1]) ||
+		math.IsNaN(w.values[warp.MvidVoltageL2]) ||
+		math.IsNaN(w.values[warp.MvidVoltageL3]) {
 		return 0, 0, 0, api.ErrNotAvailable
 	}
-	return w.meter.Voltages[0], w.meter.Voltages[1], w.meter.Voltages[2], nil
+
+	return w.values[warp.MvidVoltageL1], w.values[warp.MvidVoltageL2], w.values[warp.MvidVoltageL3], nil
 }
 
 // identify reports the vehicle mac read via ISO 15118 before the RFID tag
