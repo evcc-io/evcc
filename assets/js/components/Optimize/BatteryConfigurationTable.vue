@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<div class="table-responsive">
-			<table class="table">
+			<table class="table table-sm align-top w-auto text-nowrap">
 				<thead>
 					<tr>
 						<th scope="col">Battery</th>
@@ -11,13 +11,30 @@
 						<th scope="col">Power Range</th>
 						<th scope="col">Max Discharge</th>
 						<th scope="col">Grid Interaction</th>
-						<th scope="col">Demand Profile</th>
+						<th scope="col">Demand</th>
 						<th scope="col">SoC Goals</th>
 					</tr>
 				</thead>
 				<tbody>
 					<tr v-for="(battery, index) in batteries" :key="index">
-						<th scope="row">{{ getBatteryTitle(index) }}</th>
+						<th scope="row">
+							<div class="d-flex align-items-center gap-2">
+								<span
+									class="battery-indicator"
+									:style="{ backgroundColor: batteryColors[index] }"
+								></span>
+								{{ getBatteryTitle(index) }}
+							</div>
+							<div class="progress soc-progress mt-2">
+								<div
+									class="progress-bar"
+									:style="{
+										width: socPercentage(battery.s_initial, index) + '%',
+										backgroundColor: batteryColors[index],
+									}"
+								></div>
+							</div>
+						</th>
 						<td>
 							<div>{{ formatStateOfCharge(battery.s_initial, index) }}</div>
 							<div class="text-muted small">
@@ -33,7 +50,7 @@
 						<td>
 							<div>{{ formatEnergyValue(battery.p_a) }}</div>
 							<div class="text-muted small">
-								{{ formatTotalEnergyValue(battery.p_a, index) }}
+								{{ formatTotalEnergyValue(battery.p_a, index) }} total
 							</div>
 						</td>
 						<td>
@@ -41,16 +58,21 @@
 						</td>
 						<td>{{ formatPower(battery.d_max) }}</td>
 						<td>
-							{{ formatGridInteraction(battery) }}
+							<span :class="{ 'text-muted': !hasGridInteraction(battery) }">
+								{{ formatGridInteraction(battery) }}
+							</span>
 						</td>
 						<td>
-							<span v-if="battery.p_demand?.length" class="badge bg-info">
+							<span v-if="battery.p_demand?.length">
 								{{ battery.p_demand.length }} steps
 							</span>
 							<span v-else class="text-muted">None</span>
 						</td>
 						<td>
-							<span v-if="battery.s_goal?.length" class="badge bg-warning">
+							<span
+								v-if="battery.s_goal?.length"
+								class="badge rounded-pill text-bg-light"
+							>
 								{{ battery.s_goal.length }} goals
 							</span>
 							<span v-else class="text-muted">None</span>
@@ -93,6 +115,10 @@ export default defineComponent({
 			type: Array as PropType<BatteryDetail[]>,
 			required: true,
 		},
+		batteryColors: {
+			type: Array as PropType<string[]>,
+			default: () => [],
+		},
 		currency: {
 			type: String as PropType<CURRENCY>,
 			required: true,
@@ -101,9 +127,6 @@ export default defineComponent({
 	methods: {
 		formatPower(watts: number): string {
 			return this.fmtW(watts, this.POWER_UNIT.KW, true, 1);
-		},
-		formatEnergy(wh: number): string {
-			return this.fmtWh(wh, this.POWER_UNIT.KW, true, 1);
 		},
 		formatPowerRange(min: number, max: number): string {
 			const minValue = this.fmtW(min, this.POWER_UNIT.KW, false, 1);
@@ -122,6 +145,13 @@ export default defineComponent({
 			const detail = this.batteryDetails[index];
 			return detail ? detail.title || detail.name : `Battery ${index + 1}`;
 		},
+		socPercentage(initialSocWh: number, index: number): number {
+			const detail = this.batteryDetails[index];
+			if (detail?.capacity && detail.capacity > 0) {
+				return (initialSocWh / 1000 / detail.capacity) * 100;
+			}
+			return 0;
+		},
 		formatStateOfCharge(initialSocWh: number, index: number): string {
 			const detail = this.batteryDetails[index];
 			if (detail?.capacity) {
@@ -132,12 +162,7 @@ export default defineComponent({
 			return "-";
 		},
 		formatInitialSocPercentage(initialSocWh: number, index: number): string {
-			const detail = this.batteryDetails[index];
-			if (detail?.capacity && detail.capacity > 0) {
-				const percentage = (initialSocWh / 1000 / detail.capacity) * 100;
-				return this.fmtPercentage(percentage, 0);
-			}
-			return "";
+			return this.fmtPercentage(this.socPercentage(initialSocWh, index), 0);
 		},
 		formatSocRangePercentage(minSocWh: number, maxSocWh: number, index: number): string {
 			const detail = this.batteryDetails[index];
@@ -155,6 +180,9 @@ export default defineComponent({
 				return this.fmtMoney(totalValue, this.currency, true, true);
 			}
 			return "";
+		},
+		hasGridInteraction(battery: BatteryConfig): boolean {
+			return !!(battery.charge_from_grid || battery.discharge_to_grid);
 		},
 		formatGridInteraction(battery: BatteryConfig): string {
 			const canCharge = battery.charge_from_grid;
@@ -175,8 +203,43 @@ export default defineComponent({
 </script>
 
 <style scoped>
+.table {
+	font-size: 0.8125rem;
+}
 .table td,
 .table th {
 	font-variant-numeric: tabular-nums;
+	padding-right: 1.75rem;
+	padding-top: 0.625rem;
+	padding-bottom: 0.625rem;
+	border-color: rgba(147, 148, 158, 0.1);
+}
+.table .small {
+	font-size: 0.75rem;
+}
+.table thead th {
+	color: var(--bs-gray-medium);
+	font-size: 0.6875rem;
+	font-weight: normal;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	padding-top: 0;
+	padding-bottom: 0.25rem;
+	border-color: rgba(147, 148, 158, 0.25);
+}
+.battery-indicator {
+	width: 0.625rem;
+	height: 0.625rem;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+.badge {
+	font-size: 0.75rem;
+}
+.soc-progress {
+	height: 0.25rem;
+}
+.table .text-muted {
+	color: var(--bs-gray-medium) !important;
 }
 </style>

@@ -119,6 +119,30 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	}
 }
 
+// setConsumptionLimitData stores a freshly received LPC limit. eebus-go reports a
+// stated duration as the time *remaining* (spine stores an absolute end time), so an
+// already-active limit must restart the clock run() measures the duration against.
+// Caller holds the mutex.
+func (c *EEBus) setConsumptionLimitData(limit ucapi.LoadLimit) {
+	c.consumptionLimit = limit
+	c.limitReceived = time.Now()
+
+	if limitActive(c.consumptionLimitActivated) {
+		*c.consumptionLimitActivated = c.limitReceived
+	}
+}
+
+// setProductionLimitData stores a freshly received LPP limit, see setConsumptionLimitData.
+// Caller holds the mutex.
+func (c *EEBus) setProductionLimitData(limit ucapi.LoadLimit) {
+	c.productionLimit = limit
+	c.limitReceived = time.Now()
+
+	if limitActive(c.productionLimitActivated) {
+		*c.productionLimitActivated = c.limitReceived
+	}
+}
+
 func (c *EEBus) updateConsumptionLimit() {
 	limit, err := c.cs.CsLPCInterface.ConsumptionLimit()
 	if err != nil {
@@ -129,8 +153,7 @@ func (c *EEBus) updateConsumptionLimit() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.consumptionLimit = limit
-	c.limitReceived = time.Now()
+	c.setConsumptionLimitData(limit)
 }
 
 func (c *EEBus) updateProductionLimit() {
@@ -143,8 +166,7 @@ func (c *EEBus) updateProductionLimit() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.productionLimit = limit
-	c.limitReceived = time.Now()
+	c.setProductionLimitData(limit)
 }
 
 func (c *EEBus) consumptionWriteApprovalRequired() {
@@ -158,8 +180,7 @@ func (c *EEBus) consumptionWriteApprovalRequired() {
 		c.cs.CsLPCInterface.ApproveOrDenyConsumptionLimit(msg, true, "")
 
 		c.mux.Lock()
-		c.consumptionLimit = limit
-		c.limitReceived = time.Now()
+		c.setConsumptionLimitData(limit)
 		c.mux.Unlock()
 	}
 }
@@ -174,8 +195,7 @@ func (c *EEBus) productionWriteApprovalRequired() {
 
 		c.cs.CsLPPInterface.ApproveOrDenyProductionLimit(msg, true, "")
 		c.mux.Lock()
-		c.productionLimit = limit
-		c.limitReceived = time.Now()
+		c.setProductionLimitData(limit)
 		c.mux.Unlock()
 	}
 }

@@ -146,9 +146,13 @@ func (site *Site) batteryMaxSocReached(dev config.Device[api.Meter]) (bool, erro
 // api.BatteryCharge:
 //
 //	The current soc is validated against max soc.
-//	In case max soc is reached, hold mode is applied.
+//	In case max soc is reached, hold mode is applied to that battery only.
 func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 	fromToCharge := mode == api.BatteryCharge || mode == api.BatteryUnknown && site.batteryMode == api.BatteryCharge
+
+	if site.batteryModeApplied == nil {
+		site.batteryModeApplied = make(map[string]api.BatteryMode)
+	}
 
 	for _, dev := range site.batteryMeters {
 		meter := dev.Instance()
@@ -158,8 +162,11 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 			continue
 		}
 
+		// mode is per battery, max soc is validated individually
+		devMode := mode
+
 		// validate max soc
-		if fromToCharge && mode != api.BatteryHold {
+		if fromToCharge && devMode != api.BatteryHold {
 			ok, err := site.batteryMaxSocReached(dev)
 			if err != nil && !errors.Is(err, api.ErrNotAvailable) {
 				return err
@@ -167,18 +174,25 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 
 			// put battery into hold mode when soc limit reached
 			if ok {
-				// TODO do this only once
-				mode = api.BatteryHold
+				devMode = api.BatteryHold
 			}
 		}
 
-		if mode != api.BatteryUnknown {
-			if err := batCtrl.SetBatteryMode(mode); err == nil {
-				site.log.DEBUG.Printf("set battery %s mode: %s", deviceTitleOrName(dev), mode)
-			} else if !errors.Is(err, api.ErrNotAvailable) {
+		// don't re-apply the mode the battery is already in
+		name := dev.Config().Name
+		if devMode == api.BatteryUnknown || devMode == site.batteryModeApplied[name] {
+			continue
+		}
+
+		if err := batCtrl.SetBatteryMode(devMode); err != nil {
+			if !errors.Is(err, api.ErrNotAvailable) {
 				return err
 			}
+			continue
 		}
+
+		site.batteryModeApplied[name] = devMode
+		site.log.DEBUG.Printf("set battery %s mode: %s", deviceTitleOrName(dev), devMode)
 	}
 
 	return nil
@@ -208,7 +222,7 @@ func (site *Site) dischargeControlActive(rate api.Rate) bool {
 		return false
 	}
 
-	for _, lp := range site.Loadpoints() {
+	for _, lp := range site.activeLoadpoints() {
 		smartCostActive := site.smartCostActive(lp, rate)
 		if lp.GetStatus() == api.StatusC && (smartCostActive || lp.IsFastChargingActive()) {
 			return true

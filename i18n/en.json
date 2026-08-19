@@ -330,17 +330,22 @@
       "change": "Change",
       "clear": "Clear",
       "close": "Close",
+      "confirmDisable": "Disable this device? It will be ignored after the next restart.",
+      "confirmEnable": "Enable this device again?",
       "confirmSave": "There are unsaved changes. Save now?",
       "copied": "Copied!",
       "copy": "Copy",
       "customHelp": "Create a user-defined device using evcc's plugin system.",
       "customOption": "User-defined device",
       "delete": "Delete",
+      "disable": "Disable",
+      "disabled": "disabled",
       "dismiss": "Dismiss",
       "docsLink": "See documentation.",
       "dragHandle": "Drag handle",
       "dragItem": "Draggable: {title}",
       "dragList": "Reorderable list",
+      "enable": "Enable",
       "error": "Error",
       "experimental": "Experimental",
       "forceSave": "Save anyway",
@@ -847,8 +852,8 @@
       "general": "General",
       "grid": "Grid",
       "integrations": "Integrations",
-      "loadpoints": "Charging points & Heaters",
-      "meter": "Solar & Battery",
+      "loadpoints": "Charging points & heaters",
+      "meter": "Solar & battery",
       "services": "Services",
       "system": "System",
       "vehicles": "Vehicles"
@@ -982,7 +987,7 @@
         "titleEdit": "Edit Temperature Forecast"
       },
       "template": "Provider",
-      "title": "Tariffs & Forecasts",
+      "title": "Tariffs & forecasts",
       "titleChoice": "What Do You Want To Add?",
       "type": {
         "co2": "CO₂ Intensity",
@@ -1180,9 +1185,12 @@
     }
   },
   "general": {
+    "back": "Back",
     "download": "Download",
+    "error": "Error",
     "none": "none",
-    "note": "Note:"
+    "note": "Note:",
+    "warning": "Warning"
   },
   "header": {
     "about": "About",
@@ -1541,6 +1549,7 @@
       "keepAsIs": "Keep as is",
       "learnMore": "Learn more.",
       "limitSoc": "Default limit",
+      "limitSocDescription": "Applied when the vehicle is connected.",
       "menu": "Vehicles",
       "minSoc": "Minimum charge",
       "minSocDescription": "Fast charge to this level in solar mode.",
@@ -1734,6 +1743,7 @@
       "label": "Language"
     },
     "loadpoints": {
+      "disabledDevice": "disabled",
       "help": "Change order and visibility for the UI.",
       "hide": "Hide {title}",
       "label": "Charging points",

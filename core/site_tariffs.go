@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/json"
 	"math"
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -26,11 +27,11 @@ func (s forecastSeries) MarshalBytes() ([]byte, error) {
 }
 
 type solarDetails struct {
-	Scale            float64      `json:"scale"`                      // scale factor yield/forecasted today, 1 if unscaled
-	Today            dailyDetails `json:"today,omitempty"`            // tomorrow
-	Tomorrow         dailyDetails `json:"tomorrow,omitempty"`         // tomorrow
-	DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow,omitempty"` // day after tomorrow
-	Timeseries       timeseries   `json:"timeseries,omitempty"`       // timeseries of forecasted energy
+	Scale            float64      `json:"scale"`                // trailing percentile solar scale factor, 1 if unscaled
+	Today            dailyDetails `json:"today"`                // tomorrow
+	Tomorrow         dailyDetails `json:"tomorrow"`             // tomorrow
+	DayAfterTomorrow dailyDetails `json:"dayAfterTomorrow"`     // day after tomorrow
+	Timeseries       timeseries   `json:"timeseries,omitempty"` // timeseries of forecasted energy
 }
 
 var _ api.BytesMarshaler = (*solarDetails)(nil)
@@ -188,6 +189,14 @@ func (site *Site) persistTariffs() {
 	}
 }
 
+// forecastSlotEnergy is the energy expected in the slot covering now, integrated
+// the same way as the published forecast so the persisted history matches the
+// curve the UI draws. Beyond the forecast horizon it is zero.
+func forecastSlotEnergy(solar api.Rates, now time.Time) float64 {
+	slot := now.Truncate(tariff.SlotDuration)
+	return solarEnergy(solar, slot, slot.Add(tariff.SlotDuration)) / 1e3
+}
+
 func (site *Site) solarDetails(solar api.Rates) solarDetails {
 	res := solarDetails{
 		Timeseries: solarTimeseries(solar),
@@ -216,10 +225,8 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 		Complete: !last.Before(eot.AddDate(0, 0, 1)),
 	}
 
-	if r, err := solar.At(time.Now()); err == nil {
-		if err := site.collectors[metrics.Forecast].AddEnergy(nil, nil, r.Value); err != nil {
-			site.log.ERROR.Printf("solar forecast collector: %v", err)
-		}
+	if err := site.collectors[metrics.Forecast].SetEnergy(forecastSlotEnergy(solar, time.Now())); err != nil {
+		site.log.ERROR.Printf("solar forecast collector: %v", err)
 	}
 
 	if r, err := tariff.At(site.GetTariff(api.TariffUsageTemperature), time.Now()); err == nil {
@@ -233,8 +240,8 @@ func (site *Site) solarDetails(solar api.Rates) solarDetails {
 	return res
 }
 
-// effectiveSolarScale returns the solar forecast scale if forecast adjustment
-// is enabled, 1 otherwise.
+// effectiveSolarScale returns the solar forecast scale used to adjust the
+// optimizer's solar input if forecast adjustment is enabled, 1 otherwise.
 func (site *Site) effectiveSolarScale() float64 {
 	if !site.GetSolarAdjusted() {
 		return 1
@@ -242,46 +249,84 @@ func (site *Site) effectiveSolarScale() float64 {
 	return site.solarScale()
 }
 
-// solarScale returns the ratio of produced solar energy to forecasted solar
-// energy for the current day, queried from the metrics database. Used to
-// adjust forecasts when PV is consistently under-/over-producing relative
-// to the forecast. Returns 1.0 when not enough data is available to make
-// the ratio meaningful, or when the ratio falls outside [0.8, 1.5] (an
-// implausible correction, typically from partial-day data).
+const (
+	solarScaleWindow     = 30  // trailing window of days to consider
+	solarScaleMinSamples = 14  // minimum daily ratios before applying a scale
+	solarScalePercentile = 0.5 // percentile of the daily ratio distribution to use
+	solarScaleMinEnergy  = 0.5 // kWh, skip days where either side is too small for a meaningful ratio
+)
+
+// solarScale computes a scale factor for the solar forecast by sorting the daily
+// produced/forecasted solar ratio over a trailing window of completed days and
+// picking the value at a configured percentile (window: solarScaleWindow,
+// percentile: solarScalePercentile). This captures the installation's systematic
+// bias (soiling, shading, model error) instead of a single day's weather noise.
+// The current (partial) day is excluded; returns 1 when there is not enough history.
+//
+// Depends only on completed days, so it's cached instead of recomputed per run.
 func (site *Site) solarScale() float64 {
-	series, err := metrics.QueryEnergy(now.BeginningOfDay(), time.Now(), "day", true)
+	scale, err := site.solarScaleCached()
 	if err != nil {
-		site.log.ERROR.Printf("solar forecast scale: %v", err)
 		return 1
 	}
+	return scale
+}
 
-	var pv, fcst float64
+// querySolarScale does the actual metrics query and percentile calculation
+// for solarScale, given the current beginning-of-day boundary.
+func (site *Site) querySolarScale(bod time.Time) (float64, error) {
+	from := bod.AddDate(0, 0, -solarScaleWindow)
+	series, err := metrics.QueryEnergy(from, time.Now(), "day", true)
+	if err != nil {
+		return 0, err
+	}
+
+	pv := make(map[string]float64, solarScaleWindow)
+	fcst := make(map[string]float64, solarScaleWindow)
 	for _, s := range series {
-		if len(s.Data) == 0 {
-			continue
-		}
+		var m map[string]float64
 		switch s.Group {
 		case metrics.PV:
-			pv = s.Data[0].Energy
+			m = pv
 		case metrics.Forecast:
-			fcst = s.Data[0].Energy
+			m = fcst
+		default:
+			continue
+		}
+		for _, d := range s.Data {
+			m[d.Start.Format("2006-01-02")] = d.Energy
 		}
 	}
 
-	const minEnergy = 0.5 // kWh
-	if fcst <= 0 || pv <= minEnergy {
-		return 1
+	today := bod.Format("2006-01-02")
+	ratios := make([]float64, 0, len(fcst))
+	for day, f := range fcst {
+		// skip today (partial) and dark days where the ratio is noise. The threshold
+		// applies to production as well: a near-zero yield against a healthy forecast
+		// is a fault (snow, soiling, inverter or metering outage), not a bias that
+		// should be projected onto the next solarScaleWindow days.
+		if p := pv[day]; day != today && f > solarScaleMinEnergy && p > solarScaleMinEnergy {
+			ratios = append(ratios, p/f)
+		}
 	}
 
-	scale := pv / fcst
-	site.log.DEBUG.Printf("solar forecast: produced %.3fkWh, forecasted %.3fkWh, scale %.3f", pv, fcst, scale)
-
-	// ignore implausible scale factors from partial-day data
-	if scale < 0.8 || scale > 1.5 {
-		return 1
+	scale, ok := percentileOf(ratios, solarScalePercentile, solarScaleMinSamples)
+	if !ok {
+		return 1, nil
 	}
+	site.log.DEBUG.Printf("solar scale P%.0f over %d days = %.3f", solarScalePercentile*100, len(ratios), scale)
+	return scale, nil
+}
 
-	return scale
+// percentileOf returns the p-th percentile (0..1) of values by nearest-rank on the
+// sorted series, or false when fewer than minSamples are present.
+func percentileOf(values []float64, p float64, minSamples int) (float64, bool) {
+	if len(values) < minSamples {
+		return 0, false
+	}
+	s := slices.Clone(values)
+	slices.Sort(s)
+	return s[int(p*float64(len(s)-1))], true
 }
 
 func (site *Site) isDynamicTariff(usage api.TariffUsage) bool {

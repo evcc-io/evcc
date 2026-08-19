@@ -8,5 +8,5 @@ params:
     required: true
 render: |
   type: aiways
-  {{ include "vehicle-base" . }}
-  {{ include "vehicle-features" . }}
+  {{ include "base" . }}
+  {{ include "features" . }}

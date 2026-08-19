@@ -7,6 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/core/metrics"
 	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/util"
 )
 
 // deleteResult reports the number of affected rows
@@ -57,6 +58,9 @@ func deleteEnergyHandler(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, http.StatusInternalServerError, err)
 		return
 	}
+
+	// invalidate cached values (e.g. the solar scale) derived from the deleted history
+	util.ResetCached()
 
 	jsonWrite(w, deleteResult{rows})
 }

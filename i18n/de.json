@@ -330,17 +330,22 @@
       "change": "Ändern",
       "clear": "Löschen",
       "close": "Schließen",
+      "confirmDisable": "Dieses Gerät deaktivieren? Es wird nach dem nächsten Neustart ignoriert.",
+      "confirmEnable": "Dieses Gerät wieder aktivieren?",
       "confirmSave": "Es gibt ungespeicherte Änderungen. Jetzt speichern?",
       "copied": "Kopiert!",
       "copy": "Kopieren",
       "customHelp": "Erstelle ein benutzerdefiniertes Gerät mit evcc's Plugin-System.",
       "customOption": "Benutzerdefiniertes Gerät",
       "delete": "Löschen",
+      "disable": "Deaktivieren",
+      "disabled": "deaktiviert",
       "dismiss": "Ausblenden",
       "docsLink": "Siehe Dokumentation.",
       "dragHandle": "Verschieben",
       "dragItem": "Verschiebbar: {title}",
       "dragList": "Sortierbare Liste",
+      "enable": "Aktivieren",
       "error": "Fehler",
       "experimental": "Experimentell",
       "forceSave": "Trotzdem speichern",
@@ -1180,9 +1185,12 @@
     }
   },
   "general": {
+    "back": "Zurück",
     "download": "Download",
+    "error": "Fehler",
     "none": "keine",
-    "note": "Hinweis:"
+    "note": "Hinweis:",
+    "warning": "Warnung"
   },
   "header": {
     "about": "Über",
@@ -1237,9 +1245,9 @@
     "createButtonDiscussion": "GitHub Diskussion starten...",
     "createButtonEmail": "Anfrage per E-Mail senden",
     "createButtonIssue": "GitHub Issue erstellen...",
+    "description": "Deine Installation funktioniert nicht wie erwartet? Nutze diese Seite um Hilfe zu bekommen oder Probleme zu melden. Gib genügend Details an, damit wir das Problem verstehen und reproduzieren können. Halte deine Beschreibung prägnant, klar und leicht verständlich.",
     "downloadButton": "Debug-Informationen herunterladen",
     "downloadHint": "Hänge diese Datei an deine E-Mail an, falls weitere Informationen benötigt werden.",
-    "description": "Deine Installation funktioniert nicht wie erwartet? Nutze diese Seite um Hilfe zu bekommen oder Probleme zu melden. Gib genügend Details an, damit wir das Problem verstehen und reproduzieren können. Halte deine Beschreibung prägnant, klar und leicht verständlich.",
     "helpType": {
       "discussion": "Brauche Hilfe bei meiner Einrichtung",
       "discussionDescription": "Community-Diskussionen bieten Antworten.",
@@ -1541,6 +1549,7 @@
       "keepAsIs": "Beibehalten",
       "learnMore": "Mehr erfahren.",
       "limitSoc": "Standardlimit",
+      "limitSocDescription": "Wird beim Anschließen des Fahrzeugs angewendet.",
       "menu": "Fahrzeuge",
       "minSoc": "Minimale Ladung",
       "minSocDescription": "Wird im PV-Modus schnell bis zu diesem Wert geladen.",
@@ -1626,7 +1635,7 @@
     "meterstop": "Endzählerstand",
     "odometer": "Kilometerstand",
     "price": "Kosten",
-    "soc": "Ladestand",
+    "soc": "Ladung",
     "started": "Startzeit",
     "title": "Ladevorgang"
   },
@@ -1734,6 +1743,7 @@
       "label": "Sprache"
     },
     "loadpoints": {
+      "disabledDevice": "deaktiviert",
       "help": "Reihenfolge und Sichtbarkeit für die Benutzeroberfläche ändern.",
       "hide": "{title} ausblenden",
       "label": "Ladepunkte",

@@ -20,4 +20,4 @@ render: |
   token: {{ .token }}
   siteid: {{ .siteid }}
   channel: {{ .channel }}
-  {{ include "tariff-base" . }}
+  {{ include "base" . }}

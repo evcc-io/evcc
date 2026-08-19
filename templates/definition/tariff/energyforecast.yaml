@@ -15,8 +15,8 @@ params:
   - preset: tariff-features
 render: |
   type: custom
-  {{ include "tariff-base" . }}
-  {{ include "tariff-features" . }}
+  {{ include "base" . }}
+  {{ include "features" . }}
   forecast:
     source: http
     uri: https://www.energyforecast.de/api/v1/predictions/next_96_hours?resolution=QUARTER_HOURLY&fixed_cost_cent=0&vat=0&token={{ .token }}{{ if .domain }}&market_zone={{ .domain }}{{ end }}

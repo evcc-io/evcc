@@ -471,8 +471,7 @@
         },
         "start": {
           "messageDefault": "Carga iniciada en modo {mode}.",
-          "title": "Cuando empieza la carga",
-          "titleDefault": "Carga iniciada en modo {mode}."
+          "title": "Cuando empieza la carga"
         },
         "stop": {
           "messageDefault": "Carga finalizada: {chargedEnergy} kWh en {chargeDuration}.",
@@ -979,7 +978,6 @@
       },
       "planNumber": "Plan {number}",
       "precondition": {
-        "description": "Cargue {duration} antes de la salida para preacondicionar la batería.",
         "label": "Cobro tardío",
         "optionAll": "todo",
         "optionNo": "no"
@@ -989,7 +987,6 @@
       "repeatingPlans": "Planes recurrentes",
       "selectAll": "Seleccionar todo",
       "strategyDisabledDescription": "La recarga comienza lo más tarde posible para terminar justo a tiempo para la salida. Con los precios dinámicos de la red o la tarifa de CO₂, hay más opciones disponibles aquí.",
-      "strategySettings": "Configuración de la estrategia",
       "time": "Tiempo",
       "title": "Plan",
       "unsavedChanges": "Hay cambios sin guardar. ¿Aplicar ahora?",
