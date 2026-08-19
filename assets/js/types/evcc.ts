@@ -6,10 +6,14 @@ interface WebView {
 declare global {
   interface Window {
     app: any;
-    evcc: {
+    evcc?: {
       version: string;
-      commit: string;
-      customCss: string;
+      customCss: boolean;
+      customLogo: boolean;
+      customBrand: string;
+      customWebsite: string;
+      customEmail: string;
+      customPhone: string;
     };
   }
   interface Window {
@@ -210,6 +214,8 @@ export interface State {
   homePower?: number;
   /** Configured grid operating point in W. Positive values maintain grid import. */
   residualPower?: number;
+  /** Static grid export power limit in W used as optimizer constraint, 0 = disabled. An active HEMS curtailment takes precedence. */
+  gridExportLimit?: number;
   /** Share of green energy in home consumption, between 0 and 1. */
   greenShareHome?: number;
   /** Share of green energy used for charging, between 0 and 1. */
@@ -437,6 +443,7 @@ export interface Entity {
   type: string;
   id: number;
   config: Config;
+  deviceDisable?: boolean;
 }
 
 export enum ConfigType {
@@ -478,6 +485,7 @@ export interface LoadpointThreshold {
 export interface ConfigLoadpoint {
   id?: number;
   name?: string;
+  disable?: boolean;
   charger: string;
   meter: string;
   vehicle: string;
@@ -597,6 +605,8 @@ export interface Loadpoint {
   connected: boolean;
   /** Duration since the vehicle was connected, in seconds. */
   connectedDuration: number;
+  /** Loadpoint is disabled via configuration. */
+  disabled?: boolean;
   /** Delay before charging stops in solar mode, in seconds. */
   disableDelay: number;
   /** Grid draw power above which charging stops in solar mode, in W. */
@@ -1272,32 +1282,11 @@ export interface Slot {
   selectable?: boolean | null;
 }
 
-/** A forecast value at a point in time. */
-export interface TimeseriesEntry {
-  /** Forecast power in W. */
-  val: number;
-  /**
-   * Time of the forecast value.
-   * @format date-time
-   */
-  ts: string;
-}
+/** A forecast time slot as [start, end, value] array. Start and end are unix seconds. Value unit depends on the forecast type. */
+export type ForecastSlot = [number, number, number];
 
-/** A forecast value for a time slot. */
-export interface ForecastSlot {
-  /**
-   * Start of the time slot.
-   * @format date-time
-   */
-  start: string;
-  /**
-   * End of the time slot.
-   * @format date-time
-   */
-  end: string;
-  /** Forecast value of the time slot. Unit depends on the forecast type. */
-  value: number;
-}
+/** A forecast value at a point in time as [ts, val] array. ts is unix seconds, val is power in W. */
+export type TimeseriesEntry = [number, number];
 
 /** Expected solar production energy of a day. */
 export interface EnergyByDay {
@@ -1335,6 +1324,33 @@ export interface Forecast {
   feedin?: ForecastSlot[];
   /** Temperature forecast in °C per time slot. */
   temperature?: ForecastSlot[];
+}
+
+// Ui* variants of the forecast wire types, expanded to objects with unix
+// milliseconds by expandForecast in utils/forecast
+
+export interface UiTimeseriesEntry {
+  ts: number;
+  val: number;
+}
+
+export interface UiForecastSlot {
+  start: number;
+  end: number;
+  value: number;
+}
+
+export interface UiSolarDetails extends Omit<SolarDetails, "timeseries"> {
+  timeseries?: UiTimeseriesEntry[];
+}
+
+export interface UiForecast {
+  grid?: UiForecastSlot[];
+  co2?: UiForecastSlot[];
+  solar?: UiSolarDetails;
+  planner?: UiForecastSlot[];
+  feedin?: UiForecastSlot[];
+  temperature?: UiForecastSlot[];
 }
 
 export interface SelectOption<T> {
@@ -1416,6 +1432,7 @@ export interface TimeSeries {
 // Solver status enum
 export enum OptimizationStatus {
   OPTIMAL = "Optimal",
+  FEASIBLE = "Feasible",
   INFEASIBLE = "Infeasible",
   UNBOUNDED = "Unbounded",
   UNDEFINED = "Undefined",

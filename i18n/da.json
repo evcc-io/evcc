@@ -24,9 +24,9 @@
       "charging": "lader",
       "discharging": "aflader",
       "energy": "Energi",
-      "gridCharge": "lader fra nettet",
+      "gridCharge": "netladning",
       "hold": "afladning låst",
-      "holdCharge": "opladning låst",
+      "holdCharge": "ladning låst",
       "ofTotal": "af {total}",
       "power": "Effekt",
       "soc": "Batteriniveau"
@@ -42,13 +42,14 @@
       },
       "bufferTitle": "Batteri som opladningsbuffer",
       "discharge": "Forhindrer hjemmebatteriet at aflade i hurtig mode og ved planlagt opladning.",
+      "gridDischarge": "Tillad hjemmebatteriet at aflade til elnettet.",
       "priority": "Hjemmebatteriet har prioritet, mens det er under {soc}. Derefter får ladepunkterne overskuddet.",
       "priorityNone": "Soloverskud går direkte til ladepunkterne. Sæt en værdi over {soc} for at prioritere hjemmebatteriet.",
       "priorityTitle": "Hvor sendes overskuddet først hen?"
     },
     "optimizer": {
       "action": {
-        "charge": "opladning fra nettet",
+        "charge": "Opladning fra nettet",
         "discharge": "Aflader til nettet",
         "hold": "Bloker afladning",
         "holdcharge": "Bloker opladning",
@@ -119,6 +120,7 @@
       "titleEdit": "Rediger selvregulerende forbrugsenhed"
     },
     "battery": {
+      "title": "Batteri",
       "titleAdd": "Tilføj batteri",
       "titleEdit": "Rediger batteri"
     },
@@ -189,6 +191,7 @@
     "deviceValue": {
       "activeClients": "Aktive klienter",
       "amount": "Mængde",
+      "asleep": "sover",
       "broker": "Broker",
       "bucket": "Bucket",
       "capacity": "Kapacitet",
@@ -216,6 +219,7 @@
       "enabled": "Aktiveret",
       "energy": "Energi",
       "events": "Begivenheder",
+      "exportLimit": "Eksportgrænse til nettet",
       "feedinPrice": "Indfødningstarif",
       "forecast": "Prognose",
       "gridPrice": "God pris",
@@ -227,6 +231,7 @@
       "no": "nej",
       "odometer": "Kilometertæller",
       "org": "Organisation",
+      "outdoorTemp": "Udendørstemperatur",
       "phaseCurrents": "Strømstyrke",
       "phasePowers": "Effekt",
       "phaseVoltages": "Spænding",
@@ -236,6 +241,7 @@
       "price": "Pris",
       "productionLimited": "Produktionsgrænse",
       "range": "Rækkevidde",
+      "remoteEnabled": "Aktiveret",
       "returnEnergy": "Energi (baglæns)",
       "singlePhase": "Enkelt fase",
       "soc": "Oplader",
@@ -301,6 +307,7 @@
     "form": {
       "danger": "Pas på",
       "deprecated": "forældet",
+      "durationUnit": "Tidsenhed for {label}",
       "example": "Eksempel",
       "optional": "valgfrit"
     },
@@ -313,17 +320,22 @@
       "change": "Ændre",
       "clear": "Slet",
       "close": "Luk",
+      "confirmDisable": "Deaktiver denne enhed? Den ignoreres efter næste genstart.",
+      "confirmEnable": "Aktiver denne enhed igen?",
       "confirmSave": "Ændringer er ikke gemt. Skal de gemmes nu?",
       "copied": "Kopieret!",
       "copy": "Kopier",
       "customHelp": "Opret en brugerdefineret enhed ved hjælp af evcc's plugin-system.",
       "customOption": "Brugerdefineret enhed",
       "delete": "Slet",
+      "disable": "Deaktivér",
+      "disabled": "deaktiveret",
       "dismiss": "Afvis",
       "docsLink": "Se dokumentation.",
       "dragHandle": "Træk-håndtag",
       "dragItem": "Kan trækkes: {title}",
       "dragList": "Rækkefølgen kan ændres",
+      "enable": "Aktiver",
       "error": "Fejl",
       "experimental": "Eksperimentel",
       "forceSave": "Gem alligevel",
@@ -365,12 +377,24 @@
       },
       "customOption": "Brugerdefineret integration",
       "description": "Effektbegrænsning via eksterne systemer (f.eks. §14a EnWG, §9 EEG-grænseflade eller overordnet energistyringssystem). Fungerer sammen med belastningsstyringsfunktionen. Begrænsning af solproduktionen understøttes også for udvalgte enheder. Den faktiske begrænsningsgrænse skal konfigureres for hver enkelt inverter.",
+      "download": "Download",
+      "dynamicLimits": "Dynamisk grænse",
       "eventsRecorded": "Registrerede {count} netbegrænsningshændelser.",
+      "exportLimit": "Eksportgrænse til nettet",
+      "exportLimitDescription": "Batterioptimeringen respekterer denne grænse for at undgå tab af solenergi. En aktivt begrænsning fra en integration med en dynamisk grænse har forrang.",
+      "exportLimitHint": "Statisk grænse for indfødning ved nettilslutningspunktet.",
       "generic": "Generelle integrationer",
       "integrations": "Integrationer",
       "lastEvent": "Sidst {timeAgo}.",
+      "noEvents": "Endnu ingen begivenheder gemt.",
+      "recordedEvents": "Gemte begivenheder",
+      "staticLimits": "Statisk grænse",
       "template": "Integration",
-      "title": "Ekstern grænse"
+      "title": "Ekstern grænse",
+      "type": {
+        "custom": "Brugerdefineret integration",
+        "relay": "Brugerdefineret integration (relæ)"
+      }
     },
     "icon": {
       "change": "ændre",
@@ -398,10 +422,11 @@
         "heating": "Tilføj varmelegeme"
       },
       "addMeter": "Tilføj dedikeret energimåler",
+      "advancedConfig": "Avanceret konfiguration",
       "cancel": "Afbryd",
       "chargerError": {
         "charging": "Konfiguration af en oplader er påkrævet.",
-        "heating": "Varmelegemet skal konfigureres."
+        "heating": "Et varmelegeme skal konfigureres."
       },
       "chargerLabel": {
         "charging": "Oplader",
@@ -419,11 +444,21 @@
       "circuitInvalid": "Kredsløbet findes ikke",
       "circuitLabel": "Kredsløb",
       "circuitUnassigned": "ikke tildelt",
+      "created": "“{name}” blev oprettet og bruger fornuftige standardindstillinger.",
+      "createdTitle": {
+        "charging": "Ladepunkt oprettet",
+        "heating": "Varmelegeme oprettet"
+      },
+      "creating": {
+        "charging": "Lader gemt. Opretter ladepunkt…",
+        "heating": "Varmelegeme gemt. Opretter varmelegeme…"
+      },
       "defaultModeHelp": {
         "charging": "Opladningstilstand når køretøjet forbindes.",
         "heating": "Indstilles ved systemstart."
       },
       "defaultModeHelpKeep": "Gemmer den senest valgte tilstand.",
+      "defaultModeKeep": "Gem som det er",
       "defaultModeLabel": "Standardtilstand",
       "delete": "Slet",
       "electricalSubtitle": "Ved tvivl, spørg din elektriker.",
@@ -536,18 +571,18 @@
           "titleDefault": "Køretøjet sover"
         },
         "connect": {
-          "messageDefault": "Bil forbundet med {pvPower}kW PV",
-          "title": "Når bilen forbindes",
-          "titleDefault": "Bil er forbundet"
+          "messageDefault": "Køretøj forbundet med {pvPower}kW PV",
+          "title": "Når køretøjet forbindes",
+          "titleDefault": "Køretøj forbundet"
         },
         "disconnect": {
-          "messageDefault": "Bilen er frakoblet efter {connectedDuration}",
-          "title": "Når bilen frakobles",
-          "titleDefault": "Bilen er frakoblet"
+          "messageDefault": "Køretøjet er frakoblet efter {connectedDuration}",
+          "title": "Når køretøjet frakobles",
+          "titleDefault": "Køretøjet er frakoblet"
         },
         "guest": {
           "messageDefault": "Ukendt køretøj, er et gæstekøretøj forbundet?",
-          "title": "Når en ukendt bil forbindes",
+          "title": "Når et ukendt køretøj forbindes",
           "titleDefault": "Ukendt køretøj"
         },
         "planoverrun": {
@@ -569,6 +604,11 @@
           "messageDefault": "Opladning er afsluttet {chargedEnergy}kWh på {chargeDuration}.",
           "title": "Når opladning stopper",
           "titleDefault": "Opladning er færdig"
+        },
+        "suggestion": {
+          "messageDefault": "Optimeringsforslag for {suggestionTitle}: Hvis optimeringsstyring var aktiv, ville den nu udføre handlingen '{suggestionAction}'. Dette er kun en anbefaling. Der er ikke foretaget nogen ændringer. Eksperimentel funktion. Feedback modtages gerne på https://github.com/evcc-io/evcc/issues/31903",
+          "title": "Når optimeringens anbefalede handling ændres",
+          "titleDefault": "Optimeringsforslag"
         }
       },
       "eventMessage": "Besked",
@@ -624,6 +664,8 @@
       "connectionHintTcpip": "Enheden er tilgængelig via netværk (LAN/WiFi).",
       "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Netværk",
+      "delay": "Forsinkelse",
+      "delayHint": "Valgfri ventetid før hver registeradgang. Er kun nødvendig for langsomme enheder.",
       "device": "Enhedsnavn",
       "deviceHint": "Eksempel: /dev/ttyUSB0",
       "host": "IP-adresse eller værtsnavn",
@@ -634,7 +676,9 @@
       "protocolHintRtu": "Forbindelse gennem en RS485 til Ethernet-adapter uden protokoloversættelse.",
       "protocolHintTcp": "Enheden har indbygget LAN/Wifi-understøttelse eller er forbundet via en RS485 til Ethernet-adapter med protokoloversættelse.",
       "protocolValueRtu": "RTU",
-      "protocolValueTcp": "TCP"
+      "protocolValueTcp": "TCP",
+      "timeout": "Timeout",
+      "timeoutHint": "Valgfri maksimal ventetid på svar fra enheden."
     },
     "modbusproxy": {
       "add": "Tilføj proxyforbindelse",
@@ -798,7 +842,7 @@
       "general": "Generelle",
       "grid": "Elnettet",
       "integrations": "Integrationer",
-      "loadpoints": "Lader og varmelegemer",
+      "loadpoints": "Ladere og varmelegemer",
       "meter": "Sol og batteri",
       "services": "Tjenester",
       "system": "System",
@@ -913,7 +957,8 @@
         "feedIn": "Tilføj elnet eksport tarif",
         "grid": "Tilføj elnet import tarif",
         "planner": "Tilføj planlægnings prognose",
-        "solar": "Tilføj sol prognose"
+        "solar": "Tilføj sol prognose",
+        "temperature": "Tilføj temperaturprognose"
       },
       "planner": {
         "description": "Avanceret indstilling. Normalt ikke nødvendig, da dynamiske eltariffer eller CO₂-prognoser bruges automatisk. Aktiverer en ekstra datakilde, som kun anvendes til ladeplanlægning – ikke til statistik eller prisberegninger.",
@@ -926,6 +971,11 @@
         "titleAdd": "Tilføj sol prognose",
         "titleEdit": "Juster sol prognose"
       },
+      "temperature": {
+        "description": "Udendørs temperaturprognose for din placering. Vises i brugerfladen og bruges til at forudsige varmebehovet.",
+        "titleAdd": "Tilføj temperaturprognose",
+        "titleEdit": "Rediger temperaturprognose"
+      },
       "template": "Udbyder",
       "title": "Tariffer og prognoser",
       "titleChoice": "Hvad ønsker du at tilføje?",
@@ -934,7 +984,8 @@
         "feedIn": "Indfødningspris",
         "grid": "Købspris fra elnettet",
         "planner": "Planlægning",
-        "solar": "Sol"
+        "solar": "Sol",
+        "temperature": "Temperaturprognose"
       },
       "zones": {
         "add": "Tilføj zone",
@@ -1055,6 +1106,8 @@
     "version": {
       "availableLong": "ny version tilgængelig",
       "community": "evcc-fællesskabet",
+      "labelEmail": "Email",
+      "labelPhone": "Telefon",
       "labelRelease": "Udgivet",
       "labelVersion": "Version",
       "labelWebsite": "Hjemmeside",
@@ -1087,7 +1140,8 @@
       "co2": "Se når strøm i din region er grøn. Opladningsplaner bliver optimeret til lav-emission og sparet CO₂ beregnes.",
       "price": "Konfigurér din dynamiske eltarif for automatisk at optimere ladeplaner og beregne besparelser.",
       "setup": "Indstil tariffer og prognoser",
-      "solar": "Vis forventet solenergi produceret i dag og de nærmeste dage. Bliver også brugt til automatisk optimering af opladninger i fremtiden."
+      "solar": "Vis forventet solenergi produceret i dag og de nærmeste dage. Bliver også brugt til automatisk optimering af opladninger i fremtiden.",
+      "temperature": "Se den forventede udendørstemperatur for din placering. Bruges til at forudsige varmebehovet."
     },
     "hideLine": "skjul linjen",
     "modalTitle": "Prognose",
@@ -1109,14 +1163,24 @@
     "solarAdjust": "Juster solprognosen på baggrund af produktions data{percent}.",
     "solarAdjustMedium": "Justering baseret på faktiske data",
     "solarAdjustShort": "justering",
+    "temperature": {
+      "average": "Gennemsnit",
+      "range": "Rækkevidde"
+    },
     "type": {
       "co2": "CO₂ Emissioner",
       "price": "Strømpris",
-      "solar": "Solenergiproduktion"
+      "solar": "Solenergiproduktion",
+      "temperature": "Udendørstemperatur"
     }
   },
   "general": {
-    "note": "Note:"
+    "back": "Tilbage",
+    "download": "Download",
+    "error": "Fejl",
+    "none": "ingen",
+    "note": "Note:",
+    "warning": "Advarsel"
   },
   "header": {
     "about": "Om",
@@ -1129,6 +1193,7 @@
     "sessions": "Opladnings sessioner"
   },
   "help": {
+    "contactButton": "Kontakt os",
     "discussionsButton": "GitHub diskussioner",
     "documentationButton": "Dokumentation",
     "issueButton": "Indberet et problem",
@@ -1168,8 +1233,11 @@
     "additionalContext": "Supplerende oplysninger",
     "additionalContextPlaceholder": "Eventuelle yderligere oplysninger, der kan være nyttige...\"\n- Konfigurationsdetaljer\n- Hvad du har prøvet\n- Platform- og systemoplysninger",
     "createButtonDiscussion": "Start en GitHub diskussion...",
+    "createButtonEmail": "Send anmodning via e-mail",
     "createButtonIssue": "Opret GitHub-issue…",
     "description": "Virker din installation ikke som forventet? Brug denne side til at få hjælp eller rapportere problemer. Giv tilstrækkelige oplysninger, så vi kan forstå og genskabe problemet, samtidig med at din beskrivelse holdes kort, klar og let at følge.",
+    "downloadButton": "Download debug information",
+    "downloadHint": "Tilføj denne fil til e-mailen hvis mere information er nødvendig.",
     "helpType": {
       "discussion": "Har brug for hjælp til min opsætning",
       "discussionDescription": "Diskussioner i fællesskabet giver svar.",
@@ -1181,6 +1249,7 @@
     "issueTitle": "Titel",
     "stepsToReproduce": "Trin til at genskabe problemet",
     "subTitleDiscussion": "Beskriv dit problem",
+    "subTitleEmail": "Beskriv problemet",
     "subTitleIssue": "Beskriv problemet",
     "summary": {
       "confirmationButtonDiscussion": "Start en GitHub-diskussion",
@@ -1233,24 +1302,33 @@
       "goal": "Opladnings mål",
       "modalTitle": "Lade plan",
       "none": "ingen",
+      "once": "èn gang",
       "optimization": {
         "cheapest": "billigst",
+        "cheapestDescription": "Vælger de billigste tidspunkter. Kan medføre flere start og stop.",
+        "cleanest": "renest",
+        "cleanestDescription": "Vælger de reneste tidsrum. Kan medføre flere start og stop.",
         "continuous": "kontinuerlig",
+        "continuousCo2Description": "Vælger det reneste sammenhængende tidsrum.",
+        "continuousPriceDescription": "Vælger det billigste sammenhængende tidsrum.",
         "label": "Optimering"
       },
       "planNumber": "Plan {number}",
       "precondition": {
-        "description": "Oplad {duration} før afgang til batterikonditionering.",
+        "description": "Flytter en del af opladningen til lige før afgang: Varmt batteri og mindre tid ved høj ladestand.",
         "label": "Sen opladning",
         "optionAll": "alt",
-        "optionNo": "nej"
+        "optionNo": "nej",
+        "summary": "{precondition} før"
       },
       "remove": "Fjern",
       "repeating": "Gentager",
       "repeatingPlans": "Gentager plan",
       "selectAll": "Vælg alt",
+      "strategy": {
+        "label": "Strategi"
+      },
       "strategyDisabledDescription": "Opladningen påbegyndes så sent som muligt og afsluttes præcis ved afgang. Med dynamiske elpriser eller CO₂-tariffer er der flere valgmuligheder.",
-      "strategySettings": "Indstillinger for strategi",
       "time": "Tid",
       "title": "Plan",
       "unsavedChanges": "Der er ændringer som ikke er gemt. Skal de benyttes nu?",
@@ -1281,11 +1359,15 @@
       "pv": "Solcelleanlæg",
       "pvExport": "Eksport til elnet",
       "pvProduction": "Produktion",
-      "selfConsumption": "Eget forbrug"
+      "selfConsumption": "Eget forbrug",
+      "toggleDetails": "Detaljer om energiflow"
     },
     "heatingStatus": {
       "charging": "Opvarmer…",
       "connected": "Standby.",
+      "minTemp": "Minimum opvarmning til {temp}.",
+      "suggestionStartTooltip": "Optimering anbefaler opvarmning nu.",
+      "suggestionStopTooltip": "Optimering anbefaler at pause opvarmningen.",
       "vehicleLimit": "Opvarmning begrænsning",
       "waitForVehicle": "Klar til at varme…"
     },
@@ -1309,6 +1391,7 @@
           "returnEnergy": "Energi (eksport)"
         }
       },
+      "download": "Download",
       "empty": "Ingen historik i dette tidsinterval.",
       "group": {
         "battery": "Batteri",
@@ -1330,12 +1413,15 @@
       "emission": "Udledning",
       "fallbackName": "Ladepunkt",
       "finished": "Sluttidspunkt",
+      "last24hEnergy": "Sidste 24 timer",
+      "last7dEnergy": "Sidste 7 dage",
       "power": "Effekt",
       "price": "Pris",
       "remaining": "Resterende tid",
       "remoteDisabledHard": "{source}: slukket",
       "remoteDisabledSoft": "{source}: Adaptiv sol-opladning er slukket",
-      "solar": "solenergi"
+      "solar": "solenergi",
+      "todayEnergy": "I dag"
     },
     "loadpointSettings": {
       "batteryBoost": {
@@ -1353,11 +1439,16 @@
       "batteryUsage": "Husbatteri",
       "currents": "Ladestrøm",
       "default": "standard",
+      "heating": "Opvarmning",
       "maxCurrent": {
         "label": "Max. Nuværende"
       },
       "minCurrent": {
         "label": "Min. Nuværende"
+      },
+      "minTemp": {
+        "description": "Under {0} bruges batteri- og netstrøm også i soltilstand for at opretholde denne temperatur.",
+        "label": "Min. temperatur"
       },
       "phasesConfigured": {
         "label": "Faser",
@@ -1441,6 +1532,21 @@
       "unknown": "Gæstekøretøj",
       "vehicleSoc": "Oplader"
     },
+    "vehicleSettings": {
+      "connectedTo": "Forbundet til {0}",
+      "description": "Disse standarder benyttes, når køretøjet forbindes til et ladepunkt.",
+      "editHint": "Tilføj eller rediger køretøjer i {0}.",
+      "keepAsIs": "Gem som det er",
+      "learnMore": "Lær mere.",
+      "limitSoc": "Standardgrænse",
+      "limitSocDescription": "Anvendes, når køretøjet er tilsluttet.",
+      "menu": "Køretøjer",
+      "minSoc": "Minimum opladning",
+      "minSocDescription": "Hurtig opladning til dette niveau i soltilstand.",
+      "mode": "Standardtilstand",
+      "notConnected": "Ikke tilsluttet",
+      "title": "Køretøjsindstillinger"
+    },
     "vehicleStatus": {
       "awaitingAuthorization": "Venter på godkendelse.",
       "batteryBoost": "Boost fra batteri er aktiv.",
@@ -1467,6 +1573,8 @@
       "pvEnable": "Overskud tilgængeligt. Starter snart.",
       "scale1p": "Reducerer snart til 1-faset opladning.",
       "scale3p": "Øger snart til 3-faset opladning.",
+      "suggestionStartTooltip": "Optimering anbefaler opladning nu.",
+      "suggestionStopTooltip": "Optimering anbefaler at pause opladningen.",
       "targetChargeActive": "Opladningsplan er aktiv. Forventes afsluttet om {duration}.",
       "targetChargePlanned": "Opladningsplan starter om {duration}.",
       "targetChargeWaitForVehicle": "Plan for opladning er klar. Venter på køretøj…",
@@ -1506,6 +1614,7 @@
   },
   "session": {
     "addOdometer": "Tilføj distance",
+    "addedRange": "Tilføjet range",
     "cancel": "Afbryd",
     "co2": "CO2",
     "date": "Tidsrum",
@@ -1516,11 +1625,12 @@
     "meterstop": "Meter slut",
     "odometer": "Kilometerstand",
     "price": "Omkostning",
-    "soc": "Køretøjets SoC",
+    "soc": "Opladning",
     "started": "Startet",
     "title": "Lade session"
   },
   "sessions": {
+    "addedRange": "Rækkevidde",
     "avgPower": "⌀ Effekt",
     "avgPrice": "⌀ pris",
     "chargeDuration": "Varighed",
@@ -1546,6 +1656,7 @@
     },
     "co2": "⌀ CO₂",
     "csv": {
+      "addedrange": "Tilføjet rækkevidde (km)",
       "chargedenergy": "Energi (kWh)",
       "chargeduration": "Varighed",
       "co2perkwh": "CO₂/kWh",
@@ -1564,6 +1675,8 @@
       "vehicle": "Køretøj"
     },
     "date": "Start",
+    "download": "Download {period}",
+    "downloadTotal": "Download total",
     "energy": "Opladet",
     "filter": {
       "allLoadpoints": "alle ladepunkter",
@@ -1620,6 +1733,7 @@
       "label": "Sprog"
     },
     "loadpoints": {
+      "disabledDevice": "deaktiveret",
       "help": "Tilpas rækkefølge og synlighed i brugerfladen.",
       "hide": "Skjul {title}",
       "label": "Opladningspunkter",

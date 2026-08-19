@@ -13,6 +13,7 @@ import {
   isConfigured,
 } from "./components/Auth/auth";
 import { initConfigModal } from "./configModal";
+import { isMobileWidth } from "./mixins/breakpoint";
 import { hapticFeedback } from "./utils/haptic";
 import type { VueI18nInstance } from "vue-i18n";
 
@@ -65,6 +66,10 @@ export default function setupRouter(i18n: VueI18nInstance) {
     stringifyQuery,
     scrollBehavior(to, from) {
       if (to.hash) {
+        // config section hashes open a detail panel on small screens, no scrolling
+        if (to.path === "/config" && isMobileWidth()) {
+          return false;
+        }
         return new Promise((resolve) => {
           const check = () => {
             if (document.querySelector(to.hash)) {
@@ -103,9 +108,9 @@ export default function setupRouter(i18n: VueI18nInstance) {
           return {
             month: month ? parseInt(month as string, 10) : undefined,
             year: year ? parseInt(year as string, 10) : undefined,
-            period,
-            loadpointFilter: loadpoint,
-            vehicleFilter: vehicle,
+            period: period ?? undefined,
+            loadpointFilter: loadpoint ?? undefined,
+            vehicleFilter: vehicle ?? undefined,
           };
         },
       },
@@ -128,7 +133,7 @@ export default function setupRouter(i18n: VueI18nInstance) {
             day: day ? parseInt(day as string, 10) : undefined,
             month: month ? parseInt(month as string, 10) : undefined,
             year: year ? parseInt(year as string, 10) : undefined,
-            period,
+            period: period ?? undefined,
           };
         },
       },

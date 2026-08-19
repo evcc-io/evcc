@@ -69,8 +69,14 @@ func propsToMap(props config.Properties) (map[string]any, error) {
 	}
 
 	return lo.PickBy(res, func(k string, v any) bool {
-		if k == "Type" || v.(string) == "" {
+		if k == "Type" {
 			return false
+		}
+		switch val := v.(type) {
+		case string:
+			return val != ""
+		case bool:
+			return val
 		}
 		return true
 	}), nil
@@ -464,7 +470,7 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 	wg.Go(func() {
 		if dev, ok := api.Cap[api.Identifier](instance); ok {
 			val, err := dev.Identify()
-			makeResult("identifier", val, err)
+			makeResult("identifier", strings.Join(val, ", "), err)
 		}
 	})
 

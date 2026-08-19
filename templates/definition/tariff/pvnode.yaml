@@ -54,11 +54,15 @@ render: |
       type: bearer
       token: {{ .apikey }}
     jq: |
-      [.values[] |
-        {
-          start: (.dtm | sub(" "; "T") + "Z"),
-          end:   (.dtm | sub(" "; "T") + "Z" | fromdateiso8601 + 900 | todateiso8601 ),
-          value: (.pv_watts | round )
-        }
-      ] | tostring
+      # values are the average power of the 15min interval ending at the timestamp.
+      # evcc expects the power at the timestamp, which is the mean of the intervals
+      # meeting there- the trailing interval is dropped as its successor is unknown.
+      [.values[] | {t: (.dtm | sub(" "; "T") + "Z" | fromdateiso8601), v: .pv_watts}] as $s
+      | [ range(0; ($s|length)-1) |
+          {
+            start: ($s[.].t       | todateiso8601),
+            end:   ($s[.].t + 900 | todateiso8601),
+            value: ((($s[.].v + $s[.+1].v) / 2) | round)
+          }
+        ] | tostring
   interval: {{ .interval }}

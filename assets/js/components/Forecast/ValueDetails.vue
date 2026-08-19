@@ -20,7 +20,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
-import type { ForecastSlot } from "@/types/evcc";
+import type { UiForecastSlot } from "@/types/evcc";
 import type { ValueChartType } from "./ValueChart.vue";
 
 const MAX_HOURS = 96;
@@ -31,10 +31,10 @@ export default defineComponent({
 	mixins: [formatter],
 	props: {
 		type: { type: String as PropType<ValueChartType>, required: true },
-		rates: { type: Array as PropType<ForecastSlot[]> },
+		rates: { type: Array as PropType<UiForecastSlot[]> },
 	},
 	computed: {
-		upcomingSlots(): ForecastSlot[] {
+		upcomingSlots(): UiForecastSlot[] {
 			if (!Array.isArray(this.rates)) return [];
 			const now = new Date();
 			return this.rates

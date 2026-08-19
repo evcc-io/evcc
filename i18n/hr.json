@@ -847,7 +847,6 @@
       },
       "planNumber": "Plan {number}",
       "precondition": {
-        "description": "Punjenje {duration} prije polaska kako bi se izvršilo predkondicioniranje baterije.",
         "label": "Kasnije punjenje",
         "optionAll": "sve",
         "optionNo": "ne"
@@ -857,7 +856,6 @@
       "repeatingPlans": "Ponavljajući planovi",
       "selectAll": "Odaberi sve",
       "strategyDisabledDescription": "Punjenje počinje što kasnije kako bi se završilo upravo na vrijeme za polazak. Uz dinamične cijene mreže ili CO₂ tarifu ovdje su dostupne dodatne opcije.",
-      "strategySettings": "Postavke strategije",
       "time": "Vrijeme",
       "title": "Plan",
       "unsavedChanges": "Postoje promjene koje nisu spremljene. Spremiti odmah?",

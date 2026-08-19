@@ -100,6 +100,9 @@ components:
         residualPower:
           description: Configured grid operating point in W. Positive values maintain grid import.
           type: number
+        gridExportLimit:
+          description: Static grid export power limit in W used as optimizer constraint, 0 = disabled. An active HEMS curtailment takes precedence.
+          type: number
         greenShareHome:
           description: Share of green energy in home consumption, between 0 and 1.
           type: number
@@ -630,24 +633,12 @@ components:
           items:
             $ref: "#/components/schemas/ForecastSlot"
     ForecastSlot:
-      description: A forecast value for a time slot.
-      type: object
-      properties:
-        start:
-          description: Start of the time slot.
-          type: string
-          format: date-time
-        end:
-          description: End of the time slot.
-          type: string
-          format: date-time
-        value:
-          description: Forecast value of the time slot. Unit depends on the forecast type.
-          type: number
-      required:
-        - start
-        - end
-        - value
+      description: A forecast time slot as [start, end, value] array. Start and end are unix seconds. Value unit depends on the forecast type.
+      type: array
+      items:
+        type: number
+      minItems: 3
+      maxItems: 3
     GenericConfigStatus:
       description: Configuration and runtime status of an integration. Structure depends on configuration.
       type: object
@@ -836,6 +827,9 @@ components:
         connectedDuration:
           description: Duration since the vehicle was connected, in seconds.
           type: number
+        disabled:
+          description: Loadpoint is disabled via configuration.
+          type: boolean
         disableDelay:
           description: Delay before charging stops in solar mode, in seconds.
           type: number
@@ -1767,19 +1761,12 @@ components:
         - chargedKWh
         - solarPercentage
     TimeseriesEntry:
-      description: A forecast value at a point in time.
-      type: object
-      properties:
-        val:
-          description: Forecast power in W.
-          type: number
-        ts:
-          description: Time of the forecast value.
-          type: string
-          format: date-time
-      required:
-        - val
-        - ts
+      description: A forecast value at a point in time as [ts, val] array. ts is unix seconds, val is power in W.
+      type: array
+      items:
+        type: number
+      minItems: 2
+      maxItems: 2
     Vehicle:
       description: A configured vehicle.
       type: object

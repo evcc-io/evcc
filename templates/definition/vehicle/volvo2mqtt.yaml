@@ -17,7 +17,7 @@ params:
     default: 720h
 render: |
   type: custom
-  {{- include "vehicle-common" . }}
+  {{- include "common" . }}
   soc:
     source: mqtt
     topic: homeassistant/sensor/{{ .vin }}_battery_charge_level/state
@@ -26,4 +26,4 @@ render: |
     source: mqtt
     topic: homeassistant/sensor/{{ .vin }}_electric_range/state
     timeout: {{ .timeout }}
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}

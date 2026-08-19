@@ -169,7 +169,7 @@ import SmartCostLimit from "../Tariff/SmartCostLimit.vue";
 import SmartFeedInPriority from "../Tariff/SmartFeedInPriority.vue";
 import SettingsBatteryBoost from "./SettingsBatteryBoost.vue";
 import { defineComponent, type PropType } from "vue";
-import { PHASES, CURRENCY, SMART_COST_TYPE, type Forecast, type UiLoadpoint } from "@/types/evcc";
+import { PHASES, CURRENCY, SMART_COST_TYPE, type UiForecast, type UiLoadpoint } from "@/types/evcc";
 import api from "@/api";
 
 const V = 230;
@@ -206,7 +206,7 @@ export default defineComponent({
 		tariffGrid: Number,
 		currency: String as PropType<CURRENCY>,
 		multipleLoadpoints: Boolean,
-		forecast: Object as PropType<Forecast>,
+		forecast: Object as PropType<UiForecast>,
 	},
 	data() {
 		return {
