@@ -49,6 +49,7 @@ export default defineConfig({
         files: ["assets/**/*.{ts,js,vue}", "tests/**/*.ts"],
         rules: {
           "no-param-reassign": "error",
+          "no-unused-vars": ["error", { ignoreRestSiblings: true }],
           "vue/require-default-prop": "off",
           "vue/no-reserved-component-names": "off",
           "typescript/no-explicit-any": "off",

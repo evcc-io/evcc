@@ -3,13 +3,30 @@ products:
   - brand: Voltie
     description:
       generic: Charger
-capabilities: ["mA", "meter", "dim"]
+capabilities: ["mA", "1p3p", "meter", "dim"]
 requirements:
+  description:
+    de: Modbus muss in der Voltie App im Modbus-Konfigurationsbildschirm auf "TCP" gestellt werden; die dort eingestellte Slave-Adresse (Standard 11) muss mit der ID übereinstimmen. Der Kommunikations-Timeout regelt die Ladung nach Verbindungsverlust auf 0 A herunter, er muss daher auf 0 gesetzt (deaktiviert) oder größer als das evcc-Aktualisierungsintervall gewählt werden. Benötigt EVSE-Firmware 350 oder neuer und Ladegerät-Software 1.3.40 oder neuer. Phasenumschaltung, Gesamtzähler, Phasenleistungen und die Strom-Grenzwerte benötigen EVSE-Firmware 352 oder neuer.
+    en: Modbus must be set to "TCP" on the Modbus config screen of the Voltie app, and the slave address configured there (default 11) must match the ID. The communication timeout reduces the charging current to 0 A after a loss of communication, so it has to be set to 0 (disabled) or to a value larger than the evcc update interval. Requires EVSE firmware 350 or later and charger software 1.3.40 or later. Phase switching, the total energy counter, the phase powers and the current limits require EVSE firmware 352 or later.
   evcc: ["sponsorship"]
+caveats:
+  - description:
+      de: Der Auto-Start des Ladegeräts wird beim Start von evcc dauerhaft deaktiviert und muss nach dem Entfernen von evcc in der Voltie App wieder eingeschaltet werden.
+      en: The charger's auto start mode is disabled persistently when evcc starts and has to be switched back on in the Voltie app after evcc is removed.
+  - description:
+      de: Das Modbus-TCP-Gateway leitet höchstens zwei Transaktionen pro Sekunde weiter. Kürzere Abfrageintervalle führen zu Zeitüberschreitungen, nicht zu aktuelleren Daten.
+      en: The Modbus TCP gateway forwards at most two transactions per second. Shorter polling intervals produce timeouts rather than fresher data.
+  - description:
+      de: Die Phasenumschaltung ist nur auf Ladegeräten ab Baujahr 2026 verfügbar (Seriennummer beginnt mit 1026). Auf älteren Geräten weist das Ladegerät die Umschaltung ab.
+      en: Phase switching is only available on chargers manufactured from 2026 (serial number starting with 1026). On older hardware the charger rejects the switch.
 params:
   - name: modbus
     choice: ["tcpip"]
-    id: 1
+    id: 11
+  - name: cache
+    advanced: true
+    default: 1s
 render: |
   type: voltie
   {{- include "modbus" . }}
+  cache: {{ .cache }}

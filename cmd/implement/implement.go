@@ -38,6 +38,10 @@ type typeStruct struct {
 
 func getTypeImport(t reflect.Type) string {
 	n := t.Name()
+	if n == "" {
+		// unnamed type, e.g. []string
+		return t.String()
+	}
 	if p := t.PkgPath(); p != "" {
 		if s := strings.Split(p, "github.com/evcc-io/evcc/"); len(s) == 2 {
 			return fmt.Sprintf("%s.%s", s[1], n)
@@ -69,6 +73,7 @@ func generate(out io.Writer) error {
 		reflect.TypeFor[api.ChargeState](),
 		reflect.TypeFor[api.CurrentController](),
 		reflect.TypeFor[api.CurrentGetter](),
+		reflect.TypeFor[api.CurrentLimiter](),
 		reflect.TypeFor[api.Curtailer](),
 		reflect.TypeFor[api.Dimmer](),
 		reflect.TypeFor[api.Identifier](),

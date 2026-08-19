@@ -391,6 +391,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	// all device skis are registered, unknown ones may now be denied
+	eebus.ConfigComplete()
+
 	// setup MCP
 	if err == nil && isMcp() {
 		router := httpd.Router()

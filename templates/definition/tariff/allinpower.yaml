@@ -10,7 +10,7 @@ params:
   - preset: tariff-base
 render: |
   type: custom
-  {{ include "tariff-base" . }}
+  {{ include "base" . }}
   forecast:
     source: http
     uri: https://api.allinpower.nl/troodon/api/p/spot_market/prices/?product_type=ELK

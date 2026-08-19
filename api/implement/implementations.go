@@ -173,6 +173,21 @@ func (i *iCurrentGetter) GetMaxCurrent() (float64, error) {
 	return i.currentGetter0()
 }
 
+func CurrentLimiter(currentLimiter0 func() (float64, float64, error)) api.CurrentLimiter {
+	if currentLimiter0 == nil {
+		return nil
+	}
+	return &iCurrentLimiter{currentLimiter0}
+}
+
+type iCurrentLimiter struct {
+	currentLimiter0 func() (float64, float64, error)
+}
+
+func (i *iCurrentLimiter) GetMinMaxCurrent() (float64, float64, error) {
+	return i.currentLimiter0()
+}
+
 func Curtailer(curtailer0 func() (int, error), curtailer1 func(int) error) api.Curtailer {
 	if curtailer0 == nil || curtailer1 == nil {
 		return nil
@@ -213,7 +228,7 @@ func (i *iDimmer) Dimmed() (bool, error) {
 	return i.dimmer1()
 }
 
-func Identifier(identifier0 func() (string, error)) api.Identifier {
+func Identifier(identifier0 func() ([]string, error)) api.Identifier {
 	if identifier0 == nil {
 		return nil
 	}
@@ -221,10 +236,10 @@ func Identifier(identifier0 func() (string, error)) api.Identifier {
 }
 
 type iIdentifier struct {
-	identifier0 func() (string, error)
+	identifier0 func() ([]string, error)
 }
 
-func (i *iIdentifier) Identify() (string, error) {
+func (i *iIdentifier) Identify() ([]string, error) {
 	return i.identifier0()
 }
 

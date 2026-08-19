@@ -166,8 +166,9 @@ jobs:
           key: ${{ steps.vp-cache.outputs.cache-primary-key }}
 
       - name: Cache dist
-        # avoid cache thrashing by nightly
-        if: github.event_name == 'push' || github.event_name == 'pull_request'
+        # only the release and nightly builds consume this, both keyed by the
+        # master or tag sha. Pull request entries would never be restored
+        if: github.event_name == 'push'
         uses: actions/cache/save@v6
         id: cache-dist
         with:
@@ -302,6 +303,7 @@ jobs:
 
     permissions:
       contents: read
+      actions: write
 
     steps:
       - uses: actions/checkout@v7
@@ -323,7 +325,30 @@ jobs:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
 
+      - name: Install
+        run: make install-ui
+
       - name: Install Playwright (browsers + deps)
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: make install-ui && vpx playwright install --with-deps chromium
+        run: vpx playwright install --with-deps chromium
         timeout-minutes: 5
+
+      # the UI job saves its task cache on a Depot runner, so forks never see
+      # it. Run the same tasks here to seed the GitHub-hosted cache
+      - name: Restore vp task cache
+        id: vp-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: node_modules/.vite/task-cache
+          key: ${{ runner.os }}-${{ runner.arch }}-vp-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-vp-
+
+      - name: Warm vp tasks
+        run: make openapi lint-ui test-ui ui
+
+      - name: Save vp task cache
+        uses: actions/cache/save@v6
+        with:
+          path: node_modules/.vite/task-cache
+          key: ${{ steps.vp-cache.outputs.cache-primary-key }}

@@ -120,8 +120,6 @@
       "titleEdit": "Redaguoti Savireguliuojantį vartotoją"
     },
     "battery": {
-      "description": "Eksperimentiniai kaupiklio valdikliai. Šios funkcijos vis dar testuojamos ir gali būti pakeistos arba pašalintos būsimose versijose.",
-      "gridDischarge": "Leiskite kaupikliui išsikrauti į tinklą",
       "title": "Kaupiklis",
       "titleAdd": "Pridėti kaupiklį",
       "titleEdit": "Redaguoti kaupiklį"
@@ -221,6 +219,7 @@
       "enabled": "Aktyvuotas",
       "energy": "Energija (paimta)",
       "events": "Įvykiai",
+      "exportLimit": "Atidavimo į tinklą limitas",
       "feedinPrice": "Tiekimo į tinklą kaina",
       "forecast": "Prognozė",
       "gridPrice": "Energijos kaina",
@@ -308,6 +307,7 @@
     "form": {
       "danger": "Pavojus",
       "deprecated": "nebenaudojama",
+      "durationUnit": "Laiko vienetas, skirtas {label}",
       "example": "Pavyzdys",
       "optional": "pasirinktinai"
     },
@@ -320,17 +320,22 @@
       "change": "Pakeisti",
       "clear": "Išvalyti",
       "close": "Uždaryti",
+      "confirmDisable": "Išjungti šį įrenginį? Jis bus ignoruojamas po evcc paleidimo iš naujo.",
+      "confirmEnable": "Vėl įjungti šį įrenginį?",
       "confirmSave": "Yra neišsaugotų pakeitimų. Išsaugoti dabar ?",
       "copied": "Nukopijuota!",
       "copy": "Kopijuoti",
       "customHelp": "Sukurkite vartotojo apibrėžtą įrenginį naudodami evcc įskiepių sistemą.",
       "customOption": "Vartotojo apibrėžtas įrenginys",
       "delete": "Ištrinti",
+      "disable": "Išjungti",
+      "disabled": "Išjungta",
       "dismiss": "Atmesti",
       "docsLink": "Žiūrėkite dokumentaciją.",
       "dragHandle": "Vilkti",
       "dragItem": "Galima vilkti: {title}",
       "dragList": "Galima sukeisti vietomis",
+      "enable": "Įjungti",
       "error": "Klaida",
       "experimental": "Eksperimentinės",
       "forceSave": "Vistiek įrašyti",
@@ -373,12 +378,17 @@
       "customOption": "Vartotojo sukurta integracija",
       "description": "Galios ribojimas išorinėmis sistemomis (pvz., §14a EnWG, §9 EEG sąsaja arba aukštesnio lygio energijos valdymo sistema). Veikia kartu su apkrovos valdymo funkcija. Kai kuriems inverteriams taip pat galima apriboti gamybos galią, ji nustatoma kiekvieno inverterio konfigūracijoje.",
       "download": "Atsisiųsti",
+      "dynamicLimits": "Dinaminės ribos",
       "eventsRecorded": "Užfiksuota {count} tinklo galios apribojimo įvykių.",
+      "exportLimit": "Tinklo eksporto limitas",
+      "exportLimitDescription": "Kaupiklio optimizatorius laikosi šios ribos, kad išvengtų saulės nuostolių. Pirmenybė teikiama aktyviam ribojimo signalui iš dinaminės ribos integravimo.",
+      "exportLimitHint": "Tinklo eksporto galios riba.",
       "generic": "Standartinės integracijos",
       "integrations": "Integracijos",
       "lastEvent": "Naujausias {timeAgo}.",
       "noEvents": "Kol kas neužfiksuota jokių įvykių.",
       "recordedEvents": "Įrašyti įvykiai",
+      "staticLimits": "Statinės ribos",
       "template": "Integracija",
       "title": "Išorinė riba",
       "type": {
@@ -832,7 +842,7 @@
       "general": "Pagrindiniai",
       "grid": "Elektros tinklas",
       "integrations": "Integracijos",
-      "loadpoints": "Įkrovikliai ir Šildytuvai",
+      "loadpoints": "Įkrovikliai ir šildytuvai",
       "meter": "Saulės elektrinės ir kaupikliai",
       "services": "Paslaugos",
       "system": "Sistema",
@@ -967,7 +977,7 @@
         "titleEdit": "Redaguoti Temperatūros Prognozę"
       },
       "template": "Tiekėjas",
-      "title": "Tarifai ir Prognozės",
+      "title": "Tarifai ir prognozės",
       "titleChoice": "Ką norite pridėti?",
       "type": {
         "co2": "CO₂ Intensyvumas",
@@ -1096,6 +1106,8 @@
     "version": {
       "availableLong": "(yra naujesnė versija)",
       "community": "evcc bendruomenė",
+      "labelEmail": "El. paštas",
+      "labelPhone": "Telefonas",
       "labelRelease": "Leidimas",
       "labelVersion": "Versija",
       "labelWebsite": "Svetainė",
@@ -1163,9 +1175,12 @@
     }
   },
   "general": {
+    "back": "Atgal",
     "download": "Atsisiųsti",
+    "error": "Klaida",
     "none": "nė vienas",
-    "note": "Pastaba:"
+    "note": "Pastaba:",
+    "warning": "Perspėjimas"
   },
   "header": {
     "about": "Apie",
@@ -1178,6 +1193,7 @@
     "sessions": "Įkrovimo Sesijos"
   },
   "help": {
+    "contactButton": "Susisiekite su mumis",
     "discussionsButton": "GitHub diskusijos",
     "documentationButton": "Dokumentacija",
     "issueButton": "Pranešti apie problemą",
@@ -1217,8 +1233,11 @@
     "additionalContext": "Papildomas kontekstas",
     "additionalContextPlaceholder": "Bet kokia papildoma informacija, kuri galėtų būti naudinga...\n- Konfigūracijos informacija\n- Ką bandėte\n- Sistemos informacija",
     "createButtonDiscussion": "Pradėti GitHub diskusiją...",
+    "createButtonEmail": "Siųsti užklausą el. paštu",
     "createButtonIssue": "Sukurti GitHub pranešimą apie problemą...",
     "description": "Jūsų diegimas neveikia taip, kaip tikėtasi? Šiame puslapyje galite gauti pagalbos arba pranešti apie problemas. Pateikite pakankamai informacijos, kad galėtume suprasti ir atkartoti problemą, o aprašymas turi būti glaustas, aiškus ir lengvai suprantamas.",
+    "downloadButton": "Atsisiųskite klaidų šalinimo informaciją",
+    "downloadHint": "Pridėkite šį failą prie savo el. laiško, jei reikia daugiau informacijos.",
     "helpType": {
       "discussion": "Reikia pagalbos",
       "discussionDescription": "Bendruomenės diskusijose randami atsakymai.",
@@ -1230,6 +1249,7 @@
     "issueTitle": "Pavadinimas",
     "stepsToReproduce": "Žingsniai atkartojimui",
     "subTitleDiscussion": "Aprašykite savo problemą",
+    "subTitleEmail": "Apibūdinkite problemą",
     "subTitleIssue": "Aprašykite nesklandumus",
     "summary": {
       "confirmationButtonDiscussion": "Pradėti diskusiją GitHub",
@@ -1282,24 +1302,33 @@
       "goal": "Įkrovimo tikslas",
       "modalTitle": "Įkrovimo planas",
       "none": "nėra",
+      "once": "vieną kartą",
       "optimization": {
         "cheapest": "pigiausias",
+        "cheapestDescription": "Parenka pigiausius laikotarpius. Gali būti daugiau paleidimų ir sustojimų.",
+        "cleanest": "švariausia",
+        "cleanestDescription": "Parenka švariausius laikotarpius. Gali būti daugiau paleidimų ir sustojimų.",
         "continuous": "be pertraukos",
+        "continuousCo2Description": "Parenka švariausią nepertraukiamą laikotarpių seriją.",
+        "continuousPriceDescription": "Pasirenkama pigiausia ištisinė laikotarpių serija.",
         "label": "Optimizacija"
       },
       "planNumber": "Planas {number}",
       "precondition": {
-        "description": "Įkrovimas {duration} prieš išvykstant, baterijos paruošimui.",
+        "description": "Dalis įkrovimo perkeliama prieš pat išvykstant: pašyla baterija, trumpiau būna su aukštu įkrovimo lygiu.",
         "label": "Vėlyvas įkrovimas",
         "optionAll": "viskas",
-        "optionNo": "ne"
+        "optionNo": "ne",
+        "summary": "{precondition} prieš"
       },
       "remove": "Pašalinti",
       "repeating": "kartojasi",
       "repeatingPlans": "Pasikartojantys planai",
       "selectAll": "Pasirinkti visus",
+      "strategy": {
+        "label": "Strategija"
+      },
       "strategyDisabledDescription": "Įkrovimas pradedamas kuo vėliau, kad būtų baigtas prieš pat išvykimą. Jei naudojate 15 minučių biržos planą (arba CO₂ tarifą), čia galite rinktis iš daugiau variantų.",
-      "strategySettings": "Strategijos pasirinkimai",
       "time": "Laikas",
       "title": "Planas",
       "unsavedChanges": "Yra neišsaugotų pakeitimų. Išsaugoti dabar?",
@@ -1510,6 +1539,7 @@
       "keepAsIs": "Palikti kaip yra",
       "learnMore": "Sužinoti daugiau.",
       "limitSoc": "Numatytasis limitas",
+      "limitSocDescription": "Taikoma, kai prijungiamas automobilis.",
       "menu": "Automobiliai",
       "minSoc": "Minimali įkrova",
       "minSocDescription": "Greitas įkrovimas iki šio lygio saulės režime.",
@@ -1584,6 +1614,7 @@
   },
   "session": {
     "addOdometer": "Įrašyti skaičių",
+    "addedRange": "Įkrautas atstumas",
     "cancel": "Atšaukti",
     "co2": "CO₂",
     "date": "Periodas",
@@ -1594,11 +1625,12 @@
     "meterstop": "Skaitiklis pabaiga",
     "odometer": "Odometras",
     "price": "Išlaidos",
-    "soc": "Automobilio įkrova",
+    "soc": "Įkrova",
     "started": "Pradėta",
     "title": "Įkrovimo sesija"
   },
   "sessions": {
+    "addedRange": "Atstumas",
     "avgPower": "⌀ Galia",
     "avgPrice": "⌀ Kaina",
     "chargeDuration": "Trukmė",
@@ -1624,6 +1656,7 @@
     },
     "co2": "⌀ CO₂",
     "csv": {
+      "addedrange": "Įkrautas atstumas (km)",
       "chargedenergy": "Energija (kWh)",
       "chargeduration": "Trukmė",
       "co2perkwh": "CO₂/kWh",
@@ -1700,6 +1733,7 @@
       "label": "Kalba"
     },
     "loadpoints": {
+      "disabledDevice": "išjungtas",
       "help": "Pakeiskite vartotojo sąsajos išdėstymą ir matomumą.",
       "hide": "Paslėpti {title}",
       "label": "Įkrovikliai",

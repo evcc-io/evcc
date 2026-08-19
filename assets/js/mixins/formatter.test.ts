@@ -30,6 +30,11 @@ describe("fmtW", () => {
     expect(fmt.fmtW(0, POWER_UNIT.W)).eq("0 W");
     expect(fmt.fmtW(1200000, POWER_UNIT.W)).eq("1.200.000 W");
   });
+  test("should format negative values", () => {
+    expect(fmt.fmtW(-5300, POWER_UNIT.AUTO)).eq("-5,3 kW");
+    expect(fmt.fmtW(-500, POWER_UNIT.AUTO)).eq("-500 W");
+    expect(fmt.fmtW(-12000000, POWER_UNIT.AUTO)).eq("-12,0 MW");
+  });
   test("should format without units", () => {
     expect(fmt.fmtW(0, POWER_UNIT.AUTO, false)).eq("0,0");
     expect(fmt.fmtW(1200000, POWER_UNIT.AUTO, false)).eq("1.200,0");
