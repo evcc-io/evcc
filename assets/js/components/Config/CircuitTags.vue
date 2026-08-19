@@ -1,5 +1,4 @@
 <template>
-	{{ nodes }}
 	<template v-for="(node, idx) in nodes" :key="node.name">
 		<hr v-if="idx > 0 || depth > 0" />
 		<div :style="style">
@@ -13,7 +12,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import DeviceTags from "./DeviceTags.vue";
-import type { CircuitNode } from "@/utils/circuits.ts";
+import type { CircuitNode } from "../../utils/circuits";
 
 export default defineComponent({
 	name: "CircuitTags",

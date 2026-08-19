@@ -14,8 +14,8 @@
 		<template #default>
 			<div v-if="circuits.length === 0" class="onboarding">
 				<p class="evcc-gray">
-					No circuits configured. Start with a main circuit that represents your grid
-					connection.
+					No circuits configured. Start with a main circuit that
+					represents your grid connection.
 				</p>
 				<button
 					type="button"
@@ -23,11 +23,22 @@
 					tabindex="0"
 					@click="openCircuit()"
 				>
-					<shopicon-regular-plus size="s" class="flex-shrink-0"></shopicon-regular-plus>
+					<shopicon-regular-plus
+						size="s"
+						class="flex-shrink-0"
+					></shopicon-regular-plus>
 					Add main circuit
 				</button>
 			</div>
-			<CircuitsTree v-else :circuitsTree="configCircuitTree(circuits)" :on-add-sub="onAddSub" />
+			<CircuitsTree
+				class="mb-3"
+				v-else
+				:circuitsTree="configCircuitTree(circuits)"
+				:on-add-sub="onAddSub"
+			/>
+			<span class="evcc-gray">
+				Charging points are assigned to circuits in their own settings.
+			</span>
 		</template>
 	</JsonModal>
 </template>
