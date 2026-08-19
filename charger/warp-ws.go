@@ -269,6 +269,8 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 		err = json.Unmarshal(payload, &w.evse.State)
 	case "evse/low_level_state":
 		err = json.Unmarshal(payload, &w.evse.LowLevelState)
+	case "evse/slots":
+		err = json.Unmarshal(payload, &w.evse.Slots)
 	case "evse/phase_auto_switch":
 		// Phase Auto Switching needs to be disabled WARP2 or newer
 		// Necessary if charging 1p only vehicles
@@ -583,6 +585,15 @@ func (w *WarpWS) ChargeDuration() (time.Duration, error) {
 		evse_duration_ms = w.chargeTracker.EvseUptimeStart - w.evse.LowLevelState.Uptime
 	}
 	return time.Duration(int64(evse_duration_ms) * 1000 * 1000), nil
+}
+
+// GetMinMaxCurrent implements the api.CurrentLimiter interface
+func (w *WarpWS) GetMinMaxCurrent() (float64, float64, error) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
+	var maxCurrent = min(w.evse.Slots[0].MaxCurrent, w.evse.Slots[1].MaxCurrent)
+	return 6, float64(maxCurrent) / 1000, nil
 }
 
 func (w *WarpWS) setCurrent(curr int64) error {
