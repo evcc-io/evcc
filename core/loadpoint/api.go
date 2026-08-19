@@ -139,8 +139,10 @@ type API interface {
 	SetPlanStrategy(api.PlanStrategy) error
 	// SocBasedPlanning determines if the planner is soc based
 	SocBasedPlanning() bool
-	// GetPlan creates a charging plan
-	GetPlan(targetTime time.Time, requiredDuration, precondition time.Duration, continuous bool) api.Rates
+	// GetPlan creates a charging plan for the given goals
+	GetPlan(goals []api.PlanGoal, precondition time.Duration, continuous bool) api.Rates
+	// GetPlannerGoals returns the planner goals: the next plan first, followed by later pending plans
+	GetPlannerGoals(planTime time.Time, requiredDuration time.Duration, maxPower float64) []api.PlanGoal
 
 	// GetSocConfig returns the soc poll settings
 	GetSocConfig() SocConfig

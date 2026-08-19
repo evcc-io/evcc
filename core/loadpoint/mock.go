@@ -502,17 +502,17 @@ func (mr *MockAPIMockRecorder) GetPhasesConfigured() *gomock.Call {
 }
 
 // GetPlan mocks base method.
-func (m *MockAPI) GetPlan(targetTime time.Time, requiredDuration, precondition time.Duration, continuous bool) api.Rates {
+func (m *MockAPI) GetPlan(goals []api.PlanGoal, precondition time.Duration, continuous bool) api.Rates {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPlan", targetTime, requiredDuration, precondition, continuous)
+	ret := m.ctrl.Call(m, "GetPlan", goals, precondition, continuous)
 	ret0, _ := ret[0].(api.Rates)
 	return ret0
 }
 
 // GetPlan indicates an expected call of GetPlan.
-func (mr *MockAPIMockRecorder) GetPlan(targetTime, requiredDuration, precondition, continuous any) *gomock.Call {
+func (mr *MockAPIMockRecorder) GetPlan(goals, precondition, continuous any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlan", reflect.TypeOf((*MockAPI)(nil).GetPlan), targetTime, requiredDuration, precondition, continuous)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlan", reflect.TypeOf((*MockAPI)(nil).GetPlan), goals, precondition, continuous)
 }
 
 // GetPlanEnergy mocks base method.
@@ -571,6 +571,20 @@ func (m *MockAPI) GetPlanStrategy() api.PlanStrategy {
 func (mr *MockAPIMockRecorder) GetPlanStrategy() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlanStrategy", reflect.TypeOf((*MockAPI)(nil).GetPlanStrategy))
+}
+
+// GetPlannerGoals mocks base method.
+func (m *MockAPI) GetPlannerGoals(planTime time.Time, requiredDuration time.Duration, maxPower float64) []api.PlanGoal {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPlannerGoals", planTime, requiredDuration, maxPower)
+	ret0, _ := ret[0].([]api.PlanGoal)
+	return ret0
+}
+
+// GetPlannerGoals indicates an expected call of GetPlannerGoals.
+func (mr *MockAPIMockRecorder) GetPlannerGoals(planTime, requiredDuration, maxPower any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPlannerGoals", reflect.TypeOf((*MockAPI)(nil).GetPlannerGoals), planTime, requiredDuration, maxPower)
 }
 
 // GetPriority mocks base method.

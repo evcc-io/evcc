@@ -84,12 +84,13 @@ func (mr *MockAPIMockRecorder) GetMode() *gomock.Call {
 }
 
 // GetPlanSoc mocks base method.
-func (m *MockAPI) GetPlanSoc() (time.Time, int) {
+func (m *MockAPI) GetPlanSoc() (time.Time, int, *api.PlanAbsence) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPlanSoc")
 	ret0, _ := ret[0].(time.Time)
 	ret1, _ := ret[1].(int)
-	return ret0, ret1
+	ret2, _ := ret[2].(*api.PlanAbsence)
+	return ret0, ret1, ret2
 }
 
 // GetPlanSoc indicates an expected call of GetPlanSoc.
@@ -191,17 +192,17 @@ func (mr *MockAPIMockRecorder) SetMode(arg0 any) *gomock.Call {
 }
 
 // SetPlanSoc mocks base method.
-func (m *MockAPI) SetPlanSoc(arg0 time.Time, arg1 int) error {
+func (m *MockAPI) SetPlanSoc(arg0 time.Time, arg1 int, arg2 *api.PlanAbsence) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetPlanSoc", arg0, arg1)
+	ret := m.ctrl.Call(m, "SetPlanSoc", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetPlanSoc indicates an expected call of SetPlanSoc.
-func (mr *MockAPIMockRecorder) SetPlanSoc(arg0, arg1 any) *gomock.Call {
+func (mr *MockAPIMockRecorder) SetPlanSoc(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPlanSoc", reflect.TypeOf((*MockAPI)(nil).SetPlanSoc), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPlanSoc", reflect.TypeOf((*MockAPI)(nil).SetPlanSoc), arg0, arg1, arg2)
 }
 
 // SetPlanStrategy mocks base method.

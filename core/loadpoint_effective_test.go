@@ -173,32 +173,32 @@ func TestNextPlan(t *testing.T) {
 		plans  []plan
 	}{
 		{1, 0, []plan{
-			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10},
-			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 10},
+			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10, Goal: 10},
+			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 10, Goal: 10},
 		}},
 		{0, 20, []plan{
-			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10},
-			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 10},
+			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10, Goal: 10},
+			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 10, Goal: 10},
 		}},
 		{1, 0, []plan{
-			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 20},
-			{Id: 2, End: clock.Now().Add(9 * time.Hour), Soc: 20},
+			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 20, Goal: 20},
+			{Id: 2, End: clock.Now().Add(9 * time.Hour), Soc: 20, Goal: 20},
 		}},
 		{2, 0, []plan{
-			{Id: 2, End: clock.Now().Add(8 * time.Hour), Soc: 20},
-			{Id: 1, End: clock.Now().Add(9 * time.Hour), Soc: 20},
+			{Id: 2, End: clock.Now().Add(8 * time.Hour), Soc: 20, Goal: 20},
+			{Id: 1, End: clock.Now().Add(9 * time.Hour), Soc: 20, Goal: 20},
 		}},
 		{2, 0, []plan{
-			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10},
-			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 60},
+			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10, Goal: 10},
+			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 60, Goal: 60},
 		}},
 		{1, 5, []plan{
-			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10},
-			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 20},
+			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10, Goal: 10},
+			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 20, Goal: 20},
 		}},
 		{2, 15, []plan{
-			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10},
-			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 20},
+			{Id: 1, End: clock.Now().Add(8 * time.Hour), Soc: 10, Goal: 10},
+			{Id: 2, End: clock.Now().Add(10 * time.Hour), Soc: 20, Goal: 20},
 		}},
 	} {
 		lp.vehicleSoc = float64(tc.soc)
@@ -215,6 +215,38 @@ func TestNextPlan(t *testing.T) {
 	}
 }
 
+func TestVehiclePlansAbsence(t *testing.T) {
+	config.Reset()
+	t.Cleanup(config.Reset)
+
+	ctrl := gomock.NewController(t)
+	v := api.NewMockVehicle(ctrl)
+
+	const name = "vehicle"
+	require.NoError(t, config.Vehicles().Add(
+		config.NewStaticDevice(config.Named{Name: name}, api.Vehicle(v)),
+	))
+
+	// static absence-only plan (no explicit soc)
+	planTime := time.Now().Add(2 * time.Hour).Truncate(time.Second)
+	settings.SetTime("vehicle."+name+"."+keys.PlanTime, planTime)
+	require.NoError(t, settings.SetJson("vehicle."+name+"."+keys.PlanAbsence, &api.PlanAbsence{Duration: 48 * time.Hour, Soc: 30}))
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.vehicle = v
+	lp.minSoc = 10
+
+	plans := lp.vehiclePlans()
+	require.Len(t, plans, 1)
+
+	// derived soc covers min soc plus absence drop
+	assert.Equal(t, 40, plans[0].Soc)
+	assert.Equal(t, 40, plans[0].Goal)
+	assert.Equal(t, planTime, plans[0].End)
+	require.NotNil(t, plans[0].Absence)
+	assert.Equal(t, 48*time.Hour, plans[0].Absence.Duration)
+}
+
 func TestPlanLocking(t *testing.T) {
 	clk := clock.NewMock()
 	now := clk.Now()
@@ -225,28 +257,28 @@ func TestPlanLocking(t *testing.T) {
 	planTime := now.Add(2 * time.Hour)
 
 	t.Run("lock and unlock", func(t *testing.T) {
-		lp.lockPlanGoal(planTime, 80, 2)
+		lp.lockPlanGoal(planTime, 80, 80, 2)
 
 		// locked values returned before plan target
-		ts, soc, id := lp.nextVehiclePlan()
-		assert.Equal(t, planTime, ts)
-		assert.Equal(t, 80, soc)
-		assert.Equal(t, 2, id)
+		p := lp.nextVehiclePlan()
+		require.NotNil(t, p)
+		assert.Equal(t, planTime, p.End)
+		assert.Equal(t, 80, p.Soc)
+		assert.Equal(t, 80, p.Goal)
+		assert.Equal(t, 2, p.Id)
 
 		clk.Add(3 * time.Hour) // advance past plan target
 
 		// locked values persist during overrun
-		ts, soc, id = lp.nextVehiclePlan()
-		assert.Equal(t, planTime, ts)
-		assert.Equal(t, 80, soc)
-		assert.Equal(t, 2, id)
+		p = lp.nextVehiclePlan()
+		require.NotNil(t, p)
+		assert.Equal(t, planTime, p.End)
+		assert.Equal(t, 80, p.Soc)
+		assert.Equal(t, 2, p.Id)
 
 		// after clearing, lock is not returned
 		lp.clearPlanLock()
-		ts, soc, id = lp.nextVehiclePlan()
-		assert.True(t, ts.IsZero())
-		assert.Equal(t, 0, soc)
-		assert.Equal(t, 0, id)
+		assert.Nil(t, lp.nextVehiclePlan())
 	})
 }
 

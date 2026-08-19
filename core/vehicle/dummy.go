@@ -47,13 +47,13 @@ func (v *dummy) GetLimitSoc() int {
 func (v *dummy) SetLimitSoc(soc int) {
 }
 
-// GetPlanSoc returns the charge plan soc
-func (v *dummy) GetPlanSoc() (time.Time, int) {
-	return time.Time{}, 0
+// GetPlanSoc returns the charge plan time, soc and absence
+func (v *dummy) GetPlanSoc() (time.Time, int, *api.PlanAbsence) {
+	return time.Time{}, 0, nil
 }
 
-// SetPlanSoc sets the charge plan soc
-func (v *dummy) SetPlanSoc(ts time.Time, soc int) error {
+// SetPlanSoc sets the charge plan time, soc and absence
+func (v *dummy) SetPlanSoc(ts time.Time, soc int, absence *api.PlanAbsence) error {
 	return nil
 }
 

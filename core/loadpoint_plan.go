@@ -18,6 +18,7 @@ import (
 type PlanLock struct {
 	Time time.Time // target time (committed goal, persists during overrun)
 	Soc  int       // target soc
+	Goal int       // planning goal including accumulated absence soc drops
 	Id   int       // id (0=none, 1=static, 2+=repeating), needed to highlight the plan in ui
 }
 
@@ -34,10 +35,11 @@ func (lp *Loadpoint) ClearPlanLock() {
 }
 
 // lockPlanGoal locks the current plan goal to handle overruns (soc-based plans)
-func (lp *Loadpoint) lockPlanGoal(planTime time.Time, soc int, id int) {
+func (lp *Loadpoint) lockPlanGoal(planTime time.Time, soc, goal, id int) {
 	lp.planLocked = PlanLock{
 		Time: planTime,
 		Soc:  soc,
+		Goal: goal,
 		Id:   id,
 	}
 }
@@ -62,7 +64,7 @@ func (lp *Loadpoint) finishPlan() {
 	} else if !lp.socBasedPlanning() {
 		lp.setPlanEnergy(time.Time{}, 0)
 	} else if v := lp.GetVehicle(); v != nil {
-		vehicle.Settings(lp.log, v).SetPlanSoc(time.Time{}, 0)
+		vehicle.Settings(lp.log, v).SetPlanSoc(time.Time{}, 0, nil)
 	}
 }
 
@@ -97,25 +99,61 @@ func (lp *Loadpoint) GetPlanGoal() (float64, bool) {
 	defer lp.RUnlock()
 
 	if lp.socBasedPlanning() {
-		_, soc, _ := lp.nextVehiclePlan()
-		return float64(soc), true
+		if p := lp.nextVehiclePlan(); p != nil {
+			return float64(p.Goal), true
+		}
+		return 0, true
 	}
 
 	_, limit := lp.getPlanEnergy()
 	return limit, false
 }
 
-// GetPlan creates a charging plan for given time and duration
+// GetPlan creates a charging plan for the given goals
 // The plan is sorted by time
-func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration, precondition time.Duration, continuous bool) api.Rates {
-	if lp.planner == nil || targetTime.IsZero() {
+func (lp *Loadpoint) GetPlan(goals []api.PlanGoal, precondition time.Duration, continuous bool) api.Rates {
+	if lp.planner == nil || len(goals) == 0 || goals[0].Time.IsZero() {
 		return nil
 	}
 
-	lp.log.TRACE.Printf("plan: creating plan with continuous=%v, precondition=%v, duration=%v, target=%v",
-		continuous, precondition, requiredDuration.Round(time.Second), targetTime.Round(time.Second).Local())
+	lp.log.TRACE.Printf("plan: creating plan with continuous=%v, precondition=%v, duration=%v, target=%v, goals=%d",
+		continuous, precondition, goals[0].Duration.Round(time.Second), goals[0].Time.Round(time.Second).Local(), len(goals))
 
-	return lp.planner.Plan(requiredDuration, precondition, targetTime, continuous)
+	return lp.planner.PlanGoals(goals, precondition, continuous)
+}
+
+// GetPlannerGoals returns the planner goals: the next plan first, followed by later
+// pending plans with their additional charging durations and absence windows
+func (lp *Loadpoint) GetPlannerGoals(planTime time.Time, requiredDuration time.Duration, maxPower float64) []api.PlanGoal {
+	lp.RLock()
+	defer lp.RUnlock()
+
+	goals := []api.PlanGoal{{Duration: requiredDuration, Time: planTime}}
+
+	if !lp.socBasedPlanning() {
+		return goals
+	}
+
+	for _, p := range lp.vehiclePlans() {
+		var absence time.Duration
+		if p.Absence != nil {
+			absence = p.Absence.Duration
+		}
+
+		// the next plan itself only contributes its absence window
+		if p.End.Equal(planTime) {
+			goals[0].Absence = absence
+			continue
+		}
+
+		goals = append(goals, api.PlanGoal{
+			Duration: lp.getPlanRequiredDuration(float64(p.Goal), maxPower),
+			Time:     p.End,
+			Absence:  absence,
+		})
+	}
+
+	return goals
 }
 
 // plannerActive checks if the charging plan has a currently active slot
@@ -169,7 +207,9 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	strategy := lp.getEffectivePlanStrategy()
 
-	plan = lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
+	goals := lp.GetPlannerGoals(planTime, requiredDuration, maxPower)
+
+	plan = lp.GetPlan(goals, strategy.Precondition, strategy.Continuous)
 	if plan == nil {
 		lp.log.DEBUG.Println("!! plan: plan nil")
 		return false
@@ -208,7 +248,9 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 		// lock the goal when soc-based plan becomes active for the first time
 		if lp.planLocked.Id == 0 && isSocBased {
-			lp.lockPlanGoal(planTime, int(goal), lp.getPlanId())
+			if p := lp.nextVehiclePlan(); p != nil {
+				lp.lockPlanGoal(p.End, p.Soc, p.Goal, p.Id)
+			}
 		}
 
 		// remember last active plan's slot end time

@@ -134,6 +134,37 @@ func clampRatesSeq(rates api.Rates, start, end time.Time) iter.Seq[api.Rate] {
 	}
 }
 
+// subtractRates removes the given windows from rates, splitting slots as needed
+func subtractRates(rates, windows api.Rates) api.Rates {
+	res := rates
+	for _, w := range windows {
+		if !w.End.After(w.Start) {
+			continue
+		}
+
+		next := make(api.Rates, 0, len(res))
+		for _, r := range res {
+			// no overlap
+			if !r.End.After(w.Start) || !r.Start.Before(w.End) {
+				next = append(next, r)
+				continue
+			}
+
+			// keep part before window
+			if r.Start.Before(w.Start) {
+				next = append(next, api.Rate{Start: r.Start, End: w.Start, Value: r.Value})
+			}
+
+			// keep part after window
+			if r.End.After(w.End) {
+				next = append(next, api.Rate{Start: w.End, End: r.End, Value: r.Value})
+			}
+		}
+		res = next
+	}
+	return res
+}
+
 // windowCost returns the cost of the given window. Durations are summed per price before
 // multiplication, hence the result does not depend on how the window's slots are clamped.
 func windowCost(rates api.Rates, start, end time.Time) float64 {

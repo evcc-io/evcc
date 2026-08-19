@@ -35,15 +35,17 @@ func (lp *Loadpoint) EffectivePriority() int {
 }
 
 type plan struct {
-	Id    int
-	Start time.Time // last possible start time
-	End   time.Time // user-selected finish time
-	Soc   int
+	Id      int
+	Start   time.Time // last possible start time
+	End     time.Time // user-selected finish time
+	Soc     int       // user-selected (or absence-derived) target soc
+	Goal    int       // planning goal including accumulated absence soc drops, capped at 100
+	Absence *api.PlanAbsence
 }
 
 func (lp *Loadpoint) nextActivePlan(maxPower float64, plans []plan) *plan {
 	for i, p := range plans {
-		requiredDuration := lp.getPlanRequiredDuration(float64(p.Soc), maxPower)
+		requiredDuration := lp.getPlanRequiredDuration(float64(p.Goal), maxPower)
 		plans[i].Start = p.End.Add(-requiredDuration)
 	}
 
@@ -53,7 +55,7 @@ func (lp *Loadpoint) nextActivePlan(maxPower float64, plans []plan) *plan {
 	})
 
 	for _, p := range plans {
-		if lp.vehicleSoc == 0 || lp.vehicleSoc < float64(p.Soc) {
+		if lp.vehicleSoc == 0 || lp.vehicleSoc < float64(p.Goal) {
 			return &p
 		}
 	}
@@ -61,59 +63,87 @@ func (lp *Loadpoint) nextActivePlan(maxPower float64, plans []plan) *plan {
 	return nil
 }
 
-// nextVehiclePlan returns the next vehicle plan time, soc, id
+// vehiclePlans returns all vehicle plans sorted by target time. Absence plans without
+// explicit soc get a derived soc covering the drop plus min soc. Accumulated soc drops
+// of earlier absences increase the planning goal of later plans.
+func (lp *Loadpoint) vehiclePlans() []plan {
+	v := lp.GetVehicle()
+	if v == nil {
+		return nil
+	}
+
+	var plans []plan
+
+	// static plan
+	if planTime, soc, absence := vehicle.Settings(lp.log, v).GetPlanSoc(); soc != 0 || absence != nil {
+		plans = append(plans, plan{Id: 1, Soc: soc, End: planTime, Absence: absence})
+	}
+
+	// repeating plans
+	for index, rp := range vehicle.Settings(lp.log, v).GetRepeatingPlans() {
+		if !rp.Active || len(rp.Weekdays) == 0 {
+			continue
+		}
+
+		planTime, err := util.GetNextOccurrence(rp.Weekdays, rp.Time, rp.Tz)
+		if err != nil {
+			lp.log.DEBUG.Printf("invalid repeating plan: weekdays=%v, time=%s, tz=%s, error=%v", rp.Weekdays, rp.Time, rp.Tz, err)
+			continue
+		}
+
+		plans = append(plans, plan{Id: index + 2, Soc: rp.Soc, End: planTime, Absence: rp.Absence})
+	}
+
+	// sort plans by target time
+	slices.SortStableFunc(plans, func(i, j plan) int {
+		return i.End.Compare(j.End)
+	})
+
+	minSoc := lp.effectiveMinSoc()
+	var drops int
+	for i := range plans {
+		p := &plans[i]
+		if p.Soc == 0 && p.Absence != nil {
+			p.Soc = min(100, minSoc+p.Absence.Soc)
+		}
+		p.Goal = min(100, p.Soc+drops)
+		if p.Absence != nil {
+			drops += p.Absence.Soc
+		}
+	}
+
+	return plans
+}
+
+// nextVehiclePlan returns the next vehicle plan
 // Returns locked plan if available, otherwise calculates fresh
-func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
+func (lp *Loadpoint) nextVehiclePlan() *plan {
 	// return locked plan if available
 	if p := lp.planLocked; p.Id > 0 {
-		return p.Time, p.Soc, p.Id
+		return &plan{Id: p.Id, End: p.Time, Soc: p.Soc, Goal: p.Goal}
 	}
 
-	// calculate fresh plan
-	if v := lp.GetVehicle(); v != nil {
-		var plans []plan
-
-		// static plan
-		if planTime, soc := vehicle.Settings(lp.log, v).GetPlanSoc(); soc != 0 {
-			plans = append(plans, plan{Id: 1, Soc: soc, End: planTime})
-		}
-
-		// repeating plans
-		for index, rp := range vehicle.Settings(lp.log, v).GetRepeatingPlans() {
-			if !rp.Active || len(rp.Weekdays) == 0 {
-				continue
-			}
-
-			planTime, err := util.GetNextOccurrence(rp.Weekdays, rp.Time, rp.Tz)
-			if err != nil {
-				lp.log.DEBUG.Printf("invalid repeating plan: weekdays=%v, time=%s, tz=%s, error=%v", rp.Weekdays, rp.Time, rp.Tz, err)
-				continue
-			}
-
-			plans = append(plans, plan{Id: index + 2, Soc: rp.Soc, End: planTime})
-		}
-
-		// calculate earliest required plan start
-		if plan := lp.nextActivePlan(lp.effectiveMaxPower(), plans); plan != nil {
-			return plan.End, plan.Soc, plan.Id
-		}
-	}
-	return time.Time{}, 0, 0
+	// calculate earliest required plan start
+	return lp.nextActivePlan(lp.effectiveMaxPower(), lp.vehiclePlans())
 }
 
 // EffectivePlanSoc returns the soc target for the current plan
 func (lp *Loadpoint) EffectivePlanSoc() int {
 	lp.RLock()
 	defer lp.RUnlock()
-	_, soc, _ := lp.nextVehiclePlan()
-	return soc
+	if p := lp.nextVehiclePlan(); p != nil {
+		return p.Soc
+	}
+	return 0
 }
 
 // getPlanId returns the plan id of the current/next plan
 func (lp *Loadpoint) getPlanId() int {
 	if lp.socBasedPlanning() {
-		_, _, id := lp.nextVehiclePlan()
-		return id
+		if p := lp.nextVehiclePlan(); p != nil {
+			return p.Id
+		}
+		return 0
 	}
 	if lp.planEnergy > 0 {
 		return 1
@@ -133,8 +163,10 @@ func (lp *Loadpoint) EffectivePlanTime() time.Time {
 	lp.RLock()
 	defer lp.RUnlock()
 	if lp.socBasedPlanning() {
-		ts, _, _ := lp.nextVehiclePlan()
-		return ts
+		if p := lp.nextVehiclePlan(); p != nil {
+			return p.End
+		}
+		return time.Time{}
 	}
 
 	ts, _ := lp.getPlanEnergy()

@@ -29,10 +29,10 @@ type API interface {
 	// SetLimitSoc sets the limit soc
 	SetLimitSoc(soc int)
 
-	// GetPlanSoc returns the charge plan soc
-	GetPlanSoc() (time.Time, int)
-	// SetPlanSoc sets the charge plan time and soc
-	SetPlanSoc(time.Time, int) error
+	// GetPlanSoc returns the charge plan time, soc and absence
+	GetPlanSoc() (time.Time, int, *api.PlanAbsence)
+	// SetPlanSoc sets the charge plan time, soc and absence
+	SetPlanSoc(time.Time, int, *api.PlanAbsence) error
 
 	// GetRepeatingPlans returns every repeating plan
 	GetRepeatingPlans() []api.RepeatingPlan

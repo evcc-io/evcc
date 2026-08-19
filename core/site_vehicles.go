@@ -13,8 +13,9 @@ import (
 )
 
 type planStruct struct {
-	Soc  int       `json:"soc"`
-	Time time.Time `json:"time"`
+	Soc     int              `json:"soc"`
+	Time    time.Time        `json:"time"`
+	Absence *api.PlanAbsence `json:"absence,omitempty"`
 }
 
 type vehicleStruct struct {
@@ -48,10 +49,11 @@ func (site *Site) publishVehicles() {
 		ac := instance.OnIdentified()
 
 		var plan *planStruct
-		if time, soc := v.GetPlanSoc(); !time.IsZero() {
+		if time, soc, absence := v.GetPlanSoc(); !time.IsZero() {
 			plan = &planStruct{
-				Soc:  soc,
-				Time: time,
+				Soc:     soc,
+				Time:    time,
+				Absence: absence,
 			}
 		}
 

@@ -94,6 +94,79 @@ func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
 	return res
 }
 
+// PlanGoals creates a charging plan covering multiple charging goals.
+// The first goal is the active one and is planned with full strategy support (precondition,
+// continuous). The remaining goals are planned cost-optimally in target time order using the
+// remaining slots outside of absence windows. Durations are cumulative, hence only each goal's
+// shortfall vs. the slots already planned before its target time is added.
+func (t *Planner) PlanGoals(goals []api.PlanGoal, precondition time.Duration, continuous bool) api.Rates {
+	if t == nil || len(goals) == 0 {
+		return nil
+	}
+
+	plan := t.Plan(goals[0].Duration, precondition, goals[0].Time, continuous)
+
+	// without tariff, later goals are planned just-in-time once they become due
+	if len(goals) == 1 || t.tariff == nil {
+		return plan
+	}
+
+	rates, err := t.tariff.Rates()
+	if len(rates) == 0 || err != nil {
+		return plan
+	}
+
+	now := t.clock.Now().Truncate(time.Second)
+	last := rates[len(rates)-1].End
+
+	// planned slots and absence windows are unavailable for other goals
+	unavailable := slices.Clone(plan)
+	for _, g := range goals {
+		if g.Absence > 0 {
+			unavailable = append(unavailable, api.Rate{Start: g.Time, End: g.Time.Add(g.Absence)})
+		}
+	}
+
+	remaining := slices.Clone(goals[1:])
+	slices.SortStableFunc(remaining, func(i, j api.PlanGoal) int {
+		return i.Time.Compare(j.Time)
+	})
+
+	for _, g := range remaining {
+		targetTime := g.Time
+
+		// charging before the target time already planned for other goals counts towards this goal
+		requiredDuration := g.Duration - Duration(clampRates(plan, now, targetTime))
+		if requiredDuration <= 0 {
+			continue
+		}
+
+		// reduce planning horizon to available rates
+		// ponytail: time after the rate horizon may overlap absence windows- over-estimates future capacity
+		if targetTime.After(last) {
+			durationAfterRates := targetTime.Sub(last)
+			if durationAfterRates >= requiredDuration {
+				// enough time for charging once rates cover the target time
+				continue
+			}
+
+			requiredDuration -= durationAfterRates
+			targetTime = last
+		}
+
+		avail := subtractRates(clampRates(rates, now, targetTime), unavailable)
+		slices.SortStableFunc(avail, sortByCost)
+
+		res := optimalPlan(avail, requiredDuration, targetTime)
+		plan = append(plan, res...)
+		unavailable = append(unavailable, res...)
+	}
+
+	plan.Sort()
+
+	return plan
+}
+
 func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime time.Time, continuous bool) api.Rates {
 	if t == nil || requiredDuration <= 0 {
 		return nil

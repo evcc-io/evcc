@@ -8,6 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/gorilla/mux"
 )
 
@@ -121,22 +122,49 @@ func planSocHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		if err := v.SetPlanSoc(ts, soc); err != nil {
+		if err := v.SetPlanSoc(ts, soc, nil); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		ts, soc = v.GetPlanSoc()
+		jsonWrite(w, staticPlanResponse(v))
+	}
+}
 
-		res := struct {
-			Soc  int       `json:"soc"`
-			Time time.Time `json:"time"`
-		}{
-			Soc:  soc,
-			Time: ts,
+type staticPlanStruct struct {
+	Soc     int              `json:"soc"`
+	Time    time.Time        `json:"time"`
+	Absence *api.PlanAbsence `json:"absence,omitempty"`
+}
+
+func staticPlanResponse(v vehicle.API) staticPlanStruct {
+	ts, soc, absence := v.GetPlanSoc()
+	return staticPlanStruct{Soc: soc, Time: ts, Absence: absence}
+}
+
+// planSocUpdateHandler updates the static plan from a json body. Soc is optional if an absence is given.
+func planSocUpdateHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		v, err := site.Vehicles().ByName(vars["name"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
 		}
 
-		jsonWrite(w, res)
+		var req staticPlanStruct
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if err := v.SetPlanSoc(req.Time, req.Soc, req.Absence); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		jsonWrite(w, staticPlanResponse(v))
 	}
 }
 
@@ -207,7 +235,7 @@ func planSocRemoveHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		if err := v.SetPlanSoc(time.Time{}, 0); err != nil {
+		if err := v.SetPlanSoc(time.Time{}, 0, nil); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}

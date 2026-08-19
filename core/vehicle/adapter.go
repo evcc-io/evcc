@@ -94,8 +94,8 @@ func (v *adapter) SetLimitSoc(soc int) {
 	v.publish()
 }
 
-// GetPlanSoc returns the charge plan soc
-func (v *adapter) GetPlanSoc() (time.Time, int) {
+// GetPlanSoc returns the charge plan time, soc and absence
+func (v *adapter) GetPlanSoc() (time.Time, int, *api.PlanAbsence) {
 	var ts time.Time
 	if v, err := settings.Time(v.key() + keys.PlanTime); err == nil {
 		ts = v
@@ -104,17 +104,25 @@ func (v *adapter) GetPlanSoc() (time.Time, int) {
 	if v, err := settings.Int(v.key() + keys.PlanSoc); err == nil {
 		soc = int(v)
 	}
-	return ts, soc
+	var absence *api.PlanAbsence
+	if err := settings.Json(v.key()+keys.PlanAbsence, &absence); err != nil {
+		absence = nil
+	}
+	return ts, soc, absence
 }
 
-// SetPlanSoc sets the charge plan soc
-func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
+// SetPlanSoc sets the charge plan time, soc and absence. Soc is optional if an absence is given.
+func (v *adapter) SetPlanSoc(ts time.Time, soc int, absence *api.PlanAbsence) error {
 	if !ts.IsZero() && ts.Before(time.Now()) {
 		return errors.New("timestamp is in the past")
 	}
 
+	if err := absence.Validate(); err != nil {
+		return err
+	}
+
 	// remove plan
-	if soc == 0 {
+	if soc == 0 && absence == nil {
 		ts = time.Time{}
 		v.log.DEBUG.Printf("delete %s plan", v.name)
 	} else {
@@ -123,6 +131,9 @@ func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 
 	settings.SetTime(v.key()+keys.PlanTime, ts)
 	settings.SetInt(v.key()+keys.PlanSoc, int64(soc))
+	if err := settings.SetJson(v.key()+keys.PlanAbsence, absence); err != nil {
+		return err
+	}
 
 	// note: could be optimized by only clearing plan lock of the relevant loadpoint
 	v.clearPlanLocks()
@@ -144,6 +155,9 @@ func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlan) error {
 		}
 		if _, err := time.Parse("15:04", plan.Time); err != nil {
 			return fmt.Errorf("invalid time: %v", err)
+		}
+		if err := plan.Absence.Validate(); err != nil {
+			return err
 		}
 	}
 
