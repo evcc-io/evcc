@@ -327,6 +327,7 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 
 		if w.indices[warp.MvidEnergy] != -1 {
 			implement.Has(w, implement.MeterEnergy(w.totalEnergy))
+			implement.Has(w, implement.ChargeRater(w.chargedEnergy))
 		}
 
 		if w.indices[warp.MvidCurrentL1] != -1 && w.indices[warp.MvidCurrentL2] != -1 && w.indices[warp.MvidCurrentL3] != -1 {
@@ -515,6 +516,26 @@ func (w *WarpWS) capacity() float64 {
 		return *w.evState.Capacity
 	}
 	return 0
+}
+
+func (w *WarpWS) chargedEnergy() (float64, error) {
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+
+	if w.chargeTracker.UserId == -1 {
+		// Currently not charging.
+		// TODO: is this an error or shall we return 0, nil here?
+		return 0, api.ErrNotAvailable
+	}
+
+	var start = float64(w.chargeTracker.MeterStart)
+	var now = w.values[warp.MvidEnergy]
+
+	if math.IsNaN(start) || math.IsNaN(now) {
+		return 0, api.ErrNotAvailable
+	}
+
+	return now - start, nil
 }
 
 func (w *WarpWS) setCurrent(curr int64) error {
