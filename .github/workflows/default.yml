@@ -23,18 +23,7 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-          cache: false # avoid cache thrashing
         id: go
-
-      - uses: actions/cache@v6
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-clean-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-clean-
-            ${{ runner.os }}-go-
 
       - name: Install tools
         run: make install
@@ -63,18 +52,7 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-          cache: false
         id: go
-
-      - uses: actions/cache@v6
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-build-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-build-
-            ${{ runner.os }}-go-
 
       - uses: voidzero-dev/setup-vp@v1
         with:
@@ -101,18 +79,7 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-          cache: false
         id: go
-
-      - uses: actions/cache@v6
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-test-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-test-
-            ${{ runner.os }}-go-
 
       - name: Test
         run: mkdir dist && touch dist/empty && make test
@@ -132,18 +99,7 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-          cache: false # avoid cache thrashing
         id: go
-
-      - uses: actions/cache@v6
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-lint-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-lint-
-            ${{ runner.os }}-go-
 
       - run: mkdir dist && touch dist/empty
 
@@ -177,7 +133,8 @@ jobs:
         run: make install-ui
 
       - name: OpenAPI
-        run: make openapi
+        # backport release tags may not have the openapi target yet
+        run: if grep -q '^openapi' Makefile; then make openapi; fi
 
       - name: Lint
         run: make lint-ui
@@ -225,18 +182,7 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-          cache: false
         id: go
-
-      - uses: actions/cache@v6
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-integration-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-integration-
-            ${{ runner.os }}-go-
 
       - uses: voidzero-dev/setup-vp@v1
         with:
@@ -254,7 +200,7 @@ jobs:
         run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').packages['node_modules/@playwright/test'].version)")" >> $GITHUB_ENV
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v6
+        uses: actions/cache/restore@v6
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
@@ -264,6 +210,13 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: vpx playwright install --with-deps chromium
         timeout-minutes: 5
+
+      - name: Save Playwright browsers
+        if: github.ref == 'refs/heads/master' && steps.playwright-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
 
       - name: Run tests
         run: npx playwright test --shard=${{ matrix.shard }}/4 --workers=3 --reporter=blob,html

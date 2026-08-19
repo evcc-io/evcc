@@ -24,32 +24,32 @@ import colors, { lighterColor } from "@/colors";
 import formatter from "@/mixins/formatter";
 import chartMixin from "./chartMixin";
 import { robustPriceMax, PRICE_SPIKE_CLIP } from "@/utils/robustPriceMax";
-import type { CURRENCY, ForecastSlot } from "@/types/evcc";
+import type { CURRENCY, UiForecastSlot } from "@/types/evcc";
 
 export default defineComponent({
 	name: "PriceChart",
 	mixins: [formatter, chartMixin],
 	props: {
-		grid: { type: Array as PropType<ForecastSlot[]>, required: true },
-		feedin: { type: Array as PropType<ForecastSlot[]> },
+		grid: { type: Array as PropType<UiForecastSlot[]>, required: true },
+		feedin: { type: Array as PropType<UiForecastSlot[]> },
 		currency: { type: String as PropType<CURRENCY> },
 		zoom: { type: Boolean, default: false },
 	},
 	computed: {
-		slots(): ForecastSlot[] {
+		slots(): UiForecastSlot[] {
 			return filterForecastSlots(this.grid, this.startDate, this.endDate);
 		},
-		feedinSlots(): ForecastSlot[] {
+		feedinSlots(): UiForecastSlot[] {
 			return this.feedin
 				? filterForecastSlots(this.feedin, this.startDate, this.endDate)
 				: [];
 		},
-		markPoints(): { coord: [string, number]; value: string }[] {
+		markPoints(): { coord: [number, number]; value: string }[] {
 			const slots = this.slots;
 			if (!slots.length) return [];
 			const minIdx = minSlotIndex(slots);
 			const maxIdx = maxSlotIndex(slots);
-			const points: { coord: [string, number]; value: string }[] = [];
+			const points: { coord: [number, number]; value: string }[] = [];
 			if (slots[minIdx]) {
 				points.push({
 					coord: [clampStart(slots[minIdx]!.start, this.startDate), slots[minIdx]!.value],
@@ -160,7 +160,7 @@ export default defineComponent({
 	methods: {
 		// dots at the axis ceiling flag slots whose price is clipped above the
 		// robust max, so a spike is distinct from a legit top-of-range price
-		spikeMarkers(slots: ForecastSlot[]): Record<string, unknown>[] {
+		spikeMarkers(slots: UiForecastSlot[]): Record<string, unknown>[] {
 			const cap = this.yAxisConfig["max"] as number | undefined;
 			if (cap == null) return [];
 			const clipped = slots.filter((s) => s.value > cap);
@@ -181,9 +181,9 @@ export default defineComponent({
 			];
 		},
 		priceSeries(
-			slots: ForecastSlot[],
+			slots: UiForecastSlot[],
 			color: string,
-			points?: { coord: [string, number]; value: string }[]
+			points?: { coord: [number, number]; value: string }[]
 		): Record<string, unknown> {
 			const avg = slots.length ? slots.reduce((a, s) => a + s.value, 0) / slots.length : 0;
 			const gradientDown = avg >= 0;

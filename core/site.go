@@ -8,6 +8,7 @@ import (
 	"math"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -46,7 +47,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 // updater abstracts the Loadpoint implementation for testing
 type updater interface {
 	loadpoint.API
-	Update(sitePower, batteryBoostPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64, dim *bool)
+	Update(sitePower, batteryPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64, dim *bool)
 }
 
 var _ site.API = (*Site)(nil)
@@ -85,10 +86,13 @@ type Site struct {
 	bufferSoc                float64             // continue charging on battery above this Soc
 	bufferStartSoc           float64             // start charging on battery above this Soc
 	batteryDischargeControl  bool                // prevent battery discharge for fast and planned charging
-	optimizerManualPA        *float64            // optional manual p_a override in currency/kWh
 	batteryGridChargeLimit   *float64            // grid charging limit
-	batteryOptimizerSocGoals []api.RepeatingPlan // recurring optimizer reserve goals (soc + time + tz + weekdays)
 	batteryGridDischarge     bool                // allow battery discharge to grid (experimental)
+	optimizerManualPA        *float64            // optional manual p_a override in currency/kWh
+	batteryOptimizerSocGoals []api.RepeatingPlan // recurring optimizer reserve goals (soc + time + tz + weekdays)
+
+	// grid settings
+	gridExportLimit float64 // static grid export power limit in W, 0 = disabled
 
 	// forecast settings
 	solarAdjusted bool // adjust solar forecast to real production data
@@ -111,12 +115,18 @@ type Site struct {
 	excessDCPower            float64                     // PV excess DC charge power (hybrid only)
 	auxPower                 float64                     // Aux power
 	battery                  types.BatteryState          // Battery cached and published state
+	batteryMaxDischargePower float64                     // Max discharge power of all battery meters
 	batteryMode              api.BatteryMode             // Battery mode (runtime only, not persisted)
 	batteryModeExternal      api.BatteryMode             // Battery mode (external, runtime only, not persisted)
 	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
-	batterySuggestions       map[string]types.Suggestion // Optimizer suggestions by battery meter name
-	loadpointSuggestions     map[int]types.Suggestion    // Optimizer suggestions by loadpoint id
+	suggestions              map[string]types.Suggestion // Optimizer suggestions by device key
 	suggestionActions        map[string]string           // last notified actionable optimizer action by device key
+
+	optimizerMu          sync.Mutex  // guards optimizer runs
+	optimizerUpdated     time.Time   // last optimizer run, guarded by optimizerMu
+	optimizerPending     atomic.Bool // a trigger arrived while a run held the lock; re-run afterwards
+	optimizerTariffHash  uint64      // fingerprint of the planner+feedin rates last seen by the update loop
+	optimizerTariffDirty bool        // a tariff change is pending; deferred one cycle so planner+feedin settle
 }
 
 // MetersConfig contains the site's meter configuration
@@ -383,16 +393,6 @@ func (site *Site) restoreSettings() error {
 			return err
 		}
 	}
-	if v, err := settings.Float(keys.OptimizerManualPA); err == nil {
-		if err := site.SetOptimizerManualPA(&v); err != nil {
-			return err
-		}
-	}
-	if goals, err := loadBatteryOptimizerSocGoals(); err == nil && len(goals) > 0 {
-		if err := site.SetBatteryOptimizerSocGoals(goals); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
-			return err
-		}
-	}
 	if v, err := settings.Bool(keys.BatteryGridDischarge); err == nil {
 		if err := site.SetBatteryGridDischarge(v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
 			return err
@@ -405,6 +405,11 @@ func (site *Site) restoreSettings() error {
 	}
 	if v, err := settings.Float(keys.BatteryGridChargeLimit); err == nil {
 		if err := site.SetBatteryGridChargeLimit(&v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
+			return err
+		}
+	}
+	if v, err := settings.Float(keys.GridExportLimit); err == nil {
+		if err := site.SetGridExportLimit(v); err != nil {
 			return err
 		}
 	}
@@ -696,6 +701,7 @@ func (site *Site) updateBatteryMeters() {
 
 	mm := site.collectMeters("battery", site.batteryMeters)
 
+	var maxDischargePower float64
 	for i, dev := range site.batteryMeters {
 		meter := dev.Instance()
 
@@ -715,9 +721,31 @@ func (site *Site) updateBatteryMeters() {
 			}
 		}
 
+		if bpl, ok := api.Cap[api.BatteryPowerLimiter](meter); ok && maxDischargePower >= 0 {
+			var empty bool
+			if bsl, ok := api.Cap[api.BatterySocLimiter](meter); ok {
+				minSoc, _ := bsl.GetSocLimits()
+				if mm[i].Soc != nil && *mm[i].Soc <= minSoc {
+					empty = true
+				}
+			}
+
+			if !empty {
+				_, discharge := bpl.GetPowerLimits()
+				maxDischargePower += discharge
+			}
+		} else {
+			maxDischargePower = -1 // any battery without a limit disables the cap
+		}
+
 		_, controllable := api.Cap[api.BatteryController](meter)
 		mm[i].Controllable = new(controllable)
 	}
+
+	// written from the meter goroutine, read via GetBatteryMaxDischargePower
+	site.Lock()
+	site.batteryMaxDischargePower = max(0, maxDischargePower)
+	site.Unlock()
 
 	// retain the last known soc when every battery read failed this cycle, so a
 	// transient meter error does not report the pack as empty (0%)
@@ -778,8 +806,9 @@ func (site *Site) updateBatteryMeters() {
 
 // publishBattery applies the optimizer suggestions and publishes the battery state
 func (site *Site) publishBattery() {
+	mode := site.GetBatteryMode().String()
 	for i, d := range site.battery.Devices {
-		site.battery.Devices[i].Suggestion = site.batterySuggestion(d.Name)
+		site.battery.Devices[i].Suggestion = site.suggestion(batteryKey(d.Name), mode)
 	}
 
 	site.publish(keys.Battery, site.battery)
@@ -871,7 +900,7 @@ func (site *Site) updateGridMeter() error {
 		return nil
 	}
 
-	mm := types.Measurement{Name: site.Meters.GridMeterRef}
+	mm := types.Measurement{Name: site.gridMeter.Config().Name}
 
 	meter := site.gridMeter.Instance()
 
@@ -925,7 +954,9 @@ func (site *Site) updateGridMeter() error {
 		}
 	}
 
-	site.collectors[site.Meters.GridMeterRef].AddEnergy(mm.Energy, mm.ReturnEnergy, mm.Power)
+	if c, ok := site.collectors[site.gridMeter.Config().Name]; ok {
+		c.AddEnergy(mm.Energy, mm.ReturnEnergy, mm.Power)
+	}
 
 	site.publish(keys.Grid, mm)
 
@@ -951,21 +982,21 @@ func (site *Site) updateMeters() error {
 		// refresh the fingerprint every cycle so a change is never missed
 		tariffsChanged := site.optimizerTariffsChanged()
 		switch {
-		case optimizerTariffDirty:
+		case site.optimizerTariffDirty:
 			// a price change was pending from the previous cycle: run it now,
 			// before re-arming, so a continuous stream of updates can't defer the
 			// run indefinitely (and starve the backstop). The run reads the latest
 			// planner+feedin at execution time, so a change also landing this
 			// cycle is captured, and both separate MQTT topics are consistent.
-			optimizerTariffDirty = false
+			site.optimizerTariffDirty = false
 			site.triggerOptimizer()
 		case tariffsChanged:
 			// first change of a burst: defer one cycle so planner and feedin
 			// (separate MQTT topics) both settle, then run via the case above.
-			optimizerTariffDirty = true
-		case time.Since(optimizerUpdated) >= tariff.SlotDuration:
+			site.optimizerTariffDirty = true
+		case time.Since(site.optimizerUpdated) >= tariff.SlotDuration:
 			// backstop: re-run each slot even when the tariffs are static
-			go site.optimizerUpdateAsync()
+			go site.optimizerUpdateAsync(tariff.SlotDuration)
 		}
 	}
 
@@ -1186,7 +1217,7 @@ func (site *Site) update(lp updater) {
 			}
 
 			lp.Update(
-				sitePower, max(0, site.battery.Power), consumption, feedin, batteryBuffered, batteryStart,
+				sitePower, site.battery.Power, consumption, feedin, batteryBuffered, batteryStart,
 				greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
 				hems.Dimmed(site.hems),
 			)
@@ -1212,7 +1243,7 @@ func (site *Site) update(lp updater) {
 			)
 		}
 
-		site.log.INFO.Println("planner:", msg)
+		site.log.WARN.Println("planner:", msg)
 	}
 
 	// update battery after reading meters to ensure that (modbus) connection is open
@@ -1245,11 +1276,10 @@ func (site *Site) prepare() {
 	site.publish(keys.BufferStartSoc, site.bufferStartSoc)
 	site.publish(keys.BatteryMode, site.batteryMode)
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
-	site.publish(keys.OptimizerManualPA, site.GetOptimizerManualPA())
-	site.publish(keys.BatteryOptimizerSocGoals, site.GetBatteryOptimizerSocGoals())
 	site.publish(keys.BatteryGridDischarge, site.batteryGridDischarge)
 	site.publish(keys.SolarAdjusted, site.solarAdjusted)
 	site.publish(keys.ResidualPower, site.GetResidualPower())
+	site.publish(keys.GridExportLimit, site.GetGridExportLimit())
 	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))
 	site.publish(keys.SmartFeedInPriorityAvailable, site.isDynamicTariff(api.TariffUsageFeedIn))
 

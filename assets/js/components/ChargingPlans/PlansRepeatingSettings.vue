@@ -4,7 +4,7 @@
 			<ChargingPlanRepeatingSettings
 				:showHeader="index === 0"
 				:number="index + startNumber"
-				class="mb-5 mb-lg-4"
+				class="mb-4"
 				:formIdPrefix="formIdPrefix"
 				v-bind="plan"
 				:rangePerSoc="rangePerSoc"

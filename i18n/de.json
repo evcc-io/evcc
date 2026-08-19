@@ -229,6 +229,7 @@
       "enabled": "Ladebereit",
       "energy": "Energie",
       "events": "Ereignisse",
+      "exportLimit": "Einspeiselimit",
       "feedinPrice": "Einspeisevergütung",
       "forecast": "Vorhersage",
       "gridPrice": "Netzpreis",
@@ -316,6 +317,7 @@
     "form": {
       "danger": "Achtung",
       "deprecated": "veraltet",
+      "durationUnit": "Zeiteinheit für {label}",
       "example": "Beispiel",
       "optional": "optional"
     },
@@ -381,12 +383,17 @@
       "customOption": "Benutzerdefinierte Integration",
       "description": "Leistungsbegrenzung durch externe Systeme (z.B. §14a EnWG, §9 EEG Schnittstelle oder übergeordnetes Energiemanagementsystem). Spielt mit dem Lastmanagement Feature zusammen. Das Abregeln der Solarproduktion wird ebenfalls für ausgewählte Geräte unterstützt. Der konkrete Abregelungswert muss in der jeweiligen Wechselrichter-Konfiguration eingestellt werden.",
       "download": "Download",
+      "dynamicLimits": "Dynamische Limits",
       "eventsRecorded": "{count} Netzbegrenzungen gespeichert.",
+      "exportLimit": "Einspeiselimit",
+      "exportLimitDescription": "Der Batterie-Optimierer berücksichtigt dieses Limit um Solarverluste zu vermeiden. Eine aktive Abregelung durch eine Integration der dynamischen Limits hat Vorrang.",
+      "exportLimitHint": "Statische Einspeisegrenze am Netzanschlusspunkt.",
       "generic": "Generische Integrationen",
       "integrations": "Integrationen",
       "lastEvent": "Letzter Eintrag {timeAgo}.",
       "noEvents": "Es wurden noch keine Ereignisse aufgezeichnet.",
       "recordedEvents": "Aufgezeichnete Ereignisse",
+      "staticLimits": "Statische Limits",
       "template": "Integration",
       "title": "Externe Begrenzung",
       "type": {
@@ -1104,6 +1111,8 @@
     "version": {
       "availableLong": "neue Version verfügbar",
       "community": "evcc Community",
+      "labelEmail": "E-Mail",
+      "labelPhone": "Telefon",
       "labelRelease": "Release",
       "labelVersion": "Version",
       "labelWebsite": "Website",
@@ -1186,6 +1195,7 @@
     "sessions": "Ladevorgänge"
   },
   "help": {
+    "contactButton": "Kontakt aufnehmen",
     "discussionsButton": "GitHub Discussions",
     "documentationButton": "Dokumentation",
     "issueButton": "Problem melden",
@@ -1225,7 +1235,10 @@
     "additionalContext": "Zusätzlicher Kontext",
     "additionalContextPlaceholder": "Alle zusätzlichen Informationen, die hilfreich sein könnten...\n- Konfigurationsdetails\n- Was du versucht hast\n- Umgebungsdetails",
     "createButtonDiscussion": "GitHub Diskussion starten...",
+    "createButtonEmail": "Anfrage per E-Mail senden",
     "createButtonIssue": "GitHub Issue erstellen...",
+    "downloadButton": "Debug-Informationen herunterladen",
+    "downloadHint": "Hänge diese Datei an deine E-Mail an, falls weitere Informationen benötigt werden.",
     "description": "Deine Installation funktioniert nicht wie erwartet? Nutze diese Seite um Hilfe zu bekommen oder Probleme zu melden. Gib genügend Details an, damit wir das Problem verstehen und reproduzieren können. Halte deine Beschreibung prägnant, klar und leicht verständlich.",
     "helpType": {
       "discussion": "Brauche Hilfe bei meiner Einrichtung",
@@ -1238,6 +1251,7 @@
     "issueTitle": "Titel",
     "stepsToReproduce": "Schritte zur Reproduktion",
     "subTitleDiscussion": "Beschreibe dein Problem",
+    "subTitleEmail": "Beschreibe dein Problem",
     "subTitleIssue": "Beschreibe das Problem",
     "summary": {
       "confirmationButtonDiscussion": "GitHub Diskussion starten",
@@ -1290,24 +1304,33 @@
       "goal": "Ladeziel",
       "modalTitle": "Ladeplanung",
       "none": "keiner",
+      "once": "einmalig",
       "optimization": {
         "cheapest": "günstigst",
+        "cheapestDescription": "Wählt die günstigsten Zeitfenster. Kann zu mehreren Starts und Stopps führen.",
+        "cleanest": "sauberst",
+        "cleanestDescription": "Wählt die saubersten Zeitfenster. Kann zu mehreren Starts und Stopps führen.",
         "continuous": "kontinuierlich",
+        "continuousCo2Description": "Wählt die sauberste unterbrechungsfreie Folge von Zeitfenstern.",
+        "continuousPriceDescription": "Wählt die günstigste unterbrechungsfreie Folge von Zeitfenstern.",
         "label": "Optimierung"
       },
       "planNumber": "Plan {number}",
       "precondition": {
-        "description": "Lade {duration} vor Abfahrt zur Batterie-Vorkonditionierung.",
+        "description": "Verlagert einen Teil des Ladens direkt vor die Abfahrt: warme Batterie, weniger Zeit mit hohem Ladestand.",
         "label": "Spätes Laden",
         "optionAll": "alles",
-        "optionNo": "nein"
+        "optionNo": "nein",
+        "summary": "{precondition} vorher"
       },
       "remove": "Entfernen",
       "repeating": "wiederholend",
       "repeatingPlans": "Wiederholende Pläne",
       "selectAll": "Alle wählen",
+      "strategy": {
+        "label": "Strategie"
+      },
       "strategyDisabledDescription": "Das Laden startet so spät wie möglich und wird rechtzeitig zur Abfahrt abgeschlossen. Mit dynamischen Netzpreisen oder einem CO₂-Tarif stehen hier weitere Optionen zur Verfügung.",
-      "strategySettings": "Strategie-Einstellungen",
       "time": "Zeit",
       "title": "Plan",
       "unsavedChanges": "Ungespeicherte Änderungen vorhanden. Jetzt anwenden?",
@@ -1592,6 +1615,7 @@
   },
   "session": {
     "addOdometer": "Wert eintragen",
+    "addedRange": "Geladene Reichweite",
     "cancel": "Abbrechen",
     "co2": "CO₂",
     "date": "Zeitraum",
@@ -1607,6 +1631,7 @@
     "title": "Ladevorgang"
   },
   "sessions": {
+    "addedRange": "Reichweite",
     "avgPower": "⌀ Leistung",
     "avgPrice": "⌀ Preis",
     "chargeDuration": "Ladedauer",
@@ -1632,6 +1657,7 @@
     },
     "co2": "⌀ CO₂",
     "csv": {
+      "addedrange": "Geladene Reichweite (km)",
       "chargedenergy": "Energie (kWh)",
       "chargeduration": "Ladedauer",
       "co2perkwh": "CO₂/kWh",

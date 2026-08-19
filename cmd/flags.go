@@ -28,6 +28,24 @@ const (
 	flagCustomCss            = "custom-css"
 	flagCustomCssDescription = "Additional user-defined CSS file for custom styling. No compatibility guarantees."
 
+	flagCustomLogoLight            = "custom-logo-light"
+	flagCustomLogoLightDescription = "Custom light-mode logo file (svg, png) replacing the evcc logo in the UI. Requires custom-logo-dark."
+
+	flagCustomLogoDark            = "custom-logo-dark"
+	flagCustomLogoDarkDescription = "Custom dark-mode logo file (svg, png) replacing the evcc logo in the UI. Requires custom-logo-light."
+
+	flagCustomBrand            = "custom-brand"
+	flagCustomBrandDescription = "Custom brand name shown in the UI"
+
+	flagCustomWebsite            = "custom-website"
+	flagCustomWebsiteDescription = "Custom website URL shown in the UI"
+
+	flagCustomEmail            = "custom-email"
+	flagCustomEmailDescription = "Support email address shown in the UI"
+
+	flagCustomPhone            = "custom-phone"
+	flagCustomPhoneDescription = "Support phone number shown in the UI"
+
 	flagBatteryMode                = "battery-mode"
 	flagBatteryModeDescription     = "Set battery mode (normal, hold, charge, holdcharge)"
 	flagBatteryModeWait            = "battery-mode-wait"

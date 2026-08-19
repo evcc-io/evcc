@@ -27,6 +27,9 @@ jobs:
     #   - https://gh.io/using-larger-runners (GitHub.com only)
     # Consider using larger runners or machines with greater resources for possible analysis time improvements.
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+    env:
+      # we don't analyze pull requests, so the cached overlay base databases are never restored
+      CODEQL_OVERLAY_DATABASE_MODE: none
     permissions:
       # required for all workflows
       security-events: write

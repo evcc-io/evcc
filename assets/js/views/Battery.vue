@@ -75,8 +75,8 @@ export default defineComponent({
 			return this.gridChargePossible || this.gridChargeLimit !== null;
 		},
 		gridChargeTariff() {
-			const { forecast, smartCostType } = this.state;
-			return smartCostType === SMART_COST_TYPE.CO2 ? forecast?.co2 : forecast?.planner;
+			const { co2, planner } = store.uiForecast.value;
+			return this.state.smartCostType === SMART_COST_TYPE.CO2 ? co2 : planner;
 		},
 		smartCostLimitProps() {
 			return {

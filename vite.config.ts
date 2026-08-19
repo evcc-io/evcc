@@ -6,6 +6,9 @@ import browserslist from "browserslist";
 import { visualizer } from "rollup-plugin-visualizer";
 import path from "path";
 
+const frontendPort = Number(process.env.VITE_PORT) || 7071;
+const backendUrl = `http://localhost:${Number(process.env.VITE_BACKEND_PORT) || 7070}`;
+
 export default defineConfig({
   staged: {
     "*": "vp check --fix",
@@ -74,19 +77,19 @@ export default defineConfig({
     assetsInlineLimit: 1024,
     chunkSizeWarningLimit: 800, // legacy build increases file size
   },
-  server: (() => {
-    const frontend = Number(process.env.VITE_PORT) || 7071;
-    const backend = Number(process.env.VITE_BACKEND_PORT) || 7070;
-    return {
-      port: frontend,
-      proxy: {
-        "/api": `http://localhost:${backend}`,
-        "/i18n": `http://localhost:${backend}`,
-        "/providerauth": `http://localhost:${backend}`,
-        "/ws": { target: `ws://localhost:${backend}`, ws: true },
-      },
-    };
-  })(),
+  server: {
+    port: frontendPort,
+    proxy: {
+      "/api": backendUrl,
+      "/i18n": backendUrl,
+      "/providerauth": backendUrl,
+      "/globals.js": backendUrl,
+      "/custom.css": backendUrl,
+      "/custom-logo-light": backendUrl,
+      "/custom-logo-dark": backendUrl,
+      "/ws": { target: backendUrl.replace("http", "ws"), ws: true },
+    },
+  },
   plugins: lazyPlugins(() => [
     legacy({
       modernPolyfills: ["es.promise.all-settled"],
