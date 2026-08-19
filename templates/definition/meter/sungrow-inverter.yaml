@@ -10,7 +10,6 @@ params:
   - name: modbus
     choice: ["rs485", "tcpip"]
     baudrate: 9600
-  - name: maxacpower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -45,17 +44,33 @@ render: |
       address: 5003 # Total power yields, 1 kWh
       type: input
       decode: uint32s
-  maxacpower: {{ .maxacpower }} # W
-  # EEG §9 curtailment via the power limitation registers.
-  # Addresses below are 0-based, i.e. documentation register minus one:
+  # EEG §9 curtailment via the power limitation registers
   #   5006 (doc 5007) power limitation switch, 0xAA enable / 0x55 disable
   #   5007 (doc 5008) power limitation value, 0.1 % of nominal power
-  # Note the SH hybrid series uses a different map, where doc 5008 is the
-  # internal temperature - do not reuse these addresses there.
-  # Writes must use `writesingle`; `holding` would build a read operation.
   curtail:
     source: sequence
     set:
+      # Order matters: the switch must be set BEFORE the value. While the
+      # limitation is disabled the inverter resets register 5007 to its 110 %
+      # default, so writing the value first would be discarded when coming back
+      # from an uncurtailed state.
+      - source: go
+        script: |
+          ena := 170 // 0xAA - enable limitation
+          if curtail == 100 {
+            ena = 85 // 0x55 - disable limitation
+          }
+          ena
+        out:
+          - name: ena
+            type: int
+            config:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 5006 # Power limitation switch
+                type: writesingle
+                decode: uint16
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
@@ -63,29 +78,6 @@ render: |
           type: writesingle
           decode: uint16
         scale: 10
-      - source: switch
-        switch:
-          - case: 100 # uncurtailed - disable limitation
-            set:
-              source: const
-              value: 85 # 0x55
-              set:
-                source: modbus
-                {{- include "modbus" . | indent 14 }}
-                register:
-                  address: 5006 # Power limitation switch
-                  type: writesingle
-                  decode: uint16
-        default:
-          source: const
-          value: 170 # 0xAA
-          set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 5006 # Power limitation switch
-              type: writesingle
-              decode: uint16
   curtailed:
     source: go
     in:
