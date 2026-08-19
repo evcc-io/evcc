@@ -561,6 +561,11 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	// soc update reset
 	lp.socUpdated = time.Time{}
 
+	// charger may have reconfigured phases internally while disconnected (#32957)
+	if err := lp.syncChargerPhases(); err != nil {
+		lp.log.ERROR.Println(err)
+	}
+
 	// set default or start detection
 	if !lp.chargerHasFeature(api.IntegratedDevice) {
 		lp.vehicleDefaultOrDetect()
@@ -884,35 +889,9 @@ func (lp *Loadpoint) syncCharger() error {
 		}
 
 		// sync phases
-		_, isPs := api.Cap[api.PhaseSwitcher](lp.charger)
-		if phases := lp.GetPhases(); isPs && shouldBeConsistent && phases > 0 {
-			// fallback to active phases from measured phases
-			chargerPhases := lp.measuredPhases
-			if chargerPhases == 2 {
-				chargerPhases = 3
-			}
-
-			pg, isPg := api.Cap[api.PhaseGetter](lp.charger)
-			if isPg {
-				if chargerPhases, err = pg.GetPhases(); err == nil {
-					if chargerPhases > 0 && chargerPhases != phases {
-						lp.log.WARN.Printf("charger logic error: phases mismatch (got %d, expected %d)", chargerPhases, phases)
-						lp.SetPhases(chargerPhases)
-					}
-				} else {
-					if errors.Is(err, api.ErrNotAvailable) {
-						return nil
-					}
-					return fmt.Errorf("charger get phases: %w", err)
-				}
-			}
-
-			// use measured phase currents for active phases as fallback if charger does not provide phases
-			if !isPg || errors.Is(err, api.ErrNotAvailable) {
-				if chargerPhases > phases {
-					lp.log.WARN.Printf("charger logic error: phases mismatch (got %d measured, expected %d)", chargerPhases, phases)
-					lp.SetPhases(chargerPhases)
-				}
+		if shouldBeConsistent {
+			if err := lp.syncChargerPhases(); err != nil {
+				return err
 			}
 		}
 
