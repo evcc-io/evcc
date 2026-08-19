@@ -1,120 +1,147 @@
 name: Nightly Build
 permissions:
   contents: read
+  packages: write
 
 on:
   schedule: # runs on the default branch: master
-    - cron: "0 2 * * *" # run at 2 AM UTC
+    - cron: "10 20 * * *" # run at 6:10 AM
   workflow_dispatch:
 
 jobs:
-  check_date:
-    runs-on: depot-ubuntu-24.04-arm
-    name: Check latest commit
+  # check_date:
+  #   runs-on: ubuntu-latest
+  #   name: Check latest commit
+  #   outputs:
+  #     should_run: ${{ steps.should_run.outputs.should_run }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: print latest_commit
+  #       run: echo ${{ github.sha }}
 
+  #     - id: should_run
+  #       continue-on-error: true
+  #       name: check latest commit is less than a day
+  #       if: ${{ github.event_name == 'schedule' }}
+  #       run: test -z $(git rev-list  --after="24 hours" ${{ github.sha }}) && echo "should_run=false" >> $GITHUB_OUTPUT
+
+  # call-build-workflow:
+  #   name: Call Build
+  #   needs: check_date
+  #   if: |
+  #     ${{ needs.check_date.outputs.should_run != 'false' }}
+  #     && startsWith(github.ref, 'refs/heads/master')
+  #     && ! contains(github.head_ref, 'refs/heads/chore/')
+  #   uses: evcc-io/evcc/.github/workflows/default.yml@master
+
+  # Preflight guards the nightly build against a broken upstream sync.
+  # The docker job below builds evcc-master with our master merged in; when the
+  # fork's patches no longer merge cleanly into the latest upstream, that merge
+  # conflicts. Instead of publishing a half-merged (broken) :nightly image, we:
+  #   1. open a resolve/upstream-<date> PR the first time the conflict appears, and
+  #   2. pause the nightly build until that PR is merged (no more churn/broken images).
+  preflight:
+    name: Check upstream merge
+    runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write # push the resolve/upstream-* snapshot branch
+      pull-requests: write # open the resolution PR
     outputs:
-      should_run: ${{ steps.should_run.outputs.should_run }}
+      proceed: ${{ steps.decide.outputs.proceed }}
     steps:
       - uses: actions/checkout@v7
         with:
-          persist-credentials: false
-      - name: print latest_commit
-        run: echo ${{ github.sha }}
+          ref: refs/heads/evcc-master
+          fetch-depth: 0
+          token: ${{ secrets.EVCC_PAT }}
 
-      - id: should_run
-        continue-on-error: true
-        name: check latest commit is less than a day
-        if: ${{ github.event_name == 'schedule' }}
-        run: test -z $(git rev-list  --after="24 hours" ${{ github.sha }}) && echo "should_run=false" >> $GITHUB_OUTPUT
+      - name: Set up Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
 
-  call-build-workflow:
-    name: Call Build
-    needs: check_date
-    if: |
-      needs.check_date.outputs.should_run != 'false'
-      && startsWith(github.ref, 'refs/heads/master')
-      && ! contains(github.head_ref, 'refs/heads/chore/')
-    uses: evcc-io/evcc/.github/workflows/default.yml@master
-    permissions:
-      contents: read
-      actions: write
+      - name: Pause if a resolution PR is already open
+        id: guard
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # PR create/list needs the workflow token's pull-requests:write (EVCC_PAT can push but not open PRs)
+        run: |
+          open=$(gh pr list --repo "$GITHUB_REPOSITORY" --base master --state open \
+            --json headRefName --jq '[.[] | select(.headRefName | startswith("resolve/upstream-"))] | length')
+          if [ "$open" -gt 0 ]; then
+            echo "::notice::An open resolve/upstream-* PR exists — nightly build paused until it is merged."
+            echo "blocked=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "blocked=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Detect merge conflict (master -> evcc-master)
+        id: merge
+        if: steps.guard.outputs.blocked != 'true'
+        run: |
+          if git merge origin/master --no-commit --no-ff; then
+            # clean (or already up to date): abort the in-progress merge; the
+            # docker job re-merges for the actual build
+            git merge --abort 2>/dev/null || true
+            echo "conflict=false" >> "$GITHUB_OUTPUT"
+          else
+            git merge --abort
+            echo "conflict=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open resolution branch + PR on conflict
+        if: steps.guard.outputs.blocked != 'true' && steps.merge.outputs.conflict == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # PR create/list needs the workflow token's pull-requests:write (EVCC_PAT can push but not open PRs)
+        run: |
+          branch="resolve/upstream-$(date -u +%Y%m%d)"
+          echo "::warning::master no longer merges cleanly into evcc-master — opening ${branch} for manual resolution and skipping the build."
+          # snapshot the current evcc-master (the upstream code that won't merge)
+          git push origin "HEAD:refs/heads/${branch}" --force
+          if [ "$(gh pr list --repo "$GITHUB_REPOSITORY" --base master --head "${branch}" --state open --json number --jq 'length')" -eq 0 ]; then
+            gh pr create --repo "$GITHUB_REPOSITORY" --base master --head "${branch}" \
+              --title "Nightly: resolve upstream merge conflict ($(date -u +%Y-%m-%d))" \
+              --body $'The nightly build could not merge `master` into `evcc-master`; the upstream sync needs manual conflict resolution.\n\nThis branch snapshots `evcc-master` (the upstream code that failed to merge). Resolve the conflicts against `master` — keep the fork patches (e.g. the `PMaxImp` hard grid-import cap and the optimizer features) — then merge this PR.\n\n**Nightly Docker builds are paused until a `resolve/upstream-*` PR is merged.**'
+          else
+            echo "resolution PR already open for ${branch}"
+          fi
+
+      - name: Decide whether to build
+        id: decide
+        run: |
+          if [ "${{ steps.guard.outputs.blocked }}" = "true" ] || [ "${{ steps.merge.outputs.conflict }}" = "true" ]; then
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
+          fi
 
   docker:
-    needs:
-      - call-build-workflow
-    uses: ./.github/workflows/nightly-docker.yml
-    permissions:
-      contents: read
-      actions: read
-    secrets: inherit
-
-  hassio:
-    name: Hassio Addon :nightly
-    needs:
-      - docker
-    runs-on: depot-ubuntu-24.04-arm
-
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          repository: evcc-io/hassio-addon
-          token: ${{ secrets.HASSIO_DEPLOY_TOKEN }}
-          path: ./hassio
-
-      - name: Update version
-        run: |
-          current_date=$(date +%Y%m%d)
-          short_sha=$(echo "${{ github.sha }}" | cut -c 1-7)
-          sed -i -e "s/version:.*/version: nightly.${current_date}-${short_sha}/" ./hassio/evcc-nightly/config.yaml
-
-      - name: Push
-        run: |
-          cd ./hassio
-          git add .
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git commit -am "Mirror evcc nightly release"
-          git push
-
-  hassio-changelog:
-    name: Update Hassio Nightly Changelog
-    needs:
-      - hassio
-    uses: ./.github/workflows/hassio-changelog.yml
-    with:
-      addon_path: evcc-nightly
-      include_unreleased: true
-    secrets: inherit
-
-  apt:
-    name: Publish APT nightly
-    needs:
-      - call-build-workflow
-    runs-on: depot-ubuntu-24.04-arm
+    name: Publish Docker :nightly
+    needs: preflight
+    if: needs.preflight.outputs.proceed == 'true'
+    runs-on: ubuntu-latest
 
     permissions:
       contents: read
       actions: read
+      packages: write
 
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: refs/heads/evcc-master # force master
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: actions/setup-go@v7
-        with:
-          go-version-file: go.mod
-        id: go
+      - name: Set up Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
 
-      - name: Patch ASN1
-        run: make patch-asn1-sudo
+      - name: Merge our master branch into evcc-master for building
+        run: |
+          git merge origin/master --no-commit --no-ff
+          git reset -- .github/workflows
+          git commit -m "merge from evcc/master" || true
 
       - name: Get dist from cache
         uses: actions/cache/restore@v6
@@ -123,22 +150,46 @@ jobs:
           path: dist
           key: ${{ runner.os }}-${{ github.sha }}-dist
 
-      - name: Create nightly build
-        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94 # v7
+      - name: Login
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4
         with:
-          version: '~> v2'
-          args: --snapshot -f .goreleaser-nightly.yml --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/setup-python@v6
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
+
+      - name: Define tags
+        id: meta
+        uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9 # v6
         with:
-          python-version: 3.12
+          images: ghcr.io/jeffborg/evcc
+          tags: |
+            type=raw,value=nightly
+            type=raw,value=nightly.{{date 'YYYYMMDD'}}-{{sha}}
 
-      - name: Install Cloudsmith CLI
-        run: pip install cloudsmith-cli==1.16.0
+      - name: Publish
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64,linux/arm/v6
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Publish .deb to Cloudsmith
+      - name: Delete old nightly.* tags from GHCR
         env:
-          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-        run: make apt-nightly
+          GHCR_USERNAME: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Or use a PAT with 'write:packages' scope
+        run: |
+          repo="ghcr.io/jeffborg/evcc"
+          tags=$(curl -s -H "Authorization: Bearer $GHCR_TOKEN" "https://api.github.com/users/jeffborg/packages/container/evcc/versions" | jq -r '.[] | select(.metadata.container.tags[] | startswith("nightly.")) | {id: .id, updated_at: .updated_at} | @base64')
+
+          sorted_tags=$(echo "$tags" | base64 --decode | jq -s 'sort_by(.updated_at) | reverse | .[2:]')
+
+          for tag in $(echo "$sorted_tags" | jq -r '.[].id'); do
+            echo "Deleting tag ID: $tag"
+            curl -s -X DELETE -H "Authorization: Bearer $GHCR_TOKEN" "https://api.github.com/users/jeffborg/packages/container/evcc/versions/$tag"
+          done

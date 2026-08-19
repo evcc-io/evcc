@@ -15,7 +15,7 @@ on:
 jobs:
   update-changelog:
     name: Update Hassio Changelog
-    runs-on: depot-ubuntu-24.04-arm
+    runs-on: ubuntu-24.04
 
     # release asset uploads fire repeated `edited` events, serialize to avoid racing pushes
     concurrency:

@@ -3,7 +3,7 @@
 		<div>
 			<ChargingPlanRepeatingSettings
 				:showHeader="index === 0"
-				:number="index + 2"
+				:number="index + startNumber"
 				class="mb-4"
 				:formIdPrefix="formIdPrefix"
 				v-bind="plan"
@@ -47,6 +47,7 @@ export default defineComponent({
 	props: {
 		id: [Number, String],
 		rangePerSoc: Number,
+		startNumber: { type: Number, default: 2 }, // loadpoint repeating plans follow the static plan (#1)
 		plans: { type: Array as PropType<RepeatingPlan[]>, default: () => [] },
 	},
 	emits: ["updated"],

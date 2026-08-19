@@ -28,7 +28,10 @@
 				<div
 					class="slot-bar"
 					:style="valueStyle(slot.value)"
-					:class="{ unknown: slot.value === undefined && avgValue }"
+					:class="{
+						unknown: slot.value === undefined && avgValue,
+						clipped: isClipped(slot.value),
+					}"
 				></div>
 				<div class="slot-label">
 					<span v-if="slot.start.getMinutes() === 0 && slot.start.getHours() % 2 === 0">{{
@@ -63,6 +66,7 @@ import "@h2d2/shopicons/es/regular/arrowright";
 import { is12hFormat } from "@/units";
 import PlanEndIcon from "../MaterialIcon/PlanEnd.vue";
 import formatter from "@/mixins/formatter";
+import { robustPriceMax, PRICE_SPIKE_CLIP } from "@/utils/robustPriceMax";
 import type { Slot } from "@/types/evcc";
 const BAR_WIDTH = 8;
 
@@ -89,16 +93,17 @@ export default defineComponent({
 	},
 	computed: {
 		valueInfo() {
-			let max = Number.MIN_VALUE;
-			let min = 0;
-			this.slots
+			const values = this.slots
 				.map((s) => s.value)
-				.filter((value) => value !== undefined)
-				.forEach((value) => {
-					max = Math.max(max, value);
-					min = Math.min(min, value);
-				});
-			return { min, range: max - min };
+				.filter((value): value is number => value !== undefined);
+			let min = 0;
+			values.forEach((value) => {
+				min = Math.min(min, value);
+			});
+			// clip prices above the spike threshold so they don't flatten the
+			// everyday range; spike bars clip at full height (see valueStyle)
+			const max = values.length ? robustPriceMax(values, { threshold: PRICE_SPIKE_CLIP }) : 0;
+			return { min, max, range: max - min || 1 };
 		},
 		targetLeft() {
 			return `${(this.targetOffset / 0.25) * BAR_WIDTH}px`;
@@ -152,11 +157,15 @@ export default defineComponent({
 		},
 		valueStyle(value: number | undefined) {
 			const val = value === undefined ? this.avgValue : value;
-			const height =
-				value !== undefined && !isNaN(val)
-					? `${10 + (90 / this.valueInfo.range) * (val - this.valueInfo.min)}%`
-					: "50%";
-			return { height };
+			if (value === undefined || isNaN(val)) {
+				return { height: "50%" };
+			}
+			const raw = 10 + (90 / this.valueInfo.range) * (val - this.valueInfo.min);
+			// clip spikes above the robust max to full height
+			return { height: `${Math.min(100, raw)}%` };
+		},
+		isClipped(value: number | undefined) {
+			return value !== undefined && value > this.valueInfo.max;
 		},
 		startLongPress(index: number) {
 			this.longPressTimer = setTimeout(() => {
@@ -249,6 +258,27 @@ export default defineComponent({
 	justify-content: center;
 	color: var(--bs-white);
 	transition: height var(--evcc-transition-fast) ease-in;
+}
+/* hatched cap marks a spike clipped above the chart's robust max */
+.slot-bar.clipped {
+	position: relative;
+}
+.slot-bar.clipped::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 4px;
+	border-radius: 2px 2px 0 0;
+	background: repeating-linear-gradient(
+		-45deg,
+		var(--bs-white) 0,
+		var(--bs-white) 1px,
+		transparent 1px,
+		transparent 3px
+	);
+	opacity: 0.7;
 }
 .slot-bar.unknown {
 	opacity: 0.33;

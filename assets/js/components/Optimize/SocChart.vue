@@ -10,6 +10,7 @@
 						? 'chart-container-small-with-labels'
 						: 'chart-container-small'
 				"
+				@mouseleave="emitHoverIndex(null)"
 			>
 				<Chart
 					:ref="`chartRef${index}`"
@@ -42,6 +43,7 @@ import type { CURRENCY, BatteryDetail } from "@/types/evcc";
 import formatter from "@/mixins/formatter";
 import colors from "@/colors";
 import "../Sessions/chartConfig";
+import { syncChartTooltip } from "./chartSync";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, ChartLegendPlugin);
 
@@ -72,9 +74,33 @@ export default defineComponent({
 			type: Array as PropType<string[]>,
 			default: () => [],
 		},
+		activeIndex: {
+			type: Number as PropType<number | null>,
+			default: null,
+		},
 	},
+	emits: ["hover-index"],
 	computed: {},
+	watch: {
+		activeIndex() {
+			this.syncTooltips();
+		},
+	},
 	methods: {
+		getChart(batteryIndex: number) {
+			const chartRefs = this.$refs[`chartRef${batteryIndex}`] as
+				| Array<{ chart?: ChartJS } | undefined>
+				| undefined;
+			return chartRefs?.[0]?.chart;
+		},
+		emitHoverIndex(index: number | null) {
+			this.$emit("hover-index", index);
+		},
+		syncTooltips() {
+			this.batteryDetails.forEach((_battery, index) => {
+				syncChartTooltip(this.getChart(index), this.activeIndex);
+			});
+		},
 		getTimeLabels(): string[] {
 			const startTime = new Date(this.timestamp);
 			return this.evopt.req.time_series.dt.map((_, index) => {
@@ -129,6 +155,9 @@ export default defineComponent({
 				interaction: {
 					mode: "index",
 					intersect: false,
+				},
+				onHover: (_event, activeElements) => {
+					this.emitHoverIndex(activeElements[0]?.index ?? null);
 				},
 				plugins: {
 					title: { display: false },

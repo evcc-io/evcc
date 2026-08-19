@@ -200,6 +200,10 @@ components:
         batteryGridDischarge:
           description: Home battery is allowed to discharge to the grid (experimental).
           type: boolean
+        optimizerManualPA:
+          description: Optional manual p_a override for the optimizer (currency/kWh).
+          type: number
+          nullable: true
         solarAdjusted:
           description: Solar forecast is adjusted to real production data (experimental).
           type: boolean
@@ -210,6 +214,12 @@ components:
         batteryGridChargeActive:
           description: Home battery is currently charged from grid.
           type: boolean
+        batteryOptimizerSocGoals:
+          description: Recurring optimizer battery SoC reserve goals.
+          type: array
+          nullable: true
+          items:
+            $ref: "#/components/schemas/RepeatingPlan"
         smartCostAvailable:
           description: A dynamic grid price or CO₂ forecast is configured.
           type: boolean
