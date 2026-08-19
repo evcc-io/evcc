@@ -6,8 +6,13 @@ import (
 	"time"
 )
 
-// GetNextOccurrence returns the next occurrence of the given time on the specified weekdays.
+// GetNextOccurrence returns the next occurrence of the given time on the specified weekdays starting from the current time.
 func GetNextOccurrence(weekdays []int, timeStr string, tz string) (time.Time, error) {
+	return GetNextOccurrenceAt(time.Now(), weekdays, timeStr, tz)
+}
+
+// GetNextOccurrenceAt returns the next occurrence of the given time on the specified weekdays starting from the provided reference time.
+func GetNextOccurrenceAt(from time.Time, weekdays []int, timeStr string, tz string) (time.Time, error) {
 	loc, err := time.LoadLocation(tz)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("invalid timezone: %w", err)
@@ -20,15 +25,15 @@ func GetNextOccurrence(weekdays []int, timeStr string, tz string) (time.Time, er
 
 	hour, minute := parsedTime.Hour(), parsedTime.Minute()
 
-	now := time.Now().In(loc)
+	from = from.In(loc)
 
 	target := time.Date(
-		now.Year(), now.Month(), now.Day(),
+		from.Year(), from.Month(), from.Day(),
 		hour, minute, 0, 0, loc,
 	)
 
 	// If the target time has passed today, start from tomorrow
-	if target.Before(now) {
+	if target.Before(from) {
 		target = target.AddDate(0, 0, 1)
 	}
 

@@ -32,6 +32,7 @@ type vehicleStruct struct {
 	Plan           *planStruct         `json:"plan,omitempty"`
 	RepeatingPlans []api.RepeatingPlan `json:"repeatingPlans"`
 	PlanStrategy   api.PlanStrategy    `json:"planStrategy"`
+	PausedUntil    *time.Time          `json:"pausedUntil,omitempty"`
 }
 
 // publishVehicles returns a list of vehicle titles
@@ -55,6 +56,11 @@ func (site *Site) publishVehicles() {
 			}
 		}
 
+		var pausedUntil *time.Time
+		if ts := v.GetPausedUntil(); !ts.IsZero() {
+			pausedUntil = &ts
+		}
+
 		res[v.Name()] = vehicleStruct{
 			Title:          instance.GetTitle(),
 			Icon:           instance.Icon(),
@@ -70,6 +76,7 @@ func (site *Site) publishVehicles() {
 			Plan:           plan,
 			RepeatingPlans: v.GetRepeatingPlans(),
 			PlanStrategy:   v.GetPlanStrategy(),
+			PausedUntil:    pausedUntil,
 		}
 
 		// publish effective plan strategy immediately for soc-based planning

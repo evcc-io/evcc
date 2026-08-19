@@ -1313,6 +1313,8 @@
         "continuousPriceDescription": "Wählt die günstigste unterbrechungsfreie Folge von Zeitfenstern.",
         "label": "Optimierung"
       },
+      "pause": "Pause",
+      "pausedUntil": "Pausiert bis {time}",
       "planNumber": "Plan {number}",
       "precondition": {
         "description": "Verlagert einen Teil des Ladens direkt vor die Abfahrt: warme Batterie, weniger Zeit mit hohem Ladestand.",
@@ -1321,9 +1323,17 @@
         "optionNo": "nein",
         "summary": "{precondition} vorher"
       },
+      "preset24h": "+24 Stunden",
+      "preset48h": "+48 Stunden",
+      "preset7d": "+7 Tage",
+      "presetCustom": "Benutzerdefiniert…",
+      "presetFriday": "Bis Freitag 18:00",
+      "presetSunday": "Bis Sonntag 18:00",
+      "presetTomorrow": "Bis morgen 10:00",
       "remove": "Entfernen",
       "repeating": "wiederholend",
       "repeatingPlans": "Wiederholende Pläne",
+      "resume": "Fortsetzen",
       "selectAll": "Alle wählen",
       "strategy": {
         "label": "Strategie"
