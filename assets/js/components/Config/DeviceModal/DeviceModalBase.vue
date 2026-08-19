@@ -245,7 +245,6 @@ import {
 	type ModbusCapability,
 	type ApiData,
 	applyDefaultsFromTemplate,
-	coerceServiceValue,
 	createDeviceUtils,
 	fetchServiceValues,
 	ADMIN_PASSWORD_REQUIRED,
@@ -919,7 +918,7 @@ export default defineComponent({
 			if (values?.length === 1 && !this.values[paramName] && param?.Required) {
 				// debounced auto-fill must not mark a clean form dirty
 				const wasClean = !this.dirty;
-				this.values[paramName] = coerceServiceValue(param, values[0]);
+				this.values[paramName] = values[0];
 				if (wasClean) {
 					this.rebaseline();
 				}

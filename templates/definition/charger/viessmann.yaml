@@ -150,7 +150,6 @@ params:
   - name: measurements
     required: true
     type: bool
-    default: false
     service: viessmann/measurements?clientid={clientid}&redirecturi={redirecturi}&gateway_serial={gateway_serial}&installation_id={installation_id}&device_id={device_id}
     description:
       de: Leistungs- und Temperaturwerte auslesen

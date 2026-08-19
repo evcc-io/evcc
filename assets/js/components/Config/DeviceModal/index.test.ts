@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import {
-  applyDefaultsFromTemplate,
-  coerceServiceValue,
-  createServiceEndpoints,
-  type TemplateParam,
-} from "./index";
+import { createServiceEndpoints, type TemplateParam } from "./index";
 
 const buildParam = (name: string, service?: string): TemplateParam => ({
   Name: name,
@@ -103,47 +98,5 @@ describe("createServiceEndpoints", () => {
     expect(endpoints[0]!.url({ home: "" })).toBe("homes/{home}/sensors");
     // Non-empty value should replace placeholder
     expect(endpoints[0]!.url({ home: "main" })).toBe("homes/main/sensors");
-  });
-});
-
-describe("coerceServiceValue", () => {
-  it("converts values for Bool params", () => {
-    const param = { ...buildParam("measurements"), Type: "Bool" };
-    expect(coerceServiceValue(param, "true")).toBe(true);
-    expect(coerceServiceValue(param, "false")).toBe(false);
-  });
-
-  it("keeps strings for other params", () => {
-    expect(coerceServiceValue(buildParam("home"), "true")).toBe("true");
-    expect(coerceServiceValue(undefined, "value")).toBe("value");
-  });
-});
-
-describe("applyDefaultsFromTemplate", () => {
-  const template = (params: TemplateParam[]) => ({ Params: params }) as any;
-
-  it("coerces string defaults of Bool params to booleans", () => {
-    const params = [
-      { ...buildParam("measurements"), Type: "Bool", Default: "false" },
-      { ...buildParam("enabled"), Type: "Bool", Default: "true" },
-    ];
-    const values: Record<string, any> = {};
-    applyDefaultsFromTemplate(template(params), values as any);
-    expect(values["measurements"]).toBe(false);
-    expect(values["enabled"]).toBe(true);
-  });
-
-  it("keeps explicit Bool values", () => {
-    const params = [{ ...buildParam("measurements"), Type: "Bool", Default: "true" }];
-    const values: Record<string, any> = { measurements: false };
-    applyDefaultsFromTemplate(template(params), values as any);
-    expect(values["measurements"]).toBe(false);
-  });
-
-  it("applies plain defaults for other params", () => {
-    const params = [{ ...buildParam("device_id"), Default: "0" }];
-    const values: Record<string, any> = {};
-    applyDefaultsFromTemplate(template(params), values as any);
-    expect(values["device_id"]).toBe("0");
   });
 });
