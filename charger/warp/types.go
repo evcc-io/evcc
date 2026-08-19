@@ -66,8 +66,9 @@ type Name struct {
 
 // WARP4 only: vehicle data read via ISO 15118; soc is null and mac is empty while unknown
 type EvState struct {
-	Soc *float64 `json:"soc"`
-	Mac string   `json:"mac"`
+	Soc      *float64 `json:"soc"`
+	Mac      string   `json:"mac"`
+	Capacity *float64 `json:"capacity"`
 }
 
 type FloatWithNaN float64
