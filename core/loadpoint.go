@@ -561,7 +561,7 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	// soc update reset
 	lp.socUpdated = time.Time{}
 
-	// charger may have reconfigured phases internally while disconnected (#32957)
+	// charger may have reconfigured phases internally while disconnected
 	if err := lp.syncChargerPhases(); err != nil {
 		lp.log.ERROR.Println(err)
 	}
