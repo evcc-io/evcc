@@ -1,0 +1,35 @@
+template: steca
+products:
+  - brand: Steca
+    description:
+      generic: StecaCharger
+capabilities: ["iso151182", "mA", "rfid", "1p3p", "meter", "dim"]
+requirements:
+  description:
+    de: |
+      Das PV-Überschussladen der Wallbox muss deaktiviert sein (Ladeverwaltung -> Ladeeinstellungen -> PV-Überschussladen aus).
+
+      Für Phasenumschaltung und RFID-Identifikation werden IP-Adresse und Techniker-Passwort benötigt. Die Phasenumschaltung sollte in der Wallbox aktiviert werden (Ladeverwaltung -> Ladeeinstellungen).
+    en: |
+      The wallbox PV surplus charging must be disabled (Charging management -> Charging settings -> PV surplus charging off).
+
+      Phase switching and RFID identification require the IP address and technician password. Phase switching should be enabled in the wallbox settings (Charging management -> Charging settings).
+params:
+  - preset: eebus
+  - name: ip
+    help:
+      de: IP-Adresse der Wallbox. Erforderlich für Phasenumschaltung und RFID-Identifikation.
+      en: IP address of the wallbox. Required for phase switching and RFID identification.
+  - name: password
+    help:
+      de: Techniker-Passwort. Erforderlich für Phasenumschaltung und RFID-Identifikation.
+      en: Technician password. Required for phase switching and RFID identification.
+render: |
+  type: ghosteebus
+  ski: {{ .ski }}
+  ip: {{ .ip }}
+  meter: true
+  {{- if .password }}
+  user: technician
+  password: {{ .password }}
+  {{- end }}
