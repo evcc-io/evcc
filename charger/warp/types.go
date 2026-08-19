@@ -27,11 +27,16 @@ type EvsePhaseAutoSwitch struct {
 	Enabled bool `json:"enabled"`
 }
 
+type EvseLowLevelState struct {
+	Uptime uint32 `json:"uptime"`
+}
+
 type Evse struct {
 	State           EvseState
 	ExternalCurrent EvseExternalCurrent
 	UserCurrent     EvseExternalCurrent
 	UserEnabled     EvseUserEnabled
+	LowLevelState   EvseLowLevelState
 }
 
 type MeterValues struct {
@@ -78,6 +83,8 @@ type FloatWithNaN float64
 
 type ChargeTrackerCurrentCharge struct {
 	UserId            int          `json:"user_id"`
+	EvseUptimeStart   uint32       `json:"evse_uptime_start"`
+	TimestampMinutes  int          `json:"timestamp_minutes"`
 	MeterStart        FloatWithNaN `json:"meter_start"`
 	AuthorizationInfo struct {
 		TagType int    `json:"tag_type"`

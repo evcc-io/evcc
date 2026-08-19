@@ -267,6 +267,8 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 		err = json.Unmarshal(payload, &w.evse.UserEnabled)
 	case "evse/state":
 		err = json.Unmarshal(payload, &w.evse.State)
+	case "evse/low_level_state":
+		err = json.Unmarshal(payload, &w.evse.LowLevelState)
 	case "evse/phase_auto_switch":
 		// Phase Auto Switching needs to be disabled WARP2 or newer
 		// Necessary if charging 1p only vehicles
@@ -536,6 +538,51 @@ func (w *WarpWS) chargedEnergy() (float64, error) {
 	}
 
 	return now - start, nil
+}
+
+// ChargeDuration implements the api.ChargeTimer interface
+func (w *WarpWS) ChargeDuration() (time.Duration, error) {
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+
+	// Time-keeping is hard.
+	// Older WARP firmwares supported only <= 32 bit datatypes on the API.
+	// Thus the start unix timestamp is an int32 in *minutes*.
+	// Also if the wall-clock time was unknown when the charge started, the timestamp is 0.
+	// (For example when the NTP sync failed)
+	//
+	// We can rely on the EVSE uptime instead, but this also is a 32 bit int in milliseconds.
+	// It will overflow after ~ 50 days.
+	// Also the EVSE clock does drift a bit.
+	//
+	// If the wall-clock time at charge start is unknown, we don't report anything.
+	// If the charge start (based on the wall-clock time) was more than two hours ago, report the wall-clock duration.
+	//   In that case it's probably fine that we jump up to 59 seconds.
+	// If it was less than two hours ago, use the EVSE's clock.
+
+	if w.chargeTracker.UserId == -1 {
+		// Currently not charging.
+		// TODO: is this an error or shall we return 0, nil here?
+		return 0, api.ErrNotAvailable
+	}
+
+	if w.chargeTracker.TimestampMinutes == 0 {
+		return 0, api.ErrNotAvailable
+	}
+	var wallclock_duration = time.Now().Sub(time.Unix(int64(w.chargeTracker.TimestampMinutes)*60, 0))
+
+	if wallclock_duration.Hours() > 2 {
+		return wallclock_duration, nil
+	}
+
+	var evse_duration_ms uint32
+
+	if w.evse.LowLevelState.Uptime >= w.chargeTracker.EvseUptimeStart {
+		evse_duration_ms = w.evse.LowLevelState.Uptime - w.chargeTracker.EvseUptimeStart
+	} else {
+		evse_duration_ms = w.chargeTracker.EvseUptimeStart - w.evse.LowLevelState.Uptime
+	}
+	return time.Duration(int64(evse_duration_ms) * 1000 * 1000), nil
 }
 
 func (w *WarpWS) setCurrent(curr int64) error {
