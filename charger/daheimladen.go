@@ -108,6 +108,9 @@ func NewDaheimLaden(ctx context.Context, settings modbus.TcpSettings, phases boo
 		phases: 3,  // assume 3p
 	}
 
+    // First Modbus read must be minimal (1 register) to avoid errors after charger reboot
+    // when no sponsor token is present. `checkStation` reads 22 registers and is intentionally
+    // called later.
 	// get initial state from charger
 	curr, err := wb.getCurrent()
 	if err != nil {
