@@ -55,6 +55,9 @@ const (
 	MvidVoltageL1 Mvid = 1
 	MvidVoltageL2 Mvid = 2
 	MvidVoltageL3 Mvid = 3
+	MvidPowerL1   Mvid = 39
+	MvidPowerL2   Mvid = 48
+	MvidPowerL3   Mvid = 57
 )
 
 type Name struct {
