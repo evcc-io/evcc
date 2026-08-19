@@ -1449,8 +1449,15 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
 		}
 
+		// while charging, scaling down only helps if 1p is sustainable, otherwise it
+		// merely delays the pv disable timer by the phase timer duration
+		useful := !lp.enabled || !lp.charging() || powerToCurrent(availablePower, 1) >= minCurrent
+		if insufficient && !useful {
+			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min 1p threshold, disabling instead of scaling down", availablePower, Voltage*minCurrent)
+		}
+
 		// scaling down also frees load management headroom for min power on activePhases
-		scalable = insufficient || !lp.circuitAllowsPhases(activePhases, minCurrent)
+		scalable = insufficient && useful || !lp.circuitAllowsPhases(activePhases, minCurrent)
 	}
 
 	// scale down phases
