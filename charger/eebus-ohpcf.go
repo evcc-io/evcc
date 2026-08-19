@@ -101,8 +101,7 @@ func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost ti
 	}
 
 	if err := c.connector.Wait(ctx); err != nil {
-		// keep ski trusted, the device stays configured
-		inst.UnsubscribeDevice(ski, c)
+		inst.UnregisterDeviceKeepTrust(ski, c)
 		return nil, err
 	}
 

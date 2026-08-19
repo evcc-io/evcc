@@ -77,10 +77,10 @@ func TestUnregisterDevice_MutexNotHeldDuringShipCall(t *testing.T) {
 	c.UnregisterDevice("aabbcc", dev)
 }
 
-// TestUnsubscribeDeviceKeepsTrust guards that a device that could not connect
-// does not revoke the trust its configuration established- the remote service
-// must still be able to connect once it comes up.
-func TestUnsubscribeDeviceKeepsTrust(t *testing.T) {
+// TestUnregisterDeviceKeepTrust guards that a device that could not connect does
+// not revoke the trust its configuration established- the remote service must
+// still be able to connect once it comes up.
+func TestUnregisterDeviceKeepTrust(t *testing.T) {
 	dev := &mockDevice{}
 	c := &EEBus{
 		log:     util.NewLogger("test"),
@@ -88,7 +88,7 @@ func TestUnsubscribeDeviceKeepsTrust(t *testing.T) {
 		service: eebusmocks.NewServiceInterface(t), // no UnregisterRemoteService expected
 	}
 
-	c.UnsubscribeDevice("aabbcc", dev)
+	c.UnregisterDeviceKeepTrust("aabbcc", dev)
 
 	require.NotContains(t, c.clients, "aabbcc")
 }

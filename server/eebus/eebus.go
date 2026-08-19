@@ -445,15 +445,19 @@ func (c *EEBus) UnregisterDevice(ski string, device Device) {
 	c.unregisterDevice(ski, device, false)
 }
 
-// UnsubscribeDevice unsubscribes device but keeps ski trusted. The device remains
+// UnregisterDeviceKeepTrust unsubscribes device but keeps ski trusted. The device remains
 // configured, so the remote service must still be able to connect later.
-func (c *EEBus) UnsubscribeDevice(ski string, device Device) {
+func (c *EEBus) UnregisterDeviceKeepTrust(ski string, device Device) {
 	c.unregisterDevice(ski, device, true)
 }
 
 func (c *EEBus) unregisterDevice(ski string, device Device, keepTrust bool) {
 	ski = shiputil.NormalizeSKI(ski)
-	c.log.TRACE.Printf("unregistering ski: %s", ski)
+	if keepTrust {
+		c.log.TRACE.Printf("unregistering device for ski: %s, keeping trust", ski)
+	} else {
+		c.log.TRACE.Printf("unregistering ski: %s", ski)
+	}
 
 	c.mux.Lock()
 	if idx := slices.Index(c.clients[ski], device); idx != -1 {

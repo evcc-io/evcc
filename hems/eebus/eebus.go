@@ -122,8 +122,7 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 	}
 
 	if err := c.Wait(ctx); err != nil {
-		// keep ski trusted, the device stays configured
-		inst.UnsubscribeDevice(ski, c)
+		inst.UnregisterDeviceKeepTrust(ski, c)
 		return nil, err
 	}
 
