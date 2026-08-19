@@ -3,6 +3,7 @@ products:
   - brand: Sungrow
     description:
       generic: SG Series Inverter
+capabilities: ["curtail"]
 params:
   - name: usage
     choice: ["grid", "pv"]
@@ -56,7 +57,7 @@ render: |
     source: sequence
     set:
       - source: modbus
-        {{- include "modbus" . | indent 4 }}
+        {{- include "modbus" . | indent 6 }}
         register:
           address: 5007 # Power limitation setting, 0.1 %
           type: writesingle
@@ -70,7 +71,7 @@ render: |
               value: 85 # 0x55
               set:
                 source: modbus
-                {{- include "modbus" . | indent 8 }}
+                {{- include "modbus" . | indent 14 }}
                 register:
                   address: 5006 # Power limitation switch
                   type: writesingle
@@ -80,7 +81,7 @@ render: |
           value: 170 # 0xAA
           set:
             source: modbus
-            {{- include "modbus" . | indent 6 }}
+            {{- include "modbus" . | indent 10 }}
             register:
               address: 5006 # Power limitation switch
               type: writesingle
@@ -92,7 +93,7 @@ render: |
         type: int
         config:
           source: modbus
-          {{- include "modbus" . | indent 6 }}
+          {{- include "modbus" . | indent 8 }}
           register:
             address: 5006
             type: holding
@@ -101,7 +102,7 @@ render: |
         type: int
         config:
           source: modbus
-          {{- include "modbus" . | indent 6 }}
+          {{- include "modbus" . | indent 8 }}
           register:
             address: 5007
             type: holding
