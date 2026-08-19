@@ -9,6 +9,7 @@ params:
   - name: modbus
     choice: ["rs485", "tcpip"]
     baudrate: 9600
+  - name: maxacpower
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -43,4 +44,72 @@ render: |
       address: 5003 # Total power yields, 1 kWh
       type: input
       decode: uint32s
+  maxacpower: {{ .maxacpower }} # W
+  # EEG §9 curtailment via the power limitation registers.
+  # Addresses below are 0-based, i.e. documentation register minus one:
+  #   5006 (doc 5007) power limitation switch, 0xAA enable / 0x55 disable
+  #   5007 (doc 5008) power limitation value, 0.1 % of nominal power
+  # Note the SH hybrid series uses a different map, where doc 5008 is the
+  # internal temperature - do not reuse these addresses there.
+  # Writes must use `writesingle`; `holding` would build a read operation.
+  curtail:
+    source: sequence
+    set:
+      - source: modbus
+        {{- include "modbus" . | indent 4 }}
+        register:
+          address: 5007 # Power limitation setting, 0.1 %
+          type: writesingle
+          decode: uint16
+        scale: 10
+      - source: switch
+        switch:
+          - case: 100 # uncurtailed - disable limitation
+            set:
+              source: const
+              value: 85 # 0x55
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 8 }}
+                register:
+                  address: 5006 # Power limitation switch
+                  type: writesingle
+                  decode: uint16
+        default:
+          source: const
+          value: 170 # 0xAA
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 6 }}
+            register:
+              address: 5006 # Power limitation switch
+              type: writesingle
+              decode: uint16
+  curtailed:
+    source: go
+    in:
+      - name: ena
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 6 }}
+          register:
+            address: 5006
+            type: holding
+            decode: uint16
+      - name: limit
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 6 }}
+          register:
+            address: 5007
+            type: holding
+            decode: uint16
+    script: |
+      percent := 100
+      if ena == 170 {
+        percent = limit / 10
+      }
+      percent
   {{- end }}
