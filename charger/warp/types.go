@@ -77,6 +77,8 @@ type EvState struct {
 type FloatWithNaN float64
 
 type ChargeTrackerCurrentCharge struct {
+	UserId            int          `json:"user_id"`
+	MeterStart        FloatWithNaN `json:"meter_start"`
 	AuthorizationInfo struct {
 		TagType int    `json:"tag_type"`
 		TagId   string `json:"tag_id"`
