@@ -264,9 +264,6 @@ const (
 // The current (partial) day is excluded; returns 1 when there is not enough history.
 //
 // Depends only on completed days, so it's cached instead of recomputed per run.
-//
-// The result only depends on completed days, so it cannot change within a day. It is
-// cached accordingly instead of being recomputed on every optimizer run.
 func (site *Site) solarScale() float64 {
 	scale, err := site.solarScaleCached()
 	if err != nil {

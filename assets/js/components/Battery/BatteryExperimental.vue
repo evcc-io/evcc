@@ -21,6 +21,9 @@
 			:buffer-start-soc="state.bufferStartSoc"
 			:battery-discharge-control="state.batteryDischargeControl"
 			:battery-grid-discharge="state.batteryGridDischarge"
+			:battery-optimizer-soc-goals="state.batteryOptimizerSocGoals || []"
+			:optimizer-manual-p-a="state.optimizerManualPA"
+			:currency="state.currency"
 			:battery="state.battery"
 			:experimental="state.experimental"
 		/>
@@ -117,8 +120,8 @@ export default defineComponent({
 			return this.gridChargePossible || this.gridChargeLimit !== null;
 		},
 		gridChargeTariff() {
-			const { co2, grid } = store.uiForecast.value;
-			return this.state.smartCostType === SMART_COST_TYPE.CO2 ? co2 : grid;
+			const { co2, planner } = store.uiForecast.value;
+			return this.state.smartCostType === SMART_COST_TYPE.CO2 ? co2 : planner;
 		},
 		smartCostLimitProps() {
 			return {

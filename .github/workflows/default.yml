@@ -10,7 +10,7 @@ on:
 jobs:
   clean:
     name: Clean
-    runs-on: depot-ubuntu-24.04-arm
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read
@@ -39,7 +39,7 @@ jobs:
 
   build:
     name: Build
-    runs-on: depot-ubuntu-24.04-arm
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read
@@ -66,7 +66,7 @@ jobs:
 
   test:
     name: Test
-    runs-on: depot-ubuntu-24.04-arm
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read
@@ -86,7 +86,7 @@ jobs:
 
   lint:
     name: Lint
-    runs-on: depot-ubuntu-24.04-arm
+    runs-on: ubuntu-24.04
 
     permissions:
       contents: read
@@ -117,7 +117,7 @@ jobs:
     permissions:
       contents: read
       actions: write
-    runs-on: depot-ubuntu-24.04-arm
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v7
@@ -131,15 +131,6 @@ jobs:
 
       - name: Install
         run: make install-ui
-
-      - name: Restore vp task cache
-        id: vp-cache
-        uses: actions/cache/restore@v6
-        with:
-          path: node_modules/.vite/task-cache
-          key: ${{ runner.os }}-${{ runner.arch }}-vp-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-vp-
 
       - name: OpenAPI
         # backport release tags may not have the openapi target yet
@@ -157,18 +148,9 @@ jobs:
       - name: Build UI
         run: make ui
 
-      - name: Save vp task cache
-        # avoid cache thrashing by nightly and pull requests
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        uses: actions/cache/save@v6
-        with:
-          path: node_modules/.vite/task-cache
-          key: ${{ steps.vp-cache.outputs.cache-primary-key }}
-
       - name: Cache dist
-        # only the release and nightly builds consume this, both keyed by the
-        # master or tag sha. Pull request entries would never be restored
-        if: github.event_name == 'push'
+        # avoid cache thrashing by nightly
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
         uses: actions/cache/save@v6
         id: cache-dist
         with:
@@ -181,7 +163,12 @@ jobs:
 
   integration:
     name: Integration
-    runs-on: depot-ubuntu-24.04-arm-32
+    runs-on: ubuntu-24.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
 
     permissions:
       contents: read
@@ -202,20 +189,8 @@ jobs:
           node-version: "26"
           cache: true
 
-      - name: Install
-        run: make install-ui
-
-      - name: Restore vp task cache
-        # restore only, the UI job owns saving the cache
-        uses: actions/cache/restore@v6
-        with:
-          path: node_modules/.vite/task-cache
-          key: ${{ runner.os }}-${{ runner.arch }}-vp-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-vp-
-
       - name: Build UI
-        run: make ui
+        run: make install-ui ui
 
       - name: Build Go
         run: make build
@@ -244,111 +219,23 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
 
       - name: Run tests
-        run: vpx playwright test
+        run: npx playwright test --shard=${{ matrix.shard }}/4 --workers=3 --reporter=blob,html
         timeout-minutes: 20
         env:
           TZ: Europe/Berlin
 
-      - name: Upload Playwright Report
+      - name: Upload HTML report
         uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.shard }}
           path: playwright-report/
           retention-days: 14
 
-      - name: Upload Playwright Raw Test Results
+      - name: Upload blob report
         uses: actions/upload-artifact@v7
-        if: failure()
+        if: ${{ !cancelled() }}
         with:
-          name: playwright-test-results
-          path: test-results/
-          retention-days: 2
-
-  # fork pull requests cannot use Depot's cache and fall back to the GitHub one,
-  # which only master can seed for them. Must not run on a Depot runner, those
-  # write to Depot's cache instead
-  warm-fork-cache-go:
-    name: Warm fork cache (Go)
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    runs-on: ubuntu-24.04-arm
-
-    permissions:
-      contents: read
-
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-
-      # setup-go puts ImageOS in the cache key, and GitHub's arm image reports
-      # ubuntu24-arm64 where Depot's reports ubuntu24. Without the override the
-      # warmed entry never matches the key a fork run looks for
-      - uses: actions/setup-go@v7
-        env:
-          ImageOS: ubuntu24
-        with:
-          go-version-file: go.mod
-        id: go
-
-      # on a hit setup-go does not save again, so building would populate nothing
-      - name: Build
-        if: steps.go.outputs.cache-hit != 'true'
-        run: mkdir dist && touch dist/empty && make build
-
-  warm-fork-cache-ui:
-    name: Warm fork cache (UI)
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    runs-on: ubuntu-24.04-arm
-
-    permissions:
-      contents: read
-      actions: write
-
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-
-      - uses: voidzero-dev/setup-vp@v1
-        with:
-          node-version: "26"
-          cache: true
-
-      - name: Get Playwright version
-        run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').packages['node_modules/@playwright/test'].version)")" >> $GITHUB_ENV
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v6
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
-
-      - name: Install
-        run: make install-ui
-
-      - name: Install Playwright (browsers + deps)
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: vpx playwright install --with-deps chromium
-        timeout-minutes: 5
-
-      # the UI job saves its task cache on a Depot runner, so forks never see
-      # it. Run the same tasks here to seed the GitHub-hosted cache
-      - name: Restore vp task cache
-        id: vp-cache
-        uses: actions/cache/restore@v6
-        with:
-          path: node_modules/.vite/task-cache
-          key: ${{ runner.os }}-${{ runner.arch }}-vp-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-vp-
-
-      - name: Warm vp tasks
-        run: make openapi lint-ui test-ui ui
-
-      - name: Save vp task cache
-        uses: actions/cache/save@v6
-        with:
-          path: node_modules/.vite/task-cache
-          key: ${{ steps.vp-cache.outputs.cache-primary-key }}
+          name: blob-report-${{ matrix.shard }}
+          path: blob-report/
+          retention-days: 14

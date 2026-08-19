@@ -23,12 +23,17 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
+				"GitHub.copilot",
+				"GitHub.copilot-chat",
 				"esbenp.prettier-vscode",
 				"octref.vetur"
 			]
 		}
 	},
 	"remoteEnv": {
-		"GOTOOLCHAIN": "auto"
+		"GOTOOLCHAIN": "auto",
+		"EVCC_SPONSORTOKEN": "Test",
+		"GRPC_URI": "127.0.0.1:8080",
+		"OPTIMIZER_URI": "http://host.docker.internal:7050"
 	}
 }

@@ -5,16 +5,86 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/types"
+	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/sponsor"
 	optimizer "github.com/evcc-io/optimizer/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
+
+// TestOptimizerTriggerNotDroppedDuringRun verifies triggerOptimizer records a
+// pending re-run instead of silently dropping the trigger when a run is already
+// in progress, and that rerunIfPending consumes that flag afterwards.
+func TestOptimizerTriggerNotDroppedDuringRun(t *testing.T) {
+	// authorize sponsor + enable the optimizer so triggerOptimizer runs its body
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	settings.SetBool(keys.Experimental, true)
+	settings.SetBool(keys.Optimizer, true)
+	sponsor.Subject = "test"
+	t.Cleanup(func() {
+		sponsor.Subject = ""
+		settings.SetBool(keys.Experimental, false)
+		settings.SetBool(keys.Optimizer, false)
+	})
+
+	site := &Site{log: util.NewLogger("test")}
+	site.optimizerPending.Store(false)
+
+	// hold the optimizer lock to simulate an in-flight run
+	require.True(t, site.optimizerMu.TryLock(), "optimizer lock should be free at test start")
+	defer site.optimizerMu.Unlock()
+
+	// a forced run arriving during the in-flight run must be recorded, not dropped
+	site.optimizerUpdateAsync(0)
+	assert.True(t, site.optimizerPending.Load(), "trigger during a run must set the pending flag")
+
+	// the post-run hook consumes the flag (unauthorized keeps triggerOptimizer a
+	// no-op so no real run is launched from the test)
+	sponsor.Subject = ""
+	site.rerunIfPending()
+	assert.False(t, site.optimizerPending.Load(), "rerunIfPending must consume the pending flag")
+}
+
+// fakeRatesTariff is a minimal api.Tariff returning fixed rates for tests.
+type fakeRatesTariff struct{ rates api.Rates }
+
+func (f *fakeRatesTariff) Rates() (api.Rates, error) { return f.rates, nil }
+func (f *fakeRatesTariff) Type() api.TariffType      { return api.TariffTypePriceForecast }
+
+// TestOptimizerTariffsChanged verifies the planner/feedin rate fingerprint detects
+// a price change and reports no change when the rates are identical, so the
+// update loop only re-runs the optimizer when its price inputs actually move.
+func TestOptimizerTariffsChanged(t *testing.T) {
+	start := time.Now().Truncate(time.Hour)
+	rate := func(v float64) api.Rates {
+		return api.Rates{{Start: start, End: start.Add(tariff.SlotDuration), Value: v}}
+	}
+
+	planner := &fakeRatesTariff{rates: rate(0.20)}
+	feedin := &fakeRatesTariff{rates: rate(0.10)}
+	site := &Site{log: util.NewLogger("test"), tariffs: &tariff.Tariffs{Planner: planner, FeedIn: feedin}}
+
+	// fingerprint is a per-site field, starts at zero value
+
+	site.optimizerTariffsChanged() // prime the fingerprint
+	assert.False(t, site.optimizerTariffsChanged(), "identical rates should report unchanged")
+
+	planner.rates = rate(0.21)
+	assert.True(t, site.optimizerTariffsChanged(), "changed planner rate should report changed")
+	assert.False(t, site.optimizerTariffsChanged(), "re-reading the changed planner rate should report unchanged")
+
+	feedin.rates = rate(0.11)
+	assert.True(t, site.optimizerTariffsChanged(), "changed feedin rate should report changed")
+	assert.False(t, site.optimizerTariffsChanged(), "re-reading the changed feedin rate should report unchanged")
+}
 
 func TestLoadpointProfile(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -303,7 +373,7 @@ func TestBatteryRequestSocLimitsClamp(t *testing.T) {
 		dev := newBatteryDevice(t, 20, 100)
 		m := types.Measurement{Capacity: &capacity, Soc: &soc}
 
-		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute, nil)
 
 		assert.Equal(t, float32(1500), req.SMin)
 		assert.Equal(t, float32(10000), req.SMax)
@@ -315,7 +385,7 @@ func TestBatteryRequestSocLimitsClamp(t *testing.T) {
 		dev := newBatteryDevice(t, 0, 80)
 		m := types.Measurement{Capacity: &capacity, Soc: &soc}
 
-		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute, nil)
 
 		assert.Equal(t, float32(0), req.SMin)
 		assert.Equal(t, float32(9500), req.SMax)
@@ -327,7 +397,7 @@ func TestBatteryRequestSocLimitsClamp(t *testing.T) {
 		dev := newBatteryDevice(t, 20, 80)
 		m := types.Measurement{Capacity: &capacity, Soc: &soc}
 
-		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute, nil)
 
 		assert.Equal(t, float32(2000), req.SMin)
 		assert.Equal(t, float32(8000), req.SMax)
@@ -338,7 +408,7 @@ func TestBatteryRequestSocLimitsClamp(t *testing.T) {
 		dev := newBatteryDevice(t, 20, 0)
 		m := types.Measurement{Capacity: &capacity, Soc: &soc}
 
-		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute, nil)
 
 		assert.Equal(t, float32(2000), req.SMin)
 		assert.Equal(t, float32(10000), req.SMax)
@@ -420,6 +490,235 @@ func TestGridExportLimit(t *testing.T) {
 
 	require.NoError(t, site.SetGridExportLimit(7000))
 	assert.Equal(t, 7000.0, site.GetGridExportLimit())
+}
+
+func TestFillMissingRateSlots(t *testing.T) {
+	now := time.Now().Truncate(tariff.SlotDuration)
+
+	rates := api.Rates{
+		{Start: now, End: now.Add(tariff.SlotDuration), Value: 1},
+		{Start: now.Add(2 * tariff.SlotDuration), End: now.Add(3 * tariff.SlotDuration), Value: 3},
+	}
+
+	got, _ := fillMissingRateSlots(rates, 4, plannerRateFallback)
+
+	require.Len(t, got, 4)
+	assert.Equal(t, []float64{1, plannerRateFallback, 3, plannerRateFallback}, []float64{
+		got[0].Value,
+		got[1].Value,
+		got[2].Value,
+		got[3].Value,
+	})
+}
+
+func TestRateHorizonSlotsIgnoresMissingPlannerSlots(t *testing.T) {
+	now := time.Now().Truncate(tariff.SlotDuration)
+
+	rates := api.Rates{
+		{Start: now, End: now.Add(tariff.SlotDuration), Value: 1},
+		{Start: now.Add(2 * tariff.SlotDuration), End: now.Add(3 * tariff.SlotDuration), Value: 3},
+		{Start: now.Add(95 * tariff.SlotDuration), End: now.Add(96 * tariff.SlotDuration), Value: 96},
+	}
+
+	assert.Equal(t, 96, rateHorizonSlots(rates))
+}
+
+func TestBatteryRequestDischargeToGrid(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	site := &Site{batteryGridDischarge: true}
+	var meter api.Meter = &struct {
+		api.Meter
+		api.BatteryController
+	}{
+		BatteryController: api.NewMockBatteryController(ctrl),
+	}
+	capacity := 10.0
+	soc := 50.0
+
+	bat, _ := site.batteryRequest(config.NewStaticDevice(config.Named{Name: "battery1"}, meter), types.Measurement{
+		Soc:      &soc,
+		Capacity: &capacity,
+	}, nil, 0, 0, nil)
+
+	assert.True(t, bat.DischargeToGrid)
+}
+
+func TestOptimizerPA(t *testing.T) {
+	t.Run("automatic", func(t *testing.T) {
+		site := new(Site)
+		assert.InDelta(t, 0.0891, site.optimizerPA([]float32{0.25, 0.10}), 1e-6)
+	})
+
+	t.Run("manual override", func(t *testing.T) {
+		manual := 0.33
+		site := &Site{optimizerManualPA: &manual}
+		assert.InDelta(t, 0.00033, site.optimizerPA([]float32{0.25, 0.10}), 1e-9)
+	})
+}
+
+var allWeekdays = []int{0, 1, 2, 3, 4, 5, 6}
+
+func TestBatterySocGoalSlots(t *testing.T) {
+	loc := time.UTC
+
+	timestamps := []time.Time{
+		time.Date(2025, 1, 1, 20, 30, 0, 0, loc),
+		time.Date(2025, 1, 1, 20, 45, 0, 0, loc),
+		time.Date(2025, 1, 1, 21, 0, 0, 0, loc),
+		time.Date(2025, 1, 1, 21, 15, 0, 0, loc),
+		time.Date(2025, 1, 2, 20, 45, 0, 0, loc),
+		time.Date(2025, 1, 2, 21, 0, 0, 0, loc),
+	}
+
+	assert.Equal(t, []float32{0, 0, 2000, 0, 0, 2000}, batterySocGoalSlots(nil, timestamps, loc, 21, 0, allWeekdays, 2000))
+}
+
+func TestBatterySocGoalSlotsRollsToNextDay(t *testing.T) {
+	loc := time.UTC
+
+	timestamps := []time.Time{
+		time.Date(2025, 1, 1, 21, 5, 0, 0, loc),
+		time.Date(2025, 1, 2, 20, 45, 0, 0, loc),
+		time.Date(2025, 1, 2, 21, 15, 0, 0, loc),
+	}
+
+	assert.Equal(t, []float32{0, 0, 1500}, batterySocGoalSlots(nil, timestamps, loc, 21, 0, allWeekdays, 1500))
+}
+
+func TestBatterySocGoalSlotsTimezone(t *testing.T) {
+	loc := time.FixedZone("MST", -7*60*60)
+
+	timestamps := []time.Time{
+		time.Date(2025, 1, 2, 3, 45, 0, 0, time.UTC),
+		time.Date(2025, 1, 2, 4, 0, 0, 0, time.UTC),
+		time.Date(2025, 1, 2, 4, 15, 0, 0, time.UTC),
+	}
+
+	assert.Equal(t, []float32{0, 2500, 0}, batterySocGoalSlots(nil, timestamps, loc, 21, 0, allWeekdays, 2500))
+}
+
+// TestBatterySocGoalSlotsWeekdays only marks days whose weekday is selected.
+// 2025-01-01 is a Wednesday (3), 2025-01-02 a Thursday (4).
+func TestBatterySocGoalSlotsWeekdays(t *testing.T) {
+	loc := time.UTC
+
+	timestamps := []time.Time{
+		time.Date(2025, 1, 1, 20, 30, 0, 0, loc),
+		time.Date(2025, 1, 1, 20, 45, 0, 0, loc),
+		time.Date(2025, 1, 1, 21, 0, 0, 0, loc),
+		time.Date(2025, 1, 1, 21, 15, 0, 0, loc),
+		time.Date(2025, 1, 2, 20, 45, 0, 0, loc),
+		time.Date(2025, 1, 2, 21, 0, 0, 0, loc),
+	}
+
+	// Wednesday only: Jan 2 (Thursday) is skipped
+	assert.Equal(t, []float32{0, 0, 2000, 0, 0, 0}, batterySocGoalSlots(nil, timestamps, loc, 21, 0, []int{3}, 2000))
+}
+
+// TestBatterySocGoalSlotsMerge accumulates two goals into one reserve array; the
+// higher reserve wins where slots overlap.
+func TestBatterySocGoalSlotsMerge(t *testing.T) {
+	loc := time.UTC
+
+	timestamps := []time.Time{
+		time.Date(2025, 1, 1, 20, 30, 0, 0, loc),
+		time.Date(2025, 1, 1, 20, 45, 0, 0, loc),
+		time.Date(2025, 1, 1, 21, 0, 0, 0, loc),
+		time.Date(2025, 1, 1, 21, 15, 0, 0, loc),
+		time.Date(2025, 1, 2, 20, 45, 0, 0, loc),
+		time.Date(2025, 1, 2, 21, 0, 0, 0, loc),
+	}
+
+	sgoal := batterySocGoalSlots(nil, timestamps, loc, 21, 0, allWeekdays, 2000)
+	sgoal = batterySocGoalSlots(sgoal, timestamps, loc, 20, 45, allWeekdays, 1500)
+	assert.Equal(t, []float32{0, 1500, 2000, 0, 1500, 2000}, sgoal)
+
+	// overlap on the same 21:00 slots: the higher reserve wins
+	sgoal = batterySocGoalSlots(sgoal, timestamps, loc, 21, 0, allWeekdays, 3000)
+	assert.Equal(t, []float32{0, 1500, 3000, 0, 1500, 3000}, sgoal)
+}
+
+func batterySocGoalMeter(ctrl *gomock.Controller) api.Meter {
+	return &struct {
+		api.Meter
+		api.BatteryController
+	}{
+		BatteryController: api.NewMockBatteryController(ctrl),
+	}
+}
+
+func TestBatteryRequestSocGoal(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	s := &Site{
+		batteryOptimizerSocGoals: []api.RepeatingPlan{{Weekdays: allWeekdays, Soc: 20, Time: "21:00", Tz: "UTC", Active: true}},
+	}
+	capacity := 10.0
+	soc := 50.0
+	timestamps := []time.Time{
+		time.Date(2025, 1, 1, 20, 30, 0, 0, time.UTC),
+		time.Date(2025, 1, 1, 20, 45, 0, 0, time.UTC),
+		time.Date(2025, 1, 1, 21, 0, 0, 0, time.UTC),
+	}
+
+	bat, _ := s.batteryRequest(config.NewStaticDevice(config.Named{Name: "battery1"}, batterySocGoalMeter(ctrl)), types.Measurement{
+		Soc:      &soc,
+		Capacity: &capacity,
+	}, nil, len(timestamps), 0, timestamps)
+
+	assert.Equal(t, []float32{0, 0, 2000}, bat.SGoal)
+	assert.Equal(t, float32(10000), bat.SMax)
+}
+
+// TestBatteryRequestSocGoalTimezone proves the goal time is interpreted in the
+// goal's own timezone, not the server's local zone (the reported wrong-slot bug).
+// 21:00 America/New_York (EST, UTC-5) is 02:00 UTC the next day.
+func TestBatteryRequestSocGoalTimezone(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	s := &Site{
+		batteryOptimizerSocGoals: []api.RepeatingPlan{{Weekdays: allWeekdays, Soc: 20, Time: "21:00", Tz: "America/New_York", Active: true}},
+	}
+	capacity := 10.0
+	soc := 50.0
+	timestamps := []time.Time{
+		time.Date(2025, 1, 3, 1, 45, 0, 0, time.UTC),
+		time.Date(2025, 1, 3, 2, 0, 0, 0, time.UTC),
+		time.Date(2025, 1, 3, 2, 15, 0, 0, time.UTC),
+	}
+
+	bat, _ := s.batteryRequest(config.NewStaticDevice(config.Named{Name: "battery1"}, batterySocGoalMeter(ctrl)), types.Measurement{
+		Soc:      &soc,
+		Capacity: &capacity,
+	}, nil, len(timestamps), 0, timestamps)
+
+	assert.Equal(t, []float32{0, 2000, 0}, bat.SGoal)
+}
+
+// TestBatteryRequestSocGoalInvalidTimezone asserts an unusable timezone skips the
+// goal entirely rather than silently misplacing it via the server's local zone.
+func TestBatteryRequestSocGoalInvalidTimezone(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	s := &Site{
+		log:                      util.NewLogger("foo"),
+		batteryOptimizerSocGoals: []api.RepeatingPlan{{Weekdays: allWeekdays, Soc: 20, Time: "21:00", Tz: "Not/AZone", Active: true}},
+	}
+	capacity := 10.0
+	soc := 50.0
+	timestamps := []time.Time{
+		time.Date(2025, 1, 1, 20, 30, 0, 0, time.UTC),
+		time.Date(2025, 1, 1, 20, 45, 0, 0, time.UTC),
+		time.Date(2025, 1, 1, 21, 0, 0, 0, time.UTC),
+	}
+
+	bat, _ := s.batteryRequest(config.NewStaticDevice(config.Named{Name: "battery1"}, batterySocGoalMeter(ctrl)), types.Measurement{
+		Soc:      &soc,
+		Capacity: &capacity,
+	}, nil, len(timestamps), 0, timestamps)
+
+	assert.Nil(t, bat.SGoal)
 }
 
 func TestBlendMeasured(t *testing.T) {

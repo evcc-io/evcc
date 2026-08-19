@@ -1,0 +1,49 @@
+name: Sync evcc master Repo Branch
+
+on:
+  schedule:
+    # Run the workflow daily at 6am
+    - cron: "0 20 * * *"
+  workflow_dispatch: # Allows manual trigger of the workflow
+
+# Least privilege: pushes authenticate with EVCC_PAT (set via checkout),
+# so the default GITHUB_TOKEN only needs read access.
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+        with:
+          # Fetch all branches
+          fetch-depth: 0
+          token: ${{ secrets.EVCC_PAT }}
+
+      - name: Set up Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Add public repo as remote
+        run: |
+          git remote add public https://github.com/evcc-io/evcc.git
+
+      - name: Fetch master branch from public repo
+        run: |
+          git fetch public master
+
+      - name: Checkout evcc-master branch
+        run: |
+          git checkout evcc-master
+
+      - name: Merge master branch from public repo into evcc-master
+        run: |
+          git merge public/master --no-edit
+
+      - name: Push changes to evcc-master
+        run: |
+          git push origin evcc-master

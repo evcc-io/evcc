@@ -1,0 +1,123 @@
+name: Sync Missing Tags
+
+on:
+  schedule:
+    # Runs daily at 6am
+    - cron: "0 20 * * *"
+  workflow_dispatch: # Allows manual trigger
+
+# Least privilege: branch/tag pushes authenticate with EVCC_PAT (set via
+# checkout); GITHUB_TOKEN is used only by `gh pr create`, which needs
+# pull-requests: write.
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Fetch all branches and tags
+          token: ${{ secrets.EVCC_PAT }}
+
+      - name: Set up Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Add public repo as remote
+        run: |
+          git remote add public https://github.com/evcc-io/evcc.git
+
+      - name: Fetch tags from the public repo
+        run: |
+          git fetch public --tags
+
+      - name: Get all tags from the public repo
+        id: get-public-tags
+        run: |
+          git tag -l | grep -E '^0\.[0-9]+\.[0-9]+$' > public_tags.txt
+          echo "Public tags:"
+          cat public_tags.txt
+
+      - name: Get existing tags in the repo
+        id: get-existing-tags
+        run: |
+          git tag -l | grep -E '^0\.[0-9]+\.[0-9]+\.0$' > existing_tags.txt
+          echo "Existing tags:"
+          cat existing_tags.txt
+
+      - name: Sync missing tags
+        run: |
+          # Define the starting tag
+          START_TAG="0.130.7"
+
+          # Convert version to numeric format for comparison
+          tag_to_numeric() {
+            echo "$1" | sed 's/\./_/g' | awk -F'_' '{ printf("%d%03d%03d", $1, $2, $3) }'
+          }
+
+          START_NUMERIC=$(tag_to_numeric $START_TAG)
+
+          # Read tags from files
+          PUBLIC_TAGS=$(cat public_tags.txt)
+          EXISTING_TAGS=$(cat existing_tags.txt)
+
+          for TAG in $PUBLIC_TAGS; do
+            # Convert the current tag to numeric format
+            TAG_NUMERIC=$(tag_to_numeric $TAG)
+
+            # Check if the tag is greater than the starting tag
+            if [ "$TAG_NUMERIC" -gt "$START_NUMERIC" ]; then
+              # Generate the new tag name with .0 suffix
+              NEW_TAG="${TAG}.0"
+
+              # Check if the tag already exists
+              if ! echo "$EXISTING_TAGS" | grep -q "^${NEW_TAG}$"; then
+                echo "Processing new tag: $NEW_TAG"
+
+                # Create a new branch for the tag
+                git checkout -b "tag-${TAG}" ${TAG}
+
+                # Attempt to merge the master branch into the new branch
+                git merge master --no-edit || {
+                  echo "Merge conflict detected for tag ${TAG}. Attempting auto-resolution."
+
+                  # Auto-resolve conflicts that are confined to the fork's known,
+                  # permanent divergences from upstream in .github/workflows/:
+                  # deleted workflows, removed jobs (apt, Home Assistant add-on, ...)
+                  # and runner type. Any other conflict is left untouched so the
+                  # sync opens a pull request. See resolve_tag_sync.py for details.
+                  # The script is merged in cleanly from master, so it is present
+                  # in the working tree even though the upstream tag lacks it.
+                  python3 .github/scripts/resolve_tag_sync.py
+
+                  # If any conflicts remain, hand off to a manual pull request.
+                  if [ -n "$(git diff --name-only --diff-filter=U)" ]; then
+                    echo "Unresolved conflicts remain for tag ${TAG}. Creating pull request."
+                    git merge --abort
+                    git push origin "tag-${TAG}"
+                    gh pr create --title "Resolve merge conflict for tag ${NEW_TAG}" --body "A merge conflict was detected while syncing tag ${NEW_TAG}. Please resolve the conflict in this PR." --head master --base "tag-${TAG}"
+                    continue
+                  fi
+
+                  # All conflicts were fork divergences; finalize the auto-resolved merge.
+                  echo "All conflicts were fork divergences. Committing auto-resolved merge."
+                  git commit --no-edit
+                }
+                # Tag the branch with .0 appended to the original tag name
+                git tag "${NEW_TAG}"
+
+                # Push the new branch and tag to your repository
+                git push origin "tag-${TAG}"
+                git push origin "${NEW_TAG}"
+              fi
+            fi
+          done
+
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

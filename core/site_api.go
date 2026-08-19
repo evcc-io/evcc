@@ -429,6 +429,40 @@ func (site *Site) SetBatteryDischargeControl(val bool) error {
 	return nil
 }
 
+func (site *Site) GetOptimizerManualPA() *float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.optimizerManualPA
+}
+
+func (site *Site) SetOptimizerManualPA(val *float64) error {
+	site.log.DEBUG.Println("set optimizer manual p_a:", printPtr("%.3f", val))
+
+	var changed bool
+
+	site.Lock()
+	if !ptrValueEqual(site.optimizerManualPA, val) {
+		site.optimizerManualPA = val
+
+		if val == nil {
+			settings.SetString(keys.OptimizerManualPA, "")
+			site.publish(keys.OptimizerManualPA, nil)
+		} else {
+			settings.SetFloat(keys.OptimizerManualPA, *val)
+			site.publish(keys.OptimizerManualPA, *val)
+		}
+
+		changed = true
+	}
+	site.Unlock()
+
+	if changed {
+		site.triggerOptimizer()
+	}
+
+	return nil
+}
+
 // GetBatteryGridDischarge returns whether the battery may discharge to grid (experimental)
 func (site *Site) GetBatteryGridDischarge() bool {
 	site.RLock()
@@ -507,6 +541,90 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
 
 	return nil
 }
+
+func (site *Site) GetBatteryOptimizerSocGoals() []api.RepeatingPlan {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryOptimizerSocGoals
+}
+
+func (site *Site) SetBatteryOptimizerSocGoals(goals []api.RepeatingPlan) error {
+	site.log.DEBUG.Printf("set battery optimizer soc goals: %+v", goals)
+
+	if !site.hasBatteryControl() {
+		return ErrBatteryControlNotAvailable
+	}
+
+	for i, g := range goals {
+		// inactive or weekday-less goals are ignored by the optimizer, so don't
+		// reject them here - matches applyBatterySocGoals and the shared UI, which
+		// lets a plan be toggled off or left without weekdays
+		if !g.Active || len(g.Weekdays) == 0 {
+			continue
+		}
+		if err := validateBatteryOptimizerSocGoal(g); err != nil {
+			return fmt.Errorf("battery optimizer soc goal %d: %w", i+1, err)
+		}
+	}
+
+	var changed bool
+
+	site.Lock()
+	if !slices.EqualFunc(site.batteryOptimizerSocGoals, goals, repeatingPlanEqual) {
+		site.batteryOptimizerSocGoals = goals
+
+		if len(goals) == 0 {
+			settings.SetString(keys.BatteryOptimizerSocGoals, "")
+		} else if err := settings.SetJson(keys.BatteryOptimizerSocGoals, goals); err != nil {
+			site.log.ERROR.Printf("battery optimizer soc goals: %v", err)
+		}
+		site.publish(keys.BatteryOptimizerSocGoals, goals)
+
+		changed = true
+	}
+	site.Unlock()
+
+	if changed {
+		site.triggerOptimizer()
+	}
+
+	return nil
+}
+
+// validateBatteryOptimizerSocGoal checks a single reserve goal. Time is
+// meaningless without its zone, so an explicit valid IANA timezone is required.
+func validateBatteryOptimizerSocGoal(g api.RepeatingPlan) error {
+	if g.Soc <= 0 || g.Soc > 100 {
+		return errors.New("soc must be greater than 0 and at most 100")
+	}
+	if _, err := time.Parse("15:04", g.Time); err != nil {
+		return errors.New("time must use HH:MM format")
+	}
+	if g.Tz == "" {
+		return errors.New("timezone is required")
+	}
+	if _, err := time.LoadLocation(g.Tz); err != nil {
+		return errors.New("timezone must be a valid IANA timezone")
+	}
+	if len(g.Weekdays) == 0 {
+		return errors.New("at least one weekday is required")
+	}
+	for _, d := range g.Weekdays {
+		if d < 0 || d > 6 {
+			return errors.New("weekdays must be 0..6 (Sunday..Saturday)")
+		}
+	}
+	return nil
+}
+
+// repeatingPlanEqual compares two repeating plans by value (Weekdays is a slice).
+func repeatingPlanEqual(a, b api.RepeatingPlan) bool {
+	return a.Time == b.Time && a.Tz == b.Tz && a.Soc == b.Soc &&
+		a.Active == b.Active && slices.Equal(a.Weekdays, b.Weekdays)
+}
+
+// loadBatteryOptimizerSocGoals reads the persisted goals; returns (nil, err)
+// when absent or malformed so callers can simply skip it.
 
 // GetOptimizerChargingStrategy returns the optimizer grid charging strategy,
 // falling back to the default when unset.

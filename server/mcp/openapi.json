@@ -4507,6 +4507,42 @@
           "power"
         ]
       },
+      "RepeatingPlan": {
+        "description": "A repeating charging plan.",
+        "type": "object",
+        "properties": {
+          "weekdays": {
+            "description": "Weekdays the plan is active. 0 is Sunday, 6 is Saturday.",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "time": {
+            "description": "Target time in HH:MM format.",
+            "type": "string"
+          },
+          "tz": {
+            "description": "Time zone of the target time, like Europe/Berlin.",
+            "type": "string"
+          },
+          "soc": {
+            "description": "SoC goal in %.",
+            "type": "number"
+          },
+          "active": {
+            "description": "Plan is active.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "weekdays",
+          "time",
+          "tz",
+          "soc",
+          "active"
+        ]
+      },
       "SmartCostType": {
         "description": "Type of the smart charging limit.",
         "type": "string",
@@ -4562,42 +4598,6 @@
           {
             "$ref": "#/components/schemas/StaticEnergyPlan"
           }
-        ]
-      },
-      "RepeatingPlan": {
-        "description": "A repeating charging plan.",
-        "type": "object",
-        "properties": {
-          "weekdays": {
-            "description": "Weekdays the plan is active. 0 is Sunday, 6 is Saturday.",
-            "type": "array",
-            "items": {
-              "type": "number"
-            }
-          },
-          "time": {
-            "description": "Target time in HH:MM format.",
-            "type": "string"
-          },
-          "tz": {
-            "description": "Time zone of the target time, like Europe/Berlin.",
-            "type": "string"
-          },
-          "soc": {
-            "description": "SoC goal in %.",
-            "type": "number"
-          },
-          "active": {
-            "description": "Plan is active.",
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "weekdays",
-          "time",
-          "tz",
-          "soc",
-          "active"
         ]
       },
       "Vehicle": {
@@ -5167,6 +5167,11 @@
             "description": "Home battery is allowed to discharge to the grid (experimental).",
             "type": "boolean"
           },
+          "optimizerManualPA": {
+            "description": "Optional manual p_a override for the optimizer (currency/kWh).",
+            "type": "number",
+            "nullable": true
+          },
           "solarAdjusted": {
             "description": "Solar forecast is adjusted to real production data (experimental).",
             "type": "boolean"
@@ -5179,6 +5184,14 @@
           "batteryGridChargeActive": {
             "description": "Home battery is currently charged from grid.",
             "type": "boolean"
+          },
+          "batteryOptimizerSocGoals": {
+            "description": "Recurring optimizer battery SoC reserve goals.",
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "$ref": "#/components/schemas/RepeatingPlan"
+            }
           },
           "smartCostAvailable": {
             "description": "A dynamic grid price or CO₂ forecast is configured.",
