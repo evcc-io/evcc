@@ -336,6 +336,10 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 		if w.indices[warp.MvidVoltageL1] != -1 && w.indices[warp.MvidVoltageL2] != -1 && w.indices[warp.MvidVoltageL3] != -1 {
 			implement.Has(w, implement.PhaseVoltages(w.voltages))
 		}
+
+		if w.indices[warp.MvidPowerL1] != -1 && w.indices[warp.MvidPowerL2] != -1 && w.indices[warp.MvidPowerL3] != -1 {
+			implement.Has(w, implement.PhasePowers(w.powers))
+		}
 	case metersValuesTopic:
 		var values []warp.FloatWithNaN
 		if err := json.Unmarshal(payload, &values); err != nil {
@@ -462,6 +466,19 @@ func (w *WarpWS) voltages() (float64, float64, float64, error) {
 	}
 
 	return w.values[warp.MvidVoltageL1], w.values[warp.MvidVoltageL2], w.values[warp.MvidVoltageL3], nil
+}
+
+func (w *WarpWS) powers() (float64, float64, float64, error) {
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+
+	if math.IsNaN(w.values[warp.MvidPowerL1]) ||
+		math.IsNaN(w.values[warp.MvidPowerL2]) ||
+		math.IsNaN(w.values[warp.MvidPowerL3]) {
+		return 0, 0, 0, api.ErrNotAvailable
+	}
+
+	return w.values[warp.MvidPowerL1], w.values[warp.MvidPowerL2], w.values[warp.MvidPowerL3], nil
 }
 
 // identify reports the vehicle mac read via ISO 15118 before the RFID tag

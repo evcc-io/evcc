@@ -16,10 +16,16 @@ const (
 	_MvidLowerName_2 = "current l2"
 	_MvidName_3      = "current l3"
 	_MvidLowerName_3 = "current l3"
-	_MvidName_4      = "power"
-	_MvidLowerName_4 = "power"
-	_MvidName_5      = "energy"
-	_MvidLowerName_5 = "energy"
+	_MvidName_4      = "power l1"
+	_MvidLowerName_4 = "power l1"
+	_MvidName_5      = "power l2"
+	_MvidLowerName_5 = "power l2"
+	_MvidName_6      = "power l3"
+	_MvidLowerName_6 = "power l3"
+	_MvidName_7      = "power"
+	_MvidLowerName_7 = "power"
+	_MvidName_8      = "energy"
+	_MvidLowerName_8 = "energy"
 )
 
 var (
@@ -27,8 +33,11 @@ var (
 	_MvidIndex_1 = [...]uint8{0, 10}
 	_MvidIndex_2 = [...]uint8{0, 10}
 	_MvidIndex_3 = [...]uint8{0, 10}
-	_MvidIndex_4 = [...]uint8{0, 5}
-	_MvidIndex_5 = [...]uint8{0, 6}
+	_MvidIndex_4 = [...]uint8{0, 8}
+	_MvidIndex_5 = [...]uint8{0, 8}
+	_MvidIndex_6 = [...]uint8{0, 8}
+	_MvidIndex_7 = [...]uint8{0, 5}
+	_MvidIndex_8 = [...]uint8{0, 6}
 )
 
 func (i Mvid) String() string {
@@ -42,10 +51,16 @@ func (i Mvid) String() string {
 		return _MvidName_2
 	case i == 21:
 		return _MvidName_3
-	case i == 74:
+	case i == 39:
 		return _MvidName_4
-	case i == 209:
+	case i == 48:
 		return _MvidName_5
+	case i == 57:
+		return _MvidName_6
+	case i == 74:
+		return _MvidName_7
+	case i == 209:
+		return _MvidName_8
 	default:
 		return fmt.Sprintf("Mvid(%d)", i)
 	}
@@ -61,11 +76,14 @@ func _MvidNoOp() {
 	_ = x[MvidCurrentL1-(13)]
 	_ = x[MvidCurrentL2-(17)]
 	_ = x[MvidCurrentL3-(21)]
+	_ = x[MvidPowerL1-(39)]
+	_ = x[MvidPowerL2-(48)]
+	_ = x[MvidPowerL3-(57)]
 	_ = x[MvidPower-(74)]
 	_ = x[MvidEnergy-(209)]
 }
 
-var _MvidValues = []Mvid{MvidVoltageL1, MvidVoltageL2, MvidVoltageL3, MvidCurrentL1, MvidCurrentL2, MvidCurrentL3, MvidPower, MvidEnergy}
+var _MvidValues = []Mvid{MvidVoltageL1, MvidVoltageL2, MvidVoltageL3, MvidCurrentL1, MvidCurrentL2, MvidCurrentL3, MvidPowerL1, MvidPowerL2, MvidPowerL3, MvidPower, MvidEnergy}
 
 var _MvidNameToValueMap = map[string]Mvid{
 	_MvidName_0[0:10]:       MvidVoltageL1,
@@ -80,10 +98,16 @@ var _MvidNameToValueMap = map[string]Mvid{
 	_MvidLowerName_2[0:10]:  MvidCurrentL2,
 	_MvidName_3[0:10]:       MvidCurrentL3,
 	_MvidLowerName_3[0:10]:  MvidCurrentL3,
-	_MvidName_4[0:5]:        MvidPower,
-	_MvidLowerName_4[0:5]:   MvidPower,
-	_MvidName_5[0:6]:        MvidEnergy,
-	_MvidLowerName_5[0:6]:   MvidEnergy,
+	_MvidName_4[0:8]:        MvidPowerL1,
+	_MvidLowerName_4[0:8]:   MvidPowerL1,
+	_MvidName_5[0:8]:        MvidPowerL2,
+	_MvidLowerName_5[0:8]:   MvidPowerL2,
+	_MvidName_6[0:8]:        MvidPowerL3,
+	_MvidLowerName_6[0:8]:   MvidPowerL3,
+	_MvidName_7[0:5]:        MvidPower,
+	_MvidLowerName_7[0:5]:   MvidPower,
+	_MvidName_8[0:6]:        MvidEnergy,
+	_MvidLowerName_8[0:6]:   MvidEnergy,
 }
 
 var _MvidNames = []string{
@@ -93,8 +117,11 @@ var _MvidNames = []string{
 	_MvidName_1[0:10],
 	_MvidName_2[0:10],
 	_MvidName_3[0:10],
-	_MvidName_4[0:5],
-	_MvidName_5[0:6],
+	_MvidName_4[0:8],
+	_MvidName_5[0:8],
+	_MvidName_6[0:8],
+	_MvidName_7[0:5],
+	_MvidName_8[0:6],
 }
 
 // MvidString retrieves an enum value from the enum constants string name.
