@@ -291,6 +291,7 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 		hasIso15118 := w.hasFeature(warp.FeatureIso15118)
 		if hasIso15118 {
 			implement.Has(w, implement.Battery(w.soc))
+			implement.Has(w, implement.BatteryCapacity(w.capacity))
 		}
 
 		// Feature: NFC
@@ -487,6 +488,16 @@ func (w *WarpWS) soc() (float64, error) {
 		return *w.evState.Soc, nil
 	}
 	return 0, api.ErrNotAvailable
+}
+
+// capacity implements the api.BatteryCapacity interface
+func (w *WarpWS) capacity() float64 {
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+	if w.evState != nil && w.evState.Capacity != nil {
+		return *w.evState.Capacity
+	}
+	return 0
 }
 
 func (w *WarpWS) setCurrent(curr int64) error {
