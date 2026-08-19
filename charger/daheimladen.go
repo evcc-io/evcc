@@ -370,13 +370,11 @@ func (wb *DaheimLaden) checkStation() error {
 		// it as "sponsorship required"
 		return fmt.Errorf("station id: %w", err)
 	}
-
 	// station id starts (dlRegStationId-dlRegEvseMaxCurrent) registers into the block
 	s, err := utf16BEBytesAsString(b[2*(dlRegStationId-dlRegEvseMaxCurrent):])
 	if err != nil {
 		return fmt.Errorf("station id: %w", err)
 	}
-
 	// station id was read successfully - from here on, an empty/invalid id is
 	// treated as "sponsorship required" as before
 	if s == "" {
