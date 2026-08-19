@@ -31,8 +31,13 @@ type EvseLowLevelState struct {
 	Uptime uint32 `json:"uptime"`
 }
 
+type EvseSlot struct {
+	MaxCurrent int32 `json:"max_current"`
+}
+
 type Evse struct {
 	State           EvseState
+	Slots           []EvseSlot
 	ExternalCurrent EvseExternalCurrent
 	UserCurrent     EvseExternalCurrent
 	UserEnabled     EvseUserEnabled
