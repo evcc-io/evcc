@@ -108,12 +108,6 @@ func NewDaheimLaden(ctx context.Context, settings modbus.TcpSettings, phases boo
 		phases: 3,  // assume 3p
 	}
 
-	if !sponsor.IsAuthorized() {
-		if err := wb.checkStation(); err != nil {
-			return nil, err
-		}
-	}
-
 	// get initial state from charger
 	curr, err := wb.getCurrent()
 	if err != nil {
@@ -135,6 +129,12 @@ func NewDaheimLaden(ctx context.Context, settings modbus.TcpSettings, phases boo
 	if phases {
 		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
 		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
+	}
+
+	if !sponsor.IsAuthorized() {
+		if err := wb.checkStation(); err != nil {
+			return nil, err
+		}
 	}
 
 	return wb, nil
