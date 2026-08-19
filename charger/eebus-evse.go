@@ -94,7 +94,8 @@ func newEEBus(ctx context.Context, ski, ip string) (*EEBus, error) {
 	}
 
 	if err := c.connector.Wait(ctx); err != nil {
-		inst.UnregisterDevice(ski, c)
+		// keep ski trusted, the device stays configured
+		inst.UnsubscribeDevice(ski, c)
 		return nil, err
 	}
 

@@ -440,7 +440,18 @@ func (c *EEBus) RegisterDevice(ski, ip string, device Device) error {
 	return nil
 }
 
+// UnregisterDevice unsubscribes device and drops trust for ski once no device is left
 func (c *EEBus) UnregisterDevice(ski string, device Device) {
+	c.unregisterDevice(ski, device, false)
+}
+
+// UnsubscribeDevice unsubscribes device but keeps ski trusted. The device remains
+// configured, so the remote service must still be able to connect later.
+func (c *EEBus) UnsubscribeDevice(ski string, device Device) {
+	c.unregisterDevice(ski, device, true)
+}
+
+func (c *EEBus) unregisterDevice(ski string, device Device, keepTrust bool) {
 	ski = shiputil.NormalizeSKI(ski)
 	c.log.TRACE.Printf("unregistering ski: %s", ski)
 
@@ -457,7 +468,7 @@ func (c *EEBus) UnregisterDevice(ski string, device Device) {
 			// acquire c.mux. Holding c.mux across this cross-layer call would
 			// deadlock the same goroutine on its own non-reentrant mutex. See #28942.
 			// The paired device (empty ski) stays trusted until unpaired.
-			if ski != "" {
+			if ski != "" && !keepTrust {
 				defer c.service.UnregisterRemoteService(shipapi.NewServiceIdentity(ski, "", ""))
 			}
 		}
