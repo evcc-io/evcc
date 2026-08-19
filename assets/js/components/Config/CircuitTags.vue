@@ -1,4 +1,5 @@
 <template>
+	{{ nodes }}
 	<template v-for="(node, idx) in nodes" :key="node.name">
 		<hr v-if="idx > 0 || depth > 0" />
 		<div :style="style">
@@ -12,14 +13,13 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import DeviceTags from "./DeviceTags.vue";
-import type { CircuitNode } from "../../utils/circuits";
-import type { Circuit } from "@/types/evcc.ts";
+import type { CircuitNode } from "@/utils/circuits.ts";
 
 export default defineComponent({
 	name: "CircuitTags",
 	components: { DeviceTags },
 	props: {
-		nodes: { type: Array as PropType<CircuitNode<Circuit>[]>, required: true },
+		nodes: { type: Array as PropType<CircuitNode[]>, required: true },
 		depth: { type: Number, default: 0 },
 	},
 	computed: {
@@ -28,7 +28,7 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		circuitTags(node: CircuitNode<Circuit>) {
+		circuitTags(node: CircuitNode) {
 			const result: Record<string, object> = {};
 			const p = node.power || 0;
 			if (node.maxPower) {

@@ -27,7 +27,7 @@
 					Add main circuit
 				</button>
 			</div>
-			<CircuitsTree v-else :circuitsTree="circuitTree(circuits)" :on-add-sub="onAddSub" />
+			<CircuitsTree v-else :circuitsTree="configCircuitTree(circuits)" :on-add-sub="onAddSub" />
 		</template>
 	</JsonModal>
 </template>
@@ -37,7 +37,7 @@ import JsonModal from "./JsonModal.vue";
 import type { ConfigCircuit } from "@/types/evcc";
 import CircuitsTree from "./CircuitsTree.vue";
 import { openModal } from "@/configModal.ts";
-import { circuitTree } from "@/utils/circuits.ts";
+import { configCircuitTree } from "@/utils/circuits.ts";
 import type { PropType } from "vue";
 
 export default {
@@ -52,7 +52,7 @@ export default {
 		},
 	},
 	methods: {
-		circuitTree,
+		configCircuitTree,
 		async openCircuit() {
 			await openModal("circuit");
 		},

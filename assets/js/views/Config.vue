@@ -694,7 +694,6 @@ import type {
 	DeviceType,
 	Notification,
 	Remote,
-	Circuit,
 } from "@/types/evcc";
 import { ConfigType, CURRENCY } from "@/types/evcc";
 import { circuitTree, type CircuitNode } from "@/utils/circuits";
@@ -1268,14 +1267,8 @@ export default defineComponent({
 				authDisabled: this.authDisabled,
 			};
 		},
-		circuitsRoot(): CircuitNode<Circuit> | undefined {
-			const circuits = Object.entries(store.state.circuits?.config || {}).map(
-				([name, circuit]) => ({
-					name,
-					...circuit,
-				})
-			);
-			return circuitTree(circuits);
+		circuitsRoot(): CircuitNode | undefined {
+			return circuitTree(store.state.circuits?.config);
 		},
 		hemsDimmed(): boolean {
 			// only consumption limits matter for circuits, curtailment affects feed-in

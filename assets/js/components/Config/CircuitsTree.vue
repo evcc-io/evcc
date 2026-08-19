@@ -6,14 +6,23 @@
 					<span v-if="full" class="tree-line" />
 				</span>
 				<span class="tree-col">
-					<span class="tree-line" :class="{ 'tree-line--half': isLast }" />
+					<span
+						class="tree-line"
+						:class="{ 'tree-line--half': isLast }"
+					/>
 					<span class="tree-knick" />
 				</span>
 			</template>
-			<DeviceRefBox compact class="flex-grow-1" @edit="openCircuit(circuitsTree?.name)">
+			<DeviceRefBox
+				compact
+				class="flex-grow-1"
+				@edit="openCircuit(circuitsTree?.name)"
+			>
 				<span class="d-flex align-items-center gap-2">
 					<span class="fw-bold">{{ circuitsTree?.deviceTitle }}</span>
-					<span class="ms-auto evcc-gray value">{{ valueLabel }}</span>
+					<span class="ms-auto evcc-gray value">{{
+						valueLabel
+					}}</span>
 				</span>
 			</DeviceRefBox>
 		</div>
@@ -42,7 +51,10 @@
 				tabindex="0"
 				@click="addSub"
 			>
-				<shopicon-regular-plus size="s" class="flex-shrink-0"></shopicon-regular-plus>
+				<shopicon-regular-plus
+					size="s"
+					class="flex-shrink-0"
+				></shopicon-regular-plus>
 				Add sub-circuit
 			</button>
 		</div>
@@ -54,8 +66,7 @@ import type { PropType } from "vue";
 import DeviceRefBox from "./DeviceRefBox.vue";
 import formatter from "@/mixins/formatter.ts";
 import { openModal } from "@/configModal.ts";
-import type { CircuitNode } from "@/utils/circuits.ts";
-import type { ConfigCircuit } from "@/types/evcc.ts";
+import type { ConfigCircuitNode } from "@/utils/circuits.ts";
 
 export default {
 	name: "CircuitsTree",
@@ -63,7 +74,7 @@ export default {
 	components: { DeviceRefBox },
 	props: {
 		circuitsTree: {
-			type: Object as PropType<CircuitNode<ConfigCircuit>>,
+			type: Object as PropType<ConfigCircuitNode>,
 		},
 		/** Nesting depth from root (0 = root, no indentation/lines). */
 		depth: { type: Number, default: 0 },
@@ -97,7 +108,8 @@ export default {
 			if (!this.circuitsTree) return "";
 			const { maxpower, maxcurrent } = this.circuitsTree.config;
 			const parts: string[] = [];
-			if (maxpower !== undefined) parts.push(this.fmtW(maxpower as number));
+			if (maxpower !== undefined)
+				parts.push(this.fmtW(maxpower as number));
 			if (maxcurrent !== undefined) parts.push(`${maxcurrent} A`);
 			return parts.join(" · ");
 		},

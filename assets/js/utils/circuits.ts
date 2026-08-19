@@ -1,35 +1,47 @@
 import type { ConfigCircuit, Circuit } from "../types/evcc";
 import deepClone from "./deepClone";
 
-type CircuitInput = ConfigCircuit | Circuit;
-
-export type CircuitNode<T extends CircuitInput> = T & {
-  children?: CircuitNode<T>[];
+export type ConfigCircuitNode = ConfigCircuit & {
+  children?: ConfigCircuitNode[];
 };
 
-function isConfigCircuit(circuit: CircuitInput): circuit is ConfigCircuit {
-  return "config" in circuit;
-}
+export type CircuitNode = Circuit & {
+  children?: CircuitNode[];
+};
 
-function getParent(circuit: CircuitInput): string | undefined {
-  if (isConfigCircuit(circuit)) {
-    return typeof circuit.config.parent === "string" ? circuit.config.parent : undefined;
-  }
-
-  return circuit.parent;
-}
-
-// circuitTree builds a tree from published circuit data.
-// Returns the root node or undefined if empty.
-export function circuitTree<T extends CircuitInput>(circuits?: T[]): CircuitNode<T> | undefined {
-  const nodes = deepClone(circuits ?? []) as CircuitNode<T>[];
+// configCircuitTree builds a tree from ConfigCircuit data
+export function configCircuitTree(circuits?: ConfigCircuit[]): ConfigCircuitNode | undefined {
+  const nodes = deepClone(circuits ?? []) as ConfigCircuitNode[];
   const nodesByName = new Map(nodes.map((node) => [node.name, node]));
 
-  let root: CircuitNode<T> | undefined;
+  let root: ConfigCircuitNode | undefined;
 
   for (const node of nodes) {
-    const parentName = getParent(node);
+    const parentName = typeof node.config.parent === "string" ? node.config.parent : undefined;
     const parent = parentName ? nodesByName.get(parentName) : undefined;
+
+    if (parent) {
+      parent.children ??= [];
+      parent.children.push(node);
+    } else {
+      root = node;
+    }
+  }
+
+  return root;
+}
+
+// circuitTree builds a tree from published Circuit data (Record keyed by id)
+export function circuitTree(circuits?: Record<string, Circuit>): CircuitNode | undefined {
+  const source = deepClone(circuits ?? {}) as Record<string, CircuitNode>;
+  const entries = Object.entries(source);
+
+  const nodeById = new Map(entries); // id -> node, rein intern
+
+  let root: CircuitNode | undefined;
+
+  for (const [, node] of entries) {
+    const parent = node.parent ? nodeById.get(node.parent) : undefined;
 
     if (parent) {
       parent.children ??= [];
