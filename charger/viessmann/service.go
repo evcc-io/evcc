@@ -116,11 +116,12 @@ var measurementFeatures = []string{
 // hasMeasurements reports whether the device provides all data points the
 // optional measurements readers require.
 func hasMeasurements(features []Feature) bool {
-	return !slices.ContainsFunc(measurementFeatures, func(name string) bool {
-		return !slices.ContainsFunc(features, func(f Feature) bool {
-			return f.Feature == name
-		})
-	})
+	for _, name := range measurementFeatures {
+		if !slices.ContainsFunc(features, func(f Feature) bool { return f.Feature == name }) {
+			return false
+		}
+	}
+	return true
 }
 
 // getMeasurements reports whether the device provides the optional power and
