@@ -365,7 +365,12 @@ func (wb *DaheimLaden) getPhases() (int, error) {
 func (wb *DaheimLaden) checkStation() error {
 	b, err := wb.conn.ReadHoldingRegisters(dlRegEvseMaxCurrent, 22)
 	if err != nil {
-		return api.ErrSponsorRequired
+		return nil, fmt.Errorf("station ID: %w", err)
+	}
+	// second call for initialization purposes
+	b, err := wb.conn.ReadHoldingRegisters(dlRegEvseMaxCurrent, 22)
+	if err != nil {
+		return nil, fmt.Errorf("station ID: %w", err)
 	}
 	// station id starts (dlRegStationId-dlRegEvseMaxCurrent) registers into the block
 	s, err := utf16BEBytesAsString(b[2*(dlRegStationId-dlRegEvseMaxCurrent):])
