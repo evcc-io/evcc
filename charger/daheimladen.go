@@ -370,7 +370,7 @@ func (wb *DaheimLaden) checkStation() error {
 	// second call for initialization purposes
 	b, err = wb.conn.ReadHoldingRegisters(dlRegEvseMaxCurrent, 22)
 	if err != nil {
-		return err
+		return api.ErrSponsorRequired
 	}
 	// station id starts (dlRegStationId-dlRegEvseMaxCurrent) registers into the block
 	s, err := utf16BEBytesAsString(b[2*(dlRegStationId-dlRegEvseMaxCurrent):])
