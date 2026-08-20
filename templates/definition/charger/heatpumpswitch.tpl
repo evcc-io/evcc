@@ -1,7 +1,7 @@
 {{ define "heatpumpswitch" }}
 features:
 - continuous
-- predictorprofiletemperature
+- demandtemperature
 - heating
 - integrateddevice
 - switchdevice

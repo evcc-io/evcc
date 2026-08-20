@@ -1,7 +1,7 @@
 {{ define "warmwaterswitch" }}
 features:
 - continuous
-- predictorprofilesameweekday
+- demandweekday
 - heating
 - integrateddevice
 - switchdevice
