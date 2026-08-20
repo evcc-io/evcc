@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -52,8 +53,8 @@ func TestSupervisorToken(t *testing.T) {
 
 	_, err = ts4.Token()
 	require.Error(t, err)
-	assert.ErrorContains(t, err, "login required")
-
+	var elr *api.ErrLoginRequired
+	assert.ErrorAs(t, err, &elr)
 	// connection requires uri
 	_, err = NewConnection(util.NewLogger("test"), "", "", false)
 	assert.Error(t, err)
