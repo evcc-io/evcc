@@ -2105,19 +2105,14 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64, dim *bool) {
 	// hold battery boost when SOC drops below the limit: stop draining the battery, but
 	// keep the vehicle prioritised over recharging it (via sitePower priorityAdjustment)
-	// until the vehicle disconnects. This holds the battery at the configured level
-	// instead of the naive on/off which lets the battery recharge and oscillate (#30558).
-	// If the limit is lowered while on hold, resume boosting once the soc is above it again (#32998).
-	if boost := lp.GetBatteryBoost(); boost != boostDisabled {
+	// until the vehicle disconnects or the limit is relaxed (see SetBatteryBoostLimit).
+	// This holds the battery at the configured level instead of the naive on/off which
+	// lets the battery recharge and oscillate (#30558).
+	if boost := lp.GetBatteryBoost(); boost != boostDisabled && boost != boostHold {
 		if limit := lp.GetBatteryBoostLimit(); limit < 100 {
-			batterySoc := lp.site.GetBatterySoc()
-			switch {
-			case boost != boostHold && batterySoc < float64(limit):
+			if batterySoc := lp.site.GetBatterySoc(); batterySoc < float64(limit) {
 				lp.log.DEBUG.Printf("battery boost hold: soc below limit (%.0f%% < %d%%)", batterySoc, limit)
 				lp.setBatteryBoost(boostHold)
-			case boost == boostHold && batterySoc >= float64(limit):
-				lp.log.DEBUG.Printf("battery boost resume: soc above limit (%.0f%% >= %d%%)", batterySoc, limit)
-				lp.setBatteryBoost(boostContinue)
 			}
 		}
 	}

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
@@ -221,6 +222,45 @@ func TestBoostPowerPhaseSwitchGapBridgingExclusions(t *testing.T) {
 
 			res := lp.boostPower(0)
 			assert.Equal(t, tc.expected, res)
+		})
+	}
+}
+
+// stubSettings only implements what SetBatteryBoostLimit writes
+type stubSettings struct {
+	settings.Settings
+}
+
+func (stubSettings) SetInt(string, int64) {}
+
+// Relaxing the limit resumes a boost it put on hold, tightening it does not (#32998).
+func TestSetBatteryBoostLimitResume(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		boost    int
+		from, to int
+		want     int
+	}{
+		{"lowering the limit resumes", boostHold, 50, 30, boostStart},
+		{"disabling the limit resumes", boostHold, 50, 100, boostStart},
+		{"raising the limit holds", boostHold, 30, 50, boostHold},
+		{"enabling a limit holds", boostHold, 100, 50, boostHold},
+		{"unchanged limit holds", boostHold, 50, 50, boostHold},
+		{"only a held boost resumes", boostContinue, 50, 30, boostContinue},
+		{"disabled boost stays disabled", boostDisabled, 50, 30, boostDisabled},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			lp := &Loadpoint{
+				log:               util.NewLogger("lp"),
+				settings:          stubSettings{},
+				batteryBoost:      tc.boost,
+				batteryBoostLimit: tc.from,
+			}
+
+			lp.SetBatteryBoostLimit(tc.to)
+
+			assert.Equal(t, tc.to, lp.batteryBoostLimit)
+			assert.Equal(t, tc.want, lp.batteryBoost)
 		})
 	}
 }
