@@ -216,12 +216,16 @@ func (suite *connTestSuite) TestOnStatusNotificationClearsStaleTxn() {
 // fresh RemoteStartTransaction instead of evcc waiting indefinitely for a disconnect.
 func (suite *connTestSuite) TestOnStatusNotificationFinishingTriggersRemoteStart() {
 	suite.conn.remoteIdTag = "evcc"
+	suite.conn.txnId = 42
+	suite.conn.idTag = "active"
 
-	// charger sends StopTransaction, which clears txnId/idTag
+	// charger sends StopTransaction, which must clear txnId/idTag before Finishing arrives
 	_, err := suite.conn.OnStopTransaction(&core.StopTransactionRequest{
 		TransactionId: suite.conn.txnId,
 	})
 	suite.NoError(err)
+	suite.Equal(0, suite.conn.txnId, "StopTransaction must clear txnId before Finishing")
+	suite.Equal("", suite.conn.idTag, "StopTransaction must clear idTag before Finishing")
 
 	_, err = suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
 		ConnectorId: 1,
