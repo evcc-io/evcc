@@ -33,12 +33,13 @@ func TestEntityUpdate(t *testing.T) {
 		cachedScenarios          []uint
 		entityScenarios          []uint
 		want                     string // "cached", "entity" or "nil"
+		newlyAvailable           bool
 	}{
-		{"first entity is recorded", 0, 1, nil, []uint{1}, "entity"},
-		{"entity without scenarios is ignored", 0, 1, nil, nil, "nil"},
-		{"shallower entity wins", 2, 1, []uint{1}, []uint{1}, "entity"},
-		{"deeper entity loses", 1, 2, []uint{1}, []uint{1}, "cached"},
-		{"removal drops the recorded entity", 1, 1, nil, nil, "nil"},
+		{"first entity is recorded", 0, 1, nil, []uint{1}, "entity", true},
+		{"entity without scenarios is ignored", 0, 1, nil, nil, "nil", false},
+		{"shallower entity wins", 2, 1, []uint{1}, []uint{1}, "entity", true},
+		{"deeper entity loses", 1, 2, []uint{1}, []uint{1}, "cached", false},
+		{"removal drops the recorded entity", 1, 1, nil, nil, "nil", false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			uc := ucmocks.NewMaMPCInterface(t)
@@ -58,7 +59,8 @@ func TestEntityUpdate(t *testing.T) {
 				"cached": cached, "entity": entity, "nil": nil,
 			}[tc.want]
 
-			e.Update(entity)
+			// the result gates re-stating the limit to a newly available CS
+			assert.Equal(t, tc.newlyAvailable, e.Update(entity))
 			assert.Equal(t, want, e.get())
 		})
 	}
@@ -77,7 +79,7 @@ func TestEntityUpdateRemovalOfOtherEntity(t *testing.T) {
 	e := NewEntity(uc)
 	e.Set(cached)
 
-	e.Update(removed)
+	assert.False(t, e.Update(removed))
 	assert.Equal(t, cached, e.get())
 }
 

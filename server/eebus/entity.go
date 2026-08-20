@@ -64,10 +64,10 @@ func (e *Entity[U]) Update(entity spineapi.EntityRemoteInterface) bool {
 	return e.entity != prev
 }
 
-// Available returns the remote entity, ErrNotAvailable if the use case has none
+// available returns the remote entity, ErrNotAvailable if the use case has none
 // or the entity does not announce all of the given scenarios. Use case methods
 // only validate the entity type, so the scenarios must be checked here.
-func (e *Entity[U]) Available(scenarios ...uint) (spineapi.EntityRemoteInterface, error) {
+func (e *Entity[U]) available(scenarios ...uint) (spineapi.EntityRemoteInterface, error) {
 	entity := e.get()
 	if entity == nil {
 		return nil, api.ErrNotAvailable
@@ -97,7 +97,7 @@ func (e *Entity[U]) Required() (spineapi.EntityRemoteInterface, error) {
 func (e *Entity[U]) Read[T any](read func(uc U, entity spineapi.EntityRemoteInterface) (T, error), scenarios ...uint) (T, error) {
 	var zero T
 
-	entity, err := e.Available(scenarios...)
+	entity, err := e.available(scenarios...)
 	if err != nil {
 		return zero, err
 	}
@@ -112,7 +112,7 @@ func (e *Entity[U]) Read[T any](read func(uc U, entity spineapi.EntityRemoteInte
 
 // Write runs a control write against the remote entity and waits for its result.
 func (e *Entity[U]) Write(write func(uc U, entity spineapi.EntityRemoteInterface, cb ResultCB) (*model.MsgCounterType, error), scenarios ...uint) error {
-	entity, err := e.Available(scenarios...)
+	entity, err := e.available(scenarios...)
 	if err != nil {
 		return err
 	}
