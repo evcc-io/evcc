@@ -20,6 +20,14 @@ func TestSupervisorToken(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "test_supervisor_token", tok.AccessToken)
 
+	// SupervisorURI variant with trailing slash should still match
+	tsSlash, ok := supervisorTokenSource(SupervisorURI + "/")
+	require.True(t, ok)
+	
+	tokSlash, err := tsSlash.Token()
+	require.NoError(t, err)
+	assert.Equal(t, "test_supervisor_token", tokSlash.AccessToken)
+
 	// empty uri does not match supervisor
 	_, ok = supervisorTokenSource("")
 	assert.False(t, ok)
@@ -35,6 +43,17 @@ func TestSupervisorToken(t *testing.T) {
 	tok3, err := ts3.Token()
 	require.NoError(t, err)
 	assert.Equal(t, "test_supervisor_token", tok3.AccessToken)
+
+	// when SUPERVISOR_TOKEN is unset, NewHomeAssistantFromConfig should fall back to the standard OAuth token source
+	t.Setenv(SupervisorToken, "")
+
+	ts4, err := NewHomeAssistantFromConfig(map[string]any{"uri": SupervisorURI})
+	require.NoError(t, err)
+
+	tok4, err := ts4.Token()
+	require.NoError(t, err)
+	// ensure we did not use the supervisor token source
+	assert.NotEqual(t, "test_supervisor_token", tok4.AccessToken)
 
 	// connection requires uri
 	_, err = NewConnection(util.NewLogger("test"), "", "", false)
