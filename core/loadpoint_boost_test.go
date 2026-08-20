@@ -236,23 +236,25 @@ func (stubSettings) SetInt(string, int64) {}
 // Relaxing the limit resumes a boost it put on hold, tightening it does not (#32998).
 func TestSetBatteryBoostLimitResume(t *testing.T) {
 	for _, tc := range []struct {
-		name     string
-		boost    int
-		from, to int
-		want     int
+		name       string
+		boost      int
+		from, to   int
+		want       int
+		wantUpdate bool
 	}{
-		{"lowering the limit resumes", boostHold, 50, 30, boostStart},
-		{"disabling the limit resumes", boostHold, 50, 100, boostStart},
-		{"raising the limit holds", boostHold, 30, 50, boostHold},
-		{"enabling a limit holds", boostHold, 100, 50, boostHold},
-		{"unchanged limit holds", boostHold, 50, 50, boostHold},
-		{"only a held boost resumes", boostContinue, 50, 30, boostContinue},
-		{"disabled boost stays disabled", boostDisabled, 50, 30, boostDisabled},
+		{"lowering the limit resumes", boostHold, 50, 30, boostStart, true},
+		{"disabling the limit resumes", boostHold, 50, 100, boostStart, true},
+		{"raising the limit holds", boostHold, 30, 50, boostHold, true},
+		{"enabling a limit holds", boostHold, 100, 50, boostHold, true},
+		{"unchanged limit holds", boostHold, 50, 50, boostHold, false},
+		{"only a held boost resumes", boostContinue, 50, 30, boostContinue, true},
+		{"disabled boost stays disabled", boostDisabled, 50, 30, boostDisabled, true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			lp := &Loadpoint{
 				log:               util.NewLogger("lp"),
 				settings:          stubSettings{},
+				lpChan:            make(chan *Loadpoint, 1),
 				batteryBoost:      tc.boost,
 				batteryBoostLimit: tc.from,
 			}
@@ -261,6 +263,8 @@ func TestSetBatteryBoostLimitResume(t *testing.T) {
 
 			assert.Equal(t, tc.to, lp.batteryBoostLimit)
 			assert.Equal(t, tc.want, lp.batteryBoost)
+			// a changed limit must act now instead of on the next update tick
+			assert.Equal(t, tc.wantUpdate, len(lp.lpChan) == 1)
 		})
 	}
 }
