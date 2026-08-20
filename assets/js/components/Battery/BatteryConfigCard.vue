@@ -71,6 +71,22 @@
 			</div>
 		</div>
 
+		<p
+			v-if="optimizerControlledTitles.length"
+			class="d-flex gap-3 text-muted small mb-0"
+			data-testid="battery-optimizer-hint"
+		>
+			<OptimizerAuto class="flex-shrink-0" />
+			<i18n-t keypath="battery.config.optimizerControlledHint" tag="span" scope="global">
+				<template #loadpoints>{{ optimizerControlledTitles.join(", ") }}</template>
+				<template #optimizer>
+					<router-link to="/optimize" class="text-muted">
+						{{ $t("config.optimizer.linkWord") }}
+					</router-link>
+				</template>
+			</i18n-t>
+		</p>
+
 		<template v-if="controllable">
 			<hr class="my-3" />
 			<div class="form-check form-switch">
@@ -114,13 +130,14 @@ import type { Battery } from "@/types/evcc";
 import store from "@/store";
 import Card from "../Helper/Card.vue";
 import InlineSocSelect from "./InlineSocSelect.vue";
+import OptimizerAuto from "../MaterialIcon/OptimizerAuto.vue";
 
 // Battery usage controls for the experimental page. The logic is intentionally duplicated
 // from the classic BatteryUsageSettings.vue (slated for removal) so the two can diverge
 // during the transition.
 export default defineComponent({
 	name: "BatteryConfigCard",
-	components: { Card, InlineSocSelect },
+	components: { Card, InlineSocSelect, OptimizerAuto },
 	mixins: [formatter],
 	props: {
 		bufferSoc: { type: Number, default: 100 },
@@ -130,6 +147,7 @@ export default defineComponent({
 		batteryGridDischarge: Boolean,
 		battery: { type: Object as PropType<Battery> },
 		experimental: Boolean,
+		optimizerControlledTitles: { type: Array as PropType<string[]>, default: () => [] },
 	},
 	data() {
 		return {
