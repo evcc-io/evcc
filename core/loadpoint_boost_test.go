@@ -226,7 +226,8 @@ func TestBoostPowerPhaseSwitchGapBridgingExclusions(t *testing.T) {
 	}
 }
 
-// Relaxing the limit resumes a boost it put on hold, tightening it does not (#32998).
+// Relaxing the limit resumes a boost it put on hold, tightening it does not.
+// Setting 100 disables the feature and ends an active boost.
 func TestSetBatteryBoostLimitResume(t *testing.T) {
 	for _, tc := range []struct {
 		name       string
@@ -236,7 +237,8 @@ func TestSetBatteryBoostLimitResume(t *testing.T) {
 		wantUpdate bool
 	}{
 		{"lowering the limit resumes", boostHold, 50, 30, boostStart, true},
-		{"disabling the limit resumes", boostHold, 50, 100, boostStart, true},
+		{"removing the limit ends held boost", boostHold, 50, 100, boostDisabled, true},
+		{"removing the limit ends active boost", boostContinue, 50, 100, boostDisabled, true},
 		{"raising the limit holds", boostHold, 30, 50, boostHold, true},
 		{"enabling a limit holds", boostHold, 100, 50, boostHold, true},
 		{"unchanged limit holds", boostHold, 50, 50, boostHold, false},
