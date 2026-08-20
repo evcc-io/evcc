@@ -224,7 +224,6 @@ import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import api from "@/api";
 import { defineComponent, type PropType } from "vue";
 import type { Battery } from "@/types/evcc";
-import store from "@/store";
 
 export default defineComponent({
 	name: "BatteryUsageSettings",
@@ -236,6 +235,7 @@ export default defineComponent({
 		bufferStartSoc: { type: Number, default: 0 },
 		batteryDischargeControl: Boolean,
 		battery: { type: Object as PropType<Battery> },
+		optimizerAutomatic: Boolean,
 	},
 	data() {
 		return {
@@ -245,9 +245,6 @@ export default defineComponent({
 		};
 	},
 	computed: {
-		optimizerAutomatic(): boolean {
-			return !!store.state?.optimizerAutomatic;
-		},
 		batterySoc() {
 			return this.battery?.soc ?? 0;
 		},

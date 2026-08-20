@@ -14,6 +14,7 @@
 						:buffer-start-soc="state.bufferStartSoc"
 						:battery-discharge-control="state.batteryDischargeControl"
 						:battery="state.battery"
+						:optimizer-automatic="state.optimizerAutomatic"
 					/>
 					<template v-if="gridChargeVisible">
 						<hr class="my-5" />

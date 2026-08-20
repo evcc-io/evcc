@@ -127,7 +127,6 @@ import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
 import api from "@/api";
 import type { Battery } from "@/types/evcc";
-import store from "@/store";
 import Card from "../Helper/Card.vue";
 import InlineSocSelect from "./InlineSocSelect.vue";
 import OptimizerAuto from "../MaterialIcon/OptimizerAuto.vue";
@@ -147,6 +146,7 @@ export default defineComponent({
 		batteryGridDischarge: Boolean,
 		battery: { type: Object as PropType<Battery> },
 		experimental: Boolean,
+		optimizerAutomatic: Boolean,
 		optimizerControlledTitles: { type: Array as PropType<string[]>, default: () => [] },
 	},
 	data() {
@@ -157,9 +157,6 @@ export default defineComponent({
 		};
 	},
 	computed: {
-		optimizerAutomatic(): boolean {
-			return !!store.state?.optimizerAutomatic;
-		},
 		chargeSubtitle(): string {
 			return `${this.$t("battery.card.soc")} ${this.fmtSoc(this.batterySoc)}`;
 		},
