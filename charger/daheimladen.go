@@ -363,12 +363,11 @@ func (wb *DaheimLaden) getPhases() (int, error) {
 }
 
 func (wb *DaheimLaden) checkStation() error {
-	b, err := wb.conn.ReadHoldingRegisters(dlRegEvseMaxCurrent, 22)
-	if err != nil {
+	// first call for fw init
+	if _, err := wb.conn.ReadHoldingRegisters(dlRegEvseMaxCurrent, 22); err != nil {
 		return err
 	}
-	// second call for initialization purposes
-	b, err = wb.conn.ReadHoldingRegisters(dlRegEvseMaxCurrent, 22)
+	b, err := wb.conn.ReadHoldingRegisters(dlRegEvseMaxCurrent, 22)
 	if err != nil {
 		return api.ErrSponsorRequired
 	}
