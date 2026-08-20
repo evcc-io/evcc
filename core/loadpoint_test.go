@@ -752,8 +752,9 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 			Disable: loadpoint.ThresholdConfig{
 				Delay: dt,
 			},
-			status:  api.StatusC,
-			enabled: true,
+			status:      api.StatusC,
+			enabled:     true,
+			chargePower: 3 * Voltage * minA, // charging 3p at min current
 		}
 
 		start := clock.Now()
