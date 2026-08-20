@@ -1,0 +1,62 @@
+template: senec-connect
+products:
+  - brand: SENEC
+    description:
+      generic: .Connect (Cloud)
+requirements:
+  description:
+    de: >-
+      Cloud-Anbindung über die SENEC.Connect-API, u. a. für den SENEC.Home P4, der über die lokale
+      Schnittstelle (siehe `senec-home`) nicht unterstützt wird. Ein Subscription Key aus dem SENEC
+      Developer Portal wird benötigt. Der Zugriff ist read-only, eine Batteriesteuerung ist darüber
+      nicht möglich.
+    en: >-
+      Cloud connection via the SENEC.Connect API, required for the SENEC.Home P4, which is not
+      supported via the local interface (see `senec-home`). A subscription key from the SENEC
+      developer portal is required. Access is read-only, battery control is not possible.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: token
+    required: true
+    description:
+      de: Subscription Key
+      en: Subscription key
+    help:
+      de: Abonnement-Schlüssel aus dem SENEC Developer Portal (wird als Header `Ocp-Apim-Subscription-Key` gesendet).
+      en: Subscription key from the SENEC developer portal (sent as header `Ocp-Apim-Subscription-Key`).
+    type: string
+  - preset: battery-params
+render: |
+  {{- define "uri" -}}
+  https://apim-eds-gwc-prod.azure-api.net/senec-connect/v1/systems/device-data/general
+  {{- end }}
+  type: custom
+  power:
+    source: http
+    uri: {{ include "uri" . }}
+    headers:
+    - content-type: application/json
+    - Ocp-Apim-Subscription-Key: {{ .token }}
+    cache: 1m
+  {{- if eq .usage "grid" }}
+    jq: .[0].meter.grid_power
+  {{- end }}
+  {{- if eq .usage "pv" }}
+    jq: .[0].meter.production
+  {{- end }}
+  {{- if eq .usage "battery" }}
+    jq: .[0].battery.power
+    scale: -1
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  soc:
+    source: http
+    uri: {{ include "uri" . }}
+    headers:
+    - content-type: application/json
+    - Ocp-Apim-Subscription-Key: {{ .token }}
+    cache: 1m
+    jq: .[0].battery.state_of_charge
+  {{- include "battery-params" . }}
+  {{- end }}
