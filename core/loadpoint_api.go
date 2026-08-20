@@ -680,9 +680,8 @@ func (lp *Loadpoint) GetBatteryBoostLimit() int {
 	return lp.batteryBoostLimit
 }
 
-// SetBatteryBoostLimit sets the battery boost soc limit. Relaxing the limit resumes
-// a boost held by it, so leaving the hold requires an explicit user action and the
-// battery cannot start flipping between hold and boost on its own (#32998).
+// SetBatteryBoostLimit sets the battery boost soc limit. Relaxing the limit
+// resumes a boost held by it (#32998).
 func (lp *Loadpoint) SetBatteryBoostLimit(limit int) {
 	lp.Lock()
 	defer lp.Unlock()

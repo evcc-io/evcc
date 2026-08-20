@@ -226,13 +226,6 @@ func TestBoostPowerPhaseSwitchGapBridgingExclusions(t *testing.T) {
 	}
 }
 
-// stubSettings only implements what SetBatteryBoostLimit writes
-type stubSettings struct {
-	settings.Settings
-}
-
-func (stubSettings) SetInt(string, int64) {}
-
 // Relaxing the limit resumes a boost it put on hold, tightening it does not (#32998).
 func TestSetBatteryBoostLimitResume(t *testing.T) {
 	for _, tc := range []struct {
@@ -253,7 +246,7 @@ func TestSetBatteryBoostLimitResume(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			lp := &Loadpoint{
 				log:               util.NewLogger("lp"),
-				settings:          stubSettings{},
+				settings:          settings.NewDatabaseSettingsAdapter("foo"),
 				lpChan:            make(chan *Loadpoint, 1),
 				batteryBoost:      tc.boost,
 				batteryBoostLimit: tc.from,
