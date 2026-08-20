@@ -17,6 +17,7 @@ params:
   # battery control
   - name: defaultmode
     default: 2
+  - name: maxchargerate
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -187,7 +188,7 @@ render: |
               type: writeholding
               decode: int16
         - source: const
-          value: 0x7F64 # end (0xFF / 100%)
+          value: {{ add 0x7F00 .maxchargerate }} # day mask 0x7F (all days) in high byte, charge power % in low byte
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}        
