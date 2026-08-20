@@ -12,7 +12,9 @@ import (
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -754,8 +756,9 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 			Disable: loadpoint.ThresholdConfig{
 				Delay: dt,
 			},
-			status:  api.StatusC,
-			enabled: true,
+			status:      api.StatusC,
+			enabled:     true,
+			chargePower: 3 * Voltage * minA, // charging 3p at min current
 		}
 
 		start := clock.Now()
@@ -945,4 +948,27 @@ func TestPVSolarShare(t *testing.T) {
 		"enable threshold should apply despite solar share")
 	assert.Equal(t, minA, newLp(1, true, 0, 5000).pvMaxCurrent(api.ModePV, 100, 0, false, false),
 		"disable threshold should apply despite solar share")
+}
+
+// default vehicle referencing a disabled vehicle must not fail loadpoint creation
+func TestNewLoadpointFromConfigDisabledVehicle(t *testing.T) {
+	config.Reset()
+	t.Cleanup(config.Reset)
+
+	ctrl := gomock.NewController(t)
+
+	// disabled vehicle: device registered without instance
+	var vehicle api.Vehicle
+	require.NoError(t, config.Vehicles().Add(config.NewStaticDevice(config.Named{Name: "vehicle"}, vehicle)))
+	require.NoError(t, config.Chargers().Add(config.NewStaticDevice(config.Named{Name: "charger"}, api.Charger(api.NewMockCharger(ctrl)))))
+
+	lp, err := NewLoadpointFromConfig(util.NewLogger("foo"), nil, nil, map[string]any{
+		"charger": "charger",
+		"vehicle": "vehicle",
+	})
+	require.NoError(t, err)
+	require.Nil(t, lp.defaultVehicle)
+
+	// disabled vehicle is filtered from instances
+	require.Empty(t, config.Instances(config.Vehicles().Devices()))
 }

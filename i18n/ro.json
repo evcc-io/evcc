@@ -1011,7 +1011,6 @@
       },
       "planNumber": "Planul {number}",
       "precondition": {
-        "description": "Încărcați {duration} înainte de plecare pentru precondiționarea bateriei.",
         "label": "Încărcare întârziată",
         "optionAll": "totul",
         "optionNo": "nu"
@@ -1021,7 +1020,6 @@
       "repeatingPlans": "Planuri repetitive",
       "selectAll": "Selectați tot",
       "strategyDisabledDescription": "Încărcarea începe cât mai târziu posibil, pentru a se termina chiar înainte de plecare. Cu prețuri dinamice la rețea sau tariful CO₂, aici sunt disponibile mai multe opțiuni.",
-      "strategySettings": "Setări strategie",
       "time": "Timp",
       "title": "Plan",
       "unsavedChanges": "Există modificări nesalvate. Doriți să le aplicați acum?",
