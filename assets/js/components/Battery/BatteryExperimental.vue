@@ -23,6 +23,7 @@
 			:battery-grid-discharge="state.batteryGridDischarge"
 			:battery="state.battery"
 			:experimental="state.experimental"
+			:optimizer-controlled-titles="optimizerControlledTitles"
 		/>
 
 		<Card
@@ -96,6 +97,11 @@ export default defineComponent({
 		batteryAvailable(): boolean {
 			return this.devices.length > 0;
 		},
+		optimizerControlledTitles(): string[] {
+			return (this.state.loadpoints ?? [])
+				.filter((lp) => lp.optimizerControlled)
+				.map((lp) => lp.title || this.$t("main.loadpoint.fallbackName"));
+		},
 		evopt() {
 			return this.state.evopt;
 		},
@@ -139,9 +145,7 @@ export default defineComponent({
 				currency: this.state.currency || CURRENCY.EUR,
 				tariff: this.gridChargeTariff,
 				possible: this.gridChargePossible,
-				disabledHint: this.state.optimizerAutomatic
-					? this.$t("config.optimizer.controlled")
-					: "",
+				disabledHint: this.state.optimizerAutomatic ? "config.optimizer.controlled" : "",
 			};
 		},
 		gridDischargeLimit(): number | null {

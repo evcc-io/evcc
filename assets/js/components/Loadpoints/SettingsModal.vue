@@ -273,9 +273,7 @@ export default defineComponent({
 			return this.loadpoints.find((loadpoint) => loadpoint.id === this.id);
 		},
 		optimizerHint(): string {
-			return this.loadpoint?.optimizerControlled
-				? this.$t("config.optimizer.controlled")
-				: "";
+			return this.loadpoint?.optimizerControlled ? "config.optimizer.controlled" : "";
 		},
 		maxCurrent() {
 			return this.loadpoint?.maxCurrent;

@@ -42,7 +42,19 @@
 					{{ $t("config.optimizer.automatic") }}
 				</label>
 				<div class="text-muted small">
-					{{ $t("config.optimizer.automaticHint") }}
+					<p class="mt-2 mb-1">{{ $t("config.optimizer.automaticHint") }}</p>
+					<ul class="mb-2 ps-3">
+						<li>{{ $t("config.optimizer.automaticCharging") }}</li>
+						<li>{{ $t("config.optimizer.automaticBattery") }}</li>
+						<li>{{ $t("config.optimizer.automaticLimits") }}</li>
+						<li>{{ $t("config.optimizer.automaticPlans") }}</li>
+					</ul>
+					<p class="mb-1">{{ $t("config.optimizer.automaticNotControlled") }}</p>
+					<ul class="mb-0 ps-3">
+						<li>{{ $t("config.optimizer.automaticNotControlledModes") }}</li>
+						<li>{{ $t("config.optimizer.automaticNotControlledDevices") }}</li>
+						<li>{{ $t("config.optimizer.automaticNotControlledVehicles") }}</li>
+					</ul>
 				</div>
 			</div>
 		</div>
