@@ -779,10 +779,10 @@ components:
         chargerFeatureContinuous:
           description: Charger is a heating device where disabled means normal operation.
           type: boolean
-        chargerFeaturePredictorProfileTemperature:
+        chargerFeatureDemandTemperature:
           description: Heating device demand forecast uses daily average profile scaled by outdoor temperature.
           type: boolean
-        chargerFeaturePredictorProfileSameWeekday:
+        chargerFeatureDemandWeekday:
           description: Heating device demand forecast uses same-weekday average over past 4 weeks.
           type: boolean
         chargerFeatureHeating:
@@ -1063,8 +1063,8 @@ components:
         - chargerFeatureClimaterDisabled
         - chargerFeatureCoarseCurrent
         - chargerFeatureContinuous
-        - chargerFeaturePredictorProfileTemperature
-        - chargerFeaturePredictorProfileSameWeekday
+        - chargerFeatureDemandTemperature
+        - chargerFeatureDemandWeekday
         - chargerFeatureHeating
         - chargerFeatureIntegratedDevice
         - chargerFeatureOffline
