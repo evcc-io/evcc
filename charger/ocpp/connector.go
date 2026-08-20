@@ -180,7 +180,7 @@ func (conn *Connector) Status() (core.ChargePointStatus, error) {
 	return conn.status.Status, nil
 }
 
-// NeedsAuthentication checks if local authentication or an initial RemoteStartTransaction is required
+// NeedsAuthentication checks if local authentication or a RemoteStartTransaction is required
 func (conn *Connector) NeedsAuthentication() bool {
 	if !conn.cp.Connected() {
 		return false
@@ -192,10 +192,17 @@ func (conn *Connector) NeedsAuthentication() bool {
 	return conn.isWaitingForAuth()
 }
 
-// isWaitingForAuth checks if meter values are outdated.
+// isWaitingForAuth checks if a RemoteStartTransaction is required to (re-)start charging.
+// This is true for Preparing (cable just plugged in) and also for Finishing when no
+// transaction is running: some chargers end the transaction on their own whenever the
+// charging profile limit drops below their minimum current (e.g. limit 0 in off/pv mode)
+// and never resume without a fresh RemoteStartTransaction, even though they still report
+// remotestart-capability. Waiting for a disconnect in that case stalls unattended installs.
 // Must only be called while holding lock.
 func (conn *Connector) isWaitingForAuth() bool {
-	return conn.status != nil && conn.txnId == 0 && conn.status.Status == core.ChargePointStatusPreparing
+	return conn.status != nil && conn.txnId == 0 &&
+		(conn.status.Status == core.ChargePointStatusPreparing ||
+			conn.status.Status == core.ChargePointStatusFinishing)
 }
 
 // isMeterTimeout checks if meter values are outdated.
