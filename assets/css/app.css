@@ -450,6 +450,11 @@ a:hover {
 .modal.show .modal-dialog {
 	transform: none;
 }
+/* restore bootstrap's dismiss-blocked zoom, neutralized by the transform reset above */
+.modal.modal-static .modal-dialog {
+	transform: scale(1.02);
+	transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
 
 .modal-header {
 	padding: 0 0 1rem 0;
@@ -945,4 +950,10 @@ input::-webkit-date-and-time-value {
 
 .sticky-bottom {
 	bottom: calc(var(--tab-bar-height) + 0.25rem);
+}
+
+[_echarts_instance_] {
+	user-select: none;
+	-webkit-user-select: none;
+	-webkit-touch-callout: none;
 }

@@ -89,6 +89,11 @@ test.describe("charging loadpoint", async () => {
     await expectModalVisible(lpModal);
     await expect(lpModal.getByRole("heading", { name: "Edit Charging Point" })).toBeVisible();
     await lpModal.getByLabel("Title").fill("Solar Carport 2");
+
+    // unsaved changes: backdrop click keeps modal open
+    await lpModal.click({ position: { x: 10, y: 10 } });
+    await expectModalVisible(lpModal);
+
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
     await expect(page.getByTestId("loadpoint")).toContainText("Solar Carport 2");

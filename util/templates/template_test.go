@@ -42,22 +42,22 @@ func TestRequiredString(t *testing.T) {
 		},
 	}
 
-	_, _, err := tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+	_, _, err := tmpl.RenderResult(Meter, RenderModeUnitTest, map[string]any{
 		"Param": "foo",
 	})
 	assert.NoError(t, err, "test: required present")
 
-	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+	_, _, err = tmpl.RenderResult(Meter, RenderModeUnitTest, map[string]any{
 		"Param": "",
 	})
 	assert.Error(t, err, "test: required present but empty")
 
-	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+	_, _, err = tmpl.RenderResult(Meter, RenderModeUnitTest, map[string]any{
 		"Param": nil,
 	})
 	assert.Error(t, err, "test: required present but nil")
 
-	_, _, err = tmpl.RenderResult(RenderModeDocs, map[string]any{
+	_, _, err = tmpl.RenderResult(Meter, RenderModeDocs, map[string]any{
 		"Param": nil,
 	})
 	assert.NoError(t, err, "docs: required present but nil")
@@ -74,27 +74,27 @@ func TestRequiredNumber(t *testing.T) {
 		},
 	}
 
-	_, _, err := tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+	_, _, err := tmpl.RenderResult(Meter, RenderModeUnitTest, map[string]any{
 		"Param": "1",
 	})
 	assert.NoError(t, err, "test: required present")
 
-	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+	_, _, err = tmpl.RenderResult(Meter, RenderModeUnitTest, map[string]any{
 		"Param": "",
 	})
 	assert.Error(t, err, "test: required present but empty")
 
-	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+	_, _, err = tmpl.RenderResult(Meter, RenderModeUnitTest, map[string]any{
 		"Param": "0",
 	})
 	assert.Error(t, err, "test: required present but zero value")
 
-	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+	_, _, err = tmpl.RenderResult(Meter, RenderModeUnitTest, map[string]any{
 		"Param": nil,
 	})
 	assert.Error(t, err, "test: required present but nil")
 
-	_, _, err = tmpl.RenderResult(RenderModeDocs, map[string]any{
+	_, _, err = tmpl.RenderResult(Meter, RenderModeDocs, map[string]any{
 		"Param": nil,
 	})
 	assert.NoError(t, err, "docs: required present but nil")
@@ -111,22 +111,22 @@ func TestRequiredDeprecated(t *testing.T) {
 		},
 	}
 
-	_, _, err := tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+	_, _, err := tmpl.RenderResult(Meter, RenderModeUnitTest, map[string]any{
 		"Param": "foo",
 	})
 	assert.NoError(t, err, "test: required present")
 
-	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+	_, _, err = tmpl.RenderResult(Meter, RenderModeUnitTest, map[string]any{
 		"Param": "",
 	})
 	assert.NoError(t, err, "test: required present but empty")
 
-	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+	_, _, err = tmpl.RenderResult(Meter, RenderModeUnitTest, map[string]any{
 		"Param": nil,
 	})
 	assert.NoError(t, err, "test: required present but nil")
 
-	_, _, err = tmpl.RenderResult(RenderModeDocs, map[string]any{
+	_, _, err = tmpl.RenderResult(Meter, RenderModeDocs, map[string]any{
 		"Param": nil,
 	})
 	assert.NoError(t, err, "docs: required present but nil")
@@ -146,25 +146,25 @@ func TestRequiredPerUsage(t *testing.T) {
 		},
 	}
 
-	_, _, err := tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+	_, _, err := tmpl.RenderResult(Meter, RenderModeUnitTest, map[string]any{
 		"Param": nil,
 		"Usage": nil,
 	})
 	require.NoError(t, err)
 
-	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+	_, _, err = tmpl.RenderResult(Meter, RenderModeUnitTest, map[string]any{
 		"Param": nil,
 		"Usage": "pv",
 	})
 	require.NoError(t, err)
 
-	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+	_, _, err = tmpl.RenderResult(Meter, RenderModeUnitTest, map[string]any{
 		"Param": nil,
 		"Usage": "battery",
 	})
 	require.Error(t, err)
 
-	_, _, err = tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+	_, _, err = tmpl.RenderResult(Meter, RenderModeUnitTest, map[string]any{
 		"Param": "foo",
 		"Usage": "battery",
 	})
@@ -190,7 +190,7 @@ func TestValidatePattern(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.host, func(t *testing.T) {
-			_, _, err := tmpl.RenderResult(RenderModeInstance, map[string]any{"host": tt.host})
+			_, _, err := tmpl.RenderResult(Meter, RenderModeInstance, map[string]any{"host": tt.host})
 			if tt.valid {
 				require.NoError(t, err)
 			} else {

@@ -59,6 +59,21 @@ test.describe("disable / enable", async () => {
     await page.reload();
     await createLoadpoint(page, "Garage");
 
+    // restart to bring both loadpoints live
+    await restart();
+    await page.reload();
+
+    // switch charge mode on dashboard; runtime setting is persisted next to the loadpoint config
+    await page.goto("/");
+    const modeButton = page
+      .getByTestId("loadpoint")
+      .nth(0)
+      .getByTestId("mode")
+      .getByRole("button", { name: "Fast" });
+    await modeButton.click();
+    await expect(modeButton).toHaveClass(/active/);
+    await page.goto("/#/config");
+
     const target = page.getByTestId("loadpoint").nth(0);
 
     await toggleLoadpointDisable(page, 0, "Disable");
@@ -66,10 +81,11 @@ test.describe("disable / enable", async () => {
     // card shows disabled state
     await expect(disabledBadge(target)).toBeVisible();
 
-    // restart, no fatal
+    // restart, no fatal, both loadpoints still listed
     await restart();
     await page.reload();
     await expectNoFatal(page);
+    await expect(page.getByTestId("loadpoint")).toHaveCount(2);
     await expect(disabledBadge(target)).toBeVisible();
 
     // re-enable by clicking the disabled card
@@ -223,6 +239,10 @@ test.describe("disable / enable", async () => {
     await start();
     await page.goto("/#/config");
 
+    // loadpoint so the vehicle shows up on the dashboard
+    await createLoadpoint(page, "Carport");
+    await page.reload();
+
     // add user-defined vehicle
     await page.getByTestId("add-vehicle").click();
     const modal = page.getByTestId("vehicle-modal");
@@ -261,6 +281,23 @@ soc:
     await expectNoFatal(page);
     await expect(disabledBadge(vehicleCard)).toBeVisible();
 
+    // disabled vehicle is hidden from main ui
+    await page.goto("/");
+    await expect(page.getByTestId("loadpoint")).toBeVisible();
+    await expect(
+      page.getByTestId("change-vehicle").getByRole("option", { name: "blue Honda" })
+    ).toHaveCount(0);
+
+    // no vehicles entry in more menu
+    const moreTab = page.getByTestId("tab-more");
+    await moreTab.click();
+    await expect(moreTab.getByRole("button", { name: "User Interface" })).toBeVisible();
+    await expect(moreTab.getByRole("button", { name: "Vehicles" })).not.toBeVisible();
+    // close more menu
+    await moreTab.click();
+
+    await page.goto("/#/config");
+
     // re-enable by clicking the disabled card
     await disabledBadge(vehicleCard).click();
     await expect(disabledBadge(vehicleCard)).toHaveCount(0);
@@ -270,6 +307,19 @@ soc:
     await page.reload();
     await expectNoFatal(page);
     await expect(vehicleCard).toContainText("blue Honda");
+
+    // vehicle is selectable on the dashboard again
+    await page.goto("/");
+    await expect(
+      page.getByTestId("change-vehicle").getByRole("option", { name: "blue Honda" })
+    ).toHaveCount(1);
+
+    // vehicle is back in the more menu vehicles modal
+    await moreTab.click();
+    await moreTab.getByRole("button", { name: "Vehicles" }).click();
+    const settingsModal = page.getByTestId("vehicle-settings-modal");
+    await expectModalVisible(settingsModal);
+    await expect(settingsModal.getByRole("group", { name: "blue Honda" })).toBeVisible();
   });
 });
 

@@ -118,7 +118,12 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 	if err != nil {
 		return nil, fmt.Errorf("identify: %w", err)
 	}
-	implement.May(c, implement.Identifier(identify))
+	if identify != nil {
+		implement.Has(c, implement.Identifier(func() ([]string, error) {
+			id, err := identify()
+			return []string{id}, err
+		}))
+	}
 
 	// decorate wakeup
 	if cc.Wakeup != nil {

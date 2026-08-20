@@ -1,4 +1,4 @@
-{{ define "tariff-base" }}
+{{ define "base" }}
 {{- if .charges }}
 charges: {{ .charges }}
 {{- end }}

@@ -3,6 +3,7 @@
 		id="loadpointModal"
 		ref="modal"
 		config-modal-name="loadpoint"
+		:prevent-dismiss="dirty"
 		:title="modalTitle"
 		data-testid="loadpoint-modal"
 		@open="onOpen"
@@ -738,6 +739,7 @@ export default {
 			isModalVisible: false,
 			saving: false,
 			values: deepClone(defaultValues) as ConfigLoadpoint,
+			baseline: JSON.stringify(defaultValues),
 			chargerPower: "11kw",
 			solarMode: "default",
 			autoCreate: false,
@@ -749,6 +751,9 @@ export default {
 	computed: {
 		id(): number | undefined {
 			return getModal("loadpoint")?.id;
+		},
+		dirty(): boolean {
+			return JSON.stringify(this.values) !== this.baseline;
 		},
 		selectedType(): LoadpointType | undefined {
 			return getModal("loadpoint")?.type as LoadpointType | undefined;
@@ -924,6 +929,10 @@ export default {
 			this.autoCreate = false;
 			this.autoCreateInProgress = false;
 			this.updatePhases();
+			this.rebaseline();
+		},
+		rebaseline() {
+			this.baseline = JSON.stringify(this.values);
 		},
 		async loadConfiguration() {
 			try {
@@ -936,6 +945,7 @@ export default {
 				this.updateChargerPower();
 				this.updateSolarMode();
 				this.updatePhases();
+				this.rebaseline();
 			} catch (e) {
 				console.error(e);
 			}

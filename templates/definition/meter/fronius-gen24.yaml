@@ -6,7 +6,7 @@ products:
   - brand: Fronius
     description:
       generic: Primo GEN24 Plus
-capabilities: ["battery-control"]
+capabilities: ["battery-control", "curtail"]
 requirements:
   description:
     de: |
@@ -168,6 +168,55 @@ render: |
       value: 160:2:DCWH # mppt 2
       scale: 0.001
   maxacpower: {{ .maxacpower }} # W
+  curtail:
+    source: sequence
+    set:
+      - source: sunspec
+        uri: {{ joinHostPort .host .port }}
+        id: 1
+        value: 123:WMaxLimPct
+      - source: switch
+        switch:
+          - case: 100 # Uncurtailed
+            set:
+              source: const
+              value: 0 # Limit disabled
+              set:
+                source: sunspec
+                uri: {{ joinHostPort .host .port }}
+                id: 1
+                value: 123:WMaxLim_Ena
+        default:
+          source: const
+          value: 1 # Limit enabled
+          set:
+            source: sunspec
+            uri: {{ joinHostPort .host .port }}
+            id: 1
+            value: 123:WMaxLim_Ena
+  curtailed: # the limit percentage only applies while the limit is enabled
+    source: go
+    in:
+    - name: ena
+      type: bool
+      config:
+        source: sunspec
+        uri: {{ joinHostPort .host .port }}
+        id: 1
+        value: 123:WMaxLim_Ena
+    - name: limit
+      type: float
+      config:
+        source: sunspec
+        uri: {{ joinHostPort .host .port }}
+        id: 1
+        value: 123:WMaxLimPct
+    script: |
+      percent := 100
+      if ena {
+        percent = int(limit)
+      }
+      percent
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
