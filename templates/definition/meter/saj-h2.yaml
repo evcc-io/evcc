@@ -188,7 +188,7 @@ render: |
               type: writeholding
               decode: int16
         - source: const
-          value: {{ add 0x7F00 .maxchargerate }} # day mask 0x7F (all days) in high byte, charge power % in low byte
+          value: {{ add 0x7F00 (max 0 (min 100 .maxchargerate)) }} # day mask 0x7F (all days) in high byte, charge power % in low byte
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}        
