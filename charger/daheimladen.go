@@ -120,6 +120,12 @@ func NewDaheimLaden(ctx context.Context, settings modbus.TcpSettings, phases boo
 		wb.curr = curr
 	}
 
+	if !sponsor.IsAuthorized() {
+		if err := wb.checkStation(); err != nil {
+			return nil, err
+		}
+	}
+
 	// get failsafe timeout from charger
 	b, err := wb.conn.ReadHoldingRegisters(dlRegCommTimeout, 1)
 	if err != nil {
@@ -132,12 +138,6 @@ func NewDaheimLaden(ctx context.Context, settings modbus.TcpSettings, phases boo
 	if phases {
 		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
 		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
-	}
-
-	if !sponsor.IsAuthorized() {
-		if err := wb.checkStation(); err != nil {
-			return nil, err
-		}
 	}
 
 	return wb, nil
