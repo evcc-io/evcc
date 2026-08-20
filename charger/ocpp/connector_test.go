@@ -210,6 +210,29 @@ func (suite *connTestSuite) TestOnStatusNotificationClearsStaleTxn() {
 	suite.True(suite.conn.NeedsAuthentication(), "Preparing after Available should require authentication")
 }
 
+// TestOnStatusNotificationFinishingTriggersRemoteStart ensures that a charger which ends
+// the transaction on its own (StopTransaction followed by Finishing, e.g. because the
+// charging profile limit dropped below its minimum current) is recognised as needing a
+// fresh RemoteStartTransaction instead of evcc waiting indefinitely for a disconnect.
+func (suite *connTestSuite) TestOnStatusNotificationFinishingTriggersRemoteStart() {
+	suite.conn.remoteIdTag = "evcc"
+
+	// charger sends StopTransaction, which clears txnId/idTag
+	_, err := suite.conn.OnStopTransaction(&core.StopTransactionRequest{
+		TransactionId: suite.conn.txnId,
+	})
+	suite.NoError(err)
+
+	_, err = suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+		ConnectorId: 1,
+		Status:      core.ChargePointStatusFinishing,
+		ErrorCode:   core.NoError,
+		Timestamp:   types.NewDateTime(suite.clock.Now()),
+	})
+	suite.NoError(err)
+	suite.True(suite.conn.NeedsAuthentication(), "Finishing without a running transaction should require authentication")
+}
+
 // TestOnStatusNotificationKeepsActiveTxn ensures that an active transaction is
 // not cleared by transient status notifications other than Available.
 func (suite *connTestSuite) TestOnStatusNotificationKeepsActiveTxn() {
