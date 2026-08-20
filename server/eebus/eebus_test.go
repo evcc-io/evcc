@@ -76,3 +76,25 @@ func TestUnregisterDevice_MutexNotHeldDuringShipCall(t *testing.T) {
 
 	c.UnregisterDevice("aabbcc", dev)
 }
+
+// TestPairingDeniedOnlyWhenConfigured guards that an unknown ski is not denied
+// while device configuration is still running- its device may register the ski
+// moments later, and a denial locks the remote service out until the next restart.
+func TestPairingDeniedOnlyWhenConfigured(t *testing.T) {
+	identity := shipapi.NewServiceIdentity("aabbcc", "", "")
+	detail := shipapi.NewConnectionStateDetail(shipapi.ConnectionStateReceivedPairingRequest, nil)
+
+	service := eebusmocks.NewServiceInterface(t)
+	c := &EEBus{
+		log:     util.NewLogger("test"),
+		clients: make(map[string][]Device),
+		service: service,
+	}
+
+	// still configuring - no CancelPairing expected
+	c.ServicePairingDetailUpdate(identity, detail)
+
+	service.EXPECT().CancelPairing(identity).Once()
+	c.configured = true
+	c.ServicePairingDetailUpdate(identity, detail)
+}

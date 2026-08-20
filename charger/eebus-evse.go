@@ -520,19 +520,26 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 var _ api.Identifier = (*EEBus)(nil)
 
 // Identify implements the api.Identifier interface
-func (c *EEBus) Identify() (string, error) {
+func (c *EEBus) Identify() ([]string, error) {
 	evEntity, ok := c.isEvConnected()
 	if !ok {
-		return "", nil
+		return nil, nil
 	}
 
-	if identification, err := c.cem.EvCC.Identifications(evEntity); err == nil && len(identification) > 0 {
-		// return the first identification for now
-		// later this could be multiple, e.g. MAC Address and PCID
-		return identification[0].Value, nil
+	identification, err := c.cem.EvCC.Identifications(evEntity)
+	if err != nil {
+		return nil, nil
 	}
 
-	return "", nil
+	// may be multiple, e.g. MAC address and PCID
+	var res []string
+	for _, i := range identification {
+		if i.Value != "" {
+			res = append(res, i.Value)
+		}
+	}
+
+	return res, nil
 }
 
 var _ api.Battery = (*EEBus)(nil)

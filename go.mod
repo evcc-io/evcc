@@ -1,6 +1,6 @@
 module github.com/evcc-io/evcc
 
-go 1.26.3
+go 1.27.0
 
 require (
 	dario.cat/mergo v1.0.2
@@ -45,7 +45,6 @@ require (
 	github.com/gokrazy/updater v0.0.0-20260620140544-0a84d8ab3878
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/go-github/v32 v32.1.0
-	github.com/google/uuid v1.6.0
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
 	github.com/gosimple/slug v1.15.0
@@ -98,7 +97,7 @@ require (
 	github.com/teslamotors/vehicle-command v0.4.1
 	github.com/tess1o/go-ecoflow v1.1.1-0.20251003083510-2ccc15a17e29
 	github.com/traefik/yaegi v0.16.1
-	github.com/volkszaehler/mbmd v0.0.0-20260803093438-96221ccf34be
+	github.com/volkszaehler/mbmd v0.0.0-20260812141656-4304ad77c56f
 	github.com/warthog618/go-gpiocdev v0.9.1
 	github.com/xuri/excelize/v2 v2.11.0
 	gitlab.com/bboehmke/sunny v0.17.0
@@ -175,6 +174,7 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/jsonschema-go v0.4.3 // indirect
 	github.com/google/renameio/v2 v2.0.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/govalues/decimal v0.1.36 // indirect
@@ -269,3 +269,5 @@ replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20
 replace github.com/enbility/spine-go => github.com/andig/spine-go v0.7.1-0.20260804073026-f9a8d8e8fd18
 
 replace github.com/enbility/eebus-go => github.com/andig/eebus-go v0.0.0-20260725155950-e735091ff165
+
+replace github.com/enbility/ship-go => github.com/andig/ship-go v0.6.1-0.20260818072438-bade5ec9fbd7

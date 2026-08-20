@@ -864,7 +864,6 @@
       },
       "planNumber": "Načrt {number}",
       "precondition": {
-        "description": "Pred odhodom napolnite {duration} za predhodno ogrevanje baterije.",
         "label": "Pozno polnjenje",
         "optionAll": "vse",
         "optionNo": "ne"
@@ -874,7 +873,6 @@
       "repeatingPlans": "Ponavljajoči načrti",
       "selectAll": "Izberi vse",
       "strategyDisabledDescription": "Polnjenje se začne čim pozneje, da se konča ravno pravočasno za odhod. Z dinamičnimi cenami omrežja ali tarifo CO₂ je na voljo več možnosti.",
-      "strategySettings": "Nastavitve strategije",
       "time": "Čas",
       "title": "Načrt",
       "unsavedChanges": "Obstajajo neshranjene spremembe. Želite uporabiti zdaj?",

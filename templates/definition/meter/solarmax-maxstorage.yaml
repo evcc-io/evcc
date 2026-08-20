@@ -39,13 +39,7 @@ render: |
       address: 110 # PV-Leistung MAX.STORAGE
       type: input
       decode: int32s
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register: # manual non-sunspec register configuration
-      address: 150 # Produzierte PV-Energie
-      type: input
-      decode: int32s
+  # energy removed: register 150 (Produzierte PV-Energie) only resolves whole kWh (#32324)
   maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -132,5 +126,8 @@ render: |
                 address: 142
                 type: writemultiple
                 decode: int16
+      default:
+        source: error
+        error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

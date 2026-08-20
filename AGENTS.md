@@ -200,6 +200,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 ### Styling & Internationalization
 
 - Use CSS Custom Properties for theming (semantic names: `--evcc-green`, `--evcc-battery`)
+- No inline `style` attributes; use Bootstrap utility classes or scoped CSS (inline only for truly dynamic values)
 - Use existing custom media queries for responsive breakpoints
 - Use `$t()` function for all user-facing strings
 - Update both `i18n/en.json` and `i18n/de.json` for new strings

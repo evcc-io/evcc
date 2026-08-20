@@ -35,6 +35,7 @@ import (
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/telemetry"
+	"github.com/jinzhu/now"
 	"github.com/samber/lo"
 	"github.com/smallnest/chanx"
 	"golang.org/x/sync/errgroup"
@@ -112,11 +113,14 @@ type Site struct {
 	batteryMode              api.BatteryMode             // Battery mode (runtime only, not persisted)
 	batteryModeExternal      api.BatteryMode             // Battery mode (external, runtime only, not persisted)
 	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
+	batteryModeApplied       map[string]api.BatteryMode  // Battery mode last applied per battery meter
 	suggestions              map[string]types.Suggestion // Optimizer suggestions by device key
 	suggestionActions        map[string]string           // last notified actionable optimizer action by device key
 
 	optimizerMu      sync.Mutex // guards optimizer runs
 	optimizerUpdated time.Time  // last optimizer run, guarded by optimizerMu
+
+	solarScaleCached func() (float64, error) // util.Cached wrapper around querySolarScale
 }
 
 // siteState is the site's cached measurement state, updated once per meter cycle
@@ -366,6 +370,15 @@ func NewSite() *Site {
 		Voltage:    230, // V
 		collectors: make(map[string]*metrics.Collector),
 	}
+
+	// the result only depends on completed days, so it cannot change within a day
+	site.solarScaleCached = util.Cached(func() (float64, error) {
+		scale, err := site.querySolarScale(now.BeginningOfDay())
+		if err != nil {
+			site.log.ERROR.Printf("solar scale percentile: %v, falling back to unadjusted forecast", err)
+		}
+		return scale, err
+	}, 24*time.Hour)
 
 	return site
 }
@@ -1090,9 +1103,10 @@ func (site *Site) sitePower(state siteState, totalChargePower, flexiblePower flo
 		residualPower = 100 // W
 	}
 
-	// allow using grid and charge as estimate for pv power
-	if site.pvMeters == nil {
-		state.pvPower = max(0, totalChargePower-state.gridPower+residualPower)
+	// allow using grid, charge and battery power as estimate for pv power
+	// needs a grid meter, otherwise grid power is itself derived from pv power (see above)
+	if site.pvMeters == nil && site.gridMeter != nil {
+		state.pvPower = max(0, totalChargePower-state.gridPower-state.battery.Power+residualPower)
 		site.log.DEBUG.Printf("pv power: %.0fW", state.pvPower)
 		site.publish(keys.PvPower, state.pvPower)
 	}

@@ -271,6 +271,7 @@ func TestPvScalePhases(t *testing.T) {
 			// scale down
 			min1p := 0.1
 			lp.phaseTimer = time.Time{}
+			lp.chargePower = float64(lp.ActivePhases()) * minA * Voltage // charging at min current
 
 			plainCharger.EXPECT().Enable(false).Return(nil).MaxTimes(1)
 			phaseCharger.EXPECT().Phases1p3p(1).Return(nil).MaxTimes(1)
@@ -370,6 +371,17 @@ func TestPvScalePhasesTimer(t *testing.T) {
 		}},
 		{"3/3->1, timer elapsed", 3, 3, 0.1, 1, 1, func(lp *Loadpoint) {
 			lp.phaseTimer = elapsed
+		}},
+
+		// charging with insufficient power for 1p: disable instead of scaling down
+		{"3/3->1, insufficient for 1p, charging", 3, 3, 0.1, 3, 0, func(lp *Loadpoint) {
+			lp.phaseTimer = elapsed
+			lp.enabled = true
+		}},
+		{"3/3->1, sufficient for 1p, charging", 3, 3, 3 * Voltage * minA / 2, 1, 1, func(lp *Loadpoint) {
+			lp.phaseTimer = elapsed
+			lp.enabled = true
+			lp.chargePower = 3 * Voltage * minA
 		}},
 
 		// switch down from 3p/0p while not yet charging

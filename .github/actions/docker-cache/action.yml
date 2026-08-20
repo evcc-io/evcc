@@ -32,6 +32,12 @@ runs:
           ${{ runner.os }}-docker-mounts-${{ inputs.cache-scope }}-
           ${{ runner.os }}-docker-mounts-main-
 
+    # the go module cache restores read-only, which fails the dance's cleanup
+    # of the source directory after injection
+    - name: Make cache mounts writable
+      shell: bash
+      run: test -d .docker-cache && chmod -R u+w .docker-cache || true
+
     - name: Inject cache mounts
       uses: reproducible-containers/buildkit-cache-dance@5422eac04292c961a382e0f584ea0f03ad9da723 # v3.4.0
       with:
