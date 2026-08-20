@@ -23,6 +23,7 @@
 			:battery-grid-discharge="state.batteryGridDischarge"
 			:battery="state.battery"
 			:experimental="state.experimental"
+			:optimizer-automatic="state.optimizerAutomatic"
 			:optimizer-controlled-titles="optimizerControlledTitles"
 		/>
 
