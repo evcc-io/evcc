@@ -23,10 +23,13 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	base, err := col.EnergyProfileWeekday(time.Now().Weekday())
 	if err != nil {
 		// fall back to all-days average (28 samples, more robust)
+		site.log.DEBUG.Printf("home profile: weekday profile unavailable (%v), using all-days average", err)
 		base, err = col.EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -28))
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		site.log.DEBUG.Printf("home profile: using same-weekday profile")
 	}
 
 	// convert to Wh
