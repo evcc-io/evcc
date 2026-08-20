@@ -951,3 +951,9 @@ input::-webkit-date-and-time-value {
 .sticky-bottom {
 	bottom: calc(var(--tab-bar-height) + 0.25rem);
 }
+
+[_echarts_instance_] {
+	user-select: none;
+	-webkit-user-select: none;
+	-webkit-touch-callout: none;
+}
