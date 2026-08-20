@@ -742,8 +742,15 @@ temp:
     await expectModalHidden(modal);
     await expectModalVisible(lpModal);
 
+    // heating-specific mode labels
+    await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
+    const modeSelect = lpModal.getByLabel("Default mode");
+    await expect(modeSelect.getByRole("option", { name: "Normal", exact: true })).toHaveCount(1);
+    await expect(modeSelect.getByRole("option", { name: "Boost", exact: true })).toHaveCount(1);
+
     // create
-    await finishLoadpoint(page);
+    await lpModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(lpModal);
 
     await expect(page.getByTestId("loadpoint")).toHaveCount(1);
     const lpEntry = page.getByTestId("loadpoint").first();

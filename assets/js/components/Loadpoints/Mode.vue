@@ -61,6 +61,7 @@
 <script lang="ts">
 import { CHARGE_MODE, ALWAYS_CHARGE } from "@/types/evcc";
 import { defineComponent } from "vue";
+import chargeModeLabelKey from "@/utils/chargeModeLabel";
 import AlwaysChargeIcon from "../MaterialIcon/AlwaysCharge.vue";
 import DropdownIcon from "../MaterialIcon/Dropdown.vue";
 import AlwaysChargeDropdown from "./AlwaysChargeDropdown.vue";
@@ -102,18 +103,7 @@ export default defineComponent({
 	},
 	methods: {
 		label(mode: CHARGE_MODE) {
-			if (mode === OFF && this.continuous) {
-				return this.$t("main.mode.normal");
-			}
-			if (mode === NOW) {
-				if (this.continuous) {
-					return this.$t("main.mode.boost");
-				}
-				if (this.switchDevice) {
-					return this.$t("main.mode.on");
-				}
-			}
-			return this.$t(`main.mode.${mode}`);
+			return this.$t(chargeModeLabelKey(mode, this.continuous, this.switchDevice));
 		},
 		isActive(mode: CHARGE_MODE) {
 			return this.mode === mode;
