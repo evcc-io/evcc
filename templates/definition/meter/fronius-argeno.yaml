@@ -39,4 +39,4 @@ render: |
       - 113:WH
       - 103:WH
     scale: 0.001
-  {{- include "sunspec-maxacpower-uri" . }}
+  {{- include "sunspec-maxacpower-tcp" . }}

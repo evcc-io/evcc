@@ -7,7 +7,7 @@ maxacpower: # nameplate rating
     - 702:WMaxRtg
 {{- end }}
 
-{{ define "sunspec-maxacpower-uri" }}
+{{ define "sunspec-maxacpower-tcp" }}
 maxacpower: # nameplate rating
   source: sunspec
   uri: {{ joinHostPort .host .port }}

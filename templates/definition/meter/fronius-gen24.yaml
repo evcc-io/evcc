@@ -168,7 +168,7 @@ render: |
       id: 1
       value: 160:2:DCWH # mppt 2
       scale: 0.001
-  {{- include "sunspec-maxacpower-uri" . }}
+  {{- include "sunspec-maxacpower-tcp" . }}
   curtail:
     source: sequence
     set:
