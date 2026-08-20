@@ -196,9 +196,19 @@
 					<label for="batteryDischargeControl">
 						{{ $t("batterySettings.discharge") }}
 					</label>
-					<div v-if="optimizerAutomatic" class="text-muted small">
-						{{ $t("config.optimizer.controlled") }}
-					</div>
+					<i18n-t
+						v-if="optimizerAutomatic"
+						keypath="config.optimizer.controlled"
+						tag="div"
+						class="text-muted small"
+						scope="global"
+					>
+						<template #optimizer>
+							<router-link to="/optimize" class="text-muted">
+								{{ $t("config.optimizer.linkWord") }}
+							</router-link>
+						</template>
+					</i18n-t>
 				</div>
 			</div>
 		</div>
