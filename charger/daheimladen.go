@@ -368,7 +368,7 @@ func (wb *DaheimLaden) checkStation() error {
 		return err
 	}
 	// second call for initialization purposes
-	b, err := wb.conn.ReadHoldingRegisters(dlRegEvseMaxCurrent, 22)
+	b, err = wb.conn.ReadHoldingRegisters(dlRegEvseMaxCurrent, 22)
 	if err != nil {
 		return err
 	}
