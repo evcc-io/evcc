@@ -64,7 +64,6 @@ type WarpWS struct {
 	// power manager
 	pmState          *warp.PmState
 	pmLowLevelState  *warp.PmLowLevelState
-	lastPhasesWanted int // 0=never set; 1 or 3
 }
 
 func init() {
@@ -163,28 +162,10 @@ func (w *WarpWS) run(ctx context.Context, role wsRole, client *http.Client, wsUR
 
 		bo.Reset()
 
-		if role == wsRolePM {
-			if err := w.resendLastPhasesWantedIfAny(); err != nil {
-				w.log.WARN.Printf("resend phases_wanted on reconnect: %v", err)
-			}
-		}
-
 		if err := w.handleConnection(ctx, role, conn); err != nil {
 			w.log.ERROR.Println(err)
 		}
 	}
-}
-
-func (w *WarpWS) resendLastPhasesWantedIfAny() error {
-	w.mu.RLock()
-	phases := w.lastPhasesWanted
-	w.mu.RUnlock()
-
-	if phases == 0 {
-		return nil
-	}
-
-	return w.postPhasesWanted(phases)
 }
 
 // Returns parsed URI and hostname
@@ -634,9 +615,6 @@ func (w *WarpWS) phases1p3p(phases int) error {
 	if err := w.postPhasesWanted(phases); err != nil {
 		return err
 	}
-	w.mu.Lock()
-	w.lastPhasesWanted = phases
-	w.mu.Unlock()
 	return nil
 }
 
