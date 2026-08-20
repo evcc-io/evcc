@@ -108,6 +108,14 @@ func NewDaheimLaden(ctx context.Context, settings modbus.TcpSettings, phases boo
 		phases: 3,  // assume 3p
 	}
 
+    // dummy for initialization
+	b, err := wb.conn.ReadHoldingRegisters(dlRegErrorCode, 1)
+	if err != nil {
+		return 0, err
+
+    // break for initialization
+    time.Sleep(time.Second)
+
 	if !sponsor.IsAuthorized() {
 		if err := wb.checkStation(); err != nil {
 			return nil, err
