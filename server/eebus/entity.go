@@ -61,7 +61,7 @@ func (e *Entity[U]) Update(entity spineapi.EntityRemoteInterface) bool {
 		e.entity = entity
 	}
 
-	return e.entity != nil && e.entity != prev
+	return e.entity != prev
 }
 
 // Available returns the remote entity, ErrNotAvailable if the use case has none

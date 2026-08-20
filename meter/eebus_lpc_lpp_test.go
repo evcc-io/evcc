@@ -262,7 +262,7 @@ func TestLPC_LPP_InitialLimit(t *testing.T) {
 		c.lpc.Set(nil)
 
 		written := make(chan ucapi.LoadLimit, 1)
-		lpc.EXPECT().AvailableScenariosForEntity(entity).Return([]uint{1})
+		lpc.EXPECT().AvailableScenariosForEntity(entity).Return([]uint{eebus.LPCLimit})
 		lpc.EXPECT().
 			WriteConsumptionLimit(entity, mock.Anything, mock.Anything).
 			Run(captureWrite(written)).
@@ -279,7 +279,7 @@ func TestLPC_LPP_InitialLimit(t *testing.T) {
 		c.curtailPercent = 100
 
 		written := make(chan ucapi.LoadLimit, 1)
-		lpp.EXPECT().AvailableScenariosForEntity(entity).Return([]uint{1})
+		lpp.EXPECT().AvailableScenariosForEntity(entity).Return([]uint{eebus.LPPLimit})
 		lpp.EXPECT().
 			WriteProductionLimit(entity, mock.Anything, mock.Anything).
 			Run(captureWrite(written)).

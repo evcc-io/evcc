@@ -73,7 +73,7 @@ func TestOHPCF_LPC_InitialLimit(t *testing.T) {
 	c.lpc.Set(nil)
 
 	written := make(chan ucapi.LoadLimit, 1)
-	lpc.EXPECT().AvailableScenariosForEntity(entity).Return([]uint{1})
+	lpc.EXPECT().AvailableScenariosForEntity(entity).Return([]uint{eebus.LPCLimit})
 	lpc.EXPECT().
 		WriteConsumptionLimit(entity, mock.Anything, mock.Anything).
 		Run(func(_ spineapi.EntityRemoteInterface, limit ucapi.LoadLimit, cb func(model.ResultDataType, model.MsgCounterType)) {
