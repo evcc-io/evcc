@@ -458,6 +458,19 @@ func (site *Site) restoreSettings() error {
 			site.log.WARN.Printf("optimizer charging strategy: %v", err)
 		}
 	}
+	if v, err := settings.Float(keys.OptimizerManualPA); err == nil {
+		if err := site.SetOptimizerManualPA(&v); err != nil {
+			site.log.WARN.Printf("optimizer manual pa: %v", err)
+		}
+	}
+	if goals, err := loadBatteryOptimizerSocGoals(); err == nil && len(goals) > 0 {
+		// restore the persisted goals directly: SetBatteryOptimizerSocGoals is the
+		// API path and rejects when no controllable battery is present yet at boot
+		site.Lock()
+		site.batteryOptimizerSocGoals = goals
+		site.Unlock()
+		site.publish(keys.BatteryOptimizerSocGoals, goals)
+	}
 	site.publish(keys.OptimizerChargingStrategy, site.GetOptimizerChargingStrategy())
 	site.publish(keys.OptimizerChargingStrategies, optimizerChargingStrategies)
 

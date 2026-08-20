@@ -86,6 +86,36 @@ func TestOptimizerTariffsChanged(t *testing.T) {
 	assert.False(t, site.optimizerTariffsChanged(), "re-reading the changed feedin rate should report unchanged")
 }
 
+// TestOptimizerSettingsPersistRoundTrip is a regression guard for the boot-restore
+// bug: recurring battery SoC goals and manual PA are persisted, so the read-back
+// path (loadBatteryOptimizerSocGoals / settings.Float, wired into restoreSettings)
+// must return what the setters wrote. They were silently lost once.
+func TestOptimizerSettingsPersistRoundTrip(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	t.Cleanup(func() {
+		settings.SetString(keys.BatteryOptimizerSocGoals, "")
+		settings.SetString(keys.OptimizerManualPA, "")
+	})
+
+	site := &Site{log: util.NewLogger("test")}
+
+	// SoC goals: persisted goals (as the DB holds them) must read back via
+	// loadBatteryOptimizerSocGoals - the function restoreSettings wires on boot,
+	// and the one that was removed, causing the goals to vanish on restart
+	goals := []api.RepeatingPlan{{Weekdays: allWeekdays, Soc: 30, Time: "06:00", Tz: "UTC", Active: true}}
+	require.NoError(t, settings.SetJson(keys.BatteryOptimizerSocGoals, goals))
+	loaded, err := loadBatteryOptimizerSocGoals()
+	require.NoError(t, err)
+	assert.Equal(t, goals, loaded, "soc goals must round-trip through settings")
+
+	// manual PA: persisted by SetOptimizerManualPA, read back via settings.Float (as restoreSettings does)
+	pa := 0.25
+	require.NoError(t, site.SetOptimizerManualPA(&pa))
+	got, err := settings.Float(keys.OptimizerManualPA)
+	require.NoError(t, err)
+	assert.Equal(t, pa, got, "manual PA must round-trip through settings")
+}
+
 func TestLoadpointProfile(t *testing.T) {
 	ctrl := gomock.NewController(t)
 

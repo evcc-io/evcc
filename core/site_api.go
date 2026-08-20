@@ -625,6 +625,13 @@ func repeatingPlanEqual(a, b api.RepeatingPlan) bool {
 
 // loadBatteryOptimizerSocGoals reads the persisted goals; returns (nil, err)
 // when absent or malformed so callers can simply skip it.
+func loadBatteryOptimizerSocGoals() ([]api.RepeatingPlan, error) {
+	var goals []api.RepeatingPlan
+	if err := settings.Json(keys.BatteryOptimizerSocGoals, &goals); err != nil {
+		return nil, err
+	}
+	return goals, nil
+}
 
 // GetOptimizerChargingStrategy returns the optimizer grid charging strategy,
 // falling back to the default when unset.
