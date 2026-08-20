@@ -14,10 +14,10 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"uuid"
 
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 )
 
@@ -92,7 +92,7 @@ func (v *Identity) loginCCI(password string) (*oauth2.Token, error) {
 // fetch RSA cert, signin, exchange the auth code for CCI and then CCS tokens
 func (v *Identity) loginCCIPassword(password string) (*oauth2.Token, error) {
 	c := v.config.CCI
-	deviceID := uuid.NewString()
+	deviceID := uuid.New().String()
 
 	v.log.DEBUG.Println("cci: logging in via OneApp/CCI password login")
 
