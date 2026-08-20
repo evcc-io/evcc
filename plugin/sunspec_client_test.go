@@ -11,14 +11,19 @@ import (
 	sunsdev "github.com/volkszaehler/mbmd/meters/sunspec"
 )
 
-// countingClient counts the physical reads reaching the device
+// countingClient counts the physical reads reaching the device, failing the
+// first failReads of them
 type countingClient struct {
 	gridx.Client
-	reads int
+	reads     int
+	failReads int
 }
 
 func (c *countingClient) ReadHoldingRegisters(_, quantity uint16) ([]byte, error) {
 	c.reads++
+	if c.reads <= c.failReads {
+		return nil, errors.New("read failed")
+	}
 	return make([]byte, 2*quantity), nil
 }
 
@@ -47,6 +52,23 @@ func TestSunspecCachedClient(t *testing.T) {
 	_, err = c.ReadHoldingRegisters(40000, 4)
 	require.NoError(t, err)
 	require.Equal(t, 3, cnt.reads, "read after write must not serve stale data")
+}
+
+func TestSunspecCachedClientError(t *testing.T) {
+	cnt := &countingClient{failReads: 1}
+	c := newSunspecCachedClient(cnt)
+
+	_, err := c.ReadHoldingRegisters(40000, 4)
+	require.Error(t, err, "read error must be propagated")
+
+	// errors are not cached, the next read reaches the device again
+	_, err = c.ReadHoldingRegisters(40000, 4)
+	require.NoError(t, err)
+	require.Equal(t, 2, cnt.reads)
+
+	_, err = c.ReadHoldingRegisters(40000, 4)
+	require.NoError(t, err)
+	require.Equal(t, 2, cnt.reads, "successful read must be cached afterwards")
 }
 
 func TestSunspecCachedClientPayloadIsolated(t *testing.T) {
