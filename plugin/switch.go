@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -84,6 +85,7 @@ func (o *switchPlugin) IntSetter(param string) (func(int64) error, error) {
 			return dflt(val)
 		}
 
-		return fmt.Errorf("switch: value not found: %d", val)
+		// an unmatched value means the device does not implement it
+		return fmt.Errorf("%w: switch value %d", api.ErrNotAvailable, val)
 	}, nil
 }

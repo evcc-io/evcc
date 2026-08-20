@@ -188,6 +188,7 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 			if !errors.Is(err, api.ErrNotAvailable) {
 				return err
 			}
+			site.log.DEBUG.Printf("battery %s does not support mode: %s", deviceTitleOrName(dev), devMode)
 			continue
 		}
 
