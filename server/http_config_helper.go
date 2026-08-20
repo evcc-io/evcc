@@ -470,7 +470,7 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 	wg.Go(func() {
 		if dev, ok := api.Cap[api.Identifier](instance); ok {
 			val, err := dev.Identify()
-			makeResult("identifier", val, err)
+			makeResult("identifier", strings.Join(val, ", "), err)
 		}
 	})
 

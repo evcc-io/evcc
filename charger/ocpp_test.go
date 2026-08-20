@@ -322,7 +322,7 @@ func (suite *ocppTestSuite) TestAutoStart() {
 
 		id, err := c1.Identify()
 		suite.Require().NoError(err)
-		suite.Require().Equal(expectedIdTag, id)
+		suite.Require().Equal([]string{expectedIdTag}, id)
 
 		conn1 := c1.Connector()
 		_, err = conn1.TransactionID()

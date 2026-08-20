@@ -85,6 +85,75 @@ func TestApplyBatteryMode(t *testing.T) {
 	}
 }
 
+// battery meter with soc, controller and soc limits
+func batteryControlMock(ctrl *gomock.Controller, soc, maxSoc float64) (api.Meter, *api.MockBatteryController) {
+	batSoc := api.NewMockBattery(ctrl)
+	batSoc.EXPECT().Soc().Return(soc, nil).AnyTimes()
+
+	batSocLimit := api.NewMockBatterySocLimiter(ctrl)
+	batSocLimit.EXPECT().GetSocLimits().Return(0.0, maxSoc).AnyTimes()
+
+	batCon := api.NewMockBatteryController(ctrl)
+
+	return &struct {
+		api.Meter
+		api.Battery
+		api.BatteryController
+		api.BatterySocLimiter
+	}{
+		Battery:           batSoc,
+		BatteryController: batCon,
+		BatterySocLimiter: batSocLimit,
+	}, batCon
+}
+
+// TestBatteryHoldAppliedOnce guards that reaching max soc during grid charge switches
+// the battery to hold mode once instead of on every update
+func TestBatteryHoldAppliedOnce(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	bat, batCon := batteryControlMock(ctrl, 90, 80)
+
+	site := &Site{
+		log:           util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "bat"}, bat)},
+		batteryMode:   api.BatteryCharge,
+	}
+
+	batCon.EXPECT().SetBatteryMode(api.BatteryHold).Times(1)
+
+	for range 3 {
+		site.updateBatteryMode(true, api.Rate{})
+	}
+
+	ctrl.Finish()
+}
+
+// TestBatteryHoldNotShared guards that one battery reaching max soc does not put the
+// remaining batteries into hold mode
+func TestBatteryHoldNotShared(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	full, fullCon := batteryControlMock(ctrl, 90, 80)
+	empty, emptyCon := batteryControlMock(ctrl, 50, 80)
+
+	site := &Site{
+		log: util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{
+			config.NewStaticDevice(config.Named{Name: "full"}, full),
+			config.NewStaticDevice(config.Named{Name: "empty"}, empty),
+		},
+		batteryMode: api.BatteryCharge,
+	}
+
+	fullCon.EXPECT().SetBatteryMode(api.BatteryHold).Times(1)
+	emptyCon.EXPECT().SetBatteryMode(gomock.Any()).Times(0)
+
+	site.updateBatteryMode(true, api.Rate{})
+
+	ctrl.Finish()
+}
+
 func TestRequiredExternalBatteryMode(t *testing.T) {
 	for _, tc := range []struct {
 		internal, external, new api.BatteryMode
@@ -184,8 +253,10 @@ func TestExternalBatteryModeChange(t *testing.T) {
 		assert.Equal(t, site.batteryModeExternal, api.BatteryUnknown)
 		assert.False(t, site.batteryModeExternalTimer.IsZero())
 
-		// battery switched back to normal mode
-		batCon.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
+		// battery switched back to normal mode unless already applied in step 2
+		if tc.expected != api.BatteryNormal {
+			batCon.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
+		}
 		site.updateBatteryMode(false, api.Rate{})
 
 		// timer disabled

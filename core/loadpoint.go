@@ -561,6 +561,11 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	// soc update reset
 	lp.socUpdated = time.Time{}
 
+	// charger may have reconfigured phases internally while disconnected
+	if err := lp.syncChargerPhases(); err != nil {
+		lp.log.ERROR.Println(err)
+	}
+
 	// set default or start detection
 	if !lp.chargerHasFeature(api.IntegratedDevice) {
 		lp.vehicleDefaultOrDetect()
@@ -884,35 +889,9 @@ func (lp *Loadpoint) syncCharger() error {
 		}
 
 		// sync phases
-		_, isPs := api.Cap[api.PhaseSwitcher](lp.charger)
-		if phases := lp.GetPhases(); isPs && shouldBeConsistent && phases > 0 {
-			// fallback to active phases from measured phases
-			chargerPhases := lp.measuredPhases
-			if chargerPhases == 2 {
-				chargerPhases = 3
-			}
-
-			pg, isPg := api.Cap[api.PhaseGetter](lp.charger)
-			if isPg {
-				if chargerPhases, err = pg.GetPhases(); err == nil {
-					if chargerPhases > 0 && chargerPhases != phases {
-						lp.log.WARN.Printf("charger logic error: phases mismatch (got %d, expected %d)", chargerPhases, phases)
-						lp.SetPhases(chargerPhases)
-					}
-				} else {
-					if errors.Is(err, api.ErrNotAvailable) {
-						return nil
-					}
-					return fmt.Errorf("charger get phases: %w", err)
-				}
-			}
-
-			// use measured phase currents for active phases as fallback if charger does not provide phases
-			if !isPg || errors.Is(err, api.ErrNotAvailable) {
-				if chargerPhases > phases {
-					lp.log.WARN.Printf("charger logic error: phases mismatch (got %d measured, expected %d)", chargerPhases, phases)
-					lp.SetPhases(chargerPhases)
-				}
+		if shouldBeConsistent {
+			if err := lp.syncChargerPhases(); err != nil {
+				return err
 			}
 		}
 
@@ -1470,8 +1449,15 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
 		}
 
+		// while charging, scaling down only helps if 1p is sustainable, otherwise it
+		// merely delays the pv disable timer by the phase timer duration
+		useful := !lp.enabled || !lp.charging() || powerToCurrent(availablePower, 1) >= minCurrent
+		if insufficient && !useful {
+			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min 1p threshold, disabling instead of scaling down", availablePower, Voltage*minCurrent)
+		}
+
 		// scaling down also frees load management headroom for min power on activePhases
-		scalable = insufficient || !lp.circuitAllowsPhases(activePhases, minCurrent)
+		scalable = insufficient && useful || !lp.circuitAllowsPhases(activePhases, minCurrent)
 	}
 
 	// scale down phases

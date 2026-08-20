@@ -228,7 +228,7 @@ func (i *iDimmer) Dimmed() (bool, error) {
 	return i.dimmer1()
 }
 
-func Identifier(identifier0 func() (string, error)) api.Identifier {
+func Identifier(identifier0 func() ([]string, error)) api.Identifier {
 	if identifier0 == nil {
 		return nil
 	}
@@ -236,10 +236,10 @@ func Identifier(identifier0 func() (string, error)) api.Identifier {
 }
 
 type iIdentifier struct {
-	identifier0 func() (string, error)
+	identifier0 func() ([]string, error)
 }
 
-func (i *iIdentifier) Identify() (string, error) {
+func (i *iIdentifier) Identify() ([]string, error) {
 	return i.identifier0()
 }
 
