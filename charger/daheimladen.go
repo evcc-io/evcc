@@ -109,9 +109,10 @@ func NewDaheimLaden(ctx context.Context, settings modbus.TcpSettings, phases boo
 	}
 
     // dummy for initialization
-	b, err := wb.conn.ReadHoldingRegisters(dlRegErrorCode, 1)
+	_, err := wb.conn.ReadHoldingRegisters(dlRegErrorCode, 1)
 	if err != nil {
 		return 0, err
+    }
 
     // break for initialization
     time.Sleep(time.Second)
