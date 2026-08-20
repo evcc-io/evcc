@@ -227,4 +227,7 @@ render: |
                 address: 40801 # CmpBMS.GridWSpt - Sollwert der Netzaustauschleistung
                 type: writemultiple
                 decode: uint32
+      default:
+        source: error
+        error: ErrNotAvailable
   {{- include "battery-params" . }}
