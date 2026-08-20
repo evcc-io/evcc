@@ -23,7 +23,7 @@ func TestSupervisorToken(t *testing.T) {
 	// SupervisorURI variant with trailing slash should still match
 	tsSlash, ok := supervisorTokenSource(SupervisorURI + "/")
 	require.True(t, ok)
-	
+
 	tokSlash, err := tsSlash.Token()
 	require.NoError(t, err)
 	assert.Equal(t, "test_supervisor_token", tokSlash.AccessToken)
@@ -50,10 +50,9 @@ func TestSupervisorToken(t *testing.T) {
 	ts4, err := NewHomeAssistantFromConfig(map[string]any{"uri": SupervisorURI})
 	require.NoError(t, err)
 
-	tok4, err := ts4.Token()
-	require.NoError(t, err)
-	// ensure we did not use the supervisor token source
-	assert.NotEqual(t, "test_supervisor_token", tok4.AccessToken)
+	_, err = ts4.Token()
+	require.Error(t, err)
+	assert.ErrorContains(t, err, "login required")
 
 	// connection requires uri
 	_, err = NewConnection(util.NewLogger("test"), "", "", false)

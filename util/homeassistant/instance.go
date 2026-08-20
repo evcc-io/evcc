@@ -13,6 +13,7 @@ func init() {
 	auth.Register("homeassistant", NewHomeAssistantFromConfig)
 }
 
+// NewHomeAssistantFromConfig creates a Home Assistant token source from configuration
 func NewHomeAssistantFromConfig(other map[string]any) (oauth2.TokenSource, error) {
 	var cc struct {
 		URI      string

@@ -16,6 +16,7 @@ import (
 
 // https://developers.home-assistant.io/docs/auth_api
 
+// NewOAuth creates a Home Assistant OAuth token source
 func NewOAuth(uri string, insecure bool) (oauth2.TokenSource, error) {
 	uri = strings.TrimRight(uri, "/") // normalize
 

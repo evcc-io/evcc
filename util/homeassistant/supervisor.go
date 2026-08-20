@@ -8,8 +8,11 @@ import (
 )
 
 const (
-	SupervisorURI      = "http://supervisor/core"
-	SupervisorToken    = "SUPERVISOR_TOKEN"
+	// SupervisorURI is the Home Assistant Core API endpoint when running as a Home Assistant add-on
+	SupervisorURI = "http://supervisor/core"
+	// SupervisorToken is the environment variable name containing the bearer token
+	SupervisorToken = "SUPERVISOR_TOKEN"
+	// SupervisorInstance is the discovered instance name for the Supervisor integration
 	SupervisorInstance = "HomeAssistant via EVCC App"
 )
 
