@@ -13,7 +13,7 @@ const (
 	// SupervisorToken is the environment variable name containing the bearer token
 	SupervisorToken = "SUPERVISOR_TOKEN"
 	// SupervisorInstance is the discovered instance name for the Supervisor integration
-	SupervisorInstance = "HomeAssistant via EVCC App"
+	SupervisorInstance = "HomeAssistant Host"
 )
 
 func init() {
