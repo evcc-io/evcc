@@ -14,6 +14,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
+var (
+	mu         sync.Mutex
+	identities = make(map[string]*Identity)
+)
+
 // https://auth.tesla.com/oauth2/v3/.well-known/openid-configuration
 
 // OAuth2Config is the OAuth2 configuration for authenticating with the Tesla API.
@@ -51,7 +56,7 @@ func NewIdentity(log *util.Logger, oc *oauth2.Config, token *oauth2.Token) (oaut
 	}
 
 	// reuse identity instance
-	if instance := getInstance(claims.Subject); instance != nil {
+	if instance := identities[claims.Subject]; instance != nil {
 		return instance, nil
 	}
 
@@ -86,7 +91,7 @@ func NewIdentity(log *util.Logger, oc *oauth2.Config, token *oauth2.Token) (oaut
 	v.TokenSource = oauth.RefreshTokenSource(token, v.refreshToken)
 
 	// add instance
-	addInstance(claims.Subject, v)
+	identities[claims.Subject] = v
 
 	return v, nil
 }

@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util/config"
@@ -66,6 +67,24 @@ func TestInstanceParallelProbes(t *testing.T) {
 	require.NotContains(t, res, "power", "blocking getter must be abandoned")
 }
 
+// asleepVehicle returns api.ErrAsleep from its getters.
+type asleepVehicle struct{}
+
+func (v asleepVehicle) Soc() (float64, error) {
+	return 0, api.ErrAsleep
+}
+
+func (v asleepVehicle) Range() (int64, error) {
+	return 0, api.ErrAsleep
+}
+
+// TestInstanceAsleep ensures asleep is flagged as state, not as error.
+func TestInstanceAsleep(t *testing.T) {
+	res := testInstance(context.Background(), asleepVehicle{})
+	assert.Equal(t, testResult{Value: 0.0, Asleep: true}, res["soc"])
+	assert.Equal(t, testResult{Value: int64(0), Asleep: true}, res["range"])
+}
+
 func TestConfigReqUnmarshal(t *testing.T) {
 	var req configReq
 	require.NoError(t, json.Unmarshal([]byte(`{
@@ -87,18 +106,33 @@ func TestConfigReqUnmarshal(t *testing.T) {
 }
 
 func TestConfigReqMarshalToMap(t *testing.T) {
-	props := config.Properties{
+	res, err := propsToMap(config.Properties{
 		Type:    "type",
 		Title:   "title",
 		Product: "product",
-	}
-
-	res, err := propsToMap(props)
+	})
 	require.NoError(t, err)
-
 	assert.Equal(t, map[string]any{
 		"deviceTitle":   "title",
 		"deviceProduct": "product",
+	}, res)
+
+	// Disable=false is omitted (zero value)
+	res, err = propsToMap(config.Properties{
+		Type:  "type",
+		Title: "title",
+	})
+	require.NoError(t, err)
+	assert.NotContains(t, res, "deviceDisable")
+
+	// Disable=true is included
+	res, err = propsToMap(config.Properties{
+		Type:    "type",
+		Disable: true,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, map[string]any{
+		"deviceDisable": true,
 	}, res)
 }
 

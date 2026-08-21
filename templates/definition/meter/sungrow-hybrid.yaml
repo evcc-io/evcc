@@ -267,5 +267,8 @@ render: |
               address: 13051 # Battery max forced (dis)charge power
               type: writesingle
               decode: uint16
+    default:
+      source: error
+      error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

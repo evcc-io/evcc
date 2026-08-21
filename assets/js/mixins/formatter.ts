@@ -25,6 +25,7 @@ const CURRENCY_SYMBOLS: Record<CURRENCY, string> = {
   ZAR: "R",
   TRY: "₺",
   MYR: "RM",
+  THB: "฿",
 };
 
 // list of currencies where energy price should be displayed in subunits (factor 100)
@@ -72,17 +73,15 @@ export default defineComponent({
       const base = 10 ** precision;
       return (Math.round(num * base) / base).toFixed(precision);
     },
+    getPowerUnit(watt: number): POWER_UNIT {
+      const abs = Math.abs(watt);
+      return abs >= 10_000_000 ? POWER_UNIT.MW : abs >= 1000 ? POWER_UNIT.KW : POWER_UNIT.W;
+    },
     fmtW(watt = 0, format = POWER_UNIT.KW, withUnit = true, digits?: number) {
       let unit = format;
       let d = digits;
       if (POWER_UNIT.AUTO === unit) {
-        if (watt >= 10_000_000) {
-          unit = POWER_UNIT.MW;
-        } else if (watt >= 1000 || 0 === watt) {
-          unit = POWER_UNIT.KW;
-        } else {
-          unit = POWER_UNIT.W;
-        }
+        unit = watt === 0 ? POWER_UNIT.KW : this.getPowerUnit(watt);
       }
       let value = watt;
       if (POWER_UNIT.KW === unit) {
@@ -213,13 +212,15 @@ export default defineComponent({
       }).format(date);
     },
     hourShort(date: Date) {
-      const locale = this.$i18n?.locale;
-      // special: use shorter german format
-      if (locale === "de") return date.getHours();
-      return new Intl.DateTimeFormat(locale, {
+      // keep only hour and AM/PM; drops locale noise like "Uhr" (de), "h" (fr) and leading zeros
+      return new Intl.DateTimeFormat(this.$i18n?.locale, {
         hour: "numeric",
         hour12: is12hFormat(),
-      }).format(date);
+      })
+        .formatToParts(date)
+        .filter(({ type }) => type === "hour" || type === "dayPeriod")
+        .map(({ value }) => value.replace(/^0(?=\d)/, ""))
+        .join(" ");
     },
     weekdayShort(date: Date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
@@ -241,18 +242,21 @@ export default defineComponent({
 
       return `${weekday} ${hour}`.trim();
     },
+    // "gestern"/"heute"/"morgen" within one day of now, null otherwise
+    relativeDayName(date: Date) {
+      const startOfDay = (d: Date) => new Date(d).setHours(0, 0, 0, 0);
+      const days = Math.round((startOfDay(date) - startOfDay(new Date())) / 86400000);
+      if (Math.abs(days) > 1) return null;
+      return new Intl.RelativeTimeFormat(this.$i18n?.locale, { numeric: "auto" }).format(
+        days,
+        "day"
+      );
+    },
     // relative day plus time, e.g. "heute 16:30", "morgen 5:00", "Freitag 12:15"
     fmtDayTime(date: Date) {
       const time = this.fmtHourMinute(date);
-      const startOfDay = (d: Date) => new Date(d).setHours(0, 0, 0, 0);
-      const days = Math.round((startOfDay(date) - startOfDay(new Date())) / 86400000);
-      if (days === 0 || days === 1) {
-        const day = new Intl.RelativeTimeFormat(this.$i18n?.locale, {
-          numeric: "auto",
-        }).format(days, "day");
-        return `${day} ${time}`;
-      }
-      return `${this.weekdayLong(date)} ${time}`;
+      const day = this.relativeDayName(date);
+      return `${day ?? this.weekdayLong(date)} ${time}`;
     },
     fmtHourMinute(date: Date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {

@@ -134,8 +134,8 @@ func opevLimits3p(min, max, def float64) ([]float64, []float64, []float64, error
 
 // ackWrite makes a mocked WriteLoadControlLimits invoke its result callback with a
 // success result, as the real eebus-go does, so eebus.Await completes.
-func ackWrite(_ spineapi.EntityRemoteInterface, _ []ucapi.LoadLimitsPhase, resultCB func(model.ResultDataType)) {
-	resultCB(model.ResultDataType{})
+func ackWrite(_ spineapi.EntityRemoteInterface, _ []ucapi.LoadLimitsPhase, resultCB func(model.ResultDataType, model.MsgCounterType)) {
+	resultCB(model.ResultDataType{}, model.MsgCounterType(0))
 }
 
 func TestWriteCurrentLimitData_OpevOnly(t *testing.T) {
@@ -441,4 +441,49 @@ func TestEEBusCurrentPower_Elli(t *testing.T) {
 	power, err := eebus.currentPower()
 	require.NoError(t, err)
 	assert.Equal(t, 4002.0, power)
+}
+
+// minMax must only trust EV current limits under ISO15118; IEC61851 EVs
+// report EVSE defaults that would override the loadpoint config (#14418).
+func TestEEBusMinMaxCommunicationStandard(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		standard model.DeviceConfigurationKeyValueStringType
+		iso      bool
+	}{
+		{"iec", model.DeviceConfigurationKeyValueStringTypeIEC61851, false},
+		{"unknown", model.DeviceConfigurationKeyValueStringType("unknown"), false},
+		{"iso", model.DeviceConfigurationKeyValueStringTypeISO151182ED2, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			evcc := mocks.NewCemEVCCInterface(t)
+			opev := mocks.NewCemOPEVInterface(t)
+			evEntity := spinemocks.NewEntityRemoteInterface(t)
+
+			eebus := &EEBus{
+				cem: &eebus.CustomerEnergyManagement{
+					EvCC: evcc,
+					OpEV: opev,
+				},
+				ev:  evEntity,
+				log: util.NewLogger("test"),
+			}
+
+			evcc.EXPECT().EVConnected(evEntity).Return(true)
+			evcc.EXPECT().CommunicationStandard(evEntity).Return(tc.standard, nil)
+
+			if tc.iso {
+				opev.EXPECT().CurrentLimits(evEntity).Return(opevLimits3p(6, 16, 0))
+			}
+
+			mm, err := eebus.minMax()
+			if tc.iso {
+				require.NoError(t, err)
+				assert.Equal(t, 6.0, mm.min)
+				assert.Equal(t, 16.0, mm.max)
+			} else {
+				require.ErrorIs(t, err, api.ErrNotAvailable)
+			}
+		})
+	}
 }

@@ -345,7 +345,7 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 	}
 
 	// always set overload protection limits (obligation)
-	if err := eebus.Await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+	if err := eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 		return c.cem.OpEV.WriteLoadControlLimits(evEntity, limits, cb)
 	}); err != nil {
 		return err
@@ -397,7 +397,7 @@ func (c *EEBus) writeOscevLimits(evEntity spineapi.EntityRemoteInterface, curren
 		limits = append(limits, limit)
 	}
 
-	if err := eebus.Await(func(cb func(model.ResultDataType)) (*model.MsgCounterType, error) {
+	if err := eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
 		return c.cem.OscEV.WriteLoadControlLimits(evEntity, limits, cb)
 	}); err != nil {
 		c.log.DEBUG.Println("failed to write OSCEV limits:", err)
@@ -520,19 +520,26 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 var _ api.Identifier = (*EEBus)(nil)
 
 // Identify implements the api.Identifier interface
-func (c *EEBus) Identify() (string, error) {
+func (c *EEBus) Identify() ([]string, error) {
 	evEntity, ok := c.isEvConnected()
 	if !ok {
-		return "", nil
+		return nil, nil
 	}
 
-	if identification, err := c.cem.EvCC.Identifications(evEntity); err == nil && len(identification) > 0 {
-		// return the first identification for now
-		// later this could be multiple, e.g. MAC Address and PCID
-		return identification[0].Value, nil
+	identification, err := c.cem.EvCC.Identifications(evEntity)
+	if err != nil {
+		return nil, nil
 	}
 
-	return "", nil
+	// may be multiple, e.g. MAC address and PCID
+	var res []string
+	for _, i := range identification {
+		if i.Value != "" {
+			res = append(res, i.Value)
+		}
+	}
+
+	return res, nil
 }
 
 var _ api.Battery = (*EEBus)(nil)
@@ -564,6 +571,16 @@ func (c *EEBus) minMax() (minMax, error) {
 	evEntity, ok := c.isEvConnected()
 	if !ok {
 		return zero, nil
+	}
+
+	// IEC61851 EVs can't report their current range, so the EVSE sends generic
+	// defaults (6/16A) that would override the loadpoint config; trust ISO only (#14418)
+	switch comStandard, err := c.cem.EvCC.CommunicationStandard(evEntity); {
+	case err != nil:
+		return zero, eebus.WrapError(err)
+	case comStandard != model.DeviceConfigurationKeyValueStringTypeISO151182ED1 &&
+		comStandard != model.DeviceConfigurationKeyValueStringTypeISO151182ED2:
+		return zero, api.ErrNotAvailable
 	}
 
 	minLimits, maxLimits, _, err := c.cem.OpEV.CurrentLimits(evEntity)

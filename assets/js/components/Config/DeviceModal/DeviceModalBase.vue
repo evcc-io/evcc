@@ -6,6 +6,7 @@
 		:data-testid="`${name}-modal`"
 		:size="modalSize"
 		:config-modal-name="name"
+		:prevent-dismiss="dirty"
 		@open="handleOpen"
 		@close="handleClose"
 		@visibilitychange="handleVisibilityChange"
@@ -151,7 +152,13 @@
 							/>
 
 							<PropertyCollapsible>
-								<template v-if="advancedParams.length" #advanced>
+								<template v-if="advancedParams.length || modbus" #advanced>
+									<ModbusAdvanced
+										v-if="modbus"
+										v-model:delay="values['delay']"
+										v-model:timeout="values['timeout']"
+										component-id="device"
+									/>
 									<PropertyEntry
 										v-for="param in advancedParams"
 										:id="`${deviceType}Param${param.Name}`"
@@ -173,6 +180,8 @@
 				<DeviceModalActions
 					v-if="showActions"
 					:is-deletable="isDeletable"
+					:is-disabled="isDisabled"
+					:can-disable="canDisable"
 					:test-state="test"
 					:is-saving="saving"
 					:is-succeeded="succeeded"
@@ -182,6 +191,7 @@
 					@save="handleSave"
 					@remove="handleRemove"
 					@test="testManually"
+					@disable="handleDisable"
 				>
 					<template #before-test>
 						<AdminPasswordPrompt
@@ -196,6 +206,7 @@
 				</DeviceModalActions>
 			</template>
 		</form>
+		<slot name="post-content" :values="values"></slot>
 	</GenericModal>
 </template>
 
@@ -203,11 +214,12 @@
 import { defineComponent, type PropType } from "vue";
 import GenericModal from "../../Helper/GenericModal.vue";
 import DeviceInfoButton from "./DeviceInfoButton.vue";
-import { closeModal } from "@/configModal";
+import { closeModal, isNestedIn } from "@/configModal";
 import ErrorMessage from "../../Helper/ErrorMessage.vue";
 import PropertyEntry from "../PropertyEntry.vue";
 import PropertyCollapsible from "../PropertyCollapsible.vue";
 import Modbus from "./Modbus.vue";
+import ModbusAdvanced from "./ModbusAdvanced.vue";
 import DeviceModalActions from "./Actions.vue";
 import Markdown from "../Markdown.vue";
 import SponsorTokenRequired from "./SponsorTokenRequired.vue";
@@ -250,6 +262,7 @@ export default defineComponent({
 		PropertyEntry,
 		PropertyCollapsible,
 		Modbus,
+		ModbusAdvanced,
 		DeviceModalActions,
 		Markdown,
 		SponsorTokenRequired,
@@ -293,8 +306,8 @@ export default defineComponent({
 		isTypeDeprecated: Function as PropType<(type: ConfigType) => boolean>,
 		// Optional: provide template options from parent (to avoid circular dependency)
 		provideTemplateOptions: Function as PropType<(products: Product[]) => TemplateGroup[]>,
-		// Optional: handle template change (receives event and values, allows setting values.yaml)
-		onTemplateChange: Function as PropType<(e: Event, values: DeviceValues) => void>,
+		// Optional: handle template change (receives selected value and values, allows setting values.yaml)
+		onTemplateChange: Function as PropType<(value: string, values: DeviceValues) => void>,
 		// Optional: default template to select when opening modal for new devices
 		defaultTemplate: String,
 		// Optional: callback after configuration is loaded (receives values)
@@ -314,6 +327,7 @@ export default defineComponent({
 		"added",
 		"updated",
 		"removed",
+		"disable",
 		"open",
 		"close",
 		"template-changed",
@@ -331,6 +345,7 @@ export default defineComponent({
 			succeeded: false,
 			loadingTemplate: false,
 			values: { ...this.initialValues } as DeviceValues,
+			baseline: JSON.stringify({ ...this.initialValues }),
 			test: initialTestState(),
 			serviceValues: {} as Record<string, string[]>,
 			serviceValuesTimer: null as Timeout | null,
@@ -342,6 +357,9 @@ export default defineComponent({
 	computed: {
 		device() {
 			return createDeviceUtils(this.deviceType);
+		},
+		dirty(): boolean {
+			return JSON.stringify(this.values) !== this.baseline;
 		},
 		modalSize(): string | undefined {
 			return this.showYamlInput ? "xl" : undefined;
@@ -447,6 +465,12 @@ export default defineComponent({
 		},
 		isDeletable() {
 			return !this.isNew && !this.hideDelete;
+		},
+		isDisabled() {
+			return Boolean(this.values.deviceDisable);
+		},
+		canDisable(): boolean {
+			return !isNestedIn("loadpoint");
 		},
 		showActions() {
 			// explicitly hide template fields (ocpp step 1)
@@ -622,7 +646,11 @@ export default defineComponent({
 			this.values = { ...this.initialValues } as DeviceValues;
 			this.test = initialTestState();
 			this.resetAuthStatus();
+			this.rebaseline();
 			this.$emit("reset");
+		},
+		rebaseline() {
+			this.baseline = JSON.stringify(this.values);
 		},
 		async loadConfiguration() {
 			try {
@@ -638,6 +666,9 @@ export default defineComponent({
 				if (device.deviceIcon !== undefined) {
 					this.values.deviceIcon = device.deviceIcon;
 				}
+				if (device.deviceDisable !== undefined) {
+					this.values.deviceDisable = device.deviceDisable;
+				}
 				this.applyDefaults();
 				this.templateName = this.values.template;
 
@@ -645,17 +676,23 @@ export default defineComponent({
 				if (this.onConfigurationLoaded) {
 					this.onConfigurationLoaded(this.values);
 				}
+				this.rebaseline();
 				this.checkAuthStatus();
 			} catch (e) {
 				console.error(e);
 			}
 		},
 		applyDefaults() {
+			// late-arriving defaults must not mark a clean form dirty
+			const wasClean = !this.dirty;
 			applyDefaultsFromTemplate(this.template, this.values);
 
 			// Allow parent to apply custom defaults
 			if (this.applyCustomDefaults) {
 				this.applyCustomDefaults(this.template, this.values);
+			}
+			if (wasClean) {
+				this.rebaseline();
 			}
 		},
 		async loadProducts() {
@@ -819,6 +856,11 @@ export default defineComponent({
 				handleError(e, "remove failed");
 			}
 		},
+		async handleDisable(disable: boolean) {
+			if (this.id === undefined) return;
+			this.$emit("disable", { id: this.id, disable });
+			await closeModal();
+		},
 		handleOpen() {
 			this.isModalVisible = true;
 			this.$emit("open");
@@ -829,11 +871,11 @@ export default defineComponent({
 			this.$emit("close");
 			this.isModalVisible = false;
 		},
-		handleTemplateChange(e: Event) {
+		handleTemplateChange(value: string | null) {
 			// ensure this triggers after tempateName watcher
 			this.$nextTick(() => {
-				if (this.onTemplateChange) {
-					this.onTemplateChange(e, this.values);
+				if (this.onTemplateChange && value !== null) {
+					this.onTemplateChange(value, this.values);
 				}
 			});
 		},
@@ -874,7 +916,12 @@ export default defineComponent({
 			const param = this.templateParams.find((p) => p.Name === paramName);
 			// Only auto-apply if exactly one value is returned, field is empty, and field is required
 			if (values?.length === 1 && !this.values[paramName] && param?.Required) {
+				// debounced auto-fill must not mark a clean form dirty
+				const wasClean = !this.dirty;
 				this.values[paramName] = values[0];
+				if (wasClean) {
+					this.rebaseline();
+				}
 			}
 		},
 	},

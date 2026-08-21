@@ -1,6 +1,7 @@
 package remote
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"sync"
@@ -34,6 +35,7 @@ type Remote struct {
 	publisher   chan<- util.Param
 	lastSeen    map[string]time.Time // persisted: username → last activity
 	connected   map[string]int       // in-memory: active connection count per user
+	lastError   error                // last connect/registration error, published to UI
 }
 
 // New creates a new Remote manager, loads persisted settings, and connects if enabled.
@@ -93,8 +95,10 @@ func (r *Remote) Enabled() bool {
 }
 
 func (r *Remote) connect() {
-	if !sponsor.IsAuthorizedForApi() {
-		r.log.WARN.Println("remote access requires a sponsor token")
+	if sponsor.Token == "" {
+		msg := "remote access requires a sponsor token"
+		r.log.WARN.Println(msg)
+		r.setError(errors.New(msg))
 		return
 	}
 
@@ -105,9 +109,12 @@ func (r *Remote) connect() {
 	if token == "" {
 		if err := r.register(); err != nil {
 			r.log.ERROR.Printf("registration failed: %v", err)
+			r.setError(fmt.Errorf("registration failed: %w", err))
 			return
 		}
 	}
+
+	r.setError(nil)
 
 	r.log.INFO.Printf("remote access via %s", r.settings.URL)
 
@@ -129,6 +136,16 @@ func (r *Remote) disconnect() {
 		r.tunnel.Close()
 		r.tunnel = nil
 	}
+	r.lastError = nil
+}
+
+// setError records a connect error and publishes it to the UI.
+func (r *Remote) setError(err error) {
+	r.mu.Lock()
+	r.lastError = err
+	r.mu.Unlock()
+
+	r.publish()
 }
 
 type registerRequest struct {
@@ -192,6 +209,16 @@ func (r *Remote) ConfigStatus() globalconfig.ConfigStatus {
 	connected := r.tunnel != nil && r.tunnel.IsConnected()
 	loginBlocked := r.tunnel != nil && r.tunnel.LoginBlocked()
 
+	lastErr := r.lastError
+	if lastErr == nil && r.tunnel != nil {
+		lastErr = r.tunnel.Error()
+	}
+
+	var errMsg string
+	if lastErr != nil {
+		errMsg = lastErr.Error()
+	}
+
 	return globalconfig.ConfigStatus{
 		Config: struct {
 			Enabled bool `json:"enabled"`
@@ -203,11 +230,13 @@ func (r *Remote) ConfigStatus() globalconfig.ConfigStatus {
 			URL          string               `json:"url,omitempty"`
 			LoginBlocked bool                 `json:"loginBlocked"`
 			LastSeen     map[string]time.Time `json:"lastSeen,omitempty"`
+			Error        string               `json:"error,omitempty"`
 		}{
 			Connected:    connected,
 			URL:          r.settings.URL,
 			LoginBlocked: loginBlocked,
 			LastSeen:     r.lastSeen,
+			Error:        errMsg,
 		},
 	}
 }

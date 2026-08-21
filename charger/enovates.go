@@ -69,14 +69,12 @@ func NewEnovatesFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		return nil, err
 	}
 
-	return NewEnovates(ctx, cc.URI, cc.ID)
+	return NewEnovates(ctx, cc)
 }
 
 // NewEnovates creates an Enovates charger
-func NewEnovates(ctx context.Context, uri string, slaveID uint8) (api.Charger, error) {
-	uri = util.DefaultPort(uri, 502)
-
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewEnovates(ctx context.Context, settings modbus.TcpSettings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -235,13 +233,13 @@ func (wb *Enovates) Voltages() (float64, float64, float64, error) {
 var _ api.Identifier = (*Enovates)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *Enovates) Identify() (string, error) {
+func (wb *Enovates) Identify() ([]string, error) {
 	b, err := wb.conn.ReadHoldingRegisters(enovatesRegToken, 16)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return trimModbusString(b), nil
+	return []string{trimModbusString(b)}, nil
 }
 
 var _ api.Diagnosis = (*Enovates)(nil)

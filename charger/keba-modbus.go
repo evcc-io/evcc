@@ -89,7 +89,7 @@ func NewKebaFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		return nil, err
 	}
 
-	wb, err := NewKeba(ctx, cc.embed, cc.URI, cc.ID)
+	wb, err := NewKeba(ctx, cc.embed, cc.TcpSettings)
 	if err != nil {
 		return nil, err
 	}
@@ -162,8 +162,8 @@ func NewKebaFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 }
 
 // NewKeba creates a new charger
-func NewKeba(ctx context.Context, embed embed, uri string, slaveID uint8) (*Keba, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewKeba(ctx context.Context, embed embed, settings modbus.TcpSettings) (*Keba, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -358,10 +358,10 @@ func (wb *Keba) currents() (float64, float64, float64, error) {
 }
 
 // identify implements the api.Identifier interface
-func (wb *Keba) identify() (string, error) {
+func (wb *Keba) identify() ([]string, error) {
 	b, err := wb.conn.ReadHoldingRegisters(kebaRegRfid, 2)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	id := hex.EncodeToString(b)
@@ -369,7 +369,7 @@ func (wb *Keba) identify() (string, error) {
 		id = ""
 	}
 
-	return id, nil
+	return []string{id}, nil
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface

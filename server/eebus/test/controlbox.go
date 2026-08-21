@@ -34,6 +34,18 @@ type controlbox struct {
 }
 
 func createControlbox(ctx context.Context, remoteSki string, port int) (*controlbox, error) {
+	h, err := newControlbox(nil, port)
+	if err != nil {
+		return nil, err
+	}
+
+	h.myService.RegisterRemoteService(shipapi.NewServiceIdentity(remoteSki, "", ""))
+	h.start(ctx)
+
+	return h, nil
+}
+
+func newControlbox(pairing *shipapi.PairingConfig, port int) (*controlbox, error) {
 	certificate, err := cert.CreateCertificate("Demo", "Demo", "DE", "Demo-Unit-01")
 	if err != nil {
 		return nil, err
@@ -48,16 +60,19 @@ func createControlbox(ctx context.Context, remoteSki string, port int) (*control
 		ski: ski,
 	}
 
+	// unique per instance: a shared serial collides on ShipID when multiple controlboxes run concurrently
+	serial := ski[:8]
+
 	configuration, err := api.NewConfiguration(
-		"Demo", "Demo", "ControlBox", "123456789",
+		"Demo", "Demo", "ControlBox", serial,
 		[]shipapi.DeviceCategoryType{shipapi.DeviceCategoryTypeGridConnectionHub},
 		model.DeviceTypeTypeElectricitySupplySystem,
 		[]model.EntityTypeType{model.EntityTypeTypeGridGuard},
-		port, certificate, time.Second*60, nil, nil)
+		port, certificate, time.Second*60, pairing, nil)
 	if err != nil {
 		return nil, err
 	}
-	configuration.SetAlternateIdentifier("Demo-ControlBox-123456789")
+	configuration.SetAlternateIdentifier("Demo-ControlBox-" + serial)
 
 	h.myService = service.NewService(configuration, h)
 	// h.myService.SetLogging(h)
@@ -73,15 +88,16 @@ func createControlbox(ctx context.Context, remoteSki string, port int) (*control
 	h.uclpp = lpp.NewLPP(localEntity, h.OnLPPEvent)
 	h.myService.AddUseCase(h.uclpp)
 
-	h.myService.RegisterRemoteService(shipapi.NewServiceIdentity(remoteSki, "", ""))
+	return h, nil
+}
+
+func (h *controlbox) start(ctx context.Context) {
 	h.myService.Start()
 
 	go func() {
 		<-ctx.Done()
 		h.myService.Shutdown()
 	}()
-
-	return h, nil
 }
 
 func (h *controlbox) remoteEntity(event api.EventType) []spineapi.EntityRemoteInterface {

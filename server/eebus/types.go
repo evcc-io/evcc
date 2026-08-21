@@ -1,6 +1,8 @@
 package eebus
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/evcc-io/evcc/util"
@@ -26,6 +28,7 @@ type Config struct {
 	ShipID      string      `json:"shipid"`
 	Interfaces  []string    `json:"interfaces,omitempty"`
 	Certificate Certificate `json:"certificate"`
+	Secret      string      `json:"secret,omitempty"` // hex SHIP pairing secret
 }
 
 // IsConfigured returns true if the EEbus server is configured
@@ -52,6 +55,15 @@ func createShipID() string {
 	return fmt.Sprintf("%s-%0x", "EVCC", protectedID[:8])
 }
 
+// CreatePairingSecret returns a 16-byte SHIP pairing secret as hex string.
+func CreatePairingSecret() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
+}
+
 func DefaultConfig(conf *Config) (*Config, error) {
 	cert, err := CreateCertificate()
 	if err != nil {
@@ -69,9 +81,15 @@ func DefaultConfig(conf *Config) (*Config, error) {
 		port = 4712
 	}
 
+	secret, err := CreatePairingSecret()
+	if err != nil {
+		return nil, err
+	}
+
 	res := Config{
 		Port:   port,
 		ShipID: createShipID(),
+		Secret: secret,
 		Certificate: Certificate{
 			Public:  public,
 			Private: private,

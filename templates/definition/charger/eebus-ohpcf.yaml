@@ -21,6 +21,3 @@ render: |
   type: eebus-ohpcf
   {{ include "eebus" . }}
   reboost: {{ .reboost }}
-  features:
-    - heating
-    - integrateddevice

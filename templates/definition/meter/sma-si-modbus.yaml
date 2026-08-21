@@ -108,4 +108,7 @@ render: |
                 address: 40151 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WCtlComAct
                 type: writemultiple
                 decode: uint32
+      default:
+        source: error
+        error: ErrNotAvailable
   {{- include "battery-params" . }}

@@ -23,7 +23,7 @@ test.afterEach(async () => {
 const CONFIG = "fast.evcc.yaml";
 
 test.describe("HEMS", () => {
-  test("grid sessions in template modal", async ({ page }) => {
+  test("no recorded events section in create mode", async ({ page }) => {
     await start(CONFIG, "hems.sql");
     await page.goto("/#/config");
 
@@ -31,17 +31,63 @@ test.describe("HEMS", () => {
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
 
-    await expect(hemsModal.getByTestId("grid-sessions")).toBeVisible();
-    await expect(hemsModal).toContainText("Recorded 3 grid limitation events");
-    await expect(hemsModal).toContainText("Most recent");
-
-    const csvLink = hemsModal.getByRole("link", { name: "Download CSV" });
-    await expect(csvLink).toHaveAttribute("href", /\.\/api\/gridsessions\?format=csv&lang=en/);
+    await expect(hemsModal.getByTestId("grid-sessions")).not.toBeVisible();
 
     // template selector is shown in create mode, yaml editor hidden until "User-defined" is chosen
     await expect(hemsModal.getByLabel("Integration")).toBeVisible();
     await expect(hemsModal.getByTestId("yaml-editor")).not.toBeVisible();
     await expect(hemsModal).not.toContainText("Configured via evcc.yaml");
+
+    // both user-defined variants prefill their own yaml
+    const editor = hemsModal.getByTestId("yaml-editor");
+    await hemsModal
+      .getByLabel("Integration")
+      .selectOption({ label: "User-defined integration (relay)" });
+    await expect(editor).toContainText("type: relay");
+    await hemsModal.getByLabel("Integration").selectOption({ label: "User-defined integration" });
+    await expect(editor).toContainText("type: custom");
+
+    // validate reports active limits
+    const testResult = hemsModal.getByTestId("test-result");
+    await editorClear(editor);
+    await editorPaste(
+      editor,
+      page,
+      `type: custom
+maxconsumptionpower:
+  source: const
+  value: 4200`
+    );
+    await testResult.getByRole("link", { name: "validate" }).click();
+    await expect(testResult).toContainText("Status: successful");
+    await expect(testResult).toContainText(["Consumption limit", "4.2 kW"].join(""));
+
+    await hemsModal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(hemsModal);
+  });
+
+  test("recorded events in configured modal", async ({ page }) => {
+    await start("hems-yaml.evcc.yaml", "hems.sql");
+    await page.goto("/#/config");
+
+    await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
+    const hemsModal = page.getByTestId("hems-modal");
+    await expectModalVisible(hemsModal);
+
+    await expect(hemsModal.getByTestId("grid-sessions")).toBeVisible();
+    await expect(hemsModal).toContainText("Recorded events");
+    await expect(hemsModal).toContainText("Recorded 3 grid limitation events");
+    await expect(hemsModal).toContainText("Most recent");
+
+    await hemsModal.getByRole("button", { name: "Download" }).click();
+    await expect(hemsModal.getByRole("link", { name: "CSV" })).toHaveAttribute(
+      "href",
+      "./api/gridsessions?lang=en&format=csv"
+    );
+    await expect(hemsModal.getByRole("link", { name: "XLSX" })).toHaveAttribute(
+      "href",
+      "./api/gridsessions?lang=en&format=xlsx"
+    );
 
     await hemsModal.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(hemsModal);
@@ -55,7 +101,8 @@ test.describe("HEMS", () => {
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
 
-    await expect(hemsModal.getByTestId("grid-sessions")).not.toBeVisible();
+    await expect(hemsModal.getByTestId("grid-sessions")).toBeVisible();
+    await expect(hemsModal).toContainText("No events recorded yet");
     await expect(hemsModal).toContainText("Configured via evcc.yaml");
     await expect(hemsModal.getByLabel("Integration")).not.toBeVisible();
     await expect(hemsModal.getByTestId("yaml-editor")).not.toBeVisible();
@@ -63,6 +110,73 @@ test.describe("HEMS", () => {
 
     await hemsModal.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(hemsModal);
+  });
+
+  test("grid export limit", async ({ page }) => {
+    await start(CONFIG);
+    await page.goto("/#/config");
+
+    const hemsModal = page.getByTestId("hems-modal");
+    const section = hemsModal.getByTestId("grid-export-limit");
+
+    // hidden without experimental
+    await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(hemsModal);
+    await expect(section).not.toBeVisible();
+    await hemsModal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(hemsModal);
+
+    // enable experimental
+    await page
+      .getByTestId("generalconfig-experimental")
+      .getByRole("button", { name: "edit" })
+      .click();
+    const experimentalModal = page.getByTestId("experimental-modal");
+    await expectModalVisible(experimentalModal);
+    await experimentalModal.getByLabel("Enable experimental features.").click();
+    await experimentalModal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(experimentalModal);
+
+    await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(hemsModal);
+    const toggle = section.getByRole("switch", { name: "Grid export limit" });
+    const input = section.getByRole("spinbutton", { name: "Grid export limit" });
+    const staticTab = hemsModal.getByRole("link", { name: "Static limits" });
+
+    await staticTab.click();
+
+    // initially off, input collapsed
+    await expect(toggle).not.toBeChecked();
+    await expect(input).not.toBeVisible();
+
+    // enable, set value, commit via Enter
+    await toggle.click();
+    await expect(input).toBeVisible();
+    await input.fill("7000");
+    await input.press("Enter");
+    await expect(section.getByText("Saved.")).toBeVisible();
+
+    await hemsModal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(hemsModal);
+
+    // card shows the static limit instead of unconfigured
+    const hemsCard = page.getByTestId("hems");
+    await expect(hemsCard).toContainText("Grid export limit");
+    await expect(hemsCard).toContainText("7.0 kW");
+    await expect(hemsCard).not.toContainText("Configured");
+
+    // persisted across restart
+    await restart(CONFIG);
+    await page.reload();
+    await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(hemsModal);
+    await staticTab.click();
+    await expect(toggle).toBeChecked();
+    await expect(input).toHaveValue("7000");
+
+    // switch off removes limit, collapse is the feedback
+    await toggle.click();
+    await expect(input).not.toBeVisible();
   });
 
   test("user-defined relay drives external limit without circuits", async ({ page }) => {
@@ -76,7 +190,9 @@ test.describe("HEMS", () => {
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
-    await hemsModal.getByLabel("Integration").selectOption({ label: "User-defined integration" });
+    await hemsModal
+      .getByLabel("Integration")
+      .selectOption({ label: "User-defined integration (relay)" });
     const hemsEditor = hemsModal.getByTestId("yaml-editor");
     await expect(hemsEditor).toBeVisible();
     await editorClear(hemsEditor);
@@ -128,7 +244,9 @@ limit:
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
-    await hemsModal.getByLabel("Integration").selectOption({ label: "User-defined integration" });
+    await hemsModal
+      .getByLabel("Integration")
+      .selectOption({ label: "User-defined integration (relay)" });
     const hemsEditor = hemsModal.getByTestId("yaml-editor");
     await editorClear(hemsEditor);
     await editorPaste(
@@ -188,7 +306,9 @@ limit:
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
-    await hemsModal.getByLabel("Integration").selectOption({ label: "User-defined integration" });
+    await hemsModal
+      .getByLabel("Integration")
+      .selectOption({ label: "User-defined integration (relay)" });
     const hemsEditor = hemsModal.getByTestId("yaml-editor");
     await expect(hemsEditor).toBeVisible();
     await editorClear(hemsEditor);
@@ -288,7 +408,9 @@ w4:${signalSource("w4")}`
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
-    await hemsModal.getByLabel("Integration").selectOption({ label: "User-defined integration" });
+    await hemsModal
+      .getByLabel("Integration")
+      .selectOption({ label: "User-defined integration (relay)" });
     const hemsEditor = hemsModal.getByTestId("yaml-editor");
     await expect(hemsEditor).toBeVisible();
     await editorClear(hemsEditor);
@@ -317,18 +439,18 @@ w3:
   test.describe("grid sessions CSV in app context", () => {
     test("dispatches download event", async ({ page }) => {
       await enableAppContext(page);
-      await start(CONFIG, "hems.sql");
+      await start("hems-yaml.evcc.yaml", "hems.sql");
       await page.goto("/#/config");
 
       await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
       const hemsModal = page.getByTestId("hems-modal");
       await expectModalVisible(hemsModal);
 
-      const csvLink = hemsModal.getByRole("link", { name: "Download CSV" });
-      await csvLink.click();
+      await hemsModal.getByRole("button", { name: "Download" }).click();
+      await hemsModal.getByRole("link", { name: "CSV" }).click();
       expect(await expectAppEvent(page)).toMatchObject({
         type: "download",
-        url: expect.stringContaining("/api/gridsessions?format=csv&lang=en"),
+        url: expect.stringContaining("/api/gridsessions?lang=en&format=csv"),
       });
     });
   });
@@ -353,7 +475,9 @@ w3:
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
-    await hemsModal.getByLabel("Integration").selectOption({ label: "User-defined integration" });
+    await hemsModal
+      .getByLabel("Integration")
+      .selectOption({ label: "User-defined integration (relay)" });
     const hemsEditor = hemsModal.getByTestId("yaml-editor");
     await expect(hemsEditor).toBeVisible();
     await editorClear(hemsEditor);
@@ -385,6 +509,7 @@ limit:
     await addDemoCharger(page);
     const lpModal = page.getByTestId("loadpoint-modal");
     await expectModalVisible(lpModal);
+    await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
     const circuitOptions = lpModal.getByLabel("Circuit").getByRole("option");
     await expect(circuitOptions).toHaveText(["---", "House [main]"]);
   });

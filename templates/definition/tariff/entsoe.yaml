@@ -118,5 +118,5 @@ render: |
   type: entsoe
   securitytoken: {{ .securitytoken }}
   domain: "{{ .domain }}"
-  {{ include "tariff-base" . }}
-  {{ include "tariff-features" . }}
+  {{ include "base" . }}
+  {{ include "features" . }}

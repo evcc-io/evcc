@@ -44,8 +44,18 @@ params:
     example: "sensor.house_energy"
     advanced: true
     help:
-      en: Entity ID for cumulative energy measurement in kWh. Should provide total energy consumed/produced, not daily or interval values.
-      de: Entitäts-ID für kumulative Energiemessung in kWh. Sollte die gesamte verbrauchte/produzierte Energie liefern, nicht tägliche oder Intervallwerte.
+      en: Entity ID for total energy in kWh (e.g. grid import or battery charging). No daily or interval values.
+      de: Entitäts-ID für Gesamtenergie in kWh (z.B. Netzbezug oder Batterieladung). Keine täglichen oder Intervallwerte.
+  - name: returnEnergy
+    description:
+      de: Energieentität (Gegenrichtung)
+      en: Return Energy Entity
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
+    example: "sensor.house_return_energy"
+    advanced: true
+    help:
+      en: Entity ID for total energy in reverse direction in kWh (e.g. grid export or battery discharging). No daily or interval values.
+      de: Entitäts-ID für Gesamtenergie in Gegenrichtung in kWh (z.B. Netzeinspeisung oder Batterieentladung). Keine täglichen oder Intervallwerte.
   - name: currentL1
     description:
       de: L1 Stromentität
@@ -160,6 +170,7 @@ render: |
   insecure: {{ .insecure }}
   power: {{ .power }}
   energy: {{ .energy }}
+  returnenergy: {{ .returnEnergy }}
   currents:
     - {{ .currentL1 }}
     - {{ .currentL2 }}

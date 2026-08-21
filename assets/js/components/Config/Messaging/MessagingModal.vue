@@ -4,7 +4,7 @@
 		name="messaging"
 		:title="$t('config.messaging.title')"
 		:description="$t('config.messaging.description')"
-		docs="/docs/reference/configuration/messaging"
+		docs="/docs/notifications"
 		endpoint="/config/messagingEvents"
 		state-key="messagingEvents"
 		data-testid="messaging-modal"
@@ -128,7 +128,8 @@ export default {
 			this.events.forEach((event) => {
 				const e = v[event];
 				v[event] = {
-					disabled: e?.disabled ?? true,
+					// suggestion is advisory and opt-out to gather feedback, all others opt-in
+					disabled: e?.disabled ?? event !== MESSAGING_EVENTS.SUGGESTION,
 					title: e?.title ?? "",
 					msg: e?.msg ?? "",
 				};

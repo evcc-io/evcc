@@ -79,7 +79,10 @@ func Tariffs() Handler[api.Tariff] {
 func Instances[T any](devices []Device[T]) []T {
 	res := make([]T, 0, len(devices))
 	for _, dev := range devices {
-		res = append(res, dev.Instance())
+		// skip disabled devices without instance
+		if inst := dev.Instance(); any(inst) != nil {
+			res = append(res, inst)
+		}
 	}
 	return res
 }

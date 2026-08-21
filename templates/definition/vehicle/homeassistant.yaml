@@ -54,6 +54,33 @@ params:
     help:
       en: Entity ID for charging status (A=disconnected, B=connected, C=charging)
       de: Entitäts-ID für Ladestatus (A=getrennt, B=verbunden, C=laden)
+  - name: statusA
+    description:
+      de: Zustände für Status A
+      en: States for status A
+    example: not_plugged, disconnected
+    advanced: true
+    help:
+      en: Comma-separated list of additional states meaning disconnected
+      de: Komma-getrennte Liste zusätzlicher Zustände für getrennt
+  - name: statusB
+    description:
+      de: Zustände für Status B
+      en: States for status B
+    example: charging_stopped, charging_completed
+    advanced: true
+    help:
+      en: Comma-separated list of additional states meaning connected
+      de: Komma-getrennte Liste zusätzlicher Zustände für verbunden
+  - name: statusC
+    description:
+      de: Zustände für Status C
+      en: States for status C
+    example: instant_charging, fast_charging
+    advanced: true
+    help:
+      en: Comma-separated list of additional states meaning charging
+      de: Komma-getrennte Liste zusätzlicher Zustände für laden
   - name: limitSoc
     description:
       de: Ziel-Ladezustand [%]
@@ -131,8 +158,8 @@ params:
     default: true
 render: |
   type: homeassistant
-  {{ include "vehicle-common" . }}
-  {{ include "vehicle-features" . }}
+  {{ include "common" . }}
+  {{ include "features" . }}
   uri: {{ .uri }}
   home: {{ .home }} # deprecated
   insecure: {{ .insecure }}
@@ -144,6 +171,9 @@ render: |
     odometer: {{ .odometer }}
     climater: {{ .climater }}
     finishTime: {{ .finishTime }}
+  statusA: {{ .statusA }}
+  statusB: {{ .statusB }}
+  statusC: {{ .statusC }}
   services:
     start_charging: {{ .start_charging }}
     stop_charging: {{ .stop_charging }}

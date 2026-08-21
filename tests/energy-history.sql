@@ -18,7 +18,7 @@ CREATE UNIQUE INDEX `meters_meter_ts` ON `meters`(`meter`, `ts`);
 -- entities (name = stable id, title = display label)
 -- home is a virtual entity; evcc resets its title to "home" on boot
 INSERT INTO `entities` (id, `group`, name, title) VALUES (1, 'home', 'home', 'home');
-INSERT INTO `entities` (id, `group`, name, title) VALUES (2, 'grid', 'grid', 'Grid');
+INSERT INTO `entities` (id, `group`, name, title) VALUES (2, 'grid', 'grid', 'grid');
 INSERT INTO `entities` (id, `group`, name, title) VALUES (3, 'battery', 'battery', 'Battery');
 INSERT INTO `entities` (id, `group`, name, title) VALUES (4, 'pv', 'solar', 'Solar');
 INSERT INTO `entities` (id, `group`, name, title) VALUES (5, 'consumer', 'kitchen', 'Kitchen');
@@ -28,6 +28,8 @@ INSERT INTO `entities` (id, `group`, name, title) VALUES (8, 'pv', 'pv-west', 'P
 INSERT INTO `entities` (id, `group`, name, title) VALUES (9, 'forecast', 'forecast', 'Forecast');
 INSERT INTO `entities` (id, `group`, name, title) VALUES (10, 'battery', 'battery-2', 'Battery 2');
 INSERT INTO `entities` (id, `group`, name, title) VALUES (11, 'meter', 'submeter', 'Submeter');
+-- leftover from a swapped grid meter device ref
+INSERT INTO `entities` (id, `group`, name, title) VALUES (12, 'grid', 'db:2', 'db:2');
 
 -- =====================================================================
 -- API test data: 2026-03-24/25 (existing). Used by the JSON-shape tests.
@@ -164,6 +166,17 @@ INSERT INTO `meters` VALUES (11, 1775728800, 0.3, 0);
 INSERT INTO `meters` VALUES (11, 1775729700, 0.3, 0);
 INSERT INTO `meters` VALUES (11, 1775730600, 0.3, 0);
 INSERT INTO `meters` VALUES (11, 1775731500, 0.3, 0);
+
+-- 2026-04-11 → grid meter swap (history-grid-swap.spec.ts): old entity
+-- 11:00-11:45, leftover "db:2" 12:00-12:45.
+INSERT INTO `meters` VALUES (2, 1775898000, 0.5, 0.1);
+INSERT INTO `meters` VALUES (2, 1775898900, 0.5, 0.1);
+INSERT INTO `meters` VALUES (2, 1775899800, 0.5, 0.1);
+INSERT INTO `meters` VALUES (2, 1775900700, 0.5, 0.1);
+INSERT INTO `meters` VALUES (12, 1775901600, 0.5, 0.1);
+INSERT INTO `meters` VALUES (12, 1775902500, 0.5, 0.1);
+INSERT INTO `meters` VALUES (12, 1775903400, 0.5, 0.1);
+INSERT INTO `meters` VALUES (12, 1775904300, 0.5, 0.1);
 
 -- 2026-04-10 → additional meter with export. Import peak 2 kW, export 0.4 kW.
 -- Negative values must flip the axis to symmetric (bidirectional) ±2 kW.
