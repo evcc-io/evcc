@@ -16,6 +16,7 @@ params:
   - name: port
     default: 502
   - name: maxacpower
+    deprecated: true # read from nameplate
 render: |
   type: custom
   # Fronius Argeno: AC output via SunSpec inverter model 113 (float, primary)
@@ -38,4 +39,4 @@ render: |
       - 113:WH
       - 103:WH
     scale: 0.001
-  maxacpower: {{ .maxacpower }} # W
+  {{- include "sunspec-maxacpower-tcp" . }}

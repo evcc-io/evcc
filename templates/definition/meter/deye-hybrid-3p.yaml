@@ -608,5 +608,8 @@ render: |
               address: 109 # Battery Max Discharging Current
               type: writemultiple
               decode: uint16
+    default:
+      source: error
+      error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

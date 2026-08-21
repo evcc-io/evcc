@@ -133,7 +133,7 @@
 					@click="showDetails(session.id)"
 				>
 					<td class="ps-0 tabular">
-						{{ fmtFullDateTime(new Date(session.created), true) }}
+						{{ fmtWeekdayDayTime(new Date(session.created)) }}
 					</td>
 					<td class="d-none d-md-table-cell">
 						{{ session.loadpoint }}

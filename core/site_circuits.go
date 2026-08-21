@@ -4,10 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"sync"
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/samber/lo"
@@ -21,6 +23,46 @@ type circuitStruct struct {
 	Current    *float64 `json:"current,omitempty"`
 	MaxPower   float64  `json:"maxPower,omitempty"`
 	MaxCurrent float64  `json:"maxCurrent,omitempty"`
+}
+
+// updateCircuits updates all circuits' power and currents
+func (site *Site) updateCircuits() {
+	if site.circuit == nil {
+		return
+	}
+
+	if err := site.circuit.Update(site.loadpointsAsCircuitDevices()); err != nil {
+		site.log.ERROR.Println(err)
+	}
+
+	site.publishCircuits()
+}
+
+// applyHemsLimits applies the HEMS dim and curtail state to the site's devices
+func (site *Site) applyHemsLimits() {
+	if site.hems == nil {
+		return
+	}
+
+	var wg sync.WaitGroup
+
+	wg.Go(func() {
+		if dim := hems.Dimmed(site.hems); dim != nil {
+			if err := site.dimMeters(*dim); err != nil {
+				site.log.ERROR.Println(err)
+			}
+		}
+	})
+
+	wg.Go(func() {
+		if hems.Curtailed(site.hems) != nil {
+			if err := site.curtailPV(site.hems.CurtailedPercent()); err != nil {
+				site.log.ERROR.Println(err)
+			}
+		}
+	})
+
+	wg.Wait()
 }
 
 // publishCircuits returns a list of circuit titles

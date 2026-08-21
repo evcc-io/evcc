@@ -260,5 +260,8 @@ render: |
                 address: 47087 # Charge from grid
                 type: writesingle
                 encoding: uint16
+      default:
+        source: error
+        error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

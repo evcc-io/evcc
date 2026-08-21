@@ -227,6 +227,14 @@ func (site *Site) setSuggestions(suggestions map[string]types.Suggestion) {
 	site.suggestions = suggestions
 }
 
+// setBatteryForecast replaces the battery forecast of the cached state
+func (site *Site) setBatteryForecast(forecast *types.BatteryForecast) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.battery.Forecast = forecast
+}
+
 // suggestion returns the optimizer suggestion for the given device key.
 // The actionable flag is evaluated on read against the device's current
 // action since that changes between optimizer runs.
@@ -263,7 +271,7 @@ func (site *Site) publishSuggestions() {
 // optimizer result is stale
 func (site *Site) clearSuggestions() {
 	site.setSuggestions(nil)
-	site.battery.Forecast = nil
+	site.setBatteryForecast(nil)
 
 	site.publishBattery()
 	site.publishSuggestions()
@@ -390,7 +398,7 @@ func (site *Site) optimizerUpdateAsync(minAge time.Duration) {
 		}
 	}()
 
-	err = site.optimizerUpdate(site.battery.Devices)
+	err = site.optimizerUpdate(site.state().battery.Devices)
 }
 
 // optimizerRequest assembles the optimizer request and the matching device
@@ -675,7 +683,7 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 	site.publish("evopt-batteries", batteries)
 
 	site.setSuggestions(suggestions)
-	site.battery.Forecast = site.addBatteryForecastTotals(req.Batteries, res.Batteries)
+	site.setBatteryForecast(site.addBatteryForecastTotals(req.Batteries, res.Batteries))
 
 	site.publishBattery()
 

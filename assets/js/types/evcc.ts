@@ -14,6 +14,7 @@ declare global {
       customWebsite: string;
       customEmail: string;
       customPhone: string;
+      customTheme: THEME;
     };
   }
   interface Window {
