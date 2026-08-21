@@ -3189,6 +3189,10 @@
             "description": "Recommended discharge power in W.",
             "type": "number"
           },
+          "grid": {
+            "description": "Planned site grid flow of the slot in W, positive means import.",
+            "type": "number"
+          },
           "actionable": {
             "description": "Suggestion differs from the current operating mode.",
             "type": "boolean"
@@ -3950,6 +3954,10 @@
           },
           "discharge": {
             "description": "Recommended discharge power in W.",
+            "type": "number"
+          },
+          "grid": {
+            "description": "Planned site grid flow of the slot in W, positive means import.",
             "type": "number"
           },
           "actionable": {

@@ -441,6 +441,9 @@ components:
         discharge:
           description: Recommended discharge power in W.
           type: number
+        grid:
+          description: Planned site grid flow of the slot in W, positive means import.
+          type: number
         actionable:
           description: Suggestion differs from the current operating mode.
           type: boolean
@@ -1181,6 +1184,9 @@ components:
           type: number
         discharge:
           description: Recommended discharge power in W.
+          type: number
+        grid:
+          description: Planned site grid flow of the slot in W, positive means import.
           type: number
         actionable:
           description: Suggestion differs from the current operating mode.
