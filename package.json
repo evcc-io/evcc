@@ -31,9 +31,6 @@
     "axios": "^1.18.1",
     "bootstrap": "^5.3.8",
     "canvas-confetti": "^1.9.4",
-    "chart.js": "^4.5.1",
-    "chartjs-adapter-dayjs-4": "^1.0.4",
-    "chartjs-plugin-datalabels": "^2.2.0",
     "countup.js": "^2.10.1",
     "dayjs": "^1.11.21",
     "echarts": "^6.1.0",
@@ -41,7 +38,6 @@
     "smoothscroll-polyfill": "^0.4.4",
     "snarkdown": "^2.0.0",
     "vue": "^3.5.40",
-    "vue-chartjs": "^5.3.4",
     "vue-i18n": "^11.4.8",
     "vue-router": "^5.2.0"
   },
@@ -90,13 +86,13 @@
     "tsx": "^4.23.1",
     "typescript": "^5.9.3",
     "vite": "npm:@voidzero-dev/vite-plus-core@0.2.6",
+    "vite-plus": "0.2.6",
     "vitest": "4.1.10",
     "vue-hot-reload-api": "^2.3.4",
     "vue-tsc": "^3.3.8",
     "wait-on": "^9.1.0",
     "ws": "^8.21.1",
-    "yaml": "^2.9.0",
-    "vite-plus": "0.2.6"
+    "yaml": "^2.9.0"
   },
   "overrides": {
     "vite": "npm:@voidzero-dev/vite-plus-core@0.2.6",

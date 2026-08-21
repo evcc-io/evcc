@@ -88,6 +88,9 @@ render: |
             address: 31265 # SMA Modbus Profile: Metering.GridMs.WIn.phsA # Power drawn from grid phase L1, unsigned, zero if no consumption
             type: input
             decode: uint32nan
+          block: # 31259-31270
+            register: 31259
+            count: 12
           scale: 1
         - source: modbus
           {{- include "modbus" . | indent 8 }}
@@ -95,6 +98,9 @@ render: |
             address: 31259 # SMA Modbus Profile: Metering.GridMs.W.phsA # Power grid feeding L1, unsigned, zero if no feeding
             type: input
             decode: uint32nan
+          block: # 31259-31270
+            register: 31259
+            count: 12
           scale: -1
     - source: calc
       add:
@@ -104,6 +110,9 @@ render: |
             address: 31267 # SMA Modbus Profile: Metering.GridMs.WIn.phsB # Power drawn from grid phase L2, unsigned, zero if no consumption
             type: input
             decode: uint32nan
+          block: # 31259-31270
+            register: 31259
+            count: 12
           scale: 1
         - source: modbus
           {{- include "modbus" . | indent 8 }}
@@ -111,6 +120,9 @@ render: |
             address: 31261 # SMA Modbus Profile: Metering.GridMs.W.phsB # Power grid feeding L2, unsigned, zero if no feeding
             type: input
             decode: uint32nan
+          block: # 31259-31270
+            register: 31259
+            count: 12
           scale: -1
     - source: calc
       add:
@@ -120,6 +132,9 @@ render: |
             address: 31269 # SMA Modbus Profile: Metering.GridMs.WIn.phsC # Power drawn from grid phase L3, unsigned, zero if no consumption
             type: input
             decode: uint32nan
+          block: # 31259-31270
+            register: 31259
+            count: 12
           scale: 1
         - source: modbus
           {{- include "modbus" . | indent 8 }}
@@ -127,6 +142,9 @@ render: |
             address: 31263 # SMA Modbus Profile: Metering.GridMs.W.phsC # Power grid feeding L3, unsigned, zero if no feeding
             type: input
             decode: uint32nan
+          block: # 31259-31270
+            register: 31259
+            count: 12
           scale: -1
   {{- end }}
   {{- if eq .usage "pv" }}
@@ -424,5 +442,8 @@ render: |
                 address: 40801 # CmpBMS.GridWSpt - Sollwert der Netzaustauschleistung
                 type: writemultiple
                 decode: uint32
+      default:
+        source: error
+        error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

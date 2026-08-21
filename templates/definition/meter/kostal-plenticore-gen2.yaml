@@ -35,7 +35,7 @@ params:
     default: little
     advanced: true
   - name: maxacpower
-    service: modbus/read?address=531&type=holding&encoding=uint16&{modbus}
+    deprecated: true # read from nameplate
   - preset: battery-params
   - name: capacity
     service: modbus/read?address=1068&type=holding&encoding=float32s&scale=0.001&{modbus}
@@ -74,7 +74,7 @@ render: |
       type: holding
       encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
     scale: 0.001 # Wh -> kWh
-  maxacpower: {{ .maxacpower }} # W
+  {{- include "sunspec-maxacpower" . }}
   # feed-in curtailment via active power limit (SunSpec model 123, WMaxLimPct @ 40217).
   # written as a single register (fn 06); the Plenticore rejects write multiple (fn 16) here.
   # WMaxLim_Ena (register 40221) is enabled by default and left to the inverter
@@ -172,5 +172,8 @@ render: |
               address: 1038 # Battery max. charge power limit, absolute [W]
               type: writemultiple
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+      default:
+        source: error
+        error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

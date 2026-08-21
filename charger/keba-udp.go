@@ -305,10 +305,10 @@ func (c *KebaUdp) currents() (float64, float64, float64, error) {
 var _ api.Identifier = (*KebaUdp)(nil)
 
 // Identify implements the api.Identifier interface
-func (c *KebaUdp) Identify() (string, error) {
+func (c *KebaUdp) Identify() ([]string, error) {
 	var kr keba.Report100
 	err := c.roundtrip("report", 100, &kr)
-	return kr.RFIDTag, err
+	return []string{kr.RFIDTag}, err
 }
 
 var _ api.Diagnosis = (*KebaUdp)(nil)

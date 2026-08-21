@@ -133,7 +133,7 @@
 					@click="showDetails(session.id)"
 				>
 					<td class="ps-0 tabular">
-						{{ fmtFullDateTime(new Date(session.created), true) }}
+						{{ fmtWeekdayDayTime(new Date(session.created)) }}
 					</td>
 					<td class="d-none d-md-table-cell">
 						{{ session.loadpoint }}
@@ -506,19 +506,19 @@ export default defineComponent({
 	z-index: 1;
 }
 .sticky-top {
-	top: 7rem;
+	top: calc(7rem + var(--safe-area-inset-top));
 }
 @media (--lg-and-up) {
 	.sticky-top {
-		top: 4.5rem;
+		top: calc(4.5rem + var(--safe-area-inset-top));
 	}
 }
 .sticky-top th {
-	padding-top: max(0.5rem, env(safe-area-inset-top));
+	padding-top: 0.5rem;
 }
 .table-outer {
 	position: relative;
-	top: calc(max(0.5rem, env(safe-area-inset-top)) * -1);
+	top: -0.5rem;
 }
 .month-header {
 	position: relative;

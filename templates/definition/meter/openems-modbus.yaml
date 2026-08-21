@@ -219,6 +219,9 @@ render: |
           source: error
           error: ErrNotAvailable
           {{- end }}
+      default:
+        source: error
+        error: ErrNotAvailable
   {{- end }}
   {{- include "battery-params" . }}
   {{- end }}

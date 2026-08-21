@@ -66,4 +66,7 @@ render: |
           headers:
             - content-type: application/json
           body: '{"operating_mode":"manual_setpoint","inverter_manual_setpoint_w":{{ .maxchargepower }}}'
+    default:
+      source: error
+      error: ErrNotAvailable
   {{- include "battery-params" . }}
