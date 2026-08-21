@@ -43,6 +43,8 @@ func automaticLoadpoint(t *testing.T, mode api.ChargeMode, automatic bool) (*Loa
 	ctrl := gomock.NewController(t)
 	charger := api.NewMockCharger(ctrl)
 
+	Voltage = 230
+
 	lp := &Loadpoint{
 		log:         util.NewLogger("foo"),
 		bus:         evbus.New(),
@@ -90,29 +92,36 @@ func modelledVehicle(ctrl *gomock.Controller) api.Vehicle {
 func TestOptimizerGate(t *testing.T) {
 	enableAutomatic(t)
 
+	// the 1p test loadpoint tops out at 3680W
+	full := types.Suggestion{Action: actionCharge, Charge: 3680, Grid: 1000}
+	stop := types.Suggestion{Action: actionStop}
+
 	tc := []struct {
 		mode   api.ChargeMode
-		action string
+		s      types.Suggestion
 		expect func(h *api.MockCharger)
 	}{
 		// optimizer starts and stops pv charging, replacing the price limits
-		{api.ModePV, actionCharge, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(maxA)) }},
-		{api.ModePV, actionStop, func(h *api.MockCharger) { h.EXPECT().Enable(false) }},
+		{api.ModePV, full, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(maxA)) }},
+		{api.ModePV, stop, func(h *api.MockCharger) { h.EXPECT().Enable(false) }},
 
 		// minpv keeps its minimum power when the optimizer stops
-		{api.ModeMinPV, actionCharge, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(maxA)) }},
-		{api.ModeMinPV, actionStop, nil}, // already at min current
+		{api.ModeMinPV, full, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(maxA)) }},
+		{api.ModeMinPV, stop, nil}, // already at min current
+
+		// a grid-fed power below the maximum is applied as current
+		{api.ModePV, types.Suggestion{Action: actionCharge, Charge: 2300, Grid: 1000}, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(10)) }},
 
 		// off and fast remain the user's decision
-		{api.ModeOff, actionCharge, func(h *api.MockCharger) { h.EXPECT().Enable(false) }},
-		{api.ModeNow, actionStop, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(maxA)) }},
+		{api.ModeOff, full, func(h *api.MockCharger) { h.EXPECT().Enable(false) }},
+		{api.ModeNow, stop, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(maxA)) }},
 	}
 
 	for _, tc := range tc {
 		t.Log(tc)
 
 		lp, charger, ctrl := automaticLoadpoint(t, tc.mode, true)
-		lp.setSuggestion(&types.Suggestion{Action: tc.action})
+		lp.setSuggestion(&tc.s)
 
 		if tc.expect != nil {
 			tc.expect(charger)
@@ -122,6 +131,32 @@ func TestOptimizerGate(t *testing.T) {
 
 		ctrl.Finish()
 	}
+}
+
+// TestOptimizerSurplusRegime covers a charge power matched to the forecast surplus:
+// control falls through to the pv loop and its enable/disable timer keeps running
+// instead of being elapsed on every cycle
+func TestOptimizerSurplusRegime(t *testing.T) {
+	enableAutomatic(t)
+
+	lp, charger, ctrl := automaticLoadpoint(t, api.ModePV, true)
+	lp.Disable.Delay = time.Minute
+	lp.offeredCurrent = maxA
+
+	// a previous grid-fed slot left the pv timer elapsed
+	lp.pvTimer = elapsed
+
+	lp.setSuggestion(&types.Suggestion{Action: actionCharge, Charge: 2300})
+
+	// surplus dip: the loadpoint steps down to min current while the disable
+	// timer runs instead of disabling right away
+	charger.EXPECT().MaxCurrent(int64(minA))
+	lp.Update(4000, 0, nil, nil, false, false, 0, nil, nil, nil)
+
+	assert.False(t, lp.pvTimer.Equal(elapsed), "pv timer must not stay elapsed")
+	assert.False(t, lp.pvTimer.IsZero(), "pv disable timer must be running")
+
+	ctrl.Finish()
 }
 
 func TestOptimizerGateInactive(t *testing.T) {

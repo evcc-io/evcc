@@ -173,15 +173,21 @@ func suggestionEvent(detail batteryDetail, s types.Suggestion) messenger.Event {
 // maps cleanly onto the discrete battery mode / loadpoint intent that control would later apply.
 // An idle battery is interpreted from the grid flow: importing means discharge is withheld
 // (hold), exporting means charging is withheld (holdcharge).
-func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, slot int, gridImporting, gridExporting bool, slotHours float64) types.Suggestion {
+func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, slot int, gridImport, gridExport float32, slotHours float64) types.Suggestion {
 	if slot < 0 || slotHours <= 0 || slot >= len(res.ChargingPower) || slot >= len(res.DischargingPower) {
 		return types.Suggestion{}
 	}
 
 	charge := float64(res.ChargingPower[slot]) / slotHours
 	discharge := float64(res.DischargingPower[slot]) / slotHours
+	gridImporting := gridImport > 0
+	gridExporting := gridExport > 0
 
-	s := types.Suggestion{Charge: charge, Discharge: discharge}
+	s := types.Suggestion{
+		Charge:    charge,
+		Discharge: discharge,
+		Grid:      float64(gridImport-gridExport) / slotHours,
+	}
 
 	if detail.Type == batteryTypeBattery {
 		idle := charge <= suggestionThreshold && discharge <= suggestionThreshold
@@ -760,8 +766,13 @@ func (site *Site) reapplySuggestions(now time.Time) {
 func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details requestDetails, res optimizer.OptimizationResult, schedule optimizerSchedule, now time.Time, completed time.Time) {
 	slot := schedule.activeSlot(now)
 	slotHours := schedule.duration(slot).Hours()
-	gridImporting := slot >= 0 && slot < len(res.GridImport) && res.GridImport[slot] > 0
-	gridExporting := slot >= 0 && slot < len(res.GridExport) && res.GridExport[slot] > 0
+	var gridImport, gridExport float32
+	if slot >= 0 && slot < len(res.GridImport) {
+		gridImport = res.GridImport[slot]
+	}
+	if slot >= 0 && slot < len(res.GridExport) {
+		gridExport = res.GridExport[slot]
+	}
 
 	var batteries []batteryResult
 	suggestions := make(map[string]types.Suggestion, len(req.Batteries))
@@ -780,7 +791,7 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 			}),
 		})
 
-		suggestion := currentSlotSuggestion(detail, batRes, slot, gridImporting, gridExporting, slotHours)
+		suggestion := currentSlotSuggestion(detail, batRes, slot, gridImport, gridExport, slotHours)
 		if suggestion.Action == "" {
 			continue
 		}
