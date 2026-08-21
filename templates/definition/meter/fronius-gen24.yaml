@@ -35,8 +35,10 @@ params:
   - preset: battery-params
   - name: maxchargerate
   - name: watchdog
-    default: 60s
+    type: int
+    default: 60 # s
     required: true
+    service: sunspec/read?value=124:0:InOutWRte_RvrtTms&uri={host}:{port}&id=1
 render: |
   type: custom
   # sunspec model 20x (int+sf)/ 21x (float) meter
@@ -254,7 +256,7 @@ render: |
     value: 124:0:ChaState
   batterymode: # model 124
     source: watchdog
-    timeout: {{ .watchdog }}
+    timeout: {{ .watchdog }}s
     reset: 1 # reset watchdog on normal
     set:
       source: switch
@@ -283,7 +285,7 @@ render: |
           set:
           # device reverts to normal unless refreshed by the watchdog
           - source: const
-            value: {{ durationSeconds .watchdog }} # s
+            value: {{ .watchdog }} # s
             set:
               source: sunspec
               uri: {{ joinHostPort .host .port }}
@@ -315,7 +317,7 @@ render: |
               id: 1
               value: 124:0:ChaGriSet
           - source: const
-            value: {{ durationSeconds .watchdog }} # s
+            value: {{ .watchdog }} # s
             set:
               source: sunspec
               uri: {{ joinHostPort .host .port }}
@@ -340,7 +342,7 @@ render: |
           source: sequence
           set:
           - source: const
-            value: {{ durationSeconds .watchdog }} # s
+            value: {{ .watchdog }} # s
             set:
               source: sunspec
               uri: {{ joinHostPort .host .port }}
