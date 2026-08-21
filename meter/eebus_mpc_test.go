@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,10 +25,13 @@ func newMPCMeter(t *testing.T) (*EEBus, *mpcmocks.MaMPCInterface, spineapi.Entit
 
 	c := &EEBus{
 		log:       util.NewLogger("eebus-mpc-test"),
-		mm:        mm,
-		maEntity:  entity,
+		ma:        eebus.NewEntity[measurements](mm),
 		scenarios: mpcScenarios,
 	}
+	c.ma.Set(entity)
+
+	// entity announces every scenario unless a test overrides it
+	mm.EXPECT().IsScenarioAvailableAtEntity(entity, mock.Anything).Return(true).Maybe()
 
 	return c, mm, entity
 }
@@ -45,7 +49,6 @@ func TestMPC_SCE1_TotalActivePower(t *testing.T) {
 		} {
 			t.Run(tc.dir, func(t *testing.T) {
 				c, mm, entity := newMPCMeter(t)
-				mm.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.MPCPower).Return(true)
 				mm.EXPECT().Power(entity).Return(tc.value, nil)
 
 				got, err := c.CurrentPower()
@@ -60,7 +63,6 @@ func TestMPC_SCE1_TotalActivePower(t *testing.T) {
 		for _, badErr := range nonNormalErrors {
 			t.Run(badErr.Error(), func(t *testing.T) {
 				c, mm, entity := newMPCMeter(t)
-				mm.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.MPCPower).Return(true)
 				mm.EXPECT().Power(entity).Return(0, badErr)
 
 				_, err := c.CurrentPower()
@@ -74,7 +76,6 @@ func TestMPC_SCE1_TotalActivePower(t *testing.T) {
 func TestMPC_SCE2_TotalConsumedEnergy(t *testing.T) {
 	t.Run("ATC_SCE2_PT_MATotalConsumedEnergy_001", func(t *testing.T) {
 		c, mm, entity := newMPCMeter(t)
-		mm.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.MPCEnergyConsumed).Return(true)
 		mm.EXPECT().EnergyConsumed(entity).Return(9876.5, nil)
 
 		got, err := c.TotalEnergy()
@@ -86,7 +87,6 @@ func TestMPC_SCE2_TotalConsumedEnergy(t *testing.T) {
 		for _, badErr := range nonNormalErrors {
 			t.Run(badErr.Error(), func(t *testing.T) {
 				c, mm, entity := newMPCMeter(t)
-				mm.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.MPCEnergyConsumed).Return(true)
 				mm.EXPECT().EnergyConsumed(entity).Return(0, badErr)
 
 				_, err := c.TotalEnergy()
@@ -101,7 +101,6 @@ func TestMPC_SCE3_ActiveACCurrent(t *testing.T) {
 	// PT_001/003/005 (phase A/B/C, "normal") in one Currents() call.
 	t.Run("ATC_SCE3_PT_MAActiveACCurrent_001_003_005", func(t *testing.T) {
 		c, mm, entity := newMPCMeter(t)
-		mm.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.MPCCurrentPerPhase).Return(true)
 		mm.EXPECT().CurrentPerPhase(entity).Return([]float64{5.1, 5.2, 5.3}, nil)
 
 		l1, l2, l3, err := c.Currents()
@@ -114,7 +113,6 @@ func TestMPC_SCE3_ActiveACCurrent(t *testing.T) {
 		for _, badErr := range nonNormalErrors {
 			t.Run(badErr.Error(), func(t *testing.T) {
 				c, mm, entity := newMPCMeter(t)
-				mm.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.MPCCurrentPerPhase).Return(true)
 				mm.EXPECT().CurrentPerPhase(entity).Return(nil, badErr)
 
 				_, _, _, err := c.Currents()
@@ -128,7 +126,6 @@ func TestMPC_SCE3_ActiveACCurrent(t *testing.T) {
 func TestMPC_SCE4_ACVoltage(t *testing.T) {
 	t.Run("ATC_SCE4_PT_MAACVoltage", func(t *testing.T) {
 		c, mm, entity := newMPCMeter(t)
-		mm.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.MPCVoltagePerPhase).Return(true)
 		mm.EXPECT().VoltagePerPhase(entity).Return([]float64{230.0, 230.5, 229.5}, nil)
 
 		u1, u2, u3, err := c.Voltages()
@@ -140,7 +137,6 @@ func TestMPC_SCE4_ACVoltage(t *testing.T) {
 		for _, badErr := range nonNormalErrors {
 			t.Run(badErr.Error(), func(t *testing.T) {
 				c, mm, entity := newMPCMeter(t)
-				mm.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.MPCVoltagePerPhase).Return(true)
 				mm.EXPECT().VoltagePerPhase(entity).Return(nil, badErr)
 
 				_, _, _, err := c.Voltages()

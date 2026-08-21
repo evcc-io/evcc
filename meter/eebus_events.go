@@ -24,17 +24,14 @@ func (c *EEBus) Connect(connected bool) {
 		return
 	}
 
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	c.maEntity = nil
-	c.egLpcEntity = nil
-	c.egLppEntity = nil
+	c.ma.Set(nil)
+	c.lpc.Set(nil)
+	c.lpp.Set(nil)
 }
 
 // UseCaseEvent implements the eebus.Device interface
 func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event eebusapi.EventType) {
-	// deviceremoval fires support-update events with a nil entity
+	// device removal fires support-update events with a nil entity
 	if entity == nil {
 		return
 	}
@@ -42,62 +39,20 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	switch event {
 	// Monitoring Appliance
 	case mpc.UseCaseSupportUpdate, mgcp.UseCaseSupportUpdate:
-		c.maUseCaseSupportUpdate(entity)
+		c.ma.Update(entity)
 
 	// Energy Guard - LPC
 	case lpc.UseCaseSupportUpdate:
-		c.egLpcUseCaseSupportUpdate(entity)
+		if c.lpc.Update(entity) {
+			// [LPC-913]: state the limit to the newly available CS
+			go eebus.AssertLimit(c.ctx, c.log, func() error { return c.Dim(c.lastDimmed()) })
+		}
 
 	// Energy Guard - LPP
 	case lpp.UseCaseSupportUpdate:
-		c.egLppUseCaseSupportUpdate(entity)
-	}
-}
-
-//
-// Monitoring Appliance - MPC/MGPC
-//
-
-func (c *EEBus) maUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	// prefer the shallowest (device-level) entity
-	if c.maEntity == nil || len(entity.Address().Entity) < len(c.maEntity.Address().Entity) {
-		c.maEntity = entity
-	}
-}
-
-//
-// Energy Guard - LPC
-//
-
-func (c *EEBus) egLpcUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	// prefer the shallowest (device-level) entity
-	if c.egLpcEntity == nil || len(entity.Address().Entity) < len(c.egLpcEntity.Address().Entity) {
-		c.egLpcEntity = entity
-
-		// [LPC-913]: state the limit to the newly available CS
-		go eebus.AssertLimit(c.ctx, c.log, func() error { return c.Dim(c.lastDimmed()) })
-	}
-}
-
-//
-// Energy Guard - LPP
-//
-
-func (c *EEBus) egLppUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	// prefer the shallowest (device-level) entity
-	if c.egLppEntity == nil || len(entity.Address().Entity) < len(c.egLppEntity.Address().Entity) {
-		c.egLppEntity = entity
-
-		// [LPP-913]: state the limit to the newly available CS
-		go eebus.AssertLimit(c.ctx, c.log, func() error { return c.SetCurtailPercent(c.lastCurtailPercent()) })
+		if c.lpp.Update(entity) {
+			// [LPP-913]: state the limit to the newly available CS
+			go eebus.AssertLimit(c.ctx, c.log, func() error { return c.SetCurtailPercent(c.lastCurtailPercent()) })
+		}
 	}
 }

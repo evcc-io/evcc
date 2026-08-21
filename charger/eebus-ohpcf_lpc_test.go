@@ -29,11 +29,14 @@ func newOHPCFEGCharger(t *testing.T) (*EEBusOHPCF, *egmocks.EgLPCInterface, spin
 	entity := spinemocks.NewEntityRemoteInterface(t)
 
 	c := &EEBusOHPCF{
-		ctx:         t.Context(),
-		log:         util.NewLogger("eebus-ohpcf-test"),
-		eg:          &eebus.EnergyGuard{EgLPCInterface: lpc},
-		egLpcEntity: entity,
+		ctx: t.Context(),
+		log: util.NewLogger("eebus-ohpcf-test"),
+		lpc: eebus.NewEntity[ucapi.EgLPCInterface](lpc),
 	}
+	c.lpc.Set(entity)
+
+	// entity announces every scenario unless a test overrides it
+	lpc.EXPECT().IsScenarioAvailableAtEntity(entity, mock.Anything).Return(true).Maybe()
 
 	return c, lpc, entity
 }
@@ -51,7 +54,6 @@ func TestOHPCF_LPC_EGMessages_ConsumptionLimit(t *testing.T) {
 	} {
 		t.Run("ATC_COM_PT_EGMessages_001_"+tc.name, func(t *testing.T) {
 			c, lpc, entity := newOHPCFEGCharger(t)
-			lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(true)
 			lpc.EXPECT().
 				WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: 0, IsActive: tc.active}, mock.Anything).
 				Run(func(_ spineapi.EntityRemoteInterface, _ ucapi.LoadLimit, cb func(model.ResultDataType, model.MsgCounterType)) {
@@ -68,10 +70,10 @@ func TestOHPCF_LPC_EGMessages_ConsumptionLimit(t *testing.T) {
 // limit to the CS - deactivated when nothing is being limited.
 func TestOHPCF_LPC_InitialLimit(t *testing.T) {
 	c, lpc, entity := newOHPCFEGCharger(t)
-	c.egLpcEntity = nil
+	c.lpc.Set(nil)
 
 	written := make(chan ucapi.LoadLimit, 1)
-	lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(true)
+	lpc.EXPECT().AvailableScenariosForEntity(entity).Return([]uint{eebus.LPCLimit})
 	lpc.EXPECT().
 		WriteConsumptionLimit(entity, mock.Anything, mock.Anything).
 		Run(func(_ spineapi.EntityRemoteInterface, limit ucapi.LoadLimit, cb func(model.ResultDataType, model.MsgCounterType)) {
@@ -93,7 +95,6 @@ func TestOHPCF_LPC_InitialLimit(t *testing.T) {
 // A rejected write (NACK) must surface as an error, not silent success.
 func TestOHPCF_LPC_Dim_WriteRejected(t *testing.T) {
 	c, lpc, entity := newOHPCFEGCharger(t)
-	lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(true)
 	lpc.EXPECT().
 		WriteConsumptionLimit(entity, mock.Anything, mock.Anything).
 		Run(func(_ spineapi.EntityRemoteInterface, _ ucapi.LoadLimit, cb func(model.ResultDataType, model.MsgCounterType)) {
@@ -107,16 +108,9 @@ func TestOHPCF_LPC_Dim_WriteRejected(t *testing.T) {
 
 // Dim is gated: no announced LPC scenario, or no connected entity → ErrNotAvailable.
 func TestOHPCF_LPC_Dim_Gating(t *testing.T) {
-	t.Run("scenario_not_announced", func(t *testing.T) {
-		c, lpc, entity := newOHPCFEGCharger(t)
-		lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(false)
-
-		assert.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
-	})
-
 	t.Run("entity_not_connected", func(t *testing.T) {
 		c, _, _ := newOHPCFEGCharger(t)
-		c.egLpcEntity = nil
+		c.lpc.Set(nil)
 
 		assert.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
 	})
@@ -140,7 +134,6 @@ func TestOHPCF_LPC_Dimmed(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			c, lpc, entity := newOHPCFEGCharger(t)
-			lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(true)
 			lpc.EXPECT().ConsumptionLimit(entity).Return(tc.limit, nil)
 
 			got, err := c.Dimmed()
@@ -152,17 +145,9 @@ func TestOHPCF_LPC_Dimmed(t *testing.T) {
 
 // Dimmed is gated like Dim: no announced LPC scenario, or no connected entity → ErrNotAvailable.
 func TestOHPCF_LPC_Dimmed_Gating(t *testing.T) {
-	t.Run("scenario_not_announced", func(t *testing.T) {
-		c, lpc, entity := newOHPCFEGCharger(t)
-		lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(false)
-
-		_, err := c.Dimmed()
-		assert.ErrorIs(t, err, api.ErrNotAvailable)
-	})
-
 	t.Run("entity_not_connected", func(t *testing.T) {
 		c, _, _ := newOHPCFEGCharger(t)
-		c.egLpcEntity = nil
+		c.lpc.Set(nil)
 
 		_, err := c.Dimmed()
 		assert.ErrorIs(t, err, api.ErrNotAvailable)
@@ -174,11 +159,39 @@ func TestOHPCF_LPC_Dimmed_Discard(t *testing.T) {
 	for _, badErr := range []error{eebusapi.ErrDataInvalid, eebusapi.ErrDataNotAvailable, eebusapi.ErrMetadataNotAvailable} {
 		t.Run(badErr.Error(), func(t *testing.T) {
 			c, lpc, entity := newOHPCFEGCharger(t)
-			lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(true)
 			lpc.EXPECT().ConsumptionLimit(entity).Return(ucapi.LoadLimit{}, badErr)
 
 			_, err := c.Dimmed()
 			assert.ErrorIs(t, err, api.ErrNotAvailable)
 		})
 	}
+}
+
+// Dim/Dimmed are gated: no announced LPC scenario, or no connected entity →
+// ErrNotAvailable.
+func TestOHPCF_LPC_Gating(t *testing.T) {
+	t.Run("scenario_not_announced", func(t *testing.T) {
+		// own mocks: the shared helper announces every scenario
+		lpc := egmocks.NewEgLPCInterface(t)
+		entity := spinemocks.NewEntityRemoteInterface(t)
+		lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(false)
+
+		c := &EEBusOHPCF{
+			log: util.NewLogger("eebus-ohpcf-test"),
+			lpc: eebus.NewEntity[ucapi.EgLPCInterface](lpc),
+		}
+		c.lpc.Set(entity)
+
+		assert.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
+
+		_, err := c.Dimmed()
+		assert.ErrorIs(t, err, api.ErrNotAvailable)
+	})
+
+	t.Run("entity_not_connected", func(t *testing.T) {
+		c, _, _ := newOHPCFEGCharger(t)
+		c.lpc.Set(nil)
+
+		assert.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
+	})
 }
