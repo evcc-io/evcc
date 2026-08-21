@@ -1,6 +1,5 @@
 <template>
-	<div class="report-group d-flex align-items-center gap-3 ms-auto">
-		<code v-if="rule" class="report-host text-truncate" :class="hostClass">{{ host }}</code>
+	<div class="report-group d-flex align-items-center ms-auto">
 		<button
 			type="button"
 			class="loadpoint-report btn d-flex align-items-center justify-content-center p-2 flex-shrink-0"
@@ -47,11 +46,6 @@ export default defineComponent({
 				return this.rule.upstreamUrl || "";
 			}
 		},
-		hostClass(): string {
-			if (this.status === "error") return "text-danger";
-			if (this.status === "pending") return "text-warning";
-			return "text-success";
-		},
 		buttonClass(): string {
 			switch (this.status) {
 				case "connected":
@@ -65,16 +59,19 @@ export default defineComponent({
 			}
 		},
 		title(): string {
-			switch (this.status) {
-				case "connected":
-					return this.$t("config.ocppreport.statusConnected");
-				case "pending":
-					return this.$t("config.ocppreport.statusPending");
-				case "error":
-					return this.$t("config.ocppreport.statusError");
-				default:
-					return this.$t("config.ocppreport.statusUnconfigured");
-			}
+			const label = (() => {
+				switch (this.status) {
+					case "connected":
+						return this.$t("config.ocppreport.statusConnected");
+					case "pending":
+						return this.$t("config.ocppreport.statusPending");
+					case "error":
+						return this.$t("config.ocppreport.statusError");
+					default:
+						return this.$t("config.ocppreport.statusUnconfigured");
+				}
+			})();
+			return this.host ? `${label} (${this.host})` : label;
 		},
 	},
 	methods: {
@@ -86,12 +83,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.report-host {
-	min-width: 0;
-	max-width: 16rem;
-	text-align: right;
-	font-size: var(--bs-body-font-size);
-}
 .report-group {
 	min-width: 0;
 	flex-shrink: 100;
