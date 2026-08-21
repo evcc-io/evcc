@@ -64,11 +64,3 @@ export default defineComponent({
 	},
 });
 </script>
-<style scoped>
-span {
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
-	transform: translate3d(0, 0, 0);
-	backface-visibility: hidden;
-}
-</style>

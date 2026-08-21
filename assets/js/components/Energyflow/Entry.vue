@@ -199,16 +199,10 @@ export default defineComponent({
 <style scoped>
 .entry {
 	transition: color var(--evcc-transition-medium) linear;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
 }
 
 .power {
 	min-width: 75px;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
-	transform: translate3d(0, 0, 0);
-	backface-visibility: hidden;
 }
 .icon-placeholder {
 	width: 24px;
