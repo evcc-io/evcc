@@ -204,7 +204,8 @@ func TestBatteryBoost(t *testing.T) {
 	// tests with maxDischargePower != nil:
 	// - the battery power parameter is irrelevant
 	//   if maxDischargePower != nil
-	s.maxDischargePower = new(0.0)
+	maxDischargePower := 0.0
+	s.maxDischargePower = &maxDischargePower
 	lp.Enable.Threshold = 0
 	lp.Disable.Threshold = 0
 
@@ -229,7 +230,7 @@ func TestBatteryBoost(t *testing.T) {
 	// - enable  = -min(231, 1380)   = -231
 	// - disable = -231 + 1380       = 1149
 	// - gap     =  230*(6*3-16)-231 =  229
-	s.maxDischargePower = new(231.0)
+	maxDischargePower = 231.0
 	batteryPower = 4711
 	boost = lp.boostPower(batteryPower)
 	gap = lp.boostPhaseScaling()
@@ -242,7 +243,7 @@ func TestBatteryBoost(t *testing.T) {
 	// test maxDischargePower >= 1380:
 	// - enable  = -min(5000, 1380) = -1380
 	// - disable = -1380 + 1380     =     0
-	s.maxDischargePower = new(5000.0)
+	maxDischargePower = 5000.0
 	batteryPower = 0
 	boost = lp.boostPower(batteryPower)
 	gap = lp.boostPhaseScaling()
@@ -264,7 +265,7 @@ func TestBatteryBoost(t *testing.T) {
 	assert.Equal(t, -5001.0, enable)
 	assert.Equal(t, 3998.0, disable)
 
-	s.maxDischargePower = new(10000.0)
+	maxDischargePower = 10000.0
 	enable, disable = lp.boostThresholds(0)
 	assert.Equal(t, -9000.0, enable)
 	assert.Equal(t, -1.0, disable)
@@ -277,7 +278,7 @@ func TestBatteryBoost(t *testing.T) {
 	// test low max current (= big power gap):
 	// - gap = 230*(6*3-6) - 230 = 2530
 	//   (subtract 230W coarse current adjustment)
-	s.maxDischargePower = new(0.0)
+	maxDischargePower = 0.0
 	lp.maxCurrent = 6
 	gap = lp.boostPhaseScaling()
 	assert.Equal(t, 2530.0, gap)
