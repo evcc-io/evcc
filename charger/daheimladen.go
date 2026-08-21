@@ -363,16 +363,30 @@ func (wb *DaheimLaden) getPhases() (int, error) {
 }
 
 func (wb *DaheimLaden) checkStation() error {
-	// first call for fw init
+	// first call triggers fw to populate the register map
 	if _, err := wb.conn.ReadHoldingRegisters(dlRegEvseMaxCurrent, 22); err != nil {
 		return err
 	}
-	b, err := wb.conn.ReadHoldingRegisters(dlRegEvseMaxCurrent, 22)
-	if err != nil {
-		return api.ErrSponsorRequired
+
+	var s string
+	var err error
+
+	// map may still be zero right after the wake-up call- poll briefly until populated
+	for i := 0; i < 5; i++ {
+		time.Sleep(200 * time.Millisecond)
+
+		var b []byte
+		b, err = wb.conn.ReadHoldingRegisters(dlRegEvseMaxCurrent, 22)
+		if err != nil {
+			continue
+		}
+
+		s, err = utf16BEBytesAsString(b[2*(dlRegStationId-dlRegEvseMaxCurrent):])
+		if err == nil && s != "" {
+			break
+		}
 	}
-	// station id starts (dlRegStationId-dlRegEvseMaxCurrent) registers into the block
-	s, err := utf16BEBytesAsString(b[2*(dlRegStationId-dlRegEvseMaxCurrent):])
+
 	if err != nil || s == "" {
 		return api.ErrSponsorRequired
 	}
@@ -382,11 +396,9 @@ func (wb *DaheimLaden) checkStation() error {
 			return api.ErrSponsorRequired
 		}
 	}
-
 	if strings.Contains(strings.ToLower(s), "heidelbridge") {
 		return api.ErrSponsorRequired
 	}
-
 	return nil
 }
 
