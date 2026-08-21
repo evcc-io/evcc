@@ -253,6 +253,10 @@ export default defineComponent({
 	overflow: hidden;
 	position: relative;
 	width: 0;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	transform: translate3d(0, 0, 0);
+	backface-visibility: hidden;
 }
 .visualization--ready .site-progress-bar {
 	transition-property: width;
@@ -288,6 +292,10 @@ html.dark .grid-import {
 	margin: 0 0.2rem;
 	white-space: nowrap;
 	overflow: hidden;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	transform: translate3d(0, 0, 0);
+	backface-visibility: hidden;
 }
 .visualization--ready :deep(.label-bar) {
 	transition-property: flex-basis, opacity;

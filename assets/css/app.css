@@ -137,6 +137,8 @@ html.no-transitions * {
 body {
 	background-color: var(--evcc-background);
 	color: var(--evcc-default-text);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 
 body:not(.modal-open) {

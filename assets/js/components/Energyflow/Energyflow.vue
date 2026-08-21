@@ -652,6 +652,10 @@ export default defineComponent({
 });
 </script>
 <style scoped>
+.energyflow {
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
 .details {
 	height: 0;
 	opacity: 0;
@@ -660,6 +664,9 @@ export default defineComponent({
 	transition-property: height, opacity, transform;
 	transition-duration: 0;
 	transition-timing-function: cubic-bezier(0.5, 0.5, 0.5, 1.15);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	backface-visibility: hidden;
 }
 .details--ready {
 	transition-duration: var(--evcc-transition-medium);
