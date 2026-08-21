@@ -2,8 +2,8 @@ template: kaco-nh3-hybrid
 products:
   - brand: KACO
     description:
-      de: KACO Blueplanet Hybrid NH3 (abregelbar)
-      en: KACO Blueplanet Hybrid NH3 (curtailable)
+      de: KACO Blueplanet Hybrid NH3
+      en: KACO Blueplanet Hybrid NH3
 group: generic
 capabilities: ["battery-control", "curtail"]
 params:
