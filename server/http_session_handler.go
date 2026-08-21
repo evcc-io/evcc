@@ -9,21 +9,43 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/util/export"
+	"github.com/evcc-io/evcc/util/export/csv"
+	"github.com/evcc-io/evcc/util/export/xlsx"
 	"github.com/evcc-io/evcc/util/locale"
 	"github.com/gorilla/mux"
 	"golang.org/x/text/language"
 )
 
-func csvResult(ctx context.Context, w http.ResponseWriter, res any, filename string) {
-	w.Header().Set("Content-Type", "text/csv")
-	w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`.csv"`)
+// jsonAttachment writes res as json with download headers
+func jsonAttachment(w http.ResponseWriter, res any, filename string) {
+	w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`.json"`)
+	jsonWrite(w, res)
+}
 
-	if ww, ok := api.Cap[api.CsvWriter](res); ok {
-		_ = ww.WriteCsv(ctx, w)
+// exportResult writes res to w as format (csv|xlsx) with download headers.
+func exportResult(ctx context.Context, w http.ResponseWriter, format string, res export.Writer, filename string) {
+	if format == "xlsx" {
+		w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+		w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`.xlsx"`)
 	} else {
+		w.Header().Set("Content-Type", "text/csv")
+		w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`.csv"`)
+	}
+
+	var ww export.RowWriter
+	var err error
+	if format == "xlsx" {
+		ww, err = xlsx.New(ctx, w)
+	} else {
+		ww, err = csv.New(ctx, w)
+	}
+	if err == nil {
+		err = res.Write(ww)
+	}
+	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
@@ -72,7 +94,14 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if r.URL.Query().Get("format") == "csv" {
+	format := r.URL.Query().Get("format")
+
+	if format == "json" {
+		jsonAttachment(w, res, filename)
+		return
+	}
+
+	if format == "csv" || format == "xlsx" {
 		lang := r.URL.Query().Get("lang")
 		if lang == "" {
 			// get request language
@@ -83,7 +112,7 @@ func sessionHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		ctx := context.WithValue(context.Background(), locale.Locale, lang)
-		csvResult(ctx, w, &res, filename)
+		exportResult(ctx, w, format, &res, filename)
 		return
 	}
 

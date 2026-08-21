@@ -315,6 +315,34 @@ func (lp *Loadpoint) SetLimitSoc(soc int) {
 	}
 }
 
+// GetMinSoc returns the loadpoint min soc (heating: min temperature)
+func (lp *Loadpoint) GetMinSoc() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.minSoc
+}
+
+// setMinSoc sets the loadpoint min soc (no mutex)
+func (lp *Loadpoint) setMinSoc(soc int) {
+	lp.minSoc = soc
+	lp.publish(keys.MinSoc, soc)
+	lp.settings.SetInt(keys.MinSoc, int64(soc))
+}
+
+// SetMinSoc sets the loadpoint min soc (heating: min temperature)
+func (lp *Loadpoint) SetMinSoc(soc int) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Println("set min soc:", soc)
+
+	// apply immediately
+	if lp.minSoc != soc {
+		lp.setMinSoc(soc)
+		lp.requestUpdate()
+	}
+}
+
 // GetLimitEnergy returns the session limit energy
 func (lp *Loadpoint) GetLimitEnergy() float64 {
 	lp.RLock()
@@ -470,11 +498,11 @@ func (lp *Loadpoint) SetSocConfig(soc loadpoint.SocConfig) {
 func (lp *Loadpoint) GetUI() loadpoint.UIConfig {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.ui
+	return lp.Ui
 }
 
 func (lp *Loadpoint) setUI(ui loadpoint.UIConfig) {
-	lp.ui = ui
+	lp.Ui = ui
 	lp.publish(keys.UI, ui)
 	lp.settings.SetJson(keys.UI, ui)
 }
@@ -652,7 +680,8 @@ func (lp *Loadpoint) GetBatteryBoostLimit() int {
 	return lp.batteryBoostLimit
 }
 
-// SetBatteryBoostLimit sets the battery boost soc limit
+// SetBatteryBoostLimit sets the battery boost soc limit. Relaxing the limit
+// resumes a boost held by it, 100 disables the feature and ends an active boost.
 func (lp *Loadpoint) SetBatteryBoostLimit(limit int) {
 	lp.Lock()
 	defer lp.Unlock()
@@ -660,9 +689,24 @@ func (lp *Loadpoint) SetBatteryBoostLimit(limit int) {
 	lp.log.DEBUG.Println("set battery boost limit:", limit)
 
 	if lp.batteryBoostLimit != limit {
+		relaxed := limit < lp.batteryBoostLimit && lp.batteryBoostLimit < 100
+
 		lp.batteryBoostLimit = limit
 		lp.settings.SetInt(keys.BatteryBoostLimit, int64(limit))
 		lp.publish(keys.BatteryBoostLimit, limit)
+
+		// lock is held, hence assign instead of setBatteryBoost
+		switch {
+		case limit == 100 && lp.batteryBoost != boostDisabled:
+			lp.log.DEBUG.Println("battery boost disable: limit removed")
+			lp.batteryBoost = boostDisabled
+			lp.publish(keys.BatteryBoost, false)
+		case relaxed && lp.batteryBoost == boostHold:
+			lp.log.DEBUG.Println("battery boost resume: limit relaxed")
+			lp.batteryBoost = boostStart
+		}
+
+		lp.requestUpdate()
 	}
 }
 

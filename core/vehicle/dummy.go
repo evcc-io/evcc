@@ -20,6 +20,15 @@ func (v *dummy) Name() string {
 	return ""
 }
 
+// GetMode returns the charge mode
+func (v *dummy) GetMode() api.ChargeMode {
+	return ""
+}
+
+// SetMode sets the charge mode
+func (v *dummy) SetMode(mode api.ChargeMode) {
+}
+
 // GetMinSoc returns the min soc
 func (v *dummy) GetMinSoc() int {
 	return 0

@@ -29,7 +29,7 @@ params:
     advanced: true
 render: |
   type: custom
-  {{- include "vehicle-common" . }}
+  {{- include "common" . }}
   soc:
     {{- include "source" . | indent 2 }}
     jq: .energy[0].level
@@ -73,4 +73,4 @@ render: |
   uri: {{ trimSuffix "/" .url }}/get_vehicleinfo/{{ .vin }}?from_cache=1
   {{- end }}
   {{- end }}
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}

@@ -81,7 +81,7 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, FieldHvBatteryLevelValue, FieldSoc, FieldHvSoc, KeyBatteryStateReportSoc); p != nil {
+	if p := lookup(data, FieldHvBatteryLevelValue, FieldSoc, FieldHvSoc, KeyBatteryStateReportSoc, KeyEnyaqSoc); p != nil {
 		return strconv.ParseFloat(p.Value, 64)
 	}
 
@@ -157,8 +157,10 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 
 	// block 2: flat charging_state field and the current_charge_state field
 	if p := lookup(data, FieldChargingState, FieldCurrentChargeState); p != nil &&
-		(strings.EqualFold(p.Value, "charging") || strings.Contains(strings.ToUpper(p.Value), "CHARGING_HV") ||
-			strings.EqualFold(p.Value, "conservationCharging") || strings.EqualFold(p.Value, "CHARGE_STATE_CONSERVATION_CHARGING")) {
+		(strings.Contains(strings.ToUpper(p.Value), "CHARGING_HV") ||
+			strings.EqualFold(p.Value, "charging") ||
+			strings.EqualFold(p.Value, "conservationCharging") ||
+			strings.EqualFold(p.Value, "CHARGE_STATE_CONSERVATION_CHARGING")) {
 		status = api.StatusC
 	}
 
@@ -186,7 +188,14 @@ func (v *Provider) GetLimitSoc() (int64, error) {
 		return 0, err
 	}
 
-	if p := lookup(data, FieldTargetSoc); p != nil {
+	// the battery care mode threshold only reflects the target soc while care
+	// mode is active; otherwise it is unrelated and must not be used (see #32520)
+	fields := []string{FieldTargetSoc}
+	if p := find(data, FieldBcamActivation); p != nil && p.Value == BcamActivationActivated {
+		fields = append(fields, FieldChargeBcamThreshold)
+	}
+
+	if p := lookup(data, fields...); p != nil {
 		f, err := strconv.ParseFloat(p.Value, 64)
 		return int64(f), err
 	}

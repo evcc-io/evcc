@@ -13,9 +13,3 @@ export default {
 	components: { Markdown },
 };
 </script>
-
-<style scoped>
-.alert {
-	margin-bottom: 5rem;
-}
-</style>

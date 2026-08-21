@@ -29,7 +29,7 @@ params:
   - preset: tariff-base
 render: |
   type: custom
-  {{ include "tariff-base" . }}
+  {{ include "base" . }}
   forecast:
     source: http
     uri: https://i.spottyenergie.at/api/prices/{{ .pricetype }}/{{ unquote .contractid }}

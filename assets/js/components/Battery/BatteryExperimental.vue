@@ -1,9 +1,13 @@
 <template>
 	<div v-if="batteryAvailable" data-testid="battery-experimental">
-		<BatteryStatusCards class="mb-4" :battery="state.battery" />
+		<BatteryStatusCards
+			class="mb-4 box-pull-out"
+			:battery="state.battery"
+			:battery-mode="state.batteryMode"
+		/>
 
 		<BatteryHistoryCard
-			class="mb-4"
+			class="mb-4 box-pull-out"
 			:batteries="chartBatteries"
 			:now="now"
 			:kwh-available="kWhAvailable"
@@ -11,15 +15,21 @@
 		/>
 
 		<BatteryConfigCard
-			class="mb-4"
+			class="mb-4 box-pull-out"
 			:buffer-soc="state.bufferSoc"
 			:priority-soc="state.prioritySoc"
 			:buffer-start-soc="state.bufferStartSoc"
 			:battery-discharge-control="state.batteryDischargeControl"
+			:battery-grid-discharge="state.batteryGridDischarge"
 			:battery="state.battery"
+			:experimental="state.experimental"
 		/>
 
-		<Card v-if="gridChargeVisible" :title="$t('batterySettings.gridChargeTab')">
+		<Card
+			v-if="gridChargeVisible"
+			class="box-pull-out"
+			:title="$t('batterySettings.gridChargeTab')"
+		>
 			<SmartCostLimit v-bind="smartCostLimitProps" />
 		</Card>
 	</div>
@@ -107,8 +117,8 @@ export default defineComponent({
 			return this.gridChargePossible || this.gridChargeLimit !== null;
 		},
 		gridChargeTariff() {
-			const { forecast, smartCostType } = this.state;
-			return smartCostType === SMART_COST_TYPE.CO2 ? forecast?.co2 : forecast?.grid;
+			const { co2, grid } = store.uiForecast.value;
+			return this.state.smartCostType === SMART_COST_TYPE.CO2 ? co2 : grid;
 		},
 		smartCostLimitProps() {
 			return {

@@ -175,5 +175,8 @@ render: |
               address: 1092
               type: writemultiple
               decode: uint16
+    default:
+      source: error
+      error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

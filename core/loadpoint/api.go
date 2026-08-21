@@ -91,6 +91,10 @@ type API interface {
 	GetLimitEnergy() float64
 	// SetLimitEnergy sets the session limit energy
 	SetLimitEnergy(energy float64)
+	// GetMinSoc returns the loadpoint min soc (heating: min temperature)
+	GetMinSoc() int
+	// SetMinSoc sets the loadpoint min soc (heating: min temperature)
+	SetMinSoc(soc int)
 
 	//
 	// effective values
@@ -108,6 +112,8 @@ type API interface {
 	EffectiveMinPower() float64
 	// EffectiveMaxPower returns the max charging power taking active phases into account
 	EffectiveMaxPower() float64
+	// PvChargeStarting reports a PV loadpoint claiming surplus but not yet drawing it
+	PvChargeStarting() bool
 	// EffectivePlanStrategy returns the effective plan strategy
 	EffectivePlanStrategy() api.PlanStrategy
 	// PublishEffectiveValues publishes effective values for currently attached vehicle
@@ -213,6 +219,8 @@ type API interface {
 	GetRemainingDuration() time.Duration
 	// GetRemainingEnergy is the remaining charge energy in kWh
 	GetRemainingEnergy() float64
+	// GetChargedEnergy returns session charge energy in Wh
+	GetChargedEnergy() float64
 
 	//
 	// vehicles

@@ -1,0 +1,229 @@
+name: Backport Command
+
+# Triggered by a maintainer commenting `/backport [branch]` on a merged pull
+# request. Cherry-picks the merged commit onto the target branch and opens a
+# pull request against it, so a fix can ship as a bugfix release without
+# pulling in everything that landed on master since.
+#
+# Without an argument the branch of the next bugfix release is used, e.g.
+# `release/0.313.1`. It is created at the newest tag of that line on first use.
+#
+# Pushing and opening the pull request use RELEASE_DEPLOY_TOKEN so its checks
+# start without approval. GITHUB_TOKEN would create them in a pending state.
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+
+jobs:
+  backport:
+    name: Backport
+    # on any PR comment starting with /backport, only from maintainers
+    if: |
+      github.event.issue.pull_request &&
+      startsWith(github.event.comment.body, '/backport') &&
+      contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: depot-ubuntu-24.04-arm
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: React to comment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: 'eyes',
+            });
+
+      - name: Resolve target branch
+        id: pr
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+
+            // reported back as a comment, so the reason is visible on the pull request
+            const fail = (message) => {
+              core.setOutput('error', message);
+              core.setFailed(message);
+            };
+
+            // the command is usually posted right before hitting merge, so give the
+            // pull request time to land instead of failing on the race
+            const deadline = Date.now() + 5 * 60 * 1000;
+            let pr;
+            for (;;) {
+              try {
+                ({ data: pr } = await github.rest.pulls.get({
+                  owner,
+                  repo,
+                  pull_number: context.payload.issue.number,
+                }));
+                // a closed pull request will never merge, no point in waiting it out
+                if (pr.merged || pr.state === 'closed') {
+                  break;
+                }
+              } catch (err) {
+                // a blip while polling must not fail the command, but a request that
+                // is still failing when the time is up is a real error
+                if (Date.now() >= deadline) {
+                  throw err;
+                }
+              }
+              if (Date.now() >= deadline) {
+                break;
+              }
+              await new Promise((resolve) => setTimeout(resolve, 15000));
+            }
+            if (!pr.merged) {
+              fail(`pull request #${pr.number} is not merged`);
+              return;
+            }
+            if (!pr.labels.some((l) => l.name === 'bug')) {
+              fail(`pull request #${pr.number} is not labelled \`bug\`, only bugfixes are backported`);
+              return;
+            }
+            // same marker the changelog uses to group breaking changes
+            if (/\(BC\)/i.test(pr.title)) {
+              fail(`pull request #${pr.number} is a breaking change, it must not go into a bugfix release`);
+              return;
+            }
+
+            const compare = (a, b) => {
+              const [x, y] = [a, b].map((v) => v.split('.').map(Number));
+              return x[0] - y[0] || x[1] - y[1] || x[2] - y[2];
+            };
+            const tags = await github.paginate(github.rest.repos.listTags, { owner, repo, per_page: 100 });
+            const releases = tags.map((t) => t.name).filter((n) => /^\d+\.\d+\.\d+$/.test(n)).sort(compare);
+
+            let target = context.payload.comment.body.trim().split(/\s+/)[1];
+            if (target) {
+              // the target ends up in a checkout ref, keep it to plain branch names
+              if (!/^[\w.\-\/]+$/.test(target) || target.includes('..')) {
+                fail('usage: /backport [branch]');
+                return;
+              }
+            } else {
+              // named after the bugfix release the branch will produce
+              const [major, minor, patch] = releases[releases.length - 1].split('.').map(Number);
+              target = `release/${major}.${minor}.${patch + 1}`;
+            }
+
+            // branch off the newest tag of the release line on first backport
+            try {
+              await github.rest.repos.getBranch({ owner, repo, branch: target });
+            } catch (err) {
+              if (err.status !== 404) throw err;
+
+              const line = target.replace(/^release\//, '').split('.').slice(0, 2).join('.');
+              const base = releases.filter((n) => n.startsWith(`${line}.`)).pop();
+              if (!base) {
+                fail(`branch \`${target}\` does not exist and no release matches it`);
+                return;
+              }
+
+              const { data: commit } = await github.rest.repos.getCommit({ owner, repo, ref: base });
+              await github.rest.git.createRef({ owner, repo, ref: `refs/heads/${target}`, sha: commit.sha });
+              core.notice(`created ${target} at ${base}`);
+            }
+
+            core.setOutput('target', target);
+            core.setOutput('branch', `backport/${pr.number}-${target}`);
+            core.setOutput('sha', pr.merge_commit_sha);
+            core.setOutput('title', pr.title);
+
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.pr.outputs.target }}
+          # persisted for the push below
+          token: ${{ secrets.RELEASE_DEPLOY_TOKEN }}
+
+      - name: Cherry-pick
+        env:
+          BRANCH: ${{ steps.pr.outputs.branch }}
+          SHA: ${{ steps.pr.outputs.sha }}
+          ACTOR: ${{ github.event.comment.user.login }}
+          ACTOR_ID: ${{ github.event.comment.user.id }}
+        run: |
+          # the cherry-pick keeps the original author, commit it as the requester
+          git config user.name "$ACTOR"
+          git config user.email "$ACTOR_ID+$ACTOR@users.noreply.github.com"
+          git switch -c "$BRANCH"
+
+          # -m 1 picks the first-parent diff of a merge commit; squashed pull
+          # requests are ordinary commits and must not get the flag
+          mainline=""
+          if git rev-parse --quiet --verify "$SHA^2" >/dev/null; then
+            mainline="-m 1"
+          fi
+
+          git cherry-pick $mainline "$SHA"
+          git push origin "$BRANCH"
+
+      - name: Create pull request
+        id: create
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_DEPLOY_TOKEN }}
+          BRANCH: ${{ steps.pr.outputs.branch }}
+          TARGET: ${{ steps.pr.outputs.target }}
+          TITLE: ${{ steps.pr.outputs.title }}
+          ACTOR: ${{ github.event.comment.user.login }}
+        run: |
+          # the pull request is authored by the deploy token, so assign the
+          # requester. the body stays empty, squashing it would carry the text
+          # into the release branch as the commit description.
+          # the title stays untouched so the changelog filters and groups still
+          # see the original prefix, the backport label identifies the pull request
+          url=$(gh pr create \
+            --base "$TARGET" \
+            --head "$BRANCH" \
+            --title "$TITLE" \
+            --label backport \
+            --assignee "$ACTOR" \
+            --body "")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Comment result
+        if: always()
+        uses: actions/github-script@v8
+        env:
+          TARGET: ${{ steps.pr.outputs.target }}
+          URL: ${{ steps.create.outputs.url }}
+          ERROR: ${{ steps.pr.outputs.error }}
+        with:
+          script: |
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const { TARGET, URL, ERROR } = process.env;
+            const body = URL
+              ? `✅ Opened backport pull request on \`${TARGET}\`: ${URL}`
+              : ERROR
+                ? `❌ ${ERROR}`
+                : `❌ Backport failed, most likely a cherry-pick conflict. See the [run logs](${runUrl}).`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body,
+            });
+
+      - name: Resolve command comment
+        if: always()
+        uses: actions/github-script@v8
+        with:
+          script: |
+            // collapse the /backport comment as resolved, the result was reported
+            // back as a comment either way
+            await github.graphql(
+              `mutation($id:ID!){minimizeComment(input:{subjectId:$id,classifier:RESOLVED}){minimizedComment{isMinimized}}}`,
+              { id: context.payload.comment.node_id }
+            );

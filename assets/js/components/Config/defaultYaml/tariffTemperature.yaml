@@ -1,0 +1,28 @@
+## Outdoor temperature forecast
+tariff: temperature
+forecast: # hourly outdoor temperature forecast (°C)
+  source: js
+  script: |
+    var rates = [];
+    var now = new Date();
+    for (var i = 0; i < 48; i++) {
+      var start = new Date(now.getTime() + i * 3600000);
+      rates.push({
+        start: start.toISOString(),
+        end: new Date(start.getTime() + 3600000).toISOString(),
+        value: 15 // °C
+      });
+    }
+    JSON.stringify(rates);
+
+## HTTP example (uncomment to use)
+
+#forecast: # hourly outdoor temperature forecast (°C)
+#  source: http
+#  uri: https://example.com/api/temperature
+#  jq: |
+#    map({
+#      "start": .start,
+#      "end": .end,
+#      "value": .temperature
+#    }) | tostring

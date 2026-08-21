@@ -36,9 +36,7 @@
 					class="h-100"
 					:class="{ 'loadpoint-unselected': !selected(loadpoint.id) }"
 					@click="goTo(loadpoint.id)"
-					@open-charging-plan-modal="
-						(openArrivalTab) => openChargingPlanModal(loadpoint.id, openArrivalTab)
-					"
+					@open-charging-plan-modal="openChargingPlanModal(loadpoint.id)"
 					@open-settings-modal="openSettingsModal(loadpoint.id)"
 				/>
 			</div>
@@ -100,7 +98,7 @@ import type {
 	Timeout,
 	Vehicle,
 	BATTERY_MODE,
-	Forecast,
+	UiForecast,
 	CURRENCY,
 } from "@/types/evcc";
 import ChargingPlanModal from "../ChargingPlans/ChargingPlanModal.vue";
@@ -125,7 +123,7 @@ export default defineComponent({
 		batteryConfigured: Boolean,
 		batterySoc: Number,
 		batteryMode: String as PropType<BATTERY_MODE>,
-		forecast: Object as PropType<Forecast>,
+		forecast: Object as PropType<UiForecast>,
 	},
 	emits: ["id-changed"],
 	data() {
@@ -178,8 +176,13 @@ export default defineComponent({
 			return this.loadpoints[index]?.id;
 		},
 		handleCarouselScroll() {
-			const { scrollLeft } = this.$refs["carousel"] as HTMLElement;
-			const { offsetWidth } = this.$refs["carousel"]?.children[0] as HTMLElement;
+			const carousel = this.$refs["carousel"] as HTMLElement | undefined;
+			if (!carousel || !carousel.children.length) {
+				return;
+			}
+
+			const { scrollLeft } = carousel;
+			const { offsetWidth } = carousel.children[0] as HTMLElement;
 			this.highlightedIndex = Math.round((scrollLeft - 7.5) / offsetWidth);
 
 			// save scroll position to url if not changing for 2s
@@ -205,7 +208,11 @@ export default defineComponent({
 			this.viewportHeight = window.innerHeight;
 		},
 		left(index: number) {
-			return (this.$refs["carousel"]?.children[0] as HTMLElement).offsetWidth * index;
+			const carousel = this.$refs["carousel"] as HTMLElement | undefined;
+			if (!carousel || !carousel.children.length) {
+				return 0;
+			}
+			return (carousel.children[0] as HTMLElement).offsetWidth * index;
 		},
 		scrollTo(index: number) {
 			this.highlightedIndex = index;
@@ -224,17 +231,10 @@ export default defineComponent({
 				}
 			}, 1000);
 		},
-		openChargingPlanModal(loadpointId: string, openArrivalTab = false) {
+		openChargingPlanModal(loadpointId: string) {
 			const modal = this.$refs["chargingPlanModal"] as
 				| InstanceType<typeof ChargingPlanModal>
 				| undefined;
-
-			if (openArrivalTab) {
-				modal?.showArrivalTab();
-			} else {
-				modal?.showDepartureTab();
-			}
-
 			modal?.open(loadpointId);
 		},
 		openSettingsModal(loadpointId: string) {

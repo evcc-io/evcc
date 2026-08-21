@@ -1,0 +1,41 @@
+{{ define "common" }}
+{{- if .title }}
+title: {{ .title }}
+{{- end }}
+{{- if .icon }}
+icon: {{ .icon }}
+{{- end }}
+{{- if .capacity }}
+capacity: {{ .capacity }}
+{{- end }}
+{{- if .phases }}
+phases: {{ .phases }}
+{{- end }}
+
+{{- if or .mode .minCurrent .maxCurrent .maxPower .priority }}
+onIdentify:
+{{- if .mode }}
+  mode: {{ .mode }}
+{{- end }}
+{{- if .minCurrent }}
+  minCurrent: {{ .minCurrent }}
+{{- end }}
+{{- if .maxCurrent }}
+  maxCurrent: {{ .maxCurrent }}
+{{- end }}
+{{- if .maxPower }}
+  maxPower: {{ .maxPower }}
+{{- end }}
+{{- if .priority }}
+  priority: {{ .priority }}
+{{- end }}
+{{- end }}
+
+{{- if len .identifiers }}
+identifiers:
+{{- range .identifiers }}
+- {{ quote . }}
+{{- end }}
+{{- end }}
+
+{{- end }}

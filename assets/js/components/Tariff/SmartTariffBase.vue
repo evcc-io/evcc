@@ -8,7 +8,7 @@
 			<label :for="formId" class="col-sm-4 col-form-label pt-0 pt-sm-2">
 				{{ limitLabel }}
 			</label>
-			<div class="col-sm-8 col-lg-4 pe-0">
+			<div class="col-sm-8 col-lg-4 pe-lg-0">
 				<div class="input-group input-group-sm mb-1 mb-lg-0">
 					<div class="input-group-text">
 						<div class="form-check form-switch m-0">

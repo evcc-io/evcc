@@ -1,10 +1,8 @@
 <template>
-	<h3 class="fw-normal mb-4">{{ $t("sessions.overview") }}</h3>
-
-	<div v-if="sessions.length === 0" data-testid="sessions-nodata" class="mb-5">
+	<div v-if="sessions.length === 0" data-testid="sessions-nodata">
 		<p>{{ $t("sessions.noData") }}</p>
 	</div>
-	<div v-else class="mb-5 table-outer">
+	<div v-else class="table-outer">
 		<table class="table text-nowrap">
 			<thead class="sticky-top">
 				<tr data-testid="sessions-head">
@@ -176,7 +174,7 @@ const COLUMNS_PER_BREAKPOINT = {
 	sm: 3,
 	md: 4,
 	lg: 7,
-	xl: 8,
+	xl: 7,
 	xxl: 9,
 };
 
@@ -261,6 +259,13 @@ export default defineComponent({
 					total: this.chargeDuration,
 					value: (session) => session.chargeDuration,
 					format: (value) => this.fmtDurationNs(value, false, "h"),
+				},
+				{
+					name: "addedRange",
+					unit: distanceUnit(),
+					total: this.addedRange,
+					value: (session) => session.addedRange || null,
+					format: (value) => `+${this.fmtNumber(distanceValue(value), 0)}`,
 				},
 				{
 					name: "odometer",
@@ -364,6 +369,11 @@ export default defineComponent({
 		},
 		chargeDuration() {
 			return this.filteredSessions.reduce((total, s) => total + s.chargeDuration, 0);
+		},
+		addedRange() {
+			const sessions = this.filteredSessions.filter((s) => s.addedRange != null);
+			if (!sessions.length) return null;
+			return sessions.reduce((total, s) => total + (s.addedRange || 0), 0);
 		},
 		price() {
 			return this.filteredSessions.reduce((total, s) => total + (s.price || 0), 0);
@@ -479,7 +489,7 @@ export default defineComponent({
 }
 .table thead,
 .table tfoot {
-	background: var(--evcc-background);
+	background: var(--evcc-box);
 }
 .table tfoot th {
 	border-top-width: 2px;
@@ -496,19 +506,19 @@ export default defineComponent({
 	z-index: 1;
 }
 .sticky-top {
-	top: 7rem;
+	top: calc(7rem + var(--safe-area-inset-top));
 }
 @media (--lg-and-up) {
 	.sticky-top {
-		top: 4.5rem;
+		top: calc(4.5rem + var(--safe-area-inset-top));
 	}
 }
 .sticky-top th {
-	padding-top: max(0.5rem, env(safe-area-inset-top));
+	padding-top: 0.5rem;
 }
 .table-outer {
 	position: relative;
-	top: calc(max(0.5rem, env(safe-area-inset-top)) * -1);
+	top: -0.5rem;
 }
 .month-header {
 	position: relative;

@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	ucapi "github.com/enbility/eebus-go/usecases/api"
+	"github.com/enbility/eebus-go/usecases/cem/ohpcf"
+	spinemocks "github.com/enbility/spine-go/mocks"
 	"github.com/evcc-io/evcc/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -26,6 +28,15 @@ func TestEEBusOHPCFNotConnected(t *testing.T) {
 
 	// dimming uses EG LPC, which is unavailable without an LPC entity
 	require.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
+}
+
+// a failed enable must not persist the intent, otherwise Enabled() reports a
+// state the compressor never accepted and the loadpoint runs out of sync (#32252).
+func TestOHPCFEnableFailureKeepsState(t *testing.T) {
+	c := &EEBusOHPCF{}
+
+	require.ErrorIs(t, c.Enable(true), errNotConnected)
+	assert.False(t, c.lastEnabled())
 }
 
 // status mapping: running is C, every other connected state (incl. completed
@@ -69,4 +80,17 @@ func TestOHPCFControlAction(t *testing.T) {
 	for _, tc := range tc {
 		assert.Equal(t, tc.want, ohpcfControlAction(tc.state, tc.enable), "%v enable=%v", tc.state, tc.enable)
 	}
+}
+
+// a consumption-state update always records the compressor entity; while
+// disabled it must not attempt to apply (avoids acting on a stale intent, #31549).
+func TestOHPCFUseCaseEventConsumptionStateDisabled(t *testing.T) {
+	c := &EEBusOHPCF{}
+	entity := spinemocks.NewEntityRemoteInterface(t)
+
+	c.UseCaseEvent(nil, entity, ohpcf.DataUpdateConsumptionState)
+
+	got, ok := c.connectedCompressor()
+	require.True(t, ok)
+	assert.Equal(t, entity, got)
 }

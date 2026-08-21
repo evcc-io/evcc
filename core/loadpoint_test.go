@@ -12,7 +12,9 @@ import (
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -390,7 +392,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	// wrap vehicle with estimator
 	expectVehiclePublish(vehicle)
 
-	socEstimator := soc.NewEstimator(util.NewLogger("foo"), charger, vehicle)
+	socEstimator := soc.NewEstimator(util.NewLogger("foo"), vehicle)
 
 	lp := &Loadpoint{
 		log:         util.NewLogger("foo"),
@@ -750,8 +752,9 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 			Disable: loadpoint.ThresholdConfig{
 				Delay: dt,
 			},
-			status:  api.StatusC,
-			enabled: true,
+			status:      api.StatusC,
+			enabled:     true,
+			chargePower: 3 * Voltage * minA, // charging 3p at min current
 		}
 
 		start := clock.Now()
@@ -862,4 +865,46 @@ func TestWelcomeChargeAppliedOnlyOnce(t *testing.T) {
 	ch.EXPECT().Status().Return(api.StatusB, nil)
 	welcomeCharge, _ = lp.updateChargerStatus()
 	assert.False(t, welcomeCharge)
+}
+
+// TestBatteryBoostHold verifies that in the hold state (soc limit reached) battery
+// boost no longer draws power from the battery, while still counting as active so
+// the site keeps prioritising the vehicle over recharging the battery (#30558).
+func TestBatteryBoostHold(t *testing.T) {
+	lp := &Loadpoint{log: util.NewLogger("foo")}
+
+	// disabled draws nothing
+	lp.batteryBoost = boostDisabled
+	assert.Equal(t, 0.0, lp.boostPower(2000), "disabled")
+
+	// hold draws nothing (stops draining the battery)...
+	lp.batteryBoost = boostHold
+	assert.Equal(t, 0.0, lp.boostPower(2000), "hold")
+
+	// ...but is still an active boost state (GetBatteryBoost != boostDisabled),
+	// which is what keeps the sitePower priority adjustment applied to the loadpoint
+	assert.NotEqual(t, boostDisabled, lp.GetBatteryBoost(), "hold is active")
+}
+
+// default vehicle referencing a disabled vehicle must not fail loadpoint creation
+func TestNewLoadpointFromConfigDisabledVehicle(t *testing.T) {
+	config.Reset()
+	t.Cleanup(config.Reset)
+
+	ctrl := gomock.NewController(t)
+
+	// disabled vehicle: device registered without instance
+	var vehicle api.Vehicle
+	require.NoError(t, config.Vehicles().Add(config.NewStaticDevice(config.Named{Name: "vehicle"}, vehicle)))
+	require.NoError(t, config.Chargers().Add(config.NewStaticDevice(config.Named{Name: "charger"}, api.Charger(api.NewMockCharger(ctrl)))))
+
+	lp, err := NewLoadpointFromConfig(util.NewLogger("foo"), nil, nil, map[string]any{
+		"charger": "charger",
+		"vehicle": "vehicle",
+	})
+	require.NoError(t, err)
+	require.Nil(t, lp.defaultVehicle)
+
+	// disabled vehicle is filtered from instances
+	require.Empty(t, config.Instances(config.Vehicles().Devices()))
 }

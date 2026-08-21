@@ -28,10 +28,11 @@ test.describe("demo mode", async () => {
     await expect(page.getByRole("heading", { name: "Demo Mode" })).toBeVisible();
   });
 
-  test("two loadpoints", async ({ page }) => {
-    await expect(page.getByTestId("loadpoint")).toHaveCount(2);
+  test("three loadpoints", async ({ page }) => {
+    await expect(page.getByTestId("loadpoint")).toHaveCount(3);
     await expect(page.getByTestId("loadpoint").nth(0)).toContainText("Carport");
     await expect(page.getByTestId("loadpoint").nth(1)).toContainText("Garage");
+    await expect(page.getByTestId("loadpoint").nth(2)).toContainText("Heat pump");
   });
 
   test("auth is locked", async ({ page }) => {

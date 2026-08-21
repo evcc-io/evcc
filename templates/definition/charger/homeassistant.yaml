@@ -34,6 +34,33 @@ params:
     help:
       en: Entity ID for charging status (A=ready, B=connected, C=charging)
       de: Entitäts-ID für Ladestatus (A=bereit, B=verbunden, C=laden)
+  - name: statusA
+    description:
+      de: Zustände für Status A
+      en: States for status A
+    example: not_plugged, disconnected
+    advanced: true
+    help:
+      en: Comma-separated list of additional states meaning ready
+      de: Komma-getrennte Liste zusätzlicher Zustände für bereit
+  - name: statusB
+    description:
+      de: Zustände für Status B
+      en: States for status B
+    example: charging_stopped, charging_completed
+    advanced: true
+    help:
+      en: Comma-separated list of additional states meaning connected
+      de: Komma-getrennte Liste zusätzlicher Zustände für verbunden
+  - name: statusC
+    description:
+      de: Zustände für Status C
+      en: States for status C
+    example: instant_charging, fast_charging
+    advanced: true
+    help:
+      en: Comma-separated list of additional states meaning charging
+      de: Komma-getrennte Liste zusätzlicher Zustände für laden
   - name: enabled
     description:
       de: Aktivierungsstatus-Sensor
@@ -165,6 +192,9 @@ render: |
   uri: {{ .uri }}
   insecure: {{ .insecure }}
   status: {{ .status }}
+  statusA: {{ .statusA }}
+  statusB: {{ .statusB }}
+  statusC: {{ .statusC }}
   enabled: {{ .enabled }}
   enable: {{ .enable }}
   maxcurrent: {{ .setMaxCurrent }}
@@ -183,4 +213,4 @@ render: |
     - {{ .voltageL3 }}
   {{- end }}
   phases: {{ .phaseswitch }}
-  {{ include "charger-features" . }}
+  {{ include "features" . }}

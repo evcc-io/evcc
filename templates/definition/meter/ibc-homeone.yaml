@@ -34,19 +34,19 @@ render: |
       register:
         address: 60038 # 360039 external meter L1 power (S32, W, positive = import)
         type: input
-        decode: int32
+        decode: int32s
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 60040 # 360041 external meter L2 power (S32, W)
         type: input
-        decode: int32
+        decode: int32s
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 60042 # 360043 external meter L3 power (S32, W)
         type: input
-        decode: int32
+        decode: int32s
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -78,9 +78,8 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 1621 # 31622 battery SOC (U16, 0.01 %)
+      address: 1621 # 31622 battery SOC (U16, %)
       type: input
       decode: uint16
-    scale: 0.01
   {{- include "battery-params" . }}
   {{- end }}

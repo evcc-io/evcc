@@ -192,7 +192,7 @@ func (m *MQTT) Listen(site site.API) error {
 	}
 
 	// loadpoint setters
-	for id, lp := range site.Loadpoints() {
+	for id, lp := range site.ActiveLoadpoints() {
 		topic := fmt.Sprintf("%s/loadpoints/%d", m.root, id+1)
 		if err := m.listenLoadpointSetters(topic, site, lp); err != nil {
 			return err
@@ -215,15 +215,18 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 		{"bufferSoc", floatSetter(site.SetBufferSoc)},
 		{"bufferStartSoc", floatSetter(site.SetBufferStartSoc)},
 		{"batteryDischargeControl", boolSetter(site.SetBatteryDischargeControl)},
+		{"batteryGridDischarge", boolSetter(site.SetBatteryGridDischarge)},
 		{"prioritySoc", floatSetter(site.SetPrioritySoc)},
 		{"residualPower", floatSetter(site.SetResidualPower)},
+		{"gridExportLimit", floatSetter(site.SetGridExportLimit)},
+		{"solarAdjusted", boolSetter(pass(site.SetSolarAdjusted))},
 		{"smartCostLimit", floatPtrSetter(pass(func(limit *float64) {
-			for _, lp := range site.Loadpoints() {
+			for _, lp := range site.ActiveLoadpoints() {
 				lp.SetSmartCostLimit(limit)
 			}
 		}))},
 		{"smartFeedInPriorityLimit", floatPtrSetter(pass(func(limit *float64) {
-			for _, lp := range site.Loadpoints() {
+			for _, lp := range site.ActiveLoadpoints() {
 				lp.SetSmartFeedInPriorityLimit(limit)
 			}
 		}))},
@@ -248,6 +251,7 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		{"mode", setterFunc(api.ChargeModeString, pass(lp.SetMode))},
 		{"phasesConfigured", intSetter(lp.SetPhasesConfigured)},
 		{"limitSoc", intSetter(pass(lp.SetLimitSoc))},
+		{"minSoc", intSetter(pass(lp.SetMinSoc))},
 		{"priority", intSetter(pass(lp.SetPriority))},
 		{"minCurrent", floatSetter(lp.SetMinCurrent)},
 		{"maxCurrent", floatSetter(lp.SetMaxCurrent)},

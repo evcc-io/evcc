@@ -71,6 +71,14 @@
 				/>
 			</div>
 			<LabelAndValue
+				v-if="integratedDevice"
+				:label="$t('main.loadpoint.todayEnergy')"
+				:value="todayEnergy"
+				:valueFmt="fmtEnergy"
+				align="center"
+			/>
+			<LabelAndValue
+				v-else
 				v-show="socBasedCharging"
 				:label="$t('main.loadpoint.charged')"
 				:value="chargedEnergy"
@@ -90,7 +98,7 @@
 			@remove-vehicle="removeVehicle"
 			@open-loadpoint-settings="openSettingsModal"
 			@batteryboost-updated="setBatteryBoost"
-			@open-modal="(openArrivalTab) => $emit('open-charging-plan-modal', openArrivalTab)"
+			@open-modal="$emit('open-charging-plan-modal')"
 		/>
 	</div>
 </template>
@@ -117,12 +125,13 @@ import type {
 	CHARGER_STATUS_REASON,
 	Timeout,
 	Vehicle,
-	Forecast,
+	UiForecast,
 	SMART_COST_TYPE,
 	BATTERY_MODE,
 	LoadpointUi,
+	PlanStrategy,
+	LoadpointSuggestion,
 } from "@/types/evcc";
-import type { PlanStrategy } from "@/components/ChargingPlans/types";
 
 export default defineComponent({
 	name: "Loadpoint",
@@ -144,6 +153,7 @@ export default defineComponent({
 		title: String,
 		mode: String as PropType<CHARGE_MODE>,
 		effectiveLimitSoc: Number,
+		effectiveMinSoc: Number,
 		limitEnergy: Number,
 		remoteDisabled: String,
 		remoteDisabledSource: String,
@@ -203,6 +213,9 @@ export default defineComponent({
 		vehicleWelcomeActive: Boolean,
 		chargePower: { type: Number, default: 0 },
 		chargedEnergy: { type: Number, default: 0 },
+		todayEnergy: { type: Number, default: 0 },
+		last24hEnergy: Number,
+		last7dEnergy: Number,
 		chargeRemainingDuration: { type: Number, default: 0 },
 
 		// other information
@@ -229,6 +242,7 @@ export default defineComponent({
 		smartFeedInPriorityAvailable: Boolean,
 		smartFeedInPriorityActive: Boolean,
 		smartFeedInPriorityNextStart: String as PropType<string | null>,
+		suggestion: Object as PropType<LoadpointSuggestion | null>,
 		tariffGrid: Number,
 		tariffFeedIn: Number,
 		tariffCo2: Number,
@@ -237,7 +251,7 @@ export default defineComponent({
 		fullWidth: Boolean,
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
-		forecast: Object as PropType<Forecast>,
+		forecast: Object as PropType<UiForecast>,
 		lastSmartCostLimit: Number,
 		lastSmartFeedInPriorityLimit: Number,
 		vehicleKnown: Boolean,
@@ -404,6 +418,7 @@ export default defineComponent({
 	border-radius: 2rem;
 	color: var(--evcc-default-text);
 	background: var(--evcc-box);
+	border: 1px solid var(--bs-border-color-translucent);
 }
 
 .details > div {

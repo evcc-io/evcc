@@ -13,10 +13,10 @@ import (
 )
 
 // test renders and instantiates plus yaml-parses the template per usage
-func test(t *testing.T, tmpl Template, values map[string]any, cb func(values map[string]any)) {
+func test(t *testing.T, class Class, tmpl Template, values map[string]any, cb func(values map[string]any)) {
 	t.Helper()
 
-	b, _, err := tmpl.RenderResult(RenderModeInstance, values)
+	b, _, err := tmpl.RenderResult(class, RenderModeInstance, values)
 	if err != nil {
 		t.Log(string(b))
 		t.Error(err)
@@ -108,7 +108,7 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 			t.Run(tmpl.Template, func(t *testing.T) {
 				t.Parallel()
 
-				test(t, tmpl, values, func(values map[string]any) {
+				test(t, class, tmpl, values, func(values map[string]any) {
 					instantiate(t, values)
 				})
 			})
@@ -125,7 +125,7 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 			t.Run(tmpl.Template+"/"+u, func(t *testing.T) {
 				t.Parallel()
 
-				test(t, tmpl, usageValues, func(values map[string]any) {
+				test(t, class, tmpl, usageValues, func(values map[string]any) {
 					instantiate(t, values)
 				})
 			})

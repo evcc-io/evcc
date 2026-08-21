@@ -37,7 +37,7 @@
 					<div
 						v-for="i in 3"
 						:key="i"
-						class="history-tile history-tile-skeleton mb-4"
+						class="history-tile history-tile-skeleton box-pull-out mb-4"
 						aria-hidden="true"
 					></div>
 				</div>
@@ -53,7 +53,7 @@
 					:title="$t(`main.history.group.${group}`)"
 					:subtitle="groupTotalLabel(group)"
 					edge-to-edge
-					class="mb-4"
+					class="box-pull-out mb-4"
 					:data-testid="`history-section-${group}`"
 				>
 					<GroupChart
@@ -87,17 +87,9 @@
 						@focus="onLegendFocus(group, $event)"
 					/>
 				</Card>
-				<p v-if="visibleGroups.length" class="text-end mt-3 mb-0">
-					<a
-						:href="csvLink"
-						download
-						class="text-muted small history-csv-link"
-						data-testid="history-csv-download"
-						@click="handleDownloadClick($event, csvLink)"
-					>
-						{{ $t("main.history.downloadCsv") }}
-					</a>
-				</p>
+				<div v-if="visibleGroups.length" class="d-flex align-items-baseline gap-2 mb-3">
+					<DownloadButton :label="$t('general.download')" :href="downloadHref()" />
+				</div>
 			</main>
 		</div>
 	</div>
@@ -117,7 +109,7 @@ import { PERIODS } from "../components/Sessions/types";
 import { GROUP_ORDER, groupColor, hasColorPicker } from "../components/History/groups";
 import colors, { resolveColors, deviceColorMap, darken, batteryColor } from "../colors";
 import LegendList from "../components/Sessions/LegendList.vue";
-import { handleDownloadClick } from "@/utils/native";
+import DownloadButton from "../components/Helper/DownloadButton.vue";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
 import api from "../api";
 import store from "../store";
@@ -126,6 +118,18 @@ const HISTORY_PERIODS = [PERIODS.DAY, PERIODS.MONTH, PERIODS.YEAR];
 
 function daysInMonth(year: number, month: number) {
 	return new Date(year, month, 0).getDate();
+}
+
+function shiftPeriod(period: PERIODS, from: Date, offset: number): Date {
+	switch (period) {
+		case PERIODS.DAY:
+			return new Date(from.getFullYear(), from.getMonth(), from.getDate() + offset);
+		case PERIODS.YEAR:
+			return new Date(from.getFullYear() + offset, 0, 1);
+		case PERIODS.MONTH:
+		default:
+			return new Date(from.getFullYear(), from.getMonth() + offset, 1);
+	}
 }
 
 export default defineComponent({
@@ -138,6 +142,7 @@ export default defineComponent({
 		PeriodHeader,
 		GroupChart,
 		LegendList,
+		DownloadButton,
 	},
 	mixins: [formatter],
 	props: {
@@ -211,18 +216,7 @@ export default defineComponent({
 			}
 		},
 		to(): Date {
-			switch (this.effectivePeriod) {
-				case PERIODS.DAY: {
-					const d = new Date(this.from);
-					d.setDate(d.getDate() + 1);
-					return d;
-				}
-				case PERIODS.YEAR:
-					return new Date(this.effectiveYear + 1, 0, 1);
-				case PERIODS.MONTH:
-				default:
-					return new Date(this.effectiveYear, this.effectiveMonth, 1);
-			}
+			return shiftPeriod(this.effectivePeriod, this.from, 1);
 		},
 		aggregate(): string {
 			switch (this.effectivePeriod) {
@@ -316,16 +310,6 @@ export default defineComponent({
 			}
 			return this.fmtWh(Math.abs(sum) * 1000, POWER_UNIT.AUTO);
 		},
-		csvLink(): string {
-			const params = new URLSearchParams({
-				format: "csv",
-				lang: this.$i18n?.locale,
-				from: this.from.toISOString(),
-				to: this.to.toISOString(),
-				aggregate: this.aggregate,
-			});
-			return `./api/history/energy?${params.toString()}`;
-		},
 	},
 	watch: {
 		fetchKey() {
@@ -359,7 +343,15 @@ export default defineComponent({
 	},
 	methods: {
 		groupColor,
-		handleDownloadClick,
+		downloadHref(): string {
+			const params = new URLSearchParams({
+				lang: this.$i18n?.locale,
+				from: this.from.toISOString(),
+				to: this.to.toISOString(),
+				aggregate: this.aggregate,
+			});
+			return `./api/history/energy?${params.toString()}`;
+		},
 		legendsForGroup(group: string): Legend[] {
 			const items = this.entityLegends(group);
 			const focused = this.focusedEntity[group] ?? null;
@@ -475,27 +467,43 @@ export default defineComponent({
 		},
 		async fetchData() {
 			this.loading = true;
+			const requestKey = this.fetchKey;
 			const requestFrom = this.from;
 			const requestTo = this.to;
 			const requestPeriod = this.effectivePeriod;
 			try {
-				const res = await api.get("history/energy", {
-					params: {
-						from: requestFrom.toISOString(),
-						to: requestTo.toISOString(),
-						aggregate: this.aggregate,
-						grouped: false,
-					},
-				});
+				const res = await this.fetchEnergy(requestFrom, requestTo);
+				// a newer request superseded this one
+				if (requestKey !== this.fetchKey) return;
 				this.rawSeries = res.data || [];
 				this.displayFrom = requestFrom;
 				this.displayTo = requestTo;
 				this.displayPeriod = requestPeriod;
+				this.prefetchAdjacent();
 			} catch (e) {
 				console.error("Failed to load energy history", e);
 				// keep previous data on error
 			} finally {
-				this.loading = false;
+				if (requestKey === this.fetchKey) this.loading = false;
+			}
+		},
+		fetchEnergy(from: Date, to: Date) {
+			return api.get("history/energy", {
+				params: {
+					from: from.toISOString(),
+					to: to.toISOString(),
+					aggregate: this.aggregate,
+					grouped: false,
+				},
+			});
+		},
+		// warm the browser http cache for the prev/next period
+		prefetchAdjacent() {
+			for (const offset of [-1, 1]) {
+				const from = shiftPeriod(this.effectivePeriod, this.from, offset);
+				const to = shiftPeriod(this.effectivePeriod, this.from, offset + 1);
+				if (from > new Date() || to <= this.startDate) continue;
+				this.fetchEnergy(from, to).catch(() => {});
 			}
 		},
 		buildBaseQuery(): Record<string, string | undefined> {
@@ -570,14 +578,6 @@ export default defineComponent({
 		animation: none;
 		opacity: 0.8;
 	}
-}
-.history-csv-link {
-	text-decoration: none;
-}
-.history-csv-link:hover,
-.history-csv-link:focus {
-	color: var(--evcc-default-text);
-	text-decoration: underline;
 }
 @media (max-width: 575.98px) {
 	/* edge-to-edge on mobile: cancel the container's px-4 padding */
