@@ -363,43 +363,37 @@ func (wb *DaheimLaden) getPhases() (int, error) {
 }
 
 func (wb *DaheimLaden) checkStation() error {
-	// first call triggers fw to populate the register map
-	if _, err := wb.conn.ReadHoldingRegisters(dlRegEvseMaxCurrent, 22); err != nil {
-		return err
-	}
-
-	var s string
-	var err error
-
 	// map may still be zero right after the wake-up call- poll briefly until populated
-	for i := 0; i < 5; i++ {
-		time.Sleep(200 * time.Millisecond)
-
-		var b []byte
-		b, err = wb.conn.ReadHoldingRegisters(dlRegEvseMaxCurrent, 22)
+	for range 5 {
+		b, err := wb.conn.ReadHoldingRegisters(dlRegEvseMaxCurrent, 22)
 		if err != nil {
+			return err
+		}
+
+		s, err := utf16BEBytesAsString(b[2*(dlRegStationId-dlRegEvseMaxCurrent):])
+		if err != nil {
+			return err
+		}
+
+		if len(s) == 0 {
+			time.Sleep(200 * time.Millisecond)
 			continue
 		}
 
-		s, err = utf16BEBytesAsString(b[2*(dlRegStationId-dlRegEvseMaxCurrent):])
-		if err == nil && s != "" {
-			break
-		}
-	}
-
-	if err != nil || s == "" {
-		return api.ErrSponsorRequired
-	}
-
-	for _, r := range s {
-		if r < 0x20 || r > 0x7e {
+		if strings.Contains(strings.ToLower(s), "heidelbridge") {
 			return api.ErrSponsorRequired
 		}
+
+		for _, r := range s {
+			if r < 0x20 || r > 0x7e {
+				return api.ErrSponsorRequired
+			}
+		}
+
+		return nil
 	}
-	if strings.Contains(strings.ToLower(s), "heidelbridge") {
-		return api.ErrSponsorRequired
-	}
-	return nil
+
+	return api.ErrSponsorRequired
 }
 
 var _ api.Diagnosis = (*DaheimLaden)(nil)
