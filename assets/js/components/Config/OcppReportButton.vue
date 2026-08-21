@@ -21,7 +21,7 @@ import OcppForwardStatus from "../MaterialIcon/OcppForwardStatus.vue";
 import type { OcppReportRule } from "@/types/evcc";
 import { openModal } from "@/configModal";
 
-type ReportStatus = "unconfigured" | "configured" | "error";
+type ReportStatus = "unconfigured" | "pending" | "connected" | "error";
 
 export default defineComponent({
 	name: "OcppReportButton",
@@ -29,12 +29,14 @@ export default defineComponent({
 	props: {
 		loadpointTitle: { type: String, required: true },
 		rule: { type: Object as PropType<OcppReportRule>, default: undefined },
+		connected: { type: Boolean, default: false },
 		error: { type: String, default: undefined },
 	},
 	computed: {
 		status(): ReportStatus {
 			if (!this.rule) return "unconfigured";
-			return this.error ? "error" : "configured";
+			if (this.error) return "error";
+			return this.connected ? "connected" : "pending";
 		},
 		// hostname of the upstream URL, scheme and path stripped
 		host(): string {
@@ -46,12 +48,16 @@ export default defineComponent({
 			}
 		},
 		hostClass(): string {
-			return this.status === "error" ? "text-danger" : "text-success";
+			if (this.status === "error") return "text-danger";
+			if (this.status === "pending") return "text-warning";
+			return "text-success";
 		},
 		buttonClass(): string {
 			switch (this.status) {
-				case "configured":
+				case "connected":
 					return "text-success border border-success report-bg-success";
+				case "pending":
+					return "text-warning border border-warning report-bg-pending";
 				case "error":
 					return "text-danger border border-danger report-bg-error";
 				default:
@@ -60,12 +66,14 @@ export default defineComponent({
 		},
 		title(): string {
 			switch (this.status) {
-				case "configured":
-					return this.$t("config.ocpp.forwardingConfigured");
+				case "connected":
+					return this.$t("config.ocppreport.statusConnected");
+				case "pending":
+					return this.$t("config.ocppreport.statusPending");
 				case "error":
-					return this.$t("config.ocpp.forwardingError");
+					return this.$t("config.ocppreport.statusError");
 				default:
-					return this.$t("config.ocpp.forwardingOff");
+					return this.$t("config.ocppreport.statusUnconfigured");
 			}
 		},
 	},
@@ -96,6 +104,9 @@ export default defineComponent({
 }
 .report-bg-success {
 	background-color: color-mix(in srgb, var(--evcc-primary) 10%, transparent);
+}
+.report-bg-pending {
+	background-color: color-mix(in srgb, var(--evcc-orange) 10%, transparent);
 }
 .report-bg-error {
 	background-color: color-mix(in srgb, var(--evcc-red) 10%, transparent);
