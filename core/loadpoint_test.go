@@ -915,7 +915,7 @@ func TestPVSolarShare(t *testing.T) {
 		return lp
 	}
 
-	minPower := newLp(1, false, 0, 0).EffectiveMinPower()
+	minPower := currentToPower(minA, 3)
 
 	// enable: share 1.0 requires the full min power as surplus
 	assert.Equal(t, minA, newLp(1, false, 0, 0).pvMaxCurrent(api.ModePV, -minPower, 0, false, false),
@@ -948,6 +948,44 @@ func TestPVSolarShare(t *testing.T) {
 		"enable threshold should apply despite solar share")
 	assert.Equal(t, minA, newLp(1, true, 0, 5000).pvMaxCurrent(api.ModePV, 100, 0, false, false),
 		"disable threshold should apply despite solar share")
+}
+
+// TestPVSolarSharePhases verifies that the derived switch points scale with the
+// phases charging actually runs on, not with the theoretical 1p minimum.
+func TestPVSolarSharePhases(t *testing.T) {
+	Voltage = 100
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	// 1p3p charger pinned to 3p cannot scale down, so the enable point must
+	// require the full 3p min power - not the 1p min power of EffectiveMinPower
+	charger := struct {
+		*api.MockCharger
+		*api.MockPhaseSwitcher
+	}{
+		api.NewMockCharger(ctrl), api.NewMockPhaseSwitcher(ctrl),
+	}
+
+	newLp := func(enabled bool) *Loadpoint {
+		lp := &Loadpoint{
+			log:              util.NewLogger("foo"),
+			clock:            clock.NewMock(),
+			charger:          charger,
+			minCurrent:       minA,
+			maxCurrent:       maxA,
+			phases:           3,
+			phasesConfigured: 3,
+			solarShare:       1,
+		}
+		lp.status = api.StatusC
+		lp.enabled = enabled
+		return lp
+	}
+
+	assert.Equal(t, 0.0, newLp(false).pvMaxCurrent(api.ModePV, -currentToPower(minA, 1), 0, false, false),
+		"must not enable at 1p surplus while pinned to 3p")
+	assert.Equal(t, minA, newLp(false).pvMaxCurrent(api.ModePV, -currentToPower(minA, 3), 0, false, false),
+		"should enable at 3p surplus")
 }
 
 // default vehicle referencing a disabled vehicle must not fail loadpoint creation

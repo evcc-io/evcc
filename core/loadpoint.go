@@ -1625,25 +1625,28 @@ func (lp *Loadpoint) customThresholds() bool {
 }
 
 // pvDisableThreshold returns the pv disable switch point, derived from the solar share
-// unless custom thresholds are configured
-func (lp *Loadpoint) pvDisableThreshold() float64 {
+// unless custom thresholds are configured. Phases is the number of phases charging is
+// expected to continue on, which may differ from the active phases if a scale down is pending.
+func (lp *Loadpoint) pvDisableThreshold(minCurrent float64, phases int) float64 {
 	if lp.customThresholds() {
 		return lp.Disable.Threshold
 	}
 	// allow grid import for the non-solar part of the min power
-	return (1 - lp.GetSolarShare()) * lp.EffectiveMinPower()
+	return (1 - lp.GetSolarShare()) * currentToPower(minCurrent, phases)
 }
 
 // pvEnableDecision returns the pv enable switch point and whether charging should start,
-// derived from the solar share unless custom thresholds are configured
-func (lp *Loadpoint) pvEnableDecision(targetCurrent, minCurrent, sitePower float64) (float64, bool) {
+// derived from the solar share unless custom thresholds are configured.
+// availableCurrent is the loadpoint's own current plus the surplus, unclamped.
+func (lp *Loadpoint) pvEnableDecision(availableCurrent, minCurrent, sitePower float64, phases int) (float64, bool) {
 	if !lp.customThresholds() {
-		threshold := -lp.GetSolarShare() * lp.EffectiveMinPower()
-		return threshold, sitePower <= threshold
+		// require the solar share of the min current to come from surplus
+		share := lp.GetSolarShare()
+		return -share * currentToPower(minCurrent, phases), availableCurrent >= share*minCurrent
 	}
 
 	threshold := lp.Enable.Threshold
-	return threshold, (threshold == 0 && targetCurrent >= minCurrent) ||
+	return threshold, (threshold == 0 && availableCurrent >= minCurrent) ||
 		(threshold != 0 && sitePower <= threshold)
 }
 
@@ -1674,7 +1677,8 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryPower f
 		effectiveCurrent = powerToCurrent(lp.chargePower, activePhases)
 	}
 	deltaCurrent := powerToCurrent(-sitePower, activePhases)
-	targetCurrent := max(effectiveCurrent+deltaCurrent, 0)
+	availableCurrent := effectiveCurrent + deltaCurrent
+	targetCurrent := max(availableCurrent, 0)
 
 	// in MinPV mode or under special conditions return at least minCurrent
 	if battery := batteryStart || batteryBuffered && lp.charging() || lp.GetBatteryBoost() == boostContinue; (mode == api.ModeMinPV || battery) && targetCurrent < minCurrent {
@@ -1686,13 +1690,15 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryPower f
 
 	if mode == api.ModePV && lp.enabled && targetCurrent < minCurrent {
 		projectedSitePower := sitePower
+		projectedPhases := activePhases
 		if lp.hasPhaseSwitching() && !lp.phaseTimer.IsZero() {
 			// calculate site power after a phase switch from activePhases phases -> 1 phase
 			// notes: activePhases can be 1, 2 or 3 and phaseTimer can only be active if lp current is already at minCurrent
 			projectedSitePower -= Voltage * minCurrent * float64(activePhases-1)
+			projectedPhases = 1
 		}
 
-		disableThreshold := lp.pvDisableThreshold()
+		disableThreshold := lp.pvDisableThreshold(minCurrent, projectedPhases)
 
 		// kick off disable sequence, unless climater keep-alive is holding
 		// charging at minCurrent — otherwise the "pausing soon" badge would
@@ -1731,7 +1737,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryPower f
 	}
 
 	if mode == api.ModePV && !lp.enabled {
-		enableThreshold, shouldEnable := lp.pvEnableDecision(targetCurrent, minCurrent, sitePower)
+		enableThreshold, shouldEnable := lp.pvEnableDecision(availableCurrent, minCurrent, sitePower, activePhases)
 
 		// kick off enable sequence
 		if shouldEnable {

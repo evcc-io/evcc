@@ -935,9 +935,8 @@ func (lp *Loadpoint) SetSolarShare(val float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.DEBUG.Printf("set solar share: %.2f", val)
-
 	if lp.solarShare != val {
+		lp.log.DEBUG.Printf("set solar share: %.2f", val)
 		lp.solarShare = val
 
 		lp.settings.SetFloat(keys.SolarShare, val)
