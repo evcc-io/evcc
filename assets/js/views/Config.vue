@@ -580,7 +580,7 @@
 				/>
 				<OcppModal :ocpp="ocpp" :stationTitles="stationTitles" />
 				<OcppForwarderModal @changed="loadDirty" />
-				<OcppReportModal @changed="loadDirty" />
+				<OcppReportModal :loadpoints="loadpoints" :chargers="chargers" @changed="loadDirty" />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
 				<SecurityModal :auth-disabled="authDisabled" />
 				<ApiKeyModal :auth-disabled="authDisabled" />
