@@ -90,12 +90,6 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, err
 	}
 
-	// If the energy manager URI is set, use the energy manager for phase switching.
-	if cc.EnergyManagerURI != "" {
-		implement.Has(w, implement.PhaseSwitcher(w.phases1p3p))
-		implement.Has(w, implement.PhaseGetter(w.getPhases))
-	}
-
 	return w, nil
 }
 
@@ -211,10 +205,20 @@ func (w *WarpWS) handleConnection(ctx context.Context, role wsRole, conn *websoc
 				return err
 			}
 
-			// only drop PM topics on the main WS when a dedicated PM connection exists;
-			// on single-WS setups (WARP3) PM events arrive here and must be processed
-			if role == wsRoleMain && w.pm != w.Connection && isPmTopic(event.Topic) {
-				continue
+			if w.pm != w.Connection {
+				// If there is a separate connection to an WEM,
+				// ignore all messages from the WEM except info/features and the power manager.
+				// info/features is accepted from both connections:
+				// The WEM declares the phase_switch feture if it is configured correctly.
+				// All other features that we check are charger-only
+				if role == wsRolePM && event.Topic != "info/features" && !isPmTopic(event.Topic) {
+					continue
+				}
+				// If there is a separate connection to an WEM,
+				// ignore messages from the charger's power manager
+				if role == wsRoleMain && isPmTopic(event.Topic) {
+					continue
+				}
 			}
 
 			w.log.TRACE.Printf("websocket: event %s: %s", event.Topic, event.Payload)
