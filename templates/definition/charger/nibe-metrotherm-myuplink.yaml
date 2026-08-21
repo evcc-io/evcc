@@ -9,11 +9,11 @@ requirements:
   description:
     de: |
       Direkte Integration via NIBE myUplink API für SG Ready Steuerung.
-      Shelly EM mini Gen 4 für externe Energiemessung erforderlich.
+      Für Leistungsmessung kann optional ein Shelly EM mini Gen 4 verwendet werden.
       API-Anmeldedaten auf https://dev.myuplink.com/ erstellen.
     en: |
       Direct integration via NIBE myUplink API for SG Ready control.
-      Shelly EM mini Gen 4 for power metering is required.
+      For power metering, a Shelly EM mini Gen 4 can optionally be used.
       Create API credentials on https://dev.myuplink.com/
 params:
   - name: deviceid
@@ -35,11 +35,16 @@ params:
     description:
       en: OAuth2 Client Secret
       de: OAuth2 Client-Geheimnis
-  - name: shellyhost
-    required: true
+  - name: useshelly
+    type: bool
+    default: false
     description:
-      en: Shelly EM Mini host or IP
-      de: Shelly EM Mini Host oder IP-Adresse
+      en: Use external Shelly EM Mini for power metering
+      de: Externes Shelly EM Mini für Leistungsmessung verwenden
+  - name: shellyhost
+    description:
+      en: Shelly EM Mini host or IP (required if useshelly is enabled)
+      de: Shelly EM Mini Host oder IP-Adresse (erforderlich wenn useshelly aktiviert ist)
 
 render: |
   type: sgready
@@ -81,19 +86,26 @@ render: |
       end
     timeout: 10s
   
-  # Power consumption from Shelly EM Mini (instantaneous)
+  {{- if .useshelly }}
+  # Power consumption from Shelly EM Mini (instantaneous, optional)
   power:
     source: http
     uri: http://{{ .shellyhost }}/rpc/Switch.GetStatus?id=0
     jq: .apower | floor
     timeout: 5s
+  {{- end }}
   
-  # Energy meter from Shelly EM Mini (cumulative kWh)
+  # Energy consumption from myUplink API (cumulative kWh)
   energy:
     source: http
-    uri: http://{{ .shellyhost }}/rpc/Switch.GetStatus?id=0
-    jq: .aenergy.total / 1000
-    timeout: 5s
+    uri: https://api.myuplink.com/v2/devices/{{ .deviceid }}/points?parameterIds=40013
+    auth:
+      type: oauth2
+      clientid: {{ .clientid }}
+      clientsecret: {{ .clientsecret }}
+      tokenurl: https://api.myuplink.com/oauth/token
+    jq: .data[0].value | tonumber
+    timeout: 10s
   
   # Temperature from myUplink
   temp:
