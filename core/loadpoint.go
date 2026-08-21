@@ -2280,14 +2280,17 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 		err = lp.fastCharging()
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
-		// optimizer decides start/stop, replacing the price limits
+		// optimizer decides start/stop and level, replacing the price limits
 		if suggestion != nil {
-			err = lp.optimizerCharging(suggestion, mode, welcomeCharge)
-			break
+			if handled, e := lp.optimizerCharging(suggestion, mode, welcomeCharge); handled {
+				err = e
+				break
+			}
+			// surplus regime: the pv loop below tracks the measured surplus
 		}
 
 		// cheap tariff
-		if smartCostActive {
+		if suggestion == nil && smartCostActive {
 			rate, _ := consumption.At(time.Now())
 			lp.log.DEBUG.Printf("smart consumption active: %.2f", rate.Value)
 			err = lp.fastCharging()
@@ -2297,7 +2300,7 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 		}
 
 		// attractive feedin
-		if smartFeedInPriorityActive {
+		if suggestion == nil && smartFeedInPriorityActive {
 			rate, _ := feedin.At(time.Now())
 			lp.log.DEBUG.Printf("smart feed-in active: %.2f", rate.Value)
 

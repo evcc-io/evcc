@@ -30,6 +30,10 @@ type Suggestion struct {
 	Action    string  `json:"action"`
 	Charge    float64 `json:"charge"`    // recommended charge power, W
 	Discharge float64 `json:"discharge"` // recommended discharge power, W
+	// Grid is the planned site grid flow of the slot, positive means import.
+	// It tells apart a charge power matched to the forecast surplus from one
+	// fed by the grid.
+	Grid float64 `json:"grid"`
 	// Actionable indicates the suggestion differs from the current operating mode.
 	Actionable bool `json:"actionable"`
 }
