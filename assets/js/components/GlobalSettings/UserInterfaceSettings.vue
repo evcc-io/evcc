@@ -70,6 +70,7 @@
 				<option value="mdy">{{ $t("settings.dateFormat.mdy") }}</option>
 				<option value="ymd">{{ $t("settings.dateFormat.ymd") }}</option>
 			</select>
+			<div class="form-text evcc-gray">{{ dateFormatExample }}</div>
 		</FormRow>
 		<FormRow v-if="loadpoints.length" :label="$t('settings.loadpoints.label')">
 			<LoadpointOrderSettings :loadpoints="loadpoints" />
@@ -114,10 +115,13 @@ import {
 import { isApp } from "@/utils/native";
 import { defineComponent, type PropType } from "vue";
 import { LENGTH_UNIT, THEME, TIME_FORMAT, type UiLoadpoint } from "@/types/evcc";
+import formatter from "@/mixins/formatter";
+import type { DateFormat } from "@/settings";
 
 export default defineComponent({
 	name: "UserInterfaceSettings",
 	components: { FormRow, SelectGroup, LoadpointOrderSettings },
+	mixins: [formatter],
 	props: {
 		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
 	},
@@ -127,7 +131,6 @@ export default defineComponent({
 			language: getLocalePreference() || "",
 			unit: getUnits(),
 			timeFormat: is12hFormat() ? TIME_FORMAT.H12 : TIME_FORMAT.H24,
-			dateFormat: getDateFormat(),
 			fullscreenActive: false,
 			THEMES: Object.values(THEME),
 			UNITS: Object.values(LENGTH_UNIT),
@@ -135,6 +138,17 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		dateFormat: {
+			get(): DateFormat {
+				return getDateFormat();
+			},
+			set(value: DateFormat) {
+				setDateFormat(value);
+			},
+		},
+		dateFormatExample(): string {
+			return this.fmtFullDateTime(new Date(2015, 9, 21, 16, 29));
+		},
 		languageOptions: () => {
 			const locales = Object.entries(LOCALES).map(([key, value]) => {
 				return { value: key, name: value[1] };
@@ -157,9 +171,6 @@ export default defineComponent({
 		},
 		timeFormat(value) {
 			set12hFormat(value === TIME_FORMAT.H12);
-		},
-		dateFormat(value) {
-			setDateFormat(value);
 		},
 		theme(value) {
 			setThemePreference(value);

@@ -115,7 +115,7 @@ export interface Settings {
   theme: THEME | null;
   unit: string;
   is12hFormat: boolean;
-  dateFormat: DateFormat; // "" = auto, "dmy" = DD/MM, "mdy" = MM/DD, "ymd" = YYYY-MM-DD
+  dateFormat: DateFormat;
   energyflowDetails: boolean;
   energyflowCo2: boolean;
   energyflowPv: boolean;

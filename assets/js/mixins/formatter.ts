@@ -4,40 +4,51 @@ import { CURRENCY } from "../types/evcc";
 import settings from "@/settings";
 import type { DateFormat } from "@/settings";
 
-// Format the day+month portion of a date according to the user's date-order
-// preference.  Month names are always rendered in the given UI locale so they
-// stay translated regardless of the ordering choice.
-//   dmy  → "17 May"   (or "17 Mai" in German)
-//   mdy  → "May 17"
-//   ymd  → "2025-05-17"
-//   ""   → locale-native (existing behaviour, auto)
-function formatDayMonth(date: Date, locale: string | undefined, fmt: DateFormat): string {
-  const monthName = new Intl.DateTimeFormat(locale, { month: "short" }).format(date);
-  const day = date.getDate();
-  const year = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(day).padStart(2, "0");
-  if (fmt === "mdy") return `${monthName} ${day}`;
-  if (fmt === "ymd") return `${year}-${mm}-${dd}`;
-  if (fmt === "dmy") return `${day} ${monthName}`;
-  // auto: use locale-native ordering
-  return new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" }).format(date);
+// Extract a single part in date context, where names can differ from their
+// standalone forms (German "So.", "Jan." vs "So", "Jan").
+function datePart(
+  date: Date,
+  locale: string | undefined,
+  type: Intl.DateTimeFormatPartTypes
+): string {
+  return (
+    new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "short" })
+      .formatToParts(date)
+      .find((part) => part.type === type)?.value ?? ""
+  );
 }
 
-// Format the numeric date portion (no month names) with the right day/month
-// ordering.  Used in the compact "short" date format.
-//   dmy  → "17/05"  (via en-GB locale)
-//   mdy  → "5/17"   (via en-US locale)
-//   ymd  → "2025-05-17" (explicit construction — Intl does not include year with only month+day)
-//   ""   → locale-native
-function formatNumericDate(date: Date, locale: string | undefined, fmt: DateFormat): string {
-  if (fmt === "ymd") {
-    const mm = String(date.getMonth() + 1).padStart(2, "0");
-    const dd = String(date.getDate()).padStart(2, "0");
-    return `${date.getFullYear()}-${mm}-${dd}`;
-  }
-  const orderLocale = fmt === "mdy" ? "en-US" : fmt === "dmy" ? "en-GB" : locale;
-  return new Intl.DateTimeFormat(orderLocale, { month: "numeric", day: "numeric" }).format(date);
+// Day+month(+year) in the user's date order, e.g. "17 Mai" or "Mai 17, 2025".
+// Ordering and punctuation come from a reference locale (en-GB day-first,
+// en-US month-first), month names stay translated. ymd is the full ISO date.
+function formatDayMonth(
+  date: Date,
+  locale: string | undefined,
+  fmt: DateFormat,
+  year = false
+): string {
+  if (fmt === "ymd") return isoDate(date);
+  const orderLocale = fmt === "mdy" ? "en-US" : "en-GB";
+  const month = datePart(date, locale, "month");
+  // some locales (e.g. Czech) use numeric months in date context
+  const name = /\p{L}/u.test(month)
+    ? month
+    : new Intl.DateTimeFormat(locale, { month: "short" }).format(date);
+  return new Intl.DateTimeFormat(orderLocale, {
+    month: "short",
+    day: "numeric",
+    year: year ? "numeric" : undefined,
+  })
+    .formatToParts(date)
+    .map((part) => (part.type === "month" ? name : part.value))
+    .join("");
+}
+
+// local-time ISO date, Intl cannot produce this reliably across locales
+function isoDate(date: Date): string {
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${mm}-${dd}`;
 }
 
 const CURRENCY_SYMBOLS: Record<CURRENCY, string> = {
@@ -308,15 +319,16 @@ export default defineComponent({
         hour12: is12hFormat(),
       }).format(date);
     },
-    fmtFullDateTime(date: Date, short: boolean) {
+    fmtFullDateTime(date: Date) {
       const locale = this.$i18n?.locale;
       const fmt = this.dateFormat;
       if (!fmt) {
         // auto: single Intl call preserves locale-native separators (e.g. German "So., 15. Jan.,")
         return new Intl.DateTimeFormat(locale, {
-          weekday: short ? undefined : "short",
-          month: short ? "numeric" : "short",
+          weekday: "short",
+          month: "short",
           day: "numeric",
+          year: "numeric",
           hour: "numeric",
           minute: "numeric",
           hour12: is12hFormat(),
@@ -327,11 +339,13 @@ export default defineComponent({
         minute: "numeric",
         hour12: is12hFormat(),
       }).format(date);
-      if (short) {
-        return `${formatNumericDate(date, locale, fmt)} ${time}`.trim();
-      }
-      const weekday = new Intl.DateTimeFormat(locale, { weekday: "short" }).format(date);
-      return `${weekday} ${formatDayMonth(date, locale, fmt)} ${time}`.trim();
+      const weekday = datePart(date, locale, "weekday");
+      return `${weekday} ${formatDayMonth(date, locale, fmt, true)} ${time}`.trim();
+    },
+    // weekday + day of month + time, for lists within a known month
+    fmtWeekdayDayTime(date: Date) {
+      const weekday = datePart(date, this.$i18n?.locale, "weekday");
+      return `${weekday} ${date.getDate()}, ${this.fmtHourMinute(date)}`;
     },
     fmtWeekdayTime(date: Date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
@@ -362,7 +376,7 @@ export default defineComponent({
           month: "short",
         }).format(date);
       }
-      const weekday = new Intl.DateTimeFormat(locale, { weekday: "short" }).format(date);
+      const weekday = datePart(date, locale, "weekday");
       return `${weekday} ${formatDayMonth(date, locale, fmt)}`.trim();
     },
     fmtDayMonthYear(date: Date) {
