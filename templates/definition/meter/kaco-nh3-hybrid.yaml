@@ -31,7 +31,6 @@ params:
     description:
       de: Batteriespeichernummer
       en: Battery number
-  - preset: battery-params
 requirements:
   description:
     de: |
@@ -123,9 +122,22 @@ render: |
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     value: 802:SoC # Model 802 (Battery Base) - State of Charge
+  capacity:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 802:WHRtg # Model 802 - Battery nominal capacity in Wh (read from inverter)
+  minsoc:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 802:SoCMin # Model 802 - Minimum SOC limit % (read from inverter)
+  maxsoc:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 802:SoCMax # Model 802 - Maximum SOC limit % (read from inverter)
   # Dynamic calculation of max charge/discharge power based on battery voltage
   # Formula: Power (W) = Battery Voltage (V) × Max Current (30 A)
-  # This avoids manual configuration and adapts to different battery voltages
+  # Battery voltage varies with SoC (e.g., 300-330V for 6-series Dyness stack)
+  # This ensures accurate power limits throughout the charge cycle
   maxchargepower:
     source: go
     in:
@@ -180,5 +192,4 @@ render: |
     default:
       source: error
       error: ErrNotAvailable
-  {{- include "battery-params" . }}
   {{- end }}
