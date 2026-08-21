@@ -122,7 +122,7 @@ type batteryResult struct {
 	Empty time.Time `json:"empty,omitzero"`
 }
 
-// suggestionThreshold ignores numerical noise around zero power (W)
+// suggestionThreshold ignores numerical noise in power comparisons (W)
 const suggestionThreshold = 50
 
 // advisory actions for a loadpoint/vehicle slot; battery actions use api.BatteryMode
