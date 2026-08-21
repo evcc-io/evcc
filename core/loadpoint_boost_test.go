@@ -33,10 +33,6 @@ func (m *mockSite) GetResidualPower() float64 {
 	return m.residualPower
 }
 
-type plainCharger struct {
-	api.Charger
-}
-
 type phaseSwitchCharger struct {
 	api.Charger
 }
