@@ -1,0 +1,182 @@
+template: kaco-nh3-hybrid
+products:
+  - brand: KACO
+    description:
+      de: KACO Blueplanet Hybrid NH3 (abregelbar)
+      en: KACO Blueplanet Hybrid NH3 (curtailable)
+group: generic
+capabilities: ["battery-control", "curtail"]
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485"]
+  - name: modBusDeviceId
+    default: 3
+    description:
+      de: Geräte-ID (Slave ID)
+      en: Device ID (Slave ID)
+  - name: baudrate
+    default: 9600
+    type: choice
+    choice: [9600, 19200, 38400]
+    description:
+      de: Baudrate der RS485-Verbindung
+      en: Baud rate of RS485 connection
+  - name: battery
+    type: choice
+    choice: [1, 2]
+    required: true
+    usages: ["battery"]
+    description:
+      de: Batteriespeichernummer
+      en: Battery number
+  - preset: battery-params
+requirements:
+  description:
+    de: |
+      Modbus-RTU (RS485) Verbindung mit 9600 Baud, 8 Datenbits, 1 Stoppbit, keine Parität.
+      Der KACO NH3 muss sich im Grid-Feeding Modus befinden und Sunspec Model 704 (Generic Inverter Controls) unterstützen.
+      Für Batteriesteuerung: Zwei Batteriepakete (BMS1 + BMS2) jeweils mit einem Batteriezähler mit Batteriespeichernummer 1 und 2 anlegen.
+      Batteriekapazität: 30.72 kWh | Max. Lade-/Entladestrom: 30 A
+      Lade-/Entladeleistung wird dynamisch aus der Batteriespannung berechnet (P = U × 30A).
+    en: |
+      Modbus-RTU (RS485) connection with 9600 baud, 8 data bits, 1 stop bit, no parity.
+      KACO NH3 must be in Grid-Feeding mode and support SunSpec Model 704 (Generic Inverter Controls).
+      For battery control: add one battery meter each for two battery packs (BMS1 + BMS2), using battery number 1 and 2.
+      Battery capacity: 30.72 kWh | Max. charge/discharge current: 30 A
+      Charge/discharge power is calculated dynamically from battery voltage (P = U × 30A).
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 203:W # Model 203 (Three Phase Meter) - Grid Power
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 701:W # Model 701 (Inverter) - AC Power Output
+  energy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 701:TotWhInj # Model 701 - Total Watt-hours Injected
+    scale: 0.001
+  curtail:
+    source: sequence
+    set:
+      # Step 1: Set the power limit percentage (0-100%)
+      - source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 704:WMaxLimPct # Model 704 (Generic Inverter Controls) at address 50640
+      # Step 2: Control enable/disable of the limit
+      - source: switch
+        switch:
+          - case: 100 # Uncurtailed (no limit)
+            set:
+              source: const
+              value: 0 # Disabled
+              set:
+                source: sunspec
+                {{- include "modbus" . | indent 14 }}
+                value: 704:WMaxLimPctEna # Model 704 at address 50639
+        default:
+          source: const
+          value: 1 # Enabled
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 704:WMaxLimPctEna # Model 704 at address 50639
+  curtailed: # Read back the current curtailment status
+    source: go
+    in:
+    - name: ena
+      type: bool
+      config:
+        source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 704:WMaxLimPctEna # Model 704 at address 50639
+    - name: limit
+      type: float
+      config:
+        source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 704:WMaxLimPct # Model 704 at address 50640
+    script: |
+      percent := 100
+      if ena {
+        percent = int(limit)
+      }
+      percent
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: {{ if eq .battery "2" }}714:Prt.2.DCW{{ else }}714:Prt.1.DCW{{ end }} # Model 714 (DC Module - Battery Power)
+    # Prt.1 = Battery 1, Prt.2 = Battery 2 via Model 714 (Multi-Port DC Module)
+  soc:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 802:SoC # Model 802 (Battery Base) - State of Charge
+  # Dynamic calculation of max charge/discharge power based on battery voltage
+  # Formula: Power (W) = Battery Voltage (V) × Max Current (30 A)
+  # This avoids manual configuration and adapts to different battery voltages
+  maxchargepower:
+    source: go
+    in:
+    - name: voltage
+      type: float
+      config:
+        source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 802:V # Model 802 (Battery Base) - Battery Voltage
+    script: |
+      # Calculate max charge power: voltage × 30A (max current)
+      int(voltage * 30)
+  maxdischargepower:
+    source: go
+    in:
+    - name: voltage
+      type: float
+      config:
+        source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 802:V # Model 802 (Battery Base) - Battery Voltage
+    script: |
+      # Calculate max discharge power: voltage × 30A (max current)
+      int(voltage * 30)
+  batterymode:
+    source: switch
+    switch:
+      - case: 1 # normal
+        set:
+          source: const
+          value: 1 # Normal mode
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 802:ChaSt # Model 802 (Battery Base) at address 51003 - Charge State
+      - case: 2 # hold
+        set:
+          source: const
+          value: 6 # Holding mode
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 802:ChaSt # Model 802 at address 51003
+      - case: 3 # charge
+        set:
+          source: const
+          value: 3 # Charging mode
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value: 802:ChaSt # Model 802 at address 51003
+    default:
+      source: error
+      error: ErrNotAvailable
+  {{- include "battery-params" . }}
+  {{- end }}
