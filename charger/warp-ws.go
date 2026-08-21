@@ -657,25 +657,29 @@ func (w *WarpWS) GetMinMaxCurrent() (float64, float64, error) {
 	return 6, maxC, err
 }
 
-func (w *WarpWS) setCurrent(curr int64) error {
-	uri := fmt.Sprintf("%s/evse/external_current", w.URI)
-	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]int64{"current": curr}), request.JSONEncoding)
+func (w *WarpWS) callAPI(api string, payload any) error {
+	var uri string
+	if w.pm != w.Connection && isPmTopic(api) {
+		uri = fmt.Sprintf("%s/%s", w.pm.URI, api)
+	} else {
+		uri = fmt.Sprintf("%s/%s", w.URI, api)
+	}
+
+	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(payload), request.JSONEncoding)
 	_, err := w.Do(req)
 	return err
+}
+
+func (w *WarpWS) setCurrent(curr int64) error {
+	return w.callAPI("evse/external_current", curr)
 }
 
 func (w *WarpWS) disablePhaseAutoSwitch() error {
-	uri := fmt.Sprintf("%s/evse/phase_auto_switch", w.URI)
-	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]bool{"enabled": false}), request.JSONEncoding)
-	_, err := w.Do(req)
-	return err
+	return w.callAPI("evse/phase_auto_switch", false)
 }
 
 func (w *WarpWS) postPhasesWanted(phases int) error {
-	uri := fmt.Sprintf("%s/power_manager/external_control", w.pm.URI)
-	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(map[string]int{"phases_wanted": phases}), request.JSONEncoding)
-	_, err := w.pm.Do(req)
-	return err
+	return w.callAPI("power_manager/external_control", phases)
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface
