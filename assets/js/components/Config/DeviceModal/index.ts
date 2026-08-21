@@ -102,10 +102,13 @@ export function handleError(e: any, msg: string) {
 export function applyDefaultsFromTemplate(template: Template | null, values: DeviceValues) {
   const params = template?.Params || [];
   params.forEach((p) => {
-    if (p.Default && !values[p.Name]) {
+    if (p.Type === "Bool") {
+      if (values[p.Name] === undefined) {
+        // template defaults are strings, the form model uses real booleans
+        values[p.Name] = p.Default === "true";
+      }
+    } else if (p.Default && !values[p.Name]) {
       values[p.Name] = p.Default;
-    } else if (p.Type === "Bool" && values[p.Name] === undefined) {
-      values[p.Name] = false; // initialize
     }
   });
 }

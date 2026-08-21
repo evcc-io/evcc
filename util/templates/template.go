@@ -108,6 +108,12 @@ func (t *Template) Validate() error {
 			return fmt.Errorf("param %s: description can't be empty", p.Name)
 		}
 
+		// bool params are rendered as real booleans, so anything but true/false
+		// would render differently than it appears in the ui
+		if p.Type == TypeBool && p.Default != "" && p.Default != "true" && p.Default != "false" {
+			return fmt.Errorf("param %s: bool default must be true or false, got '%s'", p.Name, p.Default)
+		}
+
 		maxLength := 50
 		actualLength := max(len(p.Description.String("en")), len(p.Description.String("de")))
 		if actualLength > maxLength {
@@ -395,7 +401,7 @@ func (t *Template) RenderResult(class Class, renderMode int, other map[string]an
 			}
 
 		default:
-			if res[out] == nil || res[out].(string) == "" {
+			if prev, ok := res[out].(string); res[out] == nil || (ok && prev == "") {
 				// prevent rendering nil interfaces as "<nil>" string
 				var s string
 				if val != nil {
@@ -418,6 +424,16 @@ func (t *Template) RenderResult(class Class, renderMode int, other map[string]an
 				}
 
 				res[out] = s
+			}
+		}
+	}
+
+	// bool params are rendered as real booleans so templates can use
+	// `{{ if .param }}` instead of comparing against "true"/"false"
+	for _, p := range t.Params {
+		if p.Type == TypeBool {
+			if s, ok := res[p.Name].(string); ok {
+				res[p.Name] = s == "true"
 			}
 		}
 	}

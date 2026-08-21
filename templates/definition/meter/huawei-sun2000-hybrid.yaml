@@ -352,7 +352,7 @@ render: |
       source: convert
       convert: bool2int
       set:
-        {{- if eq .forceaccharging "true" }}
+        {{- if .forceaccharging }}
         source: const
         value: 1 # Enable
         set:
