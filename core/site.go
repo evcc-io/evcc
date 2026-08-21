@@ -13,6 +13,7 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/coordinator"
@@ -1365,10 +1366,26 @@ func (site *Site) currentRate(rates api.Rates) api.Rate {
 }
 
 // prepare publishes initial values
+// registerOcppReportLookup lets the OCPP report client (evcc-io/evcc#32989)
+// resolve a loadpoint by title for outbound session reporting and inbound
+// remote-control dispatch.
+func (site *Site) registerOcppReportLookup() {
+	ocpp.SetLoadpointLookup(func(title string) (loadpoint.API, bool) {
+		for _, lp := range site.ActiveLoadpoints() {
+			if lp.GetTitle() == title {
+				return lp, true
+			}
+		}
+		return nil, false
+	})
+}
+
 func (site *Site) prepare() {
 	if err := site.restoreSettings(); err != nil {
 		site.log.ERROR.Println(err)
 	}
+
+	site.registerOcppReportLookup()
 
 	site.publish(keys.SiteTitle, site.Title)
 

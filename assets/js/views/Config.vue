@@ -53,7 +53,15 @@
 							@enable="handleDisable('loadpoint', loadpoint.id!, false)"
 						>
 							<template #tags>
-								<DeviceTags :tags="loadpointTags(loadpoint)" />
+								<div class="d-flex align-items-center justify-content-between gap-2">
+									<DeviceTags :tags="loadpointTags(loadpoint)" />
+									<OcppReportButton
+										v-if="loadpoint.title"
+										:loadpoint-title="loadpoint.title"
+										:rule="ocppReportRule(loadpoint.title)"
+										:error="ocppReportError(loadpoint.title)"
+									/>
+								</div>
 							</template>
 							<template #icon>
 								<VehicleIcon
@@ -571,6 +579,7 @@
 				/>
 				<OcppModal :ocpp="ocpp" :stationTitles="stationTitles" />
 				<OcppForwarderModal @changed="loadDirty" />
+				<OcppReportModal @changed="loadDirty" />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
 				<SecurityModal :auth-disabled="authDisabled" />
 				<ApiKeyModal :auth-disabled="authDisabled" />
@@ -613,6 +622,8 @@ import EebusModal from "../components/Config/EebusModal.vue";
 import OcppIcon from "../components/MaterialIcon/Ocpp.vue";
 import OcppModal from "../components/Config/OcppModal.vue";
 import OcppForwarderModal from "../components/Config/OcppForwarderModal.vue";
+import OcppReportModal from "../components/Config/OcppReportModal.vue";
+import OcppReportButton from "../components/Config/OcppReportButton.vue";
 import formatter from "../mixins/formatter";
 import GeneralConfig from "../components/Config/GeneralConfig.vue";
 import HemsIcon from "../components/MaterialIcon/Hems.vue";
@@ -728,6 +739,8 @@ export default defineComponent({
 		OcppIcon,
 		OcppModal,
 		OcppForwarderModal,
+		OcppReportModal,
+		OcppReportButton,
 		GeneralConfig,
 		HemsIcon,
 		HemsModal,
@@ -1610,6 +1623,16 @@ export default defineComponent({
 				this.hasDeviceError("charger", loadpoint.charger) ||
 				this.hasDeviceError("meter", loadpoint.meter)
 			);
+		},
+		ocppReportRule(title: string) {
+			return (store.state?.ocppreport?.config || []).find(
+				(r) => r.loadpointTitle === title
+			);
+		},
+		ocppReportError(title: string): string | undefined {
+			return (store.state?.ocppreport?.status || []).find(
+				(s) => s.loadpointTitle === title
+			)?.error;
 		},
 		hasDeviceError(type: DeviceType, name?: string) {
 			if (!name) return false;
