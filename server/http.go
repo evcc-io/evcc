@@ -55,6 +55,7 @@ type Customization struct {
 	Website   string
 	Email     string
 	Phone     string
+	Theme     string
 }
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
@@ -110,6 +111,12 @@ func NewHTTPd(addr string, hub *SocketHub, custom Customization) *HTTPd {
 
 	if (custom.LogoLight == "") != (custom.LogoDark == "") {
 		log.FATAL.Fatal("custom logo requires both light and dark variants")
+	}
+
+	switch custom.Theme {
+	case "", "auto", "light", "dark":
+	default:
+		log.FATAL.Fatalf("invalid custom theme: %s (expected auto, light, dark)", custom.Theme)
 	}
 
 	for path, file := range map[string]string{
