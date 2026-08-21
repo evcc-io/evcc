@@ -343,8 +343,8 @@ export default defineComponent({
 		batteryBoostAvailable() {
 			return this.batteryConfigured;
 		},
-		solarShare() {
-			return this.loadpoint?.solarShare ?? 1;
+		solarSharePercent() {
+			return Math.round((this.loadpoint?.solarShare ?? 1) * 100);
 		},
 		thresholdsConfigured() {
 			return !!(this.loadpoint?.enableThreshold || this.loadpoint?.disableThreshold);
@@ -379,8 +379,8 @@ export default defineComponent({
 		phasesConfigured(value) {
 			this.selectedPhases = value;
 		},
-		solarShare() {
-			this.selectedSolarShare = this.solarSharePercent();
+		solarSharePercent(value) {
+			this.selectedSolarShare = value;
 		},
 	},
 	methods: {
@@ -390,12 +390,9 @@ export default defineComponent({
 			this.selectedMaxCurrent = this.maxCurrent;
 			this.selectedMinCurrent = this.minCurrent;
 			this.selectedMinTemp = this.minTemp;
-			this.selectedSolarShare = this.solarSharePercent();
+			this.selectedSolarShare = this.solarSharePercent;
 			const modalRef = this.$refs["modal"] as InstanceType<typeof GenericModal> | undefined;
 			modalRef?.open();
-		},
-		solarSharePercent() {
-			return Math.round(this.solarShare * 100);
 		},
 		apiPath(func: string) {
 			return "loadpoints/" + this.id + "/" + func;
