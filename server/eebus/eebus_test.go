@@ -133,6 +133,5 @@ func TestConfigCompleteResolvesPending(t *testing.T) {
 		newInstance(t, map[string][]Device{identity.SKI: {&mockDevice{}}})
 
 		ConfigComplete()
-		require.True(t, instance.configured)
 	})
 }

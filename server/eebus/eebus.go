@@ -602,17 +602,18 @@ func (c *EEBus) ServicePairingDetailUpdate(identity shipapi.ServiceIdentity, det
 	}
 
 	c.mux.Lock()
-	defer c.mux.Unlock()
 
-	if clients, ok := c.clients[identity.SKI]; !ok || len(clients) == 0 {
-		if !c.configured {
-			// device configuration is still running- leave the request pending
-			// instead of denying a ski that is about to be registered
-			c.log.DEBUG.Printf("pairing request from %s while configuring, left pending", identity.SKI)
-			c.pending[identity.SKI] = identity
-			return
-		}
+	deny := len(c.clients[identity.SKI]) == 0
+	if deny && !c.configured {
+		// device configuration is still running- leave the request pending
+		// instead of denying a ski that is about to be registered
+		c.log.DEBUG.Printf("pairing request from %s while configuring, left pending", identity.SKI)
+		c.pending[identity.SKI] = identity
+		deny = false
+	}
+	c.mux.Unlock()
 
+	if deny {
 		// this is an unknown SKI, so deny pairing
 		c.service.CancelPairing(identity)
 	}
