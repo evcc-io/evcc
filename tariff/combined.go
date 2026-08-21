@@ -19,14 +19,24 @@ func NewCombined(tariffs []api.Tariff) api.Tariff {
 
 func (t *combined) Rates() (api.Rates, error) {
 	var rates api.Rates
+	var err error
+	var errs int
 
 	for _, t := range t.tariffs {
-		rr, err := t.Rates()
-		if err != nil {
-			return nil, err
+		rr, rerr := t.Rates()
+		if rerr != nil {
+			err = rerr
+			errs++
+			continue
 		}
 
 		rates = append(rates, rr...)
+	}
+
+	// only fail if all sources are unavailable - a single stale/erroring
+	// source should not discard the other sources' still-valid rates
+	if errs == len(t.tariffs) {
+		return nil, err
 	}
 
 	rates.Sort()
