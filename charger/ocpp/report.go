@@ -319,7 +319,13 @@ func (conn *reportConnection) dial() {
 			recordReportError(conn.title, err.Error())
 			return err
 		}
-		clearReportError(conn.title)
+		// always notify on a successful connect, even if no prior error was
+		// recorded (e.g. the very first attempt succeeds) - the UI still
+		// needs to see the connected transition
+		reportMu.Lock()
+		delete(reportErrors, conn.title)
+		reportMu.Unlock()
+		notifyReportUpdated()
 		return nil
 	}
 
