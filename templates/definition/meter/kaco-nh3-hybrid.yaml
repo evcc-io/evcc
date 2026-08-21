@@ -11,7 +11,7 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["rs485"]
-  - name: modBusDeviceId
+  - name: modbusdeviceid
     default: 3
     description:
       de: Geräte-ID (Slave ID)
@@ -25,7 +25,7 @@ params:
       en: Baud rate of RS485 connection
   - name: battery
     type: choice
-    choice: [1, 2]
+    choice: ["1", "2"]
     required: true
     usages: ["battery"]
     description:
@@ -35,13 +35,15 @@ params:
 requirements:
   description:
     de: |
-      Modbus-RTU (RS485) Verbindung mit 9600 Baud, 8 Datenbits, 1 Stoppbit, keine Parität.
+      Modbus-RTU (RS485) Verbindung mit konfigurierbarer Baudrate (9600, 19200, 38400 Baud),
+      8 Datenbits, 1 Stoppbit, keine Parität.
       Der KACO NH3 muss sich im Grid-Feeding Modus befinden und Sunspec Model 704 (Generic Inverter Controls) unterstützen.
       Für Batteriesteuerung: Zwei Batteriepakete (BMS1 + BMS2) jeweils mit einem Batteriezähler mit Batteriespeichernummer 1 und 2 anlegen.
       Batteriekapazität: 30.72 kWh | Max. Lade-/Entladestrom: 30 A
       Lade-/Entladeleistung wird dynamisch aus der Batteriespannung berechnet (P = U × 30A).
     en: |
-      Modbus-RTU (RS485) connection with 9600 baud, 8 data bits, 1 stop bit, no parity.
+      Modbus-RTU (RS485) connection with configurable baud rate (9600, 19200, 38400 baud),
+      8 data bits, 1 stop bit, no parity.
       KACO NH3 must be in Grid-Feeding mode and support SunSpec Model 704 (Generic Inverter Controls).
       For battery control: add one battery meter each for two battery packs (BMS1 + BMS2), using battery number 1 and 2.
       Battery capacity: 30.72 kWh | Max. charge/discharge current: 30 A
