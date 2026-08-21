@@ -660,7 +660,7 @@ func (lp *Loadpoint) SetBatteryBoost(enable bool) error {
 		if enable {
 			if !lp.enabled {
 				lp.pvTimer = elapsed
-			} else if lp.activePhases() == lp.minActivePhases() {
+			} else if lp.hasPhaseSwitching() && lp.activePhases() == 1 {
 				lp.phaseTimer = elapsed
 			}
 			lp.requestUpdate()
