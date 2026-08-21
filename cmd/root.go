@@ -240,6 +240,17 @@ func runRoot(cmd *cobra.Command, args []string) {
 			log.INFO.Printf("OCPP forwarder:    %d rule(s) active", len(ocpp.ForwarderRules()))
 		}
 
+		// register the callback even with no rules so runtime additions are pushed
+		ocpp.SetReportUpdated(func() {
+			valueChan <- util.Param{Key: keys.OcppReport, Val: globalconfig.ConfigStatus{
+				Config: lo.Map(ocpp.ReportRules(), func(r ocpp.ReportRule, _ int) ocpp.ReportRule { return r.Redacted() }),
+				Status: ocpp.GetReportStatus(),
+			}}
+		})
+		if ocpp.ReportEnabled() {
+			log.INFO.Printf("OCPP report:       %d rule(s) active", len(ocpp.ReportRules()))
+		}
+
 		if _, eebusErr := eebus.Instance(); eebusErr != nil {
 			log.ERROR.Println("eebus:", eebusErr)
 		}
@@ -439,6 +450,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.OcppForwarder, Val: globalconfig.ConfigStatus{
 		Config: lo.Map(ocpp.ForwarderRules(), func(r ocpp.ForwarderRule, _ int) ocpp.ForwarderRule { return r.Redacted() }),
 		Status: ocpp.GetForwarderStatus(),
+	}}
+	valueChan <- util.Param{Key: keys.OcppReport, Val: globalconfig.ConfigStatus{
+		Config: lo.Map(ocpp.ReportRules(), func(r ocpp.ReportRule, _ int) ocpp.ReportRule { return r.Redacted() }),
+		Status: ocpp.GetReportStatus(),
 	}}
 	valueChan <- util.Param{Key: keys.Sponsor, Val: globalconfig.ConfigStatus{
 		Status:     sponsor.RedactedStatus(),
