@@ -3,25 +3,11 @@ package ocpp
 import (
 	"testing"
 
-	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/loadpoint"
 	occore "github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/mock/gomock"
 )
-
-func withLookup(t *testing.T, title string, lp loadpoint.API) {
-	t.Helper()
-	SetLoadpointLookup(func(s string) (loadpoint.API, bool) {
-		if s == title {
-			return lp, true
-		}
-		return nil, false
-	})
-	t.Cleanup(func() { SetLoadpointLookup(nil) })
-}
 
 func TestReportRuleSameConnection(t *testing.T) {
 	base := ReportRule{LoadpointTitle: "Carport", UpstreamURL: "wss://a", StationID: "s1", Username: "u", Password: "p"}
@@ -43,75 +29,25 @@ func TestReportRuleRedacted(t *testing.T) {
 	assert.NotEmpty(t, red.Password)
 }
 
-func TestOnRemoteStartTransaction(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	lp := loadpoint.NewMockAPI(ctrl)
+// The report client is a one-way reporter (evcc-io/evcc#32989): its upstream
+// is a billing/certification backend, not an access-control authority, so
+// remote start/stop is always honestly rejected regardless of connector,
+// transaction id, or whether a loadpoint is even configured for this rule.
+func TestOnRemoteStartTransactionAlwaysRejected(t *testing.T) {
+	handler := &reportHandler{conn: &reportConnection{title: "Carport"}}
 
-	conn := &reportConnection{title: "Carport"}
-	handler := &reportHandler{conn: conn}
-
-	t.Run("accepted, connector 1", func(t *testing.T) {
-		withLookup(t, "Carport", lp)
-		lp.EXPECT().SetMode(api.ModeNow)
-
-		res, err := handler.OnRemoteStartTransaction(&occore.RemoteStartTransactionRequest{IdTag: "tag1"})
-		require.NoError(t, err)
-		assert.Equal(t, types.RemoteStartStopStatusAccepted, res.Status)
-	})
-
-	t.Run("rejected, wrong connector", func(t *testing.T) {
-		withLookup(t, "Carport", lp)
-		two := 2
-
-		res, err := handler.OnRemoteStartTransaction(&occore.RemoteStartTransactionRequest{IdTag: "tag1", ConnectorId: &two})
-		require.NoError(t, err)
-		assert.Equal(t, types.RemoteStartStopStatusRejected, res.Status)
-	})
-
-	t.Run("rejected, no such loadpoint", func(t *testing.T) {
-		SetLoadpointLookup(func(string) (loadpoint.API, bool) { return nil, false })
-		t.Cleanup(func() { SetLoadpointLookup(nil) })
-
-		res, err := handler.OnRemoteStartTransaction(&occore.RemoteStartTransactionRequest{IdTag: "tag1"})
-		require.NoError(t, err)
-		assert.Equal(t, types.RemoteStartStopStatusRejected, res.Status)
-	})
+	res, err := handler.OnRemoteStartTransaction(&occore.RemoteStartTransactionRequest{IdTag: "tag1"})
+	require.NoError(t, err)
+	assert.Equal(t, types.RemoteStartStopStatusRejected, res.Status)
 }
 
-func TestOnRemoteStopTransaction(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	lp := loadpoint.NewMockAPI(ctrl)
-
+func TestOnRemoteStopTransactionAlwaysRejected(t *testing.T) {
 	txID := 42
-	conn := &reportConnection{title: "Carport", transactionId: &txID}
-	handler := &reportHandler{conn: conn}
+	handler := &reportHandler{conn: &reportConnection{title: "Carport", transactionId: &txID}}
 
-	t.Run("accepted, matching transaction", func(t *testing.T) {
-		withLookup(t, "Carport", lp)
-		lp.EXPECT().SetMode(api.ModeOff)
-
-		res, err := handler.OnRemoteStopTransaction(&occore.RemoteStopTransactionRequest{TransactionId: 42})
-		require.NoError(t, err)
-		assert.Equal(t, types.RemoteStartStopStatusAccepted, res.Status)
-	})
-
-	t.Run("rejected, mismatched transaction", func(t *testing.T) {
-		withLookup(t, "Carport", lp)
-
-		res, err := handler.OnRemoteStopTransaction(&occore.RemoteStopTransactionRequest{TransactionId: 999})
-		require.NoError(t, err)
-		assert.Equal(t, types.RemoteStartStopStatusRejected, res.Status)
-	})
-
-	t.Run("rejected, no active transaction", func(t *testing.T) {
-		withLookup(t, "Carport", lp)
-		empty := &reportConnection{title: "Carport"}
-		emptyHandler := &reportHandler{conn: empty}
-
-		res, err := emptyHandler.OnRemoteStopTransaction(&occore.RemoteStopTransactionRequest{TransactionId: 42})
-		require.NoError(t, err)
-		assert.Equal(t, types.RemoteStartStopStatusRejected, res.Status)
-	})
+	res, err := handler.OnRemoteStopTransaction(&occore.RemoteStopTransactionRequest{TransactionId: 42})
+	require.NoError(t, err)
+	assert.Equal(t, types.RemoteStartStopStatusRejected, res.Status)
 }
 
 func TestOnUnlockConnectorNotSupported(t *testing.T) {

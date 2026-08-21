@@ -784,7 +784,7 @@
       "usernameHelp": "For HTTP Basic Auth to the upstream server."
     },
     "ocppreport": {
-      "description": "Report this loadpoint's charging sessions to an external OCPP backend (billing, certification, etc.) and accept remote start/stop from it. evcc keeps controlling the charger itself, regardless of its native protocol.",
+      "description": "Report this loadpoint's charging sessions to an external OCPP backend (billing, certification, etc.). One-way: evcc keeps full control of the charger itself, regardless of its native protocol, and never accepts remote commands from the backend.",
       "editTitle": "OCPP Report",
       "idTag": "ID tag",
       "idTagHelp": "Identifier sent to the upstream server for Authorize/StartTransaction. Defaults to EVCC.",
