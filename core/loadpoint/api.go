@@ -174,9 +174,9 @@ type API interface {
 	// SetDisableDelay sets loadpoint disable delay
 	SetDisableDelay(delay time.Duration)
 
-	// GetBatteryBoost returns the battery boost
-	GetBatteryBoost() int
-	// SetBatteryBoost sets the battery boost
+	// GetBatteryBoost returns the battery boost enabled state
+	GetBatteryBoost() bool
+	// SetBatteryBoost sets the battery boost enabled state
 	SetBatteryBoost(enable bool) error
 	// GetBatteryBoostLimit returns the battery boost soc limit
 	GetBatteryBoostLimit() int

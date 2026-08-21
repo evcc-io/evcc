@@ -1320,7 +1320,7 @@ func (site *Site) updatePower(lp updater, state siteState, totalChargePower floa
 
 		// battery boost deliberately drains the battery, hence battery priority
 		// below prioritySoc does not apply to the boosting loadpoint (#30541)
-		if lp.GetBatteryBoost() != boostDisabled {
+		if lp.GetBatteryBoost() {
 			sitePower += res.priorityAdjustment
 		}
 

@@ -867,23 +867,26 @@ func TestWelcomeChargeAppliedOnlyOnce(t *testing.T) {
 	assert.False(t, welcomeCharge)
 }
 
-// TestBatteryBoostHold verifies that in the hold state (soc limit reached) battery
-// boost no longer draws power from the battery, while still counting as active so
+// TestBatteryBoostSocLow verifies that if battery soc is not above the boost limit
+// boost is inactive, while still counting as enabled so
 // the site keeps prioritising the vehicle over recharging the battery (#30558).
-func TestBatteryBoostHold(t *testing.T) {
-	lp := &Loadpoint{log: util.NewLogger("foo")}
+func TestBatteryBoostSocLow(t *testing.T) {
+	s := &mockSite{}
+	lp := &Loadpoint{
+		log:  util.NewLogger("foo"),
+		site: s,
+	}
 
-	// disabled draws nothing
-	lp.batteryBoost = boostDisabled
-	assert.Equal(t, 0.0, lp.boostPower(2000), "disabled")
+	lp.batteryBoost = true
+	lp.batteryBoostLimit = 50
+	s.batterySoc = 49
 
-	// hold draws nothing (stops draining the battery)...
-	lp.batteryBoost = boostHold
-	assert.Equal(t, 0.0, lp.boostPower(2000), "hold")
+	// boost is not active...
+	assert.False(t, lp.IsBatteryBoostActive(), "boost inactive")
 
-	// ...but is still an active boost state (GetBatteryBoost != boostDisabled),
+	// ...but is still enabled,
 	// which is what keeps the sitePower priority adjustment applied to the loadpoint
-	assert.NotEqual(t, boostDisabled, lp.GetBatteryBoost(), "hold is active")
+	assert.True(t, lp.GetBatteryBoost(), "boost enabled")
 }
 
 // default vehicle referencing a disabled vehicle must not fail loadpoint creation

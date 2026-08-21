@@ -60,12 +60,6 @@ const (
 
 	chargerSwitchDuration = 60 * time.Second // allow out of sync during this timespan
 	phaseSwitchDuration   = 60 * time.Second // allow out of sync and do not measure phases during this timespan
-
-	// battery boost states
-	boostDisabled = 0
-	boostStart    = 1
-	boostContinue = 2
-	boostHold     = 3 // soc limit reached: stop draining but keep vehicle priority over recharging
 )
 
 // elapsed is the time an expired timer will be set to
@@ -123,7 +117,7 @@ type Loadpoint struct {
 	minSoc                   int      // Forced charging below this soc (heating: temperature), 0=disabled
 	smartCostLimit           *float64 // always charge if consumption cost is below this value
 	smartFeedInPriorityLimit *float64 // prevent charging if feed-in cost is above this value
-	batteryBoost             int      // battery boost state
+	batteryBoost             bool     // battery boost enabled state
 	batteryBoostLimit        int      // battery boost soc limit (0-100, 100=disabled)
 
 	mode                api.ChargeMode
@@ -792,7 +786,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publish(keys.PlanActive, lp.planActive)
 
 	// battery boost
-	lp.publish(keys.BatteryBoost, lp.batteryBoost != boostDisabled)
+	lp.publish(keys.BatteryBoost, lp.batteryBoost)
 	lp.publish(keys.BatteryBoostLimit, lp.batteryBoostLimit)
 
 	// read initial charger state to prevent immediately disabling charger
@@ -1457,12 +1451,13 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 	var waiting bool
 	activePhases := lp.ActivePhases()
 	availablePower := lp.chargePower - sitePower
+	boostedAvailablePower := availablePower + lp.boostPhaseScaling()
 	scalable := activePhases > 1 && lp.phasesConfigured < 3
 
 	if scalable {
-		insufficient := (sitePower > 0 || !lp.enabled) && powerToCurrent(availablePower, activePhases) < minCurrent
+		insufficient := (sitePower > 0 || !lp.enabled) && powerToCurrent(boostedAvailablePower, activePhases) < minCurrent
 		if insufficient {
-			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
+			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", boostedAvailablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
 		}
 
 		// while charging, scaling down only helps if 1p is sustainable, otherwise it
@@ -1518,8 +1513,8 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 		maxCurrent >= minCurrent && lp.circuitAllowsPhases(maxPhases, minCurrent)
 
 	// scale up phases
-	if targetCurrent := powerToCurrent(availablePower, maxPhases); targetCurrent >= minCurrent && scalable {
-		lp.log.DEBUG.Printf("available power %.0fW > %.0fW min %dp threshold", availablePower, float64(maxPhases)*Voltage*minCurrent, maxPhases)
+	if targetCurrent := powerToCurrent(boostedAvailablePower, maxPhases); targetCurrent >= minCurrent && scalable {
+		lp.log.DEBUG.Printf("available power %.0fW > %.0fW min %dp threshold", boostedAvailablePower, float64(maxPhases)*Voltage*minCurrent, maxPhases)
 
 		if !lp.charging() { // scale immediately if not charging
 			lp.phaseTimer = elapsed
@@ -1577,56 +1572,118 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 
 // boostPower returns the additional power that the loadpoint should draw from the battery
 func (lp *Loadpoint) boostPower(batteryPower float64) float64 {
-	boost := lp.GetBatteryBoost()
-	if boost == boostDisabled || boost == boostHold {
+	if !lp.IsBatteryBoostActive() {
 		return 0
 	}
 
-	// push demand to drain battery (at least 100W)
-	delta := math.Max(100, math.Abs(lp.site.GetResidualPower()))
-
-	if lp.coarseCurrent() {
-		// add effective step power to delta to make sure to step up to the next full amp
-		// just using lp.EffectiveStepPower() as delta is not enough because this will result
-		// in a too low current when there is a bit remaining grid consumption due to the accuracy
-		// of the battery controller
-		delta += lp.EffectiveStepPower()
-	}
-
-	// bridge the power gap between 1p max and 3p min so pvScalePhases can trigger a scale-up
-	if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() && lp.site.GetBatteryMaxDischargePower() != nil {
-		if activePhases, maxPhases := lp.ActivePhases(), lp.MaxActivePhases(); activePhases < maxPhases &&
-			lp.circuitAllowsPhases(maxPhases, lp.effectiveMinCurrent()) {
-			// max power actually achievable on the active phases
-			activeMaxPower := min(lp.EffectiveMaxPower(), Voltage*lp.effectiveMaxCurrent()*float64(activePhases))
-			delta += max(0, lp.EffectiveMinPower()*float64(maxPhases)-activeMaxPower)
-		}
-	}
-
-	// start boosting by setting maximum power
-	if boost == boostStart {
-		delta = lp.EffectiveMaxPower()
-
-		// expire timers
-		if lp.hasPhaseSwitching() {
-			lp.phaseTimer = elapsed
-		}
-		lp.pvTimer = elapsed
-
-		if lp.charging() {
-			lp.setBatteryBoost(boostContinue)
-		}
-	}
+	var boostOffset float64
 
 	if maxDischargePower := lp.site.GetBatteryMaxDischargePower(); maxDischargePower != nil {
-		// limit delta to what the battery can still provide
-		delta = min(delta, max(0, *maxDischargePower-batteryPower))
+		// use max discharge power instead of the currently measured battery power
+		batteryPower = *maxDischargePower
+
+		// remove grid export bias
+		boostOffset = max(0, lp.site.GetResidualPower())
+
+		if lp.coarseCurrent() {
+			// prevent charging of empty or low power batteries
+			boostOffset += max(0, lp.EffectiveStepPower()-batteryPower)
+		}
+	} else {
+		// remove grid export bias and enforce at least 100W grid import bias
+		boostOffset = max(0, lp.site.GetResidualPower()+100)
+
+		if lp.coarseCurrent() {
+			// the current battery discharge power has to be the min (not the max) available power
+			boostOffset += lp.EffectiveStepPower()
+		}
 	}
 
-	res := max(0, batteryPower) + delta + lp.site.GetResidualPower()
-	lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = -%.0fW battery - %.0fW boost - %.0fW residual", -res, max(0, batteryPower), delta, lp.site.GetResidualPower())
+	// treat battery discharge power as additional available power
+	batteryDischargePower := max(0, batteryPower)
 
-	return res
+	boostPower := batteryDischargePower + boostOffset
+	lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = %.0fW battery - %.0fW boost", -boostPower, -batteryDischargePower, boostOffset)
+
+	return boostPower
+}
+
+// boostPhaseScaling returns the required offset power to trigger phase scaling
+// at a sufficiently low available power level, ensuring battery boost works correctly
+func (lp *Loadpoint) boostPhaseScaling() float64 {
+	if !lp.IsBatteryBoostActive() {
+		return 0
+	}
+
+	minActivePhases := lp.MinActivePhases()
+	maxPowerMinP := currentToPower(lp.effectiveMaxCurrent(), minActivePhases)
+	minPowerMaxP := currentToPower(lp.effectiveMinCurrent(), lp.MaxActivePhases())
+	powerGap := max(0, minPowerMaxP-maxPowerMinP)
+
+	if maxDischargePower := lp.site.GetBatteryMaxDischargePower(); maxDischargePower != nil {
+		_maxDischargePower := *maxDischargePower
+		if lp.coarseCurrent() {
+			// use the same lower bound as in boostPower() at 1p
+			_maxDischargePower = max(_maxDischargePower, currentToPower(1, minActivePhases))
+		}
+
+		// avoid grid import as much as possible without allowing the battery to charge
+		powerGap = max(0, powerGap-_maxDischargePower)
+	}
+
+	if powerGap > 0 {
+		lp.log.DEBUG.Printf("pv charge battery boost phase scaling: %.0fW", powerGap)
+	}
+
+	return powerGap
+}
+
+// battery boost active:   boostThresholds returns modified pv enable/disable thresholds to avoid battery charging and minimize grid import
+// battery boost inactive: boostThresholds returns the unmodified pv enable/disable thresholds
+func (lp *Loadpoint) boostThresholds(batteryPower float64) (float64, float64) {
+	disableThreshold := lp.GetDisableThreshold()
+	enableThreshold := lp.GetEnableThreshold()
+	if enableThreshold == 0 {
+		enableThreshold = -currentToPower(lp.effectiveMinCurrent(), lp.ActivePhases())
+	}
+
+	if !lp.IsBatteryBoostActive() {
+		return enableThreshold, disableThreshold
+	}
+
+	// note: Battery boost maintains at least the effective switching hysteresis given by this delta and
+	//       shifts both thresholds by disableThreshold towards more grid import power.
+	//       Comments below assume delta = lp min charge power and disableThreshold = 0
+	delta := disableThreshold - enableThreshold
+
+	if maxDischargePower := lp.site.GetBatteryMaxDischargePower(); maxDischargePower != nil {
+		// note: Effective thresholds are shifted if residual power is negative.
+		// Use max discharge power instead of the currently measured battery power
+		batteryPower = *maxDischargePower
+		if lp.coarseCurrent() {
+			// use the same lower bound as in boostPower()
+			batteryPower = max(batteryPower, lp.EffectiveStepPower())
+		}
+
+		// enable if the battery is not discharging or if the battery discharge power headroom is at least lp min charge power
+		enableThreshold = disableThreshold - min(batteryPower, delta)
+		// maintain the original hysteresis
+		disableThreshold = enableThreshold + delta
+	} else {
+		// note: Effective thresholds are shifted if residual power is below -100W
+		if lp.coarseCurrent() {
+			// compensate for the addition of effective step power in boostPower()
+			disableThreshold -= lp.EffectiveStepPower()
+		}
+
+		// enable if the current battery discharge power is not above 100W
+		enableThreshold = disableThreshold - batteryPower
+		// disable if the current grid import power is at least the original disable threshold + lp min charge power + 100W
+		disableThreshold += delta
+	}
+
+	lp.log.DEBUG.Printf("pv charge battery boost thresholds: %.0fW enable, %.0fW disable", enableThreshold, disableThreshold)
+	return enableThreshold, disableThreshold
 }
 
 // pvMaxCurrent calculates the maximum target current for PV mode
@@ -1659,18 +1716,21 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryPower f
 	targetCurrent := max(effectiveCurrent+deltaCurrent, 0)
 
 	// in MinPV mode or under special conditions return at least minCurrent
-	if battery := batteryStart || batteryBuffered && lp.charging() || lp.GetBatteryBoost() == boostContinue; (mode == api.ModeMinPV || battery) && targetCurrent < minCurrent {
+	if battery := batteryStart || batteryBuffered && lp.charging(); (mode == api.ModeMinPV || battery) && targetCurrent < minCurrent {
 		lp.log.DEBUG.Printf("pv charge current: min %.3gA > %.3gA (%.0fW @ %dp, battery: %t)", minCurrent, targetCurrent, sitePower, activePhases, battery)
 		return minCurrent
 	}
 
 	lp.log.DEBUG.Printf("pv charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, activePhases)
 
+	enableThreshold, disableThreshold := lp.boostThresholds(batteryPower)
+
 	if mode == api.ModePV && lp.enabled && targetCurrent < minCurrent {
 		projectedSitePower := sitePower
-		if lp.hasPhaseSwitching() && !lp.phaseTimer.IsZero() {
+		if lp.hasPhaseSwitching() && lp.phasesConfigured < 3 {
 			// calculate site power after a phase switch from activePhases phases -> 1 phase
-			// notes: activePhases can be 1, 2 or 3 and phaseTimer can only be active if lp current is already at minCurrent
+			// notes: apply if a phase switch down is possible, not only when the phase timer is running.
+			//        This stops the pv timer from running erroneously due to the phase scaling boost.
 			projectedSitePower -= Voltage * minCurrent * float64(activePhases-1)
 		}
 		// a continuous device consuming less than its min power demand keeps the
@@ -1682,8 +1742,8 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryPower f
 		// kick off disable sequence, unless climater keep-alive is holding
 		// charging at minCurrent — otherwise the "pausing soon" badge would
 		// flash on/off forever while climater is active (issue #29834).
-		if projectedSitePower >= lp.Disable.Threshold && !lp.vehicleClimateActive() {
-			lp.log.DEBUG.Printf("projected site power %.0fW >= %.0fW disable threshold", projectedSitePower, lp.Disable.Threshold)
+		if projectedSitePower >= disableThreshold && !lp.vehicleClimateActive() {
+			lp.log.DEBUG.Printf("projected site power %.0fW >= %.0fW disable threshold", projectedSitePower, disableThreshold)
 
 			if lp.pvTimer.IsZero() {
 				lp.log.DEBUG.Printf("pv disable timer start: %v", lp.GetDisableDelay())
@@ -1717,9 +1777,8 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryPower f
 
 	if mode == api.ModePV && !lp.enabled {
 		// kick off enable sequence
-		if (lp.Enable.Threshold == 0 && targetCurrent >= minCurrent) ||
-			(lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold) {
-			lp.log.DEBUG.Printf("site power %.0fW <= %.0fW enable threshold", sitePower, lp.Enable.Threshold)
+		if sitePower <= enableThreshold {
+			lp.log.DEBUG.Printf("site power %.0fW <= %.0fW enable threshold", sitePower, enableThreshold)
 
 			if lp.pvTimer.IsZero() {
 				lp.log.DEBUG.Printf("pv enable timer start: %v", lp.GetEnableDelay())
@@ -2127,20 +2186,6 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64, dim *bool) {
-	// hold battery boost when SOC drops below the limit: stop draining the battery, but
-	// keep the vehicle prioritised over recharging it (via sitePower priorityAdjustment)
-	// until the vehicle disconnects or the limit is relaxed (see SetBatteryBoostLimit).
-	// This holds the battery at the configured level instead of the naive on/off which
-	// lets the battery recharge and oscillate (#30558).
-	if boost := lp.GetBatteryBoost(); boost != boostDisabled && boost != boostHold {
-		if limit := lp.GetBatteryBoostLimit(); limit < 100 {
-			if batterySoc := lp.site.GetBatterySoc(); batterySoc < float64(limit) {
-				lp.log.DEBUG.Printf("battery boost hold: soc below limit (%.0f%% < %d%%)", batterySoc, limit)
-				lp.setBatteryBoost(boostHold)
-			}
-		}
-	}
-
 	// smart cost
 	smartCostActive, smartCostNextStart := lp.checkSmartLimit(lp.GetSmartCostLimit(), consumption, true)
 	lp.publish(keys.SmartCostActive, smartCostActive)

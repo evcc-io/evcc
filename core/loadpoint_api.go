@@ -172,7 +172,7 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 	if lp.mode != mode {
 		lp.setMode(mode)
 
-		lp.batteryBoost = boostDisabled
+		lp.batteryBoost = false
 		lp.publish(keys.BatteryBoost, false)
 
 		// reset timers
@@ -635,21 +635,14 @@ func (lp *Loadpoint) SetDisableDelay(delay time.Duration) {
 	}
 }
 
-// GetBatteryBoost returns the battery boost
-func (lp *Loadpoint) GetBatteryBoost() int {
+// GetBatteryBoost returns the battery boost enabled state
+func (lp *Loadpoint) GetBatteryBoost() bool {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.batteryBoost
 }
 
-// setBatteryBoost returns the battery boost
-func (lp *Loadpoint) setBatteryBoost(boost int) {
-	lp.Lock()
-	defer lp.Unlock()
-	lp.batteryBoost = boost
-}
-
-// SetBatteryBoost sets the battery boost
+// SetBatteryBoost sets the battery boost enabled state
 func (lp *Loadpoint) SetBatteryBoost(enable bool) error {
 	lp.Lock()
 	defer lp.Unlock()
@@ -660,12 +653,16 @@ func (lp *Loadpoint) SetBatteryBoost(enable bool) error {
 
 	lp.log.DEBUG.Println("set battery boost:", enable)
 
-	if enable != (lp.batteryBoost != boostDisabled) {
+	if lp.batteryBoost != enable {
+		lp.batteryBoost = enable
 		lp.publish(keys.BatteryBoost, enable)
 
-		lp.batteryBoost = boostDisabled
 		if enable {
-			lp.batteryBoost = boostStart
+			if !lp.enabled {
+				lp.pvTimer = elapsed
+			} else if lp.activePhases() == lp.minActivePhases() {
+				lp.phaseTimer = elapsed
+			}
 			lp.requestUpdate()
 		}
 	}
@@ -680,8 +677,7 @@ func (lp *Loadpoint) GetBatteryBoostLimit() int {
 	return lp.batteryBoostLimit
 }
 
-// SetBatteryBoostLimit sets the battery boost soc limit. Relaxing the limit
-// resumes a boost held by it, 100 disables the feature and ends an active boost.
+// SetBatteryBoostLimit sets the battery boost soc limit
 func (lp *Loadpoint) SetBatteryBoostLimit(limit int) {
 	lp.Lock()
 	defer lp.Unlock()
@@ -689,24 +685,9 @@ func (lp *Loadpoint) SetBatteryBoostLimit(limit int) {
 	lp.log.DEBUG.Println("set battery boost limit:", limit)
 
 	if lp.batteryBoostLimit != limit {
-		relaxed := limit < lp.batteryBoostLimit && lp.batteryBoostLimit < 100
-
 		lp.batteryBoostLimit = limit
 		lp.settings.SetInt(keys.BatteryBoostLimit, int64(limit))
 		lp.publish(keys.BatteryBoostLimit, limit)
-
-		// lock is held, hence assign instead of setBatteryBoost
-		switch {
-		case limit == 100 && lp.batteryBoost != boostDisabled:
-			lp.log.DEBUG.Println("battery boost disable: limit removed")
-			lp.batteryBoost = boostDisabled
-			lp.publish(keys.BatteryBoost, false)
-		case relaxed && lp.batteryBoost == boostHold:
-			lp.log.DEBUG.Println("battery boost resume: limit relaxed")
-			lp.batteryBoost = boostStart
-		}
-
-		lp.requestUpdate()
 	}
 }
 
@@ -832,6 +813,16 @@ func (lp *Loadpoint) IsFastChargingActive() bool {
 	defer lp.RUnlock()
 
 	return lp.mode == api.ModeNow || lp.planActive || lp.minSocNotReached()
+}
+
+// IsBatteryBoostActive returns true if battery boost is enabled and battery soc is sufficiently high
+func (lp *Loadpoint) IsBatteryBoostActive() bool {
+	if !lp.GetBatteryBoost() {
+		return false
+	}
+
+	limit := lp.GetBatteryBoostLimit()
+	return limit <= 0 || lp.site.GetBatterySoc() > float64(limit)
 }
 
 // GetRemainingDuration is the estimated remaining charging duration
