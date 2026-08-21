@@ -42,8 +42,6 @@ type WarpWS struct {
 
 	mu sync.RWMutex
 
-	// capabilities
-	features []string
 
 	// evse
 	evse       warp.Evse
@@ -270,21 +268,28 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 			}
 		}
 	case "info/features":
-		err = json.Unmarshal(payload, &w.features)
+		var features []string
+		if err = json.Unmarshal(payload, &features); err != nil {
+			return err
+		}
+
+		var hasFeature = func(feature string) bool {
+			return slices.Contains(features, feature)
+		}
 
 		// Feature: ISO 15118 (WARP4): vehicle soc and mac exposed via ev/state
-		hasIso15118 := w.hasFeature(warp.FeatureIso15118)
+		hasIso15118 := hasFeature(warp.FeatureIso15118)
 		if hasIso15118 {
 			implement.Has(w, implement.Battery(w.soc))
 			implement.Has(w, implement.BatteryCapacity(w.capacity))
 		}
 
 		// Feature: NFC
-		if w.hasFeature(warp.FeatureNfc) || hasIso15118 {
+		if hasFeature(warp.FeatureNfc) || hasIso15118 {
 			implement.Has(w, implement.Identifier(w.identify))
 		}
 
-		if w.hasFeature(warp.FeaturePhaseSwitch) {
+		if hasFeature(warp.FeaturePhaseSwitch) {
 			implement.Has(w, implement.PhaseSwitcher(w.phases1p3p))
 			implement.Has(w, implement.PhaseGetter(w.getPhases))
 		}
@@ -345,10 +350,6 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 		err = json.Unmarshal(payload, &w.pmLowLevelState)
 	}
 	return err
-}
-
-func (w *WarpWS) hasFeature(feature string) bool {
-	return slices.Contains(w.features, feature)
 }
 
 func (w *WarpWS) Enable(enable bool) error {
