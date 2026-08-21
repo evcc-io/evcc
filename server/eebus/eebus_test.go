@@ -88,13 +88,51 @@ func TestPairingDeniedOnlyWhenConfigured(t *testing.T) {
 	c := &EEBus{
 		log:     util.NewLogger("test"),
 		clients: make(map[string][]Device),
+		pending: make(map[string]shipapi.ServiceIdentity),
 		service: service,
 	}
 
 	// still configuring - no CancelPairing expected
 	c.ServicePairingDetailUpdate(identity, detail)
+	require.Len(t, c.pending, 1)
 
 	service.EXPECT().CancelPairing(identity).Once()
 	c.configured = true
 	c.ServicePairingDetailUpdate(identity, detail)
+}
+
+// TestConfigCompleteResolvesPending guards that a request left pending during
+// configuration is denied afterwards unless its ski belongs to a configured device-
+// ship-go keeps prolonging the pending handshake until somebody decides.
+func TestConfigCompleteResolvesPending(t *testing.T) {
+	identity := shipapi.NewServiceIdentity("aabbcc", "", "")
+
+	newInstance := func(t *testing.T, clients map[string][]Device) *eebusmocks.ServiceInterface {
+		service := eebusmocks.NewServiceInterface(t)
+		instance = &EEBus{
+			log:     util.NewLogger("test"),
+			clients: clients,
+			pending: map[string]shipapi.ServiceIdentity{identity.SKI: identity},
+			service: service,
+		}
+		t.Cleanup(func() { instance = nil })
+		return service
+	}
+
+	t.Run("unknown ski denied", func(t *testing.T) {
+		service := newInstance(t, make(map[string][]Device))
+		service.EXPECT().CancelPairing(identity).Once()
+
+		ConfigComplete()
+		require.True(t, instance.configured)
+		require.Empty(t, instance.pending)
+	})
+
+	t.Run("configured ski kept", func(t *testing.T) {
+		// no CancelPairing expected- the device registered its ski meanwhile
+		newInstance(t, map[string][]Device{identity.SKI: {&mockDevice{}}})
+
+		ConfigComplete()
+		require.True(t, instance.configured)
+	})
 }
