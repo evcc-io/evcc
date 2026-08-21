@@ -59,6 +59,7 @@ func globalsJsHandler(custom Customization) http.HandlerFunc {
 		Website    string `json:"customWebsite"`
 		Email      string `json:"customEmail"`
 		Phone      string `json:"customPhone"`
+		Theme      string `json:"customTheme"`
 	}{
 		Version:    util.Version,
 		CustomCss:  custom.Css != "",
@@ -67,6 +68,7 @@ func globalsJsHandler(custom Customization) http.HandlerFunc {
 		Website:    custom.Website,
 		Email:      custom.Email,
 		Phone:      custom.Phone,
+		Theme:      custom.Theme,
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
