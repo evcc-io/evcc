@@ -1,11 +1,11 @@
 package charger
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"math"
 	"net/http"
 	"net/url"
@@ -33,19 +33,26 @@ const (
 
 type WarpWS struct {
 	*warp.Connection
-	implement.Caps
 	pm *warp.Connection // separate Energy Manager
+
+	implement.Caps
 
 	// config
 	log        *util.Logger
 	meterIndex uint
 
+	maxCurrent int64 // input from evcc
+
 	mu sync.RWMutex
 
+	// Any data below is protected by mu
+	// and should only be trusted if all connErrs are nil.
+	// use readWSData (handles both the mutex and the connection errors) to read any data below
+
+	connErrs []error
 
 	// evse
-	evse       warp.Evse
-	maxCurrent int64 // input from evcc
+	evse warp.Evse
 
 	// meter
 	// warp.MvidValues() is the list of meter value IDs that are of interest for EVCC.
@@ -60,8 +67,8 @@ type WarpWS struct {
 	evState *warp.EvState
 
 	// power manager
-	pmState          *warp.PmState
-	pmLowLevelState  *warp.PmLowLevelState
+	pmState         *warp.PmState
+	pmLowLevelState *warp.PmLowLevelState
 }
 
 func init() {
@@ -96,6 +103,13 @@ func NewWarpWSFromConfig(ctx context.Context, other map[string]any) (api.Charger
 func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass string, meterIndex uint) (*WarpWS, error) {
 	log := util.NewLogger("warp-ws")
 
+	// We never use ErrMustRetry anywhere else.
+	// This is the marker value for "we've not yet attempted to connect"
+	connErrs := []error{api.ErrMustRetry, nil}
+	if emURI != "" {
+		connErrs[1] = api.ErrMustRetry
+	}
+
 	w := &WarpWS{
 		Connection: warp.NewConnection(log, uri, user, pass),
 		Caps:       implement.New(),
@@ -103,6 +117,7 @@ func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass strin
 		meterIndex: meterIndex,
 		indices:    make(map[warp.Mvid]int, len(warp.MvidValues())),
 		values:     make(map[warp.Mvid]float64, len(warp.MvidValues())),
+		connErrs:   connErrs,
 	}
 
 	if emURI != "" {
@@ -128,6 +143,13 @@ func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass strin
 	return w, nil
 }
 
+func (w *WarpWS) setConnectionError(err error, role wsRole) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
+	w.connErrs[role] = err
+}
+
 func (w *WarpWS) run(ctx context.Context, role wsRole, client *http.Client, wsURI string) {
 	bo := backoff.NewExponentialBackOff(
 		backoff.WithMaxElapsedTime(0),
@@ -139,9 +161,14 @@ func (w *WarpWS) run(ctx context.Context, role wsRole, client *http.Client, wsUR
 
 		conn, _, err := websocket.Dial(ctx, wsURI, &websocket.DialOptions{HTTPClient: client})
 		if err != nil {
-			if !errors.Is(err, context.DeadlineExceeded) {
-				w.log.ERROR.Printf("websocket: %v", err)
+			if strings.Contains(err.Error(), "expected handshake response status code 101 but got 401") {
+				err = api.ErrMissingCredentials
+			} else if errors.Is(err, context.DeadlineExceeded) {
+				err = api.ErrTimeout
 			}
+
+			w.log.ERROR.Println(err)
+			w.setConnectionError(err, role)
 
 			select {
 			case <-ctx.Done():
@@ -155,6 +182,8 @@ func (w *WarpWS) run(ctx context.Context, role wsRole, client *http.Client, wsUR
 		bo.Reset()
 
 		if err := w.handleConnection(ctx, role, conn); err != nil {
+			w.setConnectionError(err, role)
+			// TODO: remove this print?
 			w.log.ERROR.Println(err)
 		}
 	}
@@ -192,16 +221,28 @@ func (w *WarpWS) handleConnection(ctx context.Context, role wsRole, conn *websoc
 			continue // next frame
 		}
 
-		dec := json.NewDecoder(r)
-		for {
+		// Split message into lines first:
+		// json.Decode eats whitespace, so we can't detect the end of the first dump.
+		scanner := bufio.NewScanner(r)
+		for scanner.Scan() {
+			if len(scanner.Bytes()) == 0 {
+				// An empty line signifies the end of the first dump of JSON messages.
+				// This dump contains every API exactly once,
+				// so now is the time to clear connection errors to indicate
+				// that the cached data is valid.
+				// Following websocket frames will not contain an empty line.
+				w.setConnectionError(nil, role)
+
+				// We could break here, because an empty line will always be the last line in a websocket frame,
+				// but continue is sufficient.
+				continue
+			}
+
 			var event struct {
 				Topic   string          `json:"topic"`
 				Payload json.RawMessage `json:"payload"`
 			}
-			if err := dec.Decode(&event); err != nil {
-				if errors.Is(err, io.EOF) {
-					break //next frame
-				}
+			if err := json.Unmarshal(scanner.Bytes(), &event); err != nil {
 				return err
 			}
 
@@ -225,6 +266,10 @@ func (w *WarpWS) handleConnection(ctx context.Context, role wsRole, conn *websoc
 			if err := w.handleEvent(event.Topic, event.Payload); err != nil {
 				w.log.ERROR.Printf("bad payload for topic %s: %v", event.Topic, err)
 			}
+		}
+
+		if err := scanner.Err(); err != nil {
+			return err
 		}
 	}
 }
@@ -364,10 +409,42 @@ func (w *WarpWS) Enable(enable bool) error {
 	return w.setCurrent(curr)
 }
 
-func (w *WarpWS) Enabled() (bool, error) {
+func (w *WarpWS) readWSData[R any](fn func() (R, error)) (R, error) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
-	return w.evse.ExternalCurrent.Current > 0, nil
+
+	// If there is an ErrMustRetry, wait until there is not.
+	// TODO: Don't sleep here, use a condition variable or similar?
+	// Add another second to the deadline to allow some time for the first API dump to arrive.
+	deadline := time.Now().Add(max(w.Timeout, w.pm.Timeout)).Add(1 * time.Second)
+	for slices.ContainsFunc(w.connErrs, func(e error) bool { return errors.Is(e, api.ErrMustRetry) }) {
+		if time.Now().After(deadline) {
+			// Return the zero-value of type R if there is a connection error.
+			var result R
+			return result, api.ErrTimeout
+		}
+
+		w.mu.RUnlock()
+		time.Sleep(100 * time.Millisecond)
+		w.mu.RLock()
+	}
+
+	// Return any actual error.
+	if idx := slices.IndexFunc(w.connErrs, func(e error) bool {
+		return e != nil && !errors.Is(e, api.ErrMustRetry)
+	}); idx != -1 {
+		// Return the zero-value of type R if there is a connection error.
+		var result R
+		return result, w.connErrs[idx]
+	}
+
+	return fn()
+}
+
+func (w *WarpWS) Enabled() (bool, error) {
+	return w.readWSData(func() (bool, error) {
+		return w.evse.ExternalCurrent.Current > 0, nil
+	})
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -395,191 +472,189 @@ func (w *WarpWS) statusFromEvseStatus(state int) (api.ChargeStatus, error) {
 }
 
 func (w *WarpWS) Status() (api.ChargeStatus, error) {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
-	return w.statusFromEvseStatus(w.evse.State.Iec61851State)
+	return w.readWSData(func() (api.ChargeStatus, error) {
+		return w.statusFromEvseStatus(w.evse.State.Iec61851State)
+	})
 }
 
 func (w *WarpWS) StatusReason() (api.Reason, error) {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
-	if status, err := w.statusFromEvseStatus(w.evse.State.Iec61851State); err != nil {
-		return api.ReasonUnknown, err
-	} else if status == api.StatusB && w.evse.UserEnabled.Enabled && w.evse.UserCurrent.Current == 0 {
-		return api.ReasonWaitingForAuthorization, nil
+	return w.readWSData(func() (api.Reason, error) {
+		if status, err := w.statusFromEvseStatus(w.evse.State.Iec61851State); err != nil {
+			return api.ReasonUnknown, err
+		} else if status == api.StatusB && w.evse.UserEnabled.Enabled && w.evse.UserCurrent.Current == 0 {
+			return api.ReasonWaitingForAuthorization, nil
+		}
+		return api.ReasonUnknown, nil
+	})
+}
+
+func (w *WarpWS) readMeterValues(ids ...warp.Mvid) ([]float64, error) {
+	result, err := w.readWSData(func() ([]float64, error) {
+		result := make([]float64, len(ids))
+
+		for i, id := range ids {
+			if math.IsNaN(w.values[id]) {
+				return result, api.ErrNotAvailable
+			}
+			result[i] = w.values[id]
+		}
+
+		return result, nil
+	})
+
+	if err != nil {
+		// Return slice of correct size to allow callers to index into it.
+		return make([]float64, len(ids)), err
 	}
-	return api.ReasonUnknown, nil
+
+	return result, nil
 }
 
 func (w *WarpWS) currentPower() (float64, error) {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
-
-	if math.IsNaN(w.values[warp.MvidPower]) {
-		return 0, api.ErrNotAvailable
-	}
-
-	return w.values[warp.MvidPower], nil
+	result, err := w.readMeterValues(warp.MvidPower)
+	return result[0], err
 }
 
 func (w *WarpWS) totalEnergy() (float64, error) {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
-
-	if math.IsNaN(w.values[warp.MvidEnergy]) {
-		return 0, api.ErrNotAvailable
-	}
-
-	return w.values[warp.MvidEnergy], nil
+	result, err := w.readMeterValues(warp.MvidEnergy)
+	return result[0], err
 }
 
 func (w *WarpWS) currents() (float64, float64, float64, error) {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	result, err := w.readMeterValues(
+		warp.MvidCurrentL1,
+		warp.MvidCurrentL2,
+		warp.MvidCurrentL3)
 
-	if math.IsNaN(w.values[warp.MvidCurrentL1]) ||
-		math.IsNaN(w.values[warp.MvidCurrentL2]) ||
-		math.IsNaN(w.values[warp.MvidCurrentL3]) {
-		return 0, 0, 0, api.ErrNotAvailable
-	}
-
-	return w.values[warp.MvidCurrentL1], w.values[warp.MvidCurrentL2], w.values[warp.MvidCurrentL3], nil
+	return result[0], result[1], result[2], err
 }
 
 func (w *WarpWS) voltages() (float64, float64, float64, error) {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	result, err := w.readMeterValues(
+		warp.MvidVoltageL1,
+		warp.MvidVoltageL2,
+		warp.MvidVoltageL3)
 
-	if math.IsNaN(w.values[warp.MvidVoltageL1]) ||
-		math.IsNaN(w.values[warp.MvidVoltageL2]) ||
-		math.IsNaN(w.values[warp.MvidVoltageL3]) {
-		return 0, 0, 0, api.ErrNotAvailable
-	}
-
-	return w.values[warp.MvidVoltageL1], w.values[warp.MvidVoltageL2], w.values[warp.MvidVoltageL3], nil
+	return result[0], result[1], result[2], err
 }
 
 func (w *WarpWS) powers() (float64, float64, float64, error) {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	result, err := w.readMeterValues(
+		warp.MvidPowerL1,
+		warp.MvidPowerL2,
+		warp.MvidPowerL3)
 
-	if math.IsNaN(w.values[warp.MvidPowerL1]) ||
-		math.IsNaN(w.values[warp.MvidPowerL2]) ||
-		math.IsNaN(w.values[warp.MvidPowerL3]) {
-		return 0, 0, 0, api.ErrNotAvailable
-	}
-
-	return w.values[warp.MvidPowerL1], w.values[warp.MvidPowerL2], w.values[warp.MvidPowerL3], nil
+	return result[0], result[1], result[2], err
 }
 
 // identify reports the vehicle mac read via ISO 15118 before the RFID tag
 func (w *WarpWS) identify() ([]string, error) {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
-
-	var ids []string
-	if w.evState != nil && w.evState.Mac != "" {
-		ids = append(ids, w.evState.Mac)
-	}
-	if tag := w.chargeTracker.AuthorizationInfo.TagId; tag != "" {
-		ids = append(ids, tag)
-	}
-
-	return ids, nil
+	return w.readWSData(func() ([]string, error) {
+		var ids []string
+		if w.evState != nil && w.evState.Mac != "" {
+			ids = append(ids, w.evState.Mac)
+		}
+		if tag := w.chargeTracker.AuthorizationInfo.TagId; tag != "" {
+			ids = append(ids, tag)
+		}
+		return ids, nil
+	})
 }
 
 // soc implements the api.Battery interface
 func (w *WarpWS) soc() (float64, error) {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
-	if w.evState != nil && w.evState.Soc != nil {
-		return *w.evState.Soc, nil
-	}
-	return 0, api.ErrNotAvailable
+	return w.readWSData(func() (float64, error) {
+		if w.evState != nil && w.evState.Soc != nil {
+			return *w.evState.Soc, nil
+		}
+		return 0, api.ErrNotAvailable
+	})
 }
 
 // capacity implements the api.BatteryCapacity interface
 func (w *WarpWS) capacity() float64 {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
-	if w.evState != nil && w.evState.Capacity != nil {
-		return *w.evState.Capacity
-	}
-	return 0
+	// TODO: why does api.BatteryCapacity not support returning errors?
+	// Throwing it away for now, capacity will be 0 if any error occurs.
+	cap, _ := w.readWSData(func() (float64, error) {
+		if w.evState != nil && w.evState.Capacity != nil {
+			return *w.evState.Capacity, nil
+		}
+		return 0, api.ErrNotAvailable
+	})
+
+	return cap
 }
 
 func (w *WarpWS) chargedEnergy() (float64, error) {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	return w.readWSData(func() (float64, error) {
+		if w.chargeTracker.UserId == -1 {
+			// Currently not charging.
+			// TODO: is this an error or shall we return 0, nil here?
+			return 0, api.ErrNotAvailable
+		}
 
-	if w.chargeTracker.UserId == -1 {
-		// Currently not charging.
-		// TODO: is this an error or shall we return 0, nil here?
-		return 0, api.ErrNotAvailable
-	}
+		var start = float64(w.chargeTracker.MeterStart)
+		var now = w.values[warp.MvidEnergy]
 
-	var start = float64(w.chargeTracker.MeterStart)
-	var now = w.values[warp.MvidEnergy]
-
-	if math.IsNaN(start) || math.IsNaN(now) {
-		return 0, api.ErrNotAvailable
-	}
-
-	return now - start, nil
+		if math.IsNaN(start) || math.IsNaN(now) {
+			return 0, api.ErrNotAvailable
+		}
+		return now - start, nil
+	})
 }
 
 // ChargeDuration implements the api.ChargeTimer interface
 func (w *WarpWS) ChargeDuration() (time.Duration, error) {
-	w.mu.RLock()
-	defer w.mu.RUnlock()
+	return w.readWSData(func() (time.Duration, error) {
+		// Time-keeping is hard.
+		// Older WARP firmwares supported only <= 32 bit datatypes on the API.
+		// Thus the start unix timestamp is an int32 in *minutes*.
+		// Also if the wall-clock time was unknown when the charge started, the timestamp is 0.
+		// (For example when the NTP sync failed)
+		//
+		// We can rely on the EVSE uptime instead, but this also is a 32 bit int in milliseconds.
+		// It will overflow after ~ 50 days.
+		// Also the EVSE clock does drift a bit.
+		//
+		// If the wall-clock time at charge start is unknown, we don't report anything.
+		// If the charge start (based on the wall-clock time) was more than two hours ago, report the wall-clock duration.
+		//   In that case it's probably fine that we jump up to 59 seconds.
+		// If it was less than two hours ago, use the EVSE's clock.
 
-	// Time-keeping is hard.
-	// Older WARP firmwares supported only <= 32 bit datatypes on the API.
-	// Thus the start unix timestamp is an int32 in *minutes*.
-	// Also if the wall-clock time was unknown when the charge started, the timestamp is 0.
-	// (For example when the NTP sync failed)
-	//
-	// We can rely on the EVSE uptime instead, but this also is a 32 bit int in milliseconds.
-	// It will overflow after ~ 50 days.
-	// Also the EVSE clock does drift a bit.
-	//
-	// If the wall-clock time at charge start is unknown, we don't report anything.
-	// If the charge start (based on the wall-clock time) was more than two hours ago, report the wall-clock duration.
-	//   In that case it's probably fine that we jump up to 59 seconds.
-	// If it was less than two hours ago, use the EVSE's clock.
+		if w.chargeTracker.UserId == -1 {
+			// Currently not charging.
+			// TODO: is this an error or shall we return 0, nil here?
+			return 0, api.ErrNotAvailable
+		}
 
-	if w.chargeTracker.UserId == -1 {
-		// Currently not charging.
-		// TODO: is this an error or shall we return 0, nil here?
-		return 0, api.ErrNotAvailable
-	}
+		if w.chargeTracker.TimestampMinutes == 0 {
+			return 0, api.ErrNotAvailable
+		}
+		var wallclock_duration = time.Since(time.Unix(int64(w.chargeTracker.TimestampMinutes)*60, 0))
 
-	if w.chargeTracker.TimestampMinutes == 0 {
-		return 0, api.ErrNotAvailable
-	}
-	var wallclock_duration = time.Now().Sub(time.Unix(int64(w.chargeTracker.TimestampMinutes)*60, 0))
+		if wallclock_duration.Hours() > 2 {
+			return wallclock_duration, nil
+		}
 
-	if wallclock_duration.Hours() > 2 {
-		return wallclock_duration, nil
-	}
+		var evse_duration_ms uint32
 
-	var evse_duration_ms uint32
-
-	if w.evse.LowLevelState.Uptime >= w.chargeTracker.EvseUptimeStart {
-		evse_duration_ms = w.evse.LowLevelState.Uptime - w.chargeTracker.EvseUptimeStart
-	} else {
-		evse_duration_ms = w.chargeTracker.EvseUptimeStart - w.evse.LowLevelState.Uptime
-	}
-	return time.Duration(int64(evse_duration_ms) * 1000 * 1000), nil
+		if w.evse.LowLevelState.Uptime >= w.chargeTracker.EvseUptimeStart {
+			evse_duration_ms = w.evse.LowLevelState.Uptime - w.chargeTracker.EvseUptimeStart
+		} else {
+			evse_duration_ms = w.chargeTracker.EvseUptimeStart - w.evse.LowLevelState.Uptime
+		}
+		return time.Duration(int64(evse_duration_ms) * 1000 * 1000), nil
+	})
 }
 
 // GetMinMaxCurrent implements the api.CurrentLimiter interface
 func (w *WarpWS) GetMinMaxCurrent() (float64, float64, error) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
+	maxC, err := w.readWSData(func() (float64, error) {
+		var maxCurrent = min(w.evse.Slots[0].MaxCurrent, w.evse.Slots[1].MaxCurrent)
+		return float64(maxCurrent) / 1000, nil
+	})
 
-	var maxCurrent = min(w.evse.Slots[0].MaxCurrent, w.evse.Slots[1].MaxCurrent)
-	return 6, float64(maxCurrent) / 1000, nil
+	return 6, maxC, err
 }
 
 func (w *WarpWS) setCurrent(curr int64) error {
@@ -605,16 +680,19 @@ func (w *WarpWS) postPhasesWanted(phases int) error {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (w *WarpWS) phases1p3p(phases int) error {
-	// ExternalControlDeactivated is the WEM/WARP3 idle state before any
-	// phases_wanted has been sent — the POST below activates external control.
-	// Only block on states the POST cannot resolve.
-	ec, err := w.ensurePmState()
+	ec, err := w.readWSData(func() (warp.ExternalControl, error) {
+		return w.pmState.ExternalControl, nil
+	})
 	if err != nil {
 		return err
 	}
-	if ec.ExternalControl == warp.ExternalControlRuntimeConditionsNotMet ||
-		ec.ExternalControl == warp.ExternalControlCurrentlySwitching {
-		return fmt.Errorf("external control %v: %w", ec.ExternalControl, api.ErrNotAvailable)
+
+	// ExternalControlDeactivated is the WEM/WARP3 idle state before any
+	// phases_wanted has been sent — the POST below activates external control.
+	// Only block on states the POST cannot resolve.
+	if ec == warp.ExternalControlRuntimeConditionsNotMet ||
+		ec == warp.ExternalControlCurrentlySwitching {
+		return fmt.Errorf("external control %v: %w", ec, api.ErrNotAvailable)
 	}
 
 	if err := w.postPhasesWanted(phases); err != nil {
@@ -625,50 +703,10 @@ func (w *WarpWS) phases1p3p(phases int) error {
 
 // getPhases implements the api.PhaseGetter interface
 func (w *WarpWS) getPhases() (int, error) {
-	s, err := w.ensurePmLowLevelState()
-	if err != nil {
-		return 0, err
-	}
-	if s.Is3phase {
-		return 3, nil
-	}
-	return 1, nil
-}
-
-func (w *WarpWS) ensurePmLowLevelState() (warp.PmLowLevelState, error) {
-	w.mu.RLock()
-	s := w.pmLowLevelState
-	w.mu.RUnlock()
-	if s != nil {
-		return *s, nil
-	}
-
-	var ns warp.PmLowLevelState
-	if err := w.pm.GetJSON(fmt.Sprintf("%s/power_manager/low_level_state", w.pm.URI), &ns); err != nil {
-		return warp.PmLowLevelState{}, err
-	}
-
-	w.mu.Lock()
-	w.pmLowLevelState = &ns
-	w.mu.Unlock()
-	return ns, nil
-}
-
-func (w *WarpWS) ensurePmState() (warp.PmState, error) {
-	w.mu.RLock()
-	s := w.pmState
-	w.mu.RUnlock()
-	if s != nil {
-		return *s, nil
-	}
-
-	var res warp.PmState
-	if err := w.pm.GetJSON(fmt.Sprintf("%s/power_manager/state", w.pm.URI), &res); err != nil {
-		return warp.PmState{}, err
-	}
-
-	w.mu.Lock()
-	w.pmState = &res
-	w.mu.Unlock()
-	return res, nil
+	return w.readWSData(func() (int, error) {
+		if w.pmLowLevelState.Is3phase {
+			return 3, nil
+		}
+		return 1, nil
+	})
 }
