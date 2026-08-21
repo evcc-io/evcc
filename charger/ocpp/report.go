@@ -1,15 +1,19 @@
 package ocpp
 
-// Bidirectional OCPP client, one connection per loadpoint. Unlike the forwarder
-// (which relays real OCPP frames between a charger that already speaks OCPP to
-// evcc and an upstream Central System), this dials OUT to an upstream Central
-// System and SYNTHESIZES OCPP messages from evcc's own charging session
-// lifecycle - so it works for any charger type (Modbus etc.), not just
-// OCPP-native ones. It also accepts upstream remote-control commands
-// (RemoteStartTransaction/RemoteStopTransaction) and translates them into
-// evcc's own loadpoint control.
+// One-way OCPP reporting client, one connection per loadpoint. Unlike the
+// forwarder (which relays real OCPP frames between a charger that already
+// speaks OCPP to evcc and an upstream Central System), this dials OUT to an
+// upstream Central System and SYNTHESIZES OCPP messages from evcc's own
+// charging session lifecycle - so it works for any charger type (Modbus
+// etc.), not just OCPP-native ones. It never accepts remote control from the
+// upstream: the upstream here is a billing/certification backend for a
+// charger evcc already fully controls itself, not an access-control
+// authority for it (unlike the forwarder's upstream, which can legitimately
+// be one) - RemoteStartTransaction/RemoteStopTransaction and UnlockConnector
+// are honestly rejected rather than translated into loadpoint control.
 //
-// Design: evcc-io/evcc#32989.
+// Design: evcc-io/evcc#32989 ("no need to support locking/unlocking the
+// charger, just logging the charge sessions would be sufficient").
 
 import (
 	"crypto/tls"
@@ -22,7 +26,6 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
@@ -36,7 +39,8 @@ import (
 var reportLog = util.NewLogger("ocpp-report")
 
 // ReportRule configures reporting a loadpoint's charging sessions to an
-// upstream OCPP 1.6J Central System, and accepting remote control from it.
+// upstream OCPP 1.6J Central System. One-way: evcc reports, it never accepts
+// remote control from the upstream (evcc-io/evcc#32989).
 type ReportRule struct {
 	LoadpointTitle string `json:"loadpointTitle" yaml:"loadpointTitle"`
 	UpstreamURL    string `json:"upstreamUrl" yaml:"upstreamUrl"`
@@ -84,8 +88,9 @@ var (
 )
 
 // SetLoadpointLookup registers the function used to resolve a loadpoint by
-// title, for both outbound reporting and inbound remote-control dispatch.
-// Called once at site startup.
+// title, so an upstream TriggerMessage(MeterValues) request can read current
+// state to answer it - the only inbound use, purely a read. Called once at
+// site startup.
 func SetLoadpointLookup(fn func(title string) (loadpoint.API, bool)) {
 	loadpointLookupMu.Lock()
 	loadpointLookupFn = fn
@@ -470,40 +475,19 @@ type reportHandler struct {
 var _ core.ChargePointHandler = (*reportHandler)(nil)
 var _ remotetrigger.ChargePointHandler = (*reportHandler)(nil)
 
+// OnRemoteStartTransaction / OnRemoteStopTransaction: the report client is a
+// one-way reporter (evcc-io/evcc#32989 - "no need to support locking/unlocking
+// the charger, just logging the charge sessions would be sufficient"). Its
+// upstream is a billing/certification backend for a charger evcc already
+// fully controls itself, not an access-control authority for it - unlike the
+// forwarder's upstream, which can legitimately be one. So these are honestly
+// rejected rather than translated into loadpoint control.
 func (h *reportHandler) OnRemoteStartTransaction(request *core.RemoteStartTransactionRequest) (*core.RemoteStartTransactionConfirmation, error) {
-	if request.ConnectorId != nil && *request.ConnectorId != 1 {
-		return core.NewRemoteStartTransactionConfirmation(types.RemoteStartStopStatusRejected), nil
-	}
-
-	lp, ok := lookupLoadpoint(h.conn.title)
-	if !ok {
-		return core.NewRemoteStartTransactionConfirmation(types.RemoteStartStopStatusRejected), nil
-	}
-
-	reportLog.DEBUG.Printf("%s: remote start requested", h.conn.title)
-	lp.SetMode(api.ModeNow)
-
-	return core.NewRemoteStartTransactionConfirmation(types.RemoteStartStopStatusAccepted), nil
+	return core.NewRemoteStartTransactionConfirmation(types.RemoteStartStopStatusRejected), nil
 }
 
 func (h *reportHandler) OnRemoteStopTransaction(request *core.RemoteStopTransactionRequest) (*core.RemoteStopTransactionConfirmation, error) {
-	h.conn.mu.Lock()
-	txID := h.conn.transactionId
-	h.conn.mu.Unlock()
-
-	if txID == nil || *txID != request.TransactionId {
-		return core.NewRemoteStopTransactionConfirmation(types.RemoteStartStopStatusRejected), nil
-	}
-
-	lp, ok := lookupLoadpoint(h.conn.title)
-	if !ok {
-		return core.NewRemoteStopTransactionConfirmation(types.RemoteStartStopStatusRejected), nil
-	}
-
-	reportLog.DEBUG.Printf("%s: remote stop requested", h.conn.title)
-	lp.SetMode(api.ModeOff)
-
-	return core.NewRemoteStopTransactionConfirmation(types.RemoteStartStopStatusAccepted), nil
+	return core.NewRemoteStopTransactionConfirmation(types.RemoteStartStopStatusRejected), nil
 }
 
 // OnUnlockConnector: evcc has no generic cross-charger unlock capability, so
