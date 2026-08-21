@@ -35,6 +35,18 @@
 			>
 				{{ sessionError }}
 			</div>
+			<div
+				v-if="conflictingForwarderHost"
+				class="alert alert-warning"
+				role="alert"
+				data-testid="ocppreport-forwarder-conflict"
+			>
+				{{
+					$t("config.ocppreport.forwarderConflictWarning", {
+						host: conflictingForwarderHost,
+					})
+				}}
+			</div>
 			<FormRow
 				id="ocppreportUpstreamUrl"
 				:label="$t('config.ocppreport.upstreamUrl')"
@@ -178,12 +190,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, type PropType } from "vue";
 import JsonModal from "./JsonModal.vue";
 import FormRow from "./FormRow.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
 import PropertyCertField from "./PropertyCertField.vue";
-import type { OcppReportRule, OcppReportSession } from "@/types/evcc";
+import type { ConfigCharger, ConfigLoadpoint, OcppReportRule, OcppReportSession } from "@/types/evcc";
 import { getModal, closeModal } from "@/configModal";
 import api from "@/api";
 import store from "@/store";
@@ -191,6 +203,10 @@ import store from "@/store";
 export default defineComponent({
 	name: "OcppReportModal",
 	components: { JsonModal, FormRow, PropertyCollapsible, PropertyCertField },
+	props: {
+		loadpoints: { type: Array as PropType<ConfigLoadpoint[]>, default: () => [] },
+		chargers: { type: Array as PropType<ConfigCharger[]>, default: () => [] },
+	},
 	emits: ["changed"],
 	data() {
 		return { removing: false };
@@ -226,6 +242,27 @@ export default defineComponent({
 					? "config.ocpp.status.connected"
 					: "config.ocpp.status.configured"
 			);
+		},
+		// host of an existing OCPP forwarder rule already attached to this
+		// loadpoint's own charger, if it's OCPP-native and forwarded - both
+		// features can run in parallel, but pointed at the same backend they'd
+		// report the same session twice (see evcc-io/evcc#32989 discussion)
+		conflictingForwarderHost(): string | undefined {
+			const lp = this.loadpoints.find((l) => l.title === this.targetLoadpointTitle);
+			const charger = lp && this.chargers.find((c) => c.name === lp.charger);
+			const stationId = charger?.config?.["stationid"] as string | undefined;
+			if (!stationId) return undefined;
+
+			const rule = (store.state?.ocppforwarder?.config || []).find(
+				(r) => r.stationId === stationId
+			);
+			if (!rule) return undefined;
+
+			try {
+				return new URL(rule.upstreamUrl).host;
+			} catch {
+				return rule.upstreamUrl;
+			}
 		},
 	},
 	methods: {
