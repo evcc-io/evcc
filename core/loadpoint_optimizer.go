@@ -1,6 +1,8 @@
 package core
 
 import (
+	"math"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/types"
 )
@@ -68,21 +70,56 @@ func (lp *Loadpoint) planDeadlineCritical() bool {
 	return required > 0
 }
 
-// optimizerCharging applies the optimizer's start/stop decision. Current and
-// phases remain the loadpoint's decision.
-func (lp *Loadpoint) optimizerCharging(s *types.Suggestion, mode api.ChargeMode, welcomeCharge bool) error {
+// optimizerSurplus reports that the optimizer matched the charge power to the
+// forecast surplus instead of feeding the loadpoint from the grid. Full power
+// is grid-fed by definition and never counts as surplus.
+func (lp *Loadpoint) optimizerSurplus(s *types.Suggestion) bool {
+	return s.Charge < lp.EffectiveMaxPower()-suggestionThreshold &&
+		math.Abs(s.Grid) <= suggestionThreshold
+}
+
+// optimizerCharging applies the optimizer's charging decision. It returns false
+// if the loadpoint is to follow pv surplus instead, leaving current and phases
+// to the regular pv control loop. Otherwise current and phases follow the
+// suggested power, only the level is the optimizer's decision.
+func (lp *Loadpoint) optimizerCharging(s *types.Suggestion, mode api.ChargeMode, welcomeCharge bool) (bool, error) {
+	if s.Action == actionCharge && lp.optimizerSurplus(s) {
+		// the forecast surplus only holds on average, so the pv loop tracks the
+		// measured one- its enable/disable and phase timers must keep running
+		if lp.pvTimer.Equal(elapsed) {
+			// elapsed by a previous grid-fed slot, would disable on the first dip
+			lp.resetPVTimer()
+		}
+
+		lp.log.DEBUG.Printf("optimizer: charge (%.0fW), following pv surplus", s.Charge)
+		return false, nil
+	}
+
 	lp.resetPhaseTimer()
 	lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
 	if s.Action == actionCharge {
-		lp.log.DEBUG.Printf("optimizer: charge (%.0fW)", s.Charge)
-		return lp.fastCharging()
+		// grid-fed charging at full power
+		if s.Charge >= lp.EffectiveMaxPower()-suggestionThreshold {
+			lp.log.DEBUG.Printf("optimizer: charge (%.0fW), full power", s.Charge)
+			return true, lp.fastCharging()
+		}
+
+		// a limited setpoint, e.g. a minimum demand or a grid import limit
+		if current := powerToCurrent(s.Charge, lp.ActivePhases()); current >= lp.effectiveMinCurrent() {
+			lp.log.DEBUG.Printf("optimizer: charge (%.0fW)", s.Charge)
+			return true, lp.setLimit(current)
+		}
+
+		// below what the active phases can deliver, minCharging scales down instead
+		lp.log.DEBUG.Printf("optimizer: charge (%.0fW), minimum power", s.Charge)
+		return true, lp.minCharging()
 	}
 
 	// minpv keeps its minimum power, the optimizer plans with it
 	if mode == api.ModeMinPV {
 		lp.log.DEBUG.Println("optimizer: stop, keeping minimum power")
-		return lp.minCharging()
+		return true, lp.minCharging()
 	}
 
 	// without welcome charge the vehicle never reports identity and soc, leaving
@@ -90,14 +127,14 @@ func (lp *Loadpoint) optimizerCharging(s *types.Suggestion, mode api.ChargeMode,
 	if welcomeCharge {
 		lp.log.DEBUG.Println("optimizer: stop, welcome charge")
 		lp.resetPVTimer()
-		return lp.setLimit(lp.effectiveMinCurrent())
+		return true, lp.setLimit(lp.effectiveMinCurrent())
 	}
 
 	if lp.vehicleClimateActive() {
 		lp.log.DEBUG.Println("optimizer: stop, climate active")
-		return lp.setLimit(lp.effectiveMinCurrent())
+		return true, lp.setLimit(lp.effectiveMinCurrent())
 	}
 
 	lp.log.DEBUG.Println("optimizer: stop")
-	return lp.setLimit(0)
+	return true, lp.setLimit(0)
 }
