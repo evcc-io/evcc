@@ -70,22 +70,17 @@ func (lp *Loadpoint) planDeadlineCritical() bool {
 	return required > 0
 }
 
-// optimizerSurplus reports that the optimizer matched the charge power to the
-// forecast surplus instead of feeding the loadpoint from the grid. Full power
-// is grid-fed by definition and never counts as surplus.
-func (lp *Loadpoint) optimizerSurplus(s *types.Suggestion) bool {
-	return s.Charge < lp.EffectiveMaxPower()-suggestionThreshold &&
-		math.Abs(s.Grid) <= suggestionThreshold
-}
-
 // optimizerCharging applies the optimizer's charging decision. It returns false
 // if the loadpoint is to follow pv surplus instead, leaving current and phases
 // to the regular pv control loop. Otherwise current and phases follow the
 // suggested power, only the level is the optimizer's decision.
 func (lp *Loadpoint) optimizerCharging(s *types.Suggestion, mode api.ChargeMode, welcomeCharge bool) (bool, error) {
-	if s.Action == actionCharge && lp.optimizerSurplus(s) {
-		// the forecast surplus only holds on average, so the pv loop tracks the
-		// measured one- its enable/disable and phase timers must keep running
+	// full power is grid-fed by definition and never counts as surplus
+	full := s.Charge >= lp.EffectiveMaxPower()-suggestionThreshold
+
+	if s.Action == actionCharge && !full && math.Abs(s.Grid) <= suggestionThreshold {
+		// the charge power matches the forecast surplus, which only holds on average-
+		// the pv loop tracks the measured one, so its timers must keep running
 		if lp.pvTimer.Equal(elapsed) {
 			// elapsed by a previous grid-fed slot, would disable on the first dip
 			lp.resetPVTimer()
@@ -99,8 +94,7 @@ func (lp *Loadpoint) optimizerCharging(s *types.Suggestion, mode api.ChargeMode,
 	lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
 	if s.Action == actionCharge {
-		// grid-fed charging at full power
-		if s.Charge >= lp.EffectiveMaxPower()-suggestionThreshold {
+		if full {
 			lp.log.DEBUG.Printf("optimizer: charge (%.0fW), full power", s.Charge)
 			return true, lp.fastCharging()
 		}
