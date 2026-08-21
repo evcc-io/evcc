@@ -6,23 +6,22 @@ products:
 group: heating
 capabilities: ["dim", "meter"]
 requirements:
+  evcc: ["skiptest"]
   description:
     de: |
-      Direkte Integration via NIBE myUplink API für SG Ready Steuerung.
-      Für Leistungsmessung kann optional ein Shelly EM mini Gen 4 verwendet werden.
+      Integration via NIBE myUplink API für SG Ready Steuerung.
       API-Anmeldedaten auf https://dev.myuplink.com/ erstellen.
     en: |
-      Direct integration via NIBE myUplink API for SG Ready control.
-      For power metering, a Shelly EM mini Gen 4 can optionally be used.
+      Integration via NIBE myUplink API for SG Ready control.
       Create API credentials on https://dev.myuplink.com/
 params:
   - name: deviceid
     required: true
     description:
-      en: NIBE device ID (from myUplink)
-      de: NIBE Geräte-ID (aus myUplink)
+      en: NIBE device ID
+      de: NIBE Geräte-ID
     help:
-      en: Can be found in myUplink app or via https://api.myuplink.com/v2/devices
+      en: Found in myUplink app or via https://api.myuplink.com/v2/devices
       de: Finden Sie in der myUplink-App oder über https://api.myuplink.com/v2/devices
   - name: clientid
     required: true
@@ -39,63 +38,76 @@ params:
     type: bool
     default: false
     description:
-      en: Use external Shelly EM Mini for power metering
-      de: Externes Shelly EM Mini für Leistungsmessung verwenden
+      en: Shelly EM power metering
+      de: Shelly EM Leistungsmessung
+    help:
+      en: Enable optional power metering via Shelly EM
+      de: Optionale Leistungsmessung via Shelly EM
   - name: shellyhost
     description:
-      en: Shelly EM Mini host or IP (required if useshelly is enabled)
-      de: Shelly EM Mini Host oder IP-Adresse (erforderlich wenn useshelly aktiviert ist)
+      en: Shelly EM host or IP
+      de: Shelly EM Host oder IP
+    help:
+      en: Required when Shelly EM metering is enabled
+      de: Erforderlich wenn Shelly EM aktiviert ist
 
 render: |
   type: sgready
-  
-  # Set SG Ready mode via myUplink API
   setmode:
-    source: http
-    uri: https://api.myuplink.com/v2/devices/{{ .deviceid }}/points
-    method: PATCH
-    auth:
-      type: oauth2
-      clientid: {{ .clientid }}
-      clientsecret: {{ .clientsecret }}
-      tokenurl: https://api.myuplink.com/oauth/token
-    body: |
-      {
-        "settings": [
-          {
-            "parameterId": "40067",
-            "value": {{ if eq .setmode 1 }}3{{ else if eq .setmode 2 }}1{{ else if eq .setmode 3 }}2{{ end }}
-          }
-        ]
-      }
-    timeout: 10s
-  
-  # Read current SG Ready mode
+    source: switch
+    switch:
+    - case: 1 # dim
+      set:
+        source: http
+        uri: https://api.myuplink.com/v2/devices/{{ .deviceid }}/points
+        method: PATCH
+        auth:
+          type: oauth2
+          clientid: {{ .clientid }}
+          clientsecret: {{ .clientsecret }}
+          tokenurl: https://api.myuplink.com/oauth/token
+        body: '{"settings":[{"parameterId":"40067","value":3}]}'
+        timeout: 10s
+    - case: 2 # normal
+      set:
+        source: http
+        uri: https://api.myuplink.com/v2/devices/{{ .deviceid }}/points
+        method: PATCH
+        auth:
+          type: oauth2
+          clientid: {{ .clientid }}
+          clientsecret: {{ .clientsecret }}
+          tokenurl: https://api.myuplink.com/oauth/token
+        body: '{"settings":[{"parameterId":"40067","value":1}]}'
+        timeout: 10s
+    - case: 3 # boost
+      set:
+        source: http
+        uri: https://api.myuplink.com/v2/devices/{{ .deviceid }}/points
+        method: PATCH
+        auth:
+          type: oauth2
+          clientid: {{ .clientid }}
+          clientsecret: {{ .clientsecret }}
+          tokenurl: https://api.myuplink.com/oauth/token
+        body: '{"settings":[{"parameterId":"40067","value":2}]}'
+        timeout: 10s
   getmode:
-    source: http
-    uri: https://api.myuplink.com/v2/devices/{{ .deviceid }}/points?parameterIds=40067
-    auth:
-      type: oauth2
-      clientid: {{ .clientid }}
-      clientsecret: {{ .clientsecret }}
-      tokenurl: https://api.myuplink.com/oauth/token
-    jq: |
-      if .data[0].value == 2 then 3
-      elif .data[0].value == 3 then 1
-      else 2
-      end
-    timeout: 10s
-  
-  {{- if .useshelly }}
-  # Power consumption from Shelly EM Mini (instantaneous, optional)
-  power:
-    source: http
-    uri: http://{{ .shellyhost }}/rpc/Switch.GetStatus?id=0
-    jq: .apower | floor
-    timeout: 5s
-  {{- end }}
-  
-  # Energy consumption from myUplink API (cumulative kWh)
+    source: map
+    values:
+      1: 2 # normal
+      2: 3 # boost
+      3: 1 # dim
+    get:
+      source: http
+      uri: https://api.myuplink.com/v2/devices/{{ .deviceid }}/points?parameterIds=40067
+      auth:
+        type: oauth2
+        clientid: {{ .clientid }}
+        clientsecret: {{ .clientsecret }}
+        tokenurl: https://api.myuplink.com/oauth/token
+      jq: .data[0].value | tonumber
+      timeout: 10s
   energy:
     source: http
     uri: https://api.myuplink.com/v2/devices/{{ .deviceid }}/points?parameterIds=40013
@@ -106,8 +118,6 @@ render: |
       tokenurl: https://api.myuplink.com/oauth/token
     jq: .data[0].value | tonumber
     timeout: 10s
-  
-  # Temperature from myUplink
   temp:
     source: http
     uri: https://api.myuplink.com/v2/devices/{{ .deviceid }}/points?parameterIds=40004
@@ -118,3 +128,10 @@ render: |
       tokenurl: https://api.myuplink.com/oauth/token
     jq: .data[0].value | tonumber
     timeout: 10s
+  {{- if .useshelly }}
+  power:
+    source: http
+    uri: http://{{ .shellyhost }}/rpc/EM.GetStatus?id=0
+    jq: .act_power | floor
+    timeout: 5s
+  {{- end }}
