@@ -59,6 +59,7 @@
 										v-if="loadpoint.title"
 										:loadpoint-title="loadpoint.title"
 										:rule="ocppReportRule(loadpoint.title)"
+										:connected="ocppReportConnected(loadpoint.title)"
 										:error="ocppReportError(loadpoint.title)"
 									/>
 								</div>
@@ -1703,6 +1704,11 @@ export default defineComponent({
 			return (store.state?.ocppreport?.status || []).find(
 				(s) => s.loadpointTitle === title
 			)?.error;
+		},
+		ocppReportConnected(title: string): boolean {
+			return !!(store.state?.ocppreport?.status || []).find(
+				(s) => s.loadpointTitle === title
+			)?.upstreamConnected;
 		},
 		hasDeviceError(type: DeviceType, name?: string) {
 			if (!name) return false;
