@@ -46,7 +46,6 @@ test.describe("grid meter", async () => {
     await page.getByTestId("add-grid").click();
 
     const meterModal = page.getByTestId("meter-modal");
-    await meterModal.getByRole("button", { name: "Add grid meter" }).click();
     await meterModal.getByLabel("Manufacturer").selectOption("OpenEMS REST-API");
     await meterModal.getByLabel("IP address or hostname").fill(simulatorHost());
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();

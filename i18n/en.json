@@ -189,7 +189,10 @@
       "title": "Currency"
     },
     "curtailer": {
-      "description": "Device that limits feed-in on request of the grid operator (§ 9 EEG). Configured separately from the grid meter.",
+      "description": "Device that limits feed-in on request of the grid operator (§ 9 EEG). Many solar inverters support this directly via their solar meter configuration. A separate configuration is only needed for some manufacturers or multi-inverter systems.",
+      "generic": "Generic integrations",
+      "specific": "Specific integrations",
+      "template": "Manufacturer",
       "title": "Curtailment",
       "titleAdd": "Add Curtailment Device",
       "titleEdit": "Edit Curtailment Device"
@@ -218,7 +221,7 @@
       "currentRange": "Current",
       "curtailLimit": "Feed-in limit",
       "curtailable": "Curtailable",
-      "curtailed": "Feed-in limited",
+      "curtailed": "Feed-in limit",
       "detected": "Detected",
       "dimLimit": "Consumption limit",
       "dimmed": "Consumption limited",
@@ -546,7 +549,7 @@
       "addAdditional": "Add additional meter",
       "addConsumer": "Add consumer",
       "addCurtailer": "Add curtailment device",
-      "addGrid": "Add grid meter or grid curtailment",
+      "addGrid": "Add grid meter",
       "addLoadpoint": "Add charging point or heater",
       "addPvBattery": "Add solar or battery",
       "addTariffs": "Add tariffs",
@@ -646,7 +649,6 @@
         "aux": "Add self-regulating consumer",
         "battery": "Add battery meter",
         "consumer": "Add regular consumer",
-        "curtailer": "Add grid curtailment",
         "grid": "Add grid meter",
         "pv": "Add solar meter"
       },

@@ -26,7 +26,6 @@ test.describe("required field validation", async () => {
     await page.goto("/#/config");
 
     await page.getByRole("button", { name: "Add grid meter" }).click();
-    await page.getByTestId("meter-modal").getByRole("button", { name: "Add grid meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
     await meterModal.getByLabel("Manufacturer").selectOption("Required Field Demo");

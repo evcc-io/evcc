@@ -38,7 +38,6 @@ test.describe("circuit", async () => {
 
     // add grid meter
     await page.getByRole("button", { name: "Add grid meter" }).click();
-    await page.getByTestId("meter-modal").getByRole("button", { name: "Add grid meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
     await meterModal.getByLabel("Manufacturer").selectOption("Demo meter");

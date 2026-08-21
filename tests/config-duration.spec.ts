@@ -29,7 +29,6 @@ test.describe("duration fields", async () => {
     await start(undefined, undefined, templateFlags);
     await page.goto("/#/config");
     await page.getByRole("button", { name: "Add grid meter" }).click();
-    await page.getByTestId("meter-modal").getByRole("button", { name: "Add grid meter" }).click();
     const modal = page.getByTestId("meter-modal");
     await expectModalVisible(modal);
     await modal.getByLabel("Manufacturer").selectOption("Duration Demo Meter");

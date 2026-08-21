@@ -20,7 +20,6 @@ test.describe("deep linking", async () => {
     await page.getByTestId("add-grid").click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
-    await meterModal.getByRole("button", { name: "Add grid meter" }).click();
     const urlWithModal = page.url();
     expect(urlWithModal).toContain("meter[type:grid]");
 

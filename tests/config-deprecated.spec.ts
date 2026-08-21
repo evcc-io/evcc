@@ -21,7 +21,6 @@ test.describe("deprecated template", async () => {
     await page.goto("/#/config");
 
     await page.getByRole("button", { name: "Add grid meter" }).click();
-    await page.getByTestId("meter-modal").getByRole("button", { name: "Add grid meter" }).click();
     const meterModal = page.getByTestId("meter-modal");
     await expectModalVisible(meterModal);
     await meterModal.getByLabel("Manufacturer").selectOption("Old Meter");
@@ -52,7 +51,6 @@ test.describe("deprecated template", async () => {
     await expect(page.getByTestId("grid")).not.toBeVisible();
 
     await page.getByRole("button", { name: "Add grid meter" }).click();
-    await page.getByTestId("meter-modal").getByRole("button", { name: "Add grid meter" }).click();
     await expectModalVisible(meterModal);
     const manufacturerSelect = meterModal.getByLabel("Manufacturer");
     const options = await manufacturerSelect.locator("option").allTextContents();

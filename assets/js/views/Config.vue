@@ -127,6 +127,12 @@
 						@edit="(type, id) => openModal('meter', { type, id })"
 						@enable="handleDisable('meter', gridMeter.id, false)"
 					/>
+					<NewDeviceButton
+						v-if="!gridMeter"
+						:title="$t('config.main.addGrid')"
+						data-testid="add-grid"
+						@click="openModal('meter', { type: 'grid' })"
+					/>
 					<DeviceCard
 						v-for="curtailer in curtailerDevices"
 						:id="`curtailer_${curtailer.name}`"
@@ -147,9 +153,10 @@
 						</template>
 					</DeviceCard>
 					<NewDeviceButton
-						:title="$t(gridMeter ? 'config.main.addCurtailer' : 'config.main.addGrid')"
-						data-testid="add-grid"
-						@click="addGridDevice"
+						v-if="pvMeters.length > 0"
+						:title="$t('config.main.addCurtailer')"
+						data-testid="add-curtailer"
+						@click="openModal('curtailer')"
 					/>
 				</div>
 				<h2 class="my-4 mt-5">{{ $t("config.section.meter") }}</h2>
@@ -1306,14 +1313,6 @@ export default defineComponent({
 			this.loadMessengers();
 			this.loadDirty();
 		},
-		addGridDevice() {
-			// only one grid meter is possible, offer the choice while none exists
-			if (this.gridMeter) {
-				openModal("curtailer");
-			} else {
-				openModal("meter", { choices: ["grid", "curtailer"] });
-			}
-		},
 		curtailerTitle(curtailer: ConfigCurtailer): string {
 			return (
 				curtailer.deviceTitle ||
@@ -1394,8 +1393,9 @@ export default defineComponent({
 			return this.deviceValues[type][id] || {};
 		},
 		curtailmentBanner(type: DeviceType, name: string): string | undefined {
-			// the tag is only present while curtailing, a zero percent limit is still one
-			return this.deviceTags(type, name)["curtailed"]?.value !== undefined
+			// devices report the allowed feed-in percent, 100 = uncurtailed
+			const value = this.deviceTags(type, name)["curtailed"]?.value;
+			return typeof value === "number" && value < 100
 				? this.$t("config.deviceValue.productionLimited")
 				: undefined;
 		},

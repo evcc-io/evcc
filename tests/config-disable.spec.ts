@@ -92,7 +92,6 @@ test.describe("disable / enable", async () => {
 
     // add grid meter
     await page.getByRole("button", { name: "Add grid meter" }).click();
-    await page.getByTestId("meter-modal").getByRole("button", { name: "Add grid meter" }).click();
     await expectModalVisible(meterModal);
     await meterModal.getByLabel("Manufacturer").selectOption("Demo meter");
     await meterModal.getByLabel("Power").fill("0");
