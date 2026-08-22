@@ -25,6 +25,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/metrics"
 	coresettings "github.com/evcc-io/evcc/core/settings"
+	"github.com/evcc-io/evcc/curtailer"
 	"github.com/evcc-io/evcc/hems"
 	hemsapi "github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/hems/shm"
@@ -394,6 +395,50 @@ func configureMeters(static []config.Named, names ...string) error {
 			}
 
 			return configurableInstance("meter", &conf, meter.NewFromConfig, config.Meters())
+		})
+	}
+
+	return eg.Wait()
+}
+
+func configureCurtailers(static []config.Named, names ...string) error {
+	var eg errgroup.Group
+
+	for i, cc := range static {
+		if cc.Name == "" {
+			return fmt.Errorf("cannot create curtailer %d: missing name", i+1)
+		}
+
+		// configure all, if no name refs are given
+		if len(names) > 0 && !slices.Contains(names, cc.Name) {
+			continue
+		}
+
+		if err := nameValid(cc.Name); err != nil {
+			log.WARN.Printf("create curtailer %d: %v", i+1, err)
+		}
+
+		eg.Go(func() error {
+			return staticInstance("curtailer", cc, curtailer.NewFromConfig, config.Curtailers())
+		})
+	}
+
+	// append devices from database
+	configurable, err := config.ConfigurationsByClass(templates.Curtailer)
+	if err != nil {
+		return err
+	}
+
+	for _, conf := range configurable {
+		eg.Go(func() error {
+			cc := conf.Named()
+
+			// always skip unreferenced db devices
+			if !slices.Contains(names, cc.Name) {
+				return nil
+			}
+
+			return configurableInstance("curtailer", &conf, curtailer.NewFromConfig, config.Curtailers())
 		})
 	}
 
@@ -1285,6 +1330,10 @@ func configureDevices(conf globalconfig.All) error {
 
 	if err := configureCircuits(&conf.Circuits); err != nil {
 		errs = append(errs, &ClassError{ClassCircuit, err})
+	}
+
+	if err := configureCurtailers(conf.Curtailers, references.curtailer...); err != nil {
+		errs = append(errs, &ClassError{ClassCurtailer, err})
 	}
 
 	return joinErrors(errs...)

@@ -13,4 +13,5 @@ const (
 	Circuit
 	Messenger
 	Hems
+	Curtailer
 )

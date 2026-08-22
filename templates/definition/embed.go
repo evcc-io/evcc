@@ -2,7 +2,7 @@ package definition
 
 import "embed"
 
-//go:embed charger/*.yaml meter/*.yaml vehicle/*.yaml tariff/*.yaml messenger/*.yaml circuit/*.yaml hems/*.yaml
+//go:embed charger/*.yaml meter/*.yaml vehicle/*.yaml tariff/*.yaml messenger/*.yaml circuit/*.yaml hems/*.yaml curtailer/*.yaml
 var YamlTemplates embed.FS
 
 //go:embed */*.tpl
