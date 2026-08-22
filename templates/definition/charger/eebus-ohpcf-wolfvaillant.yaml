@@ -43,3 +43,4 @@ render: |
   {{ include "eebus" . }}
   reboost: {{ .reboost }}
   disablepowerlimiter: {{ .disablepowerlimiter }}
+  {{ include "heatpumpswitch" . }}
