@@ -79,7 +79,7 @@
 						{{ lp.title || lp.name }}
 					</span>
 					<span class="lp-power-value evcc-gray text-nowrap">
-						{{ fmtW(meterPower(lp) / 1000, POWER_UNIT.KW, false) }}
+						{{ fmtW(meterPower(lp), POWER_UNIT.KW, false) }}
 					</span>
 					<span class="lp-power-unit evcc-gray text-nowrap">
 						kW
