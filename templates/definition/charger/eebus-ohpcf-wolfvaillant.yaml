@@ -29,7 +29,7 @@ params:
     help:
       de: Wartezeit, nach der eine neu angekündigte optionale Leistungsaufnahme erneut eingeplant wird.
       en: Wait time after which a newly announced optional power consumption is scheduled again.
-  - name: disableminmax
+  - name: disablepowerlimiter
     type: bool
     default: false
     advanced: true
@@ -43,4 +43,4 @@ render: |
   type: eebus-ohpcf
   {{ include "eebus" . }}
   reboost: {{ .reboost }}
-  disableminmax: {{ .disableminmax }}
+  disablepowerlimiter: {{ .disablepowerlimiter }}

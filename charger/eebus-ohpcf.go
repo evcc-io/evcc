@@ -60,11 +60,11 @@ func init() {
 // NewEEBusOHPCFFromConfig creates an EEBus OHPCF charger from generic config
 func NewEEBusOHPCFFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
-		embed         `mapstructure:",squash"`
-		Ski           string
-		Ip            string
-		Reboost       time.Duration
-		DisableMinMax bool
+		embed               `mapstructure:",squash"`
+		Ski                 string
+		Ip                  string
+		Reboost             time.Duration
+		DisablePowerLimiter bool
 	}{
 		embed: embed{
 			Icon_:     "heatpump",
@@ -77,12 +77,12 @@ func NewEEBusOHPCFFromConfig(ctx context.Context, other map[string]any) (api.Cha
 		return nil, err
 	}
 
-	return NewEEBusOHPCF(ctx, &cc.embed, cc.Ski, cc.Ip, cc.Reboost, cc.DisableMinMax)
+	return NewEEBusOHPCF(ctx, &cc.embed, cc.Ski, cc.Ip, cc.Reboost, cc.DisablePowerLimiter)
 }
 
 // NewEEBusOHPCF creates an EEBus OHPCF charger, registers it with the EEBus
 // instance and waits for the connection.
-func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost time.Duration, disableMinMax bool) (api.Charger, error) {
+func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost time.Duration, disablePowerLimiter bool) (api.Charger, error) {
 	inst, err := eebus.Instance()
 	if err != nil {
 		return nil, err
@@ -100,7 +100,7 @@ func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost ti
 		reboost:   reboost,
 	}
 
-	if !disableMinMax {
+	if !disablePowerLimiter {
 		implement.Has(c, implement.PowerLimiter(c.getMinMaxPower))
 	}
 
