@@ -554,16 +554,18 @@ func (wb *Voltie) Voltages() (float64, float64, float64, error) {
 // effect at all where it is refused. Where it succeeds it costs the one EEPROM
 // write that any phase switch costs, once per start.
 func (wb *Voltie) phaseSwitchingSupported() bool {
-	// a charging session makes the firmware refuse the write for an unrelated
-	// reason, which would look exactly like a board without the relay
-	if charging, err := wb.charging(); err != nil || charging {
-		wb.log.DEBUG.Println("phase switching support not probed")
-		return true
-	}
-
+	// checkSettings has just read the status block, so this is a cache hit and
+	// needs no further request
 	b, err := wb.read(wb.status)
 	if err != nil {
 		return false
+	}
+
+	// a charging session makes the firmware refuse the write for an unrelated
+	// reason, which would look exactly like a board without the relay
+	if voltieU16(wb.status, b, voltieRegCharging) != 0 {
+		wb.log.DEBUG.Println("charging, phase switching support not probed")
+		return true
 	}
 
 	if _, err := wb.conn.WriteSingleRegister(voltieRegSinglePhase,
