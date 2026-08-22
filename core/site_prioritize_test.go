@@ -12,15 +12,15 @@ import (
 
 func newPVLoadpoint(prio int, mode api.ChargeMode, status api.ChargeStatus, enabled bool, timer time.Time) *Loadpoint {
 	lp := &Loadpoint{
-		log:        util.NewLogger("lp"),
-		clock:      clock.NewMock(),
-		minCurrent: minA,
-		maxCurrent: maxA,
-		mode:       mode,
-		status:     status,
-		pvTimer:    timer,
-		priority:   prio,
+		log:      util.NewLogger("lp"),
+		clock:    clock.NewMock(),
+		mode:     mode,
+		status:   status,
+		pvTimer:  timer,
+		priority: prio,
 	}
+	currentController(lp).minCurrent = minA
+	currentController(lp).maxCurrent = maxA
 	currentController(lp).phases = 1
 	currentController(lp).enabled = enabled
 	return lp

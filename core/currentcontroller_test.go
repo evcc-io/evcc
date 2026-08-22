@@ -13,8 +13,8 @@ import (
 func testControllerLoadpoint(charger api.Charger, phasesConfigured, phases int) *Loadpoint {
 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
 	lp.wakeUpTimer = NewTimer()
-	lp.minCurrent = minA
-	lp.maxCurrent = maxA
+	currentController(lp).minCurrent = minA
+	currentController(lp).maxCurrent = maxA
 	lp.phasesConfigured = phasesConfigured
 	currentController(lp).phases = phases
 	lp.charger = charger

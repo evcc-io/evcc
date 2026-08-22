@@ -7,10 +7,16 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/wrapper"
+	"github.com/evcc-io/evcc/util/modbus"
 )
+
+// minActiveCurrent is the minimum current at which a phase is treated as active
+const minActiveCurrent = 1.0
 
 type CurrentController struct {
 	lp *Loadpoint
@@ -20,6 +26,9 @@ type CurrentController struct {
 	phases         int       // Charger enabled phases
 	offeredCurrent float64   // Charger current limit
 	phaseTimer     time.Time // 1p3p switch timer
+	minCurrent     float64   // PV mode: start current	Min+PV mode: min current
+	maxCurrent     float64   // Max allowed current. Physically ensured by the charger
+	chargeCurrents []float64 // Phase currents
 }
 
 func newCurrentController(lp *Loadpoint) *CurrentController {
@@ -94,22 +103,119 @@ func (c *CurrentController) SetPower(power float64) error {
 // roundedCurrent rounds current down to full amps if charger or vehicle require it
 func (c *CurrentController) roundedCurrent(current float64) float64 {
 	// full amps only?
-	if c.lp.coarseCurrent() {
+	if c.coarseCurrent() {
 		current = math.Trunc(current)
 	}
 	return current
 }
 
+// coarseCurrent returns true if charger or vehicle require full amp steps
+func (c *CurrentController) coarseCurrent() bool {
+	return !api.HasCap[api.ChargerEx](c.lp.charger) || c.lp.vehicleHasFeature(api.CoarseCurrent)
+}
+
+// maxPhaseCurrent returns the maximum charge current per phase or- if not available-
+// the offered current from either charger or charge meter
+func (c *CurrentController) maxPhaseCurrent() float64 {
+	if c.chargeCurrents == nil {
+		return c.offeredCurrent
+	}
+	return max(c.chargeCurrents[0], c.chargeCurrents[1], c.chargeCurrents[2])
+}
+
 // actualMaxChargeCurrent returns the maximum of all phase currents.
 // If currents not measured falls back to offered current.
 func (c *CurrentController) actualMaxChargeCurrent() float64 {
-	if c.lp.chargeCurrents != nil {
-		return max(c.lp.chargeCurrents[0], c.lp.chargeCurrents[1], c.lp.chargeCurrents[2])
+	if c.chargeCurrents != nil {
+		return max(c.chargeCurrents[0], c.chargeCurrents[1], c.chargeCurrents[2])
 	}
 	if c.lp.charging() {
 		return c.offeredCurrent
 	}
 	return 0
+}
+
+// publishOfferedCurrent publishes the offered current on the event bus
+func (c *CurrentController) publishOfferedCurrent() {
+	c.lp.bus.Publish(evChargeCurrent, c.offeredCurrent)
+}
+
+// evChargeCurrentHandler publishes the offered current
+func (c *CurrentController) evChargeCurrentHandler(current float64) {
+	if !c.enabled {
+		current = 0
+	}
+	c.lp.publish(keys.OfferedCurrent, current)
+}
+
+// evChargeCurrentWrappedMeterHandler updates the dummy charge meter's charge power.
+// This simplifies the main flow where the charge meter can always be treated as present.
+// It assumes that the charge meter cannot consume more than total household consumption.
+// If physical charge meter is present this handler is not used.
+// The actual value is published by the evChargeCurrentHandler
+func (c *CurrentController) evChargeCurrentWrappedMeterHandler(current float64) {
+	power := current * float64(c.lp.ActivePhases()) * Voltage
+
+	// if disabled we cannot be charging
+	if !c.enabled || !c.lp.charging() {
+		power = 0
+	}
+
+	// handler only called if charge meter was replaced by dummy
+	c.lp.chargeMeter.(*wrapper.ChargeMeter).SetPower(power)
+}
+
+// updateChargeCurrents reads the phase currents from the charge meter
+func (c *CurrentController) updateChargeCurrents() {
+	c.chargeCurrents = nil
+
+	if phaseMeter, ok := api.Cap[api.PhaseCurrents](c.lp.chargeMeter); ok {
+		if err := backoff.Retry(func() error {
+			i1, i2, i3, err := phaseMeter.Currents()
+			if err != nil {
+				if errors.Is(err, api.ErrNotAvailable) {
+					err = backoff.Permanent(err)
+				}
+				return err
+			}
+
+			c.lp.Lock()
+			c.chargeCurrents = []float64{i1, i2, i3}
+			c.lp.Unlock()
+
+			c.lp.log.DEBUG.Printf("charge currents: %.3gA", c.chargeCurrents)
+			c.lp.publish(keys.ChargeCurrents, c.chargeCurrents)
+
+			return nil
+		}, modbus.Backoff()); err != nil && !errors.Is(err, api.ErrNotAvailable) {
+			c.lp.log.ERROR.Printf("charge currents: %v", err)
+		}
+	}
+}
+
+// phasesFromChargeCurrents uses PhaseCurrents interface to count phases with current >=1A
+func (c *CurrentController) phasesFromChargeCurrents() {
+	if c.chargeCurrents == nil {
+		return
+	}
+
+	if c.lp.charging() && c.lp.phaseSwitchCompleted() {
+		var phases int
+		for _, i := range c.chargeCurrents {
+			if i > minActiveCurrent {
+				phases++
+			}
+		}
+
+		if phases >= 1 {
+			c.lp.Lock()
+			c.lp.measuredPhases = phases
+			c.lp.Unlock()
+
+			c.lp.log.DEBUG.Printf("detected active phases: %dp", phases)
+			c.lp.publish(keys.PhasesActive, phases)
+		}
+	}
 }
 
 func (c *CurrentController) setMinCurrent() error {

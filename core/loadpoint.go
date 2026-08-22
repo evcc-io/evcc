@@ -53,7 +53,6 @@ const (
 
 	timerInactive = "inactive"
 
-	minActiveCurrent = 1.0 // minimum current at which a phase is treated as active
 	minActiveVoltage = 207 // minimum voltage at which a phase is treated as active
 
 	maxSessionEnergy = 1e3 // kWh, above this a charge rater reading is treated as garbage
@@ -119,8 +118,6 @@ type Loadpoint struct {
 
 	title                    string   // UI title
 	priority                 int      // Priority
-	minCurrent               float64  // PV mode: start current	Min+PV mode: min current
-	maxCurrent               float64  // Max allowed current. Physically ensured by the charger
 	phasesConfigured         int      // Charger configured phase mode 0/1/3
 	limitSoc                 int      // Session limit for soc
 	limitEnergy              float64  // Session limit for energy
@@ -168,7 +165,6 @@ type Loadpoint struct {
 	// cached state
 	status         api.ChargeStatus // Charger status
 	chargePower    float64          // Charging power
-	chargeCurrents []float64        // Phase currents
 	connectedTime  time.Time        // Time when vehicle was connected
 	connectPending bool             // connect notification deferred until vehicle detection settles
 	pvTimer        time.Time        // PV enabled/disable timer
@@ -314,8 +310,6 @@ func NewLoadpoint(log *util.Logger, settings settings.Settings) *Loadpoint {
 		bus:               bus,      // event bus
 		mode:              api.ModeOff,
 		status:            api.StatusNone,
-		minCurrent:        6,   // A
-		maxCurrent:        16,  // A
 		batteryBoostLimit: 100, // disabled
 		Soc: loadpoint.SocConfig{
 			Poll: loadpoint.PollConfig{
@@ -331,7 +325,10 @@ func NewLoadpoint(log *util.Logger, settings settings.Settings) *Loadpoint {
 	}
 
 	// default to current-based control until the charger type is configured
-	lp.chargeController = newCurrentController(lp)
+	ctrl := newCurrentController(lp)
+	ctrl.minCurrent = 6  // A
+	ctrl.maxCurrent = 16 // A
+	lp.chargeController = ctrl
 
 	return lp
 }
@@ -460,7 +457,7 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 			lp.chargeMeter = &capableMeter{Meter: mt, source: charger}
 		} else {
 			mt := new(wrapper.ChargeMeter)
-			_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentWrappedMeterHandler)
+			_ = lp.bus.Subscribe(evChargeCurrent, lp.ctrl().evChargeCurrentWrappedMeterHandler)
 			_ = lp.bus.Subscribe(evChargeStop, func() { mt.SetPower(0) })
 			lp.chargeMeter = mt
 		}
@@ -688,31 +685,6 @@ func (lp *Loadpoint) evVehicleSocProgressHandler(soc float64) {
 	}
 }
 
-// evChargeCurrentHandler publishes the offered current
-func (lp *Loadpoint) evChargeCurrentHandler(current float64) {
-	if !lp.ctrl().enabled {
-		current = 0
-	}
-	lp.publish(keys.OfferedCurrent, current)
-}
-
-// evChargeCurrentWrappedMeterHandler updates the dummy charge meter's charge power.
-// This simplifies the main flow where the charge meter can always be treated as present.
-// It assumes that the charge meter cannot consume more than total household consumption.
-// If physical charge meter is present this handler is not used.
-// The actual value is published by the evChargeCurrentHandler
-func (lp *Loadpoint) evChargeCurrentWrappedMeterHandler(current float64) {
-	power := current * float64(lp.ActivePhases()) * Voltage
-
-	// if disabled we cannot be charging
-	if !lp.ctrl().enabled || !lp.charging() {
-		power = 0
-	}
-
-	// handler only called if charge meter was replaced by dummy
-	lp.chargeMeter.(*wrapper.ChargeMeter).SetPower(power)
-}
-
 // defaultMode executes the action
 func (lp *Loadpoint) defaultMode() {
 	lp.RLock()
@@ -736,7 +708,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	_ = lp.bus.Subscribe(evChargeStop, lp.evChargeStopHandler)
 	_ = lp.bus.Subscribe(evVehicleConnect, lp.evVehicleConnectHandler)
 	_ = lp.bus.Subscribe(evVehicleDisconnect, lp.evVehicleDisconnectHandler)
-	_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentHandler)
+	_ = lp.bus.Subscribe(evChargeCurrent, lp.ctrl().evChargeCurrentHandler)
 	_ = lp.bus.Subscribe(evVehicleSoc, lp.evVehicleSocProgressHandler)
 
 	// restore settings
@@ -841,11 +813,6 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	if ctrl, ok := lp.charger.(loadpoint.Controller); ok {
 		ctrl.LoadpointControl(lp)
 	}
-}
-
-// coarseCurrent returns true if charger or vehicle require full amp steps
-func (lp *Loadpoint) coarseCurrent() bool {
-	return !api.HasCap[api.ChargerEx](lp.charger) || lp.vehicleHasFeature(api.CoarseCurrent)
 }
 
 // connected returns the EVs connection state
@@ -1033,7 +1000,7 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 	}
 
 	// update whenever there is a state change
-	lp.bus.Publish(evChargeCurrent, lp.ctrl().offeredCurrent)
+	lp.ctrl().publishOfferedCurrent()
 
 	return welcomeCharge, nil
 }
@@ -1175,57 +1142,9 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 	}
 
 	// update charge currents
-	lp.chargeCurrents = nil
-
-	if phaseMeter, ok := api.Cap[api.PhaseCurrents](lp.chargeMeter); ok {
-		if err := backoff.Retry(func() error {
-			i1, i2, i3, err := phaseMeter.Currents()
-			if err != nil {
-				if errors.Is(err, api.ErrNotAvailable) {
-					err = backoff.Permanent(err)
-				}
-				return err
-			}
-
-			lp.Lock()
-			lp.chargeCurrents = []float64{i1, i2, i3}
-			lp.Unlock()
-
-			lp.log.DEBUG.Printf("charge currents: %.3gA", lp.chargeCurrents)
-			lp.publish(keys.ChargeCurrents, lp.chargeCurrents)
-
-			return nil
-		}, modbus.Backoff()); err != nil && !errors.Is(err, api.ErrNotAvailable) {
-			lp.log.ERROR.Printf("charge currents: %v", err)
-		}
-	}
+	lp.ctrl().updateChargeCurrents()
 
 	return power
-}
-
-// phasesFromChargeCurrents uses PhaseCurrents interface to count phases with current >=1A
-func (lp *Loadpoint) phasesFromChargeCurrents() {
-	if lp.chargeCurrents == nil {
-		return
-	}
-
-	if lp.charging() && lp.phaseSwitchCompleted() {
-		var phases int
-		for _, i := range lp.chargeCurrents {
-			if i > minActiveCurrent {
-				phases++
-			}
-		}
-
-		if phases >= 1 {
-			lp.Lock()
-			lp.measuredPhases = phases
-			lp.Unlock()
-
-			lp.log.DEBUG.Printf("detected active phases: %dp", phases)
-			lp.publish(keys.PhasesActive, phases)
-		}
-	}
 }
 
 // updateChargeVoltages uses PhaseVoltages interface to count phases with nominal grid voltage
@@ -1545,12 +1464,12 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 
 	// read and publish meters first- charge power and currents have already been updated by the site
 	lp.updateChargeVoltages()
-	lp.phasesFromChargeCurrents()
+	lp.ctrl().phasesFromChargeCurrents()
 
 	lp.energyMetrics.SetEnvironment(greenShare, effPrice, effCo2)
 
 	// update ChargeRater here to make sure initial meter update is caught
-	lp.bus.Publish(evChargeCurrent, lp.ctrl().offeredCurrent)
+	lp.ctrl().publishOfferedCurrent()
 	lp.bus.Publish(evChargePower, lp.chargePower)
 
 	// update progress and soc before status is updated

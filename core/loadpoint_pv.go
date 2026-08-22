@@ -17,22 +17,17 @@ func (lp *Loadpoint) boostPower(ctrl *CurrentController, batteryPower float64) f
 	// push demand to drain battery (at least 100W)
 	delta := math.Max(100, math.Abs(lp.site.GetResidualPower()))
 
-	if lp.coarseCurrent() {
-		// add effective step power to delta to make sure to step up to the next full amp
-		// just using lp.EffectiveStepPower() as delta is not enough because this will result
+	if ctrl.coarseCurrent() {
+		// add step power to delta to make sure to step up to the next full amp
+		// just using the step power as delta is not enough because this will result
 		// in a too low current when there is a bit remaining grid consumption due to the accuracy
 		// of the battery controller
-		delta += lp.EffectiveStepPower()
+		delta += ctrl.stepPower()
 	}
 
 	// bridge the power gap between 1p max and 3p min so pvScalePhases can trigger a scale-up
 	if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() && lp.site.GetBatteryMaxDischargePower() != nil {
-		if activePhases, maxPhases := lp.ActivePhases(), lp.MaxActivePhases(); activePhases < maxPhases &&
-			ctrl.circuitAllowsPhases(maxPhases, ctrl.effectiveMinCurrent()) {
-			// max power actually achievable on the active phases
-			activeMaxPower := min(lp.EffectiveMaxPower(), Voltage*ctrl.effectiveMaxCurrent()*float64(activePhases))
-			delta += max(0, lp.EffectiveMinPower()*float64(maxPhases)-activeMaxPower)
-		}
+		delta += ctrl.phaseSwitchGapPower()
 	}
 
 	// start boosting by setting maximum power

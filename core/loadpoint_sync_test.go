@@ -113,13 +113,13 @@ func TestSyncChargerCurrentsByMeasurement(t *testing.T) {
 		charger.EXPECT().Enabled().Return(true, nil)
 
 		lp := &Loadpoint{
-			log:            util.NewLogger("foo"),
-			bus:            evbus.New(),
-			clock:          clock.New(),
-			charger:        charger,
-			status:         api.StatusC,
-			chargeCurrents: []float64{tc.actualCurrent, 0, 0},
+			log:     util.NewLogger("foo"),
+			bus:     evbus.New(),
+			clock:   clock.New(),
+			charger: charger,
+			status:  api.StatusC,
 		}
+		currentController(lp).chargeCurrents = []float64{tc.actualCurrent, 0, 0}
 		currentController(lp).enabled = true
 		currentController(lp).phases = 3
 		currentController(lp).offeredCurrent = tc.lpCurrent

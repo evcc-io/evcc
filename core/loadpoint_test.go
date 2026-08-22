@@ -84,7 +84,7 @@ func attachListeners(t *testing.T, lp *Loadpoint) {
 
 	if charger, ok := lp.charger.(*api.MockCharger); ok && charger != nil {
 		charger.EXPECT().Enabled().Return(true, nil)
-		charger.EXPECT().MaxCurrent(int64(lp.minCurrent)).Return(nil)
+		charger.EXPECT().MaxCurrent(int64(currentController(lp).minCurrent)).Return(nil)
 	}
 
 	uiChan, pushChan, lpChan := createChannels(t)
@@ -97,8 +97,8 @@ func TestNew(t *testing.T) {
 	if lp.GetPhases() != 0 {
 		t.Errorf("Phases %v", lp.GetPhases())
 	}
-	if lp.maxCurrent != maxA {
-		t.Errorf("MaxCurrent %v", lp.maxCurrent)
+	if currentController(lp).maxCurrent != maxA {
+		t.Errorf("MaxCurrent %v", currentController(lp).maxCurrent)
 	}
 	if lp.status != api.StatusNone {
 		t.Errorf("status %v", lp.status)
@@ -172,10 +172,10 @@ func TestUpdatePowerZero(t *testing.T) {
 			chargeRater: &Null{}, // silence nil panics
 			chargeTimer: &Null{}, // silence nil panics
 			wakeUpTimer: NewTimer(),
-			minCurrent:  minA,
-			maxCurrent:  maxA,
 			status:      tc.status, // no status change
 		}
+		currentController(lp).minCurrent = minA
+		currentController(lp).maxCurrent = maxA
 		currentController(lp).phases = 1
 
 		attachListeners(t, lp)
@@ -319,8 +319,6 @@ func TestPVHysteresis(t *testing.T) {
 				log:            util.NewLogger("foo"),
 				clock:          clock,
 				charger:        charger,
-				minCurrent:     minA,
-				maxCurrent:     maxA,
 				measuredPhases: phases,
 				Enable: loadpoint.ThresholdConfig{
 					Threshold: tc.enable,
@@ -331,6 +329,8 @@ func TestPVHysteresis(t *testing.T) {
 					Delay:     dt,
 				},
 			}
+			currentController(lp).minCurrent = minA
+			currentController(lp).maxCurrent = maxA
 
 			currentController(lp).phases = phases
 
@@ -368,10 +368,10 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 	lp := &Loadpoint{
 		log:            util.NewLogger("foo"),
 		clock:          clock,
-		minCurrent:     minA,
-		maxCurrent:     maxA,
 		measuredPhases: phases,
 	}
+	currentController(lp).minCurrent = minA
+	currentController(lp).maxCurrent = maxA
 	currentController(lp).phases = phases
 
 	// not connected, test PV mode logic  short-circuited
@@ -410,8 +410,6 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 		progress:    NewProgress(0, 10), // silence nil panics
 		wakeUpTimer: NewTimer(),         // silence nil panics
 		// coordinator:   coordinator.NewDummy(), // silence nil panics
-		minCurrent:   minA,
-		maxCurrent:   maxA,
 		vehicle:      vehicle,      // needed for targetSoc check
 		socEstimator: socEstimator, // instead of vehicle: vehicle,
 		mode:         api.ModeNow,
@@ -423,6 +421,8 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 			},
 		},
 	}
+	currentController(lp).minCurrent = minA
+	currentController(lp).maxCurrent = maxA
 
 	attachListeners(t, lp)
 
@@ -488,11 +488,11 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 		chargeRater: &Null{}, // silence nil panics
 		chargeTimer: &Null{}, // silence nil panics
 		wakeUpTimer: NewTimer(),
-		minCurrent:  minA,
-		maxCurrent:  maxA,
 		status:      api.StatusC,
 		DefaultMode: api.ModeOff, // default mode
 	}
+	currentController(lp).minCurrent = minA
+	currentController(lp).maxCurrent = maxA
 
 	attachListeners(t, lp)
 
@@ -555,10 +555,10 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 		chargeRater: rater,
 		chargeTimer: &Null{}, // silence nil panics
 		wakeUpTimer: NewTimer(),
-		minCurrent:  minA,
-		maxCurrent:  maxA,
 		status:      api.StatusC,
 	}
+	currentController(lp).minCurrent = minA
+	currentController(lp).maxCurrent = maxA
 
 	attachListeners(t, lp)
 
@@ -757,14 +757,14 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 			wakeUpTimer: NewTimer(),
 			clock:       clock,
 			charger:     charger,
-			minCurrent:  minA,
-			maxCurrent:  maxA,
 			Disable: loadpoint.ThresholdConfig{
 				Delay: dt,
 			},
 			status:      api.StatusC,
 			chargePower: 3 * Voltage * minA, // charging 3p at min current
 		}
+		currentController(lp).minCurrent = minA
+		currentController(lp).maxCurrent = maxA
 		currentController(lp).enabled = true
 
 		start := clock.Now()
@@ -802,13 +802,13 @@ func TestConnectionDurationDropDetection(t *testing.T) {
 		bus:         evbus.New(),
 		clock:       clock,
 		charger:     charger,
-		minCurrent:  minA,
-		maxCurrent:  maxA,
 		chargeMeter: &Null{},    // silence nil panics
 		chargeRater: &Null{},    // silence nil panics
 		chargeTimer: &Null{},    // silence nil panics
 		wakeUpTimer: NewTimer(), // silence nil panics
 	}
+	currentController(lp).minCurrent = minA
+	currentController(lp).maxCurrent = maxA
 
 	attachListeners(t, lp)
 
@@ -850,13 +850,13 @@ func TestWelcomeChargeAppliedOnlyOnce(t *testing.T) {
 		bus:         evbus.New(),
 		clock:       clock,
 		charger:     charger,
-		minCurrent:  minA,
-		maxCurrent:  maxA,
 		chargeMeter: &Null{},    // silence nil panics
 		chargeRater: &Null{},    // silence nil panics
 		chargeTimer: &Null{},    // silence nil panics
 		wakeUpTimer: NewTimer(), // silence nil panics
 	}
+	currentController(lp).minCurrent = minA
+	currentController(lp).maxCurrent = maxA
 
 	attachListeners(t, lp)
 
@@ -959,14 +959,14 @@ func TestPVDisableContinuousDeviceShortfall(t *testing.T) {
 				log:              util.NewLogger("foo"),
 				clock:            clock,
 				charger:          &continuousCharger{},
-				minCurrent:       minA,
-				maxCurrent:       maxA,
 				phasesConfigured: 1,
 				measuredPhases:   1,
 				status:           tc.status,
 				chargePower:      tc.chargePower,
 				Disable:          loadpoint.ThresholdConfig{Delay: dt},
 			}
+			currentController(lp).minCurrent = minA
+			currentController(lp).maxCurrent = maxA
 			currentController(lp).phases = 1
 			currentController(lp).enabled = true
 

@@ -751,10 +751,7 @@ func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 func (lp *Loadpoint) GetMaxPhaseCurrent() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
-	if lp.chargeCurrents == nil {
-		return lp.ctrl().offeredCurrent
-	}
-	return max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
+	return lp.ctrl().maxPhaseCurrent()
 }
 
 // GetMinCurrent returns the min loadpoint current
@@ -766,14 +763,17 @@ func (lp *Loadpoint) GetMinCurrent() float64 {
 
 // getMinCurrent returns the max loadpoint current
 func (lp *Loadpoint) getMinCurrent() float64 {
-	return lp.minCurrent
+	if ctrl := lp.ctrl(); ctrl != nil {
+		return ctrl.minCurrent
+	}
+	return 0
 }
 
 // setMinCurrent sets the min loadpoint current (no mutex)
 func (lp *Loadpoint) setMinCurrent(current float64) {
-	lp.minCurrent = current
-	lp.publish(keys.MinCurrent, lp.minCurrent)
-	lp.settings.SetFloat(keys.MinCurrent, lp.minCurrent)
+	lp.ctrl().minCurrent = current
+	lp.publish(keys.MinCurrent, current)
+	lp.settings.SetFloat(keys.MinCurrent, current)
 }
 
 // SetMinCurrent sets the min loadpoint current
@@ -781,12 +781,12 @@ func (lp *Loadpoint) SetMinCurrent(current float64) error {
 	lp.Lock()
 	defer lp.Unlock()
 
-	if current > lp.maxCurrent {
+	if current > lp.getMaxCurrent() {
 		return errors.New("min current must be smaller or equal than max current")
 	}
 
 	lp.log.DEBUG.Println("set min current:", current)
-	if current != lp.minCurrent {
+	if current != lp.getMinCurrent() {
 		lp.setMinCurrent(current)
 	}
 
@@ -802,14 +802,17 @@ func (lp *Loadpoint) GetMaxCurrent() float64 {
 
 // getMaxCurrent returns the max loadpoint current
 func (lp *Loadpoint) getMaxCurrent() float64 {
-	return lp.maxCurrent
+	if ctrl := lp.ctrl(); ctrl != nil {
+		return ctrl.maxCurrent
+	}
+	return 0
 }
 
 // setMaxCurrent sets the max loadpoint current
 func (lp *Loadpoint) setMaxCurrent(current float64) {
-	lp.maxCurrent = current
-	lp.publish(keys.MaxCurrent, lp.maxCurrent)
-	lp.settings.SetFloat(keys.MaxCurrent, lp.maxCurrent)
+	lp.ctrl().maxCurrent = current
+	lp.publish(keys.MaxCurrent, current)
+	lp.settings.SetFloat(keys.MaxCurrent, current)
 }
 
 // SetMaxCurrent sets the max loadpoint current
@@ -817,12 +820,12 @@ func (lp *Loadpoint) SetMaxCurrent(current float64) error {
 	lp.Lock()
 	defer lp.Unlock()
 
-	if current < lp.minCurrent {
+	if current < lp.getMinCurrent() {
 		return errors.New("max current must be greater or equal than min current")
 	}
 
 	lp.log.DEBUG.Println("set max current:", current)
-	if current != lp.maxCurrent {
+	if current != lp.getMaxCurrent() {
 		lp.setMaxCurrent(current)
 	}
 

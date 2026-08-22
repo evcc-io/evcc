@@ -19,8 +19,8 @@ func (c *CurrentController) effectiveCurrent() float64 {
 	}
 
 	// adjust actual current for vehicles like Zoe where it remains below target
-	if c.lp.chargeCurrents != nil {
-		cur := max(c.lp.chargeCurrents[0], c.lp.chargeCurrents[1], c.lp.chargeCurrents[2])
+	if c.chargeCurrents != nil {
+		cur := max(c.chargeCurrents[0], c.chargeCurrents[1], c.chargeCurrents[2])
 		return min(cur+2.0, c.offeredCurrent)
 	}
 

@@ -14,7 +14,7 @@ func (c *CurrentController) PublishEffectiveValues() {
 
 // effectiveMinCurrent returns the effective min current
 func (c *CurrentController) effectiveMinCurrent() float64 {
-	lpMin := c.lp.getMinCurrent()
+	lpMin := c.minCurrent
 	var vehicleMin, chargerMin float64
 
 	if v := c.lp.GetVehicle(); v != nil {
@@ -36,7 +36,7 @@ func (c *CurrentController) effectiveMinCurrent() float64 {
 			chargerMin = res / (Voltage * float64(c.lp.minActivePhases()))
 			// coarse chargers truncate to full amps in setLimit, so round the
 			// demand up to keep the enable gate reachable (#31549)
-			if c.lp.coarseCurrent() {
+			if c.coarseCurrent() {
 				chargerMin = math.Ceil(chargerMin)
 			}
 		}
@@ -54,7 +54,7 @@ func (c *CurrentController) effectiveMinCurrent() float64 {
 
 // effectiveMaxCurrent returns the effective max current
 func (c *CurrentController) effectiveMaxCurrent() float64 {
-	maxCurrent := c.lp.getMaxCurrent()
+	maxCurrent := c.maxCurrent
 
 	if v := c.lp.GetVehicle(); v != nil {
 		if res, ok := v.OnIdentified().GetMaxCurrent(); ok && res > 0 {
@@ -73,7 +73,7 @@ func (c *CurrentController) effectiveMaxCurrent() float64 {
 			powerMax := res / (Voltage * float64(c.lp.maxActivePhases()))
 			// match effectiveMinCurrent's rounding so a fixed power request
 			// (min == max) doesn't yield min > max on coarse chargers (#31549)
-			if c.lp.coarseCurrent() {
+			if c.coarseCurrent() {
 				powerMax = math.Ceil(powerMax)
 			}
 			maxCurrent = min(maxCurrent, powerMax)
@@ -122,6 +122,25 @@ func (c *CurrentController) reachableMinPower() float64 {
 		phases = 1
 	}
 	return currentToPower(c.effectiveMinCurrent(), phases)
+}
+
+// stepPower returns the power step of one full amp on the currently active phases
+func (c *CurrentController) stepPower() float64 {
+	return Voltage * float64(c.lp.ActivePhases())
+}
+
+// phaseSwitchGapPower returns the extra power needed to bridge the gap between the
+// maximum power on the active phases and the minimum power after scaling up, if
+// scaling up is possible
+func (c *CurrentController) phaseSwitchGapPower() float64 {
+	activePhases, maxPhases := c.lp.ActivePhases(), c.lp.MaxActivePhases()
+	if activePhases >= maxPhases || !c.circuitAllowsPhases(maxPhases, c.effectiveMinCurrent()) {
+		return 0
+	}
+
+	// max power actually achievable on the active phases
+	activeMaxPower := min(c.lp.EffectiveMaxPower(), c.activeMaxPower())
+	return max(0, c.lp.EffectiveMinPower()*float64(maxPhases)-activeMaxPower)
 }
 
 // effectivePower returns the currently effective charging power

@@ -45,10 +45,10 @@ func TestPublishSocAndRange(t *testing.T) {
 		chargeRater:  &Null{}, // silence nil panics
 		chargeTimer:  &Null{}, // silence nil panics
 		socEstimator: soc.NewEstimator(log, vehicle),
-		minCurrent:   minA,
-		maxCurrent:   maxA,
 		mode:         api.ModeNow,
 	}
+	currentController(lp).minCurrent = minA
+	currentController(lp).maxCurrent = maxA
 	currentController(lp).phases = 1
 
 	// populate channels
@@ -160,11 +160,11 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 			chargeMeter: &Null{}, // silence nil panics
 			chargeRater: &Null{}, // silence nil panics
 			chargeTimer: &Null{}, // silence nil panics
-			minCurrent:  minA,
-			maxCurrent:  maxA,
 			status:      api.StatusC,
 			mode:        api.ModeNow,
 		}
+		currentController(lp).minCurrent = minA
+		currentController(lp).maxCurrent = maxA
 		currentController(lp).phases = 1
 
 		// populate channels
@@ -557,10 +557,10 @@ func TestReconnectVehicle(t *testing.T) {
 				chargeRater: &Null{}, // silence nil panics
 				chargeTimer: &Null{}, // silence nil panics
 				wakeUpTimer: NewTimer(),
-				minCurrent:  minA,
-				maxCurrent:  maxA,
 				mode:        api.ModeNow,
 			}
+			currentController(lp).minCurrent = minA
+			currentController(lp).maxCurrent = maxA
 			currentController(lp).phases = 1
 
 			lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle}))

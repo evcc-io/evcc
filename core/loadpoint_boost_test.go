@@ -37,8 +37,8 @@ func TestBoostPower(t *testing.T) {
 		log:          util.NewLogger("lp"),
 		status:       api.StatusC,
 		batteryBoost: boostStart,
-		maxCurrent:   16,
 	}
+	currentController(lp).maxCurrent = 16
 	currentController(lp).phases = 3
 	s := &mockSite{}
 	lp.site = s
@@ -125,10 +125,10 @@ func TestBoostPowerPhaseSwitchGapBridging(t *testing.T) {
 		status:           api.StatusC,
 		charger:          phaseSwitchCharger{},
 		batteryBoost:     boostContinue,
-		minCurrent:       6,
-		maxCurrent:       16,
 		phasesConfigured: 3,
 	}
+	currentController(lp).minCurrent = 6
+	currentController(lp).maxCurrent = 16
 	currentController(lp).phases = 1
 	s := &mockSite{}
 	lp.site = s
@@ -208,12 +208,12 @@ func TestBoostPowerPhaseSwitchGapBridgingExclusions(t *testing.T) {
 				status:           api.StatusC,
 				charger:          tc.charger,
 				batteryBoost:     boostContinue,
-				minCurrent:       6,
-				maxCurrent:       16,
 				phasesConfigured: 3,
 				phasesSwitched:   tc.phasesSwitched,
 				circuit:          circuit,
 			}
+			currentController(lp).minCurrent = 6
+			currentController(lp).maxCurrent = 16
 			currentController(lp).phases = 1
 			s := &mockSite{
 				maxDischargePower: tc.maxDischargePower,
