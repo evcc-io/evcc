@@ -57,9 +57,9 @@ import (
 // that firmware, and the block read lengths follow the firmware as well.
 //
 // Phase switching additionally depends on the power board, which the firmware
-// does not expose over Modbus. The same firmware runs on older boards that have
-// no L2/L3 relay and reject the write, so the capability is probed on startup
-// and only offered once the charger has accepted it.
+// does not expose over Modbus. The same firmware also runs on older boards that
+// have no L2/L3 relay and reject the write, so the capability is enabled by
+// configuration rather than guessed.
 
 const (
 	// register blocks fetched in bulk
@@ -272,6 +272,7 @@ func NewVoltieFromConfig(ctx context.Context, other map[string]any) (api.Charger
 	cc := struct {
 		modbus.TcpSettings `mapstructure:",squash"`
 		Cache              time.Duration
+		Phases1p3p         bool
 	}{
 		TcpSettings: modbus.TcpSettings{
 			ID:      voltieDefaultSlaveID,
@@ -285,11 +286,11 @@ func NewVoltieFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, err
 	}
 
-	return NewVoltie(ctx, cc.TcpSettings, cc.Cache)
+	return NewVoltie(ctx, cc.TcpSettings, cc.Cache, cc.Phases1p3p)
 }
 
 // NewVoltie creates a Voltie charger
-func NewVoltie(ctx context.Context, settings modbus.TcpSettings, cache time.Duration) (*Voltie, error) {
+func NewVoltie(ctx context.Context, settings modbus.TcpSettings, cache time.Duration, phaseSwitching bool) (*Voltie, error) {
 	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
@@ -339,9 +340,13 @@ func NewVoltie(ctx context.Context, settings modbus.TcpSettings, cache time.Dura
 		implement.Has(wb, implement.PhasePowers(wb.powers))
 		implement.Has(wb, implement.CurrentLimiter(wb.getMinMaxCurrent))
 
-		if wb.phaseSwitchingSupported() {
+		if phaseSwitching {
 			implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
 		}
+	}
+
+	if phaseSwitching && !wb.ext {
+		log.WARN.Printf("phase switching requires firmware %d or later", voltieExtFirmware)
 	}
 
 	return wb, nil
@@ -539,39 +544,6 @@ var _ api.PhaseVoltages = (*Voltie)(nil)
 // Voltages implements the api.PhaseVoltages interface
 func (wb *Voltie) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(voltieRegVoltages, 1e3)
-}
-
-// phaseSwitchingSupported reports whether the power board can switch phases.
-// The board type is not exposed over Modbus, so the register is written its own
-// value: that leaves the relay where it is, but a board without the L2/L3 relay
-// refuses it. The firmware also refuses while charging, which makes the probe
-// inconclusive, and an unverified capability is not offered.
-//
-// The firmware checks the board before it touches anything, so the probe has no
-// effect at all where it is refused. Where it succeeds it costs the one EEPROM
-// write that any phase switch costs, once per start.
-func (wb *Voltie) phaseSwitchingSupported() bool {
-	// checkSettings has just read the status block, so this is a cache hit and
-	// needs no further request
-	b, err := wb.read(wb.status)
-	if err != nil {
-		return false
-	}
-
-	// a charging session makes the firmware refuse the write for an unrelated
-	// reason, which would look exactly like a board without the relay
-	if voltieU16(wb.status, b, voltieRegCharging) != 0 {
-		wb.log.DEBUG.Println("charging, cannot probe phase switching")
-		return false
-	}
-
-	if _, err := wb.conn.WriteSingleRegister(voltieRegSinglePhase,
-		voltieU16(wb.status, b, voltieRegSinglePhase)); err != nil {
-		wb.log.DEBUG.Printf("phase switching unavailable: %v", err)
-		return false
-	}
-
-	return true
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface. The firmware never
