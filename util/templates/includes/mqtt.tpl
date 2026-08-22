@@ -6,7 +6,7 @@ user: {{ .user }}
 {{- if .password }}
 password: {{ .password }}
 {{- end }}
-{{- if ne .timeout "30s" }}
+{{- if .timeout }}
 timeout: {{ .timeout }}
 {{- end }}
 {{- if .caCert }}
