@@ -905,9 +905,7 @@ export default defineComponent({
 					count: (this.gridMeter ? 1 : 0) + this.curtailerDevices.length,
 					error:
 						(!!this.gridMeter && this.hasDeviceError("meter", this.gridMeter.name)) ||
-						this.curtailerDevices.some((c) =>
-							this.hasDeviceError("curtailer", c.name)
-						),
+						this.curtailerDevices.some((c) => this.hasDeviceError("curtailer", c.name)),
 				},
 				{
 					slug: "pv-battery",
