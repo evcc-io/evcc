@@ -1234,7 +1234,7 @@ func (site *Site) update(lp updater, circuitsYamlsource globalconfig.YamlSource)
 	// update loadpoints
 	totalChargePower := site.updateLoadpoints(consumption)
 
-	site.updateCircuits()
+	site.updateCircuits(circuitsYamlsource)
 	site.applyHemsLimits()
 
 	if state, err := site.updateMeters(); err != nil {

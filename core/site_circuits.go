@@ -28,7 +28,7 @@ type circuitStruct struct {
 }
 
 // updateCircuits updates all circuits' power and currents
-func (site *Site) updateCircuits() {
+func (site *Site) updateCircuits(circuitsYamlsource globalconfig.YamlSource) {
 	if site.circuit == nil {
 		return
 	}
@@ -37,7 +37,7 @@ func (site *Site) updateCircuits() {
 		site.log.ERROR.Println(err)
 	}
 
-	site.publishCircuits()
+	site.publishCircuits(circuitsYamlsource)
 }
 
 // applyHemsLimits applies the HEMS dim and curtail state to the site's devices
