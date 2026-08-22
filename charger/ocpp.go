@@ -414,8 +414,8 @@ func (c *OCPP) phases1p3p(phases int) error {
 var _ api.Identifier = (*OCPP)(nil)
 
 // Identify implements the api.Identifier interface
-func (c *OCPP) Identify() (string, error) {
-	return c.conn.IdTag(), nil
+func (c *OCPP) Identify() ([]string, error) {
+	return []string{c.conn.IdTag()}, nil
 }
 
 var _ api.Diagnosis = (*OCPP)(nil)

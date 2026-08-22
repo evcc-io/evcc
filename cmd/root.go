@@ -113,6 +113,7 @@ func init() {
 	rootCmd.Flags().StringVar(&customization.Website, flagCustomWebsite, os.Getenv("EVCC_CUSTOM_WEBSITE"), flagCustomWebsiteDescription)
 	rootCmd.Flags().StringVar(&customization.Email, flagCustomEmail, os.Getenv("EVCC_CUSTOM_EMAIL"), flagCustomEmailDescription)
 	rootCmd.Flags().StringVar(&customization.Phone, flagCustomPhone, os.Getenv("EVCC_CUSTOM_PHONE"), flagCustomPhoneDescription)
+	rootCmd.Flags().StringVar(&customization.Theme, flagCustomTheme, os.Getenv("EVCC_CUSTOM_THEME"), flagCustomThemeDescription)
 }
 
 // initConfig reads in config file and ENV variables if set
@@ -390,6 +391,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 			})
 		}
 	}
+
+	// all device skis are registered, unknown ones may now be denied
+	eebus.ConfigComplete()
 
 	// setup MCP
 	if err == nil && isMcp() {

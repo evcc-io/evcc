@@ -60,6 +60,7 @@ jobs:
     permissions:
       contents: read
       actions: read
+      id-token: write # depot OIDC
     secrets: inherit
 
   report:

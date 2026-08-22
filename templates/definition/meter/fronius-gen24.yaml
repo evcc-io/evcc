@@ -31,6 +31,7 @@ params:
       generic: Integer
     deprecated: true
   - name: maxacpower
+    deprecated: true # read from nameplate
   - preset: battery-params
   - name: maxchargerate
 render: |
@@ -167,7 +168,7 @@ render: |
       id: 1
       value: 160:2:DCWH # mppt 2
       scale: 0.001
-  maxacpower: {{ .maxacpower }} # W
+  {{- include "sunspec-maxacpower-tcp" . }}
   curtail:
     source: sequence
     set:
@@ -330,5 +331,8 @@ render: |
             uri: {{ .host }}:{{ .port }}
             id: 1
             value: 124:0:InWRte
+    default:
+      source: error
+      error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

@@ -396,10 +396,10 @@ func (m *MockIdentifier) EXPECT() *MockIdentifierMockRecorder {
 }
 
 // Identify mocks base method.
-func (m *MockIdentifier) Identify() (string, error) {
+func (m *MockIdentifier) Identify() ([]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Identify")
-	ret0, _ := ret[0].(string)
+	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

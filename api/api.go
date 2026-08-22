@@ -130,9 +130,10 @@ type ChargeRater interface {
 	ChargedEnergy() (float64, error)
 }
 
-// Identifier identifies a vehicle and is implemented by the charger
+// Identifier identifies a vehicle and is implemented by the charger.
+// A charger may know more than one identity, e.g. an RFID tag and a vehicle id.
 type Identifier interface {
-	Identify() (string, error)
+	Identify() ([]string, error)
 }
 
 // Authorizer authorizes a charging session by supplying RFID credentials

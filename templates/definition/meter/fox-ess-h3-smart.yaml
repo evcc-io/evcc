@@ -60,36 +60,54 @@ render: |
         address: 39279 # PV1
         type: holding
         decode: int32
+      block: # 39279-39290
+        register: 39279
+        count: 12
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 39281 # PV2
         type: holding
         decode: int32
+      block: # 39279-39290
+        register: 39279
+        count: 12
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 39283 # PV3
         type: holding
         decode: int32
+      block: # 39279-39290
+        register: 39279
+        count: 12
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 39285 # PV4
         type: holding
         decode: int32
+      block: # 39279-39290
+        register: 39279
+        count: 12
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 39287 # PV5
         type: holding
         decode: int32
+      block: # 39279-39290
+        register: 39279
+        count: 12
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 39289 # PV6
         type: holding
         decode: int32
+      block: # 39279-39290
+        register: 39279
+        count: 12
   maxacpower: {{ .maxacpower }}
   {{- end }}
   {{- if eq .usage "battery" }}
@@ -244,5 +262,8 @@ render: |
                 address: 46003 # Remote Active Power, int32 across 46003 (high word) and 46004 (low word)
                 type: writemultiple
                 encoding: int32
+      default:
+        source: error
+        error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}
