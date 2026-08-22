@@ -62,3 +62,4 @@ render: |
   {{- end }}
   heatingzone: {{ .zone }}
   heatingsetpoint: {{ .setpoint }}
+  {{ include "heatpumpswitch" . }}

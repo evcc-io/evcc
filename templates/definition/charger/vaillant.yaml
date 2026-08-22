@@ -109,3 +109,4 @@ render: |
   heatingsetpoint: {{ .setpoint }}
   reboost: {{ .reboost }}
   hysteresis: {{ .hysteresis }}
+  {{ include "heatpumpswitch" . }}
