@@ -56,6 +56,10 @@ func TestControllerEnvelope(t *testing.T) {
 			assert.Equal(t, tc.activeMin, c.activeMinPower(), "active min power")
 			assert.Equal(t, tc.reachable, c.reachableMinPower(), "reachable min power")
 			assert.Equal(t, tc.max, c.effectiveMaxPower(), "effective max power")
+
+			// api.PowerController envelope
+			assert.Equal(t, tc.reachable, c.MinPower(), "envelope min power")
+			assert.Equal(t, tc.max, c.MaxPower(), "envelope max power")
 		})
 	}
 }

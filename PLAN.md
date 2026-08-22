@@ -60,16 +60,27 @@ slot in by supplying its own envelope.
 
 ## Steps
 
-1. **This PR** — rework in place (new commits, no force-push):
+1. **This PR** — rework in place (new commits, no force-push): *(done)*
    - collapse the transitional intent vocabulary (`chargeMinimum`, `fastCharging`,
      `feedInCharging`, `pvCharging`, `enforcePhases`) into `SetPower` + envelope
    - move welcome/climate floors into loadpoint power policy
    - relocate the phase decision and `phaseTimer` into the controller
    - the controller keeps embedding `*Loadpoint` for plumbing for now
-2. **Follow-up PR** — structural inversion: controller-owned state (`enabled`,
-   `offeredCurrent`, `phases`, `phaseTimer`), explicit narrow dependencies (charger, clock,
-   logger, publish hook, vehicle-limit provider), no `*Loadpoint` embedding.
-3. **Follow-up** — activate native `api.PowerController` chargers.
+2. **Follow-up PR** — structural inversion: *(state, embedding and envelope done on this
+   branch; explicit deps outstanding)*
+   - controller-owned state (`enabled`, `offeredCurrent`, `phases`, `phaseTimer`) — done:
+     fields live on `CurrentController`, guarded by the loadpoint's mutex; `syncCharger`
+     and enable bookkeeping moved along; `lp.ctrl()` is the transitional concrete accessor
+   - no `*Loadpoint` embedding — done: named `lp` field, dependencies explicit as `c.lp.x`
+   - `MinPower()`/`MaxPower()` envelope on `api.PowerController` — done: a native charger
+     supplies its own envelope; `CurrentController` implements it (lock-free, honors the
+     phase lock)
+   - explicit narrow dependencies (charger, clock, logger, publish hook, vehicle-limit
+     provider) — outstanding: charger attaches after construction, so plain field copies
+     would go stale; needs provider-style indirection to be designed
+3. **Follow-up** — activate native `api.PowerController` chargers, including wiring
+   loadpoint's power path to the interface envelope (today `effectiveMin/MaxPower` still
+   short-circuits to the concrete controller to preserve min-active-phases semantics).
 
 ## Behaviour changes
 

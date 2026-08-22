@@ -83,6 +83,22 @@ func (c *CurrentController) effectiveMaxCurrent() float64 {
 	return maxCurrent
 }
 
+// MinPower returns the lower bound of the capability envelope in W. With automatic
+// phase switching it spans down to the 1p minimum, with locked phase configuration
+// it reflects the locked phases.
+func (c *CurrentController) MinPower() float64 {
+	phases := c.lp.minActivePhases()
+	if c.lp.hasPhaseSwitching() && c.lp.phasesConfigured > 1 {
+		phases = c.lp.phasesConfigured
+	}
+	return currentToPower(c.effectiveMinCurrent(), phases)
+}
+
+// MaxPower returns the upper bound of the capability envelope in W
+func (c *CurrentController) MaxPower() float64 {
+	return c.effectiveMaxPower()
+}
+
 // effectiveMinPower returns the effective min power for the minimum active phases
 func (c *CurrentController) effectiveMinPower() float64 {
 	return Voltage * c.effectiveMinCurrent() * float64(c.lp.minActivePhases())
