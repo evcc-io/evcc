@@ -404,7 +404,7 @@
 							<template #icon><CircuitsIcon /></template>
 							<template #tags>
 								<DeviceTags v-if="!circuitsRoot" :tags="circuitsTags" />
-								<CircuitTags v-else :nodes="[circuitsRoot]" />
+								<CircuitTags v-else :nodes="[circuitsRoot]" :loadpoints="loadpoints" :meters="stateMeters"/>
 							</template>
 						</DeviceCard>
 						<DeviceCard
@@ -694,6 +694,7 @@ import type {
 	DeviceType,
 	Notification,
 	Remote,
+	Meter,
 } from "@/types/evcc";
 import { ConfigType, CURRENCY } from "@/types/evcc";
 import { circuitTree, type CircuitNode } from "@/utils/circuits";
@@ -852,6 +853,14 @@ export default defineComponent({
 		return { title: this.$t("config.main.title") };
 	},
 	computed: {
+		stateMeters(): Meter[] {
+			return [
+				...(store.state.grid ? [store.state.grid] : []),
+				...(store.state.aux ?? []),
+				...(store.state.ext ?? []),
+				...(store.state.consumers ?? []),
+			];
+		},
 		activeSlug(): string | undefined {
 			const slug = this.$route.hash.slice(1);
 			return SECTION_TITLES[slug] ? slug : undefined;
