@@ -909,11 +909,12 @@ func TestNewLoadpointFromConfigDisabledVehicle(t *testing.T) {
 	require.Empty(t, config.Instances(config.Vehicles().Devices()))
 }
 
-// TestPVDisableIdleContinuousDevice is a regression test for #32282: a continuous
-// device that is enabled but not consuming (heat pump boost signalled, compressor
-// idle) does not show its demand in site power. Without projecting it, the disable
-// gate only trips on grid consumption which the idle device never causes.
-func TestPVDisableIdleContinuousDevice(t *testing.T) {
+// TestPVDisableContinuousDeviceShortfall is a regression test for #32282: a continuous
+// device consuming less than its min power demand keeps the remainder out of site
+// power, so the disable gate never trips on the missing surplus. The shortfall
+// towards min power is projected into the gate regardless of charge status, since
+// some chargers (sgready) report StatusC while the device is idle.
+func TestPVDisableContinuousDeviceShortfall(t *testing.T) {
 	const dt = time.Minute
 
 	tc := []struct {
@@ -927,8 +928,14 @@ func TestPVDisableIdleContinuousDevice(t *testing.T) {
 		{"idle, insufficient surplus", api.StatusB, 0, -400, 0},
 		// idle device, export covers its demand: keep enabled
 		{"idle, sufficient surplus", api.StatusB, 0, -700, 7},
-		// consuming device: measured power reflects demand, keep lenient hysteresis
-		{"consuming, exporting", api.StatusC, 300, -200, minA},
+		// idle device reporting StatusC (sgready-style): still disable
+		{"idle, StatusC, insufficient surplus", api.StatusC, 0, -400, 0},
+		// starting device: own draw plus surplus covers min power, keep enabled
+		{"starting, demand covered", api.StatusB, 300, -400, 7},
+		// running below min power without surplus for the remaining demand: disable
+		{"running below min, insufficient surplus", api.StatusC, 300, -200, 0},
+		// consuming min power, importing: unchanged disable behavior
+		{"consuming, importing", api.StatusC, 600, 100, 0},
 	}
 
 	for _, tc := range tc {
