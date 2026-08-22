@@ -388,7 +388,7 @@ test.describe("session details", async () => {
     await expect(modal.getByLabel("Charging point")).toHaveValue("Garage");
     await expect(modal.getByLabel("Vehicle")).toHaveValue("weißes Model 3");
     await expect(modal.getByTestId("session-details-date")).toContainText(
-      ["Thu, May 4, 22:00", "Fri, May 5, 06:00"].join("")
+      ["Thu, May 4, 2023, 22:00", "Fri, May 5, 2023, 06:00"].join("")
     );
     await expect(modal.getByTestId("session-details-energy")).toContainText("5.0 kWh");
     await expect(modal.getByTestId("session-details-energy")).toContainText("1:00");
@@ -410,7 +410,7 @@ test.describe("session details", async () => {
     await expect(modal.getByLabel("Charging point")).toHaveValue("Carport");
     await expect(modal.getByLabel("Vehicle")).toHaveValue("blauer e-Golf");
     await expect(modal.getByTestId("session-details-date")).toContainText(
-      ["Wed, Mar 1, 07:00", "Tue, May 2, 12:00"].join("")
+      ["Wed, Mar 1, 2023, 07:00", "Tue, May 2, 2023, 12:00"].join("")
     );
     await expect(modal.getByTestId("session-details-energy")).toContainText("10.0 kWh");
     await expect(modal.getByTestId("session-details-energy")).toContainText("1:00");
@@ -420,6 +420,31 @@ test.describe("session details", async () => {
     await expect(modal.getByTestId("session-details-co2")).toContainText("300 g/kWh");
     await expect(modal.getByTestId("session-details-added-range")).toContainText("+60 km");
     await expect(modal.getByTestId("session-details-odometer")).toContainText("12,345 km");
+  });
+
+  test("date format setting (session 1)", async ({ page }) => {
+    await page.goto("/#/sessions?year=2023&month=3");
+    const modal = page.getByTestId("session-details");
+    const date = modal.getByTestId("session-details-date");
+
+    // auto format
+    await page.getByTestId("sessions-entry").nth(0).click();
+    await expectModalVisible(modal);
+    await expect(date).toContainText("Wed, Mar 1, 2023, 07:00");
+    await modal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(modal);
+
+    await openMoreMenu(page);
+    await page.getByRole("button", { name: "User Interface", exact: true }).click();
+    const settings = page.getByTestId("global-settings-modal");
+    await expectModalVisible(settings);
+    await settings.getByLabel("Date format").selectOption("ymd");
+    await settings.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(settings);
+
+    await page.getByTestId("sessions-entry").nth(0).click();
+    await expectModalVisible(modal);
+    await expect(date).toContainText("Wed 2023-03-01 07:00");
   });
 
   test("edit session (session 5)", async ({ page }) => {
