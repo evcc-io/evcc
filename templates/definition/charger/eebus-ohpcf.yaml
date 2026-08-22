@@ -19,7 +19,6 @@ params:
       en: Wait time after which a newly announced optional power consumption is scheduled again.
   - name: disablepowerlimiter
     type: bool
-    default: false
     advanced: true
     description:
       de: Leistungsgrenzen ignorieren
