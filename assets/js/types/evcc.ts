@@ -1383,7 +1383,7 @@ export type DeviceType =
   | "messenger"
   | "tariff"
   | "hems"
-  | "circuit";
+  | "circuit"
   | "curtailer";
 export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext" | "consumer";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
