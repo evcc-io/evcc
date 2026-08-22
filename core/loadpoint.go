@@ -1657,6 +1657,12 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryPower f
 			// notes: activePhases can be 1, 2 or 3 and phaseTimer can only be active if lp current is already at minCurrent
 			projectedSitePower -= Voltage * minCurrent * float64(activePhases-1)
 		}
+		// a continuous device consuming less than its min power demand keeps the
+		// remainder out of site power, hiding insufficient surplus until it ramps
+		// up (#32282). Project the shortfall towards min power into the gate.
+		if lp.chargerHasFeature(api.Continuous) {
+			projectedSitePower += max(0, currentToPower(minCurrent, lp.minActivePhases())-lp.chargePower)
+		}
 		// kick off disable sequence, unless climater keep-alive is holding
 		// charging at minCurrent — otherwise the "pausing soon" badge would
 		// flash on/off forever while climater is active (issue #29834).
