@@ -1,6 +1,8 @@
 package core
 
 import (
+	"math"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 )
@@ -27,6 +29,19 @@ func (c *CurrentController) effectiveMinCurrent() float64 {
 		}
 	}
 
+	// power-limited chargers (e.g. EEBus OHPCF heat pump) report their demand in
+	// W; convert to per-phase current so the PV enable gate covers it
+	if pl, ok := api.Cap[api.PowerLimiter](c.lp.charger); ok {
+		if res, _, err := pl.GetMinMaxPower(); err == nil && res > 0 {
+			chargerMin = res / (Voltage * float64(c.lp.minActivePhases()))
+			// coarse chargers truncate to full amps in setLimit, so round the
+			// demand up to keep the enable gate reachable (#31549)
+			if c.lp.coarseCurrent() {
+				chargerMin = math.Ceil(chargerMin)
+			}
+		}
+	}
+
 	switch {
 	case max(vehicleMin, chargerMin) == 0:
 		return lpMin
@@ -50,6 +65,18 @@ func (c *CurrentController) effectiveMaxCurrent() float64 {
 	if cl, ok := api.Cap[api.CurrentLimiter](c.lp.charger); ok {
 		if _, res, err := cl.GetMinMaxCurrent(); err == nil && res > 0 {
 			maxCurrent = min(maxCurrent, res)
+		}
+	}
+
+	if pl, ok := api.Cap[api.PowerLimiter](c.lp.charger); ok {
+		if _, res, err := pl.GetMinMaxPower(); err == nil && res > 0 {
+			powerMax := res / (Voltage * float64(c.lp.maxActivePhases()))
+			// match effectiveMinCurrent's rounding so a fixed power request
+			// (min == max) doesn't yield min > max on coarse chargers (#31549)
+			if c.lp.coarseCurrent() {
+				powerMax = math.Ceil(powerMax)
+			}
+			maxCurrent = min(maxCurrent, powerMax)
 		}
 	}
 

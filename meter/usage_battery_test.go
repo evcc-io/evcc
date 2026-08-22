@@ -1,11 +1,58 @@
 package meter
 
 import (
+	"context"
 	"testing"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/require"
 )
+
+func TestBatteryCapacity(t *testing.T) {
+	ctx := context.TODO()
+
+	// static value
+	{
+		var cc batteryCapacityCtx
+		require.NoError(t, util.DecodeOther(map[string]any{"capacity": 10}, &cc))
+		g, err := cc.Decorator(ctx)
+		require.NoError(t, err)
+		require.NotNil(t, g)
+		require.Equal(t, 10.0, g())
+	}
+
+	// zero value is treated as not configured
+	{
+		var cc batteryCapacityCtx
+		require.NoError(t, util.DecodeOther(map[string]any{"capacity": 0}, &cc))
+		g, err := cc.Decorator(ctx)
+		require.NoError(t, err)
+		require.Nil(t, g)
+	}
+
+	// unset is not configured
+	{
+		var cc batteryCapacityCtx
+		g, err := cc.Decorator(ctx)
+		require.NoError(t, err)
+		require.Nil(t, g)
+	}
+
+	// float plugin
+	{
+		var cc batteryCapacityCtx
+		require.NoError(t, util.DecodeOther(map[string]any{
+			"capacity": map[string]any{
+				"source": "const",
+				"value":  "12.5",
+			},
+		}, &cc))
+		g, err := cc.Decorator(ctx)
+		require.NoError(t, err)
+		require.NotNil(t, g)
+		require.Equal(t, 12.5, g())
+	}
+}
 
 func TestBatterySocLimits(t *testing.T) {
 	other := map[string]any{

@@ -15,12 +15,18 @@ import (
 	"go.yaml.in/yaml/v4"
 )
 
+// IncludeExt is the file extension of class-local, include-only templates
+const IncludeExt = ".tpl"
+
 var (
 	//go:embed includes/*.tpl
 	includeFS embed.FS
 
 	// baseTmpl holds all included template definitions
 	baseTmpl *template.Template
+
+	// classTmpl holds baseTmpl plus the class-local include definitions
+	classTmpl = make(map[Class]*template.Template)
 
 	templates       = make(map[Class][]Template)
 	ConfigDefaults  configDefaults
@@ -31,11 +37,33 @@ var (
 func init() {
 	ConfigDefaults.Load()
 
-	baseTmpl = template.Must(FuncMap(template.New("base")).ParseFS(includeFS, "includes/*.tpl"))
+	// the root template is replaced by the rendered template's body, so its name
+	// must not collide with an include name (`$` cannot appear in a file name)
+	baseTmpl = template.Must(FuncMap(template.New("$root")).ParseFS(includeFS, "includes/*.tpl"))
 
-	for _, class := range []Class{Charger, Meter, Vehicle, Tariff, Messenger, Circuit} {
+	for _, class := range []Class{Charger, Meter, Vehicle, Tariff, Messenger, Circuit, Hems, Curtailer} {
+		if err := loadIncludes(definition.TemplateIncludes, class); err != nil {
+			panic(err)
+		}
 		load(class)
 	}
+}
+
+// loadIncludes parses the class-local include-only templates
+func loadIncludes(fsys fs.FS, class Class) error {
+	files, err := fs.Glob(fsys, class.String()+"/*"+IncludeExt)
+	if err != nil || len(files) == 0 {
+		return err
+	}
+
+	tmpl, err := FuncMap(template.Must(baseTmpl.Clone())).ParseFS(fsys, files...)
+	if err != nil {
+		return fmt.Errorf("processing %s includes failed: %w", class, err)
+	}
+
+	classTmpl[class] = tmpl
+
+	return nil
 }
 
 // Register adds a template file to the registry
@@ -76,6 +104,19 @@ func fromBytes(b []byte) (Template, error) {
 	for _, f := range []func() error{tmpl.ResolvePresets, tmpl.ResolveGroup, tmpl.UpdateParamsWithDefaults, tmpl.UpdateModbusParamsWithDefaults, tmpl.SortRequiredParamsFirst, tmpl.Validate} {
 		if err := f(); err != nil {
 			return tmpl, fmt.Errorf("template '%s': %w", tmpl.Template, err)
+		}
+	}
+
+	// push down capabilities to products
+	for i := range tmpl.Products {
+		tmpl.Products[i].Capabilities = append(tmpl.Products[i].Capabilities, tmpl.Capabilities...)
+
+		seen := make(map[Capability]struct{}, len(tmpl.Products[i].Capabilities))
+		for _, c := range tmpl.Products[i].Capabilities {
+			if _, ok := seen[c]; ok {
+				return Template{}, fmt.Errorf("template '%s': duplicate capability '%s' for product '%s'", tmpl.Template, c, tmpl.Products[i].Identifier())
+			}
+			seen[c] = struct{}{}
 		}
 	}
 

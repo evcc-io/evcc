@@ -12,4 +12,6 @@ const (
 	Loadpoint
 	Circuit
 	Messenger
+	Hems
+	Curtailer
 )

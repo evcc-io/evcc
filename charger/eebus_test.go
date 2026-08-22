@@ -8,6 +8,7 @@ import (
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	evcemuc "github.com/enbility/eebus-go/usecases/cem/evcem"
 	"github.com/enbility/eebus-go/usecases/mocks"
+	spineapi "github.com/enbility/spine-go/api"
 	spinemocks "github.com/enbility/spine-go/mocks"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
@@ -131,6 +132,12 @@ func opevLimits3p(min, max, def float64) ([]float64, []float64, []float64, error
 	return []float64{min, min, min}, []float64{max, max, max}, []float64{def, def, def}, nil
 }
 
+// ackWrite makes a mocked WriteLoadControlLimits invoke its result callback with a
+// success result, as the real eebus-go does, so eebus.Await completes.
+func ackWrite(_ spineapi.EntityRemoteInterface, _ []ucapi.LoadLimitsPhase, resultCB func(model.ResultDataType, model.MsgCounterType)) {
+	resultCB(model.ResultDataType{}, model.MsgCounterType(0))
+}
+
 func TestWriteCurrentLimitData_OpevOnly(t *testing.T) {
 	eebus, opev, oscev, evEntity := newTestEEBus(t)
 	_ = eebus
@@ -140,7 +147,7 @@ func TestWriteCurrentLimitData_OpevOnly(t *testing.T) {
 	opev.EXPECT().CurrentLimits(evEntity).Return(opevLimits3p(6, 16, 0))
 	opev.EXPECT().WriteLoadControlLimits(evEntity, mock.MatchedBy(func(limits []ucapi.LoadLimitsPhase) bool {
 		return len(limits) == 3 && limits[0].IsActive && limits[0].Value == 10
-	}), mock.Anything).Return(nil, nil)
+	}), mock.Anything).Run(ackWrite).Return(nil, nil)
 
 	oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(false)
 
@@ -158,7 +165,7 @@ func TestWriteCurrentLimitData_OpevAndOscev(t *testing.T) {
 	opev.EXPECT().WriteLoadControlLimits(evEntity, mock.MatchedBy(func(limits []ucapi.LoadLimitsPhase) bool {
 		// OPEV: active at 10A (below max of 16)
 		return len(limits) == 3 && limits[0].IsActive && limits[0].Value == 10
-	}), mock.Anything).Return(nil, nil)
+	}), mock.Anything).Run(ackWrite).Return(nil, nil)
 
 	oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
 	oscev.EXPECT().LoadControlLimits(evEntity).Return([]ucapi.LoadLimitsPhase{}, nil)
@@ -166,7 +173,7 @@ func TestWriteCurrentLimitData_OpevAndOscev(t *testing.T) {
 	oscev.EXPECT().WriteLoadControlLimits(evEntity, mock.MatchedBy(func(limits []ucapi.LoadLimitsPhase) bool {
 		// OSCEV: active at 10A (>= min of 2, recommendation to charge)
 		return len(limits) == 3 && limits[0].IsActive && limits[0].Value == 10
-	}), mock.Anything).Return(nil, nil)
+	}), mock.Anything).Run(ackWrite).Return(nil, nil)
 
 	err := eebus.writeCurrentLimitData(evEntity, 10)
 	require.NoError(t, err)
@@ -182,7 +189,7 @@ func TestWriteCurrentLimitData_AtMax(t *testing.T) {
 	opev.EXPECT().WriteLoadControlLimits(evEntity, mock.MatchedBy(func(limits []ucapi.LoadLimitsPhase) bool {
 		// OPEV: inactive at max (no restriction needed)
 		return len(limits) == 3 && !limits[0].IsActive && limits[0].Value == 16
-	}), mock.Anything).Return(nil, nil)
+	}), mock.Anything).Run(ackWrite).Return(nil, nil)
 
 	oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
 	oscev.EXPECT().LoadControlLimits(evEntity).Return([]ucapi.LoadLimitsPhase{}, nil)
@@ -190,7 +197,7 @@ func TestWriteCurrentLimitData_AtMax(t *testing.T) {
 	oscev.EXPECT().WriteLoadControlLimits(evEntity, mock.MatchedBy(func(limits []ucapi.LoadLimitsPhase) bool {
 		// OSCEV: active at 16A (>= min, recommend charging)
 		return len(limits) == 3 && limits[0].IsActive && limits[0].Value == 16
-	}), mock.Anything).Return(nil, nil)
+	}), mock.Anything).Run(ackWrite).Return(nil, nil)
 
 	err := eebus.writeCurrentLimitData(evEntity, 16)
 	require.NoError(t, err)
@@ -206,7 +213,7 @@ func TestWriteCurrentLimitData_Disable(t *testing.T) {
 	opev.EXPECT().WriteLoadControlLimits(evEntity, mock.MatchedBy(func(limits []ucapi.LoadLimitsPhase) bool {
 		// OPEV: active at 0A (hard stop)
 		return len(limits) == 3 && limits[0].IsActive && limits[0].Value == 0
-	}), mock.Anything).Return(nil, nil)
+	}), mock.Anything).Run(ackWrite).Return(nil, nil)
 
 	oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
 	oscev.EXPECT().LoadControlLimits(evEntity).Return([]ucapi.LoadLimitsPhase{}, nil)
@@ -214,7 +221,7 @@ func TestWriteCurrentLimitData_Disable(t *testing.T) {
 	oscev.EXPECT().WriteLoadControlLimits(evEntity, mock.MatchedBy(func(limits []ucapi.LoadLimitsPhase) bool {
 		// OSCEV: inactive at 0A (no recommendation, < min)
 		return len(limits) == 3 && !limits[0].IsActive && limits[0].Value == 0
-	}), mock.Anything).Return(nil, nil)
+	}), mock.Anything).Run(ackWrite).Return(nil, nil)
 
 	err := eebus.writeCurrentLimitData(evEntity, 0)
 	require.NoError(t, err)
@@ -227,7 +234,7 @@ func TestWriteCurrentLimitData_OscevNoLimitData(t *testing.T) {
 	// OSCEV scenario available but no limit data (e.g. PCMP wallbox)
 	opev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
 	opev.EXPECT().CurrentLimits(evEntity).Return(opevLimits3p(6, 16, 0))
-	opev.EXPECT().WriteLoadControlLimits(evEntity, mock.Anything, mock.Anything).Return(nil, nil)
+	opev.EXPECT().WriteLoadControlLimits(evEntity, mock.Anything, mock.Anything).Run(ackWrite).Return(nil, nil)
 
 	oscev.EXPECT().IsScenarioAvailableAtEntity(evEntity, uint(1)).Return(true)
 	oscev.EXPECT().LoadControlLimits(evEntity).Return(nil, errors.New("data not available"))
@@ -434,4 +441,49 @@ func TestEEBusCurrentPower_Elli(t *testing.T) {
 	power, err := eebus.currentPower()
 	require.NoError(t, err)
 	assert.Equal(t, 4002.0, power)
+}
+
+// minMax must only trust EV current limits under ISO15118; IEC61851 EVs
+// report EVSE defaults that would override the loadpoint config (#14418).
+func TestEEBusMinMaxCommunicationStandard(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		standard model.DeviceConfigurationKeyValueStringType
+		iso      bool
+	}{
+		{"iec", model.DeviceConfigurationKeyValueStringTypeIEC61851, false},
+		{"unknown", model.DeviceConfigurationKeyValueStringType("unknown"), false},
+		{"iso", model.DeviceConfigurationKeyValueStringTypeISO151182ED2, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			evcc := mocks.NewCemEVCCInterface(t)
+			opev := mocks.NewCemOPEVInterface(t)
+			evEntity := spinemocks.NewEntityRemoteInterface(t)
+
+			eebus := &EEBus{
+				cem: &eebus.CustomerEnergyManagement{
+					EvCC: evcc,
+					OpEV: opev,
+				},
+				ev:  evEntity,
+				log: util.NewLogger("test"),
+			}
+
+			evcc.EXPECT().EVConnected(evEntity).Return(true)
+			evcc.EXPECT().CommunicationStandard(evEntity).Return(tc.standard, nil)
+
+			if tc.iso {
+				opev.EXPECT().CurrentLimits(evEntity).Return(opevLimits3p(6, 16, 0))
+			}
+
+			mm, err := eebus.minMax()
+			if tc.iso {
+				require.NoError(t, err)
+				assert.Equal(t, 6.0, mm.min)
+				assert.Equal(t, 16.0, mm.max)
+			} else {
+				require.ErrorIs(t, err, api.ErrNotAvailable)
+			}
+		})
+	}
 }

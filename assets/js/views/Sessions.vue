@@ -65,102 +65,89 @@
 					</IconSelectGroup>
 				</div>
 
-				<h3
-					class="fw-normal my-0 d-flex gap-3 flex-wrap d-flex align-items-baseline overflow-hidden"
-				>
-					<span v-if="historyTitle" class="d-block no-wrap text-truncate">
-						{{ historyTitle }}
-					</span>
-					<small class="d-block no-wrap text-truncate">{{ historySubTitle }}</small>
-				</h3>
-				<EnergyHistoryChart
-					v-if="activeType === types.SOLAR"
-					class="mb-5"
-					:sessions="currentSessions"
-					:color-mappings="colorMappings"
-					:device-colors="deviceColors"
-					:group-by="selectedGroup"
-					:period="period"
-				/>
-				<CostHistoryChart
-					v-else
-					class="mb-5"
-					:sessions="currentTypeSessions"
-					:color-mappings="colorMappings"
-					:device-colors="deviceColors"
-					:group-by="selectedGroup"
-					:cost-type="activeType"
-					:currency="currency"
-					:period="period"
-				/>
-				<div v-if="showExtraCharts" class="row align-items-start">
-					<div class="col-12 col-lg-6 mb-5">
-						<h3 class="fw-normal my-4">{{ firstExtraTitle }}</h3>
-						<div v-if="activeType === types.SOLAR">
-							<SolarYearChart
-								v-if="showSolarYearChart"
-								:period="period"
-								:sessions="currentSessions"
-							/>
-							<SolarGroupedChart
-								v-else
-								:sessions="currentSessions"
-								:color-mappings="colorMappings"
-								:device-colors="deviceColors"
-								:group-by="selectedGroupWithoutNone"
-							/>
+				<Card :title="historyTitle" :subtitle="historySubTitle" edge-to-edge class="mb-4">
+					<EnergyHistoryChart
+						v-if="activeType === types.SOLAR"
+						:sessions="currentSessions"
+						:color-mappings="colorMappings"
+						:device-colors="deviceColors"
+						:group-by="selectedGroup"
+						:period="period"
+					/>
+					<CostHistoryChart
+						v-else
+						:sessions="currentTypeSessions"
+						:color-mappings="colorMappings"
+						:device-colors="deviceColors"
+						:group-by="selectedGroup"
+						:cost-type="activeType"
+						:currency="currency"
+						:period="period"
+					/>
+				</Card>
+				<div v-if="showExtraCharts">
+					<div class="row">
+						<div class="col-12 col-lg-6 mb-4">
+							<Card :title="firstExtraTitle" edge-to-edge class="h-100">
+								<div v-if="activeType === types.SOLAR">
+									<SolarYearChart
+										v-if="showSolarYearChart"
+										:period="period"
+										:sessions="currentSessions"
+									/>
+									<SolarGroupedChart
+										v-else
+										:sessions="currentSessions"
+										:color-mappings="colorMappings"
+										:device-colors="deviceColors"
+										:group-by="selectedGroupWithoutNone"
+									/>
+								</div>
+								<AvgCostGroupedChart
+									v-else
+									:sessions="currentTypeSessions"
+									:color-mappings="colorMappings"
+									:device-colors="deviceColors"
+									:group-by="selectedGroupWithoutNone"
+									:cost-type="activeType"
+									:currency="currency"
+								/>
+							</Card>
 						</div>
-						<AvgCostGroupedChart
-							v-else
-							:sessions="currentTypeSessions"
-							:color-mappings="colorMappings"
-							:device-colors="deviceColors"
-							:suggested-max-price="suggestedMaxAvgCost"
-							:group-by="selectedGroupWithoutNone"
-							:cost-type="activeType"
-							:currency="currency"
-						/>
-					</div>
-					<div class="col-12 col-lg-6 mb-5">
-						<h3 class="fw-normal my-4">{{ secondExtraTitle }}</h3>
-						<EnergyGroupedChart
-							v-if="activeType === types.SOLAR"
-							:sessions="currentSessions"
-							:color-mappings="colorMappings"
-							:device-colors="deviceColors"
-							:group-by="selectedGroupWithoutNone"
-						/>
-						<CostGroupedChart
-							v-else
-							:sessions="currentTypeSessions"
-							:color-mappings="colorMappings"
-							:device-colors="deviceColors"
-							:group-by="selectedGroupWithoutNone"
-							:cost-type="activeType"
-							:currency="currency"
-						/>
+						<div class="col-12 col-lg-6 mb-4">
+							<Card :title="secondExtraTitle" edge-to-edge class="h-100">
+								<EnergyGroupedChart
+									v-if="activeType === types.SOLAR"
+									:sessions="currentSessions"
+									:color-mappings="colorMappings"
+									:device-colors="deviceColors"
+									:group-by="selectedGroupWithoutNone"
+								/>
+								<CostGroupedChart
+									v-else
+									:sessions="currentTypeSessions"
+									:color-mappings="colorMappings"
+									:device-colors="deviceColors"
+									:group-by="selectedGroupWithoutNone"
+									:cost-type="activeType"
+									:currency="currency"
+								/>
+							</Card>
+						</div>
 					</div>
 				</div>
 
-				<SessionTable
-					v-if="showTable"
-					:sessions="currentSessions"
-					:vehicleFilter="vehicleFilter"
-					:loadpointFilter="loadpointFilter"
-					:currency="currency"
-					@show-session="showDetails"
-				/>
-				<div class="d-flex gap-2 my-3">
-					<a
-						class="btn btn-outline-secondary"
-						tabindex="0"
-						:href="csvLink"
-						download
-						data-testid="sessions-download"
-						@click="handleDownloadClick($event, csvLink)"
-					>
-						{{ csvLinkLabel }}
-					</a>
+				<Card v-if="showTable" :title="$t('sessions.overview')" edge-to-edge class="mb-4">
+					<SessionTable
+						:sessions="currentSessions"
+						:vehicleFilter="vehicleFilter"
+						:loadpointFilter="loadpointFilter"
+						:currency="currency"
+						@show-session="showDetails"
+					/>
+				</Card>
+				<div class="d-flex align-items-baseline gap-2 my-3">
+					<DownloadButton :label="$t('general.download')" :href="downloadHref()" />
 					<button
 						v-if="!showTable"
 						class="btn btn-link text-muted"
@@ -201,6 +188,7 @@ import CostHistoryChart from "../components/Sessions/CostHistoryChart.vue";
 import CostGroupedChart from "../components/Sessions/CostGroupedChart.vue";
 import AvgCostGroupedChart from "../components/Sessions/AvgCostGroupedChart.vue";
 import Header from "../components/Top/Header.vue";
+import Card from "../components/Helper/Card.vue";
 import IconSelectGroup from "../components/Helper/IconSelectGroup.vue";
 import IconSelectItem from "../components/Helper/IconSelectItem.vue";
 import SelectGroup from "../components/Helper/SelectGroup.vue";
@@ -211,11 +199,12 @@ import settings from "../settings";
 import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
 import DateNavigator from "../components/Sessions/DateNavigator.vue";
 import PeriodHeader from "../components/Sessions/PeriodHeader.vue";
-import { handleDownloadClick } from "@/utils/native";
+import DownloadButton from "../components/Helper/DownloadButton.vue";
 import DynamicPriceIcon from "../components/MaterialIcon/DynamicPrice.vue";
 import { TYPES, GROUPS, PERIODS, type Session } from "../components/Sessions/types";
 import { defineComponent, type PropType } from "vue";
 import { CURRENCY, type Notification } from "@/types/evcc";
+import vehicleList from "@/utils/vehicleList";
 
 export default defineComponent({
 	name: "Sessions",
@@ -223,6 +212,8 @@ export default defineComponent({
 		SessionDetailsModal,
 		SessionTable,
 		TopHeader: Header,
+		Card,
+		DownloadButton,
 		EnergyHistoryChart,
 		EnergyGroupedChart,
 		IconSelectGroup,
@@ -467,8 +458,7 @@ export default defineComponent({
 			});
 		},
 		vehicleList() {
-			const vehicles = store.state.vehicles || {};
-			return Object.entries(vehicles).map(([name, vehicle]) => ({ ...vehicle, name }));
+			return vehicleList(store.state.vehicles);
 		},
 		loadpointList() {
 			const loadpoints = store.state.loadpoints || [];
@@ -482,85 +472,26 @@ export default defineComponent({
 			date.setMonth(this.month - 1, 1);
 			return this.fmtMonth(date, false);
 		},
-		csvLinkLabel() {
-			if (this.period === PERIODS.MONTH) {
-				const date = new Date();
-				date.setMonth(this.month - 1, 1);
-				date.setFullYear(this.year);
-				const period = this.fmtMonthYear(date);
-				return this.$t("sessions.csvPeriod", { period });
-			} else if (this.period === PERIODS.YEAR) {
-				const period = this.year;
-				return this.$t("sessions.csvPeriod", { period });
-			} else {
-				return this.$t("sessions.csvTotal");
-			}
-		},
-		csvLink() {
-			if (this.period === PERIODS.MONTH) {
-				return this.csvHrefLink(this.year, this.month);
-			} else if (this.period === PERIODS.YEAR) {
-				return this.csvHrefLink(this.year);
-			}
-			return this.csvHrefLink();
-		},
 		deviceColors(): DeviceColors {
 			return deviceColorMap(store.state.deviceColors);
 		},
 		colorMappings() {
-			const lastThreeMonths = new Date();
-			lastThreeMonths.setMonth(lastThreeMonths.getMonth() - 3);
-
-			// Aggregate energy to get sorted list of loadpoints/vehicles for coloring
-			const aggregateEnergy = (group: Exclude<GROUPS, GROUPS.NONE>) => {
-				return this.sessionsWithDefaults.reduce((acc: Record<string, number>, session) => {
-					if (new Date(session.created) >= lastThreeMonths) {
-						const key = session[group];
-						acc[key] = (acc[key] || 0) + session.chargedEnergy;
-					}
-					return acc;
-				}, {});
-			};
-
-			// Ordered key list: sessions ranked by recent energy first, then any
-			// remaining keys encountered in the dataset.
-			const orderedKeys = (
-				energyAggregation: Record<string, number>,
-				colorType: Exclude<GROUPS, GROUPS.NONE>
-			): string[] => {
-				const ranked = Object.entries(energyAggregation)
-					.sort((a, b) => b[1] - a[1])
-					.map(([k]) => k)
-					.filter(Boolean);
-				const seen = new Set(ranked);
+			// alphabetical keys for stable palette assignment; manual overrides win
+			const uniqueKeys = (group: Exclude<GROUPS, GROUPS.NONE>): string[] => {
+				const keys = new Set<string>();
 				for (const s of this.sessionsWithDefaults) {
-					const k = s[colorType];
-					if (k && !seen.has(k)) {
-						ranked.push(k);
-						seen.add(k);
-					}
+					const k = s[group];
+					if (k) keys.add(k);
 				}
-				return ranked;
+				return Array.from(keys).sort((a, b) => a.localeCompare(b));
 			};
 
 			const overrides = this.deviceColors;
-			const loadpointColors = resolveColors(
-				orderedKeys(aggregateEnergy(GROUPS.LOADPOINT), GROUPS.LOADPOINT),
-				overrides
-			);
-			const vehicleColors = resolveColors(
-				orderedKeys(aggregateEnergy(GROUPS.VEHICLE), GROUPS.VEHICLE),
-				overrides
-			);
-
-			const solar = { self: colors.self, grid: colors.grid };
-			const cost = { price: colors.price, co2: colors.co2 };
-
 			return {
-				loadpoint: loadpointColors,
-				vehicle: vehicleColors,
-				solar,
-				cost,
+				loadpoint: resolveColors(uniqueKeys(GROUPS.LOADPOINT), overrides),
+				vehicle: resolveColors(uniqueKeys(GROUPS.VEHICLE), overrides),
+				solar: { self: colors.self, grid: colors.grid },
+				cost: { price: colors.price, co2: colors.co2 },
 			};
 		},
 		groupIcons() {
@@ -621,23 +552,6 @@ export default defineComponent({
 
 			return (isGrouped && hasMultipleEntries) || (isSolar && isNotMonth && !isGrouped);
 		},
-		suggestedMaxAvgPrice() {
-			// returns the 98th percentile of avg prices for all sessions
-			const sessionsWithPrice = this.sessions.filter((s) => s.pricePerKWh !== null);
-			const prices = sessionsWithPrice.map((s) => s.pricePerKWh ?? 0);
-			return this.percentile(prices, 98) ?? 0;
-		},
-		suggestedMaxAvgCo2() {
-			// returns the 98th percentile of avg co2 emissions for all sessions
-			const sessionsWithCo2 = this.sessions.filter((s) => s.co2PerKWh !== null);
-			const co2 = sessionsWithCo2.map((s) => s.co2PerKWh ?? 0);
-			return this.percentile(co2, 98) ?? 0;
-		},
-		suggestedMaxAvgCost() {
-			return this.activeType === TYPES.PRICE
-				? this.suggestedMaxAvgPrice
-				: this.suggestedMaxAvgCo2;
-		},
 	},
 	watch: {
 		offline() {
@@ -648,7 +562,6 @@ export default defineComponent({
 		this.loadSessions();
 	},
 	methods: {
-		handleDownloadClick,
 		changePeriod(newPeriod: PERIODS) {
 			let month: number | undefined = this.month;
 			let year: number | undefined = this.year;
@@ -681,13 +594,14 @@ export default defineComponent({
 			);
 			modal.show();
 		},
-		csvHrefLink(year?: number, month?: number) {
-			const params = new URLSearchParams({
-				format: "csv",
-				lang: this.$i18n?.locale,
-			});
-			if (year) params.append("year", year.toString());
-			if (month) params.append("month", month.toString());
+		downloadHref() {
+			const params = new URLSearchParams({ lang: this.$i18n?.locale });
+			if (this.period === PERIODS.MONTH || this.period === PERIODS.YEAR) {
+				params.append("year", this.year.toString());
+			}
+			if (this.period === PERIODS.MONTH) {
+				params.append("month", this.month.toString());
+			}
 			return `./api/sessions?${params.toString()}`;
 		},
 		updateType(type: TYPES) {
@@ -700,12 +614,6 @@ export default defineComponent({
 		},
 		updateDate({ year, month }: { year: number; month: number }) {
 			this.$router.push({ query: { ...this.$route.query, year, month } });
-		},
-		percentile(arr: number[], p: number): number | null {
-			if (arr.length === 0) return null;
-			const sorted = arr.sort((a, b) => a - b);
-			const index = (p / 100) * (sorted.length - 1);
-			return sorted[Math.floor(index)] ?? null;
 		},
 	},
 });

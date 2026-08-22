@@ -59,6 +59,19 @@
 				equal-width
 			/>
 		</FormRow>
+		<FormRow id="settingsDateFormat" :label="$t('settings.dateFormat.label')">
+			<select
+				id="settingsDateFormat"
+				v-model="dateFormat"
+				class="form-select form-select-sm w-75"
+			>
+				<option value="">{{ $t("settings.dateFormat.auto") }}</option>
+				<option value="dmy">{{ $t("settings.dateFormat.dmy") }}</option>
+				<option value="mdy">{{ $t("settings.dateFormat.mdy") }}</option>
+				<option value="ymd">{{ $t("settings.dateFormat.ymd") }}</option>
+			</select>
+			<div class="form-text evcc-gray">{{ dateFormatExample }}</div>
+		</FormRow>
 		<FormRow v-if="loadpoints.length" :label="$t('settings.loadpoints.label')">
 			<LoadpointOrderSettings :loadpoints="loadpoints" />
 		</FormRow>
@@ -91,17 +104,24 @@ import {
 	removeLocalePreference,
 } from "@/i18n.ts";
 import { getThemePreference, setThemePreference } from "@/theme.ts";
-import { getUnits, setUnits, is12hFormat, set12hFormat } from "@/units";
+import {
+	getUnits,
+	setUnits,
+	is12hFormat,
+	set12hFormat,
+	getDateFormat,
+	setDateFormat,
+} from "@/units";
 import { isApp } from "@/utils/native";
 import { defineComponent, type PropType } from "vue";
-import { LENGTH_UNIT, THEME, type UiLoadpoint } from "@/types/evcc";
-
-const TIME_12H = "12";
-const TIME_24H = "24";
+import { LENGTH_UNIT, THEME, TIME_FORMAT, type UiLoadpoint } from "@/types/evcc";
+import formatter from "@/mixins/formatter";
+import type { DateFormat } from "@/settings";
 
 export default defineComponent({
 	name: "UserInterfaceSettings",
 	components: { FormRow, SelectGroup, LoadpointOrderSettings },
+	mixins: [formatter],
 	props: {
 		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
 	},
@@ -110,14 +130,25 @@ export default defineComponent({
 			theme: getThemePreference(),
 			language: getLocalePreference() || "",
 			unit: getUnits(),
-			timeFormat: is12hFormat() ? TIME_12H : TIME_24H,
+			timeFormat: is12hFormat() ? TIME_FORMAT.H12 : TIME_FORMAT.H24,
 			fullscreenActive: false,
 			THEMES: Object.values(THEME),
 			UNITS: Object.values(LENGTH_UNIT),
-			TIME_FORMATS: [TIME_24H, TIME_12H],
+			TIME_FORMATS: [TIME_FORMAT.H24, TIME_FORMAT.H12],
 		};
 	},
 	computed: {
+		dateFormat: {
+			get(): DateFormat {
+				return getDateFormat();
+			},
+			set(value: DateFormat) {
+				setDateFormat(value);
+			},
+		},
+		dateFormatExample(): string {
+			return this.fmtFullDateTime(new Date(2015, 9, 21, 16, 29));
+		},
 		languageOptions: () => {
 			const locales = Object.entries(LOCALES).map(([key, value]) => {
 				return { value: key, name: value[1] };
@@ -139,7 +170,7 @@ export default defineComponent({
 			setUnits(value);
 		},
 		timeFormat(value) {
-			set12hFormat(value === TIME_12H);
+			set12hFormat(value === TIME_FORMAT.H12);
 		},
 		theme(value) {
 			setThemePreference(value);

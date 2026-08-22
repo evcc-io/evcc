@@ -69,8 +69,14 @@ func propsToMap(props config.Properties) (map[string]any, error) {
 	}
 
 	return lo.PickBy(res, func(k string, v any) bool {
-		if k == "Type" || v.(string) == "" {
+		if k == "Type" {
 			return false
+		}
+		switch val := v.(type) {
+		case string:
+			return val != ""
+		case bool:
+			return val
 		}
 		return true
 	}), nil
@@ -245,8 +251,9 @@ func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class te
 }
 
 type testResult = struct {
-	Value any    `json:"value"`
-	Error string `json:"error"`
+	Value  any    `json:"value"`
+	Error  string `json:"error"`
+	Asleep bool   `json:"asleep,omitempty"`
 }
 
 func hasFeature(instance any, f api.Feature) bool {
@@ -266,7 +273,12 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 			if errors.Is(err, api.ErrNotAvailable) {
 				return
 			}
-			tr.Error = err.Error()
+			// asleep is a valid vehicle state, not an error
+			if errors.Is(err, api.ErrAsleep) {
+				tr.Asleep = true
+			} else {
+				tr.Error = err.Error()
+			}
 		}
 		resMu.Lock()
 		res[key] = tr
@@ -434,9 +446,29 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 
 	wg.Go(func() {
 		if dev, ok := api.Cap[api.Curtailer](instance); ok {
-			makeResult("curtailable", true, nil)
-			if val, err := dev.Curtailed(); err != nil || val {
-				makeResult("curtailed", true, err)
+			if _, isMeter := instance.(api.Meter); isMeter {
+				// curtailment as meter capability, limit only reported while actually curtailing
+				makeResult("curtailable", true, nil)
+				if val, err := dev.CurtailedPercent(); err != nil || val < 100 {
+					makeResult("curtailed", val, err)
+				}
+			} else {
+				// dedicated curtailment device, always report the limit
+				val, err := dev.CurtailedPercent()
+				makeResult("curtailed", val, err)
+			}
+		}
+	})
+
+	wg.Go(func() {
+		if dev, ok := api.Cap[api.HEMS](instance); ok {
+			if power := dev.MaxConsumptionPower(); power != nil && *power > 0 {
+				makeResult("dimLimit", *power, nil)
+			}
+			if percent := dev.CurtailedPercent(); percent != nil && *percent < 100 {
+				if limit := dev.MaxProductionPower(); limit != nil {
+					makeResult("curtailLimit", *limit, nil)
+				}
 			}
 		}
 	})
@@ -444,7 +476,7 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 	wg.Go(func() {
 		if dev, ok := api.Cap[api.Identifier](instance); ok {
 			val, err := dev.Identify()
-			makeResult("identifier", val, err)
+			makeResult("identifier", strings.Join(val, ", "), err)
 		}
 	})
 
@@ -464,6 +496,9 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 			case api.TariffTypeSolar:
 				valueKey = "power"
 				ratesKey = "solarRates"
+			case api.TariffTypeTemperature:
+				valueKey = "outdoorTemp"
+				ratesKey = "temperatureRates"
 			default:
 				valueKey = "price"
 			}
@@ -526,6 +561,39 @@ func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Val
 
 		return nil
 	}
+}
+
+var criticalPluginSources = []string{"script"}
+
+func configHasCriticalPlugin(req configReq) bool {
+	if req.Yaml != "" {
+		// any, not map: global yaml configs (circuits) are a list
+		var m any
+		if err := yaml.Unmarshal([]byte(req.Yaml), &m); err != nil {
+			return false // malformed yaml already rejected by decodeDeviceConfig
+		}
+		return valueHasCriticalSource(m)
+	}
+	return valueHasCriticalSource(req.Other)
+}
+
+func valueHasCriticalSource(v any) bool {
+	switch t := v.(type) {
+	case map[string]any:
+		for k, val := range t {
+			if strings.EqualFold(k, "source") {
+				if s, ok := val.(string); ok && slices.Contains(criticalPluginSources, strings.ToLower(strings.TrimSpace(s))) {
+					return true
+				}
+			}
+			if valueHasCriticalSource(val) {
+				return true
+			}
+		}
+	case []any:
+		return slices.ContainsFunc(t, valueHasCriticalSource)
+	}
+	return false
 }
 
 // decodeDeviceConfig extracts device configuration and yaml details

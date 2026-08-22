@@ -37,7 +37,7 @@
 					<div
 						v-for="i in 3"
 						:key="i"
-						class="history-tile history-tile-skeleton mb-4"
+						class="history-tile history-tile-skeleton box-pull-out mb-4"
 						aria-hidden="true"
 					></div>
 				</div>
@@ -47,22 +47,15 @@
 					</div>
 				</div>
 
-				<section
+				<Card
 					v-for="group in visibleGroups"
 					:key="group"
-					class="history-tile mb-4"
+					:title="$t(`main.history.group.${group}`)"
+					:subtitle="groupTotalLabel(group)"
+					edge-to-edge
+					class="box-pull-out mb-4"
 					:data-testid="`history-section-${group}`"
 				>
-					<h3
-						class="fw-normal my-0 d-flex gap-3 flex-wrap align-items-baseline overflow-hidden history-tile-title"
-					>
-						<span class="d-block no-wrap text-truncate">
-							{{ $t(`main.history.group.${group}`) }}
-						</span>
-						<small class="d-block no-wrap text-truncate">
-							{{ groupTotalLabel(group) }}
-						</small>
-					</h3>
 					<GroupChart
 						v-if="displayFrom && displayTo && displayPeriod"
 						:group="group"
@@ -93,18 +86,10 @@
 						:device-colors="deviceColors"
 						@focus="onLegendFocus(group, $event)"
 					/>
-				</section>
-				<p v-if="visibleGroups.length" class="text-end mt-3 mb-0">
-					<a
-						:href="csvLink"
-						download
-						class="text-muted small history-csv-link"
-						data-testid="history-csv-download"
-						@click="handleDownloadClick($event, csvLink)"
-					>
-						{{ $t("main.history.downloadCsv") }}
-					</a>
-				</p>
+				</Card>
+				<div v-if="visibleGroups.length" class="d-flex align-items-baseline gap-2 mb-3">
+					<DownloadButton :label="$t('general.download')" :href="downloadHref()" />
+				</div>
 			</main>
 		</div>
 	</div>
@@ -113,6 +98,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import Header from "../components/Top/Header.vue";
+import Card from "../components/Helper/Card.vue";
 import PeriodSelector from "../components/Sessions/PeriodSelector.vue";
 import DateNavigator from "../components/Sessions/DateNavigator.vue";
 import PeriodHeader from "../components/Sessions/PeriodHeader.vue";
@@ -121,9 +107,9 @@ import type { Legend } from "../components/Sessions/types";
 import type { DeviceColors } from "@/types/evcc";
 import { PERIODS } from "../components/Sessions/types";
 import { GROUP_ORDER, groupColor, hasColorPicker } from "../components/History/groups";
-import colors, { resolveColors, deviceColorMap, darken } from "../colors";
+import colors, { resolveColors, deviceColorMap, darken, batteryColor } from "../colors";
 import LegendList from "../components/Sessions/LegendList.vue";
-import { handleDownloadClick } from "@/utils/native";
+import DownloadButton from "../components/Helper/DownloadButton.vue";
 import formatter, { POWER_UNIT } from "../mixins/formatter";
 import api from "../api";
 import store from "../store";
@@ -134,15 +120,29 @@ function daysInMonth(year: number, month: number) {
 	return new Date(year, month, 0).getDate();
 }
 
+function shiftPeriod(period: PERIODS, from: Date, offset: number): Date {
+	switch (period) {
+		case PERIODS.DAY:
+			return new Date(from.getFullYear(), from.getMonth(), from.getDate() + offset);
+		case PERIODS.YEAR:
+			return new Date(from.getFullYear() + offset, 0, 1);
+		case PERIODS.MONTH:
+		default:
+			return new Date(from.getFullYear(), from.getMonth() + offset, 1);
+	}
+}
+
 export default defineComponent({
 	name: "History",
 	components: {
 		TopHeader: Header,
+		Card,
 		PeriodSelector,
 		DateNavigator,
 		PeriodHeader,
 		GroupChart,
 		LegendList,
+		DownloadButton,
 	},
 	mixins: [formatter],
 	props: {
@@ -159,7 +159,6 @@ export default defineComponent({
 			displayTo: null as Date | null,
 			displayPeriod: null as PERIODS | null,
 			loading: true,
-			interval: null as ReturnType<typeof setInterval> | null,
 			startDate: new Date(2020, 0, 1),
 			focusedEntity: {} as Record<string, number | null>,
 		};
@@ -170,6 +169,9 @@ export default defineComponent({
 	computed: {
 		deviceColors(): DeviceColors {
 			return deviceColorMap(store.state.deviceColors);
+		},
+		historyUpdated(): string | undefined {
+			return store.state.historyUpdated;
 		},
 		effectivePeriod(): PERIODS {
 			return this.period && HISTORY_PERIODS.includes(this.period)
@@ -214,18 +216,7 @@ export default defineComponent({
 			}
 		},
 		to(): Date {
-			switch (this.effectivePeriod) {
-				case PERIODS.DAY: {
-					const d = new Date(this.from);
-					d.setDate(d.getDate() + 1);
-					return d;
-				}
-				case PERIODS.YEAR:
-					return new Date(this.effectiveYear + 1, 0, 1);
-				case PERIODS.MONTH:
-				default:
-					return new Date(this.effectiveYear, this.effectiveMonth, 1);
-			}
+			return shiftPeriod(this.effectivePeriod, this.from, 1);
 		},
 		aggregate(): string {
 			switch (this.effectivePeriod) {
@@ -319,16 +310,6 @@ export default defineComponent({
 			}
 			return this.fmtWh(Math.abs(sum) * 1000, POWER_UNIT.AUTO);
 		},
-		csvLink(): string {
-			const params = new URLSearchParams({
-				format: "csv",
-				lang: this.$i18n?.locale,
-				from: this.from.toISOString(),
-				to: this.to.toISOString(),
-				aggregate: this.aggregate,
-			});
-			return `./api/history/energy?${params.toString()}`;
-		},
 	},
 	watch: {
 		fetchKey() {
@@ -336,6 +317,9 @@ export default defineComponent({
 		},
 		offline(offline) {
 			if (!offline) this.fetchData();
+		},
+		historyUpdated() {
+			this.fetchData();
 		},
 		rawSeries() {
 			// Drop focused entries whose paletteIndex no longer matches any entity
@@ -356,14 +340,18 @@ export default defineComponent({
 	},
 	mounted() {
 		this.fetchData();
-		this.interval = setInterval(() => this.fetchData(), 15 * 60 * 1e3);
-	},
-	unmounted() {
-		if (this.interval) clearInterval(this.interval);
 	},
 	methods: {
 		groupColor,
-		handleDownloadClick,
+		downloadHref(): string {
+			const params = new URLSearchParams({
+				lang: this.$i18n?.locale,
+				from: this.from.toISOString(),
+				to: this.to.toISOString(),
+				aggregate: this.aggregate,
+			});
+			return `./api/history/energy?${params.toString()}`;
+		},
 		legendsForGroup(group: string): Legend[] {
 			const items = this.entityLegends(group);
 			const focused = this.focusedEntity[group] ?? null;
@@ -418,6 +406,7 @@ export default defineComponent({
 			const colorFor = (i: number, s: HistorySeries) => {
 				if (s.virtual) return colors.muted || baseColor;
 				if (colorPicker) return palette[s.title] || baseColor;
+				if (group === "battery") return batteryColor(s.paletteIndex ?? i);
 				return darken(baseColor, stepAlpha(i, Math.max(n, 1)));
 			};
 			return list.map((s, i) => {
@@ -447,6 +436,8 @@ export default defineComponent({
 			return focused !== null && focused !== i;
 		},
 		groupTotalLabel(group: string): string {
+			// Additional meters can be import, export, or consumption, so no meaningful sum.
+			if (group === "meter") return "";
 			// Consumption total comes from `home` (overall consumption),
 			// not the sum of explicit meter entities.
 			const list =
@@ -476,27 +467,43 @@ export default defineComponent({
 		},
 		async fetchData() {
 			this.loading = true;
+			const requestKey = this.fetchKey;
 			const requestFrom = this.from;
 			const requestTo = this.to;
 			const requestPeriod = this.effectivePeriod;
 			try {
-				const res = await api.get("history/energy", {
-					params: {
-						from: requestFrom.toISOString(),
-						to: requestTo.toISOString(),
-						aggregate: this.aggregate,
-						grouped: false,
-					},
-				});
+				const res = await this.fetchEnergy(requestFrom, requestTo);
+				// a newer request superseded this one
+				if (requestKey !== this.fetchKey) return;
 				this.rawSeries = res.data || [];
 				this.displayFrom = requestFrom;
 				this.displayTo = requestTo;
 				this.displayPeriod = requestPeriod;
+				this.prefetchAdjacent();
 			} catch (e) {
 				console.error("Failed to load energy history", e);
 				// keep previous data on error
 			} finally {
-				this.loading = false;
+				if (requestKey === this.fetchKey) this.loading = false;
+			}
+		},
+		fetchEnergy(from: Date, to: Date) {
+			return api.get("history/energy", {
+				params: {
+					from: from.toISOString(),
+					to: to.toISOString(),
+					aggregate: this.aggregate,
+					grouped: false,
+				},
+			});
+		},
+		// warm the browser http cache for the prev/next period
+		prefetchAdjacent() {
+			for (const offset of [-1, 1]) {
+				const from = shiftPeriod(this.effectivePeriod, this.from, offset);
+				const to = shiftPeriod(this.effectivePeriod, this.from, offset + 1);
+				if (from > new Date() || to <= this.startDate) continue;
+				this.fetchEnergy(from, to).catch(() => {});
 			}
 		},
 		buildBaseQuery(): Record<string, string | undefined> {
@@ -541,6 +548,7 @@ export default defineComponent({
 <style scoped>
 .history-tile {
 	background: var(--evcc-box);
+	border: 1px solid var(--bs-border-color-translucent);
 	padding: 1.25rem 1rem 1.75rem;
 }
 .empty-container {
@@ -570,17 +578,6 @@ export default defineComponent({
 		animation: none;
 		opacity: 0.8;
 	}
-}
-.history-csv-link {
-	text-decoration: none;
-}
-.history-csv-link:hover,
-.history-csv-link:focus {
-	color: var(--evcc-default-text);
-	text-decoration: underline;
-}
-.history-tile-title {
-	margin: 0 0 0.5rem;
 }
 @media (max-width: 575.98px) {
 	/* edge-to-edge on mobile: cancel the container's px-4 padding */

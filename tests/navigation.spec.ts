@@ -30,9 +30,16 @@ test.describe("bottom navigation", async () => {
     await expect(tabMore).toBeVisible();
     await expect(tabBattery).toHaveCount(0);
 
+    // more menu opens and closes on the same tab
+    const configLink = tabMore.getByRole("link", { name: "Configuration" });
+    await tabMore.click();
+    await expect(configLink).toBeVisible();
+    await tabMore.click();
+    await expect(configLink).not.toBeVisible();
+
     // navigate to config via More menu
     await tabMore.click();
-    await tabMore.getByRole("link", { name: "Configuration" }).click();
+    await configLink.click();
     await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
 
     // create battery meter

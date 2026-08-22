@@ -77,6 +77,18 @@ func (c *CurrentController) roundedCurrent(current float64) float64 {
 	return current
 }
 
+// actualMaxChargeCurrent returns the maximum of all phase currents.
+// If currents not measured falls back to offered current.
+func (c *CurrentController) actualMaxChargeCurrent() float64 {
+	if c.lp.chargeCurrents != nil {
+		return max(c.lp.chargeCurrents[0], c.lp.chargeCurrents[1], c.lp.chargeCurrents[2])
+	}
+	if c.lp.charging() {
+		return c.lp.offeredCurrent
+	}
+	return 0
+}
+
 func (c *CurrentController) setMinCurrent() error {
 	return c.setLimit(c.effectiveMinCurrent())
 }
@@ -87,14 +99,7 @@ func (c *CurrentController) setLimit(current float64) error {
 
 	// apply circuit limits
 	if c.lp.circuit != nil {
-		var actualCurrent float64
-		if c.lp.chargeCurrents != nil {
-			actualCurrent = max(c.lp.chargeCurrents[0], c.lp.chargeCurrents[1], c.lp.chargeCurrents[2])
-		} else if c.lp.charging() {
-			actualCurrent = c.lp.offeredCurrent
-		}
-
-		currentLimit := c.lp.circuit.ValidateCurrent(actualCurrent, current)
+		currentLimit := c.lp.circuit.ValidateCurrent(c.actualMaxChargeCurrent(), current)
 
 		activePhases := c.lp.ActivePhases()
 		powerLimit := c.lp.circuit.ValidatePower(c.lp.chargePower, currentToPower(current, activePhases))
@@ -138,7 +143,7 @@ func (c *CurrentController) setLimit(current float64) error {
 
 		if err != nil {
 			v := c.lp.GetVehicle()
-			if vv, ok := api.Cap[api.Resurrector](v); ok && errors.Is(err, api.ErrAsleep) {
+			if vv, ok := api.Cap[api.Resurrector](v); ok && errors.Is(err, api.ErrAsleep) && !hasFeature(v, api.WakeUpDisabled) {
 				// https://github.com/evcc-io/evcc/issues/8254
 				// wakeup vehicle
 				c.lp.log.DEBUG.Printf("set charge current limit: waking up vehicle")
@@ -159,7 +164,7 @@ func (c *CurrentController) setLimit(current float64) error {
 	if enabled := current >= effMinCurrent; enabled != c.lp.enabled {
 		if err := c.lp.charger.Enable(enabled); err != nil {
 			v := c.lp.GetVehicle()
-			if vv, ok := api.Cap[api.Resurrector](v); enabled && ok && errors.Is(err, api.ErrAsleep) {
+			if vv, ok := api.Cap[api.Resurrector](v); enabled && ok && errors.Is(err, api.ErrAsleep) && !hasFeature(v, api.WakeUpDisabled) {
 				// https://github.com/evcc-io/evcc/issues/8254
 				// wakeup vehicle
 				c.lp.log.DEBUG.Printf("charger %s: waking up vehicle", status[enabled])

@@ -1,0 +1,113 @@
+template: solvis
+products:
+  - brand: Solvis
+    description:
+      generic: SolvisControl 2/3
+group: heating
+capabilities: ["meter"]
+requirements:
+  description:
+    de: |
+      Modbus TCP muss am SolvisControl unter „Einstellungen / Netzwerk“ aktiviert sein.
+      Die Ansteuerung erfolgt über die Warmwasser-Solltemperatur.
+      Eine Leistungsreduzierung (dim) unterstützt der Regler nicht.
+    en: |
+      Modbus TCP must be enabled at the SolvisControl under "Settings / Network".
+      Control is done via the hot water target temperature.
+      The controller does not support power reduction (dim).
+params:
+  - name: host
+  - name: port
+    default: 502
+  - name: tempnormal
+    type: int
+    default: 48
+    description:
+      de: Solltemperatur Normalbetrieb
+      en: Target temperature normal mode
+  - name: tempboost
+    type: int
+    default: 60
+    description:
+      de: Solltemperatur Boost
+      en: Target temperature boost
+  - name: tempsource
+    required: true
+    type: choice
+    choice: ["warmwater", "buffer"]
+    default: warmwater
+render: |
+  type: sgready
+  # The controller has no mode register, the mode is tracked by evcc.
+  # It could be read back from 2305:
+  # getmode:
+  #   source: map
+  #   values:
+  #     {{ .tempnormal }}: 2
+  #     {{ .tempboost }}: 3
+  #   get:
+  #     source: modbus
+  #     uri: {{ joinHostPort .host .port }}
+  #     id: 1
+  #     register:
+  #       address: 2305
+  #       type: holding
+  #       encoding: uint16
+  setmode:
+    source: switch
+    switch:
+    - case: 2 # normal
+      set:
+        source: const
+        value: {{ .tempnormal }}
+        set:
+          source: modbus
+          uri: {{ joinHostPort .host .port }}
+          id: 1
+          register:
+            address: 2305 # Warmwasser Solltemperatur
+            type: writesingle
+            encoding: uint16
+    - case: 3 # boost
+      set:
+        source: const
+        value: {{ .tempboost }}
+        set:
+          source: modbus
+          uri: {{ joinHostPort .host .port }}
+          id: 1
+          register:
+            address: 2305 # Warmwasser Solltemperatur
+            type: writesingle
+            encoding: uint16
+    - case: 1 # dim
+      set:
+        source: error
+        error: ErrNotAvailable
+  power:
+    source: modbus
+    uri: {{ joinHostPort .host .port }}
+    id: 1
+    register:
+      address: 33545 # Wärmepumpe Leistungsaufnahme elektrisch
+      type: holding
+      encoding: uint16
+    scale: 100 # 0.1 kW -> W
+  temp:
+    source: modbus
+    uri: {{ joinHostPort .host .port }}
+    id: 1
+    register:
+      address: {{ if eq .tempsource "warmwater" }}33025{{ else }}33024{{ end }} # 33025 Warmwasser S2, 33024 Warmwasserpuffer S1
+      type: input
+      encoding: int16
+    scale: 0.1
+  limittemp:
+    source: modbus
+    uri: {{ joinHostPort .host .port }}
+    id: 1
+    register:
+      address: 2305 # Warmwasser Solltemperatur
+      type: holding
+      encoding: uint16
+  {{ include "heatpumpswitch" . }}

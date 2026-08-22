@@ -30,13 +30,6 @@ func New(driver, dsn string) (*gorm.DB, error) {
 
 	switch driver {
 	case "sqlite":
-
-		// Example DSNs:
-		//"path/to/database.db"
-		// "~/database.db",
-		// "database.db?cache=shared&journal_mode=WAL"
-		// ":memory:"
-
 		// Split database path and connection parameters
 		dbPath, params, _ := strings.Cut(dsn, "?")
 
@@ -80,9 +73,20 @@ func New(driver, dsn string) (*gorm.DB, error) {
 		return nil, fmt.Errorf("invalid database type: %s not in [sqlite]", driver)
 	}
 
-	return gorm.Open(dialect, &gorm.Config{
+	db, err := gorm.Open(dialect, &gorm.Config{
 		Logger: &Logger{util.NewLogger("db")},
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	// sqlite allows a single writer; serialize on one connection so concurrent
+	// writes wait on busy_timeout instead of failing with SQLITE_BUSY.
+	if sqlDB, err := db.DB(); err == nil {
+		sqlDB.SetMaxOpenConns(1)
+	}
+
+	return db, nil
 }
 
 func NewInstance(driver, dsn string) error {

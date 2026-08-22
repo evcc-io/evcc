@@ -3,6 +3,8 @@ package request
 import (
 	"encoding/json"
 	"encoding/xml"
+	"errors"
+	"io"
 	"net/http"
 	"time"
 
@@ -60,7 +62,12 @@ func decodeJSON(resp *http.Response, res any) error {
 		return err
 	}
 
-	return json.NewDecoder(resp.Body).Decode(&res)
+	// swallow io.EOF to allow empty response
+	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil && !errors.Is(err, io.EOF) {
+		return err
+	}
+
+	return nil
 }
 
 // decodeXML reads HTTP response and decodes XML body if error is nil

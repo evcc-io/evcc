@@ -26,8 +26,8 @@ params:
   - preset: tariff-features
 render: |
   type: custom
-  {{ include "tariff-base" . }}
-  {{ include "tariff-features" . }}
+  {{ include "base" . }}
+  {{ include "features" . }}
   forecast:
     source: http
     uri: {{ .uri }}/prices?region={{ .region }}&unit=EUR_PER_KWH&timezone=UTC

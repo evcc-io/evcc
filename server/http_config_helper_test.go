@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/util/config"
@@ -66,6 +67,24 @@ func TestInstanceParallelProbes(t *testing.T) {
 	require.NotContains(t, res, "power", "blocking getter must be abandoned")
 }
 
+// asleepVehicle returns api.ErrAsleep from its getters.
+type asleepVehicle struct{}
+
+func (v asleepVehicle) Soc() (float64, error) {
+	return 0, api.ErrAsleep
+}
+
+func (v asleepVehicle) Range() (int64, error) {
+	return 0, api.ErrAsleep
+}
+
+// TestInstanceAsleep ensures asleep is flagged as state, not as error.
+func TestInstanceAsleep(t *testing.T) {
+	res := testInstance(context.Background(), asleepVehicle{})
+	assert.Equal(t, testResult{Value: 0.0, Asleep: true}, res["soc"])
+	assert.Equal(t, testResult{Value: int64(0), Asleep: true}, res["range"])
+}
+
 func TestConfigReqUnmarshal(t *testing.T) {
 	var req configReq
 	require.NoError(t, json.Unmarshal([]byte(`{
@@ -87,18 +106,33 @@ func TestConfigReqUnmarshal(t *testing.T) {
 }
 
 func TestConfigReqMarshalToMap(t *testing.T) {
-	props := config.Properties{
+	res, err := propsToMap(config.Properties{
 		Type:    "type",
 		Title:   "title",
 		Product: "product",
-	}
-
-	res, err := propsToMap(props)
+	})
 	require.NoError(t, err)
-
 	assert.Equal(t, map[string]any{
 		"deviceTitle":   "title",
 		"deviceProduct": "product",
+	}, res)
+
+	// Disable=false is omitted (zero value)
+	res, err = propsToMap(config.Properties{
+		Type:  "type",
+		Title: "title",
+	})
+	require.NoError(t, err)
+	assert.NotContains(t, res, "deviceDisable")
+
+	// Disable=true is included
+	res, err = propsToMap(config.Properties{
+		Type:    "type",
+		Disable: true,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, map[string]any{
+		"deviceDisable": true,
 	}, res)
 }
 
@@ -208,6 +242,40 @@ func TestMergeMaskedFiltersBehavior(t *testing.T) {
 	assert.Equal(t, 200.0, result["power"])
 	assert.Equal(t, "demo-meter", result["template"])
 	assert.NotContains(t, result, "outdatedField")
+}
+
+func TestConfigHasCriticalPlugin(t *testing.T) {
+	tc := []struct {
+		name string
+		yaml string
+		want bool
+	}{
+		{"script top level", "power:\n  source: script\n  cmd: echo 1", true},
+		{"script case insensitive", "power:\n  Source: SCRIPT\n  cmd: echo 1", true},
+		{"script nested in calc", "power:\n  source: calc\n  add:\n    - source: const\n      value: 1\n    - source: script\n      cmd: echo 1", true},
+		{"script nested in sequence set", "power:\n  source: sequence\n  set:\n    - source: script\n      cmd: echo 1", true},
+		{"script nested in js transformation", "power:\n  source: js\n  script: x\n  in:\n    - name: x\n      type: float\n      source: script\n      cmd: echo 1", true},
+		{"js without script", "power:\n  source: js\n  script: \"x = 1\"", false},
+		{"go without script", "power:\n  source: go\n  script: \"return 1\"", false},
+		{"http without script", "power:\n  source: http\n  uri: http://localhost", false},
+		{"plain template", "power: 100", false},
+		{"script in yaml list", "- name: main\n  getmaxcurrent:\n    source: script\n    cmd: echo 1", true},
+		{"benign yaml list", "- name: main\n  maxcurrent: 16", false},
+	}
+
+	for _, tc := range tc {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, configHasCriticalPlugin(configReq{Yaml: tc.yaml}))
+		})
+	}
+
+	// non-yaml custom config carried in Other
+	assert.True(t, configHasCriticalPlugin(configReq{
+		Other: map[string]any{"power": map[string]any{"source": "script", "cmd": "echo 1"}},
+	}))
+	assert.False(t, configHasCriticalPlugin(configReq{
+		Other: map[string]any{"template": "tesla"},
+	}))
 }
 
 func TestFilterValidTemplateParams(t *testing.T) {

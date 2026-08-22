@@ -2,6 +2,13 @@ import { CHARGE_MODE } from "@/types/evcc";
 import Vehicle from "./Vehicle.vue";
 import type { Meta, StoryFn } from "@storybook/vue3";
 
+function getFutureTime(hours: number, minutes: number) {
+  const now = new Date();
+  now.setHours(now.getHours() + hours);
+  now.setMinutes(now.getMinutes() + minutes);
+  return now.toISOString();
+}
+
 const baseState = {
   vehicle: {
     title: "Mein Auto",
@@ -56,12 +63,15 @@ export default {
   },
 } as Meta<typeof Vehicle>;
 
+// white box background as in the app's loadpoint card
+const cardStyle = "padding: 1rem; background: var(--evcc-box); border-radius: 0.5rem;";
+
 const Template: StoryFn<typeof Vehicle> = (args) => ({
   components: { Vehicle },
   setup() {
-    return { args };
+    return { args, cardStyle };
   },
-  template: '<Vehicle v-bind="args" />',
+  template: '<div :style="cardStyle"><Vehicle v-bind="args" /></div>',
 });
 
 export const Disconnected = Template.bind({});
@@ -152,6 +162,33 @@ VehicleLimitReached.args = {
   vehicleSoc: 80,
 };
 
+export const MinSocCharging = Template.bind({});
+MinSocCharging.args = {
+  ...baseState,
+  enabled: true,
+  charging: true,
+  vehicleSoc: 17.3,
+  vehicleRange: 92,
+  minSocNotReached: true,
+  effectiveMinSoc: 30,
+};
+
+export const HeatingMinTemp = Template.bind({});
+HeatingMinTemp.args = {
+  ...baseState,
+  vehicle: { ...baseState.vehicle, title: "Warmwasser", icon: "waterheater" },
+  heating: true,
+  integratedDevice: true,
+  enabled: true,
+  charging: true,
+  vehicleSoc: 38,
+  vehicleRange: 0,
+  effectiveLimitSoc: 60,
+  minSocNotReached: true,
+  effectiveMinSoc: 40,
+  ui: { minTemp: 35, maxTemp: 70 },
+};
+
 export const TargetChargePlanned = Template.bind({});
 TargetChargePlanned.args = {
   ...baseState,
@@ -173,6 +210,35 @@ SmartChargeCostLimitActive.args = {
   charging: true,
   smartCostLimit: 0.13,
   mode: CHARGE_MODE.PV,
+};
+
+export const SuggestionCharge = Template.bind({});
+SuggestionCharge.args = {
+  ...baseState,
+  suggestion: { action: "charge", actionable: true },
+};
+
+export const SuggestionPause = Template.bind({});
+SuggestionPause.args = {
+  ...baseState,
+  enabled: true,
+  charging: true,
+  suggestion: { action: "stop", actionable: true },
+};
+
+export const SuggestionCombination = Template.bind({});
+SuggestionCombination.args = {
+  ...baseState,
+  enabled: true,
+  charging: true,
+  suggestion: { action: "stop", actionable: true },
+  currency: "EUR",
+  tariffGrid: 0.32,
+  smartCostLimit: 0.12,
+  smartCostType: "price",
+  planActive: true,
+  effectivePlanTime: getFutureTime(6, 54),
+  planProjectedEnd: getFutureTime(5, 43),
 };
 
 export const PvEnableTimer = Template.bind({});

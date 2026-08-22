@@ -3,6 +3,16 @@ import { ConfigType } from "@/types/evcc";
 import api from "@/api";
 import { extractPlaceholders, replacePlaceholders } from "@/utils/placeholder";
 
+// config write needs the admin password (script plugin)
+export const ADMIN_PASSWORD_REQUIRED = 428;
+
+const allowAdminPasswordRequired = (status: number) =>
+  (status >= 200 && status < 300) || status === ADMIN_PASSWORD_REQUIRED;
+
+function adminPasswordHeader(adminPassword = ""): Record<string, string> {
+  return adminPassword ? { "X-Admin-Password": adminPassword } : {};
+}
+
 export type Product = {
   group: string;
   name: string;
@@ -57,6 +67,7 @@ export type DeviceValues = {
   template: string | null;
   deviceTitle?: string;
   deviceIcon?: string;
+  deviceDisable?: boolean;
   usage?: MeterTemplateUsage;
   heating?: boolean;
   integrateddevice?: boolean;
@@ -109,6 +120,46 @@ export function customChargerName(type: ConfigType, isHeating: boolean) {
     return `${prefix}custom${suffix}`;
   }
   return `${prefix}${type}`;
+}
+
+// flattenDeviceConfig converts a GET /config/devices/:class/:id response
+// into the flat shape expected by POST/PUT/test (id and name are dropped).
+//
+// GET (config = device-specfic):
+//   {
+//     id: 26,
+//     name: "db:26",
+//     type: "template",
+//     deviceTitle: "Espresso",
+//     device__: "..",
+//     config: {
+//       template: "tasmota",
+//       host: "192.168.1.2"
+//     }
+//   }
+//
+// PUT|POST|test (flat):
+//   {
+//     type: "template",
+//     deviceTitle: "Espresso",
+//     device__: "..",
+//     template: "tasmota",
+//     host: "192.168.1.2"
+//   }
+//
+// TODO: align GET and PUT shapes — always nest device-specific values under
+// `config` and drop the artificial `device` prefix (deviceTitle → title, ...)
+// matching db structure. Once the API is symmetric this helper goes away.
+export function flattenDeviceConfig(dev: any): Record<string, any> {
+  const { id, name, config, ...rest } = dev;
+  const flat = { ...config, ...rest };
+  // title/icon are extracted from yaml on GET for display only; writing them
+  // back is rejected ("cannot mix yaml and other")
+  if (flat.yaml) {
+    delete flat.title;
+    delete flat.icon;
+  }
+  return flat;
 }
 
 export async function loadServiceValues(path: string) {
@@ -189,21 +240,37 @@ export const fetchServiceValues = async (
 };
 
 export function createDeviceUtils(deviceType: DeviceType) {
-  function test(id: number | undefined, data: any) {
+  function test(id: number | undefined, data: any, adminPassword = "") {
     let url = `config/test/${deviceType}`;
     if (id !== undefined) {
       url += `/merge/${id}`;
     }
-    return api.post(url, data);
+    const opts = {
+      headers: adminPasswordHeader(adminPassword),
+      validateStatus: allowAdminPasswordRequired,
+    };
+    return api.post(url, data, opts);
   }
 
-  function update(id: number, data: any, force = false) {
-    const params = { force };
-    return api.put(`config/devices/${deviceType}/${id}`, data, { params });
+  function update(id: number, data: any, force = false, adminPassword = "") {
+    const opts = {
+      headers: adminPasswordHeader(adminPassword),
+      validateStatus: allowAdminPasswordRequired,
+      params: { force },
+    };
+    return api.put(`config/devices/${deviceType}/${id}`, data, opts);
   }
 
   function remove(id: number) {
     return api.delete(`config/devices/${deviceType}/${id}`);
+  }
+
+  // disable flips the disable flag by re-PUTing the existing config.
+  // force=true so a broken device can still be toggled.
+  async function disable(id: number, disable: boolean) {
+    const dev = (await api.get(`config/devices/${deviceType}/${id}`)).data;
+    const body = { ...flattenDeviceConfig(dev), deviceDisable: disable };
+    return api.put(`config/devices/${deviceType}/${id}`, body, { params: { force: true } });
   }
 
   async function load(id: number) {
@@ -211,10 +278,13 @@ export function createDeviceUtils(deviceType: DeviceType) {
     return response.data;
   }
 
-  async function create(data: any, force = false) {
-    const params = { force };
-    const response = await api.post(`config/devices/${deviceType}`, data, { params });
-    return response.data;
+  function create(data: any, force = false, adminPassword = "") {
+    const opts = {
+      headers: adminPasswordHeader(adminPassword),
+      validateStatus: allowAdminPasswordRequired,
+      params: { force },
+    };
+    return api.post(`config/devices/${deviceType}`, data, opts);
   }
 
   async function loadProducts(lang?: string, usage?: string) {
@@ -271,6 +341,7 @@ export function createDeviceUtils(deviceType: DeviceType) {
     test,
     update,
     remove,
+    disable,
     load,
     create,
     loadProducts,

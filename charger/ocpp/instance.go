@@ -1,6 +1,7 @@
 package ocpp
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -43,8 +44,8 @@ func (r ForwarderRule) Redacted() ForwarderRule {
 }
 
 var (
-	once        sync.Once
 	instance    *CS
+	started     func() error // memoized listen; set in NewServer, runs once
 	port        = 8887
 	boundPort   int
 	externalUrl string
@@ -129,64 +130,77 @@ func CurrentConfig() Config {
 	return Config{Port: port}
 }
 
-// Init initializes the OCPP server
-func Init(cfg Config, networkExternalUrl string) {
+// NewServer builds the OCPP central system without starting it.
+func NewServer(cfg Config, networkExternalUrl string) {
 	port = cfg.Port
 	externalUrl = networkExternalUrl
-}
 
-func Instance() *CS {
-	once.Do(func() {
-		log := util.NewLogger("ocpp")
+	log := util.NewLogger("ocpp")
 
-		server := &interceptingServer{Server: ws.NewServer()}
-		server.SetCheckOriginHandler(func(r *http.Request) bool { return true })
+	server := &interceptingServer{Server: ws.NewServer()}
+	server.SetCheckOriginHandler(func(r *http.Request) bool { return true })
 
-		dispatcher := ocppj.NewDefaultServerDispatcher(ocppj.NewFIFOQueueMap(0))
-		dispatcher.SetTimeout(Timeout)
+	dispatcher := ocppj.NewDefaultServerDispatcher(ocppj.NewFIFOQueueMap(0))
 
-		endpoint := ocppj.NewServer(server, dispatcher, nil, core.Profile, remotetrigger.Profile, smartcharging.Profile, security.Profile, firmware.Profile)
-		endpoint.SetInvalidMessageHook(func(client ws.Channel, err *ocpp.Error, rawMessage string, parsedFields []any) *ocpp.Error {
-			log.ERROR.Printf("%v (%s)", err, rawMessage)
-			return nil
-		})
-
-		cs := ocpp16.NewCentralSystem(endpoint, server)
-
-		instance = &CS{
-			log:           log,
-			regs:          make(map[string]*registration),
-			CentralSystem: cs,
-			server:        server,
-		}
-
-		instance.txnId.Store(time.Now().UTC().Unix())
-
-		ocppj.SetLogger(instance)
-
-		cs.SetCoreHandler(instance)
-		cs.SetSecurityHandler(instance)
-		cs.SetFirmwareManagementHandler(instance)
-		cs.SetNewChargePointHandler(instance.NewChargePoint)
-		cs.SetChargePointDisconnectedHandler(instance.ChargePointDisconnected)
-
-		go instance.errorHandler(cs.Errors())
-		go cs.Start(port, "/{ws}")
-
-		// wait for server to start
-		tick := time.Tick(10 * time.Millisecond)
-		timeout := time.After(10 * time.Second)
-		for server.Addr() == nil {
-			select {
-			case <-tick:
-			case <-timeout:
-				log.ERROR.Println("timeout waiting for server to bind")
-				return
-			}
-		}
-
-		boundPort = server.Addr().Port
+	endpoint := ocppj.NewServer(server, dispatcher, nil, core.Profile, remotetrigger.Profile, smartcharging.Profile, security.Profile, firmware.Profile)
+	endpoint.SetInvalidMessageHook(func(client ws.Channel, err *ocpp.Error, rawMessage string, parsedFields []any) *ocpp.Error {
+		log.ERROR.Printf("%v (%s)", err, rawMessage)
+		return nil
 	})
 
-	return instance
+	cs := ocpp16.NewCentralSystem(endpoint, server)
+
+	inst := &CS{
+		log:           log,
+		regs:          make(map[string]*registration),
+		CentralSystem: cs,
+		server:        server,
+		dispatcher:    dispatcher,
+	}
+
+	inst.txnId.Store(time.Now().UTC().Unix())
+
+	ocppj.SetLogger(inst)
+
+	cs.SetCoreHandler(inst)
+	cs.SetSecurityHandler(inst)
+	cs.SetFirmwareManagementHandler(inst)
+	cs.SetNewChargePointHandler(inst.NewChargePoint)
+	cs.SetChargePointDisconnectedHandler(inst.ChargePointDisconnected)
+
+	// wire the start memo before publishing instance, so Instance() never sees
+	// a non-nil instance with a nil started
+	started = sync.OnceValue(inst.listen)
+	instance = inst
+}
+
+// listen starts the central system and blocks until it has bound its port.
+func (cs *CS) listen() error {
+	cs.dispatcher.SetTimeout(Timeout)
+
+	go cs.errorHandler(cs.Errors())
+	go cs.CentralSystem.Start(port, "/{ws}")
+
+	// wait for server to bind
+	tick := time.Tick(10 * time.Millisecond)
+	timeout := time.After(10 * time.Second)
+	for cs.server.Addr() == nil {
+		select {
+		case <-tick:
+		case <-timeout:
+			return errors.New("timeout waiting for server to bind")
+		}
+	}
+
+	boundPort = cs.server.Addr().Port
+	return nil
+}
+
+// Instance returns the central system, starting it once on first call. It
+// returns an error if the server fails to bind its port.
+func Instance() (*CS, error) {
+	if instance == nil {
+		return nil, errors.New("ocpp not configured")
+	}
+	return instance, started()
 }

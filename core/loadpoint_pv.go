@@ -8,9 +8,9 @@ import (
 )
 
 // boostPower returns the additional power that the loadpoint should draw from the battery
-func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
+func (lp *Loadpoint) boostPower(ctrl *CurrentController, batteryPower float64) float64 {
 	boost := lp.GetBatteryBoost()
-	if boost == boostDisabled {
+	if boost == boostDisabled || boost == boostHold {
 		return 0
 	}
 
@@ -23,6 +23,16 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 		// in a too low current when there is a bit remaining grid consumption due to the accuracy
 		// of the battery controller
 		delta += lp.EffectiveStepPower()
+	}
+
+	// bridge the power gap between 1p max and 3p min so pvScalePhases can trigger a scale-up
+	if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() && lp.site.GetBatteryMaxDischargePower() != nil {
+		if activePhases, maxPhases := lp.ActivePhases(), lp.MaxActivePhases(); activePhases < maxPhases &&
+			ctrl.circuitAllowsPhases(maxPhases, ctrl.effectiveMinCurrent()) {
+			// max power actually achievable on the active phases
+			activeMaxPower := min(lp.EffectiveMaxPower(), Voltage*ctrl.effectiveMaxCurrent()*float64(activePhases))
+			delta += max(0, lp.EffectiveMinPower()*float64(maxPhases)-activeMaxPower)
+		}
 	}
 
 	// start boosting by setting maximum power
@@ -40,21 +50,26 @@ func (lp *Loadpoint) boostPower(batteryBoostPower float64) float64 {
 		}
 	}
 
-	res := batteryBoostPower + delta + lp.site.GetResidualPower()
-	lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = -%.0fW battery - %.0fW boost", -res, batteryBoostPower, delta)
+	if maxDischargePower := lp.site.GetBatteryMaxDischargePower(); maxDischargePower != nil {
+		// limit delta to what the battery can still provide
+		delta = min(delta, max(0, *maxDischargePower-batteryPower))
+	}
+
+	res := max(0, batteryPower) + delta + lp.site.GetResidualPower()
+	lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = -%.0fW battery - %.0fW boost - %.0fW residual", -res, max(0, batteryPower), delta, lp.site.GetResidualPower())
 
 	return res
 }
 
 // pvTargetPower calculates the target charging power for PV mode (0 disables)
-func (lp *Loadpoint) pvTargetPower(ctrl *CurrentController, mode api.ChargeMode, sitePower, batteryBoostPower float64, batteryBuffered, batteryStart bool) float64 {
+func (lp *Loadpoint) pvTargetPower(ctrl *CurrentController, mode api.ChargeMode, sitePower, batteryPower float64, batteryBuffered, batteryStart bool) float64 {
 	// read only once to simplify testing
 	minPower := ctrl.activeMinPower()
 	maxPower := ctrl.activeMaxPower()
 	reachableMinPower := ctrl.reachableMinPower()
 
 	// push demand to drain battery
-	sitePower -= lp.boostPower(batteryBoostPower)
+	sitePower -= lp.boostPower(ctrl, batteryPower)
 
 	// provide surplus for phase reconciliation by the controller
 	lp.surplus = &sitePower
@@ -63,7 +78,7 @@ func (lp *Loadpoint) pvTargetPower(ctrl *CurrentController, mode api.ChargeMode,
 	targetPower := max(ctrl.effectivePower()-sitePower, 0)
 
 	// in MinPV mode or under special conditions return at least min power
-	if battery := batteryStart || batteryBuffered && lp.charging(); (mode == api.ModeMinPV || battery) && targetPower < minPower {
+	if battery := batteryStart || batteryBuffered && lp.charging() || lp.GetBatteryBoost() == boostContinue; (mode == api.ModeMinPV || battery) && targetPower < minPower {
 		lp.log.DEBUG.Printf("pv charge power: min %.0fW > %.0fW (%.0fW @ %dp, battery: %t)", minPower, targetPower, sitePower, lp.ActivePhases(), battery)
 		return reachableMinPower
 	}

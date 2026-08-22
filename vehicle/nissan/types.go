@@ -92,17 +92,8 @@ type Attributes struct {
 	// v2
 	Timestamp       *time.Time `json:"timestamp"`
 	BatteryAutonomy *int       `json:"batteryAutonomy"`
-}
-
-func (a *Attributes) Updated() time.Time {
-	if a.LastUpdateTime != nil {
-		// v1
-		return a.LastUpdateTime.Time
-	} else if a.Timestamp != nil {
-		// v2
-		return *a.Timestamp
-	}
-	return time.Time{}
+	// synthesized fields
+	Updated time.Time
 }
 
 type ActionResponse struct {

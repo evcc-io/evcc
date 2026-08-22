@@ -16,7 +16,7 @@ func TestSockePlugin(t *testing.T) {
 	ctx, cancel := context.WithTimeout(t.Context(), time.Second*10)
 	defer cancel()
 
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		c, err := websocket.Accept(w, r, nil)
 		require.NoError(t, err)
 		defer c.Close(websocket.StatusNormalClosure, "")
@@ -36,8 +36,7 @@ func TestSockePlugin(t *testing.T) {
 			}
 		}
 	}))
-
-	defer srv.Close()
+	srv.Start()
 
 	addr := "ws://" + srv.Listener.Addr().String()
 	p, err := NewSocketPluginFromConfig(map[string]any{

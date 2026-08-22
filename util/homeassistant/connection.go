@@ -167,55 +167,72 @@ func (c *Connection) GetTimeState(entity string) (time.Time, error) {
 	return time.Parse(time.RFC3339, state.State)
 }
 
-// chargeStatusMap maps Home Assistant states to EVCC charge status
+// chargeStatusMap maps unambiguous Home Assistant states to evcc charge status.
+// Vendor-specific states are configured per device, see NewStatusMap.
 var chargeStatusMap = map[string]api.ChargeStatus{
-	// Status C - Charging
-	"c":        api.StatusC,
-	"charging": api.StatusC,
-	"on":       api.StatusC,
-	"true":     api.StatusC,
-	"active":   api.StatusC,
-	"1":        api.StatusC,
-
-	// Status B - Connected/Ready
+	"a":                  api.StatusA,
+	"disconnected":       api.StatusA,
+	"not_plugged":        api.StatusA,
 	"b":                  api.StatusB,
 	"connected":          api.StatusB,
-	"ready":              api.StatusB,
 	"plugged":            api.StatusB,
-	"charging_completed": api.StatusB,
-	"initialising":       api.StatusB,
-	"preparing":          api.StatusB,
-	"2":                  api.StatusB,
-	"no_power":           api.StatusB,
-	"complete":           api.StatusB,
-	"stopped":            api.StatusB,
 	"starting":           api.StatusB,
+	"stopped":            api.StatusB,
 	"paused":             api.StatusB,
-
-	// Status A - Disconnected
-	"a":                   api.StatusA,
-	"disconnected":        api.StatusA,
-	"off":                 api.StatusA,
-	"none":                api.StatusA,
-	"unavailable":         api.StatusA,
-	"unknown":             api.StatusA,
-	"notreadyforcharging": api.StatusA,
-	"not_plugged":         api.StatusA,
-	"0":                   api.StatusA,
+	"complete":           api.StatusB,
+	"charging_completed": api.StatusB,
+	"c":                  api.StatusC,
+	"charging":           api.StatusC,
 }
 
-// GetChargeStatus maps Home Assistant states to api.ChargeStatus
-func (c *Connection) GetChargeStatus(entity string) (api.ChargeStatus, error) {
+// StatusMap maps device-specific Home Assistant states to evcc charge status
+type StatusMap map[string]api.ChargeStatus
+
+// NewStatusMap creates a status map from comma-separated, case-insensitive lists
+// of states. It extends the built-in mapping, overriding it only for states
+// explicitly mapped to a different status.
+func NewStatusMap(a, b, c string) (StatusMap, error) {
+	res := make(StatusMap)
+
+	for _, e := range []struct {
+		status api.ChargeStatus
+		states string
+	}{
+		{api.StatusA, a},
+		{api.StatusB, b},
+		{api.StatusC, c},
+	} {
+		for s := range strings.SplitSeq(e.states, ",") {
+			if s = strings.ToLower(strings.TrimSpace(s)); s != "" {
+				if status, ok := res[s]; ok {
+					return nil, fmt.Errorf("status %s: duplicate state '%s', already mapped to %s", e.status, s, status)
+				}
+				res[s] = e.status
+			}
+		}
+	}
+
+	return res, nil
+}
+
+// GetChargeStatus maps Home Assistant states to api.ChargeStatus. The
+// device-specific status map extends the built-in mapping and takes precedence.
+func (c *Connection) GetChargeStatus(entity string, states StatusMap) (api.ChargeStatus, error) {
 	state, err := c.GetState(entity)
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	if status, ok := chargeStatusMap[strings.ToLower(strings.TrimSpace(state.State))]; ok {
+	s := strings.ToLower(strings.TrimSpace(state.State))
+
+	if status, ok := states[s]; ok {
+		return status, nil
+	}
+	if status, ok := chargeStatusMap[s]; ok {
 		return status, nil
 	}
 
-	return api.StatusNone, fmt.Errorf("unknown charge status: %s", state)
+	return api.StatusNone, fmt.Errorf("unknown charge status '%s' for entity %s", state.State, entity)
 }
 
 // CallService calls a Home Assistant service

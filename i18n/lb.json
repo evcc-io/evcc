@@ -19,6 +19,49 @@
     "successCloseTab": "Du kannst dësen Tab elo zoumaachen.",
     "title": "Autoriséierungsstatus"
   },
+  "battery": {
+    "card": {
+      "charging": "luet",
+      "discharging": "entluet",
+      "energy": "Energie",
+      "gridCharge": "Luede vum Netz",
+      "hold": "Entluede gespaart",
+      "holdCharge": "Luede gespaart",
+      "ofTotal": "vun {total}",
+      "power": "Leeschtung",
+      "soc": "Luedestand"
+    },
+    "combined": "Combinéiert",
+    "config": {
+      "buffer": "D'Energie vun der Batterie soll iwwert dem {soc} benotzt ginn, fir d'Opluedpunkten z'ënnerstëtzen, an verzögert d'Ofschalten am Solarmodus. Fänkt automatesch un mam Solaroplueden {start}.",
+      "bufferNone": "D'Energie vun der Batterie gëtt net fir d'Opluedpunkte benotzt. Setzt e Wäert ënner {soc} fir d'Ënnerstëtzung z'erméiglechen.",
+      "bufferStart": {
+        "above": "esoubal d'Batterie iwwer {soc} ass",
+        "full": "esoubal d'Batterie voll ass",
+        "never": "nëmme mat genuch Iwwerschoss"
+      },
+      "bufferTitle": "Batterie als Luedpuffer",
+      "discharge": "Verhënnert d'Entluede vun der Batterie am schnelle Modus a wärend dem geplangten Oplueden.",
+      "gridDischarge": "Erlaabt der Batterie sech an d'Netz ze entlueden.",
+      "priority": "D'Batterie huet Prioritéit, soulaang de SOC ënner {soc} ass. Dann kréien d'Opluedpunkten de Rescht.",
+      "priorityNone": "Den Iwwerschoss vun der Solaranlag geet direkt op d'Opluedpunkten. Setzt e Wäert iwwer {soc} fir d'Batterie ze prioriséieren.",
+      "priorityTitle": "Wou geet den Iwwerschoss fir d'éischt hin?"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Aus dem Netz lueden",
+        "discharge": "Entlueden an d'Netz",
+        "hold": "Entluede verhënneren",
+        "holdcharge": "Luede verhënneren",
+        "normal": "Normale Betrib"
+      },
+      "empty": "eidel",
+      "full": "voll",
+      "highest": "Héchststand ({value})",
+      "lowest": "Déifstand ({value})",
+      "suggestion": "Virschlag"
+    }
+  },
   "batterySettings": {
     "batteryLevel": "Luedstand vun der Batterie",
     "bufferStart": {
@@ -51,12 +94,33 @@
     "hex": "Hex Faarw"
   },
   "config": {
+    "adminPassword": {
+      "description": "De Script-Plugin féiert e Systembefehl aus, deen mat de Berechtegungen vum evcc-Prozess leeft. Gitt w.e.g. Äert Administrateurpasswuert nach eng Kéier an, fir weiderzemaachen.",
+      "invalid": "Falsch Passwuert. Probéiert et wgl. nach eng Kéier.",
+      "title": "Potenziell geféierlech Aktioun"
+    },
+    "apiKey": {
+      "description": "Bitt sécheren Zougang zu Skripter a Automatisatiounsaufgaben, wéi geplangte Backups, ouni datt Dir Äert Administrateurpasswuert deelen musst.",
+      "exampleLabel": "Probéiert et aus: Luet eng Sécherungskopie mat curl erof",
+      "generate": "Erstellt en API-Schlëssel",
+      "generateConfirm": "Gitt Äert Administrateurpasswuert an, fir e neien API-Schlëssel ze erstellen.",
+      "keyLabel": "API-Schlëssel",
+      "regenerate": "Erstellt en neien API-Schlëssel",
+      "regenerateConfirm": "Gitt Äert Administratorpasswuert an, fir de API-Schlëssel nei ze generéieren.",
+      "regenerateLink": "Nei erstellen",
+      "regenerateWarning": "Wann Dir e neie Schlëssel erstellt, gëtt de bestehenden Schlëssel ongëlteg a all Automatisatiounen, déi dëse Schlëssel benotzen, funktionéieren net méi. Wëllt Dir weiderfueren?",
+      "revealSuccess": "Äre neie API-Schlëssel ass asazbereet.",
+      "revealTitle": "API-Schlëssel erstallt",
+      "shownOnce": "Dëse Schlëssel gëtt nëmmen eemol ugewisen. Späichert en sécher of. Dir kënnt en spéider net méi erëmkréien.",
+      "title": "API-Schlëssel"
+    },
     "aux": {
       "description": "Gerät, dee säi Verbrauch op de verfügbaren Iwwerschoss (z. B. smarten Heizstaf) selbststänneg upasst. evcc erwaart, datt dëst Gerät selbststänneg säi Verbrauch reduzéiert, wann et noutwenneg ass.",
       "titleAdd": "Intelligente Verbraucher derbäi fügen",
       "titleEdit": "Intelligenten Verbraucher beaarbechten"
     },
     "battery": {
+      "title": "Batterie",
       "titleAdd": "Batterie derbäi setzen",
       "titleEdit": "Batterie upassen"
     },
@@ -67,7 +131,7 @@
     "charger": {
       "chargers": "Wallboxen",
       "generic": "Generesch Integratiounen",
-      "heatingdevices": "Heizungsgerät",
+      "heatingdevices": "Heizungsgeräter",
       "ocppConfirmContinue": "Deng Wallbox huet sech nach ni mam evcc verbonnen. Wëlls du wierklech weiderfueren?",
       "ocppConnected": "Verbonnen!",
       "ocppDescription": "evcc huet een agebautenen OCPP-Server. Verfolleg dës Etappen:",
@@ -82,16 +146,16 @@
       "template": "Hiersteller",
       "titleAdd": {
         "charging": "Wallbox derbäi fügen",
-        "heating": "Heizung derbäi fügen"
+        "heating": "Heizungsgerät derbäi fügen"
       },
       "titleEdit": {
         "charging": "Wallbox beaarbechten",
-        "heating": "Heizung beaarbechten"
+        "heating": "Heizungsgerät beaarbechten"
       },
       "type": {
         "custom": {
           "charging": "Benotzerdefinéirt Wallbox",
-          "heating": "Benotzerdefinéirt Heizung"
+          "heating": "Benotzerdefinéirten Heizungsgerät"
         },
         "heatpump": "Benotzerdefinéirt Wärmepompel",
         "sgready": "Benotzerdefinéiert Wärmepompel (sg-ready iwwer Plugins)",
@@ -104,6 +168,11 @@
       "description": "Sécherstellen, datt d'Zomm vun all den Luedstatiounen déi mam Circuit verbonne sinn net déi konfiguréiert Leeschtung an aktuell Grenzen iwwerschreit. Circuiten kënnen agenist ginn fir eng Hierarchie opzebauen.",
       "title": "Management vun der Belaaschtung",
       "usableMeters": "Verwendbar Zielerreferenzen"
+    },
+    "consumer": {
+      "description": "Verfollegt kleng, net-kontrolléierbar Apparater (Frigo, Wäschmaschinn, asw.). Dëst gëtt Iech e besseren Iwwerbléck iwwert Ären Hausenergieverbrauch.",
+      "titleAdd": "Füügt een Zieler derbäi",
+      "titleEdit": "Verbrauchszieler änneren"
     },
     "control": {
       "description": "Normalerweis sinn d'Standardwäerter gutt. Veränner se nëmmen wann s du weess wat s du mëss.",
@@ -122,6 +191,7 @@
     "deviceValue": {
       "activeClients": "Aktiv Clienten",
       "amount": "Unzahl",
+      "asleep": "schléift",
       "broker": "Broker",
       "bucket": "Bucket",
       "capacity": "Capacitéit",
@@ -140,12 +210,16 @@
       "currency": "Wärung",
       "current": "Stroum",
       "currentRange": "Stroum",
+      "curtailLimit": "Begrenzung fir anzespeisen",
+      "curtailable": "Ofregelbar",
       "curtailed": "Einspeisung limitéiert",
       "detected": "Erkannt",
+      "dimLimit": "Benotzungslimit",
       "dimmed": "Verbrauch limitéiert",
       "enabled": "Ageschalt",
       "energy": "Energie",
       "events": "Evenementer",
+      "exportLimit": "Limitt vum Netz-Export",
       "feedinPrice": "Präis fir anzespeisen",
       "forecast": "Previsioun",
       "gridPrice": "Netz Präis",
@@ -157,6 +231,7 @@
       "no": "nee",
       "odometer": "Kilometerzäler",
       "org": "Organisatioun",
+      "outdoorTemp": "Baussentemperatur",
       "phaseCurrents": "Stroum",
       "phasePowers": "Leeschtung",
       "phaseVoltages": "Spannung",
@@ -164,10 +239,14 @@
       "power": "Leeschtung",
       "powerRange": "Leeschtung",
       "price": "Präis",
+      "productionLimited": "Produktioun limitéiert",
       "range": "Autonomie",
+      "remoteEnabled": "Aktivéiert",
+      "returnEnergy": "Energie (réckwäerts)",
       "singlePhase": "Eephaseg",
       "soc": "Luedstand",
       "solarForecast": "PV Previsioun",
+      "switchDevice": "Stroumsteierung",
       "temp": "Temperatur",
       "topic": "Sujet",
       "url": "URL",
@@ -194,13 +273,21 @@
         "public": "Ëffentlecht Zertifikaat",
         "title": "Zertifikater"
       },
+      "configuredDevices": "Konfiguréiert Geräter",
       "description": "Konfiguratioun, déi et dem evcc erlaabt, mat EEBus-kompatiblen Apparater wéi Ladegeräter oder enger Kontroll-Eenheet vun Ärem Netzbetreiber ze kommunizéieren. All relevant Initialiséierung an d'Generéiere vun Zertifikater gëtt beim éischte Start automatesch duerchgefouert.",
       "descriptionAdvanced": "Keng Ännerungen néideg. Maacht Ännerungen nëmmen wann Dir wierklech wësst, wat Dir maacht. Wann Dir entweder d'SHIP-ID oder d'Zertifikater ännert, musst Dir Är Apparater erëm koppelen.",
       "interfaces": "Schnëttstellen",
       "interfacesHelp": "Limitéiert d'Netzwierkschnëttstellen, déi EEBus soll benotzen, fir Kommunikatiounsproblemer ze vermeiden. Loosst d'Feld eidel, fir all Schnëttstellen ze benotzen. Eng Entrée pro Zeil.",
+      "noConfiguredDevices": "Keng per SKI konfiguréiert Geräter.",
+      "noPairings": "Keng gekoppelt Geräter.",
+      "pairings": "Gekoppelt Geräter",
       "port": "Port",
       "portHelp": "De Port, deen ze benotzen ass.",
+      "qr": "Kopplungscode",
+      "qrExplain": "Wärend der Installatioun no engem aneren EEBus-Apparat scannen, fir en automatesch ze koppelen, ouni den SKI manuell aginn ze mussen.",
       "removeConfirm": "All EEBus-Konfiguratioun gëtt ewechgeholl. Nei Zertifikater a Identifikateuren ginn beim nächsten Start generéiert. Sidd Dir sécher?",
+      "removePairing": "Kopplung ewechhuelen",
+      "removePairingConfirm": "D'Verbindung zum Gerät gëtt getrennt a muss nei gekoppelt ginn. Bass du sécher?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Permanente Apparat-Identifikator fir d'Identifikatioun am EEBus-Netzwierk.",
       "shipidHelp": "Dës SHIP-ID ass mat deenen ënnen genannten Zertifikater verbonnen.",
@@ -213,13 +300,14 @@
       "title": "Experimentell"
     },
     "ext": {
-      "description": "Dokumentéiert d'Energiewäerter vun onkontrolléierte Verbraucher (z.B. Frigo, Wäschmaschinn, asw.) fir statistesch Zwecker. Dës Zieler kënnen och fir d'Laaschtverwaltung (z.B. Ënnerverdeelung) benotzt ginn.",
-      "titleAdd": "Zieler derbäi fügen",
-      "titleEdit": "Zieler beaarbechten"
+      "description": "Enthält Zieler, déi net fir Kontroll- oder Displayzwecker benotzt ginn (Zweeverdeelungszähler, alternativ Netz- oder PV-Zähler, asw.). Hir Donnéeën ginn op déiselwecht Manéier protokolléiert an exportéiert wéi bei anere Zähler.",
+      "titleAdd": "Füügt en zousätzlechen Zieler derbäi",
+      "titleEdit": "Zousätzlechen Zieler beaarbechten"
     },
     "form": {
       "danger": "Oppassen",
       "deprecated": "obsolet",
+      "durationUnit": "Zäiteenheet fir {label}",
       "example": "Beispill",
       "optional": "optionell"
     },
@@ -253,7 +341,6 @@
       "noFileSelected": "Keng Datei ausgewielt.",
       "off": "aus",
       "on": "un",
-      "password": "Passwuert",
       "readFromFile": "Vun der Datei liesen",
       "remove": "Ewechhuelen",
       "required": "obligatoresch",
@@ -275,6 +362,7 @@
       "titleEdit": "Netzzieler beaarbechten"
     },
     "hems": {
+      "changeConfirm": "Déi aktuell Konfiguratioun gëtt geläscht. Weider?",
       "csv": {
         "created": "Erstallt",
         "finished": "Ofgeschloss",
@@ -282,11 +370,26 @@
         "limitpower": "Limitt (kW)",
         "type": "Typ"
       },
-      "description": "Kraaftbegrenzung duerch extern Systemer (z. B. §14a EnWG, §9 EEG-Schnittstell oder e méi héichgestallt Energiemanagementsystem). Aarbecht zesumme mat der Lastmanagement-Funktioun.",
-      "downloadCsv": "CSV eroflueden",
+      "customOption": "Benotzerdefinéiert Integratioun",
+      "description": "Kraaftbegrenzung duerch extern Systemer (z. B. §14a EnWG, §9 EEG-Schnittstell oder e méi héichgestallt Energiemanagementsystem). Arbecht zesumme mat der Laaschtmanagement-Funktioun. D'Begrenzung vun der Solarproduktioun gëtt och fir ausgewielte Geräter ënnerstëtzt. Den tatsächleche Begrenzungswäert muss an der Konfiguratioun vun all Inverter festgeluecht ginn.",
+      "download": "Eroflueden",
+      "dynamicLimits": "Dynamesch Limitten",
       "eventsRecorded": "{count} gespäichert Limitatiounen vum Netz.",
+      "exportLimit": "Limitt vum Netz-Export",
+      "exportLimitDescription": "De Batterieoptimiséierer respektéiert dës Limitte fir Solarveeloschter ze vermeiden. En aktiven Ofschalt-Signal aus enger dynamescher Limitt-Integratioun huet Prioritéit.",
+      "exportLimitHint": "Statesche Einspeise-Limitt um Netzuschlosspunkt.",
+      "generic": "Generesch Integratiounen",
+      "integrations": "Integratiounen",
       "lastEvent": "Méi rezent {timeAgo}.",
-      "title": "Äusserlech Grenz"
+      "noEvents": "Nach keng Evenementer opgezeechent.",
+      "recordedEvents": "Opgezeechent Evenementer",
+      "staticLimits": "Statesch Limitte",
+      "template": "Integratioun",
+      "title": "Äusserlech Grenz",
+      "type": {
+        "custom": "Benotzerdefinéiert Integratioun",
+        "relay": "Benotzerdefinéiert Integratioun (Relais)"
+      }
     },
     "icon": {
       "change": "änneren",
@@ -311,17 +414,18 @@
     "loadpoint": {
       "addCharger": {
         "charging": "Wallbox derbäi fügen",
-        "heating": "Heizung derbäi fügen"
+        "heating": "Heizungsgerät derbäi fügen"
       },
       "addMeter": "Zousätzlechen Energiezieler derbäi fügen",
+      "advancedConfig": "Erweidert Konfiguratioun",
       "cancel": "Ofbriechen",
       "chargerError": {
         "charging": "Wallbox muss konfiguréiert sinn.",
-        "heating": "Heizung muss konfiguréiert sinn."
+        "heating": "Heizungsgerät muss konfiguréiert sinn."
       },
       "chargerLabel": {
         "charging": "Wallbox",
-        "heating": "Heizung"
+        "heating": "Heizungsgerät"
       },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Verwennt Stroum vu 6 bis 16 A.",
@@ -335,14 +439,22 @@
       "circuitInvalid": "De Circuit existéiert net",
       "circuitLabel": "Stroumkrees",
       "circuitUnassigned": "net zougewisen",
+      "created": "„{name}“ gouf ugeluecht a verwennt sënnvoll Standardwäerter.",
+      "createdTitle": {
+        "charging": "Luedpunkt erstellt",
+        "heating": "Heizung erstellt"
+      },
+      "creating": {
+        "charging": "Wallbox gespäichert. Opluedpunkt gëtt erstellt …",
+        "heating": "Heizungsgerät gespeächert. Heizung gëtt erstellt …"
+      },
       "defaultModeHelp": {
         "charging": "Luedmodus beim Uschléisse vum Gefier.",
         "heating": "Ass beim Systemstart agestallt."
       },
       "defaultModeHelpKeep": "De leschte Modus deen ausgewielt gouf gëtt bäibehal.",
+      "defaultModeKeep": "bäibehalen",
       "defaultModeLabel": "Standard-Modus",
-      "defaultsHint": "De Standardmodus, d'PV-Iwwerschossverhalen an d'elektresch Detailer verwenne raisonnabel Standardwäerter.",
-      "defaultsHintLink": "Astellungen upassen",
       "delete": "Läschen",
       "electricalSubtitle": "Wann onsécher sidd, da léiwer den Elektriker froen.",
       "electricalTitle": "Elektresch",
@@ -351,12 +463,15 @@
       "estimateLabel": "Luedstand zwëschen API-Updates interpoléieren",
       "maxCurrentHelp": "Muss méi grouss wéi de minimale Stroum sinn.",
       "maxCurrentLabel": "Maximale Stroum",
+      "maxTempHelp": "Muss méi héich sinn wéi déi minimal Temperatur.",
+      "maxTempLabel": "Maximal Temperatur",
       "minCurrentHelp": "Géi nëmmen ënner 6 A, wann s du weess, wat s du mëss.",
       "minCurrentLabel": "Minimale Stroum",
+      "minTempLabel": "Minimal Temperatur",
       "noVehicles": "Kee Gefier konfiguréiert.",
       "option": {
         "charging": "Luedpunkt derbäi fügen",
-        "heating": "Heizungsgerät derbäi fügen"
+        "heating": "Heizung derbäi fügen"
       },
       "phases1p": "1-phaseg",
       "phases3p": "3-phaseg",
@@ -377,12 +492,13 @@
       "priorityHelp": "Eng mei héich Prioritéit, gëtt éischter mat PV-Iwwerschoss beliwwert.",
       "priorityLabel": "Prioritéit",
       "save": "Späicheren",
-      "showAllSettings": "All d'Astellungen uweisen",
       "solarBehaviorCustomHelp": "Definéier deng eege Schwellen a Verzögerungen fir d'Aus- an Aschalten.",
       "solarBehaviorDefaultHelp": "Start no {enableDelay} genügenden Iwwerschoss. Stop wa fir {disableDelay} net genuch Iwwerschoss disponibel ass.",
       "solarBehaviorLabel": "PV-Iwwerschoss",
       "solarModeCustom": "personnaliséiert",
       "solarModeMaximum": "nëmme Sonn",
+      "temperatureRangeHelp": "Beräich fir d'Temperatur deen ugewise gëtt. Beaflosst net d'Steierung.",
+      "temperatureRangeTitle": "Temperaturberäich",
       "thresholdDisableDelayLabel": "Verzögerung fir d'Ausschalten",
       "thresholdDisableHelpInvalid": "Wgl. ee positive Wäert verwennen.",
       "thresholdDisableHelpPositive": "Stoppen, wa méi {power} fir {delay} aus dem Netz bezu ginn.",
@@ -396,12 +512,12 @@
       "titleAdd": {
         "charging": "Luedepunkt derbäi fügen",
         "heating": "Heizung derbäi fügen",
-        "unknown": "Wallbox oder Heizung derbäi fügen"
+        "unknown": "Opluedpunkt oder Heizung derbäi fügen"
       },
       "titleEdit": {
         "charging": "Luedpunkt beaarbechten",
         "heating": "Heizung beaarbechten",
-        "unknown": "Wallbox oder Heizung beaarbechten"
+        "unknown": "Opluedpunkt oder Heizung beaarbechten"
       },
       "titleExample": {
         "charging": "Garage, Carport, etc.",
@@ -417,8 +533,9 @@
     },
     "main": {
       "addAdditional": "Zousätzlechen Zieler derbäi fügen",
+      "addConsumer": "Verbraucher derbäisetzen",
       "addGrid": "Netzzieler derbäi fügen",
-      "addLoadpoint": "Wallbox oder Heizung derbäi fügen",
+      "addLoadpoint": "Opluedpunkt oder Heizung derbäi fügen",
       "addPvBattery": "PV oder Batterie derbäi setzen",
       "addTariffs": "Tariffer derbäi fügen",
       "addVehicle": "Gefier derbäi setzen",
@@ -449,18 +566,18 @@
           "titleDefault": "Gefier schléift"
         },
         "connect": {
-          "messageDefault": "Auto ugeschloss mat {pvPower} kW PV",
-          "title": "Wann een Auto sech verbënnt",
-          "titleDefault": "Auto ass verbonnen"
+          "messageDefault": "Gefier ugeschloss mat {pvPower} kW PV",
+          "title": "Wann ee Gefier sech verbënnt",
+          "titleDefault": "Gefier ass verbonnen"
         },
         "disconnect": {
-          "messageDefault": "Auto no {connectedDuration} getrennt",
-          "title": "Wann een Auto getrennt gëtt",
-          "titleDefault": "Auto getrennt"
+          "messageDefault": "Gefier no {connectedDuration} getrennt",
+          "title": "Wann ee Gefier getrennt gëtt",
+          "titleDefault": "Gefier getrennt"
         },
         "guest": {
           "messageDefault": "Onbekanntent Gefier, Gaascht verbonnen?",
-          "title": "Wann en onbekannten Auto sech verbënnt",
+          "title": "Wann en onbekanntent Gefier sech verbënnt",
           "titleDefault": "Onbekannt Gefier"
         },
         "planoverrun": {
@@ -482,6 +599,11 @@
           "messageDefault": "{chargedEnergy} kWh fäerdeg opgeluede an {chargeDuration}.",
           "title": "Wann d'Oplueden ophält",
           "titleDefault": "Oplueden ofgeschloss"
+        },
+        "suggestion": {
+          "messageDefault": "Optimiséierungsvirschlag fir {suggestionTitle}: wann d'Kontroll vum Optimiséierer aktiv wier, géif en elo '{suggestionAction}' uwenden. Nëmmen als Rotschlag, näischt gouf geännert. Experimentell — Feedback ass wëllkomm bei https://github.com/evcc-io/evcc/issues/31903",
+          "title": "Wann d'Virschlagsaktioun vum Optimiséierer sech ännert",
+          "titleDefault": "Virschlag vum Optimiséierer"
         }
       },
       "eventMessage": "Noriicht",
@@ -502,12 +624,16 @@
     },
     "meter": {
       "cancel": "Ofbriechen",
+      "convertToConsumer": {
+        "confirm": "Verwandelt dësen \"zousätzlechen Zieler\" an e \" Verbraucher\".",
+        "link": "An ee Verbraucher konvertéieren"
+      },
       "delete": "Läschen",
       "generic": "Allgemeng Integratiounen",
       "option": {
         "aux": "Intelligente Verbraucher derbäi fügen",
         "battery": "Hausbatterie derbäi fügen",
-        "ext": "Reegelméissege Verbraucher derbäisetzen",
+        "consumer": "Reguläre Verbraucher derbäisetzen",
         "pv": "Sonnen-Zieler derbäi fügen"
       },
       "save": "Späicheren",
@@ -533,6 +659,8 @@
       "connectionHintTcpip": "Den Apparat kann direkt per LAN/Wifi duerch evcc konfiguréiert ginn.",
       "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Netzwierk",
+      "delay": "Verspéidung",
+      "delayHint": "Optional Waardezäit virun all Registerzougang. Nëmmen néideg fir lues Apparater.",
       "device": "Numm vum Apparat",
       "deviceHint": "Beispill: /dev/ttyUSB0",
       "host": "IP-Adress oder Hostname",
@@ -543,7 +671,9 @@
       "protocolHintRtu": "Verbindung durch een RS485 zu Ethernet-Adapter ouni Protokoll-Iwwersetzung.",
       "protocolHintTcp": "Apparat huet eng nativ LAN/Wifi-Ënnerstëtzung oder ass duerch en RS485 zu Ethernet-Adapter mat Protokoll-Iwwersetzung verbonnen.",
       "protocolValueRtu": "RTU",
-      "protocolValueTcp": "TCP"
+      "protocolValueTcp": "TCP",
+      "timeout": "Zäitiwwerschreitung",
+      "timeoutHint": "Optional maximal Zäit fir op eng Äntwert vun engem Apparat ofzewaarden."
     },
     "modbusproxy": {
       "add": "Proxy-Verbindung derbäi fügen",
@@ -589,23 +719,20 @@
       "descriptionHost": "Gëtt verwennt, fir den evcc am lokalen Netzwierk unzekënnegen.",
       "descriptionInternalUrl": "Lokal Netzwierkadress vum evcc.",
       "descriptionPort": "Port fir de Web Interface an d'API. Du muss d'Browser-URL updaten, wann s du dëst änners.",
-      "descriptionSchema": "Beaflosst nëmme wéi d'URL'en generéiert ginn. Wann s du HTTPS auswiels, da gëtt d'Verschlësselung net aktivéiert.",
       "labelExternalUrl": "Extern URL",
       "labelHost": "mDNS-Hostname",
       "labelInternalUrl": "Intern URL",
       "labelPort": "Port",
-      "labelSchema": "Schema",
       "title": "Netzwierk",
       "warningUrlPath": "D'URL brauch normalerweis keen Zougankspad. Sidd Dir sécher, datt dat richteg ass?"
     },
     "ocpp": {
-      "connectedChargers": "Verbonne Wallboxen",
-      "connectionStatus": "Konfiguréiert Station-IDs",
-      "connectionStatusHelp": "Verbindungsstatus vun de konfiguréierte Wallboxen.",
-      "detectedChargers": "Erkannt Station-IDs",
-      "detectedHelp": "Dës Wallboxen hu probéiert sech mat evcc ze verbannen. Fir eng Wallbox ze benotzen, erstellt eng Wallbox mat senger Statiouns-ID.",
+      "forwardingConfigured": "Weiderleedung konfiguréiert",
+      "forwardingError": "Weiderleedungsfeeler",
+      "forwardingOff": "Keng Weiderleedung konfiguréiert",
       "noChargers": "Keng OCPP-Wallbox erkannt.",
-      "noStations": "Keng Statioune verbonnen",
+      "stations": "Statiouns-IDen",
+      "stationsHelp": "Konfiguréiert an detektéiert OCPP-Wallboxen. Zousätzlech zur lokaler Kontroll kënnt Dir d'Weiderleedung vun Noriichten op en externen Server konfiguréieren (z. B. fir d'Ofrechnung).",
       "status": {
         "configured": "Net verbonnen",
         "connected": "Verbonnen",
@@ -614,6 +741,30 @@
       "title": "OCPP Server",
       "url": "Server-URL",
       "urlHelp": "Kopéier dës URL fir d'Konfiguratioun vun denger Wallbox. Kuck am Handbuch vum Hiersteller no Detailer. Et gëtt erwaart, datt d'Wallbox automatesch säin eenzegaartegen Identifikator (Statiouns-ID) un d'URL bäifügt. A rare Fäll musst Dir den Identifikator eventuell manuell spezifizéieren. Beispill: `{url}`"
+    },
+    "ocppforwarder": {
+      "description": "Schéckt d'OCPP-Noriichte vun dëser Wallbox zousätzlech zu evcc un en externen Server (Abrechnungsplattform, Netzbetreiber, asw.).",
+      "editTitle": "OCPP weiderleeden",
+      "labelCaCert": "Serverzertifikaat (CA)",
+      "labelCheckInsecure": "Erlaabt selwer ënnerschriwwen Zertifikater",
+      "labelInsecure": "Zertifikaatsvalidatioun",
+      "password": "Passwuert",
+      "passwordHelp": "Fir d'HTTP-Basic-Authentifikatioun um Upstream-Server.",
+      "readOnly": {
+        "check": "Blockéiert Befeeler vum upstream-Server",
+        "help": {
+          "false": "Den Upstream kann iwwer evcc Befeeler un d'Wallbox schécken.",
+          "true": "Den Upstream kritt all Wallbox-Noriichten, kann awer keng Befeeler verschécken. evcc behält d'eenzeg Kontroll."
+        },
+        "label": "Upstream-Befeeler"
+      },
+      "status": "Status",
+      "upstreamStationId": "Statiouns-ID",
+      "upstreamStationIdHelp": "Wallbox-Identifikatioun un den Upstream-Server geschéckt.",
+      "upstreamUrl": "Upstream-Server-URL",
+      "upstreamUrlHelp": "OCPP-WebSocket-URL vum externe Server.",
+      "username": "Benotzernumm",
+      "usernameHelp": "Fir d'HTTP-Basic-Authentifikatioun um Upstream-Server."
     },
     "optimizer": {
       "description": "Analyséiert d'Solarprognos, d'Stroumpräisser an Är Verbrauchssmuster, fir d'Batterie- a Luedstrategie ze optiméieren. D'Donnéeë ginn un den evcc-Optimiséierungsservice fir d'Berechnen geschéckt. Momentan berechent a visualiséiert et nëmmen. Et steiert nach keng Apparater.",
@@ -682,14 +833,23 @@
     },
     "section": {
       "additionalMeter": "Zousätzlech Zieler",
+      "consumers": "Verbraucher",
       "general": "Allgemeng",
       "grid": "Netzuschloss",
       "integrations": "Integratiounen",
-      "loadpoints": "Lueden & Heizen",
+      "loadpoints": "Opluedpunkte & Heizungsgeräter",
       "meter": "PV & Batterie",
       "services": "Servicer",
       "system": "System",
       "vehicles": "Gefierer"
+    },
+    "security": {
+      "authDisabledHint": "Authentifikatioun ass ausgeschalt. Login-Detailer kënnen net verwalt ginn.",
+      "description": "D'Authentifikatiouns- a Login-Detailer fir dës Instanz verwalten.",
+      "passwordDescription": "Aktualiséiert d'Passwuert, dat fir den Zougang an der Konfiguratiouns-UI benotzt gëtt.",
+      "passwordTitle": "Administrator-Passwuert",
+      "title": "Sécherheet",
+      "updatePassword": "Passwuert änneren"
     },
     "shm": {
       "cardTitle": "Sunny Home Manager",
@@ -706,14 +866,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Lizenzschlëssel",
-      "activationKeyHint": "Per E-Mail un Iech geschéckt. Op der {url} ze fannen.",
       "addToken": "Token aginn",
       "changeToken": "Token änneren",
       "description": "De Sponsoring Modell hëlleft eis de Projet z'erhalen an nohalteg nei a spannend Fonctiounen z'entwéckelen. Als Sponsor kriss du Zougank zu all Wallbox-Implementatiounen.",
       "descriptionToken": "Als GitHub-Sponsor fannt Dir Ären Token op {url}. Mir bidden och ee Test-Token un fir ze testen {trialToken}.",
-      "email": "E-Mail",
-      "emailHint": "E-Mail-Adress, déi Dir fir {url} benotzt hutt",
       "enterYourToken": "Äre Sponsor-Token",
       "error": "De Sponsortoken ass ongülteg.",
       "invalid": "ongülteg",
@@ -796,7 +952,8 @@
         "feedIn": "Netzexport-Tarif derbäifügen",
         "grid": "Netzimport-Tarif derbäifügen",
         "planner": "Planner-Previsiounen derbäifügen",
-        "solar": "Solar-Previsiounen derbäifügen"
+        "solar": "Solar-Previsiounen derbäifügen",
+        "temperature": "Eng Temperaturprognos derbäi fügen"
       },
       "planner": {
         "description": "Erweidert Astellung. Normalerweis net néideg, well déi dynamesch Stroumtariffer oder CO₂-Previsiounen automatesch benotzt ginn. Erlaabt eng zousätzlech Datequell, déi nëmmen fir d'Opluedplangung benotzt gëtt, net fir Statistiken a Präisberechnungen.",
@@ -809,6 +966,11 @@
         "titleAdd": "Solarprevisioun derbäifügen",
         "titleEdit": "Solarprevisioun beaarbechten"
       },
+      "temperature": {
+        "description": "Baussen-Temperaturprognos fir Är Plaz. Am Interface ugewisen a gëtt benotzt fir de Heizungsbedarf virauszesoen.",
+        "titleAdd": "Eng Temperaturprognos derbäi fügen",
+        "titleEdit": "Temperaturprognos änneren"
+      },
       "template": "Fournisseur",
       "title": "Tariffer & Previsiounen",
       "titleChoice": "Wat wëlls du derbäisetzen?",
@@ -817,7 +979,8 @@
         "feedIn": "Verkafspräis un d'Netz",
         "grid": "Netzimportspräis",
         "planner": "Planner",
-        "solar": "Solar"
+        "solar": "Solar",
+        "temperature": "Temperaturprognos"
       },
       "zones": {
         "add": "Zone derbäifügen",
@@ -840,10 +1003,6 @@
         "timeTo": "Bis",
         "weekdays": "Wochendeeg"
       }
-    },
-    "tariffs": {
-      "description": "Definéier d'Stroumtariffer fir d'Käschte vun den Opluedsessiounen ze berechnen.",
-      "title": "Tariffer"
     },
     "telemetry": {
       "description": "Konfiguréier den Datenaustausch fir den evcc ze verbesseren. Deng Privatsphär ass eis wichteg an d'Participatioun ass komplett fakultativ.",
@@ -882,7 +1041,7 @@
       "greenShareSub2": "Solar- & Batteriespäicher",
       "power": "Luedeleeschtung",
       "powerSub1": "{activeClients} vu {totalClients} Participanten",
-      "powerSub2": "gëtt elo opgelueden…",
+      "powerSub2": "gëtt gelueden.",
       "tabTitle": "Live Gemeinschaft"
     },
     "savings": {
@@ -942,6 +1101,8 @@
     "version": {
       "availableLong": "nei Versioun verfügbar",
       "community": "evcc Communautéit",
+      "labelEmail": "E-Mail",
+      "labelPhone": "Telefon",
       "labelRelease": "Verëffentlechung",
       "labelVersion": "Versioun",
       "labelWebsite": "Websäit",
@@ -974,7 +1135,8 @@
       "co2": "Iwwerpréiwt, wéini d'Netzenergie an Ärer Regioun propper ass. Luedpläng ginn optimiséiert fir d'Emissiounen ze reduzéieren an CO₂ anzespueren.",
       "price": "Konfiguréiert Ären dynameschen Stromtarif, fir d'Luedpläng automatesch ze optiméieren an d'Erspuernësser ze berechnen.",
       "setup": "Tariffer a Prognosen opstellen",
-      "solar": "Kuckt déi erwaart Solarproduktioun fir haut an déi nächst Deeg. Et gëtt och an der Zukunft fir d'automatiséiert Luedoptimiséierung benotzt."
+      "solar": "Kuckt déi erwaart Solarproduktioun fir haut an déi nächst Deeg. Et gëtt och an der Zukunft fir d'automatiséiert Luedoptimiséierung benotzt.",
+      "temperature": "Kuckt déierwaart Baussentemperatur fir Äre Standuert. Gëtt benotzt fir den Heizungsbedarf virauszesoen."
     },
     "hideLine": "Linn ausblennen",
     "modalTitle": "Prognose",
@@ -996,32 +1158,34 @@
     "solarAdjust": "Solarprognose unhand vun de reale Produktionsdaten upassen{percent}.",
     "solarAdjustMedium": "unpassen un déi reell Produktiounsdaten",
     "solarAdjustShort": "upassen",
+    "temperature": {
+      "average": "Moyenne",
+      "range": "Beräich"
+    },
     "type": {
       "co2": "CO₂-Emissiounen",
       "price": "Netzpräis",
-      "solar": "Solar-Productioun"
+      "solar": "Solar-Productioun",
+      "temperature": "Baussentemperatur"
     }
   },
   "general": {
+    "download": "Eroflueden",
+    "none": "keng",
     "note": "Bemierkung:"
   },
   "header": {
     "about": "Iwwer",
-    "authProviders": {
-      "confirmLogout": "Sécher, datt s du {title} trenne wëlls?",
-      "loggedOut": "Erfollegräich ofgemellt",
-      "title": "Autoriséirungsstatus"
-    },
     "blog": "Blog",
     "docs": "Dokumentatioun",
     "github": "GitHub",
-    "login": "Logine vun de Gefierer",
     "logout": "Ofmellen",
     "nativeSettings": "Server änneren",
     "needHelp": "Brauchs du Hëllef?",
     "sessions": "Opluedsessiounen"
   },
   "help": {
+    "contactButton": "Kontaktéiert eis",
     "discussionsButton": "GitHub Diskussiounen",
     "documentationButton": "Dokumentatioun",
     "issueButton": "Problem mellen",
@@ -1061,8 +1225,11 @@
     "additionalContext": "Zousätzleche Kontext",
     "additionalContextPlaceholder": "All zousätzlech Informatiounen, déi hëllefräich kéinte sinn...\n- Konfiguratiounsdetailer\n- Wat Dir probéiert hutt\n- Ëmfelddetailer",
     "createButtonDiscussion": "GitHub Diskussioun starten...",
+    "createButtonEmail": "Ufro per E-Mail schécken",
     "createButtonIssue": "GitHub Issue erstellen...",
     "description": "Funktionéiert Är Installatioun net wéi erwaart? Benotzt dës Säit fir Hëllef ze kréien oder Problemer ze mellen. Gitt genuch Detailer fir eis ze hëllefen de Problem ze verstoen a reproduzéieren, wärend Är Beschreiwung präzis, kloer an einfach ze verstoen ass.",
+    "downloadButton": "Debug-Informatioun eroflueden",
+    "downloadHint": "Füügt dës Datei bei Är E-Mail derbäi, wa méi Informatiounen néideg sinn.",
     "helpType": {
       "discussion": "Brauch Hëllef mat menger Installatioun",
       "discussionDescription": "Gemeinschaftsdiskussiounen liwweren Äntwerten.",
@@ -1074,6 +1241,7 @@
     "issueTitle": "Titel",
     "stepsToReproduce": "Schrëtt fir de Problem ze reproduzéieren",
     "subTitleDiscussion": "Beschreif däi Problem",
+    "subTitleEmail": "Beschreif däi Problem",
     "subTitleIssue": "Beschreif de Problem",
     "summary": {
       "confirmationButtonDiscussion": "GitHub Diskussioun starten",
@@ -1110,7 +1278,6 @@
   "loginModal": {
     "cancel": "Ofbriechen",
     "demoMode": "Login gëtt am Demomodus net ënnerstëtzt.",
-    "error": "Login feelgeschloen: ",
     "iframeHint": "Evcc an engem neien Tab opmaachen.",
     "iframeIssue": "D'Passwuert ass richteg, mee de Browser schéngt den Authentifikatiouns-Cookie ofgeleent ze hunn. Dëst ka geschéien wann s du evcc an engem iframe iwwer HTTP verwenns.",
     "invalid": "Passwuert ass ongültig.",
@@ -1123,34 +1290,39 @@
     "chargingPlan": {
       "active": "Aktiv",
       "addRepeatingPlan": "Widderhuelte Planifikatioun derbäi fügen",
-      "arrivalTab": "Arrivée",
       "day": "Dag",
-      "departureTab": "Depart",
       "goal": "Luedzil",
       "modalTitle": "Luedplanifikatioun",
       "none": "keng",
+      "once": "eemol",
       "optimization": {
         "cheapest": "am bëllegsten",
+        "cheapestDescription": "Wielt déi bëllegst Slots aus. Kann zu méi Starten a Stoppe féieren.",
+        "cleanest": "am proppersten",
+        "cleanestDescription": "Wielt déi propperst Slots aus. Kann zu méi Starts a Stops féieren.",
         "continuous": "kontinuéierlech",
+        "continuousCo2Description": "Wielt déi propperest onënnerbrach Serie vu Slots.",
+        "continuousPriceDescription": "Wielt déi bëllegst onënnerbrach Serie vu Slots aus.",
         "label": "Optimisatioun"
       },
       "planNumber": "Planifkatioun {number}",
       "precondition": {
-        "description": "Luetzäit {duration} virum Fortfuere fir Batterie-Prekonditionéierung.",
+        "description": "Verleeë e Deel vum Opluede direkt virum Depart: waarm Batterie, manner Zäit op engem héijen Opluede-Niveau.",
         "label": "Verspéit Lueden",
         "optionAll": "Alles",
-        "optionNo": "Nee"
+        "optionNo": "Nee",
+        "summary": "{precondition} virdrun"
       },
       "remove": "Ewechhuelen",
       "repeating": "widderhuelend",
       "repeatingPlans": "Widderhuelend Planifikatiounen",
       "selectAll": "All auswielen",
+      "strategy": {
+        "label": "Strategie"
+      },
       "strategyDisabledDescription": "D'Laden fänkt sou spéit wéi méiglech un, fir grad rechtzäiteg virum Depart ofzeschléissen. Mat dynamesche Netzpräisser oder engem CO₂-Tarif stinn hei nach méi Optiounen zur Verfügung.",
-      "strategySettings": "Strategie-Astellungen",
       "time": "Zäit",
       "title": "Planifikatioun",
-      "titleMinSoc": "Min. Oplueden",
-      "titleTargetCharge": "Depart",
       "unsavedChanges": "Net gespäichert Ännerungen leie vir. Elo uwennen?",
       "update": "Uwennen",
       "weekdays": "Deeg"
@@ -1163,12 +1335,9 @@
     "energyflow": {
       "battery": "Batterie",
       "batteryCharge": "Batterie oplueden",
+      "batteryChargeHold": "Batterie (Opluede gespäert)",
       "batteryDischarge": "Batterie entlueden",
       "batteryDischargeHold": "Batterie (gespäert)",
-      "batteryForecastEmpty": "Eidel",
-      "batteryForecastFull": "Voll",
-      "batteryForecastNextHigh": "Héich",
-      "batteryForecastNextLow": "Déif",
       "batteryGridChargeActive": "Oluede vum Netz: aktiv",
       "batteryGridChargeLimit": "Opluede vum Netz: wann",
       "batteryTooltip": "{energy} vun {total} ({soc})",
@@ -1182,16 +1351,22 @@
       "pv": "Solaranlag",
       "pvExport": "Export an d'Stroumnetz",
       "pvProduction": "Produktioun",
-      "selfConsumption": "eegene Verbrauch"
+      "selfConsumption": "eegene Verbrauch",
+      "toggleDetails": "Detailer vum Energieflux"
     },
     "heatingStatus": {
       "charging": "Wiermen…",
       "connected": "Standby.",
+      "minTemp": "Mindestheizung op {temp}.",
+      "suggestionStartTooltip": "Den Optimiséierer recommandéiert elo ze heizen.",
+      "suggestionStopTooltip": "Den Optimiséierer recommandéiert d'Heizung ze pausen.",
       "vehicleLimit": "Limitt vun der Heizung",
       "waitForVehicle": "Prett fir ze Heizen…"
     },
     "hemsWarning": {
-      "title": "Extern Begrenzung:"
+      "consumption": "Verbrauch",
+      "feedIn": "Aspeisung",
+      "title": "Extern Begrenzung aktiv"
     },
     "history": {
       "direction": {
@@ -1202,16 +1377,21 @@
         "grid": {
           "energy": "importéiert",
           "returnEnergy": "agespeist"
+        },
+        "meter": {
+          "energy": "Energie",
+          "returnEnergy": "Energie (ëmgedréint)"
         }
       },
-      "downloadCsv": "CSV eroflueden",
+      "download": "Eroflueden",
       "empty": "Keng historesch Daten fir dësen Zäitraum.",
       "group": {
         "battery": "Batterie",
+        "consumer": "Verbrauch",
         "forecast": "Virso",
         "grid": "Netz",
         "loadpoint": "Lueden & Heizen",
-        "meter": "Verbrauch",
+        "meter": "Aner Zieler",
         "pv": "Produktioun"
       },
       "otherConsumers": "Aneres",
@@ -1225,12 +1405,15 @@
       "emission": "Emissioun",
       "fallbackName": "Luedstatioun",
       "finished": "Fäerdeg um",
+      "last24hEnergy": "Lescht 24h",
+      "last7dEnergy": "Lescht 7 Deeg",
       "power": "Leeschtung",
       "price": "Käschten",
       "remaining": "Reschtzäit",
       "remoteDisabledHard": "{source}: Deaktivéiert",
       "remoteDisabledSoft": "{source}: Adaptatiivt PV-Lueden deaktivéiert",
-      "solar": "Sonn"
+      "solar": "Sonn",
+      "todayEnergy": "Haut"
     },
     "loadpointSettings": {
       "batteryBoost": {
@@ -1248,22 +1431,17 @@
       "batteryUsage": "Hausbatterie",
       "currents": "Luedstroum",
       "default": "Standard",
-      "disclaimerHint": "Notiz:",
-      "limitSoc": {
-        "description": "Luedzil dat benotzt gëtt, wann dëst Gefier verbonnen ass.",
-        "label": "Standard Luedzil"
-      },
+      "heating": "Heizen",
       "maxCurrent": {
         "label": "Max. Stroum"
       },
       "minCurrent": {
         "label": "Min. Stroum"
       },
-      "minSoc": {
-        "description": "D'Gefier gëtt \"séier\" op {0} am Solarmodus opgelueden. Da geet et weider mat Solariwwerschëss. Dëst ass nëtzlech fir eng Minimum-Reechwäit och wärend méi däischter Deeg ze garantéieren.",
-        "label": "Min. oplueden %"
+      "minTemp": {
+        "description": "Ënner {0} ginn och d'Batterie- an d'Netzstroum am Solarmodus benotzt, fir dës Temperatur z'erhalen.",
+        "label": "Min. Temperatur"
       },
-      "onlyForSocBasedCharging": "Dës Optioune sinn nëmme fir Gefierer mat bekannte Luedstatioune verfügbar.",
       "phasesConfigured": {
         "label": "Phasen",
         "no1p3pSupport": "Wéi ass deng Luedstatioun ugeschloss?",
@@ -1346,6 +1524,20 @@
       "unknown": "Gaascht Gefier",
       "vehicleSoc": "Gelueden"
     },
+    "vehicleSettings": {
+      "connectedTo": "verbonne mat {0}",
+      "description": "Dës Virastellungen ginn ugewannt, wann d'Gefier sech mat enger Opluedstatioun verbënnt.",
+      "editHint": "Füügt Gefierer an {0} derbäi oder ännert se.",
+      "keepAsIs": "Loosst et wéi et ass",
+      "learnMore": "Méi gewuer ginn.",
+      "limitSoc": "Standardlimitt",
+      "menu": "Gefierer",
+      "minSoc": "Minimal Ladung",
+      "minSocDescription": "Schnell op dëse Niveau am Solarmodus oplueden.",
+      "mode": "Standardmodus",
+      "notConnected": "net verbonnen",
+      "title": "Astellunge vum Gefier"
+    },
     "vehicleStatus": {
       "awaitingAuthorization": "Waarden op d'Autorisatioun.",
       "batteryBoost": "Batterie Boost ass aktiv.",
@@ -1372,6 +1564,8 @@
       "pvEnable": "Iwwerschoss verfügbar. Starte geschwënn.",
       "scale1p": "Reduktioun op eng eenzeg Phase.",
       "scale3p": "Erhéije geschwënn op dräi Phasen.",
+      "suggestionStartTooltip": "Den Optimiséierer recommandéiert elo opzelueden.",
+      "suggestionStopTooltip": "Den Optimiséierer recommandéiert d'Oplueden ze pausen.",
       "targetChargeActive": "Luedplanung aktiv. Ageschate Schluss an {duration}.",
       "targetChargePlanned": "Luedpladung fänkt un an {duration} un.",
       "targetChargeWaitForVehicle": "Luedplang ass prett. Waarden op d'Gefier…",
@@ -1410,6 +1604,8 @@
     "updatePassword": "Passwuert änneren"
   },
   "session": {
+    "addOdometer": "Wäert derbäisetzen",
+    "addedRange": "Zousätzlech Autonomie",
     "cancel": "Ofbriechen",
     "co2": "CO₂",
     "date": "Zäitraum",
@@ -1419,14 +1615,17 @@
     "meterstart": "Éischt Meter Liesung",
     "meterstop": "Last Meter Liesung",
     "odometer": "Kilometerzähler",
-    "price": "Präis",
+    "price": "Käschten",
+    "soc": "Ladung",
     "started": "Startzeit",
     "title": "Charging Sessioun"
   },
   "sessions": {
+    "addedRange": "Autonomie",
     "avgPower": "⌀ Leeschtung",
     "avgPrice": "⌀ Präis",
     "chargeDuration": "Oplueddauer",
+    "chargedSoc": "Ladung",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
       "avgPriceByGroup": "⌀ Präis {byGroup}",
@@ -1448,6 +1647,7 @@
     },
     "co2": "⌀ CO₂",
     "csv": {
+      "addedrange": "Zousätzlech Distanz (km)",
       "chargedenergy": "Energie (kWh)",
       "chargeduration": "Oplueddauer",
       "co2perkwh": "CO₂/kWh",
@@ -1458,14 +1658,16 @@
       "meterstart": "Zielerstand am Ufank (kWh)",
       "meterstop": "Zielerstand zum Schluss (kWh)",
       "odometer": "Kilometerstand (km)",
-      "price": "Präis",
+      "price": "Käschten",
       "priceperkwh": "Präis/kWh",
+      "socend": "SoC Enn (%)",
+      "socstart": "SoC-Start (%)",
       "solarpercentage": "Sonn (%)",
       "vehicle": "Gefier"
     },
-    "csvPeriod": "{period} CSV eroflueden",
-    "csvTotal": "Gesamt CSV eroflueden",
     "date": "Ufank",
+    "download": "Eroflueden {period}",
+    "downloadTotal": "Total eroflueden",
     "energy": "Opgelueden",
     "filter": {
       "allLoadpoints": "All Luedstatiounen",
@@ -1475,12 +1677,12 @@
     "group": {
       "co2": "Emissiounen",
       "grid": "Netz",
-      "price": "Präis",
+      "price": "Käschten",
       "self": "Sonn"
     },
     "groupBy": {
       "loadpoint": "Luedpunkt",
-      "none": "Insgesamt",
+      "none": "Solar",
       "vehicle": "Gefier"
     },
     "loadpoint": "Luedstatioun",
@@ -1501,8 +1703,8 @@
     "total": "Total",
     "type": {
       "co2": "CO₂",
-      "price": "Präis",
-      "solar": "Sonn"
+      "price": "Käschten",
+      "solar": "Energie"
     },
     "vehicle": "Gefier"
   },

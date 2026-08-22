@@ -4,10 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"sync"
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/samber/lo"
@@ -21,6 +23,46 @@ type circuitStruct struct {
 	Current    *float64 `json:"current,omitempty"`
 	MaxPower   float64  `json:"maxPower,omitempty"`
 	MaxCurrent float64  `json:"maxCurrent,omitempty"`
+}
+
+// updateCircuits updates all circuits' power and currents
+func (site *Site) updateCircuits() {
+	if site.circuit == nil {
+		return
+	}
+
+	if err := site.circuit.Update(site.loadpointsAsCircuitDevices()); err != nil {
+		site.log.ERROR.Println(err)
+	}
+
+	site.publishCircuits()
+}
+
+// applyHemsLimits applies the HEMS dim and curtail state to the site's devices
+func (site *Site) applyHemsLimits() {
+	if site.hems == nil {
+		return
+	}
+
+	var wg sync.WaitGroup
+
+	wg.Go(func() {
+		if dim := hems.Dimmed(site.hems); dim != nil {
+			if err := site.dimMeters(*dim); err != nil {
+				site.log.ERROR.Println(err)
+			}
+		}
+	})
+
+	wg.Go(func() {
+		if hems.Curtailed(site.hems) != nil {
+			if err := site.curtailPV(site.hems.CurtailedPercent()); err != nil {
+				site.log.ERROR.Println(err)
+			}
+		}
+	})
+
+	wg.Wait()
 }
 
 // publishCircuits returns a list of circuit titles
@@ -56,10 +98,15 @@ func (site *Site) publishCircuits() {
 	site.publish(keys.Circuits, res)
 }
 
-func (site *Site) dimMeters(dim *bool) error {
-	if dim == nil {
+// dimMeters applies the HEMS dim state to all dimmable aux and ext meters.
+// Devices are only queried when the state changes or after a failed attempt.
+func (site *Site) dimMeters(dim bool) error {
+	if site.dimmed != nil && *site.dimmed == dim {
 		return nil
 	}
+
+	// invalidate until successfully applied
+	site.dimmed = nil
 
 	var errs error
 	for _, dev := range slices.Concat(site.auxMeters, site.extMeters) {
@@ -68,55 +115,84 @@ func (site *Site) dimMeters(dim *bool) error {
 			continue
 		}
 
-		if dimmed, err := backoff.RetryWithData(m.Dimmed, modbus.Backoff()); err == nil {
-			if *dim == dimmed {
-				continue
-			}
-		} else {
-			if !errors.Is(err, api.ErrNotAvailable) {
-				errs = errors.Join(errs, fmt.Errorf("%s dimmed: %w", deviceTitleOrName(dev), err))
-			}
+		// unreadable state: apply unconditionally
+		dimmed, err := backoff.RetryWithData(m.Dimmed, modbus.Backoff())
+		if err != nil && !errors.Is(err, api.ErrNotAvailable) {
+			errs = errors.Join(errs, fmt.Errorf("%s dimmed: %w", deviceTitleOrName(dev), err))
+			continue
+		}
+		if err == nil && dim == dimmed {
 			continue
 		}
 
-		if err := m.Dim(*dim); err == nil {
-			site.log.DEBUG.Printf("%s dim: %t", deviceTitleOrName(dev), *dim)
+		if err := m.Dim(dim); err == nil {
+			site.log.DEBUG.Printf("%s dim: %t", deviceTitleOrName(dev), dim)
 		} else if !errors.Is(err, api.ErrNotAvailable) {
 			errs = errors.Join(errs, fmt.Errorf("%s dim: %w", deviceTitleOrName(dev), err))
 		}
 	}
 
+	if errs == nil {
+		site.dimmed = &dim
+	}
+
 	return errs
 }
 
-func (site *Site) curtailPV(curtail *bool) error {
-	if curtail == nil {
+// curtailable is a named curtailment device
+type curtailable struct {
+	name string
+	api.Curtailer
+}
+
+// curtailables returns the curtailment devices and the curtailable pv meters
+func (site *Site) curtailables() []curtailable {
+	var res []curtailable
+
+	for _, dev := range site.pvMeters {
+		if m, ok := api.Cap[api.Curtailer](dev.Instance()); ok {
+			res = append(res, curtailable{deviceTitleOrName(dev), m})
+		}
+	}
+
+	for _, dev := range site.curtailers {
+		res = append(res, curtailable{deviceTitleOrName(dev), dev.Instance()})
+	}
+
+	return res
+}
+
+// curtailPV applies the HEMS curtailment percent to all curtailment devices and curtailable pv meters.
+// Devices are only queried when the percent changes or after a failed attempt.
+func (site *Site) curtailPV(percent *int) error {
+	if percent == nil || site.curtailPercent != nil && *site.curtailPercent == *percent {
 		return nil
 	}
 
+	// invalidate until successfully applied
+	site.curtailPercent = nil
+
 	var errs error
-	for _, dev := range site.pvMeters {
-		m, ok := api.Cap[api.Curtailer](dev.Instance())
-		if !ok {
+	for _, m := range site.curtailables() {
+		// unreadable state: apply unconditionally
+		curtailed, err := backoff.RetryWithData(m.CurtailedPercent, modbus.Backoff())
+		if err != nil && !errors.Is(err, api.ErrNotAvailable) {
+			errs = errors.Join(errs, fmt.Errorf("%s curtailed: %w", m.name, err))
+			continue
+		}
+		if err == nil && curtailed == *percent {
 			continue
 		}
 
-		if curtailed, err := backoff.RetryWithData(m.Curtailed, modbus.Backoff()); err == nil {
-			if *curtail == curtailed {
-				continue
-			}
-		} else {
-			if !errors.Is(err, api.ErrNotAvailable) {
-				errs = errors.Join(errs, fmt.Errorf("%s curtailed: %w", deviceTitleOrName(dev), err))
-			}
-			continue
-		}
-
-		if err := m.Curtail(*curtail); err == nil {
-			site.log.DEBUG.Printf("%s curtail: %t", deviceTitleOrName(dev), *curtail)
+		if err := m.SetCurtailPercent(*percent); err == nil {
+			site.log.DEBUG.Printf("%s curtail: %d%%", m.name, *percent)
 		} else if !errors.Is(err, api.ErrNotAvailable) {
-			errs = errors.Join(errs, fmt.Errorf("%s curtail: %w", deviceTitleOrName(dev), err))
+			errs = errors.Join(errs, fmt.Errorf("%s curtail: %w", m.name, err))
 		}
+	}
+
+	if errs == nil {
+		site.curtailPercent = new(*percent)
 	}
 
 	return errs

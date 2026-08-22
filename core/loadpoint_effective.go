@@ -17,6 +17,7 @@ func (lp *Loadpoint) PublishEffectiveValues() {
 	lp.publish(keys.EffectivePlanTime, lp.EffectivePlanTime())
 	lp.publish(keys.EffectivePlanSoc, lp.EffectivePlanSoc())
 	lp.publish(keys.EffectivePlanStrategy, lp.EffectivePlanStrategy())
+	lp.publish(keys.EffectiveMinSoc, lp.EffectiveMinSoc())
 	lp.publish(keys.EffectiveLimitSoc, lp.EffectiveLimitSoc())
 
 	if ctrl, ok := lp.chargeController.(*CurrentController); ok {
@@ -144,6 +145,25 @@ func (lp *Loadpoint) EffectivePlanTime() time.Time {
 // SocBasedPlanning returns true if soc based planning is enabled
 func (lp *Loadpoint) SocBasedPlanning() bool {
 	return lp.socBasedPlanning()
+}
+
+// EffectiveMinSoc returns the effective min soc (heating: min temperature)
+func (lp *Loadpoint) EffectiveMinSoc() int {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.effectiveMinSoc()
+}
+
+// effectiveMinSoc returns the effective min soc (heating: min temperature)
+func (lp *Loadpoint) effectiveMinSoc() int {
+	minSoc := lp.minSoc
+
+	// loadpoint and vehicle min soc are independent limits- honor both
+	if v := lp.GetVehicle(); v != nil {
+		minSoc = max(minSoc, vehicle.Settings(lp.log, v).GetMinSoc())
+	}
+
+	return minSoc
 }
 
 // EffectiveLimitSoc returns the effective session limit soc

@@ -69,12 +69,12 @@ func NewWeidmüllerFromConfig(ctx context.Context, other map[string]any) (api.Ch
 		return nil, err
 	}
 
-	return NewWeidmüller(ctx, cc.URI, cc.ID)
+	return NewWeidmüller(ctx, cc)
 }
 
 // NewWeidmüller creates Weidmüller charger
-func NewWeidmüller(ctx context.Context, uri string, id uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewWeidmüller(ctx context.Context, settings modbus.TcpSettings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -245,12 +245,12 @@ func (wb *Weidmüller) Voltages() (float64, float64, float64, error) {
 var _ api.Identifier = (*Weidmüller)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *Weidmüller) Identify() (string, error) {
+func (wb *Weidmüller) Identify() ([]string, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wmRegCardId, 11)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return bytesAsString(b), nil
+	return []string{bytesAsString(b)}, nil
 }
 
 var _ api.PhaseSwitcher = (*Weidmüller)(nil)

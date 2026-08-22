@@ -63,7 +63,7 @@ func NewConnector(ctx context.Context, log *util.Logger, id int, cp *CP, idTag s
 
 	var ok bool
 	// apply cached status if available
-	instance.WithConnectorStatus(cp.ID(), id, func(status *core.StatusNotificationRequest) {
+	cp.cs.WithConnectorStatus(cp.ID(), id, func(status *core.StatusNotificationRequest) {
 		if _, err := cp.OnStatusNotification(status); err == nil {
 			ok = true
 		}

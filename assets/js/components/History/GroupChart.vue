@@ -5,18 +5,20 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, markRaw, type PropType } from "vue";
+import { defineComponent, type PropType } from "vue";
 import {
-	echarts,
 	FONT_FAMILY,
 	forecastGrid,
 	forecastYAxis,
 	tooltipStyle,
 	tooltipTable,
+	xAxisLabelStyle,
+	type TooltipRow,
 } from "../Forecast/echarts";
-import colors, { resolveColors, deviceColorMap, darken } from "@/colors";
+import colors, { resolveColors, deviceColorMap, darken, batteryColor, setAlpha } from "@/colors";
 import store from "@/store";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
+import echartsChart from "@/mixins/echartsChart";
 import { PERIODS } from "../Sessions/types";
 import { is12hFormat } from "@/units";
 import { hasColorPicker } from "./groups";
@@ -54,6 +56,9 @@ export function stepAlpha(i: number, n: number): number {
 // Symmetric axis regardless of whether the period contains both directions.
 const BIDIRECTIONAL_GROUPS: ReadonlySet<string> = new Set(["grid", "battery"]);
 
+// Multiple entities stack into one bar; grid and meter render side-by-side.
+const STACKED_GROUPS: ReadonlySet<string> = new Set(["loadpoint", "consumer", "pv", "battery"]);
+
 // Round up to a nice number (5-tick symmetric axis: -L, -L/2, 0, L/2, L).
 function niceCeil(v: number): number {
 	if (v <= 0) return 0;
@@ -65,7 +70,7 @@ function niceCeil(v: number): number {
 
 export default defineComponent({
 	name: "GroupChart",
-	mixins: [formatter],
+	mixins: [formatter, echartsChart],
 	props: {
 		group: { type: String, required: true },
 		color: { type: String, required: true },
@@ -80,7 +85,6 @@ export default defineComponent({
 		to: { type: Date, required: true },
 	},
 	data(): {
-		chart: echarts.ECharts | null;
 		isMobile: boolean;
 		mediaQuery: MediaQueryList | null;
 		previousFocusedEntity: number | null;
@@ -89,7 +93,6 @@ export default defineComponent({
 		activeSlot: number | null;
 	} {
 		return {
-			chart: null,
 			isMobile: false,
 			mediaQuery: null,
 			previousFocusedEntity: this.focusedEntity as number | null,
@@ -104,19 +107,33 @@ export default defineComponent({
 		valueFactor(): number {
 			return this.period === PERIODS.DAY ? 4 : 1;
 		},
+		stackEntities(): boolean {
+			return STACKED_GROUPS.has(this.group);
+		},
 		// Peak of stacked per-slot sums, incl. overlay when shown so its line isn't
 		// clipped. Bidirectional: pos/neg separately.
 		axisPeak(): number {
 			const factor = this.valueFactor;
+			// Stacked groups: sum entities per slot. Unstacked (grid, meter): max per entity.
 			const peak = (series: HistorySeries[], pick: (slot: HistorySlot) => number) => {
-				const sums = new Map<string, number>();
-				for (const s of series) {
-					for (const slot of s.data) {
-						sums.set(slot.start, (sums.get(slot.start) || 0) + pick(slot) * factor);
+				if (this.stackEntities) {
+					const sums = new Map<string, number>();
+					for (const s of series) {
+						for (const slot of s.data) {
+							sums.set(slot.start, (sums.get(slot.start) || 0) + pick(slot) * factor);
+						}
 					}
+					let max = 0;
+					for (const v of sums.values()) if (v > max) max = v;
+					return max;
 				}
 				let max = 0;
-				for (const v of sums.values()) if (v > max) max = v;
+				for (const s of series) {
+					for (const slot of s.data) {
+						const v = pick(slot) * factor;
+						if (v > max) max = v;
+					}
+				}
 				return max;
 			};
 			if (this.isBidirectional) {
@@ -201,7 +218,7 @@ export default defineComponent({
 		// Which category slots carry a bar, so hover can skip empty slots.
 		slotsWithData(): boolean[] {
 			const index = new Map(this.categoryKeys.map((k, i) => [k, i]));
-			const has = new Array(this.categoryKeys.length).fill(false);
+			const has = Array.from({ length: this.categoryKeys.length }, () => false);
 			for (const s of this.visibleSeries) {
 				for (const slot of s.data) {
 					if (slot.energy <= 0 && slot.returnEnergy <= 0) continue;
@@ -227,6 +244,9 @@ export default defineComponent({
 					return palette[s.title] || this.color;
 				});
 			}
+			if (this.group === "battery") {
+				return this.series.map((s, i) => batteryColor(s.paletteIndex ?? i));
+			}
 			if (this.series.length <= 1) return [this.color];
 			return this.series.map((_, i) => darken(this.color, stepAlpha(i, this.series.length)));
 		},
@@ -242,7 +262,10 @@ export default defineComponent({
 
 			// Always render overlay slot (line series) so series structure is stable;
 			// data is all-null when toggled off. Prepend so it renders BEHIND bars.
-			const overlayValues: (number | null)[] = new Array(cats.length).fill(null);
+			const overlayValues: (number | null)[] = Array.from(
+				{ length: cats.length },
+				() => null
+			);
 			if (this.showOverlay && this.overlay.length) {
 				for (const s of this.overlay) {
 					for (const slot of s.data) {
@@ -269,21 +292,20 @@ export default defineComponent({
 			// Always render import + export series per entity, even if one direction
 			// is empty (null-filled). Stable series ids/structure across renders so
 			// echarts can animate value transitions instead of redrawing from zero.
-			// Groups with multiple entities stack them; grid keeps bars side-by-side.
-			const stackEntities =
-				this.group === "loadpoint" ||
-				this.group === "consumer" ||
-				this.group === "meter" ||
-				this.group === "pv" ||
-				this.group === "battery";
 			// Build value arrays per entity first so we can determine, per slot,
 			// which entity is the *visible* top/bottom of the stack — that one
 			// gets the rounded cap even if higher-index entities are zero/null.
 			const energyByEntity: (number | null)[][] = [];
 			const returnEnergyByEntity: (number | null)[][] = [];
 			this.series.forEach((s, i) => {
-				const energyValues: (number | null)[] = new Array(cats.length).fill(null);
-				const returnEnergyValues: (number | null)[] = new Array(cats.length).fill(null);
+				const energyValues: (number | null)[] = Array.from(
+					{ length: cats.length },
+					() => null
+				);
+				const returnEnergyValues: (number | null)[] = Array.from(
+					{ length: cats.length },
+					() => null
+				);
 				const hidden =
 					this.focusedEntity !== null && this.focusedEntity !== (s.paletteIndex ?? i);
 				if (!hidden) {
@@ -300,8 +322,8 @@ export default defineComponent({
 			});
 			// Per slot: index of the topmost (largest i) entity with a non-zero
 			// value. -1 = no entity has data at that slot.
-			const topEnergyPerSlot: number[] = new Array(cats.length).fill(-1);
-			const topReturnEnergyPerSlot: number[] = new Array(cats.length).fill(-1);
+			const topEnergyPerSlot: number[] = Array.from({ length: cats.length }, () => -1);
+			const topReturnEnergyPerSlot: number[] = Array.from({ length: cats.length }, () => -1);
 			for (let i = 0; i < this.series.length; i++) {
 				for (let idx = 0; idx < cats.length; idx++) {
 					if ((energyByEntity[i]![idx] ?? 0) > 0) topEnergyPerSlot[idx] = i;
@@ -317,7 +339,9 @@ export default defineComponent({
 			};
 			this.series.forEach((s, i) => {
 				const c = this.entryColors[i] || this.color;
-				const returnEnergyColor = (s.group === "grid" && colors.export) || c;
+				const returnEnergyColor =
+					(s.group === "grid" && colors.export) ||
+					(s.group === "battery" ? setAlpha(c, "cc") || c : c);
 				const energyValues = energyByEntity[i]!;
 				const returnEnergyValues = returnEnergyByEntity[i]!;
 				const energyName =
@@ -327,13 +351,10 @@ export default defineComponent({
 				const returnEnergyName = this.directionLabel(s, "returnEnergy");
 				// Same stack name for import and export means they share one x slot
 				// (positive values stack up, negative stack down, no width penalty).
-				const stackName = stackEntities ? `group-${this.group}` : `entity-${i}`;
-				// For non-stacked groups every bar is its own cap. For stacked groups
-				// the cap moves to the topmost non-zero entity per slot, so when the
-				// last entity is empty at a given slot the next-lower one still gets
-				// the rounded top. A focused entity is rendered solo → always caps.
-				// Stable identity for focus comparison: paletteIndex when set
-				// (filtered groups), otherwise plain array index.
+				const stackName = this.stackEntities ? `group-${this.group}` : `entity-${i}`;
+				// Rounded cap goes on the visible top/bottom per slot: non-stacked bars
+				// always cap; stacked groups cap the topmost non-zero entity so an empty
+				// top entity doesn't drop the rounding; a focused entity is solo.
 				const stableIdx = s.paletteIndex ?? i;
 				const energyData: (
 					| number
@@ -342,7 +363,7 @@ export default defineComponent({
 				)[] = energyValues.map((v, idx) => {
 					if (v == null) return v;
 					const isTop =
-						!stackEntities ||
+						!this.stackEntities ||
 						topEnergyPerSlot[idx] === i ||
 						this.focusedEntity === stableIdx;
 					if (!isTop) return v;
@@ -355,7 +376,7 @@ export default defineComponent({
 				)[] = returnEnergyValues.map((v, idx) => {
 					if (v == null) return v;
 					const isBottom =
-						!stackEntities ||
+						!this.stackEntities ||
 						topReturnEnergyPerSlot[idx] === i ||
 						this.focusedEntity === stableIdx;
 					if (!isBottom) return v;
@@ -390,21 +411,14 @@ export default defineComponent({
 		labelForTimestamp(): (t: number) => string {
 			if (this.period === PERIODS.DAY) {
 				// Skip 00:00 so the chart can align with the section title on the left.
-				// Use every 6h on mobile (06/12/18) and every 3h on desktop. 12 is a
-				// multiple of both, so noon stays visible. Drop minutes; honor am/pm.
-				const stepHours = this.isMobile ? 6 : 3;
-				const h12 = is12hFormat();
+				// wider "4 PM" labels get double spacing
+				const stepHours = (this.isMobile ? 2 : 1) * (is12hFormat() ? 2 : 1);
 				return (t: number) => {
 					const d = new Date(t);
 					if (d.getMinutes() !== 0) return "";
 					const h = d.getHours();
-					if (h === 0) return "";
-					if (h % stepHours !== 0) return "";
-					if (h12) {
-						const hh = h % 12 || 12;
-						return `${hh} ${h < 12 ? "AM" : "PM"}`;
-					}
-					return String(h);
+					if (h === 0 || h % stepHours !== 0) return "";
+					return this.hourShort(d);
 				};
 			}
 			if (this.period === PERIODS.MONTH) {
@@ -416,7 +430,8 @@ export default defineComponent({
 				: (t: number) => this.fmtMonth(new Date(t), true);
 		},
 		// Column headers for bidirectional tooltips (grid: imported/exported,
-		// battery: charged/discharged). Null when the group has no direction labels.
+		// battery: charged/discharged, meter: energy/reverse). Null when the group
+		// has no direction labels.
 		directionHeaders(): string[] | null {
 			if (!this.isBidirectional) return null;
 			const energyKey = `main.history.direction.${this.group}.energy`;
@@ -482,7 +497,7 @@ export default defineComponent({
 							if (p.value == null) continue;
 							hasBar = true;
 							if (typeof p.value === "number" && p.value > 0) {
-								if (/-energy$/.test(p.seriesId)) sum += p.value;
+								if (p.seriesId.endsWith("-energy")) sum += p.value;
 							}
 						}
 						let x = point[0] - w / 2;
@@ -521,12 +536,6 @@ export default defineComponent({
 						if (!first) return "";
 						const ts = cats[first.dataIndex];
 						const head = ts != null ? tooltipDate(ts) : "";
-						const formatValue = (v: number) => {
-							const watts = Math.abs(v) * 1000;
-							return this.period === PERIODS.DAY
-								? this.fmtW(watts, POWER_UNIT.AUTO)
-								: this.fmtWh(watts, POWER_UNIT.AUTO);
-						};
 
 						// Collect energy/returnEnergy values per entity from this slot's params.
 						const totals = new Map<number, { energy: number; returnEnergy: number }>();
@@ -552,8 +561,29 @@ export default defineComponent({
 						);
 						const showName = this.series.length > 1 && this.focusedEntity === null;
 
-						const rows = indices.map((i) => {
-							const t = totals.get(i) ?? { energy: 0, returnEnergy: 0 };
+						// one unit for all rows, based on the largest individual value (not the total)
+						const rowValues = indices.map(
+							(i) => totals.get(i) ?? { energy: 0, returnEnergy: 0 }
+						);
+						const unit = this.getPowerUnit(
+							Math.max(
+								0,
+								...rowValues.flatMap((t) =>
+									this.isBidirectional
+										? [t.energy, t.returnEnergy]
+										: [t.energy + t.returnEnergy]
+								)
+							) * 1000
+						);
+						const formatValue = (v: number) => {
+							const watts = Math.abs(v) * 1000;
+							return this.period === PERIODS.DAY
+								? this.fmtW(watts, unit)
+								: this.fmtWh(watts, unit);
+						};
+
+						const rows: TooltipRow[] = indices.map((i, idx) => {
+							const t = rowValues[idx] ?? { energy: 0, returnEnergy: 0 };
 							const values = this.isBidirectional
 								? [formatValue(t.energy), formatValue(t.returnEnergy)]
 								: [formatValue(t.energy + t.returnEnergy)];
@@ -562,6 +592,17 @@ export default defineComponent({
 								values,
 							};
 						});
+						if (showName) {
+							const sum = (key: "energy" | "returnEnergy") =>
+								rowValues.reduce((acc, t) => acc + t[key], 0);
+							rows.push({
+								name: this.$t("sessions.total"),
+								values: this.isBidirectional
+									? [formatValue(sum("energy")), formatValue(sum("returnEnergy"))]
+									: [formatValue(sum("energy") + sum("returnEnergy"))],
+								total: true,
+							});
+						}
 						return tooltipTable(head, rows, this.directionHeaders ?? undefined);
 					},
 				},
@@ -578,11 +619,8 @@ export default defineComponent({
 					axisTick: { show: false },
 					splitLine: { show: false },
 					axisLabel: {
-						color: colors.muted || "",
-						fontSize: 11,
-						hideOverlap:
-							this.period !== PERIODS.DAY &&
-							!(this.period === PERIODS.YEAR && this.isMobile),
+						...xAxisLabelStyle(),
+						hideOverlap: !(this.period === PERIODS.YEAR && this.isMobile),
 						interval:
 							this.period === PERIODS.DAY ||
 							(this.period === PERIODS.YEAR && this.isMobile)
@@ -637,61 +675,50 @@ export default defineComponent({
 			};
 		},
 	},
-	watch: {
-		chartOption: {
-			handler() {
-				const opt = (this as unknown as WithChartOption).chartOption;
-				const focusChanged = this.previousFocusedEntity !== this.focusedEntity;
-				const periodChanged = this.previousPeriod !== this.period;
-				// Fingerprint the set of series IDs in their render order so we can
-				// detect when entities are added or removed (e.g. a filtered loadpoint
-				// re-appears after navigating to a new day).
-				const newSeriesKey = (opt["series"] as Array<{ id?: string }>)
-					.map((s) => s.id ?? "")
-					.join(",");
-				// Full reset on period/composition change — replaceMerge re-appends
-				// re-introduced series at the end and flips stack order. Otherwise
-				// partial update lets stable IDs animate value transitions.
-				const fullReset = periodChanged || newSeriesKey !== this.previousSeriesKey;
-				this.chart?.setOption(
-					fullReset
-						? opt
-						: {
-								animation: !focusChanged,
-								xAxis: opt["xAxis"],
-								yAxis: opt["yAxis"],
-								series: opt["series"],
-								tooltip: opt["tooltip"],
-							},
-					fullReset ? { notMerge: true } : { replaceMerge: ["series", "yAxis"] }
-				);
-				this.previousFocusedEntity = this.focusedEntity as number | null;
-				this.previousPeriod = this.period as PERIODS;
-				this.previousSeriesKey = newSeriesKey;
-			},
-			deep: true,
-		},
-	},
 	mounted() {
-		const el = this.$refs["chartEl"] as HTMLElement;
-		this.chart = markRaw(echarts.init(el));
-		this.chart.setOption((this as unknown as WithChartOption).chartOption);
-		const zr = this.chart.getZr();
-		zr.on("mousemove", this.onChartMouseMove);
-		zr.on("globalout", this.clearHighlight);
+		const zr = this.chart?.getZr();
+		zr?.on("mousemove", this.onChartMouseMove);
+		zr?.on("globalout", this.clearHighlight);
 		this.mediaQuery = window.matchMedia("(max-width: 575.98px)");
 		this.isMobile = this.mediaQuery.matches;
 		this.mediaQuery.addEventListener("change", this.onMediaChange);
-		window.addEventListener("resize", this.resize);
 	},
 	beforeUnmount() {
-		window.removeEventListener("resize", this.resize);
 		this.mediaQuery?.removeEventListener("change", this.onMediaChange);
-		this.chart?.dispose();
 	},
 	methods: {
-		resize() {
-			this.chart?.resize();
+		applyChartOption() {
+			const opt = (this as unknown as WithChartOption).chartOption;
+			const focusChanged = this.previousFocusedEntity !== this.focusedEntity;
+			const periodChanged = this.previousPeriod !== this.period;
+			// Fingerprint the set of series IDs in their render order so we can
+			// detect when entities are added or removed (e.g. a filtered loadpoint
+			// re-appears after navigating to a new day).
+			const newSeriesKey = (opt["series"] as Array<{ id?: string }>)
+				.map((s) => s.id ?? "")
+				.join(",");
+			// Full reset on period/composition change — replaceMerge re-appends
+			// re-introduced series at the end and flips stack order. Otherwise
+			// partial update lets stable IDs animate value transitions.
+			const fullReset = periodChanged || newSeriesKey !== this.previousSeriesKey;
+			this.chart?.setOption(
+				fullReset
+					? opt
+					: {
+							animation: !focusChanged,
+							xAxis: opt["xAxis"],
+							yAxis: opt["yAxis"],
+							series: opt["series"],
+							tooltip: opt["tooltip"],
+						},
+				fullReset ? { notMerge: true } : { replaceMerge: ["series", "yAxis"] }
+			);
+			this.previousFocusedEntity = this.focusedEntity as number | null;
+			this.previousPeriod = this.period as PERIODS;
+			this.previousSeriesKey = newSeriesKey;
+		},
+		onTouchTooltipReset() {
+			this.clearHighlight();
 		},
 		// highlight hovered slot, dim rest. manual because built-in axis highlight hard-codes notBlur
 		onChartMouseMove(e: { offsetX: number; offsetY: number }) {

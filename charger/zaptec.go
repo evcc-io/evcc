@@ -47,14 +47,18 @@ const _ZaptecGo2PhaseSwitchCurrent = 32.0 // threshold (in A) at which Zaptec Go
 type Zaptec struct {
 	*request.Helper
 	implement.Caps
-	log        *util.Logger
-	statusG    util.Cacheable[zaptec.StateResponse]
-	instance   zaptec.Charger
-	version    int
-	enabled    bool
-	priority   bool
-	passive    bool
-	lastStatus int
+	log             *util.Logger
+	statusG         util.Cacheable[zaptec.StateResponse]
+	instance        zaptec.Charger
+	version         int
+	enabled         bool
+	priority        bool
+	passive         bool
+	startPrevention bool
+	lastStatus      int
+
+	session      string    // last seen SessionIdentifier
+	sessionStart time.Time // start of the current session
 }
 
 func init() {
@@ -64,11 +68,12 @@ func init() {
 // NewZaptecFromConfig creates a Zaptec Pro charger from generic config
 func NewZaptecFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
-		User, Password string
-		Id             string
-		Priority       bool
-		Passive        bool
-		Cache          time.Duration
+		User, Password      string
+		Id                  string
+		Priority            bool
+		Passive             bool
+		Cache               time.Duration
+		AutoStartPrevention bool
 	}{
 		Cache: time.Second,
 	}
@@ -81,11 +86,11 @@ func NewZaptecFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, api.ErrMissingCredentials
 	}
 
-	return NewZaptec(ctx, cc.User, cc.Password, cc.Id, cc.Priority, cc.Passive, cc.Cache)
+	return NewZaptec(ctx, cc.User, cc.Password, cc.Id, cc.Priority, cc.Passive, cc.Cache, cc.AutoStartPrevention)
 }
 
 // NewZaptec creates Zaptec charger
-func NewZaptec(_ context.Context, user, password, id string, priority bool, passive bool, cache time.Duration) (api.Charger, error) {
+func NewZaptec(_ context.Context, user, password, id string, priority bool, passive bool, cache time.Duration, startPrevention bool) (api.Charger, error) {
 	log := util.NewLogger("zaptec").Redact(user, password)
 
 	if !sponsor.IsAuthorized() {
@@ -93,11 +98,12 @@ func NewZaptec(_ context.Context, user, password, id string, priority bool, pass
 	}
 
 	c := &Zaptec{
-		Helper:   request.NewHelper(log),
-		Caps:     implement.New(),
-		log:      log,
-		priority: priority,
-		passive:  passive,
+		Helper:          request.NewHelper(log),
+		Caps:            implement.New(),
+		log:             log,
+		priority:        priority,
+		passive:         passive,
+		startPrevention: startPrevention,
 	}
 
 	// Add User-Agent header for Zaptec API compliance
@@ -202,7 +208,7 @@ func (c *Zaptec) Status() (api.ChargeStatus, error) {
 	}
 	currentStatus, err := res.ObservationByID(zaptec.ChargerOperationMode).Int()
 	if err == nil && currentStatus == zaptec.OpModeDisconnected && currentStatus != c.lastStatus {
-		err = c.MaxCurrentMillis(0)
+		err = c.preventAutoStart()
 	}
 	c.lastStatus = currentStatus
 
@@ -219,6 +225,14 @@ func (c *Zaptec) Status() (api.ChargeStatus, error) {
 		}
 		return api.StatusNone, err
 	}
+}
+
+func (c *Zaptec) preventAutoStart() error {
+	if !c.startPrevention {
+		return nil
+	}
+
+	return c.MaxCurrentMillis(0)
 }
 
 // Enabled implements the api.Charger interface
@@ -241,13 +255,16 @@ func (c *Zaptec) Enable(enable bool) error {
 		Code int
 	}
 
+	err := c.DoJSON(req, &res)
+
 	// ignore 528: Charging is not Paused nor Scheduled; Resume command cannot be sent
-	if err := c.DoJSON(req, &res); err == nil || res.Code == 528 {
+	if err == nil || res.Code == 528 {
 		c.enabled = enable
 		c.statusG.Reset()
+		return nil
 	}
 
-	return nil
+	return err
 }
 
 func (c *Zaptec) chargerUpdate(data zaptec.Update) error {
@@ -320,6 +337,33 @@ func (c *Zaptec) ChargedEnergy() (float64, error) {
 	}
 
 	return res.ObservationByID(zaptec.TotalChargePowerSession).Float64()
+}
+
+var _ api.ConnectionTimer = (*Zaptec)(nil)
+
+// ConnectionDuration implements the api.ConnectionTimer interface.
+// Derived from SessionIdentifier: a session change drops the duration, so the loadpoint detects a cable swap as reconnect.
+func (c *Zaptec) ConnectionDuration() (time.Duration, error) {
+	res, err := c.statusG.Get()
+	if err != nil {
+		return 0, err
+	}
+
+	var session string
+	if o := res.ObservationByID(zaptec.SessionIdentifier); o != nil {
+		session = o.ValueAsString
+	}
+
+	if session != c.session {
+		c.session = session
+		c.sessionStart = time.Now()
+	}
+
+	if session == "" {
+		return 0, nil
+	}
+
+	return time.Since(c.sessionStart), nil
 }
 
 var _ api.PhaseCurrents = (*Zaptec)(nil)
@@ -411,17 +455,17 @@ func (c *Zaptec) switchPhases(phases int) error {
 var _ api.Identifier = (*Zaptec)(nil)
 
 // Identify implements the api.Identifier interface
-func (c *Zaptec) Identify() (string, error) {
+func (c *Zaptec) Identify() ([]string, error) {
 	res, err := c.statusG.Get()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if id := res.ObservationByID(zaptec.ChargerCurrentUserUuid); id != nil {
-		return id.ValueAsString, nil
+		return []string{id.ValueAsString}, nil
 	}
 
-	return "", nil
+	return nil, nil
 }
 
 func (c *Zaptec) installation() (zaptec.Installation, error) {

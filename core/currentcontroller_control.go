@@ -74,18 +74,30 @@ func (c *CurrentController) scalePhases(phases int) error {
 	return nil
 }
 
+// circuitAllowsPhases checks if the circuit power limit allows charging at minCurrent on phases
+func (c *CurrentController) circuitAllowsPhases(phases int, minCurrent float64) bool {
+	if c.lp.circuit == nil {
+		return true
+	}
+
+	minPower := currentToPower(minCurrent, phases)
+	powerLimit := c.lp.circuit.ValidatePower(c.lp.chargePower, minPower)
+	if powerLimit < minPower {
+		c.lp.log.DEBUG.Printf("available circuit power %.0fW < %.0fW min %dp power", powerLimit, minPower, phases)
+		return false
+	}
+
+	return true
+}
+
 // fastCharging scales to 3p if available and sets maximum current
 func (c *CurrentController) fastCharging() error {
 	if c.lp.hasPhaseSwitching() {
 		phases := 3
 
 		// load management limit active
-		if c.lp.circuit != nil {
-			minPower3p := currentToPower(c.effectiveMinCurrent(), 3)
-			if powerLimit := c.lp.circuit.ValidatePower(c.lp.chargePower, minPower3p); powerLimit < minPower3p {
-				phases = 1
-				c.lp.log.DEBUG.Printf("fast charging: scaled to 1p to match %.0fW available circuit power", powerLimit)
-			}
+		if !c.circuitAllowsPhases(3, c.effectiveMinCurrent()) {
+			phases = 1
 		}
 
 		// ignore api.ErrNotAvailable: the phase switch could not be performed
@@ -130,12 +142,27 @@ func (c *CurrentController) pvScalePhases(sitePower, minCurrent, maxCurrent floa
 	var waiting bool
 	activePhases := c.lp.ActivePhases()
 	availablePower := c.lp.chargePower - sitePower
-	scalable := (sitePower > 0 || !c.lp.enabled) && activePhases > 1 && c.lp.phasesConfigured < 3
+	scalable := activePhases > 1 && c.lp.phasesConfigured < 3
+
+	if scalable {
+		insufficient := (sitePower > 0 || !c.lp.enabled) && powerToCurrent(availablePower, activePhases) < minCurrent
+		if insufficient {
+			c.lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
+		}
+
+		// while charging, scaling down only helps if 1p is sustainable, otherwise it
+		// merely delays the pv disable timer by the phase timer duration
+		useful := !c.lp.enabled || !c.lp.charging() || powerToCurrent(availablePower, 1) >= minCurrent
+		if insufficient && !useful {
+			c.lp.log.DEBUG.Printf("available power %.0fW < %.0fW min 1p threshold, disabling instead of scaling down", availablePower, Voltage*minCurrent)
+		}
+
+		// scaling down also frees load management headroom for min power on activePhases
+		scalable = insufficient && useful || !c.circuitAllowsPhases(activePhases, minCurrent)
+	}
 
 	// scale down phases
-	if targetCurrent := powerToCurrent(availablePower, activePhases); targetCurrent < minCurrent && scalable {
-		c.lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
-
+	if scalable {
 		if !c.lp.charging() { // scale immediately if not charging
 			c.lp.phaseTimer = elapsed
 		}
@@ -163,9 +190,17 @@ func (c *CurrentController) pvScalePhases(sitePower, minCurrent, maxCurrent floa
 		waiting = true
 	}
 
+	// load management may cap the 1p current far below the theoretical maximum
+	if c.lp.circuit != nil {
+		maxCurrent = c.lp.circuit.ValidateCurrent(c.actualMaxChargeCurrent(), maxCurrent)
+	}
+
 	maxPhases := c.lp.MaxActivePhases()
 	target1pCurrent := powerToCurrent(availablePower, 1)
-	scalable = maxPhases > 1 && phases < maxPhases && target1pCurrent > maxCurrent
+
+	// scaling up is pointless unless load management allows min current and power on maxPhases
+	scalable = maxPhases > 1 && phases < maxPhases && target1pCurrent > maxCurrent &&
+		maxCurrent >= minCurrent && c.circuitAllowsPhases(maxPhases, minCurrent)
 
 	// scale up phases
 	if targetCurrent := powerToCurrent(availablePower, maxPhases); targetCurrent >= minCurrent && scalable {

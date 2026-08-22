@@ -1,0 +1,204 @@
+template: solplanet-modbus
+products:
+  - brand: Solplanet
+    description:
+      generic: Hybrid inverter (Modbus TCP)
+requirements:
+  description:
+    de: |
+      Nur für Wechselrichter mit eigenem Modbus-TCP-Ethernet-Port (z.B. ASW-TH Serie, KACO Blueplanet Hybrid NH3, Port eth 5&6), Protokoll AISWEI "MB001_ASW GEN-Modbus" V2.1.7.
+      Ältere Geräte ohne diesen Port benötigen stattdessen das `solplanet-ai-dongle` Template.
+      Die Import-/Export-Zählerstände des Netzzählers (46443/46445) werden von dieser Firmware nicht über Modbus TCP bereitgestellt.
+      Bei zwei Batteriepaketen (BMS1 + BMS2) je einen Batteriezähler mit Batteriespeichernummer 1 und 2 anlegen.
+    en: |
+      Only for inverters with a dedicated Modbus TCP ethernet port (e.g. ASW-TH series, KACO Blueplanet Hybrid NH3, port eth 5&6), protocol AISWEI "MB001_ASW GEN-Modbus" V2.1.7.
+      Older devices without that port need the `solplanet-ai-dongle` template instead.
+      The grid meter import/export energy counters (46443/46445) are not exposed over Modbus TCP by this firmware.
+      With two battery packs (BMS1 + BMS2) add one battery meter each, using battery number 1 and 2.
+capabilities: ["battery-control", "curtail"]
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 1
+  - name: battery
+    type: choice
+    choice: [1, 2]
+    required: true
+    usages: ["battery"]
+    description:
+      de: Batteriespeichernummer
+      en: Battery number
+  - preset: battery-params
+  - name: maxchargepower
+    required: true
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 6433 # 46434 total system power (smart meter)
+      type: holding
+      decode: int32
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1600 # 31601 PV total power
+      type: input
+      decode: uint32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1604 # 31605 PV E-Total (0.1 kWh)
+      type: input
+      decode: uint32
+    scale: 0.1
+  curtail: # allowed feed-in power as percent of nominal
+    source: sequence
+    set:
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 5402 # 45403 active power set (%Pn * 100)
+          type: writesingle
+          encoding: uint16
+        scale: 100
+      # active power control: disabled at 100% (unlimited), enabled while curtailed
+      - source: switch
+        switch:
+          - case: 100 # uncurtailed
+            set:
+              source: const
+              value: 0
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 4000 # 44001 active power control function
+                  type: writesingle
+                  encoding: uint16
+        default:
+          source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 4000
+              type: writesingle
+              encoding: uint16
+  curtailed: # the power limit only applies while active power control is enabled
+    source: go
+    in:
+      - name: ena
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 4000
+            type: holding
+            decode: uint16
+      - name: percent
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 5402
+            type: holding
+            decode: uint16
+          scale: 0.01
+    script: |
+      res := 100
+      if ena != 0 && percent > 0 && percent < 100 {
+        res = percent
+      }
+      res
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ if eq .battery "2" }}1751{{ else }}1618{{ end }} # 31752/31619 BMS2/1 battery power
+      type: input
+      decode: int32
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ if eq .battery "2" }}1754{{ else }}1621{{ end }} # 31755/31622 BMS2/1 battery SoC
+      type: input
+      decode: uint16
+  batterymode:
+    source: switch
+    switch:
+      - case: 1 # normal
+        set:
+          source: const
+          value: 2 # normal
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 1103 # 41104 battery working mode
+              type: writesingle
+              encoding: uint16
+      - case: 2 # hold
+        set:
+          source: sequence
+          set:
+            - source: const
+              value: 4 # custom
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 1103
+                  type: writesingle
+                  encoding: uint16
+            - source: const
+              value: 0
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 1152 # 41153 charge/discharge power, negative charges
+                  type: writesingle
+                  encoding: int16
+      - case: 3 # charge
+        set:
+          source: sequence
+          set:
+            - source: const
+              value: 4
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 1103
+                  type: writesingle
+                  encoding: uint16
+            - source: const
+              value: {{ mul .maxchargepower -1 }}
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 1152
+                  type: writesingle
+                  encoding: int16
+    default:
+      source: error
+      error: ErrNotAvailable
+  {{- include "battery-params" . }}
+  {{- end }}

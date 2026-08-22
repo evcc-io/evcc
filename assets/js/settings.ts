@@ -19,10 +19,11 @@ const SAVINGS_REGION = "savings_region";
 const SAVINGS_INDICATOR = "savings_indicator";
 const SESSIONS_GROUP = "sessions_group";
 const SESSIONS_TYPE = "sessions_type";
-const SETTINGS_SOLAR_ADJUSTED = "settings_solar_adjusted";
+const BATTERY_UNIT = "battery_unit";
 const SETTINGS_PRICE_ZOOM = "settings_price_zoom";
 const SETTINGS_HIDE_FEEDIN = "settings_hide_feedin";
 const LAST_BATTERY_SMART_COST_LIMIT = "last_battery_smart_cost_limit";
+const SETTINGS_DATE_FORMAT = "settings_date_format";
 const LAST_TARGET_TIME = "last_target_time";
 const LAST_SOC_GOAL = "last_soc_goal";
 const LAST_ENERGY_GOAL = "last_energy_goal";
@@ -99,6 +100,8 @@ function saveJSON(key: string) {
   };
 }
 
+export type DateFormat = "" | "dmy" | "mdy" | "ymd";
+
 export interface LoadpointSettings {
   order?: number;
   visible?: boolean;
@@ -112,6 +115,7 @@ export interface Settings {
   theme: THEME | null;
   unit: string;
   is12hFormat: boolean;
+  dateFormat: DateFormat;
   energyflowDetails: boolean;
   energyflowCo2: boolean;
   energyflowPv: boolean;
@@ -124,7 +128,7 @@ export interface Settings {
   savingsIndicator: string;
   sessionsGroup: string;
   sessionsType: string;
-  solarAdjusted: boolean;
+  batteryUnit: string;
   priceZoom: boolean;
   hideFeedin: boolean;
   loadpoints: Record<string, LoadpointSettings>;
@@ -141,6 +145,7 @@ const settings: Settings = reactive({
   theme: read(SETTINGS_THEME),
   unit: read(SETTINGS_UNIT),
   is12hFormat: readBool(SETTINGS_12H_FORMAT),
+  dateFormat: read(SETTINGS_DATE_FORMAT) || "",
   energyflowDetails: readBool(SETTINGS_ENERGYFLOW_DETAILS),
   energyflowCo2: readBool(SETTINGS_ENERGYFLOW_CO2),
   energyflowPv: readBool(SETTINGS_ENERGYFLOW_PV),
@@ -153,7 +158,7 @@ const settings: Settings = reactive({
   savingsIndicator: read(SAVINGS_INDICATOR),
   sessionsGroup: read(SESSIONS_GROUP),
   sessionsType: read(SESSIONS_TYPE),
-  solarAdjusted: readBool(SETTINGS_SOLAR_ADJUSTED),
+  batteryUnit: read(BATTERY_UNIT),
   priceZoom: readBool(SETTINGS_PRICE_ZOOM),
   hideFeedin: readBool(SETTINGS_HIDE_FEEDIN),
   loadpoints: readJSON(LOADPOINTS),
@@ -169,6 +174,7 @@ watch(() => settings.locale, save(SETTINGS_LOCALE));
 watch(() => settings.theme, save(SETTINGS_THEME));
 watch(() => settings.unit, save(SETTINGS_UNIT));
 watch(() => settings.is12hFormat, saveBool(SETTINGS_12H_FORMAT));
+watch(() => settings.dateFormat, save(SETTINGS_DATE_FORMAT));
 watch(() => settings.energyflowDetails, saveBool(SETTINGS_ENERGYFLOW_DETAILS));
 watch(() => settings.energyflowCo2, saveBool(SETTINGS_ENERGYFLOW_CO2));
 watch(() => settings.energyflowPv, saveBool(SETTINGS_ENERGYFLOW_PV));
@@ -181,7 +187,7 @@ watch(() => settings.savingsRegion, save(SAVINGS_REGION));
 watch(() => settings.savingsIndicator, save(SAVINGS_INDICATOR));
 watch(() => settings.sessionsGroup, save(SESSIONS_GROUP));
 watch(() => settings.sessionsType, save(SESSIONS_TYPE));
-watch(() => settings.solarAdjusted, saveBool(SETTINGS_SOLAR_ADJUSTED));
+watch(() => settings.batteryUnit, save(BATTERY_UNIT));
 watch(() => settings.priceZoom, saveBool(SETTINGS_PRICE_ZOOM));
 watch(() => settings.hideFeedin, saveBool(SETTINGS_HIDE_FEEDIN));
 watch(() => settings.loadpoints, saveJSON(LOADPOINTS), { deep: true });

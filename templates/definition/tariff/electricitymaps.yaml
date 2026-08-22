@@ -25,6 +25,7 @@ params:
       en: "see [api.electricitymap.org](https://api.electricitymap.org/v3/zones)"
 render: |
   type: electricitymaps
+  features: ["cacheable"]
   uri: {{ .uri }}
   token: {{ .token }}
   zone: {{ .zone }}

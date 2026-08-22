@@ -332,17 +332,17 @@ func TestGhostEEBus_Identify(t *testing.T) {
 	tests := []struct {
 		name   string
 		uuid   string
-		wantID string
+		wantID []string
 	}{
 		{
 			name:   "with_uuid",
 			uuid:   "ABC123",
-			wantID: "ABC123",
+			wantID: []string{"ABC123"},
 		},
 		{
 			name:   "empty",
 			uuid:   "",
-			wantID: "",
+			wantID: []string{""},
 		},
 	}
 
@@ -378,12 +378,16 @@ func TestGhostEEBus_IdentifyFallback(t *testing.T) {
 
 		id, err := wb.Identify()
 		require.NoError(t, err)
-		assert.Equal(t, "MAC-001", id)
+		assert.Equal(t, []string{"MAC-001"}, id)
 	})
 
-	t.Run("rfid_returns_id", func(t *testing.T) {
-		wb, _, _ := newTestGhostEEBusWithEEBus(t)
+	t.Run("rfid_and_eebus", func(t *testing.T) {
+		wb, evccMock, evEntity := newTestGhostEEBusWithEEBus(t)
 		wb.hasRFID = true
+
+		// both identities are reported
+		evccMock.EXPECT().EVConnected(evEntity).Return(true)
+		evccMock.EXPECT().Identifications(evEntity).Return([]ucapi.IdentificationItem{{Value: "MAC-001"}}, nil)
 
 		httpmock.ActivateNonDefault(wb.Client)
 		defer httpmock.DeactivateAndReset()
@@ -397,7 +401,7 @@ func TestGhostEEBus_IdentifyFallback(t *testing.T) {
 
 		id, err := wb.Identify()
 		require.NoError(t, err)
-		assert.Equal(t, "RFID-42", id)
+		assert.Equal(t, []string{"RFID-42", "MAC-001"}, id)
 	})
 
 	t.Run("rfid_empty_falls_back_to_eebus", func(t *testing.T) {
@@ -421,6 +425,6 @@ func TestGhostEEBus_IdentifyFallback(t *testing.T) {
 
 		id, err := wb.Identify()
 		require.NoError(t, err)
-		assert.Equal(t, "MAC-001", id)
+		assert.Equal(t, []string{"MAC-001"}, id)
 	})
 }

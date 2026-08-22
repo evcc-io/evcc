@@ -9,12 +9,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"uuid"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/google/uuid"
 	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
@@ -44,6 +44,9 @@ type Config struct {
 	Brand             string
 	TokenURL          string
 	UseBasicAuth      bool
+	// CCI is set for brands affected by the IDPConnect WAF block on the legacy
+	// authorize endpoint (EU Kia/Hyundai), nil for Genesis EU and Hyundai AU
+	CCI *CCIConfig
 }
 
 // Identity implements the Kia/Hyundai bluelink identity.
@@ -53,6 +56,9 @@ type Identity struct {
 	log      *util.Logger
 	config   Config
 	deviceID string
+	user     string
+	language string
+	bundle   cciBundle
 	oauth2.TokenSource
 }
 
@@ -73,11 +79,11 @@ func (v *Identity) getDeviceID() (string, error) {
 		return "", err
 	}
 
-	uuid := uuid.NewString()
+	id := uuid.New().String()
 	data := map[string]any{
 		"pushRegId": lo.RandomString(64, []rune("0123456789ABCDEF")),
 		"pushType":  v.config.PushType,
-		"uuid":      uuid,
+		"uuid":      id,
 	}
 
 	headers := map[string]string{
@@ -155,7 +161,7 @@ func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	return util.TokenWithExpiry(&res), err
 }
 
-func (v *Identity) Login(user, password, language, brand string) (err error) {
+func (v *Identity) Login(user, password, language, brand string) error {
 	if user == "" || password == "" {
 		return api.ErrMissingCredentials
 	}
@@ -168,18 +174,35 @@ func (v *Identity) Login(user, password, language, brand string) (err error) {
 		return fmt.Errorf("unknown brand (%s)", brand)
 	}
 
+	v.user = user
+	v.language = language
+
+	refresher := v.refreshToken
+
 	token, err := v.refreshToken(&oauth2.Token{RefreshToken: password})
+	if err == nil && !token.Valid() {
+		err = errors.New("no access token")
+	}
+
+	// CCI-capable brands (EU Kia/Hyundai) additionally accept the account
+	// password, as generating a legacy refresh_token is WAF-blocked
+	if err != nil && v.config.CCI != nil {
+		refresher = v.refreshCCI
+		token, err = v.loginCCI(password)
+	}
+
 	if err != nil {
 		return fmt.Errorf("login failed: %w", err)
 	}
-	v.TokenSource = oauth.RefreshTokenSource(token, v.refreshToken)
+
+	v.TokenSource = oauth.RefreshTokenSource(token, refresher)
 
 	v.deviceID, err = v.getDeviceID()
 	if err != nil {
 		return fmt.Errorf("error getting device id: %w", err)
 	}
 
-	return err
+	return nil
 }
 
 // Request decorates requests with authorization headers

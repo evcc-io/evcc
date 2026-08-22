@@ -12,7 +12,7 @@
 			@click="openAboutModal"
 		>
 			<span v-if="showVersionBadge" class="circle-badge me-1 bg-darker-green"></span>
-			<span>evcc</span>
+			<span>{{ customBrand || "evcc" }}</span>
 			<span class="ms-2 text-muted small">{{ versionLabel }}</span>
 			<shopicon-regular-gift
 				v-if="newVersionAvailable"
@@ -57,6 +57,14 @@
 		<button type="button" class="dropdown-item" @click="openSettingsModal">
 			{{ $t("settings.title") }}
 		</button>
+		<button
+			v-if="hasVehicles"
+			type="button"
+			class="dropdown-item"
+			@click="openVehicleSettingsModal"
+		>
+			{{ $t("main.vehicleSettings.menu") }}
+		</button>
 		<router-link class="dropdown-item" to="/config" active-class="active">
 			<span v-if="showConfigBadge" class="circle-badge me-1" :class="badgeClass"></span>
 			{{ $t("config.main.title") }}
@@ -88,12 +96,13 @@ import {
 import settings from "@/settings";
 import { isUserConfigError } from "@/utils/fatal";
 import { defineComponent, type PropType } from "vue";
-import type { FatalError, Sponsor, EvOpt, AuthProviders } from "@/types/evcc";
+import type { FatalError, Sponsor, EvOpt, AuthProviders, Vehicle } from "@/types/evcc";
 
 export default defineComponent({
 	name: "MoreMenu",
 	props: {
 		open: { type: Boolean, default: false },
+		vehicles: { type: Object as PropType<Record<string, Vehicle>>, default: () => ({}) },
 		authProviders: { type: Object as PropType<AuthProviders>, default: () => ({}) },
 		sponsor: { type: Object as PropType<Sponsor>, default: () => ({}) },
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
@@ -101,15 +110,12 @@ export default defineComponent({
 		authDisabled: Boolean,
 		evopt: { type: Object as PropType<EvOpt>, required: false },
 		installed: String,
-		commit: String,
 		availableVersion: String,
+		customBrand: String,
 	},
 	emits: ["close"],
 	data() {
-		return {
-			isApp: isApp(),
-			onClickOutside: undefined as ((e: MouseEvent) => void) | undefined,
-		};
+		return { isApp: isApp() };
 	},
 	computed: {
 		providers() {
@@ -137,7 +143,7 @@ export default defineComponent({
 			return "bg-warning";
 		},
 		versionLabel() {
-			return getShortVersion(this.installed || "", this.commit);
+			return getShortVersion(this.installed || "");
 		},
 		newVersionAvailable() {
 			return isNewVersionAvailable(this.installed, this.availableVersion);
@@ -155,19 +161,9 @@ export default defineComponent({
 		showLogout() {
 			return !this.authDisabled && isLoggedIn();
 		},
-	},
-	mounted() {
-		this.onClickOutside = (e: MouseEvent) => {
-			if (this.open && !this.$el.contains(e.target as Node)) {
-				this.$emit("close");
-			}
-		};
-		document.addEventListener("click", this.onClickOutside, true);
-	},
-	unmounted() {
-		if (this.onClickOutside) {
-			document.removeEventListener("click", this.onClickOutside, true);
-		}
+		hasVehicles() {
+			return Object.keys(this.vehicles).length > 0;
+		},
 	},
 	methods: {
 		handleAuthRequired() {
@@ -188,6 +184,12 @@ export default defineComponent({
 		openAboutModal() {
 			const modal = Modal.getOrCreateInstance(
 				document.getElementById("aboutModal") as HTMLElement
+			);
+			modal.show();
+		},
+		openVehicleSettingsModal() {
+			const modal = Modal.getOrCreateInstance(
+				document.getElementById("vehicleSettingsModal") as HTMLElement
 			);
 			modal.show();
 		},
