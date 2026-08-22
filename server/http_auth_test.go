@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util/auth"
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -74,4 +75,39 @@ func TestRequireCriticalConfig(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestEnsureAuthHandler guards the gating configureAuth applies to the
+// /providerauth (+ /oauth) routes: unauthenticated requests are rejected while
+// auth.Disabled passes through.
+func TestEnsureAuthHandler(t *testing.T) {
+	newServer := func(a auth.Auth) *httptest.Server {
+		router := mux.NewRouter()
+		sub := router.PathPrefix("/providerauth").Subrouter()
+		sub.Use(EnsureAuthHandler(a))
+		sub.Methods(http.MethodGet).Path("/login").HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		})
+		return httptest.NewServer(router)
+	}
+
+	t.Run("enabled rejects without credentials", func(t *testing.T) {
+		srv := newServer(fakeAuth{mode: auth.Enabled})
+		defer srv.Close()
+
+		resp, err := http.Get(srv.URL + "/providerauth/login")
+		assert.NoError(t, err)
+		defer resp.Body.Close()
+		assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+	})
+
+	t.Run("disabled passes through", func(t *testing.T) {
+		srv := newServer(fakeAuth{mode: auth.Disabled})
+		defer srv.Close()
+
+		resp, err := http.Get(srv.URL + "/providerauth/login")
+		assert.NoError(t, err)
+		defer resp.Body.Close()
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+	})
 }

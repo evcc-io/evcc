@@ -186,6 +186,11 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// EnsureAuthHandler exposes the auth middleware for routers wired outside this package.
+func EnsureAuthHandler(authObject auth.Auth) mux.MiddlewareFunc {
+	return ensureAuthHandler(authObject)
+}
+
 func ensureAuthHandler(authObject auth.Auth) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
