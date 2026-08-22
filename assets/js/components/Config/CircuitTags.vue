@@ -7,13 +7,9 @@
 					class="node-name"
 					:class="{ 'node-name--root': depth === 0 }"
 				>
-					{{ node.title || node.name }}
-				</span>
-				<span v-if="depth > 0" class="node-power evcc-gray">
-					{{ fmtW(node.power) }}
+					{{ node.name }}
 				</span>
 			</div>
-
 			<!-- Limits -->
 			<div v-if="parts(node).length" class="metrics">
 				<div
@@ -41,12 +37,11 @@
 					</div>
 				</div>
 			</div>
-
 			<!-- Root circuit without configured limits -->
 			<div v-else-if="depth === 0" class="root-power evcc-gray">
+				asd
 				{{ fmtW(node.power) }}
 			</div>
-
 			<!-- Loadpoints assigned to this circuit -->
 			<div v-if="loadpointsFor(node).length" class="loadpoints">
 				<div
@@ -75,7 +70,6 @@
 					</span>
 				</div>
 			</div>
-
 			<!-- Child circuits -->
 			<div v-if="node.children?.length" class="children">
 				<CircuitTags
@@ -133,9 +127,9 @@ export default {
 
 				result.push({
 					unit: "kW",
-					label: `${this.fmt1(power / 1000)} / ${this.fmt1(
+					label: `${this.fmtW(power / 1000, this.POWER_UNIT.KW, false)} / ${this.fmtW(
 						node.maxPower / 1000,
-					)} kW`,
+					)}`,
 					ratio,
 					warning: ratio >= 1,
 				});
@@ -148,8 +142,10 @@ export default {
 
 				result.push({
 					unit: "A",
-					label: `${this.fmt1(current)} / ${this.fmt1(
+					label: `${this.fmtW(current, this.POWER_UNIT.W, false)} / ${this.fmtW(
 						node.maxCurrent,
+						this.POWER_UNIT.W,
+						false,
 					)} A`,
 					ratio,
 					warning: ratio >= 1,
@@ -158,18 +154,16 @@ export default {
 
 			return result;
 		},
-		fmt1(value: number): string {
-			return (value ?? 0).toFixed(1);
-		},
 		barWidth(ratio: number): number {
 			return Math.max(0, Math.min(100, ratio * 100));
 		},
 		loadpointsFor(node: CircuitNode): ConfigLoadpoint[] {
-			return this.loadpoints.filter((lp) => lp.circuit === node.name);
+			return this.loadpoints.filter(
+				(lp) => lp.circuit === node.title?.toLowerCase(),
+			);
 		},
 		meterPower(lp: ConfigLoadpoint): number {
 			const meter = this.meters.find((m) => m.name === lp.meter);
-
 			return meter?.power ?? 0;
 		},
 	},
