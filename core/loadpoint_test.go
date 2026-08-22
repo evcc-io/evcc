@@ -909,11 +909,11 @@ func TestNewLoadpointFromConfigDisabledVehicle(t *testing.T) {
 	require.Empty(t, config.Instances(config.Vehicles().Devices()))
 }
 
-// TestPVDisableIdleIntegratedDevice is a regression test for #32282: an integrated
+// TestPVDisableIdleContinuousDevice is a regression test for #32282: a continuous
 // device that is enabled but not consuming (heat pump boost signalled, compressor
 // idle) does not show its demand in site power. Without projecting it, the disable
 // gate only trips on grid consumption which the idle device never causes.
-func TestPVDisableIdleIntegratedDevice(t *testing.T) {
+func TestPVDisableIdleContinuousDevice(t *testing.T) {
 	const dt = time.Minute
 
 	tc := []struct {
@@ -939,7 +939,7 @@ func TestPVDisableIdleIntegratedDevice(t *testing.T) {
 			lp := &Loadpoint{
 				log:              util.NewLogger("foo"),
 				clock:            clock,
-				charger:          &integratedDeviceCharger{},
+				charger:          &continuousCharger{},
 				minCurrent:       minA,
 				maxCurrent:       maxA,
 				phases:           1,
