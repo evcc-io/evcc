@@ -138,6 +138,9 @@ render: |
           - Content-Type: application/json
         # GS < 0 means grid import / grid charging
         body: '{"state":{"MM":0,"GS":-{{ .maxchargepower | int }}}}'
+    default:
+      source: error
+      error: ErrNotAvailable
   {{- include "battery-capacity" . }}
   {{- include "battery-minmaxsoc" . }}
   maxchargepower: {{ .maxchargepower | int }} # W

@@ -188,6 +188,15 @@
       "label": "Currency",
       "title": "Currency"
     },
+    "curtailer": {
+      "description": "Device that limits feed-in on request of the grid operator (§ 9 EEG). Many solar inverters support this directly via their solar meter configuration. A separate configuration is only needed for some manufacturers or multi-inverter systems.",
+      "generic": "Generic integrations",
+      "specific": "Specific integrations",
+      "template": "Manufacturer",
+      "title": "Curtailment",
+      "titleAdd": "Add Curtailment Device",
+      "titleEdit": "Edit Curtailment Device"
+    },
     "deviceValue": {
       "activeClients": "Active clients",
       "amount": "Amount",
@@ -212,7 +221,7 @@
       "currentRange": "Current",
       "curtailLimit": "Feed-in limit",
       "curtailable": "Curtailable",
-      "curtailed": "Feed-in limited",
+      "curtailed": "Feed-in limit",
       "detected": "Detected",
       "dimLimit": "Consumption limit",
       "dimmed": "Consumption limited",
@@ -539,6 +548,7 @@
     "main": {
       "addAdditional": "Add additional meter",
       "addConsumer": "Add consumer",
+      "addCurtailer": "Add curtailment device",
       "addGrid": "Add grid meter",
       "addLoadpoint": "Add charging point or heater",
       "addPvBattery": "Add solar or battery",
@@ -639,6 +649,7 @@
         "aux": "Add self-regulating consumer",
         "battery": "Add battery meter",
         "consumer": "Add regular consumer",
+        "grid": "Add grid meter",
         "pv": "Add solar meter"
       },
       "save": "Save",
@@ -1718,6 +1729,13 @@
     "vehicle": "Vehicle"
   },
   "settings": {
+    "dateFormat": {
+      "auto": "Auto",
+      "dmy": "DD/MM/YYYY",
+      "label": "Date format",
+      "mdy": "MM/DD/YYYY",
+      "ymd": "YYYY-MM-DD"
+    },
     "deviceInfo": "Settings you make in this dialog only affect this device.",
     "fullscreen": {
       "enter": "Enter fullscreen",

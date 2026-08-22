@@ -64,6 +64,7 @@ type All struct {
 	Site            map[string]any
 	Loadpoints      []config.Named
 	Circuits        []config.Named
+	Curtailers      []config.Named
 }
 
 type Javascript struct {

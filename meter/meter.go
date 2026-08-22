@@ -24,7 +24,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		measurement.Curtailer `mapstructure:",squash"` // optional
 
 		// pv
-		pvMaxACPower `mapstructure:",squash"`
+		pvMaxACPowerCtx `mapstructure:",squash"`
 
 		// battery
 		batteryCapacityCtx    `mapstructure:",squash"`
@@ -127,7 +127,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 	implement.May(m, implement.PhaseCurrents(currentsG))
 	implement.May(m, implement.PhaseVoltages(voltagesG))
 	implement.May(m, implement.PhasePowers(powersG))
-	implement.May(m, implement.MaxACPowerGetter(cc.pvMaxACPower.Decorator()))
+	implement.May(m, implement.MaxACPowerGetter(cc.pvMaxACPowerCtx.Decorator(ctx)))
 
 	return m, nil
 }

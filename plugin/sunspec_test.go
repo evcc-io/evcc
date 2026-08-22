@@ -1,12 +1,14 @@
 package plugin
 
 import (
+	"sync"
 	"testing"
 
 	sunspec "github.com/andig/gosunspec"
 	"github.com/andig/gosunspec/memory"
 	"github.com/andig/gosunspec/models/model704"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	sunsdev "github.com/volkszaehler/mbmd/meters/sunspec"
 )
@@ -33,7 +35,7 @@ func TestSunspecBool(t *testing.T) {
 
 // newSunspecTestDevice builds an in-memory SunSpec model 704 (DER AC Controls)
 // device; mbmd never touches the modbus.Client argument, so no connection is needed.
-func newSunspecTestDevice(t *testing.T) (*sunsdev.SunSpec, sunspec.Block) {
+func newSunspecTestDevice(t *testing.T) (*sunspecDevice, sunspec.Block) {
 	t.Helper()
 
 	slab, err := memory.NewSlabBuilder().AddModel(model704.ModelID).Build()
@@ -47,7 +49,7 @@ func newSunspecTestDevice(t *testing.T) (*sunsdev.SunSpec, sunspec.Block) {
 
 	block := devices[0].MustModel(sunspec.ModelId(model704.ModelID)).MustBlock(0)
 
-	dev := sunsdev.NewDevice("test")
+	dev := &sunspecDevice{SunSpec: sunsdev.NewDevice("test")}
 	require.NoError(t, dev.InitializeWithTree(devices))
 
 	return dev, block
@@ -110,4 +112,33 @@ func TestSunspecBoolGetterInt(t *testing.T) {
 	got, err = g()
 	require.NoError(t, err)
 	require.True(t, got)
+}
+
+// TestSunspecConcurrentSharedDevice reads different points of one shared device
+// tree concurrently, as the config page's parallel capability probes do.
+func TestSunspecConcurrentSharedDevice(t *testing.T) {
+	dev, block := newSunspecTestDevice(t)
+	block.MustPoint(model704.WMaxLimPctEna).SetEnum16(1)
+	block.MustPoint(model704.WMaxLimPct).SetUint16(50)
+	require.NoError(t, block.Write(model704.WMaxLimPctEna))
+	require.NoError(t, block.Write(model704.WMaxLimPct))
+
+	var wg sync.WaitGroup
+	for range 20 {
+		for _, point := range []string{model704.WMaxLimPctEna, model704.WMaxLimPct} {
+			wg.Go(func() {
+				mb := &ModbusSunspec{
+					device: dev,
+					op:     modbus.SunSpecOperation{Model: model704.ModelID, Point: point},
+				}
+
+				g, err := mb.BoolGetter()
+				assert.NoError(t, err) // require fails the test goroutine only
+
+				_, err = g()
+				assert.NoError(t, err)
+			})
+		}
+	}
+	wg.Wait()
 }

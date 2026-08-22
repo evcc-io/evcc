@@ -1,6 +1,6 @@
 module github.com/evcc-io/evcc
 
-go 1.26.3
+go 1.27.0
 
 require (
 	dario.cat/mergo v1.0.2
@@ -45,7 +45,6 @@ require (
 	github.com/gokrazy/updater v0.0.0-20260620140544-0a84d8ab3878
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/go-github/v32 v32.1.0
-	github.com/google/uuid v1.6.0
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
 	github.com/gosimple/slug v1.15.0
@@ -55,6 +54,7 @@ require (
 	github.com/hashicorp/yamux v0.1.2
 	github.com/hasura/go-graphql-client v0.16.0
 	github.com/holoplot/go-evdev v0.0.0-20260504100651-66d1748fe847
+	github.com/icholy/digest v1.2.0
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
 	github.com/insomniacslk/tapo v1.1.0
 	github.com/itchyny/gojq v0.12.19
@@ -63,7 +63,6 @@ require (
 	github.com/jinzhu/now v1.1.5
 	github.com/joeshaw/carwings v0.0.0-20250704173606-1708e349f36c
 	github.com/joho/godotenv v1.5.1
-	github.com/jpfielding/go-http-digest v0.0.0-20260421181648-7215c19bbaa3
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/koron/go-ssdp v0.9.1
 	github.com/korylprince/ipnetgen v1.0.1
@@ -175,6 +174,7 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/jsonschema-go v0.4.3 // indirect
 	github.com/google/renameio/v2 v2.0.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/govalues/decimal v0.1.36 // indirect

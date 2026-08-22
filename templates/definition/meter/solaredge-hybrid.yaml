@@ -109,7 +109,7 @@ render: |
           address: 0xE174 # Battery 1 Instantaneous Power
           type: holding
           decode: float32nans
-  maxacpower: {{ .maxacpower }} # W
+  {{- include "sunspec-maxacpower" . }}
   curtail:
     source: sequence
     set:
@@ -320,5 +320,8 @@ render: |
                 address: 0xE010 # StorageRemoteCtrl_DischargeLimit
                 type: writemultiple
                 encoding: float32s
+      default:
+        source: error
+        error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

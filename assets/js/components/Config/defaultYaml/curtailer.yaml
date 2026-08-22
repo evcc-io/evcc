@@ -1,0 +1,28 @@
+## required attributes
+# feed-in limit in percent of nominal production power (0..100, 100 = uncurtailed)
+curtail: # set feed-in limit
+  source: js
+  script: console.log(curtail)
+curtailed: # current feed-in limit
+  source: const
+  value: 100
+
+## alternative examples
+
+#curtail:
+#  source: http
+#  uri: http://inverter.local/api/limit?percent={{ .curtail }}
+#  method: POST
+#curtailed:
+#  source: http
+#  uri: http://inverter.local/api/limit
+#  jq: .percent
+
+#curtail:
+#  source: modbus
+#  uri: 192.168.179.200:502
+#  id: 1
+#  register: { type: writesingle, address: 40016, encoding: uint16 }
+#curtailed:
+#  source: error
+#  error: ErrNotAvailable

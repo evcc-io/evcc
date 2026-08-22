@@ -125,5 +125,8 @@ render: |
             source: sunspec
             {{- include "modbus" . | indent 10 }}
             value: 124:0:InOutWRte_RvrtTms
+    default:
+      source: error
+      error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}
