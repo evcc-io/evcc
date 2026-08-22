@@ -464,6 +464,15 @@ func (c *integratedDeviceCharger) Features() []api.Feature {
 	return []api.Feature{api.IntegratedDevice}
 }
 
+// continuousCharger is a minimal charger advertising the Continuous feature.
+type continuousCharger struct {
+	integratedDeviceCharger
+}
+
+func (c *continuousCharger) Features() []api.Feature {
+	return []api.Feature{api.IntegratedDevice, api.Continuous}
+}
+
 // TestDisconnectIntegratedDeviceKeepsMode is a regression test for #30187:
 // switching an integrated-device loadpoint to "off" makes a switch socket report
 // StatusA (disconnect). The disconnect handler must NOT reset the mode to the
