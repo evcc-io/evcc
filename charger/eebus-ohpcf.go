@@ -468,8 +468,7 @@ func (c *EEBusOHPCF) apply(enable bool) error {
 	return nil
 }
 
-// getMinMaxPower implements the api.PowerLimiter interface, reporting the
-// optional consumption as expected min/max or ErrNotAvailable if none.
+// getMinMaxPower is the callback used to provide the optional power limits.
 func (c *EEBusOHPCF) getMinMaxPower() (float64, float64, error) {
 	entity, ok := c.connectedCompressor()
 	if !ok {
