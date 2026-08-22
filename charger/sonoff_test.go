@@ -36,9 +36,9 @@ func TestSonoff(t *testing.T) {
 			on = req.Params.On
 			res = map[string]any{"result": map[string]any{}}
 		case "Meter.GetStatus":
-			// 220V, 5A, 1100W, 123.45kWh
+			// 1100W, 123.45kWh
 			res = map[string]any{"result": map[string]any{
-				"voltage": 22000, "current": 500, "power": 110000, "total_energy": 12345,
+				"power": 110000, "total_energy": 12345,
 			}}
 		default:
 			res = map[string]any{"error": map[string]any{"code": -12805, "message": "internal error"}}
@@ -71,13 +71,6 @@ func TestSonoff(t *testing.T) {
 	energy, err := me.TotalEnergy()
 	require.NoError(t, err)
 	assert.Equal(t, 123.45, energy)
-
-	pc, ok := api.Cap[api.PhaseCurrents](c)
-	require.True(t, ok)
-
-	l1, _, _, err := pc.Currents()
-	require.NoError(t, err)
-	assert.Equal(t, 5.0, l1)
 
 	status, err := c.Status()
 	require.NoError(t, err)

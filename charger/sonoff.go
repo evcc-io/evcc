@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -9,44 +10,11 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
+	"github.com/evcc-io/evcc/charger/sonoff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/jpfielding/go-http-digest/pkg/digest"
+	"github.com/evcc-io/evcc/util/transport"
 )
-
-// Sonoff device rpc api
-// https://help.sonoff.tech/docs/API_Welcome
-
-type sonoffRequest struct {
-	Id     int    `json:"id"`
-	Src    string `json:"src"`
-	Method string `json:"method"`
-	Params any    `json:"params,omitempty"`
-}
-
-type sonoffChannelParams struct {
-	Id int `json:"id"`
-}
-
-type sonoffSetParams struct {
-	Id int  `json:"id"`
-	On bool `json:"on"`
-}
-
-// sonoffSwitchStatus is the Switch.GetStatus result
-// https://help.sonoff.tech/docs/API_Switch
-type sonoffSwitchStatus struct {
-	On bool `json:"on"`
-}
-
-// sonoffMeterStatus is the Meter.GetStatus result, scaled by 100 (energy in 0.01kWh)
-// https://help.sonoff.tech/docs/API_Meter
-type sonoffMeterStatus struct {
-	Voltage     float64 `json:"voltage"`
-	Current     float64 `json:"current"`
-	Power       float64 `json:"power"`
-	TotalEnergy float64 `json:"total_energy"`
-}
 
 // Sonoff charger implementation
 type Sonoff struct {
@@ -55,8 +23,8 @@ type Sonoff struct {
 	*request.Helper
 	uri     string
 	channel int
-	statusG util.Cacheable[sonoffSwitchStatus]
-	meterG  util.Cacheable[sonoffMeterStatus]
+	statusG util.Cacheable[sonoff.SwitchStatus]
+	meterG  util.Cacheable[sonoff.MeterStatus]
 }
 
 func init() {
@@ -104,15 +72,19 @@ func NewSonoff(embed embed, uri, user, password string, channel int, standbypowe
 	// rfc7616 digest authentication
 	// https://help.sonoff.tech/docs/API_Authentication
 	if password != "" {
-		c.Client.Transport = digest.NewTransport(user, password, c.Client.Transport)
+		c.Client.Transport = transport.Digest(user, password, c.Client.Transport)
 	}
 
-	c.statusG = util.ResettableCached(func() (sonoffSwitchStatus, error) {
-		return sonoffCall[sonoffSwitchStatus](c, "Switch.GetStatus", sonoffChannelParams{Id: channel})
+	c.statusG = util.ResettableCached(func() (sonoff.SwitchStatus, error) {
+		var res sonoff.SwitchStatus
+		err := c.call("Switch.GetStatus", sonoff.ChannelParams{Id: channel}, &res)
+		return res, err
 	}, cache)
 
-	c.meterG = util.ResettableCached(func() (sonoffMeterStatus, error) {
-		return sonoffCall[sonoffMeterStatus](c, "Meter.GetStatus", sonoffChannelParams{Id: channel})
+	c.meterG = util.ResettableCached(func() (sonoff.MeterStatus, error) {
+		var res sonoff.MeterStatus
+		err := c.call("Meter.GetStatus", sonoff.ChannelParams{Id: channel}, &res)
+		return res, err
 	}, cache)
 
 	// validate switch channel
@@ -125,24 +97,14 @@ func NewSonoff(embed embed, uri, user, password string, channel int, standbypowe
 	// metering is optional, devices without meter component fail the call
 	if _, err := c.meterG.Get(); err == nil {
 		implement.Has(c, implement.MeterEnergy(c.totalEnergy))
-		implement.Has(c, implement.PhaseCurrents(c.currents))
-		implement.Has(c, implement.PhaseVoltages(c.voltages))
 	}
 
 	return c, nil
 }
 
-// sonoffCall executes a single rpc method and returns its result
-func sonoffCall[T any](c *Sonoff, method string, params any) (T, error) {
-	var res struct {
-		Result T `json:"result"`
-		Error  *struct {
-			Code    int    `json:"code"`
-			Message string `json:"message"`
-		} `json:"error"`
-	}
-
-	data := sonoffRequest{
+// call executes a single rpc method and decodes its result into res
+func (c *Sonoff) call(method string, params, res any) error {
+	data := sonoff.Request{
 		Id:     c.channel,
 		Src:    "evcc",
 		Method: method,
@@ -151,18 +113,23 @@ func sonoffCall[T any](c *Sonoff, method string, params any) (T, error) {
 
 	req, err := request.New(http.MethodPost, c.uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
-		return res.Result, err
+		return err
 	}
 
-	if err := c.DoJSON(req, &res); err != nil {
-		return res.Result, err
+	var resp sonoff.Response
+	if err := c.DoJSON(req, &resp); err != nil {
+		return err
 	}
 
-	if res.Error != nil {
-		return res.Result, fmt.Errorf("%s: %s (%d)", method, res.Error.Message, res.Error.Code)
+	if resp.Error != nil {
+		return fmt.Errorf("%s: %w", method, resp.Error)
 	}
 
-	return res.Result, nil
+	if res == nil {
+		return nil
+	}
+
+	return json.Unmarshal(resp.Result, res)
 }
 
 // Enabled implements the api.Charger interface
@@ -175,8 +142,7 @@ func (c *Sonoff) Enabled() (bool, error) {
 func (c *Sonoff) Enable(enable bool) error {
 	c.statusG.Reset()
 
-	_, err := sonoffCall[struct{}](c, "Switch.Set", sonoffSetParams{Id: c.channel, On: enable})
-	return err
+	return c.call("Switch.Set", sonoff.SetParams{Id: c.channel, On: enable}, nil)
 }
 
 func (c *Sonoff) currentPower() (float64, error) {
@@ -187,14 +153,4 @@ func (c *Sonoff) currentPower() (float64, error) {
 func (c *Sonoff) totalEnergy() (float64, error) {
 	res, err := c.meterG.Get()
 	return res.TotalEnergy / 100, err
-}
-
-func (c *Sonoff) currents() (float64, float64, float64, error) {
-	res, err := c.meterG.Get()
-	return res.Current / 100, 0, 0, err
-}
-
-func (c *Sonoff) voltages() (float64, float64, float64, error) {
-	res, err := c.meterG.Get()
-	return res.Voltage / 100, 0, 0, err
 }
