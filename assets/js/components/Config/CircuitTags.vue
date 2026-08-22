@@ -1,17 +1,8 @@
 <template>
-	<div
-		class="w-100 min-w-0"
-		:class="{ 'border-start ps-3 circuit-tags--child': depth > 0 }"
-	>
-		<div
-			v-for="node in nodes"
-			:key="node.name"
-			class="node-block w-100 min-w-0"
-		>
+	<div class="w-100 min-w-0" :class="{ 'border-start ps-3 circuit-tags--child': depth > 0 }">
+		<div v-for="node in nodes" :key="node.name" class="node-block w-100 min-w-0">
 			<div class="w-100 min-w-0 mb-1">
-				<div
-					class="node-header-row d-flex flex-wrap align-items-baseline min-w-0"
-				>
+				<div class="node-header-row d-flex flex-wrap align-items-baseline min-w-0">
 					<span
 						class="node-name d-block mw-100 min-w-0 fw-bold text-truncate"
 						:class="{ 'node-name--root': depth === 0 }"
@@ -37,11 +28,7 @@
 				v-if="parts(node).length || loadpointsFor(node).length"
 				class="measurement-grid d-grid align-items-center w-100 min-w-0"
 			>
-				<div
-					v-for="part in parts(node)"
-					:key="part.unit"
-					class="bar-row"
-				>
+				<div v-for="part in parts(node)" :key="part.unit" class="bar-row">
 					<span class="bar-unit fw-bold lh-1 text-end">
 						{{ part.unit }}
 					</span>
@@ -58,11 +45,7 @@
 					class="loadpoint-spacer"
 					aria-hidden="true"
 				/>
-				<div
-					v-for="lp in loadpointsFor(node)"
-					:key="lp.name"
-					class="loadpoint-row"
-				>
+				<div v-for="lp in loadpointsFor(node)" :key="lp.name" class="loadpoint-row">
 					<svg
 						class="lp-icon"
 						width="11"
@@ -81,15 +64,10 @@
 					<span class="lp-power-value evcc-gray text-nowrap">
 						{{ fmtW(meterPower(lp), POWER_UNIT.KW, false) }}
 					</span>
-					<span class="lp-power-unit evcc-gray text-nowrap">
-						kW
-					</span>
+					<span class="lp-power-unit evcc-gray text-nowrap"> kW </span>
 				</div>
 			</div>
-			<div
-				v-if="!parts(node).length && depth === 0"
-				class="root-power evcc-gray"
-			>
+			<div v-if="!parts(node).length && depth === 0" class="root-power evcc-gray">
 				{{ fmtW(node.power) }}
 			</div>
 			<div v-if="node.children?.length" class="children">
@@ -155,8 +133,7 @@ export default {
 			}
 			if (node.maxCurrent !== undefined) {
 				const current = node.current ?? 0;
-				const ratio =
-					node.maxCurrent > 0 ? current / node.maxCurrent : 0;
+				const ratio = node.maxCurrent > 0 ? current / node.maxCurrent : 0;
 				result.push({
 					unit: "A",
 					value: this.fmtW(current, this.POWER_UNIT.W, false),
@@ -171,9 +148,7 @@ export default {
 			return Math.max(0, Math.min(100, ratio * 100));
 		},
 		loadpointsFor(node: CircuitNode): ConfigLoadpoint[] {
-			return this.loadpoints.filter(
-				(lp) => lp.circuit === node.title?.toLowerCase(),
-			);
+			return this.loadpoints.filter((lp) => lp.circuit === node.title?.toLowerCase());
 		},
 		meterPower(lp: ConfigLoadpoint): number {
 			const meter = this.meters.find((m) => m.name === lp.meter);

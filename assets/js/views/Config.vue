@@ -429,7 +429,12 @@
 							<template #icon><CircuitsIcon /></template>
 							<template #tags>
 								<DeviceTags v-if="!circuitsRoot" :tags="circuitsTags" />
-								<CircuitTags v-else :nodes="[circuitsRoot]" :loadpoints="loadpoints" :meters="stateMeters"/>
+								<CircuitTags
+									v-else
+									:nodes="[circuitsRoot]"
+									:loadpoints="loadpoints"
+									:meters="stateMeters"
+								/>
 							</template>
 						</DeviceCard>
 						<DeviceCard

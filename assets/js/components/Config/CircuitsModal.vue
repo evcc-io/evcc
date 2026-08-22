@@ -14,8 +14,8 @@
 		<template #default>
 			<div v-if="circuits.length === 0" class="onboarding">
 				<p class="evcc-gray">
-					No circuits configured. Start with a main circuit that
-					represents your grid connection.
+					No circuits configured. Start with a main circuit that represents your grid
+					connection.
 				</p>
 				<button
 					type="button"
@@ -23,10 +23,7 @@
 					tabindex="0"
 					@click="openCircuit()"
 				>
-					<shopicon-regular-plus
-						size="s"
-						class="flex-shrink-0"
-					></shopicon-regular-plus>
+					<shopicon-regular-plus size="s" class="flex-shrink-0"></shopicon-regular-plus>
 					Add main circuit
 				</button>
 			</div>
