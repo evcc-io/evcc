@@ -55,6 +55,10 @@ import (
 // communication timeout, the hardware current limit, lifetime energy and the
 // phase powers. Those capabilities are only offered when the charger reports
 // that firmware, and the block read lengths follow the firmware as well.
+//
+// Phase switching additionally depends on the power board, which the firmware
+// does not expose over Modbus. The same firmware runs on older boards that have
+// no L2/L3 relay and reject the write, so support is probed once on startup.
 
 const (
 	// register blocks fetched in bulk
@@ -222,6 +226,10 @@ type Voltie struct {
 	meter  modbus.Block
 	info   modbus.Block
 	ext    bool // firmware provides the extended register blocks
+
+	// set once the charger has refused a phase switch for a reason that will not
+	// change while running, so no further attempt interrupts a session
+	noPhaseSwitch bool
 }
 
 // read fetches a register block through the shared bulk read cache, so all
@@ -329,11 +337,14 @@ func NewVoltie(ctx context.Context, settings modbus.TcpSettings, cache time.Dura
 	}
 
 	if wb.ext {
-		implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
 		implement.Has(wb, implement.PhaseGetter(wb.getPhases))
 		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
 		implement.Has(wb, implement.PhasePowers(wb.powers))
 		implement.Has(wb, implement.CurrentLimiter(wb.getMinMaxCurrent))
+
+		if wb.phaseSwitchingSupported() {
+			implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
+		}
 	}
 
 	return wb, nil
@@ -533,15 +544,60 @@ func (wb *Voltie) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(voltieRegVoltages, 1e3)
 }
 
-// phases1p3p implements the api.PhaseSwitcher interface. The register is only
-// writable on chargers manufactured from 2026, which carry an HPOW108 power
-// board; other hardware rejects the write with exception 0x03, as does a relay
-// or EEPROM error. The hardware generation cannot be detected up front: the
-// serial numbers exposed over Modbus are the MCU and power board serials, not
-// the charger serial that carries the generation prefix.
+// phaseSwitchingSupported reports whether the power board can switch phases.
+// The board type is not exposed over Modbus, so the register is written its own
+// value: that leaves the relay where it is, but a board without the L2/L3 relay
+// refuses it. The firmware also refuses while charging, so a probe during a
+// running session is inconclusive and the decision is left to the runtime latch.
+//
+// The firmware checks the board before it touches anything, so the probe has no
+// effect at all where it is refused. Where it succeeds it costs the one EEPROM
+// write that any phase switch costs, once per start.
+func (wb *Voltie) phaseSwitchingSupported() bool {
+	// a charging session makes the firmware refuse the write for an unrelated
+	// reason, which would look exactly like a board without the relay
+	if charging, err := wb.charging(); err != nil || charging {
+		wb.log.DEBUG.Println("phase switching support not probed")
+		return true
+	}
+
+	b, err := wb.read(wb.status)
+	if err != nil {
+		return false
+	}
+
+	if _, err := wb.conn.WriteSingleRegister(voltieRegSinglePhase,
+		voltieU16(wb.status, b, voltieRegSinglePhase)); err != nil {
+		wb.log.DEBUG.Printf("phase switching unavailable: %v", err)
+		return false
+	}
+
+	return true
+}
+
+// charging reads the charging flag past the cache, which is the condition the
+// firmware checks before it allows a phase switch
+func (wb *Voltie) charging() (bool, error) {
+	wb.cache.Clear()
+
+	b, err := wb.read(wb.status)
+	if err != nil {
+		return false, err
+	}
+
+	return voltieU16(wb.status, b, voltieRegCharging) != 0, nil
+}
+
+// phases1p3p implements the api.PhaseSwitcher interface. The firmware accepts
+// the write only on a power board that has the L2/L3 relay, and never while
+// charging, so support is probed on startup and a rejection here is latched.
 func (wb *Voltie) phases1p3p(phases int) error {
 	if phases != 1 && phases != 3 {
 		return fmt.Errorf("invalid phases: %d", phases)
+	}
+
+	if wb.noPhaseSwitch {
+		return errors.New("charger rejected phase switching, not retrying")
 	}
 
 	b, err := wb.read(wb.status)
@@ -566,7 +622,15 @@ func (wb *Voltie) phases1p3p(phases int) error {
 		}
 
 		if _, err = wb.conn.WriteSingleRegister(voltieRegSinglePhase, u); err != nil {
-			err = fmt.Errorf("switch phases: %w", err)
+			// Apart from charging, the firmware only refuses when it cannot switch at
+			// all: a power board without the L2/L3 relay, control by Modbus disabled,
+			// or a relay or EEPROM error. Latching that keeps further attempts from
+			// stopping and restarting the session. Charging is re-read first, so a
+			// session starting mid-write cannot disable a charger that does work.
+			if charging, cerr := wb.charging(); cerr == nil && !charging {
+				wb.noPhaseSwitch = true
+				wb.log.ERROR.Printf("phase switching disabled after rejection: %v", err)
+			}
 		}
 
 		wb.cache.Clear()
@@ -588,14 +652,12 @@ func (wb *Voltie) awaitContactorOpen() error {
 			time.Sleep(voltiePhaseSwitchWait)
 		}
 
-		wb.cache.Clear()
-
-		b, err := wb.read(wb.status)
+		charging, err := wb.charging()
 		if err != nil {
 			return err
 		}
 
-		if voltieU16(wb.status, b, voltieRegCharging) == 0 {
+		if !charging {
 			return nil
 		}
 	}
