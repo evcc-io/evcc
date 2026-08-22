@@ -41,7 +41,7 @@ func (lp *Loadpoint) boostPower(ctrl *CurrentController, batteryPower float64) f
 
 		// expire timers
 		if lp.hasPhaseSwitching() {
-			lp.phaseTimer = elapsed
+			ctrl.phaseTimer = elapsed
 		}
 		lp.pvTimer = elapsed
 
@@ -85,9 +85,9 @@ func (lp *Loadpoint) pvTargetPower(ctrl *CurrentController, mode api.ChargeMode,
 
 	lp.log.DEBUG.Printf("pv charge power: %.0fW = %.0fW - %.0fW (@ %dp)", targetPower, ctrl.effectivePower(), sitePower, lp.ActivePhases())
 
-	if mode == api.ModePV && lp.enabled && targetPower < minPower {
+	if mode == api.ModePV && ctrl.enabled && targetPower < minPower {
 		projectedSitePower := sitePower
-		if lp.hasPhaseSwitching() && !lp.phaseTimer.IsZero() {
+		if lp.hasPhaseSwitching() && !ctrl.phaseTimer.IsZero() {
 			// calculate site power after a phase switch to the minimum reachable phases
 			// notes: phaseTimer can only be active if lp current is already at minCurrent
 			projectedSitePower -= minPower - reachableMinPower
@@ -128,7 +128,7 @@ func (lp *Loadpoint) pvTargetPower(ctrl *CurrentController, mode api.ChargeMode,
 		return reachableMinPower
 	}
 
-	if mode == api.ModePV && !lp.enabled {
+	if mode == api.ModePV && !ctrl.enabled {
 		// kick off enable sequence
 		if (lp.Enable.Threshold == 0 && targetPower >= reachableMinPower) ||
 			(lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold) {

@@ -30,8 +30,8 @@ func (lp *Loadpoint) SetPhases(phases int) {
 
 // setPhases sets the number of enabled phases without modifying the charger
 func (lp *Loadpoint) setPhases(phases int) {
-	if lp.phases != phases {
-		lp.phases = phases
+	if ctrl := lp.ctrl(); ctrl != nil && ctrl.phases != phases {
+		ctrl.phases = phases
 
 		// reset timer to disabled state
 		lp.resetPhaseTimer()
@@ -87,7 +87,7 @@ func (lp *Loadpoint) ActivePhases() int {
 // activePhases returns the number of expectedly active phases for the meter.
 // If unknown for 1p3p chargers during startup it will assume 3p.
 func (lp *Loadpoint) activePhases() int {
-	physical := lp.phases
+	physical := lp.ctrl().phases
 	vehicle := lp.getVehiclePhases()
 	measured := lp.getMeasuredPhases()
 	charger := lp.getChargerPhysicalPhases()
@@ -127,7 +127,7 @@ func (lp *Loadpoint) MaxActivePhases() int {
 
 // maxActivePhases returns the maximum number of active phases for the loadpoint.
 func (lp *Loadpoint) maxActivePhases() int {
-	physical := lp.phases
+	physical := lp.ctrl().phases
 	measured := lp.getMeasuredPhases()
 	vehicle := lp.getVehiclePhases()
 	charger := lp.getChargerPhysicalPhases()

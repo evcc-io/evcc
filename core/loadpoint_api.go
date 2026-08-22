@@ -250,7 +250,10 @@ func (lp *Loadpoint) SetPriority(prio int) {
 func (lp *Loadpoint) GetPhases() int {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.phases
+	if ctrl := lp.ctrl(); ctrl != nil {
+		return ctrl.phases
+	}
+	return 0
 }
 
 // GetPhasesConfigured returns the configured phases
@@ -749,7 +752,7 @@ func (lp *Loadpoint) GetMaxPhaseCurrent() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
 	if lp.chargeCurrents == nil {
-		return lp.offeredCurrent
+		return lp.ctrl().offeredCurrent
 	}
 	return max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
 }

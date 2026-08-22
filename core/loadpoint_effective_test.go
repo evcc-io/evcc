@@ -281,7 +281,7 @@ func TestGetChargePowerFlexibility(t *testing.T) {
 			lp.planActive = tc.planActive
 			// EffectiveMinPower() = 230V * 6A * 1phase = 1380W
 			lp.minCurrent = 6
-			lp.phases = 1
+			currentController(lp).phases = 1
 
 			assert.Equal(t, tc.want, lp.GetChargePowerFlexibility(nil))
 		})

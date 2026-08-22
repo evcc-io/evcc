@@ -5,16 +5,39 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/loadpoint"
 )
 
 type CurrentController struct {
 	lp *Loadpoint
+
+	// controller state, guarded by the loadpoint's mutex
+	enabled        bool      // Charger enabled state
+	phases         int       // Charger enabled phases
+	offeredCurrent float64   // Charger current limit
+	phaseTimer     time.Time // 1p3p switch timer
 }
 
 func newCurrentController(lp *Loadpoint) *CurrentController {
 	return &CurrentController{lp: lp}
+}
+
+// ctrl returns the loadpoint's current controller or nil if the charger is natively power-controlled
+func (lp *Loadpoint) ctrl() *CurrentController {
+	ctrl, _ := lp.chargeController.(*CurrentController)
+	return ctrl
+}
+
+func (c *CurrentController) setAndPublishEnabled(enabled bool) {
+	if enabled != c.enabled {
+		c.lp.log.DEBUG.Printf("charger %s", status[enabled])
+		c.enabled = enabled
+	}
+	c.lp.publish(keys.Enabled, enabled)
 }
 
 // SetPower sets the charger to the given power target (0 disables).
@@ -84,7 +107,7 @@ func (c *CurrentController) actualMaxChargeCurrent() float64 {
 		return max(c.lp.chargeCurrents[0], c.lp.chargeCurrents[1], c.lp.chargeCurrents[2])
 	}
 	if c.lp.charging() {
-		return c.lp.offeredCurrent
+		return c.offeredCurrent
 	}
 	return 0
 }
@@ -115,7 +138,7 @@ func (c *CurrentController) setLimit(current float64) error {
 	}
 
 	// set current
-	if current != c.lp.offeredCurrent && current >= effMinCurrent {
+	if current != c.offeredCurrent && current >= effMinCurrent {
 		var err error
 		if charger, ok := api.Cap[api.ChargerEx](c.lp.charger); ok {
 			err = charger.MaxCurrentMillis(current)
@@ -156,12 +179,12 @@ func (c *CurrentController) setLimit(current float64) error {
 		}
 
 		c.lp.log.DEBUG.Printf("set charge current limit: %.3gA", current)
-		c.lp.offeredCurrent = current
+		c.offeredCurrent = current
 		c.lp.bus.Publish(evChargeCurrent, current)
 	}
 
 	// set enabled/disabled
-	if enabled := current >= effMinCurrent; enabled != c.lp.enabled {
+	if enabled := current >= effMinCurrent; enabled != c.enabled {
 		if err := c.lp.charger.Enable(enabled); err != nil {
 			v := c.lp.GetVehicle()
 			if vv, ok := api.Cap[api.Resurrector](v); enabled && ok && errors.Is(err, api.ErrAsleep) && !hasFeature(v, api.WakeUpDisabled) {
@@ -176,12 +199,12 @@ func (c *CurrentController) setLimit(current float64) error {
 			return fmt.Errorf("charger %s: %w", status[enabled], err)
 		}
 
-		c.lp.setAndPublishEnabled(enabled)
+		c.setAndPublishEnabled(enabled)
 		c.lp.chargerSwitched = c.lp.clock.Now()
 
 		// ensure we always re-set current when enabling charger
 		if !enabled {
-			c.lp.offeredCurrent = 0
+			c.offeredCurrent = 0
 		}
 
 		c.lp.bus.Publish(evChargeCurrent, current)
@@ -192,6 +215,101 @@ func (c *CurrentController) setLimit(current float64) error {
 		} else {
 			c.lp.stopWakeUpTimer()
 		}
+	}
+
+	return nil
+}
+
+// syncCharger updates charger status and synchronizes it with expectations
+func (c *CurrentController) syncCharger() error {
+	enabled, err := c.lp.charger.Enabled()
+	if err != nil {
+		return fmt.Errorf("charger enabled: %w", err)
+	}
+
+	shouldBeConsistent := c.lp.shouldBeConsistent()
+
+	if shouldBeConsistent {
+		defer func() {
+			c.setAndPublishEnabled(enabled)
+		}()
+	}
+
+	// #1: check charger logic, fix charger state if necessary (for chargers that start charging while being disabled)
+	if !enabled && c.lp.charging() {
+		c.lp.log.WARN.Println("charger logic error: disabled but charging")
+
+		// treat as enabled when charging for further validations
+		enabled = true
+
+		if shouldBeConsistent {
+			if err := c.lp.charger.Enable(true); err != nil { // also enable charger to correct internal state
+				return fmt.Errorf("charger enable: %w", err)
+			}
+
+			c.lp.elapsePVTimer() // elapse PV timer so loadpoint can immediately switch charger if necessary
+			return nil
+		}
+	}
+
+	// #2: sync charger
+	switch {
+	case enabled && c.enabled:
+		// sync max current
+		var (
+			current float64
+			err     error
+		)
+
+		// use chargers actual set current if available
+		cg, isCg := api.Cap[api.CurrentGetter](c.lp.charger)
+		if isCg {
+			if current, err = cg.GetMaxCurrent(); err == nil {
+				// smallest adjustment most PWM-Controllers can do is: 100%÷256×0,6A = 0.234A
+				if delta := math.Abs(c.offeredCurrent - current); delta > 0.23 {
+					if shouldBeConsistent && delta >= 1 {
+						c.lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA, expected %.3gA) - make sure your interval is at least 30s", current, c.offeredCurrent)
+					}
+					c.offeredCurrent = current
+					c.lp.bus.Publish(evChargeCurrent, c.offeredCurrent)
+				}
+			} else if !loadpoint.AcceptableError(err) {
+				return fmt.Errorf("charger get max current: %w", err)
+			}
+		}
+
+		// use measured phase currents as fallback if charger does not provide max current or does not currently relay from vehicle (TWC3)
+		if !isCg || errors.Is(err, api.ErrNotAvailable) {
+			// validate if current too high by more than 1A (https://github.com/evcc-io/evcc/issues/14731)
+			if current := c.lp.GetMaxPhaseCurrent(); current > c.offeredCurrent+1.0 {
+				if shouldBeConsistent && !c.lp.chargerHasFeature(api.Heating) {
+					c.lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA measured, expected %.3gA) - make sure your interval is at least 30s", current, c.offeredCurrent)
+				}
+				c.offeredCurrent = current
+				c.lp.bus.Publish(evChargeCurrent, c.offeredCurrent)
+			}
+		}
+
+		// sync phases
+		if shouldBeConsistent {
+			if err := c.lp.syncChargerPhases(); err != nil {
+				return err
+			}
+		}
+
+	case enabled == c.enabled:
+		// sync disabled state
+
+	case !enabled && !c.lp.phaseSwitchCompleted():
+		// some chargers (i.E. Easee in some configurations) disable themselves to be able to switch phases
+		// -> enable charger
+		if err := c.lp.charger.Enable(true); err != nil {
+			return fmt.Errorf("charger enable: %w", err)
+		}
+
+	case shouldBeConsistent && (enabled || c.lp.connected()):
+		// ignore disabled state if vehicle was disconnected (!c.enabled && !c.lp.connected)
+		c.lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[c.enabled], status[enabled])
 	}
 
 	return nil

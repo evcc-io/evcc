@@ -102,7 +102,8 @@ func TestLoadpointCurrentAction(t *testing.T) {
 		{"charging at 100% soc with no explicit limit", true, api.StatusC, 100, actionStop},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			lp := &Loadpoint{enabled: tc.enabled, status: tc.status, vehicleSoc: tc.soc}
+			lp := &Loadpoint{status: tc.status, vehicleSoc: tc.soc}
+			currentController(lp).enabled = tc.enabled
 			assert.Equal(t, tc.want, loadpointCurrentAction(lp))
 		})
 	}
@@ -517,7 +518,7 @@ func TestSuggestionActionable(t *testing.T) {
 	assert.True(t, s.Actionable)
 
 	// loadpoint charging matches the suggestion
-	lp.enabled = true
+	currentController(lp).enabled = true
 	lp.status = api.StatusC
 	assert.False(t, loadpointSuggestion(0).Actionable)
 

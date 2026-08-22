@@ -16,7 +16,7 @@ func testControllerLoadpoint(charger api.Charger, phasesConfigured, phases int) 
 	lp.minCurrent = minA
 	lp.maxCurrent = maxA
 	lp.phasesConfigured = phasesConfigured
-	lp.phases = phases
+	currentController(lp).phases = phases
 	lp.charger = charger
 	lp.status = api.StatusC
 	return lp
@@ -68,11 +68,11 @@ func TestControllerSetPowerDisable(t *testing.T) {
 	charger.EXPECT().Enable(false).Return(nil)
 
 	lp := testControllerLoadpoint(charger, 3, 3)
-	lp.enabled = true
-	lp.offeredCurrent = minA
+	currentController(lp).enabled = true
+	currentController(lp).offeredCurrent = minA
 
 	require.NoError(t, currentController(lp).SetPower(0))
-	assert.False(t, lp.enabled, "charger must be disabled")
+	assert.False(t, currentController(lp).enabled, "charger must be disabled")
 }
 
 func TestControllerSetPowerClampsToEnvelope(t *testing.T) {
@@ -105,7 +105,7 @@ func TestControllerSetPowerClampsToEnvelope(t *testing.T) {
 			lp.surplus = &surplus
 
 			require.NoError(t, currentController(lp).SetPower(tc.power))
-			assert.Equal(t, float64(tc.expected), lp.offeredCurrent)
+			assert.Equal(t, float64(tc.expected), currentController(lp).offeredCurrent)
 		})
 	}
 }
@@ -131,8 +131,8 @@ func TestControllerSetPowerFastCharging(t *testing.T) {
 
 	// full envelope target scales up immediately and sets maximum current
 	require.NoError(t, c.SetPower(c.effectiveMaxPower()))
-	assert.Equal(t, 3, lp.phases, "expected immediate scale up")
-	assert.Equal(t, float64(maxA), lp.offeredCurrent)
+	assert.Equal(t, 3, c.phases, "expected immediate scale up")
+	assert.Equal(t, float64(maxA), c.offeredCurrent)
 }
 
 func TestControllerSurplusConsumedPerCycle(t *testing.T) {

@@ -38,8 +38,8 @@ func TestBoostPower(t *testing.T) {
 		status:       api.StatusC,
 		batteryBoost: boostStart,
 		maxCurrent:   16,
-		phases:       3,
 	}
+	currentController(lp).phases = 3
 	s := &mockSite{}
 	lp.site = s
 
@@ -127,9 +127,9 @@ func TestBoostPowerPhaseSwitchGapBridging(t *testing.T) {
 		batteryBoost:     boostContinue,
 		minCurrent:       6,
 		maxCurrent:       16,
-		phases:           1,
 		phasesConfigured: 3,
 	}
+	currentController(lp).phases = 1
 	s := &mockSite{}
 	lp.site = s
 
@@ -148,7 +148,7 @@ func TestBoostPowerPhaseSwitchGapBridging(t *testing.T) {
 	assert.Greater(t, Voltage*16+res, Voltage*6*3, "boost must bridge 1p-3p gap")
 
 	// already on 3p: no phase gap added, only base + step
-	lp.phases = 3
+	currentController(lp).phases = 3
 	res = lp.boostPower(currentController(lp), 0)
 	// delta = 100 + 690 (step@3p) = 790
 	assert.Equal(t, 790.0, res)
@@ -210,11 +210,11 @@ func TestBoostPowerPhaseSwitchGapBridgingExclusions(t *testing.T) {
 				batteryBoost:     boostContinue,
 				minCurrent:       6,
 				maxCurrent:       16,
-				phases:           1,
 				phasesConfigured: 3,
 				phasesSwitched:   tc.phasesSwitched,
 				circuit:          circuit,
 			}
+			currentController(lp).phases = 1
 			s := &mockSite{
 				maxDischargePower: tc.maxDischargePower,
 			}

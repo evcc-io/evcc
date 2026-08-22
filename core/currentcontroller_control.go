@@ -21,10 +21,10 @@ func (c *CurrentController) effectiveCurrent() float64 {
 	// adjust actual current for vehicles like Zoe where it remains below target
 	if c.lp.chargeCurrents != nil {
 		cur := max(c.lp.chargeCurrents[0], c.lp.chargeCurrents[1], c.lp.chargeCurrents[2])
-		return min(cur+2.0, c.lp.offeredCurrent)
+		return min(cur+2.0, c.offeredCurrent)
 	}
 
-	return c.lp.offeredCurrent
+	return c.offeredCurrent
 }
 
 // scalePhasesRequired validates if fixed phase configuration matches enabled phases
@@ -145,14 +145,14 @@ func (c *CurrentController) pvScalePhases(sitePower, minCurrent, maxCurrent floa
 	scalable := activePhases > 1 && c.lp.phasesConfigured < 3
 
 	if scalable {
-		insufficient := (sitePower > 0 || !c.lp.enabled) && powerToCurrent(availablePower, activePhases) < minCurrent
+		insufficient := (sitePower > 0 || !c.enabled) && powerToCurrent(availablePower, activePhases) < minCurrent
 		if insufficient {
 			c.lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
 		}
 
 		// while charging, scaling down only helps if 1p is sustainable, otherwise it
 		// merely delays the pv disable timer by the phase timer duration
-		useful := !c.lp.enabled || !c.lp.charging() || powerToCurrent(availablePower, 1) >= minCurrent
+		useful := !c.enabled || !c.lp.charging() || powerToCurrent(availablePower, 1) >= minCurrent
 		if insufficient && !useful {
 			c.lp.log.DEBUG.Printf("available power %.0fW < %.0fW min 1p threshold, disabling instead of scaling down", availablePower, Voltage*minCurrent)
 		}
@@ -164,17 +164,17 @@ func (c *CurrentController) pvScalePhases(sitePower, minCurrent, maxCurrent floa
 	// scale down phases
 	if scalable {
 		if !c.lp.charging() { // scale immediately if not charging
-			c.lp.phaseTimer = elapsed
+			c.phaseTimer = elapsed
 		}
 
-		if c.lp.phaseTimer.IsZero() {
+		if c.phaseTimer.IsZero() {
 			c.lp.log.DEBUG.Printf("start phase %s timer", phaseScale1p)
-			c.lp.phaseTimer = c.lp.clock.Now()
+			c.phaseTimer = c.lp.clock.Now()
 		}
 
 		c.lp.publishTimer(phaseTimer, c.lp.GetDisableDelay(), phaseScale1p)
 
-		if elapsed := c.lp.clock.Since(c.lp.phaseTimer); elapsed >= c.lp.GetDisableDelay() {
+		if elapsed := c.lp.clock.Since(c.phaseTimer); elapsed >= c.lp.GetDisableDelay() {
 			if err := c.scalePhases(1); err != nil {
 				// a charger may report it cannot switch phases right now
 				// (api.ErrNotAvailable); assume a failed switch and stay silent
@@ -207,17 +207,17 @@ func (c *CurrentController) pvScalePhases(sitePower, minCurrent, maxCurrent floa
 		c.lp.log.DEBUG.Printf("available power %.0fW > %.0fW min %dp threshold", availablePower, float64(maxPhases)*Voltage*minCurrent, maxPhases)
 
 		if !c.lp.charging() { // scale immediately if not charging
-			c.lp.phaseTimer = elapsed
+			c.phaseTimer = elapsed
 		}
 
-		if c.lp.phaseTimer.IsZero() {
+		if c.phaseTimer.IsZero() {
 			c.lp.log.DEBUG.Printf("start phase %s timer", phaseScale3p)
-			c.lp.phaseTimer = c.lp.clock.Now()
+			c.phaseTimer = c.lp.clock.Now()
 		}
 
 		c.lp.publishTimer(phaseTimer, c.lp.GetEnableDelay(), phaseScale3p)
 
-		if elapsed := c.lp.clock.Since(c.lp.phaseTimer); elapsed >= c.lp.GetEnableDelay() {
+		if elapsed := c.lp.clock.Since(c.phaseTimer); elapsed >= c.lp.GetEnableDelay() {
 			if err := c.scalePhases(3); err != nil {
 				// a charger may report it cannot switch phases right now
 				// (api.ErrNotAvailable); assume a failed switch and stay silent
@@ -234,7 +234,7 @@ func (c *CurrentController) pvScalePhases(sitePower, minCurrent, maxCurrent floa
 	}
 
 	// reset timer to disabled state
-	if !waiting && !c.lp.phaseTimer.IsZero() {
+	if !waiting && !c.phaseTimer.IsZero() {
 		c.lp.resetPhaseTimer()
 	}
 
