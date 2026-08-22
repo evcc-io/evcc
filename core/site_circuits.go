@@ -17,7 +17,7 @@ import (
 )
 
 type circuitStruct struct {
-	Name string`json:"name,omitempty"`
+	Name       string   `json:"name,omitempty"`
 	Title      string   `json:"title,omitempty"`
 	Icon       string   `json:"icon,omitempty"`
 	Parent     string   `json:"parent,omitempty"`
@@ -82,7 +82,7 @@ func (site *Site) publishCircuits(circuitsYamlsource globalconfig.YamlSource) {
 		props := deviceProperties(c)
 
 		data := circuitStruct{
-			Name: props.Title,
+			Name:       props.Title,
 			Title:      instance.GetTitle(),
 			Icon:       props.Icon,
 			Parent:     names[instance.GetParent()],
@@ -99,7 +99,7 @@ func (site *Site) publishCircuits(circuitsYamlsource globalconfig.YamlSource) {
 	}
 
 	site.publish(keys.Circuits, globalconfig.ConfigStatus{
-		Config: res,
+		Config:     res,
 		YamlSource: circuitsYamlsource,
 	})
 }
