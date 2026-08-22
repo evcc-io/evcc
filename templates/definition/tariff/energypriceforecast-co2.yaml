@@ -34,7 +34,7 @@ params:
         "NO2",
         "NO3",
         "NO4",
-        "NO5"
+        "NO5",
       ]
     required: true
   - name: horizon
