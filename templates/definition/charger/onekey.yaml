@@ -22,6 +22,11 @@ requirements:
       broker is `localhost`.
 params:
   - preset: mqtt
+  - name: timeout
+    default: 90s
+    help:
+      de: Ab wann ein Messwert als veraltet gilt — Standard 90 s, das Dreifache des 30-s-Herzschlags des Geräts
+      en: When a reading counts as stale — default 90 s, three times the device's 30 s heartbeat
   - name: topic
     default: onekey
     description:
@@ -43,24 +48,19 @@ render: |
     source: mqtt
     {{- include "mqtt" . | indent 2 }}
     topic: {{ .topic }}/wp/sgmode
-    timeout: 90s
   power:
     source: mqtt
     {{- include "mqtt" . | indent 2 }}
     topic: {{ .topic }}/wp/power
-    timeout: 90s
   energy:
     source: mqtt
     {{- include "mqtt" . | indent 2 }}
     topic: {{ .topic }}/wp/energy
-    timeout: 90s
   temp:
     source: mqtt
     {{- include "mqtt" . | indent 2 }}
     topic: {{ .topic }}/wp/temp
-    timeout: 90s
   limittemp:
     source: mqtt
     {{- include "mqtt" . | indent 2 }}
     topic: {{ .topic }}/wp/limittemp
-    timeout: 90s
