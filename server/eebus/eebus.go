@@ -536,7 +536,7 @@ func (c *EEBus) ucCallback(ski string, device spineapi.DeviceRemoteInterface, en
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.log.DEBUG.Printf("ski %s event %s", ski, event)
+	c.log.DEBUG.Printf("Evnt: %s %s", ski, event)
 
 	for _, client := range c.clientsFor(ski) {
 		client.UseCaseEvent(device, entity, event)
