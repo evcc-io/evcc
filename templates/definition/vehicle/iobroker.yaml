@@ -136,40 +136,147 @@ params:
   - preset: vehicle-features
 render: |
   type: custom
-  {{- include "common" . }}
-  {{- include "iobroker-get" (merge (dict "name" "soc" "state" .soc) .) }}
+  {{ include "common" . }}
+  soc:
+    source: http
+    headers:
+      - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .soc }}/plain?extraPlain=true
+    cache: {{ .cache }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
   {{- if .range }}
-  {{- include "iobroker-get" (merge (dict "name" "range" "state" .range) .) }}
+  range:
+    source: http
+    headers:
+      - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .range }}/plain?extraPlain=true
+    cache: {{ .cache }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
   {{- end }}
   {{- if .status }}
-  {{- $a := .statusA | nospace | splitList "," | compact }}
-  {{- $b := .statusB | nospace | splitList "," | compact }}
-  {{- $c := .statusC | nospace | splitList "," | compact }}
-  {{- $jq := "" }}
-  {{- if or $a $b $c }}
-  {{- $jq = printf "'. as $s | if %s | index($s) then \"C\" elif %s | index($s) then \"B\" elif %s | index($s) then \"A\" else $s end'" (toJson $c) (toJson $b) (toJson $a) }}
-  {{- end }}
-  {{- include "iobroker-get" (merge (dict "name" "status" "state" .status "jq" $jq) .) }}
+  status:
+    source: http
+    headers:
+      - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .status }}/plain?extraPlain=true
+    cache: {{ .cache }}
+    {{- $a := .statusA | nospace | splitList "," | compact }}
+    {{- $b := .statusB | nospace | splitList "," | compact }}
+    {{- $c := .statusC | nospace | splitList "," | compact }}
+    {{- if or $a $b $c }}
+    quote: true
+    jq: '. as $s | if {{ toJson $c }} | index($s) then "C" elif {{ toJson $b }} | index($s) then "B" elif {{ toJson $a }} | index($s) then "A" else $s end'
+    {{- end }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
   {{- end }}
   {{- if .limitSoc }}
-  {{- include "iobroker-get" (merge (dict "name" "limitsoc" "state" .limitSoc) .) }}
+  limitsoc:
+    source: http
+    headers:
+      - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .limitSoc }}/plain?extraPlain=true
+    cache: {{ .cache }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
   {{- end }}
   {{- if .odometer }}
-  {{- include "iobroker-get" (merge (dict "name" "odometer" "state" .odometer) .) }}
+  odometer:
+    source: http
+    headers:
+      - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .odometer }}/plain?extraPlain=true
+    cache: {{ .cache }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
   {{- end }}
   {{- if .climater }}
-  {{- include "iobroker-get" (merge (dict "name" "climater" "state" .climater) .) }}
+  climater:
+    source: http
+    headers:
+      - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .climater }}/plain?extraPlain=true
+    cache: {{ .cache }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
   {{- end }}
   {{- if .finishTime }}
-  {{- include "iobroker-get" (merge (dict "name" "finishtime" "state" .finishTime) .) }}
+  finishtime:
+    source: http
+    headers:
+      - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .finishTime }}/plain?extraPlain=true
+    cache: {{ .cache }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
   {{- end }}
   {{- if .chargeEnable }}
-  {{- include "iobroker-set" (merge (dict "name" "chargeenable" "state" .chargeEnable "value" "${chargeenable}") .) }}
+  chargeenable:
+    source: http
+    headers:
+      - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .chargeEnable }}?value=${chargeenable}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
   {{- end }}
   {{- if .setMaxCurrent }}
-  {{- include "iobroker-set" (merge (dict "name" "maxcurrent" "state" .setMaxCurrent "value" "${maxcurrent}") .) }}
+  maxcurrent:
+    source: http
+    headers:
+      - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .setMaxCurrent }}?value=${maxcurrent}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
   {{- end }}
   {{- if .wakeup }}
-  {{- include "iobroker-set" (merge (dict "name" "wakeup" "state" .wakeup "value" "${wakeup}") .) }}
+  wakeup:
+    source: http
+    headers:
+      - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .wakeup }}?value=${wakeup}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
   {{- end }}
   {{ include "features" . }}
