@@ -13,7 +13,7 @@ type SlotWrapper struct {
 }
 
 // Rates converts arbitrary slot lengths (multiples of SlotDuration) to 15m slots.
-// Price sub-slots are constant, solar sub-slots interpolated around the slot center.
+// Price sub-slots are constant, solar sub-slots interpolated towards the next slot.
 func (t *SlotWrapper) Rates() (api.Rates, error) {
 	rates, err := t.Tariff.Rates()
 	if err != nil {
@@ -58,52 +58,32 @@ func (t *SlotWrapper) Rates() (api.Rates, error) {
 	return res, nil
 }
 
-// shapeSolar interpolates solar sub-slots between the slot centers. The slot value
-// applies to the entire period, so sub-slots are centered and rescaled to it. Slot
-// edges meet the average of both neighbouring values, keeping the curve continuous.
+// shapeSolar samples the source curve at the sub-slot starts. A solar value is the
+// power at its Start (see core.solarEnergy), so splitting a slot must interpolate
+// towards the successor rather than redistribute the value across the sub-slots -
+// only then does the split leave the integrated energy untouched. Interpolation runs
+// over the distance between the two starts, which is the slot length only for a gapless
+// series. The trailing slot has no successor and stays flat.
 func shapeSolar(rates api.Rates, i int, vals []float64) {
-	if len(vals) < 2 {
-		return
-	}
-
 	cur := rates[i].Value
-	if cur <= 0 {
-		// empty slot stays empty, shaping a non-positive slot would flip signs when rescaling
+
+	for j := range vals {
+		vals[j] = cur
+	}
+
+	if i+1 >= len(rates) {
 		return
 	}
 
-	prev, next := cur, cur
-	if i > 0 {
-		prev = rates[i-1].Value
-	}
-	if i+1 < len(rates) {
-		next = rates[i+1].Value
-	}
-
-	var sum float64
-	for j := range vals {
-		// sub-slot midpoint relative to the slot midpoint, [-0.5,0.5)
-		f := (float64(j)+0.5)/float64(len(vals)) - 0.5
-
-		delta := next - cur
-		if f < 0 {
-			delta = cur - prev
-		}
-
-		vals[j] = max(cur+f*delta, 0)
-		sum += vals[j]
-	}
-
-	if sum <= 0 {
-		for j := range vals {
-			vals[j] = cur
-		}
+	next := rates[i+1]
+	span := next.Start.Sub(rates[i].Start)
+	if span <= 0 {
 		return
 	}
 
-	// preserve the slot average
-	scale := cur * float64(len(vals)) / sum
 	for j := range vals {
-		vals[j] *= scale
+		// beyond the successor's start the curve is the successor's business
+		d := min(time.Duration(j)*SlotDuration, span)
+		vals[j] = cur + (next.Value-cur)*float64(d)/float64(span)
 	}
 }
