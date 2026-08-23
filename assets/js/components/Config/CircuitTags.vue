@@ -67,9 +67,6 @@
 					<span class="lp-power-unit evcc-gray text-nowrap"> kW </span>
 				</div>
 			</div>
-			<div v-if="!parts(node).length && depth === 0" class="root-power evcc-gray">
-				{{ fmtW(node.power) }}
-			</div>
 			<div v-if="node.children?.length" class="children">
 				<CircuitTags
 					:nodes="node.children"
@@ -217,12 +214,6 @@ export default {
 	border-radius: inherit;
 	background: var(--evcc-dark-green);
 	transition: width 0.2s ease;
-}
-.root-power {
-	margin-top: 3px;
-	font-size: 12px;
-	line-height: 1.2;
-	font-variant-numeric: tabular-nums;
 }
 .loadpoint-spacer {
 	grid-column: 1 / -1;
