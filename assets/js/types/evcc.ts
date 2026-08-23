@@ -266,7 +266,7 @@ export interface State {
   /** Update interval of the control loop in seconds. */
   interval?: number;
   /** Load management circuits, keyed by circuit name. */
-  circuits?: ConfigStatus<Record<string, Circuit>, unknown>;
+  circuits?: Circuits;
   /** Battery buffer SoC in %. Energy above this level may be used for charging in solar mode. */
   bufferSoc?: number;
   /** Battery priority SoC in %. Home battery is charged first while below this level. */
@@ -336,6 +336,9 @@ export interface ConfigStatus<C, S> {
 
 /** Configuration and runtime status of an integration. Structure depends on configuration. */
 export interface GenericConfigStatus extends ConfigStatus<unknown, unknown> {}
+
+/** Load management circuits and runtime status. */
+export interface Circuits extends ConfigStatus<Record<string, Circuit>, unknown> {}
 
 /** Home energy management system integration. */
 export interface Hems extends ConfigStatus<HemsConfig, HemsStatus> {}
