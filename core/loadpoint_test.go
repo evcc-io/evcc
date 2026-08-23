@@ -887,11 +887,11 @@ func TestBatteryBoostHold(t *testing.T) {
 
 	// disabled draws nothing
 	lp.batteryBoost = boostDisabled
-	assert.Equal(t, 0.0, lp.boostPower(currentController(lp), 2000), "disabled")
+	assert.Equal(t, 0.0, lp.boostPower(currentController(lp), currentController(lp).Envelope(), 2000), "disabled")
 
 	// hold draws nothing (stops draining the battery)...
 	lp.batteryBoost = boostHold
-	assert.Equal(t, 0.0, lp.boostPower(currentController(lp), 2000), "hold")
+	assert.Equal(t, 0.0, lp.boostPower(currentController(lp), currentController(lp).Envelope(), 2000), "hold")
 
 	// ...but is still an active boost state (GetBatteryBoost != boostDisabled),
 	// which is what keeps the sitePower priority adjustment applied to the loadpoint

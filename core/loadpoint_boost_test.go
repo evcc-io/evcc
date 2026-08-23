@@ -46,21 +46,21 @@ func TestBoostPower(t *testing.T) {
 	// No max discharge power limit (nil)
 	s.maxDischargePower = nil
 	// EffectiveMaxPower will be 230 * 16 * 3 = 11040
-	res := lp.boostPower(currentController(lp), 0)
+	res := lp.boostPower(currentController(lp), currentController(lp).Envelope(), 0)
 	assert.Equal(t, 11040.0, res)
 	assert.Equal(t, boostContinue, lp.batteryBoost)
 
 	// Discharge power limit is 0W (battery empty)
 	s.maxDischargePower = new(float64)
 	lp.batteryBoost = boostStart
-	res = lp.boostPower(currentController(lp), 0)
+	res = lp.boostPower(currentController(lp), currentController(lp).Envelope(), 0)
 	assert.Equal(t, 0.0, res)
 
 	// With max discharge power limit
 	limit5000 := 5000.0
 	s.maxDischargePower = &limit5000
 	lp.batteryBoost = boostStart
-	res = lp.boostPower(currentController(lp), 0)
+	res = lp.boostPower(currentController(lp), currentController(lp).Envelope(), 0)
 	assert.Equal(t, 5000.0, res)
 	assert.Equal(t, boostContinue, lp.batteryBoost)
 
@@ -72,19 +72,19 @@ func TestBoostPower(t *testing.T) {
 	// delta = 790
 	// delta = min(790, max(0, 5000 - 0)) = 790
 	// res = 0 + 790 + 0 = 790
-	res = lp.boostPower(currentController(lp), 0)
+	res = lp.boostPower(currentController(lp), currentController(lp).Envelope(), 0)
 	assert.Equal(t, 790.0, res)
 
 	// boostContinue at limit
 	// delta = min(790, max(0, 5000 - 5000)) = 0
 	// res = 5000 + 0 + 0 = 5000
-	res = lp.boostPower(currentController(lp), 5000)
+	res = lp.boostPower(currentController(lp), currentController(lp).Envelope(), 5000)
 	assert.Equal(t, 5000.0, res)
 
 	// boostContinue over limit
 	// delta = min(790, max(0, 5000 - 6000)) = 0
 	// res = 6000 + 0 + 0 = 6000
-	res = lp.boostPower(currentController(lp), 6000)
+	res = lp.boostPower(currentController(lp), currentController(lp).Envelope(), 6000)
 	assert.Equal(t, 6000.0, res)
 
 	// boostStart while battery is charging (negative power)
@@ -92,7 +92,7 @@ func TestBoostPower(t *testing.T) {
 	// max discharge capacity = 5000 - (-2000) = 7000W
 	// res = max(0, -2000) + 7000 + 0 = 7000W
 	lp.batteryBoost = boostStart
-	res = lp.boostPower(currentController(lp), -2000)
+	res = lp.boostPower(currentController(lp), currentController(lp).Envelope(), -2000)
 	assert.Equal(t, 7000.0, res)
 
 	// boostContinue while battery is charging (negative power)
@@ -103,7 +103,7 @@ func TestBoostPower(t *testing.T) {
 	s.maxDischargePower = &limit50
 	s.residualPower = 0 // base delta = 100 + 690 = 790
 	lp.batteryBoost = boostContinue
-	res = lp.boostPower(currentController(lp), -2000)
+	res = lp.boostPower(currentController(lp), currentController(lp).Envelope(), -2000)
 	// res = max(0, -2000) + 790 + 0 = 790W
 	assert.Equal(t, 790.0, res)
 }
@@ -139,7 +139,7 @@ func TestBoostPowerPhaseSwitchGapBridging(t *testing.T) {
 	limit := 10000.0
 	s.maxDischargePower = &limit
 	s.residualPower = 0
-	res := lp.boostPower(currentController(lp), 0)
+	res := lp.boostPower(currentController(lp), currentController(lp).Envelope(), 0)
 	// delta = 100 (base) + 230 (step@1p) + 460 (gap) = 790
 	// res = 0 + 790 + 0 = 790
 	assert.Equal(t, 790.0, res)
@@ -149,7 +149,7 @@ func TestBoostPowerPhaseSwitchGapBridging(t *testing.T) {
 
 	// already on 3p: no phase gap added, only base + step
 	currentController(lp).phases = 3
-	res = lp.boostPower(currentController(lp), 0)
+	res = lp.boostPower(currentController(lp), currentController(lp).Envelope(), 0)
 	// delta = 100 + 690 (step@3p) = 790
 	assert.Equal(t, 790.0, res)
 }
@@ -202,6 +202,7 @@ func TestBoostPowerPhaseSwitchGapBridgingExclusions(t *testing.T) {
 
 			circuit := api.NewMockCircuit(ctrl)
 			circuit.EXPECT().ValidatePower(gomock.Any(), gomock.Any()).Return(tc.circuitPower).AnyTimes()
+			circuit.EXPECT().GetMaxPower().Return(0.0).AnyTimes()
 
 			lp := &Loadpoint{
 				log:              util.NewLogger("lp"),
@@ -220,7 +221,7 @@ func TestBoostPowerPhaseSwitchGapBridgingExclusions(t *testing.T) {
 			}
 			lp.site = s
 
-			res := lp.boostPower(currentController(lp), 0)
+			res := lp.boostPower(currentController(lp), currentController(lp).Envelope(), 0)
 			assert.Equal(t, tc.expected, res)
 		})
 	}

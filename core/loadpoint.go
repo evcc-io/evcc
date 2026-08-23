@@ -127,7 +127,6 @@ type Loadpoint struct {
 
 	mode                api.ChargeMode
 	measuredPhases      int       // Charger physically measured phases
-	surplus             *float64  // Surplus power for phase reconciliation, valid for current cycle only
 	socUpdated          time.Time // Soc updated timestamp (poll: connected)
 	vehicleDetect       time.Time // Vehicle connected timestamp
 	chargerSwitched     time.Time // Charger enabled/disabled timestamp
@@ -1555,7 +1554,7 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 	lp.publish(keys.MinSocNotReached, minSocNotReached)
 
 	// surplus is only valid for the current cycle when provided by pv mode
-	lp.surplus = nil
+	ctrl.resetSurplus()
 
 	// execute loading strategy
 	switch {

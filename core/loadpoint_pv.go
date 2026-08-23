@@ -8,7 +8,7 @@ import (
 )
 
 // boostPower returns the additional power that the loadpoint should draw from the battery
-func (lp *Loadpoint) boostPower(ctrl *CurrentController, batteryPower float64) float64 {
+func (lp *Loadpoint) boostPower(ctrl *CurrentController, env Envelope, batteryPower float64) float64 {
 	boost := lp.GetBatteryBoost()
 	if boost == boostDisabled || boost == boostHold {
 		return 0
@@ -17,17 +17,17 @@ func (lp *Loadpoint) boostPower(ctrl *CurrentController, batteryPower float64) f
 	// push demand to drain battery (at least 100W)
 	delta := math.Max(100, math.Abs(lp.site.GetResidualPower()))
 
-	if ctrl.coarseCurrent() {
+	if env.Coarse {
 		// add step power to delta to make sure to step up to the next full amp
 		// just using the step power as delta is not enough because this will result
 		// in a too low current when there is a bit remaining grid consumption due to the accuracy
 		// of the battery controller
-		delta += ctrl.stepPower()
+		delta += env.Step
 	}
 
 	// bridge the power gap between 1p max and 3p min so pvScalePhases can trigger a scale-up
-	if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() && lp.site.GetBatteryMaxDischargePower() != nil {
-		delta += ctrl.phaseSwitchGapPower()
+	if lp.site.GetBatteryMaxDischargePower() != nil {
+		delta += env.PhaseSwitchGap
 	}
 
 	// start boosting by setting maximum power
@@ -35,9 +35,7 @@ func (lp *Loadpoint) boostPower(ctrl *CurrentController, batteryPower float64) f
 		delta = lp.EffectiveMaxPower()
 
 		// expire timers
-		if lp.hasPhaseSwitching() {
-			ctrl.phaseTimer = elapsed
-		}
+		ctrl.expirePhaseTimer()
 		lp.pvTimer = elapsed
 
 		if lp.charging() {
@@ -58,40 +56,41 @@ func (lp *Loadpoint) boostPower(ctrl *CurrentController, batteryPower float64) f
 
 // pvTargetPower calculates the target charging power for PV mode (0 disables)
 func (lp *Loadpoint) pvTargetPower(ctrl *CurrentController, mode api.ChargeMode, sitePower, batteryPower float64, batteryBuffered, batteryStart bool) float64 {
-	// read only once to simplify testing
-	minPower := ctrl.activeMinPower()
-	maxPower := ctrl.activeMaxPower()
-	reachableMinPower := ctrl.reachableMinPower()
+	// snapshot the controller's capabilities once per cycle
+	env := ctrl.Envelope()
+	minPower := env.ActiveMin
+	maxPower := env.ActiveMax
+	reachableMinPower := env.ReachableMin
 
 	// push demand to drain battery
-	sitePower -= lp.boostPower(ctrl, batteryPower)
+	sitePower -= lp.boostPower(ctrl, env, batteryPower)
 
 	// provide surplus for phase reconciliation by the controller
-	lp.surplus = &sitePower
+	ctrl.Prepare(sitePower)
 
 	// calculate target charge power from delta power and actual power
-	targetPower := max(ctrl.effectivePower()-sitePower, 0)
+	targetPower := max(env.Effective-sitePower, 0)
 
 	// in MinPV mode or under special conditions return at least min power
 	if battery := batteryStart || batteryBuffered && lp.charging() || lp.GetBatteryBoost() == boostContinue; (mode == api.ModeMinPV || battery) && targetPower < minPower {
-		lp.log.DEBUG.Printf("pv charge power: min %.0fW > %.0fW (%.0fW @ %dp, battery: %t)", minPower, targetPower, sitePower, lp.ActivePhases(), battery)
+		lp.log.DEBUG.Printf("pv charge power: min %.0fW > %.0fW (%.0fW @ %dp, battery: %t)", minPower, targetPower, sitePower, env.ActivePhases, battery)
 		return reachableMinPower
 	}
 
-	lp.log.DEBUG.Printf("pv charge power: %.0fW = %.0fW - %.0fW (@ %dp)", targetPower, ctrl.effectivePower(), sitePower, lp.ActivePhases())
+	lp.log.DEBUG.Printf("pv charge power: %.0fW = %.0fW - %.0fW (@ %dp)", targetPower, env.Effective, sitePower, env.ActivePhases)
 
-	if mode == api.ModePV && ctrl.enabled && targetPower < minPower {
+	if mode == api.ModePV && env.Enabled && targetPower < minPower {
 		projectedSitePower := sitePower
-		if lp.hasPhaseSwitching() && !ctrl.phaseTimer.IsZero() {
+		if env.ScalePending {
 			// calculate site power after a phase switch to the minimum reachable phases
-			// notes: phaseTimer can only be active if lp current is already at minCurrent
+			// notes: phase timer can only be active if lp current is already at min current
 			projectedSitePower -= minPower - reachableMinPower
 		}
 		// a continuous device consuming less than its min power demand keeps the
 		// remainder out of site power, hiding insufficient surplus until it ramps
 		// up (#32282). Project the shortfall towards min power into the gate.
 		if lp.chargerHasFeature(api.Continuous) {
-			projectedSitePower += max(0, ctrl.effectiveMinPower()-lp.chargePower)
+			projectedSitePower += max(0, env.EffectiveMin-lp.chargePower)
 		}
 		// kick off disable sequence, unless climater keep-alive is holding
 		// charging at min power — otherwise the "pausing soon" badge would
@@ -129,7 +128,7 @@ func (lp *Loadpoint) pvTargetPower(ctrl *CurrentController, mode api.ChargeMode,
 		return reachableMinPower
 	}
 
-	if mode == api.ModePV && !ctrl.enabled {
+	if mode == api.ModePV && !env.Enabled {
 		// kick off enable sequence
 		if (lp.Enable.Threshold == 0 && targetPower >= reachableMinPower) ||
 			(lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold) {

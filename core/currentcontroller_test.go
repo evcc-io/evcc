@@ -106,7 +106,7 @@ func TestControllerSetPowerClampsToEnvelope(t *testing.T) {
 
 			// surplus context: keep phase hysteresis out of the way
 			surplus := 0.0
-			lp.surplus = &surplus
+			currentController(lp).Prepare(surplus)
 
 			require.NoError(t, currentController(lp).SetPower(tc.power))
 			assert.Equal(t, float64(tc.expected), currentController(lp).offeredCurrent)
@@ -150,8 +150,8 @@ func TestControllerSurplusConsumedPerCycle(t *testing.T) {
 	lp := testControllerLoadpoint(charger, 3, 3)
 
 	surplus := -1000.0
-	lp.surplus = &surplus
+	currentController(lp).Prepare(surplus)
 
 	require.NoError(t, currentController(lp).SetPower(10*3*Voltage))
-	assert.Nil(t, lp.surplus, "surplus must be consumed")
+	assert.Nil(t, currentController(lp).surplus, "surplus must be consumed")
 }

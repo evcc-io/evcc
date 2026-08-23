@@ -29,6 +29,7 @@ type CurrentController struct {
 	minCurrent     float64   // PV mode: start current	Min+PV mode: min current
 	maxCurrent     float64   // Max allowed current. Physically ensured by the charger
 	chargeCurrents []float64 // Phase currents
+	surplus        *float64  // Surplus power for phase reconciliation, valid for current cycle only
 }
 
 func newCurrentController(lp *Loadpoint) *CurrentController {
@@ -68,11 +69,10 @@ func (c *CurrentController) SetPower(power float64) error {
 	}
 
 	// surplus tracking: reconcile phases for the current surplus
-	// TODO pass surplus explicitly once the controller owns its state
-	surplusTracking := c.lp.surplus != nil
+	surplusTracking := c.surplus != nil
 	if surplusTracking {
-		surplus := *c.lp.surplus
-		c.lp.surplus = nil
+		surplus := *c.surplus
+		c.surplus = nil
 
 		if c.lp.hasPhaseSwitching() && c.lp.phaseSwitchCompleted() {
 			c.pvScalePhases(surplus, c.effectiveMinCurrent(), c.effectiveMaxCurrent())
@@ -220,6 +220,24 @@ func (c *CurrentController) phasesFromChargeCurrents() {
 
 func (c *CurrentController) setMinCurrent() error {
 	return c.setLimit(c.effectiveMinCurrent())
+}
+
+// Prepare arms the controller's phase reconciliation with the pv surplus
+// for the upcoming SetPower call. The value is consumed once.
+func (c *CurrentController) Prepare(surplus float64) {
+	c.surplus = &surplus
+}
+
+// resetSurplus discards a stale surplus from an aborted cycle
+func (c *CurrentController) resetSurplus() {
+	c.surplus = nil
+}
+
+// expirePhaseTimer forces the phase scale timer to elapse
+func (c *CurrentController) expirePhaseTimer() {
+	if c.lp.hasPhaseSwitching() {
+		c.phaseTimer = elapsed
+	}
 }
 
 // setLimit applies charger current limits and enables/disables accordingly
