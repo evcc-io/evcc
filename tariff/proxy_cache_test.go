@@ -12,7 +12,7 @@ import (
 func TestCacheInterval(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 
-	p := &cachingProxy{key: "test", interval: time.Hour}
+	p := &cachingProxy{key: "test", timer: &refreshTimer{interval: time.Hour}}
 	require.NoError(t, p.cachePut(api.TariffTypeSolar, api.Rates{
 		{Start: time.Now(), End: time.Now().Add(time.Hour), Value: 1},
 	}))

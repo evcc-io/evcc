@@ -31,6 +31,7 @@ type Ostrom struct {
 	cityId       int // Required for the Fair tariff types
 	basic        string
 	data         *util.Monitor[api.Rates]
+	timer        *refreshTimer
 }
 
 var _ api.Tariff = (*Ostrom)(nil)
@@ -60,6 +61,7 @@ func ensureContractEx(cid int64, contracts []ostrom.Contract) (ostrom.Contract, 
 
 func NewOstromFromConfig(other map[string]any) (api.Tariff, error) {
 	cc := struct {
+		schedule     `mapstructure:",squash"`
 		ClientId     string
 		ClientSecret string
 		Environment  string
@@ -76,6 +78,11 @@ func NewOstromFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
+	timer, err := cc.schedule.timer(time.Hour)
+	if err != nil {
+		return nil, err
+	}
+
 	basic := transport.BasicAuthHeader(cc.ClientId, cc.ClientSecret)
 	log := util.NewLogger("ostrom").Redact(basic)
 
@@ -84,7 +91,8 @@ func NewOstromFromConfig(other map[string]any) (api.Tariff, error) {
 		env:    cc.Environment,
 		basic:  basic,
 		Helper: request.NewHelper(log),
-		data:   util.NewMonitor[api.Rates](2 * time.Hour),
+		data:   util.NewMonitor[api.Rates](max(2*time.Hour, timer.window())),
+		timer:  timer,
 	}
 
 	t.Client.Transport = &oauth2.Transport{
@@ -204,7 +212,7 @@ func (t *Ostrom) refreshToken() (*oauth2.Token, error) {
 func (t *Ostrom) runStatic(done chan error) {
 	var once sync.Once
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	for tick := t.timer.C(); ; <-tick {
 		price, err := t.getFixedPrice()
 		if err != nil {
 			if reportError(&once, done, err) {
@@ -234,7 +242,7 @@ func (t *Ostrom) runStatic(done chan error) {
 func (t *Ostrom) run(done chan error) {
 	var once sync.Once
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	for tick := t.timer.C(); ; <-tick {
 		var res ostrom.Prices
 
 		start := now.BeginningOfDay()

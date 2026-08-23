@@ -23,6 +23,7 @@ type Amber struct {
 	uri     string
 	channel string
 	data    *util.Monitor[api.Rates]
+	timer   *refreshTimer
 }
 
 var _ api.Tariff = (*Amber)(nil)
@@ -33,10 +34,11 @@ func init() {
 
 func NewAmberFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
-		embed   `mapstructure:",squash"`
-		Token   string
-		SiteID  string
-		Channel string
+		embed    `mapstructure:",squash"`
+		schedule `mapstructure:",squash"`
+		Token    string
+		SiteID   string
+		Channel  string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -55,6 +57,11 @@ func NewAmberFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, errors.New("missing channel")
 	}
 
+	timer, err := cc.schedule.timer(time.Minute)
+	if err != nil {
+		return nil, err
+	}
+
 	log := util.NewLogger("amber").Redact(cc.Token)
 
 	t := &Amber{
@@ -63,7 +70,8 @@ func NewAmberFromConfig(other map[string]any) (api.Tariff, error) {
 		Helper:  request.NewHelper(log),
 		uri:     fmt.Sprintf(amber.URI, strings.ToUpper(cc.SiteID)),
 		channel: strings.ToLower(cc.Channel),
-		data:    util.NewMonitor[api.Rates](2 * time.Hour),
+		data:    util.NewMonitor[api.Rates](max(2*time.Hour, timer.window())),
+		timer:   timer,
 	}
 
 	t.Client.Transport = &transport.Decorator{
@@ -79,7 +87,7 @@ func NewAmberFromConfig(other map[string]any) (api.Tariff, error) {
 func (t *Amber) run(done chan error) {
 	var once sync.Once
 
-	for tick := time.Tick(time.Minute); ; <-tick {
+	for tick := t.timer.C(); ; <-tick {
 		var res []amber.PriceInfo
 
 		if err := backoff.Retry(func() error {

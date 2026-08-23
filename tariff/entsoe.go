@@ -24,6 +24,7 @@ type Entsoe struct {
 	token  string
 	domain string
 	data   *util.Monitor[api.Rates]
+	timer  *refreshTimer
 }
 
 var _ api.Tariff = (*Entsoe)(nil)
@@ -35,6 +36,7 @@ func init() {
 func NewEntsoeFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		embed         `mapstructure:",squash"`
+		schedule      `mapstructure:",squash"`
 		Securitytoken string
 		Domain        string
 	}
@@ -55,6 +57,11 @@ func NewEntsoeFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, err
 	}
 
+	timer, err := cc.schedule.timer(time.Hour)
+	if err != nil {
+		return nil, err
+	}
+
 	domain, err := entsoe.Area(entsoe.BZN, strings.ToUpper(cc.Domain))
 	if err != nil {
 		return nil, err
@@ -68,7 +75,8 @@ func NewEntsoeFromConfig(other map[string]any) (api.Tariff, error) {
 		embed:  &cc.embed,
 		token:  cc.Securitytoken,
 		domain: domain,
-		data:   util.NewMonitor[api.Rates](2 * time.Hour),
+		data:   util.NewMonitor[api.Rates](max(2*time.Hour, timer.window())),
+		timer:  timer,
 	}
 
 	// Wrap the client with a decorator that adds the security token to each request.
@@ -86,7 +94,7 @@ func (t *Entsoe) run(done chan error) {
 	var once sync.Once
 
 	// Data updated by ESO every half hour, but we only need data every hour to stay current.
-	for tick := time.Tick(time.Hour); ; <-tick {
+	for tick := t.timer.C(); ; <-tick {
 		var tr entsoe.PublicationMarketDocument
 
 		if err := backoff.Retry(func() error {

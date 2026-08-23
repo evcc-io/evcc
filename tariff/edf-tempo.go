@@ -27,6 +27,7 @@ type EdfTempo struct {
 	basic  string
 	data   *util.Monitor[api.Rates]
 	prices map[string]float64
+	timer  *refreshTimer
 }
 
 var _ api.Tariff = (*EdfTempo)(nil)
@@ -38,6 +39,7 @@ func init() {
 func NewEdfTempoFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
 		embed        `mapstructure:",squash"`
+		schedule     `mapstructure:",squash"`
 		ClientID     string
 		ClientSecret string
 		Prices       struct {
@@ -57,6 +59,11 @@ func NewEdfTempoFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, err
 	}
 
+	timer, err := cc.schedule.timer(time.Hour)
+	if err != nil {
+		return nil, err
+	}
+
 	basic := transport.BasicAuthHeader(cc.ClientID, cc.ClientSecret)
 	log := util.NewLogger("edf-tempo").Redact(basic)
 
@@ -65,7 +72,8 @@ func NewEdfTempoFromConfig(other map[string]any) (api.Tariff, error) {
 		log:    log,
 		basic:  basic,
 		Helper: request.NewHelper(log),
-		data:   util.NewMonitor[api.Rates](2 * time.Hour),
+		data:   util.NewMonitor[api.Rates](max(2*time.Hour, timer.window())),
+		timer:  timer,
 	}
 
 	prices := structs.Map(cc.Prices)
@@ -103,7 +111,7 @@ func (t *EdfTempo) refreshToken() (*oauth2.Token, error) {
 func (t *EdfTempo) run(done chan error) {
 	var once sync.Once
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	for tick := t.timer.C(); ; <-tick {
 		var res struct {
 			Data struct {
 				Values []struct {

@@ -17,10 +17,11 @@ import (
 
 type ElectricityMaps struct {
 	*request.Helper
-	log  *util.Logger
-	uri  string
-	zone string
-	data *util.Monitor[api.Rates]
+	log   *util.Logger
+	uri   string
+	zone  string
+	data  *util.Monitor[api.Rates]
+	timer *refreshTimer
 }
 
 type CarbonIntensity struct {
@@ -42,14 +43,20 @@ func init() {
 
 func NewElectricityMapsFromConfig(other map[string]any) (api.Tariff, error) {
 	cc := struct {
-		Uri   string
-		Token string
-		Zone  string
+		schedule `mapstructure:",squash"`
+		Uri      string
+		Token    string
+		Zone     string
 	}{
 		Zone: "DE",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	timer, err := cc.schedule.timer(time.Hour)
+	if err != nil {
 		return nil, err
 	}
 
@@ -60,7 +67,8 @@ func NewElectricityMapsFromConfig(other map[string]any) (api.Tariff, error) {
 		Helper: request.NewHelper(log),
 		uri:    util.DefaultScheme(strings.TrimRight(cc.Uri, "/"), "https"),
 		zone:   strings.ToUpper(cc.Zone),
-		data:   util.NewMonitor[api.Rates](2 * time.Hour),
+		data:   util.NewMonitor[api.Rates](max(2*time.Hour, timer.window())),
+		timer:  timer,
 	}
 
 	t.Client.Transport = &transport.Decorator{
@@ -78,7 +86,7 @@ func (t *ElectricityMaps) run(done chan error) {
 
 	uri := fmt.Sprintf("%s/carbon-intensity/forecast?zone=%s", t.uri, t.zone)
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	for tick := t.timer.C(); ; <-tick {
 		var res CarbonIntensity
 
 		if err := backoff.Retry(func() error {

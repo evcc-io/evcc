@@ -28,9 +28,10 @@ var romeLocation *time.Location
 
 type Pun struct {
 	*embed
-	zone string
-	log  *util.Logger
-	data *util.Monitor[api.Rates]
+	zone  string
+	log   *util.Logger
+	data  *util.Monitor[api.Rates]
+	timer *refreshTimer
 }
 
 type NewDataSet struct {
@@ -64,8 +65,9 @@ func init() {
 
 func NewPunFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
-		embed `mapstructure:",squash"`
-		Zone  string
+		embed    `mapstructure:",squash"`
+		schedule `mapstructure:",squash"`
+		Zone     string
 	}
 
 	logger := util.NewLogger("pun")
@@ -78,6 +80,11 @@ func NewPunFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, err
 	}
 
+	timer, err := cc.schedule.timer(time.Hour)
+	if err != nil {
+		return nil, err
+	}
+
 	var zone = strings.ToUpper(strings.TrimSpace(cc.Zone))
 	if cc.Zone == "" {
 		zone = "PUN"
@@ -87,7 +94,8 @@ func NewPunFromConfig(other map[string]any) (api.Tariff, error) {
 		log:   logger,
 		zone:  zone,
 		embed: &cc.embed,
-		data:  util.NewMonitor[api.Rates](2 * time.Hour),
+		data:  util.NewMonitor[api.Rates](max(2*time.Hour, timer.window())),
+		timer: timer,
 	}
 
 	return runOrError(t)
@@ -96,7 +104,7 @@ func NewPunFromConfig(other map[string]any) (api.Tariff, error) {
 func (t *Pun) run(done chan error) {
 	var once sync.Once
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	for tick := t.timer.C(); ; <-tick {
 		// get today data
 		today, err := backoff.RetryWithData(func() (api.Rates, error) {
 			res, err := t.getData(time.Now())

@@ -307,7 +307,8 @@ func (p *Param) IsZero(s string) bool {
 
 // yamlQuote quotes strings for yaml if they would otherwise by modified by the unmarshaler
 func (p *Param) yamlQuote(value string) string {
-	if p.Type != TypeString {
+	// TypeDuration may hold a cron expression, which needs quoting like a string
+	if p.Type != TypeString && p.Type != TypeDuration {
 		return value
 	}
 

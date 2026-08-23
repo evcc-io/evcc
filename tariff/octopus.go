@@ -25,6 +25,7 @@ type Octopus struct {
 	paymentMethod   string
 	tariffDirection octoGql.TariffDirection
 	data            *util.Monitor[api.Rates]
+	timer           *refreshTimer
 }
 
 var _ api.Tariff = (*Octopus)(nil)
@@ -47,6 +48,7 @@ func NewOctopusFromConfig(other map[string]any) (api.Tariff, error) {
 // Split out to allow for testing.
 func buildOctopusFromConfig(other map[string]any) (*Octopus, error) {
 	var cc struct {
+		schedule        `mapstructure:",squash"`
 		Region          string
 		Tariff          string // DEPRECATED: use ProductCode
 		ProductCode     string
@@ -59,6 +61,11 @@ func buildOctopusFromConfig(other map[string]any) (*Octopus, error) {
 	logger := util.NewLogger("octopus")
 
 	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	timer, err := cc.schedule.timer(time.Hour)
+	if err != nil {
 		return nil, err
 	}
 
@@ -117,7 +124,8 @@ func buildOctopusFromConfig(other map[string]any) (*Octopus, error) {
 		accountnumber:   cc.AccountNumber,
 		paymentMethod:   paymentMethod,
 		tariffDirection: cc.TariffDirection,
-		data:            util.NewMonitor[api.Rates](2 * time.Hour),
+		data:            util.NewMonitor[api.Rates](max(2*time.Hour, timer.window())),
+		timer:           timer,
 	}
 
 	return t, nil
@@ -150,7 +158,7 @@ func (t *Octopus) run(done chan error) {
 	}
 
 	// TODO tick every 15 minutes if GraphQL is available to poll for Intelligent slots.
-	for tick := time.Tick(time.Hour); ; <-tick {
+	for tick := t.timer.C(); ; <-tick {
 		var res octoRest.UnitRates
 
 		if err := backoff.Retry(func() error {

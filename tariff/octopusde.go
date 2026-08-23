@@ -22,6 +22,7 @@ type OctopusDe struct {
 	log       *util.Logger
 	gqlClient *krakengql.Client
 	data      *util.Monitor[api.Rates]
+	timer     *refreshTimer
 }
 
 type planningHorizon struct {
@@ -49,6 +50,7 @@ func NewOctopusDeFromConfig(other map[string]any) (api.Tariff, error) {
 // Split out to allow for testing.
 func buildOctopusDeFromConfig(other map[string]any) (*OctopusDe, error) {
 	var cc struct {
+		schedule      `mapstructure:",squash"`
 		Email         string
 		Password      string
 		AccountNumber string
@@ -70,6 +72,11 @@ func buildOctopusDeFromConfig(other map[string]any) (*OctopusDe, error) {
 		return nil, errors.New("missing account number")
 	}
 
+	timer, err := cc.schedule.timer(time.Hour)
+	if err != nil {
+		return nil, err
+	}
+
 	log := util.NewLogger("octopus-de")
 
 	// Create GraphQL client
@@ -81,7 +88,8 @@ func buildOctopusDeFromConfig(other map[string]any) (*OctopusDe, error) {
 	t := &OctopusDe{
 		log:       log,
 		gqlClient: gqlClient,
-		data:      util.NewMonitor[api.Rates](2 * time.Hour),
+		data:      util.NewMonitor[api.Rates](max(2*time.Hour, timer.window())),
+		timer:     timer,
 	}
 
 	return t, nil
@@ -90,7 +98,7 @@ func buildOctopusDeFromConfig(other map[string]any) (*OctopusDe, error) {
 func (t *OctopusDe) run(done chan error) {
 	var once sync.Once
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	for tick := t.timer.C(); ; <-tick {
 		var rates []RatePeriod
 
 		if err := backoff.Retry(func() error {

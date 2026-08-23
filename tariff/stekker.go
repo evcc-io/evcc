@@ -31,6 +31,7 @@ type Stekker struct {
 	interval time.Duration
 	log      *util.Logger
 	data     *util.Monitor[api.Rates]
+	timer    *refreshTimer
 }
 
 var _ api.Tariff = (*Stekker)(nil)
@@ -44,8 +45,9 @@ const stekkerURI = "https://stekker.app/epex-forecast"
 // NewStekkerFromConfig creates provider from config
 func NewStekkerFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
-		embed  `mapstructure:",squash"`
-		Region string
+		embed    `mapstructure:",squash"`
+		schedule `mapstructure:",squash"`
+		Region   string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -57,6 +59,11 @@ func NewStekkerFromConfig(other map[string]any) (api.Tariff, error) {
 	}
 
 	if err := cc.init(); err != nil {
+		return nil, err
+	}
+
+	timer, err := cc.schedule.timer(time.Hour)
+	if err != nil {
 		return nil, err
 	}
 
@@ -76,7 +83,8 @@ func NewStekkerFromConfig(other map[string]any) (api.Tariff, error) {
 		region:   cc.Region,
 		interval: interval,
 		log:      util.NewLogger("stekker"),
-		data:     util.NewMonitor[api.Rates](2 * time.Hour),
+		data:     util.NewMonitor[api.Rates](max(2*time.Hour, timer.window())),
+		timer:    timer,
 	}
 
 	return runOrError(t)
@@ -86,7 +94,7 @@ func (t *Stekker) run(done chan error) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	for tick := t.timer.C(); ; <-tick {
 		url := fmt.Sprintf("%s?advanced_view=&region=%s&unit=MWh", stekkerURI, t.region)
 		resp, err := client.Get(url)
 		if err != nil {
