@@ -45,8 +45,8 @@ func TestPhaseSwitchInterruption(t *testing.T) {
 		since    time.Duration
 		expected []api.ChargeStatus
 	}{
-		{"during phase switch", phaseSwitchInterruptDuration - time.Second, nil},
-		{"after phase switch", phaseSwitchInterruptDuration + time.Second, []api.ChargeStatus{api.StatusB}},
+		{"during phase switch", phaseSwitchDuration - time.Second, nil},
+		{"after phase switch", phaseSwitchDuration + time.Second, []api.ChargeStatus{api.StatusB}},
 	}
 
 	for _, tc := range tc {
