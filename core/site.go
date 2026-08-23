@@ -13,7 +13,6 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/coordinator"
@@ -1217,7 +1216,7 @@ func (site *Site) reservedPVPower(lp updater) float64 {
 	return reserved
 }
 
-func (site *Site) update(lp updater, circuitsYamlsource globalconfig.YamlSource) {
+func (site *Site) update(lp updater) {
 	site.log.DEBUG.Println("----")
 
 	// smart cost and battery mode handling
@@ -1234,7 +1233,7 @@ func (site *Site) update(lp updater, circuitsYamlsource globalconfig.YamlSource)
 	// update loadpoints
 	totalChargePower := site.updateLoadpoints(consumption)
 
-	site.updateCircuits(circuitsYamlsource)
+	site.updateCircuits()
 	site.applyHemsLimits()
 
 	if state, err := site.updateMeters(); err != nil {
@@ -1478,7 +1477,7 @@ func (site *Site) loopLoadpoints(next chan<- updater) {
 
 // Run is the main control loop. It reacts to trigger events by
 // updating measurements and executing control logic.
-func (site *Site) Run(stopC chan struct{}, interval time.Duration, circuitsYamlsource globalconfig.YamlSource) {
+func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	if max := 30 * time.Second; interval < max {
 		site.log.INFO.Printf("interval <%.0fs can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval", max.Seconds())
 	}
@@ -1488,14 +1487,14 @@ func (site *Site) Run(stopC chan struct{}, interval time.Duration, circuitsYamls
 		go site.loopLoadpoints(loadpointChan)
 	}
 
-	site.update(<-loadpointChan, circuitsYamlsource) // start immediately
+	site.update(<-loadpointChan) // start immediately
 
 	for tick := time.Tick(interval); ; {
 		select {
 		case <-tick:
-			site.update(<-loadpointChan, circuitsYamlsource)
+			site.update(<-loadpointChan)
 		case lp := <-site.lpUpdateChan:
-			site.update(lp, circuitsYamlsource)
+			site.update(lp)
 		case <-stopC:
 			return
 		}

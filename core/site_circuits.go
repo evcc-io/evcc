@@ -28,7 +28,7 @@ type circuitStruct struct {
 }
 
 // updateCircuits updates all circuits' power and currents
-func (site *Site) updateCircuits(circuitsYamlsource globalconfig.YamlSource) {
+func (site *Site) updateCircuits() {
 	if site.circuit == nil {
 		return
 	}
@@ -37,7 +37,7 @@ func (site *Site) updateCircuits(circuitsYamlsource globalconfig.YamlSource) {
 		site.log.ERROR.Println(err)
 	}
 
-	site.publishCircuits(circuitsYamlsource)
+	site.publishCircuits()
 }
 
 // applyHemsLimits applies the HEMS dim and curtail state to the site's devices
@@ -68,7 +68,7 @@ func (site *Site) applyHemsLimits() {
 }
 
 // publishCircuits returns a list of circuit titles
-func (site *Site) publishCircuits(circuitsYamlsource globalconfig.YamlSource) {
+func (site *Site) publishCircuits() {
 	cc := config.Circuits().Devices()
 	res := make(map[string]circuitStruct, len(cc))
 
@@ -100,7 +100,6 @@ func (site *Site) publishCircuits(circuitsYamlsource globalconfig.YamlSource) {
 
 	site.publish(keys.Circuits, globalconfig.ConfigStatus{
 		Config:     res,
-		YamlSource: circuitsYamlsource,
 	})
 }
 
