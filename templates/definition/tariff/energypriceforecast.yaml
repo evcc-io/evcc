@@ -40,11 +40,6 @@ params:
   - name: currency
     choice: ["EUR", "DKK", "CZK", "PLN", "SEK", "NOK"]
   - name: apikey
-    type: string
-    mask: true
-    description:
-      en: API key (optional)
-      de: API-Key (optional)
     help:
       en: "Optional for forecasts up to 120 hours. [Get an API key](https://energypriceforecast.eu/en/api-early-access/)."
       de: "Optional für Prognosen bis zu 120 Stunden. [API-Key erhalten](https://energypriceforecast.eu/de/api-early-access/)."
@@ -52,9 +47,6 @@ params:
     default: 120
     type: int
     unit: h
-    description:
-      en: Requested forecast horizon
-      de: Angefragter Prognosehorizont
     help:
       en: Anonymous access is limited to 48 hours from October 1, 2026. An API key allows up to 120 hours.
       de: Anonymer Zugriff ist ab 1. Oktober 2026 auf 48 Stunden begrenzt. Mit API-Key sind bis zu 120 Stunden möglich.
