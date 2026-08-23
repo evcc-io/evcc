@@ -45,7 +45,7 @@ test.describe("invalid references", async () => {
       circuitEditor,
       page,
       `- name: main2
-  title: Main`,
+  title: Main`
     );
     await circuitsModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(circuitsModal);
