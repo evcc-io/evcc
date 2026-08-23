@@ -296,10 +296,15 @@ limit:
     await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
     const circuitsModal = page.getByTestId("circuits-modal");
     await expectModalVisible(circuitsModal);
-    const circuitsEditor = circuitsModal.getByTestId("yaml-editor");
-    await editorClear(circuitsEditor);
-    await editorPaste(circuitsEditor, page, `- name: main\n  title: House`);
-    await circuitsModal.getByRole("button", { name: "Save" }).click();
+    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+
+    const circuitModal = page.getByTestId("circuit-modal");
+    await expectModalVisible(circuitModal);
+    await circuitModal.getByLabel("Title").fill("House");
+    await circuitModal.getByLabel("Circuit").selectOption({ label: "Static circuit" });
+    await circuitModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(circuitModal);
+    await circuitsModal.getByRole("button", { name: "Cancel" }).click();
     await expectModalHidden(circuitsModal);
 
     // configure fnn hems with all signals wired to the simulator
@@ -461,10 +466,15 @@ w3:
     await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
     const circuitsModal = page.getByTestId("circuits-modal");
     await expectModalVisible(circuitsModal);
-    const circuitsEditor = circuitsModal.getByTestId("yaml-editor");
-    await editorClear(circuitsEditor);
-    await editorPaste(circuitsEditor, page, `- name: main\n  title: House`);
-    await circuitsModal.getByRole("button", { name: "Save" }).click();
+    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+
+    const circuitModal = page.getByTestId("circuit-modal");
+    await expectModalVisible(circuitModal);
+    await circuitModal.getByLabel("Title").fill("House");
+    await circuitModal.getByLabel("Circuit").selectOption({ label: "Static circuit" });
+    await circuitModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(circuitModal);
+    await circuitsModal.getByRole("button", { name: "Cancel" }).click();
     await expectModalHidden(circuitsModal);
 
     // configure hems via user-defined provider
@@ -497,7 +507,7 @@ limit:
     await expect(page.getByTestId("circuits").getByTestId("device-banner")).toHaveText(
       "Consumption limited"
     );
-    await expect(page.getByTestId("circuits")).toContainText(["House", "Power", "0.0 kW"].join(""));
+    await expect(page.getByTestId("circuits")).toContainText("House");
     await expect(page.getByTestId("circuits")).not.toContainText("External Limit");
 
     // a new loadpoint can only be assigned to the dedicated circuit
@@ -507,6 +517,6 @@ limit:
     await expectModalVisible(lpModal);
     await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
     const circuitOptions = lpModal.getByLabel("Circuit").getByRole("option");
-    await expect(circuitOptions).toHaveText(["---", "House [main]"]);
+    await expect(circuitOptions).toHaveText(["---", "House [db:1]"]);
   });
 });
