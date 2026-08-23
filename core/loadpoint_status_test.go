@@ -66,9 +66,9 @@ func TestPhaseSwitchInterruption(t *testing.T) {
 				*api.MockConnectionTimer
 			}{charger, timer},
 			status:            api.StatusC,
-			phasesSwitched:    time.Now().Add(-tc.since),
 			connectedDuration: time.Hour,
 		}
+		currentController(lp).phasesSwitched = time.Now().Add(-tc.since)
 
 		res, err := lp.getStatusChanges()
 		require.NoError(t, err, tc.desc)
