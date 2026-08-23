@@ -1629,6 +1629,9 @@ func (lp *Loadpoint) boostPhaseScaling() float64 {
 
 		// avoid grid import as much as possible without allowing the battery to charge
 		powerGap = max(0, powerGap-_maxDischargePower)
+	} else if lp.coarseCurrent() {
+		// compensate for the addition of effective step power in boostPower() at 1p
+		powerGap = max(0, powerGap-currentToPower(1, minActivePhases))
 	}
 
 	if powerGap > 0 {

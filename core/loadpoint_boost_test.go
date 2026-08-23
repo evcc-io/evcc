@@ -127,9 +127,9 @@ func TestBatteryBoost(t *testing.T) {
 	assert.Equal(t, 330.0, boost)
 
 	// test battery power = 0:
-	// - enable  = -230 -    0   = -230
-	// - disable = -230 + 1380   = 1150
-	// - gap     =  230*(6*3-16) =  460
+	// - enable  = -230 -    0       = -230
+	// - disable = -230 + 1380       = 1150
+	// - gap     =  230*(6*3-16)-230 =  230
 	//
 	// - assume lp is disabled:
 	//     sitePower = 0 - 330 = -330 <= -230 (lp enables)
@@ -138,7 +138,7 @@ func TestBatteryBoost(t *testing.T) {
 	gap := lp.boostPhaseScaling()
 	enable, disable = lp.boostThresholds(batteryPower)
 	assert.Equal(t, 330.0, boost)
-	assert.Equal(t, 460.0, gap)
+	assert.Equal(t, 230.0, gap)
 	assert.Equal(t, -230.0, enable)
 	assert.Equal(t, 1150.0, disable)
 
@@ -195,10 +195,20 @@ func TestBatteryBoost(t *testing.T) {
 	assert.Equal(t, 8768.0, disable)
 
 	// test low max current (= big power gap):
-	// - gap = 230*(6*3-6) = 2760W
+	// - gap = 230*(6*3-6) - 230 = 2530
+	//   (subtract 230W coarse current adjustment)
 	lp.maxCurrent = 6
 	gap = lp.boostPhaseScaling()
-	assert.Equal(t, 2760.0, gap)
+	assert.Equal(t, 2530.0, gap)
+
+	// test phases = 3:
+	// - continue using 1p coarse current adjustment
+	//   If we would subtract 690W now,
+	//   we would have a negative 1p/3p switching hysteresis
+	lp.phases = 3
+	gap = lp.boostPhaseScaling()
+	assert.Equal(t, 2530.0, gap)
+	lp.phases = 1
 	lp.maxCurrent = 16
 
 	// tests with maxDischargePower != nil:
