@@ -10,7 +10,7 @@
 					<span class="tree-knick" />
 				</span>
 			</template>
-			<DeviceRefBox compact class="flex-grow-1" @edit="openCircuit(circuitsTree?.name)">
+			<DeviceRefBox compact class="flex-grow-1" @edit="editCircuit">
 				<span class="d-flex align-items-center gap-2">
 					<span class="fw-bold">{{ circuitsTree?.deviceTitle }}</span>
 					<span class="ms-auto evcc-gray value">{{ valueLabel }}</span>
@@ -81,12 +81,14 @@ export default {
 		},
 	},
 	methods: {
-		async openCircuit(name?: string) {
-			const id = parseInt(name?.split(":")[1] || "-1");
-			await openModal("circuit", { id });
-		},
 		addSub() {
 			this.onAddSub(this.circuitsTree?.name);
+		},
+		async editCircuit() {
+			const id = parseInt(this.circuitsTree?.name?.split(":")[1] || "-1"); // TODO: where to get id from?
+			const hasChildren =
+				this.circuitsTree?.children && this.circuitsTree.children.length > 0;
+			await openModal("circuit", { id, hasChildren });
 		},
 	},
 	computed: {

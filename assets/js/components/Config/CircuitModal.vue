@@ -8,6 +8,7 @@
 		:initial-values="initialValues"
 		:on-template-change="handleTemplateChange"
 		:filter-template-params="filterTemplateParams"
+		:hide-delete="hasChildren"
 		@added="$emit('changed', $event)"
 		@updated="$emit('changed')"
 		@removed="$emit('changed')"
@@ -76,6 +77,9 @@ export default defineComponent({
 		},
 		id(): number | undefined {
 			return getModal("circuit")?.id;
+		},
+		hasChildren(): boolean | undefined {
+			return getModal("circuit")?.hasChildren;
 		},
 		isNew(): boolean {
 			return this.id === undefined;
