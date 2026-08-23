@@ -121,10 +121,10 @@ func (phaseSwitchCharger) Phases1p3p(int) error { return nil }
 func TestBoostPowerPhaseSwitchGapBridging(t *testing.T) {
 	Voltage = 230
 	lp := &Loadpoint{
-		log:              util.NewLogger("lp"),
-		status:           api.StatusC,
-		charger:          phaseSwitchCharger{},
-		batteryBoost:     boostContinue,
+		log:          util.NewLogger("lp"),
+		status:       api.StatusC,
+		charger:      phaseSwitchCharger{},
+		batteryBoost: boostContinue,
 	}
 	currentController(lp).phasesConfigured = 3
 	currentController(lp).minCurrent = 6
@@ -205,11 +205,11 @@ func TestBoostPowerPhaseSwitchGapBridgingExclusions(t *testing.T) {
 			circuit.EXPECT().GetMaxPower().Return(0.0).AnyTimes()
 
 			lp := &Loadpoint{
-				log:              util.NewLogger("lp"),
-				status:           api.StatusC,
-				charger:          tc.charger,
-				batteryBoost:     boostContinue,
-				circuit:          circuit,
+				log:          util.NewLogger("lp"),
+				status:       api.StatusC,
+				charger:      tc.charger,
+				batteryBoost: boostContinue,
+				circuit:      circuit,
 			}
 			currentController(lp).phasesConfigured = 3
 			currentController(lp).phasesSwitched = tc.phasesSwitched

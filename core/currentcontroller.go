@@ -139,34 +139,31 @@ func (c *CurrentController) actualMaxChargeCurrent() float64 {
 	return 0
 }
 
-// publishOfferedCurrent publishes the offered current on the event bus
+// publishOfferedCurrent publishes the current offered current
 func (c *CurrentController) publishOfferedCurrent() {
-	c.lp.bus.Publish(evChargeCurrent, c.offeredCurrent)
+	c.updateOfferedCurrent(c.offeredCurrent)
 }
 
-// evChargeCurrentHandler publishes the offered current
-func (c *CurrentController) evChargeCurrentHandler(current float64) {
-	if !c.enabled {
-		current = 0
-	}
-	c.lp.publish(keys.OfferedCurrent, current)
-}
-
-// evChargeCurrentWrappedMeterHandler updates the dummy charge meter's charge power.
-// This simplifies the main flow where the charge meter can always be treated as present.
+// updateOfferedCurrent publishes the offered current and updates the dummy
+// charge meter's charge power if the charge meter was replaced by a dummy.
 // It assumes that the charge meter cannot consume more than total household consumption.
-// If physical charge meter is present this handler is not used.
-// The actual value is published by the evChargeCurrentHandler
-func (c *CurrentController) evChargeCurrentWrappedMeterHandler(current float64) {
-	power := current * float64(c.lp.ActivePhases()) * Voltage
-
-	// if disabled we cannot be charging
-	if !c.enabled || !c.lp.charging() {
-		power = 0
+func (c *CurrentController) updateOfferedCurrent(current float64) {
+	published := current
+	if !c.enabled {
+		published = 0
 	}
+	c.lp.publish(keys.OfferedCurrent, published)
 
-	// handler only called if charge meter was replaced by dummy
-	c.lp.chargeMeter.(*wrapper.ChargeMeter).SetPower(power)
+	if mt, ok := c.lp.chargeMeter.(*wrapper.ChargeMeter); ok {
+		power := current * float64(c.lp.ActivePhases()) * Voltage
+
+		// if disabled we cannot be charging
+		if !c.enabled || !c.lp.charging() {
+			power = 0
+		}
+
+		mt.SetPower(power)
+	}
 }
 
 // updateChargeCurrents reads the phase currents from the charge meter
@@ -308,7 +305,7 @@ func (c *CurrentController) setLimit(current float64) error {
 
 		c.lp.log.DEBUG.Printf("set charge current limit: %.3gA", current)
 		c.offeredCurrent = current
-		c.lp.bus.Publish(evChargeCurrent, current)
+		c.updateOfferedCurrent(current)
 	}
 
 	// set enabled/disabled
@@ -335,7 +332,7 @@ func (c *CurrentController) setLimit(current float64) error {
 			c.offeredCurrent = 0
 		}
 
-		c.lp.bus.Publish(evChargeCurrent, current)
+		c.updateOfferedCurrent(current)
 
 		// start/stop vehicle wake-up timer
 		if enabled {
@@ -400,7 +397,7 @@ func (c *CurrentController) syncCharger() (bool, error) {
 						c.lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA, expected %.3gA) - make sure your interval is at least 30s", current, c.offeredCurrent)
 					}
 					c.offeredCurrent = current
-					c.lp.bus.Publish(evChargeCurrent, c.offeredCurrent)
+					c.publishOfferedCurrent()
 				}
 			} else if !loadpoint.AcceptableError(err) {
 				return false, fmt.Errorf("charger get max current: %w", err)
@@ -415,7 +412,7 @@ func (c *CurrentController) syncCharger() (bool, error) {
 					c.lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA measured, expected %.3gA) - make sure your interval is at least 30s", current, c.offeredCurrent)
 				}
 				c.offeredCurrent = current
-				c.lp.bus.Publish(evChargeCurrent, c.offeredCurrent)
+				c.publishOfferedCurrent()
 			}
 		}
 

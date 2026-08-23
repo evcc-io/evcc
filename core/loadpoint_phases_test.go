@@ -83,8 +83,8 @@ func TestMaxActivePhases(t *testing.T) {
 			vehicle.EXPECT().Phases().Return(tc.vehicle).MinTimes(1)
 
 			lp := &Loadpoint{
-				vehicle:          vehicle,
-				charger:          plainCharger,
+				vehicle: vehicle,
+				charger: plainCharger,
 			}
 			currentController(lp).phasesConfigured = configured // fixed phases or default
 			currentController(lp).measuredPhases = tc.measuredPhases
@@ -135,8 +135,8 @@ func TestMinActivePhases(t *testing.T) {
 			vehicle.EXPECT().Phases().Return(tc.vehicle).AnyTimes()
 
 			lp := &Loadpoint{
-				vehicle:          vehicle,
-				charger:          plainCharger,
+				vehicle: vehicle,
+				charger: plainCharger,
 			}
 			currentController(lp).phasesConfigured = configured // fixed phases or default
 			currentController(lp).measuredPhases = tc.measuredPhases
@@ -221,17 +221,17 @@ func TestPvScalePhases(t *testing.T) {
 		vehicle.EXPECT().Features().AnyTimes()
 
 		lp := &Loadpoint{
-			log:              util.NewLogger("foo"),
-			bus:              evbus.New(),
-			clock:            clock,
-			chargeMeter:      &Null{},            // silence nil panics
-			chargeRater:      &Null{},            // silence nil panics
-			chargeTimer:      &Null{},            // silence nil panics
-			progress:         NewProgress(0, 10), // silence nil panics
-			wakeUpTimer:      NewTimer(),         // silence nil panics
-			mode:             api.ModeNow,
-			vehicle:          vehicle,
-			status:           api.StatusC,
+			log:         util.NewLogger("foo"),
+			bus:         evbus.New(),
+			clock:       clock,
+			chargeMeter: &Null{},            // silence nil panics
+			chargeRater: &Null{},            // silence nil panics
+			chargeTimer: &Null{},            // silence nil panics
+			progress:    NewProgress(0, 10), // silence nil panics
+			wakeUpTimer: NewTimer(),         // silence nil panics
+			mode:        api.ModeNow,
+			vehicle:     vehicle,
+			status:      api.StatusC,
 		}
 		currentController(lp).phasesConfigured = 0 // allow switching
 		currentController(lp).minCurrent = minA
@@ -412,11 +412,11 @@ func TestPvScalePhasesTimer(t *testing.T) {
 		clock.Add(time.Hour) // avoid time.IsZero
 
 		lp := &Loadpoint{
-			log:            util.NewLogger("foo"),
-			wakeUpTimer:    NewTimer(),
-			clock:          clock,
-			charger:        charger,
-			status:         api.StatusC,
+			log:         util.NewLogger("foo"),
+			wakeUpTimer: NewTimer(),
+			clock:       clock,
+			charger:     charger,
+			status:      api.StatusC,
 			Enable: loadpoint.ThresholdConfig{
 				Delay: dt,
 			},
@@ -763,18 +763,18 @@ func TestPvScalePhasesCircuitLimits(t *testing.T) {
 			}).AnyTimes()
 
 			lp := &Loadpoint{
-				log:            util.NewLogger("foo"),
-				bus:            evbus.New(),
-				clock:          clock.NewMock(),
-				chargeMeter:    &Null{},
-				chargeRater:    &Null{},
-				chargeTimer:    &Null{},
-				progress:       NewProgress(0, 10),
-				wakeUpTimer:    NewTimer(),
-				mode:           api.ModeNow,
-				vehicle:        vehicle,
-				status:         api.StatusC,
-				circuit:        circuit,
+				log:         util.NewLogger("foo"),
+				bus:         evbus.New(),
+				clock:       clock.NewMock(),
+				chargeMeter: &Null{},
+				chargeRater: &Null{},
+				chargeTimer: &Null{},
+				progress:    NewProgress(0, 10),
+				wakeUpTimer: NewTimer(),
+				mode:        api.ModeNow,
+				vehicle:     vehicle,
+				status:      api.StatusC,
+				circuit:     circuit,
 				charger: struct {
 					*api.MockCharger
 					*api.MockPhaseSwitcher

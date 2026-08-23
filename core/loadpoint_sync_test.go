@@ -165,11 +165,11 @@ func TestSyncChargerPhasesByGetter(t *testing.T) {
 		pg.EXPECT().GetPhases().Return(tc.actualPhases, nil).MaxTimes(1)
 
 		lp := &Loadpoint{
-			log:            util.NewLogger("foo"),
-			bus:            evbus.New(),
-			clock:          clock.New(),
-			charger:        charger,
-			status:         api.StatusC,
+			log:     util.NewLogger("foo"),
+			bus:     evbus.New(),
+			clock:   clock.New(),
+			charger: charger,
+			status:  api.StatusC,
 		}
 		currentController(lp).measuredPhases = tc.actualPhases
 		currentController(lp).enabled = true
@@ -212,11 +212,11 @@ func TestSyncChargerPhasesByMeasurement(t *testing.T) {
 		ch.EXPECT().Enabled().Return(true, nil)
 
 		lp := &Loadpoint{
-			log:            util.NewLogger("foo"),
-			bus:            evbus.New(),
-			clock:          clock.New(),
-			charger:        charger,
-			status:         api.StatusC,
+			log:     util.NewLogger("foo"),
+			bus:     evbus.New(),
+			clock:   clock.New(),
+			charger: charger,
+			status:  api.StatusC,
 		}
 		currentController(lp).measuredPhases = tc.actualPhases
 		currentController(lp).enabled = true

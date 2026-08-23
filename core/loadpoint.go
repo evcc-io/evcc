@@ -35,7 +35,6 @@ import (
 const (
 	evChargeStart         = "start"      // update chargeTimer
 	evChargeStop          = "stop"       // update chargeTimer
-	evChargeCurrent       = "current"    // update fakeChargeMeter
 	evChargePower         = "power"      // update chargeRater
 	evVehicleConnect      = "connect"    // vehicle connected
 	evVehicleDisconnect   = "disconnect" // vehicle disconnected
@@ -445,7 +444,6 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 			lp.chargeMeter = &capableMeter{Meter: mt, source: charger}
 		} else {
 			mt := new(wrapper.ChargeMeter)
-			_ = lp.bus.Subscribe(evChargeCurrent, lp.ctrl().evChargeCurrentWrappedMeterHandler)
 			_ = lp.bus.Subscribe(evChargeStop, func() { mt.SetPower(0) })
 			lp.chargeMeter = mt
 		}
@@ -696,7 +694,6 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	_ = lp.bus.Subscribe(evChargeStop, lp.evChargeStopHandler)
 	_ = lp.bus.Subscribe(evVehicleConnect, lp.evVehicleConnectHandler)
 	_ = lp.bus.Subscribe(evVehicleDisconnect, lp.evVehicleDisconnectHandler)
-	_ = lp.bus.Subscribe(evChargeCurrent, lp.ctrl().evChargeCurrentHandler)
 	_ = lp.bus.Subscribe(evVehicleSoc, lp.evVehicleSocProgressHandler)
 
 	// restore settings
