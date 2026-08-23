@@ -15,9 +15,11 @@ test.describe("circuit", async () => {
     await start(CONFIG_YAML);
 
     await page.goto("/#/config");
+    const loadpoints = page.getByTestId("loadpoint");
 
-    await expect(page.getByTestId("loadpoint")).toHaveCount(1);
-    await expect(page.getByTestId("loadpoint")).toContainText(["Power", "1.0 kW"].join(""));
+    await expect(loadpoints).toHaveCount(2);
+    await expect(loadpoints.nth(0)).toContainText("Power1.0 kW");
+    await expect(loadpoints.nth(1)).toContainText("Power1.0 kW");
 
     await expect(page.getByTestId("grid")).toHaveCount(1);
     await expect(page.getByTestId("grid")).toContainText(["Power", "2.1 kW"].join(""));
@@ -27,7 +29,22 @@ test.describe("circuit", async () => {
 
     await expect(page.getByTestId("circuits")).toHaveCount(1);
     await expect(page.getByTestId("circuits")).toContainText(
-      ["Main", "Power", "2.1 kW", "Current", "3.0 A / 16.0 A"].join("")
+      [
+        "Main",
+        "2.1/10.0 kW",
+        "3/16 A",
+        "kW",
+        "A",
+        "Carport 1",
+        "0.0 kW",
+        " ",
+        "Carport 2",
+        "0.0 kW",
+        " ",
+        "Child",
+        "2/10 A",
+        "A",
+      ].join("")
     );
   });
 

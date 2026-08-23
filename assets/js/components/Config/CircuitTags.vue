@@ -7,7 +7,7 @@
 						class="node-name d-block mw-100 min-w-0 fw-bold text-truncate"
 						:class="{ 'node-name--root': depth === 0 }"
 					>
-						{{ node.name }}
+						{{ node.name || node.title }}
 					</span>
 					<div
 						v-if="parts(node).length"

@@ -10,19 +10,40 @@ meters:
     currentL1: 3
     currentL2: 3
     currentL3: 3
+  - name: child_meter
+    type: template
+    template: demo-meter
+    power: 1150
+    currentL1: 2
+    currentL2: 2
+    currentL3: 1
 
 loadpoints:
-  - title: Carport
-    charger: charger
+  - title: Carport 1
+    charger: charger1
+    circuit: main
+  - title: Carport 2
+    charger: charger2
     circuit: main
 
 circuits:
   - name: main
     meter: grid
     maxcurrent: 16
+    maxPower: 10000
+  - name: child
+    parent: main
+    meter: child_meter
+    maxcurrent: 10
 
 chargers:
-  - name: charger
+  - name: charger1
+    type: template
+    template: demo-charger
+    status: C
+    enabled: true
+    power: 1000
+  - name: charger2
     type: template
     template: demo-charger
     status: C
