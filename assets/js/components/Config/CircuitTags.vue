@@ -164,6 +164,7 @@ export default {
 }
 .circuit-tags--child {
 	border-color: var(--evcc-gray-10) !important;
+	border-left-width: 5px !important;
 }
 .node-block + .node-block {
 	margin-top: 14px;
