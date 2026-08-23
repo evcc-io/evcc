@@ -6,14 +6,23 @@
 					<span v-if="full" class="tree-line" />
 				</span>
 				<span class="tree-col">
-					<span class="tree-line" :class="{ 'tree-line--half': isLast }" />
+					<span
+						class="tree-line"
+						:class="{ 'tree-line--half': isLast }"
+					/>
 					<span class="tree-knick" />
 				</span>
 			</template>
-			<DeviceRefBox compact class="flex-grow-1" @edit="openCircuit(circuitsTree?.name)">
+			<DeviceRefBox
+				compact
+				class="flex-grow-1"
+				@edit="openCircuit(circuitsTree?.name)"
+			>
 				<span class="d-flex align-items-center gap-2">
 					<span class="fw-bold">{{ circuitsTree?.deviceTitle }}</span>
-					<span class="ms-auto evcc-gray value">{{ valueLabel }}</span>
+					<span class="ms-auto evcc-gray value">{{
+						valueLabel
+					}}</span>
 				</span>
 			</DeviceRefBox>
 		</div>
@@ -42,8 +51,12 @@
 				tabindex="0"
 				@click="addSub"
 			>
-				<shopicon-regular-plus size="s" class="flex-shrink-0"></shopicon-regular-plus>
-				Add sub-circuit
+				<shopicon-regular-plus
+					size="s"
+					class="flex-shrink-0"
+				></shopicon-regular-plus>
+
+				{{ $t("config.circuits.addSubCircuit") }}
 			</button>
 		</div>
 	</div>
@@ -96,7 +109,8 @@ export default {
 			if (!this.circuitsTree) return "";
 			const { maxpower, maxcurrent } = this.circuitsTree.config;
 			const parts: string[] = [];
-			if (maxpower !== undefined) parts.push(this.fmtW(maxpower as number));
+			if (maxpower !== undefined)
+				parts.push(this.fmtW(maxpower as number));
 			if (maxcurrent !== undefined) parts.push(`${maxcurrent} A`);
 			return parts.join(" · ");
 		},

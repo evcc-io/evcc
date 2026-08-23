@@ -175,6 +175,10 @@
       "primary": "Specific circuit"
     },
     "circuits": {
+      "addSubCircuit": "Add sub-circuit",
+      "chargingPointsNote": "Charging points are assigned to circuits in their own settings.",
+      "addMainCircuit": "Add main circuit",
+      "noCircuitsConfigured": "No circuits configured. Start with a main circuit that represents your grid connection.",
       "description": "Ensures, that the sum of all loadpoints connected to a circuit does not exceed the configured power and current limits. Circuits can be nested to build a hierarchy.",
       "legacyWarning": "New circuits configuration available! Remove and save your configuration here to use the new guided process.",
       "title": "Load Management",

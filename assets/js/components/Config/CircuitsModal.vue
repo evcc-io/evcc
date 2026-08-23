@@ -14,8 +14,7 @@
 		<template #default>
 			<div v-if="circuits.length === 0" class="onboarding">
 				<p class="evcc-gray">
-					No circuits configured. Start with a main circuit that represents your grid
-					connection.
+					{{ $t("config.circuits.noCircuitsConfigured") }}
 				</p>
 				<button
 					type="button"
@@ -24,7 +23,7 @@
 					@click="openCircuit()"
 				>
 					<shopicon-regular-plus size="s" class="flex-shrink-0"></shopicon-regular-plus>
-					Add main circuit
+					{{ $t("config.circuits.addMainCircuit") }}
 				</button>
 			</div>
 			<CircuitsTree
@@ -34,7 +33,7 @@
 				:on-add-sub="onAddSub"
 			/>
 			<span class="evcc-gray">
-				Charging points are assigned to circuits in their own settings.
+				{{ $t("config.circuits.chargingPointsNote") }}
 			</span>
 		</template>
 	</JsonModal>

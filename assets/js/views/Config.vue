@@ -895,9 +895,7 @@ export default defineComponent({
 		stateMeters(): Meter[] {
 			return [
 				...(store.state.grid ? [store.state.grid] : []),
-				...(store.state.aux ?? []),
 				...(store.state.ext ?? []),
-				...(store.state.consumers ?? []),
 			];
 		},
 		activeSlug(): string | undefined {

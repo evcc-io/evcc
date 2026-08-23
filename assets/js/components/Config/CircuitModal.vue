@@ -110,7 +110,6 @@ export default defineComponent({
 			return params.filter((p) => p.Name !== "parent");
 		},
 		handleClose() {
-			console.log("reset value to undefined");
 			this.parentCircuit = undefined;
 		},
 	},
