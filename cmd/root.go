@@ -304,7 +304,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// setup site and loadpoints
 	var site *core.Site
 	if err == nil {
-		site, err = configureSiteAndLoadpoints(&conf)
+		site, err = configureSiteAndLoadpoints(&conf, valueChan)
 	}
 
 	// setup influx

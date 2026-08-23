@@ -158,7 +158,7 @@ func isWritable(filePath string) bool {
 	return true
 }
 
-func configureCircuits(conf *[]config.Named) error {
+func configureCircuits(conf *[]config.Named, valueChan chan<- util.Param) error {
 	// yaml config from file
 	if len(*conf) != 0 {
 		yamlSource.circuits = globalconfig.YamlSourceFile
@@ -176,6 +176,10 @@ func configureCircuits(conf *[]config.Named) error {
 		}
 		yamlSource.circuits = globalconfig.YamlSourceDb
 	}
+
+	valueChan <- util.Param{Key: keys.Circuits, Val: globalconfig.ConfigStatus{
+		YamlSource: yamlSource.circuits,
+	}}
 
 	// load configCircuits devices from database
 	configurable, err := config.ConfigurationsByClass(templates.Circuit)
@@ -1307,7 +1311,7 @@ func configureTariffs(conf *globalconfig.Tariffs, names ...string) (*tariff.Tari
 	return &tariffs, nil
 }
 
-func configureDevices(conf globalconfig.All) error {
+func configureDevices(conf globalconfig.All, valueChan chan<- util.Param) error {
 	// collect references for filtering used devices
 	if err := collectRefs(conf); err != nil {
 		return err
@@ -1328,7 +1332,7 @@ func configureDevices(conf globalconfig.All) error {
 		errs = append(errs, &ClassError{ClassVehicle, err})
 	}
 
-	if err := configureCircuits(&conf.Circuits); err != nil {
+	if err := configureCircuits(&conf.Circuits, valueChan); err != nil {
 		errs = append(errs, &ClassError{ClassCircuit, err})
 	}
 
@@ -1366,7 +1370,7 @@ func configureModbusProxy(conf *[]globalconfig.ModbusProxy) error {
 	return nil
 }
 
-func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
+func configureSiteAndLoadpoints(conf *globalconfig.All, valueChan chan<- util.Param) (*core.Site, error) {
 	// migrate settings
 	if settings.Exists(keys.Interval) {
 		d, err := settings.Int(keys.Interval)
@@ -1378,7 +1382,7 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 
 	var errs []error
 
-	if err := configureDevices(*conf); err != nil {
+	if err := configureDevices(*conf, valueChan); err != nil {
 		errs = append(errs, err)
 	}
 

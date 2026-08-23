@@ -1,8 +1,9 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { expectModalVisible, expectModalHidden, editorClear, editorPaste } from "./utils";
+import { expectModalVisible, expectModalHidden } from "./utils";
 
 const CONFIG_YAML = "config-circuit.evcc.yaml";
+const CONFIG_CIRCUITS_LEGACY = "config-circuits.sql";
 
 test.use({ baseURL: baseUrl() });
 
@@ -10,172 +11,103 @@ test.afterEach(async () => {
   await stop();
 });
 
+async function validateCircuitsTags(page: Page) {
+  const loadpoints = page.getByTestId("loadpoint");
+
+  await expect(loadpoints).toHaveCount(2);
+  await expect(loadpoints.nth(0)).toContainText("Power1.0 kW");
+  await expect(loadpoints.nth(1)).toContainText("Power1.0 kW");
+
+  await expect(page.getByTestId("circuits")).toHaveCount(1);
+  await expect(page.getByTestId("circuits")).toContainText(
+    [
+      "Main",
+      "2.0/10.0 kW",
+      "12/16 A",
+      "kW",
+      "A",
+      "Carport 1",
+      "2.0 kW",
+      " ",
+      "Carport 2",
+      "2.0 kW",
+      " ",
+      "Child",
+      "0/10 A",
+      "A",
+    ].join("")
+  );
+}
+
 test.describe("circuit", async () => {
   test("from yaml", async ({ page }) => {
     await start(CONFIG_YAML);
-
     await page.goto("/#/config");
-    const loadpoints = page.getByTestId("loadpoint");
-
-    await expect(loadpoints).toHaveCount(2);
-    await expect(loadpoints.nth(0)).toContainText("Power1.0 kW");
-    await expect(loadpoints.nth(1)).toContainText("Power1.0 kW");
-
-    await expect(page.getByTestId("circuits")).toHaveCount(1);
-    await expect(page.getByTestId("circuits")).toContainText(
-      [
-        "Main",
-        "2.0/10.0 kW",
-        "12/16 A",
-        "kW",
-        "A",
-        "Carport 1",
-        "2.0 kW",
-        " ",
-        "Carport 2",
-        "2.0 kW",
-        " ",
-        "Child",
-        "0/10 A",
-        "A",
-      ].join("")
-    );
+    await validateCircuitsTags(page);
   });
 
   test("via ui", async ({ page }) => {
-    await start();
-
+    await start(undefined, CONFIG_CIRCUITS_LEGACY);
     await page.goto("/#/config");
 
-    // add grid meter
-    await page.getByRole("button", { name: "Add grid meter" }).click();
-    const meterModal = page.getByTestId("meter-modal");
-    await expectModalVisible(meterModal);
-    await meterModal.getByLabel("Manufacturer").selectOption("Demo meter");
-    await meterModal.getByLabel("Power").fill("2070");
-    await page.getByRole("button", { name: "Show advanced settings" }).click();
-    await meterModal.getByLabel("L1 current").fill("3");
-    await meterModal.getByLabel("L2 current").fill("3");
-    await meterModal.getByLabel("L3 current").fill("3");
-    await meterModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(meterModal);
+    const card = page.getByTestId("circuits");
+    await expect(card).toBeVisible();
+    await expect(card).toContainText(["Configured", "no"].join(""));
 
-    // add loadpoint and charger
-    const lpModal = page.getByTestId("loadpoint-modal");
-    await page.getByRole("button", { name: "Add charging point or heater" }).click();
-    await expectModalVisible(lpModal);
-    await lpModal.getByRole("button", { name: "Add charging point" }).click();
-    await lpModal.getByLabel("Title").fill("Carport");
-
-    // add charger
-    await lpModal.getByRole("button", { name: "Add charger" }).click();
-    const chargerModal = page.getByTestId("charger-modal");
-    await expectModalVisible(chargerModal);
-    await chargerModal.getByLabel("Manufacturer").selectOption("Demo charger");
-    await chargerModal.getByLabel("Charge status").selectOption("C");
-    await chargerModal.getByLabel("Power").fill("1000");
-    await chargerModal.getByRole("radio", { name: "Enabled: Yes" }).click();
-    await chargerModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(chargerModal);
-    await expectModalVisible(lpModal);
-
-    // no load management, no circuits
-    await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
-    await expect(lpModal.getByLabel("Circuit")).not.toBeVisible();
-
-    await lpModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(lpModal);
-
-    // add circuit via ui as yaml input
-    await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
-    const circuitsModal = page.getByTestId("circuits-modal");
+    await card.getByRole("button", { name: "edit" }).click();
+    const circuitsModal = page.getByTestId("circuits-legacy-modal");
     await expectModalVisible(circuitsModal);
 
-    const editor = circuitsModal.getByTestId("yaml-editor");
-    await editorClear(editor);
-    await editorPaste(
-      editor,
-      page,
-      `- name: main
-  meter: db:1
-  maxcurrent: 16
-- name: circuit_house
-  title: House
-  maxcurrent: 10
-  parent: main
-- name: circuit_garage
-  title: Garage
-  maxcurrent: 8
-  parent: main`
+    // check for new configuration notice
+    await expect(circuitsModal.getByRole("alert")).toContainText(
+      "New circuits configuration available"
     );
-
-    await circuitsModal.getByRole("button", { name: "Save" }).click();
+    await circuitsModal.getByRole("button", { name: "Cancel" }).click();
     await expectModalHidden(circuitsModal);
 
-    // restart
-    const restartButton = await page
+    // add missing configuration via ui to be able to validate circuit references
+    for (const [loadpointName, circuitName] of [
+      ["Carport 1", "[main]"],
+      ["Carport 2", "[main]"],
+    ]) {
+      // add loadpoint
+      const lpModal = page.getByTestId("loadpoint-modal");
+      await page.getByRole("button", { name: "Add charging point or heater" }).click();
+      await expectModalVisible(lpModal);
+      await lpModal.getByRole("button", { name: "Add charging point" }).click();
+      await lpModal.getByLabel("Title").fill(loadpointName);
+
+      // add charger
+      await lpModal.getByRole("button", { name: "Add charger" }).click();
+      const chargerModal = page.getByTestId("charger-modal");
+      await expectModalVisible(chargerModal);
+      await chargerModal.getByLabel("Manufacturer").selectOption("Demo charger");
+      await chargerModal.getByLabel("Charge status").selectOption("C");
+      await chargerModal.getByLabel("Power").fill("1000");
+      await chargerModal.getByRole("radio", { name: "Enabled: Yes" }).click();
+      await chargerModal.getByRole("button", { name: "Save" }).click();
+      await expectModalHidden(chargerModal);
+      await expectModalVisible(lpModal);
+
+      await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
+      await expect(lpModal.getByLabel("Circuit")).toBeVisible();
+
+      // assign loadpoint to circuit
+      await lpModal.getByLabel("Circuit").selectOption(circuitName);
+      await lpModal.getByRole("button", { name: "Save" }).click();
+      await expectModalHidden(lpModal);
+    }
+
+    // restart button appears
+    const restartButton = page
       .getByTestId("bottom-banner")
       .getByRole("button", { name: "Restart" });
     await expect(restartButton).toBeVisible();
+
+    // restart
     await restart();
     await page.reload();
 
-    // assign loadpoint to circuit
-    await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
-    await expectModalVisible(lpModal);
-    await lpModal.getByLabel("Circuit").selectOption("Garage [circuit_garage]");
-    await lpModal.getByLabel("Circuit").selectOption("House [circuit_house]");
-    await lpModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(lpModal);
-
-    // save, restart and check values
-    await expect(restartButton).toBeVisible();
-    await restart();
-    await page.reload();
-
-    // verify the configuration matches the yaml test
-    await expect(page.getByTestId("loadpoint")).toHaveCount(1);
-    await expect(page.getByTestId("loadpoint")).toContainText(["Power", "1.0 kW"].join(""));
-
-    await expect(page.getByTestId("grid")).toHaveCount(1);
-    await expect(page.getByTestId("grid")).toContainText(["Power", "2.1 kW"].join(""));
-    await expect(page.getByTestId("grid")).toContainText(
-      ["L1", "L2", "L3", "Current", "3.0", "3.0", "3.0", "A"].join("")
-    );
-
-    await expect(page.getByTestId("circuits")).toHaveCount(1);
-    await expect(page.getByTestId("circuits")).toContainText(
-      ["Main", "Power", "2.1 kW", "Current", "3.0 A / 16.0 A"].join("")
-    );
-    await expect(page.getByTestId("circuits")).toContainText(
-      ["House", "Power", "1.0 kW", "Current", "6.0 A / 10.0 A"].join("")
-    );
-    await expect(page.getByTestId("circuits")).toContainText(
-      ["Garage", "Power", "0.0 kW", "Current", "0.0 A / 8.0 A"].join("")
-    );
-
-    // assign to garage
-    await page.getByTestId("loadpoint").getByRole("button", { name: "edit" }).click();
-    await expectModalVisible(lpModal);
-    await lpModal.getByLabel("Circuit").selectOption("Garage [circuit_garage]");
-    await lpModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(lpModal);
-
-    // save, restart and check values
-    await expect(restartButton).toBeVisible();
-    await restart();
-    await page.reload();
-
-    // verify circuits
-    await expect(page.getByTestId("circuits")).toHaveCount(1);
-    await expect(page.getByTestId("circuits")).toContainText(
-      ["Main", "Power", "2.1 kW", "Current", "3.0 A / 16.0 A"].join("")
-    );
-    await expect(page.getByTestId("circuits")).toContainText(
-      ["House", "Power", "0.0 kW", "Current", "0.0 A / 10.0 A"].join("")
-    );
-    await expect(page.getByTestId("circuits")).toContainText(
-      ["Garage", "Power", "1.0 kW", "Current", "6.0 A / 8.0 A"].join("")
-    );
+    await validateCircuitsTags(page);
   });
 });
