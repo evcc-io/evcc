@@ -56,7 +56,7 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 13005 # Total export energy from PV, 0.1kWh
+      address: 13045 # Total export energy, 0.1kWh
       type: input
       decode: uint32s
     scale: 0.1
