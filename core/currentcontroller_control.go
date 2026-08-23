@@ -131,7 +131,7 @@ func (c *CurrentController) pvScalePhases(sitePower, minCurrent, maxCurrent floa
 	// - https://github.com/evcc-io/evcc/issues/1572
 	// - https://github.com/evcc-io/evcc/issues/2230
 	// - https://github.com/evcc-io/evcc/issues/2613
-	measuredPhases := c.lp.GetMeasuredPhases()
+	measuredPhases := c.GetMeasuredPhases()
 	if phases > 0 && phases < measuredPhases {
 		if c.lp.chargerUpdateCompleted() && c.phaseSwitchCompleted() {
 			c.lp.log.WARN.Printf("ignoring inconsistent phases: %dp < %dp observed active", phases, measuredPhases)

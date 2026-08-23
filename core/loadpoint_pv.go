@@ -27,7 +27,7 @@ func (lp *Loadpoint) boostPower(ctrl *CurrentController, env Envelope, batteryPo
 
 	// bridge the power gap between 1p max and 3p min so pvScalePhases can trigger a scale-up
 	if lp.site.GetBatteryMaxDischargePower() != nil {
-		delta += env.PhaseSwitchGap
+		delta += ctrl.phaseSwitchGapPower()
 	}
 
 	// start boosting by setting maximum power
@@ -81,7 +81,8 @@ func (lp *Loadpoint) pvTargetPower(ctrl *CurrentController, mode api.ChargeMode,
 
 	if mode == api.ModePV && env.Enabled && targetPower < minPower {
 		projectedSitePower := sitePower
-		if env.ScalePending {
+		// read live: boostPower may have expired the phase timer after the snapshot
+		if ctrl.phaseScalePending() {
 			// calculate site power after a phase switch to the minimum reachable phases
 			// notes: phase timer can only be active if lp current is already at min current
 			projectedSitePower -= minPower - reachableMinPower

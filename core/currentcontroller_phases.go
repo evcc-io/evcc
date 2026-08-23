@@ -105,6 +105,13 @@ func (c *CurrentController) hasPhaseSwitching() bool {
 	return api.HasCap[api.PhaseSwitcher](c.lp.charger)
 }
 
+// GetMeasuredPhases provides synchronized access to measured phases
+func (c *CurrentController) GetMeasuredPhases() int {
+	c.lp.RLock()
+	defer c.lp.RUnlock()
+	return c.measuredPhases
+}
+
 // phaseSwitchCompleted returns true if phase switch command should be already processed by the charger (so we can try to sync charger and loadpoint and are able to measure currents)
 func (c *CurrentController) phaseSwitchCompleted() bool {
 	return time.Since(c.phasesSwitched) > phaseSwitchDuration
@@ -136,7 +143,7 @@ func (c *CurrentController) syncChargerPhases() error {
 	}
 
 	// use measured phase currents for active phases as fallback if charger does not provide phases
-	chargerPhases := c.lp.GetMeasuredPhases()
+	chargerPhases := c.GetMeasuredPhases()
 	if chargerPhases == 2 {
 		chargerPhases = 3
 	}

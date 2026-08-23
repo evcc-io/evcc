@@ -32,18 +32,6 @@ func (lp *Loadpoint) ResetMeasuredPhases() {
 	lp.ctrl().resetMeasuredPhases()
 }
 
-// GetMeasuredPhases provides synchronized access to measured phases
-func (lp *Loadpoint) GetMeasuredPhases() int {
-	lp.RLock()
-	defer lp.RUnlock()
-	return lp.getMeasuredPhases()
-}
-
-// getMeasuredPhases provides access to measured phases
-func (lp *Loadpoint) getMeasuredPhases() int {
-	return lp.ctrl().measuredPhases
-}
-
 // ActivePhases returns the number of expectedly active phases for the meter.
 // If unknown for 1p3p chargers during startup it will assume 3p.
 func (lp *Loadpoint) ActivePhases() int {

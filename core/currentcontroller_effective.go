@@ -86,36 +86,35 @@ func (c *CurrentController) effectiveMaxCurrent() float64 {
 // Envelope is a per-cycle snapshot of the charge controller's power capabilities
 // and state, consumed by the loadpoint's power-domain policy
 type Envelope struct {
-	ActiveMin      float64 // min power at the currently active phases in W
-	ActiveMax      float64 // max power at the currently active phases in W
-	ReachableMin   float64 // min power reachable from the current phase state in W
-	EffectiveMin   float64 // min power at the minimum active phases in W
-	Max            float64 // max power taking vehicle capabilities and phase scaling into account in W
-	Effective      float64 // currently effective charging power in W
-	Step           float64 // power of one full amp step at the active phases in W
-	PhaseSwitchGap float64 // extra power to bridge the gap towards a phase scale-up in W (0 if not possible)
-	Coarse         bool    // charger or vehicle require full amp steps
-	Enabled        bool    // charger enabled state
-	ScalePending   bool    // phase scale timer running
-	ActivePhases   int     // currently active phases
+	ActiveMin    float64 // min power at the currently active phases in W
+	ActiveMax    float64 // max power at the currently active phases in W
+	ReachableMin float64 // min power reachable from the current phase state in W
+	EffectiveMin float64 // min power at the minimum active phases in W
+	Effective    float64 // currently effective charging power in W
+	Step         float64 // power of one full amp step at the active phases in W
+	Coarse       bool    // charger or vehicle require full amp steps
+	Enabled      bool    // charger enabled state
+	ActivePhases int     // currently active phases
 }
 
 // Envelope returns the per-cycle snapshot of the controller's power capabilities and state
 func (c *CurrentController) Envelope() Envelope {
 	return Envelope{
-		ActiveMin:      c.activeMinPower(),
-		ActiveMax:      c.activeMaxPower(),
-		ReachableMin:   c.reachableMinPower(),
-		EffectiveMin:   c.effectiveMinPower(),
-		Max:            c.effectiveMaxPower(),
-		Effective:      c.effectivePower(),
-		Step:           c.stepPower(),
-		PhaseSwitchGap: c.phaseSwitchGapPower(),
-		Coarse:         c.coarseCurrent(),
-		Enabled:        c.enabled,
-		ScalePending:   c.hasPhaseSwitching() && !c.phaseTimer.IsZero(),
-		ActivePhases:   c.lp.ActivePhases(),
+		ActiveMin:    c.activeMinPower(),
+		ActiveMax:    c.activeMaxPower(),
+		ReachableMin: c.reachableMinPower(),
+		EffectiveMin: c.effectiveMinPower(),
+		Effective:    c.effectivePower(),
+		Step:         c.stepPower(),
+		Coarse:       c.coarseCurrent(),
+		Enabled:      c.enabled,
+		ActivePhases: c.lp.ActivePhases(),
 	}
+}
+
+// phaseScalePending reports whether a phase scale timer is currently running
+func (c *CurrentController) phaseScalePending() bool {
+	return c.hasPhaseSwitching() && !c.phaseTimer.IsZero()
 }
 
 // MinPower returns the lower bound of the capability envelope in W. With automatic

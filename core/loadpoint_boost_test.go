@@ -202,7 +202,7 @@ func TestBoostPowerPhaseSwitchGapBridgingExclusions(t *testing.T) {
 
 			circuit := api.NewMockCircuit(ctrl)
 			circuit.EXPECT().ValidatePower(gomock.Any(), gomock.Any()).Return(tc.circuitPower).AnyTimes()
-			circuit.EXPECT().GetMaxPower().Return(0.0).AnyTimes()
+			circuit.EXPECT().GetMaxPower().Return(0.0).AnyTimes() // via phaseSwitchGapPower -> EffectiveMaxPower
 
 			lp := &Loadpoint{
 				log:          util.NewLogger("lp"),
