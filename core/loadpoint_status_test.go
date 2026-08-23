@@ -2,9 +2,14 @@ package core
 
 import (
 	"testing"
+	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 func TestStatusEvents(t *testing.T) {
@@ -29,5 +34,45 @@ func TestStatusEvents(t *testing.T) {
 	for _, tc := range tc {
 		ev := statusEvents(tc.from, tc.to)
 		assert.Equalf(t, tc.events, ev, "from %s to %s got: %v", tc.from, tc.to, ev)
+	}
+}
+
+// TestPhaseSwitchInterruption verifies that a charge interruption right after a phase
+// switch is ignored while a real interruption is still detected
+func TestPhaseSwitchInterruption(t *testing.T) {
+	tc := []struct {
+		desc     string
+		since    time.Duration
+		expected []api.ChargeStatus
+	}{
+		{"during phase switch", phaseSwitchInterruptDuration - time.Second, nil},
+		{"after phase switch", phaseSwitchInterruptDuration + time.Second, []api.ChargeStatus{api.StatusB}},
+	}
+
+	for _, tc := range tc {
+		ctrl := gomock.NewController(t)
+		charger := api.NewMockCharger(ctrl)
+		charger.EXPECT().Status().Return(api.StatusB, nil)
+
+		clck := clock.NewMock()
+
+		lp := &Loadpoint{
+			log:     util.NewLogger("foo"),
+			clock:   clck,
+			charger: charger,
+			status:  api.StatusC,
+		}
+
+		lp.phasesSwitched = clck.Now()
+		clck.Add(tc.since)
+
+		res, err := lp.getStatusChanges()
+		require.NoError(t, err, tc.desc)
+		assert.Equal(t, tc.expected, res, tc.desc)
+
+		// status is left unchanged, interruption is detected once the timespan has elapsed
+		assert.Equal(t, api.StatusC, lp.GetStatus(), tc.desc)
+
+		ctrl.Finish()
 	}
 }

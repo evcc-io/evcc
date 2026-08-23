@@ -61,6 +61,9 @@ const (
 	chargerSwitchDuration = 60 * time.Second // allow out of sync during this timespan
 	phaseSwitchDuration   = 60 * time.Second // allow out of sync and do not measure phases during this timespan
 
+	// chargers may briefly interrupt charging while switching phases
+	phaseSwitchInterruptDuration = 2 * time.Minute
+
 	// battery boost states
 	boostDisabled = 0
 	boostStart    = 1
@@ -1230,6 +1233,14 @@ func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
 
 	// detect if charger status changed
 	prevStatus := lp.GetStatus()
+
+	// ignore charge interruption while switching phases. Status is left unchanged,
+	// hence a real interruption is detected once the timespan has elapsed.
+	if status == api.StatusB && prevStatus == api.StatusC && !lp.phaseSwitchInterruptCompleted() {
+		lp.log.DEBUG.Println("ignoring charge interruption during phase switch")
+		return nil, nil
+	}
+
 	if status != prevStatus {
 		res = []api.ChargeStatus{status}
 	}
@@ -2105,6 +2116,11 @@ func (lp *Loadpoint) chargerUpdateCompleted() bool {
 // phaseSwitchCompleted returns true if phase switch command should be already processed by the charger (so we can try to sync charger and loadpoint and are able to measure currents)
 func (lp *Loadpoint) phaseSwitchCompleted() bool {
 	return time.Since(lp.phasesSwitched) > phaseSwitchDuration
+}
+
+// phaseSwitchInterruptCompleted returns true if the charger cannot be expected to interrupt charging due to phase switching any more
+func (lp *Loadpoint) phaseSwitchInterruptCompleted() bool {
+	return lp.clock.Since(lp.phasesSwitched) > phaseSwitchInterruptDuration
 }
 
 // Update is the main control function. It reevaluates meters and charger state
