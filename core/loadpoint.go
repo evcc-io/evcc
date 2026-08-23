@@ -105,10 +105,6 @@ type Loadpoint struct {
 	Title       string         `mapstructure:"title"`    // UI title
 	Priority    int            `mapstructure:"priority"` // Priority
 
-	// power controller configuration
-	MinPower float64
-	MaxPower float64
-
 	title                    string   // UI title
 	priority                 int      // Priority
 	limitSoc                 int      // Session limit for soc
@@ -399,13 +395,10 @@ func (lp *Loadpoint) requestUpdate() {
 	}
 }
 
-// configureChargeController selects the power controller based on charger capabilities
+// configureChargeController ensures the loadpoint's charge controller. Natively
+// power-controlled chargers (api.PowerController) are driven by the controller
+// as well- it writes power instead of current.
 func (lp *Loadpoint) configureChargeController() {
-	if ctrl, ok := lp.charger.(api.PowerController); ok {
-		lp.chargeController = ctrl
-		return
-	}
-
 	// keep the state-carrying controller created at construction
 	if _, ok := lp.chargeController.(*CurrentController); !ok {
 		lp.chargeController = newCurrentController(lp)
@@ -762,15 +755,10 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	if enabled, err := lp.charger.Enabled(); err == nil {
 		if enabled {
 			// sync a defined current for use by pv mode without taking a charging decision
-			if ctrl, ok := lp.chargeController.(*CurrentController); ok {
-				ctrl.enabled = enabled
-				if err := ctrl.setMinCurrent(); err != nil {
-					lp.log.ERROR.Printf("set min current: %v", err)
-				}
-			} else if minPower := lp.EffectiveMinPower(); minPower > 0 {
-				if err := lp.chargeController.SetPower(minPower); err != nil {
-					lp.log.ERROR.Printf("set power: %v", err)
-				}
+			ctrl := lp.ctrl()
+			ctrl.enabled = enabled
+			if err := ctrl.setMinCurrent(); err != nil {
+				lp.log.ERROR.Printf("set min current: %v", err)
 			}
 		}
 	} else {

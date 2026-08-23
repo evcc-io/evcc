@@ -265,7 +265,10 @@ func (c *CurrentController) setLimit(current float64) error {
 	// set current
 	if current != c.offeredCurrent && current >= effMinCurrent {
 		var err error
-		if charger, ok := api.Cap[api.ChargerEx](c.lp.charger); ok {
+		if pc, ok := api.Cap[api.PowerController](c.lp.charger); ok {
+			// natively power-controlled charger
+			err = pc.SetPower(currentToPower(current, c.ActivePhases()))
+		} else if charger, ok := api.Cap[api.ChargerEx](c.lp.charger); ok {
 			err = charger.MaxCurrentMillis(current)
 		} else {
 			var ctrl api.CurrentController

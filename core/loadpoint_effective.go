@@ -199,10 +199,7 @@ func (lp *Loadpoint) EffectiveMinPower() float64 {
 
 // effectiveMinPower returns the effective min power taking vehicle capabilities and phase scaling into account
 func (lp *Loadpoint) effectiveMinPower() float64 {
-	if ctrl, ok := lp.chargeController.(*CurrentController); ok {
-		return ctrl.effectiveMinPower()
-	}
-	return lp.MinPower
+	return lp.ctrl().effectiveMinPower()
 }
 
 // EffectiveMaxPower returns the effective max power taking vehicle capabilities,
@@ -220,10 +217,7 @@ func (lp *Loadpoint) EffectiveMaxPower() float64 {
 
 // effectiveMaxPower returns the effective max power taking vehicle capabilities and phase scaling into account
 func (lp *Loadpoint) effectiveMaxPower() float64 {
-	if ctrl, ok := lp.chargeController.(*CurrentController); ok {
-		return ctrl.effectiveMaxPower()
-	}
-	return lp.MaxPower
+	return lp.ctrl().effectiveMaxPower()
 }
 
 // EffectivePlanStrategy returns the effective plan strategy

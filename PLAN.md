@@ -72,15 +72,21 @@ slot in by supplying its own envelope.
      fields live on `CurrentController`, guarded by the loadpoint's mutex; `syncCharger`
      and enable bookkeeping moved along; `lp.ctrl()` is the transitional concrete accessor
    - no `*Loadpoint` embedding — done: named `lp` field, dependencies explicit as `c.lp.x`
-   - `MinPower()`/`MaxPower()` envelope on `api.PowerController` — done: a native charger
-     supplies its own envelope; `CurrentController` implements it (lock-free, honors the
-     phase lock)
+   - envelope: `api.PowerController` is the setter seam only (`SetPower`); a native
+     charger supplies its envelope via `api.PowerLimiter` and enable/disable via
+     `api.Charger` — the controller keeps owning enable mechanics, dedup and wake-up
    - explicit narrow dependencies (charger, clock, logger, publish hook, vehicle-limit
      provider) — outstanding: charger attaches after construction, so plain field copies
      would go stale; needs provider-style indirection to be designed
-3. **Follow-up** — activate native `api.PowerController` chargers, including wiring
-   loadpoint's power path to the interface envelope (today `effectiveMin/MaxPower` still
-   short-circuits to the concrete controller to preserve min-active-phases semantics).
+3. **Native `api.PowerController` chargers** — *(first wave done)*: the controller
+   prefers a native `SetPower(W)` charger write over `MaxCurrent`; chargers never act as
+   the charge controller directly, so enable dedup, wake-up and sync stay in one place.
+   Implemented natively: `heatpump`, `sgready` (and their ~20 heat-pump templates),
+   `mypv` — their `230 * current * phases` back-conversion and the `loadpoint.Controller`
+   phase back-channel are no longer used by the control path (kept for compatibility).
+   Open: OCPP watts-profiles (needs power-denominated state/replay alongside `c.current`),
+   DC chargers (alpitronic, sigenergy-evdc, delta, foxess-evc). EEBus OHPCF stays on/off —
+   its wattage is demand (`api.PowerLimiter` envelope), not a setpoint.
 
 ## Behaviour changes
 

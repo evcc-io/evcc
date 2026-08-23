@@ -155,3 +155,29 @@ func TestControllerSurplusConsumedPerCycle(t *testing.T) {
 	require.NoError(t, currentController(lp).SetPower(10*3*Voltage))
 	assert.Nil(t, currentController(lp).surplus, "surplus must be consumed")
 }
+
+type fakePowerCharger struct {
+	api.Charger
+	power float64
+}
+
+func (c *fakePowerCharger) SetPower(power float64) error {
+	c.power = power
+	return nil
+}
+
+// a natively power-controlled charger receives the setpoint in W instead of a current write
+func TestControllerNativePowerCharger(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	Voltage = 230
+
+	charger := &fakePowerCharger{Charger: api.NewMockCharger(ctrl)}
+	charger.Charger.(*api.MockCharger).EXPECT().Enable(true).Return(nil)
+
+	lp := testControllerLoadpoint(charger, 1, 1)
+	c := currentController(lp)
+
+	require.NoError(t, c.SetPower(10*Voltage))
+	assert.Equal(t, 10*Voltage, charger.power, "expected watt write")
+	assert.Equal(t, 10.0, c.offeredCurrent)
+}
