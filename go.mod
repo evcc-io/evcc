@@ -268,4 +268,4 @@ replace github.com/enbility/spine-go => github.com/andig/spine-go v0.7.1-0.20260
 
 replace github.com/enbility/eebus-go => github.com/andig/eebus-go v0.0.0-20260725155950-e735091ff165
 
-replace github.com/enbility/ship-go => github.com/andig/ship-go v0.6.1-0.20260818072438-bade5ec9fbd7
+replace github.com/enbility/ship-go => github.com/andig/ship-go v0.6.1-0.20260823123104-33315569d512
