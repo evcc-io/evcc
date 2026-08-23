@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
@@ -54,25 +53,16 @@ func TestPhaseSwitchInterruption(t *testing.T) {
 		charger := api.NewMockCharger(ctrl)
 		charger.EXPECT().Status().Return(api.StatusB, nil)
 
-		clck := clock.NewMock()
-
 		lp := &Loadpoint{
-			log:     util.NewLogger("foo"),
-			clock:   clck,
-			charger: charger,
-			status:  api.StatusC,
+			log:            util.NewLogger("foo"),
+			charger:        charger,
+			status:         api.StatusC,
+			phasesSwitched: time.Now().Add(-tc.since),
 		}
-
-		lp.phasesSwitched = clck.Now()
-		clck.Add(tc.since)
 
 		res, err := lp.getStatusChanges()
 		require.NoError(t, err, tc.desc)
 		assert.Equal(t, tc.expected, res, tc.desc)
-
-		// status is left unchanged, interruption is detected once the timespan has elapsed
 		assert.Equal(t, api.StatusC, lp.GetStatus(), tc.desc)
-
-		ctrl.Finish()
 	}
 }

@@ -1233,7 +1233,7 @@ func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
 
 	// ignore charge interruption while switching phases. Status is left unchanged,
 	// hence a real interruption is detected once the timespan has elapsed.
-	if status == api.StatusB && prevStatus == api.StatusC && lp.clock.Since(lp.phasesSwitched) <= phaseSwitchDuration {
+	if status == api.StatusB && prevStatus == api.StatusC && !lp.phaseSwitchCompleted() {
 		lp.log.DEBUG.Println("ignoring charge interruption during phase switch")
 		return nil, nil
 	}
