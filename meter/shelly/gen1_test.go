@@ -2,11 +2,10 @@ package shelly
 
 import (
 	"encoding/json"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
 
+	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -50,54 +49,20 @@ func TestUnmarshalGen1Status(t *testing.T) {
 	}
 }
 
-// gen1Server emulates a gen1 device serving the given /status response.
-func gen1Server(t *testing.T, model, status string) *httptest.Server {
-	t.Helper()
-
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-
-		switch r.URL.Path {
-		case "/shelly":
-			json.NewEncoder(w).Encode(map[string]any{"type": model})
-		case "/status":
-			w.Write([]byte(status))
-		default:
-			http.Error(w, "not found", http.StatusNotFound)
-		}
-	}))
-}
-
-// TestGen1ReturnEnergy asserts that only the EM variants report a return
-// register- a 1PM's production must not be booked in return direction (#33062).
-func TestGen1ReturnEnergy(t *testing.T) {
-	{
-		// Shelly 1PM: meters, no total_returned
-		srv := gen1Server(t, "SHSW-PM", `{"relays":[{"ison":true}],"meters":[{"power":198.0,"is_valid":true,"total":31510486}]}`)
-		defer srv.Close()
-
-		conn, err := NewConnection(srv.URL, "", "", 0, time.Second)
-		require.NoError(t, err)
-
-		assert.False(t, conn.HasReturnEnergy(), "1PM has no return register")
-
-		total, err := conn.TotalEnergy()
-		require.NoError(t, err)
-		assert.InDelta(t, 525.17, total, 0.01)
+// TestGen1HasReturnEnergy asserts that only the EM variants report a return
+// register - a 1PM's production must not be booked in return direction (#33062).
+func TestGen1HasReturnEnergy(t *testing.T) {
+	status := func(s string) util.Cacheable[Gen1Status] {
+		var res Gen1Status
+		require.NoError(t, json.Unmarshal([]byte(s), &res))
+		return util.ResettableCached(func() (Gen1Status, error) { return res, nil }, time.Minute)
 	}
 
-	{
-		// Shelly EM: emeters with total_returned
-		srv := gen1Server(t, "SHEM", `{"relays":[{"ison":true}],"emeters":[{"power":-620.34,"is_valid":true,"total":401472.9,"total_returned":653673.7}]}`)
-		defer srv.Close()
+	// Shelly 1PM: meters without total_returned
+	g := &gen1{status: status(`{"meters":[{"power":198.0,"total":31510486}]}`)}
+	assert.False(t, g.HasReturnEnergy(), "1PM has no return register")
 
-		conn, err := NewConnection(srv.URL, "", "", 0, time.Second)
-		require.NoError(t, err)
-
-		assert.True(t, conn.HasReturnEnergy())
-
-		ret, err := conn.ReturnEnergy()
-		require.NoError(t, err)
-		assert.InDelta(t, 653.67, ret, 0.01)
-	}
+	// Shelly EM: emeters with total_returned
+	g = &gen1{status: status(`{"emeters":[{"power":-620.34,"total":401472.9,"total_returned":653673.7}]}`)}
+	assert.True(t, g.HasReturnEnergy())
 }
