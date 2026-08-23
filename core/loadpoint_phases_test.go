@@ -106,7 +106,7 @@ func TestMaxActivePhases(t *testing.T) {
 				expectedPhases = configured
 			}
 
-			require.Equal(t, expectedPhases, lp.maxActivePhases(), "expected max active phases")
+			require.Equal(t, expectedPhases, currentController(lp).maxActivePhases(), "expected max active phases")
 			ctrl.Finish()
 		}
 	}
@@ -158,7 +158,7 @@ func TestMinActivePhases(t *testing.T) {
 				expectedPhases = configured
 			}
 
-			require.Equal(t, expectedPhases, lp.minActivePhases(), "expected min active phases")
+			require.Equal(t, expectedPhases, currentController(lp).minActivePhases(), "expected min active phases")
 			ctrl.Finish()
 		}
 	}
@@ -168,7 +168,7 @@ func testScale(t *testing.T, lp *Loadpoint, sitePower float64, direction string,
 	t.Helper()
 
 	act := lp.ActivePhases()
-	max := lp.maxActivePhases()
+	max := currentController(lp).maxActivePhases()
 
 	testDirection := direction[0:1] // (d)own or (u)p
 	testExpectation := tc.scale
@@ -262,7 +262,7 @@ func TestPvScalePhases(t *testing.T) {
 
 		require.Equal(t, tc.physical, currentController(lp).phases, "wrong phases")
 		require.Equal(t, tc.actExpected, lp.ActivePhases(), "expected active phases")
-		require.Equal(t, tc.maxExpected, lp.maxActivePhases(), "expected max active phases")
+		require.Equal(t, tc.maxExpected, currentController(lp).maxActivePhases(), "expected max active phases")
 
 		ctrl.Finish()
 

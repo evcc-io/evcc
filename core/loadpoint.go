@@ -274,8 +274,8 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 	}
 
 	// phase switching defaults based on charger capabilities
-	if !lp.hasPhaseSwitching() {
-		phases := lp.getChargerPhysicalPhases()
+	if !lp.ctrl().hasPhaseSwitching() {
+		phases := lp.ctrl().getChargerPhysicalPhases()
 		if phases == 0 {
 			phases = 3 // default to 3p if no charger phases are known
 		}
@@ -335,7 +335,7 @@ func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.Int(keys.Priority); err == nil {
 		lp.setPriority(int(v))
 	}
-	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil && (v > 0 || lp.hasPhaseSwitching()) {
+	if v, err := lp.settings.Int(keys.PhasesConfigured); err == nil && (v > 0 || lp.ctrl().hasPhaseSwitching()) {
 		lp.setPhasesConfigured(int(v))
 	}
 	if v, err := lp.settings.Float(keys.MinCurrent); err == nil && v > 0 {
@@ -596,7 +596,7 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	lp.clearPlanLock()
 
 	// phases are unknown when vehicle disconnects
-	lp.ResetMeasuredPhases()
+	lp.ctrl().ResetMeasuredPhases()
 
 	// energy and duration
 	lp.energyMetrics.Publish("session", lp)
@@ -701,7 +701,7 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 
 	lp.publish(keys.UI, lp.Ui)
 
-	if phases := lp.getChargerPhysicalPhases(); phases != 0 {
+	if phases := lp.ctrl().getChargerPhysicalPhases(); phases != 0 {
 		if configured := lp.ctrl().phasesConfigured; configured != phases && configured != 0 {
 			lp.log.WARN.Printf("configured phases %d do not match physical phases %d", configured, phases)
 		}
@@ -710,8 +710,8 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	}
 
 	lp.publish(keys.PhasesConfigured, lp.ctrl().phasesConfigured)
-	lp.publish(keys.ChargerPhases1p3p, lp.hasPhaseSwitching())
-	lp.publish(keys.ChargerSinglePhase, lp.getChargerPhysicalPhases() == 1)
+	lp.publish(keys.ChargerPhases1p3p, lp.ctrl().hasPhaseSwitching())
+	lp.publish(keys.ChargerSinglePhase, lp.ctrl().getChargerPhysicalPhases() == 1)
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
 	lp.publish(keys.SmartCostLimit, lp.smartCostLimit)
 	lp.publish(keys.SmartFeedInPriorityLimit, lp.smartFeedInPriorityLimit)
@@ -1062,17 +1062,6 @@ func (lp *Loadpoint) resetPVTimer(typ ...string) {
 	lp.publishTimer(pvTimer, 0, timerInactive)
 }
 
-// resetPhaseTimer resets the phase switch timer to disabled state
-func (lp *Loadpoint) resetPhaseTimer() {
-	ctrl := lp.ctrl()
-	if ctrl == nil || ctrl.phaseTimer.IsZero() {
-		return
-	}
-
-	ctrl.phaseTimer = time.Time{}
-	lp.publishTimer(phaseTimer, 0, timerInactive)
-}
-
 // TODO move up to timer functions
 func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action string) {
 	timer := lp.pvTimer
@@ -1140,7 +1129,7 @@ func (lp *Loadpoint) updateChargeVoltages() {
 	lp.log.DEBUG.Printf("charge voltages: %.3gV", chargeVoltages)
 	lp.publish(keys.ChargeVoltages, chargeVoltages)
 
-	if lp.hasPhaseSwitching() {
+	if lp.ctrl().hasPhaseSwitching() {
 		return // we don't need the voltages, but publish
 	}
 
@@ -1161,7 +1150,7 @@ func (lp *Loadpoint) updateChargeVoltages() {
 
 	if phases >= 1 {
 		lp.log.DEBUG.Printf("detected connected phases: %dp", phases)
-		lp.SetPhases(phases)
+		lp.ctrl().SetPhases(phases)
 	}
 }
 
@@ -1394,7 +1383,7 @@ func (lp *Loadpoint) stopWakeUpTimer() {
 }
 
 func (lp *Loadpoint) shouldBeConsistent() bool {
-	return lp.chargerUpdateCompleted() && lp.phaseSwitchCompleted()
+	return lp.chargerUpdateCompleted() && lp.ctrl().phaseSwitchCompleted()
 }
 
 // chargerUpdateCompleted returns true if enable command should be already processed by the charger (so we can try to sync charger and loadpoint)
@@ -1556,7 +1545,7 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 	// minimum or target charging
 	case minSocNotReached || plannerActive:
 		err = ctrl.SetPower(lp.effectiveMaxPower())
-		lp.resetPhaseTimer()
+		lp.ctrl().resetPhaseTimer()
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
 	case lp.LimitEnergyReached():
@@ -1577,7 +1566,7 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 			rate, _ := consumption.At(time.Now())
 			lp.log.DEBUG.Printf("smart consumption active: %.2f", rate.Value)
 			err = ctrl.SetPower(lp.effectiveMaxPower())
-			lp.resetPhaseTimer()
+			lp.ctrl().resetPhaseTimer()
 			lp.elapsePVTimer() // let PV mode disable immediately afterwards
 			break
 		}
@@ -1595,7 +1584,7 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 				err = ctrl.SetPower(0)
 			}
 
-			lp.resetPhaseTimer()
+			lp.ctrl().resetPhaseTimer()
 			lp.elapsePVTimer() // let PV mode disable immediately afterwards
 			break
 		}

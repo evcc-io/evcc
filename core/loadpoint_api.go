@@ -178,7 +178,7 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 		// reset timers
 		switch mode {
 		case api.ModeNow, api.ModeOff:
-			lp.resetPhaseTimer()
+			lp.ctrl().resetPhaseTimer()
 			lp.resetPVTimer()
 			lp.setPlanActive(false)
 		case api.ModeMinPV:
@@ -266,7 +266,7 @@ func (lp *Loadpoint) GetPhasesConfigured() int {
 // SetPhasesConfigured sets the configured phases
 func (lp *Loadpoint) SetPhasesConfigured(phases int) error {
 	// limit auto mode (phases=0) to scalable charger
-	if !lp.hasPhaseSwitching() && phases == 0 {
+	if !lp.ctrl().hasPhaseSwitching() && phases == 0 {
 		return fmt.Errorf("charger does not support phase switching")
 	}
 
@@ -274,7 +274,7 @@ func (lp *Loadpoint) SetPhasesConfigured(phases int) error {
 		return fmt.Errorf("invalid number of phases: %d", phases)
 	}
 
-	if physical := lp.getChargerPhysicalPhases(); physical != 0 && phases > physical {
+	if physical := lp.ctrl().getChargerPhysicalPhases(); physical != 0 && phases > physical {
 		return fmt.Errorf("cannot configure more phases than physically connected: %d > %d", phases, physical)
 	}
 

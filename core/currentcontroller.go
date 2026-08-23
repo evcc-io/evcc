@@ -66,7 +66,7 @@ func (c *CurrentController) SetPower(power float64) error {
 			// the charger cannot switch phases right now (e.g. EEBus charger
 			// with an ISO 15118 vehicle). Adopt the configured phase count so
 			// the switch is not re-attempted on every cycle (issue #29974).
-			c.lp.SetPhases(c.phasesConfigured)
+			c.SetPhases(c.phasesConfigured)
 			err = nil
 		}
 		return err
@@ -98,7 +98,7 @@ func (c *CurrentController) SetPower(power float64) error {
 		return c.minCharging()
 	}
 
-	current := powerToCurrent(power, c.lp.ActivePhases())
+	current := powerToCurrent(power, c.ActivePhases())
 	current = min(max(current, c.effectiveMinCurrent()), c.effectiveMaxCurrent())
 
 	return c.setLimit(current)
@@ -155,7 +155,7 @@ func (c *CurrentController) updateOfferedCurrent(current float64) {
 	c.lp.publish(keys.OfferedCurrent, published)
 
 	if mt, ok := c.lp.chargeMeter.(*wrapper.ChargeMeter); ok {
-		power := current * float64(c.lp.ActivePhases()) * Voltage
+		power := current * float64(c.ActivePhases()) * Voltage
 
 		// if disabled we cannot be charging
 		if !c.enabled || !c.lp.charging() {
@@ -249,7 +249,7 @@ func (c *CurrentController) setLimit(current float64) error {
 	if c.lp.circuit != nil {
 		currentLimit := c.lp.circuit.ValidateCurrent(c.actualMaxChargeCurrent(), current)
 
-		activePhases := c.lp.ActivePhases()
+		activePhases := c.ActivePhases()
 		powerLimit := c.lp.circuit.ValidatePower(c.lp.chargePower, currentToPower(current, activePhases))
 		currentLimitViaPower := powerToCurrent(powerLimit, activePhases)
 

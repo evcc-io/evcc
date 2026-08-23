@@ -114,7 +114,7 @@ func TestEffectivePowerLimiter(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
-	phases := float64(lp.minActivePhases()) // == maxActivePhases for default lp
+	phases := float64(currentController(lp).minActivePhases()) // == maxActivePhases for default lp
 
 	powerLimiter := api.NewMockPowerLimiter(ctrl)
 	// min 10A, max 12A worth of power across all phases
@@ -138,7 +138,7 @@ func TestEffectivePowerLimiterCoarse(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
-	phases := float64(lp.minActivePhases())
+	phases := float64(currentController(lp).minActivePhases())
 
 	powerLimiter := api.NewMockPowerLimiter(ctrl)
 	// fixed 5.5 A/phase request -> fractional, coarse charger truncates to 5 A

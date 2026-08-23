@@ -65,7 +65,7 @@ func (c *CurrentController) scalePhases(phases int) error {
 		c.phasesSwitched = c.lp.clock.Now()
 
 		// update setting and reset timer
-		c.lp.SetPhases(phases)
+		c.SetPhases(phases)
 
 		// some vehicles may hang on phase switch
 		c.lp.startWakeUpTimer()
@@ -136,11 +136,11 @@ func (c *CurrentController) pvScalePhases(sitePower, minCurrent, maxCurrent floa
 		if c.lp.chargerUpdateCompleted() && c.phaseSwitchCompleted() {
 			c.lp.log.WARN.Printf("ignoring inconsistent phases: %dp < %dp observed active", phases, measuredPhases)
 		}
-		c.lp.ResetMeasuredPhases()
+		c.ResetMeasuredPhases()
 	}
 
 	var waiting bool
-	activePhases := c.lp.ActivePhases()
+	activePhases := c.ActivePhases()
 	availablePower := c.lp.chargePower - sitePower
 	scalable := activePhases > 1 && c.phasesConfigured < 3
 
@@ -195,7 +195,7 @@ func (c *CurrentController) pvScalePhases(sitePower, minCurrent, maxCurrent floa
 		maxCurrent = c.lp.circuit.ValidateCurrent(c.actualMaxChargeCurrent(), maxCurrent)
 	}
 
-	maxPhases := c.lp.MaxActivePhases()
+	maxPhases := c.MaxActivePhases()
 	target1pCurrent := powerToCurrent(availablePower, 1)
 
 	// scaling up is pointless unless load management allows min current and power on maxPhases
@@ -235,7 +235,7 @@ func (c *CurrentController) pvScalePhases(sitePower, minCurrent, maxCurrent floa
 
 	// reset timer to disabled state
 	if !waiting && !c.phaseTimer.IsZero() {
-		c.lp.resetPhaseTimer()
+		c.resetPhaseTimer()
 	}
 
 	return 0

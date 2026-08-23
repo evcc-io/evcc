@@ -19,23 +19,55 @@ func expect(phases int) int {
 	return unknownPhases
 }
 
+// SetPhases sets the number of enabled phases without modifying the charger
+func (c *CurrentController) SetPhases(phases int) {
+	c.lp.Lock()
+	defer c.lp.Unlock()
+	c.setPhases(phases)
+}
+
 // setPhases sets the number of enabled phases without modifying the charger
 func (c *CurrentController) setPhases(phases int) {
 	if c.phases != phases {
 		c.phases = phases
 
 		// reset timer to disabled state
-		c.lp.resetPhaseTimer()
+		c.resetPhaseTimer()
 
 		// measure phases after switching
 		c.resetMeasuredPhases()
 	}
 }
 
+// resetPhaseTimer resets the phase switch timer to disabled state
+func (c *CurrentController) resetPhaseTimer() {
+	if c.phaseTimer.IsZero() {
+		return
+	}
+
+	c.phaseTimer = time.Time{}
+	c.lp.publishTimer(phaseTimer, 0, timerInactive)
+}
+
+// ResetMeasuredPhases resets measured phases to unknown on vehicle disconnect, phase switch or phase api call
+func (c *CurrentController) ResetMeasuredPhases() {
+	c.lp.Lock()
+	defer c.lp.Unlock()
+	c.resetMeasuredPhases()
+}
+
 // resetMeasuredPhases resets measured phases to unknown on vehicle disconnect, phase switch or phase api call
 func (c *CurrentController) resetMeasuredPhases() {
 	c.measuredPhases = 0
 	c.lp.publish(keys.PhasesActive, c.activePhases())
+}
+
+// ActivePhases returns the number of expectedly active phases for the meter.
+// If unknown for 1p3p chargers during startup it will assume 3p.
+func (c *CurrentController) ActivePhases() int {
+	c.lp.Lock()
+	defer c.lp.Unlock()
+	return c.activePhases()
 }
 
 // activePhases returns the number of expectedly active phases for the meter.
@@ -62,6 +94,13 @@ func (c *CurrentController) minActivePhases() int {
 		return 1
 	}
 
+	return c.maxActivePhases()
+}
+
+// MaxActivePhases returns the maximum number of active phases for the loadpoint.
+func (c *CurrentController) MaxActivePhases() int {
+	c.lp.RLock()
+	defer c.lp.RUnlock()
 	return c.maxActivePhases()
 }
 
@@ -136,7 +175,7 @@ func (c *CurrentController) syncChargerPhases() error {
 
 		if chargerPhases > 0 && chargerPhases != phases {
 			c.lp.log.WARN.Printf("charger logic error: phases mismatch (got %d, expected %d)", chargerPhases, phases)
-			c.lp.SetPhases(chargerPhases)
+			c.SetPhases(chargerPhases)
 		}
 
 		return nil
@@ -150,7 +189,7 @@ func (c *CurrentController) syncChargerPhases() error {
 
 	if chargerPhases > phases {
 		c.lp.log.WARN.Printf("charger logic error: phases mismatch (got %d measured, expected %d)", chargerPhases, phases)
-		c.lp.SetPhases(chargerPhases)
+		c.SetPhases(chargerPhases)
 	}
 
 	return nil
