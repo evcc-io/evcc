@@ -28,9 +28,8 @@ func TestBootNotificationStoresResultAndConnects(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, core.RegistrationStatusAccepted, res.Status)
 
-	// requested heartbeat interval must stay below the websocket inactivity timeout,
-	// otherwise chargers not sending websocket pings are disconnected while idle
-	assert.Less(t, time.Duration(res.Interval)*time.Second, PingWait)
+	// heartbeat must stay below the websocket inactivity timeout
+	assert.Less(t, time.Duration(res.Interval)*time.Second, pingWait)
 
 	// should be connected after BootNotification
 	assert.True(t, cp.Connected(), "should be connected after BootNotification")

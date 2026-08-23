@@ -5,12 +5,11 @@ import "time"
 var Timeout = time.Minute // default request / response timeout on protocol level
 
 const (
-	// HeartbeatInterval is the interval requested from the charge point in BootNotification
-	HeartbeatInterval = time.Minute
+	heartbeatInterval = time.Minute // heartbeat interval requested in BootNotification
 
-	// PingWait is the websocket inactivity timeout. Must exceed HeartbeatInterval,
-	// otherwise chargers that don't send websocket pings are disconnected while idle.
-	PingWait = 3 * HeartbeatInterval
+	// pingWait must exceed heartbeatInterval, otherwise chargers not sending
+	// websocket pings are disconnected while idle
+	pingWait = 3 * heartbeatInterval
 )
 
 // TriggerBootDelay defines how long to wait after WebSocket connect before

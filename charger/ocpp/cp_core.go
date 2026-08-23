@@ -16,7 +16,7 @@ var (
 func (cp *CP) OnBootNotification(request *core.BootNotificationRequest) (*core.BootNotificationConfirmation, error) {
 	res := &core.BootNotificationConfirmation{
 		CurrentTime: types.Now(),
-		Interval:    int(HeartbeatInterval.Seconds()),
+		Interval:    int(heartbeatInterval.Seconds()),
 		Status:      core.RegistrationStatusAccepted,
 	}
 

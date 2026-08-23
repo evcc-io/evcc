@@ -141,7 +141,7 @@ func NewServer(cfg Config, networkExternalUrl string) {
 	server.SetCheckOriginHandler(func(r *http.Request) bool { return true })
 
 	timeouts := ws.NewServerTimeoutConfig()
-	timeouts.PingWait = PingWait
+	timeouts.PingWait = pingWait
 	server.SetTimeoutConfig(timeouts)
 
 	dispatcher := ocppj.NewDefaultServerDispatcher(ocppj.NewFIFOQueueMap(0))
