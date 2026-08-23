@@ -88,13 +88,19 @@ func TestMissingSoc(t *testing.T) {
 
 	ce := NewEstimator(util.NewLogger("foo"), vehicle)
 
+	// missing soc without any prior sample keeps the zero estimate
+	assert.Equal(t, 0.0, ce.Soc(nil, 100))
+
 	soc := 20.0
 	assert.Equal(t, 20.0, ce.Soc(&soc, 0))
 	assert.Equal(t, 21.0, ce.Soc(&soc, 100))
 
-	// missing soc keeps the estimate and must not corrupt the sampled state
-	assert.Equal(t, 21.0, ce.Soc(nil, 200))
+	// missing soc extrapolates from charged energy and must not corrupt the sampled state
+	assert.Equal(t, 22.0, ce.Soc(nil, 200))
 	assert.Equal(t, 22.0, ce.Soc(&soc, 200))
+
+	// energy reset while soc is missing keeps the estimate
+	assert.Equal(t, 22.0, ce.Soc(nil, 50))
 }
 
 func TestImprovedEstimatorRemainingChargeDuration(t *testing.T) {

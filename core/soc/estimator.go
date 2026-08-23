@@ -92,7 +92,12 @@ func remainingChargeEnergy(targetSoc, vehicleSoc, virtualCapacity float64) float
 // Soc replaces the api.Vehicle.Soc interface to take charged energy into account
 func (s *Estimator) Soc(fetchedSoc *float64, chargedEnergy float64) float64 {
 	if fetchedSoc == nil {
-		s.log.WARN.Println("missing vehicle soc- ignored by estimator")
+		// extrapolate soc from charged energy while no vehicle soc is available,
+		// never below the current estimate to stay monotonic across energy resets
+		if energyDelta := max(chargedEnergy, 0) - s.prevChargedEnergy; s.initialSoc > 0 && energyDelta >= 0 {
+			s.vehicleSoc = min(max(s.vehicleSoc, s.prevSoc+energyDelta/s.energyPerSocStep), 100)
+			s.log.DEBUG.Printf("soc extrapolated: %.2f%%", s.vehicleSoc)
+		}
 		return s.vehicleSoc
 	}
 
