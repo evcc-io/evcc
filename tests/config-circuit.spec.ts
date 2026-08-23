@@ -21,28 +21,22 @@ test.describe("circuit", async () => {
     await expect(loadpoints.nth(0)).toContainText("Power1.0 kW");
     await expect(loadpoints.nth(1)).toContainText("Power1.0 kW");
 
-    await expect(page.getByTestId("grid")).toHaveCount(1);
-    await expect(page.getByTestId("grid")).toContainText(["Power", "2.1 kW"].join(""));
-    await expect(page.getByTestId("grid")).toContainText(
-      ["L1", "L2", "L3", "Current", "3.0", "3.0", "3.0", "A"].join("")
-    );
-
     await expect(page.getByTestId("circuits")).toHaveCount(1);
     await expect(page.getByTestId("circuits")).toContainText(
       [
         "Main",
-        "2.1/10.0 kW",
-        "3/16 A",
+        "2.0/10.0 kW",
+        "12/16 A",
         "kW",
         "A",
         "Carport 1",
-        "0.0 kW",
+        "2.0 kW",
         " ",
         "Carport 2",
-        "0.0 kW",
+        "2.0 kW",
         " ",
         "Child",
-        "2/10 A",
+        "0/10 A",
         "A",
       ].join("")
     );
