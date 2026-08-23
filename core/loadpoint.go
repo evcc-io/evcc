@@ -273,8 +273,14 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 
 	lp.configureChargerType(lp.charger)
 	// add collector
-	if lp.chargeMeter != nil {
+	if lp.chargeMeter != nil && collector != nil {
 		lp.chargeEnergy = collector
+
+		// drop stale readings when the meter no longer reports totals
+		energy, returnEnergy := api.HasCap[api.MeterEnergy](lp.chargeMeter), api.HasCap[api.MeterReturnEnergy](lp.chargeMeter)
+		if err := collector.SetCapabilities(energy, returnEnergy); err != nil {
+			return lp, err
+		}
 	}
 
 	// set title after collector is wired to refresh the metrics entity
