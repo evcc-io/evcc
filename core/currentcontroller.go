@@ -30,6 +30,10 @@ type CurrentController struct {
 	maxCurrent     float64   // Max allowed current. Physically ensured by the charger
 	chargeCurrents []float64 // Phase currents
 	surplus        *float64  // Surplus power for phase reconciliation, valid for current cycle only
+
+	phasesConfigured int       // Charger configured phase mode 0/1/3
+	measuredPhases   int       // Charger physically measured phases
+	phasesSwitched   time.Time // Phase switch timestamp
 }
 
 func newCurrentController(lp *Loadpoint) *CurrentController {
@@ -62,7 +66,7 @@ func (c *CurrentController) SetPower(power float64) error {
 			// the charger cannot switch phases right now (e.g. EEBus charger
 			// with an ISO 15118 vehicle). Adopt the configured phase count so
 			// the switch is not re-attempted on every cycle (issue #29974).
-			c.lp.SetPhases(c.lp.phasesConfigured)
+			c.lp.SetPhases(c.phasesConfigured)
 			err = nil
 		}
 		return err
@@ -74,7 +78,7 @@ func (c *CurrentController) SetPower(power float64) error {
 		surplus := *c.surplus
 		c.surplus = nil
 
-		if c.lp.hasPhaseSwitching() && c.lp.phaseSwitchCompleted() {
+		if c.hasPhaseSwitching() && c.phaseSwitchCompleted() {
 			c.pvScalePhases(surplus, c.effectiveMinCurrent(), c.effectiveMaxCurrent())
 		}
 	}
@@ -199,7 +203,7 @@ func (c *CurrentController) phasesFromChargeCurrents() {
 		return
 	}
 
-	if c.lp.charging() && c.lp.phaseSwitchCompleted() {
+	if c.lp.charging() && c.phaseSwitchCompleted() {
 		var phases int
 		for _, i := range c.chargeCurrents {
 			if i > minActiveCurrent {
@@ -209,7 +213,7 @@ func (c *CurrentController) phasesFromChargeCurrents() {
 
 		if phases >= 1 {
 			c.lp.Lock()
-			c.lp.measuredPhases = phases
+			c.measuredPhases = phases
 			c.lp.Unlock()
 
 			c.lp.log.DEBUG.Printf("detected active phases: %dp", phases)
@@ -235,7 +239,7 @@ func (c *CurrentController) resetSurplus() {
 
 // expirePhaseTimer forces the phase scale timer to elapse
 func (c *CurrentController) expirePhaseTimer() {
-	if c.lp.hasPhaseSwitching() {
+	if c.hasPhaseSwitching() {
 		c.phaseTimer = elapsed
 	}
 }
@@ -344,11 +348,13 @@ func (c *CurrentController) setLimit(current float64) error {
 	return nil
 }
 
-// syncCharger updates charger status and synchronizes it with expectations
-func (c *CurrentController) syncCharger() error {
+// syncCharger updates charger status and synchronizes it with expectations.
+// It reports whether a "charging while disabled" state was corrected so the
+// caller's policy can react to the unexpected charging.
+func (c *CurrentController) syncCharger() (bool, error) {
 	enabled, err := c.lp.charger.Enabled()
 	if err != nil {
-		return fmt.Errorf("charger enabled: %w", err)
+		return false, fmt.Errorf("charger enabled: %w", err)
 	}
 
 	shouldBeConsistent := c.lp.shouldBeConsistent()
@@ -368,11 +374,10 @@ func (c *CurrentController) syncCharger() error {
 
 		if shouldBeConsistent {
 			if err := c.lp.charger.Enable(true); err != nil { // also enable charger to correct internal state
-				return fmt.Errorf("charger enable: %w", err)
+				return false, fmt.Errorf("charger enable: %w", err)
 			}
 
-			c.lp.elapsePVTimer() // elapse PV timer so loadpoint can immediately switch charger if necessary
-			return nil
+			return true, nil
 		}
 	}
 
@@ -398,7 +403,7 @@ func (c *CurrentController) syncCharger() error {
 					c.lp.bus.Publish(evChargeCurrent, c.offeredCurrent)
 				}
 			} else if !loadpoint.AcceptableError(err) {
-				return fmt.Errorf("charger get max current: %w", err)
+				return false, fmt.Errorf("charger get max current: %w", err)
 			}
 		}
 
@@ -416,19 +421,19 @@ func (c *CurrentController) syncCharger() error {
 
 		// sync phases
 		if shouldBeConsistent {
-			if err := c.lp.syncChargerPhases(); err != nil {
-				return err
+			if err := c.syncChargerPhases(); err != nil {
+				return false, err
 			}
 		}
 
 	case enabled == c.enabled:
 		// sync disabled state
 
-	case !enabled && !c.lp.phaseSwitchCompleted():
+	case !enabled && !c.phaseSwitchCompleted():
 		// some chargers (i.E. Easee in some configurations) disable themselves to be able to switch phases
 		// -> enable charger
 		if err := c.lp.charger.Enable(true); err != nil {
-			return fmt.Errorf("charger enable: %w", err)
+			return false, fmt.Errorf("charger enable: %w", err)
 		}
 
 	case shouldBeConsistent && (enabled || c.lp.connected()):
@@ -436,5 +441,5 @@ func (c *CurrentController) syncCharger() error {
 		c.lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[c.enabled], status[enabled])
 	}
 
-	return nil
+	return false, nil
 }

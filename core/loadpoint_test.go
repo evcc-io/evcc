@@ -319,7 +319,6 @@ func TestPVHysteresis(t *testing.T) {
 				log:            util.NewLogger("foo"),
 				clock:          clock,
 				charger:        charger,
-				measuredPhases: phases,
 				Enable: loadpoint.ThresholdConfig{
 					Threshold: tc.enable,
 					Delay:     dt,
@@ -329,6 +328,7 @@ func TestPVHysteresis(t *testing.T) {
 					Delay:     dt,
 				},
 			}
+			currentController(lp).measuredPhases = phases
 			currentController(lp).minCurrent = minA
 			currentController(lp).maxCurrent = maxA
 
@@ -368,8 +368,8 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 	lp := &Loadpoint{
 		log:            util.NewLogger("foo"),
 		clock:          clock,
-		measuredPhases: phases,
 	}
+	currentController(lp).measuredPhases = phases
 	currentController(lp).minCurrent = minA
 	currentController(lp).maxCurrent = maxA
 	currentController(lp).phases = phases
@@ -959,12 +959,12 @@ func TestPVDisableContinuousDeviceShortfall(t *testing.T) {
 				log:              util.NewLogger("foo"),
 				clock:            clock,
 				charger:          &continuousCharger{},
-				phasesConfigured: 1,
-				measuredPhases:   1,
 				status:           tc.status,
 				chargePower:      tc.chargePower,
 				Disable:          loadpoint.ThresholdConfig{Delay: dt},
 			}
+			currentController(lp).phasesConfigured = 1
+			currentController(lp).measuredPhases = 1
 			currentController(lp).minCurrent = minA
 			currentController(lp).maxCurrent = maxA
 			currentController(lp).phases = 1

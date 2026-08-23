@@ -113,7 +113,7 @@ func (c *CurrentController) Envelope() Envelope {
 		PhaseSwitchGap: c.phaseSwitchGapPower(),
 		Coarse:         c.coarseCurrent(),
 		Enabled:        c.enabled,
-		ScalePending:   c.lp.hasPhaseSwitching() && !c.phaseTimer.IsZero(),
+		ScalePending:   c.hasPhaseSwitching() && !c.phaseTimer.IsZero(),
 		ActivePhases:   c.lp.ActivePhases(),
 	}
 }
@@ -123,8 +123,8 @@ func (c *CurrentController) Envelope() Envelope {
 // it reflects the locked phases.
 func (c *CurrentController) MinPower() float64 {
 	phases := c.lp.minActivePhases()
-	if c.lp.hasPhaseSwitching() && c.lp.phasesConfigured > 1 {
-		phases = c.lp.phasesConfigured
+	if c.hasPhaseSwitching() && c.phasesConfigured > 1 {
+		phases = c.phasesConfigured
 	}
 	return currentToPower(c.effectiveMinCurrent(), phases)
 }
@@ -153,7 +153,7 @@ func (c *CurrentController) activeMaxPower() float64 {
 // phase scale-down into account
 func (c *CurrentController) reachableMinPower() float64 {
 	phases := c.lp.ActivePhases()
-	if c.lp.hasPhaseSwitching() && c.lp.phasesConfigured < 3 && phases > 1 {
+	if c.hasPhaseSwitching() && c.phasesConfigured < 3 && phases > 1 {
 		phases = 1
 	}
 	return currentToPower(c.effectiveMinCurrent(), phases)
@@ -168,7 +168,7 @@ func (c *CurrentController) stepPower() float64 {
 // maximum power on the active phases and the minimum power after scaling up, if
 // scaling up is possible
 func (c *CurrentController) phaseSwitchGapPower() float64 {
-	if !c.lp.hasPhaseSwitching() || !c.lp.phaseSwitchCompleted() {
+	if !c.hasPhaseSwitching() || !c.phaseSwitchCompleted() {
 		return 0
 	}
 

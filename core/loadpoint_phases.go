@@ -1,23 +1,20 @@
 package core
 
 import (
-	"errors"
-	"fmt"
-
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 )
 
 // setPhasesConfigured sets the default phase configuration
 func (lp *Loadpoint) setPhasesConfigured(phases int) {
-	lp.phasesConfigured = phases
-	lp.publish(keys.PhasesConfigured, lp.phasesConfigured)
-	lp.settings.SetInt(keys.PhasesConfigured, int64(lp.phasesConfigured))
+	ctrl := lp.ctrl()
+	ctrl.phasesConfigured = phases
+	lp.publish(keys.PhasesConfigured, phases)
+	lp.settings.SetInt(keys.PhasesConfigured, int64(phases))
 
 	// configured phases are actual phases for non-1p3p charger
 	// for 1p3p charger, configuration does not mean that the physical state has changed, so don't touch it
 	if !lp.hasPhaseSwitching() {
-		lp.setPhases(phases)
+		ctrl.setPhases(phases)
 	}
 }
 
@@ -25,55 +22,26 @@ func (lp *Loadpoint) setPhasesConfigured(phases int) {
 func (lp *Loadpoint) SetPhases(phases int) {
 	lp.Lock()
 	defer lp.Unlock()
-	lp.setPhases(phases)
-}
-
-// setPhases sets the number of enabled phases without modifying the charger
-func (lp *Loadpoint) setPhases(phases int) {
-	if ctrl := lp.ctrl(); ctrl != nil && ctrl.phases != phases {
-		ctrl.phases = phases
-
-		// reset timer to disabled state
-		lp.resetPhaseTimer()
-
-		// measure phases after switching
-		lp.resetMeasuredPhases()
-	}
+	lp.ctrl().setPhases(phases)
 }
 
 // ResetMeasuredPhases resets measured phases to unknown on vehicle disconnect, phase switch or phase api call
 func (lp *Loadpoint) ResetMeasuredPhases() {
 	lp.Lock()
 	defer lp.Unlock()
-	lp.resetMeasuredPhases()
+	lp.ctrl().resetMeasuredPhases()
 }
 
-// resetMeasuredPhases resets measured phases to unknown on vehicle disconnect, phase switch or phase api call
-func (lp *Loadpoint) resetMeasuredPhases() {
-	lp.measuredPhases = 0
-	lp.publish(keys.PhasesActive, lp.activePhases())
-}
-
-// GetMeasuredPhases provides synchronized access to measuredPhases
+// GetMeasuredPhases provides synchronized access to measured phases
 func (lp *Loadpoint) GetMeasuredPhases() int {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.getMeasuredPhases()
 }
 
-// getMeasuredPhases provides synchronized access to measuredPhases
+// getMeasuredPhases provides access to measured phases
 func (lp *Loadpoint) getMeasuredPhases() int {
-	return lp.measuredPhases
-}
-
-// assume 3p for switchable charger during startup
-const unknownPhases = 3
-
-func expect(phases int) int {
-	if phases > 0 {
-		return phases
-	}
-	return unknownPhases
+	return lp.ctrl().measuredPhases
 }
 
 // ActivePhases returns the number of expectedly active phases for the meter.
@@ -87,19 +55,7 @@ func (lp *Loadpoint) ActivePhases() int {
 // activePhases returns the number of expectedly active phases for the meter.
 // If unknown for 1p3p chargers during startup it will assume 3p.
 func (lp *Loadpoint) activePhases() int {
-	physical := lp.ctrl().phases
-	vehicle := lp.getVehiclePhases()
-	measured := lp.getMeasuredPhases()
-	charger := lp.getChargerPhysicalPhases()
-
-	active := min(expect(vehicle), expect(physical), expect(measured), expect(charger))
-
-	// sanity check - we should not assume less active phases than actually measured
-	if measured > 0 && active < measured {
-		lp.log.WARN.Printf("phase mismatch between %dp measured for %dp vehicle and %dp charger", measured, vehicle, physical)
-	}
-
-	return active
+	return lp.ctrl().activePhases()
 }
 
 // MinActivePhases returns the minimum number of active phases for the loadpoint.
@@ -111,11 +67,7 @@ func (lp *Loadpoint) MinActivePhases() int {
 
 // minActivePhases returns the minimum number of active phases for the loadpoint.
 func (lp *Loadpoint) minActivePhases() int {
-	if lp.hasPhaseSwitching() || lp.phasesConfigured == 1 {
-		return 1
-	}
-
-	return lp.maxActivePhases()
+	return lp.ctrl().minActivePhases()
 }
 
 // MaxActivePhases returns the maximum number of active phases for the loadpoint.
@@ -127,79 +79,18 @@ func (lp *Loadpoint) MaxActivePhases() int {
 
 // maxActivePhases returns the maximum number of active phases for the loadpoint.
 func (lp *Loadpoint) maxActivePhases() int {
-	physical := lp.ctrl().phases
-	measured := lp.getMeasuredPhases()
-	vehicle := lp.getVehiclePhases()
-	charger := lp.getChargerPhysicalPhases()
-
-	// during 1p or unknown config, 1p measured is not a restriction
-	if physical <= 1 || vehicle == 1 || charger == 1 {
-		measured = 0
-	}
-
-	// if 1p3p supported then assume configured limit or 3p
-	if lp.hasPhaseSwitching() {
-		physical = lp.phasesConfigured
-	}
-
-	return min(expect(vehicle), expect(physical), expect(measured), expect(charger))
-}
-
-func (lp *Loadpoint) getVehiclePhases() int {
-	if v := lp.GetVehicle(); v != nil {
-		return v.Phases()
-	}
-
-	return 0
+	return lp.ctrl().maxActivePhases()
 }
 
 func (lp *Loadpoint) getChargerPhysicalPhases() int {
-	if cc, ok := api.Cap[api.PhaseDescriber](lp.charger); ok {
-		return cc.Phases()
-	}
-
-	return 0
+	return lp.ctrl().getChargerPhysicalPhases()
 }
 
 func (lp *Loadpoint) hasPhaseSwitching() bool {
-	return api.HasCap[api.PhaseSwitcher](lp.charger)
+	return lp.ctrl().hasPhaseSwitching()
 }
 
-// syncChargerPhases synchronizes the assumed phase state with the charger's actual state.
-// Chargers may reconfigure phases internally, i.e. when the vehicle is (dis)connected.
-func (lp *Loadpoint) syncChargerPhases() error {
-	phases := lp.GetPhases()
-	if !lp.hasPhaseSwitching() || phases <= 0 {
-		return nil
-	}
-
-	if pg, ok := api.Cap[api.PhaseGetter](lp.charger); ok {
-		chargerPhases, err := pg.GetPhases()
-		if err != nil {
-			if errors.Is(err, api.ErrNotAvailable) {
-				return nil
-			}
-			return fmt.Errorf("charger get phases: %w", err)
-		}
-
-		if chargerPhases > 0 && chargerPhases != phases {
-			lp.log.WARN.Printf("charger logic error: phases mismatch (got %d, expected %d)", chargerPhases, phases)
-			lp.SetPhases(chargerPhases)
-		}
-
-		return nil
-	}
-
-	// use measured phase currents for active phases as fallback if charger does not provide phases
-	chargerPhases := lp.GetMeasuredPhases()
-	if chargerPhases == 2 {
-		chargerPhases = 3
-	}
-
-	if chargerPhases > phases {
-		lp.log.WARN.Printf("charger logic error: phases mismatch (got %d measured, expected %d)", chargerPhases, phases)
-		lp.SetPhases(chargerPhases)
-	}
-
-	return nil
+// phaseSwitchCompleted returns true if phase switch command should be already processed by the charger
+func (lp *Loadpoint) phaseSwitchCompleted() bool {
+	return lp.ctrl().phaseSwitchCompleted()
 }

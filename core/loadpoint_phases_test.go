@@ -83,11 +83,11 @@ func TestMaxActivePhases(t *testing.T) {
 			vehicle.EXPECT().Phases().Return(tc.vehicle).MinTimes(1)
 
 			lp := &Loadpoint{
-				phasesConfigured: configured, // fixed phases or default
 				vehicle:          vehicle,
-				measuredPhases:   tc.measuredPhases,
 				charger:          plainCharger,
 			}
+			currentController(lp).phasesConfigured = configured // fixed phases or default
+			currentController(lp).measuredPhases = tc.measuredPhases
 			currentController(lp).phases = tc.physical
 
 			// 1p3p
@@ -135,11 +135,11 @@ func TestMinActivePhases(t *testing.T) {
 			vehicle.EXPECT().Phases().Return(tc.vehicle).AnyTimes()
 
 			lp := &Loadpoint{
-				phasesConfigured: configured, // fixed phases or default
 				vehicle:          vehicle,
-				measuredPhases:   tc.measuredPhases,
 				charger:          plainCharger,
 			}
+			currentController(lp).phasesConfigured = configured // fixed phases or default
+			currentController(lp).measuredPhases = tc.measuredPhases
 			currentController(lp).phases = tc.physical
 
 			// 1p3p
@@ -231,9 +231,9 @@ func TestPvScalePhases(t *testing.T) {
 			wakeUpTimer:      NewTimer(),         // silence nil panics
 			mode:             api.ModeNow,
 			vehicle:          vehicle,
-			phasesConfigured: 0, // allow switching
 			status:           api.StatusC,
 		}
+		currentController(lp).phasesConfigured = 0 // allow switching
 		currentController(lp).minCurrent = minA
 		currentController(lp).maxCurrent = maxA
 		currentController(lp).phases = tc.physical
@@ -255,7 +255,7 @@ func TestPvScalePhases(t *testing.T) {
 
 		attachListeners(t, lp)
 
-		lp.measuredPhases = tc.measuredPhases
+		currentController(lp).measuredPhases = tc.measuredPhases
 		if tc.measuredPhases > 0 && tc.vehicle > 0 {
 			t.Fatalf("%v invalid test case", tc)
 		}
@@ -285,7 +285,7 @@ func TestPvScalePhases(t *testing.T) {
 
 			// reset to initial state
 			currentController(lp).phases = tc.physical
-			lp.measuredPhases = tc.measuredPhases
+			currentController(lp).measuredPhases = tc.measuredPhases
 
 			plainCharger.EXPECT().Enable(false).Return(nil).MaxTimes(1)
 			phaseCharger.EXPECT().Phases1p3p(3).Return(nil).MaxTimes(1)
@@ -416,7 +416,6 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			wakeUpTimer:    NewTimer(),
 			clock:          clock,
 			charger:        charger,
-			measuredPhases: tc.measuredPhases,
 			status:         api.StatusC,
 			Enable: loadpoint.ThresholdConfig{
 				Delay: dt,
@@ -425,6 +424,7 @@ func TestPvScalePhasesTimer(t *testing.T) {
 				Delay: dt,
 			},
 		}
+		currentController(lp).measuredPhases = tc.measuredPhases
 		currentController(lp).minCurrent = minA
 		currentController(lp).maxCurrent = maxA
 		currentController(lp).phases = tc.phases
@@ -478,8 +478,8 @@ func TestScalePhasesIfAvailable(t *testing.T) {
 				plainCharger,
 				phaseCharger,
 			},
-			phasesConfigured: tc.dflt, // fixed phases or default
 		}
+		currentController(lp).phasesConfigured = tc.dflt // fixed phases or default
 		currentController(lp).minCurrent = minA
 		currentController(lp).phases = tc.physical // current phase status
 
@@ -554,7 +554,7 @@ func TestMinChargingPhaseScaling(t *testing.T) {
 			lp := NewLoadpoint(util.NewLogger("foo"), nil)
 			currentController(lp).minCurrent = 6
 			currentController(lp).maxCurrent = 16
-			lp.phasesConfigured = tc.phasesConfigured
+			currentController(lp).phasesConfigured = tc.phasesConfigured
 			currentController(lp).phases = tc.phases
 			currentController(lp).offeredCurrent = 0 // ensure MaxCurrent is called
 			lp.wakeUpTimer = NewTimer()
@@ -694,8 +694,8 @@ func TestUpdatePhaseSwitchNotAvailable(t *testing.T) {
 			plainCharger,
 			phaseCharger,
 		},
-		phasesConfigured: 3, // fixed 3p
 	}
+	currentController(lp).phasesConfigured = 3 // fixed 3p
 	currentController(lp).minCurrent = minA
 	currentController(lp).maxCurrent = maxA
 
@@ -773,7 +773,6 @@ func TestPvScalePhasesCircuitLimits(t *testing.T) {
 				wakeUpTimer:    NewTimer(),
 				mode:           api.ModeNow,
 				vehicle:        vehicle,
-				measuredPhases: tc.phases,
 				status:         api.StatusC,
 				circuit:        circuit,
 				charger: struct {
@@ -781,6 +780,7 @@ func TestPvScalePhasesCircuitLimits(t *testing.T) {
 					*api.MockPhaseSwitcher
 				}{plainCharger, phaseCharger},
 			}
+			currentController(lp).measuredPhases = tc.phases
 			currentController(lp).minCurrent = 6
 			currentController(lp).maxCurrent = 32
 			currentController(lp).phases = tc.phases

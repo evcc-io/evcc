@@ -116,7 +116,6 @@ type Loadpoint struct {
 
 	title                    string   // UI title
 	priority                 int      // Priority
-	phasesConfigured         int      // Charger configured phase mode 0/1/3
 	limitSoc                 int      // Session limit for soc
 	limitEnergy              float64  // Session limit for energy
 	minSoc                   int      // Forced charging below this soc (heating: temperature), 0=disabled
@@ -126,11 +125,9 @@ type Loadpoint struct {
 	batteryBoostLimit        int      // battery boost soc limit (0-100, 100=disabled)
 
 	mode                api.ChargeMode
-	measuredPhases      int       // Charger physically measured phases
 	socUpdated          time.Time // Soc updated timestamp (poll: connected)
 	vehicleDetect       time.Time // Vehicle connected timestamp
 	chargerSwitched     time.Time // Charger enabled/disabled timestamp
-	phasesSwitched      time.Time // Phase switch timestamp
 	vehicleDetectTicker *clock.Ticker
 	vehicleIdentifier   string
 
@@ -288,7 +285,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 			phases = 3 // default to 3p if no charger phases are known
 		}
 
-		lp.phasesConfigured = phases
+		lp.ctrl().phasesConfigured = phases
 		lp.ctrl().phases = phases
 	}
 
@@ -574,7 +571,7 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 	lp.socUpdated = time.Time{}
 
 	// charger may have reconfigured phases internally while disconnected
-	if err := lp.syncChargerPhases(); err != nil {
+	if err := lp.ctrl().syncChargerPhases(); err != nil {
 		lp.log.ERROR.Println(err)
 	}
 
@@ -720,14 +717,14 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publish(keys.UI, lp.Ui)
 
 	if phases := lp.getChargerPhysicalPhases(); phases != 0 {
-		if lp.phasesConfigured != phases && lp.phasesConfigured != 0 {
-			lp.log.WARN.Printf("configured phases %d do not match physical phases %d", lp.phasesConfigured, phases)
+		if configured := lp.ctrl().phasesConfigured; configured != phases && configured != 0 {
+			lp.log.WARN.Printf("configured phases %d do not match physical phases %d", configured, phases)
 		}
 		lp.ctrl().phases = phases
-		lp.phasesConfigured = phases
+		lp.ctrl().phasesConfigured = phases
 	}
 
-	lp.publish(keys.PhasesConfigured, lp.phasesConfigured)
+	lp.publish(keys.PhasesConfigured, lp.ctrl().phasesConfigured)
 	lp.publish(keys.ChargerPhases1p3p, lp.hasPhaseSwitching())
 	lp.publish(keys.ChargerSinglePhase, lp.getChargerPhysicalPhases() == 1)
 	lp.publish(keys.PhasesActive, lp.ActivePhases())
@@ -1420,11 +1417,6 @@ func (lp *Loadpoint) chargerUpdateCompleted() bool {
 	return time.Since(lp.chargerSwitched) > chargerSwitchDuration
 }
 
-// phaseSwitchCompleted returns true if phase switch command should be already processed by the charger (so we can try to sync charger and loadpoint and are able to measure currents)
-func (lp *Loadpoint) phaseSwitchCompleted() bool {
-	return time.Since(lp.phasesSwitched) > phaseSwitchDuration
-}
-
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64, dim *bool) {
 	// hold battery boost when SOC drops below the limit: stop draining the battery, but
@@ -1538,9 +1530,15 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 	}
 
 	// sync settings with charger
-	if err := ctrl.syncCharger(); err != nil {
+	corrected, err := ctrl.syncCharger()
+	if err != nil {
 		lp.log.ERROR.Println(err)
 		return
+	}
+	if corrected {
+		// charger was charging while disabled: elapse PV timer so the
+		// loadpoint can immediately switch the charger if necessary
+		lp.elapsePVTimer()
 	}
 
 	mode := lp.GetMode()

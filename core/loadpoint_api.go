@@ -260,7 +260,7 @@ func (lp *Loadpoint) GetPhases() int {
 func (lp *Loadpoint) GetPhasesConfigured() int {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.phasesConfigured
+	return lp.ctrl().phasesConfigured
 }
 
 // SetPhasesConfigured sets the configured phases

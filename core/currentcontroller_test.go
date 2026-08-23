@@ -15,7 +15,7 @@ func testControllerLoadpoint(charger api.Charger, phasesConfigured, phases int) 
 	lp.wakeUpTimer = NewTimer()
 	currentController(lp).minCurrent = minA
 	currentController(lp).maxCurrent = maxA
-	lp.phasesConfigured = phasesConfigured
+	currentController(lp).phasesConfigured = phasesConfigured
 	currentController(lp).phases = phases
 	lp.charger = charger
 	lp.status = api.StatusC

@@ -125,8 +125,8 @@ func TestBoostPowerPhaseSwitchGapBridging(t *testing.T) {
 		status:           api.StatusC,
 		charger:          phaseSwitchCharger{},
 		batteryBoost:     boostContinue,
-		phasesConfigured: 3,
 	}
+	currentController(lp).phasesConfigured = 3
 	currentController(lp).minCurrent = 6
 	currentController(lp).maxCurrent = 16
 	currentController(lp).phases = 1
@@ -209,10 +209,10 @@ func TestBoostPowerPhaseSwitchGapBridgingExclusions(t *testing.T) {
 				status:           api.StatusC,
 				charger:          tc.charger,
 				batteryBoost:     boostContinue,
-				phasesConfigured: 3,
-				phasesSwitched:   tc.phasesSwitched,
 				circuit:          circuit,
 			}
+			currentController(lp).phasesConfigured = 3
+			currentController(lp).phasesSwitched = tc.phasesSwitched
 			currentController(lp).minCurrent = 6
 			currentController(lp).maxCurrent = 16
 			currentController(lp).phases = 1

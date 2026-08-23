@@ -9,7 +9,7 @@ import (
 
 // enforcePhases scales to the configured phases
 func (c *CurrentController) enforcePhases() error {
-	return c.scalePhases(c.lp.phasesConfigured)
+	return c.scalePhases(c.phasesConfigured)
 }
 
 // effectiveCurrent returns the currently effective charging current
@@ -29,16 +29,16 @@ func (c *CurrentController) effectiveCurrent() float64 {
 
 // scalePhasesRequired validates if fixed phase configuration matches enabled phases
 func (c *CurrentController) scalePhasesRequired() bool {
-	return c.lp.hasPhaseSwitching() && c.lp.phasesConfigured != 0 && c.lp.phasesConfigured != c.lp.GetPhases()
+	return c.hasPhaseSwitching() && c.phasesConfigured != 0 && c.phasesConfigured != c.lp.GetPhases()
 }
 
 // scalePhasesIfAvailable scales if api.PhaseSwitcher is available and allowed
 func (c *CurrentController) scalePhasesIfAvailable(phases int) error {
-	if c.lp.phasesConfigured != 0 {
-		phases = c.lp.phasesConfigured
+	if c.phasesConfigured != 0 {
+		phases = c.phasesConfigured
 	}
 
-	if c.lp.hasPhaseSwitching() {
+	if c.hasPhaseSwitching() {
 		return c.scalePhases(phases)
 	}
 
@@ -62,7 +62,7 @@ func (c *CurrentController) scalePhases(phases int) error {
 		c.lp.log.DEBUG.Printf("switched phases: %dp", phases)
 
 		// prevent premature measurement of active phases
-		c.lp.phasesSwitched = c.lp.clock.Now()
+		c.phasesSwitched = c.lp.clock.Now()
 
 		// update setting and reset timer
 		c.lp.SetPhases(phases)
@@ -92,7 +92,7 @@ func (c *CurrentController) circuitAllowsPhases(phases int, minCurrent float64) 
 
 // fastCharging scales to 3p if available and sets maximum current
 func (c *CurrentController) fastCharging() error {
-	if c.lp.hasPhaseSwitching() {
+	if c.hasPhaseSwitching() {
 		phases := 3
 
 		// load management limit active
@@ -112,7 +112,7 @@ func (c *CurrentController) fastCharging() error {
 
 // minCharging scales to 1p if available and sets minimum current
 func (c *CurrentController) minCharging() error {
-	if c.lp.hasPhaseSwitching() {
+	if c.hasPhaseSwitching() {
 		// ignore api.ErrNotAvailable: the phase switch could not be performed
 		// right now, continue with the current phase configuration
 		if err := c.scalePhasesIfAvailable(1); err != nil && !errors.Is(err, api.ErrNotAvailable) {
@@ -133,7 +133,7 @@ func (c *CurrentController) pvScalePhases(sitePower, minCurrent, maxCurrent floa
 	// - https://github.com/evcc-io/evcc/issues/2613
 	measuredPhases := c.lp.GetMeasuredPhases()
 	if phases > 0 && phases < measuredPhases {
-		if c.lp.chargerUpdateCompleted() && c.lp.phaseSwitchCompleted() {
+		if c.lp.chargerUpdateCompleted() && c.phaseSwitchCompleted() {
 			c.lp.log.WARN.Printf("ignoring inconsistent phases: %dp < %dp observed active", phases, measuredPhases)
 		}
 		c.lp.ResetMeasuredPhases()
@@ -142,7 +142,7 @@ func (c *CurrentController) pvScalePhases(sitePower, minCurrent, maxCurrent floa
 	var waiting bool
 	activePhases := c.lp.ActivePhases()
 	availablePower := c.lp.chargePower - sitePower
-	scalable := activePhases > 1 && c.lp.phasesConfigured < 3
+	scalable := activePhases > 1 && c.phasesConfigured < 3
 
 	if scalable {
 		insufficient := (sitePower > 0 || !c.enabled) && powerToCurrent(availablePower, activePhases) < minCurrent
