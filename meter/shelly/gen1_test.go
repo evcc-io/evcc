@@ -2,7 +2,10 @@ package shelly
 
 import (
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -44,5 +47,57 @@ func TestUnmarshalGen1Status(t *testing.T) {
 		g := &gen1{model: "SHEM"}
 		assert.Equal(t, 401472.9, g.energy(res.EMeters[0].Total))
 		assert.Equal(t, -620.34, res.EMeters[0].Power)
+	}
+}
+
+// gen1Server emulates a gen1 device serving the given /status response.
+func gen1Server(t *testing.T, model, status string) *httptest.Server {
+	t.Helper()
+
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		switch r.URL.Path {
+		case "/shelly":
+			json.NewEncoder(w).Encode(map[string]any{"type": model})
+		case "/status":
+			w.Write([]byte(status))
+		default:
+			http.Error(w, "not found", http.StatusNotFound)
+		}
+	}))
+}
+
+// TestGen1ReturnEnergy asserts that only the EM variants report a return
+// register- a 1PM's production must not be booked in return direction (#33062).
+func TestGen1ReturnEnergy(t *testing.T) {
+	{
+		// Shelly 1PM: meters, no total_returned
+		srv := gen1Server(t, "SHSW-PM", `{"relays":[{"ison":true}],"meters":[{"power":198.0,"is_valid":true,"total":31510486}]}`)
+		defer srv.Close()
+
+		conn, err := NewConnection(srv.URL, "", "", 0, time.Second)
+		require.NoError(t, err)
+
+		assert.False(t, conn.HasReturnEnergy(), "1PM has no return register")
+
+		total, err := conn.TotalEnergy()
+		require.NoError(t, err)
+		assert.InDelta(t, 525.17, total, 0.01)
+	}
+
+	{
+		// Shelly EM: emeters with total_returned
+		srv := gen1Server(t, "SHEM", `{"relays":[{"ison":true}],"emeters":[{"power":-620.34,"is_valid":true,"total":401472.9,"total_returned":653673.7}]}`)
+		defer srv.Close()
+
+		conn, err := NewConnection(srv.URL, "", "", 0, time.Second)
+		require.NoError(t, err)
+
+		assert.True(t, conn.HasReturnEnergy())
+
+		ret, err := conn.ReturnEnergy()
+		require.NoError(t, err)
+		assert.InDelta(t, 653.67, ret, 0.01)
 	}
 }
