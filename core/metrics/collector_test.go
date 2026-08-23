@@ -669,3 +669,43 @@ func TestCollectorClearsUnrestoredCheckpoint(t *testing.T) {
 	require.NoError(t, db.Instance.First(&e, col2.entity.Id).Error)
 	require.Nil(t, e.EnergyMeter, "unrestored checkpoint must be cleared too")
 }
+
+// TestCollectorKeepsRestoreForSurvivingDirection verifies that clearing one
+// direction of a bidirectional group does not discard the downtime delta the
+// other direction still covers.
+func TestCollectorKeepsRestoreForSurvivingDirection(t *testing.T) {
+	clk := clock.NewMock() // 1970-01-01 00:00:00 UTC, on a slot boundary
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector(Grid, "surviving", "", WithClock(clk))
+	require.NoError(t, err)
+
+	// checkpoint both directions
+	require.NoError(t, col.AddEnergy(new(100.0), new(200.0), 0))
+	clk.Add(15 * time.Minute) // 00:15
+	require.NoError(t, col.AddEnergy(new(100.5), new(200.2), 0))
+	clk.Add(15 * time.Minute) // 00:30
+	require.NoError(t, col.AddEnergy(new(101.0), new(200.4), 0))
+
+	// restart after 1h downtime, joining slot 01:30 mid-way, without export
+	clk.Add(65 * time.Minute) // 01:35
+	col2, err := NewCollector(Grid, "surviving", "", WithClock(clk))
+	require.NoError(t, err)
+	require.NoError(t, col2.SetCapabilities(true, false))
+	require.True(t, col2.restored, "the surviving import reading still seeds a restore")
+	require.Nil(t, col2.accu.returnEnergyMeter)
+
+	// the import delta across the downtime is kept
+	require.NoError(t, col2.AddEnergy(new(111.0), nil, 0))
+	require.InDelta(t, 10.0, col2.accu.Energy, 1e-10)
+
+	clk.Add(10 * time.Minute) // 01:45
+	require.NoError(t, col2.AddEnergy(new(111.0), nil, 0))
+
+	var m meter
+	require.NoError(t, db.Instance.Where("meter = ? AND ts = ?", col2.entity.Id, 90*60).First(&m).Error)
+	require.InDelta(t, 10.0, m.Energy, 1e-10)
+	require.True(t, m.Recovered, "catchup slot must be flagged recovered")
+}

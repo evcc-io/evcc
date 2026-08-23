@@ -224,8 +224,9 @@ func (c *Collector) SetCapabilities(energy, returnEnergy bool) error {
 		return nil
 	}
 
-	// the remaining readings may no longer seed a complete restore
-	c.restored = c.accu.Snapshot().CompleteFor(c.entity.Group)
+	// a surviving reading still covers the downtime for its own direction, so
+	// keep the restore rather than discarding that delta with the cleared one
+	c.restored = c.accu.energyMeter != nil || c.accu.returnEnergyMeter != nil
 
 	return db.Instance.Model(&c.entity).UpdateColumns(cols).Error
 }
