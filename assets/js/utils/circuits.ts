@@ -36,7 +36,7 @@ export function circuitTree(circuits?: Record<string, Circuit>): CircuitNode | u
   const source = deepClone(circuits ?? {}) as Record<string, CircuitNode>;
   const entries = Object.entries(source);
 
-  const nodeById = new Map(entries); // id -> node, rein intern
+  const nodeById = new Map(entries);
 
   let root: CircuitNode | undefined;
 
