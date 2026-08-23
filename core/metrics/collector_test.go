@@ -640,3 +640,32 @@ func TestCollectorFallsBackToPowerAfterCapabilityLoss(t *testing.T) {
 	require.NoError(t, col2.AddEnergy(nil, nil, 1e3))
 	require.InDelta(t, 1e3*5/60/1e3, col2.accu.Energy, 1e-10)
 }
+
+// TestCollectorClearsUnrestoredCheckpoint verifies that a bidirectional group
+// also drops a checkpoint that was too incomplete to be restored, so it cannot
+// resurface once the other direction is checkpointed again.
+func TestCollectorClearsUnrestoredCheckpoint(t *testing.T) {
+	clk := clock.NewMock() // 1970-01-01 00:00:00 UTC, on a slot boundary
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector(Grid, "incomplete", "", WithClock(clk))
+	require.NoError(t, err)
+
+	// only the energy direction is metered, so the state stays incomplete
+	require.NoError(t, col.AddEnergy(new(100.0), nil, 0))
+	clk.Add(15 * time.Minute) // 00:15
+	require.NoError(t, col.AddEnergy(new(100.5), nil, 0))
+
+	col2, err := NewCollector(Grid, "incomplete", "", WithClock(clk))
+	require.NoError(t, err)
+	require.False(t, col2.restored, "incomplete state must not restore")
+	require.Nil(t, col2.accu.energyMeter)
+
+	require.NoError(t, col2.SetCapabilities(false, false))
+
+	var e entity
+	require.NoError(t, db.Instance.First(&e, col2.entity.Id).Error)
+	require.Nil(t, e.EnergyMeter, "unrestored checkpoint must be cleared too")
+}

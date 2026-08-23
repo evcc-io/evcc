@@ -207,12 +207,14 @@ func (c *Collector) SetEnergy(energy float64) error {
 func (c *Collector) SetCapabilities(energy, returnEnergy bool) error {
 	cols := make(map[string]any, 2)
 
-	if !energy && c.accu.energyMeter != nil {
+	// keyed on the entity, since an incomplete state is left unrestored and would
+	// otherwise resurface once the other direction is checkpointed again
+	if !energy && c.entity.EnergyMeter != nil {
 		c.accu.energyMeter = nil
 		c.entity.EnergyMeter = nil
 		cols["energy_meter"] = nil
 	}
-	if !returnEnergy && c.accu.returnEnergyMeter != nil {
+	if !returnEnergy && c.entity.ReturnEnergyMeter != nil {
 		c.accu.returnEnergyMeter = nil
 		c.entity.ReturnEnergyMeter = nil
 		cols["return_energy_meter"] = nil
