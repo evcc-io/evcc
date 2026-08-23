@@ -105,10 +105,6 @@ type Loadpoint struct {
 	Title       string         `mapstructure:"title"`    // UI title
 	Priority    int            `mapstructure:"priority"` // Priority
 
-	// from yaml, deprecated
-	GuardDuration_ time.Duration `mapstructure:"guardduration"` // ignored, present for compatibility
-	Phases_        int           `mapstructure:"phases"`        // ignored, present for compatibility
-
 	// power controller configuration
 	MinPower float64
 	MaxPower float64
@@ -330,14 +326,6 @@ func NewLoadpoint(log *util.Logger, settings settings.Settings) *Loadpoint {
 func (lp *Loadpoint) restoreSettings() {
 	if testing.Testing() {
 		return
-	}
-
-	// deprecated yaml properties
-	if lp.Phases_ > 0 {
-		lp.log.WARN.Printf("ignoring deprecated phases: %d. please configure via UI", lp.Phases_)
-	}
-	if lp.GuardDuration_ > 0 {
-		lp.log.WARN.Printf("ignoring deprecated guardduration: %s. please configure via UI", lp.GuardDuration_)
 	}
 
 	// restore runtime configuration (database & yaml LPs)
