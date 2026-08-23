@@ -29,7 +29,7 @@ async function login(page: Page) {
 
 async function openCircuitsModal(page: Page, yaml: string) {
   await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
-  const modal = page.getByTestId("circuits-modal");
+  const modal = page.getByTestId("circuits-legacy-modal");
   await expectModalVisible(modal);
   const editor = modal.getByTestId("yaml-editor");
   await expect(editor).toBeVisible();

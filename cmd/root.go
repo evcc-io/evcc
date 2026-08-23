@@ -304,7 +304,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// setup site and loadpoints
 	var site *core.Site
 	if err == nil {
-		site, err = configureSiteAndLoadpoints(&conf, valueChan)
+		site, err = configureSiteAndLoadpoints(&conf)
 	}
 
 	// setup influx
@@ -453,6 +453,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}}
 	valueChan <- util.Param{Key: keys.Tariffs, Val: globalconfig.ConfigStatus{
 		YamlSource: yamlSource.tariffs,
+	}}
+	valueChan <- util.Param{Key: keys.Circuits, Val: globalconfig.ConfigStatus{
+		YamlSource: yamlSource.circuits,
 	}}
 
 	// publish remote access status
