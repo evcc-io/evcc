@@ -26,15 +26,16 @@
 					{{ $t("config.circuits.addMainCircuit") }}
 				</button>
 			</div>
-			<CircuitsTree
-				class="mb-3"
-				v-else
-				:circuitsTree="configCircuitTree(circuits)"
-				:on-add-sub="onAddSub"
-			/>
-			<span class="evcc-gray">
-				{{ $t("config.circuits.chargingPointsNote") }}
-			</span>
+			<div v-else>
+				<CircuitsTree
+					class="mb-3"
+					:circuitsTree="configCircuitTree(circuits)"
+					:on-add-sub="onAddSub"
+				/>
+				<span class="evcc-gray">
+					{{ $t("config.circuits.chargingPointsNote") }}
+				</span>
+			</div>
 		</template>
 	</JsonModal>
 </template>
