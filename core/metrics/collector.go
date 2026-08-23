@@ -202,6 +202,35 @@ func (c *Collector) SetEnergy(energy float64) error {
 	return nil
 }
 
+// SetCapabilities drops the persisted reading for a direction the device no longer
+// reports, so its energy falls back to power integration instead of freezing.
+func (c *Collector) SetCapabilities(energy, returnEnergy bool) error {
+	cols := make(map[string]any, 2)
+
+	// keyed on the entity, since an incomplete state is left unrestored and would
+	// otherwise resurface once the other direction is checkpointed again
+	if !energy && c.entity.EnergyMeter != nil {
+		c.accu.energyMeter = nil
+		c.entity.EnergyMeter = nil
+		cols["energy_meter"] = nil
+	}
+	if !returnEnergy && c.entity.ReturnEnergyMeter != nil {
+		c.accu.returnEnergyMeter = nil
+		c.entity.ReturnEnergyMeter = nil
+		cols["return_energy_meter"] = nil
+	}
+
+	if len(cols) == 0 {
+		return nil
+	}
+
+	// a surviving reading still covers the downtime for its own direction, so
+	// keep the restore rather than discarding that delta with the cleared one
+	c.restored = c.accu.energyMeter != nil || c.accu.returnEnergyMeter != nil
+
+	return db.Instance.Model(&c.entity).UpdateColumns(cols).Error
+}
+
 func (c *Collector) SetEnergyMeterTotal(v float64) error {
 	return c.process(func() {
 		c.accu.SetEnergyMeterTotal(v)
