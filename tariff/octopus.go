@@ -158,6 +158,7 @@ func (t *Octopus) run(done chan error) {
 	}
 
 	// TODO tick every 15 minutes if GraphQL is available to poll for Intelligent slots.
+	defer t.timer.Stop()
 	for tick := t.timer.C(); ; <-tick {
 		var res octoRest.UnitRates
 

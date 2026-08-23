@@ -212,6 +212,7 @@ func (t *Ostrom) refreshToken() (*oauth2.Token, error) {
 func (t *Ostrom) runStatic(done chan error) {
 	var once sync.Once
 
+	defer t.timer.Stop()
 	for tick := t.timer.C(); ; <-tick {
 		price, err := t.getFixedPrice()
 		if err != nil {
@@ -242,6 +243,7 @@ func (t *Ostrom) runStatic(done chan error) {
 func (t *Ostrom) run(done chan error) {
 	var once sync.Once
 
+	defer t.timer.Stop()
 	for tick := t.timer.C(); ; <-tick {
 		var res ostrom.Prices
 

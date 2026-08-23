@@ -111,6 +111,7 @@ func (t *EdfTempo) refreshToken() (*oauth2.Token, error) {
 func (t *EdfTempo) run(done chan error) {
 	var once sync.Once
 
+	defer t.timer.Stop()
 	for tick := t.timer.C(); ; <-tick {
 		var res struct {
 			Data struct {

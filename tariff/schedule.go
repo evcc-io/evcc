@@ -18,6 +18,7 @@ type schedule struct {
 type refreshTimer struct {
 	interval time.Duration
 	sched    cron.Schedule
+	stop     chan struct{}
 }
 
 func (s schedule) timer(fallback time.Duration) (*refreshTimer, error) {
@@ -50,13 +51,27 @@ func (s schedule) timer(fallback time.Duration) (*refreshTimer, error) {
 
 // C returns a ticker-like channel so run loops keep the existing
 // `for tick := …; ; <-tick` shape as a drop-in replacement for time.Tick.
+// Call Stop when the loop exits to release the driving goroutine and timer.
 func (t *refreshTimer) C() <-chan time.Time {
 	ch := make(chan time.Time, 1)
+	t.stop = make(chan struct{})
+	stop := t.stop
 
 	if t.sched == nil {
 		go func() {
-			for tt := range time.Tick(t.interval) {
-				ch <- tt
+			ticker := time.NewTicker(t.interval)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-stop:
+					return
+				case tt := <-ticker.C:
+					select {
+					case ch <- tt:
+					case <-stop:
+						return
+					}
+				}
 			}
 		}()
 		return ch
@@ -68,11 +83,28 @@ func (t *refreshTimer) C() <-chan time.Time {
 			if next.IsZero() {
 				return
 			}
-			tt := <-time.After(time.Until(next))
-			ch <- tt
+			timer := time.NewTimer(time.Until(next))
+			select {
+			case <-stop:
+				timer.Stop()
+				return
+			case tt := <-timer.C:
+				select {
+				case ch <- tt:
+				case <-stop:
+					return
+				}
+			}
 		}
 	}()
 	return ch
+}
+
+// Stop releases the goroutine and timer started by C. Safe to call once per C.
+func (t *refreshTimer) Stop() {
+	if t.stop != nil {
+		close(t.stop)
+	}
 }
 
 // window returns a staleness window for sizing util.Monitor, mirroring the

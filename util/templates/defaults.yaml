@@ -458,8 +458,8 @@ params:
       de: Intervall
       en: Interval
     help:
-      en: 'How often to refresh: a duration like `15m`, `1h`, `24h`, or a cron expression `minute hour day month weekday` such as `15 0 * * *` (daily at 00:15, local time).'
-      de: 'Aktualisierungsrhythmus: eine Dauer wie `15m`, `1h`, `24h`, oder ein Cron-Ausdruck `Minute Stunde Tag Monat Wochentag` wie `15 0 * * *` (täglich um 00:15, Ortszeit).'
+      en: "How often to refresh: a duration like `15m`, `1h`, `24h`, or a cron expression `minute hour day month weekday` such as `15 0 * * *` (daily at 00:15, local time)."
+      de: "Aktualisierungsrhythmus: eine Dauer wie `15m`, `1h`, `24h`, oder ein Cron-Ausdruck `Minute Stunde Tag Monat Wochentag` wie `15 0 * * *` (täglich um 00:15, Ortszeit)."
   - name: mac
     private: true
     description:

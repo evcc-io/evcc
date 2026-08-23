@@ -82,6 +82,7 @@ func NewSolcastFromConfig(other map[string]any) (api.Tariff, error) {
 func (t *Solcast) run(done chan error) {
 	var once sync.Once
 
+	defer t.timer.Stop()
 	for tick := t.timer.C(); ; <-tick {
 		// ensure we don't run when not needed, but execute once at startup
 		select {

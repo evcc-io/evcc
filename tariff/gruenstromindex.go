@@ -67,6 +67,7 @@ func (t *GrünStromIndex) run(done chan error) {
 	var once sync.Once
 	uri := fmt.Sprintf("https://api.corrently.io/v2.0/gsi/prediction?zip=%s", t.zip)
 
+	defer t.timer.Stop()
 	for tick := t.timer.C(); ; <-tick {
 		var res corrently.Forecast
 

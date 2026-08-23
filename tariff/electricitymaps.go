@@ -86,6 +86,7 @@ func (t *ElectricityMaps) run(done chan error) {
 
 	uri := fmt.Sprintf("%s/carbon-intensity/forecast?zone=%s", t.uri, t.zone)
 
+	defer t.timer.Stop()
 	for tick := t.timer.C(); ; <-tick {
 		var res CarbonIntensity
 

@@ -87,6 +87,7 @@ func NewAmberFromConfig(other map[string]any) (api.Tariff, error) {
 func (t *Amber) run(done chan error) {
 	var once sync.Once
 
+	defer t.timer.Stop()
 	for tick := t.timer.C(); ; <-tick {
 		var res []amber.PriceInfo
 

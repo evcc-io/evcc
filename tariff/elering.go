@@ -69,6 +69,7 @@ func (t *Elering) run(done chan error) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
 
+	defer t.timer.Stop()
 	for tick := t.timer.C(); ; <-tick {
 		var res elering.NpsPrice
 

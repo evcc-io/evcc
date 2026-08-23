@@ -84,6 +84,7 @@ func (t *Tibber) run(done chan error) {
 		"id": graphql.ID(t.homeID),
 	}
 
+	defer t.timer.Stop()
 	for tick := t.timer.C(); ; <-tick {
 		var res struct {
 			Viewer struct {

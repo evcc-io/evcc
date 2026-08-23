@@ -502,7 +502,13 @@ export default {
 				this.$emit("update:modelValue", "");
 				return;
 			}
+
+			// read display value before override changes the getter's unit
+			const num = this.value;
 			this.unitOverride = unit;
+			if (typeof num === "number") {
+				this.$emit("update:modelValue", toGoDuration(num, unit));
+			}
 		},
 		onFieldChange(e) {
 			// unparsable input (e.g. locale decimal separator mismatch)

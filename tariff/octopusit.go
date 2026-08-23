@@ -89,6 +89,7 @@ func buildOctopusItFromConfig(other map[string]any) (*OctopusIt, error) {
 func (t *OctopusIt) run(done chan error) {
 	var once sync.Once
 
+	defer t.timer.Stop()
 	for tick := t.timer.C(); ; <-tick {
 		var rates []RatePeriod
 

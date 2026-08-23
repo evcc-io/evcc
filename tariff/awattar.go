@@ -66,6 +66,7 @@ func (t *Awattar) run(done chan error) {
 
 	client := request.NewHelper(t.log)
 
+	defer t.timer.Stop()
 	for tick := t.timer.C(); ; <-tick {
 		var res awattar.Prices
 

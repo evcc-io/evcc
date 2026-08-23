@@ -94,6 +94,7 @@ func (t *Entsoe) run(done chan error) {
 	var once sync.Once
 
 	// Data updated by ESO every half hour, but we only need data every hour to stay current.
+	defer t.timer.Stop()
 	for tick := t.timer.C(); ; <-tick {
 		var tr entsoe.PublicationMarketDocument
 
