@@ -34,8 +34,10 @@ params:
     help:
       de: |
         Nicht gesetzt oder 0 = Gesamtleistung aller Strings, 1-4 = ein einzelner String.
+        String-Zähler messen DC-Leistung (Spannung × Strom) und dienen nur der Überwachung. Als PV-Zähler der Site den Gesamtleistungs-Zähler (0) verwenden.
       en: |
         Unset or 0 = total power of all strings, 1-4 = one individual string.
+        String meters measure DC power (voltage × current) and are for monitoring only. Keep the total-power meter (0) as the site's PV meter.
   - preset: battery-params
 render: |
   type: custom
