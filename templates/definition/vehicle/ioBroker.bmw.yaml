@@ -1,4 +1,5 @@
 template: ioBroker.bmw
+deprecated: true
 products:
   - description:
       generic: ioBroker.bmw
