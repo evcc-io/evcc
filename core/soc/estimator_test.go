@@ -99,8 +99,17 @@ func TestMissingSoc(t *testing.T) {
 	assert.Equal(t, 22.0, ce.Soc(nil, 200))
 	assert.Equal(t, 22.0, ce.Soc(&soc, 200))
 
-	// energy reset while soc is missing keeps the estimate
+	// energy reset while soc is missing keeps the estimate (monotonic clamp)
 	assert.Equal(t, 22.0, ce.Soc(nil, 50))
+
+	// resample the baseline at a higher energy, then reset the energy below it:
+	// the reset guard must hold the estimate
+	soc = 25.0
+	assert.Equal(t, 25.0, ce.Soc(&soc, 400))
+	assert.Equal(t, 25.0, ce.Soc(nil, 50))
+
+	// extrapolation resumes once the energy passes the sampled baseline again
+	assert.Equal(t, 26.0, ce.Soc(nil, 500))
 }
 
 func TestMissingSocFromZero(t *testing.T) {
@@ -114,6 +123,13 @@ func TestMissingSocFromZero(t *testing.T) {
 	soc := 0.0
 	assert.Equal(t, 0.0, ce.Soc(&soc, 0))
 	assert.Equal(t, 1.0, ce.Soc(nil, 100))
+
+	// the first sample seeds the energy baseline: a 0% soc at nonzero session
+	// energy must not jump ahead by the pre-baseline energy
+	vehicle.EXPECT().Capacity().Return(8.5)
+	ce = NewEstimator(util.NewLogger("foo"), vehicle)
+	assert.Equal(t, 0.0, ce.Soc(&soc, 5000))
+	assert.Equal(t, 1.0, ce.Soc(nil, 5100))
 }
 
 func TestImprovedEstimatorRemainingChargeDuration(t *testing.T) {

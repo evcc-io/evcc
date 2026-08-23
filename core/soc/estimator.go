@@ -102,19 +102,19 @@ func (s *Estimator) Soc(fetchedSoc *float64, chargedEnergy float64) float64 {
 		return s.vehicleSoc
 	}
 
-	s.sampled = true
-
 	chargedEnergy = max(chargedEnergy, 0)
 	socDelta := *fetchedSoc - s.prevSoc
 	energyDelta := chargedEnergy - s.prevChargedEnergy
 
-	// no soc change and no energy reset: interpolate soc from charged energy
-	if socDelta == 0 && energyDelta >= 0 {
+	// no soc change and no energy reset: interpolate soc from charged energy.
+	// the first valid soc always takes the sampling path below to seed the baseline.
+	if s.sampled && socDelta == 0 && energyDelta >= 0 {
 		s.vehicleSoc = min(*fetchedSoc+energyDelta/s.energyPerSocStep, 100)
 		s.log.DEBUG.Printf("soc estimated: %.2f%% (vehicle: %.2f%%)", s.vehicleSoc, *fetchedSoc)
 		return s.vehicleSoc
 	}
 
+	s.sampled = true
 	s.vehicleSoc = *fetchedSoc
 
 	if s.initialSoc == 0 {
