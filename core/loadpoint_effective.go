@@ -1,7 +1,6 @@
 package core
 
 import (
-	"math"
 	"slices"
 	"time"
 
@@ -18,10 +17,12 @@ func (lp *Loadpoint) PublishEffectiveValues() {
 	lp.publish(keys.EffectivePlanTime, lp.EffectivePlanTime())
 	lp.publish(keys.EffectivePlanSoc, lp.EffectivePlanSoc())
 	lp.publish(keys.EffectivePlanStrategy, lp.EffectivePlanStrategy())
-	lp.publish(keys.EffectiveMinCurrent, lp.effectiveMinCurrent())
-	lp.publish(keys.EffectiveMaxCurrent, lp.effectiveMaxCurrent())
 	lp.publish(keys.EffectiveMinSoc, lp.EffectiveMinSoc())
 	lp.publish(keys.EffectiveLimitSoc, lp.EffectiveLimitSoc())
+
+	if ctrl, ok := lp.chargeController.(*CurrentController); ok {
+		ctrl.PublishEffectiveValues()
+	}
 }
 
 // EffectivePriority returns the effective priority
@@ -146,77 +147,6 @@ func (lp *Loadpoint) SocBasedPlanning() bool {
 	return lp.socBasedPlanning()
 }
 
-// effectiveMinCurrent returns the effective min current
-func (lp *Loadpoint) effectiveMinCurrent() float64 {
-	lpMin := lp.getMinCurrent()
-	var vehicleMin, chargerMin float64
-
-	if v := lp.GetVehicle(); v != nil {
-		if res, ok := v.OnIdentified().GetMinCurrent(); ok {
-			vehicleMin = res
-		}
-	}
-
-	if c, ok := api.Cap[api.CurrentLimiter](lp.charger); ok {
-		if res, _, err := c.GetMinMaxCurrent(); err == nil {
-			chargerMin = res
-		}
-	}
-
-	// power-limited chargers (e.g. EEBus OHPCF heat pump) report their demand in
-	// W; convert to per-phase current so the PV enable gate covers it
-	if c, ok := api.Cap[api.PowerLimiter](lp.charger); ok {
-		if res, _, err := c.GetMinMaxPower(); err == nil && res > 0 {
-			chargerMin = res / (Voltage * float64(lp.minActivePhases()))
-			// coarse chargers truncate to full amps in setLimit, so round the
-			// demand up to keep the enable gate reachable (#31549)
-			if lp.coarseCurrent() {
-				chargerMin = math.Ceil(chargerMin)
-			}
-		}
-	}
-
-	switch {
-	case max(vehicleMin, chargerMin) == 0:
-		return lpMin
-	case chargerMin > 0:
-		return max(vehicleMin, chargerMin)
-	default:
-		return max(vehicleMin, lpMin)
-	}
-}
-
-// effectiveMaxCurrent returns the effective max current
-func (lp *Loadpoint) effectiveMaxCurrent() float64 {
-	maxCurrent := lp.getMaxCurrent()
-
-	if v := lp.GetVehicle(); v != nil {
-		if res, ok := v.OnIdentified().GetMaxCurrent(); ok && res > 0 {
-			maxCurrent = min(maxCurrent, res)
-		}
-	}
-
-	if c, ok := api.Cap[api.CurrentLimiter](lp.charger); ok {
-		if _, res, err := c.GetMinMaxCurrent(); err == nil && res > 0 {
-			maxCurrent = min(maxCurrent, res)
-		}
-	}
-
-	if c, ok := api.Cap[api.PowerLimiter](lp.charger); ok {
-		if _, res, err := c.GetMinMaxPower(); err == nil && res > 0 {
-			powerMax := res / (Voltage * float64(lp.maxActivePhases()))
-			// match effectiveMinCurrent's rounding so a fixed power request
-			// (min == max) doesn't yield min > max on coarse chargers (#31549)
-			if lp.coarseCurrent() {
-				powerMax = math.Ceil(powerMax)
-			}
-			maxCurrent = min(maxCurrent, powerMax)
-		}
-	}
-
-	return maxCurrent
-}
-
 // EffectiveMinSoc returns the effective min soc (heating: min temperature)
 func (lp *Loadpoint) EffectiveMinSoc() int {
 	lp.RLock()
@@ -260,16 +190,16 @@ func (lp *Loadpoint) effectiveLimitSoc() int {
 	return 100
 }
 
-// EffectiveStepPower returns the effective step power for the currently active phases
-func (lp *Loadpoint) EffectiveStepPower() float64 {
-	return Voltage * float64(lp.ActivePhases())
-}
-
 // EffectiveMinPower returns the effective min power for the minimum active phases
 func (lp *Loadpoint) EffectiveMinPower() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
-	return Voltage * lp.effectiveMinCurrent() * float64(lp.minActivePhases())
+	return lp.effectiveMinPower()
+}
+
+// effectiveMinPower returns the effective min power taking vehicle capabilities and phase scaling into account
+func (lp *Loadpoint) effectiveMinPower() float64 {
+	return lp.ctrl().effectiveMinPower()
 }
 
 // EffectiveMaxPower returns the effective max power taking vehicle capabilities,
@@ -287,13 +217,7 @@ func (lp *Loadpoint) EffectiveMaxPower() float64 {
 
 // effectiveMaxPower returns the effective max power taking vehicle capabilities and phase scaling into account
 func (lp *Loadpoint) effectiveMaxPower() float64 {
-	res := Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())
-	if lp.vehicle != nil {
-		if maxPower, ok := lp.vehicle.OnIdentified().GetMaxPower(); ok {
-			return min(maxPower, res)
-		}
-	}
-	return res
+	return lp.ctrl().effectiveMaxPower()
 }
 
 // EffectivePlanStrategy returns the effective plan strategy

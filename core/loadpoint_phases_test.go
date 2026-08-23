@@ -83,12 +83,12 @@ func TestMaxActivePhases(t *testing.T) {
 			vehicle.EXPECT().Phases().Return(tc.vehicle).MinTimes(1)
 
 			lp := &Loadpoint{
-				phasesConfigured: configured, // fixed phases or default
-				vehicle:          vehicle,
-				phases:           tc.physical,
-				measuredPhases:   tc.measuredPhases,
-				charger:          plainCharger,
+				vehicle: vehicle,
+				charger: plainCharger,
 			}
+			currentController(lp).phasesConfigured = configured // fixed phases or default
+			currentController(lp).measuredPhases = tc.measuredPhases
+			currentController(lp).phases = tc.physical
 
 			// 1p3p
 			if tc.capable == 0 {
@@ -106,7 +106,7 @@ func TestMaxActivePhases(t *testing.T) {
 				expectedPhases = configured
 			}
 
-			require.Equal(t, expectedPhases, lp.maxActivePhases(), "expected max active phases")
+			require.Equal(t, expectedPhases, currentController(lp).maxActivePhases(), "expected max active phases")
 			ctrl.Finish()
 		}
 	}
@@ -135,12 +135,12 @@ func TestMinActivePhases(t *testing.T) {
 			vehicle.EXPECT().Phases().Return(tc.vehicle).AnyTimes()
 
 			lp := &Loadpoint{
-				phasesConfigured: configured, // fixed phases or default
-				vehicle:          vehicle,
-				phases:           tc.physical,
-				measuredPhases:   tc.measuredPhases,
-				charger:          plainCharger,
+				vehicle: vehicle,
+				charger: plainCharger,
 			}
+			currentController(lp).phasesConfigured = configured // fixed phases or default
+			currentController(lp).measuredPhases = tc.measuredPhases
+			currentController(lp).phases = tc.physical
 
 			// 1p3p
 			if tc.capable == 0 {
@@ -158,7 +158,7 @@ func TestMinActivePhases(t *testing.T) {
 				expectedPhases = configured
 			}
 
-			require.Equal(t, expectedPhases, lp.minActivePhases(), "expected min active phases")
+			require.Equal(t, expectedPhases, currentController(lp).minActivePhases(), "expected min active phases")
 			ctrl.Finish()
 		}
 	}
@@ -168,7 +168,7 @@ func testScale(t *testing.T, lp *Loadpoint, sitePower float64, direction string,
 	t.Helper()
 
 	act := lp.ActivePhases()
-	max := lp.maxActivePhases()
+	max := currentController(lp).maxActivePhases()
 
 	testDirection := direction[0:1] // (d)own or (u)p
 	testExpectation := tc.scale
@@ -178,7 +178,7 @@ func testScale(t *testing.T, lp *Loadpoint, sitePower float64, direction string,
 		// scale-up should only execute when the 1p max current is exceeded
 		// we're testing this here and remove the upscale expectation for the following test below 1p max current
 		if maxAmp := -sitePower / Voltage; maxAmp < maxA {
-			if scaled := lp.pvScalePhases(sitePower, minA, maxAmp-0.0001); scaled != 3 {
+			if scaled := currentController(lp).pvScalePhases(sitePower, minA, maxAmp-0.0001); scaled != 3 {
 				t.Errorf("%v act=%d max=%d missing scale %s at reduced max current %.1fA", tc, act, max, direction, maxAmp)
 			}
 
@@ -187,7 +187,7 @@ func testScale(t *testing.T, lp *Loadpoint, sitePower float64, direction string,
 		}
 	}
 
-	scaled := lp.pvScalePhases(sitePower, minA, maxA)
+	scaled := currentController(lp).pvScalePhases(sitePower, minA, maxA)
 
 	if strings.Contains(testExpectation, testDirection) {
 		if scaled == 0 {
@@ -221,22 +221,22 @@ func TestPvScalePhases(t *testing.T) {
 		vehicle.EXPECT().Features().AnyTimes()
 
 		lp := &Loadpoint{
-			log:              util.NewLogger("foo"),
-			bus:              evbus.New(),
-			clock:            clock,
-			chargeMeter:      &Null{},            // silence nil panics
-			chargeRater:      &Null{},            // silence nil panics
-			chargeTimer:      &Null{},            // silence nil panics
-			progress:         NewProgress(0, 10), // silence nil panics
-			wakeUpTimer:      NewTimer(),         // silence nil panics
-			mode:             api.ModeNow,
-			minCurrent:       minA,
-			maxCurrent:       maxA,
-			vehicle:          vehicle,
-			phasesConfigured: 0, // allow switching
-			phases:           tc.physical,
-			status:           api.StatusC,
+			log:         util.NewLogger("foo"),
+			bus:         evbus.New(),
+			clock:       clock,
+			chargeMeter: &Null{},            // silence nil panics
+			chargeRater: &Null{},            // silence nil panics
+			chargeTimer: &Null{},            // silence nil panics
+			progress:    NewProgress(0, 10), // silence nil panics
+			wakeUpTimer: NewTimer(),         // silence nil panics
+			mode:        api.ModeNow,
+			vehicle:     vehicle,
+			status:      api.StatusC,
 		}
+		currentController(lp).phasesConfigured = 0 // allow switching
+		currentController(lp).minCurrent = minA
+		currentController(lp).maxCurrent = maxA
+		currentController(lp).phases = tc.physical
 
 		if phaseCharger != nil {
 			lp.charger = struct {
@@ -255,14 +255,14 @@ func TestPvScalePhases(t *testing.T) {
 
 		attachListeners(t, lp)
 
-		lp.measuredPhases = tc.measuredPhases
+		currentController(lp).measuredPhases = tc.measuredPhases
 		if tc.measuredPhases > 0 && tc.vehicle > 0 {
 			t.Fatalf("%v invalid test case", tc)
 		}
 
-		require.Equal(t, tc.physical, lp.phases, "wrong phases")
+		require.Equal(t, tc.physical, currentController(lp).phases, "wrong phases")
 		require.Equal(t, tc.actExpected, lp.ActivePhases(), "expected active phases")
-		require.Equal(t, tc.maxExpected, lp.maxActivePhases(), "expected max active phases")
+		require.Equal(t, tc.maxExpected, currentController(lp).maxActivePhases(), "expected max active phases")
 
 		ctrl.Finish()
 
@@ -270,7 +270,7 @@ func TestPvScalePhases(t *testing.T) {
 		if phaseCharger != nil {
 			// scale down
 			min1p := 0.1
-			lp.phaseTimer = time.Time{}
+			currentController(lp).phaseTimer = time.Time{}
 			lp.chargePower = float64(lp.ActivePhases()) * minA * Voltage // charging at min current
 
 			plainCharger.EXPECT().Enable(false).Return(nil).MaxTimes(1)
@@ -281,11 +281,11 @@ func TestPvScalePhases(t *testing.T) {
 
 			// scale up
 			min3p := float64(tc.maxExpected) * minA * Voltage
-			lp.phaseTimer = time.Time{}
+			currentController(lp).phaseTimer = time.Time{}
 
 			// reset to initial state
-			lp.phases = tc.physical
-			lp.measuredPhases = tc.measuredPhases
+			currentController(lp).phases = tc.physical
+			currentController(lp).measuredPhases = tc.measuredPhases
 
 			plainCharger.EXPECT().Enable(false).Return(nil).MaxTimes(1)
 			phaseCharger.EXPECT().Phases1p3p(3).Return(nil).MaxTimes(1)
@@ -320,67 +320,67 @@ func TestPvScalePhasesTimer(t *testing.T) {
 		// switch up from 1p/1p configured/active
 		{"1/1->3, not enough power", 1, 1, 0, 1, 0, nil},
 		{"1/1->3, kickoff", 1, 1, -3 * Voltage * minA, 1, 0, func(lp *Loadpoint) {
-			lp.phaseTimer = time.Time{}
+			currentController(lp).phaseTimer = time.Time{}
 		}},
 		{"1/1->3, timer running", 1, 1, -3 * Voltage * minA, 1, 0, func(lp *Loadpoint) {
-			lp.phaseTimer = lp.clock.Now()
+			currentController(lp).phaseTimer = lp.clock.Now()
 		}},
 		{"1/1->3, timer elapsed", 1, 1, -3 * Voltage * minA, 3, 3, func(lp *Loadpoint) {
-			lp.phaseTimer = elapsed
+			currentController(lp).phaseTimer = elapsed
 		}},
 
 		// omit to switch up (again) from 3p/1p configured/a0ctive
 		{"3/1->3, not enough power", 3, 1, 0, 3, 0, nil},
 		{"3/1->3, kickoff", 3, 1, -3 * Voltage * minA, 3, 0, func(lp *Loadpoint) {
-			lp.phaseTimer = time.Time{}
+			currentController(lp).phaseTimer = time.Time{}
 		}},
 		{"3/1->3, timer running", 3, 1, -3 * Voltage * minA, 3, 0, func(lp *Loadpoint) {
-			lp.phaseTimer = lp.clock.Now()
+			currentController(lp).phaseTimer = lp.clock.Now()
 		}},
 		{"3/1->3, timer elapsed", 3, 1, -3 * Voltage * minA, 3, 0, func(lp *Loadpoint) {
-			lp.phaseTimer = elapsed
+			currentController(lp).phaseTimer = elapsed
 		}},
 
 		// omit to switch down from 3p/1p configured/active
 		{"3/1->1, not enough power", 3, 1, 0, 3, 0, nil},
 		{"3/1->1, kickoff", 3, 1, -1 * Voltage * minA, 3, 0, func(lp *Loadpoint) {
-			lp.phaseTimer = time.Time{}
+			currentController(lp).phaseTimer = time.Time{}
 		}},
 		{"3/1->1, timer running", 3, 1, -1 * Voltage * minA, 3, 0, func(lp *Loadpoint) {
-			lp.phaseTimer = lp.clock.Now()
+			currentController(lp).phaseTimer = lp.clock.Now()
 		}},
 		{"3/1->1, timer elapsed", 3, 1, -1 * Voltage * minA, 3, 0, func(lp *Loadpoint) {
-			lp.phaseTimer = elapsed
+			currentController(lp).phaseTimer = elapsed
 		}},
 
 		// switch down from 3p/3p configured/active
 		{"3/3->1, enough power", 3, 3, 0, 3, 0, nil},
 		{"3/3->1, enough power, timer elapsed, load point enabled", 3, 3, 0, 3, 0, func(lp *Loadpoint) {
-			lp.phaseTimer = elapsed
-			lp.enabled = true
+			currentController(lp).phaseTimer = elapsed
+			currentController(lp).enabled = true
 		}},
 		{"3/3->1, enough power, timer elapsed, load point disabled", 3, 3, 0, 1, 1, func(lp *Loadpoint) {
-			lp.phaseTimer = elapsed
-			lp.enabled = false
+			currentController(lp).phaseTimer = elapsed
+			currentController(lp).enabled = false
 		}},
 		{"3/3->1, kickoff", 3, 3, 0.1, 3, 0, func(lp *Loadpoint) {
-			lp.phaseTimer = time.Time{}
+			currentController(lp).phaseTimer = time.Time{}
 		}},
 		{"3/3->1, timer running", 3, 3, 0.1, 3, 0, func(lp *Loadpoint) {
-			lp.phaseTimer = lp.clock.Now()
+			currentController(lp).phaseTimer = lp.clock.Now()
 		}},
 		{"3/3->1, timer elapsed", 3, 3, 0.1, 1, 1, func(lp *Loadpoint) {
-			lp.phaseTimer = elapsed
+			currentController(lp).phaseTimer = elapsed
 		}},
 
 		// charging with insufficient power for 1p: disable instead of scaling down
 		{"3/3->1, insufficient for 1p, charging", 3, 3, 0.1, 3, 0, func(lp *Loadpoint) {
-			lp.phaseTimer = elapsed
-			lp.enabled = true
+			currentController(lp).phaseTimer = elapsed
+			currentController(lp).enabled = true
 		}},
 		{"3/3->1, sufficient for 1p, charging", 3, 3, 3 * Voltage * minA / 2, 1, 1, func(lp *Loadpoint) {
-			lp.phaseTimer = elapsed
-			lp.enabled = true
+			currentController(lp).phaseTimer = elapsed
+			currentController(lp).enabled = true
 			lp.chargePower = 3 * Voltage * minA
 		}},
 
@@ -396,13 +396,13 @@ func TestPvScalePhasesTimer(t *testing.T) {
 		// error states from 1p/3p misconfiguration - no correction for time being (stay at 1p)
 		{"1/3->1, enough power", 1, 3, -1 * Voltage * maxA, 1, 0, nil},
 		{"1/3->1, kickoff, correct phase setting", 1, 3, 0.1, 1, 0, func(lp *Loadpoint) {
-			lp.phaseTimer = time.Time{}
+			currentController(lp).phaseTimer = time.Time{}
 		}},
 		{"1/3->1, timer running, correct phase setting", 1, 3, 0.1, 1, 0, func(lp *Loadpoint) {
-			lp.phaseTimer = lp.clock.Now()
+			currentController(lp).phaseTimer = lp.clock.Now()
 		}},
 		{"1/3->1, switch not executed", 1, 3, 0.1, 1, 0, func(lp *Loadpoint) {
-			lp.phaseTimer = elapsed
+			currentController(lp).phaseTimer = elapsed
 		}},
 	}
 
@@ -412,15 +412,11 @@ func TestPvScalePhasesTimer(t *testing.T) {
 		clock.Add(time.Hour) // avoid time.IsZero
 
 		lp := &Loadpoint{
-			log:            util.NewLogger("foo"),
-			wakeUpTimer:    NewTimer(),
-			clock:          clock,
-			charger:        charger,
-			minCurrent:     minA,
-			maxCurrent:     maxA,
-			phases:         tc.phases,
-			measuredPhases: tc.measuredPhases,
-			status:         api.StatusC,
+			log:         util.NewLogger("foo"),
+			wakeUpTimer: NewTimer(),
+			clock:       clock,
+			charger:     charger,
+			status:      api.StatusC,
 			Enable: loadpoint.ThresholdConfig{
 				Delay: dt,
 			},
@@ -428,6 +424,10 @@ func TestPvScalePhasesTimer(t *testing.T) {
 				Delay: dt,
 			},
 		}
+		currentController(lp).measuredPhases = tc.measuredPhases
+		currentController(lp).minCurrent = minA
+		currentController(lp).maxCurrent = maxA
+		currentController(lp).phases = tc.phases
 
 		if tc.prepare != nil {
 			tc.prepare(lp)
@@ -437,10 +437,10 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			charger.MockPhaseSwitcher.EXPECT().Phases1p3p(tc.toPhases).Return(nil)
 		}
 
-		res := lp.pvScalePhases(tc.sitePower, minA, maxA)
+		res := currentController(lp).pvScalePhases(tc.sitePower, minA, maxA)
 
 		require.Equal(t, tc.res, res, tc.desc)
-		require.Equal(t, tc.toPhases, lp.phases, tc.desc)
+		require.Equal(t, tc.toPhases, currentController(lp).phases, tc.desc)
 	}
 }
 
@@ -478,17 +478,17 @@ func TestScalePhasesIfAvailable(t *testing.T) {
 				plainCharger,
 				phaseCharger,
 			},
-			minCurrent:       minA,
-			phasesConfigured: tc.dflt,     // fixed phases or default
-			phases:           tc.physical, // current phase status
 		}
+		currentController(lp).phasesConfigured = tc.dflt // fixed phases or default
+		currentController(lp).minCurrent = minA
+		currentController(lp).phases = tc.physical // current phase status
 
 		// restrict scalable charger by config
 		if tc.dflt == 0 || tc.dflt != tc.physical {
 			phaseCharger.EXPECT().Phases1p3p(tc.maxExpected).Return(nil)
 		}
 
-		_ = lp.scalePhasesIfAvailable(3)
+		_ = currentController(lp).scalePhasesIfAvailable(3)
 
 		ctrl.Finish()
 	}
@@ -517,10 +517,10 @@ func TestScalePhasesNotAvailable(t *testing.T) {
 			plainCharger,
 			phaseCharger,
 		},
-		phases: 1, // current phase status, switch to 3p will be attempted
 	}
+	currentController(lp).phases = 1 // current phase status, switch to 3p will be attempted
 
-	err := lp.scalePhases(3)
+	err := currentController(lp).scalePhases(3)
 	require.Error(t, err)
 	require.True(t, errors.Is(err, api.ErrNotAvailable), "want api.ErrNotAvailable, got %v", err)
 
@@ -528,9 +528,10 @@ func TestScalePhasesNotAvailable(t *testing.T) {
 	require.Equal(t, 1, lp.GetPhases())
 }
 
-// TestMinChargingPhaseScaling verifies that minCharging scales down to 1 phase
-// (the absolute minimum) when phase switching is available, so feed-in priority
-// in min+pv mode drops to 1p min current instead of staying on 3p (issue #30298).
+// TestMinChargingPhaseScaling verifies that a bottom-envelope SetPower target
+// scales down to 1 phase (the absolute minimum) when phase switching is available,
+// so feed-in priority in min+pv mode drops to 1p min current instead of staying
+// on 3p (issue #30298).
 func TestMinChargingPhaseScaling(t *testing.T) {
 	Voltage = 230
 
@@ -551,11 +552,11 @@ func TestMinChargingPhaseScaling(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			lp := NewLoadpoint(util.NewLogger("foo"), nil)
-			lp.minCurrent = 6
-			lp.maxCurrent = 16
-			lp.phasesConfigured = tc.phasesConfigured
-			lp.phases = tc.phases
-			lp.offeredCurrent = 0 // ensure MaxCurrent is called
+			currentController(lp).minCurrent = 6
+			currentController(lp).maxCurrent = 16
+			currentController(lp).phasesConfigured = tc.phasesConfigured
+			currentController(lp).phases = tc.phases
+			currentController(lp).offeredCurrent = 0 // ensure MaxCurrent is called
 			lp.wakeUpTimer = NewTimer()
 
 			plainCharger := api.NewMockCharger(ctrl)
@@ -573,11 +574,11 @@ func TestMinChargingPhaseScaling(t *testing.T) {
 			}
 
 			// minimum current is offered at the scaled phase count
-			plainCharger.EXPECT().MaxCurrent(int64(lp.minCurrent)).Return(nil)
+			plainCharger.EXPECT().MaxCurrent(int64(currentController(lp).minCurrent)).Return(nil)
 
-			err := lp.minCharging()
+			err := currentController(lp).SetPower(lp.effectiveMinPower())
 			require.NoError(t, err)
-			require.Equal(t, tc.expectedPhases, lp.phases, tc.desc)
+			require.Equal(t, tc.expectedPhases, currentController(lp).phases, tc.desc)
 
 			ctrl.Finish()
 		})
@@ -609,11 +610,11 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 			ctrl := gomock.NewController(t)
 
 			lp := NewLoadpoint(util.NewLogger("foo"), nil)
-			lp.minCurrent = 6
-			lp.maxCurrent = 16
-			lp.phases = tc.phases
+			currentController(lp).minCurrent = 6
+			currentController(lp).maxCurrent = 16
+			currentController(lp).phases = tc.phases
 			lp.chargePower = tc.chargePower
-			lp.offeredCurrent = 0 // ensure MaxCurrent is called
+			currentController(lp).offeredCurrent = 0 // ensure MaxCurrent is called
 			lp.wakeUpTimer = NewTimer()
 
 			plainCharger := api.NewMockCharger(ctrl)
@@ -633,8 +634,8 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 				circuit.EXPECT().ValidatePower(tc.chargePower, minPower3p).Return(tc.availableCircuitPower)
 
 				// setLimit calls
-				circuit.EXPECT().ValidateCurrent(gomock.Any(), lp.maxCurrent).Return(lp.maxCurrent)
-				circuit.EXPECT().ValidatePower(tc.chargePower, float64(tc.expectedPhases)*Voltage*lp.maxCurrent).Return(float64(tc.expectedPhases) * Voltage * lp.maxCurrent)
+				circuit.EXPECT().ValidateCurrent(gomock.Any(), currentController(lp).maxCurrent).Return(currentController(lp).maxCurrent)
+				circuit.EXPECT().ValidatePower(tc.chargePower, float64(tc.expectedPhases)*Voltage*currentController(lp).maxCurrent).Return(float64(tc.expectedPhases) * Voltage * currentController(lp).maxCurrent)
 			}
 
 			plainCharger.EXPECT().Enabled().Return(true, nil).AnyTimes()
@@ -644,11 +645,11 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 				phaseCharger.EXPECT().Phases1p3p(tc.expectedPhases).Return(nil)
 			}
 
-			plainCharger.EXPECT().MaxCurrent(int64(lp.maxCurrent)).Return(nil)
+			plainCharger.EXPECT().MaxCurrent(int64(currentController(lp).maxCurrent)).Return(nil)
 
-			err := lp.fastCharging()
+			err := currentController(lp).fastCharging()
 			require.NoError(t, err)
-			require.Equal(t, tc.expectedPhases, lp.phases, tc.desc)
+			require.Equal(t, tc.expectedPhases, currentController(lp).phases, tc.desc)
 
 			ctrl.Finish()
 		})
@@ -685,8 +686,6 @@ func TestUpdatePhaseSwitchNotAvailable(t *testing.T) {
 		progress:    NewProgress(0, 10),
 		wakeUpTimer: NewTimer(),
 		mode:        api.ModeNow,
-		minCurrent:  minA,
-		maxCurrent:  maxA,
 		status:      api.StatusC,
 		charger: struct {
 			*api.MockCharger
@@ -695,9 +694,10 @@ func TestUpdatePhaseSwitchNotAvailable(t *testing.T) {
 			plainCharger,
 			phaseCharger,
 		},
-		phasesConfigured: 3, // fixed 3p
-		phases:           0, // unknown
 	}
+	currentController(lp).phasesConfigured = 3 // fixed 3p
+	currentController(lp).minCurrent = minA
+	currentController(lp).maxCurrent = maxA
 
 	attachListeners(t, lp)
 
@@ -763,29 +763,29 @@ func TestPvScalePhasesCircuitLimits(t *testing.T) {
 			}).AnyTimes()
 
 			lp := &Loadpoint{
-				log:            util.NewLogger("foo"),
-				bus:            evbus.New(),
-				clock:          clock.NewMock(),
-				chargeMeter:    &Null{},
-				chargeRater:    &Null{},
-				chargeTimer:    &Null{},
-				progress:       NewProgress(0, 10),
-				wakeUpTimer:    NewTimer(),
-				mode:           api.ModeNow,
-				minCurrent:     6,
-				maxCurrent:     32,
-				vehicle:        vehicle,
-				phases:         tc.phases,
-				measuredPhases: tc.phases,
-				status:         api.StatusC,
-				circuit:        circuit,
+				log:         util.NewLogger("foo"),
+				bus:         evbus.New(),
+				clock:       clock.NewMock(),
+				chargeMeter: &Null{},
+				chargeRater: &Null{},
+				chargeTimer: &Null{},
+				progress:    NewProgress(0, 10),
+				wakeUpTimer: NewTimer(),
+				mode:        api.ModeNow,
+				vehicle:     vehicle,
+				status:      api.StatusC,
+				circuit:     circuit,
 				charger: struct {
 					*api.MockCharger
 					*api.MockPhaseSwitcher
 				}{plainCharger, phaseCharger},
 			}
+			currentController(lp).measuredPhases = tc.phases
+			currentController(lp).minCurrent = 6
+			currentController(lp).maxCurrent = 32
+			currentController(lp).phases = tc.phases
 
-			require.Equal(t, tc.expectedPhases, lp.pvScalePhases(tc.sitePower, lp.minCurrent, lp.maxCurrent))
+			require.Equal(t, tc.expectedPhases, currentController(lp).pvScalePhases(tc.sitePower, currentController(lp).minCurrent, currentController(lp).maxCurrent))
 
 			ctrl.Finish()
 		})

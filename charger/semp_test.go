@@ -304,7 +304,7 @@ func TestSEMPCharger(t *testing.T) {
 
 	t.Run("MaxCurrent", func(t *testing.T) {
 		handler.requestCount = 0
-		err := wb.MaxCurrent(16)
+		err := wb.(api.CurrentController).MaxCurrent(16)
 		require.NoError(t, err)
 		// calcPower() = 230 * 3 (phases) * 16 (current) = 11040, but limited to maxPower=11000
 		assert.Contains(t, handler.lastRequest, "<RecommendedPowerConsumption>11000</RecommendedPowerConsumption>")
@@ -414,7 +414,7 @@ func TestSEMPChargerPhases1p3p(t *testing.T) {
 		err := wb.Enable(true)
 		require.NoError(t, err)
 		// Set current to have a predictable power calculation
-		err = wb.MaxCurrent(16)
+		err = wb.(api.CurrentController).MaxCurrent(16)
 		require.NoError(t, err)
 		err = phaseSwitcher.Phases1p3p(1)
 		require.NoError(t, err)

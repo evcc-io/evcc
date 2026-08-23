@@ -7,7 +7,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-//go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,PowerLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,MeterReturnEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Dimmer,HEMS,Tariff
+//go:generate go tool mockgen -package api -destination mock.go -mock_names CurrentCharger=MockCharger github.com/evcc-io/evcc/api CurrentCharger,ChargeState,CurrentLimiter,PowerLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,MeterReturnEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Dimmer,HEMS,Tariff
 
 // Meter provides total active power in W
 type Meter interface {
@@ -88,11 +88,29 @@ type BatteryController interface {
 	SetBatteryMode(BatteryMode) error
 }
 
+// PowerController provides power-based charger control in W. Chargers that
+// natively accept power targets implement this interface; the charge controller
+// then writes power instead of current. Enable/disable stays on Charger and the
+// power envelope is supplied via PowerLimiter.
+type PowerController interface {
+	SetPower(power float64) error
+}
+
+// PowerLimiter returns the power limits for power-controlled devices
+type PowerLimiter interface {
+	GetMinMaxPower() (float64, float64, error)
+}
+
 // Charger provides current charging status and enable/disable charging
 type Charger interface {
 	ChargeState
 	Enabled() (bool, error)
 	Enable(enable bool) error
+}
+
+// CurrentCharger combines Charger and CurrentController; the typical AC charger, used for mock generation
+type CurrentCharger interface {
+	Charger
 	CurrentController
 }
 
@@ -189,11 +207,6 @@ type VehiclePosition interface {
 // CurrentLimiter returns the current limits
 type CurrentLimiter interface {
 	GetMinMaxCurrent() (float64, float64, error)
-}
-
-// PowerLimiter returns the power limits in W
-type PowerLimiter interface {
-	GetMinMaxPower() (float64, float64, error)
 }
 
 // SocLimiter returns the soc limit

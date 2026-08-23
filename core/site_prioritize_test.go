@@ -11,18 +11,19 @@ import (
 )
 
 func newPVLoadpoint(prio int, mode api.ChargeMode, status api.ChargeStatus, enabled bool, timer time.Time) *Loadpoint {
-	return &Loadpoint{
-		log:        util.NewLogger("lp"),
-		clock:      clock.NewMock(),
-		minCurrent: minA,
-		maxCurrent: maxA,
-		phases:     1,
-		mode:       mode,
-		status:     status,
-		enabled:    enabled,
-		pvTimer:    timer,
-		priority:   prio,
+	lp := &Loadpoint{
+		log:      util.NewLogger("lp"),
+		clock:    clock.NewMock(),
+		mode:     mode,
+		status:   status,
+		pvTimer:  timer,
+		priority: prio,
 	}
+	currentController(lp).minCurrent = minA
+	currentController(lp).maxCurrent = maxA
+	currentController(lp).phases = 1
+	currentController(lp).enabled = enabled
+	return lp
 }
 
 func TestPvChargeStarting(t *testing.T) {
@@ -78,7 +79,7 @@ func TestReservedPVPower(t *testing.T) {
 
 	// once high is charging it no longer reserves surplus from low
 	high.status = api.StatusC
-	high.enabled = true
+	currentController(high).enabled = true
 	high.pvTimer = time.Time{}
 	if got := site.reservedPVPower(low); got != 0 {
 		t.Errorf("low after high charging: want 0, got %.0f", got)

@@ -37,30 +37,30 @@ func TestBoostPower(t *testing.T) {
 		log:          util.NewLogger("lp"),
 		status:       api.StatusC,
 		batteryBoost: boostStart,
-		maxCurrent:   16,
-		phases:       3,
 	}
+	currentController(lp).maxCurrent = 16
+	currentController(lp).phases = 3
 	s := &mockSite{}
 	lp.site = s
 
 	// No max discharge power limit (nil)
 	s.maxDischargePower = nil
 	// EffectiveMaxPower will be 230 * 16 * 3 = 11040
-	res := lp.boostPower(0)
+	res := lp.boostPower(currentController(lp), currentController(lp).Envelope(), 0)
 	assert.Equal(t, 11040.0, res)
 	assert.Equal(t, boostContinue, lp.batteryBoost)
 
 	// Discharge power limit is 0W (battery empty)
 	s.maxDischargePower = new(float64)
 	lp.batteryBoost = boostStart
-	res = lp.boostPower(0)
+	res = lp.boostPower(currentController(lp), currentController(lp).Envelope(), 0)
 	assert.Equal(t, 0.0, res)
 
 	// With max discharge power limit
 	limit5000 := 5000.0
 	s.maxDischargePower = &limit5000
 	lp.batteryBoost = boostStart
-	res = lp.boostPower(0)
+	res = lp.boostPower(currentController(lp), currentController(lp).Envelope(), 0)
 	assert.Equal(t, 5000.0, res)
 	assert.Equal(t, boostContinue, lp.batteryBoost)
 
@@ -72,19 +72,19 @@ func TestBoostPower(t *testing.T) {
 	// delta = 790
 	// delta = min(790, max(0, 5000 - 0)) = 790
 	// res = 0 + 790 + 0 = 790
-	res = lp.boostPower(0)
+	res = lp.boostPower(currentController(lp), currentController(lp).Envelope(), 0)
 	assert.Equal(t, 790.0, res)
 
 	// boostContinue at limit
 	// delta = min(790, max(0, 5000 - 5000)) = 0
 	// res = 5000 + 0 + 0 = 5000
-	res = lp.boostPower(5000)
+	res = lp.boostPower(currentController(lp), currentController(lp).Envelope(), 5000)
 	assert.Equal(t, 5000.0, res)
 
 	// boostContinue over limit
 	// delta = min(790, max(0, 5000 - 6000)) = 0
 	// res = 6000 + 0 + 0 = 6000
-	res = lp.boostPower(6000)
+	res = lp.boostPower(currentController(lp), currentController(lp).Envelope(), 6000)
 	assert.Equal(t, 6000.0, res)
 
 	// boostStart while battery is charging (negative power)
@@ -92,7 +92,7 @@ func TestBoostPower(t *testing.T) {
 	// max discharge capacity = 5000 - (-2000) = 7000W
 	// res = max(0, -2000) + 7000 + 0 = 7000W
 	lp.batteryBoost = boostStart
-	res = lp.boostPower(-2000)
+	res = lp.boostPower(currentController(lp), currentController(lp).Envelope(), -2000)
 	assert.Equal(t, 7000.0, res)
 
 	// boostContinue while battery is charging (negative power)
@@ -103,7 +103,7 @@ func TestBoostPower(t *testing.T) {
 	s.maxDischargePower = &limit50
 	s.residualPower = 0 // base delta = 100 + 690 = 790
 	lp.batteryBoost = boostContinue
-	res = lp.boostPower(-2000)
+	res = lp.boostPower(currentController(lp), currentController(lp).Envelope(), -2000)
 	// res = max(0, -2000) + 790 + 0 = 790W
 	assert.Equal(t, 790.0, res)
 }
@@ -121,15 +121,15 @@ func (phaseSwitchCharger) Phases1p3p(int) error { return nil }
 func TestBoostPowerPhaseSwitchGapBridging(t *testing.T) {
 	Voltage = 230
 	lp := &Loadpoint{
-		log:              util.NewLogger("lp"),
-		status:           api.StatusC,
-		charger:          phaseSwitchCharger{},
-		batteryBoost:     boostContinue,
-		minCurrent:       6,
-		maxCurrent:       16,
-		phases:           1,
-		phasesConfigured: 3,
+		log:          util.NewLogger("lp"),
+		status:       api.StatusC,
+		charger:      phaseSwitchCharger{},
+		batteryBoost: boostContinue,
 	}
+	currentController(lp).phasesConfigured = 3
+	currentController(lp).minCurrent = 6
+	currentController(lp).maxCurrent = 16
+	currentController(lp).phases = 1
 	s := &mockSite{}
 	lp.site = s
 
@@ -139,7 +139,7 @@ func TestBoostPowerPhaseSwitchGapBridging(t *testing.T) {
 	limit := 10000.0
 	s.maxDischargePower = &limit
 	s.residualPower = 0
-	res := lp.boostPower(0)
+	res := lp.boostPower(currentController(lp), currentController(lp).Envelope(), 0)
 	// delta = 100 (base) + 230 (step@1p) + 460 (gap) = 790
 	// res = 0 + 790 + 0 = 790
 	assert.Equal(t, 790.0, res)
@@ -148,8 +148,8 @@ func TestBoostPowerPhaseSwitchGapBridging(t *testing.T) {
 	assert.Greater(t, Voltage*16+res, Voltage*6*3, "boost must bridge 1p-3p gap")
 
 	// already on 3p: no phase gap added, only base + step
-	lp.phases = 3
-	res = lp.boostPower(0)
+	currentController(lp).phases = 3
+	res = lp.boostPower(currentController(lp), currentController(lp).Envelope(), 0)
 	// delta = 100 + 690 (step@3p) = 790
 	assert.Equal(t, 790.0, res)
 }
@@ -202,25 +202,26 @@ func TestBoostPowerPhaseSwitchGapBridgingExclusions(t *testing.T) {
 
 			circuit := api.NewMockCircuit(ctrl)
 			circuit.EXPECT().ValidatePower(gomock.Any(), gomock.Any()).Return(tc.circuitPower).AnyTimes()
+			circuit.EXPECT().GetMaxPower().Return(0.0).AnyTimes() // via phaseSwitchGapPower -> EffectiveMaxPower
 
 			lp := &Loadpoint{
-				log:              util.NewLogger("lp"),
-				status:           api.StatusC,
-				charger:          tc.charger,
-				batteryBoost:     boostContinue,
-				minCurrent:       6,
-				maxCurrent:       16,
-				phases:           1,
-				phasesConfigured: 3,
-				phasesSwitched:   tc.phasesSwitched,
-				circuit:          circuit,
+				log:          util.NewLogger("lp"),
+				status:       api.StatusC,
+				charger:      tc.charger,
+				batteryBoost: boostContinue,
+				circuit:      circuit,
 			}
+			currentController(lp).phasesConfigured = 3
+			currentController(lp).phasesSwitched = tc.phasesSwitched
+			currentController(lp).minCurrent = 6
+			currentController(lp).maxCurrent = 16
+			currentController(lp).phases = 1
 			s := &mockSite{
 				maxDischargePower: tc.maxDischargePower,
 			}
 			lp.site = s
 
-			res := lp.boostPower(0)
+			res := lp.boostPower(currentController(lp), currentController(lp).Envelope(), 0)
 			assert.Equal(t, tc.expected, res)
 		})
 	}

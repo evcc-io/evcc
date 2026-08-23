@@ -41,11 +41,12 @@ func TestSyncCharger(t *testing.T) {
 			clock:   clock.New(),
 			charger: charger,
 			status:  tc.status,
-			enabled: tc.expected,
 		}
+		currentController(lp).enabled = tc.expected
 
-		require.NoError(t, lp.syncCharger())
-		assert.Equal(t, tc.corrected, lp.enabled)
+		_, err := currentController(lp).syncCharger()
+		require.NoError(t, err)
+		assert.Equal(t, tc.corrected, currentController(lp).enabled)
 	}
 }
 
@@ -77,18 +78,19 @@ func TestSyncChargerCurrentsByGetter(t *testing.T) {
 		cg.EXPECT().GetMaxCurrent().Return(tc.actualCurrent, nil).MaxTimes(1)
 
 		lp := &Loadpoint{
-			log:            util.NewLogger("foo"),
-			bus:            evbus.New(),
-			clock:          clock.New(),
-			charger:        charger,
-			status:         api.StatusC,
-			enabled:        true,
-			phases:         3,
-			offeredCurrent: tc.lpCurrent,
+			log:     util.NewLogger("foo"),
+			bus:     evbus.New(),
+			clock:   clock.New(),
+			charger: charger,
+			status:  api.StatusC,
 		}
+		currentController(lp).enabled = true
+		currentController(lp).phases = 3
+		currentController(lp).offeredCurrent = tc.lpCurrent
 
-		require.NoError(t, lp.syncCharger())
-		assert.Equal(t, tc.outCurrent, lp.offeredCurrent)
+		_, err := currentController(lp).syncCharger()
+		require.NoError(t, err)
+		assert.Equal(t, tc.outCurrent, currentController(lp).offeredCurrent)
 	}
 }
 
@@ -113,19 +115,20 @@ func TestSyncChargerCurrentsByMeasurement(t *testing.T) {
 		charger.EXPECT().Enabled().Return(true, nil)
 
 		lp := &Loadpoint{
-			log:            util.NewLogger("foo"),
-			bus:            evbus.New(),
-			clock:          clock.New(),
-			charger:        charger,
-			status:         api.StatusC,
-			enabled:        true,
-			phases:         3,
-			offeredCurrent: tc.lpCurrent,
-			chargeCurrents: []float64{tc.actualCurrent, 0, 0},
+			log:     util.NewLogger("foo"),
+			bus:     evbus.New(),
+			clock:   clock.New(),
+			charger: charger,
+			status:  api.StatusC,
 		}
+		currentController(lp).chargeCurrents = []float64{tc.actualCurrent, 0, 0}
+		currentController(lp).enabled = true
+		currentController(lp).phases = 3
+		currentController(lp).offeredCurrent = tc.lpCurrent
 
-		require.NoError(t, lp.syncCharger())
-		assert.Equal(t, tc.outCurrent, lp.offeredCurrent)
+		_, err := currentController(lp).syncCharger()
+		require.NoError(t, err)
+		assert.Equal(t, tc.outCurrent, currentController(lp).offeredCurrent)
 	}
 }
 
@@ -162,18 +165,19 @@ func TestSyncChargerPhasesByGetter(t *testing.T) {
 		pg.EXPECT().GetPhases().Return(tc.actualPhases, nil).MaxTimes(1)
 
 		lp := &Loadpoint{
-			log:            util.NewLogger("foo"),
-			bus:            evbus.New(),
-			clock:          clock.New(),
-			charger:        charger,
-			status:         api.StatusC,
-			enabled:        true,
-			phases:         tc.lpPhases,
-			measuredPhases: tc.actualPhases,
+			log:     util.NewLogger("foo"),
+			bus:     evbus.New(),
+			clock:   clock.New(),
+			charger: charger,
+			status:  api.StatusC,
 		}
+		currentController(lp).measuredPhases = tc.actualPhases
+		currentController(lp).enabled = true
+		currentController(lp).phases = tc.lpPhases
 
-		require.NoError(t, lp.syncCharger())
-		assert.Equal(t, tc.outPhases, lp.phases)
+		_, err := currentController(lp).syncCharger()
+		require.NoError(t, err)
+		assert.Equal(t, tc.outPhases, currentController(lp).phases)
 	}
 }
 
@@ -208,17 +212,18 @@ func TestSyncChargerPhasesByMeasurement(t *testing.T) {
 		ch.EXPECT().Enabled().Return(true, nil)
 
 		lp := &Loadpoint{
-			log:            util.NewLogger("foo"),
-			bus:            evbus.New(),
-			clock:          clock.New(),
-			charger:        charger,
-			status:         api.StatusC,
-			enabled:        true,
-			phases:         tc.lpPhases,
-			measuredPhases: tc.actualPhases,
+			log:     util.NewLogger("foo"),
+			bus:     evbus.New(),
+			clock:   clock.New(),
+			charger: charger,
+			status:  api.StatusC,
 		}
+		currentController(lp).measuredPhases = tc.actualPhases
+		currentController(lp).enabled = true
+		currentController(lp).phases = tc.lpPhases
 
-		require.NoError(t, lp.syncCharger())
-		assert.Equal(t, tc.outPhases, lp.phases)
+		_, err := currentController(lp).syncCharger()
+		require.NoError(t, err)
+		assert.Equal(t, tc.outPhases, currentController(lp).phases)
 	}
 }

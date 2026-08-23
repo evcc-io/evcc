@@ -103,8 +103,9 @@ func TestEffectiveMinMaxCurrent(t *testing.T) {
 			lp.vehicle = vehicle
 		}
 
-		assert.Equal(t, tc.effectiveMin, lp.effectiveMinCurrent(), "min")
-		assert.Equal(t, tc.effectiveMax, lp.effectiveMaxCurrent(), "max")
+		cc := currentController(lp)
+		assert.Equal(t, tc.effectiveMin, cc.effectiveMinCurrent(), "min")
+		assert.Equal(t, tc.effectiveMax, cc.effectiveMaxCurrent(), "max")
 	}
 }
 
@@ -113,7 +114,7 @@ func TestEffectivePowerLimiter(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
-	phases := float64(lp.minActivePhases()) // == maxActivePhases for default lp
+	phases := float64(currentController(lp).minActivePhases()) // == maxActivePhases for default lp
 
 	powerLimiter := api.NewMockPowerLimiter(ctrl)
 	// min 10A, max 12A worth of power across all phases
@@ -127,8 +128,8 @@ func TestEffectivePowerLimiter(t *testing.T) {
 		PowerLimiter: powerLimiter,
 	}
 
-	assert.Equal(t, 10.0, lp.effectiveMinCurrent(), "min")
-	assert.Equal(t, 12.0, lp.effectiveMaxCurrent(), "max")
+	assert.Equal(t, 10.0, currentController(lp).effectiveMinCurrent(), "min")
+	assert.Equal(t, 12.0, currentController(lp).effectiveMaxCurrent(), "max")
 }
 
 // coarse power-limited charger with fixed request must not yield min > max (#31549)
@@ -137,7 +138,7 @@ func TestEffectivePowerLimiterCoarse(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
-	phases := float64(lp.minActivePhases())
+	phases := float64(currentController(lp).minActivePhases())
 
 	powerLimiter := api.NewMockPowerLimiter(ctrl)
 	// fixed 5.5 A/phase request -> fractional, coarse charger truncates to 5 A
@@ -153,8 +154,8 @@ func TestEffectivePowerLimiterCoarse(t *testing.T) {
 		PowerLimiter: powerLimiter,
 	}
 
-	minCurrent := lp.effectiveMinCurrent()
-	maxCurrent := lp.effectiveMaxCurrent()
+	minCurrent := currentController(lp).effectiveMinCurrent()
+	maxCurrent := currentController(lp).effectiveMaxCurrent()
 	assert.Equal(t, 6.0, minCurrent, "min rounded up to full amps")
 	assert.Equal(t, 6.0, maxCurrent, "max rounded up to full amps")
 	assert.LessOrEqual(t, minCurrent, maxCurrent, "min must not exceed max")
@@ -279,8 +280,8 @@ func TestGetChargePowerFlexibility(t *testing.T) {
 			lp.chargePower = 2700
 			lp.planActive = tc.planActive
 			// EffectiveMinPower() = 230V * 6A * 1phase = 1380W
-			lp.minCurrent = 6
-			lp.phases = 1
+			currentController(lp).minCurrent = 6
+			currentController(lp).phases = 1
 
 			assert.Equal(t, tc.want, lp.GetChargePowerFlexibility(nil))
 		})

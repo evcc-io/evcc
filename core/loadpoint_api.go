@@ -178,7 +178,7 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 		// reset timers
 		switch mode {
 		case api.ModeNow, api.ModeOff:
-			lp.resetPhaseTimer()
+			lp.ctrl().resetPhaseTimer()
 			lp.resetPVTimer()
 			lp.setPlanActive(false)
 		case api.ModeMinPV:
@@ -250,20 +250,23 @@ func (lp *Loadpoint) SetPriority(prio int) {
 func (lp *Loadpoint) GetPhases() int {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.phases
+	if ctrl := lp.ctrl(); ctrl != nil {
+		return ctrl.phases
+	}
+	return 0
 }
 
 // GetPhasesConfigured returns the configured phases
 func (lp *Loadpoint) GetPhasesConfigured() int {
 	lp.RLock()
 	defer lp.RUnlock()
-	return lp.phasesConfigured
+	return lp.ctrl().phasesConfigured
 }
 
 // SetPhasesConfigured sets the configured phases
 func (lp *Loadpoint) SetPhasesConfigured(phases int) error {
 	// limit auto mode (phases=0) to scalable charger
-	if !lp.hasPhaseSwitching() && phases == 0 {
+	if !lp.ctrl().hasPhaseSwitching() && phases == 0 {
 		return fmt.Errorf("charger does not support phase switching")
 	}
 
@@ -271,7 +274,7 @@ func (lp *Loadpoint) SetPhasesConfigured(phases int) error {
 		return fmt.Errorf("invalid number of phases: %d", phases)
 	}
 
-	if physical := lp.getChargerPhysicalPhases(); physical != 0 && phases > physical {
+	if physical := lp.ctrl().getChargerPhysicalPhases(); physical != 0 && phases > physical {
 		return fmt.Errorf("cannot configure more phases than physically connected: %d > %d", phases, physical)
 	}
 
@@ -748,10 +751,7 @@ func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 func (lp *Loadpoint) GetMaxPhaseCurrent() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
-	if lp.chargeCurrents == nil {
-		return lp.offeredCurrent
-	}
-	return max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
+	return lp.ctrl().maxPhaseCurrent()
 }
 
 // GetMinCurrent returns the min loadpoint current
@@ -763,14 +763,17 @@ func (lp *Loadpoint) GetMinCurrent() float64 {
 
 // getMinCurrent returns the max loadpoint current
 func (lp *Loadpoint) getMinCurrent() float64 {
-	return lp.minCurrent
+	if ctrl := lp.ctrl(); ctrl != nil {
+		return ctrl.minCurrent
+	}
+	return 0
 }
 
 // setMinCurrent sets the min loadpoint current (no mutex)
 func (lp *Loadpoint) setMinCurrent(current float64) {
-	lp.minCurrent = current
-	lp.publish(keys.MinCurrent, lp.minCurrent)
-	lp.settings.SetFloat(keys.MinCurrent, lp.minCurrent)
+	lp.ctrl().minCurrent = current
+	lp.publish(keys.MinCurrent, current)
+	lp.settings.SetFloat(keys.MinCurrent, current)
 }
 
 // SetMinCurrent sets the min loadpoint current
@@ -778,12 +781,12 @@ func (lp *Loadpoint) SetMinCurrent(current float64) error {
 	lp.Lock()
 	defer lp.Unlock()
 
-	if current > lp.maxCurrent {
+	if current > lp.getMaxCurrent() {
 		return errors.New("min current must be smaller or equal than max current")
 	}
 
 	lp.log.DEBUG.Println("set min current:", current)
-	if current != lp.minCurrent {
+	if current != lp.getMinCurrent() {
 		lp.setMinCurrent(current)
 	}
 
@@ -799,14 +802,17 @@ func (lp *Loadpoint) GetMaxCurrent() float64 {
 
 // getMaxCurrent returns the max loadpoint current
 func (lp *Loadpoint) getMaxCurrent() float64 {
-	return lp.maxCurrent
+	if ctrl := lp.ctrl(); ctrl != nil {
+		return ctrl.maxCurrent
+	}
+	return 0
 }
 
 // setMaxCurrent sets the max loadpoint current
 func (lp *Loadpoint) setMaxCurrent(current float64) {
-	lp.maxCurrent = current
-	lp.publish(keys.MaxCurrent, lp.maxCurrent)
-	lp.settings.SetFloat(keys.MaxCurrent, lp.maxCurrent)
+	lp.ctrl().maxCurrent = current
+	lp.publish(keys.MaxCurrent, current)
+	lp.settings.SetFloat(keys.MaxCurrent, current)
 }
 
 // SetMaxCurrent sets the max loadpoint current
@@ -814,12 +820,12 @@ func (lp *Loadpoint) SetMaxCurrent(current float64) error {
 	lp.Lock()
 	defer lp.Unlock()
 
-	if current < lp.minCurrent {
+	if current < lp.getMinCurrent() {
 		return errors.New("max current must be greater or equal than min current")
 	}
 
 	lp.log.DEBUG.Println("set max current:", current)
-	if current != lp.maxCurrent {
+	if current != lp.getMaxCurrent() {
 		lp.setMaxCurrent(current)
 	}
 
