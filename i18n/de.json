@@ -164,8 +164,23 @@
         "switchsocket": "Benutzerdefinierte schaltbare Steckdose"
       }
     },
+    "circuit": {
+      "parentCircuit": "Übergeordneter Stromkreis",
+      "titleAdd": "Stromkreis hinzufügen",
+      "titleEdit": "Stromkreis bearbeiten",
+      "titleLabel": "Titel",
+      "template": "Stromkreis",
+      "generic": "Generischer Stromkreis",
+      "custom": "Benutzerdefinierter Stromkreis",
+      "primary": "Spezifischer Stromkreis"
+    },
     "circuits": {
+      "addSubCircuit": "Untergeordneten Stromkreis hinzufügen",
+      "chargingPointsNote": "Ladepunkte werden in ihren eigenen Einstellungen Stromkreisen zugewiesen.",
+      "addMainCircuit": "Hauptstromkreis hinzufügen",
+      "noCircuitsConfigured": "Keine Stromkreise konfiguriert. Beginne mit einem Hauptstromkreis, der deinen Netzanschluss darstellt.",
       "description": "Stellt sicher, dass die Summe aller Ladepunkte, die an einen Stromkreis angeschlossen sind, die konfigurierten Leistungs- und Stromgrenzen nicht überschreitet. Stromkreise können verschachtelt werden, um eine Hierarchie aufzubauen.",
+      "legacyWarning": "Neue Stromkreis-Konfiguration verfügbar! Entferne und speichere deine Konfiguration hier, um den neuen geführten Prozess zu verwenden.",
       "title": "Lastmanagement",
       "usableMeters": "Verwendbare Zählerreferenzen"
     },
