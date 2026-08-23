@@ -8,7 +8,6 @@ import (
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/server/db"
-	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -52,7 +51,7 @@ loadpoints:
 
 	suite.Require().NoError(viper.UnmarshalExact(&conf))
 
-	suite.Require().NoError(configureCircuits(&conf.Circuits, make(chan util.Param, 1)))
+	suite.Require().NoError(configureCircuits(&conf.Circuits))
 	suite.Require().Len(config.Circuits().Devices(), 2)
 	suite.Require().False(config.Circuits().Devices()[0].Instance().HasMeter())
 
@@ -83,7 +82,7 @@ loadpoints:
 
 	suite.Require().NoError(viper.UnmarshalExact(&conf))
 
-	suite.Require().NoError(configureCircuits(&conf.Circuits, make(chan util.Param, 1)))
+	suite.Require().NoError(configureCircuits(&conf.Circuits))
 	suite.Require().Len(config.Circuits().Devices(), 2)
 	suite.Require().False(config.Circuits().Devices()[0].Instance().HasMeter())
 
@@ -141,7 +140,7 @@ loadpoints:
 
 	suite.Require().NoError(viper.UnmarshalExact(&conf))
 
-	suite.Require().NoError(configureCircuits(&conf.Circuits, make(chan util.Param, 1)))
+	suite.Require().NoError(configureCircuits(&conf.Circuits))
 	suite.Require().Len(config.Circuits().Devices(), 1)
 
 	// mock charger

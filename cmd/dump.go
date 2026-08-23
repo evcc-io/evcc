@@ -57,7 +57,7 @@ func runDump(cmd *cobra.Command, args []string) {
 
 	var site *core.Site
 	if err == nil {
-		site, err = configureSiteAndLoadpoints(&conf, make(chan util.Param, 1))
+		site, err = configureSiteAndLoadpoints(&conf)
 	}
 
 	if *dumpConfig {
