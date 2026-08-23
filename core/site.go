@@ -167,6 +167,24 @@ func activeMeters(refs []string) ([]config.Device[api.Meter], error) {
 	return res, nil
 }
 
+// newMeterCollector creates a meter collector and reconciles the persisted meter
+// readings with the device's capabilities, so a device that lost its energy
+// registers falls back to power integration instead of freezing.
+func newMeterCollector(group, ref, title string, meter api.Meter) (*metrics.Collector, error) {
+	energy, returnEnergy := api.HasCap[api.MeterEnergy](meter), api.HasCap[api.MeterReturnEnergy](meter)
+	if group == metrics.Battery {
+		// batteries map discharge to energy, see updateBatteryMeters
+		energy, returnEnergy = returnEnergy, energy
+	}
+
+	c, err := metrics.NewCollector(group, ref, title)
+	if err != nil {
+		return nil, err
+	}
+
+	return c, c.SetCapabilities(energy, returnEnergy)
+}
+
 func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tariff.Tariffs) error {
 	site.loadpoints = loadpoints
 	site.tariffs = tariffs
@@ -233,7 +251,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		} else {
 			site.gridMeter = dev
 
-			me, err := metrics.NewCollector(metrics.Grid, site.Meters.GridMeterRef, metrics.Grid)
+			me, err := newMeterCollector(metrics.Grid, site.Meters.GridMeterRef, metrics.Grid, dev.Instance())
 			if err != nil {
 				return err
 			}
@@ -253,7 +271,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		site.pvMeters = append(site.pvMeters, dev)
 
 		// energy collector (for history persistence and forecast scaling)
-		me, err := metrics.NewCollector(metrics.PV, ref, deviceTitleOrName(dev))
+		me, err := newMeterCollector(metrics.PV, ref, deviceTitleOrName(dev), dev.Instance())
 		if err != nil {
 			return err
 		}
@@ -282,7 +300,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.batteryMeters = mm
 	for _, dev := range mm {
 		ref := dev.Config().Name
-		me, err := metrics.NewCollector(metrics.Battery, ref, deviceTitleOrName(dev))
+		me, err := newMeterCollector(metrics.Battery, ref, deviceTitleOrName(dev), dev.Instance())
 		if err != nil {
 			return err
 		}
@@ -297,7 +315,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.extMeters = mm
 	for _, dev := range mm {
 		ref := dev.Config().Name
-		me, err := metrics.NewCollector(metrics.Meter, ref, deviceTitleOrName(dev))
+		me, err := newMeterCollector(metrics.Meter, ref, deviceTitleOrName(dev), dev.Instance())
 		if err != nil {
 			return err
 		}
@@ -312,7 +330,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.auxMeters = mm
 	for _, dev := range mm {
 		ref := dev.Config().Name
-		me, err := metrics.NewCollector(metrics.Consumer, ref, deviceTitleOrName(dev))
+		me, err := newMeterCollector(metrics.Consumer, ref, deviceTitleOrName(dev), dev.Instance())
 		if err != nil {
 			return err
 		}
@@ -327,7 +345,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.consumerMeters = mm
 	for _, dev := range mm {
 		ref := dev.Config().Name
-		me, err := metrics.NewCollector(metrics.Consumer, ref, deviceTitleOrName(dev))
+		me, err := newMeterCollector(metrics.Consumer, ref, deviceTitleOrName(dev), dev.Instance())
 		if err != nil {
 			return err
 		}
