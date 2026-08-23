@@ -63,7 +63,7 @@ render: |
   forecast:
     source: http
     uri: https://api.energypriceforecast.eu/api/v1/evcc/tariff?country={{.region}}&type=grid&currency={{.currency}}&hours={{.horizon}}
-    {{- if .apikey }}
+    {{ if .apikey }}
     auth:
       type: bearer
       token: {{ .apikey }}
