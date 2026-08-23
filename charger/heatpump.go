@@ -174,6 +174,13 @@ func (wb *Heatpump) MaxCurrentMillis(current float64) error {
 	return wb.setMaxPower(int64(230 * current * float64(phases)))
 }
 
+var _ api.PowerController = (*Heatpump)(nil)
+
+// SetPower implements the api.PowerController interface
+func (wb *Heatpump) SetPower(power float64) error {
+	return wb.setMaxPower(int64(power))
+}
+
 var _ loadpoint.Controller = (*Heatpump)(nil)
 
 // LoadpointControl implements loadpoint.Controller

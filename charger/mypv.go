@@ -272,11 +272,18 @@ func (wb *MyPv) MaxCurrentMillis(current float64) error {
 		}
 	}
 
-	power := uint16(voltage * current * float64(phases))
+	return wb.SetPower(voltage * current * float64(phases))
+}
 
-	err := wb.setPower(power)
+var _ api.PowerController = (*MyPv)(nil)
+
+// SetPower implements the api.PowerController interface
+func (wb *MyPv) SetPower(power float64) error {
+	p := uint16(power)
+
+	err := wb.setPower(p)
 	if err == nil {
-		atomic.StoreUint32(&wb.power, uint32(power))
+		atomic.StoreUint32(&wb.power, uint32(p))
 	}
 
 	return err
