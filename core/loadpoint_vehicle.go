@@ -180,6 +180,11 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 			lp.SetMode(mode)
 		}
 
+		// vehicle limits are applied on top of the loadpoint config and may contradict it
+		if minCurrent, maxCurrent := lp.minCurrentLimit(), lp.effectiveMaxCurrent(); minCurrent > maxCurrent {
+			lp.log.ERROR.Printf("invalid config: min current %.3gA exceeds max current %.3gA, charging at %.3gA", minCurrent, maxCurrent, maxCurrent)
+		}
+
 		lp.addTask(lp.vehicleOdometer)
 
 		lp.progress.Reset()

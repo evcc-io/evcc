@@ -146,8 +146,15 @@ func (lp *Loadpoint) SocBasedPlanning() bool {
 	return lp.socBasedPlanning()
 }
 
-// effectiveMinCurrent returns the effective min current
+// effectiveMinCurrent returns the effective min current, capped at the effective
+// max current. Vehicle and charger limits are dynamic, so any combination of them
+// and the loadpoint config must yield a usable current (#32843).
 func (lp *Loadpoint) effectiveMinCurrent() float64 {
+	return min(lp.minCurrentLimit(), lp.effectiveMaxCurrent())
+}
+
+// minCurrentLimit returns the highest min current of loadpoint, vehicle and charger
+func (lp *Loadpoint) minCurrentLimit() float64 {
 	lpMin := lp.getMinCurrent()
 	var vehicleMin, chargerMin float64
 

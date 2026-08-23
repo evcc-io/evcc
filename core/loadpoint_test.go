@@ -974,3 +974,33 @@ func TestPVDisableContinuousDeviceShortfall(t *testing.T) {
 		})
 	}
 }
+
+// a vehicle max current below the loadpoint min current must not stall control (#32843)
+func TestSetLimitVehicleMaxBelowLoadpointMin(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	ch := api.NewMockCharger(ctrl)
+
+	v := api.NewMockVehicle(ctrl)
+	v.EXPECT().OnIdentified().Return(api.ActionConfig{MaxCurrent: 20}).AnyTimes()
+	v.EXPECT().Features().Return(nil).AnyTimes()
+
+	lp := &Loadpoint{
+		log:         util.NewLogger("foo"),
+		bus:         evbus.New(),
+		clock:       clock.NewMock(),
+		charger:     ch,
+		vehicle:     v,
+		minCurrent:  25,
+		maxCurrent:  29,
+		wakeUpTimer: NewTimer(), // silence nil panics
+	}
+
+	assert.Equal(t, 25.0, lp.minCurrentLimit(), "min current limit")
+	assert.Equal(t, 20.0, lp.effectiveMinCurrent(), "effective min current")
+
+	ch.EXPECT().MaxCurrent(int64(20)).Return(nil)
+	ch.EXPECT().Enable(true).Return(nil)
+
+	require.NoError(t, lp.setLimit(lp.effectiveMaxCurrent()))
+	assert.Equal(t, 20.0, lp.offeredCurrent)
+}

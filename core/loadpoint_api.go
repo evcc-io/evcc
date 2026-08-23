@@ -778,9 +778,8 @@ func (lp *Loadpoint) SetMinCurrent(current float64) error {
 	lp.Lock()
 	defer lp.Unlock()
 
-	// vehicle or charger may limit max current below the loadpoint setting (#32843)
-	if maxCurrent := lp.effectiveMaxCurrent(); current > maxCurrent {
-		return fmt.Errorf("min current must be smaller or equal than max current %.3gA", maxCurrent)
+	if current > lp.maxCurrent {
+		return errors.New("min current must be smaller or equal than max current")
 	}
 
 	lp.log.DEBUG.Println("set min current:", current)
@@ -815,9 +814,8 @@ func (lp *Loadpoint) SetMaxCurrent(current float64) error {
 	lp.Lock()
 	defer lp.Unlock()
 
-	// vehicle or charger may raise min current above the loadpoint setting (#32843)
-	if minCurrent := max(lp.minCurrent, lp.effectiveMinCurrent()); current < minCurrent {
-		return fmt.Errorf("max current must be greater or equal than min current %.3gA", minCurrent)
+	if current < lp.minCurrent {
+		return errors.New("max current must be greater or equal than min current")
 	}
 
 	lp.log.DEBUG.Println("set max current:", current)

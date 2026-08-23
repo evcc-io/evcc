@@ -954,11 +954,7 @@ func (lp *Loadpoint) setLimit(current float64) error {
 		current = lp.roundedCurrent(min(currentLimit, currentLimitViaPower))
 	}
 
-	// https://github.com/evcc-io/evcc/issues/16309
 	effMinCurrent := lp.effectiveMinCurrent()
-	if effMaxCurrent := lp.effectiveMaxCurrent(); effMinCurrent > effMaxCurrent {
-		return fmt.Errorf("invalid config: min current %.3gA exceeds max current %.3gA", effMinCurrent, effMaxCurrent)
-	}
 
 	// set current
 	if current != lp.offeredCurrent && current >= effMinCurrent {
