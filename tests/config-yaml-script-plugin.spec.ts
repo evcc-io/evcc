@@ -40,7 +40,7 @@ async function openCircuitsModal(page: Page, yaml: string) {
 
 test.describe("yaml config with script plugin requires admin password", async () => {
   test("caches password across save and reopen", async ({ page }) => {
-    await start(undefined, "password.sql", "");
+    await start(undefined, "password-circuits.sql", "");
     await page.goto("/#/config");
     await login(page);
 
