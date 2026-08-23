@@ -600,3 +600,43 @@ func TestCollectorSetEnergy(t *testing.T) {
 	require.True(t, ok)
 	require.Equal(t, 1.5, v)
 }
+
+// TestCollectorFallsBackToPowerAfterCapabilityLoss verifies that a meter which
+// lost its energy register stops using the stale checkpoint and integrates power
+// instead (https://github.com/evcc-io/evcc/issues/33091).
+func TestCollectorFallsBackToPowerAfterCapabilityLoss(t *testing.T) {
+	clk := clock.NewMock() // 1970-01-01 00:00:00 UTC, on a slot boundary
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector(PV, "capability", "", WithClock(clk))
+	require.NoError(t, err)
+
+	// meter reports totals, checkpoint is persisted at the slot boundary
+	require.NoError(t, col.AddEnergy(new(54716.0), nil, 1e3))
+	clk.Add(15 * time.Minute) // 00:15
+	require.NoError(t, col.AddEnergy(new(54716.0), nil, 1e3))
+
+	var e entity
+	require.NoError(t, db.Instance.First(&e, col.entity.Id).Error)
+	require.Equal(t, 54716.0, *e.EnergyMeter)
+
+	// restart without the energy register: stale reading would freeze energy
+	col2, err := NewCollector(PV, "capability", "", WithClock(clk))
+	require.NoError(t, err)
+	require.True(t, col2.restored)
+
+	require.NoError(t, col2.SetCapabilities(false, false))
+	require.Nil(t, col2.accu.energyMeter)
+	require.False(t, col2.restored, "no readings left to seed a restore")
+
+	require.NoError(t, db.Instance.First(&e, col2.entity.Id).Error)
+	require.Nil(t, e.EnergyMeter, "stale checkpoint must be cleared")
+
+	// power is integrated again
+	require.NoError(t, col2.AddEnergy(nil, nil, 1e3))
+	clk.Add(5 * time.Minute)
+	require.NoError(t, col2.AddEnergy(nil, nil, 1e3))
+	require.InDelta(t, 1e3*5/60/1e3, col2.accu.Energy, 1e-10)
+}
