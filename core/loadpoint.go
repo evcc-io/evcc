@@ -277,7 +277,8 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 		lp.chargeEnergy = collector
 
 		// drop stale readings when the meter no longer reports totals
-		if err := collector.SetCapabilities(api.HasCap[api.MeterEnergy](lp.chargeMeter), false); err != nil {
+		energy, returnEnergy := api.HasCap[api.MeterEnergy](lp.chargeMeter), api.HasCap[api.MeterReturnEnergy](lp.chargeMeter)
+		if err := collector.SetCapabilities(energy, returnEnergy); err != nil {
 			return lp, err
 		}
 	}
