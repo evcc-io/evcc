@@ -172,7 +172,8 @@
       "template": "Circuit",
       "generic": "Generic circuit",
       "custom": "User-defined circuit",
-      "primary": "Specific circuit"
+      "primary": "Specific circuit",
+      "deleteChildrenFirst": "To delete this circuit, first delete its child circuits."
     },
     "circuits": {
       "addSubCircuit": "Add sub-circuit",

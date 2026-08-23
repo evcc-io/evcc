@@ -172,7 +172,8 @@
       "template": "Stromkreis",
       "generic": "Generischer Stromkreis",
       "custom": "Benutzerdefinierter Stromkreis",
-      "primary": "Spezifischer Stromkreis"
+      "primary": "Spezifischer Stromkreis",
+      "deleteChildrenFirst": "Um diesen Schaltkreis zu löschen, müssen zuerst die untergeordneten Schaltkreise gelöscht werden."
     },
     "circuits": {
       "addSubCircuit": "Untergeordneten Stromkreis hinzufügen",

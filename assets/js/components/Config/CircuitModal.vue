@@ -40,6 +40,11 @@
 				/>
 			</FormRow>
 		</template>
+		<template v-if="hasChildren" #after-test>
+			<p class="evcc-gray">
+				{{ $t("config.circuit.deleteChildrenFirst") }}
+			</p>
+		</template>
 	</DeviceModalBase>
 </template>
 
