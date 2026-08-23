@@ -304,7 +304,7 @@ limit:
     await circuitModal.getByLabel("Circuit").selectOption({ label: "Static circuit" });
     await circuitModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(circuitModal);
-    await circuitsModal.getByRole("button", { name: "Cancel" }).click();
+    await circuitsModal.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(circuitsModal);
 
     // configure fnn hems with all signals wired to the simulator
@@ -474,7 +474,7 @@ w3:
     await circuitModal.getByLabel("Circuit").selectOption({ label: "Static circuit" });
     await circuitModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(circuitModal);
-    await circuitsModal.getByRole("button", { name: "Cancel" }).click();
+    await circuitsModal.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(circuitsModal);
 
     // configure hems via user-defined provider
