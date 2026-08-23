@@ -1233,12 +1233,12 @@ func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
 
 	// ignore charge interruption while switching phases. Status is left unchanged,
 	// hence a real interruption is detected once the timespan has elapsed.
-	if status == api.StatusB && prevStatus == api.StatusC && !lp.phaseSwitchCompleted() {
-		lp.log.DEBUG.Println("ignoring charge interruption during phase switch")
-		return nil, nil
-	}
+	ignore := status == api.StatusB && prevStatus == api.StatusC && !lp.phaseSwitchCompleted()
 
-	if status != prevStatus {
+	switch {
+	case ignore:
+		lp.log.DEBUG.Println("ignoring charge interruption during phase switch")
+	case status != prevStatus:
 		res = []api.ChargeStatus{status}
 	}
 
@@ -1252,7 +1252,7 @@ func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
 		defer func() { lp.connectedDuration = d }()
 
 		// connection duration dropped without disconnect status, indicates intermediate disconnect
-		if status != api.StatusA && prevStatus != api.StatusA && d < lp.connectedDuration {
+		if !ignore && status != api.StatusA && prevStatus != api.StatusA && d < lp.connectedDuration {
 			lp.log.DEBUG.Printf("connection duration drop detected (%s -> %v)", lp.connectedDuration.Round(time.Second), d.Round(time.Second))
 			res = []api.ChargeStatus{api.StatusA, status}
 		}
