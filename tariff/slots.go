@@ -61,17 +61,29 @@ func (t *SlotWrapper) Rates() (api.Rates, error) {
 // shapeSolar samples the source curve at the sub-slot starts. A solar value is the
 // power at its Start (see core.solarEnergy), so splitting a slot must interpolate
 // towards the successor rather than redistribute the value across the sub-slots -
-// only then does the split leave the integrated energy untouched. The trailing slot
-// has no successor and stays flat.
+// only then does the split leave the integrated energy untouched. Interpolation runs
+// over the distance between the two starts, which is the slot length only for a gapless
+// series. The trailing slot has no successor and stays flat.
 func shapeSolar(rates api.Rates, i int, vals []float64) {
 	cur := rates[i].Value
 
-	next := cur
-	if i+1 < len(rates) {
-		next = rates[i+1].Value
+	for j := range vals {
+		vals[j] = cur
+	}
+
+	if i+1 >= len(rates) {
+		return
+	}
+
+	next := rates[i+1]
+	span := next.Start.Sub(rates[i].Start)
+	if span <= 0 {
+		return
 	}
 
 	for j := range vals {
-		vals[j] = cur + (next-cur)*float64(j)/float64(len(vals))
+		// beyond the successor's start the curve is the successor's business
+		d := min(time.Duration(j)*SlotDuration, span)
+		vals[j] = cur + (next.Value-cur)*float64(d)/float64(span)
 	}
 }

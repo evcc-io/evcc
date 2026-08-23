@@ -213,6 +213,29 @@ func TestSolarInterpolationInterior(t *testing.T) {
 	assertSourceValues(t, rr, res)
 }
 
+// TestSolarInterpolationGap verifies that the ramp spans the distance between the
+// two slot starts, not the slot length, when the series has a gap
+func TestSolarInterpolationGap(t *testing.T) {
+	now := time.Now().Truncate(SlotDuration)
+
+	// one hour, then a one hour gap before the successor
+	rr := api.Rates{
+		{Start: now, End: now.Add(time.Hour), Value: 0},
+		{Start: now.Add(2 * time.Hour), End: now.Add(3 * time.Hour), Value: 8},
+	}
+
+	w := &SlotWrapper{&testTariff{rates: rr, typ: api.TariffTypeSolar}}
+
+	res, err := w.Rates()
+	require.NoError(t, err)
+	require.Len(t, res, 8)
+
+	// ramp reaches the successor after two hours, not after one
+	for i, expected := range []float64{0, 1, 2, 3} {
+		assert.InDelta(t, expected, res[i].Value, 1e-9, "slot %d", i)
+	}
+}
+
 // TestSolarNegativeSlot verifies that a non-positive slot ramps like any other
 func TestSolarNegativeSlot(t *testing.T) {
 	now := time.Now().Truncate(SlotDuration)
