@@ -127,11 +127,7 @@
 						<NewDeviceButton
 							data-testid="add-consumer"
 							:title="$t('config.main.addConsumer')"
-							@click="
-								openModal('meter', {
-									choices: ['consumer', 'aux'],
-								})
-							"
+							@click="openModal('meter', { choices: ['consumer', 'aux'] })"
 						/>
 					</div>
 				</ConfigSection>
@@ -207,11 +203,7 @@
 						/>
 						<NewDeviceButton
 							:title="$t('config.main.addPvBattery')"
-							@click="
-								openModal('meter', {
-									choices: ['pv', 'battery'],
-								})
-							"
+							@click="openModal('meter', { choices: ['pv', 'battery'] })"
 						/>
 					</div>
 				</ConfigSection>
@@ -290,11 +282,7 @@
 						<NewDeviceButton
 							v-if="possibleTariffTypes.length"
 							:title="$t('config.tariff.addTariff')"
-							@click="
-								openModal('tariff', {
-									choices: possibleTariffTypes,
-								})
-							"
+							@click="openModal('tariff', { choices: possibleTariffTypes })"
 						/>
 						<TariffCard
 							v-if="co2Tariff"
@@ -357,11 +345,7 @@
 						<NewDeviceButton
 							v-if="possibleForecastTypes.length"
 							:title="$t('config.tariff.addForecast')"
-							@click="
-								openModal('tariff', {
-									choices: possibleForecastTypes,
-								})
-							"
+							@click="openModal('tariff', { choices: possibleForecastTypes })"
 						/>
 					</div>
 				</ConfigSection>
@@ -893,10 +877,7 @@ export default defineComponent({
 	},
 	computed: {
 		stateMeters(): Meter[] {
-			return [
-				...(store.state.grid ? [store.state.grid] : []),
-				...(store.state.ext ?? []),
-			];
+			return [...(store.state.grid ? [store.state.grid] : []), ...(store.state.ext ?? [])];
 		},
 		activeSlug(): string | undefined {
 			const slug = this.$route.hash.slice(1);

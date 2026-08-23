@@ -19,15 +19,8 @@
 		<template #extra>
 			<p class="my-2 small">
 				{{ $t("config.circuits.usableMeters") }}:
-				<code
-					v-for="meter in usableMeters"
-					:key="meter.name"
-					class="ms-1 meter"
-				>
-					{{ meter.name
-					}}<span v-if="meter.title" class="ms-1"
-						>({{ meter.title }})</span
-					>
+				<code v-for="meter in usableMeters" :key="meter.name" class="ms-1 meter">
+					{{ meter.name }}<span v-if="meter.title" class="ms-1">({{ meter.title }})</span>
 				</code>
 			</p>
 		</template>
@@ -67,12 +60,8 @@ export default {
 				result.push(
 					...this.extMeters.map((m) => ({
 						name: m.name,
-						title:
-							m.deviceTitle ||
-							m.deviceProduct ||
-							m.config["template"] ||
-							m.type,
-					})),
+						title: m.deviceTitle || m.deviceProduct || m.config["template"] || m.type,
+					}))
 				);
 			}
 			return result;
