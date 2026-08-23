@@ -1041,8 +1041,8 @@ func (lp *Loadpoint) charging() bool {
 func (lp *Loadpoint) PvChargeStarting() bool {
 	lp.RLock()
 	enabled := lp.enabled
-	// an expired timer is not a running one: the loadpoint may enable immediately,
-	// e.g. after being paused for attractive feed-in, hence it claims no surplus
+	// an elapsed timer means a delay was skipped, e.g. by a feed-in pause, not an
+	// enable pending, hence such a loadpoint claims no surplus
 	pvTimerRunning := !lp.pvTimer.IsZero() && !lp.pvTimer.Equal(elapsed)
 	lp.RUnlock()
 
