@@ -47,6 +47,9 @@ params:
     default: 120
     type: int
     unit: h
+    description:
+      en: Forecast horizon
+      de: Prognosehorizont
     help:
       en: Anonymous access is limited to 48 hours from October 1, 2026. An API key allows up to 120 hours.
       de: Anonymer Zugriff ist ab 1. Oktober 2026 auf 48 Stunden begrenzt. Mit API-Key sind bis zu 120 Stunden möglich.
