@@ -103,6 +103,19 @@ func TestMissingSoc(t *testing.T) {
 	assert.Equal(t, 22.0, ce.Soc(nil, 50))
 }
 
+func TestMissingSocFromZero(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Capacity().Return(8.5)
+
+	ce := NewEstimator(util.NewLogger("foo"), vehicle)
+
+	// a fetched soc of exactly 0% must still enable extrapolation
+	soc := 0.0
+	assert.Equal(t, 0.0, ce.Soc(&soc, 0))
+	assert.Equal(t, 1.0, ce.Soc(nil, 100))
+}
+
 func TestImprovedEstimatorRemainingChargeDuration(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	vehicle := api.NewMockVehicle(ctrl)

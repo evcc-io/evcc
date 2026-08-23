@@ -30,6 +30,7 @@ type Estimator struct {
 	initialEnergy     float64 // energy counter at first valid soc in Wh
 	prevSoc           float64 // vehicle soc at last soc change in %
 	prevChargedEnergy float64 // charged energy at last soc change in Wh
+	sampled           bool    // a valid vehicle soc was received
 }
 
 // NewEstimator creates new estimator
@@ -94,12 +95,14 @@ func (s *Estimator) Soc(fetchedSoc *float64, chargedEnergy float64) float64 {
 	if fetchedSoc == nil {
 		// extrapolate soc from charged energy while no vehicle soc is available,
 		// never below the current estimate to stay monotonic across energy resets
-		if energyDelta := max(chargedEnergy, 0) - s.prevChargedEnergy; s.initialSoc > 0 && energyDelta >= 0 {
+		if energyDelta := max(chargedEnergy, 0) - s.prevChargedEnergy; s.sampled && energyDelta >= 0 {
 			s.vehicleSoc = min(max(s.vehicleSoc, s.prevSoc+energyDelta/s.energyPerSocStep), 100)
 			s.log.DEBUG.Printf("soc extrapolated: %.2f%%", s.vehicleSoc)
 		}
 		return s.vehicleSoc
 	}
+
+	s.sampled = true
 
 	chargedEnergy = max(chargedEnergy, 0)
 	socDelta := *fetchedSoc - s.prevSoc
