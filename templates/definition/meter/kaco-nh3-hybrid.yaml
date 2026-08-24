@@ -52,44 +52,40 @@ render: |
   power:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: 203:W # Model 203 (Three Phase Meter) - Grid Power
+    value: 203:W
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: 701:W # Model 701 (Inverter) - AC Power Output
+    value: 701:W
   energy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: 701:TotWhInj # Model 701 - Total Watt-hours Injected
+    value: 701:TotWhInj
     scale: 0.001
   curtail:
     source: sequence
     set:
-      # Step 1: Set the power limit percentage (0-100%)
       - source: sunspec
         {{- include "modbus" . | indent 6 }}
-        value: 704:WMaxLimPct # Model 704 (Generic Inverter Controls) at address 50640
-      # Step 2: Control enable/disable of the limit
+        value: 704:WMaxLimPct
       - source: switch
         switch:
-          - case: 100 # Uncurtailed (no limit)
+          - case: 100
             set:
               source: const
-              value: 0 # Disabled
+              value: 0
               set:
                 source: sunspec
                 {{- include "modbus" . | indent 14 }}
-                value: 704:WMaxLimPctEna # Model 704 at address 50639
+                value: 704:WMaxLimPctEna
         default:
-          source: const
-          value: 1 # Enabled
           set:
             source: sunspec
-            {{- include "modbus" . | indent 10 }}
-            value: 704:WMaxLimPctEna # Model 704 at address 50639
-  curtailed: # Read back the current curtailment status
+            {{- include "modbus" . | indent 12 }}
+            value: 704:WMaxLimPctEna
+  curtailed:
     source: go
     in:
     - name: ena
@@ -97,13 +93,13 @@ render: |
       config:
         source: sunspec
         {{- include "modbus" . | indent 6 }}
-        value: 704:WMaxLimPctEna # Model 704 at address 50639
+        value: 704:WMaxLimPctEna
     - name: limit
       type: float
       config:
         source: sunspec
         {{- include "modbus" . | indent 6 }}
-        value: 704:WMaxLimPct # Model 704 at address 50640
+        value: 704:WMaxLimPct
     script: |
       percent := 100
       if ena {
@@ -115,28 +111,23 @@ render: |
   power:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: {{ if eq .battery "2" }}714:Prt.2.DCW{{ else }}714:Prt.1.DCW{{ end }} # Model 714 (DC Module - Battery Power)
-    # Prt.1 = Battery 1, Prt.2 = Battery 2 via Model 714 (Multi-Port DC Module)
+    value: {{ if eq .battery "2" }}714:Prt.2.DCW{{ else }}714:Prt.1.DCW{{ end }}
   soc:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: 802:SoC # Model 802 (Battery Base) - State of Charge
+    value: 802:SoC
   capacity:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: 802:WHRtg # Model 802 - Battery nominal capacity in Wh (read from inverter)
+    value: 802:WHRtg
   minsoc:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: 802:SoCMin # Model 802 - Minimum SOC limit % (read from inverter)
+    value: 802:SoCMin
   maxsoc:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: 802:SoCMax # Model 802 - Maximum SOC limit % (read from inverter)
-  # Dynamic calculation of max charge/discharge power based on battery voltage
-  # Formula: Power (W) = Battery Voltage (V) × Max Current (30 A)
-  # Battery voltage varies with SoC (e.g., 300-330V for 6-series Dyness stack)
-  # This ensures accurate power limits throughout the charge cycle
+    value: 802:SoCMax
   maxchargepower:
     source: go
     in:
@@ -145,9 +136,8 @@ render: |
       config:
         source: sunspec
         {{- include "modbus" . | indent 6 }}
-        value: 802:V # Model 802 (Battery Base) - Battery Voltage
+        value: 802:V
     script: |
-      # Calculate max charge power: voltage × 30A (max current)
       int(voltage * 30)
   maxdischargepower:
     source: go
@@ -157,37 +147,36 @@ render: |
       config:
         source: sunspec
         {{- include "modbus" . | indent 6 }}
-        value: 802:V # Model 802 (Battery Base) - Battery Voltage
+        value: 802:V
     script: |
-      # Calculate max discharge power: voltage × 30A (max current)
       int(voltage * 30)
   batterymode:
     source: switch
     switch:
-      - case: 1 # normal
+      - case: 1
         set:
           source: const
-          value: 1 # Normal mode
+          value: 1
           set:
             source: sunspec
             {{- include "modbus" . | indent 10 }}
-            value: 802:ChaSt # Model 802 (Battery Base) at address 51003 - Charge State
-      - case: 2 # hold
+            value: 802:ChaSt
+      - case: 2
         set:
           source: const
-          value: 6 # Holding mode
+          value: 6
           set:
             source: sunspec
             {{- include "modbus" . | indent 10 }}
-            value: 802:ChaSt # Model 802 at address 51003
-      - case: 3 # charge
+            value: 802:ChaSt
+      - case: 3
         set:
           source: const
-          value: 3 # Charging mode
+          value: 3
           set:
             source: sunspec
             {{- include "modbus" . | indent 10 }}
-            value: 802:ChaSt # Model 802 at address 51003
+            value: 802:ChaSt
     default:
       source: error
       error: ErrNotAvailable
