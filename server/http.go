@@ -320,14 +320,14 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 		}
 
 		// API key endpoints require an authenticated session.
-		ensureAuth := ensureAuthHandler(auth)
+		ensureAuth := EnsureAuthHandler(auth)
 		api.Methods("GET").Path("/apikey").Handler(ensureAuth(apiKeyStatusHandler(auth)))
 		api.Methods("POST").Path("/apikey").Handler(ensureAuth(regenerateApiKeyHandler(auth)))
 	}
 
 	{ // api/config
 		api := api.PathPrefix("/config").Subrouter()
-		api.Use(ensureAuthHandler(auth))
+		api.Use(EnsureAuthHandler(auth))
 
 		routes := map[string]route{
 			"auth":               {"POST", "/auth", authHandler},
@@ -423,7 +423,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 	{ // api/system
 		api := api.PathPrefix("/system").Subrouter()
-		api.Use(ensureAuthHandler(auth))
+		api.Use(EnsureAuthHandler(auth))
 
 		routes := map[string]route{
 			"log":        {"GET", "/log", logHandler},
