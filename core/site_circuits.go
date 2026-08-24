@@ -139,7 +139,30 @@ func (site *Site) dimMeters(dim bool) error {
 	return errs
 }
 
-// curtailPV applies the HEMS curtailment percent to all curtailable pv or grid meters.
+// curtailable is a named curtailment device
+type curtailable struct {
+	name string
+	api.Curtailer
+}
+
+// curtailables returns the curtailment devices and the curtailable pv meters
+func (site *Site) curtailables() []curtailable {
+	var res []curtailable
+
+	for _, dev := range site.pvMeters {
+		if m, ok := api.Cap[api.Curtailer](dev.Instance()); ok {
+			res = append(res, curtailable{deviceTitleOrName(dev), m})
+		}
+	}
+
+	for _, dev := range site.curtailers {
+		res = append(res, curtailable{deviceTitleOrName(dev), dev.Instance()})
+	}
+
+	return res
+}
+
+// curtailPV applies the HEMS curtailment percent to all curtailment devices and curtailable pv meters.
 // Devices are only queried when the percent changes or after a failed attempt.
 func (site *Site) curtailPV(percent *int) error {
 	if percent == nil || site.curtailPercent != nil && *site.curtailPercent == *percent {
@@ -149,22 +172,12 @@ func (site *Site) curtailPV(percent *int) error {
 	// invalidate until successfully applied
 	site.curtailPercent = nil
 
-	meters := slices.Clone(site.pvMeters)
-	if site.gridMeter != nil {
-		meters = append(meters, site.gridMeter)
-	}
-
 	var errs error
-	for _, dev := range meters {
-		m, ok := api.Cap[api.Curtailer](dev.Instance())
-		if !ok {
-			continue
-		}
-
+	for _, m := range site.curtailables() {
 		// unreadable state: apply unconditionally
 		curtailed, err := backoff.RetryWithData(m.CurtailedPercent, modbus.Backoff())
 		if err != nil && !errors.Is(err, api.ErrNotAvailable) {
-			errs = errors.Join(errs, fmt.Errorf("%s curtailed: %w", deviceTitleOrName(dev), err))
+			errs = errors.Join(errs, fmt.Errorf("%s curtailed: %w", m.name, err))
 			continue
 		}
 		if err == nil && curtailed == *percent {
@@ -172,9 +185,9 @@ func (site *Site) curtailPV(percent *int) error {
 		}
 
 		if err := m.SetCurtailPercent(*percent); err == nil {
-			site.log.DEBUG.Printf("%s curtail: %d%%", deviceTitleOrName(dev), *percent)
+			site.log.DEBUG.Printf("%s curtail: %d%%", m.name, *percent)
 		} else if !errors.Is(err, api.ErrNotAvailable) {
-			errs = errors.Join(errs, fmt.Errorf("%s curtail: %w", deviceTitleOrName(dev), err))
+			errs = errors.Join(errs, fmt.Errorf("%s curtail: %w", m.name, err))
 		}
 	}
 

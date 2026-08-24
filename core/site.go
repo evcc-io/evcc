@@ -65,6 +65,7 @@ type Site struct {
 	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
 	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
 	Meters        MetersConfig `mapstructure:"meters"`        // Meter references
+	CurtailersRef []string     `mapstructure:"curtailers"`    // Curtailment device references
 
 	// meters
 	circuit        api.Circuit                // Circuit
@@ -75,6 +76,7 @@ type Site struct {
 	extMeters      []config.Device[api.Meter] // External meters - for monitoring only
 	auxMeters      []config.Device[api.Meter] // Auxiliary meters
 	consumerMeters []config.Device[api.Meter] // Consumer meters
+	curtailers     []config.Device[api.Curtailer]
 
 	// last applied HEMS state, nil until applied or after a failed attempt
 	dimmed         *bool
@@ -184,6 +186,24 @@ func activeMeters(refs []string) ([]config.Device[api.Meter], error) {
 	return res, nil
 }
 
+// newMeterCollector creates a meter collector and reconciles the persisted meter
+// readings with the device's capabilities, so a device that lost its energy
+// registers falls back to power integration instead of freezing.
+func newMeterCollector(group, ref, title string, meter api.Meter) (*metrics.Collector, error) {
+	energy, returnEnergy := api.HasCap[api.MeterEnergy](meter), api.HasCap[api.MeterReturnEnergy](meter)
+	if group == metrics.Battery {
+		// batteries map discharge to energy, see updateBatteryMeters
+		energy, returnEnergy = returnEnergy, energy
+	}
+
+	c, err := metrics.NewCollector(group, ref, title)
+	if err != nil {
+		return nil, err
+	}
+
+	return c, c.SetCapabilities(energy, returnEnergy)
+}
+
 func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tariff.Tariffs) error {
 	site.loadpoints = loadpoints
 	site.tariffs = tariffs
@@ -250,7 +270,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		} else {
 			site.gridMeter = dev
 
-			me, err := metrics.NewCollector(metrics.Grid, site.Meters.GridMeterRef, metrics.Grid)
+			me, err := newMeterCollector(metrics.Grid, site.Meters.GridMeterRef, metrics.Grid, dev.Instance())
 			if err != nil {
 				return err
 			}
@@ -270,7 +290,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		site.pvMeters = append(site.pvMeters, dev)
 
 		// energy collector (for history persistence and forecast scaling)
-		me, err := metrics.NewCollector(metrics.PV, ref, deviceTitleOrName(dev))
+		me, err := newMeterCollector(metrics.PV, ref, deviceTitleOrName(dev), dev.Instance())
 		if err != nil {
 			return err
 		}
@@ -299,7 +319,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.batteryMeters = mm
 	for _, dev := range mm {
 		ref := dev.Config().Name
-		me, err := metrics.NewCollector(metrics.Battery, ref, deviceTitleOrName(dev))
+		me, err := newMeterCollector(metrics.Battery, ref, deviceTitleOrName(dev), dev.Instance())
 		if err != nil {
 			return err
 		}
@@ -314,7 +334,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.extMeters = mm
 	for _, dev := range mm {
 		ref := dev.Config().Name
-		me, err := metrics.NewCollector(metrics.Meter, ref, deviceTitleOrName(dev))
+		me, err := newMeterCollector(metrics.Meter, ref, deviceTitleOrName(dev), dev.Instance())
 		if err != nil {
 			return err
 		}
@@ -329,7 +349,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.auxMeters = mm
 	for _, dev := range mm {
 		ref := dev.Config().Name
-		me, err := metrics.NewCollector(metrics.Consumer, ref, deviceTitleOrName(dev))
+		me, err := newMeterCollector(metrics.Consumer, ref, deviceTitleOrName(dev), dev.Instance())
 		if err != nil {
 			return err
 		}
@@ -344,11 +364,20 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.consumerMeters = mm
 	for _, dev := range mm {
 		ref := dev.Config().Name
-		me, err := metrics.NewCollector(metrics.Consumer, ref, deviceTitleOrName(dev))
+		me, err := newMeterCollector(metrics.Consumer, ref, deviceTitleOrName(dev), dev.Instance())
 		if err != nil {
 			return err
 		}
 		site.collectors[ref] = me
+	}
+
+	// curtailment devices
+	for _, ref := range site.CurtailersRef {
+		dev, err := config.Curtailers().ByName(ref)
+		if err != nil {
+			return err
+		}
+		site.curtailers = append(site.curtailers, dev)
 	}
 
 	// revert battery mode on shutdown
@@ -395,19 +424,22 @@ func (site *Site) restoreMetersAndTitle() {
 		site.Meters.GridMeterRef = v
 	}
 	if v, err := settings.String(keys.PvMeters); err == nil && v != "" {
-		site.Meters.PVMetersRef = append(site.Meters.PVMetersRef, filterConfigurable(strings.Split(v, ","))...)
+		site.Meters.PVMetersRef = append(site.Meters.PVMetersRef, filterConfigurableMeter(strings.Split(v, ","))...)
 	}
 	if v, err := settings.String(keys.BatteryMeters); err == nil && v != "" {
-		site.Meters.BatteryMetersRef = append(site.Meters.BatteryMetersRef, filterConfigurable(strings.Split(v, ","))...)
+		site.Meters.BatteryMetersRef = append(site.Meters.BatteryMetersRef, filterConfigurableMeter(strings.Split(v, ","))...)
 	}
 	if v, err := settings.String(keys.ExtMeters); err == nil && v != "" {
-		site.Meters.ExtMetersRef = append(site.Meters.ExtMetersRef, filterConfigurable(strings.Split(v, ","))...)
+		site.Meters.ExtMetersRef = append(site.Meters.ExtMetersRef, filterConfigurableMeter(strings.Split(v, ","))...)
 	}
 	if v, err := settings.String(keys.AuxMeters); err == nil && v != "" {
-		site.Meters.AuxMetersRef = append(site.Meters.AuxMetersRef, filterConfigurable(strings.Split(v, ","))...)
+		site.Meters.AuxMetersRef = append(site.Meters.AuxMetersRef, filterConfigurableMeter(strings.Split(v, ","))...)
 	}
 	if v, err := settings.String(keys.ConsumerMeters); err == nil && v != "" {
-		site.Meters.ConsumerMetersRef = append(site.Meters.ConsumerMetersRef, filterConfigurable(strings.Split(v, ","))...)
+		site.Meters.ConsumerMetersRef = append(site.Meters.ConsumerMetersRef, filterConfigurableMeter(strings.Split(v, ","))...)
+	}
+	if v, err := settings.String(keys.Curtailers); err == nil && v != "" {
+		site.CurtailersRef = append(site.CurtailersRef, filterConfigurableCurtailers(strings.Split(v, ","))...)
 	}
 }
 

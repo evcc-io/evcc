@@ -33,7 +33,7 @@ IMAGE_FILE := evcc_$(TAG_NAME).img
 PACKAGES = ./release
 
 # asn1-patch
-GOROOT := $(shell go env GOROOT)
+GOROOT = $(shell go env GOROOT)
 CURRDIR := $(shell pwd)
 
 default:: ui build

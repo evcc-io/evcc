@@ -51,7 +51,8 @@ render: |
       type: bearer
       token: {{ .apikey }}
     jq: |
-      # values are the average power of the 15min interval ending at the timestamp.
+      # values are the average power of the 15min interval ending at the timestamp,
+      # per https://github.com/evcc-io/evcc/pull/33102#issuecomment-5392639519.
       # evcc expects the power at the timestamp, which is the mean of the intervals
       # meeting there- the trailing interval is dropped as its successor is unknown.
       [.values[] | {t: (.timestamp | fromdateiso8601), v: .pv_power}] as $s

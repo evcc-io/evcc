@@ -18,6 +18,7 @@ import (
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/curtailer"
 	"github.com/evcc-io/evcc/hems"
 	hemsapi "github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/messenger"
@@ -80,6 +81,9 @@ func devicesConfigHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		res, err = devicesConfig(class, config.Circuits(), hidePrivate)
+
+	case templates.Curtailer:
+		res, err = devicesConfig(class, config.Curtailers(), hidePrivate)
 
 	case templates.Hems:
 		res, err = devicesConfig(class, config.Hems(), hidePrivate)
@@ -210,6 +214,9 @@ func deviceConfigHandler(w http.ResponseWriter, r *http.Request) {
 	case templates.Circuit:
 		res, err = deviceConfig(class, id, config.Circuits(), hidePrivate)
 
+	case templates.Curtailer:
+		res, err = deviceConfig(class, id, config.Curtailers(), hidePrivate)
+
 	case templates.Hems:
 		res, err = deviceConfig(class, id, config.Hems(), hidePrivate)
 
@@ -274,6 +281,9 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 	case templates.Circuit:
 		instance, err = deviceStatus(name, config.Circuits())
+
+	case templates.Curtailer:
+		instance, err = deviceStatus(name, config.Curtailers())
 
 	case templates.Hems:
 		err = api.ErrNotAvailable
@@ -374,6 +384,9 @@ func newDeviceHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 
 		case templates.Circuit:
 			conf, err = newDevice(ctx, class, req, circuit.NewFromConfig, config.Circuits(), force)
+
+		case templates.Curtailer:
+			conf, err = newDevice(ctx, class, req, curtailer.NewFromConfig, config.Curtailers(), force)
 
 		case templates.Hems:
 			if existing, _ := config.ConfigurationByClass(templates.Hems); existing != nil {
@@ -476,6 +489,9 @@ func updateDeviceHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 
 		case templates.Circuit:
 			err = updateDevice(ctx, id, class, req, circuit.NewFromConfig, config.Circuits(), force)
+
+		case templates.Curtailer:
+			err = updateDevice(ctx, id, class, req, curtailer.NewFromConfig, config.Curtailers(), force)
 
 		case templates.Hems:
 			err = updateDevice(ctx, id, class, req, newHemsFactory(site), config.Hems(), force)
@@ -655,6 +671,12 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 				}
 			}
 
+		case templates.Curtailer:
+			err = deleteDevice(id, config.Curtailers())
+
+			// cleanup references
+			cleanupSiteMeterRef(config.NameForID(id), site.GetCurtailerRefs, site.SetCurtailerRefs)
+
 		case templates.Hems:
 			err = deleteDevice(id, config.Hems())
 
@@ -758,6 +780,9 @@ func testConfigHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 
 		case templates.Circuit:
 			instance, err = testConfig(ctx, id, class, req, circuit.NewFromConfig, config.Circuits())
+
+		case templates.Curtailer:
+			instance, err = testConfig(ctx, id, class, req, curtailer.NewFromConfig, config.Curtailers())
 
 		case templates.Hems:
 			instance, err = testConfig(ctx, id, class, req, newHemsFactory(site), config.Hems())
