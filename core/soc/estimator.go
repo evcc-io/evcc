@@ -30,6 +30,7 @@ type Estimator struct {
 	initialEnergy     float64 // energy counter at first valid soc in Wh
 	prevSoc           float64 // vehicle soc at last soc change in %
 	prevChargedEnergy float64 // charged energy at last soc change in Wh
+	sampled           bool    // a valid vehicle soc was received
 }
 
 // NewEstimator creates new estimator
@@ -92,7 +93,12 @@ func remainingChargeEnergy(targetSoc, vehicleSoc, virtualCapacity float64) float
 // Soc replaces the api.Vehicle.Soc interface to take charged energy into account
 func (s *Estimator) Soc(fetchedSoc *float64, chargedEnergy float64) float64 {
 	if fetchedSoc == nil {
-		s.log.WARN.Println("missing vehicle soc- ignored by estimator")
+		// extrapolate soc from charged energy while no vehicle soc is available,
+		// never below the current estimate to stay monotonic across energy resets
+		if energyDelta := max(chargedEnergy, 0) - s.prevChargedEnergy; s.sampled && energyDelta >= 0 {
+			s.vehicleSoc = min(max(s.vehicleSoc, s.prevSoc+energyDelta/s.energyPerSocStep), 100)
+			s.log.DEBUG.Printf("soc extrapolated: %.2f%%", s.vehicleSoc)
+		}
 		return s.vehicleSoc
 	}
 
@@ -100,13 +106,15 @@ func (s *Estimator) Soc(fetchedSoc *float64, chargedEnergy float64) float64 {
 	socDelta := *fetchedSoc - s.prevSoc
 	energyDelta := chargedEnergy - s.prevChargedEnergy
 
-	// no soc change and no energy reset: interpolate soc from charged energy
-	if socDelta == 0 && energyDelta >= 0 {
+	// no soc change and no energy reset: interpolate soc from charged energy.
+	// the first valid soc always takes the sampling path below to seed the baseline.
+	if s.sampled && socDelta == 0 && energyDelta >= 0 {
 		s.vehicleSoc = min(*fetchedSoc+energyDelta/s.energyPerSocStep, 100)
 		s.log.DEBUG.Printf("soc estimated: %.2f%% (vehicle: %.2f%%)", s.vehicleSoc, *fetchedSoc)
 		return s.vehicleSoc
 	}
 
+	s.sampled = true
 	s.vehicleSoc = *fetchedSoc
 
 	if s.initialSoc == 0 {

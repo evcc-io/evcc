@@ -2025,13 +2025,15 @@ func (lp *Loadpoint) publishSocAndRange() {
 		}
 	}
 
-	if socR != nil {
-		if socEstimator == nil {
-			lp.vehicleSoc = *socR
-		} else {
-			lp.vehicleSoc = socEstimator.Soc(socR, lp.GetChargedEnergy())
+	if socEstimator != nil {
+		// nil soc extrapolates from charged energy while vehicle api is unavailable;
+		// don't overwrite a known soc while a freshly created estimator returns 0
+		if soc := socEstimator.Soc(socR, lp.GetChargedEnergy()); socR != nil || soc > 0 {
+			lp.vehicleSoc = soc
 			lp.log.DEBUG.Printf("vehicle soc (estimator): %.0f%%", lp.vehicleSoc)
 		}
+	} else if socR != nil {
+		lp.vehicleSoc = *socR
 	}
 	lp.publish(keys.VehicleSoc, lp.vehicleSoc)
 
