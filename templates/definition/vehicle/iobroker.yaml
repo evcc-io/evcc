@@ -22,7 +22,7 @@ params:
     description:
       en: The full uri of the host to query
       de: Der vollständige URI der ioBroker Instanz
-    example: https://iobroker.homelab.lan:8082
+    example: https://iobroker.homelab.lan:8093
   - name: cache
     default: 15m
   - name: user
