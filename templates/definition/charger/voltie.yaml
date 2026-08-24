@@ -26,7 +26,18 @@ params:
   - name: cache
     advanced: true
     default: 1s
+  - name: phases1p3p
+    description:
+      de: Phasenumschaltung
+      en: Phase switching
+    help:
+      de: Nur auf Ladegeräten ab Baujahr 2026 verfügbar, deren Seriennummer mit 1026 beginnt. Auf älterer Hardware weist das Ladegerät die Umschaltung ab.
+      en: Only available on chargers manufactured from 2026, whose serial number starts with 1026. On older hardware the charger rejects the switch.
+    type: bool
+    default: false
+    advanced: true
 render: |
   type: voltie
   {{- include "modbus" . }}
   cache: {{ .cache }}
+  phases1p3p: {{ .phases1p3p }}

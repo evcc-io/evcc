@@ -273,8 +273,14 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 
 	lp.configureChargerType(lp.charger)
 	// add collector
-	if lp.chargeMeter != nil {
+	if lp.chargeMeter != nil && collector != nil {
 		lp.chargeEnergy = collector
+
+		// drop stale readings when the meter no longer reports totals
+		energy, returnEnergy := api.HasCap[api.MeterEnergy](lp.chargeMeter), api.HasCap[api.MeterReturnEnergy](lp.chargeMeter)
+		if err := collector.SetCapabilities(energy, returnEnergy); err != nil {
+			return lp, err
+		}
 	}
 
 	// set title after collector is wired to refresh the metrics entity
@@ -1041,7 +1047,9 @@ func (lp *Loadpoint) charging() bool {
 func (lp *Loadpoint) PvChargeStarting() bool {
 	lp.RLock()
 	enabled := lp.enabled
-	pvTimerRunning := !lp.pvTimer.IsZero()
+	// an elapsed timer means a delay was skipped, e.g. by a feed-in pause, not an
+	// enable pending, hence such a loadpoint claims no surplus
+	pvTimerRunning := !lp.pvTimer.IsZero() && !lp.pvTimer.Equal(elapsed)
 	lp.RUnlock()
 
 	if lp.GetMode() != api.ModePV || !lp.connected() || lp.chargeGoalReached(enabled) {
@@ -1230,7 +1238,15 @@ func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
 
 	// detect if charger status changed
 	prevStatus := lp.GetStatus()
-	if status != prevStatus {
+
+	// ignore charge interruption while switching phases. Status is left unchanged,
+	// hence a real interruption is detected once the timespan has elapsed.
+	ignore := status == api.StatusB && prevStatus == api.StatusC && !lp.phaseSwitchCompleted()
+
+	switch {
+	case ignore:
+		lp.log.DEBUG.Println("ignoring charge interruption during phase switch")
+	case status != prevStatus:
 		res = []api.ChargeStatus{status}
 	}
 
@@ -1244,7 +1260,7 @@ func (lp *Loadpoint) getStatusChanges() ([]api.ChargeStatus, error) {
 		defer func() { lp.connectedDuration = d }()
 
 		// connection duration dropped without disconnect status, indicates intermediate disconnect
-		if status != api.StatusA && prevStatus != api.StatusA && d < lp.connectedDuration {
+		if !ignore && status != api.StatusA && prevStatus != api.StatusA && d < lp.connectedDuration {
 			lp.log.DEBUG.Printf("connection duration drop detected (%s -> %v)", lp.connectedDuration.Round(time.Second), d.Round(time.Second))
 			res = []api.ChargeStatus{api.StatusA, status}
 		}
@@ -1657,6 +1673,12 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryPower f
 			// notes: activePhases can be 1, 2 or 3 and phaseTimer can only be active if lp current is already at minCurrent
 			projectedSitePower -= Voltage * minCurrent * float64(activePhases-1)
 		}
+		// a continuous device consuming less than its min power demand keeps the
+		// remainder out of site power, hiding insufficient surplus until it ramps
+		// up (#32282). Project the shortfall towards min power into the gate.
+		if lp.chargerHasFeature(api.Continuous) {
+			projectedSitePower += max(0, currentToPower(minCurrent, lp.minActivePhases())-lp.chargePower)
+		}
 		// kick off disable sequence, unless climater keep-alive is holding
 		// charging at minCurrent — otherwise the "pausing soon" badge would
 		// flash on/off forever while climater is active (issue #29834).
@@ -2005,13 +2027,15 @@ func (lp *Loadpoint) publishSocAndRange() {
 		}
 	}
 
-	if socR != nil {
-		if socEstimator == nil {
-			lp.vehicleSoc = *socR
-		} else {
-			lp.vehicleSoc = socEstimator.Soc(socR, lp.GetChargedEnergy())
+	if socEstimator != nil {
+		// nil soc extrapolates from charged energy while vehicle api is unavailable;
+		// don't overwrite a known soc while a freshly created estimator returns 0
+		if soc := socEstimator.Soc(socR, lp.GetChargedEnergy()); socR != nil || soc > 0 {
+			lp.vehicleSoc = soc
 			lp.log.DEBUG.Printf("vehicle soc (estimator): %.0f%%", lp.vehicleSoc)
 		}
+	} else if socR != nil {
+		lp.vehicleSoc = *socR
 	}
 	lp.publish(keys.VehicleSoc, lp.vehicleSoc)
 

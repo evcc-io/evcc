@@ -24,18 +24,23 @@ var (
 	ErrBatteryControlNotAvailable = errors.New("battery control not available")
 )
 
-// isConfigurable checks if the meter is configurable
-func isConfigurable(ref string) bool {
-	dev, _ := config.Meters().ByName(ref)
-	_, ok := dev.(config.ConfigurableDevice[api.Meter])
-	return ok
+// filterConfigurableDevices filters references to configurable devices of the given handler
+func filterConfigurableDevices[T any](h config.Handler[T], ref []string) []string {
+	return lo.Filter(ref, func(ref string, _ int) bool {
+		dev, _ := h.ByName(ref)
+		_, ok := dev.(config.ConfigurableDevice[T])
+		return ok
+	})
 }
 
-// filterConfigurable filters configurable meters
-func filterConfigurable(ref []string) []string {
-	return lo.Filter(ref, func(ref string, _ int) bool {
-		return isConfigurable(ref)
-	})
+// filterConfigurableMeter filters configurable meters
+func filterConfigurableMeter(ref []string) []string {
+	return filterConfigurableDevices(config.Meters(), ref)
+}
+
+// filterConfigurableCurtailers filters configurable curtailment devices
+func filterConfigurableCurtailers(ref []string) []string {
+	return filterConfigurableDevices(config.Curtailers(), ref)
 }
 
 // Optimize updates the optimizer
@@ -89,7 +94,7 @@ func (site *Site) SetPVMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.PVMetersRef = ref
-	settings.SetString(keys.PvMeters, strings.Join(filterConfigurable(ref), ","))
+	settings.SetString(keys.PvMeters, strings.Join(filterConfigurableMeter(ref), ","))
 }
 
 // GetBatteryMeterRefs returns the BatteryMeterRef
@@ -105,7 +110,7 @@ func (site *Site) SetBatteryMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.BatteryMetersRef = ref
-	settings.SetString(keys.BatteryMeters, strings.Join(filterConfigurable(ref), ","))
+	settings.SetString(keys.BatteryMeters, strings.Join(filterConfigurableMeter(ref), ","))
 }
 
 // GetAuxMeterRefs returns the AuxMeterRef
@@ -121,7 +126,7 @@ func (site *Site) SetAuxMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.AuxMetersRef = ref
-	settings.SetString(keys.AuxMeters, strings.Join(filterConfigurable(ref), ","))
+	settings.SetString(keys.AuxMeters, strings.Join(filterConfigurableMeter(ref), ","))
 }
 
 // GetConsumerMeterRefs returns the ConsumerMeterRef
@@ -137,7 +142,7 @@ func (site *Site) SetConsumerMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.ConsumerMetersRef = ref
-	settings.SetString(keys.ConsumerMeters, strings.Join(filterConfigurable(ref), ","))
+	settings.SetString(keys.ConsumerMeters, strings.Join(filterConfigurableMeter(ref), ","))
 }
 
 // GetExtMeterRefs returns the ExtMeterRef
@@ -153,7 +158,23 @@ func (site *Site) SetExtMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.ExtMetersRef = ref
-	settings.SetString(keys.ExtMeters, strings.Join(filterConfigurable(ref), ","))
+	settings.SetString(keys.ExtMeters, strings.Join(filterConfigurableMeter(ref), ","))
+}
+
+// GetCurtailerRefs returns the curtailment device references
+func (site *Site) GetCurtailerRefs() []string {
+	site.RLock()
+	defer site.RUnlock()
+	return site.CurtailersRef
+}
+
+// SetCurtailerRefs sets the curtailment device references
+func (site *Site) SetCurtailerRefs(ref []string) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.CurtailersRef = ref
+	settings.SetString(keys.Curtailers, strings.Join(filterConfigurableCurtailers(ref), ","))
 }
 
 // GetBatterySoc returns the current battery soc
