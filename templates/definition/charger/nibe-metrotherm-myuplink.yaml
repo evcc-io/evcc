@@ -10,30 +10,30 @@ requirements:
   description:
     de: |
       Integration via NIBE myUplink API für SG Ready Steuerung.
-      OAuth2 Anmeldedaten auf https://dev.myuplink.com/ erstellen.
+      Manuelles Abrufen eines Access Token erforderlich.
+      Siehe https://github.com/evcc-io/evcc/wiki/NIBE-Metrotherm für Setup-Anleitung.
     en: |
       Integration via NIBE myUplink API for SG Ready control.
-      Create OAuth2 credentials on https://dev.myuplink.com/
+      Manual access token retrieval required.
+      See https://github.com/evcc-io/evcc/wiki/NIBE-Metrotherm for setup guide.
 params:
   - name: deviceid
     required: true
     description:
       en: NIBE device ID
-      de: NIBE Geräte-ID
+      de: NIBE Gerät-ID
     help:
-      en: Found in myUplink app or via https://api.myuplink.com/v2/devices
-      de: Finden Sie in der myUplink-App oder über https://api.myuplink.com/v2/devices
-  - name: clientid
-    required: true
-    description:
-      en: OAuth2 Client ID
-      de: OAuth2 Client-ID
-  - name: clientsecret
+      en: Found in myUplink app or via API
+      de: Finden Sie in der myUplink-App
+  - name: accesstoken
     required: true
     mask: true
     description:
-      en: OAuth2 Client Secret
-      de: OAuth2 Client-Geheimnis
+      en: myUplink access token
+      de: myUplink Access Token
+    help:
+      en: Obtained from myUplink developer portal (valid 1 hour)
+      de: Von myUplink Developer Portal (gültig 1 Stunde)
 
 render: |
   type: sgready
@@ -46,10 +46,8 @@ render: |
         uri: https://api.myuplink.com/v2/devices/{{ .deviceid }}/points
         method: PATCH
         auth:
-          type: oauth2
-          clientid: {{ .clientid }}
-          clientsecret: {{ .clientsecret }}
-          tokenurl: https://api.myuplink.com/oauth/token
+          type: bearer
+          token: {{ .accesstoken }}
         body: '{"settings":[{"parameterId":"40067","value":3}]}'
         timeout: 10s
     - case: 2 # normal
@@ -58,10 +56,8 @@ render: |
         uri: https://api.myuplink.com/v2/devices/{{ .deviceid }}/points
         method: PATCH
         auth:
-          type: oauth2
-          clientid: {{ .clientid }}
-          clientsecret: {{ .clientsecret }}
-          tokenurl: https://api.myuplink.com/oauth/token
+          type: bearer
+          token: {{ .accesstoken }}
         body: '{"settings":[{"parameterId":"40067","value":1}]}'
         timeout: 10s
     - case: 3 # boost
@@ -70,10 +66,8 @@ render: |
         uri: https://api.myuplink.com/v2/devices/{{ .deviceid }}/points
         method: PATCH
         auth:
-          type: oauth2
-          clientid: {{ .clientid }}
-          clientsecret: {{ .clientsecret }}
-          tokenurl: https://api.myuplink.com/oauth/token
+          type: bearer
+          token: {{ .accesstoken }}
         body: '{"settings":[{"parameterId":"40067","value":2}]}'
         timeout: 10s
   getmode:
@@ -86,19 +80,15 @@ render: |
       source: http
       uri: https://api.myuplink.com/v2/devices/{{ .deviceid }}/points?parameterIds=40067
       auth:
-        type: oauth2
-        clientid: {{ .clientid }}
-        clientsecret: {{ .clientsecret }}
-        tokenurl: https://api.myuplink.com/oauth/token
+        type: bearer
+        token: {{ .accesstoken }}
       jq: .data[0].value | tonumber
       timeout: 10s
   temp:
     source: http
     uri: https://api.myuplink.com/v2/devices/{{ .deviceid }}/points?parameterIds=40004
     auth:
-      type: oauth2
-      clientid: {{ .clientid }}
-      clientsecret: {{ .clientsecret }}
-      tokenurl: https://api.myuplink.com/oauth/token
+      type: bearer
+      token: {{ .accesstoken }}
     jq: .data[0].value | tonumber
     timeout: 10s
