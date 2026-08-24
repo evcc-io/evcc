@@ -47,7 +47,7 @@ func (site *Site) addHeatingDemand(gt []float64, minLen int) []loadpoint.API {
 			continue
 		}
 
-		profile, correct := lp.demandProfile(now.BeginningOfDay().AddDate(0, 0, -28))
+		profile, correct := lp.demandProfile(now.BeginningOfDay().AddDate(0, 0, -7))
 		if profile == nil {
 			continue
 		}
