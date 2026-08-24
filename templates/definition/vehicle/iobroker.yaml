@@ -141,7 +141,7 @@ render: |
     source: http
     headers:
       - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .soc }}/plain?extraPlain=true
+    uri: {{ .uri }}/v1/state/{{ .soc }}/plain?extraPlain=true
     cache: {{ .cache }}
     {{- if .user }}
     auth:
@@ -154,7 +154,7 @@ render: |
     source: http
     headers:
       - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .range }}/plain?extraPlain=true
+    uri: {{ .uri }}/v1/state/{{ .range }}/plain?extraPlain=true
     cache: {{ .cache }}
     {{- if .user }}
     auth:
@@ -168,7 +168,7 @@ render: |
     source: http
     headers:
       - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .status }}/plain?extraPlain=true
+    uri: {{ .uri }}/v1/state/{{ .status }}/plain?extraPlain=true
     cache: {{ .cache }}
     {{- $a := .statusA | nospace | splitList "," | compact }}
     {{- $b := .statusB | nospace | splitList "," | compact }}
@@ -189,7 +189,7 @@ render: |
     source: http
     headers:
       - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .limitSoc }}/plain?extraPlain=true
+    uri: {{ .uri }}/v1/state/{{ .limitSoc }}/plain?extraPlain=true
     cache: {{ .cache }}
     {{- if .user }}
     auth:
@@ -203,7 +203,7 @@ render: |
     source: http
     headers:
       - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .odometer }}/plain?extraPlain=true
+    uri: {{ .uri }}/v1/state/{{ .odometer }}/plain?extraPlain=true
     cache: {{ .cache }}
     {{- if .user }}
     auth:
@@ -217,7 +217,7 @@ render: |
     source: http
     headers:
       - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .climater }}/plain?extraPlain=true
+    uri: {{ .uri }}/v1/state/{{ .climater }}/plain?extraPlain=true
     cache: {{ .cache }}
     {{- if .user }}
     auth:
@@ -231,7 +231,7 @@ render: |
     source: http
     headers:
       - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .finishTime }}/plain?extraPlain=true
+    uri: {{ .uri }}/v1/state/{{ .finishTime }}/plain?extraPlain=true
     cache: {{ .cache }}
     {{- if .user }}
     auth:
@@ -245,7 +245,7 @@ render: |
     source: http
     headers:
       - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .chargeEnable }}?value=${chargeenable}
+    uri: {{ .uri }}/v1/state/{{ .chargeEnable }}?value=${chargeenable}
     {{- if .user }}
     auth:
       type: basic
@@ -258,7 +258,7 @@ render: |
     source: http
     headers:
       - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .setMaxCurrent }}?value=${maxcurrent}
+    uri: {{ .uri }}/v1/state/{{ .setMaxCurrent }}?value=${maxcurrent}
     {{- if .user }}
     auth:
       type: basic
@@ -271,7 +271,7 @@ render: |
     source: http
     headers:
       - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .wakeup }}?value=${wakeup}
+    uri: {{ .uri }}/v1/state/{{ .wakeup }}?value=${wakeup}
     {{- if .user }}
     auth:
       type: basic
