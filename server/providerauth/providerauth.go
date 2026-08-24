@@ -33,8 +33,8 @@ func init() {
 }
 
 // Setup connects the redirect handler to the router and registers the callback channel.
-// authMiddleware gates login/logout; callback stays open because the IdP redirects to
-// it cross-site without a SameSite=Strict session cookie — it is gated by its state token.
+// Login/logout are gated by authMiddleware. Callback stays open: the cross-site IdP
+// redirect carries no SameSite=Strict cookie, the state token protects it instead.
 func Setup(router *mux.Router, paramC chan<- util.Param, authMiddleware mux.MiddlewareFunc) {
 	gate := func(h http.HandlerFunc) http.Handler { return authMiddleware(h) }
 

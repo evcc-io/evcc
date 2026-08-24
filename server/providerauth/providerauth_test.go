@@ -10,34 +10,22 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// blockAll is a stand-in auth middleware that rejects every request.
+// stand-in auth middleware rejecting every request
 func blockAll(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 	})
 }
 
-// TestSetupGating pins the wiring: login/logout are gated, callback stays open
-// (302 to the error page on the invalid state, not a middleware 401).
+// login/logout are gated, callback stays open (302 to error page, not middleware 401)
 func TestSetupGating(t *testing.T) {
 	router := mux.NewRouter()
-	paramC := make(chan util.Param, 1)
-	Setup(router, paramC, blockAll)
-
-	srv := httptest.NewServer(router)
-	defer srv.Close()
-
-	client := &http.Client{
-		CheckRedirect: func(*http.Request, []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	}
+	Setup(router, make(chan util.Param, 1), blockAll)
 
 	get := func(path string) int {
-		resp, err := client.Get(srv.URL + path)
-		assert.NoError(t, err)
-		defer resp.Body.Close()
-		return resp.StatusCode
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
+		return rec.Code
 	}
 
 	assert.Equal(t, http.StatusUnauthorized, get("/login?id=x"), "login must be gated")
