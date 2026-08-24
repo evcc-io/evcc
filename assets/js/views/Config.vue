@@ -1092,7 +1092,9 @@ export default defineComponent({
 			return result;
 		},
 		vehicleOptions(): VehicleOption[] {
-			return this.vehicles.map((v) => ({ key: v.name, name: v.config?.title || v.name }));
+			return this.vehicles
+				.filter((v) => !v.deviceDisable)
+				.map((v) => ({ key: v.name, name: v.config?.title || v.name }));
 		},
 		hems() {
 			return store.state?.hems;
