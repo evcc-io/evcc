@@ -47,6 +47,8 @@ func TestApplyPrecondition(t *testing.T) {
 	// plan in 1h, 40min precondition: slots 1 (10min) and 2, 3 (full)
 	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(time.Hour)).Times(1)
 	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: 40 * time.Minute}).Times(1)
+	lp.EXPECT().GetPlanGoal().Return(80.0, true).Times(1)
+	lp.EXPECT().GetPlanRequiredDuration(80.0, 8000.0).Return(2 * time.Hour).Times(1)
 	res := applyPrecondition(lp, nil, 8)
 	require.Len(t, res, 8)
 	assert.InDeltaSlice(t, []float32{0, 2000. / 1.5, 2000, 2000, 0, 0, 0, 0}, res, 1)
@@ -54,12 +56,32 @@ func TestApplyPrecondition(t *testing.T) {
 	// existing demand is kept where higher
 	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(time.Hour)).Times(1)
 	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: 30 * time.Minute}).Times(1)
+	lp.EXPECT().GetPlanGoal().Return(80.0, true).Times(1)
+	lp.EXPECT().GetPlanRequiredDuration(80.0, 8000.0).Return(2 * time.Hour).Times(1)
 	res = applyPrecondition(lp, []float32{3000, 3000, 3000, 3000, 0, 0, 0, 0}, 8)
 	assert.InDeltaSlice(t, []float32{3000, 3000, 3000, 3000, 0, 0, 0, 0}, res, 1)
 
 	// plan beyond horizon
 	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(24 * time.Hour)).Times(1)
 	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: time.Hour}).Times(1)
+	lp.EXPECT().GetPlanGoal().Return(80.0, true).Times(1)
+	lp.EXPECT().GetPlanRequiredDuration(80.0, 8000.0).Return(2 * time.Hour).Times(1)
+	assert.Nil(t, applyPrecondition(lp, nil, 8))
+
+	// "all" precondition is limited to the required charging duration (#33135)
+	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(time.Hour)).Times(1)
+	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: 7 * 24 * time.Hour}).Times(1)
+	lp.EXPECT().GetPlanGoal().Return(80.0, true).Times(1)
+	lp.EXPECT().GetPlanRequiredDuration(80.0, 8000.0).Return(40 * time.Minute).Times(1)
+	res = applyPrecondition(lp, nil, 8)
+	require.Len(t, res, 8)
+	assert.InDeltaSlice(t, []float32{0, 2000. / 1.5, 2000, 2000, 0, 0, 0, 0}, res, 1)
+
+	// goal already reached: no demand
+	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(time.Hour)).Times(1)
+	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: 7 * 24 * time.Hour}).Times(1)
+	lp.EXPECT().GetPlanGoal().Return(80.0, true).Times(1)
+	lp.EXPECT().GetPlanRequiredDuration(80.0, 8000.0).Return(time.Duration(0)).Times(1)
 	assert.Nil(t, applyPrecondition(lp, nil, 8))
 }
 

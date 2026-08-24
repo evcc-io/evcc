@@ -1237,6 +1237,15 @@ func applyPrecondition(lp loadpoint.API, demand []float32, minLen int) []float32
 		return demand
 	}
 
+	// limit to the required charging duration, i.e. "all" must not demand beyond the plan goal
+	goal, _ := lp.GetPlanGoal()
+	if required := lp.GetPlanRequiredDuration(goal, lp.EffectiveMaxPower()); required < precondition {
+		precondition = required
+	}
+	if precondition <= 0 {
+		return demand
+	}
+
 	// TODO precise slot placement
 	end := time.Until(ts)
 	start := end - precondition
