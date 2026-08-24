@@ -266,7 +266,7 @@ render: |
         source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
-          address: 47415 # Active power control mode (0=no curtailment)
+          address: 47415 # Active power control mode (7=percentage feed-in limit)
           type: holding
           decode: uint16
     - name: percent
@@ -279,10 +279,12 @@ render: |
           type: holding
           decode: uint16
         scale: 0.1
-    # the percentage register is only meaningful while a limit mode is active
+    # 47418 only holds the feed-in limit in mode 7, the same mode the curtail
+    # setter above writes. any other mode (unlimited, DI scheduling, zero
+    # export, kW limit) leaves it unused and it then reads 0
     script: |
       limit := percent
-      if mode == 0 {
+      if mode != 7 {
         limit = 100
       }
       limit
