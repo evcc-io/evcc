@@ -4,16 +4,16 @@ products:
     description:
       generic: Metrotherm (SG Ready via myUplink)
 group: heating
-capabilities: ["dim", "meter"]
+capabilities: ["dim"]
 requirements:
   evcc: ["skiptest"]
   description:
     de: |
       Integration via NIBE myUplink API für SG Ready Steuerung.
-      API-Anmeldedaten auf https://dev.myuplink.com/ erstellen.
+      OAuth2 Anmeldedaten auf https://dev.myuplink.com/ erstellen.
     en: |
       Integration via NIBE myUplink API for SG Ready control.
-      Create API credentials on https://dev.myuplink.com/
+      Create OAuth2 credentials on https://dev.myuplink.com/
 params:
   - name: deviceid
     required: true
@@ -25,28 +25,15 @@ params:
       de: Finden Sie in der myUplink-App oder über https://api.myuplink.com/v2/devices
   - name: clientid
     required: true
+    description:
+      en: OAuth2 Client ID
+      de: OAuth2 Client-ID
   - name: clientsecret
     required: true
     mask: true
     description:
       en: OAuth2 Client Secret
       de: OAuth2 Client-Geheimnis
-  - name: useshelly
-    type: bool
-    default: false
-    description:
-      en: Shelly EM power metering
-      de: Shelly EM Leistungsmessung
-    help:
-      en: Enable optional power metering via Shelly EM
-      de: Optionale Leistungsmessung via Shelly EM
-  - name: shellyhost
-    description:
-      en: Shelly EM host or IP
-      de: Shelly EM Host oder IP
-    help:
-      en: Required when Shelly EM metering is enabled
-      de: Erforderlich wenn Shelly EM aktiviert ist
 
 render: |
   type: sgready
@@ -105,16 +92,6 @@ render: |
         tokenurl: https://api.myuplink.com/oauth/token
       jq: .data[0].value | tonumber
       timeout: 10s
-  energy:
-    source: http
-    uri: https://api.myuplink.com/v2/devices/{{ .deviceid }}/points?parameterIds=40013
-    auth:
-      type: oauth2
-      clientid: {{ .clientid }}
-      clientsecret: {{ .clientsecret }}
-      tokenurl: https://api.myuplink.com/oauth/token
-    jq: .data[0].value | tonumber
-    timeout: 10s
   temp:
     source: http
     uri: https://api.myuplink.com/v2/devices/{{ .deviceid }}/points?parameterIds=40004
@@ -125,10 +102,3 @@ render: |
       tokenurl: https://api.myuplink.com/oauth/token
     jq: .data[0].value | tonumber
     timeout: 10s
-  {{- if .useshelly }}
-  power:
-    source: http
-    uri: http://{{ .shellyhost }}/rpc/EM.GetStatus?id=0
-    jq: .act_power | floor
-    timeout: 5s
-  {{- end }}
