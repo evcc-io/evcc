@@ -419,8 +419,7 @@
 							</template>
 						</DeviceCard>
 						<DeviceCard
-							v-if="experimental"
-							:title="`${$t('config.remote.title')} 🧪`"
+							:title="$t('config.remote.title')"
 							editable
 							:unconfigured="isUnconfigured(remoteTags)"
 							data-testid="remote-access"
