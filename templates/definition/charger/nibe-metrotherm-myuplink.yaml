@@ -25,9 +25,6 @@ params:
       de: Finden Sie in der myUplink-App oder über https://api.myuplink.com/v2/devices
   - name: clientid
     required: true
-    description:
-      en: OAuth2 Client ID
-      de: OAuth2 Client-ID
   - name: clientsecret
     required: true
     mask: true
