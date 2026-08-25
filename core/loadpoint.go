@@ -220,15 +220,6 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 		lp.mode = api.ModeOff
 	}
 
-	// migrate deprecated default modes; a legacy default also determines the always charge state
-	switch lp.mode {
-	case api.ModeMinPV:
-		lp.alwaysCharge = api.AlwaysChargeOn
-		lp.mode = api.ModeSmart
-	case api.ModePV:
-		lp.mode = api.ModeSmart
-	}
-
 	if lp.Priority > 0 {
 		lp.setPriority(lp.Priority)
 	}
@@ -279,6 +270,12 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 	lp.charger = dev.Instance()
 	if lp.charger == nil {
 		return lp, errors.New("missing charger instance")
+	}
+
+	// migrate deprecated default modes; a legacy default also determines the always charge state
+	var ac api.AlwaysCharge
+	if lp.mode, ac = lp.normalizeMode(lp.mode); ac != "" {
+		lp.alwaysCharge = ac
 	}
 
 	lp.configureChargerType(lp.charger)
@@ -374,12 +371,9 @@ func (lp *Loadpoint) restoreSettings() {
 	if v, err := lp.settings.String(keys.Mode); err == nil && v != "" && lp.DefaultMode == api.ModeEmpty {
 		if mode, err := api.ChargeModeString(v); err == nil {
 			// migrate deprecated values, setMode persists the result
-			switch mode {
-			case api.ModeMinPV:
-				lp.setAlwaysCharge(api.AlwaysChargeOn)
-				mode = api.ModeSmart
-			case api.ModePV:
-				mode = api.ModeSmart
+			mode, ac := lp.normalizeMode(mode)
+			if ac != "" {
+				lp.setAlwaysCharge(ac)
 			}
 			lp.setMode(mode)
 		}

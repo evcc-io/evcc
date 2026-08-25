@@ -156,6 +156,21 @@ func (lp *Loadpoint) setMode(mode api.ChargeMode) {
 	lp.settings.SetString(keys.Mode, string(mode))
 }
 
+// normalizeMode maps the deprecated pv/minpv modes to smart. The returned always charge
+// state is empty if unchanged; chargers without current control never get always charge.
+func (lp *Loadpoint) normalizeMode(mode api.ChargeMode) (api.ChargeMode, api.AlwaysCharge) {
+	if mode != api.ModePV && mode != api.ModeMinPV {
+		return mode, ""
+	}
+	if lp.chargerHasFeature(api.SwitchDevice) || lp.chargerHasFeature(api.Continuous) {
+		return api.ModeSmart, ""
+	}
+	if mode == api.ModeMinPV {
+		return api.ModeSmart, api.AlwaysChargeOn
+	}
+	return api.ModeSmart, api.AlwaysChargeOff
+}
+
 // SetMode sets loadpoint charge mode
 func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 	lp.Lock()
@@ -170,16 +185,9 @@ func (lp *Loadpoint) SetMode(mode api.ChargeMode) {
 
 	// normalize deprecated aliases; must happen before the change check since
 	// pv/minpv carry an always charge side effect even when mode stays smart
-	switch mode {
-	case api.ModePV, api.ModeMinPV:
-		if !lp.chargerHasFeature(api.SwitchDevice) && !lp.chargerHasFeature(api.Continuous) {
-			ac := api.AlwaysChargeOff
-			if mode == api.ModeMinPV {
-				ac = api.AlwaysChargeOn
-			}
-			lp.setAlwaysCharge(ac)
-		}
-		mode = api.ModeSmart
+	mode, ac := lp.normalizeMode(mode)
+	if ac != "" {
+		lp.setAlwaysCharge(ac)
 	}
 
 	// apply immediately

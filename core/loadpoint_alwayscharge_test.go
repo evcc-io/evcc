@@ -73,3 +73,29 @@ func TestAlwaysChargeOnceResetsOnDisconnect(t *testing.T) {
 	lp.evVehicleDisconnectHandler()
 	assert.Equal(t, api.AlwaysChargeOn, lp.GetAlwaysCharge())
 }
+
+func TestNormalizeMode(t *testing.T) {
+	switchDevice := &featureCharger{features: []api.Feature{api.SwitchDevice}}
+	continuous := &featureCharger{features: []api.Feature{api.Continuous}}
+
+	for _, tc := range []struct {
+		name    string
+		charger api.Charger
+		in      api.ChargeMode
+		mode    api.ChargeMode
+		ac      api.AlwaysCharge
+	}{
+		{"minpv", nil, api.ModeMinPV, api.ModeSmart, api.AlwaysChargeOn},
+		{"pv", nil, api.ModePV, api.ModeSmart, api.AlwaysChargeOff},
+		{"smart untouched", nil, api.ModeSmart, api.ModeSmart, ""},
+		{"now untouched", nil, api.ModeNow, api.ModeNow, ""},
+		{"minpv switch device", switchDevice, api.ModeMinPV, api.ModeSmart, ""},
+		{"pv switch device", switchDevice, api.ModePV, api.ModeSmart, ""},
+		{"minpv continuous", continuous, api.ModeMinPV, api.ModeSmart, ""},
+	} {
+		lp := &Loadpoint{charger: tc.charger}
+		mode, ac := lp.normalizeMode(tc.in)
+		assert.Equal(t, tc.mode, mode, tc.name)
+		assert.Equal(t, tc.ac, ac, tc.name)
+	}
+}
