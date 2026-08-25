@@ -44,7 +44,7 @@ params:
 
 render: |
   type: custom
-  {{ include "tariff-base" . }}
+  {{ include "base" . }}
   forecast:
     source: js
     script: |

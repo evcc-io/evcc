@@ -57,11 +57,12 @@
 					<SettingsFormRow
 						:id="fieldId(vehicle, 'limitSoc')"
 						:label="$t('main.vehicleSettings.limitSoc')"
+						:description="$t('main.vehicleSettings.limitSocDescription')"
 					>
 						<select
 							:id="fieldId(vehicle, 'limitSoc')"
 							class="form-select form-select-sm"
-							:value="vehicle.limitSoc ?? 0"
+							:value="vehicle.limitSoc || 100"
 							@change="changeLimitSoc(vehicle, $event)"
 						>
 							<option
@@ -85,7 +86,7 @@
 							@change="changeMinSoc(vehicle, $event)"
 						>
 							<option
-								v-for="opt in socOptions(vehicle)"
+								v-for="opt in socOptions(vehicle, true)"
 								:key="opt.value"
 								:value="opt.value"
 							>
@@ -171,19 +172,21 @@ export default defineComponent({
 			}
 			return vehicleHasSoc(vehicle) || vehicleNotReachable(vehicle);
 		},
-		socOptions(vehicle: Vehicle): SelectOption<number>[] {
-			// 0 = none, then 5-100 in steps of 5
+		socOptions(vehicle: Vehicle, withNone = false): SelectOption<number>[] {
+			// 5-100 in steps of 5, optionally preceded by 0 = none
 			const rangePerSoc = this.connectedLoadpoint(vehicle)?.rangePerSoc;
-			return Array.from(Array(21).keys()).map((i) => {
-				const soc = i * 5;
-				return {
-					value: soc,
-					name:
-						soc === 0
-							? this.$t("general.none")
-							: this.fmtSocOption(soc, rangePerSoc, distanceUnit()),
-				};
-			});
+			return Array.from(Array(21).keys())
+				.filter((i) => withNone || i > 0)
+				.map((i) => {
+					const soc = i * 5;
+					return {
+						value: soc,
+						name:
+							soc === 0
+								? this.$t("general.none")
+								: this.fmtSocOption(soc, rangePerSoc, distanceUnit()),
+					};
+				});
 		},
 		selectValue(event: Event): string {
 			return (event.target as HTMLSelectElement).value;

@@ -219,6 +219,7 @@
       "enabled": "Activé",
       "energy": "Énergie",
       "events": "Evénements",
+      "exportLimit": "Limite d'exportation du réseau",
       "feedinPrice": "Prix de vente",
       "forecast": "Prévisions",
       "gridPrice": "Prix du réseau",
@@ -306,6 +307,7 @@
     "form": {
       "danger": "Attention",
       "deprecated": "obsolète",
+      "durationUnit": "Unité de temps pour {label}",
       "example": "Exemple",
       "optional": "optionnel"
     },
@@ -371,12 +373,17 @@
       "customOption": "Intégration personnalisée",
       "description": "Limitation de puissance par des systèmes externes (par exemple, §14a de l'EnWG, §9 de l'EEG ou un système de gestion de l'énergie de niveau supérieur). Fonctionne conjointement avec la fonctionnalité de gestion de la charge. La limitation de la production solaire est également prise en charge pour certains appareils. La limite de limitation effective doit être définie lors de la configuration de chaque onduleur.",
       "download": "Télécharger",
+      "dynamicLimits": "Limites dynamiques",
       "eventsRecorded": "Enregistrement de {count} événements liés à la limitation de la grille.",
+      "exportLimit": "Limite d'exportation du réseau",
+      "exportLimitDescription": "L'optimiseur de batterie respecte cette limite afin d'éviter les pertes d'énergie solaire. Un signal de limitation actif issu d'une intégration dynamique des limites prévaut.",
+      "exportLimitHint": "Limite statique d'injection au point de raccordement au réseau.",
       "generic": "Intégrations génériques",
       "integrations": "Intégrations",
       "lastEvent": "Le plus récent {timeAgo}.",
       "noEvents": "Aucun événement n'a encore été enregistré.",
       "recordedEvents": "Événements enregistrés",
+      "staticLimits": "Limites statiques",
       "template": "Intégration",
       "title": "Limite externe",
       "type": {
@@ -1094,6 +1101,8 @@
     "version": {
       "availableLong": "mise à jour disponible",
       "community": "Communauté evcc",
+      "labelEmail": "E-mail",
+      "labelPhone": "Téléphone",
       "labelRelease": "Lancement",
       "labelVersion": "Version",
       "labelWebsite": "Site web",
@@ -1176,6 +1185,7 @@
     "sessions": "Sessions de charge"
   },
   "help": {
+    "contactButton": "Contactez-nous",
     "discussionsButton": "Discussions GitHub",
     "documentationButton": "Documentation",
     "issueButton": "Signaler un problème",
@@ -1215,8 +1225,11 @@
     "additionalContext": "Contexte additionnel",
     "additionalContextPlaceholder": "Toute information utile...\n- Détails de configuration\n- Ce que vous avez essayé\n- Détails de l’environnement",
     "createButtonDiscussion": "Démarrer une discussion sur GitHub…",
+    "createButtonEmail": "Envoyer une demande par e-mail",
     "createButtonIssue": "Créer un problème sur GitHub…",
     "description": "Votre installation ne fonctionne pas comme attendu ? Utilisez cette page pour obtenir de l’aide ou signaler un problème. Fournissez suffisamment de détails pour nous permettre de comprendre et de reproduire le problème, tout en restant concis, clair et facile à suivre.",
+    "downloadButton": "Télécharger les informations de débogage",
+    "downloadHint": "Si vous avez besoin de plus d'informations, veuillez joindre ce fichier à votre e-mail.",
     "helpType": {
       "discussion": "J’ai besoin d’aide avec mon installation",
       "discussionDescription": "Les discussions de la communauté fournissent des réponses.",
@@ -1228,6 +1241,7 @@
     "issueTitle": "Titre",
     "stepsToReproduce": "Étapes permettant de reproduire le problème",
     "subTitleDiscussion": "Décrivez votre problème",
+    "subTitleEmail": "Décrivez votre problème",
     "subTitleIssue": "Décrivez le problème",
     "summary": {
       "confirmationButtonDiscussion": "Démarrer une Discussion sur GitHub",
@@ -1280,24 +1294,33 @@
       "goal": "Objectif de charge",
       "modalTitle": "Planification de la charge",
       "none": "aucune",
+      "once": "une fois",
       "optimization": {
         "cheapest": "le moins cher",
+        "cheapestDescription": "Sélectionne les créneaux horaires les moins chers. Cela peut entraîner plusieurs démarrages et arrêts.",
+        "cleanest": "le plus propre",
+        "cleanestDescription": "Sélectionne les créneaux les plus propres. Cela peut entraîner plusieurs démarrages et arrêts.",
         "continuous": "continu",
+        "continuousCo2Description": "Sélectionne la série de créneaux la plus propre et sans interruption.",
+        "continuousPriceDescription": "Sélectionne la série de créneaux horaires sans interruption et la moins chère.",
         "label": "Optimisation"
       },
       "planNumber": "Plan {number}",
       "precondition": {
-        "description": "Charge {duration} avant le départ pour pré-conditionner la batterie.",
+        "description": "Effectuer une partie de la recharge juste avant le départ : la batterie est chaude et reste moins longtemps à un niveau de charge élevé.",
         "label": "Chargement tardif",
         "optionAll": "tous",
-        "optionNo": "non"
+        "optionNo": "non",
+        "summary": "{precondition} avant"
       },
       "remove": "Enlever",
       "repeating": "récurrent",
       "repeatingPlans": "Plans récurrents",
       "selectAll": "Sélect. tous",
+      "strategy": {
+        "label": "Stratégie"
+      },
       "strategyDisabledDescription": "La charge commence le plus tard possible afin de se terminer juste à temps pour le départ. Avec les prix dynamiques du réseau ou la tarification CO₂, davantage d'options sont disponibles ici.",
-      "strategySettings": "Paramètres de stratégie",
       "time": "Heure",
       "title": "Planification",
       "unsavedChanges": "Il y a des modifications non sauvegardées. Appliquer ?",
@@ -1582,6 +1605,7 @@
   },
   "session": {
     "addOdometer": "Ajouter une valeur",
+    "addedRange": "Autonomie ajoutée",
     "cancel": "Annuler",
     "co2": "CO₂",
     "date": "Période",
@@ -1592,11 +1616,12 @@
     "meterstop": "Fin du Compteur",
     "odometer": "Kilométrage",
     "price": "Coût",
-    "soc": "Etat de Charge du véhicule",
+    "soc": "Charge",
     "started": "Démarré",
     "title": "Session de charge"
   },
   "sessions": {
+    "addedRange": "Autonomie",
     "avgPower": "Puissance ⌀",
     "avgPrice": "Prix ⌀",
     "chargeDuration": "Durée",
@@ -1622,6 +1647,7 @@
     },
     "co2": "CO₂ ⌀",
     "csv": {
+      "addedrange": "Autonomie ajoutée (km)",
       "chargedenergy": "Énergie (kWh)",
       "chargeduration": "Durée",
       "co2perkwh": "CO₂/kWh",

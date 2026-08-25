@@ -189,6 +189,10 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 	fromToCharge := site.fromTo(mode, api.BatteryCharge)
 	fromToDischarge := site.fromTo(mode, api.BatteryDischarge)
 
+	if site.batteryModeApplied == nil {
+		site.batteryModeApplied = make(map[string]api.BatteryMode)
+	}
+
 	for _, dev := range site.batteryMeters {
 		meter := dev.Instance()
 
@@ -211,13 +215,21 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 			}
 		}
 
-		if deviceMode != api.BatteryUnknown {
-			if err := batCtrl.SetBatteryMode(deviceMode); err == nil {
-				site.log.DEBUG.Printf("set battery %s mode: %s", deviceTitleOrName(dev), deviceMode)
-			} else if !errors.Is(err, api.ErrNotAvailable) {
+		// don't re-apply the mode the battery is already in
+		name := dev.Config().Name
+		if deviceMode == api.BatteryUnknown || deviceMode == site.batteryModeApplied[name] {
+			continue
+		}
+
+		if err := batCtrl.SetBatteryMode(deviceMode); err != nil {
+			if !errors.Is(err, api.ErrNotAvailable) {
 				return err
 			}
+			continue
 		}
+
+		site.batteryModeApplied[name] = deviceMode
+		site.log.DEBUG.Printf("set battery %s mode: %s", deviceTitleOrName(dev), deviceMode)
 	}
 
 	return nil
@@ -260,7 +272,7 @@ func (site *Site) dischargeControlActive(rate api.Rate) bool {
 		return false
 	}
 
-	for _, lp := range site.Loadpoints() {
+	for _, lp := range site.activeLoadpoints() {
 		smartCostActive := site.smartCostActive(lp, rate)
 		if lp.GetStatus() == api.StatusC && (smartCostActive || lp.IsFastChargingActive()) {
 			return true

@@ -6,6 +6,7 @@
 		:title="title"
 		:size="size"
 		:config-modal-name="name"
+		:prevent-dismiss="!nothingChanged"
 		@open="open"
 	>
 		<p v-if="description || docsLink">

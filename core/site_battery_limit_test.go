@@ -49,7 +49,7 @@ func TestBatteryMaxDischargePowerAggregation(t *testing.T) {
 	}
 
 	site.updateBatteryMeters()
-	assert.Equal(t, 0.0, site.GetBatteryMaxDischargePower())
+	assert.Nil(t, site.GetBatteryMaxDischargePower())
 
 	// both batteries with limit
 	m3 := &mockBatteryPowerLimiter{Meter: &mockMeter{}, discharge: 3000}
@@ -59,7 +59,9 @@ func TestBatteryMaxDischargePowerAggregation(t *testing.T) {
 	}
 
 	site.updateBatteryMeters()
-	assert.Equal(t, 5000.0, site.GetBatteryMaxDischargePower())
+	if res := site.GetBatteryMaxDischargePower(); assert.NotNil(t, res) {
+		assert.Equal(t, 5000.0, *res)
+	}
 }
 
 type mockBatterySocLimiter struct {
@@ -100,7 +102,9 @@ func TestBatteryMaxDischargePowerWithMinSoc(t *testing.T) {
 
 	site.updateBatteryMeters()
 	// Only m2 should contribute
-	assert.Equal(t, 3000.0, site.GetBatteryMaxDischargePower())
+	if res := site.GetBatteryMaxDischargePower(); assert.NotNil(t, res) {
+		assert.Equal(t, 3000.0, *res)
+	}
 
 	// Both empty
 	m3 := &mockLimiter{mockBatterySocLimiter: mockBatterySocLimiter{Meter: &mockMeter{}, soc: 15, min: 20}, discharge: 3000}
@@ -110,5 +114,7 @@ func TestBatteryMaxDischargePowerWithMinSoc(t *testing.T) {
 	}
 
 	site.updateBatteryMeters()
-	assert.Equal(t, 0.0, site.GetBatteryMaxDischargePower())
+	if res := site.GetBatteryMaxDischargePower(); assert.NotNil(t, res) {
+		assert.Equal(t, 0.0, *res)
+	}
 }

@@ -19,6 +19,8 @@ requirements:
       The [myteslamate.com](https://www.myteslamate.com/tesla-api-application-registration/) guide explains the process and generates a free Access and Refresh Token.
       With this token pair and your Client ID created in the Tesla Developer Account, evcc can directly communicate with the Tesla Fleet API.
 params:
+  - name: usage
+    choice: ["battery"]
   - name: host
   - name: password
     required: true
@@ -47,11 +49,17 @@ params:
       en: optional product identifier of the energy site, use to override autodetection
       de: optionale Product ID dieser Energy Site, zum Übersteuern der automatischen Erkennung
   - name: minsoc
+    default: 20
     advanced: true
+    help:
+      de: Backup-Reserve, die evcc im Normalbetrieb wiederherstellt
+      en: Backup reserve evcc restores in normal operation
   - name: maxsoc
-    advanced: true
+    deprecated: true
   - name: maxchargepower
+    deprecated: true
   - name: maxdischargepower
+    deprecated: true
 render: |
   type: powerwall-fleet
   uri: {{ .host }}
@@ -65,6 +73,3 @@ render: |
     refresh: {{ .refreshToken }}
   siteId: {{ .siteId }}
   minsoc: {{ .minsoc }}
-  maxsoc: {{ .maxsoc }}
-  maxchargepower: {{ .maxchargepower }}
-  maxdischargepower: {{ .maxdischargepower }}

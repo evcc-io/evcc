@@ -120,8 +120,6 @@
       "titleEdit": "Upraviť samoregulačný spotrebič"
     },
     "battery": {
-      "description": "Experimentálne ovládanie batérie. Tieto funkcie sa testujú a môžu sa zmeniť alebo byť odstránené v budúcich verziách.",
-      "gridDischarge": "Umožniť batérií vybíjanie do siete",
       "title": "Batéria",
       "titleAdd": "Pridať batériu",
       "titleEdit": "Upraviť batériu"
@@ -221,6 +219,7 @@
       "enabled": "Povolené",
       "energy": "Energia",
       "events": "Udalosti",
+      "exportLimit": "Limit exportu do siete",
       "feedinPrice": "Výkupná cena",
       "forecast": "Predpoveď",
       "gridPrice": "Cena zo siete",
@@ -308,6 +307,7 @@
     "form": {
       "danger": "Nebezpečenstvo",
       "deprecated": "zastarané",
+      "durationUnit": "Časová jednotka pre {label}",
       "example": "Príklad",
       "optional": "voliteľné"
     },
@@ -320,17 +320,22 @@
       "change": "Zmeniť",
       "clear": "Vymazať",
       "close": "Zatvoriť",
+      "confirmDisable": "Vypnúť toto zariadenie? Bude to ignorované po ďalšom reštarte.",
+      "confirmEnable": "Opäť povoliť toto zariadenie?",
       "confirmSave": "Existujú neuložené zmeny. Uložiť teraz?",
       "copied": "Skopírované!",
       "copy": "Kopírovať",
       "customHelp": "Vytvorte používateľom definované zariadenie pomocou systému pluginov evcc.",
       "customOption": "Užívateľom definované zariadenie",
       "delete": "Zmazať",
+      "disable": "Zakázať",
+      "disabled": "zakázané",
       "dismiss": "Zamietnuť",
       "docsLink": "Pozri dokumentáciu.",
       "dragHandle": "Ovládací prvok na presun",
       "dragItem": "Presunuteľné: {title}",
       "dragList": "Zoznam s možnosťou zmeny poradia",
+      "enable": "Povoliť",
       "error": "Chyba",
       "experimental": "Experimentálne",
       "forceSave": "Napriek tomu uložiť",
@@ -373,14 +378,23 @@
       "customOption": "Užívateľom-definovaná integrácia",
       "description": "Obmedzenie výkonu externými systémami (napr. §14a EnWG, §9 rozhranie EEG alebo systém riadenia energie nadradenej úrovne). Funguje spoločne s funkciou riadenia záťaže. Pre vybrané zariadenia je podporované aj obmedzenie výroby solárnej energie. Skutočný limit obmedzenia musí byť nastavený v každej konfigurácii meniča.",
       "download": "Stiahnuť",
+      "dynamicLimits": "Dynamické limity",
       "eventsRecorded": "Zaznamenané {count} sieťové obmedzenia udalostí.",
+      "exportLimit": "Limit exportu do siete",
+      "exportLimitDescription": "Optimalizátor batérie rešpektuje tento limit, aby sa predišlo stratám solárnej energie. Prednosť má signál aktívneho obmedzenia z dynamickej integrácie limitov.",
+      "exportLimitHint": "Statický limit importu v bode pripojenia k sieti.",
       "generic": "Všeobecné integrácie",
       "integrations": "Integrácie",
       "lastEvent": "Najnovšie {timeAgo}.",
       "noEvents": "Zatiaľ žiadne udalosti zaznamenané.",
       "recordedEvents": "Nahrané udalosti",
+      "staticLimits": "Statické limity",
       "template": "Integrácia",
-      "title": "Externý limit"
+      "title": "Externý limit",
+      "type": {
+        "custom": "Užívateľom-definovaná integrácia",
+        "relay": "Užívateľ-definovaná integrácia (relay)"
+      }
     },
     "icon": {
       "change": "zmeniť",
@@ -465,7 +479,7 @@
         "heating": "Pridať ohrievač"
       },
       "phases1p": "1-fáza",
-      "phases3p": "3-fázový",
+      "phases3p": "3-fázy",
       "phasesAutomatic": "Automatické fázy",
       "phasesAutomaticHelp": "Váš nabíjačka podporuje automatické prepínanie medzi 1- a 3-fázovým nabíjaním. V hlavnej obrazovke môžete upraviť správanie fáz počas nabíjania.",
       "phasesHelp": "Počet pripojených fáz.",
@@ -828,7 +842,7 @@
       "general": "Všeobecné",
       "grid": "Sieť",
       "integrations": "Integrácie",
-      "loadpoints": "Nabíjacie body a ohrievače",
+      "loadpoints": "Nabíjacie body a Ohrievače",
       "meter": "Solár & Batéria",
       "services": "Služby",
       "system": "Systém",
@@ -1092,6 +1106,8 @@
     "version": {
       "availableLong": "nová verzia k dispozícii",
       "community": "evcc komunita",
+      "labelEmail": "E-mail",
+      "labelPhone": "Telefón",
       "labelRelease": "Vydanie",
       "labelVersion": "Verzia",
       "labelWebsite": "Webová stránka",
@@ -1159,9 +1175,12 @@
     }
   },
   "general": {
+    "back": "Späť",
     "download": "Stiahnuť",
+    "error": "Chyba",
     "none": "žiadny",
-    "note": "Poznámka:"
+    "note": "Poznámka:",
+    "warning": "Upozornenie"
   },
   "header": {
     "about": "O nás",
@@ -1174,6 +1193,7 @@
     "sessions": "Nabíjacie Relácie"
   },
   "help": {
+    "contactButton": "Kontaktujte nás",
     "discussionsButton": "Diskusie na GitHube",
     "documentationButton": "Dokumentácia",
     "issueButton": "Nahlásiť problém",
@@ -1213,8 +1233,11 @@
     "additionalContext": "Dodatočný kontext",
     "additionalContextPlaceholder": "Akékoľvek ďalšie informácie, ktoré by mohli byť užitočné...\n- Podrobnosti o konfigurácii\n- Čo ste vyskúšali\n- Podrobnosti o prostredí",
     "createButtonDiscussion": "Začnite diskusiu na GitHube...",
+    "createButtonEmail": "Poslať žiadosť e-mailom",
     "createButtonIssue": "Vytvoriť problém na GitHube...",
     "description": "Vaša inštalácia nefunguje podľa očakávaní? Použite túto stránku na získanie pomoci alebo nahlásenie problémov. Poskytnite dostatok podrobností, aby sme problém pochopili a zreprodukovali, pričom váš popis musí byť stručný, jasný a ľahko pochopiteľný.",
+    "downloadButton": "Stiahnuť debug informácie",
+    "downloadHint": "Ak potrebujete viac informácií, priložte tento súbor k svojmu e-mailu.",
     "helpType": {
       "discussion": "Potrebujem pomoc s nastavením",
       "discussionDescription": "Komunitné diskusie poskytujú odpovede.",
@@ -1226,6 +1249,7 @@
     "issueTitle": "Názov",
     "stepsToReproduce": "Kroky k reprodukcii",
     "subTitleDiscussion": "Opíšte svoj problém",
+    "subTitleEmail": "Opíšte svoj problém",
     "subTitleIssue": "Popíšte problém",
     "summary": {
       "confirmationButtonDiscussion": "Začnite diskusiu na GitHube",
@@ -1278,24 +1302,33 @@
       "goal": "Cieľ nabíjania",
       "modalTitle": "Nabíjací plán",
       "none": "žiadny",
+      "once": "raz",
       "optimization": {
         "cheapest": "najlacnejší",
+        "cheapestDescription": "Vyberie najlacnejšie sloty. Môže viesť k viacerým štartom a zastaveniam.",
+        "cleanest": "najčistejšie",
+        "cleanestDescription": "Vyberie najčistejšie sloty. Môže viesť k viacerým štartom a zastaveniam.",
         "continuous": "nepretržitý",
+        "continuousCo2Description": "Vyberie najčistejšiu neprerušenú sériu slotov.",
+        "continuousPriceDescription": "Vyberie najlacnejšiu neprerušenú sériu slotov.",
         "label": "Optimalizácia"
       },
       "planNumber": "Plán {number}",
       "precondition": {
-        "description": "Nabíjať batériu {duration} pred odchodom na predkondicionovanie.",
+        "description": "Presunie časť nabíjania tesne pred odchod: zohriata batéria, menej času pri vysokom stave nabitia.",
         "label": "Neskoré nabíjanie",
         "optionAll": "všetko",
-        "optionNo": "nie"
+        "optionNo": "nie",
+        "summary": "{precondition} pred"
       },
       "remove": "Odstrániť",
       "repeating": "opakujúce sa",
       "repeatingPlans": "Opakujúce sa plány",
       "selectAll": "Vybrať všetko",
+      "strategy": {
+        "label": "Stratégia"
+      },
       "strategyDisabledDescription": "Nabíjanie začína čo najneskôr, aby sa skončilo presne včas pred odchodom. S dynamickými sieťovými cenami alebo tarifom CO₂ je tu viac možností k dispozícii.",
-      "strategySettings": "Nastavenie stratégie",
       "time": "Čas",
       "title": "Plán",
       "unsavedChanges": "Existujú neuložené zmeny. Uložiť teraz?",
@@ -1506,6 +1539,7 @@
       "keepAsIs": "Ponechať ako je",
       "learnMore": "Viac informácií.",
       "limitSoc": "Predvolený limit",
+      "limitSocDescription": "Aplikované, keď je vozidlo pripojené.",
       "menu": "Vozidlá",
       "minSoc": "Minimálne nabitie",
       "minSocDescription": "Rýchle nabíjanie na túto úroveň v solárnom režime.",
@@ -1580,6 +1614,7 @@
   },
   "session": {
     "addOdometer": "Pridať hodnotu",
+    "addedRange": "Pridaný rozsah",
     "cancel": "Zrušiť",
     "co2": "CO₂",
     "date": "Obdobie",
@@ -1595,6 +1630,7 @@
     "title": "Nabíjacia relácia"
   },
   "sessions": {
+    "addedRange": "Rozsah",
     "avgPower": "⌀ Výkon",
     "avgPrice": "⌀ Cena",
     "chargeDuration": "Trvanie",
@@ -1620,6 +1656,7 @@
     },
     "co2": "⌀ CO2",
     "csv": {
+      "addedrange": "Pridaný rozsah (km)",
       "chargedenergy": "Energia (kWh)",
       "chargeduration": "Trvanie",
       "co2perkwh": "CO₂/kWh",
@@ -1696,6 +1733,7 @@
       "label": "Jazyk"
     },
     "loadpoints": {
+      "disabledDevice": "zakázané",
       "help": "Zmeniť poradie a viditeľnosť používateľského rozhrania.",
       "hide": "Skryť {title}",
       "label": "Nabíjacie stanice",

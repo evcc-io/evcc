@@ -311,6 +311,23 @@ a:hover {
 	--bs-btn-line-height: 2;
 }
 
+.btn-pill {
+	--bs-btn-bg: var(--bs-body-bg);
+	--bs-btn-color: var(--evcc-default-text);
+	--bs-btn-border-color: var(--evcc-gray-50);
+	--bs-btn-hover-bg: var(--bs-body-bg);
+	--bs-btn-hover-color: var(--evcc-default-text);
+	--bs-btn-hover-border-color: var(--evcc-default-text);
+	--bs-btn-active-bg: var(--bs-body-bg);
+	--bs-btn-active-color: var(--evcc-default-text);
+	--bs-btn-active-border-color: var(--evcc-default-text);
+	white-space: nowrap;
+	text-transform: uppercase;
+	font-weight: bold;
+	font-size: 0.75rem;
+	border-radius: 50rem;
+}
+
 .btn-outline-secondary {
 	--bs-btn-color: var(--evcc-default-text);
 	--bs-btn-border-color: var(--evcc-default-text);
@@ -432,6 +449,11 @@ a:hover {
 }
 .modal.show .modal-dialog {
 	transform: none;
+}
+/* restore bootstrap's dismiss-blocked zoom, neutralized by the transform reset above */
+.modal.modal-static .modal-dialog {
+	transform: scale(1.02);
+	transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .modal-header {
@@ -783,6 +805,43 @@ html.app .modal-dialog {
 	}
 }
 
+/* in-place fade-swipe between two views (Vue transition classes, e.g. config list>detail) */
+.fade-swap-left-enter-active,
+.fade-swap-left-leave-active,
+.fade-swap-right-enter-active,
+.fade-swap-right-leave-active {
+	transition:
+		opacity 150ms ease,
+		transform 150ms ease;
+}
+/* leaving view overlaps the entering one instead of pushing it down;
+   ancestor must be position:relative and unpadded, or the view jumps when going absolute */
+.fade-swap-left-leave-active,
+.fade-swap-right-leave-active {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+}
+.fade-swap-left-enter-from,
+.fade-swap-left-leave-to {
+	opacity: 0;
+	transform: translateX(-1rem);
+}
+.fade-swap-right-enter-from,
+.fade-swap-right-leave-to {
+	opacity: 0;
+	transform: translateX(1rem);
+}
+@media (prefers-reduced-motion: reduce) {
+	.fade-swap-left-enter-active,
+	.fade-swap-left-leave-active,
+	.fade-swap-right-enter-active,
+	.fade-swap-right-leave-active {
+		transition: none;
+	}
+}
+
 .round-box--error {
 	box-shadow: 0 0 0.5rem var(--bs-danger);
 	border: 1px solid var(--bs-danger);
@@ -891,4 +950,10 @@ input::-webkit-date-and-time-value {
 
 .sticky-bottom {
 	bottom: calc(var(--tab-bar-height) + 0.25rem);
+}
+
+[_echarts_instance_] {
+	user-select: none;
+	-webkit-user-select: none;
+	-webkit-touch-callout: none;
 }

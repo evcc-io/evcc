@@ -64,5 +64,5 @@ render: |
     secret: {{ .clientSecret }}
   redirecturi: {{ .redirectUri }}
   vin: {{ .vin }}
-  {{ include "vehicle-common" . }}
-  {{ include "vehicle-features" . }}
+  {{ include "common" . }}
+  {{ include "features" . }}

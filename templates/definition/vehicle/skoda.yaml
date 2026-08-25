@@ -12,6 +12,6 @@ params:
   - name: timeout
 render: |
   type: skoda
-  {{ include "vehicle-base" . }}
+  {{ include "base" . }}
   timeout: {{ .timeout }}
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}

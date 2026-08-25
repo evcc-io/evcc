@@ -14,6 +14,7 @@ declare global {
       customWebsite: string;
       customEmail: string;
       customPhone: string;
+      customTheme: THEME;
     };
   }
   interface Window {
@@ -447,6 +448,7 @@ export interface Entity {
   type: string;
   id: number;
   config: Config;
+  deviceDisable?: boolean;
 }
 
 export enum ConfigType {
@@ -461,6 +463,10 @@ export enum ConfigType {
 
 export type ConfigVehicle = Entity;
 export type ConfigMessenger = Entity;
+
+export interface ConfigCurtailer extends Entity {
+  deviceTitle?: string;
+}
 
 export interface ConfigHems extends Entity {
   deviceProduct?: string;
@@ -488,6 +494,7 @@ export interface LoadpointThreshold {
 export interface ConfigLoadpoint {
   id?: number;
   name?: string;
+  disable?: boolean;
   charger: string;
   meter: string;
   vehicle: string;
@@ -607,6 +614,8 @@ export interface Loadpoint {
   connected: boolean;
   /** Duration since the vehicle was connected, in seconds. */
   connectedDuration: number;
+  /** Loadpoint is disabled via configuration. */
+  disabled?: boolean;
   /** Delay before charging stops in solar mode, in seconds. */
   disableDelay: number;
   /** Grid draw power above which charging stops in solar mode, in W. */
@@ -1368,7 +1377,8 @@ export type DeviceType =
   | "loadpoint"
   | "messenger"
   | "tariff"
-  | "hems";
+  | "hems"
+  | "curtailer";
 export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext" | "consumer";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
 export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar" | "temperature";
@@ -1385,6 +1395,7 @@ export interface SiteConfig {
   aux: string[] | null;
   ext: string[] | null;
   consumer: string[] | null;
+  curtail: string[] | null;
 }
 
 export type ValueOf<T> = T[keyof T];

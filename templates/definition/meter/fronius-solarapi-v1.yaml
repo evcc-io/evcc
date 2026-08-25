@@ -119,6 +119,9 @@ render: |
       set:
         source: error
         error: ErrNotAvailable
+    default:
+      source: error
+      error: ErrNotAvailable
   {{- end }}
   {{- include "battery-params" . }}
   {{- end }}

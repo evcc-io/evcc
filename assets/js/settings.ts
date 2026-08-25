@@ -24,6 +24,7 @@ const SETTINGS_PRICE_ZOOM = "settings_price_zoom";
 const SETTINGS_HIDE_FEEDIN = "settings_hide_feedin";
 const LAST_BATTERY_SMART_COST_LIMIT = "last_battery_smart_cost_limit";
 const LAST_BATTERY_GRID_DISCHARGE_LIMIT = "last_battery_grid_discharge_limit";
+const SETTINGS_DATE_FORMAT = "settings_date_format";
 const LAST_TARGET_TIME = "last_target_time";
 const LAST_SOC_GOAL = "last_soc_goal";
 const LAST_ENERGY_GOAL = "last_energy_goal";
@@ -100,6 +101,8 @@ function saveJSON(key: string) {
   };
 }
 
+export type DateFormat = "" | "dmy" | "mdy" | "ymd";
+
 export interface LoadpointSettings {
   order?: number;
   visible?: boolean;
@@ -113,6 +116,7 @@ export interface Settings {
   theme: THEME | null;
   unit: string;
   is12hFormat: boolean;
+  dateFormat: DateFormat;
   energyflowDetails: boolean;
   energyflowCo2: boolean;
   energyflowPv: boolean;
@@ -143,6 +147,7 @@ const settings: Settings = reactive({
   theme: read(SETTINGS_THEME),
   unit: read(SETTINGS_UNIT),
   is12hFormat: readBool(SETTINGS_12H_FORMAT),
+  dateFormat: read(SETTINGS_DATE_FORMAT) || "",
   energyflowDetails: readBool(SETTINGS_ENERGYFLOW_DETAILS),
   energyflowCo2: readBool(SETTINGS_ENERGYFLOW_CO2),
   energyflowPv: readBool(SETTINGS_ENERGYFLOW_PV),
@@ -172,6 +177,7 @@ watch(() => settings.locale, save(SETTINGS_LOCALE));
 watch(() => settings.theme, save(SETTINGS_THEME));
 watch(() => settings.unit, save(SETTINGS_UNIT));
 watch(() => settings.is12hFormat, saveBool(SETTINGS_12H_FORMAT));
+watch(() => settings.dateFormat, save(SETTINGS_DATE_FORMAT));
 watch(() => settings.energyflowDetails, saveBool(SETTINGS_ENERGYFLOW_DETAILS));
 watch(() => settings.energyflowCo2, saveBool(SETTINGS_ENERGYFLOW_CO2));
 watch(() => settings.energyflowPv, saveBool(SETTINGS_ENERGYFLOW_PV));

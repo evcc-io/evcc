@@ -57,11 +57,33 @@ jobs:
               core.setFailed(message);
             };
 
-            const { data: pr } = await github.rest.pulls.get({
-              owner,
-              repo,
-              pull_number: context.payload.issue.number,
-            });
+            // the command is usually posted right before hitting merge, so give the
+            // pull request time to land instead of failing on the race
+            const deadline = Date.now() + 5 * 60 * 1000;
+            let pr;
+            for (;;) {
+              try {
+                ({ data: pr } = await github.rest.pulls.get({
+                  owner,
+                  repo,
+                  pull_number: context.payload.issue.number,
+                }));
+                // a closed pull request will never merge, no point in waiting it out
+                if (pr.merged || pr.state === 'closed') {
+                  break;
+                }
+              } catch (err) {
+                // a blip while polling must not fail the command, but a request that
+                // is still failing when the time is up is a real error
+                if (Date.now() >= deadline) {
+                  throw err;
+                }
+              }
+              if (Date.now() >= deadline) {
+                break;
+              }
+              await new Promise((resolve) => setTimeout(resolve, 15000));
+            }
             if (!pr.merged) {
               fail(`pull request #${pr.number} is not merged`);
               return;
@@ -157,18 +179,15 @@ jobs:
           TITLE: ${{ steps.pr.outputs.title }}
           ACTOR: ${{ github.event.comment.user.login }}
         run: |
-          # the release line the branch was cut from, 0.313 for release/0.313.1
-          line=$(echo "${TARGET#release/}" | cut -d. -f1,2)
-
           # the pull request is authored by the deploy token, so assign the
           # requester. the body stays empty, squashing it would carry the text
           # into the release branch as the commit description.
-          # the marker trails the title so the changelog filters and groups still
-          # see the original prefix, goreleaser strips it from the release notes
+          # the title stays untouched so the changelog filters and groups still
+          # see the original prefix, the backport label identifies the pull request
           url=$(gh pr create \
             --base "$TARGET" \
             --head "$BRANCH" \
-            --title "$TITLE [$line backport]" \
+            --title "$TITLE" \
             --label backport \
             --assignee "$ACTOR" \
             --body "")

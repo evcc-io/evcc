@@ -835,6 +835,9 @@ components:
         connectedDuration:
           description: Duration since the vehicle was connected, in seconds.
           type: number
+        disabled:
+          description: Loadpoint is disabled via configuration.
+          type: boolean
         disableDelay:
           description: Delay before charging stops in solar mode, in seconds.
           type: number

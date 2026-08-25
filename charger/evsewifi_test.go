@@ -10,10 +10,10 @@ import (
 )
 
 func TestEvseWifi(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = fmt.Fprintln(w, `{"list":[{"useMeter":true, "alwaysActive":true}]}`)
 	}))
-	defer ts.Close()
+	ts.Start()
 
 	wb, err := NewEVSEWifiFromConfig(map[string]any{
 		"uri": ts.URL,
@@ -46,10 +46,10 @@ func TestEvseWifi(t *testing.T) {
 }
 
 func TestEvseWifiEx(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	ts := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = fmt.Fprintln(w, `{"list":[{"actualCurrentMA":600, "alwaysActive":true}]}`)
 	}))
-	defer ts.Close()
+	ts.Start()
 
 	wb, err := NewEVSEWifiFromConfig(map[string]any{
 		"uri": ts.URL,

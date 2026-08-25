@@ -211,12 +211,12 @@ export default {
 				case "dimLimit":
 				case "curtailLimit":
 				case "exportLimit":
-					return this.fmtW(value);
+					return this.fmtW(value, POWER_UNIT.AUTO);
 				case "energy":
 				case "returnEnergy":
 				case "capacity":
 				case "chargedEnergy":
-					return this.fmtWh(value * 1e3);
+					return this.fmtWh(value * 1e3, POWER_UNIT.AUTO);
 				case "soc":
 				case "vehicleLimitSoc":
 					return this.fmtPercentage(value, 1);

@@ -17,8 +17,7 @@ params:
     choice: ["tcpip"]
     id: 1
   - name: maxacpower
-    service: modbus/read?address=40227&type=holding&encoding=uint16&scale=1&{modbus}
-    usages: ["pv"]
+    deprecated: true # read from nameplate
 render: |
   type: custom
   # sunspec model 701 (DER AC Measurement)
@@ -96,5 +95,5 @@ render: |
         percent = int(limit)
       }
       percent
-  maxacpower: {{ .maxacpower }}
+  {{- include "sunspec-maxacpower" . }}
   {{- end }}

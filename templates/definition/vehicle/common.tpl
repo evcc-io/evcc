@@ -1,4 +1,4 @@
-{{ define "vehicle-common" }}
+{{ define "common" }}
 {{- if .title }}
 title: {{ .title }}
 {{- end }}

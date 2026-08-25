@@ -159,7 +159,7 @@ export default defineComponent({
 			return store.uiLoadpoints.value || [];
 		},
 		orderedVisibleLoadpoints() {
-			return this.loadpoints.filter((lp) => lp.visible);
+			return this.loadpoints.filter((lp) => lp.visible && !lp.disabled);
 		},
 		batterySoc() {
 			return this.battery?.soc;

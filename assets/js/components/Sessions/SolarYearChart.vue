@@ -1,9 +1,9 @@
 <template>
 	<div v-if="chartData.labels.length > 1" class="row">
-		<div class="col-12 col-md-6 mb-3">
-			<Radar :data="chartData" :options="options" />
+		<div class="col-12 col-md-6 col-lg-12 col-xxl-6 mb-3">
+			<div ref="chartEl" class="round-chart"></div>
 		</div>
-		<div class="col-12 col-md-6 d-flex align-items-center py-0 py-md-3">
+		<div class="col-12 col-md-6 col-lg-12 col-xxl-6 d-flex align-items-center">
 			<LegendList :legends="legends" small-equal-widths />
 		</div>
 	</div>
@@ -11,27 +11,30 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
-import { Radar } from "vue-chartjs";
 import {
-	RadialLinearScale,
-	PointElement,
-	LineElement,
-	Filler,
-	Tooltip,
-	type TooltipItem,
-} from "chart.js";
-import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig.ts";
+	FONT_FAMILY,
+	topBottomCenterPosition,
+	tooltipStyle,
+	tooltipTable,
+	type TooltipRow,
+} from "./echarts";
+import echartsChart from "@/mixins/echartsChart";
 import formatter from "@/mixins/formatter";
 import colors, { dimColor } from "@/colors";
 import LegendList from "./LegendList.vue";
 import type { Legend, PERIODS, Session } from "./types.ts";
 
-registerChartComponents([RadialLinearScale, PointElement, LineElement, Filler, Tooltip]);
+interface Dataset {
+	label: string;
+	borderColor: string | undefined;
+	data: (number | null)[];
+	yearData: { self: number; grid: number };
+}
 
 export default defineComponent({
 	name: "SolarYearChart",
-	components: { Radar, LegendList },
-	mixins: [formatter],
+	components: { LegendList },
+	mixins: [formatter, echartsChart],
 	props: {
 		sessions: { type: Array as PropType<Session[]>, default: () => [] },
 		period: { type: String as PropType<PERIODS>, default: "total" },
@@ -49,9 +52,7 @@ export default defineComponent({
 			}
 			return new Date(this.sessions[this.sessions.length - 1]!.created);
 		},
-		chartData() {
-			console.log("update solar month data");
-
+		chartData(): { labels: string[]; datasets: Dataset[] } {
 			if (!this.firstDay || !this.lastDay) {
 				return { labels: [], datasets: [] };
 			}
@@ -68,7 +69,6 @@ export default defineComponent({
 				const yearString = `${year}`;
 				years.push(yearString);
 				result[yearString] = {};
-				console.log("year", yearString);
 
 				for (let month = 1; month <= 12; month++) {
 					result[yearString][month] = { self: 0, grid: 0 };
@@ -91,10 +91,7 @@ export default defineComponent({
 
 			const datasets = years.map((year) => {
 				const borderColor = colors.selfPalette[years.indexOf(year)] || undefined;
-				const backgroundColor =
-					years.length === 1 && borderColor ? dimColor(borderColor) : "transparent";
 				return {
-					backgroundColor,
 					borderColor,
 					label: year,
 					data: Object.values(result[year] || {}).map(({ self = 0, grid = 0 }) => {
@@ -146,49 +143,72 @@ export default defineComponent({
 				});
 			}
 		},
-		options() {
+		chartOption(): Record<string, unknown> {
+			const { labels, datasets } = this.chartData;
+			const singleYear = datasets.length === 1;
 			return {
-				...commonOptions,
-				locale: this.$i18n?.locale,
-				aspectRatio: 1,
-				borderWidth: 4,
-				color: colors.text || "",
-				spacing: 0,
-				radius: "100%",
-				elements: { line: { tension: 0.05 } },
-				plugins: {
-					...commonOptions.plugins,
-					tooltip: {
-						...commonOptions.plugins.tooltip,
-						axis: "xy",
-						position: "topBottomCenter",
-						callbacks: {
-							label: (tooltipItem: TooltipItem<"radar">) => {
-								const value = tooltipItem.dataset.data[tooltipItem.dataIndex] || 0;
-								const datasetLabel = tooltipItem.dataset.label || "";
-								return datasetLabel + ": " + this.fmtPercentage(value, 1);
-							},
-							labelColor: tooltipLabelColor(true),
-						},
-					} as any,
-				},
-				scales: {
-					r: {
-						min: 0,
-						max: 100,
-						beginAtZero: false,
-						ticks: {
-							stepSize: 20,
-							color: colors.muted,
-							backdropColor: colors.box,
-							font: { size: 10 },
-							callback: (value: number) => this.fmtPercentage(value, 0),
-						},
-						angleLines: { display: false },
-						grid: { color: colors.border },
+				animation: false,
+				textStyle: { fontFamily: FONT_FAMILY },
+				tooltip: {
+					trigger: "item",
+					...tooltipStyle(colors.text || ""),
+					position: topBottomCenterPosition(() => this.chart),
+					formatter: (params: { name: string; value: (number | null)[] }) => {
+						const rows: TooltipRow[] = [];
+						(params.value || []).forEach((value, index) => {
+							if (value === null) return;
+							rows.push({
+								name: labels[index] ?? "",
+								values: [this.fmtPercentage(value, 1)],
+							});
+						});
+						return tooltipTable(params.name, rows);
 					},
 				},
-			} as any;
+				radar: {
+					// tick labels on the first spoke only
+					indicator: labels.map((name, i) => ({
+						name,
+						min: 0,
+						max: 100,
+						...(i === 0
+							? {
+									axisLabel: {
+										show: true,
+										fontSize: 10,
+										color: colors.muted || "",
+										backgroundColor: colors.box || "",
+										padding: [1, 3],
+										formatter: (value: number) => this.fmtPercentage(value, 0),
+									},
+								}
+							: {}),
+					})),
+					radius: "72%",
+					axisNameGap: 12,
+					splitNumber: 5,
+					axisName: { color: colors.muted || "", fontSize: 14 },
+					axisLine: { show: false },
+					splitLine: { lineStyle: { color: colors.border || "" } },
+					splitArea: { show: false },
+				},
+				series: [
+					{
+						type: "radar",
+						symbol: "none",
+						data: datasets.map((dataset) => ({
+							name: dataset.label,
+							value: dataset.data,
+							lineStyle: { color: dataset.borderColor, width: 4 },
+							itemStyle: { color: dataset.borderColor },
+							areaStyle:
+								singleYear && dataset.borderColor
+									? { color: dimColor(dataset.borderColor) }
+									: undefined,
+						})),
+					},
+				],
+			};
 		},
 	},
 });

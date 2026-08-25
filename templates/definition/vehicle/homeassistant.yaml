@@ -158,8 +158,8 @@ params:
     default: true
 render: |
   type: homeassistant
-  {{ include "vehicle-common" . }}
-  {{ include "vehicle-features" . }}
+  {{ include "common" . }}
+  {{ include "features" . }}
   uri: {{ .uri }}
   home: {{ .home }} # deprecated
   insecure: {{ .insecure }}

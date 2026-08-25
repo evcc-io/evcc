@@ -104,14 +104,7 @@ type vehicles struct {
 }
 
 func (vv *vehicles) Instances() []api.Vehicle {
-	devs := config.Vehicles().Devices()
-
-	res := make([]api.Vehicle, 0, len(devs))
-	for _, dev := range devs {
-		res = append(res, dev.Instance())
-	}
-
-	return res
+	return config.Instances(config.Vehicles().Devices())
 }
 
 func (vv *vehicles) Settings() []vehicle.API {
@@ -119,6 +112,10 @@ func (vv *vehicles) Settings() []vehicle.API {
 
 	res := make([]vehicle.API, 0, len(devs))
 	for _, dev := range devs {
+		// skip disabled vehicles
+		if dev.Instance() == nil {
+			continue
+		}
 		res = append(res, vehicle.Adapter(vv.log, dev))
 	}
 

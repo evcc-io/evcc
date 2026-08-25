@@ -34,7 +34,7 @@ params:
 
 render: |
   type: custom
-  {{ include "tariff-base" . }}
+  {{ include "base" . }}
   forecast:
     source: http
     uri: https://api.pstryk.pl/integrations/meter-data/unified-metrics/?metrics=pricing&resolution=hour&window_start={{ `{{ now.UTC | mustDateModify "-24h" | date "2006-01-02" }}` }}:00:00Z&window_end={{ `{{ now.UTC | mustDateModify "+72h" | date "2006-01-02" }}` }}:00:00Z

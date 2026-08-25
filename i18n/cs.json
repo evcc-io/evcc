@@ -1171,7 +1171,6 @@
       },
       "planNumber": "Plán {number}",
       "precondition": {
-        "description": "Nabíjení bude dokončeno {duration} před časem odjezdu. Vhodné v zimě pro zahřátí baterie či její šetření při vyšším stavu nabití.",
         "label": "Odložené nabíjení",
         "optionAll": "všechen",
         "optionNo": "ne"
@@ -1181,7 +1180,6 @@
       "repeatingPlans": "Opakující se plány",
       "selectAll": "Vybrat vše",
       "strategyDisabledDescription": "Nabíjení začíná co nejpozději, aby bylo dokončeno právě včas před odjezdem. S dynamickými cenami elektřiny nebo tarifem CO₂ je zde k dispozici více možností.",
-      "strategySettings": "Nastavení strategie",
       "time": "Čas",
       "title": "Plán",
       "unsavedChanges": "Jsou zde neuložené změny. Použít nyní?",
