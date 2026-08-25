@@ -221,4 +221,4 @@ render: |
     cache: {{ .cache }}
     jq: .dhw.settemp
   {{- end }}
-  {{ include "warmwaterswitch" . }}
+  {{ include "heatpumpswitch" . }}
