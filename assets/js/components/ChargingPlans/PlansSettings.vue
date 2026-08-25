@@ -109,6 +109,7 @@ export default defineComponent({
 		socPerKwh: Number,
 		rangePerSoc: Number,
 		smartCostType: String as PropType<SMART_COST_TYPE>,
+		smartCostAvailable: Boolean,
 		currency: String as PropType<CURRENCY>,
 		mode: String,
 		capacity: Number,
@@ -163,11 +164,8 @@ export default defineComponent({
 			return `${this.$t("main.targetCharge.nextPlan")}: #${this.nextPlanId}`;
 		},
 		strategyDisabled(): boolean {
-			// options only make sense if there are variable prices
-			// TODO: make this logic more robust (api fails, missing data)
-			const slots = this.forecast?.planner || [];
-			const values = new Set(slots.map(({ value }) => value));
-			return values.size <= 1;
+			// options only make sense with a dynamic tariff
+			return !this.smartCostAvailable;
 		},
 	},
 	watch: {

@@ -24,6 +24,7 @@
 					:socPerKwh="loadpoint?.socPerKwh"
 					:rangePerSoc="loadpoint?.rangePerSoc"
 					:smartCostType="smartCostType"
+					:smartCostAvailable="smartCostAvailable"
 					:currency="currency"
 					:mode="loadpoint?.mode"
 					:capacity="vehicle?.capacity"
@@ -69,6 +70,7 @@ export default defineComponent({
 		loadpoints: { type: Array as PropType<UiLoadpoint[]>, default: () => [] },
 		vehicles: { type: Array as PropType<Vehicle[]>, default: () => [] },
 		smartCostType: String as PropType<SMART_COST_TYPE>,
+		smartCostAvailable: Boolean,
 		currency: String as PropType<CURRENCY>,
 		forecast: Object as PropType<UiForecast>,
 	},

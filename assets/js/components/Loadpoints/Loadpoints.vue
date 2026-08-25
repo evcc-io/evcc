@@ -66,6 +66,7 @@
 				:loadpoints="loadpoints"
 				:vehicles="vehicles"
 				:smartCostType="smartCostType"
+				:smartCostAvailable="smartCostAvailable"
 				:currency="currency"
 				:forecast="forecast"
 			/>
