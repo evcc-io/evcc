@@ -331,9 +331,8 @@
     "mode": {
       "enum": [
         "off",
-        "now",
-        "pv",
-        "minpv"
+        "smart",
+        "now"
       ]
     },
     "pollMode": {
