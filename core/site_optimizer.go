@@ -944,6 +944,11 @@ func matchSoc(ts []float32, fun func(float32) bool) time.Time {
 	return time.Time{}
 }
 
+// alwaysChargeActive reports if the loadpoint is forced to draw at least min power
+func alwaysChargeActive(lp loadpoint.API) bool {
+	return lp.GetMode() == api.ModeSmart && lp.GetAlwaysCharge().Active()
+}
+
 // continuousDemand creates a slice of power demands depending on loadpoint mode
 func continuousDemand(lp loadpoint.API, minLen int) []float32 {
 	if lp.GetStatus() != api.StatusC {
@@ -951,7 +956,7 @@ func continuousDemand(lp loadpoint.API, minLen int) []float32 {
 	}
 
 	pwr := lp.EffectiveMaxPower()
-	if lp.GetMode() == api.ModeSmart {
+	if alwaysChargeActive(lp) {
 		pwr = lp.EffectiveMinPower()
 	}
 
@@ -963,11 +968,9 @@ func continuousDemand(lp loadpoint.API, minLen int) []float32 {
 // loadpointProfile returns the loadpoint's charging profile in Wh
 // TODO consider charging efficiency
 func loadpointProfile(lp loadpoint.API, minLen int) []float64 {
-	mode := lp.GetMode()
-	status := lp.GetStatus()
-	minActive := mode == api.ModeSmart && lp.GetAlwaysCharge().Active()
+	minActive := alwaysChargeActive(lp)
 
-	if status != api.StatusC || (!minActive && mode != api.ModeNow) {
+	if lp.GetStatus() != api.StatusC || (!minActive && lp.GetMode() != api.ModeNow) {
 		return nil
 	}
 
@@ -998,9 +1001,9 @@ func loadpointProfile(lp loadpoint.API, minLen int) []float64 {
 func unmodelledPower(lp loadpoint.API) float64 {
 	power := lp.GetChargePower()
 
-	// minpv keeps drawing at least min power while the vehicle is connected,
+	// always charge keeps drawing at least min power while the vehicle is connected,
 	// even before the charge meter has caught up
-	if lp.GetMode() == api.ModeMinPV && lp.GetStatus() == api.StatusC {
+	if alwaysChargeActive(lp) && lp.GetStatus() == api.StatusC {
 		power = max(power, lp.EffectiveMinPower())
 	}
 
