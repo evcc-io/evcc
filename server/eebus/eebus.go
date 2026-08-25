@@ -87,6 +87,9 @@ type EEBus struct {
 	// unknown ski may still belong to a device that is not configured yet.
 	configured bool
 
+	// pending contains pairing requests received while still configuring
+	pending map[string]shipapi.ServiceIdentity
+
 	ski string
 
 	paired    []shipapi.ServiceIdentity // devices paired via SHIP Pairing Service
@@ -122,8 +125,21 @@ func ConfigComplete() {
 	}
 
 	instance.mux.Lock()
-	defer instance.mux.Unlock()
 	instance.configured = true
+
+	// deny requests left pending during configuration whose ski remained unknown
+	var deny []shipapi.ServiceIdentity
+	for _, identity := range instance.pending {
+		if len(instance.clients[identity.SKI]) == 0 {
+			deny = append(deny, identity)
+		}
+	}
+	clear(instance.pending)
+	instance.mux.Unlock()
+
+	for _, identity := range deny {
+		instance.service.CancelPairing(identity)
+	}
 }
 
 func GetStatus() any {
@@ -207,10 +223,16 @@ func NewServer(other Config) (*EEBus, error) {
 		ski:       ski,
 		clients:   make(map[string][]Device),
 		connected: make(map[string]bool),
+		pending:   make(map[string]shipapi.ServiceIdentity),
 	}
 
 	c.service = service.NewService(configuration, c)
 	c.service.SetLogging(c)
+
+	// keep pairing requests from unknown skis pending instead of aborting the ship
+	// handshake- the ski may still be registered by a device that is being configured
+	c.service.UserIsAbleToApproveOrCancelPairingRequests(true)
+
 	if err := c.service.Setup(); err != nil {
 		if errors.Is(err, shipapi.ErrInvalidSKI) {
 			const hint = "The stored EEBUS certificate has an invalid Subject Key Identifier (SKI).\n" +
@@ -514,7 +536,7 @@ func (c *EEBus) ucCallback(ski string, device spineapi.DeviceRemoteInterface, en
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.log.DEBUG.Printf("ski %s event %s", ski, event)
+	c.log.DEBUG.Printf("Evnt: %s %s", ski, event)
 
 	for _, client := range c.clientsFor(ski) {
 		client.UseCaseEvent(device, entity, event)
@@ -587,6 +609,7 @@ func (c *EEBus) ServicePairingDetailUpdate(identity shipapi.ServiceIdentity, det
 			// device configuration is still running- leave the request pending
 			// instead of denying a ski that is about to be registered
 			c.log.DEBUG.Printf("pairing request from %s while configuring, left pending", identity.SKI)
+			c.pending[identity.SKI] = identity
 			return
 		}
 
@@ -601,16 +624,22 @@ func (c *EEBus) ServiceAutoTrusted(service eebusapi.ServiceInterface, identity s
 	c.log.INFO.Printf("service trusted: %s", identity.ShipID)
 
 	c.mux.Lock()
-	defer c.mux.Unlock()
 	c.upsertPairing(identity)
 
 	// connect may run before trust is established, so clientsFor skips consumers
 	// registered without ski; wake them now that the device is paired
+	var clients []Device
 	if c.connected[identity.SKI] {
-		for _, client := range c.clientsFor(identity.SKI) {
-			client.Connect(true)
-		}
+		clients = c.clientsFor(identity.SKI)
 	}
+	c.mux.Unlock()
+
+	for _, client := range clients {
+		client.Connect(true)
+	}
+
+	// registering the now trusted identity approves a handshake still pending trust
+	c.service.RegisterRemoteService(identity)
 }
 
 func (c *EEBus) ServiceAutoTrustFailed(service eebusapi.ServiceInterface, identity shipapi.ServiceIdentity, reason error) {

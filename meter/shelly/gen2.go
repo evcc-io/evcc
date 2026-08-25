@@ -8,7 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/jpfielding/go-http-digest/pkg/digest"
+	"github.com/evcc-io/evcc/util/transport"
 )
 
 // Gen2API endpoint reference: https://shelly-api-docs.shelly.cloud/gen2/
@@ -132,7 +132,7 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 	// Shelly gen 2 rfc7616 authentication
 	// https://shelly-api-docs.shelly.cloud/gen2/General/Authentication
 	if user != "" {
-		c.Client.Transport = digest.NewTransport(user, password, c.Client.Transport)
+		c.Client.Transport = transport.Digest(user, password, c.Client.Transport)
 	}
 
 	var res Gen2Methods

@@ -60,7 +60,7 @@ render: |
   power:
     source: const
     value: {{ .power }}
-  {{- if .curtailable }}
+  {{- if eq .curtailable "true" }}
   curtail:
     source: js
     vm: shared

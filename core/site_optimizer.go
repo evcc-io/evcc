@@ -228,6 +228,14 @@ func (site *Site) setSuggestions(suggestions map[string]types.Suggestion) {
 	site.suggestions = suggestions
 }
 
+// setBatteryForecast replaces the battery forecast of the cached state
+func (site *Site) setBatteryForecast(forecast *types.BatteryForecast) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.battery.Forecast = forecast
+}
+
 // suggestion returns the optimizer suggestion for the given device key.
 // The actionable flag is evaluated on read against the device's current
 // action since that changes between optimizer runs.
@@ -264,7 +272,7 @@ func (site *Site) publishSuggestions() {
 // optimizer result is stale
 func (site *Site) clearSuggestions() {
 	site.setSuggestions(nil)
-	site.battery.Forecast = nil
+	site.setBatteryForecast(nil)
 
 	site.publishBattery()
 	site.publishSuggestions()
@@ -391,7 +399,7 @@ func (site *Site) optimizerUpdateAsync(minAge time.Duration) {
 		}
 	}()
 
-	err = site.optimizerUpdate(site.battery.Devices)
+	err = site.optimizerUpdate(site.state().battery.Devices)
 }
 
 // optimizerRequest assembles the optimizer request and the matching device
@@ -668,7 +676,7 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 	site.publish("evopt-batteries", batteries)
 
 	site.setSuggestions(suggestions)
-	site.battery.Forecast = site.addBatteryForecastTotals(req.Batteries, res.Batteries)
+	site.setBatteryForecast(site.addBatteryForecastTotals(req.Batteries, res.Batteries))
 
 	site.publishBattery()
 
@@ -1256,6 +1264,15 @@ func applyPrecondition(lp loadpoint.API, demand []float32, minLen int) []float32
 
 	ts := lp.EffectivePlanTime()
 	if ts.IsZero() {
+		return demand
+	}
+
+	// limit to the required charging duration, i.e. "all" must not demand beyond the plan goal
+	goal, _ := lp.GetPlanGoal()
+	if required := lp.GetPlanRequiredDuration(goal, lp.EffectiveMaxPower()); required < precondition {
+		precondition = required
+	}
+	if precondition <= 0 {
 		return demand
 	}
 

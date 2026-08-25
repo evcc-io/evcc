@@ -41,7 +41,7 @@ func init() {
 	// must not collide with an include name (`$` cannot appear in a file name)
 	baseTmpl = template.Must(FuncMap(template.New("$root")).ParseFS(includeFS, "includes/*.tpl"))
 
-	for _, class := range []Class{Charger, Meter, Vehicle, Tariff, Messenger, Circuit, Hems} {
+	for _, class := range []Class{Charger, Meter, Vehicle, Tariff, Messenger, Circuit, Hems, Curtailer} {
 		if err := loadIncludes(definition.TemplateIncludes, class); err != nil {
 			panic(err)
 		}

@@ -188,6 +188,15 @@
       "label": "Currency",
       "title": "Currency"
     },
+    "curtailer": {
+      "description": "Device that limits feed-in on request of the grid operator (§ 9 EEG). Many solar inverters support this directly via their solar meter configuration. A separate configuration is only needed for some manufacturers or multi-inverter systems.",
+      "generic": "Generic integrations",
+      "specific": "Specific integrations",
+      "template": "Manufacturer",
+      "title": "Curtailment",
+      "titleAdd": "Add Curtailment Device",
+      "titleEdit": "Edit Curtailment Device"
+    },
     "deviceValue": {
       "activeClients": "Active clients",
       "amount": "Amount",
@@ -212,7 +221,7 @@
       "currentRange": "Current",
       "curtailLimit": "Feed-in limit",
       "curtailable": "Curtailable",
-      "curtailed": "Feed-in limited",
+      "curtailed": "Feed-in limit",
       "detected": "Detected",
       "dimLimit": "Consumption limit",
       "dimmed": "Consumption limited",
@@ -539,6 +548,7 @@
     "main": {
       "addAdditional": "Add additional meter",
       "addConsumer": "Add consumer",
+      "addCurtailer": "Add curtailment device",
       "addGrid": "Add grid meter",
       "addLoadpoint": "Add charging point or heater",
       "addPvBattery": "Add solar or battery",
@@ -639,6 +649,7 @@
         "aux": "Add self-regulating consumer",
         "battery": "Add battery meter",
         "consumer": "Add regular consumer",
+        "grid": "Add grid meter",
         "pv": "Add solar meter"
       },
       "save": "Save",
@@ -829,6 +840,8 @@
       "noClients": "No clients yet. No one can connect yet.",
       "password": "Password",
       "passwordOnce": "This password is shown only once. Scan the QR code or copy it now. You won't be able to see it again.",
+      "privacy": "By enabling this feature, you agree to our {0}.",
+      "privacyLink": "privacy policy",
       "qrInstall": "Install the evcc app for {ios} or {android}.",
       "qrScan": "Scan the code with your phone's camera to connect. Click it, if you're already using your phone.",
       "removeClient": "Remove client",
@@ -905,6 +918,8 @@
           "confirmationButton": "Reset & restart",
           "confirmationText": "This will permanently delete your selected data. Ensure you've downloaded a backup first.",
           "description": "Having problems with configuration and want to start over? Delete all data and start fresh.",
+          "remote": "Remote access",
+          "remoteDescription": "Deletes configuration and credentials.",
           "sessions": "Charging sessions",
           "sessionsDescription": "Deletes your charging session history.",
           "settings": "Configuration & settings",
@@ -1726,6 +1741,13 @@
     "vehicle": "Vehicle"
   },
   "settings": {
+    "dateFormat": {
+      "auto": "Auto",
+      "dmy": "DD/MM/YYYY",
+      "label": "Date format",
+      "mdy": "MM/DD/YYYY",
+      "ymd": "YYYY-MM-DD"
+    },
     "deviceInfo": "Settings you make in this dialog only affect this device.",
     "fullscreen": {
       "enter": "Enter fullscreen",

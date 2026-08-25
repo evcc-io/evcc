@@ -197,5 +197,8 @@ render: |
                   address: 1152
                   type: writesingle
                   encoding: int16
+    default:
+      source: error
+      error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}
