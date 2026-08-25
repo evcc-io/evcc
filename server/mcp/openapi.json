@@ -4517,7 +4517,8 @@
         "enum": [
           "co2",
           "pricedynamic",
-          "priceforecast"
+          "priceforecast",
+          "pricestatic"
         ]
       },
       "DeviceColorEntry": {
