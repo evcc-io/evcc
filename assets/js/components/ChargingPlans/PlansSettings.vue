@@ -36,7 +36,6 @@
 					:id="id"
 					:precondition="effectivePlanStrategy?.precondition"
 					:continuous="effectivePlanStrategy?.continuous"
-					:disabled="strategyDisabled"
 					:smart-cost-type="smartCostType"
 					@update="updatePlanStrategy"
 				/>
@@ -71,7 +70,6 @@ import api from "@/api";
 import deepEqual from "@/utils/deepEqual";
 import { debounceLeading } from "@/utils/debounceLeading";
 import { defineComponent, type PropType } from "vue";
-import { SMART_COST_TYPE } from "@/types/evcc";
 import type {
 	CURRENCY,
 	UiForecast,
@@ -79,6 +77,7 @@ import type {
 	PlanStrategy,
 	PlanWrapper,
 	RepeatingPlan,
+	SMART_COST_TYPE,
 	StaticEnergyPlan,
 	StaticPlan,
 	StaticSocPlan,
@@ -161,10 +160,6 @@ export default defineComponent({
 		},
 		nextPlanTitle(): string {
 			return `${this.$t("main.targetCharge.nextPlan")}: #${this.nextPlanId}`;
-		},
-		strategyDisabled(): boolean {
-			// options only make sense with a dynamic planner tariff
-			return !this.smartCostType || this.smartCostType === SMART_COST_TYPE.PRICE_STATIC;
 		},
 	},
 	watch: {
