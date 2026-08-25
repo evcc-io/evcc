@@ -137,7 +137,7 @@ export default defineComponent({
 	},
 	computed: {
 		docsUrl(): string {
-			return `${docsPrefix()}/docs/features/limits`;
+			return `${docsPrefix()}/features/limits`;
 		},
 		modeOptions(): SelectOption<string>[] {
 			return [

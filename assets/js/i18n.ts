@@ -114,3 +114,7 @@ export function docsPrefix() {
   const path = locale === "de" ? "" : `/en`;
   return `https://docs.evcc.io${path}`;
 }
+
+export function isGermanDocsLocale() {
+  return getLocale() === "de";
+}

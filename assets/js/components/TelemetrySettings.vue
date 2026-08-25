@@ -33,7 +33,7 @@
 import { defineComponent } from "vue";
 import ErrorMessage from "./Helper/ErrorMessage.vue";
 import api from "../api";
-import { docsPrefix } from "../i18n";
+import { docsPrefix, isGermanDocsLocale } from "../i18n";
 import type { AxiosError } from "axios";
 
 export default defineComponent({
@@ -47,7 +47,10 @@ export default defineComponent({
 	},
 	computed: {
 		docsLink() {
-			return `${docsPrefix()}/docs/faq#telemetry`;
+			const anchor = isGermanDocsLocale()
+				? "telemetry--community-daten"
+				: "telemetry--community-data";
+			return `${docsPrefix()}/faq#${anchor}`;
 		},
 	},
 	methods: {
