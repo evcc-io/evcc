@@ -109,15 +109,8 @@ func vehicleAlwaysChargeHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		var ac api.AlwaysCharge
-		if val := vars["value"]; val != "" {
-			if ac, err = api.AlwaysChargeString(val); err != nil {
-				jsonError(w, http.StatusBadRequest, err)
-				return
-			}
-		}
-
-		v.SetAlwaysCharge(ac)
+		// route restricts value to on|off, DELETE has none
+		v.SetAlwaysCharge(api.AlwaysCharge(vars["value"]))
 
 		res := struct {
 			AlwaysCharge api.AlwaysCharge `json:"alwaysCharge"`

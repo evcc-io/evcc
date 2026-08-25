@@ -275,7 +275,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 	// migrate deprecated default modes; a legacy default seeds always charge once, afterwards
 	// the persisted value wins. The default itself becomes smart, disconnect no longer touches always charge
 	var ac api.AlwaysCharge
-	if lp.mode, ac = lp.normalizeMode(lp.mode); ac != "" && lp.settings != nil {
+	if lp.mode, ac = lp.normalizeMode(lp.mode); ac != "" {
 		if _, err := lp.settings.String(keys.AlwaysCharge); err != nil {
 			lp.alwaysCharge = ac
 			lp.settings.SetString(keys.AlwaysCharge, string(ac))
