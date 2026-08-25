@@ -114,6 +114,10 @@ import { SMART_COST_TYPE, type PlanStrategy } from "@/types/evcc";
 import DropdownIcon from "../MaterialIcon/Dropdown.vue";
 
 const HOUR = 60 * 60;
+const QUARTER_HOUR = 0.25 * HOUR;
+const HALF_HOUR = 0.5 * HOUR;
+const ONE_HOUR = 1 * HOUR;
+const TWO_HOURS = 2 * HOUR;
 const EVERYTHING = 7 * 24 * HOUR;
 
 export default defineComponent({
@@ -177,11 +181,6 @@ export default defineComponent({
 			return this.$t(`main.chargingPlan.optimization.${variant}Description`);
 		},
 		preconditionOptions() {
-			const QUARTER_HOUR = 0.25 * HOUR;
-			const HALF_HOUR = 0.5 * HOUR;
-			const ONE_HOUR = 1 * HOUR;
-			const TWO_HOURS = 2 * HOUR;
-
 			const options = [QUARTER_HOUR, HALF_HOUR, ONE_HOUR, TWO_HOURS, EVERYTHING];
 
 			// support custom values (via API)
