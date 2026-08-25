@@ -947,10 +947,6 @@ export default {
 			try {
 				const res = await api.get(`config/loadpoints/${this.id}`);
 				this.values = deepClone(res.data);
-				// display deprecated pv/minpv default modes as smart
-				if (["pv", "minpv"].includes(this.values.defaultMode)) {
-					this.values.defaultMode = SMART;
-				}
 				this.updateChargerPower();
 				this.updateSolarMode();
 				this.updatePhases();

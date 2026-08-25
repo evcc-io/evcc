@@ -272,11 +272,16 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 		return lp, errors.New("missing charger instance")
 	}
 
-	// migrate deprecated default modes; a legacy default also determines the always charge state
+	// migrate deprecated default modes; a legacy default seeds always charge once, afterwards
+	// the persisted value wins. The default itself becomes smart, disconnect no longer touches always charge
 	var ac api.AlwaysCharge
-	if lp.mode, ac = lp.normalizeMode(lp.mode); ac != "" {
-		lp.alwaysCharge = ac
+	if lp.mode, ac = lp.normalizeMode(lp.mode); ac != "" && lp.settings != nil {
+		if _, err := lp.settings.String(keys.AlwaysCharge); err != nil {
+			lp.alwaysCharge = ac
+			lp.settings.SetString(keys.AlwaysCharge, string(ac))
+		}
 	}
+	lp.DefaultMode, _ = lp.normalizeMode(lp.DefaultMode)
 
 	lp.configureChargerType(lp.charger)
 	// add collector

@@ -481,7 +481,7 @@ func (c *continuousCharger) Features() []api.Feature {
 func TestDisconnectIntegratedDeviceKeepsMode(t *testing.T) {
 	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
 	lp.charger = &integratedDeviceCharger{}
-	lp.DefaultMode = api.ModePV
+	lp.DefaultMode = api.ModeSmart
 	lp.setMode(api.ModeOff)
 
 	x, y, z := createChannels(t)

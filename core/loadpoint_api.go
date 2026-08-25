@@ -271,6 +271,9 @@ func (lp *Loadpoint) SetDefaultMode(mode api.ChargeMode) {
 
 	lp.log.DEBUG.Println("set default mode:", mode)
 
+	// deprecated pv/minpv map to smart, always charge is not part of the default
+	mode, _ = lp.normalizeMode(mode)
+
 	if lp.DefaultMode != mode {
 		lp.DefaultMode = mode
 		lp.settings.SetString(keys.DefaultMode, string(mode))

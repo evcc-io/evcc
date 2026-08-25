@@ -4,10 +4,13 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 type featureCharger struct {
@@ -98,4 +101,49 @@ func TestNormalizeMode(t *testing.T) {
 		assert.Equal(t, tc.mode, mode, tc.name)
 		assert.Equal(t, tc.ac, ac, tc.name)
 	}
+}
+
+func TestSetDefaultModeLegacyAliases(t *testing.T) {
+	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
+
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	// deprecated defaults map to smart without touching always charge
+	for _, mode := range []api.ChargeMode{api.ModeMinPV, api.ModePV} {
+		lp.SetDefaultMode(mode)
+		assert.Equal(t, api.ModeSmart, lp.GetDefaultMode())
+		assert.Equal(t, api.AlwaysChargeOff, lp.GetAlwaysCharge())
+	}
+}
+
+func TestLegacyDefaultModeSeedsAlwaysCharge(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	require.NoError(t, config.Chargers().Add(config.NewStaticDevice(config.Named{Name: "seed-charger"}, api.Charger(api.NewMockCharger(ctrl)))))
+
+	dbSettings := settings.NewDatabaseSettingsAdapter("seed.")
+	create := func() *Loadpoint {
+		lp, err := NewLoadpointFromConfig(util.NewLogger("foo"), dbSettings, nil, map[string]any{
+			"charger": "seed-charger",
+			"mode":    "minpv",
+		})
+		require.NoError(t, err)
+		return lp
+	}
+
+	// first boot: legacy default seeds and persists always charge, default becomes smart
+	lp := create()
+	assert.Equal(t, api.ModeSmart, lp.GetMode())
+	assert.Equal(t, api.ModeSmart, lp.GetDefaultMode())
+	assert.Equal(t, api.AlwaysChargeOn, lp.GetAlwaysCharge())
+	v, err := dbSettings.String(keys.AlwaysCharge)
+	require.NoError(t, err)
+	assert.Equal(t, "on", v)
+
+	// later boots: the persisted user choice wins over the seed
+	dbSettings.SetString(keys.AlwaysCharge, "off")
+	lp = create()
+	assert.Equal(t, api.AlwaysChargeOff, lp.GetAlwaysCharge())
+	v, _ = dbSettings.String(keys.AlwaysCharge)
+	assert.Equal(t, "off", v)
 }
