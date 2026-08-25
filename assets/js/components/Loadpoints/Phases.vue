@@ -9,7 +9,11 @@
 				'phase-hidden': !isPhaseActive(num) && (maxPhases === 1 || num > maxPhases),
 			}"
 		>
-			<div class="target" :style="{ width: `${targetWidth()}%` }"></div>
+			<div
+				v-show="targetWidth() > 0"
+				class="target"
+				:style="{ width: `${targetWidth()}%` }"
+			></div>
 			<div class="real" :style="{ width: `${realWidth(num)}%` }"></div>
 		</div>
 	</div>
@@ -112,8 +116,8 @@ html.dark .phase {
 	opacity: 1;
 }
 .target {
-	background: var(--evcc-green)
-		radial-gradient(circle, var(--evcc-dark-green) 1px, transparent 1.2px) 0 0 / 4px 4px;
+	background-color: var(--evcc-green);
+	border-right: 1px solid var(--evcc-dark-green);
 }
 .real {
 	background-color: var(--evcc-dark-green);

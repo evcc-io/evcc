@@ -69,7 +69,7 @@ export const MainlyL3 = Template.bind({});
 MainlyL3.args = {
   ...base,
   phasesActive: 1,
-  offeredCurrent: 10,
+  offeredCurrent: 20,
   maxCurrent: 20,
   chargeCurrents: [0.007, 0.009, 5.945],
 };
