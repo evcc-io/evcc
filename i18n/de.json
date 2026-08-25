@@ -1558,14 +1558,12 @@
     "vehicleSettings": {
       "connectedTo": "verbunden mit {0}",
       "description": "Diese Standardwerte werden angewendet, wenn das Fahrzeug an einem Ladepunkt angeschlossen wird.",
-      "editHint": "Fahrzeuge unter {0} hinzufügen oder bearbeiten.",
+      "editHint": "Fahrzeuge können in der {0} bearbeitet werden.",
       "keepAsIs": "Beibehalten",
       "learnMore": "Mehr erfahren.",
       "limitSoc": "Standardlimit",
-      "limitSocDescription": "Wird beim Anschließen des Fahrzeugs angewendet.",
       "menu": "Fahrzeuge",
       "minSoc": "Minimale Ladung",
-      "minSocDescription": "Wird im Smart-Modus schnell bis zu diesem Wert geladen.",
       "mode": "Standardmodus",
       "notConnected": "nicht verbunden",
       "title": "Fahrzeugeinstellungen"

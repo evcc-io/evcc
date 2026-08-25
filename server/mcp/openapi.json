@@ -1983,6 +1983,79 @@
         }
       }
     },
+    "/vehicles/{name}/alwayscharge": {
+      "delete": {
+        "operationId": "deleteVehicleAlwaysCharge",
+        "summary": "Reset always charge",
+        "description": "Resets the vehicle always charge default to keep the loadpoint state.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/features/solar-charging"
+        },
+        "tags": [
+          "vehicles"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "alwaysCharge": {
+                      "$ref": "#/components/schemas/VehicleAlwaysCharge"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/vehicles/{name}/alwayscharge/{alwaysCharge}": {
+      "post": {
+        "operationId": "setVehicleAlwaysCharge",
+        "summary": "Set always charge",
+        "description": "Sets the always charge state applied when this vehicle becomes active on a loadpoint.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/features/solar-charging"
+        },
+        "tags": [
+          "vehicles"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          },
+          {
+            "$ref": "#/components/parameters/vehicleAlwaysCharge"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "alwaysCharge": {
+                      "$ref": "#/components/schemas/VehicleAlwaysCharge"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/vehicles/{name}/plan/repeating": {
       "post": {
         "operationId": "updateVehicleRepeatingPlans",
@@ -2689,6 +2762,14 @@
             }
           }
         }
+      },
+      "VehicleAlwaysCharge": {
+        "description": "Always charge default applied on identification. Once is not supported for vehicles.",
+        "type": "string",
+        "enum": [
+          "off",
+          "on"
+        ]
       },
       "ChargeModeInput": {
         "description": "Charging behavior. The values `pv` and `minpv` are deprecated aliases: `pv` maps to `smart`, `minpv` maps to `smart` with always charge enabled.",
@@ -4687,6 +4768,20 @@
               }
             ]
           },
+          "alwaysCharge": {
+            "description": "Always charge state applied when the vehicle connects.",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AlwaysCharge"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  ""
+                ]
+              }
+            ]
+          },
           "minSoc": {
             "description": "Minimum SoC in %. Vehicle is fast-charged until this level is reached.",
             "type": "number"
@@ -5465,6 +5560,14 @@
         "required": true,
         "schema": {
           "$ref": "#/components/schemas/VehicleName"
+        }
+      },
+      "vehicleAlwaysCharge": {
+        "name": "alwaysCharge",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/VehicleAlwaysCharge"
         }
       },
       "current": {

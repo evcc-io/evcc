@@ -219,6 +219,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 	vehicles := map[string]route{
 		"mode":           {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/mode/{value:[a-z]+}", vehicleModeHandler(site)},
 		"modeDelete":     {"DELETE", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/mode", vehicleModeHandler(site)},
+		"alwaysCharge":   {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/alwayscharge/{value:on|off}", vehicleAlwaysChargeHandler(site)},
+		"alwaysCharge2":  {"DELETE", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/alwayscharge", vehicleAlwaysChargeHandler(site)},
 		"minsoc":         {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/minsoc/{value:[0-9]+}", minSocHandler(site)},
 		"limitsoc":       {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/limitsoc/{value:[0-9]+}", limitSocHandler(site)},
 		"plan":           {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/soc/{value:[0-9]+}/{time:[0-9TZ:.+-]+}", planSocHandler(site)},

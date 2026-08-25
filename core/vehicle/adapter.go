@@ -56,8 +56,13 @@ func (v *adapter) GetMode() api.ChargeMode {
 		if err != nil {
 			return ""
 		}
-		// migrate deprecated values
+		// migrate deprecated values; a stored minpv default keeps its min charging meaning
 		if mode == api.ModePV || mode == api.ModeMinPV {
+			ac := api.AlwaysChargeOff
+			if mode == api.ModeMinPV {
+				ac = api.AlwaysChargeOn
+			}
+			v.SetAlwaysCharge(ac)
 			mode = api.ModeSmart
 			v.SetMode(mode)
 		}
@@ -66,10 +71,31 @@ func (v *adapter) GetMode() api.ChargeMode {
 	return ""
 }
 
-// SetMode sets the charge mode
+// SetMode sets the charge mode; deprecated pv/minpv map to smart
 func (v *adapter) SetMode(mode api.ChargeMode) {
+	if mode == api.ModePV || mode == api.ModeMinPV {
+		mode = api.ModeSmart
+	}
+
 	v.log.DEBUG.Printf("set %s mode: %s", v.name, mode)
 	settings.SetString(v.key()+keys.Mode, string(mode))
+	v.publish()
+}
+
+// GetAlwaysCharge returns the always charge state applied on identification, empty if unset
+func (v *adapter) GetAlwaysCharge() api.AlwaysCharge {
+	if s, err := settings.String(v.key() + keys.AlwaysCharge); err == nil {
+		if ac, err := api.AlwaysChargeString(s); err == nil {
+			return ac
+		}
+	}
+	return ""
+}
+
+// SetAlwaysCharge sets the always charge state applied on identification, empty clears it
+func (v *adapter) SetAlwaysCharge(ac api.AlwaysCharge) {
+	v.log.DEBUG.Printf("set %s always charge: %s", v.name, ac)
+	settings.SetString(v.key()+keys.AlwaysCharge, string(ac))
 	v.publish()
 }
 

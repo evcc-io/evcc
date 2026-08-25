@@ -23,6 +23,7 @@ type vehicleStruct struct {
 	Capacity       float64             `json:"capacity,omitempty"`
 	Phases         int                 `json:"phases,omitempty"`
 	Mode           api.ChargeMode      `json:"mode,omitempty"`
+	AlwaysCharge   api.AlwaysCharge    `json:"alwaysCharge,omitempty"`
 	MinSoc         int                 `json:"minSoc,omitempty"`
 	LimitSoc       int                 `json:"limitSoc,omitempty"`
 	MinCurrent     float64             `json:"minCurrent,omitempty"`
@@ -61,6 +62,7 @@ func (site *Site) publishVehicles() {
 			Capacity:       instance.Capacity(),
 			Phases:         instance.Phases(),
 			Mode:           v.GetMode(),
+			AlwaysCharge:   v.GetAlwaysCharge(),
 			MinSoc:         v.GetMinSoc(),
 			LimitSoc:       v.GetLimitSoc(),
 			MinCurrent:     ac.MinCurrent,

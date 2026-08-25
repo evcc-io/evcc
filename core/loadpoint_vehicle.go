@@ -171,16 +171,24 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 			lp.socEstimator = nil
 		}
 
-		lp.publish(keys.VehicleName, vehicle.Settings(lp.log, v).Name())
+		vs := vehicle.Settings(lp.log, v)
+		lp.publish(keys.VehicleName, vs.Name())
 		lp.publish(keys.VehicleTitle, v.GetTitle())
 
 		// vehicle mode overrides the yaml onIdentify action
 		mode, ok := v.OnIdentified().GetMode()
-		if m := vehicle.Settings(lp.log, v).GetMode(); m != "" {
+		if m := vs.GetMode(); m != "" {
 			mode, ok = m, true
 		}
 		if ok && mode != "" {
 			lp.SetMode(mode)
+		}
+
+		// vehicle always charge applies after mode, since deprecated pv/minpv modes reset it
+		if ac := vs.GetAlwaysCharge(); ac != "" {
+			if err := lp.SetAlwaysCharge(ac); err != nil {
+				lp.log.WARN.Printf("vehicle always charge: %v", err)
+			}
 		}
 
 		lp.addTask(lp.vehicleOdometer)

@@ -190,10 +190,19 @@ test.describe("default mode", async () => {
     await closeModal(page);
   }
 
+  async function setAlwaysCharge(page: Page, title: string, option: string) {
+    const modal = await openVehicleSettings(page);
+    await vehicleRow(modal, title)
+      .getByRole("combobox", { name: "Always charge" })
+      .selectOption(option);
+    await closeModal(page);
+  }
+
   test("apply and restart", async ({ page }) => {
     await page.goto("/");
 
     await setDefaultMode(page, "blauer e-Golf", "Fast");
+    await setAlwaysCharge(page, "grüner Honda e", "On");
     await page.waitForLoadState("networkidle");
 
     await restart(simulatorConfig());
@@ -203,6 +212,9 @@ test.describe("default mode", async () => {
     await expect(
       vehicleRow(modal, "blauer e-Golf").getByRole("combobox", { name: "Default mode" })
     ).toHaveValue("now");
+    await expect(
+      vehicleRow(modal, "grüner Honda e").getByRole("combobox", { name: "Always charge" })
+    ).toHaveValue("on");
   });
 
   test("applied on vehicle switch", async ({ page }) => {
@@ -219,6 +231,26 @@ test.describe("default mode", async () => {
 
     await switchVehicle(page, "blauer e-Golf");
     await expect(mode.getByRole("button", { name: "Smart", exact: true })).toHaveClass(/active/);
+  });
+
+  test("always charge applied per vehicle", async ({ page }) => {
+    await page.goto("/");
+    const mode = page.getByTestId("loadpoint").first().getByTestId("mode");
+    const alwaysChargeSwitch = page.getByTestId("always-charge-dropdown").getByRole("switch");
+
+    await setDefaultMode(page, "blauer e-Golf", "Smart");
+    await setAlwaysCharge(page, "blauer e-Golf", "On");
+    await setDefaultMode(page, "grüner Honda e", "Smart");
+    await setAlwaysCharge(page, "grüner Honda e", "Off");
+
+    await switchVehicle(page, "blauer e-Golf");
+    await expect(mode.getByRole("button", { name: "Smart", exact: true })).toHaveClass(/active/);
+    await mode.getByTestId("always-charge-toggle").click();
+    await expect(alwaysChargeSwitch).toBeChecked();
+
+    // explicit off, so the second vehicle does not inherit always charge
+    await switchVehicle(page, "grüner Honda e");
+    await expect(alwaysChargeSwitch).not.toBeChecked();
   });
 });
 

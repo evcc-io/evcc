@@ -1241,6 +1241,8 @@ export interface Vehicle {
   name?: string;
   /** Charge mode applied when the vehicle connects. */
   mode?: CHARGE_MODE | "";
+  /** Always charge state applied when the vehicle connects. */
+  alwaysCharge?: ALWAYS_CHARGE | "";
   /** Minimum SoC in %. Vehicle is fast-charged until this level is reached. */
   minSoc?: number;
   /** SoC limit in %. Charging stops when reached. */
