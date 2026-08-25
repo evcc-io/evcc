@@ -41,7 +41,6 @@ type Enovates struct {
 }
 
 const (
-	enovatesRegMaxAmp         = 51   // uint16 RO, max amp per phase
 	enovatesRegCurrents       = 200  // 3x uint16 RO, mA
 	enovatesRegVoltages       = 203  // 3x int16 RO, V
 	enovatesRegPower          = 206  // int16 RO, W (active power total)
@@ -49,7 +48,7 @@ const (
 	enovatesRegMode3StateStr  = 301  // 2x register RO, IEC 61851 state, e.g. "C2"
 	enovatesRegEMSLimit       = 400  // int16 RW, mA (-1 = no limit, 0 = disabled)
 	enovatesRegToken          = 401  // 16x register RO, ASCII
-	enovatesRegCurrentOffered = 417  // uint16 RO, mA
+	enovatesRegCurrentOffered = 417  // uint16 RO, mA, current actually offered to the vehicle
 	enovatesRegSerial         = 5032 // 16x register RO, ASCII
 	enovatesRegModel          = 5048 // 16x register RO, ASCII
 	enovatesRegFirmware       = 5064 // 16x register RO, ASCII
@@ -92,9 +91,9 @@ func NewEnovates(ctx context.Context, settings modbus.TcpSettings) (api.Charger,
 		current: 6000,
 	}
 
-	// verify connection and EMS register availability
-	if _, err := wb.conn.ReadHoldingRegisters(enovatesRegMode3StateStr, 2); err != nil {
-		return nil, err
+	// the transaction token is only readable when EMS over Modbus TCP is enabled
+	if _, err := wb.conn.ReadHoldingRegisters(enovatesRegToken, 16); err != nil {
+		return nil, fmt.Errorf("ems over modbus tcp not enabled: %w", err)
 	}
 
 	return wb, nil
@@ -160,22 +159,13 @@ var _ api.CurrentGetter = (*Enovates)(nil)
 
 // GetMaxCurrent implements the api.CurrentGetter interface
 func (wb *Enovates) GetMaxCurrent() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(enovatesRegEMSLimit, 1)
+	// the EMS limit register may read -1 (no limit), hence use the actually offered current
+	b, err := wb.conn.ReadHoldingRegisters(enovatesRegCurrentOffered, 1)
 	if err != nil {
 		return 0, err
 	}
 
-	// -1 signals no EMS limit, fall back to the hardware maximum
-	if limit := int16(binary.BigEndian.Uint16(b)); limit >= 0 {
-		return float64(limit) / 1e3, nil
-	}
-
-	b, err = wb.conn.ReadHoldingRegisters(enovatesRegMaxAmp, 1)
-	if err != nil {
-		return 0, err
-	}
-
-	return rs485.RTUUint16ToFloat64(b), nil
+	return float64(binary.BigEndian.Uint16(b)) / 1e3, nil
 }
 
 var _ api.Meter = (*Enovates)(nil)
