@@ -1669,7 +1669,7 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 	// read only once to simplify testing
 	minCurrent := lp.effectiveMinCurrent()
 	maxCurrent := lp.effectiveMaxCurrent()
-	alwaysCharge := lp.alwaysCharge.Active()
+	alwaysCharge := lp.GetAlwaysCharge().Active()
 
 	// push demand to drain battery
 	sitePower -= lp.boostPower(batteryPower)
@@ -2340,7 +2340,7 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 			rate, _ := feedin.At(time.Now())
 			lp.log.DEBUG.Printf("smart feed-in active: %.2f", rate.Value)
 
-			if lp.alwaysCharge.Active() {
+			if lp.GetAlwaysCharge().Active() {
 				// minimize self-consumption to maximize feed-in by scaling down
 				// to the absolute minimum of 1 phase at min current
 				err = lp.minCharging()
