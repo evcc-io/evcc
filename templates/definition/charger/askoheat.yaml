@@ -83,3 +83,4 @@ render: |
   features:
     - heating
     - integrateddevice
+  {{ include "warmwaterswitch" . }}
