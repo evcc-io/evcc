@@ -81,8 +81,6 @@ render: |
       encoding: uint16
   icon: waterheater
   features:
-    - continuous
     - demandweekday
     - heating
     - integrateddevice
-    - switchdevice
