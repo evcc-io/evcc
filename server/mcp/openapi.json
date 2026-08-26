@@ -1257,12 +1257,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/PriorityStrategy"
-                    }
-                  }
+                  "$ref": "#/components/schemas/PriorityStrategy"
                 }
               }
             }
@@ -1292,12 +1287,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "result": {
-                      "$ref": "#/components/schemas/PriorityBasis"
-                    }
-                  }
+                  "$ref": "#/components/schemas/PriorityBasis"
                 }
               }
             }

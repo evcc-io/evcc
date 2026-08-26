@@ -755,10 +755,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "#/components/schemas/PriorityStrategy"
+                $ref: "#/components/schemas/PriorityStrategy"
   /prioritybasis/{basis}:
     post:
       operationId: setPriorityBasis
@@ -776,10 +773,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  result:
-                    $ref: "#/components/schemas/PriorityBasis"
+                $ref: "#/components/schemas/PriorityBasis"
   /priorityhysteresis/{hysteresis}:
     post:
       operationId: setPriorityHysteresis
