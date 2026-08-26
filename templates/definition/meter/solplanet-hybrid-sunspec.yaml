@@ -21,6 +21,17 @@ params:
   - name: modbus
     choice: ["rs485"]
     id: 3
+  - name: mppt
+    type: int
+    choice: [2, 3]
+    default: 3
+    usages: ["pv"]
+    description:
+      de: Anzahl der MPP-Tracker
+      en: Number of MPP trackers
+    help:
+      de: Anzahl der PV-Eingänge des Wechselrichters
+      en: Number of PV inputs of the inverter
   - preset: battery-power
 render: |
   type: custom
@@ -74,30 +85,20 @@ render: |
   power:
     source: calc
     add:
+    {{- range until (int .mppt) }}
       - source: sunspec
-        {{- include "modbus" . | indent 6 }}
-        value: 160:1:DCW # mppt 1
-      - source: sunspec
-        {{- include "modbus" . | indent 6 }}
-        value: 160:2:DCW # mppt 2
-      - source: sunspec
-        {{- include "modbus" . | indent 6 }}
-        value: 160:3:DCW # mppt 3
+        {{- include "modbus" $ | indent 6 }}
+        value: 160:{{ add1 . }}:DCW # mppt {{ add1 . }}
+    {{- end }}
   energy:
     source: calc
     add:
+    {{- range until (int .mppt) }}
       - source: sunspec
-        {{- include "modbus" . | indent 6 }}
-        value: 160:1:DCWH # mppt 1
+        {{- include "modbus" $ | indent 6 }}
+        value: 160:{{ add1 . }}:DCWH # mppt {{ add1 . }}
         scale: 0.001
-      - source: sunspec
-        {{- include "modbus" . | indent 6 }}
-        value: 160:2:DCWH # mppt 2
-        scale: 0.001
-      - source: sunspec
-        {{- include "modbus" . | indent 6 }}
-        value: 160:3:DCWH # mppt 3
-        scale: 0.001
+    {{- end }}
   curtail:
     source: sequence
     set:
