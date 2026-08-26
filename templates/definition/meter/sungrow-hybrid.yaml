@@ -132,9 +132,9 @@ render: |
     set:
       - source: go
         script: |
-          ena := 170 // 0xAA - enable limitation
+          ena := 0xAA // enable limitation
           if curtail == 100 {
-            ena = 85 // 0x55 - disable limitation
+            ena = 0x55 // disable limitation
           }
           ena
         out:
@@ -178,7 +178,7 @@ render: |
           scale: 0.1
     script: |
       percent := 100
-      if ena == 170 {
+      if ena == 0xAA {
         percent = ratio
       }
       percent
