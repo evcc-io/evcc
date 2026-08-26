@@ -19,8 +19,7 @@ export function getReleaseName(version: string): string {
 
 export function getShortVersion(version: string): string {
   if (isDevelopment(version)) return "dev build";
-  // the build timestamp only serves package ordering and is not worth displaying
-  return `v${version.replace(/-dev\.\d+\+/, "-dev+")}`;
+  return `v${version}`;
 }
 
 export function isNewVersionAvailable(installed?: string, available?: string): boolean {

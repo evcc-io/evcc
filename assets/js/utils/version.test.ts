@@ -46,8 +46,7 @@ describe("getReleaseName", () => {
 describe("getShortVersion", () => {
   test("formats version", () => {
     expect(getShortVersion(DEV)).toBe("dev build");
-    expect(getShortVersion(NIGHTLY)).toBe("v0.304.0-dev+abc1234");
-    expect(getShortVersion("0.304.0-dev+abc1234")).toBe("v0.304.0-dev+abc1234");
+    expect(getShortVersion(NIGHTLY)).toBe("v0.304.0-dev.1712345678+abc1234");
     expect(getShortVersion(STABLE)).toBe("v0.303.1");
   });
 });
