@@ -1,5 +1,9 @@
 <template>
-	<div class="phases d-flex">
+	<div
+		v-tooltip="phasesMismatch ? $t('main.loadpoint.phasesMismatch') : undefined"
+		class="phases d-flex"
+		:class="{ 'phases-warning': phasesMismatch }"
+	>
 		<div
 			v-for="num in [1, 2, 3]"
 			:key="num"
@@ -42,6 +46,9 @@ export default defineComponent({
 		maxPhases() {
 			// 0 = automatic 1p3p switching
 			return this.phasesConfigured || 3;
+		},
+		phasesMismatch() {
+			return [1, 2, 3].filter((num) => this.isPhaseActive(num)).length > this.maxPhases;
 		},
 	},
 	methods: {
@@ -121,5 +128,12 @@ html.dark .phase {
 }
 .real {
 	background-color: var(--evcc-dark-green);
+}
+.phases-warning .target {
+	background-color: var(--bs-warning-border-subtle);
+	border-right-color: var(--bs-warning);
+}
+.phases-warning .real {
+	background-color: var(--bs-warning);
 }
 </style>

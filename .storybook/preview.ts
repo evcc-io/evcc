@@ -2,6 +2,7 @@ import { type Preview, setup } from "@storybook/vue3";
 import "bootstrap/dist/css/bootstrap.min.css";
 import smoothscroll from "smoothscroll-polyfill";
 import setupI18n from "../assets/js/i18n";
+import tooltip from "../assets/js/directives/tooltip";
 import "../assets/css/app.css";
 import { watchThemeChanges } from "../assets/js/theme";
 
@@ -35,6 +36,7 @@ export default {
 
 setup((app) => {
   app.use(setupI18n());
+  app.directive("tooltip", tooltip);
 
   // Mock router-link for Storybook
   app.component("router-link", {

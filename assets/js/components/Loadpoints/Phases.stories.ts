@@ -74,6 +74,16 @@ MainlyL3.args = {
   chargeCurrents: [0.007, 0.009, 5.945],
 };
 
+// 1p device but 3 phases measured: configuration error, warning color + tooltip
+export const Mismatch1p = Template.bind({});
+Mismatch1p.args = {
+  ...base,
+  phasesConfigured: 1,
+  phasesActive: 3,
+  offeredCurrent: 10,
+  chargeCurrents: [10, 10, 10],
+};
+
 // cycles 1p → 3p → 1p every few seconds to inspect the transition
 export const Switching: StoryFn<typeof Phases> = (args) => ({
   components: { Phases },
