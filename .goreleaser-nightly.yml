@@ -59,7 +59,7 @@ snapshot:
   # semver pre-release of the upcoming version. The timestamp makes the package
   # version increase monotonically: apt compares it numerically, while the commit
   # alone would sort randomly.
-  version_template: "{{ incminor .Version }}-dev.{{ .Timestamp }}+{{ .ShortCommit }}"
+  version_template: "{{ incminor .Version }}-dev.{{ .Timestamp }}"
 
 changelog:
   sort: asc

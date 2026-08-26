@@ -9,7 +9,7 @@ NEXT_TAG = $(shell echo $(GIT_TAG) | awk -F. -v b='$(BUMP)' '{ if (b == "patch")
 # untagged builds are semver pre-releases of the upcoming version. The build
 # timestamp makes them increase monotonically: the commit alone sorts randomly.
 BUILD_TIMESTAMP := $(shell date -u '+%s')
-TAG_NAME ?= $(if $(filter-out 0,$(GIT_DIST)),$(NEXT_TAG)-dev.$(BUILD_TIMESTAMP)+$(SHA),$(GIT_TAG))
+TAG_NAME ?= $(if $(filter-out 0,$(GIT_DIST)),$(NEXT_TAG)-dev.$(BUILD_TIMESTAMP),$(GIT_TAG))
 COMMIT := $(SHA)
 # hide commit for releases
 ifeq ($(RELEASE),1)
