@@ -154,9 +154,7 @@ func NewSalia(ctx context.Context, uri, user, password string, cache time.Durati
 }
 
 func (wb *Salia) heartbeat(ctx context.Context) {
-	bo := backoff.NewExponentialBackOff()
-	bo.InitialInterval = 5 * time.Second
-	bo.MaxInterval = time.Minute
+	bo := util.BackOff(util.WithInitialInterval(5*time.Second), util.WithMaxInterval(time.Minute))
 
 	for tick := time.Tick(30 * time.Second); ; {
 		select {
@@ -165,8 +163,8 @@ func (wb *Salia) heartbeat(ctx context.Context) {
 			return
 		}
 
-		if _, err := backoff.Retry(ctx, func() (struct{}, error) {
-			return struct{}{}, wb.post(salia.HeartBeat, "alive")
+		if err := util.Retry(ctx, func() error {
+			return wb.post(salia.HeartBeat, "alive")
 		}, backoff.WithBackOff(bo), backoff.WithMaxElapsedTime(0)); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}

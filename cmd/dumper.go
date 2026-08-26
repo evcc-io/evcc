@@ -12,6 +12,7 @@ import (
 
 	"github.com/cenkalti/backoff/v5"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 	"github.com/fatih/structs"
 )
 
@@ -74,8 +75,7 @@ func (d *dumper) Dump(name string, v any) {
 	if v, ok := api.Cap[api.Meter](v); ok {
 		d.measureTime(w, "Power", func() (string, error) {
 			// read meter power quickly
-			bo := backoff.NewExponentialBackOff()
-			bo.InitialInterval = 20 * time.Millisecond
+			bo := util.BackOff(util.WithInitialInterval(20 * time.Millisecond))
 
 			power, err := backoff.Retry(context.Background(), v.CurrentPower,
 				backoff.WithBackOff(bo), backoff.WithMaxElapsedTime(d.timeout))

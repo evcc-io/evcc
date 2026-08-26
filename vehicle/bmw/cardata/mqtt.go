@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cenkalti/backoff/v5"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/eclipse/paho.mqtt.golang/packets"
 	"github.com/evcc-io/evcc/api"
@@ -132,9 +131,7 @@ func (v *MqttConnector) Unsubscribe(vin string, ch <-chan StreamingMessage) {
 }
 
 func (v *MqttConnector) run(ctx context.Context, ts oauth2.TokenSource) {
-	bo := backoff.NewExponentialBackOff()
-	bo.InitialInterval = time.Second
-	bo.MaxInterval = time.Minute
+	bo := util.BackOff(util.WithInitialInterval(time.Second), util.WithMaxInterval(time.Minute))
 
 	for ctx.Err() == nil {
 		time.Sleep(bo.NextBackOff())

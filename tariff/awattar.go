@@ -66,8 +66,8 @@ func (t *Awattar) run(done chan error) {
 		end := time.Now().Add(48 * time.Hour).UnixMilli()
 		uri := fmt.Sprintf("%s?start=%d&end=%d", t.uri, start, end)
 
-		if _, err := retry(func() (struct{}, error) {
-			return struct{}{}, backoffPermanentError(client.GetJSON(uri, &res))
+		if err := retry(func() error {
+			return backoffPermanentError(client.GetJSON(uri, &res))
 		}); err != nil {
 			if reportError(&once, done, err) {
 				return

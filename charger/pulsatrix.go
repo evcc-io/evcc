@@ -186,13 +186,14 @@ func (c *Pulsatrix) sync() error {
 
 // reconnect reconnects to a pulsatrix SECC websocket
 func (c *Pulsatrix) reconnect() {
-	bo := backoff.NewExponentialBackOff()
-	bo.InitialInterval = backoffInitial
-	bo.MaxInterval = backoffMax
-	bo.Multiplier = backoffMultiplier
+	bo := util.BackOff(
+		util.WithInitialInterval(backoffInitial),
+		util.WithMaxInterval(backoffMax),
+		util.WithMultiplier(backoffMultiplier),
+	)
 
 	var lastErrorLog time.Time
-	operation := func() (struct{}, error) {
+	operation := func() error {
 		err := c.connect()
 		if err != nil {
 			// log error every errorLogInterval
@@ -201,11 +202,11 @@ func (c *Pulsatrix) reconnect() {
 				lastErrorLog = time.Now()
 			}
 		}
-		return struct{}{}, err
+		return err
 	}
 
 	// 0 means no time limit - retry indefinitely
-	if _, err := backoff.Retry(context.Background(), operation,
+	if err := util.Retry(context.Background(), operation,
 		backoff.WithBackOff(bo), backoff.WithMaxElapsedTime(0),
 	); err != nil {
 		c.log.ERROR.Printf("unexpected backoff failure: %v", err)

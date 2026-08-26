@@ -120,8 +120,8 @@ func (t *EdfTempo) run(done chan error) {
 			strings.ReplaceAll(start.Format(time.RFC3339), "+", "%2B"),
 			strings.ReplaceAll(end.Format(time.RFC3339), "+", "%2B"))
 
-		if _, err := retry(func() (struct{}, error) {
-			return struct{}{}, backoffPermanentError(t.GetJSON(uri, &res))
+		if err := retry(func() error {
+			return backoffPermanentError(t.GetJSON(uri, &res))
 		}); err != nil {
 			if reportError(&once, done, err) {
 				return

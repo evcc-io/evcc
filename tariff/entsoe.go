@@ -89,40 +89,40 @@ func (t *Entsoe) run(done chan error) {
 	for tick := time.Tick(time.Hour); ; <-tick {
 		var tr entsoe.PublicationMarketDocument
 
-		if _, err := retry(func() (struct{}, error) {
+		if err := retry(func() error {
 			// Request the next 24 hours of data.
 			data, err := t.DoBody(entsoe.DayAheadPricesRequest(t.domain, time.Hour*24))
 			if err != nil {
-				return struct{}{}, backoffPermanentError(err)
+				return backoffPermanentError(err)
 			}
 
 			var doc entsoe.Document
 			if err := xml.NewDecoder(bytes.NewReader(data)).Decode(&doc); err != nil {
-				return struct{}{}, backoff.Permanent(err)
+				return backoff.Permanent(err)
 			}
 
 			switch doc.XMLName.Local {
 			case entsoe.AcknowledgementMarketDocumentName:
 				var doc entsoe.AcknowledgementMarketDocument
 				if err := xml.NewDecoder(bytes.NewReader(data)).Decode(&doc); err != nil {
-					return struct{}{}, backoff.Permanent(err)
+					return backoff.Permanent(err)
 				}
 
-				return struct{}{}, backoff.Permanent(errors.New(doc.Reason.Text))
+				return backoff.Permanent(errors.New(doc.Reason.Text))
 
 			case entsoe.PublicationMarketDocumentName:
 				if err := xml.NewDecoder(bytes.NewReader(data)).Decode(&tr); err != nil {
-					return struct{}{}, backoff.Permanent(err)
+					return backoff.Permanent(err)
 				}
 
 				if tr.Type != string(entsoe.ProcessTypeDayAhead) {
-					return struct{}{}, backoff.Permanent(errors.New("invalid document type: " + tr.Type))
+					return backoff.Permanent(errors.New("invalid document type: " + tr.Type))
 				}
 
-				return struct{}{}, nil
+				return nil
 
 			default:
-				return struct{}{}, backoff.Permanent(errors.New("invalid document name: " + doc.XMLName.Local))
+				return backoff.Permanent(errors.New("invalid document name: " + doc.XMLName.Local))
 			}
 		}); err != nil {
 			if reportError(&once, done, err) {

@@ -84,16 +84,16 @@ func (t *OctopusIt) run(done chan error) {
 	for tick := time.Tick(time.Hour); ; <-tick {
 		var rates []RatePeriod
 
-		if _, err := retry(func() (struct{}, error) {
+		if err := retry(func() error {
 			agr, err := t.gqlClient.ItActiveAgreement()
 			if err != nil {
 				if errors.Is(err, krakengql.ErrAuthFailed) {
-					return struct{}{}, backoff.Permanent(err)
+					return backoff.Permanent(err)
 				}
-				return struct{}{}, backoffPermanentError(err)
+				return backoffPermanentError(err)
 			}
 			rates, err = ratesForItAgreement(agr, time.Now())
-			return struct{}{}, backoffPermanentError(err)
+			return backoffPermanentError(err)
 		}); err != nil {
 			if reportError(&once, done, err) {
 				return

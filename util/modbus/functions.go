@@ -12,17 +12,25 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v5"
+	"github.com/evcc-io/evcc/util"
 )
 
-// Retry retries the operation using modbus-specific backoff settings
-func Retry[T any](op backoff.Operation[T]) (T, error) {
-	bo := backoff.NewExponentialBackOff()
-	bo.InitialInterval = 20 * time.Millisecond
+// retryOptions are the modbus-specific backoff settings
+func retryOptions() []backoff.RetryOption {
+	return []backoff.RetryOption{
+		backoff.WithBackOff(util.BackOff(util.WithInitialInterval(20 * time.Millisecond))),
+		backoff.WithMaxElapsedTime(10 * time.Second),
+	}
+}
 
-	return backoff.Retry(context.Background(), op,
-		backoff.WithBackOff(bo),
-		backoff.WithMaxElapsedTime(10*time.Second),
-	)
+// Retry retries a value-less operation using modbus-specific backoff settings
+func Retry(op func() error) error {
+	return util.Retry(context.Background(), op, retryOptions()...)
+}
+
+// RetryWithData retries the operation using modbus-specific backoff settings
+func RetryWithData[T any](op backoff.Operation[T]) (T, error) {
+	return backoff.Retry(context.Background(), op, retryOptions()...)
 }
 
 // DecodeMask converts a bit mask in decimal or hex format to uint64

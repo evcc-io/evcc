@@ -14,7 +14,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v5"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/meter/obis"
@@ -179,8 +178,7 @@ func (m *Dsmr) setConn(conn io.ReadCloser) {
 }
 
 func (m *Dsmr) run(ctx context.Context, conn io.ReadCloser, done chan struct{}) {
-	bo := backoff.NewExponentialBackOff()
-	bo.MaxInterval = 5 * time.Minute
+	bo := util.BackOff(util.WithMaxInterval(5 * time.Minute))
 
 	reader := bufio.NewReader(conn)
 

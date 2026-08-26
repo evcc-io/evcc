@@ -80,8 +80,8 @@ func (t *ElectricityMaps) run(done chan error) {
 	for tick := time.Tick(time.Hour); ; <-tick {
 		var res CarbonIntensity
 
-		if _, err := retry(func() (struct{}, error) {
-			return struct{}{}, backoffPermanentError(t.GetJSON(uri, &res))
+		if err := retry(func() error {
+			return backoffPermanentError(t.GetJSON(uri, &res))
 		}); err != nil {
 			if res.Error != "" {
 				err = errors.New(res.Error)

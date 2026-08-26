@@ -90,9 +90,9 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 
 		var res solcast.Forecasts
 
-		if _, err := retry(func() (struct{}, error) {
+		if err := retry(func() error {
 			uri := fmt.Sprintf("https://api.solcast.com.au/rooftop_sites/%s/forecasts?period=PT30M&format=json&hours=96", t.site)
-			return struct{}{}, backoffPermanentError(t.GetJSON(uri, &res))
+			return backoffPermanentError(t.GetJSON(uri, &res))
 		}); err != nil {
 			if reportError(&once, done, err) {
 				return

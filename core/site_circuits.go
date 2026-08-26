@@ -115,7 +115,7 @@ func (site *Site) dimMeters(dim bool) error {
 		}
 
 		// unreadable state: apply unconditionally
-		dimmed, err := modbus.Retry(m.Dimmed)
+		dimmed, err := modbus.RetryWithData(m.Dimmed)
 		if err != nil && !errors.Is(err, api.ErrNotAvailable) {
 			errs = errors.Join(errs, fmt.Errorf("%s dimmed: %w", deviceTitleOrName(dev), err))
 			continue
@@ -174,7 +174,7 @@ func (site *Site) curtailPV(percent *int) error {
 	var errs error
 	for _, m := range site.curtailables() {
 		// unreadable state: apply unconditionally
-		curtailed, err := modbus.Retry(m.CurtailedPercent)
+		curtailed, err := modbus.RetryWithData(m.CurtailedPercent)
 		if err != nil && !errors.Is(err, api.ErrNotAvailable) {
 			errs = errors.Join(errs, fmt.Errorf("%s curtailed: %w", m.name, err))
 			continue

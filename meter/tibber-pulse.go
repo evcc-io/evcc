@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cenkalti/backoff/v5"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/tibber"
 	"github.com/evcc-io/evcc/util"
@@ -173,9 +172,7 @@ func NewTibberFromConfig(ctx context.Context, other map[string]any) (api.Meter, 
 
 		var reconnectCount int
 
-		bo := backoff.NewExponentialBackOff()
-		bo.InitialInterval = 30 * time.Second
-		bo.MaxInterval = 10 * time.Minute
+		bo := util.BackOff(util.WithInitialInterval(30*time.Second), util.WithMaxInterval(10*time.Minute))
 
 		for {
 			reconnectCount++

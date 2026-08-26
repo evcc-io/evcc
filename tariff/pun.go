@@ -98,7 +98,7 @@ func (t *Pun) run(done chan error) {
 
 	for tick := time.Tick(time.Hour); ; <-tick {
 		// get today data
-		today, err := retry(func() (api.Rates, error) {
+		today, err := retryWithData(func() (api.Rates, error) {
 			res, err := t.getData(time.Now())
 			return res, backoffPermanentError(err)
 		})
@@ -111,7 +111,7 @@ func (t *Pun) run(done chan error) {
 		}
 
 		// get tomorrow data (may not be available before ~13:00 CET)
-		res, err := retry(func() (api.Rates, error) {
+		res, err := retryWithData(func() (api.Rates, error) {
 			res, err := t.getData(time.Now().AddDate(0, 0, 1))
 			if errors.Is(err, ErrPunDataNotAvailable) {
 				return res, backoff.Permanent(err)

@@ -56,9 +56,7 @@ const limitTimeout = 50 * time.Second
 // follow a heartbeat and may reject them while still in state "init". Retrying
 // stops when ctx is cancelled, i.e. when the device is gone.
 func AssertLimit(ctx context.Context, log *util.Logger, write func() error) {
-	if _, err := backoff.Retry(ctx, func() (struct{}, error) {
-		return struct{}{}, write()
-	}, backoff.WithMaxElapsedTime(limitTimeout)); err != nil && ctx.Err() == nil {
+	if err := util.Retry(ctx, write, backoff.WithMaxElapsedTime(limitTimeout)); err != nil && ctx.Err() == nil {
 		log.DEBUG.Printf("assert limit: %v", err)
 	}
 }

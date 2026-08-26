@@ -86,10 +86,10 @@ func (t *Tibber) run(done chan error) {
 			}
 		}
 
-		if _, err := retry(func() (struct{}, error) {
+		if err := retry(func() error {
 			ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 			defer cancel()
-			return struct{}{}, t.client.Query(ctx, &res, v)
+			return t.client.Query(ctx, &res, v)
 		}); err != nil {
 			if reportError(&once, done, err) {
 				return

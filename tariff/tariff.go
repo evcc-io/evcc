@@ -91,13 +91,13 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 
 	for tick := time.Tick(interval); ; <-tick {
 		var data api.Rates
-		if _, err := retry(func() (struct{}, error) {
+		if err := retry(func() error {
 			s, err := forecastG()
 			if err != nil {
-				return struct{}{}, backoffPermanentError(err)
+				return backoffPermanentError(err)
 			}
 			if err := json.Unmarshal([]byte(s), &data); err != nil {
-				return struct{}{}, backoff.Permanent(err)
+				return backoff.Permanent(err)
 			}
 			for i, r := range data {
 				data[i] = api.Rate{
@@ -106,7 +106,7 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 					End:   r.End.Local(),
 				}
 			}
-			return struct{}{}, nil
+			return nil
 		}); err != nil {
 			if reportError(&once, done, err) {
 				return

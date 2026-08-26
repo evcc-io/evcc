@@ -61,8 +61,8 @@ func (t *GrünStromIndex) run(done chan error) {
 	for tick := time.Tick(time.Hour); ; <-tick {
 		var res corrently.Forecast
 
-		_, err := retry(func() (struct{}, error) {
-			return struct{}{}, backoffPermanentError(t.GetJSON(uri, &res))
+		err := retry(func() error {
+			return backoffPermanentError(t.GetJSON(uri, &res))
 		})
 
 		if err == nil && res.Err {

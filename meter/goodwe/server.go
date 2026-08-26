@@ -62,8 +62,7 @@ func (m *Server) GetInverter(ip string) *util.Monitor[Inverter] {
 }
 
 func (m *Server) readData() {
-	bo := backoff.NewExponentialBackOff()
-	bo.MaxInterval = time.Second
+	bo := util.BackOff(util.WithMaxInterval(time.Second))
 
 	for {
 		mu.RLock()
@@ -71,7 +70,7 @@ func (m *Server) readData() {
 		mu.RUnlock()
 
 		for _, ip := range ips {
-			if _, err := backoff.Retry(context.Background(), func() (struct{}, error) {
+			if err := util.Retry(context.Background(), func() error {
 				addr, err := net.ResolveUDPAddr("udp", net.JoinHostPort(ip, "8899"))
 				if err == nil {
 					_, err = m.conn.WriteToUDP([]byte{0xF7, 0x03, 0x89, 0x1C, 0x00, 0x7D, 0x7A, 0xE7}, addr)
@@ -80,7 +79,7 @@ func (m *Server) readData() {
 					time.Sleep(5 * time.Second)
 					_, err = m.conn.WriteToUDP([]byte{0xF7, 0x03, 0x90, 0x88, 0x00, 0x0D, 0x3D, 0xB3}, addr)
 				}
-				return struct{}{}, err
+				return err
 			}, backoff.WithBackOff(bo), backoff.WithMaxElapsedTime(10*time.Second)); err != nil {
 				m.log.ERROR.Println(err)
 			}

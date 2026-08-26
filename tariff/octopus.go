@@ -152,8 +152,8 @@ func (t *Octopus) run(done chan error) {
 	for tick := time.Tick(time.Hour); ; <-tick {
 		var res octoRest.UnitRates
 
-		if _, err := retry(func() (struct{}, error) {
-			return struct{}{}, backoffPermanentError(client.GetJSON(restQueryUri, &res))
+		if err := retry(func() error {
+			return backoffPermanentError(client.GetJSON(restQueryUri, &res))
 		}); err != nil {
 			if reportError(&once, done, err) {
 				return

@@ -23,15 +23,22 @@ func Name(conf config.Typed) string {
 	return conf.Type
 }
 
-// retry retries the operation using tariff-specific backoff settings
-func retry[T any](op backoff.Operation[T]) (T, error) {
-	bo := backoff.NewExponentialBackOff()
-	bo.InitialInterval = time.Second
-
-	return backoff.Retry(context.Background(), op,
-		backoff.WithBackOff(bo),
+// retryOptions are the tariff-specific backoff settings
+func retryOptions() []backoff.RetryOption {
+	return []backoff.RetryOption{
+		backoff.WithBackOff(util.BackOff(util.WithInitialInterval(time.Second))),
 		backoff.WithMaxElapsedTime(time.Minute),
-	)
+	}
+}
+
+// retry retries a value-less operation using tariff-specific backoff settings
+func retry(op func() error) error {
+	return util.Retry(context.Background(), op, retryOptions()...)
+}
+
+// retryWithData retries the operation using tariff-specific backoff settings
+func retryWithData[T any](op backoff.Operation[T]) (T, error) {
+	return backoff.Retry(context.Background(), op, retryOptions()...)
 }
 
 // backoffPermanentError returns a permanent error in case of HTTP 400
