@@ -188,6 +188,15 @@
       "label": "Divisa",
       "title": "Divisa"
     },
+    "curtailer": {
+      "description": "Dispositiu que limita la injecció a petició de l'operador de la xarxa (§ 9 EEG). Molts inversors solars ho permeten directament a través de la configuració del seu comptador solar. Només alguns fabricants o sistemes multi inversor necessiten una configuració separada.",
+      "generic": "Integracions genèriques",
+      "specific": "Integracions específiques",
+      "template": "Fabricant",
+      "title": "Restricció",
+      "titleAdd": "Afegeix un dispositiu de restricció",
+      "titleEdit": "Edita el dispositiu de restricció"
+    },
     "deviceValue": {
       "activeClients": "Clients actius",
       "amount": "Import",
@@ -212,7 +221,7 @@
       "currentRange": "Corrent",
       "curtailLimit": "Límit d’injecció",
       "curtailable": "Reduïble",
-      "curtailed": "Injecció limitada",
+      "curtailed": "Límit d'injecció",
       "detected": "Detectat",
       "dimLimit": "Límit de consum",
       "dimmed": "Consum limitat",
@@ -539,6 +548,7 @@
     "main": {
       "addAdditional": "Afegeix comptador addicional",
       "addConsumer": "Afegeix consumidor",
+      "addCurtailer": "Afegeix dispositiu de restricció",
       "addGrid": "Afegeix comptador de xarxa",
       "addLoadpoint": "Afegeix punt de recàrrega o escalfador",
       "addPvBattery": "Afegeix solar o bateria",
@@ -639,6 +649,7 @@
         "aux": "Afegeix consumidor autoregulat",
         "battery": "Afegeix comptador de bateria",
         "consumer": "Afegeix consumidor normal",
+        "grid": "Afegeix mesurador de xarxa",
         "pv": "Afegeix comptador solar"
       },
       "save": "Desa",
@@ -829,6 +840,8 @@
       "noClients": "Encara no hi ha clients. Ningú no es pot connectar encara.",
       "password": "Contrasenya",
       "passwordOnce": "Aquesta contrasenya es mostra una sola vegada. Escanegeu el codi QR o copieu-la ara. No la tornareu a veure.",
+      "privacy": "Habilitant aquesta funció, dones el consentiment a la nostra {0}.",
+      "privacyLink": "Política de privacitat",
       "qrInstall": "Instal·leu l’app d’evcc per a {ios} o {android}.",
       "qrScan": "Escanegeu el codi amb la càmera del mòbil per a connectar-vos. Feu-hi clic si ja utilitzeu el mòbil.",
       "removeClient": "Elimina client",
@@ -905,6 +918,8 @@
           "confirmationButton": "Restableix i reinicia",
           "confirmationText": "Se suprimiran permanentment les dades seleccionades. Assegureu-vos d’haver descarregat abans una còpia de seguretat.",
           "description": "Teniu problemes de configuració i voleu començar de zero? Suprimiu totes les dades i comenceu de nou.",
+          "remote": "Accés remot",
+          "remoteDescription": "Esborrar configuracions i credencials.",
           "sessions": "Sessions de càrrega",
           "sessionsDescription": "Suprimeix l’historial de les vostres sessions de càrrega.",
           "settings": "Configuració i paràmetres",
@@ -1535,7 +1550,7 @@
     "vehicleSettings": {
       "connectedTo": "connectat a {0}",
       "description": "Aquests valors per defecte s’apliquen quan el vehicle es connecta a un punt de recàrrega.",
-      "editHint": "Afegiu o editeu vehicles a {0}.",
+      "editHint": "Els vehicles es poden editar a {0}.",
       "keepAsIs": "Tal com està",
       "learnMore": "Més informació.",
       "limitSoc": "Límit per defecte",
@@ -1718,6 +1733,13 @@
     "vehicle": "Vehicle"
   },
   "settings": {
+    "dateFormat": {
+      "auto": "Automàtic",
+      "dmy": "DD/MM/YYYY",
+      "label": "Format de data",
+      "mdy": "MM/DD/YYYY",
+      "ymd": "YYYY-MM-DD"
+    },
     "deviceInfo": "Els paràmetres d’aquest diàleg només afecten aquest dispositiu.",
     "fullscreen": {
       "enter": "Activa la pantalla completa",
