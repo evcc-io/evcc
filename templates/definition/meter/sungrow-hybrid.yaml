@@ -4,7 +4,7 @@ products:
   - brand: Sungrow
     description:
       generic: SH Series Hybrid Inverter
-capabilities: ["battery-control"]
+capabilities: ["battery-control", "curtail"]
 requirements:
   description:
     de: Verbindungen über das WiNet-S-Dongle (WiFi oder LAN) funktionieren nur mit aktueller Firmware. Ältere Versionen liefern nicht alle benötigten Daten (Leistung, Ladestand).
