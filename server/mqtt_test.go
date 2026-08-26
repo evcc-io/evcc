@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"math"
 	"slices"
 	"strconv"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/core/types"
+	"github.com/evcc-io/evcc/util"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -95,6 +97,26 @@ func (suite *mqttSuite) TestSlice() {
 	suite.Require().Len(suite.topics, 3)
 	suite.Equal([]string{"test", "test/1", "test/2"}, suite.topics, "topics")
 	suite.Equal([]string{"2", "10", "20"}, suite.payloads, "payloads")
+}
+
+type jsonSeries [][]float64
+
+func (s jsonSeries) MarshalBytes() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+// a sharded struct publishes one message per key, BytesMarshaler fields as json
+func (suite *mqttSuite) TestSharderBytesMarshaler() {
+	p := struct {
+		Foo jsonSeries `json:"foo,omitempty"`
+		Bar jsonSeries `json:"bar,omitempty"`
+	}{
+		Foo: jsonSeries{{1, 2, 3}, {4, 5, 6}},
+	}
+
+	suite.publish("test", false, util.NewSharder("test", p))
+	suite.Equal([]string{"test/foo", "test/bar"}, suite.topics, "topics")
+	suite.Equal([]string{"[[1,2,3],[4,5,6]]", ""}, suite.payloads, "payloads")
 }
 
 func (suite *mqttSuite) TestNilInterface() {

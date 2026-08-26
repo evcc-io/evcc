@@ -11,7 +11,9 @@
 					<div class="field-caption small evcc-gray mt-1">always, fixed</div>
 				</div>
 				<div class="field-value gap-2">
-					<span class="large fw-bold text-lowercase evcc-default-text">Lowest cost</span>
+					<span class="value-text fw-bold text-lowercase evcc-default-text"
+						>Lowest cost</span
+					>
 					<LockIcon class="value-icon" />
 				</div>
 			</div>
@@ -32,7 +34,7 @@
 						@change="onStrategyChange"
 					>
 						<span
-							class="large fw-bold text-lowercase evcc-default-text secondary-goal"
+							class="value-text fw-bold text-lowercase evcc-default-text secondary-goal"
 							>{{ secondaryGoalLabel }}</span
 						>
 					</CustomSelect>
@@ -60,7 +62,7 @@
 				</div>
 				<div class="field-value gap-2">
 					<StatusIndicator :variant="statusVariant">
-						<span class="large fw-bold text-lowercase evcc-default-text">{{
+						<span class="value-text fw-bold text-lowercase evcc-default-text">{{
 							status
 						}}</span>
 					</StatusIndicator>
@@ -88,7 +90,7 @@
 				</div>
 				<div class="field-value gap-2">
 					<span
-						class="fs-4 fw-bold tabular"
+						class="value-text fw-bold tabular"
 						:class="isCredit ? 'text-primary' : 'evcc-default-text'"
 					>
 						{{ netCostDisplay }}
@@ -123,6 +125,8 @@ import "@h2d2/shopicons/es/regular/info";
 // themselves come from backend state to avoid drift if the enum changes
 const STRATEGY_LABELS: Record<string, string> = {
 	charge_before_export: "fill battery first",
+	attenuate_demand_peaks: "reduce grid import peaks",
+	attenuate_feedin_peaks: "reduce grid feed-in peaks",
 	attenuate_grid_peaks: "reduce grid peaks",
 	none: "no preference",
 };
@@ -130,6 +134,7 @@ const STRATEGY_LABELS: Record<string, string> = {
 const STATUS_TOOLTIP =
 	"The optimizer result:<br><br>" +
 	"<strong>Optimal</strong>: the best plan was found.<br>" +
+	"<strong>Feasible</strong>: a usable plan was found, but not proven optimal.<br>" +
 	"<strong>Infeasible</strong>: the constraints cannot all be met.<br>" +
 	"<strong>Not solved</strong>: optimization hasn't finished yet.";
 
@@ -178,13 +183,15 @@ export default defineComponent({
 			if (Math.abs(elapsed) < 60 * 1000) return "just now";
 			return this.fmtTimeAgo(elapsed);
 		},
-		statusVariant(): "success" | "warning" | "muted" {
+		statusVariant(): "success" | "warning" | "danger" | "muted" {
 			switch (this.status) {
 				case OptimizationStatus.OPTIMAL:
 					return "success";
+				case OptimizationStatus.FEASIBLE:
+					return "warning";
 				case OptimizationStatus.INFEASIBLE:
 				case OptimizationStatus.UNBOUNDED:
-					return "warning";
+					return "danger";
 				default:
 					return "muted";
 			}
@@ -274,18 +281,20 @@ export default defineComponent({
 .info-icon {
 	cursor: help;
 }
+/* body size on small screens, larger from md up; bold carries the emphasis */
+.value-text {
+	font-size: 1rem;
+	line-height: 1.2;
+}
+@media (min-width: 768px) {
+	.value-text {
+		font-size: 1.25rem;
+	}
+}
 .secondary-goal {
 	text-decoration: underline;
 	text-decoration-color: var(--evcc-gray);
 	text-underline-offset: 3px;
-}
-
-/* small: slightly reduced value size, rows are tighter */
-@media (max-width: 767.98px) {
-	.field-value .large,
-	.field-value .fs-4 {
-		font-size: 1.125rem !important;
-	}
 }
 
 /* md and up: each field a vertical stack (label, value, caption); columns via Bootstrap grid */

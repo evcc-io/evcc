@@ -7,6 +7,9 @@ products:
     description:
       de: Smartmeter (über Wechselrichter)
       en: Smartmeter (via Inverter)
+  - brand: Fronius
+    description:
+      generic: Smart Meter IP
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

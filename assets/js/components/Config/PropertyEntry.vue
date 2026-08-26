@@ -25,13 +25,16 @@
 </template>
 
 <script>
-/* eslint-disable vue/prop-name-casing */
+/* oxlint-disable vue/prop-name-casing */
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
+import formatter from "@/mixins/formatter";
+import { goDurationToUnit, goDurationUnit } from "@/utils/goDuration";
 
 export default {
 	name: "PropertyEntry",
 	components: { FormRow, PropertyField },
+	mixins: [formatter],
 	props: {
 		id: String,
 		Name: String,
@@ -66,8 +69,11 @@ export default {
 			return this.Description === this.Help ? undefined : this.Help;
 		},
 		example() {
-			// hide example text since config ui doesnt use go duration format (e.g. 5m)
-			return this.Type === "Duration" ? undefined : this.Example;
+			// show duration example in its own unit, field unit is user-changeable
+			const unit = this.Type === "Duration" ? goDurationUnit(this.Example) : null;
+			if (!unit) return this.Example;
+			const value = goDurationToUnit(this.Example, unit);
+			return `${value} ${this.fmtDurationUnit(value, unit)}`;
 		},
 	},
 };

@@ -258,7 +258,6 @@
       "noFileSelected": "Ingen fil valgt.",
       "off": "av",
       "on": "på",
-      "password": "Passord",
       "readFromFile": "Les fra fil",
       "remove": "Fjern",
       "required": "påkrevd",
@@ -288,7 +287,6 @@
         "type": "Type"
       },
       "description": "Effektbegrensning ved hjelp av eksterne systemer (f.eks. §14a EnWG, §9 EEG-grensesnitt eller overordnet energistyringssystem). Fungerer sammen med funksjonen for laststyring.",
-      "downloadCsv": "Last ned CSV",
       "eventsRecorded": "Registrerte {count} hendelser med rutenettbegrensning.",
       "lastEvent": "Siste {timeAgo}.",
       "title": "Ekstern grense"
@@ -380,7 +378,6 @@
       "priorityHelp": "Høyere prioritet gir fortrinnsrett til overskudd fra solenergi.",
       "priorityLabel": "Prioritet",
       "save": "Lagre",
-      "showAllSettings": "Vis alle innstillinger",
       "solarBehaviorCustomHelp": "Definer dine egne terskler og forsinkelser for aktivering og deaktivering.",
       "solarBehaviorDefaultHelp": "Start etter {enableDelay} med tilstrekkelig overskudd. Stopp når det ikke er nok overskudd til {disableDelay}.",
       "solarBehaviorLabel": "Solenergi",
@@ -446,7 +443,6 @@
       "option": {
         "aux": "Legg til selvregulerende forbruker",
         "battery": "Legg til batterimåler",
-        "ext": "Legg til vanlig forbruker",
         "pv": "Legg til solenergimåler"
       },
       "save": "Lagre",
@@ -535,13 +531,7 @@
       "title": "Nettverk"
     },
     "ocpp": {
-      "connectedChargers": "Tilkoblede ladere",
-      "connectionStatus": "Konfigurerte stasjons-ID-er",
-      "connectionStatusHelp": "Tilkoblingsstatus for konfigurerte ladere.",
-      "detectedChargers": "Oppdagede stasjons-ID-er",
-      "detectedHelp": "Disse ladere har forsøkt å koble seg til evcc. For å bruke en lader, opprett et ladepunkt med stasjons-ID-en.",
       "noChargers": "Ingen OCPP-ladere oppdaget.",
-      "noStations": "Ingen stasjoner tilkoblet",
       "status": {
         "configured": "Ikke tilkoblet",
         "connected": "Tilkoblet",
@@ -657,10 +647,6 @@
       "restartRequiredMessage": "Konfigurasjonen er endret.",
       "restartingDescription": "Vennligst vent…",
       "restartingMessage": "Starter evcc på nytt."
-    },
-    "tariffs": {
-      "description": "Definer energitariffene dine for å beregne kostnadene for ladingen.",
-      "title": "Tariffer"
     },
     "telemetry": {
       "description": "Konfigurer datadeling for å bidra til å forbedre evcc. Vi tar personvernet ditt på alvor, og deltakelse er helt frivillig.",
@@ -793,7 +779,6 @@
     "blog": "Blogg",
     "docs": "Dokumentasjon",
     "github": "GitHub",
-    "login": "Kjøretøysinnlogginger",
     "logout": "Logg ut",
     "nativeSettings": "Endre server",
     "needHelp": "Trenger du hjelp?",
@@ -911,7 +896,6 @@
       },
       "planNumber": "Plan {number}",
       "precondition": {
-        "description": "Lad {duration} før avreise for å forberede batteriet.",
         "label": "Sen betaling",
         "optionAll": "alt",
         "optionNo": "nei"
@@ -921,7 +905,6 @@
       "repeatingPlans": "Gjentatte planer",
       "selectAll": "Velg alt",
       "strategyDisabledDescription": "Ladingen starter så sent som mulig for å være ferdig akkurat i tide til avreise. Med dynamiske nettpriser eller CO₂-tariff er det flere alternativer tilgjengelig her.",
-      "strategySettings": "Strategiinnstillinger",
       "time": "Tid",
       "title": "Plan",
       "unsavedChanges": "Det er ubehandlede endringer. Vil du bruke dem nå?",
@@ -980,14 +963,12 @@
       "batteryUsage": "Hjemmebatteri",
       "currents": "Ladestrøm",
       "default": "forvalg",
-      "disclaimerHint": "Merknad:",
       "maxCurrent": {
         "label": "Maks. ladestrøm"
       },
       "minCurrent": {
         "label": "Min. ladestrøm"
       },
-      "onlyForSocBasedCharging": "Disse alternativene er kun tilgjengelige for kjøretøy med kjent ladenivå.",
       "phasesConfigured": {
         "label": "Faser",
         "no1p3pSupport": "Hvordan er laderen din koblet til?",
@@ -1088,15 +1069,10 @@
       "feedinPriorityPausing": "Solcellelading pauset for å maksimere innmatingen.",
       "finished": "Ferdig.",
       "minCharge": "Minimumslading til {soc}.",
-      "pvDisable": "Ikke nok overskudd. Pause i {remaining}...",
-      "pvEnable": "Overskudd tilgjengelig. Starter om {remaining}...",
-      "scale1p": "Reduserer til 1-fase strøm i {remaining}...",
-      "scale3p": "Øker til 3-fase strøm i {remaining}...",
       "targetChargeActive": "Målladning aktiv. Estimert ferdig om {duration}.",
       "targetChargePlanned": "Mållading starter på {duration}.",
       "targetChargeWaitForVehicle": "Ladingsplan klar. Venter på kjøretøy…",
       "vehicleLimit": "Kjøretøybegrensning",
-      "vehicleLimitReached": "Kjøretøygrense på {soc} nådd.",
       "waitForVehicle": "Klar. Venter på kjøretøy…",
       "welcome": "Kort innledende ladning for å bekrefte tilkoblingen."
     },
@@ -1182,8 +1158,6 @@
       "solarpercentage": "Solenergi (%)",
       "vehicle": "Kjøretøy"
     },
-    "csvPeriod": "Last ned {period} CSV",
-    "csvTotal": "Last ned total CSV",
     "date": "Start",
     "energy": "Oppladet",
     "filter": {

@@ -219,7 +219,6 @@
       "noFileSelected": "Nincs fájl kiválasztva.",
       "off": "ki",
       "on": "be",
-      "password": "Jelszó",
       "readFromFile": "Fájlból olvasás",
       "remove": "Eltávolítás",
       "required": "szükséges",
@@ -249,7 +248,6 @@
         "type": "Típus"
       },
       "description": "Teljesítménykorlátozás külső rendszerekkel (pl. §14a EnWG, §9 EEG interfész vagy magasabb szintű energiagazdálkodási rendszer). A terheléskezelési funkcióval együtt működik.",
-      "downloadCsv": "CSV letöltése",
       "eventsRecorded": "{count} rácskorlátozási esemény rögzítve.",
       "lastEvent": "Legutóbbi {timeAgo}.",
       "title": "Külső határ"
@@ -341,7 +339,6 @@
       "priorityHelp": "Magasabb prioritás esetén elsőbbségi hozzáférést biztosít a napenergia-többlethez.",
       "priorityLabel": "Prioritás",
       "save": "Mentés",
-      "showAllSettings": "Összes beállítás megjelenítése",
       "solarBehaviorCustomHelp": "Definiálja a saját engedélyezési és letiltási küszöbértékeit és késleltetéseit.",
       "solarBehaviorDefaultHelp": "Indítás elegendő többlet után {enableDelay} idő elteltével. Megállítás, ha nincs elegendő többlet a következőhöz: {disableDelay}.",
       "solarBehaviorLabel": "Szolár",
@@ -408,7 +405,6 @@
       "option": {
         "aux": "Önszabályozó fogyasztó hozzáadása",
         "battery": "Akkumulátoros mérő hozzáadása",
-        "ext": "Rendszeres fogyasztó hozzáadása",
         "pv": "Napelem mérő hozzáadása"
       },
       "save": "Mentés",
@@ -490,22 +486,14 @@
       "descriptionHost": "Az evcc helyi hálózatban történő bejelentésére szolgál.",
       "descriptionInternalUrl": "Az evcc helyi hálózati címe.",
       "descriptionPort": "Port a webes felülethez és az API-hoz. Frissítened kell a böngésződ URL-jét, ha ezt megváltoztatod.",
-      "descriptionSchema": "Csak az URL-ek létrehozásának módját érinti. A HTTPS kiválasztása nem engedélyezi a titkosítást.",
       "labelExternalUrl": "Külső URL",
       "labelHost": "mDNS-gazdanév",
       "labelInternalUrl": "Belső URL",
       "labelPort": "Port",
-      "labelSchema": "Séma",
       "title": "Hálózat"
     },
     "ocpp": {
-      "connectedChargers": "Csatlakoztatott töltők",
-      "connectionStatus": "Konfigurált állomásazonosítók",
-      "connectionStatusHelp": "A konfigurált töltők csatlakozási állapota.",
-      "detectedChargers": "Észlelt állomásazonosítók",
-      "detectedHelp": "Ezek a töltők megpróbáltak csatlakozni az evcc-hez. A töltő használatához hozzon létre egy töltési pontot az állomás azonosítójával.",
       "noChargers": "Nincs OCPP töltő észlelve.",
-      "noStations": "Nincs csatlakoztatott állomás",
       "status": {
         "configured": "Nincs csatlakozás",
         "connected": "Csatlakoztatva",
@@ -621,10 +609,6 @@
       "restartRequiredMessage": "A Konfiguráció megváltozott.",
       "restartingDescription": "Kérlek várj…",
       "restartingMessage": "evcc újraindítása."
-    },
-    "tariffs": {
-      "description": "Határozza meg energiatarifáját a töltési folyamatok költségeinek kiszámításához.",
-      "title": "Tarifák"
     },
     "telemetry": {
       "description": "Az adatmegosztás konfigurálása az evcc fejlesztésének elősegítése érdekében. Az Ön adatainak védelme fontos számunkra, és a részvétel teljesen opcionális.",
@@ -754,15 +738,9 @@
   },
   "header": {
     "about": "Névjegy",
-    "authProviders": {
-      "confirmLogout": "Biztosan le szeretnéd választani a(z) {title}?",
-      "loggedOut": "Sikeresen kijelentkezve",
-      "title": "Engedélyezési állapot"
-    },
     "blog": "Blog",
     "docs": "Dokumentáció",
     "github": "GitHub",
-    "login": "Jármű Bejelentkezések",
     "logout": "Kijelentkezés",
     "nativeSettings": "Szerver Váltás",
     "needHelp": "Szükséged van segítségre?",
@@ -857,7 +835,6 @@
   "loginModal": {
     "cancel": "Mégse",
     "demoMode": "A bejelentkezés demó módban nem támogatott.",
-    "error": "Sikertelen bejelentkezés: ",
     "iframeHint": "evcc megnyitása új lapon.",
     "iframeIssue": "A jelszavad helyes, de úgy tűnik, hogy a böngésződ elvetette a hitelesítési sütit. Ez akkor történhet meg, ha az evcc-t iframe-ben futtatod HTTP-n.",
     "invalid": "A jelszó érvénytelen.",
@@ -881,7 +858,6 @@
       },
       "planNumber": "Terv {number}",
       "precondition": {
-        "description": "Töltse {duration} indulás előtt az akkumulátor előkondícionálásához.",
         "label": "Késleltetett Töltés",
         "optionAll": "minden",
         "optionNo": "nem"
@@ -891,7 +867,6 @@
       "repeatingPlans": "Ismétlődő tervek",
       "selectAll": "Összes kiválasztása",
       "strategyDisabledDescription": "A töltés a lehető legkésőbb kezdődik, hogy pontosan az indulás előtt befejeződjön. Dinamikus hálózati árak vagy CO₂-tarifa esetén itt több lehetőség áll rendelkezésre.",
-      "strategySettings": "Stratégiai beállítások",
       "time": "Idő",
       "title": "Terv",
       "unsavedChanges": "Vannak nem mentett módosítások. Alkalmazza most?",
@@ -950,14 +925,12 @@
       "batteryUsage": "Otthoni Akkumulátor",
       "currents": "Töltőáram",
       "default": "alapértelmezett",
-      "disclaimerHint": "Megjegyzés:",
       "maxCurrent": {
         "label": "Max. Áram"
       },
       "minCurrent": {
         "label": "Min. Áram"
       },
-      "onlyForSocBasedCharging": "Ezek a beállítások csak olyan járművekre elérhetőek, amiknek ismert a töltési szintje.",
       "phasesConfigured": {
         "label": "Fázis",
         "no1p3pSupport": "Milyen módon van csatlakoztatva a töltőd?",
@@ -1152,8 +1125,6 @@
       "solarpercentage": "Napenergia (%)",
       "vehicle": "Jármű"
     },
-    "csvPeriod": "Letöltés - {period} .CSV",
-    "csvTotal": "Letöltés - Összes időszak .CSV",
     "date": "Kezdés",
     "energy": "Töltve",
     "filter": {

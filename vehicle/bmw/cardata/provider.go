@@ -50,7 +50,7 @@ func NewProvider(ctx context.Context, log *util.Logger, api *API, ts oauth2.Toke
 
 	go func() {
 		<-ctx.Done()
-		mqtt.Unsubscribe(vin)
+		mqtt.Unsubscribe(vin, recvC)
 	}()
 
 	go func() {
@@ -71,19 +71,36 @@ func (v *Provider) findOrCreateContainer() (string, error) {
 		return "", err
 	}
 
+	// obsolete containers keep streaming, resulting in duplicate messages
+	defer v.deleteObsoleteContainers(containers)
+
 	if i := slices.IndexFunc(containers, func(c Container) bool {
-		return c.Name == "evcc.io" && c.Purpose == requiredVersion
+		return c.Name == containerName && c.Purpose == requiredVersion
 	}); i >= 0 {
 		return containers[i].ContainerId, nil
 	}
 
 	res, err := v.api.CreateContainer(CreateContainer{
-		Name:                 "evcc.io",
+		Name:                 containerName,
 		Purpose:              requiredVersion,
 		TechnicalDescriptors: requiredKeys,
 	})
 
 	return res.ContainerId, err
+}
+
+func (v *Provider) deleteObsoleteContainers(containers []Container) {
+	for _, c := range containers {
+		if c.Name != containerName || c.Purpose == requiredVersion {
+			continue
+		}
+
+		v.log.DEBUG.Printf("deleting obsolete container %s (%s)", c.ContainerId, c.Purpose)
+
+		if err := v.api.DeleteContainer(c.ContainerId); err != nil {
+			v.log.WARN.Printf("delete container %s: %v", c.ContainerId, err)
+		}
+	}
 }
 
 func (v *Provider) setupContainer() error {

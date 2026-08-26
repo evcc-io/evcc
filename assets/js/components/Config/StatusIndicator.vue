@@ -16,7 +16,7 @@
 import { defineComponent, type PropType } from "vue";
 import Tooltip from "bootstrap/js/dist/tooltip";
 
-type Variant = "success" | "warning" | "muted";
+type Variant = "success" | "warning" | "danger" | "muted";
 
 export default defineComponent({
 	name: "StatusIndicator",
@@ -34,6 +34,8 @@ export default defineComponent({
 					return "bg-success";
 				case "warning":
 					return "bg-warning";
+				case "danger":
+					return "bg-danger";
 				default:
 					return "border border-secondary";
 			}

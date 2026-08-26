@@ -1,4 +1,4 @@
-# GENERATED FILE - DO NOT EDIT (source: assets/js/types/evcc.ts, update: npm run openapi)
+# GENERATED FILE - DO NOT EDIT (source: assets/js/types/evcc.ts, update: make openapi)
 components:
   schemas:
     State:
@@ -100,6 +100,9 @@ components:
         residualPower:
           description: Configured grid operating point in W. Positive values maintain grid import.
           type: number
+        gridExportLimit:
+          description: Static grid export power limit in W used as optimizer constraint, 0 = disabled. An active HEMS curtailment takes precedence.
+          type: number
         greenShareHome:
           description: Share of green energy in home consumption, between 0 and 1.
           type: number
@@ -134,6 +137,7 @@ components:
           description: Current CO₂ emissions of charging in g/kWh, taking the green energy share into account.
           type: number
         tariffTemperature:
+          description: Current outside temperature in °C.
           type: number
         mqtt:
           $ref: "#/components/schemas/MqttConfig"
@@ -197,6 +201,7 @@ components:
           description: Home battery is allowed to discharge to the grid (experimental).
           type: boolean
         solarAdjusted:
+          description: Solar forecast is adjusted to real production data (experimental).
           type: boolean
         batteryGridChargeLimit:
           description: Price or emission limit for charging the home battery from grid.
@@ -501,13 +506,16 @@ components:
         - ZAR
         - TRY
         - MYR
+        - THB
     DeviceColorEntry:
       description: Color assigned to a device for consistent UI display.
       type: object
       properties:
         title:
+          description: Device title the color is assigned to.
           type: string
         color:
+          description: Assigned color as CSS value.
           type: string
       required:
         - title
@@ -620,28 +628,17 @@ components:
           items:
             $ref: "#/components/schemas/ForecastSlot"
         temperature:
+          description: Temperature forecast in °C per time slot.
           type: array
           items:
             $ref: "#/components/schemas/ForecastSlot"
     ForecastSlot:
-      description: A forecast value for a time slot.
-      type: object
-      properties:
-        start:
-          description: Start of the time slot.
-          type: string
-          format: date-time
-        end:
-          description: End of the time slot.
-          type: string
-          format: date-time
-        value:
-          description: Forecast value of the time slot. Unit depends on the forecast type.
-          type: number
-      required:
-        - start
-        - end
-        - value
+      description: A forecast time slot as [start, end, value] array. Start and end are unix seconds. Value unit depends on the forecast type.
+      type: array
+      items:
+        type: number
+      minItems: 3
+      maxItems: 3
     GenericConfigStatus:
       description: Configuration and runtime status of an integration. Structure depends on configuration.
       type: object
@@ -830,6 +827,9 @@ components:
         connectedDuration:
           description: Duration since the vehicle was connected, in seconds.
           type: number
+        disabled:
+          description: Loadpoint is disabled via configuration.
+          type: boolean
         disableDelay:
           description: Delay before charging stops in solar mode, in seconds.
           type: number
@@ -953,8 +953,10 @@ components:
           description: Remaining time until the pending charge start or stop action executes, in seconds.
           type: number
         last24hEnergy:
+          description: Energy used in the last 24 hours in kWh.
           type: number
         last7dEnergy:
+          description: Energy used in the last 7 days in kWh.
           type: number
         sessionCo2PerKWh:
           description: Average CO₂ emissions of the current charging session in g/kWh.
@@ -1007,6 +1009,7 @@ components:
           description: Loadpoint title for UI display.
           type: string
         todayEnergy:
+          description: Energy used since midnight in kWh.
           type: number
         vehicleClimaterActive:
           description: Climater of the connected vehicle is active.
@@ -1367,8 +1370,10 @@ components:
       properties:
         config:
           $ref: "#/components/schemas/OcppConfig"
+          description: OCPP server configuration.
         status:
           $ref: "#/components/schemas/OcppStatus"
+          description: OCPP server status.
       required:
         - config
         - status
@@ -1575,6 +1580,9 @@ components:
           type: object
           additionalProperties:
             type: string
+        error:
+          description: Last connection error.
+          type: string
       required:
         - connected
         - loginBlocked
@@ -1753,19 +1761,12 @@ components:
         - chargedKWh
         - solarPercentage
     TimeseriesEntry:
-      description: A forecast value at a point in time.
-      type: object
-      properties:
-        val:
-          description: Forecast power in W.
-          type: number
-        ts:
-          description: Time of the forecast value.
-          type: string
-          format: date-time
-      required:
-        - val
-        - ts
+      description: A forecast value at a point in time as [ts, val] array. ts is unix seconds, val is power in W.
+      type: array
+      items:
+        type: number
+      minItems: 2
+      maxItems: 2
     Vehicle:
       description: A configured vehicle.
       type: object

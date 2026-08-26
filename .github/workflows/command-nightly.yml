@@ -1,8 +1,8 @@
 name: Nightly Command
 
 # Triggered by a maintainer commenting `/nightly` on an issue or pull request.
-# Builds the nightly packages from master (goreleaser snapshot) to check the
-# nightly pipeline is green, then replies with the result. No download artifacts.
+# Builds the nightly packages from master (goreleaser snapshot), publishes
+# evcc/evcc:nightly, then replies with the result. No APT or Hassio release.
 
 on:
   issue_comment:
@@ -54,9 +54,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  docker:
+    needs: nightly
+    uses: ./.github/workflows/nightly-docker.yml
+    permissions:
+      contents: read
+      actions: read
+      id-token: write # depot OIDC
+    secrets: inherit
+
   report:
     name: Report
-    needs: nightly
+    needs:
+      - nightly
+      - docker
     if: always() && needs.nightly.result != 'skipped'
     runs-on: depot-ubuntu-24.04-arm
     permissions:
@@ -71,9 +82,9 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
-            const ok = '${{ needs.nightly.result }}' === 'success';
+            const ok = '${{ needs.docker.result }}' === 'success';
             const body = ok
-              ? '✅ Nightly build from master finished.'
+              ? '✅ Nightly build from master finished, `evcc/evcc:nightly` updated.'
               : `❌ Nightly build from master failed. See the [run logs](${runUrl}).`;
             await github.rest.issues.createComment({ owner, repo, issue_number: num, body });
 

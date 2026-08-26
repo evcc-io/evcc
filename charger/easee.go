@@ -850,11 +850,11 @@ func (c *Easee) StatusReason() (api.Reason, error) {
 var _ api.Identifier = (*Easee)(nil)
 
 // Currents implements the api.PhaseCurrents interface
-func (c *Easee) Identify() (string, error) {
+func (c *Easee) Identify() ([]string, error) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	return c.rfid, nil
+	return []string{c.rfid}, nil
 }
 
 // Set smart charging status to update the chargers led (smart=blue, fast=white)

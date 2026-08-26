@@ -6,7 +6,7 @@ const command = process.argv[2] ?? "generate";
 switch (command) {
   case "generate": {
     const schemas = buildSchemas();
-    await writeStateSchemas(schemas);
+    writeStateSchemas(schemas);
     await bundleMcpJson();
     console.log(
       `${Object.keys(schemas.defs).length} state schemas → openapi.state.yaml + mcp/openapi.json`
@@ -20,7 +20,7 @@ switch (command) {
   case "validate": {
     const source = process.argv[3];
     if (!source) {
-      console.error("usage: npm run openapi -- validate <payload.json | url>");
+      console.error("usage: vp run openapi -- validate <payload.json | url>");
       process.exit(1);
     }
     const { validate } = await import("./validate");

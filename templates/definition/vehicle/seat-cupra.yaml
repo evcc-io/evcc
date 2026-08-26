@@ -29,12 +29,11 @@ params:
     advanced: true
   - name: welcomecharge
     advanced: true
-    deprecated: true
   - name: streaming
     deprecated: true
   - preset: vehicle-online
 render: |
   type: drivesomethinggreater
   brand: Cupra
-  {{ include "vehicle-base" . }}
-  {{ include "vehicle-features" (merge (dict "basefeatures" (list "streaming")) .) }}
+  {{ include "base" . }}
+  {{ include "features" (merge (dict "basefeatures" (list "streaming")) .) }}

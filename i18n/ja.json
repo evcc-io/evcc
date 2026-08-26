@@ -249,7 +249,6 @@
       "noFileSelected": "ファイルが選択されていません。",
       "off": "オフ",
       "on": "オン",
-      "password": "パスワード",
       "readFromFile": "ファイルから読み込み",
       "remove": "削除",
       "required": "必須",
@@ -279,7 +278,6 @@
         "type": "タイプ"
       },
       "description": "外部システム(例: §14a EnWG、§9 EEG インターフェース、または上位のHEMS)による出力制限です。負荷管理機能と連動して動作します。",
-      "downloadCsv": "CSVをダウンロード",
       "eventsRecorded": "系統による出力制限を {count} 件記録しました。",
       "lastEvent": "直近のイベントは {timeAgo} です。",
       "title": "外部出力制限"
@@ -337,8 +335,6 @@
       },
       "defaultModeHelpKeep": "最後に選択されたモードを維持します。",
       "defaultModeLabel": "デフォルトモード",
-      "defaultsHint": "デフォルトの充電モード、太陽光連動の挙動、および電気周りの細かい設定には、適切な初期値が使用されます。",
-      "defaultsHintLink": "設定を変更",
       "delete": "削除",
       "electricalSubtitle": "ご不明な点がある場合は、電気工事士にご相談ください。",
       "electricalTitle": "電気",
@@ -373,7 +369,6 @@
       "priorityHelp": "優先度が高いほど、太陽光の余剰電力が優先的に割り当てられます。",
       "priorityLabel": "優先度",
       "save": "保存",
-      "showAllSettings": "すべての設定を見る",
       "solarBehaviorCustomHelp": "充電の開始・停止に関するしきい値と遅延時間をカスタム設定します。",
       "solarBehaviorDefaultHelp": "太陽光の余剰電力が十分な状態が {enableDelay} 継続すると開始し、不足した状態が {disableDelay} 継続すると停止します。",
       "solarBehaviorLabel": "太陽光",
@@ -503,7 +498,6 @@
       "option": {
         "aux": "自動調整機器を追加",
         "battery": "蓄電池メーターを追加",
-        "ext": "一般機器メーターを追加",
         "pv": "太陽光メーターを追加"
       },
       "save": "保存",
@@ -593,13 +587,7 @@
       "warningUrlPath": "通常URLにパスは必要ありません。これで間違いありませんか？"
     },
     "ocpp": {
-      "connectedChargers": "接続済み充電器",
-      "connectionStatus": "設定済みのステーションID",
-      "connectionStatusHelp": "設定済み充電器の接続状態を表示します。",
-      "detectedChargers": "検出されたステーションID",
-      "detectedHelp": "evccへの接続を試みた充電器です。使用するには、該当するステーションIDで充電ポイントを作成してください。",
       "noChargers": "OCPP充電器は検出されませんでした。",
-      "noStations": "接続中の充電ステーションなし",
       "status": {
         "configured": "未接続",
         "connected": "接続済み",
@@ -849,32 +837,13 @@
       "validate": "検証"
     },
     "vehicle": {
-      "cancel": "取消",
-      "chargingSettings": "充電設定",
-      "defaultMode": "デフォルトモード",
-      "defaultModeHelp": "車両接続時の初期充電モードです。",
-      "delete": "削除",
       "generic": "その他の統合",
-      "identifiers": "RFID識別子",
-      "identifiersHelp": "車両を識別するためのRFID識別子のリストです。1行に1項目ずつ入力してください。現在の識別子は、概要ページの各充電ポイントで確認できます。",
-      "maximumCurrent": "最大電流",
-      "maximumCurrentHelp": "最小電流より大きい値にする必要があります。",
-      "maximumPhases": "最大相数",
-      "maximumPhasesHelp": "この車両は何相で充電できますか？必要な最小太陽光余剰電力と充電プランにかかる時間の計算に使用されます。",
-      "maximumPower": "最大電力",
-      "maximumPowerHelp": "車両が受け入れ可能な最大電力",
-      "minimumCurrent": "最小電流",
-      "minimumCurrentHelp": "内容を十分に理解している場合のみ、6A未満に設定してください。",
       "online": "オンラインAPI対応車両",
       "primary": "汎用統合",
-      "priority": "優先度",
-      "priorityHelp": "優先度が高いほど、この車両に太陽光の余剰電力が優先的に割り当てられます。",
-      "save": "保存",
       "scooter": "スクーター",
       "template": "メーカー",
       "titleAdd": "車両を追加",
-      "titleEdit": "車両を編集",
-      "validateSave": "検証して保存"
+      "titleEdit": "車両を編集"
     }
   },
   "footer": {
@@ -1132,7 +1101,6 @@
       },
       "planNumber": "プラン {number}",
       "precondition": {
-        "description": "バッテリーのプレコンディショニングのため、出発の {duration} 前から充電します。",
         "label": "遅延充電",
         "optionAll": "すべて",
         "optionNo": "いいえ"
@@ -1142,7 +1110,6 @@
       "repeatingPlans": "繰り返しプラン",
       "selectAll": "すべて選択",
       "strategyDisabledDescription": "出発時刻に間に合うよう、できるだけ遅い時間帯に充電を開始します。市場連動型の料金プランやCO₂データが設定されている場合、さらに高度なオプションが利用可能になります。",
-      "strategySettings": "戦略設定",
       "time": "時間",
       "title": "プラン",
       "unsavedChanges": "保存されていない変更があります。今すぐ適用しますか？",
@@ -1194,7 +1161,6 @@
           "returnEnergy": "売電"
         }
       },
-      "downloadCsv": "CSVをダウンロード",
       "empty": "指定された期間のデータが存在しません。",
       "group": {
         "battery": "蓄電池",
@@ -1238,14 +1204,12 @@
       "batteryUsage": "家庭用蓄電池",
       "currents": "充電電流",
       "default": "デフォルト",
-      "disclaimerHint": "注：",
       "maxCurrent": {
         "label": "最大電流"
       },
       "minCurrent": {
         "label": "最小電流"
       },
-      "onlyForSocBasedCharging": "これらのオプションは、バッテリー残量が取得できている車両でのみ利用可能です。",
       "phasesConfigured": {
         "label": "相数",
         "no1p3pSupport": "お使いの充電器は、どのような形式で結線されていますか？",
@@ -1445,8 +1409,6 @@
       "solarpercentage": "太陽光 (%)",
       "vehicle": "車両"
     },
-    "csvPeriod": "{period} のCSVをダウンロード",
-    "csvTotal": "全期間のCSVをダウンロード",
     "date": "開始",
     "energy": "充電済み",
     "filter": {

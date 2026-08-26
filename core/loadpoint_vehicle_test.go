@@ -44,7 +44,7 @@ func TestPublishSocAndRange(t *testing.T) {
 		chargeMeter:  &Null{}, // silence nil panics
 		chargeRater:  &Null{}, // silence nil panics
 		chargeTimer:  &Null{}, // silence nil panics
-		socEstimator: soc.NewEstimator(log, charger, vehicle),
+		socEstimator: soc.NewEstimator(log, vehicle),
 		minCurrent:   minA,
 		maxCurrent:   maxA,
 		phases:       1,
@@ -188,7 +188,7 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 
 		t.Run(tc.name+" wo/estimator", test)
 
-		lp.socEstimator = soc.NewEstimator(log, tc.charger, tc.vehicle)
+		lp.socEstimator = soc.NewEstimator(log, tc.vehicle)
 		t.Run(tc.name+" w/estimator", test)
 	}
 }
@@ -201,40 +201,60 @@ func TestVehicleDetectByID(t *testing.T) {
 
 	type testcase struct {
 		string
-		id, i1, i2 string
-		res        api.Vehicle
-		prepare    func(testcase)
+		ids     []string
+		i1, i2  string
+		res     api.Vehicle
+		match   string
+		prepare func(testcase)
 	}
 	tc := []testcase{
-		{"1/_/_->0", "1", "", "", nil, func(tc testcase) {
+		{"1/_/_->0", []string{"1"}, "", "", nil, "", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return(nil)
 			v2.EXPECT().Identifiers().Return(nil)
 			v1.EXPECT().Identifiers().Return(nil)
 			v2.EXPECT().Identifiers().Return(nil)
 		}},
-		{"1/1/2->1", "1", "1", "2", v1, func(tc testcase) {
+		{"1/1/2->1", []string{"1"}, "1", "2", v1, "1", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 		}},
-		{"2/1/2->2", "2", "1", "2", v2, func(tc testcase) {
+		{"2/1/2->2", []string{"2"}, "1", "2", v2, "2", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 		}},
-		{"11/1*/2->1", "11", "1*", "2", v1, func(tc testcase) {
+		{"11/1*/2->1", []string{"11"}, "1*", "2", v1, "11", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			// v2.EXPECT().Identifiers().Return([]string{tc.i2})
 		}},
-		{"22/1*/2*->2", "22", "1*", "2*", v2, func(tc testcase) {
+		{"22/1*/2*->2", []string{"22"}, "1*", "2*", v2, "22", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 		}},
-		{"2/_/*->2", "2", "", "*", v2, func(tc testcase) {
+		{"2/_/*->2", []string{"2"}, "", "*", v2, "2", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return(nil)
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 			v1.EXPECT().Identifiers().Return(nil)
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+		}},
+		// second identity matches, e.g. rfid tag and vehicle id
+		{"x,2/1/2->2", []string{"x", "2"}, "1", "2", v2, "2", func(tc testcase) {
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+		}},
+		// wildcard matches the second identity
+		{"x,22/1/2*->2", []string{"x", "22"}, "1", "2*", v2, "22", func(tc testcase) {
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 		}},
 	}
@@ -252,8 +272,12 @@ func TestVehicleDetectByID(t *testing.T) {
 			tc.prepare(tc)
 		}
 
-		if res := lp.selectVehicleByID(tc.id); tc.res != res {
+		res, match := lp.selectVehicleByID(tc.ids...)
+		if tc.res != res {
 			t.Errorf("expected %v, got %v", tc.res, res)
+		}
+		if tc.match != match {
+			t.Errorf("expected match %q, got %q", tc.match, match)
 		}
 	}
 }
@@ -332,7 +356,7 @@ func (c *idCharger) Status() (api.ChargeStatus, error) { return api.StatusB, nil
 func (c *idCharger) Enabled() (bool, error)            { return false, nil }
 func (c *idCharger) Enable(bool) error                 { return nil }
 func (c *idCharger) MaxCurrent(int64) error            { return nil }
-func (c *idCharger) Identify() (string, error)         { return c.id, nil }
+func (c *idCharger) Identify() ([]string, error)       { return []string{c.id}, nil }
 
 // TestReidentifyActiveVehicleKeepsMode is a regression test for #31499:
 // re-identifying the already-active vehicle must not reapply its default mode.
@@ -399,6 +423,36 @@ func TestReassignActiveVehicleKeepsSoc(t *testing.T) {
 	assert.Equal(t, 0.0, lp.vehicleSoc, "soc must clear on vehicle change")
 }
 
+// TestActiveVehicleChangeTriggersOptimizer ensures the optimizer is re-run when
+// the detected vehicle changes, as the loadpoint profile depends on it.
+func TestActiveVehicleChangeTriggersOptimizer(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().GetTitle().Return("target").AnyTimes()
+	vehicle.EXPECT().Icon().Return("").AnyTimes()
+	vehicle.EXPECT().Capacity().AnyTimes()
+	vehicle.EXPECT().Phases().AnyTimes()
+	vehicle.EXPECT().OnIdentified().AnyTimes()
+
+	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
+	s := new(mockSite)
+	lp.site = s
+
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	lp.setActiveVehicle(vehicle)
+	assert.Equal(t, 1, s.optimized, "vehicle detected")
+
+	// re-assigning the same vehicle is not a change
+	lp.setActiveVehicle(vehicle)
+	assert.Equal(t, 1, s.optimized, "same vehicle re-assigned")
+
+	lp.setActiveVehicle(nil)
+	assert.Equal(t, 2, s.optimized, "vehicle removed")
+}
+
 // integratedDeviceCharger is a minimal charger advertising the IntegratedDevice feature.
 type integratedDeviceCharger struct{}
 
@@ -408,6 +462,15 @@ func (c *integratedDeviceCharger) Enable(bool) error                 { return ni
 func (c *integratedDeviceCharger) MaxCurrent(int64) error            { return nil }
 func (c *integratedDeviceCharger) Features() []api.Feature {
 	return []api.Feature{api.IntegratedDevice}
+}
+
+// continuousCharger is a minimal charger advertising the Continuous feature.
+type continuousCharger struct {
+	integratedDeviceCharger
+}
+
+func (c *continuousCharger) Features() []api.Feature {
+	return []api.Feature{api.IntegratedDevice, api.Continuous}
 }
 
 // TestDisconnectIntegratedDeviceKeepsMode is a regression test for #30187:

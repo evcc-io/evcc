@@ -62,7 +62,7 @@ export async function startSimulator() {
   log(`wait until port ${port} is available`);
   await waitOn({ resources: [`tcp:${port}`], reverse: true, log: LOG_ENABLED });
 
-  const instance = spawn("npm", ["run", "simulator", "--", "--port", port.toString()]);
+  const instance = spawn("vp", ["run", "simulator", "--port", port.toString()]);
 
   const steamLog = createSteamLog();
   instance.stdout.pipe(steamLog);

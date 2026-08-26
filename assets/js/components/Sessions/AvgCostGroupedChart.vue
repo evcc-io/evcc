@@ -1,31 +1,28 @@
 <template>
 	<div v-if="chartData.labels.length > 1" class="row">
-		<div class="col-12 col-md-6 mb-3">
-			<PolarArea :data="chartData" :options="options" />
+		<div class="col-12 col-md-6 col-lg-12 col-xxl-6 mb-3">
+			<div ref="chartEl" class="round-chart"></div>
 		</div>
-		<div class="col-12 col-md-6 d-flex align-items-center py-0 py-md-3">
+		<div class="col-12 col-md-6 col-lg-12 col-xxl-6 d-flex align-items-center">
 			<LegendList :legends="legends" :device-colors="deviceColors" grid />
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
-import { PolarArea } from "vue-chartjs";
-import { RadialLinearScale, ArcElement, Legend, Tooltip, type TooltipItem } from "chart.js";
-import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig.ts";
+import { defineComponent, type PropType } from "vue";
+import { FONT_FAMILY, topBottomCenterPosition, tooltipStyle, tooltipTable } from "./echarts";
+import echartsChart from "@/mixins/echartsChart";
 import formatter from "@/mixins/formatter";
 import colors, { dimColor } from "@/colors";
 import LegendList from "./LegendList.vue";
-import { defineComponent, type PropType } from "vue";
 import type { CURRENCY, DeviceColors } from "@/types/evcc";
 import { TYPES, GROUPS, type Session } from "./types.ts";
 
-registerChartComponents([RadialLinearScale, ArcElement, Legend, Tooltip]);
-
 export default defineComponent({
 	name: "AvgCostGroupedChart",
-	components: { PolarArea, LegendList },
-	mixins: [formatter],
+	components: { LegendList },
+	mixins: [formatter, echartsChart],
 	props: {
 		sessions: { type: Array as PropType<Session[]>, default: () => [] },
 		currency: { type: String as PropType<CURRENCY>, default: "EUR" },
@@ -35,12 +32,10 @@ export default defineComponent({
 		},
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {} }) },
 		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
-		suggestedMax: { type: Number, default: 0 },
 		costType: { type: String as PropType<TYPES>, default: TYPES.PRICE },
 	},
 	computed: {
-		chartData() {
-			console.log(`update ${this.costType} grouped data`);
+		chartData(): { labels: string[]; data: number[]; colors: string[] } {
 			const aggregatedData: Record<string, { energy: number; cost: number }> = {};
 
 			this.sessions.forEach((session) => {
@@ -58,87 +53,78 @@ export default defineComponent({
 				}
 			});
 
-			const sortedEntries = Object.entries(aggregatedData).sort(
-				(a, b) => b[1].cost - a[1].cost
+			// stable alphabetical order so entries don't jump between periods
+			const sortedEntries = Object.entries(aggregatedData).sort((a, b) =>
+				a[0].localeCompare(b[0])
 			);
 			const labels = sortedEntries.map(([label]) => label);
 			const data = sortedEntries.map(([, value]) => value.cost / value.energy);
+			const entryColors = labels.map((label) => this.colorMappings[this.groupBy][label]);
 
-			const borderColors = labels.map((label) => this.colorMappings[this.groupBy][label]);
-			const backgroundColors = borderColors.map((color) => dimColor(color));
-			return {
-				labels: labels,
-				datasets: [
-					{
-						data: data,
-						borderColor: borderColors,
-						backgroundColor: backgroundColors,
-					},
-				],
-			};
+			return { labels, data, colors: entryColors };
 		},
 		legends() {
-			return this.chartData.labels.map((label, index) => {
-				const dataset = this.chartData.datasets[0]!;
-				const dataValue = dataset.data[index] as number;
-				return {
-					label: label,
-					color: dataset.borderColor[index],
-					value: this.formatValue(dataValue),
-					id: label || undefined,
-				};
-			});
+			const { labels, data, colors: entryColors } = this.chartData;
+			return labels.map((label, index) => ({
+				label,
+				color: entryColors[index],
+				value: this.formatValue(data[index] as number),
+				id: label || undefined,
+			}));
 		},
-		options() {
+		chartOption(): Record<string, unknown> {
+			const { labels, data, colors: entryColors } = this.chartData;
 			return {
-				...commonOptions,
-				locale: this.$i18n?.locale,
-				aspectRatio: 1,
-				borderRadius: 8,
-				borderWidth: 3,
-				color: colors.text || "",
-				spacing: 0,
-				radius: "100%",
-				plugins: {
-					...commonOptions.plugins,
-					tooltip: {
-						...commonOptions.plugins.tooltip,
-						axis: "r",
-						position: "topBottomCenter",
-						callbacks: {
-							title: () => null,
-							label: (tooltipItem: TooltipItem<"polarArea">) => {
-								const { label, dataset, dataIndex } = tooltipItem;
-								const d = dataset.data[dataIndex];
-
-								return (
-									label +
-									": " +
-									(this.costType === TYPES.CO2
-										? this.fmtCo2Long(d)
-										: this.fmtPricePerKWh(d, this.currency))
-								);
+				animation: false,
+				textStyle: { fontFamily: FONT_FAMILY },
+				tooltip: {
+					trigger: "item",
+					...tooltipStyle(colors.text || ""),
+					position: topBottomCenterPosition(() => this.chart),
+					formatter: (params: { name: string; value: number }) =>
+						tooltipTable(params.name, [
+							{
+								values: [
+									this.costType === TYPES.CO2
+										? this.fmtCo2Long(params.value)
+										: this.fmtPricePerKWh(params.value, this.currency),
+								],
 							},
-							labelColor: tooltipLabelColor(true),
-						},
-					} as any,
+						]),
 				},
-				scales: {
-					r: {
-						suggestedMin: 0,
-						suggestedMax: this.suggestedMax,
-						beginAtZero: false,
-						ticks: {
-							color: colors.muted || "",
-							backdropColor: colors.background || "",
-							font: { size: 10 },
-							callback: this.formatValue,
-							maxTicksLimit: 6,
-						},
-						angleLines: { display: false },
-						grid: { color: colors.border || "" },
-					} as any,
+				polar: { radius: "95%" },
+				angleAxis: { type: "category", data: labels, show: false, startAngle: 90 },
+				radiusAxis: {
+					min: 0,
+					splitNumber: 4,
+					axisLine: { show: false },
+					axisTick: { show: false },
+					splitLine: { lineStyle: { color: colors.border || "" } },
+					axisLabel: {
+						fontSize: 10,
+						color: colors.muted || "",
+						backgroundColor: colors.box || "",
+						padding: [1, 3],
+						formatter: this.formatValue,
+					},
 				},
+				series: [
+					{
+						type: "bar",
+						coordinateSystem: "polar",
+						barCategoryGap: "0%",
+						data: data.map((value, i) => ({
+							value,
+							itemStyle: {
+								color: dimColor(entryColors[i]),
+								borderColor: entryColors[i],
+								borderWidth: 3,
+								// round outer corners only, sharp apex at the center
+								borderRadius: [0, 0, 8, 8],
+							},
+						})),
+					},
+				],
 			};
 		},
 	},

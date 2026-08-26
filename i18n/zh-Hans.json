@@ -174,7 +174,6 @@
       "hideAdvancedSettings": "隐藏高级设置",
       "off": "关",
       "on": "开",
-      "password": "密码",
       "readFromFile": "从文件读取",
       "remove": "移除",
       "save": "保存",
@@ -270,7 +269,6 @@
       "priorityHelp": "较高优先级的充电点优先使用太阳能余电。",
       "priorityLabel": "优先级",
       "save": "保存",
-      "showAllSettings": "显示所有设置",
       "solarBehaviorCustomHelp": "自定义启用和禁用阈值及延迟时间。",
       "solarBehaviorDefaultHelp": "仅使用太阳能余电充电。当余电持续 {enableDelay} 后开始充电。当余电不足持续 {disableDelay} 后停止充电。",
       "solarBehaviorLabel": "太阳能充电行为",
@@ -319,7 +317,6 @@
       "option": {
         "aux": "添加智能耗电设备",
         "battery": "添加电池计量表",
-        "ext": "添加外部计量表",
         "pv": "添加太阳能计量表"
       },
       "save": "保存",
@@ -373,10 +370,8 @@
     "network": {
       "descriptionHost": "使用 .local 后缀启用 mDNS。这对于移动应用程序和某些 OCPP 充电桩的发现功能非常重要。",
       "descriptionPort": "Web 界面和 API 的端口。如果更改此设置，您需要更新浏览器 URL。",
-      "descriptionSchema": "仅影响 URL 的生成方式。选择 HTTPS 不会启用加密。",
       "labelHost": "主机名",
       "labelPort": "端口",
-      "labelSchema": "协议",
       "title": "网络"
     },
     "options": {
@@ -431,10 +426,6 @@
       "restartRequiredMessage": "配置已更改。",
       "restartingDescription": "请稍候…",
       "restartingMessage": "正在重启 evcc。"
-    },
-    "tariffs": {
-      "description": "定义您的能源费率以计算充电会话的成本。",
-      "title": "费率"
     },
     "title": {
       "description": "显示在主屏幕和浏览器选项卡上。",
@@ -560,7 +551,6 @@
     "blog": "博客",
     "docs": "文档",
     "github": "GitHub",
-    "login": "车辆登录",
     "logout": "登出",
     "nativeSettings": "更换服务器",
     "needHelp": "需要帮助？",
@@ -601,7 +591,6 @@
   },
   "loginModal": {
     "cancel": "取消",
-    "error": "登录失败： ",
     "iframeHint": "在新标签页中打开 evcc。",
     "iframeIssue": "密码正确，但您的浏览器似乎已丢弃身份验证 Cookie。如果您通过 HTTP 在 iframe 中运行 evcc，可能会发生这种情况。",
     "invalid": "密码无效。",
@@ -620,7 +609,6 @@
       "none": "无",
       "planNumber": "计划 {number}",
       "precondition": {
-        "description": "出发前充电 {duration} 以进行电池预处理。",
         "label": "延迟充电",
         "optionAll": "全部",
         "optionNo": "否"
@@ -683,14 +671,12 @@
       "batteryUsage": "住宅电池",
       "currents": "充电电流",
       "default": "默认",
-      "disclaimerHint": "注意：",
       "maxCurrent": {
         "label": "最大电流"
       },
       "minCurrent": {
         "label": "最小电流"
       },
-      "onlyForSocBasedCharging": "这些选项仅适用于已知充电量的车辆。",
       "phasesConfigured": {
         "label": "相数",
         "no1p3pSupport": "您的充电桩是如何连接的？",
@@ -797,7 +783,6 @@
       "targetChargePlanned": "充电计划将于 {duration} 后开始。",
       "targetChargeWaitForVehicle": "充电计划准备就绪。等待车辆连接…",
       "vehicleLimit": "车辆充电上限",
-      "vehicleLimitReached": "已达到车辆充电上限 {soc}。",
       "waitForVehicle": "准备就绪。等待车辆连接…",
       "welcome": "短暂初始充电以确认连接。"
     },
@@ -882,8 +867,6 @@
       "solarpercentage": "太阳能 (%)",
       "vehicle": "车辆"
     },
-    "csvPeriod": "下载 {period} CSV 文件",
-    "csvTotal": "下载总计 CSV 文件",
     "date": "开始",
     "energy": "已充电量",
     "filter": {

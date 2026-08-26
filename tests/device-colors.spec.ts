@@ -41,21 +41,21 @@ test("device colors: autoassign, override, persistence", async ({ page }) => {
 
   // ---------- Step 2 — Sessions, by-loadpoint + override ----------
   await page.getByRole("button", { name: "Charging point", exact: true }).click();
-  // initial autoassign — Garage (more energy) → palette[0], Carport → palette[1]
-  await expectLegendColor(page, "Garage", BLUE);
-  await expectLegendColor(page, "Carport", AMBER);
+  // initial autoassign — alphabetical: Carport → palette[0], Garage → palette[1]
+  await expectLegendColor(page, "Carport", BLUE);
+  await expectLegendColor(page, "Garage", AMBER);
 
-  // open picker on Garage badge; second palette swatch = AMBER
+  // open picker on Garage badge; first palette swatch = BLUE
   await legendBadge(page, "Garage").click();
   const popover = page.getByRole("dialog");
   await expect(popover).toBeVisible();
   // palette swatches have title=hex
-  await popover.getByTitle("#FBBF24").click();
+  await popover.getByTitle("#60A5FA").click();
   await page.keyboard.press("Escape");
 
-  await expectLegendColor(page, "Garage", AMBER);
-  // non-collision: Carport must shift off AMBER to the first free entry (BLUE)
-  await expectLegendColor(page, "Carport", BLUE);
+  await expectLegendColor(page, "Garage", BLUE);
+  // non-collision: Carport must shift off BLUE to the first free entry (AMBER)
+  await expectLegendColor(page, "Carport", AMBER);
 
   // ---------- Step 3 — History view, same colors ----------
   await page.goto("/#/history?period=day&year=2026&month=5&day=15");
@@ -63,8 +63,8 @@ test("device colors: autoassign, override, persistence", async ({ page }) => {
     .locator("section")
     .filter({ has: page.getByRole("heading", { name: "Charging & Heating" }) });
   await expect(lpSection).toBeVisible({ timeout: 10000 });
-  await expectLegendColor(lpSection, "Garage", AMBER);
-  await expectLegendColor(lpSection, "Carport", BLUE);
+  await expectLegendColor(lpSection, "Garage", BLUE);
+  await expectLegendColor(lpSection, "Carport", AMBER);
 
   // ---------- Step 4 — Custom hex on consumer meter (Consumption chart) ----------
   const consumerSection = chartSection(page, "Consumption");

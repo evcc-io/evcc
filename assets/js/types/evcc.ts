@@ -6,10 +6,15 @@ interface WebView {
 declare global {
   interface Window {
     app: any;
-    evcc: {
+    evcc?: {
       version: string;
-      commit: string;
-      customCss: string;
+      customCss: boolean;
+      customLogo: boolean;
+      customBrand: string;
+      customWebsite: string;
+      customEmail: string;
+      customPhone: string;
+      customTheme: THEME;
     };
   }
   interface Window {
@@ -23,7 +28,12 @@ export type AuthProviders = Record<string, { id: string; authenticated: boolean 
 
 export type DeviceColors = Record<string, string>;
 /** Color assigned to a device for consistent UI display. */
-export type DeviceColorEntry = { title: string; color: string };
+export type DeviceColorEntry = {
+  /** Device title the color is assigned to. */
+  title: string;
+  /** Assigned color as CSS value. */
+  color: string;
+};
 
 /** MQTT integration configuration. */
 export interface MqttConfig {
@@ -205,6 +215,8 @@ export interface State {
   homePower?: number;
   /** Configured grid operating point in W. Positive values maintain grid import. */
   residualPower?: number;
+  /** Static grid export power limit in W used as optimizer constraint, 0 = disabled. An active HEMS curtailment takes precedence. */
+  gridExportLimit?: number;
   /** Share of green energy in home consumption, between 0 and 1. */
   greenShareHome?: number;
   /** Share of green energy used for charging, between 0 and 1. */
@@ -227,6 +239,7 @@ export interface State {
   tariffCo2Home?: number;
   /** Current CO₂ emissions of charging in g/kWh, taking the green energy share into account. */
   tariffCo2Loadpoints?: number;
+  /** Current outside temperature in °C. */
   tariffTemperature?: number;
   /** MQTT integration configuration. */
   mqtt?: MqttConfig;
@@ -264,6 +277,7 @@ export interface State {
   batteryDischargeControl?: boolean;
   /** Home battery is allowed to discharge to the grid (experimental). */
   batteryGridDischarge?: boolean;
+  /** Solar forecast is adjusted to real production data (experimental). */
   solarAdjusted?: boolean;
   /** Price or emission limit for charging the home battery from grid. */
   batteryGridChargeLimit?: number | null;
@@ -379,7 +393,9 @@ export interface OcppStatus {
 
 /** OCPP server configuration and status. */
 export interface Ocpp {
+  /** OCPP server configuration. */
   config: OcppConfig;
+  /** OCPP server status. */
   status: OcppStatus;
 }
 
@@ -428,6 +444,7 @@ export interface Entity {
   type: string;
   id: number;
   config: Config;
+  deviceDisable?: boolean;
 }
 
 export enum ConfigType {
@@ -442,6 +459,10 @@ export enum ConfigType {
 
 export type ConfigVehicle = Entity;
 export type ConfigMessenger = Entity;
+
+export interface ConfigCurtailer extends Entity {
+  deviceTitle?: string;
+}
 
 export interface ConfigHems extends Entity {
   deviceProduct?: string;
@@ -469,6 +490,7 @@ export interface LoadpointThreshold {
 export interface ConfigLoadpoint {
   id?: number;
   name?: string;
+  disable?: boolean;
   charger: string;
   meter: string;
   vehicle: string;
@@ -588,6 +610,8 @@ export interface Loadpoint {
   connected: boolean;
   /** Duration since the vehicle was connected, in seconds. */
   connectedDuration: number;
+  /** Loadpoint is disabled via configuration. */
+  disabled?: boolean;
   /** Delay before charging stops in solar mode, in seconds. */
   disableDelay: number;
   /** Grid draw power above which charging stops in solar mode, in W. */
@@ -674,7 +698,9 @@ export interface Loadpoint {
   pvAction: PV_ACTION;
   /** Remaining time until the pending charge start or stop action executes, in seconds. */
   pvRemaining: number;
+  /** Energy used in the last 24 hours in kWh. */
   last24hEnergy?: number;
+  /** Energy used in the last 7 days in kWh. */
   last7dEnergy?: number;
   /** Average CO₂ emissions of the current charging session in g/kWh. */
   sessionCo2PerKWh: number | null;
@@ -708,6 +734,7 @@ export interface Loadpoint {
   suggestion?: LoadpointSuggestion | null;
   /** Loadpoint title for UI display. */
   title: string;
+  /** Energy used since midnight in kWh. */
   todayEnergy?: number;
   /** Climater of the connected vehicle is active. */
   vehicleClimaterActive: boolean | null;
@@ -786,6 +813,7 @@ export enum CURRENCY {
   ZAR = "ZAR",
   TRY = "TRY",
   MYR = "MYR",
+  THB = "THB",
 }
 
 export enum ICON_SIZE {
@@ -950,6 +978,8 @@ export type RemoteStatus = {
   loginBlocked: boolean;
   /** Last remote activity per client, keyed by username. RFC3339 timestamps. */
   lastSeen?: Record<string, string>;
+  /** Last connection error. */
+  error?: string;
 };
 
 export type RemoteClient = {
@@ -1257,32 +1287,11 @@ export interface Slot {
   selectable?: boolean | null;
 }
 
-/** A forecast value at a point in time. */
-export interface TimeseriesEntry {
-  /** Forecast power in W. */
-  val: number;
-  /**
-   * Time of the forecast value.
-   * @format date-time
-   */
-  ts: string;
-}
+/** A forecast time slot as [start, end, value] array. Start and end are unix seconds. Value unit depends on the forecast type. */
+export type ForecastSlot = [number, number, number];
 
-/** A forecast value for a time slot. */
-export interface ForecastSlot {
-  /**
-   * Start of the time slot.
-   * @format date-time
-   */
-  start: string;
-  /**
-   * End of the time slot.
-   * @format date-time
-   */
-  end: string;
-  /** Forecast value of the time slot. Unit depends on the forecast type. */
-  value: number;
-}
+/** A forecast value at a point in time as [ts, val] array. ts is unix seconds, val is power in W. */
+export type TimeseriesEntry = [number, number];
 
 /** Expected solar production energy of a day. */
 export interface EnergyByDay {
@@ -1318,7 +1327,35 @@ export interface Forecast {
   planner?: ForecastSlot[];
   /** Feed-in rate forecast. Rate per kWh in the configured currency per time slot. */
   feedin?: ForecastSlot[];
+  /** Temperature forecast in °C per time slot. */
   temperature?: ForecastSlot[];
+}
+
+// Ui* variants of the forecast wire types, expanded to objects with unix
+// milliseconds by expandForecast in utils/forecast
+
+export interface UiTimeseriesEntry {
+  ts: number;
+  val: number;
+}
+
+export interface UiForecastSlot {
+  start: number;
+  end: number;
+  value: number;
+}
+
+export interface UiSolarDetails extends Omit<SolarDetails, "timeseries"> {
+  timeseries?: UiTimeseriesEntry[];
+}
+
+export interface UiForecast {
+  grid?: UiForecastSlot[];
+  co2?: UiForecastSlot[];
+  solar?: UiSolarDetails;
+  planner?: UiForecastSlot[];
+  feedin?: UiForecastSlot[];
+  temperature?: UiForecastSlot[];
 }
 
 export interface SelectOption<T> {
@@ -1335,7 +1372,8 @@ export type DeviceType =
   | "loadpoint"
   | "messenger"
   | "tariff"
-  | "hems";
+  | "hems"
+  | "curtailer";
 export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext" | "consumer";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
 export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar" | "temperature";
@@ -1352,6 +1390,7 @@ export interface SiteConfig {
   aux: string[] | null;
   ext: string[] | null;
   consumer: string[] | null;
+  curtail: string[] | null;
 }
 
 export type ValueOf<T> = T[keyof T];
@@ -1400,6 +1439,7 @@ export interface TimeSeries {
 // Solver status enum
 export enum OptimizationStatus {
   OPTIMAL = "Optimal",
+  FEASIBLE = "Feasible",
   INFEASIBLE = "Infeasible",
   UNBOUNDED = "Unbounded",
   UNDEFINED = "Undefined",

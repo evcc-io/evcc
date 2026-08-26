@@ -1,0 +1,40 @@
+template: dwd-temperature
+products:
+  - brand: DWD (Bright Sky) Temperature
+requirements:
+  description:
+    en: Outdoor temperature forecast based on Deutscher Wetterdienst (DWD) MOSMIX data, provided as JSON by the free [Bright Sky](https://brightsky.dev) API. No API key required.
+    de: Außentemperaturprognose auf Basis von MOSMIX-Daten des Deutschen Wetterdienstes (DWD), bereitgestellt als JSON über die freie [Bright Sky](https://brightsky.dev) API. Kein API-Schlüssel erforderlich.
+  evcc: ["skiptest"]
+group: temperature
+params:
+  - name: lat
+    required: true
+  - name: lon
+    required: true
+  - name: interval
+    default: 1h
+    advanced: true
+render: |
+  type: custom
+  tariff: temperature
+  forecast:
+    source: http
+    uri: https://api.brightsky.dev/weather?lat={{ .lat }}&lon={{ .lon }}&date={{ now | date "2006-01-02" }}&last_date={{ now | dateModify "+120h" | date "2006-01-02" }}&tz=UTC
+    jq: |
+      def toZ: sub("\\+00:00$"; "Z"); # fromdateiso8601 needs a literal Z
+      def epoch: toZ | fromdateiso8601;
+      [ .weather[] | select(.temperature != null) | . + {ts: (.timestamp | epoch)} ] as $recs
+      # interpolate hourly values into 15-minute slots
+      | [ range(0; $recs | length) as $i
+          | $recs[$i] as $r
+          | range(0; 4) as $j
+          | ($r.ts + $j * 900) as $start
+          | ( if $i + 1 < ($recs | length) then
+                $r.temperature + ($j / 4) * ($recs[$i + 1].temperature - $r.temperature)
+              else
+                $r.temperature
+              end ) as $val
+          | { start: ($start | todateiso8601), end: (($start + 900) | todateiso8601), value: $val }
+        ] | tostring
+  interval: {{ .interval }}

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import { calculateCostRange, findRateInRange, generateRateSlots } from "./tariffSlots";
 import type { Rate, Slot } from "../types/evcc";
 

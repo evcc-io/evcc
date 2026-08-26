@@ -28,20 +28,24 @@ params:
     service: auth/redirecturi
   - name: gateway_serial
     required: true
+    service: viessmann/equipment?detail=gateways&clientid={clientid}&redirecturi={redirecturi}
     description:
       de: Gateway Serial
       en: Gateway Serial
     help:
-      de: Seriennummer des VitoConnect modul (VitoCare App -> Einstellungen -> Kommunikationsmodul -> Seriennummer)
-      en: VitoConnect serial number (VitoCare App -> Settings -> Communication module -> Serial number)
+      de: Wird nach der Anmeldung automatisch ermittelt. Alternativ manuell eintragen (VitoCare App -> Einstellungen -> Kommunikationsmodul -> Seriennummer)
+      en: Determined automatically after login. Alternatively enter manually (VitoCare App -> Settings -> Communication module -> Serial number)
   - name: installation_id
     required: true
+    service: viessmann/equipment?clientid={clientid}&redirecturi={redirecturi}
     description:
       de: Installation ID
       en: Installation ID
     help:
       de: |
-        Leider kann man die Installation ID nicht einfach in der Viessmann App einsehen - stattdessen müssen wir die folgenden Kommandos in der Kommandozeile ausführen. Es ist uns bewusst, dass das nicht für jeden Benutzer einfach umsetzbar ist, aber bisher haben wir leider keinen besseren Ablauf...<br/>
+        Wird nach der Anmeldung automatisch ermittelt.
+
+        <details><summary>Fallback: Installation ID per Kommandozeile ermitteln</summary>
 
         Vorraussetzungen: curl, jq, und die folgenden Umgebungsvariblen:
 
@@ -82,8 +86,12 @@ params:
           https://api.viessmann-climatesolutions.com/iot/v2/equipment/installations?includeGateways=true \
           | jq '.data[].id'
         ```
+
+        </details>
       en: |
-        Unfortunately you cannot simply lookup this number in the Viessmann app - instead you need to use the following commands on the command line... we're aware this is not for every user, but currently we don't have a better workflow...<br/>
+        Determined automatically after login.
+
+        <details><summary>Fallback: determine the installation id on the command line</summary>
 
         Prerequisites: curl, jq, and the following parameters:
 
@@ -124,6 +132,8 @@ params:
           https://api.viessmann-climatesolutions.com/iot/v2/equipment/installations?includeGateways=true \
           | jq '.data[].id'
         ```
+
+        </details>
   - name: device_id
     required: true
     description:

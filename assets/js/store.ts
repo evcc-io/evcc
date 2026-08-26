@@ -1,7 +1,8 @@
-import { reactive } from "vue";
+import { computed, reactive } from "vue";
 import type { State } from "./types/evcc";
 import { convertToUiLoadpoints } from "./uiLoadpoints";
 import { useDebouncedComputed } from "./utils/useDebouncedComputed";
+import { expandForecast } from "./utils/forecast";
 import settings from "./settings";
 
 function setProperty(obj: object, props: string[], value: any) {
@@ -43,9 +44,14 @@ const uiLoadpoints = useDebouncedComputed(
   50
 );
 
+// derived forecast with slots expanded to objects with unix milliseconds; lazy,
+// only computed while a forecast consumer is mounted
+const uiForecast = computed(() => expandForecast(state.forecast));
+
 export interface Store {
   state: State; // raw state from websocket
   uiLoadpoints: typeof uiLoadpoints;
+  uiForecast: typeof uiForecast;
   offline(value: boolean): void;
   update(msg: any): void;
   reset(): void;
@@ -54,6 +60,7 @@ export interface Store {
 const store: Store = {
   state,
   uiLoadpoints,
+  uiForecast,
   offline(value: boolean) {
     state.offline = value;
   },

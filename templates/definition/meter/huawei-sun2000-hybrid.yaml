@@ -9,13 +9,21 @@ capabilities: ["battery-control", "curtail", "dim"]
 requirements:
   description:
     de: |
+      Modbus TCP erfordert die Freischaltung in den Kommunikationseinstellungen des Wechselrichters via "Installateur Zugang", siehe [Modbus TCP Aktivierungs-Anleitung](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
+
       Netz und Batterie erfordern den Huawei Smart Power Sensor (DDSU/DTSU666 oder SmartPS).
 
-      Modbus TCP erfordert die Freischaltung in den Kommunikationseinstellungen des Wechselrichters via "Installateur Zugang", siehe [Modbus TCP Aktivierungs-Anleitung](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
+      Mehrere LUNA2000-Türme am selben SUN2000-Wechselrichter werden als eine einzige logische Batterie konfiguriert.
+
+      Die Abregelung begrenzt die Einspeiseleistung auf den gewünschten Prozentsatz der maximalen AC-Leistung. Der Wechselrichter begrenzt automatisch die PV-Leistung, um dies zu erreichen.
     en: |
+      Modbus TCP requires activation within the communication settings of the inverter using an "installer account", see [Modbus TCP Activation Guide](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
+
       Grid and Battery require the Huawei Smart Power Sensor (DDSU/DTSU666 or SmartPS).
 
-      Modbus TCP requires activation within the communication settings of the inverter using an "installer account", see [Modbus TCP Activation Guide](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
+      Multiple LUNA2000 towers connected to the same SUN2000 inverter are configured as a single logical battery.
+
+      Curtailment will limit the export power to the desired percentage of the maximum AC power. The inverter will automatically limit the PV power to achieve this.
 caveats:
   - description:
       de: |
@@ -27,7 +35,7 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["rs485", "tcpip"]
-    timeout: 15s
+    timeout: 5s
   - name: timeout
     deprecated: true
   - name: maxacpower
@@ -40,6 +48,7 @@ params:
     usages: ["pv"]
     deprecated: true # curtailment now applies the HEMS-distributed percent directly
   - name: storageunit
+    deprecated: true
   - name: forceaccharging
     default: false
     advanced: true
@@ -284,49 +293,45 @@ render: |
     {{- include "modbus" . | indent 2 }}
     connectdelay: 1s
     register:
-      {{- if eq .storageunit "2" }}
-      address: 37743
-      {{- else }}
-      address: 37001
-      {{- end }}
+      address: 37765 # overall power
       type: holding
       decode: int32nan
+    block: # 37760-37783
+      register: 37760
+      count: 24
     scale: -1
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      {{- if eq .storageunit "2" }}
-      address: 37755 # [Energy storage unit 2] Total discharge
-      {{- else }}
-      address: 37068 # [Energy storage unit 1] Total discharge
-      {{- end }}
+      address: 37782 # overall energy discharged
       type: holding
       decode: uint32nan
+    block: # 37760-37783
+      register: 37760
+      count: 24
     scale: 0.01
   returnenergy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      {{- if eq .storageunit "2" }}
-      address: 37753 # [Energy storage unit 2] Total charge
-      {{- else }}
-      address: 37066 # [Energy storage unit 1] Total charge
-      {{- end }}
+      address: 37780 # overall energy charged
       type: holding
       decode: uint32nan
+    block: # 37760-37783
+      register: 37760
+      count: 24
     scale: 0.01
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      {{- if eq .storageunit "2" }}
-      address: 37738
-      {{- else }}
-      address: 37004
-      {{- end }}
+      address: 37760 # overall SoC
       type: holding
       decode: uint16nan
+    block: # 37760-37783
+      register: 37760
+      count: 24
     scale: 0.1
   dim:
     source: ifelse
@@ -556,7 +561,7 @@ render: |
                   if limit < rated { out = limit }
                   out
               - source: const
-                value: 1 # Minute
+                value: 2 # Minutes (watchdog*2 for redundancy reasons)
                 set:
                   source: modbus
                   {{- include "modbus" . | indent 16 }}
@@ -617,9 +622,12 @@ render: |
                   out := rated
                   if limit < rated { out = limit }
                   out
+        default:
+          source: error
+          error: ErrNotAvailable
       # single watchdog wraps the ENTIRE 47100 lifecycle, not just case 3
       - source: watchdog
-        timeout: 30s
+        timeout: 60s # re-write every timeout/2
         reset: [1, 2, 4]
         set:
           source: switch

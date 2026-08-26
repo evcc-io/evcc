@@ -313,7 +313,7 @@ export default defineComponent({
 		},
 		batteryDetails() {
 			if (!this.batteryDevices.length) {
-				return;
+				return "";
 			}
 			const multipleBatteries = this.batteryDevices.length > 1;
 			return this.batteryDevices

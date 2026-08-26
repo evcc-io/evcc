@@ -3,14 +3,16 @@ package tariff
 import (
 	"crypto/sha256"
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server/db/cache"
 )
 
 type cached struct {
-	Type  api.TariffType `json:"type"`
-	Rates api.Rates      `json:"rates"`
+	Type    api.TariffType `json:"type"`
+	Rates   api.Rates      `json:"rates"`
+	Updated time.Time      `json:"updated"`
 }
 
 func cacheKey(typ string, other map[string]any) string {
@@ -19,8 +21,9 @@ func cacheKey(typ string, other map[string]any) string {
 
 func cachePut(key string, typ api.TariffType, rates api.Rates) error {
 	return cache.Put(key, &cached{
-		Type:  typ,
-		Rates: rates,
+		Type:    typ,
+		Rates:   rates,
+		Updated: time.Now(),
 	})
 }
 

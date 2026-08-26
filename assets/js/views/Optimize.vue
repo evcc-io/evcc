@@ -18,37 +18,64 @@
 		<div class="row">
 			<main class="col-12">
 				<div v-if="evopt">
-					<Card title="Result: Charging Plan" edge-to-edge class="box-pull-out mb-4">
+					<h2 class="mt-2 mb-4">Optimizer Plan</h2>
+
+					<Card
+						title="Charging Plan"
+						subtitle="kW"
+						edge-to-edge
+						class="box-pull-out mb-4"
+					>
 						<ChargeChart
 							:evopt="evopt"
 							:battery-details="evopt.details.batteryDetails"
 							:timestamp="evopt.details.timestamp[0]"
-							:currency="currency"
 							:battery-colors="batteryColors"
 							:device-colors="deviceColors"
 						/>
 					</Card>
 
-					<Card title="Result: SoC Projection" edge-to-edge class="box-pull-out mb-4">
-						<SocChart
+					<Card
+						v-if="socEntries.length"
+						title="SoC Projections"
+						subtitle="%"
+						edge-to-edge
+						class="box-pull-out mb-4"
+					>
+						<div
+							v-for="(entry, idx) in socEntries"
+							:key="entry.index"
+							:class="{ 'mb-3': idx < socEntries.length - 1 }"
+						>
+							<SocChart
+								:evopt="evopt"
+								:entry="entry"
+								:timestamp="evopt.details.timestamp[0]"
+								:show-x-axis="idx === socEntries.length - 1"
+							/>
+						</div>
+					</Card>
+
+					<Card
+						title="Timeline"
+						:subtitle="timeSeriesSubtitle"
+						edge-to-edge
+						class="box-pull-out mb-4"
+					>
+						<TimeSeriesDataTable
 							:evopt="evopt"
+							mode="response"
 							:battery-details="evopt.details.batteryDetails"
-							:timestamp="evopt.details.timestamp[0]"
+							:timestamps="evopt.details.timestamp"
 							:currency="currency"
 							:battery-colors="batteryColors"
 						/>
 					</Card>
 
-					<Card title="Input: Grid Prices" edge-to-edge class="box-pull-out mb-4">
-						<PriceChart
-							:evopt="evopt"
-							:timestamp="evopt.details.timestamp[0]"
-							:currency="currency"
-						/>
-					</Card>
+					<h2 class="section-title mb-4">Optimizer Inputs</h2>
 
 					<Card
-						title="Input: Battery"
+						title="Batteries"
 						:subtitle="batteryEfficiencySubtitle"
 						edge-to-edge
 						class="box-pull-out mb-4"
@@ -56,44 +83,46 @@
 						<BatteryConfigurationTable
 							:batteries="evopt.req.batteries"
 							:battery-details="evopt.details.batteryDetails"
+							:battery-colors="batteryColors"
 							:currency="currency"
 						/>
 					</Card>
 
-					<Card title="Time Series" edge-to-edge class="box-pull-out mb-4">
+					<Card
+						title="Environment"
+						:subtitle="timeSeriesSubtitle"
+						edge-to-edge
+						class="box-pull-out mb-4"
+					>
 						<TimeSeriesDataTable
 							:evopt="evopt"
+							mode="request"
 							:battery-details="evopt.details.batteryDetails"
 							:timestamps="evopt.details.timestamp"
 							:currency="currency"
 							:battery-colors="batteryColors"
-							:dimmed-battery-colors="dimmedBatteryColors"
 						/>
 					</Card>
 
-					<Card title="Raw Data" edge-to-edge class="box-pull-out mb-4">
-						<div class="mb-4">
-							<p class="mb-2">Request:</p>
-							<div class="position-relative">
-								<pre
-									class="p-3 overflow-auto"
-									style="background-color: var(--evcc-gray-10)"
-									>{{ formattedRequest }}</pre
-								>
-								<CopyButton :content="formattedRequest" />
-							</div>
-						</div>
+					<h2 class="section-title mb-4">Raw Data</h2>
 
-						<div>
-							<p class="mb-2">Response:</p>
-							<div class="position-relative">
-								<pre
-									class="p-3 overflow-auto"
-									style="background-color: var(--evcc-gray-10)"
-									>{{ formattedResponse }}</pre
-								>
-								<CopyButton :content="formattedResponse" />
-							</div>
+					<Card title="Request" edge-to-edge class="box-pull-out mb-4">
+						<div class="position-relative">
+							<pre
+								class="p-3 overflow-auto"
+								style="background-color: var(--evcc-gray-10)"
+								>{{ formattedRequest }}</pre>
+							<CopyButton :content="formattedRequest" />
+						</div>
+					</Card>
+
+					<Card title="Response" edge-to-edge class="box-pull-out mb-4">
+						<div class="position-relative">
+							<pre
+								class="p-3 overflow-auto"
+								style="background-color: var(--evcc-gray-10)"
+								>{{ formattedResponse }}</pre>
+							<CopyButton :content="formattedResponse" />
 						</div>
 					</Card>
 				</div>
@@ -111,17 +140,17 @@ import Header from "../components/Top/Header.vue";
 import Card from "../components/Helper/Card.vue";
 import OptimizeHeader from "../components/Optimize/OptimizeHeader.vue";
 import BatteryConfigurationTable from "../components/Optimize/BatteryConfigurationTable.vue";
-import SocChart from "../components/Optimize/SocChart.vue";
+import SocChart, { type SocChartEntry } from "../components/Optimize/SocChart.vue";
 import ChargeChart from "../components/Optimize/ChargeChart.vue";
-import PriceChart from "../components/Optimize/PriceChart.vue";
 import TimeSeriesDataTable from "../components/Optimize/TimeSeriesDataTable.vue";
 import CopyButton from "../components/Optimize/CopyButton.vue";
 import { formatCompactJson } from "../components/Optimize/compactJson";
+import { loadpointTitle } from "../components/Optimize/chart";
 import api from "../api";
 import store from "../store";
 import formatter from "../mixins/formatter";
-import { resolveColors, deviceColorMap } from "../colors";
-import { CURRENCY } from "../types/evcc";
+import { resolveColors, deviceColorMap, batteryColor } from "../colors";
+import { CURRENCY, type BatteryDetail } from "../types/evcc";
 
 export default defineComponent({
 	name: "Optimize",
@@ -132,7 +161,6 @@ export default defineComponent({
 		BatteryConfigurationTable,
 		SocChart,
 		ChargeChart,
-		PriceChart,
 		TimeSeriesDataTable,
 		CopyButton,
 	},
@@ -174,19 +202,47 @@ export default defineComponent({
 		deviceColors() {
 			return deviceColorMap(store.state.deviceColors);
 		},
-		batteryTitles(): string[] {
-			const details = this.evopt?.details?.batteryDetails || [];
-			return (this.evopt?.res.batteries || []).map(
-				(_, i) => details[i]?.title || details[i]?.name || `battery-${i}`
-			);
+		batteryDetails(): BatteryDetail[] {
+			return this.evopt?.details?.batteryDetails || [];
 		},
-		batteryColors() {
-			if (!this.evopt?.res.batteries) return [];
-			const palette = resolveColors(this.batteryTitles, this.deviceColors);
-			return this.batteryTitles.map((t) => palette[t] || "");
+		loadpointColorKeys(): string[] {
+			return [
+				...new Set(
+					this.batteryDetails.filter((d) => d.type === "vehicle").map(loadpointTitle)
+				),
+			];
 		},
-		dimmedBatteryColors() {
-			return (this.batteryColors || []).map((color) => this.dimColorBy25Percent(color));
+		// loadpoints share the picker palette with History
+		loadpointPalette() {
+			return resolveColors(this.loadpointColorKeys, this.deviceColors);
+		},
+		// per-entry colors aligned with res.batteries: dedicated battery palette
+		// for home batteries (same as battery page and history), picker palette
+		// for loadpoints
+		batteryColors(): string[] {
+			let batteryIndex = 0;
+			return this.batteryDetails.map((d) => {
+				if (d.type === "battery") return batteryColor(batteryIndex++);
+				const key = loadpointTitle(d);
+				return this.loadpointPalette[key] || "";
+			});
+		},
+		// loadpoints first, then batteries, matching the charging plan order
+		socEntries(): SocChartEntry[] {
+			const entries = this.batteryDetails.map((d, i) => ({
+				index: i,
+				type: d.type,
+				title: d.title || d.name,
+				capacity: d.capacity,
+				color: this.batteryColors[i] || "",
+			}));
+			return [
+				...entries.filter((e) => e.type === "vehicle"),
+				...entries.filter((e) => e.type === "battery"),
+			];
+		},
+		timeSeriesSubtitle(): string {
+			return `${this.evopt?.req.time_series.dt.length || 0} steps ・ ${this.horizonHours} h horizon`;
 		},
 		formattedRequest() {
 			return this.evopt?.req ? formatCompactJson(this.evopt.req) : "";
@@ -209,10 +265,12 @@ export default defineComponent({
 		changeChargingStrategy(value: string) {
 			api.post(`optimizerchargingstrategy/${value}`);
 		},
-		dimColorBy25Percent(color: string): string {
-			// Convert color to 25% opacity (40 in hex = 25% of 255)
-			return color?.toLowerCase().replace(/ff$/, "40") || color;
-		},
 	},
 });
 </script>
+
+<style scoped>
+.section-title {
+	margin-top: 4rem;
+}
+</style>

@@ -239,7 +239,6 @@
       "noFileSelected": "Nu a fost selectat niciun fișier.",
       "off": "oprit",
       "on": "pe",
-      "password": "Parolă",
       "readFromFile": "Citește din fișier",
       "remove": "Eliminare",
       "required": "necesar",
@@ -269,7 +268,6 @@
         "type": "Tip"
       },
       "description": "Limitarea puterii prin sisteme externe (de exemplu, §14a EnWG, interfața §9 EEG sau sistem de gestionare a energiei de nivel superior). Funcționează împreună cu funcția de gestionare a sarcinii.",
-      "downloadCsv": "Descărcați CSV",
       "eventsRecorded": "Au fost înregistrate {count} evenimente de limitare a grilei.",
       "lastEvent": "Cel mai recent {timeAgo}.",
       "title": "Limită externă"
@@ -327,8 +325,6 @@
       },
       "defaultModeHelpKeep": "Păstrează ultimul mod selectat.",
       "defaultModeLabel": "Mod implicit",
-      "defaultsHint": "Modul implicit, comportamentul solar și detaliile electrice utilizează valori implicite sensibile.",
-      "defaultsHintLink": "Modificați setările",
       "delete": "Șterge",
       "electricalSubtitle": "Dacă aveți dubii, adresați-vă electricianului dumneavoastră.",
       "electricalTitle": "Electric",
@@ -363,7 +359,6 @@
       "priorityHelp": "Prioritatea mai mare beneficiază de acces preferențial la surplusul de energie solară.",
       "priorityLabel": "Prioritate",
       "save": "Salvați",
-      "showAllSettings": "Afișează toate setările",
       "solarBehaviorCustomHelp": "Definiți propriile praguri și întârzieri de activare și dezactivare.",
       "solarBehaviorDefaultHelp": "Pornește după {enableDelay} de surplus suficient. Oprește-te când nu mai este suficient surplus pentru {disableDelay}.",
       "solarBehaviorLabel": "Solar",
@@ -486,7 +481,6 @@
       "option": {
         "aux": "Adăugați consumator cu autoreglare",
         "battery": "Adăugați indicatorul bateriei",
-        "ext": "Adăugați consumator obișnuit",
         "pv": "Adăugați contorul solar"
       },
       "save": "Salveaza",
@@ -576,13 +570,7 @@
       "warningUrlPath": "De obicei, adresa URL nu necesită o cale. Ești sigur că este corectă?"
     },
     "ocpp": {
-      "connectedChargers": "Încărcătoare conectate",
-      "connectionStatus": "ID-uri stații configurate",
-      "connectionStatusHelp": "Starea conexiunii încărcătoarelor configurate.",
-      "detectedChargers": "ID-uri stații detectate",
-      "detectedHelp": "Aceste încărcătoare au încercat să se conecteze la evcc. Pentru a utiliza un încărcător, creați un punct de încărcare cu ID-ul stației sale.",
       "noChargers": "Nu s-au detectat încărcătoare OCPP.",
-      "noStations": "Nu sunt stații conectate",
       "status": {
         "configured": "Nu este conectat",
         "connected": "Conectat",
@@ -773,10 +761,6 @@
         "weekdays": "Zile lucratoare din saptamână"
       }
     },
-    "tariffs": {
-      "description": "Definiți tarifele energetice pentru a calcula costurile sesiunilor de încărcare.",
-      "title": "Tarife"
-    },
     "telemetry": {
       "description": "Configurați partajarea datelor pentru a contribui la îmbunătățirea evcc. Confidențialitatea dvs. este importantă pentru noi, iar participarea este complet opțională.",
       "title": "Telemetrie"
@@ -910,7 +894,6 @@
     "blog": "Blog",
     "docs": "Documentație",
     "github": "GitHub",
-    "login": "Login Masina",
     "logout": "Deconectare",
     "nativeSettings": "Schimbare server",
     "needHelp": "Ai nevoie de Ajutor ?",
@@ -1028,7 +1011,6 @@
       },
       "planNumber": "Planul {number}",
       "precondition": {
-        "description": "Încărcați {duration} înainte de plecare pentru precondiționarea bateriei.",
         "label": "Încărcare întârziată",
         "optionAll": "totul",
         "optionNo": "nu"
@@ -1038,7 +1020,6 @@
       "repeatingPlans": "Planuri repetitive",
       "selectAll": "Selectați tot",
       "strategyDisabledDescription": "Încărcarea începe cât mai târziu posibil, pentru a se termina chiar înainte de plecare. Cu prețuri dinamice la rețea sau tariful CO₂, aici sunt disponibile mai multe opțiuni.",
-      "strategySettings": "Setări strategie",
       "time": "Timp",
       "title": "Plan",
       "unsavedChanges": "Există modificări nesalvate. Doriți să le aplicați acum?",
@@ -1104,14 +1085,12 @@
       "batteryUsage": "Baterie pentru uz casnic",
       "currents": "Curent încărcare",
       "default": "default",
-      "disclaimerHint": "Nota:",
       "maxCurrent": {
         "label": "Amperaj maxim"
       },
       "minCurrent": {
         "label": "Amperaj minim"
       },
-      "onlyForSocBasedCharging": "Aceste optiuni sunt active doar pentru masini carora le cunoaste gradul de incarcare.",
       "phasesConfigured": {
         "label": "Faze",
         "no1p3pSupport": "Cum e conectat incarcatorul tau?",
@@ -1309,8 +1288,6 @@
       "solarpercentage": "Solar (%)",
       "vehicle": "Vehicul"
     },
-    "csvPeriod": "Descarca {period} CSV",
-    "csvTotal": "Descarca total CSV",
     "date": "Start",
     "energy": "Încărcat",
     "filter": {

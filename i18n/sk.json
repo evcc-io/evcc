@@ -42,6 +42,7 @@
       },
       "bufferTitle": "Batéria ako zásobník energie pre nabíjanie",
       "discharge": "Zabráňte vybíjaniu domácej batérie v rýchlom režime a počas plánovaného nabíjania.",
+      "gridDischarge": "Umožniť batérií vybíjanie do siete.",
       "priority": "Domáca batéria má prioritu, kým je pod {soc}. Potom nabíjacie stanice dostanú prebytok.",
       "priorityNone": "Prebytok solárnej energie ide priamo do nabíjacích staníc. Nastavte hodnotu vyššiu ako {soc}, aby ste uprednostnili domácu batériu.",
       "priorityTitle": "Kam ide prebytok ako najprv?"
@@ -49,16 +50,16 @@
     "optimizer": {
       "action": {
         "charge": "Nabíjanie zo siete",
-        "hold": "Vybíjanie zablokované",
-        "holdcharge": "Nabíjanie pozastavené",
-        "normal": "Po prebytku solárnej energie"
+        "discharge": "Vybiť do siete",
+        "hold": "Zabrániť vybíjaniu",
+        "holdcharge": "Zabrániť nabíjaniu",
+        "normal": "Normálna prevádzka"
       },
       "empty": "prázdne",
       "full": "plné",
       "highest": "Najvyššia ({value})",
       "lowest": "Najnižšia ({value})",
-      "suggestion": "Návrh",
-      "title": "Optimalizátor"
+      "suggestion": "Návrh"
     }
   },
   "batterySettings": {
@@ -119,6 +120,7 @@
       "titleEdit": "Upraviť samoregulačný spotrebič"
     },
     "battery": {
+      "title": "Batéria",
       "titleAdd": "Pridať batériu",
       "titleEdit": "Upraviť batériu"
     },
@@ -189,6 +191,7 @@
     "deviceValue": {
       "activeClients": "Aktívne klienti",
       "amount": "Počet",
+      "asleep": "spanie",
       "broker": "Broker",
       "bucket": "Nádoba",
       "capacity": "Kapacita",
@@ -216,6 +219,7 @@
       "enabled": "Povolené",
       "energy": "Energia",
       "events": "Udalosti",
+      "exportLimit": "Limit exportu do siete",
       "feedinPrice": "Výkupná cena",
       "forecast": "Predpoveď",
       "gridPrice": "Cena zo siete",
@@ -227,6 +231,7 @@
       "no": "nie",
       "odometer": "Počítadlo kilometrov",
       "org": "Organizácia",
+      "outdoorTemp": "Vonkajšia teplota",
       "phaseCurrents": "Prúd",
       "phasePowers": "Výkon",
       "phaseVoltages": "Napätie",
@@ -236,6 +241,7 @@
       "price": "Cena",
       "productionLimited": "Výroba obmedzená",
       "range": "Rozsah",
+      "remoteEnabled": "Povolené",
       "returnEnergy": "Energia (spätná)",
       "singlePhase": "Jednofázové",
       "soc": "Nabitie",
@@ -301,6 +307,7 @@
     "form": {
       "danger": "Nebezpečenstvo",
       "deprecated": "zastarané",
+      "durationUnit": "Časová jednotka pre {label}",
       "example": "Príklad",
       "optional": "voliteľné"
     },
@@ -313,17 +320,22 @@
       "change": "Zmeniť",
       "clear": "Vymazať",
       "close": "Zatvoriť",
+      "confirmDisable": "Vypnúť toto zariadenie? Bude to ignorované po ďalšom reštarte.",
+      "confirmEnable": "Opäť povoliť toto zariadenie?",
       "confirmSave": "Existujú neuložené zmeny. Uložiť teraz?",
       "copied": "Skopírované!",
       "copy": "Kopírovať",
       "customHelp": "Vytvorte používateľom definované zariadenie pomocou systému pluginov evcc.",
       "customOption": "Užívateľom definované zariadenie",
       "delete": "Zmazať",
+      "disable": "Zakázať",
+      "disabled": "zakázané",
       "dismiss": "Zamietnuť",
       "docsLink": "Pozri dokumentáciu.",
       "dragHandle": "Ovládací prvok na presun",
       "dragItem": "Presunuteľné: {title}",
       "dragList": "Zoznam s možnosťou zmeny poradia",
+      "enable": "Povoliť",
       "error": "Chyba",
       "experimental": "Experimentálne",
       "forceSave": "Napriek tomu uložiť",
@@ -365,13 +377,24 @@
       },
       "customOption": "Užívateľom-definovaná integrácia",
       "description": "Obmedzenie výkonu externými systémami (napr. §14a EnWG, §9 rozhranie EEG alebo systém riadenia energie nadradenej úrovne). Funguje spoločne s funkciou riadenia záťaže. Pre vybrané zariadenia je podporované aj obmedzenie výroby solárnej energie. Skutočný limit obmedzenia musí byť nastavený v každej konfigurácii meniča.",
-      "downloadCsv": "Stiahnuť CSV",
+      "download": "Stiahnuť",
+      "dynamicLimits": "Dynamické limity",
       "eventsRecorded": "Zaznamenané {count} sieťové obmedzenia udalostí.",
+      "exportLimit": "Limit exportu do siete",
+      "exportLimitDescription": "Optimalizátor batérie rešpektuje tento limit, aby sa predišlo stratám solárnej energie. Prednosť má signál aktívneho obmedzenia z dynamickej integrácie limitov.",
+      "exportLimitHint": "Statický limit importu v bode pripojenia k sieti.",
       "generic": "Všeobecné integrácie",
       "integrations": "Integrácie",
       "lastEvent": "Najnovšie {timeAgo}.",
+      "noEvents": "Zatiaľ žiadne udalosti zaznamenané.",
+      "recordedEvents": "Nahrané udalosti",
+      "staticLimits": "Statické limity",
       "template": "Integrácia",
-      "title": "Externý limit"
+      "title": "Externý limit",
+      "type": {
+        "custom": "Užívateľom-definovaná integrácia",
+        "relay": "Užívateľ-definovaná integrácia (relay)"
+      }
     },
     "icon": {
       "change": "zmeniť",
@@ -399,6 +422,7 @@
         "heating": "Pridať ohrievač"
       },
       "addMeter": "Pridať vyhradený merač energie",
+      "advancedConfig": "Pokročilá konfigurácia",
       "cancel": "Zrušiť",
       "chargerError": {
         "charging": "Je potrebná konfigurácia nabíjačky.",
@@ -420,14 +444,22 @@
       "circuitInvalid": "Obvod neexistuje",
       "circuitLabel": "Obvod",
       "circuitUnassigned": "nepriradené",
+      "created": "“{name}” bol vytvorený a používa rozumné predvolené nastavenia.",
+      "createdTitle": {
+        "charging": "Nabíjací bod vytvorený",
+        "heating": "Ohrievač vytvorený"
+      },
+      "creating": {
+        "charging": "Nabíjačka uložená. Vytváram nabíjací bod …",
+        "heating": "Ohrievač uložený. Vytváram ohrievač …"
+      },
       "defaultModeHelp": {
         "charging": "Režim nabíjania pri pripájaní vozidla.",
         "heating": "Je nastavené pri spustení systému."
       },
       "defaultModeHelpKeep": "Zachová posledný vybraný režim.",
+      "defaultModeKeep": "ponechať ako je",
       "defaultModeLabel": "Predvolený režim",
-      "defaultsHint": "Predvolený režim, správanie solárnej energie a elektrické detaily používajú rozumné predvolené hodnoty.",
-      "defaultsHintLink": "Upraviť nastavenia",
       "delete": "Zmazať",
       "electricalSubtitle": "V prípade pochybností sa obráťte na svojho elektrikára.",
       "electricalTitle": "Elektrika",
@@ -444,10 +476,10 @@
       "noVehicles": "Žiadne vozidlá nie sú nakonfigurované.",
       "option": {
         "charging": "Pridať nabíjaciu stanicu",
-        "heating": "Pridajte vykurovacie zariadenie"
+        "heating": "Pridať ohrievač"
       },
       "phases1p": "1-fáza",
-      "phases3p": "3-fázový",
+      "phases3p": "3-fázy",
       "phasesAutomatic": "Automatické fázy",
       "phasesAutomaticHelp": "Váš nabíjačka podporuje automatické prepínanie medzi 1- a 3-fázovým nabíjaním. V hlavnej obrazovke môžete upraviť správanie fáz počas nabíjania.",
       "phasesHelp": "Počet pripojených fáz.",
@@ -484,13 +516,13 @@
       "thresholdEnableLabel": "Povoliť sieťový výkon",
       "titleAdd": {
         "charging": "Pridať Nabíjaciu Stanicu",
-        "heating": "Pridať zariadenie na vykurovanie",
-        "unknown": "Pridať nabíjačku alebo ohrievač"
+        "heating": "Pridať ohrievač",
+        "unknown": "Pridať nabíjací bod alebo ohrievač"
       },
       "titleEdit": {
         "charging": "Upraviť Nabíjaciu Stanicu",
-        "heating": "Upraviť vykurovacie zariadenie",
-        "unknown": "Upraviť nabíjačku alebo ohrievač"
+        "heating": "Upraviť ohrievač",
+        "unknown": "Upraviť nabíjací bod alebo ohrievač"
       },
       "titleExample": {
         "charging": "Garáž, Carport, atď.",
@@ -508,13 +540,13 @@
       "addAdditional": "Pridať ďalší merač",
       "addConsumer": "Pridať spotrebič",
       "addGrid": "Pridať merač elektrickej siete",
-      "addLoadpoint": "Pridať nabíjačku alebo ohrievač",
+      "addLoadpoint": "Pridať nabíjací bod alebo ohrievač",
       "addPvBattery": "Pridať solár alebo batériu",
       "addTariffs": "Pridať tarify",
       "addVehicle": "Pridať vozidlo",
       "configured": "Nakonfigurované",
       "edit": "upraviť",
-      "loadpointRequired": "Aspoň jedna nabíjacia stanica musí byť nakonfigurovaná.",
+      "loadpointRequired": "Aspoň jeden nabíjací bod musí byť nakonfigurovaný.",
       "name": "Meno",
       "title": "Konfigurácia",
       "unconfigured": "nie je nakonfigurovaný",
@@ -539,18 +571,18 @@
           "titleDefault": "Vozidlo spí"
         },
         "connect": {
-          "messageDefault": "Auto pripojené na {pvPower}kW PV",
-          "title": "Keď sa auto pripojí",
-          "titleDefault": "Auto pripojené"
+          "messageDefault": "Vozidlo pripojené na {pvPower}kW PV",
+          "title": "Keď sa vozidlo pripojí",
+          "titleDefault": "Vozidlo pripojené"
         },
         "disconnect": {
-          "messageDefault": "Auto odpojené po {connectedDuration}",
-          "title": "Keď sa auto odpojí",
-          "titleDefault": "Odpojenie auta"
+          "messageDefault": "Vozidlo odpojené po {connectedDuration}",
+          "title": "Keď sa vozidlo odpojí",
+          "titleDefault": "Odpojenie vozidla"
         },
         "guest": {
           "messageDefault": "Neznáme vozidlo, hosť pripojený?",
-          "title": "Keď sa neznáme auto spája",
+          "title": "Keď sa neznáme vozidlo spája",
           "titleDefault": "Neznáme vozidlo"
         },
         "planoverrun": {
@@ -572,6 +604,11 @@
           "messageDefault": "Nabíjanie dokončené {chargedEnergy} kWh za {chargeDuration}.",
           "title": "Keď sa nabíjanie zastaví",
           "titleDefault": "Nabíjanie ukončené"
+        },
+        "suggestion": {
+          "messageDefault": "Návrh optimalizátora pre {suggestionTitle}: ak by bol ovládací prvok optimalizátora aktívny, teraz by sa použila funkcia „{suggestionAction}“. Iba odporúčanie, nič sa nezmenilo. Experimentálne – spätná väzba je vítaná na https://github.com/evcc-io/evcc/issues/31903",
+          "title": "Keď sa zmení odporúčaná činnosť optimalizátora",
+          "titleDefault": "Návrh optimalizátora"
         }
       },
       "eventMessage": "Správa",
@@ -627,6 +664,8 @@
       "connectionHintTcpip": "Zariadenie je dostupné cez sieť (LAN/WiFi).",
       "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Sieť",
+      "delay": "Oneskorenie",
+      "delayHint": "Voliteľný čas čakania pred každým prístupom k registru. Potrebný iba pre pomalé zariadenia.",
       "device": "Názov zariadenia",
       "deviceHint": "Príklad: /dev/ttyUSB0",
       "host": "IP adresa alebo názov hostiteľa",
@@ -637,7 +676,9 @@
       "protocolHintRtu": "Pripojenie cez RS485 na Ethernet adaptér bez prekladu protokolu.",
       "protocolHintTcp": "Zariadenie má natívnu podporu LAN/Wifi alebo je pripojené cez adaptér RS485 na Ethernet s prekladom protokolu.",
       "protocolValueRtu": "RTU",
-      "protocolValueTcp": "TCP"
+      "protocolValueTcp": "TCP",
+      "timeout": "Časový limit",
+      "timeoutHint": "Voliteľný maximálny čas čakania na odpoveď zariadenia."
     },
     "modbusproxy": {
       "add": "Pridať proxy pripojenie",
@@ -801,7 +842,7 @@
       "general": "Všeobecné",
       "grid": "Sieť",
       "integrations": "Integrácie",
-      "loadpoints": "Nabíjanie a vykurovanie",
+      "loadpoints": "Nabíjacie body a Ohrievače",
       "meter": "Solár & Batéria",
       "services": "Služby",
       "system": "Systém",
@@ -818,8 +859,8 @@
     "shm": {
       "cardTitle": "Sunny Home Manager",
       "description": "evcc je vybavený integráciou pre SMA Sunny Home Manager (SHM) prostredníctvom protokolu SEMP. Ak beží v rovnakej sieti, po prihlásení do vášho účtu Sunny Portal by sa vám mala automaticky zobraziť ponuka na pridanie všetkých nabíjačiek nakonfigurovaných v evcc ako novo objavené spotrebitče. Všetko by malo byť okamžite pripravené na použitie bez nutnosti akýchkoľvek úprav nižšie.",
-      "descriptionDeviceId": "12-znakový HEX reťazec. Predpona pre všetky zariadenia (nabíjacia stanica atď.).",
-      "descriptionDeviceSerial": "12-znakový HEX reťazec. Základné sériové číslo pre všetky zariadenia (nabíjacia stanica atď.). evcc ho štandardne odvodzuje z MAC adresy hostiteľa.",
+      "descriptionDeviceId": "12-znakový HEX reťazec. Predpona pre všetky zariadenia (nabíjací bod, atď.).",
+      "descriptionDeviceSerial": "12-znakový HEX reťazec. Základné sériové číslo pre všetky zariadenia (nabíjací bod, atď.). evcc ho štandardne odvodzuje z MAC adresy hostiteľa.",
       "descriptionIdPattern": "Vzor identifikátora",
       "descriptionIds": "V Sunny Portal potrebuje každý spotrebič jedinečný identifikátor. evcc generuje jedinečný identifikátor na základe vášho hardvéru. Ak migrujete evcc na iný hardvér, tieto identifikátory sa môžu zmeniť. Ak chcete zachovať históriu, môžete tu prepísať vygenerované identifikátory. Otvorte SEMP URL (/semp) na overenie aktuálnych identifikátorov.",
       "descriptionSempUrl": "SEMP URL",
@@ -864,7 +905,7 @@
           "confirmationButton": "Reset & restart",
           "confirmationText": "Týmto sa natrvalo odstránia vybrané údaje. Uistite sa, že ste si stiahli zálohu.",
           "description": "Máte problémy s konfiguráciou a chcete začať odznova? Vymažte všetky údaje a začnite odznova.",
-          "sessions": "Nabíjacie sedenia",
+          "sessions": "Nabíjacie relácie",
           "sessionsDescription": "Vymaže históriu nabíjania.",
           "settings": "Konfigurácia a nastavenia",
           "settingsDescription": "Odstráni všetky nakonfigurované zariadenia, služby, plány, vyrovnávacie pamäte atď.",
@@ -896,9 +937,9 @@
         "titleEdit": "Upraviť predpoveď CO₂"
       },
       "co2Services": "CO₂ služby",
-      "customForecast": "Používateľom definovaná prognóza",
+      "customForecast": "Používateľom definovaná predpoveď",
       "customTariff": "Používateľom definovaný tarif",
-      "description": "Nakonfigurujte si svoje energetické tarify a prognózy. Pre dynamickú správu použite konfiguráciu založenú na zariadení, pre statickéú správu použite YAML.",
+      "description": "Nakonfigurujte si svoje energetické tarify a predpovede. Pre dynamickú správu použite konfiguráciu založenú na zariadení, pre statickéú správu použite YAML.",
       "feedIn": {
         "description": "Kompenzácia za elektrinu exportovanú do siete. Používa sa na výpočet skutočných nákladov na nabíjanie.",
         "titleAdd": "Pridať tarif za export elektriny do siete",
@@ -915,19 +956,25 @@
         "co2": "Pridať predpoveď CO₂",
         "feedIn": "Pridať tarif za export elektriny do siete",
         "grid": "Pridať tarif na odber zo siete",
-        "planner": "Pridať prognózu plánovača",
-        "solar": "Pridať predpoveď pre solár"
+        "planner": "Pridať predpoveď plánovača",
+        "solar": "Pridať predpoveď pre solár",
+        "temperature": "Pridať predpoveď teploty"
       },
       "planner": {
         "description": "Rozšírené nastavenie. Zvyčajne nie je potrebné, pretože sa automaticky používajú dynamické tarify za elektrinu alebo predpovede emisií CO₂. Umožňuje dodatočný zdroj údajov, ktorý sa používa iba na plánovanie nabíjania, nie na štatistiky a výpočty cien.",
-        "titleAdd": "Pridať prognózu plánovača",
-        "titleEdit": "upraviť prognózu plánovača"
+        "titleAdd": "Pridať Predpoveď Plánovača",
+        "titleEdit": "Upraviť Predpoveď Plánovača"
       },
       "services": "Služby",
       "solar": {
         "description": "Predpoveď produkcie solárnej energie pre váš fotovoltaický systém. Zobrazuje sa v rozhraní a bude sa v budúcnosti používať na optimalizačné algoritmy.",
         "titleAdd": "Pridať Predpoveď produkcie solárnej energie",
         "titleEdit": "Zmeniť predpoveď produkcie solárnej energie"
+      },
+      "temperature": {
+        "description": "Predpoveď vonkajšej teploty pre vašu polohu. Zobrazené v rozhraní a používané na predpoveď dopytu na vyhrievanie.",
+        "titleAdd": "Pridať Predpoveď Teploty",
+        "titleEdit": "Upraviť predpoveď teploty"
       },
       "template": "Poskytovateľ",
       "title": "Tarify a predpovede",
@@ -937,7 +984,8 @@
         "feedIn": "Cena exportu do siete",
         "grid": "Cena za odber zo siete",
         "planner": "Plánovač",
-        "solar": "Solár"
+        "solar": "Solár",
+        "temperature": "Predpoveď počasia"
       },
       "zones": {
         "add": "Pridať zónu",
@@ -1058,6 +1106,8 @@
     "version": {
       "availableLong": "nová verzia k dispozícii",
       "community": "evcc komunita",
+      "labelEmail": "E-mail",
+      "labelPhone": "Telefón",
       "labelRelease": "Vydanie",
       "labelVersion": "Verzia",
       "labelWebsite": "Webová stránka",
@@ -1089,10 +1139,11 @@
     "empty": {
       "co2": "Zistite, kedy je energia zo siete vo vašom regióne čistá. Plány nabíjania sa optimalizujú pre nízke emisie a vypočítajú úspory CO₂.",
       "price": "Konfigurujte svoj dynamický tarif elektrickej energie na automatické optimalizovanie plánov nabíjania a vypočtov úspory.",
-      "setup": "Nastavenie tarifov a prognóz",
-      "solar": "Pozrite si očakávanú produkciu solárnej energie na dnes a nasledujúce dni. V budúcnosti sa použije aj na automatickú optimalizáciu nabíjania."
+      "setup": "Nastavenie tarifov a predpovedí",
+      "solar": "Pozrite si očakávanú produkciu solárnej energie na dnes a nasledujúce dni. V budúcnosti sa použije aj na automatickú optimalizáciu nabíjania.",
+      "temperature": "Pozrite si predpovedanú vonkajšiu teplotu pre vašu polohu. Použité na predpoveď dopytu na vyhrievanie."
     },
-    "hideLine": "skrytá čiara",
+    "hideLine": "skryť krivku",
     "modalTitle": "Predpoveď",
     "price": {
       "average": "Priemer",
@@ -1101,25 +1152,35 @@
       "range": "Rozsah"
     },
     "priceZoom": "priblížiť",
-    "showLine": "zobraziť riadok",
+    "showLine": "zobraziť krivku",
     "solar": {
       "dayAfterTomorrow": "Pozajtra",
       "partly": "čiastočne",
-      "remaining": "zostávajúce",
+      "remaining": "zostáva",
       "today": "Dnes",
       "tomorrow": "Zajtra"
     },
-    "solarAdjust": "Upraviť prognózu solárnej energie na základe skutočných údajov o produkcii {percent}.",
+    "solarAdjust": "Upraviť predpoveď solárnej energie na základe skutočných údajov o produkcii {percent}.",
     "solarAdjustMedium": "úprava skutočných údajov",
     "solarAdjustShort": "prispôsobiť",
+    "temperature": {
+      "average": "Priemer",
+      "range": "Rozsah"
+    },
     "type": {
       "co2": "CO₂ Emisie",
       "price": "Cena zo siete",
-      "solar": "Solárna výroba"
+      "solar": "Solárna výroba",
+      "temperature": "Vonkajšia Teplota"
     }
   },
   "general": {
-    "note": "Poznámka:"
+    "back": "Späť",
+    "download": "Stiahnuť",
+    "error": "Chyba",
+    "none": "žiadny",
+    "note": "Poznámka:",
+    "warning": "Upozornenie"
   },
   "header": {
     "about": "O nás",
@@ -1129,9 +1190,10 @@
     "logout": "Odhlásiť",
     "nativeSettings": "Zmeniť Server",
     "needHelp": "Potrebujete pomoc?",
-    "sessions": "Nabíjacie Sedenia"
+    "sessions": "Nabíjacie Relácie"
   },
   "help": {
+    "contactButton": "Kontaktujte nás",
     "discussionsButton": "Diskusie na GitHube",
     "documentationButton": "Dokumentácia",
     "issueButton": "Nahlásiť problém",
@@ -1171,8 +1233,11 @@
     "additionalContext": "Dodatočný kontext",
     "additionalContextPlaceholder": "Akékoľvek ďalšie informácie, ktoré by mohli byť užitočné...\n- Podrobnosti o konfigurácii\n- Čo ste vyskúšali\n- Podrobnosti o prostredí",
     "createButtonDiscussion": "Začnite diskusiu na GitHube...",
+    "createButtonEmail": "Poslať žiadosť e-mailom",
     "createButtonIssue": "Vytvoriť problém na GitHube...",
     "description": "Vaša inštalácia nefunguje podľa očakávaní? Použite túto stránku na získanie pomoci alebo nahlásenie problémov. Poskytnite dostatok podrobností, aby sme problém pochopili a zreprodukovali, pričom váš popis musí byť stručný, jasný a ľahko pochopiteľný.",
+    "downloadButton": "Stiahnuť debug informácie",
+    "downloadHint": "Ak potrebujete viac informácií, priložte tento súbor k svojmu e-mailu.",
     "helpType": {
       "discussion": "Potrebujem pomoc s nastavením",
       "discussionDescription": "Komunitné diskusie poskytujú odpovede.",
@@ -1184,6 +1249,7 @@
     "issueTitle": "Názov",
     "stepsToReproduce": "Kroky k reprodukcii",
     "subTitleDiscussion": "Opíšte svoj problém",
+    "subTitleEmail": "Opíšte svoj problém",
     "subTitleIssue": "Popíšte problém",
     "summary": {
       "confirmationButtonDiscussion": "Začnite diskusiu na GitHube",
@@ -1232,34 +1298,39 @@
     "chargingPlan": {
       "active": "Aktívny",
       "addRepeatingPlan": "Pridať opakujúci sa plán",
-      "arrivalTab": "Príchod",
       "day": "Deň",
-      "departureTab": "Odchod",
       "goal": "Cieľ nabíjania",
       "modalTitle": "Nabíjací plán",
       "none": "žiadny",
+      "once": "raz",
       "optimization": {
         "cheapest": "najlacnejší",
+        "cheapestDescription": "Vyberie najlacnejšie sloty. Môže viesť k viacerým štartom a zastaveniam.",
+        "cleanest": "najčistejšie",
+        "cleanestDescription": "Vyberie najčistejšie sloty. Môže viesť k viacerým štartom a zastaveniam.",
         "continuous": "nepretržitý",
+        "continuousCo2Description": "Vyberie najčistejšiu neprerušenú sériu slotov.",
+        "continuousPriceDescription": "Vyberie najlacnejšiu neprerušenú sériu slotov.",
         "label": "Optimalizácia"
       },
       "planNumber": "Plán {number}",
       "precondition": {
-        "description": "Nabíjať batériu {duration} pred odchodom na predkondicionovanie.",
+        "description": "Presunie časť nabíjania tesne pred odchod: zohriata batéria, menej času pri vysokom stave nabitia.",
         "label": "Neskoré nabíjanie",
         "optionAll": "všetko",
-        "optionNo": "nie"
+        "optionNo": "nie",
+        "summary": "{precondition} pred"
       },
       "remove": "Odstrániť",
       "repeating": "opakujúce sa",
       "repeatingPlans": "Opakujúce sa plány",
       "selectAll": "Vybrať všetko",
+      "strategy": {
+        "label": "Stratégia"
+      },
       "strategyDisabledDescription": "Nabíjanie začína čo najneskôr, aby sa skončilo presne včas pred odchodom. S dynamickými sieťovými cenami alebo tarifom CO₂ je tu viac možností k dispozícii.",
-      "strategySettings": "Nastavenie stratégie",
       "time": "Čas",
       "title": "Plán",
-      "titleMinSoc": "Minimálne nabitie",
-      "titleTargetCharge": "Odchod",
       "unsavedChanges": "Existujú neuložené zmeny. Uložiť teraz?",
       "update": "Použiť",
       "weekdays": "Dni"
@@ -1275,16 +1346,12 @@
       "batteryChargeHold": "Batéria (nabíjanie uzamknuté)",
       "batteryDischarge": "Vybíjanie batérie",
       "batteryDischargeHold": "Batéria (vybíjanie uzamknuté)",
-      "batteryForecastEmpty": "Prázdne",
-      "batteryForecastFull": "Plné",
-      "batteryForecastNextHigh": "Vysoký",
-      "batteryForecastNextLow": "Nízky",
       "batteryGridChargeActive": "Sieťové nabíjanie: aktívne",
       "batteryGridChargeLimit": "Sieťové nabíjanie: keď",
       "batteryTooltip": "{energy} z {total} ({soc})",
       "forecast": "Predpoveď",
       "forecastTooltip": "predpoveď: zostávajúca produkcia solárnej energie dnes",
-      "gridImport": "Import do siete",
+      "gridImport": "Import zo siete",
       "homePower": "Spotreba",
       "loadpoints": "Nabíjačka| Nabíjačka | {count} nabíjačiek",
       "loadpointsLimit": "{limit} limit",
@@ -1292,11 +1359,15 @@
       "pv": "Solárny systém",
       "pvExport": "Export do siete",
       "pvProduction": "Výroba",
-      "selfConsumption": "Vlastná spotreba"
+      "selfConsumption": "Vlastná spotreba",
+      "toggleDetails": "Podrobnosti o toku energie"
     },
     "heatingStatus": {
       "charging": "Vyhrievanie…",
       "connected": "Pohotovostný režim.",
+      "minTemp": "Minimálne vyhrievanie na {temp}.",
+      "suggestionStartTooltip": "Optimalizátor odporúča vyhrievanie teraz.",
+      "suggestionStopTooltip": "Optimalizátor odporúča pozastaviť vyhrievanie.",
       "vehicleLimit": "Limit ohrievača",
       "waitForVehicle": "Pripravený na ohrev…"
     },
@@ -1320,7 +1391,7 @@
           "returnEnergy": "Energia (spätná)"
         }
       },
-      "downloadCsv": "Stiahnuť CSV",
+      "download": "Stiahnuť",
       "empty": "Pre toto časové obdobie nie sú k dispozícii žiadne historické údaje.",
       "group": {
         "battery": "Batéria",
@@ -1340,14 +1411,17 @@
       "co2": "⌀ CO2",
       "duration": "Trvanie",
       "emission": "Emisie",
-      "fallbackName": "Nabíjacia stanica",
+      "fallbackName": "Nabíjací bod",
       "finished": "Čas ukončenia",
+      "last24hEnergy": "Posledných 24h",
+      "last7dEnergy": "Posledných 7 dní",
       "power": "Výkon",
       "price": "Výdavky",
-      "remaining": "Zostávajúce",
+      "remaining": "Zostáva",
       "remoteDisabledHard": "{source}: vypnuté",
       "remoteDisabledSoft": "{source}: vypnuté adaptívne solárne nabíjanie",
-      "solar": "Solár"
+      "solar": "Solár",
+      "todayEnergy": "Dnes"
     },
     "loadpointSettings": {
       "batteryBoost": {
@@ -1365,22 +1439,17 @@
       "batteryUsage": "Domáca batéria",
       "currents": "Nabíjací prúd",
       "default": "predvolené",
-      "disclaimerHint": "Poznámka:",
-      "limitSoc": {
-        "description": "Limit nabíjania, ktorý sa používa, keď je toto vozidlo pripojené.",
-        "label": "Predvolený limit"
-      },
+      "heating": "Vyhrievanie",
       "maxCurrent": {
         "label": "Max. prúd"
       },
       "minCurrent": {
         "label": "Min. prúd"
       },
-      "minSoc": {
-        "description": "Vozidlo sa v solárnom režime „rýchlo“ nabije na {0}. Potom pokračuje s prebytočnou solárnou energiou. Užitočné na zabezpečenie minimálneho dojazdu aj počas zamračených dní.",
-        "label": "Min. nabitie %"
+      "minTemp": {
+        "description": "Pod {0} sa na udržanie tejto teploty v solárnom režime používa aj batéria a energia zo siete.",
+        "label": "Min. teplota"
       },
-      "onlyForSocBasedCharging": "Tieto možnosti sú dostupné iba pre vozidlá so známou úrovňou nabitia.",
       "phasesConfigured": {
         "label": "Fázy",
         "no1p3pSupport": "Ako je pripojená vaša nabíjačka?",
@@ -1463,6 +1532,21 @@
       "unknown": "Hosťovské vozidlo",
       "vehicleSoc": "Stav nabitia"
     },
+    "vehicleSettings": {
+      "connectedTo": "pripojený k {0}",
+      "description": "Tieto predvolené hodnoty sa aplikujú, keď sa vozidlo pripojí k nabíjaciemu bodu.",
+      "editHint": "Pridať alebo upraviť vozidlá v {0}.",
+      "keepAsIs": "Ponechať ako je",
+      "learnMore": "Viac informácií.",
+      "limitSoc": "Predvolený limit",
+      "limitSocDescription": "Aplikované, keď je vozidlo pripojené.",
+      "menu": "Vozidlá",
+      "minSoc": "Minimálne nabitie",
+      "minSocDescription": "Rýchle nabíjanie na túto úroveň v solárnom režime.",
+      "mode": "Predvolený režim",
+      "notConnected": "nepripojené",
+      "title": "Nastavenie vozidiel"
+    },
     "vehicleStatus": {
       "awaitingAuthorization": "Čakám na autorizáciu.",
       "batteryBoost": "Boost batérie aktívny.",
@@ -1489,6 +1573,8 @@
       "pvEnable": "Prebytok k dispozícii. Čoskoro začíname.",
       "scale1p": "Čoskoro prejdeme na jednofázové nabíjanie.",
       "scale3p": "Čoskoro prejdeme na trojfázové nabíjanie.",
+      "suggestionStartTooltip": "Optimalizátor odporúča nabíjanie teraz.",
+      "suggestionStopTooltip": "Optimalizátor odporúča pozastavenie nabíjania.",
       "targetChargeActive": "Aktívny plán nabíjania. Odhadovaná úprava za {duration}.",
       "targetChargePlanned": "Plán nabíjania začína za {duration}.",
       "targetChargeWaitForVehicle": "Plán nabíjania pripravený. Čakám na vozidlo…",
@@ -1528,6 +1614,7 @@
   },
   "session": {
     "addOdometer": "Pridať hodnotu",
+    "addedRange": "Pridaný rozsah",
     "cancel": "Zrušiť",
     "co2": "CO₂",
     "date": "Obdobie",
@@ -1543,6 +1630,7 @@
     "title": "Nabíjacia relácia"
   },
   "sessions": {
+    "addedRange": "Rozsah",
     "avgPower": "⌀ Výkon",
     "avgPrice": "⌀ Cena",
     "chargeDuration": "Trvanie",
@@ -1568,13 +1656,14 @@
     },
     "co2": "⌀ CO2",
     "csv": {
+      "addedrange": "Pridaný rozsah (km)",
       "chargedenergy": "Energia (kWh)",
       "chargeduration": "Trvanie",
       "co2perkwh": "CO₂/kWh",
       "created": "Vytvorené",
       "finished": "Dokončené",
       "identifier": "Identifikátor",
-      "loadpoint": "Nabíjacia stanica",
+      "loadpoint": "Nabíjací bod",
       "meterstart": "Začiatok merania (kWh)",
       "meterstop": "Koniec merania (kWh)",
       "odometer": "Najazdené kilometre (km)",
@@ -1585,9 +1674,9 @@
       "solarpercentage": "Solár (%)",
       "vehicle": "Vozidlo"
     },
-    "csvPeriod": "Stiahnuť súbor {period} CSV",
-    "csvTotal": "Stiahnuť celkový súbor CSV",
     "date": "Začiatok",
+    "download": "Stiahnuť {period}",
+    "downloadTotal": "Stiahnuť celkom",
     "energy": "Nabité",
     "filter": {
       "allLoadpoints": "všetky nabíjacie stanice",
@@ -1601,12 +1690,12 @@
       "self": "Solár"
     },
     "groupBy": {
-      "loadpoint": "Nabíjacia stanica",
+      "loadpoint": "Nabíjací bod",
       "none": "Solár",
       "vehicle": "Vozidlo"
     },
-    "loadpoint": "Nabíjacia stanica",
-    "noData": "Tento mesiac žiadne nabíjacie sedenia.",
+    "loadpoint": "Nabíjací bod",
+    "noData": "Tento mesiac žiadne nabíjacie relácie.",
     "odometer": "Najazdené kilometre",
     "overview": "Prehľad",
     "period": {
@@ -1619,7 +1708,7 @@
     "reallyDelete": "Naozaj chcete odstrániť túto reláciu?",
     "showIndividualEntries": "Zobraziť individuálne stretnutia",
     "solar": "Solár",
-    "title": "Nabíjacie Sedenia",
+    "title": "Nabíjacie Relácie",
     "total": "Celkom",
     "type": {
       "co2": "CO₂",
@@ -1644,6 +1733,7 @@
       "label": "Jazyk"
     },
     "loadpoints": {
+      "disabledDevice": "zakázané",
       "help": "Zmeniť poradie a viditeľnosť používateľského rozhrania.",
       "hide": "Skryť {title}",
       "label": "Nabíjacie stanice",
@@ -1713,7 +1803,7 @@
     "fixAndRestart": "Prosím, opravte problém a reštartujte server.",
     "hint": "Poznámka: Môže to byť aj chybné zariadenie (menič, merač atď.). Skontrolujte sieťové pripojenia.",
     "lineError": "Chyba v {0}.",
-    "lineErrorLink": "riadok {0}",
+    "lineErrorLink": "čiara {0}",
     "restartButton": "Restart",
     "title": "Chyba spustenia"
   },
@@ -1723,6 +1813,6 @@
     "comingSoon": "Táto stránka je vo výstavbe.",
     "forecast": "Predpoveď",
     "more": "Viac",
-    "sessions": "Sedenia"
+    "sessions": "Relácie"
   }
 }

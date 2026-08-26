@@ -19,13 +19,13 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
-import type { SolarDetails } from "@/types/evcc";
+import type { UiSolarDetails } from "@/types/evcc";
 
 export default defineComponent({
 	name: "SolarDetails",
 	mixins: [formatter],
 	props: {
-		solar: { type: Object as PropType<SolarDetails> },
+		solar: { type: Object as PropType<UiSolarDetails> },
 	},
 	computed: {
 		days(): {

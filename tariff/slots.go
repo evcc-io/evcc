@@ -12,10 +12,8 @@ type SlotWrapper struct {
 	api.Tariff
 }
 
-// Rates converts arbitrary slot lengths (e.g. 1h, 30m) to 15m slots.
-// Slot length must be multiple of SlotDuration.
-// For price tariffs, the value is constant over all sub-slots.
-// For solar/co2, linear interpolation is used between slot boundaries.
+// Rates converts arbitrary slot lengths (multiples of SlotDuration) to 15m slots.
+// Price sub-slots are constant, solar sub-slots interpolated towards the next slot.
 func (t *SlotWrapper) Rates() (api.Rates, error) {
 	rates, err := t.Tariff.Rates()
 	if err != nil {
@@ -37,28 +35,55 @@ func (t *SlotWrapper) Rates() (api.Rates, error) {
 
 		numSlots := max(int(r.End.Sub(r.Start)/SlotDuration), 1)
 
+		vals := make([]float64, numSlots)
+		for j := range vals {
+			vals[j] = r.Value
+		}
+
+		if t.Type() == api.TariffTypeSolar {
+			shapeSolar(rates, i, vals)
+		}
+
 		for j := range numSlots {
 			start := r.Start.Add(time.Duration(j) * SlotDuration)
-			end := start.Add(SlotDuration)
-			val := r.Value
-
-			switch t.Type() {
-			case api.TariffTypeSolar: //, api.TariffTypeCo2
-				if i+1 < len(rates) {
-					start0 := r.Start
-					start1 := rates[i+1].Start
-					frac := float64(start.Sub(start0)) / float64(start1.Sub(start0))
-					val = r.Value + frac*(rates[i+1].Value-r.Value)
-				}
-			}
 
 			res = append(res, api.Rate{
 				Start: start,
-				End:   end,
-				Value: val,
+				End:   start.Add(SlotDuration),
+				Value: vals[j],
 			})
 		}
 	}
 
 	return res, nil
+}
+
+// shapeSolar samples the source curve at the sub-slot starts. A solar value is the
+// power at its Start (see core.solarEnergy), so splitting a slot must interpolate
+// towards the successor rather than redistribute the value across the sub-slots -
+// only then does the split leave the integrated energy untouched. Interpolation runs
+// over the distance between the two starts, which is the slot length only for a gapless
+// series. The trailing slot has no successor and stays flat.
+func shapeSolar(rates api.Rates, i int, vals []float64) {
+	cur := rates[i].Value
+
+	for j := range vals {
+		vals[j] = cur
+	}
+
+	if i+1 >= len(rates) {
+		return
+	}
+
+	next := rates[i+1]
+	span := next.Start.Sub(rates[i].Start)
+	if span <= 0 {
+		return
+	}
+
+	for j := range vals {
+		// beyond the successor's start the curve is the successor's business
+		d := min(time.Duration(j)*SlotDuration, span)
+		vals[j] = cur + (next.Value-cur)*float64(d)/float64(span)
+	}
 }

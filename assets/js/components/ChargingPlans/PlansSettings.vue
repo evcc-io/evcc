@@ -32,6 +32,14 @@
 						@updated="updateRepeatingPlans"
 					/>
 				</div>
+				<ChargingPlanStrategy
+					:id="id"
+					:precondition="effectivePlanStrategy?.precondition"
+					:continuous="effectivePlanStrategy?.continuous"
+					:disabled="strategyDisabled"
+					:smart-cost-type="smartCostType"
+					@update="updatePlanStrategy"
+				/>
 			</div>
 		</div>
 		<hr />
@@ -40,29 +48,11 @@
 				<span v-if="!multiplePlans">
 					{{ $t(`main.targetCharge.${noActivePlan ? "preview" : "currentPlan"}`) }}
 				</span>
-				<span v-else-if="noActivePlan">{{ $t("main.targetCharge.preview") }} #1</span>
+				<span v-else-if="noActivePlan">{{ $t("main.targetCharge.preview") }}: #1</span>
 				<span v-else-if="alreadyReached">{{ $t("main.targetCharge.goalReached") }}</span>
 				<span v-else>{{ nextPlanTitle }}</span>
-				<button
-					type="button"
-					class="btn btn-sm"
-					:class="strategyOpen ? 'btn-secondary' : 'evcc-gray'"
-					:aria-label="$t('main.chargingPlan.strategySettings')"
-					tabindex="0"
-					@click="strategyOpen = !strategyOpen"
-				>
-					<shopicon-regular-adjust size="s"></shopicon-regular-adjust>
-				</button>
 			</div>
 		</h5>
-		<ChargingPlanStrategy
-			:id="id"
-			:precondition="effectivePlanStrategy?.precondition"
-			:continuous="effectivePlanStrategy?.continuous"
-			:disabled="strategyDisabled"
-			:show="strategyOpen"
-			@update="updatePlanStrategy"
-		/>
 		<ChargingPlanPreview v-bind="chargingPlanPreviewProps" />
 		<ChargingPlanWarnings v-bind="chargingPlanWarningsProps" />
 	</div>
@@ -83,11 +73,12 @@ import { debounceLeading } from "@/utils/debounceLeading";
 import { defineComponent, type PropType } from "vue";
 import type {
 	CURRENCY,
-	Forecast,
+	UiForecast,
 	PlanResponse,
 	PlanStrategy,
 	PlanWrapper,
 	RepeatingPlan,
+	SMART_COST_TYPE,
 	StaticEnergyPlan,
 	StaticPlan,
 	StaticSocPlan,
@@ -117,14 +108,14 @@ export default defineComponent({
 		socBasedPlanning: Boolean,
 		socPerKwh: Number,
 		rangePerSoc: Number,
-		smartCostType: String,
+		smartCostType: String as PropType<SMART_COST_TYPE>,
 		currency: String as PropType<CURRENCY>,
 		mode: String,
 		capacity: Number,
 		vehicle: Object as PropType<Vehicle>,
 		vehicleLimitSoc: Number,
 		planOverrun: Number,
-		forecast: Object as PropType<Forecast>,
+		forecast: Object as PropType<UiForecast>,
 	},
 	emits: [
 		"static-plan-removed",
@@ -138,7 +129,6 @@ export default defineComponent({
 			plan: {} as PlanWrapper,
 			activeTab: "time",
 			nextPlanId: 0,
-			strategyOpen: false,
 			updatePlanPreviewDebounced: null as any as () => void,
 			updateActivePlanDebounced: null as any as () => void,
 		};
@@ -170,7 +160,7 @@ export default defineComponent({
 			return this.plan.duration === 0;
 		},
 		nextPlanTitle(): string {
-			return `${this.$t("main.targetCharge.nextPlan")} #${this.nextPlanId}`;
+			return `${this.$t("main.targetCharge.nextPlan")}: #${this.nextPlanId}`;
 		},
 		strategyDisabled(): boolean {
 			// options only make sense if there are variable prices
@@ -327,7 +317,7 @@ export default defineComponent({
 h5 {
 	position: relative;
 	display: flex;
-	top: -33px;
+	top: -26px;
 	margin-bottom: -0.5rem;
 	padding: 0 0.5rem;
 	justify-content: center;

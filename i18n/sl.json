@@ -225,7 +225,6 @@
       "noFileSelected": "Izbrana ni nobena datoteka.",
       "off": "izklopljeno",
       "on": "vklopljeno",
-      "password": "Geslo",
       "readFromFile": "Preberi iz datoteke",
       "remove": "Odstrani",
       "required": "zahtevano",
@@ -255,7 +254,6 @@
         "type": "Vrsta"
       },
       "description": "Omejitev moči z zunanjimi sistemi (npr. §14a EnWG, §9 EEG vmesnik ali višji sistem za upravljanje z energijo). Deluje skupaj s funkcijo upravljanja obremenitve.",
-      "downloadCsv": "Prenesi CSV",
       "eventsRecorded": "Zabeleženo {count} dogodkov omejitve omrežja.",
       "lastEvent": "Najnovejše {timeAgo}.",
       "title": "Zunanja meja"
@@ -347,7 +345,6 @@
       "priorityHelp": "Višja prioriteta ima prednostni dostop do presežka sončne energije.",
       "priorityLabel": "Prioriteta",
       "save": "Shrani",
-      "showAllSettings": "Prikaži vse nastavitve",
       "solarBehaviorCustomHelp": "Določite lastne pragove za omogočanje in onemogočanje ter zakasnitve.",
       "solarBehaviorDefaultHelp": "Začni po {enableDelay} zadostnega presežka. Ustavi, ko presežek ni dovolj za {disableDelay}.",
       "solarBehaviorLabel": "Sončna energija",
@@ -413,7 +410,6 @@
       "option": {
         "aux": "Dodajte samoreguliranega odjemalca",
         "battery": "Dodajte merilnik baterije",
-        "ext": "Dodajte rednega potrošnika",
         "pv": "Dodaj merilnik sončne energije"
       },
       "save": "Shrani",
@@ -495,22 +491,14 @@
       "descriptionHost": "Uporablja se za napovedovanje evcc v vašem lokalnem omrežju.",
       "descriptionInternalUrl": "Lokalni omrežni naslov evcc.",
       "descriptionPort": "Vrata za spletni vmesnik in API. Če spremenite, boste morali posodobiti URL v brskalniku.",
-      "descriptionSchema": "Vpliva samo na to, kako so URL-ji ustvarjeni. Če izberete HTTPS, šifriranje ne bo omogočeno.",
       "labelExternalUrl": "Zunanji URL",
       "labelHost": "Ime gostitelja mDNS",
       "labelInternalUrl": "Notranji URL",
       "labelPort": "Port",
-      "labelSchema": "Shema",
       "title": "Mreža"
     },
     "ocpp": {
-      "connectedChargers": "Priključene polnilne postaje",
-      "connectionStatus": "Konfigurirani ID-ji postaj",
-      "connectionStatusHelp": "Stanje povezave konfiguriranih polnilnih postaj.",
-      "detectedChargers": "Zaznani ID-ji polnilnih postaj",
-      "detectedHelp": "Te polnilnice so se poskušale povezati z evcc. Če želite uporabiti polnilnico, ustvarite nakladalno točko z njeno ID postajo.",
       "noChargers": "Ni zaznanih polnilnikov OCPP.",
-      "noStations": "Ni povezanih polnilnih postaj",
       "status": {
         "configured": "Brez povezave",
         "connected": "Povezan",
@@ -627,10 +615,6 @@
       "restartRequiredMessage": "Konfiguracija je bila spremenjena.",
       "restartingDescription": "Prosimo, počakajte…",
       "restartingMessage": "Ponovni zagon evcc."
-    },
-    "tariffs": {
-      "description": "Določite svoje tarife za energijo, da izračunate stroške svojih polnilnih sej.",
-      "title": "Tarife"
     },
     "telemetry": {
       "description": "Konfigurirajte deljenje podatkov, da izboljšate evcc. Vaša zasebnost nam je pomembna in sodelovanje je popolnoma neobvezno.",
@@ -760,15 +744,9 @@
   },
   "header": {
     "about": "Informacije",
-    "authProviders": {
-      "confirmLogout": "Ali ste prepričani, da želite prekiniti povezavo z {title}?",
-      "loggedOut": "Uspešno odjavljen/a",
-      "title": "Stanje avtorizacije"
-    },
     "blog": "Blog",
     "docs": "Dokumentacija",
     "github": "GitHub",
-    "login": "Prijave v vozila",
     "logout": "Odjava",
     "nativeSettings": "Zamenjaj strežnik",
     "needHelp": "Potrebuješ pomoč?",
@@ -863,7 +841,6 @@
   "loginModal": {
     "cancel": "Prekliči",
     "demoMode": "Prijava v demo načinu ni podprta.",
-    "error": "Prijava ni uspela: ",
     "iframeHint": "Odpri evcc v novem zavihku.",
     "iframeIssue": "Vaše geslo je pravilno, vendar se zdi, da je vaš brskalnik izpustil piškotek za preverjanje pristnosti. To se lahko zgodi, če zaženete evcc v iframe prek HTTP.",
     "invalid": "Geslo ni veljavno.",
@@ -887,22 +864,15 @@
       },
       "planNumber": "Načrt {number}",
       "precondition": {
-        "description": "Pred odhodom napolnite {duration} za predhodno ogrevanje baterije.",
         "label": "Pozno polnjenje",
         "optionAll": "vse",
         "optionNo": "ne"
       },
-      "preconditionDescription": "Pred odhodom napolnite {duration} za predhodno ogrevanje baterije.",
-      "preconditionLong": "Pozno polnjenje",
-      "preconditionOptionAll": "vse",
-      "preconditionOptionNo": "ne",
-      "preconditionShort": "Pozno",
       "remove": "Odstrani",
       "repeating": "ponavljajoči",
       "repeatingPlans": "Ponavljajoči načrti",
       "selectAll": "Izberi vse",
       "strategyDisabledDescription": "Polnjenje se začne čim pozneje, da se konča ravno pravočasno za odhod. Z dinamičnimi cenami omrežja ali tarifo CO₂ je na voljo več možnosti.",
-      "strategySettings": "Nastavitve strategije",
       "time": "Čas",
       "title": "Načrt",
       "unsavedChanges": "Obstajajo neshranjene spremembe. Želite uporabiti zdaj?",
@@ -961,14 +931,12 @@
       "batteryUsage": "Domača baterija",
       "currents": "Polnilni tok",
       "default": "privzeto",
-      "disclaimerHint": "Opomba:",
       "maxCurrent": {
         "label": "Maks. tok"
       },
       "minCurrent": {
         "label": "Min. tok"
       },
-      "onlyForSocBasedCharging": "Te možnosti so na voljo samo za vozila z znano stopnjo napolnjenosti.",
       "phasesConfigured": {
         "label": "Faze",
         "no1p3pSupport": "Kako je priključena vaša polnilnica?",
@@ -1163,8 +1131,6 @@
       "solarpercentage": "Sončna energija (%)",
       "vehicle": "Vozilo"
     },
-    "csvPeriod": "Prenesi {period} CSV",
-    "csvTotal": "Prenesi celoten CSV",
     "date": "Začetek",
     "energy": "Napolnjeno",
     "filter": {

@@ -209,7 +209,6 @@
       "noFileSelected": "Nije odabrana nijedna datoteka.",
       "off": "isključen",
       "on": "na",
-      "password": "Lozinka",
       "readFromFile": "Čitaj iz datoteke",
       "remove": "Ukloni",
       "required": "potrebno",
@@ -239,7 +238,6 @@
         "type": "Tip"
       },
       "description": "Ograničenje snage putem vanjskih sistema (npr. §14a EnWG, §9 EEG interfejs ili viši sistem za upravljanje energijom). Radi zajedno s funkcijom upravljanja opterećenjem.",
-      "downloadCsv": "Preuzmi CSV",
       "eventsRecorded": "Zabilježeno je {count} događaja ograničenja mreže.",
       "lastEvent": "Najnoviji prije {timeAgo}.",
       "title": "Vanjski limit"
@@ -331,7 +329,6 @@
       "priorityHelp": "Oni s višim prioritetom dobivaju prednost pri pristupu višku solarne energije.",
       "priorityLabel": "Prioritet",
       "save": "Sačuvaj",
-      "showAllSettings": "Prikaži sve postavke",
       "solarBehaviorCustomHelp": "Definirajte vlastite pragove i odgode za omogućavanje i onemogućavanje.",
       "solarBehaviorDefaultHelp": "Počnite nakon {enableDelay} kada je višak dovoljan. Zaustavite kada viška nije dovoljno za {disableDelay}.",
       "thresholdDisableHelpPositive": "Zaustavi kada se iz mreže potroši više od {power} za {delay}.",
@@ -378,10 +375,7 @@
   },
   "main": {
     "chargingPlan": {
-      "planNumber": "Plan {number}",
-      "precondition": {
-        "description": "Punite {duration} prije polaska kako biste pripremili bateriju."
-      }
+      "planNumber": "Plan {number}"
     },
     "energyflow": {
       "batteryTooltip": "{energy} od {total} ({soc})",
@@ -433,8 +427,7 @@
       "historyCo2Sub": "{value} ukupno",
       "historyPriceSub": "{value} ukupno",
       "solarByGroup": "Solarni udio {byGroup}"
-    },
-    "csvPeriod": "Preuzmi {period} CSV"
+    }
   },
   "settings": {
     "loadpoints": {

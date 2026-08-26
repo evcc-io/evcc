@@ -6,16 +6,16 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/vehicle"
 	"github.com/evcc-io/evcc/vehicle/ford/connect"
 	"golang.org/x/oauth2"
 )
 
 func fordConnectToken(conf config.Named) (*oauth2.Token, error) {
 	var cc struct {
-		Credentials vehicle.ClientCredentials
-		Tokens      vehicle.Tokens
+		Credentials oauth.ClientCredentials
+		Tokens      oauth.Tokens
 		Other       map[string]any `mapstructure:",remain"`
 	}
 

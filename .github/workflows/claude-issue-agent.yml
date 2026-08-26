@@ -3,6 +3,10 @@ name: Claude Issue & PR Agent
 on:
   issues:
     types: [opened]
+  # a reporter answering an earlier request for information re-runs the agent,
+  # see the reanalyze job below
+  issue_comment:
+    types: [created]
   # pull_request_target runs in the base-repo context so the labeling token and
   # CLAUDE secret are available even for fork PRs. The PR-label job below never
   # checks out or runs PR head code — it only reads PR metadata as untrusted data.
@@ -27,9 +31,69 @@ jobs:
       mode: triage
     secrets: inherit
 
+  # The triage agent asks for missing information and applies `waiting for
+  # feedback`. Nothing re-runs it once the reporter answers, so the report sits
+  # with the details nobody looked at until a maintainer types `/analyze`. This
+  # gate detects exactly that reply and re-runs the agent for it.
+  reanalyze-gate:
+    name: Re-analyze gate
+    # the label is read from the event payload, which predates the removal that
+    # waiting-feedback.yml performs on this same event
+    if: |
+      github.event_name == 'issue_comment' &&
+      !github.event.issue.pull_request &&
+      github.event.comment.user.login == github.event.issue.user.login &&
+      contains(github.event.issue.labels.*.name, 'waiting for feedback')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: read
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      - uses: actions/github-script@v9.0.0
+        id: check
+        with:
+          script: |
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+            });
+
+            // hands off as soon as a human other than the reporter joins the thread
+            const others = comments.filter(
+              (c) =>
+                c.user.login !== 'github-actions[bot]' &&
+                c.user.login !== context.payload.issue.user.login,
+            );
+
+            core.setOutput('run', String(others.length === 0));
+
+  reanalyze:
+    name: Re-analyze after feedback
+    needs: reanalyze-gate
+    if: needs.reanalyze-gate.outputs.run == 'true'
+    permissions:
+      contents: read # explore the codebase for the answer; no fix/PR in analyze mode
+      issues: write # comment
+      id-token: write
+      actions: read
+    uses: ./.github/workflows/claude-issue-agent-run.yml
+    with:
+      issue_number: ${{ github.event.issue.number }}
+      # no comment_id: there is no invoking command to read or resolve
+      mode: analyze
+    secrets: inherit
+
   pr-label:
     name: PR labeling
-    if: github.event_name == 'pull_request_target'
+    # bot PRs (dependabot etc.) are skipped: the action rejects non-human actors
+    # unless allowlisted, and bots already label their own PRs. backports are
+    # skipped as well, they carry the backport label and nothing else
+    if: |
+      github.event_name == 'pull_request_target' &&
+      github.event.pull_request.user.type != 'Bot' &&
+      !startsWith(github.event.pull_request.head.ref, 'backport/')
     runs-on: ubuntu-latest
     permissions:
       contents: read # read base repo for area classification

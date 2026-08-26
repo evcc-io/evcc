@@ -1,6 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { parse, stringify } from "yaml";
-import prettier from "prettier";
 import { bundle, createConfig } from "@redocly/openapi-core";
 import type { StateSchemas } from "./schemas";
 
@@ -8,10 +7,10 @@ const OPENAPI_PATH = "server/openapi.yaml";
 const STATE_PATH = "server/openapi.state.yaml";
 const MCP_JSON_PATH = "server/mcp/openapi.json";
 
-const HEADER = `# GENERATED FILE - DO NOT EDIT (source: assets/js/types/evcc.ts, update: npm run openapi)
+const HEADER = `# GENERATED FILE - DO NOT EDIT (source: assets/js/types/evcc.ts, update: make openapi)
 `;
 
-export async function writeStateSchemas(schemas: StateSchemas): Promise<void> {
+export function writeStateSchemas(schemas: StateSchemas): void {
   const root = parse(readFileSync(OPENAPI_PATH, "utf8"));
   const handWritten = new Set(Object.keys(root.components?.schemas ?? {}));
   for (const name of Object.keys(schemas.defs)) {
@@ -27,8 +26,7 @@ export async function writeStateSchemas(schemas: StateSchemas): Promise<void> {
       { lineWidth: 0, aliasDuplicateObjects: false }
     );
 
-  const config = await prettier.resolveConfig(STATE_PATH);
-  writeFileSync(STATE_PATH, await prettier.format(doc, { ...config, filepath: STATE_PATH }));
+  writeFileSync(STATE_PATH, doc);
 }
 
 // inline the multi-file spec into the single json embedded by the MCP server

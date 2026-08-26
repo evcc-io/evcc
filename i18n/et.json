@@ -13,6 +13,27 @@
     "loggedOut": "Väljalogimine õnnestus",
     "logoutFailed": "Väljalogimine ei õnnestunud"
   },
+  "battery": {
+    "card": {
+      "charging": "laadimas",
+      "discharging": "tühjenemas",
+      "energy": "Energia"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Laadi võrgust",
+        "discharge": "Laadi võrku",
+        "hold": "Takista võrku laadimist",
+        "holdcharge": "Takista võrgust laadimist",
+        "normal": "Tavaline töörežiim"
+      },
+      "empty": "tühi",
+      "full": "täis",
+      "highest": "Kõrgeim ({value})",
+      "lowest": "Madalaim ({value})",
+      "suggestion": "Soovitus"
+    }
+  },
   "batterySettings": {
     "batteryLevel": "Akutase",
     "bufferStart": {
@@ -21,27 +42,46 @@
       "never": "vaid piisava ülejäägi puhul."
     },
     "capacity": "{energy} / {total}",
-    "control": "Akuhaldus"
+    "control": "Akuhaldus",
+    "legendTopSublineDisabledState": "pole kasutusel",
+    "modalTitle": "Kodu aku",
+    "noBattery": "Ühtegi akut pole seadistatud.",
+    "usageTab": "Akukasutus"
+  },
+  "colors": {
+    "auto": "Automaatne"
   },
   "config": {
+    "apiKey": {
+      "generateConfirm": "Uue API-võtme loomiseks sisesta oma peakasutaja salasõna.",
+      "keyLabel": "API-võti",
+      "regenerate": "Loo API-võti uuesti",
+      "regenerateConfirm": "API-võtme uuesti loomiseks sisesta oma peakasutaja salasõna.",
+      "regenerateLink": "Loo uuesti",
+      "revealSuccess": "Sinu uus API-võti on valmis kasutamiseks.",
+      "revealTitle": "API-võti on loodud",
+      "shownOnce": "Seda võtit näidatakse vaid üks kord ja teda ei saa uuesti näidata. Salvesta ta turvaliselt.",
+      "title": "API-võti"
+    },
     "battery": {
+      "title": "Aku",
       "titleAdd": "Lisa aku",
-      "titleEdit": "Muuda aku"
+      "titleEdit": "Muuda akut"
     },
     "charger": {
       "template": "Tootja",
       "titleAdd": {
         "charging": "Lisa laadija",
-        "heating": "Lisa soojendus"
+        "heating": "Lisa soojendusseade"
       },
       "titleEdit": {
         "charging": "Muuda laadijat",
-        "heating": "Muuda soojendust"
+        "heating": "Muuda soojendusseadet"
       },
       "type": {
         "custom": {
           "charging": "Kasutaja poolt määratletud laadijat",
-          "heating": "Kasutaja poolt määratletud soojendus"
+          "heating": "Kasutaja poolt määratletud soojendusseade"
         },
         "heatpump": "Kasutaja poolt määratletud soojuspump"
       }

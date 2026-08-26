@@ -26,8 +26,8 @@ test("tooltip shows one merged grid entity", async ({ page }) => {
 
   const tooltip = chart.locator("table");
   await expect(tooltip).toBeVisible();
-  // single unnamed row, no per-entity rows
+  // single unnamed row, no per-entity rows; one unit across both columns
   await expect(tooltip).toHaveText(
-    ["12:00 – 12:15", "imported", "exported", "2.0 kW", "400 W"].join("")
+    ["12:00 – 12:15", "imported", "exported", "2.0 kW", "0.4 kW"].join("")
   );
 });

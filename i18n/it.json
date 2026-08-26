@@ -19,6 +19,49 @@
     "successCloseTab": "Puoi ora chiudere questa scheda.",
     "title": "Stato dell'autorizzazione"
   },
+  "battery": {
+    "card": {
+      "charging": "Ricarica",
+      "discharging": "Scarica",
+      "energy": "Energia",
+      "gridCharge": "Carica da rete",
+      "hold": "Scarica inibita",
+      "holdCharge": "Ricarica inibita",
+      "ofTotal": "di {total}",
+      "power": "Potenza batteria",
+      "soc": "% batteria"
+    },
+    "combined": "Combinata",
+    "config": {
+      "buffer": "L'energia accumulata nella batteria domestica al di sopra del valore {soc} può essere utilizzata per alimentare i punti di ricarica e ritardare lo spegnimento in modalità solare. Avvia automaticamente la ricarica solare {start}.",
+      "bufferNone": "L'energia della batteria domestica non viene utilizzata per i punti di ricarica. Impostare un valore inferiore a {soc} per abilitare il supporto.",
+      "bufferStart": {
+        "above": "Quando la % della batteria è maggiore del {soc}",
+        "full": "quando la batteria è carica",
+        "never": "solo con un surplus sufficiente"
+      },
+      "bufferTitle": "Batteria come tampone di carica",
+      "discharge": "Prevenire la scarica della batteria domestica in modalità rapida e durante la ricarica programmata.",
+      "gridDischarge": "Consenti alla batteria domestica di fornire energia alla rete.",
+      "priority": "La batteria domestica ha la priorità finché il suo livello di carica è inferiore a {soc}. Successivamente, le colonnine di ricarica ricevono l'energia in eccesso.",
+      "priorityNone": "L'energia solare in eccesso viene inviata direttamente ai punti di ricarica. Imposta un valore superiore a {soc} per dare priorità alla batteria domestica.",
+      "priorityTitle": "Dove va a finire prima il surplus?"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Carica dalla rete",
+        "discharge": "Scarico in rete",
+        "hold": "Previeni scarica batteria",
+        "holdcharge": "Impedisci la ricarica",
+        "normal": "Funzionamento normale"
+      },
+      "empty": "Vuoto",
+      "full": "pieno",
+      "highest": "Più alto ({value})",
+      "lowest": "Più basso ({value})",
+      "suggestion": "Suggerimento"
+    }
+  },
   "batterySettings": {
     "batteryLevel": "Livello batteria",
     "bufferStart": {
@@ -39,17 +82,45 @@
     "legendTopAutostart": "Parti automaticamente",
     "legendTopName": "Ricarica del veicolo assistita dalla batteria",
     "legendTopSubline": "quando la batteria supera il {soc}.",
+    "legendTopSublineAbove": "quando sopra il {soc}",
+    "legendTopSublineDisabled": "è {soc}.",
+    "legendTopSublineDisabledState": "disabilitato",
     "modalTitle": "Batteria di casa",
     "noBattery": "Nessuna batteria configurata.",
     "usageTab": "Uso della batteria"
   },
+  "colors": {
+    "auto": "Automatico",
+    "hex": "Codice colore esadecimale"
+  },
   "config": {
+    "adminPassword": {
+      "description": "Lo script plugin esegue un comando a livello di sistema con i permessi del processo evcc. Reinserisci la password di amministratore per continuare.",
+      "invalid": "Password non valida. Per favore ritenta.",
+      "title": "Operazione potenzialmente danno"
+    },
+    "apiKey": {
+      "description": "Consenti a script e attività di automazione, come i backup programmati, di accedere in modo sicuro senza dover condividere la password di amministratore.",
+      "exampleLabel": "Provalo: scarica un backup con curl",
+      "generate": "Genera chiave API",
+      "generateConfirm": "Inserisci la tua password di amministratore per generare una nuova chiave API.",
+      "keyLabel": "Chiave API",
+      "regenerate": "Rigenera chiave API",
+      "regenerateConfirm": "Inserisci la tua password di amministratore per rigenerare la chiave API.",
+      "regenerateLink": "Rigenera",
+      "regenerateWarning": "La rigenerazione invaliderà le chiavi esistenti e tutte le automazioni che le utilizzano cesserano di funzionare. Continuare?",
+      "revealSuccess": "La tua nuova chiave API è pronta per essere usata.",
+      "revealTitle": "Chiave API creata",
+      "shownOnce": "Questa chiave è mostrata una sola volta. Conservala in un luogo sicuro. Non potrai recuperarla in seguito.",
+      "title": "Chiave API"
+    },
     "aux": {
       "description": "Dispositivo che modifica il suo consumo sulla base del surplus di produzione disponibile (es: boiler smart). evcc si aspetta che questo dispositivo riduca il suo consumo se richiesto.",
       "titleAdd": "Aggiungi consumatore autoregolato",
       "titleEdit": "Modifica dispositivo con consumo auto-regolato"
     },
     "battery": {
+      "title": "Batteria",
       "titleAdd": "Aggiungi Batteria",
       "titleEdit": "Modifica Batteria"
     },
@@ -98,6 +169,11 @@
       "title": "Gestione del carico",
       "usableMeters": "Riferimenti dei contatori utilizzabili"
     },
+    "consumer": {
+      "description": "Monitora elettrodomestici non controllabili (frigorifero, lavatrice, ecc.). Ti offre una migliore panoramica dei consumi domestici.",
+      "titleAdd": "Aggiungi contatore di consumo",
+      "titleEdit": "Modifica contatore di consumo"
+    },
     "control": {
       "description": "Normalmente le impostazioni di default sono adeguate. Modificale solo se sai cosa stai facendo.",
       "descriptionInterval": "Ciclo di aggiornamento in secondi. Definisce la frequenza con cui evcc legge i dati del contatore e regola la ricarica. L'impostazione predefinita di 30 secondi è una scelta sicura. Dispositivi come veicoli, wallbox e inverter richiedono in genere diversi secondi per regolare il loro comportamento. Se i componenti reagiscono rapidamente, è possibile utilizzare valori inferiori. Si consiglia vivamente di non scendere al di sotto dei 10 secondi. Se si osserva un comportamento di controllo irregolare o valori di potenza instabili, scegliere un intervallo maggiore.",
@@ -108,13 +184,14 @@
     },
     "currency": {
       "description": "Utilizzato per formattare i prezzi dell'energia, i costi e i risparmi in base alla tua tariffa.",
-      "example": "Il prezzo della ricarica era {price}. Hai risparmiato {amount}.",
+      "example": "Il prezzo della ricarica è stato {price}. Hai risparmiato {amount}.",
       "label": "Valuta",
       "title": "Valuta"
     },
     "deviceValue": {
       "activeClients": "Client attivi",
       "amount": "Quantità",
+      "asleep": "inattivo",
       "broker": "Broker",
       "bucket": "Bucket",
       "capacity": "Capacità",
@@ -133,12 +210,16 @@
       "currency": "Valuta",
       "current": "Corrente",
       "currentRange": "Corrente",
+      "curtailLimit": "Limite di immissione",
+      "curtailable": "Limitabile",
       "curtailed": "Alimentazione limitata",
       "detected": "Rilevato",
+      "dimLimit": "Limite di consumo",
       "dimmed": "Consumi limitati",
       "enabled": "Abilitato",
       "energy": "Energia",
       "events": "Stati",
+      "exportLimit": "Limite esportazione in rete",
       "feedinPrice": "Prezzo di vendita",
       "forecast": "Previsione",
       "gridPrice": "Prezzo d'acquisto",
@@ -150,6 +231,7 @@
       "no": "no",
       "odometer": "Chilometraggio",
       "org": "Organizzazione",
+      "outdoorTemp": "Temperatura esterna",
       "phaseCurrents": "Corrente",
       "phasePowers": "Potenza",
       "phaseVoltages": "Voltaggio",
@@ -157,7 +239,10 @@
       "power": "Potenza",
       "powerRange": "Potenza",
       "price": "Prezzo",
+      "productionLimited": "Produzione limitata",
       "range": "Intervallo",
+      "remoteEnabled": "Abilitato",
+      "returnEnergy": "Energia (inversa)",
       "singlePhase": "Singola fase",
       "soc": "Carica",
       "solarForecast": "Previsioni solari",
@@ -187,13 +272,21 @@
         "public": "Certificato pubblico",
         "title": "Certificati"
       },
+      "configuredDevices": "Dispositivi configurati",
       "description": "Configurazione che consente a evcc di comunicare con dispositivi compatibili con EEBus, come i caricabatterie o un'unità di controllo del gestore della rete. Tutte le inizializzazioni e la generazione dei certificati necessari vengono eseguite automaticamente al primo avvio.",
       "descriptionAdvanced": "Non sono necessarie modifiche. Apportate modifiche solo se sapete esattamente cosa state facendo. Se modificate lo SHIP-id o i certificati, dovrete associare nuovamente i dispositivi.",
       "interfaces": "Interfacce",
       "interfacesHelp": "Limita le interfacce di rete che EEBus deve utilizzare per evitare problemi di comunicazione. Lascia il campo vuoto per utilizzare tutte le interfacce. Un solo valore per riga.",
+      "noConfiguredDevices": "Nessun dispositivo configurato da SKI.",
+      "noPairings": "Nessun dispositivo associato.",
+      "pairings": "Dispositivi associati",
       "port": "Porta",
       "portHelp": "La porta da usare.",
+      "qr": "Codice di abbinamento",
+      "qrExplain": "Esegui la scansione da un altro dispositivo EEBus durante l'installazione per associare automaticamente il dispositivo, senza dover inserire manualmente l'identificativo dell'apparecchio SKI.",
       "removeConfirm": "Tutte le configurazioni di EEBus verranno rimosse. Al prossimo avvio verranno generati nuovi certificati e identificativi. Sei sicuro?",
+      "removePairing": "Rimuovi associazione",
+      "removePairingConfirm": "Il dispositivo sarà disconnesso e dovrà essere associato nuovamente. Sei sicuro?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Identificativo permanente del dispositivo per l'identificazione nella rete EEBus.",
       "shipidHelp": "Questo SHIP-ID è collegato ai certificati riportati di seguito.",
@@ -213,6 +306,7 @@
     "form": {
       "danger": "Pericolo",
       "deprecated": "deprecato",
+      "durationUnit": "Unità di tempo per {label}",
       "example": "Esempio",
       "optional": "facoltativo"
     },
@@ -245,7 +339,6 @@
       "noFileSelected": "Nessun file selezionato.",
       "off": "off",
       "on": "on",
-      "password": "Password",
       "readFromFile": "Importa da file",
       "remove": "Rimuovi",
       "required": "richiesto",
@@ -267,6 +360,7 @@
       "titleEdit": "Modifica contatore di rete"
     },
     "hems": {
+      "changeConfirm": "La configurazione esistente sarà eliminata. Continuare?",
       "csv": {
         "created": "Creato",
         "finished": "Finito",
@@ -274,11 +368,26 @@
         "limitpower": "Limite (kW)",
         "type": "Tipo"
       },
+      "customOption": "Integrazione definite dall'utente",
       "description": "Limitazione della potenza da parte di sistemi esterni (ad es. §14a EnWG, interfaccia §9 EEG o sistema di gestione dell'energia di livello superiore). Funziona in combinazione con la funzione di gestione del carico.",
-      "downloadCsv": "Scarica CSV",
+      "download": "Scarica",
+      "dynamicLimits": "Limiti dinamici",
       "eventsRecorded": "Registrati {count} eventi di limitazione di prelievo dalla rete.",
+      "exportLimit": "Limite di immissione in rete",
+      "exportLimitDescription": "L'ottimizzatore della batteria rispetta questo limite per evitare perdite solari. Un segnale di limitazione attivo derivante da un'integrazione con limite dinamico ha la precedenza.",
+      "exportLimitHint": "Limite statico di immissione in rete al punto di connessione.",
+      "generic": "Integrazioni generiche",
+      "integrations": "Integrazioni",
       "lastEvent": "Più recente {timeAgo}.",
-      "title": "Limite prelievo da rete"
+      "noEvents": "Nessun evento registrato finora.",
+      "recordedEvents": "Eventi registrati",
+      "staticLimits": "Limiti statici",
+      "template": "Integrazione",
+      "title": "Limite prelievo da rete",
+      "type": {
+        "custom": "Integrazioni definite dall'utente",
+        "relay": "Integrazione definita dall'utente (relè)"
+      }
     },
     "icon": {
       "change": "cambia",
@@ -306,6 +415,7 @@
         "heating": "Aggiungi riscaldatore"
       },
       "addMeter": "Aggiungi contatore energetico dedicato",
+      "advancedConfig": "Configurazione avanzata",
       "cancel": "Annulla",
       "chargerError": {
         "charging": "È necessario configurare un caricatore.",
@@ -327,14 +437,22 @@
       "circuitInvalid": "Il circuito non esiste",
       "circuitLabel": "Circuito",
       "circuitUnassigned": "non assegnato",
+      "created": "“{name}” è stato creato e utilizza impostazioni predefinite di buon senso.",
+      "createdTitle": {
+        "charging": "Punto di ricarica creato",
+        "heating": "Riscaldatore creato"
+      },
+      "creating": {
+        "charging": "Caricabatterie salvato. Creazione del punto di ricarica in corso…",
+        "heating": "Dispositivo di riscaldamento salvato. Creazione del riscaldatore in corso…"
+      },
       "defaultModeHelp": {
         "charging": "Modalità di ricarica quando si collega il veicolo.",
         "heating": "Viene impostato all'avvio del sistema."
       },
       "defaultModeHelpKeep": "Mantiene l'ultima modalità selezionata.",
+      "defaultModeKeep": "mantieni com'è",
       "defaultModeLabel": "Modalità predefinita",
-      "defaultsHint": "Modalità predefinita, comportamento solare e dettagli elettrici utilizzano valori predefiniti ragionevoli.",
-      "defaultsHintLink": "Regola le impostazioni",
       "delete": "Elimina",
       "electricalSubtitle": "Se non sei sicuro, chiedi al tuo elettricista.",
       "electricalTitle": "Elettricità",
@@ -343,8 +461,11 @@
       "estimateLabel": "Stima il livello di carica tra gli aggiornamenti dell'API",
       "maxCurrentHelp": "Deve essere maggiore della corrente minima.",
       "maxCurrentLabel": "Corrente massima",
+      "maxTempHelp": "Deve essere maggiore della temperatura minima.",
+      "maxTempLabel": "Temperature massima",
       "minCurrentHelp": "Scendere al di sotto dei 6A solo se si sa quello che si sta facendo.",
       "minCurrentLabel": "Corrente minima",
+      "minTempLabel": "Temperatura minima",
       "noVehicles": "Nessun veicolo configurato.",
       "option": {
         "charging": "Aggiungi punto di ricarica",
@@ -369,7 +490,6 @@
       "priorityHelp": "Le priorità più elevate ottengono l'accesso preferenziale al surplus solare.",
       "priorityLabel": "Priorità",
       "save": "Salva",
-      "showAllSettings": "Mostra tutte le impostazioni",
       "solarBehaviorCustomHelp": "Definisci soglie personalizzate di attivazione e disattivazione della ricarica.",
       "solarBehaviorDefaultHelp": "Avvia dopo {enableDelay} di surplus sufficiente. Interrompi quando il surplus non è sufficiente per {disableDelay}.",
       "solarBehaviorLabel": "Solare",
@@ -492,7 +612,6 @@
       "option": {
         "aux": "Aggiungi un consumatore autoregolato",
         "battery": "Aggiungi contatore batteria",
-        "ext": "Aggiungi consumatore abituale",
         "pv": "Aggiungi contatore fotovoltaico"
       },
       "save": "Salva",
@@ -574,23 +693,15 @@
       "descriptionHost": "Utilizzato per annunciare evcc nella rete locale.",
       "descriptionInternalUrl": "Indirizzo di rete locale di evcc.",
       "descriptionPort": "Porta per l'interfaccia web e l'API. Dovrai modificare l'URL se modifichi questo.",
-      "descriptionSchema": "Modifica solo come vengono generati gli URL. Selezionare HTTPS non abiliterà la crittografia.",
       "labelExternalUrl": "URL esterno",
       "labelHost": "Nome host mDNS",
       "labelInternalUrl": "URL interno",
       "labelPort": "Porta",
-      "labelSchema": "Tipo",
       "title": "Rete",
       "warningUrlPath": "L'URL di solito non ha bisogno di un percorso. Sei sicuro che sia corretto?"
     },
     "ocpp": {
-      "connectedChargers": "Caricabatterie collegati",
-      "connectionStatus": "ID stazione configurati",
-      "connectionStatusHelp": "Stato di connessione dei caricabatterie configurati.",
-      "detectedChargers": "ID stazioni rilevate",
-      "detectedHelp": "Questi caricatori hanno tentato di connettersi a evcc. Per utilizzare un caricatore, creare un punto di carico con il relativo ID stazione.",
       "noChargers": "Nessun caricatore OCPP rilevato.",
-      "noStations": "Nessuna stazione collegata",
       "status": {
         "configured": "Non connesso",
         "connected": "Connesso",
@@ -821,10 +932,6 @@
         "weekdays": "Giorni feriali"
       }
     },
-    "tariffs": {
-      "description": "Definisci le tue tariffe energetiche per calcolare i costi delle tue sessioni di ricarica.",
-      "title": "Tariffe"
-    },
     "telemetry": {
       "description": "Configura la condivisione dei dati per contribuire a migliorare evcc. La tua privacy è importante per noi e la partecipazione è completamente facoltativa.",
       "title": "Telemetria"
@@ -990,7 +1097,6 @@
     "blog": "Blog",
     "docs": "Documentazione",
     "github": "GitHub",
-    "login": "Iscrizioni Veicolo",
     "logout": "Logout",
     "nativeSettings": "Cambia Server",
     "needHelp": "Hai bisogno di aiuto?",
@@ -1085,7 +1191,6 @@
   "loginModal": {
     "cancel": "Annulla",
     "demoMode": "Il login non è supportato in modalità demo.",
-    "error": "Login fallito: ",
     "iframeHint": "Apri evcc in una nuova scheda.",
     "iframeIssue": "La tua password è corretta, ma sembra che il cookie di autenticazione sia stato eliminato. Questo può succedere quando usi evcc su un iframe su HTTP.",
     "invalid": "Password errata.",
@@ -1109,7 +1214,6 @@
       },
       "planNumber": "Piano {number}",
       "precondition": {
-        "description": "Carica {duration} prima della partenza per pre-condizionare la batteria.",
         "label": "Carica ritardata",
         "optionAll": "tutto",
         "optionNo": "no"
@@ -1119,7 +1223,6 @@
       "repeatingPlans": "Piani ricorrenti",
       "selectAll": "Seleziona tutti",
       "strategyDisabledDescription": "La ricarica inizia il più tardi possibile per terminare appena in tempo per la partenza. Con i prezzi dinamici della rete elettrica o la tariffa CO₂, sono disponibili ulteriori opzioni.",
-      "strategySettings": "Impostazioni strategia",
       "time": "Ora",
       "title": "Piano",
       "unsavedChanges": "Ci sono modifiche non salvate. Vuoi salvarle adesso?",
@@ -1186,14 +1289,12 @@
       "batteryUsage": "Batteria di casa",
       "currents": "Corrente di carica",
       "default": "default",
-      "disclaimerHint": "Nota:",
       "maxCurrent": {
         "label": "Corrente massima"
       },
       "minCurrent": {
         "label": "Corrente min."
       },
-      "onlyForSocBasedCharging": "Questa opzione è solo per i veicoli dei quali si sa lo stato di carica.",
       "phasesConfigured": {
         "label": "Fasi",
         "no1p3pSupport": "Com'è connessa la tua stazione di ricarica?",
@@ -1393,8 +1494,6 @@
       "solarpercentage": "Solare (%)",
       "vehicle": "Veicolo"
     },
-    "csvPeriod": "Scarica il CSV di {period}",
-    "csvTotal": "Scarica il CSV complessivo",
     "date": "Avvio",
     "energy": "Caricato",
     "filter": {

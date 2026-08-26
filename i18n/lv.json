@@ -21,9 +21,12 @@
   },
   "battery": {
     "card": {
-      "charging": "Uzlādējas",
-      "discharging": "Izlādējas",
+      "charging": "uzlādējas",
+      "discharging": "izlādējas",
       "energy": "Enerģija",
+      "gridCharge": "tīkla uzlāde",
+      "hold": "izlāde bloķēta",
+      "holdCharge": "Uzlāde bloķēta",
       "ofTotal": "no {total}",
       "power": "Jauda",
       "soc": "Akumulatora līmenis"
@@ -39,23 +42,24 @@
       },
       "bufferTitle": "Akumulators kā uzlādes buferis",
       "discharge": "Novērst mājas akumulatora izlādi ātrajā režīmā un plānotās uzlādes laikā.",
+      "gridDischarge": "Atļaut mājas akumulatora izlādi tīklā.",
       "priority": "Mājas akumulatoram ir prioritāte, kamēr tas ir zem {soc}. Pēc tam uzlādes punkti saņem pārpalikumu.",
       "priorityNone": "Saules pārpalikums nonāk tieši uzlādes punktos. Iestatiet vērtību virs {soc}, lai dotu priekšroku mājas akumulatoram.",
       "priorityTitle": "Kur pārpalikums nonāk vispirms?"
     },
     "optimizer": {
       "action": {
-        "charge": "Tīkla uzlāde",
-        "hold": "Izlāde bloķēta",
-        "holdcharge": "Uzlāde apturēta",
-        "normal": "Seko saules pārpalikumam"
+        "charge": "Uzlādēt no elektrotīkla",
+        "discharge": "Izlādēt tīklā",
+        "hold": "Nepieļaut izlādi",
+        "holdcharge": "Apturēt uzlādi",
+        "normal": "Sekot saules pārpalikumam"
       },
       "empty": "tukšs",
       "full": "pilns",
       "highest": "Augstākais ({value})",
       "lowest": "Zemākais ({value})",
-      "suggestion": "Ieteikums",
-      "title": "Optimizētājs"
+      "suggestion": "Ieteikums"
     }
   },
   "batterySettings": {
@@ -70,7 +74,7 @@
     "discharge": "Novērst izlādi ātrajā režīmā un plānotajā uzlādē.",
     "disclaimerHint": "Piezīme:",
     "disclaimerText": "Šie iestatījumi ietekmē tikai saules enerģijas režīmu. Uzlādes uzvedība tiek attiecīgi pielāgota.",
-    "gridChargeTab": "Tīkla uzlāde",
+    "gridChargeTab": "Uzlāde no tīkla",
     "legendBottomName": "Dot priekšroku mājas akumulatora uzlādei",
     "legendBottomSubline": "līdz tas sasniedz {soc}.",
     "legendMiddleName": "Dot priekšroku transportlīdzekļa uzlādei",
@@ -116,6 +120,7 @@
       "titleEdit": "Rediģēt pašregulējošu patērētāju"
     },
     "battery": {
+      "title": "Akumulators",
       "titleAdd": "Pievienot akumulatoru",
       "titleEdit": "Rediģēt akumulatoru"
     },
@@ -141,16 +146,16 @@
       "template": "Ražotājs",
       "titleAdd": {
         "charging": "Pievienot lādētāju",
-        "heating": "Pievienot sildītāju"
+        "heating": "Sildīšanas ierīces pievienošana"
       },
       "titleEdit": {
         "charging": "Rediģēt lādētāju",
-        "heating": "Rediģēt sildītāju"
+        "heating": "Rediģēt sildīšanas ierīci"
       },
       "type": {
         "custom": {
           "charging": "Lietotāja definēts lādētājs",
-          "heating": "Lietotāja definēts sildītājs"
+          "heating": "Lietotāja definēta sildīšanas ierīce"
         },
         "heatpump": "Lietotāja definēts siltumsūknis",
         "sgready": "Lietotāja definēts siltumsūknis (sg-ready caur spraudņiem)",
@@ -186,6 +191,7 @@
     "deviceValue": {
       "activeClients": "Aktīvie klienti",
       "amount": "Daudzums",
+      "asleep": "miega režīmā",
       "broker": "Brokeris",
       "bucket": "Tvertne",
       "capacity": "Kapacitāte",
@@ -213,6 +219,7 @@
       "enabled": "Iespējots",
       "energy": "Enerģija",
       "events": "Notikumi",
+      "exportLimit": "Tīkla atdeves limits",
       "feedinPrice": "Atdeves cena",
       "forecast": "Prognoze",
       "gridPrice": "Tīkla cena",
@@ -224,6 +231,7 @@
       "no": "nē",
       "odometer": "Odometrs",
       "org": "Organizācija",
+      "outdoorTemp": "Āra gaisa temperatūra",
       "phaseCurrents": "Fāžu strāvas",
       "phasePowers": "Fāžu jaudas",
       "phaseVoltages": "Fāžu spriegumi",
@@ -233,6 +241,7 @@
       "price": "Cena",
       "productionLimited": "Ražošana ierobežota",
       "range": "Nobraukums",
+      "remoteEnabled": "Iespējots",
       "returnEnergy": "Enerģija (atpakaļvirzienā)",
       "singlePhase": "Vienfāzu",
       "soc": "Uzlādes līmenis",
@@ -298,6 +307,7 @@
     "form": {
       "danger": "Bīstami",
       "deprecated": "novecojis",
+      "durationUnit": "Laika vienība vienumam {label}",
       "example": "Piemērs",
       "optional": "neobligāti"
     },
@@ -310,17 +320,22 @@
       "change": "Mainīt",
       "clear": "Notīrīt",
       "close": "Aizvērt",
+      "confirmDisable": "Atspējot šo ierīci? Tā tiks ignorēta pēc nākamās restartēšanas.",
+      "confirmEnable": "Vai atkal iespējot šo ierīci?",
       "confirmSave": "Ir nesaglabātas izmaiņas. Saglabāt tagad?",
       "copied": "Nokopēts!",
       "copy": "Kopēt",
       "customHelp": "Izveidot lietotāja definētu ierīci, izmantojot evcc spraudņu sistēmu.",
       "customOption": "Lietotāja definēta ierīce",
       "delete": "Dzēst",
+      "disable": "Atspējot",
+      "disabled": "atspējots",
       "dismiss": "Noraidīt",
       "docsLink": "Skatīt dokumentāciju.",
       "dragHandle": "Vilkt",
       "dragItem": "Velkams: {title}",
       "dragList": "Pārkārtojams saraksts",
+      "enable": "Iespējot",
       "error": "Kļūda",
       "experimental": "Eksperimentāla versija",
       "forceSave": "Saglabāt tik un tā",
@@ -362,13 +377,24 @@
       },
       "customOption": "Lietotāja definēta integrācija",
       "description": "Jaudas ierobežošana no ārējām sistēmām (piem. §14a EnWG §9 EEG saskarne vai augstāka līmeņa enerģijas pārvaldības sistēma). Darbojas kopā ar slodzes pārvaldības funkciju. Saules ražošanas ierobežošana ir pieejama arī atlasītām ierīcēm. Faktiskais atdeves ierobežojums jāiestata katrā invertora konfigurācijā.",
-      "downloadCsv": "Lejupielādēt CSV",
+      "download": "Lejupielādēt",
+      "dynamicLimits": "Dinamiskie ierobežojumi",
       "eventsRecorded": "Saglabāti {count} tīkla ierobežošanas notikumi.",
+      "exportLimit": "Atdeves tīklā ierobežojums",
+      "exportLimitDescription": "Akumulatora optimizētājs ievēro šo ierobežojumu, lai novērstu saules enerģijas zudumus. Aktīvs ierobežošanas signāls no dinamisko ierobežojumu integrācijas ir prioritārs.",
+      "exportLimitHint": "Statisks atdeves ierobežojums pieslēguma punktā tīklam.",
       "generic": "Vispārīgās integrācijas",
       "integrations": "Integrācijas",
       "lastEvent": "Pēdējais pirms {timeAgo}.",
+      "noEvents": "Vēl nav reģistrēts neviens notikums.",
+      "recordedEvents": "Reģistrētie notikumi",
+      "staticLimits": "Statiskie ierobežojumi",
       "template": "Integrācija",
-      "title": "Ārējais ierobežojums"
+      "title": "Ārējais ierobežojums",
+      "type": {
+        "custom": "Lietotāja definēta integrācija",
+        "relay": "Lietotāja definēta integrācija (relejs)"
+      }
     },
     "icon": {
       "change": "mainīt",
@@ -393,17 +419,18 @@
     "loadpoint": {
       "addCharger": {
         "charging": "Pievienot lādētāju",
-        "heating": "Pievienot sildītāju"
+        "heating": "Pievienot sildierīci"
       },
       "addMeter": "Pievienot atsevišķu enerģijas skaitītāju",
+      "advancedConfig": "Paplašinātā konfigurācija",
       "cancel": "Atcelt",
       "chargerError": {
         "charging": "Nepieciešams konfigurēt lādētāju.",
-        "heating": "Nepieciešams konfigurēt sildītāju."
+        "heating": "Nepieciešams konfigurēt sildīšanas ierīci."
       },
       "chargerLabel": {
         "charging": "Lādētājs",
-        "heating": "Sildītājs"
+        "heating": "Sildīšanas ierīce"
       },
       "chargerPower11kw": "11 kW",
       "chargerPower11kwHelp": "Izmantos strāvas diapazonu no 6 līdz 16 A.",
@@ -417,14 +444,22 @@
       "circuitInvalid": "Ķēde nepastāv",
       "circuitLabel": "Ķēde",
       "circuitUnassigned": "nepiešķirts",
+      "created": "„{name}” izveidots un izmanto saprātīgus noklusējuma iestatījumus.",
+      "createdTitle": {
+        "charging": "Uzlādes punkts izveidots",
+        "heating": "Sildītājs izveidots"
+      },
+      "creating": {
+        "charging": "Lādētājs saglabāts. Izveido uzlādes punktu …",
+        "heating": "Sildīšanas ierīce saglabāta. Izveido sildītāju …"
+      },
       "defaultModeHelp": {
         "charging": "Uzlādes režīms pievienojot transportlīdzekli.",
         "heating": "Tiek iestatīts sistēmas startēšanas brīdī."
       },
       "defaultModeHelpKeep": "Saglabā pēdējo izvēlēto režīmu.",
+      "defaultModeKeep": "atstāt kā ir",
       "defaultModeLabel": "Noklusējuma režīms",
-      "defaultsHint": "Noklusējuma režīms - saules enerģijas ražošanas uzvedība un elektrības parametri izmanto saprātīgus noklusējumus.",
-      "defaultsHintLink": "Pielāgot iestatījumus",
       "delete": "Dzēst",
       "electricalSubtitle": "Šaubu gadījumā jautājiet elektriķim.",
       "electricalTitle": "Elektrība",
@@ -441,7 +476,7 @@
       "noVehicles": "Nav konfigurēts neviens transportlīdzeklis.",
       "option": {
         "charging": "Pievienot uzlādes punktu",
-        "heating": "Pievienot sildīšanas ierīci"
+        "heating": "Sildītāja pievienošana"
       },
       "phases1p": "Vienfāzu",
       "phases3p": "Trīsfāžu",
@@ -481,12 +516,12 @@
       "thresholdEnableLabel": "Ieslēgšanas tīkla jauda",
       "titleAdd": {
         "charging": "Pievienot uzlādes punktu",
-        "heating": "Pievienot sildīšanas ierīci",
-        "unknown": "Pievienot lādētāju vai sildītāju"
+        "heating": "Pievienot Sildītāju",
+        "unknown": "Lādētāja vai sildītāja pievienošana"
       },
       "titleEdit": {
         "charging": "Rediģēt uzlādes punktu",
-        "heating": "Rediģēt sildīšanas ierīci",
+        "heating": "Rediģēt sildītāju",
         "unknown": "Rediģēt lādētāju vai sildītāju"
       },
       "titleExample": {
@@ -505,7 +540,7 @@
       "addAdditional": "Pievienot papildu skaitītāju",
       "addConsumer": "Pievienot enerģijas patērētāju",
       "addGrid": "Pievienot tīkla skaitītāju",
-      "addLoadpoint": "Pievienot lādētāju vai sildītāju",
+      "addLoadpoint": "Pievienot lādētāju vai sildierīci",
       "addPvBattery": "Pievienot saules enerģijas avotu vai akumulatoru",
       "addTariffs": "Pievienot tarifus",
       "addVehicle": "Pievienot transportlīdzekli",
@@ -536,18 +571,18 @@
           "titleDefault": "Transportlīdzeklis aizmidzis"
         },
         "connect": {
-          "messageDefault": "Automašīna pievienota pie {pvPower}kW saules",
-          "title": "Kad automašīna pievienojas",
-          "titleDefault": "Automašīna pievienota"
+          "messageDefault": "Transportlīdzeklis pievienots pie {pvPower}kW saules",
+          "title": "Kad transportlīdzeklis pievienojas",
+          "titleDefault": "Transportlīdzeklis pievienots"
         },
         "disconnect": {
-          "messageDefault": "Automašīna atvienota pēc {connectedDuration}",
-          "title": "Kad automašīna atvienojas",
-          "titleDefault": "Automašīna atvienota"
+          "messageDefault": "Transportlīdzeklis atvienots pēc {connectedDuration}",
+          "title": "Kad transportlīdzeklis atvienojas",
+          "titleDefault": "Transportlīdzeklis atvienots"
         },
         "guest": {
           "messageDefault": "Nezināms transportlīdzeklis viesis pievienojies?",
-          "title": "Kad nezināma automašīna pievienojas",
+          "title": "Kad nezināms transportlīdzeklis pievienojas",
           "titleDefault": "Nezināms transportlīdzeklis"
         },
         "planoverrun": {
@@ -569,6 +604,11 @@
           "messageDefault": "Pabeigta uzlāde {chargedEnergy} kWh {chargeDuration} laikā.",
           "title": "Kad uzlāde apstājas",
           "titleDefault": "Uzlāde pabeigta"
+        },
+        "suggestion": {
+          "messageDefault": "Optimizētāja ieteikums {suggestionTitle}: ja optimizētāja vadība būtu aktīva, tas tagad piemērotu '{suggestionAction}'. Tikai ieteikums, nekas nav mainīts. Eksperimentāls — atsauksmes laipni gaidītas https://github.com/evcc-io/evcc/issues/31903",
+          "title": "Kad optimizētāja ieteikuma darbība mainās",
+          "titleDefault": "Optimizētāja ieteikums"
         }
       },
       "eventMessage": "Ziņojums",
@@ -599,7 +639,6 @@
         "aux": "Pievienot pašregulējošu patērētāju",
         "battery": "Pievienot akumulatora skaitītāju",
         "consumer": "Pievienot parastu patērētāju",
-        "ext": "Pievienot parastu patērētāju",
         "pv": "Pievienot saules enerģijas skaitītāju"
       },
       "save": "Saglabāt",
@@ -625,6 +664,8 @@
       "connectionHintTcpip": "Ierīce ir sasniedzama caur tīklu (LAN/WiFi).",
       "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Tīkls",
+      "delay": "Aizture",
+      "delayHint": "Neobligāts gaidīšanas laiks pirms katra reģistra piekļuves. Nepieciešams tikai lēnām ierīcēm.",
       "device": "Ierīces nosaukums",
       "deviceHint": "Piemērs: /dev/ttyUSB0",
       "host": "IP adrese vai resursdatora nosaukums",
@@ -635,7 +676,9 @@
       "protocolHintRtu": "Savienojums caur RS485 uz Ethernet adapteri bez protokola translācijas.",
       "protocolHintTcp": "Ierīcei ir iebūvēts LAN/Wifi atbalsts vai tā ir savienota caur RS485 uz Ethernet adapteri ar protokola translāciju.",
       "protocolValueRtu": "RTU",
-      "protocolValueTcp": "TCP"
+      "protocolValueTcp": "TCP",
+      "timeout": "Pārtraukums",
+      "timeoutHint": "Neobligāts maksimālais gaidīšanas laiks uz ierīces atbildi."
     },
     "modbusproxy": {
       "add": "Pievienot starpniekservera savienojumu",
@@ -799,7 +842,7 @@
       "general": "Vispārīgi",
       "grid": "Tīkls",
       "integrations": "Integrācijas",
-      "loadpoints": "Uzlāde un sildīšana",
+      "loadpoints": "Lādētāji un sildītāji",
       "meter": "Saules enerģija un akumulators",
       "services": "Pakalpojumi",
       "system": "Sistēma",
@@ -914,7 +957,8 @@
         "feedIn": "Pievienot tīkla atdeves tarifu",
         "grid": "Pievienot tīkla patēriņa tarifu",
         "planner": "Pievienot plānotāja prognozi",
-        "solar": "Pievienot saules enerģijas prognozi"
+        "solar": "Pievienot saules enerģijas prognozi",
+        "temperature": "Pievienot laika prognozi temperatūrai"
       },
       "planner": {
         "description": "Paplašināts iestatījums. Parasti nav nepieciešams, jo dinamiski elektrības tarifi vai CO₂ prognozes tiek izmantotas automātiski. Iespējo papildu datu avotu ko izmanto tikai uzlādes plānošanai nevis statistikai un cenu aprēķiniem.",
@@ -927,15 +971,21 @@
         "titleAdd": "Pievienot saules enerģijas prognozi",
         "titleEdit": "Rediģēt saules enerģijas prognozi"
       },
+      "temperature": {
+        "description": "Āra temperatūras prognoze jūsu atrašanās vietai. Tiek rādīta saskarnē un izmantota, lai prognozētu sildīšanas pieprasījumu.",
+        "titleAdd": "Pievienot Temperatūras Prognozi",
+        "titleEdit": "Rediģēt temperatūras prognozi"
+      },
       "template": "Pakalpojumu sniedzējs",
       "title": "Tarifi un prognozes",
       "titleChoice": "Ko vēlaties pievienot?",
       "type": {
         "co2": "CO₂ intensitāte",
-        "feedIn": "Tīkla atdeves cena",
+        "feedIn": "Tīkla eksporta cena",
         "grid": "Tīkla patēriņa cena",
         "planner": "Plānotājs",
-        "solar": "Saules enerģija"
+        "solar": "Saules enerģija",
+        "temperature": "Temperatūras prognoze"
       },
       "zones": {
         "add": "Pievienot zonu",
@@ -1056,6 +1106,8 @@
     "version": {
       "availableLong": "pieejama jauna versija",
       "community": "evcc kopiena",
+      "labelEmail": "E-pasts",
+      "labelPhone": "Tālrunis",
       "labelRelease": "Laidiens",
       "labelVersion": "Versija",
       "labelWebsite": "Tīmekļa vietne",
@@ -1088,7 +1140,8 @@
       "co2": "Redziet, kad tīkla enerģija jūsu reģionā ir tīra. Uzlādes plāni optimizēs zemām emisijām un aprēķinās CO₂ ietaupījumus.",
       "price": "Konfigurējiet dinamisko elektrības tarifu, lai automātiski optimizētu uzlādes plānus un aprēķinātu ietaupījumus.",
       "setup": "Iestatīt tarifus un prognozes",
-      "solar": "Redziet sagaidāmo saules enerģijas ražošanu šodienai un nākamajām dienām. Nākotnē tiks izmantota arī automātiskai uzlādes optimizācijai."
+      "solar": "Redziet sagaidāmo saules enerģijas ražošanu šodienai un nākamajām dienām. Nākotnē tiks izmantota arī automātiskai uzlādes optimizācijai.",
+      "temperature": "Skatiet paredzamo āra temperatūru jūsu atrašanās vietai. Izmanto, lai prognozētu sildīšanas pieprasījumu."
     },
     "hideLine": "slēpt līniju",
     "modalTitle": "Prognoze",
@@ -1110,14 +1163,24 @@
     "solarAdjust": "Pielāgot saules enerģijas prognozi balstoties uz reāliem ražošanas datiem {percent}.",
     "solarAdjustMedium": "reālo datu pielāgošana",
     "solarAdjustShort": "pielāgot",
+    "temperature": {
+      "average": "Vidējā",
+      "range": "Diapazons"
+    },
     "type": {
       "co2": "CO₂ emisijas",
       "price": "Tīkla cena",
-      "solar": "Saules enerģijas ražošana"
+      "solar": "Saules enerģijas ražošana",
+      "temperature": "Āra Temperatūra"
     }
   },
   "general": {
-    "note": "Piezīme:"
+    "back": "Atpakaļ",
+    "download": "Lejupielādēt",
+    "error": "Kļūda",
+    "none": "nav",
+    "note": "Piezīme:",
+    "warning": "Brīdinājums"
   },
   "header": {
     "about": "Par",
@@ -1130,6 +1193,7 @@
     "sessions": "Uzlādes sesijas"
   },
   "help": {
+    "contactButton": "Sazinieties ar mums",
     "discussionsButton": "GitHub diskusijas",
     "documentationButton": "Dokumentācija",
     "issueButton": "Ziņot par problēmu",
@@ -1169,8 +1233,11 @@
     "additionalContext": "Papildu konteksts",
     "additionalContextPlaceholder": "Jebkāda papildu informācija, kas varētu būt noderīga...\n- Konfigurācijas detaļas\n- Ko mēģinājāt\n- Vides informācija",
     "createButtonDiscussion": "Sākt GitHub diskusiju...",
+    "createButtonEmail": "Nosūtīt pieprasījumu e-pastā",
     "createButtonIssue": "Izveidot GitHub problēmu...",
     "description": "Jūsu instalācija nedarbojas kā paredzēts? Izmantojiet šo lapu, lai saņemtu palīdzību vai ziņotu par problēmām. Sniedziet pietiekami daudz detaļu, lai mēs varētu saprast un reproducēt problēmu, vienlaikus saglabājot aprakstu kodolīgu skaidru un viegli izsekojamu.",
+    "downloadButton": "Lejupielādēt atkļūdošanas informāciju",
+    "downloadHint": "Ja nepieciešama papildu informācija, pievienojiet šo datni savam e-pastam.",
     "helpType": {
       "discussion": "Nepieciešama palīdzība ar manu iestatīšanu",
       "discussionDescription": "Kopienas diskusijas sniedz atbildes.",
@@ -1182,6 +1249,7 @@
     "issueTitle": "Nosaukums",
     "stepsToReproduce": "Soļi reproducēšanai",
     "subTitleDiscussion": "Aprakstiet savu problēmu",
+    "subTitleEmail": "Aprakstiet savu problēmu",
     "subTitleIssue": "Aprakstiet problēmu",
     "summary": {
       "confirmationButtonDiscussion": "Sākt GitHub diskusiju",
@@ -1234,24 +1302,33 @@
       "goal": "Uzlādes mērķis",
       "modalTitle": "Uzlādes plāns",
       "none": "nav",
+      "once": "vienu reizi",
       "optimization": {
         "cheapest": "lētākais",
+        "cheapestDescription": "Atlasa vislētākos laika posmus. Var rasties vairākas uzlādes pauzes un atsākšanas.",
+        "cleanest": "vistīrākā",
+        "cleanestDescription": "Atlasa viszaļākos laika posmus. Var izraisīt vairākas uzlādes pārtraukumus.",
         "continuous": "nepārtraukts",
+        "continuousCo2Description": "Atlasa nepārtrauktu vistīrāko laika posmu virkni.",
+        "continuousPriceDescription": "Atlasa nepārtrauktu vislētāko laika posmu virkni.",
         "label": "Optimizācija"
       },
       "planNumber": "Plāns {number}",
       "precondition": {
-        "description": "Uzlādēt {duration} pirms izbraukšanas akumulatora priekškondicionēšanai.",
+        "description": "Daļu no uzlādes veic tieši pirms izbraukšanas: slitāks akumulators, mazāk laika ar augstu uzlādes līmeni.",
         "label": "Vēlā uzlāde",
         "optionAll": "viss",
-        "optionNo": "nē"
+        "optionNo": "nē",
+        "summary": "{precondition} pirms"
       },
       "remove": "Noņemt",
       "repeating": "atkārtojošs",
       "repeatingPlans": "Atkārtojošie plāni",
       "selectAll": "Izvēlēties visus",
+      "strategy": {
+        "label": "Stratēģija"
+      },
       "strategyDisabledDescription": "Uzlāde sākas cik vien vēlu iespējams, lai pabeigtu tieši pirms izbraukšanas. Ar dinamiskiem tīkla tarifiem vai CO₂ tarifu šeit ir pieejamas papildus iespējas.",
-      "strategySettings": "Stratēģijas iestatījumi",
       "time": "Laiks",
       "title": "Plāns",
       "unsavedChanges": "Ir nesaglabātas izmaiņas. Piemērot tagad?",
@@ -1282,11 +1359,15 @@
       "pv": "Saules enerģijas ražošanas sistēma",
       "pvExport": "Atdeve tīklā",
       "pvProduction": "Ražošana",
-      "selfConsumption": "Pašpatēriņš"
+      "selfConsumption": "Pašpatēriņš",
+      "toggleDetails": "Enerģijas plūsmas detaļas"
     },
     "heatingStatus": {
       "charging": "Silda…",
       "connected": "Gaidīšanas režīms.",
+      "minTemp": "Minimālā sildīšana līdz {temp}.",
+      "suggestionStartTooltip": "Optimizētājs iesaka sildīt tagad.",
+      "suggestionStopTooltip": "Optimizētājs iesaka apturēt sildīšanu.",
       "vehicleLimit": "Sildītāja ierobežojums",
       "waitForVehicle": "Gatavs sildīšanai…"
     },
@@ -1310,7 +1391,7 @@
           "returnEnergy": "Enerģija (atpakaļvirzienā)"
         }
       },
-      "downloadCsv": "Lejupielādēt CSV",
+      "download": "Lejupielādēt",
       "empty": "Nav vēstures datu par šo laika periodu.",
       "group": {
         "battery": "Akumulators",
@@ -1332,12 +1413,15 @@
       "emission": "Emisija",
       "fallbackName": "Uzlādes punkts",
       "finished": "Beigu laiks",
+      "last24hEnergy": "Pēdējās 24 stundas",
+      "last7dEnergy": "Pēdējās 7 dienas",
       "power": "Jauda",
       "price": "Izmaksas",
       "remaining": "Atlicis",
       "remoteDisabledHard": "{source}: izslēgts",
       "remoteDisabledSoft": "{source}: izslēgta adaptīvā saules enerģijas uzlāde",
-      "solar": "Saules enerģija"
+      "solar": "Saules enerģija",
+      "todayEnergy": "Šodien"
     },
     "loadpointSettings": {
       "batteryBoost": {
@@ -1355,14 +1439,17 @@
       "batteryUsage": "Mājas akumulators",
       "currents": "Uzlādes strāva",
       "default": "noklusējuma",
-      "disclaimerHint": "Piezīme:",
+      "heating": "Sildīšana",
       "maxCurrent": {
         "label": "Maks. strāva"
       },
       "minCurrent": {
         "label": "Min. strāva"
       },
-      "onlyForSocBasedCharging": "Šīs iespējas ir pieejamas tikai transportlīdzekļiem ar zināmu uzlādes līmeni.",
+      "minTemp": {
+        "description": "Zem {0} akumulators un tīkla jauda tiek izmantoti arī saules režīmā, lai uzturētu šo temperatūru.",
+        "label": "Min. temperatūra"
+      },
       "phasesConfigured": {
         "label": "Fāzes",
         "no1p3pSupport": "Kā jūsu lādētājs ir pieslēgts?",
@@ -1445,6 +1532,21 @@
       "unknown": "Viesu transportlīdzeklis",
       "vehicleSoc": "Uzlādes līmenis"
     },
+    "vehicleSettings": {
+      "connectedTo": "savienots ar {0}",
+      "description": "Šie noklusējumi tiek piemēroti, kad transportlīdzeklis pieslēdzas uzlādes punktam.",
+      "editHint": "Pievienojiet vai rediģējiet transportlīdzekļus {0}.",
+      "keepAsIs": "Atstāt kā ir",
+      "learnMore": "Uzzināt vairāk.",
+      "limitSoc": "Noklusējuma ierobežojums",
+      "limitSocDescription": "Tiek piemērots, kad transportlīdzeklis ir pievienots.",
+      "menu": "Transportlīdzekļi",
+      "minSoc": "Minimālā uzlāde",
+      "minSocDescription": "Ātrā uzlāde līdz šim līmenim saules režīmā.",
+      "mode": "Noklusējuma režīms",
+      "notConnected": "nav pievienots",
+      "title": "Transportlīdzekļa iestatījumi"
+    },
     "vehicleStatus": {
       "awaitingAuthorization": "Gaida autorizāciju.",
       "batteryBoost": "Akumulatora paātrinājums aktīvs.",
@@ -1471,6 +1573,8 @@
       "pvEnable": "Pārpalikums pieejams. Drīz sāksies.",
       "scale1p": "Drīz samazinās līdz vienfāzu uzlādei.",
       "scale3p": "Drīz palielinās līdz trīsfāžu uzlādei.",
+      "suggestionStartTooltip": "Optimizētājs iesaka uzlādēt tagad.",
+      "suggestionStopTooltip": "Optimizētājs iesaka apturēt uzlādi.",
       "targetChargeActive": "Uzlādes plāns aktīvs. Paredzamās beigas pēc {duration}.",
       "targetChargePlanned": "Uzlādes plāns sākas pēc {duration}.",
       "targetChargeWaitForVehicle": "Uzlādes plāns gatavs. Gaida transportlīdzekli…",
@@ -1510,6 +1614,7 @@
   },
   "session": {
     "addOdometer": "Pievienot vērtību",
+    "addedRange": "Pievienotais nobraukums",
     "cancel": "Atcelt",
     "co2": "CO₂",
     "date": "Periods",
@@ -1520,11 +1625,12 @@
     "meterstop": "Skaitītāja beigas",
     "odometer": "Nobraukums",
     "price": "Izmaksas",
-    "soc": "Transp. uzlādes līmenis",
+    "soc": "Uzlāde",
     "started": "Sākts",
     "title": "Uzlādes sesija"
   },
   "sessions": {
+    "addedRange": "Diapazons",
     "avgPower": "⌀ Jauda",
     "avgPrice": "⌀ Cena",
     "chargeDuration": "Ilgums",
@@ -1550,6 +1656,7 @@
     },
     "co2": "⌀ CO₂",
     "csv": {
+      "addedrange": "Pievienotais nobraukums (km)",
       "chargedenergy": "Enerģija (kWh)",
       "chargeduration": "Ilgums",
       "co2perkwh": "CO₂/kWh",
@@ -1567,9 +1674,9 @@
       "solarpercentage": "Saules enerģija (%)",
       "vehicle": "Transportlīdzeklis"
     },
-    "csvPeriod": "Lejupielādēt {period} CSV",
-    "csvTotal": "Lejupielādēt kopējo CSV",
     "date": "Sākums",
+    "download": "Lejupielādēt {period}",
+    "downloadTotal": "Lejupielādēt kopā",
     "energy": "Uzlādēts",
     "filter": {
       "allLoadpoints": "visi uzlādes punkti",
@@ -1626,6 +1733,7 @@
       "label": "Valoda"
     },
     "loadpoints": {
+      "disabledDevice": "atspējots",
       "help": "Mainīt secību un redzamību lietotāja saskarnē.",
       "hide": "Slēpt {title}",
       "label": "Uzlādes punkti",

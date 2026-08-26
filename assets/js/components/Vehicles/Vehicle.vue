@@ -95,7 +95,7 @@ import { defineComponent, type PropType } from "vue";
 import {
 	CHARGE_MODE,
 	type BATTERY_MODE,
-	type Forecast,
+	type UiForecast,
 	type VehicleStatus,
 	type Vehicle,
 	type LoadpointUi,
@@ -146,7 +146,7 @@ export default defineComponent({
 		chargerStatusReason: String,
 		phaseAction: String,
 		phaseRemainingInterpolated: Number,
-		forecast: Object as PropType<Forecast>,
+		forecast: Object as PropType<UiForecast>,
 		planActive: Boolean,
 		planEnergy: Number,
 		planProjectedStart: String,

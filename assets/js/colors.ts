@@ -27,6 +27,7 @@ const colors: {
   temperature: string | null;
   export: string | null;
   background: string | null;
+  box: string | null;
   light: string | null;
   selfPalette: string[];
   palette: string[];
@@ -44,6 +45,7 @@ const colors: {
   temperature: null,
   export: null,
   background: null,
+  box: null,
   light: null,
   selfPalette: ["#0FDE41", "#FFBD2F", "#FD6158", "#03C1EF", "#0F662D", "#FF922E"],
   palette: [
@@ -152,6 +154,7 @@ export function updateCssColors() {
   colors.temperature = style.getPropertyValue("--evcc-temperature");
   colors.export = style.getPropertyValue("--evcc-export-contrast");
   colors.background = style.getPropertyValue("--evcc-background");
+  colors.box = style.getPropertyValue("--evcc-box");
   colors.pricePerKWh = style.getPropertyValue("--bs-gray-medium");
   colors.co2PerKWh = style.getPropertyValue("--bs-gray-medium");
   colors.light = style.getPropertyValue("--bs-gray-light");

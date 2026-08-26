@@ -311,6 +311,23 @@ a:hover {
 	--bs-btn-line-height: 2;
 }
 
+.btn-pill {
+	--bs-btn-bg: var(--bs-body-bg);
+	--bs-btn-color: var(--evcc-default-text);
+	--bs-btn-border-color: var(--evcc-gray-50);
+	--bs-btn-hover-bg: var(--bs-body-bg);
+	--bs-btn-hover-color: var(--evcc-default-text);
+	--bs-btn-hover-border-color: var(--evcc-default-text);
+	--bs-btn-active-bg: var(--bs-body-bg);
+	--bs-btn-active-color: var(--evcc-default-text);
+	--bs-btn-active-border-color: var(--evcc-default-text);
+	white-space: nowrap;
+	text-transform: uppercase;
+	font-weight: bold;
+	font-size: 0.75rem;
+	border-radius: 50rem;
+}
+
 .btn-outline-secondary {
 	--bs-btn-color: var(--evcc-default-text);
 	--bs-btn-border-color: var(--evcc-default-text);
@@ -432,6 +449,11 @@ a:hover {
 }
 .modal.show .modal-dialog {
 	transform: none;
+}
+/* restore bootstrap's dismiss-blocked zoom, neutralized by the transform reset above */
+.modal.modal-static .modal-dialog {
+	transform: scale(1.02);
+	transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .modal-header {
@@ -586,6 +608,16 @@ small {
 .dark .form-switch .form-check-input:checked {
 	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%2328293e'/%3e%3c/svg%3e");
 }
+/* hide number input spinners */
+input[type="number"] {
+	appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
 /* fix desktop safari formatting */
 input::-webkit-datetime-edit {
 	display: block;
@@ -773,6 +805,43 @@ html.app .modal-dialog {
 	}
 }
 
+/* in-place fade-swipe between two views (Vue transition classes, e.g. config list>detail) */
+.fade-swap-left-enter-active,
+.fade-swap-left-leave-active,
+.fade-swap-right-enter-active,
+.fade-swap-right-leave-active {
+	transition:
+		opacity 150ms ease,
+		transform 150ms ease;
+}
+/* leaving view overlaps the entering one instead of pushing it down;
+   ancestor must be position:relative and unpadded, or the view jumps when going absolute */
+.fade-swap-left-leave-active,
+.fade-swap-right-leave-active {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+}
+.fade-swap-left-enter-from,
+.fade-swap-left-leave-to {
+	opacity: 0;
+	transform: translateX(-1rem);
+}
+.fade-swap-right-enter-from,
+.fade-swap-right-leave-to {
+	opacity: 0;
+	transform: translateX(1rem);
+}
+@media (prefers-reduced-motion: reduce) {
+	.fade-swap-left-enter-active,
+	.fade-swap-left-leave-active,
+	.fade-swap-right-enter-active,
+	.fade-swap-right-leave-active {
+		transition: none;
+	}
+}
+
 .round-box--error {
 	box-shadow: 0 0 0.5rem var(--bs-danger);
 	border: 1px solid var(--bs-danger);
@@ -847,7 +916,7 @@ input::-webkit-date-and-time-value {
 .collapsible-wrapper {
 	display: grid;
 	grid-template-rows: 0fr;
-	transition: grid-template-rows var(--evcc-transition-fast) ease 0.2s;
+	transition: grid-template-rows var(--evcc-transition-fast) ease var(--evcc-transition-fast);
 }
 
 .collapsible-wrapper.open {
@@ -858,14 +927,33 @@ input::-webkit-date-and-time-value {
 .collapsible-content {
 	overflow: hidden;
 	opacity: 0;
-	transition: opacity 0.2s ease;
+	/* keep hidden content non-interactive and out of the a11y tree */
+	visibility: hidden;
+	transition:
+		opacity var(--evcc-transition-fast) ease,
+		visibility var(--evcc-transition-fast) ease;
 }
 
 .collapsible-wrapper.open .collapsible-content {
 	opacity: 1;
-	transition: opacity var(--evcc-transition-fast) ease 0.2s;
+	visibility: visible;
+	transition:
+		opacity var(--evcc-transition-fast) ease var(--evcc-transition-fast),
+		visibility var(--evcc-transition-fast) ease var(--evcc-transition-fast);
+}
+
+/* clearance so overflow-hidden containers don't clip focus rings */
+.ring-space {
+	padding: 0.5rem;
+	margin: -0.5rem;
 }
 
 .sticky-bottom {
 	bottom: calc(var(--tab-bar-height) + 0.25rem);
+}
+
+[_echarts_instance_] {
+	user-select: none;
+	-webkit-user-select: none;
+	-webkit-touch-callout: none;
 }

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect } from "vite-plus/test";
 import { historyToSeries, forecastToSeries, buildChartBatteries } from "./history";
 import type { BatteryMeter, EvOpt } from "@/types/evcc";
 import type { BatteryHistorySeries } from "./types";

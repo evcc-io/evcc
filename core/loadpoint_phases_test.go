@@ -271,6 +271,7 @@ func TestPvScalePhases(t *testing.T) {
 			// scale down
 			min1p := 0.1
 			lp.phaseTimer = time.Time{}
+			lp.chargePower = float64(lp.ActivePhases()) * minA * Voltage // charging at min current
 
 			plainCharger.EXPECT().Enable(false).Return(nil).MaxTimes(1)
 			phaseCharger.EXPECT().Phases1p3p(1).Return(nil).MaxTimes(1)
@@ -370,6 +371,17 @@ func TestPvScalePhasesTimer(t *testing.T) {
 		}},
 		{"3/3->1, timer elapsed", 3, 3, 0.1, 1, 1, func(lp *Loadpoint) {
 			lp.phaseTimer = elapsed
+		}},
+
+		// charging with insufficient power for 1p: disable instead of scaling down
+		{"3/3->1, insufficient for 1p, charging", 3, 3, 0.1, 3, 0, func(lp *Loadpoint) {
+			lp.phaseTimer = elapsed
+			lp.enabled = true
+		}},
+		{"3/3->1, sufficient for 1p, charging", 3, 3, 3 * Voltage * minA / 2, 1, 1, func(lp *Loadpoint) {
+			lp.phaseTimer = elapsed
+			lp.enabled = true
+			lp.chargePower = 3 * Voltage * minA
 		}},
 
 		// switch down from 3p/0p while not yet charging
@@ -696,4 +708,86 @@ func TestUpdatePhaseSwitchNotAvailable(t *testing.T) {
 	// second cycle must not attempt the switch again (Phases1p3p .Times(1))
 	lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
 	require.Equal(t, 3, lp.GetPhases())
+}
+
+func TestPvScalePhasesCircuitLimits(t *testing.T) {
+	Voltage = 230
+
+	tc := []struct {
+		desc           string
+		phases         int
+		sitePower      float64
+		circuitCurrent float64 // ValidateCurrent cap, 0 = unlimited
+		circuitPower   float64 // ValidatePower cap, 0 = unlimited
+		expectedPhases int
+	}{
+		// 5520W available equals 24A on 1p, below the 32A loadpoint limit
+		{desc: "no circuit limit", phases: 1, sitePower: -5520, expectedPhases: 0},
+		{desc: "current limit below 1p target", phases: 1, sitePower: -5520, circuitCurrent: 20, expectedPhases: 3},
+		{desc: "power limit below 3p minimum", phases: 1, sitePower: -5520, circuitCurrent: 16, circuitPower: 4000, expectedPhases: 0},
+		{desc: "current limit below minimum", phases: 1, sitePower: -5520, circuitCurrent: 2, expectedPhases: 0},
+		// 11040W available equals 16A on 3p, 4140W required for 3p minimum
+		{desc: "3p, no circuit limit", phases: 3, sitePower: -11040, expectedPhases: 0},
+		{desc: "3p, power limit below 3p minimum", phases: 3, sitePower: -11040, circuitPower: 3000, expectedPhases: 1},
+	}
+
+	for _, tc := range tc {
+		t.Run(tc.desc, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			plainCharger := api.NewMockCharger(ctrl)
+			plainCharger.EXPECT().Enabled().Return(true, nil).AnyTimes()
+			plainCharger.EXPECT().Enable(gomock.Any()).Return(nil).AnyTimes()
+			plainCharger.EXPECT().MaxCurrent(gomock.Any()).Return(nil).AnyTimes()
+
+			phaseCharger := api.NewMockPhaseSwitcher(ctrl)
+			phaseCharger.EXPECT().Phases1p3p(gomock.Any()).Return(nil).AnyTimes()
+
+			vehicle := api.NewMockVehicle(ctrl)
+			vehicle.EXPECT().Phases().Return(3).AnyTimes()
+			vehicle.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
+			vehicle.EXPECT().Features().Return(nil).AnyTimes()
+
+			circuit := api.NewMockCircuit(ctrl)
+			circuit.EXPECT().ValidateCurrent(gomock.Any(), gomock.Any()).DoAndReturn(func(_, current float64) float64 {
+				if tc.circuitCurrent == 0 {
+					return current
+				}
+				return min(current, tc.circuitCurrent)
+			}).AnyTimes()
+			circuit.EXPECT().ValidatePower(gomock.Any(), gomock.Any()).DoAndReturn(func(_, power float64) float64 {
+				if tc.circuitPower == 0 {
+					return power
+				}
+				return min(power, tc.circuitPower)
+			}).AnyTimes()
+
+			lp := &Loadpoint{
+				log:            util.NewLogger("foo"),
+				bus:            evbus.New(),
+				clock:          clock.NewMock(),
+				chargeMeter:    &Null{},
+				chargeRater:    &Null{},
+				chargeTimer:    &Null{},
+				progress:       NewProgress(0, 10),
+				wakeUpTimer:    NewTimer(),
+				mode:           api.ModeNow,
+				minCurrent:     6,
+				maxCurrent:     32,
+				vehicle:        vehicle,
+				phases:         tc.phases,
+				measuredPhases: tc.phases,
+				status:         api.StatusC,
+				circuit:        circuit,
+				charger: struct {
+					*api.MockCharger
+					*api.MockPhaseSwitcher
+				}{plainCharger, phaseCharger},
+			}
+
+			require.Equal(t, tc.expectedPhases, lp.pvScalePhases(tc.sitePower, lp.minCurrent, lp.maxCurrent))
+
+			ctrl.Finish()
+		})
+	}
 }

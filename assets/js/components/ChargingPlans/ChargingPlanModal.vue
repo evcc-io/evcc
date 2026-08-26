@@ -48,7 +48,7 @@ import PlansSettings from "./PlansSettings.vue";
 import api from "@/api";
 import type {
 	CURRENCY,
-	Forecast,
+	UiForecast,
 	PlanStrategy,
 	RepeatingPlan,
 	SMART_COST_TYPE,
@@ -70,7 +70,7 @@ export default defineComponent({
 		vehicles: { type: Array as PropType<Vehicle[]>, default: () => [] },
 		smartCostType: String as PropType<SMART_COST_TYPE>,
 		currency: String as PropType<CURRENCY>,
-		forecast: Object as PropType<Forecast>,
+		forecast: Object as PropType<UiForecast>,
 	},
 	data() {
 		return {

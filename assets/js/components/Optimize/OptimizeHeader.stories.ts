@@ -14,7 +14,13 @@ const base = {
   updated: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
   horizonHours: 47,
   currency: CURRENCY.EUR,
-  chargingStrategies: ["charge_before_export", "attenuate_grid_peaks", "none"],
+  chargingStrategies: [
+    "charge_before_export",
+    "attenuate_demand_peaks",
+    "attenuate_feedin_peaks",
+    "attenuate_grid_peaks",
+    "none",
+  ],
   selectedStrategy: "charge_before_export",
   pending: false,
 };
@@ -34,6 +40,10 @@ Payment.args = { ...base, status: OptimizationStatus.OPTIMAL, netCost: 12.4 };
 // solar surplus, you receive a credit: green, signed
 export const Credit = Template.bind({});
 Credit.args = { ...base, status: OptimizationStatus.OPTIMAL, netCost: -3.8 };
+
+// usable but not proven optimal plan
+export const Feasible = Template.bind({});
+Feasible.args = { ...base, status: OptimizationStatus.FEASIBLE, netCost: 12.4 };
 
 // solver could not produce a plan
 export const Infeasible = Template.bind({});

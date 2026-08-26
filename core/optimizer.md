@@ -6,7 +6,7 @@ Optimizer uses mixed integer linear programming (MILP) to minize a cost function
 - solar forecast
 - base load (aka home) energy demand
 - end of forecast commercial value
-- strategy- either "charge before export" (charge loads as soon as possible) or "attenuate grid peaks"
+- strategy- either "charge before export" (charge loads as soon as possible) or attenuating grid peaks on the demand side, the feed-in side or both
 - home battery or loadpoint/vehicle...
   - capacity, soc and charge goals
   - charge/discharge power limits and efficiency
@@ -47,3 +47,7 @@ Use minimum of energy consumption cost.
 - home battery or loadpoint/vehicle...
   - capacity, soc and charge goals
   - charge/discharge power limits and efficiency
+
+Without vehicle capacity or soc a configured session energy limit is modelled instead:
+state is the session's charged energy, goal is the limit. Loadpoints with neither are
+not modelled at all- their power is added to the base load.

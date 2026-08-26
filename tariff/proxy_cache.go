@@ -11,18 +11,22 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/jinzhu/now"
 )
+
+// defaultInterval is the update interval assumed if the tariff doesn't configure one
+const defaultInterval = time.Hour
 
 // cachingProxy wraps a tariff with caching
 type cachingProxy struct {
 	mu   sync.Mutex
 	hash [32]byte
 
-	key    string
-	ctx    context.Context
-	typ    string
-	config map[string]any
+	key      string
+	ctx      context.Context
+	typ      string
+	config   map[string]any
+	interval time.Duration
+	updated  time.Time
 
 	cached *cached
 	tariff api.Tariff
@@ -37,31 +41,41 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 		tariffType = template
 	}
 
-	p := &cachingProxy{
-		ctx:    ctx,
-		typ:    typ,
-		config: other,
-		key:    tariffType + "-" + cacheKey(typ, other),
+	cc := struct {
+		Interval time.Duration
+		Other    map[string]any `mapstructure:",remain"`
+	}{
+		Interval: defaultInterval,
 	}
 
-	// check if we have cached data until end of tomorrow
-	data, err := p.cacheGet(untilEndOfTomorrow())
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	p := &cachingProxy{
+		ctx:      ctx,
+		typ:      typ,
+		config:   other,
+		interval: cc.Interval,
+		key:      tariffType + "-" + cacheKey(typ, other),
+	}
+
+	// check if cached data is up to date
+	data, err := p.cacheGet()
 	if err != nil {
 		// attempt to create a new instance
 		tariff, err := NewFromConfig(ctx, typ, other)
 		if err != nil {
-			// check if we have at least data for the next 24 hours
-			atLeast2hrs, err2 := p.cacheGet(for24hrs())
-			if err2 != nil {
-				// if not available, return error
+			// if no cached data available, return error
+			if p.cached == nil {
 				return nil, err
 			}
 
-			// use cached data for the next 24 hours
-			data = atLeast2hrs
+			// use outdated cached data
+			data = p.cached
 		}
 
-		// if instance creation was successful, cache it, otherwise use cached 24hrs of data
+		// if instance creation was successful, use it, otherwise use outdated cached data
 		if err == nil {
 			p.tariff = tariff
 		}
@@ -69,9 +83,7 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 
 	if data != nil {
 		log := util.NewLogger("tariff")
-		log.DEBUG.Printf("using cache: %s (start: %s, end: %s)", p.key,
-			data.Rates[0].Start.Local(), data.Rates[len(data.Rates)-1].End.Local(),
-		)
+		log.DEBUG.Printf("using cache: %s (updated: %s)", p.key, data.Updated.Local())
 	}
 
 	return p, nil
@@ -92,7 +104,7 @@ func (p *cachingProxy) Rates() (api.Rates, error) {
 	defer p.mu.Unlock()
 
 	if p.tariff == nil {
-		if res, err := p.cacheGet(for24hrs()); err == nil {
+		if res, err := p.cacheGet(); err == nil {
 			return slices.Clone(res.Rates), nil
 		}
 
@@ -117,7 +129,7 @@ func (p *cachingProxy) Type() api.TariffType {
 	defer p.mu.Unlock()
 
 	if p.tariff == nil {
-		if res, err := p.cacheGet(for24hrs()); err == nil {
+		if res, err := p.cacheGet(); err == nil {
 			return res.Type
 		}
 
@@ -135,7 +147,8 @@ func (p *cachingProxy) dynamicTariff() bool {
 	}, p.tariff.Type())
 }
 
-func (p *cachingProxy) cacheGet(until time.Time) (*cached, error) {
+// cacheGet returns cached data if the update interval has not yet elapsed
+func (p *cachingProxy) cacheGet() (*cached, error) {
 	if p.cached == nil {
 		res, err := cacheGet(p.key)
 		if err != nil {
@@ -145,31 +158,26 @@ func (p *cachingProxy) cacheGet(until time.Time) (*cached, error) {
 		p.cached = res
 	}
 
-	if !ratesValid(p.cached.Rates, until) {
-		return nil, errors.New("not enough rates")
+	if len(p.cached.Rates) == 0 {
+		return nil, errors.New("no rates")
+	}
+
+	if d := time.Since(p.cached.Updated); d > p.interval {
+		return nil, fmt.Errorf("cache outdated: %v", d.Round(time.Second))
 	}
 
 	return p.cached, nil
 }
 
+// cachePut persists rates if changed or the update interval has elapsed
 func (p *cachingProxy) cachePut(typ api.TariffType, rates api.Rates) error {
 	hash := sha256.Sum256(fmt.Append(nil, rates))
-	if hash == p.hash {
+	if hash == p.hash && time.Since(p.updated) < p.interval {
 		return nil
 	}
 
 	p.hash = hash
+	p.updated = time.Now()
+
 	return cachePut(p.key, typ, rates)
-}
-
-func for24hrs() time.Time {
-	return time.Now().Add(24 * time.Hour)
-}
-
-func untilEndOfTomorrow() time.Time {
-	return now.BeginningOfDay().AddDate(0, 0, 2)
-}
-
-func ratesValid(rr api.Rates, until time.Time) bool {
-	return len(rr) > 0 && !rr[len(rr)-1].End.Before(until)
 }

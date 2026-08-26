@@ -103,6 +103,12 @@ func (c *Collector) process(fun func()) error {
 
 	fun()
 
+	return c.advanceSlot(now)
+}
+
+// advanceSlot persists and resets the accumulator when now has entered a new
+// slot, leaving it untouched within the current one.
+func (c *Collector) advanceSlot(now time.Time) error {
 	slotStart := now.Truncate(tariff.SlotDuration)
 
 	switch {
@@ -181,6 +187,48 @@ func (c *Collector) LastSlotEnergy() (float64, bool) {
 		return 0, false
 	}
 	return m.Energy, true
+}
+
+// SetEnergy overwrites the current slot's energy in kWh for sources that yield
+// the slot total rather than a delta. Repeated calls within a slot are
+// idempotent, so the caller needs no tick bookkeeping of its own.
+func (c *Collector) SetEnergy(energy float64) error {
+	// advance first- the completed slot keeps the value it was last set to
+	if err := c.advanceSlot(c.accu.clock.Now()); err != nil {
+		return err
+	}
+
+	c.accu.Energy = energy
+	return nil
+}
+
+// SetCapabilities drops the persisted reading for a direction the device no longer
+// reports, so its energy falls back to power integration instead of freezing.
+func (c *Collector) SetCapabilities(energy, returnEnergy bool) error {
+	cols := make(map[string]any, 2)
+
+	// keyed on the entity, since an incomplete state is left unrestored and would
+	// otherwise resurface once the other direction is checkpointed again
+	if !energy && c.entity.EnergyMeter != nil {
+		c.accu.energyMeter = nil
+		c.entity.EnergyMeter = nil
+		cols["energy_meter"] = nil
+	}
+	if !returnEnergy && c.entity.ReturnEnergyMeter != nil {
+		c.accu.returnEnergyMeter = nil
+		c.entity.ReturnEnergyMeter = nil
+		cols["return_energy_meter"] = nil
+	}
+
+	if len(cols) == 0 {
+		return nil
+	}
+
+	// a surviving reading still covers the downtime for its own direction, so
+	// keep the restore rather than discarding that delta with the cleared one
+	c.restored = c.accu.energyMeter != nil || c.accu.returnEnergyMeter != nil
+
+	return db.Instance.Model(&c.entity).UpdateColumns(cols).Error
 }
 
 func (c *Collector) SetEnergyMeterTotal(v float64) error {

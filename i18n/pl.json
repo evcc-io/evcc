@@ -19,6 +19,49 @@
     "successCloseTab": "Możesz teraz zamknąć tę kartę.",
     "title": "Status autoryzacji"
   },
+  "battery": {
+    "card": {
+      "charging": "ładowanie",
+      "discharging": "rozładowywanie",
+      "energy": "Energia",
+      "gridCharge": "ładowanie sieciowe",
+      "hold": "rozładowywanie zablokowane",
+      "holdCharge": "ładowanie zablokowane",
+      "ofTotal": "z {total}",
+      "power": "Moc",
+      "soc": "Poziom naładowania magazynu"
+    },
+    "combined": "Łącznie",
+    "config": {
+      "buffer": "Energia z domowego magazynu energii powyżej {soc} może być wykorzystana do zasilania punktów obciążenia i opóźnień w wyłączaniu w trybie solarnym. Automatyczne uruchamianie ładowania słonecznego {start}.",
+      "bufferNone": "Energia z domowego magazynu energii nie jest wykorzystywana do zasilania punktów obciążenia. Ustaw wartość poniżej {soc}, aby włączyć obsługę.",
+      "bufferStart": {
+        "above": "gdy magazyn energii ma powyżej {soc}",
+        "full": "gdy magazyn energii jest pełen",
+        "never": "tylko z wystarczającą nadwyżką"
+      },
+      "bufferTitle": "Magazyn energii jako bufor ładowania",
+      "discharge": "Zapobiegaj rozładowywaniu domowego magazynu energii w trybie szybkim i w zaplanowanym ładowaniu.",
+      "gridDischarge": "Pozwól na rozładowywanie domowego magazynu energii do sieci.",
+      "priority": "Domowy magazyn energii ma priorytet, gdy jego stan jest poniżej {soc}. Wtedy punkty obciążenia otrzymują nadwyżkę.",
+      "priorityNone": "Nadwyżka energii słonecznej trafia bezpośrednio do punktów obciążenia. Ustaw wartość powyżej {soc}, aby nadać priorytet domowemu magazynowi energii.",
+      "priorityTitle": "Gdzie najpierw trafia nadwyżka?"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Ładowanie z sieci",
+        "discharge": "Rozładowywanie do sieci",
+        "hold": "Zapobiegaj rozładowywaniu",
+        "holdcharge": "Zapobiegaj ładowaniu",
+        "normal": "Normalna praca"
+      },
+      "empty": "pusty",
+      "full": "pełny",
+      "highest": "Najwyższa ({value})",
+      "lowest": "Najniższa ({value})",
+      "suggestion": "Sugestia"
+    }
+  },
   "batterySettings": {
     "batteryLevel": "Stan naładowania magazynu energii",
     "bufferStart": {
@@ -28,7 +71,7 @@
     },
     "capacity": "{energy} z {total}",
     "control": "Kontrola akumulatora",
-    "discharge": "Zapobiegaj rozładowaniu w trybie szybkim i zaplanowanym ładowaniu.",
+    "discharge": "Zapobiegaj rozładowywaniu w trybie szybkim i zaplanowanym ładowaniu.",
     "disclaimerHint": "Uwaga:",
     "disclaimerText": "Te ustawienia mają wpływ tylko na tryb solarny. Sposób ładowania jest odpowiednio dostosowywany.",
     "gridChargeTab": "Ładowanie z sieci",
@@ -51,12 +94,29 @@
     "hex": "Kolor Hex"
   },
   "config": {
+    "adminPassword": {
+      "invalid": "Błędne hasło. Proszę spróbować ponownie.",
+      "title": "Możliwa niebezpieczna czynność"
+    },
+    "apiKey": {
+      "generate": "Stwórz klucz API",
+      "keyLabel": "Klucz API",
+      "regenerate": "Utwórz ponownie klucz API",
+      "regenerateConfirm": "Należy podać hasło administratora, aby ponownie utworzyć klucz API.",
+      "regenerateLink": "Utwórz ponownie",
+      "regenerateWarning": "Ponowne utworzenie unieważni istniejący klucz i wszelkie automatyzacje używające go przestaną działać. Kontynuować?",
+      "revealSuccess": "Nowe klucz API jest gotowy do użycia.",
+      "revealTitle": "Utworzono klucz API",
+      "shownOnce": "Klucz jest wyświetlany tylko raz. Należy zapisać go w bezpiecznym miejscu, gdyż nie będzie można go pobrać ponownie.",
+      "title": "Klucz API"
+    },
     "aux": {
       "description": "Urządzenie, które dostosowuje swój pobór energii na podstawie dostępnej nadwyżki (np. inteligentne podgrzewacze wody). evcc zakłada, że urządzenie to zmniejszy zużycie energii, jeśli zajdzie taka potrzeba.",
       "titleAdd": "Dodaj samoregulujące się urządzenie konsumujące",
       "titleEdit": "Edytuj samoregulujące się urządzenie konsumujące"
     },
     "battery": {
+      "title": "Bateria",
       "titleAdd": "Dodaj magazyn energii",
       "titleEdit": "Edytuj magazyn energii"
     },
@@ -125,7 +185,9 @@
       "title": "Waluta"
     },
     "deviceValue": {
+      "activeClients": "Aktywni klienci",
       "amount": "Ilość",
+      "asleep": "śpi",
       "broker": "Broker",
       "bucket": "Bucket",
       "capacity": "Pojemność",
@@ -255,7 +317,6 @@
       "noFileSelected": "Nie wybrano pliku.",
       "off": "wyłączony",
       "on": "włączony",
-      "password": "Hasło",
       "readFromFile": "Wczytaj z pliku",
       "remove": "Wymaż",
       "required": "wymagane",
@@ -285,7 +346,6 @@
         "type": "Typ"
       },
       "description": "Ograniczenie mocy przez systemy zewnętrzne (np. §14a EnWG, interfejs §9 EEG lub wyższy poziom systemu zarządzania energią). Współpracuje z funkcją zarządzania obciążeniem.",
-      "downloadCsv": "Pobierz CSV",
       "eventsRecorded": "Zarejestrowano {count} zdarzeń związanych z ograniczeniami sieci.",
       "lastEvent": "Najnowsze {timeAgo}.",
       "title": "Limit zewnętrzny"
@@ -337,14 +397,21 @@
       "circuitInvalid": "Obwód nie istnieje",
       "circuitLabel": "Obwód",
       "circuitUnassigned": "nieprzypisany",
+      "created": "Utworzono \"{name}\" z domyślnymi wartościami.",
+      "createdTitle": {
+        "charging": "Utworzono punkt ładowania",
+        "heating": "Utworzono grzejnik"
+      },
+      "creating": {
+        "charging": "Zapisano ładowarkę. Tworzenie punktu ładowania…"
+      },
       "defaultModeHelp": {
         "charging": "Tryb ładowania po podłączeniu pojazdu.",
         "heating": "Jest ustawiane podczas uruchamiania systemu."
       },
       "defaultModeHelpKeep": "Zachowuje ostatnio wybrany tryb.",
+      "defaultModeKeep": "zostaw jak jest",
       "defaultModeLabel": "Tryb domyślny",
-      "defaultsHint": "Tryb domyślny, zachowanie energii słonecznej i szczegóły elektryczne korzystają z rozsądnych wartości domyślnych.",
-      "defaultsHintLink": "Dostosuj ustawienia",
       "delete": "Usuń",
       "electricalSubtitle": "W razie wątpliwości skonsultuj się z elektrykiem.",
       "electricalTitle": "Elektryczny",
@@ -379,12 +446,12 @@
       "priorityHelp": "Wyższy priorytet zapewnia preferowany dostęp do nadwyżek energii słonecznej.",
       "priorityLabel": "Priorytet",
       "save": "Zapisz",
-      "showAllSettings": "Pokaż wszystkie ustawienia",
       "solarBehaviorCustomHelp": "Zdefiniuj własne progi włączania i wyłączania oraz opóźnienia.",
       "solarBehaviorDefaultHelp": "Rozpocznij po {enableDelay} wystarczającej nadwyżki. Zatrzymaj, gdy nadwyżka nie będzie wystarczająca dla {disableDelay}.",
       "solarBehaviorLabel": "Słońce",
       "solarModeCustom": "własne",
       "solarModeMaximum": "maksymalnie słońce",
+      "temperatureRangeTitle": "Zakres temperatur",
       "thresholdDisableDelayLabel": "Wyłącz opóźnienie",
       "thresholdDisableHelpInvalid": "Proszę użyć wartości dodatniej.",
       "thresholdDisableHelpPositive": "Zatrzymaj, gdy z sieci zostanie zużyte więcej niż {power} przez {delay}.",
@@ -419,6 +486,7 @@
     },
     "main": {
       "addAdditional": "Dodaj dodatkowy licznik",
+      "addConsumer": "Dodaj konsumenta",
       "addGrid": "Dodaj licznik sieciowy",
       "addLoadpoint": "Dodaj ładowarkę lub podgrzewacz",
       "addPvBattery": "Dodaj licznik energii słonecznej lub magazynu energii",
@@ -435,7 +503,10 @@
       "welcomeBannerTitle": "Skonfigurujmy Twój system!"
     },
     "mcp": {
-      "description": "Udostępnia serwer protokołu Model Context Protocol, umożliwiając asystentom AI, takim jak Claude, odczytywanie stanu systemu i kontrolowanie ładowania."
+      "description": "Udostępnia serwer protokołu Model Context Protocol, umożliwiając asystentom AI, takim jak Claude, odczytywanie stanu systemu i kontrolowanie ładowania.",
+      "exampleLabel": "Np. Claude CLI",
+      "title": "Serwer MCP",
+      "url": "Adres MCP"
     },
     "messaging": {
       "addMessenger": "Dodaj usługę",
@@ -480,6 +551,9 @@
           "messageDefault": "Zakończono ładowanie {chargedEnergy}kWh w ciągu {chargeDuration}.",
           "title": "Gdy ładowanie się zatrzyma",
           "titleDefault": "Ładowanie zakończone"
+        },
+        "suggestion": {
+          "titleDefault": "Sugestia optymalizatora"
         }
       },
       "eventMessage": "Wiadomość",
@@ -505,7 +579,6 @@
       "option": {
         "aux": "Dodaj samoregulujące się urządzenie konsumujące",
         "battery": "Dodaj licznik magazynu energii",
-        "ext": "Dodaj zwykłego konsumenta",
         "pv": "Dodaj licznik energii słonecznej"
       },
       "save": "Zapisz",
@@ -587,7 +660,6 @@
       "descriptionHost": "Służy do ogłaszania evcc w sieci lokalnej.",
       "descriptionInternalUrl": "Lokalny adres sieciowy evcc.",
       "descriptionPort": "Port dla interfejsu internetowego i API. Jeśli zmienisz tę wartość, musisz zaktualizować adres URL przeglądarki.",
-      "descriptionSchema": "Wpływa tylko na sposób generowania adresów URL. Wybranie protokołu HTTPS nie spowoduje włączenia szyfrowania.",
       "labelExternalUrl": "Zewnętrzny adres URL",
       "labelHost": "Nazwa hosta mDNS",
       "labelInternalUrl": "Wewnętrzny adres URL",
@@ -596,13 +668,7 @@
       "warningUrlPath": "Adres URL zazwyczaj nie wymaga ścieżki. Czy napewno jest to poprawne?"
     },
     "ocpp": {
-      "connectedChargers": "Podłączone ładowarki",
-      "connectionStatus": "Skonfigurowane identyfikatory stacji",
-      "connectionStatusHelp": "Stan połączenia skonfigurowanych ładowarek.",
-      "detectedChargers": "Wykryte identyfikatory stacji",
-      "detectedHelp": "Te ładowarki próbowały połączyć się z evcc. Aby skorzystać z ładowarki, utwórz punkt ładowania z jej identyfikatorem stacji.",
       "noChargers": "Nie wykryto żadnych ładowarek OCPP.",
-      "noStations": "Brak podłączonych stacji",
       "status": {
         "configured": "Nie podłączony",
         "connected": "Połączony",
@@ -796,10 +862,6 @@
         "weekdays": "Dni powszednie"
       }
     },
-    "tariffs": {
-      "description": "Określ swoje taryfy energetyczne, aby obliczyć koszty sesji ładowania.",
-      "title": "Taryfy"
-    },
     "telemetry": {
       "description": "Skonfiguruj udostępnianie danych, aby pomóc ulepszyć evcc. Twoja prywatność jest dla nas ważna, a udział w programie jest całkowicie dobrowolny.",
       "title": "Telemetria"
@@ -934,7 +996,6 @@
     "blog": "Blog",
     "docs": "Dokumentacja",
     "github": "GitHub",
-    "login": "Dane logowania pojazdu",
     "logout": "Wylogowanie",
     "nativeSettings": "Zmień serwer",
     "needHelp": "Potrzebuję Pomocy?",
@@ -1052,7 +1113,6 @@
       },
       "planNumber": "Plan {number}",
       "precondition": {
-        "description": "Naładuj {duration} przed wyjazdem dla wstępnego kondycjonowania akumulatora.",
         "label": "Późniejsze ładowanie",
         "optionAll": "wszystko",
         "optionNo": "nie"
@@ -1062,7 +1122,6 @@
       "repeatingPlans": "Powtarzające się plany",
       "selectAll": "Wybierz wszystko",
       "strategyDisabledDescription": "Ładowanie rozpoczyna się jak najpóźniej, aby zakończyć się tuż przed wyjazdem. Dzięki dynamicznym cenom energii elektrycznej lub taryfie CO₂ dostępnych jest więcej opcji.",
-      "strategySettings": "Ustawienia strategii",
       "time": "Czas",
       "title": "Plan",
       "unsavedChanges": "Są niezapisane zmiany. Zastosować teraz?",
@@ -1111,7 +1170,6 @@
           "returnEnergy": "wyeksportowane"
         }
       },
-      "downloadCsv": "Pobierz CSV",
       "empty": "Brak dostępnych danych historycznych dla tego przedziału czasu.",
       "group": {
         "battery": "Magazyn energii",
@@ -1155,14 +1213,15 @@
       "batteryUsage": "Domowy magazyn energii",
       "currents": "Prąd ładowania",
       "default": "domyślny",
-      "disclaimerHint": "Uwaga:",
       "maxCurrent": {
         "label": "Maks. prąd"
       },
       "minCurrent": {
         "label": "Min. Prąd"
       },
-      "onlyForSocBasedCharging": "Opcje te są dostępne tylko dla pojazdów ze znanym poziomem naładowania.",
+      "minTemp": {
+        "label": "Min. temperatura"
+      },
       "phasesConfigured": {
         "label": "Fazy",
         "no1p3pSupport": "Jak podłączone jest urządzenie?",
@@ -1244,6 +1303,16 @@
       "tempLimit": "Limit temperatury",
       "unknown": "Pojazd gościa",
       "vehicleSoc": "Poziom naładowania"
+    },
+    "vehicleSettings": {
+      "connectedTo": "podłączono do {0}",
+      "editHint": "Dodaj lub usuļ pojazdy w {0}.",
+      "keepAsIs": "Zostaw jak jest",
+      "learnMore": "Dowiedz się więcej.",
+      "limitSoc": "Domyślne ograniczenie",
+      "menu": "Pojazdy",
+      "minSoc": "Minimalny poziom naładowania",
+      "title": "Ustawienia pojazdu"
     },
     "vehicleStatus": {
       "awaitingAuthorization": "Oczekiwanie na zezwolenie.",
@@ -1365,8 +1434,6 @@
       "solarpercentage": "Słońce (%)",
       "vehicle": "Pojazd"
     },
-    "csvPeriod": "Pobierz plik {period} CSV",
-    "csvTotal": "Pobierz plik CSV",
     "date": "Rozpoczęcie",
     "energy": "Zużycie",
     "filter": {
@@ -1500,6 +1567,7 @@
   "tabBar": {
     "battery": "Magazyn energii",
     "charge": "Obciążenie",
+    "comingSoon": "Strona jest w trakcie budowy.",
     "forecast": "Prognoza",
     "more": "Więcej",
     "sessions": "Sesje"

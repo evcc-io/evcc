@@ -7,29 +7,48 @@ import (
 	"github.com/cenkalti/backoff/v4"
 )
 
+// permanentError is a sentinel error that keeps matching errors.Is after
+// backoff has stripped the backoff.Permanent wrapper.
+type permanentError struct {
+	msg string
+}
+
+func (e *permanentError) Error() string { return e.msg }
+
+// Is matches the wrapped sentinel, too
+func (e *permanentError) Is(target error) bool {
+	var t *permanentError
+	return errors.As(target, &t) && t == e
+}
+
+// permanent creates a permanent sentinel error
+func permanent(msg string) error {
+	return backoff.Permanent(&permanentError{msg})
+}
+
 // ErrNotAvailable indicates that a feature is not available
-var ErrNotAvailable = backoff.Permanent(errors.New("not available"))
+var ErrNotAvailable = permanent("not available")
 
 // ErrUnsupportedPlatform indicates unsupported hardware platform
-var ErrUnsupportedPlatform error = backoff.Permanent(errors.New("unsupported platform"))
+var ErrUnsupportedPlatform = permanent("unsupported platform")
 
 // ErrMustRetry indicates that a rate-limited operation should be retried
 var ErrMustRetry = errors.New("must retry")
 
 // ErrSponsorRequired indicates that a sponsor token is required
-var ErrSponsorRequired = errors.New("sponsorship required, see https://docs.evcc.io/docs/sponsorship")
+var ErrSponsorRequired = permanent("sponsorship required, see https://docs.evcc.io/docs/sponsorship")
 
 // ErrMissingCredentials indicates that user/password are missing
-var ErrMissingCredentials = backoff.Permanent(errors.New("missing user/password credentials"))
+var ErrMissingCredentials = permanent("missing user/password credentials")
 
 // ErrMissingToken indicates that access/refresh tokens are missing
-var ErrMissingToken = backoff.Permanent(errors.New("missing token credentials"))
+var ErrMissingToken = permanent("missing token credentials")
 
 // ErrOutdated indicates that result is outdated
 var ErrOutdated = errors.New("outdated")
 
 // ErrTimeout is the error returned when a timeout happened
-var ErrTimeout error = errors.New("timeout")
+var ErrTimeout = errors.New("timeout")
 
 // LoginRequiredError creates a login error for given auth provider
 func LoginRequiredError(providerAuth string) error {

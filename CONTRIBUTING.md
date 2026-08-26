@@ -4,11 +4,11 @@
 
 ### Development environment
 
-Developing evcc requires [Go][1] and [Node][2]. We recommend VSCode with the [Go](https://marketplace.visualstudio.com/items?itemName=golang.Go), [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [Vetur](https://marketplace.visualstudio.com/items?itemName=octref.vetur) extensions.
+Developing evcc requires [Go][1] [Node][2] and [Vite+][3]. We recommend VSCode with the [Go](https://marketplace.visualstudio.com/items?itemName=golang.Go), [Oxc](https://marketplace.visualstudio.com/items?itemName=oxc.oxc-vscode) and [Vue](https://marketplace.visualstudio.com/items?itemName=Vue.volar) extensions.
 
 Alternatively, if you use VS Code and [devcontainers](https://code.visualstudio.com/docs/devcontainers/containers), you can use the "Dev containers: Clone repository in container volume" action. This will create a devcontainer with the required toolchain and install the prerequisites as explained below. Wait until the startup log says "Done. Press any key to close the terminal." and check for any errors.
 
-We use linters (golangci-lint, Prettier) to keep a coherent source code formatting. It's recommended to use the format-on-save feature of your editor. You can manually reformat your code by running:
+We use linters (golangci-lint, oxlint/oxfmt via Vite+) to keep a coherent source code formatting. It's recommended to use the format-on-save feature of your editor. You can manually reformat your code by running:
 
 ```sh
 make lint
@@ -74,6 +74,32 @@ GOOS=linux GOARCH=arm GOARM=6 make
 make docker DOCKER_IMAGE=my/docker DOCKER_TAG=0815
 ```
 
+## Releases
+
+Releases are cut by pushing a `MAJOR.MINOR.PATCH` tag. Any other tag is ignored.
+
+Feature releases (`0.313.0`) must be tagged on `master`. The release workflow
+rejects a feature tag that is not reachable from `master`.
+
+Bugfix releases (`0.313.1`) may be tagged on any branch. That allows servicing
+an older release line without shipping everything that has landed on `master`
+since. Only the newest release moves the `latest` pointers, so a bugfix release
+of an older line publishes its artifacts, but leaves the `evcc/evcc:latest`
+docker tag, the homebrew formula, the GitHub latest release, the hassio addon
+and the demo instance untouched.
+
+To move a merged pull request onto a release branch, comment `/backport` on it.
+The pull request has to carry the `bug` label and must not be marked `(BC)`,
+only non-breaking bugfixes are backported.
+The commit is cherry-picked onto the branch of the next bugfix release, e.g.
+`release/0.313.1`, and a pull request is opened against it. The branch is
+created at the newest tag of that line if it does not exist yet. Pass a branch
+name, `/backport release/0.312.2`, to service an older line.
+
+Releasing a bugfix deletes its release branch, since the tag is the branch tip
+and everything on it has shipped. A branch that received further backports after
+the tag is kept.
+
 ## Debugging in VS Code
 
 ### evcc Core
@@ -98,8 +124,15 @@ You can adjust the referred configuration as needed to e.g. use your live config
 For frontend development start the Vue toolchain in dev-mode. Open http://127.0.0.1:7071/ to get to the live reloading development server. It pulls its data from port 7070 (see above).
 
 ```sh
-npm install
-npm run dev
+vp install
+vp run dev
+```
+
+Start the backend with `--disable-auth` when checking the configuration UI of a
+throw-away instance. Without it the UI asks for an administrator password first.
+
+```sh
+./evcc --config tests/config-with-tariffs.evcc.yaml --disable-auth
 ```
 
 ### Storybook
@@ -107,7 +140,7 @@ npm run dev
 We're using storybook to develop and visualize UI components in different states. Running the command below will open your browser at http://127.0.0.1:6006/.
 
 ```sh
-npm run storybook
+vp run storybook
 ```
 
 ### Integration testing
@@ -116,7 +149,7 @@ We use Playwright for end-to-end integration tests. They start a local evcc inst
 
 ```sh
 make ui build
-npm run playwright
+vp run playwright
 ```
 
 ### Simulating device state
@@ -124,7 +157,7 @@ npm run playwright
 Since we don't want to run tests against real devices or cloud services, we've build a simple simulator that lets you emulated meters, vehicles and loadpoints. The simulators web interface runs on http://localhost:7072.
 
 ```
-npm run simulator
+vp run simulator
 ```
 
 Run an evcc instance that uses simulator data. This configuration runs with a very high refresh interval to speed up testing.
@@ -185,6 +218,7 @@ Note: To ensure the build succeeds after creating new translations, make sure to
 
 [1]: https://go.dev
 [2]: https://nodejs.org/
+[3]: https://viteplus.dev/guide/#install-vp
 
 ## Documentation, Website and iOS/Android App
 
