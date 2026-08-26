@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/solcast"
 	"github.com/evcc-io/evcc/util"
@@ -91,10 +90,10 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 
 		var res solcast.Forecasts
 
-		if err := backoff.Retry(func() error {
+		if _, err := retry(func() (struct{}, error) {
 			uri := fmt.Sprintf("https://api.solcast.com.au/rooftop_sites/%s/forecasts?period=PT30M&format=json&hours=96", t.site)
-			return backoffPermanentError(t.GetJSON(uri, &res))
-		}, bo()); err != nil {
+			return struct{}{}, backoffPermanentError(t.GetJSON(uri, &res))
+		}); err != nil {
 			if reportError(&once, done, err) {
 				return
 			}

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/url"
 
-	"github.com/cenkalti/backoff/v4"
+	"github.com/cenkalti/backoff/v5"
 )
 
 // permanentError is a sentinel error that signals permanence to backoff while
@@ -16,8 +16,8 @@ type permanentError struct {
 func (e *permanentError) Error() string { return e.msg }
 
 // As signals permanence to backoff. Wrapping the sentinel in backoff.Permanent
-// instead would make errors.Is match any other permanent error, since
-// backoff.PermanentError.Is matches by type rather than identity.
+// instead would hide it from errors.Is, since backoff strips the wrapper and
+// returns the wrapped error.
 func (e *permanentError) As(target any) bool {
 	if p, ok := target.(**backoff.PermanentError); ok {
 		*p = &backoff.PermanentError{Err: e}

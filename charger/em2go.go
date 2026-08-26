@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
+	"github.com/cenkalti/backoff/v5"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
@@ -108,14 +108,14 @@ func NewEm2Go(ctx context.Context, settings modbus.TcpSettings) (api.Charger, er
 		current: 60,
 	}
 
-	bo := backoff.WithContext(
-		backoff.NewExponentialBackOff(
-			backoff.WithInitialInterval(2*time.Second),
-			backoff.WithMaxInterval(10*time.Second),
-			backoff.WithMaxElapsedTime(30*time.Second),
-		), ctx)
+	bo := backoff.NewExponentialBackOff()
+	bo.InitialInterval = 2 * time.Second
+	bo.MaxInterval = 10 * time.Second
 
-	res, err := backoff.RetryWithData(wb.initialize, bo)
+	res, err := backoff.Retry(ctx, wb.initialize,
+		backoff.WithBackOff(bo),
+		backoff.WithMaxElapsedTime(30*time.Second),
+	)
 	if err != nil {
 		return nil, err
 	}

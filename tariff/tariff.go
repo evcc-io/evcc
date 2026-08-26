@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
+	"github.com/cenkalti/backoff/v5"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
@@ -91,13 +91,13 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 
 	for tick := time.Tick(interval); ; <-tick {
 		var data api.Rates
-		if err := backoff.Retry(func() error {
+		if _, err := retry(func() (struct{}, error) {
 			s, err := forecastG()
 			if err != nil {
-				return backoffPermanentError(err)
+				return struct{}{}, backoffPermanentError(err)
 			}
 			if err := json.Unmarshal([]byte(s), &data); err != nil {
-				return backoff.Permanent(err)
+				return struct{}{}, backoff.Permanent(err)
 			}
 			for i, r := range data {
 				data[i] = api.Rate{
@@ -106,8 +106,8 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 					End:   r.End.Local(),
 				}
 			}
-			return nil
-		}, bo()); err != nil {
+			return struct{}{}, nil
+		}); err != nil {
 			if reportError(&once, done, err) {
 				return
 			}

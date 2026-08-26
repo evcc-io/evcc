@@ -11,7 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core/circuit"
@@ -671,7 +670,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 
 		// power
 		var b bytes.Buffer
-		power, err := backoff.RetryWithData(meter.CurrentPower, modbus.Backoff())
+		power, err := modbus.Retry(meter.CurrentPower)
 		if err == nil {
 			mm[i].Power = power
 			site.log.DEBUG.Printf("%s %d power: %.0fW", key, i+1, power)
@@ -1005,7 +1004,7 @@ func (site *Site) updateGridMeter() error {
 
 	meter := site.gridMeter.Instance()
 
-	if res, err := backoff.RetryWithData(meter.CurrentPower, modbus.Backoff()); err == nil {
+	if res, err := modbus.Retry(meter.CurrentPower); err == nil {
 		mm.Power = res
 
 		site.Lock()

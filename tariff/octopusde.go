@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
+	"github.com/cenkalti/backoff/v5"
 	"github.com/evcc-io/evcc/api"
 	krakengql "github.com/evcc-io/evcc/tariff/octopuskraken/graphql"
 	"github.com/evcc-io/evcc/util"
@@ -93,17 +93,17 @@ func (t *OctopusDe) run(done chan error) {
 	for tick := time.Tick(time.Hour); ; <-tick {
 		var rates []RatePeriod
 
-		if err := backoff.Retry(func() error {
+		if _, err := retry(func() (struct{}, error) {
 			agr, err := t.gqlClient.ActiveAgreement()
 			if err != nil {
 				if errors.Is(err, krakengql.ErrAuthFailed) {
-					return backoff.Permanent(err)
+					return struct{}{}, backoff.Permanent(err)
 				}
-				return backoffPermanentError(err)
+				return struct{}{}, backoffPermanentError(err)
 			}
 			rates, err = ratesForAgreement(agr, time.Now())
-			return backoffPermanentError(err)
-		}, bo()); err != nil {
+			return struct{}{}, backoffPermanentError(err)
+		}); err != nil {
 			if reportError(&once, done, err) {
 				return
 			}

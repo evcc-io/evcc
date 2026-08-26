@@ -1,12 +1,13 @@
 package tariff
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
+	"github.com/cenkalti/backoff/v5"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -22,9 +23,13 @@ func Name(conf config.Typed) string {
 	return conf.Type
 }
 
-func bo() backoff.BackOff {
-	return backoff.NewExponentialBackOff(
-		backoff.WithInitialInterval(time.Second),
+// retry retries the operation using tariff-specific backoff settings
+func retry[T any](op backoff.Operation[T]) (T, error) {
+	bo := backoff.NewExponentialBackOff()
+	bo.InitialInterval = time.Second
+
+	return backoff.Retry(context.Background(), op,
+		backoff.WithBackOff(bo),
 		backoff.WithMaxElapsedTime(time.Minute),
 	)
 }

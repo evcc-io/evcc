@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
+	"github.com/cenkalti/backoff/v5"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/entsoe"
 	"github.com/evcc-io/evcc/util"
@@ -89,42 +89,42 @@ func (t *Entsoe) run(done chan error) {
 	for tick := time.Tick(time.Hour); ; <-tick {
 		var tr entsoe.PublicationMarketDocument
 
-		if err := backoff.Retry(func() error {
+		if _, err := retry(func() (struct{}, error) {
 			// Request the next 24 hours of data.
 			data, err := t.DoBody(entsoe.DayAheadPricesRequest(t.domain, time.Hour*24))
 			if err != nil {
-				return backoffPermanentError(err)
+				return struct{}{}, backoffPermanentError(err)
 			}
 
 			var doc entsoe.Document
 			if err := xml.NewDecoder(bytes.NewReader(data)).Decode(&doc); err != nil {
-				return backoff.Permanent(err)
+				return struct{}{}, backoff.Permanent(err)
 			}
 
 			switch doc.XMLName.Local {
 			case entsoe.AcknowledgementMarketDocumentName:
 				var doc entsoe.AcknowledgementMarketDocument
 				if err := xml.NewDecoder(bytes.NewReader(data)).Decode(&doc); err != nil {
-					return backoff.Permanent(err)
+					return struct{}{}, backoff.Permanent(err)
 				}
 
-				return backoff.Permanent(errors.New(doc.Reason.Text))
+				return struct{}{}, backoff.Permanent(errors.New(doc.Reason.Text))
 
 			case entsoe.PublicationMarketDocumentName:
 				if err := xml.NewDecoder(bytes.NewReader(data)).Decode(&tr); err != nil {
-					return backoff.Permanent(err)
+					return struct{}{}, backoff.Permanent(err)
 				}
 
 				if tr.Type != string(entsoe.ProcessTypeDayAhead) {
-					return backoff.Permanent(errors.New("invalid document type: " + tr.Type))
+					return struct{}{}, backoff.Permanent(errors.New("invalid document type: " + tr.Type))
 				}
 
-				return nil
+				return struct{}{}, nil
 
 			default:
-				return backoff.Permanent(errors.New("invalid document name: " + doc.XMLName.Local))
+				return struct{}{}, backoff.Permanent(errors.New("invalid document name: " + doc.XMLName.Local))
 			}
-		}, bo()); err != nil {
+		}); err != nil {
 			if reportError(&once, done, err) {
 				return
 			}

@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/ostrom"
 	"github.com/evcc-io/evcc/util"
@@ -168,9 +167,9 @@ func (t *Ostrom) getFixedPrice() (float64, error) {
 	var tariffs ostrom.Tariffs
 
 	uri := fmt.Sprintf("%s?usage=1000&cityId=%d", ostrom.URI_GET_STATIC_PRICE, t.cityId)
-	if err := backoff.Retry(func() error {
-		return backoffPermanentError(t.GetJSON(uri, &tariffs))
-	}, bo()); err != nil {
+	if _, err := retry(func() (struct{}, error) {
+		return struct{}{}, backoffPermanentError(t.GetJSON(uri, &tariffs))
+	}); err != nil {
 		return 0, err
 	}
 
@@ -248,9 +247,9 @@ func (t *Ostrom) run(done chan error) {
 		}
 
 		uri := t.apiUri(fmt.Sprintf("/spot-prices?%s", params.Encode()))
-		if err := backoff.Retry(func() error {
-			return backoffPermanentError(t.GetJSON(uri, &res))
-		}, bo()); err != nil {
+		if _, err := retry(func() (struct{}, error) {
+			return struct{}{}, backoffPermanentError(t.GetJSON(uri, &res))
+		}); err != nil {
 			if reportError(&once, done, err) {
 				return
 			}

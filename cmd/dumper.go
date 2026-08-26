@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -9,7 +10,7 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
+	"github.com/cenkalti/backoff/v5"
 	"github.com/evcc-io/evcc/api"
 	"github.com/fatih/structs"
 )
@@ -34,11 +35,6 @@ func (d *dumper) DumpWithHeader(name string, device any) {
 	if d.len > 1 {
 		fmt.Println()
 	}
-}
-
-// bo returns an exponential backoff for reading meter power quickly
-func (d *dumper) bo() *backoff.ExponentialBackOff {
-	return backoff.NewExponentialBackOff(backoff.WithInitialInterval(20*time.Millisecond), backoff.WithMaxElapsedTime(d.timeout))
 }
 
 // formatDuration returns duration as string if >= 1ms, otherwise empty string
@@ -77,10 +73,12 @@ func (d *dumper) Dump(name string, v any) {
 
 	if v, ok := api.Cap[api.Meter](v); ok {
 		d.measureTime(w, "Power", func() (string, error) {
-			power, err := backoff.RetryWithData(func() (float64, error) {
-				f, err := v.CurrentPower()
-				return f, err
-			}, d.bo())
+			// read meter power quickly
+			bo := backoff.NewExponentialBackOff()
+			bo.InitialInterval = 20 * time.Millisecond
+
+			power, err := backoff.Retry(context.Background(), v.CurrentPower,
+				backoff.WithBackOff(bo), backoff.WithMaxElapsedTime(d.timeout))
 			return fmt.Sprintf("%.0fW", power), err
 		})
 	}

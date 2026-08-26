@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	octoGql "github.com/evcc-io/evcc/tariff/octopus/graphql"
 	octoRest "github.com/evcc-io/evcc/tariff/octopus/rest"
@@ -153,9 +152,9 @@ func (t *Octopus) run(done chan error) {
 	for tick := time.Tick(time.Hour); ; <-tick {
 		var res octoRest.UnitRates
 
-		if err := backoff.Retry(func() error {
-			return backoffPermanentError(client.GetJSON(restQueryUri, &res))
-		}, bo()); err != nil {
+		if _, err := retry(func() (struct{}, error) {
+			return struct{}{}, backoffPermanentError(client.GetJSON(restQueryUri, &res))
+		}); err != nil {
 			if reportError(&once, done, err) {
 				return
 			}

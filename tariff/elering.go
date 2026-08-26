@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/elering"
 	"github.com/evcc-io/evcc/util"
@@ -69,9 +68,9 @@ func (t *Elering) run(done chan error) {
 			url.QueryEscape(ts.Format(time.RFC3339)),
 			url.QueryEscape(ts.Add(48*time.Hour).Format(time.RFC3339)))
 
-		if err := backoff.Retry(func() error {
-			return backoffPermanentError(client.GetJSON(uri, &res))
-		}, bo()); err != nil {
+		if _, err := retry(func() (struct{}, error) {
+			return struct{}{}, backoffPermanentError(client.GetJSON(uri, &res))
+		}); err != nil {
 			if reportError(&once, done, err) {
 				return
 			}

@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
+	"github.com/cenkalti/backoff/v5"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
@@ -380,14 +380,13 @@ func floatVal(f float64) []byte {
 }
 
 func queryRCT[T any](id rct.Identifier, fun func(id rct.Identifier) (T, error)) (T, error) {
-	bo := backoff.NewExponentialBackOff(
-		backoff.WithInitialInterval(500*time.Millisecond),
-		backoff.WithMaxInterval(2*time.Second),
-		backoff.WithMaxElapsedTime(10*time.Second))
+	bo := backoff.NewExponentialBackOff()
+	bo.InitialInterval = 500 * time.Millisecond
+	bo.MaxInterval = 2 * time.Second
 
-	return backoff.RetryWithData(func() (T, error) {
+	return backoff.Retry(context.Background(), func() (T, error) {
 		return fun(id)
-	}, bo)
+	}, backoff.WithBackOff(bo), backoff.WithMaxElapsedTime(10*time.Second))
 }
 
 // queryFloat adds retry logic of recoverable errors to QueryFloat32

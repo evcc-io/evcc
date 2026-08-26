@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/corrently"
 	"github.com/evcc-io/evcc/util"
@@ -62,9 +61,9 @@ func (t *GrünStromIndex) run(done chan error) {
 	for tick := time.Tick(time.Hour); ; <-tick {
 		var res corrently.Forecast
 
-		err := backoff.Retry(func() error {
-			return backoffPermanentError(t.GetJSON(uri, &res))
-		}, bo())
+		_, err := retry(func() (struct{}, error) {
+			return struct{}{}, backoffPermanentError(t.GetJSON(uri, &res))
+		})
 
 		if err == nil && res.Err {
 			if s, ok := res.Message.(string); ok {

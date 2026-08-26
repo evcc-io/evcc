@@ -6,7 +6,6 @@ import (
 	"slices"
 	"sync"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/hems/hems"
@@ -116,7 +115,7 @@ func (site *Site) dimMeters(dim bool) error {
 		}
 
 		// unreadable state: apply unconditionally
-		dimmed, err := backoff.RetryWithData(m.Dimmed, modbus.Backoff())
+		dimmed, err := modbus.Retry(m.Dimmed)
 		if err != nil && !errors.Is(err, api.ErrNotAvailable) {
 			errs = errors.Join(errs, fmt.Errorf("%s dimmed: %w", deviceTitleOrName(dev), err))
 			continue
@@ -175,7 +174,7 @@ func (site *Site) curtailPV(percent *int) error {
 	var errs error
 	for _, m := range site.curtailables() {
 		// unreadable state: apply unconditionally
-		curtailed, err := backoff.RetryWithData(m.CurtailedPercent, modbus.Backoff())
+		curtailed, err := modbus.Retry(m.CurtailedPercent)
 		if err != nil && !errors.Is(err, api.ErrNotAvailable) {
 			errs = errors.Join(errs, fmt.Errorf("%s curtailed: %w", m.name, err))
 			continue

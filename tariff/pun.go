@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
+	"github.com/cenkalti/backoff/v5"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -98,10 +98,10 @@ func (t *Pun) run(done chan error) {
 
 	for tick := time.Tick(time.Hour); ; <-tick {
 		// get today data
-		today, err := backoff.RetryWithData(func() (api.Rates, error) {
+		today, err := retry(func() (api.Rates, error) {
 			res, err := t.getData(time.Now())
 			return res, backoffPermanentError(err)
-		}, bo())
+		})
 		if err != nil {
 			if reportError(&once, done, err) {
 				return
@@ -111,13 +111,13 @@ func (t *Pun) run(done chan error) {
 		}
 
 		// get tomorrow data (may not be available before ~13:00 CET)
-		res, err := backoff.RetryWithData(func() (api.Rates, error) {
+		res, err := retry(func() (api.Rates, error) {
 			res, err := t.getData(time.Now().AddDate(0, 0, 1))
 			if errors.Is(err, ErrPunDataNotAvailable) {
 				return res, backoff.Permanent(err)
 			}
 			return res, backoffPermanentError(err)
-		}, bo())
+		})
 		if err != nil && !errors.Is(err, ErrPunDataNotAvailable) {
 			if reportError(&once, done, err) {
 				return

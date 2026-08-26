@@ -1,6 +1,7 @@
 package modbus
 
 import (
+	"context"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
@@ -10,11 +11,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
+	"github.com/cenkalti/backoff/v5"
 )
 
-func Backoff() *backoff.ExponentialBackOff {
-	return backoff.NewExponentialBackOff(backoff.WithInitialInterval(20*time.Millisecond), backoff.WithMaxElapsedTime(10*time.Second))
+// Retry retries the operation using modbus-specific backoff settings
+func Retry[T any](op backoff.Operation[T]) (T, error) {
+	bo := backoff.NewExponentialBackOff()
+	bo.InitialInterval = 20 * time.Millisecond
+
+	return backoff.Retry(context.Background(), op,
+		backoff.WithBackOff(bo),
+		backoff.WithMaxElapsedTime(10*time.Second),
+	)
 }
 
 // DecodeMask converts a bit mask in decimal or hex format to uint64

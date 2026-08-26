@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/tibber"
 	"github.com/evcc-io/evcc/util"
@@ -87,11 +86,11 @@ func (t *Tibber) run(done chan error) {
 			}
 		}
 
-		if err := backoff.Retry(func() error {
+		if _, err := retry(func() (struct{}, error) {
 			ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 			defer cancel()
-			return t.client.Query(ctx, &res, v)
-		}, bo()); err != nil {
+			return struct{}{}, t.client.Query(ctx, &res, v)
+		}); err != nil {
 			if reportError(&once, done, err) {
 				return
 			}

@@ -13,7 +13,7 @@ import (
 
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
-	"github.com/cenkalti/backoff/v4"
+	"github.com/cenkalti/backoff/v5"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/keys"
@@ -1762,7 +1762,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryPower f
 
 // UpdateChargePowerAndCurrents updates charge meter power and currents for load management
 func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
-	power, err := backoff.RetryWithData(lp.chargeMeter.CurrentPower, modbus.Backoff())
+	power, err := modbus.Retry(lp.chargeMeter.CurrentPower)
 	if err == nil {
 		lp.Lock()
 		lp.chargePower = power // update value if no error
@@ -1786,13 +1786,13 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 	lp.chargeCurrents = nil
 
 	if phaseMeter, ok := api.Cap[api.PhaseCurrents](lp.chargeMeter); ok {
-		if err := backoff.Retry(func() error {
+		if _, err := modbus.Retry(func() (struct{}, error) {
 			i1, i2, i3, err := phaseMeter.Currents()
 			if err != nil {
 				if errors.Is(err, api.ErrNotAvailable) {
 					err = backoff.Permanent(err)
 				}
-				return err
+				return struct{}{}, err
 			}
 
 			lp.Lock()
@@ -1802,8 +1802,8 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 			lp.log.DEBUG.Printf("charge currents: %.3gA", lp.chargeCurrents)
 			lp.publish(keys.ChargeCurrents, lp.chargeCurrents)
 
-			return nil
-		}, modbus.Backoff()); err != nil && !errors.Is(err, api.ErrNotAvailable) {
+			return struct{}{}, nil
+		}); err != nil && !errors.Is(err, api.ErrNotAvailable) {
 			lp.log.ERROR.Printf("charge currents: %v", err)
 		}
 	}

@@ -1,6 +1,7 @@
 package goodwe
 
 import (
+	"context"
 	"encoding/binary"
 	"maps"
 	"net"
@@ -8,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
+	"github.com/cenkalti/backoff/v5"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -61,9 +62,8 @@ func (m *Server) GetInverter(ip string) *util.Monitor[Inverter] {
 }
 
 func (m *Server) readData() {
-	bo := backoff.NewExponentialBackOff(
-		backoff.WithMaxInterval(time.Second),
-		backoff.WithMaxElapsedTime(10*time.Second))
+	bo := backoff.NewExponentialBackOff()
+	bo.MaxInterval = time.Second
 
 	for {
 		mu.RLock()
@@ -71,7 +71,7 @@ func (m *Server) readData() {
 		mu.RUnlock()
 
 		for _, ip := range ips {
-			if err := backoff.Retry(func() error {
+			if _, err := backoff.Retry(context.Background(), func() (struct{}, error) {
 				addr, err := net.ResolveUDPAddr("udp", net.JoinHostPort(ip, "8899"))
 				if err == nil {
 					_, err = m.conn.WriteToUDP([]byte{0xF7, 0x03, 0x89, 0x1C, 0x00, 0x7D, 0x7A, 0xE7}, addr)
@@ -80,8 +80,8 @@ func (m *Server) readData() {
 					time.Sleep(5 * time.Second)
 					_, err = m.conn.WriteToUDP([]byte{0xF7, 0x03, 0x90, 0x88, 0x00, 0x0D, 0x3D, 0xB3}, addr)
 				}
-				return err
-			}, bo); err != nil {
+				return struct{}{}, err
+			}, backoff.WithBackOff(bo), backoff.WithMaxElapsedTime(10*time.Second)); err != nil {
 				m.log.ERROR.Println(err)
 			}
 		}

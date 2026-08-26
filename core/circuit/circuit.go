@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
@@ -281,7 +280,7 @@ func (c *Circuit) overloadOnError(t time.Time, val *float64) {
 }
 
 func (c *Circuit) updateMeters() error {
-	if f, err := backoff.RetryWithData(c.meter.CurrentPower, modbus.Backoff()); err == nil {
+	if f, err := modbus.Retry(c.meter.CurrentPower); err == nil {
 		c.power = f
 		c.powerUpdated = time.Now()
 	} else {
@@ -291,11 +290,11 @@ func (c *Circuit) updateMeters() error {
 
 	if phaseMeter, ok := api.Cap[api.PhaseCurrents](c.meter); ok {
 		var i1, i2, i3 float64
-		if err := backoff.Retry(func() error {
+		if _, err := modbus.Retry(func() (struct{}, error) {
 			var err error
 			i1, i2, i3, err = phaseMeter.Currents()
-			return err
-		}, modbus.Backoff()); err != nil {
+			return struct{}{}, err
+		}); err != nil {
 			c.overloadOnError(c.currentUpdated, &c.current)
 			return fmt.Errorf("circuit currents: %w", err)
 		}

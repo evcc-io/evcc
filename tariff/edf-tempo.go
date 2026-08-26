@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
@@ -121,9 +120,9 @@ func (t *EdfTempo) run(done chan error) {
 			strings.ReplaceAll(start.Format(time.RFC3339), "+", "%2B"),
 			strings.ReplaceAll(end.Format(time.RFC3339), "+", "%2B"))
 
-		if err := backoff.Retry(func() error {
-			return backoffPermanentError(t.GetJSON(uri, &res))
-		}, bo()); err != nil {
+		if _, err := retry(func() (struct{}, error) {
+			return struct{}{}, backoffPermanentError(t.GetJSON(uri, &res))
+		}); err != nil {
 			if reportError(&once, done, err) {
 				return
 			}

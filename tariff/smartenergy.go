@@ -5,7 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/smartenergy"
 	"github.com/evcc-io/evcc/util"
@@ -53,9 +52,9 @@ func (t *SmartEnergy) run(done chan error) {
 	for tick := time.Tick(time.Hour); ; <-tick {
 		var res smartenergy.Prices
 
-		if err := backoff.Retry(func() error {
-			return backoffPermanentError(client.GetJSON(smartenergy.URI, &res))
-		}, bo()); err != nil {
+		if _, err := retry(func() (struct{}, error) {
+			return struct{}{}, backoffPermanentError(client.GetJSON(smartenergy.URI, &res))
+		}); err != nil {
 			if reportError(&once, done, err) {
 				return
 			}

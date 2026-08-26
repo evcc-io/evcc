@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/awattar"
 	"github.com/evcc-io/evcc/util"
@@ -67,9 +66,9 @@ func (t *Awattar) run(done chan error) {
 		end := time.Now().Add(48 * time.Hour).UnixMilli()
 		uri := fmt.Sprintf("%s?start=%d&end=%d", t.uri, start, end)
 
-		if err := backoff.Retry(func() error {
-			return backoffPermanentError(client.GetJSON(uri, &res))
-		}, bo()); err != nil {
+		if _, err := retry(func() (struct{}, error) {
+			return struct{}{}, backoffPermanentError(client.GetJSON(uri, &res))
+		}); err != nil {
 			if reportError(&once, done, err) {
 				return
 			}

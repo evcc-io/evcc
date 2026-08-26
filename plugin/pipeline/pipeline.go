@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	xj "github.com/basgys/goxml2json"
-	"github.com/cenkalti/backoff/v4"
+	"github.com/cenkalti/backoff/v5"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/itchyny/gojq"

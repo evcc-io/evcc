@@ -48,7 +48,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
+	"github.com/cenkalti/backoff/v5"
 	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -186,15 +186,13 @@ func (c *Pulsatrix) sync() error {
 
 // reconnect reconnects to a pulsatrix SECC websocket
 func (c *Pulsatrix) reconnect() {
-	bo := backoff.NewExponentialBackOff(
-		backoff.WithInitialInterval(backoffInitial),
-		backoff.WithMaxInterval(backoffMax),
-		backoff.WithMultiplier(backoffMultiplier),
-	)
-	bo.MaxElapsedTime = 0 // 0 means no time limit - retry indefinitely
+	bo := backoff.NewExponentialBackOff()
+	bo.InitialInterval = backoffInitial
+	bo.MaxInterval = backoffMax
+	bo.Multiplier = backoffMultiplier
 
 	var lastErrorLog time.Time
-	operation := func() error {
+	operation := func() (struct{}, error) {
 		err := c.connect()
 		if err != nil {
 			// log error every errorLogInterval
@@ -203,11 +201,13 @@ func (c *Pulsatrix) reconnect() {
 				lastErrorLog = time.Now()
 			}
 		}
-		return err
+		return struct{}{}, err
 	}
 
-	if err := backoff.Retry(operation, bo); err != nil {
-		// should never be reached with MaxElapsedTime = 0
+	// 0 means no time limit - retry indefinitely
+	if _, err := backoff.Retry(context.Background(), operation,
+		backoff.WithBackOff(bo), backoff.WithMaxElapsedTime(0),
+	); err != nil {
 		c.log.ERROR.Printf("unexpected backoff failure: %v", err)
 	}
 }
