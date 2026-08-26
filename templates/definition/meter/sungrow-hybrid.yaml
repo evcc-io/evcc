@@ -22,6 +22,7 @@ params:
     baudrate: 9600
   - name: maxacpower
     service: modbus/read?address=5000&type=input&encoding=uint16&scale=100&{modbus}
+    required: true
   - preset: battery-params
   - name: maxchargepower
     service: modbus/read?address=13051&type=holding&encoding=uint16&scale=1&{modbus}
