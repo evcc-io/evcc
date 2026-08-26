@@ -109,9 +109,14 @@ func (t *Template) Validate() error {
 		}
 
 		// bool params are rendered as real booleans, so anything but true/false
-		// would render differently than it appears in the ui
-		if p.Type == TypeBool && p.Default != "" && p.Default != "true" && p.Default != "false" {
-			return fmt.Errorf("param %s: bool default must be true or false, got '%s'", p.Name, p.Default)
+		// would render differently than it appears in the ui. the example is the
+		// default in docs and unit test mode, see Param.DefaultValue.
+		if p.Type == TypeBool {
+			for _, v := range []string{p.Default, p.Example} {
+				if v != "" && v != "true" && v != "false" {
+					return fmt.Errorf("param %s: bool default/example must be true or false, got '%s'", p.Name, v)
+				}
+			}
 		}
 
 		maxLength := 50
@@ -401,7 +406,7 @@ func (t *Template) RenderResult(class Class, renderMode int, other map[string]an
 			}
 
 		default:
-			if prev, ok := res[out].(string); res[out] == nil || (ok && prev == "") {
+			if res[out] == nil || res[out].(string) == "" {
 				// prevent rendering nil interfaces as "<nil>" string
 				var s string
 				if val != nil {
@@ -430,6 +435,9 @@ func (t *Template) RenderResult(class Class, renderMode int, other map[string]an
 
 	// bool params are rendered as real booleans so templates can use
 	// `{{ if .param }}` instead of comparing against "true"/"false"
+	//
+	// TODO the boolean predefinedTemplateProperties (tcpip, udp, rs485*) are not
+	// declared params, so modbus.tpl still mis-branches on a stored "false"
 	for _, p := range t.Params {
 		if p.Type == TypeBool {
 			if s, ok := res[p.Name].(string); ok {

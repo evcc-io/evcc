@@ -129,6 +129,17 @@ describe("applyDefaultsFromTemplate", () => {
     expect(values["phases1p3p"]).toBe(false);
   });
 
+  it("coerces stored string values of Bool params to booleans", () => {
+    const params = [
+      { ...buildParam("phases1p3p"), Type: "Bool", Default: "true" },
+      { ...buildParam("heating"), Type: "Bool" },
+    ];
+    const values: Record<string, any> = { phases1p3p: "false", heating: "true" };
+    applyDefaultsFromTemplate(template(params), values as any);
+    expect(values["phases1p3p"]).toBe(false);
+    expect(values["heating"]).toBe(true);
+  });
+
   it("applies plain defaults for other params", () => {
     const params = [{ ...buildParam("device_id"), Default: "0" }];
     const values: Record<string, any> = {};

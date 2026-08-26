@@ -103,10 +103,10 @@ export function applyDefaultsFromTemplate(template: Template | null, values: Dev
   const params = template?.Params || [];
   params.forEach((p) => {
     if (p.Type === "Bool") {
-      if (values[p.Name] === undefined) {
-        // template defaults are strings, the form model uses real booleans
-        values[p.Name] = p.Default === "true";
-      }
+      // template defaults are strings, and configs stored before bool params
+      // became real booleans hold "true"/"false" - the form model uses booleans
+      const v = values[p.Name] === undefined ? p.Default : values[p.Name];
+      values[p.Name] = v === true || v === "true";
     } else if (p.Default && !values[p.Name]) {
       values[p.Name] = p.Default;
     }
