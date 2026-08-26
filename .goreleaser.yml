@@ -16,8 +16,7 @@ builds:
       - -trimpath
       - -tags=release
     ldflags:
-      # the package version carries a timestamp for ordering, the reported version does not
-      - -X github.com/evcc-io/evcc/util.Version={{ if .IsSnapshot }}{{ incminor .Tag }}-dev+{{ .ShortCommit }}{{ else }}{{ .Version }}{{ end }} -s -w
+      - -X github.com/evcc-io/evcc/util.Version={{ .Version }} -s -w
     env:
       - CGO_ENABLED=0
     goos:
