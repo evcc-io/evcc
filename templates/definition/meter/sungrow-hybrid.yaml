@@ -126,15 +126,15 @@ render: |
   maxacpower: {{ .maxacpower }} # W
   # EEG §9 curtailment via the power limitation registers
   #   13086 (doc 13087) power limitation switch, 0xAA enable / 0x55 disable
-  #   13087 (doc 13088) power limitation value, 0.1 % of nominal power
+  #   13087 (doc 13088) power limitation value, 0.1 % of nominal power => Does not work on SHX.0RS, use 13073 (doc 13074) instead, which is in W resolution
   curtail:
     source: sequence
     set:
       - source: go
         script: |
-          ena := 0xAA // enable limitation
+          ena := 170 // 0xAA - enable limitation
           if curtail == 100 {
-            ena = 0x55 // disable limitation
+            ena = 85 // 0x55 - disable limitation
           }
           ena
         out:
@@ -144,25 +144,23 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 13086 # Feed-in Limitation switch
+                address: 13086 # Feed-in Limitation switch (doc 13087), 0xAA enable / 0x55 disable
                 type: writesingle
                 decode: uint16
-      - source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          address: 13087 # Feed-in Limitation Ratio, 0.1 %
-          type: writesingle
-          decode: uint16
-        scale: 10
-      - source: const
-        value: 0
-        set:
-            source: modbus
-            {{- include "modbus" . | indent 10 }}
-            register:
-              address: 13073 # Feed-in Limitation Ratio, 0.1 %
-              type: writesingle
-              decode: uint16
+      - source: go
+        script: |
+          watts := curtail * {{ .maxacpower }} / 100
+          watts
+        out:
+          - name: watts
+            type: int
+            config:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 13073 # Feed-in Limitation Value (doc 13074), 1W resolution
+                type: writesingle
+                decode: uint16
   curtailed:
     source: go
     in:
@@ -175,20 +173,19 @@ render: |
             address: 13086
             type: holding
             decode: uint16
-      - name: ratio
+      - name: watts
         type: int
         config:
           source: modbus
           {{- include "modbus" . | indent 8 }}
           register:
-            address: 13087
+            address: 13073 # Feed-in Limitation Value (doc 13074), 1W
             type: holding
             decode: uint16
-          scale: 0.1
     script: |
       percent := 100
-      if ena == 0xAA {
-        percent = ratio
+      if ena == 170 {
+        percent = watts * 100 / {{ .maxacpower }}
       }
       percent
   {{- end }}
