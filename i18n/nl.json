@@ -188,6 +188,9 @@
       "label": "Valuta",
       "title": "Valuta"
     },
+    "curtailer": {
+      "template": "Fabrikant"
+    },
     "deviceValue": {
       "activeClients": "Actieve clients",
       "amount": "Aantal",
