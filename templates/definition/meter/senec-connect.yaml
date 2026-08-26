@@ -3,16 +3,17 @@ products:
   - brand: SENEC
     description:
       generic: .Connect (Cloud)
+  - brand: SENEC
+    description:
+      generic: .Home P4
 requirements:
   description:
     de: >-
-      Cloud-Anbindung über die SENEC.Connect-API, u. a. für den SENEC.Home P4, der über die lokale
-      Schnittstelle (siehe `senec-home`) nicht unterstützt wird. Ein Subscription Key aus dem SENEC
+      Cloud-Anbindung über die SENEC.Connect-API. Ein Subscription Key aus dem SENEC
       Developer Portal wird benötigt. Der Zugriff ist read-only, eine Batteriesteuerung ist darüber
       nicht möglich.
     en: >-
-      Cloud connection via the SENEC.Connect API, required for the SENEC.Home P4, which is not
-      supported via the local interface (see `senec-home`). A subscription key from the SENEC
+      Cloud connection via the SENEC.Connect API.. A subscription key from the SENEC
       developer portal is required. Access is read-only, battery control is not possible.
 params:
   - name: usage
