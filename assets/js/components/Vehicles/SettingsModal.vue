@@ -155,7 +155,7 @@ const { OFF, SMART, NOW } = CHARGE_MODE;
 
 export default defineComponent({
 	name: "VehicleSettingsModal",
-	components: { Badge, GenericModal, CustomSelect, VehicleIcon },
+	components: { Badge, CustomSelect, GenericModal, VehicleIcon },
 	mixins: [formatter],
 	props: {
 		vehicles: { type: Array as PropType<Vehicle[]>, default: () => [] },
@@ -168,7 +168,7 @@ export default defineComponent({
 	},
 	computed: {
 		docsUrl(): string {
-			return `${docsPrefix()}/docs/features/limits`;
+			return `${docsPrefix()}/features/limits`;
 		},
 		modeOptions(): SelectOption<string>[] {
 			return [
