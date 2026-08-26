@@ -10,7 +10,7 @@ requirements:
       Der Wechselrichter muss sich im Grid-Feeding Modus befinden.
       Bei zwei Batteriepaketen (BMS1 + BMS2) je einen Batteriezähler mit Batteriespeichernummer 1 und 2 anlegen.
     en: |
-      Modbus RTU (RS485) connection. Devices with a dedicated Modbus TCP ethernet port can alternatively use the `solplanet-modbus` template.
+      Modbus RTU (RS485) connection. Devices with a dedicated Modbus TCP Ethernet port can alternatively use the `solplanet-modbus` template.
       The inverter must be in grid-feeding mode.
       With two battery packs (BMS1 + BMS2) add one battery meter each, using battery number 1 and 2.
 capabilities: ["battery-control", "curtail"]
@@ -30,7 +30,7 @@ params:
     description:
       de: Batteriespeichernummer
       en: Battery number
-  - preset: battery-params
+  - preset: battery-power
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -172,9 +172,22 @@ render: |
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     value: 802:SoC
+  capacity: # nameplate rating
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 802:WHRtg
+    scale: 0.001 # Wh -> kWh
+  minsoc: # nameplate rating
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 802:SoCMin
+  maxsoc: # nameplate rating
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 802:SoCMax
   limitsoc: # model 802
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     value: 802:SoCRsvMin
-  {{- include "battery-params" . }}
+  {{- include "battery-power" . }}
   {{- end }}
