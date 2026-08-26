@@ -3,7 +3,7 @@
 		name="eebus"
 		:title="$t('config.eebus.title')"
 		:description="$t('config.eebus.description')"
-		docs="/docs/reference/configuration/eebus"
+		docs="/reference/configuration/eebus"
 		endpoint="/config/eebus"
 		state-key="eebus.config"
 		:no-buttons="fromYaml"
