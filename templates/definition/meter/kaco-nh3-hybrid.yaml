@@ -2,92 +2,182 @@ template: kaco-nh3-hybrid
 products:
   - brand: KACO
     description:
-      generic: KACO Blueplanet Hybrid NH3
-group: generic
+      generic: Blueplanet Hybrid NH3
+requirements:
+  description:
+    de: |
+      Modbus-RTU (RS485) Verbindung. Geräte mit eigenem Modbus-TCP-Ethernet-Port können alternativ das `solplanet-modbus` Template nutzen.
+      Der Wechselrichter muss sich im Grid-Feeding Modus befinden.
+      Bei zwei Batteriepaketen (BMS1 + BMS2) je einen Batteriezähler mit Batteriespeichernummer 1 und 2 anlegen.
+    en: |
+      Modbus RTU (RS485) connection. Devices with a dedicated Modbus TCP ethernet port can alternatively use the `solplanet-modbus` template.
+      The inverter must be in grid-feeding mode.
+      With two battery packs (BMS1 + BMS2) add one battery meter each, using battery number 1 and 2.
 capabilities: ["battery-control", "curtail"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["rs485"]
-  - name: modbusdeviceid
-    default: 3
-    description:
-      de: Geräte-ID (Slave ID)
-      en: Device ID (Slave ID)
-  - name: baudrate
-    default: 9600
-    type: choice
-    choice: [9600, 19200, 38400]
-    description:
-      de: Baudrate der RS485-Verbindung
-      en: Baud rate of RS485 connection
+    id: 3
+  - name: maxacpower
+    deprecated: true # read from nameplate
   - name: battery
     type: choice
-    choice: ["1", "2"]
+    choice: [1, 2]
     required: true
     usages: ["battery"]
     description:
       de: Batteriespeichernummer
       en: Battery number
-requirements:
-  description:
-    de: |
-      Modbus-RTU (RS485) Verbindung mit konfigurierbarer Baudrate (9600, 19200, 38400 Baud),
-      8 Datenbits, 1 Stoppbit, keine Parität.
-      Der KACO NH3 muss sich im Grid-Feeding Modus befinden und Sunspec Model 704 (Generic Inverter Controls) unterstützen.
-      Für Batteriesteuerung: Zwei Batteriepakete (BMS1 + BMS2) jeweils mit einem Batteriezähler mit Batteriespeichernummer 1 und 2 anlegen.
-      Batteriekapazität: 30.72 kWh | Max. Lade-/Entladestrom: 30 A
-      Lade-/Entladeleistung wird dynamisch aus der Batteriespannung berechnet (P = U × 30A).
-    en: |
-      Modbus-RTU (RS485) connection with configurable baud rate (9600, 19200, 38400 baud),
-      8 data bits, 1 stop bit, no parity.
-      KACO NH3 must be in Grid-Feeding mode and support SunSpec Model 704 (Generic Inverter Controls).
-      For battery control: add one battery meter each for two battery packs (BMS1 + BMS2), using battery number 1 and 2.
-      Battery capacity: 30.72 kWh | Max. charge/discharge current: 30 A
-      Charge/discharge power is calculated dynamically from battery voltage (P = U × 30A).
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
+  # sunspec model 20x (int+sf)/ 21x (float) meter
   power:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     value: 203:W
-  {{- end }}
-  {{- if eq .usage "pv" }}
-  power:
-    source: sunspec
-    {{- include "modbus" . | indent 2 }}
-    value: 701:W
   energy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: 701:TotWhInj
+    value: 203:TotWhImp
     scale: 0.001
+  returnenergy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value:
+      - 201:TotWhExp
+      - 211:TotWhExp
+      - 203:TotWhExp
+      - 213:TotWhExp
+    scale: 0.001
+  currents:
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value:
+        - 201:AphA
+        - 211:AphA
+        - 203:AphA
+        - 213:AphA
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value:
+        - 201:AphB
+        - 211:AphB
+        - 203:AphB
+        - 213:AphB
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value:
+        - 201:AphC
+        - 211:AphC
+        - 203:AphC
+        - 213:AphC
+  voltages:
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value:
+        - 201:PhVphA
+        - 211:PhVphA
+        - 203:PhVphA
+        - 213:PhVphA
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value:
+        - 201:PhVphB
+        - 211:PhVphB
+        - 203:PhVphB
+        - 213:PhVphB
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value:
+        - 201:PhVphC
+        - 211:PhVphC
+        - 203:PhVphC
+        - 213:PhVphC
+  powers:
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value:
+        - 201:WphA
+        - 211:WphA
+        - 203:WphA
+        - 213:WphA
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value:
+        - 201:WphB
+        - 211:WphB
+        - 203:WphB
+        - 213:WphB
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value:
+        - 201:WphC
+        - 211:WphC
+        - 203:WphC
+        - 213:WphC
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: calc
+    add:
+      - source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 160:1:DCW # mppt 1
+      - source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 160:2:DCW # mppt 2
+      - source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 160:3:DCW # mppt 3
+  energy:
+    source: calc
+    add:
+      - source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 160:1:DCWH # mppt 1
+        scale: 0.001
+      - source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 160:2:DCWH # mppt 2
+        scale: 0.001
+      - source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value: 160:3:DCWH # mppt 3
+        scale: 0.001
   curtail:
     source: sequence
     set:
       - source: sunspec
         {{- include "modbus" . | indent 6 }}
-        value: 704:WMaxLimPct
+        value:
+          - 704:WMaxLimPct
+          - 123:WMaxLimPct
       - source: switch
         switch:
-          - case: 100
+          - case: 100 # Uncurtailed
             set:
               source: const
-              value: 0
+              value: 0 # Limit disabled
               set:
                 source: sunspec
                 {{- include "modbus" . | indent 14 }}
-                value: 704:WMaxLimPctEna
+                value:
+                  - 704:WMaxLimPctEna
+                  - 123:WMaxLim_Ena
         default:
           source: const
-          value: 1
+          value: 1 # Limit enabled
           set:
             source: sunspec
             {{- include "modbus" . | indent 10 }}
-            value: 704:WMaxLimPctEna
-  curtailed:
+            value:
+              - 704:WMaxLimPctEna
+              - 123:WMaxLim_Ena
+  curtailed: # the limit percentage only applies while the limit is enabled
     source: go
     in:
     - name: ena
@@ -95,91 +185,37 @@ render: |
       config:
         source: sunspec
         {{- include "modbus" . | indent 6 }}
-        value: 704:WMaxLimPctEna
+        value:
+          - 704:WMaxLimPctEna
+          - 123:WMaxLim_Ena
     - name: limit
       type: float
       config:
         source: sunspec
         {{- include "modbus" . | indent 6 }}
-        value: 704:WMaxLimPct
+        value:
+          - 704:WMaxLimPct
+          - 123:WMaxLimPct
     script: |
       percent := 100
       if ena {
         percent = int(limit)
       }
       percent
+  {{- include "sunspec-maxacpower" . }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: {{ if eq .battery "2" }}714:Prt.2.DCW{{ else }}714:Prt.1.DCW{{ end }}
+    value: 714:{{ if eq .battery "2" }}2{{ else }}1{{ end }}:DCW # BMS2/1 battery power
   soc:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     value: 802:SoC
-  capacity:
+  limitsoc: # model 802
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: 802:WHRtg
-  minsoc:
-    source: sunspec
-    {{- include "modbus" . | indent 2 }}
-    value: 802:SoCMin
-  maxsoc:
-    source: sunspec
-    {{- include "modbus" . | indent 2 }}
-    value: 802:SoCMax
-  maxchargepower:
-    source: go
-    in:
-    - name: voltage
-      type: float
-      config:
-        source: sunspec
-        {{- include "modbus" . | indent 6 }}
-        value: 802:V
-    script: |
-      int(voltage * 30)
-  maxdischargepower:
-    source: go
-    in:
-    - name: voltage
-      type: float
-      config:
-        source: sunspec
-        {{- include "modbus" . | indent 6 }}
-        value: 802:V
-    script: |
-      int(voltage * 30)
-  batterymode:
-    source: switch
-    switch:
-    - case: 1
-      set:
-        source: const
-        value: 1
-        set:
-          source: sunspec
-          {{- include "modbus" . | indent 8 }}
-          value: 802:ChaSt
-    - case: 2
-      set:
-        source: const
-        value: 6
-        set:
-          source: sunspec
-          {{- include "modbus" . | indent 8 }}
-          value: 802:ChaSt
-    - case: 3
-      set:
-        source: const
-        value: 3
-        set:
-          source: sunspec
-          {{- include "modbus" . | indent 8 }}
-          value: 802:ChaSt
-    default:
-      source: error
-      error: ErrNotAvailable
+    value: 802:SoCRsvMin
+  {{- include "battery-params" . }}
   {{- end }}
