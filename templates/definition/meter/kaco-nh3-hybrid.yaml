@@ -34,7 +34,6 @@ params:
 render: |
   type: custom
   {{- if eq .usage "grid" }}
-  # sunspec model 20x (int+sf)/ 21x (float) meter
   power:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
@@ -47,78 +46,38 @@ render: |
   returnenergy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value:
-      - 201:TotWhExp
-      - 211:TotWhExp
-      - 203:TotWhExp
-      - 213:TotWhExp
+    value: 203:TotWhExp
     scale: 0.001
   currents:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value:
-        - 201:AphA
-        - 211:AphA
-        - 203:AphA
-        - 213:AphA
+      value: 203:AphA
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value:
-        - 201:AphB
-        - 211:AphB
-        - 203:AphB
-        - 213:AphB
+      value: 203:AphB
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value:
-        - 201:AphC
-        - 211:AphC
-        - 203:AphC
-        - 213:AphC
+      value: 203:AphC
   voltages:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value:
-        - 201:PhVphA
-        - 211:PhVphA
-        - 203:PhVphA
-        - 213:PhVphA
+      value: 203:PhVphA
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value:
-        - 201:PhVphB
-        - 211:PhVphB
-        - 203:PhVphB
-        - 213:PhVphB
+      value: 203:PhVphB
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value:
-        - 201:PhVphC
-        - 211:PhVphC
-        - 203:PhVphC
-        - 213:PhVphC
+      value: 203:PhVphC
   powers:
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value:
-        - 201:WphA
-        - 211:WphA
-        - 203:WphA
-        - 213:WphA
+      value: 203:WphA
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value:
-        - 201:WphB
-        - 211:WphB
-        - 203:WphB
-        - 213:WphB
+      value: 203:WphB
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
-      value:
-        - 201:WphC
-        - 211:WphC
-        - 203:WphC
-        - 213:WphC
+      value: 203:WphC
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
