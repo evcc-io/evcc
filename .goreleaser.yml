@@ -76,9 +76,8 @@ checksum:
   name_template: "checksums.txt"
 
 snapshot:
-  # semver pre-release of the upcoming version. The timestamp makes the package
-  # version increase monotonically: apt compares it numerically, while the commit
-  # alone would sort randomly.
+  # semver pre-release of the upcoming version, the timestamp keeps the package
+  # version increasing monotonically for apt
   version_template: "{{ incminor .Version }}-dev.{{ .Timestamp }}"
 
 changelog:
