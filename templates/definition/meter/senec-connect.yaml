@@ -6,6 +6,9 @@ products:
   - brand: SENEC
     description:
       generic: .Home P4
+  - brand: SENEC
+    description:
+      generic: .Home E4
 requirements:
   description:
     de: >-
@@ -13,7 +16,7 @@ requirements:
       Developer Portal wird benötigt. Der Zugriff ist read-only, eine Batteriesteuerung ist darüber
       nicht möglich.
     en: >-
-      Cloud connection via the SENEC.Connect API.. A subscription key from the SENEC
+      Cloud connection via the SENEC.Connect API. A subscription key from the SENEC
       developer portal is required. Access is read-only, battery control is not possible.
 params:
   - name: usage
@@ -27,37 +30,46 @@ params:
       de: Abonnement-Schlüssel aus dem SENEC Developer Portal (wird als Header `Ocp-Apim-Subscription-Key` gesendet).
       en: Subscription key from the SENEC developer portal (sent as header `Ocp-Apim-Subscription-Key`).
     type: string
-  - preset: battery-params
+  - name: maxacpower
+  - preset: battery-minmaxsoc
 render: |
-  {{- define "uri" -}}
-  https://apim-eds-gwc-prod.azure-api.net/senec-connect/v1/systems/device-data/general
+  {{ define "senec-connect-plugin" }}
+  source: http
+  uri: https://apim-eds-gwc-prod.azure-api.net/senec-connect/v1/systems/device-data/general
+  headers:
+  - accept: application/json
+  - Ocp-Apim-Subscription-Key: {{ .token }}
+  cache: 1s
   {{- end }}
   type: custom
   power:
-    source: http
-    uri: {{ include "uri" . }}
-    headers:
-    - content-type: application/json
-    - Ocp-Apim-Subscription-Key: {{ .token }}
-    cache: 1m
+    {{- include "senec-connect-plugin" . | indent 2 }}
   {{- if eq .usage "grid" }}
-    jq: .[0].meter.grid_power
+    jq: .[0].meter.grid_power # + from grid, - to grid
   {{- end }}
   {{- if eq .usage "pv" }}
     jq: .[0].meter.production
   {{- end }}
   {{- if eq .usage "battery" }}
-    jq: .[0].battery.power
+    jq: .[0].battery.power # + charge, - discharge
     scale: -1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
   soc:
-    source: http
-    uri: {{ include "uri" . }}
-    headers:
-    - content-type: application/json
-    - Ocp-Apim-Subscription-Key: {{ .token }}
-    cache: 1m
+    {{- include "senec-connect-plugin" . | indent 2 }}
     jq: .[0].battery.state_of_charge
-  {{- include "battery-params" . }}
+  capacity: # nameplate rating
+    {{- include "senec-connect-plugin" . | indent 2 }}
+    jq: .[0].bessNameplate.design_capacity
+    scale: 0.001 # Wh -> kWh
+  maxchargepower: # nameplate rating
+    {{- include "senec-connect-plugin" . | indent 2 }}
+    jq: .[0].bessNameplate.active_charge_power
+  maxdischargepower: # nameplate rating
+    {{- include "senec-connect-plugin" . | indent 2 }}
+    jq: .[0].bessNameplate.active_discharge_power
+  {{- include "battery-minmaxsoc" . }}
   {{- end }}
