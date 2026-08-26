@@ -123,15 +123,13 @@ html.dark .phase {
 	opacity: 1;
 }
 .target {
-	background-color: var(--evcc-green);
-	border-right: 1px solid var(--evcc-dark-green);
+	background-color: color-mix(in srgb, var(--evcc-dark-green) 40%, white);
 }
 .real {
 	background-color: var(--evcc-dark-green);
 }
 .phases-warning .target {
-	background-color: var(--bs-warning-border-subtle);
-	border-right-color: var(--bs-warning);
+	background-color: color-mix(in srgb, var(--bs-warning) 40%, white);
 }
 .phases-warning .real {
 	background-color: var(--bs-warning);
