@@ -16,7 +16,6 @@ ifeq ($(RELEASE),1)
     COMMIT :=
 endif
 VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
-BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 BUILD_TAGS := -tags=release
 LD_FLAGS := -X github.com/evcc-io/evcc/util.Version=$(VERSION) -X github.com/evcc-io/evcc/util.Commit=$(COMMIT) -s -w
 BUILD_ARGS := -trimpath -ldflags='$(LD_FLAGS)'
@@ -101,7 +100,7 @@ porcelain::
 	test -z "$$(git status --porcelain)" || (git status; git diff; false)
 
 build::
-	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
+	@echo Version: $(VERSION) $(SHA)
 	CGO_ENABLED=0 go build -v $(BUILD_TAGS) $(BUILD_ARGS)
 
 snapshot::
@@ -111,15 +110,15 @@ release::
 	goreleaser --clean
 
 docker::
-	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
+	@echo Version: $(VERSION) $(SHA)
 	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):$(DOCKER_TAG) --push .
 
 publish-nightly::
-	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
+	@echo Version: $(VERSION) $(SHA)
 	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):nightly --push .
 
 publish-release::
-	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
+	@echo Version: $(VERSION) $(SHA)
 	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):latest --tag $(DOCKER_IMAGE):$(VERSION) --build-arg RELEASE=1 --push .
 
 apt-nightly::
@@ -155,7 +154,7 @@ gok-update::
 	${GOK} update yes
 
 soc::
-	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
+	@echo Version: $(VERSION) $(SHA)
 	go build $(BUILD_TAGS) $(BUILD_ARGS) github.com/evcc-io/evcc/cmd/soc
 
 # patch asn1.go to allow Elli buggy certificates to be accepted with EEBUS
