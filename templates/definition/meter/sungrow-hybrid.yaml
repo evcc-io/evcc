@@ -147,8 +147,6 @@ render: |
                 address: 13086 # Feed-in Limitation switch
                 type: writesingle
                 decode: uint16
-      - source: sleep
-        duration: 1s
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
@@ -156,6 +154,15 @@ render: |
           type: writesingle
           decode: uint16
         scale: 10
+      - source: const
+        value: 0
+        set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 13073 # Feed-in Limitation Ratio, 0.1 %
+              type: writesingle
+              decode: uint16
   curtailed:
     source: go
     in:
