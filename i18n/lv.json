@@ -188,6 +188,15 @@
       "label": "Valūta",
       "title": "Valūta"
     },
+    "curtailer": {
+      "description": "Ierīce, kas ierobežo atdevi tīklā pēc tīkla operatora pieprasījuma (§ 9 EEG). Daudzi saules invertori to atbalsta tieši, izmantojot savu saules skaitītāja konfigurāciju. Atsevišķa konfigurācija nepieciešama tikai dažiem ražotājiem vai vairāku invertoru sistēmām.",
+      "generic": "Vispārīgas integrācijas",
+      "specific": "Specifiskās integrācijas",
+      "template": "Ražotājs",
+      "title": "Atdeves ierobežošana",
+      "titleAdd": "Pievienot atdeves ierobežošanas ierīci",
+      "titleEdit": "Rediģēt atdeves ierobežošanas ierīci"
+    },
     "deviceValue": {
       "activeClients": "Aktīvie klienti",
       "amount": "Daudzums",
@@ -212,7 +221,7 @@
       "currentRange": "Strāvas diapazons",
       "curtailLimit": "Atdeves ierobežojums",
       "curtailable": "Ierobežojams",
-      "curtailed": "Atdeve ierobežota",
+      "curtailed": "Atdeves limits",
       "detected": "Atpazīts",
       "dimLimit": "Patēriņa ierobežojums",
       "dimmed": "Patēriņš ierobežots",
@@ -539,6 +548,7 @@
     "main": {
       "addAdditional": "Pievienot papildu skaitītāju",
       "addConsumer": "Pievienot enerģijas patērētāju",
+      "addCurtailer": "Pievienot atdeves ierobežošanas iekārtu",
       "addGrid": "Pievienot tīkla skaitītāju",
       "addLoadpoint": "Pievienot lādētāju vai sildierīci",
       "addPvBattery": "Pievienot saules enerģijas avotu vai akumulatoru",
@@ -639,6 +649,7 @@
         "aux": "Pievienot pašregulējošu patērētāju",
         "battery": "Pievienot akumulatora skaitītāju",
         "consumer": "Pievienot parastu patērētāju",
+        "grid": "Pievienot tīkla skaitītāju",
         "pv": "Pievienot saules enerģijas skaitītāju"
       },
       "save": "Saglabāt",
@@ -829,10 +840,12 @@
       "noClients": "Pagaidām nav klientu. Neviens vēl nevar pieslēgties.",
       "password": "Parole",
       "passwordOnce": "Šī parole tiek rādīta tikai vienreiz. Noskenējiet QR kodu vai nokopējiet to tagad. Vēlāk to vairs nevarēs redzēt.",
+      "privacy": "Iespējojot šo funkciju, jūs piekrītat mūsu {0}.",
+      "privacyLink": "privātuma politikai",
       "qrInstall": "Instalējiet evcc lietotni {ios} vai {android}.",
       "qrScan": "Skenējiet kodu ar tālruņa kameru, lai savienotos. Noklikšķiniet, ja jau izmantojat tālruni.",
       "removeClient": "Noņemt klientu",
-      "title": "Attālā piekļuve",
+      "title": "Attālā pieslēgšanās",
       "url": "Publiskais URL",
       "username": "Lietotājvārds"
     },
@@ -905,6 +918,8 @@
           "confirmationButton": "Atiestatīt un pārstartēt",
           "confirmationText": "Tas neatgriezeniski dzēsīs jūsu izvēlētos datus. Pārliecinieties, ka vispirms esat lejupielādējis rezerves kopiju.",
           "description": "Ir problēmas ar konfigurāciju un vēlaties sākt no jauna? Dzēsiet visus datus un sāciet no nulles.",
+          "remote": "attālā piekļuve",
+          "remoteDescription": "Dzēš konfigurāciju un piekļuves datus.",
           "sessions": "Uzlādes sesijas",
           "sessionsDescription": "Dzēš jūsu uzlādes sesiju vēsturi.",
           "settings": "Konfigurācija un iestatījumi",
@@ -1718,6 +1733,13 @@
     "vehicle": "Transportlīdzeklis"
   },
   "settings": {
+    "dateFormat": {
+      "auto": "Automātiski",
+      "dmy": "DD/MM/GGGG",
+      "label": "Datuma formāts",
+      "mdy": "MM/DD/GGGG",
+      "ymd": "GGGG-MM-DD"
+    },
     "deviceInfo": "Iestatījumi ko veicat šajā dialogā, ietekmē tikai šo ierīci.",
     "fullscreen": {
       "enter": "Ieslēgt pilnekrānu",
@@ -1729,7 +1751,7 @@
       "value": "Iespējot eksperimentālās funkcijas."
     },
     "language": {
-      "auto": "Automātiski",
+      "auto": "Automātiskais režīms",
       "label": "Valoda"
     },
     "loadpoints": {
