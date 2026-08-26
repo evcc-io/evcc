@@ -1,4 +1,4 @@
-template: solplanet-hybrid
+template: solplanet-hybrid-sunspec
 products:
   - brand: Solplanet
     description:
@@ -9,10 +9,10 @@ products:
 requirements:
   description:
     de: |
-      Modbus-RTU (RS485) Verbindung. Geräte mit eigenem Modbus-TCP-Ethernet-Port können alternativ das `solplanet-modbus` Template nutzen.
+      Modbus-RTU (RS485) Verbindung. Geräte mit eigenem Modbus-TCP-Ethernet-Port können alternativ das `solplanet-hybrid-vendor` Template nutzen.
       Der Wechselrichter muss sich im Grid-Feeding Modus befinden.
     en: |
-      Modbus RTU (RS485) connection. Devices with a dedicated Modbus TCP Ethernet port can alternatively use the `solplanet-modbus` template.
+      Modbus RTU (RS485) connection. Devices with a dedicated Modbus TCP Ethernet port can alternatively use the `solplanet-hybrid-vendor` template.
       The inverter must be in grid-feeding mode.
 capabilities: ["battery-control", "curtail"]
 params:

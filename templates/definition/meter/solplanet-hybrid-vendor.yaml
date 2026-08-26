@@ -1,4 +1,5 @@
-template: solplanet-modbus
+template: solplanet-hybrid-vendor
+covers: ["solplanet-modbus"]
 products:
   - brand: Solplanet
     description:
