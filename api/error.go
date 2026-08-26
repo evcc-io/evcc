@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/url"
 
-	"github.com/cenkalti/backoff/v5"
+	"github.com/cenkalti/backoff/v7"
 )
 
 // permanentError is a sentinel error that keeps matching errors.Is after

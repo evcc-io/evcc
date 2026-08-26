@@ -1,11 +1,12 @@
 package util
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
 
-	"github.com/cenkalti/backoff/v5"
+	"github.com/cenkalti/backoff/v7"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -59,6 +60,7 @@ func TestRetryError(t *testing.T) {
 
 	assert.Equal(t, 1, calls)
 	assert.ErrorIs(t, err, errTest)
+	assert.ErrorIs(t, err, backoff.ErrExhausted)
 }
 
 func TestRetryPermanent(t *testing.T) {
@@ -71,4 +73,27 @@ func TestRetryPermanent(t *testing.T) {
 
 	assert.Equal(t, 1, calls)
 	assert.ErrorIs(t, err, errTest)
+	assert.ErrorIs(t, err, backoff.ErrPermanent)
+}
+
+// A cancelled context must stay distinguishable without losing the operation error
+func TestRetryContext(t *testing.T) {
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	err := Retry(ctx, func() error {
+		return errTest
+	})
+
+	assert.ErrorIs(t, err, context.Canceled)
+	assert.ErrorIs(t, err, errTest)
+}
+
+func TestRetryCause(t *testing.T) {
+	err := Retry(t.Context(), func() error {
+		return errTest
+	}, backoff.WithBackOff(&backoff.StopBackOff{}))
+
+	assert.Equal(t, errTest, RetryCause(err))
+	assert.Equal(t, errTest, RetryCause(errTest))
 }

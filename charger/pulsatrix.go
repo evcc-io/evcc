@@ -48,7 +48,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/cenkalti/backoff/v5"
+	"github.com/cenkalti/backoff/v7"
 	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"

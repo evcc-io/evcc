@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/cenkalti/backoff/v5"
+	"github.com/cenkalti/backoff/v7"
 	eebusapi "github.com/enbility/eebus-go/api"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
@@ -56,7 +56,8 @@ const limitTimeout = 50 * time.Second
 // follow a heartbeat and may reject them while still in state "init". Retrying
 // stops when ctx is cancelled, i.e. when the device is gone.
 func AssertLimit(ctx context.Context, log *util.Logger, write func() error) {
-	if err := util.Retry(ctx, write, backoff.WithMaxElapsedTime(limitTimeout)); err != nil && ctx.Err() == nil {
+	// a cancelled context means the device is gone, not a failed write
+	if err := util.Retry(ctx, write, backoff.WithMaxElapsedTime(limitTimeout)); err != nil && !errors.Is(err, context.Canceled) {
 		log.DEBUG.Printf("assert limit: %v", err)
 	}
 }

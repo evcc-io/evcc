@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/cenkalti/backoff/v5"
+	"github.com/cenkalti/backoff/v7"
 )
 
 // BackOffOption configures an exponential backoff policy
@@ -39,5 +39,14 @@ func Retry(ctx context.Context, op func() error, opts ...backoff.RetryOption) er
 	_, err := backoff.Retry(ctx, func() (struct{}, error) {
 		return struct{}{}, op()
 	}, opts...)
+	return err
+}
+
+// RetryCause reduces a backoff retry error to the error that caused it. Use it
+// where the message is user-facing and the reason retrying stopped is noise.
+func RetryCause(err error) error {
+	if re := backoff.AsRetryError(err); re != nil {
+		return re.LastErr
+	}
 	return err
 }

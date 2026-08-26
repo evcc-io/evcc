@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cenkalti/backoff/v5"
+	"github.com/cenkalti/backoff/v7"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
@@ -115,7 +115,7 @@ func NewEm2Go(ctx context.Context, settings modbus.TcpSettings) (api.Charger, er
 		backoff.WithMaxElapsedTime(30*time.Second),
 	)
 	if err != nil {
-		return nil, err
+		return nil, util.RetryCause(err)
 	}
 
 	b, err := wb.conn.ReadHoldingRegisters(em2GoRegCommTimeout, 1)

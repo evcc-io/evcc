@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v5"
+	"github.com/cenkalti/backoff/v7"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -115,7 +115,7 @@ func runOrError[T any, I runnable[T]](t I) (*T, error) {
 func reportError(once *sync.Once, done chan<- error, err error) (startupFailed bool) {
 	once.Do(func() {
 		startupFailed = true
-		done <- err
+		done <- util.RetryCause(err)
 	})
 	return startupFailed
 }

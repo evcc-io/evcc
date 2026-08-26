@@ -13,7 +13,7 @@ import (
 
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
-	"github.com/cenkalti/backoff/v5"
+	"github.com/cenkalti/backoff/v7"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/keys"
