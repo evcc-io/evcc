@@ -1,5 +1,8 @@
-template: kaco-nh3-hybrid
+template: solplanet-hybrid
 products:
+  - brand: Solplanet
+    description:
+      generic: ASW kH
   - brand: KACO
     description:
       generic: Blueplanet Hybrid NH3
@@ -8,11 +11,9 @@ requirements:
     de: |
       Modbus-RTU (RS485) Verbindung. Geräte mit eigenem Modbus-TCP-Ethernet-Port können alternativ das `solplanet-modbus` Template nutzen.
       Der Wechselrichter muss sich im Grid-Feeding Modus befinden.
-      Bei zwei Batteriepaketen (BMS1 + BMS2) je einen Batteriezähler mit Batteriespeichernummer 1 und 2 anlegen.
     en: |
       Modbus RTU (RS485) connection. Devices with a dedicated Modbus TCP Ethernet port can alternatively use the `solplanet-modbus` template.
       The inverter must be in grid-feeding mode.
-      With two battery packs (BMS1 + BMS2) add one battery meter each, using battery number 1 and 2.
 capabilities: ["battery-control", "curtail"]
 params:
   - name: usage
@@ -20,16 +21,6 @@ params:
   - name: modbus
     choice: ["rs485"]
     id: 3
-  - name: maxacpower
-    deprecated: true # read from nameplate
-  - name: battery
-    type: choice
-    choice: [1, 2]
-    required: true
-    usages: ["battery"]
-    description:
-      de: Batteriespeichernummer
-      en: Battery number
   - preset: battery-power
 render: |
   type: custom
@@ -167,7 +158,7 @@ render: |
   power:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
-    value: 714:{{ if eq .battery "2" }}2{{ else }}1{{ end }}:DCW # BMS2/1 battery power
+    value: 802:W
   soc:
     source: sunspec
     {{- include "modbus" . | indent 2 }}
