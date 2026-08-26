@@ -429,11 +429,10 @@ func (t *Template) RenderResult(class Class, renderMode int, other map[string]an
 					}
 				}
 
-				// bool params are passed as real booleans so templates can use
-				// `{{ if .param }}` instead of comparing against "true"/"false".
-				// TODO the boolean predefinedTemplateProperties (tcpip, udp, rs485*)
-				// are no params, so modbus.tpl still mis-branches on a stored "false"
-				if i != -1 && p.Type == TypeBool {
+				// bool params become real booleans so templates can use `{{ if .param }}`.
+				// TODO tcpip/udp/rs485* are predefined properties, so modbus.tpl still
+				// compares strings and mis-branches on a stored "false"
+				if p.Type == TypeBool {
 					res[out] = s == "true"
 				} else {
 					res[out] = s
