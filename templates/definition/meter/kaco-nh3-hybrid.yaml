@@ -85,7 +85,7 @@ render: |
           value: 1
           set:
             source: sunspec
-            {{- include "modbus" . | indent 12 }}
+            {{- include "modbus" . | indent 10 }}
             value: 704:WMaxLimPctEna
   curtailed:
     source: go
@@ -155,30 +155,30 @@ render: |
   batterymode:
     source: switch
     switch:
-      - case: 1
+    - case: 1
+      set:
+        source: const
+        value: 1
         set:
-          source: const
-          value: 1
-          set:
-            source: sunspec
-            {{- include "modbus" . | indent 10 }}
-            value: 802:ChaSt
-      - case: 2
+          source: sunspec
+          {{- include "modbus" . | indent 8 }}
+          value: 802:ChaSt
+    - case: 2
+      set:
+        source: const
+        value: 6
         set:
-          source: const
-          value: 6
-          set:
-            source: sunspec
-            {{- include "modbus" . | indent 10 }}
-            value: 802:ChaSt
-      - case: 3
+          source: sunspec
+          {{- include "modbus" . | indent 8 }}
+          value: 802:ChaSt
+    - case: 3
+      set:
+        source: const
+        value: 3
         set:
-          source: const
-          value: 3
-          set:
-            source: sunspec
-            {{- include "modbus" . | indent 10 }}
-            value: 802:ChaSt
+          source: sunspec
+          {{- include "modbus" . | indent 8 }}
+          value: 802:ChaSt
     default:
       source: error
       error: ErrNotAvailable
