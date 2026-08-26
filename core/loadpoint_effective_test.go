@@ -27,36 +27,37 @@ func TestEffectivePriorityScore(t *testing.T) {
 		priority      int
 		soc, limitSoc float64
 		capacity      float64 // vehicle capacity in kWh, 0 = no/unknown vehicle
+		ref           float64 // site-wide reference the gap is normalised against
 		expected      float64
 	}{
 		// none: fractional part is always zero
-		{api.PriorityNone, api.PriorityBasisPercent, 0, 50, 0, 0, 0},
-		{api.PriorityNone, api.PriorityBasisPercent, 2, 50, 0, 0, 2},
+		{api.PriorityNone, api.PriorityBasisPercent, 0, 50, 0, 0, 100, 0},
+		{api.PriorityNone, api.PriorityBasisPercent, 2, 50, 0, 0, 100, 2},
 		// soc (percent): lower soc scores higher within the tier
-		{api.PrioritySoc, api.PriorityBasisPercent, 0, 20, 0, 0, 0.80},
-		{api.PrioritySoc, api.PriorityBasisPercent, 0, 80, 0, 0, 0.20},
-		{api.PrioritySoc, api.PriorityBasisPercent, 1, 20, 0, 0, 1.80},
-		{api.PrioritySoc, api.PriorityBasisPercent, 0, 100, 0, 0, 0}, // full vehicle: no boost
-		{api.PrioritySoc, api.PriorityBasisPercent, 0, 0, 0, 0, 0},   // unknown soc: falls back to plain priority
+		{api.PrioritySoc, api.PriorityBasisPercent, 0, 20, 0, 0, 100, 0.80},
+		{api.PrioritySoc, api.PriorityBasisPercent, 0, 80, 0, 0, 100, 0.20},
+		{api.PrioritySoc, api.PriorityBasisPercent, 1, 20, 0, 0, 100, 1.80},
+		{api.PrioritySoc, api.PriorityBasisPercent, 0, 100, 0, 0, 100, 0}, // full vehicle: no boost
+		{api.PrioritySoc, api.PriorityBasisPercent, 0, 0, 0, 0, 100, 0},   // unknown soc: falls back to plain priority
 		// deficit (percent): larger gap to the limit soc scores higher within the tier
-		{api.PriorityDeficit, api.PriorityBasisPercent, 0, 50, 80, 0, 0.30},
-		{api.PriorityDeficit, api.PriorityBasisPercent, 0, 50, 0, 0, 0.50}, // no limit set -> default 100
-		{api.PriorityDeficit, api.PriorityBasisPercent, 0, 90, 80, 0, 0},   // soc above limit: no boost
-		{api.PriorityDeficit, api.PriorityBasisPercent, 0, 0, 80, 0, 0},    // unknown soc: falls back to plain priority
-		// soc (energy): gap is scaled by capacity -> (100-soc)/100*capacity, /100 for the fraction
-		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 20, 0, 50, 0.40}, // 80% * 50kWh = 40kWh
-		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 80, 0, 50, 0.10}, // 20% * 50kWh = 10kWh
-		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 20, 0, 25, 0.20}, // 80% * 25kWh = 20kWh
-		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 20, 0, 0, 0.80},  // capacity unknown: falls back to percent
-		// deficit (energy): (limitSoc-soc)/100*capacity, /100 for the fraction
-		{api.PriorityDeficit, api.PriorityBasisEnergy, 0, 50, 80, 50, 0.15}, // 30% * 50kWh = 15kWh
-		{api.PriorityDeficit, api.PriorityBasisEnergy, 0, 50, 80, 0, 0.30},  // capacity unknown: falls back to percent
+		{api.PriorityDeficit, api.PriorityBasisPercent, 0, 50, 80, 0, 100, 0.30},
+		{api.PriorityDeficit, api.PriorityBasisPercent, 0, 50, 0, 0, 100, 0.50}, // no limit set -> default 100
+		{api.PriorityDeficit, api.PriorityBasisPercent, 0, 90, 80, 0, 100, 0},   // soc above limit: no boost
+		{api.PriorityDeficit, api.PriorityBasisPercent, 0, 0, 80, 0, 100, 0},    // unknown soc: falls back to plain priority
+		// soc (energy): gap is scaled by capacity -> (100-soc)/100*capacity, normalised by ref
+		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 20, 0, 50, 100, 0.40}, // 80% * 50kWh = 40kWh of 100kWh
+		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 80, 0, 50, 100, 0.10}, // 20% * 50kWh = 10kWh of 100kWh
+		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 20, 0, 25, 100, 0.20}, // 80% * 25kWh = 20kWh of 100kWh
+		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 20, 0, 0, 100, 0},     // capacity unknown: no comparable gap
+		// deficit (energy): (limitSoc-soc)/100*capacity, normalised by ref
+		{api.PriorityDeficit, api.PriorityBasisEnergy, 0, 50, 80, 50, 100, 0.15}, // 30% * 50kWh = 15kWh of 100kWh
+		{api.PriorityDeficit, api.PriorityBasisEnergy, 0, 50, 80, 0, 100, 0},     // capacity unknown: no comparable gap
 		// Steve's case: a small second car is NOT over-prioritized under the energy basis.
 		// Percent basis would rank B (40%) above A (50%); energy basis ranks A (needs 37.5kWh) above B (15kWh).
-		{api.PrioritySoc, api.PriorityBasisPercent, 0, 50, 0, 75, 0.50}, // car A, percent
-		{api.PrioritySoc, api.PriorityBasisPercent, 0, 40, 0, 25, 0.60}, // car B, percent -> B wins
-		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 50, 0, 75, 0.375}, // car A, energy -> A wins
-		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 40, 0, 25, 0.15},  // car B, energy
+		{api.PrioritySoc, api.PriorityBasisPercent, 0, 50, 0, 75, 100, 0.50}, // car A, percent
+		{api.PrioritySoc, api.PriorityBasisPercent, 0, 40, 0, 25, 100, 0.60}, // car B, percent -> B wins
+		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 50, 0, 75, 75, 0.50},   // car A, energy -> A wins
+		{api.PrioritySoc, api.PriorityBasisEnergy, 0, 40, 0, 25, 75, 0.20},   // car B, energy
 	}
 
 	for _, tc := range tc {
@@ -75,7 +76,45 @@ func TestEffectivePriorityScore(t *testing.T) {
 			lp.vehicle = vehicle
 		}
 
-		assert.InDelta(t, tc.expected, lp.EffectivePriorityScore(tc.strategy, tc.basis), 1e-9)
+		assert.InDelta(t, tc.expected, lp.EffectivePriorityScore(tc.strategy, tc.basis, tc.ref), 1e-9)
+	}
+}
+
+// the energy basis must keep distinct kWh gaps distinct: a big pack near empty has to
+// outrank the same pack half full instead of both saturating the fraction
+func TestEffectivePriorityScoreEnergyLargePack(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Capacity().Return(200.0).AnyTimes()
+	vehicle.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
+
+	score := func(soc float64) float64 {
+		lp := NewLoadpoint(util.NewLogger("foo"), nil)
+		lp.vehicleSoc = soc
+		lp.vehicle = vehicle
+		return lp.EffectivePriorityScore(api.PrioritySoc, api.PriorityBasisEnergy, 200)
+	}
+
+	assert.Greater(t, score(5), score(45), "190kWh gap must outrank 110kWh gap")
+}
+
+// the fraction must stay ordered just below the tier boundary: near-empty vehicles must
+// not collapse into a tie, and an out-of-range limit soc must not reach the next tier
+func TestEffectivePriorityScoreFractionBounds(t *testing.T) {
+	score := func(strategy api.PriorityStrategy, prio int, soc float64, limitSoc int) float64 {
+		lp := NewLoadpoint(util.NewLogger("foo"), nil)
+		lp.priority = prio
+		lp.vehicleSoc = soc
+		lp.limitSoc = limitSoc
+		return lp.EffectivePriorityScore(strategy, api.PriorityBasisPercent, 100)
+	}
+
+	// raw fractions 0.998 and 0.992, 0.6pp apart
+	assert.Greater(t, score(api.PrioritySoc, 0, 0.2, 0), score(api.PrioritySoc, 0, 0.8, 0), "near-empty vehicles must not tie")
+
+	// limit soc is not range-checked: a 199pp deficit must stay inside its tier, on any tier
+	for prio := 0; prio <= 10; prio++ {
+		assert.Less(t, score(api.PriorityDeficit, prio, 1, 200), float64(prio+1), "score must stay below the next tier")
 	}
 }
 
@@ -98,8 +137,8 @@ func TestEffectivePriorityScoreHeating(t *testing.T) {
 		FeatureDescriber: describer,
 	}
 
-	assert.Equal(t, 1.0, lp.EffectivePriorityScore(api.PrioritySoc, api.PriorityBasisPercent))
-	assert.Equal(t, 1.0, lp.EffectivePriorityScore(api.PriorityDeficit, api.PriorityBasisPercent))
+	assert.Equal(t, 1.0, lp.EffectivePriorityScore(api.PrioritySoc, api.PriorityBasisPercent, 100))
+	assert.Equal(t, 1.0, lp.EffectivePriorityScore(api.PriorityDeficit, api.PriorityBasisPercent, 100))
 }
 
 func TestEffectiveMinSoc(t *testing.T) {

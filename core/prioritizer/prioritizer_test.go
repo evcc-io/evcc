@@ -13,25 +13,41 @@ import (
 type testSettings struct {
 	strategy   api.PriorityStrategy
 	basis      api.PriorityBasis
+	ref        float64
 	hysteresis int
 }
 
 func (s *testSettings) GetPriorityStrategy() api.PriorityStrategy { return s.strategy }
-func (s *testSettings) GetPriorityBasis() api.PriorityBasis       { return s.basis }
 func (s *testSettings) GetPriorityHysteresis() int                { return s.hysteresis }
+
+func (s *testSettings) EffectivePriorityScoring() (api.PriorityBasis, float64) {
+	if s.ref <= 0 {
+		return s.basis, 100
+	}
+	return s.basis, s.ref
+}
+
+// mockLoadpoint returns a loadpoint mock with the given priority tier and score
+func mockLoadpoint(ctrl *gomock.Controller, prio int, score float64) *loadpoint.MockAPI {
+	return mockHeatingLoadpoint(ctrl, prio, score, false)
+}
+
+func mockHeatingLoadpoint(ctrl *gomock.Controller, prio int, score float64, heating bool) *loadpoint.MockAPI {
+	lp := loadpoint.NewMockAPI(ctrl)
+	lp.EXPECT().GetTitle().AnyTimes()
+	lp.EXPECT().IsHeating().Return(heating).AnyTimes()
+	lp.EXPECT().EffectivePriority().Return(prio).AnyTimes()
+	lp.EXPECT().EffectivePriorityScore(gomock.Any(), gomock.Any(), gomock.Any()).Return(score).AnyTimes()
+	return lp
+}
 
 func TestPrioritzer(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	p := New(nil, &testSettings{})
 
-	lo := loadpoint.NewMockAPI(ctrl)
-	lo.EXPECT().GetTitle().AnyTimes()
-	lo.EXPECT().EffectivePriorityScore(gomock.Any(), gomock.Any()).Return(0.0).AnyTimes() // prio 0
-
-	hi := loadpoint.NewMockAPI(ctrl)
-	hi.EXPECT().GetTitle().AnyTimes()
-	hi.EXPECT().EffectivePriorityScore(gomock.Any(), gomock.Any()).Return(1.0).AnyTimes() // prio 1
+	lo := mockLoadpoint(ctrl, 0, 0.0)
+	hi := mockLoadpoint(ctrl, 1, 1.0)
 
 	// no additional power available
 	lo.EXPECT().GetChargePowerFlexibility(nil).Return(300.0)
@@ -57,13 +73,8 @@ func TestPrioritizerWithinTier(t *testing.T) {
 
 	p := New(nil, &testSettings{strategy: api.PrioritySoc})
 
-	full := loadpoint.NewMockAPI(ctrl) // prio 0, soc 80 -> score 0.20
-	full.EXPECT().GetTitle().AnyTimes()
-	full.EXPECT().EffectivePriorityScore(gomock.Any(), gomock.Any()).Return(0.20).AnyTimes()
-
-	empty := loadpoint.NewMockAPI(ctrl) // prio 0, soc 20 -> score 0.80
-	empty.EXPECT().GetTitle().AnyTimes()
-	empty.EXPECT().EffectivePriorityScore(gomock.Any(), gomock.Any()).Return(0.80).AnyTimes()
+	full := mockLoadpoint(ctrl, 0, 0.20)  // soc 80
+	empty := mockLoadpoint(ctrl, 0, 0.80) // soc 20
 
 	// fuller vehicle has nothing below it -> no extra power
 	full.EXPECT().GetChargePowerFlexibility(nil).Return(500.0)
@@ -86,19 +97,9 @@ func TestPrioritizerHysteresis(t *testing.T) {
 	// 5% deadband (0.05)
 	p := New(nil, &testSettings{strategy: api.PrioritySoc, hysteresis: 5})
 
-	// soc 50 -> 0.50, soc 51 -> 0.49
-	a := loadpoint.NewMockAPI(ctrl)
-	a.EXPECT().GetTitle().AnyTimes()
-	a.EXPECT().EffectivePriorityScore(gomock.Any(), gomock.Any()).Return(0.50).AnyTimes()
-
-	b := loadpoint.NewMockAPI(ctrl)
-	b.EXPECT().GetTitle().AnyTimes()
-	b.EXPECT().EffectivePriorityScore(gomock.Any(), gomock.Any()).Return(0.49).AnyTimes()
-
-	// clearly emptier (soc 40 -> 0.60)
-	c := loadpoint.NewMockAPI(ctrl)
-	c.EXPECT().GetTitle().AnyTimes()
-	c.EXPECT().EffectivePriorityScore(gomock.Any(), gomock.Any()).Return(0.60).AnyTimes()
+	a := mockLoadpoint(ctrl, 0, 0.50) // soc 50
+	b := mockLoadpoint(ctrl, 0, 0.49) // soc 51
+	c := mockLoadpoint(ctrl, 0, 0.60) // soc 40, clearly emptier
 
 	b.EXPECT().GetChargePowerFlexibility(nil).Return(400.0)
 	p.UpdateChargePowerFlexibility(b, nil)
@@ -110,109 +111,59 @@ func TestPrioritizerHysteresis(t *testing.T) {
 	assert.Equal(t, 400.0, p.GetChargePowerFlexibility(c))
 }
 
-// TestPrioritizerEnergyBasisMixedCapacity verifies that when one loadpoint has a
-// known vehicle capacity and another does not under the site-level energy basis,
-// the whole comparison set is ranked by percent rather than mixing a kWh fraction
-// against a percentage fraction. Without the fallback the unconfigured vehicle's
-// percentage gap would out-score the configured vehicle's (smaller) kWh gap and
-// wrongly steal surplus.
-//
-//	known:   soc 20%, 50 kWh -> energy 0.40, percent 0.80
-//	unknown: soc 50%, no cap  -> energy would fall back to percent 0.50
-//
-// With percent ranking the genuinely emptier "known" car (0.80) outranks "unknown"
-// (0.50); the buggy mixed ranking would have unknown (0.50) beat known (0.40).
-func TestPrioritizerEnergyBasisMixedCapacity(t *testing.T) {
+// TestPrioritizerHysteresisTierGate verifies that the deadband sub-orders within a
+// tier only: an explicitly configured priority must win even when the scores are
+// barely apart (2.00 vs 1.99).
+func TestPrioritizerHysteresisTierGate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	p := New(nil, &testSettings{strategy: api.PrioritySoc, basis: api.PriorityBasisEnergy})
+	p := New(nil, &testSettings{strategy: api.PrioritySoc, hysteresis: 5})
 
-	vehicle := api.NewMockVehicle(ctrl)
-	vehicle.EXPECT().Capacity().Return(50.0).AnyTimes()
+	hi := mockLoadpoint(ctrl, 2, 2.00) // prio 2, soc 100
+	lo := mockLoadpoint(ctrl, 1, 1.99) // prio 1, soc 1
 
-	// known capacity, lower soc -> percent score 0.80 (energy 0.40)
-	known := loadpoint.NewMockAPI(ctrl)
-	known.EXPECT().GetTitle().AnyTimes()
-	known.EXPECT().IsHeating().Return(false).AnyTimes()
-	known.EXPECT().GetVehicle().Return(vehicle).AnyTimes()
-	known.EXPECT().EffectivePriorityScore(api.PrioritySoc, api.PriorityBasisPercent).Return(0.80).AnyTimes()
+	lo.EXPECT().GetChargePowerFlexibility(nil).Return(400.0)
+	p.UpdateChargePowerFlexibility(lo, nil)
 
-	// unknown capacity, higher soc -> percent score 0.50
-	unknown := loadpoint.NewMockAPI(ctrl)
-	unknown.EXPECT().GetTitle().AnyTimes()
-	unknown.EXPECT().IsHeating().Return(false).AnyTimes()
-	unknown.EXPECT().GetVehicle().Return(nil).AnyTimes()
-	unknown.EXPECT().EffectivePriorityScore(api.PrioritySoc, api.PriorityBasisPercent).Return(0.50).AnyTimes()
-
-	// unknown (fuller, 0.50) has nothing emptier below it -> no extra power
-	unknown.EXPECT().GetChargePowerFlexibility(nil).Return(700.0)
-	p.UpdateChargePowerFlexibility(unknown, nil)
-	assert.Equal(t, 0.0, p.GetChargePowerFlexibility(unknown))
-
-	// known (emptier, 0.80) outranks unknown and takes its flexible power
-	known.EXPECT().GetChargePowerFlexibility(nil).Return(1e3)
-	p.UpdateChargePowerFlexibility(known, nil)
-	assert.Equal(t, 700.0, p.GetChargePowerFlexibility(known))
+	assert.Equal(t, 400.0, p.GetChargePowerFlexibility(hi))
 }
 
-// TestPrioritizerEnergyBasisAllKnown verifies that the energy basis is actually
-// used when every participating loadpoint has a known vehicle capacity.
-func TestPrioritizerEnergyBasisAllKnown(t *testing.T) {
+// TestPrioritizerHeatingSameTier verifies that a same-tier pair involving heating is
+// left untouched: heating aliases temperature as soc and carries no comparable score.
+func TestPrioritizerHeatingSameTier(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	p := New(nil, &testSettings{strategy: api.PrioritySoc, basis: api.PriorityBasisEnergy})
+	p := New(nil, &testSettings{strategy: api.PrioritySoc})
 
-	vehicle := api.NewMockVehicle(ctrl)
-	vehicle.EXPECT().Capacity().Return(50.0).AnyTimes()
+	heater := mockHeatingLoadpoint(ctrl, 0, 0.0, true)
+	car := mockLoadpoint(ctrl, 0, 0.40)
 
-	// big gap in kWh -> energy score 0.40
-	big := loadpoint.NewMockAPI(ctrl)
-	big.EXPECT().GetTitle().AnyTimes()
-	big.EXPECT().IsHeating().Return(false).AnyTimes()
-	big.EXPECT().GetVehicle().Return(vehicle).AnyTimes()
-	big.EXPECT().EffectivePriorityScore(api.PrioritySoc, api.PriorityBasisEnergy).Return(0.40).AnyTimes()
-
-	// small gap in kWh -> energy score 0.15
-	small := loadpoint.NewMockAPI(ctrl)
-	small.EXPECT().GetTitle().AnyTimes()
-	small.EXPECT().IsHeating().Return(false).AnyTimes()
-	small.EXPECT().GetVehicle().Return(vehicle).AnyTimes()
-	small.EXPECT().EffectivePriorityScore(api.PrioritySoc, api.PriorityBasisEnergy).Return(0.15).AnyTimes()
-
-	small.EXPECT().GetChargePowerFlexibility(nil).Return(600.0)
-	p.UpdateChargePowerFlexibility(small, nil)
-
-	// larger energy deficit outranks the smaller one on the energy scale
-	assert.Equal(t, 600.0, p.GetChargePowerFlexibility(big))
-}
-
-// TestPrioritizerEnergyBasisHeaterExempt verifies that a heating loadpoint without
-// vehicle capacity does not veto the energy basis for the remaining vehicles.
-func TestPrioritizerEnergyBasisHeaterExempt(t *testing.T) {
-	ctrl := gomock.NewController(t)
-
-	p := New(nil, &testSettings{strategy: api.PrioritySoc, basis: api.PriorityBasisEnergy})
-
-	vehicle := api.NewMockVehicle(ctrl)
-	vehicle.EXPECT().Capacity().Return(50.0).AnyTimes()
-
-	// heater: no vehicle, no sub-ordering score
-	heater := loadpoint.NewMockAPI(ctrl)
-	heater.EXPECT().GetTitle().AnyTimes()
-	heater.EXPECT().IsHeating().Return(true).AnyTimes()
-	heater.EXPECT().EffectivePriorityScore(api.PrioritySoc, api.PriorityBasisEnergy).Return(0.0).AnyTimes()
-
-	// car with known capacity -> energy score 0.40
-	car := loadpoint.NewMockAPI(ctrl)
-	car.EXPECT().GetTitle().AnyTimes()
-	car.EXPECT().IsHeating().Return(false).AnyTimes()
-	car.EXPECT().GetVehicle().Return(vehicle).AnyTimes()
-	car.EXPECT().EffectivePriorityScore(api.PrioritySoc, api.PriorityBasisEnergy).Return(0.40).AnyTimes()
-
-	// heater participates but is scored on the energy basis (fraction 0), no percent fallback
 	heater.EXPECT().GetChargePowerFlexibility(nil).Return(800.0)
 	p.UpdateChargePowerFlexibility(heater, nil)
+	assert.Equal(t, 0.0, p.GetChargePowerFlexibility(car), "car must not take the heater's power")
 
-	// car keeps the energy basis and outranks the score-less heater within the tier
-	assert.Equal(t, 800.0, p.GetChargePowerFlexibility(car))
+	car.EXPECT().GetChargePowerFlexibility(nil).Return(1e3)
+	p.UpdateChargePowerFlexibility(car, nil)
+	assert.Equal(t, 0.0, p.GetChargePowerFlexibility(heater), "heater must not take the car's power")
+}
+
+// TestPrioritizerHysteresisEnergyUnit verifies that under the energy basis the
+// hysteresis is a kWh band, normalised against the same reference as the score.
+func TestPrioritizerHysteresisEnergyUnit(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	// 10 kWh deadband against a 200 kWh reference -> 0.05
+	p := New(nil, &testSettings{strategy: api.PrioritySoc, basis: api.PriorityBasisEnergy, ref: 200, hysteresis: 10})
+
+	a := mockLoadpoint(ctrl, 0, 0.36) // 72 kWh gap
+	b := mockLoadpoint(ctrl, 0, 0.30) // 60 kWh gap, 12 kWh behind a
+	c := mockLoadpoint(ctrl, 0, 0.32) // 64 kWh gap, 8 kWh behind a
+
+	b.EXPECT().GetChargePowerFlexibility(nil).Return(500.0)
+	p.UpdateChargePowerFlexibility(b, nil)
+	c.EXPECT().GetChargePowerFlexibility(nil).Return(300.0)
+	p.UpdateChargePowerFlexibility(c, nil)
+
+	// only b is beyond the 10 kWh band - as a percentage band it would be 10%/0.10 and neither would be
+	assert.Equal(t, 500.0, p.GetChargePowerFlexibility(a))
 }

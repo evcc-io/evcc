@@ -91,6 +91,8 @@ type API interface {
 	GetPriorityHysteresis() int
 	// SetPriorityHysteresis sets the priority sub-ordering deadband (soc-% or kWh per basis)
 	SetPriorityHysteresis(int) error
+	// EffectivePriorityScoring returns the site-wide basis and the reference value the strategy gap is normalised against
+	EffectivePriorityScoring() (api.PriorityBasis, float64)
 
 	//
 	// tariffs and costs

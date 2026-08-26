@@ -444,6 +444,36 @@ func (site *Site) SetPriorityHysteresis(hysteresis int) error {
 	return nil
 }
 
+// EffectivePriorityScoring returns the site-wide priority basis and the reference value the
+// strategy gap is normalised against, so every loadpoint is scored on a single scale.
+func (site *Site) EffectivePriorityScoring() (api.PriorityBasis, float64) {
+	if basis := site.GetPriorityBasis(); basis != api.PriorityBasisEnergy {
+		return basis, 100
+	}
+
+	var capacity float64
+	for _, lp := range site.ActiveLoadpoints() {
+		// loadpoints without a comparable soc score fraction 0 on either basis
+		if lp.IsHeating() || lp.GetSoc() <= 0 {
+			continue
+		}
+
+		// mixing a kWh gap with a percentage gap is meaningless, hence rank all by percent
+		v := lp.GetVehicle()
+		if v == nil || v.Capacity() <= 0 {
+			return api.PriorityBasisPercent, 100
+		}
+
+		capacity = max(capacity, v.Capacity())
+	}
+
+	if capacity <= 0 {
+		return api.PriorityBasisPercent, 100
+	}
+
+	return api.PriorityBasisEnergy, capacity
+}
+
 // GetGridExportLimit returns the static grid export power limit in W (0 = disabled)
 func (site *Site) GetGridExportLimit() float64 {
 	site.RLock()
