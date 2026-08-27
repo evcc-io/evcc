@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cenkalti/backoff/v7"
+	"github.com/andig/backoff"
 	"github.com/evcc-io/evcc/plugin/javascript"
 	"github.com/evcc-io/evcc/util"
 	"github.com/robertkrimen/otto"

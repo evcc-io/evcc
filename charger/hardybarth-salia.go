@@ -26,7 +26,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cenkalti/backoff/v7"
+	"github.com/andig/backoff"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/echarge"
@@ -163,7 +163,7 @@ func (wb *Salia) heartbeat(ctx context.Context) {
 			return
 		}
 
-		if err := util.Retry(ctx, func() error {
+		if err := backoff.RetryErrorCtx(ctx, func() error {
 			return wb.post(salia.HeartBeat, "alive")
 		}, backoff.WithBackOff(bo), backoff.WithMaxElapsedTime(0)); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)

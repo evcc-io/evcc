@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/andig/backoff"
 	xj "github.com/basgys/goxml2json"
-	"github.com/cenkalti/backoff/v7"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/itchyny/gojq"

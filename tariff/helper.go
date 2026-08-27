@@ -1,13 +1,12 @@
 package tariff
 
 import (
-	"context"
 	"errors"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v7"
+	"github.com/andig/backoff"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -33,12 +32,12 @@ func retryOptions() []backoff.RetryOption {
 
 // retry retries a value-less operation using tariff-specific backoff settings
 func retry(op func() error) error {
-	return util.Retry(context.Background(), op, retryOptions()...)
+	return backoff.RetryError(op, retryOptions()...)
 }
 
 // retryWithData retries the operation using tariff-specific backoff settings
 func retryWithData[T any](op backoff.Operation[T]) (T, error) {
-	return backoff.Retry(context.Background(), op, retryOptions()...)
+	return backoff.Retry(op, retryOptions()...)
 }
 
 // backoffPermanentError returns a permanent error in case of HTTP 400
@@ -115,7 +114,7 @@ func runOrError[T any, I runnable[T]](t I) (*T, error) {
 func reportError(once *sync.Once, done chan<- error, err error) (startupFailed bool) {
 	once.Do(func() {
 		startupFailed = true
-		done <- util.RetryCause(err)
+		done <- err
 	})
 	return startupFailed
 }

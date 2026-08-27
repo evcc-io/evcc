@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -10,7 +9,7 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/cenkalti/backoff/v7"
+	"github.com/andig/backoff"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/fatih/structs"
@@ -77,7 +76,7 @@ func (d *dumper) Dump(name string, v any) {
 			// read meter power quickly
 			bo := util.BackOff(util.WithInitialInterval(20 * time.Millisecond))
 
-			power, err := backoff.Retry(context.Background(), v.CurrentPower,
+			power, err := backoff.Retry(v.CurrentPower,
 				backoff.WithBackOff(bo), backoff.WithMaxElapsedTime(d.timeout))
 			return fmt.Sprintf("%.0fW", power), err
 		})

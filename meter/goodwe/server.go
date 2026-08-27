@@ -1,7 +1,6 @@
 package goodwe
 
 import (
-	"context"
 	"encoding/binary"
 	"maps"
 	"net"
@@ -9,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v7"
+	"github.com/andig/backoff"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -70,7 +69,7 @@ func (m *Server) readData() {
 		mu.RUnlock()
 
 		for _, ip := range ips {
-			if err := util.Retry(context.Background(), func() error {
+			if err := backoff.RetryError(func() error {
 				addr, err := net.ResolveUDPAddr("udp", net.JoinHostPort(ip, "8899"))
 				if err == nil {
 					_, err = m.conn.WriteToUDP([]byte{0xF7, 0x03, 0x89, 0x1C, 0x00, 0x7D, 0x7A, 0xE7}, addr)

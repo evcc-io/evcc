@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v7"
+	"github.com/andig/backoff"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
@@ -382,7 +382,7 @@ func floatVal(f float64) []byte {
 func queryRCT[T any](id rct.Identifier, fun func(id rct.Identifier) (T, error)) (T, error) {
 	bo := util.BackOff(util.WithInitialInterval(500*time.Millisecond), util.WithMaxInterval(2*time.Second))
 
-	return backoff.Retry(context.Background(), func() (T, error) {
+	return backoff.Retry(func() (T, error) {
 		return fun(id)
 	}, backoff.WithBackOff(bo), backoff.WithMaxElapsedTime(10*time.Second))
 }

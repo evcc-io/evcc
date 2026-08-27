@@ -48,7 +48,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/cenkalti/backoff/v7"
+	"github.com/andig/backoff"
 	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -206,7 +206,7 @@ func (c *Pulsatrix) reconnect() {
 	}
 
 	// 0 means no time limit - retry indefinitely
-	if err := util.Retry(context.Background(), operation,
+	if err := backoff.RetryError(operation,
 		backoff.WithBackOff(bo), backoff.WithMaxElapsedTime(0),
 	); err != nil {
 		c.log.ERROR.Printf("unexpected backoff failure: %v", err)

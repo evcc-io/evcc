@@ -1,7 +1,6 @@
 package modbus
 
 import (
-	"context"
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
@@ -11,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cenkalti/backoff/v7"
+	"github.com/andig/backoff"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -25,12 +24,12 @@ func retryOptions() []backoff.RetryOption {
 
 // Retry retries a value-less operation using modbus-specific backoff settings
 func Retry(op func() error) error {
-	return util.Retry(context.Background(), op, retryOptions()...)
+	return backoff.RetryError(op, retryOptions()...)
 }
 
 // RetryWithData retries the operation using modbus-specific backoff settings
 func RetryWithData[T any](op backoff.Operation[T]) (T, error) {
-	return backoff.Retry(context.Background(), op, retryOptions()...)
+	return backoff.Retry(op, retryOptions()...)
 }
 
 // DecodeMask converts a bit mask in decimal or hex format to uint64

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cenkalti/backoff/v7"
+	"github.com/andig/backoff"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,7 +20,7 @@ var permanentSentinels = []error{
 // Backoff returns permanent errors unwrapped. These must still match the sentinel.
 func TestPermanentSentinels(t *testing.T) {
 	for _, err := range permanentSentinels {
-		_, unwrapped := backoff.Retry(t.Context(), func() (int, error) {
+		_, unwrapped := backoff.Retry(func() (int, error) {
 			return 0, err
 		}, backoff.WithBackOff(&backoff.StopBackOff{}))
 
@@ -34,7 +34,7 @@ func TestPermanentSentinels(t *testing.T) {
 // unwrapped by backoff.
 func TestPermanentSentinelIdentity(t *testing.T) {
 	for _, err := range permanentSentinels {
-		_, unwrapped := backoff.Retry(t.Context(), func() (int, error) {
+		_, unwrapped := backoff.Retry(func() (int, error) {
 			return 0, err
 		}, backoff.WithBackOff(&backoff.StopBackOff{}))
 

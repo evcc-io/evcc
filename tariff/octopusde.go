@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v7"
+	"github.com/andig/backoff"
 	"github.com/evcc-io/evcc/api"
 	krakengql "github.com/evcc-io/evcc/tariff/octopuskraken/graphql"
 	"github.com/evcc-io/evcc/util"

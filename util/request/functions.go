@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/cenkalti/backoff/v7"
+	"github.com/andig/backoff"
 )
 
 var (

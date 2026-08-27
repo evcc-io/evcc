@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/cenkalti/backoff/v7"
+	"github.com/andig/backoff"
 	"github.com/evcc-io/evcc/plugin/golang"
 	"github.com/evcc-io/evcc/util"
 	"github.com/traefik/yaegi/interp"
