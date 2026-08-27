@@ -1439,7 +1439,7 @@ func (lp *Loadpoint) minCharging() error {
 }
 
 // pvScalePhases switches phases if necessary and returns number of phases switched to.
-// mayDisable indicates that insufficient surplus will eventually disable the loadpoint.
+// mayDisable indicates that insufficient surplus can stop charging via the pv disable timer.
 func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, mayDisable bool) int {
 	phases := lp.GetPhases()
 
@@ -1640,7 +1640,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryPower f
 	// push demand to drain battery
 	sitePower -= lp.boostPower(batteryPower)
 
-	// these conditions keep charging at min current, the loadpoint will never disable
+	// minpv and the battery conditions hold charging at min current, no disable can follow
 	battery := batteryStart || batteryBuffered && lp.charging() || lp.GetBatteryBoost() == boostContinue
 	mayDisable := mode == api.ModePV && !battery
 
