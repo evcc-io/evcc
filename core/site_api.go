@@ -340,6 +340,27 @@ func (site *Site) GetGridPower() float64 {
 	return site.gridPower
 }
 
+// GetPVPower returns the most recent PV power in W.
+func (site *Site) GetPVPower() float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.pvPower
+}
+
+// GetHomePower returns the most recent household consumption in W.
+func (site *Site) GetHomePower() float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.homePower
+}
+
+// GetAuxPower returns the most recent auxiliary power in W.
+func (site *Site) GetAuxPower() float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.auxPower
+}
+
 // GetResidualPower returns the ResidualPower
 func (site *Site) GetResidualPower() float64 {
 	site.RLock()

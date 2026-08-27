@@ -1767,6 +1767,7 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 		lp.Unlock()
 
 		lp.log.DEBUG.Printf("charge power: %.0fW", power)
+
 		lp.publish(keys.ChargePower, power)
 
 		// https://github.com/evcc-io/evcc/issues/2153

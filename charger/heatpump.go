@@ -33,10 +33,14 @@ import (
 type Heatpump struct {
 	*embed
 	implement.Caps
-	lp        loadpoint.API
-	power     int64
-	maxPowerG func() (int64, error)
-	maxPowerS func(int64) error
+	lp              loadpoint.API
+	power           int64
+	maxPowerG       func() (int64, error)
+	maxPowerS       func(int64) error
+	powerG          func() (float64, error)
+	setHeaterPower  func(float64) error
+	setPVProduction func(float64) error
+	setHomePower    func(float64) error
 }
 
 func init() {
@@ -48,6 +52,9 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	cc := struct {
 		embed                   `mapstructure:",squash"`
 		SetMaxPower             plugin.Config
+		SetHeaterPower          *plugin.Config           // optional
+		SetPVProduction         *plugin.Config           // optional
+		SetHomePower            *plugin.Config           // optional
 		GetMaxPower             *plugin.Config           // optional
 		measurement.Temperature `mapstructure:",squash"` // optional
 		measurement.Energy      `mapstructure:",squash"` // optional
@@ -73,6 +80,11 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		return nil, err
 	}
 
+	powerG, energyG, returnG, err := cc.Energy.Configure(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	// if !sponsor.IsAuthorized() {
 	// 	return nil, api.ErrSponsorRequired
 	// }
@@ -81,11 +93,19 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	if err != nil {
 		return nil, err
 	}
-
-	powerG, energyG, returnG, err := cc.Energy.Configure(ctx)
+	res.setHeaterPower, err = cc.SetHeaterPower.FloatSetter(ctx, "heaterpower")
 	if err != nil {
 		return nil, err
 	}
+	res.setPVProduction, err = cc.SetPVProduction.FloatSetter(ctx, "pvproduction")
+	if err != nil {
+		return nil, err
+	}
+	res.setHomePower, err = cc.SetHomePower.FloatSetter(ctx, "homepower")
+	if err != nil {
+		return nil, err
+	}
+
 	implement.May(res, implement.Meter(powerG))
 	implement.May(res, implement.MeterEnergy(energyG))
 	implement.May(res, implement.MeterReturnEnergy(returnG))
@@ -171,7 +191,31 @@ func (wb *Heatpump) MaxCurrentMillis(current float64) error {
 	if wb.lp != nil {
 		phases = wb.lp.GetPhases()
 	}
-	return wb.setMaxPower(int64(230 * current * float64(phases)))
+	if err := wb.setMaxPower(int64(230 * current * float64(phases))); err != nil {
+		return err
+	}
+
+	if wb.lp == nil {
+		return nil
+	}
+
+	if wb.setHeaterPower != nil {
+		if err := wb.setHeaterPower(wb.lp.GetAuxPower()); err != nil {
+			return err
+		}
+	}
+	if wb.setPVProduction != nil {
+		if err := wb.setPVProduction(wb.lp.GetPVPower()); err != nil {
+			return err
+		}
+	}
+	if wb.setHomePower != nil {
+		if err := wb.setHomePower(wb.lp.GetHomePower()); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 var _ loadpoint.Controller = (*Heatpump)(nil)

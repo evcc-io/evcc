@@ -201,6 +201,48 @@ func (m *MockAPI) GetChargePower() float64 {
 	return ret0
 }
 
+// GetPVPower mocks base method.
+func (m *MockAPI) GetPVPower() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPVPower")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetPVPower indicates an expected call of GetPVPower.
+func (mr *MockAPIMockRecorder) GetPVPower() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPVPower", reflect.TypeOf((*MockAPI)(nil).GetPVPower))
+}
+
+// GetHomePower mocks base method.
+func (m *MockAPI) GetHomePower() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetHomePower")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetHomePower indicates an expected call of GetHomePower.
+func (mr *MockAPIMockRecorder) GetHomePower() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHomePower", reflect.TypeOf((*MockAPI)(nil).GetHomePower))
+}
+
+// GetAuxPower mocks base method.
+func (m *MockAPI) GetAuxPower() float64 {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAuxPower")
+	ret0, _ := ret[0].(float64)
+	return ret0
+}
+
+// GetAuxPower indicates an expected call of GetAuxPower.
+func (mr *MockAPIMockRecorder) GetAuxPower() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuxPower", reflect.TypeOf((*MockAPI)(nil).GetAuxPower))
+}
+
 // GetChargePower indicates an expected call of GetChargePower.
 func (mr *MockAPIMockRecorder) GetChargePower() *gomock.Call {
 	mr.mock.ctrl.T.Helper()

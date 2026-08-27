@@ -707,6 +707,21 @@ func (lp *Loadpoint) GetChargePower() float64 {
 	return lp.chargePower
 }
 
+// GetPVPower returns the latest site PV power in W.
+func (lp *Loadpoint) GetPVPower() float64 {
+	return lp.site.GetPVPower()
+}
+
+// GetHomePower returns the latest site household consumption in W.
+func (lp *Loadpoint) GetHomePower() float64 {
+	return lp.site.GetHomePower()
+}
+
+// GetAuxPower returns the latest site auxiliary power in W.
+func (lp *Loadpoint) GetAuxPower() float64 {
+	return lp.site.GetAuxPower()
+}
+
 // GetChargePowerFlexibility returns the flexible amount of current charging power
 func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 	mode := lp.GetMode()

@@ -108,6 +108,7 @@ type Site struct {
 	// cached state
 	gridPower                float64                     // Grid power
 	pvPower                  float64                     // PV power
+	homePower                float64                     // Home consumption power
 	excessDCPower            float64                     // PV excess DC charge power (hybrid only)
 	auxPower                 float64                     // Aux power
 	battery                  types.BatteryState          // Battery cached and published state
@@ -1212,20 +1213,20 @@ func (site *Site) update(lp updater) {
 
 	if sitePower, batteryBuffered, batteryStart, priorityAdjustment, err := site.sitePower(totalChargePower, flexiblePower); err == nil {
 		// ignore negative pvPower values as that means it is not an energy source but consumption
-		homePower := site.gridPower + max(0, site.pvPower) + site.battery.Power - totalChargePower
-		homePower = max(homePower, 0)
-		site.publish(keys.HomePower, homePower)
+		site.homePower = site.gridPower + max(0, site.pvPower) + site.battery.Power - totalChargePower
+		site.homePower = max(site.homePower, 0)
+		site.publish(keys.HomePower, site.homePower)
 
-		if homePower > 0 {
-			if err := site.collectors[metrics.Home].AddEnergy(nil, nil, homePower); err != nil {
+		if site.homePower > 0 {
+			if err := site.collectors[metrics.Home].AddEnergy(nil, nil, site.homePower); err != nil {
 				site.log.ERROR.Printf("persist home consumption: %v", err)
 			}
 		}
 
 		// add battery charging power to homePower to ignore all consumption which does not occur on loadpoints
 		// fix for: https://github.com/evcc-io/evcc/issues/11032
-		nonChargePower := homePower + max(0, -site.battery.Power)
-		greenShareHome := site.greenShare(0, homePower)
+		nonChargePower := site.homePower + max(0, -site.battery.Power)
+		greenShareHome := site.greenShare(0, site.homePower)
 		greenShareLoadpoints := site.greenShare(nonChargePower, nonChargePower+totalChargePower)
 
 		// TODO

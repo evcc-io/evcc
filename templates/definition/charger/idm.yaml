@@ -4,6 +4,13 @@ products:
 capabilities: ["meter", "dim"]
 group: heating
 requirements:
+  description:
+    de: |
+      EVCC übergibt den verfügbaren PV-Überschuss an die iDM-Navigatorregelung.
+      Der Wert wird in kW an Register 74 geschrieben.
+    en: |
+      EVCC sends the available PV surplus to the iDM Navigator controller.
+      The value is written to register 74 in kW.
   # evcc: ["sponsorship"]
 params:
   - name: modbus
@@ -15,22 +22,47 @@ params:
     deprecated: true
 render: |
   type: heatpump
+  # iDM names this input PV surplus, not maximum heat-pump power.
   setmaxpower:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 74 # PV Überschussleistung
+      address: 74 # iDM PV surplus input [kW]
       type: writeholdings
       decode: float32s
-    scale: 0.001
+    scale: 0.001 # EVCC W -> iDM kW
+  setheaterpower: # receives EVCC auxiliary/heater power
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 76 # iDM electric heater power [kW]
+      type: writeholdings
+      decode: float32s
+    scale: 0.001 # EVCC W -> iDM kW
+  setpvproduction:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 78 # iDM PV production [kW]
+      type: writeholdings
+      decode: float32s
+    scale: 0.001 # EVCC W -> iDM kW
+  sethomepower:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 82 # iDM household consumption [kW]
+      type: writeholdings
+      decode: float32s
+    scale: 0.001 # EVCC W -> iDM kW
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 4122 # aktuelle Aufnahmeleistung der WP
+      address: 4122 # iDM current heat-pump input power [kW]
       type: holding
       decode: float32s
-    scale: 1000
+    scale: 1000 # iDM kW -> EVCC W
   {{- if .tempsource }}
   temp:
     source: modbus
