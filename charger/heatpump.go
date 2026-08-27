@@ -37,7 +37,6 @@ type Heatpump struct {
 	power           int64
 	maxPowerG       func() (int64, error)
 	maxPowerS       func(int64) error
-	powerG          func() (float64, error)
 	setHeaterPower  func(float64) error
 	setPVProduction func(float64) error
 	setHomePower    func(float64) error
