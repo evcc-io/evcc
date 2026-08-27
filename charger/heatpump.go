@@ -198,7 +198,7 @@ func (wb *Heatpump) MaxCurrentMillis(current float64) error {
 		return nil
 	}
 
-	if wb.setHeaterPower != nil {
+	if wb.setHeaterPower != nil && wb.lp.HasAuxMeter() {
 		if err := wb.setHeaterPower(wb.lp.GetAuxPower()); err != nil {
 			return err
 		}

@@ -738,6 +738,11 @@ func (lp *Loadpoint) GetAuxPower() float64 {
 	return lp.site.GetAuxPower()
 }
 
+// HasAuxMeter reports whether an auxiliary meter is configured for the site.
+func (lp *Loadpoint) HasAuxMeter() bool {
+	return lp.site.HasAuxMeter()
+}
+
 // GetChargePowerFlexibility returns the flexible amount of current charging power
 func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 	mode := lp.GetMode()

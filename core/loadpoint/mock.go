@@ -783,6 +783,20 @@ func (mr *MockAPIMockRecorder) GetVehicle() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVehicle", reflect.TypeOf((*MockAPI)(nil).GetVehicle))
 }
 
+// HasAuxMeter mocks base method.
+func (m *MockAPI) HasAuxMeter() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HasAuxMeter")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// HasAuxMeter indicates an expected call of HasAuxMeter.
+func (mr *MockAPIMockRecorder) HasAuxMeter() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasAuxMeter", reflect.TypeOf((*MockAPI)(nil).HasAuxMeter))
+}
+
 // HasChargeMeter mocks base method.
 func (m *MockAPI) HasChargeMeter() bool {
 	m.ctrl.T.Helper()

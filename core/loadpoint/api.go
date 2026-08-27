@@ -207,6 +207,7 @@ type API interface {
 	GetPVPower() float64
 	GetHomePower() float64
 	GetAuxPower() float64
+	HasAuxMeter() bool
 	// GetChargePowerFlexibility returns the flexible amount of current charging power
 	GetChargePowerFlexibility(rates api.Rates) float64
 	// GetMaxPhaseCurrent returns max phase current

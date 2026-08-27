@@ -382,6 +382,13 @@ func (site *Site) GetAuxPower() float64 {
 	return site.auxPower
 }
 
+// HasAuxMeter reports whether an auxiliary meter is configured.
+func (site *Site) HasAuxMeter() bool {
+	site.RLock()
+	defer site.RUnlock()
+	return len(site.auxMeters) > 0
+}
+
 // GetResidualPower returns the ResidualPower
 func (site *Site) GetResidualPower() float64 {
 	site.RLock()
