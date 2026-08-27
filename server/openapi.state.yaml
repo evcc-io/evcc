@@ -304,6 +304,9 @@ components:
         energy:
           description: Total battery energy in kWh.
           type: number
+        returnEnergy:
+          description: Total battery return (exported) energy in kWh.
+          type: number
         devices:
           description: Measurement data per battery meter.
           type: array

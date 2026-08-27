@@ -1133,6 +1133,8 @@ export interface Battery {
   soc: number;
   /** Total battery energy in kWh. */
   energy?: number;
+  /** Total battery return (exported) energy in kWh. */
+  returnEnergy?: number;
   /** Measurement data per battery meter. */
   devices?: BatteryMeter[];
   /** Projected charge levels based on the solar and price forecast. */
