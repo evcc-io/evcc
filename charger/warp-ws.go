@@ -264,7 +264,7 @@ func (w *WarpWS) handleConnection(ctx context.Context, role wsRole, conn *websoc
 
 			w.log.TRACE.Printf("websocket: event %s: %s", event.Topic, event.Payload)
 			if err := w.handleEvent(event.Topic, event.Payload); err != nil {
-				w.log.ERROR.Printf("bad payload for topic %s: %v", event.Topic, err)
+				return err
 			}
 		}
 
