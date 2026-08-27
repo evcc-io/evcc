@@ -228,7 +228,7 @@ func (i *iDimmer) Dimmed() (bool, error) {
 	return i.dimmer1()
 }
 
-func Identifier(identifier0 func() (string, error)) api.Identifier {
+func Identifier(identifier0 func() ([]string, error)) api.Identifier {
 	if identifier0 == nil {
 		return nil
 	}
@@ -236,10 +236,10 @@ func Identifier(identifier0 func() (string, error)) api.Identifier {
 }
 
 type iIdentifier struct {
-	identifier0 func() (string, error)
+	identifier0 func() ([]string, error)
 }
 
-func (i *iIdentifier) Identify() (string, error) {
+func (i *iIdentifier) Identify() ([]string, error) {
 	return i.identifier0()
 }
 
@@ -376,6 +376,21 @@ type iPhaseVoltages struct {
 
 func (i *iPhaseVoltages) Voltages() (float64, float64, float64, error) {
 	return i.phaseVoltages0()
+}
+
+func PowerLimiter(powerLimiter0 func() (float64, float64, error)) api.PowerLimiter {
+	if powerLimiter0 == nil {
+		return nil
+	}
+	return &iPowerLimiter{powerLimiter0}
+}
+
+type iPowerLimiter struct {
+	powerLimiter0 func() (float64, float64, error)
+}
+
+func (i *iPowerLimiter) GetMinMaxPower() (float64, float64, error) {
+	return i.powerLimiter0()
 }
 
 func Resurrector(resurrector0 func() error) api.Resurrector {

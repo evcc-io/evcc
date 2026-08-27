@@ -7,13 +7,13 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"uuid"
 
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 )
 

@@ -600,3 +600,112 @@ func TestCollectorSetEnergy(t *testing.T) {
 	require.True(t, ok)
 	require.Equal(t, 1.5, v)
 }
+
+// TestCollectorFallsBackToPowerAfterCapabilityLoss verifies that a meter which
+// lost its energy register stops using the stale checkpoint and integrates power
+// instead (https://github.com/evcc-io/evcc/issues/33091).
+func TestCollectorFallsBackToPowerAfterCapabilityLoss(t *testing.T) {
+	clk := clock.NewMock() // 1970-01-01 00:00:00 UTC, on a slot boundary
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector(PV, "capability", "", WithClock(clk))
+	require.NoError(t, err)
+
+	// meter reports totals, checkpoint is persisted at the slot boundary
+	require.NoError(t, col.AddEnergy(new(54716.0), nil, 1e3))
+	clk.Add(15 * time.Minute) // 00:15
+	require.NoError(t, col.AddEnergy(new(54716.0), nil, 1e3))
+
+	var e entity
+	require.NoError(t, db.Instance.First(&e, col.entity.Id).Error)
+	require.Equal(t, 54716.0, *e.EnergyMeter)
+
+	// restart without the energy register: stale reading would freeze energy
+	col2, err := NewCollector(PV, "capability", "", WithClock(clk))
+	require.NoError(t, err)
+	require.True(t, col2.restored)
+
+	require.NoError(t, col2.SetCapabilities(false, false))
+	require.Nil(t, col2.accu.energyMeter)
+	require.False(t, col2.restored, "no readings left to seed a restore")
+
+	require.NoError(t, db.Instance.First(&e, col2.entity.Id).Error)
+	require.Nil(t, e.EnergyMeter, "stale checkpoint must be cleared")
+
+	// power is integrated again
+	require.NoError(t, col2.AddEnergy(nil, nil, 1e3))
+	clk.Add(5 * time.Minute)
+	require.NoError(t, col2.AddEnergy(nil, nil, 1e3))
+	require.InDelta(t, 1e3*5/60/1e3, col2.accu.Energy, 1e-10)
+}
+
+// TestCollectorClearsUnrestoredCheckpoint verifies that a bidirectional group
+// also drops a checkpoint that was too incomplete to be restored, so it cannot
+// resurface once the other direction is checkpointed again.
+func TestCollectorClearsUnrestoredCheckpoint(t *testing.T) {
+	clk := clock.NewMock() // 1970-01-01 00:00:00 UTC, on a slot boundary
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector(Grid, "incomplete", "", WithClock(clk))
+	require.NoError(t, err)
+
+	// only the energy direction is metered, so the state stays incomplete
+	require.NoError(t, col.AddEnergy(new(100.0), nil, 0))
+	clk.Add(15 * time.Minute) // 00:15
+	require.NoError(t, col.AddEnergy(new(100.5), nil, 0))
+
+	col2, err := NewCollector(Grid, "incomplete", "", WithClock(clk))
+	require.NoError(t, err)
+	require.False(t, col2.restored, "incomplete state must not restore")
+	require.Nil(t, col2.accu.energyMeter)
+
+	require.NoError(t, col2.SetCapabilities(false, false))
+
+	var e entity
+	require.NoError(t, db.Instance.First(&e, col2.entity.Id).Error)
+	require.Nil(t, e.EnergyMeter, "unrestored checkpoint must be cleared too")
+}
+
+// TestCollectorKeepsRestoreForSurvivingDirection verifies that clearing one
+// direction of a bidirectional group does not discard the downtime delta the
+// other direction still covers.
+func TestCollectorKeepsRestoreForSurvivingDirection(t *testing.T) {
+	clk := clock.NewMock() // 1970-01-01 00:00:00 UTC, on a slot boundary
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector(Grid, "surviving", "", WithClock(clk))
+	require.NoError(t, err)
+
+	// checkpoint both directions
+	require.NoError(t, col.AddEnergy(new(100.0), new(200.0), 0))
+	clk.Add(15 * time.Minute) // 00:15
+	require.NoError(t, col.AddEnergy(new(100.5), new(200.2), 0))
+	clk.Add(15 * time.Minute) // 00:30
+	require.NoError(t, col.AddEnergy(new(101.0), new(200.4), 0))
+
+	// restart after 1h downtime, joining slot 01:30 mid-way, without export
+	clk.Add(65 * time.Minute) // 01:35
+	col2, err := NewCollector(Grid, "surviving", "", WithClock(clk))
+	require.NoError(t, err)
+	require.NoError(t, col2.SetCapabilities(true, false))
+	require.True(t, col2.restored, "the surviving import reading still seeds a restore")
+	require.Nil(t, col2.accu.returnEnergyMeter)
+
+	// the import delta across the downtime is kept
+	require.NoError(t, col2.AddEnergy(new(111.0), nil, 0))
+	require.InDelta(t, 10.0, col2.accu.Energy, 1e-10)
+
+	clk.Add(10 * time.Minute) // 01:45
+	require.NoError(t, col2.AddEnergy(new(111.0), nil, 0))
+
+	var m meter
+	require.NoError(t, db.Instance.Where("meter = ? AND ts = ?", col2.entity.Id, 90*60).First(&m).Error)
+	require.InDelta(t, 10.0, m.Energy, 1e-10)
+	require.True(t, m.Recovered, "catchup slot must be flagged recovered")
+}

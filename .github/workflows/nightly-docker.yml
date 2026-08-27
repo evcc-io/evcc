@@ -13,6 +13,7 @@ jobs:
 
     permissions:
       contents: read
+      id-token: write # depot OIDC
 
     steps:
       - uses: actions/checkout@v7
@@ -27,14 +28,10 @@ jobs:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASS }}
 
-      - name: Setup Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4
-
-      - name: Restore build cache
-        uses: ./.github/actions/docker-cache
-        with:
-          builder: ${{ steps.buildx.outputs.name }}
+      # depot builders keep the Dockerfile's cache mounts on their own volumes,
+      # so they need neither buildx nor the cache dance
+      - name: Setup Depot
+        uses: depot/setup-action@15c09a5f77a0840ad4bce955686522a257853461 # v1.7.1
 
       - name: Define tags
         id: meta
@@ -46,8 +43,9 @@ jobs:
             type=raw,value=nightly.{{date 'YYYYMMDD'}}-{{sha}}
 
       - name: Publish
-        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
+        uses: depot/build-push-action@98e78adca7817480b8185f474a400b451d74e287 # v1.18.0
         with:
+          project: ${{ secrets.DEPOT_PROJECT_ID }}
           context: .
           platforms: linux/amd64,linux/arm64,linux/arm/v6
           push: true

@@ -25,6 +25,7 @@ func TestLoadpointConfigDisabledNilInstance(t *testing.T) {
 			"charger": "wallbox",
 			"meter":   "lp-meter",
 			"title":   "Garage",
+			"mode":    "pv", // runtime setting persisted by the settings adapter
 		},
 	}
 

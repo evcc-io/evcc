@@ -3,6 +3,7 @@ products:
   - brand: Sungrow
     description:
       generic: SG Series Inverter
+capabilities: ["curtail"]
 params:
   - name: usage
     choice: ["grid", "pv"]
@@ -43,4 +44,65 @@ render: |
       address: 5003 # Total power yields, 1 kWh
       type: input
       decode: uint32s
+  # EEG §9 curtailment via the power limitation registers
+  #   5006 (doc 5007) power limitation switch, 0xAA enable / 0x55 disable
+  #   5007 (doc 5008) power limitation value, 0.1 % of nominal power
+  curtail:
+    source: sequence
+    set:
+      # Order matters: the switch must be set BEFORE the value. While the
+      # limitation is disabled the inverter resets register 5007 to its 110 %
+      # default, so writing the value first would be discarded when coming back
+      # from an uncurtailed state.
+      - source: go
+        script: |
+          ena := 170 // 0xAA - enable limitation
+          if curtail == 100 {
+            ena = 85 // 0x55 - disable limitation
+          }
+          ena
+        out:
+          - name: ena
+            type: int
+            config:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 5006 # Power limitation switch
+                type: writesingle
+                decode: uint16
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 5007 # Power limitation setting, 0.1 %
+          type: writesingle
+          decode: uint16
+        scale: 10
+  curtailed:
+    source: go
+    in:
+      - name: ena
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 5006
+            type: holding
+            decode: uint16
+      - name: limit
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 5007
+            type: holding
+            decode: uint16
+    script: |
+      percent := 100
+      if ena == 170 {
+        percent = limit / 10
+      }
+      percent
   {{- end }}

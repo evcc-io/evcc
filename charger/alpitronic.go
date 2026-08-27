@@ -22,6 +22,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -36,6 +37,7 @@ type AlpitronicHYC struct {
 	conn      *modbus.Connection
 	inputG    func() ([]byte, error)
 	curr      float64
+	enabled   bool
 	connector uint16
 }
 
@@ -61,22 +63,20 @@ const (
 const (
 	hycRegState              = 0  // UINT16
 	hycRegChargingVoltage    = 1  // UINT32, cV
-	hycRegChargingCurrent    = 3  // UINT16, cA
-	hycRegChargingPower      = 4  // UINT32, W
+	hycRegChargingCurrent    = 3  // UINT16, cA up to 3.0, A from 3.1.0 on
+	hycRegPowerAbsorptionAC  = 4  // UINT32, W- DC charging power up to 3.0, AC absorption from 3.1.0 on
 	hycRegChargeTime         = 6  // UINT16, s
-	hycRegChargedEnergy      = 7  // UINT16, kWh/100
+	hycRegChargedEnergy      = 7  // UINT16, kWh/100 up to 3.0, kWh/10 from 3.1.0 on
 	hycRegSoC                = 8  // UINT16, %/100
 	hycRegConnectorType      = 9  // UINT16, 0-ChargePoint, 1-CCS2, 2-CCS1, 3-CHAdeMO, 4-CCS_AC, 5-GBT, 6-MCS, 7-NACS
-	hycRegMaxChargingPowerDC = 10 // UINT32, W- includes the limit written by us
-	hycRegMinChargingPowerDC = 12 // UINT32, W
-	hycRegVarInductive       = 14 // UINT32, var- deprecated, use hycRegStationVarInductive
-	hycRegVarCapacitive      = 16 // UINT32, var- deprecated, use hycRegStationVarCapacitive
+	hycRegMaxPowerAbsorption = 10 // UINT32, W- includes the limit written by us
+	hycRegMinPowerAbsorption = 12 // UINT32, W
 	hycRegVID                = 18 // 8 bytes
 	hycRegIdTag              = 22 // 20 bytes
 	hycRegTotalChargedEnergy = 32 // INT64, Wh
-	hycRegMaxChargingPowerAC = 36 // UINT32, W- includes the limit written by us
 
-	// the connector block is gapless- read up to the last register in use (x32..x35)
+	// read up to the last register in use (x32..x35). x14/x16 (VAR) are covered but
+	// no longer documented since 3.1.0- to be verified against the device
 	hycInputLength = 36
 )
 
@@ -104,7 +104,7 @@ const (
 
 // a zero power limit makes the station report the connector as unavailable and
 // abort a running session, so charging is inhibited with a limit that is too low
-// for any connector to actually charge- see hycRegMinChargingPowerDC
+// for any connector to actually charge- see hycRegMinPowerAbsorption
 const (
 	hycPowerPerAmp = 230 * 3 // W/A on the AC side
 	hycMinPowerAC  = 1547    // W
@@ -174,6 +174,7 @@ func newAlpitronicHYC(conn *modbus.Connection, connector uint16) (*AlpitronicHYC
 
 	if power := encoding.Uint32(b); power > hycMinPowerAC {
 		wb.curr = float64(power) / hycPowerPerAmp
+		wb.enabled = true
 	}
 
 	return wb, nil
@@ -200,6 +201,12 @@ func (wb *AlpitronicHYC) setPower(power uint32) error {
 	encoding.PutUint32(b, power)
 
 	_, err := wb.conn.WriteMultipleRegisters(wb.reg(hycRegMaxPowerAC), 2, b)
+	if err == nil {
+		// Status is polled before Enabled, so track our own writes to keep
+		// the charging state from lagging a cycle behind
+		wb.enabled = power > hycMinPowerAC
+	}
+
 	return err
 }
 
@@ -241,11 +248,33 @@ func (wb *AlpitronicHYC) Status() (api.ChargeStatus, error) {
 		hycStateFinishing:
 		return api.StatusB, nil
 	case hycStateCharging:
+		if !wb.enabled {
+			return api.StatusB, nil
+		}
 		return api.StatusC, nil
 	case hycStateFaulted:
 		return api.StatusNone, errors.New("connector state: faulted")
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", s)
+	}
+}
+
+var _ api.StatusReasoner = (*AlpitronicHYC)(nil)
+
+// StatusReason implements the api.StatusReasoner interface
+func (wb *AlpitronicHYC) StatusReason() (api.Reason, error) {
+	s, err := wb.state()
+	if err != nil {
+		return api.ReasonUnknown, err
+	}
+
+	switch s {
+	case hycStatePreparingEVReady:
+		return api.ReasonWaitingForAuthorization, nil
+	case hycStateFinishing:
+		return api.ReasonDisconnectRequired, nil
+	default:
+		return api.ReasonUnknown, nil
 	}
 }
 
@@ -256,7 +285,9 @@ func (wb *AlpitronicHYC) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return encoding.Uint32(b) > hycMinPowerAC, nil
+	wb.enabled = encoding.Uint32(b) > hycMinPowerAC
+
+	return wb.enabled, nil
 }
 
 // Enable implements the api.Charger interface
@@ -303,7 +334,7 @@ func (wb *AlpitronicHYC) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(encoding.Uint32(hycInput(b, hycRegChargingPower, 4))), nil
+	return float64(encoding.Uint32(hycInput(b, hycRegPowerAbsorptionAC, 4))), nil
 }
 
 var _ api.ChargeTimer = (*AlpitronicHYC)(nil)
@@ -318,17 +349,9 @@ func (wb *AlpitronicHYC) ChargeDuration() (time.Duration, error) {
 	return time.Duration(encoding.Uint16(hycInput(b, hycRegChargeTime, 2))) * time.Second, nil
 }
 
-var _ api.ChargeRater = (*AlpitronicHYC)(nil)
-
-// ChargedEnergy implements the api.ChargeRater interface
-func (wb *AlpitronicHYC) ChargedEnergy() (float64, error) {
-	b, err := wb.inputG()
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(encoding.Uint16(hycInput(b, hycRegChargedEnergy, 2))) / 100, nil
-}
+// api.ChargeRater is not implemented: hycRegChargedEnergy is scaled kWh/100 up to
+// firmware 3.0 and kWh/10 from 3.1.0 on, so the session energy is derived from
+// TotalEnergy instead
 
 var _ api.MeterEnergy = (*AlpitronicHYC)(nil)
 
@@ -342,43 +365,27 @@ func (wb *AlpitronicHYC) TotalEnergy() (float64, error) {
 	return float64(encoding.Int64(hycInput(b, hycRegTotalChargedEnergy, 8))) / 1e3, nil
 }
 
-var _ api.StatusReasoner = (*AlpitronicHYC)(nil)
-
-// StatusReason implements the api.StatusReasoner interface
-func (wb *AlpitronicHYC) StatusReason() (api.Reason, error) {
-	s, err := wb.state()
-	if err != nil {
-		return api.ReasonUnknown, err
-	}
-
-	switch s {
-	case hycStatePreparingEVReady:
-		return api.ReasonWaitingForAuthorization, nil
-	case hycStateFinishing:
-		return api.ReasonDisconnectRequired, nil
-	default:
-		return api.ReasonUnknown, nil
-	}
-}
-
 var _ api.Identifier = (*AlpitronicHYC)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *AlpitronicHYC) Identify() (string, error) {
+func (wb *AlpitronicHYC) Identify() ([]string, error) {
 	b, err := wb.inputG()
 	if err != nil {
-		return "", err
+		return nil, err
+	}
+
+	var res []string
+
+	// the idTag register holds the rfid uid as null-padded ascii string
+	if idTag := hycInput(b, hycRegIdTag, 20); !allZero(idTag) {
+		res = append(res, strings.ToLower(strings.TrimRight(string(idTag), "\x00")))
 	}
 
 	if vid := hycInput(b, hycRegVID, 8); !allZero(vid) {
-		return hex.EncodeToString(vid), nil
+		res = append(res, hex.EncodeToString(vid))
 	}
 
-	if idTag := hycInput(b, hycRegIdTag, 20); !allZero(idTag) {
-		return hex.EncodeToString(idTag), nil
-	}
-
-	return "", nil
+	return res, nil
 }
 
 var _ api.Battery = (*AlpitronicHYC)(nil)

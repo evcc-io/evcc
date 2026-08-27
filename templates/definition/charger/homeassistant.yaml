@@ -213,4 +213,4 @@ render: |
     - {{ .voltageL3 }}
   {{- end }}
   phases: {{ .phaseswitch }}
-  {{ include "charger-features" . }}
+  {{ include "features" . }}

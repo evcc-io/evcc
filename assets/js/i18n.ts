@@ -110,7 +110,6 @@ export async function ensureCurrentLocaleMessages(i18n: VueI18nInstance) {
 }
 
 export function docsPrefix() {
-  const locale = getLocale();
-  const path = locale === "de" ? "" : `/en`;
-  return `https://docs.evcc.io${path}`;
+  const lang = getLocale() === "de" ? "de" : "en";
+  return `https://docs.evcc.io/${lang}`;
 }
