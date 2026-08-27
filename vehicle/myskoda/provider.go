@@ -32,7 +32,8 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 func partError(res VehicleResponse, part string) error {
 	for _, e := range res.Errors {
 		if strings.HasPrefix(e.Type, part) {
-			return fmt.Errorf("%s: %s", e.Type, e.Description)
+			// the api explains a permanent condition, don't log it on every update
+			return fmt.Errorf("%s: %s: %w", e.Type, e.Description, api.ErrNotAvailable)
 		}
 	}
 	return api.ErrNotAvailable
@@ -70,13 +71,16 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch res.Status.State {
+	switch s := res.Status.State; s {
 	case "CONNECT_CABLE":
 		return api.StatusA, nil
-	case "CHARGING":
+	case "READY_FOR_CHARGING", "CHARGING_INTERRUPTED", "DISCHARGING":
+		return api.StatusB, nil
+	// conserving is conservation charging
+	case "CHARGING", "CONSERVING":
 		return api.StatusC, nil
 	default:
-		return api.StatusB, nil
+		return api.StatusNone, fmt.Errorf("invalid status: %s", s)
 	}
 }
 

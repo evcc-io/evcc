@@ -64,6 +64,33 @@ func TestVehicleResponse(t *testing.T) {
 	assert.True(t, climate)
 }
 
+func TestStatus(t *testing.T) {
+	statusG := func(state string) *Provider {
+		res := VehicleResponse{Vehicle: Vehicle{Charging: &Charging{Status: &ChargingStatus{State: state}}}}
+		return &Provider{dataG: func() (VehicleResponse, error) { return res, nil }}
+	}
+
+	for _, tc := range []struct {
+		state  string
+		status api.ChargeStatus
+	}{
+		{"CONNECT_CABLE", api.StatusA},
+		{"READY_FOR_CHARGING", api.StatusB},
+		{"CHARGING_INTERRUPTED", api.StatusB},
+		{"DISCHARGING", api.StatusB},
+		{"CHARGING", api.StatusC},
+		{"CONSERVING", api.StatusC},
+	} {
+		status, err := statusG(tc.state).Status()
+		require.NoError(t, err, tc.state)
+		assert.Equal(t, tc.status, status, tc.state)
+	}
+
+	// an unknown state must not read as plugged in, that would assign the vehicle
+	_, err := statusG("SOMETHING_NEW").Status()
+	assert.Error(t, err)
+}
+
 func TestVehicleResponsePartErrors(t *testing.T) {
 	sample := `{
 		"vehicle": { "vin": "TMBJB9NY5RF999999" },
@@ -77,6 +104,8 @@ func TestVehicleResponsePartErrors(t *testing.T) {
 
 	_, err := v.Soc()
 	assert.ErrorContains(t, err, "CHARGING_UNAVAILABLE")
+	// the description must not be logged on every update
+	assert.ErrorIs(t, err, api.ErrNotAvailable)
 
 	_, err = v.Odometer()
 	assert.ErrorIs(t, err, api.ErrNotAvailable)
