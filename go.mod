@@ -9,7 +9,7 @@ require (
 	github.com/PanterSoft/comlynx-go v0.1.0
 	github.com/PuerkitoBio/goquery v1.12.0
 	github.com/WulfgarW/sensonet v0.0.8
-	github.com/andig/backoff v0.0.0-20260827081753-53402992de08
+	github.com/andig/backoff v0.0.0-20260827094816-f54ae6991c88
 	github.com/andig/go-powerwall v0.3.0
 	github.com/andig/gosunspec v0.0.0-20260705113727-6d585e133512
 	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
