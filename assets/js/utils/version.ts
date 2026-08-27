@@ -19,7 +19,8 @@ export function getShortVersion(version: string): string {
 }
 
 export function isNewVersionAvailable(installed?: string, available?: string): boolean {
-  return !!available && !isDevelopment(installed || "") && available !== installed;
+  const v = installed || "";
+  return !!available && !isDevelopment(v) && !isNightly(v) && available !== installed;
 }
 
 export function isNewVersionUnacknowledged(

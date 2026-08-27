@@ -1141,7 +1141,7 @@
       "modalUpdateStatusStart": "Instalācija sākta:",
       "modalViewOnGitHub": "Skatīt GitHub",
       "openSource": "atvērtais kods",
-      "poweredByOpenSource": "Darbina {0}."
+      "poweredBy": "darbina"
     }
   },
   "forecast": {

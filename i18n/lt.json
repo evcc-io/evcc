@@ -1141,7 +1141,7 @@
       "modalUpdateStatusStart": "Instaliavimas pradėtas:",
       "modalViewOnGitHub": "Peržiūrėti GitHub’e",
       "openSource": "atvirąjį kodą",
-      "poweredByOpenSource": "Sukurta naudojant {0}."
+      "poweredBy": "sukurta naudojant"
     }
   },
   "forecast": {

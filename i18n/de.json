@@ -1119,14 +1119,14 @@
       "optInSponsorship": "Sponsoring erforderlich."
     },
     "version": {
-      "availableLong": "neue Version verfügbar",
+      "availableLong": "Update verfügbar",
       "community": "evcc Community",
       "labelEmail": "E-Mail",
       "labelPhone": "Telefon",
       "labelRelease": "Release",
       "labelVersion": "Version",
       "labelWebsite": "Website",
-      "latestVersion": "aktuelle Version",
+      "latestVersion": "aktuell",
       "madeByCommunity": "Entwickelt von der {0}.",
       "modalCancel": "Abbrechen",
       "modalDownload": "Download",
@@ -1141,7 +1141,7 @@
       "modalUpdateStatusStart": "Installation gestartet:",
       "modalViewOnGitHub": "Auf GitHub ansehen",
       "openSource": "Open Source",
-      "poweredByOpenSource": "Unterstützt von {0}."
+      "poweredBy": "powered by"
     }
   },
   "forecast": {

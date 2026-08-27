@@ -52,6 +52,11 @@ export default {
     hasUpdater: { control: "boolean" },
     uploadMessage: { control: "text" },
     uploadProgress: { control: "number" },
+    customLogo: { control: "boolean" },
+    customBrand: { control: "text" },
+    customWebsite: { control: "text" },
+    customEmail: { control: "text" },
+    customPhone: { control: "text" },
   },
 } as Meta<typeof AboutModal>;
 
@@ -101,4 +106,15 @@ Nightly.args = {
 export const DevBuild = Template.bind({});
 DevBuild.args = {
   installed: "0.0.0",
+};
+
+export const CustomBranding = Template.bind({});
+CustomBranding.args = {
+  installed: "0.303.1",
+  availableVersion: "0.303.1",
+  customLogo: true,
+  customBrand: "G1GA HEMS",
+  customWebsite: "https://example.com/hems",
+  customEmail: "support@example.com",
+  customPhone: "+49 123 456789",
 };

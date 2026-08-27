@@ -1020,7 +1020,7 @@
       "modalUpdateStatusStart": "நிறுவல் தொடங்கியது:",
       "modalViewOnGitHub": "GitHub இல் காண்க",
       "openSource": "திறந்த மூல",
-      "poweredByOpenSource": "{0} ஆல் இயக்கப்படுகிறது."
+      "poweredBy": "powered by"
     }
   },
   "forecast": {

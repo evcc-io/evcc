@@ -1126,7 +1126,7 @@
       "modalUpdateStatusStart": "Inštalácia sa začala:",
       "modalViewOnGitHub": "Zobraziť na GitHub",
       "openSource": "otvorený zdrojový kód",
-      "poweredByOpenSource": "Využíva technológiu {0}."
+      "poweredBy": "beží na"
     }
   },
   "forecast": {

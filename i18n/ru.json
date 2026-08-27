@@ -1126,7 +1126,7 @@
       "modalUpdateStatusStart": "Установка начата:",
       "modalViewOnGitHub": "Посмотреть на GitHub",
       "openSource": "с открытым исходным кодом",
-      "poweredByOpenSource": "Работает на {0}."
+      "poweredBy": "работает на"
     }
   },
   "forecast": {

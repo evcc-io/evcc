@@ -1126,7 +1126,7 @@
       "modalUpdateStatusStart": "Asennus aloitettu:",
       "modalViewOnGitHub": "Näytä GitHubista",
       "openSource": "avoimen lähdekoodin",
-      "poweredByOpenSource": "{0} voimalla."
+      "poweredBy": "powered by"
     }
   },
   "forecast": {

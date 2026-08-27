@@ -987,7 +987,7 @@
       "modalUpdateStatusStart": "Kurulum başladı:",
       "modalViewOnGitHub": "GitHub'da görüntüle",
       "openSource": "açık kaynak",
-      "poweredByOpenSource": "{0} tarafından desteklenmekte."
+      "poweredBy": "powered by"
     }
   },
   "forecast": {
