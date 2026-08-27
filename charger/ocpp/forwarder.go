@@ -24,6 +24,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -242,7 +243,7 @@ var (
 // exponential backoff for as long as the charger stays connected and the rule
 // remains in effect.
 func runUpstreamSidecar(id string, rule ForwarderRule) {
-	bo := util.BackOff(util.WithInitialInterval(reconnectInitialDelay), util.WithMaxInterval(reconnectMaxDelay))
+	bo := backoff.NewExponentialBackOff(backoff.WithInitialInterval(reconnectInitialDelay), backoff.WithMaxInterval(reconnectMaxDelay))
 
 	for {
 		if !dialUpstreamSidecar(id, rule) {

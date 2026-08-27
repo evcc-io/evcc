@@ -25,7 +25,7 @@ func Name(conf config.Typed) string {
 // retryOptions are the tariff-specific backoff settings
 func retryOptions() []backoff.RetryOption {
 	return []backoff.RetryOption{
-		backoff.WithBackOff(util.BackOff(util.WithInitialInterval(time.Second))),
+		backoff.WithBackOff(backoff.NewExponentialBackOff(backoff.WithInitialInterval(time.Second))),
 		backoff.WithMaxElapsedTime(time.Minute),
 	}
 }

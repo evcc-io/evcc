@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
@@ -178,7 +179,7 @@ func NewWarpWS(ctx context.Context, uri, user, pass, emURI, emUser, emPass strin
 }
 
 func (w *WarpWS) run(ctx context.Context, role wsRole, client *http.Client, wsURI string) {
-	bo := util.BackOff(util.WithMaxInterval(30 * time.Second))
+	bo := backoff.NewExponentialBackOff(backoff.WithMaxInterval(30 * time.Second))
 
 	for ctx.Err() == nil {
 		w.log.DEBUG.Println("websocket: connecting")

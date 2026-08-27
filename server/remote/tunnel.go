@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cenkalti/backoff/v4"
 	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -53,7 +54,7 @@ func NewTunnel(tunnelURL, token string, httpHandler http.Handler, authenticate f
 
 // run establishes the tunnel and reconnects on failure.
 func (t *Tunnel) run() {
-	bo := util.BackOff(util.WithInitialInterval(time.Second), util.WithMaxInterval(60*time.Second))
+	bo := backoff.NewExponentialBackOff(backoff.WithInitialInterval(time.Second), backoff.WithMaxInterval(60*time.Second))
 
 	ctx, cancel := context.WithCancel(context.Background())
 	t.cancel = cancel

@@ -186,10 +186,10 @@ func (c *Pulsatrix) sync() error {
 
 // reconnect reconnects to a pulsatrix SECC websocket
 func (c *Pulsatrix) reconnect() {
-	bo := util.BackOff(
-		util.WithInitialInterval(backoffInitial),
-		util.WithMaxInterval(backoffMax),
-		util.WithMultiplier(backoffMultiplier),
+	bo := backoff.NewExponentialBackOff(
+		backoff.WithInitialInterval(backoffInitial),
+		backoff.WithMaxInterval(backoffMax),
+		backoff.WithMultiplier(backoffMultiplier),
 	)
 
 	var lastErrorLog time.Time

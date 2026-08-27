@@ -108,7 +108,7 @@ func NewEm2Go(ctx context.Context, settings modbus.TcpSettings) (api.Charger, er
 		current: 60,
 	}
 
-	bo := util.BackOff(util.WithInitialInterval(2*time.Second), util.WithMaxInterval(10*time.Second))
+	bo := backoff.NewExponentialBackOff(backoff.WithInitialInterval(2*time.Second), backoff.WithMaxInterval(10*time.Second))
 
 	res, err := backoff.RetryCtx(ctx, wb.initialize,
 		backoff.WithBackOff(bo),

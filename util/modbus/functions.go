@@ -11,13 +11,12 @@ import (
 	"time"
 
 	"github.com/andig/backoff"
-	"github.com/evcc-io/evcc/util"
 )
 
 // retryOptions are the modbus-specific backoff settings
 func retryOptions() []backoff.RetryOption {
 	return []backoff.RetryOption{
-		backoff.WithBackOff(util.BackOff(util.WithInitialInterval(20 * time.Millisecond))),
+		backoff.WithBackOff(backoff.NewExponentialBackOff(backoff.WithInitialInterval(20 * time.Millisecond))),
 		backoff.WithMaxElapsedTime(10 * time.Second),
 	}
 }

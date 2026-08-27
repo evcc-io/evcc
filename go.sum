@@ -22,8 +22,8 @@ github.com/Shopify/toxiproxy v2.1.4+incompatible h1:TKdv8HiTLgE5wdJuEML90aBgNWso
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
 github.com/WulfgarW/sensonet v0.0.8 h1:CkKzQuGTmZiYQPOI7t9tYCynM0mVnl1UNWyiSY5a3cE=
 github.com/WulfgarW/sensonet v0.0.8/go.mod h1:uId+Lbatrz6CsUMXfj+zsRPdT5KHrh3H8YOk0xZU/9E=
-github.com/andig/backoff v0.0.0-20260827074258-e1febbbd6f60 h1:flAovbJBfEnZB6lKzrL2Tardt1d3NtTJ8YljSWSL/Ps=
-github.com/andig/backoff v0.0.0-20260827074258-e1febbbd6f60/go.mod h1:RFB1z8iTSdv0Qg1nZS4HrJoEkC8wPwo46GjQ3GXFCb4=
+github.com/andig/backoff v0.0.0-20260827081753-53402992de08 h1:+70OY6GdTKJYkmaiR9n0BM8XATKOCDyoAWoIj8AguGM=
+github.com/andig/backoff v0.0.0-20260827081753-53402992de08/go.mod h1:RFB1z8iTSdv0Qg1nZS4HrJoEkC8wPwo46GjQ3GXFCb4=
 github.com/andig/eebus-go v0.0.0-20260725155950-e735091ff165 h1:mgx3N1XD29NtCtvbm1CEMJpz8lBUgMiSdH0Ku72pDP4=
 github.com/andig/eebus-go v0.0.0-20260725155950-e735091ff165/go.mod h1:L1nBEy/dBASQRoz/9JF7KEmqFdnXHLbZqDpxiA0ezr4=
 github.com/andig/go-powerwall v0.3.0 h1:6g50+8xEwxrnzoSaPsxNRpc2fld8gARk0X78NEexFGI=

@@ -380,7 +380,7 @@ func floatVal(f float64) []byte {
 }
 
 func queryRCT[T any](id rct.Identifier, fun func(id rct.Identifier) (T, error)) (T, error) {
-	bo := util.BackOff(util.WithInitialInterval(500*time.Millisecond), util.WithMaxInterval(2*time.Second))
+	bo := backoff.NewExponentialBackOff(backoff.WithInitialInterval(500*time.Millisecond), backoff.WithMaxInterval(2*time.Second))
 
 	return backoff.Retry(func() (T, error) {
 		return fun(id)
