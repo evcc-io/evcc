@@ -41,8 +41,8 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 		ModeCharge string
 	}{
 		batterySocLimits: batterySocLimits{
-			MinSoc: 20,
-			MaxSoc: 95,
+			MinSoc: 0,
+			MaxSoc: 100,
 		},
 	}
 
