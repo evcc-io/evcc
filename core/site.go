@@ -243,7 +243,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 				return err
 			}
 			// Fix any dangling history
-			if err := lp.db.ClosePendingSessionsInHistory(lo.FromPtr(lp.chargeMeterTotal())); err != nil {
+			if err := lp.db.ClosePendingSessionsInHistory(lp.chargeMeterTotal()); err != nil {
 				return err
 			}
 

@@ -1920,9 +1920,12 @@ func (lp *Loadpoint) publishChargeProgress() {
 	lp.publish(keys.ChargeDuration, lp.chargeDuration)
 
 	// update energy, prefer totals
-	importTotal := lp.chargeMeterTotal()
-	if importTotal != nil {
-		lp.publish(keys.ChargeTotalImport, *importTotal)
+	var importTotal *float64
+	if api.HasCap[api.MeterEnergy](lp.chargeMeter) {
+		if f := lp.chargeMeterTotal(); f > 0 {
+			lp.publish(keys.ChargeTotalImport, f)
+			importTotal = &f
+		}
 	}
 
 	if lp.chargeEnergy != nil {

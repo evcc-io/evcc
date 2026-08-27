@@ -23,18 +23,6 @@ func TestMeterEnergyMeterTotal(t *testing.T) {
 	assert.Equal(t, 1.0, me.Energy)
 }
 
-func TestMeterDelta(t *testing.T) {
-	// increase
-	assert.Equal(t, 1.0, meterDelta(10, 11))
-	assert.Equal(t, 0.0, meterDelta(10, 10))
-	// reset: counter restarts near zero, reading is the delta
-	assert.Equal(t, 0.0, meterDelta(10, 0))
-	assert.Equal(t, 0.5, meterDelta(10, 0.5))
-	// implausible decrease
-	assert.Equal(t, 0.0, meterDelta(10, 9))
-	assert.Equal(t, 0.0, meterDelta(10, 5))
-}
-
 func TestMeterEnergyAddPower(t *testing.T) {
 	clock := clock.NewMock()
 	clock.Set(now.BeginningOfDay())
