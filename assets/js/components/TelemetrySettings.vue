@@ -47,7 +47,7 @@ export default defineComponent({
 	},
 	computed: {
 		docsLink() {
-			return `${docsPrefix()}/docs/faq#telemetry`;
+			return `${docsPrefix()}/faq#telemetry`;
 		},
 	},
 	methods: {

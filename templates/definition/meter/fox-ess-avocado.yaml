@@ -60,6 +60,9 @@ render: |
       address: 39123
       type: holding
       decode: int16
+    block: # 39123-39131
+      register: 39123
+      count: 9
     scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -67,6 +70,9 @@ render: |
       address: 39124
       type: holding
       decode: int16
+    block: # 39123-39131
+      register: 39123
+      count: 9
     scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -74,6 +80,9 @@ render: |
       address: 39125
       type: holding
       decode: int16
+    block: # 39123-39131
+      register: 39123
+      count: 9
     scale: 0.1
   currents:
   - source: modbus
@@ -82,6 +91,9 @@ render: |
       address: 39126
       type: holding
       decode: int32
+    block: # 39123-39131
+      register: 39123
+      count: 9
     scale: 0.001
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -89,6 +101,9 @@ render: |
       address: 39128
       type: holding
       decode: int32
+    block: # 39123-39131
+      register: 39123
+      count: 9
     scale: 0.001
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -96,6 +111,9 @@ render: |
       address: 39130
       type: holding
       decode: int32
+    block: # 39123-39131
+      register: 39123
+      count: 9
     scale: 0.001
   {{- end }}
   {{- if eq .usage "pv" }}
@@ -240,5 +258,8 @@ render: |
                 address: 46003 # Remote Active Power
                 type: writemultiple
                 encoding: int32
+      default:
+        source: error
+        error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

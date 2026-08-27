@@ -29,7 +29,7 @@ params:
     advanced: true
 render: |
   type: custom
-  {{ include "tariff-base" . }}
+  {{ include "base" . }}
   forecast:
     source: http
     uri: https://api.tariffs.ekz.ch/v1/tariffs?tariff_name=integrated_{{ .tariff_name }}&start_timestamp={{ `{{ now.Local | date "2006-01-02T15" }}` }}:00:00%2B02%3A00&end_timestamp={{ `{{ addDate now.Local 0 0 2 | date "2006-01-02T15" }}` }}:00:00

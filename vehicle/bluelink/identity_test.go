@@ -150,8 +150,8 @@ func TestLoginUsesCCIAndWiresRefreshCCI(t *testing.T) {
 	loginSrv := httptest.NewServer(loginMux)
 	defer loginSrv.Close()
 
-	var refreshCalls int32
-	var exchangeCalls int32
+	var refreshCalls atomic.Int32
+	var exchangeCalls atomic.Int32
 	cciMux := http.NewServeMux()
 	cciMux.HandleFunc("/domain/api/v1/auth/token", func(w http.ResponseWriter, _ *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]any{
@@ -165,14 +165,14 @@ func TestLoginUsesCCIAndWiresRefreshCCI(t *testing.T) {
 		// the first (login) exchange returns a token expiring inside oauth2's
 		// 10s buffer, so the next Token() call triggers exactly one refresh
 		resp := map[string]any{"accessToken": "ccs-token-2", "expiresTime": time.Now().Add(time.Hour).Unix()}
-		if atomic.AddInt32(&exchangeCalls, 1) == 1 {
+		if exchangeCalls.Add(1) == 1 {
 			resp["accessToken"] = "ccs-token-1"
 			resp["expiresTime"] = time.Now().Add(5 * time.Second).Unix()
 		}
 		_ = json.NewEncoder(w).Encode(resp)
 	})
 	cciMux.HandleFunc("/domain/api/v2/auth/token-refresh", func(w http.ResponseWriter, _ *http.Request) {
-		atomic.AddInt32(&refreshCalls, 1)
+		refreshCalls.Add(1)
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"accessToken": "cci-access-2", "refreshToken": "cci-refresh-2",
 		})
@@ -192,12 +192,12 @@ func TestLoginUsesCCIAndWiresRefreshCCI(t *testing.T) {
 	token, err := identity.Token()
 	require.NoError(t, err)
 	assert.Equal(t, "ccs-token-2", token.AccessToken)
-	assert.EqualValues(t, 1, atomic.LoadInt32(&refreshCalls), "expected TokenSource to be wired to refreshCCI")
+	assert.EqualValues(t, 1, refreshCalls.Load(), "expected TokenSource to be wired to refreshCCI")
 
 	// the now long-lived token must not trigger a further refresh
 	_, err = identity.Token()
 	require.NoError(t, err)
-	assert.EqualValues(t, 1, atomic.LoadInt32(&refreshCalls), "unexpected additional refresh")
+	assert.EqualValues(t, 1, refreshCalls.Load(), "unexpected additional refresh")
 }
 
 // TestLoginPropagatesLegacyError covers the legacy path: a failure there must

@@ -228,6 +228,14 @@ func (site *Site) setSuggestions(suggestions map[string]types.Suggestion) {
 	site.suggestions = suggestions
 }
 
+// setBatteryForecast replaces the battery forecast of the cached state
+func (site *Site) setBatteryForecast(forecast *types.BatteryForecast) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.battery.Forecast = forecast
+}
+
 // suggestion returns the optimizer suggestion for the given device key.
 // The actionable flag is evaluated on read against the device's current
 // action since that changes between optimizer runs.
@@ -264,7 +272,7 @@ func (site *Site) publishSuggestions() {
 // optimizer result is stale
 func (site *Site) clearSuggestions() {
 	site.setSuggestions(nil)
-	site.battery.Forecast = nil
+	site.setBatteryForecast(nil)
 
 	site.publishBattery()
 	site.publishSuggestions()
@@ -391,7 +399,7 @@ func (site *Site) optimizerUpdateAsync(minAge time.Duration) {
 		}
 	}()
 
-	err = site.optimizerUpdate(site.battery.Devices)
+	err = site.optimizerUpdate(site.state().battery.Devices)
 }
 
 // optimizerRequest assembles the optimizer request and the matching device
@@ -413,8 +421,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	}
 
 	if optimizerURI() == OPTIMIZER_URI {
-		// limit to 2 days for sake of performance
-		minLen = min(2*96, minLen)
+		minLen = slotsUntil(grid, optimizerHorizon(time.Now()), minLen)
 	}
 
 	if expectedSlots := 8; minLen < expectedSlots {
@@ -522,8 +529,9 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 			continue
 		}
 
-		// unknown vehicle capacity: account for the consumption as uncontrollable load
-		if v := lp.GetVehicle(); v == nil || v.Capacity() == 0 {
+		// no vehicle capacity and no session energy limit to model against:
+		// account for the consumption as uncontrollable load
+		if v := lp.GetVehicle(); v == nil || (v.Capacity() == 0 && lp.GetLimitEnergy() == 0) {
 			unmodelled += unmodelledPower(lp)
 			continue
 		}
@@ -668,7 +676,7 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 	site.publish("evopt-batteries", batteries)
 
 	site.setSuggestions(suggestions)
-	site.battery.Forecast = site.addBatteryForecastTotals(req.Batteries, res.Batteries)
+	site.setBatteryForecast(site.addBatteryForecastTotals(req.Batteries, res.Batteries))
 
 	site.publishBattery()
 
@@ -790,18 +798,22 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 	// vehicle
 	v := lp.GetVehicle()
 
-	maxSoc := v.Capacity() * 1e3 // Wh
-	if v := lp.EffectiveLimitSoc(); v > 0 {
-		maxSoc *= float64(v) / 100
-	} else if v := lp.GetLimitEnergy(); v > 0 {
-		maxSoc = v * 1e3
+	capacity := v.Capacity() // kWh
+	soc := lp.GetSoc()       // percent
+
+	// without capacity or soc there is no battery state to model, but a session energy
+	// limit still bounds the charge- use charged energy as state (see remainingLimitEnergy)
+	if limit := lp.GetLimitEnergy(); limit > 0 && (capacity == 0 || soc == 0) {
+		bat.SInitial = float32(lp.GetChargedEnergy())    // Wh
+		bat.SMax = max(bat.SInitial, float32(limit*1e3)) // prevent infeasible if limit already exceeded
+	} else {
+		maxSoc := capacity * float64(lp.EffectiveLimitSoc()) * 10 // Wh
+		bat.SInitial = float32(capacity * soc * 10)               // Wh
+		bat.SMax = max(bat.SInitial, float32(maxSoc))             // prevent infeasible if current soc above maximum
 	}
 
-	bat.SInitial = float32(v.Capacity() * lp.GetSoc() * 10) // Wh
-	bat.SMax = max(bat.SInitial, float32(maxSoc))           // prevent infeasible if current soc above maximum
-
 	detail.Type = batteryTypeVehicle
-	detail.Capacity = v.Capacity()
+	detail.Capacity = capacity
 
 	if vt := v.GetTitle(); vt != "" {
 		if detail.Title != "" {
@@ -1122,6 +1134,27 @@ func currentRates(tariff api.Tariff) api.Rates {
 	})
 }
 
+// optimizerHorizon is the timeframe the hosted optimizer is limited to for sake
+// of performance: 48 hours, extended to the end of that day. In the early hours
+// the extension would add almost a full day, hence it only applies past 6:00.
+func optimizerHorizon(t time.Time) time.Time {
+	horizon := t.Add(48 * time.Hour)
+	if t.Hour() < 6 {
+		return horizon
+	}
+	return now.With(horizon).EndOfDay()
+}
+
+// slotsUntil limits maxLen to the slots starting before the given horizon
+func slotsUntil(rates api.Rates, horizon time.Time, maxLen int) int {
+	if i := slices.IndexFunc(rates[:min(maxLen, len(rates))], func(slot api.Rate) bool {
+		return slot.Start.After(horizon)
+	}); i >= 0 {
+		return i
+	}
+	return maxLen
+}
+
 func timeSteps(minLen int, now time.Time) []int {
 	res := make([]int, 0, minLen)
 
@@ -1234,6 +1267,15 @@ func applyPrecondition(lp loadpoint.API, demand []float32, minLen int) []float32
 
 	ts := lp.EffectivePlanTime()
 	if ts.IsZero() {
+		return demand
+	}
+
+	// limit to the required charging duration, i.e. "all" must not demand beyond the plan goal
+	goal, _ := lp.GetPlanGoal()
+	if required := lp.GetPlanRequiredDuration(goal, lp.EffectiveMaxPower()); required < precondition {
+		precondition = required
+	}
+	if precondition <= 0 {
 		return demand
 	}
 

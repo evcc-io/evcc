@@ -318,12 +318,14 @@ func (wb *DaheimLaden) Voltages() (float64, float64, float64, error) {
 var _ api.Identifier = (*DaheimLaden)(nil)
 
 // Identify implements the api.Identifier interface. Only usable with PRO
-func (wb *DaheimLaden) Identify() (string, error) {
+func (wb *DaheimLaden) Identify() ([]string, error) {
 	b, err := wb.conn.ReadHoldingRegisters(dlRegCardId, 16)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return utf16BEBytesAsString(b)
+
+	id, err := utf16BEBytesAsString(b)
+	return []string{id}, err
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface

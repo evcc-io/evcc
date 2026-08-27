@@ -146,7 +146,7 @@ export default defineComponent({
 					...tooltipStyle(colors.text || ""),
 					formatter: this.tooltipFormatter,
 				},
-				xAxis: slotXAxis(this.times),
+				xAxis: slotXAxis(this.times, this.weekdayShort),
 				yAxis: forecastYAxis({
 					min: undefined,
 					position: "right",

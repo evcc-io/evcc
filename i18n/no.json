@@ -896,7 +896,6 @@
       },
       "planNumber": "Plan {number}",
       "precondition": {
-        "description": "Lad {duration} før avreise for å forberede batteriet.",
         "label": "Sen betaling",
         "optionAll": "alt",
         "optionNo": "nei"
@@ -906,7 +905,6 @@
       "repeatingPlans": "Gjentatte planer",
       "selectAll": "Velg alt",
       "strategyDisabledDescription": "Ladingen starter så sent som mulig for å være ferdig akkurat i tide til avreise. Med dynamiske nettpriser eller CO₂-tariff er det flere alternativer tilgjengelig her.",
-      "strategySettings": "Strategiinnstillinger",
       "time": "Tid",
       "title": "Plan",
       "unsavedChanges": "Det er ubehandlede endringer. Vil du bruke dem nå?",
@@ -1071,15 +1069,10 @@
       "feedinPriorityPausing": "Solcellelading pauset for å maksimere innmatingen.",
       "finished": "Ferdig.",
       "minCharge": "Minimumslading til {soc}.",
-      "pvDisable": "Ikke nok overskudd. Pause i {remaining}...",
-      "pvEnable": "Overskudd tilgjengelig. Starter om {remaining}...",
-      "scale1p": "Reduserer til 1-fase strøm i {remaining}...",
-      "scale3p": "Øker til 3-fase strøm i {remaining}...",
       "targetChargeActive": "Målladning aktiv. Estimert ferdig om {duration}.",
       "targetChargePlanned": "Mållading starter på {duration}.",
       "targetChargeWaitForVehicle": "Ladingsplan klar. Venter på kjøretøy…",
       "vehicleLimit": "Kjøretøybegrensning",
-      "vehicleLimitReached": "Kjøretøygrense på {soc} nådd.",
       "waitForVehicle": "Klar. Venter på kjøretøy…",
       "welcome": "Kort innledende ladning for å bekrefte tilkoblingen."
     },

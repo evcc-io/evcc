@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/types"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	optimizer "github.com/evcc-io/optimizer/client"
@@ -29,6 +30,30 @@ func TestLoadpointProfile(t *testing.T) {
 	require.Equal(t, []float64{250, 250, 250, 250, 250, 250, 250, 50}, loadpointProfile(lp, 8))
 }
 
+func TestOptimizerHorizon(t *testing.T) {
+	ts := time.Date(2025, 1, 1, 10, 30, 0, 0, time.Local)
+	horizon := optimizerHorizon(ts)
+
+	// 48h plus end of day
+	assert.Equal(t, time.Date(2025, 1, 3, 23, 59, 59, int(time.Second-time.Nanosecond), time.Local), horizon)
+
+	// before 6:00 the day is not extended
+	assert.Equal(t, time.Date(2025, 1, 3, 5, 30, 0, 0, time.Local),
+		optimizerHorizon(time.Date(2025, 1, 1, 5, 30, 0, 0, time.Local)))
+
+	rates := make(api.Rates, 0, 4*96)
+	for slot := ts.Truncate(tariff.SlotDuration); len(rates) < cap(rates); slot = slot.Add(tariff.SlotDuration) {
+		rates = append(rates, api.Rate{Start: slot, End: slot.Add(tariff.SlotDuration)})
+	}
+
+	// 4 days of slots from 10:30, capped at the last slot of Jan 3rd
+	assert.Equal(t, 246, slotsUntil(rates, horizon, len(rates)))
+	assert.Equal(t, time.Date(2025, 1, 3, 23, 45, 0, 0, time.Local), rates[245].Start)
+
+	// shorter forecast is not extended
+	assert.Equal(t, 8, slotsUntil(rates, horizon, 8))
+}
+
 func TestApplyPrecondition(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
@@ -47,6 +72,8 @@ func TestApplyPrecondition(t *testing.T) {
 	// plan in 1h, 40min precondition: slots 1 (10min) and 2, 3 (full)
 	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(time.Hour)).Times(1)
 	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: 40 * time.Minute}).Times(1)
+	lp.EXPECT().GetPlanGoal().Return(80.0, true).Times(1)
+	lp.EXPECT().GetPlanRequiredDuration(80.0, 8000.0).Return(2 * time.Hour).Times(1)
 	res := applyPrecondition(lp, nil, 8)
 	require.Len(t, res, 8)
 	assert.InDeltaSlice(t, []float32{0, 2000. / 1.5, 2000, 2000, 0, 0, 0, 0}, res, 1)
@@ -54,12 +81,32 @@ func TestApplyPrecondition(t *testing.T) {
 	// existing demand is kept where higher
 	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(time.Hour)).Times(1)
 	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: 30 * time.Minute}).Times(1)
+	lp.EXPECT().GetPlanGoal().Return(80.0, true).Times(1)
+	lp.EXPECT().GetPlanRequiredDuration(80.0, 8000.0).Return(2 * time.Hour).Times(1)
 	res = applyPrecondition(lp, []float32{3000, 3000, 3000, 3000, 0, 0, 0, 0}, 8)
 	assert.InDeltaSlice(t, []float32{3000, 3000, 3000, 3000, 0, 0, 0, 0}, res, 1)
 
 	// plan beyond horizon
 	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(24 * time.Hour)).Times(1)
 	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: time.Hour}).Times(1)
+	lp.EXPECT().GetPlanGoal().Return(80.0, true).Times(1)
+	lp.EXPECT().GetPlanRequiredDuration(80.0, 8000.0).Return(2 * time.Hour).Times(1)
+	assert.Nil(t, applyPrecondition(lp, nil, 8))
+
+	// "all" precondition is limited to the required charging duration (#33135)
+	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(time.Hour)).Times(1)
+	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: 7 * 24 * time.Hour}).Times(1)
+	lp.EXPECT().GetPlanGoal().Return(80.0, true).Times(1)
+	lp.EXPECT().GetPlanRequiredDuration(80.0, 8000.0).Return(40 * time.Minute).Times(1)
+	res = applyPrecondition(lp, nil, 8)
+	require.Len(t, res, 8)
+	assert.InDeltaSlice(t, []float32{0, 2000. / 1.5, 2000, 2000, 0, 0, 0, 0}, res, 1)
+
+	// goal already reached: no demand
+	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(time.Hour)).Times(1)
+	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: 7 * 24 * time.Hour}).Times(1)
+	lp.EXPECT().GetPlanGoal().Return(80.0, true).Times(1)
+	lp.EXPECT().GetPlanRequiredDuration(80.0, 8000.0).Return(time.Duration(0)).Times(1)
 	assert.Nil(t, applyPrecondition(lp, nil, 8))
 }
 
@@ -318,6 +365,54 @@ func TestBatteryRequestSocLimitsClamp(t *testing.T) {
 		assert.Equal(t, float32(2000), req.SMin)
 		assert.Equal(t, float32(10000), req.SMax)
 	})
+}
+
+// charge goal for vehicles with and without known capacity/soc, see #32890
+func TestLoadpointRequestChargeGoal(t *testing.T) {
+	site := &Site{log: util.NewLogger("foo")}
+
+	for _, tc := range []struct {
+		name                  string
+		capacity, soc         float64 // kWh, percent
+		limitSoc              int     // percent
+		limitEnergy, charged  float64 // kWh, Wh
+		wantInitial, wantSMax float32 // Wh
+	}{
+		{"soc limit", 50, 20, 80, 0, 0, 10000, 40000},
+		{"no capacity, energy limit", 0, 0, 100, 10, 0, 0, 10000},
+		{"no capacity, energy limit partially charged", 0, 0, 100, 10, 4000, 4000, 10000},
+		{"no capacity, limit exceeded", 0, 0, 100, 10, 11000, 11000, 11000},
+		{"capacity but no soc, energy limit", 50, 0, 100, 10, 0, 0, 10000},
+		{"capacity but no soc, no energy limit", 50, 0, 100, 0, 0, 0, 50000},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			v := api.NewMockVehicle(ctrl)
+			v.EXPECT().Capacity().Return(tc.capacity).AnyTimes()
+			v.EXPECT().GetTitle().Return("").AnyTimes()
+
+			lp := loadpoint.NewMockAPI(ctrl)
+			lp.EXPECT().GetVehicle().Return(v).AnyTimes()
+			lp.EXPECT().GetSoc().Return(tc.soc).AnyTimes()
+			lp.EXPECT().EffectiveLimitSoc().Return(tc.limitSoc).AnyTimes()
+			lp.EXPECT().GetLimitEnergy().Return(tc.limitEnergy).AnyTimes()
+			lp.EXPECT().GetChargedEnergy().Return(tc.charged).AnyTimes()
+			lp.EXPECT().GetTitle().Return("lp").AnyTimes()
+			lp.EXPECT().EffectiveMinPower().Return(1380.0).AnyTimes()
+			lp.EXPECT().EffectiveMaxPower().Return(11000.0).AnyTimes()
+			lp.EXPECT().GetMode().Return(api.ModePV).AnyTimes()
+			lp.EXPECT().GetStatus().Return(api.StatusB).AnyTimes()
+			lp.EXPECT().GetSmartCostLimit().Return(nil).AnyTimes()
+			lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{}).AnyTimes()
+			lp.EXPECT().GetPlanGoal().Return(0.0, false).AnyTimes()
+
+			req, _ := site.loadpointRequest(lp, 8, 15*time.Minute, nil)
+
+			assert.Equal(t, tc.wantInitial, req.SInitial)
+			assert.Equal(t, tc.wantSMax, req.SMax)
+		})
+	}
 }
 
 func TestOptimizerChargingStrategy(t *testing.T) {

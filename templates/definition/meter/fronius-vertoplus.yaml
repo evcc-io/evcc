@@ -18,6 +18,7 @@ params:
       de: "Zähleradresse von Primär- oder Sekundärzählern. Auf der Weboberfläche des Wechselrichters kann nur die Adresse des ersten Zählers (z.B. 200) eingestellt werden. Zusätzliche Zähler erhalten eine aufsteigende Nummer (z.B: 201)."
     usages: ["grid"]
   - name: maxacpower
+    deprecated: true # read from nameplate
   - name: maxchargerate
   - preset: battery-params
 render: |
@@ -163,7 +164,7 @@ render: |
       id: 1
       value: 160:3:DCWH # mppt 3
       scale: 0.001
-  maxacpower: {{ .maxacpower }} # W
+  {{- include "sunspec-maxacpower-tcp" . }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -277,5 +278,8 @@ render: |
             uri: {{ .host }}:{{ .port }}
             id: 1
             value: 124:0:InWRte
+    default:
+      source: error
+      error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

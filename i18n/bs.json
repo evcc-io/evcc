@@ -375,10 +375,7 @@
   },
   "main": {
     "chargingPlan": {
-      "planNumber": "Plan {number}",
-      "precondition": {
-        "description": "Punite {duration} prije polaska kako biste pripremili bateriju."
-      }
+      "planNumber": "Plan {number}"
     },
     "energyflow": {
       "batteryTooltip": "{energy} od {total} ({soc})",
