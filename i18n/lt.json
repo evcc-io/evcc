@@ -188,6 +188,15 @@
       "label": "Valiuta",
       "title": "Valiuta"
     },
+    "curtailer": {
+      "description": "Įrenginys, kuris tinklo operatoriaus prašymu riboja eksportą (§ 9 EEG). Daugelis saulės inverterių palaiko šią funkciją tiesiogiai per savo saulės energijos skaitiklio konfigūraciją. Atskira konfigūracija reikalinga tik kai kuriems gamintojams arba kelių inverterių sistemoms.",
+      "generic": "Tipinės integracijos",
+      "specific": "Specifinės integracijos",
+      "template": "Gamintojas",
+      "title": "Apribojimas",
+      "titleAdd": "Pridėti Apribojimo Įrenginį",
+      "titleEdit": "Redaguoti apribojimo įrenginį"
+    },
     "deviceValue": {
       "activeClients": "Aktyvūs vartotojai",
       "amount": "Kiekis",
@@ -212,7 +221,7 @@
       "currentRange": "Srovė",
       "curtailLimit": "Atidavimo į tinklą ribojimas",
       "curtailable": "Apribojama",
-      "curtailed": "Eksportas apribotas",
+      "curtailed": "Eksporto ribojimas",
       "detected": "Aptikta",
       "dimLimit": "Vartojimo riba",
       "dimmed": "Suvartojimas apribotas",
@@ -363,7 +372,7 @@
     },
     "grid": {
       "title": "Įvado skaitiklis",
-      "titleAdd": "Pridėti tinklo skaitiklį",
+      "titleAdd": "Pridėti Tinklo Skaitiklį",
       "titleEdit": "Redaguoti tinklo skaitiklį"
     },
     "hems": {
@@ -539,6 +548,7 @@
     "main": {
       "addAdditional": "Pridėti papildomą skaitiklį",
       "addConsumer": "Pridėti vartotoją",
+      "addCurtailer": "Pridėti apribojimo įrenginį",
       "addGrid": "Pridėti tinklo skaitiklį",
       "addLoadpoint": "Pridėti įkroviklį arba šildytuvą",
       "addPvBattery": "Pridėti saulės elektrinę arba kaupiklį",
@@ -639,6 +649,7 @@
         "aux": "Pridėti savireguliuojantį vartotoją",
         "battery": "Pridėti kaupiklio skaitiklį",
         "consumer": "Pridėkite įprastą vartotoją",
+        "grid": "Pridėti tinklo skaitiklį",
         "pv": "Pridėti saulės elektrinės skaitiklį"
       },
       "save": "Išsaugoti",
@@ -829,6 +840,8 @@
       "noClients": "Kol kas nėra vartotojų. Niekas dar negali prisijungti.",
       "password": "Slaptažodis",
       "passwordOnce": "Šis slaptažodis rodomas tik vieną kartą. Nuskaitykite QR kodą arba nukopijuokite jį dabar. Daugiau jo nebegalėsite pamatyti.",
+      "privacy": "Įjungdami šią funkciją, sutinkate su mūsų {0}.",
+      "privacyLink": "privatumo politika",
       "qrInstall": "Įdiekite evcc programėlę, skirtą {ios} arba {android}.",
       "qrScan": "Nuskaitykite kodą telefono kamera, kad prisijungtumėte. Bakstelėkite ant jo, jei jau naudojate telefoną.",
       "removeClient": "Pašalinti vartotoją",
@@ -905,6 +918,8 @@
           "confirmationButton": "Atstatyti ir paleisti iš naujo",
           "confirmationText": "Tai visam laikui ištrins jūsų pasirinktus duomenis. Pirmiausia įsitikinkite, kad atsisiuntėte atsarginę kopiją.",
           "description": "Kyla problemų dėl konfigūracijos ir norite pradėti iš naujo? Ištrinkite visus duomenis ir pradėkite iš naujo.",
+          "remote": "Nuotolinė prieiga",
+          "remoteDescription": "Ištrina konfigūraciją ir prisijungimo duomenis.",
           "sessions": "Įkrovimo sesijos",
           "sessionsDescription": "Ištrina įkrovimo sesijų istoriją.",
           "settings": "Konfigūracija ir nustatymai",
@@ -1718,6 +1733,13 @@
     "vehicle": "Automobilis"
   },
   "settings": {
+    "dateFormat": {
+      "auto": "Auto",
+      "dmy": "DD/MM/YYYY",
+      "label": "Datos formatas",
+      "mdy": "MM/DD/YYYY",
+      "ymd": "YYYY-MM-DD"
+    },
     "deviceInfo": "Šiame dialoge atlikti nustatymai taikomi tik šiam įrenginiui.",
     "fullscreen": {
       "enter": "Įjungti visą ekraną",

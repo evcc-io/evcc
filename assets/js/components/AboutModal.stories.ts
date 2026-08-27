@@ -94,7 +94,8 @@ StableUpdateWithUpdater.args = {
 
 export const Nightly = Template.bind({});
 Nightly.args = {
-  installed: "0.304.0-dev+5ce7be4",
+  installed: "0.304.0-dev.1712345678",
+  commit: "5ce7be4",
 };
 
 export const DevBuild = Template.bind({});

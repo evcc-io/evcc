@@ -172,6 +172,14 @@ func (wb *OpenWBPro) TotalEnergy() (float64, error) {
 	return res.Imported / 1e3, err
 }
 
+var _ api.MeterReturnEnergy = (*OpenWBPro)(nil)
+
+// ReturnEnergy implements the api.MeterReturnEnergy interface
+func (wb *OpenWBPro) ReturnEnergy() (float64, error) {
+	res, err := wb.statusG.Get()
+	return res.Exported / 1e3, err
+}
+
 // getPhaseValues returns phase values
 func (wb *OpenWBPro) getPhaseValues(f func(pro.Status) []float64) (float64, float64, float64, error) {
 	status, err := wb.statusG.Get()
