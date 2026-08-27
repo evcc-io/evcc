@@ -1343,7 +1343,6 @@
       "strategy": {
         "label": "Strategija"
       },
-      "strategyDisabledDescription": "Įkrovimas pradedamas kuo vėliau, kad būtų baigtas prieš pat išvykimą. Jei naudojate 15 minučių biržos planą (arba CO₂ tarifą), čia galite rinktis iš daugiau variantų.",
       "time": "Laikas",
       "title": "Planas",
       "unsavedChanges": "Yra neišsaugotų pakeitimų. Išsaugoti dabar?",
