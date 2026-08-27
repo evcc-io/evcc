@@ -150,6 +150,31 @@
 							data-testid="add-grid"
 							@click="openModal('meter', { type: 'grid' })"
 						/>
+						<DeviceCard
+							v-for="curtailer in curtailerDevices"
+							:id="`curtailer_${curtailer.name}`"
+							:key="curtailer.name"
+							:name="curtailer.name"
+							:title="curtailerTitle(curtailer)"
+							:editable="!!curtailer.id"
+							:error="hasDeviceError('curtailer', curtailer.name)"
+							:banner="curtailmentBanner('curtailer', curtailer.name)"
+							data-testid="curtailer"
+							@edit="openModal('curtailer', { id: curtailer.id })"
+						>
+							<template #icon>
+								<CurtailIcon />
+							</template>
+							<template #tags>
+								<DeviceTags :tags="deviceTags('curtailer', curtailer.name)" />
+							</template>
+						</DeviceCard>
+						<NewDeviceButton
+							v-if="pvMeters.length > 0"
+							:title="$t('config.main.addCurtailer')"
+							data-testid="add-curtailer"
+							@click="openModal('curtailer')"
+						/>
 					</div>
 				</ConfigSection>
 
@@ -162,7 +187,7 @@
 							meter-type="pv"
 							:has-error="hasDeviceError('meter', meter.name)"
 							:tags="deviceTags('meter', meter.name)"
-							:banner="meterBanner(meter.name)"
+							:banner="curtailmentBanner('meter', meter.name)"
 							@edit="(type, id) => openModal('meter', { type, id })"
 							@enable="handleDisable('meter', meter.id, false)"
 						/>
@@ -394,8 +419,7 @@
 							</template>
 						</DeviceCard>
 						<DeviceCard
-							v-if="experimental"
-							:title="`${$t('config.remote.title')} 🧪`"
+							:title="$t('config.remote.title')"
 							editable
 							:unconfigured="isUnconfigured(remoteTags)"
 							data-testid="remote-access"
@@ -525,6 +549,7 @@
 				<MessagingLegacyModal @changed="loadDirty" />
 				<MessagingModal :messengers="messengers" @changed="loadDirty" />
 				<MessengerModal @changed="messengerChanged" />
+				<CurtailerModal @changed="curtailerChanged" />
 				<TariffsLegacyModal @changed="loadDirty" />
 				<TariffModal
 					:currency="currency"
@@ -579,6 +604,8 @@ import CircuitsModal from "../components/Config/CircuitsModal.vue";
 import CircuitTags from "../components/Config/CircuitTags.vue";
 import collector from "../mixins/collector";
 import ControlModal from "../components/Config/ControlModal.vue";
+import CurtailerModal from "../components/Config/CurtailerModal.vue";
+import CurtailIcon from "../components/MaterialIcon/Curtail.vue";
 import DeviceCard from "../components/Config/DeviceCard.vue";
 import DeviceTags from "../components/Config/DeviceTags.vue";
 import EebusIcon from "../components/MaterialIcon/Eebus.vue";
@@ -633,6 +660,7 @@ import type {
 	ConfigCharger,
 	ConfigVehicle,
 	ConfigCircuit,
+	ConfigCurtailer,
 	ConfigMessenger,
 	ConfigHems,
 	ConfigLoadpoint,
@@ -691,6 +719,8 @@ export default defineComponent({
 		CircuitsModal,
 		CircuitTags,
 		ControlModal,
+		CurtailerModal,
+		CurtailIcon,
 		DeviceCard,
 		DeviceTags,
 		EebusIcon,
@@ -749,6 +779,7 @@ export default defineComponent({
 	data() {
 		return {
 			messengers: [] as ConfigMessenger[],
+			curtailers: [] as ConfigCurtailer[],
 			vehicles: [] as ConfigVehicle[],
 			meters: [] as ConfigMeter[],
 			loadpoints: [] as ConfigLoadpoint[],
@@ -772,6 +803,7 @@ export default defineComponent({
 				aux: null as string[] | null,
 				ext: null as string[] | null,
 				consumer: null as string[] | null,
+				curtail: null as string[] | null,
 			} as SiteConfig,
 			deviceValueTimeout: null as Timeout,
 			deviceValues: {
@@ -781,6 +813,7 @@ export default defineComponent({
 				loadpoint: {},
 				messenger: {},
 				tariff: {},
+				curtailer: {},
 			} as DeviceValuesMap,
 			isComponentMounted: true,
 			isPageVisible: true,
@@ -868,8 +901,10 @@ export default defineComponent({
 				{
 					slug: "grid",
 					icon: "shopicon-regular-powersupply",
-					count: this.gridMeter ? 1 : 0,
-					error: !!this.gridMeter && this.hasDeviceError("meter", this.gridMeter.name),
+					count: (this.gridMeter ? 1 : 0) + this.curtailerDevices.length,
+					error:
+						(!!this.gridMeter && this.hasDeviceError("meter", this.gridMeter.name)) ||
+						this.curtailerDevices.some((c) => this.hasDeviceError("curtailer", c.name)),
 				},
 				{
 					slug: "pv-battery",
@@ -877,7 +912,7 @@ export default defineComponent({
 					count: pvAndBattery.length,
 					error: meterError(pvAndBattery),
 					warning:
-						this.pvMeters.some((m) => this.meterBanner(m.name)) ||
+						this.pvMeters.some((m) => this.curtailmentBanner("meter", m.name)) ||
 						meterDisabled(pvAndBattery),
 				},
 				{
@@ -955,6 +990,12 @@ export default defineComponent({
 		extMeters() {
 			const names = this.site?.ext;
 			return this.getMetersByNames(names);
+		},
+		curtailerDevices(): ConfigCurtailer[] {
+			const names = this.site?.curtail || [];
+			return names
+				.map((name) => this.curtailers.find((c) => c.name === name))
+				.filter((c): c is ConfigCurtailer => c !== undefined);
 		},
 		consumerMeters() {
 			return this.getMetersByNames(this.site?.consumer);
@@ -1050,7 +1091,9 @@ export default defineComponent({
 			return result;
 		},
 		vehicleOptions(): VehicleOption[] {
-			return this.vehicles.map((v) => ({ key: v.name, name: v.config?.title || v.name }));
+			return this.vehicles
+				.filter((v) => !v.deviceDisable)
+				.map((v) => ({ key: v.name, name: v.config?.title || v.name }));
 		},
 		hems() {
 			return store.state?.hems;
@@ -1291,6 +1334,7 @@ export default defineComponent({
 			await this.loadLoadpoints();
 			await this.loadCircuits();
 			await this.loadMessengers();
+			await this.loadCurtailers();
 			await this.loadTariffs();
 			await this.loadTariffRefs();
 			await this.loadHems();
@@ -1310,6 +1354,9 @@ export default defineComponent({
 		},
 		async loadMessengers() {
 			this.messengers = (await this.loadConfig("devices/messenger")) || [];
+		},
+		async loadCurtailers() {
+			this.curtailers = (await this.loadConfig("devices/curtailer")) || [];
 		},
 		async loadVehicles() {
 			this.vehicles = (await this.loadConfig("devices/vehicle")) || [];
@@ -1464,6 +1511,25 @@ export default defineComponent({
 			this.loadMessengers();
 			this.loadDirty();
 		},
+		curtailerTitle(curtailer: ConfigCurtailer): string {
+			return (
+				curtailer.deviceTitle ||
+				curtailer.config?.template ||
+				this.$t("config.curtailer.title")
+			);
+		},
+		async curtailerChanged(result: ModalResult) {
+			if (result.action === "added" && result.name) {
+				this.site.curtail = [...(this.site.curtail || []), result.name];
+				await this.saveSite("curtail");
+			}
+			if (result.action === "removed") {
+				await this.loadSite();
+			}
+			await this.loadCurtailers();
+			await this.loadDirty();
+			this.updateValues();
+		},
 		siteChanged() {
 			this.loadDirty();
 		},
@@ -1504,6 +1570,7 @@ export default defineComponent({
 					vehicle: this.vehicles,
 					charger: this.chargers,
 					tariff: this.tariffs,
+					curtailer: this.curtailers,
 				} as Record<DeviceType, any[]>;
 				for (const type in devices) {
 					for (const device of devices[type as DeviceType]) {
@@ -1523,9 +1590,10 @@ export default defineComponent({
 		deviceTags(type: DeviceType, id: string) {
 			return this.deviceValues[type][id] || {};
 		},
-		meterBanner(name: string): string | undefined {
-			// the tag is only present while curtailing, a zero percent limit is still one
-			return this.deviceTags("meter", name)["curtailed"]?.value !== undefined
+		curtailmentBanner(type: DeviceType, name: string): string | undefined {
+			// devices report the allowed feed-in percent, 100 = uncurtailed
+			const value = this.deviceTags(type, name)["curtailed"]?.value;
+			return typeof value === "number" && value < 100
 				? this.$t("config.deviceValue.productionLimited")
 				: undefined;
 		},

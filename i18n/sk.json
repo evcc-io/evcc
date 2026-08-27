@@ -1328,7 +1328,6 @@
       "strategy": {
         "label": "Stratégia"
       },
-      "strategyDisabledDescription": "Nabíjanie začína čo najneskôr, aby sa skončilo presne včas pred odchodom. S dynamickými sieťovými cenami alebo tarifom CO₂ je tu viac možností k dispozícii.",
       "time": "Čas",
       "title": "Plán",
       "unsavedChanges": "Existujú neuložené zmeny. Uložiť teraz?",

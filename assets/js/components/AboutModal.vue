@@ -147,13 +147,7 @@ import Logo from "./Footer/Logo.vue";
 import api from "@/api";
 import settings from "@/settings";
 import { extractDomain } from "@/utils/extractDomain";
-import {
-	isDevelopment,
-	isNightly,
-	getReleaseName,
-	commitFromVersion,
-	isNewVersionAvailable,
-} from "@/utils/version";
+import { isDevelopment, isNightly, getReleaseName, isNewVersionAvailable } from "@/utils/version";
 import { defineComponent } from "vue";
 
 const GITHUB_REPO = "https://github.com/evcc-io/evcc";
@@ -164,6 +158,7 @@ export default defineComponent({
 	components: { GenericModal, Logo },
 	props: {
 		installed: { type: String, default: "" },
+		commit: { type: String, default: "" },
 		availableVersion: String,
 		releaseNotes: String,
 		hasUpdater: Boolean,
@@ -208,7 +203,7 @@ export default defineComponent({
 			return `${GITHUB_REPO}/network/dependencies`;
 		},
 		githubCommitUrl() {
-			return `${GITHUB_REPO}/commit/${commitFromVersion(this.installed)}`;
+			return `${GITHUB_REPO}/commit/${this.commit}`;
 		},
 		modalSize() {
 			return this.newVersionAvailable ? undefined : "sm";

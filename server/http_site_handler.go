@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/assets"
@@ -53,20 +54,24 @@ func getPreferredLanguage(header string) string {
 func globalsJsHandler(custom Customization) http.HandlerFunc {
 	globals := struct {
 		Version    string `json:"version"`
+		Commit     string `json:"commit"`
 		CustomCss  bool   `json:"customCss"`
 		CustomLogo bool   `json:"customLogo"`
 		Brand      string `json:"customBrand"`
 		Website    string `json:"customWebsite"`
 		Email      string `json:"customEmail"`
 		Phone      string `json:"customPhone"`
+		Theme      string `json:"customTheme"`
 	}{
 		Version:    util.Version,
+		Commit:     util.Commit,
 		CustomCss:  custom.Css != "",
 		CustomLogo: custom.LogoLight != "",
 		Brand:      custom.Brand,
 		Website:    custom.Website,
 		Email:      custom.Email,
 		Phone:      custom.Phone,
+		Theme:      custom.Theme,
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -526,6 +531,7 @@ func resetDatabase(shutdown func()) http.HandlerFunc {
 		var req struct {
 			Sessions bool `json:"sessions"`
 			Settings bool `json:"settings"`
+			Remote   bool `json:"remote"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
@@ -552,6 +558,15 @@ func resetDatabase(shutdown func()) http.HandlerFunc {
 
 			for _, table := range tables {
 				if err := db.Instance.Exec("DELETE FROM " + table).Error; err != nil {
+					jsonError(w, http.StatusInternalServerError, err)
+					return
+				}
+			}
+		}
+
+		if req.Remote {
+			for _, key := range []string{keys.Remote, keys.RemoteClients, keys.RemoteLastSeen} {
+				if err := settings.Delete(key); err != nil {
 					jsonError(w, http.StatusInternalServerError, err)
 					return
 				}
