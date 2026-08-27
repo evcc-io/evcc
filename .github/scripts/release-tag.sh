@@ -42,7 +42,8 @@ validate() {
 	# a release must build on its own line. a tag pushed from the wrong branch
 	# would otherwise ship an older commit under a newer version.
 	local earlier
-	earlier=$(printf '%s\n' "$releases" | grep -E "^${line//./\\.}\." | awk -v t="$tag" '$0 == t { exit } { print }')
+	# awk must not exit early here, that would SIGPIPE the grep it reads from
+	earlier=$(printf '%s\n' "$releases" | grep -E "^${line//./\\.}\." | awk -v t="$tag" '$0 == t { seen = 1 } !seen')
 
 	if [[ -n $earlier ]]; then
 		# the newest predecessor the tag really builds on. a tag from the wrong
