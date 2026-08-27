@@ -373,15 +373,30 @@ func TestPvScalePhasesTimer(t *testing.T) {
 			lp.phaseTimer = elapsed
 		}},
 
-		// charging with insufficient power for 1p: disable instead of scaling down
+		// charging with insufficient power for 1p: disable instead of scaling down (PV mode)
 		{"3/3->1, insufficient for 1p, charging", 3, 3, 0.1, 3, 0, func(lp *Loadpoint) {
 			lp.phaseTimer = elapsed
 			lp.enabled = true
+			lp.mode = api.ModePV
 		}},
 		{"3/3->1, sufficient for 1p, charging", 3, 3, 3 * Voltage * minA / 2, 1, 1, func(lp *Loadpoint) {
 			lp.phaseTimer = elapsed
 			lp.enabled = true
 			lp.chargePower = 3 * Voltage * minA
+			lp.mode = api.ModePV
+		}},
+
+		// continuous modes never run the pv disable sequence, so even if 1p is not
+		// sustainable they scale down instead of waiting for a (never happening) disable
+		{"3/3->1, insufficient for 1p, charging, MinPV", 3, 3, 0.1, 1, 1, func(lp *Loadpoint) {
+			lp.phaseTimer = elapsed
+			lp.enabled = true
+			lp.mode = api.ModeMinPV
+		}},
+		{"3/3->1, insufficient for 1p, charging, battery boost", 3, 3, 0.1, 1, 1, func(lp *Loadpoint) {
+			lp.phaseTimer = elapsed
+			lp.enabled = true
+			lp.batteryBoost = boostContinue
 		}},
 
 		// switch down from 3p/0p while not yet charging

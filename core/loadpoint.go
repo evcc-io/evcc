@@ -1468,6 +1468,14 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 		// while charging, scaling down only helps if 1p is sustainable, otherwise it
 		// merely delays the pv disable timer by the phase timer duration
 		useful := !lp.enabled || !lp.charging() || powerToCurrent(availablePower, 1) >= minCurrent
+
+		// the pv disable sequence only runs in PV mode without battery boost; in
+		// continuous modes (MinPV, battery boost) the charger is never disabled,
+		// so scaling down to 1p is the only way to shed load when power is short
+		if mode := lp.GetMode(); mode != api.ModePV || lp.GetBatteryBoost() == boostContinue {
+			useful = true
+		}
+
 		if insufficient && !useful {
 			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min 1p threshold, disabling instead of scaling down", availablePower, Voltage*minCurrent)
 		}
