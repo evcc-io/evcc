@@ -9,6 +9,9 @@ products:
   - brand: KEBA
     description:
       generic: KeContact P30 X-Series
+  - brand: KEBA
+    description:
+      generic: KeContact P30 Deutschland Edition (DE440)
   - brand: BMW
     description:
       generic: i Wallbox
