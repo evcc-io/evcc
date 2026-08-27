@@ -1126,7 +1126,7 @@
       "modalUpdateStatusStart": "Installation startede:",
       "modalViewOnGitHub": "Se på GitHub",
       "openSource": "open source",
-      "poweredByOpenSource": "Drevet af {0}."
+      "poweredBy": "drevet af"
     }
   },
   "forecast": {

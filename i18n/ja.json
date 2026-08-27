@@ -934,7 +934,7 @@
       "modalUpdateStatusStart": "インストール開始：",
       "modalViewOnGitHub": "GitHub で見る",
       "openSource": "open source",
-      "poweredByOpenSource": "Powered by {0}."
+      "poweredBy": "powered by"
     }
   },
   "forecast": {

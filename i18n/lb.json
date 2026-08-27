@@ -1121,7 +1121,7 @@
       "modalUpdateStatusStart": "Installatioun ugefaang:",
       "modalViewOnGitHub": "Op GitHub kucken",
       "openSource": "Open Source",
-      "poweredByOpenSource": "Bedriwwen vun {0}."
+      "poweredBy": "bedriwwen vun"
     }
   },
   "forecast": {
