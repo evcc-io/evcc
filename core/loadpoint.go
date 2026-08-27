@@ -353,6 +353,16 @@ func (lp *Loadpoint) restoreSettings() {
 		lp.log.WARN.Printf("ignoring deprecated guardduration: %s. please configure via UI", lp.GuardDuration_)
 	}
 
+	// restore default mode configured via the UI (yaml `mode:` already applied in NewLoadpointFromConfig)
+	if lp.DefaultMode == api.ModeEmpty {
+		if v, err := lp.settings.String(keys.DefaultMode); err == nil && v != "" {
+			if mode, err := api.ChargeModeString(v); err == nil && mode != api.ModeEmpty {
+				lp.DefaultMode = mode
+				lp.setMode(mode)
+			}
+		}
+	}
+
 	// restore runtime configuration (database & yaml LPs)
 	if v, err := lp.settings.String(keys.Mode); err == nil && v != "" && lp.DefaultMode == api.ModeEmpty {
 		lp.setMode(api.ChargeMode(v))
