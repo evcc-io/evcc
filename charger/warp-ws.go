@@ -64,11 +64,11 @@ type WarpWS struct {
 	chargeTracker warp.ChargeTrackerCurrentCharge
 
 	// ev (WARP4, ISO 15118)
-	evState *warp.EvState
+	evState warp.EvState
 
 	// power manager
-	pmState         *warp.PmState
-	pmLowLevelState *warp.PmLowLevelState
+	pmState         warp.PmState
+	pmLowLevelState warp.PmLowLevelState
 }
 
 func init() {
@@ -551,7 +551,12 @@ func (w *WarpWS) powers() (float64, float64, float64, error) {
 func (w *WarpWS) identify() ([]string, error) {
 	return w.readWSData(func() ([]string, error) {
 		var ids []string
-		if w.evState != nil && w.evState.Mac != "" {
+		// identify can be called even if the iso15118 feature is not available.
+		// In that case, evState will never be written and Mac stays empty.
+		// If the feature is available, but no vehicle is connected or reading
+		// the MAC failed, Mac is also empty.
+		// -> This handles both cases.
+		if w.evState.Mac != "" {
 			ids = append(ids, w.evState.Mac)
 		}
 		if tag := w.chargeTracker.AuthorizationInfo.TagId; tag != "" {
@@ -564,7 +569,7 @@ func (w *WarpWS) identify() ([]string, error) {
 // soc implements the api.Battery interface
 func (w *WarpWS) soc() (float64, error) {
 	return w.readWSData(func() (float64, error) {
-		if w.evState != nil && w.evState.Soc != nil {
+		if w.evState.Soc != nil {
 			return *w.evState.Soc, nil
 		}
 		return 0, api.ErrNotAvailable
@@ -576,7 +581,7 @@ func (w *WarpWS) capacity() float64 {
 	// TODO: why does api.BatteryCapacity not support returning errors?
 	// Throwing it away for now, capacity will be 0 if any error occurs.
 	cap, _ := w.readWSData(func() (float64, error) {
-		if w.evState != nil && w.evState.Capacity != nil {
+		if w.evState.Capacity != nil {
 			return *w.evState.Capacity, nil
 		}
 		return 0, api.ErrNotAvailable
