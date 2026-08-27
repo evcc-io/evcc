@@ -61,6 +61,29 @@ func TestCollectorAddEnergyWithEnergyMeter(t *testing.T) {
 	require.Equal(t, 0.0, col.accu.Energy) // reset at slot boundary
 }
 
+func TestCollectorAddEnergyWithMeterReset(t *testing.T) {
+	clock := clock.NewMock()
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	col, err := NewCollector("reset", "reset", "", WithClock(clock))
+	require.NoError(t, err)
+
+	require.NoError(t, col.AddEnergy(new(50000.0), nil, 1e3))
+	require.Equal(t, 0.0, col.accu.Energy)
+
+	// meter reset to zero: no energy, but the reading is adopted
+	clock.Add(time.Minute)
+	require.NoError(t, col.AddEnergy(new(0.0), nil, 1e3))
+	require.Equal(t, 0.0, col.accu.Energy)
+
+	// deltas after the reset are counted from zero
+	clock.Add(time.Minute)
+	require.NoError(t, col.AddEnergy(new(0.5), nil, 1e3))
+	require.Equal(t, 0.5, col.accu.Energy)
+}
+
 func TestCollectorAddEnergyWithEnergyMeterAndReturn(t *testing.T) {
 	clock := clock.NewMock()
 

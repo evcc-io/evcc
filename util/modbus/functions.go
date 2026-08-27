@@ -21,13 +21,13 @@ func retryOptions() []backoff.RetryOption {
 	}
 }
 
-// Retry retries a value-less operation using modbus-specific backoff settings
-func Retry(op func() error) error {
+// RetryError retries a value-less operation using modbus-specific backoff settings
+func RetryError(op func() error) error {
 	return backoff.RetryError(op, retryOptions()...)
 }
 
-// RetryWithData retries the operation using modbus-specific backoff settings
-func RetryWithData[T any](op backoff.Operation[T]) (T, error) {
+// Retry retries the operation using modbus-specific backoff settings
+func Retry[T any](op backoff.Operation[T]) (T, error) {
 	return backoff.Retry(op, retryOptions()...)
 }
 

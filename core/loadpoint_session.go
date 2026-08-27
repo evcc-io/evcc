@@ -11,12 +11,15 @@ import (
 	"github.com/evcc-io/evcc/core/wrapper"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/jinzhu/now"
+	"github.com/samber/lo"
 )
 
-func (lp *Loadpoint) chargeMeterTotal() float64 {
+// chargeMeterTotal returns the charge meter's total energy in kWh, nil if unavailable.
+// A zero reading is a valid total, e.g. after a meter reset.
+func (lp *Loadpoint) chargeMeterTotal() *float64 {
 	m, ok := api.Cap[api.MeterEnergy](lp.chargeMeter)
 	if !ok {
-		return 0
+		return nil
 	}
 
 	f, err := m.TotalEnergy()
@@ -24,12 +27,12 @@ func (lp *Loadpoint) chargeMeterTotal() float64 {
 		if !errors.Is(err, api.ErrNotAvailable) {
 			lp.log.ERROR.Printf("charge total import: %v", err)
 		}
-		return 0
+		return nil
 	}
 
 	lp.log.DEBUG.Printf("charge total import: %.3fkWh", f)
 
-	return f
+	return &f
 }
 
 // createSession creates a charging session. The created timestamp is empty until set by evChargeStartHandler.
@@ -40,7 +43,7 @@ func (lp *Loadpoint) createSession() {
 		return
 	}
 
-	lp.session = lp.db.New(lp.chargeMeterTotal())
+	lp.session = lp.db.New(lo.FromPtr(lp.chargeMeterTotal()))
 
 	if v := lp.GetVehicle(); v != nil {
 		lp.session.Vehicle = v.GetTitle()
@@ -69,8 +72,8 @@ func (lp *Loadpoint) createSession() {
 
 // applyEnergyMetrics writes current energy metrics into the session and persists it.
 func (lp *Loadpoint) applyEnergyMetrics(s *session.Session) {
-	if meterStop := lp.chargeMeterTotal(); meterStop > 0 {
-		s.MeterStop = &meterStop
+	if meterStop := lp.chargeMeterTotal(); meterStop != nil && *meterStop > 0 {
+		s.MeterStop = meterStop
 	}
 
 	if soc := lp.vehicleSoc; soc > 0 && !lp.chargerHasFeature(api.Heating) {

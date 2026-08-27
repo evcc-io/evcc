@@ -280,7 +280,7 @@ func (c *Circuit) overloadOnError(t time.Time, val *float64) {
 }
 
 func (c *Circuit) updateMeters() error {
-	if f, err := modbus.RetryWithData(c.meter.CurrentPower); err == nil {
+	if f, err := modbus.Retry(c.meter.CurrentPower); err == nil {
 		c.power = f
 		c.powerUpdated = time.Now()
 	} else {
@@ -290,7 +290,7 @@ func (c *Circuit) updateMeters() error {
 
 	if phaseMeter, ok := api.Cap[api.PhaseCurrents](c.meter); ok {
 		var i1, i2, i3 float64
-		if err := modbus.Retry(func() error {
+		if err := modbus.RetryError(func() error {
 			var err error
 			i1, i2, i3, err = phaseMeter.Currents()
 			return err

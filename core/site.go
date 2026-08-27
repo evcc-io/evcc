@@ -243,7 +243,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 				return err
 			}
 			// Fix any dangling history
-			if err := lp.db.ClosePendingSessionsInHistory(lp.chargeMeterTotal()); err != nil {
+			if err := lp.db.ClosePendingSessionsInHistory(lo.FromPtr(lp.chargeMeterTotal())); err != nil {
 				return err
 			}
 
@@ -670,7 +670,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 
 		// power
 		var b bytes.Buffer
-		power, err := modbus.RetryWithData(meter.CurrentPower)
+		power, err := modbus.Retry(meter.CurrentPower)
 		if err == nil {
 			mm[i].Power = power
 			site.log.DEBUG.Printf("%s %d power: %.0fW", key, i+1, power)
@@ -1004,7 +1004,7 @@ func (site *Site) updateGridMeter() error {
 
 	meter := site.gridMeter.Instance()
 
-	if res, err := modbus.RetryWithData(meter.CurrentPower); err == nil {
+	if res, err := modbus.Retry(meter.CurrentPower); err == nil {
 		mm.Power = res
 
 		site.Lock()

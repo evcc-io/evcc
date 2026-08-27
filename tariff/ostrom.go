@@ -167,7 +167,7 @@ func (t *Ostrom) getFixedPrice() (float64, error) {
 	var tariffs ostrom.Tariffs
 
 	uri := fmt.Sprintf("%s?usage=1000&cityId=%d", ostrom.URI_GET_STATIC_PRICE, t.cityId)
-	if err := retry(func() error {
+	if err := retryError(func() error {
 		return backoffPermanentError(t.GetJSON(uri, &tariffs))
 	}); err != nil {
 		return 0, err
@@ -247,7 +247,7 @@ func (t *Ostrom) run(done chan error) {
 		}
 
 		uri := t.apiUri(fmt.Sprintf("/spot-prices?%s", params.Encode()))
-		if err := retry(func() error {
+		if err := retryError(func() error {
 			return backoffPermanentError(t.GetJSON(uri, &res))
 		}); err != nil {
 			if reportError(&once, done, err) {

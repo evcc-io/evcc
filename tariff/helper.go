@@ -30,13 +30,13 @@ func retryOptions() []backoff.RetryOption {
 	}
 }
 
-// retry retries a value-less operation using tariff-specific backoff settings
-func retry(op func() error) error {
+// retryError retries a value-less operation using tariff-specific backoff settings
+func retryError(op func() error) error {
 	return backoff.RetryError(op, retryOptions()...)
 }
 
-// retryWithData retries the operation using tariff-specific backoff settings
-func retryWithData[T any](op backoff.Operation[T]) (T, error) {
+// retry retries the operation using tariff-specific backoff settings
+func retry[T any](op backoff.Operation[T]) (T, error) {
 	return backoff.Retry(op, retryOptions()...)
 }
 

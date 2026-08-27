@@ -93,7 +93,7 @@ func (t *OctopusDe) run(done chan error) {
 	for tick := time.Tick(time.Hour); ; <-tick {
 		var rates []RatePeriod
 
-		if err := retry(func() error {
+		if err := retryError(func() error {
 			agr, err := t.gqlClient.ActiveAgreement()
 			if err != nil {
 				if errors.Is(err, krakengql.ErrAuthFailed) {

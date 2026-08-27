@@ -1762,7 +1762,7 @@ func (lp *Loadpoint) pvMaxCurrent(mode api.ChargeMode, sitePower, batteryPower f
 
 // UpdateChargePowerAndCurrents updates charge meter power and currents for load management
 func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
-	power, err := modbus.RetryWithData(lp.chargeMeter.CurrentPower)
+	power, err := modbus.Retry(lp.chargeMeter.CurrentPower)
 	if err == nil {
 		lp.Lock()
 		lp.chargePower = power // update value if no error
@@ -1786,7 +1786,7 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 	lp.chargeCurrents = nil
 
 	if phaseMeter, ok := api.Cap[api.PhaseCurrents](lp.chargeMeter); ok {
-		if err := modbus.Retry(func() error {
+		if err := modbus.RetryError(func() error {
 			i1, i2, i3, err := phaseMeter.Currents()
 			if err != nil {
 				if errors.Is(err, api.ErrNotAvailable) {
@@ -1920,12 +1920,9 @@ func (lp *Loadpoint) publishChargeProgress() {
 	lp.publish(keys.ChargeDuration, lp.chargeDuration)
 
 	// update energy, prefer totals
-	var importTotal *float64
-	if api.HasCap[api.MeterEnergy](lp.chargeMeter) {
-		if f := lp.chargeMeterTotal(); f > 0 {
-			lp.publish(keys.ChargeTotalImport, f)
-			importTotal = &f
-		}
+	importTotal := lp.chargeMeterTotal()
+	if importTotal != nil {
+		lp.publish(keys.ChargeTotalImport, *importTotal)
 	}
 
 	if lp.chargeEnergy != nil {

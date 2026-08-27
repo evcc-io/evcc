@@ -81,7 +81,7 @@ func (t *Amber) run(done chan error) {
 	for tick := time.Tick(time.Minute); ; <-tick {
 		var res []amber.PriceInfo
 
-		if err := retry(func() error {
+		if err := retryError(func() error {
 			return backoffPermanentError(t.GetJSON(t.uri, &res))
 		}); err != nil {
 			if reportError(&once, done, err) {

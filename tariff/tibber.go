@@ -86,7 +86,7 @@ func (t *Tibber) run(done chan error) {
 			}
 		}
 
-		if err := retry(func() error {
+		if err := retryError(func() error {
 			ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 			defer cancel()
 			return t.client.Query(ctx, &res, v)

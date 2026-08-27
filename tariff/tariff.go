@@ -91,7 +91,7 @@ func (t *Tariff) run(forecastG func() (string, error), done chan error, interval
 
 	for tick := time.Tick(interval); ; <-tick {
 		var data api.Rates
-		if err := retry(func() error {
+		if err := retryError(func() error {
 			s, err := forecastG()
 			if err != nil {
 				return backoffPermanentError(err)

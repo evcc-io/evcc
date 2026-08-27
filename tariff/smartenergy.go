@@ -52,7 +52,7 @@ func (t *SmartEnergy) run(done chan error) {
 	for tick := time.Tick(time.Hour); ; <-tick {
 		var res smartenergy.Prices
 
-		if err := retry(func() error {
+		if err := retryError(func() error {
 			return backoffPermanentError(client.GetJSON(smartenergy.URI, &res))
 		}); err != nil {
 			if reportError(&once, done, err) {

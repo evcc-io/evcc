@@ -89,7 +89,7 @@ func (t *Entsoe) run(done chan error) {
 	for tick := time.Tick(time.Hour); ; <-tick {
 		var tr entsoe.PublicationMarketDocument
 
-		if err := retry(func() error {
+		if err := retryError(func() error {
 			// Request the next 24 hours of data.
 			data, err := t.DoBody(entsoe.DayAheadPricesRequest(t.domain, time.Hour*24))
 			if err != nil {

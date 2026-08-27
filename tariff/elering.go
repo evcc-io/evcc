@@ -68,7 +68,7 @@ func (t *Elering) run(done chan error) {
 			url.QueryEscape(ts.Format(time.RFC3339)),
 			url.QueryEscape(ts.Add(48*time.Hour).Format(time.RFC3339)))
 
-		if err := retry(func() error {
+		if err := retryError(func() error {
 			return backoffPermanentError(client.GetJSON(uri, &res))
 		}); err != nil {
 			if reportError(&once, done, err) {

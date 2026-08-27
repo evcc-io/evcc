@@ -80,6 +80,20 @@ func (m *Accumulator) String() string {
 	return b.String()
 }
 
+// meterDelta returns the energy in kWh between two total meter readings.
+// A meter reset restarts the counter near zero, making the new reading itself
+// the delta. A smaller decrease is an implausible reading and yields nothing.
+func meterDelta(prev, v float64) float64 {
+	switch {
+	case v >= prev:
+		return v - prev
+	case v < prev/2:
+		return v
+	default:
+		return 0
+	}
+}
+
 // SetEnergyMeterTotal adds the difference to the last total meter value in kWh
 func (m *Accumulator) SetEnergyMeterTotal(v float64) {
 	defer func() {
@@ -91,9 +105,7 @@ func (m *Accumulator) SetEnergyMeterTotal(v float64) {
 		return
 	}
 
-	if v >= *m.energyMeter {
-		m.Energy += v - *m.energyMeter
-	}
+	m.Energy += meterDelta(*m.energyMeter, v)
 }
 
 // SetReturnEnergyMeterTotal adds the difference to the last total meter value in kWh
@@ -107,9 +119,7 @@ func (m *Accumulator) SetReturnEnergyMeterTotal(v float64) {
 		return
 	}
 
-	if v >= *m.returnEnergyMeter {
-		m.ReturnEnergy += v - *m.returnEnergyMeter
-	}
+	m.ReturnEnergy += meterDelta(*m.returnEnergyMeter, v)
 }
 
 // AddEnergy adds the given energy in kWh to the energy total
