@@ -481,9 +481,22 @@ func (c *Zaptec) installationUpdate(data zaptec.UpdateInstallation) error {
 	uri := fmt.Sprintf("%s/api/installation/%s/update", zaptec.ApiURL, c.instance.InstallationId)
 
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
-	_, err := c.DoBody(req)
+
+	var res struct {
+		Code int
+	}
+
+	err := c.DoJSON(req, &res)
 	if err == nil {
 		c.statusG.Reset()
+		return nil
+	}
+
+	// 527: Cannot update installation when using APM- when Zaptec's Adaptive
+	// Power Management is active, installation updates are permanently blocked,
+	// so phase switching can never succeed
+	if res.Code == 527 {
+		return api.ErrNotAvailable
 	}
 
 	return err
