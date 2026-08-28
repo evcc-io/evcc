@@ -840,7 +840,8 @@ func (lp *Loadpoint) syncCharger() error {
 	}
 
 	// #1: check charger logic, fix charger state if necessary (for chargers that start charging while being disabled)
-	if !enabled && lp.charging() {
+	// continuous devices (e.g. heat pumps) may run on their own while disabled - this is normal operation, not a logic error
+	if !enabled && lp.charging() && !lp.chargerHasFeature(api.Continuous) {
 		lp.log.WARN.Println("charger logic error: disabled but charging")
 
 		// treat as enabled when charging for further validations

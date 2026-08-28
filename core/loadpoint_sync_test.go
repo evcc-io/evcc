@@ -49,6 +49,37 @@ func TestSyncCharger(t *testing.T) {
 	}
 }
 
+// TestSyncChargerContinuousDeviceSelfStart is a regression test for #33268: a continuous
+// device (e.g. a heat pump) may start running on its own while disabled - this is normal
+// operation and must not be treated as a charger logic error requiring correction.
+func TestSyncChargerContinuousDeviceSelfStart(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	ch := api.NewMockCharger(ctrl)
+	fd := api.NewMockFeatureDescriber(ctrl)
+
+	charger := struct {
+		api.Charger
+		api.FeatureDescriber
+	}{
+		ch, fd,
+	}
+
+	ch.EXPECT().Enabled().Return(false, nil).AnyTimes()
+	fd.EXPECT().Features().Return([]api.Feature{api.Continuous}).AnyTimes()
+
+	lp := &Loadpoint{
+		log:     util.NewLogger("foo"),
+		clock:   clock.New(),
+		charger: charger,
+		status:  api.StatusC,
+		enabled: false,
+	}
+
+	require.NoError(t, lp.syncCharger())
+	assert.False(t, lp.enabled)
+}
+
 func TestSyncChargerCurrentsByGetter(t *testing.T) {
 	tc := []struct {
 		lpCurrent, actualCurrent, outCurrent float64
