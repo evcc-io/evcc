@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
@@ -221,6 +222,44 @@ func TestBoostPowerPhaseSwitchGapBridgingExclusions(t *testing.T) {
 
 			res := lp.boostPower(0)
 			assert.Equal(t, tc.expected, res)
+		})
+	}
+}
+
+// Relaxing the limit resumes a boost it put on hold, tightening it does not.
+// Setting 100 disables the feature and ends an active boost.
+func TestSetBatteryBoostLimitResume(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		boost      int
+		from, to   int
+		want       int
+		wantUpdate bool
+	}{
+		{"lowering the limit resumes", boostHold, 50, 30, boostStart, true},
+		{"removing the limit ends held boost", boostHold, 50, 100, boostDisabled, true},
+		{"removing the limit ends active boost", boostContinue, 50, 100, boostDisabled, true},
+		{"raising the limit holds", boostHold, 30, 50, boostHold, true},
+		{"enabling a limit holds", boostHold, 100, 50, boostHold, true},
+		{"unchanged limit holds", boostHold, 50, 50, boostHold, false},
+		{"only a held boost resumes", boostContinue, 50, 30, boostContinue, true},
+		{"disabled boost stays disabled", boostDisabled, 50, 30, boostDisabled, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			lp := &Loadpoint{
+				log:               util.NewLogger("lp"),
+				settings:          settings.NewDatabaseSettingsAdapter("foo"),
+				lpChan:            make(chan *Loadpoint, 1),
+				batteryBoost:      tc.boost,
+				batteryBoostLimit: tc.from,
+			}
+
+			lp.SetBatteryBoostLimit(tc.to)
+
+			assert.Equal(t, tc.to, lp.batteryBoostLimit)
+			assert.Equal(t, tc.want, lp.batteryBoost)
+			// a changed limit must act now instead of on the next update tick
+			assert.Equal(t, tc.wantUpdate, len(lp.lpChan) == 1)
 		})
 	}
 }

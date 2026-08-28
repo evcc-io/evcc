@@ -706,6 +706,9 @@ render: |
                     address: 47246 # Forcible charge/discharge setting mode
                     type: writesingle
                     encoding: uint16
+        default:
+          source: error
+          error: ErrNotAvailable
       # single watchdog wraps the ENTIRE 47100 lifecycle, not just case 3
       - source: watchdog
         timeout: 60s # re-write every timeout/2

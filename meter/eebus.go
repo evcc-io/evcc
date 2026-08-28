@@ -186,7 +186,7 @@ func (c *EEBus) lastCurtailPercent() int {
 	return c.curtailPercent
 }
 
-func (c *EEBus) readValue(scenario uint, update func(entity spineapi.EntityRemoteInterface) (float64, error)) (float64, error) {
+func (c *EEBus) readValue[T any](scenario uint, update func(entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return eebusReadValue(c.mm, c.maEntity, scenario, update)
@@ -205,10 +205,7 @@ func (c *EEBus) TotalEnergy() (float64, error) {
 }
 
 func (c *EEBus) readPhases(scenario uint, update func(entity spineapi.EntityRemoteInterface) ([]float64, error)) (float64, float64, float64, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	res, err := eebusReadValue(c.mm, c.maEntity, scenario, update)
+	res, err := c.readValue(scenario, update)
 	if err != nil {
 		return 0, 0, 0, err
 	}

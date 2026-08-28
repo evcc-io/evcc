@@ -43,11 +43,11 @@ func resolveFloat(ctx context.Context, v any) (func() float64, error) {
 	case nil:
 		return nil, nil
 	case int:
-		return staticCapacity(float64(v)), nil
+		return staticFloat(float64(v)), nil
 	case int64:
-		return staticCapacity(float64(v)), nil
+		return staticFloat(float64(v)), nil
 	case float64:
-		return staticCapacity(v), nil
+		return staticFloat(v), nil
 	default:
 		var cfg plugin.Config
 		if err := util.DecodeOther(v, &cfg); err != nil {
@@ -67,7 +67,7 @@ func resolveFloat(ctx context.Context, v any) (func() float64, error) {
 	}
 }
 
-func staticCapacity(f float64) func() float64 {
+func staticFloat(f float64) func() float64 {
 	if f == 0 {
 		return nil
 	}

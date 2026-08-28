@@ -1636,6 +1636,7 @@ components:
         - co2
         - pricedynamic
         - priceforecast
+        - pricestatic
     SolarDetails:
       description: Solar production forecast.
       type: object
