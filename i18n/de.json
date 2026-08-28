@@ -1432,6 +1432,7 @@
       "finished": "Ladeende",
       "last24hEnergy": "Letzte 24h",
       "last7dEnergy": "Letzte 7 Tage",
+      "phasesMismatch": "Mehr Phasen aktiv als konfiguriert. Phasenkonfiguration prüfen.",
       "power": "Leistung",
       "price": "Kosten",
       "remaining": "Restzeit",

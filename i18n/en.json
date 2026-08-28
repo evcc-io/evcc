@@ -1432,6 +1432,7 @@
       "finished": "Finish time",
       "last24hEnergy": "Last 24h",
       "last7dEnergy": "Last 7 days",
+      "phasesMismatch": "More phases active than configured. Check phase configuration.",
       "power": "Power",
       "price": "Cost",
       "remaining": "Remaining",
