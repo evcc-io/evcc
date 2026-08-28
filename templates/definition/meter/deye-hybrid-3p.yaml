@@ -105,7 +105,7 @@ render: |
     block: # 516-538
       register: 516
       count: 23
-    {{- if or (eq .batterytype "lv") (not .firmware1098) }}
+    {{- if or (eq .batterytype "lv") (ne .firmware1098 "true") }}
     scale: 0.1
     {{- end }}
   returnenergy:
@@ -118,7 +118,7 @@ render: |
     block: # 516-538
       register: 516
       count: 23
-    {{- if or (eq .batterytype "lv") (not .firmware1098) }}
+    {{- if or (eq .batterytype "lv") (ne .firmware1098 "true") }}
     scale: 0.1
     {{- end }}
   currents:
@@ -236,7 +236,7 @@ render: |
       {{- if eq .batterytype "hv" }}  
       scale: 10
       {{- end }}
-    {{- if .includegenport }}
+    {{- if eq .includegenport "true" }}
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
@@ -261,10 +261,10 @@ render: |
       block: # 516-538
         register: 516
         count: 23
-      {{- if or (eq .batterytype "lv") (not .firmware1098) }}
+      {{- if or (eq .batterytype "lv") (ne .firmware1098 "true") }}
       scale: 0.1
       {{- end }}
-    {{- if .includegenport }}
+    {{- if eq .includegenport "true" }}
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
@@ -274,7 +274,7 @@ render: |
       block: # 516-538
         register: 516
         count: 23
-      {{- if or (eq .batterytype "lv") (not .firmware1098) }}
+      {{- if or (eq .batterytype "lv") (ne .firmware1098 "true") }}
       scale: 0.1
       {{- end }}
     {{- end }}
@@ -311,8 +311,9 @@ render: |
           scale: 10
           {{- end }}
     script: |
+      // float64 is required: a whole-number input arrives as an int literal
       // round, the watt conversion does not reproduce the written percent exactly
-      p := int(limit*100/{{ maxf .maxacpower 1 }} + 0.5)
+      p := int(float64(limit)*100/{{ maxf .maxacpower 1 }} + 0.5)
       if p > 100 {
         p = 100
       }
@@ -347,7 +348,7 @@ render: |
     block: # 516-538
       register: 516
       count: 23
-    {{- if or (eq .batterytype "lv") (not .firmware1098) }}
+    {{- if or (eq .batterytype "lv") (ne .firmware1098 "true") }}
     scale: 0.1
     {{- end }}
   returnenergy:
@@ -360,7 +361,7 @@ render: |
     block: # 516-538
       register: 516
       count: 23
-    {{- if or (eq .batterytype "lv") (not .firmware1098) }}
+    {{- if or (eq .batterytype "lv") (ne .firmware1098 "true") }}
     scale: 0.1
     {{- end }}
   soc:
