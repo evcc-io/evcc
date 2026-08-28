@@ -263,6 +263,31 @@ func (suite *connTestSuite) TestOnStatusNotificationKeepsTxnOnIgnoredAvailable()
 	suite.Equal("active", suite.conn.idTag, "idTag must survive ignored Available")
 }
 
+// TestOnMeterValuesDuplicateContextPrefersLiveReading ensures that when a
+// charger reports the same measurand twice in one MeterValues message (e.g.
+// a live Sample.Periodic value alongside the static Transaction.Begin
+// snapshot, as observed on the Growatt THOR), the live reading wins
+// regardless of array order instead of being overwritten by the snapshot.
+func (suite *connTestSuite) TestOnMeterValuesDuplicateContextPrefersLiveReading() {
+	suite.conn.meterUpdated = suite.clock.Now()
+
+	_, err := suite.conn.OnMeterValues(&core.MeterValuesRequest{
+		ConnectorId: 1,
+		MeterValue: []types.MeterValue{{
+			Timestamp: types.NewDateTime(suite.clock.Now()),
+			SampledValue: []types.SampledValue{
+				{Value: "241010", Context: types.ReadingContextSamplePeriodic, Measurand: types.MeasurandEnergyActiveImportRegister, Unit: types.UnitOfMeasureWh},
+				{Value: "240970", Context: types.ReadingContextTransactionBegin, Measurand: types.MeasurandEnergyActiveImportRegister, Unit: types.UnitOfMeasureWh},
+			},
+		}},
+	})
+	suite.NoError(err)
+
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err, "TotalEnergy")
+	suite.Equal(241.010, res, "TotalEnergy must keep the live Sample.Periodic reading, not the Transaction.Begin snapshot")
+}
+
 func (suite *connTestSuite) TestOnStopTransactionResetsReportedPower() {
 	suite.conn.meterUpdated = suite.clock.Now()
 
