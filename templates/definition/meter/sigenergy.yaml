@@ -98,23 +98,27 @@ render: |
   {{- if and .mppt (ne .mppt "all") }}
   power:
     source: calc
-    mul:
-      - source: modbus
-        uri: {{ joinHostPort .host .port }}
-        id: {{ .id }}
-        register:
-          address: {{ add 31027 (mul 2 (sub (int (trimPrefix "mppt" .mppt)) 1)) }} # {{ .mppt }} voltage
-          type: holding
-          decode: int16
-        scale: 0.1
-      - source: modbus
-        uri: {{ joinHostPort .host .port }}
-        id: {{ .id }}
-        register:
-          address: {{ add 31028 (mul 2 (sub (int (trimPrefix "mppt" .mppt)) 1)) }} # {{ .mppt }} current
-          type: holding
-          decode: int16
-        scale: 0.01
+    max:
+      - source: calc
+        mul:
+          - source: modbus
+            uri: {{ joinHostPort .host .port }}
+            id: {{ .id }}
+            register:
+              address: {{ add 31027 (mul 2 (sub (int (trimPrefix "mppt" .mppt)) 1)) }} # {{ .mppt }} voltage
+              type: holding
+              decode: int16
+            scale: 0.1
+          - source: modbus
+            uri: {{ joinHostPort .host .port }}
+            id: {{ .id }}
+            register:
+              address: {{ add 31028 (mul 2 (sub (int (trimPrefix "mppt" .mppt)) 1)) }} # {{ .mppt }} current
+              type: holding
+              decode: int16
+            scale: 0.01
+      - source: const
+        value: 0
   {{- else }}
   power:
     source: modbus
