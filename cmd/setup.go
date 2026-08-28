@@ -1544,7 +1544,7 @@ func configureLoadpoints(conf globalconfig.All) error {
 }
 
 // configureAuth handles routing for devices. For now only api.AuthProvider related routes
-func configureAuth(router *mux.Router, paramC chan<- util.Param) {
+func configureAuth(router *mux.Router, authMiddleware mux.MiddlewareFunc, paramC chan<- util.Param) {
 	auth := router.PathPrefix("/providerauth").Subrouter()
 	auth.Use(handlers.CompressHandler)
 	auth.Use(handlers.CORS(
@@ -1554,8 +1554,8 @@ func configureAuth(router *mux.Router, paramC chan<- util.Param) {
 	// backwards-compatible revert of https://github.com/evcc-io/evcc/pull/21266
 	router.PathPrefix("/oauth").Handler(auth)
 
-	// wire the handler
-	providerauth.Setup(auth, paramC)
+	// wire the handler; login/logout require an authenticated session
+	providerauth.Setup(auth, paramC, authMiddleware)
 }
 
 // isExperimental returns if experimental features are enabled

@@ -1121,7 +1121,7 @@
       "modalUpdateStatusStart": "Instalação iniciada:",
       "modalViewOnGitHub": "Ver no GitHub",
       "openSource": "código aberto",
-      "poweredByOpenSource": "Desenvolvido por {0}."
+      "poweredBy": "desenvolvido por"
     }
   },
   "forecast": {
@@ -1320,7 +1320,6 @@
       "strategy": {
         "label": "Estratégia"
       },
-      "strategyDisabledDescription": "O carregamento começa o mais tarde possível para terminar a tempo da partida. Com preços dinâmicos da rede ou tarifa de CO₂, há mais opções disponíveis aqui.",
       "time": "Hora",
       "title": "Plano",
       "unsavedChanges": "Há alterações não salvas. Aplicar agora?",

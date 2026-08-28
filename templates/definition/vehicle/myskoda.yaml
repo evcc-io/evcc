@@ -1,0 +1,40 @@
+template: myskoda
+products:
+  - brand: Škoda
+    description:
+      generic: MyŠkoda (Public API)
+requirements:
+  description:
+    de: API-Schlüssel unter [go.skoda.eu/api-keys](https://go.skoda.eu/api-keys) anfordern.
+    en: Request an API key at [go.skoda.eu/api-keys](https://go.skoda.eu/api-keys).
+params:
+  - preset: vehicle-common
+  - preset: vehicle-online
+  - name: apikey
+    required: true
+    help:
+      de: API-Schlüssel unter [go.skoda.eu/api-keys](https://go.skoda.eu/api-keys) anfordern.
+      en: Request an API key at [go.skoda.eu/api-keys](https://go.skoda.eu/api-keys).
+  - name: vin
+    required: true
+  - name: sandbox
+    type: bool
+    advanced: true
+    description:
+      de: Sandbox-Umgebung
+      en: Sandbox environment
+  - name: cache
+    default: 15m
+    advanced: true
+  - name: timeout
+render: |
+  type: myskoda
+  vin: {{ .vin }}
+  apikey: {{ .apikey }}
+  {{- if eq .sandbox "true" }}
+  sandbox: true
+  {{- end }}
+  {{ include "common" . }}
+  cache: {{ .cache }}
+  timeout: {{ .timeout }}
+  {{ include "features" . }}

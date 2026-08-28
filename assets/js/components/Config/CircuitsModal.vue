@@ -4,7 +4,7 @@
 		name="circuits"
 		:title="$t('config.circuits.title')"
 		:description="$t('config.circuits.description')"
-		docs="/docs/features/loadmanagement"
+		docs="/features/loadmanagement"
 		endpoint="/config/circuits"
 		state-key="circuits"
 		data-testid="circuits-modal"

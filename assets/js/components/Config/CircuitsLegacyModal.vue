@@ -4,7 +4,7 @@
 		name="circuitslegacy"
 		:title="`${$t('config.circuits.title')} (${$t('config.general.legacy')})`"
 		:description="$t('config.circuits.description')"
-		docs="/docs/reference/configuration/circuits"
+		docs="/reference/configuration/circuits"
 		:defaultYaml="defaultYaml"
 		endpoint="/config/circuits"
 		removeKey="circuits"

@@ -858,6 +858,8 @@
       "noClients": "No clients yet. No one can connect yet.",
       "password": "Password",
       "passwordOnce": "This password is shown only once. Scan the QR code or copy it now. You won't be able to see it again.",
+      "privacy": "By enabling this feature, you agree to our {0}.",
+      "privacyLink": "privacy policy",
       "qrInstall": "Install the evcc app for {ios} or {android}.",
       "qrScan": "Scan the code with your phone's camera to connect. Click it, if you're already using your phone.",
       "removeClient": "Remove client",
@@ -934,6 +936,8 @@
           "confirmationButton": "Reset & restart",
           "confirmationText": "This will permanently delete your selected data. Ensure you've downloaded a backup first.",
           "description": "Having problems with configuration and want to start over? Delete all data and start fresh.",
+          "remote": "Remote access",
+          "remoteDescription": "Deletes configuration and credentials.",
           "sessions": "Charging sessions",
           "sessionsDescription": "Deletes your charging session history.",
           "settings": "Configuration & settings",
@@ -1133,14 +1137,14 @@
       "optInSponsorship": "Sponsoring required."
     },
     "version": {
-      "availableLong": "new version available",
+      "availableLong": "update available",
       "community": "evcc community",
       "labelEmail": "Email",
       "labelPhone": "Phone",
       "labelRelease": "Release",
       "labelVersion": "Version",
       "labelWebsite": "Website",
-      "latestVersion": "latest version",
+      "latestVersion": "up to date",
       "madeByCommunity": "Made by the {0}.",
       "modalCancel": "Cancel",
       "modalDownload": "Download",
@@ -1155,7 +1159,7 @@
       "modalUpdateStatusStart": "Installation started:",
       "modalViewOnGitHub": "View on GitHub",
       "openSource": "open source",
-      "poweredByOpenSource": "Powered by {0}."
+      "poweredBy": "powered by"
     }
   },
   "forecast": {
@@ -1340,15 +1344,18 @@
         "continuous": "continuous",
         "continuousCo2Description": "Selects the cleanest uninterrupted series of slots.",
         "continuousPriceDescription": "Selects the cheapest uninterrupted series of slots.",
+        "disabledDescription": "Requires a dynamic tariff or CO₂ forecast.",
         "label": "Optimization"
       },
       "planNumber": "Plan {number}",
       "precondition": {
         "description": "Moves part of the charging right before departure: warm battery, less time at high charge level.",
+        "disabledDescription": "All charging happens right before departure.",
         "label": "Late Charging",
         "optionAll": "everything",
         "optionNo": "no",
-        "summary": "{precondition} before"
+        "summary": "{precondition} before",
+        "summaryAll": "right before departure"
       },
       "remove": "Remove",
       "repeating": "repeating",
@@ -1357,7 +1364,6 @@
       "strategy": {
         "label": "Strategy"
       },
-      "strategyDisabledDescription": "Charging starts as late as possible to finish just in time for departure. With dynamic grid prices or CO₂ tariff, more options are available here.",
       "time": "Time",
       "title": "Plan",
       "unsavedChanges": "There are unsaved changes. Apply now?",
@@ -1444,6 +1450,7 @@
       "finished": "Finish time",
       "last24hEnergy": "Last 24h",
       "last7dEnergy": "Last 7 days",
+      "phasesMismatch": "More phases active than configured. Check phase configuration.",
       "power": "Power",
       "price": "Cost",
       "remaining": "Remaining",
@@ -1564,14 +1571,12 @@
     "vehicleSettings": {
       "connectedTo": "connected to {0}",
       "description": "These defaults are applied when the vehicle connects to a charging point.",
-      "editHint": "Add or edit vehicles in {0}.",
+      "editHint": "Vehicles can be edited in {0}.",
       "keepAsIs": "Keep as is",
       "learnMore": "Learn more.",
       "limitSoc": "Default limit",
-      "limitSocDescription": "Applied when the vehicle is connected.",
       "menu": "Vehicles",
       "minSoc": "Minimum charge",
-      "minSocDescription": "Fast charge to this level in solar mode.",
       "mode": "Default mode",
       "notConnected": "not connected",
       "title": "Vehicle Settings"
