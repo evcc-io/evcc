@@ -3318,6 +3318,11 @@
             "description": "Energy charged in the current charging session in kWh.",
             "type": "number"
           },
+          "sessionGridCost": {
+            "description": "Cost of grid-imported energy in the current charging session in the configured currency.",
+            "type": "number",
+            "nullable": true
+          },
           "sessionPrice": {
             "description": "Total cost of the current charging session in the configured currency.",
             "type": "number",
@@ -3325,6 +3330,11 @@
           },
           "sessionPricePerKWh": {
             "description": "Average energy price of the current charging session per kWh in the configured currency.",
+            "type": "number",
+            "nullable": true
+          },
+          "sessionSolarCost": {
+            "description": "Opportunity cost of self-consumed solar energy in the current charging session in the configured currency, i.e. the feed-in revenue foregone by using it for charging instead of exporting it.",
             "type": "number",
             "nullable": true
           },
@@ -3490,8 +3500,10 @@
           "pvRemaining",
           "sessionCo2PerKWh",
           "sessionEnergy",
+          "sessionGridCost",
           "sessionPrice",
           "sessionPricePerKWh",
+          "sessionSolarCost",
           "sessionSolarPercentage",
           "smartCostActive",
           "smartCostLimit",

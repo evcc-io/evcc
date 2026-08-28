@@ -708,10 +708,14 @@ export interface Loadpoint {
   sessionCo2PerKWh: number | null;
   /** Energy charged in the current charging session in kWh. */
   sessionEnergy: number;
+  /** Cost of grid-imported energy in the current charging session in the configured currency. */
+  sessionGridCost: number | null;
   /** Total cost of the current charging session in the configured currency. */
   sessionPrice: number | null;
   /** Average energy price of the current charging session per kWh in the configured currency. */
   sessionPricePerKWh: number | null;
+  /** Opportunity cost of self-consumed solar energy in the current charging session in the configured currency, i.e. the feed-in revenue foregone by using it for charging instead of exporting it. */
+  sessionSolarCost: number | null;
   /** Share of solar energy in the current charging session in %. */
   sessionSolarPercentage: number;
   /** Fast charging with cheap or clean grid energy is currently active. */
