@@ -1,8 +1,8 @@
-template: huawei-sun2000
+template: huawei-sun2000-sdongle
 products:
   - brand: Huawei
     description:
-      generic: SUN2000
+      generic: SUN2000 & Smart Dongle
 requirements:
   description:
     de: |
