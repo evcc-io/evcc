@@ -104,6 +104,24 @@
 							{{ fmtPricePerKWh(session.pricePerKWh || 0, currency) }}
 						</td>
 					</tr>
+					<tr v-if="showPriceBreakdown" data-testid="session-details-grid-cost">
+						<th class="align-baseline text-muted">
+							{{ $t("session.priceGrid") }}
+						</th>
+						<td class="text-muted">
+							{{ fmtMoney(session.gridCost, currency) }}
+							{{ fmtCurrencySymbol(currency) }}
+						</td>
+					</tr>
+					<tr v-if="showPriceBreakdown" data-testid="session-details-solar-cost">
+						<th class="align-baseline text-muted">
+							{{ $t("session.priceSolar") }}
+						</th>
+						<td class="text-muted">
+							{{ fmtMoney(session.solarCost, currency) }}
+							{{ fmtCurrencySymbol(currency) }}
+						</td>
+					</tr>
 					<tr v-if="session.co2PerKWh != null" data-testid="session-details-co2">
 						<th class="align-baseline">
 							{{ $t("session.co2") }}
@@ -253,6 +271,15 @@ export default defineComponent({
 		},
 		chargedEnergy() {
 			return this.session.chargedEnergy * 1e3;
+		},
+		// only show the grid/solar cost split when solar was actually used, otherwise
+		// gridCost simply equals the total price and the breakdown adds no information
+		showPriceBreakdown(): boolean {
+			return (
+				this.session.gridCost != null &&
+				this.session.solarCost != null &&
+				!!this.session.solarPercentage
+			);
 		},
 		totalCo2Formatted(): string {
 			const grams = (this.session.co2PerKWh ?? 0) * (this.session.chargedEnergy ?? 0);

@@ -16,6 +16,8 @@ export interface Session {
   solarPercentage: number;
   price: number | null;
   pricePerKWh: number | null;
+  gridCost: number | null;
+  solarCost: number | null;
   co2PerKWh?: number | null;
 }
 

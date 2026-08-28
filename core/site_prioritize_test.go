@@ -156,7 +156,7 @@ func TestReservedPVPowerSmartFeedInPause(t *testing.T) {
 
 			// the pause holds across cycles, so must the absence of a reservation
 			for i := range 2 {
-				car.Update(-3500, 0, nil, feedin, false, false, 0, nil, nil, nil)
+				car.Update(-3500, 0, nil, feedin, false, false, 0, nil, nil, nil, nil)
 
 				if car.enabled {
 					t.Fatalf("cycle %d: car must be paused by the feed-in limit", i)

@@ -1641,6 +1641,8 @@
     "meterstop": "Endzählerstand",
     "odometer": "Kilometerstand",
     "price": "Kosten",
+    "priceGrid": "Netzbezug",
+    "priceSolar": "Opportunitätskosten für exportierten Solarstrom",
     "soc": "Ladung",
     "started": "Startzeit",
     "title": "Ladevorgang"
@@ -1678,6 +1680,7 @@
       "co2perkwh": "CO₂/kWh",
       "created": "Startzeit",
       "finished": "Endzeit",
+      "gridcost": "Netzkosten",
       "identifier": "Kennung",
       "loadpoint": "Ladepunkt",
       "meterstart": "Anfangszählerstand (kWh)",
@@ -1687,6 +1690,7 @@
       "priceperkwh": "Preis/kWh",
       "socend": "Ladestand Ende (%)",
       "socstart": "Ladestand Start (%)",
+      "solarcost": "Opportunitätskosten Solar",
       "solarpercentage": "Sonne (%)",
       "vehicle": "Fahrzeug"
     },

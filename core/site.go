@@ -46,7 +46,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 // updater abstracts the Loadpoint implementation for testing
 type updater interface {
 	loadpoint.API
-	Update(sitePower, batteryPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64, dim *bool)
+	Update(sitePower, batteryPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, gridPrice, feedInPrice, effectiveCo2 *float64, dim *bool)
 }
 
 var _ site.API = (*Site)(nil)
@@ -1332,7 +1332,7 @@ func (site *Site) updatePower(lp updater, state siteState, totalChargePower floa
 
 		lp.Update(
 			sitePower, state.battery.Power, consumption, feedin, res.batteryBuffered, res.batteryStart,
-			greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
+			greenShareLoadpoints, site.gridPrice(), site.feedInPrice(), site.effectiveCo2(greenShareLoadpoints),
 			hems.Dimmed(site.hems),
 		)
 	}

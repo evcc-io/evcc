@@ -95,6 +95,23 @@ func (site *Site) effectivePrice(greenShare float64) *float64 {
 	return nil
 }
 
+// gridPrice returns the current grid import price per kWh
+func (site *Site) gridPrice() *float64 {
+	if grid, err := tariff.Now(site.GetTariff(api.TariffUsageGrid)); err == nil {
+		return &grid
+	}
+	return nil
+}
+
+// feedInPrice returns the current feed-in price per kWh, used to value self-consumed
+// solar energy as the opportunity cost of not exporting it to the grid.
+func (site *Site) feedInPrice() *float64 {
+	if feedin, err := tariff.Now(site.GetTariff(api.TariffUsageFeedIn)); err == nil {
+		return &feedin
+	}
+	return nil
+}
+
 // effectiveCo2 calculates the amount of emitted co2 based on self-produced and grid-imported energy.
 func (site *Site) effectiveCo2(greenShare float64) *float64 {
 	if co2, err := tariff.Now(site.GetTariff(api.TariffUsageCo2)); err == nil {

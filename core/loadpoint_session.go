@@ -86,6 +86,8 @@ func (lp *Loadpoint) applyEnergyMetrics(s *session.Session) {
 	s.SolarPercentage = new(lp.energyMetrics.SolarPercentage())
 	s.Price = lp.energyMetrics.Price()
 	s.PricePerKWh = lp.energyMetrics.PricePerKWh()
+	s.GridCost = lp.energyMetrics.GridCost()
+	s.SolarCost = lp.energyMetrics.SolarCost()
 	s.Co2PerKWh = lp.energyMetrics.Co2PerKWh()
 	s.ChargedEnergy = lp.energyMetrics.TotalWh() / 1e3
 

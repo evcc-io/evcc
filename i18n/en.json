@@ -1641,6 +1641,8 @@
     "meterstop": "Meter stop",
     "odometer": "Mileage",
     "price": "Cost",
+    "priceGrid": "Imported power",
+    "priceSolar": "Opportunity cost of exported solar",
     "soc": "Charge",
     "started": "Started",
     "title": "Charging Session"
@@ -1678,6 +1680,7 @@
       "co2perkwh": "CO₂/kWh",
       "created": "Created",
       "finished": "Finished",
+      "gridcost": "Grid Cost",
       "identifier": "Identifier",
       "loadpoint": "Charging point",
       "meterstart": "Meter start (kWh)",
@@ -1687,6 +1690,7 @@
       "priceperkwh": "Price/kWh",
       "socend": "SoC end (%)",
       "socstart": "SoC start (%)",
+      "solarcost": "Solar Opportunity Cost",
       "solarpercentage": "Solar (%)",
       "vehicle": "Vehicle"
     },

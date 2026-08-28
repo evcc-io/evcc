@@ -25,6 +25,8 @@ type Session struct {
 	SolarPercentage      *float64       `json:"solarPercentage" csv:"Solar (%)" gorm:"column:solar_percentage"`
 	Price                *float64       `json:"price" csv:"Price" gorm:"column:price"`
 	PricePerKWh          *float64       `json:"pricePerKWh" csv:"Price/kWh" gorm:"column:price_per_kwh"`
+	GridCost             *float64       `json:"gridCost" csv:"Grid Cost" gorm:"column:grid_cost"`
+	SolarCost            *float64       `json:"solarCost" csv:"Solar Opportunity Cost" gorm:"column:solar_cost"`
 	Co2PerKWh            *float64       `json:"co2PerKWh" csv:"CO2/kWh (gCO2eq)" gorm:"column:co2_per_kwh"`
 	ReferencePricePerKWh *float64       `json:"referencePricePerKWh" csv:"Reference Price/kWh" gorm:"column:reference_price_per_kwh"`
 	ReferenceCo2PerKWh   *float64       `json:"referenceCo2PerKWh" csv:"Reference CO2/kWh (gCO2eq)" gorm:"column:reference_co2_per_kwh"`
