@@ -867,6 +867,12 @@ func (site *Site) updateBatteryMeters() {
 		}
 		return *m.Energy
 	})
+	site.battery.ReturnEnergy = lo.SumBy(mm, func(m types.Measurement) float64 {
+		if m.ReturnEnergy == nil {
+			return 0
+		}
+		return *m.ReturnEnergy
+	})
 	site.battery.Devices = mm
 
 	battery := site.battery
