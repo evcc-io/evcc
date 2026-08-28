@@ -1472,8 +1472,9 @@ func (lp *Loadpoint) minCharging() error {
 	return lp.setLimit(lp.effectiveMinCurrent())
 }
 
-// pvScalePhases switches phases if necessary and returns number of phases switched to
-func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) int {
+// pvScalePhases switches phases if necessary and returns number of phases switched to.
+// mayDisable indicates that insufficient surplus can stop charging via the pv disable timer.
+func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, mayDisable bool) int {
 	phases := lp.GetPhases()
 
 	// observed phase state inconsistency
@@ -1500,8 +1501,9 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64) in
 		}
 
 		// while charging, scaling down only helps if 1p is sustainable, otherwise it
-		// merely delays the pv disable timer by the phase timer duration
-		useful := !lp.enabled || !lp.charging() || powerToCurrent(availablePower, 1) >= minCurrent
+		// merely delays the pv disable timer by the phase timer duration. Without a
+		// disable to wait for, scaling down is the only way to reduce power (#33208).
+		useful := !lp.enabled || !lp.charging() || !mayDisable || powerToCurrent(availablePower, 1) >= minCurrent
 		if insufficient && !useful {
 			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min 1p threshold, disabling instead of scaling down", availablePower, Voltage*minCurrent)
 		}
@@ -1673,10 +1675,14 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 	// push demand to drain battery
 	sitePower -= lp.boostPower(batteryPower)
 
+	// always charge and the battery conditions hold charging at min current, no disable can follow
+	battery := batteryStart || batteryBuffered && lp.charging() || lp.GetBatteryBoost() == boostContinue
+	mayDisable := !alwaysCharge && !battery
+
 	// switch phases up/down
 	var scaledTo int
 	if lp.hasPhaseSwitching() && lp.phaseSwitchCompleted() {
-		scaledTo = lp.pvScalePhases(sitePower, minCurrent, maxCurrent)
+		scaledTo = lp.pvScalePhases(sitePower, minCurrent, maxCurrent, mayDisable)
 	}
 
 	// calculate target charge current from delta power and actual current
@@ -1694,7 +1700,7 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 	targetCurrent := max(effectiveCurrent+deltaCurrent, 0)
 
 	// with always charge or under special conditions return at least minCurrent
-	if battery := batteryStart || batteryBuffered && lp.charging() || lp.GetBatteryBoost() == boostContinue; (alwaysCharge || battery) && targetCurrent < minCurrent {
+	if (alwaysCharge || battery) && targetCurrent < minCurrent {
 		lp.log.DEBUG.Printf("pv charge current: min %.3gA > %.3gA (%.0fW @ %dp, battery: %t)", minCurrent, targetCurrent, sitePower, activePhases, battery)
 		return minCurrent
 	}

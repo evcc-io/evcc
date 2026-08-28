@@ -1129,7 +1129,7 @@
       "modalUpdateStatusStart": "Installatie gestart:",
       "modalViewOnGitHub": "Op GitHub bekijken",
       "openSource": "open source",
-      "poweredByOpenSource": "Mogelijk gemaakt door {0}."
+      "poweredBy": "mogelijk gemaakt door"
     }
   },
   "forecast": {
@@ -1331,7 +1331,6 @@
       "strategy": {
         "label": "Strategie"
       },
-      "strategyDisabledDescription": "Het opladen begint zo laat mogelijk, zodat het precies op tijd voor vertrek klaar is. Met dynamische netprijzen of een CO₂-tarief zijn er meer mogelijkheden.",
       "time": "Tijd",
       "title": "Plan",
       "unsavedChanges": "Wijzigingen nog niet opgeslagen. Nu toepassen?",

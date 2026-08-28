@@ -1140,7 +1140,7 @@
       "modalUpdateStatusStart": "Installationen har börjat:",
       "modalViewOnGitHub": "Se på GitHub",
       "openSource": "open source",
-      "poweredByOpenSource": "Powered by {0}."
+      "poweredBy": "drivs av"
     }
   },
   "forecast": {
@@ -1342,7 +1342,6 @@
       "strategy": {
         "label": "Strategi"
       },
-      "strategyDisabledDescription": "Laddningen startar så sent som möjligt för att avslutas precis i tid före avfärd. Med dynamiska elpriser eller CO₂-avgifter finns fler möjligheter här.",
       "time": "Tid",
       "title": "Plan",
       "unsavedChanges": "Det finns ej sparade ändringar. Spara nu?",

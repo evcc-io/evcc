@@ -54,6 +54,15 @@ test.describe("customization", async () => {
     const email = page.getByRole("link", { name: "support@example.com" });
     await expect(email).toBeVisible();
     await expect(email).toHaveAttribute("href", "mailto:support@example.com");
+
+    // footer: powered by evcc instead of community credit
+    await expect(page.getByText("powered by")).toBeVisible();
+    await expect(page.getByRole("link", { name: "evcc", exact: true })).toHaveAttribute(
+      "href",
+      "https://evcc.io/"
+    );
+    await expect(page.getByRole("link", { name: "open source" })).toBeVisible();
+    await expect(page.getByText("evcc community")).not.toBeVisible();
   });
 
   test("issue page uses email flow", async ({ page }) => {

@@ -1141,7 +1141,7 @@
       "modalUpdateStatusStart": "Instalace spuštěna:",
       "modalViewOnGitHub": "Zobrazit na GitHubu",
       "openSource": "open source",
-      "poweredByOpenSource": "Běží na {0}."
+      "poweredBy": "běží na"
     }
   },
   "forecast": {
@@ -1343,7 +1343,6 @@
       "strategy": {
         "label": "Strategie nabíjení"
       },
-      "strategyDisabledDescription": "Nabíjení začíná co nejpozději, aby bylo dokončeno právě včas před odjezdem. S dynamickými cenami elektřiny nebo tarifem CO₂ je zde k dispozici více možností.",
       "time": "Čas",
       "title": "Plán",
       "unsavedChanges": "Jsou zde neuložené změny. Použít nyní?",

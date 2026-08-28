@@ -1141,7 +1141,7 @@
       "modalUpdateStatusStart": "Instalācija sākta:",
       "modalViewOnGitHub": "Skatīt GitHub",
       "openSource": "atvērtais kods",
-      "poweredByOpenSource": "Darbina {0}."
+      "poweredBy": "darbina"
     }
   },
   "forecast": {
@@ -1343,7 +1343,6 @@
       "strategy": {
         "label": "Stratēģija"
       },
-      "strategyDisabledDescription": "Uzlāde sākas cik vien vēlu iespējams, lai pabeigtu tieši pirms izbraukšanas. Ar dinamiskiem tīkla tarifiem vai CO₂ tarifu šeit ir pieejamas papildus iespējas.",
       "time": "Laiks",
       "title": "Plāns",
       "unsavedChanges": "Ir nesaglabātas izmaiņas. Piemērot tagad?",
