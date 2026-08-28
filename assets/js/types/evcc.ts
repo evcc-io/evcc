@@ -1131,9 +1131,9 @@ export interface Battery {
   capacity: number;
   /** Charge level in %. Weighted by capacity across all batteries. */
   soc: number;
-  /** Total battery energy in kWh. */
+  /** Total discharged energy in kWh. */
   energy?: number;
-  /** Total battery return (exported) energy in kWh. */
+  /** Total charged energy in kWh. */
   returnEnergy?: number;
   /** Measurement data per battery meter. */
   devices?: BatteryMeter[];
