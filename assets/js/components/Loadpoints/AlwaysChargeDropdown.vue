@@ -1,22 +1,37 @@
 <template>
-	<div class="panel" data-testid="always-charge-dropdown">
+	<div
+		class="dropdown-menu dropdown-menu-end rounded-4 p-3 text-wrap"
+		role="group"
+		:aria-labelledby="titleId"
+		data-testid="always-charge-dropdown"
+	>
 		<div class="d-flex align-items-center gap-3">
-			<AlwaysChargeIcon class="icon flex-shrink-0" :class="{ active: isActive }" />
+			<AlwaysChargeIcon
+				class="flex-shrink-0"
+				:class="isActive ? 'text-primary' : 'evcc-gray'"
+				aria-hidden="true"
+			/>
 			<div class="flex-grow-1 overflow-hidden">
-				<div class="fw-bold text-truncate">{{ $t("main.alwaysCharge.label") }}</div>
-				<div class="subline" :class="{ hint: !!hint }">{{ subline }}</div>
+				<div :id="titleId" class="fw-bold text-truncate">{{ $t(labelKey) }}</div>
+				<div v-if="hint" :id="descriptionId" class="text-primary" aria-live="polite">
+					{{ $t(`main.alwaysCharge.${hint}`) }}
+				</div>
+				<div v-else :id="descriptionId" class="evcc-gray d-flex flex-wrap column-gap-1">
+					<span class="text-nowrap">{{ $t("main.alwaysCharge.description") }},</span>
+					<span class="text-nowrap">{{ minLabel }}</span>
+				</div>
 			</div>
 			<div class="d-flex align-items-center gap-2 flex-shrink-0">
 				<button
 					type="button"
-					class="once-badge"
-					:class="{ active: isOnce }"
+					class="p-0 border-0 bg-transparent"
+					:class="isOnce ? 'text-primary' : 'evcc-gray'"
 					:title="$t('main.alwaysCharge.onceTip')"
 					:aria-label="$t('main.alwaysCharge.onceTip')"
 					:aria-pressed="isOnce"
 					@click="toggleOnce"
 				>
-					<OnceIcon :filled="isOnce" />
+					<OnceIcon :filled="isOnce" aria-hidden="true" />
 				</button>
 				<div class="form-check form-switch m-0">
 					<input
@@ -24,7 +39,8 @@
 						type="checkbox"
 						role="switch"
 						:checked="isActive"
-						:aria-label="$t('main.alwaysCharge.label')"
+						:aria-labelledby="titleId"
+						:aria-describedby="descriptionId"
 						@change="toggle"
 					/>
 				</div>
@@ -47,8 +63,10 @@ export default defineComponent({
 	components: { AlwaysChargeIcon, OnceIcon },
 	mixins: [formatter],
 	props: {
+		id: { type: String, default: "" },
 		alwaysCharge: { type: String, default: OFF },
 		minCurrent: { type: Number, default: 0 },
+		heating: Boolean,
 	},
 	emits: ["updated"],
 	data() {
@@ -58,19 +76,24 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		titleId() {
+			return `always-charge-${this.id}-title`;
+		},
+		descriptionId() {
+			return `always-charge-${this.id}-description`;
+		},
+		labelKey() {
+			return this.heating ? "main.alwaysCharge.labelHeating" : "main.alwaysCharge.label";
+		},
 		isActive() {
 			return this.alwaysCharge === ON || this.alwaysCharge === ONCE;
 		},
 		isOnce() {
 			return this.alwaysCharge === ONCE;
 		},
-		subline() {
-			if (this.hint) {
-				return this.$t(`main.alwaysCharge.${this.hint}`);
-			}
-			return this.$t("main.alwaysCharge.description", {
-				current: this.fmtNumber(this.minCurrent, this.minCurrent % 1 ? 1 : 0),
-			});
+		minLabel() {
+			const current = `${this.fmtNumber(this.minCurrent, this.minCurrent % 1 ? 1 : 0)} A`;
+			return this.$t("main.alwaysCharge.minCurrent", { current });
 		},
 	},
 	unmounted() {
@@ -104,48 +127,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.panel {
-	--highlight: var(--evcc-darker-green);
-	position: absolute;
-	top: calc(100% + 10px);
-	right: 0;
-	z-index: 5;
-	width: 320px;
-	max-width: calc(100vw - 2rem);
-	padding: 0.75rem 0.875rem;
-	background: var(--evcc-box);
-	border-radius: 1rem;
-	box-shadow: 0 0 8px var(--bs-gray-light);
-	text-align: start;
-}
-html.dark .panel {
-	/* brighter green for contrast on dark panel */
-	--highlight: var(--evcc-dark-green);
-}
-.icon {
-	color: var(--evcc-gray);
-}
-.icon.active {
-	color: var(--highlight);
-}
-.subline {
-	font-size: var(--bs-body-font-size);
-	color: var(--evcc-gray);
-}
-.subline.hint {
-	color: var(--highlight);
-}
-.once-badge {
-	padding: 0;
-	color: var(--evcc-gray);
-	background: transparent;
-	border: none;
-}
-.once-badge.active {
-	color: var(--highlight);
-}
-.form-check-input:checked {
-	background-color: var(--highlight);
-	border-color: var(--highlight);
+.dropdown-menu {
+	--bs-dropdown-min-width: min(340px, calc(100vw - 2rem));
 }
 </style>

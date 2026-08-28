@@ -94,7 +94,7 @@ func TestNormalizeMode(t *testing.T) {
 		{"now untouched", nil, api.ModeNow, api.ModeNow, ""},
 		{"minpv switch device", switchDevice, api.ModeMinPV, api.ModeSmart, ""},
 		{"pv switch device", switchDevice, api.ModePV, api.ModeSmart, ""},
-		{"minpv continuous", continuous, api.ModeMinPV, api.ModeSmart, ""},
+		{"minpv continuous", continuous, api.ModeMinPV, api.ModeSmart, api.AlwaysChargeOn},
 	} {
 		lp := &Loadpoint{charger: tc.charger}
 		mode, ac := lp.normalizeMode(tc.in)

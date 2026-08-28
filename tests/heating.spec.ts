@@ -41,6 +41,16 @@ test.describe("integrated device", async () => {
     await expect(mode.getByTestId("always-charge-toggle")).toHaveCount(0);
   });
 
+  test("continuous device modes with always charge option", async ({ page }) => {
+    const lp = page.getByTestId("loadpoint").nth(1);
+    const mode = lp.getByTestId("mode");
+    await expect(mode.getByRole("button", { name: "Normal", exact: true })).toBeVisible();
+    await expect(mode.getByRole("button", { name: "Smart", exact: true })).toBeVisible();
+    await expect(mode.getByRole("button", { name: "Boost", exact: true })).toBeVisible();
+    await mode.getByTestId("always-charge-toggle").click();
+    await expect(mode.getByRole("switch", { name: "Always heat" })).toBeVisible();
+  });
+
   test("min temperature", async ({ page }) => {
     const lp = page.getByTestId("loadpoint").first();
     await lp.getByTestId("loadpoint-settings-button").last().click();

@@ -368,7 +368,7 @@ func (lp *Loadpoint) restoreSettings() {
 
 	// restore runtime configuration (database & yaml LPs)
 	// always charge before mode: mode migration below must not overwrite an already restored value
-	if v, err := lp.settings.String(keys.AlwaysCharge); err == nil && v != "" {
+	if v, err := lp.settings.String(keys.AlwaysCharge); err == nil && v != "" && lp.alwaysChargeSupported() {
 		if ac, err := api.AlwaysChargeString(v); err == nil {
 			lp.setAlwaysCharge(ac)
 		}

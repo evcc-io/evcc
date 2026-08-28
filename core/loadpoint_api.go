@@ -156,13 +156,18 @@ func (lp *Loadpoint) setMode(mode api.ChargeMode) {
 	lp.settings.SetString(keys.Mode, string(mode))
 }
 
+// alwaysChargeSupported reports if the charger can hold min power
+func (lp *Loadpoint) alwaysChargeSupported() bool {
+	return !lp.chargerHasFeature(api.SwitchDevice)
+}
+
 // normalizeMode maps the deprecated pv/minpv modes to smart. The returned always charge
-// state is empty if unchanged; chargers without current control never get always charge.
+// state is empty if unchanged; switch devices never get always charge.
 func (lp *Loadpoint) normalizeMode(mode api.ChargeMode) (api.ChargeMode, api.AlwaysCharge) {
 	if mode != api.ModePV && mode != api.ModeMinPV {
 		return mode, ""
 	}
-	if lp.chargerHasFeature(api.SwitchDevice) || lp.chargerHasFeature(api.Continuous) {
+	if !lp.alwaysChargeSupported() {
 		return api.ModeSmart, ""
 	}
 	if mode == api.ModeMinPV {
@@ -247,7 +252,7 @@ func (lp *Loadpoint) SetAlwaysCharge(ac api.AlwaysCharge) error {
 	lp.Lock()
 	defer lp.Unlock()
 
-	if lp.chargerHasFeature(api.SwitchDevice) || lp.chargerHasFeature(api.Continuous) {
+	if !lp.alwaysChargeSupported() {
 		return errors.New("always charge is not supported by this charger")
 	}
 

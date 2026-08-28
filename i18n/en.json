@@ -1311,8 +1311,10 @@
   },
   "main": {
     "alwaysCharge": {
-      "description": "no interruptions, min {current} A",
+      "description": "no interruptions",
       "label": "Always charge",
+      "labelHeating": "Always heat",
+      "minCurrent": "min {current}",
       "once": "until end of session",
       "onceTip": "Only for this session",
       "permanent": "stays on permanently"

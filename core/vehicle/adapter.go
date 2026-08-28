@@ -56,15 +56,15 @@ func (v *adapter) GetMode() api.ChargeMode {
 		if err != nil {
 			return ""
 		}
-		// migrate deprecated values; a stored minpv default keeps its min charging meaning
+		// migrate deprecated values; publishing here would recurse via publishVehicles
 		if mode == api.ModePV || mode == api.ModeMinPV {
 			ac := api.AlwaysChargeOff
 			if mode == api.ModeMinPV {
 				ac = api.AlwaysChargeOn
 			}
-			v.SetAlwaysCharge(ac)
 			mode = api.ModeSmart
-			v.SetMode(mode)
+			settings.SetString(v.key()+keys.Mode, string(mode))
+			settings.SetString(v.key()+keys.AlwaysCharge, string(ac))
 		}
 		return mode
 	}

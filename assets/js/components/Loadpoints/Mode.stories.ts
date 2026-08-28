@@ -84,4 +84,7 @@ ContinuousHeatpump.args = {
   mode: "smart",
   pvPossible: true,
   continuous: true,
+  heating: true,
+  alwaysCharge: "on",
+  effectiveMinCurrent: 6,
 };

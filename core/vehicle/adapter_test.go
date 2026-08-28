@@ -30,6 +30,11 @@ func TestAdapterSetModeLegacyAliases(t *testing.T) {
 }
 
 func TestAdapterGetModeMigratesLegacy(t *testing.T) {
+	// site publish re-reads every vehicle mode; migration must not recurse
+	var v *adapter
+	Publish = func() { v.GetMode() }
+	t.Cleanup(func() { Publish = nil })
+
 	for _, tc := range []struct {
 		stored string
 		ac     api.AlwaysCharge
@@ -37,7 +42,7 @@ func TestAdapterGetModeMigratesLegacy(t *testing.T) {
 		{"minpv", api.AlwaysChargeOn},
 		{"pv", api.AlwaysChargeOff},
 	} {
-		v := &adapter{log: util.NewLogger("foo"), name: "legacy-" + tc.stored}
+		v = &adapter{log: util.NewLogger("foo"), name: "legacy-" + tc.stored}
 		settings.SetString(v.key()+keys.Mode, tc.stored)
 
 		assert.Equal(t, api.ModeSmart, v.GetMode(), tc.stored)

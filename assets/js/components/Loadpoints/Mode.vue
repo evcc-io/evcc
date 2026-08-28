@@ -25,18 +25,25 @@
 					class="btn chevron-btn d-flex align-items-center"
 					:class="{ active: isActive(m) }"
 					data-testid="always-charge-toggle"
+					data-bs-toggle="dropdown"
+					aria-expanded="false"
 					:aria-label="$t('main.alwaysCharge.label')"
-					:aria-expanded="dropdownOpen"
-					aria-haspopup="true"
-					@click.stop="toggleDropdown"
+					@click="ensureSmart"
 				>
 					<AlwaysChargeIcon
 						v-if="alwaysChargeActive"
-						class="feature-icon"
+						:class="{ 'text-evcc': charging && isActive(m) }"
 						aria-hidden="true"
 					/>
-					<DropdownIcon class="chevron" :class="{ open: dropdownOpen }" />
+					<DropdownIcon class="chevron" aria-hidden="true" />
 				</button>
+				<AlwaysChargeDropdown
+					:id="id"
+					:alwaysCharge="alwaysCharge"
+					:heating="heating"
+					:minCurrent="effectiveMinCurrent"
+					@updated="updateAlwaysCharge"
+				/>
 			</div>
 			<button
 				v-else
@@ -49,18 +56,13 @@
 				{{ label(m) }}
 			</button>
 		</template>
-		<AlwaysChargeDropdown
-			v-if="dropdownOpen"
-			:alwaysCharge="alwaysCharge"
-			:minCurrent="effectiveMinCurrent"
-			@updated="updateAlwaysCharge"
-		/>
 	</div>
 </template>
 
 <script lang="ts">
 import { CHARGE_MODE, ALWAYS_CHARGE } from "@/types/evcc";
 import { defineComponent } from "vue";
+import Dropdown from "bootstrap/js/dist/dropdown";
 import chargeModeLabelKey from "@/utils/chargeModeLabel";
 import AlwaysChargeIcon from "../MaterialIcon/AlwaysCharge.vue";
 import DropdownIcon from "../MaterialIcon/Dropdown.vue";
@@ -72,17 +74,20 @@ export default defineComponent({
 	name: "Mode",
 	components: { AlwaysChargeIcon, DropdownIcon, AlwaysChargeDropdown },
 	props: {
+		id: { type: String, default: "" },
 		mode: String,
 		pvPossible: Boolean,
 		smartCostAvailable: Boolean,
 		switchDevice: Boolean,
 		continuous: Boolean,
+		heating: Boolean,
+		charging: Boolean,
 		alwaysCharge: { type: String, default: ALWAYS_CHARGE.OFF },
 		effectiveMinCurrent: { type: Number, default: 0 },
 	},
 	emits: ["updated", "always-charge-updated"],
 	data() {
-		return { dropdownOpen: false, SMART };
+		return { SMART };
 	},
 	computed: {
 		modes(): CHARGE_MODE[] {
@@ -92,14 +97,20 @@ export default defineComponent({
 			return [OFF, NOW];
 		},
 		alwaysChargePossible() {
-			return !this.switchDevice && !this.continuous;
+			return !this.switchDevice;
 		},
 		alwaysChargeActive() {
 			return this.alwaysCharge !== ALWAYS_CHARGE.OFF;
 		},
 	},
-	unmounted() {
-		this.closeDropdown();
+	mounted() {
+		this.initDropdown();
+	},
+	updated() {
+		this.initDropdown();
+	},
+	beforeUnmount() {
+		this.dropdown()?.dispose();
 	},
 	methods: {
 		label(mode: CHARGE_MODE) {
@@ -109,41 +120,35 @@ export default defineComponent({
 			return this.mode === mode;
 		},
 		setTargetMode(mode: CHARGE_MODE) {
-			this.closeDropdown();
+			this.dropdown()?.hide();
 			this.$emit("updated", mode);
 		},
 		updateAlwaysCharge(value: ALWAYS_CHARGE) {
 			this.$emit("always-charge-updated", value);
 		},
-		toggleDropdown() {
+		ensureSmart() {
 			if (this.mode !== SMART) {
 				this.$emit("updated", SMART);
 			}
-			if (this.dropdownOpen) {
-				this.closeDropdown();
-			} else {
-				this.openDropdown();
-			}
 		},
-		openDropdown() {
-			this.dropdownOpen = true;
-			document.addEventListener("click", this.onOutsideClick);
-			document.addEventListener("keydown", this.onKeydown);
+		toggleEl() {
+			return (this.$el as HTMLElement).querySelector<HTMLElement>(
+				'[data-bs-toggle="dropdown"]'
+			);
 		},
-		closeDropdown() {
-			this.dropdownOpen = false;
-			document.removeEventListener("click", this.onOutsideClick);
-			document.removeEventListener("keydown", this.onKeydown);
+		dropdown() {
+			const el = this.toggleEl();
+			return el ? Dropdown.getInstance(el) : null;
 		},
-		onOutsideClick(e: MouseEvent) {
-			const root = this.$refs["root"] as HTMLElement | undefined;
-			if (root && !root.contains(e.target as Node)) {
-				this.closeDropdown();
-			}
-		},
-		onKeydown(e: KeyboardEvent) {
-			if (e.key === "Escape") {
-				this.closeDropdown();
+		initDropdown() {
+			const el = this.toggleEl();
+			if (el && !Dropdown.getInstance(el)) {
+				// anchor to the whole group, keep open while toggling inside
+				Dropdown.getOrCreateInstance(el, {
+					reference: this.$refs["root"] as HTMLElement,
+					autoClose: "outside",
+					offset: [0, 10],
+				});
 			}
 		},
 	},
@@ -152,7 +157,6 @@ export default defineComponent({
 
 <style scoped>
 .mode-group {
-	--pill-accent: var(--evcc-dark-green);
 	border: 2px solid var(--evcc-default-text);
 	border-radius: 20px;
 	padding: 4px;
@@ -218,14 +222,7 @@ export default defineComponent({
 		padding-right: 0.2em;
 	}
 }
-.smart-pill.active .feature-icon {
-	color: var(--pill-accent);
-}
-/* dark theme: active pill is light, keep the icon in text color */
-html.dark .smart-pill.active .feature-icon {
-	color: inherit;
-}
-.chevron.open {
+.chevron-btn.show .chevron {
 	transform: rotate(180deg);
 }
 </style>

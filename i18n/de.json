@@ -1311,8 +1311,10 @@
   },
   "main": {
     "alwaysCharge": {
-      "description": "keine Unterbrechungen, min. {current} A",
+      "description": "keine Unterbrechungen",
       "label": "Dauerhaft laden",
+      "labelHeating": "Dauerhaft heizen",
+      "minCurrent": "min. {current}",
       "once": "bis Ladeende",
       "onceTip": "Nur für diese Ladung",
       "permanent": "bleibt dauerhaft an"
