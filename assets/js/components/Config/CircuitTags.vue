@@ -1,5 +1,5 @@
 <template>
-	<div class="w-100 min-w-0" :class="{ 'border-start ps-3 circuit-tags--child': depth > 0 }">
+	<div class="w-100 min-w-0" :class="{ 'ps-3': depth > 0 }">
 		<div v-for="node in nodes" :key="node.name" class="node-block w-100 min-w-0">
 			<div class="w-100 min-w-0 mb-1">
 				<div class="node-header-row d-flex flex-wrap align-items-baseline min-w-0">
@@ -29,7 +29,7 @@
 				class="measurement-grid d-grid align-items-center w-100 min-w-0"
 			>
 				<div v-for="part in parts(node)" :key="part.unit" class="bar-row">
-					<span class="bar-unit fw-bold lh-1 text-end">
+					<span class="bar-unit fw-bold lh-1">
 						{{ part.unit }}
 					</span>
 					<div class="bar-track min-w-0 overflow-hidden">
@@ -159,10 +159,6 @@ export default {
 .min-w-0 {
 	min-width: 0;
 }
-.circuit-tags--child {
-	border-color: var(--evcc-gray-10) !important;
-	border-left-width: 5px !important;
-}
 .node-block + .node-block {
 	margin-top: 14px;
 }
@@ -199,7 +195,6 @@ export default {
 }
 .bar-unit {
 	grid-column: 1;
-	justify-self: end;
 	padding-right: 6px;
 	font-size: 10px;
 	color: var(--evcc-gray);

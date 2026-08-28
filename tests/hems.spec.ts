@@ -301,10 +301,13 @@ limit:
     const circuitModal = page.getByTestId("circuit-modal");
     await expectModalVisible(circuitModal);
     await circuitModal.getByLabel("Title").fill("House");
-    await circuitModal.getByLabel("Circuit").selectOption({ label: "Static circuit" });
+    await circuitModal
+      .getByLabel("Circuit", { exact: true })
+      .selectOption({ label: "Static circuit" });
     await circuitModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(circuitModal);
-    await circuitsModal.getByRole("button", { name: "Close" }).click();
+    await expectModalVisible(circuitsModal);
+    await circuitsModal.getByRole("button", { name: "Close" }).last().click();
     await expectModalHidden(circuitsModal);
 
     // configure fnn hems with all signals wired to the simulator
@@ -471,10 +474,13 @@ w3:
     const circuitModal = page.getByTestId("circuit-modal");
     await expectModalVisible(circuitModal);
     await circuitModal.getByLabel("Title").fill("House");
-    await circuitModal.getByLabel("Circuit").selectOption({ label: "Static circuit" });
+    await circuitModal
+      .getByLabel("Circuit", { exact: true })
+      .selectOption({ label: "Static circuit" });
     await circuitModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(circuitModal);
-    await circuitsModal.getByRole("button", { name: "Close" }).click();
+    await expectModalVisible(circuitsModal);
+    await circuitsModal.getByRole("button", { name: "Close" }).last().click();
     await expectModalHidden(circuitsModal);
 
     // configure hems via user-defined provider

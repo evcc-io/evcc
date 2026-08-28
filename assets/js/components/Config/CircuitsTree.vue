@@ -13,7 +13,7 @@
 			<DeviceRefBox compact class="flex-grow-1" @edit="editCircuit">
 				<span class="d-flex align-items-center gap-2">
 					<span class="fw-bold">{{ circuitsTree?.deviceTitle }}</span>
-					<span class="ms-auto evcc-gray value">{{ valueLabel }}</span>
+					<span class="ms-auto me-2 evcc-gray value">{{ valueLabel }}</span>
 				</span>
 			</DeviceRefBox>
 		</div>
@@ -42,7 +42,7 @@
 				tabindex="0"
 				@click="addSub"
 			>
-				<shopicon-regular-plus size="s" class="flex-shrink-0"></shopicon-regular-plus>
+				<AddIcon :size="ICON_SIZE.XS" class="flex-shrink-0" />
 
 				{{ $t("config.circuits.addSubCircuit") }}
 			</button>
@@ -53,14 +53,16 @@
 <script lang="ts">
 import type { PropType } from "vue";
 import DeviceRefBox from "./DeviceRefBox.vue";
+import AddIcon from "../MaterialIcon/Add.vue";
 import formatter from "@/mixins/formatter.ts";
 import { openModal } from "@/configModal.ts";
 import type { ConfigCircuitNode } from "@/utils/circuits.ts";
+import { ICON_SIZE } from "@/types/evcc";
 
 export default {
 	name: "CircuitsTree",
 	mixins: [formatter],
-	components: { DeviceRefBox },
+	components: { DeviceRefBox, AddIcon },
 	props: {
 		circuitsTree: {
 			type: Object as PropType<ConfigCircuitNode>,
@@ -91,16 +93,20 @@ export default {
 			await openModal("circuit", { id, hasChildren });
 		},
 	},
+	data() {
+		return { ICON_SIZE };
+	},
 	computed: {
 		childGuides(): boolean[] {
 			return this.depth === 0 ? [] : [...this.guides, !this.isLast];
 		},
 		valueLabel(): string {
 			if (!this.circuitsTree) return "";
-			const { maxpower, maxcurrent } = this.circuitsTree.config;
+			const maxpower = Number(this.circuitsTree.config.maxpower);
+			const maxcurrent = Number(this.circuitsTree.config.maxcurrent);
 			const parts: string[] = [];
-			if (maxpower !== undefined) parts.push(this.fmtW(maxpower as number));
-			if (maxcurrent !== undefined) parts.push(`${maxcurrent} A`);
+			if (maxpower > 0) parts.push(this.fmtW(maxpower, this.POWER_UNIT.AUTO));
+			if (maxcurrent > 0) parts.push(`${this.fmtNumber(maxcurrent, 0)} A`);
 			return parts.join(" · ");
 		},
 	},

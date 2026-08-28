@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { expectModalVisible, expectModalHidden } from "./utils";
+import { expectModalVisible, expectModalHidden, editorClear, editorPaste } from "./utils";
 
 const CONFIG_YAML = "config-circuit.evcc.yaml";
 const CONFIG_CIRCUITS_LEGACY = "config-circuits.sql";
@@ -109,5 +109,80 @@ test.describe("circuit", async () => {
     await page.reload();
 
     await validateCircuitsTags(page);
+  });
+});
+
+test.describe("circuit test result", async () => {
+  test("shows configured limits", async ({ page }) => {
+    await start();
+    await page.goto("/#/config");
+
+    await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
+    const circuitsModal = page.getByTestId("circuits-modal");
+    await expectModalVisible(circuitsModal);
+    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+
+    const circuitModal = page.getByTestId("circuit-modal");
+    await expectModalVisible(circuitModal);
+    await circuitModal.getByLabel("Title").fill("House");
+    await circuitModal.getByLabel("Maximum current").fill("16");
+    await circuitModal.getByLabel("Maximum power").fill("10000");
+    await circuitModal.getByRole("link", { name: "validate" }).click();
+
+    const testResult = circuitModal.getByTestId("test-result");
+    await expect(testResult).toContainText("Status: successful");
+    await expect(testResult).toContainText("Max. current16.0 A");
+    await expect(testResult).toContainText("Max. power10.0 kW");
+  });
+
+  test("user-defined yaml sample", async ({ page }) => {
+    await start();
+    await page.goto("/#/config");
+
+    await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
+    const circuitsModal = page.getByTestId("circuits-modal");
+    await expectModalVisible(circuitsModal);
+    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+
+    const circuitModal = page.getByTestId("circuit-modal");
+    await expectModalVisible(circuitModal);
+    await circuitModal.getByLabel("Title").fill("House");
+    await circuitModal
+      .getByLabel("Circuit", { exact: true })
+      .selectOption({ label: "User-defined circuit" });
+    await expect(circuitModal.getByTestId("yaml-editor")).toContainText("maxcurrent: 63");
+    await circuitModal.getByRole("link", { name: "validate" }).click();
+
+    const testResult = circuitModal.getByTestId("test-result");
+    await expect(testResult).toContainText("Status: successful");
+    await expect(testResult).toContainText("Max. current63.0 A");
+    await expect(testResult).toContainText("Max. power30.0 kW");
+    await circuitModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(circuitModal);
+
+    // user-defined sub circuit keeps parent reference next to yaml, yaml parent is overruled
+    await circuitsModal.getByRole("button", { name: "Add sub-circuit" }).click();
+    await expectModalVisible(circuitModal);
+    await expect(circuitModal.getByLabel("Parent circuit")).toHaveValue("House");
+    await circuitModal.getByLabel("Title").fill("Garage");
+    await circuitModal
+      .getByLabel("Circuit", { exact: true })
+      .selectOption({ label: "User-defined circuit" });
+    const editor = circuitModal.getByTestId("yaml-editor");
+    await expect(editor).toContainText("maxcurrent: 63");
+    await editorClear(editor);
+    await editorPaste(editor, page, "maxcurrent: 16\nparent: db:99");
+    await circuitModal.getByRole("link", { name: "validate" }).click();
+    await expect(testResult).toContainText("Status: successful");
+    await expect(testResult).toContainText("Max. current16.0 A");
+    await circuitModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(circuitModal);
+    await expect(circuitsModal).toContainText(["House", "Garage"].join(""));
+
+    // reopen: parent survives the round trip
+    await circuitsModal.getByRole("button", { name: "edit" }).nth(1).click();
+    await expectModalVisible(circuitModal);
+    await expect(circuitModal.getByLabel("Title")).toHaveValue("Garage");
+    await expect(circuitModal.getByLabel("Parent circuit")).toHaveValue("House");
   });
 });

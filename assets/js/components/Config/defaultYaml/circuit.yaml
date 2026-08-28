@@ -1,4 +1,14 @@
-name: main # unique name, used as reference, e.g. as parent in other circuits
 maxcurrent: 63 # 63A main circuit breaker (optional)
-maxPower: 30000 # 30kW (optional)
-meter: grid # associated meter to monitor the power consumption (optional)
+maxpower: 30000 # 30kW (optional)
+
+
+## dynamic limits via plugins (optional, override the static values above)
+
+#getmaxcurrent:
+#  source: const
+#  value: 32
+#getmaxpower:
+#  source: js
+#  script: 20000
+
+#timeout: 1m # treat as overloaded if meter values are older than this (optional)

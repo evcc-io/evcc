@@ -7,15 +7,20 @@
 			class="form-select w-100"
 			:disabled="disabled"
 		>
-			<template v-for="group in groups" :key="group.label">
+			<template v-for="(group, index) in groups" :key="index">
 				<optgroup
-					v-if="group.options?.length"
+					v-if="group.label && group.options?.length"
 					:label="$t(`config.${deviceType}.${group.label}`)"
 				>
 					<option v-for="option in group.options" :key="option.name" :value="option">
 						{{ option.name }}
 					</option>
 				</optgroup>
+				<template v-else>
+					<option v-for="option in group.options" :key="option.name" :value="option">
+						{{ option.name }}
+					</option>
+				</template>
 			</template>
 		</select>
 		<div v-else class="d-flex gap-2 align-items-stretch">
@@ -47,7 +52,7 @@ export interface PrimaryOption {
 }
 
 export interface TemplateGroup {
-	label: string;
+	label?: string;
 	options: TemplateOption[];
 }
 

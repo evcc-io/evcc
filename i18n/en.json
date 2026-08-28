@@ -170,9 +170,9 @@
       "titleEdit": "Edit circuit",
       "titleLabel": "Title",
       "template": "Circuit",
-      "generic": "Generic circuit",
       "custom": "User-defined circuit",
-      "primary": "Specific circuit",
+      "meterHelp": "Meter measuring the total consumption of this circuit.",
+      "meterLabel": "Meter",
       "deleteChildrenFirst": "To delete this circuit, first delete its child circuits."
     },
     "circuits": {
@@ -252,6 +252,8 @@
       "identifier": "RFID-Identifier",
       "loginBlocked": "Login limit reached",
       "max": "max",
+      "maxCurrent": "Max. current",
+      "maxPower": "Max. power",
       "messengers": "Services",
       "no": "no",
       "odometer": "Odometer",

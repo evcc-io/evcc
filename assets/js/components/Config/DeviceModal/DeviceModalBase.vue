@@ -177,6 +177,8 @@
 					</div>
 				</div>
 
+				<slot name="before-actions" :values="values"></slot>
+
 				<DeviceModalActions
 					v-if="showActions"
 					:is-deletable="isDeletable"

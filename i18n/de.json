@@ -170,9 +170,9 @@
       "titleEdit": "Stromkreis bearbeiten",
       "titleLabel": "Titel",
       "template": "Stromkreis",
-      "generic": "Generischer Stromkreis",
       "custom": "Benutzerdefinierter Stromkreis",
-      "primary": "Spezifischer Stromkreis",
+      "meterHelp": "Zähler, der den Gesamtverbrauch dieses Stromkreises misst.",
+      "meterLabel": "Zähler",
       "deleteChildrenFirst": "Um diesen Schaltkreis zu löschen, müssen zuerst die untergeordneten Schaltkreise gelöscht werden."
     },
     "circuits": {
@@ -252,6 +252,8 @@
       "identifier": "RFID-Kennung",
       "loginBlocked": "Login-Limit erreicht",
       "max": "max",
+      "maxCurrent": "Max. Stromstärke",
+      "maxPower": "Max. Leistung",
       "messengers": "Dienste",
       "no": "Nein",
       "odometer": "Kilometerstand",

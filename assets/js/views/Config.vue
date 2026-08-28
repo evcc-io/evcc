@@ -602,7 +602,7 @@
 					:on-add-sub="addSubCircuit"
 					@changed="loadDirty"
 				/>
-				<CircuitModal ref="circuitModal" @changed="circuitChanged" />
+				<CircuitModal ref="circuitModal" :circuits="circuits" @changed="circuitChanged" />
 				<EebusModal
 					:status="eebus?.status"
 					:yamlSource="eebus?.yamlSource"
