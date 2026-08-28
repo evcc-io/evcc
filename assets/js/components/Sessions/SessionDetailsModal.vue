@@ -109,7 +109,7 @@
 							{{ $t("session.priceGrid") }}
 						</th>
 						<td class="text-muted">
-							{{ fmtMoney(session.gridCost, currency) }}
+							{{ fmtMoney(session.gridCost || 0, currency) }}
 							{{ fmtCurrencySymbol(currency) }}
 						</td>
 					</tr>
@@ -118,7 +118,7 @@
 							{{ $t("session.priceSolar") }}
 						</th>
 						<td class="text-muted">
-							{{ fmtMoney(session.solarCost, currency) }}
+							{{ fmtMoney(session.solarCost || 0, currency) }}
 							{{ fmtCurrencySymbol(currency) }}
 						</td>
 					</tr>
