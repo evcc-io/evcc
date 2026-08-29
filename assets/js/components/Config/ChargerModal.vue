@@ -4,6 +4,7 @@
 		name="charger"
 		device-type="charger"
 		:is-sponsor="isSponsor"
+		:remote-enabled="remoteEnabled"
 		:modal-title="modalTitle"
 		tags-usage="charge"
 		:provide-template-options="provideTemplateOptions"
@@ -128,6 +129,7 @@ export default defineComponent({
 			default: () => ({ config: { port: 0 }, status: { stations: [] } }),
 		},
 		isSponsor: Boolean,
+		remoteEnabled: Boolean,
 	},
 	emits: ["changed", "close"],
 	data() {

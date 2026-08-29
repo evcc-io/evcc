@@ -527,15 +527,22 @@
 				/>
 				<VehicleModal
 					:is-sponsor="isSponsor"
+					:remote-enabled="remoteEnabled"
 					@vehicle-changed="vehicleChanged"
 					@disable="({ id, disable }) => handleDisable('vehicle', id, disable)"
 				/>
 				<MeterModal
 					:is-sponsor="isSponsor"
+					:remote-enabled="remoteEnabled"
 					@changed="meterChanged"
 					@disable="({ id, disable }) => handleDisable('meter', id, disable)"
 				/>
-				<ChargerModal :is-sponsor="isSponsor" :ocpp="ocpp" @changed="chargerChanged" />
+				<ChargerModal
+					:is-sponsor="isSponsor"
+					:remote-enabled="remoteEnabled"
+					:ocpp="ocpp"
+					@changed="chargerChanged"
+				/>
 				<InfluxModal @changed="loadDirty" />
 				<MqttModal @changed="loadDirty" />
 				<NetworkModal @changed="loadDirty" />
@@ -1166,6 +1173,9 @@ export default defineComponent({
 		},
 		sponsor() {
 			return store.state?.sponsor;
+		},
+		remoteEnabled(): boolean {
+			return Boolean(this.remote?.config?.enabled);
 		},
 		isSponsor(): boolean {
 			return !!this.sponsor?.status?.name;

@@ -48,6 +48,20 @@ func TestFleetConfigValidate(t *testing.T) {
 				Tokens:      oauth.Tokens{Access: "access", Refresh: "refresh"},
 			},
 		},
+		{
+			name: "interactive",
+			config: FleetConfig{
+				Credentials: oauth.ClientCredentials{ID: "client", Secret: "secret"},
+			},
+		},
+		{
+			name: "interactive invalid origin",
+			config: FleetConfig{
+				Credentials: oauth.ClientCredentials{ID: "client", Secret: "secret"},
+				Origin:      "evcc.local",
+			},
+			want: "invalid origin",
+		},
 	}
 
 	for _, tc := range tests {
