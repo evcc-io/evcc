@@ -119,10 +119,15 @@ func (c *Connection) TotalEnergy() (float64, error) {
 // Currents implements the api.PhaseCurrents interface
 func (c *Connection) Currents() (float64, float64, float64, error) {
 	res, err := c.dataG.Get()
-	if c.usage == "pv" {
-		return -res.ActiveCurrentL1A, -res.ActiveCurrentL2A, -res.ActiveCurrentL3A, err
+	l1, l2, l3 := res.ActiveCurrentL1A, res.ActiveCurrentL2A, res.ActiveCurrentL3A
+	// 1p kWh meters only report active_current_a, not the per-phase values
+	if l1 == 0 && l2 == 0 && l3 == 0 {
+		l1 = res.ActiveCurrentA
 	}
-	return res.ActiveCurrentL1A, res.ActiveCurrentL2A, res.ActiveCurrentL3A, err
+	if c.usage == "pv" {
+		return -l1, -l2, -l3, err
+	}
+	return l1, l2, l3, err
 }
 
 // Powers implements the api.PhasePowers interface
@@ -137,5 +142,10 @@ func (c *Connection) Powers() (float64, float64, float64, error) {
 // Voltages implements the api.PhaseVoltages interface
 func (c *Connection) Voltages() (float64, float64, float64, error) {
 	res, err := c.dataG.Get()
-	return res.ActiveVoltageL1V, res.ActiveVoltageL2V, res.ActiveVoltageL3V, err
+	l1, l2, l3 := res.ActiveVoltageL1V, res.ActiveVoltageL2V, res.ActiveVoltageL3V
+	// 1p kWh meters only report active_voltage_v, not the per-phase values
+	if l1 == 0 && l2 == 0 && l3 == 0 {
+		l1 = res.ActiveVoltageV
+	}
+	return l1, l2, l3, err
 }

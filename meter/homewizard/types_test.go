@@ -56,6 +56,23 @@ func TestUnmarshalKwhDataResponse(t *testing.T) {
 	}
 }
 
+// Test homewizard kWh Meter 1-Phase response without per-phase current/voltage
+func TestUnmarshalKwh1PhaseDataResponse(t *testing.T) {
+	{
+		var res DataResponse
+		// https://api-documentation.homewizard.com/docs/v1/measurement#kwh-meters-1-and-3-phase
+		jsonstr := `{"total_power_import_kwh":1.097,"total_power_import_t1_kwh":1.097,"total_power_export_kwh":0,"total_power_export_t1_kwh":0,"active_power_w":1381.396,"active_power_l1_w":1381.396,"active_voltage_v":228.641,"active_current_a":6.051,"active_apparent_current_a":6.068,"active_reactive_current_a":0.461,"active_apparent_power_va":1385.536,"active_reactive_power_var":-105.28,"active_power_factor":0.997,"active_frequency_hz":50}`
+		require.NoError(t, json.Unmarshal([]byte(jsonstr), &res))
+
+		assert.Equal(t, float64(1381.396), res.ActivePowerW)
+		assert.Equal(t, float64(1381.396), res.ActivePowerL1W)
+		assert.Equal(t, float64(228.641), res.ActiveVoltageV)
+		assert.Equal(t, float64(6.051), res.ActiveCurrentA)
+		assert.Equal(t, float64(0), res.ActiveCurrentL1A)
+		assert.Equal(t, float64(0), res.ActiveVoltageL1V)
+	}
+}
+
 // Test homewizard P1 Meter response
 func TestUnmarshalP1DataResponse(t *testing.T) {
 	{
