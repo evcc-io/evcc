@@ -29,9 +29,9 @@ params:
   - preset: vehicle-features
 render: |
   type: bmw
-  {{ include "vehicle-base" . }}
+  {{ include "base" . }}
   {{- if ne .region "EU" }}
   region: {{ .region }}
   {{- end }}
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}
   hcaptcha: {{ .hcaptcha }}

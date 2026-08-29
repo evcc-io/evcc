@@ -158,4 +158,7 @@ render: |
           headers:
           - content-type: application/json
           body: '{"setpoint": -2200}'
+    default:
+      source: error
+      error: ErrNotAvailable
   capacity: {{ .capacity }}

@@ -23,7 +23,7 @@ params:
     default: 0.081
 render: |
   type: custom
-  {{ include "tariff-base" . }}
+  {{ include "base" . }}
   forecast:
     source: http
     uri: https://e-ckw-public-data.de-c1.eu1.cloudhub.io/api/v1/netzinformationen/energie/dynamische-preise?tariff_type=integrated&tariff_name={{ .tariff }}&start_timestamp={{ `{{ (now.AddDate 0 0 -1).Format "2006-01-02T00:00:00Z" }}` }}&end_timestamp={{ `{{ (now.AddDate 0 0 3).Format "2006-01-02T00:00:00Z" }}` }}

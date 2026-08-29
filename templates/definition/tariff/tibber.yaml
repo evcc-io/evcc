@@ -26,4 +26,4 @@ render: |
   type: tibber
   token: {{ .token }}
   homeid: {{ .homeid }}
-  {{ include "tariff-base" . }}
+  {{ include "base" . }}

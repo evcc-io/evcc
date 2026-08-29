@@ -49,6 +49,7 @@ export default defineComponent({
 		title: String,
 		dataTestid: String,
 		uncloseable: Boolean,
+		preventDismiss: Boolean,
 		size: String,
 		autofocus: { type: Boolean, default: true },
 		configModalName: String,
@@ -58,6 +59,11 @@ export default defineComponent({
 		return {
 			isModalVisible: false,
 		};
+	},
+	watch: {
+		preventDismiss() {
+			this.applyDismissProtection();
+		},
 	},
 	computed: {
 		sizeClass() {
@@ -92,6 +98,20 @@ export default defineComponent({
 		handleShow() {
 			this.$emit("open");
 			this.isModalVisible = true;
+			this.applyDismissProtection();
+		},
+		applyDismissProtection() {
+			const el = this.$refs["modal"] as HTMLElement;
+			const instance = el && Modal.getInstance(el);
+			// no instance yet: applied on next show
+			if (!instance) return;
+			const lock = this.uncloseable || this.preventDismiss;
+			// mutate instance config instead of data attributes: read at event time,
+			// keeps router/theme attribute checks and nav-close behavior intact
+			// @ts-expect-error bs internal
+			instance._config.backdrop = lock ? "static" : true;
+			// @ts-expect-error bs internal
+			instance._config.keyboard = !lock;
 		},
 		handleShown() {
 			this.$emit("opened");

@@ -19,7 +19,7 @@ import (
 type ModbusSunspec struct {
 	log    *util.Logger
 	conn   *modbus.Connection
-	device *sunsdev.SunSpec
+	device *sunspecDevice
 	op     modbus.SunSpecOperation
 	scale  float64
 	mask   uint64
@@ -73,7 +73,9 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 
 	devices := sunspecDevices.Get(conn)
 	if devices == nil {
-		devices, err = sunsdev.DeviceTree(conn)
+		// the device tree captures the client gosunspec uses for all further
+		// block reads and writes, hence wrap it in the deduplicating cache
+		devices, err = sunsdev.DeviceTree(newSunspecCachedClient(conn))
 		if err != nil && !errors.Is(err, meters.ErrPartiallyOpened) {
 			return nil, err
 		}
@@ -84,7 +86,7 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 	device := sunspecSubDevices.Get(conn, cc.SubDevice)
 	if device == nil {
 		// silence KOSTAL implementation errors
-		device = sunsdev.NewDevice("sunspec", cc.SubDevice)
+		device = &sunspecDevice{SunSpec: sunsdev.NewDevice("sunspec", cc.SubDevice)}
 		if err := device.InitializeWithTree(devices); err != nil {
 			return nil, err
 		}
@@ -109,6 +111,9 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 		mask:   mask,
 	}
 
+	device.mu.Lock()
+	defer device.mu.Unlock()
+
 	for _, op := range ops {
 		if _, _, err := device.QueryPointAny(conn, op.Model, op.Block, op.Point); err == nil {
 			mb.op = op
@@ -128,6 +133,9 @@ func recoverToError(err *error) {
 
 func (m *ModbusSunspec) floatGetter() (f float64, err error) {
 	defer recoverToError(&err)
+
+	m.device.mu.Lock()
+	defer m.device.mu.Unlock()
 
 	res, err := m.device.QueryPoint(
 		m.conn,
@@ -170,6 +178,9 @@ var _ BoolGetter = (*ModbusSunspec)(nil)
 func (m *ModbusSunspec) BoolGetter() (func() (bool, error), error) {
 	return func() (res bool, err error) {
 		defer recoverToError(&err)
+
+		m.device.mu.Lock()
+		defer m.device.mu.Unlock()
 
 		_, point, err := m.blockPoint()
 		if err != nil {
@@ -220,6 +231,8 @@ func sunspecBool(val int64, mask uint64) bool {
 	return val != 0
 }
 
+// blockPoint reads the block and returns its point. The device lock must be held
+// by the caller until the point value has been consumed or written.
 func (m *ModbusSunspec) blockPoint() (block sunspec.Block, point sunspec.Point, err error) {
 	defer recoverToError(&err)
 
@@ -240,7 +253,10 @@ var _ FloatSetter = (*Modbus)(nil)
 
 // FloatSetter executes configured modbus write operation and implements FloatSetter
 func (m *ModbusSunspec) FloatSetter(_ string) (func(float64) error, error) {
+	m.device.mu.Lock()
 	block, point, err := m.blockPoint()
+	m.device.mu.Unlock()
+
 	if err != nil {
 		return nil, err
 	}
@@ -249,6 +265,10 @@ func (m *ModbusSunspec) FloatSetter(_ string) (func(float64) error, error) {
 
 	return func(val float64) (err error) {
 		defer recoverToError(&err)
+
+		// setting the point and writing it must not interleave with a concurrent read
+		m.device.mu.Lock()
+		defer m.device.mu.Unlock()
 
 		val = val * m.scale
 		switch typ {
@@ -266,7 +286,10 @@ var _ IntSetter = (*Modbus)(nil)
 
 // IntSetter executes configured modbus write operation and implements IntSetter
 func (m *ModbusSunspec) IntSetter(_ string) (func(int64) error, error) {
+	m.device.mu.Lock()
 	block, point, err := m.blockPoint()
+	m.device.mu.Unlock()
+
 	if err != nil {
 		return nil, err
 	}
@@ -275,6 +298,10 @@ func (m *ModbusSunspec) IntSetter(_ string) (func(int64) error, error) {
 
 	return func(val int64) (err error) {
 		defer recoverToError(&err)
+
+		// setting the point and writing it must not interleave with a concurrent read
+		m.device.mu.Lock()
+		defer m.device.mu.Unlock()
 
 		val = int64(float64(val) * m.scale)
 

@@ -84,6 +84,6 @@ render: |
     refresh: {{ .refreshToken }}
   commandProxy: {{ .commandProxy }}
   proxyToken: {{ .proxyToken }}
-  {{ include "vehicle-common" . }}
-  {{ include "vehicle-features" (merge (dict "basefeatures" (list "coarsecurrent")) .) }}
+  {{ include "common" . }}
+  {{ include "features" (merge (dict "basefeatures" (list "coarsecurrent")) .) }}
   cache: {{ .cache }}

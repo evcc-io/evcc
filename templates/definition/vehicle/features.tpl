@@ -1,4 +1,4 @@
-{{ define "vehicle-features" }}
+{{ define "features" }}
 {{- if or .basefeatures (eq .coarsecurrent "true") (eq .welcomecharge "true") (eq .streaming "true") (eq .climaterdisabled "true") (eq .autodetectdisabled "true") (eq .wakeupdisabled "true") }}
 features:
 {{- range .basefeatures }}

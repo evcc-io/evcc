@@ -1,4 +1,4 @@
-{{ define "charger-features" }}
+{{ define "features" }}
 {{- if or (eq .heating "true") (eq .integrateddevice "true") }}
 features:
 {{- if eq .heating "true" }}

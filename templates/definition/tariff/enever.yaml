@@ -52,8 +52,8 @@ params:
     advanced: true
 render: |
   type: custom
-  {{ include "tariff-base" . }}
-  {{ include "tariff-features" . }}
+  {{ include "base" . }}
+  {{ include "features" . }}
   forecast:
     source: go
     script: |
