@@ -1,12 +1,15 @@
 package core
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logstash"
+	jww "github.com/spf13/jwalterweatherman"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -190,6 +193,163 @@ func TestPublishedPriorityScoreMatchesRanking(t *testing.T) {
 
 	// the veto ranks by percent: 80% gap -> 0.80, not the raw energy 60kWh -> 0.60
 	assert.InDelta(t, 0.80, published, 1e-9)
+}
+
+// a charger reporting soc itself leaves the loadpoint without a vehicle, which is the
+// ordinary way the energy basis gets vetoed. The fallback must be published, or the UI
+// keeps labelling the hysteresis in kWh while it is read in percentage points.
+func TestEffectivePriorityBasisVetoedByChargerSoc(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Capacity().Return(75.0).AnyTimes()
+	vehicle.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
+
+	car := NewLoadpoint(util.NewLogger("car"), nil)
+	car.vehicleSoc = 20
+	car.vehicle = vehicle
+
+	battery := api.NewMockBattery(ctrl)
+	battery.EXPECT().Soc().Return(50.0, nil).AnyTimes()
+
+	integrated := NewLoadpoint(util.NewLogger("integrated"), nil)
+	integrated.title = "wallbox"
+	integrated.charger = struct {
+		api.Charger
+		api.Battery
+	}{
+		Charger: api.NewMockCharger(ctrl),
+		Battery: battery,
+	}
+
+	integrated.publishSocAndRange()
+	require.Positive(t, integrated.GetSoc(), "charger soc must reach the loadpoint")
+	require.Nil(t, integrated.GetVehicle(), "a charger soc assigns no vehicle")
+
+	site := NewSite()
+	site.loadpoints = []*Loadpoint{car, integrated}
+	require.NoError(t, site.SetPriorityBasis(api.PriorityBasisEnergy))
+	require.NoError(t, site.SetPriorityHysteresis(10)) // a deadband that changes unit with the basis
+
+	basis, ref, conflict := site.effectivePriorityScoring()
+	assert.Equal(t, api.PriorityBasisPercent, basis, "charger soc without capacity vetoes the energy basis")
+	assert.Equal(t, 100.0, ref)
+	require.NotNil(t, conflict, "the veto must identify the loadpoint it came from")
+	assert.Equal(t, "wallbox", conflict.GetTitle(), "the warning names the offending loadpoint")
+
+	assert.Equal(t, api.PriorityBasisPercent, publishedPriorityBasis(site), "the fallback must be published")
+	assert.Equal(t, api.PriorityBasisPercent, publishedPriorityBasis(site), "the fallback holds while it applies")
+	assert.Equal(t, api.PriorityBasisEnergy, site.GetPriorityBasis(), "the configured basis stays unchanged")
+	assert.Equal(t, conflict, site.priorityBasisConflict, "the offender is remembered to gate the warning")
+
+	// not sticky: the configured basis returns once the charger stops reporting a soc
+	integrated.vehicleSoc = 0
+	assert.Equal(t, api.PriorityBasisEnergy, publishedPriorityBasis(site))
+	assert.Nil(t, site.priorityBasisConflict)
+}
+
+// no loadpoint carrying a comparable soc is not a veto: nothing is being ranked, so the
+// configured basis must be reported and left alone across unplug/replug
+func TestEffectivePriorityBasisIdleKeepsConfigured(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Capacity().Return(75.0).AnyTimes()
+	vehicle.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
+
+	// the only car, disconnected: reports no soc
+	car := NewLoadpoint(util.NewLogger("car"), nil)
+	car.vehicle = vehicle
+
+	site := NewSite()
+	site.loadpoints = []*Loadpoint{car}
+	require.NoError(t, site.SetPriorityBasis(api.PriorityBasisEnergy))
+
+	_, _, conflict := site.effectivePriorityScoring()
+	assert.Nil(t, conflict, "an idle site conflicts with nothing")
+
+	assert.Equal(t, api.PriorityBasisEnergy, publishedPriorityBasis(site), "idle must not report the percent fallback")
+	assert.Nil(t, site.priorityBasisConflict, "an idle site must not log a veto")
+
+	// plug in: the basis is honoured, so the published value must not move
+	car.vehicleSoc = 20
+	assert.Equal(t, api.PriorityBasisEnergy, publishedPriorityBasis(site))
+	assert.Nil(t, site.priorityBasisConflict)
+
+	// unplug again: still no flip, or the modal label oscillates kWh -> % -> kWh
+	car.vehicleSoc = 0
+	assert.Equal(t, api.PriorityBasisEnergy, publishedPriorityBasis(site))
+	assert.Nil(t, site.priorityBasisConflict)
+}
+
+// publishedPriorityBasis runs one publish cycle and returns the effective basis it published
+func publishedPriorityBasis(site *Site) any {
+	ch := make(chan util.Param, 8)
+	site.valueChan = ch
+	site.publishPriorityBasis()
+	close(ch)
+
+	var val any
+	for p := range ch {
+		if p.Key == keys.EffectivePriorityBasis {
+			val = p.Val
+		}
+	}
+	return val
+}
+
+// the warning is gated on the offending loadpoint, not on a flag: a persistent conflict
+// must stay quiet, but a new offender must re-warn instead of leaving the log blaming a
+// loadpoint that has since disconnected
+func TestEffectivePriorityBasisRewarnsOnNewConflict(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	socReportingCharger := func(title string) *Loadpoint {
+		battery := api.NewMockBattery(ctrl)
+		battery.EXPECT().Soc().Return(50.0, nil).AnyTimes()
+
+		lp := NewLoadpoint(util.NewLogger(title), nil)
+		lp.title = title
+		lp.charger = struct {
+			api.Charger
+			api.Battery
+		}{
+			Charger: api.NewMockCharger(ctrl),
+			Battery: battery,
+		}
+		lp.publishSocAndRange()
+		return lp
+	}
+
+	first := socReportingCharger("wallboxA")
+	second := socReportingCharger("wallboxB")
+
+	site := NewSite()
+	site.loadpoints = []*Loadpoint{first, second}
+	require.NoError(t, site.SetPriorityBasis(api.PriorityBasisEnergy))
+
+	warnings := func(title string) int {
+		var n int
+		for _, e := range logstash.All(nil, jww.LevelWarn, 0) {
+			if strings.Contains(e, "priority basis") && strings.Contains(e, title) {
+				n++
+			}
+		}
+		return n
+	}
+
+	publishedPriorityBasis(site)
+	assert.Equal(t, 1, warnings("wallboxA"), "the first conflict must warn")
+	assert.Equal(t, 0, warnings("wallboxB"))
+
+	// same offender across further cycles: no repeat
+	publishedPriorityBasis(site)
+	publishedPriorityBasis(site)
+	assert.Equal(t, 1, warnings("wallboxA"), "a persistent conflict must not re-log every cycle")
+
+	// the first loadpoint disconnects, the second is now the offender
+	first.vehicleSoc = 0
+	publishedPriorityBasis(site)
+	assert.Equal(t, 1, warnings("wallboxB"), "a new offender must re-warn")
+	assert.Equal(t, 1, warnings("wallboxA"), "the retired offender must not be blamed again")
 }
 
 // a heating loadpoint aliases temperature as soc and has no vehicle: it must not veto the

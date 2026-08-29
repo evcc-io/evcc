@@ -50,9 +50,10 @@ const (
 	BufferStartSoc          = "bufferStartSoc"
 
 	// loadpoint priority sub-ordering
-	PriorityStrategy   = "priorityStrategy"   // priority strategy (none, soc, deficit)
-	PriorityBasis      = "priorityBasis"      // priority strategy basis (percent, energy)
-	PriorityHysteresis = "priorityHysteresis" // priority sub-ordering deadband (soc-% or kWh per basis, 0 = off)
+	PriorityStrategy       = "priorityStrategy"       // priority strategy (none, soc, deficit)
+	PriorityBasis          = "priorityBasis"          // priority strategy basis (percent, energy)
+	EffectivePriorityBasis = "effectivePriorityBasis" // priority strategy basis actually in use (energy falls back to percent)
+	PriorityHysteresis     = "priorityHysteresis"     // priority sub-ordering deadband (soc-% or kWh per basis, 0 = off)
 
 	// grid settings
 	GridExportLimit = "gridExportLimit"

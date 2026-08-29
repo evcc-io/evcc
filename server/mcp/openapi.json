@@ -5289,6 +5289,10 @@
           "priorityBasis": {
             "$ref": "#/components/schemas/PRIORITY_BASIS"
           },
+          "effectivePriorityBasis": {
+            "$ref": "#/components/schemas/PRIORITY_BASIS",
+            "description": "Priority basis actually in use. Falls back to percent when a loadpoint reports SoC without a known vehicle capacity."
+          },
           "priorityHysteresis": {
             "type": "number"
           },

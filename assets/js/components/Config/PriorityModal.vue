@@ -143,8 +143,17 @@ export default defineComponent({
 			// basis and hysteresis only affect soc/deficit sub-ordering, not the none strategy
 			return this.values.priorityStrategy !== PRIORITY_STRATEGY.NONE;
 		},
+		effectiveBasis(): PRIORITY_BASIS {
+			const { priorityBasis, effectivePriorityBasis } = store?.state || {};
+			// the site falls back to the percent basis when a loadpoint reports soc without a
+			// known vehicle capacity, but that only describes the saved basis, not an edited one
+			if (effectivePriorityBasis && this.values.priorityBasis === priorityBasis) {
+				return effectivePriorityBasis;
+			}
+			return this.values.priorityBasis;
+		},
 		hysteresisUnit(): string {
-			return this.values.priorityBasis === PRIORITY_BASIS.ENERGY ? "kWh" : "%";
+			return this.effectiveBasis === PRIORITY_BASIS.ENERGY ? "kWh" : "%";
 		},
 	},
 	methods: {

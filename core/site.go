@@ -125,6 +125,8 @@ type Site struct {
 
 	optimizerMu      sync.Mutex // guards optimizer runs
 	optimizerUpdated time.Time  // last optimizer run, guarded by optimizerMu
+
+	priorityBasisConflict loadpoint.API // loadpoint last warned about, site update loop only
 }
 
 // MetersConfig contains the site's meter configuration
@@ -1167,6 +1169,33 @@ func (site *Site) reservedPVPower(lp updater) float64 {
 	return reserved
 }
 
+// publishPriorityBasis publishes the configured priority basis, or the percent fallback
+// while a loadpoint makes the configured energy basis impossible, and warns whenever the
+// offending loadpoint changes. Called from the site update loop only, hence unlocked.
+func (site *Site) publishPriorityBasis() {
+	configured := site.GetPriorityBasis()
+	basis, _, conflict := site.effectivePriorityScoring()
+
+	// no loadpoint carries a comparable soc: nothing is ranked and the configured basis
+	// applies again as soon as one does, hence report it rather than the idle fallback
+	if conflict == nil {
+		basis = configured
+	}
+	site.publish(keys.EffectivePriorityBasis, basis)
+
+	// keyed on the loadpoint, so a persistent conflict stays quiet but a new offender
+	// re-warns instead of leaving the log blaming one that has since disconnected
+	if conflict != nil && conflict != site.priorityBasisConflict {
+		msg := fmt.Sprintf("priority basis %s not applicable, ranking by %s: loadpoint %s reports soc without a known vehicle capacity",
+			configured, basis, conflict.GetTitle())
+		if hysteresis := site.GetPriorityHysteresis(); hysteresis > 0 {
+			msg += fmt.Sprintf(" - priority hysteresis %d is read in percentage points, not kWh", hysteresis)
+		}
+		site.log.WARN.Println(msg)
+	}
+	site.priorityBasisConflict = conflict
+}
+
 func (site *Site) update(lp updater) {
 	site.log.DEBUG.Println("----")
 
@@ -1183,6 +1212,9 @@ func (site *Site) update(lp updater) {
 
 	// update loadpoints
 	totalChargePower := site.updateLoadpoints(consumption)
+
+	// same soc snapshot PublishEffectiveValues scores against during lp.Update below
+	site.publishPriorityBasis()
 
 	// update all circuits' power and currents
 	if site.circuit != nil {
