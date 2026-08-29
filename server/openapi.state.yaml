@@ -302,7 +302,10 @@ components:
           description: Charge level in %. Weighted by capacity across all batteries.
           type: number
         energy:
-          description: Total battery energy in kWh.
+          description: Total discharged energy in kWh.
+          type: number
+        returnEnergy:
+          description: Total charged energy in kWh.
           type: number
         devices:
           description: Measurement data per battery meter.
@@ -1636,6 +1639,7 @@ components:
         - co2
         - pricedynamic
         - priceforecast
+        - pricestatic
     SolarDetails:
       description: Solar production forecast.
       type: object

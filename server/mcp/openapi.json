@@ -3843,7 +3843,11 @@
             "type": "number"
           },
           "energy": {
-            "description": "Total battery energy in kWh.",
+            "description": "Total discharged energy in kWh.",
+            "type": "number"
+          },
+          "returnEnergy": {
+            "description": "Total charged energy in kWh.",
             "type": "number"
           },
           "devices": {
@@ -4517,7 +4521,8 @@
         "enum": [
           "co2",
           "pricedynamic",
-          "priceforecast"
+          "priceforecast",
+          "pricestatic"
         ]
       },
       "DeviceColorEntry": {

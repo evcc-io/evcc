@@ -1141,7 +1141,7 @@
       "modalUpdateStatusStart": "Instal·lació iniciada:",
       "modalViewOnGitHub": "Vegeu a GitHub",
       "openSource": "codi obert",
-      "poweredByOpenSource": "Impulsat per {0}."
+      "poweredBy": "impulsat per"
     }
   },
   "forecast": {
@@ -1343,7 +1343,6 @@
       "strategy": {
         "label": "Estratègia"
       },
-      "strategyDisabledDescription": "La càrrega comença tan tard com sigui possible per a acabar just a temps de la sortida. Amb preus dinàmics de xarxa o tarifa de CO₂, hi ha més opcions disponibles.",
       "time": "Hora",
       "title": "Pla",
       "unsavedChanges": "Hi ha canvis sense aplicar. Voleu aplicar-los ara?",

@@ -44,8 +44,9 @@ describe("getShortVersion", () => {
 });
 
 describe("isNewVersionAvailable", () => {
-  test("never for dev builds", () => {
+  test("never for dev or nightly builds", () => {
     expect(isNewVersionAvailable(DEV, "0.303.1")).toBe(false);
+    expect(isNewVersionAvailable(NIGHTLY, "0.304.0")).toBe(false);
   });
   test("only when available differs", () => {
     expect(isNewVersionAvailable(STABLE, "0.303.1")).toBe(false);

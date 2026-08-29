@@ -1,5 +1,5 @@
 <template>
-	<GenericModal id="aboutModal" :size="modalSize" @opened="acknowledge">
+	<GenericModal id="aboutModal" @opened="acknowledge">
 		<template #title>
 			<a :href="websiteUrl" target="_blank" rel="noopener noreferrer">
 				<template v-if="customLogo">
@@ -44,14 +44,12 @@
 								>
 									v{{ installed }}
 								</a>
-								<span
-									v-if="!nightly && !newVersionAvailable"
-									class="text-muted text-nowrap"
-									>{{ $t("footer.version.latestVersion") }}</span
-								>
-								<span v-if="newVersionAvailable" class="text-nowrap">{{
-									$t("footer.version.availableLong")
-								}}</span>
+								<Badge v-if="newVersionAvailable">
+									{{ $t("footer.version.availableLong") }}
+								</Badge>
+								<Badge v-else-if="!nightly" variant="muted">
+									{{ $t("footer.version.latestVersion") }}
+								</Badge>
 							</div>
 						</td>
 					</tr>
@@ -115,8 +113,22 @@
 
 			<!-- open source -->
 			<hr />
-			<p class="mb-0 small d-flex flex-wrap column-gap-1">
-				<i18n-t keypath="footer.version.madeByCommunity" tag="span">
+			<p
+				class="mb-0 d-flex justify-content-between align-items-center flex-wrap column-gap-2 row-gap-1"
+			>
+				<span v-if="customLogo" class="d-flex align-items-center gap-2">
+					<span>{{ $t("footer.version.poweredBy") }}</span>
+					<a
+						:href="evccWebsiteUrl"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="d-flex"
+						aria-label="evcc"
+					>
+						<Logo class="footer-logo" />
+					</a>
+				</span>
+				<i18n-t v-else keypath="footer.version.madeByCommunity" tag="span">
 					<a
 						:href="githubRepoUrl"
 						target="_blank"
@@ -125,15 +137,13 @@
 						>{{ $t("footer.version.community") }}</a
 					>
 				</i18n-t>
-				<i18n-t keypath="footer.version.poweredByOpenSource" tag="span" class="d-inline">
-					<a
-						class="text-muted"
-						:href="githubDependenciesUrl"
-						target="_blank"
-						rel="noopener noreferrer"
-						>{{ $t("footer.version.openSource") }}</a
-					>
-				</i18n-t>
+				<a
+					class="evcc-gray"
+					:href="githubDependenciesUrl"
+					target="_blank"
+					rel="noopener noreferrer"
+					>{{ $t("footer.version.openSource") }}</a
+				>
 			</p>
 		</div>
 	</GenericModal>
@@ -144,6 +154,7 @@ import GenericModal from "./Helper/GenericModal.vue";
 import "@h2d2/shopicons/es/regular/gift";
 import "@h2d2/shopicons/es/filled/heart";
 import Logo from "./Footer/Logo.vue";
+import Badge from "./Helper/Badge.vue";
 import api from "@/api";
 import settings from "@/settings";
 import { extractDomain } from "@/utils/extractDomain";
@@ -155,7 +166,7 @@ const EVCC_WEBSITE = "https://evcc.io/";
 
 export default defineComponent({
 	name: "AboutModal",
-	components: { GenericModal, Logo },
+	components: { GenericModal, Logo, Badge },
 	props: {
 		installed: { type: String, default: "" },
 		commit: { type: String, default: "" },
@@ -199,14 +210,14 @@ export default defineComponent({
 		githubRepoUrl() {
 			return GITHUB_REPO;
 		},
+		evccWebsiteUrl() {
+			return EVCC_WEBSITE;
+		},
 		githubDependenciesUrl() {
 			return `${GITHUB_REPO}/network/dependencies`;
 		},
 		githubCommitUrl() {
 			return `${GITHUB_REPO}/commit/${this.commit}`;
-		},
-		modalSize() {
-			return this.newVersionAvailable ? undefined : "sm";
 		},
 		cleanedReleaseNotes() {
 			if (!this.releaseNotes) return "";
@@ -240,6 +251,9 @@ export default defineComponent({
 <style scoped>
 .about-logo {
 	height: 2.5rem;
+}
+.footer-logo {
+	height: 1rem;
 }
 .custom-logo {
 	height: 4rem;

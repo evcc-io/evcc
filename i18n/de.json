@@ -1119,14 +1119,14 @@
       "optInSponsorship": "Sponsoring erforderlich."
     },
     "version": {
-      "availableLong": "neue Version verfügbar",
+      "availableLong": "Update verfügbar",
       "community": "evcc Community",
       "labelEmail": "E-Mail",
       "labelPhone": "Telefon",
       "labelRelease": "Release",
       "labelVersion": "Version",
       "labelWebsite": "Website",
-      "latestVersion": "aktuelle Version",
+      "latestVersion": "aktuell",
       "madeByCommunity": "Entwickelt von der {0}.",
       "modalCancel": "Abbrechen",
       "modalDownload": "Download",
@@ -1141,7 +1141,7 @@
       "modalUpdateStatusStart": "Installation gestartet:",
       "modalViewOnGitHub": "Auf GitHub ansehen",
       "openSource": "Open Source",
-      "poweredByOpenSource": "Unterstützt von {0}."
+      "poweredBy": "powered by"
     }
   },
   "forecast": {
@@ -1326,15 +1326,18 @@
         "continuous": "kontinuierlich",
         "continuousCo2Description": "Wählt die sauberste unterbrechungsfreie Folge von Zeitfenstern.",
         "continuousPriceDescription": "Wählt die günstigste unterbrechungsfreie Folge von Zeitfenstern.",
+        "disabledDescription": "Benötigt einen dynamischen Tarif oder eine CO₂-Prognose.",
         "label": "Optimierung"
       },
       "planNumber": "Plan {number}",
       "precondition": {
         "description": "Verlagert einen Teil des Ladens direkt vor die Abfahrt: warme Batterie, weniger Zeit mit hohem Ladestand.",
+        "disabledDescription": "Das gesamte Laden erfolgt direkt vor der Abfahrt.",
         "label": "Spätes Laden",
         "optionAll": "alles",
         "optionNo": "nein",
-        "summary": "{precondition} vorher"
+        "summary": "{precondition} vorher",
+        "summaryAll": "direkt vor der Abfahrt"
       },
       "remove": "Entfernen",
       "repeating": "wiederholend",
@@ -1343,7 +1346,6 @@
       "strategy": {
         "label": "Strategie"
       },
-      "strategyDisabledDescription": "Das Laden startet so spät wie möglich und wird rechtzeitig zur Abfahrt abgeschlossen. Mit dynamischen Netzpreisen oder einem CO₂-Tarif stehen hier weitere Optionen zur Verfügung.",
       "time": "Zeit",
       "title": "Plan",
       "unsavedChanges": "Ungespeicherte Änderungen vorhanden. Jetzt anwenden?",
@@ -1430,6 +1432,7 @@
       "finished": "Ladeende",
       "last24hEnergy": "Letzte 24h",
       "last7dEnergy": "Letzte 7 Tage",
+      "phasesMismatch": "Mehr Phasen aktiv als konfiguriert. Phasenkonfiguration prüfen.",
       "power": "Leistung",
       "price": "Kosten",
       "remaining": "Restzeit",
