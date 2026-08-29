@@ -53,6 +53,8 @@ type OAuth struct {
 	deviceFlow     bool
 	tokenRetriever func(string, *oauth2.Token) error
 	tokenStorer    func(*oauth2.Token) any
+	exchangeOpts   []oauth2.AuthCodeOption
+	loginHook      func(context.Context) error
 }
 
 func NewOAuthFromConfig(ctx context.Context, other map[string]any) (oauth2.TokenSource, error) {
@@ -218,7 +220,9 @@ func (o *OAuth) HandleCallback(params url.Values) error {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
-	token, err := o.oc.Exchange(o.ctx, code, oauth2.VerifierOption(o.cv))
+	opts := append([]oauth2.AuthCodeOption{oauth2.VerifierOption(o.cv)}, o.exchangeOpts...)
+
+	token, err := o.oc.Exchange(o.ctx, code, opts...)
 	if err != nil {
 		return err
 	}
@@ -230,6 +234,12 @@ func (o *OAuth) HandleCallback(params url.Values) error {
 
 // Login implements api.AuthProvider.
 func (o *OAuth) Login(state string) (string, *oauth2.DeviceAuthResponse, error) {
+	if o.loginHook != nil {
+		if err := o.loginHook(o.ctx); err != nil {
+			return "", nil, err
+		}
+	}
+
 	o.mu.Lock()
 	defer o.mu.Unlock()
 

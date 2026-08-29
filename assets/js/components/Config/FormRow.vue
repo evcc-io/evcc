@@ -7,7 +7,7 @@
 				<small v-if="deprecated" class="evcc-gray">{{
 					$t("config.form.deprecated")
 				}}</small>
-				<small v-else-if="optional" class="evcc-gray">{{
+				<small v-else-if="optional && !readonly" class="evcc-gray">{{
 					$t("config.form.optional")
 				}}</small>
 			</div>
@@ -49,6 +49,7 @@ export default {
 		help: String,
 		optional: Boolean,
 		deprecated: Boolean,
+		readonly: Boolean,
 		error: String,
 		warning: String,
 		danger: String,

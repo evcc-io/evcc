@@ -50,6 +50,13 @@ test.describe("config device auth", async () => {
     await expect(meterModal.getByLabel("Power")).not.toBeVisible();
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).not.toBeVisible();
     await expect(meterModal.getByRole("button", { name: "Save" })).not.toBeVisible();
+
+    // readonly param filled from service, copy only
+    const callback = meterModal.getByLabel("Callback URL");
+    await expect(callback).toHaveValue(/\/providerauth\/callback$/);
+    await expect(callback).toHaveAttribute("readonly", "");
+    await expect(meterModal.getByRole("link", { name: "Copy" })).toBeVisible();
+
     await meterModal.getByLabel("Server").fill(simulatorUrl());
     await meterModal.getByLabel("Redirect URI").fill(getRedirectUri(page.url()));
     await meterModal.getByLabel("Authentication Method").selectOption("redirect");
@@ -79,21 +86,13 @@ test.describe("config device auth", async () => {
     await expect(successBanner).toContainText("Authorization Successful");
     await expect(successBanner).toContainText("Demo Auth is now connected and ready to use");
 
-    // modal reopens automatically after auth; continue configuration
+    // modal reopens with the entered values restored, auth is complete
     await expectModalVisible(meterModal);
-    await meterModal.getByLabel("Manufacturer").selectOption("Auth Demo Meter");
+    await expect(meterModal.getByLabel("Server")).toHaveValue(simulatorUrl());
+    await expect(meterModal.getByLabel("Authentication Method")).toHaveValue("redirect");
+    await expect(meterModal.getByRole("button", { name: "Prepare connection" })).not.toBeVisible();
 
-    // step 2: show regular device form - auth is complete, fill in server details again
-    await meterModal.getByLabel("Server").fill(simulatorUrl());
-    await meterModal.getByLabel("Redirect URI").fill(getRedirectUri(page.url()));
-    await meterModal.getByLabel("Authentication Method").selectOption("redirect");
-    await meterModal.getByLabel("Secret").fill(secret);
-
-    // Even though auth is already done, still need to click prepare connection to proceed to device fields
-    await meterModal.getByRole("button", { name: "Prepare connection" }).click();
-    await page.waitForTimeout(500);
-
-    // Now the Power field should be visible since auth is already complete
+    // step 2: regular device form
     await expect(meterModal.getByLabel("Power")).toBeVisible();
     await meterModal.getByLabel("Power").fill("5000");
     await expect(meterModal.getByRole("button", { name: "Validate & save" })).toBeVisible();
@@ -106,6 +105,10 @@ test.describe("config device auth", async () => {
     await expect(page.getByTestId("grid")).toBeVisible();
     await expect(page.getByTestId("grid")).toContainText("Grid meter");
     await expect(page.getByTestId("grid")).toContainText(["Power", "5.0 kW"].join(""));
+
+    // readonly params are not persisted
+    const [meter] = await (await page.request.get("/api/config/devices/meter")).json();
+    expect(meter.config).not.toHaveProperty("callback");
 
     // re-open meter for editing
     await page.getByTestId("grid").getByRole("button", { name: "edit" }).click();
@@ -166,6 +169,26 @@ test.describe("config device auth", async () => {
     // modal reopens automatically and success banner is shown
     await expectModalVisible(meterModal);
     await expect(page.getByTestId("auth-success-banner")).toBeVisible();
+  });
+
+  test("remote access requirement links to the remote access modal", async ({ page }) => {
+    await page.goto("/#/config");
+    await page.getByRole("button", { name: "Add grid meter" }).click();
+    const meterModal = page.getByTestId("meter-modal");
+    await expectModalVisible(meterModal);
+    await meterModal.getByLabel("Manufacturer").selectOption("Auth Demo Meter");
+
+    const hint = meterModal.getByTestId("remote-access-required");
+    await expect(hint).toContainText("This device requires Remote Access.");
+    await hint.getByRole("button", { name: "Enable Remote Access." }).click();
+
+    const remoteModal = page.getByTestId("remote-modal");
+    await expectModalVisible(remoteModal);
+    await expectModalHidden(meterModal);
+    await remoteModal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(remoteModal);
+    await expectModalVisible(meterModal);
+    await expect(hint).toBeVisible();
   });
 
   test("advanced auth field is hidden until expanded", async ({ page }) => {
