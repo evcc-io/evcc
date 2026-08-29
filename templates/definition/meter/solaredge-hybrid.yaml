@@ -322,7 +322,7 @@ render: |
             script: |
               // uncapped by maxacpower like ChargeLimit above: self-consumption mode
               // is self-limiting via load and the inverter's own AC hardware rating
-              limit := {{ .maxdischargepower }}
+              limit := float64({{ .maxdischargepower }})
               out := rated
               if limit < out { out = limit }
               out
@@ -471,7 +471,7 @@ render: |
                     type: writemultiple
                     encoding: float32s
             script: |
-              limit := {{ .maxdischargepower }}
+              limit := float64({{ .maxdischargepower }})
               out := rated
               if limit < out { out = limit }
               out
@@ -540,10 +540,10 @@ render: |
                     type: writemultiple
                     encoding: float32s
             script: |
-              limit := {{ .maxdischargepower }}
+              limit := float64({{ .maxdischargepower }})
               out := rated
               if limit < out { out = limit }
-              acLimit := {{ .maxacpower }}
+              acLimit := float64({{ .maxacpower }})
               if acLimit < out { out = acLimit }
               out
   {{- include "battery-params" . }}
