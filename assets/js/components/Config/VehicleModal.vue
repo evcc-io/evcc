@@ -14,6 +14,7 @@
 		@added="$emit('vehicle-changed', $event)"
 		@updated="$emit('vehicle-changed')"
 		@removed="$emit('vehicle-changed')"
+		@disable="$emit('disable', $event)"
 	/>
 </template>
 
@@ -43,7 +44,7 @@ export default defineComponent({
 	props: {
 		isSponsor: Boolean,
 	},
-	emits: ["vehicle-changed"],
+	emits: ["vehicle-changed", "disable"],
 	data() {
 		return {
 			initialValues,

@@ -84,5 +84,8 @@ render: |
             address: 50000
             type: writesingle
             decode: uint16
+    default:
+      source: error
+      error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

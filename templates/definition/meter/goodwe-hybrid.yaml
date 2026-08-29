@@ -2,8 +2,8 @@ template: goodwe-hybrid
 products:
   - brand: GoodWe
     description:
-      generic: ET/EH/BH/BT Hybrid Inverter
-capabilities: ["battery-control"]
+      generic: ET/EH/BH/BT/ESA Hybrid Inverter
+capabilities: ["battery-control", "curtail"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -12,6 +12,7 @@ params:
     baudrate: 9600
     id: 247
   - name: maxacpower
+    required: true
   - name: battery
     default: 1
     type: choice
@@ -197,6 +198,73 @@ render: |
       decode: uint32nan
     scale: 0.1
   maxacpower: {{ .maxacpower }} # W
+  # GoodWe only has a single, global feed-in limit for the whole system (registers 47509/47510),
+  # there is no per-string curtailment.
+  curtail: # limit feed-in to given percent of nominal (100 % = maxacpower)
+    source: switch
+    switch:
+    - case: 100 # uncurtailed
+      set:
+        source: const
+        value: 0 # disable limit
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47509 # Feed-in power limit enable
+            type: writesingle
+            encoding: uint16
+    default:
+      source: sequence
+      set:
+      # write the limit before enabling it, the device must not apply a stale value
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 47510 # Feed-in power limit, W
+          type: writesingle
+          encoding: uint16
+        scale: {{ divf (maxf .maxacpower 1) 100 }} # % to W
+      - source: const
+        value: 1 # enable limit
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47509
+            type: writesingle
+            encoding: uint16
+  curtailed: # allowed feed-in as percent of nominal, derived from feed-in power limit
+    source: go
+    in:
+    - name: ena
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 47509 # Feed-in power limit enable
+          type: holding
+          decode: uint16
+    - name: w
+      type: float
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 47510 # Feed-in power limit, W
+          type: holding
+          decode: uint16
+    script: |
+      percent := 100.0
+      if ena != 0 {
+        percent = w * 100 / {{ maxf .maxacpower 1 }}
+      }
+      p := int(percent + 0.5)
+      if p > 100 {
+        p = 100
+      }
+      p
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -292,5 +360,8 @@ render: |
               address: 47512 # EMSPowerSet [0-10000]
               type: writemultiple
               encoding: uint16
+    default:
+      source: error
+      error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

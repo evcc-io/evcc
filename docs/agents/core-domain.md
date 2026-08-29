@@ -122,7 +122,7 @@ effectivePrice = gridPrice * (1 - greenShare) + feedInPrice * greenShare
 |---------|-------|--------|---------|
 | `valueChan` | Site | Unbounded (`chanx.NewUnboundedChan`) | State changes -> DB + UI (ordering) |
 | `lpUpdateChan` | Site | 1 | Early loadpoint update requests |
-| `pushChan` | Loadpoint | Buffered | User notifications |
+| `pushChan` | Loadpoint | 16 | User notifications, queued via `valueChan` so the message renders the state at event time |
 
 ## Tariff Integration
 

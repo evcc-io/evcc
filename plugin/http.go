@@ -226,22 +226,25 @@ func (p *HTTP) request(url string, body string) ([]byte, error) {
 		return nil, err
 	}
 
+	val, err := request.ReadBody(resp)
+	if err != nil {
+		if err2 := knownErrors(val); err2 != nil {
+			err = err2
+		}
+
+		return val, err
+	}
+
 	// warn on uncached GET polling: a repeated roundtrip means neither a configured
 	// cache nor the device's own response headers spared it. cache hits are exempt.
+	// only successful responses count, a failed one is retried by the caller
 	if p.method == http.MethodGet && p.mu == nil && resp.Header.Get(httpcache.XFromCache) == "" {
 		if repeatedGet(url, time.Now()) {
 			p.log.WARN.Printf("uncached request repeated within 1s, please report at https://github.com/evcc-io/evcc/issues: %s", url)
 		}
 	}
 
-	val, err := request.ReadBody(resp)
-	if err != nil {
-		if err2 := knownErrors(val); err2 != nil {
-			err = err2
-		}
-	}
-
-	return val, err
+	return val, nil
 }
 
 type httpAccess struct {

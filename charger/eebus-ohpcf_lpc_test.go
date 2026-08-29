@@ -5,9 +5,11 @@ package charger
 
 import (
 	"testing"
+	"time"
 
 	eebusapi "github.com/enbility/eebus-go/api"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
+	eglpc "github.com/enbility/eebus-go/usecases/eg/lpc"
 	egmocks "github.com/enbility/eebus-go/usecases/mocks"
 	spineapi "github.com/enbility/spine-go/api"
 	spinemocks "github.com/enbility/spine-go/mocks"
@@ -27,6 +29,7 @@ func newOHPCFEGCharger(t *testing.T) (*EEBusOHPCF, *egmocks.EgLPCInterface, spin
 	entity := spinemocks.NewEntityRemoteInterface(t)
 
 	c := &EEBusOHPCF{
+		ctx:         t.Context(),
 		log:         util.NewLogger("eebus-ohpcf-test"),
 		eg:          &eebus.EnergyGuard{EgLPCInterface: lpc},
 		egLpcEntity: entity,
@@ -58,6 +61,32 @@ func TestOHPCF_LPC_EGMessages_ConsumptionLimit(t *testing.T) {
 
 			assert.NoError(t, c.Dim(tc.dim))
 		})
+	}
+}
+
+// ATC_COM_PT_EGMessages_002 (LPC-913): after initial connection the EG states a
+// limit to the CS - deactivated when nothing is being limited.
+func TestOHPCF_LPC_InitialLimit(t *testing.T) {
+	c, lpc, entity := newOHPCFEGCharger(t)
+	c.egLpcEntity = nil
+
+	written := make(chan ucapi.LoadLimit, 1)
+	lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(true)
+	lpc.EXPECT().
+		WriteConsumptionLimit(entity, mock.Anything, mock.Anything).
+		Run(func(_ spineapi.EntityRemoteInterface, limit ucapi.LoadLimit, cb func(model.ResultDataType, model.MsgCounterType)) {
+			written <- limit
+			cb(model.ResultDataType{}, 0)
+		}).
+		Return(new(model.MsgCounterType), nil)
+
+	c.UseCaseEvent(nil, entity, eglpc.UseCaseSupportUpdate)
+
+	select {
+	case limit := <-written:
+		assert.Equal(t, ucapi.LoadLimit{Value: 0, IsActive: false}, limit)
+	case <-time.After(time.Second):
+		t.Fatal("no limit written after connect")
 	}
 }
 

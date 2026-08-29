@@ -7,23 +7,28 @@ import (
 	"github.com/cenkalti/backoff/v4"
 )
 
-// permanentError is a sentinel error that keeps matching errors.Is after
-// backoff has stripped the backoff.Permanent wrapper.
+// permanentError is a sentinel error that signals permanence to backoff while
+// remaining distinguishable from the other permanent sentinels.
 type permanentError struct {
 	msg string
 }
 
 func (e *permanentError) Error() string { return e.msg }
 
-// Is matches the wrapped sentinel, too
-func (e *permanentError) Is(target error) bool {
-	var t *permanentError
-	return errors.As(target, &t) && t == e
+// As signals permanence to backoff. Wrapping the sentinel in backoff.Permanent
+// instead would make errors.Is match any other permanent error, since
+// backoff.PermanentError.Is matches by type rather than identity.
+func (e *permanentError) As(target any) bool {
+	if p, ok := target.(**backoff.PermanentError); ok {
+		*p = &backoff.PermanentError{Err: e}
+		return true
+	}
+	return false
 }
 
 // permanent creates a permanent sentinel error
 func permanent(msg string) error {
-	return backoff.Permanent(&permanentError{msg})
+	return &permanentError{msg}
 }
 
 // ErrNotAvailable indicates that a feature is not available

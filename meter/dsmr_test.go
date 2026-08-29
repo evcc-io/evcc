@@ -247,8 +247,7 @@ func assertReadings(t *testing.T, m api.Meter) {
 func TestDsmrTCP(t *testing.T) {
 	addr := serveTCP(t, dsmrFrame(dsmrTelegram50))
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	m, err := NewDsmr(ctx, addr, time.Second)
 	require.NoError(t, err)
@@ -267,7 +266,7 @@ func TestDsmrWebSocket(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			payload := dsmrFrame(dsmrTelegram50)
 
-			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				conn, err := websocket.Accept(w, r, nil)
 				if err != nil {
 					return
@@ -281,12 +280,11 @@ func TestDsmrWebSocket(t *testing.T) {
 					time.Sleep(50 * time.Millisecond)
 				}
 			}))
-			defer srv.Close()
+			srv.Start()
 
 			uri := "ws" + strings.TrimPrefix(srv.URL, "http")
 
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
+			ctx := t.Context()
 
 			m, err := NewDsmr(ctx, uri, time.Second)
 			require.NoError(t, err)
@@ -307,8 +305,7 @@ func TestDsmrIgnoresGarbage(t *testing.T) {
 
 	addr := serveTCP(t, payload)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	m, err := NewDsmr(ctx, addr, time.Second)
 	require.NoError(t, err)
@@ -398,8 +395,7 @@ func newTestDsmr(frame map[string]string) *Dsmr {
 func TestDsmrADN(t *testing.T) {
 	addr := serveTCP(t, dsmrFrame(dsmrTelegramADN))
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	m, err := NewDsmr(ctx, addr, time.Second)
 	require.NoError(t, err)
@@ -445,8 +441,7 @@ func TestDsmrADN(t *testing.T) {
 func TestDsmrExport(t *testing.T) {
 	addr := serveTCP(t, dsmrFrame(dsmrTelegramExport))
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	m, err := NewDsmr(ctx, addr, time.Second)
 	require.NoError(t, err)

@@ -6,10 +6,12 @@ products:
       generic: MyŠkoda
 params:
   - preset: vehicle-base
+  - name: welcomecharge
+    advanced: true
   - preset: vehicle-online
   - name: timeout
 render: |
   type: skoda
-  {{ include "vehicle-base" . }}
+  {{ include "base" . }}
   timeout: {{ .timeout }}
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}

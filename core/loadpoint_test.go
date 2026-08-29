@@ -12,7 +12,9 @@ import (
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -390,7 +392,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	// wrap vehicle with estimator
 	expectVehiclePublish(vehicle)
 
-	socEstimator := soc.NewEstimator(util.NewLogger("foo"), charger, vehicle)
+	socEstimator := soc.NewEstimator(util.NewLogger("foo"), vehicle)
 
 	lp := &Loadpoint{
 		log:         util.NewLogger("foo"),
@@ -750,8 +752,9 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 			Disable: loadpoint.ThresholdConfig{
 				Delay: dt,
 			},
-			status:  api.StatusC,
-			enabled: true,
+			status:      api.StatusC,
+			enabled:     true,
+			chargePower: 3 * Voltage * minA, // charging 3p at min current
 		}
 
 		start := clock.Now()
@@ -881,4 +884,93 @@ func TestBatteryBoostHold(t *testing.T) {
 	// ...but is still an active boost state (GetBatteryBoost != boostDisabled),
 	// which is what keeps the sitePower priority adjustment applied to the loadpoint
 	assert.NotEqual(t, boostDisabled, lp.GetBatteryBoost(), "hold is active")
+}
+
+// default vehicle referencing a disabled vehicle must not fail loadpoint creation
+func TestNewLoadpointFromConfigDisabledVehicle(t *testing.T) {
+	config.Reset()
+	t.Cleanup(config.Reset)
+
+	ctrl := gomock.NewController(t)
+
+	// disabled vehicle: device registered without instance
+	var vehicle api.Vehicle
+	require.NoError(t, config.Vehicles().Add(config.NewStaticDevice(config.Named{Name: "vehicle"}, vehicle)))
+	require.NoError(t, config.Chargers().Add(config.NewStaticDevice(config.Named{Name: "charger"}, api.Charger(api.NewMockCharger(ctrl)))))
+
+	lp, err := NewLoadpointFromConfig(util.NewLogger("foo"), nil, nil, map[string]any{
+		"charger": "charger",
+		"vehicle": "vehicle",
+	})
+	require.NoError(t, err)
+	require.Nil(t, lp.defaultVehicle)
+
+	// disabled vehicle is filtered from instances
+	require.Empty(t, config.Instances(config.Vehicles().Devices()))
+}
+
+// TestPVDisableContinuousDeviceShortfall is a regression test for #32282: a continuous
+// device consuming less than its min power demand keeps the remainder out of site
+// power, so the disable gate never trips on the missing surplus. The shortfall
+// towards min power is projected into the gate regardless of charge status, since
+// some chargers (sgready) report StatusC while the device is idle.
+func TestPVDisableContinuousDeviceShortfall(t *testing.T) {
+	const dt = time.Minute
+
+	tc := []struct {
+		name        string
+		status      api.ChargeStatus
+		chargePower float64
+		site        float64
+		current     float64
+	}{
+		// idle device, export below its 600W demand: disable
+		{"idle, insufficient surplus", api.StatusB, 0, -400, 0},
+		// idle device, export covers its demand: keep enabled
+		{"idle, sufficient surplus", api.StatusB, 0, -700, 7},
+		// idle device reporting StatusC (sgready-style): still disable
+		{"idle, StatusC, insufficient surplus", api.StatusC, 0, -400, 0},
+		// starting device: own draw plus surplus covers min power, keep enabled
+		{"starting, demand covered", api.StatusB, 300, -400, 7},
+		// running below min power without surplus for the remaining demand: disable
+		{"running below min, insufficient surplus", api.StatusC, 300, -200, 0},
+		// consuming min power, importing: unchanged disable behavior
+		{"consuming, importing", api.StatusC, 600, 100, 0},
+	}
+
+	for _, tc := range tc {
+		t.Run(tc.name, func(t *testing.T) {
+			clock := clock.NewMock()
+
+			Voltage = 100
+			lp := &Loadpoint{
+				log:              util.NewLogger("foo"),
+				clock:            clock,
+				charger:          &continuousCharger{},
+				minCurrent:       minA,
+				maxCurrent:       maxA,
+				phases:           1,
+				phasesConfigured: 1,
+				measuredPhases:   1,
+				status:           tc.status,
+				enabled:          true,
+				chargePower:      tc.chargePower,
+				Disable:          loadpoint.ThresholdConfig{Delay: dt},
+			}
+
+			start := clock.Now()
+			for _, delay := range []time.Duration{0, dt + 1} {
+				clock.Set(start.Add(delay))
+				current := lp.pvMaxCurrent(api.ModePV, tc.site, 0, false, false)
+
+				// before the disable delay elapses the device keeps running
+				if delay == 0 {
+					assert.Equal(t, max(tc.current, minA), current, "before disable delay")
+					continue
+				}
+
+				assert.Equal(t, tc.current, current, "after disable delay")
+			}
+		})
+	}
 }

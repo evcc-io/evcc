@@ -108,7 +108,6 @@
 									:sessions="currentTypeSessions"
 									:color-mappings="colorMappings"
 									:device-colors="deviceColors"
-									:suggested-max-price="suggestedMaxAvgCost"
 									:group-by="selectedGroupWithoutNone"
 									:cost-type="activeType"
 									:currency="currency"
@@ -477,59 +476,22 @@ export default defineComponent({
 			return deviceColorMap(store.state.deviceColors);
 		},
 		colorMappings() {
-			const lastThreeMonths = new Date();
-			lastThreeMonths.setMonth(lastThreeMonths.getMonth() - 3);
-
-			// Aggregate energy to get sorted list of loadpoints/vehicles for coloring
-			const aggregateEnergy = (group: Exclude<GROUPS, GROUPS.NONE>) => {
-				return this.sessionsWithDefaults.reduce((acc: Record<string, number>, session) => {
-					if (new Date(session.created) >= lastThreeMonths) {
-						const key = session[group];
-						acc[key] = (acc[key] || 0) + session.chargedEnergy;
-					}
-					return acc;
-				}, {});
-			};
-
-			// Ordered key list: sessions ranked by recent energy first, then any
-			// remaining keys encountered in the dataset.
-			const orderedKeys = (
-				energyAggregation: Record<string, number>,
-				colorType: Exclude<GROUPS, GROUPS.NONE>
-			): string[] => {
-				const ranked = Object.entries(energyAggregation)
-					.sort((a, b) => b[1] - a[1])
-					.map(([k]) => k)
-					.filter(Boolean);
-				const seen = new Set(ranked);
+			// alphabetical keys for stable palette assignment; manual overrides win
+			const uniqueKeys = (group: Exclude<GROUPS, GROUPS.NONE>): string[] => {
+				const keys = new Set<string>();
 				for (const s of this.sessionsWithDefaults) {
-					const k = s[colorType];
-					if (k && !seen.has(k)) {
-						ranked.push(k);
-						seen.add(k);
-					}
+					const k = s[group];
+					if (k) keys.add(k);
 				}
-				return ranked;
+				return Array.from(keys).sort((a, b) => a.localeCompare(b));
 			};
 
 			const overrides = this.deviceColors;
-			const loadpointColors = resolveColors(
-				orderedKeys(aggregateEnergy(GROUPS.LOADPOINT), GROUPS.LOADPOINT),
-				overrides
-			);
-			const vehicleColors = resolveColors(
-				orderedKeys(aggregateEnergy(GROUPS.VEHICLE), GROUPS.VEHICLE),
-				overrides
-			);
-
-			const solar = { self: colors.self, grid: colors.grid };
-			const cost = { price: colors.price, co2: colors.co2 };
-
 			return {
-				loadpoint: loadpointColors,
-				vehicle: vehicleColors,
-				solar,
-				cost,
+				loadpoint: resolveColors(uniqueKeys(GROUPS.LOADPOINT), overrides),
+				vehicle: resolveColors(uniqueKeys(GROUPS.VEHICLE), overrides),
+				solar: { self: colors.self, grid: colors.grid },
+				cost: { price: colors.price, co2: colors.co2 },
 			};
 		},
 		groupIcons() {
@@ -589,23 +551,6 @@ export default defineComponent({
 			const isNotMonth = this.period !== PERIODS.MONTH;
 
 			return (isGrouped && hasMultipleEntries) || (isSolar && isNotMonth && !isGrouped);
-		},
-		suggestedMaxAvgPrice() {
-			// returns the 98th percentile of avg prices for all sessions
-			const sessionsWithPrice = this.sessions.filter((s) => s.pricePerKWh !== null);
-			const prices = sessionsWithPrice.map((s) => s.pricePerKWh ?? 0);
-			return this.percentile(prices, 98) ?? 0;
-		},
-		suggestedMaxAvgCo2() {
-			// returns the 98th percentile of avg co2 emissions for all sessions
-			const sessionsWithCo2 = this.sessions.filter((s) => s.co2PerKWh !== null);
-			const co2 = sessionsWithCo2.map((s) => s.co2PerKWh ?? 0);
-			return this.percentile(co2, 98) ?? 0;
-		},
-		suggestedMaxAvgCost() {
-			return this.activeType === TYPES.PRICE
-				? this.suggestedMaxAvgPrice
-				: this.suggestedMaxAvgCo2;
 		},
 	},
 	watch: {
@@ -669,12 +614,6 @@ export default defineComponent({
 		},
 		updateDate({ year, month }: { year: number; month: number }) {
 			this.$router.push({ query: { ...this.$route.query, year, month } });
-		},
-		percentile(arr: number[], p: number): number | null {
-			if (arr.length === 0) return null;
-			const sorted = arr.sort((a, b) => a - b);
-			const index = (p / 100) * (sorted.length - 1);
-			return sorted[Math.floor(index)] ?? null;
 		},
 	},
 });

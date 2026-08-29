@@ -11,4 +11,4 @@ params:
   - preset: tariff-base
 render: |
   type: smartenergy
-  {{ include "tariff-base" . }}
+  {{ include "base" . }}

@@ -107,10 +107,10 @@ render: |
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
-          address: 62836 # Battery 1 Instantaneous Power
+          address: 0xE174 # Battery 1 Instantaneous Power
           type: holding
           decode: float32nans
-  maxacpower: {{ .maxacpower }} # W
+  {{- include "sunspec-maxacpower" . }}
   curtail:
     source: sequence
     set:

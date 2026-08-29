@@ -45,11 +45,12 @@ params:
   - preset: tariff-features
 render: |
   type: custom
-  {{ include "tariff-base" . }}
-  {{ include "tariff-features" . }}
+  {{ include "base" . }}
+  {{ include "features" . }}
   forecast:
     source: http
     uri: https://api.energy-charts.info/price?bzn={{ .bzn }}&end={{ `{{ addDate now 0 0 1 | date "2006-01-02" }}` }}
+    cache: 1h
     jq: |
       [.unix_seconds, .price] | transpose | map({
         "start": .[0] | todate,

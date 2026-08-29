@@ -3,6 +3,7 @@
 		<DateNavigatorButton
 			prev
 			:disabled="prevDisabled"
+			:highlight="highlightPrev"
 			:on-click="() => $emit('prev')"
 			data-testid="battery-chart-prev"
 		/>
@@ -12,6 +13,7 @@
 		<DateNavigatorButton
 			next
 			:disabled="nextDisabled"
+			:highlight="highlightNext"
 			:on-click="() => $emit('next')"
 			data-testid="battery-chart-next"
 		/>
@@ -29,6 +31,8 @@ export default defineComponent({
 		label: { type: String, default: "" },
 		prevDisabled: Boolean,
 		nextDisabled: Boolean,
+		highlightPrev: Boolean,
+		highlightNext: Boolean,
 	},
 	emits: ["prev", "next"],
 });

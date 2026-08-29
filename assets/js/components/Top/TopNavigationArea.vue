@@ -44,7 +44,7 @@ export default defineComponent({
 				co2Configured: store.state.tariffCo2 !== undefined,
 				currency: store.state.currency,
 				telemetry: store.state.telemetry,
-				forecast: store.state.forecast,
+				forecast: store.uiForecast.value,
 				tariffGrid: store.state.tariffGrid,
 			};
 		},

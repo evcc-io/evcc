@@ -125,13 +125,13 @@ import type {
 	CHARGER_STATUS_REASON,
 	Timeout,
 	Vehicle,
-	Forecast,
+	UiForecast,
 	SMART_COST_TYPE,
 	BATTERY_MODE,
 	LoadpointUi,
+	PlanStrategy,
 	LoadpointSuggestion,
 } from "@/types/evcc";
-import type { PlanStrategy } from "@/components/ChargingPlans/types";
 
 export default defineComponent({
 	name: "Loadpoint",
@@ -251,7 +251,7 @@ export default defineComponent({
 		fullWidth: Boolean,
 		gridConfigured: Boolean,
 		pvConfigured: Boolean,
-		forecast: Object as PropType<Forecast>,
+		forecast: Object as PropType<UiForecast>,
 		lastSmartCostLimit: Number,
 		lastSmartFeedInPriorityLimit: Number,
 		vehicleKnown: Boolean,

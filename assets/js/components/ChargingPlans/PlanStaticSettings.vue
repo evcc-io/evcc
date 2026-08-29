@@ -1,5 +1,5 @@
 <template>
-	<div class="mb-5 mb-lg-4" data-testid="plan-entry">
+	<div class="mb-4" data-testid="plan-entry">
 		<h5
 			v-if="multiplePlans"
 			class="d-flex gap-3 align-items-baseline d-lg-none mb-4 fw-normal evcc-gray"
@@ -8,6 +8,9 @@
 			<span class="text-uppercase fs-6">
 				{{ `${$t("main.chargingPlan.planNumber", { number: "#1" })}` }}
 			</span>
+			<small>
+				{{ $t("main.chargingPlan.once") }}
+			</small>
 		</h5>
 
 		<div class="row d-none d-lg-flex mb-2">

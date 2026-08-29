@@ -32,7 +32,7 @@ params:
   - preset: tariff-base
 render: |
   type: custom
-  {{ include "tariff-base" . }}
+  {{ include "base" . }}
   forecast:
     source: http
     uri: https://api.esios.ree.es/indicators/{{ .indicator }}?start_date={{ now | date "2006-01-02" }}T00:00&end_date={{ (now.AddDate 0 0 1) | date "2006-01-02" }}T23:59

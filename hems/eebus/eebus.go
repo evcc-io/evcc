@@ -22,6 +22,7 @@ func init() {
 
 type EEBus struct {
 	mux sync.RWMutex
+	ctx context.Context // device lifetime, aborts Run
 	log *util.Logger
 
 	*eebus.Connector
@@ -47,9 +48,15 @@ type EEBus struct {
 	failsafeProductionLimit  *float64        // feed-in limit (NOT production despite its name)
 	productionNominalMax     float64
 
-	heartbeat *util.Value[struct{}]
-	interval  time.Duration
+	heartbeat         *util.Value[struct{}]
+	heartbeatReturned time.Time // heartbeat resumed while in failsafe
+	limitReceived     time.Time // last limit written by the Energy Guard
+	interval          time.Duration
 }
+
+// failsafeReleaseTimeout is how long the CS keeps the failsafe limit after the
+// heartbeat resumed but the Energy Guard has not stated a limit yet ([LPC-921]).
+const failsafeReleaseTimeout = 2 * time.Minute
 
 type Limits struct {
 	ContractualConsumptionNominalMax    float64
@@ -70,15 +77,6 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*E
 		Interval    time.Duration
 	}{
 		Limits: Limits{
-			// contractual max power at the grid connection point reported to the control box
-			// (EEBus LPC, EMS device type). Default: standard 3x35A x 230V house connection.
-			// This is the connection capacity, not the SteuVE Pmin (see failsafe limit below).
-			ContractualConsumptionNominalMax:    24150, // 3 * 35A * 230V
-			FailsafeConsumptionActivePowerLimit: 4200,
-
-			ProductionNominalMax:               0,
-			FailsafeProductionActivePowerLimit: nil, // 0 is a valid limit
-
 			FailsafeDurationMinimum: 2 * time.Hour,
 		},
 		Interval: 10 * time.Second,
@@ -104,6 +102,7 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 	}
 
 	c := &EEBus{
+		ctx:         ctx,
 		log:         util.NewLogger("eebus"),
 		site:        site,
 		passthrough: passthrough,
@@ -117,10 +116,6 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 		failsafeProductionLimit:  limits.FailsafeProductionActivePowerLimit,
 		productionNominalMax:     limits.ProductionNominalMax,
 	}
-
-	// simulate a received heartbeat
-	// otherwise a heartbeat timeout is assumed when the state machine is called for the first time
-	c.heartbeat.Set(struct{}{})
 
 	if err := inst.RegisterDevice(ski, "", c); err != nil {
 		return nil, err
@@ -136,8 +131,10 @@ func NewEEBus(ctx context.Context, ski string, limits Limits, passthrough func(b
 	eebus.LogEntities(c.log.DEBUG, "CS LPP", c.cs.CsLPPInterface)
 
 	// set initial values
-	if err := c.cs.CsLPCInterface.SetConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
-		c.log.ERROR.Println("CS LPC SetConsumptionNominalMax:", err)
+	if limits.ContractualConsumptionNominalMax > 0 {
+		if err := c.cs.CsLPCInterface.SetConsumptionNominalMax(limits.ContractualConsumptionNominalMax); err != nil {
+			c.log.ERROR.Println("CS LPC SetConsumptionNominalMax:", err)
+		}
 	}
 	if c.failsafeConsumptionLimit > 0 {
 		if err := c.cs.CsLPCInterface.SetFailsafeConsumptionActivePowerLimit(c.failsafeConsumptionLimit, true); err != nil {
@@ -192,14 +189,22 @@ func (c *EEBus) Connect(connected bool) {
 	}
 }
 
+// Run applies limits until the device context is cancelled
 func (c *EEBus) Run() {
-	for range time.Tick(c.interval) {
+	// LPC-TS-017: the first run applies the failsafe limit until the Energy Guard states one
+	for tick := time.Tick(c.interval); ; {
 		if err := c.run(); err != nil {
 			c.log.ERROR.Println(err)
 		}
 
 		if c.publishFunc != nil {
 			c.publishFunc()
+		}
+
+		select {
+		case <-tick:
+		case <-c.ctx.Done():
+			return
 		}
 	}
 }
@@ -211,6 +216,11 @@ func (c *EEBus) run() error {
 	c.log.TRACE.Println("status:", c.status)
 
 	_, heartbeatErr := c.heartbeat.Get()
+
+	// the LPC-921 release window only runs while the heartbeat is back
+	if heartbeatErr != nil {
+		c.heartbeatReturned = time.Time{}
+	}
 
 	// LPC-911 / LPP-911: heartbeat lost while operating, enter failsafe.
 	if heartbeatErr != nil && c.status != StatusFailsafe {
@@ -235,10 +245,19 @@ func (c *EEBus) run() error {
 			return nil
 		}
 
-		// LPC-918/919/920 / LPP-equivalent: heartbeat returned - leave failsafe
-		// immediately. Fall through to the LPC-914/1 block below, which will
-		// apply whatever fresh limit the EG sent (or release the limit if the
-		// EG has not sent an active limit since the failsafe entry).
+		if c.heartbeatReturned.IsZero() {
+			c.heartbeatReturned = time.Now()
+		}
+
+		// LPC-916/LPP-916: the failsafe state is left on a heartbeat and a *following*
+		// limit write. Without one, LPC-921 grants 120s before going unlimited.
+		if c.limitReceived.Before(c.statusUpdated) && time.Since(c.heartbeatReturned) < failsafeReleaseTimeout {
+			return nil
+		}
+
+		// LPC-918/919/920 / LPP-equivalent: leave failsafe. Fall through to the
+		// LPC-914/1 block below, which will apply whatever fresh limit the EG sent
+		// (or release the limit if the EG has not sent an active limit).
 		c.log.DEBUG.Println("heartbeat returned- leaving failsafe mode")
 		c.setStatus(StatusNormal)
 
@@ -257,7 +276,8 @@ func (c *EEBus) run() error {
 		case !c.consumptionLimit.IsActive:
 			c.log.DEBUG.Println("consumption limit released")
 			c.setConsumptionLimit(0)
-		case time.Since(*c.consumptionLimitActivated) > c.consumptionLimit.Duration:
+		// a limit stated without duration does not expire
+		case c.consumptionLimit.Duration > 0 && time.Since(*c.consumptionLimitActivated) > c.consumptionLimit.Duration:
 			c.log.DEBUG.Println("consumption limit duration exceeded")
 			c.setConsumptionLimit(0)
 			c.consumptionLimit.IsActive = false
@@ -279,7 +299,8 @@ func (c *EEBus) run() error {
 		case !c.productionLimit.IsActive:
 			c.log.DEBUG.Println("production limit released")
 			c.setProductionLimit(0, false)
-		case time.Since(*c.productionLimitActivated) > c.productionLimit.Duration:
+		// a limit stated without duration does not expire
+		case c.productionLimit.Duration > 0 && time.Since(*c.productionLimitActivated) > c.productionLimit.Duration:
 			c.log.DEBUG.Println("production limit duration exceeded")
 			c.setProductionLimit(0, false)
 			c.productionLimit.IsActive = false
@@ -375,8 +396,8 @@ func (c *EEBus) MaxConsumptionPower() *float64 {
 	return new(c.consumptionLimit.Value)
 }
 
-// MaxProductionPower implements api.HEMS. Scaffolding only — EEBus does not
-// publish a wattage-typed production cap yet.
+// MaxProductionPower implements api.HEMS: nil until first connected,
+// else failsafe limit in failsafe, else the active EG-supplied LPP limit, else 0.
 func (c *EEBus) MaxProductionPower() *float64 {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
@@ -389,5 +410,6 @@ func (c *EEBus) MaxProductionPower() *float64 {
 	if c.status == StatusFailsafe {
 		return c.failsafeProductionLimit
 	}
-	return new(c.productionLimit.Value)
+	// production limits are negative watts, the api.HEMS cap is positive
+	return new(-c.productionLimit.Value)
 }

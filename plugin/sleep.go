@@ -33,8 +33,7 @@ func NewSleepFromConfig(ctx context.Context, other map[string]any) (Plugin, erro
 }
 
 // sleeper is the generic sleeper function for sleepPlugin
-// it is currently not possible to write this as a method
-func sleeper[T comparable](o *sleepPlugin) func(T) error {
+func (o *sleepPlugin) sleeper[T comparable]() func(T) error {
 	return func(val T) error {
 		<-time.After(o.duration)
 
@@ -45,17 +44,17 @@ func sleeper[T comparable](o *sleepPlugin) func(T) error {
 var _ IntSetter = (*sleepPlugin)(nil)
 
 func (o *sleepPlugin) IntSetter(param string) (func(int64) error, error) {
-	return sleeper[int64](o), nil
+	return o.sleeper[int64](), nil
 }
 
 var _ FloatSetter = (*sleepPlugin)(nil)
 
 func (o *sleepPlugin) FloatSetter(param string) (func(float64) error, error) {
-	return sleeper[float64](o), nil
+	return o.sleeper[float64](), nil
 }
 
 var _ BoolSetter = (*sleepPlugin)(nil)
 
 func (o *sleepPlugin) BoolSetter(param string) (func(bool) error, error) {
-	return sleeper[bool](o), nil
+	return o.sleeper[bool](), nil
 }

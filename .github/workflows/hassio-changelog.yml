@@ -17,6 +17,10 @@ jobs:
     name: Update Hassio Changelog
     runs-on: depot-ubuntu-24.04-arm
 
+    # release asset uploads fire repeated `edited` events, serialize to avoid racing pushes
+    concurrency:
+      group: hassio-changelog-${{ inputs.addon_path }}
+
     permissions:
       contents: read # gh api calls to evcc repo; push to hassio-addon uses HASSIO_DEPLOY_TOKEN PAT
 

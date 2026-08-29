@@ -89,6 +89,11 @@ test.describe("charging loadpoint", async () => {
     await expectModalVisible(lpModal);
     await expect(lpModal.getByRole("heading", { name: "Edit Charging Point" })).toBeVisible();
     await lpModal.getByLabel("Title").fill("Solar Carport 2");
+
+    // unsaved changes: backdrop click keeps modal open
+    await lpModal.click({ position: { x: 10, y: 10 } });
+    await expectModalVisible(lpModal);
+
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
     await expect(page.getByTestId("loadpoint")).toContainText("Solar Carport 2");
@@ -730,7 +735,7 @@ temp:
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: successful");
     await expect(restResult).toContainText(["Power", "1.0 kW"].join(""));
-    await expect(restResult).toContainText(["Energy", "0.7 kWh"].join(""));
+    await expect(restResult).toContainText(["Energy", "700 Wh"].join(""));
     await expect(restResult).toContainText(["Temperature", "25.0°C"].join(""));
     await expect(restResult).toContainText(["Heater limit", "50.0°C"].join(""));
 

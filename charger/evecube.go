@@ -378,11 +378,11 @@ func (wb *EVECUBE) phases1p3p(phases int) error {
 }
 
 // identify implements the api.Identifier interface
-func (wb *EVECUBE) identify() (string, error) {
+func (wb *EVECUBE) identify() ([]string, error) {
 	status, err := wb.getAutomationStatus()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return status.AuthTag.Tag, nil
+	return []string{status.AuthTag.Tag}, nil
 }

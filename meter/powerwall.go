@@ -1,69 +1,53 @@
 package meter
 
 import (
-	"context"
 	"errors"
 	"fmt"
-	"math"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/andig/go-powerwall"
-	"github.com/bogosj/tesla"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"golang.org/x/oauth2"
 )
 
 // PowerWall is the tesla powerwall meter
 type PowerWall struct {
 	implement.Caps
-	usage      string
-	client     *powerwall.Client
-	meterG     func() (map[string]powerwall.MeterAggregatesData, error)
-	energySite *tesla.EnergySite
+	usage  string
+	client *powerwall.Client
+	meterG func() (map[string]powerwall.MeterAggregatesData, error)
 }
 
-func init() {
-	registry.Add("tesla", NewPowerWallFromConfig)
-	registry.Add("powerwall", NewPowerWallFromConfig)
+type powerWallConfig struct {
+	URI, Usage, User, Password string
+	Cache                      time.Duration
+	SiteId                     int64   // Fleet API only, deprecated for the local meter
+	RefreshToken_              string  `mapstructure:"refreshToken"` // TODO deprecated
+	MinSoc                     float64 // Fleet API only, backup reserve restored in normal mode
+	MaxSoc_                    any     `mapstructure:"maxsoc"`            // TODO deprecated
+	MaxChargePower_            any     `mapstructure:"maxchargepower"`    // TODO deprecated
+	MaxDischargePower_         any     `mapstructure:"maxdischargepower"` // TODO deprecated
 }
 
-// NewPowerWallFromConfig creates a PowerWall Powerwall Meter from generic config
-func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
-	cc := struct {
-		URI, Usage, User, Password string
-		Cache                      time.Duration
-		RefreshToken               string
-		SiteId                     int64
-		batterySocLimits           `mapstructure:",squash"`
-		batteryPowerLimits         `mapstructure:",squash"`
-	}{
-		batterySocLimits: batterySocLimits{
-			MinSoc: 20,
-			MaxSoc: 95,
-		},
-		batteryPowerLimits: batteryPowerLimits{
-			MaxChargePower:    4600,
-			MaxDischargePower: 4600,
-		},
-		Cache: time.Second,
+func defaultPowerWallConfig() powerWallConfig {
+	return powerWallConfig{
+		Cache:  time.Second,
+		MinSoc: 20,
 	}
+}
 
-	if err := util.DecodeOther(other, &cc); err != nil {
-		return nil, err
-	}
-
+// validate checks required parameters and maps legacy usage names
+func (cc *powerWallConfig) validate() error {
 	if cc.Usage == "" {
-		return nil, errors.New("missing usage")
+		return errors.New("missing usage")
 	}
 
 	if cc.Password == "" {
-		return nil, errors.New("missing password")
+		return errors.New("missing password")
 	}
 
 	// support default meter names
@@ -74,19 +58,41 @@ func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
 		cc.Usage = "solar"
 	}
 
-	return NewPowerWall(cc.URI, cc.Usage, cc.User, cc.Password, cc.Cache, cc.RefreshToken, cc.SiteId, cc.batterySocLimits, cc.batteryPowerLimits)
+	return nil
 }
 
-// NewPowerWall creates a Tesla PowerWall Meter
-func NewPowerWall(uri, usage, user, password string, cache time.Duration, refreshToken string, siteId int64, batterySocLimits batterySocLimits, batteryPowerLimits batteryPowerLimits) (api.Meter, error) {
-	log := util.NewLogger("powerwall").Redact(user, password, refreshToken)
+func init() {
+	registry.Add("tesla", NewPowerWallFromConfig)
+	registry.Add("powerwall", NewPowerWallFromConfig)
+}
 
+// NewPowerWallFromConfig creates a PowerWall Powerwall Meter from generic config
+func NewPowerWallFromConfig(other map[string]any) (api.Meter, error) {
+	cc := defaultPowerWallConfig()
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	if err := cc.validate(); err != nil {
+		return nil, err
+	}
+
+	log := util.NewLogger("powerwall").Redact(cc.User, cc.Password)
+
+	if cc.RefreshToken_ != "" {
+		log.WARN.Println("refreshToken is deprecated, use the Powerwall (Fleet API) template for battery control")
+	}
+
+	return newPowerWall(log, cc)
+}
+
+func newPowerWall(log *util.Logger, cc powerWallConfig) (*PowerWall, error) {
 	httpClient := &http.Client{
 		Transport: request.NewTripper(log, powerwall.DefaultTransport()),
 		Timeout:   time.Second * 2, // Timeout after 2 seconds
 	}
 
-	client := powerwall.NewClient(uri, user, password, powerwall.WithHttpClient(httpClient))
+	client := powerwall.NewClient(cc.URI, cc.User, cc.Password, powerwall.WithHttpClient(httpClient))
 	if _, err := client.GetStatus(); err != nil {
 		return nil, err
 	}
@@ -94,84 +100,45 @@ func NewPowerWall(uri, usage, user, password string, cache time.Duration, refres
 	m := &PowerWall{
 		Caps:   implement.New(),
 		client: client,
-		usage:  strings.ToLower(usage),
-		meterG: util.Cached(client.GetMetersAggregates, cache),
-	}
-
-	var batteryControl bool
-	if refreshToken != "" || siteId != 0 {
-		if refreshToken == "" {
-			return nil, errors.New("missing refresh token")
-		}
-		batteryControl = true
-	}
-
-	if batteryControl {
-		ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(log))
-
-		options := []tesla.ClientOption{tesla.WithToken(&oauth2.Token{
-			RefreshToken: refreshToken,
-			Expiry:       time.Now(),
-		})}
-
-		cloudClient, err := tesla.NewClient(ctx, options...)
-		if err != nil {
-			return nil, err
-		}
-
-		if siteId == 0 {
-			// auto detect energy site ID, picking first
-			products, err := cloudClient.Products()
-			if err != nil {
-				return nil, err
-			}
-
-			for _, p := range products {
-				if p.EnergySiteId != 0 {
-					siteId = p.EnergySiteId
-					break
-				}
-			}
-		}
-
-		log.Redact(strconv.FormatInt(siteId, 10))
-		energySite, err := cloudClient.EnergySite(siteId)
-		if err != nil {
-			return nil, err
-		}
-		m.energySite = energySite
+		usage:  strings.ToLower(cc.Usage),
+		meterG: util.Cached(client.GetMetersAggregates, cc.Cache),
 	}
 
 	if m.usage == "load" || m.usage == "solar" {
 		implement.Has(m, implement.MeterEnergy(m.totalEnergy))
 	}
 
-	if usage == "battery" {
-		implement.Has(m, implement.Battery(m.batterySoc))
-		implement.May(m, implement.BatterySocLimiter(batterySocLimits.Decorator()))
-		implement.May(m, implement.BatteryPowerLimiter(batteryPowerLimits.Decorator()))
+	if m.usage == "battery" {
+		opG := util.Cached(client.GetOperation, cc.Cache)
 
-		res, err := m.client.GetSystemStatus()
+		// capacity and power limits are static, reading them validates connectivity
+		status, err := client.GetSystemStatus()
 		if err != nil {
 			return nil, err
 		}
 
-		implement.Has(m, implement.BatteryCapacity(func() float64 {
-			return res.NominalFullPackEnergy / 1e3
-		}))
-	}
+		implement.Has(m, implement.Battery(m.batterySoc))
 
-	if batteryControl {
-		implement.May(m, implement.BatteryController(batterySocLimits.LimitController(m.socG, func(limit float64) error {
-			// Handle Tesla firmware 25.18.4 restrictions:
-			// Values between 81-99% are not allowed, only ≤80% or exactly 100%
-			limitUint := uint64(limit)
-			if limitUint > 80 && limitUint < 100 {
-				// Adjust to maximum allowed (80%)
-				limitUint = 80
+		implement.Has(m, implement.BatteryCapacity(func() float64 {
+			return status.NominalFullPackEnergy / 1e3
+		}))
+
+		// backup reserve is the lower discharge limit, the powerwall has no upper soc limit
+		implement.Has(m, implement.BatterySocLimiter(func() (float64, float64) {
+			op, err := opG()
+			if err != nil {
+				log.ERROR.Println("battery soc limits:", err)
+				return 0, 100
 			}
-			return m.energySite.SetBatteryReserve(limitUint)
-		})))
+			return op.BackupReservePercent, 100
+		}))
+
+		if status.MaxApparentPower > 0 {
+			// inverter apparent power applies to charging and discharging alike
+			implement.Has(m, implement.BatteryPowerLimiter(func() (float64, float64) {
+				return status.MaxApparentPower, status.MaxApparentPower
+			}))
+		}
 	}
 
 	return m, nil
@@ -220,16 +187,4 @@ func (m *PowerWall) batterySoc() (float64, error) {
 	}
 
 	return res.Percentage, err
-}
-
-// decorate soc
-func (m *PowerWall) socG() (float64, error) {
-	ess, err := m.energySite.EnergySiteStatus()
-	if err != nil {
-		return 0, err
-	}
-	// Fix for Tesla firmware 25.18.4: Remove the problematic +0.5 rounding logic
-	// that was interfering with exact 100% reserve settings. Simply return the
-	// actual current SOC rounded to nearest integer.
-	return math.Round(ess.PercentageCharged), nil
 }

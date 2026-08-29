@@ -25,6 +25,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/metrics"
 	coresettings "github.com/evcc-io/evcc/core/settings"
+	"github.com/evcc-io/evcc/curtailer"
 	"github.com/evcc-io/evcc/hems"
 	hemsapi "github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/hems/shm"
@@ -52,7 +53,6 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/libp2p/zeroconf/v2"
-	"github.com/samber/lo"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	vpr "github.com/spf13/viper"
@@ -343,7 +343,7 @@ func configurableInstance[T any](typ string, conf *config.Config, newFromConf ne
 	}()
 
 	var instance T
-	if err == nil {
+	if err == nil && !conf.Disable {
 		instance, err = newFromConf(ctx, typ, other)
 		if err != nil {
 			err = &DeviceError{cc.Name, fmt.Errorf("cannot create %s '%s': %w", typ, cc.Name, err)}
@@ -395,6 +395,50 @@ func configureMeters(static []config.Named, names ...string) error {
 			}
 
 			return configurableInstance("meter", &conf, meter.NewFromConfig, config.Meters())
+		})
+	}
+
+	return eg.Wait()
+}
+
+func configureCurtailers(static []config.Named, names ...string) error {
+	var eg errgroup.Group
+
+	for i, cc := range static {
+		if cc.Name == "" {
+			return fmt.Errorf("cannot create curtailer %d: missing name", i+1)
+		}
+
+		// configure all, if no name refs are given
+		if len(names) > 0 && !slices.Contains(names, cc.Name) {
+			continue
+		}
+
+		if err := nameValid(cc.Name); err != nil {
+			log.WARN.Printf("create curtailer %d: %v", i+1, err)
+		}
+
+		eg.Go(func() error {
+			return staticInstance("curtailer", cc, curtailer.NewFromConfig, config.Curtailers())
+		})
+	}
+
+	// append devices from database
+	configurable, err := config.ConfigurationsByClass(templates.Curtailer)
+	if err != nil {
+		return err
+	}
+
+	for _, conf := range configurable {
+		eg.Go(func() error {
+			cc := conf.Named()
+
+			// always skip unreferenced db devices
+			if !slices.Contains(names, cc.Name) {
+				return nil
+			}
+
+			return configurableInstance("curtailer", &conf, curtailer.NewFromConfig, config.Curtailers())
 		})
 	}
 
@@ -539,9 +583,14 @@ func configureVehicles(static []config.Named, names ...string) error {
 				}
 			}
 
-			instance, err := vehicleInstance(cc)
-			if err != nil {
-				return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
+			// disabled vehicles are not instantiated
+			var instance api.Vehicle
+			if !conf.Disable {
+				var err error
+				instance, err = vehicleInstance(cc)
+				if err != nil {
+					return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
+				}
 			}
 
 			mu.Lock()
@@ -973,7 +1022,7 @@ func configureEEBus(conf *eebus.Config) error {
 	return nil
 }
 
-func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *globalconfig.MessagingEvents, vehicles messenger.Vehicles, valueChan chan<- util.Param, cache *util.ParamCache) (chan messenger.Event, error) {
+func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *globalconfig.MessagingEvents, vehicles messenger.Vehicles) (chan messenger.Event, error) {
 	// yaml config from file
 	if len(confMessaging.Events) != 0 || len(confMessaging.Services) != 0 {
 		yamlSource.messaging = globalconfig.YamlSourceFile
@@ -1002,7 +1051,8 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 		}
 	}
 
-	messageChan := make(chan messenger.Event, 1)
+	// events are queued by the value cache, keep enough slack to not stall it
+	messageChan := make(chan messenger.Event, 16)
 
 	var eg errgroup.Group
 
@@ -1043,7 +1093,7 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 		events = confMessaging.Events
 	}
 
-	messageHub, err := messenger.NewHub(events, vehicles, cache)
+	messageHub, err := messenger.NewHub(events, vehicles)
 
 	if err != nil {
 		return messageChan, fmt.Errorf("failed configuring push services: %w", err)
@@ -1055,7 +1105,7 @@ func configureMessengers(confMessaging *globalconfig.Messaging, confEvents *glob
 		}
 	}
 
-	go messageHub.Run(messageChan, valueChan)
+	go messageHub.Run(messageChan)
 
 	return messageChan, nil
 }
@@ -1141,15 +1191,20 @@ func configureSolarTariffs(confs []config.Typed, deviceNames []string, target *a
 		if len(deviceNames) == 1 {
 			return configureTariff(config.Typed{}, deviceNames[0], target)
 		}
-		tt := make([]api.Tariff, len(deviceNames))
-		for i, name := range deviceNames {
+		var tt []api.Tariff
+		for _, name := range deviceNames {
 			dev, err := config.Tariffs().ByName(name)
 			if err != nil {
 				return fmt.Errorf("tariff device %s not found: %w", name, err)
 			}
-			tt[i] = dev.Instance()
+			// nil instance marks disabled device
+			if instance := dev.Instance(); instance != nil {
+				tt = append(tt, instance)
+			}
 		}
-		*target = tariff.NewCombined(tt)
+		if len(tt) > 0 {
+			*target = tariff.NewCombined(tt)
+		}
 	}
 	return nil
 }
@@ -1204,9 +1259,13 @@ func configureTariffs(conf *globalconfig.Tariffs, names ...string) (*tariff.Tari
 				return nil
 			}
 
-			instance, err := tariffInstance(cc.Name, config.Typed{Type: cc.Type, Other: cc.Other})
-			if err != nil {
-				return err
+			var instance api.Tariff
+			if !conf.Disable {
+				var err error
+				instance, err = tariffInstance(cc.Name, config.Typed{Type: cc.Type, Other: cc.Other})
+				if err != nil {
+					return err
+				}
 			}
 
 			if e := config.Tariffs().Add(config.NewConfigurableDevice(&conf, instance)); e != nil {
@@ -1273,6 +1332,10 @@ func configureDevices(conf globalconfig.All) error {
 		errs = append(errs, &ClassError{ClassCircuit, err})
 	}
 
+	if err := configureCurtailers(conf.Curtailers, references.curtailer...); err != nil {
+		errs = append(errs, &ClassError{ClassCurtailer, err})
+	}
+
 	return joinErrors(errs...)
 }
 
@@ -1328,9 +1391,12 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 		errs = append(errs, &ClassError{ClassTariff, err})
 	}
 
-	loadpoints := lo.Map(config.Loadpoints().Devices(), func(dev config.Device[loadpoint.API], _ int) *core.Loadpoint {
-		return dev.Instance().(*core.Loadpoint)
-	})
+	// nil entries mark disabled loadpoints- indexes stay aligned with config order
+	var loadpoints []*core.Loadpoint
+	for _, dev := range config.Loadpoints().Devices() {
+		inst, _ := dev.Instance().(*core.Loadpoint)
+		loadpoints = append(loadpoints, inst)
+	}
 
 	site, err := configureSite(conf.Site, loadpoints, tariffs)
 	if err != nil {
@@ -1367,7 +1433,7 @@ CONTINUE:
 		}
 
 		if slices.ContainsFunc(loadpoints, func(lp *core.Loadpoint) bool {
-			return lp.GetCircuit() == instance
+			return lp != nil && lp.GetCircuit() == instance
 		}) {
 			continue CONTINUE
 		}
@@ -1445,14 +1511,19 @@ func configureLoadpoints(conf globalconfig.All) error {
 			return &DeviceError{cc.Name, err}
 		}
 
-		instance, err := newLoadpoint(idx, cc.Name, static, func(log *util.Logger) coresettings.Settings {
-			return coresettings.NewConfigSettingsAdapter(log, &conf)
-		})
-		if err != nil {
-			err = &DeviceError{cc.Name, err}
+		var instance loadpoint.API
+		if !conf.Disable {
+			lp, e := newLoadpoint(idx, cc.Name, static, func(log *util.Logger) coresettings.Settings {
+				return coresettings.NewConfigSettingsAdapter(log, &conf)
+			})
+			if e != nil {
+				err = &DeviceError{cc.Name, e}
+			} else {
+				instance = lp
+			}
 		}
 
-		dev := config.NewConfigurableDevice[loadpoint.API](&conf, instance)
+		dev := config.NewConfigurableDevice(&conf, instance)
 		if e := config.Loadpoints().Add(dev); e != nil && err == nil {
 			err = &DeviceError{cc.Name, e}
 		}
@@ -1473,7 +1544,7 @@ func configureLoadpoints(conf globalconfig.All) error {
 }
 
 // configureAuth handles routing for devices. For now only api.AuthProvider related routes
-func configureAuth(router *mux.Router, paramC chan<- util.Param) {
+func configureAuth(router *mux.Router, authMiddleware mux.MiddlewareFunc, paramC chan<- util.Param) {
 	auth := router.PathPrefix("/providerauth").Subrouter()
 	auth.Use(handlers.CompressHandler)
 	auth.Use(handlers.CORS(
@@ -1483,8 +1554,8 @@ func configureAuth(router *mux.Router, paramC chan<- util.Param) {
 	// backwards-compatible revert of https://github.com/evcc-io/evcc/pull/21266
 	router.PathPrefix("/oauth").Handler(auth)
 
-	// wire the handler
-	providerauth.Setup(auth, paramC)
+	// wire the handler; login/logout require an authenticated session
+	providerauth.Setup(auth, paramC, authMiddleware)
 }
 
 // isExperimental returns if experimental features are enabled

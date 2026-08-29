@@ -39,6 +39,6 @@ render: |
     id: {{ .clientid }}
     secret: {{ .clientsecret }}
   redirecturi: {{ .redirecturi }}
-  {{ include "vehicle-common" . }}
+  {{ include "common" . }}
   cache: {{ .cache }}
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}

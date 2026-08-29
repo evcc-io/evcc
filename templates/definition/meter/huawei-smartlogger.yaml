@@ -3,7 +3,7 @@ products:
   - brand: Huawei
     description:
       generic: SmartLogger
-capabilities: ["battery-control"]
+capabilities: ["battery-control", "curtail"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -31,6 +31,14 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 32349 # Negative active electricity
+      type: holding
+      decode: int64
+    scale: 0.01
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 32357 # Positive active electricity
       type: holding
       decode: int64
     scale: 0.01
@@ -63,7 +71,7 @@ render: |
     id: 0
     uri: {{ joinHostPort .host .port }}
     register:
-      address: 40521 # Active power
+      address: 40521 # Input power
       type: holding
       decode: int32
   energy:
@@ -71,11 +79,38 @@ render: |
     id: 0
     uri: {{ joinHostPort .host .port }}
     register:
-      address: 40560 # E-Total
+      address: 40446 # Accumulated PV energy yield
       type: holding
-      decode: uint32
-    scale: 0.1
+      decode: int64
+    scale: 0.01
   maxacpower: {{ .maxacpower }}
+  curtail:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 40428 # Active power [–100%, 100%] - a negative value indicates the limit for active power supplied from the grid to the ESS
+      type: writesingle
+      encoding: int16
+    scale: 10
+  curtailed:
+    source: go
+    in:
+    - name: limit
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 40428 # Active power [–100%, 100%] - a negative value indicates the limit for active power supplied from the grid to the ESS
+          type: holding
+          decode: int16
+        scale: 0.1
+    script: |
+      percent := int(limit)
+      if percent < 0 || percent > 100 {
+        percent = 100
+      }
+      percent
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -225,5 +260,8 @@ render: |
                 address: 47087 # Charge from grid
                 type: writesingle
                 encoding: uint16
+      default:
+        source: error
+        error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

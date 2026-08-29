@@ -19,9 +19,11 @@ func siteHandler(site site.API) http.HandlerFunc {
 			Aux      []string `json:"aux"`
 			Ext      []string `json:"ext"`
 			Consumer []string `json:"consumer"`
+			Curtail  []string `json:"curtail"`
 		}{
 			Title:    site.GetTitle(),
 			Grid:     site.GetGridMeterRef(),
+			Curtail:  site.GetCurtailerRefs(),
 			PV:       site.GetPVMeterRefs(),
 			Battery:  site.GetBatteryMeterRefs(),
 			Aux:      site.GetAuxMeterRefs(),
@@ -54,6 +56,7 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 			Aux      *[]string
 			Ext      *[]string
 			Consumer *[]string
+			Curtail  *[]string
 		}
 
 		if err := jsonDecoder(r.Body).Decode(&payload); err != nil {
@@ -116,6 +119,18 @@ func updateSiteHandler(site site.API) http.HandlerFunc {
 			}
 
 			site.SetConsumerMeterRefs(*payload.Consumer)
+			setConfigDirty()
+		}
+
+		if payload.Curtail != nil {
+			for _, m := range *payload.Curtail {
+				if _, err := config.Curtailers().ByName(m); err != nil {
+					jsonError(w, http.StatusBadRequest, err)
+					return
+				}
+			}
+
+			site.SetCurtailerRefs(*payload.Curtail)
 			setConfigDirty()
 		}
 

@@ -105,7 +105,7 @@ render: |
     block: # 516-538
       register: 516
       count: 23
-    {{- if or (eq .batterytype "lv") (not .firmware1098) }}
+    {{- if or (eq .batterytype "lv") (ne .firmware1098 "true") }}
     scale: 0.1
     {{- end }}
   returnenergy:
@@ -118,7 +118,7 @@ render: |
     block: # 516-538
       register: 516
       count: 23
-    {{- if or (eq .batterytype "lv") (not .firmware1098) }}
+    {{- if or (eq .batterytype "lv") (ne .firmware1098 "true") }}
     scale: 0.1
     {{- end }}
   currents:
@@ -236,7 +236,7 @@ render: |
       {{- if eq .batterytype "hv" }}  
       scale: 10
       {{- end }}
-    {{- if .includegenport }}
+    {{- if eq .includegenport "true" }}
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
@@ -261,10 +261,10 @@ render: |
       block: # 516-538
         register: 516
         count: 23
-      {{- if or (eq .batterytype "lv") (not .firmware1098) }}
+      {{- if or (eq .batterytype "lv") (ne .firmware1098 "true") }}
       scale: 0.1
       {{- end }}
-    {{- if .includegenport }}
+    {{- if eq .includegenport "true" }}
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
@@ -274,7 +274,7 @@ render: |
       block: # 516-538
         register: 516
         count: 23
-      {{- if or (eq .batterytype "lv") (not .firmware1098) }}
+      {{- if or (eq .batterytype "lv") (ne .firmware1098 "true") }}
       scale: 0.1
       {{- end }}
     {{- end }}
@@ -284,34 +284,22 @@ render: |
   # "Solar Sell" (register 145) is the owner's export on/off switch and left untouched.
   # HV models use 10 W units for register 143 (LV: 1 W).
   curtail: # limit feed-in to the given percent of nominal (100 % = nominal power)
-    source: go
-    in:
-      - name: maxacpower
-        type: int
-        config:
-          source: const
-          value: {{ .maxacpower }}
-    script: |
-      powerlimit := ( maxacpower * curtail ) / 100
-      powerlimit
-    out:
-      - name: powerlimit
-        type: int
-        config:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 143 # Max Sell Power (W)
-            type: writemultiple
-            decode: uint16
-          {{- if eq .batterytype "hv" }}
-          scale: 0.1
-          {{- end }}
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 143 # Max Sell Power (W)
+      type: writemultiple
+      decode: uint16
+    {{- if eq .batterytype "hv" }}
+    scale: {{ divf (maxf .maxacpower 1) 1000 }} # % to 10 W units
+    {{- else }}
+    scale: {{ divf (maxf .maxacpower 1) 100 }} # % to W
+    {{- end }}
   curtailed: # allowed feed-in as percent of nominal, derived from Max Sell Power
     source: go
     in:
       - name: limit
-        type: int
+        type: float
         config:
           source: modbus
           {{- include "modbus" . | indent 8 }}
@@ -322,18 +310,14 @@ render: |
           {{- if eq .batterytype "hv" }}
           scale: 10
           {{- end }}
-      - name: maxacpower
-        type: int
-        config:
-          source: const
-          value: {{ .maxacpower }}
     script: |
-      percent := 100
-      if maxacpower > 0 && limit < maxacpower {
-        // round, the watt conversion does not reproduce the written percent exactly
-        percent = (limit*100 + maxacpower/2) / maxacpower
+      // float64 is required: a whole-number input arrives as an int literal
+      // round, the watt conversion does not reproduce the written percent exactly
+      p := int(float64(limit)*100/{{ maxf .maxacpower 1 }} + 0.5)
+      if p > 100 {
+        p = 100
       }
-      percent
+      p
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -364,7 +348,7 @@ render: |
     block: # 516-538
       register: 516
       count: 23
-    {{- if or (eq .batterytype "lv") (not .firmware1098) }}
+    {{- if or (eq .batterytype "lv") (ne .firmware1098 "true") }}
     scale: 0.1
     {{- end }}
   returnenergy:
@@ -377,7 +361,7 @@ render: |
     block: # 516-538
       register: 516
       count: 23
-    {{- if or (eq .batterytype "lv") (not .firmware1098) }}
+    {{- if or (eq .batterytype "lv") (ne .firmware1098 "true") }}
     scale: 0.1
     {{- end }}
   soc:
@@ -625,5 +609,8 @@ render: |
               address: 109 # Battery Max Discharging Current
               type: writemultiple
               decode: uint16
+    default:
+      source: error
+      error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

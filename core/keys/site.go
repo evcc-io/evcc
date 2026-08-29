@@ -41,6 +41,9 @@ const (
 	AuxMeters      = "auxMeters"
 	ConsumerMeters = "consumerMeters"
 
+	// curtailment devices
+	Curtailers = "curtailers"
+
 	// battery settings
 	BatteryDischargeControl = "batteryDischargeControl"
 	BatteryGridChargeLimit  = "batteryGridChargeLimit"
@@ -48,6 +51,9 @@ const (
 	BatteryGridDischarge    = "batteryGridDischarge"
 	BufferSoc               = "bufferSoc"
 	BufferStartSoc          = "bufferStartSoc"
+
+	// grid settings
+	GridExportLimit = "gridExportLimit"
 
 	// forecast settings
 	SolarAdjusted = "solarAdjusted"
