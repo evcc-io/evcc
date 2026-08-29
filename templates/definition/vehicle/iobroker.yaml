@@ -90,6 +90,26 @@ params:
     unit: km
     type: string
     advanced: true
+  - name: latitude
+    description:
+      de: Breitengrad
+      en: Latitude
+    type: string
+    advanced: true
+    example: bmw.0.WBA8E9G50GM091234.status.position.lat
+    help:
+      en: Requires longitude to be set as well
+      de: Erfordert zusätzlich die Angabe des Längengrads
+  - name: longitude
+    description:
+      de: Längengrad
+      en: Longitude
+    type: string
+    advanced: true
+    example: bmw.0.WBA8E9G50GM091234.status.position.lon
+    help:
+      en: Requires latitude to be set as well
+      de: Erfordert zusätzlich die Angabe des Breitengrads
   - name: climater
     description:
       de: Vorklimatisierung
@@ -211,6 +231,33 @@ render: |
       user: {{ .user }}
       password: {{ .password }}
     {{- end }}
+  {{- end }}
+  {{- if and .latitude .longitude }}
+  position:
+    latitude:
+      source: http
+      headers:
+        - accept: text/plain;charset=UTF-8
+      uri: {{ .uri }}/rest-api/v1/state/{{ .latitude }}/plain?extraPlain=true
+      cache: {{ .cache }}
+      {{- if .user }}
+      auth:
+        type: basic
+        user: {{ .user }}
+        password: {{ .password }}
+      {{- end }}
+    longitude:
+      source: http
+      headers:
+        - accept: text/plain;charset=UTF-8
+      uri: {{ .uri }}/rest-api/v1/state/{{ .longitude }}/plain?extraPlain=true
+      cache: {{ .cache }}
+      {{- if .user }}
+      auth:
+        type: basic
+        user: {{ .user }}
+        password: {{ .password }}
+      {{- end }}
   {{- end }}
   {{- if .climater }}
   climater:
