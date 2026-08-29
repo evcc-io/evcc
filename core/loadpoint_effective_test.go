@@ -80,6 +80,25 @@ func TestEffectivePriorityScore(t *testing.T) {
 	}
 }
 
+// a vehicle reporting 0% is indistinguishable from an unknown soc and is deliberately read
+// as unknown: it forfeits the sub-ordering boost its gap would earn, scoring like a full
+// vehicle rather than ranking first
+func TestEffectivePriorityScoreZeroSocReadAsUnknown(t *testing.T) {
+	score := func(strategy api.PriorityStrategy, soc float64) float64 {
+		lp := NewLoadpoint(util.NewLogger("foo"), nil)
+		lp.vehicleSoc = soc
+		return lp.EffectivePriorityScore(strategy, api.PriorityBasisPercent, 100)
+	}
+
+	for _, strategy := range []api.PriorityStrategy{api.PrioritySoc, api.PriorityDeficit} {
+		depleted := score(strategy, 0)
+
+		assert.Zero(t, depleted, "soc 0 must score the bare tier, not the 100pp gap it looks like")
+		assert.Equal(t, score(strategy, 100), depleted, "soc 0 ties with a full vehicle")
+		assert.Less(t, depleted, score(strategy, 90), "soc 0 loses to any vehicle with a known gap")
+	}
+}
+
 // the energy basis must keep distinct kWh gaps distinct: a big pack near empty has to
 // outrank the same pack half full instead of both saturating the fraction
 func TestEffectivePriorityScoreEnergyLargePack(t *testing.T) {

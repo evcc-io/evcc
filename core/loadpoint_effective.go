@@ -54,7 +54,9 @@ func (lp *Loadpoint) EffectivePriorityScore(strategy api.PriorityStrategy, basis
 		return score
 	}
 
-	// soc 0 is read as unknown, matching nextActivePlan's vehicleSoc convention
+	// soc 0 is the unknown sentinel used across core. An unknown soc carries no comparable
+	// gap, hence a vehicle actually reporting 0% scores no sub-ordering boost and ties with
+	// a full one instead of ranking first within its tier.
 	soc := lp.GetSoc()
 	if soc <= 0 {
 		return score
