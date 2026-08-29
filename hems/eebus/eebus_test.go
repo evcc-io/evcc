@@ -280,6 +280,23 @@ func TestRun_LimitWithoutDuration(t *testing.T) {
 	assertProductionLimit(t, c, true)
 }
 
+// TestCurtailedPercent_Failsafe verifies CurtailedPercent reflects the configured
+// failsafe production limit while in failsafe, not the stale EG-supplied limit
+// (#33286): the EG limit had already been released (Value=0) before the heartbeat
+// was lost, which must not curtail feed-in to 0%.
+func TestCurtailedPercent_Failsafe(t *testing.T) {
+	c := newTestEEBus(t)
+	// EG limit already released before the heartbeat is lost.
+	c.productionLimit = ucapi.LoadLimit{Value: 0, IsActive: false}
+
+	require.NoError(t, c.run())
+	assert.Equal(t, StatusFailsafe, c.status)
+
+	percent := c.CurtailedPercent()
+	require.NotNil(t, percent)
+	assert.Equal(t, int(testFailsafeProduction/testProductionNominal*100), *percent)
+}
+
 // TestMaxProductionPower verifies the api.HEMS export cap is a positive wattage,
 // while LPP states its limits as negative watts.
 func TestMaxProductionPower(t *testing.T) {
