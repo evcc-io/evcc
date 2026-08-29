@@ -5,6 +5,8 @@ github.com/AlecAivazis/survey/v2 v2.3.7/go.mod h1:xUTIdE4KCOIjsBAE1JYsUPoCqYdZ1r
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/toml v1.6.0 h1:dRaEfpa2VI55EwlIW72hMRHdWouJeRF7TPYhI+AUQjk=
 github.com/BurntSushi/toml v1.6.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=
+github.com/JuulLabs-OSS/cbgo v0.0.1 h1:A5JdglvFot1J9qYR0POZ4qInttpsVPN9lqatjaPp2ro=
+github.com/JuulLabs-OSS/cbgo v0.0.1/go.mod h1:L4YtGP+gnyD84w7+jN66ncspFRfOYB5aj9QSXaFHmBA=
 github.com/Masterminds/goutils v1.1.1 h1:5nUrii3FMTL5diU80unEVvNevw1nH4+ZV4DSLVJLSYI=
 github.com/Masterminds/goutils v1.1.1/go.mod h1:8cTjp+g8YejhMuvIA5y2vz3BpJxksy863GQaJW2MFNU=
 github.com/Masterminds/semver/v3 v3.5.0 h1:kQceYJfbupGfZOKZQg0kou0DgAKhzDg2NZPAwZ/2OOE=
@@ -171,6 +173,8 @@ github.com/gabriel-vasile/mimetype v1.4.13 h1:46nXokslUBsAJE/wMsp5gtO500a4F3Nkz9
 github.com/gabriel-vasile/mimetype v1.4.13/go.mod h1:d+9Oxyo1wTzWdyVUPMmXFvp4F9tea18J8ufA774AB3s=
 github.com/getkin/kin-openapi v0.147.0 h1:s+Xsm9gUMPJbgCnABZ2to3zSQQ5A9dyj/zo62VVsldY=
 github.com/getkin/kin-openapi v0.147.0/go.mod h1:3BH9M9XDe/y9M5DSvEocVYAYq1w0qrhJHjC/vZi0AaY=
+github.com/go-ble/ble v0.0.0-20240122180141-8c5522f54333 h1:bQK6D51cNzMSTyAf0HtM30V2IbljHTDam7jru9JNlJA=
+github.com/go-ble/ble v0.0.0-20240122180141-8c5522f54333/go.mod h1:fFJl/jD/uyILGBeD5iQ8tYHrPlJafyqCJzAyTHNJ1Uk=
 github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1 h1:zga7zaRE8HCbWjcXMDlfvmQtH0/kMVLo7cQ48dy6kWg=
 github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1/go.mod h1:PumS+5d59wmAGsZo6IfRpVNaJUq+6xjC4Utt/k8GO6Q=
 github.com/go-http-utils/fresh v0.0.0-20161124030543-7231e26a4b27 h1:O6yi4xa9b2DMosGsXzlMe2E9qXgXCVkRLCoRX+5amxI=
@@ -363,6 +367,8 @@ github.com/mergermarket/go-pkcs7 v0.0.0-20170926155232-153b18ea13c9 h1:j6boLfPkc
 github.com/mergermarket/go-pkcs7 v0.0.0-20170926155232-153b18ea13c9/go.mod h1:GH7jtq102ZiRB7LEKgqP54akN7GOVaNpCJrDWTeWSMY=
 github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b h1:j7+1HpAFS1zy5+Q4qx1fWh90gTKwiN4QCGoY9TWyyO4=
 github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b/go.mod h1:01TrycV0kFyexm33Z7vhZRXopbI8J3TDReVlkTgMUxE=
+github.com/mgutz/logxi v0.0.0-20161027140823-aebf8a7d67ab h1:n8cgpHzJ5+EDyDri2s/GC7a9+qK3/YEGnBsd0uS/8PY=
+github.com/mgutz/logxi v0.0.0-20161027140823-aebf8a7d67ab/go.mod h1:y1pL58r5z2VvAjeG1VLGc8zOQgSOzbKN7kMHPvFXJ+8=
 github.com/miekg/dns v1.1.43/go.mod h1:+evo5L0630/F6ca/Z9+GAqzhjGyn8/c+TBaOyfEl0V4=
 github.com/miekg/dns v1.1.72 h1:vhmr+TF2A3tuoGNkLDFK9zi36F2LS+hKTRW0Uf8kbzI=
 github.com/miekg/dns v1.1.72/go.mod h1:+EuEPhdHOsfk6Wk5TT2CzssZdqkmFhf8r+aVyDEToIs=
@@ -445,6 +451,8 @@ github.com/quic-go/quic-go v0.61.0 h1:ui88A53s8MSVYLC56en0KQ17HARk+9986Dn0SBfKNv
 github.com/quic-go/quic-go v0.61.0/go.mod h1:9So2anK4Tp22URSQq00k+Vo2PNkle96ycDPDHL4s9vs=
 github.com/quic-go/webtransport-go v0.12.0 h1:CpnKNwZvdV0LD73xoHO8QaR0NI3llqpWRwnazdZS0sE=
 github.com/quic-go/webtransport-go v0.12.0/go.mod h1:GHne8aRFJ24h73pAMrcywXtuaz/ShBXCLXLvG/NPFdU=
+github.com/raff/goble v0.0.0-20190909174656-72afc67d6a99 h1:JtoVdxWJ3tgyqtnPq3r4hJ9aULcIDDnPXBWxZsdmqWU=
+github.com/raff/goble v0.0.0-20190909174656-72afc67d6a99/go.mod h1:CxaUhijgLFX0AROtH5mluSY71VqpjQBw9JXE2UKZmc4=
 github.com/relvacode/iso8601 v1.6.0 h1:eFXUhMJN3Gz8Rcq82f9DTMW0svjtAVuIEULglM7QHTU=
 github.com/relvacode/iso8601 v1.6.0/go.mod h1:FlNp+jz+TXpyRqgmM7tnzHHzBnz776kmAH2h3sZCn0I=
 github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec h1:W09IVJc94icq4NjY3clb7Lk8O1qJ8BdBEF8z0ibU0rE=
