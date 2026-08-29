@@ -17,12 +17,11 @@ params:
     choice: ["pv", "battery"]
   - name: host
   - name: serial
-    required: true
     example: WOB1NHMAMXXXXX3
     usages: ["battery"]
     help:
-      de: Seriennummer des Geräts (zu finden in der Zendure App)
-      en: Device serial number (can be found in the Zendure App)
+      de: Nur für die aktive Batteriesteuerung. Seriennummer des Geräts (zu finden in der Zendure App)
+      en: Required only for active battery control. Device serial number (can be found in the Zendure App)
   - name: maxacpower
     default: 800 # W
   - preset: battery-params
@@ -53,6 +52,7 @@ render: |
     uri: http://{{ .host }}/properties/report
     jq: .properties.electricLevel
     cache: {{ .cache }}
+  {{- if .serial }}
   batterymode:
     source: watchdog
     timeout: 60s
@@ -84,5 +84,6 @@ render: |
           headers:
           - content-type: application/json
           body: '{"sn":"{{ .serial }}","properties":{"smartMode":1,"acMode":1,"outputLimit":0,"inputLimit":{{ .maxchargepower }}}}'
+  {{- end }}
   {{- include "battery-params" . }}
   {{- end }}
