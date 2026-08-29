@@ -1247,19 +1247,42 @@ func (site *Site) updateLoadpoints(rates api.Rates) float64 {
 
 // reservedPVPower returns the anticipated surplus claimed by higher-priority PV loadpoints
 // that are starting up, so lower-priority loadpoints defer enabling against it (#31194).
+// Ranking uses the prioritizer's score and deadband, hence whoever wins the steady-state
+// flexibility also wins the start instead of the two contradicting each other.
 func (site *Site) reservedPVPower(lp updater) float64 {
 	if lp.GetMode() != api.ModePV {
 		return 0
 	}
 
-	prio := lp.EffectivePriority()
+	// strategy, basis and reference are site-level, so every loadpoint is scored on one scale
+	strategy := site.GetPriorityStrategy()
+	basis, ref := site.EffectivePriorityScoring()
+	score := lp.EffectivePriorityScore(strategy, basis, ref)
+	prio, heating := lp.EffectivePriority(), lp.IsHeating()
+
+	// hysteresis deadband in gap units (soc-% or kWh), normalised against the same reference
+	// as the score fraction so near-equal loadpoints all race instead of deferring to each other
+	band := float64(site.GetPriorityHysteresis()) / ref
 
 	var reserved float64
 	for _, other := range site.activeLoadpoints() {
 		if other == lp {
 			continue
 		}
-		if other.EffectivePriority() > prio && other.PvChargeStarting() {
+
+		// the deadband sub-orders within a tier only - an explicit priority always wins.
+		// heating aliases temperature as soc and carries no comparable score, so a
+		// same-tier pair involving heating is left untouched instead of always losing.
+		var threshold float64
+		if prio == other.EffectivePriority() {
+			if heating || other.IsHeating() {
+				continue
+			}
+			threshold = band
+		}
+
+		otherScore := other.EffectivePriorityScore(strategy, basis, ref)
+		if otherScore-score > threshold && other.PvChargeStarting() {
 			reserved += other.EffectiveMaxPower()
 		}
 	}
