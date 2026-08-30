@@ -154,13 +154,22 @@ func NewZaptec(_ context.Context, user, password, id string, priority bool, pass
 	}
 
 	inst, err := c.installation()
-	if err == nil || c.version == zaptec.ZaptecGo1_Pro {
+
+	// the Zaptec Go 2 switches phases by updating the installation, which is rejected
+	// as long as adaptive power management (APM) is active, so such an installation
+	// cannot offer phase switching at all
+	apm := err == nil && c.version != zaptec.ZaptecGo1_Pro && inst.EnabledFeatures.Has(zaptec.FeaturePowerManagementApm)
+	if apm {
+		c.log.WARN.Println("phase switching not available: installation uses adaptive power management (APM)")
+	}
+
+	if (err == nil || c.version == zaptec.ZaptecGo1_Pro) && !apm {
 		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
 	}
 
 	// the Zaptec Go 2 switches phases via the installation's per-phase available current;
 	// 1p->3p only works when all phases are set equal, so warn about an inconsistent setting
-	if err == nil && c.version == zaptec.ZaptecGo2 {
+	if err == nil && c.version != zaptec.ZaptecGo1_Pro && !apm {
 		if p1, p2, p3 := inst.AvailableCurrentPhase1, inst.AvailableCurrentPhase2, inst.AvailableCurrentPhase3; p2 != p1 || p3 != p1 {
 			c.log.WARN.Printf("installation available current is unequal across phases (%.3gA/%.3gA/%.3gA); phase switching back to 3p requires available current on all phases", p1, p2, p3)
 		}
