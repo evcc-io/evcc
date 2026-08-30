@@ -24,6 +24,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	optimizer "github.com/evcc-io/optimizer/client"
+	"github.com/jinzhu/now"
 	"github.com/samber/lo"
 	"golang.org/x/exp/constraints"
 )
@@ -1114,8 +1115,7 @@ func optimizerHorizon(t time.Time) time.Time {
 	if t.Hour() < 6 {
 		return horizon
 	}
-	y, m, d := horizon.Date()
-	return time.Date(y, m, d, 23, 59, 59, int(time.Second-time.Nanosecond), horizon.Location())
+	return now.With(horizon).EndOfDay()
 }
 
 // slotsUntil limits maxLen to the slots starting before the given horizon
