@@ -3648,7 +3648,11 @@
           "ZAR",
           "TRY",
           "MYR",
-          "THB"
+          "THB",
+          "BYN",
+          "UAH",
+          "RUB",
+          "KZT"
         ]
       },
       "FatalError": {
