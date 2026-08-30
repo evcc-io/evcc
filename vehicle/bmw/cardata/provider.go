@@ -132,17 +132,17 @@ func (v *Provider) any(key string) (any, error) {
 
 	_, tokenErr := v.ts.Token()
 
-	switch {
-	case tokenErr == nil && v.updated.IsZero():
-		// this will only happen once
-		if err := v.setupContainer(); err != nil {
-			v.log.WARN.Println(err)
+	if tokenErr == nil && (v.updated.IsZero() || time.Since(v.updated) > v.cache) {
+		if v.container == "" {
+			if err := v.setupContainer(); err != nil {
+				v.log.WARN.Println(err)
+			}
 		}
-		fallthrough
 
-	case tokenErr == nil && time.Since(v.updated) > v.cache && v.container != "":
-		if err := v.updateContainerData(); err != nil {
-			v.log.WARN.Println(err)
+		if v.container != "" {
+			if err := v.updateContainerData(); err != nil {
+				v.log.WARN.Println(err)
+			}
 		}
 		v.updated = time.Now()
 	}

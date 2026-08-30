@@ -1126,7 +1126,7 @@
       "modalUpdateStatusStart": "Asennus aloitettu:",
       "modalViewOnGitHub": "Näytä GitHubista",
       "openSource": "avoimen lähdekoodin",
-      "poweredByOpenSource": "{0} voimalla."
+      "poweredBy": "powered by"
     }
   },
   "forecast": {
@@ -1328,7 +1328,6 @@
       "strategy": {
         "label": "Strategia"
       },
-      "strategyDisabledDescription": "Lataus aloitetaan mahdollisimman myöhään, jotta se valmistuu juuri ennen lähtöä. Jos dynaaminen sähköverkkohinnoittelu tai CO₂-tariffit ovat asetetut, on tässä tarjolla enemmän valintoja.",
       "time": "Aika",
       "title": "Suunnitelma",
       "unsavedChanges": "Tallentamattomia muutoksia. Asetetaanko nyt?",

@@ -262,5 +262,8 @@ render: |
                 address: 46003 # Remote Active Power, int32 across 46003 (high word) and 46004 (low word)
                 type: writemultiple
                 encoding: int32
+      default:
+        source: error
+        error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

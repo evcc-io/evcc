@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -57,13 +58,14 @@ func TestSitePowerPriorityAdjustment(t *testing.T) {
 				batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, bat)},
 				prioritySoc:   prioritySoc,
 			}
-			site.excessDCPower = tc.excessDC
+			state, err := site.updateMeters()
+			require.NoError(t, err)
+			state.excessDCPower = tc.excessDC
 
-			sitePower, _, _, adjustment, err := site.sitePower(0, 0)
-			assert.NoError(t, err)
-			assert.Equal(t, tc.expSitePower, sitePower, "sitePower")
-			assert.Equal(t, tc.expAdjustment, adjustment, "priority adjustment")
-			assert.Equal(t, tc.expReconstructed, sitePower+adjustment, "reconstructed (unadjusted) site power")
+			res := site.sitePower(state, 0, 0)
+			assert.Equal(t, tc.expSitePower, res.power, "sitePower")
+			assert.Equal(t, tc.expAdjustment, res.priorityAdjustment, "priority adjustment")
+			assert.Equal(t, tc.expReconstructed, res.power+res.priorityAdjustment, "reconstructed (unadjusted) site power")
 		})
 	}
 }
@@ -160,10 +162,12 @@ func TestGreenShare(t *testing.T) {
 		t.Log(tc.title)
 
 		s := &Site{
-			gridPower: tc.grid,
-			pvPower:   tc.pv,
-			battery: types.BatteryState{
-				Power: tc.battery,
+			siteState: siteState{
+				gridPower: tc.grid,
+				pvPower:   tc.pv,
+				battery: types.BatteryState{
+					Power: tc.battery,
+				},
 			},
 		}
 

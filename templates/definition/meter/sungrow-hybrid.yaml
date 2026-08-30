@@ -52,6 +52,14 @@ render: |
       type: input
       decode: uint32s
     scale: 0.1
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 13045 # Total export energy, 0.1kWh
+      type: input
+      decode: uint32s
+    scale: 0.1
   currents:
   - source: calc
     div:
@@ -162,6 +170,14 @@ render: |
       type: input
       decode: uint32s
     scale: 0.1
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 13040 # Total Charge Energy (Accumulated charge of batteries), 0.1kWh
+      type: input
+      decode: uint32s
+    scale: 0.1
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -267,5 +283,8 @@ render: |
               address: 13051 # Battery max forced (dis)charge power
               type: writesingle
               decode: uint16
+    default:
+      source: error
+      error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

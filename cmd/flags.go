@@ -46,6 +46,9 @@ const (
 	flagCustomPhone            = "custom-phone"
 	flagCustomPhoneDescription = "Support phone number shown in the UI"
 
+	flagCustomTheme            = "custom-theme"
+	flagCustomThemeDescription = "Default UI theme (auto, light, dark). Users can override in the UI."
+
 	flagBatteryMode                = "battery-mode"
 	flagBatteryModeDescription     = "Set battery mode (normal, hold, charge, holdcharge)"
 	flagBatteryModeWait            = "battery-mode-wait"
