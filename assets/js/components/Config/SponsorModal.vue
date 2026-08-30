@@ -128,7 +128,7 @@ export default {
 			return this.token && !this.fromYaml;
 		},
 		trialTokenLink() {
-			return `${docsPrefix()}/docs/sponsorship#trial`;
+			return `${docsPrefix()}/sponsorship#trial`;
 		},
 	},
 	methods: {

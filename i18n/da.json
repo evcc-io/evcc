@@ -1126,7 +1126,7 @@
       "modalUpdateStatusStart": "Installation startede:",
       "modalViewOnGitHub": "Se på GitHub",
       "openSource": "open source",
-      "poweredByOpenSource": "Drevet af {0}."
+      "poweredBy": "drevet af"
     }
   },
   "forecast": {
@@ -1328,7 +1328,6 @@
       "strategy": {
         "label": "Strategi"
       },
-      "strategyDisabledDescription": "Opladningen påbegyndes så sent som muligt og afsluttes præcis ved afgang. Med dynamiske elpriser eller CO₂-tariffer er der flere valgmuligheder.",
       "time": "Tid",
       "title": "Plan",
       "unsavedChanges": "Der er ændringer som ikke er gemt. Skal de benyttes nu?",

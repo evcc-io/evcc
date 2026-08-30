@@ -13,10 +13,10 @@ require (
 	github.com/andig/gosunspec v0.0.0-20260705113727-6d585e133512
 	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
-	github.com/aws/aws-sdk-go-v2 v1.43.7
-	github.com/aws/aws-sdk-go-v2/config v1.32.38
-	github.com/aws/aws-sdk-go-v2/credentials v1.19.37
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.36.7
+	github.com/aws/aws-sdk-go-v2 v1.43.8
+	github.com/aws/aws-sdk-go-v2/config v1.32.39
+	github.com/aws/aws-sdk-go-v2/credentials v1.19.38
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.36.8
 	github.com/basgys/goxml2json v1.1.0
 	github.com/benbjohnson/clock v1.3.5
 	github.com/cenkalti/backoff/v4 v4.3.0
@@ -39,7 +39,7 @@ require (
 	github.com/getkin/kin-openapi v0.147.0
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
 	github.com/go-playground/validator/v10 v10.30.3
-	github.com/go-telegram/bot v1.23.0
+	github.com/go-telegram/bot v1.24.0
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/godbus/dbus/v5 v5.2.2
 	github.com/gokrazy/updater v0.0.0-20260620140544-0a84d8ab3878
@@ -74,7 +74,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/modelcontextprotocol/go-sdk v1.7.0
 	github.com/muka/go-bluetooth v0.0.0-20240701044517-04c4f09c514e
-	github.com/nicholas-fedor/shoutrrr v0.17.1
+	github.com/nicholas-fedor/shoutrrr v0.18.0
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
 	github.com/olekukonko/tablewriter v1.1.4
 	github.com/philippseith/signalr v0.11.0
@@ -85,7 +85,7 @@ require (
 	github.com/samber/lo v1.53.0
 	github.com/sandrolain/httpcache v1.4.2
 	github.com/sethvargo/go-password v0.4.0
-	github.com/sirupsen/logrus v1.10.1
+	github.com/sirupsen/logrus v1.10.2
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/smallnest/chanx v1.2.0
 	github.com/spali/go-rscp v0.2.2
@@ -97,7 +97,7 @@ require (
 	github.com/teslamotors/vehicle-command v0.4.1
 	github.com/tess1o/go-ecoflow v1.1.1-0.20251003083510-2ccc15a17e29
 	github.com/traefik/yaegi v0.16.1
-	github.com/volkszaehler/mbmd v0.0.0-20260812141656-4304ad77c56f
+	github.com/volkszaehler/mbmd v0.0.0-20260824053034-eef6045ae30e
 	github.com/warthog618/go-gpiocdev v0.9.1
 	github.com/xuri/excelize/v2 v2.11.0
 	gitlab.com/bboehmke/sunny v0.17.0
@@ -105,14 +105,14 @@ require (
 	go.uber.org/mock v0.6.0
 	go.yaml.in/yaml/v4 v4.0.0-rc.6
 	golang.org/x/crypto v0.55.0
-	golang.org/x/crypto/x509roots/fallback v0.0.0-20260819204246-82adefa711cb
-	golang.org/x/exp v0.0.0-20260820142414-ca536658362e
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20260826144058-afebf4cb4efb
+	golang.org/x/exp v0.0.0-20260824195058-e88cd73687aa
 	golang.org/x/net v0.58.0
 	golang.org/x/oauth2 v0.36.0
 	golang.org/x/sync v0.22.0
 	golang.org/x/text v0.41.0
 	golang.org/x/tools v0.49.0
-	google.golang.org/grpc v1.83.1
+	google.golang.org/grpc v1.83.2
 	google.golang.org/protobuf v1.36.12
 	gorm.io/gorm v1.31.2
 	modernc.org/sqlite v1.57.0
@@ -124,17 +124,17 @@ require (
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/antihax/optional v1.0.0 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.38 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.38 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.38 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.39 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.17 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.38 // indirect
-	github.com/aws/aws-sdk-go-v2/service/signin v1.5.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.33.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.38.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.45.7 // indirect
-	github.com/aws/smithy-go v1.27.8 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.39 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.39 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.39 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.40 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.18 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.39 // indirect
+	github.com/aws/aws-sdk-go-v2/service/signin v1.5.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.33.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.38.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.45.8 // indirect
+	github.com/aws/smithy-go v1.27.10 // indirect
 	github.com/azihsoyn/rijndael256 v0.0.0-20200316065338-d14eefa2b66b // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.1 // indirect

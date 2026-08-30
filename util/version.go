@@ -12,7 +12,7 @@ var (
 	Commit = ""
 )
 
-// FormattedVersion returns the version, untagged builds carry the commit as build metadata
+// FormattedVersion returns the version, untagged builds carry a build timestamp
 func FormattedVersion() string {
 	return Version
 }

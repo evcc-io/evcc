@@ -1,18 +1,18 @@
 <template>
-	<p class="mb-3 root" data-testid="plan-warnings">
-		<span v-if="targetIsAboveLimit" class="d-block evcc-gray mb-1">
+	<p class="mb-0 root" data-testid="plan-warnings">
+		<span v-if="targetIsAboveLimit" class="d-block evcc-gray mt-1">
 			{{ $t("main.targetCharge.targetIsAboveLimit", { limit: limitFmt }) }}
 		</span>
-		<span v-if="mode && ['off', 'now'].includes(mode)" class="d-block text-warning mb-1">
+		<span v-if="mode && ['off', 'now'].includes(mode)" class="d-block text-warning mt-1">
 			{{ $t("main.targetCharge.onlyInPvMode") }}
 		</span>
-		<span v-if="timeTooFarInTheFuture" class="d-block evcc-gray mb-1">
+		<span v-if="timeTooFarInTheFuture" class="d-block evcc-gray mt-1">
 			{{ $t("main.targetCharge.targetIsTooFarInTheFuture") }}
 		</span>
-		<span v-if="notReachableInTime" class="d-block text-warning mb-1">
+		<span v-if="notReachableInTime" class="d-block text-warning mt-1">
 			{{ $t("main.targetCharge.notReachableInTime", { overrun: overrunFmt }) }}
 		</span>
-		<span v-if="targetIsAboveVehicleLimit" class="d-block text-warning mb-1">
+		<span v-if="targetIsAboveVehicleLimit" class="d-block text-warning mt-1">
 			{{ $t("main.targetCharge.targetIsAboveVehicleLimit") }}
 		</span>
 	</p>

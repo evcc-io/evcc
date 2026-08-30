@@ -934,7 +934,7 @@
       "modalUpdateStatusStart": "インストール開始：",
       "modalViewOnGitHub": "GitHub で見る",
       "openSource": "open source",
-      "poweredByOpenSource": "Powered by {0}."
+      "poweredBy": "powered by"
     }
   },
   "forecast": {
@@ -1109,7 +1109,6 @@
       "repeating": "繰り返し",
       "repeatingPlans": "繰り返しプラン",
       "selectAll": "すべて選択",
-      "strategyDisabledDescription": "出発時刻に間に合うよう、できるだけ遅い時間帯に充電を開始します。市場連動型の料金プランやCO₂データが設定されている場合、さらに高度なオプションが利用可能になります。",
       "time": "時間",
       "title": "プラン",
       "unsavedChanges": "保存されていない変更があります。今すぐ適用しますか？",

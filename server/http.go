@@ -198,7 +198,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 		"smartcostdelete":         {"DELETE", "/smartcostlimit", updateSmartCostLimit(site, smartCostLimit)},
 		"smartfeedin":             {"POST", "/smartfeedinprioritylimit/{value:-?[0-9.]+}", updateSmartCostLimit(site, smartFeedInPriorityLimit)},
 		"smartfeedindelete":       {"DELETE", "/smartfeedinprioritylimit", updateSmartCostLimit(site, smartFeedInPriorityLimit)},
-		"tariff":                  {"GET", "/tariff/{tariff:[a-z]+}", tariffHandler(site)},
+		"tariff":                  {"GET", "/tariff/{tariff:[a-z0-9]+}", tariffHandler(site)},
 		"sessions":                {"GET", "/sessions", sessionHandler},
 		"updatesession":           {"PUT", "/session/{id:[0-9]+}", updateSessionHandler},
 		"deletesession":           {"DELETE", "/session/{id:[0-9]+}", deleteSessionHandler},
@@ -320,14 +320,14 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 		}
 
 		// API key endpoints require an authenticated session.
-		ensureAuth := ensureAuthHandler(auth)
+		ensureAuth := EnsureAuthHandler(auth)
 		api.Methods("GET").Path("/apikey").Handler(ensureAuth(apiKeyStatusHandler(auth)))
 		api.Methods("POST").Path("/apikey").Handler(ensureAuth(regenerateApiKeyHandler(auth)))
 	}
 
 	{ // api/config
 		api := api.PathPrefix("/config").Subrouter()
-		api.Use(ensureAuthHandler(auth))
+		api.Use(EnsureAuthHandler(auth))
 
 		routes := map[string]route{
 			"auth":               {"POST", "/auth", authHandler},
@@ -423,7 +423,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 	{ // api/system
 		api := api.PathPrefix("/system").Subrouter()
-		api.Use(ensureAuthHandler(auth))
+		api.Use(EnsureAuthHandler(auth))
 
 		routes := map[string]route{
 			"log":        {"GET", "/log", logHandler},

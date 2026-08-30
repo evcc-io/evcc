@@ -1121,7 +1121,7 @@
       "modalUpdateStatusStart": "Installatioun ugefaang:",
       "modalViewOnGitHub": "Op GitHub kucken",
       "openSource": "Open Source",
-      "poweredByOpenSource": "Bedriwwen vun {0}."
+      "poweredBy": "bedriwwen vun"
     }
   },
   "forecast": {
@@ -1320,7 +1320,6 @@
       "strategy": {
         "label": "Strategie"
       },
-      "strategyDisabledDescription": "D'Laden fänkt sou spéit wéi méiglech un, fir grad rechtzäiteg virum Depart ofzeschléissen. Mat dynamesche Netzpräisser oder engem CO₂-Tarif stinn hei nach méi Optiounen zur Verfügung.",
       "time": "Zäit",
       "title": "Planifikatioun",
       "unsavedChanges": "Net gespäichert Ännerungen leie vir. Elo uwennen?",
