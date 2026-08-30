@@ -393,7 +393,8 @@ func (c *EEBus) CurtailedPercent() *int {
 
 	percent := 100
 	if limitActive(c.productionLimitActivated) {
-		percent = int(c.effectiveProductionLimit() / c.productionNominalMax * 100)
+		// the EG may state a limit above the nominal production power
+		percent = min(int(c.effectiveProductionLimit()/c.productionNominalMax*100), 100)
 	}
 
 	return &percent
