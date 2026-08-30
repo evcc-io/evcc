@@ -3071,6 +3071,10 @@
             "description": "Charger is a heating device where disabled means normal operation.",
             "type": "boolean"
           },
+          "chargerFeatureDemandDaily": {
+            "description": "Heating device demand forecast uses 28-day daily average.",
+            "type": "boolean"
+          },
           "chargerFeatureDemandTemperature": {
             "description": "Heating device demand forecast uses daily average profile scaled by outdoor temperature.",
             "type": "boolean"
@@ -3445,6 +3449,7 @@
           "chargerFeatureClimaterDisabled",
           "chargerFeatureCoarseCurrent",
           "chargerFeatureContinuous",
+          "chargerFeatureDemandDaily",
           "chargerFeatureDemandTemperature",
           "chargerFeatureDemandWeekday",
           "chargerFeatureHeating",
