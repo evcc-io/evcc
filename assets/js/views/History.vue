@@ -410,16 +410,24 @@ export default defineComponent({
 				return darken(baseColor, stepAlpha(i, Math.max(n, 1)));
 			};
 			return list.map((s, i) => {
-				let sum = 0;
-				for (const slot of s.data) sum += slot.energy - slot.returnEnergy;
-				const watts = Math.abs(sum) * 1000;
+				let sumEnergy = 0;
+				let sumReturnEnergy = 0;
+				for (const slot of s.data) {
+					sumEnergy += slot.energy;
+					sumReturnEnergy += slot.returnEnergy;
+				}
 				return {
 					// Use stable paletteIndex as the focus identifier so that the
 					// selected entity keeps its identity across period navigations.
 					entityIndex: s.paletteIndex ?? i,
 					label: s.title,
 					color: colorFor(i, s),
-					value: this.fmtWh(watts, POWER_UNIT.AUTO),
+					value: this.directionSumLabel(
+						s.group,
+						sumEnergy,
+						sumReturnEnergy,
+						POWER_UNIT.AUTO
+					),
 					id: colorPicker && !s.virtual ? s.title : undefined,
 				};
 			});
@@ -452,7 +460,17 @@ export default defineComponent({
 					sumReturnEnergy += slot.returnEnergy;
 				}
 			}
-			const fmt = (v: number) => this.fmtWh(v * 1000, POWER_UNIT.KW);
+			return this.directionSumLabel(group, sumEnergy, sumReturnEnergy, POWER_UNIT.KW);
+		},
+		// Bidirectional groups (battery, exporting meters) would net out to almost
+		// zero over longer periods, so keep both directions apart when both exist.
+		directionSumLabel(
+			group: string,
+			sumEnergy: number,
+			sumReturnEnergy: number,
+			unit: POWER_UNIT
+		): string {
+			const fmt = (v: number) => this.fmtWh(v * 1000, unit);
 			const directionKey = `main.history.direction.${group}`;
 			const energyKey = `${directionKey}.energy`;
 			const returnEnergyKey = `${directionKey}.returnEnergy`;
