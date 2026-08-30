@@ -123,7 +123,8 @@ func (c *Connection) Currents() (float64, float64, float64, error) {
 
 	// 1p meters report the total instead of per-phase values
 	l1 := lo.FromPtrOr(res.ActiveCurrentL1A, res.ActiveCurrentA)
-	l2, l3 := lo.FromPtr(res.ActiveCurrentL2A), lo.FromPtr(res.ActiveCurrentL3A)
+	l2 := lo.FromPtrOr(res.ActiveCurrentL2A, 0)
+	l3 := lo.FromPtrOr(res.ActiveCurrentL3A, 0)
 
 	if c.usage == "pv" {
 		return -l1, -l2, -l3, err
@@ -146,7 +147,8 @@ func (c *Connection) Voltages() (float64, float64, float64, error) {
 
 	// 1p meters report the total instead of per-phase values
 	l1 := lo.FromPtrOr(res.ActiveVoltageL1V, res.ActiveVoltageV)
-	l2, l3 := lo.FromPtr(res.ActiveVoltageL2V), lo.FromPtr(res.ActiveVoltageL3V)
+	l2 := lo.FromPtrOr(res.ActiveVoltageL2V, 0)
+	l3 := lo.FromPtrOr(res.ActiveVoltageL3V, 0)
 
 	return l1, l2, l3, err
 }
