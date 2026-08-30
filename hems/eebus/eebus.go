@@ -355,20 +355,18 @@ func (c *EEBus) setProductionLimit(limit float64, active bool) {
 	}
 }
 
-// consumptionLimitWatt returns the LPC limit currently in force: the configured
-// failsafe limit while in failsafe, else the Energy Guard's limit.
-// Caller holds the mutex.
-func (c *EEBus) consumptionLimitWatt() float64 {
+// effectiveConsumptionLimit returns the LPC limit in force: the configured failsafe
+// limit while in failsafe, else the Energy Guard's. Caller holds the mutex.
+func (c *EEBus) effectiveConsumptionLimit() float64 {
 	if c.status == StatusFailsafe {
 		return c.failsafeConsumptionLimit
 	}
 	return c.consumptionLimit.Value
 }
 
-// productionLimitWatt returns the LPP limit currently in force as positive watts,
-// see consumptionLimitWatt. LPP states its limits as negative watts.
-// Caller holds the mutex.
-func (c *EEBus) productionLimitWatt() float64 {
+// effectiveProductionLimit returns the LPP limit in force as positive watts, see
+// effectiveConsumptionLimit. LPP states its limits as negative watts.
+func (c *EEBus) effectiveProductionLimit() float64 {
 	if c.status == StatusFailsafe && c.failsafeProductionLimit != nil {
 		return *c.failsafeProductionLimit
 	}
@@ -395,7 +393,7 @@ func (c *EEBus) CurtailedPercent() *int {
 
 	percent := 100
 	if limitActive(c.productionLimitActivated) {
-		percent = min(max(int(c.productionLimitWatt()/c.productionNominalMax*100), 0), 100)
+		percent = min(max(int(c.effectiveProductionLimit()/c.productionNominalMax*100), 0), 100)
 	}
 
 	return &percent
@@ -412,7 +410,7 @@ func (c *EEBus) MaxConsumptionPower() *float64 {
 	if !limitActive(c.consumptionLimitActivated) {
 		return new(0.0)
 	}
-	return new(c.consumptionLimitWatt())
+	return new(c.effectiveConsumptionLimit())
 }
 
 // MaxProductionPower implements api.HEMS: nil until first connected,
@@ -426,5 +424,5 @@ func (c *EEBus) MaxProductionPower() *float64 {
 	if !limitActive(c.productionLimitActivated) {
 		return new(0.0)
 	}
-	return new(c.productionLimitWatt())
+	return new(c.effectiveProductionLimit())
 }
