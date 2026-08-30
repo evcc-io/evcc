@@ -232,6 +232,9 @@ func (c *EEBus) run() error {
 		if c.failsafeProductionLimit != nil {
 			// production limit is negative, failsafe limits are always positive
 			c.setProductionLimit(-*c.failsafeProductionLimit, true)
+		} else {
+			// no failsafe limit configured, release any stale Energy Guard limit
+			c.setProductionLimit(0, false)
 		}
 
 		return nil
@@ -352,6 +355,26 @@ func (c *EEBus) setProductionLimit(limit float64, active bool) {
 	}
 }
 
+// consumptionLimitWatt returns the LPC limit currently in force: the configured
+// failsafe limit while in failsafe, else the Energy Guard's limit.
+// Caller holds the mutex.
+func (c *EEBus) consumptionLimitWatt() float64 {
+	if c.status == StatusFailsafe {
+		return c.failsafeConsumptionLimit
+	}
+	return c.consumptionLimit.Value
+}
+
+// productionLimitWatt returns the LPP limit currently in force as positive watts,
+// see consumptionLimitWatt. LPP states its limits as negative watts.
+// Caller holds the mutex.
+func (c *EEBus) productionLimitWatt() float64 {
+	if c.status == StatusFailsafe && c.failsafeProductionLimit != nil {
+		return *c.failsafeProductionLimit
+	}
+	return -c.productionLimit.Value
+}
+
 var _ api.HEMS = (*EEBus)(nil)
 
 // CurtailedPercent implements api.HEMS, converting the active LPP production
@@ -372,12 +395,7 @@ func (c *EEBus) CurtailedPercent() *int {
 
 	percent := 100
 	if limitActive(c.productionLimitActivated) {
-		if c.status == StatusFailsafe && c.failsafeProductionLimit != nil {
-			percent = int(*c.failsafeProductionLimit / c.productionNominalMax * 100)
-		} else {
-			// production limits are negative watts
-			percent = int(-c.productionLimit.Value / c.productionNominalMax * 100)
-		}
+		percent = min(max(int(c.productionLimitWatt()/c.productionNominalMax*100), 0), 100)
 	}
 
 	return &percent
@@ -394,10 +412,7 @@ func (c *EEBus) MaxConsumptionPower() *float64 {
 	if !limitActive(c.consumptionLimitActivated) {
 		return new(0.0)
 	}
-	if c.status == StatusFailsafe {
-		return new(c.failsafeConsumptionLimit)
-	}
-	return new(c.consumptionLimit.Value)
+	return new(c.consumptionLimitWatt())
 }
 
 // MaxProductionPower implements api.HEMS: nil until first connected,
@@ -411,9 +426,5 @@ func (c *EEBus) MaxProductionPower() *float64 {
 	if !limitActive(c.productionLimitActivated) {
 		return new(0.0)
 	}
-	if c.status == StatusFailsafe {
-		return c.failsafeProductionLimit
-	}
-	// production limits are negative watts, the api.HEMS cap is positive
-	return new(-c.productionLimit.Value)
+	return new(c.productionLimitWatt())
 }
