@@ -40,13 +40,6 @@ func TestLoginFormMissing(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestInvalidCountry(t *testing.T) {
-	for _, country := range []string{"", "D", "DEU", "d1"} {
-		_, err := NewIdentity(util.NewLogger("test"), "user", "pass", country)
-		assert.Error(t, err, country)
-	}
-}
-
 func TestTokenConversion(t *testing.T) {
 	_, err := (&Token{Error: "invalid_grant", ErrorDescription: "expired"}).Token()
 	assert.Error(t, err)
@@ -84,7 +77,6 @@ func testIdentity(t *testing.T, password string) *Identity {
 		log:      util.NewLogger("test"),
 		user:     "user",
 		password: "pass",
-		country:  "DE",
 	}
 
 	var state string
@@ -98,7 +90,7 @@ func testIdentity(t *testing.T, password string) *Identity {
 			assert.Equal(t, RedirectURI, q.Get("redirect_uri"))
 			assert.Equal(t, "S256", q.Get("code_challenge_method"))
 			assert.NotEmpty(t, q.Get("code_challenge"))
-			assert.Equal(t, "en_DE", q.Get("locale"))
+			assert.Equal(t, Locale, q.Get("locale"))
 			assert.Equal(t, AuthBrand, q.Get("brand"))
 			assert.Equal(t, AuthClient, q.Get("client"))
 			state = q.Get("state")
@@ -216,7 +208,7 @@ func TestTokenErrorMessage(t *testing.T) {
 	assert.Contains(t, err.Error(), "401")
 }
 
-func TestLoginFormNotFoundNamesCountry(t *testing.T) {
+func TestLoginFormNotFound(t *testing.T) {
 	v := testIdentity(t, "pass")
 	v.Client.Transport = roundTripFunc(func(r *http.Request) (*http.Response, error) {
 		return response(r, http.StatusOK, "text/html", "<html><body>maintenance</body></html>"), nil
@@ -225,5 +217,4 @@ func TestLoginFormNotFoundNamesCountry(t *testing.T) {
 	_, err := v.login()
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "login form not found")
-	assert.Contains(t, err.Error(), "DE")
 }

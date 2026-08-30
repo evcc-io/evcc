@@ -28,6 +28,9 @@ const (
 	AuthBrand   = "Nissan"
 	AuthClient  = "mynissanapp"
 
+	// the login is not region specific, the locale only selects the form's language
+	Locale = "en_GB"
+
 	// Kamereon token exchange constants
 	KamereonScope    = "openid profile vehicles"
 	KamereonPlatform = "Android"
@@ -56,23 +59,17 @@ var ErrInvalidCredentials = errors.New("invalid credentials")
 type Identity struct {
 	*request.Helper
 	oauth2.TokenSource
-	log                     *util.Logger
-	user, password, country string
+	log            *util.Logger
+	user, password string
 }
 
 // NewIdentity performs the MyNISSAN OneID login and returns a Kamereon token source
-func NewIdentity(log *util.Logger, user, password, country string) (oauth2.TokenSource, error) {
-	country = strings.ToUpper(country)
-	if len(country) != 2 || strings.Trim(country, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") != "" {
-		return nil, fmt.Errorf("invalid country, expected two-letter code: %s", country)
-	}
-
+func NewIdentity(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
 	v := &Identity{
 		Helper:   request.NewHelper(log),
 		log:      log,
 		user:     user,
 		password: password,
-		country:  country,
 	}
 
 	token, err := v.login()
@@ -134,7 +131,7 @@ func (v *Identity) login() (*oauth2.Token, error) {
 	state := lo.RandomString(32, lo.AlphanumericCharset)
 
 	uri := OAuth2Config.AuthCodeURL(state, oauth2.S256ChallengeOption(cv),
-		oauth2.SetAuthURLParam("locale", "en_"+v.country),
+		oauth2.SetAuthURLParam("locale", Locale),
 		oauth2.SetAuthURLParam("brand", AuthBrand),
 		oauth2.SetAuthURLParam("client", AuthClient),
 	)
@@ -152,7 +149,7 @@ func (v *Identity) login() (*oauth2.Token, error) {
 
 	form, err := loginForm(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%w - check that country %s is the country the Nissan account is registered in", err, v.country)
+		return nil, err
 	}
 
 	action, err := resp.Request.URL.Parse(form.Action)

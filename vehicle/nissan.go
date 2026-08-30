@@ -30,12 +30,10 @@ func NewNissanFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
-		Country             string
 		Version             string
 		Expiry              time.Duration
 		Cache               time.Duration
 	}{
-		Country: "DE", // account country
 		Version: "v1", // battery api version: v2 for Ariya
 		Expiry:  expiry,
 		Cache:   interval,
@@ -55,7 +53,7 @@ func NewNissanFromConfig(other map[string]any) (api.Vehicle, error) {
 
 	log := util.NewLogger("nissan").Redact(cc.User, cc.Password, cc.VIN)
 
-	identity, err := nissan.NewIdentity(log, cc.User, cc.Password, cc.Country)
+	identity, err := nissan.NewIdentity(log, cc.User, cc.Password)
 	if err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}

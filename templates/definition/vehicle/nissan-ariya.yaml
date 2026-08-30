@@ -9,15 +9,6 @@ products:
 params:
   - preset: vehicle-base
   - preset: vehicle-online
-  - name: country
-    description:
-      de: Land
-      en: Country
-    help:
-      de: Zweistelliger Ländercode des Landes, in dem das Nissan Konto registriert ist
-      en: Two-letter code of the country the Nissan account is registered in
-    required: true
-    default: DE
   - name: expiry
     description:
       de: Ablauf
@@ -31,7 +22,6 @@ params:
 render: |
   type: nissan
   version: v2
-  country: {{ .country }}
   {{ include "base" . }}
   expiry: {{ .expiry }}
   {{ include "features" . }}
