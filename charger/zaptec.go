@@ -177,13 +177,11 @@ func (c *Zaptec) detectVersion() (int, error) {
 		return 0, err
 	}
 
-	capResp := res.ObservationByID(zaptec.Capabilities)
-	if capResp == nil {
-		return zaptec.ZaptecGo1_Pro, nil
-	}
-
-	if err := json.Unmarshal([]byte(capResp.ValueAsString), &capabilities); err != nil {
-		return 0, err
+	// not all chargers report capabilities
+	if capResp := res.ObservationByID(zaptec.Capabilities); capResp != nil && capResp.ValueAsString != "" {
+		if err := json.Unmarshal([]byte(capResp.ValueAsString), &capabilities); err != nil {
+			return 0, err
+		}
 	}
 
 	if capabilities.ProductVariant == "Go2" {
