@@ -104,7 +104,11 @@ export default defineComponent({
 					splitNumber: 2,
 					axisLabel: {
 						color: colors.muted,
-						formatter: (value: number) => this.fmtW(value, POWER_UNIT.KW, false, 0),
+						// switch to W below 1 kW peak so ticks stay distinct (e.g. balcony PV)
+						formatter: (value: number) =>
+							this.combinedMax < 1000
+								? this.fmtW(value, POWER_UNIT.W, false, 0)
+								: this.fmtW(value, POWER_UNIT.KW, false, 0),
 					},
 				}),
 				series: [
