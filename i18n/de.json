@@ -1134,6 +1134,7 @@
       "modalLatest": "Du verwendest bereits die aktuellste Version.",
       "modalNextRelease": "Was ist neu im nächsten Release",
       "modalNoReleaseNotes": "Keine Versionshinweise verfügbar. Mehr Informationen zur neuen Version:",
+      "modalRelevantEntries": "Hervorgehobene Einträge betreffen deine konfigurierten Geräte.",
       "modalTitle": "Neue Version verfügbar",
       "modalUpdate": "Installieren",
       "modalUpdateNow": "Jetzt installieren",

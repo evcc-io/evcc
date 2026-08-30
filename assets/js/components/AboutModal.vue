@@ -1,5 +1,5 @@
 <template>
-	<GenericModal id="aboutModal" @opened="acknowledge">
+	<GenericModal id="aboutModal" @open="loadActiveFeatures" @opened="acknowledge">
 		<template #title>
 			<a :href="websiteUrl" target="_blank" rel="noopener noreferrer">
 				<template v-if="customLogo">
@@ -84,6 +84,9 @@
 			<template v-if="newVersionAvailable">
 				<hr />
 				<h6>{{ $t("footer.version.modalNextRelease") }}</h6>
+				<p v-if="releaseNotes && hasRelevantEntries" class="text-muted small">
+					{{ $t("footer.version.modalRelevantEntries") }}
+				</p>
 				<!-- oxlint-disable vue/no-v-html -->
 				<div v-if="releaseNotes" class="release-notes" v-html="cleanedReleaseNotes"></div>
 				<!-- oxlint-enable vue/no-v-html -->
@@ -159,6 +162,8 @@ import api from "@/api";
 import settings from "@/settings";
 import { extractDomain } from "@/utils/extractDomain";
 import { isDevelopment, isNightly, getReleaseName, isNewVersionAvailable } from "@/utils/version";
+import { fetchActiveFeatureNames } from "@/utils/activeFeatures";
+import { highlightAndSortChangelog } from "@/utils/highlightChangelog";
 import { defineComponent } from "vue";
 
 const GITHUB_REPO = "https://github.com/evcc-io/evcc";
@@ -185,6 +190,7 @@ export default defineComponent({
 		return {
 			updateStarted: false,
 			updateStatus: "",
+			activeFeatureNames: [] as string[],
 		};
 	},
 	computed: {
@@ -221,13 +227,20 @@ export default defineComponent({
 		},
 		cleanedReleaseNotes() {
 			if (!this.releaseNotes) return "";
-			return this.releaseNotes.replaceAll("<h2>Changelog</h2>", "");
+			const notes = this.releaseNotes.replaceAll("<h2>Changelog</h2>", "");
+			return highlightAndSortChangelog(notes, this.activeFeatureNames);
+		},
+		hasRelevantEntries() {
+			return this.cleanedReleaseNotes.includes("changelog-relevant");
 		},
 		newVersionAvailable() {
 			return isNewVersionAvailable(this.installed, this.availableVersion);
 		},
 	},
 	methods: {
+		async loadActiveFeatures() {
+			this.activeFeatureNames = await fetchActiveFeatureNames();
+		},
 		async update() {
 			try {
 				await api.post("update");
@@ -295,5 +308,12 @@ export default defineComponent({
 }
 .release-notes :deep(h1:first-child) {
 	margin-top: 0;
+}
+.release-notes :deep(.changelog-relevant) {
+	font-weight: bold;
+	background-color: color-mix(in srgb, var(--bs-primary) 12%, transparent);
+	border-radius: 0.25rem;
+	padding: 0.1rem 0.35rem;
+	margin: 0 -0.35rem;
 }
 </style>
