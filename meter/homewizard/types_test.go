@@ -47,10 +47,10 @@ func TestUnmarshalKwhDataResponse(t *testing.T) {
 		assert.Equal(t, float64(28), res.ActivePowerL1W)
 		assert.Equal(t, float64(0), res.ActivePowerL2W)
 		assert.Equal(t, float64(-181), res.ActivePowerL3W)
-		assert.Equal(t, float64(235.4), res.ActiveVoltageL1V)
+		assert.Equal(t, float64(235.4), *res.ActiveVoltageL1V)
 		assert.Equal(t, float64(235.8), res.ActiveVoltageL2V)
 		assert.Equal(t, float64(236.1), res.ActiveVoltageL3V)
-		assert.Equal(t, float64(1.19), res.ActiveCurrentL1A)
+		assert.Equal(t, float64(1.19), *res.ActiveCurrentL1A)
 		assert.Equal(t, float64(0.37), res.ActiveCurrentL2A)
 		assert.Equal(t, float64(-0.93), res.ActiveCurrentL3A)
 	}
@@ -68,8 +68,8 @@ func TestUnmarshalKwh1PhaseDataResponse(t *testing.T) {
 		assert.Equal(t, float64(1381.396), res.ActivePowerL1W)
 		assert.Equal(t, float64(228.641), res.ActiveVoltageV)
 		assert.Equal(t, float64(6.051), res.ActiveCurrentA)
-		assert.Equal(t, float64(0), res.ActiveCurrentL1A)
-		assert.Equal(t, float64(0), res.ActiveVoltageL1V)
+		assert.Nil(t, res.ActiveCurrentL1A)
+		assert.Nil(t, res.ActiveVoltageL1V)
 	}
 }
 
@@ -87,10 +87,10 @@ func TestUnmarshalP1DataResponse(t *testing.T) {
 		assert.Equal(t, float64(-21), res.ActivePowerL1W)
 		assert.Equal(t, float64(57), res.ActivePowerL2W)
 		assert.Equal(t, float64(168), res.ActivePowerL3W)
-		assert.Equal(t, float64(228), res.ActiveVoltageL1V)
+		assert.Equal(t, float64(228), *res.ActiveVoltageL1V)
 		assert.Equal(t, float64(226), res.ActiveVoltageL2V)
 		assert.Equal(t, float64(225), res.ActiveVoltageL3V)
-		assert.Equal(t, float64(-0.092), res.ActiveCurrentL1A)
+		assert.Equal(t, float64(-0.092), *res.ActiveCurrentL1A)
 		assert.Equal(t, float64(0.252), res.ActiveCurrentL2A)
 		assert.Equal(t, float64(0.747), res.ActiveCurrentL3A)
 	}
