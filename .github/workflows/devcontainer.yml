@@ -54,7 +54,7 @@ jobs:
 
       - name: Smoke test
         run: |
-          devcontainer exec --workspace-folder . bash -c '
+          devcontainer exec --workspace-folder . bash -lc '
             set -eu
             go version
             node --version
