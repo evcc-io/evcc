@@ -325,6 +325,21 @@ func TestProductionLimit_FailsafeUnconfigured(t *testing.T) {
 	assert.Equal(t, 0.0, *power)
 }
 
+// TestCurtailedPercent_AboveNominal verifies a limit above the nominal production
+// power reports 100%, not more - api.HEMS documents the percent as 0..100 and it
+// reaches the inverter unchecked.
+func TestCurtailedPercent_AboveNominal(t *testing.T) {
+	c := newTestEEBus(t)
+	c.heartbeat.Set(struct{}{})
+	c.productionLimit = ucapi.LoadLimit{Value: -2 * testProductionNominal, IsActive: true}
+
+	require.NoError(t, c.run())
+
+	percent := c.CurtailedPercent()
+	require.NotNil(t, percent)
+	assert.Equal(t, 100, *percent)
+}
+
 // TestMaxProductionPower verifies the api.HEMS export cap is a positive wattage,
 // while LPP states its limits as negative watts.
 func TestMaxProductionPower(t *testing.T) {
