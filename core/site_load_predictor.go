@@ -14,22 +14,13 @@ import (
 )
 
 // homeProfile returns the predicted home base load in Wh for minLen 15min slots
-// starting now. Prefers same-weekday data from the past 4 weeks; falls back to
-// the all-days average when the weekday profile is incomplete.
+// starting now.
 func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	col := site.collectors[metrics.Home]
 
-	// prefer same-weekday profile — better predictor, but only ~4 samples
-	base, err := col.EnergyProfileWeekday(time.Now().Weekday())
+	base, err := col.EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -28))
 	if err != nil {
-		// fall back to all-days average (28 samples, more robust)
-		site.log.DEBUG.Printf("home profile: weekday profile unavailable (%v), using all-days average", err)
-		base, err = col.EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -28))
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		site.log.DEBUG.Printf("home profile: using same-weekday profile")
+		return nil, err
 	}
 
 	// convert to Wh
@@ -47,7 +38,7 @@ func (site *Site) addHeatingDemand(gt []float64, minLen int) []loadpoint.API {
 			continue
 		}
 
-		profile, correct := lp.demandProfile(now.BeginningOfDay().AddDate(0, 0, -7))
+		profile, correct := lp.demandProfile()
 		if profile == nil {
 			continue
 		}

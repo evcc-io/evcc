@@ -261,9 +261,4 @@ render: |
       type: input
       decode: uint16
     scale: 0.1
-  features:
-  - continuous
-  - demandtemperature
-  - heating
-  - integrateddevice
-  - switchdevice
+  {{ include "heatpumpswitch" . }}

@@ -9,6 +9,7 @@ const (
 	IntegratedDevice           // charger - always connected - no vehicle, no charging sessions
 	SwitchDevice               // charger - no current control - heat pumps or switch sockets
 	Heating                    // charger - heating device - soc ist temperature (°C)
+	DemandDaily                // charger - demand forecast: 28-day daily average
 	DemandWeekday              // charger - demand forecast: same weekday last week (warm water)
 	DemandTemperature          // charger - demand forecast: daily avg scaled by outdoor temp (room heating)
 	Continuous                 // charger - heating device where disabled means "normal operation"
