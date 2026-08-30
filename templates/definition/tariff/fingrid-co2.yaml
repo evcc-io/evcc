@@ -1,4 +1,5 @@
 template: fingrid-co2
+link: https://data.fingrid.fi/en/datasets/265
 products:
   - brand: Fingrid
     description:
