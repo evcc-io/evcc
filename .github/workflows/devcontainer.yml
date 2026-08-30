@@ -43,11 +43,18 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Build and test devcontainer
+      - name: Build and start devcontainer
         uses: devcontainers/ci@8bf61b26e9c3a98f69cb6ce2f88d24ff59b785c6 # v0.3
         with:
           push: never
-          runCmd: |
+          runCmd: "true"
+
+      - name: Run lifecycle commands
+        run: devcontainer run-user-commands --workspace-folder .
+
+      - name: Smoke test
+        run: |
+          devcontainer exec --workspace-folder . bash -c '
             set -eu
             go version
             node --version
@@ -57,3 +64,4 @@ jobs:
             docker compose version
             test -w .
             make ui build
+          '
