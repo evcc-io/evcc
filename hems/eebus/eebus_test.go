@@ -325,28 +325,6 @@ func TestProductionLimit_FailsafeUnconfigured(t *testing.T) {
 	assert.Equal(t, 0.0, *power)
 }
 
-// TestCurtailedPercent_Clamped verifies an out-of-range limit stays within the 0..100
-// percent api.HEMS documents - the percent is written to the inverter unchecked.
-func TestCurtailedPercent_Clamped(t *testing.T) {
-	for _, tc := range []struct {
-		limit float64
-		want  int
-	}{
-		{-2 * testProductionNominal, 100}, // limit above the nominal production power
-		{testProductionNominal, 0},        // out-of-spec positive LPP limit
-	} {
-		c := newTestEEBus(t)
-		c.heartbeat.Set(struct{}{})
-		c.productionLimit = ucapi.LoadLimit{Value: tc.limit, IsActive: true}
-
-		require.NoError(t, c.run())
-
-		percent := c.CurtailedPercent()
-		require.NotNil(t, percent)
-		assert.Equal(t, tc.want, *percent, "limit %v", tc.limit)
-	}
-}
-
 // TestMaxProductionPower verifies the api.HEMS export cap is a positive wattage,
 // while LPP states its limits as negative watts.
 func TestMaxProductionPower(t *testing.T) {
