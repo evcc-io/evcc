@@ -28,13 +28,13 @@ type DataResponse struct {
 	TotalPowerExportT2kWh float64 `json:"total_power_export_t2_kwh"`
 	TotalPowerExportT3kWh float64 `json:"total_power_export_t3_kwh"`
 	TotalPowerExportT4kWh float64 `json:"total_power_export_t4_kwh"`
-	// L1 is a pointer as 1p meters report the totals instead of per-phase values
+	// per-phase values are pointers as 1p meters report the totals instead
 	ActiveCurrentA   float64  `json:"active_current_a"`
 	ActiveVoltageV   float64  `json:"active_voltage_v"`
 	ActiveCurrentL1A *float64 `json:"active_current_l1_a"`
-	ActiveCurrentL2A float64  `json:"active_current_l2_a"`
-	ActiveCurrentL3A float64  `json:"active_current_l3_a"`
+	ActiveCurrentL2A *float64 `json:"active_current_l2_a"`
+	ActiveCurrentL3A *float64 `json:"active_current_l3_a"`
 	ActiveVoltageL1V *float64 `json:"active_voltage_l1_v"`
-	ActiveVoltageL2V float64  `json:"active_voltage_l2_v"`
-	ActiveVoltageL3V float64  `json:"active_voltage_l3_v"`
+	ActiveVoltageL2V *float64 `json:"active_voltage_l2_v"`
+	ActiveVoltageL3V *float64 `json:"active_voltage_l3_v"`
 }

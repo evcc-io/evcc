@@ -123,11 +123,12 @@ func (c *Connection) Currents() (float64, float64, float64, error) {
 
 	// 1p meters report the total instead of per-phase values
 	l1 := lo.FromPtrOr(res.ActiveCurrentL1A, res.ActiveCurrentA)
+	l2, l3 := lo.FromPtr(res.ActiveCurrentL2A), lo.FromPtr(res.ActiveCurrentL3A)
 
 	if c.usage == "pv" {
-		return -l1, -res.ActiveCurrentL2A, -res.ActiveCurrentL3A, err
+		return -l1, -l2, -l3, err
 	}
-	return l1, res.ActiveCurrentL2A, res.ActiveCurrentL3A, err
+	return l1, l2, l3, err
 }
 
 // Powers implements the api.PhasePowers interface
@@ -145,6 +146,7 @@ func (c *Connection) Voltages() (float64, float64, float64, error) {
 
 	// 1p meters report the total instead of per-phase values
 	l1 := lo.FromPtrOr(res.ActiveVoltageL1V, res.ActiveVoltageV)
+	l2, l3 := lo.FromPtr(res.ActiveVoltageL2V), lo.FromPtr(res.ActiveVoltageL3V)
 
-	return l1, res.ActiveVoltageL2V, res.ActiveVoltageL3V, err
+	return l1, l2, l3, err
 }

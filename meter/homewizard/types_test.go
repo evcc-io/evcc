@@ -48,11 +48,11 @@ func TestUnmarshalKwhDataResponse(t *testing.T) {
 		assert.Equal(t, float64(0), res.ActivePowerL2W)
 		assert.Equal(t, float64(-181), res.ActivePowerL3W)
 		assert.Equal(t, float64(235.4), *res.ActiveVoltageL1V)
-		assert.Equal(t, float64(235.8), res.ActiveVoltageL2V)
-		assert.Equal(t, float64(236.1), res.ActiveVoltageL3V)
+		assert.Equal(t, float64(235.8), *res.ActiveVoltageL2V)
+		assert.Equal(t, float64(236.1), *res.ActiveVoltageL3V)
 		assert.Equal(t, float64(1.19), *res.ActiveCurrentL1A)
-		assert.Equal(t, float64(0.37), res.ActiveCurrentL2A)
-		assert.Equal(t, float64(-0.93), res.ActiveCurrentL3A)
+		assert.Equal(t, float64(0.37), *res.ActiveCurrentL2A)
+		assert.Equal(t, float64(-0.93), *res.ActiveCurrentL3A)
 	}
 }
 
@@ -88,10 +88,10 @@ func TestUnmarshalP1DataResponse(t *testing.T) {
 		assert.Equal(t, float64(57), res.ActivePowerL2W)
 		assert.Equal(t, float64(168), res.ActivePowerL3W)
 		assert.Equal(t, float64(228), *res.ActiveVoltageL1V)
-		assert.Equal(t, float64(226), res.ActiveVoltageL2V)
-		assert.Equal(t, float64(225), res.ActiveVoltageL3V)
+		assert.Equal(t, float64(226), *res.ActiveVoltageL2V)
+		assert.Equal(t, float64(225), *res.ActiveVoltageL3V)
 		assert.Equal(t, float64(-0.092), *res.ActiveCurrentL1A)
-		assert.Equal(t, float64(0.252), res.ActiveCurrentL2A)
-		assert.Equal(t, float64(0.747), res.ActiveCurrentL3A)
+		assert.Equal(t, float64(0.252), *res.ActiveCurrentL2A)
+		assert.Equal(t, float64(0.747), *res.ActiveCurrentL3A)
 	}
 }
