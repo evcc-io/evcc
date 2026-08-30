@@ -61,8 +61,8 @@ params:
     example: not_plugged, disconnected
     advanced: true
     help:
-      en: Comma-separated list of additional states meaning disconnected
-      de: Komma-getrennte Liste zusätzlicher Zustände für getrennt
+      en: Comma-separated list of additional states meaning disconnected, see [docs.evcc.io](https://docs.evcc.io/en/smarthome/home-assistant#charge-status)
+      de: Komma-getrennte Liste zusätzlicher Zustände für getrennt, siehe [docs.evcc.io](https://docs.evcc.io/de/smarthome/home-assistant#charge-status)
   - name: statusB
     description:
       de: Zustände für Status B
@@ -70,8 +70,8 @@ params:
     example: charging_stopped, charging_completed
     advanced: true
     help:
-      en: Comma-separated list of additional states meaning connected
-      de: Komma-getrennte Liste zusätzlicher Zustände für verbunden
+      en: Comma-separated list of additional states meaning connected, see [docs.evcc.io](https://docs.evcc.io/en/smarthome/home-assistant#charge-status)
+      de: Komma-getrennte Liste zusätzlicher Zustände für verbunden, siehe [docs.evcc.io](https://docs.evcc.io/de/smarthome/home-assistant#charge-status)
   - name: statusC
     description:
       de: Zustände für Status C
@@ -79,8 +79,8 @@ params:
     example: instant_charging, fast_charging
     advanced: true
     help:
-      en: Comma-separated list of additional states meaning charging
-      de: Komma-getrennte Liste zusätzlicher Zustände für laden
+      en: Comma-separated list of additional states meaning charging, see [docs.evcc.io](https://docs.evcc.io/en/smarthome/home-assistant#charge-status)
+      de: Komma-getrennte Liste zusätzlicher Zustände für laden, siehe [docs.evcc.io](https://docs.evcc.io/de/smarthome/home-assistant#charge-status)
   - name: limitSoc
     description:
       de: Ziel-Ladezustand [%]
@@ -124,8 +124,8 @@ params:
     service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=script,switch
     example: "script.vehicle_start_charge; switch.vehicle_charger"
     help:
-      en: Entity ID for a script or a switch that starts charging the vehicle. Only useful with the [docs.evcc.io](https://docs.evcc.io/en/docs/devices/chargers#vehicle-api-only-charger). If a switch is provided, Service to stop charging must be left empty.
-      de: Entitäts-ID für ein Skript oder einen Schalter zum Starten des Ladevorgangs. Nur sinnvoll mit der [docs.evcc.io](https://docs.evcc.io/docs/devices/chargers#vehicle-api-only-charger). Wenn ein Schalter angegeben wird, muss der Service zum Stoppen des Ladens leer bleiben.
+      en: Entity ID for a script or a switch that starts charging the vehicle. Only useful with the [Vehicle API-only charger](https://docs.evcc.io/en/chargers/vehicle-api-only-charger). If a switch is provided, Service to stop charging must be left empty.
+      de: Entitäts-ID für ein Skript oder einen Schalter zum Starten des Ladevorgangs. Nur sinnvoll mit der [Fahrzeug-API Ladesteuerung](https://docs.evcc.io/de/chargers/vehicle-api-only-charger). Wenn ein Schalter angegeben wird, muss der Service zum Stoppen des Ladens leer bleiben.
   - name: stop_charging
     description:
       de: Service zum Laden stoppen
@@ -133,8 +133,8 @@ params:
     service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=script
     example: "script.vehicle_stop_charge"
     help:
-      en: Entity ID for a script that stops charging the vehicle. Only useful with the [docs.evcc.io](https://docs.evcc.io/en/docs/devices/chargers#vehicle-api-only-charger).
-      de: Entitäts-ID für ein Skript zum Stoppen des Ladevorgangs. Nur sinnvoll mit der [docs.evcc.io](https://docs.evcc.io/docs/devices/chargers#vehicle-api-only-charger).
+      en: Entity ID for a script that stops charging the vehicle. Only useful with the [Vehicle API-only charger](https://docs.evcc.io/en/chargers/vehicle-api-only-charger).
+      de: Entitäts-ID für ein Skript zum Stoppen des Ladevorgangs. Nur sinnvoll mit der [Fahrzeug-API Ladesteuerung](https://docs.evcc.io/de/chargers/vehicle-api-only-charger).
   - name: wakeup
     description:
       de: Service zum Aufwecken
