@@ -178,6 +178,10 @@ func (c *Zaptec) detectVersion() (int, error) {
 	}
 
 	capResp := res.ObservationByID(zaptec.Capabilities)
+	if capResp == nil {
+		return zaptec.ZaptecGo1_Pro, nil
+	}
+
 	if err := json.Unmarshal([]byte(capResp.ValueAsString), &capabilities); err != nil {
 		return 0, err
 	}
