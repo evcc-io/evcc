@@ -25,7 +25,6 @@ import (
 	"math"
 	"net/http"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -57,7 +56,6 @@ type Zaptec struct {
 	passive         bool
 	startPrevention bool
 	lastStatus      int
-	apmActive       bool // installation updates are rejected while APM is active
 
 	session      string    // last seen SessionIdentifier
 	sessionStart time.Time // start of the current session
@@ -480,35 +478,12 @@ func (c *Zaptec) installation() (zaptec.Installation, error) {
 }
 
 func (c *Zaptec) installationUpdate(data zaptec.UpdateInstallation) error {
-	// APM is a property of the installation, so once rejected the update can only
-	// succeed again after APM has been turned off and evcc restarted
-	if c.apmActive {
-		return api.ErrNotAvailable
-	}
-
 	uri := fmt.Sprintf("%s/api/installation/%s/update", zaptec.ApiURL, c.instance.InstallationId)
 
 	req, _ := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
-
-	var res struct {
-		Code    int
-		Details string
-	}
-
-	err := c.DoJSON(req, &res)
+	_, err := c.DoBody(req)
 	if err == nil {
 		c.statusG.Reset()
-		return nil
-	}
-
-	// 527 covers all rejected installation updates, so the details decide: when
-	// Zaptec's Adaptive Power Management is active, installation updates are
-	// blocked altogether and phase switching can never succeed
-	if res.Code == 527 && strings.Contains(strings.ToLower(res.Details), "apm") {
-		c.log.WARN.Printf("installation update rejected (%d: %s)- phase switching is not available and will not be retried until restart", res.Code, res.Details)
-		c.apmActive = true
-
-		return api.ErrNotAvailable
 	}
 
 	return err
