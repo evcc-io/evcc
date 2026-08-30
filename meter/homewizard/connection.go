@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
+	"github.com/samber/lo"
 )
 
 // Connection is the homewizard connection
@@ -121,10 +122,7 @@ func (c *Connection) Currents() (float64, float64, float64, error) {
 	res, err := c.dataG.Get()
 
 	// 1p meters report the total instead of per-phase values
-	l1 := res.ActiveCurrentA
-	if res.ActiveCurrentL1A != nil {
-		l1 = *res.ActiveCurrentL1A
-	}
+	l1 := lo.FromPtrOr(res.ActiveCurrentL1A, res.ActiveCurrentA)
 
 	if c.usage == "pv" {
 		return -l1, -res.ActiveCurrentL2A, -res.ActiveCurrentL3A, err
@@ -146,10 +144,7 @@ func (c *Connection) Voltages() (float64, float64, float64, error) {
 	res, err := c.dataG.Get()
 
 	// 1p meters report the total instead of per-phase values
-	l1 := res.ActiveVoltageV
-	if res.ActiveVoltageL1V != nil {
-		l1 = *res.ActiveVoltageL1V
-	}
+	l1 := lo.FromPtrOr(res.ActiveVoltageL1V, res.ActiveVoltageV)
 
 	return l1, res.ActiveVoltageL2V, res.ActiveVoltageL3V, err
 }
