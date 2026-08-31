@@ -204,7 +204,6 @@ func (m *E3dc) batterySoc() (float64, error) {
 	return rscpValue(*res, cast.ToFloat64E)
 }
 
-// getBatteryModes are the modes setBatteryMode implements
 func (m *E3dc) getBatteryModes() []api.BatteryMode {
 	return []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge}
 }
