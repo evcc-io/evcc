@@ -22,7 +22,7 @@ import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import echartsChart from "@/mixins/echartsChart";
 import { PERIODS } from "../Sessions/types";
 import { is12hFormat } from "@/units";
-import { hasColorPicker } from "./groups";
+import { hasColorPicker, isBidirectional } from "./groups";
 import { energyAxisScale, type EnergyAxisScale } from "@/utils/energyAxis";
 
 export interface HistorySlot {
@@ -54,9 +54,6 @@ export function stepAlpha(i: number, n: number): number {
 	const minAlpha = 0.5;
 	return Math.max(minAlpha, 1 - (n - 1 - i) * step);
 }
-
-// Symmetric axis regardless of whether the period contains both directions.
-const BIDIRECTIONAL_GROUPS: ReadonlySet<string> = new Set(["grid", "battery"]);
 
 // Multiple entities stack into one bar; grid and meter render side-by-side.
 const STACKED_GROUPS: ReadonlySet<string> = new Set(["loadpoint", "consumer", "pv", "battery"]);
@@ -137,7 +134,7 @@ export default defineComponent({
 			}
 			const overlay = this.showOverlay ? this.overlay : [];
 			return Math.max(
-				peak(this.visibleSeries, (slot) => Math.abs(slot.energy - slot.returnEnergy)),
+				peak(this.visibleSeries, (slot) => slot.energy),
 				peak(overlay, (slot) => slot.energy)
 			);
 		},
@@ -168,12 +165,7 @@ export default defineComponent({
 			return this.series.filter((s, i) => (s.paletteIndex ?? i) === idx);
 		},
 		isBidirectional(): boolean {
-			if (BIDIRECTIONAL_GROUPS.has(this.group)) return true;
-			// additional grid/battery meters can export
-			if (this.group === "meter") {
-				return this.series.some((s) => s.data.some((slot) => slot.returnEnergy > 0));
-			}
-			return false;
+			return isBidirectional(this.group, this.series);
 		},
 		categoryTimestamps(): number[] {
 			const out: number[] = [];
@@ -210,7 +202,8 @@ export default defineComponent({
 			const has = Array.from({ length: this.categoryKeys.length }, () => false);
 			for (const s of this.visibleSeries) {
 				for (const slot of s.data) {
-					if (slot.energy <= 0 && slot.returnEnergy <= 0) continue;
+					if (slot.energy <= 0 && (!this.isBidirectional || slot.returnEnergy <= 0))
+						continue;
 					const idx = index.get(this.timestampKey(new Date(slot.start).getTime()));
 					if (idx !== undefined) has[idx] = true;
 				}
@@ -260,8 +253,7 @@ export default defineComponent({
 					for (const slot of s.data) {
 						const idx = index.get(slotKey(slot.start));
 						if (idx === undefined) continue;
-						const v = (slot.energy - slot.returnEnergy) * factor;
-						overlayValues[idx] = (overlayValues[idx] || 0) + v;
+						overlayValues[idx] = (overlayValues[idx] || 0) + slot.energy * factor;
 					}
 				}
 			}
@@ -302,7 +294,8 @@ export default defineComponent({
 						const idx = index.get(slotKey(slot.start));
 						if (idx === undefined) continue;
 						if (slot.energy > 0) energyValues[idx] = slot.energy * factor;
-						if (slot.returnEnergy > 0)
+						// non-bidirectional groups ignore return energy
+						if (this.isBidirectional && slot.returnEnergy > 0)
 							returnEnergyValues[idx] = -slot.returnEnergy * factor;
 					}
 				}
@@ -558,9 +551,7 @@ export default defineComponent({
 							Math.max(
 								0,
 								...rowValues.flatMap((t) =>
-									this.isBidirectional
-										? [t.energy, t.returnEnergy]
-										: [t.energy + t.returnEnergy]
+									this.isBidirectional ? [t.energy, t.returnEnergy] : [t.energy]
 								)
 							) * 1000
 						);
@@ -575,7 +566,7 @@ export default defineComponent({
 							const t = rowValues[idx] ?? { energy: 0, returnEnergy: 0 };
 							const values = this.isBidirectional
 								? [formatValue(t.energy), formatValue(t.returnEnergy)]
-								: [formatValue(t.energy + t.returnEnergy)];
+								: [formatValue(t.energy)];
 							return {
 								name: showName ? (nameByIdx.get(i) ?? "") : undefined,
 								values,
@@ -588,7 +579,7 @@ export default defineComponent({
 								name: this.$t("sessions.total"),
 								values: this.isBidirectional
 									? [formatValue(sum("energy")), formatValue(sum("returnEnergy"))]
-									: [formatValue(sum("energy") + sum("returnEnergy"))],
+									: [formatValue(sum("energy"))],
 								total: true,
 							});
 						}

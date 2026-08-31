@@ -90,7 +90,7 @@ func NewZaptecFromConfig(ctx context.Context, other map[string]any) (api.Charger
 }
 
 // NewZaptec creates Zaptec charger
-func NewZaptec(_ context.Context, user, password, id string, priority bool, passive bool, cache time.Duration, startPrevention bool) (api.Charger, error) {
+func NewZaptec(ctx context.Context, user, password, id string, priority bool, passive bool, cache time.Duration, startPrevention bool) (api.Charger, error) {
 	log := util.NewLogger("zaptec").Redact(user, password)
 
 	if !sponsor.IsAuthorized() {
@@ -106,14 +106,6 @@ func NewZaptec(_ context.Context, user, password, id string, priority bool, pass
 		startPrevention: startPrevention,
 	}
 
-	// Add User-Agent header for Zaptec API compliance
-	c.Client.Transport = &transport.Decorator{
-		Decorator: transport.DecorateHeaders(map[string]string{
-			"User-Agent": "evcc/" + util.Version,
-		}),
-		Base: c.Client.Transport,
-	}
-
 	// setup cached values
 	c.statusG = util.ResettableCached(func() (zaptec.StateResponse, error) {
 		var res zaptec.StateResponse
@@ -124,11 +116,16 @@ func NewZaptec(_ context.Context, user, password, id string, priority bool, pass
 		return res, err
 	}, cache)
 
-	// Create a separate HTTP client for OAuth token requests to avoid circular dependency
-	// (c.Transport will be modified to use oauth2.Transport, which would create a loop)
-	tsCtx := context.WithValue(context.Background(), oauth2.HTTPClient, &http.Client{
-		Transport: c.Transport,
-	})
+	// Add User-Agent header for Zaptec API compliance
+	tr := &transport.Decorator{
+		Decorator: transport.DecorateHeaders(map[string]string{
+			"User-Agent": "evcc/" + util.Version,
+		}),
+		Base: c.Transport,
+	}
+
+	// token requests need their own client- c.Transport is wrapped in oauth2.Transport below
+	tsCtx := context.WithValue(ctx, oauth2.HTTPClient, &http.Client{Transport: tr})
 
 	// Get shared token source for this user (per-user uniqueness)
 	ts, err := zaptec.TokenSource(tsCtx, user, password)
@@ -138,7 +135,7 @@ func NewZaptec(_ context.Context, user, password, id string, priority bool, pass
 
 	c.Transport = &oauth2.Transport{
 		Source: ts,
-		Base:   c.Transport,
+		Base:   tr,
 	}
 
 	c.instance, err = ensureChargerEx(id, c.chargers, func(charger zaptec.Charger) (string, error) {
@@ -154,13 +151,24 @@ func NewZaptec(_ context.Context, user, password, id string, priority bool, pass
 	}
 
 	inst, err := c.installation()
-	if err == nil || c.version == zaptec.ZaptecGo1_Pro {
-		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
-	}
 
-	// the Zaptec Go 2 switches phases via the installation's per-phase available current;
-	// 1p->3p only works when all phases are set equal, so warn about an inconsistent setting
-	if err == nil && c.version == zaptec.ZaptecGo2 {
+	switch {
+	case c.version != zaptec.ZaptecGo2:
+		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
+
+	case err != nil:
+		c.log.WARN.Println("phase switching not available:", err)
+
+	// the Zaptec Go 2 switches phases by updating the installation, which is rejected
+	// as long as adaptive power management (APM) is active
+	case inst.EnabledFeatures.Has(zaptec.FeaturePowerManagementApm):
+		c.log.WARN.Println("phase switching not available: installation uses adaptive power management (APM)")
+
+	default:
+		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
+
+		// the Zaptec Go 2 switches phases via the installation's per-phase available current;
+		// 1p->3p only works when all phases are set equal, so warn about an inconsistent setting
 		if p1, p2, p3 := inst.AvailableCurrentPhase1, inst.AvailableCurrentPhase2, inst.AvailableCurrentPhase3; p2 != p1 || p3 != p1 {
 			c.log.WARN.Printf("installation available current is unequal across phases (%.3gA/%.3gA/%.3gA); phase switching back to 3p requires available current on all phases", p1, p2, p3)
 		}
