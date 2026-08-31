@@ -56,15 +56,34 @@ func TestBatteryCapacity(t *testing.T) {
 }
 
 func TestBatteryModes(t *testing.T) {
-	// a setter that doesn't switch on the mode has no mode withheld from it
-	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge}, batteryModes(nil))
+	modes := func(t *testing.T, keys []int64, declared []string) []api.BatteryMode {
+		t.Helper()
+		res, err := batteryModes(keys, declared)
+		require.NoError(t, err)
+		return res
+	}
 
-	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold}, batteryModes([]int64{1, 2}))
+	// a setter that doesn't switch on the mode and declares nothing has no mode withheld from it
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge}, modes(t, nil, nil))
+
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold}, modes(t, []int64{1, 2}, nil))
 
 	// values that are not a mode are ignored, e.g. the marstek forced discharge case
-	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHoldCharge}, batteryModes([]int64{1, 4, 5}))
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHoldCharge}, modes(t, []int64{1, 4, 5}, nil))
 
-	require.Empty(t, batteryModes([]int64{0}))
+	require.Empty(t, modes(t, []int64{0}, nil))
+
+	// the declaration fills in for a setter that cannot report its keys
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryCharge}, modes(t, nil, []string{"normal", "charge"}))
+
+	// readable keys win over the declaration
+	require.Equal(t, []api.BatteryMode{api.BatteryHold}, modes(t, []int64{2}, []string{"normal", "charge"}))
+
+	_, err := batteryModes(nil, []string{"invalid"})
+	require.Error(t, err)
+
+	_, err = batteryModes(nil, []string{"unknown"})
+	require.Error(t, err)
 }
 
 func TestBatterySocLimits(t *testing.T) {

@@ -2,7 +2,9 @@ package meter
 
 import (
 	"context"
+	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
@@ -153,11 +155,10 @@ var batteryModesSocLimit = implement.BatteryModes(api.BatteryNormal, api.Battery
 
 // batteryModes converts the keys the battery mode setter switches on into modes.
 // Keys that are not a battery mode are ignored. A setter that doesn't switch on
-// the mode tells us nothing, so it is credited with every mode rather than
-// having modes withheld from it.
-func batteryModes(keys []int64) []api.BatteryMode {
+// the mode cannot be read, so the declared modes are used instead.
+func batteryModes(keys []int64, declared []string) ([]api.BatteryMode, error) {
 	if keys == nil {
-		return batteryModesAll
+		return declaredBatteryModes(declared)
 	}
 
 	res := make([]api.BatteryMode, 0, len(keys))
@@ -167,7 +168,29 @@ func batteryModes(keys []int64) []api.BatteryMode {
 		}
 	}
 
-	return res
+	return res, nil
+}
+
+// declaredBatteryModes parses the modes named in the config. Without a declaration
+// the setter is credited with every mode rather than having modes withheld from it.
+func declaredBatteryModes(names []string) ([]api.BatteryMode, error) {
+	if len(names) == 0 {
+		return batteryModesAll, nil
+	}
+
+	res := make([]api.BatteryMode, 0, len(names))
+	for _, name := range names {
+		mode, err := api.BatteryModeString(strings.TrimSpace(name))
+		if err != nil {
+			return nil, err
+		}
+		if mode == api.BatteryUnknown {
+			return nil, fmt.Errorf("invalid battery mode: %s", name)
+		}
+		res = append(res, mode)
+	}
+
+	return res, nil
 }
 
 // LimitController returns an api.BatteryController decorator
