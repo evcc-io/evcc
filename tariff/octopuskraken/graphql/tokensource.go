@@ -4,11 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"time"
 
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/transport"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/hasura/go-graphql-client"
 	"golang.org/x/oauth2"
@@ -19,6 +18,7 @@ import (
 var ErrAuthFailed = errors.New("authentication failed")
 
 type tokenSource struct {
+	log             *util.Logger
 	baseURI         string
 	email, password string
 }
@@ -31,13 +31,8 @@ func (ts *tokenSource) Token() (*oauth2.Token, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
-	// Create a temporary client without authentication for the token request.
-	// The response carries the JWT, so this request is not trace-logged - redaction
-	// cannot help here as the token is only known once the response has been logged.
-	cli := &http.Client{
-		Timeout:   request.Timeout,
-		Transport: transport.Default(),
-	}
+	// Create a temporary client without authentication for the token request
+	cli := request.NewClient(ts.log)
 	tempClient := graphql.NewClient(ts.baseURI, cli)
 
 	var q krakenTokenAuthentication

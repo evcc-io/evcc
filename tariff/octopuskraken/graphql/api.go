@@ -32,6 +32,7 @@ type Client struct {
 // (other regional Octopus companies run the same platform under their own baseURI).
 func NewClient(log *util.Logger, baseURI, email, password, accountNumber string) (*Client, error) {
 	ts := oauth2.ReuseTokenSource(nil, oauth.Redacted(log, &tokenSource{
+		log:      log,
 		baseURI:  baseURI,
 		email:    email,
 		password: password,
