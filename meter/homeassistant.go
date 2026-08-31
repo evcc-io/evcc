@@ -3,6 +3,8 @@ package meter
 import (
 	"errors"
 	"fmt"
+	"maps"
+	"slices"
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
@@ -146,9 +148,9 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 
 // configuredBatteryModes returns the modes with a backing entity
 func configuredBatteryModes(modes map[api.BatteryMode]string) []api.BatteryMode {
-	return lo.Filter([]api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}, func(mode api.BatteryMode, _ int) bool {
-		return modes[mode] != ""
-	})
+	return slices.Sorted(maps.Keys(lo.PickBy(modes, func(_ api.BatteryMode, entity string) bool {
+		return entity != ""
+	})))
 }
 
 // batteryModeController returns a BatteryController function that activates
