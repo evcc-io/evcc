@@ -259,8 +259,12 @@ export default defineComponent({
 		// Consumer group: append virtual "Other consumers" = home − sum(consumers).
 		// paletteIndex pins color across period navigation.
 		displaySeries(): (group: string) => HistorySeries[] {
-			const hasEnergy = (s: HistorySeries) =>
-				s.data.some((slot) => slot.energy !== 0 || slot.returnEnergy !== 0);
+			const hasEnergy = (s: HistorySeries) => {
+				const bidi = isBidirectional(s.group, [s]);
+				return s.data.some(
+					(slot) => slot.energy !== 0 || (bidi && slot.returnEnergy !== 0)
+				);
+			};
 			return (group: string): HistorySeries[] => {
 				// Loadpoint and additional meters stack distinct entities without a
 				// home-derived "Others" series.

@@ -213,7 +213,8 @@ export default defineComponent({
 			const has = Array.from({ length: this.categoryKeys.length }, () => false);
 			for (const s of this.visibleSeries) {
 				for (const slot of s.data) {
-					if (slot.energy <= 0 && slot.returnEnergy <= 0) continue;
+					if (slot.energy <= 0 && (!this.isBidirectional || slot.returnEnergy <= 0))
+						continue;
 					const idx = index.get(this.timestampKey(new Date(slot.start).getTime()));
 					if (idx !== undefined) has[idx] = true;
 				}
