@@ -21,11 +21,18 @@ func RedactDefaultHook(s string) []string {
 	return []string{s, url.QueryEscape(s)}
 }
 
+// maxRotatingSlots limits the number of rotating redaction slots per logger.
+// Loggers are shared per log area, so repeatedly re-created token sources would
+// otherwise keep reserving slots. Beyond the limit slots are reused in order,
+// evicting the oldest.
+const maxRotatingSlots = 32
+
 // Redactor implements log redaction
 type Redactor struct {
 	mu       sync.Mutex
 	redact   []string
 	rotating [][]string
+	nextSlot int
 }
 
 // Redact adds items for redaction
@@ -40,22 +47,37 @@ func (l *Redactor) Redact(redact ...string) {
 	}
 }
 
-// RotatingSlot reserves a redaction slot for a periodically refreshed secret
-// like an access token. Updating the slot replaces the previous value instead
-// of appending, so the redaction list does not grow with every refresh.
-func (l *Redactor) RotatingSlot() func(string) {
+// RotatingSlot reserves a redaction slot for periodically refreshed secrets
+// like access and refresh tokens. Updating the slot replaces the previous
+// values instead of appending, so the redaction list does not grow with every
+// refresh.
+func (l *Redactor) RotatingSlot() func(...string) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
 	idx := len(l.rotating)
-	l.rotating = append(l.rotating, nil)
+	if idx < maxRotatingSlots {
+		l.rotating = append(l.rotating, nil)
+	} else {
+		idx = l.nextSlot
+		l.nextSlot = (l.nextSlot + 1) % maxRotatingSlots
+		l.rotating[idx] = nil
+	}
 
-	return func(s string) {
+	return func(s ...string) {
 		l.mu.Lock()
 		defer l.mu.Unlock()
 
-		if RedactHook != nil && len(s) > 0 {
-			l.rotating[idx] = RedactHook(s)
+		l.rotating[idx] = nil
+
+		if RedactHook == nil {
+			return
+		}
+
+		for _, v := range s {
+			if len(v) > 0 {
+				l.rotating[idx] = append(l.rotating[idx], RedactHook(v)...)
+			}
 		}
 	}
 }

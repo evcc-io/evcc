@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/hasura/go-graphql-client"
@@ -30,12 +31,11 @@ type Client struct {
 // NewClient returns a new, authenticated instance for the given Kraken instance
 // (other regional Octopus companies run the same platform under their own baseURI).
 func NewClient(log *util.Logger, baseURI, email, password, accountNumber string) (*Client, error) {
-	ts := oauth2.ReuseTokenSource(nil, &tokenSource{
+	ts := oauth2.ReuseTokenSource(nil, oauth.Redacted(log, &tokenSource{
 		baseURI:  baseURI,
 		email:    email,
 		password: password,
-		redact:   log.RotatingSlot(),
-	})
+	}))
 
 	cli := request.NewClient(log)
 	cli.Transport = &transport.Decorator{

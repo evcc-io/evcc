@@ -13,12 +13,22 @@ func TestRotatingSlot(t *testing.T) {
 
 	assert.Equal(t, "*** token", string(r.redacted([]byte("static token"))))
 
-	slot("first")
-	assert.Equal(t, "*** ***", string(r.redacted([]byte("static first"))))
+	slot("access", "refresh")
+	assert.Equal(t, "*** *** ***", string(r.redacted([]byte("static access refresh"))))
 
-	// updating the slot replaces the previous value instead of appending
+	// updating the slot replaces the previous values instead of appending
 	slot("second")
 	assert.Equal(t, "*** ***", string(r.redacted([]byte("static second"))))
-	assert.Equal(t, "*** first", string(r.redacted([]byte("static first"))))
+	assert.Equal(t, "*** access refresh", string(r.redacted([]byte("static access refresh"))))
 	assert.Len(t, r.rotating, 1)
+}
+
+func TestRotatingSlotLimit(t *testing.T) {
+	var r Redactor
+
+	for range maxRotatingSlots + 1 {
+		r.RotatingSlot()
+	}
+
+	assert.Len(t, r.rotating, maxRotatingSlots)
 }

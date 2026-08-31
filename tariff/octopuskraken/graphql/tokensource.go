@@ -21,7 +21,6 @@ var ErrAuthFailed = errors.New("authentication failed")
 type tokenSource struct {
 	baseURI         string
 	email, password string
-	redact          func(string)
 }
 
 var _ oauth2.TokenSource = (*tokenSource)(nil)
@@ -56,9 +55,6 @@ func (ts *tokenSource) Token() (*oauth2.Token, error) {
 		}
 		return nil, fmt.Errorf("authentication failed: %w", err)
 	}
-
-	// keep the token out of the logs, e.g. the Authorization header when logging headers
-	ts.redact(q.ObtainKrakenToken.Token)
 
 	// Parse JWT to extract expiry time using RegisteredClaims
 	// We use ParseUnverified since we don't have the signing key and trust the token from the API
