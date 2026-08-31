@@ -9,7 +9,7 @@ import (
 )
 
 // intKeysFromYaml returns the keys the yaml-defined int setter switches on
-func intKeysFromYaml(t *testing.T, s string) []int64 {
+func intKeysFromYaml(t *testing.T, s string) ([]int64, error) {
 	t.Helper()
 
 	var other map[string]any
@@ -21,8 +21,18 @@ func intKeysFromYaml(t *testing.T, s string) []int64 {
 	return cfg.intKeys(t.Context())
 }
 
+// mustIntKeys fails the test if the setter has no fixed set of keys
+func mustIntKeys(t *testing.T, s string) []int64 {
+	t.Helper()
+
+	keys, err := intKeysFromYaml(t, s)
+	require.NoError(t, err)
+
+	return keys
+}
+
 func TestSwitchIntKeys(t *testing.T) {
-	require.Equal(t, []int64{1, 2}, intKeysFromYaml(t, `
+	require.Equal(t, []int64{1, 2}, mustIntKeys(t, `
 source: switch
 switch:
 - case: 1
@@ -35,21 +45,8 @@ switch:
     value: b
 `))
 
-	// a default that only errors out leaves the cases as the keys
-	require.Equal(t, []int64{1}, intKeysFromYaml(t, `
-source: switch
-switch:
-- case: 1
-  set:
-    source: const
-    value: a
-default:
-  source: error
-  error: ErrNotAvailable
-`))
-
-	// a default that sets handles every other value, so there is no fixed key set
-	require.Nil(t, intKeysFromYaml(t, `
+	// a default handles the values without a case, so there is no fixed set of keys
+	_, err := intKeysFromYaml(t, `
 source: switch
 switch:
 - case: 1
@@ -59,12 +56,13 @@ switch:
 default:
   source: const
   value: b
-`))
+`)
+	require.Error(t, err)
 }
 
 func TestWrappedIntKeys(t *testing.T) {
 	// watchdog forwards its set config
-	require.Equal(t, []int64{1, 2}, intKeysFromYaml(t, `
+	require.Equal(t, []int64{1, 2}, mustIntKeys(t, `
 source: watchdog
 timeout: 1m
 set:
@@ -80,33 +78,21 @@ set:
       value: b
 `))
 
-	// sequence keeps the keys all of its setters switch on
-	require.Equal(t, []int64{2}, intKeysFromYaml(t, `
+	// a plugin that doesn't switch on its value
+	require.Nil(t, mustIntKeys(t, `
+source: const
+value: a
+`))
+
+	// a sequence hides the switch, so its keys are not available
+	require.Nil(t, mustIntKeys(t, `
 source: sequence
 set:
-- source: const
-  value: a
 - source: switch
   switch:
   - case: 1
     set:
       source: const
       value: a
-  - case: 2
-    set:
-      source: const
-      value: b
-- source: switch
-  switch:
-  - case: 2
-    set:
-      source: const
-      value: c
-`))
-
-	// a plugin that doesn't switch on its value
-	require.Nil(t, intKeysFromYaml(t, `
-source: const
-value: a
 `))
 }

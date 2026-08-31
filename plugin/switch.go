@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"strconv"
@@ -93,16 +94,11 @@ func (o *switchPlugin) IntSetter(param string) (func(int64) error, error) {
 var _ IntKeysGetter = (*switchPlugin)(nil)
 
 // IntKeys returns the values the switch has a case for. A default handles the
-// remaining values, so the switch then has no fixed key set.
-func (o *switchPlugin) IntKeys() []int64 {
-	if o.dflt != nil && handles(o.dflt.intKeys(o.ctx)) {
-		return nil
+// remaining values, so the switch then has no fixed set of keys.
+func (o *switchPlugin) IntKeys() ([]int64, error) {
+	if o.dflt != nil {
+		return nil, errors.New("switch: default has no keys")
 	}
 
-	return slices.Clone(o.values)
-}
-
-// handles is true if the plugin handles at least one value
-func handles(keys []int64) bool {
-	return keys == nil || len(keys) > 0
+	return slices.Clone(o.values), nil
 }

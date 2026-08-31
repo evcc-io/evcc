@@ -216,9 +216,6 @@ render: |
               type: writemultiple
               encoding: float32
       {{- end }}
-      default:
-        source: error
-        error: ErrNotAvailable
   {{- end }}
   {{- include "battery-params" . }}
   {{- end }}

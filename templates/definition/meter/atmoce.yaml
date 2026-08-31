@@ -430,9 +430,6 @@ render: |
                   type: writemultiple
                   decode: uint32
             {{- end }}
-    default:
-      source: error
-      error: ErrNotAvailable
   {{- if not ( eq .firmware "<01.01.00.28.15" ) }}
   dim:
     source: ifelse

@@ -42,7 +42,7 @@ type (
 		IntSetter(param string) (func(int64) error, error)
 	}
 	IntKeysGetter interface {
-		IntKeys() []int64
+		IntKeys() ([]int64, error)
 	}
 	BoolSetter interface {
 		BoolSetter(param string) (func(bool) error, error)
@@ -147,17 +147,19 @@ func (c *Config) IntSetterKeys(ctx context.Context, param string) (func(int64) e
 
 	var keys []int64
 	if v, ok := prov.(IntKeysGetter); ok {
-		keys = v.IntKeys()
+		if keys, err = v.IntKeys(); err != nil {
+			return nil, nil, err
+		}
 	}
 
 	return set, keys, nil
 }
 
 // intKeys returns the keys the config's int setter has a case for, nil if it doesn't switch
-func (c *Config) intKeys(ctx context.Context) []int64 {
+func (c *Config) intKeys(ctx context.Context) ([]int64, error) {
 	prov, err := plugin[IntKeysGetter]("int", ctx, c)
 	if prov == nil || err != nil {
-		return nil
+		return nil, nil
 	}
 
 	return prov.IntKeys()

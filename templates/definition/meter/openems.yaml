@@ -165,9 +165,6 @@ render: |
           - content-type: application/json
           body: '{"value": {{ mul .maxchargepower -1 }}}' # charge power is negative
       {{- end }}
-      default:
-        source: error
-        error: ErrNotAvailable
   {{- end }}
   {{- include "battery-params" . }}
   {{- end }}

@@ -2,7 +2,6 @@ package plugin
 
 import (
 	"context"
-	"slices"
 
 	"github.com/evcc-io/evcc/util"
 )
@@ -54,29 +53,6 @@ func (o *sequencePlugin) IntSetter(param string) (func(int64) error, error) {
 		}
 		return nil
 	}, nil
-}
-
-var _ IntKeysGetter = (*sequencePlugin)(nil)
-
-// IntKeys returns the keys every setter of the sequence has a case for
-func (o *sequencePlugin) IntKeys() []int64 {
-	var res []int64
-
-	for i := range o.set {
-		keys := o.set[i].intKeys(o.ctx)
-		switch {
-		case keys == nil:
-			continue
-		case res == nil:
-			res = keys
-		default:
-			res = slices.DeleteFunc(res, func(v int64) bool {
-				return !slices.Contains(keys, v)
-			})
-		}
-	}
-
-	return res
 }
 
 var _ FloatSetter = (*sequencePlugin)(nil)

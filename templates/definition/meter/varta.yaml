@@ -99,8 +99,5 @@ render: |
                     address: 1074  # max discharge power
                     type: writeholding
                     decode: int16
-      default:
-        source: error
-        error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}
