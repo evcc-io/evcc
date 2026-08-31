@@ -386,8 +386,9 @@ export interface OcppForwarderSession {
   error?: string;
 }
 
-/** A rule reporting a loadpoint's charging sessions to an upstream OCPP backend,
- * and accepting remote control from it (evcc-io/evcc#32989). */
+/** A rule reporting a loadpoint's charging sessions to an upstream OCPP
+ * backend (evcc-io/evcc#32989). One-way: evcc never accepts remote control
+ * from the upstream. */
 export interface OcppReportRule {
   /** Title of the loadpoint to report. */
   loadpointTitle: string;
