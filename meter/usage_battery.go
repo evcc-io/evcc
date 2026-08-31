@@ -2,6 +2,7 @@ package meter
 
 import (
 	"context"
+	"slices"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
@@ -142,17 +143,20 @@ func (m *batterySocLimits) Decorator() func() (float64, float64) {
 	}
 }
 
-// batteryModesDefault are the modes implementable via soc limit. They are also the
-// fallback for setters that don't switch on the mode.
+// batteryModesDefault are the modes implementable via soc limit
 var batteryModesDefault = []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}
 
 var batteryModesSocLimit = implement.BatteryModes(batteryModesDefault...)
 
 // batteryModes converts the keys the battery mode setter switches on into modes.
-// Keys that are not a battery mode are ignored.
+// Keys that are not a battery mode are ignored. A setter that doesn't switch on
+// the mode tells us nothing, so it is credited with every mode rather than
+// having modes withheld from it.
 func batteryModes(keys []int64) []api.BatteryMode {
 	if keys == nil {
-		return batteryModesDefault
+		return slices.DeleteFunc(api.BatteryModeValues(), func(mode api.BatteryMode) bool {
+			return mode == api.BatteryUnknown
+		})
 	}
 
 	res := make([]api.BatteryMode, 0, len(keys))

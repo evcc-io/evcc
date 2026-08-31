@@ -56,8 +56,8 @@ func TestBatteryCapacity(t *testing.T) {
 }
 
 func TestBatteryModes(t *testing.T) {
-	// a setter that accepts any value keeps the modes evcc assumed before they were reported
-	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}, batteryModes(nil))
+	// a setter that doesn't switch on the mode has no mode withheld from it
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge}, batteryModes(nil))
 
 	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold}, batteryModes([]int64{1, 2}))
 
