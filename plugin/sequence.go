@@ -56,22 +56,22 @@ func (o *sequencePlugin) IntSetter(param string) (func(int64) error, error) {
 	}, nil
 }
 
-var _ IntValues = (*sequencePlugin)(nil)
+var _ IntKeysGetter = (*sequencePlugin)(nil)
 
-// IntValues returns the values accepted by every setter of the sequence
-func (o *sequencePlugin) IntValues() []int64 {
+// IntKeys returns the keys every setter of the sequence has a case for
+func (o *sequencePlugin) IntKeys() []int64 {
 	var res []int64
 
 	for i := range o.set {
-		values := o.set[i].intValues(o.ctx)
+		keys := o.set[i].intKeys(o.ctx)
 		switch {
-		case values == nil:
+		case keys == nil:
 			continue
 		case res == nil:
-			res = values
+			res = keys
 		default:
 			res = slices.DeleteFunc(res, func(v int64) bool {
-				return !slices.Contains(values, v)
+				return !slices.Contains(keys, v)
 			})
 		}
 	}

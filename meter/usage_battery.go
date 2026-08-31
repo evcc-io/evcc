@@ -143,20 +143,20 @@ func (m *batterySocLimits) Decorator() func() (float64, float64) {
 }
 
 // batteryModesDefault are the modes implementable via soc limit. They are also the
-// fallback for setters that accept any value.
+// fallback for setters that don't switch on the mode.
 var batteryModesDefault = []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}
 
 var batteryModesSocLimit = implement.BatteryModes(batteryModesDefault...)
 
-// batteryModes converts the values accepted by the battery mode setter into modes.
-// Values that are not a battery mode are ignored.
-func batteryModes(values []int64) []api.BatteryMode {
-	if values == nil {
+// batteryModes converts the keys the battery mode setter switches on into modes.
+// Keys that are not a battery mode are ignored.
+func batteryModes(keys []int64) []api.BatteryMode {
+	if keys == nil {
 		return batteryModesDefault
 	}
 
-	res := make([]api.BatteryMode, 0, len(values))
-	for _, v := range values {
+	res := make([]api.BatteryMode, 0, len(keys))
+	for _, v := range keys {
 		if mode := api.BatteryMode(v); mode != api.BatteryUnknown && mode.IsABatteryMode() {
 			res = append(res, mode)
 		}

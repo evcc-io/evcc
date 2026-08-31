@@ -90,26 +90,19 @@ func (o *switchPlugin) IntSetter(param string) (func(int64) error, error) {
 	}, nil
 }
 
-var _ IntValues = (*switchPlugin)(nil)
+var _ IntKeysGetter = (*switchPlugin)(nil)
 
-// IntValues returns the case values, skipping the cases that only error out.
-// A default that sets accepts any other value, too.
-func (o *switchPlugin) IntValues() []int64 {
-	if o.dflt != nil && accepts(o.dflt.intValues(o.ctx)) {
+// IntKeys returns the values the switch has a case for. A default handles the
+// remaining values, so the switch then has no fixed key set.
+func (o *switchPlugin) IntKeys() []int64 {
+	if o.dflt != nil && handles(o.dflt.intKeys(o.ctx)) {
 		return nil
 	}
 
-	res := make([]int64, 0, len(o.values))
-	for i := range o.cases {
-		if accepts(o.cases[i].Set.intValues(o.ctx)) {
-			res = append(res, o.values[i])
-		}
-	}
-
-	return res
+	return slices.Clone(o.values)
 }
 
-// accepts is true if the plugin accepts at least one value
-func accepts(values []int64) bool {
-	return values == nil || len(values) > 0
+// handles is true if the plugin handles at least one value
+func handles(keys []int64) bool {
+	return keys == nil || len(keys) > 0
 }

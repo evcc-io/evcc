@@ -57,10 +57,10 @@ func NewWatchDogFromConfig(ctx context.Context, other map[string]any) (Plugin, e
 	return o, nil
 }
 
-var _ IntValues = (*watchdogPlugin)(nil)
+var _ IntKeysGetter = (*watchdogPlugin)(nil)
 
-func (o *watchdogPlugin) IntValues() []int64 {
-	return o.set.intValues(o.ctx)
+func (o *watchdogPlugin) IntKeys() []int64 {
+	return o.set.intKeys(o.ctx)
 }
 
 func (o *watchdogPlugin) wdt(ctx context.Context, set func() error) {

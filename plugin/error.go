@@ -46,10 +46,10 @@ func (o *errorPlugin) StringGetter() (func() (string, error), error) {
 	}, nil
 }
 
-var _ IntValues = (*errorPlugin)(nil)
+var _ IntKeysGetter = (*errorPlugin)(nil)
 
-// IntValues returns an empty list as the plugin never sets anything
-func (o *errorPlugin) IntValues() []int64 {
+// IntKeys returns an empty list as the plugin handles no value
+func (o *errorPlugin) IntKeys() []int64 {
 	return []int64{}
 }
 

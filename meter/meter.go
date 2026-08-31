@@ -106,13 +106,13 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 			implement.Has(m, implement.BatteryController(batteryModesSocLimit, limitController))
 
 		case cc.BatteryMode != nil:
-			// the values the setter accepts are the modes the battery supports
-			modeS, values, err := cc.BatteryMode.IntSetterValues(ctx, "batteryMode")
+			// the keys the setter switches on are the modes the battery supports
+			modeS, keys, err := cc.BatteryMode.IntSetterKeys(ctx, "batteryMode")
 			if err != nil {
 				return nil, fmt.Errorf("battery mode: %w", err)
 			}
 
-			modes := batteryModes(values)
+			modes := batteryModes(keys)
 
 			implement.Has(m, implement.BatteryController(implement.BatteryModes(modes...), func(mode api.BatteryMode) error {
 				return modeS(int64(mode))
