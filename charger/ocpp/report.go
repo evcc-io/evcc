@@ -227,8 +227,21 @@ type reportConnection struct {
 	jobs  chan func()
 	done  chan struct{}
 
-	mu            sync.Mutex
-	booted        bool
+	mu     sync.Mutex
+	booted bool
+
+	// desired session state - the source of truth for what should be
+	// reported upstream. reconcile() drives the connection towards this
+	// state and is safe to call repeatedly (on connect, on reconnect, on
+	// every new value, and as a fallback if a queued reconcile job was
+	// dropped under backpressure) - so a dropped attempt is simply retried
+	// by the next reconcile rather than a session-boundary message being
+	// permanently lost.
+	sessionActive bool
+	meterStartWh  float64
+	lastMeterWh   float64
+	pendingStop   bool
+	meterStopWh   float64
 	transactionId *int
 }
 
@@ -283,6 +296,17 @@ func newReportConnection(rule ReportRule) *reportConnection {
 		conn.mu.Lock()
 		conn.booted = false // re-boot after reconnect
 		conn.mu.Unlock()
+		// re-drive desired session state onto the new connection - a
+		// transaction id from before the drop is deliberately kept (not
+		// cleared): OCPP transactions are backend-tracked state, not tied to
+		// the WebSocket connection's lifetime, and most Central Systems
+		// (incl. SteVe, verified e2e) keep a transaction open across a brief
+		// reconnect - starting a second transaction for one continuous
+		// physical charge would fragment the billing record the reconnect
+		// is trying to preserve. If sessionActive is true but transactionId
+		// is nil (the original StartTransaction never got confirmed before
+		// the drop), reconcile below issues it fresh.
+		conn.enqueue(conn.reconcile)
 	})
 
 	go func() {
@@ -331,6 +355,10 @@ func (conn *reportConnection) dial() {
 		delete(reportErrors, conn.title)
 		reportMu.Unlock()
 		notifyReportUpdated()
+		// flush any session state that accumulated while offline (e.g. a
+		// session that started and stopped entirely before the first
+		// successful connect - see reconcile())
+		conn.enqueue(conn.reconcile)
 		return nil
 	}
 
@@ -344,8 +372,13 @@ func (conn *reportConnection) close() {
 
 // enqueue schedules a job on the connection's single worker goroutine, so
 // StartTransaction/MeterValues/StopTransaction for one session stay ordered.
-// Silently dropped if the queue is full (backpressure - a report connection
-// that's badly behind shouldn't block the loadpoint's own control loop).
+// Dropped if the queue is full (backpressure - a report connection that's
+// badly behind shouldn't block the loadpoint's own control loop), but this is
+// safe for reconcile jobs specifically: they read live desired state off the
+// connection rather than closing over a point-in-time value, so a dropped
+// reconcile is simply superseded by the next one (triggered by the next
+// meter update, session boundary, or reconnect) - nothing is lost, only
+// coalesced.
 func (conn *reportConnection) enqueue(job func()) {
 	select {
 	case conn.jobs <- job:
@@ -354,6 +387,13 @@ func (conn *reportConnection) enqueue(job func()) {
 	}
 }
 
+// ensureBoot sends BootNotification once per connection generation. Callers
+// must only invoke this while connected (reconcile checks IsConnected first;
+// OnTriggerMessage's caller is inherently connected, since the trigger itself
+// arrived over the connection) - otherwise the call fails and, since nothing
+// retries a bare ensureBoot failure on its own, booted would stay false
+// forever. reconcile is what provides the retry, by re-running on every
+// (re)connect and dropped-job fallback.
 func (conn *reportConnection) ensureBoot() {
 	conn.mu.Lock()
 	booted := conn.booted
@@ -370,6 +410,82 @@ func (conn *reportConnection) ensureBoot() {
 	conn.mu.Unlock()
 }
 
+// reconcile drives the connection's upstream OCPP session state towards the
+// desired state recorded by ReportSessionStart/ReportMeterValue/
+// ReportSessionStop, so a message that failed (not yet connected, transient
+// error) is retried by whichever of the following runs next: a later
+// reconcile call, the reconnect handler, or the dial-success handler. Never
+// attempts anything while disconnected - a call that's certain to fail would
+// just waste the one attempt an unconditional fire-and-forget job gets.
+func (conn *reportConnection) reconcile() {
+	if !conn.cp.IsConnected() {
+		return
+	}
+
+	conn.ensureBoot()
+
+	conn.mu.Lock()
+	active := conn.sessionActive
+	meterStart := conn.meterStartWh
+	lastMeter := conn.lastMeterWh
+	pendingStop := conn.pendingStop
+	meterStop := conn.meterStopWh
+	txID := conn.transactionId
+	conn.mu.Unlock()
+
+	if !active {
+		return
+	}
+
+	idTag := conn.idTag()
+
+	if txID == nil {
+		if _, err := conn.cp.Authorize(idTag); err != nil {
+			reportLog.DEBUG.Printf("%s: authorize: %v", conn.title, err)
+			return
+		}
+
+		res, err := conn.cp.StartTransaction(1, idTag, int(meterStart), types.NewDateTime(time.Now()))
+		if err != nil {
+			reportLog.DEBUG.Printf("%s: start transaction: %v", conn.title, err)
+			return
+		}
+
+		conn.mu.Lock()
+		conn.transactionId = &res.TransactionId
+		txID = conn.transactionId
+		conn.mu.Unlock()
+	}
+
+	if pendingStop {
+		if _, err := conn.cp.StopTransaction(int(meterStop), types.NewDateTime(time.Now()), *txID); err != nil {
+			reportLog.DEBUG.Printf("%s: stop transaction: %v", conn.title, err)
+			return
+		}
+
+		conn.mu.Lock()
+		conn.sessionActive = false
+		conn.pendingStop = false
+		conn.transactionId = nil
+		conn.mu.Unlock()
+		return
+	}
+
+	mv := types.MeterValue{
+		Timestamp: types.NewDateTime(time.Now()),
+		SampledValue: []types.SampledValue{{
+			Value:     fmt.Sprintf("%.0f", lastMeter),
+			Measurand: types.MeasurandEnergyActiveImportRegister,
+			Unit:      types.UnitOfMeasureWh,
+		}},
+	}
+	if _, err := conn.cp.MeterValues(1, []types.MeterValue{mv}, func(r *core.MeterValuesRequest) {
+		r.TransactionId = txID
+	}); err != nil {
+		reportLog.DEBUG.Printf("%s: meter values: %v", conn.title, err)
+	}
+}
+
 func (conn *reportConnection) idTag() string {
 	if conn.rule.IdTag != "" {
 		return conn.rule.IdTag
@@ -379,6 +495,9 @@ func (conn *reportConnection) idTag() string {
 
 // ReportSessionStart notifies the loadpoint's report connection (if any) that
 // a charging session started. No-op if the loadpoint has no rule configured.
+// Records the intent durably before enqueuing reconcile, so it survives a
+// dropped/failed attempt and is retried by a later reconcile (see
+// reportConnection.reconcile).
 func ReportSessionStart(loadpointTitle string, meterStartWh float64) {
 	reportMu.RLock()
 	conn := connections[loadpointTitle]
@@ -387,24 +506,14 @@ func ReportSessionStart(loadpointTitle string, meterStartWh float64) {
 		return
 	}
 
-	idTag := conn.idTag()
-	conn.enqueue(func() {
-		conn.ensureBoot()
+	conn.mu.Lock()
+	conn.sessionActive = true
+	conn.meterStartWh = meterStartWh
+	conn.lastMeterWh = meterStartWh
+	conn.pendingStop = false
+	conn.mu.Unlock()
 
-		if _, err := conn.cp.Authorize(idTag); err != nil {
-			reportLog.DEBUG.Printf("%s: authorize: %v", conn.title, err)
-		}
-
-		res, err := conn.cp.StartTransaction(1, idTag, int(meterStartWh), types.NewDateTime(time.Now()))
-		if err != nil {
-			reportLog.DEBUG.Printf("%s: start transaction: %v", conn.title, err)
-			return
-		}
-
-		conn.mu.Lock()
-		conn.transactionId = &res.TransactionId
-		conn.mu.Unlock()
-	})
+	conn.enqueue(conn.reconcile)
 }
 
 // ReportMeterValue notifies the loadpoint's report connection (if any) of the
@@ -417,32 +526,21 @@ func ReportMeterValue(loadpointTitle string, energyWh float64) {
 		return
 	}
 
-	conn.enqueue(func() {
-		conn.mu.Lock()
-		txID := conn.transactionId
+	conn.mu.Lock()
+	if !conn.sessionActive {
 		conn.mu.Unlock()
-		if txID == nil {
-			return
-		}
+		return
+	}
+	conn.lastMeterWh = energyWh
+	conn.mu.Unlock()
 
-		mv := types.MeterValue{
-			Timestamp: types.NewDateTime(time.Now()),
-			SampledValue: []types.SampledValue{{
-				Value:     fmt.Sprintf("%.0f", energyWh),
-				Measurand: types.MeasurandEnergyActiveImportRegister,
-				Unit:      types.UnitOfMeasureWh,
-			}},
-		}
-		if _, err := conn.cp.MeterValues(1, []types.MeterValue{mv}, func(r *core.MeterValuesRequest) {
-			r.TransactionId = txID
-		}); err != nil {
-			reportLog.DEBUG.Printf("%s: meter values: %v", conn.title, err)
-		}
-	})
+	conn.enqueue(conn.reconcile)
 }
 
 // ReportSessionStop notifies the loadpoint's report connection (if any) that
-// the charging session ended.
+// the charging session ended. Recorded as a durable pending-stop flag rather
+// than sent directly, so it's retried by reconcile even if the connection is
+// currently down or a queued attempt gets dropped under backpressure.
 func ReportSessionStop(loadpointTitle string, meterStopWh float64) {
 	reportMu.RLock()
 	conn := connections[loadpointTitle]
@@ -451,19 +549,16 @@ func ReportSessionStop(loadpointTitle string, meterStopWh float64) {
 		return
 	}
 
-	conn.enqueue(func() {
-		conn.mu.Lock()
-		txID := conn.transactionId
-		conn.transactionId = nil
+	conn.mu.Lock()
+	if !conn.sessionActive {
 		conn.mu.Unlock()
-		if txID == nil {
-			return
-		}
+		return
+	}
+	conn.pendingStop = true
+	conn.meterStopWh = meterStopWh
+	conn.mu.Unlock()
 
-		if _, err := conn.cp.StopTransaction(int(meterStopWh), types.NewDateTime(time.Now()), *txID); err != nil {
-			reportLog.DEBUG.Printf("%s: stop transaction: %v", conn.title, err)
-		}
-	})
+	conn.enqueue(conn.reconcile)
 }
 
 // reportHandler implements the inbound OCPP call handlers (remote control)

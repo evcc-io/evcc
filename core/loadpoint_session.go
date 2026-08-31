@@ -67,8 +67,6 @@ func (lp *Loadpoint) createSession() {
 	lp.energyMetrics.Reset()
 	lp.energyMetrics.Publish("session", lp)
 	lp.publish(keys.ChargedEnergy, lp.GetChargedEnergy())
-
-	ocpp.ReportSessionStart(lp.GetTitle(), meterStart*1e3)
 }
 
 // applyEnergyMetrics writes current energy metrics into the session and persists it.
