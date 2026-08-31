@@ -143,10 +143,13 @@ func (m *batterySocLimits) Decorator() func() (float64, float64) {
 	}
 }
 
-// batteryModesDefault are the modes implementable via soc limit
-var batteryModesDefault = []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}
+// batteryModesAll are the modes a battery can implement
+var batteryModesAll = slices.DeleteFunc(api.BatteryModeValues(), func(mode api.BatteryMode) bool {
+	return mode == api.BatteryUnknown
+})
 
-var batteryModesSocLimit = implement.BatteryModes(batteryModesDefault...)
+// batteryModesSocLimit are the modes implementable via soc limit
+var batteryModesSocLimit = implement.BatteryModes(api.BatteryNormal, api.BatteryHold, api.BatteryCharge)
 
 // batteryModes converts the keys the battery mode setter switches on into modes.
 // Keys that are not a battery mode are ignored. A setter that doesn't switch on
@@ -154,14 +157,12 @@ var batteryModesSocLimit = implement.BatteryModes(batteryModesDefault...)
 // having modes withheld from it.
 func batteryModes(keys []int64) []api.BatteryMode {
 	if keys == nil {
-		return slices.DeleteFunc(api.BatteryModeValues(), func(mode api.BatteryMode) bool {
-			return mode == api.BatteryUnknown
-		})
+		return batteryModesAll
 	}
 
 	res := make([]api.BatteryMode, 0, len(keys))
 	for _, v := range keys {
-		if mode := api.BatteryMode(v); mode != api.BatteryUnknown && mode.IsABatteryMode() {
+		if mode := api.BatteryMode(v); slices.Contains(batteryModesAll, mode) {
 			res = append(res, mode)
 		}
 	}

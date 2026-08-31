@@ -155,7 +155,9 @@ func (c *Config) IntSetterKeys(ctx context.Context, param string) (func(int64) e
 	return set, keys, nil
 }
 
-// intKeys returns the keys the config's int setter has a case for, nil if it doesn't switch
+// intKeys returns the keys the config's int setter has a case for, nil if it doesn't switch.
+// A plugin that doesn't implement IntKeysGetter fails the lookup, which is not an error here;
+// callers build the setter first, so a config that cannot be constructed has already been reported.
 func (c *Config) intKeys(ctx context.Context) ([]int64, error) {
 	prov, err := plugin[IntKeysGetter]("int", ctx, c)
 	if prov == nil || err != nil {
