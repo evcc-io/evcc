@@ -155,13 +155,13 @@ func configuredBatteryModes(modes map[api.BatteryMode]string) []api.BatteryMode 
 // the switch-like Home Assistant entity configured for the requested evcc
 // battery mode. Each mode is self-contained: evcc only triggers the matching
 // entity and never deactivates others - any mutual exclusion is the HA side's
-// responsibility. modeHold and modeCharge are optional and return
-// api.ErrNotAvailable when requested without a backing entity.
+// responsibility. modeHold and modeCharge are optional; a mode without a
+// backing entity is not announced and hence invalid here.
 func batteryModeController(conn *homeassistant.Connection, modes map[api.BatteryMode]string) func(api.BatteryMode) error {
 	return func(mode api.BatteryMode) error {
 		target, ok := modes[mode]
 		if !ok || target == "" {
-			return api.ErrNotAvailable
+			return errInvalidBatteryMode(mode)
 		}
 		return conn.CallSwitchService(target, true)
 	}

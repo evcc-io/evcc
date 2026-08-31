@@ -269,7 +269,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				})
 
 			default:
-				return api.ErrNotAvailable
+				return errInvalidBatteryMode(mode)
 			}
 
 			return eg.Wait()

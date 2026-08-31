@@ -160,6 +160,12 @@ func batteryModes(keys []int64) []api.BatteryMode {
 	return res
 }
 
+// errInvalidBatteryMode reports a mode the setter does not implement. The
+// controller announces its modes, so reaching a setter with any other is a bug.
+func errInvalidBatteryMode(mode api.BatteryMode) error {
+	return fmt.Errorf("invalid battery mode: %s", mode)
+}
+
 // declaredBatteryModes converts the mode names declared in the config into modes
 func declaredBatteryModes(names []string) ([]api.BatteryMode, error) {
 	res := make([]api.BatteryMode, 0, len(names))
@@ -196,7 +202,7 @@ func (m *batterySocLimits) LimitController(socG func() (float64, error), limitSo
 
 		// BatteryHoldCharge implementable via limit soc
 		default:
-			return api.ErrNotAvailable
+			return errInvalidBatteryMode(mode)
 		}
 	}
 }
@@ -257,7 +263,7 @@ func (m *batterySocLimitsCtx) LimitController(ctx context.Context, socG func() (
 
 		// BatteryHoldCharge not implementable via limit soc
 		default:
-			return api.ErrNotAvailable
+			return errInvalidBatteryMode(mode)
 		}
 	}, nil
 }

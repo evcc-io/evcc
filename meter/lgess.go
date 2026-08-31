@@ -161,7 +161,7 @@ func (m *LgEss) batteryMode(batterySocLimits batterySocLimits) func(api.BatteryM
 		case api.BatteryCharge:
 			return m.conn.BatteryMode("on", int(batterySocLimits.MaxSoc), true)
 		default:
-			return api.ErrNotAvailable
+			return errInvalidBatteryMode(mode)
 		}
 	}
 }

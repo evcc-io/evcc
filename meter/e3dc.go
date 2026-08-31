@@ -236,7 +236,7 @@ func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 			e3dcBatteryCharge(0),
 		}
 	default:
-		return api.ErrNotAvailable
+		return errInvalidBatteryMode(mode)
 	}
 
 	res, err := m.retryMessages(messages)
