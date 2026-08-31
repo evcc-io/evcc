@@ -1,0 +1,51 @@
+template: hager-witty-modbus
+products:
+  - brand: Hager
+    description:
+      generic: witty plus
+capabilities: ["dim"]
+requirements:
+  description:
+    de: |
+      Modbus TCP muss über die Weboberfläche der Wallbox aktiviert sein.
+    en: |
+      Modbus TCP has to be enabled via the wallbox's web interface.
+params:
+  - name: host
+  - name: port
+    default: 502
+render: |
+  type: custom
+  status:
+    source: modbus
+    id: 1
+    uri: {{ joinHostPort .host .port }}
+    register:
+      address: 0x3008 # CP State
+      type: holding
+      decode: uint16
+  enabled:
+    source: modbus
+    id: 1
+    uri: {{ joinHostPort .host .port }}
+    register:
+      address: 0x3020 # EVCS Verfügbarkeit | EVCS availability
+      type: holding
+      decode: uint16
+  enable:
+    source: modbus
+    id: 1
+    uri: {{ joinHostPort .host .port }}
+    register:
+      address: 0x3020 # EVCS Verfügbarkeit | EVCS availability
+      type: writesingle
+      decode: uint16
+  maxcurrent:
+    source: modbus
+    id: 1
+    uri: {{ joinHostPort .host .port }}
+    register:
+      address: 0x301E # Max Charging Current
+      type: writesingle
+      decode: uint16
+    scale: 10 # A -> 0.1A steps
