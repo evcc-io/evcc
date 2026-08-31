@@ -258,6 +258,20 @@ test.describe("additional meters", () => {
     await gotoDay(page, 2026, 4, 10);
     expect(await yAxis(chart(page, "meter"))).toEqual(["kW", "-2.0", "-1.0", "0.0", "1.0", "2.0"]);
   });
+
+  // 2026-04-10: "Submeter" 2.0/0.4 kWh, "Feed-in meter" export-only 1.2 kWh.
+  // A netted value would read the same for import and export, so once one meter
+  // of the section is bidirectional every meter shows both directions.
+  test("export-only meter shows both directions next to a bidirectional one", async ({ page }) => {
+    await gotoDay(page, 2026, 4, 10);
+    const additional = section(page, "meter");
+    await expect(
+      additional.getByRole("button", { name: "Submeter 2.0 kWh · 400 Wh" })
+    ).toBeVisible();
+    await expect(
+      additional.getByRole("button", { name: "Feed-in meter 0.0 kWh · 1.2 kWh" })
+    ).toBeVisible();
+  });
 });
 
 test.describe("reconnect", () => {

@@ -30,6 +30,7 @@ INSERT INTO `entities` (id, `group`, name, title) VALUES (10, 'battery', 'batter
 INSERT INTO `entities` (id, `group`, name, title) VALUES (11, 'meter', 'submeter', 'Submeter');
 -- leftover from a swapped grid meter device ref
 INSERT INTO `entities` (id, `group`, name, title) VALUES (12, 'grid', 'db:2', 'db:2');
+INSERT INTO `entities` (id, `group`, name, title) VALUES (13, 'meter', 'feedin', 'Feed-in meter');
 
 -- =====================================================================
 -- API test data: 2026-03-24/25 (existing). Used by the JSON-shape tests.
@@ -195,3 +196,9 @@ INSERT INTO `meters` VALUES (11, 1775815200, 0.5, 0.1);
 INSERT INTO `meters` VALUES (11, 1775816100, 0.5, 0.1);
 INSERT INTO `meters` VALUES (11, 1775817000, 0.5, 0.1);
 INSERT INTO `meters` VALUES (11, 1775817900, 0.5, 0.1);
+-- Second, export-only meter on the same day. Its direction is only readable
+-- because the bidirectional sibling makes the whole section show both columns.
+INSERT INTO `meters` VALUES (13, 1775815200, 0, 0.3);
+INSERT INTO `meters` VALUES (13, 1775816100, 0, 0.3);
+INSERT INTO `meters` VALUES (13, 1775817000, 0, 0.3);
+INSERT INTO `meters` VALUES (13, 1775817900, 0, 0.3);

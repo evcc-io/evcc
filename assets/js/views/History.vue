@@ -414,13 +414,21 @@ export default defineComponent({
 				if (group === "battery") return batteryColor(s.paletteIndex ?? i);
 				return darken(baseColor, stepAlpha(i, Math.max(n, 1)));
 			};
-			return list.map((s, i) => {
-				let sumEnergy = 0;
-				let sumReturnEnergy = 0;
+			const sums = list.map((s) => {
+				let energy = 0;
+				let returnEnergy = 0;
 				for (const slot of s.data) {
-					sumEnergy += slot.energy;
-					sumReturnEnergy += slot.returnEnergy;
+					energy += slot.energy;
+					returnEnergy += slot.returnEnergy;
 				}
+				return { energy, returnEnergy };
+			});
+			// One bidirectional entity makes the whole group show both directions so
+			// that a single-direction sibling isn't mistaken for the other direction.
+			const split = sums.some((v) => v.energy > 0 && v.returnEnergy > 0);
+
+			return list.map((s, i) => {
+				const { energy, returnEnergy } = sums[i]!;
 				return {
 					// Use stable paletteIndex as the focus identifier so that the
 					// selected entity keeps its identity across period navigations.
@@ -429,10 +437,11 @@ export default defineComponent({
 					color: colorFor(i, s),
 					value: this.directionSumLabel(
 						s.group,
-						sumEnergy,
-						sumReturnEnergy,
+						energy,
+						returnEnergy,
 						POWER_UNIT.AUTO,
-						false
+						false,
+						split
 					),
 					id: colorPicker && !s.virtual ? s.title : undefined,
 				};
@@ -474,10 +483,12 @@ export default defineComponent({
 			sumEnergy: number,
 			sumReturnEnergy: number,
 			unit: POWER_UNIT,
-			withLabels = true
+			withLabels = true,
+			force = false
 		): string {
 			const fmt = (v: number) => this.fmtWh(v * 1000, unit);
-			if (sumEnergy > 0 && sumReturnEnergy > 0 && BIDIRECTIONAL_GROUPS.includes(group)) {
+			const both = force || (sumEnergy > 0 && sumReturnEnergy > 0);
+			if (both && BIDIRECTIONAL_GROUPS.includes(group)) {
 				const suffix = (key: string) =>
 					withLabels ? ` ${this.$t(`main.history.direction.${group}.${key}`)}` : "";
 				return `${fmt(sumEnergy)}${suffix("energy")} · ${fmt(sumReturnEnergy)}${suffix("returnEnergy")}`;
