@@ -1,4 +1,4 @@
-interval: 10s
+interval: 0.1s
 
 site:
   title: Hello World
