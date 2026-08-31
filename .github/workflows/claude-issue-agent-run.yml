@@ -170,9 +170,10 @@ jobs:
                - push and open a draft PR with `gh pr create --draft` whose body starts
                  with `fixes #${{ inputs.issue_number }}` and ends with the
                  "🤖 Generated with [Claude Code](https://claude.com/claude-code)" footer.
-               - if you set the issue type to Bug in step 3, create the PR with
-                 `--label bug` so it qualifies for backport. The `bug` label belongs on
-                 the fixing pull request, never on the issue.
+               - if the issue carries type Bug, whether you set it in step 3 or it
+                 already had it, create the PR with `--label bug` so it qualifies for
+                 backport. The `bug` label belongs on the fixing pull request, never on
+                 the issue.
 
             If MODE is "fix", do the following instead of step 3/4 above:
 
