@@ -580,7 +580,11 @@
 				/>
 				<OcppModal :ocpp="ocpp" :stationTitles="stationTitles" />
 				<OcppForwarderModal @changed="loadDirty" />
-				<OcppReportModal :loadpoints="loadpoints" :chargers="chargers" @changed="loadDirty" />
+				<OcppReportModal
+					:loadpoints="loadpoints"
+					:chargers="chargers"
+					@changed="loadDirty"
+				/>
 				<BackupRestoreModal v-bind="backupRestoreProps" />
 				<SecurityModal :auth-disabled="authDisabled" />
 				<ApiKeyModal :auth-disabled="authDisabled" />
@@ -1630,19 +1634,15 @@ export default defineComponent({
 			);
 		},
 		ocppReportRule(title: string) {
-			return (store.state?.ocppreport?.config || []).find(
-				(r) => r.loadpointTitle === title
-			);
+			return (store.state?.ocppreport?.config || []).find((r) => r.loadpointTitle === title);
 		},
 		ocppReportError(title: string): string | undefined {
-			return (store.state?.ocppreport?.status || []).find(
-				(s) => s.loadpointTitle === title
-			)?.error;
+			return (store.state?.ocppreport?.status || []).find((s) => s.loadpointTitle === title)
+				?.error;
 		},
 		ocppReportConnected(title: string): boolean {
-			return !!(store.state?.ocppreport?.status || []).find(
-				(s) => s.loadpointTitle === title
-			)?.upstreamConnected;
+			return !!(store.state?.ocppreport?.status || []).find((s) => s.loadpointTitle === title)
+				?.upstreamConnected;
 		},
 		hasDeviceError(type: DeviceType, name?: string) {
 			if (!name) return false;
