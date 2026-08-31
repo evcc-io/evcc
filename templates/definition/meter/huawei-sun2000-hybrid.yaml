@@ -379,6 +379,8 @@ render: |
           type: holding
           decode: uint16
     script: v == 0
+  # the sequence hides the switch, so the modes are declared here
+  batterymodes: ["normal", "hold", "charge", "holdcharge"]
   batterymode:
     source: sequence
     set:
