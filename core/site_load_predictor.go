@@ -1,7 +1,6 @@
 package core
 
 import (
-	"math"
 	"slices"
 	"time"
 
@@ -38,14 +37,26 @@ func (site *Site) addHeatingDemand(gt []float64, minLen int) []loadpoint.API {
 			continue
 		}
 
-		profile, correct := lp.demandProfile()
-		if profile == nil {
+		// skip disconnected or disabled heating loadpoints: the historical profile
+		// must not be added for consumption that will not occur
+		if s := lp.GetStatus(); s != api.StatusB && s != api.StatusC {
+			continue
+		}
+		if lp.GetMode() == api.ModeOff {
 			continue
 		}
 
-		p := tileAndTrim(profile[:], minLen)
-		if correct {
-			p = site.applyTemperatureCorrection(p)
+		var p []float64
+
+		if profile, correct := lp.demandProfile(); profile != nil {
+			p = tileAndTrim(profile[:], minLen)
+			if correct {
+				p = site.applyTemperatureCorrection(p)
+			}
+		} else if wp := lp.demandProfileWeekday(minLen); wp != nil {
+			p = wp
+		} else {
+			continue
 		}
 
 		for i := range min(len(gt), len(p)) {
@@ -63,11 +74,13 @@ func (site *Site) addHeatingDemand(gt []float64, minLen int) []loadpoint.API {
 func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 	weatherTariff := site.GetTariff(api.TariffUsageTemperature)
 	if weatherTariff == nil {
+		site.log.WARN.Println("temperature correction: demandtemperature predictor set but no temperature tariff configured")
 		return profile
 	}
 
 	rates, err := weatherTariff.Rates()
 	if err != nil || len(rates) == 0 {
+		site.log.DEBUG.Printf("temperature correction: no rates available: %v", err)
 		return profile
 	}
 
@@ -83,15 +96,22 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 	// average historical temperature per hour-of-day
 	var pastSum [24]float64
 	var pastCount [24]int
-	forecast := make(map[time.Time]float64, len(rates))
 
 	for _, r := range rates {
-		forecast[r.Start] = r.Value
-
 		if r.Start.Before(currentTime) {
 			h := r.Start.UTC().Hour()
 			pastSum[h] += r.Value
 			pastCount[h]++
+		}
+	}
+
+	// require at least one past sample for every hour-of-day; otherwise the
+	// correction would be applied to some slots but not others, mixing two
+	// models in the same profile. This is common after a restart when the
+	// temperature source only provides data from today onward.
+	for h := range pastCount {
+		if pastCount[h] == 0 {
+			return profile
 		}
 	}
 
@@ -102,19 +122,20 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 		ts := slotStart.Add(time.Duration(i) * tariff.SlotDuration)
 		h := ts.UTC().Hour()
 
-		tFuture, ok := forecast[ts]
-		if !ok || pastCount[h] == 0 {
+		r, err := rates.At(ts)
+		if err != nil {
 			continue
 		}
+		tFuture := r.Value
 
-		// heating stops once it is warm enough outside
+		// above the heating threshold the correction is skipped, keeping the
+		// historical average in the model (e.g. summer DHW still consumes energy)
 		if tFuture >= heatingStopThreshold {
-			res[i] = 0
 			continue
 		}
 
 		denominator := tRoom - pastSum[h]/float64(pastCount[h])
-		if math.Abs(denominator) < 0.5 {
+		if denominator <= 0.5 {
 			continue
 		}
 
