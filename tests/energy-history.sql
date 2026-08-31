@@ -160,6 +160,17 @@ INSERT INTO `meters` VALUES (3, 1781517600, 1.4, 1.0);
 INSERT INTO `meters` VALUES (3, 1781604000, 1.4, 1.0);
 INSERT INTO `meters` VALUES (3, 1781690400, 1.4, 1.0);
 
+-- =====================================================================
+-- Two batteries over a month: 2026-07-01..03. Battery charges more than it
+-- discharges, Battery 2 is exactly balanced so its net sum is zero.
+-- =====================================================================
+INSERT INTO `meters` VALUES (3, 1782900000, 2.0, 1.0);
+INSERT INTO `meters` VALUES (3, 1782986400, 2.0, 1.0);
+INSERT INTO `meters` VALUES (3, 1783072800, 2.0, 1.0);
+INSERT INTO `meters` VALUES (10, 1782900000, 1.5, 1.5);
+INSERT INTO `meters` VALUES (10, 1782986400, 1.5, 1.5);
+INSERT INTO `meters` VALUES (10, 1783072800, 1.5, 1.5);
+
 -- 2026-04-09 → additional meter (ext) standalone chart. Single entity 1.2 kWh,
 -- not home-combined, so no virtual "Others" series.
 INSERT INTO `meters` VALUES (11, 1775728800, 0.3, 0);

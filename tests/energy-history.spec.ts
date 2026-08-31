@@ -220,6 +220,24 @@ test.describe("consumption breakdown", () => {
   });
 });
 
+test.describe("battery legend", () => {
+  // 2026-07: Battery 6.0/3.0 kWh, Battery 2 balanced at 4.5/4.5 kWh. A net sum
+  // would collapse the balanced battery to zero, so both directions are shown.
+  test("month legend keeps charge and discharge apart", async ({ page }) => {
+    await gotoMonth(page, 2026, 7);
+    const battery = section(page, "battery");
+    await expect(battery).toBeVisible();
+
+    await expect(battery.getByRole("heading")).toContainText(
+      "10.5 kWh charged · 7.5 kWh discharged"
+    );
+    await expect(battery.getByRole("button", { name: "Battery 6.0 kWh · 3.0 kWh" })).toBeVisible();
+    await expect(
+      battery.getByRole("button", { name: "Battery 2 4.5 kWh · 4.5 kWh" })
+    ).toBeVisible();
+  });
+});
+
 test.describe("additional meters", () => {
   // 2026-04-09: single ext meter "Submeter" = 1.2 kWh, no home data.
   test("standalone section without virtual Others", async ({ page }) => {
