@@ -8,6 +8,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import {
+	axisNameStyle,
 	FONT_FAMILY,
 	forecastGrid,
 	forecastYAxis,
@@ -21,6 +22,7 @@ import historyChart from "./historyChart";
 import LegendList from "./LegendList.vue";
 import colors from "@/colors";
 import { TYPES, GROUPS } from "./types";
+import { axisScale, type AxisScale } from "@/utils/energyAxis";
 import { CURRENCY, type DeviceColors } from "@/types/evcc";
 
 interface Dataset {
@@ -152,8 +154,7 @@ export default defineComponent({
 				};
 			});
 		},
-		maxBarCost() {
-			if (this.costType !== TYPES.PRICE) return 0;
+		maxBarTotal() {
 			const barDatasets = this.chartData.datasets.filter((d) => d.type === "bar");
 			const labelCount = this.chartData.labels.length;
 			let max = 0;
@@ -162,6 +163,10 @@ export default defineComponent({
 				if (total > max) max = total;
 			}
 			return max;
+		},
+		// CO2 bars are grams
+		co2Scale(): AxisScale {
+			return axisScale(this.maxBarTotal);
 		},
 		chartOption(): Record<string, unknown> {
 			const { labels, datasets } = this.chartData;
@@ -246,41 +251,39 @@ export default defineComponent({
 							showMaxLine: true,
 							lineStyle: { color: colors.border || "" },
 						},
-						...(this.costType === TYPES.CO2 ? { name: "kg" } : {}),
-						nameLocation: "end",
-						nameGap: 18,
-						nameTextStyle: {
-							color: colors.muted || "",
-							fontFamily: FONT_FAMILY,
-							fontSize: 10,
-							opacity: 0.75,
-							align: "left",
-							// align with the value labels' left edge (8px default label margin)
-							padding: [0, 0, 0, 8],
-						},
+						...(this.costType === TYPES.CO2
+							? {
+									name: this.co2Scale.small ? "g" : "kg",
+									...(this.co2Scale.small
+										? {
+												max: this.co2Scale.limit,
+												interval: this.co2Scale.limit / 4,
+											}
+										: {}),
+								}
+							: {}),
+						...axisNameStyle(),
 						axisLabel: {
 							color: colors.muted || "",
 							hideOverlap: true,
 							formatter: (value: number) =>
 								isPrice
-									? this.fmtMoney(value, this.currency, this.maxBarCost < 4, true)
-									: this.fmtNumber(value / 1e3, 0),
+									? this.fmtMoney(
+											value,
+											this.currency,
+											this.maxBarTotal < 4,
+											true
+										)
+									: this.co2Scale.small
+										? this.fmtNumber(value, 0)
+										: this.fmtNumber(value / 1e3, this.co2Scale.digits),
 						},
 					}),
 					forecastYAxis({
 						position: "left",
 						splitLine: { show: false },
 						name: isPrice ? this.pricePerKWhUnit(this.currency, false) : "g/kWh",
-						nameLocation: "end",
-						nameGap: 18,
-						nameTextStyle: {
-							color: colors.muted || "",
-							fontFamily: FONT_FAMILY,
-							fontSize: 10,
-							opacity: 0.75,
-							align: "right",
-							padding: [0, 8, 0, 0],
-						},
+						...axisNameStyle("right"),
 						axisLabel: {
 							color: colors.muted || "",
 							hideOverlap: true,
