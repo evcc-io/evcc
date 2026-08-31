@@ -13,11 +13,17 @@ import (
 func TestAdapterSetModeLegacyAliases(t *testing.T) {
 	v := &adapter{log: util.NewLogger("foo"), name: "aliases"}
 
-	// deprecated modes map to smart without touching always charge
-	for _, mode := range []api.ChargeMode{api.ModeMinPV, api.ModePV} {
-		v.SetMode(mode)
-		assert.Equal(t, api.ModeSmart, v.GetMode())
-		assert.Equal(t, api.AlwaysCharge(""), v.GetAlwaysCharge())
+	// deprecated modes map to smart and carry the equivalent always charge
+	for _, tc := range []struct {
+		mode api.ChargeMode
+		ac   api.AlwaysCharge
+	}{
+		{api.ModeMinPV, api.AlwaysChargeOn},
+		{api.ModePV, api.AlwaysChargeOff},
+	} {
+		v.SetMode(tc.mode)
+		assert.Equal(t, api.ModeSmart, v.GetMode(), tc.mode)
+		assert.Equal(t, tc.ac, v.GetAlwaysCharge(), tc.mode)
 	}
 
 	v.SetAlwaysCharge(api.AlwaysChargeOn)

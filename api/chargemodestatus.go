@@ -25,6 +25,18 @@ func (c ChargeMode) String() string {
 	return string(c)
 }
 
+// Normalize maps deprecated pv/minpv to smart and the equivalent always charge state
+func (c ChargeMode) Normalize() (ChargeMode, AlwaysCharge) {
+	switch c {
+	case ModeMinPV:
+		return ModeSmart, AlwaysChargeOn
+	case ModePV:
+		return ModeSmart, AlwaysChargeOff
+	default:
+		return c, ""
+	}
+}
+
 // AlwaysCharge makes smart mode charge continuously at least at minimum power
 type AlwaysCharge string
 

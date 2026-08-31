@@ -657,6 +657,13 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 		lp.defaultMode()
 	}
 
+	// always charge once ends with the session; clear before default vehicle re-applies
+	if lp.GetAlwaysCharge() == api.AlwaysChargeOnce {
+		if err := lp.SetAlwaysCharge(api.AlwaysChargeOff); err != nil {
+			lp.log.ERROR.Printf("always charge: %v", err)
+		}
+	}
+
 	// set default vehicle (may be nil)
 	lp.setActiveVehicle(lp.defaultVehicle)
 
@@ -666,13 +673,6 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	// boost
 	if err := lp.SetBatteryBoost(false); err != nil {
 		lp.log.ERROR.Printf("battery boost: %v", err)
-	}
-
-	// always charge once ends with the session
-	if lp.GetAlwaysCharge() == api.AlwaysChargeOnce {
-		if err := lp.SetAlwaysCharge(api.AlwaysChargeOff); err != nil {
-			lp.log.ERROR.Printf("always charge: %v", err)
-		}
 	}
 
 	// reset session

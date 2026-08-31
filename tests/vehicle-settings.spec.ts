@@ -248,8 +248,42 @@ test.describe("default mode", async () => {
     await mode.getByTestId("always-charge-toggle").click();
     await expect(alwaysChargeSwitch).toBeChecked();
 
-    // explicit off, so the second vehicle does not inherit always charge
+    // explicit off applies on switch
     await switchVehicle(page, "grüner Honda e");
+    await expect(alwaysChargeSwitch).not.toBeChecked();
+  });
+
+  test("vehicle always charge ends with session", async ({ page }) => {
+    await page.goto("/");
+    const mode = page.getByTestId("loadpoint").first().getByTestId("mode");
+    const dropdown = page.getByTestId("always-charge-dropdown");
+    const alwaysChargeSwitch = dropdown.getByRole("switch");
+
+    await setAlwaysCharge(page, "grüner Honda e", "On");
+
+    // vehicle default applies session-scoped
+    await switchVehicle(page, "grüner Honda e");
+    await mode.getByTestId("always-charge-toggle").click();
+    await expect(alwaysChargeSwitch).toBeChecked();
+    await expect(dropdown.getByRole("button", { name: "Only for this session" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+
+    // disconnect ends the session
+    await page.goto(simulatorUrl());
+    await page.getByTestId("loadpoint0").getByText("A (disconnected)").click();
+    await simulatorApply(page);
+    await page.goto("/");
+    await expect(page.getByTestId("vehicle-status")).toHaveText("Disconnected.");
+
+    // reconnected default vehicle does not inherit always charge
+    await page.goto(simulatorUrl());
+    await page.getByTestId("loadpoint0").getByText("B (connected)").click();
+    await simulatorApply(page);
+    await page.goto("/");
+    await expect(page.getByTestId("vehicle-name")).toHaveText("blauer e-Golf");
+    await mode.getByTestId("always-charge-toggle").click();
     await expect(alwaysChargeSwitch).not.toBeChecked();
   });
 });

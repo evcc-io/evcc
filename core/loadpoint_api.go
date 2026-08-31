@@ -161,19 +161,13 @@ func (lp *Loadpoint) alwaysChargeSupported() bool {
 	return !lp.chargerHasFeature(api.SwitchDevice)
 }
 
-// normalizeMode maps the deprecated pv/minpv modes to smart. The returned always charge
-// state is empty if unchanged; switch devices never get always charge.
+// normalizeMode maps deprecated modes; switch devices never get always charge
 func (lp *Loadpoint) normalizeMode(mode api.ChargeMode) (api.ChargeMode, api.AlwaysCharge) {
-	if mode != api.ModePV && mode != api.ModeMinPV {
-		return mode, ""
-	}
+	mode, ac := mode.Normalize()
 	if !lp.alwaysChargeSupported() {
-		return api.ModeSmart, ""
+		ac = ""
 	}
-	if mode == api.ModeMinPV {
-		return api.ModeSmart, api.AlwaysChargeOn
-	}
-	return api.ModeSmart, api.AlwaysChargeOff
+	return mode, ac
 }
 
 // SetMode sets loadpoint charge mode

@@ -57,12 +57,8 @@ func (v *adapter) GetMode() api.ChargeMode {
 			return ""
 		}
 		// migrate deprecated values; publishing here would recurse via publishVehicles
-		if mode == api.ModePV || mode == api.ModeMinPV {
-			ac := api.AlwaysChargeOff
-			if mode == api.ModeMinPV {
-				ac = api.AlwaysChargeOn
-			}
-			mode = api.ModeSmart
+		if m, ac := mode.Normalize(); ac != "" {
+			mode = m
 			settings.SetString(v.key()+keys.Mode, string(mode))
 			settings.SetString(v.key()+keys.AlwaysCharge, string(ac))
 		}
@@ -73,8 +69,9 @@ func (v *adapter) GetMode() api.ChargeMode {
 
 // SetMode sets the charge mode; deprecated pv/minpv map to smart
 func (v *adapter) SetMode(mode api.ChargeMode) {
-	if mode == api.ModePV || mode == api.ModeMinPV {
-		mode = api.ModeSmart
+	mode, ac := mode.Normalize()
+	if ac != "" {
+		settings.SetString(v.key()+keys.AlwaysCharge, string(ac))
 	}
 
 	v.log.DEBUG.Printf("set %s mode: %s", v.name, mode)

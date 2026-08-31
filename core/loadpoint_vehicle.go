@@ -186,6 +186,10 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 
 		// vehicle always charge applies after mode, since deprecated pv/minpv modes reset it
 		if ac := vs.GetAlwaysCharge(); ac != "" {
+			// apply on as once so the vehicle default ends with the session; explicit loadpoint on wins
+			if ac == api.AlwaysChargeOn && lp.GetAlwaysCharge() != api.AlwaysChargeOn {
+				ac = api.AlwaysChargeOnce
+			}
 			if err := lp.SetAlwaysCharge(ac); err != nil {
 				lp.log.WARN.Printf("vehicle always charge: %v", err)
 			}
