@@ -201,16 +201,16 @@ test.describe("consumption breakdown", () => {
     await expect(consumption.getByRole("button")).toHaveCount(0);
   });
 
-  // 2026-04-12: consumers are not a bidirectional group. Return energy nets
-  // into the values instead of splitting them: home 1.0−0.2, Kitchen 0.4−0.1.
-  test("return energy nets instead of splitting", async ({ page }) => {
+  // 2026-04-12: consumers are not a bidirectional group. Return energy is
+  // ignored, not netted or split: home 1.0, Kitchen 0.4.
+  test("return energy is ignored", async ({ page }) => {
     await gotoDay(page, 2026, 4, 12);
     const consumption = section(page, "consumer");
     await expect(consumption).toBeVisible();
 
-    await expect(consumption.getByRole("heading")).toContainText("0.8 kWh");
-    await expect(consumption.getByRole("button", { name: "Kitchen 300 Wh" })).toBeVisible();
-    await expect(consumption.getByRole("button", { name: "Others 500 Wh" })).toBeVisible();
+    await expect(consumption.getByRole("heading")).toContainText("1.0 kWh");
+    await expect(consumption.getByRole("button", { name: "Kitchen 400 Wh" })).toBeVisible();
+    await expect(consumption.getByRole("button", { name: "Others 600 Wh" })).toBeVisible();
   });
 
   test("entity focus rescales axis and resets on unfocus", async ({ page }) => {

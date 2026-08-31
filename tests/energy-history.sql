@@ -204,7 +204,7 @@ INSERT INTO `meters` VALUES (13, 1775817000, 0, 0.3);
 INSERT INTO `meters` VALUES (13, 1775817900, 0, 0.3);
 
 -- 2026-04-12 → consumer with export data. Consumers are not a bidirectional
--- group, so heading and legend net: home 1.0−0.2, Kitchen 0.4−0.1.
+-- group, so return energy is ignored: home 1.0, Kitchen 0.4.
 INSERT INTO `meters` VALUES (1, 1775988000, 0.25, 0.05);
 INSERT INTO `meters` VALUES (1, 1775988900, 0.25, 0.05);
 INSERT INTO `meters` VALUES (1, 1775989800, 0.25, 0.05);
