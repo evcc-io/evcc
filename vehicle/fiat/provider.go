@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -47,16 +48,25 @@ func NewProvider(api *API, vin, pin string, expiry, cache time.Duration) *Provid
 	return impl
 }
 
-func (v *Provider) deepRefresh() error {
+// deepRefresh triggers a deep refresh of the vehicle data. It returns true if the
+// refresh was accepted (pending). A vehicle that is not plugged in refuses the
+// refresh with 403 Forbidden; in that case retrying is pointless, so it returns
+// false without error. A 403 from the preceding pin authentication is a real
+// error and is surfaced instead of being masked.
+func (v *Provider) deepRefresh() (bool, error) {
 	res, err := v.action("ev", "DEEPREFRESH")
-	if err == nil && res.ResponseStatus != "pending" {
-		err = fmt.Errorf("invalid response status: %s", res.ResponseStatus)
-	} else {
+	if err != nil {
 		if se, ok := errors.AsType[*request.StatusError](err); ok && se.StatusCode() == http.StatusForbidden {
-			err = nil
+			if req := se.Response().Request; req == nil || !strings.HasSuffix(req.URL.Path, "/authenticate") {
+				return false, nil
+			}
 		}
+		return false, err
 	}
-	return err
+	if res.ResponseStatus != "pending" {
+		return false, fmt.Errorf("invalid response status: %s", res.ResponseStatus)
+	}
+	return true, nil
 }
 
 func (v *Provider) status(statusG func() (StatusResponse, error)) (StatusResponse, error) {
@@ -68,8 +78,15 @@ func (v *Provider) status(statusG func() (StatusResponse, error)) (StatusRespons
 		if res.Timestamp.Add(v.expiry).Before(time.Now()) {
 			// start refresh
 			if v.refreshTime.IsZero() {
-				if err = v.deepRefresh(); err != nil {
+				accepted, err := v.deepRefresh()
+				if err != nil {
 					return res, err
+				}
+
+				// vehicle refused the refresh (e.g. not plugged in); retrying is
+				// pointless, so return the last known data instead of blocking
+				if !accepted {
+					return res, nil
 				}
 
 				v.refreshTime = time.Now()
