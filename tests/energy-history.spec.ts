@@ -231,11 +231,9 @@ test.describe("battery legend", () => {
     await expect(battery.getByRole("heading")).toContainText(
       "10.5 kWh charged · 7.5 kWh discharged"
     );
+    await expect(battery.getByRole("button", { name: "Battery 6.0 kWh · 3.0 kWh" })).toBeVisible();
     await expect(
-      battery.getByRole("button", { name: "Battery 6.0 kWh charged · 3.0 kWh discharged" })
-    ).toBeVisible();
-    await expect(
-      battery.getByRole("button", { name: "Battery 2 4.5 kWh charged · 4.5 kWh discharged" })
+      battery.getByRole("button", { name: "Battery 2 4.5 kWh · 4.5 kWh" })
     ).toBeVisible();
   });
 });
