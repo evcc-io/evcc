@@ -154,13 +154,8 @@ var batteryModesAll = slices.DeleteFunc(api.BatteryModeValues(), func(mode api.B
 var batteryModesSocLimit = implement.BatteryModes(api.BatteryNormal, api.BatteryHold, api.BatteryCharge)
 
 // batteryModes converts the keys the battery mode setter switches on into modes.
-// Keys that are not a battery mode are ignored. A setter that doesn't switch on
-// the mode cannot be read, so the declared modes are used instead.
-func batteryModes(keys []int64, declared []string) ([]api.BatteryMode, error) {
-	if keys == nil {
-		return declaredBatteryModes(declared)
-	}
-
+// Keys that are not a battery mode are ignored.
+func batteryModes(keys []int64) []api.BatteryMode {
 	res := make([]api.BatteryMode, 0, len(keys))
 	for _, v := range keys {
 		if mode := api.BatteryMode(v); slices.Contains(batteryModesAll, mode) {
@@ -168,16 +163,11 @@ func batteryModes(keys []int64, declared []string) ([]api.BatteryMode, error) {
 		}
 	}
 
-	return res, nil
+	return res
 }
 
-// declaredBatteryModes parses the modes named in the config. Without a declaration
-// the setter is credited with every mode rather than having modes withheld from it.
+// declaredBatteryModes converts the mode names declared in the config into modes
 func declaredBatteryModes(names []string) ([]api.BatteryMode, error) {
-	if len(names) == 0 {
-		return batteryModesAll, nil
-	}
-
 	res := make([]api.BatteryMode, 0, len(names))
 	for _, name := range names {
 		mode, err := api.BatteryModeString(strings.TrimSpace(name))

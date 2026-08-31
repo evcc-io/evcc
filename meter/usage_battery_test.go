@@ -56,33 +56,29 @@ func TestBatteryCapacity(t *testing.T) {
 }
 
 func TestBatteryModes(t *testing.T) {
-	modes := func(t *testing.T, keys []int64, declared []string) []api.BatteryMode {
-		t.Helper()
-		res, err := batteryModes(keys, declared)
-		require.NoError(t, err)
-		return res
-	}
-
-	// a setter that doesn't switch on the mode and declares nothing has no mode withheld from it
-	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge}, modes(t, nil, nil))
-
-	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold}, modes(t, []int64{1, 2}, nil))
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold}, batteryModes([]int64{1, 2}))
 
 	// values that are not a mode are ignored, e.g. the marstek forced discharge case
-	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHoldCharge}, modes(t, []int64{1, 4, 5}, nil))
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHoldCharge}, batteryModes([]int64{1, 4, 5}))
 
-	require.Empty(t, modes(t, []int64{0}, nil))
+	require.Empty(t, batteryModes([]int64{0}))
+}
 
-	// the declaration fills in for a setter that cannot report its keys
-	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryCharge}, modes(t, nil, []string{"normal", "charge"}))
+func TestDeclaredBatteryModes(t *testing.T) {
+	modes, err := declaredBatteryModes([]string{"normal", "charge"})
+	require.NoError(t, err)
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryCharge}, modes)
 
-	// readable keys win over the declaration
-	require.Equal(t, []api.BatteryMode{api.BatteryHold}, modes(t, []int64{2}, []string{"normal", "charge"}))
+	// nothing declared is nothing supported, the caller rejects it
+	modes, err = declaredBatteryModes(nil)
+	require.NoError(t, err)
+	require.Empty(t, modes)
 
-	_, err := batteryModes(nil, []string{"invalid"})
+	_, err = declaredBatteryModes([]string{"invalid"})
 	require.Error(t, err)
 
-	_, err = batteryModes(nil, []string{"unknown"})
+	// unknown parses as an enum value but is not a mode
+	_, err = declaredBatteryModes([]string{"unknown"})
 	require.Error(t, err)
 }
 
