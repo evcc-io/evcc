@@ -150,12 +150,10 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 		return nil, err
 	}
 
-	go2 := c.version == zaptec.ZaptecGo2
-
 	inst, err := c.installation()
 
 	switch {
-	case !go2:
+	case c.version != zaptec.ZaptecGo2:
 		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
 
 	case err != nil:
