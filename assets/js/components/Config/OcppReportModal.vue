@@ -140,7 +140,11 @@
 							</label>
 						</div>
 					</FormRow>
-					<FormRow id="ocppreportCaCert" :label="$t('config.ocppreport.labelCaCert')" optional>
+					<FormRow
+						id="ocppreportCaCert"
+						:label="$t('config.ocppreport.labelCaCert')"
+						optional
+					>
 						<PropertyCertField id="ocppreportCaCert" v-model="values.caCert" />
 					</FormRow>
 				</template>
@@ -195,7 +199,12 @@ import JsonModal from "./JsonModal.vue";
 import FormRow from "./FormRow.vue";
 import PropertyCollapsible from "./PropertyCollapsible.vue";
 import PropertyCertField from "./PropertyCertField.vue";
-import type { ConfigCharger, ConfigLoadpoint, OcppReportRule, OcppReportSession } from "@/types/evcc";
+import type {
+	ConfigCharger,
+	ConfigLoadpoint,
+	OcppReportRule,
+	OcppReportSession,
+} from "@/types/evcc";
 import { getModal, closeModal } from "@/configModal";
 import api from "@/api";
 import store from "@/store";
@@ -291,7 +300,9 @@ export default defineComponent({
 		async removeRule() {
 			this.removing = true;
 			try {
-				const list = this.rules.filter((r) => r.loadpointTitle !== this.targetLoadpointTitle);
+				const list = this.rules.filter(
+					(r) => r.loadpointTitle !== this.targetLoadpointTitle
+				);
 				const res = await api.post("/config/ocppreport", list, {
 					validateStatus: (code: number) => [200, 202, 400].includes(code),
 				});
