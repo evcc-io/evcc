@@ -23,8 +23,9 @@ func RedactDefaultHook(s string) []string {
 
 // Redactor implements log redaction
 type Redactor struct {
-	mu     sync.Mutex
-	redact []string
+	mu       sync.Mutex
+	redact   []string
+	rotating [][]string
 }
 
 // Redact adds items for redaction
@@ -39,10 +40,35 @@ func (l *Redactor) Redact(redact ...string) {
 	}
 }
 
+// RotatingSlot reserves a redaction slot for a periodically refreshed secret
+// like an access token. Updating the slot replaces the previous value instead
+// of appending, so the redaction list does not grow with every refresh.
+func (l *Redactor) RotatingSlot() func(string) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	idx := len(l.rotating)
+	l.rotating = append(l.rotating, nil)
+
+	return func(s string) {
+		l.mu.Lock()
+		defer l.mu.Unlock()
+
+		if RedactHook != nil && len(s) > 0 {
+			l.rotating[idx] = RedactHook(s)
+		}
+	}
+}
+
 func (l *Redactor) redacted(p []byte) []byte {
 	l.mu.Lock()
 	for _, s := range l.redact {
 		p = bytes.ReplaceAll(p, []byte(s), []byte(RedactReplacement))
+	}
+	for _, slot := range l.rotating {
+		for _, s := range slot {
+			p = bytes.ReplaceAll(p, []byte(s), []byte(RedactReplacement))
+		}
 	}
 	l.mu.Unlock()
 	return p
