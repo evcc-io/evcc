@@ -113,7 +113,6 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 		}),
 		Base: c.Transport,
 	}
-	c.Transport = tr
 
 	// setup cached values
 	c.statusG = util.ResettableCached(func() (zaptec.StateResponse, error) {
