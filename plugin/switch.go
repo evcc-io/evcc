@@ -95,13 +95,13 @@ var _ IntValues = (*switchPlugin)(nil)
 // IntValues returns the case values, skipping the cases that only error out.
 // A default that sets accepts any other value, too.
 func (o *switchPlugin) IntValues() []int64 {
-	if o.dflt != nil && sets(o.dflt.intValues(o.ctx)) {
+	if o.dflt != nil && accepts(o.dflt.intValues(o.ctx)) {
 		return nil
 	}
 
 	res := make([]int64, 0, len(o.values))
 	for i := range o.cases {
-		if sets(o.cases[i].Set.intValues(o.ctx)) {
+		if accepts(o.cases[i].Set.intValues(o.ctx)) {
 			res = append(res, o.values[i])
 		}
 	}
@@ -109,7 +109,7 @@ func (o *switchPlugin) IntValues() []int64 {
 	return res
 }
 
-// sets is true if the plugin accepts any value at all
-func sets(values []int64) bool {
+// accepts is true if the plugin accepts at least one value
+func accepts(values []int64) bool {
 	return values == nil || len(values) > 0
 }

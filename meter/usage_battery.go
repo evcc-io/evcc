@@ -2,7 +2,6 @@ package meter
 
 import (
 	"context"
-	"slices"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
@@ -158,7 +157,7 @@ func batteryModes(values []int64) []api.BatteryMode {
 
 	res := make([]api.BatteryMode, 0, len(values))
 	for _, v := range values {
-		if mode := api.BatteryMode(v); mode != api.BatteryUnknown && slices.Contains(api.BatteryModeValues(), mode) {
+		if mode := api.BatteryMode(v); mode != api.BatteryUnknown && mode.IsABatteryMode() {
 			res = append(res, mode)
 		}
 	}
