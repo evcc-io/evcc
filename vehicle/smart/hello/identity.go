@@ -67,7 +67,7 @@ func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
 		}
 	}
 
-	v.TokenSource = oauth.RefreshTokenSource(token, v.refreshToken)
+	v.TokenSource = oauth.RefreshTokenSource(log, token, v.refreshToken)
 	return v, nil
 }
 

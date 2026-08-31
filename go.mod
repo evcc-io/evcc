@@ -264,8 +264,8 @@ replace github.com/grid-x/modbus => github.com/evcc-io/modbus v0.0.0-20250501165
 
 replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20260812074841-a8aa5fef8a9e
 
-replace github.com/enbility/spine-go => github.com/andig/spine-go v0.7.1-0.20260804073026-f9a8d8e8fd18
+replace github.com/enbility/spine-go => github.com/andig/spine-go v0.7.1-0.20260831161702-3757d61432fb
 
-replace github.com/enbility/eebus-go => github.com/andig/eebus-go v0.0.0-20260725155950-e735091ff165
+replace github.com/enbility/eebus-go => github.com/andig/eebus-go v0.0.0-20260831161745-7e1f121e46ad
 
-replace github.com/enbility/ship-go => github.com/andig/ship-go v0.6.1-0.20260818072438-bade5ec9fbd7
+replace github.com/enbility/ship-go => github.com/andig/ship-go v0.6.1-0.20260831161834-ed7d71856fe6
