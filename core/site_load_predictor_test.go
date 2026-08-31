@@ -72,7 +72,8 @@ func TestApplyTemperatureCorrection(t *testing.T) {
 	assert.Greater(t, result[0], 2.0, "first hour should increase (colder forecast)")
 	assert.Less(t, result[4], 2.0, "second hour should decrease (warmer forecast)")
 	assert.Greater(t, result[0], result[4], "first hour should be higher than second hour")
-	assert.Zero(t, result[8], "third hour should stop heating (above threshold)")
+	// above the heating threshold the correction is skipped but the historical average is kept
+	assert.Equal(t, 2.0, result[8], "third hour keeps historical average when above heating threshold")
 }
 
 func TestTileAndTrim(t *testing.T) {
