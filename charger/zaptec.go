@@ -106,14 +106,6 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 		startPrevention: startPrevention,
 	}
 
-	// Add User-Agent header for Zaptec API compliance
-	tr := &transport.Decorator{
-		Decorator: transport.DecorateHeaders(map[string]string{
-			"User-Agent": "evcc/" + util.Version,
-		}),
-		Base: c.Transport,
-	}
-
 	// setup cached values
 	c.statusG = util.ResettableCached(func() (zaptec.StateResponse, error) {
 		var res zaptec.StateResponse
@@ -123,6 +115,14 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 
 		return res, err
 	}, cache)
+
+	// Add User-Agent header for Zaptec API compliance
+	tr := &transport.Decorator{
+		Decorator: transport.DecorateHeaders(map[string]string{
+			"User-Agent": "evcc/" + util.Version,
+		}),
+		Base: c.Transport,
+	}
 
 	// token requests need their own client- c.Transport is wrapped in oauth2.Transport below
 	tsCtx := context.WithValue(ctx, oauth2.HTTPClient, &http.Client{Transport: tr})
