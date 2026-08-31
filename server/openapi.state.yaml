@@ -516,6 +516,10 @@ components:
         - TRY
         - MYR
         - THB
+        - BYN
+        - UAH
+        - RUB
+        - KZT
     DeviceColorEntry:
       description: Color assigned to a device for consistent UI display.
       type: object

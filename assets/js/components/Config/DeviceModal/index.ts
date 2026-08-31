@@ -17,10 +17,12 @@ export type Product = {
   group: string;
   name: string;
   template: string;
+  link?: string;
 };
 
 export type Template = {
   Params: TemplateParam[];
+  Link?: string;
   Auth?: {
     type: string;
     params?: string[];

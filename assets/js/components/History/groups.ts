@@ -1,5 +1,8 @@
 export const GROUP_ORDER = ["pv", "battery", "grid", "loadpoint", "consumer", "meter"] as const;
 
+// sums shown per direction instead of netted
+export const BIDIRECTIONAL_GROUPS: string[] = ["battery", "grid", "meter"];
+
 const COLOR_PICKER_GROUPS = ["loadpoint", "consumer", "meter"];
 
 export function hasColorPicker(group: string): boolean {

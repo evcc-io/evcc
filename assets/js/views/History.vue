@@ -106,7 +106,12 @@ import GroupChart, { type HistorySeries, stepAlpha } from "../components/History
 import type { Legend } from "../components/Sessions/types";
 import type { DeviceColors } from "@/types/evcc";
 import { PERIODS } from "../components/Sessions/types";
-import { GROUP_ORDER, groupColor, hasColorPicker } from "../components/History/groups";
+import {
+	BIDIRECTIONAL_GROUPS,
+	GROUP_ORDER,
+	groupColor,
+	hasColorPicker,
+} from "../components/History/groups";
 import colors, { resolveColors, deviceColorMap, darken, batteryColor } from "../colors";
 import LegendList from "../components/Sessions/LegendList.vue";
 import DownloadButton from "../components/Helper/DownloadButton.vue";
@@ -409,17 +414,31 @@ export default defineComponent({
 				if (group === "battery") return batteryColor(s.paletteIndex ?? i);
 				return darken(baseColor, stepAlpha(i, Math.max(n, 1)));
 			};
+			// Any return energy makes the whole group show both directions so that
+			// a single-direction entity isn't mistaken for the other direction.
+			const split = list.some((s) => s.data.some((slot) => slot.returnEnergy > 0));
+
 			return list.map((s, i) => {
-				let sum = 0;
-				for (const slot of s.data) sum += slot.energy - slot.returnEnergy;
-				const watts = Math.abs(sum) * 1000;
+				let sumEnergy = 0;
+				let sumReturnEnergy = 0;
+				for (const slot of s.data) {
+					sumEnergy += slot.energy;
+					sumReturnEnergy += slot.returnEnergy;
+				}
 				return {
 					// Use stable paletteIndex as the focus identifier so that the
 					// selected entity keeps its identity across period navigations.
 					entityIndex: s.paletteIndex ?? i,
 					label: s.title,
 					color: colorFor(i, s),
-					value: this.fmtWh(watts, POWER_UNIT.AUTO),
+					value: this.directionSumLabel(
+						s.group,
+						sumEnergy,
+						sumReturnEnergy,
+						POWER_UNIT.AUTO,
+						false,
+						split
+					),
 					id: colorPicker && !s.virtual ? s.title : undefined,
 				};
 			});
@@ -452,18 +471,25 @@ export default defineComponent({
 					sumReturnEnergy += slot.returnEnergy;
 				}
 			}
-			const fmt = (v: number) => this.fmtWh(v * 1000, POWER_UNIT.KW);
-			const directionKey = `main.history.direction.${group}`;
-			const energyKey = `${directionKey}.energy`;
-			const returnEnergyKey = `${directionKey}.returnEnergy`;
-			const energyLabel = this.$t(energyKey);
-			const returnEnergyLabel = this.$t(returnEnergyKey);
-			const hasDirectionLabels =
-				energyLabel !== energyKey && returnEnergyLabel !== returnEnergyKey;
-			if (sumEnergy > 0 && sumReturnEnergy > 0 && hasDirectionLabels) {
-				return `${fmt(sumEnergy)} ${energyLabel} · ${fmt(sumReturnEnergy)} ${returnEnergyLabel}`;
+			return this.directionSumLabel(group, sumEnergy, sumReturnEnergy, POWER_UNIT.KW);
+		},
+		// keep directions apart, bidirectional sums net out to almost zero over longer periods
+		directionSumLabel(
+			group: string,
+			sumEnergy: number,
+			sumReturnEnergy: number,
+			unit: POWER_UNIT,
+			withLabels = true,
+			force = false
+		): string {
+			const fmt = (v: number) => this.fmtWh(v * 1000, unit);
+			const both = force || (sumEnergy > 0 && sumReturnEnergy > 0);
+			if (both && BIDIRECTIONAL_GROUPS.includes(group)) {
+				const suffix = (key: string) =>
+					withLabels ? ` ${this.$t(`main.history.direction.${group}.${key}`)}` : "";
+				return `${fmt(sumEnergy)}${suffix("energy")} · ${fmt(sumReturnEnergy)}${suffix("returnEnergy")}`;
 			}
-			return fmt(Math.abs(sumEnergy - sumReturnEnergy) || sumEnergy + sumReturnEnergy);
+			return fmt(Math.abs(sumEnergy - sumReturnEnergy));
 		},
 		async fetchData() {
 			this.loading = true;

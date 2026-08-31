@@ -16,6 +16,9 @@ power: # current power
 #maxpower: # maximum AC power in W (for hybrid pv)
 #  source: const
 #  value: 5000
+#curtailed: # current feed-in limit in % (0..100, 100 = uncurtailed)
+#  source: const
+#  value: 100
 #soc: # state of charge in % (for battery)
 #  source: const
 #  value: 75
@@ -50,3 +53,6 @@ power: # current power
 #batterymode: # set charging mode directly (1: normal, 2: hold, 3: charge) (for battery)
 #  source: js
 #  script: console.log(batterymode)
+#curtail: # set feed-in limit in % (0..100, 100 = uncurtailed)
+#  source: js
+#  script: console.log(curtail)
