@@ -30,6 +30,7 @@ INSERT INTO `entities` (id, `group`, name, title) VALUES (10, 'battery', 'batter
 INSERT INTO `entities` (id, `group`, name, title) VALUES (11, 'meter', 'submeter', 'Submeter');
 -- leftover from a swapped grid meter device ref
 INSERT INTO `entities` (id, `group`, name, title) VALUES (12, 'grid', 'db:2', 'db:2');
+INSERT INTO `entities` (id, `group`, name, title) VALUES (13, 'meter', 'feedin', 'Feed-in meter');
 
 -- =====================================================================
 -- API test data: 2026-03-24/25 (existing). Used by the JSON-shape tests.
@@ -195,3 +196,27 @@ INSERT INTO `meters` VALUES (11, 1775815200, 0.5, 0.1);
 INSERT INTO `meters` VALUES (11, 1775816100, 0.5, 0.1);
 INSERT INTO `meters` VALUES (11, 1775817000, 0.5, 0.1);
 INSERT INTO `meters` VALUES (11, 1775817900, 0.5, 0.1);
+-- Second, export-only meter on the same day. Both meters render in the same
+-- two direction columns.
+INSERT INTO `meters` VALUES (13, 1775815200, 0, 0.3);
+INSERT INTO `meters` VALUES (13, 1775816100, 0, 0.3);
+INSERT INTO `meters` VALUES (13, 1775817000, 0, 0.3);
+INSERT INTO `meters` VALUES (13, 1775817900, 0, 0.3);
+
+-- 2026-04-12 → consumer with export data. Consumers are not a bidirectional
+-- group, so heading and legend net: home 1.0−0.2, Kitchen 0.4−0.1.
+INSERT INTO `meters` VALUES (1, 1775988000, 0.25, 0.05);
+INSERT INTO `meters` VALUES (1, 1775988900, 0.25, 0.05);
+INSERT INTO `meters` VALUES (1, 1775989800, 0.25, 0.05);
+INSERT INTO `meters` VALUES (1, 1775990700, 0.25, 0.05);
+INSERT INTO `meters` VALUES (5, 1775988000, 0.1, 0.025);
+INSERT INTO `meters` VALUES (5, 1775988900, 0.1, 0.025);
+INSERT INTO `meters` VALUES (5, 1775989800, 0.1, 0.025);
+INSERT INTO `meters` VALUES (5, 1775990700, 0.1, 0.025);
+
+-- 2026-04-13 → export-only meter without an importing sibling. Return energy
+-- alone must trigger the split, otherwise 1.2 kWh reads as consumption.
+INSERT INTO `meters` VALUES (13, 1776074400, 0, 0.3);
+INSERT INTO `meters` VALUES (13, 1776075300, 0, 0.3);
+INSERT INTO `meters` VALUES (13, 1776076200, 0, 0.3);
+INSERT INTO `meters` VALUES (13, 1776077100, 0, 0.3);

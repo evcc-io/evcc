@@ -201,6 +201,18 @@ test.describe("consumption breakdown", () => {
     await expect(consumption.getByRole("button")).toHaveCount(0);
   });
 
+  // 2026-04-12: consumers are not a bidirectional group. Return energy nets
+  // into the values instead of splitting them: home 1.0−0.2, Kitchen 0.4−0.1.
+  test("return energy nets instead of splitting", async ({ page }) => {
+    await gotoDay(page, 2026, 4, 12);
+    const consumption = section(page, "consumer");
+    await expect(consumption).toBeVisible();
+
+    await expect(consumption.getByRole("heading")).toContainText("0.8 kWh");
+    await expect(consumption.getByRole("button", { name: "Kitchen 300 Wh" })).toBeVisible();
+    await expect(consumption.getByRole("button", { name: "Others 500 Wh" })).toBeVisible();
+  });
+
   test("entity focus rescales axis and resets on unfocus", async ({ page }) => {
     await gotoDay(page, 2026, 4, 7);
     const consumption = section(page, "consumer");
@@ -257,6 +269,26 @@ test.describe("additional meters", () => {
   test("bidirectional axis when data contains exports", async ({ page }) => {
     await gotoDay(page, 2026, 4, 10);
     expect(await yAxis(chart(page, "meter"))).toEqual(["kW", "-2.0", "-1.0", "0.0", "1.0", "2.0"]);
+  });
+
+  // 2026-04-10: "Submeter" 2.0/0.4 kWh. A netted value would read the same
+  // for import and export, so any return energy shows both directions.
+  test("bidirectional meter shows both directions", async ({ page }) => {
+    await gotoDay(page, 2026, 4, 10);
+    const additional = section(page, "meter");
+    await expect(
+      additional.getByRole("button", { name: "Submeter 2.0 kWh · 400 Wh" })
+    ).toBeVisible();
+  });
+
+  // 2026-04-13: export-only meter without an importing sibling. Return energy
+  // alone triggers the split, otherwise 1.2 kWh would read as consumption.
+  test("export-only meter alone shows both directions", async ({ page }) => {
+    await gotoDay(page, 2026, 4, 13);
+    const additional = section(page, "meter");
+    await expect(
+      additional.getByRole("button", { name: "Feed-in meter 0.0 kWh · 1.2 kWh" })
+    ).toBeVisible();
   });
 });
 

@@ -414,6 +414,10 @@ export default defineComponent({
 				if (group === "battery") return batteryColor(s.paletteIndex ?? i);
 				return darken(baseColor, stepAlpha(i, Math.max(n, 1)));
 			};
+			// Any return energy makes the whole group show both directions so that
+			// a single-direction entity isn't mistaken for the other direction.
+			const split = list.some((s) => s.data.some((slot) => slot.returnEnergy > 0));
+
 			return list.map((s, i) => {
 				let sumEnergy = 0;
 				let sumReturnEnergy = 0;
@@ -432,7 +436,8 @@ export default defineComponent({
 						sumEnergy,
 						sumReturnEnergy,
 						POWER_UNIT.AUTO,
-						false
+						false,
+						split
 					),
 					id: colorPicker && !s.virtual ? s.title : undefined,
 				};
@@ -474,10 +479,12 @@ export default defineComponent({
 			sumEnergy: number,
 			sumReturnEnergy: number,
 			unit: POWER_UNIT,
-			withLabels = true
+			withLabels = true,
+			force = false
 		): string {
 			const fmt = (v: number) => this.fmtWh(v * 1000, unit);
-			if (sumEnergy > 0 && sumReturnEnergy > 0 && BIDIRECTIONAL_GROUPS.includes(group)) {
+			const both = force || (sumEnergy > 0 && sumReturnEnergy > 0);
+			if (both && BIDIRECTIONAL_GROUPS.includes(group)) {
 				const suffix = (key: string) =>
 					withLabels ? ` ${this.$t(`main.history.direction.${group}.${key}`)}` : "";
 				return `${fmt(sumEnergy)}${suffix("energy")} · ${fmt(sumReturnEnergy)}${suffix("returnEnergy")}`;
