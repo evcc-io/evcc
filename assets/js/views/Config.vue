@@ -56,7 +56,7 @@
 								<div class="d-flex align-items-center justify-content-between gap-2">
 									<DeviceTags :tags="loadpointTags(loadpoint)" />
 									<OcppReportButton
-										v-if="loadpoint.title"
+										v-if="loadpoint.title && !loadpointIsHeating(loadpoint)"
 										:loadpoint-title="loadpoint.title"
 										:rule="ocppReportRule(loadpoint.title)"
 										:connected="ocppReportConnected(loadpoint.title)"
@@ -1616,6 +1616,10 @@ export default defineComponent({
 			const chargerTags = charger ? this.deviceTags("charger", charger) : {};
 			const meterTags = meter ? this.deviceTags("meter", meter) : {};
 			return { ...chargerTags, ...meterTags };
+		},
+		loadpointIsHeating(loadpoint: ConfigLoadpoint): boolean {
+			const { charger } = loadpoint;
+			return !!(charger && this.deviceTags("charger", charger)["heating"]?.value);
 		},
 		openModal,
 		loadpointError(loadpoint: ConfigLoadpoint): boolean {
