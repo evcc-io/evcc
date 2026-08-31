@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"context"
+	"slices"
 
 	"github.com/evcc-io/evcc/util"
 )
@@ -53,6 +54,29 @@ func (o *sequencePlugin) IntSetter(param string) (func(int64) error, error) {
 		}
 		return nil
 	}, nil
+}
+
+var _ IntValues = (*sequencePlugin)(nil)
+
+// IntValues returns the values accepted by every setter of the sequence
+func (o *sequencePlugin) IntValues() []int64 {
+	var res []int64
+
+	for i := range o.set {
+		values := o.set[i].intValues(o.ctx)
+		switch {
+		case values == nil:
+			continue
+		case res == nil:
+			res = values
+		default:
+			res = slices.DeleteFunc(res, func(v int64) bool {
+				return !slices.Contains(values, v)
+			})
+		}
+	}
+
+	return res
 }
 
 var _ FloatSetter = (*sequencePlugin)(nil)

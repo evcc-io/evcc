@@ -247,7 +247,6 @@ render: |
       type: holding
       decode: uint64snan
     scale: 0.001
-  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: watchdog
     timeout: {{ .watchdog }}

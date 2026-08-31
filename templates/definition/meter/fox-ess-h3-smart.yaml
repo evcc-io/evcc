@@ -125,7 +125,6 @@ render: |
       address: 37612 # Soc
       type: holding
       decode: int16
-  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: watchdog
     timeout: 30s

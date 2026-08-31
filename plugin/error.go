@@ -46,6 +46,13 @@ func (o *errorPlugin) StringGetter() (func() (string, error), error) {
 	}, nil
 }
 
+var _ IntValues = (*errorPlugin)(nil)
+
+// IntValues returns an empty list as the plugin never sets anything
+func (o *errorPlugin) IntValues() []int64 {
+	return []int64{}
+}
+
 var _ IntSetter = (*errorPlugin)(nil)
 
 func (o *errorPlugin) IntSetter(param string) (func(int64) error, error) {

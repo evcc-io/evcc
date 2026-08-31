@@ -72,7 +72,6 @@ render: |
     jq: .Body.Data.Inverters."1".SOC
     cache: {{ .cache }}
   {{- if .password }}
-  batterymodes: ["normal", "hold", "charge", "holdcharge"]
   batterymode:
     source: switch
     switch:

@@ -50,7 +50,6 @@ render: |
     jq: .ENERGY.GUI_BAT_DATA_FUEL_CHARGE | sub("fl_"; "")
     unpack: hex
     decode: float32
-  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: switch
     switch:

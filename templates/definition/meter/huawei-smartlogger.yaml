@@ -153,7 +153,6 @@ render: |
       type: holding
       decode: uint16nan
     scale: 0.1
-  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: watchdog
     timeout: 30s

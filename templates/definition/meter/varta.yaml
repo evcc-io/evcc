@@ -64,7 +64,6 @@ render: |
       address: 1068 # SOC
       type: holding
       decode: int16
-  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: watchdog
     timeout: {{ .watchdog }} # re-write at timeout/2

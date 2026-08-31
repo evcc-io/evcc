@@ -186,7 +186,6 @@ render: |
       type: input
       decode: int16
     scale: 0.1
-  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: switch
     switch:

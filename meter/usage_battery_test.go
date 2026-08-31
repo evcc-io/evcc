@@ -6,8 +6,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/templates"
-	"github.com/spf13/cast"
 	"github.com/stretchr/testify/require"
 )
 
@@ -58,80 +56,15 @@ func TestBatteryCapacity(t *testing.T) {
 }
 
 func TestBatteryModes(t *testing.T) {
-	// unset defaults to the modes evcc assumed before batterymodes existed
-	modes, err := batteryModes(nil)
-	require.NoError(t, err)
-	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}, modes)
+	// a setter that accepts any value keeps the modes evcc assumed before they were reported
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}, batteryModes(nil))
 
-	modes, err = batteryModes([]string{"normal", " hold ", "holdcharge"})
-	require.NoError(t, err)
-	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryHoldCharge}, modes)
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold}, batteryModes([]int64{1, 2}))
 
-	_, err = batteryModes([]string{"sell"})
-	require.Error(t, err)
+	// values that are not a mode are ignored, e.g. the marstek forced discharge case
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHoldCharge}, batteryModes([]int64{1, 4, 5}))
 
-	_, err = batteryModes([]string{"unknown"})
-	require.Error(t, err)
-}
-
-// switchCases collects the switch case values below v. Nested switches repeat
-// cases, so the result is their union.
-func switchCases(v any, res map[int]struct{}) {
-	switch v := v.(type) {
-	case map[string]any:
-		if c, ok := v["case"]; ok {
-			if i, err := cast.ToIntE(c); err == nil {
-				res[i] = struct{}{}
-			}
-		}
-		for _, val := range v {
-			switchCases(val, res)
-		}
-	case []any:
-		for _, val := range v {
-			switchCases(val, res)
-		}
-	}
-}
-
-// TestTemplateBatteryModes guards the declared batterymodes against the switch
-// cases they mirror
-func TestTemplateBatteryModes(t *testing.T) {
-	caseModes := map[int]api.BatteryMode{
-		1: api.BatteryNormal,
-		2: api.BatteryHold,
-		3: api.BatteryCharge,
-		4: api.BatteryHoldCharge,
-	}
-
-	templates.TestClass(t, templates.Meter, func(t *testing.T, values map[string]any) {
-		t.Helper()
-
-		instance, err := templates.RenderInstance(templates.Meter, values)
-		if err != nil {
-			return // covered by TestTemplates
-		}
-
-		cases := make(map[int]struct{})
-		switchCases(instance.Other["batterymode"], cases)
-		if len(cases) == 0 {
-			return // no switch-based batterymode
-		}
-
-		expected := make([]api.BatteryMode, 0, len(cases))
-		for c := range cases {
-			mode, ok := caseModes[c]
-			require.True(t, ok, "unmapped battery mode case: %d", c)
-			expected = append(expected, mode)
-		}
-
-		var declared []string
-		require.NoError(t, util.DecodeOther(instance.Other["batterymodes"], &declared))
-
-		modes, err := batteryModes(declared)
-		require.NoError(t, err)
-		require.ElementsMatch(t, expected, modes, "batterymodes must match the switch cases")
-	})
+	require.Empty(t, batteryModes([]int64{0}))
 }
 
 func TestBatterySocLimits(t *testing.T) {

@@ -99,7 +99,6 @@ render: |
     {{- include "auth" . | indent 2 }}
     jq: ."6007"
     cache: {{ .cache }}
-  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: switch
     switch:

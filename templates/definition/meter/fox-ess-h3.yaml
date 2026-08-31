@@ -99,7 +99,6 @@ render: |
         address: 41009 # limit soc
         type: writesingle
         decode: uint16
-  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: watchdog
     timeout: 30s

@@ -2,8 +2,7 @@ package meter
 
 import (
 	"context"
-	"fmt"
-	"strings"
+	"slices"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
@@ -145,27 +144,26 @@ func (m *batterySocLimits) Decorator() func() (float64, float64) {
 }
 
 // batteryModesDefault are the modes implementable via soc limit. They are also the
-// fallback for configs that don't declare their modes.
+// fallback for setters that accept any value.
 var batteryModesDefault = []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}
 
 var batteryModesSocLimit = implement.BatteryModes(batteryModesDefault...)
 
-// batteryModes parses the configured mode names
-func batteryModes(names []string) ([]api.BatteryMode, error) {
-	if len(names) == 0 {
-		return batteryModesDefault, nil
+// batteryModes converts the values accepted by the battery mode setter into modes.
+// Values that are not a battery mode are ignored.
+func batteryModes(values []int64) []api.BatteryMode {
+	if values == nil {
+		return batteryModesDefault
 	}
 
-	res := make([]api.BatteryMode, 0, len(names))
-	for _, name := range names {
-		mode, err := api.BatteryModeString(strings.TrimSpace(name))
-		if err != nil || mode == api.BatteryUnknown {
-			return nil, fmt.Errorf("invalid battery mode: %s", name)
+	res := make([]api.BatteryMode, 0, len(values))
+	for _, v := range values {
+		if mode := api.BatteryMode(v); mode != api.BatteryUnknown && slices.Contains(api.BatteryModeValues(), mode) {
+			res = append(res, mode)
 		}
-		res = append(res, mode)
 	}
 
-	return res, nil
+	return res
 }
 
 // LimitController returns an api.BatteryController decorator

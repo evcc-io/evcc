@@ -3,6 +3,7 @@ package plugin
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strconv"
 
 	"github.com/evcc-io/evcc/api"
@@ -15,9 +16,10 @@ type Case struct {
 }
 
 type switchPlugin struct {
-	ctx   context.Context
-	cases []Case
-	dflt  *Config
+	ctx    context.Context
+	cases  []Case
+	values []int64
+	dflt   *Config
 }
 
 func init() {
@@ -35,18 +37,23 @@ func NewSwitchFromConfig(ctx context.Context, other map[string]any) (Plugin, err
 		return nil, err
 	}
 
-	cases := make(map[string]struct{})
+	values := make([]int64, 0, len(cc.Switch))
 	for _, c := range cc.Switch {
-		if _, ok := cases[c.Case]; ok {
+		val, err := strconv.ParseInt(c.Case, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("switch: invalid case: %s", c.Case)
+		}
+		if slices.Contains(values, val) {
 			return nil, fmt.Errorf("switch: duplicate case: %s", c.Case)
 		}
-		cases[c.Case] = struct{}{}
+		values = append(values, val)
 	}
 
 	o := &switchPlugin{
-		ctx:   ctx,
-		cases: cc.Switch,
-		dflt:  cc.Default,
+		ctx:    ctx,
+		cases:  cc.Switch,
+		values: values,
+		dflt:   cc.Default,
 	}
 
 	return o, nil
@@ -70,15 +77,8 @@ func (o *switchPlugin) IntSetter(param string) (func(int64) error, error) {
 	}
 
 	return func(val int64) error {
-		for i, s := range o.cases {
-			ival, err := strconv.ParseInt(s.Case, 10, 64)
-			if err != nil {
-				return err
-			}
-
-			if ival == val {
-				return set[i](val)
-			}
+		if i := slices.Index(o.values, val); i >= 0 {
+			return set[i](val)
 		}
 
 		if dflt != nil {
@@ -88,4 +88,28 @@ func (o *switchPlugin) IntSetter(param string) (func(int64) error, error) {
 		// unmatched value means the device does not implement this setting
 		return fmt.Errorf("switch: value not found: %d: %w", val, api.ErrNotAvailable)
 	}, nil
+}
+
+var _ IntValues = (*switchPlugin)(nil)
+
+// IntValues returns the case values, skipping the cases that only error out.
+// A default that sets accepts any other value, too.
+func (o *switchPlugin) IntValues() []int64 {
+	if o.dflt != nil && sets(o.dflt.intValues(o.ctx)) {
+		return nil
+	}
+
+	res := make([]int64, 0, len(o.values))
+	for i := range o.cases {
+		if sets(o.cases[i].Set.intValues(o.ctx)) {
+			res = append(res, o.values[i])
+		}
+	}
+
+	return res
+}
+
+// sets is true if the plugin accepts any value at all
+func sets(values []int64) bool {
+	return values == nil || len(values) > 0
 }

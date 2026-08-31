@@ -41,6 +41,9 @@ type (
 	IntSetter interface {
 		IntSetter(param string) (func(int64) error, error)
 	}
+	IntValues interface {
+		IntValues() []int64
+	}
 	BoolSetter interface {
 		BoolSetter(param string) (func(bool) error, error)
 	}
@@ -127,6 +130,37 @@ func (c *Config) IntSetter(ctx context.Context, param string) (func(int64) error
 	}
 
 	return prov.IntSetter(param)
+}
+
+// IntSetterValues returns an int setter together with the values it accepts.
+// The values are nil if the setter is not restricted to a fixed set.
+func (c *Config) IntSetterValues(ctx context.Context, param string) (func(int64) error, []int64, error) {
+	prov, err := plugin[IntSetter]("int", ctx, c)
+	if prov == nil || err != nil {
+		return nil, nil, err
+	}
+
+	set, err := prov.IntSetter(param)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var values []int64
+	if v, ok := prov.(IntValues); ok {
+		values = v.IntValues()
+	}
+
+	return set, values, nil
+}
+
+// intValues returns the values the config's int setter accepts, nil if unrestricted
+func (c *Config) intValues(ctx context.Context) []int64 {
+	prov, err := plugin[IntValues]("int", ctx, c)
+	if prov == nil || err != nil {
+		return nil
+	}
+
+	return prov.IntValues()
 }
 
 func (c *Config) FloatSetter(ctx context.Context, param string) (func(float642 float64) error, error) {

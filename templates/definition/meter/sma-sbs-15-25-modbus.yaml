@@ -46,7 +46,6 @@ render: |
       address: 30845
       type: holding
       decode: uint32nan
-  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: watchdog
     timeout: {{ .watchdog }}

@@ -379,7 +379,6 @@ render: |
           type: holding
           decode: uint16
     script: v == 0
-  batterymodes: ["normal", "hold", "charge", "holdcharge"]
   batterymode:
     source: sequence
     set:

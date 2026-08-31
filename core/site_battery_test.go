@@ -95,6 +95,7 @@ func batteryControlMock(ctrl *gomock.Controller, soc, maxSoc float64) (api.Meter
 	batSocLimit.EXPECT().GetSocLimits().Return(0.0, maxSoc).AnyTimes()
 
 	batCon := api.NewMockBatteryController(ctrl)
+	batCon.EXPECT().BatteryModes().Return([]api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}).AnyTimes()
 
 	return &struct {
 		api.Meter

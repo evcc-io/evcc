@@ -143,7 +143,6 @@ render: |
       address: 37007     # soc
       decode: uint16nan
     delay: {{ .delay }}
-  batterymodes: ["normal", "hold", "charge"]
   batterymode:
     source: switch
     switch:
