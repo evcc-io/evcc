@@ -275,7 +275,10 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 			return eg.Wait()
 		}
 
-		implement.Has(m, implement.BatteryController(implement.BatteryModes(batteryModesAll...), batteryMode))
+		implement.Has(m, implement.BatteryController(
+			implement.BatteryModes(api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge),
+			batteryMode,
+		))
 	}
 
 	return m, nil

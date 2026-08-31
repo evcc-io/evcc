@@ -146,7 +146,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 
 // configuredBatteryModes returns the modes with a backing entity
 func configuredBatteryModes(modes map[api.BatteryMode]string) []api.BatteryMode {
-	return lo.Filter(batteryModesAll, func(mode api.BatteryMode, _ int) bool {
+	return lo.Filter([]api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}, func(mode api.BatteryMode, _ int) bool {
 		return modes[mode] != ""
 	})
 }

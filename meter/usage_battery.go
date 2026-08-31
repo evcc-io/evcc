@@ -3,7 +3,6 @@ package meter
 import (
 	"context"
 	"fmt"
-	"slices"
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
@@ -145,11 +144,6 @@ func (m *batterySocLimits) Decorator() func() (float64, float64) {
 	}
 }
 
-// batteryModesAll are the modes a battery can implement
-var batteryModesAll = slices.DeleteFunc(api.BatteryModeValues(), func(mode api.BatteryMode) bool {
-	return mode == api.BatteryUnknown
-})
-
 // batteryModesSocLimit are the modes implementable via soc limit
 var batteryModesSocLimit = implement.BatteryModes(api.BatteryNormal, api.BatteryHold, api.BatteryCharge)
 
@@ -158,7 +152,7 @@ var batteryModesSocLimit = implement.BatteryModes(api.BatteryNormal, api.Battery
 func batteryModes(keys []int64) []api.BatteryMode {
 	res := make([]api.BatteryMode, 0, len(keys))
 	for _, v := range keys {
-		if mode := api.BatteryMode(v); slices.Contains(batteryModesAll, mode) {
+		if mode := api.BatteryMode(v); mode != api.BatteryUnknown && mode.IsABatteryMode() {
 			res = append(res, mode)
 		}
 	}
