@@ -93,20 +93,24 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 			if cc.ModeNormal == "" {
 				return nil, errors.New("modeNormal is required when modeHold or modeCharge is configured")
 			}
+
 			modes := map[api.BatteryMode]string{
 				api.BatteryNormal: cc.ModeNormal,
 				api.BatteryHold:   cc.ModeHold,
 				api.BatteryCharge: cc.ModeCharge,
 			}
+
 			for _, entity := range modes {
 				if entity != "" && !strings.HasPrefix(entity, "script.") {
 					return nil, fmt.Errorf("battery mode entity must be a script: %s", entity)
 				}
 			}
-			implement.Has(m, implement.BatteryController(
-				implement.BatteryModes(configuredBatteryModes(modes)...),
-				batteryModeController(conn, modes),
-			))
+
+			implement.Has(m, implement.BatteryController(func() []api.BatteryMode {
+				return slices.Sorted(maps.Keys(lo.PickBy(modes, func(_ api.BatteryMode, entity string) bool {
+					return entity != ""
+				})))
+			}, batteryModeController(conn, modes)))
 		} else if cc.ModeNormal != "" {
 			return nil, errors.New("modeNormal alone has no effect; configure modeHold and/or modeCharge")
 		}
@@ -144,13 +148,6 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 	implement.May(m, implement.MaxACPowerGetter(cc.pvMaxACPower.Decorator()))
 
 	return m, nil
-}
-
-// configuredBatteryModes returns the modes with a backing entity
-func configuredBatteryModes(modes map[api.BatteryMode]string) []api.BatteryMode {
-	return slices.Sorted(maps.Keys(lo.PickBy(modes, func(_ api.BatteryMode, entity string) bool {
-		return entity != ""
-	})))
 }
 
 // batteryModeController returns a BatteryController function that activates
