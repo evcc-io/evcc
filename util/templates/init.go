@@ -107,9 +107,13 @@ func fromBytes(b []byte) (Template, error) {
 		}
 	}
 
-	// push down capabilities to products
+	// push down capabilities and link to products
 	for i := range tmpl.Products {
 		tmpl.Products[i].Capabilities = append(tmpl.Products[i].Capabilities, tmpl.Capabilities...)
+
+		if tmpl.Products[i].Link == "" {
+			tmpl.Products[i].Link = tmpl.Link
+		}
 
 		seen := make(map[Capability]struct{}, len(tmpl.Products[i].Capabilities))
 		for _, c := range tmpl.Products[i].Capabilities {

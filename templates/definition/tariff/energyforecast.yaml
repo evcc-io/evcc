@@ -1,4 +1,5 @@
 template: energyforecast
+link: https://www.energyforecast.de
 products:
   - brand: Energy Forecast
 requirements:
