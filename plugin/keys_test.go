@@ -45,8 +45,8 @@ switch:
     value: b
 `))
 
-	// a default handles the values without a case, so there is no fixed set of keys
-	_, err := intKeysFromYaml(t, `
+	// a default accepts the values without a case, so there is no fixed set of keys
+	require.Nil(t, mustIntKeys(t, `
 source: switch
 switch:
 - case: 1
@@ -56,8 +56,7 @@ switch:
 default:
   source: const
   value: b
-`)
-	require.Error(t, err)
+`))
 }
 
 func TestWrappedIntKeys(t *testing.T) {

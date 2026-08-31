@@ -2,12 +2,10 @@ package plugin
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"slices"
 	"strconv"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -86,18 +84,17 @@ func (o *switchPlugin) IntSetter(param string) (func(int64) error, error) {
 			return dflt(val)
 		}
 
-		// unmatched value means the device does not implement this setting
-		return fmt.Errorf("switch: value not found: %d: %w", val, api.ErrNotAvailable)
+		return fmt.Errorf("switch: value not found: %d", val)
 	}, nil
 }
 
 var _ IntKeysGetter = (*switchPlugin)(nil)
 
-// IntKeys returns the values the switch has a case for. A default handles the
-// remaining values, so the switch then has no fixed set of keys.
+// IntKeys returns the values the switch has a case for. A default accepts the
+// remaining values too, so the switch then has no fixed set of keys.
 func (o *switchPlugin) IntKeys() ([]int64, error) {
 	if o.dflt != nil {
-		return nil, errors.New("switch: default has no keys")
+		return nil, nil
 	}
 
 	return slices.Clone(o.values), nil

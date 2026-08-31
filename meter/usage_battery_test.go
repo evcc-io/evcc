@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/require"
+	"go.yaml.in/yaml/v4"
 )
 
 func TestBatteryCapacity(t *testing.T) {
@@ -80,6 +81,63 @@ func TestDeclaredBatteryModes(t *testing.T) {
 	// unknown parses as an enum value but is not a mode
 	_, err = declaredBatteryModes([]string{"unknown"})
 	require.Error(t, err)
+}
+
+// TestConfigurableBatteryModes covers where a configurable meter takes its modes from
+func TestConfigurableBatteryModes(t *testing.T) {
+	// a switch reports its cases, a default or a wrapping sequence hides them
+	const readable = `
+  source: switch
+  switch:
+  - case: 1
+    set: {source: sleep, duration: 0s}
+  - case: 2
+    set: {source: sleep, duration: 0s}`
+
+	const unreadable = `
+  source: sequence
+  set:
+  - source: switch
+    switch:
+    - case: 1
+      set: {source: sleep, duration: 0s}`
+
+	const withDefault = readable + `
+  default: {source: sleep, duration: 0s}`
+
+	for _, tc := range []struct {
+		name     string
+		setter   string
+		declared string
+		modes    []api.BatteryMode
+	}{
+		{"keys", readable, "", []api.BatteryMode{api.BatteryNormal, api.BatteryHold}},
+		{"keys win over declaration", readable, `["charge"]`, []api.BatteryMode{api.BatteryNormal, api.BatteryHold}},
+		{"declaration for a hidden switch", unreadable, `["normal", "charge"]`, []api.BatteryMode{api.BatteryNormal, api.BatteryCharge}},
+		{"declaration for a default", withDefault, `["normal"]`, []api.BatteryMode{api.BatteryNormal}},
+		{"neither keys nor declaration", unreadable, "", nil},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			conf := "power: {source: const, value: 0}\nsoc: {source: const, value: 50}\nbatterymode:" + tc.setter + "\n"
+			if tc.declared != "" {
+				conf += "batterymodes: " + tc.declared + "\n"
+			}
+
+			var other map[string]any
+			require.NoError(t, yaml.Unmarshal([]byte(conf), &other))
+
+			m, err := NewConfigurableFromConfig(context.TODO(), other)
+			if tc.modes == nil {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			ctrl, ok := api.Cap[api.BatteryController](m)
+			require.True(t, ok)
+			require.Equal(t, tc.modes, ctrl.BatteryModes())
+		})
+	}
 }
 
 func TestBatterySocLimits(t *testing.T) {
