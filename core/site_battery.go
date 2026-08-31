@@ -286,7 +286,7 @@ func (site *Site) dischargeControlActive(rate api.Rate) bool {
 // batteryDischargeControl. Used to keep the battery from selling to grid while an EV
 // needs a fast charge, regardless of whether the (opt-in) discharge control toggle is set.
 func (site *Site) evFastChargingActive() bool {
-	for _, lp := range site.Loadpoints() {
+	for _, lp := range site.activeLoadpoints() {
 		if lp.GetStatus() == api.StatusC && lp.IsFastChargingActive() {
 			return true
 		}

@@ -486,3 +486,11 @@ func TestBatteryGridDischargeLimitRequiresOptIn(t *testing.T) {
 	assert.NoError(t, site.SetBatteryGridDischarge(false))
 	assert.Nil(t, site.GetBatteryGridDischargeLimit(), "expected limit to be dropped with grid discharge")
 }
+
+// TestEvFastChargingActiveDisabledLoadpoint guards against the nil entries
+// Loadpoints() returns for disabled loadpoints
+func TestEvFastChargingActiveDisabledLoadpoint(t *testing.T) {
+	site := &Site{loadpoints: []*Loadpoint{nil}}
+
+	assert.False(t, site.evFastChargingActive())
+}
