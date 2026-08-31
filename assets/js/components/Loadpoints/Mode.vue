@@ -21,11 +21,13 @@
 					{{ label(m) }}
 				</button>
 				<button
+					ref="chevron"
 					type="button"
 					class="btn chevron-btn d-flex align-items-center"
 					:class="{ active: isActive(m) }"
-					data-testid="always-charge-toggle"
 					data-bs-toggle="dropdown"
+					data-bs-auto-close="outside"
+					data-bs-offset="0,10"
 					aria-expanded="false"
 					:aria-label="$t('main.alwaysCharge.label')"
 					@click="ensureSmart"
@@ -87,7 +89,7 @@ export default defineComponent({
 	},
 	emits: ["updated", "always-charge-updated"],
 	data() {
-		return { SMART };
+		return { SMART, bsDropdown: null as Dropdown | null };
 	},
 	computed: {
 		modes(): CHARGE_MODE[] {
@@ -103,14 +105,15 @@ export default defineComponent({
 			return this.alwaysCharge !== ALWAYS_CHARGE.OFF;
 		},
 	},
-	mounted() {
-		this.initDropdown();
-	},
 	updated() {
-		this.initDropdown();
+		// dispose when the smart pill is reactively removed
+		if (this.bsDropdown && !this.$refs["chevron"]) {
+			this.bsDropdown.dispose();
+			this.bsDropdown = null;
+		}
 	},
 	beforeUnmount() {
-		this.dropdown()?.dispose();
+		this.bsDropdown?.dispose();
 	},
 	methods: {
 		label(mode: CHARGE_MODE) {
@@ -120,35 +123,19 @@ export default defineComponent({
 			return this.mode === mode;
 		},
 		setTargetMode(mode: CHARGE_MODE) {
-			this.dropdown()?.hide();
+			this.bsDropdown?.hide();
 			this.$emit("updated", mode);
 		},
 		updateAlwaysCharge(value: ALWAYS_CHARGE) {
 			this.$emit("always-charge-updated", value);
 		},
 		ensureSmart() {
+			// anchor to the whole group; created lazily before bootstrap's delegated toggle handler runs
+			this.bsDropdown ??= Dropdown.getOrCreateInstance(this.$refs["chevron"] as HTMLElement, {
+				reference: this.$refs["root"] as HTMLElement,
+			});
 			if (this.mode !== SMART) {
 				this.$emit("updated", SMART);
-			}
-		},
-		toggleEl() {
-			return (this.$el as HTMLElement).querySelector<HTMLElement>(
-				'[data-bs-toggle="dropdown"]'
-			);
-		},
-		dropdown() {
-			const el = this.toggleEl();
-			return el ? Dropdown.getInstance(el) : null;
-		},
-		initDropdown() {
-			const el = this.toggleEl();
-			if (el && !Dropdown.getInstance(el)) {
-				// anchor to the whole group, keep open while toggling inside
-				Dropdown.getOrCreateInstance(el, {
-					reference: this.$refs["root"] as HTMLElement,
-					autoClose: "outside",
-					offset: [0, 10],
-				});
 			}
 		},
 	},

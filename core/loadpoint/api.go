@@ -13,6 +13,16 @@ type Controller interface {
 	LoadpointControl(API)
 }
 
+// AlwaysChargeActive reports if the loadpoint is forced to draw at least min power
+func AlwaysChargeActive(lp API) bool {
+	return lp.GetMode() == api.ModeSmart && lp.GetAlwaysCharge().Active()
+}
+
+// SurplusFlexible reports if the loadpoint charges flexibly from surplus, i.e. smart mode without always charge
+func SurplusFlexible(lp API) bool {
+	return lp.GetMode() == api.ModeSmart && !lp.GetAlwaysCharge().Active()
+}
+
 // API is the external loadpoint API
 type API interface {
 	//

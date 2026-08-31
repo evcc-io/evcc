@@ -347,6 +347,33 @@ func TestDefaultVehicle(t *testing.T) {
 	assert.Nil(t, lp.vehicle, "expected no vehicle")
 }
 
+// TestVehicleChangeResetsAlwaysChargeOnce: session-scoped once must not leak
+// into another vehicle's session when the active vehicle changes.
+func TestVehicleChangeResetsAlwaysChargeOnce(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	v1 := api.NewMockVehicle(ctrl)
+	expectVehiclePublish(v1)
+	v2 := api.NewMockVehicle(ctrl)
+	expectVehiclePublish(v2)
+
+	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
+
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	lp.setActiveVehicle(v1)
+	assert.NoError(t, lp.SetAlwaysCharge(api.AlwaysChargeOnce))
+
+	// re-assigning the same vehicle keeps once
+	lp.setActiveVehicle(v1)
+	assert.Equal(t, api.AlwaysChargeOnce, lp.GetAlwaysCharge(), "same vehicle")
+
+	// vehicle change resets once
+	lp.setActiveVehicle(v2)
+	assert.Equal(t, api.AlwaysChargeOff, lp.GetAlwaysCharge(), "changed vehicle")
+}
+
 // idCharger is a minimal charger implementing api.Identifier for identifyVehicle tests.
 type idCharger struct {
 	id string

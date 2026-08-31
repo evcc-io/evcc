@@ -801,7 +801,7 @@ func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 		return 0
 	}
 
-	if mode == api.ModeSmart && !lp.GetAlwaysCharge().Active() {
+	if loadpoint.SurplusFlexible(lp) {
 		return lp.GetChargePower()
 	}
 

@@ -160,6 +160,13 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 		lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
 	}
 
+	// once is session- and vehicle-scoped: reset on vehicle change before the new vehicle's default applies
+	if prev != nil && prev != v && lp.GetAlwaysCharge() == api.AlwaysChargeOnce {
+		if err := lp.SetAlwaysCharge(api.AlwaysChargeOff); err != nil {
+			lp.log.WARN.Printf("vehicle always charge: %v", err)
+		}
+	}
+
 	if v != nil {
 		lp.socUpdated = time.Time{}
 
@@ -181,10 +188,11 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 			mode, ok = m, true
 		}
 		if ok && mode != "" {
+			// strip deprecated pv/minpv aliases: yaml onIdentify must not persist always charge
+			mode, _ := lp.normalizeMode(mode)
 			lp.SetMode(mode)
 		}
 
-		// vehicle always charge applies after mode, since deprecated pv/minpv modes reset it
 		if ac := vs.GetAlwaysCharge(); ac != "" {
 			// apply on as once so the vehicle default ends with the session; explicit loadpoint on wins
 			if ac == api.AlwaysChargeOn && lp.GetAlwaysCharge() != api.AlwaysChargeOn {

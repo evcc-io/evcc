@@ -397,7 +397,7 @@ func (s *SEMP) planningRequest(id int, lp loadpoint.API) (res PlanningRequest) {
 	}
 
 	minEnergy := maxEnergy
-	if mode == api.ModeSmart && !lp.GetAlwaysCharge().Active() {
+	if loadpoint.SurplusFlexible(lp) {
 		minEnergy = 0
 	}
 

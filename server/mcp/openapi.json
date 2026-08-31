@@ -2008,7 +2008,17 @@
                   "type": "object",
                   "properties": {
                     "alwaysCharge": {
-                      "$ref": "#/components/schemas/VehicleAlwaysCharge"
+                      "anyOf": [
+                        {
+                          "$ref": "#/components/schemas/VehicleAlwaysCharge"
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            ""
+                          ]
+                        }
+                      ]
                     }
                   }
                 }

@@ -332,7 +332,9 @@
       "enum": [
         "off",
         "smart",
-        "now"
+        "now",
+        "pv",
+        "minpv"
       ]
     },
     "pollMode": {

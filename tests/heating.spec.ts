@@ -40,7 +40,7 @@ test.describe("integrated device", async () => {
     await expect(mode.getByRole("button", { name: "Off", exact: true })).toBeVisible();
     await expect(mode.getByRole("button", { name: "Smart", exact: true })).toBeVisible();
     await expect(mode.getByRole("button", { name: "On", exact: true })).toBeVisible();
-    await expect(mode.getByTestId("always-charge-toggle")).toHaveCount(0);
+    await expect(mode.getByRole("button", { name: "Always charge" })).toHaveCount(0);
   });
 
   test("continuous device modes with always charge option", async ({ page }) => {
@@ -49,7 +49,7 @@ test.describe("integrated device", async () => {
     await expect(mode.getByRole("button", { name: "Normal", exact: true })).toBeVisible();
     await expect(mode.getByRole("button", { name: "Smart", exact: true })).toBeVisible();
     await expect(mode.getByRole("button", { name: "Boost", exact: true })).toBeVisible();
-    await mode.getByTestId("always-charge-toggle").click();
+    await mode.getByRole("button", { name: "Always charge" }).click();
     await expect(mode.getByRole("switch", { name: "Always heat" })).toBeVisible();
   });
 

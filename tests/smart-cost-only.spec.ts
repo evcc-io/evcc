@@ -33,7 +33,7 @@ test.describe("main screen", async () => {
 test.describe("always charge", async () => {
   test("toggle states via dropdown", async ({ page }) => {
     const mode = page.getByTestId("mode");
-    const chevron = mode.getByTestId("always-charge-toggle");
+    const chevron = mode.getByRole("button", { name: "Always charge" });
     await chevron.click();
     const dropdown = page.getByTestId("always-charge-dropdown");
     await expect(dropdown).toBeVisible();
@@ -59,7 +59,7 @@ test.describe("always charge", async () => {
 
     const mode = page.getByTestId("mode");
     await expect(mode.getByRole("button", { name: "Smart" })).toHaveClass(/active/);
-    await mode.getByTestId("always-charge-toggle").click();
+    await mode.getByRole("button", { name: "Always charge" }).click();
     const dropdown = page.getByTestId("always-charge-dropdown");
     await expect(dropdown.getByRole("switch")).toBeChecked();
 
