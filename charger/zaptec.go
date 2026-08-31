@@ -128,7 +128,7 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 	tsCtx := context.WithValue(ctx, oauth2.HTTPClient, &http.Client{Transport: tr})
 
 	// Get shared token source for this user (per-user uniqueness)
-	ts, err := zaptec.TokenSource(tsCtx, user, password)
+	ts, err := zaptec.TokenSource(tsCtx, log, user, password)
 	if err != nil {
 		return nil, err
 	}
