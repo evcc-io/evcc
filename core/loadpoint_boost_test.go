@@ -16,7 +16,6 @@ var _ siteAPI = (*mockSite)(nil)
 type mockSite struct {
 	maxDischargePower *float64
 	residualPower     float64
-	batterySoc        float64
 	optimized         int
 }
 
@@ -25,7 +24,7 @@ func (m *mockSite) Optimize() {
 }
 
 func (m *mockSite) GetBatterySoc() float64 {
-	return m.batterySoc
+	return 0
 }
 
 func (m *mockSite) GetBatteryMaxDischargePower() *float64 {
