@@ -5,10 +5,13 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 )
 
 // statusErr builds the error a plugin returns for the given response
@@ -28,6 +31,42 @@ func statusErr(t *testing.T, code int, body string) error {
 	require.Error(t, err)
 
 	return err
+}
+
+// a vehicle woken from sleep may still report the pre-sleep charge state, which
+// must not be taken for a disconnect while the grace window is open (#33323)
+func TestStatusAfterWakeup(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	type vehicle struct {
+		*api.MockVehicle
+		*api.MockChargeState
+	}
+	v := &vehicle{api.NewMockVehicle(ctrl), api.NewMockChargeState(ctrl)}
+
+	lp := loadpoint.NewMockAPI(ctrl)
+	lp.EXPECT().GetVehicle().Return(v).AnyTimes()
+
+	c := &VehicleApi{lp: lp}
+
+	// vehicle asleep: connected, so the loadpoint can wake it
+	v.MockChargeState.EXPECT().Status().Return(api.StatusNone, api.ErrAsleep)
+	status, err := c.Status()
+	require.NoError(t, err)
+	require.Equal(t, api.StatusB, status)
+
+	// answers again but still reports disconnected: not believed yet
+	v.MockChargeState.EXPECT().Status().Return(api.StatusA, nil)
+	status, err = c.Status()
+	require.NoError(t, err)
+	require.Equal(t, api.StatusB, status)
+
+	// grace expired: disconnect is real
+	c.asleepAt = time.Now().Add(-asleepGrace - time.Second)
+	v.MockChargeState.EXPECT().Status().Return(api.StatusA, nil)
+	status, err = c.Status()
+	require.NoError(t, err)
+	require.Equal(t, api.StatusA, status)
 }
 
 func TestAsleep(t *testing.T) {
