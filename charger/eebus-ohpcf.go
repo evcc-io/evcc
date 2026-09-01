@@ -202,7 +202,8 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 	}
 }
 
-// setCompressor caches the compressor entity and releases a pending WaitUseCase.
+// setCompressor caches the compressor entity and releases a pending WaitUseCase,
+// which fires on the first OHPCF event, the point Status and Enabled become usable.
 func (c *EEBusOHPCF) setCompressor(entity spineapi.EntityRemoteInterface) {
 	c.mu.Lock()
 	c.compressor = entity

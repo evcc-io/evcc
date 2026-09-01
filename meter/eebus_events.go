@@ -56,6 +56,8 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 		return
 	}
 
+	// fires on the first support update of any use case the meter reads from,
+	// which is where the remote entity backing its getters becomes known
 	c.connector.UseCase()
 }
 
