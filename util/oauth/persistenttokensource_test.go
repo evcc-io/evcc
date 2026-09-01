@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/stretchr/testify/require"

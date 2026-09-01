@@ -34,3 +34,27 @@ func TestServiceHandlerUnauthorized(t *testing.T) {
 		assert.JSONEq(t, "[]", w.Body.String(), query)
 	}
 }
+
+func TestHasMeasurements(t *testing.T) {
+	all := []Feature{
+		{Feature: "heating.dhw.oneTimeCharge"},
+		{Feature: "heating.power.consumption.current"},
+		{Feature: "heating.dhw.sensors.temperature.dhwCylinder"},
+		{Feature: "heating.dhw.temperature.main"},
+	}
+	assert.True(t, hasMeasurements(all))
+
+	// any required data point missing -> not supported
+	assert.False(t, hasMeasurements(all[:3]))
+	assert.False(t, hasMeasurements(nil))
+}
+
+// Like /equipment, /measurements must return an empty JSON list until the user
+// has authorized, as the config UI polls it while the form is being filled.
+func TestMeasurementsHandlerUnauthorized(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/measurements?clientid=&redirecturi=&gateway_serial=&installation_id=&device_id=0", nil)
+	w := httptest.NewRecorder()
+	serviceMux.ServeHTTP(w, req)
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.JSONEq(t, "[]", w.Body.String())
+}
