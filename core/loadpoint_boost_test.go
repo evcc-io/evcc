@@ -6,21 +6,26 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/settings"
-	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
 
+var _ siteAPI = (*mockSite)(nil)
+
 type mockSite struct {
-	site.API
 	maxDischargePower *float64
 	residualPower     float64
+	batterySoc        float64
 	optimized         int
 }
 
 func (m *mockSite) Optimize() {
 	m.optimized++
+}
+
+func (m *mockSite) GetBatterySoc() float64 {
+	return m.batterySoc
 }
 
 func (m *mockSite) GetBatteryMaxDischargePower() *float64 {
@@ -29,6 +34,10 @@ func (m *mockSite) GetBatteryMaxDischargePower() *float64 {
 
 func (m *mockSite) GetResidualPower() float64 {
 	return m.residualPower
+}
+
+func (m *mockSite) GetTariff(api.TariffUsage) api.Tariff {
+	return nil
 }
 
 func TestBoostPower(t *testing.T) {

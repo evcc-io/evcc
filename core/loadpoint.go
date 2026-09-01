@@ -22,7 +22,6 @@ import (
 	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/settings"
-	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/wrapper"
 	"github.com/evcc-io/evcc/messenger"
@@ -77,12 +76,21 @@ const pollInterval = 60 * time.Minute
 // Task is the task type
 type Task = func()
 
+// siteAPI is the subset of site.API the loadpoint depends on
+type siteAPI interface {
+	Optimize()
+	GetBatterySoc() float64
+	GetBatteryMaxDischargePower() *float64
+	GetResidualPower() float64
+	GetTariff(api.TariffUsage) api.Tariff
+}
+
 // Loadpoint is responsible for controlling charge depending on
 // Soc needs and power availability.
 type Loadpoint struct {
 	clock    clock.Clock // mockable time
 	bus      evbus.Bus   // event bus
-	site     site.API
+	site     siteAPI
 	pushChan chan<- messenger.Event // notifications
 	uiChan   chan<- util.Param      // client push messages
 	lpChan   chan<- *Loadpoint      // update requests
@@ -707,7 +715,7 @@ func (lp *Loadpoint) defaultMode() {
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
-func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan chan<- messenger.Event, lpChan chan<- *Loadpoint) {
+func (lp *Loadpoint) Prepare(site siteAPI, uiChan chan<- util.Param, pushChan chan<- messenger.Event, lpChan chan<- *Loadpoint) {
 	lp.site = site
 	lp.uiChan = uiChan
 	lp.pushChan = pushChan
