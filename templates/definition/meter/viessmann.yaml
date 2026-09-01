@@ -55,20 +55,11 @@ params:
       de: normalerweise `0`
       en: typically `0`
     default: 0
-  - name: uri
-    advanced: true
-    default: https://api.viessmann-climatesolutions.com/iot/v2
-    description:
-      de: API-Basis-URL
-      en: API base URL
-    help:
-      de: Nur ändern, falls Viessmann die API-Domain erneut umzieht oder ein Proxy verwendet wird
-      en: Only change if Viessmann moves the API domain again or a proxy is used
 auth:
   type: viessmann
   params: [clientid, redirecturi, gateway_serial]
 render: |
-  {{- $device := printf "%s/features/installations/%s/gateways/%s/devices/%s" .uri .installation_id .gateway_serial .device_id }}
+  {{- $device := printf "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/%s/gateways/%s/devices/%s" .installation_id .gateway_serial .device_id }}
   type: custom
   power:
     # heating.power.consumption.current: real electrical input power in kW -> W.
@@ -84,14 +75,3 @@ render: |
       redirecturi: {{ .redirecturi }}
       gateway_serial: {{ .gateway_serial }}
     jq: '.data[] | select(.feature == "heating.power.consumption.current") | .properties.value.value * 1000' # kW -> W
-  soc:
-    # heating.dhw.sensors.temperature.dhwCylinder: domestic hot water temperature (°C).
-    source: http
-    uri: {{ $device }}/features
-    cache: 60s
-    auth:
-      source: viessmann
-      clientid: {{ .clientid }}
-      redirecturi: {{ .redirecturi }}
-      gateway_serial: {{ .gateway_serial }}
-    jq: '.data[] | select(.feature == "heating.dhw.sensors.temperature.dhwCylinder") | .properties.value.value'

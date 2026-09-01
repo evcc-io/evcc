@@ -157,15 +157,6 @@ params:
     help:
       de: Liest die aktuelle elektrische Leistungsaufnahme und die Warmwassertemperatur aus. Wird nach der Anmeldung automatisch anhand der vom Gerät gemeldeten Datenpunkte vorbelegt (One-Base-/E3-Generation, z. B. Vitocal 25x). Standardmäßig deaktiviert, damit sich bestehende Installationen beim Update nicht ändern.
       en: Reads the current electrical power consumption and the domestic hot water temperature. Pre-set automatically after login based on the data points the device reports (One Base/E3 generation, e.g. Vitocal 25x). Disabled by default so existing installations are unchanged on upgrade.
-  - name: uri
-    advanced: true
-    default: https://api.viessmann-climatesolutions.com/iot/v2
-    description:
-      de: API-Basis-URL
-      en: API base URL
-    help:
-      de: Nur ändern, falls Viessmann die API-Domain erneut umzieht oder ein Proxy verwendet wird
-      en: Only change if Viessmann moves the API domain again or a proxy is used
   - name: target_temperature
     deprecated: true
     description:
@@ -181,7 +172,7 @@ auth:
   type: viessmann
   params: [clientid, redirecturi, gateway_serial]
 render: |
-  {{- $device := printf "%s/features/installations/%s/gateways/%s/devices/%s" .uri .installation_id .gateway_serial .device_id }}
+  {{- $device := printf "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/%s/gateways/%s/devices/%s" .installation_id .gateway_serial .device_id }}
   type: sgready
   getmode:
     source: http
