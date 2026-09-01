@@ -228,7 +228,7 @@ render: |
         set:
           source: error
           error: ErrNotAvailable
-  {{- if eq .measurements "true" }}
+  {{- if .measurements }}
   power:
     # heating.power.consumption.current reports the real electrical input power in kW.
     # Reading it replaces evcc's fallback estimate (current * phases * voltage), which
