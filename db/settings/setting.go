@@ -53,16 +53,21 @@ func Persist() error {
 		return nil
 	}
 
-	if dirty := lo.FilterMap(settings, func(s setting, _ int) (*setting, bool) {
-		return &s, s.dirty
-	}); len(dirty) > 0 {
-		if err := db.Instance.Save(dirty).Error; err != nil {
-			return err
-		}
+	// point into settings, taking the range copy's address would clear the copy's flag
+	dirty := lo.FilterMap(settings, func(s setting, idx int) (*setting, bool) {
+		return &settings[idx], s.dirty
+	})
 
-		for _, s := range dirty {
-			s.dirty = false
-		}
+	if len(dirty) == 0 {
+		return nil
+	}
+
+	if err := db.Instance.Save(dirty).Error; err != nil {
+		return err
+	}
+
+	for _, s := range dirty {
+		s.dirty = false
 	}
 
 	return nil
