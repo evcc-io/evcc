@@ -148,7 +148,6 @@ params:
       en: typically `0`
     default: 0
   - name: measurements
-    required: true
     type: bool
     service: viessmann/measurements?clientid={clientid}&redirecturi={redirecturi}&gateway_serial={gateway_serial}&installation_id={installation_id}&device_id={device_id}
     description:
