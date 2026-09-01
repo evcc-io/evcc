@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/util"
 	"github.com/samber/lo"
 	"go.yaml.in/yaml/v4"
