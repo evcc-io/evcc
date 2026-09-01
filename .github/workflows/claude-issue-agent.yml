@@ -50,7 +50,7 @@ jobs:
     outputs:
       run: ${{ steps.check.outputs.run }}
     steps:
-      - uses: actions/github-script@v9.0.0
+      - uses: actions/github-script@v9
         id: check
         with:
           script: |

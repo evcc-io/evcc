@@ -33,7 +33,7 @@ jobs:
       platforms: ${{ steps.parse.outputs.platforms }}
     steps:
       - name: React to comment
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             await github.rest.reactions.createForIssueComment({
@@ -157,7 +157,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Comment result
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const num = context.payload.issue.number;
@@ -190,7 +190,7 @@ jobs:
             }
 
       - name: Resolve command comment
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             // collapse the /build comment as resolved now that the build is done
