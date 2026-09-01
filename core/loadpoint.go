@@ -8,7 +8,6 @@ import (
 	"slices"
 	"sync"
 	"sync/atomic"
-	"testing"
 	"time"
 
 	evbus "github.com/asaskevich/EventBus"
@@ -303,15 +302,19 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 }
 
 // NewLoadpoint creates a Loadpoint with sane defaults
-func NewLoadpoint(log *util.Logger, settings settings.Settings) *Loadpoint {
+func NewLoadpoint(log *util.Logger, set settings.Settings) *Loadpoint {
 	clock := clock.New()
 	bus := evbus.New()
 
+	if set == nil {
+		set = settings.NewMemorySettings()
+	}
+
 	lp := &Loadpoint{
-		log:               log,      // logger
-		settings:          settings, // settings
-		clock:             clock,    // mockable time
-		bus:               bus,      // event bus
+		log:               log,   // logger
+		settings:          set,   // settings
+		clock:             clock, // mockable time
+		bus:               bus,   // event bus
 		mode:              api.ModeOff,
 		status:            api.StatusNone,
 		minCurrent:        6,   // A
@@ -335,10 +338,6 @@ func NewLoadpoint(log *util.Logger, settings settings.Settings) *Loadpoint {
 
 // restoreSettings restores loadpoint settings
 func (lp *Loadpoint) restoreSettings() {
-	if testing.Testing() {
-		return
-	}
-
 	// deprecated yaml properties
 	if lp.Phases_ > 0 {
 		lp.log.WARN.Printf("ignoring deprecated phases: %d. please configure via UI", lp.Phases_)
@@ -720,6 +719,11 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	_ = lp.bus.Subscribe(evVehicleDisconnect, lp.evVehicleDisconnectHandler)
 	_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentHandler)
 	_ = lp.bus.Subscribe(evVehicleSoc, lp.evVehicleSocProgressHandler)
+
+	// loadpoints built without the constructor have no settings store
+	if lp.settings == nil {
+		lp.settings = settings.NewMemorySettings()
+	}
 
 	// restore settings
 	lp.restoreSettings()
