@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
@@ -54,7 +54,7 @@ func NewIdentity(log *util.Logger, brand, user string, oc *oauth2.Config, token 
 		return nil, errors.New("token expired")
 	}
 
-	v.TokenSource = oauth.RefreshTokenSource(token, v.refreshToken)
+	v.TokenSource = oauth.RefreshTokenSource(log, token, v.refreshToken)
 
 	// add instance
 	addInstance(v.subject, v)
@@ -77,7 +77,6 @@ func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	v.TokenSource = oauth.RefreshTokenSource(tok, v.refreshToken)
 	err = settings.SetJson(v.subject, tok)
 
 	return tok, err

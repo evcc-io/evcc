@@ -2197,7 +2197,7 @@
       "post": {
         "operationId": "resetDatabase",
         "summary": "Reset database",
-        "description": "Selectively deletes sessions and/or settings from the database. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt. The instance restarts after a successful reset.",
+        "description": "Selectively deletes sessions, settings and/or remote access data from the database. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt. The instance restarts after a successful reset.",
         "tags": [
           "db"
         ],
@@ -2228,6 +2228,10 @@
                   "settings": {
                     "type": "boolean",
                     "description": "Delete all settings, configs, and meters"
+                  },
+                  "remote": {
+                    "type": "boolean",
+                    "description": "Delete remote access configuration and registered clients"
                   }
                 }
               }
@@ -3644,7 +3648,11 @@
           "ZAR",
           "TRY",
           "MYR",
-          "THB"
+          "THB",
+          "BYN",
+          "UAH",
+          "RUB",
+          "KZT"
         ]
       },
       "FatalError": {
@@ -3839,7 +3847,11 @@
             "type": "number"
           },
           "energy": {
-            "description": "Total battery energy in kWh.",
+            "description": "Total discharged energy in kWh.",
+            "type": "number"
+          },
+          "returnEnergy": {
+            "description": "Total charged energy in kWh.",
             "type": "number"
           },
           "devices": {
@@ -4513,7 +4525,8 @@
         "enum": [
           "co2",
           "pricedynamic",
-          "priceforecast"
+          "priceforecast",
+          "pricestatic"
         ]
       },
       "DeviceColorEntry": {

@@ -266,7 +266,7 @@ func TestDsmrWebSocket(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			payload := dsmrFrame(dsmrTelegram50)
 
-			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				conn, err := websocket.Accept(w, r, nil)
 				if err != nil {
 					return
@@ -280,7 +280,7 @@ func TestDsmrWebSocket(t *testing.T) {
 					time.Sleep(50 * time.Millisecond)
 				}
 			}))
-			defer srv.Close()
+			srv.Start()
 
 			uri := "ws" + strings.TrimPrefix(srv.URL, "http")
 

@@ -1047,7 +1047,7 @@
       "modalUpdateStatusStart": "Installazione avviata:",
       "modalViewOnGitHub": "Vedi su GitHub",
       "openSource": "open source",
-      "poweredByOpenSource": "Powered by {0}."
+      "poweredBy": "powered by"
     }
   },
   "forecast": {
@@ -1232,7 +1232,6 @@
       "repeatingPlans": "Piani ricorrenti",
       "resume": "Riprendi",
       "selectAll": "Seleziona tutti",
-      "strategyDisabledDescription": "La ricarica inizia il più tardi possibile per terminare appena in tempo per la partenza. Con i prezzi dinamici della rete elettrica o la tariffa CO₂, sono disponibili ulteriori opzioni.",
       "time": "Ora",
       "title": "Piano",
       "unsavedChanges": "Ci sono modifiche non salvate. Vuoi salvarle adesso?",

@@ -352,7 +352,7 @@ render: |
       source: convert
       convert: bool2int
       set:
-        {{- if eq .forceaccharging "true" }}
+        {{- if .forceaccharging }}
         source: const
         value: 1 # Enable
         set:
@@ -622,6 +622,9 @@ render: |
                   out := rated
                   if limit < rated { out = limit }
                   out
+        default:
+          source: error
+          error: ErrNotAvailable
       # single watchdog wraps the ENTIRE 47100 lifecycle, not just case 3
       - source: watchdog
         timeout: 60s # re-write every timeout/2

@@ -311,8 +311,9 @@ render: |
           scale: 10
           {{- end }}
     script: |
+      // float64 is required: a whole-number input arrives as an int literal
       // round, the watt conversion does not reproduce the written percent exactly
-      p := int(limit*100/{{ maxf .maxacpower 1 }} + 0.5)
+      p := int(float64(limit)*100/{{ maxf .maxacpower 1 }} + 0.5)
       if p > 100 {
         p = 100
       }
@@ -608,5 +609,8 @@ render: |
               address: 109 # Battery Max Discharging Current
               type: writemultiple
               decode: uint16
+    default:
+      source: error
+      error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

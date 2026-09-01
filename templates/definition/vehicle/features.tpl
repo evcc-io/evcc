@@ -1,25 +1,25 @@
 {{ define "features" }}
-{{- if or .basefeatures (eq .coarsecurrent "true") (eq .welcomecharge "true") (eq .streaming "true") (eq .climaterdisabled "true") (eq .autodetectdisabled "true") (eq .wakeupdisabled "true") }}
+{{- if or .basefeatures .coarsecurrent .welcomecharge .streaming .climaterdisabled .autodetectdisabled .wakeupdisabled }}
 features:
 {{- range .basefeatures }}
 - {{ . }}
 {{- end }}
-{{- if eq .coarsecurrent "true" }}
+{{- if .coarsecurrent }}
 - coarsecurrent
 {{- end }}
-{{- if eq .welcomecharge "true" }}
+{{- if .welcomecharge }}
 - welcomecharge
 {{- end }}
-{{- if eq .streaming "true" }}
+{{- if .streaming }}
 - streaming
 {{- end }}
-{{- if eq .climaterdisabled "true" }}
+{{- if .climaterdisabled }}
 - climaterdisabled
 {{- end }}
-{{- if eq .autodetectdisabled "true" }}
+{{- if .autodetectdisabled }}
 - autodetectdisabled
 {{- end }}
-{{- if eq .wakeupdisabled "true" }}
+{{- if .wakeupdisabled }}
 - wakeupdisabled
 {{- end }}
 {{- end }}

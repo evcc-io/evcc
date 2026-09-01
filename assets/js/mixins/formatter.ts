@@ -1,6 +1,55 @@
 import { defineComponent } from "vue";
 import { is12hFormat } from "@/units";
 import { CURRENCY } from "../types/evcc";
+import settings from "@/settings";
+import type { DateFormat } from "@/settings";
+
+// Extract a single part in date context, where names can differ from their
+// standalone forms (German "So.", "Jan." vs "So", "Jan").
+function datePart(
+  date: Date,
+  locale: string | undefined,
+  type: Intl.DateTimeFormatPartTypes
+): string {
+  return (
+    new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "short" })
+      .formatToParts(date)
+      .find((part) => part.type === type)?.value ?? ""
+  );
+}
+
+// Day+month(+year) in the user's date order, e.g. "17 Mai" or "Mai 17, 2025".
+// Ordering and punctuation come from a reference locale (en-GB day-first,
+// en-US month-first), month names stay translated. ymd is the full ISO date.
+function formatDayMonth(
+  date: Date,
+  locale: string | undefined,
+  fmt: DateFormat,
+  year = false
+): string {
+  if (fmt === "ymd") return isoDate(date);
+  const orderLocale = fmt === "mdy" ? "en-US" : "en-GB";
+  const month = datePart(date, locale, "month");
+  // some locales (e.g. Czech) use numeric months in date context
+  const name = /\p{L}/u.test(month)
+    ? month
+    : new Intl.DateTimeFormat(locale, { month: "short" }).format(date);
+  return new Intl.DateTimeFormat(orderLocale, {
+    month: "short",
+    day: "numeric",
+    year: year ? "numeric" : undefined,
+  })
+    .formatToParts(date)
+    .map((part) => (part.type === "month" ? name : part.value))
+    .join("");
+}
+
+// local-time ISO date, Intl cannot produce this reliably across locales
+function isoDate(date: Date): string {
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${mm}-${dd}`;
+}
 
 const CURRENCY_SYMBOLS: Record<CURRENCY, string> = {
   AUD: "$",
@@ -26,6 +75,10 @@ const CURRENCY_SYMBOLS: Record<CURRENCY, string> = {
   TRY: "₺",
   MYR: "RM",
   THB: "฿",
+  BYN: "Br",
+  UAH: "₴",
+  RUB: "₽",
+  KZT: "₸",
 };
 
 // list of currencies where energy price should be displayed in subunits (factor 100)
@@ -45,6 +98,7 @@ const ENERGY_PRICE_IN_SUBUNIT: Partial<Record<CURRENCY, string>> = {
   SEK: "öre", // Swedish öre
   ZAR: "c", // South African cent
   TRY: "krş", // Türkiye kuruş
+  BYN: "к.", // Belarusian kapeyka
 };
 
 export enum POWER_UNIT {
@@ -61,6 +115,11 @@ export default defineComponent({
       fmtLimit: 100,
       fmtDigits: 1,
     };
+  },
+  computed: {
+    dateFormat(): DateFormat {
+      return settings.dateFormat || "";
+    },
   },
   methods: {
     energyPriceSubunit(currency: CURRENCY): string | undefined {
@@ -265,15 +324,33 @@ export default defineComponent({
         hour12: is12hFormat(),
       }).format(date);
     },
-    fmtFullDateTime(date: Date, short: boolean) {
-      return new Intl.DateTimeFormat(this.$i18n?.locale, {
-        weekday: short ? undefined : "short",
-        month: short ? "numeric" : "short",
-        day: "numeric",
+    fmtFullDateTime(date: Date) {
+      const locale = this.$i18n?.locale;
+      const fmt = this.dateFormat;
+      if (!fmt) {
+        // auto: single Intl call preserves locale-native separators (e.g. German "So., 15. Jan.,")
+        return new Intl.DateTimeFormat(locale, {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+          hour12: is12hFormat(),
+        }).format(date);
+      }
+      const time = new Intl.DateTimeFormat(locale, {
         hour: "numeric",
         minute: "numeric",
         hour12: is12hFormat(),
       }).format(date);
+      const weekday = datePart(date, locale, "weekday");
+      return `${weekday} ${formatDayMonth(date, locale, fmt, true)} ${time}`.trim();
+    },
+    // weekday + day of month + time, for lists within a known month
+    fmtWeekdayDayTime(date: Date) {
+      const weekday = datePart(date, this.$i18n?.locale, "weekday");
+      return `${weekday} ${date.getDate()}, ${this.fmtHourMinute(date)}`;
     },
     fmtWeekdayTime(date: Date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {
@@ -295,11 +372,17 @@ export default defineComponent({
       }).format(date);
     },
     fmtDayMonth(date: Date) {
-      return new Intl.DateTimeFormat(this.$i18n?.locale, {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-      }).format(date);
+      const locale = this.$i18n?.locale;
+      const fmt = this.dateFormat;
+      if (!fmt) {
+        return new Intl.DateTimeFormat(locale, {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+        }).format(date);
+      }
+      const weekday = datePart(date, locale, "weekday");
+      return `${weekday} ${formatDayMonth(date, locale, fmt)}`.trim();
     },
     fmtDayMonthYear(date: Date) {
       return new Intl.DateTimeFormat(this.$i18n?.locale, {

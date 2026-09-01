@@ -228,6 +228,14 @@ func (site *Site) setSuggestions(suggestions map[string]types.Suggestion) {
 	site.suggestions = suggestions
 }
 
+// setBatteryForecast replaces the battery forecast of the cached state
+func (site *Site) setBatteryForecast(forecast *types.BatteryForecast) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.battery.Forecast = forecast
+}
+
 // suggestion returns the optimizer suggestion for the given device key.
 // The actionable flag is evaluated on read against the device's current
 // action since that changes between optimizer runs.
@@ -264,7 +272,7 @@ func (site *Site) publishSuggestions() {
 // optimizer result is stale
 func (site *Site) clearSuggestions() {
 	site.setSuggestions(nil)
-	site.battery.Forecast = nil
+	site.setBatteryForecast(nil)
 
 	site.publishBattery()
 	site.publishSuggestions()
@@ -391,7 +399,7 @@ func (site *Site) optimizerUpdateAsync(minAge time.Duration) {
 		}
 	}()
 
-	err = site.optimizerUpdate(site.battery.Devices)
+	err = site.optimizerUpdate(site.state().battery.Devices)
 }
 
 // optimizerRequest assembles the optimizer request and the matching device
@@ -633,6 +641,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 // applyOptimizerResult maps the optimizer response onto suggestions, battery
 // forecast and notifications
 func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details []batteryDetail, res optimizer.OptimizationResult) {
+	now := time.Now()
 	slotHours := (time.Duration(req.TimeSeries.Dt[0]) * time.Second).Hours()
 	gridImporting := len(res.GridImport) > 0 && res.GridImport[0] > 0
 	gridExporting := len(res.GridExport) > 0 && res.GridExport[0] > 0
@@ -646,10 +655,10 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 
 		batteries = append(batteries, batteryResult{
 			batteryDetail: detail,
-			Full: matchSoc(batRes.StateOfCharge, func(soc float32) bool {
+			Full: matchSoc(batRes.StateOfCharge, now, func(soc float32) bool {
 				return soc >= batReq.SMax
 			}),
-			Empty: matchSoc(batRes.StateOfCharge, func(soc float32) bool {
+			Empty: matchSoc(batRes.StateOfCharge, now, func(soc float32) bool {
 				return soc <= batReq.SMin
 			}),
 		})
@@ -668,7 +677,7 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 	site.publish("evopt-batteries", batteries)
 
 	site.setSuggestions(suggestions)
-	site.battery.Forecast = site.addBatteryForecastTotals(req.Batteries, res.Batteries)
+	site.setBatteryForecast(site.addBatteryForecastTotals(req.Batteries, res.Batteries))
 
 	site.publishBattery()
 
@@ -929,11 +938,14 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 	return bat, detail
 }
 
-func matchSoc(ts []float32, fun func(float32) bool) time.Time {
+// matchSoc returns the end of the first slot whose soc satisfies fun.
+// Slot 0 is the remainder of the current slot, so it ends at the next slot boundary.
+func matchSoc(ts []float32, now time.Time, fun func(float32) bool) time.Time {
+	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
+
 	for i, soc := range ts {
 		if fun(soc) {
-			// TODO first slot
-			return time.Now().Add(time.Duration(i+1) * tariff.SlotDuration).Round(time.Second)
+			return eos.Add(time.Duration(i) * tariff.SlotDuration)
 		}
 	}
 
@@ -1259,6 +1271,15 @@ func applyPrecondition(lp loadpoint.API, demand []float32, minLen int) []float32
 
 	ts := lp.EffectivePlanTime()
 	if ts.IsZero() {
+		return demand
+	}
+
+	// limit to the required charging duration, i.e. "all" must not demand beyond the plan goal
+	goal, _ := lp.GetPlanGoal()
+	if required := lp.GetPlanRequiredDuration(goal, lp.EffectiveMaxPower()); required < precondition {
+		precondition = required
+	}
+	if precondition <= 0 {
 		return demand
 	}
 

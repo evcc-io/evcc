@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
@@ -88,7 +88,7 @@ func NewIdentity(log *util.Logger, oc *oauth2.Config, token *oauth2.Token) (oaut
 		return nil, errors.New("token expired")
 	}
 
-	v.TokenSource = oauth.RefreshTokenSource(token, v.refreshToken)
+	v.TokenSource = oauth.RefreshTokenSource(log, token, v.refreshToken)
 
 	// add instance
 	identities[claims.Subject] = v

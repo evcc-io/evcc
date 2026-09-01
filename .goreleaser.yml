@@ -16,8 +16,7 @@ builds:
       - -trimpath
       - -tags=release
     ldflags:
-      # the package version carries a timestamp for ordering, the reported version does not
-      - -X github.com/evcc-io/evcc/util.Version={{ if .IsSnapshot }}{{ incminor .Tag }}-dev+{{ .ShortCommit }}{{ else }}{{ .Version }}{{ end }} -s -w
+      - -X github.com/evcc-io/evcc/util.Version={{ .Version }} -s -w
     env:
       - CGO_ENABLED=0
     goos:
@@ -77,10 +76,9 @@ checksum:
   name_template: "checksums.txt"
 
 snapshot:
-  # semver pre-release of the upcoming version. The timestamp makes the package
-  # version increase monotonically: apt compares it numerically, while the commit
-  # alone would sort randomly.
-  version_template: "{{ incminor .Version }}-dev.{{ .Timestamp }}+{{ .ShortCommit }}"
+  # semver pre-release of the upcoming version, the timestamp keeps the package
+  # version increasing monotonically for apt
+  version_template: "{{ incminor .Version }}-dev.{{ .Timestamp }}"
 
 changelog:
   sort: asc

@@ -7,13 +7,13 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"uuid"
 
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 )
 
@@ -91,7 +91,7 @@ func NewIdentity(log *util.Logger, token *oauth2.Token, account string, region s
 		return nil, errors.New("token expired")
 	}
 
-	v.TokenSource = oauth.RefreshTokenSource(token, v.refreshToken)
+	v.TokenSource = oauth.RefreshTokenSource(log, token, v.refreshToken)
 
 	// add instance
 	addInstance(account, v)
@@ -125,8 +125,6 @@ func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	}
 
 	tok := util.TokenWithExpiry(&res)
-	v.TokenSource = oauth.RefreshTokenSource(tok, v.refreshToken)
-
 	err := settings.SetJson(v.settingsKey(), tok)
 
 	return tok, err
