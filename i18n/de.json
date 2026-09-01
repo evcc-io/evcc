@@ -210,7 +210,7 @@
       "chargeStatusC": "lädt",
       "chargeStatusE": "Keine Leistung",
       "chargeStatusF": "Fehler",
-      "chargedEnergy": "Geladen",
+      "chargedEnergy": "Geladen (Session)",
       "co2": "Netz-CO₂",
       "configured": "Konfiguriert",
       "connected": "Verbunden",
@@ -259,6 +259,31 @@
       "temp": "Temperatur",
       "topic": "Thema",
       "url": "URL",
+      "usage": {
+        "aux": {
+          "energy": "Verbraucht",
+          "returnEnergy": "Erzeugt"
+        },
+        "battery": {
+          "energy": "Entladen",
+          "returnEnergy": "Geladen"
+        },
+        "charge": {
+          "energy": "Geladen",
+          "returnEnergy": "Entladen"
+        },
+        "consumer": {
+          "energy": "Verbraucht",
+          "returnEnergy": "Erzeugt"
+        },
+        "grid": {
+          "energy": "Bezogen",
+          "returnEnergy": "Eingespeist"
+        },
+        "pv": {
+          "energy": "Erzeugt"
+        }
+      },
       "vehicleLimitSoc": "Ladelimit",
       "yes": "Ja"
     },
