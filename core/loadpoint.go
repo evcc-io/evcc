@@ -2176,12 +2176,12 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 	// §14a
 	if dimmer, ok := api.Cap[api.Dimmer](lp.charger); ok {
 		dimmed, err := dimmer.Dimmed()
-		if err != nil {
+		if err != nil && !errors.Is(err, api.ErrNotAvailable) {
 			lp.log.ERROR.Printf("dimmed: %v", err)
 			return
 		}
 
-		if dim != nil {
+		if dim != nil && err == nil {
 			if *dim != dimmed {
 				if err := dimmer.Dim(*dim); err != nil {
 					lp.log.ERROR.Printf("dim: %v", err)
