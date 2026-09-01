@@ -12,7 +12,6 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/samber/lo"
 )
@@ -62,7 +61,7 @@ func (site *Site) SetTitle(title string) {
 
 	site.Title = title
 	site.publish(keys.SiteTitle, title)
-	settings.SetString(keys.Title, title)
+	site.settings().SetString(keys.Title, title)
 }
 
 // GetGridMeterRef returns the GridMeterRef
@@ -78,7 +77,7 @@ func (site *Site) SetGridMeterRef(ref string) {
 	defer site.Unlock()
 
 	site.Meters.GridMeterRef = ref
-	settings.SetString(keys.GridMeter, ref)
+	site.settings().SetString(keys.GridMeter, ref)
 }
 
 // GetPVMeterRefs returns the PvMeterRef
@@ -94,7 +93,7 @@ func (site *Site) SetPVMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.PVMetersRef = ref
-	settings.SetString(keys.PvMeters, strings.Join(filterConfigurableMeter(ref), ","))
+	site.settings().SetString(keys.PvMeters, strings.Join(filterConfigurableMeter(ref), ","))
 }
 
 // GetBatteryMeterRefs returns the BatteryMeterRef
@@ -110,7 +109,7 @@ func (site *Site) SetBatteryMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.BatteryMetersRef = ref
-	settings.SetString(keys.BatteryMeters, strings.Join(filterConfigurableMeter(ref), ","))
+	site.settings().SetString(keys.BatteryMeters, strings.Join(filterConfigurableMeter(ref), ","))
 }
 
 // GetAuxMeterRefs returns the AuxMeterRef
@@ -126,7 +125,7 @@ func (site *Site) SetAuxMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.AuxMetersRef = ref
-	settings.SetString(keys.AuxMeters, strings.Join(filterConfigurableMeter(ref), ","))
+	site.settings().SetString(keys.AuxMeters, strings.Join(filterConfigurableMeter(ref), ","))
 }
 
 // GetConsumerMeterRefs returns the ConsumerMeterRef
@@ -142,7 +141,7 @@ func (site *Site) SetConsumerMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.ConsumerMetersRef = ref
-	settings.SetString(keys.ConsumerMeters, strings.Join(filterConfigurableMeter(ref), ","))
+	site.settings().SetString(keys.ConsumerMeters, strings.Join(filterConfigurableMeter(ref), ","))
 }
 
 // GetExtMeterRefs returns the ExtMeterRef
@@ -158,7 +157,7 @@ func (site *Site) SetExtMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.ExtMetersRef = ref
-	settings.SetString(keys.ExtMeters, strings.Join(filterConfigurableMeter(ref), ","))
+	site.settings().SetString(keys.ExtMeters, strings.Join(filterConfigurableMeter(ref), ","))
 }
 
 // GetCurtailerRefs returns the curtailment device references
@@ -174,7 +173,7 @@ func (site *Site) SetCurtailerRefs(ref []string) {
 	defer site.Unlock()
 
 	site.CurtailersRef = ref
-	settings.SetString(keys.Curtailers, strings.Join(filterConfigurableCurtailers(ref), ","))
+	site.settings().SetString(keys.Curtailers, strings.Join(filterConfigurableCurtailers(ref), ","))
 }
 
 // GetBatterySoc returns the current battery soc
@@ -281,7 +280,7 @@ func (site *Site) SetPrioritySoc(soc float64) error {
 
 	if site.prioritySoc != soc {
 		site.prioritySoc = soc
-		settings.SetFloat(keys.PrioritySoc, site.prioritySoc)
+		site.settings().SetFloat(keys.PrioritySoc, site.prioritySoc)
 		site.publish(keys.PrioritySoc, site.prioritySoc)
 	}
 
@@ -316,7 +315,7 @@ func (site *Site) SetBufferSoc(soc float64) error {
 
 	if site.bufferSoc != soc {
 		site.bufferSoc = soc
-		settings.SetFloat(keys.BufferSoc, site.bufferSoc)
+		site.settings().SetFloat(keys.BufferSoc, site.bufferSoc)
 		site.publish(keys.BufferSoc, site.bufferSoc)
 	}
 
@@ -347,7 +346,7 @@ func (site *Site) SetBufferStartSoc(soc float64) error {
 
 	if site.bufferStartSoc != soc {
 		site.bufferStartSoc = soc
-		settings.SetFloat(keys.BufferStartSoc, site.bufferStartSoc)
+		site.settings().SetFloat(keys.BufferStartSoc, site.bufferStartSoc)
 		site.publish(keys.BufferStartSoc, site.bufferStartSoc)
 	}
 
@@ -377,7 +376,7 @@ func (site *Site) SetResidualPower(power float64) error {
 
 	if site.ResidualPower != power {
 		site.ResidualPower = power
-		settings.SetFloat(keys.ResidualPower, site.ResidualPower)
+		site.settings().SetFloat(keys.ResidualPower, site.ResidualPower)
 		site.publish(keys.ResidualPower, site.ResidualPower)
 	}
 
@@ -406,7 +405,7 @@ func (site *Site) SetGridExportLimit(power float64) error {
 
 	if changed {
 		site.log.DEBUG.Println("set grid export limit:", power)
-		settings.SetFloat(keys.GridExportLimit, power)
+		site.settings().SetFloat(keys.GridExportLimit, power)
 		site.publish(keys.GridExportLimit, power)
 
 		// re-run the optimizer so the new limit takes effect immediately
@@ -443,7 +442,7 @@ func (site *Site) SetBatteryDischargeControl(val bool) error {
 
 	if site.batteryDischargeControl != val {
 		site.batteryDischargeControl = val
-		settings.SetBool(keys.BatteryDischargeControl, val)
+		site.settings().SetBool(keys.BatteryDischargeControl, val)
 		site.publish(keys.BatteryDischargeControl, val)
 	}
 
@@ -470,7 +469,7 @@ func (site *Site) SetBatteryGridDischarge(val bool) error {
 
 	if site.batteryGridDischarge != val {
 		site.batteryGridDischarge = val
-		settings.SetBool(keys.BatteryGridDischarge, val)
+		site.settings().SetBool(keys.BatteryGridDischarge, val)
 		site.publish(keys.BatteryGridDischarge, val)
 	}
 
@@ -493,7 +492,7 @@ func (site *Site) SetSolarAdjusted(val bool) {
 
 	if site.solarAdjusted != val {
 		site.solarAdjusted = val
-		settings.SetBool(keys.SolarAdjusted, val)
+		site.settings().SetBool(keys.SolarAdjusted, val)
 		site.publish(keys.SolarAdjusted, val)
 	}
 }
@@ -518,10 +517,10 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
 		site.batteryGridChargeLimit = val
 
 		if val == nil {
-			settings.SetString(keys.BatteryGridChargeLimit, "")
+			site.settings().SetString(keys.BatteryGridChargeLimit, "")
 			site.publish(keys.BatteryGridChargeLimit, nil)
 		} else {
-			settings.SetFloat(keys.BatteryGridChargeLimit, *val)
+			site.settings().SetFloat(keys.BatteryGridChargeLimit, *val)
 			site.publish(keys.BatteryGridChargeLimit, *val)
 		}
 	}
@@ -556,7 +555,7 @@ func (site *Site) SetOptimizerChargingStrategy(strategy string) error {
 
 	if changed {
 		site.log.DEBUG.Println("set optimizer charging strategy:", strategy)
-		settings.SetString(keys.OptimizerChargingStrategy, strategy)
+		site.settings().SetString(keys.OptimizerChargingStrategy, strategy)
 		site.publish(keys.OptimizerChargingStrategy, strategy)
 
 		// re-run the optimizer so the new strategy takes effect immediately
