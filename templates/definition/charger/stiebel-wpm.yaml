@@ -13,6 +13,15 @@ params:
   - name: tempsource
     type: choice
     choice: ["warmwater", "buffer"]
+  - name: power
+    type: bool
+    advanced: true
+    description:
+      de: Leistungsaufnahme auslesen
+      en: Read power consumption
+    help:
+      de: Aufnahmeleistung des Inverters. Nur bei WPMsystem (WPM 4) verfügbar, nicht bei WPM 3/3i.
+      en: Inverter power consumption. Only available on WPMsystem (WPM 4), not on WPM 3/3i.
 render: |
   type: sgready
   getmode:
@@ -107,5 +116,15 @@ render: |
       type: input
       encoding: int16
     scale: 0.1
+  {{- end }}
+  {{- if .power }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 3679 # 3680 INVERTER AUFNAHMELEISTUNG IWS 1 (1-based)
+      type: input
+      encoding: int16nan
+    scale: 100 # 0.1 kW -> W
   {{- end }}
   {{ include "heatpumpswitch" . }}
