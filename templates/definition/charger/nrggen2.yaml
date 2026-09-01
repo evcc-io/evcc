@@ -23,6 +23,6 @@ params:
 render: |
   type: nrggen2
   {{- include "modbus" . }}
-  {{- if ne .phases1p3p "false" }}
+  {{- if .phases1p3p }}
   phases1p3p: true
   {{- end }}
