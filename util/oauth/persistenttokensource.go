@@ -1,12 +1,13 @@
 package oauth
 
 import (
+	"encoding/json"
 	"errors"
-	"strings"
 	"sync"
 
 	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
 
@@ -33,9 +34,11 @@ func PersistentTokenSource(log *util.Logger, key string, token *oauth2.Token, re
 
 	candidates := make([]*oauth2.Token, 0, 2)
 
+	var persisted *oauth2.Token
 	var stored oauth2.Token
 	if err := settings.Json(key, &stored); err == nil {
-		candidates = append(candidates, &stored)
+		persisted = &stored
+		candidates = append(candidates, persisted)
 	}
 
 	if token != nil {
@@ -44,11 +47,20 @@ func PersistentTokenSource(log *util.Logger, key string, token *oauth2.Token, re
 
 	for _, tok := range candidates {
 		if !tok.Valid() && tok.RefreshToken != "" {
-			var err error
-			if tok, err = ts.refresh(tok); err != nil {
+			res, err := ts.refresh(tok)
+			if err != nil {
 				log.DEBUG.Printf("refreshing token: %v", err)
+
+				// only drop the persisted token: a rejected config token must not
+				// discard a persisted one that failed for a transient reason
+				if tok == persisted && rejected(err) {
+					ts.delete()
+				}
+
 				continue
 			}
+
+			tok = res
 		}
 
 		if tok.Valid() {
@@ -70,6 +82,11 @@ func (ts *persistentTokenSource) Token() (*oauth2.Token, error) {
 
 	token, err := ts.refresh(ts.token)
 	if err != nil {
+		// the api rejected the persisted token itself, so keeping it would only make the next start fail again
+		if rejected(err) {
+			ts.delete()
+		}
+
 		return ts.token, err
 	}
 
@@ -81,13 +98,6 @@ func (ts *persistentTokenSource) Token() (*oauth2.Token, error) {
 func (ts *persistentTokenSource) refresh(token *oauth2.Token) (*oauth2.Token, error) {
 	res, err := ts.refresher(token)
 	if err != nil {
-		// the api rejected the token itself, so keeping it would only make the next start fail again
-		if rejected(err) {
-			if err := settings.Delete(ts.key); err != nil {
-				ts.log.ERROR.Printf("deleting token: %v", err)
-			}
-		}
-
 		return nil, err
 	}
 
@@ -117,8 +127,32 @@ func (ts *persistentTokenSource) store(token *oauth2.Token) {
 	}
 }
 
+// delete removes the persisted token
+func (ts *persistentTokenSource) delete() {
+	if err := settings.Delete(ts.key); err != nil {
+		ts.log.ERROR.Printf("deleting token: %v", err)
+	}
+}
+
 // rejected reports whether the api refused the token itself rather than failing for a transient reason
 func rejected(err error) bool {
-	msg := err.Error()
-	return strings.Contains(msg, "invalid_grant") || strings.Contains(msg, "invalid_token")
+	var code string
+
+	// the oauth2 package exposes the error code, api helper responses need decoding
+	var re *oauth2.RetrieveError
+	var se *request.StatusError
+
+	switch {
+	case errors.As(err, &re):
+		code = re.ErrorCode
+
+	case errors.As(err, &se):
+		var res struct {
+			Error string `json:"error"`
+		}
+		_ = json.Unmarshal(se.Body(), &res)
+		code = res.Error
+	}
+
+	return code == "invalid_grant" || code == "invalid_token"
 }
