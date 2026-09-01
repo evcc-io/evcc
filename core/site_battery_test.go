@@ -342,10 +342,8 @@ func TestForcedBatteryDischargeLimits(t *testing.T) {
 		{api.BatteryHold, api.BatteryHold, 10}, // TODO make this api.BatteryUnknown
 
 		{api.BatteryDischarge, api.BatteryUnknown, 50},
-		// steady-state re-validation while discharging: mode already Discharge and
-		// unchanged (BatteryUnknown from keepUnlessModified), reserve reached mid-cycle.
-		// Regression test for the bot review on #31995: applyBatteryMode must still be
-		// invoked here to catch the reserve, not just while charging.
+		// steady-state re-validation: mode already Discharge and unchanged, reserve
+		// reached mid-cycle; applyBatteryMode must still run to catch the reserve
 		{api.BatteryDischarge, api.BatteryHold, 10},
 	} {
 		t.Logf("%+v", tc)

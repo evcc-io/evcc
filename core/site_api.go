@@ -475,8 +475,7 @@ func (site *Site) SetBatteryGridDischarge(val bool) error {
 	}
 	site.Unlock()
 
-	// the limit is meaningless without the opt-in. drop it rather than leave it stored
-	// and published where nothing can act on it and the ui cannot reach it
+	// drop the limit, it is meaningless without the opt-in
 	if changed && !val {
 		return site.SetBatteryGridDischargeLimit(nil)
 	}

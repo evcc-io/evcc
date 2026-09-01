@@ -1810,7 +1810,7 @@
     "saved": "Saved."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Paused time",
+    "activeHoursLabel": "Active time",
     "batteryDescription": "Discharges the home battery to the grid while the feed-in rate is high.",
     "description": "Pauses charging during high prices to prioritize profitable grid feed-in.",
     "priceLabel": "Feed-in rate",

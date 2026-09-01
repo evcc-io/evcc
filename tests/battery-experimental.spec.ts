@@ -106,15 +106,32 @@ test.describe("experimental battery page", async () => {
     await expect(card).toBeVisible();
 
     const gridDischarge = page.getByRole("switch", { name: /discharge to the grid/ });
+    const limit = card.getByTestId("battery-grid-discharge-limit");
     await expect(gridDischarge).not.toBeChecked();
-    await expect(card.getByTestId("battery-grid-discharge-limit")).toHaveCount(0);
+    await expect(limit).not.toBeVisible();
 
     await gridDischarge.click();
     await expect(gridDischarge).toBeChecked();
 
     // the card carries a working limit control, not just its heading
-    const limit = card.getByTestId("battery-grid-discharge-limit");
     await expect(limit).toBeVisible();
     await expect(limit.getByRole("combobox")).toBeVisible();
+
+    // 6 ct catches the base feed-in rate, so the whole forecast window reacts
+    await limit.getByLabel("Enable limit").check();
+    await limit.getByRole("combobox").selectOption("0.06");
+    await expect(limit.getByTestId("active-hours")).toContainText("Active time");
+
+    // price range follows the limit: full tariff span at 6 ct, only the
+    // 28 ct zone once the limit excludes the base rate
+    const range = limit.getByTestId("price-range");
+    await expect(range).toContainText("6.0 ct – 28.0 ct");
+    await limit.getByRole("combobox").selectOption("0.28");
+    await expect(range).toContainText("28.0 ct – 28.0 ct");
+
+    // switch and limit survive a reload
+    await page.reload();
+    await expect(gridDischarge).toBeChecked();
+    await expect(limit.getByRole("combobox")).toHaveValue("0.28");
   });
 });

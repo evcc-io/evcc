@@ -116,19 +116,15 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 			res = extMode
 		}
 	case batteryGridChargeActive:
-		// grid charge and grid discharge are driven by independent limits against different
-		// rates (buy vs feed-in), so both can be active at once, e.g. a low buy price and a
-		// high feed-in price at the same time. Charge wins - it protects against a costly
-		// double round-trip (buying to then immediately sell) - and is logged once on entry.
+		// independent limits (buy vs feed-in rate) can both be active at once;
+		// charge wins to avoid buying and immediately selling
 		if batteryGridDischargeActive && batMode != api.BatteryCharge {
 			site.log.WARN.Println("battery mode: grid charge and grid discharge both active, charge takes priority")
 		}
 		res = keepUnlessModified(api.BatteryCharge)
 	case site.dischargeControlActive(rate) || (batteryGridDischargeActive && site.evFastChargingActive()):
-		// EV/house priority: hold wins over feed-in discharge. Fast charging always wins here
-		// regardless of batteryDischargeControl - forcing the battery to sell while an EV needs
-		// a fast charge is a materially worse outcome than the toggle's original (softer,
-		// passive self-consumption) case.
+		// hold wins over feed-in discharge; fast charging holds even without
+		// batteryDischargeControl, selling while an EV fast-charges is worse
 		res = keepUnlessModified(api.BatteryHold)
 	case batteryGridDischargeActive:
 		res = keepUnlessModified(api.BatteryDischarge)
@@ -254,10 +250,8 @@ func (site *Site) batteryGridChargeActive(rate api.Rate) bool {
 	return limit != nil && !rate.IsZero() && rate.Value <= *limit
 }
 
-// batteryGridDischargeActive is the feed-in counterpart of batteryGridChargeActive:
-// discharge to grid when the feed-in rate is at or above the configured limit.
-// The experimental grid discharge setting is the opt-in for both the optimizer's
-// planning and the limit acting here.
+// batteryGridDischargeActive reports whether the feed-in rate has reached the
+// grid discharge limit; the opt-in gates both this and the optimizer's planning
 func (site *Site) batteryGridDischargeActive(rate api.Rate) bool {
 	if !site.GetBatteryGridDischarge() {
 		return false
@@ -282,9 +276,8 @@ func (site *Site) dischargeControlActive(rate api.Rate) bool {
 	return false
 }
 
-// evFastChargingActive reports whether any loadpoint is fast charging, independent of
-// batteryDischargeControl. Used to keep the battery from selling to grid while an EV
-// needs a fast charge, regardless of whether the (opt-in) discharge control toggle is set.
+// evFastChargingActive reports whether any loadpoint is fast charging,
+// regardless of the batteryDischargeControl opt-in
 func (site *Site) evFastChargingActive() bool {
 	for _, lp := range site.activeLoadpoints() {
 		if lp.GetStatus() == api.StatusC && lp.IsFastChargingActive() {

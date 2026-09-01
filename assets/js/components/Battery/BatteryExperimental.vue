@@ -115,11 +115,11 @@ export default defineComponent({
 				forecastToSeries(this.evopt, this.now.getTime())
 			);
 		},
+		batteryControllable(): boolean {
+			return this.devices.some(({ controllable }) => controllable);
+		},
 		gridChargePossible(): boolean {
-			return (
-				this.devices.some(({ controllable }) => controllable) &&
-				!!this.state.smartCostAvailable
-			);
+			return this.batteryControllable && !!this.state.smartCostAvailable;
 		},
 		gridChargeLimit(): number | null {
 			return this.state.batteryGridChargeLimit ?? null;
@@ -146,13 +146,9 @@ export default defineComponent({
 		},
 		// needs a dynamic feed-in tariff, the grid price is irrelevant here
 		gridDischargePossible(): boolean {
-			return (
-				this.devices.some(({ controllable }) => controllable) &&
-				!!this.state.smartFeedInPriorityAvailable
-			);
+			return this.batteryControllable && !!this.state.smartFeedInPriorityAvailable;
 		},
-		// the limit is inert unless the experimental grid discharge setting is on. a
-		// limit that is already set stays reachable so it can be removed
+		// requires opt-in; a set limit stays visible so it can be removed
 		gridDischargeVisible(): boolean {
 			return (
 				!!this.state.batteryGridDischarge &&
