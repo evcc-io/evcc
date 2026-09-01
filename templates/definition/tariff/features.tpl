@@ -1,10 +1,10 @@
 {{ define "features" }}
-{{- if or .basefeatures (eq .average "true") }}
+{{- if or .basefeatures .average }}
 features:
 {{- range .basefeatures }}
 - {{ . }}
 {{- end }}
-{{- if eq .average "true" }}
+{{- if .average }}
 - average
 {{- end }}
 {{- end }}

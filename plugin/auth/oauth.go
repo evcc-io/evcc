@@ -49,6 +49,7 @@ type OAuth struct {
 	cv      string
 	ctx     context.Context
 	onlineC chan<- bool
+	redact  func(...string)
 
 	deviceFlow     bool
 	tokenRetriever func(string, *oauth2.Token) error
@@ -104,6 +105,7 @@ func NewOAuth(ctx context.Context, name, device string, oc *oauth2.Config, opts 
 		ctx:     ctx,
 		subject: subject,
 		name:    name,
+		redact:  log.RotatingSlot(),
 	}
 
 	for _, opt := range opts {
@@ -137,6 +139,7 @@ func NewOAuth(ctx context.Context, name, device string, oc *oauth2.Config, opts 
 
 	if token.RefreshToken != "" {
 		o.token = &token
+		o.redact(token.AccessToken, token.RefreshToken)
 	}
 
 	// register auth redirect
@@ -198,6 +201,9 @@ func (o *OAuth) updateToken(token *oauth2.Token) {
 	}
 
 	o.token = token
+
+	// keep the token out of the logs, e.g. the Authorization header when logging headers
+	o.redact(token.AccessToken, token.RefreshToken)
 
 	o.setOnline(token.Valid())
 }

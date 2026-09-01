@@ -125,16 +125,6 @@ render: |
       address: 37612 # Soc
       type: holding
       decode: int16
-  limitsoc:
-    source: convert
-    convert: float2int
-    set:
-      source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 46611 # Minimum SoC OnGrid
-        type: writesingle
-        decode: uint16
   batterymode:
     source: watchdog
     timeout: 30s
