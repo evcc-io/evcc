@@ -9,7 +9,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core"
-	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -43,7 +43,8 @@ func TestPauseRepeatingPlansHandler(t *testing.T) {
 	router := srv.Router()
 
 	t.Run("POST valid pause timestamp", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/api/vehicles/ev4/plan/pause/2026-08-20T12:00:00Z", nil)
+		future := time.Now().Add(24 * time.Hour).UTC().Truncate(time.Second)
+		req := httptest.NewRequest(http.MethodPost, "/api/vehicles/ev4/plan/pause/"+future.Format(time.RFC3339), nil)
 		rec := httptest.NewRecorder()
 		router.ServeHTTP(rec, req)
 
@@ -54,12 +55,11 @@ func TestPauseRepeatingPlansHandler(t *testing.T) {
 		}
 		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &res))
 		require.NotNil(t, res.PausedUntil)
-		expected := time.Date(2026, 8, 20, 12, 0, 0, 0, time.UTC)
-		assert.True(t, res.PausedUntil.Equal(expected))
+		assert.True(t, res.PausedUntil.Equal(future))
 
 		v, err := site.Vehicles().ByName("ev4")
 		require.NoError(t, err)
-		assert.True(t, v.GetPausedUntil().Equal(expected))
+		assert.True(t, v.GetPausedUntil().Equal(future))
 	})
 
 	t.Run("POST invalid pause timestamp", func(t *testing.T) {
