@@ -6,8 +6,8 @@ products:
       generic: CO₂
 requirements:
   description:
-    de: "5 Tage Prognose [energypriceforecast.eu](https://energypriceforecast.eu/de/evcc-strompreis-co2-prognose/)"
-    en: "5 days prognosis [energypriceforecast.eu](https://energypriceforecast.eu/en/evcc-electricity-price-co2-forecast/)"
+    de: "Bis zu 5 Tage Prognose [energypriceforecast.eu](https://energypriceforecast.eu/de/evcc-strompreis-co2-prognose/)"
+    en: "Forecast of up to 5 days [energypriceforecast.eu](https://energypriceforecast.eu/en/evcc-electricity-price-co2-forecast/)"
   evcc: ["skiptest"]
 group: co2
 countries: ["DE", "NL", "BE", "DK", "FR", "AT", "CZ", "PL", "FI", "SE", "NO"]
@@ -38,6 +38,10 @@ params:
         "NO5",
       ]
     required: true
+  - name: apikey
+    help:
+      en: "Optional. Extends the horizon to 120 hours and allows 500 requests per UTC day. [Get an API key](https://energypriceforecast.eu/en/api-early-access/)."
+      de: "Optional. Erweitert den Horizont auf 120 Stunden und erlaubt 500 Anfragen pro UTC-Tag. [API-Key erhalten](https://energypriceforecast.eu/de/api-early-access/)."
   - name: horizon
     default: 120
     type: int
@@ -45,6 +49,9 @@ params:
     description:
       en: Forecast horizon
       de: Prognosehorizont
+    help:
+      en: Hourly CO₂ values in g/kWh. Up to 120 hours with an API key, 48 hours without.
+      de: Stündliche CO₂-Werte in g/kWh. Bis zu 120 Stunden mit API-Key, ohne Key 48 Stunden.
     required: true
 render: |
   type: custom
@@ -53,3 +60,8 @@ render: |
   forecast:
     source: http
     uri: https://api.energypriceforecast.eu/api/v1/evcc/tariff?country={{.region}}&type=co2&hours={{.horizon}}
+    {{ if .apikey }}
+    auth:
+      type: bearer
+      token: {{ .apikey }}
+    {{- end }}

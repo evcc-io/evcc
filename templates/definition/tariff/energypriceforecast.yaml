@@ -6,8 +6,8 @@ products:
       generic: Predicted spot prices
 requirements:
   description:
-    de: "Day-Ahead-Strompreise plus 4 Tage Prognose [energypriceforecast.eu](https://energypriceforecast.eu/de/evcc-strompreis-co2-prognose/)"
-    en: "Day-ahead spot prices plus a 4-day forecast [energypriceforecast.eu](https://energypriceforecast.eu/en/evcc-electricity-price-co2-forecast/)"
+    de: "Day-Ahead-Strompreise plus bis zu 5 Tage Prognose [energypriceforecast.eu](https://energypriceforecast.eu/de/evcc-strompreis-co2-prognose/)"
+    en: "Day-ahead spot prices plus a forecast of up to 5 days [energypriceforecast.eu](https://energypriceforecast.eu/en/evcc-electricity-price-co2-forecast/)"
   evcc: ["skiptest"]
 group: price
 countries: ["DE", "NL", "BE", "DK", "FR", "AT", "CZ", "PL", "FI", "SE", "NO"]
@@ -42,8 +42,8 @@ params:
     choice: ["EUR", "DKK", "CZK", "PLN", "SEK", "NOK"]
   - name: apikey
     help:
-      en: "Optional for forecasts up to 120 hours. [Get an API key](https://energypriceforecast.eu/en/api-early-access/)."
-      de: "Optional für Prognosen bis zu 120 Stunden. [API-Key erhalten](https://energypriceforecast.eu/de/api-early-access/)."
+      en: "Optional. Extends the horizon to 120 hours and allows 500 requests per UTC day. [Get an API key](https://energypriceforecast.eu/en/api-early-access/)."
+      de: "Optional. Erweitert den Horizont auf 120 Stunden und erlaubt 500 Anfragen pro UTC-Tag. [API-Key erhalten](https://energypriceforecast.eu/de/api-early-access/)."
   - name: horizon
     default: 120
     type: int
@@ -52,8 +52,8 @@ params:
       en: Forecast horizon
       de: Prognosehorizont
     help:
-      en: Anonymous access is limited to 48 hours from October 1, 2026. An API key allows up to 120 hours.
-      de: Anonymer Zugriff ist ab 1. Oktober 2026 auf 48 Stunden begrenzt. Mit API-Key sind bis zu 120 Stunden möglich.
+      en: Up to 120 hours with an API key, 48 hours without.
+      de: Bis zu 120 Stunden mit API-Key, ohne Key 48 Stunden.
     required: true
   - preset: tariff-base
   - preset: tariff-features
