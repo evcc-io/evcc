@@ -352,6 +352,7 @@
       "hideAdvancedSettings": "Erweiterte Einstellungen ausblenden",
       "invalidFileSelected": "Ungültige Datei ausgewählt",
       "legacy": "veraltet",
+      "moreInfo": "Mehr Infos:",
       "noFileSelected": "Keine Datei ausgewählt.",
       "off": "aus",
       "on": "an",
@@ -1734,6 +1735,13 @@
     "vehicle": "Fahrzeug"
   },
   "settings": {
+    "dateFormat": {
+      "auto": "Auto",
+      "dmy": "TT/MM/JJJJ",
+      "label": "Datumsformat",
+      "mdy": "MM/TT/JJJJ",
+      "ymd": "JJJJ-MM-TT"
+    },
     "deviceInfo": "Einstellungen, die du in diesem Dialog vornimmst, gelten nur für dieses Gerät.",
     "fullscreen": {
       "enter": "Vollbild starten",

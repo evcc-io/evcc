@@ -1,4 +1,5 @@
 template: pvnode-v2
+link: https://pvnode.com
 products:
   - brand: pvnode V2 API
 requirements:

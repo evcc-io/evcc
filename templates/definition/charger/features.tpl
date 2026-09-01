@@ -1,10 +1,10 @@
 {{ define "features" }}
-{{- if or (eq .heating "true") (eq .integrateddevice "true") }}
+{{- if or .heating .integrateddevice }}
 features:
-{{- if eq .heating "true" }}
+{{- if .heating }}
 - heating
 {{- end }}
-{{- if eq .integrateddevice "true" }}
+{{- if .integrateddevice }}
 - integrateddevice
 {{- end }}
 {{- end }}
