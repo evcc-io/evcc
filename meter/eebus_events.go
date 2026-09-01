@@ -51,7 +51,12 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	// Energy Guard - LPP
 	case lpp.UseCaseSupportUpdate:
 		c.egLppUseCaseSupportUpdate(entity)
+
+	default:
+		return
 	}
+
+	c.connector.UseCase()
 }
 
 //
