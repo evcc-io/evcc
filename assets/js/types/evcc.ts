@@ -8,12 +8,14 @@ declare global {
     app: any;
     evcc?: {
       version: string;
+      commit: string;
       customCss: boolean;
       customLogo: boolean;
       customBrand: string;
       customWebsite: string;
       customEmail: string;
       customPhone: string;
+      customTheme: THEME;
     };
   }
   interface Window {
@@ -459,6 +461,10 @@ export enum ConfigType {
 export type ConfigVehicle = Entity;
 export type ConfigMessenger = Entity;
 
+export interface ConfigCurtailer extends Entity {
+  deviceTitle?: string;
+}
+
 export interface ConfigHems extends Entity {
   deviceProduct?: string;
 }
@@ -529,6 +535,7 @@ export enum SMART_COST_TYPE {
   CO2 = "co2",
   PRICE_DYNAMIC = "pricedynamic",
   PRICE_FORECAST = "priceforecast",
+  PRICE_STATIC = "pricestatic",
 }
 
 export enum LENGTH_UNIT {
@@ -809,6 +816,10 @@ export enum CURRENCY {
   TRY = "TRY",
   MYR = "MYR",
   THB = "THB",
+  BYN = "BYN",
+  UAH = "UAH",
+  RUB = "RUB",
+  KZT = "KZT",
 }
 
 export enum ICON_SIZE {
@@ -1124,8 +1135,10 @@ export interface Battery {
   capacity: number;
   /** Charge level in %. Weighted by capacity across all batteries. */
   soc: number;
-  /** Total battery energy in kWh. */
+  /** Total discharged energy in kWh. */
   energy?: number;
+  /** Total charged energy in kWh. */
+  returnEnergy?: number;
   /** Measurement data per battery meter. */
   devices?: BatteryMeter[];
   /** Projected charge levels based on the solar and price forecast. */
@@ -1367,7 +1380,8 @@ export type DeviceType =
   | "loadpoint"
   | "messenger"
   | "tariff"
-  | "hems";
+  | "hems"
+  | "curtailer";
 export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext" | "consumer";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
 export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar" | "temperature";
@@ -1384,6 +1398,7 @@ export interface SiteConfig {
   aux: string[] | null;
   ext: string[] | null;
   consumer: string[] | null;
+  curtail: string[] | null;
 }
 
 export type ValueOf<T> = T[keyof T];

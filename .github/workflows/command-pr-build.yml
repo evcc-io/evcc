@@ -33,7 +33,7 @@ jobs:
       platforms: ${{ steps.parse.outputs.platforms }}
     steps:
       - name: React to comment
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             await github.rest.reactions.createForIssueComment({
@@ -139,7 +139,7 @@ jobs:
           cache-scope: pr
 
       - name: Publish
-        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
           context: .
           platforms: ${{ needs.prep.outputs.platforms }}
@@ -157,7 +157,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Comment result
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const num = context.payload.issue.number;
@@ -190,7 +190,7 @@ jobs:
             }
 
       - name: Resolve command comment
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             // collapse the /build comment as resolved now that the build is done

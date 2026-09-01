@@ -609,7 +609,6 @@
       "none": "无",
       "planNumber": "计划 {number}",
       "precondition": {
-        "description": "出发前充电 {duration} 以进行电池预处理。",
         "label": "延迟充电",
         "optionAll": "全部",
         "optionNo": "否"
@@ -784,7 +783,6 @@
       "targetChargePlanned": "充电计划将于 {duration} 后开始。",
       "targetChargeWaitForVehicle": "充电计划准备就绪。等待车辆连接…",
       "vehicleLimit": "车辆充电上限",
-      "vehicleLimitReached": "已达到车辆充电上限 {soc}。",
       "waitForVehicle": "准备就绪。等待车辆连接…",
       "welcome": "短暂初始充电以确认连接。"
     },

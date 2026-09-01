@@ -240,13 +240,13 @@ func (wb *PhoenixEVEth) getPhaseValues(reg uint16) (float64, float64, float64, e
 }
 
 // identify implements the api.Identifier interface
-func (wb *PhoenixEVEth) identify() (string, error) {
+func (wb *PhoenixEVEth) identify() ([]string, error) {
 	b, err := wb.conn.ReadHoldingRegisters(phxRegCardUID, 16)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return bytesAsString(b), nil
+	return []string{bytesAsString(b)}, nil
 }
 
 var _ api.Diagnosis = (*PhoenixEVEth)(nil)

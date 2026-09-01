@@ -9,12 +9,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"uuid"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/google/uuid"
 	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
@@ -79,11 +79,11 @@ func (v *Identity) getDeviceID() (string, error) {
 		return "", err
 	}
 
-	uuid := uuid.NewString()
+	id := uuid.New().String()
 	data := map[string]any{
 		"pushRegId": lo.RandomString(64, []rune("0123456789ABCDEF")),
 		"pushType":  v.config.PushType,
-		"uuid":      uuid,
+		"uuid":      id,
 	}
 
 	headers := map[string]string{
@@ -195,7 +195,7 @@ func (v *Identity) Login(user, password, language, brand string) error {
 		return fmt.Errorf("login failed: %w", err)
 	}
 
-	v.TokenSource = oauth.RefreshTokenSource(token, refresher)
+	v.TokenSource = oauth.RefreshTokenSource(v.log, token, refresher)
 
 	v.deviceID, err = v.getDeviceID()
 	if err != nil {

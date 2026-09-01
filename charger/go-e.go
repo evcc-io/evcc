@@ -199,12 +199,12 @@ func (c *GoE) Voltages() (float64, float64, float64, error) {
 var _ api.Identifier = (*GoE)(nil)
 
 // Identify implements the api.Identifier interface
-func (c *GoE) Identify() (string, error) {
+func (c *GoE) Identify() ([]string, error) {
 	resp, err := c.api.Status()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return resp.Identify(), nil
+	return []string{resp.Identify()}, nil
 }
 
 var _ api.MeterEnergy = (*GoE)(nil)

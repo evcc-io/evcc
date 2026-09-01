@@ -188,6 +188,15 @@
       "label": "Währung",
       "title": "Währung"
     },
+    "curtailer": {
+      "description": "Gerät, das die Einspeisung auf Anforderung des Netzbetreibers begrenzt (§ 9 EEG). Viele Wechselrichter unterstützen dies direkt über ihre PV-Zähler-Konfiguration. Eine separate Konfiguration ist nur bei manchen Herstellern oder Anlagen mit mehreren Wechselrichtern nötig.",
+      "generic": "Generische Integrationen",
+      "specific": "Spezifische Integrationen",
+      "template": "Hersteller",
+      "title": "Einspeisebegrenzung",
+      "titleAdd": "Einspeisebegrenzung hinzufügen",
+      "titleEdit": "Einspeisebegrenzung bearbeiten"
+    },
     "deviceValue": {
       "activeClients": "Aktive Clients",
       "amount": "Anzahl",
@@ -212,7 +221,7 @@
       "currentRange": "Strom",
       "curtailLimit": "Einspeiselimit",
       "curtailable": "Abregelbar",
-      "curtailed": "Einspeisung begrenzt",
+      "curtailed": "Einspeiselimit",
       "detected": "Erkannt",
       "dimLimit": "Verbrauchslimit",
       "dimmed": "Verbrauch begrenzt",
@@ -343,6 +352,7 @@
       "hideAdvancedSettings": "Erweiterte Einstellungen ausblenden",
       "invalidFileSelected": "Ungültige Datei ausgewählt",
       "legacy": "veraltet",
+      "moreInfo": "Mehr Infos:",
       "noFileSelected": "Keine Datei ausgewählt.",
       "off": "aus",
       "on": "an",
@@ -539,6 +549,7 @@
     "main": {
       "addAdditional": "Zusätzlichen Zähler hinzufügen",
       "addConsumer": "Verbraucher hinzufügen",
+      "addCurtailer": "Einspeisebegrenzung hinzufügen",
       "addGrid": "Netzzähler hinzufügen",
       "addLoadpoint": "Ladepunkt oder Heizung hinzufügen",
       "addPvBattery": "PV oder Speicher hinzufügen",
@@ -639,6 +650,7 @@
         "aux": "Selbstregelnden Verbraucher hinzufügen",
         "battery": "Hausbatterie hinzufügen",
         "consumer": "Regulären Verbraucher hinzufügen",
+        "grid": "Netzzähler hinzufügen",
         "pv": "PV-Anlage hinzufügen"
       },
       "save": "Speichern",
@@ -829,6 +841,8 @@
       "noClients": "Noch keine Clients. Niemand kann sich verbinden.",
       "password": "Passwort",
       "passwordOnce": "Dieses Passwort wird nur einmal angezeigt. QR-Code scannen oder jetzt kopieren. Es wird später nicht mehr angezeigt.",
+      "privacy": "Mit der Aktivierung dieser Funktion akzeptierst du unsere {0}.",
+      "privacyLink": "Datenschutzerklärung",
       "qrInstall": "Installiere die evcc-App für {ios} oder {android}.",
       "qrScan": "Scanne den Code mit der Kamera deines Smartphones, um dich zu verbinden. Klicke ihn an, wenn du bereits dein Handy nutzt.",
       "removeClient": "Client entfernen",
@@ -905,6 +919,8 @@
           "confirmationButton": "Zurücksetzen & Neustart",
           "confirmationText": "Dies löscht deine ausgewählten Daten dauerhaft. Stelle sicher, dass du zuerst eine Sicherung heruntergeladen hast.",
           "description": "Hast du Probleme mit der Konfiguration und möchtest von vorne beginnen? Lösche alle Daten und beginne neu.",
+          "remote": "Remotezugriff",
+          "remoteDescription": "Löscht Konfiguration und Zugangsdaten.",
           "sessions": "Ladevorgänge",
           "sessionsDescription": "Löscht den Verlauf deiner Ladevorgänge.",
           "settings": "Konfiguration & Einstellungen",
@@ -1104,14 +1120,14 @@
       "optInSponsorship": "Sponsoring erforderlich."
     },
     "version": {
-      "availableLong": "neue Version verfügbar",
+      "availableLong": "Update verfügbar",
       "community": "evcc Community",
       "labelEmail": "E-Mail",
       "labelPhone": "Telefon",
       "labelRelease": "Release",
       "labelVersion": "Version",
       "labelWebsite": "Website",
-      "latestVersion": "aktuelle Version",
+      "latestVersion": "aktuell",
       "madeByCommunity": "Entwickelt von der {0}.",
       "modalCancel": "Abbrechen",
       "modalDownload": "Download",
@@ -1126,7 +1142,7 @@
       "modalUpdateStatusStart": "Installation gestartet:",
       "modalViewOnGitHub": "Auf GitHub ansehen",
       "openSource": "Open Source",
-      "poweredByOpenSource": "Unterstützt von {0}."
+      "poweredBy": "powered by"
     }
   },
   "forecast": {
@@ -1235,9 +1251,9 @@
     "createButtonDiscussion": "GitHub Diskussion starten...",
     "createButtonEmail": "Anfrage per E-Mail senden",
     "createButtonIssue": "GitHub Issue erstellen...",
+    "description": "Deine Installation funktioniert nicht wie erwartet? Nutze diese Seite um Hilfe zu bekommen oder Probleme zu melden. Gib genügend Details an, damit wir das Problem verstehen und reproduzieren können. Halte deine Beschreibung prägnant, klar und leicht verständlich.",
     "downloadButton": "Debug-Informationen herunterladen",
     "downloadHint": "Hänge diese Datei an deine E-Mail an, falls weitere Informationen benötigt werden.",
-    "description": "Deine Installation funktioniert nicht wie erwartet? Nutze diese Seite um Hilfe zu bekommen oder Probleme zu melden. Gib genügend Details an, damit wir das Problem verstehen und reproduzieren können. Halte deine Beschreibung prägnant, klar und leicht verständlich.",
     "helpType": {
       "discussion": "Brauche Hilfe bei meiner Einrichtung",
       "discussionDescription": "Community-Diskussionen bieten Antworten.",
@@ -1311,15 +1327,18 @@
         "continuous": "kontinuierlich",
         "continuousCo2Description": "Wählt die sauberste unterbrechungsfreie Folge von Zeitfenstern.",
         "continuousPriceDescription": "Wählt die günstigste unterbrechungsfreie Folge von Zeitfenstern.",
+        "disabledDescription": "Benötigt einen dynamischen Tarif oder eine CO₂-Prognose.",
         "label": "Optimierung"
       },
       "planNumber": "Plan {number}",
       "precondition": {
         "description": "Verlagert einen Teil des Ladens direkt vor die Abfahrt: warme Batterie, weniger Zeit mit hohem Ladestand.",
+        "disabledDescription": "Das gesamte Laden erfolgt direkt vor der Abfahrt.",
         "label": "Spätes Laden",
         "optionAll": "alles",
         "optionNo": "nein",
-        "summary": "{precondition} vorher"
+        "summary": "{precondition} vorher",
+        "summaryAll": "direkt vor der Abfahrt"
       },
       "remove": "Entfernen",
       "repeating": "wiederholend",
@@ -1328,7 +1347,6 @@
       "strategy": {
         "label": "Strategie"
       },
-      "strategyDisabledDescription": "Das Laden startet so spät wie möglich und wird rechtzeitig zur Abfahrt abgeschlossen. Mit dynamischen Netzpreisen oder einem CO₂-Tarif stehen hier weitere Optionen zur Verfügung.",
       "time": "Zeit",
       "title": "Plan",
       "unsavedChanges": "Ungespeicherte Änderungen vorhanden. Jetzt anwenden?",
@@ -1415,6 +1433,7 @@
       "finished": "Ladeende",
       "last24hEnergy": "Letzte 24h",
       "last7dEnergy": "Letzte 7 Tage",
+      "phasesMismatch": "Mehr Phasen aktiv als konfiguriert. Phasenkonfiguration prüfen.",
       "power": "Leistung",
       "price": "Kosten",
       "remaining": "Restzeit",
@@ -1535,14 +1554,12 @@
     "vehicleSettings": {
       "connectedTo": "verbunden mit {0}",
       "description": "Diese Standardwerte werden angewendet, wenn das Fahrzeug an einem Ladepunkt angeschlossen wird.",
-      "editHint": "Fahrzeuge unter {0} hinzufügen oder bearbeiten.",
+      "editHint": "Fahrzeuge können in der {0} bearbeitet werden.",
       "keepAsIs": "Beibehalten",
       "learnMore": "Mehr erfahren.",
       "limitSoc": "Standardlimit",
-      "limitSocDescription": "Wird beim Anschließen des Fahrzeugs angewendet.",
       "menu": "Fahrzeuge",
       "minSoc": "Minimale Ladung",
-      "minSocDescription": "Wird im PV-Modus schnell bis zu diesem Wert geladen.",
       "mode": "Standardmodus",
       "notConnected": "nicht verbunden",
       "title": "Fahrzeugeinstellungen"
@@ -1625,7 +1642,7 @@
     "meterstop": "Endzählerstand",
     "odometer": "Kilometerstand",
     "price": "Kosten",
-    "soc": "Ladestand",
+    "soc": "Ladung",
     "started": "Startzeit",
     "title": "Ladevorgang"
   },

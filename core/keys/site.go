@@ -41,6 +41,9 @@ const (
 	AuxMeters      = "auxMeters"
 	ConsumerMeters = "consumerMeters"
 
+	// curtailment devices
+	Curtailers = "curtailers"
+
 	// battery settings
 	BatteryDischargeControl = "batteryDischargeControl"
 	BatteryGridChargeLimit  = "batteryGridChargeLimit"

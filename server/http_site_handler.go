@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -14,6 +15,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server/assets"
@@ -30,6 +32,13 @@ import (
 
 var ignoreState = []string{"releaseNotes"} // excessive size
 
+// limits for the unauthenticated jq parameter of the state endpoint
+const (
+	maxJqQueryLen    = 512         // maximum length of the jq query
+	maxJqDuration    = time.Second // maximum jq evaluation time
+	maxJqResultBytes = 1 << 20     // maximum size of the encoded jq result
+)
+
 // getPreferredLanguage returns the preferred language as two letter code
 func getPreferredLanguage(header string) string {
 	languages, _, err := language.ParseAcceptLanguage(header)
@@ -45,20 +54,24 @@ func getPreferredLanguage(header string) string {
 func globalsJsHandler(custom Customization) http.HandlerFunc {
 	globals := struct {
 		Version    string `json:"version"`
+		Commit     string `json:"commit"`
 		CustomCss  bool   `json:"customCss"`
 		CustomLogo bool   `json:"customLogo"`
 		Brand      string `json:"customBrand"`
 		Website    string `json:"customWebsite"`
 		Email      string `json:"customEmail"`
 		Phone      string `json:"customPhone"`
+		Theme      string `json:"customTheme"`
 	}{
 		Version:    util.Version,
+		Commit:     util.Commit,
 		CustomCss:  custom.Css != "",
 		CustomLogo: custom.LogoLight != "",
 		Brand:      custom.Brand,
 		Website:    custom.Website,
 		Email:      custom.Email,
 		Phone:      custom.Phone,
+		Theme:      custom.Theme,
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -115,6 +128,24 @@ func jsonHandler(h http.Handler) http.Handler {
 func jsonWrite(w http.ResponseWriter, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)
+}
+
+// jsonWriteLimited writes data as json, failing if the encoded result exceeds limit bytes.
+// Encoding into a buffer keeps oversized results from reaching the client at all.
+func jsonWriteLimited(w http.ResponseWriter, data any, limit int) {
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(data); err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	if buf.Len() > limit {
+		jsonError(w, http.StatusBadRequest, errors.New("result too large"))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	buf.WriteTo(w)
 }
 
 func jsonError(w http.ResponseWriter, status int, err error) {
@@ -256,6 +287,11 @@ func stateHandler(cache *util.ParamCache) http.HandlerFunc {
 		if q := r.URL.Query().Get("jq"); q != "" {
 			q = strings.TrimPrefix(q, ".result")
 
+			if len(q) > maxJqQueryLen {
+				jsonError(w, http.StatusBadRequest, errors.New("jq: query too long"))
+				return
+			}
+
 			query, err := gojq.Parse(q)
 			if err != nil {
 				jsonError(w, http.StatusBadRequest, err)
@@ -268,13 +304,21 @@ func stateHandler(cache *util.ParamCache) http.HandlerFunc {
 				return
 			}
 
-			res, err := jq.Query(query, b)
+			// the query is attacker-controlled, so bound evaluation time and result size
+			ctx, cancel := context.WithTimeout(r.Context(), maxJqDuration)
+			defer cancel()
+
+			res, err := jq.QueryContext(ctx, query, b)
 			if err != nil {
-				jsonError(w, http.StatusBadRequest, err)
+				status := http.StatusBadRequest
+				if ctx.Err() != nil {
+					status = http.StatusServiceUnavailable
+				}
+				jsonError(w, status, err)
 				return
 			}
 
-			jsonWrite(w, res)
+			jsonWriteLimited(w, res, maxJqResultBytes)
 			return
 		}
 
@@ -487,6 +531,7 @@ func resetDatabase(shutdown func()) http.HandlerFunc {
 		var req struct {
 			Sessions bool `json:"sessions"`
 			Settings bool `json:"settings"`
+			Remote   bool `json:"remote"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
@@ -513,6 +558,15 @@ func resetDatabase(shutdown func()) http.HandlerFunc {
 
 			for _, table := range tables {
 				if err := db.Instance.Exec("DELETE FROM " + table).Error; err != nil {
+					jsonError(w, http.StatusInternalServerError, err)
+					return
+				}
+			}
+		}
+
+		if req.Remote {
+			for _, key := range []string{keys.Remote, keys.RemoteClients, keys.RemoteLastSeen} {
+				if err := settings.Delete(key); err != nil {
 					jsonError(w, http.StatusInternalServerError, err)
 					return
 				}

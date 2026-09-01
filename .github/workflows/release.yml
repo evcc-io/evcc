@@ -67,7 +67,7 @@ jobs:
 
       - name: Meta
         id: meta
-        uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9 # v6
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6
         with:
           images: |
             evcc/evcc
@@ -144,6 +144,12 @@ jobs:
           # a bugfix release of an older line must not move the homebrew formula
           # or the Github latest release marker
           MAKE_LATEST: ${{ needs.guard.outputs.latest }}
+          # macOS code signing and notarization
+          MACOS_SIGN_P12: ${{ secrets.MACOS_SIGN_P12 }}
+          MACOS_SIGN_PASSWORD: ${{ secrets.MACOS_SIGN_PASSWORD }}
+          MACOS_NOTARY_KEY: ${{ secrets.MACOS_NOTARY_KEY }}
+          MACOS_NOTARY_KEY_ID: ${{ secrets.MACOS_NOTARY_KEY_ID }}
+          MACOS_NOTARY_ISSUER_ID: ${{ secrets.MACOS_NOTARY_ISSUER_ID }}
 
       - uses: actions/setup-python@v6
         with:

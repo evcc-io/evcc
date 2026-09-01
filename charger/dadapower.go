@@ -291,13 +291,13 @@ func (wb *Dadapower) Phases1p3p(phases int) error {
 var _ api.Identifier = (*Dadapower)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *Dadapower) Identify() (string, error) {
+func (wb *Dadapower) Identify() ([]string, error) {
 	u, err := wb.conn.ReadInputRegisters(dadapowerRegIdentification+wb.regOffset, 20)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return bytesAsString(u), nil
+	return []string{bytesAsString(u)}, nil
 }
 
 var _ api.Diagnosis = (*Dadapower)(nil)

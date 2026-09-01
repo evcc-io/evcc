@@ -345,9 +345,7 @@ w4:${signalSource("w4")}`
 
     // no signals: no limits
     await page.goto("/#/config");
-    await expect(hems).toContainText(
-      ["Consumption limited", "no", "Feed-in limited", "no"].join("")
-    );
+    await expect(hems).toContainText(["Consumption limited", "no", "Feed-in limit", "no"].join(""));
     await expect(hint).not.toBeVisible();
 
     // dim (W4): consumption limited
@@ -391,9 +389,7 @@ w4:${signalSource("w4")}`
     await expect(hint).not.toBeVisible();
     await page.reload();
     await expect(pvBanner).not.toBeVisible();
-    await expect(hems).toContainText(
-      ["Consumption limited", "no", "Feed-in limited", "no"].join("")
-    );
+    await expect(hems).toContainText(["Consumption limited", "no", "Feed-in limit", "no"].join(""));
 
     await stopSimulator();
   });
