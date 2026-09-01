@@ -735,7 +735,7 @@ temp:
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: successful");
     await expect(restResult).toContainText(["Power", "1.0 kW"].join(""));
-    await expect(restResult).toContainText(["Energy", "700 Wh"].join(""));
+    await expect(restResult).toContainText(["Consumed", "700 Wh"].join(""));
     await expect(restResult).toContainText(["Temperature", "25.0°C"].join(""));
     await expect(restResult).toContainText(["Heater limit", "50.0°C"].join(""));
 
