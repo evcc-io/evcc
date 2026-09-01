@@ -1,8 +1,9 @@
-template: solplanet-modbus
+template: solplanet-hybrid-vendor
+covers: ["solplanet-modbus"]
 products:
   - brand: Solplanet
     description:
-      generic: Hybrid inverter (Modbus TCP)
+      generic: Hybrid Inverter (Modbus TCP)
 requirements:
   description:
     de: |

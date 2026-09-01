@@ -1,0 +1,185 @@
+template: solplanet-hybrid-sunspec
+products:
+  - brand: Solplanet
+    description:
+      generic: ASW kH
+  - brand: KACO
+    description:
+      generic: Blueplanet Hybrid NH3
+requirements:
+  description:
+    de: |
+      Modbus-RTU (RS485) Verbindung. Geräte mit eigenem Modbus-TCP-Ethernet-Port können alternativ das `solplanet-hybrid-vendor` Template nutzen.
+      Der Wechselrichter muss sich im Grid-Feeding Modus befinden.
+    en: |
+      Modbus RTU (RS485) connection. Devices with a dedicated Modbus TCP Ethernet port can alternatively use the `solplanet-hybrid-vendor` template.
+      The inverter must be in grid-feeding mode.
+capabilities: ["battery-control", "curtail"]
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485"]
+    id: 3
+  - name: mppt
+    type: int
+    choice: [2, 3]
+    default: 3
+    usages: ["pv"]
+    description:
+      de: Anzahl der MPP-Tracker
+      en: Number of MPP trackers
+    help:
+      de: Anzahl der PV-Eingänge des Wechselrichters
+      en: Number of PV inputs of the inverter
+  - preset: battery-power
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 203:W
+  energy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 203:TotWhImp
+    scale: 0.001
+  returnenergy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 203:TotWhExp
+    scale: 0.001
+  currents:
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:AphA
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:AphB
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:AphC
+  voltages:
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:PhVphA
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:PhVphB
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:PhVphC
+  powers:
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:WphA
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:WphB
+    - source: sunspec
+      {{- include "modbus" . | indent 4 }}
+      value: 203:WphC
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: calc
+    add:
+    {{- range until (int .mppt) }}
+      - source: sunspec
+        {{- include "modbus" $ | indent 6 }}
+        value: 160:{{ add1 . }}:DCW # mppt {{ add1 . }}
+    {{- end }}
+  energy:
+    source: calc
+    add:
+    {{- range until (int .mppt) }}
+      - source: sunspec
+        {{- include "modbus" $ | indent 6 }}
+        value: 160:{{ add1 . }}:DCWH # mppt {{ add1 . }}
+        scale: 0.001
+    {{- end }}
+  curtail:
+    source: sequence
+    set:
+      - source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value:
+          - 704:WMaxLimPct
+          - 123:WMaxLimPct
+      - source: switch
+        switch:
+          - case: 100 # Uncurtailed
+            set:
+              source: const
+              value: 0 # Limit disabled
+              set:
+                source: sunspec
+                {{- include "modbus" . | indent 14 }}
+                value:
+                  - 704:WMaxLimPctEna
+                  - 123:WMaxLim_Ena
+        default:
+          source: const
+          value: 1 # Limit enabled
+          set:
+            source: sunspec
+            {{- include "modbus" . | indent 10 }}
+            value:
+              - 704:WMaxLimPctEna
+              - 123:WMaxLim_Ena
+  curtailed: # the limit percentage only applies while the limit is enabled
+    source: go
+    in:
+    - name: ena
+      type: bool
+      config:
+        source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value:
+          - 704:WMaxLimPctEna
+          - 123:WMaxLim_Ena
+    - name: limit
+      type: float
+      config:
+        source: sunspec
+        {{- include "modbus" . | indent 6 }}
+        value:
+          - 704:WMaxLimPct
+          - 123:WMaxLimPct
+    script: |
+      percent := 100
+      if ena {
+        percent = int(limit)
+      }
+      percent
+  {{- include "sunspec-maxacpower" . }}
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 802:W
+  soc:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 802:SoC
+  capacity: # nameplate rating
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 802:WHRtg
+    scale: 0.001 # Wh -> kWh
+  minsoc: # nameplate rating
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 802:SoCMin
+  maxsoc: # nameplate rating
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 802:SoCMax
+  limitsoc: # model 802
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 802:SoCRsvMin
+  {{- include "battery-power" . }}
+  {{- end }}
