@@ -51,14 +51,7 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	// Energy Guard - LPP
 	case lpp.UseCaseSupportUpdate:
 		c.egLppUseCaseSupportUpdate(entity)
-
-	default:
-		return
 	}
-
-	// fires on the first support update of any use case the meter reads from,
-	// which is where the remote entity backing its getters becomes known
-	c.connector.UseCase()
 }
 
 //
@@ -73,6 +66,10 @@ func (c *EEBus) maUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface) {
 	if c.maEntity == nil || len(entity.Address().Entity) < len(c.maEntity.Address().Entity) {
 		c.maEntity = entity
 	}
+
+	// the monitoring entity backs the meter's getters, so this is the point a
+	// freshly created device becomes readable
+	c.connector.UseCase()
 }
 
 //

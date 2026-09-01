@@ -51,11 +51,15 @@ func (c *Connector) UseCase() {
 }
 
 // WaitUseCase waits for the device's use case data, which the remote announces
-// only after the SHIP connection completes. A timeout is not an error.
-func (c *Connector) WaitUseCase(ctx context.Context) {
+// only after the SHIP connection completes. A timeout is not an error, a remote
+// may announce nothing usable.
+func (c *Connector) WaitUseCase(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
+		return ctx.Err()
 	case <-time.After(useCaseTimeout):
 	case <-c.useCaseC:
 	}
+
+	return nil
 }

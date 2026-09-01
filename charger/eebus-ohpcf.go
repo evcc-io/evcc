@@ -114,7 +114,10 @@ func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost ti
 	}
 
 	// the compressor entity arrives with the use case data, not with the connection
-	c.connector.WaitUseCase(ctx)
+	if err := c.connector.WaitUseCase(ctx); err != nil {
+		inst.UnregisterDevice(ski, c)
+		return nil, err
+	}
 
 	// unregister device when context is cancelled (e.g. UI config validation)
 	go func() {
