@@ -31,11 +31,15 @@ const dummyPlans: RepeatingPlan[] = [
   },
 ];
 
+const now = new Date();
+// Dynamic future timestamp, 5 days ahead (e.g. 2026-08-20T10:00:00.000Z)
+const futureIso = new Date(now.getTime() + 5 * 24 * 3600 * 1000).toISOString();
+
 const vehicleA: Vehicle = {
   name: "vehicleA",
   title: "Tesla Model 3",
   capacity: 60,
-  pausedUntil: "2026-08-20T10:00:00.000Z",
+  pausedUntil: futureIso, // paused until future date (e.g. 2026-08-20T10:00:00.000Z)
   repeatingPlans: dummyPlans,
   planStrategy: { continuous: false, precondition: 0 },
 };
@@ -91,8 +95,14 @@ describe("PlansRepeatingSettings - Custom Date/Time & Pause functionality", () =
     expect(timeInput.attributes("tabindex")).toBe("0");
     expect(dateInput.attributes("min")).toBeDefined();
 
-    // Enter custom future date and time
-    await dateInput.setValue("2026-08-25");
+    // Enter custom future date and time, 10 days ahead (e.g. 2026-08-25 14:30)
+    const customTarget = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 10, 14, 30, 0, 0);
+    const yyyy = customTarget.getFullYear();
+    const mm = String(customTarget.getMonth() + 1).padStart(2, "0");
+    const dd = String(customTarget.getDate()).padStart(2, "0");
+    const customDateStr = `${yyyy}-${mm}-${dd}`;
+
+    await dateInput.setValue(customDateStr);
     await timeInput.setValue("14:30");
 
     expect(applyBtn.attributes("disabled")).toBeUndefined();
@@ -105,11 +115,10 @@ describe("PlansRepeatingSettings - Custom Date/Time & Pause functionality", () =
     const calledUrl = postSpy.mock.calls[0]![0];
     expect(calledUrl).toContain("vehicles/vehicleB/plan/pause/");
 
-    // The encoded timestamp should decode to a valid RFC 3339 date matching local 2026-08-25 14:30:00
+    // The encoded timestamp should decode to a valid RFC 3339 date matching customTarget
     const encodedTimestamp = calledUrl.replace("vehicles/vehicleB/plan/pause/", "");
     const decodedTimestamp = decodeURIComponent(encodedTimestamp);
-    const expectedDate = new Date(2026, 7, 25, 14, 30, 0, 0);
-    expect(decodedTimestamp).toBe(expectedDate.toISOString());
+    expect(decodedTimestamp).toBe(customTarget.toISOString());
   });
 
   test("custom date/time picker validates against past timestamps", async () => {
@@ -242,9 +251,15 @@ describe("PlansRepeatingSettings - Custom Date/Time & Pause functionality", () =
     const preset24hBtn = wrapper.find('[data-testid="pause-preset-24h"]');
     expect(preset24hBtn.classes()).toContain("active");
 
-    // Open custom picker and submit
+    // Open custom picker and submit, 10 days ahead (e.g. 2026-08-30 12:00)
+    const customTarget = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 10, 12, 0, 0, 0);
+    const yyyy = customTarget.getFullYear();
+    const mm = String(customTarget.getMonth() + 1).padStart(2, "0");
+    const dd = String(customTarget.getDate()).padStart(2, "0");
+    const customDateStr = `${yyyy}-${mm}-${dd}`;
+
     await wrapper.find('[data-testid="pause-preset-custom"]').trigger("click");
-    await wrapper.find('[data-testid="pause-custom-date"]').setValue("2026-08-30");
+    await wrapper.find('[data-testid="pause-custom-date"]').setValue(customDateStr);
     await wrapper.find('[data-testid="pause-custom-time"]').setValue("12:00");
     await wrapper.find('[data-testid="pause-custom-apply"]').trigger("click");
 

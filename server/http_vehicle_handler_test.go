@@ -43,6 +43,7 @@ func TestPauseRepeatingPlansHandler(t *testing.T) {
 	router := srv.Router()
 
 	t.Run("POST valid pause timestamp", func(t *testing.T) {
+		// Dynamic future timestamp (e.g. 2026-08-20T12:00:00Z)
 		future := time.Now().Add(24 * time.Hour).UTC().Truncate(time.Second)
 		req := httptest.NewRequest(http.MethodPost, "/api/vehicles/ev4/plan/pause/"+future.Format(time.RFC3339), nil)
 		rec := httptest.NewRecorder()
