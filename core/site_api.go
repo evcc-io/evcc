@@ -384,6 +384,126 @@ func (site *Site) SetResidualPower(power float64) error {
 	return nil
 }
 
+// GetPriorityStrategy returns the loadpoint priority sub-ordering strategy
+func (site *Site) GetPriorityStrategy() api.PriorityStrategy {
+	site.RLock()
+	defer site.RUnlock()
+	return site.PriorityStrategy
+}
+
+// SetPriorityStrategy sets the loadpoint priority sub-ordering strategy
+func (site *Site) SetPriorityStrategy(strategy api.PriorityStrategy) error {
+	site.Lock()
+	defer site.Unlock()
+
+	if !strategy.IsAPriorityStrategy() {
+		return fmt.Errorf("invalid priority strategy: %d", strategy)
+	}
+
+	site.log.DEBUG.Printf("set priority strategy: %s", strategy)
+
+	if site.PriorityStrategy != strategy {
+		site.PriorityStrategy = strategy
+		settings.SetString(keys.PriorityStrategy, strategy.String())
+		site.publish(keys.PriorityStrategy, site.PriorityStrategy)
+	}
+
+	return nil
+}
+
+// GetPriorityBasis returns the priority strategy basis (percent, energy)
+func (site *Site) GetPriorityBasis() api.PriorityBasis {
+	site.RLock()
+	defer site.RUnlock()
+	return site.PriorityBasis
+}
+
+// SetPriorityBasis sets the priority strategy basis (percent, energy)
+func (site *Site) SetPriorityBasis(basis api.PriorityBasis) error {
+	site.Lock()
+	defer site.Unlock()
+
+	if !basis.IsAPriorityBasis() {
+		return fmt.Errorf("invalid priority basis: %d", basis)
+	}
+
+	site.log.DEBUG.Printf("set priority basis: %s", basis)
+
+	if site.PriorityBasis != basis {
+		site.PriorityBasis = basis
+		settings.SetString(keys.PriorityBasis, basis.String())
+		site.publish(keys.PriorityBasis, site.PriorityBasis)
+	}
+
+	return nil
+}
+
+// GetPriorityHysteresis returns the priority sub-ordering deadband (soc-% or kWh per basis)
+func (site *Site) GetPriorityHysteresis() int {
+	site.RLock()
+	defer site.RUnlock()
+	return site.PriorityHysteresis
+}
+
+// SetPriorityHysteresis sets the priority sub-ordering deadband (soc-% or kWh per basis)
+func (site *Site) SetPriorityHysteresis(hysteresis int) error {
+	site.Lock()
+	defer site.Unlock()
+
+	if hysteresis < 0 || hysteresis > 99 {
+		return fmt.Errorf("invalid priority hysteresis: %d (must be 0..99)", hysteresis)
+	}
+
+	site.log.DEBUG.Println("set priority hysteresis:", hysteresis)
+
+	if site.PriorityHysteresis != hysteresis {
+		site.PriorityHysteresis = hysteresis
+		settings.SetInt(keys.PriorityHysteresis, int64(site.PriorityHysteresis))
+		site.publish(keys.PriorityHysteresis, site.PriorityHysteresis)
+	}
+
+	return nil
+}
+
+// EffectivePriorityScoring returns the site-wide priority basis and the reference value the
+// strategy gap is normalised against, so every loadpoint is scored on a single scale.
+func (site *Site) EffectivePriorityScoring() (api.PriorityBasis, float64) {
+	basis, ref, _ := site.effectivePriorityScoring()
+	return basis, ref
+}
+
+// effectivePriorityScoring additionally returns the loadpoint that makes the configured
+// energy basis impossible. It is nil when the percent basis is returned because no
+// loadpoint carries a comparable soc at all - then nothing is ranked and the configured
+// basis still applies to whatever connects next.
+func (site *Site) effectivePriorityScoring() (api.PriorityBasis, float64, loadpoint.API) {
+	if basis := site.GetPriorityBasis(); basis != api.PriorityBasisEnergy {
+		return basis, 100, nil
+	}
+
+	var capacity float64
+	for _, lp := range site.ActiveLoadpoints() {
+		// loadpoints without a comparable soc score fraction 0 on either basis
+		if lp.IsHeating() || lp.GetSoc() <= 0 {
+			continue
+		}
+
+		// mixing a kWh gap with a percentage gap is meaningless, hence rank all by percent
+		v := lp.GetVehicle()
+		if v == nil || v.Capacity() <= 0 {
+			return api.PriorityBasisPercent, 100, lp
+		}
+
+		capacity = max(capacity, v.Capacity())
+	}
+
+	if capacity <= 0 {
+		return api.PriorityBasisPercent, 100, nil
+	}
+
+	return api.PriorityBasisEnergy, capacity, nil
+}
+
 // GetGridExportLimit returns the static grid export power limit in W (0 = disabled)
 func (site *Site) GetGridExportLimit() float64 {
 	site.RLock()

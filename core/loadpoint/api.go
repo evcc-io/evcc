@@ -100,8 +100,10 @@ type API interface {
 	// effective values
 	//
 
-	// EffectivePriority returns the effective priority
+	// EffectivePriority returns the effective priority tier (integer part of the score)
 	EffectivePriority() int
+	// EffectivePriorityScore returns the sortable priority score (tier + strategy sub-ordering) for the given site-level strategy, basis and reference
+	EffectivePriorityScore(strategy api.PriorityStrategy, basis api.PriorityBasis, ref float64) float64
 	// EffectiveLimitSoc returns the effective session limit soc
 	EffectiveLimitSoc() int
 	// EffectivePlanId returns the effective plan id
@@ -215,6 +217,8 @@ type API interface {
 
 	// IsFastChargingActive indicates if fast charging with maximum power is active
 	IsFastChargingActive() bool
+	// IsHeating indicates a heating loadpoint (charger has the heating feature)
+	IsHeating() bool
 	// GetRemainingDuration is the estimated remaining charging duration
 	GetRemainingDuration() time.Duration
 	// GetRemainingEnergy is the remaining charge energy in kWh

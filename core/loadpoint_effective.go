@@ -13,7 +13,15 @@ import (
 
 // PublishEffectiveValues publishes all effective values
 func (lp *Loadpoint) PublishEffectiveValues() {
+	// strategy/basis/reference are site-level settings; site may be unset in tests
+	strategy, basis, ref := api.PriorityNone, api.PriorityBasisPercent, 100.0
+	if lp.site != nil {
+		strategy = lp.site.GetPriorityStrategy()
+		basis, ref = lp.site.EffectivePriorityScoring()
+	}
+
 	lp.publish(keys.EffectivePriority, lp.EffectivePriority())
+	lp.publish(keys.EffectivePriorityScore, lp.EffectivePriorityScore(strategy, basis, ref))
 	lp.publish(keys.EffectivePlanId, lp.EffectivePlanId())
 	lp.publish(keys.EffectivePlanTime, lp.EffectivePlanTime())
 	lp.publish(keys.EffectivePlanSoc, lp.EffectivePlanSoc())
@@ -24,7 +32,7 @@ func (lp *Loadpoint) PublishEffectiveValues() {
 	lp.publish(keys.EffectiveLimitSoc, lp.EffectiveLimitSoc())
 }
 
-// EffectivePriority returns the effective priority
+// EffectivePriority returns the effective priority tier (integer part of the score).
 func (lp *Loadpoint) EffectivePriority() int {
 	if v := lp.GetVehicle(); v != nil {
 		if res, ok := v.OnIdentified().GetPriority(); ok {
@@ -32,6 +40,63 @@ func (lp *Loadpoint) EffectivePriority() int {
 		}
 	}
 	return lp.GetPriority()
+}
+
+// EffectivePriorityScore ranks loadpoints for surplus distribution: the integer part is
+// the effective priority tier, the fractional part [0,1) sub-orders within the tier by the
+// priority strategy (higher wins). Basis and reference come from Site.EffectivePriorityScoring
+// so all loadpoints are scored on one scale.
+func (lp *Loadpoint) EffectivePriorityScore(strategy api.PriorityStrategy, basis api.PriorityBasis, ref float64) float64 {
+	score := float64(lp.EffectivePriority())
+
+	// heating: soc holds a temperature, not a charge level, hence no sub-ordering
+	if lp.IsHeating() {
+		return score
+	}
+
+	// soc 0 is the unknown sentinel used across core. An unknown soc carries no comparable
+	// gap, hence a vehicle actually reporting 0% scores no sub-ordering boost and ties with
+	// a full one instead of ranking first within its tier.
+	soc := lp.GetSoc()
+	if soc <= 0 {
+		return score
+	}
+
+	// gap is the soc-% quantity the strategy ranks by (a larger gap scores higher)
+	var gap float64
+	switch strategy {
+	case api.PrioritySoc:
+		gap = 100 - soc
+	case api.PriorityDeficit:
+		gap = float64(lp.EffectiveLimitSoc()) - soc
+	default:
+		return score
+	}
+
+	// energy basis: turn the soc-% gap into kWh, the reference is the largest capacity in scope
+	if basis == api.PriorityBasisEnergy {
+		gap = gap / 100 * lp.vehicleCapacity()
+	}
+
+	return score + priorityFraction(gap, ref)
+}
+
+// vehicleCapacity returns the active vehicle's usable capacity in kWh, or 0 if
+// no vehicle is active or its capacity is unknown.
+func (lp *Loadpoint) vehicleCapacity() float64 {
+	if v := lp.GetVehicle(); v != nil {
+		return v.Capacity()
+	}
+	return 0
+}
+
+// priorityFraction normalises a strategy gap against the site reference, capped
+// below 1 so it can never bump a loadpoint into the next priority tier.
+func priorityFraction(v, ref float64) float64 {
+	if v <= 0 || ref <= 0 {
+		return 0
+	}
+	return min(v/ref, 0.999)
 }
 
 type plan struct {

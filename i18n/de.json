@@ -812,6 +812,32 @@
         "C": "C (lädt)"
       }
     },
+    "priority": {
+      "basis": {
+        "energy": "Energiebedarf (kWh)",
+        "percent": "Ladestand (%)"
+      },
+      "basisDescription": {
+        "energy": "Fahrzeuge werden nach der Energie verglichen, die sie noch benötigen, basierend auf ihrer Batteriekapazität.",
+        "percent": "Fahrzeuge werden nach ihrem Ladestand in Prozent verglichen."
+      },
+      "description": "Bestimmt, wer den Solarüberschuss zuerst bekommt, wenn mehrere Ladepunkte die gleiche Priorität haben.",
+      "descriptionHysteresis": "Die Priorität ändert sich erst, wenn der Unterschied diesen Wert überschreitet. Verhindert ständiges Hin- und Herwechseln.",
+      "labelBasis": "Basis",
+      "labelHysteresis": "Hysterese",
+      "labelStrategy": "Strategie",
+      "strategy": {
+        "deficit": "Größter Bedarf zuerst",
+        "none": "Wer zuerst kommt",
+        "soc": "Leerstes zuerst"
+      },
+      "strategyDescription": {
+        "deficit": "Das Fahrzeug, das am meisten Energie bis zu seinem Ladeziel benötigt, kommt zuerst.",
+        "none": "Wer zuerst mit dem Laden beginnt, behält den Überschuss.",
+        "soc": "Das Fahrzeug mit dem niedrigsten Ladestand kommt zuerst."
+      },
+      "title": "Prioritäten"
+    },
     "pv": {
       "titleAdd": "PV-Anlage hinzufügen",
       "titleEdit": "PV-Zähler bearbeiten"

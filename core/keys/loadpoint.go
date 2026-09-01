@@ -59,12 +59,13 @@ const (
 	SmartFeedInPriorityNextStart = "smartFeedInPriorityNextStart" // smart feed-in priority next start, time of next pause
 
 	// effective values
-	EffectivePriority   = "effectivePriority"   // effective priority
-	EffectivePlanId     = "effectivePlanId"     // effective plan id
-	EffectivePlanTime   = "effectivePlanTime"   // effective plan time
-	EffectivePlanSoc    = "effectivePlanSoc"    // effective plan soc
-	EffectiveMinCurrent = "effectiveMinCurrent" // effective min current
-	EffectiveMaxCurrent = "effectiveMaxCurrent" // effective max current
+	EffectivePriority      = "effectivePriority"      // effective priority
+	EffectivePriorityScore = "effectivePriorityScore" // effective priority score (tier + strategy sub-ordering)
+	EffectivePlanId        = "effectivePlanId"        // effective plan id
+	EffectivePlanTime      = "effectivePlanTime"      // effective plan time
+	EffectivePlanSoc       = "effectivePlanSoc"       // effective plan soc
+	EffectiveMinCurrent    = "effectiveMinCurrent"    // effective min current
+	EffectiveMaxCurrent    = "effectiveMaxCurrent"    // effective max current
 
 	EffectiveMinSoc       = "effectiveMinSoc"       // effective min soc
 	EffectiveLimitSoc     = "effectiveLimitSoc"     // effective limit soc

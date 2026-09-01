@@ -191,6 +191,15 @@ components:
         prioritySoc:
           description: Battery priority SoC in %. Home battery is charged first while below this level.
           type: number
+        priorityStrategy:
+          $ref: "#/components/schemas/PRIORITY_STRATEGY"
+        priorityBasis:
+          $ref: "#/components/schemas/PRIORITY_BASIS"
+        effectivePriorityBasis:
+          $ref: "#/components/schemas/PRIORITY_BASIS"
+          description: Priority basis actually in use. Falls back to percent when a loadpoint reports SoC without a known vehicle capacity.
+        priorityHysteresis:
+          type: number
         bufferStartSoc:
           description: Battery buffer start SoC in %. Solar charging starts automatically above this level.
           type: number
@@ -872,6 +881,8 @@ components:
         effectivePriority:
           description: Currently applied priority.
           type: number
+        effectivePriorityScore:
+          type: number
         enableDelay:
           description: Delay before charging starts in solar mode, in seconds.
           type: number
@@ -1089,6 +1100,7 @@ components:
         - effectivePlanTime
         - effectivePlanStrategy
         - effectivePriority
+        - effectivePriorityScore
         - enableDelay
         - enableThreshold
         - enabled
@@ -1518,6 +1530,17 @@ components:
       required:
         - continuous
         - precondition
+    PRIORITY_BASIS:
+      type: string
+      enum:
+        - percent
+        - energy
+    PRIORITY_STRATEGY:
+      type: string
+      enum:
+        - none
+        - soc
+        - deficit
     PvAction:
       description: Pending charge start or stop action in solar mode.
       type: string

@@ -78,6 +78,25 @@ type API interface {
 	SetGridExportLimit(float64) error
 
 	//
+	// loadpoint priority sub-ordering
+	//
+
+	// GetPriorityStrategy returns the loadpoint priority sub-ordering strategy
+	GetPriorityStrategy() api.PriorityStrategy
+	// SetPriorityStrategy sets the loadpoint priority sub-ordering strategy
+	SetPriorityStrategy(api.PriorityStrategy) error
+	// GetPriorityBasis returns the priority strategy basis (percent, energy)
+	GetPriorityBasis() api.PriorityBasis
+	// SetPriorityBasis sets the priority strategy basis (percent, energy)
+	SetPriorityBasis(api.PriorityBasis) error
+	// GetPriorityHysteresis returns the priority sub-ordering deadband (soc-% or kWh per basis)
+	GetPriorityHysteresis() int
+	// SetPriorityHysteresis sets the priority sub-ordering deadband (soc-% or kWh per basis)
+	SetPriorityHysteresis(int) error
+	// EffectivePriorityScoring returns the site-wide basis and the reference value the strategy gap is normalised against
+	EffectivePriorityScoring() (api.PriorityBasis, float64)
+
+	//
 	// tariffs and costs
 	//
 
