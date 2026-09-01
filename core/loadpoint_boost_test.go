@@ -101,8 +101,10 @@ func TestBatteryBoost(t *testing.T) {
 	lp.batteryBoost = false
 	batteryPower := 1337.0
 	boost := lp.boostPower(batteryPower)
+	gap := lp.boostPhaseScaling()
 	enable, disable := lp.boostThresholds(batteryPower)
 	assert.Equal(t, 0.0, boost)
+	assert.Equal(t, 0.0, gap)
 	assert.Equal(t, -1380.0, enable)
 	assert.Equal(t, 0.0, disable)
 
@@ -111,40 +113,46 @@ func TestBatteryBoost(t *testing.T) {
 	lp.batteryBoost = true
 	s.batterySoc = 49
 	boost = lp.boostPower(batteryPower)
+	gap = lp.boostPhaseScaling()
 	enable, disable = lp.boostThresholds(batteryPower)
 	assert.Equal(t, 0.0, boost)
+	assert.Equal(t, 0.0, gap)
 	assert.Equal(t, -1380.0, enable)
 	assert.Equal(t, 0.0, disable)
 	s.batterySoc = 51
 
-	// test battery charging:
-	// - boostPower() ignores battery charge power
-	//   and returns at least
-	//   EffectiveStepPower + max(0, residualPower+100)
-	//   if maxDischargePower = nil
+	// test battery charging with 1W:
+	// - enable  = -230 -   -1       = -229
+	// - disable = -229 + 1380       = 1151
+	// - gap     =  230*(6*3-16)-230 =  230
+	//
+	// - assume lp is disabled:
+	//     sitePower = -1 - 330 = -331 <= -229 (lp enables)
 	batteryPower = -1
 	boost = lp.boostPower(batteryPower)
+	gap = lp.boostPhaseScaling()
+	enable, disable = lp.boostThresholds(batteryPower)
 	assert.Equal(t, 330.0, boost)
+	assert.Equal(t, 230.0, gap)
+	assert.Equal(t, -229.0, enable)
+	assert.Equal(t, 1151.0, disable)
 
 	// test battery power = 0:
-	// - enable  = -230 -    0       = -230
-	// - disable = -230 + 1380       = 1150
-	// - gap     =  230*(6*3-16)-230 =  230
+	// - enable  = -230 -    0 = -230
+	// - disable = -230 + 1380 = 1150
 	//
 	// - assume lp is disabled:
 	//     sitePower = 0 - 330 = -330 <= -230 (lp enables)
 	batteryPower = 0
 	boost = lp.boostPower(batteryPower)
-	gap := lp.boostPhaseScaling()
 	enable, disable = lp.boostThresholds(batteryPower)
 	assert.Equal(t, 330.0, boost)
-	assert.Equal(t, 230.0, gap)
 	assert.Equal(t, -230.0, enable)
 	assert.Equal(t, 1150.0, disable)
 
 	// test battery discharging with 100W:
 	// - enable  = -230 -  100 = -330
-	// - disable = -230 + 1380 = 1150
+	// - disable = -330 + 1380 = 1050
 	//
 	// - assume lp is disabled:
 	//     sitePower = 100 - 430 = -330 <= -330 (lp enables)
@@ -153,26 +161,42 @@ func TestBatteryBoost(t *testing.T) {
 	enable, disable = lp.boostThresholds(batteryPower)
 	assert.Equal(t, 430.0, boost)
 	assert.Equal(t, -330.0, enable)
-	assert.Equal(t, 1150.0, disable)
+	assert.Equal(t, 1050.0, disable)
 
 	// test battery discharging with 200W:
 	// - enable  = -230 -  200 = -430
-	// - disable = -230 + 1380 = 1150
+	// - disable = -430 + 1380 =  950
 	//
 	// - assume lp is disabled:
 	//     sitePower = 200 - 530 = -330 > -430 (lp stays disabled)
 	//
 	// - assume lp is enabled, 1380W charge power:
 	//   - assume 1180W grid import + 200W from battery:
-	//       sitePower = 1380 - 530 = 850 < 1150 (lp stays enabled)
-	//   - assume 1480W grid import (100W grid + 200W battery non-lp load):
-	//       sitePower = 1680 - 530 = 1150 >= 1150 (lp disables)
+	//       sitePower = 1380 - 530 = 850 < 950 (lp stays enabled)
+	//   - assume 1280W grid import (100W battery load w/o lp):
+	//       sitePower = 1480 - 530 = 950 >= 950 (lp disables)
 	batteryPower = 200
 	boost = lp.boostPower(batteryPower)
 	enable, disable = lp.boostThresholds(batteryPower)
 	assert.Equal(t, 530.0, boost)
 	assert.Equal(t, -430.0, enable)
-	assert.Equal(t, 1150.0, disable)
+	assert.Equal(t, 950.0, disable)
+
+	// test battery discharging with 1381W:
+	// - enable  =  -230 - 1380 = -1610
+	// - disable = -1610 + 1380 =  -230
+	//
+	// - assume lp is enabled, 1380W charge power:
+	//   - assume 0W grid import:
+	//       sitePower = 1381 - 1711 = -330 < -230 (lp stays enabled)
+	//   - assume 100W grid import (101W battery load w/o lp):
+	//       sitePower = 1481 - 1711 = -230 >= -230 (lp disables)
+	batteryPower = 1381
+	boost = lp.boostPower(batteryPower)
+	enable, disable = lp.boostThresholds(batteryPower)
+	assert.Equal(t, 1711.0, boost)
+	assert.Equal(t, -1610.0, enable)
+	assert.Equal(t, -230.0, disable)
 
 	// test manual thresholds:
 	// - we cannot safely assume that a manual enable threshold
@@ -186,13 +210,13 @@ func TestBatteryBoost(t *testing.T) {
 	lp.Enable.Threshold = -9000
 	lp.Disable.Threshold = 1
 	enable, disable = lp.boostThresholds(batteryPower)
-	assert.Equal(t, -429.0, enable)
-	assert.Equal(t, 8772.0, disable)
+	assert.Equal(t, -1610.0, enable)
+	assert.Equal(t, 7391.0, disable)
 
 	lp.Disable.Threshold = -1
 	enable, disable = lp.boostThresholds(batteryPower)
-	assert.Equal(t, -431.0, enable)
-	assert.Equal(t, 8768.0, disable)
+	assert.Equal(t, -1612.0, enable)
+	assert.Equal(t, 7387.0, disable)
 
 	// test low max current (= big power gap):
 	// - gap = 230*(6*3-6) - 230 = 2530

@@ -1656,7 +1656,7 @@ func (lp *Loadpoint) boostThresholds(batteryPower float64) (float64, float64) {
 		return enableThreshold, disableThreshold
 	}
 
-	// note: Battery boost maintains at least the effective switching hysteresis given by this delta and
+	// note: Battery boost maintains the effective switching hysteresis given by this delta and
 	//       shifts both thresholds by disableThreshold towards more grid import power.
 	//       Comments below assume delta = lp min charge power and disableThreshold = 0
 	delta := disableThreshold - enableThreshold
@@ -1669,23 +1669,19 @@ func (lp *Loadpoint) boostThresholds(batteryPower float64) (float64, float64) {
 			// use the same lower bound as in boostPower()
 			batteryPower = max(batteryPower, lp.EffectiveStepPower())
 		}
-
-		// enable if the battery is not discharging or if the battery discharge power headroom is at least lp min charge power
-		enableThreshold = disableThreshold - min(batteryPower, delta)
-		// maintain the original hysteresis
-		disableThreshold = enableThreshold + delta
 	} else {
 		// note: Effective thresholds are shifted if residual power is below -100W
 		if lp.coarseCurrent() {
 			// compensate for the addition of effective step power in boostPower()
 			disableThreshold -= lp.EffectiveStepPower()
 		}
-
-		// enable if the current battery discharge power is not above 100W
-		enableThreshold = disableThreshold - batteryPower
-		// disable if the current grid import power is at least the original disable threshold + lp min charge power + 100W
-		disableThreshold += delta
 	}
+
+	// enable if the battery is not discharging or if the battery discharge power headroom is at least lp min charge power
+	// note: If maxDischargePower = nil, an additional 100W battery discharge/grid import bias is applied
+	enableThreshold = disableThreshold - min(batteryPower, delta)
+	// maintain the original hysteresis
+	disableThreshold = enableThreshold + delta
 
 	lp.log.DEBUG.Printf("pv charge battery boost thresholds: %.0fW enable, %.0fW disable", enableThreshold, disableThreshold)
 	return enableThreshold, disableThreshold
