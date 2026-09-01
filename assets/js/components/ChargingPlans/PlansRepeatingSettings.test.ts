@@ -96,7 +96,15 @@ describe("PlansRepeatingSettings - Custom Date/Time & Pause functionality", () =
     expect(dateInput.attributes("min")).toBeDefined();
 
     // Enter custom future date and time, 10 days ahead (e.g. 2026-08-25 14:30)
-    const customTarget = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 10, 14, 30, 0, 0);
+    const customTarget = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + 10,
+      14,
+      30,
+      0,
+      0
+    );
     const yyyy = customTarget.getFullYear();
     const mm = String(customTarget.getMonth() + 1).padStart(2, "0");
     const dd = String(customTarget.getDate()).padStart(2, "0");
@@ -252,7 +260,15 @@ describe("PlansRepeatingSettings - Custom Date/Time & Pause functionality", () =
     expect(preset24hBtn.classes()).toContain("active");
 
     // Open custom picker and submit, 10 days ahead (e.g. 2026-08-30 12:00)
-    const customTarget = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 10, 12, 0, 0, 0);
+    const customTarget = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + 10,
+      12,
+      0,
+      0,
+      0
+    );
     const yyyy = customTarget.getFullYear();
     const mm = String(customTarget.getMonth() + 1).padStart(2, "0");
     const dd = String(customTarget.getDate()).padStart(2, "0");
