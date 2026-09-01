@@ -48,8 +48,8 @@ render: |
   forecast:
     source: js
     script: |
-      // Generate deterministic dynamic grid prices for 3 days in 15-minute slots
-      // Pattern repeats every 3 days for predictability
+      // Generate deterministic dynamic grid prices for 5 days in 15-minute slots
+      // Daily pattern (by hour) repeats for predictability
       var now = new Date();
       var start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
       var rates = [];
@@ -58,7 +58,7 @@ render: |
       var priceRange = maxPrice - minPrice;
       var noiseAmount = parseFloat({{ .noise }});
 
-      // Generate 15-minute slots for 3 days
+      // Generate 15-minute slots for 5 days
       var slotMinutes = 15;
       var slotDuration = slotMinutes * 60 * 1000;
       var slotsPerHour = 60 / slotMinutes;
@@ -95,7 +95,7 @@ render: |
         return ((n - Math.floor(n)) * 2 - 1) * noiseAmount;
       }
 
-      for (var day = 0; day < 3; day++) {
+      for (var day = 0; day < 5; day++) {
         for (var slot = 0; slot < slotsPerDay; slot++) {
           var time = new Date(start.getTime() + (day * slotsPerDay + slot) * slotDuration);
           var hour = slot / slotsPerHour;

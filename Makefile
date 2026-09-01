@@ -6,15 +6,16 @@ GIT_TAG := $(shell test -d .git && git describe --abbrev=0 --tags)
 # commits since the latest tag, empty or 0 means the commit is tagged
 GIT_DIST := $(shell test -n "$(GIT_TAG)" && git rev-list --count $(GIT_TAG)..HEAD)
 NEXT_TAG = $(shell echo $(GIT_TAG) | awk -F. -v b='$(BUMP)' '{ if (b == "patch") { m = $$2; p = $$3 + 1 } else { m = $$2 + 1; p = 0 }; print $$1 "." m "." p }')
-# untagged builds are semver pre-releases of the upcoming version
-TAG_NAME ?= $(if $(filter-out 0,$(GIT_DIST)),$(NEXT_TAG)-dev+$(SHA),$(GIT_TAG))
+# untagged builds are semver pre-releases of the upcoming version, the build
+# timestamp keeps them increasing monotonically
+BUILD_TIMESTAMP := $(shell date -u '+%s')
+TAG_NAME ?= $(if $(filter-out 0,$(GIT_DIST)),$(NEXT_TAG)-dev.$(BUILD_TIMESTAMP),$(GIT_TAG))
 COMMIT := $(SHA)
 # hide commit for releases
 ifeq ($(RELEASE),1)
     COMMIT :=
 endif
 VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
-BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 BUILD_TAGS := -tags=release
 LD_FLAGS := -X github.com/evcc-io/evcc/util.Version=$(VERSION) -X github.com/evcc-io/evcc/util.Commit=$(COMMIT) -s -w
 BUILD_ARGS := -trimpath -ldflags='$(LD_FLAGS)'
@@ -33,7 +34,7 @@ IMAGE_FILE := evcc_$(TAG_NAME).img
 PACKAGES = ./release
 
 # asn1-patch
-GOROOT := $(shell go env GOROOT)
+GOROOT = $(shell go env GOROOT)
 CURRDIR := $(shell pwd)
 
 default:: ui build
@@ -99,7 +100,7 @@ porcelain::
 	test -z "$$(git status --porcelain)" || (git status; git diff; false)
 
 build::
-	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
+	@echo Version: $(VERSION) $(SHA)
 	CGO_ENABLED=0 go build -v $(BUILD_TAGS) $(BUILD_ARGS)
 
 snapshot::
@@ -109,15 +110,15 @@ release::
 	goreleaser --clean
 
 docker::
-	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
+	@echo Version: $(VERSION) $(SHA)
 	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):$(DOCKER_TAG) --push .
 
 publish-nightly::
-	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
+	@echo Version: $(VERSION) $(SHA)
 	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):nightly --push .
 
 publish-release::
-	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
+	@echo Version: $(VERSION) $(SHA)
 	docker buildx build --platform $(PLATFORM) --tag $(DOCKER_IMAGE):latest --tag $(DOCKER_IMAGE):$(VERSION) --build-arg RELEASE=1 --push .
 
 apt-nightly::
@@ -153,7 +154,7 @@ gok-update::
 	${GOK} update yes
 
 soc::
-	@echo Version: $(VERSION) $(SHA) $(BUILD_DATE)
+	@echo Version: $(VERSION) $(SHA)
 	go build $(BUILD_TAGS) $(BUILD_ARGS) github.com/evcc-io/evcc/cmd/soc
 
 # patch asn1.go to allow Elli buggy certificates to be accepted with EEBUS

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
-import { createServiceEndpoints, type TemplateParam } from "./index";
+import { applyDefaultsFromTemplate, createServiceEndpoints, type TemplateParam } from "./index";
 
 const buildParam = (name: string, service?: string): TemplateParam => ({
   Name: name,
@@ -98,5 +98,52 @@ describe("createServiceEndpoints", () => {
     expect(endpoints[0]!.url({ home: "" })).toBe("homes/{home}/sensors");
     // Non-empty value should replace placeholder
     expect(endpoints[0]!.url({ home: "main" })).toBe("homes/main/sensors");
+  });
+});
+
+describe("applyDefaultsFromTemplate", () => {
+  const template = (params: TemplateParam[]) => ({ Params: params }) as any;
+
+  it("coerces string defaults of Bool params to booleans", () => {
+    const params = [
+      { ...buildParam("measurements"), Type: "Bool", Default: "false" },
+      { ...buildParam("enabled"), Type: "Bool", Default: "true" },
+    ];
+    const values: Record<string, any> = {};
+    applyDefaultsFromTemplate(template(params), values as any);
+    expect(values["measurements"]).toBe(false);
+    expect(values["enabled"]).toBe(true);
+  });
+
+  it("initializes Bool params without default to false", () => {
+    const params = [{ ...buildParam("flag"), Type: "Bool" }];
+    const values: Record<string, any> = {};
+    applyDefaultsFromTemplate(template(params), values as any);
+    expect(values["flag"]).toBe(false);
+  });
+
+  it("keeps an explicitly stored false against a true default", () => {
+    const params = [{ ...buildParam("phases1p3p"), Type: "Bool", Default: "true" }];
+    const values: Record<string, any> = { phases1p3p: false };
+    applyDefaultsFromTemplate(template(params), values as any);
+    expect(values["phases1p3p"]).toBe(false);
+  });
+
+  it("coerces stored string values of Bool params to booleans", () => {
+    const params = [
+      { ...buildParam("phases1p3p"), Type: "Bool", Default: "true" },
+      { ...buildParam("heating"), Type: "Bool" },
+    ];
+    const values: Record<string, any> = { phases1p3p: "false", heating: "true" };
+    applyDefaultsFromTemplate(template(params), values as any);
+    expect(values["phases1p3p"]).toBe(false);
+    expect(values["heating"]).toBe(true);
+  });
+
+  it("applies plain defaults for other params", () => {
+    const params = [{ ...buildParam("device_id"), Default: "0" }];
+    const values: Record<string, any> = {};
+    applyDefaultsFromTemplate(template(params), values as any);
+    expect(values["device_id"]).toBe("0");
   });
 });

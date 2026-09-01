@@ -1,6 +1,6 @@
 import Loadpoints from "./Loadpoints.vue";
 import type { Meta, StoryFn } from "@storybook/vue3";
-import { CURRENCY, SMART_COST_TYPE } from "@/types/evcc";
+import { CHARGE_MODE, CURRENCY, SMART_COST_TYPE } from "@/types/evcc";
 
 // Create LoadpointCompact structure for the Loadpoints component
 const createLoadpoint = (opts: any = {}) => {
@@ -117,11 +117,18 @@ TwoLoadpoints.args = {
       index: 0,
       vehicleName: "vehicle_3",
       charging: true,
-      chargePower: 8050,
-      power: 8050,
+      chargePower: 1380,
+      power: 1380,
       connected: true,
       soc: 66,
       vehicleSoc: 66,
+      mode: CHARGE_MODE.PV,
+      phasesConfigured: 3,
+      phasesActive: 1,
+      offeredCurrent: 9,
+      chargeCurrents: [6, 0, 0],
+      minCurrent: 6,
+      maxCurrent: 16,
     }),
     createLoadpoint({
       title: "Charging point with a very very very long title that tests layout compatibility!!!",

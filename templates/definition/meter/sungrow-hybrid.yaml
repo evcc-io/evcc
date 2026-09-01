@@ -52,6 +52,14 @@ render: |
       type: input
       decode: uint32s
     scale: 0.1
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 13045 # Total export energy, 0.1kWh
+      type: input
+      decode: uint32s
+    scale: 0.1
   currents:
   - source: calc
     div:
@@ -159,6 +167,14 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 13026 # Total battery discharge energy, 0.1kWh
+      type: input
+      decode: uint32s
+    scale: 0.1
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 13040 # Total Charge Energy (Accumulated charge of batteries), 0.1kWh
       type: input
       decode: uint32s
     scale: 0.1
