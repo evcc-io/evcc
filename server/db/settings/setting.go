@@ -48,6 +48,11 @@ func Persist() error {
 	mu.Lock()
 	defer mu.Unlock()
 
+	// settings are in-memory only until a database is configured
+	if db.Instance == nil {
+		return nil
+	}
+
 	if dirty := lo.FilterMap(settings, func(s setting, _ int) (*setting, bool) {
 		return &s, s.dirty
 	}); len(dirty) > 0 {
@@ -85,10 +90,12 @@ func Delete(key string) error {
 	defer mu.Unlock()
 
 	if idx := slices.IndexFunc(settings, equal(key)); idx >= 0 {
-		if err := db.Instance.Delete(setting{
-			Key: settings[idx].Key,
-		}).Error; err != nil {
-			return err
+		if db.Instance != nil {
+			if err := db.Instance.Delete(setting{
+				Key: settings[idx].Key,
+			}).Error; err != nil {
+				return err
+			}
 		}
 
 		settings = slices.Delete(settings, idx, idx+1)
