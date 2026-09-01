@@ -139,25 +139,27 @@ jobs:
             3. LABEL: Based on your investigation, pick the single best label from this
                set and apply it with
                `gh issue edit ${{ inputs.issue_number }} --add-label <label>`:
-               bug, enhancement, documentation, question, device, tariff, vehicle, heating.
+               enhancement, documentation, question, device, tariff, vehicle, heating.
                Only ever apply a label from this existing set — never create a new label.
-               Skip this step if the issue already has one of these labels.
-               - Be reluctant to classify as a bug. Apply `bug` (or type Bug) ONLY
-                 when the report gives clear, reproducible evidence of a genuine
-                 software defect that you could confirm against the code. Missing
-                 information, an unreproducible report, a screenshot in place of
-                 logs/data, or any doubt between a software defect and a
-                 configuration/user error all mean: do NOT apply `bug` — pick a better
-                 fit (e.g. `question`) or leave it unlabeled, and explain why in your
-                 comment. Default away from `bug`.
-               - If in step 2 you asked for missing information needed to diagnose,
-                 add the `waiting for feedback` label
+               NEVER apply a `bug` label. A bug is expressed as the issue type only
+               (`gh issue edit ${{ inputs.issue_number }} --type Bug`).
+               Skip this step if the issue already has one of these labels or type Bug.
+               - Be reluctant to classify as a bug. Set type Bug ONLY when the report
+                 gives clear, reproducible evidence of a genuine software defect that
+                 you confirmed against the code, and your step 2 comment states that
+                 cause without asking the reporter anything. Missing information, an
+                 unreproducible report, a screenshot in place of logs/data, or any
+                 doubt between a software defect and a configuration/user error all
+                 mean: do NOT set type Bug — pick a better fitting label (e.g.
+                 `question`) or leave it unlabeled, and explain why in your comment.
+                 Default away from Bug.
+               - If your step 2 comment contains ANY question to the reporter — missing
+                 information, a request to confirm your diagnosis, a "could you check
+                 whether ..." — then you do not know yet: add the `waiting for feedback`
+                 label
                  (`gh issue edit ${{ inputs.issue_number }} --add-label "waiting for feedback"`)
-                 and do not apply `bug`. `waiting for feedback` is an allowed existing
+                 and do NOT set type Bug. `waiting for feedback` is an allowed existing
                  label, additional to the set above.
-               - When you do classify it as a bug, prefer setting the issue type to Bug
-                 (`gh issue edit ${{ inputs.issue_number }} --type Bug`) over the plain
-                 `bug` label.
 
             4. FIX (only if applicable): Only attempt when the issue is a clearly-scoped,
                low-risk bug or small enhancement with an obvious fix. If it needs design
@@ -168,6 +170,10 @@ jobs:
                - push and open a draft PR with `gh pr create --draft` whose body starts
                  with `fixes #${{ inputs.issue_number }}` and ends with the
                  "🤖 Generated with [Claude Code](https://claude.com/claude-code)" footer.
+               - if the issue carries type Bug, whether you set it in step 3 or it
+                 already had it, create the PR with `--label bug` so it qualifies for
+                 backport. The `bug` label belongs on the fixing pull request, never on
+                 the issue.
 
             If MODE is "fix", do the following instead of step 3/4 above:
 
@@ -177,6 +183,8 @@ jobs:
                - push and open a PR (not draft) with `gh pr create` whose body starts
                  with `fixes #${{ inputs.issue_number }}` and ends with the
                  "🤖 Generated with [Claude Code](https://claude.com/claude-code)" footer.
+               - if the issue carries type Bug, create the PR with `--label bug` so it
+                 qualifies for backport.
                If the fix needs design discussion, spans too many files, or you
                cannot determine the correct change with confidence, do NOT open a
                PR — explain why in your step 2 comment instead.

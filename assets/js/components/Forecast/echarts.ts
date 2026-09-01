@@ -264,6 +264,22 @@ export function forecastYAxis(overrides: Record<string, unknown> = {}) {
   };
 }
 
+// unit label at the top of a value axis, flush with the tick labels
+export function axisNameStyle(align: "left" | "right" = "left") {
+  return {
+    nameLocation: "end",
+    nameGap: 18,
+    nameTextStyle: {
+      color: colors.muted || "",
+      fontFamily: FONT_FAMILY,
+      fontSize: 10,
+      opacity: 0.75,
+      align,
+      padding: align === "left" ? [0, 0, 0, 8] : [0, 8, 0, 0],
+    },
+  };
+}
+
 export function clampStart(ts: number, startDate: Date): number {
   return Math.max(ts, startDate.getTime());
 }

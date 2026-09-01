@@ -280,6 +280,66 @@ func TestRun_LimitWithoutDuration(t *testing.T) {
 	assertProductionLimit(t, c, true)
 }
 
+// TestProductionLimit_Failsafe verifies both api.HEMS production getters report the
+// configured failsafe limit while in failsafe, not the stale EG-supplied limit
+// (#33286): the EG limit had already been released (Value=0) before the heartbeat
+// was lost, which must not curtail feed-in to 0%.
+func TestProductionLimit_Failsafe(t *testing.T) {
+	c := newTestEEBus(t)
+	// EG limit already released before the heartbeat is lost.
+	c.productionLimit = ucapi.LoadLimit{Value: 0, IsActive: false}
+
+	require.NoError(t, c.run())
+	require.Equal(t, StatusFailsafe, c.status)
+
+	percent := c.CurtailedPercent()
+	require.NotNil(t, percent)
+	assert.Equal(t, int(testFailsafeProduction/testProductionNominal*100), *percent)
+
+	power := c.MaxProductionPower()
+	require.NotNil(t, power)
+	assert.Equal(t, testFailsafeProduction, *power)
+}
+
+// TestProductionLimit_FailsafeUnconfigured verifies that entering failsafe without a
+// configured failsafe production limit releases a stale EG limit. run() returns early
+// while in failsafe, so a limit left applied here would stay applied indefinitely.
+func TestProductionLimit_FailsafeUnconfigured(t *testing.T) {
+	c := newTestEEBus(t)
+	c.failsafeProductionLimit = nil
+	c.heartbeat.Set(struct{}{})
+
+	c.productionLimit = ucapi.LoadLimit{Value: -500, IsActive: true}
+	require.NoError(t, c.run())
+	assertProductionLimit(t, c, true)
+
+	// heartbeat lost
+	c.heartbeat = util.NewValue[struct{}](time.Hour)
+
+	require.NoError(t, c.run())
+	require.Equal(t, StatusFailsafe, c.status)
+	assertProductionLimit(t, c, false)
+
+	power := c.MaxProductionPower()
+	require.NotNil(t, power)
+	assert.Equal(t, 0.0, *power)
+}
+
+// TestCurtailedPercent_AboveNominal verifies a limit above the nominal production
+// power reports 100%, not more - api.HEMS documents the percent as 0..100 and it
+// reaches the inverter unchecked.
+func TestCurtailedPercent_AboveNominal(t *testing.T) {
+	c := newTestEEBus(t)
+	c.heartbeat.Set(struct{}{})
+	c.productionLimit = ucapi.LoadLimit{Value: -2 * testProductionNominal, IsActive: true}
+
+	require.NoError(t, c.run())
+
+	percent := c.CurtailedPercent()
+	require.NotNil(t, percent)
+	assert.Equal(t, 100, *percent)
+}
+
 // TestMaxProductionPower verifies the api.HEMS export cap is a positive wattage,
 // while LPP states its limits as negative watts.
 func TestMaxProductionPower(t *testing.T) {

@@ -1,4 +1,4 @@
-import { test, expect, devices, type Page } from "@playwright/test";
+import { test, expect, devices, type Page, type Locator } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
 import {
   expectModalVisible,
@@ -579,5 +579,45 @@ test.describe("edit odometer", async () => {
     await odometer.fill("");
     await odometer.press("Enter");
     await expect(odometer).toContainText("Add value");
+  });
+});
+
+// Y-axis labels rendered by echarts: position=right uses text-anchor=start.
+// DOM order: axis name first, then ticks bottom→top (min, ..., max).
+async function yAxis(c: Locator): Promise<string[]> {
+  const els = c.locator('svg text[text-anchor="start"]');
+  await els.first().waitFor();
+  return els.allTextContents();
+}
+
+test.describe("chart axis scale", async () => {
+  test("kWh for regular sessions", async ({ page }) => {
+    await page.goto("/#/sessions?year=2023&month=5");
+    expect((await yAxis(page.getByTestId("sessions-chart")))[0]).toBe("kWh");
+  });
+
+  test("sub-1 kWh switches to Wh, floored at 1000", async ({ page }) => {
+    await page.goto("/#/sessions?year=2023&month=7");
+    expect(await yAxis(page.getByTestId("sessions-chart"))).toEqual([
+      "Wh",
+      "0",
+      "250",
+      "500",
+      "750",
+      "1,000",
+    ]);
+  });
+
+  test("sub-1 kg CO2 switches to g, floored at 1000", async ({ page }) => {
+    await page.goto("/#/sessions?year=2023&month=7");
+    await page.getByRole("button", { name: "CO₂" }).click();
+    expect(await yAxis(page.getByTestId("sessions-chart"))).toEqual([
+      "g",
+      "0",
+      "250",
+      "500",
+      "750",
+      "1,000",
+    ]);
   });
 });

@@ -816,6 +816,10 @@ export enum CURRENCY {
   TRY = "TRY",
   MYR = "MYR",
   THB = "THB",
+  BYN = "BYN",
+  UAH = "UAH",
+  RUB = "RUB",
+  KZT = "KZT",
 }
 
 export enum ICON_SIZE {
@@ -1131,8 +1135,10 @@ export interface Battery {
   capacity: number;
   /** Charge level in %. Weighted by capacity across all batteries. */
   soc: number;
-  /** Total battery energy in kWh. */
+  /** Total discharged energy in kWh. */
   energy?: number;
+  /** Total charged energy in kWh. */
+  returnEnergy?: number;
   /** Measurement data per battery meter. */
   devices?: BatteryMeter[];
   /** Projected charge levels based on the solar and price forecast. */
