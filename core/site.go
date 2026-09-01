@@ -47,6 +47,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 type updater interface {
 	loadpoint.API
 	Update(sitePower, batteryPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64, dim *bool)
+	UpdateStatus()
 }
 
 var _ site.API = (*Site)(nil)
@@ -1262,6 +1263,13 @@ func (site *Site) update(lp updater) {
 
 	if state, err := site.updateMeters(); err != nil {
 		site.log.ERROR.Println(err)
+
+		// Meters are unavailable, so charging cannot be controlled safely.
+		// Still refresh charger and vehicle state so connection status, soc and
+		// range don't freeze while a single (possibly unrelated) meter fails.
+		if lp != nil {
+			lp.UpdateStatus()
+		}
 	} else {
 		go site.optimizerUpdateAsync(tariff.SlotDuration)
 

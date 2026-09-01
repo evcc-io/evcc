@@ -2131,6 +2131,60 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 	return time.Since(lp.phasesSwitched) > phaseSwitchDuration
 }
 
+// refreshStatus reads and publishes charger status, identifies the connected
+// vehicle and publishes soc/range. It contains no charging control logic and is
+// therefore safe to run when site meters are unavailable.
+func (lp *Loadpoint) refreshStatus() (bool, error) {
+	welcomeCharge, err := lp.updateChargerStatus()
+	if err != nil {
+		return false, err
+	}
+
+	lp.publish(keys.VehicleWelcomeActive, welcomeCharge)
+	lp.publish(keys.Connected, lp.connected())
+	lp.publish(keys.Charging, lp.charging())
+
+	lp.resetHeatingSession()
+
+	if sr, ok := api.Cap[api.StatusReasoner](lp.charger); ok && lp.GetStatus() == api.StatusB {
+		if r, err := sr.StatusReason(); err == nil {
+			lp.publish(keys.ChargerStatusReason, r)
+		} else {
+			lp.log.ERROR.Printf("charger status reason: %v", err)
+		}
+	}
+
+	// identify connected vehicle
+	if lp.connected() && !lp.chargerHasFeature(api.IntegratedDevice) {
+		// read identity and run associated action
+		lp.identifyVehicle()
+
+		// find vehicle by status for a couple of minutes after connecting
+		if lp.vehicleUnidentified() {
+			lp.identifyVehicleByStatus()
+		}
+	}
+
+	// release deferred connect notification once detection has settled
+	lp.maybePushVehicleConnect()
+
+	// publish soc after updating charger status to make sure
+	// initial update of connected state matches charger status
+	lp.publishSocAndRange()
+
+	return welcomeCharge, nil
+}
+
+// UpdateStatus refreshes charger and vehicle state without executing charging
+// control logic. It is used when site meters are unavailable, so that vehicle
+// connection state, soc and range do not go stale while the site cannot be
+// controlled safely.
+func (lp *Loadpoint) UpdateStatus() {
+	if _, err := lp.refreshStatus(); err != nil {
+		lp.log.ERROR.Println(err)
+	}
+}
+
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64, dim *bool) {
 	// hold battery boost when SOC drops below the limit: stop draining the battery, but
@@ -2199,43 +2253,11 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 	}
 
 	// read and publish status
-	welcomeCharge, err := lp.updateChargerStatus()
+	welcomeCharge, err := lp.refreshStatus()
 	if err != nil {
 		lp.log.ERROR.Println(err)
 		return
 	}
-
-	lp.publish(keys.VehicleWelcomeActive, welcomeCharge)
-	lp.publish(keys.Connected, lp.connected())
-	lp.publish(keys.Charging, lp.charging())
-
-	lp.resetHeatingSession()
-
-	if sr, ok := api.Cap[api.StatusReasoner](lp.charger); ok && lp.GetStatus() == api.StatusB {
-		if r, err := sr.StatusReason(); err == nil {
-			lp.publish(keys.ChargerStatusReason, r)
-		} else {
-			lp.log.ERROR.Printf("charger status reason: %v", err)
-		}
-	}
-
-	// identify connected vehicle
-	if lp.connected() && !lp.chargerHasFeature(api.IntegratedDevice) {
-		// read identity and run associated action
-		lp.identifyVehicle()
-
-		// find vehicle by status for a couple of minutes after connecting
-		if lp.vehicleUnidentified() {
-			lp.identifyVehicleByStatus()
-		}
-	}
-
-	// release deferred connect notification once detection has settled
-	lp.maybePushVehicleConnect()
-
-	// publish soc after updating charger status to make sure
-	// initial update of connected state matches charger status
-	lp.publishSocAndRange()
 
 	// sync settings with charger
 	if err := lp.syncCharger(); err != nil {
