@@ -1,7 +1,7 @@
 package session
 
 import (
-	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/util"
 	"gorm.io/gorm"
 )
