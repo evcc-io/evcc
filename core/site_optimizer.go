@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/metrics"
+	"github.com/evcc-io/evcc/core/slots"
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/messenger"
@@ -26,7 +27,6 @@ import (
 	optimizer "github.com/evcc-io/optimizer/client"
 	"github.com/jinzhu/now"
 	"github.com/samber/lo"
-	"golang.org/x/exp/constraints"
 )
 
 const (
@@ -409,10 +409,10 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	var details requestDetails
 
 	solarTariff := site.GetTariff(api.TariffUsageSolar)
-	solar := currentRates(solarTariff)
+	solar := slots.CurrentRates(solarTariff)
 
-	grid := currentRates(site.GetTariff(api.TariffUsageGrid))
-	feedIn := currentRates(site.GetTariff(api.TariffUsageFeedIn))
+	grid := slots.CurrentRates(site.GetTariff(api.TariffUsageGrid))
+	feedIn := slots.CurrentRates(site.GetTariff(api.TariffUsageFeedIn))
 
 	minLen := lo.Min([]int{len(grid), len(feedIn)})
 	// exclude empty solar forecast from minLen
@@ -421,7 +421,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	}
 
 	if optimizerURI() == OPTIMIZER_URI {
-		minLen = slotsUntil(grid, optimizerHorizon(time.Now()), minLen)
+		minLen = slots.Until(grid, slots.Horizon(time.Now()), minLen)
 	}
 
 	if expectedSlots := 8; minLen < expectedSlots {
@@ -432,7 +432,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	}
 
 	now := time.Now()
-	dt := timeSteps(minLen, now)
+	dt := slots.TimeSteps(minLen, now)
 	firstSlotDuration := time.Duration(dt[0]) * time.Second
 
 	site.log.DEBUG.Printf("optimizer: optimizing %d slots until %v: grid=%d, feedIn=%d, solar=%d, first slot: %v",
@@ -450,7 +450,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	// blend measured energy of the last metrics slot into the first slots
 	if v := site.measuredSlotEnergy(metrics.Home); v > 0 {
 		orig := slices.Clone(gt[:min(optimizerDecaySlots, len(gt))])
-		blendMeasured(gt, v, optimizerDecaySlots)
+		slots.BlendMeasured(gt, v, optimizerDecaySlots)
 		site.log.DEBUG.Printf("optimizer: home slots updated with measured %.0fWh: %.0f -> %.0f", v, orig, gt[:len(orig)])
 	}
 
@@ -463,15 +463,15 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		}
 
 		scale := site.effectiveSolarScale()
-		ftSlots := scaleAndPrune(solarEnergy, scale, minLen)
+		ftSlots := slots.ScaleAndPrune(solarEnergy, scale, minLen)
 
 		// decay the scale derived from measured vs forecasted energy of the last completed slot
 		if pv, fcst := site.measuredSlotEnergy(site.Meters.PVMetersRef...), site.measuredSlotEnergy(metrics.Forecast)*scale; pv > 0 && fcst > 0 {
 			orig := slices.Clone(ftSlots[:min(optimizerDecaySlots, len(ftSlots))])
-			blendScale(ftSlots, pv/fcst, optimizerDecaySlots)
+			slots.BlendScale(ftSlots, pv/fcst, optimizerDecaySlots)
 			site.log.DEBUG.Printf("optimizer: pv slots updated with scale %.2f: %.0f -> %.0f", pv/fcst, orig, ftSlots[:len(orig)])
 		}
-		ft = prorate(ftSlots, firstSlotDuration)
+		ft = slots.Prorate(ftSlots, firstSlotDuration)
 	}
 
 	req = optimizer.OptimizationInput{
@@ -483,10 +483,10 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		EtaD: eta,
 		TimeSeries: optimizer.TimeSeries{
 			Dt: dt,
-			Gt: prorate(gt, firstSlotDuration),
+			Gt: slots.Prorate(gt, firstSlotDuration),
 			Ft: ft,
-			PN: scaleAndPrune(grid, 0.001, minLen),
-			PE: scaleAndPrune(feedIn, 0.001, minLen),
+			PN: slots.ScaleAndPrune(grid, 0.001, minLen),
+			PE: slots.ScaleAndPrune(feedIn, 0.001, minLen),
 		},
 	}
 
@@ -494,7 +494,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	pa := lo.Min(req.TimeSeries.PN) * eta * 0.99
 
 	details = requestDetails{
-		Timestamps: asTimestamps(dt, now),
+		Timestamps: slots.AsTimestamps(dt, now),
 	}
 
 	if site.circuit != nil {
@@ -549,11 +549,11 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	// without a capacity there is no fill point to assert it any further.
 	if unmodelled > 0 {
 		load := make([]float64, minLen)
-		blendMeasured(load, unmodelled/slotsPerHour, optimizerDecaySlots)
+		slots.BlendMeasured(load, unmodelled/slotsPerHour, optimizerDecaySlots)
 
 		site.log.DEBUG.Printf("optimizer: home slots updated with unmodelled %.0fW loadpoint load: %.0f", unmodelled, load[:min(optimizerDecaySlots, len(load))])
 
-		for i, v := range prorate(load, firstSlotDuration) {
+		for i, v := range slots.Prorate(load, firstSlotDuration) {
 			req.TimeSeries.Gt[i] += v
 		}
 	}
@@ -654,10 +654,10 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 
 		batteries = append(batteries, batteryResult{
 			batteryDetail: detail,
-			Full: matchSoc(batRes.StateOfCharge, func(soc float32) bool {
+			Full: slots.MatchSoc(batRes.StateOfCharge, func(soc float32) bool {
 				return soc >= batReq.SMax
 			}),
-			Empty: matchSoc(batRes.StateOfCharge, func(soc float32) bool {
+			Empty: slots.MatchSoc(batRes.StateOfCharge, func(soc float32) bool {
 				return soc <= batReq.SMin
 			}),
 		})
@@ -786,7 +786,7 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 	}
 
 	if profile := loadpointProfile(lp, minLen); profile != nil {
-		bat.PDemand = prorate(profile, firstSlotDuration)
+		bat.PDemand = slots.Prorate(profile, firstSlotDuration)
 	}
 
 	detail := batteryDetail{
@@ -858,7 +858,7 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 
 	if demand != nil {
 		// after prorate, so the shortened first slot counts with the energy it really carries
-		bat.PDemand = clearDemandWhenFull(prorate(demand, firstSlotDuration), bat.SMax-bat.SInitial)
+		bat.PDemand = clearDemandWhenFull(slots.Prorate(demand, firstSlotDuration), bat.SMax-bat.SInitial)
 	}
 
 	return bat, detail
@@ -930,22 +930,11 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 	// tariff forecast-based grid charging demand
 	if bat.ChargeFromGrid {
 		if demand := site.applyBatteryGridChargeLimit(bat.CMax, grid, minLen); demand != nil {
-			bat.PDemand = prorate(demand, firstSlotDuration)
+			bat.PDemand = slots.Prorate(demand, firstSlotDuration)
 		}
 	}
 
 	return bat, detail
-}
-
-func matchSoc(ts []float32, fun func(float32) bool) time.Time {
-	for i, soc := range ts {
-		if fun(soc) {
-			// TODO first slot
-			return time.Now().Add(time.Duration(i+1) * tariff.SlotDuration).Round(time.Second)
-		}
-	}
-
-	return time.Time{}
 }
 
 // continuousDemand creates a slice of power demands depending on loadpoint mode
@@ -1019,12 +1008,12 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	}
 
 	// max 4 days
-	slots := make([]float64, 0, minLen+1)
-	for len(slots) <= minLen+24*4 { // allow for prorating first day
-		slots = append(slots, profile[:]...)
+	profileSlots := make([]float64, 0, minLen+1)
+	for len(profileSlots) <= minLen+24*4 { // allow for prorating first day
+		profileSlots = append(profileSlots, profile[:]...)
 	}
 
-	res := profileSlotsFromNow(slots)
+	res := slots.FromNow(profileSlots)
 	if len(res) < minLen {
 		return nil, fmt.Errorf("minimum home profile length %d is less than required %d", len(res), minLen)
 	}
@@ -1036,13 +1025,6 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	return lo.Map(res, func(v float64, i int) float64 {
 		return v * 1e3
 	}), nil
-}
-
-// profileSlotsFromNow strips away any slots before "now".
-// The profile contains 48 15min slots (00:00-23:45) that repeat for multiple days.
-func profileSlotsFromNow(profile []float64) []float64 {
-	firstSlot := int(time.Now().Truncate(tariff.SlotDuration).Sub(now.BeginningOfDay()) / tariff.SlotDuration)
-	return profile[firstSlot:]
 }
 
 // measuredSlotEnergy returns the summed energy in Wh of the last completed
@@ -1065,39 +1047,6 @@ func (site *Site) measuredSlotEnergy(refs ...string) float64 {
 	return sum * 1e3
 }
 
-// blendMeasured decays the first slots from the measured value into the
-// forecast. Slot 0 uses the measured value, the forecast takes over from
-// slot decaySlots on.
-func blendMeasured[T constraints.Float](slots []T, measured T, decaySlots int) {
-	for i := range min(decaySlots, len(slots)) {
-		w := T(decaySlots-i) / T(decaySlots)
-		slots[i] = w*measured + (1-w)*slots[i]
-	}
-}
-
-// blendScale decays a scale factor towards 1 over the first slots.
-// Slot 0 is scaled by the full factor, from slot decaySlots on it is 1.
-func blendScale[T constraints.Float](slots []T, scale float64, decaySlots int) {
-	for i := range min(decaySlots, len(slots)) {
-		w := float64(decaySlots-i) / float64(decaySlots)
-		slots[i] = T(float64(slots[i]) * (w*scale + (1 - w)))
-	}
-}
-
-// prorate adjusts the first slot's energy amount according to remaining duration
-func prorate[T constraints.Float](slots []T, firstSlotDuration time.Duration) []float32 {
-	// return empty slice instead of nil to make api happy
-	if len(slots) == 0 {
-		return []float32{}
-	}
-
-	res := slices.Clone(slots)
-	res[0] = res[0] * T(firstSlotDuration) / T(tariff.SlotDuration)
-	return lo.Map(res, func(f T, _ int) float32 {
-		return float32(f)
-	})
-}
-
 func solarRatesToEnergy(rr api.Rates) (api.Rates, error) {
 	res := make(api.Rates, 0, len(rr))
 
@@ -1115,85 +1064,6 @@ func solarRatesToEnergy(rr api.Rates) (api.Rates, error) {
 	}
 
 	return res, nil
-}
-
-func currentRates(tariff api.Tariff) api.Rates {
-	if tariff == nil {
-		return nil
-	}
-
-	rates, err := tariff.Rates()
-	if err != nil {
-		return nil
-	}
-
-	// filter past slots
-	now := time.Now()
-	return lo.Filter(rates, func(slot api.Rate, _ int) bool {
-		return slot.End.After(now)
-	})
-}
-
-// optimizerHorizon is the timeframe the hosted optimizer is limited to for sake
-// of performance: 48 hours, extended to the end of that day. In the early hours
-// the extension would add almost a full day, hence it only applies past 6:00.
-func optimizerHorizon(t time.Time) time.Time {
-	horizon := t.Add(48 * time.Hour)
-	if t.Hour() < 6 {
-		return horizon
-	}
-	return now.With(horizon).EndOfDay()
-}
-
-// slotsUntil limits maxLen to the slots starting before the given horizon
-func slotsUntil(rates api.Rates, horizon time.Time, maxLen int) int {
-	if i := slices.IndexFunc(rates[:min(maxLen, len(rates))], func(slot api.Rate) bool {
-		return slot.Start.After(horizon)
-	}); i >= 0 {
-		return i
-	}
-	return maxLen
-}
-
-func timeSteps(minLen int, now time.Time) []int {
-	res := make([]int, 0, minLen)
-
-	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
-	if d := eos.Sub(now); d > time.Second && d < tariff.SlotDuration {
-		res = append(res, int(d.Seconds()))
-	}
-
-	for i := len(res); i < minLen; i++ {
-		res = append(res, int(tariff.SlotDuration.Seconds())) // 15min slots
-	}
-
-	return res
-}
-
-func asTimestamps(dt []int, now time.Time) []time.Time {
-	res := make([]time.Time, 0, len(dt))
-
-	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
-	res = append(res, eos.Add(-time.Duration(dt[0])*time.Second))
-
-	for i := range len(dt) - 1 {
-		res = append(res, res[i].Add(time.Duration(dt[i])*time.Second))
-	}
-
-	return res
-}
-
-func scaleAndPrune(rates api.Rates, scale float64, maxLen int) []float32 {
-	res := make([]float32, 0, maxLen)
-
-	for _, slot := range rates {
-		res = append(res, float32(slot.Value*scale))
-		if len(res) >= maxLen {
-			break
-		}
-	}
-
-	return res
 }
 
 func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, minLen int) {
