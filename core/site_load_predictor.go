@@ -80,7 +80,7 @@ func (site *Site) applyTemperatureCorrection(profile []float64) []float64 {
 
 	rates, err := weatherTariff.Rates()
 	if err != nil || len(rates) == 0 {
-		site.log.DEBUG.Printf("temperature correction: no rates available: %v", err)
+		site.log.ERROR.Printf("temperature correction: no rates available: %v", err)
 		return profile
 	}
 
