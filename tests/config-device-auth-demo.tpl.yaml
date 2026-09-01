@@ -1,12 +1,14 @@
 template: device-auth-demo
 group: generic
+requirements:
+  evcc: ["remoteaccess"]
 products:
   - description:
       de: Auth Demo Zähler
       en: Auth Demo Meter
 auth:
   type: demo
-  params: ["server", "method", "redirectUri", "secret", "scope"]
+  params: ["server", "method", "redirectUri", "callback", "secret", "scope"]
 params:
   - name: usage
     choice: ["grid"]
@@ -20,6 +22,11 @@ params:
       generic: Redirect URI
     example: "http://localhost:7070/providerauth/callback"
     required: true
+  - name: callback
+    readonly: true
+    description:
+      generic: Callback URL
+    service: auth/redirecturi
   - name: method
     description:
       generic: Authentication Method

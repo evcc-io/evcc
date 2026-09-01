@@ -1,0 +1,80 @@
+template: tesla-fleet
+products:
+  - brand: Tesla
+requirements:
+  evcc: ["skiptest", "remoteaccess"]
+  description:
+    de: |
+      Direkte Anbindung an die offizielle Tesla Fleet API mit eigenem Developer Account.
+
+      1. Kostenlosen Developer Account auf [developer.tesla.com](https://developer.tesla.com/) erstellen und eine Anwendung anlegen.
+      2. Genehmigungstyp *Autorisierungscode und Maschine-zu-Maschine* wählen. Die beiden URLs unten als *Zulässige Herkunfts-URL* und *Zulässige Weiterleitungs-URI* eintragen.
+      3. Berechtigungen *Profilinformationen*, *Fahrzeugdaten*, *Fahrzeugstandort*, *Fahrzeugbefehle* und *Fahrzeug-Ladeverwaltung* auswählen.
+      4. Rechnungsinfos überspringen.
+      5. *Einzelheiten ansehen* der Anwendung öffnen und *Kunden-ID* und *Kundengeheimnis* in die Felder unten kopieren.
+    en: |
+      Direct connection to the official Tesla Fleet API with your own developer account.
+
+      1. Create a free developer account at [developer.tesla.com](https://developer.tesla.com/) and add an application.
+      2. Select grant type *Authorization Code and Machine-to-Machine*. Enter the two URLs below as *Allowed Origin URL* and *Allowed Redirect URI*.
+      3. Select the scopes *Profile Information*, *Vehicle Information*, *Vehicle Location*, *Vehicle Commands* and *Vehicle Charging Management*.
+      4. Skip billing info.
+      5. Open *View details* of the application and copy *Client ID* and *Client Secret* into the fields below.
+params:
+  - preset: vehicle-common
+  - preset: vehicle-online
+  - name: allowedorigin
+    readonly: true
+    required: true
+    description:
+      de: Zulässige Herkunfts-URL
+      en: Allowed Origin URL
+    service: tesla/origin
+  - name: redirecturi
+    readonly: true
+    description:
+      de: Zulässige Weiterleitungs-URI
+      en: Allowed Redirect URI
+    service: tesla/redirecturi
+  - name: clientid
+    help:
+      de: Kunden-ID der Anwendung auf [developer.tesla.com](https://developer.tesla.com/dashboard).
+      en: Client ID of the application at [developer.tesla.com](https://developer.tesla.com/dashboard).
+  - name: clientsecret
+    help:
+      de: Kundengeheimnis der Anwendung auf [developer.tesla.com](https://developer.tesla.com/dashboard).
+      en: Client Secret of the application at [developer.tesla.com](https://developer.tesla.com/dashboard).
+  - name: origin
+    advanced: true
+    description:
+      generic: Origin URL
+    help:
+      de: Eigene öffentliche https-Adresse dieser evcc-Instanz statt der Remotezugriff-Adresse.
+      en: Own public https address of this evcc instance instead of the Remote Access address.
+    example: https://evcc.example.com
+  - name: vin
+  - name: cache
+    default: 15m
+  - name: virtualkey
+    readonly: true
+    advanced: true
+    description:
+      de: Virtueller Schlüssel
+      en: Virtual key
+    help:
+      de: Nur erforderlich für direkte Ladesteuerung am Fahrzeug, z. B. am Tesla Wall Connector. Link auf dem Smartphone öffnen und den Schlüssel in der Tesla-App auf jedem Fahrzeug installieren.
+      en: Only required for direct charge control via the vehicle, e.g. with a Tesla Wall Connector. Open the link on your phone and add the key to each vehicle in the Tesla app.
+    service: tesla/virtualkey
+auth:
+  type: tesla
+  params: [allowedorigin, redirecturi, clientid, clientsecret, origin]
+render: |
+  type: tesla
+  origin: {{ .origin }}
+  credentials:
+    id: {{ .clientid }}
+    secret: {{ .clientsecret }}
+  vin: {{ .vin }}
+  {{ include "common" . }}
+  {{ include "features" (merge (dict "basefeatures" (list "coarsecurrent")) .) }}
+  cache: {{ .cache }}

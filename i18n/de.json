@@ -846,6 +846,8 @@
       "qrInstall": "Installiere die evcc-App für {ios} oder {android}.",
       "qrScan": "Scanne den Code mit der Kamera deines Smartphones, um dich zu verbinden. Klicke ihn an, wenn du bereits dein Handy nutzt.",
       "removeClient": "Client entfernen",
+      "required": "Dieses Gerät benötigt den Remotezugriff.",
+      "requiredEnable": "Remotezugriff aktivieren.",
       "title": "Remotezugriff",
       "url": "Öffentliche URL",
       "username": "Benutzername"

@@ -426,7 +426,7 @@ func (t *Template) RenderResult(class Class, renderMode int, other map[string]an
 				}
 
 				// validate required fields from yaml
-				if p.IsRequired() && p.IsZero(s) && (renderMode == RenderModeUnitTest || renderMode == RenderModeInstance && !testing.Testing()) {
+				if p.IsRequired() && !p.Readonly && p.IsZero(s) && (renderMode == RenderModeUnitTest || renderMode == RenderModeInstance && !testing.Testing()) {
 					// validate required per usage
 					if len(p.Usages) == 0 || slices.Contains(p.Usages, usage) {
 						return nil, nil, fmt.Errorf("missing required `%s`", p.Name)

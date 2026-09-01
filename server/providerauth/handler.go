@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -48,9 +49,10 @@ type Handler struct {
 	updateC   chan string
 }
 
+// stateEntry remembers the page the login started from, the redirect uri may be on another origin
 type stateEntry struct {
 	id       string
-	returnTo string // config modal query to restore on callback
+	returnTo string // e.g. http://evcc.local:7070/#/config?vehicle=8
 }
 
 // TODO get status from update channel
@@ -102,7 +104,7 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	// Generate a new state and store the provider
 	state := NewState()
 	encryptedState := state.Encrypt(a.secret)
-	a.states[encryptedState] = stateEntry{id: id, returnTo: r.URL.Query().Get("return")}
+	a.states[encryptedState] = stateEntry{id: id, returnTo: returnURL(r.URL.Query().Get("return"))}
 
 	// Schedule cleanup for stale state entries after state becomes invalid
 	time.AfterFunc(stateValidity, func() {
@@ -157,23 +159,34 @@ func (a *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 	jsonWrite(w, "OK")
 }
 
-func (a *Handler) redirectToError(w http.ResponseWriter, r *http.Request, message string) {
-	http.Redirect(w, r, "/#/config?callbackError="+url.QueryEscape(message), http.StatusFound)
+// returnURL validates the page to return to after the callback, empty if unusable
+func returnURL(s string) string {
+	if u, err := url.Parse(s); err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+		return ""
+	}
+	return s
+}
+
+// redirectToConfig sends the browser back to the config page the login started from
+func redirectToConfig(w http.ResponseWriter, r *http.Request, returnTo, query string) {
+	if returnTo == "" {
+		returnTo = "/#/config"
+	}
+	sep := "?"
+	if strings.Contains(returnTo, "?") {
+		sep = "&"
+	}
+	http.Redirect(w, r, returnTo+sep+query, http.StatusFound)
 }
 
 func (a *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 
-	if q.Has("error") {
-		errorMsg := q.Get("error") + ": " + q.Get("error_description")
-		a.redirectToError(w, r, errorMsg)
-		return
-	}
-
+	// the callback is reachable without session, only act on states issued by us
 	encryptedState := q.Get("state")
 	state, err := DecryptState(encryptedState, a.secret)
 	if err != nil || !state.Valid() {
-		a.redirectToError(w, r, "invalid state")
+		http.Error(w, "invalid state", http.StatusBadRequest)
 		return
 	}
 
@@ -183,32 +196,35 @@ func (a *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
 	// Find the corresponding provider
 	entry, ok := a.states[encryptedState]
 	if !ok {
-		a.redirectToError(w, r, "no provider found for state")
+		http.Error(w, "invalid state", http.StatusBadRequest)
 		return
 	}
 	id := entry.id
 
-	provider, ok := a.providers[id]
-	if !ok {
-		a.redirectToError(w, r, "internal provider state unexpected")
-		return
-	}
-
 	// Remove the state from the map
 	delete(a.states, encryptedState)
 
-	// Handle the callback
-	if err := provider.HandleCallback(r.URL.Query()); err != nil {
-		a.log.ERROR.Printf("callback for provider %s failed: %v", id, err)
-		a.redirectToError(w, r, err.Error())
+	redirectToError := func(message string) {
+		redirectToConfig(w, r, entry.returnTo, "callbackError="+url.QueryEscape(message))
+	}
+
+	if q.Has("error") {
+		redirectToError(q.Get("error") + ": " + q.Get("error_description"))
 		return
 	}
 
-	// restore the config modal stack alongside the completion marker
-	query := "callbackCompleted=" + url.QueryEscape(id)
-	if entry.returnTo != "" {
-		query = entry.returnTo + "&" + query
+	provider, ok := a.providers[id]
+	if !ok {
+		redirectToError("internal provider state unexpected")
+		return
 	}
 
-	http.Redirect(w, r, "/#/config?"+query, http.StatusFound)
+	// Handle the callback
+	if err := provider.HandleCallback(q); err != nil {
+		a.log.ERROR.Printf("callback for provider %s failed: %v", id, err)
+		redirectToError(err.Error())
+		return
+	}
+
+	redirectToConfig(w, r, entry.returnTo, "callbackCompleted="+url.QueryEscape(id))
 }
