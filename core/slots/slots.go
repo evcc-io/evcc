@@ -12,7 +12,8 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-// MatchSoc returns the end time of the first slot whose soc satisfies fun
+// MatchSoc returns when the first slot whose soc satisfies fun is reached,
+// counted from now rather than from the current slot boundary.
 func MatchSoc(ts []float32, fun func(float32) bool) time.Time {
 	for i, soc := range ts {
 		if fun(soc) {
