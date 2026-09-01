@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/session"
 	"github.com/evcc-io/evcc/core/wrapper"
@@ -40,7 +41,8 @@ func (lp *Loadpoint) createSession() {
 		return
 	}
 
-	lp.session = lp.db.New(lp.chargeMeterTotal())
+	meterStart := lp.chargeMeterTotal()
+	lp.session = lp.db.New(meterStart)
 
 	if v := lp.GetVehicle(); v != nil {
 		lp.session.Vehicle = v.GetTitle()
@@ -110,6 +112,12 @@ func (lp *Loadpoint) stopSession() {
 	s.ChargeDuration = new(lp.chargeDuration.Abs())
 
 	lp.applyEnergyMetrics(s)
+
+	meterStop := 0.0
+	if s.MeterStop != nil {
+		meterStop = *s.MeterStop
+	}
+	ocpp.ReportSessionStop(lp.GetTitle(), meterStop*1e3)
 }
 
 type sessionOption func(*session.Session)
@@ -162,6 +170,14 @@ func (lp *Loadpoint) finalizeSessionEnergy() {
 	lp.energyMetrics.Update(chargedKWh)
 
 	lp.applyEnergyMetrics(s)
+
+	// register-style reading: absolute cumulative meter, same baseline as
+	// StartTransaction's meterStart, so a backend can just subtract them
+	register := chargedKWh
+	if s.MeterStart != nil {
+		register += *s.MeterStart
+	}
+	ocpp.ReportMeterValue(lp.GetTitle(), register*1e3)
 }
 
 func (lp *Loadpoint) resetHeatingSession() {

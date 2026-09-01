@@ -4912,6 +4912,103 @@
           }
         }
       },
+      "OcppReportRule": {
+        "description": "A rule reporting a loadpoint's charging sessions to an upstream OCPP backend (evcc-io/evcc#32989). One-way: evcc never accepts remote control from the upstream.",
+        "type": "object",
+        "properties": {
+          "loadpointTitle": {
+            "description": "Title of the loadpoint to report.",
+            "type": "string"
+          },
+          "upstreamUrl": {
+            "description": "URL of the upstream OCPP backend.",
+            "type": "string"
+          },
+          "stationId": {
+            "description": "Station id presented to the upstream backend.",
+            "type": "string"
+          },
+          "idTag": {
+            "description": "ID tag presented to the upstream backend for Authorize/StartTransaction.",
+            "type": "string"
+          },
+          "username": {
+            "description": "Username for upstream authentication.",
+            "type": "string"
+          },
+          "password": {
+            "description": "Password for upstream authentication. Redacted.",
+            "type": "string"
+          },
+          "insecure": {
+            "description": "Skip TLS certificate verification.",
+            "type": "boolean"
+          },
+          "caCert": {
+            "description": "CA certificate for TLS connections.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loadpointTitle",
+          "upstreamUrl"
+        ]
+      },
+      "OcppReportSession": {
+        "description": "Connection status of an OCPP report rule.",
+        "type": "object",
+        "properties": {
+          "loadpointTitle": {
+            "description": "Loadpoint title.",
+            "type": "string"
+          },
+          "upstreamUrl": {
+            "description": "URL of the upstream OCPP backend.",
+            "type": "string"
+          },
+          "upstreamConnected": {
+            "description": "Connection to the upstream backend is established.",
+            "type": "boolean"
+          },
+          "error": {
+            "description": "Last connection error.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loadpointTitle",
+          "upstreamUrl",
+          "upstreamConnected"
+        ]
+      },
+      "OcppReport": {
+        "description": "OCPP report rules and upstream connection status.",
+        "type": "object",
+        "properties": {
+          "config": {
+            "description": "Static configuration.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OcppReportRule"
+            }
+          },
+          "status": {
+            "description": "Runtime status.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OcppReportSession"
+            }
+          },
+          "yamlSource": {
+            "description": "Source of the configuration, evcc.yaml file or database.",
+            "type": "string",
+            "enum": [
+              "file",
+              "db"
+            ]
+          }
+        }
+      },
       "State": {
         "description": "Complete system state as returned by /api/state and pushed via websocket and MQTT. This structure mirrors the internal UI state and carries no compatibility promise. Fields may change or disappear between releases.",
         "type": "object",
@@ -5251,6 +5348,10 @@
           "ocppforwarder": {
             "$ref": "#/components/schemas/OcppForwarder",
             "description": "OCPP forwarder rules and upstream connection status."
+          },
+          "ocppreport": {
+            "$ref": "#/components/schemas/OcppReport",
+            "description": "OCPP report rules and upstream connection status."
           },
           "optimizer": {
             "description": "Battery optimizer is enabled.",

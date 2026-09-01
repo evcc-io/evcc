@@ -313,6 +313,8 @@ export interface State {
   ocpp?: Ocpp;
   /** OCPP forwarder rules and upstream connection status. */
   ocppforwarder?: OcppForwarder;
+  /** OCPP report rules and upstream connection status. */
+  ocppreport?: OcppReport;
   /** Battery optimizer is enabled. */
   optimizer?: boolean;
   /** Selected battery optimizer charging strategy. */
@@ -376,6 +378,43 @@ export interface OcppForwarder extends ConfigStatus<OcppForwarderRule[], OcppFor
 export interface OcppForwarderSession {
   /** Charger id. */
   chargerId: string;
+  /** URL of the upstream OCPP backend. */
+  upstreamUrl: string;
+  /** Connection to the upstream backend is established. */
+  upstreamConnected: boolean;
+  /** Last connection error. */
+  error?: string;
+}
+
+/** A rule reporting a loadpoint's charging sessions to an upstream OCPP
+ * backend (evcc-io/evcc#32989). One-way: evcc never accepts remote control
+ * from the upstream. */
+export interface OcppReportRule {
+  /** Title of the loadpoint to report. */
+  loadpointTitle: string;
+  /** URL of the upstream OCPP backend. */
+  upstreamUrl: string;
+  /** Station id presented to the upstream backend. */
+  stationId?: string;
+  /** ID tag presented to the upstream backend for Authorize/StartTransaction. */
+  idTag?: string;
+  /** Username for upstream authentication. */
+  username?: string;
+  /** Password for upstream authentication. Redacted. */
+  password?: string;
+  /** Skip TLS certificate verification. */
+  insecure?: boolean;
+  /** CA certificate for TLS connections. */
+  caCert?: string;
+}
+
+/** OCPP report rules and upstream connection status. */
+export interface OcppReport extends ConfigStatus<OcppReportRule[], OcppReportSession[]> {}
+
+/** Connection status of an OCPP report rule. */
+export interface OcppReportSession {
+  /** Loadpoint title. */
+  loadpointTitle: string;
   /** URL of the upstream OCPP backend. */
   upstreamUrl: string;
   /** Connection to the upstream backend is established. */

@@ -14,6 +14,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
@@ -525,6 +526,12 @@ func (lp *Loadpoint) evChargeStartHandler() {
 	lp.updateSession(func(session *session.Session) {
 		if session.Created.IsZero() {
 			session.Created = lp.clock.Now()
+
+			meterStart := 0.0
+			if session.MeterStart != nil {
+				meterStart = *session.MeterStart
+			}
+			ocpp.ReportSessionStart(lp.GetTitle(), meterStart*1e3)
 		}
 		// capture start soc once available (may not be present at session start)
 		if soc := lp.vehicleSoc; session.SocStart == nil && soc > 0 && !lp.chargerHasFeature(api.Heating) {
