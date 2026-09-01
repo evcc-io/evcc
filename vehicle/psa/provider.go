@@ -13,11 +13,16 @@ type Provider struct {
 	statusG func() (Status, error)
 }
 
-// NewProvider creates a vehicle api provider
-func NewProvider(api *API, vid string, cache time.Duration) *Provider {
+// NewProvider creates a vehicle api provider. The vehicle id is resolved
+// lazily since it requires an authenticated api call.
+func NewProvider(api *API, vid func() (string, error), cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: util.Cached(func() (Status, error) {
-			return api.Status(vid)
+			id, err := vid()
+			if err != nil {
+				return Status{}, err
+			}
+			return api.Status(id)
 		}, cache),
 	}
 	return impl

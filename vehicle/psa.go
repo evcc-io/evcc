@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/vehicle/psa"
+	"golang.org/x/oauth2"
 )
 
 // https://github.com/TA2k/ioBroker.psa
@@ -55,38 +56,49 @@ func newPSA(brand, realm string, other map[string]any) (api.Vehicle, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	token, err := cc.Tokens.Token()
-	if err != nil {
-		return nil, err
-	}
-
-	v := &PSA{
-		embed: &cc.embed,
-	}
-
 	log := util.NewLogger(brand)
 	log.Redact(cc.User, cc.Tokens.Access, cc.Tokens.Refresh)
 
-	oc := psa.Oauth2Config(brand, strings.ToLower(cc.Country))
-	identity, err := psa.NewIdentity(log, brand, cc.User, oc, token)
+	// optional seed token from `evcc token` (login happens in the ui)
+	var seed *oauth2.Token
+	if token, err := cc.Tokens.Token(); err == nil {
+		seed = token
+	}
+
+	identity, err := psa.NewIdentity(log, brand, cc.User, strings.ToLower(cc.Country), seed)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO still needed?
-	api := psa.NewAPI(log, identity, realm, oc.ClientID)
+	api := psa.NewAPI(log, identity, realm, identity.ClientID())
 
-	vehicle, err := ensureVehicleEx(
-		cc.VIN, api.Vehicles,
-		func(v psa.Vehicle) (string, error) {
-			return v.VIN, nil
-		},
-	)
-	if err != nil {
-		return nil, err
+	// resolved on first use so the vehicle can be created before login
+	var vid string
+	resolve := func() (string, error) {
+		if vid != "" {
+			return vid, nil
+		}
+
+		vehicle, err := ensureVehicleEx(
+			cc.VIN, api.Vehicles,
+			func(v psa.Vehicle) (string, error) {
+				return v.VIN, nil
+			},
+		)
+		if err != nil {
+			return "", err
+		}
+
+		vid = vehicle.ID
+
+		return vid, nil
 	}
 
-	v.Provider = psa.NewProvider(api, vehicle.ID, cc.Cache)
+	v := &PSA{
+		embed:    &cc.embed,
+		Provider: psa.NewProvider(api, resolve, cc.Cache),
+	}
 
-	return v, err
+	return v, nil
 }
