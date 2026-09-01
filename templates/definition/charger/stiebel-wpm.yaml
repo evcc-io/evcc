@@ -15,7 +15,6 @@ params:
     choice: ["warmwater", "buffer"]
   - name: power
     type: bool
-    default: false
     advanced: true
     description:
       de: Leistungsaufnahme auslesen
