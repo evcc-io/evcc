@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
@@ -416,7 +417,7 @@ func TestLoadpointRequestChargeGoal(t *testing.T) {
 }
 
 func TestOptimizerChargingStrategy(t *testing.T) {
-	site := &Site{log: util.NewLogger("foo")}
+	site := &Site{log: util.NewLogger("foo"), settings: settings.NewMemorySettings()}
 
 	// default when unset
 	assert.Equal(t, defaultOptimizerChargingStrategy, site.GetOptimizerChargingStrategy())
@@ -431,7 +432,7 @@ func TestOptimizerChargingStrategy(t *testing.T) {
 }
 
 func TestGridExportLimit(t *testing.T) {
-	site := &Site{log: util.NewLogger("foo")}
+	site := &Site{log: util.NewLogger("foo"), settings: settings.NewMemorySettings()}
 
 	// disabled by default
 	assert.Equal(t, 0.0, site.GetGridExportLimit())

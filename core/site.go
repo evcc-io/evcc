@@ -60,8 +60,7 @@ type Site struct {
 	sync.RWMutex
 	log *util.Logger
 
-	settingsOnce  sync.Once
-	settingsStore settings.Settings
+	settings settings.Settings
 
 	// configuration
 	Title         string       `mapstructure:"title"`         // UI title
@@ -398,10 +397,10 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	site := &Site{
-		log:           util.NewLogger("site"),
-		settingsStore: settings.NewDatabaseSettingsAdapter(""),
-		Voltage:       230, // V
-		collectors:    make(map[string]*metrics.Collector),
+		log:        util.NewLogger("site"),
+		settings:   settings.NewDatabaseSettingsAdapter(""),
+		Voltage:    230, // V
+		collectors: make(map[string]*metrics.Collector),
 	}
 
 	// the result only depends on completed days, so it cannot change within a day
@@ -416,90 +415,80 @@ func NewSite() *Site {
 	return site
 }
 
-// settings returns the settings store, defaulting to a non-persistent one
-func (site *Site) settings() settings.Settings {
-	site.settingsOnce.Do(func() {
-		if site.settingsStore == nil {
-			site.settingsStore = settings.NewMemorySettings()
-		}
-	})
-	return site.settingsStore
-}
-
 // restoreMetersAndTitle restores site meter configuration
 func (site *Site) restoreMetersAndTitle() {
-	if v, err := site.settings().String(keys.Title); err == nil {
+	if v, err := site.settings.String(keys.Title); err == nil {
 		site.Title = v
 	}
-	if v, err := site.settings().String(keys.GridMeter); err == nil && v != "" {
+	if v, err := site.settings.String(keys.GridMeter); err == nil && v != "" {
 		site.Meters.GridMeterRef = v
 	}
-	if v, err := site.settings().String(keys.PvMeters); err == nil && v != "" {
+	if v, err := site.settings.String(keys.PvMeters); err == nil && v != "" {
 		site.Meters.PVMetersRef = append(site.Meters.PVMetersRef, filterConfigurableMeter(strings.Split(v, ","))...)
 	}
-	if v, err := site.settings().String(keys.BatteryMeters); err == nil && v != "" {
+	if v, err := site.settings.String(keys.BatteryMeters); err == nil && v != "" {
 		site.Meters.BatteryMetersRef = append(site.Meters.BatteryMetersRef, filterConfigurableMeter(strings.Split(v, ","))...)
 	}
-	if v, err := site.settings().String(keys.ExtMeters); err == nil && v != "" {
+	if v, err := site.settings.String(keys.ExtMeters); err == nil && v != "" {
 		site.Meters.ExtMetersRef = append(site.Meters.ExtMetersRef, filterConfigurableMeter(strings.Split(v, ","))...)
 	}
-	if v, err := site.settings().String(keys.AuxMeters); err == nil && v != "" {
+	if v, err := site.settings.String(keys.AuxMeters); err == nil && v != "" {
 		site.Meters.AuxMetersRef = append(site.Meters.AuxMetersRef, filterConfigurableMeter(strings.Split(v, ","))...)
 	}
-	if v, err := site.settings().String(keys.ConsumerMeters); err == nil && v != "" {
+	if v, err := site.settings.String(keys.ConsumerMeters); err == nil && v != "" {
 		site.Meters.ConsumerMetersRef = append(site.Meters.ConsumerMetersRef, filterConfigurableMeter(strings.Split(v, ","))...)
 	}
-	if v, err := site.settings().String(keys.Curtailers); err == nil && v != "" {
+	if v, err := site.settings.String(keys.Curtailers); err == nil && v != "" {
 		site.CurtailersRef = append(site.CurtailersRef, filterConfigurableCurtailers(strings.Split(v, ","))...)
 	}
 }
 
 // restoreSettings restores site settings
 func (site *Site) restoreSettings() error {
-	if v, err := site.settings().Float(keys.BufferSoc); err == nil {
+	if v, err := site.settings.Float(keys.BufferSoc); err == nil {
 		if err := site.SetBufferSoc(v); err != nil && !errors.Is(err, ErrBatteryNotConfigured) {
 			return err
 		}
 	}
-	if v, err := site.settings().Float(keys.BufferStartSoc); err == nil {
+	if v, err := site.settings.Float(keys.BufferStartSoc); err == nil {
 		if err := site.SetBufferStartSoc(v); err != nil && !errors.Is(err, ErrBatteryNotConfigured) {
 			return err
 		}
 	}
-	if v, err := site.settings().Float(keys.PrioritySoc); err == nil {
+	if v, err := site.settings.Float(keys.PrioritySoc); err == nil {
 		if err := site.SetPrioritySoc(v); err != nil && !errors.Is(err, ErrBatteryNotConfigured) {
 			return err
 		}
 	}
-	if v, err := site.settings().Bool(keys.BatteryDischargeControl); err == nil {
+	if v, err := site.settings.Bool(keys.BatteryDischargeControl); err == nil {
 		if err := site.SetBatteryDischargeControl(v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
 			return err
 		}
 	}
-	if v, err := site.settings().Bool(keys.BatteryGridDischarge); err == nil {
+	if v, err := site.settings.Bool(keys.BatteryGridDischarge); err == nil {
 		if err := site.SetBatteryGridDischarge(v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
 			return err
 		}
 	}
-	if v, err := site.settings().Float(keys.ResidualPower); err == nil {
+	if v, err := site.settings.Float(keys.ResidualPower); err == nil {
 		if err := site.SetResidualPower(v); err != nil {
 			return err
 		}
 	}
-	if v, err := site.settings().Float(keys.BatteryGridChargeLimit); err == nil {
+	if v, err := site.settings.Float(keys.BatteryGridChargeLimit); err == nil {
 		if err := site.SetBatteryGridChargeLimit(&v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
 			return err
 		}
 	}
-	if v, err := site.settings().Float(keys.GridExportLimit); err == nil {
+	if v, err := site.settings.Float(keys.GridExportLimit); err == nil {
 		if err := site.SetGridExportLimit(v); err != nil {
 			return err
 		}
 	}
-	if v, err := site.settings().Bool(keys.SolarAdjusted); err == nil {
+	if v, err := site.settings.Bool(keys.SolarAdjusted); err == nil {
 		site.SetSolarAdjusted(v)
 	}
-	if v, err := site.settings().String(keys.OptimizerChargingStrategy); err == nil && v != "" {
+	if v, err := site.settings.String(keys.OptimizerChargingStrategy); err == nil && v != "" {
 		if err := site.SetOptimizerChargingStrategy(v); err != nil {
 			site.log.WARN.Printf("optimizer charging strategy: %v", err)
 		}
