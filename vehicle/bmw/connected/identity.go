@@ -51,7 +51,7 @@ func (v *Identity) Login(user, password, hcaptcha string) (oauth2.TokenSource, e
 		v.log.DEBUG.Println("identity.Login - database token found")
 		tok, err := v.refreshToken(&tok)
 		if err == nil {
-			ts := oauth2.ReuseTokenSourceWithExpiry(tok, oauth.RefreshTokenSource(tok, v.refreshToken), 15*time.Minute)
+			ts := oauth2.ReuseTokenSourceWithExpiry(tok, oauth.RefreshTokenSource(v.log, tok, v.refreshToken), 15*time.Minute)
 			return ts, nil
 		}
 		v.log.DEBUG.Println("identity.Login - database token invalid. Proceeding to login via user, password and captcha.")
@@ -150,7 +150,7 @@ func (v *Identity) Login(user, password, hcaptcha string) (oauth2.TokenSource, e
 		return nil, err
 	}
 
-	ts := oauth2.ReuseTokenSourceWithExpiry(token, oauth.RefreshTokenSource(token, v.refreshToken), 15*time.Minute)
+	ts := oauth2.ReuseTokenSourceWithExpiry(token, oauth.RefreshTokenSource(v.log, token, v.refreshToken), 15*time.Minute)
 
 	return ts, nil
 }

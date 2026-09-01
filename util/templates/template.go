@@ -119,6 +119,18 @@ func (t *Template) Validate() error {
 			return fmt.Errorf("param %s: description can't be empty", p.Name)
 		}
 
+		// bool params are rendered as real booleans, so anything but true/false
+		// would render differently than it appears in the ui. the example is the
+		// default in docs and unit test mode, see Param.DefaultValue.
+		if p.Type == TypeBool {
+			if v := p.Default; v != "" && v != "true" && v != "false" {
+				return fmt.Errorf("param %s: bool default must be true or false, got '%s'", p.Name, v)
+			}
+			if v := p.Example; v != "" && v != "true" && v != "false" {
+				return fmt.Errorf("param %s: bool example must be true or false, got '%s'", p.Name, v)
+			}
+		}
+
 		maxLength := 50
 		actualLength := max(len(p.Description.String("en")), len(p.Description.String("de")))
 		if actualLength > maxLength {
@@ -428,7 +440,14 @@ func (t *Template) RenderResult(class Class, renderMode int, other map[string]an
 					}
 				}
 
-				res[out] = s
+				// bool params become real booleans so templates can use `{{ if .param }}`.
+				// TODO tcpip/udp/rs485* are predefined properties, so modbus.tpl still
+				// compares strings and mis-branches on a stored "false"
+				if p.Type == TypeBool {
+					res[out] = s == "true"
+				} else {
+					res[out] = s
+				}
 			}
 		}
 	}
