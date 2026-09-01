@@ -59,7 +59,7 @@ func (s *DB) Persist(session any) {
 }
 
 // Return sessions
-// TODO make this part of server/db
+// TODO make this part of db
 func (s *DB) Sessions() (Sessions, error) {
 	var res Sessions
 	tx := s.db.Find(&res)
