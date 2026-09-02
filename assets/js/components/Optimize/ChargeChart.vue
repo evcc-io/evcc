@@ -11,6 +11,7 @@ import {
 	axisNameStyle,
 	FONT_FAMILY,
 	forecastYAxis,
+	hoverDot,
 	lineCasing,
 	tooltipStyle,
 	tooltipTable,
@@ -103,22 +104,18 @@ export default defineComponent({
 				type: "line",
 				z: 4,
 				data: this.gridPower,
-				showSymbol: false,
 				smooth: 0.2,
+				...hoverDot(colors.grid || ""),
 				lineStyle: { color: colors.grid || "", ...lineDefaults },
-				itemStyle: { color: colors.grid || "" },
-				emphasis: { disabled: true },
 			};
 			const solar = {
 				name: SOLAR_LABEL,
 				type: "line",
 				z: 4,
 				data: this.evopt.req.time_series.ft.map(this.toKW),
-				showSymbol: false,
 				smooth: 0.2,
+				...hoverDot(colors.forecast || ""),
 				lineStyle: { color: colors.forecast || "", ...lineDefaults },
-				itemStyle: { color: colors.forecast || "" },
-				emphasis: { disabled: true },
 			};
 			const series: Record<string, unknown>[] = [
 				dayBoundarySeries(this.times),
@@ -166,8 +163,6 @@ export default defineComponent({
 						type: "line",
 						lineStyle: { color: colors.muted || "", opacity: 0.4 },
 					},
-					// no chart anchor: category-axis values are scalars, convertToPixel
-					// would choke on them; follow the pointer instead
 					...tooltipStyle(colors.text || ""),
 					formatter: this.tooltipFormatter,
 				},
