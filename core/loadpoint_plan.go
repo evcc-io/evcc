@@ -123,47 +123,125 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration, preconditio
 	return lp.planner.Plan(requiredDuration, precondition, targetTime, continuous)
 }
 
+// planConstraints are the inputs a charge plan is computed from. Gathering them
+// has no side effects on loadpoint state.
+type planConstraints struct {
+	connected        bool             // a vehicle is connected
+	time             time.Time        // effective plan time
+	goal             float64          // soc in % or energy in kWh
+	socBased         bool             // goal is soc, not energy
+	maxPower         float64          // effective max charge power
+	requiredDuration time.Duration    // estimated duration to reach the goal
+	strategy         api.PlanStrategy // precondition, continuous
+}
+
+// planConstraints gathers the current plan constraints. None of the reads have
+// side effects.
+func (lp *Loadpoint) planConstraints() planConstraints {
+	var c planConstraints
+
+	c.connected = lp.connected()
+	c.time = lp.EffectivePlanTime()
+	c.goal, c.socBased = lp.GetPlanGoal()
+	c.maxPower = lp.EffectiveMaxPower()
+	c.requiredDuration = lp.GetPlanRequiredDuration(c.goal, c.maxPower)
+	c.strategy = lp.getEffectivePlanStrategy()
+
+	return c
+}
+
+// planEvaluation records one evaluation of the plan constraints: the constraints
+// it was given and the plan they produced
+type planEvaluation struct {
+	// constraints go in
+	constraints planConstraints
+
+	// plan comes out
+	plan       api.Rates
+	start, end time.Time
+	overrun    time.Duration
+}
+
+// evaluatePlan gathers the plan constraints and computes the resulting charge plan.
+// It has no side effects on loadpoint state and may run outside the control cycle.
+func (lp *Loadpoint) evaluatePlan() planEvaluation {
+	pe := planEvaluation{constraints: lp.planConstraints()}
+
+	if !pe.constraints.connected || pe.constraints.time.IsZero() {
+		return pe
+	}
+
+	// expired plans are only kept alive while active
+	if lp.clock.Until(pe.constraints.time) < 0 && (!lp.planActive || !pe.constraints.connected) {
+		return pe
+	}
+
+	if pe.constraints.requiredDuration <= 0 {
+		return pe
+	}
+
+	pe.plan = lp.GetPlan(pe.constraints.time, pe.constraints.requiredDuration, pe.constraints.strategy.Precondition, pe.constraints.strategy.Continuous)
+	if pe.plan == nil {
+		return pe
+	}
+
+	pe.start = planner.Start(pe.plan)
+	pe.end = planner.End(pe.plan)
+
+	if excessDuration := pe.constraints.requiredDuration - lp.clock.Until(pe.constraints.time); excessDuration > 0 {
+		pe.overrun = excessDuration
+	}
+
+	return pe
+}
+
+// publishPlanState publishes the given plan state
+func (lp *Loadpoint) publishPlanState(pe planEvaluation) {
+	lp.publish(keys.Plan, pe.plan)
+	lp.publish(keys.PlanProjectedStart, pe.start)
+	lp.publish(keys.PlanProjectedEnd, pe.end)
+	lp.publish(keys.PlanOverrun, pe.overrun)
+}
+
+// publishPlan computes and publishes the charge plan. Unlike plannerActive it has
+// no side effects, so it runs for every loadpoint on every control cycle rather
+// than only for the loadpoint the cycle is updating.
+func (lp *Loadpoint) publishPlan() {
+	lp.publishPlanState(lp.evaluatePlan())
+}
+
 // plannerActive checks if the charging plan has a currently active slot
 func (lp *Loadpoint) plannerActive() (active bool) {
 	defer func() {
 		lp.setPlanActive(active)
 	}()
 
-	var plan api.Rates
-	var planStart, planEnd time.Time
-	var planOverrun time.Duration
+	pe := lp.evaluatePlan()
 
 	defer func() {
-		lp.publish(keys.Plan, plan)
-		lp.publish(keys.PlanProjectedStart, planStart)
-		lp.publish(keys.PlanProjectedEnd, planEnd)
-		lp.publish(keys.PlanOverrun, planOverrun)
+		lp.publishPlanState(pe)
 	}()
 
 	// re-check since plannerActive() is called before connected() check in Update()
-	if !lp.connected() {
+	if !pe.constraints.connected {
 		return false
 	}
 
-	planTime := lp.EffectivePlanTime()
-	if planTime.IsZero() {
+	if pe.constraints.time.IsZero() {
 		lp.log.DEBUG.Println("!! plan: plan time zero")
 		return false
 	}
 
 	// keep overrunning plans as long as a vehicle is connected
-	if lp.clock.Until(planTime) < 0 && (!lp.planActive || !lp.connected()) {
+	if lp.clock.Until(pe.constraints.time) < 0 && (!lp.planActive || !pe.constraints.connected) {
 		lp.log.DEBUG.Println("plan: deleting expired plan")
 		lp.finishPlan()
 		return false
 	}
 
-	goal, isSocBased := lp.GetPlanGoal()
-	maxPower := lp.EffectiveMaxPower()
-	requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
-	if requiredDuration <= 0 {
+	if pe.constraints.requiredDuration <= 0 {
 		// continue a 100% plan as long as the vehicle is connected
-		if lp.planActive && isSocBased && goal == 100 {
+		if lp.planActive && pe.constraints.socBased && pe.constraints.goal == 100 {
 			return true
 		}
 		lp.log.DEBUG.Println("!! plan: required duration 0")
@@ -172,48 +250,42 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
-	strategy := lp.getEffectivePlanStrategy()
-
-	plan = lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
-	if plan == nil {
+	if pe.plan == nil {
 		lp.log.DEBUG.Println("!! plan: plan nil")
 		return false
 	}
 
 	var overrun string
-	if excessDuration := requiredDuration - lp.clock.Until(planTime); excessDuration > 0 {
-		overrun = fmt.Sprintf("overruns by %v, ", excessDuration.Round(time.Second))
-		planOverrun = excessDuration
+	if pe.overrun > 0 {
+		overrun = fmt.Sprintf("overruns by %v, ", pe.overrun.Round(time.Second))
 		if !lp.planOverrunSent {
 			lp.pushEvent("planoverrun")
 			lp.planOverrunSent = true
 		}
 	}
 
-	planStart = planner.Start(plan)
-	planEnd = planner.End(plan)
 	lp.log.DEBUG.Printf("plan: charge %v between %v until %v (%spower: %.0fW, avg cost: %.3f)",
-		planner.Duration(plan).Round(time.Second), planStart.Round(time.Second).Local(), planTime.Round(time.Second).Local(), overrun,
-		maxPower, planner.AverageCost(plan))
+		planner.Duration(pe.plan).Round(time.Second), pe.start.Round(time.Second).Local(), pe.constraints.time.Round(time.Second).Local(), overrun,
+		pe.constraints.maxPower, planner.AverageCost(pe.plan))
 
 	// log plan
-	for _, slot := range plan {
+	for _, slot := range pe.plan {
 		lp.log.TRACE.Printf("  slot from: %v to %v cost %.3f", slot.Start.Round(time.Second).Local(), slot.End.Round(time.Second).Local(), slot.Value)
 	}
 
-	activeSlot := planner.SlotAt(lp.clock.Now(), plan)
+	activeSlot := planner.SlotAt(lp.clock.Now(), pe.plan)
 	active = !activeSlot.End.IsZero()
 
 	if active {
 		// ignore short plans if not already active
-		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < tariff.SlotDuration-time.Minute && !planner.SlotHasSuccessor(activeSlot, plan) {
+		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < tariff.SlotDuration-time.Minute && !planner.SlotHasSuccessor(activeSlot, pe.plan) {
 			lp.log.DEBUG.Printf("plan: slot too short- ignoring remaining %v", slotRemaining.Round(time.Second))
 			return false
 		}
 
 		// lock the goal when soc-based plan becomes active for the first time
-		if lp.planLocked.Id == 0 && isSocBased {
-			lp.lockPlanGoal(planTime, int(goal), lp.getPlanId())
+		if lp.planLocked.Id == 0 && pe.constraints.socBased {
+			lp.lockPlanGoal(pe.constraints.time, int(pe.constraints.goal), lp.getPlanId())
 		}
 
 		// remember last active plan's slot end time
@@ -221,25 +293,25 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	} else if lp.planActive {
 		// planner was active (any slot, not necessarily previous slot) and charge goal has not yet been met
 		switch {
-		case lp.clock.Now().After(planTime) && !planTime.IsZero():
+		case lp.clock.Now().After(pe.constraints.time) && !pe.constraints.time.IsZero():
 			// if the plan did not (entirely) work, we may still be charging beyond plan end- in that case, continue charging
 			// TODO check when schedule is implemented
 			lp.log.DEBUG.Println("plan: continuing after target time")
 			return true
-		case lp.clock.Now().Before(lp.planSlotEnd) && !lp.planSlotEnd.IsZero() && requiredDuration > strategy.Precondition:
+		case lp.clock.Now().Before(lp.planSlotEnd) && !lp.planSlotEnd.IsZero() && pe.constraints.requiredDuration > pe.constraints.strategy.Precondition:
 			// don't stop an already running slot if goal was not met
 			lp.log.DEBUG.Printf("plan: continuing until end of slot at %s", lp.planSlotEnd.Round(time.Second).Local())
 			return true
-		case requiredDuration < tariff.SlotDuration && requiredDuration > strategy.Precondition:
-			lp.log.DEBUG.Printf("plan: continuing for remaining %v", requiredDuration.Round(time.Second))
+		case pe.constraints.requiredDuration < tariff.SlotDuration && pe.constraints.requiredDuration > pe.constraints.strategy.Precondition:
+			lp.log.DEBUG.Printf("plan: continuing for remaining %v", pe.constraints.requiredDuration.Round(time.Second))
 			return true
-		case lp.clock.Until(planStart) < tariff.SlotDuration-time.Minute:
-			lp.log.DEBUG.Printf("plan: avoid re-start within %v, continuing for remaining %v", tariff.SlotDuration, lp.clock.Until(planStart).Round(time.Second))
+		case lp.clock.Until(pe.start) < tariff.SlotDuration-time.Minute:
+			lp.log.DEBUG.Printf("plan: avoid re-start within %v, continuing for remaining %v", tariff.SlotDuration, lp.clock.Until(pe.start).Round(time.Second))
 			return true
-		case strategy.Continuous && requiredDuration > strategy.Precondition:
-			lp.log.DEBUG.Printf("plan: ignoring restart at %s for continuous charging", planStart.Round(time.Second).Local())
-			planStart = lp.clock.Now()
-			planEnd = planStart.Add(requiredDuration)
+		case pe.constraints.strategy.Continuous && pe.constraints.requiredDuration > pe.constraints.strategy.Precondition:
+			lp.log.DEBUG.Printf("plan: ignoring restart at %s for continuous charging", pe.start.Round(time.Second).Local())
+			pe.start = lp.clock.Now()
+			pe.end = pe.start.Add(pe.constraints.requiredDuration)
 			return true
 		}
 	}
