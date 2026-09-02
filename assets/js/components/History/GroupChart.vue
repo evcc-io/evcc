@@ -7,13 +7,16 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import {
+	axisNameStyle,
 	FONT_FAMILY,
 	forecastGrid,
 	forecastYAxis,
+	lineCasing,
 	tooltipStyle,
 	tooltipTable,
 	xAxisLabelStyle,
 	type TooltipRow,
+	lineDefaults,
 } from "../Forecast/echarts";
 import colors, { resolveColors, deviceColorMap, darken, batteryColor, setAlpha } from "@/colors";
 import store from "@/store";
@@ -21,7 +24,8 @@ import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import echartsChart from "@/mixins/echartsChart";
 import { PERIODS } from "../Sessions/types";
 import { is12hFormat } from "@/units";
-import { hasColorPicker } from "./groups";
+import { hasColorPicker, isBidirectional } from "./groups";
+import { energyAxisScale, type EnergyAxisScale } from "@/utils/energyAxis";
 
 export interface HistorySlot {
 	start: string;
@@ -53,20 +57,8 @@ export function stepAlpha(i: number, n: number): number {
 	return Math.max(minAlpha, 1 - (n - 1 - i) * step);
 }
 
-// Symmetric axis regardless of whether the period contains both directions.
-const BIDIRECTIONAL_GROUPS: ReadonlySet<string> = new Set(["grid", "battery"]);
-
 // Multiple entities stack into one bar; grid and meter render side-by-side.
 const STACKED_GROUPS: ReadonlySet<string> = new Set(["loadpoint", "consumer", "pv", "battery"]);
-
-// Round up to a nice number (5-tick symmetric axis: -L, -L/2, 0, L/2, L).
-function niceCeil(v: number): number {
-	if (v <= 0) return 0;
-	const mag = Math.pow(10, Math.floor(Math.log10(v)));
-	const r = v / mag;
-	const n = r <= 1 ? 1 : r <= 2 ? 2 : r <= 3 ? 3 : r <= 4 ? 4 : r <= 6 ? 6 : r <= 8 ? 8 : 10;
-	return n * mag;
-}
 
 export default defineComponent({
 	name: "GroupChart",
@@ -144,23 +136,19 @@ export default defineComponent({
 			}
 			const overlay = this.showOverlay ? this.overlay : [];
 			return Math.max(
-				peak(this.visibleSeries, (slot) => Math.abs(slot.energy - slot.returnEnergy)),
+				peak(this.visibleSeries, (slot) => slot.energy),
 				peak(overlay, (slot) => slot.energy)
 			);
 		},
-		// W/Wh scale when peak below 1 kW(h). Zero data falls here too.
+		// axisPeak is in kW(h), the shared scale works in W(h)
+		axisScale(): EnergyAxisScale {
+			return energyAxisScale(this.axisPeak * 1000);
+		},
 		useSmallUnit(): boolean {
-			return this.axisPeak < 1;
+			return this.axisScale.unit === POWER_UNIT.W;
 		},
-		// Rounded range. W mode floors at 1 kW (= 1000 W) for stable context.
 		axisLimit(): number {
-			const v = niceCeil(this.axisPeak);
-			return this.useSmallUnit ? Math.max(v, 1) : v;
-		},
-		// 1-3 kW(h) band gets one decimal to avoid duplicate integer ticks.
-		axisDigits(): number {
-			if (this.useSmallUnit) return 0;
-			return this.axisLimit > 0 && this.axisLimit <= 3 ? 1 : 0;
+			return this.axisScale.limit / 1000;
 		},
 		unit(): "W" | "Wh" | "kW" | "kWh" {
 			if (this.period === PERIODS.DAY) return this.useSmallUnit ? "W" : "kW";
@@ -179,12 +167,7 @@ export default defineComponent({
 			return this.series.filter((s, i) => (s.paletteIndex ?? i) === idx);
 		},
 		isBidirectional(): boolean {
-			if (BIDIRECTIONAL_GROUPS.has(this.group)) return true;
-			// additional grid/battery meters can export
-			if (this.group === "meter") {
-				return this.series.some((s) => s.data.some((slot) => slot.returnEnergy > 0));
-			}
-			return false;
+			return isBidirectional(this.group, this.series);
 		},
 		categoryTimestamps(): number[] {
 			const out: number[] = [];
@@ -221,7 +204,8 @@ export default defineComponent({
 			const has = Array.from({ length: this.categoryKeys.length }, () => false);
 			for (const s of this.visibleSeries) {
 				for (const slot of s.data) {
-					if (slot.energy <= 0 && slot.returnEnergy <= 0) continue;
+					if (slot.energy <= 0 && (!this.isBidirectional || slot.returnEnergy <= 0))
+						continue;
 					const idx = index.get(this.timestampKey(new Date(slot.start).getTime()));
 					if (idx !== undefined) has[idx] = true;
 				}
@@ -261,7 +245,7 @@ export default defineComponent({
 			const result: Record<string, unknown>[] = [];
 
 			// Always render overlay slot (line series) so series structure is stable;
-			// data is all-null when toggled off. Prepend so it renders BEHIND bars.
+			// data is all-null when toggled off.
 			const overlayValues: (number | null)[] = Array.from(
 				{ length: cats.length },
 				() => null
@@ -271,23 +255,24 @@ export default defineComponent({
 					for (const slot of s.data) {
 						const idx = index.get(slotKey(slot.start));
 						if (idx === undefined) continue;
-						const v = (slot.energy - slot.returnEnergy) * factor;
-						overlayValues[idx] = (overlayValues[idx] || 0) + v;
+						overlayValues[idx] = (overlayValues[idx] || 0) + slot.energy * factor;
 					}
 				}
 			}
 			const overlayCol = this.overlayColor || this.color;
-			result.push({
+			const overlay = {
 				id: "overlay",
 				name: this.overlayLabel || "overlay",
 				type: "line",
 				data: overlayValues,
 				smooth: true,
 				symbol: "none",
-				lineStyle: { color: overlayCol, width: 2, type: "dotted" },
+				connectNulls: true,
+				lineStyle: { color: overlayCol, ...lineDefaults },
 				itemStyle: { color: overlayCol },
-				z: 1,
-			});
+				z: 4,
+			};
+			result.push(lineCasing(overlay, 3), overlay);
 
 			// Always render import + export series per entity, even if one direction
 			// is empty (null-filled). Stable series ids/structure across renders so
@@ -313,7 +298,8 @@ export default defineComponent({
 						const idx = index.get(slotKey(slot.start));
 						if (idx === undefined) continue;
 						if (slot.energy > 0) energyValues[idx] = slot.energy * factor;
-						if (slot.returnEnergy > 0)
+						// non-bidirectional groups ignore return energy
+						if (this.isBidirectional && slot.returnEnergy > 0)
 							returnEnergyValues[idx] = -slot.returnEnergy * factor;
 					}
 				}
@@ -470,57 +456,6 @@ export default defineComponent({
 						shadowStyle: { color: "transparent" },
 					},
 					...tooltipStyle(this.tooltipColor),
-					// Allow the tooltip to float above the 180px chart container instead
-					// of being clamped by `confine: true` — otherwise tall bars push the
-					// tooltip onto the bar.
-					confine: false,
-					position: (
-						point: [number, number],
-						params:
-							| { value: number | null; seriesId: string }[]
-							| { value: number | null; seriesId: string },
-						el: HTMLElement
-					): [number, number] => {
-						const w = el?.offsetWidth || 0;
-						const h = el?.offsetHeight || 0;
-						const margin = 8;
-						// Anchor the tooltip just above the top edge of the bar at this
-						// slot. Top edge = sum of positive imports; for export-only slots
-						// (bidirectional groups with discharge) that's 0 (the zero line),
-						// which still sits above the visible bar.
-						const arr = Array.isArray(params) ? params : [params];
-						let sum = 0;
-						let hasBar = false;
-						for (const p of arr) {
-							if (!/^entity-\d+-(energy|returnEnergy)$/.test(p.seriesId || ""))
-								continue;
-							if (p.value == null) continue;
-							hasBar = true;
-							if (typeof p.value === "number" && p.value > 0) {
-								if (p.seriesId.endsWith("-energy")) sum += p.value;
-							}
-						}
-						let x = point[0] - w / 2;
-						let y = point[1] - h - margin;
-						if (hasBar && this.chart) {
-							const pixelY = this.chart.convertToPixel({ yAxisIndex: 0 }, sum);
-							if (typeof pixelY === "number" && isFinite(pixelY)) {
-								y = pixelY - h - margin;
-							}
-						}
-						// Clamp X to the viewport so the tooltip never escapes the browser
-						// edges. The chart container is in CSS-pixel coordinates relative
-						// to the chart's bounding box, so map via getBoundingClientRect.
-						const dom = this.chart?.getDom();
-						const rect = dom?.getBoundingClientRect();
-						if (rect) {
-							const minX = -rect.left + margin;
-							const maxX = window.innerWidth - rect.left - w - margin;
-							if (x < minX) x = minX;
-							if (x > maxX) x = maxX;
-						}
-						return [x, y];
-					},
 					formatter: (
 						params: {
 							value: number | null;
@@ -569,9 +504,7 @@ export default defineComponent({
 							Math.max(
 								0,
 								...rowValues.flatMap((t) =>
-									this.isBidirectional
-										? [t.energy, t.returnEnergy]
-										: [t.energy + t.returnEnergy]
+									this.isBidirectional ? [t.energy, t.returnEnergy] : [t.energy]
 								)
 							) * 1000
 						);
@@ -586,7 +519,7 @@ export default defineComponent({
 							const t = rowValues[idx] ?? { energy: 0, returnEnergy: 0 };
 							const values = this.isBidirectional
 								? [formatValue(t.energy), formatValue(t.returnEnergy)]
-								: [formatValue(t.energy + t.returnEnergy)];
+								: [formatValue(t.energy)];
 							return {
 								name: showName ? (nameByIdx.get(i) ?? "") : undefined,
 								values,
@@ -599,7 +532,7 @@ export default defineComponent({
 								name: this.$t("sessions.total"),
 								values: this.isBidirectional
 									? [formatValue(sum("energy")), formatValue(sum("returnEnergy"))]
-									: [formatValue(sum("energy") + sum("returnEnergy"))],
+									: [formatValue(sum("energy"))],
 								total: true,
 							});
 						}
@@ -647,27 +580,15 @@ export default defineComponent({
 						lineStyle: { color: colors.border || "" },
 					},
 					name: this.unit,
-					nameLocation: "end",
-					nameGap: 18,
-					nameTextStyle: {
-						color: colors.muted || "",
-						fontFamily: FONT_FAMILY,
-						fontSize: 10,
-						opacity: 0.75,
-						align: "left",
-						// Axis name anchors at the axis line; axis labels have a default
-						// 8px margin, so shift the name right by the same amount to land
-						// flush with the value labels' left edge.
-						padding: [0, 0, 0, 8],
-					},
+					...axisNameStyle(),
 					axisLabel: {
 						color: colors.muted || "",
 						hideOverlap: true,
 						formatter: (v: number): string => {
-							const unit = this.useSmallUnit ? POWER_UNIT.W : POWER_UNIT.KW;
+							const { unit, digits } = this.axisScale;
 							return this.period === PERIODS.DAY
-								? this.fmtW(v * 1000, unit, false, this.axisDigits)
-								: this.fmtWh(v * 1000, unit, false, this.axisDigits);
+								? this.fmtW(v * 1000, unit, false, digits)
+								: this.fmtWh(v * 1000, unit, false, digits);
 						},
 					},
 				}),
@@ -753,18 +674,6 @@ export default defineComponent({
 			if (this.period === PERIODS.YEAR) return `m${d.getMonth()}`;
 			if (this.period === PERIODS.MONTH) return `d${d.getDate()}`;
 			return `t${d.getHours()}:${d.getMinutes()}`;
-		},
-		niceCeil(v: number): number {
-			if (v <= 0) return 0;
-			const mag = Math.pow(10, Math.floor(Math.log10(v)));
-			const r = v / mag;
-			let n;
-			if (r <= 1) n = 1;
-			else if (r <= 2) n = 2;
-			else if (r <= 2.5) n = 2.5;
-			else if (r <= 5) n = 5;
-			else n = 10;
-			return n * mag;
 		},
 		directionLabel(s: HistorySeries, dir: "energy" | "returnEnergy"): string {
 			const key = `main.history.direction.${s.group}.${dir}`;

@@ -1,4 +1,5 @@
 template: voltcast
+link: https://voltcast.com
 products:
   - brand: Voltcast
 requirements:
@@ -74,8 +75,8 @@ params:
 render: |
   type: custom
   features: ["cacheable"]
-  {{ include "tariff-base" . }}
-  {{ include "tariff-features" . }}
+  {{ include "base" . }}
+  {{ include "features" . }}
   forecast:
     source: http
     uri: https://voltcast.com/api/v1/forecasts/{{ .zone }}?horizon=48h

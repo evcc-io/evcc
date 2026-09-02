@@ -31,7 +31,7 @@ params:
     default: 30s
 render: |
   type: custom
-  {{- include "vehicle-common" . }}
+  {{- include "common" . }}
   chargeEnable:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/command/{{`{{ if .chargeenable }}charge_start{{ else }}charge_stop{{ end }}`}}
@@ -86,4 +86,4 @@ render: |
       else "A" end)
     timeout: {{ .timeout }}
     cache: 1s
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}

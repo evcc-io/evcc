@@ -21,6 +21,7 @@ type Template struct {
 	Auth         map[string]any `json:",omitempty"` // OAuth parameters (if required)
 	Group        string         `json:",omitempty"` // the group this template belongs to, references groupList entries
 	Covers       []string       `json:",omitempty"` // list of covered outdated template names
+	Link         string         `json:",omitempty"` // integration provider link, can be overridden per product
 	Products     []Product      `json:",omitempty"` // list of products this template is compatible with
 	Capabilities []Capability   `json:"-"`
 	Countries    []CountryCode  `json:",omitempty"` // list of countries supported by this template
@@ -88,6 +89,16 @@ func (t *Template) Validate() error {
 		}
 	}
 
+	links := []string{t.Link}
+	for _, p := range t.Products {
+		links = append(links, p.Link)
+	}
+	for _, l := range links {
+		if l != "" && !strings.HasPrefix(l, "https://") {
+			return fmt.Errorf("invalid link: '%s'", l)
+		}
+	}
+
 	for _, r := range t.Requirements.EVCC {
 		if !slices.Contains(ValidRequirements, r) {
 			return fmt.Errorf("invalid requirement: '%s'", r)
@@ -106,6 +117,18 @@ func (t *Template) Validate() error {
 
 		if p.Description.String("en") == "" || p.Description.String("de") == "" {
 			return fmt.Errorf("param %s: description can't be empty", p.Name)
+		}
+
+		// bool params are rendered as real booleans, so anything but true/false
+		// would render differently than it appears in the ui. the example is the
+		// default in docs and unit test mode, see Param.DefaultValue.
+		if p.Type == TypeBool {
+			if v := p.Default; v != "" && v != "true" && v != "false" {
+				return fmt.Errorf("param %s: bool default must be true or false, got '%s'", p.Name, v)
+			}
+			if v := p.Example; v != "" && v != "true" && v != "false" {
+				return fmt.Errorf("param %s: bool example must be true or false, got '%s'", p.Name, v)
+			}
 		}
 
 		maxLength := 50
@@ -325,7 +348,7 @@ func formatValue(val any) string {
 }
 
 // RenderResult renders the result template to instantiate the proxy
-func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, map[string]any, error) {
+func (t *Template) RenderResult(class Class, renderMode int, other map[string]any) ([]byte, map[string]any, error) {
 	values := t.Defaults(renderMode)
 	if err := mergeMaps(other, values); err != nil {
 		return nil, values, err
@@ -417,12 +440,25 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 					}
 				}
 
-				res[out] = s
+				// bool params become real booleans so templates can use `{{ if .param }}`.
+				// TODO tcpip/udp/rs485* are predefined properties, so modbus.tpl still
+				// compares strings and mis-branches on a stored "false"
+				if p.Type == TypeBool {
+					res[out] = s == "true"
+				} else {
+					res[out] = s
+				}
 			}
 		}
 	}
 
-	tmpl, err := FuncMap(template.Must(baseTmpl.Clone())).Parse(t.Render)
+	// class-local includes take precedence over the global ones
+	base, ok := classTmpl[class]
+	if !ok {
+		base = baseTmpl
+	}
+
+	tmpl, err := FuncMap(template.Must(base.Clone())).Parse(t.Render)
 	if err != nil {
 		return nil, res, err
 	}

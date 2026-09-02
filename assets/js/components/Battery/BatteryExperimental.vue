@@ -32,6 +32,15 @@
 		>
 			<SmartCostLimit v-bind="smartCostLimitProps" />
 		</Card>
+
+		<Card
+			v-if="gridDischargeVisible"
+			class="box-pull-out mt-4"
+			:title="$t('batterySettings.gridDischargeTab')"
+			data-testid="battery-grid-discharge-limit"
+		>
+			<SmartFeedInPriority v-bind="smartFeedInPriorityProps" />
+		</Card>
 	</div>
 	<p v-else class="my-4 text-muted">{{ $t("batterySettings.noBattery") }}</p>
 </template>
@@ -44,6 +53,7 @@ import api from "@/api";
 import { SMART_COST_TYPE, CURRENCY, type BatteryMeter } from "@/types/evcc";
 import Card from "../Helper/Card.vue";
 import SmartCostLimit from "../Tariff/SmartCostLimit.vue";
+import SmartFeedInPriority from "../Tariff/SmartFeedInPriority.vue";
 import BatteryStatusCards from "./BatteryStatusCards.vue";
 import BatteryConfigCard from "./BatteryConfigCard.vue";
 import BatteryHistoryCard from "./BatteryHistoryCard.vue";
@@ -57,6 +67,7 @@ export default defineComponent({
 	components: {
 		Card,
 		SmartCostLimit,
+		SmartFeedInPriority,
 		BatteryStatusCards,
 		BatteryConfigCard,
 		BatteryHistoryCard,
@@ -104,11 +115,11 @@ export default defineComponent({
 				forecastToSeries(this.evopt, this.now.getTime())
 			);
 		},
+		batteryControllable(): boolean {
+			return this.devices.some(({ controllable }) => controllable);
+		},
 		gridChargePossible(): boolean {
-			return (
-				this.devices.some(({ controllable }) => controllable) &&
-				!!this.state.smartCostAvailable
-			);
+			return this.batteryControllable && !!this.state.smartCostAvailable;
 		},
 		gridChargeLimit(): number | null {
 			return this.state.batteryGridChargeLimit ?? null;
@@ -128,6 +139,29 @@ export default defineComponent({
 				currency: this.state.currency || CURRENCY.EUR,
 				tariff: this.gridChargeTariff,
 				possible: this.gridChargePossible,
+			};
+		},
+		gridDischargeLimit(): number | null {
+			return this.state.batteryGridDischargeLimit ?? null;
+		},
+		// needs a dynamic feed-in tariff, the grid price is irrelevant here
+		gridDischargePossible(): boolean {
+			return this.batteryControllable && !!this.state.smartFeedInPriorityAvailable;
+		},
+		// requires opt-in; a set limit stays visible so it can be removed
+		gridDischargeVisible(): boolean {
+			return (
+				!!this.state.batteryGridDischarge &&
+				(this.gridDischargePossible || this.gridDischargeLimit !== null)
+			);
+		},
+		smartFeedInPriorityProps() {
+			return {
+				currentLimit: this.gridDischargeLimit,
+				lastLimit: settings.lastBatteryGridDischargeLimit,
+				currency: this.state.currency || CURRENCY.EUR,
+				tariff: store.uiForecast.value.feedin,
+				possible: this.gridDischargePossible,
 			};
 		},
 	},

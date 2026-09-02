@@ -84,6 +84,9 @@ render: |
       address: 60090 # Phase A Grid Current (A * 100)
       type: holding
       decode: int16
+    block: # 60089-60094
+      register: 60089
+      count: 6
     scale: 0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -91,6 +94,9 @@ render: |
       address: 60092 # Phase B Grid Current (A * 100)
       type: holding
       decode: int16
+    block: # 60089-60094
+      register: 60089
+      count: 6
     scale: 0.01
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -98,6 +104,9 @@ render: |
       address: 60094 # Phase C Grid Current (A * 100)
       type: holding
       decode: int16
+    block: # 60089-60094
+      register: 60089
+      count: 6
     scale: 0.01
   voltages:
   - source: modbus
@@ -106,6 +115,9 @@ render: |
       address: 60089 # Phase A Grid Voltage (V * 10)
       type: holding
       decode: uint16
+    block: # 60089-60094
+      register: 60089
+      count: 6
     scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -113,6 +125,9 @@ render: |
       address: 60091 # Phase B Grid Voltage (V * 10)
       type: holding
       decode: uint16
+    block: # 60089-60094
+      register: 60089
+      count: 6
     scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -120,6 +135,9 @@ render: |
       address: 60093 # Phase C Grid Voltage (V * 10)
       type: holding
       decode: uint16
+    block: # 60089-60094
+      register: 60089
+      count: 6
     scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}

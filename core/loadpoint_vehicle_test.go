@@ -201,40 +201,60 @@ func TestVehicleDetectByID(t *testing.T) {
 
 	type testcase struct {
 		string
-		id, i1, i2 string
-		res        api.Vehicle
-		prepare    func(testcase)
+		ids     []string
+		i1, i2  string
+		res     api.Vehicle
+		match   string
+		prepare func(testcase)
 	}
 	tc := []testcase{
-		{"1/_/_->0", "1", "", "", nil, func(tc testcase) {
+		{"1/_/_->0", []string{"1"}, "", "", nil, "", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return(nil)
 			v2.EXPECT().Identifiers().Return(nil)
 			v1.EXPECT().Identifiers().Return(nil)
 			v2.EXPECT().Identifiers().Return(nil)
 		}},
-		{"1/1/2->1", "1", "1", "2", v1, func(tc testcase) {
+		{"1/1/2->1", []string{"1"}, "1", "2", v1, "1", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 		}},
-		{"2/1/2->2", "2", "1", "2", v2, func(tc testcase) {
+		{"2/1/2->2", []string{"2"}, "1", "2", v2, "2", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 		}},
-		{"11/1*/2->1", "11", "1*", "2", v1, func(tc testcase) {
+		{"11/1*/2->1", []string{"11"}, "1*", "2", v1, "11", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			// v2.EXPECT().Identifiers().Return([]string{tc.i2})
 		}},
-		{"22/1*/2*->2", "22", "1*", "2*", v2, func(tc testcase) {
+		{"22/1*/2*->2", []string{"22"}, "1*", "2*", v2, "22", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 		}},
-		{"2/_/*->2", "2", "", "*", v2, func(tc testcase) {
+		{"2/_/*->2", []string{"2"}, "", "*", v2, "2", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return(nil)
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 			v1.EXPECT().Identifiers().Return(nil)
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+		}},
+		// second identity matches, e.g. rfid tag and vehicle id
+		{"x,2/1/2->2", []string{"x", "2"}, "1", "2", v2, "2", func(tc testcase) {
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+		}},
+		// wildcard matches the second identity
+		{"x,22/1/2*->2", []string{"x", "22"}, "1", "2*", v2, "22", func(tc testcase) {
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 		}},
 	}
@@ -252,8 +272,12 @@ func TestVehicleDetectByID(t *testing.T) {
 			tc.prepare(tc)
 		}
 
-		if res := lp.selectVehicleByID(tc.id); tc.res != res {
+		res, match := lp.selectVehicleByID(tc.ids...)
+		if tc.res != res {
 			t.Errorf("expected %v, got %v", tc.res, res)
+		}
+		if tc.match != match {
+			t.Errorf("expected match %q, got %q", tc.match, match)
 		}
 	}
 }
@@ -261,7 +285,7 @@ func TestVehicleDetectByID(t *testing.T) {
 func TestDefaultVehicle(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	mode := api.ModePV
+	mode := api.ModeSmart
 	current := 66.6
 
 	dflt := api.NewMockVehicle(ctrl)
@@ -323,6 +347,33 @@ func TestDefaultVehicle(t *testing.T) {
 	assert.Nil(t, lp.vehicle, "expected no vehicle")
 }
 
+// TestVehicleChangeResetsAlwaysChargeOnce: session-scoped once must not leak
+// into another vehicle's session when the active vehicle changes.
+func TestVehicleChangeResetsAlwaysChargeOnce(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	v1 := api.NewMockVehicle(ctrl)
+	expectVehiclePublish(v1)
+	v2 := api.NewMockVehicle(ctrl)
+	expectVehiclePublish(v2)
+
+	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
+
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	lp.setActiveVehicle(v1)
+	assert.NoError(t, lp.SetAlwaysCharge(api.AlwaysChargeOnce))
+
+	// re-assigning the same vehicle keeps once
+	lp.setActiveVehicle(v1)
+	assert.Equal(t, api.AlwaysChargeOnce, lp.GetAlwaysCharge(), "same vehicle")
+
+	// vehicle change resets once
+	lp.setActiveVehicle(v2)
+	assert.Equal(t, api.AlwaysChargeOff, lp.GetAlwaysCharge(), "changed vehicle")
+}
+
 // idCharger is a minimal charger implementing api.Identifier for identifyVehicle tests.
 type idCharger struct {
 	id string
@@ -332,7 +383,7 @@ func (c *idCharger) Status() (api.ChargeStatus, error) { return api.StatusB, nil
 func (c *idCharger) Enabled() (bool, error)            { return false, nil }
 func (c *idCharger) Enable(bool) error                 { return nil }
 func (c *idCharger) MaxCurrent(int64) error            { return nil }
-func (c *idCharger) Identify() (string, error)         { return c.id, nil }
+func (c *idCharger) Identify() ([]string, error)       { return []string{c.id}, nil }
 
 // TestReidentifyActiveVehicleKeepsMode is a regression test for #31499:
 // re-identifying the already-active vehicle must not reapply its default mode.
@@ -358,7 +409,7 @@ func TestReidentifyActiveVehicleKeepsMode(t *testing.T) {
 
 	// vehicle already active via a different detection path (e.g. SoC poll)
 	lp.setActiveVehicle(vehicle)
-	assert.Equal(t, api.ModePV, lp.GetMode(), "mode after first identification")
+	assert.Equal(t, api.ModeSmart, lp.GetMode(), "mode after first identification")
 
 	// user/system escalates to now in between
 	lp.SetMode(api.ModeNow)
@@ -440,6 +491,15 @@ func (c *integratedDeviceCharger) Features() []api.Feature {
 	return []api.Feature{api.IntegratedDevice}
 }
 
+// continuousCharger is a minimal charger advertising the Continuous feature.
+type continuousCharger struct {
+	integratedDeviceCharger
+}
+
+func (c *continuousCharger) Features() []api.Feature {
+	return []api.Feature{api.IntegratedDevice, api.Continuous}
+}
+
 // TestDisconnectIntegratedDeviceKeepsMode is a regression test for #30187:
 // switching an integrated-device loadpoint to "off" makes a switch socket report
 // StatusA (disconnect). The disconnect handler must NOT reset the mode to the
@@ -448,7 +508,7 @@ func (c *integratedDeviceCharger) Features() []api.Feature {
 func TestDisconnectIntegratedDeviceKeepsMode(t *testing.T) {
 	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
 	lp.charger = &integratedDeviceCharger{}
-	lp.DefaultMode = api.ModePV
+	lp.DefaultMode = api.ModeSmart
 	lp.setMode(api.ModeOff)
 
 	x, y, z := createChannels(t)

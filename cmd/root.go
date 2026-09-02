@@ -16,10 +16,10 @@ import (
 	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/server"
-	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/mcp"
 	"github.com/evcc-io/evcc/server/network"
@@ -113,6 +113,7 @@ func init() {
 	rootCmd.Flags().StringVar(&customization.Website, flagCustomWebsite, os.Getenv("EVCC_CUSTOM_WEBSITE"), flagCustomWebsiteDescription)
 	rootCmd.Flags().StringVar(&customization.Email, flagCustomEmail, os.Getenv("EVCC_CUSTOM_EMAIL"), flagCustomEmailDescription)
 	rootCmd.Flags().StringVar(&customization.Phone, flagCustomPhone, os.Getenv("EVCC_CUSTOM_PHONE"), flagCustomPhoneDescription)
+	rootCmd.Flags().StringVar(&customization.Theme, flagCustomTheme, os.Getenv("EVCC_CUSTOM_THEME"), flagCustomThemeDescription)
 }
 
 // initConfig reads in config file and ENV variables if set
@@ -391,6 +392,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	// all device skis are registered, unknown ones may now be denied
+	eebus.ConfigComplete()
+
 	// setup MCP
 	if err == nil && isMcp() {
 		router := httpd.Router()
@@ -477,10 +481,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 		once.Do(func() { close(stopC) }) // signal loop to end
 	}()
 
-	// allow web access for vehicles
-	configureAuth(httpd.Router(), valueChan)
-
 	authObject := auth.New()
+
+	// allow web access for vehicles
+	configureAuth(httpd.Router(), server.EnsureAuthHandler(authObject), valueChan)
+
 	if ok, _ := cmd.Flags().GetBool(flagDisableAuth); ok {
 		log.WARN.Println("❗❗❗ Authentication is disabled. This is dangerous. Your data and credentials are not protected.")
 		authObject.SetAuthMode(auth.Disabled)

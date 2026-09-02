@@ -317,13 +317,6 @@
         "charging": "充電器",
         "heating": "ヒーター"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "6 〜 16 A の電流値を使用します。",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "6 〜 32 A の電流値を使用します。",
-      "chargerPowerCustom": "その他",
-      "chargerPowerCustomHelp": "カスタムの電流値を設定します。",
-      "chargerTypeLabel": "充電器タイプ",
       "chargingTitle": "挙動",
       "circuitHelp": "電力および電流の上限値を超えないようにするための、負荷管理の割り当てです。",
       "circuitInvalid": "指定された回路が存在しません",
@@ -934,7 +927,7 @@
       "modalUpdateStatusStart": "インストール開始：",
       "modalViewOnGitHub": "GitHub で見る",
       "openSource": "open source",
-      "poweredByOpenSource": "Powered by {0}."
+      "poweredBy": "powered by"
     }
   },
   "forecast": {
@@ -1101,7 +1094,6 @@
       },
       "planNumber": "プラン {number}",
       "precondition": {
-        "description": "バッテリーのプレコンディショニングのため、出発の {duration} 前から充電します。",
         "label": "遅延充電",
         "optionAll": "すべて",
         "optionNo": "いいえ"
@@ -1110,8 +1102,6 @@
       "repeating": "繰り返し",
       "repeatingPlans": "繰り返しプラン",
       "selectAll": "すべて選択",
-      "strategyDisabledDescription": "出発時刻に間に合うよう、できるだけ遅い時間帯に充電を開始します。市場連動型の料金プランやCO₂データが設定されている場合、さらに高度なオプションが利用可能になります。",
-      "strategySettings": "戦略設定",
       "time": "時間",
       "title": "プラン",
       "unsavedChanges": "保存されていない変更があります。今すぐ適用しますか？",

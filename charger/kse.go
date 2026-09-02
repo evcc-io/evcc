@@ -263,13 +263,13 @@ func (wb *KSE) getPhases() (int, error) {
 }
 
 // Identify implements the api.Identifier interface
-func (wb *KSE) identify() (string, error) {
+func (wb *KSE) identify() ([]string, error) {
 	b, err := wb.conn.ReadHoldingRegisters(kseRegNFCTransactionID, 4)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return bytesAsString(b), nil
+	return []string{bytesAsString(b)}, nil
 }
 
 var _ api.Diagnosis = (*KSE)(nil)

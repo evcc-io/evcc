@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/types"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	optimizer "github.com/evcc-io/optimizer/client"
@@ -19,7 +20,8 @@ func TestLoadpointProfile(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	lp := loadpoint.NewMockAPI(ctrl)
-	lp.EXPECT().GetMode().Return(api.ModeMinPV).AnyTimes()
+	lp.EXPECT().GetMode().Return(api.ModeSmart).AnyTimes()
+	lp.EXPECT().GetAlwaysCharge().Return(api.AlwaysChargeOn).AnyTimes()
 	lp.EXPECT().GetStatus().Return(api.StatusC).AnyTimes()
 	lp.EXPECT().GetChargePower().Return(10000.0).AnyTimes()   //  10 kW
 	lp.EXPECT().EffectiveMinPower().Return(1000.0).AnyTimes() //   1 kW
@@ -27,6 +29,86 @@ func TestLoadpointProfile(t *testing.T) {
 
 	// expected slots: 0.25 kWh...
 	require.Equal(t, []float64{250, 250, 250, 250, 250, 250, 250, 50}, loadpointProfile(lp, 8))
+}
+
+func TestOptimizerHorizon(t *testing.T) {
+	ts := time.Date(2025, 1, 1, 10, 30, 0, 0, time.Local)
+	horizon := optimizerHorizon(ts)
+
+	// 48h plus end of day
+	assert.Equal(t, time.Date(2025, 1, 3, 23, 59, 59, int(time.Second-time.Nanosecond), time.Local), horizon)
+
+	// before 6:00 the day is not extended
+	assert.Equal(t, time.Date(2025, 1, 3, 5, 30, 0, 0, time.Local),
+		optimizerHorizon(time.Date(2025, 1, 1, 5, 30, 0, 0, time.Local)))
+
+	rates := make(api.Rates, 0, 4*96)
+	for slot := ts.Truncate(tariff.SlotDuration); len(rates) < cap(rates); slot = slot.Add(tariff.SlotDuration) {
+		rates = append(rates, api.Rate{Start: slot, End: slot.Add(tariff.SlotDuration)})
+	}
+
+	// 4 days of slots from 10:30, capped at the last slot of Jan 3rd
+	assert.Equal(t, 246, slotsUntil(rates, horizon, len(rates)))
+	assert.Equal(t, time.Date(2025, 1, 3, 23, 45, 0, 0, time.Local), rates[245].Start)
+
+	// shorter forecast is not extended
+	assert.Equal(t, 8, slotsUntil(rates, horizon, 8))
+}
+
+func TestApplyPrecondition(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	lp := loadpoint.NewMockAPI(ctrl)
+	lp.EXPECT().EffectiveMaxPower().Return(8000.0).AnyTimes() // 2 kWh per slot
+
+	// no precondition configured
+	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{}).Times(1)
+	assert.Nil(t, applyPrecondition(lp, nil, 8))
+
+	// no plan
+	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: time.Hour}).Times(1)
+	lp.EXPECT().EffectivePlanTime().Return(time.Time{}).Times(1)
+	assert.Nil(t, applyPrecondition(lp, nil, 8))
+
+	// plan in 1h, 40min precondition: slots 1 (10min) and 2, 3 (full)
+	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(time.Hour)).Times(1)
+	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: 40 * time.Minute}).Times(1)
+	lp.EXPECT().GetPlanGoal().Return(80.0, true).Times(1)
+	lp.EXPECT().GetPlanRequiredDuration(80.0, 8000.0).Return(2 * time.Hour).Times(1)
+	res := applyPrecondition(lp, nil, 8)
+	require.Len(t, res, 8)
+	assert.InDeltaSlice(t, []float32{0, 2000. / 1.5, 2000, 2000, 0, 0, 0, 0}, res, 1)
+
+	// existing demand is kept where higher
+	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(time.Hour)).Times(1)
+	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: 30 * time.Minute}).Times(1)
+	lp.EXPECT().GetPlanGoal().Return(80.0, true).Times(1)
+	lp.EXPECT().GetPlanRequiredDuration(80.0, 8000.0).Return(2 * time.Hour).Times(1)
+	res = applyPrecondition(lp, []float32{3000, 3000, 3000, 3000, 0, 0, 0, 0}, 8)
+	assert.InDeltaSlice(t, []float32{3000, 3000, 3000, 3000, 0, 0, 0, 0}, res, 1)
+
+	// plan beyond horizon
+	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(24 * time.Hour)).Times(1)
+	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: time.Hour}).Times(1)
+	lp.EXPECT().GetPlanGoal().Return(80.0, true).Times(1)
+	lp.EXPECT().GetPlanRequiredDuration(80.0, 8000.0).Return(2 * time.Hour).Times(1)
+	assert.Nil(t, applyPrecondition(lp, nil, 8))
+
+	// "all" precondition is limited to the required charging duration (#33135)
+	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(time.Hour)).Times(1)
+	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: 7 * 24 * time.Hour}).Times(1)
+	lp.EXPECT().GetPlanGoal().Return(80.0, true).Times(1)
+	lp.EXPECT().GetPlanRequiredDuration(80.0, 8000.0).Return(40 * time.Minute).Times(1)
+	res = applyPrecondition(lp, nil, 8)
+	require.Len(t, res, 8)
+	assert.InDeltaSlice(t, []float32{0, 2000. / 1.5, 2000, 2000, 0, 0, 0, 0}, res, 1)
+
+	// goal already reached: no demand
+	lp.EXPECT().EffectivePlanTime().Return(time.Now().Add(time.Hour)).Times(1)
+	lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{Precondition: 7 * 24 * time.Hour}).Times(1)
+	lp.EXPECT().GetPlanGoal().Return(80.0, true).Times(1)
+	lp.EXPECT().GetPlanRequiredDuration(80.0, 8000.0).Return(time.Duration(0)).Times(1)
+	assert.Nil(t, applyPrecondition(lp, nil, 8))
 }
 
 func TestLoadpointCurrentAction(t *testing.T) {
@@ -75,19 +157,22 @@ func TestUnmodelledPower(t *testing.T) {
 	for _, tc := range []struct {
 		name            string
 		mode            api.ChargeMode
+		alwaysCharge    api.AlwaysCharge
 		status          api.ChargeStatus
 		power, minPower float64
 		expected        float64
 	}{
-		{"pv charging", api.ModePV, api.StatusC, 4000, 1380, 4000},
-		{"pv connected", api.ModePV, api.StatusB, 0, 1380, 0},
-		{"minpv floor before meter caught up", api.ModeMinPV, api.StatusC, 0, 4000, 4000},
-		{"minpv floor must not lower measured", api.ModeMinPV, api.StatusC, 4000, 1000, 4000},
-		{"minpv floor only applies while charging", api.ModeMinPV, api.StatusB, 0, 4000, 0},
-		{"negative measurement clamped", api.ModePV, api.StatusC, -100, 0, 0},
+		{"smart charging", api.ModeSmart, api.AlwaysChargeOff, api.StatusC, 4000, 1380, 4000},
+		{"smart connected", api.ModeSmart, api.AlwaysChargeOff, api.StatusB, 0, 1380, 0},
+		{"always charge floor before meter caught up", api.ModeSmart, api.AlwaysChargeOn, api.StatusC, 0, 4000, 4000},
+		{"always charge floor must not lower measured", api.ModeSmart, api.AlwaysChargeOn, api.StatusC, 4000, 1000, 4000},
+		{"always charge floor only applies while charging", api.ModeSmart, api.AlwaysChargeOn, api.StatusB, 0, 4000, 0},
+		{"always charge floor only in smart mode", api.ModeNow, api.AlwaysChargeOn, api.StatusC, 0, 4000, 0},
+		{"negative measurement clamped", api.ModeSmart, api.AlwaysChargeOff, api.StatusC, -100, 0, 0},
 	} {
 		lp := loadpoint.NewMockAPI(ctrl)
 		lp.EXPECT().GetMode().Return(tc.mode).AnyTimes()
+		lp.EXPECT().GetAlwaysCharge().Return(tc.alwaysCharge).AnyTimes()
 		lp.EXPECT().GetStatus().Return(tc.status).AnyTimes()
 		lp.EXPECT().GetChargePower().Return(tc.power).AnyTimes()
 		lp.EXPECT().EffectiveMinPower().Return(tc.minPower).AnyTimes()
@@ -284,6 +369,56 @@ func TestBatteryRequestSocLimitsClamp(t *testing.T) {
 		assert.Equal(t, float32(2000), req.SMin)
 		assert.Equal(t, float32(10000), req.SMax)
 	})
+}
+
+// charge goal for vehicles with and without known capacity/soc, see #32890
+func TestLoadpointRequestChargeGoal(t *testing.T) {
+	site := &Site{log: util.NewLogger("foo")}
+
+	for _, tc := range []struct {
+		name                  string
+		capacity, soc         float64 // kWh, percent
+		limitSoc              int     // percent
+		limitEnergy, charged  float64 // kWh, Wh
+		wantInitial, wantSMax float32 // Wh
+	}{
+		{"soc limit", 50, 20, 80, 0, 0, 10000, 40000},
+		{"no capacity, energy limit", 0, 0, 100, 10, 0, 0, 10000},
+		{"no capacity, energy limit partially charged", 0, 0, 100, 10, 4000, 4000, 10000},
+		{"no capacity, limit exceeded", 0, 0, 100, 10, 11000, 11000, 11000},
+		{"capacity but no soc, energy limit", 50, 0, 100, 10, 0, 0, 10000},
+		{"capacity but no soc, no energy limit", 50, 0, 100, 0, 0, 0, 50000},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			v := api.NewMockVehicle(ctrl)
+			v.EXPECT().Capacity().Return(tc.capacity).AnyTimes()
+			v.EXPECT().GetTitle().Return("").AnyTimes()
+
+			lp := loadpoint.NewMockAPI(ctrl)
+			lp.EXPECT().GetVehicle().Return(v).AnyTimes()
+			lp.EXPECT().GetSoc().Return(tc.soc).AnyTimes()
+			lp.EXPECT().EffectiveLimitSoc().Return(tc.limitSoc).AnyTimes()
+			lp.EXPECT().GetLimitEnergy().Return(tc.limitEnergy).AnyTimes()
+			lp.EXPECT().GetChargedEnergy().Return(tc.charged).AnyTimes()
+			lp.EXPECT().GetTitle().Return("lp").AnyTimes()
+			lp.EXPECT().EffectiveMinPower().Return(1380.0).AnyTimes()
+			lp.EXPECT().EffectiveMaxPower().Return(11000.0).AnyTimes()
+			lp.EXPECT().GetMode().Return(api.ModeSmart).AnyTimes()
+			lp.EXPECT().GetAlwaysCharge().Return(api.AlwaysChargeOff).AnyTimes()
+			lp.EXPECT().GetStatus().Return(api.StatusB).AnyTimes()
+			lp.EXPECT().GetSmartCostLimit().Return(nil).AnyTimes()
+			lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{}).AnyTimes()
+			lp.EXPECT().EffectivePlanTime().Return(time.Time{}).AnyTimes()
+			lp.EXPECT().GetPlanGoal().Return(0.0, false).AnyTimes()
+
+			req, _ := site.loadpointRequest(lp, 8, 15*time.Minute, nil)
+
+			assert.Equal(t, tc.wantInitial, req.SInitial)
+			assert.Equal(t, tc.wantSMax, req.SMax)
+		})
+	}
 }
 
 func TestOptimizerChargingStrategy(t *testing.T) {

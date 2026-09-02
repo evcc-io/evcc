@@ -8,12 +8,14 @@ declare global {
     app: any;
     evcc?: {
       version: string;
+      commit: string;
       customCss: boolean;
       customLogo: boolean;
       customBrand: string;
       customWebsite: string;
       customEmail: string;
       customPhone: string;
+      customTheme: THEME;
     };
   }
   interface Window {
@@ -282,6 +284,10 @@ export interface State {
   batteryGridChargeLimit?: number | null;
   /** Home battery is currently charged from grid. */
   batteryGridChargeActive?: boolean;
+  /** Feed-in price limit for discharging the home battery to the grid (experimental). */
+  batteryGridDischargeLimit?: number | null;
+  /** Home battery is currently discharged to the grid. */
+  batteryGridDischargeActive?: boolean;
   /** A dynamic grid price or CO₂ forecast is configured. */
   smartCostAvailable?: boolean;
   /** Type of the smart charging limit, price based or emission based. */
@@ -459,6 +465,10 @@ export enum ConfigType {
 export type ConfigVehicle = Entity;
 export type ConfigMessenger = Entity;
 
+export interface ConfigCurtailer extends Entity {
+  deviceTitle?: string;
+}
+
 export interface ConfigHems extends Entity {
   deviceProduct?: string;
 }
@@ -529,6 +539,7 @@ export enum SMART_COST_TYPE {
   CO2 = "co2",
   PRICE_DYNAMIC = "pricedynamic",
   PRICE_FORECAST = "priceforecast",
+  PRICE_STATIC = "pricestatic",
 }
 
 export enum LENGTH_UNIT {
@@ -545,6 +556,8 @@ export enum TIME_FORMAT {
 export interface Loadpoint {
   /** Unique loadpoint identifier used in API routes and configuration. */
   name: string;
+  /** Always charge state. Smart mode charges continuously at least at minimum power. */
+  alwaysCharge: ALWAYS_CHARGE;
   /** Battery boost is active. When enabled, home battery power is used for fast charging. */
   batteryBoost: boolean;
   /** Charging current per phase in A. */
@@ -809,6 +822,10 @@ export enum CURRENCY {
   TRY = "TRY",
   MYR = "MYR",
   THB = "THB",
+  BYN = "BYN",
+  UAH = "UAH",
+  RUB = "RUB",
+  KZT = "KZT",
 }
 
 export enum ICON_SIZE {
@@ -822,9 +839,15 @@ export enum ICON_SIZE {
 /** Charging mode. */
 export enum CHARGE_MODE {
   OFF = "off",
+  SMART = "smart",
   NOW = "now",
-  MINPV = "minpv",
-  PV = "pv",
+}
+
+/** Always charge state. Smart mode charges continuously at least at minimum power. */
+export enum ALWAYS_CHARGE {
+  OFF = "off",
+  ON = "on",
+  ONCE = "once",
 }
 
 /** Battery operation mode. */
@@ -834,6 +857,7 @@ export enum BATTERY_MODE {
   HOLD = "hold",
   CHARGE = "charge",
   HOLDCHARGE = "holdcharge",
+  DISCHARGE = "discharge",
 }
 
 export enum PHASES {
@@ -1124,8 +1148,10 @@ export interface Battery {
   capacity: number;
   /** Charge level in %. Weighted by capacity across all batteries. */
   soc: number;
-  /** Total battery energy in kWh. */
+  /** Total discharged energy in kWh. */
   energy?: number;
+  /** Total charged energy in kWh. */
+  returnEnergy?: number;
   /** Measurement data per battery meter. */
   devices?: BatteryMeter[];
   /** Projected charge levels based on the solar and price forecast. */
@@ -1228,6 +1254,8 @@ export interface Vehicle {
   name?: string;
   /** Charge mode applied when the vehicle connects. */
   mode?: CHARGE_MODE | "";
+  /** Always charge state applied when the vehicle connects. */
+  alwaysCharge?: ALWAYS_CHARGE | "";
   /** Minimum SoC in %. Vehicle is fast-charged until this level is reached. */
   minSoc?: number;
   /** SoC limit in %. Charging stops when reached. */
@@ -1367,7 +1395,8 @@ export type DeviceType =
   | "loadpoint"
   | "messenger"
   | "tariff"
-  | "hems";
+  | "hems"
+  | "curtailer";
 export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext" | "consumer";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
 export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar" | "temperature";
@@ -1384,6 +1413,7 @@ export interface SiteConfig {
   aux: string[] | null;
   ext: string[] | null;
   consumer: string[] | null;
+  curtail: string[] | null;
 }
 
 export type ValueOf<T> = T[keyof T];

@@ -7,11 +7,18 @@ export default {
   argTypes: {
     mode: {
       control: "select",
-      options: ["off", "now", "minpv", "pv"],
+      options: ["off", "smart", "now"],
       description: "Charging mode",
     },
     pvPossible: { control: "boolean", description: "Whether PV is possible" },
     smartCostAvailable: { control: "boolean", description: "Whether smart cost is available" },
+    alwaysCharge: {
+      control: "select",
+      options: ["off", "on", "once"],
+      description: "Always charge state",
+    },
+    switchDevice: { control: "boolean", description: "Charger without current control" },
+    continuous: { control: "boolean", description: "Continuously operating heatpump" },
   },
   parameters: {
     layout: "centered",
@@ -35,14 +42,49 @@ Minimal.args = { mode: "now" };
 
 export const Full = Template.bind({});
 Full.args = {
-  mode: "pv",
+  mode: "smart",
   pvPossible: true,
   smartCostAvailable: true,
+  effectiveMinCurrent: 6,
 };
 
 export const SmartGridOnly = Template.bind({});
 SmartGridOnly.args = {
-  mode: "pv",
+  mode: "smart",
   pvPossible: false,
   smartCostAvailable: true,
+  effectiveMinCurrent: 6,
+};
+
+export const AlwaysCharge = Template.bind({});
+AlwaysCharge.args = {
+  mode: "smart",
+  pvPossible: true,
+  alwaysCharge: "on",
+  effectiveMinCurrent: 6,
+};
+
+export const AlwaysChargeOnce = Template.bind({});
+AlwaysChargeOnce.args = {
+  mode: "smart",
+  pvPossible: true,
+  alwaysCharge: "once",
+  effectiveMinCurrent: 6,
+};
+
+export const SwitchDevice = Template.bind({});
+SwitchDevice.args = {
+  mode: "smart",
+  pvPossible: true,
+  switchDevice: true,
+};
+
+export const ContinuousHeatpump = Template.bind({});
+ContinuousHeatpump.args = {
+  mode: "smart",
+  pvPossible: true,
+  continuous: true,
+  heating: true,
+  alwaysCharge: "on",
+  effectiveMinCurrent: 6,
 };
