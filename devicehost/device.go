@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"runtime"
-	"strings"
 
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/devicehost/proto/pb"
@@ -56,34 +54,47 @@ func capability[T any]() string {
 	return reflect.TypeFor[T]().String()
 }
 
-// methodName splits an api interface method expression like api.Meter.CurrentPower
+// methodName resolves an api interface method expression like api.Meter.CurrentPower
 // into its capability and method name
 func methodName(expr any) (string, string, error) {
-	v := reflect.ValueOf(expr)
-	if v.Kind() != reflect.Func {
+	typ := reflect.TypeOf(expr)
+	if typ == nil || typ.Kind() != reflect.Func || typ.NumIn() == 0 {
 		return "", "", fmt.Errorf("not a method expression: %T", expr)
 	}
 
-	fn := runtime.FuncForPC(v.Pointer())
-	if fn == nil {
-		return "", "", fmt.Errorf("unnamed method expression: %T", expr)
+	recv := typ.In(0)
+	if recv.Kind() != reflect.Interface {
+		return "", "", fmt.Errorf("receiver is not an interface: %T", expr)
 	}
 
-	// github.com/evcc-io/evcc/api.Meter.CurrentPower
-	name := fn.Name()
-	name = name[strings.LastIndexByte(name, '/')+1:]
+	// interface method signatures omit the receiver
+	in := make([]reflect.Type, 0, typ.NumIn()-1)
+	for i := 1; i < typ.NumIn(); i++ {
+		in = append(in, typ.In(i))
+	}
+	out := make([]reflect.Type, 0, typ.NumOut())
+	for i := range typ.NumOut() {
+		out = append(out, typ.Out(i))
+	}
+	sig := reflect.FuncOf(in, out, typ.IsVariadic())
 
-	pkg, rest, ok := strings.Cut(name, ".")
-	if !ok {
-		return "", "", fmt.Errorf("unexpected method name: %s", fn.Name())
+	var method string
+	for i := range recv.NumMethod() {
+		m := recv.Method(i)
+		if m.Type != sig {
+			continue
+		}
+		if method != "" {
+			return "", "", fmt.Errorf("%s: %s and %s share signature %s", recv, method, m.Name, sig)
+		}
+		method = m.Name
 	}
 
-	typ, method, ok := strings.Cut(rest, ".")
-	if !ok {
-		return "", "", fmt.Errorf("unexpected method name: %s", fn.Name())
+	if method == "" {
+		return "", "", fmt.Errorf("%s has no method with signature %s", recv, sig)
 	}
 
-	return pkg + "." + typ, method, nil
+	return recv.String(), method, nil
 }
 
 // call invokes an api interface method on the device, e.g. api.Meter.CurrentPower

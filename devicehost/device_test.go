@@ -1,6 +1,7 @@
 package devicehost
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
@@ -8,8 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestMethodName guards the wire names derived from method expressions against
-// a change in the Go runtime's function naming
+// TestMethodName checks the wire names derived from method expressions
 func TestMethodName(t *testing.T) {
 	for _, tc := range []struct {
 		expr       any
@@ -31,6 +31,21 @@ func TestMethodName(t *testing.T) {
 
 func TestMethodNameInvalid(t *testing.T) {
 	_, _, err := methodName(42)
+	assert.Error(t, err)
+
+	_, _, err = methodName(strings.Contains)
+	assert.Error(t, err, "receiver is not an interface")
+}
+
+type ambiguous interface {
+	Foo() error
+	Bar() error
+}
+
+// TestMethodNameAmbiguous ensures sibling methods sharing a signature fail loudly
+// instead of resolving to the wrong wire name
+func TestMethodNameAmbiguous(t *testing.T) {
+	_, _, err := methodName(ambiguous.Foo)
 	assert.Error(t, err)
 }
 
