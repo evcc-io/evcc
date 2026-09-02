@@ -279,8 +279,8 @@ func (c *Zaptec) Enable(enable bool) error {
 
 func (c *Zaptec) chargerUpdate(data zaptec.Update) error {
 	if c.passive {
-		if data.MaxChargeCurrent != nil || data.MinChargeCurrent != nil || data.OfflineChargeCurrent != nil {
-			c.log.DEBUG.Println("zaptec: passive mode: skipping chargerUpdate with current fields set")
+		if data.MaxChargeCurrent != nil || data.MinChargeCurrent != nil || data.OfflineChargeCurrent != nil || data.MaxChargePhases != nil {
+			c.log.DEBUG.Println("zaptec: passive mode: skipping chargerUpdate with current/phase fields set")
 			return nil
 		}
 	}
