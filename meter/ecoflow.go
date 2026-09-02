@@ -215,7 +215,7 @@ func (m *EcoFlow) setBackupReserve(limit float64) error {
 		return err
 	}
 	if res == nil {
-		return api.ErrTimeout
+		return errors.New("invalid response")
 	}
 	if res.Code != "0" {
 		return fmt.Errorf("%s (%s)", res.Message, res.Code)
