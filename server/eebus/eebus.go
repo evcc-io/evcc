@@ -382,7 +382,7 @@ func (c *EEBus) Pairings() []PairingInfo {
 	}
 
 	for ski := range c.clients {
-		if ski == "" || c.pairedIndex(shipapi.NewServiceIdentity(ski, "", "")) >= 0 {
+		if ski == "" || c.isPaired(ski) {
 			continue
 		}
 		res = append(res, PairingInfo{
@@ -437,6 +437,11 @@ func (c *EEBus) pairedIndex(identity shipapi.ServiceIdentity) int {
 	})
 }
 
+// isPaired reports whether ski was paired via the SHIP Pairing Service (mux must be held)
+func (c *EEBus) isPaired(ski string) bool {
+	return c.pairedIndex(shipapi.NewServiceIdentity(ski, "", "")) >= 0
+}
+
 // upsertPairing adds or updates a pairing and persists it (mux must be held)
 func (c *EEBus) upsertPairing(identity shipapi.ServiceIdentity) {
 	if idx := c.pairedIndex(identity); idx >= 0 {
@@ -454,7 +459,7 @@ func (c *EEBus) upsertPairing(identity shipapi.ServiceIdentity) {
 // without ski when ski is a SHIP-paired device (mux must be held)
 func (c *EEBus) clientsFor(ski string) []Device {
 	res := c.clients[ski]
-	if c.pairedIndex(shipapi.NewServiceIdentity(ski, "", "")) >= 0 {
+	if c.isPaired(ski) {
 		res = append(slices.Clone(res), c.clients[""]...)
 	}
 	return res
@@ -508,7 +513,7 @@ func (c *EEBus) replayUseCases(ski string, device Device) {
 	if ski == "" {
 		// the paired device registers without ski, see clientsFor
 		match = func(remote string) bool {
-			return c.connected[remote] && c.pairedIndex(shipapi.NewServiceIdentity(remote, "", "")) >= 0
+			return c.connected[remote] && c.isPaired(remote)
 		}
 	}
 
