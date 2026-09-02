@@ -39,6 +39,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 | [Plugin System](docs/agents/plugin-system.md)                 | Plugin layer (HTTP, MQTT, Modbus, SunSpec, JS)                               |
 | [Web UI & API](docs/agents/web-ui-api.md)                     | REST API, WebSocket, Vue frontend, authentication                            |
 | [API Security](docs/agents/api-security.md)                   | Auth modes, JWT/API key/session, two-tier checks, credential storage         |
+| [Chart Conventions](docs/agents/charts.md)                    | ECharts charts: axis units and scale rules, tooltips, layout                 |
 
 ### Loading guide by task type
 
@@ -47,6 +48,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - **Meter implementation** — hardware-integrations + plugin-system
 - **Vehicle implementation** — hardware-integrations
 - **UI/frontend work** — web-ui-api
+- **Chart work (ECharts, axes, tooltips)** — charts + web-ui-api
 - **API endpoint work** — web-ui-api + core-domain
 - **Auth / login / API key / permissions** — api-security + web-ui-api
 - **Config/template work** — plugin-system
@@ -200,6 +202,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 ### Styling & Internationalization
 
 - Use CSS Custom Properties for theming (semantic names: `--evcc-green`, `--evcc-battery`)
+- No inline `style` attributes; use Bootstrap utility classes or scoped CSS (inline only for truly dynamic values)
 - Use existing custom media queries for responsive breakpoints
 - Use `$t()` function for all user-facing strings
 - Update both `i18n/en.json` and `i18n/de.json` for new strings

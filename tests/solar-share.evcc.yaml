@@ -23,7 +23,7 @@ loadpoints:
   - title: Carport
     charger: charger
     meter: charger_meter
-    mode: pv
+    mode: smart
     enable:
       threshold: -500
     disable:

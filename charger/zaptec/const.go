@@ -146,3 +146,16 @@ const (
 	ZaptecGo1_Pro = 0
 	ZaptecGo2     = 1
 )
+
+// Features is the installation's feature flag bitmask
+type Features int
+
+// See https://api.zaptec.com/swagger/v1/swagger.json
+const (
+	FeaturePowerManagementApm Features = 4 // adaptive power management
+)
+
+// Has reports whether the feature set contains the given feature
+func (f Features) Has(feature Features) bool {
+	return f&feature != 0
+}

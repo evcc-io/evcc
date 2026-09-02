@@ -26,6 +26,7 @@
 				:last-limit="loadpoint?.lastSmartFeedInPriorityLimit"
 				:currency="currency"
 				:loadpoint-id="id"
+				is-loadpoint
 				:multiple-loadpoints="multipleLoadpoints"
 				:possible="smartFeedInPriorityAvailable"
 				:tariff="forecast?.feedin"
@@ -218,8 +219,6 @@ import api from "@/api";
 import "@h2d2/shopicons/es/regular/powersupply";
 import "@h2d2/shopicons/es/regular/sun";
 
-const V = 230;
-
 const range = (start: number, stop: number, step = -1) =>
 	Array.from({ length: (stop - start) / step + 1 }, (_, i) => start + i * step);
 
@@ -396,9 +395,6 @@ export default defineComponent({
 		},
 		apiPath(func: string) {
 			return "loadpoints/" + this.id + "/" + func;
-		},
-		fmtPhasePower(current?: number, phases?: PHASES) {
-			return this.fmtW(V * (current || 0) * (phases || 0));
 		},
 		formId(name: string) {
 			return `loadpoint_${this.id}_${name}`;

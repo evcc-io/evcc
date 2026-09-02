@@ -188,6 +188,14 @@
       "label": "Valuta",
       "title": "Valuta"
     },
+    "curtailer": {
+      "generic": "Generisk integration",
+      "specific": "Specifik integration",
+      "template": "Tillverkare",
+      "title": "Effektbegränsning",
+      "titleAdd": "Lägg till effektbegränsning",
+      "titleEdit": "Ändra effektbegränsning"
+    },
     "deviceValue": {
       "activeClients": "Aktiva klienter",
       "amount": "Belopp",
@@ -432,13 +440,6 @@
         "charging": "Laddare",
         "heating": "Värmekälla"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Använder mellan 6 och 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Använder mellan 6 till 32 A.",
-      "chargerPowerCustom": "annan",
-      "chargerPowerCustomHelp": "Ange strömintervall.",
-      "chargerTypeLabel": "Typ av laddare",
       "chargingTitle": "Tillstånd",
       "circuitHelp": "Belastningsstyrning som säkrar att effekt och strömgränser ej överskrids.",
       "circuitInvalid": "Kretsen saknas",
@@ -539,6 +540,7 @@
     "main": {
       "addAdditional": "Lägg till ytterligare mätare",
       "addConsumer": "Lägg till förbrukare",
+      "addCurtailer": "Lägg till effektbegränsare",
       "addGrid": "Lägg till elmätare",
       "addLoadpoint": "Lägg till laddare eller värmare",
       "addPvBattery": "Lägg till solceller eller batteri",
@@ -639,6 +641,7 @@
         "aux": "Lägg till enhet som själv anpassar förbrukning",
         "battery": "Lägg till batterimätare",
         "consumer": "Lägg till standardförbrukare",
+        "grid": "Lägg till nätmätare",
         "pv": "Lägg till solenergimätare"
       },
       "save": "Spara",
@@ -829,6 +832,8 @@
       "noClients": "Det finns inga klienter än. Ingen kan ansluta just nu.",
       "password": "Lösenord",
       "passwordOnce": "Det här lösenordet visas bara en gång. Skanna QR-koden eller kopiera den nu. Du kommer inte att kunna se den igen.",
+      "privacy": "Genom att aktivera denna funktion accepterar du vår {0}.",
+      "privacyLink": "integritetspolicy",
       "qrInstall": "Installera evcc-appen för {ios} eller {android}.",
       "qrScan": "Skanna koden med din telefons kamera för att ansluta. Klicka på den om du redan använder din telefon.",
       "removeClient": "Ta bort klient",
@@ -905,6 +910,8 @@
           "confirmationButton": "Nollställ & starta om",
           "confirmationText": "Denna åtgärd raderar dina data permanent. Säkerställ att du har sparat en backup först.",
           "description": "Har du problem med konfigurationen och vill börja om? Radera all data och starta om.",
+          "remote": "Fjärråtkomst",
+          "remoteDescription": "Raderar konfiguration och inloggningsuppgifter.",
           "sessions": "Laddningar",
           "sessionsDescription": "Raderar din laddningshistorik.",
           "settings": "Konfiguration & inställningar",
@@ -1126,7 +1133,7 @@
       "modalUpdateStatusStart": "Installationen har börjat:",
       "modalViewOnGitHub": "Se på GitHub",
       "openSource": "open source",
-      "poweredByOpenSource": "Powered by {0}."
+      "poweredBy": "drivs av"
     }
   },
   "forecast": {
@@ -1328,7 +1335,6 @@
       "strategy": {
         "label": "Strategi"
       },
-      "strategyDisabledDescription": "Laddningen startar så sent som möjligt för att avslutas precis i tid före avfärd. Med dynamiska elpriser eller CO₂-avgifter finns fler möjligheter här.",
       "time": "Tid",
       "title": "Plan",
       "unsavedChanges": "Det finns ej sparade ändringar. Spara nu?",
@@ -1625,7 +1631,7 @@
     "meterstop": "Mätare stopp",
     "odometer": "Mätarställning",
     "price": "Kostnad",
-    "soc": "Fordon SoC",
+    "soc": "Laddning",
     "started": "Start-tid",
     "title": "Laddning"
   },
@@ -1718,6 +1724,13 @@
     "vehicle": "Fordon"
   },
   "settings": {
+    "dateFormat": {
+      "auto": "Automatisk",
+      "dmy": "DD/MM/ÅÅÅÅ",
+      "label": "Datumformat",
+      "mdy": "MM/DD/ÅÅÅÅ",
+      "ymd": "ÅÅÅÅ-MM-DD"
+    },
     "deviceInfo": "Inställningar du gör här påverkar endast denna enhet.",
     "fullscreen": {
       "enter": "Till helskärmsläge",

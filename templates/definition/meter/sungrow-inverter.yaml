@@ -37,13 +37,6 @@ render: |
       address: 5030 # Total Active Power
       type: input
       decode: uint32s
-  energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 5003 # Total power yields, 1 kWh
-      type: input
-      decode: uint32s
   # EEG §9 curtailment via the power limitation registers
   #   5006 (doc 5007) power limitation switch, 0xAA enable / 0x55 disable
   #   5007 (doc 5008) power limitation value, 0.1 % of nominal power

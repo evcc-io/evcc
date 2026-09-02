@@ -2,6 +2,7 @@ package hello
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -94,16 +95,56 @@ func (v *API) request(method, path string, params url.Values, body io.Reader) (*
 	return req, err
 }
 
-func (v *API) Vehicles() ([]Vehicle, error) {
-	var res struct {
-		Code    Int
-		Message string
-		Error   Error
-		Data    struct {
-			List []Vehicle
+// response is the common envelope of all api responses
+type response[T any] struct {
+	Code    Int
+	Message string
+	Error   Error
+	Data    T
+}
+
+// do executes a signed request. A ResponseTokenInvalid answer means the backend
+// no longer accepts the token although it has not expired yet- retry once with a
+// fresh login. The body is built per attempt as it may embed the current token.
+func do[T any](v *API, method, path string, params url.Values, body func() ([]byte, error)) (T, error) {
+	var zero T
+	var res response[T]
+	var err error
+
+	for range 2 {
+		var rdr io.Reader
+		if body != nil {
+			b, err := body()
+			if err != nil {
+				return zero, err
+			}
+			rdr = bytes.NewReader(b)
 		}
+
+		var req *http.Request
+		req, err = v.request(method, path, params, rdr)
+		if err != nil {
+			return zero, err
+		}
+
+		res = response[T]{}
+		err = v.DoJSON(req, &res)
+
+		if res.Code != ResponseTokenInvalid && res.Error.Code != ResponseTokenInvalid {
+			break
+		}
+
+		v.identity.Invalidate()
 	}
 
+	if err := responseError(err, res.Code, res.Message, res.Error); err != nil {
+		return zero, err
+	}
+
+	return res.Data, nil
+}
+
+func (v *API) Vehicles() ([]Vehicle, error) {
 	userID, err := v.identity.UserID()
 	if err != nil {
 		return nil, err
@@ -115,64 +156,37 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 	}
 
 	// vehicle list is fetched on V1: SetSeries runs only after this call
-	path := "/device-platform/user/vehicle/secure"
-	req, err := v.request(http.MethodGet, path, params, nil)
-	if err != nil {
-		return nil, err
-	}
+	res, err := do[struct{ List []Vehicle }](v, http.MethodGet, "/device-platform/user/vehicle/secure", params, nil)
 
-	err = v.DoJSON(req, &res)
-	if err := responseError(err, res.Code, res.Message, res.Error); err != nil {
-		return nil, err
-	}
-
-	return res.Data.List, err
+	return res.List, err
 }
 
 func (v *API) UpdateSession(vin string) error {
-	token, err := v.identity.Token()
-	if err != nil {
-		return err
-	}
-
 	params := url.Values{
 		"identity_type": {"smart"},
 	}
 
-	data := map[string]string{
-		"vin":          vin,
-		"sessionToken": token.AccessToken,
-		"language":     "",
+	body := func() ([]byte, error) {
+		token, err := v.identity.Token()
+		if err != nil {
+			return nil, err
+		}
+
+		return json.Marshal(map[string]string{
+			"vin":          vin,
+			"sessionToken": token.AccessToken,
+			"language":     "",
+		})
 	}
 
-	path := "/device-platform/user/session/update"
-	req, err := v.request(http.MethodPost, path, params, request.MarshalJSON(data))
-	if err != nil {
-		return err
-	}
+	_, err := do[struct{}](v, http.MethodPost, "/device-platform/user/session/update", params, body)
 
-	var res struct {
-		Code    Int
-		Message string
-		Error   Error
-	}
-
-	err = v.DoJSON(req, &res)
-	return responseError(err, res.Code, res.Message, res.Error)
+	return err
 }
 
 func (v *API) Status(vin string) (VehicleStatus, error) {
 	if err := v.UpdateSession(vin); err != nil {
 		return VehicleStatus{}, fmt.Errorf("update session failed: %w", err)
-	}
-
-	var res struct {
-		Code    Int
-		Message string
-		Error   Error
-		Data    struct {
-			VehicleStatus VehicleStatus
-		}
 	}
 
 	userID, err := v.identity.UserID()
@@ -186,18 +200,9 @@ func (v *API) Status(vin string) (VehicleStatus, error) {
 		"userId": {userID},
 	}
 
-	path := "/remote-control/vehicle/status/" + vin
-	req, err := v.request(http.MethodGet, path, params, nil)
-	if err != nil {
-		return VehicleStatus{}, err
-	}
+	res, err := do[struct{ VehicleStatus VehicleStatus }](v, http.MethodGet, "/remote-control/vehicle/status/"+vin, params, nil)
 
-	err = v.DoJSON(req, &res)
-	if err := responseError(err, res.Code, res.Message, res.Error); err != nil {
-		return VehicleStatus{}, err
-	}
-
-	return res.Data.VehicleStatus, err
+	return res.VehicleStatus, err
 }
 
 func (v *API) SocStatus(vin string) (VehicleSocStatus, error) {
@@ -205,27 +210,9 @@ func (v *API) SocStatus(vin string) (VehicleSocStatus, error) {
 		return VehicleSocStatus{}, fmt.Errorf("update session failed: %w", err)
 	}
 
-	var res struct {
-		Code    Int
-		Message string
-		Error   Error
-		Data    VehicleSocStatus
-	}
-
 	params := url.Values{
 		"setting": {"charging"},
 	}
 
-	path := "/remote-control/vehicle/status/soc/" + vin
-	req, err := v.request(http.MethodGet, path, params, nil)
-	if err != nil {
-		return VehicleSocStatus{}, err
-	}
-
-	err = v.DoJSON(req, &res)
-	if err := responseError(err, res.Code, res.Message, res.Error); err != nil {
-		return VehicleSocStatus{}, err
-	}
-
-	return res.Data, err
+	return do[VehicleSocStatus](v, http.MethodGet, "/remote-control/vehicle/status/soc/"+vin, params, nil)
 }

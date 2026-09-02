@@ -12,7 +12,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/samber/lo"
 )
@@ -20,22 +20,28 @@ import (
 var _ site.API = (*Site)(nil)
 
 var (
-	ErrBatteryNotConfigured       = errors.New("battery not configured")
-	ErrBatteryControlNotAvailable = errors.New("battery control not available")
+	ErrBatteryNotConfigured             = errors.New("battery not configured")
+	ErrBatteryControlNotAvailable       = errors.New("battery control not available")
+	ErrBatteryGridDischargeNotAvailable = errors.New("battery grid discharge not available")
 )
 
-// isConfigurable checks if the meter is configurable
-func isConfigurable(ref string) bool {
-	dev, _ := config.Meters().ByName(ref)
-	_, ok := dev.(config.ConfigurableDevice[api.Meter])
-	return ok
+// filterConfigurableDevices filters references to configurable devices of the given handler
+func filterConfigurableDevices[T any](h config.Handler[T], ref []string) []string {
+	return lo.Filter(ref, func(ref string, _ int) bool {
+		dev, _ := h.ByName(ref)
+		_, ok := dev.(config.ConfigurableDevice[T])
+		return ok
+	})
 }
 
-// filterConfigurable filters configurable meters
-func filterConfigurable(ref []string) []string {
-	return lo.Filter(ref, func(ref string, _ int) bool {
-		return isConfigurable(ref)
-	})
+// filterConfigurableMeter filters configurable meters
+func filterConfigurableMeter(ref []string) []string {
+	return filterConfigurableDevices(config.Meters(), ref)
+}
+
+// filterConfigurableCurtailers filters configurable curtailment devices
+func filterConfigurableCurtailers(ref []string) []string {
+	return filterConfigurableDevices(config.Curtailers(), ref)
 }
 
 // Optimize updates the optimizer
@@ -89,7 +95,7 @@ func (site *Site) SetPVMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.PVMetersRef = ref
-	settings.SetString(keys.PvMeters, strings.Join(filterConfigurable(ref), ","))
+	settings.SetString(keys.PvMeters, strings.Join(filterConfigurableMeter(ref), ","))
 }
 
 // GetBatteryMeterRefs returns the BatteryMeterRef
@@ -105,7 +111,7 @@ func (site *Site) SetBatteryMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.BatteryMetersRef = ref
-	settings.SetString(keys.BatteryMeters, strings.Join(filterConfigurable(ref), ","))
+	settings.SetString(keys.BatteryMeters, strings.Join(filterConfigurableMeter(ref), ","))
 }
 
 // GetAuxMeterRefs returns the AuxMeterRef
@@ -121,7 +127,7 @@ func (site *Site) SetAuxMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.AuxMetersRef = ref
-	settings.SetString(keys.AuxMeters, strings.Join(filterConfigurable(ref), ","))
+	settings.SetString(keys.AuxMeters, strings.Join(filterConfigurableMeter(ref), ","))
 }
 
 // GetConsumerMeterRefs returns the ConsumerMeterRef
@@ -137,7 +143,7 @@ func (site *Site) SetConsumerMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.ConsumerMetersRef = ref
-	settings.SetString(keys.ConsumerMeters, strings.Join(filterConfigurable(ref), ","))
+	settings.SetString(keys.ConsumerMeters, strings.Join(filterConfigurableMeter(ref), ","))
 }
 
 // GetExtMeterRefs returns the ExtMeterRef
@@ -153,7 +159,23 @@ func (site *Site) SetExtMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.ExtMetersRef = ref
-	settings.SetString(keys.ExtMeters, strings.Join(filterConfigurable(ref), ","))
+	settings.SetString(keys.ExtMeters, strings.Join(filterConfigurableMeter(ref), ","))
+}
+
+// GetCurtailerRefs returns the curtailment device references
+func (site *Site) GetCurtailerRefs() []string {
+	site.RLock()
+	defer site.RUnlock()
+	return site.CurtailersRef
+}
+
+// SetCurtailerRefs sets the curtailment device references
+func (site *Site) SetCurtailerRefs(ref []string) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.CurtailersRef = ref
+	settings.SetString(keys.Curtailers, strings.Join(filterConfigurableCurtailers(ref), ","))
 }
 
 // GetBatterySoc returns the current battery soc
@@ -445,12 +467,17 @@ func (site *Site) SetBatteryGridDischarge(val bool) error {
 	}
 
 	site.Lock()
-	defer site.Unlock()
-
-	if site.batteryGridDischarge != val {
+	changed := site.batteryGridDischarge != val
+	if changed {
 		site.batteryGridDischarge = val
 		settings.SetBool(keys.BatteryGridDischarge, val)
 		site.publish(keys.BatteryGridDischarge, val)
+	}
+	site.Unlock()
+
+	// drop the limit, it is meaningless without the opt-in
+	if changed && !val {
+		return site.SetBatteryGridDischargeLimit(nil)
 	}
 
 	return nil
@@ -502,6 +529,42 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
 		} else {
 			settings.SetFloat(keys.BatteryGridChargeLimit, *val)
 			site.publish(keys.BatteryGridChargeLimit, *val)
+		}
+	}
+
+	return nil
+}
+
+func (site *Site) GetBatteryGridDischargeLimit() *float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryGridDischargeLimit
+}
+
+func (site *Site) SetBatteryGridDischargeLimit(val *float64) error {
+	site.log.DEBUG.Println("set grid discharge limit:", printPtr("%.1f", val))
+
+	if !site.hasBatteryControl() {
+		return ErrBatteryControlNotAvailable
+	}
+
+	// a limit can only be set while the opt-in is on, so it can never outlive it
+	if val != nil && !site.GetBatteryGridDischarge() {
+		return ErrBatteryGridDischargeNotAvailable
+	}
+
+	site.Lock()
+	defer site.Unlock()
+
+	if !ptrValueEqual(site.batteryGridDischargeLimit, val) {
+		site.batteryGridDischargeLimit = val
+
+		if val == nil {
+			settings.SetString(keys.BatteryGridDischargeLimit, "")
+			site.publish(keys.BatteryGridDischargeLimit, nil)
+		} else {
+			settings.SetFloat(keys.BatteryGridDischargeLimit, *val)
+			site.publish(keys.BatteryGridDischargeLimit, *val)
 		}
 	}
 

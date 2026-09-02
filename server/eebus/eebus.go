@@ -87,12 +87,27 @@ type EEBus struct {
 	// unknown ski may still belong to a device that is not configured yet.
 	configured bool
 
+	// pending contains pairing requests received while still configuring
+	pending map[string]shipapi.ServiceIdentity
+
 	ski string
 
 	paired    []shipapi.ServiceIdentity // devices paired via SHIP Pairing Service
 	connected map[string]bool           // connection state per ski
 
-	clients map[string][]Device
+	clients  map[string][]Device
+	useCases []useCase
+}
+
+// pairedSki is the clients key of the device paired via the SHIP Pairing Service,
+// whose ski is not known at configuration time but learned during pairing
+const pairedSki = ""
+
+// useCase pairs a registered use case with its support update event, which
+// carries the remote entity a device binds its getters to.
+type useCase struct {
+	eebusapi.UseCaseInterface
+	support eebusapi.EventType
 }
 
 var (
@@ -122,8 +137,21 @@ func ConfigComplete() {
 	}
 
 	instance.mux.Lock()
-	defer instance.mux.Unlock()
 	instance.configured = true
+
+	// deny requests left pending during configuration whose ski remained unknown
+	var deny []shipapi.ServiceIdentity
+	for _, identity := range instance.pending {
+		if len(instance.clients[identity.SKI]) == 0 {
+			deny = append(deny, identity)
+		}
+	}
+	clear(instance.pending)
+	instance.mux.Unlock()
+
+	for _, identity := range deny {
+		instance.service.CancelPairing(identity)
+	}
 }
 
 func GetStatus() any {
@@ -207,10 +235,16 @@ func NewServer(other Config) (*EEBus, error) {
 		ski:       ski,
 		clients:   make(map[string][]Device),
 		connected: make(map[string]bool),
+		pending:   make(map[string]shipapi.ServiceIdentity),
 	}
 
 	c.service = service.NewService(configuration, c)
 	c.service.SetLogging(c)
+
+	// keep pairing requests from unknown skis pending instead of aborting the ship
+	// handshake- the ski may still be registered by a device that is being configured
+	c.service.UserIsAbleToApproveOrCancelPairingRequests(true)
+
 	if err := c.service.Setup(); err != nil {
 		if errors.Is(err, shipapi.ErrInvalidSKI) {
 			const hint = "The stored EEBUS certificate has an invalid Subject Key Identifier (SKI).\n" +
@@ -283,16 +317,25 @@ func NewServer(other Config) (*EEBus, error) {
 	}
 
 	// register use cases
-	for _, uc := range []eebusapi.UseCaseInterface{
-		c.cem.EvseCC, c.cem.EvCC,
-		c.cem.EvCem, c.cem.OpEV,
-		c.cem.OscEV, c.cem.EvSoc,
-		c.cem.OHPCF,
-		c.cs.CsLPCInterface, c.cs.CsLPPInterface,
-		c.ma.MaMGCPInterface, c.ma.MaMPCInterface, c.ma.MaMDTInterface,
-		c.eg.EgLPCInterface, c.eg.EgLPPInterface,
-	} {
-		c.service.AddUseCase(uc)
+	c.useCases = []useCase{
+		{c.cem.EvseCC, evsecc.UseCaseSupportUpdate},
+		{c.cem.EvCC, evcc.UseCaseSupportUpdate},
+		{c.cem.EvCem, evcem.UseCaseSupportUpdate},
+		{c.cem.OpEV, opev.UseCaseSupportUpdate},
+		{c.cem.OscEV, oscev.UseCaseSupportUpdate},
+		{c.cem.EvSoc, evsoc.UseCaseSupportUpdate},
+		{c.cem.OHPCF, ohpcf.UseCaseSupportUpdate},
+		{c.cs.CsLPCInterface, csplc.UseCaseSupportUpdate},
+		{c.cs.CsLPPInterface, cslpp.UseCaseSupportUpdate},
+		{c.ma.MaMGCPInterface, mgcp.UseCaseSupportUpdate},
+		{c.ma.MaMPCInterface, mpc.UseCaseSupportUpdate},
+		{c.ma.MaMDTInterface, mdt.UseCaseSupportUpdate},
+		{c.eg.EgLPCInterface, eglpc.UseCaseSupportUpdate},
+		{c.eg.EgLPPInterface, eglpp.UseCaseSupportUpdate},
+	}
+
+	for _, uc := range c.useCases {
+		c.service.AddUseCase(uc.UseCaseInterface)
 	}
 
 	// re-establish trust for devices paired via the SHIP Pairing Service
@@ -343,7 +386,7 @@ func (c *EEBus) Pairings() []PairingInfo {
 	}
 
 	for ski := range c.clients {
-		if ski == "" || c.pairedIndex(shipapi.NewServiceIdentity(ski, "", "")) >= 0 {
+		if ski == pairedSki || c.isPaired(ski) {
 			continue
 		}
 		res = append(res, PairingInfo{
@@ -398,6 +441,13 @@ func (c *EEBus) pairedIndex(identity shipapi.ServiceIdentity) int {
 	})
 }
 
+// isPaired reports whether ski was paired via the SHIP Pairing Service (mux must be held)
+func (c *EEBus) isPaired(ski string) bool {
+	return ski != pairedSki && slices.ContainsFunc(c.paired, func(i shipapi.ServiceIdentity) bool {
+		return i.SKI == ski
+	})
+}
+
 // upsertPairing adds or updates a pairing and persists it (mux must be held)
 func (c *EEBus) upsertPairing(identity shipapi.ServiceIdentity) {
 	if idx := c.pairedIndex(identity); idx >= 0 {
@@ -414,11 +464,10 @@ func (c *EEBus) upsertPairing(identity shipapi.ServiceIdentity) {
 // clientsFor returns the devices registered for ski, including devices registered
 // without ski when ski is a SHIP-paired device (mux must be held)
 func (c *EEBus) clientsFor(ski string) []Device {
-	res := c.clients[ski]
-	if ski != "" && slices.ContainsFunc(c.paired, func(i shipapi.ServiceIdentity) bool { return i.SKI == ski }) {
-		res = append(slices.Clone(res), c.clients[""]...)
+	if c.isPaired(ski) {
+		return slices.Concat(c.clients[ski], c.clients[pairedSki])
 	}
-	return res
+	return c.clients[ski]
 }
 
 // RegisterDevice subscribes a device to the remote service with given ski.
@@ -432,7 +481,7 @@ func (c *EEBus) RegisterDevice(ski, ip string, device Device) error {
 	}
 
 	// trust for the paired device is established by pairing, not by configuration
-	if ski != "" {
+	if ski != pairedSki {
 		identity := shipapi.NewServiceIdentity(ski, "", "")
 		if len(ip) > 0 {
 			identity.IPv4 = ip
@@ -446,16 +495,43 @@ func (c *EEBus) RegisterDevice(ski, ip string, device Device) error {
 
 	// the remote service may already be connected
 	connected := c.connected[ski]
-	if ski == "" {
+	if ski == pairedSki {
 		connected = slices.ContainsFunc(c.paired, func(i shipapi.ServiceIdentity) bool {
 			return i.SKI != "" && c.connected[i.SKI]
 		})
 	}
 	if connected {
 		device.Connect(true)
+		c.replayUseCases(ski, device)
 	}
 
 	return nil
+}
+
+// replayUseCases re-states the use case support of an already connected remote to
+// a device registering after discovery has finished. eebus-go emits
+// UseCaseSupportUpdate only on notification, so a second device for the same ski
+// - the config UI device test while the device is running - would otherwise never
+// learn its remote entity and report "not connected" (mux must be held).
+func (c *EEBus) replayUseCases(ski string, device Device) {
+	match := func(remote string) bool { return remote == ski }
+	if ski == pairedSki {
+		// the paired device registers without ski, see clientsFor
+		match = func(remote string) bool {
+			return c.connected[remote] && c.isPaired(remote)
+		}
+	}
+
+	for _, uc := range c.useCases {
+		for _, res := range uc.RemoteEntitiesScenarios() {
+			remote := res.Entity.Device()
+			if remote == nil || !match(remote.Ski()) {
+				continue
+			}
+
+			device.UseCaseEvent(remote, res.Entity, uc.support)
+		}
+	}
 }
 
 func (c *EEBus) UnregisterDevice(ski string, device Device) {
@@ -474,8 +550,8 @@ func (c *EEBus) UnregisterDevice(ski string, device Device) {
 			// which calls back into evcc's connect(ski, false) — and that needs to
 			// acquire c.mux. Holding c.mux across this cross-layer call would
 			// deadlock the same goroutine on its own non-reentrant mutex. See #28942.
-			// The paired device (empty ski) stays trusted until unpaired.
-			if ski != "" {
+			// The paired device stays trusted until unpaired.
+			if ski != pairedSki {
 				defer c.service.UnregisterRemoteService(shipapi.NewServiceIdentity(ski, "", ""))
 			}
 		}
@@ -514,7 +590,7 @@ func (c *EEBus) ucCallback(ski string, device spineapi.DeviceRemoteInterface, en
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.log.DEBUG.Printf("ski %s event %s", ski, event)
+	c.log.DEBUG.Printf("Evnt: %s %s", ski, event)
 
 	for _, client := range c.clientsFor(ski) {
 		client.UseCaseEvent(device, entity, event)
@@ -587,6 +663,7 @@ func (c *EEBus) ServicePairingDetailUpdate(identity shipapi.ServiceIdentity, det
 			// device configuration is still running- leave the request pending
 			// instead of denying a ski that is about to be registered
 			c.log.DEBUG.Printf("pairing request from %s while configuring, left pending", identity.SKI)
+			c.pending[identity.SKI] = identity
 			return
 		}
 
@@ -601,16 +678,23 @@ func (c *EEBus) ServiceAutoTrusted(service eebusapi.ServiceInterface, identity s
 	c.log.INFO.Printf("service trusted: %s", identity.ShipID)
 
 	c.mux.Lock()
-	defer c.mux.Unlock()
 	c.upsertPairing(identity)
 
 	// connect may run before trust is established, so clientsFor skips consumers
 	// registered without ski; wake them now that the device is paired
+	var clients []Device
 	if c.connected[identity.SKI] {
-		for _, client := range c.clientsFor(identity.SKI) {
-			client.Connect(true)
-		}
+		// clone, the result may alias c.clients but is used after unlocking
+		clients = slices.Clone(c.clientsFor(identity.SKI))
 	}
+	c.mux.Unlock()
+
+	for _, client := range clients {
+		client.Connect(true)
+	}
+
+	// registering the now trusted identity approves a handshake still pending trust
+	c.service.RegisterRemoteService(identity)
 }
 
 func (c *EEBus) ServiceAutoTrustFailed(service eebusapi.ServiceInterface, identity shipapi.ServiceIdentity, reason error) {
