@@ -93,7 +93,7 @@ func (h *Host) register(ctx context.Context) error {
 	}
 
 	for _, typ := range res.GetTypes() {
-		class, err := templates.ClassString(typ.GetClass())
+		class, err := templates.ClassString(typ.GetDeviceClass())
 		if err != nil {
 			return fmt.Errorf("%s: %w", typ.GetType(), err)
 		}

@@ -38,9 +38,9 @@ its configuration properties:
 
 ```go
 &pb.DeviceType{
-    Class: "meter",
-    Type:  "pv",
-    Title: "Example PV Meter",
+    DeviceClass: "meter",
+    Type:        "pv",
+    Title:       "Example PV Meter",
     Properties: []*pb.Property{
         {Name: "uri", Title: "URI", Type: pb.PropertyType_PROPERTY_TYPE_STRING, Required: true},
         {Name: "scale", Title: "Scale", Type: pb.PropertyType_PROPERTY_TYPE_FLOAT, DefaultValue: "1", Advanced: true},

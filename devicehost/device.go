@@ -38,9 +38,9 @@ func newDevice(ctx context.Context, class templates.Class, other map[string]any)
 	}
 
 	res, err := h.client.New(ctx, &pb.NewRequest{
-		Class:      class.String(),
-		Type:       cc.Device,
-		Properties: cc.Properties,
+		DeviceClass: class.String(),
+		Type:        cc.Device,
+		Properties:  cc.Properties,
 	})
 	if err != nil {
 		return nil, err

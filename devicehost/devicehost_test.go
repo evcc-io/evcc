@@ -51,9 +51,9 @@ func uriProperty() *pb.Property {
 func (h *exampleHost) Types(context.Context, *pb.TypesRequest) (*pb.TypesReply, error) {
 	return &pb.TypesReply{Types: []*pb.DeviceType{
 		{
-			Class: "meter",
-			Type:  "pv",
-			Title: "Example PV Meter",
+			DeviceClass: "meter",
+			Type:        "pv",
+			Title:       "Example PV Meter",
 			Properties: []*pb.Property{
 				uriProperty(),
 				{
@@ -66,10 +66,10 @@ func (h *exampleHost) Types(context.Context, *pb.TypesRequest) (*pb.TypesReply, 
 			},
 		},
 		{
-			Class:      "charger",
-			Type:       "wallbox",
-			Title:      "Example Wallbox",
-			Properties: []*pb.Property{uriProperty()},
+			DeviceClass: "charger",
+			Type:        "wallbox",
+			Title:       "Example Wallbox",
+			Properties:  []*pb.Property{uriProperty()},
 		},
 	}}, nil
 }

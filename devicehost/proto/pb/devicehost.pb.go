@@ -164,8 +164,8 @@ func (x *TypesReply) GetTypes() []*DeviceType {
 // DeviceType describes an instantiable device type
 type DeviceType struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Class         string                 `protobuf:"bytes,1,opt,name=class,proto3" json:"class,omitempty"` // charger, meter, vehicle, tariff
-	Type          string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`   // type name, host-local
+	DeviceClass   string                 `protobuf:"bytes,1,opt,name=device_class,json=deviceClass,proto3" json:"device_class,omitempty"` // charger, meter, vehicle, tariff
+	Type          string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`                                  // type name, host-local
 	Title         string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
 	Properties    []*Property            `protobuf:"bytes,4,rep,name=properties,proto3" json:"properties,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -202,9 +202,9 @@ func (*DeviceType) Descriptor() ([]byte, []int) {
 	return file_proto_devicehost_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *DeviceType) GetClass() string {
+func (x *DeviceType) GetDeviceClass() string {
 	if x != nil {
-		return x.Class
+		return x.DeviceClass
 	}
 	return ""
 }
@@ -359,7 +359,7 @@ func (x *Property) GetChoice() []string {
 
 type NewRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Class         string                 `protobuf:"bytes,1,opt,name=class,proto3" json:"class,omitempty"`
+	DeviceClass   string                 `protobuf:"bytes,1,opt,name=device_class,json=deviceClass,proto3" json:"device_class,omitempty"`
 	Type          string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
 	Properties    map[string]string      `protobuf:"bytes,3,rep,name=properties,proto3" json:"properties,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
@@ -396,9 +396,9 @@ func (*NewRequest) Descriptor() ([]byte, []int) {
 	return file_proto_devicehost_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *NewRequest) GetClass() string {
+func (x *NewRequest) GetDeviceClass() string {
 	if x != nil {
-		return x.Class
+		return x.DeviceClass
 	}
 	return ""
 }
@@ -592,10 +592,10 @@ const file_proto_devicehost_proto_rawDesc = "" +
 	"\fTypesRequest\":\n" +
 	"\n" +
 	"TypesReply\x12,\n" +
-	"\x05types\x18\x01 \x03(\v2\x16.devicehost.DeviceTypeR\x05types\"\x82\x01\n" +
+	"\x05types\x18\x01 \x03(\v2\x16.devicehost.DeviceTypeR\x05types\"\x8f\x01\n" +
 	"\n" +
-	"DeviceType\x12\x14\n" +
-	"\x05class\x18\x01 \x01(\tR\x05class\x12\x12\n" +
+	"DeviceType\x12!\n" +
+	"\fdevice_class\x18\x01 \x01(\tR\vdeviceClass\x12\x12\n" +
 	"\x04type\x18\x02 \x01(\tR\x04type\x12\x14\n" +
 	"\x05title\x18\x03 \x01(\tR\x05title\x124\n" +
 	"\n" +
@@ -613,10 +613,10 @@ const file_proto_devicehost_proto_rawDesc = "" +
 	"\aexample\x18\t \x01(\tR\aexample\x12\x12\n" +
 	"\x04unit\x18\n" +
 	" \x01(\tR\x04unit\x12\x16\n" +
-	"\x06choice\x18\v \x03(\tR\x06choice\"\xbd\x01\n" +
+	"\x06choice\x18\v \x03(\tR\x06choice\"\xca\x01\n" +
 	"\n" +
-	"NewRequest\x12\x14\n" +
-	"\x05class\x18\x01 \x01(\tR\x05class\x12\x12\n" +
+	"NewRequest\x12!\n" +
+	"\fdevice_class\x18\x01 \x01(\tR\vdeviceClass\x12\x12\n" +
 	"\x04type\x18\x02 \x01(\tR\x04type\x12F\n" +
 	"\n" +
 	"properties\x18\x03 \x03(\v2&.devicehost.NewRequest.PropertiesEntryR\n" +
