@@ -43,6 +43,8 @@ export default defineComponent({
       }
       if (!el) return;
       this.chart = markRaw(echarts.init(el));
+      // hover states jump instead of fading, keeps the dot in sync with the tooltip
+      this.chart.setOption({ stateAnimation: { duration: 0 } });
       this.chart.setOption((this as unknown as WithChartOption).chartOption);
       registerTouchTooltip(this.chart, el, () => this.onTouchTooltipReset());
       this.onChartInit();

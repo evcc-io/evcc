@@ -17,7 +17,8 @@
 - `GET /state` — complete system state (supports jq filtering)
 
 ### Per-loadpoint (`/loadpoints/{id}/...`)
-- `POST mode/{value}` — off/now/minpv/pv
+- `POST mode/{value}` — off/smart/now (deprecated aliases pv/minpv)
+- `POST alwayscharge/{value}` — off/on/once
 - `POST limitsoc/{value}`, `limitenergy/{value}` — charge limits
 - `POST mincurrent/{value}`, `maxcurrent/{value}` — current limits
 - `POST phases/{value}` — phase config

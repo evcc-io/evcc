@@ -63,28 +63,7 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Nabití baterie",
-    "bufferStart": {
-      "above": "když je nad {soc}.",
-      "full": "když je na {soc}.",
-      "never": "pouze když je dost přebytků."
-    },
-    "capacity": "{energy} z {total}",
-    "control": "Ovládání baterie",
-    "discharge": "Zabrání vybití baterie FVE v okamžitém režimu a během naplánovaného nabíjení.",
-    "disclaimerHint": "Poznámka:",
-    "disclaimerText": "Tato nastavení jsou platná pouze v solárním režimu. Chování dobíjení se upraví dle potřeby.",
     "gridChargeTab": "Nabíjení z distribuční sítě",
-    "legendBottomName": "Upřednostnit nabíjení baterie FVE",
-    "legendBottomSubline": "dokud nedosáhne hodnoty {soc}.",
-    "legendMiddleName": "Upřednostnit nabíjení vozidla",
-    "legendMiddleSubline": "když je baterie domu nad {soc}.",
-    "legendTopAutostart": "Spustí se automaticky",
-    "legendTopName": "Nabíjení vozidla s využitím baterie domu",
-    "legendTopSubline": "když je baterie domu nad {soc}.",
-    "legendTopSublineAbove": "když nad {soc}",
-    "legendTopSublineDisabled": "je {soc}.",
-    "legendTopSublineDisabledState": "zakázáno",
     "modalTitle": "Nastavení baterie",
     "noBattery": "Nejsou nakonfigurovány žádné baterie.",
     "usageTab": "Využití baterie"
@@ -441,13 +420,6 @@
         "charging": "Nabíječka",
         "heating": "Zařízení pro vytápění"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Použije se nastavení proudu od 6 do 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Použije se nastavení proudu od 6 do 32 A.",
-      "chargerPowerCustom": "Ostatní",
-      "chargerPowerCustomHelp": "Definujte vlastní rozsah proudu (A) připojeného zařízení.",
-      "chargerTypeLabel": "Typ nabíječky",
       "chargingTitle": "Chování",
       "circuitHelp": "Řízení zátěže zajišťující nepřekročení limitů proudu a výkonu.",
       "circuitInvalid": "Obvod neexistuje",

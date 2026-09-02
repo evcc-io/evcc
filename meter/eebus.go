@@ -134,6 +134,12 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 		return nil, err
 	}
 
+	// the remote entities arrive with the use case data, not with the connection
+	if err := c.connector.WaitUseCase(ctx); err != nil {
+		inst.UnregisterDevice(ski, c)
+		return nil, err
+	}
+
 	// unregister device when context is cancelled (e.g. UI config validation)
 	go func() {
 		<-ctx.Done()

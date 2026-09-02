@@ -20,28 +20,7 @@
     "title": "Estado de la autorización"
   },
   "batterySettings": {
-    "batteryLevel": "Nivel de bateria",
-    "bufferStart": {
-      "above": "cuando esté por encima de {soc}.",
-      "full": "si está en {soc}.",
-      "never": "cuando hay suficiente excedente."
-    },
-    "capacity": "{energy} de {total}",
-    "control": "Control de la batería",
-    "discharge": "Evitar la descarga en modo rápido y carga planificada.",
-    "disclaimerHint": "Nota:",
-    "disclaimerText": "Estos parámetros solo afectan al modo solar. El comportamiento de carga se ajusta correspondientemente.",
     "gridChargeTab": "Carga de red",
-    "legendBottomName": "Priorizar la batería de casa",
-    "legendBottomSubline": "hasta alcanzar {soc}.",
-    "legendMiddleName": "Priorizar la carga de vehículos",
-    "legendMiddleSubline": "cuando la batería de casa sobrepasa {soc}.",
-    "legendTopAutostart": "Inicio automático",
-    "legendTopName": "Carga de vehículos asistida por baterías",
-    "legendTopSubline": "cuando la batería de casa sobrepasa {soc}.",
-    "legendTopSublineAbove": "cuando supere {soc}",
-    "legendTopSublineDisabled": "está en {soc}.",
-    "legendTopSublineDisabledState": "deshabilitado",
     "modalTitle": "Batería doméstica",
     "noBattery": "No hay baterías configuradas.",
     "usageTab": "Uso de la batería"
@@ -322,13 +301,6 @@
         "charging": "Cargador",
         "heating": "Calentador"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Utilizará un rango de corriente de 6 a 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Utilizará un rango de corriente de 6 a 32 A.",
-      "chargerPowerCustom": "otro",
-      "chargerPowerCustomHelp": "Defina un rango de corriente personalizado.",
-      "chargerTypeLabel": "Tipo de cargador",
       "chargingTitle": "Comportamiento",
       "circuitHelp": "Asignación de gestión de carga para garantizar que no se superen los límites de potencia y corriente.",
       "circuitInvalid": "El circuito no existe",

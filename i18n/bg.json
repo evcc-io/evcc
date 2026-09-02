@@ -20,25 +20,7 @@
     "title": "Статус на оторизацията"
   },
   "batterySettings": {
-    "batteryLevel": "Батерия %",
-    "bufferStart": {
-      "above": "когато над {soc}.",
-      "full": "при {soc}.",
-      "never": "само с достатъчен излишък."
-    },
-    "capacity": "{energy} от {total}",
-    "control": "Управление на батерията",
-    "discharge": "Предотвратяване на разряд в бърз режим и планирано зареждане.",
-    "disclaimerHint": "Бележка:",
-    "disclaimerText": "Тези настройки засягат само соларния режим. Поведението при зареждане се коригира съответно.",
     "gridChargeTab": "Зареждане от мрежата",
-    "legendBottomName": "Приоритизиране на зареждането на домашната батерия",
-    "legendBottomSubline": "докато достигне {soc}.",
-    "legendMiddleName": "Приоритизиране на зареждането на превозното средство",
-    "legendMiddleSubline": "когато домашната батерия е над {soc}.",
-    "legendTopAutostart": "автоматично стартиране",
-    "legendTopName": "зареждане използвайки батерия",
-    "legendTopSubline": "когато домашната батерия е над {soc}.",
     "modalTitle": "Домашна батерия",
     "usageTab": "Използване на батерията"
   },
@@ -277,13 +259,6 @@
         "charging": "Зарядно",
         "heating": "Нагревател"
       },
-      "chargerPower11kw": "11 кВт",
-      "chargerPower11kwHelp": "Ще бъде използван ток в диапазона от 6 до 16 А.",
-      "chargerPower22kw": "22 кВт",
-      "chargerPower22kwHelp": "Ще бъде използван ток в диапазона от 6 до 32 А.",
-      "chargerPowerCustom": "други",
-      "chargerPowerCustomHelp": "Определи специфичен токов диапазон.",
-      "chargerTypeLabel": "Вид на зарадяното",
       "chargingTitle": "Поведение",
       "circuitHelp": "Задание на управление на товара, за да бъде осигурена достатъчно мощност и ограничения на тока не са превишени.",
       "circuitInvalid": "Веригата не съществува",

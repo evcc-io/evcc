@@ -165,6 +165,20 @@ func (mr *MockAPIMockRecorder) EffectivePriority() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectivePriority", reflect.TypeOf((*MockAPI)(nil).EffectivePriority))
 }
 
+// GetAlwaysCharge mocks base method.
+func (m *MockAPI) GetAlwaysCharge() api.AlwaysCharge {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAlwaysCharge")
+	ret0, _ := ret[0].(api.AlwaysCharge)
+	return ret0
+}
+
+// GetAlwaysCharge indicates an expected call of GetAlwaysCharge.
+func (mr *MockAPIMockRecorder) GetAlwaysCharge() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAlwaysCharge", reflect.TypeOf((*MockAPI)(nil).GetAlwaysCharge))
+}
+
 // GetBatteryBoost mocks base method.
 func (m *MockAPI) GetBatteryBoost() bool {
 	m.ctrl.T.Helper()
@@ -793,6 +807,20 @@ func (m *MockAPI) PvChargeStarting() bool {
 func (mr *MockAPIMockRecorder) PvChargeStarting() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PvChargeStarting", reflect.TypeOf((*MockAPI)(nil).PvChargeStarting))
+}
+
+// SetAlwaysCharge mocks base method.
+func (m *MockAPI) SetAlwaysCharge(arg0 api.AlwaysCharge) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetAlwaysCharge", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetAlwaysCharge indicates an expected call of SetAlwaysCharge.
+func (mr *MockAPIMockRecorder) SetAlwaysCharge(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAlwaysCharge", reflect.TypeOf((*MockAPI)(nil).SetAlwaysCharge), arg0)
 }
 
 // SetBatteryBoost mocks base method.

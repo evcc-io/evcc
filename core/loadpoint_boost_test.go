@@ -3,6 +3,7 @@ package core
 import (
 	"testing"
 
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
@@ -42,8 +43,9 @@ func (phaseSwitchCharger) Phases1p3p(int) error { return nil }
 func TestBoostActive(t *testing.T) {
 	s := &mockSite{}
 	lp := &Loadpoint{
-		log:  util.NewLogger("lp"),
-		site: s,
+		log:   util.NewLogger("lp"),
+    clock: clock.New(),
+		site:  s,
 	}
 
 	// test boost disabled and soc is too low
@@ -81,6 +83,7 @@ func TestBatteryBoost(t *testing.T) {
 	s := &mockSite{}
 	lp := &Loadpoint{
 		log:        util.NewLogger("lp"),
+    clock:      clock.New(),
 		site:       s,
 		charger:    phaseSwitchCharger{},
 		minCurrent: 6,

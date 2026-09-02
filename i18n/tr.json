@@ -45,28 +45,7 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Doluluk oranı",
-    "bufferStart": {
-      "above": "{soc} seviyesinin üzerindeyken.",
-      "full": "{soc} seviyesindeyken.",
-      "never": "yalnızca yeterli fazlalık ile."
-    },
-    "capacity": "{total}'in {energy}'si",
-    "control": "Batarya kontrolü",
-    "discharge": "Hızlı modda ve planlanan doldurmada boşalmayı önle.",
-    "disclaimerHint": "Not:",
-    "disclaimerText": "Bu ayarlar yalnızca güneş enerjisi yöntemini etkiler. Doldurma davranışı buna göre ayarlanır.",
     "gridChargeTab": "Şebekeden doldurma",
-    "legendBottomName": "Ev bataryasına öncelik ver",
-    "legendBottomSubline": "{soc} seviyesine ulaşana kadar.",
-    "legendMiddleName": "Aracın doldurulmasına öncelik ver",
-    "legendMiddleSubline": "ev bataryası {soc} seviyesinin üzerindeyse.",
-    "legendTopAutostart": "Otomatik olarak başla",
-    "legendTopName": "Batarya destekli araç doldurma",
-    "legendTopSubline": "ev bataryası {soc} seviyesinin üzerindeyse.",
-    "legendTopSublineAbove": "{soc} üzerindeyken",
-    "legendTopSublineDisabled": "{soc}'dur.",
-    "legendTopSublineDisabledState": "devre dışı",
     "modalTitle": "Ev Bataryası",
     "noBattery": "Batarya yapılandırılmamış.",
     "usageTab": "Batarya kullanımı"
@@ -366,13 +345,6 @@
         "charging": "“Doldurma cihazı”",
         "heating": "Isıtıcı"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "6 ila 16 A akım aralığını kullanır.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "6 ila 32 A akım aralığını kullanır.",
-      "chargerPowerCustom": "diğer",
-      "chargerPowerCustomHelp": "Kendine özgü bir akım aralığı tanımla.",
-      "chargerTypeLabel": "“Doldurma gücü”",
       "chargingTitle": "Davranış",
       "circuitHelp": "Güç ve akım limitlerinin aşılmaması için yük yönetim ataması.",
       "circuitInvalid": "Devre mevcut değil",

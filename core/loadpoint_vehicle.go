@@ -160,6 +160,13 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 		lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
 	}
 
+	// once is session- and vehicle-scoped: reset on vehicle change before the new vehicle's default applies
+	if prev != nil && prev != v && lp.GetAlwaysCharge() == api.AlwaysChargeOnce {
+		if err := lp.SetAlwaysCharge(api.AlwaysChargeOff); err != nil {
+			lp.log.WARN.Printf("vehicle always charge: %v", err)
+		}
+	}
+
 	if v != nil {
 		lp.socUpdated = time.Time{}
 
@@ -171,16 +178,29 @@ func (lp *Loadpoint) setActiveVehicle(v api.Vehicle) {
 			lp.socEstimator = nil
 		}
 
-		lp.publish(keys.VehicleName, vehicle.Settings(lp.log, v).Name())
+		vs := vehicle.Settings(lp.log, v)
+		lp.publish(keys.VehicleName, vs.Name())
 		lp.publish(keys.VehicleTitle, v.GetTitle())
 
 		// vehicle mode overrides the yaml onIdentify action
 		mode, ok := v.OnIdentified().GetMode()
-		if m := vehicle.Settings(lp.log, v).GetMode(); m != "" {
+		if m := vs.GetMode(); m != "" {
 			mode, ok = m, true
 		}
 		if ok && mode != "" {
+			// strip deprecated pv/minpv aliases: yaml onIdentify must not persist always charge
+			mode, _ := lp.normalizeMode(mode)
 			lp.SetMode(mode)
+		}
+
+		if ac := vs.GetAlwaysCharge(); ac != "" {
+			// apply on as once so the vehicle default ends with the session; explicit loadpoint on wins
+			if ac == api.AlwaysChargeOn && lp.GetAlwaysCharge() != api.AlwaysChargeOn {
+				ac = api.AlwaysChargeOnce
+			}
+			if err := lp.SetAlwaysCharge(ac); err != nil {
+				lp.log.WARN.Printf("vehicle always charge: %v", err)
+			}
 		}
 
 		lp.addTask(lp.vehicleOdometer)

@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
@@ -26,12 +26,14 @@ type savedState struct {
 
 type Identity struct {
 	*request.Helper
-	oauth2.TokenSource
 	log              *util.Logger
 	user, password   string
 	userID, deviceID string
 	subject          string
 	mu               sync.Mutex
+	tsMu             sync.RWMutex
+	ts               oauth2.TokenSource
+	refresher        func(*oauth2.Token) (*oauth2.Token, error)
 }
 
 func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
@@ -67,8 +69,26 @@ func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
 		}
 	}
 
-	v.TokenSource = oauth.RefreshTokenSource(log, token, v.refreshToken)
+	v.refresher = v.refreshToken
+	v.ts = oauth.RefreshTokenSource(log, token, v.refresher)
 	return v, nil
+}
+
+// Token implements the oauth2.TokenSource interface
+func (v *Identity) Token() (*oauth2.Token, error) {
+	v.tsMu.RLock()
+	ts := v.ts
+	v.tsMu.RUnlock()
+
+	return ts.Token()
+}
+
+// Invalidate discards the current token. The next Token call performs a fresh login.
+func (v *Identity) Invalidate() {
+	v.tsMu.Lock()
+	defer v.tsMu.Unlock()
+
+	v.ts = oauth.RefreshTokenSource(v.log, nil, v.refresher)
 }
 
 func (v *Identity) refreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
