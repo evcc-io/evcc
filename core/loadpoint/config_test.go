@@ -23,3 +23,13 @@ func TestSplitConfigUI(t *testing.T) {
 	assert.Equal(t, 45.0, dynamic.UI.MaxTemp)
 	assert.NotContains(t, other, "ui")
 }
+
+func TestSplitConfigAlwaysCharge(t *testing.T) {
+	payload := map[string]any{"charger": "wallbox", "alwaysCharge": "on"}
+
+	dynamic, other, err := SplitConfig(payload)
+	require.NoError(t, err)
+
+	assert.Equal(t, "on", dynamic.AlwaysCharge)
+	assert.NotContains(t, other, "alwaysCharge")
+}
