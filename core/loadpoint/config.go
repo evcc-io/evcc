@@ -90,7 +90,7 @@ func (payload DynamicConfig) Apply(lp API) error {
 
 	// always charge is optional; ignore "not supported" for devices without current control
 	if payload.AlwaysCharge != "" {
-		if ac, acErr := api.AlwaysChargeString(payload.AlwaysCharge); acErr == nil {
+		if ac, err := api.AlwaysChargeString(payload.AlwaysCharge); err == nil {
 			_ = lp.SetAlwaysCharge(ac)
 		}
 	}
