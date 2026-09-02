@@ -18,7 +18,7 @@ var capTable = map[string]func(*device, implement.Caps){
 				{{- range .Results}}
 				var {{.VarName}} {{.Signature}}
 				{{- end}}
-				{{if .HasError}}err :={{else}}_ ={{end}} call[api.{{$t}}](d, "{{.Function}}", []any{ {{range .Params}}{{.VarName}},{{end}} }{{range .Results}}, &{{.VarName}}{{end}})
+				{{if .HasError}}err :={{else}}_ ={{end}} call(d, api.{{$t}}.{{.Function}}, []any{ {{range .Params}}{{.VarName}},{{end}} }{{range .Results}}, &{{.VarName}}{{end}})
 				return {{.ReturnExpr}}
 			},
 		{{- end}}

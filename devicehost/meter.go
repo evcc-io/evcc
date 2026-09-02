@@ -28,6 +28,6 @@ func Meter(ctx context.Context, other map[string]any) (api.Meter, error) {
 
 func (m *meter) CurrentPower() (float64, error) {
 	var power float64
-	err := call[api.Meter](m.device, "CurrentPower", nil, &power)
+	err := call(m.device, api.Meter.CurrentPower, nil, &power)
 	return power, err
 }

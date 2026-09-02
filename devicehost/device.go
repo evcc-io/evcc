@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"runtime"
+	"strings"
 
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/devicehost/proto/pb"
@@ -54,9 +56,44 @@ func capability[T any]() string {
 	return reflect.TypeFor[T]().String()
 }
 
-// call invokes a method of the api interface T on the device
-func call[T any](d *device, method string, args []any, ret ...any) error {
-	return d.invoke(capability[T](), method, args, ret...)
+// methodName splits an api interface method expression like api.Meter.CurrentPower
+// into its capability and method name
+func methodName(expr any) (string, string, error) {
+	v := reflect.ValueOf(expr)
+	if v.Kind() != reflect.Func {
+		return "", "", fmt.Errorf("not a method expression: %T", expr)
+	}
+
+	fn := runtime.FuncForPC(v.Pointer())
+	if fn == nil {
+		return "", "", fmt.Errorf("unnamed method expression: %T", expr)
+	}
+
+	// github.com/evcc-io/evcc/api.Meter.CurrentPower
+	name := fn.Name()
+	name = name[strings.LastIndexByte(name, '/')+1:]
+
+	pkg, rest, ok := strings.Cut(name, ".")
+	if !ok {
+		return "", "", fmt.Errorf("unexpected method name: %s", fn.Name())
+	}
+
+	typ, method, ok := strings.Cut(rest, ".")
+	if !ok {
+		return "", "", fmt.Errorf("unexpected method name: %s", fn.Name())
+	}
+
+	return pkg + "." + typ, method, nil
+}
+
+// call invokes an api interface method on the device, e.g. api.Meter.CurrentPower
+func call(d *device, expr any, args []any, ret ...any) error {
+	capability, method, err := methodName(expr)
+	if err != nil {
+		return err
+	}
+
+	return d.invoke(capability, method, args, ret...)
 }
 
 // invoke calls a capability method, decoding the reply into the ret pointers
