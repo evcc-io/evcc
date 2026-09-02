@@ -1119,14 +1119,14 @@
       "optInSponsorship": "Es requereix patrocini."
     },
     "version": {
-      "availableLong": "nova versió disponible",
+      "availableLong": "actualizació disponible",
       "community": "comunitat d’evcc",
       "labelEmail": "Correu electrònic",
       "labelPhone": "Telèfon",
       "labelRelease": "Llançament",
       "labelVersion": "Versió",
       "labelWebsite": "Lloc web",
-      "latestVersion": "última versió",
+      "latestVersion": "Actualitzada",
       "madeByCommunity": "Fet per la {0}.",
       "modalCancel": "Cancel·la",
       "modalDownload": "Descarrega",
@@ -1326,15 +1326,18 @@
         "continuous": "continu",
         "continuousCo2Description": "Selecciona la sèrie més neta i ininterrompuda de franges.",
         "continuousPriceDescription": "Selecciona la sèrie més barata i ininterrompuda de franges.",
+        "disabledDescription": "Requereix d'una tarifa dinàmica o previsió de CO₂.",
         "label": "Optimització"
       },
       "planNumber": "Pla {number}",
       "precondition": {
         "description": "Mou part de la càrrega just abans de la sortida: bateria calenta, menys temps amb nivell de càrrega alt.",
+        "disabledDescription": "Tota la càrrega succeeix just abans de la sortida.",
         "label": "Càrrega tardana",
         "optionAll": "tot",
         "optionNo": "no",
-        "summary": "{precondition} abans"
+        "summary": "{precondition} abans",
+        "summaryAll": "just abans de la sortida"
       },
       "remove": "Elimina",
       "repeating": "repetitiu",
@@ -1429,6 +1432,7 @@
       "finished": "Hora de finalització",
       "last24hEnergy": "Últimes 24 h",
       "last7dEnergy": "Últims 7 dies",
+      "phasesMismatch": "Més fases actives de les configurades. Comprova la configuració de fases.",
       "power": "Potència",
       "price": "Cost",
       "remaining": "Restant",
