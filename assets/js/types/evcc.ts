@@ -1,3 +1,7 @@
+// Source of truth for the state API schema (scripts/state-schema). When adding
+// or changing state types: add a JSDoc description and run `npm run openapi` to
+// regenerate server/openapi.state.yaml and server/mcp/openapi.json.
+
 // react-native-webview
 interface WebView {
   postMessage: (message: string) => void;
@@ -738,6 +742,8 @@ export interface Loadpoint {
    * @format date-time
    */
   smartFeedInPriorityNextStart: string | null;
+  /** Required solar share. Usually 0 to 1; values outside that range are possible via API for special cases. */
+  solarShare: number;
   /** Charging suggestion from the battery optimizer. */
   suggestion?: LoadpointSuggestion | null;
   /** Loadpoint title for UI display. */

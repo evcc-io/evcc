@@ -722,6 +722,25 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+  /loadpoints/{id}/solarshare/{share}:
+    post:
+      operationId: setLoadpointSolarShare
+      summary: Set solar share
+      description: "Set the share of the minimum charging power that must come from solar surplus in smart mode. 1 (default) requires full surplus, 0 starts charging as soon as there is no grid import. Ignored while enable/disable thresholds are configured. Usually 0 to 1; values outside that range are possible for special cases."
+      tags:
+        - loadpoints
+      parameters:
+        - $ref: "#/components/parameters/id"
+        - name: share
+          in: path
+          description: Solar share of the minimum charging power.
+          required: true
+          example: 0.5
+          schema:
+            type: number
+      responses:
+        "200":
+          $ref: "#/components/responses/NumberResult"
   /loadpoints/{id}/vehicle:
     delete:
       operationId: removeLoadpointVehicle
