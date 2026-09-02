@@ -402,13 +402,6 @@
         "charging": "Ładowarka",
         "heating": "Podgrzewacz"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Użyty zakres prądu będzie wynosił od 6 do 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Użyty zakres prądu będzie wynosił od 6 do 32 A.",
-      "chargerPowerCustom": "inny",
-      "chargerPowerCustomHelp": "Zdefiniuj niestandardowy zakres prądu.",
-      "chargerTypeLabel": "Typ ładowarki",
       "chargingTitle": "Postępowanie",
       "circuitHelp": "Przypisanie zarządzania obciążeniem w celu zapewnienia, że nie zostaną przekroczone limity mocy i prądu.",
       "circuitInvalid": "Obwód nie istnieje",

@@ -287,13 +287,6 @@
         "charging": "Töltő",
         "heating": "Fűtőberendezés"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "6 és 16 A közötti áramtartomány lesz használatban.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "6 és 32 A közötti áramtartomány lesz használatban.",
-      "chargerPowerCustom": "egyéb",
-      "chargerPowerCustomHelp": "Definiáljon egy egyedi áramtartományt.",
-      "chargerTypeLabel": "Töltő típusa",
       "chargingTitle": "Viselkedés",
       "circuitHelp": "Terheléskezelési hozzárendelés a teljesítmény- és áramkorlátok túllépésének biztosítására.",
       "circuitInvalid": "Az áramkör nem létezik",

@@ -432,13 +432,6 @@
         "charging": "Nabíjačka",
         "heating": "Ohrievač"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Bude používať rozsah prúdu od 6 do 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Bude používať rozsah prúdu od 6 do 32 A.",
-      "chargerPowerCustom": "iné",
-      "chargerPowerCustomHelp": "Definujte vlastný rozsah prúdu.",
-      "chargerTypeLabel": "Typ nabíjačky",
       "chargingTitle": "Správanie",
       "circuitHelp": "Priradenie riadenia záťaže, aby sa zabezpečilo, že nebudú prekročené limity výkonu a prúdu.",
       "circuitInvalid": "Obvod neexistuje",

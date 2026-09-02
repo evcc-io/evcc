@@ -322,13 +322,6 @@
         "charging": "Cargador",
         "heating": "Calentador"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Utilizará un rango de corriente de 6 a 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Utilizará un rango de corriente de 6 a 32 A.",
-      "chargerPowerCustom": "otro",
-      "chargerPowerCustomHelp": "Defina un rango de corriente personalizado.",
-      "chargerTypeLabel": "Tipo de cargador",
       "chargingTitle": "Comportamiento",
       "circuitHelp": "Asignación de gestión de carga para garantizar que no se superen los límites de potencia y corriente.",
       "circuitInvalid": "El circuito no existe",

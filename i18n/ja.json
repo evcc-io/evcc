@@ -317,13 +317,6 @@
         "charging": "充電器",
         "heating": "ヒーター"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "6 〜 16 A の電流値を使用します。",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "6 〜 32 A の電流値を使用します。",
-      "chargerPowerCustom": "その他",
-      "chargerPowerCustomHelp": "カスタムの電流値を設定します。",
-      "chargerTypeLabel": "充電器タイプ",
       "chargingTitle": "挙動",
       "circuitHelp": "電力および電流の上限値を超えないようにするための、負荷管理の割り当てです。",
       "circuitInvalid": "指定された回路が存在しません",

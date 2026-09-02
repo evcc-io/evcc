@@ -366,13 +366,6 @@
         "charging": "“Doldurma cihazı”",
         "heating": "Isıtıcı"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "6 ila 16 A akım aralığını kullanır.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "6 ila 32 A akım aralığını kullanır.",
-      "chargerPowerCustom": "diğer",
-      "chargerPowerCustomHelp": "Kendine özgü bir akım aralığı tanımla.",
-      "chargerTypeLabel": "“Doldurma gücü”",
       "chargingTitle": "Davranış",
       "circuitHelp": "Güç ve akım limitlerinin aşılmaması için yük yönetim ataması.",
       "circuitInvalid": "Devre mevcut değil",
