@@ -897,7 +897,6 @@ func TestBatteryBoostHold(t *testing.T) {
 func TestPVSolarShare(t *testing.T) {
 	Voltage = 100
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
 	newLp := func(share float64, enabled bool, enableT, disableT float64) *Loadpoint {
 		lp := &Loadpoint{
@@ -957,7 +956,6 @@ func TestPVSolarShare(t *testing.T) {
 func TestPVSolarSharePhases(t *testing.T) {
 	Voltage = 100
 	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
 	// 1p3p charger pinned to 3p cannot scale down, so the enable point must
 	// require the full 3p min power - not the 1p min power of EffectiveMinPower

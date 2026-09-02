@@ -1514,10 +1514,18 @@
       },
       "smartCostCheap": "günstige Netzladung",
       "smartCostClean": "Grünes Netzladen",
-      "solar": "Überschussladen",
+      "solar": "Solarüberschuss",
       "solarShare": {
-        "description": "Mindestens {share} der minimalen Ladeleistung muss aus Solarstrom stammen.",
-        "descriptionZero": "Laden startet, sobald etwas Überschuss verfügbar ist.",
+        "charging": {
+          "description": "Mindestens {share} der minimalen Ladeleistung muss aus Solarstrom stammen.",
+          "descriptionFull": "Laden startet, sobald der Überschuss die minimale Ladeleistung deckt.",
+          "descriptionZero": "Laden startet, sobald etwas Überschuss verfügbar ist."
+        },
+        "heating": {
+          "description": "Mindestens {share} der minimalen Heizleistung muss aus Solarstrom stammen.",
+          "descriptionFull": "Heizen startet, sobald der Überschuss die minimale Heizleistung deckt.",
+          "descriptionZero": "Heizen startet, sobald etwas Überschuss verfügbar ist."
+        },
         "label": "Sonnenanteil",
         "thresholdsHint": "Leistungsbasierte Ladeschwellen sind konfiguriert. Entferne sie, um diesen Regler zu nutzen.",
         "thresholdsHintYaml": "Leistungsbasierte Ladeschwellen sind konfiguriert. Entferne die Ein-/Ausschaltschwellen dieses Ladepunkts in deiner evcc.yaml, um diesen Regler zu nutzen.",

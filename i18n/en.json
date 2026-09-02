@@ -1514,10 +1514,18 @@
       },
       "smartCostCheap": "Cheap Grid Charging",
       "smartCostClean": "Clean Grid Charging",
-      "solar": "Surplus Charging",
+      "solar": "Solar Surplus",
       "solarShare": {
-        "description": "At least {share} of the minimum charging power must come from solar.",
-        "descriptionZero": "Charging starts as soon as some surplus is available.",
+        "charging": {
+          "description": "At least {share} of the minimum charging power must come from solar.",
+          "descriptionFull": "Charging starts as soon as the surplus covers the minimum charging power.",
+          "descriptionZero": "Charging starts as soon as some surplus is available."
+        },
+        "heating": {
+          "description": "At least {share} of the minimum heating power must come from solar.",
+          "descriptionFull": "Heating starts as soon as the surplus covers the minimum heating power.",
+          "descriptionZero": "Heating starts as soon as some surplus is available."
+        },
         "label": "Solar Share",
         "thresholdsHint": "Power-based charging thresholds are configured. Remove them to use this slider.",
         "thresholdsHintYaml": "Power-based charging thresholds are configured. Remove the enable/disable thresholds from this loadpoint in your evcc.yaml to use this slider.",

@@ -25,7 +25,7 @@ test.describe("solar share", async () => {
     const slider = modal.getByLabel("Solar Share");
     await expect(slider).toBeEnabled();
     await expect(slider).toHaveValue("100");
-    await expect(modal.getByText("must come from solar")).toBeVisible();
+    await expect(modal.getByText("covers the minimum charging power")).toBeVisible();
   });
 
   test("slider disabled by yaml thresholds", async ({ page }) => {

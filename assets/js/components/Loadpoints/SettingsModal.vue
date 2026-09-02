@@ -44,7 +44,7 @@
 					:class="{ 'opacity-50': thresholdsConfigured }"
 				>
 					<shopicon-regular-powersupply
-						class="solar-share-icon"
+						class="solar-share-icon flex-shrink-0"
 					></shopicon-regular-powersupply>
 					<input
 						:id="formId('solarshare')"
@@ -57,7 +57,9 @@
 						:disabled="thresholdsConfigured"
 						@change="setSolarShare"
 					/>
-					<shopicon-regular-sun class="solar-share-icon"></shopicon-regular-sun>
+					<shopicon-regular-sun
+						class="solar-share-icon flex-shrink-0"
+					></shopicon-regular-sun>
 				</div>
 				<div class="col-sm-8 offset-sm-4 mt-1">
 					<small class="text-muted">
@@ -357,10 +359,14 @@ export default defineComponent({
 			return { path: "/config", query: { loadpoint: name.slice(3) } };
 		},
 		solarShareDescription(): string {
+			const prefix = `main.loadpointSettings.solarShare.${this.heating ? "heating" : "charging"}`;
 			if (this.selectedSolarShare === 0) {
-				return this.$t("main.loadpointSettings.solarShare.descriptionZero");
+				return this.$t(`${prefix}.descriptionZero`);
 			}
-			return this.$t("main.loadpointSettings.solarShare.description", {
+			if (this.selectedSolarShare === 100) {
+				return this.$t(`${prefix}.descriptionFull`);
+			}
+			return this.$t(`${prefix}.description`, {
 				share: this.fmtPercentage(this.selectedSolarShare),
 			});
 		},
@@ -453,6 +459,5 @@ export default defineComponent({
 
 .solar-share-icon {
 	width: 24px;
-	flex: 0 0 auto;
 }
 </style>

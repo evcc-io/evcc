@@ -1732,7 +1732,7 @@ func (lp *Loadpoint) pvDisableThreshold(minCurrent float64, phases int) float64 
 		return lp.Disable.Threshold
 	}
 	// allow grid import for the non-solar part of the min power
-	return (1 - lp.GetSolarShare()) * currentToPower(minCurrent, phases)
+	return (1 - lp.solarShare) * currentToPower(minCurrent, phases)
 }
 
 // pvEnableDecision returns the pv enable switch point and whether charging should start,
@@ -1741,7 +1741,7 @@ func (lp *Loadpoint) pvDisableThreshold(minCurrent float64, phases int) float64 
 func (lp *Loadpoint) pvEnableDecision(availableCurrent, minCurrent, sitePower float64, phases int) (float64, bool) {
 	if !lp.customThresholds() {
 		// require the solar share of the min current to come from surplus
-		share := lp.GetSolarShare()
+		share := lp.solarShare
 		return -share * currentToPower(minCurrent, phases), availableCurrent >= share*minCurrent
 	}
 
