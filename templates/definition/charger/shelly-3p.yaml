@@ -1,6 +1,6 @@
 template: shelly-3p
 products:
-  - { brand: Shelly, description: { generic: Pro 3 } }
+  - { brand: Shelly, description: { de: Pro 3 (dreiphasig), en: Pro 3 (three phase) } }
 requirements:
   description:
     de: Die Relais 1, 2 und 3 werden gemeinsam geschaltet.

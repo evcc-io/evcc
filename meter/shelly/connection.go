@@ -33,8 +33,8 @@ type Phases interface {
 
 // Connection is the Shelly connection. It aggregates one Generation per configured channel.
 type Connection struct {
-	Generation // first channel, decides the device capabilities
-	gens       []Generation
+	Generation // first relay, decides the device capabilities
+	relays     []Generation
 	gen        int
 }
 
@@ -90,12 +90,12 @@ func NewConnection(uri, user, password string, channels []int, cache time.Durati
 		}
 	}
 
-	gens := make([]Generation, 0, len(channels))
+	relays := make([]Generation, 0, len(channels))
 	for _, channel := range channels {
 		if resp.Gen < 2 {
 			// Shelly GEN 1 API
 			// https://shelly-api-docs.shelly.cloud/gen1/#shelly-family-overview
-			gens = append(gens, newGen1(client, uri, model, channel, cache))
+			relays = append(relays, newGen1(client, uri, model, channel, cache))
 			continue
 		}
 
@@ -105,27 +105,27 @@ func NewConnection(uri, user, password string, channels []int, cache time.Durati
 		if err != nil {
 			return nil, err
 		}
-		gens = append(gens, gen)
+		relays = append(relays, gen)
 	}
 
 	// channels are compared after construction- the Pro output add-on can remap
 	// multiple configured channels onto the same relay
-	used := make(map[int]bool, len(gens))
-	for _, gen := range gens {
+	used := make(map[int]bool, len(relays))
+	for _, gen := range relays {
 		if used[gen.relay()] {
 			return nil, fmt.Errorf("duplicate channel: %d", gen.relay())
 		}
 		used[gen.relay()] = true
 	}
 
-	conn := &Connection{Generation: gens[0], gens: gens, gen: resp.Gen}
+	conn := &Connection{Generation: relays[0], relays: relays, gen: resp.Gen}
 
 	return conn, nil
 }
 
 // Enabled reports whether all configured channels are switched on
 func (c *Connection) Enabled() (bool, error) {
-	for _, gen := range c.gens {
+	for _, gen := range c.relays {
 		enabled, err := gen.Enabled()
 		if err != nil || !enabled {
 			return false, err
@@ -138,7 +138,7 @@ func (c *Connection) Enabled() (bool, error) {
 // left in the wrong state would otherwise go unnoticed by the Enabled readback.
 func (c *Connection) Enable(enable bool) error {
 	var errs []error
-	for _, gen := range c.gens {
+	for _, gen := range c.relays {
 		if err := gen.Enable(enable); err != nil {
 			errs = append(errs, err)
 		}
@@ -164,7 +164,7 @@ func (c *Connection) ReturnEnergy() (float64, error) {
 // sum accumulates a reading across all configured channels
 func (c *Connection) sum(fun func(Generation) (float64, error)) (float64, error) {
 	var total float64
-	for _, gen := range c.gens {
+	for _, gen := range c.relays {
 		val, err := fun(gen)
 		if err != nil {
 			return 0, err
@@ -178,7 +178,7 @@ func (c *Connection) sum(fun func(Generation) (float64, error)) (float64, error)
 // device readings, three channels are mapped to L1..L3 in configuration order.
 func (c *Connection) HasPhases() bool {
 	_, ok := c.Generation.(Phases)
-	return ok && (len(c.gens) == 1 || len(c.gens) == 3)
+	return ok && (len(c.relays) == 1 || len(c.relays) == 3)
 }
 
 // Currents implements the api.PhaseCurrents interface
@@ -201,12 +201,12 @@ func (c *Connection) phaseValues(fun func(Phases) (float64, float64, float64, er
 		return 0, 0, 0, api.ErrNotAvailable
 	}
 
-	if len(c.gens) == 1 {
+	if len(c.relays) == 1 {
 		return fun(c.Generation.(Phases))
 	}
 
 	var res [3]float64
-	for i, gen := range c.gens {
+	for i, gen := range c.relays {
 		l1, _, _, err := fun(gen.(Phases))
 		if err != nil {
 			return 0, 0, 0, err
