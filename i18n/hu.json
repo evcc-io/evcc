@@ -20,25 +20,7 @@
     "title": "Engedélyezési állapot"
   },
   "batterySettings": {
-    "batteryLevel": "Akkumulátor szint",
-    "bufferStart": {
-      "above": "amikor {soc} felett van.",
-      "full": "amikor {soc}-on van.",
-      "never": "csak ha van elég többlet."
-    },
-    "capacity": "{energy} / {total}",
-    "control": "Akkumulátor vezérlés",
-    "discharge": "Kisütés megakadályoza gyorstöltési és tervezett töltési üzemmódban.",
-    "disclaimerHint": "Megjegyzés:",
-    "disclaimerText": "Ezek a beállítások csak a szolár üzemmódot érintik. A töltés módja ennek megfelelően kerül beállításra.",
     "gridChargeTab": "Hálózati töltés",
-    "legendBottomName": "Otthoni akkumulátoros töltés priorizálása",
-    "legendBottomSubline": "ameddig eléri {soc}-ot.",
-    "legendMiddleName": "Jármű töltésének priorizálása",
-    "legendMiddleSubline": "amikor az otthoni akkumulátor {soc} felett van.",
-    "legendTopAutostart": "Automatikusan indul",
-    "legendTopName": "Energiatárolóval támogatott töltés",
-    "legendTopSubline": "amikor az otthoni akkumulátor {soc} felett van.",
     "modalTitle": "Otthoni Akkumulátor",
     "usageTab": "Akkumulátor használat"
   },

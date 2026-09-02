@@ -63,28 +63,7 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Batteri-niveau",
-    "bufferStart": {
-      "above": "når den er over {soc}.",
-      "full": "når den er på {soc}.",
-      "never": "kun med nok overskud."
-    },
-    "capacity": "{energy} af {total}",
-    "control": "Batteri indstillinger",
-    "discharge": "Forhindrer afladning ved planlagt opladning og i hurtig mode.",
-    "disclaimerHint": "OBS:",
-    "disclaimerText": "Disse indstillinger gælder kun for solar modus. Indstillingerne ændres tilsvarende.",
     "gridChargeTab": "Opladning fra elnettet",
-    "legendBottomName": "Prioritér opladning af husbatteriet",
-    "legendBottomSubline": "Indtil der opnås {soc}.",
-    "legendMiddleName": "Prioriter opladning af køretøj",
-    "legendMiddleSubline": "Når husbatteriet er over {soc}.",
-    "legendTopAutostart": "Starter automatisk",
-    "legendTopName": "Batteri-understøttet opladning af køretøj",
-    "legendTopSubline": "når husbatteriet er over {soc}.",
-    "legendTopSublineAbove": "når over {soc}",
-    "legendTopSublineDisabled": "er {soc}.",
-    "legendTopSublineDisabledState": "deaktiveret",
     "modalTitle": "Hus batteri",
     "noBattery": "Ingen batterier er konfigurerede.",
     "usageTab": "Batteri anvendelse"

@@ -45,28 +45,7 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Doluluk oranı",
-    "bufferStart": {
-      "above": "{soc} seviyesinin üzerindeyken.",
-      "full": "{soc} seviyesindeyken.",
-      "never": "yalnızca yeterli fazlalık ile."
-    },
-    "capacity": "{total}'in {energy}'si",
-    "control": "Batarya kontrolü",
-    "discharge": "Hızlı modda ve planlanan doldurmada boşalmayı önle.",
-    "disclaimerHint": "Not:",
-    "disclaimerText": "Bu ayarlar yalnızca güneş enerjisi yöntemini etkiler. Doldurma davranışı buna göre ayarlanır.",
     "gridChargeTab": "Şebekeden doldurma",
-    "legendBottomName": "Ev bataryasına öncelik ver",
-    "legendBottomSubline": "{soc} seviyesine ulaşana kadar.",
-    "legendMiddleName": "Aracın doldurulmasına öncelik ver",
-    "legendMiddleSubline": "ev bataryası {soc} seviyesinin üzerindeyse.",
-    "legendTopAutostart": "Otomatik olarak başla",
-    "legendTopName": "Batarya destekli araç doldurma",
-    "legendTopSubline": "ev bataryası {soc} seviyesinin üzerindeyse.",
-    "legendTopSublineAbove": "{soc} üzerindeyken",
-    "legendTopSublineDisabled": "{soc}'dur.",
-    "legendTopSublineDisabledState": "devre dışı",
     "modalTitle": "Ev Bataryası",
     "noBattery": "Batarya yapılandırılmamış.",
     "usageTab": "Batarya kullanımı"

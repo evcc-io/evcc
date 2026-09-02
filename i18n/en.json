@@ -63,29 +63,8 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Battery level",
-    "bufferStart": {
-      "above": "when above {soc}.",
-      "full": "when at {soc}.",
-      "never": "only with enough surplus."
-    },
-    "capacity": "{energy} of {total}",
-    "control": "Battery control",
-    "discharge": "Prevent discharge in fast mode and planned charging.",
-    "disclaimerHint": "Note:",
-    "disclaimerText": "These settings only affect smart mode. Charging behaviour is adjusted accordingly.",
     "gridChargeTab": "Grid charging",
     "gridDischargeTab": "Grid discharging",
-    "legendBottomName": "Prioritize home battery charging",
-    "legendBottomSubline": "until it reaches {soc}.",
-    "legendMiddleName": "Prioritize vehicle charging",
-    "legendMiddleSubline": "when home battery is above {soc}.",
-    "legendTopAutostart": "Start automatically",
-    "legendTopName": "Battery-supported vehicle charging",
-    "legendTopSubline": "when home battery is above {soc}.",
-    "legendTopSublineAbove": "when above {soc}",
-    "legendTopSublineDisabled": "is {soc}.",
-    "legendTopSublineDisabledState": "disabled",
     "modalTitle": "Home Battery",
     "noBattery": "No batteries configured.",
     "usageTab": "Battery usage"

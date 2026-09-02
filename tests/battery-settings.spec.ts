@@ -15,44 +15,54 @@ test.describe("battery settings", async () => {
   test("battery view", async ({ page }) => {
     await page.goto("/#/battery");
 
-    await expect(page.getByRole("heading", { name: "Home Battery" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Grid charging" })).toBeVisible();
     await expect(page.getByTestId("header")).toContainText("Home Battery");
-    await expect(page.locator("body")).toContainText("Battery level: 50%");
-    await expect(page.locator("body")).toContainText("10.0 kWh of 20.0 kWh");
+    await expect(page.getByRole("heading", { name: "Battery usage" })).toContainText(
+      "Battery level 50%"
+    );
+    await expect(page.getByRole("heading", { name: "Grid charging" })).toBeVisible();
+    await expect(page.getByTestId("battery-status-card")).toContainText("10.0 kWh");
   });
 
   test("battery usage", async ({ page }) => {
     await page.goto("/#/battery");
 
-    await page.locator("#batterySettingsPriority").selectOption({ label: "50%" });
-    await expect(page.locator("label[for=batterySettingsPriorityMiddle] span")).toHaveText("50%");
-    await expect(page.locator("label[for=batterySettingsPriorityBottom] span")).toHaveText("50%");
-    await page.locator("#batterySettingsBufferTop").selectOption({ label: "when above 80%" });
-    await page.locator("#batterySettingsBufferStart").selectOption({ label: "when above 90%." });
-    await expect(page.locator("label[for=batterySettingsBuffer] span")).toHaveText("80%");
+    const prioritySoc = page.getByTestId("battery-priority").getByRole("combobox");
+    const buffer = page.getByTestId("battery-buffer");
+    const bufferSoc = buffer.getByRole("combobox").first();
+
+    await prioritySoc.selectOption("50");
+    await expect(prioritySoc).toHaveValue("50");
+
+    await bufferSoc.selectOption("80");
+    await expect(bufferSoc).toHaveValue("80");
+
+    const bufferStart = buffer.getByRole("combobox").last();
+    await bufferStart.selectOption("90");
+    await expect(bufferStart).toHaveValue("90");
+
+    // persisted
+    await page.reload();
+    await expect(prioritySoc).toHaveValue("50");
+    await expect(bufferSoc).toHaveValue("80");
+    await expect(bufferStart).toHaveValue("90");
   });
 
   test("buffer 100% disables battery-supported charging", async ({ page }) => {
     await page.goto("/#/battery");
 
-    const topRow = page.getByText("Battery-supported vehicle charging");
-    const bufferSoc = topRow.getByRole("combobox").filter({ hasText: "disabled" });
-    const bufferStart = page.locator("#batterySettingsBufferStart");
+    const buffer = page.getByTestId("battery-buffer");
+    const bufferSoc = buffer.getByRole("combobox").first();
 
     await expect(bufferSoc).toHaveValue("100");
-    await expect(page.getByText("Start automatically")).toBeHidden();
+    await expect(buffer).toContainText("not used for the charging points");
+    await expect(buffer.getByRole("combobox")).toHaveCount(1);
 
-    await bufferSoc.selectOption({ label: "when above 80%" });
-    await expect(page.getByText("Start automatically")).toBeVisible();
+    await bufferSoc.selectOption("80");
+    await expect(buffer).toContainText("Start solar charging automatically");
+    await expect(buffer.getByRole("combobox")).toHaveCount(2);
 
-    await bufferStart.selectOption({ label: "when above 90%." });
-
-    await bufferSoc.selectOption({ label: "disabled" });
-    await expect(page.getByText("Start automatically")).toBeHidden();
-
-    await bufferSoc.selectOption({ label: "when above 80%" });
-    await expect(topRow).toContainText("only with enough surplus.");
+    await bufferSoc.selectOption("100");
+    await expect(buffer).toContainText("not used for the charging points");
   });
 
   test("grid charging", async ({ page }) => {
@@ -89,7 +99,9 @@ test.describe("battery settings", async () => {
 
     // enable discharge lock
     await page.goto("/#/battery");
-    await page.getByLabel("Prevent discharge in fast mode and planned charging.").check();
+    await page
+      .getByLabel("Prevent home battery discharge in fast mode and during planned charging.")
+      .check();
     await page.waitForLoadState("networkidle");
     await page.getByRole("link", { name: "Charge" }).click();
 
