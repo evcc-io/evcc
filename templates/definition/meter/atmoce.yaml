@@ -304,6 +304,7 @@ render: |
       register: 60089
       count: 7
     scale: 1
+  batterymodes: ["normal", "hold", "charge", "holdcharge", "discharge"]
   batterymode:
     source: sequence
     set:
