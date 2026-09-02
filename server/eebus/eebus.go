@@ -99,6 +99,10 @@ type EEBus struct {
 	useCases []useCase
 }
 
+// pairedSki is the clients key of the device paired via the SHIP Pairing Service,
+// whose ski is not known at configuration time but learned during pairing
+const pairedSki = ""
+
 // useCase pairs a registered use case with its support update event, which
 // carries the remote entity a device binds its getters to.
 type useCase struct {
@@ -382,7 +386,7 @@ func (c *EEBus) Pairings() []PairingInfo {
 	}
 
 	for ski := range c.clients {
-		if ski == "" || c.isPaired(ski) {
+		if ski == pairedSki || c.isPaired(ski) {
 			continue
 		}
 		res = append(res, PairingInfo{
@@ -439,7 +443,9 @@ func (c *EEBus) pairedIndex(identity shipapi.ServiceIdentity) int {
 
 // isPaired reports whether ski was paired via the SHIP Pairing Service (mux must be held)
 func (c *EEBus) isPaired(ski string) bool {
-	return c.pairedIndex(shipapi.NewServiceIdentity(ski, "", "")) >= 0
+	return ski != pairedSki && slices.ContainsFunc(c.paired, func(i shipapi.ServiceIdentity) bool {
+		return i.SKI == ski
+	})
 }
 
 // upsertPairing adds or updates a pairing and persists it (mux must be held)
@@ -458,11 +464,10 @@ func (c *EEBus) upsertPairing(identity shipapi.ServiceIdentity) {
 // clientsFor returns the devices registered for ski, including devices registered
 // without ski when ski is a SHIP-paired device (mux must be held)
 func (c *EEBus) clientsFor(ski string) []Device {
-	res := c.clients[ski]
 	if c.isPaired(ski) {
-		res = append(slices.Clone(res), c.clients[""]...)
+		return slices.Concat(c.clients[ski], c.clients[pairedSki])
 	}
-	return res
+	return c.clients[ski]
 }
 
 // RegisterDevice subscribes a device to the remote service with given ski.
@@ -476,7 +481,7 @@ func (c *EEBus) RegisterDevice(ski, ip string, device Device) error {
 	}
 
 	// trust for the paired device is established by pairing, not by configuration
-	if ski != "" {
+	if ski != pairedSki {
 		identity := shipapi.NewServiceIdentity(ski, "", "")
 		if len(ip) > 0 {
 			identity.IPv4 = ip
@@ -490,7 +495,7 @@ func (c *EEBus) RegisterDevice(ski, ip string, device Device) error {
 
 	// the remote service may already be connected
 	connected := c.connected[ski]
-	if ski == "" {
+	if ski == pairedSki {
 		connected = slices.ContainsFunc(c.paired, func(i shipapi.ServiceIdentity) bool {
 			return i.SKI != "" && c.connected[i.SKI]
 		})
@@ -510,7 +515,7 @@ func (c *EEBus) RegisterDevice(ski, ip string, device Device) error {
 // learn its remote entity and report "not connected" (mux must be held).
 func (c *EEBus) replayUseCases(ski string, device Device) {
 	match := func(remote string) bool { return remote == ski }
-	if ski == "" {
+	if ski == pairedSki {
 		// the paired device registers without ski, see clientsFor
 		match = func(remote string) bool {
 			return c.connected[remote] && c.isPaired(remote)
@@ -545,8 +550,8 @@ func (c *EEBus) UnregisterDevice(ski string, device Device) {
 			// which calls back into evcc's connect(ski, false) — and that needs to
 			// acquire c.mux. Holding c.mux across this cross-layer call would
 			// deadlock the same goroutine on its own non-reentrant mutex. See #28942.
-			// The paired device (empty ski) stays trusted until unpaired.
-			if ski != "" {
+			// The paired device stays trusted until unpaired.
+			if ski != pairedSki {
 				defer c.service.UnregisterRemoteService(shipapi.NewServiceIdentity(ski, "", ""))
 			}
 		}
