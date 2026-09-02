@@ -432,13 +432,6 @@
         "charging": "Зарядное устройство",
         "heating": "Нагревательное устройство"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Будет использовать ток в диапазоне от 6 до 16 А.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Будет использовать ток в диапазоне от 6 до 32 А.",
-      "chargerPowerCustom": "другой",
-      "chargerPowerCustomHelp": "Определите пользовательский диапазон тока.",
-      "chargerTypeLabel": "Тип зарядного устройства",
       "chargingTitle": "Поведение",
       "circuitHelp": "Задание управления нагрузкой для обеспечения соблюдения ограничений по мощности и току.",
       "circuitInvalid": "Цепь не существует",

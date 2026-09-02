@@ -223,13 +223,6 @@
       "chargerLabel": {
         "charging": "充电桩"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "将使用 6 至 16 A 的电流范围。",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "将使用 6 至 32 A 的电流范围。",
-      "chargerPowerCustom": "其他",
-      "chargerPowerCustomHelp": "定义自定义电流范围。",
-      "chargerTypeLabel": "充电桩类型",
       "chargingTitle": "充电",
       "circuitHelp": "负载管理分配，以确保不超过功率和电流限制。",
       "circuitLabel": "电路",

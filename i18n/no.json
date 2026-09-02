@@ -326,13 +326,6 @@
         "charging": "Lader",
         "heating": "Varmeelement"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Vil bruke et strømområde på 6 til 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Vil bruke et strømområde på 6 til 32 A.",
-      "chargerPowerCustom": "annen",
-      "chargerPowerCustomHelp": "Definer et tilpasset strømområde.",
-      "chargerTypeLabel": "Ladertype",
       "chargingTitle": "Oppførsel",
       "circuitHelp": "Laststyringsoppgave for å sikre at effekt- og strømgrenser ikke overskrides.",
       "circuitInvalid": "Kretsen eksisterer ikke",

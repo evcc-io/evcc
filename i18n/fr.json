@@ -427,13 +427,6 @@
         "charging": "Chargeur",
         "heating": "Dispositif de chauffage"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Utilisera des courants de 6 à 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Utilisera des courants de 6 à 32 A.",
-      "chargerPowerCustom": "autre",
-      "chargerPowerCustomHelp": "Définir un intervalle de courant personnalisé.",
-      "chargerTypeLabel": "Type de chargeur",
       "chargingTitle": "Comportement",
       "circuitHelp": "Assignation de la gestion de charge afin d’assurer que les limites de puissance et de courant ne sont pas dépassées.",
       "circuitInvalid": "Le circuit n'existe pas",

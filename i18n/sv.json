@@ -440,13 +440,6 @@
         "charging": "Laddare",
         "heating": "Värmekälla"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Använder mellan 6 och 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Använder mellan 6 till 32 A.",
-      "chargerPowerCustom": "annan",
-      "chargerPowerCustomHelp": "Ange strömintervall.",
-      "chargerTypeLabel": "Typ av laddare",
       "chargingTitle": "Tillstånd",
       "circuitHelp": "Belastningsstyrning som säkrar att effekt och strömgränser ej överskrids.",
       "circuitInvalid": "Kretsen saknas",

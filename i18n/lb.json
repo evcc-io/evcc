@@ -427,13 +427,6 @@
         "charging": "Wallbox",
         "heating": "Heizungsgerät"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Verwennt Stroum vu 6 bis 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Verwennt Stroum vu 6 bis 32 A.",
-      "chargerPowerCustom": "aneren",
-      "chargerPowerCustomHelp": "Een eegenen Stroumberäich definéieren.",
-      "chargerTypeLabel": "Luedleeschtung",
       "chargingTitle": "Verhalen",
       "circuitHelp": "Laaschtmanagement-Zouweisung, fir sécher ze goen, dass d'Leeschtung a Stroumlimitten net iwwerschratt ginn.",
       "circuitInvalid": "De Circuit existéiert net",

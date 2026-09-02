@@ -468,13 +468,6 @@
         "charging": "Charger",
         "heating": "Heating device"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Will use a current range of 6 to 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Will use a current range of 6 to 32 A.",
-      "chargerPowerCustom": "other",
-      "chargerPowerCustomHelp": "Define a custom current range.",
-      "chargerTypeLabel": "Charger type",
       "chargingTitle": "Behaviour",
       "circuitHelp": "Load management assignment to ensure power and current limits are not exceeded.",
       "circuitInvalid": "Circuit does not exist",
@@ -488,6 +481,10 @@
       "creating": {
         "charging": "Charger saved. Creating charging point …",
         "heating": "Heating device saved. Creating heater …"
+      },
+      "currentRangeHelp": {
+        "charging": "Typical: 6-16 A for 11 kW, 6-32 A for 22 kW chargers (3-phase).",
+        "heating": "Depends on the rated power of the heating device (see data sheet)."
       },
       "defaultModeHelp": {
         "charging": "Charging mode when connecting the vehicle.",

@@ -468,13 +468,6 @@
         "charging": "Wallbox",
         "heating": "Heizgerät"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Verwendet einen Strombereich von 6 bis 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Verwendet einen Strombereich von 6 bis 32 A.",
-      "chargerPowerCustom": "andere",
-      "chargerPowerCustomHelp": "Definiere einen eigenen Strombereich.",
-      "chargerTypeLabel": "Ladetyp",
       "chargingTitle": "Verhalten",
       "circuitHelp": "Lastmanagement-Zuordnung, um die Leistungs- und Stromgrenzen nicht zu überschreiten.",
       "circuitInvalid": "Stromkreis existiert nicht",
@@ -488,6 +481,10 @@
       "creating": {
         "charging": "Wallbox gespeichert. Ladepunkt wird erstellt …",
         "heating": "Heizgerät gespeichert. Heizung wird erstellt …"
+      },
+      "currentRangeHelp": {
+        "charging": "Typisch: 6-16 A bei 11 kW, 6-32 A bei 22 kW Wallboxen (3-phasig).",
+        "heating": "Abhängig von der Nennleistung des Heizgeräts (siehe Datenblatt)."
       },
       "defaultModeHelp": {
         "charging": "Lademodus beim Anschließen des Fahrzeugs.",

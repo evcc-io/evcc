@@ -1,6 +1,6 @@
 <!-- oxlint-disable vue/no-v-html -->
 <template>
-	<div class="mb-4">
+	<div class="form-row">
 		<label :for="id">
 			<div class="form-label">
 				{{ label }}
@@ -62,3 +62,8 @@ export default {
 	},
 };
 </script>
+<style scoped>
+.form-row {
+	margin-bottom: 1.5rem;
+}
+</style>

@@ -354,13 +354,6 @@
         "charging": "மின்னூட்டி",
         "heating": "ஈட்டர்"
       },
-      "chargerPower11kw": "11 கிலோவாட்",
-      "chargerPower11kwHelp": "தற்போதைய 6 முதல் 16 வரை தற்போதைய வரம்பைப் பயன்படுத்தும்.",
-      "chargerPower22kw": "22 கிலோவாட்",
-      "chargerPower22kwHelp": "தற்போதைய 6 முதல் 32 ஏ வரை பயன்படுத்தும்.",
-      "chargerPowerCustom": "மற்றொன்று",
-      "chargerPowerCustomHelp": "தனிப்பயன் தற்போதைய வரம்பை வரையறுக்கவும்.",
-      "chargerTypeLabel": "சார்சர் வகை",
       "chargingTitle": "நடத்தை",
       "circuitHelp": "ஆற்றல் மற்றும் தற்போதைய வரம்புகள் மீறப்படுவதில்லை என்பதை உறுதிப்படுத்த சுமை மேலாண்மை பணி.",
       "circuitInvalid": "சர்க்யூட் இல்லை",

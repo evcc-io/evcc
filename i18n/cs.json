@@ -441,13 +441,6 @@
         "charging": "Nabíječka",
         "heating": "Zařízení pro vytápění"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Použije se nastavení proudu od 6 do 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Použije se nastavení proudu od 6 do 32 A.",
-      "chargerPowerCustom": "Ostatní",
-      "chargerPowerCustomHelp": "Definujte vlastní rozsah proudu (A) připojeného zařízení.",
-      "chargerTypeLabel": "Typ nabíječky",
       "chargingTitle": "Chování",
       "circuitHelp": "Řízení zátěže zajišťující nepřekročení limitů proudu a výkonu.",
       "circuitInvalid": "Obvod neexistuje",
