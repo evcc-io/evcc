@@ -47,12 +47,28 @@ func TestUnmarshalKwhDataResponse(t *testing.T) {
 		assert.Equal(t, float64(28), res.ActivePowerL1W)
 		assert.Equal(t, float64(0), res.ActivePowerL2W)
 		assert.Equal(t, float64(-181), res.ActivePowerL3W)
-		assert.Equal(t, float64(235.4), res.ActiveVoltageL1V)
-		assert.Equal(t, float64(235.8), res.ActiveVoltageL2V)
-		assert.Equal(t, float64(236.1), res.ActiveVoltageL3V)
-		assert.Equal(t, float64(1.19), res.ActiveCurrentL1A)
-		assert.Equal(t, float64(0.37), res.ActiveCurrentL2A)
-		assert.Equal(t, float64(-0.93), res.ActiveCurrentL3A)
+		assert.Equal(t, float64(235.4), *res.ActiveVoltageL1V)
+		assert.Equal(t, float64(235.8), *res.ActiveVoltageL2V)
+		assert.Equal(t, float64(236.1), *res.ActiveVoltageL3V)
+		assert.Equal(t, float64(1.19), *res.ActiveCurrentL1A)
+		assert.Equal(t, float64(0.37), *res.ActiveCurrentL2A)
+		assert.Equal(t, float64(-0.93), *res.ActiveCurrentL3A)
+	}
+}
+
+// Test homewizard kWh Meter 1-Phase response without per-phase current/voltage
+func TestUnmarshalKwh1PhaseDataResponse(t *testing.T) {
+	{
+		var res DataResponse
+		// https://api-documentation.homewizard.com/docs/v1/measurement#kwh-meters-1-and-3-phase
+		jsonstr := `{"total_power_import_kwh":1.097,"total_power_import_t1_kwh":1.097,"total_power_export_kwh":0,"total_power_export_t1_kwh":0,"active_power_w":1381.396,"active_power_l1_w":1381.396,"active_voltage_v":228.641,"active_current_a":6.051,"active_apparent_current_a":6.068,"active_reactive_current_a":0.461,"active_apparent_power_va":1385.536,"active_reactive_power_var":-105.28,"active_power_factor":0.997,"active_frequency_hz":50}`
+		require.NoError(t, json.Unmarshal([]byte(jsonstr), &res))
+
+		assert.Equal(t, float64(1381.396), res.ActivePowerW)
+		assert.Equal(t, float64(1381.396), res.ActivePowerL1W)
+		assert.Equal(t, float64(228.641), res.ActiveVoltageV)
+		assert.Equal(t, float64(6.051), res.ActiveCurrentA)
+		assert.Nil(t, res.ActiveCurrentL1A)
 	}
 }
 
@@ -70,11 +86,11 @@ func TestUnmarshalP1DataResponse(t *testing.T) {
 		assert.Equal(t, float64(-21), res.ActivePowerL1W)
 		assert.Equal(t, float64(57), res.ActivePowerL2W)
 		assert.Equal(t, float64(168), res.ActivePowerL3W)
-		assert.Equal(t, float64(228), res.ActiveVoltageL1V)
-		assert.Equal(t, float64(226), res.ActiveVoltageL2V)
-		assert.Equal(t, float64(225), res.ActiveVoltageL3V)
-		assert.Equal(t, float64(-0.092), res.ActiveCurrentL1A)
-		assert.Equal(t, float64(0.252), res.ActiveCurrentL2A)
-		assert.Equal(t, float64(0.747), res.ActiveCurrentL3A)
+		assert.Equal(t, float64(228), *res.ActiveVoltageL1V)
+		assert.Equal(t, float64(226), *res.ActiveVoltageL2V)
+		assert.Equal(t, float64(225), *res.ActiveVoltageL3V)
+		assert.Equal(t, float64(-0.092), *res.ActiveCurrentL1A)
+		assert.Equal(t, float64(0.252), *res.ActiveCurrentL2A)
+		assert.Equal(t, float64(0.747), *res.ActiveCurrentL3A)
 	}
 }

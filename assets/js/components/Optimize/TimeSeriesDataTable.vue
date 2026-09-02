@@ -172,7 +172,7 @@ export default defineComponent({
 			return [
 				{
 					rows: [
-						this.powerRow("Solar Forecast", ts.ft, colors.self || ""),
+						this.powerRow("Solar Forecast", ts.ft, colors.forecast || ""),
 						this.powerRow("Household Demand", ts.gt, colors.muted || ""),
 						{
 							label: "Time Step",

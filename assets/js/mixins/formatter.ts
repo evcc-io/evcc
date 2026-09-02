@@ -75,6 +75,10 @@ const CURRENCY_SYMBOLS: Record<CURRENCY, string> = {
   TRY: "₺",
   MYR: "RM",
   THB: "฿",
+  BYN: "Br",
+  UAH: "₴",
+  RUB: "₽",
+  KZT: "₸",
 };
 
 // list of currencies where energy price should be displayed in subunits (factor 100)
@@ -94,6 +98,7 @@ const ENERGY_PRICE_IN_SUBUNIT: Partial<Record<CURRENCY, string>> = {
   SEK: "öre", // Swedish öre
   ZAR: "c", // South African cent
   TRY: "krş", // Türkiye kuruş
+  BYN: "к.", // Belarusian kapeyka
 };
 
 export enum POWER_UNIT {

@@ -75,6 +75,7 @@
     "disclaimerHint": "Hinweis:",
     "disclaimerText": "Nur relevant im PV-Modus. Das Ladeverhalten wird entsprechend angepasst.",
     "gridChargeTab": "Netzladen",
+    "gridDischargeTab": "Netzentladen",
     "legendBottomName": "Priorisiere die Hausbatterie",
     "legendBottomSubline": "bis sie {soc} erreicht hat.",
     "legendMiddleName": "Priorisiere Fahrzeugladen,",
@@ -210,7 +211,7 @@
       "chargeStatusC": "lädt",
       "chargeStatusE": "Keine Leistung",
       "chargeStatusF": "Fehler",
-      "chargedEnergy": "Geladen",
+      "chargedEnergy": "Geladen (Session)",
       "co2": "Netz-CO₂",
       "configured": "Konfiguriert",
       "connected": "Verbunden",
@@ -259,6 +260,31 @@
       "temp": "Temperatur",
       "topic": "Thema",
       "url": "URL",
+      "usage": {
+        "aux": {
+          "energy": "Verbraucht",
+          "returnEnergy": "Erzeugt"
+        },
+        "battery": {
+          "energy": "Entladen",
+          "returnEnergy": "Geladen"
+        },
+        "charge": {
+          "energy": "Geladen",
+          "returnEnergy": "Entladen"
+        },
+        "consumer": {
+          "energy": "Verbraucht",
+          "returnEnergy": "Erzeugt"
+        },
+        "grid": {
+          "energy": "Bezogen",
+          "returnEnergy": "Eingespeist"
+        },
+        "pv": {
+          "energy": "Erzeugt"
+        }
+      },
       "vehicleLimitSoc": "Ladelimit",
       "yes": "Ja"
     },
@@ -352,6 +378,7 @@
       "hideAdvancedSettings": "Erweiterte Einstellungen ausblenden",
       "invalidFileSelected": "Ungültige Datei ausgewählt",
       "legacy": "veraltet",
+      "moreInfo": "Mehr Infos:",
       "noFileSelected": "Keine Datei ausgewählt.",
       "off": "aus",
       "on": "an",
@@ -1432,6 +1459,7 @@
       "finished": "Ladeende",
       "last24hEnergy": "Letzte 24h",
       "last7dEnergy": "Letzte 7 Tage",
+      "phasesMismatch": "Mehr Phasen aktiv als konfiguriert. Phasenkonfiguration prüfen.",
       "power": "Leistung",
       "price": "Kosten",
       "remaining": "Restzeit",
@@ -1733,6 +1761,13 @@
     "vehicle": "Fahrzeug"
   },
   "settings": {
+    "dateFormat": {
+      "auto": "Auto",
+      "dmy": "TT/MM/JJJJ",
+      "label": "Datumsformat",
+      "mdy": "MM/TT/JJJJ",
+      "ymd": "JJJJ-MM-TT"
+    },
     "deviceInfo": "Einstellungen, die du in diesem Dialog vornimmst, gelten nur für dieses Gerät.",
     "fullscreen": {
       "enter": "Vollbild starten",
@@ -1802,7 +1837,8 @@
     "saved": "Gespeichert."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Pausierte Zeit",
+    "activeHoursLabel": "Aktive Zeit",
+    "batteryDescription": "Entlädt die Hausbatterie ins Netz, wenn der Einspeisetarif hoch ist.",
     "description": "Pausiert den Ladevorgang bei hohen Preisen, um der profitablen Netzeinspeisung Vorrang zu geben.",
     "priceLabel": "Einspeisetarif",
     "priceLimit": "Einspeisegrenze",

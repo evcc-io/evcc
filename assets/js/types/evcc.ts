@@ -284,6 +284,10 @@ export interface State {
   batteryGridChargeLimit?: number | null;
   /** Home battery is currently charged from grid. */
   batteryGridChargeActive?: boolean;
+  /** Feed-in price limit for discharging the home battery to the grid (experimental). */
+  batteryGridDischargeLimit?: number | null;
+  /** Home battery is currently discharged to the grid. */
+  batteryGridDischargeActive?: boolean;
   /** A dynamic grid price or CO₂ forecast is configured. */
   smartCostAvailable?: boolean;
   /** Type of the smart charging limit, price based or emission based. */
@@ -816,6 +820,10 @@ export enum CURRENCY {
   TRY = "TRY",
   MYR = "MYR",
   THB = "THB",
+  BYN = "BYN",
+  UAH = "UAH",
+  RUB = "RUB",
+  KZT = "KZT",
 }
 
 export enum ICON_SIZE {
@@ -841,6 +849,7 @@ export enum BATTERY_MODE {
   HOLD = "hold",
   CHARGE = "charge",
   HOLDCHARGE = "holdcharge",
+  DISCHARGE = "discharge",
 }
 
 export enum PHASES {
@@ -1131,8 +1140,10 @@ export interface Battery {
   capacity: number;
   /** Charge level in %. Weighted by capacity across all batteries. */
   soc: number;
-  /** Total battery energy in kWh. */
+  /** Total discharged energy in kWh. */
   energy?: number;
+  /** Total charged energy in kWh. */
+  returnEnergy?: number;
   /** Measurement data per battery meter. */
   devices?: BatteryMeter[];
   /** Projected charge levels based on the solar and price forecast. */

@@ -210,6 +210,13 @@ components:
         batteryGridChargeActive:
           description: Home battery is currently charged from grid.
           type: boolean
+        batteryGridDischargeLimit:
+          description: Feed-in price limit for discharging the home battery to the grid (experimental).
+          type: number
+          nullable: true
+        batteryGridDischargeActive:
+          description: Home battery is currently discharged to the grid.
+          type: boolean
         smartCostAvailable:
           description: A dynamic grid price or CO₂ forecast is configured.
           type: boolean
@@ -302,7 +309,10 @@ components:
           description: Charge level in %. Weighted by capacity across all batteries.
           type: number
         energy:
-          description: Total battery energy in kWh.
+          description: Total discharged energy in kWh.
+          type: number
+        returnEnergy:
+          description: Total charged energy in kWh.
           type: number
         devices:
           description: Measurement data per battery meter.
@@ -401,6 +411,7 @@ components:
         - hold
         - charge
         - holdcharge
+        - discharge
     BatterySuggestion:
       description: Battery optimizer suggestion for a home battery.
       type: object
@@ -507,6 +518,10 @@ components:
         - TRY
         - MYR
         - THB
+        - BYN
+        - UAH
+        - RUB
+        - KZT
     DeviceColorEntry:
       description: Color assigned to a device for consistent UI display.
       type: object

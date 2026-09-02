@@ -131,10 +131,6 @@ const (
 	actionCharge = "charge"
 )
 
-// actionDischarge is the battery-to-grid discharge advisory. It has no matching
-// api.BatteryMode, so it always reads as actionable.
-const actionDischarge = "discharge"
-
 // evSuggestion notifies when the optimizer's advisory action for a device changes
 const evSuggestion = "suggestion"
 
@@ -192,7 +188,7 @@ func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gr
 			s.Action = api.BatteryHoldCharge.String()
 		case discharge > suggestionThreshold && gridExporting:
 			// discharging while exporting means battery-to-grid discharge
-			s.Action = actionDischarge
+			s.Action = api.BatteryDischarge.String()
 		default:
 			s.Action = api.BatteryNormal.String()
 		}
@@ -641,6 +637,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 // applyOptimizerResult maps the optimizer response onto suggestions, battery
 // forecast and notifications
 func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details []batteryDetail, res optimizer.OptimizationResult) {
+	now := time.Now()
 	slotHours := (time.Duration(req.TimeSeries.Dt[0]) * time.Second).Hours()
 	gridImporting := len(res.GridImport) > 0 && res.GridImport[0] > 0
 	gridExporting := len(res.GridExport) > 0 && res.GridExport[0] > 0
@@ -654,10 +651,10 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 
 		batteries = append(batteries, batteryResult{
 			batteryDetail: detail,
-			Full: matchSoc(batRes.StateOfCharge, func(soc float32) bool {
+			Full: matchSoc(batRes.StateOfCharge, now, func(soc float32) bool {
 				return soc >= batReq.SMax
 			}),
-			Empty: matchSoc(batRes.StateOfCharge, func(soc float32) bool {
+			Empty: matchSoc(batRes.StateOfCharge, now, func(soc float32) bool {
 				return soc <= batReq.SMin
 			}),
 		})
@@ -937,11 +934,14 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 	return bat, detail
 }
 
-func matchSoc(ts []float32, fun func(float32) bool) time.Time {
+// matchSoc returns the end of the first slot whose soc satisfies fun.
+// Slot 0 is the remainder of the current slot, so it ends at the next slot boundary.
+func matchSoc(ts []float32, now time.Time, fun func(float32) bool) time.Time {
+	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
+
 	for i, soc := range ts {
 		if fun(soc) {
-			// TODO first slot
-			return time.Now().Add(time.Duration(i+1) * tariff.SlotDuration).Round(time.Second)
+			return eos.Add(time.Duration(i) * tariff.SlotDuration)
 		}
 	}
 
