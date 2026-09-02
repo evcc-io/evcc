@@ -19,6 +19,7 @@ type DynamicConfig struct {
 	// dynamic config
 	Title                    string    `json:"title"`
 	DefaultMode              string    `json:"defaultMode"`
+	AlwaysCharge             string    `json:"alwaysCharge"`
 	Priority                 int       `json:"priority"`
 	PhasesConfigured         int       `json:"phasesConfigured"`
 	MinCurrent               float64   `json:"minCurrent"`
@@ -88,6 +89,13 @@ func (payload DynamicConfig) Apply(lp API) error {
 	mode, err := api.ChargeModeString(payload.DefaultMode)
 	if err == nil {
 		lp.SetDefaultMode(mode)
+	}
+
+	// always charge is optional; ignore "not supported" for devices without current control
+	if payload.AlwaysCharge != "" {
+		if ac, err := api.AlwaysChargeString(payload.AlwaysCharge); err == nil {
+			_ = lp.SetAlwaysCharge(ac)
+		}
 	}
 
 	if err == nil {
