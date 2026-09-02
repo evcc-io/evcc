@@ -60,6 +60,8 @@ const (
 	chargerSwitchDuration = 60 * time.Second // allow out of sync during this timespan
 	phaseSwitchDuration   = 60 * time.Second // allow out of sync and do not measure phases during this timespan
 
+	phaseScaleUpBuffer = 1.1 // min current headroom required before load management allows scaling up again
+
 	// battery boost states
 	boostDisabled = 0
 	boostStart    = 1
@@ -1424,16 +1426,14 @@ func (lp *Loadpoint) fastCharging() error {
 	}
 
 	targetPhases := 3
-	minPower3p := currentToPower(lp.effectiveMinCurrent(), 3)
-	powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(lp.effectiveMaxCurrent(), 3))
-	if powerLimit < minPower3p {
+	if !lp.circuitAllowsPhases(3, lp.effectiveMinCurrent()) {
 		targetPhases = 1
 	}
 
 	if lp.phasesConfigured != 0 {
 		// user configured fixed phase count overrides automatic switching
 		if lp.phasesConfigured == 3 && targetPhases == 1 {
-			lp.log.DEBUG.Printf("configured fixed phase count %dp prevents switching to 1p to match %.0fW available circuit power", lp.phasesConfigured, powerLimit)
+			lp.log.DEBUG.Printf("configured fixed phase count %dp prevents switching to 1p", lp.phasesConfigured)
 		}
 		targetPhases = lp.phasesConfigured
 	}
@@ -1443,37 +1443,33 @@ func (lp *Loadpoint) fastCharging() error {
 
 	// scale down: immediate
 	if targetPhases == 1 && phases == 3 {
-		lp.log.DEBUG.Printf("fast charging: scaled to 1p to match %.0fW available circuit power", powerLimit)
 		if err := lp.scalePhases(1); err != nil && !errors.Is(err, api.ErrNotAvailable) {
 			return err
 		}
 	}
 
-	// scale up: buffered and delayed
+	// scale up: delayed and buffered against immediately undoing a scale down.
+	// a fixed phase configuration is not subject to load management, hence no buffer.
 	var waiting bool
-	if targetPhases == 3 && phases == 1 {
-		minPower3p = 1.1 * minPower3p // add 10% buffer to prevent immediate scale up after scale down
-		if powerLimit < minPower3p && lp.phasesConfigured != 3 {
-			lp.log.DEBUG.Printf("fast charging: staying at 1p, power limit %.0fW < %.0fW threshold incl. buffer", powerLimit, minPower3p)
+	if targetPhases == 3 && phases == 1 &&
+		(lp.phasesConfigured == 3 || lp.circuitAllowsPhases(3, phaseScaleUpBuffer*lp.effectiveMinCurrent())) {
+		if !lp.charging() { // scale immediately if not charging
+			lp.phaseTimer = elapsed
+		}
+
+		if lp.phaseTimer.IsZero() {
+			lp.log.DEBUG.Printf("start phase %s timer", phaseScale3p)
+			lp.phaseTimer = lp.clock.Now()
+		}
+
+		lp.publishTimer(phaseTimer, lp.GetEnableDelay(), phaseScale3p)
+
+		if lp.clock.Since(lp.phaseTimer) >= lp.GetEnableDelay() {
+			if err := lp.scalePhases(3); err != nil && !errors.Is(err, api.ErrNotAvailable) {
+				return err
+			}
 		} else {
-			if !lp.charging() { // scale immediately if not charging
-				lp.phaseTimer = elapsed
-			}
-
-			if lp.phaseTimer.IsZero() {
-				lp.log.DEBUG.Printf("fast charging: start phase %s timer", phaseScale3p)
-				lp.phaseTimer = lp.clock.Now()
-			}
-
-			lp.publishTimer(phaseTimer, lp.GetEnableDelay(), phaseScale3p)
-
-			if lp.clock.Since(lp.phaseTimer) >= lp.GetEnableDelay() {
-				if err := lp.scalePhases(3); err != nil && !errors.Is(err, api.ErrNotAvailable) {
-					return err
-				}
-			} else {
-				waiting = true
-			}
+			waiting = true
 		}
 	}
 
