@@ -23,6 +23,7 @@ params:
     port: 1502
   - name: maxacpower
     required: true
+    usages: ["pv", "battery"]
   - preset: battery-params
   - name: maxdischargepower
     default: 5000
@@ -267,15 +268,64 @@ render: |
                 address: 0xE00D # StorageRemoteCtrl_CommandMode
                 type: writesingle
                 encoding: uint16
-          - source: const
-            value: {{ .maxdischargepower }} # W
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 0xE010 # StorageRemoteCtrl_DischargeLimit
-                type: writemultiple
-                encoding: float32s
+          - source: go
+            in:
+              - name: rated
+                type: float
+                config:
+                  source: cached
+                  cache: 1h # rated max is static
+                  value:
+                    source: modbus
+                    {{- include "modbus" . | indent 18 }}
+                    register:
+                      address: 0xE144 # Battery 1 Max Charge Continues Power (RO)
+                      type: holding
+                      decode: float32nans
+            out:
+              - name: limit
+                type: float
+                config:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 0xE00E # StorageRemoteCtrl_ChargeLimit
+                    type: writemultiple
+                    encoding: float32s
+            script: |
+              rated // unblock charging (holdcharge may have zeroed this); DC-coupled PV
+              // charging bypasses the AC stage, so this isn't capped to maxacpower
+          - source: go
+            in:
+              - name: rated
+                type: float
+                config:
+                  source: cached
+                  cache: 1h # rated max is static
+                  value:
+                    source: modbus
+                    {{- include "modbus" . | indent 18 }}
+                    register:
+                      address: 0xE146 # Battery 1 Max Discharge Continues Power (RO)
+                      type: holding
+                      decode: float32nans
+            out:
+              - name: limit
+                type: float
+                config:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 0xE010 # StorageRemoteCtrl_DischargeLimit
+                    type: writemultiple
+                    encoding: float32s
+            script: |
+              // uncapped by maxacpower like ChargeLimit above: self-consumption mode
+              // is self-limiting via load and the inverter's own AC hardware rating
+              limit := float64({{ .maxdischargepower }})
+              out := rated
+              if limit < out { out = limit }
+              out
       - case: 2 # hold
         set:
           source: sequence
@@ -289,6 +339,33 @@ render: |
                 address: 0xE00D # StorageRemoteCtrl_CommandMode
                 type: writesingle
                 encoding: uint16
+          - source: go
+            in:
+              - name: rated
+                type: float
+                config:
+                  source: cached
+                  cache: 1h # rated max is static
+                  value:
+                    source: modbus
+                    {{- include "modbus" . | indent 18 }}
+                    register:
+                      address: 0xE144 # Battery 1 Max Charge Continues Power (RO)
+                      type: holding
+                      decode: float32nans
+            out:
+              - name: limit
+                type: float
+                config:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 0xE00E # StorageRemoteCtrl_ChargeLimit
+                    type: writemultiple
+                    encoding: float32s
+            script: |
+              rated // unblock charging (holdcharge may have zeroed this); DC-coupled PV
+              // charging bypasses the AC stage, so this isn't capped to maxacpower
           - source: const
             value: 0 # W
             set:
@@ -311,6 +388,33 @@ render: |
                 address: 0xE00D # StorageRemoteCtrl_CommandMode
                 type: writesingle
                 encoding: uint16
+          - source: go
+            in:
+              - name: rated
+                type: float
+                config:
+                  source: cached
+                  cache: 1h # rated max is static
+                  value:
+                    source: modbus
+                    {{- include "modbus" . | indent 18 }}
+                    register:
+                      address: 0xE144 # Battery 1 Max Charge Continues Power (RO)
+                      type: holding
+                      decode: float32nans
+            out:
+              - name: limit
+                type: float
+                config:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 0xE00E # StorageRemoteCtrl_ChargeLimit
+                    type: writemultiple
+                    encoding: float32s
+            script: |
+              rated // unblock charging (holdcharge may have zeroed this); DC-coupled PV
+              // charging bypasses the AC stage, so this isn't capped to maxacpower
           - source: const
             value: 0 # W
             set:
@@ -320,8 +424,127 @@ render: |
                 address: 0xE010 # StorageRemoteCtrl_DischargeLimit
                 type: writemultiple
                 encoding: float32s
-      default:
-        source: error
-        error: ErrNotAvailable
+      - case: 4 # holdcharge
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 7 # Maximize self-consumption
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0xE00D # StorageRemoteCtrl_CommandMode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 0 # W
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0xE00E # StorageRemoteCtrl_ChargeLimit
+                type: writemultiple
+                encoding: float32s
+          - source: go
+            in:
+              - name: rated
+                type: float
+                config:
+                  source: cached
+                  cache: 1h # rated max is static
+                  value:
+                    source: modbus
+                    {{- include "modbus" . | indent 18 }}
+                    register:
+                      address: 0xE146 # Battery 1 Max Discharge Continues Power (RO)
+                      type: holding
+                      decode: float32nans
+            out:
+              - name: limit
+                type: float
+                config:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 0xE010 # StorageRemoteCtrl_DischargeLimit
+                    type: writemultiple
+                    encoding: float32s
+            script: |
+              limit := float64({{ .maxdischargepower }})
+              out := rated
+              if limit < out { out = limit }
+              out
+      - case: 5 # discharge
+        set:
+          source: sequence
+          set:
+          - source: const
+            value: 4 # Maximize export - discharge battery to meet max inverter AC limit
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 0xE00D # StorageRemoteCtrl_CommandMode
+                type: writesingle
+                encoding: uint16
+          - source: go
+            in:
+              - name: rated
+                type: float
+                config:
+                  source: cached
+                  cache: 1h # rated max is static
+                  value:
+                    source: modbus
+                    {{- include "modbus" . | indent 18 }}
+                    register:
+                      address: 0xE144 # Battery 1 Max Charge Continues Power (RO)
+                      type: holding
+                      decode: float32nans
+            out:
+              - name: limit
+                type: float
+                config:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 0xE00E # StorageRemoteCtrl_ChargeLimit
+                    type: writemultiple
+                    encoding: float32s
+            script: |
+              rated // unblock charging (holdcharge may have zeroed this); DC-coupled PV
+              // charging bypasses the AC stage, so this isn't capped to maxacpower
+          - source: go
+            in:
+              - name: rated
+                type: float
+                config:
+                  source: cached
+                  cache: 1h # rated max is static
+                  value:
+                    source: modbus
+                    {{- include "modbus" . | indent 18 }}
+                    register:
+                      address: 0xE146 # Battery 1 Max Discharge Continues Power (RO)
+                      type: holding
+                      decode: float32nans
+            out:
+              - name: limit
+                type: float
+                config:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 0xE010 # StorageRemoteCtrl_DischargeLimit
+                    type: writemultiple
+                    encoding: float32s
+            script: |
+              limit := float64({{ .maxdischargepower }})
+              out := rated
+              if limit < out { out = limit }
+              acLimit := float64({{ .maxacpower }})
+              if acLimit < out { out = acLimit }
+              out
   {{- include "battery-params" . }}
   {{- end }}
