@@ -88,7 +88,7 @@ energy:
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: successful");
     await expect(restResult).toContainText(["Power", "3.0 kW"].join(""));
-    await expect(restResult).toContainText(["Energy", "42.0 kWh"].join(""));
+    await expect(restResult).toContainText(["Consumed", "42.0 kWh"].join(""));
 
     // create
     await modal.getByRole("button", { name: "Save" }).click();
@@ -126,7 +126,7 @@ energy:
     await restResult.getByRole("link", { name: "validate" }).click();
     await expect(restResult).toContainText("Status: successful");
     await expect(restResult).toContainText(["Power", "300 W"].join(""));
-    await expect(restResult).toContainText(["Energy", "4.2 kWh"].join(""));
+    await expect(restResult).toContainText(["Consumed", "4.2 kWh"].join(""));
     await modal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(modal);
     await expect(page.getByTestId("aux")).toHaveCount(1);

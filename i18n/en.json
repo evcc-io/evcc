@@ -211,7 +211,7 @@
       "chargeStatusC": "charging",
       "chargeStatusE": "no power",
       "chargeStatusF": "error",
-      "chargedEnergy": "Charged",
+      "chargedEnergy": "Charged (session)",
       "co2": "Grid CO₂",
       "configured": "Configured",
       "connected": "Connected",
@@ -260,6 +260,31 @@
       "temp": "Temperature",
       "topic": "Topic",
       "url": "URL",
+      "usage": {
+        "aux": {
+          "energy": "Consumed",
+          "returnEnergy": "Produced"
+        },
+        "battery": {
+          "energy": "Discharged",
+          "returnEnergy": "Charged"
+        },
+        "charge": {
+          "energy": "Charged",
+          "returnEnergy": "Discharged"
+        },
+        "consumer": {
+          "energy": "Consumed",
+          "returnEnergy": "Produced"
+        },
+        "grid": {
+          "energy": "Imported",
+          "returnEnergy": "Exported"
+        },
+        "pv": {
+          "energy": "Produced"
+        }
+      },
       "vehicleLimitSoc": "Charge limit",
       "yes": "yes"
     },
