@@ -14,6 +14,7 @@ import {
 	forecastGrid,
 	forecastXAxes,
 	forecastYAxis,
+	lineDefaults,
 } from "./echarts";
 import colors, { lighterColor } from "@/colors";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
@@ -116,12 +117,12 @@ export default defineComponent({
 						symbol: "circle",
 						symbolSize: 6,
 						showSymbol: false,
-						lineStyle: { color: selfColor, width: 3 },
+						lineStyle: { color: selfColor, ...lineDefaults },
 						areaStyle: { color: lighterColor(selfColor) },
 						emphasis: {
 							disabled: false,
 							scale: false,
-							lineStyle: { color: selfColor, width: 3 },
+							lineStyle: { color: selfColor, ...lineDefaults },
 							areaStyle: { color: lighterColor(selfColor) },
 							itemStyle: { color: selfColor, borderColor: selfColor, borderWidth: 2 },
 						},

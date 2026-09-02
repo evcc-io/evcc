@@ -18,6 +18,7 @@ import {
 	filterForecastSlots,
 	minSlotIndex,
 	maxSlotIndex,
+	lineDefaults,
 } from "./echarts";
 import colors from "@/colors";
 import formatter from "@/mixins/formatter";
@@ -117,7 +118,7 @@ export default defineComponent({
 						symbol: "circle",
 						symbolSize: 6,
 						showSymbol: false,
-						lineStyle: { color, width: 3 },
+						lineStyle: { color, ...lineDefaults },
 						emphasis: {
 							disabled: false,
 							scale: false,

@@ -11,10 +11,12 @@ import {
 	FONT_FAMILY,
 	forecastGrid,
 	forecastYAxis,
+	lineCasing,
 	tooltipStyle,
 	tooltipTable,
 	xAxisLabelStyle,
 	type TooltipRow,
+	lineDefaults,
 } from "../Forecast/echarts";
 import colors, { resolveColors, deviceColorMap, darken, batteryColor, setAlpha } from "@/colors";
 import store from "@/store";
@@ -243,7 +245,7 @@ export default defineComponent({
 			const result: Record<string, unknown>[] = [];
 
 			// Always render overlay slot (line series) so series structure is stable;
-			// data is all-null when toggled off. Prepend so it renders BEHIND bars.
+			// data is all-null when toggled off.
 			const overlayValues: (number | null)[] = Array.from(
 				{ length: cats.length },
 				() => null
@@ -258,17 +260,19 @@ export default defineComponent({
 				}
 			}
 			const overlayCol = this.overlayColor || this.color;
-			result.push({
+			const overlay = {
 				id: "overlay",
 				name: this.overlayLabel || "overlay",
 				type: "line",
 				data: overlayValues,
 				smooth: true,
 				symbol: "none",
-				lineStyle: { color: overlayCol, width: 2, type: "dotted" },
+				connectNulls: true,
+				lineStyle: { color: overlayCol, ...lineDefaults },
 				itemStyle: { color: overlayCol },
-				z: 1,
-			});
+				z: 4,
+			};
+			result.push(lineCasing(overlay, 3), overlay);
 
 			// Always render import + export series per entity, even if one direction
 			// is empty (null-filled). Stable series ids/structure across renders so
