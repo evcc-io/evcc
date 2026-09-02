@@ -153,6 +153,13 @@ func (p *Script) BoolSetter(param string) (func(bool) error, error) {
 	return p.scriptSetter[bool](param)
 }
 
+var _ FloatSetter = (*Script)(nil)
+
+// FloatSetter invokes script with parameter replaced by float value
+func (p *Script) FloatSetter(param string) (func(float64) error, error) {
+	return p.scriptSetter[float64](param)
+}
+
 var _ StringSetter = (*Script)(nil)
 
 // StringSetter returns a function that invokes a script with parameter by a string value
