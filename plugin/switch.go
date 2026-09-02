@@ -3,9 +3,9 @@ package plugin
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strconv"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -15,9 +15,10 @@ type Case struct {
 }
 
 type switchPlugin struct {
-	ctx   context.Context
-	cases []Case
-	dflt  *Config
+	ctx    context.Context
+	cases  []Case
+	values []int64
+	dflt   *Config
 }
 
 func init() {
@@ -35,18 +36,23 @@ func NewSwitchFromConfig(ctx context.Context, other map[string]any) (Plugin, err
 		return nil, err
 	}
 
-	cases := make(map[string]struct{})
+	values := make([]int64, 0, len(cc.Switch))
 	for _, c := range cc.Switch {
-		if _, ok := cases[c.Case]; ok {
+		val, err := strconv.ParseInt(c.Case, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("switch: invalid case: %s", c.Case)
+		}
+		if slices.Contains(values, val) {
 			return nil, fmt.Errorf("switch: duplicate case: %s", c.Case)
 		}
-		cases[c.Case] = struct{}{}
+		values = append(values, val)
 	}
 
 	o := &switchPlugin{
-		ctx:   ctx,
-		cases: cc.Switch,
-		dflt:  cc.Default,
+		ctx:    ctx,
+		cases:  cc.Switch,
+		values: values,
+		dflt:   cc.Default,
 	}
 
 	return o, nil
@@ -70,22 +76,26 @@ func (o *switchPlugin) IntSetter(param string) (func(int64) error, error) {
 	}
 
 	return func(val int64) error {
-		for i, s := range o.cases {
-			ival, err := strconv.ParseInt(s.Case, 10, 64)
-			if err != nil {
-				return err
-			}
-
-			if ival == val {
-				return set[i](val)
-			}
+		if i := slices.Index(o.values, val); i >= 0 {
+			return set[i](val)
 		}
 
 		if dflt != nil {
 			return dflt(val)
 		}
 
-		// unmatched value means the device does not implement this setting
-		return fmt.Errorf("switch: value not found: %d: %w", val, api.ErrNotAvailable)
+		return fmt.Errorf("switch: value not found: %d", val)
 	}, nil
+}
+
+var _ IntKeysGetter = (*switchPlugin)(nil)
+
+// IntKeys returns the values the switch has a case for. A default accepts the
+// remaining values too, so the switch then has no fixed set of keys.
+func (o *switchPlugin) IntKeys() ([]int64, error) {
+	if o.dflt != nil {
+		return nil, nil
+	}
+
+	return slices.Clone(o.values), nil
 }

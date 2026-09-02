@@ -320,8 +320,5 @@ render: |
                 address: 0xE010 # StorageRemoteCtrl_DischargeLimit
                 type: writemultiple
                 encoding: float32s
-      default:
-        source: error
-        error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}
