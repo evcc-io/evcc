@@ -122,7 +122,8 @@ func NewConnection(uri, user, password string, channels []int, cache time.Durati
 			}
 
 			// the Pro output add-on remaps every channel to the same relay
-			gen, relay = g, g.switchchannel
+			gen = g
+			relay = g.switchchannel
 		}
 
 		if used[relay] {
@@ -133,9 +134,7 @@ func NewConnection(uri, user, password string, channels []int, cache time.Durati
 		relays = append(relays, gen)
 	}
 
-	conn := &Connection{relays: relays, gen: resp.Gen}
-
-	return conn, nil
+	return &Connection{relays: relays, gen: resp.Gen}, nil
 }
 
 // Enabled reports whether all configured channels are switched on
@@ -176,7 +175,6 @@ func (c *Connection) ReturnEnergy() (float64, error) {
 	return c.sum(Generation.ReturnEnergy)
 }
 
-// sum accumulates a reading across all configured channels
 func (c *Connection) sum(fun func(Generation) (float64, error)) (float64, error) {
 	var total float64
 	for _, gen := range c.relays {

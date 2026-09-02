@@ -3,7 +3,6 @@ package shelly
 import (
 	"encoding/json"
 	"fmt"
-	"maps"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -113,23 +112,20 @@ func TestDuplicateChannel(t *testing.T) {
 		channels []int
 		rpc      map[string]string
 	}{
-		{"configured twice", []int{0, 0}, nil},
+		{"configured twice", []int{0, 0}, map[string]string{
+			"Switch.GetStatus": `{"id":0,"output":true}`,
+		}},
 		{"remapped by add-on", []int{0, 1}, map[string]string{
+			"Switch.GetStatus":              `{"id":0,"output":true}`,
 			"ProOutputAddon.GetPeripherals": `{"digital_out":{"switch:100":{}}}`,
 		}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			rpc := map[string]string{
-				"Switch.GetStatus": `{"id":0,"output":true}`,
-				"Switch.GetConfig": `{"id":0}`,
-			}
-			maps.Copy(rpc, tc.rpc)
-
-			srv := shellyServer(t, rpc)
+			srv := shellyServer(t, tc.rpc)
 			defer srv.Close()
 
 			_, err := NewConnection(srv.URL, "", "", tc.channels, time.Second)
-			require.Error(t, err)
+			require.ErrorContains(t, err, "duplicate channel")
 		})
 	}
 }
