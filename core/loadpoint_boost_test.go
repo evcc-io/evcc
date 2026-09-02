@@ -44,7 +44,7 @@ func TestBoostActive(t *testing.T) {
 	s := &mockSite{}
 	lp := &Loadpoint{
 		log:   util.NewLogger("lp"),
-    clock: clock.New(),
+		clock: clock.New(),
 		site:  s,
 	}
 
@@ -83,7 +83,7 @@ func TestBatteryBoost(t *testing.T) {
 	s := &mockSite{}
 	lp := &Loadpoint{
 		log:        util.NewLogger("lp"),
-    clock:      clock.New(),
+		clock:      clock.New(),
 		site:       s,
 		charger:    phaseSwitchCharger{},
 		minCurrent: 6,
