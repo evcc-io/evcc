@@ -131,10 +131,6 @@ const (
 	actionCharge = "charge"
 )
 
-// actionDischarge is the battery-to-grid discharge advisory. It has no matching
-// api.BatteryMode, so it always reads as actionable.
-const actionDischarge = "discharge"
-
 // evSuggestion notifies when the optimizer's advisory action for a device changes
 const evSuggestion = "suggestion"
 
@@ -192,7 +188,7 @@ func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gr
 			s.Action = api.BatteryHoldCharge.String()
 		case discharge > suggestionThreshold && gridExporting:
 			// discharging while exporting means battery-to-grid discharge
-			s.Action = actionDischarge
+			s.Action = api.BatteryDischarge.String()
 		default:
 			s.Action = api.BatteryNormal.String()
 		}
@@ -649,6 +645,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 // applyOptimizerResult maps the optimizer response onto suggestions, battery
 // forecast and notifications
 func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details []batteryDetail, res optimizer.OptimizationResult) {
+	now := time.Now()
 	slotHours := (time.Duration(req.TimeSeries.Dt[0]) * time.Second).Hours()
 	gridImporting := len(res.GridImport) > 0 && res.GridImport[0] > 0
 	gridExporting := len(res.GridExport) > 0 && res.GridExport[0] > 0
@@ -662,10 +659,10 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 
 		batteries = append(batteries, batteryResult{
 			batteryDetail: detail,
-			Full: matchSoc(batRes.StateOfCharge, func(soc float32) bool {
+			Full: matchSoc(batRes.StateOfCharge, now, func(soc float32) bool {
 				return soc >= batReq.SMax
 			}),
-			Empty: matchSoc(batRes.StateOfCharge, func(soc float32) bool {
+			Empty: matchSoc(batRes.StateOfCharge, now, func(soc float32) bool {
 				return soc <= batReq.SMin
 			}),
 		})
@@ -849,17 +846,13 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 		// forced max charging
 		demand = continuousDemand(lp, minLen)
 
-	case api.ModeMinPV:
-		// forced min charging
-		demand = continuousDemand(lp, minLen)
+	case api.ModeSmart:
+		if lp.GetAlwaysCharge().Active() {
+			// forced min charging
+			demand = continuousDemand(lp, minLen)
+		}
 		// add smartcost limit, precondition and plan goal, if configured
 		demand = applySmartCostLimit(lp, demand, grid, minLen)
-		demand = applyPrecondition(lp, demand, minLen)
-		site.applyPlanGoal(lp, &bat, minLen)
-
-	case api.ModePV:
-		// add smartcost limit, precondition and plan goal, if configured
-		demand = applySmartCostLimit(lp, nil, grid, minLen)
 		demand = applyPrecondition(lp, demand, minLen)
 		site.applyPlanGoal(lp, &bat, minLen)
 	}
@@ -905,9 +898,9 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 
 	instance := dev.Instance()
 
-	controllable := api.HasCap[api.BatteryController](instance)
+	ctrl, controllable := api.Cap[api.BatteryController](instance)
 	if controllable {
-		bat.ChargeFromGrid = true
+		bat.ChargeFromGrid = slices.Contains(ctrl.BatteryModes(), api.BatteryCharge)
 		bat.DischargeToGrid = site.GetBatteryGridDischarge()
 	}
 
@@ -945,11 +938,14 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 	return bat, detail
 }
 
-func matchSoc(ts []float32, fun func(float32) bool) time.Time {
+// matchSoc returns the end of the first slot whose soc satisfies fun.
+// Slot 0 is the remainder of the current slot, so it ends at the next slot boundary.
+func matchSoc(ts []float32, now time.Time, fun func(float32) bool) time.Time {
+	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
+
 	for i, soc := range ts {
 		if fun(soc) {
-			// TODO first slot
-			return time.Now().Add(time.Duration(i+1) * tariff.SlotDuration).Round(time.Second)
+			return eos.Add(time.Duration(i) * tariff.SlotDuration)
 		}
 	}
 
@@ -963,7 +959,7 @@ func continuousDemand(lp loadpoint.API, minLen int) []float32 {
 	}
 
 	pwr := lp.EffectiveMaxPower()
-	if lp.GetMode() == api.ModeMinPV {
+	if loadpoint.AlwaysChargeActive(lp) {
 		pwr = lp.EffectiveMinPower()
 	}
 
@@ -975,15 +971,14 @@ func continuousDemand(lp loadpoint.API, minLen int) []float32 {
 // loadpointProfile returns the loadpoint's charging profile in Wh
 // TODO consider charging efficiency
 func loadpointProfile(lp loadpoint.API, minLen int) []float64 {
-	mode := lp.GetMode()
-	status := lp.GetStatus()
+	minActive := loadpoint.AlwaysChargeActive(lp)
 
-	if status != api.StatusC || (mode != api.ModeMinPV && mode != api.ModeNow) {
+	if lp.GetStatus() != api.StatusC || (!minActive && lp.GetMode() != api.ModeNow) {
 		return nil
 	}
 
 	power := lp.GetChargePower()
-	if minP := lp.EffectiveMinPower(); mode == api.ModeMinPV && minP < power {
+	if minP := lp.EffectiveMinPower(); minActive && minP < power {
 		power = minP
 	}
 
@@ -1009,9 +1004,9 @@ func loadpointProfile(lp loadpoint.API, minLen int) []float64 {
 func unmodelledPower(lp loadpoint.API) float64 {
 	power := lp.GetChargePower()
 
-	// minpv keeps drawing at least min power while the vehicle is connected,
+	// always charge keeps drawing at least min power while the vehicle is connected,
 	// even before the charge meter has caught up
-	if lp.GetMode() == api.ModeMinPV && lp.GetStatus() == api.StatusC {
+	if loadpoint.AlwaysChargeActive(lp) && lp.GetStatus() == api.StatusC {
 		power = max(power, lp.EffectiveMinPower())
 	}
 
@@ -1224,7 +1219,7 @@ func applySmartCostLimit(lp loadpoint.API, demand []float32, grid api.Rates, min
 		if grid[i].Value <= *costLimit {
 			demand[i] = float32(maxPower / slotsPerHour)
 		}
-		// else: keep existing demand (either 0 or minPower from ModeMinPV)
+		// else: keep existing demand (either 0 or minPower from always charge)
 	}
 
 	return demand

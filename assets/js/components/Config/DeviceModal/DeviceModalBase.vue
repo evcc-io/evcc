@@ -202,6 +202,7 @@
 					:is-new="isNew"
 					:sponsor-token-required="sponsorTokenRequired"
 					:currency="currency"
+					:usage="tagsUsage"
 					@save="handleSave"
 					@remove="handleRemove"
 					@test="testManually"
@@ -299,6 +300,8 @@ export default defineComponent({
 		showMainContent: { type: Boolean, default: true },
 		// Optional: usage parameter for loadProducts (e.g., meter type: "pv", "battery", "aux", "ext")
 		usage: String,
+		// Optional: usage for test result labels
+		tagsUsage: String,
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 		// Optional: custom product name computation
 		getProductName: Function as PropType<

@@ -18,9 +18,9 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/db"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/server/assets"
-	"github.com/evcc-io/evcc/server/db"
-	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/encode"
 	"github.com/evcc-io/evcc/util/jq"
@@ -34,7 +34,7 @@ var ignoreState = []string{"releaseNotes"} // excessive size
 
 // limits for the unauthenticated jq parameter of the state endpoint
 const (
-	maxJqQueryLen    = 512         // maximum length of the jq query
+	maxJqQueryLen    = 8192        // maximum length of the jq query
 	maxJqDuration    = time.Second // maximum jq evaluation time
 	maxJqResultBytes = 1 << 20     // maximum size of the encoded jq result
 )

@@ -157,9 +157,6 @@ render: |
               method: POST
               {{- include "auth" . | indent 14 }}
               jq: .result
-    default:
-      source: error
-      error: ErrNotAvailable
     
   {{- include "battery-params" . }}
   {{- end }}

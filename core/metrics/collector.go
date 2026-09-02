@@ -3,7 +3,7 @@ package metrics
 import (
 	"time"
 
-	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/jinzhu/now"
 )

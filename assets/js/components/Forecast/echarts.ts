@@ -79,10 +79,42 @@ export function markPointLabel(
   };
 }
 
-export function tooltipStyle(
-  color: string,
-  getChart?: () => { convertToPixel: echarts.ECharts["convertToPixel"] } | null
-) {
+export const lineDefaults = { width: 2, cap: "round", join: "round" } as const;
+
+// invisible symbols on every point, filled dot on the hovered one, line keeps its width.
+// Symbols stay in the scene so the dot survives re-renders (showSymbol: false would create
+// a temporary one that echarts drops)
+export function hoverDot(color: string, lineStyle: Record<string, unknown> = {}) {
+  return {
+    symbol: "circle",
+    symbolSize: 6,
+    showSymbol: true,
+    itemStyle: { color, opacity: 0 },
+    emphasis: {
+      disabled: false,
+      scale: false,
+      lineStyle: { color, ...lineDefaults, ...lineStyle },
+      itemStyle: { color, borderColor: color, borderWidth: 2, opacity: 1 },
+    },
+  };
+}
+
+// wider box-colored twin drawn beneath a line so it stays readable over bars
+export function lineCasing(line: Record<string, unknown>, z: number): Record<string, unknown> {
+  return {
+    ...line,
+    id: line["id"] ? `${line["id"]}-casing` : undefined,
+    name: `${line["name"]}-casing`,
+    z,
+    silent: true,
+    symbol: "none",
+    emphasis: { disabled: true },
+    lineStyle: { ...lineDefaults, color: colors.box || "", width: lineDefaults.width + 2 },
+    itemStyle: { color: colors.box || "" },
+  };
+}
+
+export function tooltipStyle(color: string) {
   return {
     confine: true,
     // re-show after hide would otherwise slide in from the stale position
@@ -92,24 +124,20 @@ export function tooltipStyle(
     borderWidth: 0,
     padding: [5, 10],
     extraCssText: "box-shadow: none; border-radius: 4px; text-align: center; z-index: 1000;",
+    // beside the pointer so it never covers the hovered slot, flips left near the right edge
     position(
       point: [number, number],
-      params: { value: [string, number] }[] | { value: [string, number] },
-      el: HTMLElement
+      _params: unknown,
+      el: HTMLElement,
+      _rect: unknown,
+      size: { viewSize: [number, number] }
     ): [number, number] {
       const w = el?.offsetWidth || 0;
       const h = el?.offsetHeight || 0;
-      const margin = 8;
-      const arr = Array.isArray(params) ? params : [params];
-      const p = arr[0];
-      const chart = getChart?.();
-      if (chart && p?.value) {
-        const pixelY = chart.convertToPixel({ seriesIndex: 0 }, p.value)?.[1];
-        if (pixelY != null) {
-          return [point[0] - w / 2, pixelY - h - margin];
-        }
-      }
-      return [point[0] - w / 2, point[1] - h - margin];
+      const margin = 16;
+      const x =
+        point[0] + margin + w > size.viewSize[0] ? point[0] - margin - w : point[0] + margin;
+      return [x, point[1] - h / 2];
     },
     textStyle: {
       fontFamily: FONT_FAMILY,

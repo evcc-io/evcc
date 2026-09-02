@@ -165,8 +165,5 @@ render: |
                     address: 10071
                     type: writemultiple
                     encoding: int32
-      default:
-        source: error
-        error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

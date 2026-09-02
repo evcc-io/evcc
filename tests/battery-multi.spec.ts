@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
 
-const CONFIG = "battery-experimental.evcc.yaml";
-const SQL = "battery-experimental.sql";
+const CONFIG = "battery-multi.evcc.yaml";
+const SQL = "battery-multi.sql";
 
 test.use({ baseURL: baseUrl() });
 test.describe.configure({ mode: "parallel" });
@@ -14,10 +14,9 @@ test.afterEach(async () => {
   await stop();
 });
 
-test.describe("experimental battery page", async () => {
+test.describe("battery page with multiple batteries", async () => {
   test("status cards: combined aggregate plus one per battery", async ({ page }) => {
     await page.goto("/#/battery");
-    await expect(page.getByTestId("battery-experimental")).toBeVisible();
 
     const cards = page.getByTestId("battery-status-card");
     await expect(cards).toHaveCount(3); // combined + battery1 + battery2
@@ -94,5 +93,41 @@ test.describe("experimental battery page", async () => {
     await expect(discharge).not.toBeChecked();
     await discharge.click();
     await expect(discharge).toBeChecked();
+  });
+
+  // the limit is inert while the experimental grid discharge switch is off, so its
+  // control only shows once the switch is on
+  test("battery config: grid discharge limit follows the grid discharge switch", async ({
+    page,
+  }) => {
+    await page.goto("/#/battery");
+    const gridDischarge = page.getByRole("switch", { name: /discharge to the grid/ });
+    const limit = page.getByTestId("battery-grid-discharge-limit");
+    await expect(gridDischarge).not.toBeChecked();
+    await expect(limit).not.toBeVisible();
+
+    await gridDischarge.click();
+    await expect(gridDischarge).toBeChecked();
+
+    // the card carries a working limit control, not just its heading
+    await expect(limit).toBeVisible();
+    await expect(limit.getByRole("combobox")).toBeVisible();
+
+    // 6 ct catches the base feed-in rate, so the whole forecast window reacts
+    await limit.getByLabel("Enable limit").check();
+    await limit.getByRole("combobox").selectOption("0.06");
+    await expect(limit.getByTestId("active-hours")).toContainText("Active time");
+
+    // price range follows the limit: full tariff span at 6 ct, only the
+    // 28 ct zone once the limit excludes the base rate
+    const range = limit.getByTestId("price-range");
+    await expect(range).toContainText("6.0 ct – 28.0 ct");
+    await limit.getByRole("combobox").selectOption("0.28");
+    await expect(range).toContainText("28.0 ct – 28.0 ct");
+
+    // switch and limit survive a reload
+    await page.reload();
+    await expect(gridDischarge).toBeChecked();
+    await expect(limit.getByRole("combobox")).toHaveValue("0.28");
   });
 });

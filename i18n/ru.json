@@ -63,28 +63,7 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Уровень заряда аккумулятора",
-    "bufferStart": {
-      "above": "когда выше {soc}.",
-      "full": "когда на {soc}.",
-      "never": "только при наличии достаточного излишка."
-    },
-    "capacity": "{energy} из {total}",
-    "control": "Управление аккумулятором",
-    "discharge": "Предотвратить разряд в быстром режиме и запланированной зарядке.",
-    "disclaimerHint": "Примечание:",
-    "disclaimerText": "Эти настройки влияют только на режим солнечной батареи. Поведение зарядки изменяется соответствующе.",
     "gridChargeTab": "Зарядка сети",
-    "legendBottomName": "Приоритет зарядки домашнего аккумулятора",
-    "legendBottomSubline": "пока не достигнет {soc}.",
-    "legendMiddleName": "Приоритет зарядки электромобиля",
-    "legendMiddleSubline": "когда домашний аккумулятор заряжен выше {soc}.",
-    "legendTopAutostart": "Автоматический запуск",
-    "legendTopName": "Зарядка автомобиля с поддержкой от аккумулятора",
-    "legendTopSubline": "когда домашний аккумулятор заряжен выше {soc}.",
-    "legendTopSublineAbove": "когда заряд выше {soc}",
-    "legendTopSublineDisabled": "составляет {soc}.",
-    "legendTopSublineDisabledState": "неактивно",
     "modalTitle": "Домашний Аккумулятор",
     "noBattery": "Аккумуляторы не настроены.",
     "usageTab": "Использование аккумулятора"
@@ -432,13 +411,6 @@
         "charging": "Зарядное устройство",
         "heating": "Нагревательное устройство"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Будет использовать ток в диапазоне от 6 до 16 А.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Будет использовать ток в диапазоне от 6 до 32 А.",
-      "chargerPowerCustom": "другой",
-      "chargerPowerCustomHelp": "Определите пользовательский диапазон тока.",
-      "chargerTypeLabel": "Тип зарядного устройства",
       "chargingTitle": "Поведение",
       "circuitHelp": "Задание управления нагрузкой для обеспечения соблюдения ограничений по мощности и току.",
       "circuitInvalid": "Цепь не существует",

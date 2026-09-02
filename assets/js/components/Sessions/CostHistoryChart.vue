@@ -17,6 +17,8 @@ import {
 	tooltipTable,
 	xAxisLabelStyle,
 	type TooltipRow,
+	lineCasing,
+	lineDefaults,
 } from "./echarts";
 import historyChart from "./historyChart";
 import LegendList from "./LegendList.vue";
@@ -190,19 +192,19 @@ export default defineComponent({
 				data: stackData[i],
 			}));
 			if (line) {
-				series.push({
+				const avg = {
 					name: line.label,
 					type: "line",
 					yAxisIndex: 1,
+					z: 4,
 					data: line.data,
 					smooth: 0.25,
-					symbol: "circle",
-					symbolSize: 12,
-					showSymbol: false,
+					symbol: "none",
 					connectNulls: true,
-					lineStyle: { color: line.color, width: 2 },
+					lineStyle: { color: line.color, ...lineDefaults },
 					itemStyle: { color: line.color },
-				});
+				};
+				series.push(lineCasing(avg, 3), avg);
 			}
 			return {
 				animation: false,

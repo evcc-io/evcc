@@ -30,7 +30,7 @@ func TestPvChargeStarting(t *testing.T) {
 	now := clock.NewMock().Now()
 
 	// enable timer running but car already full (soc at default 100% limit): not starting up
-	enablePendingFull := newPVLoadpoint(0, api.ModePV, api.StatusB, false, now)
+	enablePendingFull := newPVLoadpoint(0, api.ModeSmart, api.StatusB, false, now)
 	enablePendingFull.vehicleSoc = 100
 
 	tc := []struct {
@@ -38,15 +38,15 @@ func TestPvChargeStarting(t *testing.T) {
 		lp       *Loadpoint
 		starting bool
 	}{
-		{"enable timer running", newPVLoadpoint(0, api.ModePV, api.StatusB, false, now), true},
-		{"enabled not charging", newPVLoadpoint(0, api.ModePV, api.StatusB, true, time.Time{}), false},
-		{"enabled and charging", newPVLoadpoint(0, api.ModePV, api.StatusC, true, time.Time{}), false},
-		{"disabled idle", newPVLoadpoint(0, api.ModePV, api.StatusB, false, time.Time{}), false},
-		{"disconnected", newPVLoadpoint(0, api.ModePV, api.StatusA, false, now), false},
+		{"enable timer running", newPVLoadpoint(0, api.ModeSmart, api.StatusB, false, now), true},
+		{"enabled not charging", newPVLoadpoint(0, api.ModeSmart, api.StatusB, true, time.Time{}), false},
+		{"enabled and charging", newPVLoadpoint(0, api.ModeSmart, api.StatusC, true, time.Time{}), false},
+		{"disabled idle", newPVLoadpoint(0, api.ModeSmart, api.StatusB, false, time.Time{}), false},
+		{"disconnected", newPVLoadpoint(0, api.ModeSmart, api.StatusA, false, now), false},
 		{"not pv mode", newPVLoadpoint(0, api.ModeNow, api.StatusB, false, now), false},
 		{"enable pending but car full", enablePendingFull, false},
 		// elapsed means a delay was skipped, e.g. by a feed-in pause, not an enable pending
-		{"timer elapsed", newPVLoadpoint(0, api.ModePV, api.StatusB, false, elapsed), false},
+		{"timer elapsed", newPVLoadpoint(0, api.ModeSmart, api.StatusB, false, elapsed), false},
 	}
 
 	for _, tc := range tc {
@@ -60,9 +60,9 @@ func TestReservedPVPower(t *testing.T) {
 	Voltage = 230
 
 	// higher-priority loadpoint (prio 1) starting up
-	high := newPVLoadpoint(1, api.ModePV, api.StatusB, false, clock.NewMock().Now())
+	high := newPVLoadpoint(1, api.ModeSmart, api.StatusB, false, clock.NewMock().Now())
 	// lower-priority loadpoint (prio 0) in PV mode
-	low := newPVLoadpoint(0, api.ModePV, api.StatusB, false, time.Time{})
+	low := newPVLoadpoint(0, api.ModeSmart, api.StatusB, false, time.Time{})
 
 	site := &Site{
 		log:        util.NewLogger("site"),
@@ -130,7 +130,7 @@ func TestReservedPVPowerSmartFeedInPause(t *testing.T) {
 			clck := clock.NewMock()
 			limit := 0.05
 
-			car := newPVLoadpoint(1, api.ModePV, tc.status, tc.enabled, time.Time{})
+			car := newPVLoadpoint(1, api.ModeSmart, tc.status, tc.enabled, time.Time{})
 			car.bus = evbus.New()
 			car.clock = clck
 			car.charger = &feedInCharger{status: tc.status, enabled: tc.enabled}
@@ -143,7 +143,7 @@ func TestReservedPVPowerSmartFeedInPause(t *testing.T) {
 			car.limitSoc = 80
 			attachListeners(t, car)
 
-			low := newPVLoadpoint(0, api.ModePV, api.StatusB, false, time.Time{})
+			low := newPVLoadpoint(0, api.ModeSmart, api.StatusB, false, time.Time{})
 
 			site := &Site{
 				log:        util.NewLogger("site"),
