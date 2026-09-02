@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/evcc-io/evcc/server/db"
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/spf13/cobra"
 )
 

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/hems/smartgrid"
-	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/util/locale"
 	"golang.org/x/text/language"
 )

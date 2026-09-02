@@ -30,8 +30,8 @@ github.com/andig/gosunspec v0.0.0-20260705113727-6d585e133512 h1:1y8dS4GaBB9WUu/
 github.com/andig/gosunspec v0.0.0-20260705113727-6d585e133512/go.mod h1:c6P6szcR+ROkqZruOR4f6qbDKFjZX6OitPpj+yJ/r8k=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e h1:m/NTP3JWpR7M0ljLxiQU4fzR25jjhe1LDtxLMNcoNJQ=
 github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e/go.mod h1:4VtYzTm//oUipwvO3yh0g/udTE7pYJM+U/kyAuFDsgM=
-github.com/andig/ship-go v0.6.1-0.20260831161834-ed7d71856fe6 h1:aih/lHlvayTwROgXDdRAu757hgVJSdzMIwZcoPWoFhs=
-github.com/andig/ship-go v0.6.1-0.20260831161834-ed7d71856fe6/go.mod h1:EvRFx83phCwPQrOuWw2CX5t0c6mcFVzIk6gQEz4Lijg=
+github.com/andig/ship-go v0.6.1-0.20260901124541-3de7acda5f88 h1:OgRi1nQkFJMauJfPg9QdU7RahhaYSb1UZRjUgv5B7Mc=
+github.com/andig/ship-go v0.6.1-0.20260901124541-3de7acda5f88/go.mod h1:EvRFx83phCwPQrOuWw2CX5t0c6mcFVzIk6gQEz4Lijg=
 github.com/andig/spine-go v0.7.1-0.20260831161702-3757d61432fb h1:HKar7XQiiOFlJczv4dII3LiwQ1XhMhihc59kIsdQ1e8=
 github.com/andig/spine-go v0.7.1-0.20260831161702-3757d61432fb/go.mod h1:ddWZU5BQGyzRGF20Z7rUKFFzbCp+cfu9mZgYtOMW/fM=
 github.com/andybalholm/cascadia v1.3.3 h1:AG2YHrzJIm4BZ19iwJ/DAua6Btl3IwJX+VI4kktS1LM=
