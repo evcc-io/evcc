@@ -1,15 +1,12 @@
 package mercedes
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
-	"sync"
 	"uuid"
 
-	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
@@ -20,7 +17,6 @@ import (
 type Identity struct {
 	*request.Helper
 	oauth2.TokenSource
-	mu        sync.Mutex
 	log       *util.Logger
 	account   string
 	region    string
@@ -63,35 +59,12 @@ func NewIdentity(log *util.Logger, token *oauth2.Token, account string, region s
 		return instance, nil
 	}
 
-	// store config token for potential re-use
-	var configToken = token
-
-	// database token
-	var tok oauth2.Token
-	if err := settings.Json(v.settingsKey(), &tok); err == nil {
-		v.log.DEBUG.Println("identity.NewIdentity - database token found")
-		token = &tok
+	ts, err := oauth.PersistentTokenSource(log, v.settingsKey(), token, v.refreshToken)
+	if err != nil {
+		return nil, err
 	}
 
-	if !token.Valid() && token.RefreshToken != "" {
-		v.log.DEBUG.Println("identity.NewIdentity - refreshToken started")
-		if tok, err := v.refreshToken(token); err == nil {
-			token = tok
-		}
-	}
-
-	if !token.Valid() {
-		v.log.DEBUG.Println("identity.NewIdentity - config refreshToken started")
-		if tok, err := v.refreshToken(configToken); err == nil {
-			token = tok
-		}
-	}
-
-	if !token.Valid() {
-		return nil, errors.New("token expired")
-	}
-
-	v.TokenSource = oauth.RefreshTokenSource(log, token, v.refreshToken)
+	v.TokenSource = ts
 
 	// add instance
 	addInstance(account, v)
@@ -104,9 +77,6 @@ func (v *Identity) settingsKey() string {
 }
 
 func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	v.mu.Lock()
-	defer v.mu.Unlock()
-
 	data := url.Values{
 		"grant_type":    {"refresh_token"},
 		"refresh_token": {token.RefreshToken},
@@ -120,12 +90,5 @@ func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	if res.RefreshToken == "" {
-		res.RefreshToken = token.RefreshToken
-	}
-
-	tok := util.TokenWithExpiry(&res)
-	err := settings.SetJson(v.settingsKey(), tok)
-
-	return tok, err
+	return util.TokenWithExpiry(&res), nil
 }
