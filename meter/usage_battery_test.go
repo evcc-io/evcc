@@ -59,8 +59,10 @@ func TestBatteryCapacity(t *testing.T) {
 func TestBatteryModes(t *testing.T) {
 	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold}, batteryModes([]int64{1, 2}))
 
-	// values that are not a mode are ignored, e.g. the marstek forced discharge case
-	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHoldCharge}, batteryModes([]int64{1, 4, 5}))
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHoldCharge, api.BatteryDischarge}, batteryModes([]int64{1, 4, 5}))
+
+	// values that are not a mode are ignored
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal}, batteryModes([]int64{1, 99}))
 
 	require.Empty(t, batteryModes([]int64{0}))
 }

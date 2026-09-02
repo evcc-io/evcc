@@ -88,7 +88,7 @@ func TestApplyBatteryMode(t *testing.T) {
 // battery controller supporting the modes a soc limit can implement
 func batteryControllerMock(ctrl *gomock.Controller) *api.MockBatteryController {
 	batCon := api.NewMockBatteryController(ctrl)
-	batCon.EXPECT().BatteryModes().Return([]api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}).AnyTimes()
+	batCon.EXPECT().BatteryModes().Return([]api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryDischarge}).AnyTimes()
 
 	return batCon
 }
@@ -360,7 +360,7 @@ func TestForcedBatteryDischargeLimits(t *testing.T) {
 
 		var bat api.Meter
 		batSoc := api.NewMockBattery(ctrl)
-		batCon := api.NewMockBatteryController(ctrl)
+		batCon := batteryControllerMock(ctrl)
 		batSocLimit := api.NewMockBatterySocLimiter(ctrl)
 
 		bat = &struct {
@@ -400,7 +400,7 @@ func TestBatteryDischargeHemsCurtailed(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	var bat api.Meter
-	batCon := api.NewMockBatteryController(ctrl)
+	batCon := batteryControllerMock(ctrl)
 
 	bat = &struct {
 		api.Meter
