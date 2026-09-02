@@ -347,6 +347,47 @@
         }
       }
     },
+    "/batterygriddischargelimit": {
+      "delete": {
+        "operationId": "removeBatteryGridDischargeLimit",
+        "summary": "Remove battery grid discharge limit",
+        "description": "Remove battery grid discharge limit (experimental).",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/features/battery"
+        },
+        "tags": [
+          "battery"
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NullResult"
+          }
+        }
+      }
+    },
+    "/batterygriddischargelimit/{cost}": {
+      "post": {
+        "operationId": "setBatteryGridDischargeLimit",
+        "summary": "Set battery grid discharge limit",
+        "description": "Discharge home battery to grid when the feed-in price is at or above the threshold (experimental). Requires a feed-in tariff and the battery grid discharge setting. Ignored otherwise.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/features/battery"
+        },
+        "tags": [
+          "battery"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/costLimit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        }
+      }
+    },
     "/batterymode": {
       "delete": {
         "operationId": "disableExternalBatteryControl",
@@ -2848,7 +2889,8 @@
           "normal",
           "hold",
           "charge",
-          "holdcharge"
+          "holdcharge",
+          "discharge"
         ]
       },
       "ChargeMode": {
@@ -5193,6 +5235,15 @@
             "description": "Home battery is currently charged from grid.",
             "type": "boolean"
           },
+          "batteryGridDischargeLimit": {
+            "description": "Feed-in price limit for discharging the home battery to the grid (experimental).",
+            "type": "number",
+            "nullable": true
+          },
+          "batteryGridDischargeActive": {
+            "description": "Home battery is currently discharged to the grid.",
+            "type": "boolean"
+          },
           "smartCostAvailable": {
             "description": "A dynamic grid price or CO₂ forecast is configured.",
             "type": "boolean"
@@ -5614,9 +5665,9 @@
           "application/json": {
             "schema": {
               "type": "integer",
-              "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge",
+              "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge, 5: discharge",
               "minimum": 0,
-              "maximum": 4
+              "maximum": 5
             }
           }
         }

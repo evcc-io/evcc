@@ -75,6 +75,7 @@
     "disclaimerHint": "Note:",
     "disclaimerText": "These settings only affect solar mode. Charging behaviour is adjusted accordingly.",
     "gridChargeTab": "Grid charging",
+    "gridDischargeTab": "Grid discharging",
     "legendBottomName": "Prioritize home battery charging",
     "legendBottomSubline": "until it reaches {soc}.",
     "legendMiddleName": "Prioritize vehicle charging",
@@ -1811,7 +1812,8 @@
     "saved": "Saved."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Paused time",
+    "activeHoursLabel": "Active time",
+    "batteryDescription": "Discharges the home battery to the grid while the feed-in rate is high.",
     "description": "Pauses charging during high prices to prioritize profitable grid feed-in.",
     "priceLabel": "Feed-in rate",
     "priceLimit": "Feed-in limit",

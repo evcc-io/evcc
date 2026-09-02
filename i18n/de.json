@@ -75,6 +75,7 @@
     "disclaimerHint": "Hinweis:",
     "disclaimerText": "Nur relevant im PV-Modus. Das Ladeverhalten wird entsprechend angepasst.",
     "gridChargeTab": "Netzladen",
+    "gridDischargeTab": "Netzentladen",
     "legendBottomName": "Priorisiere die Hausbatterie",
     "legendBottomSubline": "bis sie {soc} erreicht hat.",
     "legendMiddleName": "Priorisiere Fahrzeugladen,",
@@ -1811,7 +1812,8 @@
     "saved": "Gespeichert."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Pausierte Zeit",
+    "activeHoursLabel": "Aktive Zeit",
+    "batteryDescription": "Entlädt die Hausbatterie ins Netz, wenn der Einspeisetarif hoch ist.",
     "description": "Pausiert den Ladevorgang bei hohen Preisen, um der profitablen Netzeinspeisung Vorrang zu geben.",
     "priceLabel": "Einspeisetarif",
     "priceLimit": "Einspeisegrenze",
