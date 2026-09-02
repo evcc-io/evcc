@@ -31,11 +31,10 @@ type Phases interface {
 	api.PhasePowers
 }
 
-// Connection is the Shelly connection. It aggregates one Generation per configured channel.
+// Connection is the Shelly connection. It aggregates one Generation per configured relay.
 type Connection struct {
-	Generation // first relay, decides the device capabilities
-	relays     []Generation
-	gen        int
+	relays []Generation
+	gen    int
 }
 
 var _ Phases = (*Connection)(nil)
@@ -43,6 +42,21 @@ var _ Phases = (*Connection)(nil)
 // SignedPower reports whether the device returns directional (signed) power.
 func (c *Connection) SignedPower() bool {
 	return c.gen >= 3
+}
+
+// IsThreePhase reports whether the device is a three-phase energy meter
+func (c *Connection) IsThreePhase() bool {
+	return c.relays[0].IsThreePhase()
+}
+
+// IsReversed reports whether the device-side "Reverse power measurement" setting is enabled
+func (c *Connection) IsReversed() bool {
+	return c.relays[0].IsReversed()
+}
+
+// HasReturnEnergy reports whether the device measures energy in the return direction
+func (c *Connection) HasReturnEnergy() bool {
+	return c.relays[0].HasReturnEnergy()
 }
 
 // NewConnection creates a new Shelly device connection.
@@ -118,7 +132,7 @@ func NewConnection(uri, user, password string, channels []int, cache time.Durati
 		used[gen.relay()] = true
 	}
 
-	conn := &Connection{Generation: relays[0], relays: relays, gen: resp.Gen}
+	conn := &Connection{relays: relays, gen: resp.Gen}
 
 	return conn, nil
 }
@@ -174,10 +188,10 @@ func (c *Connection) sum(fun func(Generation) (float64, error)) (float64, error)
 	return total, nil
 }
 
-// HasPhases reports whether per-phase readings are available. A single channel uses the
-// device readings, three channels are mapped to L1..L3 in configuration order.
+// HasPhases reports whether per-phase readings are available. A single relay uses the
+// device readings, three relays are mapped to L1..L3 in configuration order.
 func (c *Connection) HasPhases() bool {
-	_, ok := c.Generation.(Phases)
+	_, ok := c.relays[0].(Phases)
 	return ok && (len(c.relays) == 1 || len(c.relays) == 3)
 }
 
@@ -202,7 +216,7 @@ func (c *Connection) phaseValues(fun func(Phases) (float64, float64, float64, er
 	}
 
 	if len(c.relays) == 1 {
-		return fun(c.Generation.(Phases))
+		return fun(c.relays[0].(Phases))
 	}
 
 	var res [3]float64
