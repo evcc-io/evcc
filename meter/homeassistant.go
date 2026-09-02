@@ -11,7 +11,6 @@ import (
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/homeassistant"
-	"github.com/samber/lo"
 )
 
 func init() {
@@ -100,17 +99,19 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 				api.BatteryCharge: cc.ModeCharge,
 			}
 
+			// an unconfigured mode is not supported
+			maps.DeleteFunc(modes, func(_ api.BatteryMode, entity string) bool {
+				return entity == ""
+			})
+
 			for _, entity := range modes {
-				if entity != "" && !strings.HasPrefix(entity, "script.") {
+				if !strings.HasPrefix(entity, "script.") {
 					return nil, fmt.Errorf("battery mode entity must be a script: %s", entity)
 				}
 			}
 
-			implement.Has(m, implement.BatteryController(func() []api.BatteryMode {
-				return slices.Sorted(maps.Keys(lo.PickBy(modes, func(_ api.BatteryMode, entity string) bool {
-					return entity != ""
-				})))
-			}, batteryModeController(conn, modes)))
+			modeG := implement.BatteryModes(slices.Sorted(maps.Keys(modes))...)
+			implement.Has(m, implement.BatteryController(modeG, batteryModeController(conn, modes)))
 		} else if cc.ModeNormal != "" {
 			return nil, errors.New("modeNormal alone has no effect; configure modeHold and/or modeCharge")
 		}
@@ -159,7 +160,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 func batteryModeController(conn *homeassistant.Connection, modes map[api.BatteryMode]string) func(api.BatteryMode) error {
 	return func(mode api.BatteryMode) error {
 		target, ok := modes[mode]
-		if !ok || target == "" {
+		if !ok {
 			return errInvalidBatteryMode(mode)
 		}
 		return conn.CallSwitchService(target, true)
