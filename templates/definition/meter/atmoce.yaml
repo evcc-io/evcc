@@ -373,6 +373,37 @@ render: |
                   address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
                   type: writeholding
                   decode: uint16
+          - case: 5 # discharge -> Enable grid discharging with minimum target soc (will be stopped by evcc)
+            set:
+              source: sequence
+              set:
+                - source: const
+                  value: {{ .minsoc }}
+                  set:
+                    source: modbus
+                    {{- include "modbus" . | indent 18 }}
+                    register:
+                      address: 60312 # Energy Storage Forced Charging/Discharging Target SOC (%)
+                      type: writeholding
+                      decode: uint16
+                - source: const
+                  value: 0
+                  set:
+                    source: modbus
+                    {{- include "modbus" . | indent 18 }}
+                    register:
+                      address: 60311 # Energy Storage Forced Charging/Discharging Mode (0 = Target SOC, 1 = Charging/discharging duration)
+                      type: writeholding
+                      decode: uint16
+                - source: const
+                  value: 1
+                  set:
+                    source: modbus
+                    {{- include "modbus" . | indent 18 }}
+                    register:
+                      address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
+                      type: writeholding
+                      decode: uint16
       {{- if eq .firmware ">=01.01.00.28.15" }}
       - source: switch
         switch:
