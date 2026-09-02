@@ -176,15 +176,16 @@ func newBluelinkFromConfig(ctx context.Context, brand string, other map[string]a
 
 	// Try to fetch battery capacity from vehicle if the user didn't provide one in the configuration
 	if v.Capacity_ == 0 {
-		v.Capacity_ = fetchVehicleCapacity(api, vehicle, 0)
+		v.Capacity_ = fetchVehicleCapacity(api, vehicle)
 	}
 
 	return v, nil
 }
 
-func fetchVehicleCapacity(api *bluelink.API, vehicle bluelink.Vehicle, capacity float64) float64 {
+func fetchVehicleCapacity(api *bluelink.API, vehicle bluelink.Vehicle) float64 {
 	if res, err := api.StatusLatest(vehicle); err == nil {
-		capacity, _ = res.Capacity()
+		capacity, _ := res.Capacity()
+		return capacity
 	}
-	return capacity
+	return 0
 }

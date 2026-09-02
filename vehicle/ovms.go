@@ -50,7 +50,7 @@ func NewOvmsFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, 
 	log := util.NewLogger("ovms").Redact(cc.User, cc.Password, cc.VehicleID)
 
 	v := &Ovms{
-		embed:     &cc.embed,
+		embed:     cc.embed.withContext(ctx),
 		Helper:    request.NewHelper(log),
 		user:      cc.User,
 		password:  cc.Password,
