@@ -1225,7 +1225,7 @@ func (site *Site) updateLoadpoints(rates api.Rates) float64 {
 // reservedPVPower returns the anticipated surplus claimed by higher-priority PV loadpoints
 // that are starting up, so lower-priority loadpoints defer enabling against it (#31194).
 func (site *Site) reservedPVPower(lp updater) float64 {
-	if lp.GetMode() != api.ModePV {
+	if !loadpoint.SurplusFlexible(lp) {
 		return 0
 	}
 
@@ -1307,7 +1307,7 @@ func (site *Site) update(lp updater) {
 func (site *Site) updatePower(lp updater, state siteState, totalChargePower float64, consumption, feedin api.Rates) {
 	// prioritize if possible
 	var flexiblePower float64
-	if lp != nil && lp.GetMode() == api.ModePV {
+	if lp != nil && loadpoint.SurplusFlexible(lp) {
 		flexiblePower = site.prioritizer.GetChargePowerFlexibility(lp)
 	}
 

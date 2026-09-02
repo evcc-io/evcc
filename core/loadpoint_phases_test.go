@@ -609,6 +609,8 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 		phaseTimerRunning     bool
 	}{
 		{desc: "no circuit", activePhases: 3, phasesConfigured: 0, status: api.StatusB, chargePower: 0, expectedPhases: 3, noCircuit: true, phaseTimerRunning: true},
+		// without load management scaling up cannot overload anything- no delay
+		{desc: "no circuit, charging at 1p", activePhases: 1, phasesConfigured: 0, status: api.StatusC, chargePower: 3680, expectedPhases: 3, noCircuit: true, phaseTimerRunning: true},
 
 		{desc: "fixed 1p, 1p active", activePhases: 1, phasesConfigured: 1, status: api.StatusB, chargePower: 0, availableCircuitPower: 11040, expectedPhases: 1},
 		{desc: "fixed 1p, 3p active", activePhases: 3, phasesConfigured: 1, status: api.StatusB, chargePower: 0, availableCircuitPower: 11040, expectedPhases: 1},
@@ -696,7 +698,7 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 			require.NoError(t, err)
 
 			// handle scale phases up delay
-			if tc.activePhases == 1 && tc.expectedPhases == 3 && tc.status == api.StatusC {
+			if !tc.noCircuit && tc.activePhases == 1 && tc.expectedPhases == 3 && tc.status == api.StatusC {
 				require.Equal(t, 1, lp.phases, "should not scale up immediately while charging")
 
 				clck.Add(lp.Enable.Delay - time.Second)

@@ -33,7 +33,7 @@
     },
     "combined": "Combined",
     "config": {
-      "buffer": "Home battery energy above {soc} may be used to support the charging points and delays switching off in solar mode. Start solar charging automatically {start}.",
+      "buffer": "Home battery energy above {soc} may be used to support the charging points and delays switching off in smart mode. Start solar charging automatically {start}.",
       "bufferNone": "Home battery energy is not used for the charging points. Set a value below {soc} to enable support.",
       "bufferStart": {
         "above": "once the battery is above {soc}",
@@ -73,7 +73,7 @@
     "control": "Battery control",
     "discharge": "Prevent discharge in fast mode and planned charging.",
     "disclaimerHint": "Note:",
-    "disclaimerText": "These settings only affect solar mode. Charging behaviour is adjusted accordingly.",
+    "disclaimerText": "These settings only affect smart mode. Charging behaviour is adjusted accordingly.",
     "gridChargeTab": "Grid charging",
     "gridDischargeTab": "Grid discharging",
     "legendBottomName": "Prioritize home battery charging",
@@ -1337,6 +1337,15 @@
     "title": "Authentication"
   },
   "main": {
+    "alwaysCharge": {
+      "description": "no interruptions",
+      "label": "Always charge",
+      "labelHeating": "Always heat",
+      "minCurrent": "min {current}",
+      "once": "until end of session",
+      "onceTip": "Only for this session",
+      "permanent": "stays on permanently"
+    },
     "chargingPlan": {
       "active": "Active",
       "addRepeatingPlan": "Add repeating plan",
@@ -1474,7 +1483,7 @@
         "descriptionDisabled": "Select a limit to allow fast charging from home battery.",
         "disabled": "Disabled",
         "label": "Battery Boost",
-        "mode": "Only available in solar and min+solar mode.",
+        "mode": "Only available in smart mode.",
         "once": "Boost active for this charging session.",
         "stateActive": "Battery boost active",
         "stateBelowLimit": "Battery too low for boost",
@@ -1492,7 +1501,7 @@
         "label": "Min. Current"
       },
       "minTemp": {
-        "description": "Below {0} battery and grid power are also used in solar mode to maintain this temperature.",
+        "description": "Below {0} battery and grid power are also used in smart mode to maintain this temperature.",
         "label": "Min. temperature"
       },
       "phasesConfigured": {
@@ -1510,10 +1519,11 @@
       "vehicle": "Vehicle"
     },
     "mode": {
-      "minpv": "Min+Solar",
+      "boost": "Boost",
+      "normal": "Normal",
       "now": "Fast",
       "off": "Off",
-      "pv": "Solar",
+      "on": "On",
       "smart": "Smart"
     },
     "provider": {
@@ -1532,7 +1542,7 @@
       "inactiveLabel": "Target time",
       "nextPlan": "Next plan",
       "notReachableInTime": "Goal will be reached {overrun} later.",
-      "onlyInPvMode": "Charging plan only works in solar mode.",
+      "onlyInSmartMode": "Charging plan only works in smart mode.",
       "planDuration": "Charging time",
       "planPeriodLabel": "Period",
       "planPeriodValue": "{start} to {end}",
@@ -1827,7 +1837,7 @@
     "co2Label": "CO₂ emission",
     "co2Limit": "CO₂ limit",
     "enable": "Enable limit",
-    "loadpointDescription": "Enables temporary fast-charging in solar mode.",
+    "loadpointDescription": "Enables temporary fast-charging in smart mode.",
     "modalTitle": "Smart Grid Charging",
     "none": "none",
     "priceLabel": "Energy price",

@@ -556,6 +556,8 @@ export enum TIME_FORMAT {
 export interface Loadpoint {
   /** Unique loadpoint identifier used in API routes and configuration. */
   name: string;
+  /** Always charge state. Smart mode charges continuously at least at minimum power. */
+  alwaysCharge: ALWAYS_CHARGE;
   /** Battery boost is active. When enabled, home battery power is used for fast charging. */
   batteryBoost: boolean;
   /** Charging current per phase in A. */
@@ -837,9 +839,15 @@ export enum ICON_SIZE {
 /** Charging mode. */
 export enum CHARGE_MODE {
   OFF = "off",
+  SMART = "smart",
   NOW = "now",
-  MINPV = "minpv",
-  PV = "pv",
+}
+
+/** Always charge state. Smart mode charges continuously at least at minimum power. */
+export enum ALWAYS_CHARGE {
+  OFF = "off",
+  ON = "on",
+  ONCE = "once",
 }
 
 /** Battery operation mode. */
@@ -1246,6 +1254,8 @@ export interface Vehicle {
   name?: string;
   /** Charge mode applied when the vehicle connects. */
   mode?: CHARGE_MODE | "";
+  /** Always charge state applied when the vehicle connects. */
+  alwaysCharge?: ALWAYS_CHARGE | "";
   /** Minimum SoC in %. Vehicle is fast-charged until this level is reached. */
   minSoc?: number;
   /** SoC limit in %. Charging stops when reached. */

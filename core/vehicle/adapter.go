@@ -52,15 +52,47 @@ func (v *adapter) Name() string {
 // GetMode returns the charge mode
 func (v *adapter) GetMode() api.ChargeMode {
 	if s, err := settings.String(v.key() + keys.Mode); err == nil {
-		return api.ChargeMode(s)
+		mode, err := api.ChargeModeString(s)
+		if err != nil {
+			return ""
+		}
+		// migrate deprecated values; publishing here would recurse via publishVehicles
+		if m, ac := mode.Normalize(); ac != "" {
+			mode = m
+			settings.SetString(v.key()+keys.Mode, string(mode))
+			settings.SetString(v.key()+keys.AlwaysCharge, string(ac))
+		}
+		return mode
 	}
 	return ""
 }
 
-// SetMode sets the charge mode
+// SetMode sets the charge mode; deprecated pv/minpv map to smart
 func (v *adapter) SetMode(mode api.ChargeMode) {
+	mode, ac := mode.Normalize()
+	if ac != "" {
+		settings.SetString(v.key()+keys.AlwaysCharge, string(ac))
+	}
+
 	v.log.DEBUG.Printf("set %s mode: %s", v.name, mode)
 	settings.SetString(v.key()+keys.Mode, string(mode))
+	v.publish()
+}
+
+// GetAlwaysCharge returns the always charge state applied on identification, empty if unset
+func (v *adapter) GetAlwaysCharge() api.AlwaysCharge {
+	if s, err := settings.String(v.key() + keys.AlwaysCharge); err == nil {
+		if ac, err := api.AlwaysChargeString(s); err == nil {
+			return ac
+		}
+	}
+	return ""
+}
+
+// SetAlwaysCharge sets the always charge state applied on identification, empty clears it
+func (v *adapter) SetAlwaysCharge(ac api.AlwaysCharge) {
+	v.log.DEBUG.Printf("set %s always charge: %s", v.name, ac)
+	settings.SetString(v.key()+keys.AlwaysCharge, string(ac))
 	v.publish()
 }
 
