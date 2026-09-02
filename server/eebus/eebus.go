@@ -95,7 +95,15 @@ type EEBus struct {
 	paired    []shipapi.ServiceIdentity // devices paired via SHIP Pairing Service
 	connected map[string]bool           // connection state per ski
 
-	clients map[string][]Device
+	clients  map[string][]Device
+	useCases []useCase
+}
+
+// useCase pairs a registered use case with its support update event, which
+// carries the remote entity a device binds its getters to.
+type useCase struct {
+	eebusapi.UseCaseInterface
+	support eebusapi.EventType
 }
 
 var (
@@ -305,16 +313,25 @@ func NewServer(other Config) (*EEBus, error) {
 	}
 
 	// register use cases
-	for _, uc := range []eebusapi.UseCaseInterface{
-		c.cem.EvseCC, c.cem.EvCC,
-		c.cem.EvCem, c.cem.OpEV,
-		c.cem.OscEV, c.cem.EvSoc,
-		c.cem.OHPCF,
-		c.cs.CsLPCInterface, c.cs.CsLPPInterface,
-		c.ma.MaMGCPInterface, c.ma.MaMPCInterface, c.ma.MaMDTInterface,
-		c.eg.EgLPCInterface, c.eg.EgLPPInterface,
-	} {
-		c.service.AddUseCase(uc)
+	c.useCases = []useCase{
+		{c.cem.EvseCC, evsecc.UseCaseSupportUpdate},
+		{c.cem.EvCC, evcc.UseCaseSupportUpdate},
+		{c.cem.EvCem, evcem.UseCaseSupportUpdate},
+		{c.cem.OpEV, opev.UseCaseSupportUpdate},
+		{c.cem.OscEV, oscev.UseCaseSupportUpdate},
+		{c.cem.EvSoc, evsoc.UseCaseSupportUpdate},
+		{c.cem.OHPCF, ohpcf.UseCaseSupportUpdate},
+		{c.cs.CsLPCInterface, csplc.UseCaseSupportUpdate},
+		{c.cs.CsLPPInterface, cslpp.UseCaseSupportUpdate},
+		{c.ma.MaMGCPInterface, mgcp.UseCaseSupportUpdate},
+		{c.ma.MaMPCInterface, mpc.UseCaseSupportUpdate},
+		{c.ma.MaMDTInterface, mdt.UseCaseSupportUpdate},
+		{c.eg.EgLPCInterface, eglpc.UseCaseSupportUpdate},
+		{c.eg.EgLPPInterface, eglpp.UseCaseSupportUpdate},
+	}
+
+	for _, uc := range c.useCases {
+		c.service.AddUseCase(uc.UseCaseInterface)
 	}
 
 	// re-establish trust for devices paired via the SHIP Pairing Service
@@ -437,7 +454,7 @@ func (c *EEBus) upsertPairing(identity shipapi.ServiceIdentity) {
 // without ski when ski is a SHIP-paired device (mux must be held)
 func (c *EEBus) clientsFor(ski string) []Device {
 	res := c.clients[ski]
-	if ski != "" && slices.ContainsFunc(c.paired, func(i shipapi.ServiceIdentity) bool { return i.SKI == ski }) {
+	if c.pairedIndex(shipapi.NewServiceIdentity(ski, "", "")) >= 0 {
 		res = append(slices.Clone(res), c.clients[""]...)
 	}
 	return res
@@ -475,9 +492,36 @@ func (c *EEBus) RegisterDevice(ski, ip string, device Device) error {
 	}
 	if connected {
 		device.Connect(true)
+		c.replayUseCases(ski, device)
 	}
 
 	return nil
+}
+
+// replayUseCases re-states the use case support of an already connected remote to
+// a device registering after discovery has finished. eebus-go emits
+// UseCaseSupportUpdate only on notification, so a second device for the same ski
+// - the config UI device test while the device is running - would otherwise never
+// learn its remote entity and report "not connected" (mux must be held).
+func (c *EEBus) replayUseCases(ski string, device Device) {
+	match := func(remote string) bool { return remote == ski }
+	if ski == "" {
+		// the paired device registers without ski, see clientsFor
+		match = func(remote string) bool {
+			return c.connected[remote] && c.pairedIndex(shipapi.NewServiceIdentity(remote, "", "")) >= 0
+		}
+	}
+
+	for _, uc := range c.useCases {
+		for _, res := range uc.RemoteEntitiesScenarios() {
+			remote := res.Entity.Device()
+			if remote == nil || !match(remote.Ski()) {
+				continue
+			}
+
+			device.UseCaseEvent(remote, res.Entity, uc.support)
+		}
+	}
 }
 
 func (c *EEBus) UnregisterDevice(ski string, device Device) {
