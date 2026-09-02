@@ -73,7 +73,6 @@ func (site *Site) updateBatteryMode(batteryGridChargeActive, batteryGridDischarg
 		site.log.DEBUG.Println("battery mode: HEMS curtailed")
 		batteryMode = api.BatteryNormal
 	}
-	}
 
 	// NOTE: applyBatteryMode is always called when charge or discharge mode is active to
 	// validate max soc / min soc reserve

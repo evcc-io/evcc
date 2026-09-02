@@ -386,8 +386,8 @@ func TestForcedBatteryDischargeLimits(t *testing.T) {
 	}
 }
 
-// TestBatteryDischargeHemsCurtailed ensures grid discharge is held back while the
-// grid operator curtails production.
+// TestBatteryDischargeHemsCurtailed ensures grid discharge stops but the battery
+// keeps serving house load while the grid operator curtails production.
 func TestBatteryDischargeHemsCurtailed(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
@@ -413,7 +413,7 @@ func TestBatteryDischargeHemsCurtailed(t *testing.T) {
 		hems:          hems,
 	}
 
-	batCon.EXPECT().SetBatteryMode(api.BatteryHold).Times(1)
+	batCon.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
 
 	site.updateBatteryMode(false, true, api.Rate{})
 
