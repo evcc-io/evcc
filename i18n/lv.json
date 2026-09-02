@@ -352,6 +352,7 @@
       "hideAdvancedSettings": "Slēpt paplašinātos iestatījumus",
       "invalidFileSelected": "Izvēlēta nederīga datne",
       "legacy": "novecojis",
+      "moreInfo": "Vairāk informācijas:",
       "noFileSelected": "Nav izvēlēta datne.",
       "off": "izslēgts",
       "on": "ieslēgts",
@@ -1119,14 +1120,14 @@
       "optInSponsorship": "Nepieciešama sponsorēšana."
     },
     "version": {
-      "availableLong": "pieejama jauna versija",
+      "availableLong": "Pieejams atjauninājums",
       "community": "evcc kopiena",
       "labelEmail": "E-pasts",
       "labelPhone": "Tālrunis",
       "labelRelease": "Laidiens",
       "labelVersion": "Versija",
       "labelWebsite": "Tīmekļa vietne",
-      "latestVersion": "jaunākā versija",
+      "latestVersion": "Versija ir aktuāla",
       "madeByCommunity": "Izveidojusi {0}.",
       "modalCancel": "Atcelt",
       "modalDownload": "Lejupielādēt",
@@ -1326,15 +1327,18 @@
         "continuous": "nepārtraukts",
         "continuousCo2Description": "Atlasa nepārtrauktu vistīrāko laika posmu virkni.",
         "continuousPriceDescription": "Atlasa nepārtrauktu vislētāko laika posmu virkni.",
+        "disabledDescription": "Nepieciešams dinamisks tarifs vai CO₂ prognoze.",
         "label": "Optimizācija"
       },
       "planNumber": "Plāns {number}",
       "precondition": {
         "description": "Daļu no uzlādes veic tieši pirms izbraukšanas: slitāks akumulators, mazāk laika ar augstu uzlādes līmeni.",
+        "disabledDescription": "Visa uzlāde notiek tieši pirms izbraukšanas.",
         "label": "Vēlā uzlāde",
         "optionAll": "viss",
         "optionNo": "nē",
-        "summary": "{precondition} pirms"
+        "summary": "{precondition} pirms",
+        "summaryAll": "tieši pirms izbraukšanas"
       },
       "remove": "Noņemt",
       "repeating": "atkārtojošs",
@@ -1429,6 +1433,7 @@
       "finished": "Beigu laiks",
       "last24hEnergy": "Pēdējās 24 stundas",
       "last7dEnergy": "Pēdējās 7 dienas",
+      "phasesMismatch": "Aktīvo fāžu skaits pārsniedz konfigurēto. Pārbaudiet fāžu konfigurāciju.",
       "power": "Jauda",
       "price": "Izmaksas",
       "remaining": "Atlicis",
@@ -1549,7 +1554,7 @@
     "vehicleSettings": {
       "connectedTo": "savienots ar {0}",
       "description": "Šie noklusējumi tiek piemēroti, kad transportlīdzeklis pieslēdzas uzlādes punktam.",
-      "editHint": "Pievienojiet vai rediģējiet transportlīdzekļus {0}.",
+      "editHint": "Transportlīdzekļus var rediģēt sadaļā {0}.",
       "keepAsIs": "Atstāt kā ir",
       "learnMore": "Uzzināt vairāk.",
       "limitSoc": "Noklusējuma ierobežojums",
