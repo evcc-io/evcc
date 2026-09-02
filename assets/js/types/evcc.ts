@@ -742,7 +742,7 @@ export interface Loadpoint {
    * @format date-time
    */
   smartFeedInPriorityNextStart: string | null;
-  /** Required solar share, from 0 to 1. */
+  /** Required solar share. Usually 0 to 1; values outside that range are possible via API for special cases. */
   solarShare: number;
   /** Charging suggestion from the battery optimizer. */
   suggestion?: LoadpointSuggestion | null;

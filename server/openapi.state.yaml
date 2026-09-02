@@ -1025,7 +1025,7 @@ components:
           nullable: true
           format: date-time
         solarShare:
-          description: Required solar share, from 0 to 1.
+          description: Required solar share. Usually 0 to 1; values outside that range are possible via API for special cases.
           type: number
         suggestion:
           description: Charging suggestion from the battery optimizer.
