@@ -3,6 +3,7 @@ package shelly
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -103,11 +104,34 @@ func TestMultiChannelConnection(t *testing.T) {
 	assert.Equal(t, []bool{true, true, true}, switched, "all channels are switched")
 }
 
-// TestDuplicateChannel asserts that duplicate channels are rejected- they would
-// count the same relay twice.
+// TestDuplicateChannel asserts that channels resolving to the same relay are
+// rejected- they would count the same relay twice. The Pro output add-on remaps
+// every configured channel to switch 100, so the check must run on the resolved id.
 func TestDuplicateChannel(t *testing.T) {
-	_, err := NewConnection("http://foo", "", "", []int{0, 0}, time.Second)
-	require.Error(t, err)
+	for _, tc := range []struct {
+		name     string
+		channels []int
+		rpc      map[string]string
+	}{
+		{"configured twice", []int{0, 0}, nil},
+		{"remapped by add-on", []int{0, 1}, map[string]string{
+			"ProOutputAddon.GetPeripherals": `{"digital_out":{"switch:100":{}}}`,
+		}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			rpc := map[string]string{
+				"Switch.GetStatus": `{"id":0,"output":true}`,
+				"Switch.GetConfig": `{"id":0}`,
+			}
+			maps.Copy(rpc, tc.rpc)
+
+			srv := shellyServer(t, rpc)
+			defer srv.Close()
+
+			_, err := NewConnection(srv.URL, "", "", tc.channels, time.Second)
+			require.Error(t, err)
+		})
+	}
 }
 
 // TestNakedSwitchConnection asserts that a switch without power measurement

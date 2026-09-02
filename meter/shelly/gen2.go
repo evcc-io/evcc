@@ -233,6 +233,10 @@ func (c *gen2) CurrentPower() (float64, error) {
 	}
 }
 
+func (c *gen2) relay() int {
+	return c.switchchannel
+}
+
 // Gen2Enabled implements the Gen2 api.Charger interface
 func (c *gen2) Enabled() (bool, error) {
 	if c.hasSwitchEndpoint() {

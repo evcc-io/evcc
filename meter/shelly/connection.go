@@ -15,6 +15,8 @@ import (
 type Generation interface {
 	Enabled() (bool, error)
 	Enable(bool) error
+	// relay is the switch id the channel resolves to, which may differ from the configured one
+	relay() int
 	api.Meter
 	api.MeterEnergy
 	api.MeterReturnEnergy
@@ -51,14 +53,6 @@ func NewConnection(uri, user, password string, channels []int, cache time.Durati
 
 	if len(channels) == 0 {
 		return nil, errors.New("missing channel")
-	}
-
-	used := make(map[int]bool, len(channels))
-	for _, channel := range channels {
-		if used[channel] {
-			return nil, fmt.Errorf("duplicate channel: %d", channel)
-		}
-		used[channel] = true
 	}
 
 	for _, suffix := range []string{"/", "/rcp", "/shelly"} {
@@ -114,6 +108,16 @@ func NewConnection(uri, user, password string, channels []int, cache time.Durati
 		gens = append(gens, gen)
 	}
 
+	// channels are compared after construction- the Pro output add-on can remap
+	// multiple configured channels onto the same relay
+	used := make(map[int]bool, len(gens))
+	for _, gen := range gens {
+		if used[gen.relay()] {
+			return nil, fmt.Errorf("duplicate channel: %d", gen.relay())
+		}
+		used[gen.relay()] = true
+	}
+
 	conn := &Connection{Generation: gens[0], gens: gens, gen: resp.Gen}
 
 	return conn, nil
@@ -130,14 +134,16 @@ func (c *Connection) Enabled() (bool, error) {
 	return true, nil
 }
 
-// Enable switches all configured channels
+// Enable switches all configured channels. Every channel is attempted, a channel
+// left in the wrong state would otherwise go unnoticed by the Enabled readback.
 func (c *Connection) Enable(enable bool) error {
+	var errs []error
 	for _, gen := range c.gens {
 		if err := gen.Enable(enable); err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 // CurrentPower implements the api.Meter interface
