@@ -33,7 +33,7 @@
     },
     "combined": "Gesamt",
     "config": {
-      "buffer": "Hausspeicherenergie oberhalb von {soc} darf für die Unterstützung der Ladepunkte genutzt werden und zögert die Abschaltung im PV-Modus hinaus. PV-Ladung automatisch starten {start}.",
+      "buffer": "Hausspeicherenergie oberhalb von {soc} darf für die Unterstützung der Ladepunkte genutzt werden und zögert die Abschaltung im Smart-Modus hinaus. PV-Ladung automatisch starten {start}.",
       "bufferNone": "Hausspeicherenergie wird nicht für die Ladepunkte genutzt. Setze einen Wert unter {soc}, um die Unterstützung zu aktivieren.",
       "bufferStart": {
         "above": "ab einem Speicherstand von {soc}",
@@ -73,7 +73,7 @@
     "control": "Batteriesteuerung",
     "discharge": "Verhindere Entladung im Schnell-Modus und bei geplantem Laden.",
     "disclaimerHint": "Hinweis:",
-    "disclaimerText": "Nur relevant im PV-Modus. Das Ladeverhalten wird entsprechend angepasst.",
+    "disclaimerText": "Nur relevant im Smart-Modus. Das Ladeverhalten wird entsprechend angepasst.",
     "gridChargeTab": "Netzladen",
     "gridDischargeTab": "Netzentladen",
     "legendBottomName": "Priorisiere die Hausbatterie",
@@ -1337,6 +1337,15 @@
     "title": "Authentifizierung"
   },
   "main": {
+    "alwaysCharge": {
+      "description": "keine Unterbrechungen",
+      "label": "Dauerhaft laden",
+      "labelHeating": "Dauerhaft heizen",
+      "minCurrent": "min. {current}",
+      "once": "bis Ladeende",
+      "onceTip": "Nur für diese Ladung",
+      "permanent": "bleibt dauerhaft an"
+    },
     "chargingPlan": {
       "active": "Aktiv",
       "addRepeatingPlan": "Wiederholenden Plan hinzufügen",
@@ -1474,7 +1483,7 @@
         "descriptionDisabled": "Limit wählen, um Schnellladen aus der Hausbatterie zu erlauben.",
         "disabled": "Deaktiviert",
         "label": "Batterie Boost",
-        "mode": "Nur im PV- und Min+PV-Modus verfügbar.",
+        "mode": "Nur im Smart-Modus verfügbar.",
         "once": "Boost ist für diesen Ladevorgang aktiviert.",
         "stateActive": "Batterie Boost aktiv",
         "stateBelowLimit": "Batterie zu niedrig für Boost",
@@ -1492,7 +1501,7 @@
         "label": "Min. Ladestrom"
       },
       "minTemp": {
-        "description": "Unter {0} wird im PV-Modus auch mit Batterie- und Netzstrom geheizt, um diese Temperatur zu halten.",
+        "description": "Unter {0} wird im Smart-Modus auch mit Batterie- und Netzstrom geheizt, um diese Temperatur zu halten.",
         "label": "Min. Temperatur"
       },
       "phasesConfigured": {
@@ -1510,11 +1519,12 @@
       "vehicle": "Fahrzeug"
     },
     "mode": {
-      "minpv": "Min+PV",
+      "boost": "Boost",
+      "normal": "Normal",
       "now": "Schnell",
       "off": "Aus",
-      "pv": "PV",
-      "smart": "Intelligent"
+      "on": "An",
+      "smart": "Smart"
     },
     "provider": {
       "login": "anmelden",
@@ -1532,7 +1542,7 @@
       "inactiveLabel": "Zielzeit",
       "nextPlan": "Nächster Plan",
       "notReachableInTime": "Zielzeit wird {overrun} später erreicht.",
-      "onlyInPvMode": "Ladeplanung ist nur im PV-Modus aktiv.",
+      "onlyInSmartMode": "Ladeplanung ist nur im Smart-Modus aktiv.",
       "planDuration": "Ladedauer",
       "planPeriodLabel": "Zeitraum",
       "planPeriodValue": "{start} bis {end}",
@@ -1827,7 +1837,7 @@
     "co2Label": "CO₂-Emission",
     "co2Limit": "CO₂-Grenze",
     "enable": "Grenze aktivieren",
-    "loadpointDescription": "Aktiviert vorübergehendes Schnellladen im PV-Modus.",
+    "loadpointDescription": "Aktiviert vorübergehendes Schnellladen im Smart-Modus.",
     "modalTitle": "Smartes Netzladen",
     "none": "keine",
     "priceLabel": "Energiepreis",

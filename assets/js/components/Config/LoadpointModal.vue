@@ -651,6 +651,7 @@ import PropertyField from "./PropertyField.vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
 import api from "@/api";
 import GenericModal from "../Helper/GenericModal.vue";
+import chargeModeLabelKey from "@/utils/chargeModeLabel";
 import deepClone from "@/utils/deepClone";
 import deepEqual from "@/utils/deepEqual";
 import sleep from "@/utils/sleep";
@@ -675,7 +676,7 @@ import {
 
 const nsPerMin = 60 * 1e9;
 
-const { OFF, PV, MINPV, NOW } = CHARGE_MODE;
+const { OFF, SMART, NOW } = CHARGE_MODE;
 
 const defaultValues = {
 	id: undefined,
@@ -805,6 +806,9 @@ export default {
 		chargerIsSwitchDevice() {
 			return this.chargerStatus?.switchDevice?.value || false;
 		},
+		chargerIsContinuous() {
+			return this.chargerStatus?.continuous?.value || false;
+		},
 		chargerIsHeating() {
 			return this.chargerStatus?.heating?.value === true;
 		},
@@ -844,9 +848,12 @@ export default {
 		},
 		defaultModeOptions(): { key: CHARGE_MODE; name: string }[] {
 			// empty option is provided by PropertyField placeholder
-			// switch devices have no current control, so minpv does not apply
-			const modes = this.chargerIsSwitchDevice ? [OFF, PV, NOW] : [OFF, PV, MINPV, NOW];
-			return modes.map((key) => ({ key, name: this.$t(`main.mode.${key}`) }));
+			return [OFF, SMART, NOW].map((key) => ({
+				key,
+				name: this.$t(
+					chargeModeLabelKey(key, this.chargerIsContinuous, this.chargerIsSwitchDevice)
+				),
+			}));
 		},
 		showCircuit() {
 			return this.circuits.length > 0 || !!this.values.circuit;

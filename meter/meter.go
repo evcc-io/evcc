@@ -2,6 +2,7 @@ package meter
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
@@ -33,6 +34,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		Soc                   *plugin.Config // optional
 		LimitSoc              *plugin.Config // optional
 		BatteryMode           *plugin.Config // optional
+		BatteryModes          []string       // optional, modes supported by batteryMode if it cannot report them itself
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -103,15 +105,28 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 				return nil, err
 			}
 
-			implement.Has(m, implement.BatteryController(limitController))
+			implement.Has(m, implement.BatteryController(batteryModesSocLimit, limitController))
 
 		case cc.BatteryMode != nil:
-			modeS, err := cc.BatteryMode.IntSetter(ctx, "batteryMode")
+			modeS, keys, err := cc.BatteryMode.IntSetterKeys(ctx, "batteryMode")
 			if err != nil {
 				return nil, fmt.Errorf("battery mode: %w", err)
 			}
 
-			implement.Has(m, implement.BatteryController(func(mode api.BatteryMode) error {
+			// the keys the setter switches on are the modes the battery supports,
+			// a setter that cannot report them must declare its modes
+			var modes []api.BatteryMode
+			if keys != nil {
+				modes = batteryModes(keys)
+			} else if modes, err = declaredBatteryModes(cc.BatteryModes); err != nil {
+				return nil, fmt.Errorf("battery modes: %w", err)
+			}
+
+			if len(modes) == 0 {
+				return nil, errors.New("battery mode: no supported modes, add batteryModes")
+			}
+
+			implement.Has(m, implement.BatteryController(implement.BatteryModes(modes...), func(mode api.BatteryMode) error {
 				return modeS(int64(mode))
 			}))
 		}

@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -214,6 +215,11 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 		// don't re-apply the mode the battery is already in
 		name := dev.Config().Name
 		if deviceMode == api.BatteryUnknown || deviceMode == site.batteryModeApplied[name] {
+			continue
+		}
+
+		if !slices.Contains(batCtrl.BatteryModes(), deviceMode) {
+			site.log.DEBUG.Printf("battery %s does not support mode: %s", deviceTitleOrName(dev), deviceMode)
 			continue
 		}
 

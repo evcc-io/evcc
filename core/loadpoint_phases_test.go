@@ -585,6 +585,7 @@ func TestMinChargingPhaseScaling(t *testing.T) {
 			err := lp.minCharging()
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedPhases, lp.phases, tc.desc)
+			require.True(t, lp.phaseTimer.IsZero(), "phase timer must not remain active")
 
 			ctrl.Finish()
 		})
@@ -596,32 +597,74 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 
 	tc := []struct {
 		desc                  string
-		phases                int
+		phasesConfigured      int
+		activePhases          int
+		measuredPhases        int
 		chargePower           float64
-		availableCircuitPower float64 // ValidatePower return for 3p request
+		status                api.ChargeStatus
+		availableCircuitPower float64 // circuit headroom, caps the ValidatePower request
 		expectedPhases        int
 		noCircuit             bool
+		phaseSwitchInProgress bool
+		phaseTimerRunning     bool
 	}{
-		{desc: "no circuit", phases: 3, chargePower: 0, expectedPhases: 3, noCircuit: true},
-		{desc: "low limit, no surplus", phases: 3, chargePower: 0, availableCircuitPower: 3680, expectedPhases: 1},
-		{desc: "low limit, with surplus", phases: 1, chargePower: 0, availableCircuitPower: 11040, expectedPhases: 3},
-		{desc: "already charging, low limit", phases: 3, chargePower: 3680, availableCircuitPower: 3680, expectedPhases: 1},
-		{desc: "already charging, high limit", phases: 1, chargePower: 3680, availableCircuitPower: 11040, expectedPhases: 3},
-		{desc: "edge case: just below 3p minimum", phases: 3, chargePower: 0, availableCircuitPower: 4140 - 1, expectedPhases: 1},
-		{desc: "edge case: just at 3p minimum", phases: 1, chargePower: 0, availableCircuitPower: 4140, expectedPhases: 3},
+		{desc: "no circuit", activePhases: 3, phasesConfigured: 0, status: api.StatusB, chargePower: 0, expectedPhases: 3, noCircuit: true, phaseTimerRunning: true},
+		// without load management scaling up cannot overload anything- no delay
+		{desc: "no circuit, charging at 1p", activePhases: 1, phasesConfigured: 0, status: api.StatusC, chargePower: 3680, expectedPhases: 3, noCircuit: true, phaseTimerRunning: true},
+
+		{desc: "fixed 1p, 1p active", activePhases: 1, phasesConfigured: 1, status: api.StatusB, chargePower: 0, availableCircuitPower: 11040, expectedPhases: 1},
+		{desc: "fixed 1p, 3p active", activePhases: 3, phasesConfigured: 1, status: api.StatusB, chargePower: 0, availableCircuitPower: 11040, expectedPhases: 1},
+
+		{desc: "fixed 3p, 3p active", activePhases: 3, phasesConfigured: 3, status: api.StatusB, chargePower: 0, availableCircuitPower: 3680, expectedPhases: 3},
+		{desc: "fixed 3p, 1p active", activePhases: 1, phasesConfigured: 3, status: api.StatusB, chargePower: 0, availableCircuitPower: 3680, expectedPhases: 3},
+
+		{desc: "low limit, no surplus", phasesConfigured: 0, activePhases: 3, status: api.StatusB, chargePower: 0, availableCircuitPower: 3680, expectedPhases: 1, phaseTimerRunning: true},
+		{desc: "low limit, with surplus", phasesConfigured: 0, activePhases: 1, status: api.StatusB, chargePower: 0, availableCircuitPower: 11040, expectedPhases: 3},
+
+		{desc: "charging, low limit", phasesConfigured: 0, activePhases: 3, status: api.StatusC, chargePower: 3680, availableCircuitPower: 3680, expectedPhases: 1},
+		{desc: "charging, high limit", phasesConfigured: 0, activePhases: 1, status: api.StatusC, chargePower: 3680, availableCircuitPower: 11040, expectedPhases: 3},
+
+		{desc: "switching down just below 3p minimum", phasesConfigured: 0, activePhases: 3, status: api.StatusB, chargePower: 0, availableCircuitPower: 4140 - 1, expectedPhases: 1},
+		{desc: "exactly at 3p minimum", phasesConfigured: 0, activePhases: 3, status: api.StatusB, chargePower: 0, availableCircuitPower: 4140, expectedPhases: 3},
+		// the 10% scale up buffer is expected literally- deriving it from phaseScaleUpBuffer would be circular
+		{desc: "switching up at 3p minimum plus buffer", phasesConfigured: 0, activePhases: 1, status: api.StatusB, chargePower: 0, availableCircuitPower: 230 * 1.1 * 6 * 3, expectedPhases: 3},
+
+		{desc: "edge case: staying at 1p at 3p minimum plus buffer - 1", phasesConfigured: 0, activePhases: 1, status: api.StatusB, chargePower: 0, availableCircuitPower: 230*1.1*6*3 - 1, expectedPhases: 1, phaseTimerRunning: true},
+
+		{desc: "phase switch in progress", phasesConfigured: 0, activePhases: 1, status: api.StatusB, chargePower: 0, availableCircuitPower: 11040, expectedPhases: 1, phaseSwitchInProgress: true, phaseTimerRunning: true},
+
+		// measured phases must not be mistaken for the enabled phase count
+		{desc: "2p vehicle on 3p, low limit", phasesConfigured: 0, activePhases: 3, measuredPhases: 2, status: api.StatusC, chargePower: 3680, availableCircuitPower: 3680, expectedPhases: 1},
+		{desc: "1p vehicle on 3p, high limit", phasesConfigured: 0, activePhases: 3, measuredPhases: 1, status: api.StatusC, chargePower: 3680, availableCircuitPower: 11040, expectedPhases: 3},
 	}
 
 	for _, tc := range tc {
 		t.Run(tc.desc, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
+			clck := clock.NewMock()
+			clck.Add(time.Hour) // avoid IsZero issues
 
 			lp := NewLoadpoint(util.NewLogger("foo"), nil)
+			lp.clock = clck
 			lp.minCurrent = 6
 			lp.maxCurrent = 16
-			lp.phases = tc.phases
+			lp.Enable.Delay = time.Minute
+			lp.phasesConfigured = tc.phasesConfigured
+			lp.phases = tc.activePhases
+			lp.measuredPhases = tc.measuredPhases
 			lp.chargePower = tc.chargePower
+			lp.status = tc.status
 			lp.offeredCurrent = 0 // ensure MaxCurrent is called
 			lp.wakeUpTimer = NewTimer()
+
+			if tc.phaseSwitchInProgress {
+				lp.phasesSwitched = clck.Now()
+			}
+
+			// a pending pv scale timer must not survive fast charging
+			if tc.phaseTimerRunning {
+				lp.phaseTimer = clck.Now()
+			}
 
 			plainCharger := api.NewMockCharger(ctrl)
 			phaseCharger := api.NewMockPhaseSwitcher(ctrl)
@@ -634,28 +677,42 @@ func TestFastChargingCircuitBasedPhaseScaling(t *testing.T) {
 				circuit := api.NewMockCircuit(ctrl)
 				lp.circuit = circuit
 
-				minPower3p := Voltage * 6 * 3
+				// ValidatePower caps the request at the available circuit power
+				circuit.EXPECT().ValidatePower(tc.chargePower, gomock.Any()).DoAndReturn(func(_, new float64) float64 {
+					return min(new, tc.availableCircuitPower)
+				}).AnyTimes()
 
-				// fastCharging call to ValidatePower
-				circuit.EXPECT().ValidatePower(tc.chargePower, minPower3p).Return(tc.availableCircuitPower)
-
-				// setLimit calls
-				circuit.EXPECT().ValidateCurrent(gomock.Any(), lp.maxCurrent).Return(lp.maxCurrent)
-				circuit.EXPECT().ValidatePower(tc.chargePower, float64(tc.expectedPhases)*Voltage*lp.maxCurrent).Return(float64(tc.expectedPhases) * Voltage * lp.maxCurrent)
+				circuit.EXPECT().ValidateCurrent(gomock.Any(), lp.maxCurrent).Return(lp.maxCurrent).AnyTimes()
 			}
 
 			plainCharger.EXPECT().Enabled().Return(true, nil).AnyTimes()
 			plainCharger.EXPECT().Enable(gomock.Any()).Return(nil).AnyTimes()
 
-			if tc.phases != tc.expectedPhases {
-				phaseCharger.EXPECT().Phases1p3p(tc.expectedPhases).Return(nil)
+			if tc.activePhases != tc.expectedPhases {
+				phaseCharger.EXPECT().Phases1p3p(tc.expectedPhases).Return(nil).MaxTimes(1)
 			}
 
-			plainCharger.EXPECT().MaxCurrent(int64(lp.maxCurrent)).Return(nil)
+			plainCharger.EXPECT().MaxCurrent(gomock.Any()).Return(nil).AnyTimes()
 
 			err := lp.fastCharging()
 			require.NoError(t, err)
+
+			// handle scale phases up delay
+			if !tc.noCircuit && tc.activePhases == 1 && tc.expectedPhases == 3 && tc.status == api.StatusC {
+				require.Equal(t, 1, lp.phases, "should not scale up immediately while charging")
+
+				clck.Add(lp.Enable.Delay - time.Second)
+				err = lp.fastCharging()
+				require.NoError(t, err)
+				require.Equal(t, 1, lp.phases, "should not scale up before delay elapsed")
+
+				clck.Add(time.Second)
+				err = lp.fastCharging()
+				require.NoError(t, err)
+			}
+
 			require.Equal(t, tc.expectedPhases, lp.phases, tc.desc)
+			require.True(t, lp.phaseTimer.IsZero(), "phase timer must not remain active")
 
 			ctrl.Finish()
 		})

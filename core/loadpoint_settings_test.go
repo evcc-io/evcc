@@ -43,7 +43,7 @@ func TestSettingsRoundtrip(t *testing.T) {
 	lp.charger = charger
 	lp.Prepare(new(Site), uiChan, pushChan, lpChan)
 
-	lp.SetMode(api.ModePV)
+	lp.SetMode(api.ModeSmart)
 	lp.SetPriority(3)
 	require.NoError(t, lp.SetMinCurrent(8))
 	require.NoError(t, lp.SetMaxCurrent(12))
@@ -63,7 +63,7 @@ func TestSettingsRoundtrip(t *testing.T) {
 	restored.charger = charger
 	restored.Prepare(new(Site), uiChan, pushChan, lpChan)
 
-	assert.Equal(t, api.ModePV, restored.GetMode())
+	assert.Equal(t, api.ModeSmart, restored.GetMode())
 	assert.Equal(t, 3, restored.GetPriority())
 	assert.Equal(t, 8.0, restored.GetMinCurrent())
 	assert.Equal(t, 12.0, restored.GetMaxCurrent())

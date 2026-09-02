@@ -214,8 +214,5 @@ render: |
               address: 2133 # 0x855 Charge Cut Soc
               type: writemultiple
               decode: uint16
-    default:
-      source: error
-      error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}
