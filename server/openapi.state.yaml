@@ -210,6 +210,13 @@ components:
         batteryGridChargeActive:
           description: Home battery is currently charged from grid.
           type: boolean
+        batteryGridDischargeLimit:
+          description: Feed-in price limit for discharging the home battery to the grid (experimental).
+          type: number
+          nullable: true
+        batteryGridDischargeActive:
+          description: Home battery is currently discharged to the grid.
+          type: boolean
         smartCostAvailable:
           description: A dynamic grid price or CO₂ forecast is configured.
           type: boolean
@@ -404,6 +411,7 @@ components:
         - hold
         - charge
         - holdcharge
+        - discharge
     BatterySuggestion:
       description: Battery optimizer suggestion for a home battery.
       type: object

@@ -11,10 +11,12 @@ import {
 	FONT_FAMILY,
 	forecastGrid,
 	forecastYAxis,
+	lineCasing,
 	tooltipStyle,
 	tooltipTable,
 	xAxisLabelStyle,
 	type TooltipRow,
+	lineDefaults,
 } from "../Forecast/echarts";
 import colors, { resolveColors, deviceColorMap, darken, batteryColor, setAlpha } from "@/colors";
 import store from "@/store";
@@ -243,7 +245,7 @@ export default defineComponent({
 			const result: Record<string, unknown>[] = [];
 
 			// Always render overlay slot (line series) so series structure is stable;
-			// data is all-null when toggled off. Prepend so it renders BEHIND bars.
+			// data is all-null when toggled off.
 			const overlayValues: (number | null)[] = Array.from(
 				{ length: cats.length },
 				() => null
@@ -258,17 +260,19 @@ export default defineComponent({
 				}
 			}
 			const overlayCol = this.overlayColor || this.color;
-			result.push({
+			const overlay = {
 				id: "overlay",
 				name: this.overlayLabel || "overlay",
 				type: "line",
 				data: overlayValues,
 				smooth: true,
 				symbol: "none",
-				lineStyle: { color: overlayCol, width: 2, type: "dotted" },
+				connectNulls: true,
+				lineStyle: { color: overlayCol, ...lineDefaults },
 				itemStyle: { color: overlayCol },
-				z: 1,
-			});
+				z: 4,
+			};
+			result.push(lineCasing(overlay, 3), overlay);
 
 			// Always render import + export series per entity, even if one direction
 			// is empty (null-filled). Stable series ids/structure across renders so
@@ -452,57 +456,6 @@ export default defineComponent({
 						shadowStyle: { color: "transparent" },
 					},
 					...tooltipStyle(this.tooltipColor),
-					// Allow the tooltip to float above the 180px chart container instead
-					// of being clamped by `confine: true` — otherwise tall bars push the
-					// tooltip onto the bar.
-					confine: false,
-					position: (
-						point: [number, number],
-						params:
-							| { value: number | null; seriesId: string }[]
-							| { value: number | null; seriesId: string },
-						el: HTMLElement
-					): [number, number] => {
-						const w = el?.offsetWidth || 0;
-						const h = el?.offsetHeight || 0;
-						const margin = 8;
-						// Anchor the tooltip just above the top edge of the bar at this
-						// slot. Top edge = sum of positive imports; for export-only slots
-						// (bidirectional groups with discharge) that's 0 (the zero line),
-						// which still sits above the visible bar.
-						const arr = Array.isArray(params) ? params : [params];
-						let sum = 0;
-						let hasBar = false;
-						for (const p of arr) {
-							if (!/^entity-\d+-(energy|returnEnergy)$/.test(p.seriesId || ""))
-								continue;
-							if (p.value == null) continue;
-							hasBar = true;
-							if (typeof p.value === "number" && p.value > 0) {
-								if (p.seriesId.endsWith("-energy")) sum += p.value;
-							}
-						}
-						let x = point[0] - w / 2;
-						let y = point[1] - h - margin;
-						if (hasBar && this.chart) {
-							const pixelY = this.chart.convertToPixel({ yAxisIndex: 0 }, sum);
-							if (typeof pixelY === "number" && isFinite(pixelY)) {
-								y = pixelY - h - margin;
-							}
-						}
-						// Clamp X to the viewport so the tooltip never escapes the browser
-						// edges. The chart container is in CSS-pixel coordinates relative
-						// to the chart's bounding box, so map via getBoundingClientRect.
-						const dom = this.chart?.getDom();
-						const rect = dom?.getBoundingClientRect();
-						if (rect) {
-							const minX = -rect.left + margin;
-							const maxX = window.innerWidth - rect.left - w - margin;
-							if (x < minX) x = minX;
-							if (x > maxX) x = maxX;
-						}
-						return [x, y];
-					},
 					formatter: (
 						params: {
 							value: number | null;

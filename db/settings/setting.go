@@ -48,16 +48,26 @@ func Persist() error {
 	mu.Lock()
 	defer mu.Unlock()
 
-	if dirty := lo.FilterMap(settings, func(s setting, _ int) (*setting, bool) {
-		return &s, s.dirty
-	}); len(dirty) > 0 {
-		if err := db.Instance.Save(dirty).Error; err != nil {
-			return err
-		}
+	// settings are in-memory only until a database is configured
+	if db.Instance == nil {
+		return nil
+	}
 
-		for _, s := range dirty {
-			s.dirty = false
-		}
+	// point into settings, taking the range copy's address would clear the copy's flag
+	dirty := lo.FilterMap(settings, func(s setting, idx int) (*setting, bool) {
+		return &settings[idx], s.dirty
+	})
+
+	if len(dirty) == 0 {
+		return nil
+	}
+
+	if err := db.Instance.Save(dirty).Error; err != nil {
+		return err
+	}
+
+	for _, s := range dirty {
+		s.dirty = false
 	}
 
 	return nil
@@ -85,10 +95,12 @@ func Delete(key string) error {
 	defer mu.Unlock()
 
 	if idx := slices.IndexFunc(settings, equal(key)); idx >= 0 {
-		if err := db.Instance.Delete(setting{
-			Key: settings[idx].Key,
-		}).Error; err != nil {
-			return err
+		if db.Instance != nil {
+			if err := db.Instance.Delete(setting{
+				Key: settings[idx].Key,
+			}).Error; err != nil {
+				return err
+			}
 		}
 
 		settings = slices.Delete(settings, idx, idx+1)

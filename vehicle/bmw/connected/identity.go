@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
@@ -46,18 +45,11 @@ func (v *Identity) Login(user, password, hcaptcha string) (oauth2.TokenSource, e
 	v.user = user
 
 	// database token
-	var tok oauth2.Token
-	if err := settings.Json(v.settingsKey(), &tok); err == nil {
-		v.log.DEBUG.Println("identity.Login - database token found")
-		tok, err := v.refreshToken(&tok)
-		if err == nil {
-			ts := oauth2.ReuseTokenSourceWithExpiry(tok, oauth.RefreshTokenSource(v.log, tok, v.refreshToken), 15*time.Minute)
-			return ts, nil
-		}
-		v.log.DEBUG.Println("identity.Login - database token invalid. Proceeding to login via user, password and captcha.")
-	} else {
-		v.log.DEBUG.Println("identity.Login - no database token found. Proceeding to login via user, password and captcha.")
+	if ts, err := oauth.PersistentTokenSource(v.log, v.settingsKey(), nil, v.refreshToken); err == nil {
+		return oauth2.ReuseTokenSourceWithExpiry(nil, ts, 15*time.Minute), nil
 	}
+
+	v.log.DEBUG.Println("no usable database token, logging in via user, password and captcha")
 
 	cv := oauth2.GenerateVerifier()
 
@@ -150,9 +142,12 @@ func (v *Identity) Login(user, password, hcaptcha string) (oauth2.TokenSource, e
 		return nil, err
 	}
 
-	ts := oauth2.ReuseTokenSourceWithExpiry(token, oauth.RefreshTokenSource(v.log, token, v.refreshToken), 15*time.Minute)
+	ts, err := oauth.PersistentTokenSource(v.log, v.settingsKey(), token, v.refreshToken)
+	if err != nil {
+		return nil, err
+	}
 
-	return ts, nil
+	return oauth2.ReuseTokenSourceWithExpiry(nil, ts, 15*time.Minute), nil
 }
 
 func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
@@ -172,11 +167,7 @@ func (v *Identity) retrieveToken(data url.Values) (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	tokex := util.TokenWithExpiry(&tok)
-
-	err = settings.SetJson(v.settingsKey(), tokex)
-
-	return tokex, err
+	return util.TokenWithExpiry(&tok), nil
 }
 
 func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {

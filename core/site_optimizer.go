@@ -131,10 +131,6 @@ const (
 	actionCharge = "charge"
 )
 
-// actionDischarge is the battery-to-grid discharge advisory. It has no matching
-// api.BatteryMode, so it always reads as actionable.
-const actionDischarge = "discharge"
-
 // evSuggestion notifies when the optimizer's advisory action for a device changes
 const evSuggestion = "suggestion"
 
@@ -192,7 +188,7 @@ func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gr
 			s.Action = api.BatteryHoldCharge.String()
 		case discharge > suggestionThreshold && gridExporting:
 			// discharging while exporting means battery-to-grid discharge
-			s.Action = actionDischarge
+			s.Action = api.BatteryDischarge.String()
 		default:
 			s.Action = api.BatteryNormal.String()
 		}

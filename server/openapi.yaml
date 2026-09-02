@@ -221,6 +221,32 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+  /batterygriddischargelimit:
+    delete:
+      operationId: removeBatteryGridDischargeLimit
+      summary: Remove battery grid discharge limit
+      description: "Remove battery grid discharge limit (experimental)."
+      externalDocs:
+        url: https://docs.evcc.io/en/features/battery
+      tags:
+        - battery
+      responses:
+        "200":
+          $ref: "#/components/responses/NullResult"
+  /batterygriddischargelimit/{cost}:
+    post:
+      operationId: setBatteryGridDischargeLimit
+      summary: Set battery grid discharge limit
+      description: "Discharge home battery to grid when the feed-in price is at or above the threshold (experimental). Requires a feed-in tariff and the battery grid discharge setting. Ignored otherwise."
+      externalDocs:
+        url: https://docs.evcc.io/en/features/battery
+      tags:
+        - battery
+      parameters:
+        - $ref: "#/components/parameters/costLimit"
+      responses:
+        "200":
+          $ref: "#/components/responses/NumberResult"
   /batterymode:
     delete:
       operationId: disableExternalBatteryControl
@@ -2014,9 +2040,9 @@ components:
         application/json:
           schema:
             type: integer
-            description: "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge"
+            description: "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge, 5: discharge"
             minimum: 0
-            maximum: 4
+            maximum: 5
   securitySchemes:
     cookieAuth:
       type: apiKey
