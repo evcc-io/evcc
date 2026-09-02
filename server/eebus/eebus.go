@@ -684,7 +684,8 @@ func (c *EEBus) ServiceAutoTrusted(service eebusapi.ServiceInterface, identity s
 	// registered without ski; wake them now that the device is paired
 	var clients []Device
 	if c.connected[identity.SKI] {
-		clients = c.clientsFor(identity.SKI)
+		// clone, the result may alias c.clients but is used after unlocking
+		clients = slices.Clone(c.clientsFor(identity.SKI))
 	}
 	c.mux.Unlock()
 
