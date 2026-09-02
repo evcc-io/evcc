@@ -7,23 +7,23 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/PanterSoft/comlynx-go v0.1.0
-	github.com/PuerkitoBio/goquery v1.12.0
+	github.com/PuerkitoBio/goquery v1.13.0
 	github.com/WulfgarW/sensonet v0.0.8
 	github.com/andig/go-powerwall v0.3.0
 	github.com/andig/gosunspec v0.0.0-20260705113727-6d585e133512
 	github.com/andig/mbserver v0.0.0-20230310211055-1d29cbb5820e
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
-	github.com/aws/aws-sdk-go-v2 v1.43.8
-	github.com/aws/aws-sdk-go-v2/config v1.32.39
-	github.com/aws/aws-sdk-go-v2/credentials v1.19.38
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.36.8
+	github.com/aws/aws-sdk-go-v2 v1.45.1
+	github.com/aws/aws-sdk-go-v2/config v1.33.2
+	github.com/aws/aws-sdk-go-v2/credentials v1.20.2
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.40.0
 	github.com/basgys/goxml2json v1.1.0
 	github.com/benbjohnson/clock v1.3.5
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/cli/browser v1.3.0
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21
 	github.com/coder/websocket v1.8.15
-	github.com/coreos/go-oidc/v3 v3.20.0
+	github.com/coreos/go-oidc/v3 v3.21.0
 	github.com/d2r2/go-i2c v0.0.0-20191123181816-73a8a799d6bc
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dylanmei/iso8601 v0.1.0
@@ -36,10 +36,10 @@ require (
 	github.com/evcc-io/rct v0.2.0
 	github.com/evcc-io/tesla-proxy-client v0.0.0-20260722080120-05ada06c7368
 	github.com/fatih/structs v1.1.0
-	github.com/getkin/kin-openapi v0.147.0
+	github.com/getkin/kin-openapi v0.149.0
 	github.com/go-http-utils/etag v0.0.0-20161124023236-513ea8f21eb1
 	github.com/go-playground/validator/v10 v10.30.3
-	github.com/go-telegram/bot v1.24.0
+	github.com/go-telegram/bot v1.25.0
 	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/godbus/dbus/v5 v5.2.2
 	github.com/gokrazy/updater v0.0.0-20260620140544-0a84d8ab3878
@@ -74,13 +74,13 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/modelcontextprotocol/go-sdk v1.7.0
 	github.com/muka/go-bluetooth v0.0.0-20240701044517-04c4f09c514e
-	github.com/nicholas-fedor/shoutrrr v0.18.0
+	github.com/nicholas-fedor/shoutrrr v0.19.0
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
 	github.com/olekukonko/tablewriter v1.1.4
 	github.com/philippseith/signalr v0.11.0
 	github.com/prometheus-community/pro-bing v0.9.1
 	github.com/prometheus/client_golang v1.24.1
-	github.com/prometheus/common v0.70.1
+	github.com/prometheus/common v0.71.0
 	github.com/robertkrimen/otto v0.5.1
 	github.com/samber/lo v1.53.0
 	github.com/sandrolain/httpcache v1.4.2
@@ -105,7 +105,7 @@ require (
 	go.uber.org/mock v0.6.0
 	go.yaml.in/yaml/v4 v4.0.0-rc.6
 	golang.org/x/crypto v0.55.0
-	golang.org/x/crypto/x509roots/fallback v0.0.0-20260826144058-afebf4cb4efb
+	golang.org/x/crypto/x509roots/fallback v0.0.0-20260902180247-86efde54dc70
 	golang.org/x/exp v0.0.0-20260824195058-e88cd73687aa
 	golang.org/x/net v0.58.0
 	golang.org/x/oauth2 v0.36.0
@@ -115,26 +115,26 @@ require (
 	google.golang.org/grpc v1.83.2
 	google.golang.org/protobuf v1.36.12
 	gorm.io/gorm v1.31.2
-	modernc.org/sqlite v1.57.0
+	modernc.org/sqlite v1.58.0
 )
 
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
-	github.com/andybalholm/cascadia v1.3.3 // indirect
+	github.com/andybalholm/cascadia v1.3.4 // indirect
 	github.com/antihax/optional v1.0.0 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.39 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.39 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.39 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.40 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.18 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.39 // indirect
-	github.com/aws/aws-sdk-go-v2/service/signin v1.5.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.33.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.38.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.45.8 // indirect
-	github.com/aws/smithy-go v1.27.10 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.19.1 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.1 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.1 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.5.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.19 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.14.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/signin v1.8.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.36.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.41.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.48.0 // indirect
+	github.com/aws/smithy-go v1.28.1 // indirect
 	github.com/azihsoyn/rijndael256 v0.0.0-20200316065338-d14eefa2b66b // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bitly/go-simplejson v0.5.1 // indirect
@@ -221,7 +221,7 @@ require (
 	github.com/rickb777/plural v1.4.7 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sagikazarmark/locafero v0.12.0 // indirect
-	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2 // indirect
+	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3 // indirect
 	github.com/segmentio/asm v1.1.3 // indirect
 	github.com/segmentio/encoding v0.5.4 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
@@ -247,9 +247,9 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect
 	gopkg.in/go-playground/validator.v9 v9.30.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
-	modernc.org/libc v1.74.4 // indirect
+	modernc.org/libc v1.75.6 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
-	modernc.org/memory v1.11.0 // indirect
+	modernc.org/memory v1.12.1 // indirect
 )
 
 tool (
