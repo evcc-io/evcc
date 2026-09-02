@@ -68,10 +68,11 @@ func (site *Site) updateBatteryMode(batteryGridChargeActive, batteryGridDischarg
 		batteryMode = api.BatteryHold
 	}
 
-	// put battery into hold mode when discharging to grid and HEMS curtailed production
+	// stop discharging to grid when HEMS curtailed production, but keep self-consumption
 	if curtailed := hems.Curtailed(site.hems); site.fromTo(batteryMode, api.BatteryDischarge) && curtailed != nil && *curtailed {
 		site.log.DEBUG.Println("battery mode: HEMS curtailed")
-		batteryMode = api.BatteryHold
+		batteryMode = api.BatteryNormal
+	}
 	}
 
 	// NOTE: applyBatteryMode is always called when charge or discharge mode is active to
