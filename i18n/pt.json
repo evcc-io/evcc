@@ -427,13 +427,6 @@
         "charging": "Carregador",
         "heating": "Dispositivo de aquecimento"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Utilização de uma gama de correntes de 6 a 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Utilização de uma gama de correntes de 6 a 32 A.",
-      "chargerPowerCustom": "outro",
-      "chargerPowerCustomHelp": "Definir um intervalo de Correntes personalizado.",
-      "chargerTypeLabel": "Tipo de Carregador",
       "chargingTitle": "Comportamento",
       "circuitHelp": "Atribuição de gestão de carga para garantir que os limites de potência e corrente não são excedidos.",
       "circuitInvalid": "O circuito não existe",

@@ -441,13 +441,6 @@
         "charging": "Carregador",
         "heating": "Dispositiu de calefacció"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Utilitzarà un interval de corrent de 6 a 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Utilitzarà un interval de corrent de 6 a 32 A.",
-      "chargerPowerCustom": "altre",
-      "chargerPowerCustomHelp": "Defineix un interval de corrent personalitzat.",
-      "chargerTypeLabel": "Tipus de carregador",
       "chargingTitle": "Comportament",
       "circuitHelp": "Assignació a la gestió de càrregues per a assegurar que no se superin els límits de potència i corrent.",
       "circuitInvalid": "El circuit no existeix",

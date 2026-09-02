@@ -432,13 +432,6 @@
         "charging": "Laturi",
         "heating": "Lämmityslaite"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Käyttää 6-16 A:n virta-aluetta.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Käyttää 6-32 A:n virta-aluetta.",
-      "chargerPowerCustom": "muu",
-      "chargerPowerCustomHelp": "Mukauta käytettävä virta-alue.",
-      "chargerTypeLabel": "Laturin tyyppi",
       "chargingTitle": "Toiminta",
       "circuitHelp": "Kuormanhallinnan määritys varmistaa, että teho ja virtarajoitteita ei ylitetä.",
       "circuitInvalid": "Piiriä ei ole olemassa",

@@ -277,13 +277,6 @@
         "charging": "Зарядно",
         "heating": "Нагревател"
       },
-      "chargerPower11kw": "11 кВт",
-      "chargerPower11kwHelp": "Ще бъде използван ток в диапазона от 6 до 16 А.",
-      "chargerPower22kw": "22 кВт",
-      "chargerPower22kwHelp": "Ще бъде използван ток в диапазона от 6 до 32 А.",
-      "chargerPowerCustom": "други",
-      "chargerPowerCustomHelp": "Определи специфичен токов диапазон.",
-      "chargerTypeLabel": "Вид на зарадяното",
       "chargingTitle": "Поведение",
       "circuitHelp": "Задание на управление на товара, за да бъде осигурена достатъчно мощност и ограничения на тока не са превишени.",
       "circuitInvalid": "Веригата не съществува",

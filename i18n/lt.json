@@ -442,13 +442,6 @@
         "charging": "Įkroviklis",
         "heating": "Šildytuvas"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Naudos įkrovimo srovę nuo 6 iki 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Naudos įkrovimo srovę nuo 6 iki 32 A.",
-      "chargerPowerCustom": "kiti",
-      "chargerPowerCustomHelp": "Nurodykite įkrovimo srovės ribas.",
-      "chargerTypeLabel": "Įkroviklio tipas",
       "chargingTitle": "Elgesys",
       "circuitHelp": "Apkrovos valdymo priskyrimas, siekiant užtikrinti, kad nebūtų viršytos galios ir srovės ribos.",
       "circuitInvalid": "Tokios grandinės nėra",

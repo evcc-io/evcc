@@ -442,13 +442,6 @@
         "charging": "Lādētājs",
         "heating": "Sildīšanas ierīce"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Izmantos strāvas diapazonu no 6 līdz 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Izmantos strāvas diapazonu no 6 līdz 32 A.",
-      "chargerPowerCustom": "cits",
-      "chargerPowerCustomHelp": "Definējiet pielāgotu strāvas diapazonu.",
-      "chargerTypeLabel": "Lādētāja tips",
       "chargingTitle": "Uzvedība",
       "circuitHelp": "Slodzes pārvaldības piešķīrums, lai nodrošinātu jaudas un strāvas robežu nepārsniegšanu.",
       "circuitInvalid": "Ķēde nepastāv",

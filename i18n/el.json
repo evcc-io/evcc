@@ -277,13 +277,6 @@
         "charging": "Φορτιστής",
         "heating": "Θερμαντήρας"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Θα χρησιμοποιήσει εύρος έντασης ρεύματος από 6 έως 16 Α.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Θα χρησιμοποιήσει εύρος έντασης ρεύματος από 6 έως 32 A.",
-      "chargerPowerCustom": "άλλο",
-      "chargerPowerCustomHelp": "Ορίστε ένα προσαρμοσμένο εύρος έντασης ρεύματος.",
-      "chargerTypeLabel": "Τύπος φορτιστή",
       "chargingTitle": "Συμπεριφορά",
       "circuitHelp": "Εκχώρηση διαχείρισης φορτίου για τη διασφάλιση της μη υπέρβασης των ορίων ισχύος και ρεύματος.",
       "circuitInvalid": "Το κύκλωμα δεν υπάρχει",

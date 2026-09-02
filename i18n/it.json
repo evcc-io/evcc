@@ -425,13 +425,6 @@
         "charging": "Caricabatterie",
         "heating": "Riscaldatore"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Utilizzerà un intervallo di corrente tra 6 e 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Utilizzerà un intervallo di corrente tra 6 e 32 A.",
-      "chargerPowerCustom": "altro",
-      "chargerPowerCustomHelp": "Definire un intervallo di corrente personalizzato.",
-      "chargerTypeLabel": "Tipo di caricabatterie",
       "chargingTitle": "Comportamento",
       "circuitHelp": "Assegnazione della gestione del carico per garantire che i limiti di potenza e corrente non vengano superati.",
       "circuitInvalid": "Il circuito non esiste",
