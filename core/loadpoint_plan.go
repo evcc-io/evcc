@@ -151,10 +151,11 @@ func (lp *Loadpoint) planConstraints() planConstraints {
 }
 
 // planEvaluation records one evaluation of the plan constraints: the constraints
-// it was given and the plan they produced
+// it was given, the plan they produced, and the generation it ran against
 type planEvaluation struct {
 	// constraints go in
 	constraints planConstraints
+	gen         uint64 // generation the constraints were gathered at
 
 	// plan comes out
 	plan       api.Rates
@@ -165,7 +166,10 @@ type planEvaluation struct {
 // evaluatePlan gathers the plan constraints and computes the resulting charge plan.
 // It has no side effects on loadpoint state and may run outside the control cycle.
 func (lp *Loadpoint) evaluatePlan() planEvaluation {
-	pe := planEvaluation{constraints: lp.planConstraints()}
+	// snapshot the generation before gathering, so that a change landing while we
+	// compute is not reported as included in the result
+	pe := planEvaluation{gen: lp.planGen.Load()}
+	pe.constraints = lp.planConstraints()
 
 	if !pe.constraints.connected || pe.constraints.time.IsZero() {
 		return pe
@@ -201,6 +205,9 @@ func (lp *Loadpoint) publishPlanState(pe planEvaluation) {
 	lp.publish(keys.PlanProjectedStart, pe.start)
 	lp.publish(keys.PlanProjectedEnd, pe.end)
 	lp.publish(keys.PlanOverrun, pe.overrun)
+
+	// a change that landed while computing is not reflected in this plan
+	lp.publish(keys.PlanStale, lp.planGen.Load() != pe.gen)
 }
 
 // publishPlan computes and publishes the charge plan. Unlike plannerActive it has

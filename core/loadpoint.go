@@ -164,6 +164,7 @@ type Loadpoint struct {
 	planActive       bool             // charge plan exists and has a currently active slot
 	planOverrunSent  bool             // notification has been sent already
 	planLocked       PlanLock         // locked plan
+	planGen          atomic.Uint64    // bumped by every change that may affect the plan
 
 	// cached state
 	status         api.ChargeStatus // Charger status
@@ -446,6 +447,11 @@ func (lp *Loadpoint) restoreSettings() {
 
 // requestUpdate requests site to update this loadpoint
 func (lp *Loadpoint) requestUpdate() {
+	// the published plan is computed from the pre-change constraints until the
+	// next control cycle republishes it
+	lp.planGen.Add(1)
+	lp.publish(keys.PlanStale, true)
+
 	select {
 	case lp.lpChan <- lp: // request loadpoint update
 	default:

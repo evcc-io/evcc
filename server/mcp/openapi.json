@@ -3494,6 +3494,10 @@
             "$ref": "#/components/schemas/PlanStrategy",
             "description": "Charging plan strategy."
           },
+          "planStale": {
+            "description": "A plan recomputation is pending. The published plan does not yet reflect the current constraints.",
+            "type": "boolean"
+          },
           "planProjectedEnd": {
             "description": "Projected end of the charging plan. End of the last planned slot.",
             "type": "string",
@@ -3710,6 +3714,7 @@
           "planEnergy",
           "planOverrun",
           "planStrategy",
+          "planStale",
           "planProjectedEnd",
           "planProjectedStart",
           "planTime",
