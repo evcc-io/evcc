@@ -1344,6 +1344,23 @@ func (lp *Loadpoint) resetPhaseTimer() {
 	lp.publishTimer(phaseTimer, 0, timerInactive)
 }
 
+// phaseTimerElapsed starts or continues the phase switch timer for the given action
+// and returns true once delay has elapsed. Scaling is immediate while not charging.
+func (lp *Loadpoint) phaseTimerElapsed(delay time.Duration, action string) bool {
+	if !lp.charging() { // scale immediately if not charging
+		lp.phaseTimer = elapsed
+	}
+
+	if lp.phaseTimer.IsZero() {
+		lp.log.DEBUG.Printf("start phase %s timer", action)
+		lp.phaseTimer = lp.clock.Now()
+	}
+
+	lp.publishTimer(phaseTimer, delay, action)
+
+	return lp.clock.Since(lp.phaseTimer) >= delay
+}
+
 // scalePhasesRequired validates if fixed phase configuration matches enabled phases
 func (lp *Loadpoint) scalePhasesRequired() bool {
 	return lp.hasPhaseSwitching() && lp.phasesConfigured != 0 && lp.phasesConfigured != lp.GetPhases()
@@ -1409,20 +1426,33 @@ func (lp *Loadpoint) circuitAllowsPhases(phases int, minCurrent float64) bool {
 
 // fastCharging scales to 3p if available and sets maximum current
 func (lp *Loadpoint) fastCharging() error {
-	if !lp.hasPhaseSwitching() || !lp.phaseSwitchCompleted() {
+	waiting, err := lp.fastChargingPhases()
+
+	if !waiting {
 		lp.resetPhaseTimer()
-		return lp.setLimit(lp.effectiveMaxCurrent())
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return lp.setLimit(lp.effectiveMaxCurrent())
+}
+
+// fastChargingPhases scales to 3p if load management allows and reports whether
+// it is waiting for the scale up delay to elapse
+func (lp *Loadpoint) fastChargingPhases() (bool, error) {
+	if !lp.hasPhaseSwitching() || !lp.phaseSwitchCompleted() {
+		return false, nil
 	}
 
 	if lp.circuit == nil {
-		lp.resetPhaseTimer()
-
 		// ignore api.ErrNotAvailable: the phase switch could not be performed
 		// right now, continue with the current phase configuration
 		if err := lp.scalePhasesIfAvailable(3); err != nil && !errors.Is(err, api.ErrNotAvailable) {
-			return err
+			return false, err
 		}
-		return lp.setLimit(lp.effectiveMaxCurrent())
+		return false, nil
 	}
 
 	targetPhases := 3
@@ -1444,40 +1474,25 @@ func (lp *Loadpoint) fastCharging() error {
 	// scale down: immediate
 	if targetPhases == 1 && phases == 3 {
 		if err := lp.scalePhases(1); err != nil && !errors.Is(err, api.ErrNotAvailable) {
-			return err
+			return false, err
 		}
+		return false, nil
 	}
 
 	// scale up: delayed and buffered against immediately undoing a scale down.
 	// a fixed phase configuration is not subject to load management, hence no buffer.
-	var waiting bool
 	if targetPhases == 3 && phases == 1 &&
 		(lp.phasesConfigured == 3 || lp.circuitAllowsPhases(3, phaseScaleUpBuffer*lp.effectiveMinCurrent())) {
-		if !lp.charging() { // scale immediately if not charging
-			lp.phaseTimer = elapsed
+		if !lp.phaseTimerElapsed(lp.GetEnableDelay(), phaseScale3p) {
+			return true, nil
 		}
 
-		if lp.phaseTimer.IsZero() {
-			lp.log.DEBUG.Printf("start phase %s timer", phaseScale3p)
-			lp.phaseTimer = lp.clock.Now()
-		}
-
-		lp.publishTimer(phaseTimer, lp.GetEnableDelay(), phaseScale3p)
-
-		if lp.clock.Since(lp.phaseTimer) >= lp.GetEnableDelay() {
-			if err := lp.scalePhases(3); err != nil && !errors.Is(err, api.ErrNotAvailable) {
-				return err
-			}
-		} else {
-			waiting = true
+		if err := lp.scalePhases(3); err != nil && !errors.Is(err, api.ErrNotAvailable) {
+			return false, err
 		}
 	}
 
-	if !waiting {
-		lp.resetPhaseTimer()
-	}
-
-	return lp.setLimit(lp.effectiveMaxCurrent())
+	return false, nil
 }
 
 // minCharging scales to 1p if available and sets minimum current
@@ -1535,18 +1550,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 
 	// scale down phases
 	if scalable {
-		if !lp.charging() { // scale immediately if not charging
-			lp.phaseTimer = elapsed
-		}
-
-		if lp.phaseTimer.IsZero() {
-			lp.log.DEBUG.Printf("start phase %s timer", phaseScale1p)
-			lp.phaseTimer = lp.clock.Now()
-		}
-
-		lp.publishTimer(phaseTimer, lp.GetDisableDelay(), phaseScale1p)
-
-		if elapsed := lp.clock.Since(lp.phaseTimer); elapsed >= lp.GetDisableDelay() {
+		if lp.phaseTimerElapsed(lp.GetDisableDelay(), phaseScale1p) {
 			if err := lp.scalePhases(1); err != nil {
 				// a charger may report it cannot switch phases right now
 				// (api.ErrNotAvailable); assume a failed switch and stay silent
@@ -1578,18 +1582,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 	if targetCurrent := powerToCurrent(availablePower, maxPhases); targetCurrent >= minCurrent && scalable {
 		lp.log.DEBUG.Printf("available power %.0fW > %.0fW min %dp threshold", availablePower, float64(maxPhases)*Voltage*minCurrent, maxPhases)
 
-		if !lp.charging() { // scale immediately if not charging
-			lp.phaseTimer = elapsed
-		}
-
-		if lp.phaseTimer.IsZero() {
-			lp.log.DEBUG.Printf("start phase %s timer", phaseScale3p)
-			lp.phaseTimer = lp.clock.Now()
-		}
-
-		lp.publishTimer(phaseTimer, lp.GetEnableDelay(), phaseScale3p)
-
-		if elapsed := lp.clock.Since(lp.phaseTimer); elapsed >= lp.GetEnableDelay() {
+		if lp.phaseTimerElapsed(lp.GetEnableDelay(), phaseScale3p) {
 			if err := lp.scalePhases(3); err != nil {
 				// a charger may report it cannot switch phases right now
 				// (api.ErrNotAvailable); assume a failed switch and stay silent
