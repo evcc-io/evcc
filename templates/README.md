@@ -285,7 +285,7 @@ auth:
 - `string`: for string values (default)
 - `bool`: for `true` and `false` values
 - `choice`: for a selection from predefined options (defined in `choice` property)
-- `chargemodes`: for a selection of charge modes (`Off`, `Now`, `MinPV`, `PV`), including `None` which results in the param not being set
+- `chargemodes`: for a selection of charge modes (`Off`, `Smart`, `Now`), including `None` which results in the param not being set
 - `duration`: for duration values (e.g., `5m`, `1h30m`, `10s`)
 - `float`: for floating point numbers
 - `int`: for integer values

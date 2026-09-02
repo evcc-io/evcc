@@ -412,6 +412,12 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 	})
 
 	wg.Go(func() {
+		if hasFeature(instance, api.Continuous) {
+			makeResult("continuous", true, nil)
+		}
+	})
+
+	wg.Go(func() {
 		if dev, ok := api.Cap[api.IconDescriber](instance); ok && dev.Icon() != "" {
 			makeResult("icon", dev.Icon(), nil)
 		}

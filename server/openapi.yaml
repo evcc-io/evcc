@@ -297,6 +297,27 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+  /loadpoints/{id}/alwayscharge/{alwaysCharge}:
+    post:
+      operationId: setLoadpointAlwaysCharge
+      summary: Set always charge
+      description: "Updates the always charge state. When active, smart mode charges continuously at least at minimum power. The once state resets when the vehicle is disconnected."
+      externalDocs:
+        url: https://docs.evcc.io/en/features/solar-charging
+      tags:
+        - loadpoints
+      parameters:
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/alwaysCharge"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "./openapi.state.yaml#/components/schemas/AlwaysCharge"
+        "400":
+          description: "Not supported for chargers without current control."
   /loadpoints/{id}/batteryboost/{enable}:
     post:
       operationId: setLoadpointBatteryBoost
@@ -1204,6 +1225,53 @@ paths:
                 properties:
                   mode:
                     $ref: "./openapi.state.yaml#/components/schemas/ChargeMode"
+  /vehicles/{name}/alwayscharge:
+    delete:
+      operationId: deleteVehicleAlwaysCharge
+      summary: Reset always charge
+      description: "Resets the vehicle always charge default to keep the loadpoint state."
+      externalDocs:
+        url: https://docs.evcc.io/en/features/solar-charging
+      tags:
+        - vehicles
+      parameters:
+        - $ref: "#/components/parameters/vehicleName"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alwaysCharge:
+                    anyOf:
+                      - $ref: "#/components/schemas/VehicleAlwaysCharge"
+                      - type: string
+                        enum:
+                          - ""
+  /vehicles/{name}/alwayscharge/{alwaysCharge}:
+    post:
+      operationId: setVehicleAlwaysCharge
+      summary: Set always charge
+      description: "Sets the always charge state applied when this vehicle becomes active on a loadpoint."
+      externalDocs:
+        url: https://docs.evcc.io/en/features/solar-charging
+      tags:
+        - vehicles
+      parameters:
+        - $ref: "#/components/parameters/vehicleName"
+        - $ref: "#/components/parameters/vehicleAlwaysCharge"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alwaysCharge:
+                    $ref: "#/components/schemas/VehicleAlwaysCharge"
   /vehicles/{name}/plan/repeating:
     post:
       operationId: updateVehicleRepeatingPlans
@@ -1659,6 +1727,22 @@ components:
           co2PerKWh:
             type: number
             description: Average CO₂ emissions per kWh
+    VehicleAlwaysCharge:
+      description: Always charge default applied on identification. Once is not supported for vehicles.
+      type: string
+      enum:
+        - off
+        - on
+    ChargeModeInput:
+      description: "Charging behavior. The values `pv` and `minpv` are deprecated aliases: `pv` maps to `smart`, `minpv` maps to `smart` with always charge enabled."
+      type: string
+      enum:
+        - off
+        - smart
+        - now
+        - pv
+        - minpv
+      example: smart
     Current:
       description: Electric current in A
       type: number
@@ -1870,7 +1954,13 @@ components:
       in: path
       required: true
       schema:
-        $ref: "./openapi.state.yaml#/components/schemas/ChargeMode"
+        $ref: "#/components/schemas/ChargeModeInput"
+    alwaysCharge:
+      name: alwaysCharge
+      in: path
+      required: true
+      schema:
+        $ref: "./openapi.state.yaml#/components/schemas/AlwaysCharge"
     soc:
       name: soc
       description: SOC in %
@@ -1899,6 +1989,12 @@ components:
       required: true
       schema:
         $ref: "#/components/schemas/VehicleName"
+    vehicleAlwaysCharge:
+      name: alwaysCharge
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/VehicleAlwaysCharge"
     current:
       name: current
       description: Electric current in A

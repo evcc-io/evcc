@@ -190,10 +190,19 @@ test.describe("default mode", async () => {
     await closeModal(page);
   }
 
+  async function setAlwaysCharge(page: Page, title: string, option: string) {
+    const modal = await openVehicleSettings(page);
+    await vehicleRow(modal, title)
+      .getByRole("combobox", { name: "Always charge" })
+      .selectOption(option);
+    await closeModal(page);
+  }
+
   test("apply and restart", async ({ page }) => {
     await page.goto("/");
 
     await setDefaultMode(page, "blauer e-Golf", "Fast");
+    await setAlwaysCharge(page, "grüner Honda e", "On");
     await page.waitForLoadState("networkidle");
 
     await restart(simulatorConfig());
@@ -203,6 +212,9 @@ test.describe("default mode", async () => {
     await expect(
       vehicleRow(modal, "blauer e-Golf").getByRole("combobox", { name: "Default mode" })
     ).toHaveValue("now");
+    await expect(
+      vehicleRow(modal, "grüner Honda e").getByRole("combobox", { name: "Always charge" })
+    ).toHaveValue("on");
   });
 
   test("applied on vehicle switch", async ({ page }) => {
@@ -210,7 +222,7 @@ test.describe("default mode", async () => {
     const mode = page.getByTestId("loadpoint").first().getByTestId("mode");
 
     // per-vehicle default modes
-    await setDefaultMode(page, "blauer e-Golf", "Solar");
+    await setDefaultMode(page, "blauer e-Golf", "Smart");
     await setDefaultMode(page, "grüner Honda e", "Fast");
 
     // switching vehicles applies the vehicle's default mode
@@ -218,7 +230,61 @@ test.describe("default mode", async () => {
     await expect(mode.getByRole("button", { name: "Fast" })).toHaveClass(/active/);
 
     await switchVehicle(page, "blauer e-Golf");
-    await expect(mode.getByRole("button", { name: "Solar", exact: true })).toHaveClass(/active/);
+    await expect(mode.getByRole("button", { name: "Smart", exact: true })).toHaveClass(/active/);
+  });
+
+  test("always charge applied per vehicle", async ({ page }) => {
+    await page.goto("/");
+    const mode = page.getByTestId("loadpoint").first().getByTestId("mode");
+    const alwaysChargeSwitch = page.getByTestId("always-charge-dropdown").getByRole("switch");
+
+    await setDefaultMode(page, "blauer e-Golf", "Smart");
+    await setAlwaysCharge(page, "blauer e-Golf", "On");
+    await setDefaultMode(page, "grüner Honda e", "Smart");
+    await setAlwaysCharge(page, "grüner Honda e", "Off");
+
+    await switchVehicle(page, "blauer e-Golf");
+    await expect(mode.getByRole("button", { name: "Smart", exact: true })).toHaveClass(/active/);
+    await mode.getByRole("button", { name: "Always charge" }).click();
+    await expect(alwaysChargeSwitch).toBeChecked();
+
+    // explicit off applies on switch
+    await switchVehicle(page, "grüner Honda e");
+    await expect(alwaysChargeSwitch).not.toBeChecked();
+  });
+
+  test("vehicle always charge ends with session", async ({ page }) => {
+    await page.goto("/");
+    const mode = page.getByTestId("loadpoint").first().getByTestId("mode");
+    const dropdown = page.getByTestId("always-charge-dropdown");
+    const alwaysChargeSwitch = dropdown.getByRole("switch");
+
+    await setAlwaysCharge(page, "grüner Honda e", "On");
+
+    // vehicle default applies session-scoped
+    await switchVehicle(page, "grüner Honda e");
+    await mode.getByRole("button", { name: "Always charge" }).click();
+    await expect(alwaysChargeSwitch).toBeChecked();
+    await expect(dropdown.getByRole("button", { name: "Only for this session" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+
+    // disconnect ends the session
+    await page.goto(simulatorUrl());
+    await page.getByTestId("loadpoint0").getByText("A (disconnected)").click();
+    await simulatorApply(page);
+    await page.goto("/");
+    await expect(page.getByTestId("vehicle-status")).toHaveText("Disconnected.");
+
+    // reconnected default vehicle does not inherit always charge
+    await page.goto(simulatorUrl());
+    await page.getByTestId("loadpoint0").getByText("B (connected)").click();
+    await simulatorApply(page);
+    await page.goto("/");
+    await expect(page.getByTestId("vehicle-name")).toHaveText("blauer e-Golf");
+    await mode.getByRole("button", { name: "Always charge" }).click();
+    await expect(alwaysChargeSwitch).not.toBeChecked();
   });
 });
 

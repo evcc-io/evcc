@@ -282,6 +282,13 @@ components:
         - loadpoints
         - forecast
         - vehicles
+    AlwaysCharge:
+      description: Always charge state. Smart mode charges continuously at least at minimum power.
+      type: string
+      enum:
+        - off
+        - on
+        - once
     AuthProviders:
       description: Status of configured vehicle authentication providers, keyed by provider name.
       type: object
@@ -454,9 +461,8 @@ components:
       type: string
       enum:
         - off
+        - smart
         - now
-        - minpv
-        - pv
     ChargerStatusReason:
       description: Reason why the charger is waiting.
       type: string
@@ -745,6 +751,9 @@ components:
         name:
           description: Unique loadpoint identifier used in API routes and configuration.
           type: string
+        alwaysCharge:
+          $ref: "#/components/schemas/AlwaysCharge"
+          description: Always charge state. Smart mode charges continuously at least at minimum power.
         batteryBoost:
           description: Battery boost is active. When enabled, home battery power is used for fast charging.
           type: boolean
@@ -1062,6 +1071,7 @@ components:
           description: Display-only UI settings.
       required:
         - name
+        - alwaysCharge
         - batteryBoost
         - chargeDuration
         - chargePower
@@ -1794,6 +1804,13 @@ components:
           description: Charge mode applied when the vehicle connects.
           anyOf:
             - $ref: "#/components/schemas/ChargeMode"
+            - type: string
+              enum:
+                - ""
+        alwaysCharge:
+          description: Always charge state applied when the vehicle connects.
+          anyOf:
+            - $ref: "#/components/schemas/AlwaysCharge"
             - type: string
               enum:
                 - ""

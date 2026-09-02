@@ -339,8 +339,7 @@ export default {
 			if (this.chargeModes) {
 				return [
 					{ key: "off", name: this.$t("main.mode.off") },
-					{ key: "pv", name: this.$t("main.mode.pv") },
-					{ key: "minpv", name: this.$t("main.mode.minpv") },
+					{ key: "smart", name: this.$t("main.mode.smart") },
 					{ key: "now", name: this.$t("main.mode.now") },
 				];
 			}
