@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
 
-const CONFIG = "battery-experimental.evcc.yaml";
-const SQL = "battery-experimental.sql";
+const CONFIG = "battery-multi.evcc.yaml";
+const SQL = "battery-multi.sql";
 
 test.use({ baseURL: baseUrl() });
 test.describe.configure({ mode: "parallel" });
@@ -14,10 +14,9 @@ test.afterEach(async () => {
   await stop();
 });
 
-test.describe("experimental battery page", async () => {
+test.describe("battery page with multiple batteries", async () => {
   test("status cards: combined aggregate plus one per battery", async ({ page }) => {
     await page.goto("/#/battery");
-    await expect(page.getByTestId("battery-experimental")).toBeVisible();
 
     const cards = page.getByTestId("battery-status-card");
     await expect(cards).toHaveCount(3); // combined + battery1 + battery2
@@ -102,11 +101,8 @@ test.describe("experimental battery page", async () => {
     page,
   }) => {
     await page.goto("/#/battery");
-    const card = page.getByTestId("battery-experimental");
-    await expect(card).toBeVisible();
-
     const gridDischarge = page.getByRole("switch", { name: /discharge to the grid/ });
-    const limit = card.getByTestId("battery-grid-discharge-limit");
+    const limit = page.getByTestId("battery-grid-discharge-limit");
     await expect(gridDischarge).not.toBeChecked();
     await expect(limit).not.toBeVisible();
 

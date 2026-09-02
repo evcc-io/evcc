@@ -63,28 +63,7 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Batterijniveau",
-    "bufferStart": {
-      "above": "Wanneer boven {soc}.",
-      "full": "wanneer op {soc}.",
-      "never": "enkel bij voldoende overschot."
-    },
-    "capacity": "{energy} van {total}",
-    "control": "Batterijsturing",
-    "discharge": "Voorkom ontladen bij gebruik van de snelle modus of bij gepland laden.",
-    "disclaimerHint": "Opgelet:",
-    "disclaimerText": "Deze instellingen beïnvloeden enkel de PV modus. Oplaadgedrag wordt overeenkomstig aangepast.",
     "gridChargeTab": "Netladen",
-    "legendBottomName": "Opladen van de thuisbatterij heeft prioriteit",
-    "legendBottomSubline": "tot {soc} bereikt is.",
-    "legendMiddleName": "Voertuig laden heeft prioriteit",
-    "legendMiddleSubline": "zodra de thuisbatterij {soc} bereikt heeft.",
-    "legendTopAutostart": "Start automatisch",
-    "legendTopName": "Voertuig opladen met energie uit de thuisbatterij",
-    "legendTopSubline": "zodra de thuisbatterij {soc} bereikt heeft.",
-    "legendTopSublineAbove": "wanneer {soc} bereikt is",
-    "legendTopSublineDisabled": "is {soc}.",
-    "legendTopSublineDisabledState": "Uitgeschakeld",
     "modalTitle": "Thuisbatterij",
     "noBattery": "Geen accu geconfigureerd.",
     "usageTab": "Batterijgebruik"
