@@ -107,6 +107,11 @@ Implement `pb.DeviceHostServer` and serve it over gRPC. `devicehost_test.go`
 contains a complete example host with a pv meter and a wallbox, driven through
 registration, instantiation and reading values.
 
+A host is not restricted to Go.
+[evcc-io/devicehost-python](https://github.com/evcc-io/devicehost-python) is the
+same idea in Python, exposing a meter whose power value comes from the device
+configuration.
+
 ## Limitations
 
 * Transport is insecure and unauthenticated.
