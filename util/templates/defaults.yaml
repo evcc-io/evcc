@@ -148,7 +148,7 @@ params:
       en: Lower limit as configured on the battery system. Used by optimizer.
     example: 25
     type: int
-    usages: ["battery", "vehicle"]
+    usages: ["battery"]
   - name: maxsoc
     unit: "%"
     description:
