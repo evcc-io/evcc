@@ -29,11 +29,14 @@ type Phases interface {
 	api.PhasePowers
 }
 
-// Connection is the Shelly connection
+// Connection is the Shelly connection. It aggregates one Generation per configured channel.
 type Connection struct {
-	Generation
-	gen int
+	Generation // first channel, decides the device capabilities
+	gens       []Generation
+	gen        int
 }
+
+var _ Phases = (*Connection)(nil)
 
 // SignedPower reports whether the device returns directional (signed) power.
 func (c *Connection) SignedPower() bool {
@@ -41,9 +44,21 @@ func (c *Connection) SignedPower() bool {
 }
 
 // NewConnection creates a new Shelly device connection.
-func NewConnection(uri, user, password string, channel int, cache time.Duration) (*Connection, error) {
+func NewConnection(uri, user, password string, channels []int, cache time.Duration) (*Connection, error) {
 	if uri == "" {
 		return nil, errors.New("missing uri")
+	}
+
+	if len(channels) == 0 {
+		return nil, errors.New("missing channel")
+	}
+
+	used := make(map[int]bool, len(channels))
+	for _, channel := range channels {
+		if used[channel] {
+			return nil, fmt.Errorf("duplicate channel: %d", channel)
+		}
+		used[channel] = true
 	}
 
 	for _, suffix := range []string{"/", "/rcp", "/shelly"} {
@@ -68,26 +83,130 @@ func NewConnection(uri, user, password string, channel int, cache time.Duration)
 
 	client.Transport = request.NewTripper(log, transport.Insecure())
 
-	var gen Generation
-	if resp.Gen < 2 {
-		// Shelly GEN 1 API
-		// https://shelly-api-docs.shelly.cloud/gen1/#shelly-family-overview
-		if user != "" {
+	// authentication is wrapped once, the client is shared by all channels
+	if user != "" {
+		if resp.Gen < 2 {
+			// https://shelly-api-docs.shelly.cloud/gen1/#authentication
 			log.Redact(transport.BasicAuthHeader(user, password))
-		}
-		gen = newGen1(client, uri, model, channel, user, password, cache)
-	} else {
-		// Shelly GEN 2+ API
-		// https://shelly-api-docs.shelly.cloud/gen2/
-
-		var err error
-		gen, err = newGen2(client, uri, model, channel, user, password, cache)
-		if err != nil {
-			return nil, err
+			client.Transport = transport.BasicAuth(user, password, client.Transport)
+		} else {
+			// Shelly gen 2 rfc7616 authentication
+			// https://shelly-api-docs.shelly.cloud/gen2/General/Authentication
+			client.Transport = transport.Digest(user, password, client.Transport)
 		}
 	}
 
-	conn := &Connection{Generation: gen, gen: resp.Gen}
+	gens := make([]Generation, 0, len(channels))
+	for _, channel := range channels {
+		if resp.Gen < 2 {
+			// Shelly GEN 1 API
+			// https://shelly-api-docs.shelly.cloud/gen1/#shelly-family-overview
+			gens = append(gens, newGen1(client, uri, model, channel, cache))
+			continue
+		}
+
+		// Shelly GEN 2+ API
+		// https://shelly-api-docs.shelly.cloud/gen2/
+		gen, err := newGen2(client, uri, model, channel, cache)
+		if err != nil {
+			return nil, err
+		}
+		gens = append(gens, gen)
+	}
+
+	conn := &Connection{Generation: gens[0], gens: gens, gen: resp.Gen}
 
 	return conn, nil
+}
+
+// Enabled reports whether all configured channels are switched on
+func (c *Connection) Enabled() (bool, error) {
+	for _, gen := range c.gens {
+		enabled, err := gen.Enabled()
+		if err != nil || !enabled {
+			return false, err
+		}
+	}
+	return true, nil
+}
+
+// Enable switches all configured channels
+func (c *Connection) Enable(enable bool) error {
+	for _, gen := range c.gens {
+		if err := gen.Enable(enable); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// CurrentPower implements the api.Meter interface
+func (c *Connection) CurrentPower() (float64, error) {
+	return c.sum(Generation.CurrentPower)
+}
+
+// TotalEnergy implements the api.MeterEnergy interface
+func (c *Connection) TotalEnergy() (float64, error) {
+	return c.sum(Generation.TotalEnergy)
+}
+
+// ReturnEnergy implements the api.MeterReturnEnergy interface
+func (c *Connection) ReturnEnergy() (float64, error) {
+	return c.sum(Generation.ReturnEnergy)
+}
+
+// sum accumulates a reading across all configured channels
+func (c *Connection) sum(fun func(Generation) (float64, error)) (float64, error) {
+	var total float64
+	for _, gen := range c.gens {
+		val, err := fun(gen)
+		if err != nil {
+			return 0, err
+		}
+		total += val
+	}
+	return total, nil
+}
+
+// HasPhases reports whether per-phase readings are available. A single channel uses the
+// device readings, three channels are mapped to L1..L3 in configuration order.
+func (c *Connection) HasPhases() bool {
+	_, ok := c.Generation.(Phases)
+	return ok && (len(c.gens) == 1 || len(c.gens) == 3)
+}
+
+// Currents implements the api.PhaseCurrents interface
+func (c *Connection) Currents() (float64, float64, float64, error) {
+	return c.phaseValues(Phases.Currents)
+}
+
+// Voltages implements the api.PhaseVoltages interface
+func (c *Connection) Voltages() (float64, float64, float64, error) {
+	return c.phaseValues(Phases.Voltages)
+}
+
+// Powers implements the api.PhasePowers interface
+func (c *Connection) Powers() (float64, float64, float64, error) {
+	return c.phaseValues(Phases.Powers)
+}
+
+func (c *Connection) phaseValues(fun func(Phases) (float64, float64, float64, error)) (float64, float64, float64, error) {
+	if !c.HasPhases() {
+		return 0, 0, 0, api.ErrNotAvailable
+	}
+
+	if len(c.gens) == 1 {
+		return fun(c.Generation.(Phases))
+	}
+
+	var res [3]float64
+	for i, gen := range c.gens {
+		l1, _, _, err := fun(gen.(Phases))
+		if err != nil {
+			return 0, 0, 0, err
+		}
+		res[i] = l1
+	}
+
+	return res[0], res[1], res[2], nil
 }

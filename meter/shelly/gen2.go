@@ -8,7 +8,6 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/transport"
 )
 
 // Gen2API endpoint reference: https://shelly-api-docs.shelly.cloud/gen2/
@@ -119,7 +118,7 @@ func (c *gen2) apiCall[T any](id int, method string) func() (T, error) {
 }
 
 // gen2InitApi initializes the connection to the shelly gen2+ api and sets up the cached gen2SwitchStatus, gen2EM1Status and gen2EMStatus
-func newGen2(helper *request.Helper, uri, model string, channel int, user, password string, cache time.Duration) (*gen2, error) {
+func newGen2(helper *request.Helper, uri, model string, channel int, cache time.Duration) (*gen2, error) {
 	// Shelly GEN 2+ API
 	// https://shelly-api-docs.shelly.cloud/gen2/
 	c := &gen2{
@@ -127,12 +126,6 @@ func newGen2(helper *request.Helper, uri, model string, channel int, user, passw
 		uri:           fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "http")),
 		switchchannel: channel,
 		model:         model,
-	}
-
-	// Shelly gen 2 rfc7616 authentication
-	// https://shelly-api-docs.shelly.cloud/gen2/General/Authentication
-	if user != "" {
-		c.Client.Transport = transport.Digest(user, password, c.Client.Transport)
 	}
 
 	var res Gen2Methods
