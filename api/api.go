@@ -5,13 +5,9 @@ import (
 	"time"
 
 	"golang.org/x/oauth2"
-
-	"github.com/evcc-io/evcc/api/internal"
 )
 
 //go:generate go tool mockgen -package api -destination mock.go github.com/evcc-io/evcc/api Charger,ChargeState,CurrentLimiter,PowerLimiter,CurrentGetter,PhaseSwitcher,PhaseGetter,FeatureDescriber,Identifier,Meter,MeterEnergy,MeterReturnEnergy,PhaseCurrents,Vehicle,ConnectionTimer,ChargeRater,Battery,BatteryController,BatterySocLimiter,Circuit,Dimmer,HEMS,Tariff
-
-var ContextTitle internal.ContextKey
 
 // Meter provides total active power in W
 type Meter interface {
@@ -156,9 +152,9 @@ type PhaseDescriber interface {
 type Vehicle interface {
 	Battery
 	BatteryCapacity
-	IconDescriber
 	FeatureDescriber
 	PhaseDescriber
+	TitleDescriber
 	Identifiers() []string
 	OnIdentified() ActionConfig
 }

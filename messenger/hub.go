@@ -100,7 +100,9 @@ func (h *Hub) apply(ev Event, tmpl string) (string, error) {
 
 			instance := v.Instance()
 			attr["vehicleTitle"] = instance.GetTitle()
-			attr["vehicleIcon"] = instance.Icon()
+			if dev, ok := api.Cap[api.IconDescriber](instance); ok {
+				attr["vehicleIcon"] = dev.Icon()
+			}
 			attr["vehicleCapacity"] = instance.Capacity()
 		}
 	}

@@ -50,7 +50,7 @@ func NewCardataFromConfig(ctx context.Context, other map[string]any) (api.Vehicl
 	}
 
 	v := &Cardata{
-		embed: &cc.embed,
+		embed: cc.embed.withContext(ctx),
 	}
 
 	log := util.NewLogger("cardata").Redact(cc.ClientID, cc.VIN)
