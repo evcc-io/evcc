@@ -84,10 +84,6 @@ func (c *gen1) CurrentPower() (float64, error) {
 	return power, nil
 }
 
-func (c *gen1) relay() int {
-	return c.channel
-}
-
 func (c *gen1) Enabled() (bool, error) {
 	var res Gen1SwitchResponse
 	uri := fmt.Sprintf("%s/relay/%d", c.uri, c.channel)

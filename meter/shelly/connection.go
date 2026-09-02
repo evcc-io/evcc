@@ -15,8 +15,6 @@ import (
 type Generation interface {
 	Enabled() (bool, error)
 	Enable(bool) error
-	// relay is the switch id the channel resolves to, which may differ from the configured one
-	relay() int
 	api.Meter
 	api.MeterEnergy
 	api.MeterReturnEnergy
@@ -105,31 +103,34 @@ func NewConnection(uri, user, password string, channels []int, cache time.Durati
 	}
 
 	relays := make([]Generation, 0, len(channels))
+	used := make(map[int]bool, len(channels))
+
 	for _, channel := range channels {
+		var gen Generation
+		relay := channel
+
 		if resp.Gen < 2 {
 			// Shelly GEN 1 API
 			// https://shelly-api-docs.shelly.cloud/gen1/#shelly-family-overview
-			relays = append(relays, newGen1(client, uri, model, channel, cache))
-			continue
+			gen = newGen1(client, uri, model, channel, cache)
+		} else {
+			// Shelly GEN 2+ API
+			// https://shelly-api-docs.shelly.cloud/gen2/
+			g, err := newGen2(client, uri, model, channel, cache)
+			if err != nil {
+				return nil, err
+			}
+
+			// the Pro output add-on remaps every channel to the same relay
+			gen, relay = g, g.switchchannel
 		}
 
-		// Shelly GEN 2+ API
-		// https://shelly-api-docs.shelly.cloud/gen2/
-		gen, err := newGen2(client, uri, model, channel, cache)
-		if err != nil {
-			return nil, err
+		if used[relay] {
+			return nil, fmt.Errorf("duplicate channel: %d", relay)
 		}
+		used[relay] = true
+
 		relays = append(relays, gen)
-	}
-
-	// channels are compared after construction- the Pro output add-on can remap
-	// multiple configured channels onto the same relay
-	used := make(map[int]bool, len(relays))
-	for _, gen := range relays {
-		if used[gen.relay()] {
-			return nil, fmt.Errorf("duplicate channel: %d", gen.relay())
-		}
-		used[gen.relay()] = true
 	}
 
 	conn := &Connection{relays: relays, gen: resp.Gen}
