@@ -19,6 +19,7 @@ import {
 	filterForecastSlots,
 	minSlotIndex,
 	maxSlotIndex,
+	lineDefaults,
 } from "./echarts";
 import colors, { lighterColor } from "@/colors";
 import formatter from "@/mixins/formatter";
@@ -158,7 +159,7 @@ export default defineComponent({
 				data: slots.map((s) => ({
 					value: [clampStart(s.start, this.startDate), s.value],
 				})),
-				lineStyle: { color, width: 2 },
+				lineStyle: { color, ...lineDefaults },
 				areaStyle: {
 					color: new echarts.graphic.LinearGradient(
 						0,

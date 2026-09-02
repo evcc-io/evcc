@@ -15,6 +15,7 @@ import {
 	forecastYAxis,
 	tooltipStyle,
 	tooltipTable,
+	lineDefaults,
 } from "../Forecast/echarts";
 import colors, { dimColor } from "@/colors";
 import formatter from "@/mixins/formatter";
@@ -119,7 +120,7 @@ export default defineComponent({
 						z: 3,
 						data: this.socSeries,
 						showSymbol: false,
-						lineStyle: { color: this.entry.color, width: 2 },
+						lineStyle: { color: this.entry.color, ...lineDefaults },
 						itemStyle: { color: this.entry.color },
 						areaStyle: { color: dimColor(this.entry.color) },
 						emphasis: { disabled: true },

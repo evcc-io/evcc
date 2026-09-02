@@ -79,6 +79,23 @@ export function markPointLabel(
   };
 }
 
+export const lineDefaults = { width: 2, cap: "round", join: "round" } as const;
+
+// wider box-colored twin drawn beneath a line so it stays readable over bars
+export function lineCasing(line: Record<string, unknown>, z: number): Record<string, unknown> {
+  return {
+    ...line,
+    id: line["id"] ? `${line["id"]}-casing` : undefined,
+    name: `${line["name"]}-casing`,
+    z,
+    silent: true,
+    symbol: "none",
+    emphasis: { disabled: true },
+    lineStyle: { ...lineDefaults, color: colors.box || "", width: lineDefaults.width + 2 },
+    itemStyle: { color: colors.box || "" },
+  };
+}
+
 export function tooltipStyle(
   color: string,
   getChart?: () => { convertToPixel: echarts.ECharts["convertToPixel"] } | null

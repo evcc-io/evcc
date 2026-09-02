@@ -11,6 +11,7 @@ import {
 	tooltipStyle,
 	tooltipTable,
 	type TooltipRow,
+	lineDefaults,
 } from "../Forecast/echarts";
 import colors, { dimColor, setAlpha, batteryColor } from "@/colors";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
@@ -102,7 +103,7 @@ export default defineComponent({
 						z: 3,
 						data: this.socHistory(b),
 						showSymbol: false,
-						lineStyle: { color: c, width: 3 },
+						lineStyle: { color: c, ...lineDefaults },
 						itemStyle: { color: c },
 						...(this.single ? { areaStyle: { color: dimColor(c) } } : {}),
 						emphasis: { disabled: true },
@@ -113,7 +114,7 @@ export default defineComponent({
 						z: 3,
 						data: this.socForecast(b),
 						showSymbol: false,
-						lineStyle: { color: c, width: 2, type: "dotted" },
+						lineStyle: { color: c, type: "dotted", ...lineDefaults },
 						itemStyle: { color: c },
 						...(this.single ? { areaStyle: { color: hatchPattern(c) } } : {}),
 						emphasis: { disabled: true },
@@ -131,7 +132,7 @@ export default defineComponent({
 						data: this.energyData(b, "hist"),
 						showSymbol: false,
 						smooth: 0.4,
-						lineStyle: { color: c, width: 3 },
+						lineStyle: { color: c, ...lineDefaults },
 						itemStyle: { color: c },
 						areaStyle: { color: setAlpha(c, "60") },
 						emphasis: { disabled: true },
@@ -144,7 +145,7 @@ export default defineComponent({
 						data: this.energyData(b, "fc"),
 						showSymbol: false,
 						smooth: 0.4,
-						lineStyle: { color: c, width: 2, type: "dotted" },
+						lineStyle: { color: c, type: "dotted", ...lineDefaults },
 						itemStyle: { color: c },
 						areaStyle: { color: hatchPattern(c) },
 						emphasis: { disabled: true },
