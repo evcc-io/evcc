@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
 
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/devicehost/proto/pb"
@@ -48,8 +49,18 @@ func newDevice(ctx context.Context, class templates.Class, other map[string]any)
 	return &device{host: h, id: res.GetId(), caps: res.GetCapabilities()}, nil
 }
 
-// call invokes a capability method, decoding the reply into the ret pointers
-func (d *device) call(capability, method string, args []any, ret ...any) error {
+// capability returns the wire name of an api interface, e.g. "api.Meter"
+func capability[T any]() string {
+	return reflect.TypeFor[T]().String()
+}
+
+// call invokes a method of the api interface T on the device
+func call[T any](d *device, method string, args []any, ret ...any) error {
+	return d.invoke(capability[T](), method, args, ret...)
+}
+
+// invoke calls a capability method, decoding the reply into the ret pointers
+func (d *device) invoke(capability, method string, args []any, ret ...any) error {
 	encoded := make([][]byte, 0, len(args))
 	for _, arg := range args {
 		b, err := json.Marshal(arg)

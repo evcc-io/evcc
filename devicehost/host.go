@@ -118,8 +118,8 @@ func (h *Host) unregister() {
 	clear(h.registered)
 }
 
-// TemplateName returns the evcc template name of a host device type
-func TemplateName(host, typ string) string {
+// templateName returns the evcc template name of a host device type
+func templateName(host, typ string) string {
 	return host + "-" + typ
 }
 
@@ -140,7 +140,7 @@ func (h *Host) template(typ *pb.DeviceType) templates.Template {
 	}
 
 	return templates.Template{
-		Template: TemplateName(h.name, typ.GetType()),
+		Template: templateName(h.name, typ.GetType()),
 		Params:   params,
 		Render:   strings.Join(render, "\n") + "\n",
 	}

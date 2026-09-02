@@ -28,20 +28,20 @@ func Charger(ctx context.Context, other map[string]any) (api.Charger, error) {
 
 func (c *charger) Status() (api.ChargeStatus, error) {
 	var status api.ChargeStatus
-	err := c.call("api.ChargeState", "Status", nil, &status)
+	err := call[api.ChargeState](c.device, "Status", nil, &status)
 	return status, err
 }
 
 func (c *charger) Enabled() (bool, error) {
 	var enabled bool
-	err := c.call("api.Charger", "Enabled", nil, &enabled)
+	err := call[api.Charger](c.device, "Enabled", nil, &enabled)
 	return enabled, err
 }
 
 func (c *charger) Enable(enable bool) error {
-	return c.call("api.Charger", "Enable", []any{enable})
+	return call[api.Charger](c.device, "Enable", []any{enable})
 }
 
 func (c *charger) MaxCurrent(current int64) error {
-	return c.call("api.CurrentController", "MaxCurrent", []any{current})
+	return call[api.CurrentController](c.device, "MaxCurrent", []any{current})
 }

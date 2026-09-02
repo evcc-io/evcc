@@ -11,14 +11,14 @@ import (
 var capTable = map[string]func(*device, implement.Caps){
 {{- range .Types}}
 {{- $t := .Type}}
-	"api.{{$t}}": func(d *device, c implement.Caps) {
+	capability[api.{{$t}}](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.{{$t}}(
 		{{- range .Functions}}
 			func({{range .Params}}{{.VarName}} {{.Signature}}, {{end}}) {{.ReturnTypes}} {
 				{{- range .Results}}
 				var {{.VarName}} {{.Signature}}
 				{{- end}}
-				{{if .HasError}}err :={{else}}_ ={{end}} d.call("api.{{$t}}", "{{.Function}}", []any{ {{range .Params}}{{.VarName}},{{end}} }{{range .Results}}, &{{.VarName}}{{end}})
+				{{if .HasError}}err :={{else}}_ ={{end}} call[api.{{$t}}](d, "{{.Function}}", []any{ {{range .Params}}{{.VarName}},{{end}} }{{range .Results}}, &{{.VarName}}{{end}})
 				return {{.ReturnExpr}}
 			},
 		{{- end}}

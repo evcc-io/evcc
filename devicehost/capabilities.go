@@ -11,317 +11,317 @@ import (
 
 // capTable decorates a device with the capabilities its host reports
 var capTable = map[string]func(*device, implement.Caps){
-	"api.Battery": func(d *device, c implement.Caps) {
+	capability[api.Battery](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.Battery(
 			func() (float64, error) {
 				var r0 float64
-				err := d.call("api.Battery", "Soc", []any{}, &r0)
+				err := call[api.Battery](d, "Soc", []any{}, &r0)
 				return r0, err
 			},
 		))
 	},
-	"api.BatteryCapacity": func(d *device, c implement.Caps) {
+	capability[api.BatteryCapacity](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.BatteryCapacity(
 			func() float64 {
 				var r0 float64
-				_ = d.call("api.BatteryCapacity", "Capacity", []any{}, &r0)
+				_ = call[api.BatteryCapacity](d, "Capacity", []any{}, &r0)
 				return r0
 			},
 		))
 	},
-	"api.BatteryController": func(d *device, c implement.Caps) {
+	capability[api.BatteryController](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.BatteryController(
 			func() []api.BatteryMode {
 				var r0 []api.BatteryMode
-				_ = d.call("api.BatteryController", "BatteryModes", []any{}, &r0)
+				_ = call[api.BatteryController](d, "BatteryModes", []any{}, &r0)
 				return r0
 			},
 			func(p0 api.BatteryMode) error {
-				err := d.call("api.BatteryController", "SetBatteryMode", []any{p0})
+				err := call[api.BatteryController](d, "SetBatteryMode", []any{p0})
 				return err
 			},
 		))
 	},
-	"api.BatteryPowerLimiter": func(d *device, c implement.Caps) {
+	capability[api.BatteryPowerLimiter](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.BatteryPowerLimiter(
 			func() (float64, float64) {
 				var r0 float64
 				var r1 float64
-				_ = d.call("api.BatteryPowerLimiter", "GetPowerLimits", []any{}, &r0, &r1)
+				_ = call[api.BatteryPowerLimiter](d, "GetPowerLimits", []any{}, &r0, &r1)
 				return r0, r1
 			},
 		))
 	},
-	"api.BatterySocLimiter": func(d *device, c implement.Caps) {
+	capability[api.BatterySocLimiter](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.BatterySocLimiter(
 			func() (float64, float64) {
 				var r0 float64
 				var r1 float64
-				_ = d.call("api.BatterySocLimiter", "GetSocLimits", []any{}, &r0, &r1)
+				_ = call[api.BatterySocLimiter](d, "GetSocLimits", []any{}, &r0, &r1)
 				return r0, r1
 			},
 		))
 	},
-	"api.ChargeController": func(d *device, c implement.Caps) {
+	capability[api.ChargeController](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.ChargeController(
 			func(p0 bool) error {
-				err := d.call("api.ChargeController", "ChargeEnable", []any{p0})
+				err := call[api.ChargeController](d, "ChargeEnable", []any{p0})
 				return err
 			},
 		))
 	},
-	"api.ChargeRater": func(d *device, c implement.Caps) {
+	capability[api.ChargeRater](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.ChargeRater(
 			func() (float64, error) {
 				var r0 float64
-				err := d.call("api.ChargeRater", "ChargedEnergy", []any{}, &r0)
+				err := call[api.ChargeRater](d, "ChargedEnergy", []any{}, &r0)
 				return r0, err
 			},
 		))
 	},
-	"api.ChargerEx": func(d *device, c implement.Caps) {
+	capability[api.ChargerEx](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.ChargerEx(
 			func(p0 float64) error {
-				err := d.call("api.ChargerEx", "MaxCurrentMillis", []any{p0})
+				err := call[api.ChargerEx](d, "MaxCurrentMillis", []any{p0})
 				return err
 			},
 		))
 	},
-	"api.ChargeState": func(d *device, c implement.Caps) {
+	capability[api.ChargeState](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.ChargeState(
 			func() (api.ChargeStatus, error) {
 				var r0 api.ChargeStatus
-				err := d.call("api.ChargeState", "Status", []any{}, &r0)
+				err := call[api.ChargeState](d, "Status", []any{}, &r0)
 				return r0, err
 			},
 		))
 	},
-	"api.CurrentController": func(d *device, c implement.Caps) {
+	capability[api.CurrentController](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.CurrentController(
 			func(p0 int64) error {
-				err := d.call("api.CurrentController", "MaxCurrent", []any{p0})
+				err := call[api.CurrentController](d, "MaxCurrent", []any{p0})
 				return err
 			},
 		))
 	},
-	"api.CurrentGetter": func(d *device, c implement.Caps) {
+	capability[api.CurrentGetter](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.CurrentGetter(
 			func() (float64, error) {
 				var r0 float64
-				err := d.call("api.CurrentGetter", "GetMaxCurrent", []any{}, &r0)
+				err := call[api.CurrentGetter](d, "GetMaxCurrent", []any{}, &r0)
 				return r0, err
 			},
 		))
 	},
-	"api.CurrentLimiter": func(d *device, c implement.Caps) {
+	capability[api.CurrentLimiter](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.CurrentLimiter(
 			func() (float64, float64, error) {
 				var r0 float64
 				var r1 float64
-				err := d.call("api.CurrentLimiter", "GetMinMaxCurrent", []any{}, &r0, &r1)
+				err := call[api.CurrentLimiter](d, "GetMinMaxCurrent", []any{}, &r0, &r1)
 				return r0, r1, err
 			},
 		))
 	},
-	"api.Curtailer": func(d *device, c implement.Caps) {
+	capability[api.Curtailer](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.Curtailer(
 			func() (int, error) {
 				var r0 int
-				err := d.call("api.Curtailer", "CurtailedPercent", []any{}, &r0)
+				err := call[api.Curtailer](d, "CurtailedPercent", []any{}, &r0)
 				return r0, err
 			},
 			func(p0 int) error {
-				err := d.call("api.Curtailer", "SetCurtailPercent", []any{p0})
+				err := call[api.Curtailer](d, "SetCurtailPercent", []any{p0})
 				return err
 			},
 		))
 	},
-	"api.Dimmer": func(d *device, c implement.Caps) {
+	capability[api.Dimmer](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.Dimmer(
 			func(p0 bool) error {
-				err := d.call("api.Dimmer", "Dim", []any{p0})
+				err := call[api.Dimmer](d, "Dim", []any{p0})
 				return err
 			},
 			func() (bool, error) {
 				var r0 bool
-				err := d.call("api.Dimmer", "Dimmed", []any{}, &r0)
+				err := call[api.Dimmer](d, "Dimmed", []any{}, &r0)
 				return r0, err
 			},
 		))
 	},
-	"api.Identifier": func(d *device, c implement.Caps) {
+	capability[api.Identifier](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.Identifier(
 			func() ([]string, error) {
 				var r0 []string
-				err := d.call("api.Identifier", "Identify", []any{}, &r0)
+				err := call[api.Identifier](d, "Identify", []any{}, &r0)
 				return r0, err
 			},
 		))
 	},
-	"api.MaxACPowerGetter": func(d *device, c implement.Caps) {
+	capability[api.MaxACPowerGetter](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.MaxACPowerGetter(
 			func() float64 {
 				var r0 float64
-				_ = d.call("api.MaxACPowerGetter", "MaxACPower", []any{}, &r0)
+				_ = call[api.MaxACPowerGetter](d, "MaxACPower", []any{}, &r0)
 				return r0
 			},
 		))
 	},
-	"api.Meter": func(d *device, c implement.Caps) {
+	capability[api.Meter](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.Meter(
 			func() (float64, error) {
 				var r0 float64
-				err := d.call("api.Meter", "CurrentPower", []any{}, &r0)
+				err := call[api.Meter](d, "CurrentPower", []any{}, &r0)
 				return r0, err
 			},
 		))
 	},
-	"api.MeterEnergy": func(d *device, c implement.Caps) {
+	capability[api.MeterEnergy](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.MeterEnergy(
 			func() (float64, error) {
 				var r0 float64
-				err := d.call("api.MeterEnergy", "TotalEnergy", []any{}, &r0)
+				err := call[api.MeterEnergy](d, "TotalEnergy", []any{}, &r0)
 				return r0, err
 			},
 		))
 	},
-	"api.MeterReturnEnergy": func(d *device, c implement.Caps) {
+	capability[api.MeterReturnEnergy](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.MeterReturnEnergy(
 			func() (float64, error) {
 				var r0 float64
-				err := d.call("api.MeterReturnEnergy", "ReturnEnergy", []any{}, &r0)
+				err := call[api.MeterReturnEnergy](d, "ReturnEnergy", []any{}, &r0)
 				return r0, err
 			},
 		))
 	},
-	"api.PhaseCurrents": func(d *device, c implement.Caps) {
+	capability[api.PhaseCurrents](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.PhaseCurrents(
 			func() (float64, float64, float64, error) {
 				var r0 float64
 				var r1 float64
 				var r2 float64
-				err := d.call("api.PhaseCurrents", "Currents", []any{}, &r0, &r1, &r2)
+				err := call[api.PhaseCurrents](d, "Currents", []any{}, &r0, &r1, &r2)
 				return r0, r1, r2, err
 			},
 		))
 	},
-	"api.PhaseGetter": func(d *device, c implement.Caps) {
+	capability[api.PhaseGetter](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.PhaseGetter(
 			func() (int, error) {
 				var r0 int
-				err := d.call("api.PhaseGetter", "GetPhases", []any{}, &r0)
+				err := call[api.PhaseGetter](d, "GetPhases", []any{}, &r0)
 				return r0, err
 			},
 		))
 	},
-	"api.PhasePowers": func(d *device, c implement.Caps) {
+	capability[api.PhasePowers](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.PhasePowers(
 			func() (float64, float64, float64, error) {
 				var r0 float64
 				var r1 float64
 				var r2 float64
-				err := d.call("api.PhasePowers", "Powers", []any{}, &r0, &r1, &r2)
+				err := call[api.PhasePowers](d, "Powers", []any{}, &r0, &r1, &r2)
 				return r0, r1, r2, err
 			},
 		))
 	},
-	"api.PhaseSwitcher": func(d *device, c implement.Caps) {
+	capability[api.PhaseSwitcher](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.PhaseSwitcher(
 			func(p0 int) error {
-				err := d.call("api.PhaseSwitcher", "Phases1p3p", []any{p0})
+				err := call[api.PhaseSwitcher](d, "Phases1p3p", []any{p0})
 				return err
 			},
 		))
 	},
-	"api.PhaseVoltages": func(d *device, c implement.Caps) {
+	capability[api.PhaseVoltages](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.PhaseVoltages(
 			func() (float64, float64, float64, error) {
 				var r0 float64
 				var r1 float64
 				var r2 float64
-				err := d.call("api.PhaseVoltages", "Voltages", []any{}, &r0, &r1, &r2)
+				err := call[api.PhaseVoltages](d, "Voltages", []any{}, &r0, &r1, &r2)
 				return r0, r1, r2, err
 			},
 		))
 	},
-	"api.PowerLimiter": func(d *device, c implement.Caps) {
+	capability[api.PowerLimiter](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.PowerLimiter(
 			func() (float64, float64, error) {
 				var r0 float64
 				var r1 float64
-				err := d.call("api.PowerLimiter", "GetMinMaxPower", []any{}, &r0, &r1)
+				err := call[api.PowerLimiter](d, "GetMinMaxPower", []any{}, &r0, &r1)
 				return r0, r1, err
 			},
 		))
 	},
-	"api.Resurrector": func(d *device, c implement.Caps) {
+	capability[api.Resurrector](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.Resurrector(
 			func() error {
-				err := d.call("api.Resurrector", "WakeUp", []any{})
+				err := call[api.Resurrector](d, "WakeUp", []any{})
 				return err
 			},
 		))
 	},
-	"api.SocLimiter": func(d *device, c implement.Caps) {
+	capability[api.SocLimiter](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.SocLimiter(
 			func() (int64, error) {
 				var r0 int64
-				err := d.call("api.SocLimiter", "GetLimitSoc", []any{}, &r0)
+				err := call[api.SocLimiter](d, "GetLimitSoc", []any{}, &r0)
 				return r0, err
 			},
 		))
 	},
-	"api.StatusReasoner": func(d *device, c implement.Caps) {
+	capability[api.StatusReasoner](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.StatusReasoner(
 			func() (api.Reason, error) {
 				var r0 api.Reason
-				err := d.call("api.StatusReasoner", "StatusReason", []any{}, &r0)
+				err := call[api.StatusReasoner](d, "StatusReason", []any{}, &r0)
 				return r0, err
 			},
 		))
 	},
-	"api.VehicleClimater": func(d *device, c implement.Caps) {
+	capability[api.VehicleClimater](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.VehicleClimater(
 			func() (bool, error) {
 				var r0 bool
-				err := d.call("api.VehicleClimater", "Climater", []any{}, &r0)
+				err := call[api.VehicleClimater](d, "Climater", []any{}, &r0)
 				return r0, err
 			},
 		))
 	},
-	"api.VehicleFinishTimer": func(d *device, c implement.Caps) {
+	capability[api.VehicleFinishTimer](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.VehicleFinishTimer(
 			func() (time.Time, error) {
 				var r0 time.Time
-				err := d.call("api.VehicleFinishTimer", "FinishTime", []any{}, &r0)
+				err := call[api.VehicleFinishTimer](d, "FinishTime", []any{}, &r0)
 				return r0, err
 			},
 		))
 	},
-	"api.VehicleOdometer": func(d *device, c implement.Caps) {
+	capability[api.VehicleOdometer](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.VehicleOdometer(
 			func() (float64, error) {
 				var r0 float64
-				err := d.call("api.VehicleOdometer", "Odometer", []any{}, &r0)
+				err := call[api.VehicleOdometer](d, "Odometer", []any{}, &r0)
 				return r0, err
 			},
 		))
 	},
-	"api.VehiclePosition": func(d *device, c implement.Caps) {
+	capability[api.VehiclePosition](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.VehiclePosition(
 			func() (float64, float64, error) {
 				var r0 float64
 				var r1 float64
-				err := d.call("api.VehiclePosition", "Position", []any{}, &r0, &r1)
+				err := call[api.VehiclePosition](d, "Position", []any{}, &r0, &r1)
 				return r0, r1, err
 			},
 		))
 	},
-	"api.VehicleRange": func(d *device, c implement.Caps) {
+	capability[api.VehicleRange](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.VehicleRange(
 			func() (int64, error) {
 				var r0 int64
-				err := d.call("api.VehicleRange", "Range", []any{}, &r0)
+				err := call[api.VehicleRange](d, "Range", []any{}, &r0)
 				return r0, err
 			},
 		))
