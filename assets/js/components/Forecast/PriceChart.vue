@@ -19,6 +19,7 @@ import {
 	filterForecastSlots,
 	minSlotIndex,
 	maxSlotIndex,
+	hoverDot,
 	lineDefaults,
 } from "./echarts";
 import colors, { lighterColor } from "@/colors";
@@ -99,7 +100,7 @@ export default defineComponent({
 				tooltip: {
 					trigger: "axis",
 					axisPointer: { type: "line", snap: true, lineStyle: { color: "transparent" } },
-					...tooltipStyle(priceColor, () => this.chart),
+					...tooltipStyle(priceColor),
 					formatter(params: { value: [string, number]; seriesIndex: number }[]) {
 						const p = params[0];
 						if (!p) return "";
@@ -155,7 +156,7 @@ export default defineComponent({
 				type: "line",
 				step: "start",
 				cursor: "default",
-				showSymbol: false,
+				...hoverDot(color),
 				data: slots.map((s) => ({
 					value: [clampStart(s.start, this.startDate), s.value],
 				})),
@@ -173,8 +174,6 @@ export default defineComponent({
 						]
 					),
 				},
-				itemStyle: { color },
-				emphasis: { disabled: true },
 				...(points
 					? {
 							markPoint: markPointLabel(
