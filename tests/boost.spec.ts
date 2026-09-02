@@ -97,7 +97,9 @@ test.describe("boost", async () => {
 
     // enable "Prevent discharge in fast mode"
     await page.goto("/#/battery");
-    await page.getByLabel("Prevent discharge in fast mode and planned charging.").check();
+    await page
+      .getByLabel("Prevent home battery discharge in fast mode and during planned charging.")
+      .check();
     await page.waitForLoadState("networkidle");
     await page.goto("/");
 

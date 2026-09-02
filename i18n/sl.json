@@ -20,25 +20,7 @@
     "title": "Stanje avtorizacije"
   },
   "batterySettings": {
-    "batteryLevel": "Raven baterije",
-    "bufferStart": {
-      "above": "ko je nad {soc}.",
-      "full": "ko je na {soc}.",
-      "never": "samo z dovolj presežka."
-    },
-    "capacity": "{energy} od {total}",
-    "control": "Nadzor baterije",
-    "discharge": "Preprečite praznjenje v hitrem načinu in načrtovano polnjenje.",
-    "disclaimerHint": "Opomba:",
-    "disclaimerText": "Te nastavitve vplivajo samo na solarni način. Obnašanje pri polnjenju je ustrezno prilagojeno.",
     "gridChargeTab": "Polnjenje iz omrežja",
-    "legendBottomName": "Prednostno polnjenje domače baterije",
-    "legendBottomSubline": "dokler ne doseže {soc}.",
-    "legendMiddleName": "Prioritetno polnjenje vozil",
-    "legendMiddleSubline": "ko je domača baterija nad {soc}.",
-    "legendTopAutostart": "Samodejni zagon",
-    "legendTopName": "Polnjenje vozila, ki ga podpira baterija",
-    "legendTopSubline": "ko je domača baterija nad {soc}.",
     "modalTitle": "Domača baterija",
     "usageTab": "Poraba baterije"
   },

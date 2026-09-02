@@ -63,29 +63,8 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Ladestand der Batterie",
-    "bufferStart": {
-      "above": "wenn über {soc}.",
-      "full": "wenn auf {soc}.",
-      "never": "nur mit genug PV-Überschuss."
-    },
-    "capacity": "{energy} von {total}",
-    "control": "Batteriesteuerung",
-    "discharge": "Verhindere Entladung im Schnell-Modus und bei geplantem Laden.",
-    "disclaimerHint": "Hinweis:",
-    "disclaimerText": "Nur relevant im Smart-Modus. Das Ladeverhalten wird entsprechend angepasst.",
     "gridChargeTab": "Netzladen",
     "gridDischargeTab": "Netzentladen",
-    "legendBottomName": "Priorisiere die Hausbatterie",
-    "legendBottomSubline": "bis sie {soc} erreicht hat.",
-    "legendMiddleName": "Priorisiere Fahrzeugladen,",
-    "legendMiddleSubline": "wenn Hausbatterie über {soc} ist.",
-    "legendTopAutostart": "Starte automatisch",
-    "legendTopName": "Batterieunterstütztes Fahrzeugladen",
-    "legendTopSubline": "wenn Hausbatterie über {soc} ist.",
-    "legendTopSublineAbove": "wenn über {soc}",
-    "legendTopSublineDisabled": "ist {soc}.",
-    "legendTopSublineDisabledState": "deaktiviert",
     "modalTitle": "Hausbatterie",
     "noBattery": "Keine Batterien konfiguriert.",
     "usageTab": "Batterienutzung"

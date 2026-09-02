@@ -1,7 +1,7 @@
 interval: 0.1s
 
 site:
-  title: Battery Experimental
+  title: Battery Multi
   meters:
     grid: grid
     pv: pv
