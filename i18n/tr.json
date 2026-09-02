@@ -27,12 +27,22 @@
       "gridCharge": "şebekeden şarj",
       "hold": "bataryadan kullanım kapalı",
       "holdCharge": "şarj olma kilitli",
+      "ofTotal": "{total}'ın",
       "power": "Güç",
       "soc": "Batarya seviyesi"
     },
     "combined": "Birleşik",
     "config": {
+      "buffer": "{soc} değerinin üzerindeki ev batarya enerjisi, doldurma noktalarını desteklemek için kullanılabilir ve güneş enerjisi modunda kapanmayı geciktirebilir. Güneş enerjisiyle doldurmayı otomatik olarak başlat {start}.",
+      "bufferNone": "Doldurma noktaları için ev bataryasından enerji kullanılmamaktadır. Desteği etkinleştirmek için {soc} değerinden daha düşük bir değer ayarla.",
+      "bufferStart": {
+        "above": "batarya doluluk seviyesi {soc} oranının üzerine çıktığında",
+        "full": "batarya dolduğunda",
+        "never": "sadece yeterli fazlalık olduğunda"
+      },
+      "bufferTitle": "Batarya doldurma tamponu olarak",
       "gridDischarge": "Ev tipi bataryanın şebekeye deşarj olmasına izin verin.",
+      "priority": "Ev bataryası {soc} seviyesinin altında olduğunda öncelikli olarak doldurulur. Ardından, doldurma noktalarına fazlalık aktarılır.",
       "priorityNone": "Güneş enerjisi fazlası doğrudan şarj noktalarına aktarılır. Ev bataryasına öncelik vermek için {soc} değerinin üzerinde bir ayar yapın.",
       "priorityTitle": "Fazla akım ilk nereye gitsin?"
     },
@@ -40,8 +50,15 @@
       "action": {
         "charge": "Şebekeden şarj",
         "discharge": "Şebekeye deşarj",
-        "hold": "Pil kullanımını önle"
-      }
+        "hold": "Pil kullanımını önle",
+        "holdcharge": "Doldurmayı engelle",
+        "normal": "Normal çalışma"
+      },
+      "empty": "boş",
+      "full": "dolu",
+      "highest": "En yüksek ({value})",
+      "lowest": "En düşük ({value})",
+      "suggestion": "Öneri"
     }
   },
   "batterySettings": {
@@ -76,6 +93,11 @@
     "hex": "Onaltılık renk"
   },
   "config": {
+    "adminPassword": {
+      "description": "Komut dosyası eklentisi, evcc işleminin izniyle çalışan bir sistem düzeyinde komut yürütür. Devam etmek için yönetici şifrenizi tekrar girin.",
+      "invalid": "Şifre geçersiz. Lütfen tekrar dene.",
+      "title": "Olası tehlikeli işlem"
+    },
     "apiKey": {
       "description": "Komut dosyalarına ve zamanlanmış yedeklemeler gibi otomasyon görevlerine, yönetici şifreni paylaşmadan, güvenli erişim sağla.",
       "exampleLabel": "Dene: curl ile bir yedekleme dosyası indir",
@@ -97,6 +119,7 @@
       "titleEdit": "Kendi Kendini Düzenleyen Tüketiciyi Düzenle"
     },
     "battery": {
+      "title": "Batarya",
       "titleAdd": "Batarya Ekle",
       "titleEdit": "Bataryayı Düzenle"
     },
@@ -122,16 +145,16 @@
       "template": "Üretici",
       "titleAdd": {
         "charging": "Doldurma Cihazı Ekle",
-        "heating": "Isıtıcı Ekle"
+        "heating": "Isıtma Cihazı Ekle"
       },
       "titleEdit": {
         "charging": "Doldurma Cihazını Düzenle",
-        "heating": "Isıtıcıyı Düzenle"
+        "heating": "Isıtma Cihazını Düzenle"
       },
       "type": {
         "custom": {
           "charging": "Kullanıcı tanımlı doldurma cihazı",
-          "heating": "Kullanıcı tanımlı ısıtıcı"
+          "heating": "Kullanıcı tanımlı ısıtma cihazı"
         },
         "heatpump": "Kullanıcı tanımlı ısı pompası",
         "sgready": "Kullanıcı tanımlı ısı pompası (sg-ready eklentiler üzerinden)",
@@ -144,6 +167,11 @@
       "description": "Bir devreye bağlı tüm yük noktalarının toplamının, yapılandırılan güç ve akım limitlerini aşmamasını sağlar. Devreler, bir hiyerarşi oluşturacak şekilde iç içe yerleştirilebilir.",
       "title": "Yük yönetimi",
       "usableMeters": "Kullanılabilir sayaç referansları"
+    },
+    "consumer": {
+      "description": "Daha küçük, yönetilemeyen cihazları (buzdolabı, çamaşır makinesi, ...) takip eder. Evindeki tüketim hakkında daha iyi bir genel bakış sağlar.",
+      "titleAdd": "Tüketici Sayacı Ekle",
+      "titleEdit": "Tüketici Sayacını Düzenle"
     },
     "control": {
       "description": "Genellikle varsayılan değerler iyidir. Bunları yalnızca ne yaptığını biliyorsan değiştir.",
@@ -159,9 +187,19 @@
       "label": "Para birimi",
       "title": "Para birimi"
     },
+    "curtailer": {
+      "description": "Şebeke işletmecisinin talebi üzerine şebekeye beslemeyi sınırlayan cihaz (§ 9 EEG). Birçok güneş enerjisi eviricisi, GES sayacı yapılandırması aracılığıyla bunu doğrudan destekler. Ayrı bir yapılandırma yalnızca bazı üreticiler veya çoklu evirici sistemleri için gereklidir.",
+      "generic": "Genel birleşimler",
+      "specific": "Özel birleşimler",
+      "template": "Üretici",
+      "title": "Şebekeye satış kısıtlaması",
+      "titleAdd": "Kısıtlama Cihazı Ekle",
+      "titleEdit": "Kısıtlama Cihazını Düzenle"
+    },
     "deviceValue": {
       "activeClients": "Etkin müşteriler",
       "amount": "Miktar",
+      "asleep": "uyuyor",
       "broker": "Aracı",
       "bucket": "Kova",
       "capacity": "Kapasite",
@@ -182,13 +220,14 @@
       "currentRange": "Akım",
       "curtailLimit": "Şebekeye satış sınırı",
       "curtailable": "Kısıtlanabilir",
-      "curtailed": "Satış sınırlı",
+      "curtailed": "Şebekeye satış sınırı",
       "detected": "Algılandı",
       "dimLimit": "Tüketim sınırı",
       "dimmed": "Tüketim sınırlı",
       "enabled": "Etkin",
       "energy": "Enerji",
       "events": "Etkinlikler",
+      "exportLimit": "Şebekeye satış sınırı",
       "feedinPrice": "Satış fiyatı",
       "forecast": "Tahmin",
       "gridPrice": "Alım fiyatı",
@@ -200,6 +239,7 @@
       "no": "hayır",
       "odometer": "Kilometre Sayacı",
       "org": "Organizasyon",
+      "outdoorTemp": "Dış hava sıcaklığı",
       "phaseCurrents": "Faz Akımı",
       "phasePowers": "Faz Gücü",
       "phaseVoltages": "Faz Voltajı",
@@ -209,10 +249,12 @@
       "price": "Fiyat",
       "productionLimited": "Üretim sınırlı",
       "range": "Menzil",
+      "remoteEnabled": "Etkinleştirildi",
       "returnEnergy": "Enerji (ters)",
       "singlePhase": "“Tek aşamalı”",
       "soc": "Doluluk",
       "solarForecast": "Güneş tahmini",
+      "switchDevice": "Akım yönetimi",
       "temp": "Isı",
       "topic": "Konu",
       "url": "URL",
@@ -239,13 +281,19 @@
         "public": "Açık sertifika",
         "title": "Sertifikalar"
       },
+      "configuredDevices": "Yapılandırılmış cihazlar",
       "description": "EVCC'nin doldurma cihazları veya şebeke operatörünüzün kontrol ünitesi gibi EEBus uyumlu cihazlarla iletişim kurmasını sağlayan yapılandırma. İlgili tüm başlatma ve sertifika oluşturma işlemleri ilk başlatmada otomatik olarak gerçekleştirilir.",
       "descriptionAdvanced": "Değişiklik yapmaya gerek yok. Yalnızca ne yaptığını gerçekten biliyorsan değişiklik yap. SHIP kimliğini veya sertifikaları değiştirirsen, cihazlarını yeniden eşleştirmen gerekir.",
       "interfaces": "Arayüzler",
       "interfacesHelp": "İletişim sorunlarını önlemek için EEBus'un kullanacağı ağ arayüzlerini sınırla. Tüm arayüzleri kullanmak için alanı boş bırak. Her satıra bir giriş yap.",
+      "noConfiguredDevices": "SKI tarafından yapılandırılmış cihaz yok.",
+      "noPairings": "Eşleştirilmiş cihaz yok.",
+      "pairings": "Eşleştirilmiş cihazlar",
       "port": "Port",
       "portHelp": "Kullanılacak port.",
+      "qr": "Eşleştirme kodu",
       "removeConfirm": "Tüm EEBus yapılandırmaları kaldırılacak. Bir sonraki başlatmada yeni sertifikalar ve tanımlayıcılar oluşturulacak. Emin misin?",
+      "removePairing": "Eşleştirmeyi kaldır",
       "shipid": "SHIP-ID",
       "shipidExplain": "EEBus ağında tanımlama için kalıcı cihaz tanımlayıcı.",
       "shipidHelp": "Bu SHIP-ID, aşağıdaki sertifikalarla bağlantılı.",
@@ -259,12 +307,13 @@
     },
     "ext": {
       "description": "Kontrol edilemeyen tüketicilerin (örneğin buzdolabı, çamaşır makinesi vb.) enerji değerlerini istatistiksel amaçlarla kaydeder. Bu sayaçlar yük yönetimi (örneğin alt dağıtım) için de kullanılabilir.",
-      "titleAdd": "Tüketici Sayacı Ekle",
-      "titleEdit": "Tüketici Sayacını Düzenle"
+      "titleAdd": "Ek Sayaç Ekle",
+      "titleEdit": "Ek Sayacı Düzenle"
     },
     "form": {
       "danger": "Dikkat",
       "deprecated": "“kullanımdan kaldırıldı”",
+      "durationUnit": "{label} için zaman birimi",
       "example": "Örnek",
       "optional": "isteğe bağlı"
     },
@@ -277,17 +326,21 @@
       "change": "Değiştir",
       "clear": "Temizle",
       "close": "Kapat",
+      "confirmEnable": "Bu cihaz tekrar etkinleştirilsin mi?",
       "confirmSave": "Kaydedilmemiş değişiklikler var. Şimdi kaydedilsin mi?",
       "copied": "Kopyalandı!",
       "copy": "Kopyala",
       "customHelp": "evcc'nin eklenti sistemini kullanarak kullanıcı tanımlı bir cihaz oluştur.",
       "customOption": "Kullanıcı tanımlı cihaz",
       "delete": "“Sil”",
+      "disable": "Devre dışı bırak",
+      "disabled": "Devre dışı",
       "dismiss": "Kapat",
       "docsLink": "Belgelere bak.",
       "dragHandle": "Sürükleme kolu",
       "dragItem": "Sürüklenebilir: {title}",
       "dragList": "Yeniden sıralanabilir liste",
+      "enable": "Etkinleştir",
       "error": "Hata",
       "experimental": "Deneysel",
       "forceSave": "Yine de kaydet",
@@ -1263,7 +1316,7 @@
         "label": "Asgari Akım"
       },
       "phasesConfigured": {
-        "label": "Fazlar",
+        "label": "Aşamalar",
         "no1p3pSupport": "Doldurma cihazınız nasıl bağlı?",
         "phases_0": "otomatik geçiş",
         "phases_1": "1 aşamalı",
