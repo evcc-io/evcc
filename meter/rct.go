@@ -179,6 +179,9 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 			implement.Has(m, implement.BatteryCapacity(func() float64 { return capacity + capacity2 }))
 		}
 
+		// the modes the setter implements
+		rctBatteryModes := implement.BatteryModes(api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge)
+
 		batteryMode := func(mode api.BatteryMode) error {
 			if mode != api.BatteryNormal {
 				batStatus, err := m.queryInt32(rct.BatteryStatus2)
@@ -275,15 +278,10 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 			return eg.Wait()
 		}
 
-		implement.Has(m, implement.BatteryController(m.getBatteryModes, batteryMode))
+		implement.Has(m, implement.BatteryController(rctBatteryModes, batteryMode))
 	}
 
 	return m, nil
-}
-
-// getBatteryModes are the modes the batteryMode setter implements
-func (m *RCT) getBatteryModes() []api.BatteryMode {
-	return []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge}
 }
 
 // CurrentPower implements the api.Meter interface
