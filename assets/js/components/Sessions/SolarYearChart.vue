@@ -17,6 +17,7 @@ import {
 	tooltipStyle,
 	tooltipTable,
 	type TooltipRow,
+	lineDefaults,
 } from "./echarts";
 import echartsChart from "@/mixins/echartsChart";
 import formatter from "@/mixins/formatter";
@@ -199,7 +200,7 @@ export default defineComponent({
 						data: datasets.map((dataset) => ({
 							name: dataset.label,
 							value: dataset.data,
-							lineStyle: { color: dataset.borderColor, width: 4 },
+							lineStyle: { color: dataset.borderColor, ...lineDefaults },
 							itemStyle: { color: dataset.borderColor },
 							areaStyle:
 								singleYear && dataset.borderColor

@@ -33,7 +33,7 @@
     },
     "combined": "Gesamt",
     "config": {
-      "buffer": "Hausspeicherenergie oberhalb von {soc} darf für die Unterstützung der Ladepunkte genutzt werden und zögert die Abschaltung im PV-Modus hinaus. PV-Ladung automatisch starten {start}.",
+      "buffer": "Hausspeicherenergie oberhalb von {soc} darf für die Unterstützung der Ladepunkte genutzt werden und zögert die Abschaltung im Smart-Modus hinaus. PV-Ladung automatisch starten {start}.",
       "bufferNone": "Hausspeicherenergie wird nicht für die Ladepunkte genutzt. Setze einen Wert unter {soc}, um die Unterstützung zu aktivieren.",
       "bufferStart": {
         "above": "ab einem Speicherstand von {soc}",
@@ -63,28 +63,8 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Ladestand der Batterie",
-    "bufferStart": {
-      "above": "wenn über {soc}.",
-      "full": "wenn auf {soc}.",
-      "never": "nur mit genug PV-Überschuss."
-    },
-    "capacity": "{energy} von {total}",
-    "control": "Batteriesteuerung",
-    "discharge": "Verhindere Entladung im Schnell-Modus und bei geplantem Laden.",
-    "disclaimerHint": "Hinweis:",
-    "disclaimerText": "Nur relevant im PV-Modus. Das Ladeverhalten wird entsprechend angepasst.",
     "gridChargeTab": "Netzladen",
-    "legendBottomName": "Priorisiere die Hausbatterie",
-    "legendBottomSubline": "bis sie {soc} erreicht hat.",
-    "legendMiddleName": "Priorisiere Fahrzeugladen,",
-    "legendMiddleSubline": "wenn Hausbatterie über {soc} ist.",
-    "legendTopAutostart": "Starte automatisch",
-    "legendTopName": "Batterieunterstütztes Fahrzeugladen",
-    "legendTopSubline": "wenn Hausbatterie über {soc} ist.",
-    "legendTopSublineAbove": "wenn über {soc}",
-    "legendTopSublineDisabled": "ist {soc}.",
-    "legendTopSublineDisabledState": "deaktiviert",
+    "gridDischargeTab": "Netzentladen",
     "modalTitle": "Hausbatterie",
     "noBattery": "Keine Batterien konfiguriert.",
     "usageTab": "Batterienutzung"
@@ -210,7 +190,7 @@
       "chargeStatusC": "lädt",
       "chargeStatusE": "Keine Leistung",
       "chargeStatusF": "Fehler",
-      "chargedEnergy": "Geladen",
+      "chargedEnergy": "Geladen (Session)",
       "co2": "Netz-CO₂",
       "configured": "Konfiguriert",
       "connected": "Verbunden",
@@ -259,6 +239,31 @@
       "temp": "Temperatur",
       "topic": "Thema",
       "url": "URL",
+      "usage": {
+        "aux": {
+          "energy": "Verbraucht",
+          "returnEnergy": "Erzeugt"
+        },
+        "battery": {
+          "energy": "Entladen",
+          "returnEnergy": "Geladen"
+        },
+        "charge": {
+          "energy": "Geladen",
+          "returnEnergy": "Entladen"
+        },
+        "consumer": {
+          "energy": "Verbraucht",
+          "returnEnergy": "Erzeugt"
+        },
+        "grid": {
+          "energy": "Bezogen",
+          "returnEnergy": "Eingespeist"
+        },
+        "pv": {
+          "energy": "Erzeugt"
+        }
+      },
       "vehicleLimitSoc": "Ladelimit",
       "yes": "Ja"
     },
@@ -442,13 +447,6 @@
         "charging": "Wallbox",
         "heating": "Heizgerät"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Verwendet einen Strombereich von 6 bis 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Verwendet einen Strombereich von 6 bis 32 A.",
-      "chargerPowerCustom": "andere",
-      "chargerPowerCustomHelp": "Definiere einen eigenen Strombereich.",
-      "chargerTypeLabel": "Ladetyp",
       "chargingTitle": "Verhalten",
       "circuitHelp": "Lastmanagement-Zuordnung, um die Leistungs- und Stromgrenzen nicht zu überschreiten.",
       "circuitInvalid": "Stromkreis existiert nicht",
@@ -462,6 +460,10 @@
       "creating": {
         "charging": "Wallbox gespeichert. Ladepunkt wird erstellt …",
         "heating": "Heizgerät gespeichert. Heizung wird erstellt …"
+      },
+      "currentRangeHelp": {
+        "charging": "Typisch: 6-16 A bei 11 kW, 6-32 A bei 22 kW Wallboxen (3-phasig).",
+        "heating": "Abhängig von der Nennleistung des Heizgeräts (siehe Datenblatt)."
       },
       "defaultModeHelp": {
         "charging": "Lademodus beim Anschließen des Fahrzeugs.",
@@ -1311,6 +1313,15 @@
     "title": "Authentifizierung"
   },
   "main": {
+    "alwaysCharge": {
+      "description": "keine Unterbrechungen",
+      "label": "Dauerhaft laden",
+      "labelHeating": "Dauerhaft heizen",
+      "minCurrent": "min. {current}",
+      "once": "bis Ladeende",
+      "onceTip": "Nur für diese Ladung",
+      "permanent": "bleibt dauerhaft an"
+    },
     "chargingPlan": {
       "active": "Aktiv",
       "addRepeatingPlan": "Wiederholenden Plan hinzufügen",
@@ -1448,7 +1459,7 @@
         "descriptionDisabled": "Limit wählen, um Schnellladen aus der Hausbatterie zu erlauben.",
         "disabled": "Deaktiviert",
         "label": "Batterie Boost",
-        "mode": "Nur im PV- und Min+PV-Modus verfügbar.",
+        "mode": "Nur im Smart-Modus verfügbar.",
         "once": "Boost ist für diesen Ladevorgang aktiviert.",
         "stateActive": "Batterie Boost aktiv",
         "stateBelowLimit": "Batterie zu niedrig für Boost",
@@ -1466,7 +1477,7 @@
         "label": "Min. Ladestrom"
       },
       "minTemp": {
-        "description": "Unter {0} wird im PV-Modus auch mit Batterie- und Netzstrom geheizt, um diese Temperatur zu halten.",
+        "description": "Unter {0} wird im Smart-Modus auch mit Batterie- und Netzstrom geheizt, um diese Temperatur zu halten.",
         "label": "Min. Temperatur"
       },
       "phasesConfigured": {
@@ -1484,11 +1495,12 @@
       "vehicle": "Fahrzeug"
     },
     "mode": {
-      "minpv": "Min+PV",
+      "boost": "Boost",
+      "normal": "Normal",
       "now": "Schnell",
       "off": "Aus",
-      "pv": "PV",
-      "smart": "Intelligent"
+      "on": "An",
+      "smart": "Smart"
     },
     "provider": {
       "login": "anmelden",
@@ -1506,7 +1518,7 @@
       "inactiveLabel": "Zielzeit",
       "nextPlan": "Nächster Plan",
       "notReachableInTime": "Zielzeit wird {overrun} später erreicht.",
-      "onlyInPvMode": "Ladeplanung ist nur im PV-Modus aktiv.",
+      "onlyInSmartMode": "Ladeplanung ist nur im Smart-Modus aktiv.",
       "planDuration": "Ladedauer",
       "planPeriodLabel": "Zeitraum",
       "planPeriodValue": "{start} bis {end}",
@@ -1801,7 +1813,7 @@
     "co2Label": "CO₂-Emission",
     "co2Limit": "CO₂-Grenze",
     "enable": "Grenze aktivieren",
-    "loadpointDescription": "Aktiviert vorübergehendes Schnellladen im PV-Modus.",
+    "loadpointDescription": "Aktiviert vorübergehendes Schnellladen im Smart-Modus.",
     "modalTitle": "Smartes Netzladen",
     "none": "keine",
     "priceLabel": "Energiepreis",
@@ -1811,7 +1823,8 @@
     "saved": "Gespeichert."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Pausierte Zeit",
+    "activeHoursLabel": "Aktive Zeit",
+    "batteryDescription": "Entlädt die Hausbatterie ins Netz, wenn der Einspeisetarif hoch ist.",
     "description": "Pausiert den Ladevorgang bei hohen Preisen, um der profitablen Netzeinspeisung Vorrang zu geben.",
     "priceLabel": "Einspeisetarif",
     "priceLimit": "Einspeisegrenze",

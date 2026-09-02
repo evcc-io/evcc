@@ -227,9 +227,6 @@ render: |
               address: 6000 # Battery Mode (holding)
               type: writemultiple
               encoding: uint16
-    default:
-      source: error
-      error: ErrNotAvailable
   {{- include "battery-minmaxsoc" . }}
   {{- include "battery-power" . }}
   {{- end }}

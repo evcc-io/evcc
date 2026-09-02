@@ -14,6 +14,8 @@ import {
 	forecastGrid,
 	forecastXAxes,
 	forecastYAxis,
+	hoverDot,
+	lineDefaults,
 } from "./echarts";
 import colors, { lighterColor } from "@/colors";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
@@ -82,7 +84,7 @@ export default defineComponent({
 						snapThreshold: 50,
 						lineStyle: { color: "transparent" },
 					},
-					...tooltipStyle(selfColor, () => this.chart),
+					...tooltipStyle(selfColor),
 					formatter: (params: { value: [string, number] }[]) => {
 						const p = params[0];
 						if (!p) return "";
@@ -113,18 +115,9 @@ export default defineComponent({
 						type: "line",
 						data,
 						smooth: true,
-						symbol: "circle",
-						symbolSize: 6,
-						showSymbol: false,
-						lineStyle: { color: selfColor, width: 3 },
+						...hoverDot(selfColor),
+						lineStyle: { color: selfColor, ...lineDefaults },
 						areaStyle: { color: lighterColor(selfColor) },
-						emphasis: {
-							disabled: false,
-							scale: false,
-							lineStyle: { color: selfColor, width: 3 },
-							areaStyle: { color: lighterColor(selfColor) },
-							itemStyle: { color: selfColor, borderColor: selfColor, borderWidth: 2 },
-						},
 						markPoint: markPointLabel(
 							selfColor,
 							this.tooltipVisible ? [] : this.markPoints,

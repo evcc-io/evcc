@@ -63,28 +63,7 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Stav nabitia batérie",
-    "bufferStart": {
-      "above": "ak je nad {soc}.",
-      "full": "ak je {soc}.",
-      "never": "len s dostatočným prebytkom."
-    },
-    "capacity": "{energy} z {total}",
-    "control": "Ovládanie batérie",
-    "discharge": "Zabrániť vybitiu v rýchlom režime a plánovanom nabíjaní.",
-    "disclaimerHint": "Poznámka:",
-    "disclaimerText": "Tieto nastavenia ovplyvňujú iba solárny režim. Správa nabíjania je tomu prispôsoboná.",
     "gridChargeTab": "Nabíjanie zo siete",
-    "legendBottomName": "Uprednostniť nabíjanie domácej batérie",
-    "legendBottomSubline": "pokiaľ nedosiahne {soc}.",
-    "legendMiddleName": "Uprednostniť nabíjanie auta",
-    "legendMiddleSubline": "keď je domáca batéria nad {soc}.",
-    "legendTopAutostart": "Začať automaticky",
-    "legendTopName": "Batériou podporované nabíjanie auta",
-    "legendTopSubline": "keď je domáca batéria nad {soc}.",
-    "legendTopSublineAbove": "keď nad {soc}",
-    "legendTopSublineDisabled": "je {soc}.",
-    "legendTopSublineDisabledState": "vypnúť",
     "modalTitle": "Domáca batéria",
     "noBattery": "Žiadne baterky nakonfigurované.",
     "usageTab": "Využitie batérie"
@@ -432,13 +411,6 @@
         "charging": "Nabíjačka",
         "heating": "Ohrievač"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Bude používať rozsah prúdu od 6 do 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Bude používať rozsah prúdu od 6 do 32 A.",
-      "chargerPowerCustom": "iné",
-      "chargerPowerCustomHelp": "Definujte vlastný rozsah prúdu.",
-      "chargerTypeLabel": "Typ nabíjačky",
       "chargingTitle": "Správanie",
       "circuitHelp": "Priradenie riadenia záťaže, aby sa zabezpečilo, že nebudú prekročené limity výkonu a prúdu.",
       "circuitInvalid": "Obvod neexistuje",
