@@ -489,9 +489,9 @@ func TestEEBusMinMaxCommunicationStandard(t *testing.T) {
 	}
 }
 
-// some devices (e.g. Porsche PMCC) only briefly report the identification before
-// the loadpoint detects the vehicle as connected (#33457). The last known-good
-// identification must survive a subsequent empty read and only be cleared on
+// some devices (e.g. Porsche PMCC) report the identification only briefly during the
+// connection handshake and withdraw it again before the loadpoint ever polls it
+// (#33457). The value must be captured from the update event and survive until
 // physical disconnect.
 func TestEEBusIdentifyCachesLastKnownIdentification(t *testing.T) {
 	evccMock := mocks.NewCemEVCCInterface(t)
@@ -505,19 +505,25 @@ func TestEEBusIdentifyCachesLastKnownIdentification(t *testing.T) {
 		log: util.NewLogger("test"),
 	}
 
-	// device briefly reports the identification
-	evccMock.EXPECT().EVConnected(evEntity).Return(true).Once()
-	evccMock.EXPECT().Identifications(evEntity).Return([]ucapi.IdentificationItem{{Value: "MAC-001"}}, nil).Once()
+	// identification as currently reported by the device
+	var reported []ucapi.IdentificationItem
 
+	evccMock.EXPECT().EVConnected(evEntity).Return(true)
+	evccMock.EXPECT().Identifications(evEntity).
+		RunAndReturn(func(spineapi.EntityRemoteInterface) ([]ucapi.IdentificationItem, error) {
+			return reported, nil
+		})
+
+	// device reports the identification once, only via the update event
+	reported = []ucapi.IdentificationItem{{Value: "MAC-001"}}
+	eb.UseCaseEvent(nil, evEntity, evccuc.DataUpdateIdentifications)
+
+	// the following empty update must not discard the cached value
+	reported = nil
+	eb.UseCaseEvent(nil, evEntity, evccuc.DataUpdateIdentifications)
+
+	// the loadpoint only polls once the identification is already gone
 	ids, err := eb.Identify()
-	require.NoError(t, err)
-	assert.Equal(t, []string{"MAC-001"}, ids)
-
-	// device later reports an empty identification during the connection handshake
-	evccMock.EXPECT().EVConnected(evEntity).Return(true).Once()
-	evccMock.EXPECT().Identifications(evEntity).Return(nil, nil).Once()
-
-	ids, err = eb.Identify()
 	require.NoError(t, err)
 	assert.Equal(t, []string{"MAC-001"}, ids)
 

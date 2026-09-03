@@ -163,6 +163,12 @@ func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spine
 		c.ev = nil
 		c.identification = nil
 
+	case evcc.DataUpdateIdentifications:
+		// the identification may be withdrawn again before the loadpoint polls it
+		if ids := c.identifications(entity); len(ids) > 0 {
+			c.identification = ids
+		}
+
 	case evcem.DataUpdateCurrentPerPhase:
 		// acknowledge limit change
 		c.limitUpdated = time.Time{}
@@ -523,19 +529,14 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 
 var _ api.Identifier = (*EEBus)(nil)
 
-// Identify implements the api.Identifier interface
-func (c *EEBus) Identify() ([]string, error) {
-	evEntity, ok := c.isEvConnected()
-	if !ok {
-		return nil, nil
-	}
-
-	identification, err := c.cem.EvCC.Identifications(evEntity)
+// identifications returns the entity's non-empty identification values.
+// There may be multiple, e.g. MAC address and PCID.
+func (c *EEBus) identifications(entity spineapi.EntityRemoteInterface) []string {
+	identification, err := c.cem.EvCC.Identifications(entity)
 	if err != nil {
-		return nil, nil
+		return nil
 	}
 
-	// may be multiple, e.g. MAC address and PCID
 	var res []string
 	for _, i := range identification {
 		if i.Value != "" {
@@ -543,12 +544,23 @@ func (c *EEBus) Identify() ([]string, error) {
 		}
 	}
 
+	return res
+}
+
+// Identify implements the api.Identifier interface
+func (c *EEBus) Identify() ([]string, error) {
+	evEntity, ok := c.isEvConnected()
+	if !ok {
+		return nil, nil
+	}
+
+	res := c.identifications(evEntity)
+
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	// some devices (e.g. Porsche PMCC) only briefly report the identification
-	// before the loadpoint detects the vehicle as connected - keep using the
-	// last known-good value until a physical disconnect is detected
+	// some devices (e.g. Porsche PMCC) only report the identification briefly during
+	// the connection handshake, so fall back to the value cached from the update event
 	if len(res) == 0 {
 		return c.identification, nil
 	}
