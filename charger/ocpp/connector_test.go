@@ -263,29 +263,61 @@ func (suite *connTestSuite) TestOnStatusNotificationKeepsTxnOnIgnoredAvailable()
 	suite.Equal("active", suite.conn.idTag, "idTag must survive ignored Available")
 }
 
-// TestOnMeterValuesDuplicateContextPrefersLiveReading ensures that when a
-// charger reports the same measurand twice in one MeterValues message (e.g.
-// a live Sample.Periodic value alongside the static Transaction.Begin
-// snapshot, as observed on the Growatt THOR), the live reading wins
-// regardless of array order instead of being overwritten by the snapshot.
-func (suite *connTestSuite) TestOnMeterValuesDuplicateContextPrefersLiveReading() {
-	suite.conn.meterUpdated = suite.clock.Now()
-
+// meterValues feeds the given samples as a single MeterValues message
+func (suite *connTestSuite) meterValues(samples ...types.SampledValue) {
 	_, err := suite.conn.OnMeterValues(&core.MeterValuesRequest{
 		ConnectorId: 1,
 		MeterValue: []types.MeterValue{{
-			Timestamp: types.NewDateTime(suite.clock.Now()),
-			SampledValue: []types.SampledValue{
-				{Value: "241010", Context: types.ReadingContextSamplePeriodic, Measurand: types.MeasurandEnergyActiveImportRegister, Unit: types.UnitOfMeasureWh},
-				{Value: "240970", Context: types.ReadingContextTransactionBegin, Measurand: types.MeasurandEnergyActiveImportRegister, Unit: types.UnitOfMeasureWh},
-			},
+			Timestamp:    types.NewDateTime(suite.clock.Now()),
+			SampledValue: samples,
 		}},
 	})
 	suite.NoError(err)
+}
+
+func energySample(value string, ctx types.ReadingContext) types.SampledValue {
+	return types.SampledValue{
+		Value:     value,
+		Context:   ctx,
+		Measurand: types.MeasurandEnergyActiveImportRegister,
+		Unit:      types.UnitOfMeasureWh,
+	}
+}
+
+// Some chargers (e.g. Growatt THOR) report the same measurand twice in a single
+// MeterValues message: the live Sample.Periodic value next to a static
+// Transaction.Begin snapshot that never changes. The live reading must win,
+// regardless of the order the samples appear in.
+func (suite *connTestSuite) TestOnMeterValuesBoundaryContextLast() {
+	suite.meterValues(
+		energySample("241010", types.ReadingContextSamplePeriodic),
+		energySample("240970", types.ReadingContextTransactionBegin),
+	)
 
 	res, err := suite.conn.TotalEnergy()
 	suite.NoError(err, "TotalEnergy")
-	suite.Equal(241.010, res, "TotalEnergy must keep the live Sample.Periodic reading, not the Transaction.Begin snapshot")
+	suite.Equal(241.010, res, "live reading must not be shadowed by the boundary snapshot")
+}
+
+func (suite *connTestSuite) TestOnMeterValuesBoundaryContextFirst() {
+	suite.meterValues(
+		energySample("240970", types.ReadingContextTransactionBegin),
+		energySample("241010", types.ReadingContextSamplePeriodic),
+	)
+
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err, "TotalEnergy")
+	suite.Equal(241.010, res, "live reading must not be shadowed by the boundary snapshot")
+}
+
+// chargers reporting the transaction's start value only as Transaction.Begin
+// must keep it as there is no live reading to prefer over it
+func (suite *connTestSuite) TestOnMeterValuesBoundaryContextOnly() {
+	suite.meterValues(energySample("240970", types.ReadingContextTransactionBegin))
+
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err, "TotalEnergy")
+	suite.Equal(240.970, res, "boundary snapshot must be applied when no live reading is present")
 }
 
 func (suite *connTestSuite) TestOnStopTransactionResetsReportedPower() {
