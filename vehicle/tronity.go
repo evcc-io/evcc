@@ -47,11 +47,11 @@ type Tronity struct {
 }
 
 func init() {
-	registry.Add("tronity", NewTronityFromConfig)
+	registry.AddCtx("tronity", NewTronityFromConfig)
 }
 
 // NewTronityFromConfig creates a new vehicle
-func NewTronityFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewTronityFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed       `mapstructure:",squash"`
 		Credentials oauth.ClientCredentials
@@ -84,7 +84,7 @@ func NewTronityFromConfig(other map[string]any) (api.Vehicle, error) {
 
 	v := &Tronity{
 		log:    log,
-		embed:  &cc.embed,
+		embed:  cc.embed.withContext(ctx),
 		Helper: request.NewHelper(log),
 		Caps:   implement.New(),
 		oc:     oc,

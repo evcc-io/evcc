@@ -915,7 +915,7 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 	detail := batteryDetail{
 		Type:         batteryTypeBattery,
 		Name:         dev.Config().Name,
-		Title:        deviceProperties(dev).Title,
+		Title:        config.DeviceProperties(dev).Title,
 		Capacity:     *b.Capacity,
 		controllable: controllable,
 	}

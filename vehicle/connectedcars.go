@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -15,11 +16,11 @@ type ConnectedCars struct {
 }
 
 func init() {
-	registry.Add("connected-cars", NewConnectedCarsFromConfig)
+	registry.AddCtx("connected-cars", NewConnectedCarsFromConfig)
 }
 
 // NewConnectedCarsFromConfig creates a new vehicle
-func NewConnectedCarsFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewConnectedCarsFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed       `mapstructure:",squash"`
 		DeviceToken string
@@ -56,7 +57,7 @@ func NewConnectedCarsFromConfig(other map[string]any) (api.Vehicle, error) {
 	}
 
 	v := &ConnectedCars{
-		embed: &cc.embed,
+		embed: cc.embed.withContext(ctx),
 		dataG: util.Cached(func() (connectedcars.VehicleData, error) {
 			return api.Data(vehicle.ID)
 		}, cc.Cache),

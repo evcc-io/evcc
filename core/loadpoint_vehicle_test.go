@@ -19,7 +19,6 @@ import (
 func expectVehiclePublish(vehicle *api.MockVehicle) {
 	vehicle.EXPECT().GetTitle().Return("target").AnyTimes()
 	vehicle.EXPECT().Capacity().AnyTimes()
-	vehicle.EXPECT().Icon().AnyTimes()
 	vehicle.EXPECT().Features().AnyTimes()
 	vehicle.EXPECT().Phases().AnyTimes()
 	vehicle.EXPECT().OnIdentified().AnyTimes()
@@ -290,7 +289,6 @@ func TestDefaultVehicle(t *testing.T) {
 
 	dflt := api.NewMockVehicle(ctrl)
 	dflt.EXPECT().GetTitle().Return("default").AnyTimes()
-	dflt.EXPECT().Icon().Return("").AnyTimes()
 	dflt.EXPECT().Capacity().AnyTimes()
 	dflt.EXPECT().Phases().AnyTimes()
 	dflt.EXPECT().OnIdentified().Return(api.ActionConfig{
@@ -300,7 +298,6 @@ func TestDefaultVehicle(t *testing.T) {
 
 	vehicle := api.NewMockVehicle(ctrl)
 	vehicle.EXPECT().GetTitle().Return("target").AnyTimes()
-	vehicle.EXPECT().Icon().Return("").AnyTimes()
 	vehicle.EXPECT().Capacity().AnyTimes()
 	vehicle.EXPECT().Phases().AnyTimes()
 	vehicle.EXPECT().OnIdentified().AnyTimes()
@@ -392,7 +389,6 @@ func TestReidentifyActiveVehicleKeepsMode(t *testing.T) {
 
 	vehicle := api.NewMockVehicle(ctrl)
 	vehicle.EXPECT().GetTitle().Return("target").AnyTimes()
-	vehicle.EXPECT().Icon().Return("").AnyTimes()
 	vehicle.EXPECT().Capacity().AnyTimes()
 	vehicle.EXPECT().Phases().AnyTimes()
 	vehicle.EXPECT().Identifiers().Return([]string{"rfid-1"}).AnyTimes()
@@ -427,7 +423,6 @@ func TestReassignActiveVehicleKeepsSoc(t *testing.T) {
 
 	vehicle := api.NewMockVehicle(ctrl)
 	vehicle.EXPECT().GetTitle().Return("target").AnyTimes()
-	vehicle.EXPECT().Icon().Return("").AnyTimes()
 	vehicle.EXPECT().Capacity().AnyTimes()
 	vehicle.EXPECT().Phases().AnyTimes()
 	vehicle.EXPECT().OnIdentified().AnyTimes()
@@ -457,7 +452,6 @@ func TestActiveVehicleChangeTriggersOptimizer(t *testing.T) {
 
 	vehicle := api.NewMockVehicle(ctrl)
 	vehicle.EXPECT().GetTitle().Return("target").AnyTimes()
-	vehicle.EXPECT().Icon().Return("").AnyTimes()
 	vehicle.EXPECT().Capacity().AnyTimes()
 	vehicle.EXPECT().Phases().AnyTimes()
 	vehicle.EXPECT().OnIdentified().AnyTimes()

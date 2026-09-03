@@ -1,12 +1,10 @@
 package core
 
 import (
-	"cmp"
 	"fmt"
 	"slices"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util/config"
 )
 
 var (
@@ -53,19 +51,6 @@ func ptrValueEqual[T comparable](a, b *T) bool {
 func hasFeature(a any, f api.Feature) bool {
 	c, ok := api.Cap[api.FeatureDescriber](a)
 	return ok && slices.Contains(c.Features(), f)
-}
-
-// deviceProperties returns the common device data for the given reference
-func deviceProperties[T any](dev config.Device[T]) config.Properties {
-	if d, ok := dev.(config.ConfigurableDevice[T]); ok {
-		return d.Properties()
-	}
-	return config.Properties{}
-}
-
-// deviceTitleOrName returns device title or name
-func deviceTitleOrName[T any](dev config.Device[T]) string {
-	return cmp.Or(deviceProperties(dev).Title, dev.Config().Name)
 }
 
 // circuitMaxPower returns a circuits power limit
