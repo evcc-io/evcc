@@ -493,11 +493,11 @@ func TestEEBusMinMaxCommunicationStandard(t *testing.T) {
 // connection handshake and withdraw it again before the loadpoint ever polls it
 // (#33457). The value must be captured from the update event and survive until
 // physical disconnect.
-func TestEEBusIdentifyCachesLastKnownIdentification(t *testing.T) {
+func TestEEBusIdentify(t *testing.T) {
 	evccMock := mocks.NewCemEVCCInterface(t)
 	evEntity := spinemocks.NewEntityRemoteInterface(t)
 
-	eb := &EEBus{
+	eebus := &EEBus{
 		cem: &eebus.CustomerEnergyManagement{
 			EvCC: evccMock,
 		},
@@ -516,21 +516,21 @@ func TestEEBusIdentifyCachesLastKnownIdentification(t *testing.T) {
 
 	// device reports the identification once, only via the update event
 	reported = []ucapi.IdentificationItem{{Value: "MAC-001"}}
-	eb.UseCaseEvent(nil, evEntity, evccuc.DataUpdateIdentifications)
+	eebus.UseCaseEvent(nil, evEntity, evccuc.DataUpdateIdentifications)
 
 	// the following empty update must not discard the cached value
 	reported = nil
-	eb.UseCaseEvent(nil, evEntity, evccuc.DataUpdateIdentifications)
+	eebus.UseCaseEvent(nil, evEntity, evccuc.DataUpdateIdentifications)
 
 	// the loadpoint only polls once the identification is already gone
-	ids, err := eb.Identify()
+	ids, err := eebus.Identify()
 	require.NoError(t, err)
 	assert.Equal(t, []string{"MAC-001"}, ids)
 
 	// physical disconnect clears the cached identification
-	eb.UseCaseEvent(nil, evEntity, evccuc.EvDisconnected)
+	eebus.UseCaseEvent(nil, evEntity, evccuc.EvDisconnected)
 
-	ids, err = eb.Identify()
+	ids, err = eebus.Identify()
 	require.NoError(t, err)
 	assert.Nil(t, ids)
 }

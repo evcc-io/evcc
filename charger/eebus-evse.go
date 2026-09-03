@@ -3,6 +3,7 @@ package charger
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sync"
 	"time"
 
@@ -41,7 +42,7 @@ type EEBus struct {
 
 	limitUpdated time.Time // time of last limit change
 
-	identification []string // last non-empty vehicle identification
+	lastIdentification []string // last non-empty vehicle identification
 
 	enabled   bool
 	reconnect bool
@@ -145,7 +146,7 @@ func (c *EEBus) Connect(connected bool) {
 	defer c.mux.Unlock()
 
 	c.ev = nil
-	c.identification = nil
+	c.lastIdentification = nil
 }
 
 // UseCaseEvent implements the eebus.Device interface
@@ -161,12 +162,12 @@ func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spine
 
 	case evcc.EvDisconnected:
 		c.ev = nil
-		c.identification = nil
+		c.lastIdentification = nil
 
 	case evcc.DataUpdateIdentifications:
 		// the identification may be withdrawn again before the loadpoint polls it
 		if ids := c.identifications(entity); len(ids) > 0 {
-			c.identification = ids
+			c.lastIdentification = ids
 		}
 
 	case evcem.DataUpdateCurrentPerPhase:
@@ -561,13 +562,11 @@ func (c *EEBus) Identify() ([]string, error) {
 
 	// some devices (e.g. Porsche PMCC) only report the identification briefly during
 	// the connection handshake, so fall back to the value cached from the update event
-	if len(res) == 0 {
-		return c.identification, nil
+	if len(res) > 0 {
+		c.lastIdentification = res
 	}
 
-	c.identification = res
-
-	return res, nil
+	return slices.Clone(c.lastIdentification), nil
 }
 
 var _ api.Battery = (*EEBus)(nil)
