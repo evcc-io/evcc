@@ -6,6 +6,7 @@ import (
 	"time"
 
 	ucapi "github.com/enbility/eebus-go/usecases/api"
+	evccuc "github.com/enbility/eebus-go/usecases/cem/evcc"
 	evcemuc "github.com/enbility/eebus-go/usecases/cem/evcem"
 	"github.com/enbility/eebus-go/usecases/mocks"
 	spineapi "github.com/enbility/spine-go/api"
@@ -486,4 +487,44 @@ func TestEEBusMinMaxCommunicationStandard(t *testing.T) {
 			}
 		})
 	}
+}
+
+// some devices (e.g. Porsche PMCC) only briefly report the identification before
+// the loadpoint detects the vehicle as connected (#33457). The last known-good
+// identification must survive a subsequent empty read and only be cleared on
+// physical disconnect.
+func TestEEBusIdentifyCachesLastKnownIdentification(t *testing.T) {
+	evccMock := mocks.NewCemEVCCInterface(t)
+	evEntity := spinemocks.NewEntityRemoteInterface(t)
+
+	eb := &EEBus{
+		cem: &eebus.CustomerEnergyManagement{
+			EvCC: evccMock,
+		},
+		ev:  evEntity,
+		log: util.NewLogger("test"),
+	}
+
+	// device briefly reports the identification
+	evccMock.EXPECT().EVConnected(evEntity).Return(true).Once()
+	evccMock.EXPECT().Identifications(evEntity).Return([]ucapi.IdentificationItem{{Value: "MAC-001"}}, nil).Once()
+
+	ids, err := eb.Identify()
+	require.NoError(t, err)
+	assert.Equal(t, []string{"MAC-001"}, ids)
+
+	// device later reports an empty identification during the connection handshake
+	evccMock.EXPECT().EVConnected(evEntity).Return(true).Once()
+	evccMock.EXPECT().Identifications(evEntity).Return(nil, nil).Once()
+
+	ids, err = eb.Identify()
+	require.NoError(t, err)
+	assert.Equal(t, []string{"MAC-001"}, ids)
+
+	// physical disconnect clears the cached identification
+	eb.UseCaseEvent(nil, evEntity, evccuc.EvDisconnected)
+
+	ids, err = eb.Identify()
+	require.NoError(t, err)
+	assert.Nil(t, ids)
 }

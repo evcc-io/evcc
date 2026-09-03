@@ -41,6 +41,8 @@ type EEBus struct {
 
 	limitUpdated time.Time // time of last limit change
 
+	identification []string // last non-empty vehicle identification
+
 	enabled   bool
 	reconnect bool
 	current   float64
@@ -143,6 +145,7 @@ func (c *EEBus) Connect(connected bool) {
 	defer c.mux.Unlock()
 
 	c.ev = nil
+	c.identification = nil
 }
 
 // UseCaseEvent implements the eebus.Device interface
@@ -158,6 +161,7 @@ func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spine
 
 	case evcc.EvDisconnected:
 		c.ev = nil
+		c.identification = nil
 
 	case evcem.DataUpdateCurrentPerPhase:
 		// acknowledge limit change
@@ -538,6 +542,18 @@ func (c *EEBus) Identify() ([]string, error) {
 			res = append(res, i.Value)
 		}
 	}
+
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	// some devices (e.g. Porsche PMCC) only briefly report the identification
+	// before the loadpoint detects the vehicle as connected - keep using the
+	// last known-good value until a physical disconnect is detected
+	if len(res) == 0 {
+		return c.identification, nil
+	}
+
+	c.identification = res
 
 	return res, nil
 }
