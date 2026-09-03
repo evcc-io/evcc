@@ -538,14 +538,9 @@ func (c *EEBus) identifications(entity spineapi.EntityRemoteInterface) []string 
 		return nil
 	}
 
-	var res []string
-	for _, i := range identification {
-		if i.Value != "" {
-			res = append(res, i.Value)
-		}
-	}
-
-	return res
+	return lo.FilterMap(identification, func(i ucapi.IdentificationItem, _ int) (string, bool) {
+		return i.Value, i.Value != ""
+	})
 }
 
 // Identify implements the api.Identifier interface
