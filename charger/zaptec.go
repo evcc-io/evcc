@@ -153,6 +153,13 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 	inst, err := c.installation()
 
 	switch {
+	// with passive: true evcc exercises no power control beyond on/off: no current
+	// control, and no phase switching. the latter is two quite different writes:
+	// maxChargePhases on the charger (Go 1/Pro), or threeToOnePhaseSwitchCurrent
+	// on the installation (Go 2)
+	case c.passive:
+		c.log.WARN.Println("phase switching not available: passive mode")
+
 	case c.version != zaptec.ZaptecGo2:
 		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
 
