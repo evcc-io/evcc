@@ -153,7 +153,6 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 	inst, err := c.installation()
 
 	switch {
-	// an externally managed installation rejects phase switching requests
 	case c.passive:
 		c.log.WARN.Println("phase switching not available: passive mode")
 
