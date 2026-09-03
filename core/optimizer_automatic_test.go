@@ -37,7 +37,7 @@ func enableAutomatic(t *testing.T) {
 	})
 }
 
-func automaticLoadpoint(t *testing.T, mode api.ChargeMode, automatic bool) (*Loadpoint, *api.MockCharger, *gomock.Controller) {
+func automaticLoadpoint(t *testing.T, ac api.AlwaysCharge, automatic bool) (*Loadpoint, *api.MockCharger, *gomock.Controller) {
 	t.Helper()
 
 	ctrl := gomock.NewController(t)
@@ -46,19 +46,20 @@ func automaticLoadpoint(t *testing.T, mode api.ChargeMode, automatic bool) (*Loa
 	Voltage = 230
 
 	lp := &Loadpoint{
-		log:         util.NewLogger("foo"),
-		bus:         evbus.New(),
-		clock:       clock.NewMock(),
-		charger:     charger,
-		chargeMeter: &Null{},
-		chargeRater: &Null{},
-		chargeTimer: &Null{},
-		wakeUpTimer: NewTimer(),
-		minCurrent:  minA,
-		maxCurrent:  maxA,
-		phases:      1,
-		status:      api.StatusC,
-		mode:        mode,
+		log:          util.NewLogger("foo"),
+		bus:          evbus.New(),
+		clock:        clock.NewMock(),
+		charger:      charger,
+		chargeMeter:  &Null{},
+		chargeRater:  &Null{},
+		chargeTimer:  &Null{},
+		wakeUpTimer:  NewTimer(),
+		minCurrent:   minA,
+		maxCurrent:   maxA,
+		phases:       1,
+		status:       api.StatusC,
+		mode:         api.ModeSmart,
+		alwaysCharge: ac,
 	}
 
 	// only vehicles with known capacity can be modelled by the optimizer
@@ -98,29 +99,31 @@ func TestOptimizerGate(t *testing.T) {
 
 	tc := []struct {
 		mode   api.ChargeMode
+		ac     api.AlwaysCharge
 		s      types.Suggestion
 		expect func(h *api.MockCharger)
 	}{
-		// optimizer starts and stops pv charging, replacing the price limits
-		{api.ModePV, full, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(maxA)) }},
-		{api.ModePV, stop, func(h *api.MockCharger) { h.EXPECT().Enable(false) }},
+		// optimizer starts and stops smart charging, replacing the price limits
+		{api.ModeSmart, api.AlwaysChargeOff, full, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(maxA)) }},
+		{api.ModeSmart, api.AlwaysChargeOff, stop, func(h *api.MockCharger) { h.EXPECT().Enable(false) }},
 
-		// minpv keeps its minimum power when the optimizer stops
-		{api.ModeMinPV, full, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(maxA)) }},
-		{api.ModeMinPV, stop, nil}, // already at min current
+		// always charge keeps its minimum power when the optimizer stops
+		{api.ModeSmart, api.AlwaysChargeOn, full, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(maxA)) }},
+		{api.ModeSmart, api.AlwaysChargeOn, stop, nil}, // already at min current
 
 		// a grid-fed power below the maximum is applied as current
-		{api.ModePV, types.Suggestion{Action: actionCharge, Charge: 2300, Grid: 1000}, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(10)) }},
+		{api.ModeSmart, api.AlwaysChargeOff, types.Suggestion{Action: actionCharge, Charge: 2300, Grid: 1000}, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(10)) }},
 
 		// off and fast remain the user's decision
-		{api.ModeOff, full, func(h *api.MockCharger) { h.EXPECT().Enable(false) }},
-		{api.ModeNow, stop, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(maxA)) }},
+		{api.ModeOff, api.AlwaysChargeOff, full, func(h *api.MockCharger) { h.EXPECT().Enable(false) }},
+		{api.ModeNow, api.AlwaysChargeOff, stop, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(maxA)) }},
 	}
 
 	for _, tc := range tc {
 		t.Log(tc)
 
-		lp, charger, ctrl := automaticLoadpoint(t, tc.mode, true)
+		lp, charger, ctrl := automaticLoadpoint(t, tc.ac, true)
+		lp.mode = tc.mode
 		lp.setSuggestion(&tc.s)
 
 		if tc.expect != nil {
@@ -139,7 +142,7 @@ func TestOptimizerGate(t *testing.T) {
 func TestOptimizerSurplusRegime(t *testing.T) {
 	enableAutomatic(t)
 
-	lp, charger, ctrl := automaticLoadpoint(t, api.ModePV, true)
+	lp, charger, ctrl := automaticLoadpoint(t, api.AlwaysChargeOff, true)
 	lp.Disable.Delay = time.Minute
 	lp.offeredCurrent = maxA
 
@@ -163,7 +166,7 @@ func TestOptimizerGateInactive(t *testing.T) {
 	enableAutomatic(t)
 
 	// automatic disabled: pv surplus decides, the suggestion is advisory only
-	lp, _, ctrl := automaticLoadpoint(t, api.ModePV, false)
+	lp, _, ctrl := automaticLoadpoint(t, api.AlwaysChargeOff, false)
 	lp.setSuggestion(&types.Suggestion{Action: actionCharge})
 
 	assert.Nil(t, lp.gate())
@@ -178,7 +181,7 @@ func TestOptimizerGateStale(t *testing.T) {
 	enableAutomatic(t)
 
 	// a stalled optimizer must not keep the loadpoint gated
-	lp, _, ctrl := automaticLoadpoint(t, api.ModePV, true)
+	lp, _, ctrl := automaticLoadpoint(t, api.AlwaysChargeOff, true)
 	lp.setSuggestion(&types.Suggestion{Action: actionCharge})
 	lp.suggestionUpdated = lp.clock.Now().Add(-suggestionMaxAge - time.Minute)
 
@@ -226,19 +229,11 @@ func TestSmartCostLimitUnavailable(t *testing.T) {
 	assert.Equal(t, &limit, lp.GetSmartFeedInPriorityLimit())
 }
 
-type featureCharger struct {
-	features []api.Feature
-}
-
-func (c *featureCharger) Features() []api.Feature {
-	return c.features
-}
-
 func TestBatteryModeAutomatic(t *testing.T) {
 	enableAutomatic(t)
 
 	ctrl := gomock.NewController(t)
-	batCon := api.NewMockBatteryController(ctrl)
+	batCon := batteryControllerMock(ctrl)
 
 	var bat api.Meter = &struct {
 		api.Meter

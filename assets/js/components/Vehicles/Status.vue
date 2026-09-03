@@ -184,11 +184,7 @@ export default defineComponent({
 			return this.connected && Boolean(this.suggestion?.actionable) && !this.optimizerGating;
 		},
 		optimizerGating(): boolean {
-			return (
-				this.optimizerControlled &&
-				!!this.mode &&
-				[CHARGE_MODE.PV, CHARGE_MODE.MINPV].includes(this.mode)
-			);
+			return this.optimizerControlled && this.mode === CHARGE_MODE.SMART;
 		},
 		smartCostPrice() {
 			return this.smartCostType !== SMART_COST_TYPE.CO2;

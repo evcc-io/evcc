@@ -2438,7 +2438,7 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 	case mode == api.ModeSmart:
 		// optimizer decides start/stop and level, replacing the price limits
 		if suggestion != nil {
-			if handled, e := lp.optimizerCharging(suggestion, mode, welcomeCharge); handled {
+			if handled, e := lp.optimizerCharging(suggestion, welcomeCharge); handled {
 				err = e
 				break
 			}
