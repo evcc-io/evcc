@@ -7,7 +7,7 @@ import (
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
-	circuitpkg "github.com/evcc-io/evcc/core/circuit"
+	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/site"
@@ -1094,7 +1094,7 @@ func TestSetLimitWithMeterlessCircuitAndMeterlessCharger(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	// Create real unmetered circuit with 12A limit
-	c, err := circuitpkg.New(util.NewLogger("circuit"), "main", 12, 0, nil, 0)
+	c, err := circuit.New(util.NewLogger("circuit"), "main", 12, 0, nil, 0)
 	require.NoError(t, err)
 
 	charger := api.NewMockCharger(ctrl)

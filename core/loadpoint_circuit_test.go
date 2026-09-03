@@ -6,7 +6,7 @@ import (
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
-	circuitpkg "github.com/evcc-io/evcc/core/circuit"
+	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
@@ -19,7 +19,7 @@ func TestSetLimitDeadlockPrevention(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	// Create real unmetered circuit with 16A limit
-	c, err := circuitpkg.New(util.NewLogger("circuit"), "main", 16, 0, nil, 0)
+	c, err := circuit.New(util.NewLogger("circuit"), "main", 16, 0, nil, 0)
 	require.NoError(t, err)
 
 	charger := api.NewMockCharger(ctrl)
