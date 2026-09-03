@@ -41,7 +41,7 @@
     },
     "combined": "Combined",
     "config": {
-      "buffer": "Home battery energy above {soc} may be used to support the charging points and delays switching off in solar mode. Start solar charging automatically {start}.",
+      "buffer": "Home battery energy above {soc} may be used to support the charging points and delays switching off in smart mode. Start solar charging automatically {start}.",
       "bufferNone": "Home battery energy is not used for the charging points. Set a value below {soc} to enable support.",
       "bufferStart": {
         "above": "once the battery is above {soc}",
@@ -71,28 +71,8 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Battery level",
-    "bufferStart": {
-      "above": "when above {soc}.",
-      "full": "when at {soc}.",
-      "never": "only with enough surplus."
-    },
-    "capacity": "{energy} of {total}",
-    "control": "Battery control",
-    "discharge": "Prevent discharge in fast mode and planned charging.",
-    "disclaimerHint": "Note:",
-    "disclaimerText": "These settings only affect solar mode. Charging behaviour is adjusted accordingly.",
     "gridChargeTab": "Grid charging",
-    "legendBottomName": "Prioritize home battery charging",
-    "legendBottomSubline": "until it reaches {soc}.",
-    "legendMiddleName": "Prioritize vehicle charging",
-    "legendMiddleSubline": "when home battery is above {soc}.",
-    "legendTopAutostart": "Start automatically",
-    "legendTopName": "Battery-supported vehicle charging",
-    "legendTopSubline": "when home battery is above {soc}.",
-    "legendTopSublineAbove": "when above {soc}",
-    "legendTopSublineDisabled": "is {soc}.",
-    "legendTopSublineDisabledState": "disabled",
+    "gridDischargeTab": "Grid discharging",
     "modalTitle": "Home Battery",
     "noBattery": "No batteries configured.",
     "usageTab": "Battery usage"
@@ -218,7 +198,7 @@
       "chargeStatusC": "charging",
       "chargeStatusE": "no power",
       "chargeStatusF": "error",
-      "chargedEnergy": "Charged",
+      "chargedEnergy": "Charged (session)",
       "co2": "Grid CO₂",
       "configured": "Configured",
       "connected": "Connected",
@@ -267,6 +247,31 @@
       "temp": "Temperature",
       "topic": "Topic",
       "url": "URL",
+      "usage": {
+        "aux": {
+          "energy": "Consumed",
+          "returnEnergy": "Produced"
+        },
+        "battery": {
+          "energy": "Discharged",
+          "returnEnergy": "Charged"
+        },
+        "charge": {
+          "energy": "Charged",
+          "returnEnergy": "Discharged"
+        },
+        "consumer": {
+          "energy": "Consumed",
+          "returnEnergy": "Produced"
+        },
+        "grid": {
+          "energy": "Imported",
+          "returnEnergy": "Exported"
+        },
+        "pv": {
+          "energy": "Produced"
+        }
+      },
       "vehicleLimitSoc": "Charge limit",
       "yes": "yes"
     },
@@ -450,13 +455,6 @@
         "charging": "Charger",
         "heating": "Heating device"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Will use a current range of 6 to 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Will use a current range of 6 to 32 A.",
-      "chargerPowerCustom": "other",
-      "chargerPowerCustomHelp": "Define a custom current range.",
-      "chargerTypeLabel": "Charger type",
       "chargingTitle": "Behaviour",
       "circuitHelp": "Load management assignment to ensure power and current limits are not exceeded.",
       "circuitInvalid": "Circuit does not exist",
@@ -470,6 +468,10 @@
       "creating": {
         "charging": "Charger saved. Creating charging point …",
         "heating": "Heating device saved. Creating heater …"
+      },
+      "currentRangeHelp": {
+        "charging": "Typical: 6-16 A for 11 kW, 6-32 A for 22 kW chargers (3-phase).",
+        "heating": "Depends on the rated power of the heating device (see data sheet)."
       },
       "defaultModeHelp": {
         "charging": "Charging mode when connecting the vehicle.",
@@ -520,6 +522,8 @@
       "solarBehaviorLabel": "Solar",
       "solarModeCustom": "custom",
       "solarModeMaximum": "maximum solar",
+      "solarShareNote": "The solar share slider in the user settings is disabled while watt thresholds are set. {0} and save to enable it.",
+      "solarShareReset": "Remove thresholds",
       "temperatureRangeHelp": "Display range for the temperature bar. Does not affect control.",
       "temperatureRangeTitle": "Temperature range",
       "thresholdDisableDelayLabel": "Disable delay",
@@ -1319,6 +1323,15 @@
     "title": "Authentication"
   },
   "main": {
+    "alwaysCharge": {
+      "description": "no interruptions",
+      "label": "Always charge",
+      "labelHeating": "Always heat",
+      "minCurrent": "min {current}",
+      "once": "until end of session",
+      "onceTip": "Only for this session",
+      "permanent": "stays on permanently"
+    },
     "chargingPlan": {
       "active": "Active",
       "addRepeatingPlan": "Add repeating plan",
@@ -1456,7 +1469,7 @@
         "descriptionDisabled": "Select a limit to allow fast charging from home battery.",
         "disabled": "Disabled",
         "label": "Battery Boost",
-        "mode": "Only available in solar and min+solar mode.",
+        "mode": "Only available in smart mode.",
         "once": "Boost active for this charging session.",
         "stateActive": "Battery boost active",
         "stateBelowLimit": "Battery too low for boost",
@@ -1474,7 +1487,7 @@
         "label": "Min. Current"
       },
       "minTemp": {
-        "description": "Below {0} battery and grid power are also used in solar mode to maintain this temperature.",
+        "description": "Below {0} battery and grid power are also used in smart mode to maintain this temperature.",
         "label": "Min. temperature"
       },
       "phasesConfigured": {
@@ -1488,14 +1501,32 @@
       },
       "smartCostCheap": "Cheap Grid Charging",
       "smartCostClean": "Clean Grid Charging",
+      "solar": "Solar Surplus",
+      "solarShare": {
+        "charging": {
+          "description": "At least {share} of the minimum charging power must come from solar.",
+          "descriptionFull": "Charging starts as soon as the surplus covers the minimum charging power.",
+          "descriptionZero": "Charging starts as soon as some surplus is available."
+        },
+        "heating": {
+          "description": "At least {share} of the minimum heating power must come from solar.",
+          "descriptionFull": "Heating starts as soon as the surplus covers the minimum heating power.",
+          "descriptionZero": "Heating starts as soon as some surplus is available."
+        },
+        "label": "Solar Share",
+        "thresholdsHint": "Power-based charging thresholds are configured. Remove them to use this slider.",
+        "thresholdsHintYaml": "Power-based charging thresholds are configured. Remove the enable/disable thresholds from this loadpoint in your evcc.yaml to use this slider.",
+        "thresholdsLink": "Edit configuration"
+      },
       "title": "Settings {0}",
       "vehicle": "Vehicle"
     },
     "mode": {
-      "minpv": "Min+Solar",
+      "boost": "Boost",
+      "normal": "Normal",
       "now": "Fast",
       "off": "Off",
-      "pv": "Solar",
+      "on": "On",
       "smart": "Smart"
     },
     "provider": {
@@ -1514,7 +1545,7 @@
       "inactiveLabel": "Target time",
       "nextPlan": "Next plan",
       "notReachableInTime": "Goal will be reached {overrun} later.",
-      "onlyInPvMode": "Charging plan only works in solar mode.",
+      "onlyInSmartMode": "Charging plan only works in smart mode.",
       "planDuration": "Charging time",
       "planPeriodLabel": "Period",
       "planPeriodValue": "{start} to {end}",
@@ -1809,7 +1840,7 @@
     "co2Label": "CO₂ emission",
     "co2Limit": "CO₂ limit",
     "enable": "Enable limit",
-    "loadpointDescription": "Enables temporary fast-charging in solar mode.",
+    "loadpointDescription": "Enables temporary fast-charging in smart mode.",
     "modalTitle": "Smart Grid Charging",
     "none": "none",
     "priceLabel": "Energy price",
@@ -1819,7 +1850,8 @@
     "saved": "Saved."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Paused time",
+    "activeHoursLabel": "Active time",
+    "batteryDescription": "Discharges the home battery to the grid while the feed-in rate is high.",
     "description": "Pauses charging during high prices to prioritize profitable grid feed-in.",
     "priceLabel": "Feed-in rate",
     "priceLimit": "Feed-in limit",

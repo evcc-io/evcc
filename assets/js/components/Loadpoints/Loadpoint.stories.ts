@@ -26,7 +26,7 @@ export default {
 const baseState = {
   id: "1",
   title: "Carport",
-  mode: CHARGE_MODE.PV,
+  mode: CHARGE_MODE.SMART,
   enabled: true,
   connected: true,
   socBasedCharging: true,

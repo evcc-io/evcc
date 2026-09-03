@@ -63,28 +63,7 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Livello batteria",
-    "bufferStart": {
-      "above": "quando supera il {soc}.",
-      "full": "quando è al {soc}.",
-      "never": "solo con abbastanza surplus."
-    },
-    "capacity": "{energy} di {total}",
-    "control": "Controllo batteria",
-    "discharge": "Previeni la scarica della batteria in modalità veloce oppure quando è attiva una pianificazione.",
-    "disclaimerHint": "Nota:",
-    "disclaimerText": "Queste impostazioni riguardano solamente la modalità solare. Il comportamento di ricarica è adattato di conseguenza.",
     "gridChargeTab": "Carica in corso dalla rete",
-    "legendBottomName": "Priorità alla carica della batteria di casa",
-    "legendBottomSubline": "fino al {soc}.",
-    "legendMiddleName": "Priorità alla carica del veicolo",
-    "legendMiddleSubline": "quando la batteria supera il {soc}.",
-    "legendTopAutostart": "Parti automaticamente",
-    "legendTopName": "Ricarica del veicolo assistita dalla batteria",
-    "legendTopSubline": "quando la batteria supera il {soc}.",
-    "legendTopSublineAbove": "quando sopra il {soc}",
-    "legendTopSublineDisabled": "è {soc}.",
-    "legendTopSublineDisabledState": "disabilitato",
     "modalTitle": "Batteria di casa",
     "noBattery": "Nessuna batteria configurata.",
     "usageTab": "Uso della batteria"
@@ -425,13 +404,6 @@
         "charging": "Caricabatterie",
         "heating": "Riscaldatore"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Utilizzerà un intervallo di corrente tra 6 e 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Utilizzerà un intervallo di corrente tra 6 e 32 A.",
-      "chargerPowerCustom": "altro",
-      "chargerPowerCustomHelp": "Definire un intervallo di corrente personalizzato.",
-      "chargerTypeLabel": "Tipo di caricabatterie",
       "chargingTitle": "Comportamento",
       "circuitHelp": "Assegnazione della gestione del carico per garantire che i limiti di potenza e corrente non vengano superati.",
       "circuitInvalid": "Il circuito non esiste",

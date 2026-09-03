@@ -7,6 +7,7 @@ import (
 	"github.com/enbility/eebus-go/usecases/cem/ohpcf"
 	spinemocks "github.com/enbility/spine-go/mocks"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -85,7 +86,7 @@ func TestOHPCFControlAction(t *testing.T) {
 // a consumption-state update always records the compressor entity; while
 // disabled it must not attempt to apply (avoids acting on a stale intent, #31549).
 func TestOHPCFUseCaseEventConsumptionStateDisabled(t *testing.T) {
-	c := &EEBusOHPCF{}
+	c := &EEBusOHPCF{connector: eebus.NewConnector()}
 	entity := spinemocks.NewEntityRemoteInterface(t)
 
 	c.UseCaseEvent(nil, entity, ohpcf.DataUpdateConsumptionState)
