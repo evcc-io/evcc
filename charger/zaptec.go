@@ -153,6 +153,10 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 	inst, err := c.installation()
 
 	switch {
+	// an externally managed installation rejects phase switching requests
+	case c.passive:
+		c.log.WARN.Println("phase switching not available: passive mode")
+
 	case c.version != zaptec.ZaptecGo2:
 		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
 
@@ -279,8 +283,8 @@ func (c *Zaptec) Enable(enable bool) error {
 
 func (c *Zaptec) chargerUpdate(data zaptec.Update) error {
 	if c.passive {
-		if data.MaxChargeCurrent != nil || data.MinChargeCurrent != nil || data.OfflineChargeCurrent != nil || data.MaxChargePhases != nil {
-			c.log.DEBUG.Println("zaptec: passive mode: skipping chargerUpdate with current/phase fields set")
+		if data.MaxChargeCurrent != nil || data.MinChargeCurrent != nil || data.OfflineChargeCurrent != nil {
+			c.log.DEBUG.Println("zaptec: passive mode: skipping chargerUpdate with current fields set")
 			return nil
 		}
 	}
