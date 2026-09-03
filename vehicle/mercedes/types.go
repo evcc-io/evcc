@@ -2,6 +2,8 @@ package mercedes
 
 import (
 	"time"
+
+	pb "github.com/evcc-io/evcc/vehicle/mercedes/pb"
 )
 
 var Regions = map[string]string{
@@ -31,15 +33,25 @@ type Vehicle struct {
 }
 
 type StatusResponse struct {
+	VehicleInfo struct {
+		Odometer struct {
+			Value int
+			Unit  string
+		}
+		Timestamp time.Time
+	}
 	EvInfo struct {
 		Battery struct {
+			ChargingStatus  pb.Chargingstatus
 			DistanceToEmpty struct {
 				Value int
 				Unit  string
 			}
-			StateOfCharge   float64 // 75
-			EndOfChargeTime int     // Minutes after midnight
-			TotalRange      int     // 17
+			StateOfCharge         float64 // 75
+			EndOfChargeTime       int     // Minutes after midnight
+			TotalRange            int     // 17
+			SocLimit              int     // 50-100
+			SelectedChargeProgram int
 		}
 		Timestamp time.Time
 	}

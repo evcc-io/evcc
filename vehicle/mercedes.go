@@ -59,9 +59,13 @@ func NewMercedesFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, err
 	}
 
+	// One VSU websocket per account; sources the data Mercedes removed from the
+	// REST widget (odometer, charging status, SoC limit).
+	ws := mercedes.NewWebsocket(log, identity)
+
 	v := &Mercedes{
 		embed:    &cc.embed,
-		Provider: mercedes.NewProvider(api, cc.VIN, cc.Cache),
+		Provider: mercedes.NewProvider(api, ws, cc.VIN, cc.Cache),
 	}
 
 	return v, err

@@ -49,6 +49,23 @@ const (
 	UserAgentAPAC              = "mycar-store-ap v%s, %s %s, SDK %s"
 	Locale                     = "en-GB"
 	CountryCode                = "EN"
+
+	// Websocket (VSU push) endpoints, one per account/region.
+	WebsocketUriEMEA  = "wss://websocket.emea-prod.mobilesdk.mercedes-benz.com/v2/ws"
+	WebsocketUriAPAC  = "wss://websocket.amap-prod.mobilesdk.mercedes-benz.com/v2/ws"
+	WebsocketUriNORAM = "wss://websocket.amap-prod.mobilesdk.mercedes-benz.com/v2/ws"
+
+	// RIS constants for the websocket handshake. These are coupled to the VSU
+	// switch: only with sufficiently recent RIS headers does the backend push
+	// typed vehicle_status_updates instead of the legacy vepUpdates string map.
+	// Kept static (mirroring mbapi2020), bump together with the app.
+	RisWsApplicationVersionEMEA  = "1.68.0 (3060)"
+	RisWsApplicationVersionNORAM = "3.67.0"
+	RisWsApplicationVersionAPAC  = "1.67.0"
+	RisWsSdkVersion              = "4.10.0"
+	WebsocketUserAgent           = "Mercedes-Benz/3044 CFNetwork/3860.400.22 Darwin/25.3.0"
+	WebsocketUserAgentAPAC       = "mycar-store-ap 1.67.0, ios 26.3, SDK 4.10.0"
+	WebsocketUserAgentNORAM      = "mycar-store-us v3.67.0, ios 26.3, SDK 4.10.0"
 )
 
 func getBffUri(region string) string {
@@ -73,6 +90,53 @@ func getWidgetUri(region string) string {
 		return WidgetUriNORAM
 	}
 	return WidgetUriEMEA
+}
+
+func getWebsocketUri(region string) string {
+	switch region {
+	case "EMEA":
+		return WebsocketUriEMEA
+	case "APAC":
+		return WebsocketUriAPAC
+	case "NORAM":
+		return WebsocketUriNORAM
+	}
+	return WebsocketUriEMEA
+}
+
+// wsheaders returns the handshake headers for the VSU websocket. The
+// Authorization header carries the RAW access token (no "Bearer" prefix) and
+// OUTPUT-FORMAT: PROTO selects the typed protobuf stream.
+func wsheaders(accessToken, sessionID, region string) map[string]string {
+	risAppVersion := RisWsApplicationVersionEMEA
+	appName := XApplicationNameEMEA
+	userAgent := WebsocketUserAgent
+
+	switch region {
+	case "APAC":
+		risAppVersion = RisWsApplicationVersionAPAC
+		appName = XApplicationNameAPAC
+		userAgent = WebsocketUserAgentAPAC
+	case "NORAM":
+		risAppVersion = RisWsApplicationVersionNORAM
+		appName = XApplicationNameNORAM
+		userAgent = WebsocketUserAgentNORAM
+	}
+
+	return map[string]string{
+		"Authorization":           accessToken,
+		"APP-SESSION-ID":          sessionID,
+		"OUTPUT-FORMAT":           "PROTO",
+		"X-SessionId":             sessionID,
+		"X-TrackingId":            uuid.New().String(),
+		"ris-os-name":             RisOsName,
+		"ris-os-version":          RisOsVersion,
+		"ris-sdk-version":         RisWsSdkVersion,
+		"ris-application-version": risAppVersion,
+		"X-ApplicationName":       appName,
+		"X-Locale":                Locale,
+		"User-Agent":              userAgent,
+	}
 }
 
 func mbheaders(includeAuthServerHeader bool, region string) map[string]string {
