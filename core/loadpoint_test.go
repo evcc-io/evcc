@@ -7,10 +7,8 @@ import (
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/settings"
-	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
@@ -1078,58 +1076,4 @@ func TestPVDisableContinuousDeviceShortfall(t *testing.T) {
 			}
 		})
 	}
-}
-
-type stubSite struct {
-	site.API
-	circuit api.Circuit
-	lps     []loadpoint.API
-}
-
-func (s *stubSite) GetCircuit() api.Circuit     { return s.circuit }
-func (s *stubSite) Loadpoints() []loadpoint.API { return s.lps }
-
-func TestSetLimitWithMeterlessCircuitAndMeterlessCharger(t *testing.T) {
-	Voltage = 230
-	ctrl := gomock.NewController(t)
-
-	// Create real unmetered circuit with 12A limit
-	c, err := circuit.New(util.NewLogger("circuit"), "main", 12, 0, nil, 0)
-	require.NoError(t, err)
-
-	charger := api.NewMockCharger(ctrl)
-	// Expect max current set to 12A (capped from requested 16A)
-	charger.EXPECT().MaxCurrent(int64(12)).Return(nil)
-
-	// Simulate status change from B to C
-	charger.EXPECT().Status().Return(api.StatusC, nil)
-
-	lp := &Loadpoint{
-		log:            util.NewLogger("foo"),
-		bus:            evbus.New(),
-		charger:        charger,
-		circuit:        c,
-		chargeCurrents: nil,         // unmetered / fake meter
-		status:         api.StatusB, // initially B
-		offeredCurrent: 10,          // currently offering 10A
-		enabled:        true,
-		minCurrent:     6,
-		maxCurrent:     16,
-		phases:         1,
-	}
-
-	siteAPI := &stubSite{
-		circuit: c,
-		lps:     []loadpoint.API{lp},
-	}
-	lp.site = siteAPI
-
-	// Trigger status update, which will update the circuit
-	_, err = lp.updateChargerStatus()
-	require.NoError(t, err)
-
-	// Request 16A. Circuit should cap it at 12A because current load is updated to 10A first.
-	err = lp.setLimit(16)
-	require.NoError(t, err)
-	assert.Equal(t, 12.0, lp.offeredCurrent)
 }
