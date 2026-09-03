@@ -111,7 +111,8 @@ func (lp *Loadpoint) MinActivePhases() int {
 
 // minActivePhases returns the minimum number of active phases for the loadpoint.
 func (lp *Loadpoint) minActivePhases() int {
-	if lp.hasPhaseSwitching() || lp.phasesConfigured == 1 {
+	// configured phases are both minimum and maximum, only automatic scales down to 1p
+	if lp.hasPhaseSwitching() && lp.phasesConfigured == 0 {
 		return 1
 	}
 
