@@ -1232,10 +1232,15 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 	}
 
 	var welcomeCharge bool
+	var updateCircuit bool
 
 	for _, status := range statusChanges {
 		prevStatus := lp.GetStatus()
 		lp.setStatus(status)
+
+		if prevStatus != status && (prevStatus == api.StatusC || status == api.StatusC) {
+			updateCircuit = true
+		}
 
 		for _, ev := range statusEvents(prevStatus, status) {
 			lp.bus.Publish(ev)
@@ -1258,6 +1263,21 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 					welcomeCharge = false
 				}
 			}
+		}
+	}
+
+	// Unmetered circuits dynamically allocate current based on StatusC. Re-evaluate load upon transition.
+	if updateCircuit && lp.chargeCurrents == nil && lp.circuit != nil && lp.site != nil && lp.site.GetCircuit() != nil {
+		lps := make([]api.CircuitLoad, 0)
+		for _, lpAPI := range lp.site.Loadpoints() {
+			if lpAPI != nil {
+				if cl, ok := lpAPI.(api.CircuitLoad); ok {
+					lps = append(lps, cl)
+				}
+			}
+		}
+		if err := lp.site.GetCircuit().Update(lps); err != nil {
+			lp.log.ERROR.Println("circuit update:", err)
 		}
 	}
 
