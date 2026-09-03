@@ -75,12 +75,11 @@ func getSampleKey(s types.SampledValue) types.Measurand {
 	return s.Measurand
 }
 
-// isTransactionBoundary returns true for contexts that report a snapshot taken
-// at the start or end of a transaction rather than a live reading. Some
-// chargers (e.g. Growatt THOR) additionally repeat the transaction's starting
-// value with every MeterValues message, which must not shadow the live value.
-func isTransactionBoundary(ctx types.ReadingContext) bool {
-	return ctx == types.ReadingContextTransactionBegin || ctx == types.ReadingContextTransactionEnd
+// isBoundaryContext returns true for readings that are a snapshot taken at the
+// transaction's start or end rather than a live measurement. Context is optional
+// and defaults to Sample.Periodic.
+func isBoundaryContext(c types.ReadingContext) bool {
+	return c == types.ReadingContextTransactionBegin || c == types.ReadingContextTransactionEnd
 }
 
 func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
@@ -103,26 +102,22 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 		}
 
 		// ignore old meter value requests
-		if !meterValue.Timestamp.Time.Before(conn.meterUpdated) && len(meterValue.SampledValue) > 0 {
-			// a single message may report the same measurand more than once with
-			// different contexts (e.g. a live Sample.Periodic value alongside a
-			// static Transaction.Begin/End snapshot); keep the live reading
-			// instead of whichever entry happens to come last in the array
-			samples := make(map[types.Measurand]types.SampledValue, len(meterValue.SampledValue))
-			for _, sample := range meterValue.SampledValue {
-				sample.Value = strings.TrimSpace(sample.Value)
-				key := getSampleKey(sample)
+		if !meterValue.Timestamp.Time.Before(conn.meterUpdated) {
+			// a charge point may repeat a measurand with a different context, e.g. a live
+			// Sample.Periodic value next to a static Transaction.Begin snapshot that never
+			// changes. Apply boundary snapshots first so live readings win independent of
+			// their order within the message.
+			for _, boundary := range []bool{true, false} {
+				for _, sample := range meterValue.SampledValue {
+					if isBoundaryContext(sample.Context) != boundary {
+						continue
+					}
 
-				if existing, ok := samples[key]; ok && isTransactionBoundary(sample.Context) && !isTransactionBoundary(existing.Context) {
-					continue
+					sample.Value = strings.TrimSpace(sample.Value)
+					conn.measurements[getSampleKey(sample)] = sample
+					conn.meterUpdated = meterValue.Timestamp.Time
 				}
-				samples[key] = sample
 			}
-
-			for key, sample := range samples {
-				conn.measurements[key] = sample
-			}
-			conn.meterUpdated = meterValue.Timestamp.Time
 		}
 	}
 
