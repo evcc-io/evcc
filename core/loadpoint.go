@@ -976,9 +976,9 @@ func (lp *Loadpoint) roundedCurrent(current float64) float64 {
 	return current
 }
 
-// maxChargeCurrent returns the current the loadpoint draws: the highest measured
-// phase current, or- without a charge meter- the offered current while charging
-func (lp *Loadpoint) maxChargeCurrent() float64 {
+// actualMaxChargeCurrent returns the maximum of all phase currents.
+// If currents not measured falls back to offered current.
+func (lp *Loadpoint) actualMaxChargeCurrent() float64 {
 	if lp.chargeCurrents != nil {
 		return lp.measuredMaxPhaseCurrent()
 	}
@@ -1952,7 +1952,7 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 	}
 
 	// sampled here so that the circuit and setLimit cannot disagree within a cycle
-	current := lp.maxChargeCurrent()
+	current := lp.actualMaxChargeCurrent()
 
 	lp.Lock()
 	lp.chargeCurrent = current
