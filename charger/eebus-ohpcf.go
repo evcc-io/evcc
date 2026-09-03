@@ -3,6 +3,7 @@ package charger
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -117,6 +118,13 @@ func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost ti
 	if err := c.connector.WaitUseCase(ctx); err != nil {
 		inst.UnregisterDevice(ski, c)
 		return nil, err
+	}
+
+	// a device without OHPCF never announces a compressor and would error on
+	// every cycle instead of failing here (#33461)
+	if _, ok := c.connectedCompressor(); !ok {
+		inst.UnregisterDevice(ski, c)
+		return nil, fmt.Errorf("missing use case: %s", model.UseCaseNameTypeOptimizationOfSelfConsumptionByHeatPumpCompressorFlexibility)
 	}
 
 	// unregister device when context is cancelled (e.g. UI config validation)
