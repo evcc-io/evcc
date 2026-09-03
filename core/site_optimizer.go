@@ -262,6 +262,19 @@ func (site *Site) suggestion(key, currentAction string) *types.Suggestion {
 	return &s
 }
 
+// dropStaleSuggestions clears the advice of a stalled optimizer. A single failed
+// run keeps it: dropping it would release the controlled devices for one cycle,
+// flipping the battery mode until the next run restores the suggestion.
+func (site *Site) dropStaleSuggestions() {
+	site.RLock()
+	stale := time.Since(site.suggestionsUpdated) > suggestionMaxAge
+	site.RUnlock()
+
+	if stale {
+		site.clearSuggestions()
+	}
+}
+
 // publishSuggestions publishes the loadpoints' suggestions and hands them to the
 // loadpoints, where they act as start/stop gate while the optimizer is in control
 func (site *Site) publishSuggestions() {
@@ -410,7 +423,7 @@ func (site *Site) optimizerUpdateAsync(force bool) {
 			site.log.ERROR.Println("optimizer:", err)
 
 			// stale advice must not linger
-			site.clearSuggestions()
+			site.dropStaleSuggestions()
 		}
 	}()
 
