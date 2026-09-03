@@ -74,7 +74,7 @@ func (lp *Loadpoint) planDeadlineCritical() bool {
 // if the loadpoint is to follow pv surplus instead, leaving current and phases
 // to the regular pv control loop. Otherwise current and phases follow the
 // suggested power, only the level is the optimizer's decision.
-func (lp *Loadpoint) optimizerCharging(s *types.Suggestion, mode api.ChargeMode, welcomeCharge bool) (bool, error) {
+func (lp *Loadpoint) optimizerCharging(s *types.Suggestion, welcomeCharge bool) (bool, error) {
 	// full power is grid-fed by definition and never counts as surplus
 	full := s.Charge >= lp.EffectiveMaxPower()-suggestionThreshold
 
@@ -110,8 +110,8 @@ func (lp *Loadpoint) optimizerCharging(s *types.Suggestion, mode api.ChargeMode,
 		return true, lp.minCharging()
 	}
 
-	// minpv keeps its minimum power, the optimizer plans with it
-	if mode == api.ModeMinPV {
+	// always charge keeps its minimum power, the optimizer plans with it
+	if lp.GetAlwaysCharge().Active() {
 		lp.log.DEBUG.Println("optimizer: stop, keeping minimum power")
 		return true, lp.minCharging()
 	}
