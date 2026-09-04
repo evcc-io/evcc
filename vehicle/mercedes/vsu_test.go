@@ -1,6 +1,10 @@
 package mercedes
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"net"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
@@ -125,6 +129,39 @@ func TestMapVSUSocLimitPresentButZero(t *testing.T) {
 
 	res := mapVSU(vsu)
 	assert.Equal(t, 100, res.EvInfo.Battery.SocLimit, "must fall back to charge program, not report 0%")
+}
+
+// TestIdleCycleEnd covers the read-loop classification: a read deadline that
+// fires after data was delivered is a benign end-of-cycle (reconnect quietly),
+// while a zero-data timeout, a parent cancellation, or any non-deadline error is
+// a real error the loop must propagate.
+func TestIdleCycleEnd(t *testing.T) {
+	// coder/websocket wraps the context error as "failed to get reader: %w".
+	readDeadline := fmt.Errorf("failed to get reader: %w", context.DeadlineExceeded)
+
+	tt := []struct {
+		name      string
+		err       error
+		parentErr error
+		gotData   bool
+		want      bool
+	}{
+		{"idle after data", readDeadline, nil, true, true},
+		{"bare deadline after data", context.DeadlineExceeded, nil, true, true},
+		{"timeout with no data", readDeadline, nil, false, false},
+		{"parent cancelled", readDeadline, context.Canceled, true, false},
+		{"connection closed", fmt.Errorf("failed to get reader: %w", net.ErrClosed), nil, true, false},
+		// Non-deadline errors must not be mistaken for an idle cycle even when
+		// they wrap another context error (Canceled) or are plain.
+		{"wrapped cancel", fmt.Errorf("boom: %w", context.Canceled), nil, true, false},
+		{"plain error", errors.New("plain error"), nil, true, false},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, idleCycleEnd(tc.err, tc.parentErr, tc.gotData))
+		})
+	}
 }
 
 // TestMergeVSUReplacesFields verifies that a partial update replaces individual

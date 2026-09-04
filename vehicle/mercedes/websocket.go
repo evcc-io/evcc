@@ -208,26 +208,54 @@ func (ws *Websocket) connect(ctx context.Context) error {
 
 	ws.log.DEBUG.Println("websocket: connected")
 
-	// Ping keep-alive.
+	// Ping keep-alive. Liveness is proven by pings, not by data: the pinger
+	// tears the connection down when a ping fails, so a stalled connection is
+	// surfaced as a read error rather than being mistaken for an idle cycle.
 	pingCtx, pingCancel := context.WithCancel(ctx)
 	defer pingCancel()
 	go ws.pinger(pingCtx, conn)
 
+	var gotData bool
 	for {
 		readCtx, readCancel := context.WithTimeout(ctx, wsReadTimeout)
 		typ, data, err := conn.Read(readCtx)
 		readCancel()
 		if err != nil {
+			if idleCycleEnd(err, ctx.Err(), gotData) {
+				// Clean end of a poll cycle: the backend pushed its update(s)
+				// and then went quiet, and the keep-alive pings are still
+				// succeeding. Return nil so run() reconnects on the steady duty
+				// cycle and resets the backoff instead of treating this normal
+				// condition as an error.
+				return nil
+			}
 			return err
 		}
 		if typ != websocket.MessageBinary {
 			continue
 		}
+		gotData = true
 
 		if err := ws.handleMessage(ctx, data); err != nil {
 			ws.log.DEBUG.Printf("websocket: handle: %v", err)
 		}
 	}
+}
+
+// idleCycleEnd reports whether a read error is the benign end of a poll cycle:
+// our own read deadline fired (context.DeadlineExceeded) rather than a
+// parent-context cancellation (parentErr != nil), and the connection had already
+// delivered at least one message. A healthy connection to a parked vehicle
+// always ends this way, so it must not be logged as an error or drive the
+// reconnect backoff upward.
+//
+// The gotData guard keeps a genuine fault visible: a connection that times out
+// having delivered nothing is abnormal (the backend pushes a full update on
+// connect) and is reported as an error so it is logged and backed off. A
+// connection that dies mid-life is caught by the pinger, which closes it and
+// makes Read return a non-deadline error.
+func idleCycleEnd(err, parentErr error, gotData bool) bool {
+	return gotData && parentErr == nil && errors.Is(err, context.DeadlineExceeded)
 }
 
 func (ws *Websocket) pinger(ctx context.Context, conn *websocket.Conn) {
@@ -243,6 +271,15 @@ func (ws *Websocket) pinger(ctx context.Context, conn *websocket.Conn) {
 			err := conn.Ping(pingCtx)
 			cancel()
 			if err != nil {
+				// A failed ping means the connection is dead. Close it so the
+				// read loop unblocks immediately with a non-deadline error and
+				// reconnects, instead of waiting out the full read timeout and
+				// mistaking the dead connection for a clean idle cycle. Skip the
+				// close on parent-context teardown, where connect() already
+				// closes the connection.
+				if ctx.Err() == nil {
+					_ = conn.CloseNow()
+				}
 				return
 			}
 		}
