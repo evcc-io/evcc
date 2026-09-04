@@ -27,6 +27,7 @@
 			<DeviceModalActions
 				:is-deletable="meterId !== ''"
 				:is-saveable="meterId !== values.meter"
+				:can-disable="false"
 				@save="selectMeter(values.meter)"
 				@remove="removeMeter"
 			/>

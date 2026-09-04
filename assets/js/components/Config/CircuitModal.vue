@@ -68,7 +68,14 @@
 					:help="$t('config.circuit.meterHelp')"
 					:optional="parentCircuit !== undefined"
 				>
+					<DeviceRefBox
+						v-if="values.meter"
+						:title="getMeterTitle(values.meter)"
+						compact
+						@edit="changeMeter(values)"
+					/>
 					<button
+						v-else
 						type="button"
 						class="d-flex btn btn-sm align-items-center gap-2 mb-3 btn-outline-secondary border-0 evcc-gray"
 						tabindex="0"
@@ -104,6 +111,7 @@ import { getModal, openModal } from "@/configModal";
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import ChangeMeterModal from "./ChangeMeterModal.vue";
+import DeviceRefBox from "./DeviceRefBox.vue";
 
 export default defineComponent({
 	name: "CircuitModal",
@@ -112,6 +120,7 @@ export default defineComponent({
 		FormRow,
 		PropertyField,
 		ChangeMeterModal,
+		DeviceRefBox,
 	},
 	emits: ["changed"],
 	props: {
@@ -133,6 +142,15 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		getMeterTitle() {
+			return (name: string) => {
+				const meters = this.meters.filter((m) => m.name === name);
+				if (meters.length === 1) {
+					return meters[0].deviceTitle;
+				}
+				return "";
+			};
+		},
 		initialValues(): DeviceValues {
 			return {
 				type: ConfigType.Template,
@@ -216,7 +234,7 @@ export default defineComponent({
 		handleClose() {
 			this.parentCircuit = undefined;
 		},
-		async changeMeter(values: { meter: string }) {
+		async changeMeter(values: { meter?: string }) {
 			const meter = this.meters.find((m) => m.name === values.meter);
 			const result = await openModal("changeMeter", {
 				id: meter?.id,
@@ -224,7 +242,7 @@ export default defineComponent({
 			if (result.action === "added" && result.name) {
 				values.meter = result.name;
 			} else if (result.action === "removed") {
-				values.meter = "";
+				delete values.meter;
 			}
 		},
 	},
