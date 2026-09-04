@@ -4,7 +4,9 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"testing"
+	"testing/fstest"
 	"time"
 
 	"github.com/stretchr/testify/require"
@@ -35,4 +37,39 @@ func TestWriteTimeout(t *testing.T) {
 		_, err = io.ReadAll(resp.Body)
 	}
 	require.Error(t, err, "expected connection to be closed after write timeout")
+}
+
+// TestImmutableCache only tags responses that map to a real file, so a 404,
+// a directory, or a traversal attempt is not pinned for a year.
+func TestImmutableCache(t *testing.T) {
+	fsys := fstest.MapFS{
+		"assets/index-abc123.js": {Data: []byte("x")},
+		"assets/sub/keep.js":     {Data: []byte("y")},
+	}
+	h := immutableCache(fsys, http.FileServer(http.FS(fsys)))
+
+	const want = "private, max-age=31536000, immutable"
+
+	for _, tc := range []struct {
+		path   string
+		cached bool
+	}{
+		{"/assets/index-abc123.js", true},
+		{"/assets/missing-def456.js", false}, // 404
+		{"/assets/sub", false},               // directory
+		{"/assets/sub/", false},              // directory, trailing slash
+		{"/assets/../secret", false},         // traversal
+	} {
+		t.Run(tc.path, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, tc.path, nil))
+
+			got := rec.Header().Get("Cache-Control")
+			if tc.cached {
+				require.Equal(t, want, got)
+			} else {
+				require.Empty(t, got)
+			}
+		})
+	}
 }

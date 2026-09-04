@@ -2,8 +2,10 @@ package server
 
 import (
 	"fmt"
+	"io/fs"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	eapi "github.com/evcc-io/evcc/api"
@@ -56,6 +58,28 @@ type Customization struct {
 	Email     string
 	Phone     string
 	Theme     string
+}
+
+// immutableCache adds a one-year immutable Cache-Control, but only when the
+// request path names an existing regular file in fsys. Vite content-hashes
+// every /assets/* filename, so for a hit "same URL" implies "same bytes". A
+// miss (404), a directory, or a redirect gets no such header, so a URL that
+// only later resolves to a file is not pinned for a year. private because
+// these responses sit behind auth.
+//
+// fsys is an embed.FS sub-filesystem: fs.ValidPath already rejects any name
+// containing "..", a leading/trailing slash or an empty element, and fs.Stat
+// on an fs.FS cannot escape its root regardless - there is no OS file access
+// here, and the request body is never read, only a response header is set.
+func immutableCache(fsys fs.FS, h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if name := strings.TrimPrefix(r.URL.Path, "/"); fs.ValidPath(name) {
+			if info, err := fs.Stat(fsys, name); err == nil && info.Mode().IsRegular() {
+				w.Header().Set("Cache-Control", "private, max-age=31536000, immutable")
+			}
+		}
+		h.ServeHTTP(w, r)
+	})
 }
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
@@ -136,7 +160,13 @@ func NewHTTPd(addr string, hub *SocketHub, custom Customization) *HTTPd {
 	static.HandleFunc("/globals.js", globalsJsHandler(custom))
 	static.HandleFunc("/", indexHandler())
 	for _, dir := range []string{"assets", "meta"} {
-		static.PathPrefix("/" + dir).Handler(http.FileServer(http.FS(assets.Web)))
+		h := http.Handler(http.FileServer(http.FS(assets.Web)))
+		if dir == "assets" {
+			// content-hashed filenames (index-D9lZvCVW.js) only change when their
+			// content does, so the browser can skip revalidation entirely
+			h = immutableCache(assets.Web, h)
+		}
+		static.PathPrefix("/" + dir).Handler(h)
 	}
 
 	static.PathPrefix("/i18n").Handler(http.StripPrefix("/i18n", http.FileServer(http.FS(assets.I18n))))

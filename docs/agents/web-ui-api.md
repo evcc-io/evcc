@@ -4,6 +4,7 @@
 
 - **Router:** gorilla/mux, strict slash
 - **Middleware:** GZIP, CORS (`*`), ETag caching, request logging, JSON headers, JWT auth
+- **Static asset caching:** an existing file under `/assets/*` (content-hashed by Vite) gets `Cache-Control: private, max-age=31536000, immutable` so repeat loads skip revalidation entirely; a 404/redirect/directory under that prefix does not, so a URL that only later resolves isn't pinned; `index.html`, `/globals.js` stay `no-cache` (must always reflect the current build); `/meta/*`, `/i18n/*` are unhashed and untouched (still ETag-only)
 - **Timeouts:** Read 5s, Write 10s, Idle 120s
 - **Static assets:** embedded in binary (`fs.FS`)
 - **Default port:** 7070
