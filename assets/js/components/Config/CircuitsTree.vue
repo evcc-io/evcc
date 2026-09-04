@@ -26,6 +26,7 @@
 			:guides="childGuides"
 			:is-last="false"
 			:on-add-sub="onAddSub"
+			:meters="meters"
 		/>
 
 		<div class="d-flex align-items-stretch row-spacing">
@@ -57,7 +58,7 @@ import AddIcon from "../MaterialIcon/Add.vue";
 import formatter from "@/mixins/formatter.ts";
 import { openModal } from "@/configModal.ts";
 import type { ConfigCircuitNode } from "@/utils/circuits.ts";
-import { ICON_SIZE } from "@/types/evcc";
+import { ICON_SIZE, type ConfigMeter } from "@/types/evcc";
 
 export default {
 	name: "CircuitsTree",
@@ -81,6 +82,10 @@ export default {
 			type: Function as PropType<(parent?: string) => void>,
 			required: true,
 		},
+		meters: {
+			type: Array as PropType<ConfigMeter[]>,
+			default: () => [],
+		},
 	},
 	methods: {
 		addSub() {
@@ -91,6 +96,15 @@ export default {
 			const hasChildren =
 				this.circuitsTree?.children && this.circuitsTree.children.length > 0;
 			await openModal("circuit", { id, hasChildren });
+		},
+		getMeterTitle(name?: string) {
+			if (name) {
+				const meters = this.meters.filter((m) => m.name === name);
+				if (meters.length === 1) {
+					return meters[0].deviceTitle;
+				}
+			}
+			return undefined;
 		},
 	},
 	data() {
@@ -104,9 +118,17 @@ export default {
 			if (!this.circuitsTree) return "";
 			const maxpower = Number(this.circuitsTree.config.maxpower);
 			const maxcurrent = Number(this.circuitsTree.config.maxcurrent);
+			const meterRef =
+				"meter" in this.circuitsTree.config
+					? String(this.circuitsTree.config["meter"])
+					: undefined;
+			const meterTitle = this.getMeterTitle(meterRef);
+
 			const parts: string[] = [];
 			if (maxpower > 0) parts.push(this.fmtW(maxpower, this.POWER_UNIT.AUTO));
 			if (maxcurrent > 0) parts.push(`${this.fmtNumber(maxcurrent, 0)} A`);
+			if (meterTitle) parts.push(meterTitle);
+
 			return parts.join(" · ");
 		},
 	},
@@ -117,11 +139,13 @@ export default {
 .row-spacing {
 	margin-bottom: 4px;
 }
+
 .tree-col {
 	width: 22px;
 	position: relative;
 	flex: 0 0 auto;
 }
+
 .tree-line {
 	position: absolute;
 	left: 10px;
@@ -130,11 +154,13 @@ export default {
 	width: 1px;
 	background: var(--evcc-gray-25);
 }
+
 .tree-line--half {
 	top: 0;
 	bottom: auto;
 	height: 50%;
 }
+
 .tree-knick {
 	position: absolute;
 	left: 10px;
@@ -143,10 +169,12 @@ export default {
 	height: 1px;
 	background: var(--evcc-gray-25);
 }
+
 .value {
 	font-size: 12.5px;
 	font-variant-numeric: tabular-nums;
 }
+
 .add-link {
 	font-size: 13.5px;
 	padding: 6px 0;

@@ -81,7 +81,7 @@ export default defineComponent({
 		TestResult,
 	},
 	props: {
-		isSaveable: Boolean as PropType<boolean>,
+		isSaveable: { type: Boolean as PropType<boolean>, default: true },
 		isDeletable: Boolean as PropType<boolean>,
 		isDisabled: Boolean as PropType<boolean>,
 		canDisable: { type: Boolean as PropType<boolean>, default: true },

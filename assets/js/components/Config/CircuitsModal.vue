@@ -26,6 +26,7 @@
 					class="mb-3"
 					:circuitsTree="configCircuitTree(circuits)"
 					:on-add-sub="onAddSub"
+					:meters="meters"
 				/>
 				<span class="evcc-gray">
 					{{ $t("config.circuits.chargingPointsNote") }}
@@ -42,7 +43,7 @@
 
 <script lang="ts">
 import JsonModal from "./JsonModal.vue";
-import type { ConfigCircuit } from "@/types/evcc";
+import type { ConfigCircuit, ConfigMeter } from "@/types/evcc";
 import CircuitsTree from "./CircuitsTree.vue";
 import PlaceholderButton from "../Helper/PlaceholderButton.vue";
 import "@h2d2/shopicons/es/regular/plus";
@@ -59,6 +60,10 @@ export default {
 		onAddSub: {
 			type: Function as PropType<(parent?: string) => void>,
 			required: true,
+		},
+		meters: {
+			type: Array as PropType<ConfigMeter[]>,
+			default: () => [],
 		},
 	},
 	methods: {

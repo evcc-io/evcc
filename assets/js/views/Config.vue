@@ -599,6 +599,7 @@
 				<CircuitsModal
 					:circuits="circuits"
 					:on-add-sub="addSubCircuit"
+					:meters="meters"
 					@changed="loadDirty"
 				/>
 				<CircuitModal

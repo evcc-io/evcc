@@ -11,6 +11,7 @@
 		:filter-template-params="filterTemplateParams"
 		:transform-api-data="transformApiData"
 		:preserve-on-template-change="['deviceTitle', 'parent', 'meter']"
+		:on-configuration-loaded="handleConfigurationLoaded"
 		:hide-delete="hasChildren"
 		@added="$emit('changed', $event)"
 		@updated="$emit('changed')"
@@ -198,6 +199,15 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		handleConfigurationLoaded(values: DeviceValues) {
+			if (!values["meter"]) {
+				this.meterSelection = "none";
+			} else if (this.gridMeter && values["meter"] === this.gridMeter.name) {
+				this.meterSelection = "grid";
+			} else {
+				this.meterSelection = "dedicated";
+			}
+		},
 		setParentCircuit(parentCircuit?: string) {
 			this.parentCircuit = parentCircuit;
 		},
@@ -236,12 +246,13 @@ export default defineComponent({
 		},
 		async changeMeter(values: { meter?: string }) {
 			const meter = this.meters.find((m) => m.name === values.meter);
-			const result = await openModal("changeMeter", {
-				id: meter?.id,
-			});
+			const result = await openModal("changeMeter", { id: meter?.id });
 			if (result.action === "added" && result.name) {
+				this.meterSelection =
+					this.gridMeter && result.name === this.gridMeter.name ? "grid" : "dedicated";
 				values.meter = result.name;
 			} else if (result.action === "removed") {
+				this.meterSelection = "none";
 				delete values.meter;
 			}
 		},
