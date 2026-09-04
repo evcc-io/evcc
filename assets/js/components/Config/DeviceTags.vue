@@ -267,6 +267,7 @@ export default {
 						? this.fmtPercentage(value, 0)
 						: this.$t(`config.deviceValue.${value ? "yes" : "no"}`);
 				case "controllable":
+				case "continuous":
 				case "curtailable":
 				case "phases1p3p":
 				case "singlePhase":
