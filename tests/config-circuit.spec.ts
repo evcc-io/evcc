@@ -35,7 +35,7 @@ async function validateCircuitsTags(page: Page) {
       "Child",
       "0/10 A",
       "A",
-    ].join(""),
+    ].join("")
   );
 }
 
@@ -60,7 +60,7 @@ test.describe("circuit", async () => {
 
     // check for new configuration notice
     await expect(circuitsModal.getByRole("alert")).toContainText(
-      "New circuits configuration available",
+      "New circuits configuration available"
     );
     await circuitsModal.getByRole("button", { name: "Cancel" }).click();
     await expectModalHidden(circuitsModal);
