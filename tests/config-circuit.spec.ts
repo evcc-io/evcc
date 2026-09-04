@@ -166,7 +166,7 @@ test.describe("circuit", async () => {
     await circuitModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(circuitModal);
 
-    await circuitsModal.getByRole("button", { name: "Close" }).last().click();
+    await circuitsModal.locator('button[data-bs-dismiss="modal"]').last().click();
     await expectModalHidden(circuitsModal);
 
     for (const [loadpointName, circuitName] of [
@@ -276,7 +276,8 @@ test.describe("circuit test result", async () => {
     await expect(testResult).toContainText("Max. current16.0 A");
     await circuitModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(circuitModal);
-    await expect(circuitsModal).toContainText(["House", "Garage"].join(""));
+    await expect(circuitsModal.getByTestId("circuit-node").first()).toContainText("House");
+    await expect(circuitsModal.getByTestId("circuit-node").nth(1)).toContainText("Garage");
 
     // reopen: parent survives the round trip
     await circuitsModal.getByRole("button", { name: "edit" }).nth(1).click();

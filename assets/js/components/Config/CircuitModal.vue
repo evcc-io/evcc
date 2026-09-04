@@ -234,6 +234,8 @@ export default defineComponent({
 			if (value === ConfigType.Custom) {
 				values.type = ConfigType.Custom;
 				values.yaml = defaultCircuitYaml;
+				this.meterSelection = "none";
+				delete values["meter"];
 			}
 		},
 		filterTemplateParams(params: TemplateParam[]): TemplateParam[] {
