@@ -165,6 +165,14 @@
       }
     },
     "circuit": {
+      "addMeter": "Dedizierten Energiezähler hinzufügen",
+      "meterSelectionLabel": "Zählerauswahl",
+      "meterNone": "Kein Zähler",
+      "meterSelectionHelpNoMeter": "Die Summe aller Ladepunkte wird verwendet.",
+      "meterSelectionHelpDedicatedMeter": "Füge unten einen vorhandenen Zähler zu diesem Stromkreis hinzu.",
+      "meterSelectionHelpGridMeter": "Verwendet den vorhandenen Netzbezugszähler deiner Installation.",
+      "meterGrid": "Netzbezugszähler",
+      "meterDedicated": "Dedizierter Zähler",
       "parentCircuit": "Übergeordneter Stromkreis",
       "titleAdd": "Stromkreis hinzufügen",
       "titleEdit": "Stromkreis bearbeiten",
@@ -172,8 +180,12 @@
       "template": "Stromkreis",
       "custom": "Benutzerdefinierter Stromkreis",
       "meterHelp": "Zähler, der den Gesamtverbrauch dieses Stromkreises misst.",
+      "meterLabelAdd": "Stromkreiszähler hinzufügen",
+      "meterLabelEdit": "Stromkreiszähler bearbeiten",
       "meterLabel": "Zähler",
-      "deleteChildrenFirst": "Um diesen Schaltkreis zu löschen, müssen zuerst die untergeordneten Schaltkreise gelöscht werden."
+      "deleteChildrenFirst": "Um diesen Schaltkreis zu löschen, müssen zuerst die untergeordneten Schaltkreise gelöscht werden.",
+      "meterChangeLabel": "Zähler",
+      "meterChangeHelp": "Dieser Zähler ist direkt im Stromkreis definiert und wird zusammen mit ihm gelöscht."
     },
     "circuits": {
       "addSubCircuit": "Untergeordneten Stromkreis hinzufügen",
