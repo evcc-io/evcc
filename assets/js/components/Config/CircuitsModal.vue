@@ -27,6 +27,7 @@
 					:circuitsTree="configCircuitTree(circuits)"
 					:on-add-sub="onAddSub"
 					:meters="meters"
+					:grid-meter="gridMeter"
 				/>
 				<span class="evcc-gray">
 					{{ $t("config.circuits.chargingPointsNote") }}
@@ -65,6 +66,7 @@ export default {
 			type: Array as PropType<ConfigMeter[]>,
 			default: () => [],
 		},
+		gridMeter: { type: Object as PropType<ConfigMeter> },
 	},
 	methods: {
 		configCircuitTree,

@@ -600,6 +600,7 @@
 					:circuits="circuits"
 					:on-add-sub="addSubCircuit"
 					:meters="meters"
+					:grid-meter="gridMeter"
 					@changed="loadDirty"
 				/>
 				<CircuitModal

@@ -27,6 +27,7 @@
 			:is-last="false"
 			:on-add-sub="onAddSub"
 			:meters="meters"
+			:gridMeter="gridMeter"
 		/>
 
 		<div class="d-flex align-items-stretch row-spacing">
@@ -87,6 +88,7 @@ export default {
 			type: Array as PropType<ConfigMeter[]>,
 			default: () => [],
 		},
+		gridMeter: { type: Object as PropType<ConfigMeter> },
 	},
 	methods: {
 		addSub() {
@@ -123,7 +125,11 @@ export default {
 				"meter" in this.circuitsTree.config
 					? String(this.circuitsTree.config["meter"])
 					: undefined;
-			const meterTitle = this.getMeterTitle(meterRef);
+
+			const meterTitle =
+				meterRef === this.gridMeter?.name
+					? this.$t("config.grid.title")
+					: this.getMeterTitle(meterRef);
 
 			const parts: string[] = [];
 			if (maxpower > 0) parts.push(this.fmtW(maxpower, this.POWER_UNIT.AUTO));

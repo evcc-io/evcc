@@ -56,6 +56,7 @@
 					<PropertyField
 						id="circuitParamMeterSelection"
 						v-model:model-value="meterSelection"
+						@update:model-value="meterSelectionChanged($event, values)"
 						type="Choice"
 						size="w-100"
 						class="me-2"
@@ -71,7 +72,7 @@
 					:optional="parentCircuit !== undefined"
 				>
 					<DeviceRefBox
-						v-if="values.meter"
+						v-if="values.meter && meterSelection !== 'grid'"
 						:title="getMeterTitle(values.meter)"
 						compact
 						@edit="changeMeter(values)"
@@ -201,6 +202,15 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		meterSelectionChanged(selection: string, values: { meter?: string }) {
+			if (selection === "grid") {
+				values.meter = this.gridMeter?.name;
+			} else if (selection === "none") {
+				delete values.meter;
+			} else if (values.meter === this.gridMeter?.name) {
+				delete values.meter;
+			}
+		},
 		handleConfigurationLoaded(values: DeviceValues) {
 			if (!values["meter"]) {
 				this.meterSelection = "none";
