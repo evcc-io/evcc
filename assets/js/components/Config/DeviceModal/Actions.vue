@@ -3,7 +3,7 @@
 		<slot name="before-test"></slot>
 
 		<TestResult
-			v-if="testState"
+			v-if="Object.keys(testState).length > 0"
 			v-bind="testState"
 			:sponsor-token-required="sponsorTokenRequired"
 			:currency="currency"
@@ -45,7 +45,13 @@
 			<button
 				type="submit"
 				:class="buttonClass"
-				:disabled="testState.isRunning || isSaving || isSucceeded || sponsorTokenRequired"
+				:disabled="
+					testState.isRunning ||
+					isSaving ||
+					isSucceeded ||
+					sponsorTokenRequired ||
+					!isSaveable
+				"
 				tabindex="0"
 				@click.prevent="handleSave"
 			>
@@ -75,16 +81,16 @@ export default defineComponent({
 		TestResult,
 	},
 	props: {
+		isSaveable: Boolean as PropType<boolean>,
 		isDeletable: Boolean as PropType<boolean>,
 		isDisabled: Boolean as PropType<boolean>,
 		canDisable: { type: Boolean as PropType<boolean>, default: true },
 		testState: {
 			type: Object as PropType<TestState>,
-			default: () => {},
+			default: {},
 		},
 		isSaving: Boolean as PropType<boolean>,
 		isSucceeded: Boolean as PropType<boolean>,
-		isNew: Boolean as PropType<boolean>,
 		sponsorTokenRequired: Boolean as PropType<boolean>,
 		currency: String as PropType<CURRENCY>,
 	},

@@ -601,7 +601,13 @@
 					:on-add-sub="addSubCircuit"
 					@changed="loadDirty"
 				/>
-				<CircuitModal ref="circuitModal" :circuits="circuits" @changed="circuitChanged" />
+				<CircuitModal
+					ref="circuitModal"
+					:circuits="circuits"
+					:meters="meters"
+					:grid-meter="gridMeter"
+					@changed="circuitChanged"
+				/>
 				<EebusModal
 					:status="eebus?.status"
 					:yamlSource="eebus?.yamlSource"

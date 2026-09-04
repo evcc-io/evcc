@@ -44,21 +44,45 @@
 			</FormRow>
 		</template>
 		<template #before-actions="{ values }">
-			<FormRow
-				id="circuitParamMeter"
-				:class="{ 'mt-4': values.type === ConfigType.Custom }"
-				:label="$t('config.circuit.meterLabel')"
-				:help="$t('config.circuit.meterHelp')"
-				optional
-			>
-				<PropertyField
+			<div v-if="values.type !== ConfigType.Custom">
+				<FormRow
+					v-if="parentCircuit === undefined"
+					id="circuitParamMeterSelection"
+					:label="$t('config.circuit.meterSelectionLabel')"
+					:help="meterSelectionHelp"
+				>
+					<PropertyField
+						id="circuitParamMeterSelection"
+						v-model:model-value="meterSelection"
+						type="Choice"
+						size="w-100"
+						class="me-2"
+						:choice="meterSelectionOptions"
+						required
+					/>
+				</FormRow>
+				<FormRow
+					v-if="parentCircuit !== undefined || meterSelection === 'dedicated'"
 					id="circuitParamMeter"
-					v-model.trim="values.meter"
-					type="String"
-					size="w-100"
-					class="me-2"
-				/>
-			</FormRow>
+					:label="$t('config.circuit.meterLabel')"
+					:help="$t('config.circuit.meterHelp')"
+					:optional="parentCircuit !== undefined"
+				>
+					<button
+						type="button"
+						class="d-flex btn btn-sm align-items-center gap-2 mb-3 btn-outline-secondary border-0 evcc-gray"
+						tabindex="0"
+						@click="changeMeter(values)"
+					>
+						<shopicon-regular-plus
+							size="s"
+							class="flex-shrink-0"
+						></shopicon-regular-plus>
+						{{ $t("config.circuit.addMeter") }}
+					</button>
+				</FormRow>
+			</div>
+			<ChangeMeterModal :meters="meters" :meter-id="values.meter" />
 		</template>
 		<template v-if="hasChildren" #after-test>
 			<p class="evcc-gray">
@@ -72,13 +96,14 @@
 import { defineComponent, type PropType } from "vue";
 import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
 import type { ApiData, DeviceValues, Product, TemplateParam } from "./DeviceModal";
-import type { ConfigCircuit } from "@/types/evcc";
+import type { ConfigCircuit, ConfigMeter } from "@/types/evcc";
 import { type TemplateGroup, customTemplateOption } from "./DeviceModal/TemplateSelector.vue";
 import { ConfigType } from "@/types/evcc";
 import defaultCircuitYaml from "./defaultYaml/circuit.yaml?raw";
-import { getModal } from "@/configModal";
+import { getModal, openModal } from "@/configModal";
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
+import ChangeMeterModal from "./ChangeMeterModal.vue";
 
 export default defineComponent({
 	name: "CircuitModal",
@@ -86,15 +111,25 @@ export default defineComponent({
 		DeviceModalBase,
 		FormRow,
 		PropertyField,
+		ChangeMeterModal,
 	},
 	emits: ["changed"],
 	props: {
-		circuits: { type: Array as PropType<ConfigCircuit[]>, default: () => [] },
+		circuits: {
+			type: Array as PropType<ConfigCircuit[]>,
+			default: () => [],
+		},
+		meters: {
+			type: Array as PropType<ConfigMeter[]>,
+			default: () => [],
+		},
+		gridMeter: { type: Object as PropType<ConfigMeter> },
 	},
 	data() {
 		return {
 			ConfigType,
 			parentCircuit: undefined as string | undefined,
+			meterSelection: "none",
 		};
 	},
 	computed: {
@@ -114,6 +149,34 @@ export default defineComponent({
 		},
 		isNew(): boolean {
 			return this.id === undefined;
+		},
+		meterSelectionHelp() {
+			switch (this.meterSelection) {
+				case "none":
+					return this.$t("config.circuit.meterSelectionHelpNoMeter");
+				case "grid":
+					return this.$t("config.circuit.meterSelectionHelpGridMeter");
+				case "dedicated":
+					return this.$t("config.circuit.meterSelectionHelpDedicatedMeter");
+				default:
+					return "";
+			}
+		},
+		meterSelectionOptions() {
+			const options = [{ key: "none", name: this.$t("config.circuit.meterNone") }];
+
+			if (this.gridMeter) {
+				options.push({
+					key: "grid",
+					name: this.$t("config.circuit.meterGrid"),
+				});
+			}
+			options.push({
+				key: "dedicated",
+				name: this.$t("config.circuit.meterDedicated"),
+			});
+
+			return options;
 		},
 	},
 	methods: {
@@ -152,6 +215,17 @@ export default defineComponent({
 		},
 		handleClose() {
 			this.parentCircuit = undefined;
+		},
+		async changeMeter(values: { meter: string }) {
+			const meter = this.meters.find((m) => m.name === values.meter);
+			const result = await openModal("changeMeter", {
+				id: meter?.id,
+			});
+			if (result.action === "added" && result.name) {
+				values.meter = result.name;
+			} else if (result.action === "removed") {
+				values.meter = "";
+			}
 		},
 	},
 });
