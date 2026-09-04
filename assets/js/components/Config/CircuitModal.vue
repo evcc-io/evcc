@@ -117,6 +117,12 @@ import PropertyField from "./PropertyField.vue";
 import ChangeMeterModal from "./ChangeMeterModal.vue";
 import DeviceRefBox from "./DeviceRefBox.vue";
 
+enum MeterSelection {
+	NONE = "none",
+	GRID = "grid",
+	DEDICATED = "dedicated",
+}
+
 export default defineComponent({
 	name: "CircuitModal",
 	components: {
@@ -142,7 +148,7 @@ export default defineComponent({
 		return {
 			ConfigType,
 			parentCircuit: undefined as string | undefined,
-			meterSelection: "none",
+			meterSelection: MeterSelection.NONE,
 		};
 	},
 	computed: {
@@ -174,27 +180,29 @@ export default defineComponent({
 		},
 		meterSelectionHelp() {
 			switch (this.meterSelection) {
-				case "none":
+				case MeterSelection.NONE:
 					return this.$t("config.circuit.meterSelectionHelpNoMeter");
-				case "grid":
+				case MeterSelection.GRID:
 					return this.$t("config.circuit.meterSelectionHelpGridMeter");
-				case "dedicated":
+				case MeterSelection.DEDICATED:
 					return this.$t("config.circuit.meterSelectionHelpDedicatedMeter");
 				default:
 					return "";
 			}
 		},
 		meterSelectionOptions() {
-			const options = [{ key: "none", name: this.$t("config.circuit.meterNone") }];
+			const options = [
+				{ key: MeterSelection.NONE, name: this.$t("config.circuit.meterNone") },
+			];
 
 			if (this.gridMeter) {
 				options.push({
-					key: "grid",
+					key: MeterSelection.GRID,
 					name: this.$t("config.circuit.meterGrid"),
 				});
 			}
 			options.push({
-				key: "dedicated",
+				key: MeterSelection.DEDICATED,
 				name: this.$t("config.circuit.meterDedicated"),
 			});
 
@@ -202,10 +210,10 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		meterSelectionChanged(selection: string, values: { meter?: string }) {
-			if (selection === "grid") {
+		meterSelectionChanged(selection: MeterSelection, values: { meter?: string }) {
+			if (selection === MeterSelection.GRID) {
 				values.meter = this.gridMeter?.name;
-			} else if (selection === "none") {
+			} else if (selection === MeterSelection.NONE) {
 				delete values.meter;
 			} else if (values.meter === this.gridMeter?.name) {
 				delete values.meter;
@@ -213,11 +221,11 @@ export default defineComponent({
 		},
 		handleConfigurationLoaded(values: DeviceValues) {
 			if (!values["meter"]) {
-				this.meterSelection = "none";
+				this.meterSelection = MeterSelection.NONE;
 			} else if (this.gridMeter && values["meter"] === this.gridMeter.name) {
-				this.meterSelection = "grid";
+				this.meterSelection = MeterSelection.GRID;
 			} else {
-				this.meterSelection = "dedicated";
+				this.meterSelection = MeterSelection.DEDICATED;
 			}
 		},
 		setParentCircuit(parentCircuit?: string) {
@@ -234,7 +242,7 @@ export default defineComponent({
 			if (value === ConfigType.Custom) {
 				values.type = ConfigType.Custom;
 				values.yaml = defaultCircuitYaml;
-				this.meterSelection = "none";
+				this.meterSelection = MeterSelection.NONE;
 				delete values["meter"];
 			}
 		},
@@ -263,10 +271,12 @@ export default defineComponent({
 			const result = await openModal("changeMeter", { id: meter?.id });
 			if (result.action === "added" && result.name) {
 				this.meterSelection =
-					this.gridMeter && result.name === this.gridMeter.name ? "grid" : "dedicated";
+					this.gridMeter && result.name === this.gridMeter.name
+						? MeterSelection.GRID
+						: MeterSelection.DEDICATED;
 				values.meter = result.name;
 			} else if (result.action === "removed") {
-				this.meterSelection = "none";
+				this.meterSelection = MeterSelection.NONE;
 				delete values.meter;
 			}
 		},
