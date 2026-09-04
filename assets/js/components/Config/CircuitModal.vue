@@ -45,7 +45,7 @@
 			</FormRow>
 		</template>
 		<template #before-actions="{ values }">
-			<div v-if="values.type !== ConfigType.Custom">
+			<div :class="{ 'mt-4': values.type === ConfigType.Custom }">
 				<FormRow
 					v-if="!hasParentCircuit"
 					id="circuitParamMeterSelection"
@@ -149,8 +149,11 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		getParentCircuit() {
+			return this.parentCircuit || getModal("circuit")?.parentId;
+		},
 		hasParentCircuit(): boolean {
-			return this.parentCircuit !== undefined || getModal("circuit")?.parentId !== undefined;
+			return !!this.getParentCircuit;
 		},
 		getMeterTitle() {
 			return (name: string) => {
@@ -250,7 +253,7 @@ export default defineComponent({
 			return params.filter((p) => !["parent", "meter"].includes(p.Name));
 		},
 		parentTitle(name?: string): string {
-			const parent = name ?? this.parentCircuit;
+			const parent = name ?? this.getParentCircuit;
 			return (
 				this.circuits.find((c: ConfigCircuit) => c.name === parent)?.deviceTitle ||
 				parent ||
@@ -259,8 +262,7 @@ export default defineComponent({
 		},
 		transformApiData(data: ApiData): ApiData {
 			// always sent, so a parent inside custom yaml cannot break the hierarchy
-			if (!data["parent"]) delete data["parent"];
-			if (data["yaml"]) delete data["deviceTitle"];
+			data["parent"] = data["parent"] ?? "";
 			if (!data["meter"]) delete data["meter"];
 			return data;
 		},
