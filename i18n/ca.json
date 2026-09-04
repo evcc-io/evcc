@@ -63,28 +63,7 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Nivell de bateria",
-    "bufferStart": {
-      "above": "quan està per sobre de {soc}.",
-      "full": "quan arriba a {soc}.",
-      "never": "només amb prou excedent."
-    },
-    "capacity": "{energy} de {total}",
-    "control": "Control de la bateria",
-    "discharge": "Evita la descàrrega en mode ràpid i càrrega planificada.",
-    "disclaimerHint": "Nota:",
-    "disclaimerText": "Aquests paràmetres només afecten el mode solar. El comportament de càrrega s’ajusta en conseqüència.",
     "gridChargeTab": "Càrrega de xarxa",
-    "legendBottomName": "Prioritat per a la bateria domèstica",
-    "legendBottomSubline": "fins que arriba a {soc}.",
-    "legendMiddleName": "Prioritat per al vehicle",
-    "legendMiddleSubline": "quan la bateria domèstica està per sobre de {soc}.",
-    "legendTopAutostart": "S’inicia automàticament",
-    "legendTopName": "Càrrega del vehicle amb suport de bateria",
-    "legendTopSubline": "quan la bateria domèstica està per sobre de {soc}.",
-    "legendTopSublineAbove": "quan està per sobre de {soc}",
-    "legendTopSublineDisabled": "és {soc}.",
-    "legendTopSublineDisabledState": "desactivat",
     "modalTitle": "Bateria domèstica",
     "noBattery": "No hi ha bateries configurades.",
     "usageTab": "Ús de la bateria"
@@ -441,13 +420,6 @@
         "charging": "Carregador",
         "heating": "Dispositiu de calefacció"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Utilitzarà un interval de corrent de 6 a 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Utilitzarà un interval de corrent de 6 a 32 A.",
-      "chargerPowerCustom": "altre",
-      "chargerPowerCustomHelp": "Defineix un interval de corrent personalitzat.",
-      "chargerTypeLabel": "Tipus de carregador",
       "chargingTitle": "Comportament",
       "circuitHelp": "Assignació a la gestió de càrregues per a assegurar que no se superin els límits de potència i corrent.",
       "circuitInvalid": "El circuit no existeix",

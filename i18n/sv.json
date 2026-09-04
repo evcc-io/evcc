@@ -63,28 +63,7 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Batterinivå",
-    "bufferStart": {
-      "above": "när den är över {soc}.",
-      "full": "när det är {soc}.",
-      "never": "bara med tillräckligt sol-överskott."
-    },
-    "capacity": "{energy} av {total}",
-    "control": "Batteriinställningar",
-    "discharge": "Förhindra urladdning i snabbt läge och vid schemalagd laddning.",
-    "disclaimerHint": "Obs:",
-    "disclaimerText": "Inställningarna gäller enbart sol-läge. Laddning justeras därefter.",
     "gridChargeTab": "Laddning från nätet",
-    "legendBottomName": "Prioritera laddning av hemmabatteri",
-    "legendBottomSubline": "tills den når {soc}.",
-    "legendMiddleName": "Prioritera laddning av fordon",
-    "legendMiddleSubline": "när hemmabatteriet är över {soc}.",
-    "legendTopAutostart": "Startar automatiskt",
-    "legendTopName": "Fordonsladdning med batteristöd",
-    "legendTopSubline": "när hemmabatteriet är över {soc}.",
-    "legendTopSublineAbove": "när över {soc}",
-    "legendTopSublineDisabled": "är {soc}.",
-    "legendTopSublineDisabledState": "avaktiverad",
     "modalTitle": "Hemmabatteri",
     "noBattery": "Inga batterier konfigurerade.",
     "usageTab": "Batterianvändning"
@@ -440,13 +419,6 @@
         "charging": "Laddare",
         "heating": "Värmekälla"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Använder mellan 6 och 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Använder mellan 6 till 32 A.",
-      "chargerPowerCustom": "annan",
-      "chargerPowerCustomHelp": "Ange strömintervall.",
-      "chargerTypeLabel": "Typ av laddare",
       "chargingTitle": "Tillstånd",
       "circuitHelp": "Belastningsstyrning som säkrar att effekt och strömgränser ej överskrids.",
       "circuitInvalid": "Kretsen saknas",

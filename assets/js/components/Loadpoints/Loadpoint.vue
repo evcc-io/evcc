@@ -22,7 +22,12 @@
 				/>
 			</div>
 			<div class="mb-3 d-flex align-items-center">
-				<Mode class="flex-grow-1" v-bind="modeProps" @updated="setTargetMode" />
+				<Mode
+					class="flex-grow-1"
+					v-bind="modeProps"
+					@updated="setTargetMode"
+					@always-charge-updated="setAlwaysCharge"
+				/>
 				<LoadpointSettingsButton
 					:id="id"
 					:class="expandLoadpointHeader ? 'd-lg-none d-xl-block' : ''"
@@ -120,6 +125,7 @@ import SessionInfo from "./SessionInfo.vue";
 import { defineComponent, type PropType } from "vue";
 import type {
 	CHARGE_MODE,
+	ALWAYS_CHARGE,
 	PHASE_ACTION,
 	PV_ACTION,
 	CHARGER_STATUS_REASON,
@@ -152,6 +158,8 @@ export default defineComponent({
 		// main
 		title: String,
 		mode: String as PropType<CHARGE_MODE>,
+		alwaysCharge: String as PropType<ALWAYS_CHARGE>,
+		effectiveMinCurrent: Number,
 		effectiveLimitSoc: Number,
 		effectiveMinSoc: Number,
 		limitEnergy: Number,
@@ -382,6 +390,9 @@ export default defineComponent({
 		},
 		setTargetMode(mode: CHARGE_MODE) {
 			api.post(this.apiPath("mode") + "/" + mode);
+		},
+		setAlwaysCharge(value: ALWAYS_CHARGE) {
+			api.post(this.apiPath("alwayscharge") + "/" + value);
 		},
 		setLimitSoc(soc: number) {
 			api.post(this.apiPath("limitsoc") + "/" + soc);

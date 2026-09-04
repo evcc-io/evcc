@@ -63,28 +63,7 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Kaupiklio įkrova",
-    "bufferStart": {
-      "above": "kai virš {soc}.",
-      "full": "kai {soc}.",
-      "never": "tik su pakankamu pertekliumi."
-    },
-    "capacity": "{energy} iš {total}",
-    "control": "Kaupiklio valdymas",
-    "discharge": "Neleisti kaupiklio iškrovimo režime Greitas ir planiniame įkrovime.",
-    "disclaimerHint": "Pastaba:",
-    "disclaimerText": "Šie nustatymai paveikia tik įkrovimą Saulė. Įkrovimo algoritmas atitinkamai pakeičiamas.",
     "gridChargeTab": "Įkrovimas iš tinklo",
-    "legendBottomName": "Prioritetas namo kaupiklio įkrovimui",
-    "legendBottomSubline": "kol pasieks {soc}.",
-    "legendMiddleName": "Prioritetas automobilio įkrovimui",
-    "legendMiddleSubline": "kai namo kaupiklis yra virš {soc}.",
-    "legendTopAutostart": "Startuoti automatiškai",
-    "legendTopName": "Automobilio įkrovimas su kaupiklio pagalba",
-    "legendTopSubline": "kai kaupiklis yra virš {soc}.",
-    "legendTopSublineAbove": "kai virš {soc}",
-    "legendTopSublineDisabled": "yra {soc}.",
-    "legendTopSublineDisabledState": "išjungta",
     "modalTitle": "Namų kaupiklis",
     "noBattery": "Nėra sukonfigūruotų kaupiklių.",
     "usageTab": "Kaupiklio naudojimas"
@@ -441,13 +420,6 @@
         "charging": "Įkroviklis",
         "heating": "Šildytuvas"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Naudos įkrovimo srovę nuo 6 iki 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Naudos įkrovimo srovę nuo 6 iki 32 A.",
-      "chargerPowerCustom": "kiti",
-      "chargerPowerCustomHelp": "Nurodykite įkrovimo srovės ribas.",
-      "chargerTypeLabel": "Įkroviklio tipas",
       "chargingTitle": "Elgesys",
       "circuitHelp": "Apkrovos valdymo priskyrimas, siekiant užtikrinti, kad nebūtų viršytos galios ir srovės ribos.",
       "circuitInvalid": "Tokios grandinės nėra",

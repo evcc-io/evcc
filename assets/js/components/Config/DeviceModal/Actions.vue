@@ -7,6 +7,7 @@
 			v-bind="testState"
 			:sponsor-token-required="sponsorTokenRequired"
 			:currency="currency"
+			:usage="usage"
 			@test="$emit('test')"
 		/>
 
@@ -93,6 +94,7 @@ export default defineComponent({
 		isSucceeded: Boolean as PropType<boolean>,
 		sponsorTokenRequired: Boolean as PropType<boolean>,
 		currency: String as PropType<CURRENCY>,
+		usage: String as PropType<string>,
 	},
 	emits: ["save", "remove", "test", "disable"],
 	computed: {

@@ -63,28 +63,7 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Akumulatora līmenis",
-    "bufferStart": {
-      "above": "kad virs {soc}.",
-      "full": "kad sasniedz {soc}.",
-      "never": "tikai ar pietiekamu pārpalikumu."
-    },
-    "capacity": "{energy} no {total}",
-    "control": "Akumulatora vadība",
-    "discharge": "Novērst izlādi ātrajā režīmā un plānotajā uzlādē.",
-    "disclaimerHint": "Piezīme:",
-    "disclaimerText": "Šie iestatījumi ietekmē tikai saules enerģijas režīmu. Uzlādes uzvedība tiek attiecīgi pielāgota.",
     "gridChargeTab": "Uzlāde no tīkla",
-    "legendBottomName": "Dot priekšroku mājas akumulatora uzlādei",
-    "legendBottomSubline": "līdz tas sasniedz {soc}.",
-    "legendMiddleName": "Dot priekšroku transportlīdzekļa uzlādei",
-    "legendMiddleSubline": "kad mājas akumulators ir virs {soc}.",
-    "legendTopAutostart": "Sākt automātiski",
-    "legendTopName": "Ar akumulatoru atbalstīta uzlāde",
-    "legendTopSubline": "kad mājas akumulators ir virs {soc}.",
-    "legendTopSublineAbove": "kad virs {soc}",
-    "legendTopSublineDisabled": "ir {soc}.",
-    "legendTopSublineDisabledState": "atspējots",
     "modalTitle": "Mājas akumulators",
     "noBattery": "Nav konfigurēts neviens akumulators.",
     "usageTab": "Akumulatora lietošana"
@@ -441,13 +420,6 @@
         "charging": "Lādētājs",
         "heating": "Sildīšanas ierīce"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Izmantos strāvas diapazonu no 6 līdz 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Izmantos strāvas diapazonu no 6 līdz 32 A.",
-      "chargerPowerCustom": "cits",
-      "chargerPowerCustomHelp": "Definējiet pielāgotu strāvas diapazonu.",
-      "chargerTypeLabel": "Lādētāja tips",
       "chargingTitle": "Uzvedība",
       "circuitHelp": "Slodzes pārvaldības piešķīrums, lai nodrošinātu jaudas un strāvas robežu nepārsniegšanu.",
       "circuitInvalid": "Ķēde nepastāv",

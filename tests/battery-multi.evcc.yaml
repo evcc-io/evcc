@@ -1,7 +1,7 @@
 interval: 0.1s
 
 site:
-  title: Battery Experimental
+  title: Battery Multi
   meters:
     grid: grid
     pv: pv
@@ -29,6 +29,7 @@ meters:
       source: const
       value: 76
     capacity: 13.5
+    batterymodes: ["normal", "hold", "charge", "holdcharge"]
     batterymode:
       source: js
       vm: shared
@@ -56,3 +57,9 @@ tariffs:
         price: 0.05
       - hours: 17-21
         price: 0.5
+  feedin:
+    type: fixed
+    price: 0.06
+    zones:
+      - hours: 11-14
+        price: 0.28

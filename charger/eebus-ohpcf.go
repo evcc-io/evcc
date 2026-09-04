@@ -3,6 +3,7 @@ package charger
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -113,6 +114,19 @@ func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost ti
 		return nil, err
 	}
 
+	// the compressor entity arrives with the use case data, not with the connection
+	if err := c.connector.WaitUseCase(ctx); err != nil {
+		inst.UnregisterDevice(ski, c)
+		return nil, err
+	}
+
+	// a device without OHPCF never announces a compressor and would error on
+	// every cycle instead of failing here (#33461)
+	if _, ok := c.connectedCompressor(); !ok {
+		inst.UnregisterDevice(ski, c)
+		return nil, fmt.Errorf("missing use case: %s", model.UseCaseNameTypeOptimizationOfSelfConsumptionByHeatPumpCompressorFlexibility)
+	}
+
 	// unregister device when context is cancelled (e.g. UI config validation)
 	go func() {
 		<-ctx.Done()
@@ -150,9 +164,7 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 
 	switch event {
 	case ohpcf.DataUpdateConsumptionState:
-		c.mu.Lock()
-		c.compressor = entity
-		c.mu.Unlock()
+		c.setCompressor(entity)
 
 		// react immediately to a freshly announced schedule/resume opportunity
 		// instead of waiting for the next reboost tick, which may miss it (#31549)
@@ -170,9 +182,7 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 		ohpcf.DataUpdateConsumptionStartTime,
 		ohpcf.DataUpdateMinimalRunDuration,
 		ohpcf.DataUpdateMinimalPauseDuration:
-		c.mu.Lock()
-		c.compressor = entity
-		c.mu.Unlock()
+		c.setCompressor(entity)
 
 	// Monitoring Appliance MPC provides the measured power consumption
 	case mpc.UseCaseSupportUpdate:
@@ -201,6 +211,16 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 		}
 		c.mu.Unlock()
 	}
+}
+
+// setCompressor caches the compressor entity and releases a pending WaitUseCase,
+// which fires on the first OHPCF event, the point Status and Enabled become usable.
+func (c *EEBusOHPCF) setCompressor(entity spineapi.EntityRemoteInterface) {
+	c.mu.Lock()
+	c.compressor = entity
+	c.mu.Unlock()
+
+	c.connector.UseCase()
 }
 
 func (c *EEBusOHPCF) connectedCompressor() (spineapi.EntityRemoteInterface, bool) {

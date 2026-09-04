@@ -79,7 +79,7 @@ func NewEdfTempoFromConfig(other map[string]any) (api.Tariff, error) {
 
 	t.Client.Transport = &oauth2.Transport{
 		Base:   t.Client.Transport,
-		Source: oauth2.ReuseTokenSource(nil, oauth.BootstrapTokenSource(t.refreshToken)),
+		Source: oauth2.ReuseTokenSource(nil, oauth.BootstrapTokenSource(log, t.refreshToken)),
 	}
 
 	return runOrError(t)

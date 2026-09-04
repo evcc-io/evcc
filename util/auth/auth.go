@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/core/keys"
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/sethvargo/go-password/password"
 	"golang.org/x/crypto/bcrypt"

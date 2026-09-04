@@ -198,13 +198,17 @@ func deviceOtherFromHandler[T any](name string, h config.Handler[T]) (map[string
 	return dev.Config().Other, nil
 }
 
+// deviceTestTimeout limits the device configuration test. EEBus devices need
+// headroom for ship-go's connection backoff plus the SHIP handshake.
+const deviceTestTimeout = 15 * time.Second
+
 func startDeviceTimeout() (context.Context, context.CancelFunc, chan struct{}) {
 	done := make(chan struct{})
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func() {
 		select {
-		case <-time.After(10 * time.Second):
+		case <-time.After(deviceTestTimeout):
 			// timeout - cancel context
 			cancel()
 		case <-done:
@@ -399,6 +403,12 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 	wg.Go(func() {
 		if hasFeature(instance, api.SwitchDevice) {
 			makeResult("switchDevice", true, nil)
+		}
+	})
+
+	wg.Go(func() {
+		if hasFeature(instance, api.Continuous) {
+			makeResult("continuous", true, nil)
 		}
 	})
 

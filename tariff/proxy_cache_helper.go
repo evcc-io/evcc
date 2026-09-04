@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/server/db/cache"
+	"github.com/evcc-io/evcc/db/cache"
 )
 
 type cached struct {

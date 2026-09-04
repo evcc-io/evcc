@@ -63,28 +63,7 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Carga da bateria",
-    "bufferStart": {
-      "above": "quando acima {soc}.",
-      "full": "quando estiver a {soc}.",
-      "never": "apenas com excedente de produção suficiente."
-    },
-    "capacity": "{energy} de {total}",
-    "control": "Controlo da bateria",
-    "discharge": "Prevenir a descarga no modo rápido e na carga planeada.",
-    "disclaimerHint": "Nota:",
-    "disclaimerText": "Estas configurações só afetam o modo solar. O comportamento de carregamento é ajustado de acordo.",
     "gridChargeTab": "Carregamento pela Rede",
-    "legendBottomName": "“Dar prioridade ao carregamento da bateria da casa”",
-    "legendBottomSubline": "até atingir {soc}.",
-    "legendMiddleName": "“Dar prioridade ao carregamento do veículo”",
-    "legendMiddleSubline": "quando a bateria doméstica está acima de {soc}.",
-    "legendTopAutostart": "Iniciar automaticamente",
-    "legendTopName": "Carregamento de veículos com a bateria",
-    "legendTopSubline": "quando a bateria da casa está acima de {soc}.",
-    "legendTopSublineAbove": "quando acima de {soc}",
-    "legendTopSublineDisabled": "é {soc}.",
-    "legendTopSublineDisabledState": "desativado",
     "modalTitle": "Bateria da Casa",
     "noBattery": "Não há baterias configuradas.",
     "usageTab": "Gestão da bateria"
@@ -427,13 +406,6 @@
         "charging": "Carregador",
         "heating": "Dispositivo de aquecimento"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Utilização de uma gama de correntes de 6 a 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Utilização de uma gama de correntes de 6 a 32 A.",
-      "chargerPowerCustom": "outro",
-      "chargerPowerCustomHelp": "Definir um intervalo de Correntes personalizado.",
-      "chargerTypeLabel": "Tipo de Carregador",
       "chargingTitle": "Comportamento",
       "circuitHelp": "Atribuição de gestão de carga para garantir que os limites de potência e corrente não são excedidos.",
       "circuitInvalid": "O circuito não existe",

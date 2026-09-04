@@ -8,7 +8,7 @@
 				class="d-flex gap-2 overflow-hidden text-truncate"
 			>
 				<div class="label overflow-hidden text-truncate flex-shrink-1 flex-grow-1">
-					{{ $t(`config.deviceValue.${entry.name}`) }}
+					{{ deviceValueLabel(entry.name) }}
 				</div>
 				<div class="value" :class="[valueClasses(entry), truncateClasses(entry)]">
 					{{ fmtDeviceValue(entry) }}
@@ -31,7 +31,7 @@
 						:data-testid="`device-tag-${entry.name}`"
 					>
 						<td class="text-truncate">
-							{{ $t(`config.deviceValue.${entry.name}`) }}
+							{{ deviceValueLabel(entry.name) }}
 						</td>
 						<td
 							v-for="(val, idx) in entry.value"
@@ -78,6 +78,9 @@ const PHASE_TAGS = ["phaseCurrents", "phaseVoltages", "phasePowers"];
 
 const FORECAST_TAGS = ["priceRates", "co2Rates", "solarRates", "temperatureRates"];
 
+// display order, remaining tags follow in backend order
+const FIRST_TAGS = ["power", "soc", "capacity", "energy", "returnEnergy"];
+
 export default {
 	name: "DeviceTags",
 	components: { TariffChart },
@@ -85,6 +88,7 @@ export default {
 	props: {
 		tags: Object,
 		currency: String,
+		usage: String,
 	},
 	data() {
 		return {
@@ -92,8 +96,11 @@ export default {
 		};
 	},
 	computed: {
+		effectiveUsage() {
+			return this.tags?.heating?.value ? "consumer" : this.usage;
+		},
 		regularEntries() {
-			return Object.entries(this.tags)
+			const entries = Object.entries(this.tags)
 				.filter(
 					([name]) =>
 						!HIDDEN_TAGS.includes(name) &&
@@ -103,6 +110,11 @@ export default {
 				.map(([name, { value, error, warning, muted, asleep }]) => {
 					return { name, value, error, warning, muted, asleep };
 				});
+			const first = FIRST_TAGS.flatMap((name) =>
+				entries.filter((entry) => entry.name === name)
+			);
+			const rest = entries.filter(({ name }) => !FIRST_TAGS.includes(name));
+			return [...first, ...rest];
 		},
 		phaseEntries() {
 			return Object.entries(this.tags)
@@ -176,6 +188,13 @@ export default {
 		},
 	},
 	methods: {
+		deviceValueLabel(name) {
+			const usageKey = `config.deviceValue.usage.${this.effectiveUsage}.${name}`;
+			if (this.effectiveUsage && this.$te(usageKey)) {
+				return this.$t(usageKey);
+			}
+			return this.$t(`config.deviceValue.${name}`);
+		},
 		truncateClasses(entry) {
 			// don't truncate numeric values
 			return typeof entry.value === "string"

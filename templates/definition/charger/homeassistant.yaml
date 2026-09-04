@@ -41,8 +41,8 @@ params:
     example: not_plugged, disconnected
     advanced: true
     help:
-      en: Comma-separated list of additional states meaning ready
-      de: Komma-getrennte Liste zusätzlicher Zustände für bereit
+      en: Comma-separated list of additional states meaning ready, see [docs.evcc.io](https://docs.evcc.io/en/smarthome/home-assistant#charge-status)
+      de: Komma-getrennte Liste zusätzlicher Zustände für bereit, siehe [docs.evcc.io](https://docs.evcc.io/de/smarthome/home-assistant#charge-status)
   - name: statusB
     description:
       de: Zustände für Status B
@@ -50,8 +50,8 @@ params:
     example: charging_stopped, charging_completed
     advanced: true
     help:
-      en: Comma-separated list of additional states meaning connected
-      de: Komma-getrennte Liste zusätzlicher Zustände für verbunden
+      en: Comma-separated list of additional states meaning connected, see [docs.evcc.io](https://docs.evcc.io/en/smarthome/home-assistant#charge-status)
+      de: Komma-getrennte Liste zusätzlicher Zustände für verbunden, siehe [docs.evcc.io](https://docs.evcc.io/de/smarthome/home-assistant#charge-status)
   - name: statusC
     description:
       de: Zustände für Status C
@@ -59,8 +59,8 @@ params:
     example: instant_charging, fast_charging
     advanced: true
     help:
-      en: Comma-separated list of additional states meaning charging
-      de: Komma-getrennte Liste zusätzlicher Zustände für laden
+      en: Comma-separated list of additional states meaning charging, see [docs.evcc.io](https://docs.evcc.io/en/smarthome/home-assistant#charge-status)
+      de: Komma-getrennte Liste zusätzlicher Zustände für laden, siehe [docs.evcc.io](https://docs.evcc.io/de/smarthome/home-assistant#charge-status)
   - name: enabled
     description:
       de: Aktivierungsstatus-Sensor
