@@ -92,12 +92,16 @@ export default {
 	},
 	methods: {
 		addSub() {
-			this.onAddSub(this.circuitsTree?.name);
+			this.onAddSub(this.parentCircuitName);
 		},
 		async editCircuit() {
 			const hasChildren =
 				this.circuitsTree?.children && this.circuitsTree.children.length > 0;
-			await openModal("circuit", { id: this.circuitsTree?.id, hasChildren });
+			await openModal("circuit", {
+				id: this.circuitsTree?.id,
+				hasChildren,
+				parentId: this.parentCircuitName,
+			});
 		},
 		getMeterTitle(name?: string) {
 			if (name) {
@@ -113,6 +117,9 @@ export default {
 		return { ICON_SIZE };
 	},
 	computed: {
+		parentCircuitName() {
+			return this.circuitsTree?.name;
+		},
 		childGuides(): boolean[] {
 			return this.depth === 0 ? [] : [...this.guides, !this.isLast];
 		},

@@ -9,6 +9,7 @@ export interface ModalEntry {
   choices?: string[];
   station?: string;
   hasChildren?: boolean;
+  parentId?: string;
 }
 
 export interface ModalResult {
@@ -114,6 +115,7 @@ export function parseKey(key: string): {
   choices?: string[];
   station?: string;
   hasChildren?: boolean;
+  parentId?: string;
 } {
   const bracketMatch = key.match(/^([^[]+)\[([^\]]+)\]$/);
   if (!bracketMatch) {
@@ -139,6 +141,9 @@ export function parseKey(key: string): {
   }
   if (paramKey === "hasChildren") {
     return { name, hasChildren: Boolean(paramValue) };
+  }
+  if (paramKey === "parentId") {
+    return { name, parentId: String(paramValue) };
   }
   return { name };
 }
@@ -174,6 +179,7 @@ export function parseQueryString(queryString: string): ModalEntry[] {
     if (parsed.choices) entry.choices = parsed.choices;
     if (parsed.station) entry.station = parsed.station;
     if (parsed.hasChildren) entry.hasChildren = parsed.hasChildren;
+    if (parsed.parentId) entry.parentId = parsed.parentId;
     entries.push(entry);
   }
   return entries;
@@ -192,6 +198,8 @@ export function buildQuery(stack: ModalEntry[]): Record<string, string> {
       key += `[station:${entry.station}]`;
     } else if (entry.hasChildren) {
       key += `[hasChildren:${entry.hasChildren}]`;
+    } else if (entry.parentId) {
+      key += `[parentId:${entry.parentId}]`;
     }
     query[key] = entry.id !== undefined ? String(entry.id) : "";
   }
@@ -251,6 +259,7 @@ export function openModal(
     choices?: string[];
     station?: string;
     hasChildren?: boolean;
+    parentId?: string;
   }
 ): Promise<ModalResult> {
   if (!_router) {
@@ -263,6 +272,7 @@ export function openModal(
   if (params?.choices) entry.choices = params.choices;
   if (params?.station) entry.station = params.station;
   if (params?.hasChildren) entry.hasChildren = params.hasChildren;
+  if (params?.parentId) entry.parentId = params.parentId;
 
   const newStack = [...configModal.stack, entry];
   const query = buildQuery(newStack);
@@ -307,6 +317,7 @@ export function replaceModal(
     choices?: string[];
     station?: string;
     hasChildren?: boolean;
+    parentId?: string;
   }
 ): void {
   if (!_router) return;
@@ -317,6 +328,7 @@ export function replaceModal(
   if (params?.choices) entry.choices = params.choices;
   if (params?.station) entry.station = params.station;
   if (params?.hasChildren) entry.hasChildren = params.hasChildren;
+  if (params?.parentId) entry.parentId = params.parentId;
 
   const newStack = [...configModal.stack.slice(0, -1), entry];
   const query = buildQuery(newStack);

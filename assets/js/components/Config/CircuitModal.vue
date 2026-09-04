@@ -47,7 +47,7 @@
 		<template #before-actions="{ values }">
 			<div v-if="values.type !== ConfigType.Custom">
 				<FormRow
-					v-if="parentCircuit === undefined"
+					v-if="!hasParentCircuit"
 					id="circuitParamMeterSelection"
 					data-testid="circuit-meter-selection"
 					:label="$t('config.circuit.meterSelectionLabel')"
@@ -65,17 +65,17 @@
 					/>
 				</FormRow>
 				<FormRow
-					v-if="parentCircuit !== undefined || meterSelection === 'dedicated'"
+					v-if="hasParentCircuit || meterSelection === 'dedicated'"
 					id="circuitParamMeter"
 					:label="$t('config.circuit.meterLabel')"
 					:help="$t('config.circuit.meterHelp')"
-					:optional="parentCircuit !== undefined"
+					:optional="hasParentCircuit"
 				>
 					<DeviceRefBox
 						v-if="values.meter && meterSelection !== 'grid'"
 						:title="getMeterTitle(values.meter)"
 						compact
-						@edit="changeMeter(values)"
+						@edit="createMeter(values)"
 					/>
 					<button
 						v-else
@@ -83,7 +83,7 @@
 						class="d-flex btn btn-sm align-items-center gap-2 mb-3 btn-outline-secondary border-0 evcc-gray"
 						data-testid="circuit-meter-change"
 						tabindex="0"
-						@click="changeMeter(values)"
+						@click="createMeter(values)"
 					>
 						<shopicon-regular-plus
 							size="s"
@@ -93,7 +93,6 @@
 					</button>
 				</FormRow>
 			</div>
-			<ChangeMeterModal :meters="meters" :meter-id="values.meter" />
 		</template>
 		<template v-if="hasChildren" #after-test>
 			<p class="evcc-gray">
@@ -114,7 +113,6 @@ import defaultCircuitYaml from "./defaultYaml/circuit.yaml?raw";
 import { getModal, openModal } from "@/configModal";
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
-import ChangeMeterModal from "./ChangeMeterModal.vue";
 import DeviceRefBox from "./DeviceRefBox.vue";
 
 enum MeterSelection {
@@ -129,7 +127,6 @@ export default defineComponent({
 		DeviceModalBase,
 		FormRow,
 		PropertyField,
-		ChangeMeterModal,
 		DeviceRefBox,
 	},
 	emits: ["changed"],
@@ -152,6 +149,9 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		hasParentCircuit(): boolean {
+			return this.parentCircuit !== undefined || getModal("circuit")?.parentId !== undefined;
+		},
 		getMeterTitle() {
 			return (name: string) => {
 				const meters = this.meters.filter((m) => m.name === name);
@@ -195,7 +195,7 @@ export default defineComponent({
 				{ key: MeterSelection.NONE, name: this.$t("config.circuit.meterNone") },
 			];
 
-			if (this.gridMeter) {
+			if (!this.hasParentCircuit) {
 				options.push({
 					key: MeterSelection.GRID,
 					name: this.$t("config.circuit.meterGrid"),
@@ -259,21 +259,19 @@ export default defineComponent({
 		},
 		transformApiData(data: ApiData): ApiData {
 			// always sent, so a parent inside custom yaml cannot break the hierarchy
-			data["parent"] = data["parent"] ?? "";
+			if (!data["parent"]) delete data["parent"];
+			if (data["yaml"]) delete data["deviceTitle"];
 			if (!data["meter"]) delete data["meter"];
 			return data;
 		},
 		handleClose() {
 			this.parentCircuit = undefined;
 		},
-		async changeMeter(values: { meter?: string }) {
+		async createMeter(values: { meter?: string }) {
 			const meter = this.meters.find((m) => m.name === values.meter);
-			const result = await openModal("changeMeter", { id: meter?.id });
+			const result = await openModal("meter", { id: meter?.id, type: "ext" });
 			if (result.action === "added" && result.name) {
-				this.meterSelection =
-					this.gridMeter && result.name === this.gridMeter.name
-						? MeterSelection.GRID
-						: MeterSelection.DEDICATED;
+				this.meterSelection = MeterSelection.DEDICATED;
 				values.meter = result.name;
 			} else if (result.action === "removed") {
 				this.meterSelection = MeterSelection.NONE;

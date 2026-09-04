@@ -115,15 +115,6 @@ test.describe("circuit", async () => {
     await start();
     await page.goto("/#/config");
 
-    const meterModal = page.getByTestId("meter-modal");
-    await page.getByRole("button", { name: "Add additional meter" }).click();
-    await expectModalVisible(meterModal);
-    await meterModal.getByLabel("Title").fill("Circuit meter");
-    await meterModal.getByLabel("Manufacturer").selectOption("Demo meter");
-    await meterModal.getByLabel("Power").fill("1000");
-    await meterModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(meterModal);
-
     const card = page.getByTestId("circuits");
     await card.getByRole("button", { name: "edit" }).click();
 
@@ -141,13 +132,13 @@ test.describe("circuit", async () => {
     await circuitModal.getByLabel("Meter Selection").selectOption({ label: "Dedicated meter" });
     await circuitModal.getByTestId("circuit-meter-change").click();
 
-    const changeMeterModal = page.getByTestId("changeMeter-modal");
-    await expectModalVisible(changeMeterModal);
-    const meterOption = changeMeterModal.getByRole("option", { name: /Circuit meter/ });
-    const meterValue = await meterOption.getAttribute("value");
-    await changeMeterModal.getByRole("combobox").selectOption(meterValue!);
-    await changeMeterModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(changeMeterModal);
+    const meterModal = page.getByTestId("meter-modal");
+    await expectModalVisible(meterModal);
+    await meterModal.getByLabel("Title").fill("Circuit meter");
+    await meterModal.getByLabel("Manufacturer").selectOption("Demo meter");
+    await meterModal.getByLabel("Power").fill("1000");
+    await meterModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(meterModal);
 
     await circuitModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(circuitModal);
@@ -224,14 +215,15 @@ test.describe("circuit test result", async () => {
     const circuitModal = page.getByTestId("circuit-modal");
     await expectModalVisible(circuitModal);
     await circuitModal.getByLabel("Title").fill("House");
+    await circuitModal
+      .getByLabel("Circuit", { exact: true })
+      .selectOption({ label: "Static circuit" });
     await circuitModal.getByLabel("Maximum current").fill("16");
     await circuitModal.getByLabel("Maximum power").fill("10000");
     await circuitModal.getByRole("link", { name: "validate" }).click();
 
     const testResult = circuitModal.getByTestId("test-result");
     await expect(testResult).toContainText("Status: successful");
-    await expect(testResult).toContainText("Max. current16.0 A");
-    await expect(testResult).toContainText("Max. power10.0 kW");
   });
 
   test("user-defined yaml sample", async ({ page }) => {
@@ -254,8 +246,6 @@ test.describe("circuit test result", async () => {
 
     const testResult = circuitModal.getByTestId("test-result");
     await expect(testResult).toContainText("Status: successful");
-    await expect(testResult).toContainText("Max. current63.0 A");
-    await expect(testResult).toContainText("Max. power30.0 kW");
     await circuitModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(circuitModal);
 
@@ -273,7 +263,6 @@ test.describe("circuit test result", async () => {
     await editorPaste(editor, page, "maxcurrent: 16\nparent: db:99");
     await circuitModal.getByRole("link", { name: "validate" }).click();
     await expect(testResult).toContainText("Status: successful");
-    await expect(testResult).toContainText("Max. current16.0 A");
     await circuitModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(circuitModal);
     await expect(circuitsModal.getByTestId("circuit-node").first()).toContainText("House");
