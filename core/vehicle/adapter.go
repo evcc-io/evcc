@@ -19,6 +19,9 @@ var Publish func()
 // ClearPlanLocks clears locked plan goals across all loadpoints
 var ClearPlanLocks func()
 
+// PlanChanged notifies the site that a vehicle's plan constraints changed
+var PlanChanged func(api.Vehicle)
+
 type adapter struct {
 	log         *util.Logger
 	name        string
@@ -38,6 +41,12 @@ func (v *adapter) publish() {
 func (v *adapter) clearPlanLocks() {
 	if ClearPlanLocks != nil {
 		ClearPlanLocks()
+	}
+}
+
+func (v *adapter) planChanged() {
+	if PlanChanged != nil {
+		PlanChanged(v.Instance())
 	}
 }
 
@@ -160,6 +169,7 @@ func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 	v.clearPlanLocks()
 
 	v.publish()
+	v.planChanged()
 
 	return nil
 }
@@ -189,6 +199,7 @@ func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlan) error {
 	v.clearPlanLocks()
 
 	v.publish()
+	v.planChanged()
 
 	return nil
 }
@@ -217,6 +228,7 @@ func (v *adapter) SetPlanStrategy(planStrategy api.PlanStrategy) error {
 	}
 
 	v.publish()
+	v.planChanged()
 
 	return nil
 }

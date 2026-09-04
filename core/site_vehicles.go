@@ -75,13 +75,8 @@ func (site *Site) publishVehicles() {
 		}
 
 		// publish effective plan strategy immediately for soc-based planning
-		if owner := site.coordinator.Owner(instance); owner != nil {
-			owner.PublishEffectiveValues()
-
-			// apply immediately instead of waiting for the loadpoint's turn in the control cycle
-			if lp, ok := owner.(*Loadpoint); ok {
-				lp.requestUpdate()
-			}
+		if lp := site.coordinator.Owner(instance); lp != nil {
+			lp.PublishEffectiveValues()
 		}
 	}
 
