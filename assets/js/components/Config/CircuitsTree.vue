@@ -95,10 +95,9 @@ export default {
 			this.onAddSub(this.circuitsTree?.name);
 		},
 		async editCircuit() {
-			const id = parseInt(this.circuitsTree?.name?.split(":")[1] || "-1"); // TODO: where to get id from?
 			const hasChildren =
 				this.circuitsTree?.children && this.circuitsTree.children.length > 0;
-			await openModal("circuit", { id, hasChildren });
+			await openModal("circuit", { id: this.circuitsTree?.id, hasChildren });
 		},
 		getMeterTitle(name?: string) {
 			if (name) {
