@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div data-testid="circuit-node">
 		<div class="d-flex align-items-stretch row-spacing">
 			<template v-if="depth > 0">
 				<span v-for="(full, i) in guides" :key="i" class="tree-col">
@@ -40,6 +40,7 @@
 			<button
 				type="button"
 				class="d-flex btn btn-sm btn-outline-secondary border-0 align-items-center gap-2 evcc-gray"
+				data-testid="circuit-add-sub"
 				tabindex="0"
 				@click="addSub"
 			>

@@ -49,6 +49,7 @@
 				<FormRow
 					v-if="parentCircuit === undefined"
 					id="circuitParamMeterSelection"
+					data-testid="circuit-meter-selection"
 					:label="$t('config.circuit.meterSelectionLabel')"
 					:help="meterSelectionHelp"
 				>
@@ -79,6 +80,7 @@
 						v-else
 						type="button"
 						class="d-flex btn btn-sm align-items-center gap-2 mb-3 btn-outline-secondary border-0 evcc-gray"
+						data-testid="circuit-meter-change"
 						tabindex="0"
 						@click="changeMeter(values)"
 					>

@@ -46,7 +46,7 @@ test.describe("circuit", async () => {
     await validateCircuitsTags(page);
   });
 
-  test("via ui", async ({ page }) => {
+  test("via legacy ui", async ({ page }) => {
     await start(undefined, CONFIG_CIRCUITS_LEGACY);
     await page.goto("/#/config");
 
@@ -105,6 +105,84 @@ test.describe("circuit", async () => {
     await expect(restartButton).toBeVisible();
 
     // restart
+    await restart();
+    await page.reload();
+
+    await validateCircuitsTags(page);
+  });
+
+  test("via config ui", async ({ page }) => {
+    await start();
+    await page.goto("/#/config");
+
+    const card = page.getByTestId("circuits");
+    await card.getByRole("button", { name: "edit" }).click();
+
+    const circuitsModal = page.getByTestId("circuits-modal");
+    await expectModalVisible(circuitsModal);
+    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+
+    const circuitModal = page.getByTestId("circuit-modal");
+    await expectModalVisible(circuitModal);
+    await circuitModal.getByLabel("Title").fill("Main");
+    await circuitModal
+      .getByLabel("Circuit", { exact: true })
+      .selectOption({ label: "Static circuit" });
+    await circuitModal.getByLabel("Maximum current").fill("16");
+    await circuitModal.getByLabel("Maximum power").fill("10000");
+    await circuitModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(circuitModal);
+
+    const mainCircuit = circuitsModal.getByTestId("circuit-node").filter({ hasText: "Main" });
+    await expect(mainCircuit).toBeVisible();
+    await mainCircuit.getByTestId("circuit-add-sub").click();
+    await expectModalVisible(circuitModal);
+    await expect(circuitModal.getByLabel("Parent circuit")).toHaveValue("Main");
+    await circuitModal.getByLabel("Title").fill("Child");
+    await circuitModal
+      .getByLabel("Circuit", { exact: true })
+      .selectOption({ label: "Static circuit" });
+    await circuitModal.getByLabel("Maximum current").fill("10");
+    await circuitModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(circuitModal);
+
+    await circuitsModal.getByText("Close", { exact: true }).click();
+    await expectModalHidden(circuitsModal);
+
+    for (const [loadpointName, circuitName] of [
+      ["Carport 1", "Main"],
+      ["Carport 2", "Main"],
+    ]) {
+      const lpModal = page.getByTestId("loadpoint-modal");
+      await page.getByRole("button", { name: "Add charging point or heater" }).click();
+      await expectModalVisible(lpModal);
+      await lpModal.getByRole("button", { name: "Add charging point" }).click();
+      await lpModal.getByLabel("Title").fill(loadpointName);
+
+      await lpModal.getByRole("button", { name: "Add charger" }).click();
+      const chargerModal = page.getByTestId("charger-modal");
+      await expectModalVisible(chargerModal);
+      await chargerModal.getByLabel("Manufacturer").selectOption("Demo charger");
+      await chargerModal.getByLabel("Charge status").selectOption("C");
+      await chargerModal.getByLabel("Power").fill("1000");
+      await chargerModal.getByRole("radio", { name: "Enabled: Yes" }).click();
+      await chargerModal.getByRole("button", { name: "Save" }).click();
+      await expectModalHidden(chargerModal);
+      await expectModalVisible(lpModal);
+
+      await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
+      await expect(lpModal.getByLabel("Circuit")).toBeVisible();
+      const circuitOption = lpModal.getByRole("option", { name: new RegExp(circuitName) });
+      const circuitValue = await circuitOption.getAttribute("value");
+      await lpModal.getByLabel("Circuit").selectOption(circuitValue!);
+      await lpModal.getByRole("button", { name: "Save" }).click();
+      await expectModalHidden(lpModal);
+    }
+
+    const restartButton = page
+      .getByTestId("bottom-banner")
+      .getByRole("button", { name: "Restart" });
+    await expect(restartButton).toBeVisible();
     await restart();
     await page.reload();
 
