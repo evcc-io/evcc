@@ -1265,14 +1265,6 @@ func (site *Site) update(lp updater) {
 	// update loadpoints
 	totalChargePower := site.updateLoadpoints(consumption)
 
-	// the cycle only updates a single loadpoint, but the plan is cheap to compute
-	// and must not go stale on the loadpoints waiting for their turn
-	for _, other := range site.activeLoadpoints() {
-		if updater(other) != lp {
-			other.publishPlan()
-		}
-	}
-
 	site.updateCircuits()
 	site.applyHemsLimits()
 

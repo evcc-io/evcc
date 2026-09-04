@@ -697,11 +697,6 @@ export interface Loadpoint {
   /** Charging plan strategy. */
   planStrategy: PlanStrategy;
   /**
-   * A plan recomputation is pending. The published plan does not yet reflect the
-   * current constraints.
-   */
-  planStale: boolean;
-  /**
    * Projected end of the charging plan. End of the last planned slot.
    * @format date-time
    */
