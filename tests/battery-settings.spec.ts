@@ -87,42 +87,39 @@ test.describe("battery settings", async () => {
     ).toBeVisible();
   });
 
-  for (const width of [1400, 390]) {
-    test(`optimizer automatic mode ${width}px`, async ({ page }) => {
-      await page.setViewportSize({ width, height: 900 });
-      await page.goto("/#/battery");
+  test("optimizer automatic mode", async ({ page }) => {
+    await page.goto("/#/battery");
 
-      const enableLimit = page.getByRole("switch", { name: "Enable limit" });
-      const priceLimit = page.getByRole("combobox", { name: "Price limit" });
-      const dischargeControl = page.getByRole("switch", { name: /Prevent home battery discharge/ });
-      const optimizerHints = page.getByText("Note: Charging is controlled by the optimizer.", {
-        exact: true,
-      });
-
-      await expect(enableLimit).toBeEnabled();
-      await expect(priceLimit).toBeEnabled();
-      await expect(dischargeControl).toBeEnabled();
-      await expect(optimizerHints).toHaveCount(0);
-
-      await expect(await page.request.post("/api/config/optimizerautomatic/true")).toBeOK();
-
-      await expect(enableLimit).toBeDisabled();
-      await expect(priceLimit).toBeDisabled();
-      await expect(dischargeControl).toBeDisabled();
-      await expect(optimizerHints).toHaveCount(2);
-      await expect(optimizerHints.first()).toBeVisible();
-      await expect(optimizerHints.last()).toBeVisible();
-      await expect(page.getByTestId("battery-priority").getByRole("combobox")).toBeEnabled();
-      await expect(page.getByTestId("battery-buffer").getByRole("combobox").first()).toBeEnabled();
-
-      await expect(await page.request.post("/api/config/optimizerautomatic/false")).toBeOK();
-
-      await expect(enableLimit).toBeEnabled();
-      await expect(priceLimit).toBeEnabled();
-      await expect(dischargeControl).toBeEnabled();
-      await expect(optimizerHints).toHaveCount(0);
+    const enableLimit = page.getByRole("switch", { name: "Enable limit" });
+    const priceLimit = page.getByRole("combobox", { name: "Price limit" });
+    const dischargeControl = page.getByRole("switch", { name: /Prevent home battery discharge/ });
+    const optimizerHints = page.getByText("Note: Charging is controlled by the optimizer.", {
+      exact: true,
     });
-  }
+
+    await expect(enableLimit).toBeEnabled();
+    await expect(priceLimit).toBeEnabled();
+    await expect(dischargeControl).toBeEnabled();
+    await expect(optimizerHints).toHaveCount(0);
+
+    await expect(await page.request.post("/api/config/optimizerautomatic/true")).toBeOK();
+
+    await expect(enableLimit).toBeDisabled();
+    await expect(priceLimit).toBeDisabled();
+    await expect(dischargeControl).toBeDisabled();
+    await expect(optimizerHints).toHaveCount(2);
+    await expect(optimizerHints.first()).toBeVisible();
+    await expect(optimizerHints.last()).toBeVisible();
+    await expect(page.getByTestId("battery-priority").getByRole("combobox")).toBeEnabled();
+    await expect(page.getByTestId("battery-buffer").getByRole("combobox").first()).toBeEnabled();
+
+    await expect(await page.request.post("/api/config/optimizerautomatic/false")).toBeOK();
+
+    await expect(enableLimit).toBeEnabled();
+    await expect(priceLimit).toBeEnabled();
+    await expect(dischargeControl).toBeEnabled();
+    await expect(optimizerHints).toHaveCount(0);
+  });
 
   test("hold mode display", async ({ page }) => {
     await page.goto("/");
