@@ -22,7 +22,12 @@ type VehicleApi struct {
 	geofenceEnabled        bool
 	lat, lon, radius       float64
 	cacheRefreshExpectedAt time.Time
+	asleepAt               time.Time
 }
+
+// asleepGrace bounds how long a vehicle that was just asleep may keep reporting
+// its pre-sleep charge state. Matches the loadpoint's wake-up window.
+const asleepGrace = 3 * time.Minute
 
 func init() {
 	registry.Add("vehicle-api", NewVehicleApiFromConfig)
@@ -75,6 +80,16 @@ func asleep(err error) error {
 	return err
 }
 
+// seenAsleep maps a sleeping-vehicle error and records when the vehicle was last
+// known asleep
+func (c *VehicleApi) seenAsleep(err error) error {
+	if err = asleep(err); errors.Is(err, api.ErrAsleep) {
+		c.asleepAt = time.Now()
+	}
+
+	return err
+}
+
 // isVehicleAtHome checks if the vehicle is within the geofence (if enabled)
 func (c *VehicleApi) isVehicleAtHome(vehicle api.Vehicle) (bool, error) {
 	if !c.geofenceEnabled {
@@ -88,7 +103,7 @@ func (c *VehicleApi) isVehicleAtHome(vehicle api.Vehicle) (bool, error) {
 
 	lat, lon, err := v.Position()
 	if err != nil {
-		return false, asleep(err)
+		return false, c.seenAsleep(err)
 	}
 
 	return c.distance(lat, lon) <= c.radius, nil
@@ -136,14 +151,20 @@ func (c *VehicleApi) Status() (api.ChargeStatus, error) {
 	status, err := v.Status()
 	if err != nil {
 		// asleep: report connected so the loadpoint's setLimit path can wake the vehicle
-		if errors.Is(asleep(err), api.ErrAsleep) {
+		if errors.Is(c.seenAsleep(err), api.ErrAsleep) {
 			return api.StatusB, nil
 		}
 		return api.StatusNone, err
 	}
 
-	if status == api.StatusA || !atHome {
+	if !atHome {
 		return api.StatusA, nil
+	}
+
+	// a vehicle woken from sleep answers before its charge state catches up, so a
+	// disconnect is only believed once the grace window has passed (#33323)
+	if status == api.StatusA && time.Since(c.asleepAt) < asleepGrace {
+		return api.StatusB, nil
 	}
 
 	return status, nil
@@ -177,7 +198,7 @@ func (c *VehicleApi) Enable(enable bool) error {
 	}
 
 	if err := v.ChargeEnable(enable); err != nil {
-		return asleep(err)
+		return c.seenAsleep(err)
 	}
 
 	c.enabled = enable
@@ -199,7 +220,7 @@ func (c *VehicleApi) MaxCurrent(current int64) error {
 		return nil
 	}
 
-	return asleep(v.MaxCurrent(current))
+	return c.seenAsleep(v.MaxCurrent(current))
 }
 
 var _ api.Resurrector = (*VehicleApi)(nil)
