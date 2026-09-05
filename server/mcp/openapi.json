@@ -3926,9 +3926,6 @@
             },
             "authenticated": {
               "type": "boolean"
-            },
-            "interactive": {
-              "type": "boolean"
             }
           },
           "required": [

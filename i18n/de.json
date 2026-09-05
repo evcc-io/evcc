@@ -7,18 +7,22 @@
     "authorizationSuccessful": "Autorisierung erfolgreich",
     "buttonConnect": "Mit {provider} verbinden",
     "buttonDisconnect": "Trennen",
-    "captchaHint": "Gib die Zeichen aus dem Bild unten ein.",
+    "challenge": {
+      "captcha": {
+        "label": "Zeichen aus dem Bild eingeben.",
+        "title": "Captcha"
+      },
+      "code": {
+        "label": "Code oder Adresse der Weiterleitungsseite einfügen.",
+        "title": "Autorisierungscode"
+      },
+      "openLogin": "Anmeldeseite öffnen",
+      "submit": "Weiter"
+    },
     "confirmLogout": "Sicher, dass du {title} trennen möchtest?",
     "connect": "verbinden",
     "disconnect": "trennen",
-    "field": {
-      "captcha": "Captcha",
-      "email": "E-Mail",
-      "password": "Passwort"
-    },
-    "interactiveSubmit": "Weiter",
     "loggedOut": "Erfolgreich abgemeldet",
-    "loginFailed": "Anmeldung fehlgeschlagen. Bitte überprüfe deine Angaben und versuche es erneut.",
     "logoutFailed": "Abmeldung fehlgeschlagen",
     "modalDescriptionLogin": "Schließe die Autorisierung ab, um eine Verbindung mit {provider} herzustellen.",
     "modalDescriptionLogout": "Dies trennt dein {provider}-Konto und entfernt den Zugriff auf dessen Daten.",

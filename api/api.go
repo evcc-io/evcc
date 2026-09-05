@@ -239,30 +239,26 @@ type AuthProvider interface {
 	DisplayName() string
 }
 
-// AuthField describes a single input of an interactive authentication step.
-type AuthField struct {
-	Name string `json:"name"` // stable identifier, e.g. "email", "password", "captcha"
-	Type string `json:"type"` // input type, e.g. "email", "password", "text"
-}
-
-// AuthChallenge is one step of an interactive (credential-based) login: a set
-// of fields to collect from the user, optionally accompanied by an image such
-// as a captcha. A nil challenge signals that authentication is complete.
+// AuthChallenge is user input a login needs that no browser redirect can
+// deliver, e.g. a captcha or a code copied from the vendor's login page.
 type AuthChallenge struct {
-	Image  string      `json:"image,omitempty"` // optional data URI (e.g. captcha)
-	Fields []AuthField `json:"fields"`
+	Kind  string `json:"kind"`            // AuthChallengeCaptcha or AuthChallengeCode
+	Image string `json:"image,omitempty"` // data URI shown to the user
+	Link  string `json:"link,omitempty"`  // url the user opens to obtain the answer
 }
 
-// InteractiveAuthProvider is implemented by AuthProviders that authenticate via
-// a server-side credential form (with optional follow-up challenges like a
-// captcha) instead of an OAuth redirect or device flow.
-type InteractiveAuthProvider interface {
-	AuthProvider
-	// Challenge returns the initial fields to collect (e.g. email and password).
-	Challenge() *AuthChallenge
-	// Submit processes the user-provided values and returns the next challenge
-	// (e.g. a captcha), or nil when authentication succeeded.
-	Submit(values map[string]string) (*AuthChallenge, error)
+const (
+	AuthChallengeCaptcha = "captcha"
+	AuthChallengeCode    = "code"
+)
+
+// AuthChallenger is implemented by AuthProviders whose login runs server-side
+// with stored credentials instead of a redirect or device flow.
+type AuthChallenger interface {
+	// StartChallenge begins the login. Returns the first challenge, or nil when no user input is needed.
+	StartChallenge() (*AuthChallenge, error)
+	// SubmitChallenge answers the current challenge. Returns the next challenge, or nil when authenticated.
+	SubmitChallenge(answer string) (*AuthChallenge, error)
 }
 
 // IconDescriber optionally provides an icon

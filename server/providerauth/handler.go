@@ -17,10 +17,14 @@ type errorResponse struct {
 	Error string `json:"error"`
 }
 
+// loginResponse is one of three shapes: a redirect url, a device code, or a
+// challenge answered in the ui. Authenticated is set when no user input is needed.
 type loginResponse struct {
-	LoginUri string     `json:"loginUri"`
-	Code     string     `json:"code,omitempty"`
-	Expiry   *time.Time `json:"expiry,omitempty"`
+	LoginUri      string             `json:"loginUri,omitempty"`
+	Code          string             `json:"code,omitempty"`
+	Expiry        *time.Time         `json:"expiry,omitempty"`
+	Challenge     *api.AuthChallenge `json:"challenge,omitempty"`
+	Authenticated bool               `json:"authenticated,omitempty"`
 }
 
 // jsonWrite writes a JSON response
@@ -60,11 +64,9 @@ func (a *Handler) run(paramC chan<- util.Param) {
 
 		res := make(map[string]*AuthProvider)
 		for id, provider := range a.providers {
-			_, interactive := provider.(api.InteractiveAuthProvider)
 			res[provider.DisplayName()] = &AuthProvider{
 				ID:            id,
 				Authenticated: provider.Authenticated(),
-				Interactive:   interactive,
 			}
 		}
 
@@ -88,63 +90,26 @@ func (a *Handler) register(name string, handler api.AuthProvider) (chan<- string
 	return a.updateC, nil
 }
 
-// interactiveProvider looks up a registered interactive auth provider by id.
-func (a *Handler) interactiveProvider(id string) (api.InteractiveAuthProvider, error) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-
-	provider, ok := a.providers[id]
-	if !ok {
-		return nil, fmt.Errorf("invalid id: %s", id)
-	}
-
-	ip, ok := provider.(api.InteractiveAuthProvider)
-	if !ok {
-		return nil, fmt.Errorf("provider does not support interactive login: %s", id)
-	}
-
-	return ip, nil
-}
-
-func (a *Handler) challenge(id string) (*api.AuthChallenge, error) {
-	ip, err := a.interactiveProvider(id)
-	if err != nil {
-		a.log.ERROR.Println(err)
-		return nil, err
-	}
-	return ip.Challenge(), nil
-}
-
-func (a *Handler) submit(id string, values map[string]string) (*api.AuthChallenge, bool, error) {
-	ip, err := a.interactiveProvider(id)
-	if err != nil {
-		a.log.ERROR.Println(err)
-		return nil, false, err
-	}
-
-	// not holding a.mu here: Submit performs network I/O and signals auth status
-	// via the provider's own online channel (which feeds back into updateC)
-	challenge, err := ip.Submit(values)
-	if err != nil {
-		a.log.ERROR.Printf("%s: %v", id, err)
-		return nil, false, err
-	}
-
-	return challenge, challenge == nil, nil
-}
-
 func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	a.log.DEBUG.Printf("login request for: %s", id)
 
 	a.mu.Lock()
-	defer a.mu.Unlock()
-
 	provider, ok := a.providers[id]
 	if !ok {
+		a.mu.Unlock()
 		jsonError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
+
+	// server-side login needs no redirect state. runs outside the lock: it does network i/o
+	if c, ok := provider.(api.AuthChallenger); ok {
+		a.mu.Unlock()
+		challenge, err := c.StartChallenge()
+		a.challengeResponse(w, id, challenge, err)
+		return
+	}
+	defer a.mu.Unlock()
 
 	// Generate a new state and store the provider
 	state := NewState()
@@ -179,6 +144,42 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonWrite(w, res)
+}
+
+// challengeResponse writes the outcome of a challenge step
+func (a *Handler) challengeResponse(w http.ResponseWriter, id string, challenge *api.AuthChallenge, err error) {
+	if err != nil {
+		a.log.DEBUG.Printf("login for provider %s failed: %v", id, err)
+		jsonError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	jsonWrite(w, loginResponse{Challenge: challenge, Authenticated: challenge == nil})
+}
+
+func (a *Handler) handleSubmit(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	a.log.DEBUG.Printf("submit request for: %s", id)
+
+	var req struct {
+		Answer string `json:"answer"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		jsonError(w, http.StatusBadRequest, "invalid request")
+		return
+	}
+
+	a.mu.Lock()
+	provider, ok := a.providers[id].(api.AuthChallenger)
+	a.mu.Unlock()
+
+	if !ok {
+		jsonError(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+
+	challenge, err := provider.SubmitChallenge(req.Answer)
+	a.challengeResponse(w, id, challenge, err)
 }
 
 func (a *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {

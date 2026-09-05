@@ -6,14 +6,12 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/vehicle/porsche"
-	"golang.org/x/oauth2"
 )
 
 // Porsche is an api.Vehicle implementation for Porsche cars using the Porsche
-// Connect (PPA) app backend. Authentication happens in the browser via evcc's
-// provider-auth (see vehicle/porsche).
+// Connect (PPA) app backend. Login happens in the ui via evcc's provider auth
+// (see vehicle/porsche).
 type Porsche struct {
 	*embed
 	*porsche.Provider
@@ -26,10 +24,10 @@ func init() {
 // NewPorscheFromConfig creates a new vehicle
 func NewPorscheFromConfig(_ context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
-		embed  `mapstructure:",squash"`
-		Tokens oauth.Tokens
-		VIN    string
-		Cache  time.Duration
+		embed          `mapstructure:",squash"`
+		User, Password string
+		VIN            string
+		Cache          time.Duration
 	}{
 		Cache: interval,
 	}
@@ -38,18 +36,15 @@ func NewPorscheFromConfig(_ context.Context, other map[string]any) (api.Vehicle,
 		return nil, err
 	}
 
-	// VIN is optional: the vehicle is built without an API call (so the auth
-	// provider registers and the UI shows the login button before login). If no
-	// VIN is configured it is resolved from the account on first use.
-	log := util.NewLogger("porsche").Redact(cc.VIN, cc.Tokens.Access, cc.Tokens.Refresh)
-
-	// optional seed token from `evcc token` / config (web login is the default)
-	var seed *oauth2.Token
-	if token, err := cc.Tokens.Token(); err == nil {
-		seed = token
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
 	}
 
-	identity, err := porsche.NewIdentity(log, seed)
+	log := util.NewLogger("porsche").Redact(cc.VIN)
+
+	// no api call here: the vehicle exists before the account is connected,
+	// the vin is resolved from the account on first use if not configured
+	identity, err := porsche.NewIdentity(log, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
