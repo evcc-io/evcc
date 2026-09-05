@@ -266,7 +266,7 @@ render: |
         source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
-          address: 47415 # Active power control mode (0=no curtailment)
+          address: 47415 # Active power control mode
           type: holding
           decode: uint16
     - name: percent
@@ -275,15 +275,53 @@ render: |
         source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
-          address: 47418 # Maximum Feed Grid Power (0-100 %)
+          address: 47418 # Maximum Feed Grid Power (0-100 %), mode 7
           type: holding
           decode: uint16
         scale: 0.1
-    # the percentage register is only meaningful while a limit mode is active
+    - name: watt
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 47416 # Maximum Feed Grid Power (W), mode 6
+          type: holding
+          decode: int32
+    - name: rated
+      type: int
+      config:
+        source: cached
+        cache: 1h # rated max is static
+        value:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 30075 # Maximum active power P_max (W)
+            type: holding
+            decode: uint32
+    # feed-in limit as percent of nominal, per active power control mode (47415):
+    #   7 percentage limit -> 47418 (the mode the curtail setter above writes)
+    #   6 kW limit         -> 47416 relative to the inverter rated power
+    #   5 zero export      -> 0
+    #   0 unlimited, 1 DI scheduling (limit not readable) -> 100
     script: |
-      limit := percent
-      if mode == 0 {
+      limit := 100
+      switch mode {
+      case 7:
+        limit = percent
+      case 6:
+        if rated > 0 {
+          limit = watt * 100 / rated
+        }
+      case 5:
+        limit = 0
+      }
+      if limit > 100 {
         limit = 100
+      }
+      if limit < 0 { // 47416 allows negative values
+        limit = 0
       }
       limit
   {{- end }}
