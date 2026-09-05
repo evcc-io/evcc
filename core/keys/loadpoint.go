@@ -51,6 +51,8 @@ const (
 	Suggestion = "suggestion" // optimizer's advisory suggestion for the current slot
 
 	// smart charging
+	OptimizerControlled = "optimizerControlled" // optimizer decides start/stop
+
 	SmartCostActive    = "smartCostActive"    // smart cost active
 	SmartCostLimit     = "smartCostLimit"     // smart cost limit, fast charge when costs are below
 	SmartCostNextStart = "smartCostNextStart" // smart cost next start, time of next fast charging

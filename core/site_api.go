@@ -23,6 +23,9 @@ var (
 	ErrBatteryNotConfigured             = errors.New("battery not configured")
 	ErrBatteryControlNotAvailable       = errors.New("battery control not available")
 	ErrBatteryGridDischargeNotAvailable = errors.New("battery grid discharge not available")
+
+	// ErrOptimizerAutomatic marks settings the optimizer decides on its own
+	ErrOptimizerAutomatic = errors.New("not available in automatic mode")
 )
 
 // filterConfigurableDevices filters references to configurable devices of the given handler
@@ -46,7 +49,7 @@ func filterConfigurableCurtailers(ref []string) []string {
 
 // Optimize updates the optimizer
 func (site *Site) Optimize() {
-	go site.optimizerUpdateAsync(0)
+	go site.optimizerUpdateAsync(true)
 }
 
 // GetTitle returns the title
@@ -411,7 +414,7 @@ func (site *Site) SetGridExportLimit(power float64) error {
 		site.publish(keys.GridExportLimit, power)
 
 		// re-run the optimizer so the new limit takes effect immediately
-		go site.optimizerUpdateAsync(0)
+		go site.optimizerUpdateAsync(true)
 	}
 
 	return nil
@@ -424,8 +427,13 @@ func (site *Site) GetTariff(tariff api.TariffUsage) api.Tariff {
 	return site.tariffs.Get(tariff)
 }
 
-// GetBatteryDischargeControl returns the battery control mode (no discharge only)
+// GetBatteryDischargeControl returns the battery control mode (no discharge only).
+// The optimizer replaces it in automatic mode, so it reads as disabled.
 func (site *Site) GetBatteryDischargeControl() bool {
+	if site.Automatic() {
+		return false
+	}
+
 	site.RLock()
 	defer site.RUnlock()
 	return site.batteryDischargeControl
@@ -433,6 +441,14 @@ func (site *Site) GetBatteryDischargeControl() bool {
 
 // SetBatteryDischargeControl sets the battery control mode (no discharge only)
 func (site *Site) SetBatteryDischargeControl(val bool) error {
+	if site.Automatic() {
+		return ErrOptimizerAutomatic
+	}
+
+	return site.setBatteryDischargeControl(val)
+}
+
+func (site *Site) setBatteryDischargeControl(val bool) error {
 	site.log.DEBUG.Println("set battery discharge control:", val)
 
 	if !site.hasBatteryControl() {
@@ -504,13 +520,26 @@ func (site *Site) SetSolarAdjusted(val bool) {
 	}
 }
 
+// The optimizer replaces the limit in automatic mode, so it reads as unset.
 func (site *Site) GetBatteryGridChargeLimit() *float64 {
+	if site.Automatic() {
+		return nil
+	}
+
 	site.RLock()
 	defer site.RUnlock()
 	return site.batteryGridChargeLimit
 }
 
 func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
+	if site.Automatic() {
+		return ErrOptimizerAutomatic
+	}
+
+	return site.setBatteryGridChargeLimit(val)
+}
+
+func (site *Site) setBatteryGridChargeLimit(val *float64) error {
 	site.log.DEBUG.Println("set grid charge limit:", printPtr("%.1f", val))
 
 	if !site.hasBatteryControl() {
@@ -602,7 +631,7 @@ func (site *Site) SetOptimizerChargingStrategy(strategy string) error {
 		site.publish(keys.OptimizerChargingStrategy, strategy)
 
 		// re-run the optimizer so the new strategy takes effect immediately
-		go site.optimizerUpdateAsync(0)
+		go site.optimizerUpdateAsync(true)
 	}
 
 	return nil

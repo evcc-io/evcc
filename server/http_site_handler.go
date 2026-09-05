@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
@@ -163,12 +164,20 @@ func handler[T any](conv func(string) (T, error), set func(T) error, get func() 
 		}
 
 		if err != nil {
-			jsonError(w, http.StatusBadRequest, err)
+			jsonError(w, errorStatus(err), err)
 			return
 		}
 
 		jsonWrite(w, get())
 	}
+}
+
+// errorStatus maps a setting rejected by the current state to conflict
+func errorStatus(err error) int {
+	if errors.Is(err, core.ErrOptimizerAutomatic) {
+		return http.StatusConflict
+	}
+	return http.StatusBadRequest
 }
 
 // ptrHandler updates pointer api
@@ -230,8 +239,9 @@ func callHandler(fun func()) http.HandlerFunc {
 	}
 }
 
-// updateSmartCostLimit sets the smart cost limit globally
-func updateSmartCostLimit(site site.API, setLimit func(loadpoint.API, *float64)) http.HandlerFunc {
+// updateSmartCostLimit sets the smart cost limit globally. Loadpoints under
+// optimizer control are skipped, the request fails only if none accepted it.
+func updateSmartCostLimit(site site.API, setLimit func(loadpoint.API, *float64) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		var val *float64
@@ -246,12 +256,33 @@ func updateSmartCostLimit(site site.API, setLimit func(loadpoint.API, *float64))
 			val = &f
 		}
 
-		for _, lp := range site.ActiveLoadpoints() {
-			setLimit(lp, val)
+		if err := setLoadpointsLimit(site, setLimit, val); err != nil {
+			jsonError(w, errorStatus(err), err)
+			return
 		}
 
 		jsonWrite(w, val)
 	}
+}
+
+// setLoadpointsLimit applies a limit to all loadpoints that accept it
+func setLoadpointsLimit(site site.API, setLimit func(loadpoint.API, *float64) error, val *float64) error {
+	var applied bool
+	var lastErr error
+
+	for _, lp := range site.ActiveLoadpoints() {
+		if err := setLimit(lp, val); err != nil {
+			lastErr = err
+		} else {
+			applied = true
+		}
+	}
+
+	if applied {
+		return nil
+	}
+
+	return lastErr
 }
 
 // updateBatteryMode sets the external battery mode

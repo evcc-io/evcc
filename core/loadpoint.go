@@ -23,6 +23,7 @@ import (
 	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/core/soc"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/core/wrapper"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
@@ -164,6 +165,10 @@ type Loadpoint struct {
 	planActive       bool             // charge plan exists and has a currently active slot
 	planOverrunSent  bool             // notification has been sent already
 	planLocked       PlanLock         // locked plan
+
+	// optimizer
+	suggestion        *types.Suggestion // optimizer suggestion for the current slot
+	suggestionUpdated time.Time         // time the suggestion was received
 
 	// cached state
 	status         api.ChargeStatus // Charger status
@@ -404,13 +409,13 @@ func (lp *Loadpoint) restoreSettings() {
 		lp.setLimitEnergy(v)
 	}
 	if v, err := lp.settings.Float(keys.SmartCostLimit); err == nil {
-		lp.SetSmartCostLimit(&v)
+		lp.setSmartCostLimit(&v)
 	}
 	if v, err := lp.settings.Float(keys.SolarShare); err == nil {
 		lp.SetSolarShare(v)
 	}
 	if v, err := lp.settings.Float(keys.SmartFeedInPriorityLimit); err == nil {
-		lp.SetSmartFeedInPriorityLimit(&v)
+		lp.setSmartFeedInPriorityLimit(&v)
 	}
 	if v, err := lp.settings.Int(keys.BatteryBoostLimit); err == nil {
 		lp.SetBatteryBoostLimit(int(v))
@@ -691,7 +696,9 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	lp.triggerOptimizer()
 }
 
-// triggerOptimizer re-runs the optimizer when the loadpoint's profile changed
+// triggerOptimizer re-runs the optimizer when the loadpoint's profile changed.
+// A burst of setters, e.g. on disconnect, is coalesced by optimizerUpdateAsync's
+// TryLock- only the first call gets through while a run is in flight.
 func (lp *Loadpoint) triggerOptimizer() {
 	if lp.site != nil {
 		lp.site.Optimize()
@@ -2376,9 +2383,17 @@ NO_DIM:
 
 	mode := lp.GetMode()
 	lp.publish(keys.Mode, mode)
+	lp.publish(keys.OptimizerControlled, lp.optimizerControlled())
 
 	// update and publish plan without being short-circuited by modes etc.
 	plannerActive := lp.plannerActive()
+
+	// the optimizer schedules the plan itself, the planner only backstops it.
+	// A stalled optimizer has no suggestion and releases the planner again.
+	suggestion := lp.gate()
+	if suggestion != nil {
+		plannerActive = lp.planDeadlineCritical()
+	}
 
 	// update and publish min soc not reached state
 	minSocNotReached := lp.minSocNotReached()
@@ -2425,8 +2440,17 @@ NO_DIM:
 		err = lp.fastCharging()
 
 	case mode == api.ModeSmart:
+		// optimizer decides start/stop and level, replacing the price limits
+		if suggestion != nil {
+			if handled, e := lp.optimizerCharging(suggestion, welcomeCharge); handled {
+				err = e
+				break
+			}
+			// surplus regime: the pv loop below tracks the measured surplus
+		}
+
 		// cheap tariff
-		if smartCostActive {
+		if suggestion == nil && smartCostActive {
 			rate, _ := consumption.At(time.Now())
 			lp.log.DEBUG.Printf("smart consumption active: %.2f", rate.Value)
 			err = lp.fastCharging()
@@ -2435,7 +2459,7 @@ NO_DIM:
 		}
 
 		// attractive feedin
-		if smartFeedInPriorityActive {
+		if suggestion == nil && smartFeedInPriorityActive {
 			rate, _ := feedin.At(time.Now())
 			lp.log.DEBUG.Printf("smart feed-in active: %.2f", rate.Value)
 

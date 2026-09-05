@@ -1,56 +1,50 @@
 <template>
-	<div class="container px-4 safe-area-inset">
-		<TopHeader :title="$t('batterySettings.modalTitle')" />
-		<div class="row">
-			<main class="col-12">
-				<template v-if="batteryAvailable">
-					<BatteryStatusCards
-						class="mb-4 box-pull-out"
-						:battery="state.battery"
-						:battery-mode="state.batteryMode"
-					/>
+	<div v-if="batteryAvailable" data-testid="battery-experimental">
+		<BatteryStatusCards
+			class="mb-4 box-pull-out"
+			:battery="state.battery"
+			:battery-mode="state.batteryMode"
+		/>
 
-					<BatteryHistoryCard
-						class="mb-4 box-pull-out"
-						:batteries="chartBatteries"
-						:now="now"
-						:kwh-available="kWhAvailable"
-						@range-start="onRangeStart"
-					/>
+		<BatteryHistoryCard
+			class="mb-4 box-pull-out"
+			:batteries="chartBatteries"
+			:now="now"
+			:kwh-available="kWhAvailable"
+			@range-start="onRangeStart"
+		/>
 
-					<BatteryConfigCard
-						class="mb-4 box-pull-out"
-						:buffer-soc="state.bufferSoc"
-						:priority-soc="state.prioritySoc"
-						:buffer-start-soc="state.bufferStartSoc"
-						:battery-discharge-control="state.batteryDischargeControl"
-						:battery-grid-discharge="state.batteryGridDischarge"
-						:battery="state.battery"
-						:experimental="state.experimental"
-						:optimizer-automatic="state.optimizerAutomatic"
-					/>
+		<BatteryConfigCard
+			class="mb-4 box-pull-out"
+			:buffer-soc="state.bufferSoc"
+			:priority-soc="state.prioritySoc"
+			:buffer-start-soc="state.bufferStartSoc"
+			:battery-discharge-control="state.batteryDischargeControl"
+			:battery-grid-discharge="state.batteryGridDischarge"
+			:battery="state.battery"
+			:experimental="state.experimental"
+			:optimizer-automatic="state.optimizerAutomatic"
+			:optimizer-controlled-titles="optimizerControlledTitles"
+		/>
 
-					<Card
-						v-if="gridChargeVisible"
-						class="box-pull-out"
-						:title="$t('batterySettings.gridChargeTab')"
-					>
-						<SmartCostLimit v-bind="smartCostLimitProps" />
-					</Card>
+		<Card
+			v-if="gridChargeVisible"
+			class="box-pull-out"
+			:title="$t('batterySettings.gridChargeTab')"
+		>
+			<SmartCostLimit v-bind="smartCostLimitProps" />
+		</Card>
 
-					<Card
-						v-if="gridDischargeVisible"
-						class="box-pull-out mt-4"
-						:title="$t('batterySettings.gridDischargeTab')"
-						data-testid="battery-grid-discharge-limit"
-					>
-						<SmartFeedInPriority v-bind="smartFeedInPriorityProps" />
-					</Card>
-				</template>
-				<p v-else class="my-4 text-muted">{{ $t("batterySettings.noBattery") }}</p>
-			</main>
-		</div>
+		<Card
+			v-if="gridDischargeVisible"
+			class="box-pull-out mt-4"
+			:title="$t('batterySettings.gridDischargeTab')"
+			data-testid="battery-grid-discharge-limit"
+		>
+			<SmartFeedInPriority v-bind="smartFeedInPriorityProps" />
+		</Card>
 	</div>
+	<p v-else class="my-4 text-muted">{{ $t("batterySettings.noBattery") }}</p>
 </template>
 
 <script lang="ts">
@@ -59,35 +53,26 @@ import store from "@/store";
 import settings from "@/settings";
 import api from "@/api";
 import { SMART_COST_TYPE, CURRENCY, type BatteryMeter } from "@/types/evcc";
-import Header from "../components/Top/Header.vue";
-import Card from "../components/Helper/Card.vue";
-import SmartCostLimit from "../components/Tariff/SmartCostLimit.vue";
-import SmartFeedInPriority from "../components/Tariff/SmartFeedInPriority.vue";
-import BatteryStatusCards from "../components/Battery/BatteryStatusCards.vue";
-import BatteryConfigCard from "../components/Battery/BatteryConfigCard.vue";
-import BatteryHistoryCard from "../components/Battery/BatteryHistoryCard.vue";
-import {
-	historyToSeries,
-	forecastToSeries,
-	buildChartBatteries,
-} from "../components/Battery/history";
-import type { BatteryHistorySeries, BatterySeries } from "../components/Battery/types";
+import Card from "../Helper/Card.vue";
+import SmartCostLimit from "../Tariff/SmartCostLimit.vue";
+import SmartFeedInPriority from "../Tariff/SmartFeedInPriority.vue";
+import BatteryStatusCards from "./BatteryStatusCards.vue";
+import BatteryConfigCard from "./BatteryConfigCard.vue";
+import BatteryHistoryCard from "./BatteryHistoryCard.vue";
+import { historyToSeries, forecastToSeries, buildChartBatteries } from "./history";
+import type { BatteryHistorySeries, BatterySeries } from "./types";
 
 const CHUNK_MS = 48 * 3600 * 1000; // 48h load/grow step
 
 export default defineComponent({
-	name: "Battery",
+	name: "BatteryExperimental",
 	components: {
-		TopHeader: Header,
 		Card,
 		SmartCostLimit,
 		SmartFeedInPriority,
 		BatteryStatusCards,
 		BatteryConfigCard,
 		BatteryHistoryCard,
-	},
-	head() {
-		return { title: this.$t("batterySettings.modalTitle") };
 	},
 	data() {
 		const now = new Date();
@@ -112,6 +97,11 @@ export default defineComponent({
 		},
 		batteryAvailable(): boolean {
 			return this.devices.length > 0;
+		},
+		optimizerControlledTitles(): string[] {
+			return (this.state.loadpoints ?? [])
+				.filter((lp) => lp.optimizerControlled)
+				.map((lp) => lp.title || this.$t("main.loadpoint.fallbackName"));
 		},
 		evopt() {
 			return this.state.evopt;
