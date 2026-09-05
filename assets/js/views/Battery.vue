@@ -156,6 +156,7 @@ export default defineComponent({
 				currency: this.state.currency || CURRENCY.EUR,
 				tariff: this.gridChargeTariff,
 				possible: this.gridChargePossible,
+				disabledHint: this.state.optimizerAutomatic ? "config.optimizer.controlled" : "",
 			};
 		},
 		gridDischargeLimit(): number | null {
