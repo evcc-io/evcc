@@ -230,7 +230,7 @@ render: |
       {{- include "modbus" . | indent 4 }}
       register:
         address: 47418 # Maximum Feed Grid Power (0-100 %)
-        type: writesingle
+        type: writeholding
         encoding: uint16
       scale: 10
     # active power control mode: 7 = percentage limit while curtailed, 0 = unlimited at 100%
@@ -245,7 +245,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 47415 # Active power control mode
-                type: writesingle
+                type: writeholding
                 encoding: uint16
       default:
         source: const
@@ -255,7 +255,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 47415 # Active power control mode
-            type: writesingle
+            type: writeholding
             encoding: uint16
   curtailed:
     source: go
@@ -346,7 +346,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 47087 # Charge from grid
-            type: writesingle
+            type: writeholding
             encoding: uint16
     else:
       source: convert
@@ -360,7 +360,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 47087 # Charge from grid
-            type: writesingle
+            type: writeholding
             encoding: uint16
         {{- else }}
         source: sleep
@@ -414,7 +414,7 @@ render: |
                       {{- include "modbus" . | indent 20 }}
                       register:
                         address: 47075 # Max. Charge Power
-                        type: writemultiple
+                        type: writeholdings
                         encoding: uint32
                 script: |
                   limit := {{ .maxchargepower }}
@@ -445,7 +445,7 @@ render: |
                       {{- include "modbus" . | indent 20 }}
                       register:
                         address: 47077 # Max. Discharge Power
-                        type: writemultiple
+                        type: writeholdings
                         encoding: uint32
                 script: |
                   limit := {{ .maxdischargepower }}
@@ -480,7 +480,7 @@ render: |
                       {{- include "modbus" . | indent 20 }}
                       register:
                         address: 47075 # Max. Charge Power
-                        type: writemultiple
+                        type: writeholdings
                         encoding: uint32
                 script: |
                   limit := {{ .maxchargepower }}
@@ -494,7 +494,7 @@ render: |
                   {{- include "modbus" . | indent 16 }}
                   register:
                     address: 47077 # Max. Discharge Power
-                    type: writemultiple
+                    type: writeholdings
                     encoding: uint32
           - case: 3 # charge
             set:
@@ -524,7 +524,7 @@ render: |
                       {{- include "modbus" . | indent 20 }}
                       register:
                         address: 47075 # Max. Charge Power
-                        type: writemultiple
+                        type: writeholdings
                         encoding: uint32
                 script: |
                   limit := {{ .maxchargepower }}
@@ -555,7 +555,7 @@ render: |
                       {{- include "modbus" . | indent 20 }}
                       register:
                         address: 47247 # Forcible charge power
-                        type: writemultiple
+                        type: writeholdings
                         encoding: uint32
                 script: |
                   limit := {{ .maxchargepower }}
@@ -569,7 +569,7 @@ render: |
                   {{- include "modbus" . | indent 16 }}
                   register:
                     address: 47083 # Forced charging and discharging period
-                    type: writesingle
+                    type: writeholding
                     encoding: uint16
               - source: const
                 value: 0 # duration
@@ -578,7 +578,7 @@ render: |
                   {{- include "modbus" . | indent 16 }}
                   register:
                     address: 47246 # Forcible charge/discharge setting mode
-                    type: writesingle
+                    type: writeholding
                     encoding: uint16
           - case: 4 # holdcharge
             set:
@@ -591,7 +591,7 @@ render: |
                   {{- include "modbus" . | indent 16 }}
                   register:
                     address: 47075 # Max. Charge Power
-                    type: writemultiple
+                    type: writeholdings
                     encoding: uint32
               # register 47077 is range-checked: a maxdischargepower above the
               # inverter rated max (37048) is rejected, so clamp before writing
@@ -617,7 +617,7 @@ render: |
                       {{- include "modbus" . | indent 20 }}
                       register:
                         address: 47077 # Max. Discharge Power
-                        type: writemultiple
+                        type: writeholdings
                         encoding: uint32
                 script: |
                   limit := {{ .maxdischargepower }}
@@ -652,7 +652,7 @@ render: |
                       {{- include "modbus" . | indent 20 }}
                       register:
                         address: 47077 # Max. Discharge Power
-                        type: writemultiple
+                        type: writeholdings
                         encoding: uint32
                 script: |
                   limit := {{ .maxdischargepower }}
@@ -683,7 +683,7 @@ render: |
                       {{- include "modbus" . | indent 20 }}
                       register:
                         address: 47249 # Forcible discharge power
-                        type: writemultiple
+                        type: writeholdings
                         encoding: uint32
                 script: |
                   limit := {{ .maxdischargepower }}
@@ -697,7 +697,7 @@ render: |
                   {{- include "modbus" . | indent 16 }}
                   register:
                     address: 47083 # Forced charging and discharging period
-                    type: writesingle
+                    type: writeholding
                     encoding: uint16
               - source: const
                 value: 0 # duration
@@ -706,7 +706,7 @@ render: |
                   {{- include "modbus" . | indent 16 }}
                   register:
                     address: 47246 # Forcible charge/discharge setting mode
-                    type: writesingle
+                    type: writeholding
                     encoding: uint16
         default:
           source: error
@@ -727,7 +727,7 @@ render: |
                   {{- include "modbus" . | indent 16 }}
                   register:
                     address: 47100 # Forcible charge/discharge
-                    type: writesingle
+                    type: writeholding
                     encoding: uint16
             - case: 5 # discharge
               set:
@@ -738,7 +738,7 @@ render: |
                   {{- include "modbus" . | indent 16 }}
                   register:
                     address: 47100 # Forcible charge/discharge
-                    type: writesingle
+                    type: writeholding
                     encoding: uint16
           default:
             source: const
@@ -748,7 +748,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 47100 # Forcible charge/discharge
-                type: writesingle
+                type: writeholding
                 encoding: uint16
   {{- include "battery-params" . }}
   {{- end }}

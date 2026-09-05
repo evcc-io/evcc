@@ -45,7 +45,7 @@ render: |
       id: {{ .id }}
       register:
         address: 319
-        type: writesingle
+        type: writeholding
         encoding: int16
   getmaxpower:
     source: modbus

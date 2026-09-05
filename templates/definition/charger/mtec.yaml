@@ -19,7 +19,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 1000 # PV Überschussleistung in Watt
-      type: writeholdings
+      type: writeholding
       decode: int16
     scale: 1
   power:

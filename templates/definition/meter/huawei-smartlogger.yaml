@@ -89,7 +89,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 40428 # Active power [–100%, 100%] - a negative value indicates the limit for active power supplied from the grid to the ESS
-      type: writesingle
+      type: writeholding
       encoding: int16
     scale: 10
   curtailed:
@@ -169,7 +169,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 47100 # Forcible charge/discharge
-              type: writesingle
+              type: writeholding
               encoding: uint16
       - case: 2 # hold
         set:
@@ -182,7 +182,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 47100 # Forcible charge/discharge
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: 0 # duration
@@ -191,7 +191,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 47246 # Forcible charge/discharge setting mode
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: 1 # Minute
@@ -200,7 +200,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 47083 # Forced charging and discharging period
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: 0 # W
@@ -209,7 +209,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 47249 # Forcible discharge power
-                type: writemultiple
+                type: writeholdings
                 encoding: uint32
       - case: 3 # charge
         set:
@@ -222,7 +222,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 47100 # Forcible charge/discharge
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: 0 # duration
@@ -231,7 +231,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 47246 # Forcible charge/discharge setting mode
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: 1 # Minute
@@ -240,7 +240,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 47083 # Forced charging and discharging period
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: 2500 # W
@@ -249,7 +249,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 47247 # Forcible charge power
-                type: writemultiple
+                type: writeholdings
                 encoding: uint32
           - source: const
             value: 1 # Enable
@@ -258,7 +258,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 47087 # Charge from grid
-                type: writesingle
+                type: writeholding
                 encoding: uint16
   {{- include "battery-params" . }}
   {{- end }}

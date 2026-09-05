@@ -137,7 +137,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 0x2100 # Hybrid work mode
-              type: writesingle
+              type: writeholding
               encoding: uint16
         - source: const
           value: 0 # disable
@@ -146,7 +146,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 0x214C # Time-based control Enable
-              type: writesingle
+              type: writeholding
               encoding: uint16
     - case: 2 # hold - stop battery discharge
       set:
@@ -159,7 +159,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 0x2100 # Hybrid work mode
-              type: writesingle
+              type: writeholding
               encoding: uint16
         - source: const
           value: 0 # disable
@@ -168,7 +168,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 0x214C # Time-based control Enable
-              type: writesingle
+              type: writeholding
               encoding: uint16
     - case: 3 # charge - force battery charge
       set:
@@ -181,7 +181,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 0x2101 # Once/Everyday 1
-              type: writesingle
+              type: writeholding
               encoding: uint16
         - source: const
           value: 0x0000 # 00:00
@@ -190,7 +190,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 0x2102 # Charge start time 1
-              type: writesingle
+              type: writeholding
               encoding: uint16
         - source: const
           value: 0x173B # 23:59
@@ -199,7 +199,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 0x2103 # Charge end time 1
-              type: writesingle
+              type: writeholding
               encoding: uint16
         - source: const
           value: 0 # Self used mode
@@ -208,7 +208,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 0x2100 # Hybrid work mode
-              type: writesingle
+              type: writeholding
               encoding: uint16
         - source: const
           value: 1 # enable
@@ -217,7 +217,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 0x214C # Time-based control Enable
-              type: writesingle
+              type: writeholding
               encoding: uint16
   {{- include "battery-params" . }}
   {{- end }}

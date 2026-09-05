@@ -190,7 +190,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: {{ .battery_set_register }} # SetActivePowerLessOrEquals (W)
-              type: writemultiple
+              type: writeholdings
               encoding: float32
       - case: 2 # hold
         set:
@@ -201,7 +201,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: {{ .battery_set_register }}
-              type: writemultiple
+              type: writeholdings
               encoding: float32
       {{- if .maxchargepower }}
       - case: 3 # charge
@@ -213,7 +213,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: {{ .battery_set_register }}
-              type: writemultiple
+              type: writeholdings
               encoding: float32
       {{- end }}
   {{- end }}

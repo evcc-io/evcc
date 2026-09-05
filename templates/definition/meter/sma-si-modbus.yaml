@@ -62,7 +62,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 40151 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WCtlComAct
-              type: writemultiple
+              type: writeholdings
               decode: uint32
       - case: 2 # hold
         set:
@@ -75,7 +75,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 40149 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WSpt
-                type: writemultiple
+                type: writeholdings
                 decode: int32
           - source: const
             value: 802 # aktiv (Act)
@@ -84,7 +84,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 40151 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WCtlComAct
-                type: writemultiple
+                type: writeholdings
                 decode: uint32
       - case: 3 # charge
         set:
@@ -97,7 +97,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 40149 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WSpt
-                type: writemultiple
+                type: writeholdings
                 decode: int32
           - source: const
             value: 802 # aktiv (Act)
@@ -106,6 +106,6 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 40151 # SMA Modbus Profile: Inverter.WModCfg.WCtlComCfg.WCtlComAct
-                type: writemultiple
+                type: writeholdings
                 decode: uint32
   {{- include "battery-params" . }}

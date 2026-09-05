@@ -14,7 +14,7 @@ batterymode:
           {{- include "modbus" . | indent 10 }}
           register:
             address: 44002 # Max Charge Power
-            type: writesingle
+            type: writeholding
             decode: uint16
       # Enable RS485 Control Mode
       - source: const
@@ -24,7 +24,7 @@ batterymode:
           {{- include "modbus" . | indent 10 }}
           register:
             address: 42000 # RS485 Control Mode = Enabled
-            type: writesingle
+            type: writeholding
             decode: uint16
       # Set User Work Mode
       - source: const
@@ -34,7 +34,7 @@ batterymode:
           {{- include "modbus" . | indent 10 }}
           register:
             address: 43000 # User Work Mode
-            type: writesingle
+            type: writeholding
             decode: uint16
       # Disable RS485 Control Mode
       - source: const
@@ -44,7 +44,7 @@ batterymode:
           {{- include "modbus" . | indent 10 }}
           register:
             address: 42000 # RS485 Control Mode = Disabled
-            type: writesingle
+            type: writeholding
             decode: uint16
   - case: 2 # hold
     set:
@@ -58,7 +58,7 @@ batterymode:
           {{- include "modbus" . | indent 10 }}
           register:
             address: 42000 # RS485 Control Mode = Enabled
-            type: writesingle
+            type: writeholding
             decode: uint16
       # Set Force Charge/Discharge to Stop
       - source: const
@@ -68,7 +68,7 @@ batterymode:
           {{- include "modbus" . | indent 10 }}
           register:
             address: 42010 # Force Charge/Discharge = Stop
-            type: writesingle
+            type: writeholding
             decode: uint16
   # Do not disable RS485 Control Mode because it will reset the device and let it charge/discharge again
   - case: 3 # charge
@@ -83,7 +83,7 @@ batterymode:
           {{- include "modbus" . | indent 10 }}
           register:
             address: 42000 # RS485 Control Mode = Enabled
-            type: writesingle
+            type: writeholding
             decode: uint16
       # Set Force Charge/Discharge to Charge
       - source: const
@@ -93,7 +93,7 @@ batterymode:
           {{- include "modbus" . | indent 10 }}
           register:
             address: 42010 # Force Charge/Discharge = Charge
-            type: writesingle
+            type: writeholding
             decode: uint16
       # Set Forcible Charge Power
       - source: const
@@ -103,7 +103,7 @@ batterymode:
           {{- include "modbus" . | indent 10 }}
           register:
             address: 42020 # Forcible Charge Power
-            type: writesingle
+            type: writeholding
             decode: uint16
   # Do not disable RS485 Control Mode because it will reset the device and let it charge/discharge again
   - case: 4 # holdcharge -> no charging, discharging allowed
@@ -118,7 +118,7 @@ batterymode:
           {{- include "modbus" . | indent 10 }}
           register:
             address: 44002 # Max Charge Power
-            type: writesingle
+            type: writeholding
             decode: uint16
       # Enable RS485 Control Mode
       - source: const
@@ -128,7 +128,7 @@ batterymode:
           {{- include "modbus" . | indent 10 }}
           register:
             address: 42000 # RS485 Control Mode = Enabled
-            type: writesingle
+            type: writeholding
             decode: uint16
       # Set User Work Mode
       - source: const
@@ -138,7 +138,7 @@ batterymode:
           {{- include "modbus" . | indent 10 }}
           register:
             address: 43000 # User Work Mode
-            type: writesingle
+            type: writeholding
             decode: uint16
       # Disable RS485 Control Mode
       - source: const
@@ -148,7 +148,7 @@ batterymode:
           {{- include "modbus" . | indent 10 }}
           register:
             address: 42000 # RS485 Control Mode = Disabled
-            type: writesingle
+            type: writeholding
             decode: uint16
   # Do not disable RS485 Control Mode because it will reset the device and let it charge/discharge again
   - case: 5 # discharge -> forced discharge to grid (feed-in arbitrage)
@@ -163,7 +163,7 @@ batterymode:
           {{- include "modbus" . | indent 10 }}
           register:
             address: 42000 # RS485 Control Mode = Enabled
-            type: writesingle
+            type: writeholding
             decode: uint16
       # Set Force Charge/Discharge to Discharge
       - source: const
@@ -173,7 +173,7 @@ batterymode:
           {{- include "modbus" . | indent 10 }}
           register:
             address: 42010 # Force Charge/Discharge = Discharge
-            type: writesingle
+            type: writeholding
             decode: uint16
       # Set Forcible Discharge Power
       - source: const
@@ -183,6 +183,6 @@ batterymode:
           {{- include "modbus" . | indent 10 }}
           register:
             address: 42021 # Forcible Discharge Power
-            type: writesingle
+            type: writeholding
             decode: uint16
 {{- end }}

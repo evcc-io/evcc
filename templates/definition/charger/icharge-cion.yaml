@@ -31,12 +31,12 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register: # manual register configuration
       address: 100 # ein / aus
-      type: writesingle
+      type: writeholding
       decode: uint16
   maxcurrent:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register: # manual register configuration
       address: 101 # Strom max
-      type: writesingle
+      type: writeholding
       decode: uint16
