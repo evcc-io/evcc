@@ -97,7 +97,7 @@ render: |
       {{- include "modbus" . | indent 4 }}
       register:
         address: 41009 # limit soc
-        type: writesingle
+        type: writeholding
         decode: uint16
   batterymode:
     source: watchdog
@@ -117,7 +117,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 44000 # Remote Enable
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: 0 # Self Use
@@ -126,7 +126,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 41000 # Work Mode
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: {{ .minsoc }}
@@ -135,7 +135,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 41009 # Minimum SoC
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: {{ .maxsoc }}
@@ -144,7 +144,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 41010 # Maximum SoC
-                type: writesingle
+                type: writeholding
                 encoding: uint16
       - case: 2 # hold - stop battery discharge
         set:
@@ -157,7 +157,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 41000 # Work Mode
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: 60 # Remote timeout 60 seconds
@@ -166,7 +166,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 44001 # Remote Timeout Set
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: 1 # Enabled
@@ -175,7 +175,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 44000 # Remote Enable
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: 0 # W
@@ -184,7 +184,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 44002 # Remote Active Power
-                type: writemultiple
+                type: writeholdings
                 encoding: int32
       - case: 3 # charge - force battery charge
         set:
@@ -197,7 +197,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 41000 # Work Mode
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: 60 # Remote timeout 60 seconds
@@ -206,7 +206,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 44001 # Remote Timeout Set
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: 1 # Enabled
@@ -215,7 +215,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 44000 # Remote Enable
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: {{ mul .maxchargepower -1 }} # negative power means charging
@@ -224,7 +224,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 44002 # Remote Active Power
-                type: writemultiple
+                type: writeholdings
                 encoding: int32
   {{- include "battery-params" . }}
   {{- end }}

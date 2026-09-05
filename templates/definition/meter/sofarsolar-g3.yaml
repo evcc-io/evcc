@@ -225,7 +225,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 0x1110
-              type: writemultiple
+              type: writeholdings
               decode: int16
     - case: 2 # hold
       set:
@@ -241,7 +241,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 0x1110
-                type: writemultiple
+                type: writeholdings
                 decode: int16
         - source: convert
           convert: int2bytes
@@ -256,7 +256,7 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 0x1187
-                  type: writemultiple
+                  type: writeholdings
                   decode: bytes
     - case: 3 # charge 
       set:
@@ -272,7 +272,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 0x1110
-                type: writemultiple
+                type: writeholdings
                 decode: int16
         - source: convert
           convert: int2bytes
@@ -287,7 +287,7 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 0x1187
-                  type: writemultiple
+                  type: writeholdings
                   decode: bytes
   {{- include "battery-params" . }}
   {{- end }}

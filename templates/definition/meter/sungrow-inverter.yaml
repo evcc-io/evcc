@@ -62,13 +62,13 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 5006 # Power limitation switch
-                type: writesingle
+                type: writeholding
                 decode: uint16
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
           address: 5007 # Power limitation setting, 0.1 %
-          type: writesingle
+          type: writeholding
           decode: uint16
         scale: 10
   curtailed:

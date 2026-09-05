@@ -130,7 +130,7 @@ render: |
       uri: {{ joinHostPort .host .port }}
       register:
         address: 40109 # Maximum grid feed-in power (0-100 %)
-        type: writesingle
+        type: writeholding
         encoding: uint16
       scale: 10
     # power control mode at grid connection point: 7 = percentage limit while curtailed, 0 = unlimited at 100%
@@ -146,7 +146,7 @@ render: |
               uri: {{ joinHostPort .host .port }}
               register:
                 address: 40100 # Power control mode at grid connection point
-                type: writesingle
+                type: writeholding
                 encoding: uint16
       default:
         source: const
@@ -157,7 +157,7 @@ render: |
           uri: {{ joinHostPort .host .port }}
           register:
             address: 40100 # Power control mode at grid connection point
-            type: writesingle
+            type: writeholding
             encoding: uint16
   curtailed:
     source: go

@@ -68,7 +68,7 @@ render: |
         {{- include "modbus" . | indent 6 }}
         register:
           address: 5402 # 45403 active power set (%Pn * 100)
-          type: writesingle
+          type: writeholding
           encoding: uint16
         scale: 100
       # active power control: disabled at 100% (unlimited), enabled while curtailed
@@ -83,7 +83,7 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 4000 # 44001 active power control function
-                  type: writesingle
+                  type: writeholding
                   encoding: uint16
         default:
           source: const
@@ -93,7 +93,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 4000
-              type: writesingle
+              type: writeholding
               encoding: uint16
   curtailed: # the power limit only applies while active power control is enabled
     source: go
@@ -151,7 +151,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 1103 # 41104 battery working mode
-              type: writesingle
+              type: writeholding
               encoding: uint16
       - case: 2 # hold
         set:
@@ -164,7 +164,7 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 1103
-                  type: writesingle
+                  type: writeholding
                   encoding: uint16
             - source: const
               value: 0
@@ -173,7 +173,7 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 1152 # 41153 charge/discharge power, negative charges
-                  type: writesingle
+                  type: writeholding
                   encoding: int16
       - case: 3 # charge
         set:
@@ -186,7 +186,7 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 1103
-                  type: writesingle
+                  type: writeholding
                   encoding: uint16
             - source: const
               value: {{ mul .maxchargepower -1 }}
@@ -195,7 +195,7 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 1152
-                  type: writesingle
+                  type: writeholding
                   encoding: int16
   {{- include "battery-params" . }}
   {{- end }}

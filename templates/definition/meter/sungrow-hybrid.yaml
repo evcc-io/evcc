@@ -200,7 +200,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 13050 # Charge/discharge command
-              type: writesingle
+              type: writeholding
               decode: uint16
         - source: const
           value: 0 # Self-consumption mode (Default)
@@ -209,7 +209,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 13049 # EMS mode selection
-              type: writesingle
+              type: writeholding
               decode: uint16
         - source: const
           value: {{ div .maxdischargepower 10 }}
@@ -218,7 +218,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 33047 # Battery max discharge power
-              type: writesingle
+              type: writeholding
               decode: uint16
     - case: 2 # hold
       set:
@@ -231,7 +231,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 13049 # EMS mode selection
-              type: writesingle
+              type: writeholding
               decode: uint16
         - source: const
           value: 0xCC # Stop (Default)
@@ -240,7 +240,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 13050 # Charge/discharge command
-              type: writesingle
+              type: writeholding
               decode: uint16
         # Set max battery discharge power, effectively stops discharging
         - source: const
@@ -250,7 +250,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 33047 # Battery max discharge power
-              type: writesingle
+              type: writeholding
               decode: uint16
     - case: 3 # charge
       set:
@@ -263,7 +263,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 13049 # EMS mode
-              type: writesingle
+              type: writeholding
               decode: uint16
         - source: const
           value: 0xAA # Charge
@@ -272,7 +272,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 13050 # Charge/discharge command
-              type: writesingle
+              type: writeholding
               decode: uint16
         - source: const
           value: {{ .maxchargepower }}
@@ -281,7 +281,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 13051 # Battery max forced (dis)charge power
-              type: writesingle
+              type: writeholding
               decode: uint16
   {{- include "battery-params" . }}
   {{- end }}

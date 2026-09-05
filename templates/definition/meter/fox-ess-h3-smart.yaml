@@ -143,7 +143,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 46001 # Remote Control
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: 1 # Self Use
@@ -152,7 +152,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 49203 # Work Mode
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: {{ .minsoc }}
@@ -161,7 +161,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 46609 # Minimum SoC
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: {{ .maxsoc }}
@@ -170,7 +170,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 46610 # Maximum SoC
-                type: writesingle
+                type: writeholding
                 encoding: uint16
       - case: 2 # hold - stop battery discharge
         set:
@@ -183,7 +183,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 49203 # Work Mode
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: 60 # Remote timeout 60 seconds
@@ -192,7 +192,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 46002 # Remote Timeout Set
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: 1 # Enabled
@@ -201,7 +201,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 46001 # Remote Control
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: 0 # W
@@ -210,7 +210,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 46003 # Remote Active Power, int32 across 46003 (high word) and 46004 (low word)
-                type: writemultiple
+                type: writeholdings
                 encoding: int32
       - case: 3 # charge - force battery charge
         set:
@@ -223,7 +223,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 49203 # Work Mode
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: 60 # Remote timeout 60 seconds
@@ -232,7 +232,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 46002 # Remote Timeout Set
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: 1 # Enabled
@@ -241,7 +241,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 46001 # Remote Control
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: {{ mul .maxchargepower -1 }} # negative power means charging
@@ -250,7 +250,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 46003 # Remote Active Power, int32 across 46003 (high word) and 46004 (low word)
-                type: writemultiple
+                type: writeholdings
                 encoding: int32
   {{- include "battery-params" . }}
   {{- end }}

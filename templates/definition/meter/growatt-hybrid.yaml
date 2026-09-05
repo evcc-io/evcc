@@ -120,7 +120,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 1102
-              type: writemultiple
+              type: writeholdings
               decode: uint16
         - source: const
           value: 0
@@ -129,7 +129,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 1092
-              type: writemultiple
+              type: writeholdings
               decode: uint16
     - case: 2 # hold -> enable "battery first" and disable "ac charge"
       set:
@@ -142,7 +142,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 1102
-              type: writemultiple
+              type: writeholdings
               decode: uint16
         - source: const
           value: 0
@@ -151,7 +151,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 1092
-              type: writemultiple
+              type: writeholdings
               decode: uint16
     - case: 3 # charge -> enable "battery first" and "ac charge"
       set:
@@ -164,7 +164,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 1102
-              type: writemultiple
+              type: writeholdings
               decode: uint16
         - source: const
           value: 1
@@ -173,7 +173,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 1092
-              type: writemultiple
+              type: writeholdings
               decode: uint16
   {{- include "battery-params" . }}
   {{- end }}
