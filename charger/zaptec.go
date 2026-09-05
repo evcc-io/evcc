@@ -18,6 +18,7 @@ package charger
 // SOFTWARE.
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
@@ -202,7 +203,7 @@ func (c *Zaptec) detectVersion() (int, error) {
 		}
 	}
 
-	switch capabilities.ProductVariant {
+	switch cmp.Or(capabilities.ProductVariant, capabilities.DeviceType) {
 	case "Go":
 		return zaptec.ZaptecGo, nil
 	case "Go2":
