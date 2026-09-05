@@ -151,6 +151,28 @@ func TestAsTimestamps(t *testing.T) {
 	}, got)
 }
 
+func TestActiveOptimizerSlot(t *testing.T) {
+	boundary := time.Date(2025, 1, 1, 12, 15, 0, 0, time.UTC)
+	timestamps := []time.Time{boundary.Add(-2 * time.Second), boundary, boundary.Add(tariff.SlotDuration)}
+	dt := []int{2, int(tariff.SlotDuration.Seconds()), int(tariff.SlotDuration.Seconds())}
+
+	for _, tc := range []struct {
+		name string
+		at   time.Time
+		want int
+	}{
+		{"partial slot", boundary.Add(-time.Second), 0},
+		{"next slot at boundary", boundary, 1},
+		{"next slot after delayed response", boundary.Add(4 * time.Second), 1},
+		{"following slot", boundary.Add(tariff.SlotDuration), 2},
+		{"expired result", boundary.Add(2 * tariff.SlotDuration), -1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, activeOptimizerSlot(timestamps, dt, tc.at))
+		})
+	}
+}
+
 func TestUnmodelledPower(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
@@ -250,14 +272,14 @@ func TestBatteryForecastSocExtremes(t *testing.T) {
 		},
 		{
 			"already full — no highest",
-			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000}},
+			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000, SInitial: 1000}},
 			[][]float32{{1000, 1000, 500}},
 			nil,
 			&batteryForecastSlot{slot: 2, soc: 50, limit: false},
 		},
 		{
 			"already empty — no lowest",
-			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000, SMin: 100}},
+			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000, SMin: 100, SInitial: 100}},
 			[][]float32{{100, 100, 500}},
 			&batteryForecastSlot{slot: 2, soc: 50, limit: false},
 			nil,
@@ -276,7 +298,7 @@ func TestBatteryForecastSocExtremes(t *testing.T) {
 				resp[i] = optimizer.BatteryResult{StateOfCharge: s}
 			}
 
-			high, low := batteryForecastSocExtremes(tc.req, resp)
+			high, low := batteryForecastSocExtremes(tc.req, resp, 0)
 
 			if tc.high == nil {
 				assert.Nil(t, high, "high")
@@ -296,6 +318,44 @@ func TestBatteryForecastSocExtremes(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestBatteryForecastActiveSlot(t *testing.T) {
+	req := []optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000}}
+	resp := []optimizer.BatteryResult{{StateOfCharge: []float32{1000, 500, 800}}}
+
+	high, low := batteryForecastSocExtremes(req, resp, 1)
+	require.NotNil(t, high)
+	require.NotNil(t, low)
+	assert.Equal(t, 2, high.slot)
+	assert.InDelta(t, 80, high.soc, 1e-3)
+	assert.Equal(t, 1, low.slot)
+	assert.InDelta(t, 50, low.soc, 1e-3)
+
+	base := time.Now().Add(time.Hour).Round(time.Second)
+	timestamps := []time.Time{base.Add(-2 * time.Hour), base, base.Add(tariff.SlotDuration)}
+	dt := []int{60, int(tariff.SlotDuration.Seconds()), int(tariff.SlotDuration.Seconds())}
+
+	forecast := (&Site{}).addBatteryForecastTotals(req, resp, timestamps, dt, 1)
+	require.NotNil(t, forecast)
+	require.NotNil(t, forecast.Highest)
+	require.NotNil(t, forecast.Lowest)
+	assert.Equal(t, timestamps[2].Add(tariff.SlotDuration), forecast.Highest.Time)
+	assert.Equal(t, timestamps[1].Add(tariff.SlotDuration), forecast.Lowest.Time)
+
+	resp[0].StateOfCharge = []float32{500, 1000, 800}
+	forecast = (&Site{}).addBatteryForecastTotals(req, resp, timestamps, dt, 1)
+	require.NotNil(t, forecast)
+	require.NotNil(t, forecast.Highest)
+	assert.True(t, forecast.Highest.Limit)
+	assert.Equal(t, timestamps[1].Add(tariff.SlotDuration), forecast.Highest.Time)
+
+	resp[0].StateOfCharge = []float32{500, 0, 200}
+	forecast = (&Site{}).addBatteryForecastTotals(req, resp, timestamps, dt, 1)
+	require.NotNil(t, forecast)
+	require.NotNil(t, forecast.Lowest)
+	assert.True(t, forecast.Lowest.Limit)
+	assert.Equal(t, timestamps[1].Add(tariff.SlotDuration), forecast.Lowest.Time)
 }
 
 // TestBatteryRequestSocLimitsClamp ensures the reported soc is always clamped into
@@ -497,7 +557,7 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 				ChargingPower:    []float32{tc.charge},
 				DischargingPower: []float32{tc.disch},
 			}
-			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, res, tc.gridImp, tc.gridExp, 1)
+			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, res, 0, tc.gridImp, tc.gridExp, 1)
 			assert.Equal(t, tc.want, s.Action)
 			assert.InDelta(t, tc.charge, s.Charge, 1e-3)
 			assert.InDelta(t, tc.disch, s.Discharge, 1e-3)
@@ -506,7 +566,15 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	}
 
 	// no result yields an empty suggestion
-	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryResult{}, 1000, 0, 1))
+	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryResult{}, 0, 1000, 0, 1))
+
+	// a delayed result uses the slot active when it is applied
+	res := optimizer.BatteryResult{
+		ChargingPower:    []float32{100, 0},
+		DischargingPower: []float32{0, 0},
+	}
+	s := currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, res, 1, 1000, 0, 1)
+	assert.Equal(t, api.BatteryHold.String(), s.Action)
 }
 
 // TestSuggestionActionable ensures the actionable flag follows the current state

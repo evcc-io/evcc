@@ -14,6 +14,8 @@ func TestMatchSoc(t *testing.T) {
 	// 10 minutes into the 12:00-12:15 slot
 	now := time.Date(2025, 1, 1, 12, 10, 0, 0, time.UTC)
 	eos := time.Date(2025, 1, 1, 12, 15, 0, 0, time.UTC)
+	timestamps := []time.Time{now, eos, eos.Add(tariff.SlotDuration)}
+	dt := []int{300, 900, 900}
 
 	for _, tc := range []struct {
 		ts       []float32
@@ -27,10 +29,11 @@ func TestMatchSoc(t *testing.T) {
 		{[]float32{0, 0, 0}, time.Time{}},
 		{nil, time.Time{}},
 	} {
-		assert.Equal(t, tc.expected, matchSoc(tc.ts, now, atLeast50), "%v", tc.ts)
+		assert.Equal(t, tc.expected, matchSoc(tc.ts, timestamps, dt, 0, atLeast50), "%v", tc.ts)
 	}
 
 	// called exactly on a slot boundary the current slot is full length
 	onBoundary := time.Date(2025, 1, 1, 12, 0, 0, 0, time.UTC)
-	assert.Equal(t, onBoundary.Add(tariff.SlotDuration), matchSoc([]float32{50}, onBoundary, atLeast50))
+	assert.Equal(t, onBoundary.Add(tariff.SlotDuration), matchSoc([]float32{50}, []time.Time{onBoundary}, []int{900}, 0, atLeast50))
+	assert.Equal(t, eos.Add(2*tariff.SlotDuration), matchSoc([]float32{50, 0, 50}, timestamps, dt, 1, atLeast50))
 }
