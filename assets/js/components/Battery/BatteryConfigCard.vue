@@ -102,6 +102,19 @@
 				<label class="form-check-label" for="batteryDischarge">
 					{{ $t("battery.config.discharge") }}
 				</label>
+				<i18n-t
+					v-if="optimizerAutomatic"
+					keypath="config.optimizer.controlled"
+					tag="div"
+					class="text-muted small"
+					scope="global"
+				>
+					<template #optimizer>
+						<router-link to="/optimize" class="text-muted">
+							{{ $t("config.optimizer.linkWord") }}
+						</router-link>
+					</template>
+				</i18n-t>
 			</div>
 			<div v-if="experimental" class="form-check form-switch mt-2">
 				<input
