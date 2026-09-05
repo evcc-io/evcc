@@ -1,0 +1,67 @@
+name: Devcontainer
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - .devcontainer/**
+      - .github/workflows/devcontainer.yml
+      - .npmrc
+      - Makefile
+      - go.mod
+      - go.sum
+      - package.json
+      - package-lock.json
+      - vite.config.ts
+  push:
+    branches:
+      - master
+    paths:
+      - .devcontainer/**
+      - .github/workflows/devcontainer.yml
+      - .npmrc
+      - Makefile
+      - go.mod
+      - go.sum
+      - package.json
+      - package-lock.json
+      - vite.config.ts
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    name: Smoke test
+    runs-on: depot-ubuntu-24.04-arm
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Build and start devcontainer
+        uses: devcontainers/ci@8bf61b26e9c3a98f69cb6ce2f88d24ff59b785c6 # v0.3
+        with:
+          push: never
+          runCmd: "true"
+
+      - name: Run lifecycle commands
+        run: devcontainer run-user-commands --workspace-folder .
+
+      - name: Smoke test
+        run: |
+          devcontainer exec --workspace-folder . bash -lc '
+            set -eu
+            go version
+            node --version
+            vp --version
+            docker version
+            docker buildx version
+            docker compose version
+            test -w .
+            make ui build
+          '

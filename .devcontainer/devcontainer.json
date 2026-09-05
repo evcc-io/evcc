@@ -19,7 +19,7 @@
 			"nvmVersion": "latest"
 		}
 	},
-	"postCreateCommand": "make install-ui && make install",
+	"postCreateCommand": "curl -fsSL https://vite.plus | bash && export PATH=\"$HOME/.vite-plus/bin:$HOME/.local/share/vite-plus/bin:$PATH\" && make install-ui && make install",
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -29,6 +29,7 @@
 		}
 	},
 	"remoteEnv": {
-		"GOTOOLCHAIN": "auto"
+		"GOTOOLCHAIN": "auto",
+		"PATH": "${containerEnv:HOME}/.vite-plus/bin:${containerEnv:HOME}/.local/share/vite-plus/bin:${containerEnv:PATH}"
 	}
 }
