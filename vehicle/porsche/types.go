@@ -1,95 +1,81 @@
 package porsche
 
+import "encoding/json"
+
+// Vehicle is an entry from GET /connect/v1/vehicles
 type Vehicle struct {
-	VIN              string
-	ModelDescription string
-	Pictures         []struct {
-		URL         string
-		View        string
-		Size        int
-		Width       int
-		Height      int
-		Transparent bool
-	}
+	VIN       string `json:"vin"`
+	ModelName string `json:"modelName"`
+	ModelType struct {
+		Model  string `json:"model"`
+		Year   string `json:"year"`
+		Engine string `json:"engine"` // BEV, PHEV, COMBUSTION
+	} `json:"modelType"`
 }
 
-type VehiclePairingResponse struct {
-	VIN                string
-	PairingCode        string
-	Status             string
-	CanSendPairingCode bool
-}
-
+// StatusResponse is the overview response for a single vehicle.
 type StatusResponse struct {
-	BatteryLevel struct {
-		Unit  string
-		Value float64
-	}
-	Mileage struct {
-		Unit  string
-		Value float64
-	}
-	RemainingRanges struct {
-		ElectricalRange struct {
-			Distance struct {
-				Unit  string
-				Value float64
-			}
-		}
-	}
+	VIN          string        `json:"vin"`
+	ModelName    string        `json:"modelName"`
+	Measurements []Measurement `json:"measurements"`
 }
 
-type CapabilitiesResponse struct {
-	DisplayParkingBrake      bool
-	NeedsSPIN                bool
-	HasRDK                   bool
-	EngineType               string
-	CarModel                 string
-	OnlineRemoteUpdateStatus struct {
-		EditableByUser bool
-		Active         bool
-	}
-	HeatingCapabilities struct {
-		FrontSeatHeatingAvailable bool
-		RearSeatHeatingAvailable  bool
-	}
-	SteeringWheelPosition string
-	HasHonkAndFlash       bool
+// Measurement is a single keyed measurement; Value is decoded on demand.
+type Measurement struct {
+	Key    string `json:"key"`
+	Status struct {
+		IsEnabled bool   `json:"isEnabled"`
+		Cause     string `json:"cause"`
+	} `json:"status"`
+	Value json.RawMessage `json:"value"`
 }
 
-type EmobilityResponse struct {
-	BatteryChargeStatus *struct {
-		ChargeRate struct {
-			Unit             string
-			Value            float64
-			ValueInKmPerHour int64
-		}
-		ChargingInDCMode                            bool
-		ChargingMode                                string
-		ChargingPower                               float64
-		ChargingReason                              string
-		ChargingState                               string
-		ChargingTargetDateTime                      string
-		ExternalPowerSupplyState                    string
-		PlugState                                   string
-		RemainingChargeTimeUntil100PercentInMinutes int64
-		StateOfChargeInPercentage                   int64
-		RemainingERange                             struct {
-			OriginalUnit      string
-			OriginalValue     int64
-			Unit              string
-			Value             int64
-			ValueInKilometers int64
+// measurement returns the (enabled) measurement for the given key.
+func (s StatusResponse) measurement(key string) (Measurement, bool) {
+	for _, m := range s.Measurements {
+		if m.Key == key && m.Status.IsEnabled && len(m.Value) > 0 {
+			return m, true
 		}
 	}
-	ChargingStatus string
-	DirectCharge   struct {
-		Disabled bool
-		IsActive bool
+	return Measurement{}, false
+}
+
+// decode unmarshals the value of the measurement with the given key into v.
+// Returns false if the measurement is missing/disabled.
+func (s StatusResponse) decode(key string, v any) bool {
+	m, ok := s.measurement(key)
+	if !ok {
+		return false
 	}
-	DirectClimatisation struct {
-		ClimatisationState         string
-		RemainingClimatisationTime int64
-	}
-	PcckErrorMessage string
+	return json.Unmarshal(m.Value, v) == nil
+}
+
+// measurement value shapes
+
+type batteryLevel struct {
+	Percent float64 `json:"percent"`
+}
+
+type rangeValue struct {
+	Kilometers float64 `json:"kilometers"`
+}
+
+type chargingSummary struct {
+	Status string `json:"status"` // e.g. CHARGING, CHARGING_COMPLETED, NOT_CHARGING, NOT_PLUGGED
+	Mode   string `json:"mode"`   // e.g. DIRECT
+	Type   string `json:"type"`   // e.g. AC, DC
+}
+
+type chargingRate struct {
+	ChargingPower float64 `json:"chargingPower"`
+	RateKph       float64 `json:"chargingRate-kph"`
+}
+
+type climatizerState struct {
+	IsOn bool `json:"isOn"`
+}
+
+type gpsLocation struct {
+	Location  string  `json:"location"` // "lat,lng"
+	Direction float64 `json:"direction"`
 }

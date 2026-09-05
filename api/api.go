@@ -239,6 +239,28 @@ type AuthProvider interface {
 	DisplayName() string
 }
 
+// AuthChallenge is user input a login needs that no browser redirect can
+// deliver, e.g. a captcha or a code copied from the vendor's login page.
+type AuthChallenge struct {
+	Kind  string `json:"kind"`            // AuthChallengeCaptcha or AuthChallengeCode
+	Image string `json:"image,omitempty"` // data URI shown to the user
+	Link  string `json:"link,omitempty"`  // url the user opens to obtain the answer
+}
+
+const (
+	AuthChallengeCaptcha = "captcha"
+	AuthChallengeCode    = "code"
+)
+
+// AuthChallenger is implemented by AuthProviders whose login runs server-side
+// with stored credentials instead of a redirect or device flow.
+type AuthChallenger interface {
+	// StartChallenge begins the login. Returns the first challenge, or nil when no user input is needed.
+	StartChallenge() (*AuthChallenge, error)
+	// SubmitChallenge answers the current challenge. Returns the next challenge, or nil when authenticated.
+	SubmitChallenge(answer string) (*AuthChallenge, error)
+}
+
 // IconDescriber optionally provides an icon
 type IconDescriber interface {
 	Icon() string
