@@ -71,6 +71,10 @@ func TestOCPPChargingProfileValidation(t *testing.T) {
 		_, err := NewOCPPFromConfig(t.Context(), map[string]any{"chargingprofile": value})
 		require.ErrorContains(t, err, "invalid charging profile")
 	}
+	for _, connector := range []int{-1, 0} {
+		_, err := NewOCPPFromConfig(t.Context(), map[string]any{"chargingprofile": "TxProfile", "connector": connector})
+		require.ErrorContains(t, err, "TxProfile requires a positive connector")
+	}
 }
 
 func TestOCPPChargingProfileTemplates(t *testing.T) {

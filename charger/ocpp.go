@@ -95,6 +95,9 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 	if cc.ChargingProfile != types.ChargingProfilePurposeTxDefaultProfile && cc.ChargingProfile != types.ChargingProfilePurposeTxProfile {
 		return nil, fmt.Errorf("invalid charging profile: %s", cc.ChargingProfile)
 	}
+	if cc.ChargingProfile == types.ChargingProfilePurposeTxProfile && cc.Connector <= 0 {
+		return nil, fmt.Errorf("TxProfile requires a positive connector: %d", cc.Connector)
+	}
 
 	stackLevelZero := cc.StackLevelZero != nil && *cc.StackLevelZero
 	profileKindRelative := cc.ProfileKindRelative
