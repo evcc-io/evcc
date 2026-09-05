@@ -143,9 +143,9 @@ const (
 )
 
 const (
-	ZaptecGo  = 0
-	ZaptecPro = 1
-	ZaptecGo2 = 2
+	ZaptecGo  = 0 // Go
+	ZaptecPro = 1 // ProMID
+	ZaptecGo2 = 2 // Go2
 )
 
 // Features is the installation's feature flag bitmask
