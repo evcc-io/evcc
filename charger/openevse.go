@@ -120,9 +120,7 @@ func (c *OpenEVSE) run(ctx context.Context) {
 			continue
 		}
 
-		bo.Reset()
-
-		if err := c.handleConnection(ctx, conn); err != nil && ctx.Err() == nil {
+		if err := c.handleConnection(ctx, conn, bo); err != nil && ctx.Err() == nil {
 			c.log.ERROR.Printf("websocket: %v", err)
 		}
 
@@ -131,8 +129,11 @@ func (c *OpenEVSE) run(ctx context.Context) {
 }
 
 // handleConnection reads frames until the connection fails. The first frame of a
-// connection is the full status; after merging it the charger is readable.
-func (c *OpenEVSE) handleConnection(ctx context.Context, conn *websocket.Conn) error {
+// connection is the full status; after merging it successfully the charger is
+// readable and the reconnect backoff is reset, proving the connection is usable
+// (a device that accepts the websocket and then immediately drops it must not
+// reset the backoff and cause a hot reconnect loop).
+func (c *OpenEVSE) handleConnection(ctx context.Context, conn *websocket.Conn, bo *backoff.ExponentialBackOff) error {
 	defer conn.Close(websocket.StatusNormalClosure, "")
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -168,12 +169,20 @@ func (c *OpenEVSE) handleConnection(ctx context.Context, conn *websocket.Conn) e
 
 		c.log.TRACE.Printf("websocket: %s", b)
 
-		if err := c.merge(b); err != nil {
+		err = c.merge(b)
+		if err != nil {
 			c.log.ERROR.Printf("websocket: bad frame: %v", err)
 		}
 
-		if first {
+		// a partial merge still delivers real state for the fields that did decode
+		// (the firmware may add keys with unexpected types); anything else - a
+		// syntax error, non-object frame, etc - is not usable state
+		var typeErr *json.UnmarshalTypeError
+		ok := err == nil || errors.As(err, &typeErr)
+
+		if first && ok {
 			first = false
+			bo.Reset()
 			c.setConnected(true)
 		}
 	}

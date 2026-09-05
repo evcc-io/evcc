@@ -239,3 +239,32 @@ func TestOpenEVSEInvalidState(t *testing.T) {
 	_, err := c.Status()
 	assert.ErrorContains(t, err, "invalid status: 6")
 }
+
+// TestOpenEVSEGarbageFirstFrame covers Finding 1 (fix round 1): a first frame that
+// fails to decode must not mark the connection ready with a zero Status. Only once a
+// later frame decodes (fully or with only an UnmarshalTypeError) does the charger
+// become readable.
+func TestOpenEVSEGarbageFirstFrame(t *testing.T) {
+	s := newOpenEVSETestServer(t, "garbage") // not valid JSON
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	c := newTestOpenEVSE(t, ctx, s.srv.URL, "", "")
+
+	// the garbage frame must not make the charger readable
+	time.Sleep(200 * time.Millisecond)
+	_, err := c.Status()
+	assert.Error(t, err)
+
+	// a subsequent valid frame does
+	s.send <- openevseFullStatus
+
+	require.Eventually(t, func() bool {
+		_, err := c.Status()
+		return err == nil
+	}, 5*time.Second, 10*time.Millisecond)
+
+	status, err := c.Status()
+	require.NoError(t, err)
+	assert.Equal(t, api.StatusC, status)
+}
