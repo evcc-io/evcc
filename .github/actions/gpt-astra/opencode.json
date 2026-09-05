@@ -1,0 +1,37 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "azure/gpt-6-astra",
+  "small_model": "azure/gpt-6-astra",
+  "enabled_providers": ["azure"],
+  "share": "disabled",
+  "autoupdate": false,
+  "lsp": false,
+  "formatter": false,
+  "permission": { "*": "deny" },
+  "agent": {
+    "ci": {
+      "description": "Permission-scoped GitHub automation",
+      "mode": "primary",
+      "steps": 100
+    }
+  },
+  "plugin": ["./scrub-env.mjs"],
+  "provider": {
+    "azure": {
+      "options": {
+        "baseURL": "{env:AZURE_OPENAI_ENDPOINT}",
+        "apiKey": "{env:AZURE_OPENAI_API_KEY}"
+      },
+      "models": {
+        "gpt-6-astra": {
+          "id": "{env:AZURE_OPENAI_DEPLOYMENT}",
+          "name": "GPT-Astra",
+          "reasoning": true,
+          "tool_call": true,
+          "limit": { "context": 128000, "output": 16384 },
+          "options": { "store": false }
+        }
+      }
+    }
+  }
+}

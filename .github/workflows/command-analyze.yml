@@ -1,4 +1,4 @@
-name: Claude Analyze Command
+name: GPT-Astra Analyze Command
 
 # Disabled; original job conditions are retained for re-enablement.
 
@@ -18,9 +18,8 @@ jobs:
       contents: read # explore the codebase for the answer; no fix/PR in analyze mode
       issues: write # comment + minimize the calling comment
       pull-requests: write # comment on PR conversations
-      id-token: write
       actions: read
-    uses: ./.github/workflows/claude-issue-agent-run.yml
+    uses: ./.github/workflows/gpt-astra-issue-agent-run.yml
     with:
       issue_number: ${{ github.event.issue.number }}
       mode: analyze

@@ -1,4 +1,4 @@
-name: Claude Issue Agent (reusable)
+name: GPT-Astra Issue Agent (reusable)
 
 # Shared investigate + comment logic for issue triage and the on-demand /analyze
 # and /fix commands. Callers pass a mode:
@@ -32,6 +32,7 @@ jobs:
   run:
     name: Issue agent
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     # No permissions block: inherit the caller's grant (triage/fix=write to push
     # fixes, analyze=read). A reusable job can only reduce, never elevate.
     steps:
@@ -47,29 +48,39 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: ${{ inputs.mode != 'analyze' }}
 
-      - name: Run Claude
-        # pinned: v1 (Claude Code 2.1.216) fails every Bash call with
-        # "bwrap: Can't create file at /home/.mcp.json: Permission denied"
-        uses: anthropics/claude-code-action@a874e9ecd7bb36efdad65429c6b35815f5a08f10 # v1 @ 2.1.215
+      - name: Run GPT-Astra
+        uses: ./.github/actions/gpt-astra
         with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          # surface the underlying API error when a run fails on the first turn
-          show_full_output: true
-          # Issues/comments come from external users without write access; this
-          # workflow's token is scoped by the caller. All fetched content is
-          # treated as untrusted data in the prompt.
-          allowed_non_write_users: '*'
-          additional_permissions: |
-            actions: read
-          # analyze mode gets read + comment + api tools only; triage/fix
-          # additionally get Edit/Write + git/PR tools to actually make and push a
-          # fix (analyze/fix need gh api to read their invoking comment). Task
-          # is blocked in all modes so the agent can't offload work to a
-          # background sub-agent and exit before it returns. All modes get read-only
-          # git log and gh pr view/diff to trace a regression to its pull request.
-          claude_args: ${{ inputs.mode == 'analyze' && '--allowed-tools "Read,Grep,Glob,Bash(gh label list),Bash(gh issue view:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api:*),Bash(git log:*)" --disallowed-tools "Task"' || (inputs.mode == 'fix' && '--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh issue view:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh issue comment:*),Bash(gh pr create:*),Bash(git checkout:*),Bash(git switch:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git log:*),Bash(git status),Bash(gh api:*)" --disallowed-tools "Task"' || '--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh label list),Bash(gh issue view:*),Bash(gh issue edit:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr create:*),Bash(git checkout:*),Bash(git switch:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git log:*),Bash(git status)" --disallowed-tools "Task"') }}
+          endpoint: ${{ vars.AZURE_OPENAI_ENDPOINT }}
+          deployment: ${{ vars.AZURE_OPENAI_DEPLOYMENT }}
+          api-key: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          permission: |
+            {
+              "*": "deny", "read": "allow", "glob": "allow", "grep": "allow",
+              "edit": "${{ inputs.mode == 'analyze' && 'deny' || 'allow' }}",
+              "bash": {
+                "*": "deny",
+                "git log *": "allow",
+                "gh label list*": "allow",
+                "gh issue view *": "allow",
+                "gh pr view *": "allow",
+                "gh pr diff *": "allow",
+                "gh issue comment ${{ inputs.issue_number }} *": "allow",
+                "gh api repos/${{ github.repository }}/issues/comments/${{ inputs.comment_id }} --jq .body": "allow",
+                "gh issue edit ${{ inputs.issue_number }} *": "${{ inputs.mode == 'triage' && 'allow' || 'deny' }}",
+                "gh pr create *": "${{ inputs.mode == 'analyze' && 'deny' || 'allow' }}",
+                "git checkout *": "${{ inputs.mode == 'analyze' && 'deny' || 'allow' }}",
+                "git switch *": "${{ inputs.mode == 'analyze' && 'deny' || 'allow' }}",
+                "git add *": "${{ inputs.mode == 'analyze' && 'deny' || 'allow' }}",
+                "git commit *": "${{ inputs.mode == 'analyze' && 'deny' || 'allow' }}",
+                "git push *": "${{ inputs.mode == 'analyze' && 'deny' || 'allow' }}",
+                "git diff *": "allow",
+                "git status*": "allow"
+              }
+            }
           prompt: |
             You are the issue triage, analysis and fix agent for the evcc repository.
             MODE = "${{ inputs.mode }}". Work on issue/PR #${{ inputs.issue_number }}.
@@ -132,7 +143,7 @@ jobs:
                this repo, `owner/repo@<sha>` across repos. Only write `#<number>` when
                you mean a real issue/PR — otherwise escape it (e.g. `\#3`). Wrap file
                paths, code and identifiers in backticks. Always end the comment with:
-               "🤖 Generated with [Claude Code](https://claude.com/claude-code)".
+               "🤖 Generated with [OpenCode](https://opencode.ai) using GPT-Astra".
 
             If MODE is "triage", also do the following:
 
@@ -169,7 +180,7 @@ jobs:
                - make the minimal change, then commit. Do NOT add a Co-Authored-By trailer.
                - push and open a draft PR with `gh pr create --draft` whose body starts
                  with `fixes #${{ inputs.issue_number }}` and ends with the
-                 "🤖 Generated with [Claude Code](https://claude.com/claude-code)" footer.
+                 "🤖 Generated with [OpenCode](https://opencode.ai) using GPT-Astra" footer.
                - if the issue carries type Bug, whether you set it in step 3 or it
                  already had it, create the PR with `--label bug` so it qualifies for
                  backport. The `bug` label belongs on the fixing pull request, never on
@@ -182,7 +193,7 @@ jobs:
                - make the minimal change, then commit. Do NOT add a Co-Authored-By trailer.
                - push and open a PR (not draft) with `gh pr create` whose body starts
                  with `fixes #${{ inputs.issue_number }}` and ends with the
-                 "🤖 Generated with [Claude Code](https://claude.com/claude-code)" footer.
+                 "🤖 Generated with [OpenCode](https://opencode.ai) using GPT-Astra" footer.
                - if the issue carries type Bug, create the PR with `--label bug` so it
                  qualifies for backport.
                If the fix needs design discussion, spans too many files, or you
