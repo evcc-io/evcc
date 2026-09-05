@@ -4715,6 +4715,10 @@
         "description": "A load management circuit limiting power and current of its assigned loadpoints.",
         "type": "object",
         "properties": {
+          "name": {
+            "description": "Circuit name for UI display.",
+            "type": "string"
+          },
           "title": {
             "description": "Circuit title for UI display.",
             "type": "string"
@@ -4747,6 +4751,30 @@
         "required": [
           "power"
         ]
+      },
+      "Circuits": {
+        "description": "Load management circuits and runtime status.",
+        "type": "object",
+        "properties": {
+          "config": {
+            "description": "Static configuration.",
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Circuit"
+            }
+          },
+          "status": {
+            "description": "Runtime status."
+          },
+          "yamlSource": {
+            "description": "Source of the configuration, evcc.yaml file or database.",
+            "type": "string",
+            "enum": [
+              "file",
+              "db"
+            ]
+          }
+        }
       },
       "SmartCostType": {
         "description": "Type of the smart charging limit.",
@@ -5397,11 +5425,8 @@
             "type": "number"
           },
           "circuits": {
-            "description": "Load management circuits, keyed by circuit name.",
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/Circuit"
-            }
+            "$ref": "#/components/schemas/Circuits",
+            "description": "Load management circuits, keyed by circuit name."
           },
           "bufferSoc": {
             "description": "Battery buffer SoC in %. Energy above this level may be used for charging in solar mode.",

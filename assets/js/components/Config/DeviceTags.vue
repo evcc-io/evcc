@@ -226,6 +226,7 @@ export default {
 			}
 			switch (name) {
 				case "power":
+				case "maxPower":
 				case "solarForecast":
 				case "dimLimit":
 				case "curtailLimit":
@@ -261,6 +262,9 @@ export default {
 					return `${this.fmtW(value[0])} / ${this.fmtW(value[1])}`;
 				case "currentRange":
 					return `${this.fmtNumber(value[0], 1)} A / ${this.fmtNumber(value[1], 1)} A`;
+				case "current":
+				case "maxCurrent":
+					return `${this.fmtNumber(value, 1)} A`;
 				case "curtailed":
 					// devices report the allowed feed-in percent, the hems a plain flag
 					return typeof value === "number"

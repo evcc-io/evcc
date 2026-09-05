@@ -191,6 +191,8 @@
 					</div>
 				</div>
 
+				<slot name="before-actions" :values="values"></slot>
+
 				<DeviceModalActions
 					v-if="showActions"
 					:is-deletable="isDeletable"
@@ -369,6 +371,7 @@ export default defineComponent({
 			adminPasswordValue: "",
 			adminPasswordRequired: false,
 			adminPasswordInvalid: false,
+			coveredByNested: false,
 		};
 	},
 	computed: {
@@ -551,6 +554,11 @@ export default defineComponent({
 	watch: {
 		isModalVisible(visible) {
 			if (visible) {
+				if (this.coveredByNested) {
+					// was just hidden by a nested modal, it wasn't actually reopened
+					this.coveredByNested = false;
+					return;
+				}
 				this.templateName =
 					this.isNew && this.defaultTemplate ? this.defaultTemplate : null;
 				this.reset();
@@ -563,6 +571,9 @@ export default defineComponent({
 					// For new devices, apply defaults immediately (e.g., default icons based on meter type)
 					this.applyDefaults();
 				}
+			} else {
+				// check whether we were just hidden (child modal open) or actually closed
+				this.coveredByNested = !!this.name && isNestedIn(this.name);
 			}
 		},
 		id(newVal, oldVal) {

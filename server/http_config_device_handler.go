@@ -661,6 +661,11 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 			}
 
 		case templates.Circuit:
+			var meterRef string
+			if circuit, lookupErr := config.Circuits().ByName(config.NameForID(id)); lookupErr == nil {
+				meterRef, _ = circuit.Config().Property("meter").(string)
+			}
+
 			err = deleteDevice(id, config.Circuits())
 
 			// cleanup references
@@ -668,6 +673,14 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 				lp := dev.Instance()
 				if lp != nil && lp.GetCircuitRef() == config.NameForID(id) {
 					lp.SetCircuitRef("")
+				}
+			}
+
+			if err == nil && meterRef != "" && meterRef != site.GetGridMeterRef() {
+				if meter, lookupErr := config.Meters().ByName(meterRef); lookupErr == nil {
+					if configurable, ok := meter.(config.ConfigurableDevice[api.Meter]); ok {
+						err = deleteDevice(configurable.ID(), config.Meters())
+					}
 				}
 			}
 

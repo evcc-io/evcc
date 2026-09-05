@@ -256,7 +256,12 @@
 							:has-error="hasDeviceError('tariff', gridTariff.name)"
 							:tags="deviceTags('tariff', gridTariff.name)"
 							:currency="currency"
-							@edit="openModal('tariff', { type: 'grid', id: gridTariff.id })"
+							@edit="
+								openModal('tariff', {
+									type: 'grid',
+									id: gridTariff.id,
+								})
+							"
 							@enable="handleDisable('tariff', gridTariff.id, false)"
 						/>
 						<TariffCard
@@ -266,7 +271,12 @@
 							:has-error="hasDeviceError('tariff', feedInTariff.name)"
 							:tags="deviceTags('tariff', feedInTariff.name)"
 							:currency="currency"
-							@edit="openModal('tariff', { type: 'feedIn', id: feedInTariff.id })"
+							@edit="
+								openModal('tariff', {
+									type: 'feedIn',
+									id: feedInTariff.id,
+								})
+							"
 							@enable="handleDisable('tariff', feedInTariff.id, false)"
 						/>
 						<NewDeviceButton
@@ -280,7 +290,12 @@
 							tariff-type="co2"
 							:has-error="hasDeviceError('tariff', co2Tariff.name)"
 							:tags="deviceTags('tariff', co2Tariff.name)"
-							@edit="openModal('tariff', { type: 'co2', id: co2Tariff.id })"
+							@edit="
+								openModal('tariff', {
+									type: 'co2',
+									id: co2Tariff.id,
+								})
+							"
 							@enable="handleDisable('tariff', co2Tariff.id, false)"
 						/>
 						<TariffCard
@@ -291,7 +306,12 @@
 							:has-error="hasDeviceError('tariff', tariff.name)"
 							:tags="deviceTags('tariff', tariff.name)"
 							:currency="currency"
-							@edit="openModal('tariff', { type: 'solar', id: tariff.id })"
+							@edit="
+								openModal('tariff', {
+									type: 'solar',
+									id: tariff.id,
+								})
+							"
 							@enable="handleDisable('tariff', tariff.id, false)"
 						/>
 						<TariffCard
@@ -314,7 +334,12 @@
 							:has-error="hasDeviceError('tariff', plannerTariff.name)"
 							:tags="deviceTags('tariff', plannerTariff.name)"
 							:currency="currency"
-							@edit="openModal('tariff', { type: 'planner', id: plannerTariff.id })"
+							@edit="
+								openModal('tariff', {
+									type: 'planner',
+									id: plannerTariff.id,
+								})
+							"
 							@enable="handleDisable('tariff', plannerTariff.id, false)"
 						/>
 						<NewDeviceButton
@@ -374,7 +399,7 @@
 						</DeviceCard>
 						<DeviceCard
 							:title="`${$t('config.circuits.title')}`"
-							editable
+							:editable="circuitsYamlSource !== 'file'"
 							:error="hasClassError('circuit')"
 							:unconfigured="isUnconfigured(circuitsTags)"
 							:banner="
@@ -383,12 +408,17 @@
 									: undefined
 							"
 							data-testid="circuits"
-							@edit="openModal('circuits')"
+							@edit="openCircuitsModal"
 						>
 							<template #icon><CircuitsIcon /></template>
 							<template #tags>
 								<DeviceTags v-if="!circuitsRoot" :tags="circuitsTags" />
-								<CircuitTags v-else :nodes="[circuitsRoot]" />
+								<CircuitTags
+									v-else
+									:nodes="[circuitsRoot]"
+									:loadpoints="loadpoints"
+									:meters="stateMeters"
+								/>
 							</template>
 						</DeviceCard>
 						<DeviceCard
@@ -401,7 +431,9 @@
 						>
 							<template #icon><HemsIcon /></template>
 							<template #tags>
-								<p v-if="hemsLabel" class="my-2 fw-bold">{{ hemsLabel }}</p>
+								<p v-if="hemsLabel" class="my-2 fw-bold">
+									{{ hemsLabel }}
+								</p>
 								<DeviceTags :tags="hemsTags" />
 							</template>
 						</DeviceCard>
@@ -563,7 +595,21 @@
 				<RemoteModal :remote="remote" :is-sponsor="isSponsor" :site-title="siteTitle" />
 				<TitleModal @changed="loadDirty" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
-				<CircuitsModal :gridMeter="gridMeter" :extMeters="extMeters" @changed="loadDirty" />
+				<CircuitsLegacyModal @changed="loadDirty" />
+				<CircuitsModal
+					:circuits="circuits"
+					:on-add-sub="addSubCircuit"
+					:meters="meters"
+					:grid-meter="gridMeter"
+					@changed="loadDirty"
+				/>
+				<CircuitModal
+					ref="circuitModal"
+					:circuits="circuits"
+					:meters="meters"
+					:grid-meter="gridMeter"
+					@changed="circuitChanged"
+				/>
 				<EebusModal
 					:status="eebus?.status"
 					:yamlSource="eebus?.yamlSource"
@@ -673,6 +719,7 @@ import type {
 	DeviceType,
 	Notification,
 	Remote,
+	Meter,
 } from "@/types/evcc";
 import { ConfigType, CURRENCY } from "@/types/evcc";
 import { circuitTree, type CircuitNode } from "@/utils/circuits";
@@ -696,7 +743,13 @@ const SECTION_TITLES: Record<string, string> = {
 
 type DeviceTags = Record<
 	string,
-	{ value?: any; error?: boolean; warning?: boolean; muted?: boolean; options?: any }
+	{
+		value?: any;
+		error?: boolean;
+		warning?: boolean;
+		muted?: boolean;
+		options?: any;
+	}
 >;
 
 import BackupRestoreModal from "@/components/Config/BackupRestoreModal.vue";
@@ -706,6 +759,8 @@ import PasswordModal from "../components/Auth/PasswordModal.vue";
 import SecurityModal from "../components/Config/Security/SecurityModal.vue";
 import ApiKeyModal from "../components/Config/Security/ApiKeyModal.vue";
 import AuthProvidersCard from "../components/Config/AuthProvidersCard.vue";
+import CircuitModal from "@/components/Config/CircuitModal.vue";
+import CircuitsLegacyModal from "@/components/Config/CircuitsLegacyModal.vue";
 
 export default defineComponent({
 	name: "Config",
@@ -716,7 +771,9 @@ export default defineComponent({
 		ConfigSection,
 		ConfigSectionNav,
 		CircuitsIcon,
+		CircuitsLegacyModal,
 		CircuitsModal,
+		CircuitModal,
 		CircuitTags,
 		ControlModal,
 		CurtailerModal,
@@ -774,7 +831,10 @@ export default defineComponent({
 	mixins: [formatter, collector, listDetail],
 	props: {
 		offline: Boolean,
-		notifications: { type: Array as PropType<Notification[]>, default: () => [] },
+		notifications: {
+			type: Array as PropType<Notification[]>,
+			default: () => [],
+		},
 	},
 	data() {
 		return {
@@ -823,6 +883,9 @@ export default defineComponent({
 		return { title: this.$t("config.main.title") };
 	},
 	computed: {
+		stateMeters(): Meter[] {
+			return [...(store.state.grid ? [store.state.grid] : []), ...(store.state.ext ?? [])];
+		},
 		activeSlug(): string | undefined {
 			const slug = this.$route.hash.slice(1);
 			return SECTION_TITLES[slug] ? slug : undefined;
@@ -951,7 +1014,10 @@ export default defineComponent({
 					icon: markRaw(SystemIcon),
 				},
 			];
-			return entries.map((e) => ({ ...e, title: this.$t(SECTION_TITLES[e.slug]!) }));
+			return entries.map((e) => ({
+				...e,
+				title: this.$t(SECTION_TITLES[e.slug]!),
+			}));
 		},
 		callbackCompleted() {
 			return this.$route.query["callbackCompleted"] as string | undefined;
@@ -1208,6 +1274,9 @@ export default defineComponent({
 			});
 			return map;
 		},
+		circuitsYamlSource() {
+			return store.state.circuits?.yamlSource;
+		},
 		messagingTags(): DeviceTags {
 			if (this.messagingUiConfigured) {
 				const events = store.state?.messagingEvents || [];
@@ -1239,8 +1308,8 @@ export default defineComponent({
 				authDisabled: this.authDisabled,
 			};
 		},
-		circuitsRoot(): CircuitNode | null {
-			return circuitTree(store.state?.circuits || {});
+		circuitsRoot(): CircuitNode | undefined {
+			return circuitTree(store.state.circuits?.config);
 		},
 		hemsDimmed(): boolean {
 			// only consumption limits matter for circuits, curtailment affects feed-in
@@ -1280,6 +1349,13 @@ export default defineComponent({
 		}
 	},
 	methods: {
+		addSubCircuit(parent?: string) {
+			const modal = this.$refs["circuitModal"] as
+				| InstanceType<typeof CircuitModal>
+				| undefined;
+			modal?.setParentCircuit(parent);
+			openModal("circuit");
+		},
 		isUnconfigured(tags: DeviceTags): boolean {
 			return tags["configured"]?.value === false;
 		},
@@ -1308,7 +1384,10 @@ export default defineComponent({
 			try {
 				if (deviceClass === "loadpoint") {
 					const { data } = await api.get(`config/loadpoints/${id}`);
-					await api.put(`config/loadpoints/${id}`, { ...data, disable });
+					await api.put(`config/loadpoints/${id}`, {
+						...data,
+						disable,
+					});
 				} else {
 					await createDeviceUtils(deviceClass).disable(id, disable);
 				}
@@ -1349,7 +1428,9 @@ export default defineComponent({
 		},
 		async loadConfig(path: string) {
 			const validateStatus = (code: number) => [200, 404].includes(code);
-			const response = await api.get(`/config/${path}`, { validateStatus });
+			const response = await api.get(`/config/${path}`, {
+				validateStatus,
+			});
 			return response.status === 200 ? response.data : undefined;
 		},
 		async loadMessengers() {
@@ -1503,12 +1584,20 @@ export default defineComponent({
 			await this.loadDirty();
 			this.updateValues();
 		},
+		openCircuitsModal() {
+			const modalName = this.circuitsYamlSource === "db" ? "circuitslegacy" : "circuits";
+			openModal(modalName);
+		},
 		openMessagingModal() {
 			const modalName = this.messagingYamlSource === "db" ? "messaginglegacy" : "messaging";
 			openModal(modalName);
 		},
 		async messengerChanged() {
 			this.loadMessengers();
+			this.loadDirty();
+		},
+		async circuitChanged() {
+			this.loadCircuits();
 			this.loadDirty();
 		},
 		curtailerTitle(curtailer: ConfigCurtailer): string {

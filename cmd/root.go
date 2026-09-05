@@ -454,6 +454,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Tariffs, Val: globalconfig.ConfigStatus{
 		YamlSource: yamlSource.tariffs,
 	}}
+	valueChan <- util.Param{Key: keys.Circuits, Val: globalconfig.ConfigStatus{
+		YamlSource: yamlSource.circuits,
+	}}
 
 	// publish remote access status
 	valueChan <- util.Param{Key: keys.Remote, Val: remoteAccess.ConfigStatus()}

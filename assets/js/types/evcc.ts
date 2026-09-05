@@ -271,7 +271,7 @@ export interface State {
   /** Update interval of the control loop in seconds. */
   interval?: number;
   /** Load management circuits, keyed by circuit name. */
-  circuits?: Record<string, Circuit>;
+  circuits?: Circuits;
   /** Battery buffer SoC in %. Energy above this level may be used for charging in solar mode. */
   bufferSoc?: number;
   /** Battery priority SoC in %. Home battery is charged first while below this level. */
@@ -345,6 +345,9 @@ export interface ConfigStatus<C, S> {
 
 /** Configuration and runtime status of an integration. Structure depends on configuration. */
 export interface GenericConfigStatus extends ConfigStatus<unknown, unknown> {}
+
+/** Load management circuits and runtime status. */
+export interface Circuits extends ConfigStatus<Record<string, Circuit>, unknown> {}
 
 /** Home energy management system integration. */
 export interface Hems extends ConfigStatus<HemsConfig, HemsStatus> {}
@@ -432,6 +435,8 @@ export interface Config {
 
 /** A load management circuit limiting power and current of its assigned loadpoints. */
 export interface Circuit {
+  /** Circuit name for UI display. */
+  name?: string;
   /** Circuit title for UI display. */
   title?: string;
   /** Circuit icon name for UI display. */
@@ -448,11 +453,11 @@ export interface Circuit {
   maxCurrent?: number;
 }
 
-export interface Entity {
+export interface Entity<C = never> {
   name: string;
   type: string;
   id: number;
-  config: Config;
+  config: Config | C;
   deviceDisable?: boolean;
 }
 
@@ -489,7 +494,15 @@ export interface ConfigMeter extends Entity {
   deviceIcon?: string;
 }
 
-export type ConfigCircuit = Entity;
+export interface ConfigCircuit extends Entity<{
+  maxcurrent?: number;
+  maxpower?: number;
+  parent: string;
+}> {
+  deviceProduct: string;
+  deviceTitle?: string;
+  type: ConfigType;
+}
 
 export interface LoadpointThreshold {
   delay: number;
@@ -1402,6 +1415,7 @@ export type DeviceType =
   | "messenger"
   | "tariff"
   | "hems"
+  | "circuit"
   | "curtailer";
 export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext" | "consumer";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";

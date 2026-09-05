@@ -4,9 +4,6 @@ products:
       en: Static circuit
       de: Statischer Stromkreis
 params:
-  - name: title
-    required: true
-    example: Main circuit
   - name: maxcurrent
     help:
       de: Vom Lastmanagement maximal erlaubte Stromstärke pro Phase.
@@ -26,7 +23,6 @@ params:
       en: Parent circuit
 render: |
   type: custom
-  title: {{ .title }}
   maxcurrent: {{ .maxcurrent }}
   maxpower: {{ .maxpower }}
   meter: {{ .meter }}

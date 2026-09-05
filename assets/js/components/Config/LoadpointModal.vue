@@ -865,7 +865,7 @@ export default {
 			// empty option is provided by PropertyField placeholder
 			return this.circuits.map((c) => ({
 				key: c.name,
-				name: `${c.config?.title || ""} [${c.name}]`.trim(),
+				name: `${c.deviceTitle || ""} [${c.name}]`.trim(),
 			}));
 		},
 		invalidVehicle() {

@@ -8,6 +8,7 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/util/config"
@@ -16,6 +17,7 @@ import (
 )
 
 type circuitStruct struct {
+	Name       string   `json:"name,omitempty"`
 	Title      string   `json:"title,omitempty"`
 	Icon       string   `json:"icon,omitempty"`
 	Parent     string   `json:"parent,omitempty"`
@@ -80,6 +82,7 @@ func (site *Site) publishCircuits() {
 		props := deviceProperties(c)
 
 		data := circuitStruct{
+			Name:       props.Title,
 			Title:      instance.GetTitle(),
 			Icon:       props.Icon,
 			Parent:     names[instance.GetParent()],
@@ -95,7 +98,9 @@ func (site *Site) publishCircuits() {
 		res[c.Config().Name] = data
 	}
 
-	site.publish(keys.Circuits, res)
+	site.publish(keys.Circuits, globalconfig.ConfigStatus{
+		Config: res,
+	})
 }
 
 // dimMeters applies the HEMS dim state to all dimmable aux and ext meters.
