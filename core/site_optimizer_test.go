@@ -298,7 +298,7 @@ func TestBatteryForecastSocExtremes(t *testing.T) {
 				resp[i] = optimizer.BatteryResult{StateOfCharge: s}
 			}
 
-			high, low := batteryForecastSocExtremes(tc.req, resp)
+			high, low := batteryForecastSocExtremes(tc.req, resp, 0)
 
 			if tc.high == nil {
 				assert.Nil(t, high, "high")
@@ -318,6 +318,30 @@ func TestBatteryForecastSocExtremes(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestBatteryForecastActiveSlot(t *testing.T) {
+	req := []optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000}}
+	resp := []optimizer.BatteryResult{{StateOfCharge: []float32{1000, 500, 800}}}
+
+	high, low := batteryForecastSocExtremes(req, resp, 1)
+	require.NotNil(t, high)
+	require.NotNil(t, low)
+	assert.Equal(t, 2, high.slot)
+	assert.InDelta(t, 80, high.soc, 1e-3)
+	assert.Equal(t, 1, low.slot)
+	assert.InDelta(t, 50, low.soc, 1e-3)
+
+	base := time.Now().Add(time.Hour).Round(time.Second)
+	timestamps := []time.Time{base.Add(-2 * time.Hour), base, base.Add(tariff.SlotDuration)}
+	dt := []int{60, int(tariff.SlotDuration.Seconds()), int(tariff.SlotDuration.Seconds())}
+
+	forecast := (&Site{}).addBatteryForecastTotals(req, resp, timestamps, dt, 1)
+	require.NotNil(t, forecast)
+	require.NotNil(t, forecast.Highest)
+	require.NotNil(t, forecast.Lowest)
+	assert.Equal(t, timestamps[2].Add(tariff.SlotDuration), forecast.Highest.Time)
+	assert.Equal(t, timestamps[1].Add(tariff.SlotDuration), forecast.Lowest.Time)
 }
 
 // TestBatteryRequestSocLimitsClamp ensures the reported soc is always clamped into
