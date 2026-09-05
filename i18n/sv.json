@@ -168,6 +168,7 @@
       "title": "Valuta"
     },
     "curtailer": {
+      "description": "Enhet som begränsar inmatning på nätoperatörens begäran (§ 9 EEG). Många växelriktare stöder detta direkt via sin solmätarkonfiguration. En separat konfiguration krävs endast för vissa tillverkare eller system med flera omriktare.",
       "generic": "Generisk integration",
       "specific": "Specifik integration",
       "template": "Tillverkare",
@@ -237,6 +238,31 @@
       "temp": "Temperatur",
       "topic": "Ämne",
       "url": "URL",
+      "usage": {
+        "aux": {
+          "energy": "Konsumerat",
+          "returnEnergy": "Producerat"
+        },
+        "battery": {
+          "energy": "Urladdat",
+          "returnEnergy": "Laddat"
+        },
+        "charge": {
+          "energy": "Laddat",
+          "returnEnergy": "Urladdat"
+        },
+        "consumer": {
+          "energy": "Konsumerat",
+          "returnEnergy": "Producerat"
+        },
+        "grid": {
+          "energy": "Importerat",
+          "returnEnergy": "Exporterat"
+        },
+        "pv": {
+          "energy": "Producerat"
+        }
+      },
       "vehicleLimitSoc": "Laddgräns",
       "yes": "ja"
     },
@@ -330,6 +356,7 @@
       "hideAdvancedSettings": "Dölj avancerade inställningar",
       "invalidFileSelected": "Ogiltig fil vald",
       "legacy": "äldre",
+      "moreInfo": "Mer info:",
       "noFileSelected": "Ingen fil vald.",
       "off": "av",
       "on": "på",
@@ -1090,14 +1117,14 @@
       "optInSponsorship": "Sponsring krävs."
     },
     "version": {
-      "availableLong": "ny version tillgänglig",
+      "availableLong": "uppdatering tillgänglig",
       "community": "evcc community",
       "labelEmail": "Epost",
       "labelPhone": "Telefon",
       "labelRelease": "Release",
       "labelVersion": "Version",
       "labelWebsite": "Hemsida",
-      "latestVersion": "senaste version",
+      "latestVersion": "uppdaterad",
       "madeByCommunity": "Utvecklad av {0}.",
       "modalCancel": "Avbryt",
       "modalDownload": "Nedladdning",
@@ -1297,15 +1324,18 @@
         "continuous": "kontinuerlig",
         "continuousCo2Description": "Väljer de renaste sammanhängande perioderna.",
         "continuousPriceDescription": "Väljer de billigaste sammanhängande perioderna.",
+        "disabledDescription": "Kräver rörligt pris eller CO₂ -prognos.",
         "label": "Optimering"
       },
       "planNumber": "Plan {number}",
       "precondition": {
         "description": "Flyttar delar av laddningen till strax före avfärd: varmt batteri, kortare tid med hög laddningsnivå i batteriet.",
+        "disabledDescription": "All laddning sker strax före avfärd.",
         "label": "Sen laddning",
         "optionAll": "allt",
         "optionNo": "nej",
-        "summary": "{precondition} före"
+        "summary": "{precondition} före",
+        "summaryAll": "strax före avfärd"
       },
       "remove": "Ta bort",
       "repeating": "återkommande",
@@ -1400,6 +1430,7 @@
       "finished": "Sluttid",
       "last24hEnergy": "Senaste 24 timmar",
       "last7dEnergy": "Senaste 7 dagar",
+      "phasesMismatch": "Fler faser aktiva än konfigurerat. Kontrollera fas-konfigurationen.",
       "power": "Effekt",
       "price": "Kostnad",
       "remaining": "Återstående tid",
@@ -1520,7 +1551,7 @@
     "vehicleSettings": {
       "connectedTo": "ansluten till {0}",
       "description": "Dessa standardvärden används när fordonet ansluts till en laddpunkt.",
-      "editHint": "Lägg till eller redigera fordon i {0}.",
+      "editHint": "Fordon kan redigeras i {0}.",
       "keepAsIs": "Behåll",
       "learnMore": "Lär dig mer.",
       "limitSoc": "Standardgräns",
@@ -1780,6 +1811,7 @@
   },
   "smartFeedInPriority": {
     "activeHoursLabel": "Pausad tid",
+    "batteryDescription": "Ladda ur batteriet till nätet när elpriset är högt.",
     "description": "Pausar ladning vid höga elpriser för att prioritera lönsam elnätsinmatning.",
     "priceLabel": "Inmatningshastighet",
     "priceLimit": "Inmatningsbegränsning",
