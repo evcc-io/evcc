@@ -59,6 +59,7 @@ const (
 
 	chargerSwitchDuration = 60 * time.Second // allow out of sync during this timespan
 	phaseSwitchDuration   = 60 * time.Second // allow out of sync and do not measure phases during this timespan
+	welcomeChargeDuration = 60 * time.Second // keep charging enabled after connect for vehicles requiring it
 
 	phaseScaleUpBuffer = 1.1 // min current headroom required before load management allows scaling up again
 
@@ -171,6 +172,7 @@ type Loadpoint struct {
 	chargeCurrents []float64        // Phase currents
 	connectedTime  time.Time        // Time when vehicle was connected
 	connectPending bool             // connect notification deferred until vehicle detection settles
+	welcomeUntil   time.Time        // welcome charge deadline, zero if inactive
 	pvTimer        time.Time        // PV enabled/disable timer
 	phaseTimer     time.Time        // 1p3p switch timer
 	wakeUpTimer    *Timer           // Vehicle wake-up timeout
@@ -1225,13 +1227,11 @@ func statusEvents(prevStatus, status api.ChargeStatus) []string {
 }
 
 // updateChargerStatus updates charger status and detects car connected/disconnected events
-func (lp *Loadpoint) updateChargerStatus() (bool, error) {
+func (lp *Loadpoint) updateChargerStatus() error {
 	statusChanges, err := lp.getStatusChanges()
 	if err != nil || len(statusChanges) == 0 {
-		return false, err
+		return err
 	}
-
-	var welcomeCharge bool
 
 	for _, status := range statusChanges {
 		prevStatus := lp.GetStatus()
@@ -1246,7 +1246,9 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 				case evVehicleConnect:
 					// defer notification until vehicle detection settles
 					lp.connectPending = true
-					welcomeCharge = lp.needsWelcomeCharge()
+					if lp.needsWelcomeCharge() {
+						lp.welcomeUntil = lp.clock.Now().Add(welcomeChargeDuration)
+					}
 				case evVehicleDisconnect:
 					// a still-pending connect means the vehicle disconnected before
 					// its notification was confirmed; omit both connect and disconnect
@@ -1255,7 +1257,7 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 					} else {
 						lp.pushEvent(evVehicleDisconnect)
 					}
-					welcomeCharge = false
+					lp.welcomeUntil = time.Time{}
 				}
 			}
 		}
@@ -1264,7 +1266,12 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 	// update whenever there is a state change
 	lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
 
-	return welcomeCharge, nil
+	return nil
+}
+
+// welcomeActive reports a running welcome charge
+func (lp *Loadpoint) welcomeActive() bool {
+	return lp.clock.Now().Before(lp.welcomeUntil)
 }
 
 // getStatusChanges checks charger status and returns a chronological list of status changes
@@ -2330,13 +2337,12 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 
 NO_DIM:
 	// read and publish status
-	welcomeCharge, err := lp.updateChargerStatus()
-	if err != nil {
+	if err := lp.updateChargerStatus(); err != nil {
 		lp.log.ERROR.Println(err)
 		return
 	}
 
-	lp.publish(keys.VehicleWelcomeActive, welcomeCharge)
+	lp.publish(keys.VehicleWelcomeActive, lp.welcomeActive())
 	lp.publish(keys.Connected, lp.connected())
 	lp.publish(keys.Charging, lp.charging())
 
@@ -2385,6 +2391,8 @@ NO_DIM:
 	lp.publish(keys.MinSocNotReached, minSocNotReached)
 
 	// execute loading strategy
+	var err error
+
 	switch {
 	case !lp.connected():
 		// always disable charger if not connected
@@ -2400,12 +2408,12 @@ NO_DIM:
 			err = nil
 		}
 
+	// welcome charge takes precedence over mode and limits
+	case lp.welcomeActive():
+		err = lp.setLimit(lp.effectiveMinCurrent())
+
 	case mode == api.ModeOff:
-		var current float64
-		if welcomeCharge {
-			current = lp.effectiveMinCurrent()
-		}
-		err = lp.setLimit(current)
+		err = lp.setLimit(0)
 
 	// minimum or target charging
 	case minSocNotReached || plannerActive:
@@ -2456,11 +2464,6 @@ NO_DIM:
 
 		if targetCurrent == 0 && lp.vehicleClimateActive() {
 			targetCurrent = lp.effectiveMinCurrent()
-		}
-
-		if targetCurrent == 0 && welcomeCharge {
-			targetCurrent = lp.effectiveMinCurrent()
-			lp.resetPVTimer()
 		}
 
 		err = lp.setLimit(targetCurrent)
