@@ -1,0 +1,73 @@
+name: GPT-Astra
+description: Run a permission-scoped OpenCode agent against Azure OpenAI.
+inputs:
+  endpoint:
+    description: Azure OpenAI HTTPS base URL ending in /openai/v1.
+    required: true
+  deployment:
+    description: Azure deployment name for GPT-Astra.
+    required: true
+  api-key:
+    description: Azure OpenAI API key.
+    required: true
+  github-token:
+    description: Scoped GitHub token for the agent's GitHub actions.
+    required: true
+  permission:
+    description: OpenCode tool permissions as JSON.
+    required: true
+  prompt:
+    description: Trusted workflow instructions, not issue or PR content.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Validate Azure configuration
+      shell: bash
+      env:
+        ENDPOINT: ${{ inputs.endpoint }}
+        DEPLOYMENT: ${{ inputs.deployment }}
+        API_KEY: ${{ inputs.api-key }}
+        PERMISSION: ${{ inputs.permission }}
+      run: |
+        if [[ ! "$ENDPOINT" =~ ^https://[^/?#]+/openai/v1/?$ ]] || [[ -z "$DEPLOYMENT" || -z "$API_KEY" ]]; then
+          echo "::error::Configure AZURE_OPENAI_ENDPOINT (https://RESOURCE.openai.azure.com/openai/v1), AZURE_OPENAI_DEPLOYMENT and the AZURE_OPENAI_API_KEY secret."
+          exit 1
+        fi
+        jq -e 'type == "object" and .["*"] == "deny"' <<< "$PERMISSION" > /dev/null
+
+    - name: Install OpenCode
+      shell: bash
+      run: npm install --global opencode-ai@1.18.29
+
+    - name: Run GPT-Astra
+      shell: bash
+      env:
+        AZURE_OPENAI_ENDPOINT: ${{ inputs.endpoint }}
+        AZURE_OPENAI_DEPLOYMENT: ${{ inputs.deployment }}
+        AZURE_OPENAI_API_KEY: ${{ inputs.api-key }}
+        GH_TOKEN: ${{ inputs.github-token }}
+        ASTRA_PROMPT: ${{ inputs.prompt }}
+        OPENCODE_CONFIG: ${{ github.action_path }}/opencode.json
+        OPENCODE_PERMISSION: ${{ inputs.permission }}
+        OPENCODE_DISABLE_PROJECT_CONFIG: "true"
+        OPENCODE_DISABLE_DEFAULT_PLUGINS: "true"
+        OPENCODE_DISABLE_CLAUDE_CODE: "true"
+        OPENCODE_DISABLE_EXTERNAL_SKILLS: "true"
+        XDG_CONFIG_HOME: ${{ runner.temp }}/astra/config
+        XDG_DATA_HOME: ${{ runner.temp }}/astra/data
+        XDG_CACHE_HOME: ${{ runner.temp }}/astra/cache
+      run: |
+        # The bundled Azure SDK adds /v1 for Azure OpenAI resource hosts.
+        case "$AZURE_OPENAI_ENDPOINT" in
+          https://*.openai.azure.com/openai/v1|https://*.openai.azure.com/openai/v1/)
+            AZURE_OPENAI_ENDPOINT="${AZURE_OPENAI_ENDPOINT%/}"
+            export AZURE_OPENAI_ENDPOINT="${AZURE_OPENAI_ENDPOINT%/v1}"
+            ;;
+        esac
+        git config user.name 'github-actions[bot]'
+        git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+        opencode run --agent ci --format json "$ASTRA_PROMPT" | tee "$RUNNER_TEMP/astra-events.jsonl"
+        # A completed process alone does not prove that the model finished its turn.
+        jq -s -e 'all(.type != "error") and any(.type == "step_finish" and .part.reason == "stop")' \
+          "$RUNNER_TEMP/astra-events.jsonl" > /dev/null
