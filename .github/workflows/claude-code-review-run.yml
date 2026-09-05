@@ -19,6 +19,7 @@ jobs:
   gate:
     # Only react to PR runs that finished successfully.
     if: >
+      false &&
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
