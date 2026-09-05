@@ -29,6 +29,11 @@ func TestZaptecDetectVersion(t *testing.T) {
 			want:  zaptec.ZaptecGo2,
 		},
 		{
+			name:  "Go2 takes precedence over Pro",
+			state: zaptec.StateResponse{{StateId: zaptec.Capabilities, ValueAsString: `{"DeviceType":"Pro","ProductVariant":"Go2"}`}},
+			want:  zaptec.ZaptecGo2,
+		},
+		{
 			name:  "Pro without device type",
 			state: zaptec.StateResponse{{StateId: zaptec.Capabilities, ValueAsString: `{"ProductVariant":"ProMID"}`}},
 			want:  zaptec.ZaptecPro,
@@ -39,18 +44,28 @@ func TestZaptecDetectVersion(t *testing.T) {
 			want:  zaptec.ZaptecPro,
 		},
 		{
+			name:  "Pro without product variant",
+			state: zaptec.StateResponse{{StateId: zaptec.Capabilities, ValueAsString: `{"DeviceType":"Pro"}`}},
+			want:  zaptec.ZaptecPro,
+		},
+		{
+			name:  "unknown model",
+			state: zaptec.StateResponse{{StateId: zaptec.Capabilities, ValueAsString: `{"DeviceType":"Unknown","ProductVariant":"Unknown"}`}},
+			want:  zaptec.ZaptecGo,
+		},
+		{
 			name: "missing capabilities",
-			want: zaptec.ZaptecPro,
+			want: zaptec.ZaptecGo,
 		},
 		{
 			name:  "empty capabilities",
 			state: zaptec.StateResponse{{StateId: zaptec.Capabilities}},
-			want:  zaptec.ZaptecPro,
+			want:  zaptec.ZaptecGo,
 		},
 		{
 			name:  "missing model fields",
 			state: zaptec.StateResponse{{StateId: zaptec.Capabilities, ValueAsString: `{}`}},
-			want:  zaptec.ZaptecPro,
+			want:  zaptec.ZaptecGo,
 		},
 		{
 			name:    "invalid capabilities",
