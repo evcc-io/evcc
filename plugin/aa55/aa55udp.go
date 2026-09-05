@@ -119,7 +119,7 @@ func New(log *util.Logger, conn *net.UDPConn, id int, reg modbus.Register, block
 }
 
 // NewSetter constructs a write-mode AA55UDP for a single holding register.
-// The register type must be a write type (writesingle/writemultiple).
+// The register type must be a write type (writeholding/writeholdings).
 func NewSetter(log *util.Logger, conn *net.UDPConn, id int, reg modbus.Register, scale float64, delay time.Duration) (*AA55UDP, error) {
 	if id < 0 || id > 255 {
 		return nil, fmt.Errorf("id must be 0-255, got %d", id)
