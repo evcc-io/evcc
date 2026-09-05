@@ -207,7 +207,7 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 			c.egLpcEntity = entity
 
 			// [LPC-913]: state the limit to the newly available CS
-			go eebus.AssertLimit(c.ctx, c.log, func() error { return c.Dim(c.lastDimmed()) })
+			go eebus.AssertLimit(c.ctx, c.log, func() error { return c.dim(c.lastDimmed()) })
 		}
 		c.mu.Unlock()
 	}
@@ -403,11 +403,9 @@ func (c *EEBusOHPCF) MaxCurrent(int64) error {
 	return c.apply(c.lastEnabled())
 }
 
-var _ api.Dimmer = (*EEBusOHPCF)(nil)
-
-// Dimmed implements the api.Dimmer interface, reporting whether a §14a/LPC
+// dimmedState implements the api.Dimmer interface, reporting whether a §14a/LPC
 // consumption limit is currently active on the heat pump.
-func (c *EEBusOHPCF) Dimmed() (bool, error) {
+func (c *EEBusOHPCF) dimmedState() (bool, error) {
 	c.mu.RLock()
 	entity := c.egLpcEntity
 	c.mu.RUnlock()
@@ -432,9 +430,9 @@ func (c *EEBusOHPCF) Dimmed() (bool, error) {
 	return limit.IsActive, nil
 }
 
-// Dim implements the api.Dimmer interface. It writes a §14a/LPC consumption
+// dim implements the api.Dimmer interface. It writes a §14a/LPC consumption
 // limit (fixed 0W safe limit) to the heat pump while dimmed, releasing it otherwise.
-func (c *EEBusOHPCF) Dim(dim bool) error {
+func (c *EEBusOHPCF) dim(dim bool) error {
 	c.mu.RLock()
 	entity := c.egLpcEntity
 	c.mu.RUnlock()
