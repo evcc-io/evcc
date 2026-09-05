@@ -28,6 +28,10 @@ type Status struct {
 	// driver) is active. It outranks evcc's claim (priority 500), so evcc's writes
 	// have no effect until the override is cleared.
 	ManualOverride int `json:"manual_override"`
+	// RfidAuth is the RFID tag uid that authorised the current session, present
+	// only when RFID is enabled on the charger. It is empty when no card has
+	// authorised the session.
+	RfidAuth string `json:"rfid_auth"`
 }
 
 // Claim is the body of POST /claims/{client}

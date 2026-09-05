@@ -67,6 +67,18 @@ const overrideWarning = "manual override active on charger: evcc's claim is outr
 
 var errOpenEVSENotConnected = errors.New("websocket not connected")
 
+// openevseFaults names the controller states that evcc has no status F constant
+// for, so Status() reports them as a named error instead.
+var openevseFaults = map[int]string{
+	5:  "diode check failed",
+	6:  "gfci fault",
+	7:  "no ground",
+	8:  "stuck relay",
+	9:  "gfci self-test failure",
+	10: "over temperature",
+	11: "over current",
+}
+
 // vars, not consts, so tests can shorten them
 var (
 	// openevsePingInterval is the keepalive interval. The firmware answers {"ping":1}
@@ -348,14 +360,14 @@ func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 		1: "not connected",
 		2: "connected",
 		3: "charging",
-		4: "vent required",
-		5: "diode check failed",
-		6: "gfci fault",
-		7: "no ground",
-		8: "stuck relay",
-		9: "gfci self-test failure",
-		10: "over temperature",
-		11: "over current",
+		4: "vent required",          -> B/A (api.StatusD does not exist)
+		5: "diode check failed",     -> named error (evcc has no status F constant)
+		6: "gfci fault",             -> named error
+		7: "no ground",              -> named error
+		8: "stuck relay",            -> named error
+		9: "gfci self-test failure", -> named error
+		10: "over temperature",      -> named error
+		11: "over current",          -> named error
 		254: "sleeping",
 		255: "disabled"
 	*/
@@ -363,7 +375,7 @@ func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 	switch res.State {
 	case 1:
 		return api.StatusA, nil
-	case 2, 254, 255:
+	case 2, 4, 254, 255:
 		if res.Vehicle == 1 {
 			return api.StatusB, nil
 		}
@@ -371,6 +383,9 @@ func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 	case 3:
 		return api.StatusC, nil
 	default:
+		if name, ok := openevseFaults[res.State]; ok {
+			return api.StatusNone, fmt.Errorf("charger fault: %s", name)
+		}
 		return api.StatusNone, fmt.Errorf("invalid status: %d", res.State)
 	}
 }
@@ -525,4 +540,23 @@ var _ api.ChargeTimer = (*OpenEVSE)(nil)
 func (c *OpenEVSE) ChargeDuration() (time.Duration, error) {
 	res, err := c.get()
 	return time.Duration(res.Elapsed) * time.Second, err
+}
+
+var _ api.Identifier = (*OpenEVSE)(nil)
+
+// Identify implements the api.Identifier interface. It returns the RFID tag that
+// authorised the current session, if any. The firmware builds its "no tag" value
+// from a '\0' char, so a tag consisting only of NUL bytes and/or whitespace is
+// treated as empty, same as a genuinely empty string.
+func (c *OpenEVSE) Identify() ([]string, error) {
+	res, err := c.get()
+	if err != nil {
+		return nil, err
+	}
+
+	if tag := strings.Trim(res.RfidAuth, "\x00 \t\n\r"); tag != "" {
+		return []string{tag}, nil
+	}
+
+	return nil, nil
 }

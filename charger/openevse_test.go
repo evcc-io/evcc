@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -568,14 +569,34 @@ func TestOpenEVSEBasicAuth(t *testing.T) {
 }
 
 func TestOpenEVSEInvalidState(t *testing.T) {
-	s := newOpenEVSETestServer(t, `{"state":6,"vehicle":1,"status":"active"}`)
-	ctx, cancel := context.WithCancel(context.Background())
-	t.Cleanup(cancel)
+	tc := []struct {
+		state   int
+		want    api.ChargeStatus // StatusNone means an error is expected
+		wantErr string           // substring expected in the error, when want == StatusNone
+	}{
+		{0, api.StatusNone, "invalid status: 0"}, // unknown
+		{4, api.StatusB, ""},                     // vent required, vehicle connected -> B
+		{6, api.StatusNone, "gfci fault"},        // gfci fault
+		{8, api.StatusNone, "stuck relay"},       // stuck relay
+		{11, api.StatusNone, "over current"},     // over current
+	}
 
-	c := newTestOpenEVSE(ctx, t, s.srv.URL, "", "")
+	for _, tt := range tc {
+		s := newOpenEVSETestServer(t, fmt.Sprintf(`{"state":%d,"vehicle":1,"status":"active"}`, tt.state))
+		ctx, cancel := context.WithCancel(context.Background())
 
-	_, err := c.Status()
-	assert.ErrorContains(t, err, "invalid status: 6")
+		c := newTestOpenEVSE(ctx, t, s.srv.URL, "", "")
+
+		status, err := c.Status()
+		if tt.want == api.StatusNone {
+			assert.ErrorContains(t, err, tt.wantErr)
+		} else {
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, status)
+		}
+
+		cancel()
+	}
 }
 
 // TestOpenEVSEGarbageOnlyFrame covers Finding 1 (fix round 1): a first frame that
@@ -609,4 +630,35 @@ func TestOpenEVSEGarbageFirstFrame(t *testing.T) {
 	status, err := c.Status()
 	require.NoError(t, err)
 	assert.Equal(t, api.StatusC, status)
+}
+
+// TestOpenEVSEIdentify covers the RFID tag identifier: absent on the full status
+// (RFID disabled or no card yet), populated by a diff once a card authorises the
+// session, and cleared again by a diff once the session ends.
+func TestOpenEVSEIdentify(t *testing.T) {
+	s := newOpenEVSETestServer(t, openevseFullStatus) // no rfid_auth key
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	c := newTestOpenEVSE(ctx, t, s.srv.URL, "", "")
+
+	ids, err := c.Identify()
+	require.NoError(t, err)
+	assert.Nil(t, ids)
+
+	s.send <- `{"rfid_auth":"04A1B2C3"}`
+	require.Eventually(t, func() bool {
+		ids, err := c.Identify()
+		return err == nil && len(ids) == 1
+	}, 5*time.Second, 10*time.Millisecond)
+
+	ids, err = c.Identify()
+	require.NoError(t, err)
+	assert.Equal(t, []string{"04A1B2C3"}, ids)
+
+	s.send <- `{"rfid_auth":""}`
+	require.Eventually(t, func() bool {
+		ids, err := c.Identify()
+		return err == nil && ids == nil
+	}, 5*time.Second, 10*time.Millisecond)
 }
