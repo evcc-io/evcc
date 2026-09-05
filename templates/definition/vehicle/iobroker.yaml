@@ -1,0 +1,329 @@
+template: iobroker
+products:
+  - brand: ioBroker
+group: generic
+requirements:
+  evcc: ["skiptest"]
+  description:
+    de: |
+      Auf der verwendeten ioBroker Instanz muss der `rest-api` adapter (nicht `simple-api`) als Extension eines Web-Adapters installiert sein.
+      Authentifiziert werden kann nur mittels `basic` authentication. Wird kein Passwort angegeben, so wird keine Authentifizierung durchgeführt.
+      Bei der Angabe der Datenpunkte ist darauf zu achten, dass diese korrekt URL-Encoded sind.
+      So wird aus `bmw.0.WBA8E9G50GM091234#status` `bmw.0.WBA8E9G50GM091234%23status`
+    en: |
+      The `rest-api` adapter (not `simple-api`) must be installed as extension to a web adapter.
+      Authentication can only be performed using `basic` authentication. If no password is provided, no authentication will be performed.
+      When specifying the datapoints, ensure that they are correctly URL-encoded.
+      For example, `bmw.0.WBA8E9G50GM091234#status` becomes `bmw.0.WBA8E9G50GM091234%23status`
+params:
+  - preset: vehicle-common
+  - name: uri
+    required: true
+    description:
+      en: The full uri of the host to query
+      de: Der vollständige URI der ioBroker Instanz
+    example: https://iobroker.homelab.lan:8082
+  - name: cache
+    default: 15m
+  - name: user
+  - name: password
+  - name: soc
+    description:
+      de: Ladestand
+      en: State of charge
+    unit: "%"
+    type: string
+    required: true
+    example: bmw.0.WBA8E9G50GM091234.status.chargingLevelHv
+  - name: range
+    description:
+      de: Restreichweite
+      en: Remaining range
+    unit: km
+    type: string
+  - name: status
+    description:
+      de: Ladestatus
+      en: Charging status
+    type: string
+    help:
+      en: Datapoint for charge status (A=disconnected, B=connected, C=charging)
+      de: Datenpunkt für Ladestatus (A=getrennt, B=verbunden, C=laden)
+  - name: statusA
+    description:
+      de: Werte für Status A
+      en: Values for status A
+    example: not_plugged, disconnected
+    advanced: true
+    help:
+      en: Comma-separated list of datapoint values meaning disconnected
+      de: Komma-getrennte Liste von Datenpunkt-Werten für getrennt
+  - name: statusB
+    description:
+      de: Werte für Status B
+      en: Values for status B
+    example: CONNECTED, charging_stopped
+    advanced: true
+    help:
+      en: Comma-separated list of datapoint values meaning connected
+      de: Komma-getrennte Liste von Datenpunkt-Werten für verbunden
+  - name: statusC
+    description:
+      de: Werte für Status C
+      en: Values for status C
+    example: CHARGINGACTIVE, instant_charging
+    advanced: true
+    help:
+      en: Comma-separated list of datapoint values meaning charging
+      de: Komma-getrennte Liste von Datenpunkt-Werten für laden
+  - name: limitSoc
+    description:
+      de: Ladeziel
+      en: Charge limit
+    unit: "%"
+    type: string
+    advanced: true
+  - name: odometer
+    description:
+      de: Kilometerstand
+      en: Odometer
+    unit: km
+    type: string
+    advanced: true
+  - name: latitude
+    description:
+      de: Breitengrad
+      en: Latitude
+    type: string
+    advanced: true
+    example: bmw.0.WBA8E9G50GM091234.status.position.lat
+    help:
+      en: Requires longitude to be set as well
+      de: Erfordert zusätzlich die Angabe des Längengrads
+  - name: longitude
+    description:
+      de: Längengrad
+      en: Longitude
+    type: string
+    advanced: true
+    example: bmw.0.WBA8E9G50GM091234.status.position.lon
+    help:
+      en: Requires latitude to be set as well
+      de: Erfordert zusätzlich die Angabe des Breitengrads
+  - name: climater
+    description:
+      de: Vorklimatisierung
+      en: Preconditioning
+    type: string
+    advanced: true
+  - name: finishTime
+    description:
+      de: Geschätztes Ladeende
+      en: Estimated finish time
+    type: string
+    advanced: true
+    help:
+      en: Datapoint holding a timestamp, duration or remaining seconds
+      de: Datenpunkt mit Zeitstempel, Dauer oder verbleibenden Sekunden
+  - name: chargeEnable
+    description:
+      de: Laden starten/stoppen
+      en: Start/stop charging
+    type: string
+    advanced: true
+    help:
+      en: Writable datapoint, requires charging status. Only useful with the [docs.evcc.io](https://docs.evcc.io/en/docs/devices/chargers#vehicle-api-only-charger).
+      de: Beschreibbarer Datenpunkt, benötigt Ladestatus. Nur sinnvoll mit der [docs.evcc.io](https://docs.evcc.io/docs/devices/chargers#vehicle-api-only-charger).
+  - name: setMaxCurrent
+    description:
+      de: Ladestromstärke setzen
+      en: Set charging current
+    unit: A
+    type: string
+    advanced: true
+    help:
+      en: Writable datapoint, requires charging status
+      de: Beschreibbarer Datenpunkt, benötigt Ladestatus
+  - name: wakeup
+    description:
+      de: Fahrzeug aufwecken
+      en: Wake up vehicle
+    type: string
+    advanced: true
+    help:
+      en: Writable datapoint that wakes up the vehicle
+      de: Beschreibbarer Datenpunkt zum Aufwecken des Fahrzeugs
+  - preset: vehicle-features
+render: |
+  type: custom
+  {{ include "common" . }}
+  soc:
+    source: http
+    headers:
+      - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .soc }}/plain?extraPlain=true
+    cache: {{ .cache }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+  {{- if .range }}
+  range:
+    source: http
+    headers:
+      - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .range }}/plain?extraPlain=true
+    cache: {{ .cache }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+  {{- end }}
+  {{- if .status }}
+  status:
+    source: http
+    headers:
+      - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .status }}/plain?extraPlain=true
+    cache: {{ .cache }}
+    {{- $a := .statusA | nospace | splitList "," | compact }}
+    {{- $b := .statusB | nospace | splitList "," | compact }}
+    {{- $c := .statusC | nospace | splitList "," | compact }}
+    {{- if or $a $b $c }}
+    quote: true
+    jq: '. as $s | if {{ toJson $c }} | index($s) then "C" elif {{ toJson $b }} | index($s) then "B" elif {{ toJson $a }} | index($s) then "A" else $s end'
+    {{- end }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+  {{- end }}
+  {{- if .limitSoc }}
+  limitsoc:
+    source: http
+    headers:
+      - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .limitSoc }}/plain?extraPlain=true
+    cache: {{ .cache }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+  {{- end }}
+  {{- if .odometer }}
+  odometer:
+    source: http
+    headers:
+      - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .odometer }}/plain?extraPlain=true
+    cache: {{ .cache }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+  {{- end }}
+  {{- if and .latitude .longitude }}
+  position:
+    latitude:
+      source: http
+      headers:
+        - accept: text/plain;charset=UTF-8
+      uri: {{ .uri }}/rest-api/v1/state/{{ .latitude }}/plain?extraPlain=true
+      cache: {{ .cache }}
+      {{- if .user }}
+      auth:
+        type: basic
+        user: {{ .user }}
+        password: {{ .password }}
+      {{- end }}
+    longitude:
+      source: http
+      headers:
+        - accept: text/plain;charset=UTF-8
+      uri: {{ .uri }}/rest-api/v1/state/{{ .longitude }}/plain?extraPlain=true
+      cache: {{ .cache }}
+      {{- if .user }}
+      auth:
+        type: basic
+        user: {{ .user }}
+        password: {{ .password }}
+      {{- end }}
+  {{- end }}
+  {{- if .climater }}
+  climater:
+    source: http
+    headers:
+      - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .climater }}/plain?extraPlain=true
+    cache: {{ .cache }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+  {{- end }}
+  {{- if .finishTime }}
+  finishtime:
+    source: http
+    headers:
+      - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .finishTime }}/plain?extraPlain=true
+    cache: {{ .cache }}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+  {{- end }}
+  {{- if .chargeEnable }}
+  chargeenable:
+    source: http
+    headers:
+      - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .chargeEnable }}?value=${chargeenable}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+  {{- end }}
+  {{- if .setMaxCurrent }}
+  maxcurrent:
+    source: http
+    headers:
+      - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .setMaxCurrent }}?value=${maxcurrent}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+  {{- end }}
+  {{- if .wakeup }}
+  wakeup:
+    source: http
+    headers:
+      - accept: text/plain;charset=UTF-8
+    uri: {{ .uri }}/rest-api/v1/state/{{ .wakeup }}?value=${wakeup}
+    {{- if .user }}
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    {{- end }}
+  {{- end }}
+  {{ include "features" . }}
