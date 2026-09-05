@@ -19,7 +19,31 @@ params:
     required: true
   - name: token
     required: true
+  - name: channels
+    description:
+      en: CT channels
+      de: CT-Kanäle
+    help:
+      en: "Comma-separated channel numbers (1-6), e.g. 1,2,3 for three-phase measurement. Selected channels are summed. Leave empty for channel 1 (grid) or 2 (PV)."
+      de: "Kommagetrennte Kanalnummern (1-6), z. B. 1,2,3 für dreiphasige Messung. Die gewählten Kanäle werden summiert. Leer lassen für Kanal 1 (Netz) oder 2 (PV)."
+    pattern:
+      regex: ^[1-6](,[1-6])*$
+      examples: ["1", "1,2,3"]
+  - name: maxage
+    description:
+      en: Maximum reading age
+      de: Maximales Messwertalter
+    help:
+      en: Must exceed the device's reporting interval. Older readings are rejected.
+      de: Muss das Meldeintervall des Geräts überschreiten. Ältere Messwerte werden abgelehnt.
+    type: duration
+    default: 2m
+    advanced: true
+  - name: cache
+    default: 30s
 render: |
+  {{- $maxage := durationSeconds .maxage }}
+  {{- if le $maxage 0.0 }}{{ fail "maxage must be positive" }}{{ end }}
   type: custom
   power:
     source: http
@@ -27,5 +51,12 @@ render: |
     auth:
       type: bearer
       token: {{ .token }}
-    jq: .[-1].pRealKw[{{ if eq .usage "grid" }}0{{ else }}1{{ end }}]
+    jq: |
+      .[-1] |
+      if (.timestamp | type) != "number" then error("missing or invalid timestamp")
+      elif now - .timestamp > {{ $maxage }} then error("outdated measurement")
+      else .pRealKw end as $power |
+      [{{ if .channels }}{{ unquote .channels }}{{ else if eq .usage "grid" }}1{{ else }}2{{ end }}] |
+      unique | map($power[. - 1] | if type == "number" then . else error("missing or invalid channel power") end) | add
     scale: 1000
+    cache: {{ .cache }}
