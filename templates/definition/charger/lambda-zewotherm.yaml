@@ -61,7 +61,7 @@ render: |
       id: 1
       register:
         address: 102 # PV Überschussleistung
-        type: writeholdings # λ erwartet single value als FC16
+        type: writeholding # λ erwartet single value als FC16
         decode: int16
       scale: {{ if eq .excess "plus" }}1{{ else }}-1{{ end }}
   power:

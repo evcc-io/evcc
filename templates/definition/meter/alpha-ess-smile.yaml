@@ -168,7 +168,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 2127 # 0x84F Time period control flag
-            type: writeholdings
+            type: writeholding
             decode: uint16
     - case: 2 # hold -> Enable grid charging with 10% (default) target soc -> will not start charging but will prevent uncharging of battery 
       set:
@@ -181,7 +181,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
                 address: 2127 # 0x84F Time period control flag
-                type: writeholdings
+                type: writeholding
                 decode: uint16
         - source: const
           value: {{ .minsoc }}
@@ -190,7 +190,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 2133 # 0x855 Charge Cut Soc
-              type: writeholdings
+              type: writeholding
               decode: uint16
     - case: 3 # charge -> Enable grid charging with 100% target soc (will be stopped by evcc)
       set:
@@ -203,7 +203,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
                   address: 2127 # 0x84F Time period control flag
-                  type: writeholdings
+                  type: writeholding
                   decode: uint16
         - source: const
           value: {{ .maxsoc }}
@@ -212,7 +212,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 2133 # 0x855 Charge Cut Soc
-              type: writeholdings
+              type: writeholding
               decode: uint16
   {{- include "battery-params" . }}
   {{- end }}

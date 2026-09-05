@@ -225,7 +225,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 0x1110
-              type: writeholdings
+              type: writeholding
               decode: int16
     - case: 2 # hold
       set:
@@ -241,7 +241,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 0x1110
-                type: writeholdings
+                type: writeholding
                 decode: int16
         - source: convert
           convert: int2bytes
@@ -272,7 +272,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 0x1110
-                type: writeholdings
+                type: writeholding
                 decode: int16
         - source: convert
           convert: int2bytes
