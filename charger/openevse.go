@@ -98,6 +98,8 @@ func NewOpenEVSE(ctx context.Context, uri, user, password string) (api.Charger, 
 
 // run keeps the websocket connected until ctx is cancelled
 func (c *OpenEVSE) run(ctx context.Context) {
+	defer c.release()
+
 	bo := backoff.NewExponentialBackOff(
 		backoff.WithMaxElapsedTime(0),
 		backoff.WithMaxInterval(30*time.Second),
@@ -127,8 +129,6 @@ func (c *OpenEVSE) run(ctx context.Context) {
 
 		c.setConnected(false)
 	}
-
-	c.release()
 }
 
 // handleConnection reads frames until the connection fails. The first frame of a
@@ -188,9 +188,11 @@ func (c *OpenEVSE) handleConnection(ctx context.Context, conn *websocket.Conn, b
 			bo.Reset()
 			c.setConnected(true)
 
-			if err := c.reassertClaim(); err != nil {
-				c.log.WARN.Printf("reassert claim: %v", err)
-			}
+			go func() {
+				if err := c.reassertClaim(); err != nil {
+					c.log.WARN.Printf("reassert claim: %v", err)
+				}
+			}()
 		}
 	}
 }

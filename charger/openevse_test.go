@@ -235,6 +235,7 @@ func TestOpenEVSEClaims(t *testing.T) {
 	t.Cleanup(cancel)
 
 	c := newTestOpenEVSE(t, ctx, s.srv.URL, "", "")
+	waitOpenEVSEConnected(t, c)
 
 	require.NoError(t, c.MaxCurrent(16))
 	require.NoError(t, c.Enable(true))
@@ -322,6 +323,49 @@ func TestOpenEVSEReleaseOnShutdown(t *testing.T) {
 		return s.snapshot().deleted == 1
 	}, 5*time.Second, 10*time.Millisecond)
 	assert.Equal(t, "/claims/262145", s.snapshot().claimPath)
+}
+
+// TestOpenEVSEReleaseDuringBackoff covers Finding F2 (fix round 1): if ctx is
+// cancelled while the driver is stuck in the dial-failure backoff (the websocket
+// never connects at all), the claim must still be released on shutdown.
+func TestOpenEVSEReleaseDuringBackoff(t *testing.T) {
+	var mu sync.Mutex
+	deleted := 0
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	})
+	mux.HandleFunc("/claims/", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			_, _ = w.Write([]byte(`{"msg":"done"}`))
+		case http.MethodDelete:
+			mu.Lock()
+			deleted++
+			mu.Unlock()
+			_, _ = w.Write([]byte(`{"msg":"done"}`))
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
+
+	srv := httptest.NewServer(mux)
+	t.Cleanup(srv.Close)
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	c := newTestOpenEVSE(t, ctx, srv.URL, "", "")
+	require.NoError(t, c.Enable(true))
+
+	// cancel while the driver is looping on dial failures / backoff, never having connected
+	cancel()
+
+	require.Eventually(t, func() bool {
+		mu.Lock()
+		defer mu.Unlock()
+		return deleted == 1
+	}, 5*time.Second, 10*time.Millisecond)
 }
 
 func TestOpenEVSEBasicAuth(t *testing.T) {
