@@ -31,7 +31,7 @@ params:
     default: 15m
 auth:
   type: peugeot
-  params: [user, country]
+  params: [user, country, accessToken, refreshToken]
 render: |
   type: peugeot
   vin: {{ .vin }}

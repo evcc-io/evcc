@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/server/providerauth"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
@@ -29,7 +30,8 @@ func init() {
 	for brand := range brandNames {
 		auth.Register(brand, func(other map[string]any) (oauth2.TokenSource, error) {
 			var cc struct {
-				User, Country string
+				User, Country             string
+				AccessToken, RefreshToken string
 			}
 			if err := util.DecodeOther(other, &cc); err != nil {
 				return nil, err
@@ -37,7 +39,12 @@ func init() {
 			if cc.User == "" {
 				return nil, api.ErrMissingCredentials
 			}
-			return NewIdentity(util.NewLogger(brand), brand, cc.User, cc.Country, nil)
+			tokens := oauth.Tokens{Access: cc.AccessToken, Refresh: cc.RefreshToken}
+			var seed *oauth2.Token
+			if token, err := tokens.Token(); err == nil {
+				seed = token
+			}
+			return NewIdentity(util.NewLogger(brand), brand, cc.User, cc.Country, seed)
 		})
 	}
 }
@@ -97,6 +104,11 @@ func NewIdentity(log *util.Logger, brand, user, country string, seed *oauth2.Tok
 			instance.pending = nil
 		}
 		instance.loginMu.Unlock()
+		instance.mu.Lock()
+		if instance.token == nil && seed != nil && seed.RefreshToken != "" && !settings.Exists(subject) {
+			instance.update(seed)
+		}
+		instance.mu.Unlock()
 		return instance, nil
 	}
 

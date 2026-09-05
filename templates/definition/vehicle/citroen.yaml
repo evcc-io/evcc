@@ -31,7 +31,7 @@ params:
     default: 15m
 auth:
   type: citroen
-  params: [user, country]
+  params: [user, country, accessToken, refreshToken]
 render: |
   type: citroen
   vin: {{ .vin }}

@@ -109,3 +109,26 @@ func TestSubmitChallenge(t *testing.T) {
 	require.NoError(t, settings.Json(v.subject, &token))
 	assert.Equal(t, "refresh", token.RefreshToken)
 }
+
+func TestAuthSeedAfterPrepare(t *testing.T) {
+	config := map[string]any{"user": t.Name() + "@example.com", "country": "de"}
+	ts, err := auth.NewFromConfig(context.Background(), "peugeot", config)
+	require.NoError(t, err)
+	v := ts.(*Identity)
+	t.Cleanup(func() { settings.SetString(v.subject, "") })
+	require.Nil(t, v.token)
+
+	config["refreshToken"] = "seed"
+	reused, err := auth.NewFromConfig(context.Background(), "peugeot", config)
+	require.NoError(t, err)
+	assert.Same(t, v, reused)
+	var token oauth2.Token
+	require.NoError(t, settings.Json(v.subject, &token))
+	assert.Equal(t, "seed", token.RefreshToken)
+
+	config["refreshToken"] = "stale"
+	_, err = auth.NewFromConfig(context.Background(), "peugeot", config)
+	require.NoError(t, err)
+	require.NoError(t, settings.Json(v.subject, &token))
+	assert.Equal(t, "seed", token.RefreshToken)
+}
