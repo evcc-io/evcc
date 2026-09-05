@@ -19,13 +19,11 @@ package charger
 
 import (
 	"context"
-	"encoding/binary"
 	"fmt"
 	"math"
 	"sync/atomic"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -33,21 +31,14 @@ import (
 
 // MyPvHea charger implementation
 type MyPvHea struct {
-	conn      *modbus.Connection
-	lp        loadpoint.API
+	myPvBase
 	relays    uint16
 	stepPower uint16
-	regTemp   uint16
 	mask      atomic.Uint32
 	current   atomic.Uint64
 }
 
-const (
-	heaRegPower          = 1000
-	heaRegTempLimit      = 1002
-	heaRegOperationState = 1077
-	heaRegSetPower       = 1080
-)
+const heaRegSetPower = 1080
 
 var heaTemp = []uint16{1001, 1030}
 
@@ -108,37 +99,22 @@ func NewMyPvHea(ctx context.Context, name string, settings modbus.TcpSettings, t
 	conn.Logger(log.TRACE)
 
 	wb := &MyPvHea{
-		conn:      conn,
+		myPvBase:  newMyPvBase(conn, heaTemp[tempSource-1]),
 		relays:    relays,
 		stepPower: stepPower,
-		regTemp:   heaTemp[tempSource-1],
 	}
 
 	return wb, nil
 }
 
-var _ api.IconDescriber = (*MyPvHea)(nil)
-
-// Icon implements the api.IconDescriber interface
-func (v *MyPvHea) Icon() string {
-	return "waterheater"
-}
-
-var _ api.FeatureDescriber = (*MyPvHea)(nil)
-
-// Features implements the api.FeatureDescriber interface
-func (wb *MyPvHea) Features() []api.Feature {
-	return []api.Feature{api.IntegratedDevice, api.Heating}
-}
-
 // Status implements the api.Charger interface
 func (wb *MyPvHea) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadHoldingRegisters(heaRegOperationState, 1)
+	state, err := wb.readUint16(myPvRegOperationState)
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	if state := binary.BigEndian.Uint16(b); state >= 4 {
+	if state >= 4 {
 		return api.StatusNone, fmt.Errorf("device error: operation state %d", state)
 	}
 
@@ -156,11 +132,8 @@ func (wb *MyPvHea) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *MyPvHea) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(heaRegSetPower, 1)
-	if err != nil {
-		return false, err
-	}
-	return binary.BigEndian.Uint16(b)&((1<<wb.relays)-1) != 0, nil
+	mask, err := wb.readUint16(heaRegSetPower)
+	return mask&((1<<wb.relays)-1) != 0, err
 }
 
 func (wb *MyPvHea) setRelays(mask uint16) error {
@@ -230,41 +203,6 @@ var _ api.Meter = (*MyPvHea)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *MyPvHea) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(heaRegPower, 1)
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(binary.BigEndian.Uint16(b)), nil
-}
-
-var _ api.Battery = (*MyPvHea)(nil)
-
-// Soc implements the api.Battery interface (returns water temperature).
-func (wb *MyPvHea) Soc() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.regTemp, 1)
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(binary.BigEndian.Uint16(b)) / 10, nil
-}
-
-var _ api.SocLimiter = (*MyPvHea)(nil)
-
-// GetLimitSoc implements the api.SocLimiter interface
-func (wb *MyPvHea) GetLimitSoc() (int64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(heaRegTempLimit, 1)
-	if err != nil {
-		return 0, err
-	}
-
-	return int64(binary.BigEndian.Uint16(b)) / 10, nil
-}
-
-var _ loadpoint.Controller = (*MyPvHea)(nil)
-
-// LoadpointControl implements loadpoint.Controller
-func (wb *MyPvHea) LoadpointControl(lp loadpoint.API) {
-	wb.lp = lp
+	power, err := wb.readUint16(myPvRegPower)
+	return float64(power), err
 }
