@@ -1,5 +1,7 @@
 name: Claude Issue & PR Agent
 
+# Disabled; original job conditions are retained for re-enablement.
+
 on:
   issues:
     types: [opened]

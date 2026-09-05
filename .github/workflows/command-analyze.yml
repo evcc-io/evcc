@@ -1,5 +1,7 @@
 name: Claude Analyze Command
 
+# Disabled; original job conditions are retained for re-enablement.
+
 on:
   issue_comment:
     types: [created]
