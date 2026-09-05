@@ -1,0 +1,241 @@
+package charger
+
+import (
+	"context"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"sync"
+	"testing"
+	"time"
+
+	"github.com/coder/websocket"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/openevse"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+// full status as sent by the firmware on websocket connect (subset of keys, plus noise keys)
+const openevseFullStatus = `{"mode":"STA","amp":16000,"voltage":230,"power":11040,"pilot":16,"state":3,"vehicle":1,"status":"active","elapsed":120,"session_energy":1500,"total_energy":42.5,"temp":false,"manual_override":0}`
+
+// openevseTestServer fakes the firmware's /ws and /claims/{id} endpoints
+type openevseTestServer struct {
+	srv  *httptest.Server
+	send chan string   // frames pushed to the current websocket client
+	drop chan struct{} // closes the current websocket connection
+
+	mu        sync.Mutex
+	connects  int
+	wsAuth    string
+	claimAuth string
+	claimPath string
+	claims    []openevse.Claim
+	deleted   int
+}
+
+// newOpenEVSETestServer starts the fake. If full is empty the websocket never sends a frame.
+func newOpenEVSETestServer(t *testing.T, full string) *openevseTestServer {
+	t.Helper()
+
+	s := &openevseTestServer{
+		send: make(chan string),
+		drop: make(chan struct{}),
+	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		s.mu.Lock()
+		s.connects++
+		s.wsAuth = r.Header.Get("Authorization")
+		s.mu.Unlock()
+
+		c, err := websocket.Accept(w, r, nil)
+		if err != nil {
+			return
+		}
+		defer c.Close(websocket.StatusNormalClosure, "")
+
+		ctx := r.Context()
+		if full != "" {
+			if err := c.Write(ctx, websocket.MessageText, []byte(full)); err != nil {
+				return
+			}
+		}
+
+		for {
+			select {
+			case msg := <-s.send:
+				if err := c.Write(ctx, websocket.MessageText, []byte(msg)); err != nil {
+					return
+				}
+			case <-s.drop:
+				return
+			case <-ctx.Done():
+				return
+			}
+		}
+	})
+
+	mux.HandleFunc("/claims/", func(w http.ResponseWriter, r *http.Request) {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+
+		s.claimAuth = r.Header.Get("Authorization")
+		s.claimPath = r.URL.Path
+
+		switch r.Method {
+		case http.MethodPost:
+			var claim openevse.Claim
+			if err := json.NewDecoder(r.Body).Decode(&claim); err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			s.claims = append(s.claims, claim)
+			_, _ = w.Write([]byte(`{"msg":"done"}`))
+		case http.MethodDelete:
+			s.deleted++
+			_, _ = w.Write([]byte(`{"msg":"done"}`))
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
+
+	s.srv = httptest.NewServer(mux)
+	t.Cleanup(s.srv.Close)
+
+	return s
+}
+
+// openevseSnapshot is a lock-free copy of the recorded server state
+type openevseSnapshot struct {
+	connects  int
+	wsAuth    string
+	claimAuth string
+	claimPath string
+	claims    []openevse.Claim
+	deleted   int
+}
+
+func (s *openevseTestServer) snapshot() openevseSnapshot {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return openevseSnapshot{
+		connects: s.connects, wsAuth: s.wsAuth, claimAuth: s.claimAuth,
+		claimPath: s.claimPath, claims: append([]openevse.Claim(nil), s.claims...), deleted: s.deleted,
+	}
+}
+
+func newTestOpenEVSE(t *testing.T, ctx context.Context, uri, user, password string) *OpenEVSE {
+	t.Helper()
+	c, err := NewOpenEVSE(ctx, uri, user, password)
+	require.NoError(t, err)
+	return c.(*OpenEVSE)
+}
+
+func waitOpenEVSEConnected(t *testing.T, c *OpenEVSE) {
+	t.Helper()
+	require.Eventually(t, func() bool {
+		_, err := c.Enabled()
+		return err == nil
+	}, 5*time.Second, 10*time.Millisecond)
+}
+
+func TestOpenEVSEReadsFailUntilConnected(t *testing.T) {
+	s := newOpenEVSETestServer(t, "") // websocket accepts but never sends
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	c := newTestOpenEVSE(t, ctx, s.srv.URL, "", "")
+
+	time.Sleep(200 * time.Millisecond)
+	_, err := c.Status()
+	assert.Error(t, err)
+	_, err = c.Enabled()
+	assert.Error(t, err)
+	_, err = c.CurrentPower()
+	assert.Error(t, err)
+}
+
+func TestOpenEVSEStatusMerge(t *testing.T) {
+	s := newOpenEVSETestServer(t, openevseFullStatus)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	c := newTestOpenEVSE(t, ctx, s.srv.URL, "", "")
+	waitOpenEVSEConnected(t, c)
+
+	status, err := c.Status()
+	require.NoError(t, err)
+	assert.Equal(t, api.StatusC, status)
+
+	enabled, err := c.Enabled()
+	require.NoError(t, err)
+	assert.True(t, enabled)
+
+	power, err := c.CurrentPower()
+	require.NoError(t, err)
+	assert.Equal(t, 11040.0, power)
+
+	charged, err := c.ChargedEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 1.5, charged)
+
+	total, err := c.TotalEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 42.5, total)
+
+	dur, err := c.ChargeDuration()
+	require.NoError(t, err)
+	assert.Equal(t, 120*time.Second, dur)
+
+	cur, err := c.GetMaxCurrent()
+	require.NoError(t, err)
+	assert.Equal(t, 16.0, cur)
+
+	// partial update: only changed keys, everything else must survive
+	s.send <- `{"state":2,"status":"disabled","power":0,"pilot":0}`
+
+	require.Eventually(t, func() bool {
+		status, _ := c.Status()
+		return status == api.StatusB
+	}, 5*time.Second, 10*time.Millisecond)
+
+	enabled, err = c.Enabled()
+	require.NoError(t, err)
+	assert.False(t, enabled)
+
+	power, err = c.CurrentPower()
+	require.NoError(t, err)
+	assert.Equal(t, 0.0, power)
+
+	total, err = c.TotalEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 42.5, total, "unchanged key must keep previous value")
+
+	// vehicle unplugged while sleeping -> A
+	s.send <- `{"state":254,"vehicle":0}`
+	require.Eventually(t, func() bool {
+		status, _ := c.Status()
+		return status == api.StatusA
+	}, 5*time.Second, 10*time.Millisecond)
+
+	// non-object frame (pong) and unknown keys are harmless
+	s.send <- `{"pong":1}`
+	s.send <- `{"free_heap":12345}`
+	status, err = c.Status()
+	require.NoError(t, err)
+	assert.Equal(t, api.StatusA, status)
+}
+
+func TestOpenEVSEInvalidState(t *testing.T) {
+	s := newOpenEVSETestServer(t, `{"state":6,"vehicle":1,"status":"active"}`)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	c := newTestOpenEVSE(t, ctx, s.srv.URL, "", "")
+	waitOpenEVSEConnected(t, c)
+
+	_, err := c.Status()
+	assert.ErrorContains(t, err, "invalid status: 6")
+}
