@@ -143,6 +143,8 @@ func TestGhostEEBus_PhaseSwitchISO15118(t *testing.T) {
 }
 
 func TestGhostEEBus_PhaseSwitch(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		phases    int
