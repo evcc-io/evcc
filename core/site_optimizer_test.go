@@ -156,7 +156,6 @@ func TestOptimizerResultPruneExpired(t *testing.T) {
 	boundary := time.Date(2025, 1, 1, 12, 15, 0, 0, time.UTC)
 	timestamps := []time.Time{boundary.Add(-2 * time.Second), boundary, boundary.Add(tariff.SlotDuration)}
 	dt := []int{2, int(tariff.SlotDuration.Seconds()), int(tariff.SlotDuration.Seconds())}
-	ends := []time.Time{boundary, boundary.Add(tariff.SlotDuration), boundary.Add(2 * tariff.SlotDuration)}
 
 	for _, tc := range []struct {
 		name      string
@@ -206,17 +205,15 @@ func TestOptimizerResultPruneExpired(t *testing.T) {
 			before, err := json.Marshal(original)
 			require.NoError(t, err)
 			result := original
-			got, err := result.pruneExpired(tc.at)
+			err = result.pruneExpired(tc.at)
 			after, marshalErr := json.Marshal(original)
 			require.NoError(t, marshalErr)
 			assert.JSONEq(t, string(before), string(after), "diagnostic result unchanged")
 			if tc.trim < 0 {
 				require.ErrorContains(t, err, "expired")
-				assert.Nil(t, got)
 				return
 			}
 			require.NoError(t, err)
-			assert.Equal(t, ends[tc.trim:], got)
 			assert.Equal(t, timestamps[tc.trim:], result.Details.Timestamps)
 			assert.Equal(t, dt[tc.trim:], result.Req.TimeSeries.Dt)
 			assert.Equal(t, original.Res.FlowDirection[min(tc.trim, len(original.Res.FlowDirection)):], result.Res.FlowDirection)
@@ -421,10 +418,10 @@ func TestBatteryForecastActiveSlot(t *testing.T) {
 				Res:     optimizer.OptimizationResult{Batteries: []optimizer.BatteryResult{{StateOfCharge: tc.soc}}},
 				Details: requestDetails{Timestamps: []time.Time{base.Add(-2 * time.Second), base, base.Add(tariff.SlotDuration)}},
 			}
-			ends, err := result.pruneExpired(base.Add(4 * time.Second))
+			err := result.pruneExpired(base.Add(4 * time.Second))
 			require.NoError(t, err)
 			high, low := batteryForecastSocExtremes(result.Req.Batteries, result.Res.Batteries)
-			forecast := (&Site{}).addBatteryForecastTotals(result.Req.Batteries, result.Res.Batteries, ends)
+			forecast := (&Site{}).addBatteryForecastTotals(result.Req.Batteries, result.Res.Batteries, result.Details.Timestamps, result.Req.TimeSeries.Dt)
 			require.NotNil(t, forecast)
 			for _, point := range []struct {
 				want, got *batteryForecastSlot
@@ -669,7 +666,7 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 		},
 		Details: requestDetails{Timestamps: []time.Time{base.Add(-2 * time.Second), base}},
 	}
-	_, err := result.pruneExpired(base.Add(4 * time.Second))
+	err := result.pruneExpired(base.Add(4 * time.Second))
 	require.NoError(t, err)
 	slotHours := (time.Duration(result.Req.TimeSeries.Dt[0]) * time.Second).Hours()
 	s := currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, result.Res.Batteries[0], result.Res.GridImport[0], result.Res.GridExport[0], slotHours)

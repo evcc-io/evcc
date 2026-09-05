@@ -14,7 +14,8 @@ func TestMatchSoc(t *testing.T) {
 	atLeast50 := func(soc float32) bool { return soc >= 50 }
 
 	eos := time.Date(2025, 1, 1, 12, 15, 0, 0, time.UTC)
-	ends := []time.Time{eos, eos.Add(tariff.SlotDuration), eos.Add(2 * tariff.SlotDuration)}
+	timestamps := []time.Time{eos.Add(-5 * time.Minute), eos, eos.Add(tariff.SlotDuration)}
+	dt := []int{300, 900, 900}
 
 	for _, tc := range []struct {
 		ts       []float32
@@ -30,19 +31,21 @@ func TestMatchSoc(t *testing.T) {
 		{[]float32{0, 0, 0, 50}, time.Time{}},
 		{nil, time.Time{}},
 	} {
-		assert.Equal(t, tc.expected, matchSoc(tc.ts, ends, atLeast50), "%v", tc.ts)
+		assert.Equal(t, tc.expected, matchSoc(tc.ts, timestamps, dt, atLeast50), "%v", tc.ts)
 	}
-	assert.Zero(t, matchSoc([]float32{50}, nil, atLeast50))
+	assert.Zero(t, matchSoc([]float32{50}, nil, dt, atLeast50))
+	assert.Zero(t, matchSoc([]float32{50}, timestamps, nil, atLeast50))
+	assert.Equal(t, eos.Add(time.Minute), matchSoc([]float32{0, 50}, timestamps, []int{300, 60}, atLeast50))
 
 	result := optimizerResult{
 		Req: optimizer.OptimizationInput{
-			TimeSeries: optimizer.TimeSeries{Dt: []int{300, 900, 900}},
+			TimeSeries: optimizer.TimeSeries{Dt: dt},
 			Batteries:  []optimizer.BatteryConfig{{}},
 		},
 		Res:     optimizer.OptimizationResult{Batteries: []optimizer.BatteryResult{{StateOfCharge: []float32{50, 0, 50}}}},
-		Details: requestDetails{Timestamps: []time.Time{eos.Add(-5 * time.Minute), eos, eos.Add(tariff.SlotDuration)}},
+		Details: requestDetails{Timestamps: timestamps},
 	}
-	retainedEnds, err := result.pruneExpired(eos.Add(4 * time.Second))
+	err := result.pruneExpired(eos.Add(4 * time.Second))
 	require.NoError(t, err)
-	assert.Equal(t, ends[2], matchSoc(result.Res.Batteries[0].StateOfCharge, retainedEnds, atLeast50))
+	assert.Equal(t, eos.Add(2*tariff.SlotDuration), matchSoc(result.Res.Batteries[0].StateOfCharge, result.Details.Timestamps, result.Req.TimeSeries.Dt, atLeast50))
 }
