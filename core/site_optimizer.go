@@ -159,18 +159,18 @@ func suggestionEvent(detail batteryDetail, s types.Suggestion) messenger.Event {
 	return ev
 }
 
-// currentSlotSuggestion maps the optimizer's first-slot corner result onto an advisory action.
-// Because the optimization is linear, the first slot is at an operating-range extreme, so it
+// currentSlotSuggestion maps the optimizer's active-slot result onto an advisory action.
+// Because the optimization is linear, the slot is at an operating-range extreme, so it
 // maps cleanly onto the discrete battery mode / loadpoint intent that control would later apply.
 // An idle battery is interpreted from the grid flow: importing means discharge is withheld
 // (hold), exporting means charging is withheld (holdcharge).
-func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gridImport, gridExport float32, slotHours float64) types.Suggestion {
-	if slotHours <= 0 || len(res.ChargingPower) == 0 || len(res.DischargingPower) == 0 {
+func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, slot int, gridImport, gridExport float32, slotHours float64) types.Suggestion {
+	if slot < 0 || slotHours <= 0 || slot >= len(res.ChargingPower) || slot >= len(res.DischargingPower) {
 		return types.Suggestion{}
 	}
 
-	charge := float64(res.ChargingPower[0]) / slotHours
-	discharge := float64(res.DischargingPower[0]) / slotHours
+	charge := float64(res.ChargingPower[slot]) / slotHours
+	discharge := float64(res.DischargingPower[slot]) / slotHours
 	gridImporting := gridImport > 0
 	gridExporting := gridExport > 0
 
@@ -661,22 +661,27 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		return errors.New(string(status))
 	}
 
-	site.applyOptimizerResult(req, details.BatteryDetails, *resp.JSON200)
+	slot := activeOptimizerSlot(details.Timestamps, req.TimeSeries.Dt, time.Now())
+	if slot < 0 {
+		return errors.New("optimizer result expired")
+	}
+
+	site.applyOptimizerResult(req, details.BatteryDetails, *resp.JSON200, slot)
 
 	return nil
 }
 
 // applyOptimizerResult maps the optimizer response onto suggestions, battery
 // forecast and notifications
-func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details []batteryDetail, res optimizer.OptimizationResult) {
+func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details []batteryDetail, res optimizer.OptimizationResult, slot int) {
 	now := time.Now()
-	slotHours := (time.Duration(req.TimeSeries.Dt[0]) * time.Second).Hours()
+	slotHours := (time.Duration(req.TimeSeries.Dt[slot]) * time.Second).Hours()
 	var gridImport, gridExport float32
-	if len(res.GridImport) > 0 {
-		gridImport = res.GridImport[0]
+	if slot < len(res.GridImport) {
+		gridImport = res.GridImport[slot]
 	}
-	if len(res.GridExport) > 0 {
-		gridExport = res.GridExport[0]
+	if slot < len(res.GridExport) {
+		gridExport = res.GridExport[slot]
 	}
 
 	var batteries []batteryResult
@@ -685,18 +690,24 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 	for i, batReq := range req.Batteries {
 		batRes := res.Batteries[i]
 		detail := details[i]
+		soc := batRes.StateOfCharge
+		if slot < len(soc) {
+			soc = soc[slot:]
+		} else {
+			soc = nil
+		}
 
 		batteries = append(batteries, batteryResult{
 			batteryDetail: detail,
-			Full: matchSoc(batRes.StateOfCharge, now, func(soc float32) bool {
+			Full: matchSoc(soc, now, func(soc float32) bool {
 				return soc >= batReq.SMax
 			}),
-			Empty: matchSoc(batRes.StateOfCharge, now, func(soc float32) bool {
+			Empty: matchSoc(soc, now, func(soc float32) bool {
 				return soc <= batReq.SMin
 			}),
 		})
 
-		suggestion := currentSlotSuggestion(detail, batRes, gridImport, gridExport, slotHours)
+		suggestion := currentSlotSuggestion(detail, batRes, slot, gridImport, gridExport, slotHours)
 		if suggestion.Action == "" {
 			continue
 		}
@@ -1213,6 +1224,16 @@ func asTimestamps(dt []int, now time.Time) []time.Time {
 	}
 
 	return res
+}
+
+func activeOptimizerSlot(timestamps []time.Time, dt []int, at time.Time) int {
+	for i := range min(len(timestamps), len(dt)) {
+		if at.Before(timestamps[i].Add(time.Duration(dt[i]) * time.Second)) {
+			return i
+		}
+	}
+
+	return -1
 }
 
 func scaleAndPrune(rates api.Rates, scale float64, maxLen int) []float32 {
