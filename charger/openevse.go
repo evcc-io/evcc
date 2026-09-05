@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -126,6 +127,8 @@ func (c *OpenEVSE) run(ctx context.Context) {
 
 		c.setConnected(false)
 	}
+
+	c.release()
 }
 
 // handleConnection reads frames until the connection fails. The first frame of a
@@ -184,6 +187,10 @@ func (c *OpenEVSE) handleConnection(ctx context.Context, conn *websocket.Conn, b
 			first = false
 			bo.Reset()
 			c.setConnected(true)
+
+			if err := c.reassertClaim(); err != nil {
+				c.log.WARN.Printf("reassert claim: %v", err)
+			}
 		}
 	}
 }
@@ -260,12 +267,88 @@ func (c *OpenEVSE) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (c *OpenEVSE) Enable(enable bool) error {
-	return nil // Task 4
+	c.claimMu.Lock()
+	defer c.claimMu.Unlock()
+
+	c.enabled = enable
+	return c.setClaim()
 }
 
 // MaxCurrent implements the api.Charger interface
 func (c *OpenEVSE) MaxCurrent(current int64) error {
-	return nil // Task 4
+	c.claimMu.Lock()
+	defer c.claimMu.Unlock()
+
+	c.current = int(current)
+	return c.setClaim()
+}
+
+func (c *OpenEVSE) claimURI() string {
+	return fmt.Sprintf("%s/claims/%d", c.uri, openevse.ClientID)
+}
+
+// setClaim posts the full claim built from the desired state; caller holds claimMu
+func (c *OpenEVSE) setClaim() error {
+	claim := openevse.Claim{
+		State:         openevse.Disabled,
+		ChargeCurrent: c.current,
+	}
+	if c.enabled {
+		claim.State = openevse.Enabled
+	}
+
+	if err := c.postClaim(claim); err != nil {
+		return err
+	}
+
+	c.claim = &claim
+	return nil
+}
+
+func (c *OpenEVSE) postClaim(claim openevse.Claim) error {
+	req, err := request.New(http.MethodPost, c.claimURI(), request.MarshalJSON(claim), request.JSONEncoding)
+	if err != nil {
+		return err
+	}
+
+	_, err = c.DoBody(req)
+	return err
+}
+
+// reassertClaim re-posts the last claim after a (re)connect: a firmware reboot drops all claims
+func (c *OpenEVSE) reassertClaim() error {
+	c.claimMu.Lock()
+	defer c.claimMu.Unlock()
+
+	if c.claim == nil {
+		return nil
+	}
+
+	return c.postClaim(*c.claim)
+}
+
+// release deletes evcc's claim on shutdown so the EVSE falls back to its own defaults
+func (c *OpenEVSE) release() {
+	c.claimMu.Lock()
+	defer c.claimMu.Unlock()
+
+	if c.claim == nil {
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	req, err := request.New(http.MethodDelete, c.claimURI(), nil)
+	if err == nil {
+		_, err = c.DoBody(req.WithContext(ctx))
+	}
+
+	if err != nil {
+		c.log.WARN.Printf("release claim: %v", err)
+	}
+
+	c.claim = nil
 }
 
 var _ api.CurrentGetter = (*OpenEVSE)(nil)

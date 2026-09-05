@@ -2,6 +2,7 @@ package charger
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -226,6 +227,116 @@ func TestOpenEVSEStatusMerge(t *testing.T) {
 	status, err = c.Status()
 	require.NoError(t, err)
 	assert.Equal(t, api.StatusA, status)
+}
+
+func TestOpenEVSEClaims(t *testing.T) {
+	s := newOpenEVSETestServer(t, openevseFullStatus)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	c := newTestOpenEVSE(t, ctx, s.srv.URL, "", "")
+
+	require.NoError(t, c.MaxCurrent(16))
+	require.NoError(t, c.Enable(true))
+	require.NoError(t, c.Enable(false))
+
+	snap := s.snapshot()
+	assert.Equal(t, "/claims/262145", snap.claimPath)
+	assert.Equal(t, []openevse.Claim{
+		{State: openevse.Disabled, ChargeCurrent: 16},
+		{State: openevse.Enabled, ChargeCurrent: 16},
+		{State: openevse.Disabled, ChargeCurrent: 16},
+	}, snap.claims)
+}
+
+func TestOpenEVSEClaimError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte(`{"msg":"Could not make claim"}`))
+	}))
+	t.Cleanup(srv.Close)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	c := newTestOpenEVSE(t, ctx, srv.URL, "", "")
+	assert.Error(t, c.Enable(true))
+}
+
+func TestOpenEVSEReconnectReassertsClaim(t *testing.T) {
+	s := newOpenEVSETestServer(t, openevseFullStatus)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	c := newTestOpenEVSE(t, ctx, s.srv.URL, "", "")
+	waitOpenEVSEConnected(t, c)
+
+	require.NoError(t, c.MaxCurrent(10))
+	require.NoError(t, c.Enable(true))
+	require.Len(t, s.snapshot().claims, 2)
+
+	// firmware reboots: connection drops, claims are gone
+	s.drop <- struct{}{}
+
+	require.Eventually(t, func() bool {
+		return s.snapshot().connects == 2
+	}, 10*time.Second, 10*time.Millisecond)
+
+	require.Eventually(t, func() bool {
+		return len(s.snapshot().claims) == 3
+	}, 5*time.Second, 10*time.Millisecond)
+
+	claims := s.snapshot().claims
+	assert.Equal(t, openevse.Claim{State: openevse.Enabled, ChargeCurrent: 10}, claims[2])
+}
+
+func TestOpenEVSEReconnectWithoutClaim(t *testing.T) {
+	s := newOpenEVSETestServer(t, openevseFullStatus)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	c := newTestOpenEVSE(t, ctx, s.srv.URL, "", "")
+	waitOpenEVSEConnected(t, c)
+
+	s.drop <- struct{}{}
+
+	require.Eventually(t, func() bool {
+		return s.snapshot().connects == 2
+	}, 10*time.Second, 10*time.Millisecond)
+	waitOpenEVSEConnected(t, c)
+
+	assert.Empty(t, s.snapshot().claims, "no claim must be posted if evcc never wrote one")
+}
+
+func TestOpenEVSEReleaseOnShutdown(t *testing.T) {
+	s := newOpenEVSETestServer(t, openevseFullStatus)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	c := newTestOpenEVSE(t, ctx, s.srv.URL, "", "")
+	waitOpenEVSEConnected(t, c)
+	require.NoError(t, c.Enable(true))
+
+	cancel()
+
+	require.Eventually(t, func() bool {
+		return s.snapshot().deleted == 1
+	}, 5*time.Second, 10*time.Millisecond)
+	assert.Equal(t, "/claims/262145", s.snapshot().claimPath)
+}
+
+func TestOpenEVSEBasicAuth(t *testing.T) {
+	s := newOpenEVSETestServer(t, openevseFullStatus)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	c := newTestOpenEVSE(t, ctx, s.srv.URL, "admin", "secret")
+	waitOpenEVSEConnected(t, c)
+	require.NoError(t, c.Enable(true))
+
+	want := "Basic " + base64.StdEncoding.EncodeToString([]byte("admin:secret"))
+	snap := s.snapshot()
+	assert.Equal(t, want, snap.wsAuth, "websocket handshake must carry basic auth")
+	assert.Equal(t, want, snap.claimAuth, "claim request must carry basic auth")
 }
 
 func TestOpenEVSEInvalidState(t *testing.T) {
