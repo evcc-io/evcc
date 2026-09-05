@@ -21,7 +21,9 @@ import (
 // full status as sent by the firmware on websocket connect (subset of keys, plus noise keys)
 const openevseFullStatus = `{"mode":"STA","amp":16000,"voltage":230,"power":11040,"pilot":16,"state":3,"vehicle":1,"status":"active","elapsed":120,"session_energy":1500,"total_energy":42.5,"temp":false,"manual_override":0}`
 
-// openevseTestServer fakes the firmware's /ws and /claims/{id} endpoints
+// openevseTestServer fakes the firmware's /ws and /claims/{id} endpoints.
+// It never answers {"ping":1}, so with shortened timeouts it also models a
+// silent (half-open) connection.
 type openevseTestServer struct {
 	srv  *httptest.Server
 	send chan string   // frames pushed to the current websocket client
@@ -34,6 +36,7 @@ type openevseTestServer struct {
 	claimPath string
 	claims    []openevse.Claim
 	deleted   int
+	claimErr  bool // reject claim writes with 400
 }
 
 // newOpenEVSETestServer starts the fake. If full is empty the websocket never sends a frame.
@@ -86,6 +89,12 @@ func newOpenEVSETestServer(t *testing.T, full string) *openevseTestServer {
 		s.claimAuth = r.Header.Get("Authorization")
 		s.claimPath = r.URL.Path
 
+		if s.claimErr {
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(`{"msg":"Could not make claim"}`))
+			return
+		}
+
 		switch r.Method {
 		case http.MethodPost:
 			var claim openevse.Claim
@@ -109,6 +118,13 @@ func newOpenEVSETestServer(t *testing.T, full string) *openevseTestServer {
 	return s
 }
 
+// failClaims makes every /claims request answer 400
+func (s *openevseTestServer) failClaims() {
+	s.mu.Lock()
+	s.claimErr = true
+	s.mu.Unlock()
+}
+
 // openevseSnapshot is a lock-free copy of the recorded server state
 type openevseSnapshot struct {
 	connects  int
@@ -128,7 +144,28 @@ func (s *openevseTestServer) snapshot() openevseSnapshot {
 	}
 }
 
-func newTestOpenEVSE(t *testing.T, ctx context.Context, uri, user, password string) *OpenEVSE {
+// shortenOpenEVSEReady shortens the constructor's wait for the first frame
+func shortenOpenEVSEReady(t *testing.T, d time.Duration) {
+	t.Helper()
+
+	prev := openevseReadyTimeout
+	openevseReadyTimeout = d
+	t.Cleanup(func() { openevseReadyTimeout = prev })
+}
+
+// shortenOpenEVSEKeepalive shortens the ping interval and the per-read deadline.
+// Both are snapshotted by the constructor, so this must be called before the
+// charger under test is created.
+func shortenOpenEVSEKeepalive(t *testing.T, ping, read time.Duration) {
+	t.Helper()
+
+	prevPing, prevRead := openevsePingInterval, openevseReadTimeout
+	openevsePingInterval, openevseReadTimeout = ping, read
+
+	t.Cleanup(func() { openevsePingInterval, openevseReadTimeout = prevPing, prevRead })
+}
+
+func newTestOpenEVSE(ctx context.Context, t *testing.T, uri, user, password string) *OpenEVSE {
 	t.Helper()
 	c, err := NewOpenEVSE(ctx, uri, user, password)
 	require.NoError(t, err)
@@ -143,20 +180,62 @@ func waitOpenEVSEConnected(t *testing.T, c *OpenEVSE) {
 	}, 5*time.Second, 10*time.Millisecond)
 }
 
-func TestOpenEVSEReadsFailUntilConnected(t *testing.T) {
+// TestOpenEVSEConstructWithoutFrame covers Finding F2 (final round): a device that
+// accepts the websocket but never sends a frame - a wrong host answering on the
+// port, or firmware without the push channel - must fail construction so evcc's
+// device test does not falsely pass.
+func TestOpenEVSEConstructWithoutFrame(t *testing.T) {
 	s := newOpenEVSETestServer(t, "") // websocket accepts but never sends
+	shortenOpenEVSEReady(t, time.Second)
+
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	c := newTestOpenEVSE(t, ctx, s.srv.URL, "", "")
+	_, err := NewOpenEVSE(ctx, s.srv.URL, "", "")
+	require.Error(t, err)
+	assert.ErrorIs(t, err, api.ErrTimeout)
+}
 
-	time.Sleep(200 * time.Millisecond)
-	_, err := c.Status()
-	assert.Error(t, err)
-	_, err = c.Enabled()
-	assert.Error(t, err)
-	_, err = c.CurrentPower()
-	assert.Error(t, err)
+// TestOpenEVSEConstructUnauthorized: a 401 at the websocket handshake (wrong
+// password) must surface as a constructor error.
+func TestOpenEVSEConstructUnauthorized(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
+	}))
+	t.Cleanup(srv.Close)
+
+	shortenOpenEVSEReady(t, time.Second)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	_, err := NewOpenEVSE(ctx, srv.URL, "admin", "wrong")
+	require.Error(t, err)
+	assert.ErrorContains(t, err, "401")
+}
+
+// TestOpenEVSEStaleConnection covers Finding F1 (final round): a connection that
+// stops delivering frames (half-open TCP) must not leave the charger reporting
+// stale state. The read deadline fires, the charger goes unreadable and reconnects.
+func TestOpenEVSEStaleConnection(t *testing.T) {
+	shortenOpenEVSEKeepalive(t, 100*time.Millisecond, 300*time.Millisecond)
+
+	// the fake never answers {"ping":1}, so the link is silent after the full status
+	s := newOpenEVSETestServer(t, openevseFullStatus)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	c := newTestOpenEVSE(ctx, t, s.srv.URL, "", "")
+
+	require.Eventually(t, func() bool {
+		_, err := c.Enabled()
+		return err != nil
+	}, 5*time.Second, 10*time.Millisecond, "stale connection must make reads fail")
+
+	require.Eventually(t, func() bool {
+		return s.snapshot().connects >= 2
+	}, 5*time.Second, 10*time.Millisecond, "driver must reconnect after the read deadline")
 }
 
 func TestOpenEVSEStatusMerge(t *testing.T) {
@@ -164,8 +243,7 @@ func TestOpenEVSEStatusMerge(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	c := newTestOpenEVSE(t, ctx, s.srv.URL, "", "")
-	waitOpenEVSEConnected(t, c)
+	c := newTestOpenEVSE(ctx, t, s.srv.URL, "", "")
 
 	status, err := c.Status()
 	require.NoError(t, err)
@@ -222,7 +300,7 @@ func TestOpenEVSEStatusMerge(t *testing.T) {
 		return status == api.StatusA
 	}, 5*time.Second, 10*time.Millisecond)
 
-	// non-object frame (pong) and unknown keys are harmless
+	// the pong and other unknown keys are ignored
 	s.send <- `{"pong":1}`
 	s.send <- `{"free_heap":12345}`
 	status, err = c.Status()
@@ -235,8 +313,7 @@ func TestOpenEVSEClaims(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	c := newTestOpenEVSE(t, ctx, s.srv.URL, "", "")
-	waitOpenEVSEConnected(t, c)
+	c := newTestOpenEVSE(ctx, t, s.srv.URL, "", "")
 
 	require.NoError(t, c.MaxCurrent(16))
 	require.NoError(t, c.Enable(true))
@@ -252,16 +329,13 @@ func TestOpenEVSEClaims(t *testing.T) {
 }
 
 func TestOpenEVSEClaimError(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write([]byte(`{"msg":"Could not make claim"}`))
-	}))
-	t.Cleanup(srv.Close)
+	s := newOpenEVSETestServer(t, openevseFullStatus)
+	s.failClaims()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	c := newTestOpenEVSE(t, ctx, srv.URL, "", "")
+	c := newTestOpenEVSE(ctx, t, s.srv.URL, "", "")
 	assert.Error(t, c.Enable(true))
 }
 
@@ -270,8 +344,7 @@ func TestOpenEVSEReconnectReassertsClaim(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	c := newTestOpenEVSE(t, ctx, s.srv.URL, "", "")
-	waitOpenEVSEConnected(t, c)
+	c := newTestOpenEVSE(ctx, t, s.srv.URL, "", "")
 
 	require.NoError(t, c.MaxCurrent(10))
 	require.NoError(t, c.Enable(true))
@@ -297,8 +370,7 @@ func TestOpenEVSEReconnectWithoutClaim(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	c := newTestOpenEVSE(t, ctx, s.srv.URL, "", "")
-	waitOpenEVSEConnected(t, c)
+	c := newTestOpenEVSE(ctx, t, s.srv.URL, "", "")
 
 	s.drop <- struct{}{}
 
@@ -314,8 +386,7 @@ func TestOpenEVSEReleaseOnShutdown(t *testing.T) {
 	s := newOpenEVSETestServer(t, openevseFullStatus)
 	ctx, cancel := context.WithCancel(context.Background())
 
-	c := newTestOpenEVSE(t, ctx, s.srv.URL, "", "")
-	waitOpenEVSEConnected(t, c)
+	c := newTestOpenEVSE(ctx, t, s.srv.URL, "", "")
 	require.NoError(t, c.Enable(true))
 
 	cancel()
@@ -327,15 +398,42 @@ func TestOpenEVSEReleaseOnShutdown(t *testing.T) {
 }
 
 // TestOpenEVSEReleaseDuringBackoff covers Finding F2 (fix round 1): if ctx is
-// cancelled while the driver is stuck in the dial-failure backoff (the websocket
-// never connects at all), the claim must still be released on shutdown.
+// cancelled while the driver is stuck in the dial-failure backoff, the claim must
+// still be released on shutdown. The websocket connects once so that construction
+// succeeds and a claim can be written, then every further dial fails.
 func TestOpenEVSEReleaseDuringBackoff(t *testing.T) {
 	var mu sync.Mutex
-	deleted := 0
+	var attempts, deleted int
+	var fail bool
+
+	drop := make(chan struct{})
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusInternalServerError)
+		mu.Lock()
+		attempts++
+		failing := fail
+		mu.Unlock()
+
+		if failing {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		conn, err := websocket.Accept(w, r, nil)
+		if err != nil {
+			return
+		}
+		defer conn.Close(websocket.StatusNormalClosure, "")
+
+		if err := conn.Write(r.Context(), websocket.MessageText, []byte(openevseFullStatus)); err != nil {
+			return
+		}
+
+		select {
+		case <-drop:
+		case <-r.Context().Done():
+		}
 	})
 	mux.HandleFunc("/claims/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -356,10 +454,22 @@ func TestOpenEVSEReleaseDuringBackoff(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
-	c := newTestOpenEVSE(t, ctx, srv.URL, "", "")
+	c := newTestOpenEVSE(ctx, t, srv.URL, "", "")
 	require.NoError(t, c.Enable(true))
 
-	// cancel while the driver is looping on dial failures / backoff, never having connected
+	// the device goes away: the connection drops and every reconnect fails
+	mu.Lock()
+	fail = true
+	mu.Unlock()
+	close(drop)
+
+	require.Eventually(t, func() bool {
+		mu.Lock()
+		defer mu.Unlock()
+		return attempts >= 3
+	}, 10*time.Second, 10*time.Millisecond, "driver must be looping on dial failures")
+
+	// cancel while the driver is in the dial-failure backoff
 	cancel()
 
 	require.Eventually(t, func() bool {
@@ -381,8 +491,7 @@ func TestOpenEVSEReleaseViaShutdownHook(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	c := newTestOpenEVSE(t, ctx, s.srv.URL, "", "")
-	waitOpenEVSEConnected(t, c)
+	c := newTestOpenEVSE(ctx, t, s.srv.URL, "", "")
 	require.NoError(t, c.Enable(true))
 
 	doneC := make(chan struct{})
@@ -397,8 +506,7 @@ func TestOpenEVSEBasicAuth(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	c := newTestOpenEVSE(t, ctx, s.srv.URL, "admin", "secret")
-	waitOpenEVSEConnected(t, c)
+	c := newTestOpenEVSE(ctx, t, s.srv.URL, "admin", "secret")
 	require.NoError(t, c.Enable(true))
 
 	want := "Basic " + base64.StdEncoding.EncodeToString([]byte("admin:secret"))
@@ -412,36 +520,39 @@ func TestOpenEVSEInvalidState(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	c := newTestOpenEVSE(t, ctx, s.srv.URL, "", "")
-	waitOpenEVSEConnected(t, c)
+	c := newTestOpenEVSE(ctx, t, s.srv.URL, "", "")
 
 	_, err := c.Status()
 	assert.ErrorContains(t, err, "invalid status: 6")
 }
 
-// TestOpenEVSEGarbageFirstFrame covers Finding 1 (fix round 1): a first frame that
-// fails to decode must not mark the connection ready with a zero Status. Only once a
-// later frame decodes (fully or with only an UnmarshalTypeError) does the charger
-// become readable.
+// TestOpenEVSEGarbageOnlyFrame covers Finding 1 (fix round 1): a first frame that
+// fails to decode must not mark the connection ready with a zero Status - with the
+// readiness wait in place, construction fails.
+func TestOpenEVSEGarbageOnlyFrame(t *testing.T) {
+	s := newOpenEVSETestServer(t, "garbage") // not valid JSON
+	shortenOpenEVSEReady(t, time.Second)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	_, err := NewOpenEVSE(ctx, s.srv.URL, "", "")
+	require.Error(t, err)
+	assert.ErrorIs(t, err, api.ErrTimeout)
+}
+
+// TestOpenEVSEGarbageFirstFrame: once a later frame decodes (fully or with only an
+// UnmarshalTypeError) the charger becomes readable.
 func TestOpenEVSEGarbageFirstFrame(t *testing.T) {
 	s := newOpenEVSETestServer(t, "garbage") // not valid JSON
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	c := newTestOpenEVSE(t, ctx, s.srv.URL, "", "")
+	// send is unbuffered and the constructor now blocks until the first usable
+	// frame, so the valid frame has to be pushed from another goroutine
+	go func() { s.send <- openevseFullStatus }()
 
-	// the garbage frame must not make the charger readable
-	time.Sleep(200 * time.Millisecond)
-	_, err := c.Status()
-	assert.Error(t, err)
-
-	// a subsequent valid frame does
-	s.send <- openevseFullStatus
-
-	require.Eventually(t, func() bool {
-		_, err := c.Status()
-		return err == nil
-	}, 5*time.Second, 10*time.Millisecond)
+	c := newTestOpenEVSE(ctx, t, s.srv.URL, "", "")
 
 	status, err := c.Status()
 	require.NoError(t, err)

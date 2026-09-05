@@ -36,6 +36,17 @@ type OpenEVSE struct {
 	mu        sync.RWMutex
 	status    openevse.Status
 	connected bool
+	err       error // last dial/read error, reported by the constructor's readiness wait
+
+	ready     chan struct{} // closed once the first frame has been merged
+	readyOnce sync.Once
+
+	cancel context.CancelFunc // stops run(), used when construction fails
+
+	// keepalive and read deadline, snapshotted from the package vars at construction
+	// so that the reader goroutine never races with a test shortening them
+	pingInterval time.Duration
+	readTimeout  time.Duration
 
 	claimMu sync.Mutex
 	claim   *openevse.Claim // last claim written, nil until the first write
@@ -45,7 +56,19 @@ type OpenEVSE struct {
 
 var errOpenEVSENotConnected = errors.New("websocket not connected")
 
-const openevsePingInterval = 30 * time.Second
+// vars, not consts, so tests can shorten them
+var (
+	// openevsePingInterval is the keepalive interval. The firmware answers {"ping":1}
+	// with {"pong":1}, so a healthy connection delivers a frame at least this often.
+	openevsePingInterval = 30 * time.Second
+
+	// openevseReadTimeout bounds every read. Without it a half-open TCP connection
+	// blocks the reader forever while the charger keeps reporting stale state.
+	openevseReadTimeout = 2*openevsePingInterval + 15*time.Second
+
+	// openevseReadyTimeout is how long the constructor waits for the first frame
+	openevseReadyTimeout = request.Timeout
+)
 
 func init() {
 	registry.AddCtx("openevse", NewOpenEVSEFromConfig)
@@ -57,7 +80,7 @@ func NewOpenEVSEFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		URI      string
 		User     string
 		Password string
-		Cache    time.Duration // deprecated, state is pushed by the firmware
+		Cache    time.Duration // TODO deprecated, state is pushed by the firmware
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -80,6 +103,10 @@ func NewOpenEVSE(ctx context.Context, uri, user, password string) (api.Charger, 
 		Helper: request.NewHelper(log),
 		log:    log,
 		uri:    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
+		ready:  make(chan struct{}),
+
+		pingInterval: openevsePingInterval,
+		readTimeout:  openevseReadTimeout,
 	}
 
 	if user != "" && password != "" {
@@ -92,7 +119,26 @@ func NewOpenEVSE(ctx context.Context, uri, user, password string) (api.Charger, 
 	}
 	c.wsURI = wsURI
 
+	ctx, cancel := context.WithCancel(ctx)
+	c.cancel = cancel
+
 	go c.run(ctx)
+
+	// wait for the first usable frame so that a wrong host, wrong password or a
+	// firmware without the claims API fails construction instead of silently
+	// never delivering state
+	select {
+	case <-c.ready:
+	case <-ctx.Done():
+		c.cancel()
+		return nil, ctx.Err()
+	case <-time.After(openevseReadyTimeout):
+		c.cancel()
+		if err := c.lastError(); err != nil {
+			return nil, fmt.Errorf("websocket: %w: %w", api.ErrTimeout, err)
+		}
+		return nil, fmt.Errorf("websocket: %w", api.ErrTimeout)
+	}
 
 	// evcc does not cancel a device's context on shutdown - ctx lives for the device
 	// lifetime and is only cancelled on failure - so run()'s deferred release() never
@@ -118,6 +164,8 @@ func (c *OpenEVSE) run(ctx context.Context) {
 
 		conn, _, err := websocket.Dial(ctx, c.wsURI, &websocket.DialOptions{HTTPClient: c.Client})
 		if err != nil {
+			c.setError(err)
+
 			if ctx.Err() == nil {
 				c.log.ERROR.Printf("websocket: %v", err)
 			}
@@ -131,8 +179,12 @@ func (c *OpenEVSE) run(ctx context.Context) {
 			continue
 		}
 
-		if err := c.handleConnection(ctx, conn, bo); err != nil && ctx.Err() == nil {
-			c.log.ERROR.Printf("websocket: %v", err)
+		if err := c.handleConnection(ctx, conn, bo); err != nil {
+			c.setError(err)
+
+			if ctx.Err() == nil {
+				c.log.ERROR.Printf("websocket: %v", err)
+			}
 		}
 
 		c.setConnected(false)
@@ -152,7 +204,7 @@ func (c *OpenEVSE) handleConnection(ctx context.Context, conn *websocket.Conn, b
 
 	// keepalive: the firmware answers {"ping":1} with {"pong":1}
 	go func() {
-		ticker := time.NewTicker(openevsePingInterval)
+		ticker := time.NewTicker(c.pingInterval)
 		defer ticker.Stop()
 
 		for {
@@ -161,6 +213,7 @@ func (c *OpenEVSE) handleConnection(ctx context.Context, conn *websocket.Conn, b
 				return
 			case <-ticker.C:
 				if err := conn.Write(ctx, websocket.MessageText, []byte(`{"ping":1}`)); err != nil {
+					c.log.ERROR.Printf("websocket: ping: %v", err)
 					cancel()
 					return
 				}
@@ -170,7 +223,13 @@ func (c *OpenEVSE) handleConnection(ctx context.Context, conn *websocket.Conn, b
 
 	first := true
 	for {
-		typ, b, err := conn.Read(ctx)
+		// bound every read: the firmware answers each ping, so a healthy connection
+		// always delivers a frame well inside this window. A half-open connection
+		// times out here instead of blocking forever with stale state marked valid.
+		readCtx, readCancel := context.WithTimeout(ctx, c.readTimeout)
+		typ, b, err := conn.Read(readCtx)
+		readCancel()
+
 		if err != nil {
 			return err
 		}
@@ -196,11 +255,22 @@ func (c *OpenEVSE) handleConnection(ctx context.Context, conn *websocket.Conn, b
 			bo.Reset()
 			c.setConnected(true)
 
-			go func() {
-				if err := c.reassertClaim(); err != nil {
-					c.log.WARN.Printf("reassert claim: %v", err)
-				}
-			}()
+			// the first connection of the charger's lifetime releases the constructor;
+			// no claim can have been written before it returns, so only a reconnect
+			// (a firmware reboot drops all claims) has anything to re-assert
+			var initial bool
+			c.readyOnce.Do(func() {
+				initial = true
+				close(c.ready)
+			})
+
+			if !initial {
+				go func() {
+					if err := c.reassertClaim(); err != nil {
+						c.log.WARN.Printf("reassert claim: %v", err)
+					}
+				}()
+			}
 		}
 	}
 }
@@ -216,6 +286,19 @@ func (c *OpenEVSE) setConnected(connected bool) {
 	c.mu.Lock()
 	c.connected = connected
 	c.mu.Unlock()
+}
+
+func (c *OpenEVSE) setError(err error) {
+	c.mu.Lock()
+	c.err = err
+	c.mu.Unlock()
+}
+
+// lastError returns the most recent dial or read error, nil if there was none yet
+func (c *OpenEVSE) lastError() error {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.err
 }
 
 // get returns the current status or an error while the websocket is down
@@ -363,7 +446,9 @@ func (c *OpenEVSE) release() {
 
 var _ api.CurrentGetter = (*OpenEVSE)(nil)
 
-// GetMaxCurrent implements the api.CurrentGetter interface
+// GetMaxCurrent implements the api.CurrentGetter interface. `pilot` is the firmware's
+// arbitration result across all claims, so a higher-priority claim (manual override,
+// limit) shows through here by design.
 func (c *OpenEVSE) GetMaxCurrent() (float64, error) {
 	res, err := c.get()
 	return res.Pilot, err
