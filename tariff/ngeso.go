@@ -18,6 +18,7 @@ type Ngeso struct {
 	regionId       string
 	regionPostcode string
 	data           *util.Monitor[api.Rates]
+	timer          *refreshTimer
 }
 
 var _ api.Tariff = (*Ngeso)(nil)
@@ -28,6 +29,7 @@ func init() {
 
 func NewNgesoFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
+		schedule `mapstructure:",squash"`
 		Region   string
 		Postcode string
 	}
@@ -40,11 +42,17 @@ func NewNgesoFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, errors.New("cannot define region and postcode simultaneously")
 	}
 
+	timer, err := cc.schedule.timer(time.Hour)
+	if err != nil {
+		return nil, err
+	}
+
 	t := &Ngeso{
 		log:            util.NewLogger("ngeso"),
 		regionId:       cc.Region,
 		regionPostcode: cc.Postcode,
-		data:           util.NewMonitor[api.Rates](2 * time.Hour),
+		data:           util.NewMonitor[api.Rates](max(2*time.Hour, timer.window())),
+		timer:          timer,
 	}
 
 	return runOrError(t)
@@ -69,7 +77,8 @@ func (t *Ngeso) run(done chan error) {
 	}
 
 	// Data updated by ESO every half hour, but we only need data every hour to stay current.
-	for tick := time.Tick(time.Hour); ; <-tick {
+	defer t.timer.Stop()
+	for tick := t.timer.C(); ; <-tick {
 		res, err := backoff.RetryWithData(func() (ngeso.CarbonForecastResponse, error) {
 			res, err := tReq.DoRequest(client)
 			return res, backoffPermanentError(err)

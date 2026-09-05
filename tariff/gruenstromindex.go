@@ -17,9 +17,10 @@ import (
 
 type GrünStromIndex struct {
 	*request.Helper
-	log  *util.Logger
-	zip  string
-	data *util.Monitor[api.Rates]
+	log   *util.Logger
+	zip   string
+	data  *util.Monitor[api.Rates]
+	timer *refreshTimer
 }
 
 var _ api.Tariff = (*GrünStromIndex)(nil)
@@ -30,11 +31,17 @@ func init() {
 
 func NewGrünStromIndexFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
-		Zip   string
-		Token string
+		schedule `mapstructure:",squash"`
+		Zip      string
+		Token    string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	timer, err := cc.schedule.timer(time.Hour)
+	if err != nil {
 		return nil, err
 	}
 
@@ -44,7 +51,8 @@ func NewGrünStromIndexFromConfig(other map[string]any) (api.Tariff, error) {
 		log:    log,
 		zip:    cc.Zip,
 		Helper: request.NewHelper(log),
-		data:   util.NewMonitor[api.Rates](2 * time.Hour),
+		data:   util.NewMonitor[api.Rates](max(2*time.Hour, timer.window())),
+		timer:  timer,
 	}
 
 	t.Client.Transport = &oauth2.Transport{
@@ -59,7 +67,8 @@ func (t *GrünStromIndex) run(done chan error) {
 	var once sync.Once
 	uri := fmt.Sprintf("https://api.corrently.io/v2.0/gsi/prediction?zip=%s", t.zip)
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	defer t.timer.Stop()
+	for tick := t.timer.C(); ; <-tick {
 		var res corrently.Forecast
 
 		err := backoff.Retry(func() error {

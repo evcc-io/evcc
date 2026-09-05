@@ -14,8 +14,9 @@ import (
 
 type SmartEnergy struct {
 	*embed
-	log  *util.Logger
-	data *util.Monitor[api.Rates]
+	log   *util.Logger
+	data  *util.Monitor[api.Rates]
+	timer *refreshTimer
 }
 
 var _ api.Tariff = (*SmartEnergy)(nil)
@@ -26,7 +27,8 @@ func init() {
 
 func NewSmartEnergyFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
-		embed `mapstructure:",squash"`
+		embed    `mapstructure:",squash"`
+		schedule `mapstructure:",squash"`
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -37,10 +39,16 @@ func NewSmartEnergyFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, err
 	}
 
+	timer, err := cc.schedule.timer(time.Hour)
+	if err != nil {
+		return nil, err
+	}
+
 	t := &SmartEnergy{
 		embed: &cc.embed,
 		log:   util.NewLogger("smartenergy"),
-		data:  util.NewMonitor[api.Rates](2 * time.Hour),
+		data:  util.NewMonitor[api.Rates](max(2*time.Hour, timer.window())),
+		timer: timer,
 	}
 
 	return runOrError(t)
@@ -50,7 +58,8 @@ func (t *SmartEnergy) run(done chan error) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	defer t.timer.Stop()
+	for tick := t.timer.C(); ; <-tick {
 		var res smartenergy.Prices
 
 		if err := backoff.Retry(func() error {

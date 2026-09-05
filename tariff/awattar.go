@@ -16,9 +16,10 @@ import (
 
 type Awattar struct {
 	*embed
-	log  *util.Logger
-	uri  string
-	data *util.Monitor[api.Rates]
+	log   *util.Logger
+	uri   string
+	data  *util.Monitor[api.Rates]
+	timer *refreshTimer
 }
 
 var _ api.Tariff = (*Awattar)(nil)
@@ -29,8 +30,9 @@ func init() {
 
 func NewAwattarFromConfig(other map[string]any) (api.Tariff, error) {
 	cc := struct {
-		embed  `mapstructure:",squash"`
-		Region string
+		embed    `mapstructure:",squash"`
+		schedule `mapstructure:",squash"`
+		Region   string
 	}{
 		Region: "DE",
 	}
@@ -43,11 +45,17 @@ func NewAwattarFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, err
 	}
 
+	timer, err := cc.schedule.timer(time.Hour)
+	if err != nil {
+		return nil, err
+	}
+
 	t := &Awattar{
 		embed: &cc.embed,
 		log:   util.NewLogger("awattar"),
 		uri:   fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
-		data:  util.NewMonitor[api.Rates](2 * time.Hour),
+		data:  util.NewMonitor[api.Rates](max(2*time.Hour, timer.window())),
+		timer: timer,
 	}
 
 	return runOrError(t)
@@ -58,7 +66,8 @@ func (t *Awattar) run(done chan error) {
 
 	client := request.NewHelper(t.log)
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	defer t.timer.Stop()
+	for tick := t.timer.C(); ; <-tick {
 		var res awattar.Prices
 
 		// Awattar publishes prices for next day around 13:00 CET/CEST, so up to 35h of price data are available

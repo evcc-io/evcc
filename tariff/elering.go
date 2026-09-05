@@ -21,6 +21,7 @@ type Elering struct {
 	log    *util.Logger
 	region string
 	data   *util.Monitor[api.Rates]
+	timer  *refreshTimer
 }
 
 var _ api.Tariff = (*Elering)(nil)
@@ -31,8 +32,9 @@ func init() {
 
 func NewEleringFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
-		embed  `mapstructure:",squash"`
-		Region string
+		embed    `mapstructure:",squash"`
+		schedule `mapstructure:",squash"`
+		Region   string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -47,11 +49,17 @@ func NewEleringFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, err
 	}
 
+	timer, err := cc.schedule.timer(time.Hour)
+	if err != nil {
+		return nil, err
+	}
+
 	t := &Elering{
 		embed:  &cc.embed,
 		log:    util.NewLogger("elering"),
 		region: strings.ToLower(cc.Region),
-		data:   util.NewMonitor[api.Rates](2 * time.Hour),
+		data:   util.NewMonitor[api.Rates](max(2*time.Hour, timer.window())),
+		timer:  timer,
 	}
 
 	return runOrError(t)
@@ -61,7 +69,8 @@ func (t *Elering) run(done chan error) {
 	var once sync.Once
 	client := request.NewHelper(t.log)
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	defer t.timer.Stop()
+	for tick := t.timer.C(); ; <-tick {
 		var res elering.NpsPrice
 
 		ts := time.Now().Truncate(time.Hour)

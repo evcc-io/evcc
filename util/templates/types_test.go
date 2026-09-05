@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.yaml.in/yaml/v4"
 )
 
 func TestParamLogic(t *testing.T) {
@@ -73,5 +74,19 @@ func TestParamMarshal(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, `{"Name":"","Description":"foo","Help":"","Type":"String"}`, string(b))
 		}
+	}
+}
+
+func TestParamYamlQuoteDuration(t *testing.T) {
+	p := Param{Name: "interval", Type: TypeDuration}
+
+	for _, value := range []string{"3h", "15m", "15 0 * * *", "*/15 * * * *", "@daily", "@hourly"} {
+		rendered := "interval: " + p.yamlQuote(value)
+
+		var out struct {
+			Interval string `yaml:"interval"`
+		}
+		require.NoError(t, yaml.Unmarshal([]byte(rendered), &out), "value %q rendered invalid yaml: %q", value, rendered)
+		assert.Equal(t, value, out.Interval, "value %q did not round-trip", value)
 	}
 }

@@ -22,6 +22,7 @@ type Solcast struct {
 	site   string
 	fromTo FromTo
 	data   *util.Monitor[api.Rates]
+	timer  *refreshTimer
 }
 
 var _ api.Tariff = (*Solcast)(nil)
@@ -31,16 +32,19 @@ func init() {
 }
 
 func NewSolcastFromConfig(other map[string]any) (api.Tariff, error) {
-	cc := struct {
+	var cc struct {
 		Site     string
 		Token    string
-		Interval time.Duration
+		schedule `mapstructure:",squash"`
 		FromTo   `mapstructure:",squash"`
-	}{
-		Interval: 3 * time.Hour,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	timer, err := cc.schedule.timer(3 * time.Hour)
+	if err != nil {
 		return nil, err
 	}
 
@@ -59,13 +63,14 @@ func NewSolcastFromConfig(other map[string]any) (api.Tariff, error) {
 		site:   cc.Site,
 		Helper: request.NewHelper(log),
 		fromTo: cc.FromTo,
-		data:   util.NewMonitor[api.Rates](2 * cc.Interval),
+		timer:  timer,
+		data:   util.NewMonitor[api.Rates](timer.window()),
 	}
 
 	t.Client.Transport = transport.BearerAuth(cc.Token, t.Client.Transport)
 
 	done := make(chan error)
-	go t.run(cc.Interval, done)
+	go t.run(done)
 
 	if err := <-done; err != nil {
 		return nil, err
@@ -74,10 +79,11 @@ func NewSolcastFromConfig(other map[string]any) (api.Tariff, error) {
 	return t, nil
 }
 
-func (t *Solcast) run(interval time.Duration, done chan error) {
+func (t *Solcast) run(done chan error) {
 	var once sync.Once
 
-	for ; true; <-time.Tick(interval) {
+	defer t.timer.Stop()
+	for tick := t.timer.C(); ; <-tick {
 		// ensure we don't run when not needed, but execute once at startup
 		select {
 		case <-t.data.Done():

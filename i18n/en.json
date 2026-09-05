@@ -319,6 +319,8 @@
       "titleEdit": "Edit Additional Meter"
     },
     "form": {
+      "cron": "cron",
+      "cronInvalid": "Enter a cron expression like 15 0 * * * or @daily, not a duration",
       "danger": "Danger",
       "deprecated": "deprecated",
       "durationUnit": "Time unit for {label}",

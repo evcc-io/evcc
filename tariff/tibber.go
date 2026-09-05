@@ -20,6 +20,7 @@ type Tibber struct {
 	homeID string
 	client *tibber.Client
 	data   *util.Monitor[api.Rates]
+	timer  *refreshTimer
 }
 
 var _ api.Tariff = (*Tibber)(nil)
@@ -30,9 +31,10 @@ func init() {
 
 func NewTibberFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
-		embed  `mapstructure:",squash"`
-		Token  string
-		HomeID string
+		embed    `mapstructure:",squash"`
+		schedule `mapstructure:",squash"`
+		Token    string
+		HomeID   string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -47,6 +49,11 @@ func NewTibberFromConfig(other map[string]any) (api.Tariff, error) {
 		return nil, err
 	}
 
+	timer, err := cc.schedule.timer(time.Hour)
+	if err != nil {
+		return nil, err
+	}
+
 	log := util.NewLogger("tibber").Redact(cc.Token, cc.HomeID)
 
 	t := &Tibber{
@@ -54,7 +61,8 @@ func NewTibberFromConfig(other map[string]any) (api.Tariff, error) {
 		log:    log,
 		homeID: cc.HomeID,
 		client: tibber.NewClient(log, cc.Token),
-		data:   util.NewMonitor[api.Rates](2 * time.Hour),
+		data:   util.NewMonitor[api.Rates](max(2*time.Hour, timer.window())),
+		timer:  timer,
 	}
 
 	if t.homeID == "" {
@@ -76,7 +84,8 @@ func (t *Tibber) run(done chan error) {
 		"id": graphql.ID(t.homeID),
 	}
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	defer t.timer.Stop()
+	for tick := t.timer.C(); ; <-tick {
 		var res struct {
 			Viewer struct {
 				Home struct {

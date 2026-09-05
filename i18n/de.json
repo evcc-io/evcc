@@ -319,6 +319,8 @@
       "titleEdit": "Zusätzlichen Zähler bearbeiten"
     },
     "form": {
+      "cron": "Cron",
+      "cronInvalid": "Cron-Ausdruck wie 15 0 * * * oder @daily eingeben, keine Dauer",
       "danger": "Achtung",
       "deprecated": "veraltet",
       "durationUnit": "Zeiteinheit für {label}",

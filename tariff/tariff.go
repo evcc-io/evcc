@@ -20,6 +20,7 @@ type Tariff struct {
 	data   *util.Monitor[api.Rates]
 	priceG func() (float64, error)
 	typ    api.TariffType
+	timer  *refreshTimer
 }
 
 var _ api.Tariff = (*Tariff)(nil)
@@ -31,17 +32,21 @@ func init() {
 func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Tariff, error) {
 	cc := struct {
 		embed    `mapstructure:",squash"`
+		schedule `mapstructure:",squash"`
 		Price    *plugin.Config
 		Forecast *plugin.Config
 		Type     api.TariffType `mapstructure:"tariff"`
-		Interval time.Duration
 		Cache    time.Duration
 	}{
-		Interval: time.Hour,
-		Cache:    15 * time.Minute,
+		Cache: 15 * time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	timer, err := cc.schedule.timer(time.Hour)
+	if err != nil {
 		return nil, err
 	}
 
@@ -71,12 +76,13 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.T
 		embed:  &cc.embed,
 		typ:    cc.Type,
 		priceG: priceG,
-		data:   util.NewMonitor[api.Rates](2 * cc.Interval),
+		timer:  timer,
+		data:   util.NewMonitor[api.Rates](timer.window()),
 	}
 
 	if forecastG != nil {
 		done := make(chan error)
-		go t.run(forecastG, done, cc.Interval)
+		go t.run(forecastG, done)
 
 		if err := <-done; err != nil {
 			return nil, err
@@ -86,10 +92,11 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.T
 	return t, nil
 }
 
-func (t *Tariff) run(forecastG func() (string, error), done chan error, interval time.Duration) {
+func (t *Tariff) run(forecastG func() (string, error), done chan error) {
 	var once sync.Once
 
-	for tick := time.Tick(interval); ; <-tick {
+	defer t.timer.Stop()
+	for tick := t.timer.C(); ; <-tick {
 		var data api.Rates
 		if err := backoff.Retry(func() error {
 			s, err := forecastG()

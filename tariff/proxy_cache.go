@@ -21,12 +21,12 @@ type cachingProxy struct {
 	mu   sync.Mutex
 	hash [32]byte
 
-	key      string
-	ctx      context.Context
-	typ      string
-	config   map[string]any
-	interval time.Duration
-	updated  time.Time
+	key     string
+	ctx     context.Context
+	typ     string
+	config  map[string]any
+	timer   *refreshTimer
+	updated time.Time
 
 	cached *cached
 	tariff api.Tariff
@@ -41,23 +41,26 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 		tariffType = template
 	}
 
-	cc := struct {
-		Interval time.Duration
+	var cc struct {
+		schedule `mapstructure:",squash"`
 		Other    map[string]any `mapstructure:",remain"`
-	}{
-		Interval: defaultInterval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
+	timer, err := cc.schedule.timer(defaultInterval)
+	if err != nil {
+		return nil, err
+	}
+
 	p := &cachingProxy{
-		ctx:      ctx,
-		typ:      typ,
-		config:   other,
-		interval: cc.Interval,
-		key:      tariffType + "-" + cacheKey(typ, other),
+		ctx:    ctx,
+		typ:    typ,
+		config: other,
+		timer:  timer,
+		key:    tariffType + "-" + cacheKey(typ, other),
 	}
 
 	// check if cached data is up to date
@@ -162,8 +165,8 @@ func (p *cachingProxy) cacheGet() (*cached, error) {
 		return nil, errors.New("no rates")
 	}
 
-	if d := time.Since(p.cached.Updated); d > p.interval {
-		return nil, fmt.Errorf("cache outdated: %v", d.Round(time.Second))
+	if p.timer.stale(p.cached.Updated) {
+		return nil, fmt.Errorf("cache outdated: %v", time.Since(p.cached.Updated).Round(time.Second))
 	}
 
 	return p.cached, nil
@@ -172,7 +175,7 @@ func (p *cachingProxy) cacheGet() (*cached, error) {
 // cachePut persists rates if changed or the update interval has elapsed
 func (p *cachingProxy) cachePut(typ api.TariffType, rates api.Rates) error {
 	hash := sha256.Sum256(fmt.Append(nil, rates))
-	if hash == p.hash && time.Since(p.updated) < p.interval {
+	if hash == p.hash && !p.timer.stale(p.updated) {
 		return nil
 	}
 

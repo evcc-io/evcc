@@ -94,7 +94,7 @@
 				:list="datalistId"
 				:type="inputType"
 				:step="step"
-				:placeholder="placeholder"
+				:placeholder="effectivePlaceholder"
 				:required="required"
 				:pattern="patternRegex"
 				:title="patternTitle"
@@ -191,13 +191,40 @@ export default {
 	},
 	emits: ["update:modelValue"],
 	data: () => {
-		return { selectMode: false, unitOverride: null };
+		return { selectMode: false, unitOverride: null, cronMode: false };
+	},
+	created() {
+		// start in cron mode if the existing value isn't a parseable duration
+		if (
+			this.cronCapable &&
+			typeof this.modelValue === "string" &&
+			this.modelValue !== "" &&
+			parseGoDuration(this.modelValue) === null
+		) {
+			this.cronMode = true;
+		}
 	},
 	computed: {
+		cronCapable() {
+			return this.property === "interval" && this.type === "Duration";
+		},
+		cronActive() {
+			return this.cronCapable && this.cronMode;
+		},
+		effectivePlaceholder() {
+			if (this.cronActive) return "15 0 * * *";
+			return this.placeholder;
+		},
+		// loose guardrail matching cron forms while rejecting a plain duration like "1h"; backend is authoritative
+		cronPattern() {
+			return "@(annually|yearly|monthly|weekly|daily|midnight|hourly|reboot)|@every\\s+\\S+|(\\S+\\s+){4,5}\\S+";
+		},
 		patternRegex() {
+			if (this.cronActive) return this.cronPattern;
 			return this.pattern.Regex || null;
 		},
 		patternTitle() {
+			if (this.cronActive) return this.$t("config.form.cronInvalid");
 			const examples = this.pattern.Examples || [];
 			if (!examples.length) return null;
 			return examples.join(", ");
@@ -229,6 +256,9 @@ export default {
 			if (this.masked) {
 				return "password";
 			}
+			if (this.cronActive) {
+				return "text";
+			}
 			if (["Int", "Float", "Duration", "PricePerKWh"].includes(this.type)) {
 				return "number";
 			}
@@ -254,6 +284,9 @@ export default {
 			return result;
 		},
 		endAlign() {
+			if (this.cronActive) {
+				return false;
+			}
 			return ["Int", "Float", "Duration", "PricePerKWh"].includes(this.type);
 		},
 		step() {
@@ -263,6 +296,9 @@ export default {
 			return null;
 		},
 		unitValue() {
+			if (this.cronActive) {
+				return this.$t("config.form.cron");
+			}
 			if (this.type === "Duration") {
 				return this.fmtDurationUnit(this.value, this.durationUnit);
 			}
@@ -324,16 +360,27 @@ export default {
 			return displayFactors[this.durationUnit] ?? 1;
 		},
 		durationUnit() {
+			if (this.cronActive) {
+				return "cron";
+			}
 			return this.unitOverride ?? goDurationUnit(this.modelValue) ?? this.unit ?? "second";
 		},
 		unitSelectable() {
 			return this.type === "Duration" && !this.legacyDuration && !this.disabled;
 		},
 		unitOptions() {
-			return durationUnits.map((value) => ({
+			const options = durationUnits.map((value) => ({
 				value,
 				name: this.fmtDurationUnit(2, value),
 			}));
+			// interval fields can also be driven by a cron expression
+			if (this.cronCapable) {
+				options.push({
+					value: "cron",
+					name: this.$t("config.form.cron"),
+				});
+			}
+			return options;
 		},
 		selectOptions() {
 			if (this.chargeModes) {
@@ -362,6 +409,10 @@ export default {
 		},
 		value: {
 			get() {
+				if (this.cronActive) {
+					return this.modelValue ?? "";
+				}
+
 				if (this.select && this.modelValue == null) {
 					return "";
 				}
@@ -398,6 +449,11 @@ export default {
 				return this.modelValue;
 			},
 			set(value) {
+				if (this.cronActive) {
+					this.$emit("update:modelValue", value);
+					return;
+				}
+
 				let newValue = value;
 
 				if (this.scale) {
@@ -430,11 +486,27 @@ export default {
 			return val;
 		},
 		onUnitChange(e) {
+			const unit = e.target.value;
+
+			if (unit === "cron") {
+				this.cronMode = true;
+				this.$emit("update:modelValue", "");
+				return;
+			}
+
+			// a cron expression can't convert to a duration, so clear it
+			if (this.cronActive) {
+				this.cronMode = false;
+				this.unitOverride = unit;
+				this.$emit("update:modelValue", "");
+				return;
+			}
+
 			// read display value before override changes the getter's unit
 			const num = this.value;
-			this.unitOverride = e.target.value;
+			this.unitOverride = unit;
 			if (typeof num === "number") {
-				this.$emit("update:modelValue", toGoDuration(num, this.unitOverride));
+				this.$emit("update:modelValue", toGoDuration(num, unit));
 			}
 		},
 		onFieldChange(e) {

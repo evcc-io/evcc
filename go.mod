@@ -82,6 +82,7 @@ require (
 	github.com/prometheus/client_golang v1.24.1
 	github.com/prometheus/common v0.71.0
 	github.com/robertkrimen/otto v0.5.1
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/samber/lo v1.53.0
 	github.com/sandrolain/httpcache v1.4.2
 	github.com/sethvargo/go-password v0.4.0

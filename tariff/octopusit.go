@@ -19,6 +19,7 @@ type OctopusIt struct {
 	log       *util.Logger
 	gqlClient *krakengql.Client
 	data      *util.Monitor[api.Rates]
+	timer     *refreshTimer
 }
 
 var _ api.Tariff = (*OctopusIt)(nil)
@@ -41,6 +42,7 @@ func NewOctopusItFromConfig(other map[string]any) (api.Tariff, error) {
 // Split out to allow for testing.
 func buildOctopusItFromConfig(other map[string]any) (*OctopusIt, error) {
 	var cc struct {
+		schedule      `mapstructure:",squash"`
 		Email         string
 		Password      string
 		AccountNumber string
@@ -62,6 +64,11 @@ func buildOctopusItFromConfig(other map[string]any) (*OctopusIt, error) {
 		return nil, errors.New("missing account number")
 	}
 
+	timer, err := cc.schedule.timer(time.Hour)
+	if err != nil {
+		return nil, err
+	}
+
 	log := util.NewLogger("octopus-it")
 
 	gqlClient, err := krakengql.NewClient(log, krakengql.ItBaseURI, cc.Email, cc.Password, cc.AccountNumber)
@@ -72,7 +79,8 @@ func buildOctopusItFromConfig(other map[string]any) (*OctopusIt, error) {
 	t := &OctopusIt{
 		log:       log,
 		gqlClient: gqlClient,
-		data:      util.NewMonitor[api.Rates](2 * time.Hour),
+		data:      util.NewMonitor[api.Rates](max(2*time.Hour, timer.window())),
+		timer:     timer,
 	}
 
 	return t, nil
@@ -81,7 +89,8 @@ func buildOctopusItFromConfig(other map[string]any) (*OctopusIt, error) {
 func (t *OctopusIt) run(done chan error) {
 	var once sync.Once
 
-	for tick := time.Tick(time.Hour); ; <-tick {
+	defer t.timer.Stop()
+	for tick := t.timer.C(); ; <-tick {
 		var rates []RatePeriod
 
 		if err := backoff.Retry(func() error {
