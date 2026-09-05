@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _FeatureName = "CoarseCurrentIntegratedDeviceSwitchDeviceHeatingContinuousAverageCacheableOfflineRetryableStreamingWelcomeChargeClimaterDisabledAutodetectDisabledWakeUpDisabled"
+const _FeatureName = "CoarseCurrentIntegratedDeviceSwitchDeviceHeatingDemandDailyDemandWeekdayDemandTemperatureContinuousAverageCacheableOfflineRetryableStreamingWelcomeChargeClimaterDisabledAutodetectDisabledWakeUpDisabled"
 
-var _FeatureIndex = [...]uint8{0, 13, 29, 41, 48, 58, 65, 74, 81, 90, 99, 112, 128, 146, 160}
+var _FeatureIndex = [...]uint8{0, 13, 29, 41, 48, 59, 72, 89, 99, 106, 115, 122, 131, 140, 153, 169, 187, 201}
 
-const _FeatureLowerName = "coarsecurrentintegrateddeviceswitchdeviceheatingcontinuousaveragecacheableofflineretryablestreamingwelcomechargeclimaterdisabledautodetectdisabledwakeupdisabled"
+const _FeatureLowerName = "coarsecurrentintegrateddeviceswitchdeviceheatingdemanddailydemandweekdaydemandtemperaturecontinuousaveragecacheableofflineretryablestreamingwelcomechargeclimaterdisabledautodetectdisabledwakeupdisabled"
 
 func (i Feature) String() string {
 	i -= 1
@@ -29,19 +29,22 @@ func _FeatureNoOp() {
 	_ = x[IntegratedDevice-(2)]
 	_ = x[SwitchDevice-(3)]
 	_ = x[Heating-(4)]
-	_ = x[Continuous-(5)]
-	_ = x[Average-(6)]
-	_ = x[Cacheable-(7)]
-	_ = x[Offline-(8)]
-	_ = x[Retryable-(9)]
-	_ = x[Streaming-(10)]
-	_ = x[WelcomeCharge-(11)]
-	_ = x[ClimaterDisabled-(12)]
-	_ = x[AutodetectDisabled-(13)]
-	_ = x[WakeUpDisabled-(14)]
+	_ = x[DemandDaily-(5)]
+	_ = x[DemandWeekday-(6)]
+	_ = x[DemandTemperature-(7)]
+	_ = x[Continuous-(8)]
+	_ = x[Average-(9)]
+	_ = x[Cacheable-(10)]
+	_ = x[Offline-(11)]
+	_ = x[Retryable-(12)]
+	_ = x[Streaming-(13)]
+	_ = x[WelcomeCharge-(14)]
+	_ = x[ClimaterDisabled-(15)]
+	_ = x[AutodetectDisabled-(16)]
+	_ = x[WakeUpDisabled-(17)]
 }
 
-var _FeatureValues = []Feature{CoarseCurrent, IntegratedDevice, SwitchDevice, Heating, Continuous, Average, Cacheable, Offline, Retryable, Streaming, WelcomeCharge, ClimaterDisabled, AutodetectDisabled, WakeUpDisabled}
+var _FeatureValues = []Feature{CoarseCurrent, IntegratedDevice, SwitchDevice, Heating, DemandDaily, DemandWeekday, DemandTemperature, Continuous, Average, Cacheable, Offline, Retryable, Streaming, WelcomeCharge, ClimaterDisabled, AutodetectDisabled, WakeUpDisabled}
 
 var _FeatureNameToValueMap = map[string]Feature{
 	_FeatureName[0:13]:         CoarseCurrent,
@@ -52,26 +55,32 @@ var _FeatureNameToValueMap = map[string]Feature{
 	_FeatureLowerName[29:41]:   SwitchDevice,
 	_FeatureName[41:48]:        Heating,
 	_FeatureLowerName[41:48]:   Heating,
-	_FeatureName[48:58]:        Continuous,
-	_FeatureLowerName[48:58]:   Continuous,
-	_FeatureName[58:65]:        Average,
-	_FeatureLowerName[58:65]:   Average,
-	_FeatureName[65:74]:        Cacheable,
-	_FeatureLowerName[65:74]:   Cacheable,
-	_FeatureName[74:81]:        Offline,
-	_FeatureLowerName[74:81]:   Offline,
-	_FeatureName[81:90]:        Retryable,
-	_FeatureLowerName[81:90]:   Retryable,
-	_FeatureName[90:99]:        Streaming,
-	_FeatureLowerName[90:99]:   Streaming,
-	_FeatureName[99:112]:       WelcomeCharge,
-	_FeatureLowerName[99:112]:  WelcomeCharge,
-	_FeatureName[112:128]:      ClimaterDisabled,
-	_FeatureLowerName[112:128]: ClimaterDisabled,
-	_FeatureName[128:146]:      AutodetectDisabled,
-	_FeatureLowerName[128:146]: AutodetectDisabled,
-	_FeatureName[146:160]:      WakeUpDisabled,
-	_FeatureLowerName[146:160]: WakeUpDisabled,
+	_FeatureName[48:59]:        DemandDaily,
+	_FeatureLowerName[48:59]:   DemandDaily,
+	_FeatureName[59:72]:        DemandWeekday,
+	_FeatureLowerName[59:72]:   DemandWeekday,
+	_FeatureName[72:89]:        DemandTemperature,
+	_FeatureLowerName[72:89]:   DemandTemperature,
+	_FeatureName[89:99]:        Continuous,
+	_FeatureLowerName[89:99]:   Continuous,
+	_FeatureName[99:106]:       Average,
+	_FeatureLowerName[99:106]:  Average,
+	_FeatureName[106:115]:      Cacheable,
+	_FeatureLowerName[106:115]: Cacheable,
+	_FeatureName[115:122]:      Offline,
+	_FeatureLowerName[115:122]: Offline,
+	_FeatureName[122:131]:      Retryable,
+	_FeatureLowerName[122:131]: Retryable,
+	_FeatureName[131:140]:      Streaming,
+	_FeatureLowerName[131:140]: Streaming,
+	_FeatureName[140:153]:      WelcomeCharge,
+	_FeatureLowerName[140:153]: WelcomeCharge,
+	_FeatureName[153:169]:      ClimaterDisabled,
+	_FeatureLowerName[153:169]: ClimaterDisabled,
+	_FeatureName[169:187]:      AutodetectDisabled,
+	_FeatureLowerName[169:187]: AutodetectDisabled,
+	_FeatureName[187:201]:      WakeUpDisabled,
+	_FeatureLowerName[187:201]: WakeUpDisabled,
 }
 
 var _FeatureNames = []string{
@@ -79,16 +88,19 @@ var _FeatureNames = []string{
 	_FeatureName[13:29],
 	_FeatureName[29:41],
 	_FeatureName[41:48],
-	_FeatureName[48:58],
-	_FeatureName[58:65],
-	_FeatureName[65:74],
-	_FeatureName[74:81],
-	_FeatureName[81:90],
-	_FeatureName[90:99],
-	_FeatureName[99:112],
-	_FeatureName[112:128],
-	_FeatureName[128:146],
-	_FeatureName[146:160],
+	_FeatureName[48:59],
+	_FeatureName[59:72],
+	_FeatureName[72:89],
+	_FeatureName[89:99],
+	_FeatureName[99:106],
+	_FeatureName[106:115],
+	_FeatureName[115:122],
+	_FeatureName[122:131],
+	_FeatureName[131:140],
+	_FeatureName[140:153],
+	_FeatureName[153:169],
+	_FeatureName[169:187],
+	_FeatureName[187:201],
 }
 
 // FeatureString retrieves an enum value from the enum constants string name.
