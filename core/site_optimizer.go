@@ -164,13 +164,13 @@ func suggestionEvent(detail batteryDetail, s types.Suggestion) messenger.Event {
 // maps cleanly onto the discrete battery mode / loadpoint intent that control would later apply.
 // An idle battery is interpreted from the grid flow: importing means discharge is withheld
 // (hold), exporting means charging is withheld (holdcharge).
-func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, slot int, gridImport, gridExport float32, slotHours float64) types.Suggestion {
-	if slot < 0 || slotHours <= 0 || slot >= len(res.ChargingPower) || slot >= len(res.DischargingPower) {
+func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, gridImport, gridExport float32, slotHours float64) types.Suggestion {
+	if slotHours <= 0 || len(res.ChargingPower) == 0 || len(res.DischargingPower) == 0 {
 		return types.Suggestion{}
 	}
 
-	charge := float64(res.ChargingPower[slot]) / slotHours
-	discharge := float64(res.DischargingPower[slot]) / slotHours
+	charge := float64(res.ChargingPower[0]) / slotHours
+	discharge := float64(res.DischargingPower[0]) / slotHours
 	gridImporting := gridImport > 0
 	gridExporting := gridExport > 0
 
@@ -649,39 +649,39 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 
 	// publish before the status check so the optimizer page stays available
 	// for diagnosing non-optimal results
-	site.publish("evopt", optimizerResult{
+	result := optimizerResult{
 		Updated: time.Now(),
 		Req:     req,
 		Res:     *resp.JSON200,
 		Details: details,
-	})
+	}
+	site.publish("evopt", result)
 
 	// feasible results are usable, they are just not proven optimal
 	if status := resp.JSON200.Status; status != optimizer.Optimal && status != optimizer.Feasible {
 		return errors.New(string(status))
 	}
 
-	slot := activeOptimizerSlot(details.Timestamps, req.TimeSeries.Dt, time.Now())
-	if slot < 0 {
-		return errors.New("optimizer result expired")
+	ends, err := result.pruneExpired(time.Now())
+	if err != nil {
+		return err
 	}
 
-	site.applyOptimizerResult(req, details, *resp.JSON200, slot)
+	site.applyOptimizerResult(result.Req, result.Details.BatteryDetails, result.Res, ends)
 
 	return nil
 }
 
 // applyOptimizerResult maps the optimizer response onto suggestions, battery
 // forecast and notifications
-func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details requestDetails, res optimizer.OptimizationResult, slot int) {
-	now := time.Now()
-	slotHours := (time.Duration(req.TimeSeries.Dt[slot]) * time.Second).Hours()
+func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details []batteryDetail, res optimizer.OptimizationResult, ends []time.Time) {
+	slotHours := (time.Duration(req.TimeSeries.Dt[0]) * time.Second).Hours()
 	var gridImport, gridExport float32
-	if slot < len(res.GridImport) {
-		gridImport = res.GridImport[slot]
+	if len(res.GridImport) > 0 {
+		gridImport = res.GridImport[0]
 	}
-	if slot < len(res.GridExport) {
-		gridExport = res.GridExport[slot]
+	if len(res.GridExport) > 0 {
+		gridExport = res.GridExport[0]
 	}
 
 	var batteries []batteryResult
@@ -689,25 +689,19 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 
 	for i, batReq := range req.Batteries {
 		batRes := res.Batteries[i]
-		detail := details.BatteryDetails[i]
-		soc := batRes.StateOfCharge
-		if slot < len(soc) {
-			soc = soc[slot:]
-		} else {
-			soc = nil
-		}
+		detail := details[i]
 
 		batteries = append(batteries, batteryResult{
 			batteryDetail: detail,
-			Full: matchSoc(soc, now, func(soc float32) bool {
+			Full: matchSoc(batRes.StateOfCharge, ends, func(soc float32) bool {
 				return soc >= batReq.SMax
 			}),
-			Empty: matchSoc(soc, now, func(soc float32) bool {
+			Empty: matchSoc(batRes.StateOfCharge, ends, func(soc float32) bool {
 				return soc <= batReq.SMin
 			}),
 		})
 
-		suggestion := currentSlotSuggestion(detail, batRes, slot, gridImport, gridExport, slotHours)
+		suggestion := currentSlotSuggestion(detail, batRes, gridImport, gridExport, slotHours)
 		if suggestion.Action == "" {
 			continue
 		}
@@ -721,7 +715,7 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 	site.publish("evopt-batteries", batteries)
 
 	site.setSuggestions(suggestions)
-	site.setBatteryForecast(site.addBatteryForecastTotals(req.Batteries, res.Batteries, details.Timestamps, req.TimeSeries.Dt, slot))
+	site.setBatteryForecast(site.addBatteryForecastTotals(req.Batteries, res.Batteries, ends))
 
 	site.publishBattery()
 
@@ -729,31 +723,26 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 	site.publishSuggestions()
 
 	// notify on actionable suggestion changes (advisory only, see #31903)
-	for _, ev := range site.diffSuggestions(site.pendingSuggestions(details.BatteryDetails)) {
+	for _, ev := range site.diffSuggestions(site.pendingSuggestions(details)) {
 		site.pushEvent(ev)
 	}
 }
 
-func (site *Site) addBatteryForecastTotals(req []optimizer.BatteryConfig, resp []optimizer.BatteryResult, timestamps []time.Time, dt []int, slot int) *types.BatteryForecast {
+func (site *Site) addBatteryForecastTotals(req []optimizer.BatteryConfig, resp []optimizer.BatteryResult, ends []time.Time) *types.BatteryForecast {
 	if len(resp) == 0 || len(resp[0].StateOfCharge) == 0 {
 		return nil
 	}
 
-	high, low := batteryForecastSocExtremes(req, resp, slot)
+	high, low := batteryForecastSocExtremes(req, resp)
 	if high == nil && low == nil {
 		return nil
 	}
 
-	cutoff := time.Now()
 	point := func(p *batteryForecastSlot) *types.BatteryForecastPoint {
-		if p == nil {
+		if p == nil || p.slot >= len(ends) {
 			return nil
 		}
-		ts := optimizerSlotEnd(timestamps, dt, p.slot)
-		if !ts.After(cutoff) {
-			return nil
-		}
-		return &types.BatteryForecastPoint{Soc: p.soc, Time: ts, Limit: p.limit}
+		return &types.BatteryForecastPoint{Soc: p.soc, Time: ends[p.slot], Limit: p.limit}
 	}
 
 	res := types.BatteryForecast{
@@ -779,20 +768,21 @@ type batteryForecastSlot struct {
 // the battery is forecasted to become fully charged or empty.
 // Returns nil for either point when no home battery is present or when the
 // battery already is at the respective limit.
-func batteryForecastSocExtremes(req []optimizer.BatteryConfig, resp []optimizer.BatteryResult, slot int) (*batteryForecastSlot, *batteryForecastSlot) {
+func batteryForecastSocExtremes(req []optimizer.BatteryConfig, resp []optimizer.BatteryResult) (*batteryForecastSlot, *batteryForecastSlot) {
 	homeIndices := lo.FilterMap(req, func(b optimizer.BatteryConfig, i int) (int, bool) {
 		return i, b.SCapacity > 0
 	})
-	if len(homeIndices) == 0 || len(resp) == 0 || slot < 0 || slot >= len(resp[homeIndices[0]].StateOfCharge) {
+	if len(homeIndices) == 0 || len(resp) == 0 {
 		return nil, nil
 	}
 
 	totalCapacity := lo.SumBy(homeIndices, func(i int) float32 { return req[i].SCapacity })
 	totalSMax := lo.SumBy(homeIndices, func(i int) float32 { return req[i].SMax })
 	totalSMin := lo.SumBy(homeIndices, func(i int) float32 { return req[i].SMin })
+	totalSInitial := lo.SumBy(homeIndices, func(i int) float32 { return req[i].SInitial })
 
 	var high, low *batteryForecastSlot
-	for i := slot; i < len(resp[homeIndices[0]].StateOfCharge); i++ {
+	for i := range resp[homeIndices[0]].StateOfCharge {
 		sum := lo.SumBy(homeIndices, func(idx int) float32 { return resp[idx].StateOfCharge[i] })
 		soc := float64(sum/totalCapacity) * 100
 		fullReached := totalSMax > 0 && sum >= totalSMax
@@ -809,10 +799,10 @@ func batteryForecastSocExtremes(req []optimizer.BatteryConfig, resp []optimizer.
 	}
 
 	// battery is already at the limit - announcing it will become full/empty is pointless
-	if high != nil && high.limit && high.slot == slot {
+	if high != nil && high.limit && high.slot == 0 && totalSInitial >= totalSMax {
 		high = nil
 	}
-	if low != nil && low.limit && low.slot == slot {
+	if low != nil && low.limit && low.slot == 0 && totalSInitial <= totalSMin {
 		low = nil
 	}
 
@@ -978,13 +968,10 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 }
 
 // matchSoc returns the end of the first slot whose soc satisfies fun.
-// Slot 0 is the remainder of the current slot, so it ends at the next slot boundary.
-func matchSoc(ts []float32, now time.Time, fun func(float32) bool) time.Time {
-	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
-
-	for i, soc := range ts {
+func matchSoc(ts []float32, ends []time.Time, fun func(float32) bool) time.Time {
+	for i, soc := range ts[:min(len(ts), len(ends))] {
 		if fun(soc) {
-			return eos.Add(time.Duration(i) * tariff.SlotDuration)
+			return ends[i]
 		}
 	}
 
@@ -1225,22 +1212,48 @@ func asTimestamps(dt []int, now time.Time) []time.Time {
 	return res
 }
 
-func activeOptimizerSlot(timestamps []time.Time, dt []int, at time.Time) int {
-	for i := range min(len(timestamps), len(dt)) {
-		if at.Before(optimizerSlotEnd(timestamps, dt, i)) {
-			return i
+// pruneExpired keeps an aligned suffix without modifying the published diagnostic result.
+func (r *optimizerResult) pruneExpired(at time.Time) ([]time.Time, error) {
+	if len(r.Details.Timestamps) != len(r.Req.TimeSeries.Dt) || len(r.Req.Batteries) != len(r.Res.Batteries) {
+		return nil, errors.New("inconsistent optimizer result dimensions")
+	}
+
+	ends := make([]time.Time, len(r.Details.Timestamps))
+	for i, ts := range r.Details.Timestamps {
+		ends[i] = ts.Add(time.Duration(r.Req.TimeSeries.Dt[i]) * time.Second)
+	}
+	slot := slices.IndexFunc(ends, at.Before)
+	if slot < 0 {
+		return nil, errors.New("optimizer result expired")
+	}
+
+	prune := func(s []float32) []float32 { return s[min(slot, len(s)):] }
+	r.Details.Timestamps = r.Details.Timestamps[slot:]
+	r.Req.TimeSeries.Dt = r.Req.TimeSeries.Dt[slot:]
+	r.Req.TimeSeries.Ft = prune(r.Req.TimeSeries.Ft)
+	r.Req.TimeSeries.Gt = prune(r.Req.TimeSeries.Gt)
+	r.Req.TimeSeries.PN = prune(r.Req.TimeSeries.PN)
+	r.Req.TimeSeries.PE = prune(r.Req.TimeSeries.PE)
+	r.Res.GridImport = prune(r.Res.GridImport)
+	r.Res.GridExport = prune(r.Res.GridExport)
+	r.Res.GridImportOvershoot = prune(r.Res.GridImportOvershoot)
+	r.Res.GridExportOvershoot = prune(r.Res.GridExportOvershoot)
+	r.Res.FlowDirection = r.Res.FlowDirection[min(slot, len(r.Res.FlowDirection)):]
+	r.Req.Batteries = slices.Clone(r.Req.Batteries)
+	r.Res.Batteries = slices.Clone(r.Res.Batteries)
+	for i := range r.Req.Batteries {
+		req, res := &r.Req.Batteries[i], &r.Res.Batteries[i]
+		if slot > 0 && slot <= len(res.StateOfCharge) {
+			req.SInitial = res.StateOfCharge[slot-1]
 		}
+		req.PDemand = prune(req.PDemand)
+		req.SGoal = prune(req.SGoal)
+		res.ChargingPower = prune(res.ChargingPower)
+		res.DischargingPower = prune(res.DischargingPower)
+		res.StateOfCharge = prune(res.StateOfCharge)
 	}
 
-	return -1
-}
-
-func optimizerSlotEnd(timestamps []time.Time, dt []int, slot int) time.Time {
-	if slot < 0 || slot >= len(timestamps) || slot >= len(dt) {
-		return time.Time{}
-	}
-
-	return timestamps[slot].Add(time.Duration(dt[slot]) * time.Second)
+	return ends[slot:], nil
 }
 
 func scaleAndPrune(rates api.Rates, scale float64, maxLen int) []float32 {

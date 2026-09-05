@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -151,24 +152,102 @@ func TestAsTimestamps(t *testing.T) {
 	}, got)
 }
 
-func TestActiveOptimizerSlot(t *testing.T) {
+func TestOptimizerResultPruneExpired(t *testing.T) {
 	boundary := time.Date(2025, 1, 1, 12, 15, 0, 0, time.UTC)
 	timestamps := []time.Time{boundary.Add(-2 * time.Second), boundary, boundary.Add(tariff.SlotDuration)}
 	dt := []int{2, int(tariff.SlotDuration.Seconds()), int(tariff.SlotDuration.Seconds())}
+	ends := []time.Time{boundary, boundary.Add(tariff.SlotDuration), boundary.Add(2 * tariff.SlotDuration)}
 
 	for _, tc := range []struct {
-		name string
-		at   time.Time
-		want int
+		name      string
+		at        time.Time
+		slots     int
+		trim      int
+		shortFlow bool
 	}{
-		{"partial slot", boundary.Add(-time.Second), 0},
-		{"next slot at boundary", boundary, 1},
-		{"next slot after delayed response", boundary.Add(4 * time.Second), 1},
-		{"following slot", boundary.Add(tariff.SlotDuration), 2},
-		{"expired result", boundary.Add(2 * tariff.SlotDuration), -1},
+		{"partial slot", boundary.Add(-time.Second), 3, 0, false},
+		{"boundary", boundary, 3, 1, false},
+		{"delayed response", boundary.Add(4 * time.Second), 3, 1, false},
+		{"several elapsed", boundary.Add(tariff.SlotDuration + time.Second), 3, 2, false},
+		{"short flow direction", boundary.Add(tariff.SlotDuration + time.Second), 3, 2, true},
+		{"whole horizon expired", boundary.Add(2 * tariff.SlotDuration), 3, -1, false},
+		{"empty", boundary, 0, -1, false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.want, activeOptimizerSlot(timestamps, dt, tc.at))
+			original := optimizerResult{
+				Req: optimizer.OptimizationInput{
+					TimeSeries: optimizer.TimeSeries{
+						Dt: dt[:tc.slots],
+						Ft: []float32{1, 2, 3}, Gt: []float32{4, 5, 6},
+						PN: []float32{7, 8, 9}, PE: []float32{10, 11, 12},
+					},
+					Batteries: []optimizer.BatteryConfig{
+						{SInitial: 50, PDemand: []float32{13, 14, 15}, SGoal: []float32{16, 17, 18}},
+						{SInitial: 60, PDemand: []float32{19}},
+					},
+				},
+				Res: optimizer.OptimizationResult{
+					GridImport: []float32{20, 21, 22}, GridExport: []float32{23, 24, 25},
+					GridImportOvershoot: []float32{26, 27, 28}, GridExportOvershoot: []float32{29},
+					FlowDirection: []optimizer.OptimizationResultFlowDirection{0, 1, 0},
+					Batteries: []optimizer.BatteryResult{
+						{ChargingPower: []float32{30, 31, 32}, DischargingPower: []float32{33, 34, 35}, StateOfCharge: []float32{100, 200, 300}},
+						{ChargingPower: []float32{36}, StateOfCharge: []float32{400, 500, 600}},
+					},
+				},
+				Details: requestDetails{Timestamps: timestamps[:tc.slots]},
+			}
+			if tc.shortFlow {
+				original.Res.FlowDirection = original.Res.FlowDirection[:1]
+			}
+			if tc.slots == 0 {
+				original = optimizerResult{}
+			}
+			before, err := json.Marshal(original)
+			require.NoError(t, err)
+			result := original
+			got, err := result.pruneExpired(tc.at)
+			after, marshalErr := json.Marshal(original)
+			require.NoError(t, marshalErr)
+			assert.JSONEq(t, string(before), string(after), "diagnostic result unchanged")
+			if tc.trim < 0 {
+				require.ErrorContains(t, err, "expired")
+				assert.Nil(t, got)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, ends[tc.trim:], got)
+			assert.Equal(t, timestamps[tc.trim:], result.Details.Timestamps)
+			assert.Equal(t, dt[tc.trim:], result.Req.TimeSeries.Dt)
+			assert.Equal(t, original.Res.FlowDirection[min(tc.trim, len(original.Res.FlowDirection)):], result.Res.FlowDirection)
+			for _, pair := range [][2][]float32{
+				{original.Req.TimeSeries.Ft, result.Req.TimeSeries.Ft},
+				{original.Req.TimeSeries.Gt, result.Req.TimeSeries.Gt},
+				{original.Req.TimeSeries.PN, result.Req.TimeSeries.PN},
+				{original.Req.TimeSeries.PE, result.Req.TimeSeries.PE},
+				{original.Res.GridImport, result.Res.GridImport},
+				{original.Res.GridExport, result.Res.GridExport},
+				{original.Res.GridImportOvershoot, result.Res.GridImportOvershoot},
+				{original.Res.GridExportOvershoot, result.Res.GridExportOvershoot},
+			} {
+				assert.Equal(t, pair[0][min(tc.trim, len(pair[0])):], pair[1])
+			}
+			for i, req := range result.Req.Batteries {
+				wantInitial := original.Req.Batteries[i].SInitial
+				if tc.trim > 0 {
+					wantInitial = original.Res.Batteries[i].StateOfCharge[tc.trim-1]
+				}
+				assert.Equal(t, wantInitial, req.SInitial)
+				for _, pair := range [][2][]float32{
+					{original.Req.Batteries[i].PDemand, req.PDemand},
+					{original.Req.Batteries[i].SGoal, req.SGoal},
+					{original.Res.Batteries[i].ChargingPower, result.Res.Batteries[i].ChargingPower},
+					{original.Res.Batteries[i].DischargingPower, result.Res.Batteries[i].DischargingPower},
+					{original.Res.Batteries[i].StateOfCharge, result.Res.Batteries[i].StateOfCharge},
+				} {
+					assert.Equal(t, pair[0][min(tc.trim, len(pair[0])):], pair[1])
+				}
+			}
 		})
 	}
 }
@@ -272,14 +351,14 @@ func TestBatteryForecastSocExtremes(t *testing.T) {
 		},
 		{
 			"already full — no highest",
-			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000}},
+			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000, SInitial: 1000}},
 			[][]float32{{1000, 1000, 500}},
 			nil,
 			&batteryForecastSlot{slot: 2, soc: 50, limit: false},
 		},
 		{
 			"already empty — no lowest",
-			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000, SMin: 100}},
+			[]optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000, SMin: 100, SInitial: 100}},
 			[][]float32{{100, 100, 500}},
 			&batteryForecastSlot{slot: 2, soc: 50, limit: false},
 			nil,
@@ -298,7 +377,7 @@ func TestBatteryForecastSocExtremes(t *testing.T) {
 				resp[i] = optimizer.BatteryResult{StateOfCharge: s}
 			}
 
-			high, low := batteryForecastSocExtremes(tc.req, resp, 0)
+			high, low := batteryForecastSocExtremes(tc.req, resp)
 
 			if tc.high == nil {
 				assert.Nil(t, high, "high")
@@ -321,27 +400,50 @@ func TestBatteryForecastSocExtremes(t *testing.T) {
 }
 
 func TestBatteryForecastActiveSlot(t *testing.T) {
-	req := []optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000}}
-	resp := []optimizer.BatteryResult{{StateOfCharge: []float32{1000, 500, 800}}}
-
-	high, low := batteryForecastSocExtremes(req, resp, 1)
-	require.NotNil(t, high)
-	require.NotNil(t, low)
-	assert.Equal(t, 2, high.slot)
-	assert.InDelta(t, 80, high.soc, 1e-3)
-	assert.Equal(t, 1, low.slot)
-	assert.InDelta(t, 50, low.soc, 1e-3)
-
-	base := time.Now().Add(time.Hour).Round(time.Second)
-	timestamps := []time.Time{base.Add(-2 * time.Hour), base, base.Add(tariff.SlotDuration)}
-	dt := []int{60, int(tariff.SlotDuration.Seconds()), int(tariff.SlotDuration.Seconds())}
-
-	forecast := (&Site{}).addBatteryForecastTotals(req, resp, timestamps, dt, 1)
-	require.NotNil(t, forecast)
-	require.NotNil(t, forecast.Highest)
-	require.NotNil(t, forecast.Lowest)
-	assert.Equal(t, timestamps[2].Add(tariff.SlotDuration), forecast.Highest.Time)
-	assert.Equal(t, timestamps[1].Add(tariff.SlotDuration), forecast.Lowest.Time)
+	base := time.Date(2025, 1, 1, 12, 15, 0, 0, time.UTC)
+	for _, tc := range []struct {
+		name      string
+		soc       []float32
+		high, low *batteryForecastSlot
+	}{
+		{"expired full ignored", []float32{1000, 500, 800}, &batteryForecastSlot{slot: 1, soc: 80}, &batteryForecastSlot{slot: 0, soc: 50}},
+		{"becomes full", []float32{500, 1000, 800}, &batteryForecastSlot{slot: 0, soc: 100, limit: true}, &batteryForecastSlot{slot: 1, soc: 80}},
+		{"becomes empty", []float32{500, 0, 200}, &batteryForecastSlot{slot: 1, soc: 20}, &batteryForecastSlot{slot: 0, soc: 0, limit: true}},
+		{"already full", []float32{1000, 1000, 800}, nil, &batteryForecastSlot{slot: 1, soc: 80}},
+		{"already empty", []float32{0, 0, 200}, &batteryForecastSlot{slot: 1, soc: 20}, nil},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			result := optimizerResult{
+				Req: optimizer.OptimizationInput{
+					TimeSeries: optimizer.TimeSeries{Dt: []int{2, 900, 900}},
+					Batteries:  []optimizer.BatteryConfig{{SCapacity: 1000, SMax: 1000, SInitial: 500}},
+				},
+				Res:     optimizer.OptimizationResult{Batteries: []optimizer.BatteryResult{{StateOfCharge: tc.soc}}},
+				Details: requestDetails{Timestamps: []time.Time{base.Add(-2 * time.Second), base, base.Add(tariff.SlotDuration)}},
+			}
+			ends, err := result.pruneExpired(base.Add(4 * time.Second))
+			require.NoError(t, err)
+			high, low := batteryForecastSocExtremes(result.Req.Batteries, result.Res.Batteries)
+			forecast := (&Site{}).addBatteryForecastTotals(result.Req.Batteries, result.Res.Batteries, ends)
+			require.NotNil(t, forecast)
+			for _, point := range []struct {
+				want, got *batteryForecastSlot
+				forecast  *types.BatteryForecastPoint
+			}{{tc.high, high, forecast.Highest}, {tc.low, low, forecast.Lowest}} {
+				if point.want == nil {
+					assert.Nil(t, point.got)
+					assert.Nil(t, point.forecast)
+					continue
+				}
+				require.NotNil(t, point.got)
+				require.NotNil(t, point.forecast)
+				assert.Equal(t, point.want.slot, point.got.slot)
+				assert.InDelta(t, point.want.soc, point.forecast.Soc, 1e-3)
+				assert.Equal(t, point.want.limit, point.forecast.Limit)
+				assert.Equal(t, base.Add(time.Duration(point.want.slot+1)*tariff.SlotDuration), point.forecast.Time)
+			}
+		})
+	}
 }
 
 // TestBatteryRequestSocLimitsClamp ensures the reported soc is always clamped into
@@ -543,7 +645,7 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 				ChargingPower:    []float32{tc.charge},
 				DischargingPower: []float32{tc.disch},
 			}
-			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, res, 0, tc.gridImp, tc.gridExp, 1)
+			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, res, tc.gridImp, tc.gridExp, 1)
 			assert.Equal(t, tc.want, s.Action)
 			assert.InDelta(t, tc.charge, s.Charge, 1e-3)
 			assert.InDelta(t, tc.disch, s.Discharge, 1e-3)
@@ -552,15 +654,27 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	}
 
 	// no result yields an empty suggestion
-	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryResult{}, 0, 1000, 0, 1))
+	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryResult{}, 1000, 0, 1))
 
 	// a delayed result uses the slot active when it is applied
-	res := optimizer.BatteryResult{
-		ChargingPower:    []float32{100, 0},
-		DischargingPower: []float32{0, 0},
+	base := time.Date(2025, 1, 1, 12, 15, 0, 0, time.UTC)
+	result := optimizerResult{
+		Req: optimizer.OptimizationInput{
+			TimeSeries: optimizer.TimeSeries{Dt: []int{2, 900}},
+			Batteries:  []optimizer.BatteryConfig{{}},
+		},
+		Res: optimizer.OptimizationResult{
+			GridImport: []float32{0, 250}, GridExport: []float32{100, 0},
+			Batteries: []optimizer.BatteryResult{{ChargingPower: []float32{100, 0}, DischargingPower: []float32{0, 0}}},
+		},
+		Details: requestDetails{Timestamps: []time.Time{base.Add(-2 * time.Second), base}},
 	}
-	s := currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, res, 1, 1000, 0, 1)
+	_, err := result.pruneExpired(base.Add(4 * time.Second))
+	require.NoError(t, err)
+	slotHours := (time.Duration(result.Req.TimeSeries.Dt[0]) * time.Second).Hours()
+	s := currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, result.Res.Batteries[0], result.Res.GridImport[0], result.Res.GridExport[0], slotHours)
 	assert.Equal(t, api.BatteryHold.String(), s.Action)
+	assert.Equal(t, 1000.0, s.Grid)
 }
 
 // TestSuggestionActionable ensures the actionable flag follows the current state
