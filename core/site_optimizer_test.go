@@ -151,6 +151,28 @@ func TestAsTimestamps(t *testing.T) {
 	}, got)
 }
 
+func TestActiveOptimizerSlot(t *testing.T) {
+	boundary := time.Date(2025, 1, 1, 12, 15, 0, 0, time.UTC)
+	timestamps := []time.Time{boundary.Add(-2 * time.Second), boundary, boundary.Add(tariff.SlotDuration)}
+	dt := []int{2, int(tariff.SlotDuration.Seconds()), int(tariff.SlotDuration.Seconds())}
+
+	for _, tc := range []struct {
+		name string
+		at   time.Time
+		want int
+	}{
+		{"partial slot", boundary.Add(-time.Second), 0},
+		{"next slot at boundary", boundary, 1},
+		{"next slot after delayed response", boundary.Add(4 * time.Second), 1},
+		{"following slot", boundary.Add(tariff.SlotDuration), 2},
+		{"expired result", boundary.Add(2 * tariff.SlotDuration), -1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, activeOptimizerSlot(timestamps, dt, tc.at))
+		})
+	}
+}
+
 func TestUnmodelledPower(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
@@ -497,7 +519,7 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 				ChargingPower:    []float32{tc.charge},
 				DischargingPower: []float32{tc.disch},
 			}
-			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, res, tc.gridImp, tc.gridExp, 1)
+			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, res, 0, tc.gridImp, tc.gridExp, 1)
 			assert.Equal(t, tc.want, s.Action)
 			assert.InDelta(t, tc.charge, s.Charge, 1e-3)
 			assert.InDelta(t, tc.disch, s.Discharge, 1e-3)
@@ -506,7 +528,15 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	}
 
 	// no result yields an empty suggestion
-	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryResult{}, 1000, 0, 1))
+	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryResult{}, 0, 1000, 0, 1))
+
+	// a delayed result uses the slot active when it is applied
+	res := optimizer.BatteryResult{
+		ChargingPower:    []float32{100, 0},
+		DischargingPower: []float32{0, 0},
+	}
+	s := currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, res, 1, 1000, 0, 1)
+	assert.Equal(t, api.BatteryHold.String(), s.Action)
 }
 
 // TestSuggestionActionable ensures the actionable flag follows the current state
