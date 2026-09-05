@@ -14,6 +14,14 @@ requirements:
   description:
     de: Modbus TCP muss in der Konfigurations-App mit Installateursrechten aktiviert werden. Diese Option ist in der mySigen App für Kunden nicht verfügbar.
     en: Modbus TCP must be enabled in the configuration app with installer rights. This option is not available in the mySigen app for customers.
+caveats:
+  - description:
+      de: |
+        Einzelne MPPT-Zähler messen auf der DC-Seite (vor dem Wechselrichter), der Gesamt-Zähler auf der AC-Seite (hinter dem Wechselrichter).
+        Aufgrund von Umwandlungsverlusten des Wechselrichters können die Werte beider Seiten voneinander abweichen.
+      en: |
+        Individual MPPT meters measure on the DC side (before the inverter), the total meter on the AC side (behind the inverter).
+        Due to inverter conversion losses the values of both sides can differ.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -23,6 +31,22 @@ params:
   - name: id
     default: 1
   - name: maxacpower
+  - name: mppt
+    type: choice
+    choice: ["all", "mppt1", "mppt2", "mppt3", "mppt4"]
+    default: all
+    usages: ["pv"]
+    advanced: true
+    description:
+      de: PV MPPT
+      en: PV MPPT
+    help:
+      de: |
+        Nicht gesetzt oder all = Gesamtleistung auf der AC-Seite (hinter dem Wechselrichter), mppt1-4 = ein einzelner MPPT auf der DC-Seite (vor dem Wechselrichter).
+        MPPT-Zähler messen die DC-Leistung (Spannung × Strom) auf der DC-Seite. Für einzelne MPPTs gibt es keinen Energiezähler.
+      en: |
+        Unset or all = total power on the AC side (behind the inverter), mppt1-4 = one individual MPPT on the DC side (before the inverter).
+        MPPT meters measure DC power (voltage × current) on the DC side. There is no accumulated energy register for individual MPPTs.
   - preset: battery-params
 render: |
   type: custom
@@ -71,6 +95,27 @@ render: |
       scale: 0.01
   {{- end }}
   {{- if eq .usage "pv" }}
+  {{- if and .mppt (ne .mppt "all") }}
+  power:
+    source: calc
+    mul:
+      - source: modbus
+        uri: {{ joinHostPort .host .port }}
+        id: {{ .id }}
+        register:
+          address: {{ add 31027 (mul 2 (sub (int (trimPrefix "mppt" .mppt)) 1)) }} # {{ .mppt }} voltage
+          type: holding
+          decode: int16
+        scale: 0.1
+      - source: modbus
+        uri: {{ joinHostPort .host .port }}
+        id: {{ .id }}
+        register:
+          address: {{ add 31028 (mul 2 (sub (int (trimPrefix "mppt" .mppt)) 1)) }} # {{ .mppt }} current
+          type: holding
+          decode: int16
+        scale: 0.01
+  {{- else }}
   power:
     source: modbus
     uri: {{ joinHostPort .host .port }}
@@ -80,6 +125,7 @@ render: |
       address: 31035 # PV power (per inverter)
       decode: int32
   maxacpower: {{ .maxacpower }} # W
+  {{- end }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
