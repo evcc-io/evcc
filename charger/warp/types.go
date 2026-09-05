@@ -23,11 +23,25 @@ type EvseUserEnabled struct {
 	Enabled bool `json:"enabled"`
 }
 
+type EvsePhaseAutoSwitch struct {
+	Enabled bool `json:"enabled"`
+}
+
+type EvseLowLevelState struct {
+	Uptime uint32 `json:"uptime"`
+}
+
+type EvseSlot struct {
+	MaxCurrent int32 `json:"max_current"`
+}
+
 type Evse struct {
 	State           EvseState
+	Slots           []EvseSlot
 	ExternalCurrent EvseExternalCurrent
 	UserCurrent     EvseExternalCurrent
 	UserEnabled     EvseUserEnabled
+	LowLevelState   EvseLowLevelState
 }
 
 type MeterValues struct {
@@ -38,6 +52,24 @@ type MeterValues struct {
 	Voltages  [3]float64
 }
 
+//go:generate go tool enumer -type Mvid -trimprefix Mvid -transform whitespace
+type Mvid int
+
+// See https://github.com/Tinkerforge/esp32-firmware/blob/master/software/src/modules/meters/meter_value_id.csv
+const (
+	MvidPower     Mvid = 74
+	MvidEnergy    Mvid = 209
+	MvidCurrentL1 Mvid = 13
+	MvidCurrentL2 Mvid = 17
+	MvidCurrentL3 Mvid = 21
+	MvidVoltageL1 Mvid = 1
+	MvidVoltageL2 Mvid = 2
+	MvidVoltageL3 Mvid = 3
+	MvidPowerL1   Mvid = 39
+	MvidPowerL2   Mvid = 48
+	MvidPowerL3   Mvid = 57
+)
+
 type Name struct {
 	Name        string `json:"name"`
 	WarpType    string `json:"type"`
@@ -45,35 +77,20 @@ type Name struct {
 	Uid         string `json:"uid"`
 }
 
-type PhasePair struct {
-	CurrentID int
-	VoltageID int
-}
-
-type MeterSchema struct {
-	PowerID     int
-	EnergyAbsID int
-	Phases      [3]PhasePair
-}
-
-// Value IDs based on Tinkerforge's meter_value_id.csv
-var DefaultSchema = MeterSchema{
-	PowerID:     74,  // Power Im-Ex Sum L1 L2 L3
-	EnergyAbsID: 209, // Energy Im Sum L1 L2 L3
-	Phases: [3]PhasePair{
-		{CurrentID: 13, VoltageID: 1}, // Current L1 Im-Ex Sum, Voltage L1-N
-		{CurrentID: 17, VoltageID: 2}, // Current L2 Im-Ex Sum, Voltage L2-N
-		{CurrentID: 21, VoltageID: 3}, // Current L3 Im-Ex Sum, Voltage L3-N
-	},
-}
-
 // WARP4 only: vehicle data read via ISO 15118; soc is null and mac is empty while unknown
 type EvState struct {
-	Soc *float64 `json:"soc"`
-	Mac string   `json:"mac"`
+	Soc      *float64 `json:"soc"`
+	Mac      string   `json:"mac"`
+	Capacity *float64 `json:"capacity"`
 }
 
+type FloatWithNaN float64
+
 type ChargeTrackerCurrentCharge struct {
+	UserId            int          `json:"user_id"`
+	EvseUptimeStart   uint32       `json:"evse_uptime_start"`
+	TimestampMinutes  int          `json:"timestamp_minutes"`
+	MeterStart        FloatWithNaN `json:"meter_start"`
 	AuthorizationInfo struct {
 		TagType int    `json:"tag_type"`
 		TagId   string `json:"tag_id"`
