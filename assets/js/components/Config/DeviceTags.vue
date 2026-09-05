@@ -72,7 +72,7 @@ import TariffChart from "../Tariff/TariffChart.vue";
 import { generateRateSlots, calculateCostRange } from "@/utils/tariffSlots";
 import { distanceValue, distanceUnit } from "@/units";
 
-const HIDDEN_TAGS = ["icon", "heating", "integratedDevice"];
+const HIDDEN_TAGS = ["icon", "heating", "integratedDevice", "continuous"];
 
 const PHASE_TAGS = ["phaseCurrents", "phaseVoltages", "phasePowers"];
 

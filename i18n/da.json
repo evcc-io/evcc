@@ -167,6 +167,15 @@
       "label": "Møntfod",
       "title": "Møntfod"
     },
+    "curtailer": {
+      "description": "Enhed, der begrænser indfødningen efter anmodning fra netoperatøren (§ 9 EEG). Mange solcelleinvertere understøtter dette direkte via konfigurationen af deres solmåler. En separat konfiguration er kun nødvendig for visse producenter eller systemer med flere invertere.",
+      "generic": "Generelle integrationer",
+      "specific": "Specifikke integrationer",
+      "template": "Fremstiller",
+      "title": "Effektbegrænsning",
+      "titleAdd": "Tilføj enhed til effektbegrænsning",
+      "titleEdit": "Rediger enhed til effektbegrænsning"
+    },
     "deviceValue": {
       "activeClients": "Aktive klienter",
       "amount": "Mængde",
@@ -191,7 +200,7 @@
       "currentRange": "Strømstyrke",
       "curtailLimit": "Indfødnings begrænsning",
       "curtailable": "Kan begrænses",
-      "curtailed": "Indfødning begrænset",
+      "curtailed": "Indfødningsgrænse",
       "detected": "Registreret",
       "dimLimit": "Forbrugsgrænse",
       "dimmed": "Forbrug begrænset",
@@ -322,6 +331,7 @@
       "hideAdvancedSettings": "Skjul avancerede indstillinger",
       "invalidFileSelected": "Ugyldig fil er valgt",
       "legacy": "ældre",
+      "moreInfo": "Mere info:",
       "noFileSelected": "Ingen fil valgt.",
       "off": "slukket",
       "on": "tændt",
@@ -511,6 +521,7 @@
     "main": {
       "addAdditional": "Tilføj en ekstra måler",
       "addConsumer": "Tilføj forbrugsenhed",
+      "addCurtailer": "Tilføj enhed til effekbegrænsning",
       "addGrid": "Tilføj måler til elnet",
       "addLoadpoint": "Tilføj lader eller varmelegeme",
       "addPvBattery": "Tilføj solpanel eller batteri",
@@ -611,6 +622,7 @@
         "aux": "Tilføj selvregulerende forbrugsenhed",
         "battery": "Tilføj batterimåler",
         "consumer": "Tilføj standardforbrugsenhed",
+        "grid": "Tilføj måler til elnettet",
         "pv": "Tilføj en solenergimåler"
       },
       "save": "Gem",
@@ -801,6 +813,8 @@
       "noClients": "Ingen klient endnu. Ingen kan forbindes endnu.",
       "password": "Kode",
       "passwordOnce": "Denne kode vises kun én gang. Skan QR koden eller kopier den nu. Den kan ikke vises igen.",
+      "privacy": "Ved at aktivere denne funktion accepterer du vores {0}.",
+      "privacyLink": "privatlivs politik",
       "qrInstall": "Installer evcc appen for {ios} eller {android}.",
       "qrScan": "Skan koden med telefonens kamera for at forbinde. Klik på det hvis du allerede bruger telefonen.",
       "removeClient": "Fjern klient",
@@ -877,6 +891,8 @@
           "confirmationButton": "Nulstil & genstart",
           "confirmationText": "Dette sletter dine valgte data. Sørg for, at du har downloadet en sikkerhedskopi.",
           "description": "Har du problemer med konfigurationen og vil starte forfra? Slet alle data og start forfra.",
+          "remote": "Fjernadgang",
+          "remoteDescription": "Sletter konfiguration og legitimationsoplysninger.",
           "sessions": "Opladningssessioner",
           "sessionsDescription": "Sletter din opladningshistorik.",
           "settings": "Konfiguration og indstillinger",
@@ -1076,14 +1092,14 @@
       "optInSponsorship": "Sponsorering påkrævet."
     },
     "version": {
-      "availableLong": "ny version tilgængelig",
+      "availableLong": "Opdatering tilgængelig",
       "community": "evcc-fællesskabet",
       "labelEmail": "Email",
       "labelPhone": "Telefon",
       "labelRelease": "Udgivet",
       "labelVersion": "Version",
       "labelWebsite": "Hjemmeside",
-      "latestVersion": "nyeste version",
+      "latestVersion": "Opdateret",
       "madeByCommunity": "Lavet af {0}.",
       "modalCancel": "Annuller",
       "modalDownload": "Hent",
@@ -1283,15 +1299,18 @@
         "continuous": "kontinuerlig",
         "continuousCo2Description": "Vælger det reneste sammenhængende tidsrum.",
         "continuousPriceDescription": "Vælger det billigste sammenhængende tidsrum.",
+        "disabledDescription": "Kræver dynamisk tarif eller CO₂ prognose.",
         "label": "Optimering"
       },
       "planNumber": "Plan {number}",
       "precondition": {
         "description": "Flytter en del af opladningen til lige før afgang: Varmt batteri og mindre tid ved høj ladestand.",
+        "disabledDescription": "Opladning sker umiddelbart før afgang.",
         "label": "Sen opladning",
         "optionAll": "alt",
         "optionNo": "nej",
-        "summary": "{precondition} før"
+        "summary": "{precondition} før",
+        "summaryAll": "lige før afgang"
       },
       "remove": "Fjern",
       "repeating": "Gentager",
@@ -1386,6 +1405,7 @@
       "finished": "Sluttidspunkt",
       "last24hEnergy": "Sidste 24 timer",
       "last7dEnergy": "Sidste 7 dage",
+      "phasesMismatch": "Der er flere aktive faser end konfigureret. Check venligst konfigurationen.",
       "power": "Effekt",
       "price": "Pris",
       "remaining": "Resterende tid",
@@ -1506,7 +1526,7 @@
     "vehicleSettings": {
       "connectedTo": "Forbundet til {0}",
       "description": "Disse standarder benyttes, når køretøjet forbindes til et ladepunkt.",
-      "editHint": "Tilføj eller rediger køretøjer i {0}.",
+      "editHint": "Køretøjer kan redigeres i {0}.",
       "keepAsIs": "Gem som det er",
       "learnMore": "Lær mere.",
       "limitSoc": "Standardgrænse",
@@ -1689,6 +1709,13 @@
     "vehicle": "Køretøj"
   },
   "settings": {
+    "dateFormat": {
+      "auto": "Automatisk",
+      "dmy": "DD/MM/YYYY",
+      "label": "Dato format",
+      "mdy": "MM/DD/YYYY",
+      "ymd": "YYYY-MM-DD"
+    },
     "deviceInfo": "De indstillinger, du laver her, gælder kun for denne enhed.",
     "fullscreen": {
       "enter": "Gå til fuldskærmsvisning",

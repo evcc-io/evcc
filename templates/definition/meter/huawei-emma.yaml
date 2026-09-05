@@ -25,7 +25,16 @@ render: |
     id: 0
     uri: {{ joinHostPort .host .port }}
     register:
-      address: 31679 # Total negative active energy of built-in electric energy sensor
+      address: 31687 # Total positive active energy of built-in electric energy sensor (grid import)
+      type: holding
+      decode: int64
+    scale: 0.01
+  returnenergy:
+    source: modbus
+    id: 0
+    uri: {{ joinHostPort .host .port }}
+    register:
+      address: 31679 # Total negative active energy of built-in electric energy sensor (grid export)
       type: holding
       decode: int64
     scale: 0.01

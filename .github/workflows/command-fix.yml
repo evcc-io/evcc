@@ -1,5 +1,7 @@
 name: Claude Fix Command
 
+# Disabled; original job conditions are retained for re-enablement.
+
 on:
   issue_comment:
     types: [created]
@@ -12,6 +14,7 @@ jobs:
   fix:
     name: Fix on demand
     if: |
+      false &&
       startsWith(github.event.comment.body, '/fix') &&
       contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
     permissions:

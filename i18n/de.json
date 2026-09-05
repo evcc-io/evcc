@@ -514,6 +514,8 @@
       "solarBehaviorLabel": "PV-Überschuss",
       "solarModeCustom": "manuell",
       "solarModeMaximum": "nur Sonne",
+      "solarShareNote": "Der Sonnenanteil-Regler in den Nutzereinstellungen ist deaktiviert, solange Watt-Schwellen gesetzt sind. {0} und speichern, um ihn zu aktivieren.",
+      "solarShareReset": "Schwellwerte entfernen",
       "temperatureRangeHelp": "Anzeigebereich für den Temperaturbalken. Beeinflusst die Regelung nicht.",
       "temperatureRangeTitle": "Temperaturbereich",
       "thresholdDisableDelayLabel": "Ausschaltverzögerung",
@@ -1491,6 +1493,23 @@
       },
       "smartCostCheap": "günstige Netzladung",
       "smartCostClean": "Grünes Netzladen",
+      "solar": "Solarüberschuss",
+      "solarShare": {
+        "charging": {
+          "description": "Mindestens {share} der minimalen Ladeleistung muss aus Solarstrom stammen.",
+          "descriptionFull": "Laden startet, sobald der Überschuss die minimale Ladeleistung deckt.",
+          "descriptionZero": "Laden startet, sobald etwas Überschuss verfügbar ist."
+        },
+        "heating": {
+          "description": "Mindestens {share} der minimalen Heizleistung muss aus Solarstrom stammen.",
+          "descriptionFull": "Heizen startet, sobald der Überschuss die minimale Heizleistung deckt.",
+          "descriptionZero": "Heizen startet, sobald etwas Überschuss verfügbar ist."
+        },
+        "label": "Sonnenanteil",
+        "thresholdsHint": "Leistungsbasierte Ladeschwellen sind konfiguriert. Entferne sie, um diesen Regler zu nutzen.",
+        "thresholdsHintYaml": "Leistungsbasierte Ladeschwellen sind konfiguriert. Entferne die Ein-/Ausschaltschwellen dieses Ladepunkts in deiner evcc.yaml, um diesen Regler zu nutzen.",
+        "thresholdsLink": "Konfiguration bearbeiten"
+      },
       "title": "Einstellungen {0}",
       "vehicle": "Fahrzeug"
     },
