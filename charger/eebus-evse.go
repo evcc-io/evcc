@@ -3,6 +3,7 @@ package charger
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sync"
 	"time"
 
@@ -40,6 +41,8 @@ type EEBus struct {
 	minMaxG func() (minMax, error)
 
 	limitUpdated time.Time // time of last limit change
+
+	lastIdentification []string // last non-empty vehicle identification
 
 	enabled   bool
 	reconnect bool
@@ -143,6 +146,7 @@ func (c *EEBus) Connect(connected bool) {
 	defer c.mux.Unlock()
 
 	c.ev = nil
+	c.lastIdentification = nil
 }
 
 // UseCaseEvent implements the eebus.Device interface
@@ -158,6 +162,13 @@ func (c *EEBus) UseCaseEvent(device spineapi.DeviceRemoteInterface, entity spine
 
 	case evcc.EvDisconnected:
 		c.ev = nil
+		c.lastIdentification = nil
+
+	case evcc.DataUpdateIdentifications:
+		// the identification may be withdrawn again before the loadpoint polls it
+		if ids := c.identifications(entity); len(ids) > 0 {
+			c.lastIdentification = ids
+		}
 
 	case evcem.DataUpdateCurrentPerPhase:
 		// acknowledge limit change
@@ -519,6 +530,19 @@ func (c *EEBus) currents() (float64, float64, float64, error) {
 
 var _ api.Identifier = (*EEBus)(nil)
 
+// identifications returns the entity's non-empty identification values.
+// There may be multiple, e.g. MAC address and PCID.
+func (c *EEBus) identifications(entity spineapi.EntityRemoteInterface) []string {
+	identification, err := c.cem.EvCC.Identifications(entity)
+	if err != nil {
+		return nil
+	}
+
+	return lo.FilterMap(identification, func(i ucapi.IdentificationItem, _ int) (string, bool) {
+		return i.Value, i.Value != ""
+	})
+}
+
 // Identify implements the api.Identifier interface
 func (c *EEBus) Identify() ([]string, error) {
 	evEntity, ok := c.isEvConnected()
@@ -526,20 +550,18 @@ func (c *EEBus) Identify() ([]string, error) {
 		return nil, nil
 	}
 
-	identification, err := c.cem.EvCC.Identifications(evEntity)
-	if err != nil {
-		return nil, nil
+	res := c.identifications(evEntity)
+
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	// some devices (e.g. Porsche PMCC) only report the identification briefly during
+	// the connection handshake, so fall back to the value cached from the update event
+	if len(res) > 0 {
+		c.lastIdentification = res
 	}
 
-	// may be multiple, e.g. MAC address and PCID
-	var res []string
-	for _, i := range identification {
-		if i.Value != "" {
-			res = append(res, i.Value)
-		}
-	}
-
-	return res, nil
+	return slices.Clone(c.lastIdentification), nil
 }
 
 var _ api.Battery = (*EEBus)(nil)

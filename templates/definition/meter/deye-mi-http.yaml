@@ -1,0 +1,33 @@
+template: deye-mi-http
+products:
+  - brand: Deye
+    description:
+      generic: Micro inverter (WiFi logger)
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: host
+  - name: user
+    default: admin
+  - name: password
+    default: admin
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ .host }}/status.html
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    regex: webdata_now_p\s*=\s*\"([0-9.]+)\"
+    cache: 1s
+  energy:
+    source: http
+    uri: http://{{ .host }}/status.html
+    auth:
+      type: basic
+      user: {{ .user }}
+      password: {{ .password }}
+    regex: webdata_total_e\s*=\s*\"([0-9.]+)\"
+    cache: 1s
