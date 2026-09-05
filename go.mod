@@ -50,6 +50,7 @@ require (
 	github.com/gosimple/slug v1.15.0
 	github.com/gregdel/pushover v1.4.0
 	github.com/grid-x/modbus v0.0.0-20260701064235-82e41c9acfb6
+	github.com/grid-x/serial v0.0.0-20211107191517-583c7356b3aa
 	github.com/hashicorp/go-version v1.9.0
 	github.com/hashicorp/yamux v0.1.2
 	github.com/hasura/go-graphql-client v0.16.0
@@ -178,7 +179,6 @@ require (
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/govalues/decimal v0.1.36 // indirect
-	github.com/grid-x/serial v0.0.0-20211107191517-583c7356b3aa // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20210922203350-b1ad95c89adf // indirect
