@@ -18,6 +18,7 @@ params:
     choice: ["battery"]
   - name: host
   - name: serial
+    service: http/get?uri=http://{host}/properties/report&jq=.sn
     example: WOB1NHMAMXXXXX3
     help:
       de: Nur für die aktive Batteriesteuerung. Seriennummer des Geräts (zu finden in der Zendure App)
