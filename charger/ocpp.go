@@ -48,6 +48,9 @@ type OCPP struct {
 
 	stackLevelZero      bool
 	profileKindRelative bool
+	txProfile           bool
+	profileCurrent      float64
+	transactionID       int
 }
 
 const defaultIdTag = "evcc" // RemoteStartTransaction only
@@ -78,14 +81,19 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		ProfileKindRelative  bool
 		RemoteStart          bool
 		NoChangeAvailability *bool
+		ChargingProfile      types.ChargingProfilePurposeType
 	}{
-		Connector:      1,
-		MeterInterval:  10 * time.Second,
-		ConnectTimeout: 5 * time.Minute,
+		Connector:       1,
+		MeterInterval:   10 * time.Second,
+		ConnectTimeout:  5 * time.Minute,
+		ChargingProfile: types.ChargingProfilePurposeTxDefaultProfile,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+	if cc.ChargingProfile != types.ChargingProfilePurposeTxDefaultProfile && cc.ChargingProfile != types.ChargingProfilePurposeTxProfile {
+		return nil, fmt.Errorf("invalid charging profile: %s", cc.ChargingProfile)
 	}
 
 	stackLevelZero := cc.StackLevelZero != nil && *cc.StackLevelZero
@@ -104,6 +112,7 @@ func NewOCPPFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
 	}
+	c.txProfile = cc.ChargingProfile == types.ChargingProfilePurposeTxProfile
 
 	if c.cp.HasMeasurement(types.MeasurandPowerActiveImport) {
 		implement.Has(c, implement.Meter(c.conn.CurrentPower))
@@ -212,6 +221,18 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 	if err != nil {
 		return api.StatusNone, err
 	}
+	if c.txProfile {
+		transactionID, err := c.conn.TransactionID()
+		if err != nil {
+			return api.StatusNone, err
+		}
+		// Transaction profiles expire even when the requested current stays unchanged.
+		if transactionID != c.transactionID {
+			if err := c.setCurrent(c.profileCurrent); err != nil {
+				return api.StatusNone, err
+			}
+		}
+	}
 
 	switch status {
 	case
@@ -304,18 +325,38 @@ func (c *OCPP) Enable(enable bool) error {
 	return err
 }
 
-// setCurrent sets the TxDefaultChargingProfile with given current
+// setCurrent applies the charging profile with the given current.
 func (c *OCPP) setCurrent(current float64) error {
-	err := c.conn.SetChargingProfileRequest(c.createTxDefaultChargingProfile(math.Trunc(10*current) / 10))
-	if err != nil {
-		err = fmt.Errorf("set charging profile: %w", err)
+	var transactionID int
+	if c.txProfile {
+		var err error
+		transactionID, err = c.conn.TransactionID()
+		if err != nil {
+			return err
+		}
+		if transactionID == 0 {
+			status, err := c.conn.Status()
+			if err != nil {
+				return err
+			}
+			// After reconnect, wait for MeterValues to recover an active transaction ID.
+			switch status {
+			case core.ChargePointStatusCharging, core.ChargePointStatusSuspendedEV, core.ChargePointStatusSuspendedEVSE:
+				return fmt.Errorf("transaction id: %w", api.ErrNotAvailable)
+			}
+		}
 	}
 
-	return err
+	if err := c.conn.SetChargingProfileRequest(c.createChargingProfile(math.Trunc(10*current)/10, transactionID)); err != nil {
+		return fmt.Errorf("set charging profile: %w", err)
+	}
+	c.transactionID = transactionID
+	c.profileCurrent = current
+	return nil
 }
 
-// createTxDefaultChargingProfile returns a TxDefaultChargingProfile with given current
-func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingProfile {
+// createChargingProfile returns the charging profile for the current transaction.
+func (c *OCPP) createChargingProfile(current float64, transactionID int) *types.ChargingProfile {
 	phases := c.phases
 	period := types.NewChargingSchedulePeriod(0, current)
 
@@ -344,6 +385,10 @@ func (c *OCPP) createTxDefaultChargingProfile(current float64) *types.ChargingPr
 			ChargingRateUnit:       c.cp.ChargingRateUnit,
 			ChargingSchedulePeriod: []types.ChargingSchedulePeriod{period},
 		},
+	}
+	if c.txProfile && transactionID != 0 {
+		res.ChargingProfilePurpose = types.ChargingProfilePurposeTxProfile
+		res.TransactionId = transactionID
 	}
 
 	if c.profileKindRelative {
