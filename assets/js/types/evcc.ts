@@ -270,6 +270,13 @@ export interface State {
   messagingEvents?: MessagingEvents | null;
   /** Update interval of the control loop in seconds. */
   interval?: number;
+  /**
+   * Time the control loop last ran. Not a last-modified marker; the loop runs on a
+   * fixed interval regardless of whether any value changed. Loadpoint measurements
+   * are refreshed one loadpoint per cycle.
+   * @format date-time
+   */
+  lastControlCycle?: string;
   /** Load management circuits, keyed by circuit name. */
   circuits?: Record<string, Circuit>;
   /** Battery buffer SoC in %. Energy above this level may be used for charging in solar mode. */

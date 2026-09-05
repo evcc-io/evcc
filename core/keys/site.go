@@ -13,6 +13,7 @@ const (
 	Grid                  = "grid"
 	HistoryUpdated        = "historyUpdated"
 	HomePower             = "homePower"
+	LastControlCycle      = "lastControlCycle"
 	PrioritySoc           = "prioritySoc"
 	Pv                    = "pv"
 	PvEnergy              = "pvEnergy"

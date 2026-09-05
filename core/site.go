@@ -664,6 +664,14 @@ func (site *Site) clearPlanLocks() {
 	}
 }
 
+// planChanged recomputes the charge plan of the loadpoint the vehicle is attached to
+// rather than waiting for the loadpoint's next turn in the control cycle
+func (site *Site) planChanged(v api.Vehicle) {
+	if lp, ok := site.coordinator.Owner(v).(*Loadpoint); ok {
+		lp.requestUpdate()
+	}
+}
+
 func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) []types.Measurement {
 	mm := make([]types.Measurement, len(meters))
 
@@ -1301,6 +1309,8 @@ func (site *Site) update(lp updater) {
 	site.publishSuggestions()
 
 	site.stats.Update(site)
+
+	site.publish(keys.LastControlCycle, time.Now())
 }
 
 // updatePower calculates the site power balance and updates the given loadpoint
@@ -1422,6 +1432,7 @@ func (site *Site) prepare() {
 	site.publishTariffs(0, 0)
 	vehicle.Publish = site.publishVehicles
 	vehicle.ClearPlanLocks = site.clearPlanLocks
+	vehicle.PlanChanged = site.planChanged
 }
 
 // pushEvent queues the event in the value stream. The cache attaches its state

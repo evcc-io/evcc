@@ -5396,6 +5396,11 @@
             "description": "Update interval of the control loop in seconds.",
             "type": "number"
           },
+          "lastControlCycle": {
+            "description": "Time the control loop last ran. Not a last-modified marker; the loop runs on a fixed interval regardless of whether any value changed. Loadpoint measurements are refreshed one loadpoint per cycle.",
+            "type": "string",
+            "format": "date-time"
+          },
           "circuits": {
             "description": "Load management circuits, keyed by circuit name.",
             "type": "object",
