@@ -314,7 +314,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 47512 # EMSPowerSet [0-10000]
-              type: writeholdings
+              type: writeholding
               encoding: uint16
     - case: 2 # discharge hold
       set:
@@ -336,7 +336,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 47512 # EMSPowerSet [0-10000]
-              type: writeholdings
+              type: writeholding
               encoding: uint16
     - case: 3 # charge
       set:
@@ -358,7 +358,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 47512 # EMSPowerSet [0-10000]
-              type: writeholdings
+              type: writeholding
               encoding: uint16
   {{- include "battery-params" . }}
   {{- end }}

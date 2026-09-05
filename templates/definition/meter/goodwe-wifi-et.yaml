@@ -169,7 +169,7 @@ render: |
             id: 247
             register:
               address: 47512 # EMSPowerSet [0-10000]
-              type: writeholdings
+              type: writeholding
               encoding: uint16
             delay: {{ .delay }}
     - case: 2 # discharge hold
@@ -195,7 +195,7 @@ render: |
             id: 247
             register:
               address: 47512 # EMSPowerSet [0-10000]
-              type: writeholdings
+              type: writeholding
               encoding: uint16
             delay: {{ .delay }}
     - case: 3 # charge
@@ -221,7 +221,7 @@ render: |
             id: 247
             register:
               address: 47512 # EMSPowerSet [0-10000]
-              type: writeholdings
+              type: writeholding
               encoding: uint16
             delay: {{ .delay }}
   {{- include "battery-params" . }}

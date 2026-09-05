@@ -169,7 +169,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 6000 # Battery Mode (holding)
-              type: writeholdings
+              type: writeholding
               encoding: uint16
         - source: const
           value: 0 # clear the setpoint left over from a forced charge
@@ -202,7 +202,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 6000 # Battery Mode (holding)
-              type: writeholdings
+              type: writeholding
               encoding: uint16
     - case: 3 # charge
       set:
@@ -225,7 +225,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 6000 # Battery Mode (holding)
-              type: writeholdings
+              type: writeholding
               encoding: uint16
   {{- include "battery-minmaxsoc" . }}
   {{- include "battery-power" . }}
