@@ -72,7 +72,7 @@ import TariffChart from "../Tariff/TariffChart.vue";
 import { generateRateSlots, calculateCostRange } from "@/utils/tariffSlots";
 import { distanceValue, distanceUnit } from "@/units";
 
-const HIDDEN_TAGS = ["icon", "heating", "integratedDevice"];
+const HIDDEN_TAGS = ["icon", "heating", "integratedDevice", "continuous"];
 
 const PHASE_TAGS = ["phaseCurrents", "phaseVoltages", "phasePowers"];
 
@@ -267,7 +267,6 @@ export default {
 						? this.fmtPercentage(value, 0)
 						: this.$t(`config.deviceValue.${value ? "yes" : "no"}`);
 				case "controllable":
-				case "continuous":
 				case "curtailable":
 				case "phases1p3p":
 				case "singlePhase":
