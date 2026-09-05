@@ -19,8 +19,6 @@ import (
 	"golang.org/x/oauth2"
 )
 
-var _ api.InteractiveAuthProvider = (*Identity)(nil)
-
 // Server-side port of the Auth0 "Identifier First" login used by the My Porsche
 // app, adapted from https://github.com/CJNE/pyporscheconnectapi. Because evcc
 // performs the HTTP requests itself (rather than a browser), it can read the
@@ -42,25 +40,23 @@ type ErrCaptchaRequired struct {
 
 func (e *ErrCaptchaRequired) Error() string { return "captcha required" }
 
-// LoginSession holds the state of an in-progress interactive login. It keeps
+// LoginSession holds the state of an in-progress server-side login. It keeps
 // the HTTP client (and its cookie jar) and the Auth0 state across the captcha
 // challenge so the flow can be resumed.
 type LoginSession struct {
-	log      *util.Logger
-	client   *http.Client
-	state    string
-	email    string
-	password string
-	created  time.Time
+	log       *util.Logger
+	client    *http.Client
+	state     string
+	email     string
+	password  string
+	created   time.Time
+	challenge *api.AuthChallenge // last captcha, re-served while the session is pending
 }
 
-// NewLoginSession starts an interactive login. It returns the authorization
+// NewLoginSession starts a server-side login. It returns the authorization
 // code on success, or an *ErrCaptchaRequired if a captcha must be solved (call
 // SolveCaptcha to continue).
 func NewLoginSession(log *util.Logger, email, password string) (*LoginSession, string, error) {
-	// credentials are only known at login time, keep them out of the trace log
-	log.Redact(email, password)
-
 	jar, err := cookiejar.New(nil)
 	if err != nil {
 		return nil, "", err
@@ -272,56 +268,63 @@ func (o *Identity) ExchangeCode(code string) (*oauth2.Token, error) {
 	return token, nil
 }
 
-// Expired reports whether the interactive login session is too old to resume.
+// Expired reports whether the login session is too old to resume.
 func (s *LoginSession) Expired() bool {
 	return time.Since(s.created) > 5*time.Minute
 }
 
-// Challenge implements api.InteractiveAuthProvider: the initial login form.
-func (o *Identity) Challenge() *api.AuthChallenge {
-	return &api.AuthChallenge{
-		Fields: []api.AuthField{
-			{Name: "email", Type: "email"},
-			{Name: "password", Type: "password"},
-		},
-	}
-}
-
-// Submit implements api.InteractiveAuthProvider. It either starts a login with
-// the submitted credentials or answers a pending captcha, returning the next
-// challenge (a captcha) or nil once authentication succeeded.
-func (o *Identity) Submit(values map[string]string) (*api.AuthChallenge, error) {
+// StartChallenge implements api.AuthChallenger. It logs in with the stored
+// credentials and returns the captcha if Auth0 asks for one. A pending login is
+// re-served instead of restarted, the ui may call this several times.
+func (o *Identity) StartChallenge() (*api.AuthChallenge, error) {
 	o.loginMu.Lock()
 	defer o.loginMu.Unlock()
 
-	var code string
-	var err error
-
 	if o.pending != nil && !o.pending.Expired() {
-		// answer the pending captcha
-		code, err = o.pending.SolveCaptcha(values["captcha"])
-	} else {
-		// start a new login with the submitted credentials
-		o.pending, code, err = NewLoginSession(o.log, values["email"], values["password"])
+		return o.pending.challenge, nil
 	}
 
+	return o.start()
+}
+
+// SubmitChallenge implements api.AuthChallenger. It answers the pending
+// captcha and returns the next one (wrong answer) or nil once authenticated.
+func (o *Identity) SubmitChallenge(answer string) (*api.AuthChallenge, error) {
+	o.loginMu.Lock()
+	defer o.loginMu.Unlock()
+
+	if o.pending == nil || o.pending.Expired() {
+		// stale session: restart with a fresh captcha
+		return o.start()
+	}
+
+	code, err := o.pending.SolveCaptcha(answer)
+	return o.finish(o.pending, code, err)
+}
+
+// start begins a new login. Caller must hold o.loginMu.
+func (o *Identity) start() (*api.AuthChallenge, error) {
+	s, code, err := NewLoginSession(o.log, o.user, o.password)
+	return o.finish(s, code, err)
+}
+
+// finish maps a login step result to the next challenge or exchanges the code.
+// Caller must hold o.loginMu.
+func (o *Identity) finish(s *LoginSession, code string, err error) (*api.AuthChallenge, error) {
 	var capErr *ErrCaptchaRequired
 	if errors.As(err, &capErr) {
-		return &api.AuthChallenge{
-			Image:  capErr.Image,
-			Fields: []api.AuthField{{Name: "captcha", Type: "text"}},
-		}, nil
+		s.challenge = &api.AuthChallenge{Kind: api.AuthChallengeCaptcha, Image: capErr.Image}
+		o.pending = s
+		return s.challenge, nil
 	}
+
+	o.pending = nil
 	if err != nil {
-		o.pending = nil
 		return nil, err
 	}
 
-	// success - exchange the authorization code for a token
 	if _, err := o.ExchangeCode(code); err != nil {
-		o.pending = nil
 		return nil, err
 	}
-	o.pending = nil
 	return nil, nil
 }

@@ -11,8 +11,8 @@ const (
 	ClientID  = "XhygisuebbrqQ80byOuU5VncxLIm8E6H"
 	XClientID = "41843fb4-691d-4970-85c7-2673e8ecef40"
 	// RedirectURI is the custom app scheme registered for the My Porsche app's
-	// Auth0 client. Auth0 only permits this redirect, so interactive login must
-	// happen in a browser and the resulting callback URL is pasted back.
+	// Auth0 client. Auth0 only permits this redirect, so the login runs
+	// server-side and reads the code from the redirect location (see login.go).
 	RedirectURI = "my-porsche-app://auth0/callback"
 )
 

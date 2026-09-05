@@ -1,0 +1,44 @@
+template: provider-auth-challenge-demo
+products:
+  - description:
+      generic: Auth Demo Vehicle
+auth:
+  type: demo
+  params: [user, password, server, method, secret]
+params:
+  - preset: vehicle-common
+  - name: user
+    description:
+      de: E-Mail
+      en: Email
+    required: true
+  - name: password
+    required: true
+  - name: server
+    description:
+      generic: Server
+    required: true
+  - name: method
+    description:
+      generic: Authentication Method
+    choice: ["challenge", "code"]
+    required: true
+  - name: secret
+    description:
+      generic: Secret
+    default: topsecret
+    advanced: true
+render: |
+  type: custom
+  {{ include "common" . }}
+  soc:
+    source: http
+    uri: {{ .server }}/api/state
+    jq: .site.battery.soc
+    auth:
+      source: demo
+      method: {{ .method }}
+      server: {{ .server }}
+      secret: {{ .secret }}
+      user: {{ .user }}
+      password: {{ .password }}

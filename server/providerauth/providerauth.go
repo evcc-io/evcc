@@ -15,18 +15,6 @@ var instance *Handler
 type AuthProvider struct {
 	ID            string `json:"id"`
 	Authenticated bool   `json:"authenticated"`
-	Interactive   bool   `json:"interactive,omitempty"` // credential form instead of redirect/device flow
-}
-
-// Challenge returns the initial interactive-login challenge for the provider.
-func Challenge(id string) (*api.AuthChallenge, error) {
-	return instance.challenge(id)
-}
-
-// Submit processes interactive-login field values for the provider and returns
-// the next challenge, or done=true when authentication succeeded.
-func Submit(id string, values map[string]string) (challenge *api.AuthChallenge, done bool, err error) {
-	return instance.submit(id, values)
 }
 
 func init() {
@@ -52,6 +40,7 @@ func Setup(router *mux.Router, paramC chan<- util.Param, authMiddleware mux.Midd
 	router.Methods(http.MethodGet).Path("/callback").HandlerFunc(instance.handleCallback)
 	router.Methods(http.MethodGet).Path("/login").Handler(gate(instance.handleLogin))
 	router.Methods(http.MethodGet).Path("/logout").Handler(gate(instance.handleLogout))
+	router.Methods(http.MethodPost).Path("/submit").Handler(gate(instance.handleSubmit))
 
 	go instance.run(paramC)
 }

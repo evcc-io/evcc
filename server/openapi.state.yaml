@@ -299,8 +299,6 @@ components:
             type: string
           authenticated:
             type: boolean
-          interactive:
-            type: boolean
         required:
           - id
           - authenticated
