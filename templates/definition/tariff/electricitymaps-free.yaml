@@ -1,4 +1,5 @@
 template: electricitymaps-free
+link: https://app.electricitymaps.com/home-assistant
 products:
   - brand: Electricity Maps
     description:

@@ -262,7 +262,7 @@
 												<input
 													v-model.number="logCount"
 													type="number"
-													class="form-control text-end log-count-input"
+													class="form-control text-end"
 													min="0"
 													step="25"
 												/>
@@ -686,11 +686,6 @@ export default defineComponent({
 
 <style scoped>
 @import "../../css/breakpoints.css";
-
-.log-count-input::-webkit-outer-spin-button,
-.log-count-input::-webkit-inner-spin-button {
-	margin-left: 0.5rem;
-}
 
 @media (--md-and-up) {
 	.log-lines-input {

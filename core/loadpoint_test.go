@@ -106,48 +106,49 @@ func TestNew(t *testing.T) {
 
 func TestUpdatePowerZero(t *testing.T) {
 	tc := []struct {
-		status api.ChargeStatus
-		mode   api.ChargeMode
-		expect func(h *api.MockCharger)
+		status       api.ChargeStatus
+		mode         api.ChargeMode
+		alwaysCharge api.AlwaysCharge
+		expect       func(h *api.MockCharger)
 	}{
-		{api.StatusA, api.ModeOff, func(h *api.MockCharger) {
+		{api.StatusA, api.ModeOff, api.AlwaysChargeOff, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false)
 		}},
-		{api.StatusA, api.ModeNow, func(h *api.MockCharger) {
+		{api.StatusA, api.ModeNow, api.AlwaysChargeOff, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false)
 		}},
-		{api.StatusA, api.ModeMinPV, func(h *api.MockCharger) {
+		{api.StatusA, api.ModeSmart, api.AlwaysChargeOn, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false)
 		}},
-		{api.StatusA, api.ModePV, func(h *api.MockCharger) {
+		{api.StatusA, api.ModeSmart, api.AlwaysChargeOff, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false) // zero since update called with 0
 		}},
 
-		{api.StatusB, api.ModeOff, func(h *api.MockCharger) {
+		{api.StatusB, api.ModeOff, api.AlwaysChargeOff, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false)
 		}},
-		{api.StatusB, api.ModeNow, func(h *api.MockCharger) {
+		{api.StatusB, api.ModeNow, api.AlwaysChargeOff, func(h *api.MockCharger) {
 			h.EXPECT().MaxCurrent(int64(maxA)) // true
 		}},
-		{api.StatusB, api.ModeMinPV, func(h *api.MockCharger) {
+		{api.StatusB, api.ModeSmart, api.AlwaysChargeOn, func(h *api.MockCharger) {
 			// MaxCurrent omitted since identical value
 		}},
-		{api.StatusB, api.ModePV, func(h *api.MockCharger) {
+		{api.StatusB, api.ModeSmart, api.AlwaysChargeOff, func(h *api.MockCharger) {
 			// zero since update called with 0
-			// force = false due to pv mode climater check
+			// force = false due to smart mode climater check
 			h.EXPECT().Enable(false)
 		}},
 
-		{api.StatusC, api.ModeOff, func(h *api.MockCharger) {
+		{api.StatusC, api.ModeOff, api.AlwaysChargeOff, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false)
 		}},
-		{api.StatusC, api.ModeNow, func(h *api.MockCharger) {
+		{api.StatusC, api.ModeNow, api.AlwaysChargeOff, func(h *api.MockCharger) {
 			h.EXPECT().MaxCurrent(int64(maxA)) // true
 		}},
-		{api.StatusC, api.ModeMinPV, func(h *api.MockCharger) {
+		{api.StatusC, api.ModeSmart, api.AlwaysChargeOn, func(h *api.MockCharger) {
 			// MaxCurrent omitted since identical value
 		}},
-		{api.StatusC, api.ModePV, func(h *api.MockCharger) {
+		{api.StatusC, api.ModeSmart, api.AlwaysChargeOff, func(h *api.MockCharger) {
 			// omitted since PV balanced
 		}},
 	}
@@ -171,6 +172,7 @@ func TestUpdatePowerZero(t *testing.T) {
 			minCurrent:  minA,
 			maxCurrent:  maxA,
 			phases:      1,
+			solarShare:  1,
 			status:      tc.status, // no status change
 		}
 
@@ -185,6 +187,7 @@ func TestUpdatePowerZero(t *testing.T) {
 		}
 
 		lp.mode = tc.mode
+		lp.alwaysCharge = tc.alwaysCharge
 		lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil) // false,sitePower false,0
 
 		ctrl.Finish()
@@ -319,6 +322,7 @@ func TestPVHysteresis(t *testing.T) {
 				maxCurrent:     maxA,
 				phases:         phases,
 				measuredPhases: phases,
+				solarShare:     1,
 				Enable: loadpoint.ThresholdConfig{
 					Threshold: tc.enable,
 					Delay:     dt,
@@ -341,7 +345,7 @@ func TestPVHysteresis(t *testing.T) {
 				// charger.EXPECT().Enabled().Return(tc.enabled, nil)
 
 				lp.enabled = tc.enabled
-				current := lp.pvMaxCurrent(api.ModePV, se.site, 0, false, false)
+				current := lp.pvMaxCurrent(se.site, 0, false, false)
 
 				if current != se.current {
 					t.Errorf("step %d: wanted %.1f, got %.1f", step, se.current, current)
@@ -367,6 +371,7 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 		maxCurrent:     maxA,
 		phases:         phases,
 		measuredPhases: phases,
+		solarShare:     1,
 	}
 
 	// not connected, test PV mode logic  short-circuited
@@ -374,7 +379,7 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 
 	// maxCurrent will read enabled state in PV mode
 	sitePower := -float64(phases)*minA*Voltage + 1 // 1W below min power
-	current := lp.pvMaxCurrent(api.ModePV, sitePower, 0, false, false)
+	current := lp.pvMaxCurrent(sitePower, 0, false, false)
 
 	if current != 0 {
 		t.Errorf("PV mode could not disable charger as expected. Expected 0, got %.f", current)
@@ -749,18 +754,20 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 			charger:     charger,
 			minCurrent:  minA,
 			maxCurrent:  maxA,
+			solarShare:  1,
 			Disable: loadpoint.ThresholdConfig{
 				Delay: dt,
 			},
-			status:  api.StatusC,
-			enabled: true,
+			status:      api.StatusC,
+			enabled:     true,
+			chargePower: 3 * Voltage * minA, // charging 3p at min current
 		}
 
 		start := clock.Now()
 
 		for step, se := range tc.series {
 			clock.Set(start.Add(se.delay))
-			assert.Equal(t, se.current, lp.pvMaxCurrent(api.ModePV, se.site, 0, false, false), step)
+			assert.Equal(t, se.current, lp.pvMaxCurrent(se.site, 0, false, false), step)
 		}
 
 		ctrl.Finish()
@@ -885,6 +892,102 @@ func TestBatteryBoostHold(t *testing.T) {
 	assert.NotEqual(t, boostDisabled, lp.GetBatteryBoost(), "hold is active")
 }
 
+// TestPVSolarShare verifies the pv enable/disable points derived from solarShare
+// and that manually configured thresholds take precedence over the solar share.
+func TestPVSolarShare(t *testing.T) {
+	Voltage = 100
+	ctrl := gomock.NewController(t)
+
+	newLp := func(share float64, enabled bool, enableT, disableT float64) *Loadpoint {
+		lp := &Loadpoint{
+			log:            util.NewLogger("foo"),
+			clock:          clock.NewMock(),
+			charger:        api.NewMockCharger(ctrl),
+			minCurrent:     minA,
+			maxCurrent:     maxA,
+			phases:         3,
+			measuredPhases: 3,
+			Enable:         loadpoint.ThresholdConfig{Threshold: enableT},
+			Disable:        loadpoint.ThresholdConfig{Threshold: disableT},
+			solarShare:     share,
+		}
+		lp.status = api.StatusC
+		lp.enabled = enabled
+		return lp
+	}
+
+	minPower := currentToPower(minA, 3)
+
+	// enable: share 1.0 requires the full min power as surplus
+	assert.Equal(t, minA, newLp(1, false, 0, 0).pvMaxCurrent(-minPower, 0, false, false),
+		"should enable at full surplus")
+	assert.Equal(t, 0.0, newLp(1, false, 0, 0).pvMaxCurrent(-minPower+100, 0, false, false),
+		"must not enable below full surplus")
+
+	// enable: share 0.5 accepts half the min power from grid
+	assert.Equal(t, minA, newLp(0.5, false, 0, 0).pvMaxCurrent(-minPower/2, 0, false, false),
+		"should enable at half surplus")
+
+	// enable: share 0 starts as soon as there is no grid import
+	assert.Equal(t, minA, newLp(0, false, 0, 0).pvMaxCurrent(0, 0, false, false),
+		"should enable without surplus")
+
+	// disable: share 1.0 derives threshold 0, so feed-in keeps charging
+	assert.Equal(t, minA, newLp(1, true, 0, 0).pvMaxCurrent(-500, 0, false, false),
+		"must not disable while feeding in")
+	assert.Equal(t, 0.0, newLp(1, true, 0, 0).pvMaxCurrent(100, 0, false, false),
+		"should disable on grid draw")
+
+	// disable: share 0.5 tolerates grid import up to half the min power
+	assert.Equal(t, minA, newLp(0.5, true, 0, 0).pvMaxCurrent(minPower/2-100, 0, false, false),
+		"must not disable within allowed grid import")
+	assert.Equal(t, 0.0, newLp(0.5, true, 0, 0).pvMaxCurrent(minPower/2+100, 0, false, false),
+		"should disable above allowed grid import")
+
+	// configured thresholds take precedence over solar share
+	assert.Equal(t, minA, newLp(1, false, 5000, 0).pvMaxCurrent(4000, 0, false, false),
+		"enable threshold should apply despite solar share")
+	assert.Equal(t, minA, newLp(1, true, 0, 5000).pvMaxCurrent(100, 0, false, false),
+		"disable threshold should apply despite solar share")
+}
+
+// TestPVSolarSharePhases verifies that the derived switch points scale with the
+// phases charging actually runs on, not with the theoretical 1p minimum.
+func TestPVSolarSharePhases(t *testing.T) {
+	Voltage = 100
+	ctrl := gomock.NewController(t)
+
+	// 1p3p charger pinned to 3p cannot scale down, so the enable point must
+	// require the full 3p min power - not the 1p min power of EffectiveMinPower
+	charger := struct {
+		*api.MockCharger
+		*api.MockPhaseSwitcher
+	}{
+		api.NewMockCharger(ctrl), api.NewMockPhaseSwitcher(ctrl),
+	}
+
+	newLp := func(enabled bool) *Loadpoint {
+		lp := &Loadpoint{
+			log:              util.NewLogger("foo"),
+			clock:            clock.NewMock(),
+			charger:          charger,
+			minCurrent:       minA,
+			maxCurrent:       maxA,
+			phases:           3,
+			phasesConfigured: 3,
+			solarShare:       1,
+		}
+		lp.status = api.StatusC
+		lp.enabled = enabled
+		return lp
+	}
+
+	assert.Equal(t, 0.0, newLp(false).pvMaxCurrent(-currentToPower(minA, 1), 0, false, false),
+		"must not enable at 1p surplus while pinned to 3p")
+	assert.Equal(t, minA, newLp(false).pvMaxCurrent(-currentToPower(minA, 3), 0, false, false),
+		"should enable at 3p surplus")
+}
+
 // default vehicle referencing a disabled vehicle must not fail loadpoint creation
 func TestNewLoadpointFromConfigDisabledVehicle(t *testing.T) {
 	config.Reset()
@@ -906,4 +1009,71 @@ func TestNewLoadpointFromConfigDisabledVehicle(t *testing.T) {
 
 	// disabled vehicle is filtered from instances
 	require.Empty(t, config.Instances(config.Vehicles().Devices()))
+}
+
+// TestPVDisableContinuousDeviceShortfall is a regression test for #32282: a continuous
+// device consuming less than its min power demand keeps the remainder out of site
+// power, so the disable gate never trips on the missing surplus. The shortfall
+// towards min power is projected into the gate regardless of charge status, since
+// some chargers (sgready) report StatusC while the device is idle.
+func TestPVDisableContinuousDeviceShortfall(t *testing.T) {
+	const dt = time.Minute
+
+	tc := []struct {
+		name        string
+		status      api.ChargeStatus
+		chargePower float64
+		site        float64
+		current     float64
+	}{
+		// idle device, export below its 600W demand: disable
+		{"idle, insufficient surplus", api.StatusB, 0, -400, 0},
+		// idle device, export covers its demand: keep enabled
+		{"idle, sufficient surplus", api.StatusB, 0, -700, 7},
+		// idle device reporting StatusC (sgready-style): still disable
+		{"idle, StatusC, insufficient surplus", api.StatusC, 0, -400, 0},
+		// starting device: own draw plus surplus covers min power, keep enabled
+		{"starting, demand covered", api.StatusB, 300, -400, 7},
+		// running below min power without surplus for the remaining demand: disable
+		{"running below min, insufficient surplus", api.StatusC, 300, -200, 0},
+		// consuming min power, importing: unchanged disable behavior
+		{"consuming, importing", api.StatusC, 600, 100, 0},
+	}
+
+	for _, tc := range tc {
+		t.Run(tc.name, func(t *testing.T) {
+			clock := clock.NewMock()
+
+			Voltage = 100
+			lp := &Loadpoint{
+				log:              util.NewLogger("foo"),
+				clock:            clock,
+				charger:          &continuousCharger{},
+				minCurrent:       minA,
+				maxCurrent:       maxA,
+				phases:           1,
+				phasesConfigured: 1,
+				measuredPhases:   1,
+				status:           tc.status,
+				enabled:          true,
+				chargePower:      tc.chargePower,
+				solarShare:       1,
+				Disable:          loadpoint.ThresholdConfig{Delay: dt},
+			}
+
+			start := clock.Now()
+			for _, delay := range []time.Duration{0, dt + 1} {
+				clock.Set(start.Add(delay))
+				current := lp.pvMaxCurrent(tc.site, 0, false, false)
+
+				// before the disable delay elapses the device keeps running
+				if delay == 0 {
+					assert.Equal(t, max(tc.current, minA), current, "before disable delay")
+					continue
+				}
+
+				assert.Equal(t, tc.current, current, "after disable delay")
+			}
+		})
+	}
 }

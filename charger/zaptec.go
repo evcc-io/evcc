@@ -47,14 +47,15 @@ const _ZaptecGo2PhaseSwitchCurrent = 32.0 // threshold (in A) at which Zaptec Go
 type Zaptec struct {
 	*request.Helper
 	implement.Caps
-	log        *util.Logger
-	statusG    util.Cacheable[zaptec.StateResponse]
-	instance   zaptec.Charger
-	version    int
-	enabled    bool
-	priority   bool
-	passive    bool
-	lastStatus int
+	log             *util.Logger
+	statusG         util.Cacheable[zaptec.StateResponse]
+	instance        zaptec.Charger
+	version         int
+	enabled         bool
+	priority        bool
+	passive         bool
+	startPrevention bool
+	lastStatus      int
 
 	session      string    // last seen SessionIdentifier
 	sessionStart time.Time // start of the current session
@@ -67,11 +68,12 @@ func init() {
 // NewZaptecFromConfig creates a Zaptec Pro charger from generic config
 func NewZaptecFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
-		User, Password string
-		Id             string
-		Priority       bool
-		Passive        bool
-		Cache          time.Duration
+		User, Password      string
+		Id                  string
+		Priority            bool
+		Passive             bool
+		Cache               time.Duration
+		AutoStartPrevention bool
 	}{
 		Cache: time.Second,
 	}
@@ -84,11 +86,11 @@ func NewZaptecFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, api.ErrMissingCredentials
 	}
 
-	return NewZaptec(ctx, cc.User, cc.Password, cc.Id, cc.Priority, cc.Passive, cc.Cache)
+	return NewZaptec(ctx, cc.User, cc.Password, cc.Id, cc.Priority, cc.Passive, cc.Cache, cc.AutoStartPrevention)
 }
 
 // NewZaptec creates Zaptec charger
-func NewZaptec(_ context.Context, user, password, id string, priority bool, passive bool, cache time.Duration) (api.Charger, error) {
+func NewZaptec(ctx context.Context, user, password, id string, priority bool, passive bool, cache time.Duration, startPrevention bool) (api.Charger, error) {
 	log := util.NewLogger("zaptec").Redact(user, password)
 
 	if !sponsor.IsAuthorized() {
@@ -96,19 +98,12 @@ func NewZaptec(_ context.Context, user, password, id string, priority bool, pass
 	}
 
 	c := &Zaptec{
-		Helper:   request.NewHelper(log),
-		Caps:     implement.New(),
-		log:      log,
-		priority: priority,
-		passive:  passive,
-	}
-
-	// Add User-Agent header for Zaptec API compliance
-	c.Client.Transport = &transport.Decorator{
-		Decorator: transport.DecorateHeaders(map[string]string{
-			"User-Agent": "evcc/" + util.Version,
-		}),
-		Base: c.Client.Transport,
+		Helper:          request.NewHelper(log),
+		Caps:            implement.New(),
+		log:             log,
+		priority:        priority,
+		passive:         passive,
+		startPrevention: startPrevention,
 	}
 
 	// setup cached values
@@ -121,21 +116,26 @@ func NewZaptec(_ context.Context, user, password, id string, priority bool, pass
 		return res, err
 	}, cache)
 
-	// Create a separate HTTP client for OAuth token requests to avoid circular dependency
-	// (c.Transport will be modified to use oauth2.Transport, which would create a loop)
-	tsCtx := context.WithValue(context.Background(), oauth2.HTTPClient, &http.Client{
-		Transport: c.Transport,
-	})
+	// Add User-Agent header for Zaptec API compliance
+	tr := &transport.Decorator{
+		Decorator: transport.DecorateHeaders(map[string]string{
+			"User-Agent": "evcc/" + util.Version,
+		}),
+		Base: c.Transport,
+	}
+
+	// token requests need their own client- c.Transport is wrapped in oauth2.Transport below
+	tsCtx := context.WithValue(ctx, oauth2.HTTPClient, &http.Client{Transport: tr})
 
 	// Get shared token source for this user (per-user uniqueness)
-	ts, err := zaptec.TokenSource(tsCtx, user, password)
+	ts, err := zaptec.TokenSource(tsCtx, log, user, password)
 	if err != nil {
 		return nil, err
 	}
 
 	c.Transport = &oauth2.Transport{
 		Source: ts,
-		Base:   c.Transport,
+		Base:   tr,
 	}
 
 	c.instance, err = ensureChargerEx(id, c.chargers, func(charger zaptec.Charger) (string, error) {
@@ -151,13 +151,34 @@ func NewZaptec(_ context.Context, user, password, id string, priority bool, pass
 	}
 
 	inst, err := c.installation()
-	if err == nil || c.version == zaptec.ZaptecGo1_Pro {
-		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
-	}
 
-	// the Zaptec Go 2 switches phases via the installation's per-phase available current;
-	// 1p->3p only works when all phases are set equal, so warn about an inconsistent setting
-	if err == nil && c.version == zaptec.ZaptecGo2 {
+	switch {
+	// with passive: true evcc exercises no power control beyond on/off: no current
+	// control, and no phase switching. the latter is two quite different writes:
+	// maxChargePhases on the charger (Go 1/Pro), or threeToOnePhaseSwitchCurrent
+	// on the installation (Go 2)
+	case c.passive:
+		c.log.WARN.Println("phase switching not available: passive mode")
+
+	case c.version == zaptec.ZaptecGo:
+		// no 1p3p
+
+	case c.version == zaptec.ZaptecPro:
+		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
+
+	case err != nil:
+		c.log.WARN.Println("phase switching not available:", err)
+
+	// the Zaptec Go 2 switches phases by updating the installation, which is rejected
+	// as long as adaptive power management (APM) is active
+	case inst.EnabledFeatures.Has(zaptec.FeaturePowerManagementApm):
+		c.log.WARN.Println("phase switching not available: installation uses adaptive power management (APM)")
+
+	default:
+		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
+
+		// the Zaptec Go 2 switches phases via the installation's per-phase available current;
+		// 1p->3p only works when all phases are set equal, so warn about an inconsistent setting
 		if p1, p2, p3 := inst.AvailableCurrentPhase1, inst.AvailableCurrentPhase2, inst.AvailableCurrentPhase3; p2 != p1 || p3 != p1 {
 			c.log.WARN.Printf("installation available current is unequal across phases (%.3gA/%.3gA/%.3gA); phase switching back to 3p requires available current on all phases", p1, p2, p3)
 		}
@@ -174,16 +195,21 @@ func (c *Zaptec) detectVersion() (int, error) {
 		return 0, err
 	}
 
-	capResp := res.ObservationByID(zaptec.Capabilities)
-	if err := json.Unmarshal([]byte(capResp.ValueAsString), &capabilities); err != nil {
-		return 0, err
+	// not all chargers report capabilities
+	if capResp := res.ObservationByID(zaptec.Capabilities); capResp != nil && capResp.ValueAsString != "" {
+		if err := json.Unmarshal([]byte(capResp.ValueAsString), &capabilities); err != nil {
+			return 0, err
+		}
 	}
 
-	if capabilities.ProductVariant == "Go2" {
+	switch {
+	case capabilities.ProductVariant == "Go2":
 		return zaptec.ZaptecGo2, nil
+	case capabilities.ProductVariant == "ProMID" || capabilities.DeviceType == "Pro":
+		return zaptec.ZaptecPro, nil
+	default:
+		return zaptec.ZaptecGo, nil
 	}
-
-	return zaptec.ZaptecGo1_Pro, nil
 }
 
 func (c *Zaptec) chargers() ([]zaptec.Charger, error) {
@@ -205,7 +231,7 @@ func (c *Zaptec) Status() (api.ChargeStatus, error) {
 	}
 	currentStatus, err := res.ObservationByID(zaptec.ChargerOperationMode).Int()
 	if err == nil && currentStatus == zaptec.OpModeDisconnected && currentStatus != c.lastStatus {
-		err = c.MaxCurrentMillis(0)
+		err = c.preventAutoStart()
 	}
 	c.lastStatus = currentStatus
 
@@ -222,6 +248,14 @@ func (c *Zaptec) Status() (api.ChargeStatus, error) {
 		}
 		return api.StatusNone, err
 	}
+}
+
+func (c *Zaptec) preventAutoStart() error {
+	if !c.startPrevention {
+		return nil
+	}
+
+	return c.MaxCurrentMillis(0)
 }
 
 // Enabled implements the api.Charger interface
@@ -385,7 +419,7 @@ func (c *Zaptec) phases1p3p(phases int) error {
 		return err
 	}
 
-	if c.version == zaptec.ZaptecGo1_Pro {
+	if c.version == zaptec.ZaptecPro {
 		// adjust the current by +/- 0.1A; otherwise, the phase change will not happen
 		current, err := res.ObservationByID(zaptec.ChargerMaxCurrent).Float64()
 		if err != nil {
@@ -419,7 +453,7 @@ func (c *Zaptec) phases1p3p(phases int) error {
 }
 
 func (c *Zaptec) switchPhases(phases int) error {
-	if c.version == zaptec.ZaptecGo1_Pro {
+	if c.version == zaptec.ZaptecPro {
 		data := zaptec.Update{
 			MaxChargePhases: &phases,
 		}

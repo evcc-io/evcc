@@ -203,13 +203,17 @@ func deviceOtherFromHandler[T any](name string, h config.Handler[T]) (map[string
 	return dev.Config().Other, nil
 }
 
+// deviceTestTimeout limits the device configuration test. EEBus devices need
+// headroom for ship-go's connection backoff plus the SHIP handshake.
+const deviceTestTimeout = 15 * time.Second
+
 func startDeviceTimeout() (context.Context, context.CancelFunc, chan struct{}) {
 	done := make(chan struct{})
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func() {
 		select {
-		case <-time.After(10 * time.Second):
+		case <-time.After(deviceTestTimeout):
 			// timeout - cancel context
 			cancel()
 		case <-done:
@@ -408,6 +412,12 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 	})
 
 	wg.Go(func() {
+		if hasFeature(instance, api.Continuous) {
+			makeResult("continuous", true, nil)
+		}
+	})
+
+	wg.Go(func() {
 		if dev, ok := api.Cap[api.IconDescriber](instance); ok && dev.Icon() != "" {
 			makeResult("icon", dev.Icon(), nil)
 		}
@@ -446,9 +456,15 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 
 	wg.Go(func() {
 		if dev, ok := api.Cap[api.Curtailer](instance); ok {
-			makeResult("curtailable", true, nil)
-			// only reported while actually curtailing
-			if val, err := dev.CurtailedPercent(); err != nil || val < 100 {
+			if _, isMeter := instance.(api.Meter); isMeter {
+				// curtailment as meter capability, limit only reported while actually curtailing
+				makeResult("curtailable", true, nil)
+				if val, err := dev.CurtailedPercent(); err != nil || val < 100 {
+					makeResult("curtailed", val, err)
+				}
+			} else {
+				// dedicated curtailment device, always report the limit
+				val, err := dev.CurtailedPercent()
 				makeResult("curtailed", val, err)
 			}
 		}

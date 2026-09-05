@@ -7,6 +7,7 @@ const (
 	Disabled          = "disabled"         // loadpoint disabled via config
 	Mode              = "mode"             // charge mode
 	DefaultMode       = "defaultMode"      // default charge mode
+	AlwaysCharge      = "alwaysCharge"     // smart mode: charge continuously at least at min power (off/on/once)
 	Charger           = "charger"          // charger ref
 	Meter             = "meter"            // meter ref
 	Circuit           = "circuit"          // circuit ref
@@ -53,6 +54,7 @@ const (
 	SmartCostActive    = "smartCostActive"    // smart cost active
 	SmartCostLimit     = "smartCostLimit"     // smart cost limit, fast charge when costs are below
 	SmartCostNextStart = "smartCostNextStart" // smart cost next start, time of next fast charging
+	SolarShare         = "solarShare"         // solar share required to start/continue pv charging
 
 	SmartFeedInPriorityActive    = "smartFeedInPriorityActive"    // smart feed-in priority active
 	SmartFeedInPriorityLimit     = "smartFeedInPriorityLimit"     // smart feed-in priority limit, pause self-consumption when feed-in rates are above

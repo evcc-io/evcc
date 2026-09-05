@@ -63,28 +63,7 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Nivell de bateria",
-    "bufferStart": {
-      "above": "quan està per sobre de {soc}.",
-      "full": "quan arriba a {soc}.",
-      "never": "només amb prou excedent."
-    },
-    "capacity": "{energy} de {total}",
-    "control": "Control de la bateria",
-    "discharge": "Evita la descàrrega en mode ràpid i càrrega planificada.",
-    "disclaimerHint": "Nota:",
-    "disclaimerText": "Aquests paràmetres només afecten el mode solar. El comportament de càrrega s’ajusta en conseqüència.",
     "gridChargeTab": "Càrrega de xarxa",
-    "legendBottomName": "Prioritat per a la bateria domèstica",
-    "legendBottomSubline": "fins que arriba a {soc}.",
-    "legendMiddleName": "Prioritat per al vehicle",
-    "legendMiddleSubline": "quan la bateria domèstica està per sobre de {soc}.",
-    "legendTopAutostart": "S’inicia automàticament",
-    "legendTopName": "Càrrega del vehicle amb suport de bateria",
-    "legendTopSubline": "quan la bateria domèstica està per sobre de {soc}.",
-    "legendTopSublineAbove": "quan està per sobre de {soc}",
-    "legendTopSublineDisabled": "és {soc}.",
-    "legendTopSublineDisabledState": "desactivat",
     "modalTitle": "Bateria domèstica",
     "noBattery": "No hi ha bateries configurades.",
     "usageTab": "Ús de la bateria"
@@ -188,6 +167,15 @@
       "label": "Divisa",
       "title": "Divisa"
     },
+    "curtailer": {
+      "description": "Dispositiu que limita la injecció a petició de l'operador de la xarxa (§ 9 EEG). Molts inversors solars ho permeten directament a través de la configuració del seu comptador solar. Només alguns fabricants o sistemes multi inversor necessiten una configuració separada.",
+      "generic": "Integracions genèriques",
+      "specific": "Integracions específiques",
+      "template": "Fabricant",
+      "title": "Restricció",
+      "titleAdd": "Afegeix un dispositiu de restricció",
+      "titleEdit": "Edita el dispositiu de restricció"
+    },
     "deviceValue": {
       "activeClients": "Clients actius",
       "amount": "Import",
@@ -212,7 +200,7 @@
       "currentRange": "Corrent",
       "curtailLimit": "Límit d’injecció",
       "curtailable": "Reduïble",
-      "curtailed": "Injecció limitada",
+      "curtailed": "Límit d'injecció",
       "detected": "Detectat",
       "dimLimit": "Límit de consum",
       "dimmed": "Consum limitat",
@@ -432,13 +420,6 @@
         "charging": "Carregador",
         "heating": "Dispositiu de calefacció"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Utilitzarà un interval de corrent de 6 a 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Utilitzarà un interval de corrent de 6 a 32 A.",
-      "chargerPowerCustom": "altre",
-      "chargerPowerCustomHelp": "Defineix un interval de corrent personalitzat.",
-      "chargerTypeLabel": "Tipus de carregador",
       "chargingTitle": "Comportament",
       "circuitHelp": "Assignació a la gestió de càrregues per a assegurar que no se superin els límits de potència i corrent.",
       "circuitInvalid": "El circuit no existeix",
@@ -539,6 +520,7 @@
     "main": {
       "addAdditional": "Afegeix comptador addicional",
       "addConsumer": "Afegeix consumidor",
+      "addCurtailer": "Afegeix dispositiu de restricció",
       "addGrid": "Afegeix comptador de xarxa",
       "addLoadpoint": "Afegeix punt de recàrrega o escalfador",
       "addPvBattery": "Afegeix solar o bateria",
@@ -639,6 +621,7 @@
         "aux": "Afegeix consumidor autoregulat",
         "battery": "Afegeix comptador de bateria",
         "consumer": "Afegeix consumidor normal",
+        "grid": "Afegeix mesurador de xarxa",
         "pv": "Afegeix comptador solar"
       },
       "save": "Desa",
@@ -829,6 +812,8 @@
       "noClients": "Encara no hi ha clients. Ningú no es pot connectar encara.",
       "password": "Contrasenya",
       "passwordOnce": "Aquesta contrasenya es mostra una sola vegada. Escanegeu el codi QR o copieu-la ara. No la tornareu a veure.",
+      "privacy": "Habilitant aquesta funció, dones el consentiment a la nostra {0}.",
+      "privacyLink": "Política de privacitat",
       "qrInstall": "Instal·leu l’app d’evcc per a {ios} o {android}.",
       "qrScan": "Escanegeu el codi amb la càmera del mòbil per a connectar-vos. Feu-hi clic si ja utilitzeu el mòbil.",
       "removeClient": "Elimina client",
@@ -905,6 +890,8 @@
           "confirmationButton": "Restableix i reinicia",
           "confirmationText": "Se suprimiran permanentment les dades seleccionades. Assegureu-vos d’haver descarregat abans una còpia de seguretat.",
           "description": "Teniu problemes de configuració i voleu començar de zero? Suprimiu totes les dades i comenceu de nou.",
+          "remote": "Accés remot",
+          "remoteDescription": "Esborrar configuracions i credencials.",
           "sessions": "Sessions de càrrega",
           "sessionsDescription": "Suprimeix l’historial de les vostres sessions de càrrega.",
           "settings": "Configuració i paràmetres",
@@ -1126,7 +1113,7 @@
       "modalUpdateStatusStart": "Instal·lació iniciada:",
       "modalViewOnGitHub": "Vegeu a GitHub",
       "openSource": "codi obert",
-      "poweredByOpenSource": "Impulsat per {0}."
+      "poweredBy": "impulsat per"
     }
   },
   "forecast": {
@@ -1328,7 +1315,6 @@
       "strategy": {
         "label": "Estratègia"
       },
-      "strategyDisabledDescription": "La càrrega comença tan tard com sigui possible per a acabar just a temps de la sortida. Amb preus dinàmics de xarxa o tarifa de CO₂, hi ha més opcions disponibles.",
       "time": "Hora",
       "title": "Pla",
       "unsavedChanges": "Hi ha canvis sense aplicar. Voleu aplicar-los ara?",
@@ -1535,7 +1521,7 @@
     "vehicleSettings": {
       "connectedTo": "connectat a {0}",
       "description": "Aquests valors per defecte s’apliquen quan el vehicle es connecta a un punt de recàrrega.",
-      "editHint": "Afegiu o editeu vehicles a {0}.",
+      "editHint": "Els vehicles es poden editar a {0}.",
       "keepAsIs": "Tal com està",
       "learnMore": "Més informació.",
       "limitSoc": "Límit per defecte",
@@ -1718,6 +1704,13 @@
     "vehicle": "Vehicle"
   },
   "settings": {
+    "dateFormat": {
+      "auto": "Automàtic",
+      "dmy": "DD/MM/YYYY",
+      "label": "Format de data",
+      "mdy": "MM/DD/YYYY",
+      "ymd": "YYYY-MM-DD"
+    },
     "deviceInfo": "Els paràmetres d’aquest diàleg només afecten aquest dispositiu.",
     "fullscreen": {
       "enter": "Activa la pantalla completa",

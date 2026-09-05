@@ -347,6 +347,47 @@
         }
       }
     },
+    "/batterygriddischargelimit": {
+      "delete": {
+        "operationId": "removeBatteryGridDischargeLimit",
+        "summary": "Remove battery grid discharge limit",
+        "description": "Remove battery grid discharge limit (experimental).",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/features/battery"
+        },
+        "tags": [
+          "battery"
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NullResult"
+          }
+        }
+      }
+    },
+    "/batterygriddischargelimit/{cost}": {
+      "post": {
+        "operationId": "setBatteryGridDischargeLimit",
+        "summary": "Set battery grid discharge limit",
+        "description": "Discharge home battery to grid when the feed-in price is at or above the threshold (experimental). Requires a feed-in tariff and the battery grid discharge setting. Ignored otherwise.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/features/battery"
+        },
+        "tags": [
+          "battery"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/costLimit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        }
+      }
+    },
     "/batterymode": {
       "delete": {
         "operationId": "disableExternalBatteryControl",
@@ -424,6 +465,42 @@
         "responses": {
           "200": {
             "$ref": "#/components/responses/NumberResult"
+          }
+        }
+      }
+    },
+    "/loadpoints/{id}/alwayscharge/{alwaysCharge}": {
+      "post": {
+        "operationId": "setLoadpointAlwaysCharge",
+        "summary": "Set always charge",
+        "description": "Updates the always charge state. When active, smart mode charges continuously at least at minimum power. The once state resets when the vehicle is disconnected.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/features/solar-charging"
+        },
+        "tags": [
+          "loadpoints"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/alwaysCharge"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlwaysCharge"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Not supported for chargers without current control."
           }
         }
       }
@@ -1121,6 +1198,36 @@
           },
           {
             "$ref": "#/components/parameters/costLimit"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        }
+      }
+    },
+    "/loadpoints/{id}/solarshare/{share}": {
+      "post": {
+        "operationId": "setLoadpointSolarShare",
+        "summary": "Set solar share",
+        "description": "Set the share of the minimum charging power that must come from solar surplus in smart mode. 1 (default) requires full surplus, 0 starts charging as soon as there is no grid import. Ignored while enable/disable thresholds are configured. Usually 0 to 1; values outside that range are possible for special cases.",
+        "tags": [
+          "loadpoints"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "name": "share",
+            "in": "path",
+            "description": "Solar share of the minimum charging power.",
+            "required": true,
+            "example": 0.5,
+            "schema": {
+              "type": "number"
+            }
           }
         ],
         "responses": {
@@ -1947,6 +2054,89 @@
         }
       }
     },
+    "/vehicles/{name}/alwayscharge": {
+      "delete": {
+        "operationId": "deleteVehicleAlwaysCharge",
+        "summary": "Reset always charge",
+        "description": "Resets the vehicle always charge default to keep the loadpoint state.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/features/solar-charging"
+        },
+        "tags": [
+          "vehicles"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "alwaysCharge": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/components/schemas/VehicleAlwaysCharge"
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            ""
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/vehicles/{name}/alwayscharge/{alwaysCharge}": {
+      "post": {
+        "operationId": "setVehicleAlwaysCharge",
+        "summary": "Set always charge",
+        "description": "Sets the always charge state applied when this vehicle becomes active on a loadpoint.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/features/solar-charging"
+        },
+        "tags": [
+          "vehicles"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/vehicleName"
+          },
+          {
+            "$ref": "#/components/parameters/vehicleAlwaysCharge"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "alwaysCharge": {
+                      "$ref": "#/components/schemas/VehicleAlwaysCharge"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/vehicles/{name}/plan/repeating": {
       "post": {
         "operationId": "updateVehicleRepeatingPlans",
@@ -2197,7 +2387,7 @@
       "post": {
         "operationId": "resetDatabase",
         "summary": "Reset database",
-        "description": "Selectively deletes sessions and/or settings from the database. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt. The instance restarts after a successful reset.",
+        "description": "Selectively deletes sessions, settings and/or remote access data from the database. Session users must supply the admin password in the X-Admin-Password header. API key holders via Bearer token are exempt. The instance restarts after a successful reset.",
         "tags": [
           "db"
         ],
@@ -2228,6 +2418,10 @@
                   "settings": {
                     "type": "boolean",
                     "description": "Delete all settings, configs, and meters"
+                  },
+                  "remote": {
+                    "type": "boolean",
+                    "description": "Delete remote access configuration and registered clients"
                   }
                 }
               }
@@ -2650,6 +2844,26 @@
           }
         }
       },
+      "VehicleAlwaysCharge": {
+        "description": "Always charge default applied on identification. Once is not supported for vehicles.",
+        "type": "string",
+        "enum": [
+          "off",
+          "on"
+        ]
+      },
+      "ChargeModeInput": {
+        "description": "Charging behavior. The values `pv` and `minpv` are deprecated aliases: `pv` maps to `smart`, `minpv` maps to `smart` with always charge enabled.",
+        "type": "string",
+        "enum": [
+          "off",
+          "smart",
+          "now",
+          "pv",
+          "minpv"
+        ],
+        "example": "smart"
+      },
       "Current": {
         "description": "Electric current in A",
         "type": "number",
@@ -2844,7 +3058,17 @@
           "normal",
           "hold",
           "charge",
-          "holdcharge"
+          "holdcharge",
+          "discharge"
+        ]
+      },
+      "AlwaysCharge": {
+        "description": "Always charge state. Smart mode charges continuously at least at minimum power.",
+        "type": "string",
+        "enum": [
+          "off",
+          "on",
+          "once"
         ]
       },
       "ChargeMode": {
@@ -2852,9 +3076,8 @@
         "type": "string",
         "enum": [
           "off",
-          "now",
-          "minpv",
-          "pv"
+          "smart",
+          "now"
         ]
       },
       "Rate": {
@@ -3000,6 +3223,10 @@
           "name": {
             "description": "Unique loadpoint identifier used in API routes and configuration.",
             "type": "string"
+          },
+          "alwaysCharge": {
+            "$ref": "#/components/schemas/AlwaysCharge",
+            "description": "Always charge state. Smart mode charges continuously at least at minimum power."
           },
           "batteryBoost": {
             "description": "Battery boost is active. When enabled, home battery power is used for fast charging.",
@@ -3358,6 +3585,10 @@
             "nullable": true,
             "format": "date-time"
           },
+          "solarShare": {
+            "description": "Required solar share. Usually 0 to 1; values outside that range are possible via API for special cases.",
+            "type": "number"
+          },
           "suggestion": {
             "description": "Charging suggestion from the battery optimizer.",
             "nullable": true,
@@ -3423,6 +3654,7 @@
         },
         "required": [
           "name",
+          "alwaysCharge",
           "batteryBoost",
           "chargeDuration",
           "chargePower",
@@ -3495,6 +3727,7 @@
           "smartFeedInPriorityActive",
           "smartFeedInPriorityLimit",
           "smartFeedInPriorityNextStart",
+          "solarShare",
           "title",
           "vehicleClimaterActive",
           "vehicleDetectionActive",
@@ -3644,7 +3877,11 @@
           "ZAR",
           "TRY",
           "MYR",
-          "THB"
+          "THB",
+          "BYN",
+          "UAH",
+          "RUB",
+          "KZT"
         ]
       },
       "FatalError": {
@@ -3839,7 +4076,11 @@
             "type": "number"
           },
           "energy": {
-            "description": "Total battery energy in kWh.",
+            "description": "Total discharged energy in kWh.",
+            "type": "number"
+          },
+          "returnEnergy": {
+            "description": "Total charged energy in kWh.",
             "type": "number"
           },
           "devices": {
@@ -4513,7 +4754,8 @@
         "enum": [
           "co2",
           "pricedynamic",
-          "priceforecast"
+          "priceforecast",
+          "pricestatic"
         ]
       },
       "DeviceColorEntry": {
@@ -4613,6 +4855,20 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/ChargeMode"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  ""
+                ]
+              }
+            ]
+          },
+          "alwaysCharge": {
+            "description": "Always charge state applied when the vehicle connects.",
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AlwaysCharge"
               },
               {
                 "type": "string",
@@ -5180,6 +5436,15 @@
             "description": "Home battery is currently charged from grid.",
             "type": "boolean"
           },
+          "batteryGridDischargeLimit": {
+            "description": "Feed-in price limit for discharging the home battery to the grid (experimental).",
+            "type": "number",
+            "nullable": true
+          },
+          "batteryGridDischargeActive": {
+            "description": "Home battery is currently discharged to the grid.",
+            "type": "boolean"
+          },
           "smartCostAvailable": {
             "description": "A dynamic grid price or CO₂ forecast is configured.",
             "type": "boolean"
@@ -5355,7 +5620,15 @@
         "in": "path",
         "required": true,
         "schema": {
-          "$ref": "#/components/schemas/ChargeMode"
+          "$ref": "#/components/schemas/ChargeModeInput"
+        }
+      },
+      "alwaysCharge": {
+        "name": "alwaysCharge",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/AlwaysCharge"
         }
       },
       "soc": {
@@ -5392,6 +5665,14 @@
         "required": true,
         "schema": {
           "$ref": "#/components/schemas/VehicleName"
+        }
+      },
+      "vehicleAlwaysCharge": {
+        "name": "alwaysCharge",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/VehicleAlwaysCharge"
         }
       },
       "current": {
@@ -5601,9 +5882,9 @@
           "application/json": {
             "schema": {
               "type": "integer",
-              "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge",
+              "description": "Battery mode. 0: unknown, 1: normal, 2: hold, 3: charge, 4: holdcharge, 5: discharge",
               "minimum": 0,
-              "maximum": 4
+              "maximum": 5
             }
           }
         }

@@ -143,7 +143,7 @@ render: |
           type: holding
           decode: uint16
         scale: 10
-      {{- if eq .externalpower "true" }}
+      {{- if .externalpower }}
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         register: 
