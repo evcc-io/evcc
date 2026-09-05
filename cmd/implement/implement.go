@@ -22,6 +22,9 @@ import (
 //go:embed implement.tpl
 var srcTmpl string
 
+//go:embed capabilities.tpl
+var capsTmpl string
+
 type paramStruct struct {
 	VarName, Signature string
 }
@@ -29,6 +32,10 @@ type paramStruct struct {
 type funcStruct struct {
 	Signature, Function, VarName, ReturnTypes string
 	Params                                    []paramStruct
+	// Results are the non-error return values, ReturnExpr the matching return statement
+	Results    []paramStruct
+	ReturnExpr string
+	HasError   bool
 }
 
 type typeStruct struct {
@@ -52,8 +59,8 @@ func getTypeImport(t reflect.Type) string {
 	return n
 }
 
-func generate(out io.Writer) error {
-	tmpl, err := template.New("gen").Funcs(sprig.FuncMap()).Parse(srcTmpl)
+func generate(out io.Writer, src string) error {
+	tmpl, err := template.New("gen").Funcs(sprig.FuncMap()).Parse(src)
 	if err != nil {
 		fmt.Printf("invalid template: %s", err)
 		os.Exit(2)
@@ -122,12 +129,36 @@ func generate(out io.Writer) error {
 				returns = append(returns, getTypeImport(output))
 			}
 
+			// split trailing error from the actual results
+			results := make([]paramStruct, 0, len(returns))
+			hasError := len(returns) > 0 && returns[len(returns)-1] == "error"
+			for i, r := range returns {
+				if hasError && i == len(returns)-1 {
+					continue
+				}
+				results = append(results, paramStruct{
+					VarName:   "r" + strconv.Itoa(i),
+					Signature: r,
+				})
+			}
+
+			var returnVars []string
+			for _, r := range results {
+				returnVars = append(returnVars, r.VarName)
+			}
+			if hasError {
+				returnVars = append(returnVars, "err")
+			}
+
 			functions = append(functions, funcStruct{
 				VarName:     strings.ToLower(lastPart[:1]) + lastPart[1:] + strconv.Itoa(methodIndex),
 				Signature:   fmt.Sprintf("func(%s) (%s)", strings.Join(parameters, ", "), strings.Join(returns, ", ")),
 				Function:    m.Name,
 				Params:      params,
 				ReturnTypes: fmt.Sprintf("(%s)", strings.Join(returns, ",")),
+				Results:     results,
+				ReturnExpr:  strings.Join(returnVars, ", "),
+				HasError:    hasError,
 			})
 		}
 
@@ -147,10 +178,13 @@ func generate(out io.Writer) error {
 }
 
 func main() {
-	name := "../../api/implement/implementations.go"
+	write("../../api/implement/implementations.go", srcTmpl)
+	write("../../devicehost/capabilities.go", capsTmpl)
+}
 
+func write(name, src string) {
 	generated := new(bytes.Buffer)
-	if err := generate(generated); err != nil {
+	if err := generate(generated, src); err != nil {
 		fmt.Println(err)
 		os.Exit(2)
 	}
