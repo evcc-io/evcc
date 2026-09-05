@@ -14,6 +14,7 @@ import (
 	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/openevse"
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -92,6 +93,13 @@ func NewOpenEVSE(ctx context.Context, uri, user, password string) (api.Charger, 
 	c.wsURI = wsURI
 
 	go c.run(ctx)
+
+	// evcc does not cancel a device's context on shutdown - ctx lives for the device
+	// lifetime and is only cancelled on failure - so run()'s deferred release() never
+	// fires from a normal SIGINT/SIGTERM. Register with evcc's shutdown hooks instead.
+	// release() is idempotent (guarded by claim == nil under claimMu), so it is safe
+	// to also run via the deferred call in run() when ctx is cancelled (embedding, tests).
+	shutdown.Register(c.release)
 
 	return c, nil
 }

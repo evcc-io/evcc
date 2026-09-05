@@ -13,6 +13,7 @@ import (
 	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/openevse"
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -366,6 +367,29 @@ func TestOpenEVSEReleaseDuringBackoff(t *testing.T) {
 		defer mu.Unlock()
 		return deleted == 1
 	}, 5*time.Second, 10*time.Millisecond)
+}
+
+// TestOpenEVSEReleaseViaShutdownHook covers Fix round 2: evcc never cancels a
+// device's context on shutdown (it only cancels on failure), so the deferred
+// release() in run() never fires from a real SIGINT/SIGTERM. release() must also
+// be reachable through evcc's cmd/shutdown hook registry. shutdown.Cleanup runs
+// every hook registered by every OpenEVSE constructed so far in this test binary;
+// those from other tests are harmless no-ops (nil claim, or a WARN against an
+// already-closed server), so asserting on this test's own server is safe.
+func TestOpenEVSEReleaseViaShutdownHook(t *testing.T) {
+	s := newOpenEVSETestServer(t, openevseFullStatus)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	c := newTestOpenEVSE(t, ctx, s.srv.URL, "", "")
+	waitOpenEVSEConnected(t, c)
+	require.NoError(t, c.Enable(true))
+
+	doneC := make(chan struct{})
+	shutdown.Cleanup(doneC)
+	<-doneC
+
+	assert.Equal(t, 1, s.snapshot().deleted)
 }
 
 func TestOpenEVSEBasicAuth(t *testing.T) {
