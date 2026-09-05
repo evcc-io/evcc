@@ -259,7 +259,11 @@ func (m *batterySocLimitsCtx) LimitController(ctx context.Context, socG func() (
 			return limitSocS(min(100, max(soc, floatOr0(minG))))
 
 		case api.BatteryCharge:
-			return limitSocS(floatOr0(maxG))
+			// unconfigured max soc means charge to full
+			if maxG == nil {
+				return limitSocS(100)
+			}
+			return limitSocS(maxG())
 
 		// BatteryHoldCharge not implementable via limit soc
 		default:
