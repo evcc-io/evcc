@@ -1689,7 +1689,7 @@ func (lp *Loadpoint) boostPower(batteryPower float64) float64 {
 			lp.circuitAllowsPhases(maxPhases, lp.effectiveMinCurrent()) {
 			// max power actually achievable on the active phases
 			activeMaxPower := min(lp.EffectiveMaxPower(), Voltage*lp.effectiveMaxCurrent()*float64(activePhases))
-			delta += max(0, lp.EffectiveMinPower()*float64(maxPhases)-activeMaxPower)
+			delta += max(0, Voltage*lp.effectiveMinCurrent()*float64(maxPhases)-activeMaxPower)
 		}
 	}
 
@@ -2304,6 +2304,9 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 	if dimmer, ok := api.Cap[api.Dimmer](lp.charger); ok {
 		dimmed, err := dimmer.Dimmed()
 		if err != nil {
+			if errors.Is(err, api.ErrNotAvailable) {
+				goto NO_DIM
+			}
 			lp.log.ERROR.Printf("dimmed: %v", err)
 			return
 		}
@@ -2325,6 +2328,7 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 		}
 	}
 
+NO_DIM:
 	// read and publish status
 	welcomeCharge, err := lp.updateChargerStatus()
 	if err != nil {
