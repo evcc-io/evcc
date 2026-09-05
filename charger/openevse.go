@@ -52,7 +52,18 @@ type OpenEVSE struct {
 	claim   *openevse.Claim // last claim written, nil until the first write
 	enabled bool
 	current int
+
+	// overrideWarned guards against repeating the manual-override warning on every
+	// claim write; it is reset once a status frame shows the override cleared.
+	// Guarded by mu, alongside the status it derives from.
+	overrideWarned bool
+
+	// warnOverride logs the manual-override warning; a field so tests can observe
+	// it without capturing log output.
+	warnOverride func()
 }
+
+const overrideWarning = "manual override active on charger: evcc's claim is outranked until it is cleared (tap Auto on the charger dashboard, or DELETE /override)"
 
 var errOpenEVSENotConnected = errors.New("websocket not connected")
 
@@ -108,6 +119,8 @@ func NewOpenEVSE(ctx context.Context, uri, user, password string) (api.Charger, 
 		pingInterval: openevsePingInterval,
 		readTimeout:  openevseReadTimeout,
 	}
+
+	c.warnOverride = func() { c.log.WARN.Println(overrideWarning) }
 
 	if user != "" && password != "" {
 		c.Client.Transport = transport.BasicAuth(user, password, c.Client.Transport)
@@ -279,7 +292,17 @@ func (c *OpenEVSE) handleConnection(ctx context.Context, conn *websocket.Conn, b
 func (c *OpenEVSE) merge(b []byte) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return json.Unmarshal(b, &c.status)
+
+	err := json.Unmarshal(b, &c.status)
+
+	// the override warning is re-armed only once the charger has confirmed the
+	// override is actually cleared, so a flapping override doesn't get lost in
+	// a burst of unwarned claim writes
+	if c.status.ManualOverride == 0 {
+		c.overrideWarned = false
+	}
+
+	return err
 }
 
 func (c *OpenEVSE) setConnected(connected bool) {
@@ -382,6 +405,8 @@ func (c *OpenEVSE) claimURI() string {
 
 // setClaim posts the full claim built from the desired state; caller holds claimMu
 func (c *OpenEVSE) setClaim() error {
+	c.warnIfOverridden()
+
 	claim := openevse.Claim{
 		State:         openevse.Disabled,
 		ChargeCurrent: c.current,
@@ -396,6 +421,22 @@ func (c *OpenEVSE) setClaim() error {
 
 	c.claim = &claim
 	return nil
+}
+
+// warnIfOverridden logs once that the firmware's manual override outranks evcc's
+// claim, whenever the last received status shows it active. It logs again only
+// after a status frame has shown the override inactive in between.
+func (c *OpenEVSE) warnIfOverridden() {
+	c.mu.Lock()
+	warn := c.status.ManualOverride == 1 && !c.overrideWarned
+	if warn {
+		c.overrideWarned = true
+	}
+	c.mu.Unlock()
+
+	if warn {
+		c.warnOverride()
+	}
 }
 
 func (c *OpenEVSE) postClaim(claim openevse.Claim) error {

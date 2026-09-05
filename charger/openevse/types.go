@@ -23,6 +23,11 @@ type Status struct {
 	State         int     `json:"state"`          // 1=A 2=B 3=C 4=D 5-11=F 254=sleeping 255=disabled
 	Status        string  `json:"status"`         // active, disabled, none, unknown
 	Vehicle       int     `json:"vehicle"`        // 0=not connected, 1=connected
+	// ManualOverride is 1 when the firmware's manual override claim (priority 1000,
+	// set by the charger's own UI/button, or a leftover from the previous evcc
+	// driver) is active. It outranks evcc's claim (priority 500), so evcc's writes
+	// have no effect until the override is cleared.
+	ManualOverride int `json:"manual_override"`
 }
 
 // Claim is the body of POST /claims/{client}

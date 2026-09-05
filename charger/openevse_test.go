@@ -328,6 +328,58 @@ func TestOpenEVSEClaims(t *testing.T) {
 	}, snap.claims)
 }
 
+// TestOpenEVSEManualOverrideWarning: a claim written while the firmware's manual
+// override (priority 1000) is active must warn once, not on every claim write.
+func TestOpenEVSEManualOverrideWarning(t *testing.T) {
+	s := newOpenEVSETestServer(t, `{"state":3,"vehicle":1,"status":"active","manual_override":1}`)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	c := newTestOpenEVSE(ctx, t, s.srv.URL, "", "")
+
+	var warnings int
+	c.warnOverride = func() { warnings++ }
+
+	require.NoError(t, c.Enable(true))
+	assert.Equal(t, 1, warnings, "manual override must warn once")
+
+	require.NoError(t, c.Enable(false))
+	assert.Equal(t, 1, warnings, "must not warn again while the override stays active")
+}
+
+// TestOpenEVSEManualOverrideWarningRearms: the warning must fire again once the
+// override has been observed inactive in between.
+func TestOpenEVSEManualOverrideWarningRearms(t *testing.T) {
+	s := newOpenEVSETestServer(t, `{"state":3,"vehicle":1,"status":"active","manual_override":1}`)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	c := newTestOpenEVSE(ctx, t, s.srv.URL, "", "")
+
+	var warnings int
+	c.warnOverride = func() { warnings++ }
+
+	require.NoError(t, c.Enable(true))
+	assert.Equal(t, 1, warnings)
+
+	s.send <- `{"manual_override":0}`
+	require.Eventually(t, func() bool {
+		c.mu.RLock()
+		defer c.mu.RUnlock()
+		return c.status.ManualOverride == 0
+	}, 5*time.Second, 10*time.Millisecond)
+
+	s.send <- `{"manual_override":1}`
+	require.Eventually(t, func() bool {
+		c.mu.RLock()
+		defer c.mu.RUnlock()
+		return c.status.ManualOverride == 1
+	}, 5*time.Second, 10*time.Millisecond)
+
+	require.NoError(t, c.Enable(false))
+	assert.Equal(t, 2, warnings, "must warn again after the override was observed inactive")
+}
+
 func TestOpenEVSEClaimError(t *testing.T) {
 	s := newOpenEVSETestServer(t, openevseFullStatus)
 	s.failClaims()

@@ -6,11 +6,11 @@ requirements:
   description:
     en: |
       Requires OpenEVSE WiFi firmware 4.1.9 or later. evcc controls the charger through its claims API;
-      the manual override on the charger takes precedence over evcc. If evcc is removed, delete its claim
+      the manual override on the charger (the On/Off mode on its dashboard) takes precedence over evcc; tap Auto to release it. If evcc is removed, delete its claim
       (client 262145) in the charger's web UI or via `DELETE /claims/262145`.
     de: |
       Benötigt OpenEVSE WiFi-Firmware 4.1.9 oder neuer. evcc steuert die Wallbox über deren Claims-API;
-      die manuelle Übersteuerung an der Wallbox hat Vorrang vor evcc. Wird evcc entfernt, den evcc-Claim
+      die manuelle Übersteuerung an der Wallbox (Modus Ein/Aus im Dashboard) hat Vorrang vor evcc; Auto wählen, um sie aufzuheben. Wird evcc entfernt, den evcc-Claim
       (Client 262145) in der Weboberfläche der Wallbox oder per `DELETE /claims/262145` löschen.
 params:
   - name: host
