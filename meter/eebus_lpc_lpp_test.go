@@ -144,7 +144,7 @@ func TestLPC_Dimmed(t *testing.T) {
 			lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(true)
 			lpc.EXPECT().ConsumptionLimit(entity).Return(tc.limit, nil)
 
-			got, err := c.dimmedState()
+			got, err := c.dimmed()
 			require.NoError(t, err)
 			assert.Equal(t, tc.want, got)
 		})

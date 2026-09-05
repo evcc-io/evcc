@@ -143,7 +143,7 @@ func TestOHPCF_LPC_Dimmed(t *testing.T) {
 			lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(true)
 			lpc.EXPECT().ConsumptionLimit(entity).Return(tc.limit, nil)
 
-			got, err := c.dimmedState()
+			got, err := c.dimmed()
 			require.NoError(t, err)
 			assert.Equal(t, tc.want, got)
 		})
@@ -156,7 +156,7 @@ func TestOHPCF_LPC_Dimmed_Gating(t *testing.T) {
 		c, lpc, entity := newOHPCFEGCharger(t)
 		lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(false)
 
-		_, err := c.dimmedState()
+		_, err := c.dimmed()
 		assert.ErrorIs(t, err, api.ErrNotAvailable)
 	})
 
@@ -164,7 +164,7 @@ func TestOHPCF_LPC_Dimmed_Gating(t *testing.T) {
 		c, _, _ := newOHPCFEGCharger(t)
 		c.egLpcEntity = nil
 
-		_, err := c.dimmedState()
+		_, err := c.dimmed()
 		assert.ErrorIs(t, err, api.ErrNotAvailable)
 	})
 }
@@ -177,7 +177,7 @@ func TestOHPCF_LPC_Dimmed_Discard(t *testing.T) {
 			lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(true)
 			lpc.EXPECT().ConsumptionLimit(entity).Return(ucapi.LoadLimit{}, badErr)
 
-			_, err := c.dimmedState()
+			_, err := c.dimmed()
 			assert.ErrorIs(t, err, api.ErrNotAvailable)
 		})
 	}

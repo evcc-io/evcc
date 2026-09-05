@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"sync"
 	"time"
 
@@ -46,7 +47,7 @@ type EEBusOHPCF struct {
 	egLpcEntity spineapi.EntityRemoteInterface
 	enabled     bool
 	reboosting  bool
-	dimmed      bool // last limit written, re-stated on reconnect
+	dimmedState bool // last limit written, re-stated on reconnect
 
 	connector *eebus.Connector
 }
@@ -134,6 +135,21 @@ func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost ti
 	}()
 
 	return c, nil
+}
+
+// Capability implements api.Capable. LPC may be announced after OHPCF setup.
+func (c *EEBusOHPCF) Capability(typ reflect.Type) (any, bool) {
+	if typ == reflect.TypeFor[api.Dimmer]() {
+		c.mu.RLock()
+		defer c.mu.RUnlock()
+
+		if c.egLpcEntity != nil && c.eg.EgLPCInterface.IsScenarioAvailableAtEntity(c.egLpcEntity, eebus.LPCLimit) {
+			return implement.Dimmer(c.dim, c.dimmed), true
+		}
+		return nil, false
+	}
+
+	return c.Caps.Capability(typ)
 }
 
 var _ eebus.Device = (*EEBusOHPCF)(nil)
@@ -248,7 +264,7 @@ func (c *EEBusOHPCF) lastDimmed() bool {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	return c.dimmed
+	return c.dimmedState
 }
 
 // ohpcfStatus maps the compressor process state to a charge status: running is
@@ -403,9 +419,9 @@ func (c *EEBusOHPCF) MaxCurrent(int64) error {
 	return c.apply(c.lastEnabled())
 }
 
-// dimmedState implements the api.Dimmer interface, reporting whether a §14a/LPC
+// dimmed implements the api.Dimmer interface, reporting whether a §14a/LPC
 // consumption limit is currently active on the heat pump.
-func (c *EEBusOHPCF) dimmedState() (bool, error) {
+func (c *EEBusOHPCF) dimmed() (bool, error) {
 	c.mu.RLock()
 	entity := c.egLpcEntity
 	c.mu.RUnlock()
@@ -449,7 +465,7 @@ func (c *EEBusOHPCF) dim(dim bool) error {
 	}
 
 	c.mu.Lock()
-	c.dimmed = dim
+	c.dimmedState = dim
 	c.mu.Unlock()
 
 	return nil
