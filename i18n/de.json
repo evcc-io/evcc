@@ -1053,6 +1053,8 @@
     "validation": {
       "failed": "fehlgeschlagen",
       "label": "Status",
+      "loginRequired": "Anmeldung erforderlich",
+      "loginRequiredHint": "Das Konto ist noch nicht verbunden. Speichere die Konfiguration und verbinde es anschließend unter {section}.",
       "running": "prüfe …",
       "success": "erfolgreich",
       "unknown": "unbekannt",

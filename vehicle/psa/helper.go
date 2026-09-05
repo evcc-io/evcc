@@ -2,19 +2,17 @@ package psa
 
 import (
 	"sync"
-
-	"golang.org/x/oauth2"
 )
 
 var (
 	mu         sync.Mutex
-	identities = make(map[string]oauth2.TokenSource)
+	identities = make(map[string]*Identity)
 )
 
-func getInstance(subject string) oauth2.TokenSource {
+func getInstance(subject string) *Identity {
 	return identities[subject]
 }
 
-func addInstance(subject string, identity oauth2.TokenSource) {
+func addInstance(subject string, identity *Identity) {
 	identities[subject] = identity
 }

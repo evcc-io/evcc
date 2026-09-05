@@ -1053,6 +1053,8 @@
     "validation": {
       "failed": "failed",
       "label": "Status",
+      "loginRequired": "login required",
+      "loginRequiredHint": "The account is not connected yet. Save the configuration, then connect it under {section}.",
       "running": "validating…",
       "success": "successful",
       "unknown": "unknown",

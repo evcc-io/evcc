@@ -167,7 +167,7 @@ export default defineComponent({
 	},
 	methods: {
 		handleAuthRequired() {
-			this.$router.push({ path: "/config" });
+			this.$router.push({ path: "/config", hash: "#integrations" });
 		},
 		openSettingsModal() {
 			const modal = Modal.getOrCreateInstance(

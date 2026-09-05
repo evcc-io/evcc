@@ -255,9 +255,10 @@ func deviceInstanceFromMergedConfig[T any](ctx context.Context, id int, class te
 }
 
 type testResult = struct {
-	Value  any    `json:"value"`
-	Error  string `json:"error"`
-	Asleep bool   `json:"asleep,omitempty"`
+	Value         any    `json:"value"`
+	Error         string `json:"error"`
+	Asleep        bool   `json:"asleep,omitempty"`
+	LoginRequired bool   `json:"loginRequired,omitempty"`
 }
 
 func hasFeature(instance any, f api.Feature) bool {
@@ -278,9 +279,14 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 				return
 			}
 			// asleep is a valid vehicle state, not an error
-			if errors.Is(err, api.ErrAsleep) {
+			var loginRequired *api.ErrLoginRequired
+			switch {
+			case errors.Is(err, api.ErrAsleep):
 				tr.Asleep = true
-			} else {
+			// the device is waiting for the user to complete an interactive login
+			case errors.As(err, &loginRequired):
+				tr.LoginRequired = true
+			default:
 				tr.Error = err.Error()
 			}
 		}

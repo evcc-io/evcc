@@ -4,28 +4,39 @@ products:
 requirements:
   description:
     de: |
-      Benötigt `access` und `refresh` Tokens. Diese können über den Befehl `evcc token [name]` generiert werden.
+      Beim Einrichten des Fahrzeugs dem Link folgen und im Browser mit dem Citroën-Konto anmelden.
+      Anschließend den Code oder die vollständige Weiterleitungs-URL in den Fahrzeugdialog kopieren.
     en: |
-      Requires `access` and `refresh` tokens. These can be generated with command `evcc token [name]`.
+      When configuring the vehicle, follow the link and sign in with your Citroën account in the browser.
+      Then paste the code or the full redirect URL into the vehicle dialog.
 params:
   - preset: vehicle-common
   - preset: vehicle-online
   - name: user
     required: true
+  - name: country
+    default: de
+    description:
+      de: Ländercode
+      en: Country code
   - name: password
     deprecated: true
   - name: accessToken
-    required: true
+    advanced: true
   - name: refreshToken
-    required: true
+    advanced: true
   - name: vin
     example: V...
   - name: cache
     default: 15m
+auth:
+  type: citroen
+  params: [user, country, accessToken, refreshToken]
 render: |
   type: citroen
   vin: {{ .vin }}
   user: {{ .user }}
+  country: {{ .country }}
   tokens:
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
