@@ -2304,6 +2304,9 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 	if dimmer, ok := api.Cap[api.Dimmer](lp.charger); ok {
 		dimmed, err := dimmer.Dimmed()
 		if err != nil {
+			if errors.Is(err, api.ErrNotAvailable) {
+				goto NO_DIM
+			}
 			lp.log.ERROR.Printf("dimmed: %v", err)
 			return
 		}
@@ -2325,6 +2328,7 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 		}
 	}
 
+NO_DIM:
 	// read and publish status
 	welcomeCharge, err := lp.updateChargerStatus()
 	if err != nil {
