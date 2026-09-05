@@ -1,0 +1,85 @@
+template: huawei-sun2000-sdongle
+products:
+  - brand: Huawei
+    description:
+      generic: SUN2000 & Smart Dongle
+requirements:
+  description:
+    de: |
+      Die Abregelung begrenzt die Einspeiseleistung auf den gewünschten Prozentsatz der maximalen AC-Leistung der angeschlossenen Wechselrichter. Ist am Einspeisepunkt kein Zähler (DDSU/DTSU666 oder SmartPS) installiert, wird nicht die Einspeiseleistung begrenzt, sondern die Wechselrichterleistung.
+
+      Kommt ein Huawei SmartAssistant (EMMA) zum Einsatz, muss das entsprechende EMMA-Einspeisebegrenzungsgerät verwendet werden.
+    en: |
+      Curtailment limits feed-in power to the desired percentage of the maximum AC power of the connected inverters. In case no meter (DDSU/DTSU666 or SmartPS) is installed at the feed-in point, the inverter power is limited rather than the feed-in power.
+
+      In case a Huawei SmartAssistant (EMMA) is employed, the corresponding EMMA feed-in limitation device must be used.
+params:
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    timeout: 5s
+render: |
+  type: custom
+  curtail:
+    source: sequence
+    set:
+    # allowed feed-in power as percent of nominal (0-100 %)
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 47418 # Maximum Feed Grid Power (0-100 %)
+        type: writesingle
+        encoding: uint16
+      scale: 10
+    # active power control mode: 7 = percentage limit while curtailed, 0 = unlimited at 100%
+    - source: switch
+      switch:
+        - case: 100 # uncurtailed
+          set:
+            source: const
+            value: 0 # Unlimited
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 47415 # Active power control mode
+                type: writesingle
+                encoding: uint16
+      default:
+        source: const
+        value: 7 # Power-limited grid connection (%)
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 47415 # Active power control mode
+            type: writesingle
+            encoding: uint16
+  curtailed:
+    source: go
+    in:
+    - name: mode
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 47415 # Active power control mode (0=no curtailment)
+          type: holding
+          decode: uint16
+    - name: percent
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 47418 # Maximum Feed Grid Power (0-100 %)
+          type: holding
+          decode: uint16
+        scale: 0.1
+    # the percentage register is only meaningful while a limit mode is active
+    script: |
+      limit := percent
+      if mode == 0 {
+        limit = 100
+      }
+      limit

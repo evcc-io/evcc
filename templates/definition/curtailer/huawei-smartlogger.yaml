@@ -1,0 +1,44 @@
+template: huawei-smartlogger
+products:
+  - brand: Huawei
+    description:
+      generic: SmartLogger
+requirements:
+  description:
+    de: |
+      Die Abregelung begrenzt die Einspeiseleistung auf den gewünschten Prozentsatz der maximalen AC-Leistung der angeschlossenen Wechselrichter.
+    en: |
+      Curtailment limits feed-in power to the desired percentage of the maximum AC power of the connected inverters.
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 0
+render: |
+  type: custom
+  curtail:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 40428 # Active power [–100%, 100%] - a negative value indicates the limit for active power supplied from the grid to the ESS
+      type: writesingle
+      encoding: int16
+    scale: 10
+  curtailed:
+    source: go
+    in:
+    - name: limit
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 40428 # Active power [–100%, 100%] - a negative value indicates the limit for active power supplied from the grid to the ESS
+          type: holding
+          decode: int16
+        scale: 0.1
+    script: |
+      percent := int(limit)
+      if percent < 0 || percent > 100 {
+        percent = 100
+      }
+      percent
