@@ -1280,6 +1280,8 @@ export interface Vehicle {
   capacity?: number;
   /** Vehicle icon name for UI display. */
   icon?: string;
+  /** Paused until timestamp for repeating plans. */
+  pausedUntil?: string | null;
 }
 
 export type Timeout = ReturnType<typeof setInterval> | null;

@@ -1300,6 +1300,8 @@
         "continuousPriceDescription": "Pasirenkama pigiausia ištisinė laikotarpių serija.",
         "label": "Optimizacija"
       },
+      "pause": "Pristabdyti",
+      "pausedUntil": "Pristabdyta iki {time}",
       "planNumber": "Planas {number}",
       "precondition": {
         "description": "Dalis įkrovimo perkeliama prieš pat išvykstant: pašyla baterija, trumpiau būna su aukštu įkrovimo lygiu.",
@@ -1308,9 +1310,17 @@
         "optionNo": "ne",
         "summary": "{precondition} prieš"
       },
+      "preset24h": "+24 val.",
+      "preset48h": "+48 val.",
+      "preset7d": "+7 d.",
+      "presetCustom": "Pasirinktinė data/laikas…",
+      "presetFriday": "Iki penktadienio 18:00",
+      "presetSunday": "Iki sekmadienio 18:00",
+      "presetTomorrow": "Iki rytojaus 10:00",
       "remove": "Pašalinti",
       "repeating": "kartojasi",
       "repeatingPlans": "Pasikartojantys planai",
+      "resume": "Tęsti",
       "selectAll": "Pasirinkti visus",
       "strategy": {
         "label": "Strategija"

@@ -82,3 +82,13 @@ func (v *dummy) GetPlanStrategy() api.PlanStrategy {
 func (v *dummy) SetPlanStrategy(strategy api.PlanStrategy) error {
 	return nil
 }
+
+// GetPausedUntil returns the pause repeating plans until timestamp
+func (v *dummy) GetPausedUntil() time.Time {
+	return time.Time{}
+}
+
+// SetPausedUntil sets the pause repeating plans until timestamp
+func (v *dummy) SetPausedUntil(ts time.Time) error {
+	return nil
+}

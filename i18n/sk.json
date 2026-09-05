@@ -1285,6 +1285,8 @@
         "continuousPriceDescription": "Vyberie najlacnejšiu neprerušenú sériu slotov.",
         "label": "Optimalizácia"
       },
+      "pause": "Pozastaviť",
+      "pausedUntil": "Pozastavené do {time}",
       "planNumber": "Plán {number}",
       "precondition": {
         "description": "Presunie časť nabíjania tesne pred odchod: zohriata batéria, menej času pri vysokom stave nabitia.",
@@ -1293,9 +1295,17 @@
         "optionNo": "nie",
         "summary": "{precondition} pred"
       },
+      "preset24h": "+24 hodín",
+      "preset48h": "+48 hodín",
+      "preset7d": "+7 dní",
+      "presetCustom": "Vlastný dátum/čas…",
+      "presetFriday": "Do piatku 18:00",
+      "presetSunday": "Do nedele 18:00",
+      "presetTomorrow": "Do zajtra 10:00",
       "remove": "Odstrániť",
       "repeating": "opakujúce sa",
       "repeatingPlans": "Opakujúce sa plány",
+      "resume": "Obnoviť",
       "selectAll": "Vybrať všetko",
       "strategy": {
         "label": "Stratégia"

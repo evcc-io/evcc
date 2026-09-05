@@ -124,5 +124,19 @@
       "odometer": "Odomeeter",
       "org": "Organisatsioon"
     }
+  },
+  "main": {
+    "chargingPlan": {
+      "pause": "Paus",
+      "pausedUntil": "Peatatud kuni {time}",
+      "preset24h": "+24 tundi",
+      "preset48h": "+48 tundi",
+      "preset7d": "+7 päeva",
+      "presetCustom": "Kohandatud kuupäev/kellaaeg…",
+      "presetFriday": "Kuni reedeni 18:00",
+      "presetSunday": "Kuni pühapäevani 18:00",
+      "presetTomorrow": "Kuni homseni 10:00",
+      "resume": "Jätka"
+    }
   }
 }

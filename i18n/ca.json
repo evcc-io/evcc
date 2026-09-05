@@ -1300,6 +1300,8 @@
         "continuousPriceDescription": "Selecciona la sèrie més barata i ininterrompuda de franges.",
         "label": "Optimització"
       },
+      "pause": "Pausa",
+      "pausedUntil": "En pausa fins a {time}",
       "planNumber": "Pla {number}",
       "precondition": {
         "description": "Mou part de la càrrega just abans de la sortida: bateria calenta, menys temps amb nivell de càrrega alt.",
@@ -1308,9 +1310,17 @@
         "optionNo": "no",
         "summary": "{precondition} abans"
       },
+      "preset24h": "+24 hores",
+      "preset48h": "+48 hores",
+      "preset7d": "+7 dies",
+      "presetCustom": "Data/hora personalitzada…",
+      "presetFriday": "Fins divendres 18:00",
+      "presetSunday": "Fins diumenge 18:00",
+      "presetTomorrow": "Fins demà 10:00",
       "remove": "Elimina",
       "repeating": "repetitiu",
       "repeatingPlans": "Plans repetitius",
+      "resume": "Reprèn",
       "selectAll": "Selecciona-ho tot",
       "strategy": {
         "label": "Estratègia"

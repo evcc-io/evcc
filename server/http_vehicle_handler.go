@@ -239,3 +239,55 @@ func planSocRemoveHandler(site site.API) http.HandlerFunc {
 		jsonWrite(w, struct{}{})
 	}
 }
+
+// pauseRepeatingPlansHandler pauses repeating plans until a given timestamp
+func pauseRepeatingPlansHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		v, err := site.Vehicles().ByName(vars["name"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		ts, err := time.ParseInLocation(time.RFC3339, vars["time"], nil)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if err := v.SetPausedUntil(ts); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		res := struct {
+			PausedUntil time.Time `json:"pausedUntil"`
+		}{
+			PausedUntil: v.GetPausedUntil(),
+		}
+
+		jsonWrite(w, res)
+	}
+}
+
+// resumeRepeatingPlansHandler clears repeating plans pause timestamp
+func resumeRepeatingPlansHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		v, err := site.Vehicles().ByName(vars["name"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		if err := v.SetPausedUntil(time.Time{}); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		jsonWrite(w, struct{}{})
+	}
+}

@@ -1288,6 +1288,8 @@
         "continuousPriceDescription": "Kiest de goedkoopste, continue reeks laadmomenten.",
         "label": "Optimalisatie"
       },
+      "pause": "Pauzeren",
+      "pausedUntil": "Gepauzeerd tot {time}",
       "planNumber": "Schema {number}",
       "precondition": {
         "description": "Schuift een deel van het opladen naar last-minute voor vertrek: warme EV-batterij, die minder lang met hoog laadpercentage gestaan heeft.",
@@ -1296,9 +1298,17 @@
         "optionNo": "nee",
         "summary": "{precondition} ervoor"
       },
+      "preset24h": "+24 uur",
+      "preset48h": "+48 uur",
+      "preset7d": "+7 dagen",
+      "presetCustom": "Aangepast…",
+      "presetFriday": "Tot vrijdag 18:00",
+      "presetSunday": "Tot zondag 18:00",
+      "presetTomorrow": "Tot morgen 10:00",
       "remove": "Verwijderen",
       "repeating": "herhalend",
       "repeatingPlans": "Herhalende schema's",
+      "resume": "Hervatten",
       "selectAll": "Alles selectreren",
       "strategy": {
         "label": "Strategie"

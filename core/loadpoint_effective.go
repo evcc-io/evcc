@@ -62,6 +62,20 @@ func (lp *Loadpoint) nextActivePlan(maxPower float64, plans []plan) *plan {
 }
 
 // nextVehiclePlan returns the next vehicle plan time, soc, id
+// nextRepeatingPlanTime calculates the next occurrence of a repeating plan, advancing past pausedUntil if active
+func (lp *Loadpoint) nextRepeatingPlanTime(pausedUntil time.Time, rp api.RepeatingPlan) (time.Time, error) {
+	now := time.Now()
+	if lp.clock != nil {
+		now = lp.clock.Now()
+	}
+
+	if !pausedUntil.IsZero() && now.Before(pausedUntil) {
+		return util.GetNextOccurrenceAt(pausedUntil.Add(time.Second), rp.Weekdays, rp.Time, rp.Tz)
+	}
+
+	return util.GetNextOccurrenceAt(now, rp.Weekdays, rp.Time, rp.Tz)
+}
+
 // Returns locked plan if available, otherwise calculates fresh
 func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 	// return locked plan if available
@@ -71,20 +85,23 @@ func (lp *Loadpoint) nextVehiclePlan() (time.Time, int, int) {
 
 	// calculate fresh plan
 	if v := lp.GetVehicle(); v != nil {
+		settings := vehicle.Settings(lp.log, v)
 		var plans []plan
 
 		// static plan
-		if planTime, soc := vehicle.Settings(lp.log, v).GetPlanSoc(); soc != 0 {
+		if planTime, soc := settings.GetPlanSoc(); soc != 0 {
 			plans = append(plans, plan{Id: 1, Soc: soc, End: planTime})
 		}
 
 		// repeating plans
-		for index, rp := range vehicle.Settings(lp.log, v).GetRepeatingPlans() {
+		pausedUntil := settings.GetPausedUntil()
+
+		for index, rp := range settings.GetRepeatingPlans() {
 			if !rp.Active || len(rp.Weekdays) == 0 {
 				continue
 			}
 
-			planTime, err := util.GetNextOccurrence(rp.Weekdays, rp.Time, rp.Tz)
+			planTime, err := lp.nextRepeatingPlanTime(pausedUntil, rp)
 			if err != nil {
 				lp.log.DEBUG.Printf("invalid repeating plan: weekdays=%v, time=%s, tz=%s, error=%v", rp.Weekdays, rp.Time, rp.Tz, err)
 				continue

@@ -1300,6 +1300,8 @@
         "continuousPriceDescription": "Vybere nejlevnější časový interval pro nabíjení bez přerušování nabíjení.",
         "label": "Optimalizace"
       },
+      "pause": "Pozastavit",
+      "pausedUntil": "Pozastaveno do {time}",
       "planNumber": "Plán {number}",
       "precondition": {
         "description": "Posune část dobíjení těsně před nastavený čas: lehce ohřeje baterii a zamezí stání vozu delší dobu s plnou baterií pokud nabíjíte na 100%.",
@@ -1308,9 +1310,17 @@
         "optionNo": "ne",
         "summary": "{precondition} předem"
       },
+      "preset24h": "+24 hodin",
+      "preset48h": "+48 hodin",
+      "preset7d": "+7 dní",
+      "presetCustom": "Vlastní datum/čas…",
+      "presetFriday": "Do pátku 18:00",
+      "presetSunday": "Do neděle 18:00",
+      "presetTomorrow": "Do zítřka 10:00",
       "remove": "Odebrat",
       "repeating": "opakující se",
       "repeatingPlans": "Opakující se plány",
+      "resume": "Obnovit",
       "selectAll": "Vybrat vše",
       "strategy": {
         "label": "Strategie nabíjení"

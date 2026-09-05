@@ -1300,6 +1300,8 @@
         "continuousPriceDescription": "Atlasa nepārtrauktu vislētāko laika posmu virkni.",
         "label": "Optimizācija"
       },
+      "pause": "Pauzēt",
+      "pausedUntil": "Pauzēts līdz {time}",
       "planNumber": "Plāns {number}",
       "precondition": {
         "description": "Daļu no uzlādes veic tieši pirms izbraukšanas: slitāks akumulators, mazāk laika ar augstu uzlādes līmeni.",
@@ -1308,9 +1310,17 @@
         "optionNo": "nē",
         "summary": "{precondition} pirms"
       },
+      "preset24h": "+24 stundas",
+      "preset48h": "+48 stundas",
+      "preset7d": "+7 dienas",
+      "presetCustom": "Pielāgots datums/laiks…",
+      "presetFriday": "Līdz piektdienai 18:00",
+      "presetSunday": "Līdz svētdienai 18:00",
+      "presetTomorrow": "Līdz rītdienai 10:00",
       "remove": "Noņemt",
       "repeating": "atkārtojošs",
       "repeatingPlans": "Atkārtojošie plāni",
+      "resume": "Atsākt",
       "selectAll": "Izvēlēties visus",
       "strategy": {
         "label": "Stratēģija"

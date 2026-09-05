@@ -1277,6 +1277,8 @@
         "continuousPriceDescription": "Sélectionne la série de créneaux horaires sans interruption et la moins chère.",
         "label": "Optimisation"
       },
+      "pause": "Pause",
+      "pausedUntil": "En pause jusqu'à {time}",
       "planNumber": "Plan {number}",
       "precondition": {
         "description": "Effectuer une partie de la recharge juste avant le départ : la batterie est chaude et reste moins longtemps à un niveau de charge élevé.",
@@ -1285,9 +1287,17 @@
         "optionNo": "non",
         "summary": "{precondition} avant"
       },
+      "preset24h": "+24 heures",
+      "preset48h": "+48 heures",
+      "preset7d": "+7 jours",
+      "presetCustom": "Date/heure personnalisée…",
+      "presetFriday": "Jusqu'à vendredi 18:00",
+      "presetSunday": "Jusqu'à dimanche 18:00",
+      "presetTomorrow": "Jusqu'à demain 10:00",
       "remove": "Enlever",
       "repeating": "récurrent",
       "repeatingPlans": "Plans récurrents",
+      "resume": "Reprendre",
       "selectAll": "Sélect. tous",
       "strategy": {
         "label": "Stratégie"

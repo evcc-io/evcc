@@ -1277,6 +1277,8 @@
         "continuousPriceDescription": "Seleciona a série de intervalos de tempo não interrompidos mais económica.",
         "label": "Otimização"
       },
+      "pause": "Pausar",
+      "pausedUntil": "Pausado até {time}",
       "planNumber": "Plano {number}",
       "precondition": {
         "description": "Faz parte do processo de carregamento imediatamente antes da partida: bateria aquecida, menos tempo com um nível de carga elevado.",
@@ -1285,9 +1287,17 @@
         "optionNo": "não",
         "summary": "{precondition} antes de"
       },
+      "preset24h": "+24 horas",
+      "preset48h": "+48 horas",
+      "preset7d": "+7 dias",
+      "presetCustom": "Data/hora personalizada…",
+      "presetFriday": "Até sexta-feira às 18:00",
+      "presetSunday": "Até domingo às 18:00",
+      "presetTomorrow": "Até amanhã às 10:00",
       "remove": "Apagar",
       "repeating": "recorrente",
       "repeatingPlans": "Repetição de planos",
+      "resume": "Retomar",
       "selectAll": "Selecionar tudo",
       "strategy": {
         "label": "Estratégia"

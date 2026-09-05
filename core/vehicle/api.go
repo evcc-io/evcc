@@ -47,4 +47,9 @@ type API interface {
 	GetPlanStrategy() api.PlanStrategy
 	// SetPlanStrategy sets the plan strategy
 	SetPlanStrategy(api.PlanStrategy) error
+
+	// GetPausedUntil returns the repeating plans pause timestamp
+	GetPausedUntil() time.Time
+	// SetPausedUntil sets the repeating plans pause timestamp
+	SetPausedUntil(time.Time) error
 }

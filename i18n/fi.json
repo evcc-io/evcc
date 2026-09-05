@@ -1285,6 +1285,8 @@
         "continuousPriceDescription": "Valitsee halvimman yhtenäisen aikajakson.",
         "label": "Optimointi"
       },
+      "pause": "Keskeytä",
+      "pausedUntil": "Keskeytetty klo {time} asti",
       "planNumber": "Suunnitelma {number}",
       "precondition": {
         "description": "Siirtää osan latauksesta juuri ennen lähtöaikaa: lämmittää akkua, vähemmän aikaa korkealla lataustasolla.",
@@ -1293,9 +1295,17 @@
         "optionNo": "ei",
         "summary": "{precondition} ennen"
       },
+      "preset24h": "+24 tuntia",
+      "preset48h": "+48 tuntia",
+      "preset7d": "+7 päivää",
+      "presetCustom": "Mukautettu päivämäärä/aika…",
+      "presetFriday": "Perjantaihin klo 18:00 asti",
+      "presetSunday": "Sunnuntaihin klo 18:00 asti",
+      "presetTomorrow": "Huomiseen klo 10:00 asti",
       "remove": "Poista",
       "repeating": "toistetaan",
       "repeatingPlans": "Toistuvat suunnitelmat",
+      "resume": "Jatka",
       "selectAll": "Valitse kaikki",
       "strategy": {
         "label": "Strategia"

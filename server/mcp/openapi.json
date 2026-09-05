@@ -4920,6 +4920,11 @@
           "icon": {
             "description": "Vehicle icon name for UI display.",
             "type": "string"
+          },
+          "pausedUntil": {
+            "description": "Paused until timestamp for repeating plans.",
+            "type": "string",
+            "nullable": true
           }
         },
         "required": [

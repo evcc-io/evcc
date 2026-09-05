@@ -1285,6 +1285,8 @@
         "continuousPriceDescription": "Vælger det billigste sammenhængende tidsrum.",
         "label": "Optimering"
       },
+      "pause": "Pause",
+      "pausedUntil": "Sat på pause indtil {time}",
       "planNumber": "Plan {number}",
       "precondition": {
         "description": "Flytter en del af opladningen til lige før afgang: Varmt batteri og mindre tid ved høj ladestand.",
@@ -1293,9 +1295,17 @@
         "optionNo": "nej",
         "summary": "{precondition} før"
       },
+      "preset24h": "+24 timer",
+      "preset48h": "+48 timer",
+      "preset7d": "+7 dage",
+      "presetCustom": "Brugerdefineret dato/tid…",
+      "presetFriday": "Indtil fredag 18:00",
+      "presetSunday": "Indtil søndag 18:00",
+      "presetTomorrow": "Indtil i morgen 10:00",
       "remove": "Fjern",
       "repeating": "Gentager",
       "repeatingPlans": "Gentager plan",
+      "resume": "Genoptag",
       "selectAll": "Vælg alt",
       "strategy": {
         "label": "Strategi"

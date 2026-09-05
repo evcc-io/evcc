@@ -1277,6 +1277,8 @@
         "continuousPriceDescription": "Wielt déi bëllegst onënnerbrach Serie vu Slots aus.",
         "label": "Optimisatioun"
       },
+      "pause": "Paus",
+      "pausedUntil": "Pauséiert bis {time}",
       "planNumber": "Planifkatioun {number}",
       "precondition": {
         "description": "Verleeë e Deel vum Opluede direkt virum Depart: waarm Batterie, manner Zäit op engem héijen Opluede-Niveau.",
@@ -1285,9 +1287,17 @@
         "optionNo": "Nee",
         "summary": "{precondition} virdrun"
       },
+      "preset24h": "+24 Stonnen",
+      "preset48h": "+48 Stonnen",
+      "preset7d": "+7 Deeg",
+      "presetCustom": "Benotzerdefinéiert Datum/Zäit…",
+      "presetFriday": "Bis Freideg 18:00",
+      "presetSunday": "Bis Sonndeg 18:00",
+      "presetTomorrow": "Bis muer 10:00",
       "remove": "Ewechhuelen",
       "repeating": "widderhuelend",
       "repeatingPlans": "Widderhuelend Planifikatiounen",
+      "resume": "Weidermaachen",
       "selectAll": "All auswielen",
       "strategy": {
         "label": "Strategie"

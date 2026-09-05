@@ -1299,6 +1299,8 @@
         "continuousPriceDescription": "Väljer de billigaste sammanhängande perioderna.",
         "label": "Optimering"
       },
+      "pause": "Pausa",
+      "pausedUntil": "Pausad till {time}",
       "planNumber": "Plan {number}",
       "precondition": {
         "description": "Flyttar delar av laddningen till strax före avfärd: varmt batteri, kortare tid med hög laddningsnivå i batteriet.",
@@ -1307,9 +1309,17 @@
         "optionNo": "nej",
         "summary": "{precondition} före"
       },
+      "preset24h": "+24 timmar",
+      "preset48h": "+48 timmar",
+      "preset7d": "+7 dagar",
+      "presetCustom": "Anpassat datum/tid…",
+      "presetFriday": "Till fredag 18:00",
+      "presetSunday": "Till söndag 18:00",
+      "presetTomorrow": "Till i morgon 10:00",
       "remove": "Ta bort",
       "repeating": "återkommande",
       "repeatingPlans": "Återkommande planer",
+      "resume": "Återuppta",
       "selectAll": "Välj alla",
       "strategy": {
         "label": "Strategi"
