@@ -28,7 +28,7 @@ params:
   - name: maxsoc
     deprecated: true
   - name: maxchargepower
-    default: 1000
+    deprecated: true
   - name: maxdischargepower
     deprecated: true
   - name: cache
