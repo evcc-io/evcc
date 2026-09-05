@@ -304,15 +304,14 @@ render: |
       register: 60089
       count: 7
     scale: 1
-  batterymodes: ["normal", "hold", "charge", "holdcharge", "discharge"]
   batterymode:
-    source: sequence
-    set:
-      - source: switch
-        switch:
-          - case: 1 # normal
-            set:
-              source: const
+    source: switch
+    switch:
+      - case: 1 # normal
+        set:
+          source: sequence
+          set:
+            - source: const
               value: 2
               set:
                 source: modbus
@@ -321,140 +320,7 @@ render: |
                   address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
                   type: writeholding
                   decode: uint16
-          - case: 2 # hold -> No discharging
-            set:
-              source: const
-              value: {{ if eq .firmware "<01.01.00.28.15" }}99{{ else }}2{{ end }}
-              set:
-                source: modbus
-                {{- include "modbus" . | indent 14 }}
-                register:
-                  address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
-                  type: writeholding
-                  decode: uint16
-          - case: 3 # charge -> Enable grid charging with maximum target soc (will be stopped by evcc)
-            set:
-              source: sequence
-              set:
-                - source: const
-                  value: {{ .maxsoc }}
-                  set:
-                    source: modbus
-                    {{- include "modbus" . | indent 18 }}
-                    register:
-                      address: 60312 # Energy Storage Forced Charging/Discharging Target SOC (%)
-                      type: writeholding
-                      decode: uint16
-                - source: const
-                  value: 0
-                  set:
-                    source: modbus
-                    {{- include "modbus" . | indent 18 }}
-                    register:
-                      address: 60311 # Energy Storage Forced Charging/Discharging Mode (0 = Target SOC, 1 = Charging/discharging duration)
-                      type: writeholding
-                      decode: uint16
-                - source: const
-                  value: 0
-                  set:
-                    source: modbus
-                    {{- include "modbus" . | indent 18 }}
-                    register:
-                      address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
-                      type: writeholding
-                      decode: uint16
-          - case: 4 # holdcharge -> No charging
-            set:
-              source: const
-              value: {{ if eq .firmware "<01.01.00.28.15" }}99{{ else }}2{{ end }}
-              set:
-                source: modbus
-                {{- include "modbus" . | indent 14 }}
-                register:
-                  address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
-                  type: writeholding
-                  decode: uint16
-          - case: 5 # discharge -> Enable grid discharging with minimum target soc (will be stopped by evcc)
-            set:
-              source: sequence
-              set:
-                - source: const
-                  value: {{ .minsoc }}
-                  set:
-                    source: modbus
-                    {{- include "modbus" . | indent 18 }}
-                    register:
-                      address: 60312 # Energy Storage Forced Charging/Discharging Target SOC (%)
-                      type: writeholding
-                      decode: uint16
-                - source: const
-                  value: 0
-                  set:
-                    source: modbus
-                    {{- include "modbus" . | indent 18 }}
-                    register:
-                      address: 60311 # Energy Storage Forced Charging/Discharging Mode (0 = Target SOC, 1 = Charging/discharging duration)
-                      type: writeholding
-                      decode: uint16
-                - source: const
-                  value: 1
-                  set:
-                    source: modbus
-                    {{- include "modbus" . | indent 18 }}
-                    register:
-                      address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
-                      type: writeholding
-                      decode: uint16
-      {{- if eq .firmware ">=01.01.00.28.15" }}
-      - source: switch
-        switch:
-          - case: 2 # hold -> No discharging
-            set:
-              source: sequence
-              set:
-                - source: const
-                  value: 0xFFFFFFFF # No limit
-                  set:
-                    source: modbus
-                    {{- include "modbus" . | indent 18 }}
-                    register:
-                      address: 60318 # Energy Storage Maximum Charging Power (kW * 1000)
-                      type: writeholdings
-                      decode: uint32
-                - source: const
-                  value: 0 # Set discharge limit to 0W
-                  set:
-                    source: modbus
-                    {{- include "modbus" . | indent 18 }}
-                    register:
-                      address: 60320 # Energy Storage Maximum Discharging Power (kW * 1000)
-                      type: writeholdings
-                      decode: uint32
-          - case: 4 # holdcharge -> No charging
-            set:
-              source: sequence
-              set:
-                - source: const
-                  value: 0 # Set charge limit to 0W
-                  set:
-                    source: modbus
-                    {{- include "modbus" . | indent 18 }}
-                    register:
-                      address: 60318 # Energy Storage Maximum Charging Power (kW * 1000)
-                      type: writeholdings
-                      decode: uint32
-                - source: const
-                  value: 0xFFFFFFFF # No limit
-                  set:
-                    source: modbus
-                    {{- include "modbus" . | indent 18 }}
-                    register:
-                      address: 60320 # Energy Storage Maximum Discharging Power (kW * 1000)
-                      type: writeholdings
-                      decode: uint32
-        default:
-          source: sequence
-          set:
+            {{- if eq .firmware ">=01.01.00.28.15" }}
             - source: const
               value: 0xFFFFFFFF # No limit
               set:
@@ -473,7 +339,175 @@ render: |
                   address: 60320 # Energy Storage Maximum Discharging Power (kW * 1000)
                   type: writeholdings
                   decode: uint32
-      {{- end }}
+            {{- end }}
+      - case: 2 # hold -> No discharging
+        set:
+          source: sequence
+          set:
+            - source: const
+              value: {{ if eq .firmware "<01.01.00.28.15" }}99{{ else }}2{{ end }}
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
+                  type: writeholding
+                  decode: uint16
+            {{- if eq .firmware ">=01.01.00.28.15" }}
+            - source: const
+              value: 0xFFFFFFFF # No limit
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60318 # Energy Storage Maximum Charging Power (kW * 1000)
+                  type: writeholdings
+                  decode: uint32
+            - source: const
+              value: 0 # Set discharge limit to 0W
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60320 # Energy Storage Maximum Discharging Power (kW * 1000)
+                  type: writeholdings
+                  decode: uint32
+            {{- end }}
+      - case: 3 # charge -> Enable grid charging with maximum target soc (will be stopped by evcc)
+        set:
+          source: sequence
+          set:
+            - source: const
+              value: {{ .maxsoc }}
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60312 # Energy Storage Forced Charging/Discharging Target SOC (%)
+                  type: writeholding
+                  decode: uint16
+            - source: const
+              value: 0
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60311 # Energy Storage Forced Charging/Discharging Mode (0 = Target SOC, 1 = Charging/discharging duration)
+                  type: writeholding
+                  decode: uint16
+            - source: const
+              value: 0
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
+                  type: writeholding
+                  decode: uint16
+            {{- if eq .firmware ">=01.01.00.28.15" }}
+            - source: const
+              value: 0xFFFFFFFF # No limit
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60318 # Energy Storage Maximum Charging Power (kW * 1000)
+                  type: writeholdings
+                  decode: uint32
+            - source: const
+              value: 0xFFFFFFFF # No limit
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60320 # Energy Storage Maximum Discharging Power (kW * 1000)
+                  type: writeholdings
+                  decode: uint32
+            {{- end }}
+      - case: 4 # holdcharge -> No charging
+        set:
+          source: sequence
+          set:
+            - source: const
+              value: {{ if eq .firmware "<01.01.00.28.15" }}99{{ else }}2{{ end }}
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
+                  type: writeholding
+                  decode: uint16
+            {{- if eq .firmware ">=01.01.00.28.15" }}
+            - source: const
+              value: 0 # Set charge limit to 0W
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60318 # Energy Storage Maximum Charging Power (kW * 1000)
+                  type: writeholdings
+                  decode: uint32
+            - source: const
+              value: 0xFFFFFFFF # No limit
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60320 # Energy Storage Maximum Discharging Power (kW * 1000)
+                  type: writeholdings
+                  decode: uint32
+            {{- end }}
+      - case: 5 # discharge -> Enable grid discharging with minimum target soc (will be stopped by evcc)
+        set:
+          source: sequence
+          set:
+            - source: const
+              value: {{ .minsoc }}
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60312 # Energy Storage Forced Charging/Discharging Target SOC (%)
+                  type: writeholding
+                  decode: uint16
+            - source: const
+              value: 0
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60311 # Energy Storage Forced Charging/Discharging Mode (0 = Target SOC, 1 = Charging/discharging duration)
+                  type: writeholding
+                  decode: uint16
+            - source: const
+              value: 1
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
+                  type: writeholding
+                  decode: uint16
+            {{- if eq .firmware ">=01.01.00.28.15" }}
+            - source: const
+              value: 0xFFFFFFFF # No limit
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60318 # Energy Storage Maximum Charging Power (kW * 1000)
+                  type: writeholdings
+                  decode: uint32
+            - source: const
+              value: 0xFFFFFFFF # No limit
+              set:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 60320 # Energy Storage Maximum Discharging Power (kW * 1000)
+                  type: writeholdings
+                  decode: uint32
+            {{- end }}
   {{- if not ( eq .firmware "<01.01.00.28.15" ) }}
   dim:
     source: ifelse

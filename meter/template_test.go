@@ -6,6 +6,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/util/test"
+	"github.com/stretchr/testify/require"
+	"go.yaml.in/yaml/v4"
 )
 
 var acceptable = []string{
@@ -47,4 +49,29 @@ func TestTemplates(t *testing.T) {
 			t.Error(err)
 		}
 	})
+}
+
+func TestAtmoceBatteryModes(t *testing.T) {
+	for _, firmware := range []string{"<01.01.00.28.15", ">=01.01.00.28.15"} {
+		t.Run(firmware, func(t *testing.T) {
+			tmpl, err := templates.ByName(templates.Meter, "atmoce")
+			require.NoError(t, err)
+			data, _, err := tmpl.RenderResult(templates.Meter, templates.RenderModeInstance, map[string]any{
+				"usage": "battery", "firmware": firmware, "modbus": "tcpip", "host": "localhost", "port": 15020,
+			})
+			require.NoError(t, err)
+			var conf map[string]any
+			require.NoError(t, yaml.Unmarshal(data, &conf))
+			require.NotContains(t, conf, "batterymodes")
+			delete(conf, "type")
+
+			m, err := NewConfigurableFromConfig(t.Context(), conf)
+			require.NoError(t, err)
+			ctrl, ok := api.Cap[api.BatteryController](m)
+			require.True(t, ok)
+			require.Equal(t, []api.BatteryMode{
+				api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge, api.BatteryDischarge,
+			}, ctrl.BatteryModes())
+		})
+	}
 }
