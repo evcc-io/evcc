@@ -186,29 +186,12 @@ render: |
           source: sequence
           set:
           - source: const
-            value: 1 # Self Use, fallback if the remote control watchdog expires.
-            # Feed-in First (as used previously) charges the battery from PV before AC
-            # loads, which starves the EV of solar during fast charging. Blocking
-            # discharge via the On-Grid SoC reserve below keeps normal Self Use load
-            # priority while still preventing the battery from discharging.
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 49203 # Work Mode
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 60 # Remote timeout 60 seconds
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 46002 # Remote Timeout Set
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 1 # Enabled
+            value: 0 # Disabled: keeping remote control enabled with a 0W active power
+            # target (tried previously) makes the inverter curtail PV production
+            # entirely instead of just holding the battery, confirmed on real
+            # hardware. Stay on plain Self Use and rely solely on the On-Grid SoC
+            # reserve below to block discharge; Work Mode is not locked against
+            # external changes while holding, which is the accepted trade-off.
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -217,14 +200,14 @@ render: |
                 type: writesingle
                 encoding: uint16
           - source: const
-            value: 0 # W
+            value: 1 # Self Use
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 46003 # Remote Active Power, int32 across 46003 (high word) and 46004 (low word)
-                type: writemultiple
-                encoding: int32
+                address: 49203 # Work Mode
+                type: writesingle
+                encoding: uint16
           - source: const
             value: 100 # blocks discharge regardless of current SoC
             set:
