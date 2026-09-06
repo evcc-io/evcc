@@ -18,6 +18,8 @@ params:
     choice: ["tcpip"]
     port: 502
     id: 1
+  - name: maxacpower
+    deprecated: true
   - preset: battery-params
   - name: maxchargepower
     default: 2500
