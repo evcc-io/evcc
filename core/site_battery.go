@@ -175,7 +175,8 @@ func (site *Site) unmodelledCharging() bool {
 // held for this long, filtering a single degenerate solve.
 const batterySuggestionDebounce = 20 * time.Second
 
-// batterySuggestionMode returns the optimizer's mode for the first controllable battery.
+// batterySuggestionMode returns the debounced optimizer mode for the first controllable
+// battery - the prior mode while a change is still pending, see debounceBatterySuggestion.
 // TODO apply per battery once the site tracks more than a single battery mode - the
 // debounce state below is shared across batteries for the same reason.
 func (site *Site) batterySuggestionMode() (api.BatteryMode, bool) {
