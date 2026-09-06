@@ -186,7 +186,7 @@ render: |
           source: sequence
           set:
           - source: const
-            value: 0 # Disabled: stay on Self Use, PV still serves AC loads (incl. EV) first.
+            value: 1 # Self Use, fallback if the remote control watchdog expires.
             # Feed-in First (as used previously) charges the battery from PV before AC
             # loads, which starves the EV of solar during fast charging. Blocking
             # discharge via the On-Grid SoC reserve below keeps normal Self Use load
@@ -195,18 +195,36 @@ render: |
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 46001 # Remote Control
+                address: 49203 # Work Mode
                 type: writesingle
                 encoding: uint16
           - source: const
-            value: 1 # Self Use
+            value: 60 # Remote timeout 60 seconds
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 49203 # Work Mode
+                address: 46002 # Remote Timeout Set
                 type: writesingle
                 encoding: uint16
+          - source: const
+            value: 1 # Enabled
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 46001 # Remote Control
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 0 # W
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 46003 # Remote Active Power, int32 across 46003 (high word) and 46004 (low word)
+                type: writemultiple
+                encoding: int32
           - source: const
             value: 100 # blocks discharge regardless of current SoC
             set:
