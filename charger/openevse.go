@@ -55,6 +55,7 @@ type OpenEVSE struct {
 	// so that the reader goroutine never races with a test shortening them
 	pingInterval time.Duration
 	readTimeout  time.Duration
+	stableAfter  time.Duration
 
 	claimMu sync.Mutex
 	claim   *openevse.Claim // last claim written, nil until the first write
@@ -101,6 +102,10 @@ var (
 
 	// openevseReadyTimeout is how long the constructor waits for the first frame
 	openevseReadyTimeout = request.Timeout
+
+	// openevseStableAfter is how long a connection must deliver state before a
+	// drop counts as a fresh failure (reset backoff) rather than flapping (grow it)
+	openevseStableAfter = time.Minute
 )
 
 func init() {
@@ -145,6 +150,7 @@ func NewOpenEVSE(ctx context.Context, uri, user, password string, phases1p3p boo
 
 		pingInterval: openevsePingInterval,
 		readTimeout:  openevseReadTimeout,
+		stableAfter:  openevseStableAfter,
 	}
 
 	c.warnOverride = func() { c.log.WARN.Println(overrideWarning) }
@@ -282,16 +288,32 @@ func (c *OpenEVSE) run(ctx context.Context) {
 		}
 
 		c.setConnected(false)
+
+		// a dropped connection backs off like a failed dial; handleConnection has
+		// reset bo if the connection was stable, so a healthy charger that rebooted
+		// is redialled after the initial interval while a flapping one is not
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(bo.NextBackOff()):
+		}
 	}
 }
 
 // handleConnection reads frames until the connection fails. The first frame of a
 // connection is the full status; after merging it successfully the charger is
-// readable and the reconnect backoff is reset, proving the connection is usable
-// (a device that accepts the websocket and then immediately drops it must not
-// reset the backoff and cause a hot reconnect loop).
+// readable. The reconnect backoff is only reset once the connection has delivered
+// state for stableAfter, so a device that accepts the websocket, sends a frame
+// and drops again keeps backing off instead of reconnecting in a hot loop.
 func (c *OpenEVSE) handleConnection(ctx context.Context, conn *websocket.Conn, bo *backoff.ExponentialBackOff) error {
 	defer conn.Close(websocket.StatusNormalClosure, "")
+
+	var connectedAt time.Time
+	defer func() {
+		if !connectedAt.IsZero() && time.Since(connectedAt) >= c.stableAfter {
+			bo.Reset()
+		}
+	}()
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -334,19 +356,24 @@ func (c *OpenEVSE) handleConnection(ctx context.Context, conn *websocket.Conn, b
 		c.log.TRACE.Printf("websocket: %s", b)
 
 		err = c.merge(b)
-		if err != nil {
+
+		// a type mismatch on one key leaves the others decoded, so the frame is
+		// still usable state: refusing it would make the charger unusable until
+		// evcc is updated for a firmware change to a single key. Log which key so
+		// the zero value it leaves behind is not silent. Anything else - a syntax
+		// error, non-object frame, etc - is not usable state.
+		var typeErr *json.UnmarshalTypeError
+		ok := err == nil
+		if errors.As(err, &typeErr) {
+			ok = true
+			c.log.WARN.Printf("websocket: key %s has unexpected type %s, ignoring it", typeErr.Field, typeErr.Value)
+		} else if err != nil {
 			c.log.ERROR.Printf("websocket: bad frame: %v", err)
 		}
 
-		// a partial merge still delivers real state for the fields that did decode
-		// (the firmware may add keys with unexpected types); anything else - a
-		// syntax error, non-object frame, etc - is not usable state
-		var typeErr *json.UnmarshalTypeError
-		ok := err == nil || errors.As(err, &typeErr)
-
 		if first && ok {
 			first = false
-			bo.Reset()
+			connectedAt = time.Now()
 			c.setConnected(true)
 
 			// the first connection of the charger's lifetime releases the constructor;
@@ -429,7 +456,7 @@ func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 		1: "not connected",
 		2: "connected",
 		3: "charging",
-		4: "vent required",          -> B/A (api.StatusD does not exist)
+		4: "vent required",          -> B if a vehicle is connected, else A (evcc has no status D)
 		5: "diode check failed",     -> named error (evcc has no status F constant)
 		6: "gfci fault",             -> named error
 		7: "no ground",              -> named error

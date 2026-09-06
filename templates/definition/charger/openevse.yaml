@@ -23,8 +23,8 @@ params:
       de: Phasenumschaltung
       en: Phase switching
     help:
-      de: Nur für modifizierte 3-Phasen-Controller mit `$S7`-Unterstützung
-      en: Only for modified 3-phase controllers that support `$S7`
+      de: Nur für modifizierte 3-Phasen-Controller, die `$G7` und `$S7` unterstützen
+      en: Only for modified 3-phase controllers that support `$G7` and `$S7`
     type: bool
     default: false
     advanced: true

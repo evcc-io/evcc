@@ -44,6 +44,8 @@ type openevseTestServer struct {
 	// commands answer $NK like a stock controller.
 	rapi     map[string]string
 	rapiCmds []string
+
+	flap bool // drop every connection right after the full status frame
 }
 
 const rapiBlocked = "BLOCKED"
@@ -75,6 +77,13 @@ func newOpenEVSETestServer(t *testing.T, full string) *openevseTestServer {
 			if err := c.Write(ctx, websocket.MessageText, []byte(full)); err != nil {
 				return
 			}
+		}
+
+		s.mu.Lock()
+		flap := s.flap
+		s.mu.Unlock()
+		if flap {
+			return
 		}
 
 		for {
@@ -197,6 +206,13 @@ func shortenOpenEVSEReady(t *testing.T, d time.Duration) {
 // shortenOpenEVSEKeepalive shortens the ping interval and the per-read deadline.
 // Both are snapshotted by the constructor, so this must be called before the
 // charger under test is created.
+func shortenOpenEVSEStableAfter(t *testing.T, d time.Duration) {
+	t.Helper()
+	old := openevseStableAfter
+	openevseStableAfter = d
+	t.Cleanup(func() { openevseStableAfter = old })
+}
+
 func shortenOpenEVSEKeepalive(t *testing.T, ping, read time.Duration) {
 	t.Helper()
 
@@ -789,4 +805,66 @@ func TestOpenEVSEPhaseSwitchError(t *testing.T) {
 	err = ps.Phases1p3p(3)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "$NK")
+}
+
+// TestOpenEVSEFlappingConnectionBacksOff: a charger that accepts the websocket,
+// sends its status and drops again must not be redialled in a hot loop. The
+// exponential backoff starts at 500ms, so ~2s allows 3 reconnects; a hot loop
+// would produce hundreds.
+func TestOpenEVSEFlappingConnectionBacksOff(t *testing.T) {
+	s := newOpenEVSETestServer(t, openevseFullStatus)
+	s.mu.Lock()
+	s.flap = true
+	s.mu.Unlock()
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	newTestOpenEVSE(ctx, t, s.srv.URL, "", "")
+
+	time.Sleep(2 * time.Second)
+	assert.LessOrEqual(t, s.snapshot().connects, 5, "flapping connection reconnected in a hot loop")
+}
+
+// TestOpenEVSEStableConnectionResetsBackoff: a connection that lived past the
+// stability window resets the backoff, so a rebooted charger is redialled promptly
+// even after earlier flapping grew the interval.
+func TestOpenEVSEStableConnectionResetsBackoff(t *testing.T) {
+	shortenOpenEVSEStableAfter(t, 50*time.Millisecond)
+	s := newOpenEVSETestServer(t, openevseFullStatus)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	c := newTestOpenEVSE(ctx, t, s.srv.URL, "", "")
+	waitOpenEVSEConnected(t, c)
+
+	for i := 2; i <= 4; i++ {
+		time.Sleep(100 * time.Millisecond) // past the stability window
+		s.drop <- struct{}{}
+
+		start := time.Now()
+		require.Eventually(t, func() bool {
+			return s.snapshot().connects == i
+		}, 5*time.Second, 10*time.Millisecond)
+		assert.Less(t, time.Since(start), 900*time.Millisecond, "reconnect %d should use the initial backoff", i)
+	}
+}
+
+// TestOpenEVSETypeMismatchFrame: a key with the wrong JSON type is ignored while
+// the rest of the frame is still applied.
+func TestOpenEVSETypeMismatchFrame(t *testing.T) {
+	s := newOpenEVSETestServer(t, openevseFullStatus)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	c := newTestOpenEVSE(ctx, t, s.srv.URL, "", "")
+
+	s.send <- `{"rfid_auth":42,"pilot":6}`
+	require.Eventually(t, func() bool {
+		cur, err := c.GetMaxCurrent()
+		return err == nil && cur == 6
+	}, 5*time.Second, 10*time.Millisecond)
+
+	status, err := c.Status()
+	require.NoError(t, err)
+	assert.Equal(t, api.StatusC, status)
 }
