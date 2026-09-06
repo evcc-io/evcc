@@ -172,30 +172,25 @@ render: |
                 address: 46610 # Maximum SoC
                 type: writesingle
                 encoding: uint16
+          - source: const
+            value: {{ .minsoc }}
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 46611 # Minimum SoC On-Grid
+                type: writesingle
+                encoding: uint16
       - case: 2 # hold - stop battery discharge
         set:
           source: sequence
           set:
           - source: const
-            value: 2 # Feed-in First, fallback if the remote control watchdog expires
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 49203 # Work Mode
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 60 # Remote timeout 60 seconds
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 46002 # Remote Timeout Set
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: 1 # Enabled
+            value: 0 # Disabled: stay on Self Use, PV still serves AC loads (incl. EV) first.
+            # Feed-in First (as used previously) charges the battery from PV before AC
+            # loads, which starves the EV of solar during fast charging. Blocking
+            # discharge via the On-Grid SoC reserve below keeps normal Self Use load
+            # priority while still preventing the battery from discharging.
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -204,14 +199,23 @@ render: |
                 type: writesingle
                 encoding: uint16
           - source: const
-            value: 0 # W
+            value: 1 # Self Use
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
-                address: 46003 # Remote Active Power, int32 across 46003 (high word) and 46004 (low word)
-                type: writemultiple
-                encoding: int32
+                address: 49203 # Work Mode
+                type: writesingle
+                encoding: uint16
+          - source: const
+            value: 100 # blocks discharge regardless of current SoC
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 46611 # Minimum SoC On-Grid
+                type: writesingle
+                encoding: uint16
       - case: 3 # charge - force battery charge
         set:
           source: sequence
