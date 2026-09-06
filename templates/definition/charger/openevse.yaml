@@ -8,16 +8,29 @@ requirements:
       Requires OpenEVSE WiFi firmware 4.1.9 or later. evcc controls the charger through its claims API;
       the manual override on the charger (the On/Off mode on its dashboard) takes precedence over evcc; tap Auto to release it. If evcc is removed, delete its claim
       (client 262145) in the charger's web UI or via `DELETE /claims/262145`.
+      1p/3p phase switching (`phases1p3p`) only works with modified 3-phase controllers that answer the `$G7`/`$S7` RAPI commands; stock OpenEVSE controllers do not.
     de: |
       Benötigt OpenEVSE WiFi-Firmware 4.1.9 oder neuer. evcc steuert die Wallbox über deren Claims-API;
       die manuelle Übersteuerung an der Wallbox (Modus Ein/Aus im Dashboard) hat Vorrang vor evcc; Auto wählen, um sie aufzuheben. Wird evcc entfernt, den evcc-Claim
       (Client 262145) in der Weboberfläche der Wallbox oder per `DELETE /claims/262145` löschen.
+      1p/3p-Phasenumschaltung (`phases1p3p`) funktioniert nur mit modifizierten 3-Phasen-Controllern, die die RAPI-Befehle `$G7`/`$S7` beantworten; serienmäßige OpenEVSE-Controller tun das nicht.
 params:
   - name: host
   - name: user
   - name: password
+  - name: phases1p3p
+    description:
+      de: Phasenumschaltung
+      en: Phase switching
+    help:
+      de: Nur für modifizierte 3-Phasen-Controller mit `$S7`-Unterstützung
+      en: Only for modified 3-phase controllers that support `$S7`
+    type: bool
+    default: false
+    advanced: true
 render: |
   type: openevse
   uri: http://{{ .host }}
   user: {{ .user }}
   password: {{ .password }}
+  phases1p3p: {{ .phases1p3p }}

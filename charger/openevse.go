@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/coder/websocket"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/openevse"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/util"
@@ -27,8 +29,14 @@ import (
 // the firmware's claims API (POST/DELETE /claims/{client}) at the firmware's fixed
 // API priority, so the user's manual override, RFID, OCPP and limits still win while
 // evcc wins over the built-in solar divert and schedules.
+//
+// Phase switching is opt-in (phases1p3p: true): modified three-phase controllers
+// answer the $G7/$S7 RAPI commands, which are not part of the stock open_evse
+// command set. Construction fails if it is enabled but the controller or the WiFi
+// firmware build does not accept them.
 type OpenEVSE struct {
 	*request.Helper
+	implement.Caps
 	log   *util.Logger
 	uri   string
 	wsURI string
@@ -64,6 +72,8 @@ type OpenEVSE struct {
 }
 
 const overrideWarning = "manual override active on charger: evcc's claim is outranked until it is cleared (tap Auto on the charger dashboard, or DELETE /override)"
+
+const phaseSwitchWarning = "phase switching enabled through raw RAPI commands ($S7) of a modified 3-phase controller; these are not part of stock OpenEVSE firmware and bypass its EVSE manager"
 
 var errOpenEVSENotConnected = errors.New("websocket not connected")
 
@@ -104,6 +114,10 @@ func NewOpenEVSEFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		User     string
 		Password string
 		Cache    time.Duration // TODO deprecated, state is pushed by the firmware
+
+		// Phases1p3p enables 1p/3p switching via the $S7 RAPI command of
+		// modified 3-phase controllers; stock controllers do not support it
+		Phases1p3p bool
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -114,16 +128,17 @@ func NewOpenEVSEFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		return nil, errors.New("missing uri")
 	}
 
-	return NewOpenEVSE(ctx, cc.URI, cc.User, cc.Password)
+	return NewOpenEVSE(ctx, cc.URI, cc.User, cc.Password, cc.Phases1p3p)
 }
 
 // NewOpenEVSE creates OpenEVSE charger
-func NewOpenEVSE(ctx context.Context, uri, user, password string) (api.Charger, error) {
+func NewOpenEVSE(ctx context.Context, uri, user, password string, phases1p3p bool) (api.Charger, error) {
 	basicAuth := transport.BasicAuthHeader(user, password)
 	log := util.NewLogger("openevse").Redact(user, password, basicAuth)
 
 	c := &OpenEVSE{
 		Helper: request.NewHelper(log),
+		Caps:   implement.New(),
 		log:    log,
 		uri:    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
 		ready:  make(chan struct{}),
@@ -170,9 +185,63 @@ func NewOpenEVSE(ctx context.Context, uri, user, password string) (api.Charger, 
 	// fires from a normal SIGINT/SIGTERM. Register with evcc's shutdown hooks instead.
 	// release() is idempotent (guarded by claim == nil under claimMu), so it is safe
 	// to also run via the deferred call in run() when ctx is cancelled (embedding, tests).
+	if phases1p3p {
+		if err := c.enablePhaseSwitching(); err != nil {
+			c.cancel()
+			return nil, err
+		}
+	}
+
 	shutdown.Register(c.release)
 
 	return c, nil
+}
+
+// enablePhaseSwitching verifies the $G7/$S7 phase relay commands of modified
+// three-phase controllers and exposes the phase switcher. A stock controller
+// answers $NK; WiFi firmware builds without ENABLE_FULL_RAPI (Ethernet, TFT)
+// block RAPI writes with 400. Both are configuration errors since the user asked
+// for phase switching explicitly.
+func (c *OpenEVSE) enablePhaseSwitching() error {
+	if err := c.rapiCommand("$G7"); err != nil {
+		return fmt.Errorf("phase switching: controller does not support it (stock OpenEVSE controllers do not): %w", err)
+	}
+
+	// disable the controller's own 1p/3p auto-switching
+	if err := c.rapiCommand("$S8 0"); err != nil {
+		return fmt.Errorf("phase switching: WiFi firmware rejected the $S8 write (this build blocks RAPI writes): %w", err)
+	}
+
+	c.log.WARN.Println(phaseSwitchWarning)
+	implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
+
+	return nil
+}
+
+// rapiCommand sends a raw RAPI command through the firmware's /r endpoint
+func (c *OpenEVSE) rapiCommand(command string) error {
+	var res struct {
+		Cmd, Ret, Error string
+	}
+
+	uri := fmt.Sprintf("%s/r?json=1&rapi=%s", c.uri, url.QueryEscape(command))
+
+	err := c.GetJSON(uri, &res)
+	if err == nil && !strings.HasPrefix(res.Ret, "$OK") {
+		err = fmt.Errorf("rapi command %s failed: %s%s", command, res.Ret, res.Error)
+	}
+
+	return err
+}
+
+// phases1p3p implements the api.PhaseSwitcher interface
+func (c *OpenEVSE) phases1p3p(phases int) error {
+	var set3p int
+	if phases == 3 {
+		set3p = 1
+	}
+
+	return c.rapiCommand(fmt.Sprintf("$S7 %d", set3p))
 }
 
 // run keeps the websocket connected until ctx is cancelled

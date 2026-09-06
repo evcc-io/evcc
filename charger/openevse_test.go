@@ -38,7 +38,15 @@ type openevseTestServer struct {
 	claims    []openevse.Claim
 	deleted   int
 	claimErr  bool // reject claim writes with 400
+
+	// rapi maps a RAPI command to the firmware's ret string; the special value
+	// rapiBlocked answers 400 like a build without ENABLE_FULL_RAPI. Unknown
+	// commands answer $NK like a stock controller.
+	rapi     map[string]string
+	rapiCmds []string
 }
+
+const rapiBlocked = "BLOCKED"
 
 // newOpenEVSETestServer starts the fake. If full is empty the websocket never sends a frame.
 func newOpenEVSETestServer(t *testing.T, full string) *openevseTestServer {
@@ -113,10 +121,42 @@ func newOpenEVSETestServer(t *testing.T, full string) *openevseTestServer {
 		}
 	})
 
+	mux.HandleFunc("/r", func(w http.ResponseWriter, r *http.Request) {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+
+		cmd := r.URL.Query().Get("rapi")
+		s.rapiCmds = append(s.rapiCmds, cmd)
+
+		ret, ok := s.rapi[cmd]
+		switch {
+		case ret == rapiBlocked:
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = fmt.Fprintf(w, `{"cmd":%q,"error":"RAPI_RESPONSE_BLOCKED"}`, cmd)
+		case ok:
+			_, _ = fmt.Fprintf(w, `{"cmd":%q,"ret":%q}`, cmd, ret)
+		default:
+			_, _ = fmt.Fprintf(w, `{"cmd":%q,"ret":"$NK^21"}`, cmd)
+		}
+	})
+
 	s.srv = httptest.NewServer(mux)
 	t.Cleanup(s.srv.Close)
 
 	return s
+}
+
+// setRapi installs the RAPI answers before the charger is constructed
+func (s *openevseTestServer) setRapi(rapi map[string]string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.rapi = rapi
+}
+
+func (s *openevseTestServer) rapiCommands() []string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return append([]string(nil), s.rapiCmds...)
 }
 
 // failClaims makes every /claims request answer 400
@@ -168,7 +208,7 @@ func shortenOpenEVSEKeepalive(t *testing.T, ping, read time.Duration) {
 
 func newTestOpenEVSE(ctx context.Context, t *testing.T, uri, user, password string) *OpenEVSE {
 	t.Helper()
-	c, err := NewOpenEVSE(ctx, uri, user, password)
+	c, err := NewOpenEVSE(ctx, uri, user, password, false)
 	require.NoError(t, err)
 	return c.(*OpenEVSE)
 }
@@ -192,7 +232,7 @@ func TestOpenEVSEConstructWithoutFrame(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	_, err := NewOpenEVSE(ctx, s.srv.URL, "", "")
+	_, err := NewOpenEVSE(ctx, s.srv.URL, "", "", false)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, api.ErrTimeout)
 }
@@ -210,7 +250,7 @@ func TestOpenEVSEConstructUnauthorized(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	_, err := NewOpenEVSE(ctx, srv.URL, "admin", "wrong")
+	_, err := NewOpenEVSE(ctx, srv.URL, "admin", "wrong", false)
 	require.Error(t, err)
 	assert.ErrorContains(t, err, "401")
 }
@@ -609,7 +649,7 @@ func TestOpenEVSEGarbageOnlyFrame(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 
-	_, err := NewOpenEVSE(ctx, s.srv.URL, "", "")
+	_, err := NewOpenEVSE(ctx, s.srv.URL, "", "", false)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, api.ErrTimeout)
 }
@@ -661,4 +701,92 @@ func TestOpenEVSEIdentify(t *testing.T) {
 		ids, err := c.Identify()
 		return err == nil && ids == nil
 	}, 5*time.Second, 10*time.Millisecond)
+}
+
+// TestOpenEVSEPhaseSwitching: with phases1p3p enabled, a modified 3-phase
+// controller answers $G7, evcc disables its auto-switching and exposes the switcher.
+func TestOpenEVSEPhaseSwitching(t *testing.T) {
+	s := newOpenEVSETestServer(t, openevseFullStatus)
+	s.setRapi(map[string]string{
+		"$G7":   "$OK 1^0C",
+		"$S8 0": "$OK^41",
+		"$S7 1": "$OK^41",
+		"$S7 0": "$OK^41",
+	})
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	c, err := NewOpenEVSE(ctx, s.srv.URL, "", "", true)
+	require.NoError(t, err)
+
+	ps, ok := api.Cap[api.PhaseSwitcher](c)
+	require.True(t, ok, "expected PhaseSwitcher")
+
+	require.NoError(t, ps.Phases1p3p(3))
+	require.NoError(t, ps.Phases1p3p(1))
+
+	assert.Equal(t, []string{"$G7", "$S8 0", "$S7 1", "$S7 0"}, s.rapiCommands())
+}
+
+// TestOpenEVSEPhaseSwitchingDefaultOff: the default sends no RAPI traffic at all
+func TestOpenEVSEPhaseSwitchingDefaultOff(t *testing.T) {
+	s := newOpenEVSETestServer(t, openevseFullStatus)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	c := newTestOpenEVSE(ctx, t, s.srv.URL, "", "")
+
+	assert.False(t, api.HasCap[api.PhaseSwitcher](c), "unexpected PhaseSwitcher")
+	assert.Empty(t, s.rapiCommands())
+}
+
+// TestOpenEVSEPhaseSwitchingStockController: enabled on a stock controller ($NK
+// to $G7) is a configuration error caught by the config test.
+func TestOpenEVSEPhaseSwitchingStockController(t *testing.T) {
+	s := newOpenEVSETestServer(t, openevseFullStatus)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	_, err := NewOpenEVSE(ctx, s.srv.URL, "", "", true)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "controller does not support")
+	assert.Equal(t, []string{"$G7"}, s.rapiCommands())
+}
+
+// TestOpenEVSEPhaseSwitchingBlockedFirmware: WiFi firmware builds without
+// ENABLE_FULL_RAPI pass $G reads but answer 400 to $S writes.
+func TestOpenEVSEPhaseSwitchingBlockedFirmware(t *testing.T) {
+	s := newOpenEVSETestServer(t, openevseFullStatus)
+	s.setRapi(map[string]string{
+		"$G7":   "$OK 1^0C",
+		"$S8 0": rapiBlocked,
+	})
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	_, err := NewOpenEVSE(ctx, s.srv.URL, "", "", true)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "blocks RAPI writes")
+	assert.Equal(t, []string{"$G7", "$S8 0"}, s.rapiCommands())
+}
+
+// TestOpenEVSEPhaseSwitchError: a failed $S7 write is reported to the loadpoint
+func TestOpenEVSEPhaseSwitchError(t *testing.T) {
+	s := newOpenEVSETestServer(t, openevseFullStatus)
+	s.setRapi(map[string]string{
+		"$G7":   "$OK 1^0C",
+		"$S8 0": "$OK^41",
+	})
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	c, err := NewOpenEVSE(ctx, s.srv.URL, "", "", true)
+	require.NoError(t, err)
+
+	ps, ok := api.Cap[api.PhaseSwitcher](c)
+	require.True(t, ok)
+
+	err = ps.Phases1p3p(3)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "$NK")
 }
