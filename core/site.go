@@ -112,13 +112,13 @@ type Site struct {
 	// cached measurement state, guarded by RWMutex
 	siteState
 
-	batteryMaxDischargePower *float64                    // Max discharge power of all battery meters
-	batteryMode              api.BatteryMode             // Battery mode (runtime only, not persisted)
-	batteryModeExternal      api.BatteryMode             // Battery mode (external, runtime only, not persisted)
-	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
-	batteryModeApplied       map[string]api.BatteryMode  // Battery mode last applied per battery meter
-	suggestions              map[string]types.Suggestion // Optimizer suggestions by device key
-	suggestionActions        map[string]string           // last notified actionable optimizer action by device key
+	batteryMaxDischargePower *float64                   // Max discharge power of all battery meters
+	batteryMode              api.BatteryMode            // Battery mode (runtime only, not persisted)
+	batteryModeExternal      api.BatteryMode            // Battery mode (external, runtime only, not persisted)
+	batteryModeExternalTimer time.Time                  // Battery mode timer for external control
+	batteryModeApplied       map[string]api.BatteryMode // Battery mode last applied per battery meter
+	suggestionPlan           *suggestionPlan            // whole-horizon optimizer suggestions, looked up per slot on read
+	suggestionActions        map[string]string          // last notified actionable optimizer action by device key
 
 	optimizerMu      sync.Mutex // guards optimizer runs
 	optimizerUpdated time.Time  // last optimizer run, guarded by optimizerMu

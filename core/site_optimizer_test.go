@@ -558,6 +558,19 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	}
 	s := currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, res, 1, true, false, 1)
 	assert.Equal(t, api.BatteryHold.String(), s.Action)
+
+	// a result whose active slot is not 0 (a delayed run, see optimizerSchedule)
+	// reads that slot's corner values, not the expired slot 0's
+	res2 := optimizer.BatteryResult{
+		ChargingPower:    []float32{3000, 0},
+		DischargingPower: []float32{0, 0},
+	}
+	s2 := currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, res2, 1, false, false, 1)
+	assert.Equal(t, "normal", s2.Action)
+	assert.InDelta(t, 0, s2.Charge, 1e-3)
+
+	// an out-of-range slot yields an empty suggestion instead of panicking
+	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, res2, 2, false, false, 1))
 }
 
 // TestSuggestionActionable ensures the actionable flag follows the current state
@@ -569,10 +582,10 @@ func TestSuggestionActionable(t *testing.T) {
 		batteryMode: api.BatteryNormal,
 		loadpoints:  []*Loadpoint{lp},
 	}
-	site.setSuggestions(map[string]types.Suggestion{
+	site.setSuggestionPlan(singleSlotSuggestionPlan(map[string]types.Suggestion{
 		batteryKey("bat"): {Action: api.BatteryCharge.String()},
 		loadpointKey(0):   {Action: actionCharge},
-	})
+	}))
 
 	batterySuggestion := func(name string) *types.Suggestion {
 		return site.suggestion(batteryKey(name), site.GetBatteryMode().String())
@@ -660,4 +673,96 @@ func TestDiffSuggestions(t *testing.T) {
 	// vanished device is pruned and re-notifies on return
 	assert.Empty(t, site.diffSuggestions(map[string]pendingSuggestion{}))
 	assert.Len(t, site.diffSuggestions(pending(stop)), 1)
+}
+
+// singleSlotSuggestionPlan wraps a suggestion map in a plan valid for an hour
+func singleSlotSuggestionPlan(suggestions map[string]types.Suggestion) *suggestionPlan {
+	now := time.Now()
+	return &suggestionPlan{
+		schedule: optimizerSchedule{timestamps: []time.Time{now}, dt: []int{3600}},
+		resolve:  func(int) map[string]types.Suggestion { return suggestions },
+	}
+}
+
+// testSchedule builds a 3-slot schedule of 15min each, starting at start.
+func testSchedule(start time.Time) optimizerSchedule {
+	return optimizerSchedule{
+		timestamps: []time.Time{start, start.Add(15 * time.Minute), start.Add(30 * time.Minute)},
+		dt:         []int{900, 900, 900},
+	}
+}
+
+func TestSuggestionPlanTracksWallClockAcrossReads(t *testing.T) {
+	start := time.Date(2025, 1, 1, 12, 0, 0, 0, time.UTC)
+	schedule := testSchedule(start)
+
+	slots := []map[string]types.Suggestion{
+		{"battery:home": {Action: "hold"}},
+		{"battery:home": {Action: "normal"}},
+		{"battery:home": {Action: "charge"}},
+	}
+	plan := &suggestionPlan{
+		schedule: schedule,
+		resolve:  func(slot int) map[string]types.Suggestion { return slots[slot] },
+	}
+
+	assert.Equal(t, "hold", plan.suggestions(start.Add(5 * time.Minute))["battery:home"].Action)
+	assert.Equal(t, "normal", plan.suggestions(start.Add(20 * time.Minute))["battery:home"].Action)
+	assert.Equal(t, "charge", plan.suggestions(start.Add(40 * time.Minute))["battery:home"].Action)
+
+	// past the retained horizon
+	assert.Nil(t, plan.suggestions(start.Add(2*time.Hour)))
+
+	var nilPlan *suggestionPlan
+	assert.Nil(t, nilPlan.suggestions(start))
+}
+
+func TestSuggestionReadsAcrossSlotBoundary(t *testing.T) {
+	site := &Site{}
+
+	past := time.Now().Add(-20 * time.Minute)
+	schedule := optimizerSchedule{
+		timestamps: []time.Time{past, past.Add(15 * time.Minute)},
+		dt:         []int{900, 900},
+	}
+	slots := []map[string]types.Suggestion{
+		{batteryKey("bat"): {Action: api.BatteryHold.String()}},
+		{batteryKey("bat"): {Action: api.BatteryNormal.String()}},
+	}
+	site.setSuggestionPlan(&suggestionPlan{
+		schedule: schedule,
+		resolve:  func(slot int) map[string]types.Suggestion { return slots[slot] },
+	})
+
+	s := site.suggestion(batteryKey("bat"), api.BatteryNormal.String())
+	require.NotNil(t, s)
+	assert.Equal(t, api.BatteryNormal.String(), s.Action, "must read slot 1 (now's slot), not the expired slot 0")
+
+	// entirely expired plan (both slots ended in the past): no suggestion
+	site.setSuggestionPlan(&suggestionPlan{
+		schedule: optimizerSchedule{timestamps: []time.Time{past}, dt: []int{60}},
+		resolve: func(int) map[string]types.Suggestion {
+			return map[string]types.Suggestion{batteryKey("bat"): {Action: api.BatteryHold.String()}}
+		},
+	})
+	assert.Nil(t, site.suggestion(batteryKey("bat"), api.BatteryNormal.String()))
+}
+
+func TestBuildSuggestionPlanPerSlot(t *testing.T) {
+	start := time.Date(2025, 1, 1, 12, 0, 0, 0, time.UTC)
+	schedule := testSchedule(start)
+
+	res := optimizer.OptimizationResult{
+		// slot 0: grid-charging, slot 1: idle while importing, slot 2: grid-discharging
+		GridImport: []float32{2000, 500, 0},
+		GridExport: []float32{0, 0, 2000},
+		Batteries:  []optimizer.BatteryResult{{ChargingPower: []float32{3000, 0, 0}, DischargingPower: []float32{0, 0, 2000}}},
+	}
+	details := []batteryDetail{{Type: batteryTypeBattery, Name: "home", controllable: true}}
+
+	plan := buildSuggestionPlan(details, res, schedule)
+
+	assert.Equal(t, api.BatteryCharge.String(), plan.resolve(0)["battery:home"].Action)
+	assert.Equal(t, api.BatteryHold.String(), plan.resolve(1)["battery:home"].Action)
+	assert.Equal(t, api.BatteryDischarge.String(), plan.resolve(2)["battery:home"].Action)
 }

@@ -95,7 +95,7 @@ func TestApplyOptimizerResultSchedule(t *testing.T) {
 			site := &Site{valueChan: values}
 			site.applyOptimizerResult(req, details, res, schedule, tc.at)
 
-			s, ok := site.suggestions[batteryKey("home")]
+			s, ok := site.suggestionPlan.suggestions(tc.at)[batteryKey("home")]
 			require.True(t, ok)
 			assert.Equal(t, api.BatteryCharge.String(), s.Action)
 			assert.InDelta(t, tc.power, s.Charge, 1e-3)

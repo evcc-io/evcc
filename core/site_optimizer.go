@@ -216,12 +216,12 @@ func loadpointCurrentAction(lp *Loadpoint) string {
 	return actionStop
 }
 
-// setSuggestions replaces the suggestions applied on each publish
-func (site *Site) setSuggestions(suggestions map[string]types.Suggestion) {
+// setSuggestionPlan replaces the suggestion plan applied on each publish
+func (site *Site) setSuggestionPlan(plan *suggestionPlan) {
 	site.Lock()
 	defer site.Unlock()
 
-	site.suggestions = suggestions
+	site.suggestionPlan = plan
 }
 
 // setBatteryForecast replaces the battery forecast of the cached state
@@ -232,14 +232,16 @@ func (site *Site) setBatteryForecast(forecast *types.BatteryForecast) {
 	site.battery.Forecast = forecast
 }
 
-// suggestion returns the optimizer suggestion for the given device key.
-// The actionable flag is evaluated on read against the device's current
-// action since that changes between optimizer runs.
+// suggestion returns the optimizer suggestion for the given device key, for
+// the slot covering wall-clock now. The actionable flag is evaluated on read
+// against the device's current action since that changes between optimizer
+// runs.
 func (site *Site) suggestion(key, currentAction string) *types.Suggestion {
 	site.RLock()
-	s, ok := site.suggestions[key]
+	plan := site.suggestionPlan
 	site.RUnlock()
 
+	s, ok := plan.suggestions(time.Now())[key]
 	if !ok {
 		return nil
 	}
@@ -267,7 +269,7 @@ func (site *Site) publishSuggestions() {
 // clearSuggestions removes all suggestions and the battery forecast when the
 // optimizer result is stale
 func (site *Site) clearSuggestions() {
-	site.setSuggestions(nil)
+	site.setSuggestionPlan(nil)
 	site.setBatteryForecast(nil)
 
 	site.publishBattery()
@@ -333,6 +335,57 @@ func (site *Site) diffSuggestions(pending map[string]pendingSuggestion) []messen
 type requestDetails struct {
 	Timestamps     []time.Time     `json:"timestamp"`
 	BatteryDetails []batteryDetail `json:"batteryDetails"`
+}
+
+// suggestionPlan resolves whichever slot covers now on each read (see
+// optimizerSchedule - a solve started shortly before a slot boundary can
+// return after it, so slot 0 isn't always the active slot), instead of
+// precomputing every slot up front: only the slot a read actually lands on
+// is ever needed.
+type suggestionPlan struct {
+	schedule optimizerSchedule
+	resolve  func(slot int) map[string]types.Suggestion
+}
+
+// suggestions returns every device's suggestion for the slot covering now,
+// keyed by device key, or nil if no slot does.
+func (p *suggestionPlan) suggestions(now time.Time) map[string]types.Suggestion {
+	if p == nil {
+		return nil
+	}
+	slot := p.schedule.activeSlot(now)
+	if slot < 0 {
+		return nil
+	}
+	return p.resolve(slot)
+}
+
+// buildSuggestionPlan resolves a run's suggestions for whichever slot is
+// asked for, from the request/response of a single optimizer call.
+func buildSuggestionPlan(details []batteryDetail, res optimizer.OptimizationResult, schedule optimizerSchedule) *suggestionPlan {
+	return &suggestionPlan{
+		schedule: schedule,
+		resolve: func(slot int) map[string]types.Suggestion {
+			slotHours := schedule.duration(slot).Hours()
+			gridImporting := slot < len(res.GridImport) && res.GridImport[slot] > 0
+			gridExporting := slot < len(res.GridExport) && res.GridExport[slot] > 0
+
+			suggestions := make(map[string]types.Suggestion, len(details))
+			for j, detail := range details {
+				// uncontrollable devices can't act on a suggestion
+				key := detail.key()
+				if key == "" || !detail.controllable {
+					continue
+				}
+
+				suggestion := currentSlotSuggestion(detail, res.Batteries[j], slot, gridImporting, gridExporting, slotHours)
+				if suggestion.Action != "" {
+					suggestions[key] = suggestion
+				}
+			}
+			return suggestions
+		},
+	}
 }
 
 // optimizerBattery pairs a battery request entry with its device detail
@@ -647,13 +700,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 // applyOptimizerResult maps the optimizer response onto suggestions, battery
 // forecast and notifications
 func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details requestDetails, res optimizer.OptimizationResult, schedule optimizerSchedule, now time.Time) {
-	slot := schedule.activeSlot(now)
-	slotHours := schedule.duration(slot).Hours()
-	gridImporting := slot >= 0 && slot < len(res.GridImport) && res.GridImport[slot] > 0
-	gridExporting := slot >= 0 && slot < len(res.GridExport) && res.GridExport[slot] > 0
-
 	var batteries []batteryResult
-	suggestions := make(map[string]types.Suggestion, len(req.Batteries))
 
 	for i, batReq := range req.Batteries {
 		batRes := res.Batteries[i]
@@ -668,21 +715,11 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 				return soc <= batReq.SMin
 			}),
 		})
-
-		suggestion := currentSlotSuggestion(detail, batRes, slot, gridImporting, gridExporting, slotHours)
-		if suggestion.Action == "" {
-			continue
-		}
-
-		// uncontrollable devices can't act on a suggestion
-		if key := detail.key(); key != "" && detail.controllable {
-			suggestions[key] = suggestion
-		}
 	}
 
 	site.publish("evopt-batteries", batteries)
 
-	site.setSuggestions(suggestions)
+	site.setSuggestionPlan(buildSuggestionPlan(details.BatteryDetails, res, schedule))
 	site.setBatteryForecast(site.addBatteryForecastTotals(req.Batteries, res.Batteries, schedule, now))
 
 	site.publishBattery()
