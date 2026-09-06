@@ -14,7 +14,9 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/sponsor"
+	optimizer "github.com/evcc-io/optimizer/client"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -266,6 +268,113 @@ func TestBatteryModeAutomatic(t *testing.T) {
 	ctrl.Finish()
 }
 
+func TestBatterySuggestionDebounce(t *testing.T) {
+	enableAutomatic(t)
+
+	ctrl := gomock.NewController(t)
+	batCon := batteryControllerMock(ctrl)
+
+	var bat api.Meter = &struct {
+		api.Meter
+		api.BatteryController
+	}{
+		BatteryController: batCon,
+	}
+
+	site := &Site{
+		log:           util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "bat"}, bat)},
+	}
+
+	// first suggestion is adopted immediately
+	site.setSuggestions(map[string]types.Suggestion{batteryKey("bat"): {Action: api.BatteryHold.String()}})
+	batCon.EXPECT().SetBatteryMode(api.BatteryHold)
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryHold, site.GetBatteryMode())
+
+	// a single flip to a different mode (e.g. a degenerate short-slot solve)
+	// is filtered - no SetBatteryMode call, battery stays on hold
+	site.setSuggestions(map[string]types.Suggestion{batteryKey("bat"): {Action: api.BatteryNormal.String()}})
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryHold, site.GetBatteryMode())
+
+	// the next run reverts to hold: the flip never left a trace
+	site.setSuggestions(map[string]types.Suggestion{batteryKey("bat"): {Action: api.BatteryHold.String()}})
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryHold, site.GetBatteryMode())
+
+	// a change that persists past batterySuggestionDebounce is adopted
+	site.setSuggestions(map[string]types.Suggestion{batteryKey("bat"): {Action: api.BatteryCharge.String()}})
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryHold, site.GetBatteryMode(), "not yet debounced")
+
+	site.batterySuggestionSince = time.Now().Add(-batterySuggestionDebounce - time.Second)
+	batCon.EXPECT().SetBatteryMode(api.BatteryCharge)
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryCharge, site.GetBatteryMode())
+
+	// after a gap (stalled optimizer), the next suggestion is adopted
+	// immediately again instead of being held to the stale debounce window
+	site.suggestionsUpdated = time.Now().Add(-suggestionMaxAge - time.Minute)
+	batCon.EXPECT().SetBatteryMode(api.BatteryNormal)
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryNormal, site.GetBatteryMode())
+
+	site.setSuggestions(map[string]types.Suggestion{batteryKey("bat"): {Action: api.BatteryHold.String()}})
+	batCon.EXPECT().SetBatteryMode(api.BatteryHold)
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryHold, site.GetBatteryMode())
+
+	// an unparseable suggestion releases the battery immediately, bypassing
+	// the debounce - it's a safety fallback, not a value to hold onto
+	site.setSuggestions(map[string]types.Suggestion{batteryKey("bat"): {Action: "invalid"}})
+	batCon.EXPECT().SetBatteryMode(api.BatteryNormal)
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryNormal, site.GetBatteryMode())
+
+	ctrl.Finish()
+}
+
+// leaving automatic mode must not let a stale debounce delay the next
+// suggestion once it's back in charge
+func TestBatterySuggestionDebounceResetsOnAutomaticOff(t *testing.T) {
+	enableAutomatic(t)
+
+	ctrl := gomock.NewController(t)
+	batCon := batteryControllerMock(ctrl)
+
+	var bat api.Meter = &struct {
+		api.Meter
+		api.BatteryController
+	}{
+		BatteryController: batCon,
+	}
+
+	site := &Site{
+		log:           util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "bat"}, bat)},
+	}
+
+	site.setSuggestions(map[string]types.Suggestion{batteryKey("bat"): {Action: api.BatteryCharge.String()}})
+	batCon.EXPECT().SetBatteryMode(api.BatteryCharge)
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryCharge, site.GetBatteryMode())
+
+	settings.SetBool(keys.OptimizerAutomatic, false)
+	batCon.EXPECT().SetBatteryMode(api.BatteryNormal)
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryNormal, site.GetBatteryMode())
+
+	// back in automatic mode, a differing suggestion is adopted immediately
+	settings.SetBool(keys.OptimizerAutomatic, true)
+	site.setSuggestions(map[string]types.Suggestion{batteryKey("bat"): {Action: api.BatteryHold.String()}})
+	batCon.EXPECT().SetBatteryMode(api.BatteryHold)
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryHold, site.GetBatteryMode())
+
+	ctrl.Finish()
+}
+
 // a failed optimizer run keeps fresh advice, otherwise the battery is released
 // for a single cycle until the next run restores the suggestion
 func TestBatteryModeAutomaticFailedRun(t *testing.T) {
@@ -331,4 +440,36 @@ func TestBatteryGridChargeLimitUnavailable(t *testing.T) {
 	limit := 0.2
 	assert.ErrorIs(t, site.SetBatteryGridChargeLimit(&limit), ErrOptimizerAutomatic)
 	assert.ErrorIs(t, site.SetBatteryDischargeControl(true), ErrOptimizerAutomatic)
+}
+
+// TestBatterySuggestionDebounceFiltersRealDegenerateSolve replays the exact
+// values from a captured optimizer response (dt[0]=1s, right at a 15min
+// boundary): the resulting suggestion for slot 0 alone does flip to normal,
+// but debounced against the following slot's suggestion (hold, same as
+// observed live) it never surfaces.
+func TestBatterySuggestionDebounceFiltersRealDegenerateSolve(t *testing.T) {
+	detail := batteryDetail{Type: batteryTypeBattery}
+
+	// slot 0: dt=1s, charging_power=0.0068433Wh, discharging_power=0, no grid flow
+	slot0 := currentSlotSuggestion(detail,
+		optimizer.BatteryResult{ChargingPower: []float32{0.0068433}, DischargingPower: []float32{0}},
+		0, 0, 1.0/3600)
+	assert.Equal(t, api.BatteryNormal.String(), slot0.Action, "the captured degenerate slot alone does flip to normal")
+
+	// slot 1: dt=900s, both powers 0, grid_import=11.513563Wh
+	slot1 := currentSlotSuggestion(detail,
+		optimizer.BatteryResult{ChargingPower: []float32{0}, DischargingPower: []float32{0}},
+		11.513563, 0, 900.0/3600)
+	assert.Equal(t, api.BatteryHold.String(), slot1.Action, "matches what was actually observed live")
+
+	site := &Site{log: util.NewLogger("foo")}
+	confirm := func(action string) api.BatteryMode {
+		mode, err := api.BatteryModeString(action)
+		require.NoError(t, err)
+		return site.debounceBatterySuggestion(mode)
+	}
+
+	assert.Equal(t, api.BatteryHold, confirm(slot1.Action)) // steady state before the glitch
+	assert.Equal(t, api.BatteryHold, confirm(slot0.Action), "the one-off normal must not surface")
+	assert.Equal(t, api.BatteryHold, confirm(slot1.Action))
 }

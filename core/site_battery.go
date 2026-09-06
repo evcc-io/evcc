@@ -105,6 +105,13 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 		return map[bool]api.BatteryMode{false: s, true: api.BatteryUnknown}[batMode == s]
 	}
 
+	// leaving automatic control (or held in it by an unmodelled load) must not
+	// let a stale debounce window delay the next real suggestion once it's
+	// back in charge, see batterySuggestionMode
+	if !site.Automatic() || site.unmodelledCharging() {
+		site.resetBatterySuggestionDebounce()
+	}
+
 	switch {
 	case !site.batteryConfigured():
 		res = api.BatteryUnknown
@@ -164,8 +171,13 @@ func (site *Site) unmodelledCharging() bool {
 	return false
 }
 
+// batterySuggestionDebounce delays adopting a changed suggestion until it has
+// held for this long, filtering a single degenerate solve.
+const batterySuggestionDebounce = 20 * time.Second
+
 // batterySuggestionMode returns the optimizer's mode for the first controllable battery.
-// TODO apply per battery once the site tracks more than a single battery mode
+// TODO apply per battery once the site tracks more than a single battery mode - the
+// debounce state below is shared across batteries for the same reason.
 func (site *Site) batterySuggestionMode() (api.BatteryMode, bool) {
 	for _, dev := range site.batteryMeters {
 		if dev == nil {
@@ -179,15 +191,47 @@ func (site *Site) batterySuggestionMode() (api.BatteryMode, bool) {
 
 		mode, err := api.BatteryModeString(s.Action)
 		if err != nil {
-			// unknown action, release the battery
+			// unknown action, release the battery immediately - not a case to debounce
 			site.log.DEBUG.Printf("battery %s: cannot apply suggestion %s", deviceTitleOrName(dev), s.Action)
 			return api.BatteryNormal, true
 		}
 
-		return mode, true
+		return site.debounceBatterySuggestion(mode), true
 	}
 
+	// no suggestion: don't hold the next one to a debounce window left over
+	// from before the optimizer stalled
+	site.resetBatterySuggestionDebounce()
+
 	return api.BatteryUnknown, false
+}
+
+func (site *Site) resetBatterySuggestionDebounce() {
+	site.Lock()
+	defer site.Unlock()
+	site.batterySuggestionConfirmed = api.BatteryUnknown
+}
+
+// debounceBatterySuggestion returns mode only once it has held for
+// batterySuggestionDebounce, otherwise the last debounced mode.
+func (site *Site) debounceBatterySuggestion(mode api.BatteryMode) api.BatteryMode {
+	site.Lock()
+	defer site.Unlock()
+
+	now := time.Now()
+	if mode != site.batterySuggestionPending {
+		if site.batterySuggestionConfirmed != api.BatteryUnknown {
+			site.log.DEBUG.Printf("battery suggestion: pending change to %s, confirmed %s", mode, site.batterySuggestionConfirmed)
+		}
+		site.batterySuggestionPending = mode
+		site.batterySuggestionSince = now
+	}
+
+	if site.batterySuggestionConfirmed == api.BatteryUnknown || now.Sub(site.batterySuggestionSince) >= batterySuggestionDebounce {
+		site.batterySuggestionConfirmed = site.batterySuggestionPending
+	}
+
+	return site.batterySuggestionConfirmed
 }
 
 // batterySocLimitReached reports whether the battery has reached the soc bound

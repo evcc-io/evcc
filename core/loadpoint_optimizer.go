@@ -31,6 +31,8 @@ func (lp *Loadpoint) optimizerControlled() bool {
 
 // gate returns the optimizer's start/stop decision for the current slot,
 // nil if the optimizer does not control this loadpoint
+// TODO a degenerate solve near a slot boundary can briefly flip s.Action,
+// same as the battery suggestion debounced in site_battery.go - undebounced here
 func (lp *Loadpoint) gate() *types.Suggestion {
 	if !lp.optimizerControlled() {
 		return nil
