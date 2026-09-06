@@ -20,6 +20,21 @@ type StateResponse struct {
 	} `json:"attributes"`
 }
 
+type ClimateStateResponse struct {
+	EntityId   string `json:"entity_id"`
+	State      string `json:"state"`
+	Attributes struct {
+		UnitOfMeasurement  string   `json:"unit_of_measurement"`
+		Temperature        *float64 `json:"temperature"`
+		CurrentTemperature *float64 `json:"current_temperature"`
+		MinTemp            *float64 `json:"min_temp"`
+		MaxTemp            *float64 `json:"max_temp"`
+		TargetTempStep     *float64 `json:"target_temp_step"`
+		HVACModes          []string `json:"hvac_modes"`
+		SupportedFeatures  int      `json:"supported_features"`
+	} `json:"attributes"`
+}
+
 func (state StateResponse) scale() (float64, error) {
 	if unit, ok := strings.CutSuffix(state.Attributes.UnitOfMeasurement, "W"); ok {
 		switch unit {

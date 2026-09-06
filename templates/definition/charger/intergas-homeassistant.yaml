@@ -1,0 +1,72 @@
+template: intergas-homeassistant
+products:
+  - brand: Intergas
+    description:
+      generic: Comfort Touch / Xtend (Home Assistant)
+group: heating
+requirements:
+  description:
+    en: |
+      Requires the Home Assistant InComfort integration, Celsius units and a persistent evcc database. Gateway V3 is not supported by InComfort. The thermostat must already be in heat mode.
+
+      Boost raises the current room target once by the configured amount. Off returns to normal heating by restoring the captured target; it does not turn the heating off. Manual or scheduled target changes suspend boost until the next Off transition. Only one controller should write the thermostat. Same-value changes and commands racing a manual change cannot always be distinguished.
+
+      Select Off and confirm restoration at the thermostat before stopping, removing or reconfiguring the controller. Home Assistant may acknowledge a target before the device applies it. Restoration requires connectivity. Unconfirmed commands retain their saved target across restarts and may require manual recovery; they do not have a device-side expiry.
+
+      Larger setpoint increases can engage the hybrid boiler. P217 and P186 are distinct installer settings; staying below a threshold does not guarantee gas-free heating. This integration does not change installer parameters, inhibit the boiler or control compressor power. The documented gateway test verified 20.0 → 20.5 → 20.0°C target propagation, not heating savings. Verify the chosen targets on your installation before enabling automatic control. InComfort client 0.7.1 can truncate some tenth-degree targets; check exact restoration as well as the boost target.
+    de: |
+      Benötigt die Home-Assistant-Integration InComfort, Celsius-Einheiten und eine dauerhafte evcc-Datenbank. Gateway V3 wird von InComfort nicht unterstützt. Der Thermostat muss bereits im Heizmodus sein.
+
+      Boost erhöht den aktuellen Raumsollwert einmal um den konfigurierten Betrag. Aus stellt den gespeicherten Sollwert wieder her und bedeutet normalen Heizbetrieb, nicht Abschalten der Heizung. Manuelle oder zeitgesteuerte Sollwertänderungen unterbrechen Boost bis zum nächsten Wechsel auf Aus. Nur eine Steuerung darf den Thermostat beschreiben. Gleichwertige Änderungen und zeitgleiche manuelle Eingriffe sind nicht immer unterscheidbar.
+
+      Vor dem Stoppen, Entfernen oder Umkonfigurieren Aus wählen und die Wiederherstellung am Thermostat prüfen. Home Assistant kann einen Sollwert bestätigen, bevor das Gerät ihn übernimmt. Dafür ist eine Verbindung erforderlich. Unbestätigte Befehle behalten ihren gespeicherten Sollwert auch nach Neustarts und können manuelle Wiederherstellung erfordern; sie haben keine geräteseitige Ablaufzeit.
+
+      Größere Sollwerterhöhungen können den Heizkessel zuschalten. P217 und P186 sind unterschiedliche Installateureinstellungen; das Unterschreiten eines Grenzwerts garantiert keinen gasfreien Betrieb. Diese Integration ändert keine Installateurparameter, sperrt den Heizkessel nicht und regelt keine Verdichterleistung. Der dokumentierte Gateway-Test bestätigte 20,0 → 20,5 → 20,0°C Sollwertübertragung, keine Heizkostenersparnis. Die gewählten Sollwerte vor automatischem Betrieb an der eigenen Anlage prüfen. InComfort-Client 0.7.1 kann einige Zehntelgradwerte abrunden; auch die exakte Wiederherstellung prüfen.
+auth:
+  type: homeassistant
+  params: [uri, insecure]
+params:
+  - name: uri
+    example: http://homeassistant.local:8123
+    description:
+      en: Home Assistant URI
+      de: Home Assistant URI
+    service: homeassistant/instances
+    required: true
+  - name: insecure
+  - name: entity
+    description:
+      en: Thermostat entity
+      de: Thermostat-Entität
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=climate
+    example: climate.living_room
+    required: true
+  - name: boost
+    type: float
+    unit: °C
+    description:
+      en: Temperature increase
+      de: Sollwerterhöhung
+    help:
+      en: Total increase from the starting target, not an increment per update. Choose and verify a suitable value for your heating system.
+      de: Gesamte Erhöhung gegenüber dem Ausgangssollwert, kein Zuschlag je Aktualisierung. Einen zur Heizung passenden Wert wählen und prüfen.
+    example: 0.5
+    required: true
+  - name: power
+    description:
+      en: Electrical power sensor
+      de: Sensor für elektrische Leistung
+    help:
+      en: Measured heat-pump electrical input in W or kW, not thermal output or boiler activity.
+      de: Gemessene elektrische Aufnahme der Wärmepumpe in W oder kW, nicht Wärmeleistung oder Kesselaktivität.
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
+    example: sensor.heat_pump_electrical_power
+render: |
+  type: homeassistant-thermostat
+  uri: {{ .uri }}
+  insecure: {{ .insecure }}
+  entity: {{ .entity }}
+  boost: {{ .boost }}
+  {{- if .power }}
+  power: {{ .power }}
+  {{- end }}
