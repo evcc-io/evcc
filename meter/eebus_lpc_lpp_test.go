@@ -89,7 +89,7 @@ func TestLPC_EGMessages_ConsumptionLimit(t *testing.T) {
 				Run(ackWrite).
 				Return(new(model.MsgCounterType), nil)
 
-			assert.NoError(t, c.Dim(tc.dim))
+			assert.NoError(t, c.dim(tc.dim))
 		})
 	}
 }
@@ -106,7 +106,7 @@ func TestLPC_Dim_WriteRejected(t *testing.T) {
 		}).
 		Return(new(model.MsgCounterType), nil)
 
-	assert.Error(t, c.Dim(true))
+	assert.Error(t, c.dim(true))
 }
 
 // Dim is gated: no announced LPC scenario, or no connected entity → ErrNotAvailable.
@@ -115,14 +115,14 @@ func TestLPC_Dim_Gating(t *testing.T) {
 		c, lpc, _, entity := newEGMeter(t)
 		lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(false)
 
-		assert.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
+		assert.ErrorIs(t, c.dim(true), api.ErrNotAvailable)
 	})
 
 	t.Run("entity_not_connected", func(t *testing.T) {
 		c, _, _, _ := newEGMeter(t)
 		c.egLpcEntity = nil
 
-		assert.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
+		assert.ErrorIs(t, c.dim(true), api.ErrNotAvailable)
 	})
 }
 
@@ -144,7 +144,7 @@ func TestLPC_Dimmed(t *testing.T) {
 			lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(true)
 			lpc.EXPECT().ConsumptionLimit(entity).Return(tc.limit, nil)
 
-			got, err := c.Dimmed()
+			got, err := c.dimmed()
 			require.NoError(t, err)
 			assert.Equal(t, tc.want, got)
 		})
@@ -177,7 +177,7 @@ func TestLPP_EGMessages_ProductionLimit(t *testing.T) {
 				}).
 				Return(new(model.MsgCounterType), nil)
 
-			assert.NoError(t, c.SetCurtailPercent(tc.percent))
+			assert.NoError(t, c.setCurtailPercent(tc.percent))
 		})
 	}
 }
@@ -195,7 +195,7 @@ func TestLPP_Curtail_WriteRejected(t *testing.T) {
 		}).
 		Return(new(model.MsgCounterType), nil)
 
-	assert.Error(t, c.SetCurtailPercent(0))
+	assert.Error(t, c.setCurtailPercent(0))
 }
 
 // SetCurtailPercent is gated the same way as Dim.
@@ -204,14 +204,14 @@ func TestLPP_SetCurtailPercent_Gating(t *testing.T) {
 		c, _, lpp, entity := newEGMeter(t)
 		lpp.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPPLimit).Return(false)
 
-		assert.ErrorIs(t, c.SetCurtailPercent(0), api.ErrNotAvailable)
+		assert.ErrorIs(t, c.setCurtailPercent(0), api.ErrNotAvailable)
 	})
 
 	t.Run("entity_not_connected", func(t *testing.T) {
 		c, _, _, _ := newEGMeter(t)
 		c.egLppEntity = nil
 
-		assert.ErrorIs(t, c.SetCurtailPercent(0), api.ErrNotAvailable)
+		assert.ErrorIs(t, c.setCurtailPercent(0), api.ErrNotAvailable)
 	})
 }
 
@@ -236,7 +236,7 @@ func TestLPP_CurtailedPercent(t *testing.T) {
 				lpp.EXPECT().ProductionNominalMax(entity).Return(5000.0, nil)
 			}
 
-			got, err := c.CurtailedPercent()
+			got, err := c.curtailedPercent()
 			require.NoError(t, err)
 			assert.Equal(t, tc.want, got)
 		})
@@ -255,7 +255,7 @@ func TestLPP_CurtailedPercent_RoundTrip(t *testing.T) {
 			Return(ucapi.LoadLimit{IsActive: true, Value: -float64(percent) / 100 * nominal}, nil)
 		lpp.EXPECT().ProductionNominalMax(entity).Return(nominal, nil)
 
-		got, err := c.CurtailedPercent()
+		got, err := c.curtailedPercent()
 		require.NoError(t, err)
 		assert.Equal(t, percent, got)
 	}
@@ -268,7 +268,7 @@ func TestLPP_CurtailedPercent_NoNominal(t *testing.T) {
 	lpp.EXPECT().ProductionLimit(entity).Return(ucapi.LoadLimit{IsActive: true, Value: -2000}, nil)
 	lpp.EXPECT().ProductionNominalMax(entity).Return(0.0, api.ErrNotAvailable)
 
-	_, err := c.CurtailedPercent()
+	_, err := c.curtailedPercent()
 	assert.ErrorIs(t, err, api.ErrNotAvailable)
 }
 
