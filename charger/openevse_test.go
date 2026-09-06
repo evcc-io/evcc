@@ -45,7 +45,8 @@ type openevseTestServer struct {
 	rapi     map[string]string
 	rapiCmds []string
 
-	flap bool // drop every connection right after the full status frame
+	flap   bool // drop every connection right after the full status frame
+	refuse bool // answer 503 to every websocket handshake after the first
 }
 
 const rapiBlocked = "BLOCKED"
@@ -64,7 +65,13 @@ func newOpenEVSETestServer(t *testing.T, full string) *openevseTestServer {
 		s.mu.Lock()
 		s.connects++
 		s.wsAuth = r.Header.Get("Authorization")
+		refuse := s.refuse && s.connects > 1
 		s.mu.Unlock()
+
+		if refuse {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
 
 		c, err := websocket.Accept(w, r, nil)
 		if err != nil {
@@ -277,8 +284,12 @@ func TestOpenEVSEConstructUnauthorized(t *testing.T) {
 func TestOpenEVSEStaleConnection(t *testing.T) {
 	shortenOpenEVSEKeepalive(t, 100*time.Millisecond, 300*time.Millisecond)
 
-	// the fake never answers {"ping":1}, so the link is silent after the full status
+	// the fake never answers {"ping":1}, so the link is silent after the full status;
+	// reconnects are refused so the unreadable state is observable without a race
 	s := newOpenEVSETestServer(t, openevseFullStatus)
+	s.mu.Lock()
+	s.refuse = true
+	s.mu.Unlock()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
