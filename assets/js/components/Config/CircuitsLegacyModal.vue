@@ -56,14 +56,12 @@ export default {
 					title: this.$t("config.grid.title"),
 				});
 			}
-			if (this.extMeters) {
-				result.push(
-					...this.extMeters.map((m) => ({
-						name: m.name,
-						title: m.deviceTitle || m.deviceProduct || m.config["template"] || m.type,
-					}))
-				);
-			}
+			result.push(
+				...this.extMeters.map((m) => ({
+					name: m.name,
+					title: m.deviceTitle || m.deviceProduct || m.config["template"] || m.type,
+				}))
+			);
 			return result;
 		},
 	},

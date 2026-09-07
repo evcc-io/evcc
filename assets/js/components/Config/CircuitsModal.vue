@@ -25,7 +25,6 @@
 				<CircuitsTree
 					class="mb-3"
 					:circuitsTree="configCircuitTree(circuits)"
-					:on-add-sub="onAddSub"
 					:meters="meters"
 					:grid-meter="gridMeter"
 				/>
@@ -58,10 +57,6 @@ export default {
 	emits: ["changed"],
 	props: {
 		circuits: { type: Array as PropType<ConfigCircuit[]>, required: true },
-		onAddSub: {
-			type: Function as PropType<(parent?: string) => void>,
-			required: true,
-		},
 		meters: {
 			type: Array as PropType<ConfigMeter[]>,
 			default: () => [],

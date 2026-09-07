@@ -1,6 +1,7 @@
 package core
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"slices"
@@ -72,20 +73,18 @@ func (site *Site) publishCircuits() {
 	cc := config.Circuits().Devices()
 	res := make(map[string]circuitStruct, len(cc))
 
-	names := make(map[api.Circuit]string, len(cc))
-	for _, c := range cc {
-		names[c.Instance()] = c.Config().Name
-	}
-
 	for _, c := range cc {
 		instance := c.Instance()
 		props := deviceProperties(c)
 
+		// config reference instead of instance: an updated device keeps its name but gets a new instance
+		parent, _ := c.Config().Property("parent").(string)
+
 		data := circuitStruct{
-			Name:       props.Title,
-			Title:      instance.GetTitle(),
+			Name:       c.Config().Name,
+			Title:      cmp.Or(props.Title, instance.GetTitle()),
 			Icon:       props.Icon,
-			Parent:     names[instance.GetParent()],
+			Parent:     parent,
 			Power:      instance.GetChargePower(),
 			MaxPower:   instance.GetMaxPower(),
 			MaxCurrent: instance.GetMaxCurrent(),
@@ -99,7 +98,8 @@ func (site *Site) publishCircuits() {
 	}
 
 	site.publish(keys.Circuits, globalconfig.ConfigStatus{
-		Config: res,
+		Config:     res,
+		YamlSource: site.circuitsSource,
 	})
 }
 

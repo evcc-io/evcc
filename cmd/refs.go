@@ -30,7 +30,17 @@ func collectRefs(conf globalconfig.All) error {
 	}
 
 	// circuits
-	if err := collectCircuitRefs(conf.Circuits); err != nil {
+	if err := collectCircuitRefs(slices.Values(conf.Circuits)); err != nil {
+		return err
+	}
+
+	// append circuits from database
+	circuits, err := config.ConfigurationsByClass(templates.Circuit)
+	if err != nil {
+		return err
+	}
+
+	if err := collectCircuitRefs(namedSeq(circuits)); err != nil {
 		return err
 	}
 
@@ -45,13 +55,17 @@ func collectRefs(conf globalconfig.All) error {
 		return err
 	}
 
-	return collectLoadpointRefs(func(yield func(config.Named) bool) {
+	return collectLoadpointRefs(namedSeq(configurable))
+}
+
+func namedSeq(configurable []config.Config) iter.Seq[config.Named] {
+	return func(yield func(config.Named) bool) {
 		for _, cc := range configurable {
 			if !yield(cc.Named()) {
 				return
 			}
 		}
-	})
+	}
 }
 
 func collectSiteRefs(conf globalconfig.All) error {
@@ -131,8 +145,8 @@ func collectLoadpointRefs(named iter.Seq[config.Named]) error {
 	return nil
 }
 
-func collectCircuitRefs(circuits []config.Named) error {
-	for _, cc := range circuits {
+func collectCircuitRefs(circuits iter.Seq[config.Named]) error {
+	for cc := range circuits {
 		var refs struct {
 			MeterRef string         `mapstructure:"meter"` // Circuit meter reference
 			Other    map[string]any `mapstructure:",remain"`

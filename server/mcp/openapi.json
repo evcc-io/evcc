@@ -4716,7 +4716,7 @@
         "type": "object",
         "properties": {
           "name": {
-            "description": "Circuit name for UI display.",
+            "description": "Circuit name used as configuration reference.",
             "type": "string"
           },
           "title": {

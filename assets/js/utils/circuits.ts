@@ -1,5 +1,4 @@
-import type { ConfigCircuit, Circuit } from "../types/evcc";
-import deepClone from "./deepClone";
+import type { ConfigCircuit, ConfigMeter, Circuit } from "../types/evcc";
 
 export type ConfigCircuitNode = ConfigCircuit & {
   children?: ConfigCircuitNode[];
@@ -9,47 +8,39 @@ export type CircuitNode = Circuit & {
   children?: CircuitNode[];
 };
 
-// configCircuitTree builds a tree from ConfigCircuit data
-export function configCircuitTree(circuits?: ConfigCircuit[]): ConfigCircuitNode | undefined {
-  const nodes = deepClone(circuits ?? []) as ConfigCircuitNode[];
-  const nodesByName = new Map(nodes.map((node) => [node.name, node]));
-
-  let root: ConfigCircuitNode | undefined;
-
-  for (const node of nodes) {
-    const parentName = typeof node.config.parent === "string" ? node.config.parent : undefined;
-    const parent = parentName ? nodesByName.get(parentName) : undefined;
-
+// buildTree links nodes to their parents and returns the root
+function buildTree<T extends { children?: T[] }>(
+  byKey: Record<string, T>,
+  parentOf: (node: T) => string | undefined
+): T | undefined {
+  const nodes = Object.fromEntries(Object.entries(byKey).map(([k, v]) => [k, { ...v }]));
+  let root: T | undefined;
+  for (const node of Object.values(nodes)) {
+    const parent = nodes[parentOf(node) ?? ""];
     if (parent) {
-      parent.children ??= [];
-      parent.children.push(node);
+      (parent.children ??= []).push(node);
     } else {
       root = node;
     }
   }
-
   return root;
 }
 
+// configCircuitTree builds a tree from ConfigCircuit data
+export function configCircuitTree(circuits: ConfigCircuit[] = []): ConfigCircuitNode | undefined {
+  return buildTree<ConfigCircuitNode>(
+    Object.fromEntries(circuits.map((c) => [c.name, c])),
+    (node) => (typeof node.config.parent === "string" ? node.config.parent : undefined)
+  );
+}
+
 // circuitTree builds a tree from published Circuit data (Record keyed by id)
-export function circuitTree(circuits?: Record<string, Circuit>): CircuitNode | undefined {
-  const source = deepClone(circuits ?? {}) as Record<string, CircuitNode>;
-  const entries = Object.entries(source);
+export function circuitTree(circuits: Record<string, Circuit> = {}): CircuitNode | undefined {
+  return buildTree<CircuitNode>(circuits, (node) => node.parent);
+}
 
-  const nodeById = new Map(entries);
-
-  let root: CircuitNode | undefined;
-
-  for (const [, node] of entries) {
-    const parent = node.parent ? nodeById.get(node.parent) : undefined;
-
-    if (parent) {
-      parent.children ??= [];
-      parent.children.push(node);
-    } else {
-      root = node;
-    }
-  }
-
-  return root;
+// meterTitle returns the display name of a referenced meter
+export function meterTitle(meters: ConfigMeter[], name?: string): string {
+  const meter = meters.find((m) => m.name === name);
+  return meter?.deviceProduct || meter?.config?.template || "";
 }

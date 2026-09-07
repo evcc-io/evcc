@@ -435,7 +435,7 @@ export interface Config {
 
 /** A load management circuit limiting power and current of its assigned loadpoints. */
 export interface Circuit {
-  /** Circuit name for UI display. */
+  /** Circuit name used as configuration reference. */
   name?: string;
   /** Circuit title for UI display. */
   title?: string;
@@ -498,6 +498,7 @@ export interface ConfigCircuit extends Entity<{
   maxcurrent?: number;
   maxpower?: number;
   parent: string;
+  title?: string;
 }> {
   deviceProduct: string;
   deviceTitle?: string;
@@ -1417,7 +1418,15 @@ export type DeviceType =
   | "hems"
   | "circuit"
   | "curtailer";
-export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext" | "consumer";
+export type MeterType =
+  | "grid"
+  | "pv"
+  | "battery"
+  | "charge"
+  | "aux"
+  | "ext"
+  | "consumer"
+  | "circuit";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
 export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar" | "temperature";
 

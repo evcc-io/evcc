@@ -454,6 +454,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Tariffs, Val: globalconfig.ConfigStatus{
 		YamlSource: yamlSource.tariffs,
 	}}
+	site.SetCircuitsYamlSource(yamlSource.circuits)
 	valueChan <- util.Param{Key: keys.Circuits, Val: globalconfig.ConfigStatus{
 		YamlSource: yamlSource.circuits,
 	}}

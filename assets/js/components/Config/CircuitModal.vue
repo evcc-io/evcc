@@ -16,7 +16,6 @@
 		@added="$emit('changed', $event)"
 		@updated="$emit('changed')"
 		@removed="$emit('changed')"
-		@close="handleClose"
 	>
 		<template #before-template="{ values }">
 			<FormRow id="circuitParamDeviceTitle" :label="$t('config.circuit.titleLabel')">
@@ -73,7 +72,7 @@
 				>
 					<DeviceRefBox
 						v-if="values.meter && meterSelection !== 'grid'"
-						:title="getMeterTitle(values.meter)"
+						:title="meterTitle(meters, values.meter)"
 						compact
 						@edit="createMeter(values)"
 					/>
@@ -111,6 +110,7 @@ import { type TemplateGroup, customTemplateOption } from "./DeviceModal/Template
 import { ConfigType } from "@/types/evcc";
 import defaultCircuitYaml from "./defaultYaml/circuit.yaml?raw";
 import { getModal, openModal } from "@/configModal";
+import { meterTitle } from "@/utils/circuits.ts";
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import DeviceRefBox from "./DeviceRefBox.vue";
@@ -144,39 +144,31 @@ export default defineComponent({
 	data() {
 		return {
 			ConfigType,
-			parentCircuit: undefined as string | undefined,
 			meterSelection: MeterSelection.NONE,
 		};
 	},
 	computed: {
-		getParentCircuit() {
-			return this.parentCircuit || getModal("circuit")?.parentId;
+		getParentCircuit(): string | undefined {
+			const parent = this.circuits.find((c) => c.id === this.id)?.config.parent;
+			return getModal("circuit")?.parentId || (parent ? String(parent) : undefined);
 		},
 		hasParentCircuit(): boolean {
 			return !!this.getParentCircuit;
-		},
-		getMeterTitle() {
-			return (name: string) => {
-				const meters = this.meters.filter((m) => m.name === name);
-				if (meters.length === 1) {
-					return meters[0].deviceTitle;
-				}
-				return "";
-			};
 		},
 		initialValues(): DeviceValues {
 			return {
 				type: ConfigType.Template,
 				template: null,
-				parent: this.parentCircuit,
+				parent: getModal("circuit")?.parentId,
 				meter: "",
 			};
 		},
 		id(): number | undefined {
 			return getModal("circuit")?.id;
 		},
-		hasChildren(): boolean | undefined {
-			return getModal("circuit")?.hasChildren;
+		hasChildren(): boolean {
+			const name = this.circuits.find((c) => c.id === this.id)?.name;
+			return !!name && this.circuits.some((c) => c.config.parent === name);
 		},
 		isNew(): boolean {
 			return this.id === undefined;
@@ -198,7 +190,7 @@ export default defineComponent({
 				{ key: MeterSelection.NONE, name: this.$t("config.circuit.meterNone") },
 			];
 
-			if (!this.hasParentCircuit) {
+			if (!this.hasParentCircuit && this.gridMeter) {
 				options.push({
 					key: MeterSelection.GRID,
 					name: this.$t("config.circuit.meterGrid"),
@@ -213,6 +205,7 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		meterTitle,
 		meterSelectionChanged(selection: MeterSelection, values: { meter?: string }) {
 			if (selection === MeterSelection.GRID) {
 				values.meter = this.gridMeter?.name;
@@ -230,9 +223,6 @@ export default defineComponent({
 			} else {
 				this.meterSelection = MeterSelection.DEDICATED;
 			}
-		},
-		setParentCircuit(parentCircuit?: string) {
-			this.parentCircuit = parentCircuit;
 		},
 		provideTemplateOptions(products: Product[]): TemplateGroup[] {
 			return [
@@ -252,13 +242,8 @@ export default defineComponent({
 		filterTemplateParams(params: TemplateParam[]): TemplateParam[] {
 			return params.filter((p) => !["parent", "meter"].includes(p.Name));
 		},
-		parentTitle(name?: string): string {
-			const parent = name ?? this.getParentCircuit;
-			return (
-				this.circuits.find((c: ConfigCircuit) => c.name === parent)?.deviceTitle ||
-				parent ||
-				""
-			);
+		parentTitle(name: string): string {
+			return this.circuits.find((c) => c.name === name)?.deviceTitle || name;
 		},
 		transformApiData(data: ApiData): ApiData {
 			// always sent, so a parent inside custom yaml cannot break the hierarchy
@@ -266,12 +251,9 @@ export default defineComponent({
 			if (!data["meter"]) delete data["meter"];
 			return data;
 		},
-		handleClose() {
-			this.parentCircuit = undefined;
-		},
 		async createMeter(values: { meter?: string }) {
 			const meter = this.meters.find((m) => m.name === values.meter);
-			const result = await openModal("meter", { id: meter?.id, type: "ext" });
+			const result = await openModal("meter", { id: meter?.id, type: "circuit" });
 			if (result.action === "added" && result.name) {
 				this.meterSelection = MeterSelection.DEDICATED;
 				values.meter = result.name;

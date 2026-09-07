@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import axios from "axios";
 import { start, stop, restart, baseUrl } from "./evcc";
 import {
@@ -21,6 +21,25 @@ test.afterEach(async () => {
 });
 
 const CONFIG = "fast.evcc.yaml";
+
+async function addMainCircuit(page: Page, title: string) {
+  await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
+  const circuitsModal = page.getByTestId("circuits-modal");
+  await expectModalVisible(circuitsModal);
+  await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+
+  const circuitModal = page.getByTestId("circuit-modal");
+  await expectModalVisible(circuitModal);
+  await circuitModal.getByLabel("Title").fill(title);
+  await circuitModal
+    .getByLabel("Circuit", { exact: true })
+    .selectOption({ label: "Static circuit" });
+  await circuitModal.getByRole("button", { name: "Save" }).click();
+  await expectModalHidden(circuitModal);
+  await expectModalVisible(circuitsModal);
+  await circuitsModal.getByRole("button", { name: "Close" }).last().click();
+  await expectModalHidden(circuitsModal);
+}
 
 test.describe("HEMS", () => {
   test("no recorded events section in create mode", async ({ page }) => {
@@ -293,22 +312,7 @@ limit:
     await page.goto("/#/config");
 
     // configure circuits, hint on the circuits card requires them
-    await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
-    const circuitsModal = page.getByTestId("circuits-modal");
-    await expectModalVisible(circuitsModal);
-    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
-
-    const circuitModal = page.getByTestId("circuit-modal");
-    await expectModalVisible(circuitModal);
-    await circuitModal.getByLabel("Title").fill("House");
-    await circuitModal
-      .getByLabel("Circuit", { exact: true })
-      .selectOption({ label: "Static circuit" });
-    await circuitModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(circuitModal);
-    await expectModalVisible(circuitsModal);
-    await circuitsModal.getByRole("button", { name: "Close" }).last().click();
-    await expectModalHidden(circuitsModal);
+    await addMainCircuit(page, "House");
 
     // configure fnn hems with all signals wired to the simulator
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
@@ -466,22 +470,7 @@ w3:
     await page.goto("/#/config");
 
     // configure circuits
-    await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
-    const circuitsModal = page.getByTestId("circuits-modal");
-    await expectModalVisible(circuitsModal);
-    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
-
-    const circuitModal = page.getByTestId("circuit-modal");
-    await expectModalVisible(circuitModal);
-    await circuitModal.getByLabel("Title").fill("House");
-    await circuitModal
-      .getByLabel("Circuit", { exact: true })
-      .selectOption({ label: "Static circuit" });
-    await circuitModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(circuitModal);
-    await expectModalVisible(circuitsModal);
-    await circuitsModal.getByRole("button", { name: "Close" }).last().click();
-    await expectModalHidden(circuitsModal);
+    await addMainCircuit(page, "House");
 
     // configure hems via user-defined provider
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
@@ -513,7 +502,7 @@ limit:
     await expect(page.getByTestId("circuits").getByTestId("device-banner")).toHaveText(
       "Consumption limited"
     );
-    await expect(page.getByTestId("circuits")).toContainText("House");
+    await expect(page.getByTestId("circuits")).toContainText(["House", "0.0 kW"].join(""));
     await expect(page.getByTestId("circuits")).not.toContainText("External Limit");
 
     // a new loadpoint can only be assigned to the dedicated circuit

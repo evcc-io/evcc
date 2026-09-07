@@ -163,9 +163,7 @@
       "meterLabelAdd": "Stromkreiszähler hinzufügen",
       "meterLabelEdit": "Stromkreiszähler bearbeiten",
       "meterLabel": "Zähler",
-      "deleteChildrenFirst": "Um diesen Schaltkreis zu löschen, müssen zuerst die untergeordneten Schaltkreise gelöscht werden.",
-      "meterChangeLabel": "Zähler",
-      "meterChangeHelp": "Dieser Zähler ist direkt im Stromkreis definiert und wird zusammen mit ihm gelöscht."
+      "deleteChildrenFirst": "Um diesen Stromkreis zu löschen, müssen zuerst die untergeordneten Stromkreise gelöscht werden."
     },
     "circuits": {
       "addSubCircuit": "Untergeordneten Stromkreis hinzufügen",

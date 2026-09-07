@@ -46,13 +46,7 @@
 			<button
 				type="submit"
 				:class="buttonClass"
-				:disabled="
-					testState.isRunning ||
-					isSaving ||
-					isSucceeded ||
-					sponsorTokenRequired ||
-					!isSaveable
-				"
+				:disabled="testState.isRunning || isSaving || isSucceeded || sponsorTokenRequired"
 				tabindex="0"
 				@click.prevent="handleSave"
 			>
@@ -82,7 +76,6 @@ export default defineComponent({
 		TestResult,
 	},
 	props: {
-		isSaveable: { type: Boolean as PropType<boolean>, default: true },
 		isDeletable: Boolean as PropType<boolean>,
 		isDisabled: Boolean as PropType<boolean>,
 		canDisable: { type: Boolean as PropType<boolean>, default: true },

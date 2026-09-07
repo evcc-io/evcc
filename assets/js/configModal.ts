@@ -8,9 +8,10 @@ export interface ModalEntry {
   type?: string;
   choices?: string[];
   station?: string;
-  hasChildren?: boolean;
   parentId?: string;
 }
+
+export type ModalParams = Omit<ModalEntry, "name">;
 
 export interface ModalResult {
   action: "added" | "updated" | "removed" | "converted" | "cancelled";
@@ -114,7 +115,6 @@ export function parseKey(key: string): {
   type?: string;
   choices?: string[];
   station?: string;
-  hasChildren?: boolean;
   parentId?: string;
 } {
   const bracketMatch = key.match(/^([^[]+)\[([^\]]+)\]$/);
@@ -138,9 +138,6 @@ export function parseKey(key: string): {
   }
   if (paramKey === "station") {
     return { name, station: paramValue };
-  }
-  if (paramKey === "hasChildren") {
-    return { name, hasChildren: Boolean(paramValue) };
   }
   if (paramKey === "parentId") {
     return { name, parentId: String(paramValue) };
@@ -178,7 +175,6 @@ export function parseQueryString(queryString: string): ModalEntry[] {
     if (parsed.type) entry.type = parsed.type;
     if (parsed.choices) entry.choices = parsed.choices;
     if (parsed.station) entry.station = parsed.station;
-    if (parsed.hasChildren) entry.hasChildren = parsed.hasChildren;
     if (parsed.parentId) entry.parentId = parsed.parentId;
     entries.push(entry);
   }
@@ -196,8 +192,6 @@ export function buildQuery(stack: ModalEntry[]): Record<string, string> {
       key += `[choices:${entry.choices.join(",")}]`;
     } else if (entry.station) {
       key += `[station:${entry.station}]`;
-    } else if (entry.hasChildren) {
-      key += `[hasChildren:${entry.hasChildren}]`;
     } else if (entry.parentId) {
       key += `[parentId:${entry.parentId}]`;
     }
@@ -251,17 +245,7 @@ export function initConfigModal(router: Router): void {
   });
 }
 
-export function openModal(
-  name: string,
-  params?: {
-    id?: number;
-    type?: string;
-    choices?: string[];
-    station?: string;
-    hasChildren?: boolean;
-    parentId?: string;
-  }
-): Promise<ModalResult> {
+export function openModal(name: string, params?: ModalParams): Promise<ModalResult> {
   if (!_router) {
     return Promise.resolve({ action: "cancelled" });
   }
@@ -271,7 +255,6 @@ export function openModal(
   if (params?.type) entry.type = params.type;
   if (params?.choices) entry.choices = params.choices;
   if (params?.station) entry.station = params.station;
-  if (params?.hasChildren) entry.hasChildren = params.hasChildren;
   if (params?.parentId) entry.parentId = params.parentId;
 
   const newStack = [...configModal.stack, entry];
@@ -309,17 +292,7 @@ export async function closeModal(result?: ModalResult): Promise<void> {
   resolve?.(finalResult);
 }
 
-export function replaceModal(
-  name: string,
-  params?: {
-    id?: number;
-    type?: string;
-    choices?: string[];
-    station?: string;
-    hasChildren?: boolean;
-    parentId?: string;
-  }
-): void {
+export function replaceModal(name: string, params?: ModalParams): void {
   if (!_router) return;
 
   const entry: ModalEntry = { name };
@@ -327,7 +300,6 @@ export function replaceModal(
   if (params?.type) entry.type = params.type;
   if (params?.choices) entry.choices = params.choices;
   if (params?.station) entry.station = params.station;
-  if (params?.hasChildren) entry.hasChildren = params.hasChildren;
   if (params?.parentId) entry.parentId = params.parentId;
 
   const newStack = [...configModal.stack.slice(0, -1), entry];

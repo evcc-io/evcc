@@ -6,15 +6,15 @@ products:
 params:
   - name: maxcurrent
     help:
-      de: Vom Lastmanagement maximal erlaubte Stromstärke pro Phase.
-      en: Maximum current per phase allowed by the load management system.
+      de: Maximal erlaubte Stromstärke pro Phase in diesem Stromkreis.
+      en: Maximum current per phase allowed in this circuit.
   - name: maxpower
     description:
       de: Maximale Leistung
       en: Maximum power
     help:
-      de: Vom Lastmanagement maximal erlaubte Leistung. Das System verteilt verfügbare Leistung dynamisch auf alle angeschlossenen Ladepunkte und Schaltungen.
-      en: Maximum power allowed by the load management system. The system dynamically distributes available power across all connected chargers and circuits.
+      de: Maximal erlaubte Gesamtleistung in diesem Stromkreis.
+      en: Maximum total power allowed in this circuit.
   - name: meter
     # service: TODO
   - name: parent

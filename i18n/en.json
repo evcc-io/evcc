@@ -149,7 +149,7 @@
       "meterSelectionLabel": "Meter Selection",
       "meterNone": "No meter",
       "meterSelectionHelpNoMeter": "The sum of all charging points is used.",
-      "meterSelectionHelpDedicatedMeter": "Add a exisiting meter to this circuit below.",
+      "meterSelectionHelpDedicatedMeter": "Add an existing meter to this circuit below.",
       "meterSelectionHelpGridMeter": "Uses the existing grid meter of your installation.",
       "meterGrid": "Grid meter",
       "meterDedicated": "Dedicated meter",
@@ -163,8 +163,6 @@
       "meterLabelAdd": "Add Circuit Meter",
       "meterLabelEdit": "Edit Circuit Meter",
       "deleteChildrenFirst": "To delete this circuit, first delete its child circuits.",
-      "meterChangeLabel": "Meter",
-      "meterChangeHelp": "This meter is defined inline and deleted together with the circuit.",
       "meterLabel": "Energy meter"
     },
     "circuits": {

@@ -279,13 +279,11 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	case templates.Vehicle:
 		instance, err = deviceStatus(name, config.Vehicles())
 
-	case templates.Circuit:
-		instance, err = deviceStatus(name, config.Circuits())
-
 	case templates.Curtailer:
 		instance, err = deviceStatus(name, config.Curtailers())
 
-	case templates.Hems:
+	case templates.Circuit, templates.Hems:
+		// live values are published with the site state
 		err = api.ErrNotAvailable
 
 	case templates.Tariff:
