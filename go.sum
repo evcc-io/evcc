@@ -1,7 +1,5 @@
 dario.cat/mergo v1.0.2 h1:85+piFYR1tMbRrLcDwR18y4UKJ3aH1Tbzi24VRW1TK8=
 dario.cat/mergo v1.0.2/go.mod h1:E/hbnu0NxMFBjpMIE34DRGLWqDy0g5FuKDhCb31ngxA=
-github.com/404GamerNotFound/solarman-go v0.2.0 h1:POfnWVXNEFbQPbCvpSHOv8txTFW0Z7YKp7rFORkJbAQ=
-github.com/404GamerNotFound/solarman-go v0.2.0/go.mod h1:eoQx2JmIo2xahIumCzOyl/f7STXFsxDvowFsQ1kr+JQ=
 github.com/404GamerNotFound/solarman-go v0.2.1 h1:Dolt3W1Vkf30Hk6np7JXX0YlZQ2dEUaWhKWRlVOk1J4=
 github.com/404GamerNotFound/solarman-go v0.2.1/go.mod h1:eoQx2JmIo2xahIumCzOyl/f7STXFsxDvowFsQ1kr+JQ=
 github.com/AlecAivazis/survey/v2 v2.3.7 h1:6I/u8FvytdGsgonrYsVn2t8t4QiRnh6QSTqkkhIiSjQ=
