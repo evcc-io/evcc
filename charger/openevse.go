@@ -2,81 +2,28 @@ package charger
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
-	"net/url"
 	"strings"
-	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
-	"github.com/coder/websocket"
+	"github.com/RAR/go-openevse"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
-	"github.com/evcc-io/evcc/charger/openevse"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 )
 
-// OpenEVSE charger implementation.
-//
-// State is received over the firmware's /ws websocket: the full status document on
-// connect, then partial documents with only the changed keys. Control goes through
-// the firmware's claims API (POST/DELETE /claims/{client}) at the firmware's fixed
-// API priority, so the user's manual override, RFID, OCPP and limits still win while
-// evcc wins over the built-in solar divert and schedules.
-//
-// Phase switching is opt-in (phases1p3p: true): modified three-phase controllers
-// answer the $G7/$S7 RAPI commands, which are not part of the stock open_evse
-// command set. Construction fails if it is enabled but the controller or the WiFi
-// firmware build does not accept them.
+// OpenEVSE charger implementation. State arrives over the firmware's /ws
+// websocket and control goes through its claims API; both live in
+// github.com/RAR/go-openevse. Phase switching is opt-in (phases1p3p: true) for
+// modified three-phase controllers that answer the $G7/$S7 RAPI commands.
 type OpenEVSE struct {
-	*request.Helper
 	implement.Caps
-	log   *util.Logger
-	uri   string
-	wsURI string
-
-	mu        sync.RWMutex
-	status    openevse.Status
-	connected bool
-	err       error // last dial/read error, reported by the constructor's readiness wait
-
-	ready     chan struct{} // closed once the first frame has been merged
-	readyOnce sync.Once
-
-	cancel context.CancelFunc // stops run(), used when construction fails
-
-	// keepalive and read deadline, snapshotted from the package vars at construction
-	// so that the reader goroutine never races with a test shortening them
-	pingInterval time.Duration
-	readTimeout  time.Duration
-	stableAfter  time.Duration
-
-	claimMu sync.Mutex
-	claim   *openevse.Claim // last claim written, nil until the first write
-	enabled bool
-	current int
-
-	// overrideWarned guards against repeating the manual-override warning on every
-	// claim write; it is reset once a status frame shows the override cleared.
-	// Guarded by mu, alongside the status it derives from.
-	overrideWarned bool
-
-	// warnOverride logs the manual-override warning; a field so tests can observe
-	// it without capturing log output.
-	warnOverride func()
+	conn *openevse.Client
 }
-
-const overrideWarning = "manual override active on charger: evcc's claim is outranked until it is cleared (tap Auto on the charger dashboard, or DELETE /override)"
-
-const phaseSwitchWarning = "phase switching enabled through raw RAPI commands ($S7) of a modified 3-phase controller; these are not part of stock OpenEVSE firmware and bypass its EVSE manager"
-
-var errOpenEVSENotConnected = errors.New("websocket not connected")
 
 // openevseFaults names the controller states that evcc has no status F constant
 // for, so Status() reports them as a named error instead.
@@ -89,24 +36,6 @@ var openevseFaults = map[int]string{
 	10: "over temperature",
 	11: "over current",
 }
-
-// vars, not consts, so tests can shorten them
-var (
-	// openevsePingInterval is the keepalive interval. The firmware answers {"ping":1}
-	// with {"pong":1}, so a healthy connection delivers a frame at least this often.
-	openevsePingInterval = 30 * time.Second
-
-	// openevseReadTimeout bounds every read. Without it a half-open TCP connection
-	// blocks the reader forever while the charger keeps reporting stale state.
-	openevseReadTimeout = 2*openevsePingInterval + 15*time.Second
-
-	// openevseReadyTimeout is how long the constructor waits for the first frame
-	openevseReadyTimeout = request.Timeout
-
-	// openevseStableAfter is how long a connection must deliver state before a
-	// drop counts as a fresh failure (reset backoff) rather than flapping (grow it)
-	openevseStableAfter = time.Minute
-)
 
 func init() {
 	registry.AddCtx("openevse", NewOpenEVSEFromConfig)
@@ -138,336 +67,71 @@ func NewOpenEVSEFromConfig(ctx context.Context, other map[string]any) (api.Charg
 
 // NewOpenEVSE creates OpenEVSE charger
 func NewOpenEVSE(ctx context.Context, uri, user, password string, phases1p3p bool) (api.Charger, error) {
-	basicAuth := transport.BasicAuthHeader(user, password)
-	log := util.NewLogger("openevse").Redact(user, password, basicAuth)
+	log := util.NewLogger("openevse").Redact(user, password, transport.BasicAuthHeader(user, password))
 
-	c := &OpenEVSE{
-		Helper: request.NewHelper(log),
-		Caps:   implement.New(),
-		log:    log,
-		uri:    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
-		ready:  make(chan struct{}),
-
-		pingInterval: openevsePingInterval,
-		readTimeout:  openevseReadTimeout,
-		stableAfter:  openevseStableAfter,
-	}
-
-	c.warnOverride = func() { c.log.WARN.Println(overrideWarning) }
-
+	client := request.NewClient(log)
 	if user != "" && password != "" {
-		c.Client.Transport = transport.BasicAuth(user, password, c.Client.Transport)
+		client.Transport = transport.BasicAuth(user, password, client.Transport)
 	}
 
-	wsURI, err := parseURI(c.uri)
+	conn, err := openevse.New(uri, openevse.WithHTTPClient(client), openevse.WithLogger(openevseLogger{log}))
 	if err != nil {
 		return nil, err
 	}
-	c.wsURI = wsURI
 
-	ctx, cancel := context.WithCancel(ctx)
-	c.cancel = cancel
-
-	go c.run(ctx)
-
-	// wait for the first usable frame so that a wrong host, wrong password or a
-	// firmware without the claims API fails construction instead of silently
-	// never delivering state
-	select {
-	case <-c.ready:
-	case <-ctx.Done():
-		c.cancel()
-		return nil, ctx.Err()
-	case <-time.After(openevseReadyTimeout):
-		c.cancel()
-		if err := c.lastError(); err != nil {
-			return nil, fmt.Errorf("websocket: %w: %w", api.ErrTimeout, err)
-		}
-		return nil, fmt.Errorf("websocket: %w", api.ErrTimeout)
+	// waits for the first status frame, so a wrong host or password fails the config test
+	if err := conn.Connect(ctx); err != nil {
+		return nil, err
 	}
 
-	// evcc does not cancel a device's context on shutdown - ctx lives for the device
-	// lifetime and is only cancelled on failure - so run()'s deferred release() never
-	// fires from a normal SIGINT/SIGTERM. Register with evcc's shutdown hooks instead.
-	// release() is idempotent (guarded by claim == nil under claimMu), so it is safe
-	// to also run via the deferred call in run() when ctx is cancelled (embedding, tests).
+	c := &OpenEVSE{
+		Caps: implement.New(),
+		conn: conn,
+	}
+
 	if phases1p3p {
-		if err := c.enablePhaseSwitching(); err != nil {
-			c.cancel()
+		if err := conn.EnablePhaseSwitching(); err != nil {
+			conn.Close()
 			return nil, err
 		}
+		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
 	}
 
-	shutdown.Register(c.release)
+	// evcc does not cancel a device's context on shutdown, so release the
+	// claim through the shutdown hooks instead
+	shutdown.Register(conn.Close)
 
 	return c, nil
 }
 
-// enablePhaseSwitching verifies the $G7/$S7 phase relay commands of modified
-// three-phase controllers and exposes the phase switcher. A stock controller
-// answers $NK; WiFi firmware builds without ENABLE_FULL_RAPI (Ethernet, TFT)
-// block RAPI writes with 400. Both are configuration errors since the user asked
-// for phase switching explicitly.
-func (c *OpenEVSE) enablePhaseSwitching() error {
-	if err := c.rapiCommand("$G7"); err != nil {
-		return fmt.Errorf("phase switching: controller does not support it (stock OpenEVSE controllers do not): %w", err)
-	}
-
-	// disable the controller's own 1p/3p auto-switching
-	if err := c.rapiCommand("$S8 0"); err != nil {
-		return fmt.Errorf("phase switching: WiFi firmware rejected the $S8 write (this build blocks RAPI writes): %w", err)
-	}
-
-	c.log.WARN.Println(phaseSwitchWarning)
-	implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
-
-	return nil
+// openevseLogger adapts util.Logger to openevse.Logger
+type openevseLogger struct {
+	*util.Logger
 }
 
-// rapiCommand sends a raw RAPI command through the firmware's /r endpoint
-func (c *OpenEVSE) rapiCommand(command string) error {
-	var res struct {
-		Cmd, Ret, Error string
-	}
-
-	uri := fmt.Sprintf("%s/r?json=1&rapi=%s", c.uri, url.QueryEscape(command))
-
-	err := c.GetJSON(uri, &res)
-	if err == nil && !strings.HasPrefix(res.Ret, "$OK") {
-		err = fmt.Errorf("rapi command %s failed: %s%s", command, res.Ret, res.Error)
-	}
-
-	return err
-}
-
-// phases1p3p implements the api.PhaseSwitcher interface
-func (c *OpenEVSE) phases1p3p(phases int) error {
-	var set3p int
-	if phases == 3 {
-		set3p = 1
-	}
-
-	return c.rapiCommand(fmt.Sprintf("$S7 %d", set3p))
-}
-
-// run keeps the websocket connected until ctx is cancelled
-func (c *OpenEVSE) run(ctx context.Context) {
-	defer c.release()
-
-	bo := backoff.NewExponentialBackOff(
-		backoff.WithMaxElapsedTime(0),
-		backoff.WithMaxInterval(30*time.Second),
-	)
-
-	for ctx.Err() == nil {
-		c.log.DEBUG.Println("websocket: connecting")
-
-		conn, _, err := websocket.Dial(ctx, c.wsURI, &websocket.DialOptions{HTTPClient: c.Client})
-		if err != nil {
-			c.setError(err)
-
-			if ctx.Err() == nil {
-				c.log.ERROR.Printf("websocket: %v", err)
-			}
-
-			select {
-			case <-ctx.Done():
-				return
-			case <-time.After(bo.NextBackOff()):
-			}
-
-			continue
-		}
-
-		if err := c.handleConnection(ctx, conn, bo); err != nil {
-			c.setError(err)
-
-			if ctx.Err() == nil {
-				c.log.ERROR.Printf("websocket: %v", err)
-			}
-		}
-
-		c.setConnected(false)
-
-		// a dropped connection backs off like a failed dial; handleConnection has
-		// reset bo if the connection was stable, so a healthy charger that rebooted
-		// is redialled after the initial interval while a flapping one is not
-		select {
-		case <-ctx.Done():
-			return
-		case <-time.After(bo.NextBackOff()):
-		}
-	}
-}
-
-// handleConnection reads frames until the connection fails. The first frame of a
-// connection is the full status; after merging it successfully the charger is
-// readable. The reconnect backoff is only reset once the connection has delivered
-// state for stableAfter, so a device that accepts the websocket, sends a frame
-// and drops again keeps backing off instead of reconnecting in a hot loop.
-func (c *OpenEVSE) handleConnection(ctx context.Context, conn *websocket.Conn, bo *backoff.ExponentialBackOff) error {
-	defer conn.Close(websocket.StatusNormalClosure, "")
-
-	var connectedAt time.Time
-	defer func() {
-		if !connectedAt.IsZero() && time.Since(connectedAt) >= c.stableAfter {
-			bo.Reset()
-		}
-	}()
-
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	// keepalive: the firmware answers {"ping":1} with {"pong":1}
-	go func() {
-		ticker := time.NewTicker(c.pingInterval)
-		defer ticker.Stop()
-
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-				if err := conn.Write(ctx, websocket.MessageText, []byte(`{"ping":1}`)); err != nil {
-					c.log.ERROR.Printf("websocket: ping: %v", err)
-					cancel()
-					return
-				}
-			}
-		}
-	}()
-
-	first := true
-	for {
-		// bound every read: the firmware answers each ping, so a healthy connection
-		// always delivers a frame well inside this window. A half-open connection
-		// times out here instead of blocking forever with stale state marked valid.
-		readCtx, readCancel := context.WithTimeout(ctx, c.readTimeout)
-		typ, b, err := conn.Read(readCtx)
-		readCancel()
-
-		if err != nil {
-			return err
-		}
-		if typ != websocket.MessageText {
-			continue
-		}
-
-		c.log.TRACE.Printf("websocket: %s", b)
-
-		err = c.merge(b)
-
-		// a type mismatch on one key leaves the others decoded, so the frame is
-		// still usable state: refusing it would make the charger unusable until
-		// evcc is updated for a firmware change to a single key. Log which key so
-		// the zero value it leaves behind is not silent. Anything else - a syntax
-		// error, non-object frame, etc - is not usable state.
-		var typeErr *json.UnmarshalTypeError
-		ok := err == nil
-		if errors.As(err, &typeErr) {
-			ok = true
-			c.log.WARN.Printf("websocket: key %s has unexpected type %s, ignoring it", typeErr.Field, typeErr.Value)
-		} else if err != nil {
-			c.log.ERROR.Printf("websocket: bad frame: %v", err)
-		}
-
-		if first && ok {
-			first = false
-			connectedAt = time.Now()
-			c.setConnected(true)
-
-			// the first connection of the charger's lifetime releases the constructor;
-			// no claim can have been written before it returns, so only a reconnect
-			// (a firmware reboot drops all claims) has anything to re-assert
-			var initial bool
-			c.readyOnce.Do(func() {
-				initial = true
-				close(c.ready)
-			})
-
-			if !initial {
-				go func() {
-					if err := c.reassertClaim(); err != nil {
-						c.log.WARN.Printf("reassert claim: %v", err)
-					}
-				}()
-			}
-		}
-	}
-}
-
-// merge applies a full or partial status document; keys absent from the frame keep their value
-func (c *OpenEVSE) merge(b []byte) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	err := json.Unmarshal(b, &c.status)
-
-	// the override warning is re-armed only once the charger has confirmed the
-	// override is actually cleared, so a flapping override doesn't get lost in
-	// a burst of unwarned claim writes
-	if c.status.ManualOverride == 0 {
-		c.overrideWarned = false
-	}
-
-	return err
-}
-
-func (c *OpenEVSE) setConnected(connected bool) {
-	c.mu.Lock()
-	c.connected = connected
-	c.mu.Unlock()
-}
-
-func (c *OpenEVSE) setError(err error) {
-	c.mu.Lock()
-	c.err = err
-	c.mu.Unlock()
-}
-
-// lastError returns the most recent dial or read error, nil if there was none yet
-func (c *OpenEVSE) lastError() error {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	return c.err
-}
-
-// get returns the current status or an error while the websocket is down
-func (c *OpenEVSE) get() (openevse.Status, error) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	if !c.connected {
-		return openevse.Status{}, errOpenEVSENotConnected
-	}
-
-	return c.status, nil
-}
+func (l openevseLogger) Tracef(format string, args ...any) { l.TRACE.Printf(format, args...) }
+func (l openevseLogger) Debugf(format string, args ...any) { l.DEBUG.Printf(format, args...) }
+func (l openevseLogger) Warnf(format string, args ...any)  { l.WARN.Printf(format, args...) }
+func (l openevseLogger) Errorf(format string, args ...any) { l.ERROR.Printf(format, args...) }
 
 // Status implements the api.Charger interface
 func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
-	res, err := c.get()
+	res, err := c.conn.Status()
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	/*
-		0: "unknown",
-		1: "not connected",
-		2: "connected",
-		3: "charging",
-		4: "vent required",          -> B if a vehicle is connected, else A (evcc has no status D)
-		5: "diode check failed",     -> named error (evcc has no status F constant)
-		6: "gfci fault",             -> named error
-		7: "no ground",              -> named error
-		8: "stuck relay",            -> named error
-		9: "gfci self-test failure", -> named error
-		10: "over temperature",      -> named error
-		11: "over current",          -> named error
-		254: "sleeping",
-		255: "disabled"
-	*/
+	return openevseStatus(res)
+}
 
+// openevseStatus maps the controller state to a charge status:
+//
+//	1 not connected                  -> A
+//	2 connected, 254 sleeping,
+//	255 disabled, 4 vent required    -> B if a vehicle is connected, else A (evcc has no status D)
+//	3 charging                       -> C
+//	5-11 controller faults           -> named error (evcc has no status F constant)
+func openevseStatus(res openevse.Status) (api.ChargeStatus, error) {
 	switch res.State {
 	case 1:
 		return api.StatusA, nil
@@ -488,112 +152,23 @@ func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *OpenEVSE) Enabled() (bool, error) {
-	res, err := c.get()
+	res, err := c.conn.Status()
 	return res.Status == openevse.Enabled, err
 }
 
 // Enable implements the api.Charger interface
 func (c *OpenEVSE) Enable(enable bool) error {
-	c.claimMu.Lock()
-	defer c.claimMu.Unlock()
-
-	c.enabled = enable
-	return c.setClaim()
+	return c.conn.Enable(enable)
 }
 
 // MaxCurrent implements the api.Charger interface
 func (c *OpenEVSE) MaxCurrent(current int64) error {
-	c.claimMu.Lock()
-	defer c.claimMu.Unlock()
-
-	c.current = int(current)
-	return c.setClaim()
+	return c.conn.SetCurrent(int(current))
 }
 
-func (c *OpenEVSE) claimURI() string {
-	return fmt.Sprintf("%s/claims/%d", c.uri, openevse.ClientID)
-}
-
-// setClaim posts the full claim built from the desired state; caller holds claimMu
-func (c *OpenEVSE) setClaim() error {
-	c.warnIfOverridden()
-
-	claim := openevse.Claim{
-		State:         openevse.Disabled,
-		ChargeCurrent: c.current,
-	}
-	if c.enabled {
-		claim.State = openevse.Enabled
-	}
-
-	if err := c.postClaim(claim); err != nil {
-		return err
-	}
-
-	c.claim = &claim
-	return nil
-}
-
-// warnIfOverridden logs once that the firmware's manual override outranks evcc's
-// claim, whenever the last received status shows it active. It logs again only
-// after a status frame has shown the override inactive in between.
-func (c *OpenEVSE) warnIfOverridden() {
-	c.mu.Lock()
-	warn := c.status.ManualOverride == 1 && !c.overrideWarned
-	if warn {
-		c.overrideWarned = true
-	}
-	c.mu.Unlock()
-
-	if warn {
-		c.warnOverride()
-	}
-}
-
-func (c *OpenEVSE) postClaim(claim openevse.Claim) error {
-	req, err := request.New(http.MethodPost, c.claimURI(), request.MarshalJSON(claim), request.JSONEncoding)
-	if err != nil {
-		return err
-	}
-
-	_, err = c.DoBody(req)
-	return err
-}
-
-// reassertClaim re-posts the last claim after a (re)connect: a firmware reboot drops all claims
-func (c *OpenEVSE) reassertClaim() error {
-	c.claimMu.Lock()
-	defer c.claimMu.Unlock()
-
-	if c.claim == nil {
-		return nil
-	}
-
-	return c.postClaim(*c.claim)
-}
-
-// release deletes evcc's claim on shutdown so the EVSE falls back to its own defaults
-func (c *OpenEVSE) release() {
-	c.claimMu.Lock()
-	defer c.claimMu.Unlock()
-
-	if c.claim == nil {
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	req, err := request.New(http.MethodDelete, c.claimURI(), nil)
-	if err == nil {
-		_, err = c.DoBody(req.WithContext(ctx))
-	}
-
-	if err != nil {
-		c.log.WARN.Printf("release claim: %v", err)
-	}
-
-	c.claim = nil
+// phases1p3p implements the api.PhaseSwitcher interface
+func (c *OpenEVSE) phases1p3p(phases int) error {
+	return c.conn.SetThreePhase(phases == 3)
 }
 
 var _ api.CurrentGetter = (*OpenEVSE)(nil)
@@ -602,7 +177,7 @@ var _ api.CurrentGetter = (*OpenEVSE)(nil)
 // arbitration result across all claims, so a higher-priority claim (manual override,
 // limit) shows through here by design.
 func (c *OpenEVSE) GetMaxCurrent() (float64, error) {
-	res, err := c.get()
+	res, err := c.conn.Status()
 	return res.Pilot, err
 }
 
@@ -610,7 +185,7 @@ var _ api.Meter = (*OpenEVSE)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *OpenEVSE) CurrentPower() (float64, error) {
-	res, err := c.get()
+	res, err := c.conn.Status()
 	return res.Power, err
 }
 
@@ -618,7 +193,7 @@ var _ api.MeterEnergy = (*OpenEVSE)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *OpenEVSE) TotalEnergy() (float64, error) {
-	res, err := c.get()
+	res, err := c.conn.Status()
 	return res.TotalEnergy, err
 }
 
@@ -626,7 +201,7 @@ var _ api.ChargeRater = (*OpenEVSE)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (c *OpenEVSE) ChargedEnergy() (float64, error) {
-	res, err := c.get()
+	res, err := c.conn.Status()
 	return res.SessionEnergy / 1e3, err
 }
 
@@ -634,25 +209,30 @@ var _ api.ChargeTimer = (*OpenEVSE)(nil)
 
 // ChargeDuration implements the api.ChargeTimer interface
 func (c *OpenEVSE) ChargeDuration() (time.Duration, error) {
-	res, err := c.get()
+	res, err := c.conn.Status()
 	return time.Duration(res.Elapsed) * time.Second, err
 }
 
 var _ api.Identifier = (*OpenEVSE)(nil)
 
 // Identify implements the api.Identifier interface. It returns the RFID tag that
-// authorised the current session, if any. The firmware builds its "no tag" value
-// from a '\0' char, so a tag consisting only of NUL bytes and/or whitespace is
-// treated as empty, same as a genuinely empty string.
+// authorised the current session, if any.
 func (c *OpenEVSE) Identify() ([]string, error) {
-	res, err := c.get()
+	res, err := c.conn.Status()
 	if err != nil {
 		return nil, err
 	}
 
-	if tag := strings.Trim(res.RfidAuth, "\x00 \t\n\r"); tag != "" {
+	if tag := openevseTag(res.RfidAuth); tag != "" {
 		return []string{tag}, nil
 	}
 
 	return nil, nil
+}
+
+// openevseTag cleans the firmware's rfid_auth value. The firmware builds its
+// "no tag" value from a '\0' char, so a tag consisting only of NUL bytes and/or
+// whitespace is treated as empty.
+func openevseTag(tag string) string {
+	return strings.Trim(tag, "\x00 \t\n\r")
 }

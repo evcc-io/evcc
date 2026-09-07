@@ -26,7 +26,6 @@ params:
       de: Nur für modifizierte 3-Phasen-Controller, die `$G7` und `$S7` unterstützen
       en: Only for modified 3-phase controllers that support `$G7` and `$S7`
     type: bool
-    default: false
     advanced: true
 render: |
   type: openevse
