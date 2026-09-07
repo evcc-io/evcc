@@ -7,7 +7,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/404GamerNotFound/solaman-go"
+	solarman "github.com/404GamerNotFound/solaman-go"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	gridx "github.com/grid-x/modbus"
