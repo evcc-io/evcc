@@ -552,7 +552,6 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	// no result yields an empty suggestion
 	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryResult{}, 0, true, false, 1))
 
-	// a delayed result uses the slot active when it is applied
 	res := optimizer.BatteryResult{
 		ChargingPower:    []float32{100, 0},
 		DischargingPower: []float32{0, 0},

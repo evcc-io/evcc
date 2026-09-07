@@ -647,7 +647,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 // applyOptimizerResult maps the optimizer response onto suggestions, battery
 // forecast and notifications
 func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details requestDetails, res optimizer.OptimizationResult, schedule optimizerSchedule, now time.Time) {
-	slot := schedule.controlSlot(now)
+	slot := schedule.activeSlot(now)
 	slotHours := schedule.duration(slot).Hours()
 	gridImporting := slot >= 0 && slot < len(res.GridImport) && res.GridImport[slot] > 0
 	gridExporting := slot >= 0 && slot < len(res.GridExport) && res.GridExport[slot] > 0
@@ -760,7 +760,7 @@ func batteryForecastSocExtremes(req []optimizer.BatteryConfig, resp []optimizer.
 	})
 
 	var high, low *batteryForecastSlot
-	for i := range schedule.remainingSlots(now) {
+	for i := range schedule.endsAfter(now) {
 		if i >= len(resp[homeIndices[0]].StateOfCharge) {
 			break
 		}
@@ -950,7 +950,7 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 
 // matchSoc returns the end of the first slot whose soc satisfies fun.
 func matchSoc(ts []float32, schedule optimizerSchedule, now time.Time, fun func(float32) bool) time.Time {
-	for i := range schedule.remainingSlots(now) {
+	for i := range schedule.endsAfter(now) {
 		if i >= len(ts) {
 			break
 		}

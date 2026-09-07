@@ -38,12 +38,7 @@ func (s optimizerSchedule) activeSlot(at time.Time) int {
 	return -1
 }
 
-// Keep control policy separate so it cannot shift forecast intervals.
-func (s optimizerSchedule) controlSlot(at time.Time) int {
-	return s.activeSlot(at)
-}
-
-func (s optimizerSchedule) remainingSlots(at time.Time) iter.Seq[int] {
+func (s optimizerSchedule) endsAfter(at time.Time) iter.Seq[int] {
 	return func(yield func(int) bool) {
 		for i := s.activeSlot(at); i >= 0 && i < s.len(); i++ {
 			if !yield(i) {

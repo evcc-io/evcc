@@ -34,8 +34,7 @@ func TestOptimizerSchedule(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Equal(t, tc.want, schedule.activeSlot(tc.at))
-			assert.Equal(t, tc.want, schedule.controlSlot(tc.at))
-			assert.Equal(t, tc.remaining, slices.Collect(schedule.remainingSlots(tc.at)))
+			assert.Equal(t, tc.remaining, slices.Collect(schedule.endsAfter(tc.at)))
 		})
 	}
 
@@ -54,7 +53,7 @@ func TestOptimizerSchedule(t *testing.T) {
 		{dt: []int{900}},
 	} {
 		assert.Equal(t, -1, empty.activeSlot(boundary))
-		assert.Empty(t, slices.Collect(empty.remainingSlots(boundary)))
+		assert.Empty(t, slices.Collect(empty.endsAfter(boundary)))
 	}
 }
 
