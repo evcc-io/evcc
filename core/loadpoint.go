@@ -444,6 +444,11 @@ func (lp *Loadpoint) restoreSettings() {
 	}
 }
 
+// RequestUpdate requests site to update this loadpoint
+func (lp *Loadpoint) RequestUpdate() {
+	lp.requestUpdate()
+}
+
 // requestUpdate requests site to update this loadpoint
 func (lp *Loadpoint) requestUpdate() {
 	select {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util"
 )
@@ -16,11 +17,8 @@ var _ API = (*adapter)(nil)
 // Publish publishes vehicle updates at site level
 var Publish func()
 
-// ClearPlanLocks clears locked plan goals across all loadpoints
-var ClearPlanLocks func()
-
-// RequestUpdate requests an update of the loadpoint the vehicle is attached to
-var RequestUpdate func(api.Vehicle)
+// Owner returns the loadpoint a vehicle is currently attached to, nil if unattached
+var Owner func(api.Vehicle) loadpoint.API
 
 type adapter struct {
 	log         *util.Logger
@@ -38,15 +36,25 @@ func (v *adapter) publish() {
 	}
 }
 
-func (v *adapter) clearPlanLocks() {
-	if ClearPlanLocks != nil {
-		ClearPlanLocks()
+// owner returns the loadpoint the vehicle is attached to, nil if unattached
+func (v *adapter) owner() loadpoint.API {
+	if Owner == nil {
+		return nil
+	}
+	return Owner(v.Instance())
+}
+
+// updatePlan invalidates the committed plan goal and triggers an immediate update
+func (v *adapter) updatePlan() {
+	if lp := v.owner(); lp != nil {
+		lp.UpdatePlan()
 	}
 }
 
+// requestUpdate triggers an immediate update
 func (v *adapter) requestUpdate() {
-	if RequestUpdate != nil {
-		RequestUpdate(v.Instance())
+	if lp := v.owner(); lp != nil {
+		lp.RequestUpdate()
 	}
 }
 
@@ -165,11 +173,8 @@ func (v *adapter) SetPlanSoc(ts time.Time, soc int) error {
 	settings.SetTime(v.key()+keys.PlanTime, ts)
 	settings.SetInt(v.key()+keys.PlanSoc, int64(soc))
 
-	// note: could be optimized by only clearing plan lock of the relevant loadpoint
-	v.clearPlanLocks()
-
 	v.publish()
-	v.requestUpdate()
+	v.updatePlan()
 
 	return nil
 }
@@ -195,11 +200,8 @@ func (v *adapter) SetRepeatingPlans(plans []api.RepeatingPlan) error {
 
 	v.log.DEBUG.Printf("update repeating plans for %s to: %v", v.name, plans)
 
-	// note: could be optimized by only clearing plan lock of the relevant loadpoint
-	v.clearPlanLocks()
-
 	v.publish()
-	v.requestUpdate()
+	v.updatePlan()
 
 	return nil
 }
