@@ -159,13 +159,22 @@
       "descriptionResidualPower": "Siirtää ohjaussilmukan toimintapistettä. Mikäli sinulla on kotiakku on suositeltavaa asettaa ohjausarvo 100 W:iin. Tämä antaa akulle pienen etusijan suhteessa sähköverkon käyttöön.",
       "labelInterval": "Päivitystiheys",
       "labelResidualPower": "Jäännösteho",
-      "title": "Määrittele toimintaa"
+      "title": "Laiteohjauksen toiminta"
     },
     "currency": {
       "description": "Käytetään energian hinnan, tariffien mukaisten kulujen ja säästöjen ilmoittamiseen.",
       "example": "Latauksesi oli {price} hintainen. Säästit {amount}.",
       "label": "Valuutta",
       "title": "Valuutta"
+    },
+    "curtailer": {
+      "description": "Laite, joka rajoittaa tuottoaan sähköjakelijan pyynnöstä (§ 9 EEG). Useat aurinkoinvertterit tukevat tätä suoraan niiden asetuksissaan. Erilliset asetukset tarvitaan vain joidenkin valmistajien tai useiden inverttereiden järjestelmissä.",
+      "generic": "Yleiset integraatiot",
+      "specific": "Erityisintegraatiot",
+      "template": "Valmistaja",
+      "title": "Tehonrajoitin",
+      "titleAdd": "Lisää tehonrajoitin",
+      "titleEdit": "Muokkaa tehonrajoitinta"
     },
     "deviceValue": {
       "activeClients": "Aktiiviset asiakasyhteydet",
@@ -180,7 +189,7 @@
       "chargeStatusC": "lataa",
       "chargeStatusE": "ei virtaa",
       "chargeStatusF": "virhe",
-      "chargedEnergy": "Ladattu",
+      "chargedEnergy": "Ladattu (sessio)",
       "co2": "Verkon CO₂",
       "configured": "Määritetty",
       "connected": "Yhdistetty",
@@ -191,7 +200,7 @@
       "currentRange": "Virta",
       "curtailLimit": "Verkkoonsyötön raja",
       "curtailable": "Teho leikattavissa",
-      "curtailed": "Sähkönsyöttöä rajoitettu",
+      "curtailed": "Sähkönsyötön rajoitus",
       "detected": "Tunnistettu",
       "dimLimit": "Kulutusraja",
       "dimmed": "Kulutusta rajoitettu",
@@ -229,6 +238,31 @@
       "temp": "Lämpötila",
       "topic": "Aihe",
       "url": "URL",
+      "usage": {
+        "aux": {
+          "energy": "Kulutettu",
+          "returnEnergy": "Tuotettu"
+        },
+        "battery": {
+          "energy": "Purettu",
+          "returnEnergy": "Ladattu"
+        },
+        "charge": {
+          "energy": "Ladattu",
+          "returnEnergy": "Purettu"
+        },
+        "consumer": {
+          "energy": "Kulutettu",
+          "returnEnergy": "Tuotettu"
+        },
+        "grid": {
+          "energy": "Käytetty sähköverkosta",
+          "returnEnergy": "Viety sähköverkkoon"
+        },
+        "pv": {
+          "energy": "Tuotettu"
+        }
+      },
       "vehicleLimitSoc": "Latausrajoitus",
       "yes": "kyllä"
     },
@@ -322,6 +356,7 @@
       "hideAdvancedSettings": "Piilota edistyneet asetukset",
       "invalidFileSelected": "Valittu virheellinen tiedosto",
       "legacy": "perinteinen",
+      "moreInfo": "Lisätietoa:",
       "noFileSelected": "Ei valittua tiedostoa.",
       "off": "pois",
       "on": "päällä",
@@ -425,6 +460,10 @@
         "charging": "Latauslaite tallennettu. Luodaan latauspiste …",
         "heating": "Lämmityslaite tallennettu. Luodaan lämmitin …"
       },
+      "currentRangeHelp": {
+        "charging": "Tyypillisesti: 6-16 A 11 kW, 6-32A 22 kW (3-vaiheinen).",
+        "heating": "Riippuu lämmityslaitteet tehosta. (Ks. laitteen tiedot)"
+      },
       "defaultModeHelp": {
         "charging": "Lataustila ajoneuvoa kytkettäessä.",
         "heating": "Asetetaan päälle järjestelmän käynnistyessä."
@@ -452,7 +491,7 @@
       },
       "phases1p": "1-vaihe",
       "phases3p": "3-vaihe",
-      "phasesAutomatic": "Automaattinen",
+      "phasesAutomatic": "Vaiheet automaattisesti",
       "phasesAutomaticHelp": "Laturisi tukee automaattista vaihtoa 1- ja 3-vaiheisen latauksen välillä. Päänäytössä voit säätää vaihekäyttäytymistä latauksen aikana.",
       "phasesHelp": "Kytkettyjen vaiheiden lukumäärä.",
       "phasesLabel": "Vaiheet",
@@ -511,6 +550,7 @@
     "main": {
       "addAdditional": "Lisää lisämittari",
       "addConsumer": "Lisää kuluttaja",
+      "addCurtailer": "Lisää tehonrajoitin",
       "addGrid": "Lisää verkkomittari",
       "addLoadpoint": "Lisää latauspiste tai lämmityspistettä",
       "addPvBattery": "Lisää aurinkovoimala tai akusto",
@@ -611,6 +651,7 @@
         "aux": "Lisää kulutustaan itsesäätelevä laite",
         "battery": "Lisää akun tilan mittari",
         "consumer": "Lisää tavanomainen kuluttaja",
+        "grid": "Lisää verkon syöttömittari",
         "pv": "Lisää aurinkovoimalan mittari"
       },
       "save": "Tallenna",
@@ -801,6 +842,8 @@
       "noClients": "Ei vielä etäyhteysasiakkaita. Kukaan ei vielä voi kirjautua etänä.",
       "password": "Salasana",
       "passwordOnce": "Tämä salasana näytetään vain kerran. Skannaa QR-koodi tai kopioi se, sillä et voi nähdä sitä enää uudelleen.",
+      "privacy": "Ottamalla tämän ominaisuuden käyttöön, hyväksyt {0}.",
+      "privacyLink": "yksityisyyskäytäntömme",
       "qrInstall": "Asenna evcc-sovellus {ios}:sta tai {android}:sta.",
       "qrScan": "Skannaa koodi puhelimesi kameralla yhdistääksesi. Klikkaa linkkiä, jos jo käytät puhelimesi kameraa.",
       "removeClient": "Poista etäyhteysasiakas",
@@ -877,6 +920,8 @@
           "confirmationButton": "Nollaa ja käynnistä uudelleen",
           "confirmationText": "Tämä poistaa pysyvästä valitut tiedot. Varmista, että olet ensin ladannut varmuuskopion.",
           "description": "Onko ongelmia määrittelyn kanssa ja haluat aloittaa alusta? Poista kaikki tiedot ja aloita puhtaalta pöydältä.",
+          "remote": "Etäkäyttö",
+          "remoteDescription": "Poistaa asetukset ja valtuutukset.",
           "sessions": "Lataustapahtumat",
           "sessionsDescription": "Poistaa lataustapahtumahistorian.",
           "settings": "Määrittelyt ja asetukset",
@@ -1076,14 +1121,14 @@
       "optInSponsorship": "Sponsorointi vaaditaan."
     },
     "version": {
-      "availableLong": "uusi versio saatavilla",
+      "availableLong": "päivitys saatavilla",
       "community": "evcc-yhteisö",
       "labelEmail": "Sähköposti",
       "labelPhone": "Puhelin",
       "labelRelease": "Julkaisu",
       "labelVersion": "Versio",
       "labelWebsite": "Verkkosivu",
-      "latestVersion": "uusin versio",
+      "latestVersion": "ajantasalla",
       "madeByCommunity": "{0} tekemä.",
       "modalCancel": "Peruuta",
       "modalDownload": "Lataa",
@@ -1267,6 +1312,15 @@
     "title": "Vahvistus"
   },
   "main": {
+    "alwaysCharge": {
+      "description": "ei keskeytyksiä",
+      "label": "Lataa aina",
+      "labelHeating": "Lämmitä aina",
+      "minCurrent": "vähintään {current}",
+      "once": "lataustapahtuman loppuun",
+      "onceTip": "Vain tätä lataustapahtumaa koskien",
+      "permanent": "pysyvästi päällä"
+    },
     "chargingPlan": {
       "active": "Aktiivinen",
       "addRepeatingPlan": "Lisää toistuva suunnitelma",
@@ -1283,15 +1337,18 @@
         "continuous": "yhtenäinen",
         "continuousCo2Description": "Valitsee puhtaimman yhteisen aikajakson.",
         "continuousPriceDescription": "Valitsee halvimman yhtenäisen aikajakson.",
+        "disabledDescription": "Vaatii muuttuvan sähköhinnan tai CO₂-ennusteen.",
         "label": "Optimointi"
       },
       "planNumber": "Suunnitelma {number}",
       "precondition": {
         "description": "Siirtää osan latauksesta juuri ennen lähtöaikaa: lämmittää akkua, vähemmän aikaa korkealla lataustasolla.",
+        "disabledDescription": "Koko lataus juuri ennen lähtöaikaa.",
         "label": "Viimehetken lataus",
         "optionAll": "koko latausmäärä",
         "optionNo": "ei",
-        "summary": "{precondition} ennen"
+        "summary": "{precondition} ennen",
+        "summaryAll": "juuri ennen lähtöaikaa"
       },
       "remove": "Poista",
       "repeating": "toistetaan",
@@ -1386,6 +1443,7 @@
       "finished": "Valmistumisaika",
       "last24hEnergy": "Viimeinen 24h",
       "last7dEnergy": "Viimeinen 7 päivää",
+      "phasesMismatch": "Vaiheita käytössä enemmän kuin määritelty. Tarkista määritys.",
       "power": "Teho",
       "price": "Kustannus",
       "remaining": "Jäljellä",
@@ -1400,7 +1458,7 @@
         "descriptionDisabled": "Valitse raja mahdollistaaksesi välittömän latauksen kotiakusta.",
         "disabled": "Ei päällä",
         "label": "Akun tehostaminen",
-        "mode": "Saatavilla vain aurinkosähkö(pv)- ja min + pv-tilassa.",
+        "mode": "Saatavilla vain älykäs-tilassa.",
         "once": "Tehostus on aktiivinen tälle latausistunnolle.",
         "stateActive": "Akkutehostus päällä",
         "stateBelowLimit": "Akun varaus liian alhainen tehostukseen",
@@ -1418,7 +1476,7 @@
         "label": "Minimivirta"
       },
       "minTemp": {
-        "description": "Alle {0} akun ja sähköverkon tehoa käytetään myös aurinko/PV-tilassa ylläpitämään tätä lämpötilaa.",
+        "description": "Alle {0} akun ja sähköverkon tehoa käytetään myös älykäs-tilassa ylläpitämään tätä lämpötilaa.",
         "label": "Min. lämpötila"
       },
       "phasesConfigured": {
@@ -1436,9 +1494,12 @@
       "vehicle": "Ajoneuvo"
     },
     "mode": {
+      "boost": "Tehostus",
       "minpv": "Min+PV",
+      "normal": "Tavallinen",
       "now": "Välitön",
       "off": "Seis",
+      "on": "Päällä",
       "pv": "PV",
       "smart": "Älykäs"
     },
@@ -1459,6 +1520,7 @@
       "nextPlan": "Seuraava suunnitelma",
       "notReachableInTime": "Tavoite saavutetaan {overrun} myöhemmin.",
       "onlyInPvMode": "Lataussuunnitelma toimii ainoastaan aurinkoenergiatilassa.",
+      "onlyInSmartMode": "Lataussuunnitelmaa toteutetaan vain älykäs-tilassa.",
       "planDuration": "Latausaika",
       "planPeriodLabel": "Jakso",
       "planPeriodValue": "{start} - {end}",
@@ -1506,7 +1568,7 @@
     "vehicleSettings": {
       "connectedTo": "kytketty {0}",
       "description": "Näitä asetuksia käytetään kun ajoneuvo kytketään latauspisteeseen.",
-      "editHint": "Lisää tai muokkaa ajoneuvoja {0}:ssa.",
+      "editHint": "Ajoneuvoja voi muokata {0}:ssa.",
       "keepAsIs": "Pidä nykyisenä",
       "learnMore": "Kerro lisää.",
       "limitSoc": "Vakioraja",
@@ -1689,6 +1751,13 @@
     "vehicle": "Ajoneuvo"
   },
   "settings": {
+    "dateFormat": {
+      "auto": "vakio",
+      "dmy": "PP/KK/VVVV",
+      "label": "Päivämäärämuoto",
+      "mdy": "KK/PP/VVVV",
+      "ymd": "VVVV-KK-PP"
+    },
     "deviceInfo": "Tämän valikon asetukset vaikuttavat vain tähän laitteeseen.",
     "fullscreen": {
       "enter": "Mene kokonäyttötilaan",
@@ -1700,7 +1769,7 @@
       "value": "Salli kokeelliset ominaisuudet."
     },
     "language": {
-      "auto": "Automaattinen",
+      "auto": "vakio",
       "label": "Kieli"
     },
     "loadpoints": {
@@ -1748,7 +1817,7 @@
     "co2Label": "CO₂ päästö",
     "co2Limit": "CO₂ raja",
     "enable": "Kytke rajoitus",
-    "loadpointDescription": "Mahdollistaa välittömän lataamisen väliaikaisesti aurinkosähkötilassa (PV) kun sähkö on halpaa.",
+    "loadpointDescription": "Mahdollistaa välittömän lataamisen väliaikaisesti älykäs-tilassa kun sähkö on halpaa.",
     "modalTitle": "Älykäs lataus verkosta",
     "none": "ei mitään",
     "priceLabel": "Energian hinta",
@@ -1758,7 +1827,8 @@
     "saved": "Tallennettu."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Tauotettu aika",
+    "activeHoursLabel": "Aktiivinen aika",
+    "batteryDescription": "Purkaa kotiakkua verkkoon, kun sähkön verkkoon myyntihinta on korkea.",
     "description": "Lataus tauotetaan korkean sähkön hinnan aikana, jotta voidaan priorisoida sähkön myyntiä verkkoon.",
     "priceLabel": "Verkkoon myyntihinta",
     "priceLimit": "Verkkoon syöttö rajoite",

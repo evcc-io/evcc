@@ -8,15 +8,12 @@ import (
 	"github.com/evcc-io/evcc/hems/eebus"
 	hems "github.com/evcc-io/evcc/hems/eebus"
 	server "github.com/evcc-io/evcc/server/eebus"
-	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/require"
 )
 
 // TestControlBoxGridGuardHeartbeat covers issue #31561: a real ControlBox exposes LPC/LPP
 // only on a GridGuard entity; if eebus-go's cs/lpc validEntityTypes ever drops it again, the heartbeat subscription silently never happens and the LPC failsafe eventually trips.
 func TestControlBoxGridGuardHeartbeat(t *testing.T) {
-	util.LogLevel("error", map[string]string{"eebus": "trace"})
-
 	// tear down a server instance left over from other tests in this package
 	if inst, err := server.Instance(); err == nil {
 		inst.Shutdown()

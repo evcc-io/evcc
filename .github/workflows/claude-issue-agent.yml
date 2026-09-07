@@ -1,5 +1,7 @@
 name: Claude Issue & PR Agent
 
+# Disabled; original job conditions are retained for re-enablement.
+
 on:
   issues:
     types: [opened]
@@ -18,7 +20,7 @@ on:
 jobs:
   agent:
     name: Issue triage
-    if: github.event_name == 'issues'
+    if: ${{ false && github.event_name == 'issues' }}
     permissions:
       contents: write # create branch + push PR fix
       issues: write # add labels + comment analysis
@@ -40,6 +42,7 @@ jobs:
     # the label is read from the event payload, which predates the removal that
     # waiting-feedback.yml performs on this same event
     if: |
+      false &&
       github.event_name == 'issue_comment' &&
       !github.event.issue.pull_request &&
       github.event.comment.user.login == github.event.issue.user.login &&
@@ -91,6 +94,7 @@ jobs:
     # unless allowlisted, and bots already label their own PRs. backports are
     # skipped as well, they carry the backport label and nothing else
     if: |
+      false &&
       github.event_name == 'pull_request_target' &&
       github.event.pull_request.user.type != 'Bot' &&
       !startsWith(github.event.pull_request.head.ref, 'backport/')

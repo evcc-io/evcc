@@ -194,7 +194,7 @@
       "currentRange": "Stroom",
       "curtailLimit": "Terugleveringslimiet",
       "curtailable": "Curtailbaar",
-      "curtailed": "Teruglevering beperkt",
+      "curtailed": "Terugleverlimiet",
       "detected": "Gedetecteerd",
       "dimLimit": "Consumptie limiet",
       "dimmed": "Verbruik gelimiteerd",
@@ -325,6 +325,7 @@
       "hideAdvancedSettings": "Geavanceerde instellingen verbergen",
       "invalidFileSelected": "Ongeldig bestand geselecteerd",
       "legacy": "verouderd",
+      "moreInfo": "Meer informatie:",
       "noFileSelected": "Geen bestand geselecteerd.",
       "off": "uit",
       "on": "aan",
@@ -880,6 +881,7 @@
           "confirmationButton": "Reset & herstart",
           "confirmationText": "Deze actie zal de geselecteerde data permanent verwijderen. Controleer of je eerst de backup gedownload hebt.",
           "description": "Heeft u problemen met de configuratie en wilt u opnieuw starten? Verwijder alle data en begin opnieuw.",
+          "remote": "Toegang op afstand",
           "sessions": "Laadsessies",
           "sessionsDescription": "Verwijdert je laadsessie historie.",
           "settings": "Configuratie & instellingen",
@@ -1079,14 +1081,14 @@
       "optInSponsorship": "Sponsoring nodig."
     },
     "version": {
-      "availableLong": "nieuwe versie beschikbaar",
+      "availableLong": "update beschikbaar",
       "community": "evcc community",
       "labelEmail": "E-mail",
       "labelPhone": "Telefoon",
       "labelRelease": "Release",
       "labelVersion": "Versie",
       "labelWebsite": "Website",
-      "latestVersion": "Nieuwste versie",
+      "latestVersion": "up to date",
       "madeByCommunity": "Gemaakt door de {0}.",
       "modalCancel": "Annuleer",
       "modalDownload": "Download",
@@ -1286,15 +1288,18 @@
         "continuous": "continu",
         "continuousCo2Description": "Kiest de meest ecologische, continue reeks laadmomenten.",
         "continuousPriceDescription": "Kiest de goedkoopste, continue reeks laadmomenten.",
+        "disabledDescription": "Vereist een voorspelling van dynamische tarieven of CO₂.",
         "label": "Optimalisatie"
       },
       "planNumber": "Schema {number}",
       "precondition": {
         "description": "Schuift een deel van het opladen naar last-minute voor vertrek: warme EV-batterij, die minder lang met hoog laadpercentage gestaan heeft.",
+        "disabledDescription": "Opladen zal kort voor vertrek plaatsvinden.",
         "label": "Laat Opladen",
         "optionAll": "alles",
         "optionNo": "nee",
-        "summary": "{precondition} ervoor"
+        "summary": "{precondition} ervoor",
+        "summaryAll": "vlak voor vertrek"
       },
       "remove": "Verwijderen",
       "repeating": "herhalend",
@@ -1389,6 +1394,7 @@
       "finished": "Eindtijd",
       "last24hEnergy": "Laatste 24h",
       "last7dEnergy": "Laatste 7 dagen",
+      "phasesMismatch": "Meer fases actief dan geconfigureerd. Controleer de fase-configuratie.",
       "power": "Vermogen",
       "price": "Kosten",
       "remaining": "Resterend",
@@ -1509,7 +1515,7 @@
     "vehicleSettings": {
       "connectedTo": "verbonden met {0}",
       "description": "Deze standaardwaarden worden toegepast wanneer een voertuig wordt verbonden met een laadpunt.",
-      "editHint": "Voertuig onder {0} toevoegen of bewerken.",
+      "editHint": "Voertuigen kunnen bewerkt worden onder {0}.",
       "keepAsIs": "Laat zoals het is",
       "learnMore": "Leer meer.",
       "limitSoc": "Standaardlimiet",
@@ -1692,6 +1698,13 @@
     "vehicle": "Voertuig"
   },
   "settings": {
+    "dateFormat": {
+      "auto": "Automatisch",
+      "dmy": "DD/MM/JJJJ",
+      "label": "Datum formaat",
+      "mdy": "MM/DD/JJJJ",
+      "ymd": "JJJJ-MM-DD"
+    },
     "deviceInfo": "Instellingen die u in dit scherm maakt, gelden alleen voor dit apparaat.",
     "fullscreen": {
       "enter": "Open volledig scherm",
