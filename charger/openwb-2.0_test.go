@@ -2,7 +2,6 @@ package charger
 
 import (
 	"bytes"
-	"context"
 	"testing"
 
 	"github.com/evcc-io/evcc/server/network"
@@ -35,9 +34,7 @@ func TestOpenWB20DisplayConfig(t *testing.T) {
 			if test.display != nil {
 				config["display"] = test.display
 			}
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-			_, err := NewOpenWB20FromConfig(ctx, config)
+			_, err := NewOpenWB20FromConfig(t.Context(), config)
 			require.NoError(t, err)
 			assert.Contains(t, output.String(), test.message)
 		})
