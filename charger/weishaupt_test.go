@@ -1,10 +1,12 @@
 package charger
 
 import (
+	"context"
 	"net"
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/andig/mbserver"
 	"github.com/evcc-io/evcc/api"
@@ -14,13 +16,19 @@ import (
 
 type weishauptHandler struct {
 	mbserver.DummyHandler
-	power atomic.Uint32
-	fail  atomic.Bool
+	power      atomic.Uint32
+	reads      atomic.Uint32
+	writes     atomic.Uint32
+	fail       atomic.Bool
+	failWrites atomic.Bool
 }
 
 func (h *weishauptHandler) HandleHoldingRegisters(req *mbserver.HoldingRegistersRequest) ([]uint16, error) {
 	if req.UnitId != 1 || req.Addr != 40002 || req.Quantity != 1 {
 		return nil, mbserver.ErrIllegalDataAddress
+	}
+	if !req.IsWrite {
+		h.reads.Add(1)
 	}
 	if h.fail.Load() {
 		return nil, mbserver.ErrServerDeviceFailure
@@ -29,7 +37,11 @@ func (h *weishauptHandler) HandleHoldingRegisters(req *mbserver.HoldingRegisters
 		if req.WriteFuncCode != 6 {
 			return nil, mbserver.ErrIllegalFunction
 		}
+		if h.failWrites.Load() {
+			return nil, mbserver.ErrServerDeviceFailure
+		}
 		h.power.Store(uint32(req.Args[0]))
+		h.writes.Add(1)
 	}
 	return []uint16{uint16(h.power.Load())}, nil
 }
@@ -52,7 +64,10 @@ func weishauptTestCharger(t *testing.T) *Weishaupt {
 		weishauptURI = listener.Addr().String()
 	})
 	weishauptH.power.Store(0)
+	weishauptH.reads.Store(0)
+	weishauptH.writes.Store(0)
 	weishauptH.fail.Store(false)
+	weishauptH.failWrites.Store(false)
 
 	charger, err := NewWeishauptFromConfig(t.Context(), map[string]any{"uri": weishauptURI})
 	require.NoError(t, err)
@@ -127,6 +142,29 @@ func TestWeishauptEnabled(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestWeishauptStatus(t *testing.T) {
+	wb := weishauptTestCharger(t)
+	for _, tc := range []struct {
+		power  uint32
+		status api.ChargeStatus
+	}{
+		{0, api.StatusB},
+		{100, api.StatusB},
+		{101, api.StatusC},
+		{65535, api.StatusC},
+	} {
+		weishauptH.power.Store(tc.power)
+		status, err := wb.Status()
+		require.NoError(t, err)
+		assert.Equal(t, tc.status, status)
+	}
+
+	weishauptH.fail.Store(true)
+	status, err := wb.Status()
+	assert.Error(t, err)
+	assert.Equal(t, api.StatusNone, status)
+}
+
 func TestWeishauptPowerWrite(t *testing.T) {
 	wb := weishauptTestCharger(t)
 	require.NoError(t, wb.MaxCurrent(10))
@@ -142,4 +180,64 @@ func TestWeishauptPowerWrite(t *testing.T) {
 
 	require.NoError(t, wb.Enable(true))
 	assert.Equal(t, uint32(2300), weishauptH.power.Load())
+}
+
+func TestWeishauptHeartbeat(t *testing.T) {
+	for _, name := range []string{"positive", "initial enable", "disabled", "zero current", "read failure", "write failure"} {
+		t.Run(name, func(t *testing.T) {
+			wb := weishauptTestCharger(t)
+			want := uint32(2300)
+			if name == "initial enable" {
+				require.NoError(t, wb.Enable(true))
+				want = 1
+			} else {
+				require.NoError(t, wb.MaxCurrent(10))
+			}
+			switch name {
+			case "disabled":
+				require.NoError(t, wb.Enable(false))
+				want = 0
+			case "zero current":
+				require.NoError(t, wb.MaxCurrent(0))
+				want = 0
+			case "read failure":
+				weishauptH.fail.Store(true)
+			case "write failure":
+				weishauptH.failWrites.Store(true)
+			}
+			weishauptH.writes.Store(0)
+
+			ctx, cancel := context.WithCancel(t.Context())
+			done := make(chan struct{})
+			go func() {
+				defer close(done)
+				wb.heartbeat(ctx, 10*time.Millisecond)
+			}()
+			stop := func() {
+				cancel()
+				select {
+				case <-done:
+				case <-time.After(time.Second):
+					t.Fatal("heartbeat did not stop")
+				}
+			}
+			t.Cleanup(stop)
+
+			require.Eventually(t, func() bool { return weishauptH.reads.Load() >= 2 }, time.Second, time.Millisecond)
+			if name == "read failure" || name == "write failure" {
+				assert.Zero(t, weishauptH.writes.Load())
+				weishauptH.fail.Store(false)
+				weishauptH.failWrites.Store(false)
+			}
+			if want > 0 {
+				require.Eventually(t, func() bool { return weishauptH.writes.Load() >= 2 }, time.Second, time.Millisecond)
+			}
+			stop()
+
+			assert.Equal(t, want, weishauptH.power.Load())
+			if want == 0 {
+				assert.Zero(t, weishauptH.writes.Load())
+			}
+		})
+	}
 }
