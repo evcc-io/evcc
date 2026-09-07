@@ -766,3 +766,41 @@ func TestBuildSuggestionPlanPerSlot(t *testing.T) {
 	assert.Equal(t, api.BatteryHold.String(), plan.resolve(1)["battery:home"].Action)
 	assert.Equal(t, api.BatteryDischarge.String(), plan.resolve(2)["battery:home"].Action)
 }
+
+// TestSuggestionPlanResolvesOrdinaryDrift covers the ordinary case, not an
+// edge case: optimizerUpdateAsync only re-solves tariff.SlotDuration after
+// the *previous* solve's own completion (core/site_optimizer.go), not
+// aligned to the slot grid. A solve completing t minutes into its slot
+// leaves site.suggestions describing that slot for exactly t minutes after
+// it has already ended - every run, proportional to how late in its slot
+// the previous solve happened to land, not just in a rare short-slot case.
+func TestSuggestionPlanResolvesOrdinaryDrift(t *testing.T) {
+	// solve completes 8 minutes into a 12:00-12:15 slot - unremarkable timing,
+	// no unusually short or delayed solve involved
+	applied := time.Date(2025, 1, 1, 12, 8, 0, 0, time.UTC)
+	dt := []int{7 * 60, 900, 900} // 7min left in the current slot, then full 15min slots
+	timestamps := asTimestamps(dt, applied)
+	schedule := optimizerSchedule{timestamps: timestamps, dt: dt}
+
+	slot := schedule.activeSlot(applied)
+	assert.Equal(t, 0, slot, "slot 0 is genuinely active when the result is applied")
+
+	plan := buildSuggestionPlan(
+		[]batteryDetail{{Type: batteryTypeBattery, Name: "home", controllable: true}},
+		optimizer.OptimizationResult{
+			GridImport: []float32{0, 500, 0},
+			Batteries: []optimizer.BatteryResult{{
+				ChargingPower:    []float32{0, 0, 0},
+				DischargingPower: []float32{0, 0, 0},
+			}},
+		},
+		schedule,
+	)
+
+	// next possible solve: not until 15min after 12:08, i.e. 12:23 - 8 minutes
+	// after the 12:00 slot already ended at 12:15. A read anywhere in that
+	// 8-minute gap must resolve to slot 1, not the expired slot 0.
+	midGap := time.Date(2025, 1, 1, 12, 20, 0, 0, time.UTC)
+	assert.Equal(t, api.BatteryHold.String(), plan.suggestions(midGap)["battery:home"].Action,
+		"read mid-gap resolves to slot 1 (import, idle -> hold), not the expired slot 0 (no import -> normal)")
+}
