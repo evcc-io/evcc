@@ -24,10 +24,10 @@ params:
     service: modbus/read?address=5000&type=input&encoding=uint16&scale=100&{modbus}
   - preset: battery-params
   - name: maxchargepower
-    service: modbus/read?address=13051&type=holding&encoding=uint16&scale=1&{modbus}
+    service: modbus/read?address=5627&type=input&encoding=uint16&scale=100&{modbus}
     required: true
   - name: maxdischargepower
-    service: modbus/read?address=33047&type=holding&encoding=uint16&scale=10&{modbus}
+    service: modbus/read?address=5627&type=input&encoding=uint16&scale=100&{modbus}
     required: true
   - name: capacity
     service: modbus/read?address=5638&type=input&encoding=uint16&scale=0.01&resulttype=float&{modbus}
