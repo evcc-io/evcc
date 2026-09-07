@@ -67,11 +67,6 @@ type Site struct {
 	Meters        MetersConfig `mapstructure:"meters"`        // Meter references
 	CurtailersRef []string     `mapstructure:"curtailers"`    // Curtailment device references
 
-	// loadpoint priority sub-ordering within a tier (see api.PriorityStrategy)
-	PriorityStrategy   api.PriorityStrategy `mapstructure:"priorityStrategy"`   // Priority strategy (none, soc, deficit)
-	PriorityBasis      api.PriorityBasis    `mapstructure:"priorityBasis"`      // Priority strategy basis (percent, energy)
-	PriorityHysteresis int                  `mapstructure:"priorityHysteresis"` // Priority sub-ordering deadband (soc-% or kWh per basis, 0 = off)
-
 	// meters
 	circuit        api.Circuit                // Circuit
 	hems           api.HEMS                   // HEMS (set by configureHEMS at boot)
@@ -98,6 +93,11 @@ type Site struct {
 
 	// grid settings
 	gridExportLimit float64 // static grid export power limit in W, 0 = disabled
+
+	// loadpoint priority sub-ordering within a tier (see api.PriorityStrategy), settings only
+	priorityStrategy   api.PriorityStrategy // none, soc, deficit
+	priorityBasis      api.PriorityBasis    // percent, energy
+	priorityHysteresis int                  // deadband in soc-% or kWh per basis, 0 = off
 
 	// forecast settings
 	solarAdjusted bool // adjust solar forecast to real production data
@@ -166,11 +166,6 @@ func NewSiteFromConfig(other map[string]any) (*Site, error) {
 	// TODO remove
 	if err := util.DecodeOther(other, site); err != nil {
 		return nil, err
-	}
-
-	// PriorityStrategy/PriorityBasis are validated at decode via their TextUnmarshaler
-	if site.PriorityHysteresis < 0 || site.PriorityHysteresis > 99 {
-		return nil, fmt.Errorf("invalid priority hysteresis: %d (must be 0..99)", site.PriorityHysteresis)
 	}
 
 	// add meters from config

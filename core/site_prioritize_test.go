@@ -178,8 +178,8 @@ func newPrioritySite(strategy api.PriorityStrategy, hysteresis int, lps ...*Load
 	return &Site{
 		log:                util.NewLogger("site"),
 		loadpoints:         lps,
-		PriorityStrategy:   strategy,
-		PriorityHysteresis: hysteresis,
+		priorityStrategy:   strategy,
+		priorityHysteresis: hysteresis,
 	}
 }
 
@@ -297,7 +297,7 @@ func TestReservedPVPowerAcrossTiers(t *testing.T) {
 
 	// 99 kWh against a 40 kWh reference: a band wider than one tier
 	site := newPrioritySite(api.PrioritySoc, 99, low, high)
-	site.PriorityBasis = api.PriorityBasisEnergy
+	site.priorityBasis = api.PriorityBasisEnergy
 
 	if _, ref := site.EffectivePriorityScoring(); ref != 40 {
 		t.Fatalf("reference: want 40, got %.0f", ref)

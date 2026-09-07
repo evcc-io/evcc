@@ -389,7 +389,7 @@ func (site *Site) SetResidualPower(power float64) error {
 func (site *Site) GetPriorityStrategy() api.PriorityStrategy {
 	site.RLock()
 	defer site.RUnlock()
-	return site.PriorityStrategy
+	return site.priorityStrategy
 }
 
 // SetPriorityStrategy sets the loadpoint priority sub-ordering strategy
@@ -403,10 +403,10 @@ func (site *Site) SetPriorityStrategy(strategy api.PriorityStrategy) error {
 
 	site.log.DEBUG.Printf("set priority strategy: %s", strategy)
 
-	if site.PriorityStrategy != strategy {
-		site.PriorityStrategy = strategy
+	if site.priorityStrategy != strategy {
+		site.priorityStrategy = strategy
 		settings.SetString(keys.PriorityStrategy, strategy.String())
-		site.publish(keys.PriorityStrategy, site.PriorityStrategy)
+		site.publish(keys.PriorityStrategy, site.priorityStrategy)
 	}
 
 	return nil
@@ -416,7 +416,7 @@ func (site *Site) SetPriorityStrategy(strategy api.PriorityStrategy) error {
 func (site *Site) GetPriorityBasis() api.PriorityBasis {
 	site.RLock()
 	defer site.RUnlock()
-	return site.PriorityBasis
+	return site.priorityBasis
 }
 
 // SetPriorityBasis sets the priority strategy basis (percent, energy)
@@ -430,10 +430,10 @@ func (site *Site) SetPriorityBasis(basis api.PriorityBasis) error {
 
 	site.log.DEBUG.Printf("set priority basis: %s", basis)
 
-	if site.PriorityBasis != basis {
-		site.PriorityBasis = basis
+	if site.priorityBasis != basis {
+		site.priorityBasis = basis
 		settings.SetString(keys.PriorityBasis, basis.String())
-		site.publish(keys.PriorityBasis, site.PriorityBasis)
+		site.publish(keys.PriorityBasis, site.priorityBasis)
 	}
 
 	return nil
@@ -443,7 +443,7 @@ func (site *Site) SetPriorityBasis(basis api.PriorityBasis) error {
 func (site *Site) GetPriorityHysteresis() int {
 	site.RLock()
 	defer site.RUnlock()
-	return site.PriorityHysteresis
+	return site.priorityHysteresis
 }
 
 // SetPriorityHysteresis sets the priority sub-ordering deadband (soc-% or kWh per basis)
@@ -457,10 +457,10 @@ func (site *Site) SetPriorityHysteresis(hysteresis int) error {
 
 	site.log.DEBUG.Println("set priority hysteresis:", hysteresis)
 
-	if site.PriorityHysteresis != hysteresis {
-		site.PriorityHysteresis = hysteresis
-		settings.SetInt(keys.PriorityHysteresis, int64(site.PriorityHysteresis))
-		site.publish(keys.PriorityHysteresis, site.PriorityHysteresis)
+	if site.priorityHysteresis != hysteresis {
+		site.priorityHysteresis = hysteresis
+		settings.SetInt(keys.PriorityHysteresis, int64(site.priorityHysteresis))
+		site.publish(keys.PriorityHysteresis, site.priorityHysteresis)
 	}
 
 	return nil
