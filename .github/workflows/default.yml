@@ -151,6 +151,12 @@ jobs:
       - name: Test
         run: make test-ui
 
+      - name: Test coding-agent action
+        if: hashFiles('.github/actions/coding-agent/package-lock.json') != ''
+        run: |
+          npm ci --prefix .github/actions/coding-agent --ignore-scripts --no-audit --no-fund
+          node --test .github/actions/coding-agent/*.test.mjs
+
       - name: License
         run: make license-ui
 

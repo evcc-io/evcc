@@ -1,7 +1,7 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "azure/gpt-6-astra",
-  "small_model": "azure/gpt-6-astra",
+  "model": "azure/ci",
+  "small_model": "azure/ci",
   "enabled_providers": ["azure"],
   "share": "disabled",
   "autoupdate": false,
@@ -23,9 +23,9 @@
         "apiKey": "{env:AZURE_OPENAI_API_KEY}"
       },
       "models": {
-        "gpt-6-astra": {
-          "id": "{env:AZURE_OPENAI_DEPLOYMENT}",
-          "name": "GPT-Astra",
+        "ci": {
+          "id": "{env:ACTIONS_MODEL}",
+          "name": "Configured Azure deployment",
           "reasoning": true,
           "tool_call": true,
           "limit": { "context": 128000, "output": 16384 },

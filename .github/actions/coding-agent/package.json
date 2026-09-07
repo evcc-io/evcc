@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test guard.test.mjs"
+  },
+  "dependencies": {
+    "shell-quote": "1.10.0"
+  }
+}

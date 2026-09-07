@@ -1,0 +1,118 @@
+name: Coding agent
+description: Run Claude Code or OpenCode with a task-specific tool policy.
+inputs:
+  profile:
+    description: review, label, triage, analyze or fix.
+    required: true
+  number:
+    description: Issue or pull request number.
+    required: true
+  comment-id:
+    description: Invoking comment to read in analyze or fix mode.
+    required: false
+    default: ""
+  github-token:
+    description: Scoped GitHub token for the agent's GitHub actions.
+    required: true
+  azure-api-key:
+    description: Azure OpenAI API key, required only for a GPT model.
+    required: false
+  claude-token:
+    description: Claude Code OAuth token, required only for Claude.
+    required: false
+  prompt:
+    description: Trusted workflow instructions, not issue or PR content.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Prepare coding agent
+      id: prepare
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        ACTIONS_MODEL: ${{ vars.ACTIONS_MODEL }}
+        PROFILE: ${{ inputs.profile }}
+        NUMBER: ${{ inputs.number }}
+        COMMENT_ID: ${{ inputs.comment-id }}
+        REPOSITORY: ${{ github.repository }}
+        AGENT_PROMPT: ${{ inputs.prompt }}
+        AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
+        AZURE_OPENAI_API_KEY: ${{ inputs.azure-api-key }}
+        CLAUDE_CODE_OAUTH_TOKEN: ${{ inputs.claude-token }}
+      run: node "$ACTION_PATH/prepare.mjs"
+
+    - name: Validate triggering actor
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v7
+      env:
+        PROFILE: ${{ inputs.profile }}
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          let type;
+          try {
+            const { data } = await github.rest.users.getByUsername({ username: context.actor });
+            type = data.type;
+          } catch (error) {
+            if (error.status !== 404) throw error;
+          }
+          const dependabot = process.env.PROFILE === 'review'
+            && /^dependabot(?:\[bot\])?$/i.test(context.actor);
+          if (type !== 'User' && !dependabot) {
+            core.setFailed('Only human actors may invoke this profile; Dependabot is allowed for reviews.');
+          }
+
+    - name: Install command guard
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+      run: npm ci --prefix "$ACTION_PATH" --ignore-scripts --no-audit --no-fund
+
+    - name: Run Claude Code
+      if: steps.prepare.outputs.agent == 'claude'
+      # Keep the existing pin until the sandbox regression is resolved.
+      uses: anthropics/claude-code-action@a874e9ecd7bb36efdad65429c6b35815f5a08f10 # v1 @ 2.1.215
+      env:
+        GH_PAGER: cat
+        PAGER: cat
+        GIT_PAGER: cat
+        GH_FORCE_TTY: ""
+      with:
+        claude_code_oauth_token: ${{ inputs.claude-token }}
+        github_token: ${{ inputs.github-token }}
+        allowed_non_write_users: "*"
+        allowed_bots: ${{ inputs.profile == 'review' && 'dependabot[bot]' || '' }}
+        claude_args: ${{ steps.prepare.outputs.claude_args }}
+        settings: ${{ steps.prepare.outputs.claude_settings }}
+        prompt: ${{ steps.prepare.outputs.prompt }}
+
+    - name: Install OpenCode
+      if: steps.prepare.outputs.agent == 'opencode'
+      shell: bash
+      run: npm install --global opencode-ai@1.18.29
+
+    - name: Run OpenCode
+      if: steps.prepare.outputs.agent == 'opencode'
+      shell: bash
+      env:
+        AZURE_OPENAI_ENDPOINT: ${{ steps.prepare.outputs.endpoint }}
+        ACTIONS_MODEL: ${{ steps.prepare.outputs.model }}
+        AZURE_OPENAI_API_KEY: ${{ inputs.azure-api-key }}
+        GH_TOKEN: ${{ inputs.github-token }}
+        AGENT_PROMPT: ${{ steps.prepare.outputs.prompt }}
+        OPENCODE_CONFIG: ${{ github.action_path }}/opencode.json
+        OPENCODE_PERMISSION: ${{ steps.prepare.outputs.permission }}
+        OPENCODE_DISABLE_PROJECT_CONFIG: "true"
+        OPENCODE_DISABLE_DEFAULT_PLUGINS: "true"
+        OPENCODE_DISABLE_CLAUDE_CODE: "true"
+        OPENCODE_DISABLE_EXTERNAL_SKILLS: "true"
+        XDG_CONFIG_HOME: ${{ runner.temp }}/coding-agent/config
+        XDG_DATA_HOME: ${{ runner.temp }}/coding-agent/data
+        XDG_CACHE_HOME: ${{ runner.temp }}/coding-agent/cache
+      run: |
+        git config user.name 'github-actions[bot]'
+        git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+        opencode run --agent ci --format json "$AGENT_PROMPT" | tee "$RUNNER_TEMP/coding-agent-events.jsonl"
+        # A completed process alone does not prove that the model finished its turn.
+        jq -s -e 'all(.type != "error") and any(.type == "step_finish" and .part.reason == "stop")' \
+          "$RUNNER_TEMP/coding-agent-events.jsonl" > /dev/null
