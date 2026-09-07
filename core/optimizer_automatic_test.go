@@ -453,13 +453,13 @@ func TestBatterySuggestionDebounceFiltersRealDegenerateSolve(t *testing.T) {
 	// slot 0: dt=1s, charging_power=0.0068433Wh, discharging_power=0, no grid flow
 	slot0 := currentSlotSuggestion(detail,
 		optimizer.BatteryResult{ChargingPower: []float32{0.0068433}, DischargingPower: []float32{0}},
-		0, 0, 1.0/3600)
+		0, 0, 0, 1.0/3600)
 	assert.Equal(t, api.BatteryNormal.String(), slot0.Action, "the captured degenerate slot alone does flip to normal")
 
 	// slot 1: dt=900s, both powers 0, grid_import=11.513563Wh
 	slot1 := currentSlotSuggestion(detail,
 		optimizer.BatteryResult{ChargingPower: []float32{0}, DischargingPower: []float32{0}},
-		11.513563, 0, 900.0/3600)
+		0, 11.513563, 0, 900.0/3600)
 	assert.Equal(t, api.BatteryHold.String(), slot1.Action, "matches what was actually observed live")
 
 	site := &Site{log: util.NewLogger("foo")}
