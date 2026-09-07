@@ -37,16 +37,20 @@ type Solax struct {
 	log        *util.Logger
 	conn       *modbus.Connection
 	enabled    bool
+	maxCurrent float64
 	isLegacyHw bool
 }
 
 const (
+	// register map per "X1/X3-HAC EV Charger Modbus TCP/RTU protocol V1.0.0"
+
 	// holding (FC 0x03, 0x06, 0x10)
-	solaxRegSerialNumber   = 0x0600 // 7x string
-	solaxRegDeviceMode     = 0x060D // uint16
-	solaxRegCommandControl = 0x0627 // uint16
-	solaxRegMaxCurrent     = 0x0628 // uint16 0.01A
-	solaxRegPhaseSwitch    = 0xA105 // uint16
+	solaxRegSerialNumber     = 0x0600 // 7x string
+	solaxRegDeviceMode       = 0x060D // uint16
+	solaxRegCommandControl   = 0x0627 // uint16
+	solaxRegMaxCurrent       = 0x0628 // uint16 0.01A, spec: adjust_charge_current
+	solaxRegMaxChargeCurrent = 0x0668 // uint16 0.01A, spec: MaxChargeCurrent, the device-side ceiling
+	solaxRegPhaseSwitch      = 0xA105 // uint16
 
 	// input (FC 0x04)
 	solaxRegVoltages           = 0x0000 // 3x uint16 0.01V
@@ -212,6 +216,25 @@ func (wb *Solax) MaxCurrentMillis(current float64) error {
 	return err
 }
 
+var _ api.CurrentLimiter = (*Solax)(nil)
+
+// GetMinMaxCurrent implements the api.CurrentLimiter interface
+func (wb *Solax) GetMinMaxCurrent() (float64, float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(solaxRegMaxChargeCurrent, 1)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	// the device-side ceiling is set in the Solax app, not by evcc; log it on change
+	// so a loadpoint silently capped below its configured maximum is traceable
+	if max := float64(encoding.Uint16(b)) / 100; max != wb.maxCurrent {
+		wb.maxCurrent = max
+		wb.log.INFO.Printf("device max charge current: %.1fA", max)
+	}
+
+	return 6, wb.maxCurrent, nil
+}
+
 var _ api.Meter = (*Solax)(nil)
 
 // CurrentPower implements the api.Meter interface
@@ -323,6 +346,12 @@ func (wb *Solax) Diagnose() {
 		default:
 			fmt.Printf("\tLock State:\tUnknown (%d)\n", state)
 		}
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(solaxRegMaxCurrent, 1); err == nil {
+		fmt.Printf("\tAdjust Charge Current:\t%.2fA\n", float64(encoding.Uint16(b))/100)
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(solaxRegMaxChargeCurrent, 1); err == nil {
+		fmt.Printf("\tMax Charge Current:\t%.2fA\n", float64(encoding.Uint16(b))/100)
 	}
 	if b, err := wb.conn.ReadHoldingRegisters(solaxRegDeviceMode, 1); err == nil {
 		switch state := encoding.Uint16(b); state {

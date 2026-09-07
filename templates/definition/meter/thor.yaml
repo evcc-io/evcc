@@ -12,4 +12,5 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/data.jsn
+    insecure: true
     jq: if .power_act == null then 0 else .power_act end + if .power_ac9 == null then 0 else .power_ac9 end

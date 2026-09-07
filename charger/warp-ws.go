@@ -235,7 +235,11 @@ func parseURI(uri string) (string, error) {
 		return "", err
 	}
 
-	u.Scheme = "ws"
+	if u.Scheme == "https" {
+		u.Scheme = "wss"
+	} else {
+		u.Scheme = "ws"
+	}
 	u.Path = path.Join(u.Path, "/ws")
 
 	return u.String(), nil
@@ -455,14 +459,20 @@ func (w *WarpWS) voltages() (float64, float64, float64, error) {
 	return w.meter.Voltages[0], w.meter.Voltages[1], w.meter.Voltages[2], nil
 }
 
-// identify prefers the vehicle mac read via ISO 15118 over the RFID tag
-func (w *WarpWS) identify() (string, error) {
+// identify reports the vehicle mac read via ISO 15118 before the RFID tag
+func (w *WarpWS) identify() ([]string, error) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
+
+	var ids []string
 	if w.evState != nil && w.evState.Mac != "" {
-		return w.evState.Mac, nil
+		ids = append(ids, w.evState.Mac)
 	}
-	return w.chargeTracker.AuthorizationInfo.TagId, nil
+	if tag := w.chargeTracker.AuthorizationInfo.TagId; tag != "" {
+		ids = append(ids, tag)
+	}
+
+	return ids, nil
 }
 
 // soc implements the api.Battery interface

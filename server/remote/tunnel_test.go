@@ -39,9 +39,11 @@ func serveSession(w http.ResponseWriter, r *http.Request, sessions chan<- *yamux
 // session to the sessions channel. Simulates the cloud proxy.
 func tunnelTestServer(t *testing.T, sessions chan<- *yamux.Session) *httptest.Server {
 	t.Helper()
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		serveSession(w, r, sessions)
 	}))
+	srv.Start()
+	return srv
 }
 
 // requireReachable opens a stream through the server session and issues an
@@ -78,7 +80,6 @@ func TestTunnelReconnect(t *testing.T) {
 
 	sessions := make(chan *yamux.Session, 4)
 	srv := tunnelTestServer(t, sessions)
-	defer srv.Close()
 
 	wsURL := "ws" + strings.TrimPrefix(srv.URL, "http")
 
@@ -104,11 +105,11 @@ func TestTunnelReconnect(t *testing.T) {
 // the proxy rejects credentials (401/403); a new token requires a restart.
 func TestTunnelRejectedCredentialsStops(t *testing.T) {
 	var attempts atomic.Int32
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		attempts.Add(1)
 		w.WriteHeader(http.StatusUnauthorized)
 	}))
-	defer srv.Close()
+	srv.Start()
 
 	wsURL := "ws" + strings.TrimPrefix(srv.URL, "http")
 
@@ -138,7 +139,7 @@ func TestTunnelReconnectsAfterTransientError(t *testing.T) {
 
 	var attempts atomic.Int32
 	sessions := make(chan *yamux.Session, 4)
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// first attempt fails transiently, later ones succeed
 		if attempts.Add(1) == 1 {
 			w.WriteHeader(http.StatusServiceUnavailable)
@@ -146,7 +147,7 @@ func TestTunnelReconnectsAfterTransientError(t *testing.T) {
 		}
 		serveSession(w, r, sessions)
 	}))
-	defer srv.Close()
+	srv.Start()
 
 	wsURL := "ws" + strings.TrimPrefix(srv.URL, "http")
 

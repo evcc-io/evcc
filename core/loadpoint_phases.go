@@ -1,6 +1,9 @@
 package core
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 )
@@ -108,7 +111,8 @@ func (lp *Loadpoint) MinActivePhases() int {
 
 // minActivePhases returns the minimum number of active phases for the loadpoint.
 func (lp *Loadpoint) minActivePhases() int {
-	if lp.hasPhaseSwitching() || lp.phasesConfigured == 1 {
+	// configured phases are both minimum and maximum, only automatic scales down to 1p
+	if lp.hasPhaseSwitching() && lp.phasesConfigured == 0 {
 		return 1
 	}
 
@@ -160,4 +164,43 @@ func (lp *Loadpoint) getChargerPhysicalPhases() int {
 
 func (lp *Loadpoint) hasPhaseSwitching() bool {
 	return api.HasCap[api.PhaseSwitcher](lp.charger)
+}
+
+// syncChargerPhases synchronizes the assumed phase state with the charger's actual state.
+// Chargers may reconfigure phases internally, i.e. when the vehicle is (dis)connected.
+func (lp *Loadpoint) syncChargerPhases() error {
+	phases := lp.GetPhases()
+	if !lp.hasPhaseSwitching() || phases <= 0 {
+		return nil
+	}
+
+	if pg, ok := api.Cap[api.PhaseGetter](lp.charger); ok {
+		chargerPhases, err := pg.GetPhases()
+		if err != nil {
+			if errors.Is(err, api.ErrNotAvailable) {
+				return nil
+			}
+			return fmt.Errorf("charger get phases: %w", err)
+		}
+
+		if chargerPhases > 0 && chargerPhases != phases {
+			lp.log.WARN.Printf("charger logic error: phases mismatch (got %d, expected %d)", chargerPhases, phases)
+			lp.SetPhases(chargerPhases)
+		}
+
+		return nil
+	}
+
+	// use measured phase currents for active phases as fallback if charger does not provide phases
+	chargerPhases := lp.GetMeasuredPhases()
+	if chargerPhases == 2 {
+		chargerPhases = 3
+	}
+
+	if chargerPhases > phases {
+		lp.log.WARN.Printf("charger logic error: phases mismatch (got %d measured, expected %d)", chargerPhases, phases)
+		lp.SetPhases(chargerPhases)
+	}
+
+	return nil
 }

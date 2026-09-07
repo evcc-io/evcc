@@ -3,7 +3,7 @@
 		name="modbusproxy"
 		:title="$t('config.modbusproxy.title')"
 		:description="$t('config.modbusproxy.description')"
-		docs="/docs/reference/configuration/modbusproxy"
+		docs="/reference/configuration/modbusproxy"
 		endpoint="/config/modbusproxy"
 		state-key="modbusproxy"
 		store-values-in-array

@@ -117,7 +117,6 @@ export default defineComponent({
 		bottomTabBarProps() {
 			return {
 				installed: window.evcc?.version,
-				commit: window.evcc?.commit,
 				customBrand: this.custom.brand,
 				...this.collectProps(BottomTabBar, this.state),
 			};

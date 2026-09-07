@@ -31,7 +31,7 @@ params:
     default: 30s
 render: |
   type: custom
-  {{- include "vehicle-common" . }}
+  {{- include "common" . }}
   chargeEnable:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/command/{{`{{ if .chargeenable }}charge_start{{ else }}charge_stop{{ end }}`}}
@@ -70,6 +70,12 @@ render: |
     scale: 1.60934
     timeout: {{ .timeout }}
     cache: 1s
+  finishtime:
+    source: http
+    uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
+    jq: 'if (.response.response.charge_state.minutes_to_full_charge > 0) then (now + (.response.response.charge_state.minutes_to_full_charge * 60) | strftime("%Y-%m-%dT%H:%M:%SZ")) else "" end'
+    timeout: {{ .timeout }}
+    cache: 1s
   status:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
@@ -80,4 +86,4 @@ render: |
       else "A" end)
     timeout: {{ .timeout }}
     cache: 1s
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}

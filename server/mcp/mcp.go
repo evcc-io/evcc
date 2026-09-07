@@ -46,6 +46,9 @@ func NewHandler(host http.Handler) (http.Handler, error) {
 			"loadpoints",
 			"vehicles",
 			"battery",
+			"state",
+			"sessions",
+			"experimental",
 		},
 		RequestHandler: requestHandler(log, host),
 	})

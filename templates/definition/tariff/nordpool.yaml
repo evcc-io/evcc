@@ -1,4 +1,5 @@
 template: nordpool
+link: https://www.nordpoolgroup.com/en/services/power-market-data-services/day-ahead-market-data/
 products:
   - brand: Nordpool
     description:
@@ -46,8 +47,8 @@ params:
   - preset: tariff-features
 render: |
   type: custom
-  {{ include "tariff-base" . }}
-  {{ include "tariff-features" . }}
+  {{ include "base" . }}
+  {{ include "features" . }}
   forecast:
     source: go
     script: |

@@ -202,7 +202,7 @@ func NewStatusMap(a, b, c string) (StatusMap, error) {
 		{api.StatusB, b},
 		{api.StatusC, c},
 	} {
-		for _, s := range strings.Split(e.states, ",") {
+		for s := range strings.SplitSeq(e.states, ",") {
 			if s = strings.ToLower(strings.TrimSpace(s)); s != "" {
 				if status, ok := res[s]; ok {
 					return nil, fmt.Errorf("status %s: duplicate state '%s', already mapped to %s", e.status, s, status)

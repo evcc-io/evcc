@@ -63,6 +63,9 @@ render: |
         address: 3916 # L1 energy forward
         type: input
         decode: uint32
+      block: # 3910-3921
+        register: 3910
+        count: 12
       scale: 0.01
     - source: modbus
       uri: {{ joinHostPort .host .port }}
@@ -71,6 +74,9 @@ render: |
         address: 3918 # L2 energy forward
         type: input
         decode: uint32
+      block: # 3910-3921
+        register: 3910
+        count: 12
       scale: 0.01
     - source: modbus
       uri: {{ joinHostPort .host .port }}
@@ -79,6 +85,9 @@ render: |
         address: 3920 # L3 energy forward
         type: input
         decode: uint32
+      block: # 3910-3921
+        register: 3910
+        count: 12
       scale: 0.01
   currents:
     - source: modbus
@@ -88,6 +97,9 @@ render: |
         address: 3911 # L1 current
         type: input
         decode: int16
+      block: # 3910-3921
+        register: 3910
+        count: 12
       scale: 0.1
     - source: modbus
       uri: {{ joinHostPort .host .port }}
@@ -96,6 +108,9 @@ render: |
         address: 3913 # L2 current
         type: input
         decode: int16
+      block: # 3910-3921
+        register: 3910
+        count: 12
       scale: 0.1
     - source: modbus
       uri: {{ joinHostPort .host .port }}
@@ -104,6 +119,9 @@ render: |
         address: 3915 # L3 current
         type: input
         decode: int16
+      block: # 3910-3921
+        register: 3910
+        count: 12
       scale: 0.1
   voltages:
     - source: modbus
@@ -113,6 +131,9 @@ render: |
         address: 3910 # L1 voltage
         type: input
         decode: uint16
+      block: # 3910-3921
+        register: 3910
+        count: 12
       scale: 0.1
     - source: modbus
       uri: {{ joinHostPort .host .port }}
@@ -121,6 +142,9 @@ render: |
         address: 3912 # L2 voltage
         type: input
         decode: uint16
+      block: # 3910-3921
+        register: 3910
+        count: 12
       scale: 0.1
     - source: modbus
       uri: {{ joinHostPort .host .port }}
@@ -129,4 +153,7 @@ render: |
         address: 3914 # L3 voltage
         type: input
         decode: uint16
+      block: # 3910-3921
+        register: 3910
+        count: 12
       scale: 0.1

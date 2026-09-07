@@ -599,17 +599,17 @@ func (wb *FoxESSEVC) Voltages() (float64, float64, float64, error) {
 var _ api.Identifier = (*FoxESSEVC)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *FoxESSEVC) Identify() (string, error) {
+func (wb *FoxESSEVC) Identify() ([]string, error) {
 	id, err := wb.readUint32(foxRegRFID)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if id == 0 {
-		return "", nil
+		return nil, nil
 	}
 
-	return fmt.Sprintf("%08X", id), nil
+	return []string{fmt.Sprintf("%08X", id)}, nil
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface

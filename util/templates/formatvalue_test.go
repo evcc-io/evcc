@@ -31,7 +31,7 @@ func TestRequiredLargeNumber(t *testing.T) {
 		Params: []Param{{Name: "serial", Type: TypeInt, Required: true}},
 	}
 
-	_, _, err := tmpl.RenderResult(RenderModeUnitTest, map[string]any{
+	_, _, err := tmpl.RenderResult(Meter, RenderModeUnitTest, map[string]any{
 		"serial": float64(3493601102),
 	})
 	assert.NoError(t, err, "large serial supplied as JSON number")

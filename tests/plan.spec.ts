@@ -74,7 +74,7 @@ test.describe("basic functionality", async () => {
     await expect(lp1.getByText("Loadpoint", { exact: true })).toBeVisible();
 
     await lp1.getByTestId("limit-soc").getByRole("combobox").selectOption("90%");
-    await lp1.getByRole("button", { name: "Solar", exact: true }).click();
+    await lp1.getByRole("button", { name: "Smart", exact: true }).click();
     await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
 
     await page.getByTestId("static-plan-day").selectOption({ index: 1 });
@@ -687,9 +687,8 @@ test.describe("repeating", async () => {
   });
 });
 
-// add test for precondition, start with basic.evcc.yaml and verify that precondition toggle element is not visible. make dedicated describe block
 test.describe("plan strategy", async () => {
-  test("only if dynamic tariff exists", async ({ page }) => {
+  test("no dynamic tariff: options disabled", async ({ page }) => {
     await restart(CONFIG_NO_TARIFF);
     await page.goto("/");
     const lp1 = await page.getByTestId("loadpoint").first();
@@ -697,11 +696,14 @@ test.describe("plan strategy", async () => {
     const modal = page.getByTestId("charging-plan-modal");
     await expect(modal.getByTestId("static-plan-active")).toBeVisible();
 
-    // Strategy line shows informational note only, not clickable
-    await expect(modal.getByTestId("plan-strategy")).toContainText("just in time for departure");
-    await expect(modal.getByTestId("plan-strategy").getByRole("button")).toHaveCount(0);
-    await expect(modal.getByLabel("Optimization")).not.toBeVisible();
-    await expect(modal.getByLabel("Late Charging")).not.toBeVisible();
+    const strategy = modal.getByTestId("plan-strategy");
+    await expect(strategy).toContainText("right before departure");
+    await strategy.getByRole("button").click();
+    await expect(modal.getByLabel("Optimization")).toBeDisabled();
+    await expect(modal.getByLabel("Optimization")).toHaveText("none");
+    await expect(modal.getByLabel("Late Charging")).toBeDisabled();
+    await expect(modal.getByLabel("Late Charging")).toHaveText("everything");
+    await expect(strategy).toContainText("Requires a dynamic tariff or CO₂ forecast.");
   });
 
   test("co2 tariff: cleanest instead of cheapest", async ({ page }) => {
@@ -726,6 +728,24 @@ test.describe("plan strategy", async () => {
 
     await optimization.selectOption("continuous");
     await expect(modal.getByTestId("plan-strategy")).toContainText("cleanest uninterrupted series");
+  });
+
+  test("late charging everything: optimization disabled", async ({ page }) => {
+    await page.goto("/");
+    const lp1 = await page.getByTestId("loadpoint").first();
+    await lp1.getByTestId("charging-plan").getByRole("button", { name: "none" }).click();
+    const modal = page.getByTestId("charging-plan-modal");
+    const strategy = modal.getByTestId("plan-strategy");
+    await strategy.getByRole("button", { name: "cheapest" }).click();
+
+    await modal.getByLabel("Late Charging").selectOption("everything");
+    await expect(modal.getByLabel("Optimization")).toBeDisabled();
+    await expect(modal.getByLabel("Optimization")).toHaveText("none");
+    await expect(strategy).toContainText("All charging happens right before departure.");
+
+    await modal.getByLabel("Late Charging").selectOption("no");
+    await expect(modal.getByLabel("Optimization")).toBeEnabled();
+    await expect(strategy).toContainText("cheapest slots");
   });
 
   test("visible and functional on mobile", async ({ page }) => {

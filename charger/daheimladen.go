@@ -318,12 +318,14 @@ func (wb *DaheimLaden) Voltages() (float64, float64, float64, error) {
 var _ api.Identifier = (*DaheimLaden)(nil)
 
 // Identify implements the api.Identifier interface. Only usable with PRO
-func (wb *DaheimLaden) Identify() (string, error) {
+func (wb *DaheimLaden) Identify() ([]string, error) {
 	b, err := wb.conn.ReadHoldingRegisters(dlRegCardId, 16)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return utf16BEBytesAsString(b)
+
+	id, err := utf16BEBytesAsString(b)
+	return []string{id}, err
 }
 
 // phases1p3p implements the api.PhaseSwitcher interface
@@ -361,27 +363,37 @@ func (wb *DaheimLaden) getPhases() (int, error) {
 }
 
 func (wb *DaheimLaden) checkStation() error {
-	b, err := wb.conn.ReadHoldingRegisters(dlRegEvseMaxCurrent, 22)
-	if err != nil {
-		return api.ErrSponsorRequired
-	}
-	// station id starts (dlRegStationId-dlRegEvseMaxCurrent) registers into the block
-	s, err := utf16BEBytesAsString(b[2*(dlRegStationId-dlRegEvseMaxCurrent):])
-	if err != nil || s == "" {
-		return api.ErrSponsorRequired
-	}
+	// map may still be zero right after the wake-up call- poll briefly until populated
+	for range 5 {
+		b, err := wb.conn.ReadHoldingRegisters(dlRegEvseMaxCurrent, 22)
+		if err != nil {
+			return err
+		}
 
-	for _, r := range s {
-		if r < 0x20 || r > 0x7e {
+		s, err := utf16BEBytesAsString(b[2*(dlRegStationId-dlRegEvseMaxCurrent):])
+		if err != nil {
+			return err
+		}
+
+		if len(s) == 0 {
+			time.Sleep(200 * time.Millisecond)
+			continue
+		}
+
+		if strings.Contains(strings.ToLower(s), "heidelbridge") {
 			return api.ErrSponsorRequired
 		}
+
+		for _, r := range s {
+			if r < 0x20 || r > 0x7e {
+				return api.ErrSponsorRequired
+			}
+		}
+
+		return nil
 	}
 
-	if strings.Contains(strings.ToLower(s), "heidelbridge") {
-		return api.ErrSponsorRequired
-	}
-
-	return nil
+	return api.ErrSponsorRequired
 }
 
 var _ api.Diagnosis = (*DaheimLaden)(nil)

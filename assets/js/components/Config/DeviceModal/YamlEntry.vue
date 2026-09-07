@@ -34,7 +34,7 @@ export default defineComponent({
 	},
 	computed: {
 		docsLink() {
-			return `${docsPrefix()}/docs/devices/plugins#${this.type}`;
+			return `${docsPrefix()}/user-defined-devices#${this.type}`;
 		},
 	},
 	watch: {

@@ -6,7 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core/keys"
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db/settings"
 )
 
 // updateOcppForwarderHandler persists the OCPP forwarder rules, restoring masked

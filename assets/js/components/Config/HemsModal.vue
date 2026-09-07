@@ -208,7 +208,7 @@ export default defineComponent({
 			return (this as any).fmtTimeAgo(ms - Date.now());
 		},
 		docsLink(): string {
-			return `${docsPrefix()}/docs/external-limit`;
+			return `${docsPrefix()}/external-limit`;
 		},
 		experimental(): boolean {
 			return store.state?.experimental === true;

@@ -19,7 +19,6 @@
 				:auth-disabled="authDisabled"
 				:evopt="evopt"
 				:installed="installed"
-				:commit="commit"
 				:available-version="availableVersion"
 				:custom-brand="customBrand"
 				@close="open = false"
@@ -51,7 +50,6 @@ export default defineComponent({
 		authDisabled: Boolean,
 		evopt: { type: Object as PropType<EvOpt>, required: false },
 		installed: String,
-		commit: String,
 		availableVersion: String,
 		customBrand: String,
 	},

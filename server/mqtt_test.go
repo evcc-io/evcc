@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"math"
 	"slices"
 	"strconv"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/core/types"
+	"github.com/evcc-io/evcc/util"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -97,6 +99,26 @@ func (suite *mqttSuite) TestSlice() {
 	suite.Equal([]string{"2", "10", "20"}, suite.payloads, "payloads")
 }
 
+type jsonSeries [][]float64
+
+func (s jsonSeries) MarshalBytes() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+// a sharded struct publishes one message per key, BytesMarshaler fields as json
+func (suite *mqttSuite) TestSharderBytesMarshaler() {
+	p := struct {
+		Foo jsonSeries `json:"foo,omitempty"`
+		Bar jsonSeries `json:"bar,omitempty"`
+	}{
+		Foo: jsonSeries{{1, 2, 3}, {4, 5, 6}},
+	}
+
+	suite.publish("test", false, util.NewSharder("test", p))
+	suite.Equal([]string{"test/foo", "test/bar"}, suite.topics, "topics")
+	suite.Equal([]string{"[[1,2,3],[4,5,6]]", ""}, suite.payloads, "payloads")
+}
+
 func (suite *mqttSuite) TestNilInterface() {
 	var ptr *time.Time
 	suite.publish("test", false, ptr)
@@ -130,7 +152,7 @@ func (suite *mqttSuite) TestMeasurement() {
 
 func (suite *mqttSuite) TestBatteryState() {
 	topics := lo.Map([]string{
-		"power", "energy", "capacity", "soc",
+		"power", "energy", "returnEnergy", "capacity", "soc",
 		"devices", "devices/1/name", "devices/1/title", "devices/1/icon", "devices/1/power", "devices/1/energy", "devices/1/returnEnergy", "devices/1/powers", "devices/1/currents", "devices/1/excessDCPower", "devices/1/capacity", "devices/1/soc", "devices/1/controllable", "devices/1/suggestion",
 		"forecast",
 	}, func(s string, _ int) string {
@@ -147,5 +169,5 @@ func (suite *mqttSuite) TestBatteryState() {
 	})
 
 	suite.Equal(topics, suite.topics, "topics")
-	suite.Equal([]string{"2", "", "", "20", "1", "", "", "", "1", "", "", "", "", "", "", "10", "", "", ""}, suite.payloads, "payloads")
+	suite.Equal([]string{"2", "", "", "", "20", "1", "", "", "", "1", "", "", "", "", "", "", "10", "", "", ""}, suite.payloads, "payloads")
 }

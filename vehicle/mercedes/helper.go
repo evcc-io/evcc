@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
-
-	"github.com/google/uuid"
+	"uuid"
 )
 
 // Helper provides utility primitives

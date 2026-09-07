@@ -23,6 +23,7 @@ linters:
   settings:
     modernize:
       disable:
+        - embedlit
         - stringsbuilder
     staticcheck:
       checks:

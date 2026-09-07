@@ -8,12 +8,12 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"uuid"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/polestar/pb"
-	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -119,7 +119,7 @@ func (v *GrpcAPI) Battery(ctx context.Context, vin string) (*pb.Battery, error) 
 	ctx = metadata.AppendToOutgoingContext(ctx, "vin", vin)
 
 	res, err := v.client.GetLatestBattery(ctx, &pb.GetBatteryRequest{
-		Id:  uuid.NewString(),
+		Id:  uuid.New().String(),
 		Vin: vin,
 	})
 	if err != nil {

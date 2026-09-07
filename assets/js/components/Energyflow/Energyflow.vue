@@ -656,7 +656,7 @@ export default defineComponent({
 	height: 0;
 	opacity: 0;
 	transform: scale(0.98);
-	overflow: visible;
+	overflow: hidden;
 	transition-property: height, opacity, transform;
 	transition-duration: 0;
 	transition-timing-function: cubic-bezier(0.5, 0.5, 0.5, 1.15);

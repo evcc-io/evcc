@@ -242,11 +242,11 @@ func (wb *CfosPowerBrain) WakeUp() error {
 var _ api.Identifier = (*CfosPowerBrain)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *CfosPowerBrain) Identify() (string, error) {
+func (wb *CfosPowerBrain) Identify() ([]string, error) {
 	b, err := wb.conn.ReadHoldingRegisters(cfosRegLastRfid, 15)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return bytesAsString(b), nil
+	return []string{bytesAsString(b)}, nil
 }

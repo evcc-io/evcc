@@ -3,7 +3,9 @@
 #
 # Feature releases (patch level 0) must be tagged on master. Bugfix releases may
 # be tagged on any branch so an older release line can be serviced without
-# shipping everything that landed on master since.
+# shipping everything that landed on master since. Either way the tag must build
+# on the previous release of its own line, so a tag pushed from the wrong branch
+# cannot ship an older commit under a newer version.
 #
 # Prints `latest=<true|false>` for consumption as a GitHub step output. Only the
 # newest release may move the `latest` pointers (docker tag, homebrew formula,
@@ -27,13 +29,43 @@ validate() {
 		return 1
 	fi
 
+	local line="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
+
 	if [[ ${BASH_REMATCH[3]} == 0 ]] && ! git merge-base --is-ancestor "$tag" "$MASTER_REF"; then
 		echo "::error::feature release '$tag' must be tagged on master" >&2
 		return 1
 	fi
 
+	local releases
+	releases=$(git tag --list | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort --version-sort) || true
+
+	# a release must build on its own line. a tag pushed from the wrong branch
+	# would otherwise ship an older commit under a newer version.
+	local earlier
+	# awk must not exit early here, that would SIGPIPE the grep it reads from
+	earlier=$(printf '%s\n' "$releases" | grep -E "^${line//./\\.}\." | awk -v t="$tag" '$0 == t { seen = 1 } !seen')
+
+	if [[ -n $earlier ]]; then
+		# the newest predecessor the tag really builds on. a tag from the wrong
+		# branch has none, a repeated one has it at the very same commit.
+		local prev
+		prev=$(while read -r rel; do
+			if git merge-base --is-ancestor "$rel" "$tag"; then echo "$rel"; fi
+		done <<<"$earlier" | tail -1)
+
+		if [[ -z $prev ]]; then
+			echo "::error::release '$tag' does not build on $(tail -1 <<<"$earlier"), it was tagged on the wrong branch" >&2
+			return 1
+		fi
+
+		if [[ $(git rev-parse "$tag^{commit}") == $(git rev-parse "$prev^{commit}") ]]; then
+			echo "::error::release '$tag' points at the same commit as '$prev'" >&2
+			return 1
+		fi
+	fi
+
 	local newest
-	newest=$(git tag --list | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort --version-sort | tail -1) || true
+	newest=$(printf '%s\n' "$releases" | tail -1)
 
 	if [[ $newest == "$tag" ]]; then
 		echo "latest=true"
@@ -55,10 +87,12 @@ self_test() {
 	git checkout --quiet -b fix
 	commit two
 	git tag 0.1.1 # bugfix release off master
+	git tag 0.1.2 # same commit as its predecessor
 	git tag 0.2.0 # feature release off master
 	git checkout --quiet master
 	commit three
 	git tag 0.3.0
+	git tag 0.2.1 # tagged on the wrong branch, does not contain 0.2.0
 	git tag 9.9.9-fork # tags from forks must not count as a release
 
 	MASTER_REF=master
@@ -76,6 +110,8 @@ self_test() {
 	expect 0.1.0 latest=false # feature release on master, superseded
 	expect 0.1.1 latest=false # bugfix release off master, older line
 	expect 0.3.0 latest=true  # newest release
+	expect 0.1.2 FAIL         # same commit as its predecessor
+	expect 0.2.1 FAIL         # tagged on the wrong branch
 	expect 0.2.0 FAIL         # feature release not on master
 	expect 0.1 FAIL           # not MAJOR.MINOR.PATCH
 	expect v0.1.0 FAIL        # no v prefix allowed

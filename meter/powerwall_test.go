@@ -70,7 +70,36 @@ func TestPowerWallConfigDeprecatedParams(t *testing.T) {
 	decodePowerWallConfig(t, map[string]any{
 		"usage": "battery", "password": "secret",
 		"refreshToken": "token", "siteId": 123,
+		"maxsoc": 95, "maxchargepower": 4600, "maxdischargepower": 4600,
 	})
+}
+
+// battery control must fall back to the default reserve, not to zero
+func TestPowerWallFleetReserve(t *testing.T) {
+	cc := decodePowerWallConfig(t, map[string]any{"usage": "battery", "password": "secret"})
+	limits := batterySocLimits{MinSoc: cc.MinSoc, MaxSoc: 100}
+
+	var reserve float64
+	ctrl := limits.LimitController(
+		func() (float64, error) { return 50, nil },
+		func(limit float64) error { reserve = limit; return nil },
+	)
+
+	tests := []struct {
+		mode api.BatteryMode
+		want float64
+	}{
+		{mode: api.BatteryNormal, want: 20},
+		{mode: api.BatteryHold, want: 50},
+		{mode: api.BatteryCharge, want: 100},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.mode.String(), func(t *testing.T) {
+			require.NoError(t, ctrl(tc.mode))
+			assert.Equal(t, tc.want, reserve)
+		})
+	}
 }
 
 func TestNewPowerWallFleetFromConfigValidation(t *testing.T) {

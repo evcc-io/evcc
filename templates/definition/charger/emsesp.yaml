@@ -45,6 +45,16 @@ params:
     description:
       de: "SG4-Eingang"
       en: "SG4 input"
+  - name: powercontrol
+    advanced: true
+    type: choice
+    choice: ["pvmaxcomp"]
+    description:
+      de: "Leistungssteuerung"
+      en: "Power limitation"
+    help:
+      de: "EMS-ESP Entity zur Begrenzung der maximalen Kompressorleistung (kW) bei PV-Überschuss."
+      en: "EMS-ESP entity to limit the maximum compressor power (kW) at PV surplus."
   - name: value_normal_sg4
     advanced: true
     type: string
@@ -187,7 +197,18 @@ render: |
             - content-type: application/json
             - authorization: Bearer {{ .token}}
           body: >
-            { "value" : "{{ .value_dim_sg4 }}" }    
+            { "value" : "{{ .value_dim_sg4 }}" }
+  {{- if .powercontrol }}
+  setmaxpower:
+    source: http
+    uri: http://{{ .host }}/api/boiler/{{ .powercontrol }}
+    method: POST
+    headers:
+      - content-type: application/json
+      - authorization: Bearer {{ .token }}
+    # truncate to the entity's 0.1 kW resolution
+    body: '{ "value": {{ `{{ divf (div .maxpower 100) 10 }}` }} }'
+  {{- end }}
   {{- if .tempsource }}
   temp:
     source: http

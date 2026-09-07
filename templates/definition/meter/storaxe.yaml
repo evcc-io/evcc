@@ -34,6 +34,9 @@ render: |
         address: 6 # ACVoltageL1
         type: input
         decode: int16
+      block: # 6-11
+        register: 6
+        count: 6
       scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -41,6 +44,9 @@ render: |
         address: 7 # ACVoltageL2
         type: input
         decode: int16
+      block: # 6-11
+        register: 6
+        count: 6
       scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -48,6 +54,9 @@ render: |
         address: 8 # ACVoltageL3
         type: input
         decode: int16
+      block: # 6-11
+        register: 6
+        count: 6
       scale: 0.1  
   currents:
     - source: modbus
@@ -56,6 +65,9 @@ render: |
         address: 9 # ACCurrentL1
         type: input
         decode: int16
+      block: # 6-11
+        register: 6
+        count: 6
       scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -63,6 +75,9 @@ render: |
         address: 10 # ACCurrentL2
         type: input
         decode: int16
+      block: # 6-11
+        register: 6
+        count: 6
       scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -70,6 +85,9 @@ render: |
         address: 11 # ACCurrentL3
         type: input
         decode: int16
+      block: # 6-11
+        register: 6
+        count: 6
       scale: 0.1
   soc:
     source: modbus

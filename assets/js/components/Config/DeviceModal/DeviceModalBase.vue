@@ -6,6 +6,7 @@
 		:data-testid="`${name}-modal`"
 		:size="modalSize"
 		:config-modal-name="name"
+		:prevent-dismiss="dirty"
 		@open="handleOpen"
 		@close="handleClose"
 		@visibilitychange="handleVisibilityChange"
@@ -33,6 +34,20 @@
 				>
 					<template v-if="$slots['template-action']" #action>
 						<slot name="template-action" />
+					</template>
+					<template v-if="productLink" #footer>
+						<div class="form-text evcc-gray">
+							{{ $t("config.general.moreInfo") }}
+							<a
+								:href="productLink"
+								class="text-gray"
+								target="_blank"
+								rel="noopener noreferrer"
+								data-testid="device-link"
+							>
+								{{ productLinkHost }}
+							</a>
+						</div>
 					</template>
 				</TemplateSelector>
 
@@ -179,15 +194,19 @@
 				<DeviceModalActions
 					v-if="showActions"
 					:is-deletable="isDeletable"
+					:is-disabled="isDisabled"
+					:can-disable="canDisable"
 					:test-state="test"
 					:is-saving="saving"
 					:is-succeeded="succeeded"
 					:is-new="isNew"
 					:sponsor-token-required="sponsorTokenRequired"
 					:currency="currency"
+					:usage="tagsUsage"
 					@save="handleSave"
 					@remove="handleRemove"
 					@test="testManually"
+					@disable="handleDisable"
 				>
 					<template #before-test>
 						<AdminPasswordPrompt
@@ -210,7 +229,7 @@
 import { defineComponent, type PropType } from "vue";
 import GenericModal from "../../Helper/GenericModal.vue";
 import DeviceInfoButton from "./DeviceInfoButton.vue";
-import { closeModal } from "@/configModal";
+import { closeModal, isNestedIn } from "@/configModal";
 import ErrorMessage from "../../Helper/ErrorMessage.vue";
 import PropertyEntry from "../PropertyEntry.vue";
 import PropertyCollapsible from "../PropertyCollapsible.vue";
@@ -281,6 +300,8 @@ export default defineComponent({
 		showMainContent: { type: Boolean, default: true },
 		// Optional: usage parameter for loadProducts (e.g., meter type: "pv", "battery", "aux", "ext")
 		usage: String,
+		// Optional: usage for test result labels
+		tagsUsage: String,
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 		// Optional: custom product name computation
 		getProductName: Function as PropType<
@@ -323,6 +344,7 @@ export default defineComponent({
 		"added",
 		"updated",
 		"removed",
+		"disable",
 		"open",
 		"close",
 		"template-changed",
@@ -340,6 +362,7 @@ export default defineComponent({
 			succeeded: false,
 			loadingTemplate: false,
 			values: { ...this.initialValues } as DeviceValues,
+			baseline: JSON.stringify({ ...this.initialValues }),
 			test: initialTestState(),
 			serviceValues: {} as Record<string, string[]>,
 			serviceValuesTimer: null as Timeout | null,
@@ -351,6 +374,9 @@ export default defineComponent({
 	computed: {
 		device() {
 			return createDeviceUtils(this.deviceType);
+		},
+		dirty(): boolean {
+			return JSON.stringify(this.values) !== this.baseline;
 		},
 		modalSize(): string | undefined {
 			return this.showYamlInput ? "xl" : undefined;
@@ -419,6 +445,18 @@ export default defineComponent({
 			}
 			return this.values.deviceProduct || this.templateName || "";
 		},
+		productLink(): string | undefined {
+			const matching = this.products.filter((p) => p.template === this.templateName);
+			const product = matching.find((p) => p.name === this.productName) ?? matching[0];
+			return product?.link || this.template?.Link;
+		},
+		productLinkHost(): string {
+			try {
+				return new URL(this.productLink!).hostname.replace(/^www\./, "");
+			} catch {
+				return "";
+			}
+		},
 		sponsorTokenRequired() {
 			const requirements = this.template?.Requirements as any;
 			return requirements?.EVCC?.includes("sponsorship") && !this.isSponsor;
@@ -456,6 +494,12 @@ export default defineComponent({
 		},
 		isDeletable() {
 			return !this.isNew && !this.hideDelete;
+		},
+		isDisabled() {
+			return Boolean(this.values.deviceDisable);
+		},
+		canDisable(): boolean {
+			return !isNestedIn("loadpoint");
 		},
 		showActions() {
 			// explicitly hide template fields (ocpp step 1)
@@ -631,7 +675,11 @@ export default defineComponent({
 			this.values = { ...this.initialValues } as DeviceValues;
 			this.test = initialTestState();
 			this.resetAuthStatus();
+			this.rebaseline();
 			this.$emit("reset");
+		},
+		rebaseline() {
+			this.baseline = JSON.stringify(this.values);
 		},
 		async loadConfiguration() {
 			try {
@@ -647,6 +695,9 @@ export default defineComponent({
 				if (device.deviceIcon !== undefined) {
 					this.values.deviceIcon = device.deviceIcon;
 				}
+				if (device.deviceDisable !== undefined) {
+					this.values.deviceDisable = device.deviceDisable;
+				}
 				this.applyDefaults();
 				this.templateName = this.values.template;
 
@@ -654,17 +705,23 @@ export default defineComponent({
 				if (this.onConfigurationLoaded) {
 					this.onConfigurationLoaded(this.values);
 				}
+				this.rebaseline();
 				this.checkAuthStatus();
 			} catch (e) {
 				console.error(e);
 			}
 		},
 		applyDefaults() {
+			// late-arriving defaults must not mark a clean form dirty
+			const wasClean = !this.dirty;
 			applyDefaultsFromTemplate(this.template, this.values);
 
 			// Allow parent to apply custom defaults
 			if (this.applyCustomDefaults) {
 				this.applyCustomDefaults(this.template, this.values);
+			}
+			if (wasClean) {
+				this.rebaseline();
 			}
 		},
 		async loadProducts() {
@@ -828,6 +885,11 @@ export default defineComponent({
 				handleError(e, "remove failed");
 			}
 		},
+		async handleDisable(disable: boolean) {
+			if (this.id === undefined) return;
+			this.$emit("disable", { id: this.id, disable });
+			await closeModal();
+		},
 		handleOpen() {
 			this.isModalVisible = true;
 			this.$emit("open");
@@ -883,7 +945,12 @@ export default defineComponent({
 			const param = this.templateParams.find((p) => p.Name === paramName);
 			// Only auto-apply if exactly one value is returned, field is empty, and field is required
 			if (values?.length === 1 && !this.values[paramName] && param?.Required) {
+				// debounced auto-fill must not mark a clean form dirty
+				const wasClean = !this.dirty;
 				this.values[paramName] = values[0];
+				if (wasClean) {
+					this.rebaseline();
+				}
 			}
 		},
 	},

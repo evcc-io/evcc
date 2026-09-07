@@ -149,4 +149,5 @@ render: |
         percent = 100
       }
       percent
+  {{- include "sunspec-maxacpower" . }}
   {{- end }}

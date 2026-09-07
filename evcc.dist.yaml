@@ -92,7 +92,7 @@ vehicles:
     password: mypassword # password
     vin: WREN...
     onIdentify: # set defaults when vehicle is identified
-      mode: pv # enable PV-charging when vehicle is identified
+      mode: smart # enable smart charging when vehicle is identified
 
 # site describes the EVU connection, PV and home battery
 site:
@@ -115,7 +115,7 @@ loadpoints:
     mode: "off" # default charge mode to apply when vehicle is disconnected; use "off" to disable by default if charger is publicly available
 
     # remaining settings are experts-only and best left at default values
-    priority: 0 # relative priority for concurrent charging in PV mode with multiple loadpoints (higher values have higher priority)
+    priority: 0 # relative priority for concurrent charging in smart mode with multiple loadpoints (higher values have higher priority)
     soc:
       # polling defines usage of the vehicle APIs
       # Modifying the default settings it NOT recommended. It MAY deplete your vehicle's battery
@@ -129,10 +129,10 @@ loadpoints:
         # poll interval defines how often the vehicle API may be polled if NOT charging
         interval: 60m
       estimate: true # set false to disable interpolating between api updates (not recommended)
-    enable: # pv mode enable behavior
+    enable: # smart mode enable behavior
       delay: 1m # threshold must be exceeded for this long
       threshold: 0 # grid power threshold (in Watts, negative=export). If zero, export must exceed minimum charge power to enable
-    disable: # pv mode disable behavior
+    disable: # smart mode disable behavior
       delay: 3m # threshold must be exceeded for this long
       threshold: 0 # maximum import power (W)
 

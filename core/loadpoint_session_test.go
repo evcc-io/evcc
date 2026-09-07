@@ -7,7 +7,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/session"
-	serverdb "github.com/evcc-io/evcc/server/db"
+	serverdb "github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

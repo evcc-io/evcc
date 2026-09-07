@@ -9,7 +9,7 @@ export function getThemePreference(): THEME | null {
   if (theme && Object.values(THEME).includes(theme)) {
     return theme;
   }
-  return THEME.AUTO;
+  return window.evcc?.customTheme || THEME.AUTO;
 }
 
 export function setThemePreference(theme: THEME) {

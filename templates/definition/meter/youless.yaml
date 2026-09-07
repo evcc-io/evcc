@@ -26,6 +26,10 @@ render: |
     source: http
     uri: http://{{ .host }}/e
     jq: .[0]|.p1+.p2
+  returnenergy:
+    source: http
+    uri: http://{{ .host }}/e
+    jq: .[0]|.n1+.n2
   currents:
   - source: http
     uri: http://{{ .host }}/f

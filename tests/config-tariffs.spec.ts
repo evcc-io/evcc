@@ -26,7 +26,7 @@ test.describe("tariffs", async () => {
     await page.goto("/#/config");
 
     // New configuration section should show with "Add Tariff" button
-    await expect(page.getByRole("heading", { name: "Tariffs & Forecasts" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Tariffs & forecasts" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Add Tariff" })).toBeVisible();
 
     // Old tariff card should not be shown
@@ -97,7 +97,7 @@ grid:
     await expect(page.getByTestId("tariffs-legacy")).toBeVisible();
     await expect(page.getByTestId("tariffs-legacy")).toContainText(
       [
-        "Tariffs & Forecasts",
+        "Tariffs & forecasts",
         "Grid price",
         "30.0 öre",
         "Feed-in price",

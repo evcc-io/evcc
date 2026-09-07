@@ -16,13 +16,11 @@ import (
 func TestTokenSource_ContextCancellation(t *testing.T) {
 	// server that blocks -- simulates slow/unreachable wallbox
 	unblock := make(chan struct{})
-	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		<-unblock
 	}))
-	defer func() {
-		close(unblock)
-		srv.Close()
-	}()
+	srv.StartTLS()
+	defer close(unblock)
 
 	log := util.NewLogger("test")
 
@@ -40,12 +38,12 @@ func TestTokenSource_ContextCancellation(t *testing.T) {
 
 func TestTokenSource_Success(t *testing.T) {
 	// server that returns a valid JWT-style token
-	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Authorization", fmt.Sprintf("Bearer %s",
 			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiZXhwIjo5OTk5OTk5OTk5fQ.signature"))
 		w.WriteHeader(http.StatusOK)
 	}))
-	defer srv.Close()
+	srv.StartTLS()
 
 	log := util.NewLogger("test")
 

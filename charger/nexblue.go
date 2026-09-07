@@ -127,7 +127,7 @@ func NewNexblue(ctx context.Context, user, password, serial string, cache time.D
 
 	// Inject authHelper's client as base transport; oauth2.NewClient wraps it with oauth2.Transport.
 	authCtx := context.WithValue(ctx, oauth2.HTTPClient, authHelper.Client)
-	wb.Client = oauth2.NewClient(authCtx, oauth.RefreshTokenSource(tok, login))
+	wb.Client = oauth2.NewClient(authCtx, oauth.RefreshTokenSource(log, tok, login))
 
 	wb.serial, err = ensureCharger(serial, func() ([]string, error) {
 		return wb.chargerSerials()

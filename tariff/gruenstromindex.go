@@ -74,6 +74,13 @@ func (t *GrünStromIndex) run(done chan error) {
 			}
 		}
 
+		var data api.Rates
+		if err == nil {
+			if data = gsiRates(res); len(data) == 0 {
+				err = api.ErrNotAvailable
+			}
+		}
+
 		if err != nil {
 			if reportError(&once, done, err) {
 				return
@@ -83,18 +90,31 @@ func (t *GrünStromIndex) run(done chan error) {
 			continue
 		}
 
-		data := make(api.Rates, 0, len(res.Forecast))
-		for _, r := range res.Forecast {
-			data = append(data, api.Rate{
-				Start: time.UnixMilli(r.Timeframe.Start).Local(),
-				End:   time.UnixMilli(r.Timeframe.End).Local(),
-				Value: float64(r.Co2GStandard),
-			})
-		}
-
 		mergeRates(t.data, data)
 		once.Do(func() { close(done) })
 	}
+}
+
+// gsiRates maps the forecast to rates. co2_g_standard is null since mid-2026,
+// fall back to co2_g_oekostrom and skip slots without either value.
+func gsiRates(res corrently.Forecast) api.Rates {
+	data := make(api.Rates, 0, len(res.Forecast))
+	for _, r := range res.Forecast {
+		co2 := r.Co2GStandard
+		if co2 == nil {
+			co2 = r.Co2GOekostrom
+		}
+		if co2 == nil {
+			continue
+		}
+
+		data = append(data, api.Rate{
+			Start: time.UnixMilli(r.Timeframe.Start).Local(),
+			End:   time.UnixMilli(r.Timeframe.End).Local(),
+			Value: float64(*co2),
+		})
+	}
+	return data
 }
 
 // Rates implements the api.Tariff interface

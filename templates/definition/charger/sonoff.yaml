@@ -1,0 +1,27 @@
+template: sonoff
+products:
+  - { brand: SONOFF, description: { generic: MINI-1GSP } }
+requirements:
+  description:
+    de: Benötigt ein Gerät mit SONOFF RPC API. Das Passwort wird in der eWeLink App vergeben.
+    en: Requires a device with SONOFF RPC API. The password is set in the eWeLink app.
+capabilities: ["meter"]
+group: switchsockets
+params:
+  - name: host
+  - name: user
+    default: admin
+  - name: password
+  - name: channel
+    default: 1
+    description:
+      de: Schaltkanal
+      en: Relay channel
+  - preset: switchsocket
+render: |
+  type: sonoff
+  uri: http://{{ .host }}
+  user: {{ .user }}
+  password: {{ .password }}
+  channel: {{ .channel }}
+  {{ include "switchsocket" . }}

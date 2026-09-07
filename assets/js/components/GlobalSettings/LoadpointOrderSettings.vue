@@ -8,10 +8,14 @@
 				v-for="item in loadpoints"
 				:key="item.id"
 				:title="item.title"
-				:visible="item.visible"
+				:visible="item.visible && !item.disabled"
 			>
+				{{ item.title }}
 				<template #actions>
-					<div class="form-check form-switch">
+					<span v-if="item.disabled" class="badge bg-secondary py-1 px-2">
+						{{ $t("settings.loadpoints.disabledDevice") }}
+					</span>
+					<div v-else class="form-check form-switch">
 						<input
 							:id="`loadpoint-visible-${item.id}`"
 							v-model="item.visible"
@@ -59,12 +63,12 @@ export default defineComponent({
 	},
 	computed: {
 		resetDisabled() {
-			const allVisible = this.loadpoints.every((lp) => lp.visible);
+			const allVisible = this.loadpoints.every((lp) => lp.disabled || lp.visible);
 			const noOrder = this.loadpoints.every((lp) => lp.order === null);
 			return allVisible && noOrder;
 		},
 		visibleCount() {
-			return this.loadpoints.filter((lp) => lp.visible).length;
+			return this.loadpoints.filter((lp) => lp.visible && !lp.disabled).length;
 		},
 	},
 	methods: {

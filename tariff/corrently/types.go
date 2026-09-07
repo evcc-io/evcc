@@ -18,8 +18,8 @@ type Forecast struct {
 		Gsi           float64 `json:"gsi"`
 		TimeStamp     int64   `json:"timeStamp"`
 		Energyprice   string  `json:"energyprice"`
-		Co2GStandard  int     `json:"co2_g_standard"`
-		Co2GOekostrom int     `json:"co2_g_oekostrom"`
+		Co2GStandard  *int    `json:"co2_g_standard"`
+		Co2GOekostrom *int    `json:"co2_g_oekostrom"`
 		Timeframe     struct {
 			Start int64 `json:"start"`
 			End   int64 `json:"end"`

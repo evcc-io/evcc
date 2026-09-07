@@ -107,6 +107,24 @@ func TestCurtailPVNotAvailable(t *testing.T) {
 	assert.Equal(t, []int{60, 30}, m.setCalls)
 }
 
+// A curtailment device is applied like a curtailable pv meter.
+func TestCurtailDevice(t *testing.T) {
+	m := &curtailableMeter{percent: 100}
+	site := &Site{
+		log:        util.NewLogger("foo"),
+		curtailers: []config.Device[api.Curtailer]{config.NewStaticDevice[api.Curtailer](config.Named{}, m)},
+	}
+
+	require.NoError(t, site.curtailPV(new(60)))
+	assert.Equal(t, []int{60}, m.setCalls)
+	assert.Equal(t, 1, m.gets)
+
+	// unchanged: device is not queried again
+	require.NoError(t, site.curtailPV(new(60)))
+	assert.Equal(t, []int{60}, m.setCalls)
+	assert.Equal(t, 1, m.gets)
+}
+
 // dimmableMeter counts device interactions to verify caching.
 type dimmableMeter struct {
 	api.Meter

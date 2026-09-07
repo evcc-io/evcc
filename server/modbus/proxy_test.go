@@ -2,7 +2,7 @@ package modbus
 
 import (
 	"encoding/binary"
-	"math/rand"
+	"math/rand/v2"
 	"net"
 	"sync"
 	"testing"
@@ -36,8 +36,8 @@ func TestConcurrentRead(t *testing.T) {
 			require.NoError(t, err)
 
 			for range 50 {
-				addr := uint16(rand.Int31n(200) + 1)
-				qty := uint16(rand.Int31n(32) + 1)
+				addr := uint16(rand.N(200) + 1)
+				qty := uint16(rand.N(32) + 1)
 
 				b, err := conn.ReadInputRegisters(addr, qty)
 				require.NoError(t, err)
@@ -48,7 +48,7 @@ func TestConcurrentRead(t *testing.T) {
 					}
 				}
 
-				time.Sleep(time.Duration(rand.Int31n(1000)) * time.Microsecond)
+				time.Sleep(rand.N(time.Millisecond))
 			}
 		})
 	}

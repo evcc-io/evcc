@@ -32,6 +32,9 @@ render: |
       address: 10644 # Meter Total Active Power (W, positive = import, negative = export)
       type: input
       decode: int32s
+    block: # 10632-10645
+      register: 10632
+      count: 14
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -47,18 +50,27 @@ render: |
         address: 10638 # Meter Phase A Active Power
         type: input
         decode: int32s
+      block: # 10632-10645
+        register: 10632
+        count: 14
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 10640 # Meter Phase B Active Power
         type: input
         decode: int32s
+      block: # 10632-10645
+        register: 10632
+        count: 14
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 10642 # Meter Phase C Active Power
         type: input
         decode: int32s
+      block: # 10632-10645
+        register: 10632
+        count: 14
   currents:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -66,6 +78,9 @@ render: |
         address: 10635 # Meter Phase A Current
         type: input
         decode: uint16
+      block: # 10632-10645
+        register: 10632
+        count: 14
       scale: 0.01
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -73,6 +88,9 @@ render: |
         address: 10636 # Meter Phase B Current
         type: input
         decode: uint16
+      block: # 10632-10645
+        register: 10632
+        count: 14
       scale: 0.01
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -80,6 +98,9 @@ render: |
         address: 10637 # Meter Phase C Current
         type: input
         decode: uint16
+      block: # 10632-10645
+        register: 10632
+        count: 14
       scale: 0.01
   voltages:
     - source: modbus
@@ -88,6 +109,9 @@ render: |
         address: 10632 # Meter Phase A Voltage
         type: input
         decode: uint16
+      block: # 10632-10645
+        register: 10632
+        count: 14
       scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -95,6 +119,9 @@ render: |
         address: 10633 # Meter Phase B Voltage
         type: input
         decode: uint16
+      block: # 10632-10645
+        register: 10632
+        count: 14
       scale: 0.1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
@@ -102,6 +129,9 @@ render: |
         address: 10634 # Meter Phase C Voltage
         type: input
         decode: uint16
+      block: # 10632-10645
+        register: 10632
+        count: 14
       scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}

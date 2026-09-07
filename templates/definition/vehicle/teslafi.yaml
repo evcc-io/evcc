@@ -16,7 +16,7 @@ params:
     advanced: true
 render: |
   type: custom
-  {{- include "vehicle-common" . }}
+  {{- include "common" . }}
   {{- define "teslafi_source" }}
   source: http
   uri: https://www.teslafi.com/feed.php?command=lastGood{{ if .vin }}&vin={{ .vin }}{{ end }}
@@ -44,4 +44,4 @@ render: |
   limitsoc:
     {{- include "teslafi_source" . | indent 2 }}
     jq: .charge_limit_soc
-  {{ include "vehicle-features" (merge (dict "basefeatures" (list "coarsecurrent")) .) }}
+  {{ include "features" (merge (dict "basefeatures" (list "coarsecurrent")) .) }}

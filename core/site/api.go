@@ -1,6 +1,8 @@
 package site
 
 import (
+	"iter"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 )
@@ -15,8 +17,9 @@ type API interface {
 	Publisher
 
 	Loadpoints() []loadpoint.API
+	ActiveLoadpoints() iter.Seq2[int, loadpoint.API]
 	Vehicles() Vehicles
-	Optimize() error
+	Optimize()
 
 	// Meta
 	GetTitle() string
@@ -25,6 +28,8 @@ type API interface {
 	// Config
 	GetGridMeterRef() string
 	SetGridMeterRef(string)
+	GetCurtailerRefs() []string
+	SetCurtailerRefs([]string)
 	GetPVMeterRefs() []string
 	SetPVMeterRefs([]string)
 	GetBatteryMeterRefs() []string
@@ -44,7 +49,7 @@ type API interface {
 	//
 
 	GetBatterySoc() float64
-	GetBatteryMaxDischargePower() float64
+	GetBatteryMaxDischargePower() *float64
 	GetPrioritySoc() float64
 	SetPrioritySoc(float64) error
 	GetBufferSoc() float64
@@ -56,6 +61,10 @@ type API interface {
 	GetBatteryGridChargeLimit() *float64
 	// SetBatteryGridChargeLimit sets the grid charge limit
 	SetBatteryGridChargeLimit(limit *float64) error
+	// GetBatteryGridDischargeLimit get the grid discharge (feed-in) limit
+	GetBatteryGridDischargeLimit() *float64
+	// SetBatteryGridDischargeLimit sets the grid discharge (feed-in) limit
+	SetBatteryGridDischargeLimit(limit *float64) error
 
 	// GetOptimizerChargingStrategy gets the optimizer grid charging strategy
 	GetOptimizerChargingStrategy() string

@@ -55,7 +55,7 @@
 					/>
 					<div class="text-end small text-gray mt-1">
 						<a
-							:href="`${docsPrefix()}/docs/notifications#placeholders`"
+							:href="`${docsPrefix()}/notifications#placeholders`"
 							target="_blank"
 							class="text-gray"
 						>

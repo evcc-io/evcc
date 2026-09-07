@@ -1,4 +1,4 @@
-import { test, expect, devices, type Page } from "@playwright/test";
+import { test, expect, devices, type Page, type Locator } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
 import {
   expectModalVisible,
@@ -388,7 +388,7 @@ test.describe("session details", async () => {
     await expect(modal.getByLabel("Charging point")).toHaveValue("Garage");
     await expect(modal.getByLabel("Vehicle")).toHaveValue("weißes Model 3");
     await expect(modal.getByTestId("session-details-date")).toContainText(
-      ["Thu, May 4, 22:00", "Fri, May 5, 06:00"].join("")
+      ["Thu, May 4, 2023, 22:00", "Fri, May 5, 2023, 06:00"].join("")
     );
     await expect(modal.getByTestId("session-details-energy")).toContainText("5.0 kWh");
     await expect(modal.getByTestId("session-details-energy")).toContainText("1:00");
@@ -410,7 +410,7 @@ test.describe("session details", async () => {
     await expect(modal.getByLabel("Charging point")).toHaveValue("Carport");
     await expect(modal.getByLabel("Vehicle")).toHaveValue("blauer e-Golf");
     await expect(modal.getByTestId("session-details-date")).toContainText(
-      ["Wed, Mar 1, 07:00", "Tue, May 2, 12:00"].join("")
+      ["Wed, Mar 1, 2023, 07:00", "Tue, May 2, 2023, 12:00"].join("")
     );
     await expect(modal.getByTestId("session-details-energy")).toContainText("10.0 kWh");
     await expect(modal.getByTestId("session-details-energy")).toContainText("1:00");
@@ -420,6 +420,31 @@ test.describe("session details", async () => {
     await expect(modal.getByTestId("session-details-co2")).toContainText("300 g/kWh");
     await expect(modal.getByTestId("session-details-added-range")).toContainText("+60 km");
     await expect(modal.getByTestId("session-details-odometer")).toContainText("12,345 km");
+  });
+
+  test("date format setting (session 1)", async ({ page }) => {
+    await page.goto("/#/sessions?year=2023&month=3");
+    const modal = page.getByTestId("session-details");
+    const date = modal.getByTestId("session-details-date");
+
+    // auto format
+    await page.getByTestId("sessions-entry").nth(0).click();
+    await expectModalVisible(modal);
+    await expect(date).toContainText("Wed, Mar 1, 2023, 07:00");
+    await modal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(modal);
+
+    await openMoreMenu(page);
+    await page.getByRole("button", { name: "User Interface", exact: true }).click();
+    const settings = page.getByTestId("global-settings-modal");
+    await expectModalVisible(settings);
+    await settings.getByLabel("Date format").selectOption("ymd");
+    await settings.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(settings);
+
+    await page.getByTestId("sessions-entry").nth(0).click();
+    await expectModalVisible(modal);
+    await expect(date).toContainText("Wed 2023-03-01 07:00");
   });
 
   test("edit session (session 5)", async ({ page }) => {
@@ -554,5 +579,45 @@ test.describe("edit odometer", async () => {
     await odometer.fill("");
     await odometer.press("Enter");
     await expect(odometer).toContainText("Add value");
+  });
+});
+
+// Y-axis labels rendered by echarts: position=right uses text-anchor=start.
+// DOM order: axis name first, then ticks bottom→top (min, ..., max).
+async function yAxis(c: Locator): Promise<string[]> {
+  const els = c.locator('svg text[text-anchor="start"]');
+  await els.first().waitFor();
+  return els.allTextContents();
+}
+
+test.describe("chart axis scale", async () => {
+  test("kWh for regular sessions", async ({ page }) => {
+    await page.goto("/#/sessions?year=2023&month=5");
+    expect((await yAxis(page.getByTestId("sessions-chart")))[0]).toBe("kWh");
+  });
+
+  test("sub-1 kWh switches to Wh, floored at 1000", async ({ page }) => {
+    await page.goto("/#/sessions?year=2023&month=7");
+    expect(await yAxis(page.getByTestId("sessions-chart"))).toEqual([
+      "Wh",
+      "0",
+      "250",
+      "500",
+      "750",
+      "1,000",
+    ]);
+  });
+
+  test("sub-1 kg CO2 switches to g, floored at 1000", async ({ page }) => {
+    await page.goto("/#/sessions?year=2023&month=7");
+    await page.getByRole("button", { name: "CO₂" }).click();
+    expect(await yAxis(page.getByTestId("sessions-chart"))).toEqual([
+      "g",
+      "0",
+      "250",
+      "500",
+      "750",
+      "1,000",
+    ]);
   });
 });

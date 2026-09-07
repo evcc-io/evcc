@@ -5,6 +5,7 @@ products:
       generic: Multi Connect II Wallbox
 capabilities: ["rfid", "1p3p", "meter", "dim"]
 requirements:
+  evcc: ["sponsorship"]
   description:
     de: |
       Benutzername und Passwort sind identisch zum Web-Portal bzw. My E3/DC App. Key (=RSCP-Passwort) muss im Hauskraftwerk unter Personalisieren/Benutzerprofil angelegt werden.

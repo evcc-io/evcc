@@ -6,15 +6,18 @@
 		data-testid="remote-modal"
 		@open="onOpen"
 	>
-		<div class="alert alert-warning">
-			Development preview. Not ready for general use. Use with caution and monitor your system
-			closely. Feedback welcome!
-		</div>
 		<SponsorTokenRequired v-if="!isSponsor" feature class="mt-0" />
 		<ErrorMessage :error="error" />
 
 		<template v-if="view === 'list'">
-			<p>{{ $t("config.remote.description") }}</p>
+			<p>
+				{{ $t("config.remote.description") }}
+				<i18n-t tag="span" keypath="config.remote.privacy" scope="global">
+					<a :href="privacyPolicyLink" target="_blank">
+						{{ $t("config.remote.privacyLink") }}
+					</a>
+				</i18n-t>
+			</p>
 			<div class="form-check form-switch my-3">
 				<input
 					id="remoteEnabled"
@@ -138,6 +141,10 @@ export default defineComponent({
 		status(): RemoteStatus {
 			return this.remote?.status ?? { connected: false, loginBlocked: false };
 		},
+		privacyPolicyLink(): string {
+			const path = this.$i18n.locale === "de" ? "" : "/en";
+			return `https://evcc.io${path}/datenschutz/`;
+		},
 		modalTitle(): string {
 			switch (this.view) {
 				case "create":
@@ -145,7 +152,7 @@ export default defineComponent({
 				case "reveal":
 					return this.$t("config.remote.clientCreated");
 				default:
-					return `${this.$t("config.remote.title")} 🧪`;
+					return this.$t("config.remote.title");
 			}
 		},
 	},

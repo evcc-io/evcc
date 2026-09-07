@@ -236,6 +236,8 @@ export default defineComponent({
 	display: flex;
 	overflow: hidden;
 	margin-right: 1.2rem;
+	/* Safari composites the width-animated bars without subpixel antialiasing, blurring labels on 1x displays */
+	-webkit-font-smoothing: antialiased;
 }
 .label-scale-name {
 	color: var(--evcc-gray);

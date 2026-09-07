@@ -38,7 +38,7 @@ uri: http://${simulatorHost()}`
     await expect(testResult).toContainText("Status: unknown");
     await testResult.getByRole("link", { name: "validate" }).click();
     await expect(testResult).toContainText("Status: successful");
-    await expect(testResult).toContainText(["Energy", "0.0 kWh"].join(""));
+    await expect(testResult).toContainText(["Imported", "0.0 kWh"].join(""));
 
     // save
     await meterModal.getByRole("button", { name: "Save" }).click();
@@ -50,7 +50,7 @@ uri: http://${simulatorHost()}`
     await page.reload();
     await expect(page.getByTestId("fatal-error")).not.toBeVisible();
     await expect(page.getByTestId("grid")).toBeVisible();
-    await expect(page.getByTestId("grid")).toContainText(["Energy", "0.0 kWh"].join(""));
+    await expect(page.getByTestId("grid")).toContainText(["Imported", "0.0 kWh"].join(""));
 
     // edit
     await page.getByTestId("grid").getByRole("button", { name: "edit" }).click();

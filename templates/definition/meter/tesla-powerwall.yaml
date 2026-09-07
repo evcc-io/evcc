@@ -17,18 +17,16 @@ params:
   - name: siteId
     deprecated: true
   - name: minsoc
-    advanced: true
+    deprecated: true
   - name: maxsoc
-    advanced: true
+    deprecated: true
   - name: maxchargepower
+    deprecated: true
   - name: maxdischargepower
+    deprecated: true
 render: |
   type: powerwall
   uri: {{ .host }}
   usage: {{ .usage }}
   user: customer
   password: {{ .password }} # for user 'customer'
-  minsoc: {{ .minsoc }}
-  maxsoc: {{ .maxsoc }}
-  maxchargepower: {{ .maxchargepower }}
-  maxdischargepower: {{ .maxdischargepower }}

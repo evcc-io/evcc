@@ -23,10 +23,10 @@ func newTestConnection(baseURL string) *Connection {
 
 // newStateConnection returns a connection serving state for any entity
 func newStateConnection(t *testing.T, state string) *Connection {
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `{"entity_id":"sensor.foo","state":%q}`, state)
 	}))
-	t.Cleanup(srv.Close)
+	srv.Start()
 
 	return newTestConnection(srv.URL)
 }
@@ -116,13 +116,13 @@ func TestCallSwitchService_DomainDispatch(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			var gotPath, gotBody string
-			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				gotPath = r.URL.Path
 				body, _ := io.ReadAll(r.Body)
 				gotBody = string(body)
 				w.WriteHeader(http.StatusOK)
 			}))
-			defer srv.Close()
+			srv.Start()
 
 			err := newTestConnection(srv.URL).CallSwitchService(tc.entity, tc.turnOn)
 

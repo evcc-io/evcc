@@ -4,7 +4,7 @@
 		tabindex="0"
 		@click="$emit('click')"
 	>
-		<shopicon-regular-plus class="me-1"></shopicon-regular-plus>
+		<shopicon-regular-plus class="me-1 flex-shrink-0"></shopicon-regular-plus>
 		<span class="text-start">{{ title }}</span>
 	</button>
 </template>

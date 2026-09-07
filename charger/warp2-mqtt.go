@@ -282,10 +282,10 @@ func (wb *Warp2) voltages() (float64, float64, float64, error) {
 	return res[0], res[1], res[2], nil
 }
 
-func (wb *Warp2) identify() (string, error) {
+func (wb *Warp2) identify() ([]string, error) {
 	var res warp.ChargeTrackerCurrentCharge
 	err := wb.chargeG(&res)
-	return res.AuthorizationInfo.TagId, err
+	return []string{res.AuthorizationInfo.TagId}, err
 }
 
 func (wb *Warp2) emState() (warp.PmState, error) {

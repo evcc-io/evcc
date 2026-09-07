@@ -95,7 +95,7 @@ func (v *API) doRepeatedRequest(path string, event_id string) error {
 		event_id)
 
 	var res requests.Answer[requests.ChargeStatus]
-	if _, err = doRequest(v, req, &res); err == nil {
+	if _, err = v.doRequest(req, &res); err == nil {
 		v.store(res.Data)
 	}
 	return err
@@ -120,7 +120,7 @@ func (v *API) repeatRequest(path string, event_id string) {
 	v.mu.Unlock()
 }
 
-func doRequest[T any](v *API, req *http.Request, result *requests.Answer[T]) (string, error) {
+func (v *API) doRequest[T any](req *http.Request, result *requests.Answer[T]) (string, error) {
 	resp, err := v.Do(req)
 	if err != nil {
 		return "", err
@@ -183,7 +183,7 @@ func (v *API) Wakeup(vin string) error {
 		return err
 	}
 
-	doRequest[any](v, req, nil)
+	v.doRequest[any](req, nil)
 
 	return nil
 }
@@ -214,7 +214,7 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 		"")
 
 	var res requests.Answer[requests.ChargeStatus]
-	event_id, err := doRequest(v, req, &res)
+	event_id, err := v.doRequest(req, &res)
 	if err != nil {
 		return zero, err
 	}
@@ -234,7 +234,7 @@ func (v *API) Status(vin string) (requests.ChargeStatus, error) {
 		event_id)
 
 	// answer not yet available, keep polling in the background
-	if _, err = doRequest(v, req, &res); err == api.ErrMustRetry {
+	if _, err = v.doRequest(req, &res); err == api.ErrMustRetry {
 		v.mu.Lock()
 		v.state = stateRunning
 		v.mu.Unlock()
