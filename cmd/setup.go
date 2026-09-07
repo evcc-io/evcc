@@ -545,7 +545,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 			}
 
 			if _, ok := instance.OnIdentified().GetMode(); ok {
-				log.WARN.Printf("vehicle '%s': default charge 'mode' is deprecated, please configure via UI (charging plan > arrival)", cc.Name)
+				log.WARN.Printf("vehicle '%s': default charge 'mode' is deprecated, please configure via UI (more > vehicles)", cc.Name)
 			}
 
 			mu.Lock()
