@@ -19,6 +19,7 @@ func init() {
 
 // Solarman reads Modbus registers through a Solarman V5 logger.
 type Solarman struct {
+	ctx    context.Context
 	client *solarman.Client
 	id     byte
 	reg    modbus.Register
@@ -26,7 +27,7 @@ type Solarman struct {
 }
 
 // NewSolarmanFromConfig creates a Solarman V5 plugin.
-func NewSolarmanFromConfig(_ context.Context, other map[string]any) (Plugin, error) {
+func NewSolarmanFromConfig(ctx context.Context, other map[string]any) (Plugin, error) {
 	cc := struct {
 		Host     string
 		Port     int
@@ -66,6 +67,7 @@ func NewSolarmanFromConfig(_ context.Context, other map[string]any) (Plugin, err
 	}
 
 	return &Solarman{
+		ctx:    ctx,
 		client: client,
 		id:     byte(cc.Id),
 		reg:    cc.Register,
@@ -76,9 +78,9 @@ func NewSolarmanFromConfig(_ context.Context, other map[string]any) (Plugin, err
 func (s *Solarman) read(op modbus.RegisterOperation) ([]byte, error) {
 	switch op.FuncCode {
 	case gridx.FuncCodeReadHoldingRegisters:
-		return s.client.ReadHoldingRegisters(context.Background(), s.id, op.Addr, op.Length)
+		return s.client.ReadHoldingRegisters(s.ctx, s.id, op.Addr, op.Length)
 	case gridx.FuncCodeReadInputRegisters:
-		return s.client.ReadInputRegisters(context.Background(), s.id, op.Addr, op.Length)
+		return s.client.ReadInputRegisters(s.ctx, s.id, op.Addr, op.Length)
 	default:
 		return nil, fmt.Errorf("invalid read function code: %d", op.FuncCode)
 	}
