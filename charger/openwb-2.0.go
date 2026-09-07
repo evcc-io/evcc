@@ -5,8 +5,10 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
+	"sync"
 	"time"
 
+	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/openwb"
@@ -104,8 +106,19 @@ func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charg
 			if ctx.Err() != nil {
 				return
 			}
-			client, err := mqtt.RegisteredClientOrDefault(log, cc.Config)
+			client, err := mqtt.NewClient(log, cc.Broker, cc.User, cc.Password, mqtt.ClientID(), 1, cc.Insecure, cc.CaCert, cc.ClientCert, cc.ClientKey, func(options *paho.ClientOptions) {
+				options.SetAutoReconnect(false)
+				options.SetOnConnectHandler(nil)
+				options.SetConnectionLostHandler(func(_ paho.Client, err error) {
+					log.DEBUG.Printf("display setup: MQTT connection lost: %v", err)
+					cancel()
+				})
+			})
 			if err == nil {
+				disconnect := sync.OnceFunc(client.Disconnect)
+				stop := context.AfterFunc(ctx, disconnect)
+				defer stop()
+				defer disconnect()
 				err = openwb.ConfigureDisplay(ctx, log, client, uri)
 			}
 			if err != nil && ctx.Err() != context.Canceled {
