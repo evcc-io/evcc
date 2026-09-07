@@ -30,6 +30,7 @@ import (
 
 // Weishaupt heat pump charger implementation
 type Weishaupt struct {
+	*embed
 	conn    *modbus.Connection
 	lp      loadpoint.API
 	power   uint16
@@ -65,9 +66,14 @@ func init() {
 // NewWeishauptFromConfig creates a Weishaupt charger from generic config
 func NewWeishauptFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
+		embed           `mapstructure:",squash"`
 		modbus.Settings `mapstructure:",squash"`
 		TempSource      string
 	}{
+		embed: embed{
+			Icon_:     "heatpump",
+			Features_: []api.Feature{api.Continuous, api.Heating, api.IntegratedDevice},
+		},
 		Settings: modbus.Settings{
 			ID: 1,
 		},
@@ -78,11 +84,11 @@ func NewWeishauptFromConfig(ctx context.Context, other map[string]any) (api.Char
 		return nil, err
 	}
 
-	return NewWeishaupt(ctx, cc.Settings, cc.TempSource)
+	return NewWeishaupt(ctx, &cc.embed, cc.Settings, cc.TempSource)
 }
 
 // NewWeishaupt creates Weishaupt charger
-func NewWeishaupt(ctx context.Context, settings modbus.Settings, tempSource string) (api.Charger, error) {
+func NewWeishaupt(ctx context.Context, embed *embed, settings modbus.Settings, tempSource string) (api.Charger, error) {
 	tempReg, ok := wsTempSource[tempSource]
 	if !ok {
 		return nil, fmt.Errorf("invalid temp source: %s", tempSource)
@@ -97,25 +103,12 @@ func NewWeishaupt(ctx context.Context, settings modbus.Settings, tempSource stri
 	conn.Logger(log.TRACE)
 
 	wb := &Weishaupt{
+		embed:   embed,
 		conn:    conn,
 		tempReg: tempReg,
 	}
 
 	return wb, nil
-}
-
-var _ api.IconDescriber = (*Weishaupt)(nil)
-
-// Icon implements the api.IconDescriber interface
-func (wb *Weishaupt) Icon() string {
-	return "heatpump"
-}
-
-var _ api.FeatureDescriber = (*Weishaupt)(nil)
-
-// Features implements the api.FeatureDescriber interface
-func (wb *Weishaupt) Features() []api.Feature {
-	return []api.Feature{api.Continuous, api.Heating, api.IntegratedDevice}
 }
 
 // temp reads a temperature sensor register. Values outside of -50..500°C

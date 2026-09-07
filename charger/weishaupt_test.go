@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/andig/mbserver"
-	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -54,11 +54,34 @@ func weishauptTestCharger(t *testing.T) *Weishaupt {
 	weishauptH.power.Store(0)
 	weishauptH.fail.Store(false)
 
-	charger, err := NewWeishaupt(t.Context(), modbus.Settings{URI: weishauptURI, ID: 1}, "warmwater")
+	charger, err := NewWeishauptFromConfig(t.Context(), map[string]any{"uri": weishauptURI})
 	require.NoError(t, err)
 	wb := charger.(*Weishaupt)
 	t.Cleanup(wb.conn.Close)
 	return wb
+}
+
+func TestWeishauptConfig(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		config   map[string]any
+		icon     string
+		features []api.Feature
+	}{
+		{"defaults", map[string]any{}, "heatpump", []api.Feature{api.Continuous, api.Heating, api.IntegratedDevice}},
+		{"override", map[string]any{"icon": "heater", "features": []api.Feature{api.Heating}}, "heater", []api.Feature{api.Heating}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.config["uri"] = "127.0.0.1:502"
+			charger, err := NewWeishauptFromConfig(t.Context(), tc.config)
+			require.NoError(t, err)
+			wb := charger.(*Weishaupt)
+			t.Cleanup(wb.conn.Close)
+
+			assert.Equal(t, tc.icon, wb.Icon())
+			assert.Equal(t, tc.features, wb.Features())
+		})
+	}
 }
 
 func TestWeishauptEnable(t *testing.T) {
