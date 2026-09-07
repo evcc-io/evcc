@@ -30,6 +30,29 @@ params:
     port: 1502
     id: 1
   - name: connector
+  - name: display
+    type: bool
+    default: true
+    advanced: true
+    description:
+      en: Show evcc on the display
+      de: evcc auf dem Display anzeigen
+    help:
+      en: Automatically configures an active display in secondary mode if the URL theme is supported. Requires MQTT access and an internal evcc URL reachable from openWB. Disabling this option leaves the current display settings unchanged.
+      de: Konfiguriert ein aktives Display im Secondary-Modus automatisch, wenn das URL-Theme vorhanden ist. Erfordert MQTT-Zugriff und eine von openWB erreichbare interne evcc-URL. Das Deaktivieren dieser Option belässt die aktuellen Display-Einstellungen unverändert.
+  - name: broker
+    advanced: true
+    description:
+      en: Display MQTT broker
+      de: MQTT-Broker des Displays
+    help:
+      en: Optional override for the openWB MQTT address. Defaults to the charger host on port 1883. Use tls://host:8883 for TLS.
+      de: Optionale MQTT-Adresse der openWB. Standard ist der Host der Wallbox auf Port 1883. Für TLS tls://host:8883 verwenden.
+  - name: user
+    advanced: true
+  - name: password
+    advanced: true
+  - name: insecure
   - name: phases1p3p
     type: bool
     description:
@@ -50,5 +73,14 @@ render: |
   type: openwb-2.0
   {{- include "modbus" . }}
   connector: {{ .connector }}
+  display: {{ .display }}
+  {{- if .display }}
+  {{- if .broker }}
+  broker: {{ .broker | quote }}
+  {{- end }}
+  user: {{ .user | quote }}
+  password: {{ .password | quote }}
+  insecure: {{ .insecure }}
+  {{- end }}
   phases1p3p: {{ .phases1p3p }}
   identify: {{ .identify }}

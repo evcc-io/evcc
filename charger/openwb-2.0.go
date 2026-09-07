@@ -4,9 +4,14 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"net"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
+	"github.com/evcc-io/evcc/charger/openwb"
+	"github.com/evcc-io/evcc/plugin/mqtt"
+	"github.com/evcc-io/evcc/server/network"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 )
@@ -49,9 +54,12 @@ func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charg
 		Connector          uint16
 		Phases1p3p         bool
 		Identify           bool
+		Display            bool
+		mqtt.Config        `mapstructure:",squash"`
 		modbus.TcpSettings `mapstructure:",squash"`
 	}{
 		Connector: 1,
+		Display:   true,
 		TcpSettings: modbus.TcpSettings{
 			ID: 1,
 		},
@@ -72,6 +80,38 @@ func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charg
 
 	if cc.Identify {
 		implement.Has(wb, implement.Identifier(wb.identify))
+	}
+
+	log := util.NewLogger("openwb-2.0")
+	if !cc.Display {
+		log.DEBUG.Println("display setup disabled")
+	} else if network.Config().Port == 0 {
+		log.DEBUG.Println("display setup skipped: network not initialized")
+	} else {
+		uri := network.Config().InternalURL()
+		go func() {
+			ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+			defer cancel()
+
+			if cc.Broker == "" {
+				host, _, err := net.SplitHostPort(util.DefaultPort(cc.URI, 1502))
+				if err != nil {
+					log.DEBUG.Printf("display setup skipped: invalid broker address: %v", err)
+					return
+				}
+				cc.Broker = net.JoinHostPort(host, "1883")
+			}
+			if ctx.Err() != nil {
+				return
+			}
+			client, err := mqtt.RegisteredClientOrDefault(log, cc.Config)
+			if err == nil {
+				err = openwb.ConfigureDisplay(ctx, log, client, uri)
+			}
+			if err != nil && ctx.Err() != context.Canceled {
+				log.DEBUG.Printf("display setup: %v", err)
+			}
+		}()
 	}
 
 	return wb, nil
