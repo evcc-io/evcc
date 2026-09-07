@@ -21,16 +21,16 @@ params:
     choice: ["rs485", "tcpip"]
     baudrate: 9600
   - name: maxacpower
-    service: modbus/read?address=5000&type=input&encoding=uint16&scale=100&{modbus}
+    service: modbus/read?address=5000&type=input&encoding=uint16&scale=100&{modbus} # Nominal output power, 0.1kW
   - preset: battery-params
   - name: maxchargepower
-    service: modbus/read?address=5627&type=input&encoding=uint16&scale=100&{modbus}
+    service: modbus/read?address=5627&type=input&encoding=uint16&scale=100&{modbus} # BDC rated power, 0.1kW: Battery DC/DC Converters power, also inverter default value after delivery
     required: true
   - name: maxdischargepower
-    service: modbus/read?address=5627&type=input&encoding=uint16&scale=100&{modbus}
+    service: modbus/read?address=5627&type=input&encoding=uint16&scale=100&{modbus} # BDC rated power, 0.1kW: Battery DC/DC Converters power, also inverter default value after delivery
     required: true
   - name: capacity
-    service: modbus/read?address=5638&type=input&encoding=uint16&scale=0.01&resulttype=float&{modbus}
+    service: modbus/read?address=5638&type=input&encoding=uint16&scale=0.01&resulttype=float&{modbus} # Battery Capacity - High precision, 0.01kWh
   - name: timeout
     deprecated: true
 render: |
