@@ -7,7 +7,7 @@ import (
 	"math"
 	"time"
 
-	solarmanv5 "github.com/evcc-io/evcc/plugin/solarman"
+	"github.com/404GamerNotFound/solaman-go"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	gridx "github.com/grid-x/modbus"
@@ -19,7 +19,7 @@ func init() {
 
 // Solarman reads Modbus registers through a Solarman V5 logger.
 type Solarman struct {
-	client *solarmanv5.Client
+	client *solarman.Client
 	id     byte
 	reg    modbus.Register
 	scale  float64
@@ -60,7 +60,7 @@ func NewSolarmanFromConfig(_ context.Context, other map[string]any) (Plugin, err
 		return nil, errors.New("Solarman supports holding and input registers only")
 	}
 
-	client, err := solarmanv5.New(cc.Host, cc.Port, cc.Serial, cc.Timeout)
+	client, err := solarman.New(cc.Host, cc.Port, cc.Serial, cc.Timeout)
 	if err != nil {
 		return nil, err
 	}

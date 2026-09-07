@@ -5,7 +5,7 @@ import "testing"
 func TestSolarmanFromConfig(t *testing.T) {
 	provider, err := NewSolarmanFromConfig(t.Context(), map[string]any{
 		"host":   "192.0.2.2",
-		"serial": 3875738533,
+		"serial": 1234567890,
 		"register": map[string]any{
 			"address": 86,
 			"type":    "holding",

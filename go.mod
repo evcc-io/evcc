@@ -4,6 +4,7 @@ go 1.27.0
 
 require (
 	dario.cat/mergo v1.0.2
+	github.com/404GamerNotFound/solaman-go v0.1.0
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/PanterSoft/comlynx-go v0.1.0
