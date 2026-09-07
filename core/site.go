@@ -1309,8 +1309,6 @@ func (site *Site) update(lp updater) {
 	site.publishSuggestions()
 
 	site.stats.Update(site)
-
-	site.publish(keys.LastControlCycle, time.Now())
 }
 
 // updatePower calculates the site power balance and updates the given loadpoint
