@@ -53,7 +53,7 @@ func NewTibberFromConfig(ctx context.Context, other map[string]any) (api.Vehicle
 	}
 
 	v := &Tibber{
-		embed: &cc.embed,
+		embed: cc.embed.withContext(ctx),
 		API:   tibber.NewAPI(log, ts),
 		vin:   strings.ToUpper(cc.VIN),
 	}

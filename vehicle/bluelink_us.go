@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -16,10 +17,10 @@ type BluelinkUS struct {
 }
 
 func init() {
-	registry.Add("hyundai-us", NewHyundaiUSFromConfig)
+	registry.AddCtx("hyundai-us", NewHyundaiUSFromConfig)
 }
 
-func NewHyundaiUSFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewHyundaiUSFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed          `mapstructure:",squash"`
 		User, Password string
@@ -78,7 +79,7 @@ func NewHyundaiUSFromConfig(other map[string]any) (api.Vehicle, error) {
 	vehicleAPI := bluelink_us.NewAPI(log, identity, apiCfg)
 
 	v := &BluelinkUS{
-		embed:    &cc.embed,
+		embed:    cc.embed.withContext(ctx),
 		Provider: bluelink_us.NewProvider(vehicleAPI, cc.Cache),
 	}
 

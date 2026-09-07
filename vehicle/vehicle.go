@@ -54,7 +54,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.V
 	}
 
 	v := &Vehicle{
-		embed: &cc.embed,
+		embed: cc.embed.withContext(ctx),
 		Caps:  implement.New(),
 		socG:  socG,
 	}

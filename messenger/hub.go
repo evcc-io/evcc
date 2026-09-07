@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 )
 
 // Event is a notification event
@@ -100,8 +101,11 @@ func (h *Hub) apply(ev Event, tmpl string) (string, error) {
 
 			instance := v.Instance()
 			attr["vehicleTitle"] = instance.GetTitle()
-			attr["vehicleIcon"] = instance.Icon()
 			attr["vehicleCapacity"] = instance.Capacity()
+
+			if dev, err := config.Vehicles().ByName(name); err == nil {
+				attr["vehicleIcon"] = config.DeviceProperties(dev).Icon
+			}
 		}
 	}
 

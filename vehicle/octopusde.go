@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -21,11 +22,11 @@ type OctopusDe struct {
 }
 
 func init() {
-	registry.Add("octopus-de", NewOctopusDeFromConfig)
+	registry.AddCtx("octopus-de", NewOctopusDeFromConfig)
 }
 
 // NewOctopusDeFromConfig creates a new vehicle
-func NewOctopusDeFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewOctopusDeFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed         `mapstructure:",squash"`
 		Email         string
@@ -53,7 +54,7 @@ func NewOctopusDeFromConfig(other map[string]any) (api.Vehicle, error) {
 	}
 
 	v := &OctopusDe{
-		embed:   &cc.embed,
+		embed:   cc.embed.withContext(ctx),
 		API:     api,
 		account: cc.AccountNumber,
 		device:  cc.Device,
@@ -88,7 +89,6 @@ func (v *OctopusDe) status() (octopuskraken.Device, error) {
 		}
 		if v.device == "" || strings.EqualFold(d.ID, v.device) || strings.EqualFold(d.Name, v.device) {
 			v.deviceID = d.ID
-			v.fromVehicle(d.Name, 0)
 			return d, nil
 		}
 	}

@@ -1,10 +1,4 @@
 {{ define "common" }}
-{{- if .title }}
-title: {{ .title }}
-{{- end }}
-{{- if .icon }}
-icon: {{ .icon }}
-{{- end }}
 {{- if .capacity }}
 capacity: {{ .capacity }}
 {{- end }}

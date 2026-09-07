@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"strconv"
 	"time"
 
@@ -123,12 +122,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		for _, dev := range vehicles {
 			v := dev.Instance()
 
-			header := dev.Config().Name
-			if title := v.GetTitle(); title != "" {
-				header = fmt.Sprintf("%s (%s)", title, header)
-			}
-
-			d.DumpWithHeader(header, v)
+			d.DumpWithHeader(deviceHeader(dev), v)
 			if flag {
 				d.DumpDiagnosis(v)
 			}

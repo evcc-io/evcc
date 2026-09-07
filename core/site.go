@@ -291,7 +291,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 		site.pvMeters = append(site.pvMeters, dev)
 
 		// energy collector (for history persistence and forecast scaling)
-		me, err := newMeterCollector(metrics.PV, ref, deviceTitleOrName(dev), dev.Instance())
+		me, err := newMeterCollector(metrics.PV, ref, config.DeviceTitleOrName(dev), dev.Instance())
 		if err != nil {
 			return err
 		}
@@ -320,7 +320,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.batteryMeters = mm
 	for _, dev := range mm {
 		ref := dev.Config().Name
-		me, err := newMeterCollector(metrics.Battery, ref, deviceTitleOrName(dev), dev.Instance())
+		me, err := newMeterCollector(metrics.Battery, ref, config.DeviceTitleOrName(dev), dev.Instance())
 		if err != nil {
 			return err
 		}
@@ -335,7 +335,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.extMeters = mm
 	for _, dev := range mm {
 		ref := dev.Config().Name
-		me, err := newMeterCollector(metrics.Meter, ref, deviceTitleOrName(dev), dev.Instance())
+		me, err := newMeterCollector(metrics.Meter, ref, config.DeviceTitleOrName(dev), dev.Instance())
 		if err != nil {
 			return err
 		}
@@ -350,7 +350,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.auxMeters = mm
 	for _, dev := range mm {
 		ref := dev.Config().Name
-		me, err := newMeterCollector(metrics.Consumer, ref, deviceTitleOrName(dev), dev.Instance())
+		me, err := newMeterCollector(metrics.Consumer, ref, config.DeviceTitleOrName(dev), dev.Instance())
 		if err != nil {
 			return err
 		}
@@ -365,7 +365,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.consumerMeters = mm
 	for _, dev := range mm {
 		ref := dev.Config().Name
-		me, err := newMeterCollector(metrics.Consumer, ref, deviceTitleOrName(dev), dev.Instance())
+		me, err := newMeterCollector(metrics.Consumer, ref, config.DeviceTitleOrName(dev), dev.Instance())
 		if err != nil {
 			return err
 		}
@@ -670,7 +670,7 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 	fun := func(i int, dev config.Device[api.Meter]) {
 		meter := dev.Instance()
 
-		props := deviceProperties(dev)
+		props := config.DeviceProperties(dev)
 		mm[i] = types.Measurement{
 			Name:  dev.Config().Name,
 			Title: props.Title,

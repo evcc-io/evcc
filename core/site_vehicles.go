@@ -37,15 +37,16 @@ type vehicleStruct struct {
 
 // publishVehicles returns a list of vehicle titles
 func (site *Site) publishVehicles() {
-	vv := site.Vehicles().Settings()
-	res := make(map[string]vehicleStruct, len(vv))
+	devs := config.Vehicles().Devices()
+	res := make(map[string]vehicleStruct, len(devs))
 
-	for _, v := range vv {
-		instance := v.Instance()
+	for _, dev := range devs {
+		instance := dev.Instance()
 		if instance == nil {
 			continue
 		}
 
+		v := vehicle.Adapter(site.log, dev)
 		ac := instance.OnIdentified()
 
 		var plan *planStruct
@@ -58,7 +59,7 @@ func (site *Site) publishVehicles() {
 
 		res[v.Name()] = vehicleStruct{
 			Title:          instance.GetTitle(),
-			Icon:           instance.Icon(),
+			Icon:           config.DeviceProperties(dev).Icon, // device meta data
 			Capacity:       instance.Capacity(),
 			Phases:         instance.Phases(),
 			Mode:           v.GetMode(),

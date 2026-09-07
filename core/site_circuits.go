@@ -77,7 +77,7 @@ func (site *Site) publishCircuits() {
 
 	for _, c := range cc {
 		instance := c.Instance()
-		props := deviceProperties(c)
+		props := config.DeviceProperties(c)
 
 		data := circuitStruct{
 			Title:      instance.GetTitle(),
@@ -118,7 +118,7 @@ func (site *Site) dimMeters(dim bool) error {
 		// unreadable state: apply unconditionally
 		dimmed, err := backoff.RetryWithData(m.Dimmed, modbus.Backoff())
 		if err != nil && !errors.Is(err, api.ErrNotAvailable) {
-			errs = errors.Join(errs, fmt.Errorf("%s dimmed: %w", deviceTitleOrName(dev), err))
+			errs = errors.Join(errs, fmt.Errorf("%s dimmed: %w", config.DeviceTitleOrName(dev), err))
 			continue
 		}
 		if err == nil && dim == dimmed {
@@ -126,9 +126,9 @@ func (site *Site) dimMeters(dim bool) error {
 		}
 
 		if err := m.Dim(dim); err == nil {
-			site.log.DEBUG.Printf("%s dim: %t", deviceTitleOrName(dev), dim)
+			site.log.DEBUG.Printf("%s dim: %t", config.DeviceTitleOrName(dev), dim)
 		} else if !errors.Is(err, api.ErrNotAvailable) {
-			errs = errors.Join(errs, fmt.Errorf("%s dim: %w", deviceTitleOrName(dev), err))
+			errs = errors.Join(errs, fmt.Errorf("%s dim: %w", config.DeviceTitleOrName(dev), err))
 		}
 	}
 
@@ -151,12 +151,12 @@ func (site *Site) curtailables() []curtailable {
 
 	for _, dev := range site.pvMeters {
 		if m, ok := api.Cap[api.Curtailer](dev.Instance()); ok {
-			res = append(res, curtailable{deviceTitleOrName(dev), m})
+			res = append(res, curtailable{config.DeviceTitleOrName(dev), m})
 		}
 	}
 
 	for _, dev := range site.curtailers {
-		res = append(res, curtailable{deviceTitleOrName(dev), dev.Instance()})
+		res = append(res, curtailable{config.DeviceTitleOrName(dev), dev.Instance()})
 	}
 
 	return res

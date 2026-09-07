@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -19,11 +20,11 @@ type Skoda struct {
 }
 
 func init() {
-	registry.Add("skoda", NewSkodaFromConfig)
+	registry.AddCtx("skoda", NewSkodaFromConfig)
 }
 
 // NewSkodaFromConfig creates a new vehicle
-func NewSkodaFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewSkodaFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -43,7 +44,7 @@ func NewSkodaFromConfig(other map[string]any) (api.Vehicle, error) {
 	}
 
 	v := &Skoda{
-		embed: &cc.embed,
+		embed: cc.embed.withContext(ctx),
 	}
 
 	var err error
@@ -70,7 +71,7 @@ func NewSkodaFromConfig(other map[string]any) (api.Vehicle, error) {
 	}
 
 	if err == nil {
-		v.fromVehicle(vehicle.Name, float64(vehicle.Specification.Battery.CapacityInKWh))
+		v.Capacity_ = float64(vehicle.Specification.Battery.CapacityInKWh)
 	}
 
 	// reuse tokenService to build provider
