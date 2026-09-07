@@ -821,7 +821,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PriorityStrategy"
+                $ref: "./openapi.state.yaml#/components/schemas/PriorityStrategy"
   /prioritybasis/{basis}:
     post:
       operationId: setPriorityBasis
@@ -839,7 +839,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PriorityBasis"
+                $ref: "./openapi.state.yaml#/components/schemas/PriorityBasis"
   /priorityhysteresis/{hysteresis}:
     post:
       operationId: setPriorityHysteresis
@@ -1882,19 +1882,6 @@ components:
         - INFO
         - DEBUG
         - TRACE
-    PriorityStrategy:
-      description: "Priority strategy used to sub-order loadpoints of the same priority."
-      type: string
-      enum:
-        - "none"
-        - "soc"
-        - "deficit"
-    PriorityBasis:
-      description: "Whether the priority strategy ranks by soc percentage or by absolute energy (kWh)."
-      type: string
-      enum:
-        - "percent"
-        - "energy"
     Odometer:
       nullable: true
       type: "number"
@@ -2056,13 +2043,13 @@ components:
       in: path
       required: true
       schema:
-        $ref: "#/components/schemas/PriorityStrategy"
+        $ref: "./openapi.state.yaml#/components/schemas/PriorityStrategy"
     priorityBasis:
       name: basis
       in: path
       required: true
       schema:
-        $ref: "#/components/schemas/PriorityBasis"
+        $ref: "./openapi.state.yaml#/components/schemas/PriorityBasis"
     soc:
       name: soc
       description: SOC in %

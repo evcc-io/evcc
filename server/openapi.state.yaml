@@ -192,13 +192,16 @@ components:
           description: Battery priority SoC in %. Home battery is charged first while below this level.
           type: number
         priorityStrategy:
-          $ref: "#/components/schemas/PRIORITY_STRATEGY"
+          $ref: "#/components/schemas/PriorityStrategy"
+          description: Strategy used to sub-order loadpoints of the same priority when distributing surplus.
         priorityBasis:
-          $ref: "#/components/schemas/PRIORITY_BASIS"
+          $ref: "#/components/schemas/PriorityBasis"
+          description: Whether the priority strategy compares vehicles by SoC percent or by energy in kWh.
         effectivePriorityBasis:
-          $ref: "#/components/schemas/PRIORITY_BASIS"
+          $ref: "#/components/schemas/PriorityBasis"
           description: Priority basis actually in use. Falls back to percent when a loadpoint reports SoC without a known vehicle capacity.
         priorityHysteresis:
+          description: Deadband a loadpoint must lead by before it outranks a same-priority peer, in SoC-% or kWh per basis. 0 disables.
           type: number
         bufferStartSoc:
           description: Battery buffer start SoC in %. Solar charging starts automatically above this level.
@@ -899,6 +902,7 @@ components:
           description: Currently applied priority.
           type: number
         effectivePriorityScore:
+          description: Effective priority including strategy sub-ordering. Integer part is the priority, fraction ranks within it.
           type: number
         enableDelay:
           description: Delay before charging starts in solar mode, in seconds.
@@ -1552,12 +1556,14 @@ components:
       required:
         - continuous
         - precondition
-    PRIORITY_BASIS:
+    PriorityBasis:
+      description: Unit the priority strategy compares vehicles by.
       type: string
       enum:
         - percent
         - energy
-    PRIORITY_STRATEGY:
+    PriorityStrategy:
+      description: Sub-ordering of loadpoints with the same priority.
       type: string
       enum:
         - none

@@ -3036,23 +3036,6 @@
           "TRACE"
         ]
       },
-      "PriorityStrategy": {
-        "description": "Priority strategy used to sub-order loadpoints of the same priority.",
-        "type": "string",
-        "enum": [
-          "none",
-          "soc",
-          "deficit"
-        ]
-      },
-      "PriorityBasis": {
-        "description": "Whether the priority strategy ranks by soc percentage or by absolute energy (kWh).",
-        "type": "string",
-        "enum": [
-          "percent",
-          "energy"
-        ]
-      },
       "Odometer": {
         "nullable": true,
         "type": "number",
@@ -3249,6 +3232,23 @@
         "required": [
           "continuous",
           "precondition"
+        ]
+      },
+      "PriorityStrategy": {
+        "description": "Sub-ordering of loadpoints with the same priority.",
+        "type": "string",
+        "enum": [
+          "none",
+          "soc",
+          "deficit"
+        ]
+      },
+      "PriorityBasis": {
+        "description": "Unit the priority strategy compares vehicles by.",
+        "type": "string",
+        "enum": [
+          "percent",
+          "energy"
         ]
       },
       "ChargerStatusReason": {
@@ -3520,6 +3520,7 @@
             "type": "number"
           },
           "effectivePriorityScore": {
+            "description": "Effective priority including strategy sub-ordering. Integer part is the priority, fraction ranks within it.",
             "type": "number"
           },
           "enableDelay": {
@@ -4861,21 +4862,6 @@
           "power"
         ]
       },
-      "PRIORITY_STRATEGY": {
-        "type": "string",
-        "enum": [
-          "none",
-          "soc",
-          "deficit"
-        ]
-      },
-      "PRIORITY_BASIS": {
-        "type": "string",
-        "enum": [
-          "percent",
-          "energy"
-        ]
-      },
       "SmartCostType": {
         "description": "Type of the smart charging limit.",
         "type": "string",
@@ -5540,16 +5526,19 @@
             "type": "number"
           },
           "priorityStrategy": {
-            "$ref": "#/components/schemas/PRIORITY_STRATEGY"
+            "$ref": "#/components/schemas/PriorityStrategy",
+            "description": "Strategy used to sub-order loadpoints of the same priority when distributing surplus."
           },
           "priorityBasis": {
-            "$ref": "#/components/schemas/PRIORITY_BASIS"
+            "$ref": "#/components/schemas/PriorityBasis",
+            "description": "Whether the priority strategy compares vehicles by SoC percent or by energy in kWh."
           },
           "effectivePriorityBasis": {
-            "$ref": "#/components/schemas/PRIORITY_BASIS",
+            "$ref": "#/components/schemas/PriorityBasis",
             "description": "Priority basis actually in use. Falls back to percent when a loadpoint reports SoC without a known vehicle capacity."
           },
           "priorityHysteresis": {
+            "description": "Deadband a loadpoint must lead by before it outranks a same-priority peer, in SoC-% or kWh per basis. 0 disables.",
             "type": "number"
           },
           "bufferStartSoc": {
