@@ -17,8 +17,8 @@ github.com/PanterSoft/comlynx-go v0.1.0 h1:+Kd0lJqHlWQNv9WliijoKTFrcZSZ33RBxIvi6
 github.com/PanterSoft/comlynx-go v0.1.0/go.mod h1:X+jgiMXuPftrh5cpoMm648+DpTM2RdKm5FBCyL8KpLw=
 github.com/PuerkitoBio/goquery v1.13.0 h1:mqHbjD7Jmnul4DTR24LKTjo1uUmHUh072kteGV+xpFM=
 github.com/PuerkitoBio/goquery v1.13.0/go.mod h1:Hip5mdBL8K2wEGKJdr27sRaNwIdDajmCwB/ExUPwW+g=
-github.com/RAR/go-openevse v0.1.0 h1:eaH6V/Nl4tzCrUBgIrVQ5U7nn+A1OSxhJ8awZhwXa/E=
-github.com/RAR/go-openevse v0.1.0/go.mod h1:+2BGX6b1KLnHNFOrwzpxp6Fror3q/BrVREfkOFpbwAA=
+github.com/RAR/go-openevse v0.2.0 h1:JAILOKVdKyw4o25jwThWFbkmwH8KgJ/51pjqbvO01Uo=
+github.com/RAR/go-openevse v0.2.0/go.mod h1:+2BGX6b1KLnHNFOrwzpxp6Fror3q/BrVREfkOFpbwAA=
 github.com/RaveNoX/go-jsoncommentstrip v1.0.0/go.mod h1:78ihd09MekBnJnxpICcwzCMzGrKSKYe4AqU6PDYYpjk=
 github.com/Shopify/toxiproxy v2.1.4+incompatible h1:TKdv8HiTLgE5wdJuEML90aBgNWsokNbMijUGhmcoBJc=
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
