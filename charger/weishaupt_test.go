@@ -183,7 +183,7 @@ func TestWeishauptPowerWrite(t *testing.T) {
 }
 
 func TestWeishauptHeartbeat(t *testing.T) {
-	for _, name := range []string{"positive", "initial enable", "disabled", "zero current", "read failure", "write failure"} {
+	for _, name := range []string{"positive", "initial enable", "changed setpoint", "disabled", "zero current", "external disable", "read failure", "write failure"} {
 		t.Run(name, func(t *testing.T) {
 			wb := weishauptTestCharger(t)
 			want := uint32(2300)
@@ -194,11 +194,16 @@ func TestWeishauptHeartbeat(t *testing.T) {
 				require.NoError(t, wb.MaxCurrent(10))
 			}
 			switch name {
+			case "changed setpoint":
+				weishauptH.power.Store(4600)
 			case "disabled":
 				require.NoError(t, wb.Enable(false))
 				want = 0
 			case "zero current":
 				require.NoError(t, wb.MaxCurrent(0))
+				want = 0
+			case "external disable":
+				weishauptH.power.Store(0)
 				want = 0
 			case "read failure":
 				weishauptH.fail.Store(true)

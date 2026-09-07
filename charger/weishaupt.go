@@ -129,15 +129,16 @@ func (wb *Weishaupt) heartbeat(ctx context.Context, interval time.Duration) {
 		}
 
 		wb.mu.Lock()
-		power, err := wb.getPower()
-		if err == nil && power > 0 {
-			err = wb.setPower(power)
+		if power := wb.power; power > 0 {
+			enabled, err := wb.Enabled()
+			if err == nil && enabled {
+				err = wb.setPower(power)
+			}
+			if err != nil {
+				wb.log.ERROR.Println("heartbeat:", err)
+			}
 		}
 		wb.mu.Unlock()
-
-		if err != nil {
-			wb.log.ERROR.Println("heartbeat:", err)
-		}
 	}
 }
 
@@ -167,6 +168,10 @@ func (wb *Weishaupt) getPower() (uint16, error) {
 
 func (wb *Weishaupt) setPower(power uint16) error {
 	_, err := wb.conn.WriteSingleRegister(wsRegPvPower, power)
+	if err == nil && power > 0 {
+		wb.power = power
+	}
+
 	return err
 }
 
@@ -225,12 +230,7 @@ func (wb *Weishaupt) MaxCurrentMillis(current float64) error {
 
 	power := uint16(min(voltage*current*float64(phases), 65535))
 
-	err := wb.setPower(power)
-	if err == nil && power > 0 {
-		wb.power = power
-	}
-
-	return err
+	return wb.setPower(power)
 }
 
 var _ api.Battery = (*Weishaupt)(nil)
