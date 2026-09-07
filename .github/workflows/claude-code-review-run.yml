@@ -1,5 +1,7 @@
 name: Claude Code Review (run)
 
+# Disabled; original job conditions are retained for re-enablement.
+
 # Stage 2 (privileged): triggered when the "Claude Code Review" workflow above
 # completes. workflow_run executes in the base-repo context, so it has access
 # to secrets and id-token even for PRs from forks. This is what makes reviewing
@@ -19,6 +21,7 @@ jobs:
   gate:
     # Only react to PR runs that finished successfully.
     if: >
+      false &&
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest

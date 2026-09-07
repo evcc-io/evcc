@@ -331,6 +331,7 @@
       "hideAdvancedSettings": "Slėpti išplėstinius nustatymus",
       "invalidFileSelected": "Pasirinktas netinkamas failas",
       "legacy": "seni",
+      "moreInfo": "Daugiau informacijos:",
       "noFileSelected": "Nepasirinktas failas.",
       "off": "išjungta",
       "on": "Įjungta",
@@ -969,7 +970,7 @@
       "type": {
         "co2": "CO₂ Intensyvumas",
         "feedIn": "Eksporto kaina",
-        "grid": "Pirkimo kaina",
+        "grid": "Importo kaina",
         "planner": "Planuoklis",
         "solar": "Saulės",
         "temperature": "Temperatūros Prognozė"
@@ -1091,7 +1092,7 @@
       "optInSponsorship": "Gali tik rėmėjai."
     },
     "version": {
-      "availableLong": "(yra naujesnė versija)",
+      "availableLong": "yra naujesnė versija",
       "community": "evcc bendruomenė",
       "labelEmail": "El. paštas",
       "labelPhone": "Telefonas",
@@ -1112,7 +1113,7 @@
       "modalUpdateStarted": "Startuoja nauja evcc versija…",
       "modalUpdateStatusStart": "Instaliavimas pradėtas:",
       "modalViewOnGitHub": "Peržiūrėti GitHub’e",
-      "openSource": "atvirąjį kodą",
+      "openSource": "atvirasis kodas",
       "poweredBy": "sukurta naudojant"
     }
   },
@@ -1156,7 +1157,7 @@
     },
     "type": {
       "co2": "CO₂ Išmetimai",
-      "price": "Pirkimo Kaina",
+      "price": "Tinklo Kaina",
       "solar": "Saulės Gamyba",
       "temperature": "Lauko Temperatūra"
     }
@@ -1298,15 +1299,18 @@
         "continuous": "be pertraukos",
         "continuousCo2Description": "Parenka švariausią nepertraukiamą laikotarpių seriją.",
         "continuousPriceDescription": "Pasirenkama pigiausia ištisinė laikotarpių serija.",
+        "disabledDescription": "Reikalingas dinaminis tarifas arba CO₂ prognozė.",
         "label": "Optimizacija"
       },
       "planNumber": "Planas {number}",
       "precondition": {
         "description": "Dalis įkrovimo perkeliama prieš pat išvykstant: pašyla baterija, trumpiau būna su aukštu įkrovimo lygiu.",
+        "disabledDescription": "Visas įkrovimas atliekamas prieš pat išvykimą.",
         "label": "Vėlyvas įkrovimas",
         "optionAll": "viskas",
         "optionNo": "ne",
-        "summary": "{precondition} prieš"
+        "summary": "{precondition} prieš",
+        "summaryAll": "prieš pat išvykimą"
       },
       "remove": "Pašalinti",
       "repeating": "kartojasi",
@@ -1401,6 +1405,7 @@
       "finished": "Bus baigta",
       "last24hEnergy": "Pastarosios 24 val",
       "last7dEnergy": "Pastarosios 7 dienos",
+      "phasesMismatch": "Daugiau fazių aktyvios, nei sukonfigūruota. Patikrinkite fazių konfigūraciją.",
       "power": "Galia",
       "price": "Kaina",
       "remaining": "Liko",
@@ -1521,7 +1526,7 @@
     "vehicleSettings": {
       "connectedTo": "prijungta prie {0}",
       "description": "Šie numatytieji nustatymai taikomi, kai transporto priemonė prijungiama prie įkroviklio.",
-      "editHint": "Pridėkite arba redaguokite automobilius {0}.",
+      "editHint": "Automobilius galite redaguoti čia {0}.",
       "keepAsIs": "Palikti kaip yra",
       "learnMore": "Sužinoti daugiau.",
       "limitSoc": "Numatytasis limitas",

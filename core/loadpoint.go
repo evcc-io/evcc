@@ -889,7 +889,7 @@ func (lp *Loadpoint) syncCharger() error {
 	}
 
 	// #1: check charger logic, fix charger state if necessary (for chargers that start charging while being disabled)
-	if !enabled && lp.charging() {
+	if !enabled && lp.charging() && lp.phaseSwitchCompleted() {
 		lp.log.WARN.Println("charger logic error: disabled but charging")
 
 		// treat as enabled when charging for further validations
