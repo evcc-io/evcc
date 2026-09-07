@@ -44,14 +44,16 @@ func (v *adapter) owner() loadpoint.API {
 	return Owner(v.Instance())
 }
 
-// updatePlan invalidates the committed plan goal and triggers an immediate update
+// updatePlan invalidates the committed plan goal and triggers an immediate update.
+// Used for changes to the plan goal, which make a locked goal stale.
 func (v *adapter) updatePlan() {
 	if lp := v.owner(); lp != nil {
 		lp.UpdatePlan()
 	}
 }
 
-// requestUpdate triggers an immediate update
+// requestUpdate triggers an immediate update.
+// Used for changes that affect scheduling only and leave the plan goal intact.
 func (v *adapter) requestUpdate() {
 	if lp := v.owner(); lp != nil {
 		lp.RequestUpdate()
