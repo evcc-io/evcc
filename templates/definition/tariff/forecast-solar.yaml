@@ -1,4 +1,5 @@
 template: forecast-solar
+link: https://forecast.solar
 products:
   - brand: Forecast.Solar
 requirements:

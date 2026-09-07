@@ -19,6 +19,7 @@ params:
   - name: port
     deprecated: true
   - name: wakeup_alt
+    type: bool
     description:
       en: Alternative wakeup code
       de: Alternativer Wakeup-Code
@@ -53,13 +54,13 @@ render: |
   wakeup:
     source: http
     {{- if .host }}
-    {{- if eq .wakeup_alt "true" }}
+    {{- if .wakeup_alt }}
     uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/charge_now/{{ .vin }}/1
     {{- else }}
     uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/wakeup/{{ .vin }}
     {{- end }}
     {{- else }}
-    {{- if eq .wakeup_alt "true" }}
+    {{- if .wakeup_alt }}
     uri: {{ trimSuffix "/" .url }}/charge_now/{{ .vin }}/1
     {{- else }}
     uri: {{ trimSuffix "/" .url }}/wakeup/{{ .vin }}

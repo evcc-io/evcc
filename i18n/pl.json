@@ -63,28 +63,7 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Stan naładowania magazynu energii",
-    "bufferStart": {
-      "above": "kiedy powyżej {soc}.",
-      "full": "kiedy na {soc}.",
-      "never": "tylko z wystarczającą nadwyżką."
-    },
-    "capacity": "{energy} z {total}",
-    "control": "Kontrola akumulatora",
-    "discharge": "Zapobiegaj rozładowywaniu w trybie szybkim i zaplanowanym ładowaniu.",
-    "disclaimerHint": "Uwaga:",
-    "disclaimerText": "Te ustawienia mają wpływ tylko na tryb solarny. Sposób ładowania jest odpowiednio dostosowywany.",
     "gridChargeTab": "Ładowanie z sieci",
-    "legendBottomName": "Daj priorytet ładowaniu domowemu magazynowi energii",
-    "legendBottomSubline": "aż osiągnie {soc}.",
-    "legendMiddleName": "Ustaw priorytet ładowaniu pojazdów",
-    "legendMiddleSubline": "gdy poziom naładowania domowego magazynu energii jest wyższy niż {soc}.",
-    "legendTopAutostart": "Rozpocznij automatycznie",
-    "legendTopName": "Ładowanie pojazdu z wykorzystaniem domowego magazynu energii",
-    "legendTopSubline": "gdy poziom naładowania domowego magazynu energii jest wyższy niż {soc}.",
-    "legendTopSublineAbove": "gdy jest wyższy niż {soc}",
-    "legendTopSublineDisabled": "jest {soc}.",
-    "legendTopSublineDisabledState": "wyłączone",
     "modalTitle": "Domowy magazyn energii",
     "noBattery": "Brak skonfigurowanego magazynu energii.",
     "usageTab": "Użycie magazynu"
@@ -402,13 +381,6 @@
         "charging": "Ładowarka",
         "heating": "Podgrzewacz"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Użyty zakres prądu będzie wynosił od 6 do 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Użyty zakres prądu będzie wynosił od 6 do 32 A.",
-      "chargerPowerCustom": "inny",
-      "chargerPowerCustomHelp": "Zdefiniuj niestandardowy zakres prądu.",
-      "chargerTypeLabel": "Typ ładowarki",
       "chargingTitle": "Postępowanie",
       "circuitHelp": "Przypisanie zarządzania obciążeniem w celu zapewnienia, że nie zostaną przekroczone limity mocy i prądu.",
       "circuitInvalid": "Obwód nie istnieje",

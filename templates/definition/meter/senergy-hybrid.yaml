@@ -219,8 +219,5 @@ render: |
               address: 0x214C # Time-based control Enable
               type: writesingle
               encoding: uint16
-    default:
-      source: error
-      error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

@@ -1,4 +1,5 @@
 template: tibber
+link: https://tibber.com
 products:
   - brand: Tibber
 requirements:

@@ -16,7 +16,7 @@ import (
 	"time"
 	"uuid"
 
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )

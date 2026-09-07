@@ -19,7 +19,7 @@
 				>
 					<template #soc>
 						<InlineSocSelect
-							id="batteryExpPriority"
+							id="batteryPriority"
 							:options="priorityOptions"
 							:selected="selectedPrioritySoc"
 							:label="fmtSoc(selectedPrioritySoc)"
@@ -50,7 +50,7 @@
 				>
 					<template #soc>
 						<InlineSocSelect
-							id="batteryExpBuffer"
+							id="batteryBuffer"
 							:options="bufferOptions"
 							:selected="selectedBufferSoc"
 							:label="fmtSoc(selectedBufferSoc)"
@@ -60,7 +60,7 @@
 					</template>
 					<template #start>
 						<InlineSocSelect
-							id="batteryExpBufferStart"
+							id="batteryBufferStart"
 							:options="bufferStartOptions"
 							:selected="selectedBufferStartSoc"
 							:label="selectedBufferStartName"
@@ -75,27 +75,27 @@
 			<hr class="my-3" />
 			<div class="form-check form-switch">
 				<input
-					id="batteryExpDischarge"
+					id="batteryDischarge"
 					:checked="batteryDischargeControl"
 					class="form-check-input"
 					type="checkbox"
 					role="switch"
 					@change="changeDischargeControl"
 				/>
-				<label class="form-check-label" for="batteryExpDischarge">
+				<label class="form-check-label" for="batteryDischarge">
 					{{ $t("battery.config.discharge") }}
 				</label>
 			</div>
 			<div v-if="experimental" class="form-check form-switch mt-2">
 				<input
-					id="batteryExpGridDischarge"
+					id="batteryGridDischarge"
 					:checked="batteryGridDischarge"
 					class="form-check-input"
 					type="checkbox"
 					role="switch"
 					@change="changeGridDischarge"
 				/>
-				<label class="form-check-label" for="batteryExpGridDischarge">
+				<label class="form-check-label" for="batteryGridDischarge">
 					{{ $t("battery.config.gridDischarge") }} 🧪
 				</label>
 			</div>
@@ -113,9 +113,7 @@ import type { Battery } from "@/types/evcc";
 import Card from "../Helper/Card.vue";
 import InlineSocSelect from "./InlineSocSelect.vue";
 
-// Battery usage controls for the experimental page. The logic is intentionally duplicated
-// from the classic BatteryUsageSettings.vue (slated for removal) so the two can diverge
-// during the transition.
+// Battery usage controls: surplus priority, charging buffer and discharge switches.
 export default defineComponent({
 	name: "BatteryConfigCard",
 	components: { Card, InlineSocSelect },

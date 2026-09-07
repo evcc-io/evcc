@@ -278,8 +278,5 @@ render: |
             uri: {{ .host }}:{{ .port }}
             id: 1
             value: 124:0:InWRte
-    default:
-      source: error
-      error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

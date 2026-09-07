@@ -20,7 +20,8 @@ func TestLoadpointProfile(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	lp := loadpoint.NewMockAPI(ctrl)
-	lp.EXPECT().GetMode().Return(api.ModeMinPV).AnyTimes()
+	lp.EXPECT().GetMode().Return(api.ModeSmart).AnyTimes()
+	lp.EXPECT().GetAlwaysCharge().Return(api.AlwaysChargeOn).AnyTimes()
 	lp.EXPECT().GetStatus().Return(api.StatusC).AnyTimes()
 	lp.EXPECT().GetChargePower().Return(10000.0).AnyTimes()   //  10 kW
 	lp.EXPECT().EffectiveMinPower().Return(1000.0).AnyTimes() //   1 kW
@@ -156,19 +157,22 @@ func TestUnmodelledPower(t *testing.T) {
 	for _, tc := range []struct {
 		name            string
 		mode            api.ChargeMode
+		alwaysCharge    api.AlwaysCharge
 		status          api.ChargeStatus
 		power, minPower float64
 		expected        float64
 	}{
-		{"pv charging", api.ModePV, api.StatusC, 4000, 1380, 4000},
-		{"pv connected", api.ModePV, api.StatusB, 0, 1380, 0},
-		{"minpv floor before meter caught up", api.ModeMinPV, api.StatusC, 0, 4000, 4000},
-		{"minpv floor must not lower measured", api.ModeMinPV, api.StatusC, 4000, 1000, 4000},
-		{"minpv floor only applies while charging", api.ModeMinPV, api.StatusB, 0, 4000, 0},
-		{"negative measurement clamped", api.ModePV, api.StatusC, -100, 0, 0},
+		{"smart charging", api.ModeSmart, api.AlwaysChargeOff, api.StatusC, 4000, 1380, 4000},
+		{"smart connected", api.ModeSmart, api.AlwaysChargeOff, api.StatusB, 0, 1380, 0},
+		{"always charge floor before meter caught up", api.ModeSmart, api.AlwaysChargeOn, api.StatusC, 0, 4000, 4000},
+		{"always charge floor must not lower measured", api.ModeSmart, api.AlwaysChargeOn, api.StatusC, 4000, 1000, 4000},
+		{"always charge floor only applies while charging", api.ModeSmart, api.AlwaysChargeOn, api.StatusB, 0, 4000, 0},
+		{"always charge floor only in smart mode", api.ModeNow, api.AlwaysChargeOn, api.StatusC, 0, 4000, 0},
+		{"negative measurement clamped", api.ModeSmart, api.AlwaysChargeOff, api.StatusC, -100, 0, 0},
 	} {
 		lp := loadpoint.NewMockAPI(ctrl)
 		lp.EXPECT().GetMode().Return(tc.mode).AnyTimes()
+		lp.EXPECT().GetAlwaysCharge().Return(tc.alwaysCharge).AnyTimes()
 		lp.EXPECT().GetStatus().Return(tc.status).AnyTimes()
 		lp.EXPECT().GetChargePower().Return(tc.power).AnyTimes()
 		lp.EXPECT().EffectiveMinPower().Return(tc.minPower).AnyTimes()
@@ -401,10 +405,12 @@ func TestLoadpointRequestChargeGoal(t *testing.T) {
 			lp.EXPECT().GetTitle().Return("lp").AnyTimes()
 			lp.EXPECT().EffectiveMinPower().Return(1380.0).AnyTimes()
 			lp.EXPECT().EffectiveMaxPower().Return(11000.0).AnyTimes()
-			lp.EXPECT().GetMode().Return(api.ModePV).AnyTimes()
+			lp.EXPECT().GetMode().Return(api.ModeSmart).AnyTimes()
+			lp.EXPECT().GetAlwaysCharge().Return(api.AlwaysChargeOff).AnyTimes()
 			lp.EXPECT().GetStatus().Return(api.StatusB).AnyTimes()
 			lp.EXPECT().GetSmartCostLimit().Return(nil).AnyTimes()
 			lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{}).AnyTimes()
+			lp.EXPECT().EffectivePlanTime().Return(time.Time{}).AnyTimes()
 			lp.EXPECT().GetPlanGoal().Return(0.0, false).AnyTimes()
 
 			req, _ := site.loadpointRequest(lp, 8, 15*time.Minute, nil)

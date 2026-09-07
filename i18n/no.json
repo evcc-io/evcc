@@ -20,28 +20,7 @@
     "title": "Autorisasjonsstatus"
   },
   "batterySettings": {
-    "batteryLevel": "Ladenivå",
-    "bufferStart": {
-      "above": "når over {soc}.",
-      "full": "når det er på {soc}.",
-      "never": "bare med tilstrekkelig overskudd."
-    },
-    "capacity": "{energy} av {total}",
-    "control": "Batterikontroll",
-    "discharge": "Forhindre utladning i hurtigmodus og planlagt lading.",
-    "disclaimerHint": "Merk:",
-    "disclaimerText": "Kun relevant i PV-modus. Ladeadferden justeres deretter.",
     "gridChargeTab": "Nettlading",
-    "legendBottomName": "Hjemmelading har prioritet",
-    "legendBottomSubline": "til det når {soc}.",
-    "legendMiddleName": "kjøretøy først",
-    "legendMiddleSubline": "når hjemmebatteriet er over {soc}.",
-    "legendTopAutostart": "starter automatisk",
-    "legendTopName": "batteriassistert lading",
-    "legendTopSubline": "når hjemmebatteriet er over {soc}.",
-    "legendTopSublineAbove": "hvis over {soc}",
-    "legendTopSublineDisabled": "er {soc}.",
-    "legendTopSublineDisabledState": "deaktivert",
     "modalTitle": "Batteriinnstillinger",
     "noBattery": "Ingen konfigurerte batterier.",
     "usageTab": "Batteribruk"
@@ -326,13 +305,6 @@
         "charging": "Lader",
         "heating": "Varmeelement"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Vil bruke et strømområde på 6 til 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Vil bruke et strømområde på 6 til 32 A.",
-      "chargerPowerCustom": "annen",
-      "chargerPowerCustomHelp": "Definer et tilpasset strømområde.",
-      "chargerTypeLabel": "Ladertype",
       "chargingTitle": "Oppførsel",
       "circuitHelp": "Laststyringsoppgave for å sikre at effekt- og strømgrenser ikke overskrides.",
       "circuitInvalid": "Kretsen eksisterer ikke",

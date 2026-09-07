@@ -122,7 +122,7 @@ TwoLoadpoints.args = {
       connected: true,
       soc: 66,
       vehicleSoc: 66,
-      mode: CHARGE_MODE.PV,
+      mode: CHARGE_MODE.SMART,
       phasesConfigured: 3,
       phasesActive: 1,
       offeredCurrent: 9,

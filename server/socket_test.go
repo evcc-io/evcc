@@ -21,7 +21,7 @@ func TestEncode(t *testing.T) {
 		{float64(1.23456), "1.235"},
 		{"1.2345", "\"1.2345\""},
 		{time.Hour, "3600"},
-		{"minpv", "\"minpv\""},
+		{"smart", "\"smart\""},
 		{time.Time{}, "null"},
 		{now, `"` + now.Format(time.RFC3339) + `"`},
 	}

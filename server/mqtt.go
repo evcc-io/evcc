@@ -234,6 +234,7 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 			}
 		}))},
 		{"batteryGridChargeLimit", floatPtrSetter(site.SetBatteryGridChargeLimit)},
+		{"batteryGridDischargeLimit", floatPtrSetter(site.SetBatteryGridDischargeLimit)},
 		{"batteryMode", ptrSetter(api.BatteryModeString, func(m *api.BatteryMode) error {
 			if m == nil {
 				m = new(api.BatteryUnknown)
@@ -252,6 +253,7 @@ func (m *MQTT) listenSiteSetters(topic string, site site.API) error {
 func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.API) error {
 	for _, s := range []setter{
 		{"mode", setterFunc(api.ChargeModeString, pass(lp.SetMode))},
+		{"alwaysCharge", setterFunc(api.AlwaysChargeString, lp.SetAlwaysCharge)},
 		{"phasesConfigured", intSetter(lp.SetPhasesConfigured)},
 		{"limitSoc", intSetter(pass(lp.SetLimitSoc))},
 		{"minSoc", intSetter(pass(lp.SetMinSoc))},
@@ -264,6 +266,7 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		{"enableDelay", durationSetter(pass(lp.SetEnableDelay))},
 		{"disableDelay", durationSetter(pass(lp.SetDisableDelay))},
 		{"smartCostLimit", floatPtrSetter(pass(lp.SetSmartCostLimit))},
+		{"solarShare", floatSetter(pass(lp.SetSolarShare))},
 		{"smartFeedInPriorityLimit", floatPtrSetter(pass(lp.SetSmartFeedInPriorityLimit))},
 		{"batteryBoost", boolSetter(lp.SetBatteryBoost)},
 		{"batteryBoostLimit", intSetter(pass(lp.SetBatteryBoostLimit))},

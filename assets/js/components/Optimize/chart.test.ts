@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vite-plus/test";
-import { isMidnight, slotXAxis } from "./chart";
+import { dayBoundarySeries, isMidnight, slotXAxis } from "./chart";
 
 // 15min slots starting at the given local hour
 function times(startHour: number, count: number): number[] {
@@ -25,11 +25,10 @@ describe("slotXAxis", () => {
     expect(label(16)).toBe("0\nThu");
   });
 
-  test("draws a split line at day boundaries only", () => {
+  test("marks day boundaries just inside the bar edge", () => {
     expect(isMidnight(slots[16])).toBe(true);
-    expect(axis.splitLine.interval(16)).toBe(true);
-    expect(axis.splitLine.interval(15)).toBe(false);
+    expect(dayBoundarySeries(slots).markLine.data).toEqual([{ xAxis: 15.85 }]);
     // no line at the axis start, even if the first slot is midnight
-    expect(slotXAxis(times(0, 4), weekdayShort).splitLine.interval(0)).toBe(false);
+    expect(dayBoundarySeries(times(0, 4)).markLine.data).toEqual([]);
   });
 });

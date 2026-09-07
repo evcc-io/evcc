@@ -34,7 +34,7 @@ jobs:
 
     steps:
       - name: React to comment
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             await github.rest.reactions.createForIssueComment({
@@ -46,7 +46,7 @@ jobs:
 
       - name: Resolve target branch
         id: pr
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const { owner, repo } = context.repo;
@@ -195,7 +195,7 @@ jobs:
 
       - name: Comment result
         if: always()
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           TARGET: ${{ steps.pr.outputs.target }}
           URL: ${{ steps.create.outputs.url }}
@@ -218,7 +218,7 @@ jobs:
 
       - name: Resolve command comment
         if: always()
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             // collapse the /backport comment as resolved, the result was reported

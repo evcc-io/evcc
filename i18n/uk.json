@@ -20,25 +20,7 @@
     "title": "Статус авторизації"
   },
   "batterySettings": {
-    "batteryLevel": "Рівень заряду батареї",
-    "bufferStart": {
-      "above": "коли вище {soc}.",
-      "full": "коли при {soc}.",
-      "never": "тільки з достатнім надлишком."
-    },
-    "capacity": "{energy} із {total}",
-    "control": "Контроль батареї",
-    "discharge": "Запобігти розрядці в швидкому режимі та плановій зарядці.",
-    "disclaimerHint": "Примітка:",
-    "disclaimerText": "Ці налаштування впливають лише на сонячний режим. Поведінка зарядки регулюється відповідно.",
     "gridChargeTab": "Зарядка від електромережі",
-    "legendBottomName": "Надайте пріоритет зарядці батареї домашнього накопичувача",
-    "legendBottomSubline": "поки не досягне {soc}.",
-    "legendMiddleName": "Пріоритет заряджання автомобіля",
-    "legendMiddleSubline": "коли домашня батарея вище {soc}.",
-    "legendTopAutostart": "Запустити автоматично",
-    "legendTopName": "Заряджання автомобіля за допомогою акумулятора",
-    "legendTopSubline": "коли домашня батарея вище {soc}.",
     "modalTitle": "Домашня батарея",
     "usageTab": "Використання батареї"
   },
@@ -279,13 +261,6 @@
         "charging": "Зарядний пристрій",
         "heating": "Обігрівач"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Використовуватиметься діапазон струму від 6 до 16 А.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Буде використовувати діапазон струму від 6 до 32 А.",
-      "chargerPowerCustom": "інші",
-      "chargerPowerCustomHelp": "Визначте настроюваний діапазон струму.",
-      "chargerTypeLabel": "Тип зарядного пристрою",
       "chargingTitle": "Поведінка",
       "circuitHelp": "Призначення керування навантаженням для забезпечення неперевищення обмежень потужності та струму.",
       "circuitInvalid": "Схема не існує",

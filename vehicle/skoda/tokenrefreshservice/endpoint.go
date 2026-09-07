@@ -21,6 +21,7 @@ var _ vag.TokenExchanger = (*Service)(nil)
 
 type Service struct {
 	*request.Helper
+	log  *util.Logger
 	data url.Values
 }
 
@@ -40,6 +41,7 @@ func (s *skodaTokenResponse) toVagToken(v *vag.Token) {
 func New(log *util.Logger, q url.Values) *Service {
 	return &Service{
 		Helper: request.NewHelper(log),
+		log:    log,
 		data:   q,
 	}
 }
@@ -91,5 +93,5 @@ func (v *Service) Refresh(token *vag.Token) (*vag.Token, error) {
 
 // TokenSource creates token source. Token is refreshed automatically.
 func (v *Service) TokenSource(token *vag.Token) vag.TokenSource {
-	return vag.RefreshTokenSource(token, v.Refresh)
+	return vag.RefreshTokenSource(v.log, token, v.Refresh)
 }

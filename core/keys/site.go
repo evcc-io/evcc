@@ -45,12 +45,14 @@ const (
 	Curtailers = "curtailers"
 
 	// battery settings
-	BatteryDischargeControl = "batteryDischargeControl"
-	BatteryGridChargeLimit  = "batteryGridChargeLimit"
-	BatteryGridChargeActive = "batteryGridChargeActive"
-	BatteryGridDischarge    = "batteryGridDischarge"
-	BufferSoc               = "bufferSoc"
-	BufferStartSoc          = "bufferStartSoc"
+	BatteryDischargeControl    = "batteryDischargeControl"
+	BatteryGridChargeLimit     = "batteryGridChargeLimit"
+	BatteryGridChargeActive    = "batteryGridChargeActive"
+	BatteryGridDischargeLimit  = "batteryGridDischargeLimit"
+	BatteryGridDischargeActive = "batteryGridDischargeActive"
+	BatteryGridDischarge       = "batteryGridDischarge"
+	BufferSoc                  = "bufferSoc"
+	BufferStartSoc             = "bufferStartSoc"
 
 	// loadpoint priority sub-ordering
 	PriorityStrategy       = "priorityStrategy"       // priority strategy (none, soc, deficit)

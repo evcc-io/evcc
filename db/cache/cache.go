@@ -6,7 +6,7 @@ import (
 	"errors"
 	"slices"
 
-	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/db"
 	"gorm.io/gorm"
 )
 

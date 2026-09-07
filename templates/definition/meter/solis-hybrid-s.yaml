@@ -204,8 +204,5 @@ render: |
               address: 43110
               type: writeholding
               decode: uint16
-    default:
-      source: error
-      error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

@@ -22,7 +22,7 @@ render: |
   {{- $ocpp := . }}
   {{- if not .metervalues }}
   {{- $metervalues := "-Current.Offered,Power.Offered,SoC" }}
-  {{- if eq .meter "false" }}
+  {{- if not .meter }}
   {{- $metervalues = "Current.Offered" }}
   {{- end }}
   {{- $ocpp = merge . (dict "metervalues" $metervalues) }}

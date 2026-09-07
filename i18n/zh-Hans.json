@@ -20,25 +20,7 @@
     "title": "授权状态"
   },
   "batterySettings": {
-    "batteryLevel": "电量",
-    "bufferStart": {
-      "above": "超过{soc}时。",
-      "full": "达到{soc}时。",
-      "never": "只要有足够的剩余电力。"
-    },
-    "capacity": "{energy} / {total}",
-    "control": "电池控制",
-    "discharge": "在快速模式和计划充电中防止放电。",
-    "disclaimerHint": "注意：",
-    "disclaimerText": "这些设置仅影响太阳能模式。充电行为将相应调整。",
     "gridChargeTab": "电网充电",
-    "legendBottomName": "优先为住宅电池充电",
-    "legendBottomSubline": "直至达到 {soc}。",
-    "legendMiddleName": "优先为车辆充电",
-    "legendMiddleSubline": "当住宅电池电量超过 {soc} 时。",
-    "legendTopAutostart": "自动开启",
-    "legendTopName": "电池辅助车辆充电",
-    "legendTopSubline": "当住宅电池电量超过 {soc} 时。",
     "modalTitle": "住宅电池",
     "usageTab": "电池使用情况"
   },
@@ -223,13 +205,6 @@
       "chargerLabel": {
         "charging": "充电桩"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "将使用 6 至 16 A 的电流范围。",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "将使用 6 至 32 A 的电流范围。",
-      "chargerPowerCustom": "其他",
-      "chargerPowerCustomHelp": "定义自定义电流范围。",
-      "chargerTypeLabel": "充电桩类型",
       "chargingTitle": "充电",
       "circuitHelp": "负载管理分配，以确保不超过功率和电流限制。",
       "circuitLabel": "电路",

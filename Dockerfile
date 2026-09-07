@@ -1,16 +1,12 @@
 # STEP 1 build ui
-FROM --platform=$BUILDPLATFORM node:26-alpine AS node
+FROM --platform=$BUILDPLATFORM ghcr.io/voidzero-dev/vite-plus:0.2.6@sha256:de284eb61eb6ee5fe1da3824032ed6fb37827eecd597d0d796cacd4434f806ea AS node
 
-RUN apk update && apk add --no-cache make curl bash && curl -fsSL https://vite.plus | bash
-
-# the installer only wires vp into interactive shell rc files, which RUN steps don't source.
-# newer vite+ releases dropped the split directory layout, so accept both bin locations
-ENV PATH="/root/.vite-plus/bin:/root/.local/share/vite-plus/bin:${PATH}"
+USER root
 
 WORKDIR /build
 
 # install node tools
-COPY package*.json ./
+COPY .node-version package*.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci
 
 # build ui

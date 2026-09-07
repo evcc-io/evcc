@@ -195,7 +195,7 @@ func (v *Identity) Login(user, password, language, brand string) error {
 		return fmt.Errorf("login failed: %w", err)
 	}
 
-	v.TokenSource = oauth.RefreshTokenSource(token, refresher)
+	v.TokenSource = oauth.RefreshTokenSource(v.log, token, refresher)
 
 	v.deviceID, err = v.getDeviceID()
 	if err != nil {

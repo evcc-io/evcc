@@ -20,25 +20,7 @@
     "title": "Status autorizacije"
   },
   "batterySettings": {
-    "batteryLevel": "Nivo baterije",
-    "bufferStart": {
-      "above": "kad je iznad {soc}.",
-      "full": "kad na {soc}.",
-      "never": "samo uz dovoljno viška."
-    },
-    "capacity": "{energy} od {total}",
-    "control": "Kontrola baterije",
-    "discharge": "Spriječite pražnjenje u brzom načinu rada i planirano punjenje.",
-    "disclaimerHint": "napomena:",
-    "disclaimerText": "Ova podešavanja utiču samo na solarni način rada. Ponašanje punjenja se u skladu s tim prilagođava.",
     "gridChargeTab": "Mrežno punjenje",
-    "legendBottomName": "Prioritetizirajte punjenje kućne baterije",
-    "legendBottomSubline": "dok ne dostigne {soc}.",
-    "legendMiddleName": "Prioritetizirajte punjenje vozila",
-    "legendMiddleSubline": "kada je kućna baterija iznad {soc}.",
-    "legendTopAutostart": "Pokreni automatski",
-    "legendTopName": "Punjenje vozila podržano baterijama",
-    "legendTopSubline": "kada je kućna baterija iznad {soc}.",
     "modalTitle": "Kućna baterija",
     "usageTab": "Upotreba baterije"
   },
@@ -277,13 +259,6 @@
         "charging": "Učitaj",
         "heating": "Grijač"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Koristit će trenutni raspon od 6 do 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Koristit će trenutni raspon od 6 do 32 A.",
-      "chargerPowerCustom": "drugo",
-      "chargerPowerCustomHelp": "Definirajte prilagođeni raspon struje.",
-      "chargerTypeLabel": "Tip opterećenja",
       "chargingTitle": "Ponašanje",
       "circuitHelp": "Dodjela zadatka upravljanja opterećenjem kako bi se osiguralo da se ne prekorače ograničenja snage i struje.",
       "circuitInvalid": "Kružni tok ne postoji",

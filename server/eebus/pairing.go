@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	shipapi "github.com/enbility/ship-go/api"
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db/settings"
 )
 
 const (

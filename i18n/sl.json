@@ -20,25 +20,7 @@
     "title": "Stanje avtorizacije"
   },
   "batterySettings": {
-    "batteryLevel": "Raven baterije",
-    "bufferStart": {
-      "above": "ko je nad {soc}.",
-      "full": "ko je na {soc}.",
-      "never": "samo z dovolj presežka."
-    },
-    "capacity": "{energy} od {total}",
-    "control": "Nadzor baterije",
-    "discharge": "Preprečite praznjenje v hitrem načinu in načrtovano polnjenje.",
-    "disclaimerHint": "Opomba:",
-    "disclaimerText": "Te nastavitve vplivajo samo na solarni način. Obnašanje pri polnjenju je ustrezno prilagojeno.",
     "gridChargeTab": "Polnjenje iz omrežja",
-    "legendBottomName": "Prednostno polnjenje domače baterije",
-    "legendBottomSubline": "dokler ne doseže {soc}.",
-    "legendMiddleName": "Prioritetno polnjenje vozil",
-    "legendMiddleSubline": "ko je domača baterija nad {soc}.",
-    "legendTopAutostart": "Samodejni zagon",
-    "legendTopName": "Polnjenje vozila, ki ga podpira baterija",
-    "legendTopSubline": "ko je domača baterija nad {soc}.",
     "modalTitle": "Domača baterija",
     "usageTab": "Poraba baterije"
   },
@@ -293,13 +275,6 @@
         "charging": "Polnilnica",
         "heating": "Grelec"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Uporabilo se bo tokovno območje od 6 do 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Uporabilo se bo tokovno območje od 6 do 32 A.",
-      "chargerPowerCustom": "drugo",
-      "chargerPowerCustomHelp": "Določite drug obseg toka.",
-      "chargerTypeLabel": "Vrsta polnilnice",
       "chargingTitle": "Vedenje",
       "circuitHelp": "Dodelitev upravljanja obremenitve, da se zagotovi, da omejitve moči in toka niso presežene.",
       "circuitInvalid": "Vezje ne obstaja",
