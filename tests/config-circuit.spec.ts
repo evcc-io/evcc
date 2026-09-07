@@ -142,6 +142,7 @@ test.describe("circuit", async () => {
 
     await circuitModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(circuitModal);
+    await expectModalVisible(circuitsModal);
 
     const mainCircuit = circuitsModal.getByTestId("circuit-node").filter({ hasText: "Main" });
     await expect(mainCircuit).toBeVisible();
@@ -156,8 +157,9 @@ test.describe("circuit", async () => {
     await circuitModal.getByLabel("Maximum current").fill("10");
     await circuitModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(circuitModal);
+    await expectModalVisible(circuitsModal);
 
-    await circuitsModal.locator('button[data-bs-dismiss="modal"]').last().click();
+    await circuitsModal.getByRole("button", { name: "Close" }).last().click();
     await expectModalHidden(circuitsModal);
 
     for (const [loadpointName, circuitName] of [
