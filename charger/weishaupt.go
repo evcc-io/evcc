@@ -101,10 +101,7 @@ func NewWeishaupt(ctx context.Context, settings modbus.Settings, tempSource stri
 		tempReg: tempReg,
 	}
 
-	// validate connection
-	_, err = wb.getPower()
-
-	return wb, err
+	return wb, nil
 }
 
 var _ api.IconDescriber = (*Weishaupt)(nil)
