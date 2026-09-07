@@ -176,7 +176,7 @@ func (wb *Weishaupt) Enable(enable bool) error {
 	// writing 0 releases the power setpoint and returns the heat pump to normal operation
 	var power uint16
 	if enable {
-		power = wb.power
+		power = max(1, wb.power)
 	}
 
 	return wb.setPower(power)
@@ -201,7 +201,7 @@ func (wb *Weishaupt) MaxCurrentMillis(current float64) error {
 	power := uint16(min(voltage*current*float64(phases), 65535))
 
 	err := wb.setPower(power)
-	if err == nil {
+	if err == nil && power > 0 {
 		wb.power = power
 	}
 
