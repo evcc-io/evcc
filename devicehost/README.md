@@ -79,6 +79,10 @@ opaque device id plus the api interfaces this particular instance supports:
 Capabilities are per instance, not per type — the same type may report different
 capabilities depending on the hardware it finds.
 
+Chargers can report `api.FeatureDescriber` and `api.IconDescriber` to provide
+features such as `integrateddevice` for fixed consumers and a device icon.
+These use the regular `Call` RPC, not additional fields on `DeviceType`.
+
 ### Call
 
 Arguments and return values are json encoded; their Go types follow from the
@@ -90,6 +94,8 @@ reply — return a gRPC error instead.
 | `api.Meter.CurrentPower` | – | `[-3000.0]` |
 | `api.PhaseCurrents.Currents` | – | `[10.0, 10.0, 10.0]` |
 | `api.PhaseSwitcher.Phases1p3p` | `[1]` | – |
+| `api.FeatureDescriber.Features` | - | `[["integrateddevice", "heating"]]` |
+| `api.IconDescriber.Icon` | - | `["heatpump"]` |
 
 ## Capabilities
 
