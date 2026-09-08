@@ -29,8 +29,8 @@ params:
       de: Phasenumschaltung
       en: Phase switching
     help:
-      de: Nur auf Ladegeräten ab Baujahr 2026 verfügbar, deren Seriennummer mit 1026 beginnt. Auf älterer Hardware weist das Ladegerät die Umschaltung ab.
-      en: Only available on chargers manufactured from 2026, whose serial number starts with 1026. On older hardware the charger rejects the switch.
+      de: Nur für EVSE-Firmware älter als 357 nötig; ab 357 meldet das Ladegerät selbst, ob es umschalten kann. Verfügbar nur auf Ladegeräten ab Baujahr 2026, deren Seriennummer mit 1026 beginnt.
+      en: Only needed on EVSE firmware older than 357; from 357 the charger reports whether it can switch. Available only on chargers manufactured from 2026, whose serial number starts with 1026.
     type: bool
     default: false
     advanced: true
