@@ -15,8 +15,8 @@ caveats:
       de: Das Modbus-TCP-Gateway leitet höchstens zwei Transaktionen pro Sekunde weiter. Kürzere Abfrageintervalle führen zu Zeitüberschreitungen, nicht zu aktuelleren Daten.
       en: The Modbus TCP gateway forwards at most two transactions per second. Shorter polling intervals produce timeouts rather than fresher data.
   - description:
-      de: Die Phasenumschaltung ist nur auf Ladegeräten ab Baujahr 2026 verfügbar (Seriennummer beginnt mit 1026). Auf älteren Geräten weist das Ladegerät die Umschaltung ab.
-      en: Phase switching is only available on chargers manufactured from 2026 (serial number starting with 1026). On older hardware the charger rejects the switch.
+      de: Die Phasenumschaltung ist nur auf Ladegeräten ab Baujahr 2026 verfügbar (Seriennummer beginnt mit 1026). Ab Firmware 357 liest evcc die Fähigkeit vom Ladegerät und bietet die Phasenumschaltung nur dort an, wo sie unterstützt wird.
+      en: Phase switching is only available on chargers manufactured from 2026 (serial number starting with 1026). From firmware 357 evcc reads the capability from the charger and only offers phase switching where it is supported.
 params:
   - name: modbus
     choice: ["tcpip"]
@@ -28,12 +28,9 @@ params:
     description:
       de: Phasenumschaltung
       en: Phase switching
-    help:
-      de: Nur für EVSE-Firmware älter als 357 nötig; ab 357 meldet das Ladegerät selbst, ob es umschalten kann. Verfügbar nur auf Ladegeräten ab Baujahr 2026, deren Seriennummer mit 1026 beginnt.
-      en: Only needed on EVSE firmware older than 357; from 357 the charger reports whether it can switch. Available only on chargers manufactured from 2026, whose serial number starts with 1026.
+    deprecated: true
     type: bool
     default: false
-    advanced: true
 render: |
   type: voltie
   {{- include "modbus" . }}
