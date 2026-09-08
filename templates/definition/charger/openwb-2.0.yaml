@@ -52,6 +52,14 @@ params:
     advanced: true
   - name: password
     advanced: true
+  - name: query
+    advanced: true
+    description:
+      en: Display URL parameters
+      de: URL-Parameter des Displays
+    help:
+      en: Optional query string appended to the evcc URL, e.g. lp=2 to preselect a loadpoint. Leave empty to automatically select the loadpoint using this charger, if any. See the web UI documentation for available parameters.
+      de: Optionale Query-Parameter für die evcc-URL, z. B. lp=2, um einen Ladepunkt vorauszuwählen. Leer lassen, um automatisch den Ladepunkt zu wählen, der diesen Lader verwendet, sofern vorhanden. Verfügbare Parameter siehe Web-UI-Dokumentation.
   - name: insecure
   - name: phases1p3p
     type: bool
@@ -80,6 +88,9 @@ render: |
   {{- end }}
   user: {{ .user | quote }}
   password: {{ .password | quote }}
+  {{- if .query }}
+  query: {{ .query | quote }}
+  {{- end }}
   insecure: {{ .insecure }}
   {{- end }}
   phases1p3p: {{ .phases1p3p }}

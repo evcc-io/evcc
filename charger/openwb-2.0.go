@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -15,6 +17,7 @@ import (
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/server/network"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/modbus"
 )
 
@@ -57,6 +60,7 @@ func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charg
 		Phases1p3p         bool
 		Identify           bool
 		Display            bool
+		Query              string
 		mqtt.Config        `mapstructure:",squash"`
 		modbus.TcpSettings `mapstructure:",squash"`
 	}{
@@ -119,7 +123,11 @@ func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charg
 				stop := context.AfterFunc(ctx, disconnect)
 				defer stop()
 				defer disconnect()
-				err = openwb.ConfigureDisplay(ctx, log, client, uri)
+				query := strings.TrimLeft(cc.Query, "/?#")
+				if query == "" {
+					query = lookupOpenWB20LoadpointQuery(wb)
+				}
+				err = openwb.ConfigureDisplay(ctx, log, client, uri, query)
 			}
 			if err != nil && ctx.Err() != context.Canceled {
 				log.DEBUG.Printf("display setup: %v", err)
@@ -128,6 +136,30 @@ func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charg
 	}
 
 	return wb, nil
+}
+
+// lookupOpenWB20LoadpointQuery returns a "lp=n" filter for the loadpoint that uses wb as its
+// charger, or an empty string if none is (yet) configured. Best effort: does not wait for
+// loadpoints configured after this charger.
+func lookupOpenWB20LoadpointQuery(wb *OpenWB20) string {
+	var name string
+	for _, dev := range config.Chargers().Devices() {
+		if dev.Instance() == wb {
+			name = dev.Config().Name
+			break
+		}
+	}
+	if name == "" {
+		return ""
+	}
+
+	for idx, dev := range config.Loadpoints().Devices() {
+		if lp := dev.Instance(); lp != nil && lp.GetChargerRef() == name {
+			return "lp=" + strconv.Itoa(idx+1)
+		}
+	}
+
+	return ""
 }
 
 // NewOpenWB20 creates OpenWB20 charger

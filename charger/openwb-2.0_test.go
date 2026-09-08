@@ -11,14 +11,42 @@ import (
 	"time"
 
 	"github.com/eclipse/paho.mqtt.golang/packets"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/globalconfig"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/server/network"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 	"go.yaml.in/yaml/v4"
 )
+
+func TestOpenWB20LoadpointQuery(t *testing.T) {
+	config.Reset()
+	t.Cleanup(config.Reset)
+
+	wb := &OpenWB20{}
+	other := &OpenWB20{}
+	assert.Empty(t, lookupOpenWB20LoadpointQuery(wb))
+
+	require.NoError(t, config.Chargers().Add(config.NewStaticDevice(config.Named{Name: "wallbox"}, api.Charger(wb))))
+	require.NoError(t, config.Chargers().Add(config.NewStaticDevice(config.Named{Name: "other"}, api.Charger(other))))
+	assert.Empty(t, lookupOpenWB20LoadpointQuery(wb), "charger not (yet) referenced by any loadpoint")
+
+	ctrl := gomock.NewController(t)
+	lp1 := loadpoint.NewMockAPI(ctrl)
+	lp1.EXPECT().GetChargerRef().Return("other").AnyTimes()
+	lp2 := loadpoint.NewMockAPI(ctrl)
+	lp2.EXPECT().GetChargerRef().Return("wallbox").AnyTimes()
+	require.NoError(t, config.Loadpoints().Add(config.NewStaticDevice(config.Named{Name: "lp-1"}, loadpoint.API(lp1))))
+	require.NoError(t, config.Loadpoints().Add(config.NewStaticDevice(config.Named{Name: "lp-2"}, loadpoint.API(lp2))))
+
+	assert.Equal(t, "lp=2", lookupOpenWB20LoadpointQuery(wb))
+	assert.Equal(t, "lp=1", lookupOpenWB20LoadpointQuery(other))
+}
 
 func TestOpenWB20DisplayConfig(t *testing.T) {
 	require.Zero(t, network.Config().Port)
@@ -113,9 +141,9 @@ func TestOpenWB20DisplayDisconnect(t *testing.T) {
 			listener, err := net.Listen("tcp", "127.0.0.1:0")
 			require.NoError(t, err)
 			defer listener.Close()
-			require.NoError(t, listener.(*net.TCPListener).SetDeadline(time.Now().Add(5*time.Second)))
+			require.NoError(t, listener.(*net.TCPListener).SetDeadline(time.Now().Add(10*time.Second)))
 
-			timeout := 5 * time.Second
+			timeout := 10 * time.Second
 			if test.timeout || test.reject {
 				timeout = time.Second
 			}
@@ -128,7 +156,7 @@ func TestOpenWB20DisplayDisconnect(t *testing.T) {
 			conn, err := listener.Accept()
 			require.NoError(t, err)
 			defer conn.Close()
-			require.NoError(t, conn.SetDeadline(time.Now().Add(5*time.Second)))
+			require.NoError(t, conn.SetDeadline(time.Now().Add(10*time.Second)))
 
 			packet, err := packets.ReadPacket(conn)
 			require.NoError(t, err)

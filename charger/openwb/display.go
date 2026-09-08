@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"strings"
 	"sync"
 
 	"github.com/evcc-io/evcc/util"
@@ -76,10 +77,14 @@ func (state *displayState) wait(ctx context.Context, topic string, target any, a
 }
 
 // ConfigureDisplay configures an active secondary display once, using acknowledged MQTT state.
-func ConfigureDisplay(ctx context.Context, log *util.Logger, client displayClient, uri string) error {
+// query is an optional caller-supplied query string (without a leading '/', '?' or '#') appended to uri as "uri/?query".
+func ConfigureDisplay(ctx context.Context, log *util.Logger, client displayClient, uri, query string) error {
 	parsed, err := url.Parse(uri)
 	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Hostname() == "" || parsed.Port() == "0" || parsed.User != nil {
 		return fmt.Errorf("invalid internal URL")
+	}
+	if query = strings.TrimLeft(query, "/?#"); query != "" {
+		uri += "/?" + query
 	}
 
 	state := &displayState{values: make(map[string]string), updated: make(chan struct{}, 1)}

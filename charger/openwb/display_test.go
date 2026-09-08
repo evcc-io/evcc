@@ -72,7 +72,7 @@ func TestConfigureDisplay(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
-			err := ConfigureDisplay(ctx, util.NewLogger("test"), client, uri)
+			err := ConfigureDisplay(ctx, util.NewLogger("test"), client, uri, "")
 			if test.fail {
 				require.Error(t, err)
 			} else {
@@ -105,8 +105,28 @@ func TestConfigureDisplayUnchanged(t *testing.T) {
 	client.values[displayModeTopic] = `"local"`
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	require.NoError(t, ConfigureDisplay(ctx, util.NewLogger("test"), client, "http://evcc:7070"))
+	require.NoError(t, ConfigureDisplay(ctx, util.NewLogger("test"), client, "http://evcc:7070", ""))
 	assert.Empty(t, client.writes)
+}
+
+func TestConfigureDisplayQuery(t *testing.T) {
+	for _, test := range []struct {
+		query, url string
+	}{
+		{"lp=1", "http://evcc:7070/?lp=1"},
+		{"?lp=1", "http://evcc:7070/?lp=1"},
+		{"/?lp=1", "http://evcc:7070/?lp=1"},
+		{"#/?lp=1", "http://evcc:7070/?lp=1"},
+	} {
+		t.Run(test.query, func(t *testing.T) {
+			client := newDisplayTestClient()
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			require.NoError(t, ConfigureDisplay(ctx, util.NewLogger("test"), client, "http://evcc:7070", test.query))
+			require.Len(t, client.writes, 2)
+			assert.Equal(t, `openWB/set/optional/int_display/theme={"type":"url_display","configuration":{"url":"`+test.url+`"}}`, client.writes[0])
+		})
+	}
 }
 
 func TestConfigureDisplayRejected(t *testing.T) {
@@ -114,7 +134,7 @@ func TestConfigureDisplayRejected(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
 	client.onWrite = func(topic string) {}
-	require.ErrorIs(t, ConfigureDisplay(ctx, util.NewLogger("test"), client, "http://evcc:7070"), context.DeadlineExceeded)
+	require.ErrorIs(t, ConfigureDisplay(ctx, util.NewLogger("test"), client, "http://evcc:7070", ""), context.DeadlineExceeded)
 	require.Len(t, client.writes, 1)
 	assert.True(t, strings.HasPrefix(client.writes[0], "openWB/set/optional/int_display/theme="))
 }
@@ -127,7 +147,7 @@ func TestConfigureDisplaySecondaryChanges(t *testing.T) {
 		client.listeners[displaySecondaryTopic]("false")
 		client.listeners[displayThemeTopic](`{"type":"url_display","configuration":{"url":"http://evcc:7070"}}`)
 	}
-	require.ErrorContains(t, ConfigureDisplay(ctx, util.NewLogger("test"), client, "http://evcc:7070"), "is not true")
+	require.ErrorContains(t, ConfigureDisplay(ctx, util.NewLogger("test"), client, "http://evcc:7070", ""), "is not true")
 	require.Len(t, client.writes, 1)
 }
 
@@ -135,7 +155,7 @@ func TestConfigureDisplayInvalidURL(t *testing.T) {
 	for _, uri := range []string{"", "file:///tmp/evcc", "http://evcc:0", "http://user:password@evcc"} {
 		t.Run(uri, func(t *testing.T) {
 			client := newDisplayTestClient()
-			require.Error(t, ConfigureDisplay(context.Background(), util.NewLogger("test"), client, uri))
+			require.Error(t, ConfigureDisplay(context.Background(), util.NewLogger("test"), client, uri, ""))
 			assert.Empty(t, client.listeners)
 			assert.Empty(t, client.writes)
 		})
@@ -146,6 +166,6 @@ func TestConfigureDisplayCanceled(t *testing.T) {
 	client := newDisplayTestClient()
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	require.ErrorIs(t, ConfigureDisplay(ctx, util.NewLogger("test"), client, "http://evcc:7070"), context.Canceled)
+	require.ErrorIs(t, ConfigureDisplay(ctx, util.NewLogger("test"), client, "http://evcc:7070", ""), context.Canceled)
 	assert.Empty(t, client.writes)
 }
