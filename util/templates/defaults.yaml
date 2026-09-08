@@ -147,6 +147,7 @@ params:
       de: Untere Grenze wie am Batteriesystem eingestellt. Wird vom Optimizer genutzt.
       en: Lower limit as configured on the battery system. Used by optimizer.
     example: 25
+    default: 0
     type: int
     usages: ["battery"]
   - name: maxsoc
@@ -158,6 +159,7 @@ params:
       de: Obere Grenze wie am Batteriesystem eingestellt. Wird vom Optimizer und für Netzladen genutzt.
       en: Upper limit as configured on the battery system. Used by optimizer and for grid charging.
     example: 95
+    default: 100
     type: int
     usages: ["battery"]
   - name: mincurrent
