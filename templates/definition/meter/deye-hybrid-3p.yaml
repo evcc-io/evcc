@@ -20,6 +20,11 @@ params:
   - name: storageunit
     choice: ["1", "2"]
   - preset: battery-params
+  # active battery control writes these to the device, they must match its settings
+  - name: minsoc
+    required: true
+  - name: maxsoc
+    required: true
   - name: batterytype
     choice: ["lv", "hv"]
     required: true

@@ -12,6 +12,11 @@ params:
     id: 247
   - name: maxacpower
   - preset: battery-params
+  # active battery control writes these to the device, they must match its settings
+  - name: minsoc
+    required: true
+  - name: maxsoc
+    required: true
   - name: maxchargepower
     required: true
 render: |

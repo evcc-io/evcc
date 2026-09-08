@@ -19,6 +19,11 @@ params:
     id: 85
   - name: maxacpower
   - preset: battery-params
+  # active battery control writes these to the device, they must match its settings
+  - name: minsoc
+    required: true
+  - name: maxsoc
+    required: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
