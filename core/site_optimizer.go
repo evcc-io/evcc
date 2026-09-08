@@ -275,6 +275,7 @@ func (site *Site) clearSuggestions() {
 
 	site.Lock()
 	site.suggestionActions = nil
+	site.lastOptimizerSolve = nil
 	site.Unlock()
 }
 
@@ -644,6 +645,58 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	return nil
 }
 
+// optimizerSolve holds a solve's inputs so the control cycle can reapply it
+// to a newer slot without a new network round-trip - see reapplySuggestions.
+type optimizerSolve struct {
+	req      optimizer.OptimizationInput
+	details  requestDetails
+	res      optimizer.OptimizationResult
+	schedule optimizerSchedule
+	slot     int // the slot last applied from this solve
+}
+
+// setLastOptimizerSolve remembers a solve's inputs for reapplySuggestions
+func (site *Site) setLastOptimizerSolve(solve *optimizerSolve) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.lastOptimizerSolve = solve
+}
+
+// reapplySuggestions re-derives the last solve's suggestions for whichever
+// slot covers now, without a new network round-trip. optimizerUpdateAsync
+// only re-solves every tariff.SlotDuration, and not aligned to the slot grid
+// - a solve completing partway into its slot leaves the applied suggestions
+// describing that slot for as long after it ends, until the next solve. This
+// closes that gap every control cycle in between, from data already on hand.
+//
+// Guarded the same way as optimizerUpdateAsync: skipped while the optimizer
+// is disabled or unsponsored (that state is cleared by clearSuggestions, not
+// reapplied here), and TryLock'd against optimizerMu so this never applies a
+// stale cached solve over a fresher one a concurrent real solve just wrote.
+func (site *Site) reapplySuggestions(now time.Time) {
+	if !sponsor.IsAuthorized() || !optimizerEnabled() {
+		return
+	}
+
+	if !site.optimizerMu.TryLock() {
+		return
+	}
+	defer site.optimizerMu.Unlock()
+
+	site.RLock()
+	last := site.lastOptimizerSolve
+	site.RUnlock()
+
+	if last == nil {
+		return
+	}
+
+	if slot := last.schedule.activeSlot(now); slot != last.slot {
+		site.applyOptimizerResult(last.req, last.details, last.res, last.schedule, now)
+	}
+}
+
 // applyOptimizerResult maps the optimizer response onto suggestions, battery
 // forecast and notifications
 func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details requestDetails, res optimizer.OptimizationResult, schedule optimizerSchedule, now time.Time) {
@@ -694,6 +747,8 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 	for _, ev := range site.diffSuggestions(site.pendingSuggestions(details.BatteryDetails)) {
 		site.pushEvent(ev)
 	}
+
+	site.setLastOptimizerSolve(&optimizerSolve{req: req, details: details, res: res, schedule: schedule, slot: slot})
 }
 
 func (site *Site) addBatteryForecastTotals(req []optimizer.BatteryConfig, resp []optimizer.BatteryResult, schedule optimizerSchedule, now time.Time) *types.BatteryForecast {
