@@ -1,0 +1,247 @@
+template: deye-hybrid-1p
+products:
+  - brand: Deye
+    description:
+      generic: 1p hybrid inverter
+  - brand: Sunsynk
+    description:
+      generic: 1p hybrid inverter
+capabilities: ["battery-control", "curtail"]
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 9600
+    id: 1
+  - name: maxacpower
+    required: true
+    usages: ["pv"]
+  - preset: battery-params
+  - name: maxdischargecurrent
+    required: true
+    default: 100
+    usages: ["battery"]
+    advanced: true
+    description:
+      en: Max Discharge Current
+      de: Max Entladestrom
+    help:
+      en: |
+        Maximum battery discharge current in Amperes (A) for normal mode.
+        Set via modbus register 211. Typical range depends on battery and inverter capacity.
+      de: |
+        Maximaler Batterieentladestrom in Ampere (A) für Normalmodus.
+        Wird über Modbus-Register 211 gesetzt. Typischer Bereich abhängig von Batterie- und Wechselrichterkapazität.
+  - name: gridchargecurrent
+    required: true
+    default: 60
+    usages: ["battery"]
+    advanced: true
+    description:
+      en: Grid Charge Current
+      de: Netzladestrom
+    help:
+      en: |
+        Battery charging current in Amperes (A) from grid for charge mode.
+        Set via modbus register 230. Typical range 0-185A.
+      de: |
+        Batterieladestrom in Ampere (A) aus dem Netz für Lademodus.
+        Wird über Modbus-Register 230 gesetzt. Typischer Bereich 0-185A.
+  - name: includegenport
+    type: bool
+    advanced: true
+    description:
+      de: GEN/AUX-Anschluss als Solar-Eingang nutzen
+      en: Treat GEN/AUX port as additional solar input
+    help:
+      de: |
+        Wenn aktiviert, wird die Leistung des GEN/AUX-Anschlusses (Register 166)
+        zur gesamten PV-Leistung addiert.
+      en: |
+        When enabled, the GEN/AUX port power (register 166) is added to the total PV power.
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 169 # Grid power (W)
+      type: holding
+      decode: int16
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 186 # PV1 power (W)
+        type: holding
+        decode: int16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 187 # PV2 power (W)
+        type: holding
+        decode: int16
+    {{- if eq .includegenport "true" }}
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 166 # GEN/AUX power (W)
+        type: holding
+        decode: int16
+    {{- end }}
+  maxacpower: {{ .maxacpower }}
+  # Feed-in curtailment via "Max Sell Power" (register 245, watts).
+  # The register is the device's always-active feed-in ceiling.
+  # "Solar Export" (register 247) is the owner's export on/off switch
+  # and left untouched.
+  curtail: # limit feed-in to the given percent of nominal (100 % = nominal power)
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 245 # Max Sell Power (W)
+      type: writemultiple
+      decode: uint16
+    scale: {{ divf (maxf .maxacpower 1) 100 }} # % to W
+  curtailed: # allowed feed-in as percent of nominal, derived from Max Sell Power
+    source: go
+    in:
+      - name: limit
+        type: float
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 245 # Max Sell Power (W)
+            type: holding
+            decode: uint16
+    script: |
+      // round, the watt conversion does not reproduce the written percent exactly
+      p := int(limit*100/{{ maxf .maxacpower 1 }} + 0.5)
+      if p > 100 {
+        p = 100
+      }
+      p
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 190 # Battery power (W)
+      type: holding
+      decode: int16
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 184 # Battery SOC (%)
+      type: holding
+      decode: uint16
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 255 # enable Use Timer
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 248 # Use Timer
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .maxdischargecurrent }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 211 # Battery Max Discharge Current
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 0 # disable grid charging
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 230 # Grid Charge Battery Current
+              type: writemultiple
+              decode: uint16
+    - case: 2 # hold - prevent discharge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # disable Use Timer
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 248 # Use Timer
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 0 # zero discharge
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 211 # Battery Max Discharge Current
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 0 # disable grid charging
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 230 # Grid Charge Battery Current
+              type: writemultiple
+              decode: uint16
+    - case: 3 # charge - enable grid charging
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # disable Use Timer (ignore TOU schedule)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 248 # Use Timer
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .gridchargecurrent }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 230 # Grid Charge Battery Current
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .maxdischargecurrent }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 211 # Battery Max Discharge Current
+              type: writemultiple
+              decode: uint16
+    - case: 4 # holdcharge
+      set:
+        source: error
+        error: ErrNotAvailable
+  {{- include "battery-params" . }}
+  {{- end }}
