@@ -77,14 +77,14 @@ func (state *displayState) wait(ctx context.Context, topic string, target any, a
 }
 
 // ConfigureDisplay configures an active secondary display once, using acknowledged MQTT state.
-// query is an optional caller-supplied query string (without a leading '/', '?' or '#') appended to uri as "uri/?query".
+// query is an optional caller-supplied query string (without a leading '/', '?' or '#') appended to uri as "uri/#/?query".
 func ConfigureDisplay(ctx context.Context, log *util.Logger, client displayClient, uri, query string) error {
 	parsed, err := url.Parse(uri)
 	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Hostname() == "" || parsed.Port() == "0" || parsed.User != nil {
 		return fmt.Errorf("invalid internal URL")
 	}
 	if query = strings.TrimLeft(query, "/?#"); query != "" {
-		uri += "/?" + query
+		uri += "/#/?" + query
 	}
 
 	state := &displayState{values: make(map[string]string), updated: make(chan struct{}, 1)}
@@ -150,7 +150,7 @@ func ConfigureDisplay(ctx context.Context, log *util.Logger, client displayClien
 				return fmt.Errorf("display setup stopped: %s is not true", gate)
 			}
 		}
-		log.DEBUG.Printf("configuring display: %s", topic)
+		log.DEBUG.Printf("configuring display: %s with value: %s", topic, payload)
 		client.Publish(topic, false, payload)
 		return nil
 	}

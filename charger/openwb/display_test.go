@@ -113,10 +113,10 @@ func TestConfigureDisplayQuery(t *testing.T) {
 	for _, test := range []struct {
 		query, url string
 	}{
-		{"lp=1", "http://evcc:7070/?lp=1"},
-		{"?lp=1", "http://evcc:7070/?lp=1"},
-		{"/?lp=1", "http://evcc:7070/?lp=1"},
-		{"#/?lp=1", "http://evcc:7070/?lp=1"},
+		{"lp=1", "http://evcc:7070/#/?lp=1"},
+		{"?lp=1", "http://evcc:7070/#/?lp=1"},
+		{"/?lp=1", "http://evcc:7070/#/?lp=1"},
+		{"#/?lp=1", "http://evcc:7070/#/?lp=1"},
 	} {
 		t.Run(test.query, func(t *testing.T) {
 			client := newDisplayTestClient()
