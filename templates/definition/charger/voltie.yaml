@@ -25,7 +25,6 @@ params:
     advanced: true
     default: 1s
   - name: phases1p3p
-    type: bool
     deprecated: true
 render: |
   type: voltie

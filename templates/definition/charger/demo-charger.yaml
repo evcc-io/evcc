@@ -37,7 +37,7 @@ params:
     help:
     advanced: true
   - name: phases1p3p
-    type: bool
+    advanced: true
 
 render: |
   type: custom

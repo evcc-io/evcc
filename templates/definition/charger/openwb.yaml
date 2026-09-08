@@ -12,6 +12,7 @@ params:
   - name: host
   - name: connector
   - name: phases1p3p
+    advanced: true
 render: |
   type: openwb
   broker: {{ .host }}

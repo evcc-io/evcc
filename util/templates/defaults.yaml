@@ -104,6 +104,7 @@ params:
     type: choice
     choice: ["1", "2", "3"]
   - name: phases1p3p
+    type: bool
     description:
       en: Phase switching
       de: Phasenumschaltung

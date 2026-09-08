@@ -31,6 +31,7 @@ params:
     id: 1
   - name: connector
   - name: phases1p3p
+    advanced: true
     default: true
   - name: identify
     type: bool
