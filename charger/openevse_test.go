@@ -3,7 +3,7 @@ package charger
 import (
 	"testing"
 
-	"github.com/RAR/go-openevse"
+	"github.com/OpenEVSE/go-openevse"
 	"github.com/evcc-io/evcc/api"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

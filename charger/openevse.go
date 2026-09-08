@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/RAR/go-openevse"
+	"github.com/OpenEVSE/go-openevse"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/cmd/shutdown"
@@ -18,7 +18,7 @@ import (
 
 // OpenEVSE charger implementation. State arrives over the firmware's /ws
 // websocket and control goes through its claims API; both live in
-// github.com/RAR/go-openevse. Phase switching is opt-in (phases1p3p: true) for
+// github.com/OpenEVSE/go-openevse. Phase switching is opt-in (phases1p3p: true) for
 // modified three-phase controllers that answer the $G7/$S7 RAPI commands.
 type OpenEVSE struct {
 	implement.Caps
