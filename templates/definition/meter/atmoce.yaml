@@ -25,11 +25,9 @@ params:
   - preset: battery-minmaxsoc
   # active battery control writes these to the device, they must match its settings
   - name: minsoc
-    advanced: true
     default: 10
     required: true
   - name: maxsoc
-    advanced: true
     default: 100
     required: true
   - name: firmware

@@ -51,7 +51,6 @@ params:
   # written to the device as backup reserve, must match its settings
   - name: minsoc
     default: 20
-    advanced: true
     required: true
     help:
       de: Backup-Reserve, die evcc im Normalbetrieb wiederherstellt

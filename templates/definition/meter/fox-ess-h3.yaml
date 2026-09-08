@@ -18,10 +18,8 @@ params:
     advanced: true
   # active battery control writes these to the device, they must match its settings
   - name: minsoc
-    advanced: true
     required: true
   - name: maxsoc
-    advanced: true
     required: true
 render: |
   type: custom
