@@ -24,10 +24,21 @@ import (
 // OpenWB20 charger implementation
 type OpenWB20 struct {
 	implement.Caps
-	conn    *modbus.Connection
-	enabled bool
-	curr    uint16
-	base    uint16
+	conn        *modbus.Connection
+	enabled     bool
+	curr        uint16
+	base        uint16
+	display     *openWB20DisplayConfig
+	displayOnce sync.Once
+}
+
+type openWB20DisplayConfig struct {
+	ctx context.Context
+	log *util.Logger
+	mqtt.Config
+	chargerURI string
+	evccURI    string
+	query      string
 }
 
 const (
@@ -94,53 +105,72 @@ func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charg
 	} else if network.Config().Port == 0 {
 		log.DEBUG.Println("display setup skipped: network not initialized")
 	} else {
-		uri := network.Config().InternalURL()
-		go func() {
-			ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
-			defer cancel()
-
-			if cc.Broker == "" {
-				host, _, err := net.SplitHostPort(util.DefaultPort(cc.URI, 1502))
-				if err != nil {
-					log.DEBUG.Printf("display setup skipped: invalid broker address: %v", err)
-					return
-				}
-				cc.Broker = net.JoinHostPort(host, "1883")
-			}
-			if ctx.Err() != nil {
-				return
-			}
-			client, err := mqtt.NewClient(log, cc.Broker, cc.User, cc.Password, mqtt.ClientID(), 1, cc.Insecure, cc.CaCert, cc.ClientCert, cc.ClientKey, func(options *paho.ClientOptions) {
-				options.SetAutoReconnect(false)
-				options.SetOnConnectHandler(nil)
-				options.SetConnectionLostHandler(func(_ paho.Client, err error) {
-					log.DEBUG.Printf("display setup: MQTT connection lost: %v", err)
-					cancel()
-				})
-			})
-			if err == nil {
-				disconnect := sync.OnceFunc(client.Disconnect)
-				stop := context.AfterFunc(ctx, disconnect)
-				defer stop()
-				defer disconnect()
-				query := strings.TrimLeft(cc.Query, "/?#")
-				if query == "" {
-					query = lookupOpenWB20LoadpointQuery(wb)
-				}
-				err = openwb.ConfigureDisplay(ctx, log, client, uri, query)
-			}
-			if err != nil && ctx.Err() != context.Canceled {
-				log.DEBUG.Printf("display setup: %v", err)
-			}
-		}()
+		wb.display = &openWB20DisplayConfig{
+			ctx:        ctx,
+			log:        log,
+			Config:     cc.Config,
+			chargerURI: cc.URI,
+			evccURI:    network.Config().InternalURL(),
+			query:      cc.Query,
+		}
 	}
 
 	return wb, nil
 }
 
+// ConfigComplete starts display configuration after chargers and loadpoints are registered.
+func (wb *OpenWB20) ConfigComplete() {
+	wb.displayOnce.Do(func() {
+		if wb.display == nil {
+			return
+		}
+
+		go wb.configureDisplay()
+	})
+}
+
+func (wb *OpenWB20) configureDisplay() {
+	cc := wb.display
+	ctx, cancel := context.WithTimeout(cc.ctx, 30*time.Second)
+	defer cancel()
+
+	if cc.Broker == "" {
+		host, _, err := net.SplitHostPort(util.DefaultPort(cc.chargerURI, 1502))
+		if err != nil {
+			cc.log.DEBUG.Printf("display setup skipped: invalid broker address: %v", err)
+			return
+		}
+		cc.Broker = net.JoinHostPort(host, "1883")
+	}
+	if ctx.Err() != nil {
+		return
+	}
+	client, err := mqtt.NewClient(cc.log, cc.Broker, cc.User, cc.Password, mqtt.ClientID(), 1, cc.Insecure, cc.CaCert, cc.ClientCert, cc.ClientKey, func(options *paho.ClientOptions) {
+		options.SetAutoReconnect(false)
+		options.SetOnConnectHandler(nil)
+		options.SetConnectionLostHandler(func(_ paho.Client, err error) {
+			cc.log.DEBUG.Printf("display setup: MQTT connection lost: %v", err)
+			cancel()
+		})
+	})
+	if err == nil {
+		disconnect := sync.OnceFunc(client.Disconnect)
+		stop := context.AfterFunc(ctx, disconnect)
+		defer stop()
+		defer disconnect()
+		query := strings.TrimLeft(cc.query, "/?#")
+		if query == "" {
+			query = lookupOpenWB20LoadpointQuery(wb)
+		}
+		err = openwb.ConfigureDisplay(ctx, cc.log, client, cc.evccURI, query)
+	}
+	if err != nil && ctx.Err() != context.Canceled {
+		cc.log.DEBUG.Printf("display setup: %v", err)
+	}
+}
+
 // lookupOpenWB20LoadpointQuery returns a "lp=n" filter for the loadpoint that uses wb as its
-// charger, or an empty string if none is (yet) configured. Best effort: does not wait for
-// loadpoints configured after this charger.
+// charger, or an empty string if none is configured.
 func lookupOpenWB20LoadpointQuery(wb *OpenWB20) string {
 	var name string
 	for _, dev := range config.Chargers().Devices() {

@@ -119,6 +119,8 @@ func TestOpenWB20DisplayDisconnect(t *testing.T) {
 		name      string
 		topic     string
 		value     string
+		query     string
+		wantQuery string
 		cancel    bool
 		noSuback  bool
 		unchanged bool
@@ -127,6 +129,8 @@ func TestOpenWB20DisplayDisconnect(t *testing.T) {
 		writes    int
 	}{
 		{name: "configured", writes: 2},
+		{name: "automatic query", wantQuery: "lp=1", writes: 2},
+		{name: "explicit query", query: "?foo=bar", wantQuery: "foo=bar", writes: 2},
 		{name: "primary", topic: "openWB/general/extern", value: "false"},
 		{name: "inactive", topic: "openWB/optional/int_display/active", value: "false"},
 		{name: "unsupported", topic: "openWB/system/configurable/display_themes", value: "[]"},
@@ -138,6 +142,9 @@ func TestOpenWB20DisplayDisconnect(t *testing.T) {
 		{name: "rejected", reject: true, writes: 1},
 	} {
 		t.Run(test.name, func(t *testing.T) {
+			config.Reset()
+			t.Cleanup(config.Reset)
+
 			listener, err := net.Listen("tcp", "127.0.0.1:0")
 			require.NoError(t, err)
 			defer listener.Close()
@@ -149,10 +156,20 @@ func TestOpenWB20DisplayDisconnect(t *testing.T) {
 			}
 			ctx, cancel := context.WithTimeout(t.Context(), timeout)
 			defer cancel()
-			_, err = NewOpenWB20FromConfig(ctx, map[string]any{
-				"uri": "localhost:1502", "broker": listener.Addr().String(),
+			instance, err := NewOpenWB20FromConfig(ctx, map[string]any{
+				"uri": "localhost:1502", "broker": listener.Addr().String(), "query": test.query,
 			})
 			require.NoError(t, err)
+			wb := instance.(*OpenWB20)
+			require.NoError(t, config.Chargers().Add(config.NewStaticDevice(config.Named{Name: "wallbox"}, instance)))
+			if test.name == "automatic query" {
+				lp := loadpoint.NewMockAPI(gomock.NewController(t))
+				lp.EXPECT().GetChargerRef().Return("wallbox").AnyTimes()
+				require.NoError(t, config.Loadpoints().Add(config.NewStaticDevice(config.Named{Name: "lp-1"}, loadpoint.API(lp))))
+			}
+			wb.ConfigComplete()
+			wb.ConfigComplete()
+
 			conn, err := listener.Accept()
 			require.NoError(t, err)
 			defer conn.Close()
@@ -190,7 +207,11 @@ func TestOpenWB20DisplayDisconnect(t *testing.T) {
 			for {
 				packet, err := packets.ReadPacket(conn)
 				if err != nil {
-					require.ErrorIs(t, err, io.EOF)
+					if test.cancel {
+						require.Error(t, err)
+					} else {
+						require.ErrorIs(t, err, io.EOF)
+					}
 					break
 				}
 				switch packet := packet.(type) {
@@ -215,6 +236,9 @@ func TestOpenWB20DisplayDisconnect(t *testing.T) {
 					writes++
 					assert.False(t, packet.Retain)
 					assert.True(t, strings.HasPrefix(packet.TopicName, "openWB/set/"))
+					if test.wantQuery != "" && packet.TopicName == "openWB/set/optional/int_display/theme" {
+						assert.Contains(t, string(packet.Payload), "/#/?"+test.wantQuery)
+					}
 					ack := packets.NewControlPacket(packets.Puback).(*packets.PubackPacket)
 					ack.MessageID = packet.MessageID
 					require.NoError(t, ack.Write(conn))
