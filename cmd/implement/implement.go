@@ -83,6 +83,8 @@ func generate(out io.Writer, src string) error {
 		reflect.TypeFor[api.CurrentLimiter](),
 		reflect.TypeFor[api.Curtailer](),
 		reflect.TypeFor[api.Dimmer](),
+		reflect.TypeFor[api.FeatureDescriber](),
+		reflect.TypeFor[api.IconDescriber](),
 		reflect.TypeFor[api.Identifier](),
 		reflect.TypeFor[api.MaxACPowerGetter](),
 		reflect.TypeFor[api.Meter](),

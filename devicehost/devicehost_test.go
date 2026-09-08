@@ -22,7 +22,8 @@ import (
 // exampleHost is a device host exposing a pv meter and a wallbox type
 type exampleHost struct {
 	pb.UnimplementedDeviceHostServer
-	devices map[string]*exampleDevice
+	devices     map[string]*exampleDevice
+	chargerCaps []string
 }
 
 type exampleDevice struct {
@@ -88,6 +89,10 @@ func (h *exampleHost) New(_ context.Context, req *pb.NewRequest) (*pb.NewReply, 
 	id := fmt.Sprintf("%s-%d", req.GetType(), len(h.devices))
 	h.devices[id] = &exampleDevice{properties: req.GetProperties(), phases: 3}
 
+	if req.GetDeviceClass() == "charger" {
+		caps = append(caps, h.chargerCaps...)
+	}
+
 	return &pb.NewReply{Id: id, Capabilities: caps}, nil
 }
 
@@ -146,20 +151,29 @@ func (h *exampleHost) Call(_ context.Context, req *pb.CallRequest) (*pb.CallRepl
 	case "api.PhaseSwitcher.Phases1p3p":
 		return new(pb.CallReply), arg(0, &dev.phases)
 
+	case "api.FeatureDescriber.Features":
+		return reply([]string{"integrateddevice", "heating"})
+
+	case "api.IconDescriber.Icon":
+		return reply("heatpump")
+
 	default:
 		return nil, fmt.Errorf("unknown method: %s.%s", req.GetCapability(), req.GetMethod())
 	}
 }
 
 // serve starts the example device host on an ephemeral port
-func serve(t *testing.T) string {
+func serve(t *testing.T, chargerCaps ...string) string {
 	t.Helper()
 
 	l, err := net.Listen("tcp", "127.0.0.1:0")
 	require.NoError(t, err)
 
 	srv := grpc.NewServer()
-	pb.RegisterDeviceHostServer(srv, &exampleHost{devices: make(map[string]*exampleDevice)})
+	pb.RegisterDeviceHostServer(srv, &exampleHost{
+		devices:     make(map[string]*exampleDevice),
+		chargerCaps: chargerCaps,
+	})
 
 	go func() { _ = srv.Serve(l) }()
 	t.Cleanup(srv.Stop)

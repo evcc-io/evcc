@@ -149,6 +149,24 @@ var capTable = map[string]func(*device, implement.Caps){
 			},
 		))
 	},
+	capability[api.FeatureDescriber](): func(d *device, c implement.Caps) {
+		implement.Has(c, implement.FeatureDescriber(
+			func() []api.Feature {
+				var r0 []api.Feature
+				_ = call(d, api.FeatureDescriber.Features, []any{}, &r0)
+				return r0
+			},
+		))
+	},
+	capability[api.IconDescriber](): func(d *device, c implement.Caps) {
+		implement.Has(c, implement.IconDescriber(
+			func() string {
+				var r0 string
+				_ = call(d, api.IconDescriber.Icon, []any{}, &r0)
+				return r0
+			},
+		))
+	},
 	capability[api.Identifier](): func(d *device, c implement.Caps) {
 		implement.Has(c, implement.Identifier(
 			func() ([]string, error) {
