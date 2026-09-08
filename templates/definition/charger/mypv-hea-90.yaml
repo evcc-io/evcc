@@ -1,0 +1,28 @@
+template: mypv-hea-90
+products:
+  - brand: my-PV
+    description:
+      generic: HEA•THOR IoT 9.0 kW
+capabilities: ["meter"]
+group: heating
+requirements:
+  description:
+    de: |
+      Modbus TCP zur Ansteuerung verwenden und im Ladepunkt `phases: 3` einstellen.
+      Die Leistung wird in Stufen von 3, 6 und 9 kW geschaltet. Die Leistungsgrenzen werden automatisch berücksichtigt.
+      Das zusätzliche SELV-Relais wird nicht angesteuert.
+    en: |
+      Use Modbus TCP control and configure `phases: 3` in the loadpoint.
+      Power is switched in stages of 3, 6 and 9 kW. Power limits are applied automatically.
+      The additional SELV relay is not controlled.
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+  - name: tempsource
+    choice: ["1", "2"]
+    default: "1"
+render: |
+  type: mypv-hea-90
+  {{- include "modbus" . }}
+  tempsource: {{ .tempsource }}
