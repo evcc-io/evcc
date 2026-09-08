@@ -4,7 +4,7 @@ products:
   - brand: Sungrow
     description:
       generic: SH Series Hybrid Inverter
-capabilities: ["battery-control"]
+capabilities: ["battery-control", "curtail"]
 requirements:
   description:
     de: Verbindungen über das WiNet-S-Dongle (WiFi oder LAN) funktionieren nur mit aktueller Firmware. Ältere Versionen liefern nicht alle benötigten Daten (Leistung, Ladestand).
@@ -22,6 +22,7 @@ params:
     baudrate: 9600
   - name: maxacpower
     service: modbus/read?address=5000&type=input&encoding=uint16&scale=100&{modbus}
+    required: true
   - preset: battery-params
   - name: maxchargepower
     service: modbus/read?address=13051&type=holding&encoding=uint16&scale=1&{modbus}
@@ -124,6 +125,70 @@ render: |
       decode: uint32s
     scale: 0.1
   maxacpower: {{ .maxacpower }} # W
+  # EEG §9 curtailment via the power limitation registers
+  #   13086 (doc 13087) power limitation switch, 0xAA enable / 0x55 disable
+  #   13087 (doc 13088) power limitation value, 0.1 % of nominal power => Does not work on SHX.0RS, use 13073 (doc 13074) instead, which is in W resolution
+  curtail:
+    source: sequence
+    set:
+      - source: go
+        script: |
+          ena := 170 // 0xAA - enable limitation
+          if curtail == 100 {
+            ena = 85 // 0x55 - disable limitation
+          }
+          ena
+        out:
+          - name: ena
+            type: int
+            config:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 13086 # Feed-in Limitation switch (doc 13087), 0xAA enable / 0x55 disable
+                type: writesingle
+                decode: uint16
+      - source: go
+        script: |
+          watts := curtail * {{ .maxacpower }} / 100
+          watts
+        out:
+          - name: watts
+            type: int
+            config:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 13073 # Feed-in Limitation Value (doc 13074), 1W resolution
+                type: writesingle
+                decode: uint16
+  curtailed:
+    source: go
+    in:
+      - name: ena
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 13086
+            type: holding
+            decode: uint16
+      - name: watts
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 13073 # Feed-in Limitation Value (doc 13074), 1W
+            type: holding
+            decode: uint16
+    script: |
+      percent := 100
+      if ena == 170 {
+        percent = watts * 100 / {{ .maxacpower }}
+      }
+      percent
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
