@@ -26,7 +26,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -34,24 +33,19 @@ import (
 
 // MyPv charger implementation
 type MyPv struct {
+	myPvBase
 	log     *util.Logger
-	conn    *modbus.Connection
-	lp      loadpoint.API
 	power   uint32
 	scale   float64
 	name    string
 	statusC uint16
 	enabled bool
-	regTemp uint16
 }
 
 const (
 	elwaRegSetPower           = 1000
-	elwaRegTempLimit          = 1002
 	elwaRegStatus             = 1003
 	elwaRegLoadState          = 1059
-	elwaRegPower              = 1000 // https://github.com/evcc-io/evcc/issues/18020#issuecomment-2585300804
-	elwaRegOperationState     = 1077
 	elwaERegOperationState    = elwaRegStatus // same register for elwa-e operation state
 	elwaRegRelayState         = 1058
 	elwaRegVoltage            = 1061
@@ -119,31 +113,16 @@ func NewMyPv(ctx context.Context, name string, settings modbus.TcpSettings, temp
 	conn.Logger(log.TRACE)
 
 	wb := &MyPv{
-		log:     log,
-		conn:    conn,
-		name:    name,
-		statusC: statusC,
-		scale:   scale,
-		regTemp: elwaTemp[tempSource-1],
+		myPvBase: newMyPvBase(conn, elwaTemp[tempSource-1]),
+		log:      log,
+		name:     name,
+		statusC:  statusC,
+		scale:    scale,
 	}
 
 	go wb.heartbeat(ctx, 30*time.Second)
 
 	return wb, nil
-}
-
-var _ api.IconDescriber = (*MyPv)(nil)
-
-// Icon implements the api.IconDescriber interface
-func (v *MyPv) Icon() string {
-	return "waterheater"
-}
-
-var _ api.FeatureDescriber = (*MyPv)(nil)
-
-// Features implements the api.FeatureDescriber interface
-func (wb *MyPv) Features() []api.Feature {
-	return []api.Feature{api.IntegratedDevice, api.Heating}
 }
 
 func (wb *MyPv) heartbeat(ctx context.Context, timeout time.Duration) {
@@ -168,35 +147,32 @@ func (wb *MyPv) heartbeat(ctx context.Context, timeout time.Duration) {
 
 // Status implements the api.Charger interface
 func (wb *MyPv) Status() (api.ChargeStatus, error) {
-	var b []byte
-	var err error
-
 	if wb.name == "ac-thor" {
-		b, err := wb.conn.ReadHoldingRegisters(elwaRegLoadState, 1)
+		load, err := wb.readUint16(elwaRegLoadState)
 		if err != nil {
 			return api.StatusNone, err
 		}
 
 		// all loads detached
-		if binary.BigEndian.Uint16(b) == 0 {
+		if load == 0 {
 			return api.StatusA, nil
 		}
 	}
 
 	res := api.StatusB
 
-	b, err = wb.conn.ReadHoldingRegisters(elwaRegStatus, 1)
+	state, err := wb.readUint16(elwaRegStatus)
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	c, err := wb.conn.ReadHoldingRegisters(elwaRegPower, 1)
+	power, err := wb.readUint16(myPvRegPower)
 	if err != nil {
 		return api.StatusNone, err
 	}
 
 	// ignore standby power
-	if binary.BigEndian.Uint16(b) == wb.statusC && binary.BigEndian.Uint16(c) > elwaStandbyPower {
+	if state == wb.statusC && power > elwaStandbyPower {
 		res = api.StatusC
 	}
 
@@ -206,7 +182,7 @@ func (wb *MyPv) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (wb *MyPv) Enabled() (bool, error) {
 	// "ac-thor" and "ac-elwa-2"
-	reg := elwaRegOperationState
+	reg := myPvRegOperationState
 	enabled := []uint16{1, 2} // heating PV excess, boost backup
 
 	if wb.name == "ac-elwa-e" {
@@ -215,11 +191,10 @@ func (wb *MyPv) Enabled() (bool, error) {
 	}
 
 	// register read
-	b, err := wb.conn.ReadHoldingRegisters(uint16(reg), 1)
+	state, err := wb.readUint16(uint16(reg))
 	if err != nil {
 		return false, err
 	}
-	state := binary.BigEndian.Uint16(b)
 
 	// determine enabled state
 	if state == 0 { // standby
@@ -286,86 +261,55 @@ var _ api.Meter = (*MyPv)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (wb *MyPv) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(elwaRegPower, 1)
+	power, err := wb.readUint16(myPvRegPower)
 	if err != nil {
 		return 0, err
 	}
 
-	res := float64(binary.BigEndian.Uint16(b))
+	res := float64(power)
 	if wb.name != "ac-thor" {
 		return res, nil
 	}
 
-	c, err := wb.conn.ReadHoldingRegisters(elwaRegOperationMode, 1)
+	mode, err := wb.readUint16(elwaRegOperationMode)
 	if err != nil {
 		return 0, err
 	}
-	wb.log.TRACE.Printf("operation mode %d", binary.BigEndian.Uint16(c))
+	wb.log.TRACE.Printf("operation mode %d", mode)
 
 	// AC Thor operation mode != 3
-	if binary.BigEndian.Uint16(c) != 3 {
+	if mode != 3 {
 		return res, nil
 	}
 
 	// AC Thor operation mode == 3 "Warm water 9 + 9kW"
 	// with extra heater on internal relay
 	// see https://github.com/evcc-io/evcc/discussions/23708
-	f, err := wb.conn.ReadHoldingRegisters(elwaRegRelayState, 1)
+	relay, err := wb.readUint16(elwaRegRelayState)
 	if err != nil {
 		return 0, err
 	}
 
 	// relay inactive
-	if binary.BigEndian.Uint16(f) != 1 {
+	if relay != 1 {
 		return res, nil
 	}
 
 	// get power of heater on relay as set in web interface
 	// (scale factor must be used for correct setting in web interface)
-	d, err := wb.conn.ReadHoldingRegisters(elwaRegMaxControlledPower, 1)
+	controlled, err := wb.readUint16(elwaRegMaxControlledPower)
 	if err != nil {
 		return 0, err
 	}
 
-	e, err := wb.conn.ReadHoldingRegisters(elwaRegMaxCombinedPower, 1)
+	combined, err := wb.readUint16(elwaRegMaxCombinedPower)
 	if err != nil {
 		return 0, err
 	}
-	wb.log.TRACE.Printf("max. power: controlled %.0f W / combined %.0f W", float64(binary.BigEndian.Uint16(d)), float64(binary.BigEndian.Uint16(e)))
+	wb.log.TRACE.Printf("max. power: controlled %.0f W / combined %.0f W", float64(controlled), float64(combined))
 
 	// relay power = combined power - controlled power, finally corrected with 110% factor
-	res += float64(int(binary.BigEndian.Uint16(e))-int(binary.BigEndian.Uint16(d))) / wb.scale / 1.1
+	res += float64(int(combined)-int(controlled)) / wb.scale / 1.1
 
 	return res, nil
-}
-
-var _ api.Battery = (*MyPv)(nil)
-
-// CurrentPower implements the api.Meter interface
-func (wb *MyPv) Soc() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wb.regTemp, 1)
-	if err != nil {
-		return 0, err
-	}
-
-	return float64(binary.BigEndian.Uint16(b)) / 10, nil
-}
-
-var _ api.SocLimiter = (*MyPv)(nil)
-
-// GetLimitSoc implements the api.SocLimiter interface
-func (wb *MyPv) GetLimitSoc() (int64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(elwaRegTempLimit, 1)
-	if err != nil {
-		return 0, err
-	}
-
-	return int64(binary.BigEndian.Uint16(b)) / 10, nil
-}
-
-var _ loadpoint.Controller = (*MyPv)(nil)
-
-// LoadpointControl implements loadpoint.Controller
-func (wb *MyPv) LoadpointControl(lp loadpoint.API) {
-	wb.lp = lp
 }
