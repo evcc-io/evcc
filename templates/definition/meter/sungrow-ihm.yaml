@@ -25,10 +25,6 @@ params:
     service: modbus/read?address=8144&type=input&encoding=uint32&scale=100&{modbus} # Register 8145 (Total rated active power, 0.1kW)
   - preset: battery-params
   - name: maxchargepower
-    example: 1000
-    help:
-      de: Aktiviert die Batteriesteuerung. Gesamtleistung aller Batterien in Schritten von 100 W. Nur einen vom System unterstützten Wert einstellen.
-      en: Enables battery control. Total power of all batteries in steps of 100 W. Only configure a value supported by the system.
     service: modbus/read?address=8148&type=input&encoding=uint32s&scale=100&{modbus}
 render: |
   {{- if eq .usage "grid" }}
