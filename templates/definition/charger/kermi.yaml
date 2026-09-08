@@ -28,7 +28,7 @@ render: |
       id: 40 # WP
       register:
         address: 301 # PV Überschussleistung
-        type: writesingle
+        type: writeholding
         decode: int16
       scale: 10.0
   power:

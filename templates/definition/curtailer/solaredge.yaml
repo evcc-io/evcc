@@ -55,7 +55,7 @@ render: |
                     {{- include "modbus" . | indent 18 }}
                     register:
                       address: 57344 # Export Control Mode
-                      type: writesingle
+                      type: writeholding
                       encoding: uint16
               script: |
                 mode &^ 1 // clear bit 0 (export limitation), preserve other bits (e.g. indirect production limitation)
@@ -79,7 +79,7 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 57344 # Export Control Mode
-                  type: writesingle
+                  type: writeholding
                   encoding: uint16
           script: |
             mode | 1 // set bit 0 (export limitation via meter), preserve other bits
@@ -90,13 +90,13 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 57345 # Export Control Limit Mode
-            type: writesingle
+            type: writeholding
             encoding: uint16
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
           address: 57346 # Export Control Site Limit
-          type: writemultiple
+          type: writeholdings
           encoding: float32s
         scale: {{ divf (maxf .productionnominalmax 1) 100 }} # % to W
   curtailed:

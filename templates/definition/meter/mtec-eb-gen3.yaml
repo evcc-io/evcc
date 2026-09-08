@@ -60,7 +60,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 50000
-            type: writesingle
+            type: writeholding
             decode: uint16
     - case: 2 # eco mode (hold)
       set:
@@ -71,7 +71,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 50000
-            type: writesingle
+            type: writeholding
             decode: uint16
     - case: 3 # usp mode (charge)
       set:
@@ -82,7 +82,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 50000
-            type: writesingle
+            type: writeholding
             decode: uint16
   {{- include "battery-params" . }}
   {{- end }}

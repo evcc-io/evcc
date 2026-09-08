@@ -120,7 +120,7 @@ render: |
         {{- include "modbus" . | indent 6 }}
         register:
           address: 61441 # Active Power Limit (%)
-          type: writesingle
+          type: writeholding
           encoding: uint16
       - source: const
         value: 1
@@ -129,7 +129,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 61696 # Commit Power Control Settings
-            type: writesingle
+            type: writeholding
             encoding: uint16
   curtailed:
     source: go

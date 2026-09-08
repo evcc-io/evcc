@@ -110,7 +110,7 @@ render: |
                   {{- include "modbus" . | indent 16 }}
                   register:
                     address: 10071
-                    type: writemultiple
+                    type: writeholdings
                     encoding: int32
               - source: const
                 value: 0 # self_consumption
@@ -119,7 +119,7 @@ render: |
                   {{- include "modbus" . | indent 16 }}
                   register:
                     address: 10064
-                    type: writesingle
+                    type: writeholding
                     encoding: uint16
         - case: 2 # hold
           set:
@@ -132,7 +132,7 @@ render: |
                   {{- include "modbus" . | indent 16 }}
                   register:
                     address: 10064
-                    type: writesingle
+                    type: writeholding
                     encoding: uint16
               - source: const
                 value: 0
@@ -141,7 +141,7 @@ render: |
                   {{- include "modbus" . | indent 16 }}
                   register:
                     address: 10071
-                    type: writemultiple
+                    type: writeholdings
                     encoding: int32
         - case: 3 # charge
           set:
@@ -154,7 +154,7 @@ render: |
                   {{- include "modbus" . | indent 16 }}
                   register:
                     address: 10064
-                    type: writesingle
+                    type: writeholding
                     encoding: uint16
               - source: const
                 value: -{{ .maxchargepower }}
@@ -163,7 +163,7 @@ render: |
                   {{- include "modbus" . | indent 16 }}
                   register:
                     address: 10071
-                    type: writemultiple
+                    type: writeholdings
                     encoding: int32
   {{- include "battery-params" . }}
   {{- end }}

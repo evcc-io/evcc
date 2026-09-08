@@ -158,7 +158,7 @@ render: |
             id: 247
             register:
               address: 47511 # EMSPowerMode
-              type: writesingle
+              type: writeholding
               encoding: uint16
             delay: {{ .delay }}
         - source: const
@@ -169,7 +169,7 @@ render: |
             id: 247
             register:
               address: 47512 # EMSPowerSet [0-10000]
-              type: writemultiple
+              type: writeholding
               encoding: uint16
             delay: {{ .delay }}
     - case: 2 # discharge hold
@@ -184,7 +184,7 @@ render: |
             id: 247
             register:
               address: 47511 # EMSPowerMode
-              type: writesingle
+              type: writeholding
               encoding: uint16
             delay: {{ .delay }}
         - source: const
@@ -195,7 +195,7 @@ render: |
             id: 247
             register:
               address: 47512 # EMSPowerSet [0-10000]
-              type: writemultiple
+              type: writeholding
               encoding: uint16
             delay: {{ .delay }}
     - case: 3 # charge
@@ -210,7 +210,7 @@ render: |
             id: 247
             register:
               address: 47511 # EMSPowerMode
-              type: writesingle
+              type: writeholding
               encoding: uint16
             delay: {{ .delay }}
         - source: const
@@ -221,7 +221,7 @@ render: |
             id: 247
             register:
               address: 47512 # EMSPowerSet [0-10000]
-              type: writemultiple
+              type: writeholding
               encoding: uint16
             delay: {{ .delay }}
   {{- include "battery-params" . }}

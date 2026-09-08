@@ -22,7 +22,7 @@ curtailed: # current feed-in limit
 #  source: modbus
 #  uri: 192.168.179.200:502
 #  id: 1
-#  register: { type: writesingle, address: 40016, encoding: uint16 }
+#  register: { type: writeholding, address: 40016, encoding: uint16 }
 #curtailed:
 #  source: error
 #  error: ErrNotAvailable

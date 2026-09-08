@@ -66,7 +66,7 @@ render: |
           id: 1
           register:
             address: 2305 # Warmwasser Solltemperatur
-            type: writesingle
+            type: writeholding
             encoding: uint16
     - case: 3 # boost
       set:
@@ -78,7 +78,7 @@ render: |
           id: 1
           register:
             address: 2305 # Warmwasser Solltemperatur
-            type: writesingle
+            type: writeholding
             encoding: uint16
     - case: 1 # dim
       set:

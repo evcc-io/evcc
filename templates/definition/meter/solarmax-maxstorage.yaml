@@ -76,7 +76,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 140
-                type: writemultiple
+                type: writeholding
                 decode: int16
           - source: const
             value: 7000
@@ -85,7 +85,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 141
-                type: writemultiple
+                type: writeholding
                 decode: int16
           - source: const
             value: 0
@@ -94,7 +94,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 142
-                type: writemultiple
+                type: writeholding
                 decode: int16
       - case: 2 # hold
         set:
@@ -107,7 +107,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 140
-                type: writemultiple
+                type: writeholding
                 decode: int16
           - source: const
             value: 0
@@ -116,7 +116,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 141
-                type: writemultiple
+                type: writeholding
                 decode: int16
           - source: random
             set:
@@ -124,7 +124,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 142
-                type: writemultiple
+                type: writeholding
                 decode: int16
   {{- include "battery-params" . }}
   {{- end }}

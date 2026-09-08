@@ -136,7 +136,7 @@ render: |
                     {{- include "modbus" . | indent 18 }}
                     register:
                       address: 57344 # Export Control Mode
-                      type: writesingle
+                      type: writeholding
                       encoding: uint16
               script: |
                 mode &^ 1 // clear bit 0 (export limitation), preserve other bits (e.g. indirect production limitation)
@@ -160,7 +160,7 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 57344 # Export Control Mode
-                  type: writesingle
+                  type: writeholding
                   encoding: uint16
           script: |
             mode | 1 // set bit 0 (export limitation via meter), preserve other bits
@@ -171,13 +171,13 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 57345 # Export Control Limit Mode
-            type: writesingle
+            type: writeholding
             encoding: uint16
       - source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
           address: 57346 # Export Control Site Limit
-          type: writemultiple
+          type: writeholdings
           encoding: float32s
         scale: {{ divf (maxf .maxacpower 1) 100 }} # % to W
   curtailed:
@@ -265,7 +265,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 0xE00D # StorageRemoteCtrl_CommandMode
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: {{ .maxdischargepower }} # W
@@ -274,7 +274,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 0xE010 # StorageRemoteCtrl_DischargeLimit
-                type: writemultiple
+                type: writeholdings
                 encoding: float32s
       - case: 2 # hold
         set:
@@ -287,7 +287,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 0xE00D # StorageRemoteCtrl_CommandMode
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: 0 # W
@@ -296,7 +296,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 0xE010 # StorageRemoteCtrl_DischargeLimit
-                type: writemultiple
+                type: writeholdings
                 encoding: float32s
       - case: 3 # charge
         set:
@@ -309,7 +309,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 0xE00D # StorageRemoteCtrl_CommandMode
-                type: writesingle
+                type: writeholding
                 encoding: uint16
           - source: const
             value: 0 # W
@@ -318,7 +318,7 @@ render: |
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 0xE010 # StorageRemoteCtrl_DischargeLimit
-                type: writemultiple
+                type: writeholdings
                 encoding: float32s
   {{- include "battery-params" . }}
   {{- end }}

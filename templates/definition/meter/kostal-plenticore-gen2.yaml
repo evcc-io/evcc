@@ -132,7 +132,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 1034 # Battery charge power (DC) setpoint, absolute [W]
-              type: writemultiple
+              type: writeholdings
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
       - case: 2 # hold
         set:
@@ -143,7 +143,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 1040 # Battery max. discharge power limit, absolute [W]
-              type: writemultiple
+              type: writeholdings
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
       {{- if .maxchargepower }}
       - case: 3 # charge
@@ -155,7 +155,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 1034 # Battery charge power (DC) setpoint, absolute [W]
-              type: writemultiple
+              type: writeholdings
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
       {{- end }}
       - case: 4 # holdcharge
@@ -167,7 +167,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 1038 # Battery max. charge power limit, absolute [W]
-              type: writemultiple
+              type: writeholdings
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
   {{- include "battery-params" . }}
   {{- end }}
