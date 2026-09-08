@@ -15,6 +15,11 @@ func setOptimizer(pub publisher) func(bool) error {
 	return func(b bool) error {
 		settings.SetBool(keys.Optimizer, b)
 		pub(keys.Optimizer, b)
+		if !b {
+			// automatic mode cannot outlive the optimizer
+			settings.SetBool(keys.OptimizerAutomatic, false)
+			pub(keys.OptimizerAutomatic, false)
+		}
 		return nil
 	}
 }

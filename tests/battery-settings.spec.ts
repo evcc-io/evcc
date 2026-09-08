@@ -119,6 +119,13 @@ test.describe("battery settings", async () => {
     await expect(priceLimit).toBeEnabled();
     await expect(dischargeControl).toBeEnabled();
     await expect(optimizerHints).toHaveCount(0);
+
+    // disabling the optimizer releases automatic mode
+    await expect(await page.request.post("/api/config/optimizerautomatic/true")).toBeOK();
+    await expect(enableLimit).toBeDisabled();
+    await expect(await page.request.post("/api/config/optimizer/false")).toBeOK();
+    await expect(enableLimit).toBeEnabled();
+    await expect(optimizerHints).toHaveCount(0);
   });
 
   test("hold mode display", async ({ page }) => {
