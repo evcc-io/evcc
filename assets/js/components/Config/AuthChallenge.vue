@@ -5,7 +5,7 @@
 			v-if="challenge.image"
 			:src="challenge.image"
 			alt=""
-			class="challenge-image d-block mb-3 rounded"
+			class="challenge-image d-block mb-3 rounded bg-white"
 		/>
 		<p v-if="challenge.link" class="mb-3">
 			<a :href="challenge.link" target="_blank" rel="noopener">
