@@ -685,6 +685,15 @@ func TestDiffSuggestions(t *testing.T) {
 	assert.Len(t, site.diffSuggestions(pending(stop)), 1)
 }
 
+// reapplyTestSchedule returns a schedule mimicking an ordinary solve that
+// completes 8 minutes into a 12:00-12:15 slot - unremarkable timing, no
+// unusually short or delayed solve involved. Shared by the reapply tests.
+func reapplyTestSchedule() (applied time.Time, dt []int, schedule optimizerSchedule) {
+	applied = time.Date(2025, 1, 1, 12, 8, 0, 0, time.UTC)
+	dt = []int{7 * 60, 900, 900} // 7min left in the current slot, then full 15min slots
+	return applied, dt, optimizerSchedule{timestamps: asTimestamps(dt, applied), dt: dt}
+}
+
 // TestReapplySuggestionAcrossSlotBoundary covers the ordinary case, not an
 // edge case: optimizerUpdateAsync only re-solves tariff.SlotDuration after
 // the *previous* solve's own completion (see optimizerUpdateAsync), not
@@ -703,13 +712,7 @@ func TestReapplySuggestionAcrossSlotBoundary(t *testing.T) {
 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
 	site := &Site{loadpoints: []*Loadpoint{lp}}
 
-	// solve completes 8 minutes into a 12:00-12:15 slot - unremarkable
-	// timing, no unusually short or delayed solve involved
-	applied := time.Date(2025, 1, 1, 12, 8, 0, 0, time.UTC)
-	dt := []int{7 * 60, 900, 900} // 7min left in the current slot, then full 15min slots
-	timestamps := asTimestamps(dt, applied)
-	schedule := optimizerSchedule{timestamps: timestamps, dt: dt}
-
+	applied, dt, schedule := reapplyTestSchedule()
 	require.Equal(t, 0, schedule.activeSlot(applied), "slot 0 is genuinely active when the result is applied")
 
 	req := optimizer.OptimizationInput{
@@ -726,7 +729,7 @@ func TestReapplySuggestionAcrossSlotBoundary(t *testing.T) {
 		},
 	}
 	details := requestDetails{
-		Timestamps: timestamps,
+		Timestamps: schedule.timestamps,
 		BatteryDetails: []batteryDetail{
 			{Type: batteryTypeBattery, Name: "home", controllable: true},
 			{Type: batteryTypeLoadpoint, loadpoint: new(int), controllable: true},
@@ -766,10 +769,7 @@ func TestReapplySuggestionsDoesNotResurrectClearedAdvice(t *testing.T) {
 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
 	site := &Site{loadpoints: []*Loadpoint{lp}}
 
-	applied := time.Date(2025, 1, 1, 12, 8, 0, 0, time.UTC)
-	dt := []int{7 * 60, 900, 900}
-	timestamps := asTimestamps(dt, applied)
-	schedule := optimizerSchedule{timestamps: timestamps, dt: dt}
+	applied, dt, schedule := reapplyTestSchedule()
 
 	req := optimizer.OptimizationInput{
 		TimeSeries: optimizer.TimeSeries{Dt: dt},
@@ -782,7 +782,7 @@ func TestReapplySuggestionsDoesNotResurrectClearedAdvice(t *testing.T) {
 		},
 	}
 	details := requestDetails{
-		Timestamps:     timestamps,
+		Timestamps:     schedule.timestamps,
 		BatteryDetails: []batteryDetail{{Type: batteryTypeBattery, Name: "home", controllable: true}},
 	}
 
