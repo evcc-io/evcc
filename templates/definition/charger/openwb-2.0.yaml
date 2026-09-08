@@ -32,10 +32,6 @@ params:
   - name: connector
   - name: phases1p3p
     type: bool
-    description:
-      en: Charger is equipped with phase switching feature
-      de: Phasenumschaltung vorhanden
-    advanced: true
     default: true
   - name: identify
     type: bool

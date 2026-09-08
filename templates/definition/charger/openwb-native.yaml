@@ -108,13 +108,6 @@ params:
     comset: 8N1
   - name: phases1p3p
     type: bool
-    description:
-      en: Phase switching
-      de: Phasenumschaltung
-    help:
-      en: Device is equipped with phase switching option
-      de: Gerät ist mit Phasenumschaltungsoption ausgestattet
-    default: false
   - name: rfid
     type: string
     example: "413d:2107"

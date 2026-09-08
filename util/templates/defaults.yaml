@@ -103,6 +103,14 @@ params:
       en: Used to determine the minimum solar surplus and plan duration.
     type: choice
     choice: ["1", "2", "3"]
+  - name: phases1p3p
+    advanced: true
+    description:
+      en: Phase switching
+      de: Phasenumschaltung
+    help:
+      en: Charger is equipped with phase switching feature
+      de: Wallbox verfügt über Phasenumschaltung
   - name: connector
     type: int
     description:

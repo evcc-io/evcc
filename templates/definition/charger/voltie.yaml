@@ -25,12 +25,8 @@ params:
     advanced: true
     default: 1s
   - name: phases1p3p
-    description:
-      de: Phasenumschaltung
-      en: Phase switching
-    deprecated: true
     type: bool
-    default: false
+    deprecated: true
 render: |
   type: voltie
   {{- include "modbus" . }}
