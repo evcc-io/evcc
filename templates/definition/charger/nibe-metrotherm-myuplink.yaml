@@ -1,0 +1,94 @@
+template: nibe-metrotherm-myuplink
+products:
+  - brand: NIBE
+    description:
+      generic: Metrotherm (SG Ready via myUplink)
+group: heating
+capabilities: ["dim"]
+requirements:
+  evcc: ["skiptest"]
+  description:
+    de: |
+      Integration via NIBE myUplink API für SG Ready Steuerung.
+      Manuelles Abrufen eines Access Token erforderlich.
+      Siehe https://github.com/evcc-io/evcc/wiki/NIBE-Metrotherm für Setup-Anleitung.
+    en: |
+      Integration via NIBE myUplink API for SG Ready control.
+      Manual access token retrieval required.
+      See https://github.com/evcc-io/evcc/wiki/NIBE-Metrotherm for setup guide.
+params:
+  - name: deviceid
+    required: true
+    description:
+      en: NIBE device ID
+      de: NIBE Gerät-ID
+    help:
+      en: Found in myUplink app or via API
+      de: Finden Sie in der myUplink-App
+  - name: accesstoken
+    required: true
+    mask: true
+    description:
+      en: myUplink access token
+      de: myUplink Access Token
+    help:
+      en: Obtained from myUplink developer portal (valid 1 hour)
+      de: Von myUplink Developer Portal (gültig 1 Stunde)
+
+render: |
+  type: sgready
+  setmode:
+    source: switch
+    switch:
+    - case: 1 # dim
+      set:
+        source: http
+        uri: https://api.myuplink.com/v2/devices/{{ .deviceid }}/points
+        method: PATCH
+        auth:
+          type: bearer
+          token: {{ .accesstoken }}
+        body: '{"settings":[{"parameterId":"40067","value":3}]}'
+        timeout: 10s
+    - case: 2 # normal
+      set:
+        source: http
+        uri: https://api.myuplink.com/v2/devices/{{ .deviceid }}/points
+        method: PATCH
+        auth:
+          type: bearer
+          token: {{ .accesstoken }}
+        body: '{"settings":[{"parameterId":"40067","value":1}]}'
+        timeout: 10s
+    - case: 3 # boost
+      set:
+        source: http
+        uri: https://api.myuplink.com/v2/devices/{{ .deviceid }}/points
+        method: PATCH
+        auth:
+          type: bearer
+          token: {{ .accesstoken }}
+        body: '{"settings":[{"parameterId":"40067","value":2}]}'
+        timeout: 10s
+  getmode:
+    source: map
+    values:
+      1: 2 # normal
+      2: 3 # boost
+      3: 1 # dim
+    get:
+      source: http
+      uri: https://api.myuplink.com/v2/devices/{{ .deviceid }}/points?parameterIds=40067
+      auth:
+        type: bearer
+        token: {{ .accesstoken }}
+      jq: .data[0].value | tonumber
+      timeout: 10s
+  temp:
+    source: http
+    uri: https://api.myuplink.com/v2/devices/{{ .deviceid }}/points?parameterIds=40004
+    auth:
+      type: bearer
+      token: {{ .accesstoken }}
+    jq: .data[0].value | tonumber
+    timeout: 10s
