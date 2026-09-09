@@ -3,11 +3,17 @@
 		:id="id"
 		:optional="!Required"
 		:deprecated="Deprecated"
+		:readonly="Readonly"
 		:label="label"
 		:help="help"
 		:example="example"
 	>
+		<template v-if="Readonly">
+			<input :id="id" type="text" class="form-control border" :value="value" readonly />
+			<CopyLink v-if="value" :text="String(value)" />
+		</template>
 		<PropertyField
+			v-else
 			:id="id"
 			v-model="value"
 			:masked="Mask"
@@ -28,18 +34,20 @@
 /* oxlint-disable vue/prop-name-casing */
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
+import CopyLink from "../Helper/CopyLink.vue";
 import formatter from "@/mixins/formatter";
 import { goDurationToUnit, goDurationUnit } from "@/utils/goDuration";
 
 export default {
 	name: "PropertyEntry",
-	components: { FormRow, PropertyField },
+	components: { FormRow, PropertyField, CopyLink },
 	mixins: [formatter],
 	props: {
 		id: String,
 		Name: String,
 		Required: Boolean,
 		Deprecated: Boolean,
+		Readonly: Boolean,
 		Description: String,
 		Help: String,
 		Example: String,

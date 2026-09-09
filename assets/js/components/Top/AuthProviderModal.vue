@@ -4,6 +4,7 @@
 		ref="modal"
 		:title="modalTitle"
 		data-testid="auth-provider-modal"
+		@open="prepareAuthentication"
 		@closed="handleClosed"
 	>
 		<div class="container mx-0 px-0">
@@ -159,8 +160,6 @@ export default defineComponent({
 		providerId(newId) {
 			if (newId) {
 				this.reset();
-				// auto-run the prepare step. no user input needed
-				this.prepareAuthentication();
 			}
 		},
 	},
