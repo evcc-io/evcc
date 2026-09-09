@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/stretchr/testify/require"
 )
 

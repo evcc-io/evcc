@@ -9,8 +9,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/evcc-io/evcc/server/db"
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/server/service"
 	"github.com/teslamotors/vehicle-command/pkg/protocol"
 )
