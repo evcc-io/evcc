@@ -83,7 +83,7 @@ func (v *SignedController) exec(fn func(context.Context, *vehicle.Vehicle) error
 	return err
 }
 
-var _ api.CurrentController = (*SignedController)(nil)
+var _ Commander = (*SignedController)(nil)
 
 // MaxCurrent implements the api.CurrentController interface
 func (v *SignedController) MaxCurrent(current int64) error {
@@ -97,8 +97,6 @@ func (v *SignedController) MaxCurrent(current int64) error {
 
 	return apiError(err)
 }
-
-var _ api.ChargeController = (*SignedController)(nil)
 
 // ChargeEnable implements the api.ChargeController interface
 func (v *SignedController) ChargeEnable(enable bool) error {

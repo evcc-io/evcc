@@ -12,16 +12,11 @@ import (
 	teslaclient "github.com/evcc-io/tesla-proxy-client"
 )
 
-type teslaController interface {
-	api.CurrentController
-	api.ChargeController
-}
-
 // Tesla is an api.Vehicle implementation for Tesla cars using the official Tesla vehicle-command api.
 type Tesla struct {
 	*embed
 	*tesla.Provider
-	teslaController
+	tesla.Commander
 }
 
 func init() {
@@ -73,7 +68,7 @@ func NewTeslaFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	var controller teslaController
+	var controller tesla.Commander
 
 	if cc.Interactive() {
 		key, err := tesla.SigningKey()
@@ -102,9 +97,9 @@ func NewTeslaFromConfig(other map[string]any) (api.Vehicle, error) {
 	}
 
 	v := &Tesla{
-		embed:           &cc.embed,
-		Provider:        tesla.NewProvider(vehicle, cc.Cache),
-		teslaController: controller,
+		embed:     &cc.embed,
+		Provider:  tesla.NewProvider(vehicle, cc.Cache),
+		Commander: controller,
 	}
 
 	v.fromVehicle(vehicle.DisplayName, 0)
