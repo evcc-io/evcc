@@ -198,7 +198,10 @@ func (o *OAuth) updateToken(token *oauth2.Token) {
 		store = o.tokenStorer(token)
 	}
 
+	// flush right away, a restart before the periodic persist would lose the login
 	if err := settings.SetJson(o.subject, store); err != nil {
+		o.log.ERROR.Printf("error saving token: %v", err)
+	} else if err := settings.Persist(); err != nil {
 		o.log.ERROR.Printf("error saving token: %v", err)
 	}
 

@@ -9,7 +9,6 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/server/service"
 	"github.com/teslamotors/vehicle-command/pkg/protocol"
@@ -60,10 +59,8 @@ func generatePrivateKey() (*ecdsa.PrivateKey, error) {
 	settings.SetString(privateKeySetting, string(pem.EncodeToMemory(&pem.Block{Type: "EC PRIVATE KEY", Bytes: der})))
 
 	// tesla holds the public key from now on, losing the private key means pairing again
-	if db.Instance != nil {
-		if err := settings.Persist(); err != nil {
-			return nil, err
-		}
+	if err := settings.Persist(); err != nil {
+		return nil, err
 	}
 
 	return key, nil
