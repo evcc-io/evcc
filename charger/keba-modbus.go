@@ -237,6 +237,9 @@ func (wb *Keba) getChargingState() (uint32, error) {
 // Status implements the api.Charger interface
 func (wb *Keba) Status() (api.ChargeStatus, error) {
 	if connected, err := wb.isConnected(); err != nil || !connected {
+		if err == nil {
+			err = wb.parkPhases()
+		}
 		return api.StatusA, err
 	}
 
@@ -296,18 +299,24 @@ func (wb *Keba) Enable(enable bool) error {
 		}
 	}
 
-	if _, err := wb.conn.WriteSingleRegister(wb.regEnable, u); err != nil {
+	_, err := wb.conn.WriteSingleRegister(wb.regEnable, u)
+	return err
+}
+
+// parkPhases switches back to 1p while disconnected to avoid the phase switch relay's
+// standby consumption. Runs on every status read until the charger confirms 1p, since
+// the charger may ignore the switch (e.g. during its phase switch lockout).
+func (wb *Keba) parkPhases() error {
+	if !api.HasCap[api.PhaseSwitcher](wb) {
+		return nil
+	}
+
+	phases, err := wb.getPhases()
+	if err != nil || phases == 1 {
 		return err
 	}
 
-	// switch back to 1p to avoid the phase switch relay's standby consumption.
-	// requires the phase getter, else the core cannot observe the phases we
-	// changed behind its back.
-	if !enable && api.HasCap[api.PhaseSwitcher](wb) && api.HasCap[api.PhaseGetter](wb) {
-		return wb.phases1p3p(1)
-	}
-
-	return nil
+	return wb.phases1p3p(1)
 }
 
 // MaxCurrent implements the api.Charger interface
