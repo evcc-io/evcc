@@ -1,10 +1,15 @@
 package loadpoint
 
 import (
+	"errors"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 )
+
+// ErrPhaseSwitchingUnsupported is returned when automatic phase mode is configured
+// for a charger that cannot switch phases
+var ErrPhaseSwitchingUnsupported = errors.New("charger does not support phase switching")
 
 //go:generate go tool mockgen -package loadpoint -destination mock.go -mock_names API=MockAPI github.com/evcc-io/evcc/core/loadpoint API
 
