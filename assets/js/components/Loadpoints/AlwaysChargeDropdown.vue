@@ -128,6 +128,10 @@ export default defineComponent({
 
 <style scoped>
 .dropdown-menu {
-	--bs-dropdown-min-width: min(340px, calc(100vw - 2rem));
+	/* min-width would win over max-width, so size it with width instead.
+	   3rem leaves room for the popper gutters and a scrollbar */
+	--bs-dropdown-min-width: 0;
+	width: 340px;
+	max-width: calc(100vw - 3rem);
 }
 </style>

@@ -26,6 +26,7 @@
 - `POST plan/energy/{value}/{time}` — schedule plan
 - `POST vehicle/{name}` — select vehicle
 - `POST smartcostlimit/{value}` — smart cost threshold
+- `POST solarshare/{value}` — required solar share of min power (default 1)
 
 ### Configuration (`/config/...`, auth required)
 - CRUD for devices (chargers, meters, vehicles, tariffs)

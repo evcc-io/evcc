@@ -12,6 +12,8 @@ watchThemeChanges();
 // Setup global parameters
 export default {
   parameters: {
+    // keep the file order, but push the version group to the end
+    options: { storySort: { order: ["*", "Version"] } },
     controls: {
       matchers: {
         color: /(background|color)$/i,

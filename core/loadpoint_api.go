@@ -1009,6 +1009,27 @@ func (lp *Loadpoint) SetSmartCostLimit(val *float64) {
 	}
 }
 
+// GetSolarShare gets the solar share
+func (lp *Loadpoint) GetSolarShare() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.solarShare
+}
+
+// SetSolarShare sets the solar share
+func (lp *Loadpoint) SetSolarShare(val float64) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if lp.solarShare != val {
+		lp.log.DEBUG.Printf("set solar share: %.2f", val)
+		lp.solarShare = val
+
+		lp.settings.SetFloat(keys.SolarShare, val)
+		lp.publish(keys.SolarShare, val)
+	}
+}
+
 // GetSmartFeedInPriorityLimit gets the smart feed-in limit
 func (lp *Loadpoint) GetSmartFeedInPriorityLimit() *float64 {
 	lp.RLock()
