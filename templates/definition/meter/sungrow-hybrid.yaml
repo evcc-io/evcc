@@ -29,6 +29,12 @@ params:
   - name: maxdischargepower
     service: modbus/read?address=33047&type=holding&encoding=uint16&scale=10&{modbus}
     required: true
+  - name: maxsoc
+    service: modbus/read?address=13057&type=holding&encoding=uint16&scale=0.1&{modbus}
+    required: true
+  - name: minsoc
+    service: modbus/read?address=13058&type=holding&encoding=uint16&scale=0.1&{modbus}
+    required: true
   - name: capacity
     service: modbus/read?address=5638&type=input&encoding=uint16&scale=0.01&resulttype=float&{modbus}
   - name: timeout
@@ -178,14 +184,22 @@ render: |
       type: input
       decode: uint32s
     scale: 0.1
-  soc:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 13022 # Battery level
-      type: input
-      decode: int16
-    scale: 0.1
+soc:
+    source: go
+    script: |
+      nomsoc := {{ .minsoc }} + (soc / 100 * ({{ .maxsoc }} - {{ .minsoc }}))
+      nomsoc
+    in:
+    - name: soc
+      type: float
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 13022 # Battery level
+          type: input
+          decode: int16
+        scale: 0.1
   batterymode:
     source: switch
     switch:
