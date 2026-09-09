@@ -54,7 +54,7 @@ func (lp *Loadpoint) demandProfileWeekday(minLen int) []float64 {
 		slotInDay := absSlot % 96
 
 		// fetch the weekday profile for that calendar day
-		weekday := time.Now().Truncate(24*time.Hour).AddDate(0, 0, day).Weekday()
+		weekday := now.BeginningOfDay().AddDate(0, 0, day).Weekday()
 		profile, err := lp.chargeEnergy.EnergyProfileWeekday(weekday)
 		if err != nil {
 			lp.log.DEBUG.Printf("demand profile weekday: %v", err)
