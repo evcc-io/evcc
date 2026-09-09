@@ -184,7 +184,7 @@ render: |
       type: input
       decode: uint32s
     scale: 0.1
-soc:
+  soc:
     source: go
     script: |
       nomsoc := {{ .minsoc }} + (soc / 100 * ({{ .maxsoc }} - {{ .minsoc }}))
