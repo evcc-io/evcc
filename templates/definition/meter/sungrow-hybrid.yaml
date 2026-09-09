@@ -186,12 +186,34 @@ render: |
     source: go
     script: |
       {{- if and .minsoc .maxsoc }}
-      nomsoc := {{ .minsoc }} + (soc / 100 * ({{ .maxsoc }} - {{ .minsoc }}))
+      nomsoc := min + (soc / 100 * (max - min))
       nomsoc
       {{- else }}
       soc
       {{- end }}
     in:
+    {{- if and .minsoc .maxsoc }}
+    - name: min
+      type: float
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          type: holding
+          address: 13058 # min SOC
+          decode: int16
+        scale: 0.1
+    - name: max
+      type: float
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          type: holding
+          address: 13057 # max SOC
+          decode: int16
+        scale: 0.1
+    {{- end }}
     - name: soc
       type: float
       config:
