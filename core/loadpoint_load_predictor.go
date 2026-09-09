@@ -16,26 +16,19 @@ func (lp *Loadpoint) demandProfile() (*[96]float64, bool) {
 		return nil, false
 	}
 
-	temp := lp.chargerHasFeature(api.DemandTemperature)
-
-	var profile *[96]float64
-	var err error
-
-	switch {
-	case temp:
-		profile, err = lp.chargeEnergy.EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -7))
-
-	case lp.chargerHasFeature(api.DemandDaily):
-		profile, err = lp.chargeEnergy.EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -28))
-
-	case lp.chargerHasFeature(api.DemandWeekday):
-		// weekday profiles are assembled per-day in demandProfileWeekday
-		return nil, false
-
-	default:
+	// DemandWeekday profiles are assembled per-day in demandProfileWeekday
+	if lp.chargerHasFeature(api.DemandWeekday) {
 		return nil, false
 	}
 
+	temp := lp.chargerHasFeature(api.DemandTemperature)
+
+	var from = now.BeginningOfDay().AddDate(0, 0, -28) // default: 28-day daily average
+	if temp {
+		from = now.BeginningOfDay().AddDate(0, 0, -7) // temperature: 7-day window
+	}
+
+	profile, err := lp.chargeEnergy.EnergyProfile(from)
 	if err != nil {
 		lp.log.DEBUG.Printf("demand profile: %v", err)
 		return nil, false
