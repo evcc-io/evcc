@@ -104,7 +104,7 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	// Generate a new state and store the provider
 	state := NewState()
 	encryptedState := state.Encrypt(a.secret)
-	a.states[encryptedState] = stateEntry{id: id, returnTo: returnURL(r.URL.Query().Get("return"))}
+	a.states[encryptedState] = stateEntry{id: id, returnTo: returnURL(r.URL.Query().Get("return"), r.Host)}
 
 	// Schedule cleanup for stale state entries after state becomes invalid
 	time.AfterFunc(stateValidity, func() {
@@ -159,9 +159,10 @@ func (a *Handler) handleLogout(w http.ResponseWriter, r *http.Request) {
 	jsonWrite(w, "OK")
 }
 
-// returnURL validates the page to return to after the callback, empty if unusable
-func returnURL(s string) string {
-	if u, err := url.Parse(s); err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+// returnURL validates the page to return to after the callback, empty if unusable.
+// The page must live on the host the login was requested from, the callback is reachable without session.
+func returnURL(s, host string) string {
+	if u, err := url.Parse(s); err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host != host {
 		return ""
 	}
 	return s
@@ -172,8 +173,9 @@ func redirectToConfig(w http.ResponseWriter, r *http.Request, returnTo, query st
 	if returnTo == "" {
 		returnTo = "/#/config"
 	}
+	// the query must land in the fragment for the router to see it
 	sep := "?"
-	if strings.Contains(returnTo, "?") {
+	if strings.Contains(returnTo[strings.LastIndex(returnTo, "#")+1:], "?") {
 		sep = "&"
 	}
 	http.Redirect(w, r, returnTo+sep+query, http.StatusFound)

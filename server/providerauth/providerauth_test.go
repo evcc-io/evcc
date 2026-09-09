@@ -67,7 +67,7 @@ func TestCallbackRedirectsToOrigin(t *testing.T) {
 
 	login := func(returnTo string) string {
 		rec := httptest.NewRecorder()
-		h.handleLogin(rec, httptest.NewRequest(http.MethodGet, "/login?id=fake&return="+url.QueryEscape(returnTo), nil))
+		h.handleLogin(rec, httptest.NewRequest(http.MethodGet, "http://evcc.local:7070/login?id=fake&return="+url.QueryEscape(returnTo), nil))
 		require.Equal(t, http.StatusOK, rec.Code)
 
 		var res loginResponse
@@ -97,8 +97,13 @@ func TestCallbackRedirectsToOrigin(t *testing.T) {
 	require.Equal(t, http.StatusFound, rec.Code)
 	assert.Equal(t, "http://evcc.local:7070/#/config?callbackError=access_denied%3A+nope", rec.Header().Get("Location"))
 
-	// unusable return urls fall back to the config page
-	for _, returnTo := range []string{"", "evcc.local", "javascript:alert(1)", "/#/config?vehicle=1"} {
+	// a query before the fragment must not swallow the callback result
+	state = login("http://evcc.local:7070/?x=1#/config")
+	rec = callback("state=" + state + "&code=abc")
+	assert.Equal(t, "http://evcc.local:7070/?x=1#/config?callbackCompleted=fake", rec.Header().Get("Location"))
+
+	// unusable return urls and foreign hosts fall back to the config page
+	for _, returnTo := range []string{"", "evcc.local", "javascript:alert(1)", "/#/config?vehicle=1", "https://evil.example/#/config", "http://evcc.local:7071/#/config"} {
 		state = login(returnTo)
 		rec = callback("state=" + state + "&code=abc")
 		require.Equal(t, http.StatusFound, rec.Code, returnTo)

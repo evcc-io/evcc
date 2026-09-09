@@ -25,4 +25,8 @@ func TestOriginHandlerPublic(t *testing.T) {
 	require.NoError(t, settings.SetJson(keys.Remote, map[string]any{"enabled": true, "url": "https://foo.evcc.io/"}))
 	assert.JSONEq(t, `["https://foo.evcc.io/x"]`, get("/origin?remote"))
 	assert.NotContains(t, get("/origin"), "foo.evcc.io", "local origin unaffected")
+
+	require.NoError(t, settings.SetJson(keys.Remote, map[string]any{"enabled": false, "url": "https://foo.evcc.io/"}))
+	assert.JSONEq(t, `[]`, get("/origin?remote"), "disabled remote access yields no remote origin")
+	assert.Equal(t, "https://foo.evcc.io", RemoteOrigin(), "origin survives disabling for existing devices")
 }

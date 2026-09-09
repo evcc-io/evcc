@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vite-plus/test";
-import { popAuthValues, stashAuthValues } from "./authStash";
+import { popAuthValues, stashAuthValues, cleanAuthStash } from "./authStash";
 
 describe("authStash", () => {
   beforeEach(() => window.localStorage.clear());
@@ -22,6 +22,16 @@ describe("authStash", () => {
   it("drops an expired stash", () => {
     stashAuthValues("vehicle:new", "tesla-fleet", {});
     expect(popAuthValues("vehicle:new", Date.now() + 11 * 60 * 1000)).toBeNull();
+    expect(popAuthValues("vehicle:new")).toBeNull();
+  });
+
+  it("cleans only an expired stash", () => {
+    stashAuthValues("vehicle:new", "tesla-fleet", {});
+    cleanAuthStash();
+    expect(popAuthValues("vehicle:new")).not.toBeNull();
+
+    stashAuthValues("vehicle:new", "tesla-fleet", {});
+    cleanAuthStash(Date.now() + 11 * 60 * 1000);
     expect(popAuthValues("vehicle:new")).toBeNull();
   });
 });

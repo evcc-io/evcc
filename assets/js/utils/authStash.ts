@@ -24,19 +24,34 @@ export function stashAuthValues(
   }
 }
 
+// read the stash, dropping it once expired
+function readAuthStash(now: number): AuthStash | null {
+  const raw = window.localStorage.getItem(STORAGE_KEY);
+  if (!raw) return null;
+  const stash = JSON.parse(raw) as AuthStash;
+  if (now - stash.ts > TTL_MS) {
+    window.localStorage.removeItem(STORAGE_KEY);
+    return null;
+  }
+  return stash;
+}
+
 export function popAuthValues(key: string, now = Date.now()): AuthStash | null {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const stash = JSON.parse(raw) as AuthStash;
-    if (now - stash.ts > TTL_MS) {
-      window.localStorage.removeItem(STORAGE_KEY);
-      return null;
-    }
-    if (stash.key !== key) return null;
+    const stash = readAuthStash(now);
+    if (!stash || stash.key !== key) return null;
     window.localStorage.removeItem(STORAGE_KEY);
     return stash;
   } catch {
     return null;
+  }
+}
+
+// an abandoned login never pops, so the entered secrets are cleaned on app start
+export function cleanAuthStash(now = Date.now()): void {
+  try {
+    readAuthStash(now);
+  } catch {
+    // storage unavailable
   }
 }

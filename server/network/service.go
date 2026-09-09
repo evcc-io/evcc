@@ -32,16 +32,22 @@ func Config() globalconfig.Network {
 	return config
 }
 
-// RemoteOrigin returns the remote access url as public https origin of this instance, empty if disabled
-func RemoteOrigin() string {
+func remoteSettings() (enabled bool, origin string) {
 	var remote struct {
 		Enabled bool   `json:"enabled"`
 		URL     string `json:"url"`
 	}
-	if err := settings.Json(keys.Remote, &remote); err != nil || !remote.Enabled {
-		return ""
+	if err := settings.Json(keys.Remote, &remote); err != nil {
+		return false, ""
 	}
-	return strings.TrimRight(remote.URL, "/")
+	return remote.Enabled, strings.TrimRight(remote.URL, "/")
+}
+
+// RemoteOrigin returns the remote access url as public https origin of this instance.
+// The url is kept while remote access is disabled, so devices set up through it keep working.
+func RemoteOrigin() string {
+	_, origin := remoteSettings()
+	return origin
 }
 
 // originHandler serves f(origin). With ?remote the origin is the remote access url, none while disabled.
@@ -49,7 +55,11 @@ func originHandler(f func(origin string) string) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		origin := config.ExternalURL()
 		if req.URL.Query().Has("remote") {
-			origin = RemoteOrigin()
+			enabled, remote := remoteSettings()
+			origin = ""
+			if enabled {
+				origin = remote
+			}
 		}
 
 		res := []string{}

@@ -49,8 +49,8 @@ params:
     description:
       generic: Origin URL
     help:
-      de: Eigene öffentliche https-Adresse dieser evcc-Instanz statt der Remotezugriff-Adresse.
-      en: Own public https address of this evcc instance instead of the Remote Access address.
+      de: Eigene öffentliche https-Adresse dieser evcc-Instanz statt der Remotezugriff-Adresse. Eine Änderung erfordert eine erneute Anmeldung.
+      en: Own public https address of this evcc instance instead of the Remote Access address. Changing it requires logging in again.
     example: https://evcc.example.com
   - name: vin
   - name: cache
