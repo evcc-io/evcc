@@ -1513,7 +1513,7 @@ func (site *Site) loopLoadpoints(next chan<- updater) {
 	active := site.activeLoadpoints()
 
 	for {
-		// one optimizer run per loadpoint cycle
+		// optimizer runs on its own schedule, checked once per loadpoint cycle
 		go site.optimizerUpdateAsync(false)
 
 		if len(active) == 0 {

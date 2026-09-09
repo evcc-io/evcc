@@ -618,9 +618,6 @@ func (lp *Loadpoint) evVehicleConnectHandler() {
 
 	// reset energy-based charging plan offset
 	lp.planEnergyOffset = 0
-
-	// connect adds the loadpoint's demand
-	lp.triggerOptimizer()
 }
 
 // evVehicleDisconnectHandler sends external start event
@@ -691,9 +688,6 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 	// mark plan slot as inactive
 	// this will force a deletion of an outdated plan once plan time is expired in GetPlan()
 	lp.setPlanActive(false)
-
-	// disconnect removes the loadpoint's demand
-	lp.triggerOptimizer()
 }
 
 // triggerOptimizer re-runs the optimizer when the loadpoint's profile changed.
@@ -1270,6 +1264,9 @@ func (lp *Loadpoint) updateChargerStatus() (bool, error) {
 
 	// update whenever there is a state change
 	lp.bus.Publish(evChargeCurrent, lp.offeredCurrent)
+
+	// the optimizer plans with the connected vehicles and their charging state
+	lp.triggerOptimizer()
 
 	return welcomeCharge, nil
 }
