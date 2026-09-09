@@ -21,16 +21,16 @@ params:
     choice: ["rs485", "tcpip"]
     baudrate: 9600
   - name: maxacpower
-    service: modbus/read?address=5000&type=input&encoding=uint16&scale=100&{modbus}
+    service: modbus/read?address=5000&type=input&encoding=uint16&scale=100&{modbus} # Nominal output power, 0.1kW
   - preset: battery-params
   - name: maxchargepower
-    service: modbus/read?address=13051&type=holding&encoding=uint16&scale=1&{modbus}
+    service: modbus/read?address=5627&type=input&encoding=uint16&scale=100&{modbus} # BDC rated power, 0.1kW: Battery DC/DC Converters power, also inverter default value after delivery
     required: true
   - name: maxdischargepower
-    service: modbus/read?address=33047&type=holding&encoding=uint16&scale=10&{modbus}
+    service: modbus/read?address=5627&type=input&encoding=uint16&scale=100&{modbus} # BDC rated power, 0.1kW: Battery DC/DC Converters power, also inverter default value after delivery
     required: true
   - name: capacity
-    service: modbus/read?address=5638&type=input&encoding=uint16&scale=0.01&resulttype=float&{modbus}
+    service: modbus/read?address=5638&type=input&encoding=uint16&scale=0.01&resulttype=float&{modbus} # Battery Capacity - High precision, 0.01kWh
   - name: timeout
     deprecated: true
 render: |
@@ -212,6 +212,15 @@ render: |
               type: writesingle
               decode: uint16
         - source: const
+          value: {{ div .maxchargepower 10 }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 33046 # Battery max charge power
+              type: writesingle
+              decode: uint16
+        - source: const
           value: {{ div .maxdischargepower 10 }}
           set:
             source: modbus
@@ -240,6 +249,15 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 13050 # Charge/discharge command
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: {{ div .maxchargepower 10 }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 33046 # Battery max charge power
               type: writesingle
               decode: uint16
         # Set max battery discharge power, effectively stops discharging
@@ -275,12 +293,71 @@ render: |
               type: writesingle
               decode: uint16
         - source: const
+          value: {{ div .maxchargepower 10 }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 33046 # Battery max charge power
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: {{ div .maxdischargepower 10 }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 33047 # Battery max discharge power
+              type: writesingle
+              decode: uint16
+        - source: const
           value: {{ .maxchargepower }}
           set:
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
               address: 13051 # Battery max forced (dis)charge power
+              type: writesingle
+              decode: uint16
+    - case: 4 # holdcharge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # Self-consumption mode (Default)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 13049 # EMS mode selection
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: 0xCC # Stop (Default)
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 13050 # Charge/discharge command
+              type: writesingle
+              decode: uint16
+        # Set max battery charge power, effectively stops charging
+        - source: const
+          value: 1 # 0.01kW, min allowed value for register
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 33046 # Battery max charge power
+              type: writesingle
+              decode: uint16
+        - source: const
+          value: {{ div .maxdischargepower 10 }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 33047 # Battery max discharge power
               type: writesingle
               decode: uint16
   {{- include "battery-params" . }}
