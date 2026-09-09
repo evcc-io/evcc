@@ -47,6 +47,7 @@ type Keba struct {
 	regEnable    uint16
 	energyFactor float64
 	state1p      uint32
+	enabled      bool
 }
 
 const (
@@ -109,6 +110,13 @@ func NewKebaFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		hasEnergyMeter = productCodeStr[4] != '0'
 		hasRFID = productCodeStr[5] == '1'
 		wb.state1p = 0
+
+		// enable register is write-only, seed from charging state (5: suspended)
+		s, err := wb.getChargingState()
+		if err != nil {
+			return nil, err
+		}
+		wb.enabled = s != 5
 	} else if len(productCodeStr) == 7 && productCodeStr[0] == '4' {
 		// P40
 		wb.regEnable = kebaRegMaxCurrent
@@ -274,13 +282,8 @@ func (wb *Keba) Enabled() (bool, error) {
 		return binary.BigEndian.Uint16(b) != 0, err
 	}
 
-	// P30
-	s, err := wb.getChargingState()
-	if err != nil {
-		return false, err
-	}
-
-	return !(s == 5 || s == 1), nil
+	// P30: charging state 1 also covers "no vehicle", so track enable state locally
+	return wb.enabled, nil
 }
 
 // Enable implements the api.Charger interface
@@ -299,6 +302,7 @@ func (wb *Keba) Enable(enable bool) error {
 	if _, err := wb.conn.WriteSingleRegister(wb.regEnable, u); err != nil {
 		return err
 	}
+	wb.enabled = enable
 
 	// switch back to 1p to avoid the phase switch relay's standby consumption.
 	// requires the phase getter, else the core cannot observe the phases we
