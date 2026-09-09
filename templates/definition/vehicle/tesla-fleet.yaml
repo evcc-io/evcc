@@ -29,13 +29,13 @@ params:
     description:
       de: Zulässige Herkunfts-URL
       en: Allowed Origin URL
-    service: tesla/origin
+    service: auth/origin?remote
   - name: redirecturi
     readonly: true
     description:
       de: Zulässige Weiterleitungs-URI
       en: Allowed Redirect URI
-    service: tesla/redirecturi
+    service: auth/redirecturi?remote
   - name: clientid
     help:
       de: Kunden-ID der Anwendung auf [developer.tesla.com](https://developer.tesla.com/dashboard).

@@ -66,7 +66,7 @@ func NewOAuth(ctx context.Context, clientID, clientSecret, origin string) (oauth
 	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("tesla"))
 
 	if origin == "" {
-		if origin = remoteOrigin(); origin == "" {
+		if origin = network.RemoteOrigin(); origin == "" {
 			return nil, errors.New("missing origin, enable remote access or configure a public https address")
 		}
 	}
