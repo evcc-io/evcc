@@ -44,63 +44,31 @@ func checkHemsPro() string {
 		REG_TIMEDATE = 0x00
 	)
 
-	// Create new connection to I2C bus 1
-	i2c, err := i2c.NewI2C(ADDR, 1)
-	if err != nil {
-		return ""
-	}
-	defer i2c.Close()
-
-	if _, err := i2c.WriteBytes([]byte{REG_TIMEDATE}); err != nil {
-		return ""
-	}
-
-	buf := make([]byte, 7)
-	if n, err := i2c.ReadBytes(buf); err != nil || n != 7 {
-		return ""
-	}
-
-	// I2C succeeded — verify with server
-	return checkHardware(hemspro, map[string]string{
-		"serial": deviceSerial(),
-	})
-}
-
-func checkHemsPro() (string, string) {
-	const (
-		ADDR         = 0b1101000 // 0x68 DS1307
-		REG_TIMEDATE = 0x00
-	)
-
-	// Bus 1 is the Raspberry Pi's general-purpose header I2C bus (I2C0 is
-	// reserved for HAT-EEPROM identification) - true for every RPi model.
-	// Other SBCs number their I2C controllers by hardware instance with no
-	// such convention; on a Banana Pi BPI-M2 Zero for example, the header's
-	// I2C lands on bus 0 while bus 1 is the SoC's internal HDMI DDC bus.
+	// bus 1 on Raspberry Pi, bus 0 on e.g. Banana Pi
 	for _, bus := range []int{1, 0} {
 		i2c, err := i2c.NewI2C(ADDR, bus)
 		if err != nil {
-		        continue
+			continue
 		}
-		
+
 		if _, err := i2c.WriteBytes([]byte{REG_TIMEDATE}); err != nil {
-		        i2c.Close()
-		        continue
+			i2c.Close()
+			continue
 		}
-		
+
 		buf := make([]byte, 7)
 		n, err := i2c.ReadBytes(buf)
 		i2c.Close()
 		if err != nil || n != 7 {
-		        continue
+			continue
 		}
-		
+
 		// I2C succeeded — verify with server
 		return checkHardware(hemspro, map[string]string{
-	        "serial": deviceSerial(),
-	})
-}
+			"serial": deviceSerial(),
+		})
+	}
 
-return "", ""
-  }
+	return ""
+}
 
