@@ -19,6 +19,7 @@ package charger
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -28,7 +29,7 @@ import (
 	"github.com/samber/lo"
 )
 
-// LgThinq controls an LG ThinQ water heater by raising its target temperature during boost
+// LgThinq controls an LG ThinQ water heater by switching its target temperature between normal and boost
 type LgThinq struct {
 	*SgReady
 }
@@ -44,7 +45,8 @@ func NewLgThinqFromConfig(ctx context.Context, other map[string]any) (api.Charge
 		Token    string
 		Country  string
 		Device   string
-		Setpoint float64
+		Normal   float64 // target temperature outside boost
+		Setpoint float64 // target temperature during boost
 		Cache    time.Duration
 	}{
 		embed: embed{
@@ -52,6 +54,7 @@ func NewLgThinqFromConfig(ctx context.Context, other map[string]any) (api.Charge
 			Features_: []api.Feature{api.Continuous, api.Heating, api.IntegratedDevice, api.SwitchDevice},
 		},
 		Country:  "DE",
+		Normal:   50,
 		Setpoint: 60,
 		Cache:    time.Minute,
 	}
@@ -62,6 +65,10 @@ func NewLgThinqFromConfig(ctx context.Context, other map[string]any) (api.Charge
 
 	if cc.Token == "" {
 		return nil, api.ErrMissingCredentials
+	}
+
+	if cc.Normal <= 0 || cc.Setpoint <= cc.Normal {
+		return nil, fmt.Errorf("invalid temperatures: boost setpoint %.1f must exceed normal %.1f", cc.Setpoint, cc.Normal)
 	}
 
 	log := util.NewLogger("lg-thinq").Redact(cc.Token)
@@ -87,44 +94,23 @@ func NewLgThinqFromConfig(ctx context.Context, other map[string]any) (api.Charge
 		return res, err
 	}, cc.Cache)
 
-	// target temperature before boost, restored when boost ends
-	var normal float64
-
 	set := func(mode int64) error {
+		var temp float64
 		switch mode {
 		case Normal:
-			if normal == 0 {
-				return nil
-			}
-
-			if err := conn.WaterHeaterTargetTemperature(deviceId, normal); err != nil {
-				return err
-			}
-
-			normal = 0
-			stateG.Reset()
-			return nil
-
+			temp = cc.Normal
 		case Boost:
-			state, err := stateG.Get()
-			if err != nil {
-				return err
-			}
-
-			if temp, ok := state.Celsius(); ok && normal == 0 {
-				normal = temp.TargetTemperature
-			}
-
-			if err := conn.WaterHeaterTargetTemperature(deviceId, cc.Setpoint); err != nil {
-				return err
-			}
-
-			stateG.Reset()
-			return nil
-
+			temp = cc.Setpoint
 		default:
 			return api.ErrNotAvailable
 		}
+
+		if err := conn.WaterHeaterTargetTemperature(deviceId, temp); err != nil {
+			return err
+		}
+
+		stateG.Reset()
+		return nil
 	}
 
 	res := new(LgThinq)

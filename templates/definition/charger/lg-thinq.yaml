@@ -10,11 +10,11 @@ requirements:
     de: |
       Steuert LG Warmwasser-Wärmepumpen (z.B. WH27S) über die LG ThinQ Connect Cloud API.
       Ein persönlicher Zugriffstoken (PAT) muss unter https://connect-pat.lgthinq.com mit den Rechten "Geräte anzeigen", "Gerätestatus abfragen" und "Geräte steuern" erstellt werden.
-      Die Boost Funktion setzt die Zieltemperatur des Warmwasserbereiters auf die Boost Temperatur und stellt anschließend die vorherige Zieltemperatur wieder her.
+      evcc setzt die Zieltemperatur des Warmwasserbereiters: außerhalb des Boosts auf die normale Temperatur, während des Boosts auf die Boost Temperatur.
     en: |
       Controls LG heat pump water heaters (e.g. WH27S) via the LG ThinQ Connect cloud API.
       A personal access token (PAT) must be created at https://connect-pat.lgthinq.com with the permissions "view devices", "view device status" and "control devices".
-      The boost function sets the water heater target temperature to the boost temperature and restores the previous target temperature afterwards.
+      evcc sets the water heater target temperature: the normal temperature outside of boost, the boost temperature during boost.
 params:
   - name: token
     required: true
@@ -36,6 +36,16 @@ params:
     help:
       de: Notwendig falls mehrere Warmwasserbereiter im Konto vorhanden sind
       en: Required if multiple water heaters are present in the account
+  - name: normal
+    type: float
+    unit: °C
+    default: 50
+    description:
+      de: Normale Temperatur
+      en: Normal temperature
+    help:
+      de: Zieltemperatur außerhalb des Boosts
+      en: Target temperature outside of boost
   - name: setpoint
     type: float
     unit: °C
@@ -43,6 +53,9 @@ params:
     description:
       de: Boost Temperatur
       en: Boost temperature
+    help:
+      de: Zieltemperatur während des Boosts, muss über der normalen Temperatur liegen
+      en: Target temperature during boost, must exceed the normal temperature
   - name: cache
     default: 1m
 render: |
@@ -52,5 +65,6 @@ render: |
   {{- if .device }}
   device: {{ .device }}
   {{- end }}
+  normal: {{ .normal }}
   setpoint: {{ .setpoint }}
   cache: {{ .cache }}
