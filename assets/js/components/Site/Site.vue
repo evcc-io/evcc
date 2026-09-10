@@ -177,7 +177,10 @@ export default defineComponent({
 			return store.state?.experimental;
 		},
 		energyflow() {
-			return this.collectProps(Energyflow);
+			return {
+				...this.collectProps(Energyflow),
+				loadpoints: this.orderedVisibleLoadpoints,
+			};
 		},
 		vehicleList() {
 			return vehicleList(this.vehicles);

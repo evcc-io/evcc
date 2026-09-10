@@ -395,6 +395,14 @@ test.describe("disabled loadpoint behavior", async () => {
     await expect(page.getByTestId("loadpoint").nth(0)).toContainText("Carport");
     await expect(page.getByTestId("loadpoint").nth(1)).toContainText("Süd");
 
+    // energy flow excludes disabled loadpoints as well
+    const energyflow = page.getByTestId("energyflow");
+    await energyflow.click();
+    const loadpointsEntry = page.getByTestId("energyflow-entry-loadpoints");
+    await expect(loadpointsEntry).toContainText("Carport");
+    await expect(loadpointsEntry).toContainText("Süd");
+    await expect(loadpointsEntry).not.toContainText("Garage");
+
     // state keeps disabled loadpoint at its position
     const state = await (await page.request.get("/api/state")).json();
     expect(state.loadpoints).toHaveLength(3);
