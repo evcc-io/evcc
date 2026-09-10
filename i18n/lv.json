@@ -33,7 +33,7 @@
     },
     "combined": "Kombinēti",
     "config": {
-      "buffer": "Mājas akumulatora enerģiju virs {soc} var izmantot uzlādes punktu atbalstam un aizkavē izslēgšanu saules režīmā. Sākt saules uzlādi automātiski {start}.",
+      "buffer": "Mājas akumulatora enerģiju virs {soc} var izmantot uzlādes punktu atbalstam, un tā aizkavē izslēgšanu viedajā režīmā. Sākt saules uzlādi automātiski {start}.",
       "bufferNone": "Mājas akumulatora enerģija netiek izmantota uzlādes punktiem. Iestatiet vērtību zem {soc}, lai iespējotu atbalstu.",
       "bufferStart": {
         "above": "kad akumulators ir virs {soc}",
@@ -64,6 +64,7 @@
   },
   "batterySettings": {
     "gridChargeTab": "Uzlāde no tīkla",
+    "gridDischargeTab": "Eksports no akumulatora",
     "modalTitle": "Mājas akumulators",
     "noBattery": "Nav konfigurēts neviens akumulators.",
     "usageTab": "Akumulatora lietošana"
@@ -189,7 +190,7 @@
       "chargeStatusC": "uzlādējas",
       "chargeStatusE": "nav jaudas",
       "chargeStatusF": "kļūda",
-      "chargedEnergy": "Uzlādēts",
+      "chargedEnergy": "Uzlādēts (sesijā)",
       "co2": "Tīkla CO₂",
       "configured": "Konfigurēts",
       "connected": "Pievienots",
@@ -238,6 +239,31 @@
       "temp": "Temperatūra",
       "topic": "Tēma",
       "url": "URL",
+      "usage": {
+        "aux": {
+          "energy": "Patērēts (mājai)",
+          "returnEnergy": "Saražots (saules)"
+        },
+        "battery": {
+          "energy": "Izlādēts (akumulators)",
+          "returnEnergy": "Uzlādēts (transports)"
+        },
+        "charge": {
+          "energy": "Uzlādēts (transports)",
+          "returnEnergy": "Izlādēts (akumulators)"
+        },
+        "consumer": {
+          "energy": "Patērēts (mājai)",
+          "returnEnergy": "Saražots (saules)"
+        },
+        "grid": {
+          "energy": "Importēts (no tīkla)",
+          "returnEnergy": "Eksportēts (uz tīklu)"
+        },
+        "pv": {
+          "energy": "Saražots (saules)"
+        }
+      },
       "vehicleLimitSoc": "Uzlādes ierobežojums",
       "yes": "jā"
     },
@@ -435,6 +461,10 @@
         "charging": "Lādētājs saglabāts. Izveido uzlādes punktu …",
         "heating": "Sildīšanas ierīce saglabāta. Izveido sildītāju …"
       },
+      "currentRangeHelp": {
+        "charging": "Tipiskās vērtības: 6–16 A 11 kW lādētājiem, 6–32 A 22 kW lādētājiem (3 fāzes).",
+        "heating": "Atkarīgs no sildīšanas ierīces nominālās jaudas (skatiet tehnisko datu lapu)."
+      },
       "defaultModeHelp": {
         "charging": "Uzlādes režīms pievienojot transportlīdzekli.",
         "heating": "Tiek iestatīts sistēmas startēšanas brīdī."
@@ -484,6 +514,8 @@
       "solarBehaviorLabel": "Saules enerģija",
       "solarModeCustom": "pielāgots",
       "solarModeMaximum": "maksimāli saules enerģija",
+      "solarShareNote": "Saules enerģijas daļas slīdnis lietotāja iestatījumos ir atspējots, kamēr ir iestatīti vatu sliekšņi. {0} un saglabājiet, lai to iespējotu.",
+      "solarShareReset": "Noņemt sliekšņus",
       "temperatureRangeHelp": "Temperatūras joslas attēlošanas diapazons. Neietekmē vadību.",
       "temperatureRangeTitle": "Temperatūras diapazons",
       "thresholdDisableDelayLabel": "Izslēgšanas aizkave",
@@ -1280,6 +1312,15 @@
     "title": "Autentifikācija"
   },
   "main": {
+    "alwaysCharge": {
+      "description": "bez pārtraukumiem",
+      "label": "Uzlādēt vienmēr",
+      "labelHeating": "Sildīt vienmēr",
+      "minCurrent": "min {current}",
+      "once": "līdz sesijas beigām",
+      "onceTip": "Tikai šai sesijai",
+      "permanent": "darbojas pastāvīgi"
+    },
     "chargingPlan": {
       "active": "Aktīvs",
       "addRepeatingPlan": "Pievienot atkārtojošu plānu",
@@ -1417,7 +1458,7 @@
         "descriptionDisabled": "Izvēlieties ierobežojumu, lai atļautu ātro uzlādi no mājas akumulatora.",
         "disabled": "Atspējots",
         "label": "Akumulatora paātrinājums",
-        "mode": "Pieejams tikai saules un min+saules enerģijas režīmā.",
+        "mode": "Pieejams tikai viedajā režīmā.",
         "once": "Paātrinājums aktīvs šai uzlādes sesijai.",
         "stateActive": "Akumulatora paātrinājums aktīvs",
         "stateBelowLimit": "Akumulators pārāk zems paātrinājumam",
@@ -1435,7 +1476,7 @@
         "label": "Min. strāva"
       },
       "minTemp": {
-        "description": "Zem {0} akumulators un tīkla jauda tiek izmantoti arī saules režīmā, lai uzturētu šo temperatūru.",
+        "description": "Zem {0} šīs temperatūras uzturēšanai viedajā režīmā tiek izmantota arī akumulatora un tīkla jauda.",
         "label": "Min. temperatūra"
       },
       "phasesConfigured": {
@@ -1449,13 +1490,33 @@
       },
       "smartCostCheap": "Lētā tīkla uzlāde",
       "smartCostClean": "Tīrā tīkla uzlāde",
+      "solar": "Saules pārpalikums",
+      "solarShare": {
+        "charging": {
+          "description": "Vismaz {share} no minimālās uzlādes jaudas jānāk no saules enerģijas.",
+          "descriptionFull": "Uzlāde sākas, tiklīdz pārpalikums sedz minimālo uzlādes jaudu.",
+          "descriptionZero": "Uzlāde sākas, tiklīdz ir pieejams kāds pārpalikums."
+        },
+        "heating": {
+          "description": "Vismaz {share} no minimālās sildīšanas jaudas jānāk no saules enerģijas.",
+          "descriptionFull": "Sildīšana sākas, tiklīdz pārpalikums sedz minimālo sildīšanas jaudu.",
+          "descriptionZero": "Sildīšana sākas, tiklīdz ir pieejams kāds pārpalikums."
+        },
+        "label": "Saules enerģijas daļa",
+        "thresholdsHint": "Ir konfigurēti uz jaudu balstīti uzlādes sliekšņi. Noņemiet tos, lai izmantotu šo slīdni.",
+        "thresholdsHintYaml": "Ir konfigurēti uz jaudu balstīti uzlādes sliekšņi. Lai izmantotu šo slīdni, noņemiet ieslēgšanas/izslēgšanas sliekšņus šim slodzes punktam savā evcc.yaml failā.",
+        "thresholdsLink": "Rediģēt konfigurāciju"
+      },
       "title": "Iestatījumi {0}",
       "vehicle": "Transportlīdzeklis"
     },
     "mode": {
+      "boost": "Paātrināta uzlāde",
       "minpv": "Min+Saules",
+      "normal": "Standarta uzlāde",
       "now": "Ātrā",
       "off": "Izslēgts",
+      "on": "Ieslēgts (darbojas)",
       "pv": "Saules enerģija",
       "smart": "Viedā"
     },
@@ -1476,6 +1537,7 @@
       "nextPlan": "Nākamais plāns",
       "notReachableInTime": "Mērķis tiks sasniegts {overrun} vēlāk.",
       "onlyInPvMode": "Uzlādes plāns darbojas tikai saules enerģijas režīmā.",
+      "onlyInSmartMode": "Uzlādes plāns darbojas tikai viedajā režīmā.",
       "planDuration": "Uzlādes laiks",
       "planPeriodLabel": "Periods",
       "planPeriodValue": "{start} līdz {end}",
@@ -1772,7 +1834,7 @@
     "co2Label": "CO₂ emisija",
     "co2Limit": "CO₂ ierobežojums",
     "enable": "Iespējot ierobežojumu",
-    "loadpointDescription": "Iespējo pagaidu ātro uzlādi saules enerģijas režīmā.",
+    "loadpointDescription": "Viedajā režīmā ļauj īslaicīgi ātri uzlādēt.",
     "modalTitle": "Viedā tīkla uzlāde",
     "none": "nav",
     "priceLabel": "Enerģijas cena",
@@ -1782,7 +1844,8 @@
     "saved": "Saglabāts."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Apturētais laiks",
+    "activeHoursLabel": "Aktīvais laiks",
+    "batteryDescription": "Izlādē mājas akumulatoru tīklā, kamēr atdeves tarifs ir augsts.",
     "description": "Aptur uzlādi augstu cenu laikā, lai dotu priekšroku izdevīgai atdevei tīklā.",
     "priceLabel": "Atdeves likme",
     "priceLimit": "Atdeves ierobežojums",

@@ -1764,7 +1764,7 @@
   },
   "settings": {
     "dateFormat": {
-      "auto": "Auto",
+      "auto": "Automatisch",
       "dmy": "TT/MM/JJJJ",
       "label": "Datumsformat",
       "mdy": "MM/TT/JJJJ",
