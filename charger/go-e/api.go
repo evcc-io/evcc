@@ -3,6 +3,7 @@ package goe
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -106,7 +107,28 @@ func (c *LocalAPI) Update(payload string) error {
 	var res UpdateResponse
 
 	if c.v2 {
-		return c.response(fmt.Sprintf("set?%s", payload), &res)
+		params, err := url.ParseQuery(payload)
+		if err != nil {
+			return fmt.Errorf("invalid update payload: %w", err)
+		}
+		if len(params) == 0 {
+			return errors.New("empty update payload")
+		}
+
+		if err := c.response(fmt.Sprintf("set?%s", payload), &res); err != nil {
+			return err
+		}
+
+		for key := range params {
+			value, ok := res[key]
+			if !ok {
+				return fmt.Errorf("set %s: missing confirmation", key)
+			}
+			if accepted, ok := value.(bool); !ok || !accepted {
+				return fmt.Errorf("set %s: %v", key, value)
+			}
+		}
+		return nil
 	}
 
 	return c.response(fmt.Sprintf("mqtt?payload=%s", payload), &res)
