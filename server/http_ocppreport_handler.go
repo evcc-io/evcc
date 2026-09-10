@@ -19,10 +19,14 @@ func updateOcppReportHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// idTag is mandatory: the ocpp-go library rejects an empty one on every
-	// Authorize/StartTransaction, which would silently and permanently fail
-	// every session for the rule (see charger/ocpp.ReportRule.IdTag)
+	// stationId and idTag are mandatory - no more "evcc-<loadpoint>" /
+	// "EVCC" fallbacks; an empty idTag would also silently and permanently
+	// fail every Authorize/StartTransaction (ocpp-go validates it required)
 	for _, rule := range rules {
+		if rule.StationID == "" {
+			jsonError(w, http.StatusBadRequest, fmt.Errorf("%s: stationId is required", rule.LoadpointTitle))
+			return
+		}
 		if rule.IdTag == "" {
 			jsonError(w, http.StatusBadRequest, fmt.Errorf("%s: idTag is required", rule.LoadpointTitle))
 			return

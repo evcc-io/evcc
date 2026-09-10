@@ -97,16 +97,16 @@
 				id="ocppreportStationId"
 				:label="$t('config.ocppreport.stationId')"
 				:help="$t('config.ocppreport.stationIdHelp')"
-				optional
+				:example="defaultStationId"
 			>
 				<input
 					id="ocppreportStationId"
 					v-model="values.stationId"
 					type="text"
 					class="form-control"
-					:placeholder="defaultStationId"
 					spellcheck="false"
 					autocomplete="off"
+					required
 				/>
 			</FormRow>
 			<FormRow
@@ -175,7 +175,7 @@
 					v-if="changes"
 					type="button"
 					class="btn btn-primary order-1 order-sm-2 flex-grow-1 flex-sm-grow-0 px-4"
-					:disabled="!values.upstreamUrl || !values.idTag"
+					:disabled="!values.upstreamUrl || !values.stationId || !values.idTag"
 					@click="save(false)"
 				>
 					{{ $t("config.general.save") }}
