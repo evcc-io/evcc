@@ -30,6 +30,6 @@
 	},
 	"remoteEnv": {
 		"GOTOOLCHAIN": "auto",
-		"PATH": "${containerEnv:HOME}/.vite-plus/bin:${containerEnv:HOME}/.local/share/vite-plus/bin:${containerEnv:PATH}"
+		"PATH": "/home/vscode/.vite-plus/bin:/home/vscode/.local/share/vite-plus/bin:${containerEnv:PATH}"
 	}
 }
