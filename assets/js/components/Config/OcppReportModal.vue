@@ -113,16 +113,16 @@
 				id="ocppreportIdTag"
 				:label="$t('config.ocppreport.idTag')"
 				:help="$t('config.ocppreport.idTagHelp')"
-				optional
+				example="EVCC"
 			>
 				<input
 					id="ocppreportIdTag"
 					v-model="values.idTag"
 					type="text"
 					class="form-control"
-					placeholder="EVCC"
 					spellcheck="false"
 					autocomplete="off"
+					required
 				/>
 			</FormRow>
 			<PropertyCollapsible>
@@ -175,7 +175,7 @@
 					v-if="changes"
 					type="button"
 					class="btn btn-primary order-1 order-sm-2 flex-grow-1 flex-sm-grow-0 px-4"
-					:disabled="!values.upstreamUrl"
+					:disabled="!values.upstreamUrl || !values.idTag"
 					@click="save(false)"
 				>
 					{{ $t("config.general.save") }}
