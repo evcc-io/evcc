@@ -107,14 +107,20 @@ func NewMyPvHea(ctx context.Context, name string, settings modbus.TcpSettings, t
 		stepPower: stepPower,
 	}
 
-	go wb.heartbeat(ctx)
+	// device resets relays when not written within the power timeout; not writable more than once a day
+	timeout, err := wb.readUint16(myPvRegPowerTimeout)
+	if err != nil {
+		return nil, err
+	}
+
+	go wb.heartbeat(ctx, time.Duration(max(timeout, 10))*time.Second/2)
 
 	return wb, nil
 }
 
 // heartbeat rewrites the active relay mask so the device does not fall back to idle
-func (wb *MyPvHea) heartbeat(ctx context.Context) {
-	for tick := time.Tick(5 * time.Second); ; {
+func (wb *MyPvHea) heartbeat(ctx context.Context, interval time.Duration) {
+	for tick := time.Tick(interval); ; {
 		select {
 		case <-tick:
 		case <-ctx.Done():
