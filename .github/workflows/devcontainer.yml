@@ -49,8 +49,6 @@ jobs:
           push: never
           runCmd: "true"
 
-      - name: Run lifecycle commands
-        run: devcontainer run-user-commands --workspace-folder .
 
       - name: Smoke test
         run: |
