@@ -33,7 +33,7 @@
     },
     "combined": "Samlet",
     "config": {
-      "buffer": "Energi i hjemmets batteri over {soc} kan bruges til at understøtte ladestederne og forsinke frakobling i soltilstand. Start solopladning automatisk {start}.",
+      "buffer": "Energi i hjemmets batteri over {soc} kan bruges til at understøtte ladestederne og forsinke frakobling i smart mode. Start solopladning automatisk {start}.",
       "bufferNone": "Hjemmets batteri bruges ikke til ladestederne. Sæt en værdi under {soc} for at aktivere støtte.",
       "bufferStart": {
         "above": "når batteriet er over {soc}",
@@ -64,6 +64,7 @@
   },
   "batterySettings": {
     "gridChargeTab": "Opladning fra elnettet",
+    "gridDischargeTab": "Afladning til elnettet",
     "modalTitle": "Hus batteri",
     "noBattery": "Ingen batterier er konfigurerede.",
     "usageTab": "Batteri anvendelse"
@@ -189,7 +190,7 @@
       "chargeStatusC": "oplader",
       "chargeStatusE": "ingen strøm",
       "chargeStatusF": "fejl",
-      "chargedEnergy": "Opladet",
+      "chargedEnergy": "Opladet (session)",
       "co2": "Elnettet CO₂",
       "configured": "Konfigureret",
       "connected": "Forbundet",
@@ -238,6 +239,31 @@
       "temp": "Temperatur",
       "topic": "Emne",
       "url": "URL",
+      "usage": {
+        "aux": {
+          "energy": "Forbrugt",
+          "returnEnergy": "Produceret"
+        },
+        "battery": {
+          "energy": "Afladt",
+          "returnEnergy": "Opladet"
+        },
+        "charge": {
+          "energy": "Opladet",
+          "returnEnergy": "Afladet"
+        },
+        "consumer": {
+          "energy": "Forbrugt",
+          "returnEnergy": "Produceret"
+        },
+        "grid": {
+          "energy": "Importeret",
+          "returnEnergy": "Eksporteret"
+        },
+        "pv": {
+          "energy": "Produceret"
+        }
+      },
       "vehicleLimitSoc": "Ladegrænse",
       "yes": "ja"
     },
@@ -435,6 +461,10 @@
         "charging": "Lader gemt. Opretter ladepunkt…",
         "heating": "Varmelegeme gemt. Opretter varmelegeme…"
       },
+      "currentRangeHelp": {
+        "charging": "Typisk: 6–16 A for 11 kW, 6–32 A for 22 kW-ladere (3-faset).",
+        "heating": "Afhænger af varmeenhedens effekt (se databladet)."
+      },
       "defaultModeHelp": {
         "charging": "Opladningstilstand når køretøjet forbindes.",
         "heating": "Indstilles ved systemstart."
@@ -484,6 +514,8 @@
       "solarBehaviorLabel": "Solar",
       "solarModeCustom": "egen",
       "solarModeMaximum": "max solenergi",
+      "solarShareNote": "Skyder til solandel i brugerindstillingerne er deaktiveret, når wattgrænser er angivet. {0} og gem for at aktivere den.",
+      "solarShareReset": "Fjern grænser",
       "temperatureRangeHelp": "Visningsområde for temperaturbjælken. Påvirker ikke styringen.",
       "temperatureRangeTitle": "Temperatur område",
       "thresholdDisableDelayLabel": "Deaktiver forsinkelse",
@@ -1283,6 +1315,15 @@
     "title": "Godkendelse"
   },
   "main": {
+    "alwaysCharge": {
+      "description": "ingen afbrydelser",
+      "label": "Oplad altid",
+      "labelHeating": "Opvarm altid",
+      "minCurrent": "min {current}",
+      "once": "indtil sessionen slutter",
+      "onceTip": "Kun i denne session",
+      "permanent": "Forbliver permanent aktiv"
+    },
     "chargingPlan": {
       "active": "Aktiv",
       "addRepeatingPlan": "Tilføj plan for gentagelse",
@@ -1420,7 +1461,7 @@
         "descriptionDisabled": "Vælg en grænse for at tillade hurtig opladning fra hjemmebatteriet.",
         "disabled": "Deaktiveret",
         "label": "Batteri boost",
-        "mode": "Kun tilgængelig i solar og min+solar mode.",
+        "mode": "Kun tilgængelig i smart mode.",
         "once": "Boost er aktiveret for denne opladning.",
         "stateActive": "Batteriboost er aktiv",
         "stateBelowLimit": "Batteriniveau er for lav til boost",
@@ -1438,7 +1479,7 @@
         "label": "Min. Nuværende"
       },
       "minTemp": {
-        "description": "Under {0} bruges batteri- og netstrøm også i soltilstand for at opretholde denne temperatur.",
+        "description": "Under {0} bruges batteri- og netstrøm også i smart mode for at opretholde denne temperatur.",
         "label": "Min. temperatur"
       },
       "phasesConfigured": {
@@ -1452,13 +1493,33 @@
       },
       "smartCostCheap": "Billig opladning fra elnet",
       "smartCostClean": "Grøn opladning fra elnet",
+      "solar": "Sol overskud",
+      "solarShare": {
+        "charging": {
+          "description": "Mindst {share} af den minimale ladeeffekt skal komme fra solenergi.",
+          "descriptionFull": "Opladning starter når overskuddet dækker den minimale ladningseffekt.",
+          "descriptionZero": "Opladning starter så snart der er noget overskud."
+        },
+        "heating": {
+          "description": "Mindst {share} af den minimale varmeeffekt skal komme fra solenergi.",
+          "descriptionFull": "Opvarmningen starter, så snart soloverskuddet dækker den minimale varmeeffekt.",
+          "descriptionZero": "Opvarmning starter så snart der er et overskud."
+        },
+        "label": "Solandel",
+        "thresholdsHint": "Der er konfigureret effektbaserede ladegrænser. Fjern dem for at bruge denne skyder.",
+        "thresholdsHintYaml": "Der er konfigureret effektbaserede ladegrænser. Fjern aktiverings-/deaktiveringsgrænserne for dette ladepunkt i din evcc.yaml for at bruge denne skyder.",
+        "thresholdsLink": "Juster konfigurationen"
+      },
       "title": "Indstillinger {0}",
       "vehicle": "Køretøj"
     },
     "mode": {
+      "boost": "Boost",
       "minpv": "Min+Sol",
+      "normal": "Normal",
       "now": "Hurtig",
       "off": "Fra",
+      "on": "Aktiveret",
       "pv": "Sol",
       "smart": "Smart"
     },
@@ -1479,6 +1540,7 @@
       "nextPlan": "Næste plan",
       "notReachableInTime": "Målet vil blive nået {overrun} senere.",
       "onlyInPvMode": "Opladningsplan virker kun i solar mode.",
+      "onlyInSmartMode": "Ladeplan virker kun i smart mode.",
       "planDuration": "Opladningstid",
       "planPeriodLabel": "Periode",
       "planPeriodValue": "{start} til {end}",
@@ -1775,7 +1837,7 @@
     "co2Label": "CO₂ udledning",
     "co2Limit": "CO₂ grænse",
     "enable": "Aktivér begrænsning",
-    "loadpointDescription": "Aktiverer midlertidig hurtig-opladning i solcelle tilstand.",
+    "loadpointDescription": "Aktiverer midlertidig hurtig-opladning i smart mode.",
     "modalTitle": "Smart opladning fra elnettet",
     "none": "ingen",
     "priceLabel": "Energi pris",
@@ -1785,7 +1847,8 @@
     "saved": "Gemt."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Pauseret tid",
+    "activeHoursLabel": "Aktiv tid",
+    "batteryDescription": "Aflader hjemmebatteriet til elnettet, når indfødningsprisen er høj.",
     "description": "Sætter opladningen på pause under høje priser for at prioritere rentabel nettilførsel.",
     "priceLabel": "Indfødningspris",
     "priceLimit": "Indfødningsgrænse",
