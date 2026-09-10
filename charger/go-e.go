@@ -36,7 +36,8 @@ import (
 // GoE charger implementation
 type GoE struct {
 	implement.Caps
-	api goe.API
+	api             goe.API
+	disabledOnFault bool
 }
 
 func init() {
@@ -112,11 +113,26 @@ func (c *GoE) Status() (api.ChargeStatus, error) {
 
 	switch car := resp.Status(); car {
 	case 1:
+		c.disabledOnFault = false
 		return api.StatusA, nil
 	case 2:
+		c.disabledOnFault = false
 		return api.StatusC, nil
 	case 3, 4:
+		c.disabledOnFault = false
 		return api.StatusB, nil
+	case 5:
+		if !c.disabledOnFault {
+			if err := c.Enable(false); err != nil {
+				return api.StatusNone, fmt.Errorf("disable charger after fault: %w", err)
+			}
+			c.disabledOnFault = true
+		}
+
+		if err := resp.Error(); err != 0 {
+			return api.StatusNone, fmt.Errorf("charger error: %d", err)
+		}
+		return api.StatusNone, fmt.Errorf("car error: %d", car)
 	default:
 		return api.StatusNone, fmt.Errorf("car unknown result: %d", car)
 	}

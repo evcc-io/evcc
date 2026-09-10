@@ -37,6 +37,10 @@ func (g *StatusResponse) Status() int {
 	return g.Car
 }
 
+func (g *StatusResponse) Error() int {
+	return g.Err
+}
+
 func (g *StatusResponse) Enabled() bool {
 	return g.Alw == 1
 }

@@ -65,7 +65,7 @@ func TestLocalV2(t *testing.T) {
 	h.expect("/api/status?filter=alw")
 	local := NewLocal(util.NewLogger("foo"), srv.URL, 0)
 
-	h.expect("/api/status?filter=alw,car,eto,nrg,wh,trx,cards")
+	h.expect("/api/status?filter=alw,car,err,eto,nrg,wh,trx,cards")
 	if _, err := local.Status(); err != nil {
 		t.Error(err)
 	}

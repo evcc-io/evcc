@@ -16,6 +16,7 @@ const CloudURI = "https://api.go-e.co"
 // Response is the v1 and v2 api response interface
 type Response interface {
 	Status() int
+	Error() int
 	Enabled() bool
 	CurrentPower() float64
 	ChargedEnergy() float64
@@ -86,7 +87,7 @@ func (c *LocalAPI) response(partial string, res any) error {
 func (c *LocalAPI) status() (Response, error) {
 	if c.v2 {
 		var res StatusResponse2
-		err := c.response("status?filter=alw,car,eto,nrg,wh,trx,cards", &res)
+		err := c.response("status?filter=alw,car,err,eto,nrg,wh,trx,cards", &res)
 		return &res, err
 	}
 

@@ -28,6 +28,10 @@ func (g *StatusResponse2) Status() int {
 	return g.Car
 }
 
+func (g *StatusResponse2) Error() int {
+	return g.Err
+}
+
 func (g *StatusResponse2) Enabled() bool {
 	return g.Alw
 }
