@@ -42,17 +42,17 @@ type ABLevcc struct {
 }
 
 const (
-	ablEvccCmdFirmware    = 1
-	ablEvccCmdStatus      = 2
-	ablEvccCmdInputs      = 10
-	ablEvccCmdGetPwm      = 11
-	ablEvccCmdSetPwm      = 12
-	ablEvccCmdGetDefault  = 26
-	ablEvccCmdSetBreak    = 27
-	ablEvccCmdClearBreak  = 28
-	ablEvccCmdGetBreak    = 29
-	ablEvccCmdEnterAPrime = 30
-	ablEvccCmdLeaveAPrime = 31
+	ablEvccCmdFirmware   = 1
+	ablEvccCmdStatus     = 2
+	ablEvccCmdInputs     = 10
+	ablEvccCmdGetPwm     = 11
+	ablEvccCmdSetPwm     = 12
+	ablEvccCmdGetDefault = 26
+	ablEvccCmdSetBreak   = 27
+	ablEvccCmdClearBreak = 28
+	ablEvccCmdGetBreak   = 29
+	ablEvccCmdLock       = 30
+	ablEvccCmdUnlock     = 31
 
 	ablEvccPwmMin      = 100 // 10.0% = 6A
 	ablEvccPwmMax      = 970 // 97.0% = 82.5A
@@ -65,14 +65,14 @@ const (
 // is mapped directly since api.ChargeStatusString only evaluates the first
 // character and would return both a status and an error for the error states.
 var ablEvccStatus = map[int]api.ChargeStatus{
-	0:  api.StatusA, // A  waiting for EV
-	17: api.StatusA, // A' CP off, EV detection disabled
-	4:  api.StatusB, // B2 enabled, waiting for charge request
-	9:  api.StatusB, // B' charging stopped by EV
-	12: api.StatusB, // B1 halted by bBreakCharge (undocumented)
-	13: api.StatusB, // B1 EV detected
-	5:  api.StatusC, // C  charging
-	6:  api.StatusC, // D  charging with ventilation
+	0:  api.StatusA, // A  Available - waiting for EV
+	17: api.StatusA, // A' Unavailable - CP off, EV detection disabled
+	4:  api.StatusB, // B2 SuspendedEV - enabled, waiting for charge request
+	9:  api.StatusB, // B' SuspendedEV - charging stopped by EV
+	12: api.StatusB, // B1 SuspendedEVSE - halted by bBreakCharge (undocumented)
+	13: api.StatusB, // B1 SuspendedEVSE - EV detected
+	5:  api.StatusC, // C  Charging
+	6:  api.StatusC, // D  Charging with ventilation
 }
 
 var ablEvccErrors = map[int]string{
@@ -309,14 +309,14 @@ var _ api.Resurrector = (*ABLevcc)(nil)
 // WakeUp implements the api.Resurrector interface
 func (wb *ABLevcc) WakeUp() error {
 	// CP off
-	if _, err := wb.conn.Transact(wb.addr, ablEvccCmdEnterAPrime, ""); err != nil {
+	if _, err := wb.conn.Transact(wb.addr, ablEvccCmdLock, ""); err != nil {
 		return err
 	}
 
 	time.Sleep(3 * time.Second)
 
 	// CP on
-	_, err := wb.conn.Transact(wb.addr, ablEvccCmdLeaveAPrime, "")
+	_, err := wb.conn.Transact(wb.addr, ablEvccCmdUnlock, "")
 
 	return err
 }
