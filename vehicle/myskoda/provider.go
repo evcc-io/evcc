@@ -20,7 +20,7 @@ type Provider struct {
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	return &Provider{
 		dataG: util.Cached(func() (VehicleResponse, error) {
-			return api.Vehicle(vin, "charging", "odometer", "airConditioning")
+			return api.Vehicle(vin, "charging", "chargingProfiles", "odometer", "airConditioning")
 		}, cache),
 		action: func(action string) error {
 			return api.ChargeAction(vin, action)
@@ -116,14 +116,26 @@ var _ api.SocLimiter = (*Provider)(nil)
 
 // GetLimitSoc implements the api.SocLimiter interface
 func (v *Provider) GetLimitSoc() (int64, error) {
-	res, err := v.charging()
+	res, err := v.dataG()
 	if err != nil {
 		return 0, err
 	}
-	if res.Settings == nil || res.Settings.TargetStateOfChargeInPercent == nil {
+	charging := res.Vehicle.Charging
+	if charging == nil || charging.Status == nil {
+		return 0, partError(res, "CHARGING")
+	}
+
+	// prefer the limit of the saved location (e.g. home) the vehicle is currently at
+	if charging.IsVehicleInSavedLocation && res.Vehicle.ChargingProfiles != nil {
+		if p := res.Vehicle.ChargingProfiles.CurrentVehiclePositionProfile; p != nil && p.TargetStateOfChargeInPercent != nil {
+			return int64(*p.TargetStateOfChargeInPercent), nil
+		}
+	}
+
+	if charging.Settings == nil || charging.Settings.TargetStateOfChargeInPercent == nil {
 		return 0, api.ErrNotAvailable
 	}
-	return int64(*res.Settings.TargetStateOfChargeInPercent), nil
+	return int64(*charging.Settings.TargetStateOfChargeInPercent), nil
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)
