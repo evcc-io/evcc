@@ -36,8 +36,8 @@ type MyPvHea struct {
 	log       *util.Logger
 	relays    uint16
 	stepPower uint16
-	enabled   atomic.Bool
-	mask      atomic.Uint32
+	mask      atomic.Uint32 // requested stage mask
+	active    atomic.Uint32 // last written mask
 	current   atomic.Uint64
 }
 
@@ -122,7 +122,7 @@ func (wb *MyPvHea) heartbeat(ctx context.Context, interval time.Duration) {
 			return
 		}
 
-		if mask := uint16(wb.mask.Load()); wb.enabled.Load() && mask != 0 {
+		if mask := uint16(wb.active.Load()); mask != 0 {
 			if err := wb.setRelays(mask); err != nil {
 				wb.log.ERROR.Println("heartbeat:", err)
 			}
@@ -161,6 +161,9 @@ func (wb *MyPvHea) Enabled() (bool, error) {
 
 func (wb *MyPvHea) setRelays(mask uint16) error {
 	_, err := wb.conn.WriteSingleRegister(heaRegSetPower, mask)
+	if err == nil {
+		wb.active.Store(uint32(mask))
+	}
 	return err
 }
 
@@ -171,12 +174,7 @@ func (wb *MyPvHea) Enable(enable bool) error {
 		mask = uint16(wb.mask.Load())
 	}
 
-	err := wb.setRelays(mask)
-	if err == nil {
-		wb.enabled.Store(enable)
-	}
-
-	return err
+	return wb.setRelays(mask)
 }
 
 // MaxCurrent implements the api.Charger interface
