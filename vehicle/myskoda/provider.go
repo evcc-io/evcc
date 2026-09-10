@@ -116,17 +116,13 @@ var _ api.SocLimiter = (*Provider)(nil)
 
 // GetLimitSoc implements the api.SocLimiter interface
 func (v *Provider) GetLimitSoc() (int64, error) {
-	res, err := v.dataG()
+	charging, err := v.charging()
 	if err != nil {
 		return 0, err
 	}
-	charging := res.Vehicle.Charging
-	if charging == nil || charging.Status == nil {
-		return 0, partError(res, "CHARGING")
-	}
 
 	// prefer the limit of the saved location (e.g. home) the vehicle is currently at
-	if charging.IsVehicleInSavedLocation && res.Vehicle.ChargingProfiles != nil {
+	if res, _ := v.dataG(); charging.IsVehicleInSavedLocation && res.Vehicle.ChargingProfiles != nil {
 		if p := res.Vehicle.ChargingProfiles.CurrentVehiclePositionProfile; p != nil && p.TargetStateOfChargeInPercent != nil {
 			return int64(*p.TargetStateOfChargeInPercent), nil
 		}
