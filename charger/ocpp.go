@@ -39,6 +39,7 @@ import (
 // OCPP charger implementation
 type OCPP struct {
 	implement.Caps
+	log     *util.Logger
 	cp      *ocpp.CP
 	conn    *ocpp.Connector
 	phases  int
@@ -195,6 +196,7 @@ func NewOCPP(ctx context.Context,
 
 	c := &OCPP{
 		Caps:                implement.New(),
+		log:                 log,
 		cp:                  cp,
 		conn:                conn,
 		stackLevelZero:      stackLevelZero,
@@ -231,8 +233,9 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 		}
 		// Transaction profiles expire even when the requested current stays unchanged.
 		if transactionID != c.transactionID {
+			// a failed update must not fail the status, it remains eligible for retry
 			if err := c.setCurrent(c.profileCurrent); err != nil {
-				return api.StatusNone, err
+				c.log.WARN.Printf("reapply charging profile: %v", err)
 			}
 		}
 	}

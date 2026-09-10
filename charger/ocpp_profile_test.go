@@ -191,8 +191,9 @@ func (suite *ocppTestSuite) TestTransactionProfiles() {
 	start, err = cp.StartTransaction(1, "tag", 0, types.NewDateTime(time.Now()))
 	require.NoError(t, err)
 	h.reject.Store(true)
+	// a rejected update is logged and retried, it must not fail the status
 	_, err = c.Status()
-	require.ErrorContains(t, err, "Rejected")
+	require.NoError(t, err)
 	expectProfile(types.ChargingProfilePurposeTxProfile, start.TransactionId, 0)
 	_, err = c.Status()
 	require.NoError(t, err)
