@@ -799,7 +799,7 @@
       "password": "Password",
       "passwordHelp": "For HTTP Basic Auth to the upstream server.",
       "stationId": "Station ID",
-      "stationIdHelp": "Identity presented to the upstream server.",
+      "stationIdHelp": "Identity presented to the upstream server. Required.",
       "status": "Status",
       "statusConnected": "Report connected",
       "statusError": "Report error",
