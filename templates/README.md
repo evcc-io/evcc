@@ -369,3 +369,9 @@ Service endpoints must return an array of strings (e.g., `["value1", "value2"]`)
 ## `render`
 
 `render` contains the internal device configuration. All `param` `name` values can be used as a template variable, e.g. `{{ .host }}` for a param named `host`. The content is a go template, so all of go template feature can be used, e.g. `{{- if ... }}` statements, etc.
+
+`render` is evaluated once when the device is configured. Plugin fields like the HTTP `uri` and `body` are go templates themselves and are evaluated on every request (sprig functions plus `addDate` and `timeRound`). Time-dependent expressions must be deferred to request time by wrapping them in a raw string, otherwise `now` freezes at config time:
+
+```yaml
+uri: https://example.org/forecast?from={{ `{{ now | date "2006-01-02" }}` }}&to={{ `{{ addDate now 0 0 5 | date "2006-01-02" }}` }}
+```
