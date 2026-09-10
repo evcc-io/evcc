@@ -49,10 +49,9 @@ jobs:
           push: never
           runCmd: "true"
 
-
       - name: Smoke test
         run: |
-          devcontainer exec --workspace-folder . bash -lc '
+          devcontainer exec --workspace-folder . sh -c '
             set -eu
             go version
             node --version
