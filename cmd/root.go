@@ -482,6 +482,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Experimental, Val: isExperimental()}
 	valueChan <- util.Param{Key: keys.Optimizer, Val: isOptimizer()}
 	valueChan <- util.Param{Key: keys.Mcp, Val: isMcp()}
+	valueChan <- util.Param{Key: keys.OcppReportEnabled, Val: isOcppReportEnabled()}
 
 	// run shutdown functions on stop
 	var once sync.Once

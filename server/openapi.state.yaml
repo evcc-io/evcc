@@ -11,6 +11,9 @@ components:
         experimental:
           description: Experimental UI features are enabled.
           type: boolean
+        ocppReportEnabled:
+          description: OCPP Report master switch is enabled.
+          type: boolean
         setupRequired:
           description: Initial setup is required.
           type: boolean

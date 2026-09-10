@@ -810,6 +810,12 @@
       "username": "Username",
       "usernameHelp": "For HTTP Basic Auth to the upstream server."
     },
+    "ocppreportsettings": {
+      "description": "Master switch for OCPP Report. Disabling it closes every connection without discarding the loadpoints' report rules - turn it back on to reconnect them exactly as configured.",
+      "enableLabel": "Report charging sessions to an external OCPP backend",
+      "ruleCount": "No loadpoints configured to report | 1 loadpoint configured to report | {count} loadpoints configured to report",
+      "title": "OCPP Report"
+    },
     "optimizer": {
       "description": "Analyzes solar forecast, electricity prices, and your consumption patterns to optimize battery and charging strategy. Data is sent to the evcc optimization service for processing. Currently only calculates and visualizes. Does not control devices yet.",
       "enable": "Enable Optimizer",

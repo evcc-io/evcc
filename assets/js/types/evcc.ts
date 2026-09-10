@@ -162,6 +162,8 @@ export interface State {
   telemetry?: boolean;
   /** Experimental UI features are enabled. */
   experimental?: boolean;
+  /** OCPP Report master switch is enabled. */
+  ocppReportEnabled?: boolean;
   /** Initial setup is required. */
   setupRequired?: boolean;
   /** Startup has completed. */
