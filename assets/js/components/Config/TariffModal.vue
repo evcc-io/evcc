@@ -142,6 +142,7 @@ export default defineComponent({
 			const genericTemplates = [
 				"fixed",
 				"fixed-zones",
+				"eeg51",
 				"demo-co2-forecast",
 				"demo-dynamic-grid",
 				"demo-solar-forecast",
