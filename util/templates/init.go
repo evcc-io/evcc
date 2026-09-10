@@ -81,6 +81,20 @@ func Register(class Class, filepath string) error {
 	return register(class, tmpl)
 }
 
+// Add adds a programmatically created template to the registry
+func Add(class Class, tmpl Template) error {
+	if err := tmpl.normalize(); err != nil {
+		return err
+	}
+
+	return register(class, tmpl)
+}
+
+// Remove removes a template from the registry
+func Remove(class Class, name string) {
+	templates[class] = slices.DeleteFunc(templates[class], func(t Template) bool { return t.Template == name })
+}
+
 func register(class Class, tmpl Template) error {
 	if slices.ContainsFunc(templates[class], func(t Template) bool { return t.Template == tmpl.Template }) {
 		return fmt.Errorf("duplicate template name: %s", tmpl.Template)
@@ -101,9 +115,14 @@ func fromBytes(b []byte) (Template, error) {
 		return Template{}, err
 	}
 
+	return tmpl, tmpl.normalize()
+}
+
+// normalize resolves and validates a decoded or programmatically created template
+func (tmpl *Template) normalize() error {
 	for _, f := range []func() error{tmpl.ResolvePresets, tmpl.ResolveGroup, tmpl.UpdateParamsWithDefaults, tmpl.UpdateModbusParamsWithDefaults, tmpl.SortRequiredParamsFirst, tmpl.Validate} {
 		if err := f(); err != nil {
-			return tmpl, fmt.Errorf("template '%s': %w", tmpl.Template, err)
+			return fmt.Errorf("template '%s': %w", tmpl.Template, err)
 		}
 	}
 
@@ -118,13 +137,13 @@ func fromBytes(b []byte) (Template, error) {
 		seen := make(map[Capability]struct{}, len(tmpl.Products[i].Capabilities))
 		for _, c := range tmpl.Products[i].Capabilities {
 			if _, ok := seen[c]; ok {
-				return Template{}, fmt.Errorf("template '%s': duplicate capability '%s' for product '%s'", tmpl.Template, c, tmpl.Products[i].Identifier())
+				return fmt.Errorf("template '%s': duplicate capability '%s' for product '%s'", tmpl.Template, c, tmpl.Products[i].Identifier())
 			}
 			seen[c] = struct{}{}
 		}
 	}
 
-	return tmpl, nil
+	return nil
 }
 
 func load(class Class) {

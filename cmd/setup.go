@@ -28,6 +28,7 @@ import (
 	"github.com/evcc-io/evcc/curtailer"
 	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/db/settings"
+	"github.com/evcc-io/evcc/devicehost"
 	"github.com/evcc-io/evcc/hems"
 	hemsapi "github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/hems/shm"
@@ -640,6 +641,24 @@ func configureSponsorship(token string) (err error) {
 	return sponsor.ConfigureSponsorship(token)
 }
 
+// configureDeviceHosts connects the configured device hosts and registers their device types
+func configureDeviceHosts(ctx context.Context) error {
+	for _, v := range cfgDeviceHost {
+		name, uri, ok := strings.Cut(v, "=")
+		if !ok {
+			return fmt.Errorf("invalid %s: %s, expected name=uri", flagDeviceHost, v)
+		}
+
+		if _, err := devicehost.New(ctx, name, uri); err != nil {
+			return fmt.Errorf("device host %s: %w", name, err)
+		}
+
+		log.INFO.Printf("device host %s: %s", name, uri)
+	}
+
+	return nil
+}
+
 func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 	// full http request log
 	if cmd.Flag(flagHeaders).Changed {
@@ -666,6 +685,11 @@ func configureEnvironment(cmd *cobra.Command, conf *globalconfig.All) error {
 				return err
 			}
 		}
+	}
+
+	// setup device hosts
+	if err == nil {
+		err = configureDeviceHosts(cmd.Context())
 	}
 
 	// setup translations
