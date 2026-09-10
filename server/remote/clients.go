@@ -139,7 +139,12 @@ func (r *Remote) DeleteClient(username string) error {
 		return fmt.Errorf("client %s not found", username)
 	}
 
-	r.revokeTokens(username)
+	// revoke the client's bearer tokens
+	for k, e := range r.tokens {
+		if e.user == username {
+			delete(r.tokens, k)
+		}
+	}
 
 	return saveClients(slices.Delete(list, idx, idx+1))
 }

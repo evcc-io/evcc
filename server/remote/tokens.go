@@ -34,10 +34,6 @@ func (r *Remote) IssueToken(username string) (string, time.Time, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if r.tokens == nil {
-		r.tokens = make(map[string]tokenEntry)
-	}
-
 	// drop expired tokens
 	now := time.Now()
 	for k, e := range r.tokens {
@@ -62,13 +58,4 @@ func (r *Remote) ValidateToken(token string) (string, bool) {
 	}
 
 	return e.user, true
-}
-
-// revokeTokens drops all tokens of the given client. Must be called with mu held.
-func (r *Remote) revokeTokens(username string) {
-	for k, e := range r.tokens {
-		if e.user == username {
-			delete(r.tokens, k)
-		}
-	}
 }

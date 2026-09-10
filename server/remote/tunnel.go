@@ -234,7 +234,7 @@ func (t *Tunnel) basicAuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		user, ok := t.bearerUser(r)
+		user, ok := t.authenticate.ValidateToken(strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer "))
 		if !ok {
 			var pass string
 			user, pass, ok = r.BasicAuth()
@@ -269,15 +269,6 @@ func (t *Tunnel) basicAuthMiddleware(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
-}
-
-// bearerUser returns the client username for a valid bearer token in the Authorization header.
-func (t *Tunnel) bearerUser(r *http.Request) (string, bool) {
-	token, found := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
-	if !found {
-		return "", false
-	}
-	return t.authenticate.ValidateToken(token)
 }
 
 // issueToken responds with an OAuth2-style token response (RFC 6749 section 5.1).

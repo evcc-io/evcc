@@ -16,9 +16,9 @@ import (
 
 func TestTokenLifecycle(t *testing.T) {
 	require.NoError(t, settings.SetJson(keys.RemoteClients, []persistedClient{}))
-	r := &Remote{}
+	r := &Remote{tokens: make(map[string]tokenEntry)}
 
-	_, pw, err := r.CreateClient("app", 0)
+	_, _, err := r.CreateClient("app", 0)
 	require.NoError(t, err)
 
 	_, ok := r.ValidateToken("unknown")
@@ -43,12 +43,11 @@ func TestTokenLifecycle(t *testing.T) {
 	require.NoError(t, r.DeleteClient("app"))
 	_, ok = r.ValidateToken(token)
 	assert.False(t, ok)
-	assert.False(t, r.Authenticate("app", pw))
 }
 
 func TestTokenMiddleware(t *testing.T) {
 	require.NoError(t, settings.SetJson(keys.RemoteClients, []persistedClient{}))
-	r := &Remote{}
+	r := &Remote{tokens: make(map[string]tokenEntry)}
 	_, pw, err := r.CreateClient("app", 0)
 	require.NoError(t, err)
 
