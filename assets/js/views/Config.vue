@@ -60,6 +60,7 @@
 									<OcppReportButton
 										v-if="
 											experimental &&
+											ocppReportEnabled &&
 											loadpoint.title &&
 											!loadpointIsHeating(loadpoint)
 										"
