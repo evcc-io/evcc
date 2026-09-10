@@ -86,7 +86,7 @@
     "tsx": "^4.23.12",
     "typescript": "^5.9.3",
     "vite": "npm:@voidzero-dev/vite-plus-core@0.2.6",
-    "vite-plus": "0.2.6",
+    "vite-plus": "0.3.1",
     "vitest": "4.1.11",
     "vue-hot-reload-api": "^2.3.4",
     "vue-tsc": "^3.3.11",
