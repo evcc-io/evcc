@@ -1,0 +1,70 @@
+template: abl-evcc
+products:
+  - brand: ABL
+    description:
+      generic: EVCC Controller
+  - brand: E.ON
+    description:
+      generic: Ladebox (EVSE101/201/203/205)
+capabilities: ["mA", "dim"]
+requirements:
+  evcc: ["sponsorship"]
+  description:
+    de: |
+      Nur für frühe ABL-Wallboxen mit EVCC-Steuermodul (ohne Modbus).
+
+      Die Anbindung erfolgt über RS485 (38400 Bd, 8N1), entweder mit einem
+      USB-RS485-Adapter (`device`) oder einem Ethernet-RS485-Adapter (`uri`).
+      Der Bus ist an beiden Enden mit je 120 Ω abzuschließen.
+
+      Mehrere Wallboxen an einem Bus: jedem Modul eine eigene Adresse (1..8) zuweisen.
+
+      Der maximal einstellbare Ladestrom wird durch den am Modul hinterlegten
+      Default-Ladestrom begrenzt (Werkseinstellung 16 A).
+    en: |
+      For early ABL wallboxes with EVCC control module only (no modbus).
+
+      Communication uses RS485 (38400 Bd, 8N1), either via a USB-RS485 adapter
+      (`device`) or an Ethernet-RS485 adapter (`uri`).
+      Terminate the bus with 120 Ω at both ends.
+
+      For multiple wallboxes on one bus assign an individual address (1..8) to each module.
+
+      The maximum current is limited by the module's default charging current
+      (factory setting 16 A).
+params:
+  - name: device
+    description:
+      de: Serieller Anschluss (USB-RS485-Adapter)
+      en: Serial port (USB-RS485 adapter)
+    help:
+      de: z. B. /dev/ttyUSB0 — gegenseitig ausschließend mit uri
+      en: e.g. /dev/ttyUSB0 — mutually exclusive with uri
+    service: hardware/serial
+    example: /dev/ttyUSB0
+  - name: uri
+    description:
+      de: TCP-Endpunkt eines Ethernet-RS485-Adapters
+      en: TCP endpoint of an Ethernet-RS485 adapter
+    help:
+      de: z. B. localhost:4196 — gegenseitig ausschließend mit device
+      en: e.g. localhost:4196 — mutually exclusive with device
+    example: localhost:4196
+  - name: address
+    description:
+      de: Busadresse (1..8)
+      en: Bus address (1..8)
+    type: int
+    default: 1
+  - name: timeout
+    default: 2s
+    advanced: true
+render: |
+  type: abl-evcc
+  {{- if .uri }}
+  uri: {{ .uri }}
+  {{- else }}
+  device: {{ .device }}
+  {{- end }}
+  address: {{ .address }}
+  timeout: {{ .timeout }}
