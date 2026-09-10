@@ -16,6 +16,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// allowAll accepts any basic-auth credentials and issues no tokens.
+type allowAll struct{}
+
+func (allowAll) Authenticate(string, string) bool             { return true }
+func (allowAll) IssueToken(string) (string, time.Time, error) { return "", time.Time{}, nil }
+func (allowAll) ValidateToken(string) (string, bool)          { return "", false }
+
 // serveSession upgrades the request to a websocket, wraps it in a yamux server
 // session, hands it to the sessions channel and blocks until the session closes.
 func serveSession(w http.ResponseWriter, r *http.Request, sessions chan<- *yamux.Session) {
@@ -76,14 +83,12 @@ func TestTunnelReconnect(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("pong"))
 	})
-	authenticate := func(user, pass string) bool { return true }
-
 	sessions := make(chan *yamux.Session, 4)
 	srv := tunnelTestServer(t, sessions)
 
 	wsURL := "ws" + strings.TrimPrefix(srv.URL, "http")
 
-	tun := NewTunnel(wsURL, "token", handler, authenticate, nil, util.NewLogger("test"), nil)
+	tun := NewTunnel(wsURL, "token", handler, allowAll{}, nil, util.NewLogger("test"), nil)
 	go tun.run()
 	defer tun.Close()
 
@@ -135,8 +140,6 @@ func TestTunnelReconnectsAfterTransientError(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("pong"))
 	})
-	authenticate := func(user, pass string) bool { return true }
-
 	var attempts atomic.Int32
 	sessions := make(chan *yamux.Session, 4)
 	srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -151,7 +154,7 @@ func TestTunnelReconnectsAfterTransientError(t *testing.T) {
 
 	wsURL := "ws" + strings.TrimPrefix(srv.URL, "http")
 
-	tun := NewTunnel(wsURL, "token", handler, authenticate, nil, util.NewLogger("test"), nil)
+	tun := NewTunnel(wsURL, "token", handler, allowAll{}, nil, util.NewLogger("test"), nil)
 	go tun.run()
 	defer tun.Close()
 

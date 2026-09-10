@@ -33,9 +33,10 @@ type Remote struct {
 	httpHandler http.Handler
 	log         *util.Logger
 	publisher   chan<- util.Param
-	lastSeen    map[string]time.Time // persisted: username → last activity
-	connected   map[string]int       // in-memory: active connection count per user
-	lastError   error                // last connect/registration error, published to UI
+	lastSeen    map[string]time.Time  // persisted: username → last activity
+	connected   map[string]int        // in-memory: active connection count per user
+	tokens      map[string]tokenEntry // in-memory: bearer token → client
+	lastError   error                 // last connect/registration error, published to UI
 }
 
 // New creates a new Remote manager, loads persisted settings, and connects if enabled.
@@ -47,6 +48,7 @@ func New(cloudHost string, httpHandler http.Handler, valueChan chan<- util.Param
 		publisher:   valueChan,
 		lastSeen:    make(map[string]time.Time),
 		connected:   make(map[string]int),
+		tokens:      make(map[string]tokenEntry),
 	}
 
 	// load saved settings
@@ -118,7 +120,7 @@ func (r *Remote) connect() {
 
 	r.log.INFO.Printf("remote access via %s", r.settings.URL)
 
-	tunnel := NewTunnel(r.settings.TunnelURL, r.settings.Token, r.httpHandler, r.Authenticate, r.TrackActivity, r.log, r.publish)
+	tunnel := NewTunnel(r.settings.TunnelURL, r.settings.Token, r.httpHandler, r, r.TrackActivity, r.log, r.publish)
 
 	r.mu.Lock()
 	r.tunnel = tunnel

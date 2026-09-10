@@ -2,10 +2,12 @@ package remote
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -19,14 +21,26 @@ import (
 // bad registration token or sponsor token
 var errCredentialsRejected = errors.New("remote access rejected")
 
-const minUptime = 5 * time.Second
+const (
+	minUptime = 5 * time.Second
+
+	// tokenPath issues a bearer token for basic-auth credentials (OAuth2 client credentials style)
+	tokenPath = "/api/remote/token"
+)
+
+// authenticator validates client credentials and manages bearer tokens.
+type authenticator interface {
+	Authenticate(user, pass string) bool
+	IssueToken(user string) (string, time.Time, error)
+	ValidateToken(token string) (string, bool)
+}
 
 // Tunnel manages a WebSocket+yamux tunnel to the cloud proxy.
 type Tunnel struct {
 	tunnelURL     string
 	token         string
 	httpHandler   http.Handler
-	authenticate  func(user, pass string) bool
+	authenticate  authenticator
 	trackActivity func(username string, active bool)
 	log           *util.Logger
 	cancel        func()
@@ -39,7 +53,7 @@ type Tunnel struct {
 }
 
 // NewTunnel creates a new tunnel client.
-func NewTunnel(tunnelURL, token string, httpHandler http.Handler, authenticate func(user, pass string) bool, trackActivity func(string, bool), log *util.Logger, onStateChange func()) *Tunnel {
+func NewTunnel(tunnelURL, token string, httpHandler http.Handler, authenticate authenticator, trackActivity func(string, bool), log *util.Logger, onStateChange func()) *Tunnel {
 	return &Tunnel{
 		tunnelURL:     tunnelURL,
 		token:         token,
@@ -206,9 +220,8 @@ func (t *Tunnel) Close() {
 	}
 }
 
-// basicAuthMiddleware wraps a handler with HTTP basic auth, validating
-// credentials against the given authenticate function per request.
-// It rate-limits failed attempts to prevent brute-force attacks.
+// basicAuthMiddleware wraps a handler with HTTP basic auth or a bearer token
+// issued by the token endpoint. It rate-limits failed attempts to prevent brute-force attacks.
 func (t *Tunnel) basicAuthMiddleware(next http.Handler) http.Handler {
 	rejectAuth := func(w http.ResponseWriter) {
 		w.Header().Set("WWW-Authenticate", `Basic realm="evcc"`)
@@ -216,23 +229,32 @@ func (t *Tunnel) basicAuthMiddleware(next http.Handler) http.Handler {
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user, pass, ok := r.BasicAuth()
-		if !ok || t.authenticate == nil {
+		if t.authenticate == nil {
 			rejectAuth(w)
 			return
 		}
 
-		if !t.rateLimiter.allow() {
-			t.log.INFO.Printf("login blocked for %q (rate limited)", user)
-			http.Error(w, "Too many failed login attempts. Try again in 1 minute.", http.StatusTooManyRequests)
-			return
-		}
+		user, ok := t.bearerUser(r)
+		if !ok {
+			var pass string
+			user, pass, ok = r.BasicAuth()
+			if !ok {
+				rejectAuth(w)
+				return
+			}
 
-		if !t.authenticate(user, pass) {
-			t.rateLimiter.fail()
-			t.log.INFO.Printf("failed login attempt for %q", user)
-			rejectAuth(w)
-			return
+			if !t.rateLimiter.allow() {
+				t.log.INFO.Printf("login blocked for %q (rate limited)", user)
+				http.Error(w, "Too many failed login attempts. Try again in 1 minute.", http.StatusTooManyRequests)
+				return
+			}
+
+			if !t.authenticate.Authenticate(user, pass) {
+				t.rateLimiter.fail()
+				t.log.INFO.Printf("failed login attempt for %q", user)
+				rejectAuth(w)
+				return
+			}
 		}
 
 		if t.trackActivity != nil {
@@ -240,6 +262,37 @@ func (t *Tunnel) basicAuthMiddleware(next http.Handler) http.Handler {
 			defer t.trackActivity(user, false) // long-running requests (ws)
 		}
 
+		if r.Method == http.MethodPost && r.URL.Path == tokenPath {
+			t.issueToken(w, user)
+			return
+		}
+
 		next.ServeHTTP(w, r)
+	})
+}
+
+// bearerUser returns the client username for a valid bearer token in the Authorization header.
+func (t *Tunnel) bearerUser(r *http.Request) (string, bool) {
+	token, found := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
+	if !found {
+		return "", false
+	}
+	return t.authenticate.ValidateToken(token)
+}
+
+// issueToken responds with an OAuth2-style token response (RFC 6749 section 5.1).
+func (t *Tunnel) issueToken(w http.ResponseWriter, user string) {
+	token, expires, err := t.authenticate.IssueToken(user)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-store")
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"access_token": token,
+		"token_type":   "Bearer",
+		"expires_in":   int(time.Until(expires).Seconds()),
 	})
 }
