@@ -107,14 +107,14 @@ func NewMyPvHea(ctx context.Context, name string, settings modbus.TcpSettings, t
 		stepPower: stepPower,
 	}
 
-	go wb.heartbeat(ctx, 5*time.Second)
+	go wb.heartbeat(ctx)
 
 	return wb, nil
 }
 
 // heartbeat rewrites the active relay mask so the device does not fall back to idle
-func (wb *MyPvHea) heartbeat(ctx context.Context, interval time.Duration) {
-	for tick := time.Tick(interval); ; {
+func (wb *MyPvHea) heartbeat(ctx context.Context) {
+	for tick := time.Tick(5 * time.Second); ; {
 		select {
 		case <-tick:
 		case <-ctx.Done():
