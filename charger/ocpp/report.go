@@ -38,6 +38,15 @@ import (
 
 var reportLog = util.NewLogger("ocpp-report")
 
+// defaultMeterInterval throttles intermediate MeterValues sent while a
+// session is active - core calls ReportMeterValue every loadpoint tick
+// (whenever charged energy increases), but OCPP backends expect samples on
+// the order of a typical MeterValueSampleInterval, not the loadpoint's own
+// (often much shorter) update cadence. Mirrors the forwarder's per-charger
+// meterInterval throttle (forwarder.go), fixed rather than absorbed from
+// upstream since report has no ChangeConfiguration channel to absorb it from.
+const defaultMeterInterval = 60 * time.Second
+
 // ReportRule configures reporting a loadpoint's charging sessions to an
 // upstream OCPP 1.6J Central System. One-way: evcc reports, it never accepts
 // remote control from the upstream (evcc-io/evcc#32989).
@@ -243,14 +252,21 @@ type reportConnection struct {
 	pendingStop   bool
 	meterStopWh   float64
 	transactionId *int
+
+	// intermediate MeterValues throttle - reconcile always runs on this
+	// connection's single worker goroutine (run's job loop), so these two are
+	// only ever touched from there and need no mutex, unlike the fields above
+	meterInterval time.Duration
+	lastMeterSent time.Time
 }
 
 func newReportConnection(rule ReportRule) *reportConnection {
 	conn := &reportConnection{
-		title: rule.LoadpointTitle,
-		rule:  rule,
-		jobs:  make(chan func(), 16),
-		done:  make(chan struct{}),
+		title:         rule.LoadpointTitle,
+		rule:          rule,
+		jobs:          make(chan func(), 16),
+		done:          make(chan struct{}),
+		meterInterval: defaultMeterInterval,
 	}
 
 	var opts []ws.ClientOpt
@@ -455,6 +471,10 @@ func (conn *reportConnection) reconcile() {
 		conn.transactionId = &res.TransactionId
 		txID = conn.transactionId
 		conn.mu.Unlock()
+
+		// don't let a previous session's send time throttle this new
+		// session's first sample
+		conn.lastMeterSent = time.Time{}
 	}
 
 	if pendingStop {
@@ -471,18 +491,25 @@ func (conn *reportConnection) reconcile() {
 		return
 	}
 
-	mv := types.MeterValue{
-		Timestamp: types.NewDateTime(time.Now()),
-		SampledValue: []types.SampledValue{{
-			Value:     fmt.Sprintf("%.0f", lastMeter),
-			Measurand: types.MeasurandEnergyActiveImportRegister,
-			Unit:      types.UnitOfMeasureWh,
-		}},
-	}
-	if _, err := conn.cp.MeterValues(1, []types.MeterValue{mv}, func(r *core.MeterValuesRequest) {
-		r.TransactionId = txID
-	}); err != nil {
-		reportLog.DEBUG.Printf("%s: meter values: %v", conn.title, err)
+	// throttle intermediate samples; ReportMeterValue already kept lastMeter
+	// current above, so whichever reconcile call next clears the interval
+	// sends the freshest value - no sample is skipped, only delayed
+	if now := time.Now(); now.Sub(conn.lastMeterSent) >= conn.meterInterval {
+		mv := types.MeterValue{
+			Timestamp: types.NewDateTime(now),
+			SampledValue: []types.SampledValue{{
+				Value:     fmt.Sprintf("%.0f", lastMeter),
+				Measurand: types.MeasurandEnergyActiveImportRegister,
+				Unit:      types.UnitOfMeasureWh,
+			}},
+		}
+		if _, err := conn.cp.MeterValues(1, []types.MeterValue{mv}, func(r *core.MeterValuesRequest) {
+			r.TransactionId = txID
+		}); err != nil {
+			reportLog.DEBUG.Printf("%s: meter values: %v", conn.title, err)
+		} else {
+			conn.lastMeterSent = now
+		}
 	}
 }
 
@@ -630,7 +657,9 @@ func (h *reportHandler) OnTriggerMessage(request *remotetrigger.TriggerMessageRe
 		h.conn.enqueue(h.conn.ensureBoot)
 	case core.MeterValuesFeatureName:
 		if lp, ok := lookupLoadpoint(h.conn.title); ok {
-			ReportMeterValue(h.conn.title, lp.GetChargedEnergy()*1e3)
+			// GetChargedEnergy is already in Wh, unlike finalizeSessionEnergy's
+			// kWh-based register - no *1e3 here (was reporting 1000x too high)
+			ReportMeterValue(h.conn.title, lp.GetChargedEnergy())
 		}
 	}
 
