@@ -33,7 +33,7 @@
     },
     "combined": "Combinada",
     "config": {
-      "buffer": "L’energia de la bateria domèstica per sobre de {soc} es pot utilitzar per a donar suport als punts de recàrrega i retarda l’aturada en mode solar. La càrrega solar s’inicia automàticament {start}.",
+      "buffer": "L’energia de la bateria domèstica per sobre de {soc} es pot utilitzar per a donar suport als punts de recàrrega i retarda l’aturada en mode intel·ligent. La càrrega solar s’inicia automàticament {start}.",
       "bufferNone": "L’energia de la bateria domèstica no s’utilitza per als punts de recàrrega. Establiu un valor inferior a {soc} per a habilitar el suport.",
       "bufferStart": {
         "above": "quan la bateria es troba per sobre de {soc}",
@@ -64,6 +64,7 @@
   },
   "batterySettings": {
     "gridChargeTab": "Càrrega de xarxa",
+    "gridDischargeTab": "Descarrega a la xarxa",
     "modalTitle": "Bateria domèstica",
     "noBattery": "No hi ha bateries configurades.",
     "usageTab": "Ús de la bateria"
@@ -189,7 +190,7 @@
       "chargeStatusC": "carregant",
       "chargeStatusE": "sense energia",
       "chargeStatusF": "error",
-      "chargedEnergy": "Carregat",
+      "chargedEnergy": "Carregat (sessió)",
       "co2": "CO₂ de la xarxa",
       "configured": "Configurat",
       "connected": "Connectat",
@@ -238,6 +239,31 @@
       "temp": "Temperatura",
       "topic": "Tema",
       "url": "URL",
+      "usage": {
+        "aux": {
+          "energy": "Consumit",
+          "returnEnergy": "Produït"
+        },
+        "battery": {
+          "energy": "Descarregat",
+          "returnEnergy": "Carregat"
+        },
+        "charge": {
+          "energy": "Carregat",
+          "returnEnergy": "Descarregat"
+        },
+        "consumer": {
+          "energy": "Consumit",
+          "returnEnergy": "Produït"
+        },
+        "grid": {
+          "energy": "Importat",
+          "returnEnergy": "Exportat"
+        },
+        "pv": {
+          "energy": "Produït"
+        }
+      },
       "vehicleLimitSoc": "Límit de càrrega",
       "yes": "sí"
     },
@@ -331,6 +357,7 @@
       "hideAdvancedSettings": "Amaga els paràmetres avançats",
       "invalidFileSelected": "Fitxer seleccionat no vàlid",
       "legacy": "antic",
+      "moreInfo": "Més informació:",
       "noFileSelected": "Cap fitxer seleccionat.",
       "off": "desactivat",
       "on": "activat",
@@ -433,6 +460,10 @@
       "creating": {
         "charging": "Carregador desat. S’està creant el punt de recàrrega…",
         "heating": "Dispositiu de calefacció desat. S’està creant l’escalfador…"
+      },
+      "currentRangeHelp": {
+        "charging": "Típicament: de 6 a 16 A per a 11 kW, de 6 a 32 A per a 22 kW (carregadors trifàsics).",
+        "heating": "Depèn en la potència nominal del dispositiu d'escalfament (veure manual del fabricant)."
       },
       "defaultModeHelp": {
         "charging": "Mode de càrrega en connectar el vehicle.",
