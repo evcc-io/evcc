@@ -54,11 +54,15 @@ type ReportRule struct {
 	LoadpointTitle string `json:"loadpointTitle" yaml:"loadpointTitle"`
 	UpstreamURL    string `json:"upstreamUrl" yaml:"upstreamUrl"`
 	StationID      string `json:"stationId" yaml:"stationId"`
-	IdTag          string `json:"idTag,omitempty" yaml:"idTag,omitempty"`
-	Username       string `json:"username,omitempty" yaml:"username,omitempty"`
-	Password       string `json:"password,omitempty" yaml:"password,omitempty"`
-	Insecure       bool   `json:"insecure,omitempty" yaml:"insecure,omitempty"`
-	CaCert         string `json:"caCert,omitempty" yaml:"caCert,omitempty"`
+	// IdTag is mandatory: the underlying ocpp-go library validates it
+	// `required` on every Authorize/StartTransaction, so an empty value
+	// would silently and permanently fail every session (see idTag's
+	// removed fallback - it used to default to "EVCC").
+	IdTag    string `json:"idTag" yaml:"idTag"`
+	Username string `json:"username,omitempty" yaml:"username,omitempty"`
+	Password string `json:"password,omitempty" yaml:"password,omitempty"`
+	Insecure bool   `json:"insecure,omitempty" yaml:"insecure,omitempty"`
+	CaCert   string `json:"caCert,omitempty" yaml:"caCert,omitempty"`
 }
 
 func (r ReportRule) Redacted() ReportRule {
@@ -453,7 +457,7 @@ func (conn *reportConnection) reconcile() {
 		return
 	}
 
-	idTag := conn.idTag()
+	idTag := conn.rule.IdTag
 
 	if txID == nil {
 		if _, err := conn.cp.Authorize(idTag); err != nil {
@@ -511,13 +515,6 @@ func (conn *reportConnection) reconcile() {
 			conn.lastMeterSent = now
 		}
 	}
-}
-
-func (conn *reportConnection) idTag() string {
-	if conn.rule.IdTag != "" {
-		return conn.rule.IdTag
-	}
-	return "EVCC"
 }
 
 // ReportSessionStart notifies the loadpoint's report connection (if any) that
