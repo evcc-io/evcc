@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/evcc-io/evcc/charger/ocpp"
@@ -16,6 +17,16 @@ func updateOcppReportHandler(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&rules); err != nil {
 		jsonError(w, http.StatusBadRequest, err)
 		return
+	}
+
+	// idTag is mandatory: the ocpp-go library rejects an empty one on every
+	// Authorize/StartTransaction, which would silently and permanently fail
+	// every session for the rule (see charger/ocpp.ReportRule.IdTag)
+	for _, rule := range rules {
+		if rule.IdTag == "" {
+			jsonError(w, http.StatusBadRequest, fmt.Errorf("%s: idTag is required", rule.LoadpointTitle))
+			return
+		}
 	}
 
 	// restore masked secrets (password, caCert) from stored rules by loadpoint title
