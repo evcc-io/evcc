@@ -337,7 +337,9 @@ func (c *OCPP) setCurrent(current float64) error {
 		if err != nil {
 			return err
 		}
-		if transactionID == 0 {
+		// StopTransaction clears the transaction id before the status notification arrives.
+		// Only an initially unknown transaction is awaited, an ended one restores the default profile.
+		if transactionID == 0 && c.transactionID == 0 {
 			status, err := c.conn.Status()
 			if err != nil {
 				return err

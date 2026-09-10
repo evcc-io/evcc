@@ -200,6 +200,15 @@ func (suite *ocppTestSuite) TestTransactionProfiles() {
 	require.NoError(t, c.Enable(true))
 	expectProfile(types.ChargingProfilePurposeTxProfile, start.TransactionId, 7.2)
 
+	// a transaction ending before its status notification must not block the default profile
+	_, err = cp.StatusNotification(1, core.NoError, core.ChargePointStatusCharging)
+	require.NoError(t, err)
+	_, err = cp.StopTransaction(0, types.NewDateTime(time.Now()), start.TransactionId)
+	require.NoError(t, err)
+	_, err = c.Status()
+	require.NoError(t, err)
+	expectProfile(types.ChargingProfilePurposeTxDefaultProfile, 0, 7.2)
+
 	stop()
 	require.Eventually(t, func() bool { return !c.cp.Connected() }, time.Second, 10*time.Millisecond)
 	require.ErrorIs(t, c.MaxCurrentMillis(10), api.ErrTimeout)
