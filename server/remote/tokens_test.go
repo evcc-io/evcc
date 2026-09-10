@@ -88,8 +88,18 @@ func TestTokenMiddleware(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rec.Code)
 	assert.Equal(t, "pong", rec.Body.String())
 
+	// scheme is case-insensitive
+	req = httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("Authorization", "bearer "+res.AccessToken)
+	assert.Equal(t, http.StatusOK, do(req).Code)
+
 	// invalid bearer token is rejected
 	req = httptest.NewRequest(http.MethodGet, "/", nil)
 	req.Header.Set("Authorization", "Bearer nope")
+	assert.Equal(t, http.StatusUnauthorized, do(req).Code)
+
+	// bearer token cannot renew itself
+	req = httptest.NewRequest(http.MethodPost, tokenPath, nil)
+	req.Header.Set("Authorization", "Bearer "+res.AccessToken)
 	assert.Equal(t, http.StatusUnauthorized, do(req).Code)
 }

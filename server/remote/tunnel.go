@@ -234,7 +234,14 @@ func (t *Tunnel) basicAuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		user, ok := t.authenticate.ValidateToken(strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer "))
+		// token endpoint requires basic auth; a bearer token must not renew itself
+		tokenRequest := r.Method == http.MethodPost && r.URL.Path == tokenPath
+
+		var user string
+		var ok bool
+		if scheme, token, _ := strings.Cut(r.Header.Get("Authorization"), " "); !tokenRequest && strings.EqualFold(scheme, "Bearer") {
+			user, ok = t.authenticate.ValidateToken(token)
+		}
 		if !ok {
 			var pass string
 			user, pass, ok = r.BasicAuth()
@@ -262,7 +269,7 @@ func (t *Tunnel) basicAuthMiddleware(next http.Handler) http.Handler {
 			defer t.trackActivity(user, false) // long-running requests (ws)
 		}
 
-		if r.Method == http.MethodPost && r.URL.Path == tokenPath {
+		if tokenRequest {
 			t.issueToken(w, user)
 			return
 		}
