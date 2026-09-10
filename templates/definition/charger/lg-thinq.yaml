@@ -1,0 +1,56 @@
+template: lg-thinq
+products:
+  - brand: LG
+    description:
+      de: Warmwasser-Wärmepumpe (ThinQ)
+      en: Heat pump water heater (ThinQ)
+group: heating
+requirements:
+  description:
+    de: |
+      Steuert LG Warmwasser-Wärmepumpen (z.B. WH27S) über die LG ThinQ Connect Cloud API.
+      Ein persönlicher Zugriffstoken (PAT) muss unter https://connect-pat.lgthinq.com mit den Rechten "Geräte anzeigen", "Gerätestatus abfragen" und "Geräte steuern" erstellt werden.
+      Die Boost Funktion setzt die Zieltemperatur des Warmwasserbereiters auf die Boost Temperatur und stellt anschließend die vorherige Zieltemperatur wieder her.
+    en: |
+      Controls LG heat pump water heaters (e.g. WH27S) via the LG ThinQ Connect cloud API.
+      A personal access token (PAT) must be created at https://connect-pat.lgthinq.com with the permissions "view devices", "view device status" and "control devices".
+      The boost function sets the water heater target temperature to the boost temperature and restores the previous target temperature afterwards.
+params:
+  - name: token
+    required: true
+    description:
+      de: Persönlicher Zugriffstoken (PAT)
+      en: Personal access token (PAT)
+  - name: country
+    default: DE
+    description:
+      de: Ländercode
+      en: Country code
+    help:
+      de: Ländercode des LG Kontos (ISO 3166-1 alpha-2)
+      en: Country code of the LG account (ISO 3166-1 alpha-2)
+  - name: device
+    description:
+      de: Geräte-ID
+      en: Device ID
+    help:
+      de: Notwendig falls mehrere Warmwasserbereiter im Konto vorhanden sind
+      en: Required if multiple water heaters are present in the account
+  - name: setpoint
+    type: float
+    unit: °C
+    default: 60
+    description:
+      de: Boost Temperatur
+      en: Boost temperature
+  - name: cache
+    default: 1m
+render: |
+  type: lg-thinq
+  token: {{ .token }}
+  country: {{ .country }}
+  {{- if .device }}
+  device: {{ .device }}
+  {{- end }}
+  setpoint: {{ .setpoint }}
+  cache: {{ .cache }}
