@@ -155,8 +155,6 @@ tariffs:
     type: fixed
     price: 0.08 # EUR/kWh
     # see: https://docs.evcc.io/en/docs/devices/tariffs
-    # § 51 EEG / "Solarspitzengesetz": use the "eeg51" template for a fixed feed-in rate
-    # that is forfeited while the day-ahead exchange price is negative
   co2:
     # co2 tariff provides co2 intensity forecast and is for co2-optimized target charging if no variable grid tariff is specified
     # type: template
