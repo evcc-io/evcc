@@ -103,7 +103,7 @@ func (c *LocalAPI) Status() (Response, error) {
 func (c *LocalAPI) Update(payload string) error {
 	c.statusG.Reset() // invalidate cache so the next Status refetches
 
-	res := new(UpdateResponse)
+	var res UpdateResponse
 
 	if c.v2 {
 		return c.response(fmt.Sprintf("set?%s", payload), &res)
