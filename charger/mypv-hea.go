@@ -36,7 +36,7 @@ type MyPvHea struct {
 	log       *util.Logger
 	relays    uint16
 	stepPower uint16
-	mask      atomic.Uint32 // last written relay mask
+	mask      atomic.Uint32
 	current   atomic.Uint64
 }
 
