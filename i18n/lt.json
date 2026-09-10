@@ -1072,7 +1072,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Tapkite rėmėju",
-      "becomeSponsorExtended": "Paremkite mus tiesiogiai ir gaukite lipdukų.",
       "confetti": "Norite konfeti?",
       "confettiPromise": "Gausite lipdukų ir skaitmeninių konfeti",
       "sticker": "… ar evcc lipdukų?",
@@ -1081,9 +1080,7 @@
       "titleNoSponsor": "Paremkite mus",
       "titleSponsor": "Remiate projektą",
       "titleTrial": "Bandomasis režimas",
-      "titleVictron": "Rėmėjas - Victron Energy",
-      "trial": "Jūs naudojate bandomąjį režimą ir galite naudoti visas funkcijas. Apsvarstykite galimybę paremti projektą.",
-      "victron": "Naudojate evcc Victron Energy aparatinę įrangą ir turite prieigą prie visų funkcijų."
+      "trial": "Jūs naudojate bandomąjį režimą ir galite naudoti visas funkcijas. Apsvarstykite galimybę paremti projektą."
     },
     "telemetry": {
       "optIn": "Noriu prisidėti savo duomenimis.",

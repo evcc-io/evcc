@@ -1056,7 +1056,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Staňte sa sponzorom",
-      "becomeSponsorExtended": "Podporte nás priamo a získajte samolepky.",
       "confetti": "Pripravený na confetti?",
       "confettiPromise": "Získate nálepky a digitálne confetti",
       "sticker": "... alebo evcc nálepky?",
@@ -1065,9 +1064,7 @@
       "titleNoSponsor": "Podporte nás",
       "titleSponsor": "Ste podporovateľom",
       "titleTrial": "Skúšobný režim",
-      "titleVictron": "Sponzorované spoločnosťou Victron Energy",
-      "trial": "Ste v testovacom režime a môžete používať všetky funkcie. Prosím, zvážte podporu projektu.",
-      "victron": "Používate evcc na Victron Energy hardvéri a máte prístup ku všetkým funkciám."
+      "trial": "Ste v testovacom režime a môžete používať všetky funkcie. Prosím, zvážte podporu projektu."
     },
     "telemetry": {
       "optIn": "Chcem prispieť svojimi údajmi.",
