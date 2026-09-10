@@ -212,6 +212,7 @@ test.describe("circuit", async () => {
     await circuitModal.getByLabel("Title").fill("Main renamed");
     await circuitModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(circuitModal);
+    await expectModalVisible(circuitsModal);
     await circuitsModal.getByRole("button", { name: "Close" }).last().click();
     await expectModalHidden(circuitsModal);
     // root instance was replaced, its power is unknown until restart
