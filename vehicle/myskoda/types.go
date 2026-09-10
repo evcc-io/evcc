@@ -22,7 +22,7 @@ type Vehicle struct {
 	Odometer         *Odometer
 	AirConditioning  *AirConditioning
 	Charging         *Charging
-	ChargingProfiles *ChargingProfiles
+	ChargingProfiles ChargingProfiles
 }
 
 type Odometer struct {
@@ -60,14 +60,8 @@ type ChargingSettings struct {
 	MaxChargeCurrentAcAmpere     int
 }
 
-// ChargingProfiles are the saved charging locations of the vehicle
 type ChargingProfiles struct {
-	CurrentVehiclePositionProfile *CurrentVehiclePositionProfile
-}
-
-// CurrentVehiclePositionProfile is the profile of the location the vehicle is currently at
-type CurrentVehiclePositionProfile struct {
-	ID                           int64
-	Name                         string
-	TargetStateOfChargeInPercent *int
+	CurrentVehiclePositionProfile *struct {
+		TargetStateOfChargeInPercent *int
+	}
 }
