@@ -6,10 +6,13 @@ stationid: {{ .stationid }}
 {{- if ne .connector "1" }}
 connector: {{ .connector }}
 {{- end }}
+{{- if and .chargingprofile (ne .chargingprofile "TxDefaultProfile") }}
+chargingprofile: {{ .chargingprofile }}
+{{- end }}
 {{- if .idtag }}
 idtag: {{ .idtag }}
 {{- end }}
-{{- if and .remotestart (ne .remotestart "false") }}
+{{- if .remotestart }}
 remotestart: {{ .remotestart }}
 {{- end }}
 {{- if .metervalues }}

@@ -18,6 +18,7 @@ const IFAS_BASE_URL = "https://ifas.prod-row.jlrmotor.com/ifas/jlr"
 
 type Identity struct {
 	*request.Helper
+	log                    *util.Logger
 	user, password, device string
 	oauth2.TokenSource
 }
@@ -38,6 +39,7 @@ func Headers(device string, headers map[string]string) map[string]string {
 func NewIdentity(log *util.Logger, user, password, device string) *Identity {
 	return &Identity{
 		Helper:   request.NewHelper(log),
+		log:      log,
 		user:     user,
 		password: password,
 		device:   device,
@@ -71,7 +73,7 @@ func (v *Identity) Login() (Token, error) {
 
 	token, err := v.login(data)
 	if err == nil {
-		v.TokenSource = oauth.RefreshTokenSource(&token.Token, v.refreshToken)
+		v.TokenSource = oauth.RefreshTokenSource(v.log, &token.Token, v.refreshToken)
 	}
 
 	return token, err

@@ -3,6 +3,7 @@ products:
   - brand: EcoFlow
     description:
       generic: Stream
+capabilities: ["battery-control"]
 requirements:
   description:
     de: |
@@ -12,6 +13,14 @@ requirements:
       - Die Seriennummer des Hauptgerätes Ihres Stream Systems
 
       Diese Credentials erhalten Sie über die EcoFlow Developer Console nach der Registrierung Ihrer Anwendung.
+
+      Für die aktive Batteriesteuerung muss `maxsoc` gesetzt werden. Im Normalbetrieb wird die
+      Backup Reserve auf `minsoc` gesetzt, beim Netzladen auf `maxsoc`.
+
+      **Achtung**: Die aktive Batteriesteuerung überschreibt die in der EcoFlow App eingestellte
+      Backup Reserve. Das Gerät verlangt, dass die Backup Reserve das Entladelimit um 3 übersteigt,
+      niedrigere Werte für `minsoc` werden angehoben. Ohne `minsoc` entlädt die Batterie bis zum
+      Entladelimit des Geräts.
     en: |
       To use the EcoFlow Stream meter you need:
       - A valid Access Key from the EcoFlow Developer Console
@@ -19,6 +28,14 @@ requirements:
       - The main device serial number of your Stream system
 
       These credentials can be obtained through the EcoFlow Developer Console after registering your application.
+
+      For active battery control, `maxsoc` must be set. In normal operation the Backup Reserve is
+      set to `minsoc`, for grid charging to `maxsoc`.
+
+      **Note**: Active battery control overwrites the Backup Reserve configured in the EcoFlow app.
+      The device requires the Backup Reserve to exceed the discharge limit by 3, lower `minsoc`
+      values are raised accordingly. Without `minsoc` the battery discharges down to the device's
+      own discharge limit.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

@@ -125,7 +125,7 @@ func (p *Script) StringGetter() (func() (string, error), error) {
 	}, nil
 }
 
-func (p *Script) scriptSetter[T any](param string) (func(T) error, error) {
+func (p *Script) setter[T any](param string) (func(T) error, error) {
 	return func(val T) error {
 		cmd, err := util.ReplaceFormatted(p.script, map[string]any{
 			param: val,
@@ -143,19 +143,26 @@ var _ IntSetter = (*Script)(nil)
 
 // IntSetter invokes script with parameter replaced by int value
 func (p *Script) IntSetter(param string) (func(int64) error, error) {
-	return p.scriptSetter[int64](param)
+	return p.setter[int64](param)
+}
+
+var _ FloatSetter = (*Script)(nil)
+
+// FloatSetter invokes script with parameter replaced by float value
+func (p *Script) FloatSetter(param string) (func(float64) error, error) {
+	return p.setter[float64](param)
 }
 
 var _ BoolSetter = (*Script)(nil)
 
 // BoolSetter invokes script with parameter replaced by bool value
 func (p *Script) BoolSetter(param string) (func(bool) error, error) {
-	return p.scriptSetter[bool](param)
+	return p.setter[bool](param)
 }
 
 var _ StringSetter = (*Script)(nil)
 
 // StringSetter returns a function that invokes a script with parameter by a string value
 func (p *Script) StringSetter(param string) (func(string) error, error) {
-	return p.scriptSetter[string](param)
+	return p.setter[string](param)
 }

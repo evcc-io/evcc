@@ -63,28 +63,8 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Batterijniveau",
-    "bufferStart": {
-      "above": "Wanneer boven {soc}.",
-      "full": "wanneer op {soc}.",
-      "never": "enkel bij voldoende overschot."
-    },
-    "capacity": "{energy} van {total}",
-    "control": "Batterijsturing",
-    "discharge": "Voorkom ontladen bij gebruik van de snelle modus of bij gepland laden.",
-    "disclaimerHint": "Opgelet:",
-    "disclaimerText": "Deze instellingen beïnvloeden enkel de PV modus. Oplaadgedrag wordt overeenkomstig aangepast.",
     "gridChargeTab": "Netladen",
-    "legendBottomName": "Opladen van de thuisbatterij heeft prioriteit",
-    "legendBottomSubline": "tot {soc} bereikt is.",
-    "legendMiddleName": "Voertuig laden heeft prioriteit",
-    "legendMiddleSubline": "zodra de thuisbatterij {soc} bereikt heeft.",
-    "legendTopAutostart": "Start automatisch",
-    "legendTopName": "Voertuig opladen met energie uit de thuisbatterij",
-    "legendTopSubline": "zodra de thuisbatterij {soc} bereikt heeft.",
-    "legendTopSublineAbove": "wanneer {soc} bereikt is",
-    "legendTopSublineDisabled": "is {soc}.",
-    "legendTopSublineDisabledState": "Uitgeschakeld",
+    "gridDischargeTab": "Netontlading",
     "modalTitle": "Thuisbatterij",
     "noBattery": "Geen accu geconfigureerd.",
     "usageTab": "Batterijgebruik"
@@ -189,7 +169,12 @@
       "title": "Valuta"
     },
     "curtailer": {
-      "template": "Fabrikant"
+      "generic": "Generieke integraties",
+      "specific": "Specifieke integraties",
+      "template": "Fabrikant",
+      "title": "Opwekbegrenzing",
+      "titleAdd": "Voeg opwekbegrenzingsapparaat toe",
+      "titleEdit": "Bewerk opwekbegrenzingsapparaat"
     },
     "deviceValue": {
       "activeClients": "Actieve clients",
@@ -215,7 +200,7 @@
       "currentRange": "Stroom",
       "curtailLimit": "Terugleveringslimiet",
       "curtailable": "Curtailbaar",
-      "curtailed": "Teruglevering beperkt",
+      "curtailed": "Terugleverlimiet",
       "detected": "Gedetecteerd",
       "dimLimit": "Consumptie limiet",
       "dimmed": "Verbruik gelimiteerd",
@@ -253,6 +238,31 @@
       "temp": "Temperatuur",
       "topic": "Onderwerp",
       "url": "URL",
+      "usage": {
+        "aux": {
+          "energy": "Verbruikt",
+          "returnEnergy": "Geproduceerd"
+        },
+        "battery": {
+          "energy": "Ontladen",
+          "returnEnergy": "Geladen"
+        },
+        "charge": {
+          "energy": "Geladen",
+          "returnEnergy": "Ontladen"
+        },
+        "consumer": {
+          "energy": "Verbruikt",
+          "returnEnergy": "Geproduceerd"
+        },
+        "grid": {
+          "energy": "Geïmporteerd",
+          "returnEnergy": "Geëxporteerd"
+        },
+        "pv": {
+          "energy": "Geproduceerd"
+        }
+      },
       "vehicleLimitSoc": "Laad limiet",
       "yes": "ja"
     },
@@ -346,6 +356,7 @@
       "hideAdvancedSettings": "Geavanceerde instellingen verbergen",
       "invalidFileSelected": "Ongeldig bestand geselecteerd",
       "legacy": "verouderd",
+      "moreInfo": "Meer informatie:",
       "noFileSelected": "Geen bestand geselecteerd.",
       "off": "uit",
       "on": "aan",
@@ -435,13 +446,6 @@
         "charging": "Oplader",
         "heating": "Verwarmingstoestel"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Zal een stroom van 6 tot 16 A gebruiken.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Zal een stroom van 6 tot 32 A gebruiken.",
-      "chargerPowerCustom": "andere",
-      "chargerPowerCustomHelp": "Definieer een aangepast stroombereik.",
-      "chargerTypeLabel": "Type laadpunt",
       "chargingTitle": "Gedrag",
       "circuitHelp": "Wijst een circuit toe binnen het elektriciteitsnetwerk om overschrijding van vermogens- en stroomlimieten te voorkomen.",
       "circuitInvalid": "Het circuit bestaat niet",
@@ -455,6 +459,10 @@
       "creating": {
         "charging": "Lader opgeslagen. Laadpunt wordt gecreëerd…",
         "heating": "Verwarmingsapparaat opgeslagen. Verwarmer wordt gecreëerd…"
+      },
+      "currentRangeHelp": {
+        "charging": "Gebruikelijk: 6-16 A voor 11kW, 6-32 A voor 22 kW laders (3-fase).",
+        "heating": "Afhankelijk van het nominaal vermogen van het verwarmingsapparaat (zie data sheet)."
       },
       "defaultModeHelp": {
         "charging": "Laadmodus bij het aansluiten van een voertuig.",
@@ -542,6 +550,7 @@
     "main": {
       "addAdditional": "Extra meter toevoegen",
       "addConsumer": "Voeg verbruiker toe",
+      "addCurtailer": "Voeg opwekbegrenzingsapparaat toe",
       "addGrid": "Netmeter toevoegen",
       "addLoadpoint": "Voeg laadpunt of verwarmer toe",
       "addPvBattery": "Zonnepanelen of batterij toevoegen",
@@ -642,6 +651,7 @@
         "aux": "Zelfregulerende consument toevoegen",
         "battery": "Batterijmeter toevoegen",
         "consumer": "Standaard verbruiker toevoegen",
+        "grid": "Voeg netmeter toe",
         "pv": "Zonne-energie meter toevoegen"
       },
       "save": "Opslaan",
@@ -832,6 +842,8 @@
       "noClients": "Er zijn nog geen clients. Niemand kan nog verbinden.",
       "password": "Wachtwoord",
       "passwordOnce": "Het wachtwoord wordt eenmalig getoond. Scan of kopieer de QR-code. Je kunt hem niet nogmaals bekijken.",
+      "privacy": "Door het inschakelen van deze functionaliteit, ga je akkoord met ons {0}.",
+      "privacyLink": "privacybeleid",
       "qrInstall": "Installeer de evcc app voor {ios} of {android}.",
       "qrScan": "Scan de code met de camera van je telefoon om te verbinden. Klik er op als je al je telefoon aan het gebruiken bent.",
       "removeClient": "Verwijder client",
@@ -908,6 +920,7 @@
           "confirmationButton": "Reset & herstart",
           "confirmationText": "Deze actie zal de geselecteerde data permanent verwijderen. Controleer of je eerst de backup gedownload hebt.",
           "description": "Heeft u problemen met de configuratie en wilt u opnieuw starten? Verwijder alle data en begin opnieuw.",
+          "remote": "Toegang op afstand",
           "sessions": "Laadsessies",
           "sessionsDescription": "Verwijdert je laadsessie historie.",
           "settings": "Configuratie & instellingen",
@@ -1087,7 +1100,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Sponsor worden",
-      "becomeSponsorExtended": "Steun ons direct om stickers te krijgen.",
       "confetti": "Klaar voor confetti?",
       "confettiPromise": "Je krijgt stickers en digitale confetti",
       "sticker": "... of evcc stickers?",
@@ -1096,9 +1108,7 @@
       "titleNoSponsor": "Sponsor ons",
       "titleSponsor": "Je bent een sponsor",
       "titleTrial": "Testmodus",
-      "titleVictron": "Gesponsord door Victron Energy",
-      "trial": "U bevindt zich in de proefmodus en kunt alle functies gebruiken. Overweeg alstublieft om het project te steunen.",
-      "victron": "Je gebruikt evcc op Victron Energy-hardware en hebt toegang tot alle functies."
+      "trial": "U bevindt zich in de proefmodus en kunt alle functies gebruiken. Overweeg alstublieft om het project te steunen."
     },
     "telemetry": {
       "optIn": "Ik wil mijn gegevens delen.",
@@ -1107,14 +1117,14 @@
       "optInSponsorship": "Sponsoring nodig."
     },
     "version": {
-      "availableLong": "nieuwe versie beschikbaar",
+      "availableLong": "update beschikbaar",
       "community": "evcc community",
       "labelEmail": "E-mail",
       "labelPhone": "Telefoon",
       "labelRelease": "Release",
       "labelVersion": "Versie",
       "labelWebsite": "Website",
-      "latestVersion": "Nieuwste versie",
+      "latestVersion": "up to date",
       "madeByCommunity": "Gemaakt door de {0}.",
       "modalCancel": "Annuleer",
       "modalDownload": "Download",
@@ -1314,15 +1324,18 @@
         "continuous": "continu",
         "continuousCo2Description": "Kiest de meest ecologische, continue reeks laadmomenten.",
         "continuousPriceDescription": "Kiest de goedkoopste, continue reeks laadmomenten.",
+        "disabledDescription": "Vereist een voorspelling van dynamische tarieven of CO₂.",
         "label": "Optimalisatie"
       },
       "planNumber": "Schema {number}",
       "precondition": {
         "description": "Schuift een deel van het opladen naar last-minute voor vertrek: warme EV-batterij, die minder lang met hoog laadpercentage gestaan heeft.",
+        "disabledDescription": "Opladen zal kort voor vertrek plaatsvinden.",
         "label": "Laat Opladen",
         "optionAll": "alles",
         "optionNo": "nee",
-        "summary": "{precondition} ervoor"
+        "summary": "{precondition} ervoor",
+        "summaryAll": "vlak voor vertrek"
       },
       "remove": "Verwijderen",
       "repeating": "herhalend",
@@ -1417,6 +1430,7 @@
       "finished": "Eindtijd",
       "last24hEnergy": "Laatste 24h",
       "last7dEnergy": "Laatste 7 dagen",
+      "phasesMismatch": "Meer fases actief dan geconfigureerd. Controleer de fase-configuratie.",
       "power": "Vermogen",
       "price": "Kosten",
       "remaining": "Resterend",
@@ -1537,7 +1551,7 @@
     "vehicleSettings": {
       "connectedTo": "verbonden met {0}",
       "description": "Deze standaardwaarden worden toegepast wanneer een voertuig wordt verbonden met een laadpunt.",
-      "editHint": "Voertuig onder {0} toevoegen of bewerken.",
+      "editHint": "Voertuigen kunnen bewerkt worden onder {0}.",
       "keepAsIs": "Laat zoals het is",
       "learnMore": "Leer meer.",
       "limitSoc": "Standaardlimiet",
@@ -1720,6 +1734,13 @@
     "vehicle": "Voertuig"
   },
   "settings": {
+    "dateFormat": {
+      "auto": "Automatisch",
+      "dmy": "DD/MM/JJJJ",
+      "label": "Datum formaat",
+      "mdy": "MM/DD/JJJJ",
+      "ymd": "JJJJ-MM-DD"
+    },
     "deviceInfo": "Instellingen die u in dit scherm maakt, gelden alleen voor dit apparaat.",
     "fullscreen": {
       "enter": "Open volledig scherm",

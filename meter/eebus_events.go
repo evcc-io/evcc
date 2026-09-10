@@ -66,6 +66,10 @@ func (c *EEBus) maUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface) {
 	if c.maEntity == nil || len(entity.Address().Entity) < len(c.maEntity.Address().Entity) {
 		c.maEntity = entity
 	}
+
+	// the monitoring entity backs the meter's getters, so this is the point a
+	// freshly created device becomes readable
+	c.connector.UseCase()
 }
 
 //
@@ -81,7 +85,7 @@ func (c *EEBus) egLpcUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface)
 		c.egLpcEntity = entity
 
 		// [LPC-913]: state the limit to the newly available CS
-		go eebus.AssertLimit(c.ctx, c.log, func() error { return c.Dim(c.lastDimmed()) })
+		go eebus.AssertLimit(c.ctx, c.log, func() error { return c.dim(c.lastDimmed()) })
 	}
 }
 
@@ -98,6 +102,6 @@ func (c *EEBus) egLppUseCaseSupportUpdate(entity spineapi.EntityRemoteInterface)
 		c.egLppEntity = entity
 
 		// [LPP-913]: state the limit to the newly available CS
-		go eebus.AssertLimit(c.ctx, c.log, func() error { return c.SetCurtailPercent(c.lastCurtailPercent()) })
+		go eebus.AssertLimit(c.ctx, c.log, func() error { return c.setCurtailPercent(c.lastCurtailPercent()) })
 	}
 }

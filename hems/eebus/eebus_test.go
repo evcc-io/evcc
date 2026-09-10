@@ -7,8 +7,8 @@ import (
 
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/hems/hems"
-	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"

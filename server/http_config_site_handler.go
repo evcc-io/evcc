@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util/config"
 )
 

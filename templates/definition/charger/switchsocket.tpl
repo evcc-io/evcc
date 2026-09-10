@@ -2,10 +2,10 @@
 standbypower: {{ .standbypower }}
 features:
 - switchdevice
-{{- if and .integrateddevice (ne .integrateddevice "false") }}
+{{- if .integrateddevice }}
 - integrateddevice
 {{- end }}
-{{- if and .heating (ne .heating "false") }}
+{{- if .heating }}
 - heating
 {{- end }}
 {{- if .icon }}

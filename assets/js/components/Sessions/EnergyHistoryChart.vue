@@ -8,6 +8,7 @@
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
 import {
+	axisNameStyle,
 	FONT_FAMILY,
 	forecastGrid,
 	forecastYAxis,
@@ -22,6 +23,7 @@ import LegendList from "./LegendList.vue";
 import { POWER_UNIT } from "@/mixins/formatter";
 import colors from "@/colors";
 import { GROUPS } from "./types";
+import { energyAxisScale, type EnergyAxisScale } from "@/utils/energyAxis";
 import type { DeviceColors } from "@/types/evcc";
 
 interface Dataset {
@@ -91,6 +93,16 @@ export default defineComponent({
 				datasets,
 			};
 		},
+		// stacked bars: peak is the highest per-bucket sum; data is kWh, the
+		// shared scale works in Wh
+		axisScale(): EnergyAxisScale {
+			const { labels, datasets } = this.chartData;
+			const peak = Math.max(
+				0,
+				...labels.map((_, i) => datasets.reduce((sum, d) => sum + (d.data[i] || 0), 0))
+			);
+			return energyAxisScale(peak * 1000);
+		},
 		legends() {
 			const pickable = this.groupBy !== GROUPS.NONE;
 			return this.chartData.datasets.map((dataset) => ({
@@ -149,27 +161,25 @@ export default defineComponent({
 				yAxis: forecastYAxis({
 					position: "right",
 					min: 0,
+					// W mode: fixed range so the floored limit takes effect
+					...(this.axisScale.unit === POWER_UNIT.W
+						? {
+								max: this.axisScale.limit / 1000,
+								interval: this.axisScale.limit / 4000,
+							}
+						: {}),
 					splitLine: {
 						showMinLine: true,
 						showMaxLine: true,
 						lineStyle: { color: colors.border || "" },
 					},
-					name: "kWh",
-					nameLocation: "end",
-					nameGap: 18,
-					nameTextStyle: {
-						color: colors.muted || "",
-						fontFamily: FONT_FAMILY,
-						fontSize: 10,
-						opacity: 0.75,
-						align: "left",
-						// align with the value labels' left edge (8px default label margin)
-						padding: [0, 0, 0, 8],
-					},
+					name: `${this.axisScale.unit}h`,
+					...axisNameStyle(),
 					axisLabel: {
 						color: colors.muted || "",
 						hideOverlap: true,
-						formatter: (v: number) => this.fmtWh(v * 1e3, POWER_UNIT.KW, false, 0),
+						formatter: (v: number) =>
+							this.fmtWh(v * 1e3, this.axisScale.unit, false, this.axisScale.digits),
 					},
 				}),
 				series: datasets.map((dataset, i) => ({

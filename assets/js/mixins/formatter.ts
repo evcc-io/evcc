@@ -136,6 +136,9 @@ export default defineComponent({
       const abs = Math.abs(watt);
       return abs >= 10_000_000 ? POWER_UNIT.MW : abs >= 1000 ? POWER_UNIT.KW : POWER_UNIT.W;
     },
+    fmtPhasePower(current?: number, phases?: number) {
+      return this.fmtW(230 * (current || 0) * (phases || 0));
+    },
     fmtW(watt = 0, format = POWER_UNIT.KW, withUnit = true, digits?: number) {
       let unit = format;
       let d = digits;

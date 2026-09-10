@@ -40,7 +40,7 @@ func TokenSource(ctx context.Context, log *util.Logger, uri, user, password stri
 		return nil, err
 	}
 
-	c.TokenSource = oauth.RefreshTokenSource(token, c.refresh)
+	c.TokenSource = oauth.RefreshTokenSource(log, token, c.refresh)
 
 	return c, nil
 }

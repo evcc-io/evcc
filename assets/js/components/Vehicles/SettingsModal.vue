@@ -56,6 +56,25 @@
 								</span>
 							</CustomSelect>
 						</div>
+						<div class="col-6 col-lg-3 mb-3">
+							<div class="small text-uppercase evcc-gray text-truncate">
+								{{ $t("main.alwaysCharge.label") }}
+							</div>
+							<CustomSelect
+								:id="fieldId(vehicle, 'alwaysCharge')"
+								inline
+								:options="alwaysChargeOptions"
+								:selected="vehicle.alwaysCharge ?? ''"
+								:ariaLabel="$t('main.alwaysCharge.label')"
+								@change="changeAlwaysCharge(vehicle, $event)"
+							>
+								<span class="text-decoration-underline text-primary">
+									{{
+										optionName(alwaysChargeOptions, vehicle.alwaysCharge ?? "")
+									}}
+								</span>
+							</CustomSelect>
+						</div>
 						<template v-if="socSupported(vehicle)">
 							<div class="col-6 col-lg-3 mb-3">
 								<div class="small text-uppercase evcc-gray text-truncate">
@@ -123,10 +142,16 @@ import formatter from "@/mixins/formatter";
 import { docsPrefix } from "@/i18n";
 import { distanceUnit } from "@/units";
 import { vehicleHasSoc, vehicleNotReachable } from "@/uiLoadpoints";
-import { CHARGE_MODE, type SelectOption, type UiLoadpoint, type Vehicle } from "@/types/evcc";
+import {
+	ALWAYS_CHARGE,
+	CHARGE_MODE,
+	type SelectOption,
+	type UiLoadpoint,
+	type Vehicle,
+} from "@/types/evcc";
 import { defineComponent, type PropType } from "vue";
 
-const { OFF, PV, MINPV, NOW } = CHARGE_MODE;
+const { OFF, SMART, NOW } = CHARGE_MODE;
 
 export default defineComponent({
 	name: "VehicleSettingsModal",
@@ -148,10 +173,17 @@ export default defineComponent({
 		modeOptions(): SelectOption<string>[] {
 			return [
 				{ value: "", name: this.$t("main.vehicleSettings.keepAsIs") },
-				...[OFF, PV, MINPV, NOW].map((mode) => ({
+				...[OFF, SMART, NOW].map((mode) => ({
 					value: mode,
 					name: this.$t(`main.mode.${mode}`),
 				})),
+			];
+		},
+		alwaysChargeOptions(): SelectOption<string>[] {
+			return [
+				{ value: "", name: this.$t("main.vehicleSettings.keepAsIs") },
+				{ value: ALWAYS_CHARGE.OFF, name: this.$t("main.mode.off") },
+				{ value: ALWAYS_CHARGE.ON, name: this.$t("main.mode.on") },
 			];
 		},
 	},
@@ -206,6 +238,14 @@ export default defineComponent({
 				api.delete(`vehicles/${vehicle.name}/mode`);
 			} else {
 				api.post(`vehicles/${vehicle.name}/mode/${mode}`);
+			}
+		},
+		changeAlwaysCharge(vehicle: Vehicle, event: Event): void {
+			const value = this.selectValue(event);
+			if (value === "") {
+				api.delete(`vehicles/${vehicle.name}/alwayscharge`);
+			} else {
+				api.post(`vehicles/${vehicle.name}/alwayscharge/${value}`);
 			}
 		},
 		changeMinSoc(vehicle: Vehicle, event: Event): void {

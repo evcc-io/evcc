@@ -10,7 +10,7 @@ export default {
   argTypes: {
     name: {
       control: "text",
-      description: "Sponsor name (use 'trial' or 'victron' for special states)",
+      description: "Sponsor name (use 'trial' for trial state)",
     },
     expiresAt: {
       control: "text",
@@ -50,9 +50,9 @@ IndividualSponsor.args = {
   status: { name: "naltatis" },
 };
 
-export const VictronDevice = Template.bind({});
-VictronDevice.args = {
-  status: { name: "victron" },
+export const HardwareDevice = Template.bind({});
+HardwareDevice.args = {
+  status: { name: "Victron Energy", hardware: true },
 };
 
 // Add an extra story showing the expiring state

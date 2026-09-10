@@ -16,10 +16,10 @@ import (
 	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/server"
-	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/mcp"
 	"github.com/evcc-io/evcc/server/network"
@@ -506,8 +506,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 		once.Do(func() { close(stopC) })     // signal loop to end
 	}, viper.ConfigFileUsed(), remoteAccess)
 
-	// show and check version, reduce api load during development
-	if util.Version != util.DevVersion {
+	// skip update check for dev and nightly builds, reduces api load
+	if util.Version != util.DevVersion && !strings.Contains(util.Version, "-dev.") {
 		go updater.Run(log, httpd, valueChan)
 	}
 

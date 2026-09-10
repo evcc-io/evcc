@@ -104,10 +104,13 @@ export function handleError(e: any, msg: string) {
 export function applyDefaultsFromTemplate(template: Template | null, values: DeviceValues) {
   const params = template?.Params || [];
   params.forEach((p) => {
-    if (p.Default && !values[p.Name]) {
+    if (p.Type === "Bool") {
+      // template defaults are strings, and configs stored before bool params
+      // became real booleans hold "true"/"false" - the form model uses booleans
+      const v = values[p.Name] === undefined ? p.Default : values[p.Name];
+      values[p.Name] = v === true || v === "true";
+    } else if (p.Default && !values[p.Name]) {
       values[p.Name] = p.Default;
-    } else if (p.Type === "Bool" && values[p.Name] === undefined) {
-      values[p.Name] = false; // initialize
     }
   });
 }
@@ -127,7 +130,7 @@ export function customChargerName(type: ConfigType, isHeating: boolean) {
 // flattenDeviceConfig converts a GET /config/devices/:class/:id response
 // into the flat shape expected by POST/PUT/test (id and name are dropped).
 //
-// GET (config = device-specfic):
+// GET (config = device-specific):
 //   {
 //     id: 26,
 //     name: "db:26",
