@@ -1102,7 +1102,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Esdevén patrocinador",
-      "becomeSponsorExtended": "Doneu-nos suport directament per a obtenir adhesius.",
       "confetti": "Preparat pel confeti?",
       "confettiPromise": "Rebeu adhesius i confeti digital",
       "sticker": "…o adhesius d’evcc?",
@@ -1111,9 +1110,7 @@
       "titleNoSponsor": "Doneu-nos suport",
       "titleSponsor": "Sou un patrocinador",
       "titleTrial": "Mode de prova",
-      "titleVictron": "Patrocinat per Victron Energy",
-      "trial": "Esteu en mode de prova i podeu utilitzar totes les funcions. Considereu donar suport al projecte.",
-      "victron": "Utilitzeu evcc en maquinari de Victron Energy i teniu accés a totes les funcions."
+      "trial": "Esteu en mode de prova i podeu utilitzar totes les funcions. Considereu donar suport al projecte."
     },
     "telemetry": {
       "optIn": "Vull contribuir amb les meves dades.",

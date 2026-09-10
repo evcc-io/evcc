@@ -1103,7 +1103,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Ryhdy sponsoriksi",
-      "becomeSponsorExtended": "Tue meitä suoraan saadaksesi tarroja.",
       "confetti": "Valmiina konfetteihin?",
       "confettiPromise": "Saat tarroja ja myös digikonfetteja",
       "sticker": "… vai evcc tarroja?",
@@ -1112,9 +1111,7 @@
       "titleNoSponsor": "Tue meitä",
       "titleSponsor": "Olet kannattaja",
       "titleTrial": "Kokeilutila",
-      "titleVictron": "Victron Energyn sponsoroima",
-      "trial": "Olet kokeilutilassa, voit käyttää kaikkia ominaisuuksia. Ole hyvä ja harkitse projektin tukemista.",
-      "victron": "Käytät evcc:tä Victron Energy -laitteistossa ja sinulla on pääsy kaikkiin ominaisuuksiin."
+      "trial": "Olet kokeilutilassa, voit käyttää kaikkia ominaisuuksia. Ole hyvä ja harkitse projektin tukemista."
     },
     "telemetry": {
       "optIn": "Haluan jakaa tietojani.",

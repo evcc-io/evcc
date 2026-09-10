@@ -1100,7 +1100,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Sponsor worden",
-      "becomeSponsorExtended": "Steun ons direct om stickers te krijgen.",
       "confetti": "Klaar voor confetti?",
       "confettiPromise": "Je krijgt stickers en digitale confetti",
       "sticker": "... of evcc stickers?",
@@ -1109,9 +1108,7 @@
       "titleNoSponsor": "Sponsor ons",
       "titleSponsor": "Je bent een sponsor",
       "titleTrial": "Testmodus",
-      "titleVictron": "Gesponsord door Victron Energy",
-      "trial": "U bevindt zich in de proefmodus en kunt alle functies gebruiken. Overweeg alstublieft om het project te steunen.",
-      "victron": "Je gebruikt evcc op Victron Energy-hardware en hebt toegang tot alle functies."
+      "trial": "U bevindt zich in de proefmodus en kunt alle functies gebruiken. Overweeg alstublieft om het project te steunen."
     },
     "telemetry": {
       "optIn": "Ik wil mijn gegevens delen.",
