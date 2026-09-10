@@ -2313,6 +2313,13 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 	lp.publishChargeProgress()
 	lp.PublishEffectiveValues()
 
+	// re-read energy every tick so an active OCPP report rule gets
+	// intermediate MeterValues during charging, not just at session
+	// start/stop; finalizeSessionEnergy no-ops cheaply without a session or
+	// without new energy, and charger/ocpp/report.go throttles the actual
+	// upstream send rate independently of this cadence
+	lp.finalizeSessionEnergy()
+
 	// §14a
 	if dimmer, ok := api.Cap[api.Dimmer](lp.charger); ok {
 		dimmed, err := dimmer.Dimmed()
