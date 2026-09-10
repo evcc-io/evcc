@@ -456,7 +456,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}}
 
 	if site != nil {
-    	site.SetCircuitsYamlSource(yamlSource.circuits)
+		site.SetCircuitsYamlSource(yamlSource.circuits)
 	}
 	valueChan <- util.Param{Key: keys.Circuits, Val: globalconfig.ConfigStatus{
 		YamlSource: yamlSource.circuits,
