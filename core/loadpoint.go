@@ -588,6 +588,12 @@ func (lp *Loadpoint) evChargeStopHandler() {
 		lp.resetPVTimer()
 	}
 
+	// re-read energy from charger so stopSession's OCPP report carries the
+	// real meter-stop value - without this, s.MeterStop stays nil (only
+	// evVehicleDisconnectHandler used to set it) and every charge-stop-without-
+	// unplug reports a meterStop of 0, regardless of energy actually delivered
+	lp.finalizeSessionEnergy()
+
 	lp.stopSession()
 }
 
