@@ -979,7 +979,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Diventa uno sponsor",
-      "becomeSponsorExtended": "Sostienici direttamente per ottenere adesivi.",
       "confetti": "Pronti per i coriandoli?",
       "confettiPromise": "Si ottengono adesivi e coriandoli digitali",
       "sticker": "... o adesivi evcc?",
@@ -988,9 +987,7 @@
       "titleNoSponsor": "Sostienici",
       "titleSponsor": "Sei un sostenitore",
       "titleTrial": "Modalità di prova",
-      "titleVictron": "Sponsorizzato da Victron Energy",
-      "trial": "Sei in modalità di prova e puoi utilizzare tutte le funzionalità. Ti invitiamo a sostenere il progetto.",
-      "victron": "Stai utilizzando evcc sull'hardware Victron Energy e hai accesso a tutte le funzionalità."
+      "trial": "Sei in modalità di prova e puoi utilizzare tutte le funzionalità. Ti invitiamo a sostenere il progetto."
     },
     "telemetry": {
       "optIn": "Voglio contribuire con i miei dati.",

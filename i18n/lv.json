@@ -1072,7 +1072,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Kļūt par sponsoru",
-      "becomeSponsorExtended": "Atbalstiet mūs tieši, lai saņemtu uzlīmes.",
       "confetti": "Gatavi konfeti?",
       "confettiPromise": "Jūs saņemat uzlīmes un digitālos konfeti",
       "sticker": "… vai evcc uzlīmes?",
@@ -1081,9 +1080,7 @@
       "titleNoSponsor": "Atbalstiet mūs",
       "titleSponsor": "Jūs esat atbalstītājs",
       "titleTrial": "Izmēģinājuma režīms",
-      "titleVictron": "Sponsorē Victron Energy",
-      "trial": "Jūs esat izmēģinājuma režīmā un varat izmantot visas funkcijas. Lūdzu apsveriet iespēju atbalstīt projektu.",
-      "victron": "Jūs izmantojat evcc uz Victron Energy aparatūras un jums ir piekļuve visām funkcijām."
+      "trial": "Jūs esat izmēģinājuma režīmā un varat izmantot visas funkcijas. Lūdzu apsveriet iespēju atbalstīt projektu."
     },
     "telemetry": {
       "optIn": "Es vēlos dalīties ar saviem datiem.",

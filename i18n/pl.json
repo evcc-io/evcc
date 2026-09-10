@@ -917,7 +917,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Zostań sponsorem",
-      "becomeSponsorExtended": "Wesprzyj nas bezpośrednio, aby otrzymać naklejki.",
       "confetti": "Gotowy na konfetti?",
       "confettiPromise": "Będą naklejki i cyfrowe konfetti",
       "sticker": "… lub naklejki evcc?",
@@ -926,9 +925,7 @@
       "titleNoSponsor": "Wesprzyj nas",
       "titleSponsor": "Jesteś sponsorem",
       "titleTrial": "Tryb próbny",
-      "titleVictron": "Sponsorowane przez Victron Energy",
-      "trial": "Jesteś w trybie próbnym i możesz korzystać ze wszystkich funkcji. Prosimy o rozważenie wsparcia projektu.",
-      "victron": "Używasz evcc na sprzęcie Victron Energy i masz dostęp do wszystkich funkcji."
+      "trial": "Jesteś w trybie próbnym i możesz korzystać ze wszystkich funkcji. Prosimy o rozważenie wsparcia projektu."
     },
     "telemetry": {
       "optIn": "Chcę udostępnić swoje dane.",
