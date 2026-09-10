@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"math"
 	"sync/atomic"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -32,8 +33,10 @@ import (
 // MyPvHea charger implementation
 type MyPvHea struct {
 	myPvBase
+	log       *util.Logger
 	relays    uint16
 	stepPower uint16
+	enabled   atomic.Bool
 	mask      atomic.Uint32
 	current   atomic.Uint64
 }
@@ -100,11 +103,31 @@ func NewMyPvHea(ctx context.Context, name string, settings modbus.TcpSettings, t
 
 	wb := &MyPvHea{
 		myPvBase:  newMyPvBase(conn, heaTemp[tempSource-1]),
+		log:       log,
 		relays:    relays,
 		stepPower: stepPower,
 	}
 
+	go wb.heartbeat(ctx, 5*time.Second)
+
 	return wb, nil
+}
+
+// heartbeat rewrites the active relay mask so the device does not fall back to idle
+func (wb *MyPvHea) heartbeat(ctx context.Context, interval time.Duration) {
+	for tick := time.Tick(interval); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+
+		if mask := uint16(wb.mask.Load()); wb.enabled.Load() && mask != 0 {
+			if err := wb.setRelays(mask); err != nil {
+				wb.log.ERROR.Println("heartbeat:", err)
+			}
+		}
+	}
 }
 
 // Status implements the api.Charger interface
@@ -148,7 +171,12 @@ func (wb *MyPvHea) Enable(enable bool) error {
 		mask = uint16(wb.mask.Load())
 	}
 
-	return wb.setRelays(mask)
+	err := wb.setRelays(mask)
+	if err == nil {
+		wb.enabled.Store(enable)
+	}
+
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
