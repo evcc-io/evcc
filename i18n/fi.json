@@ -64,6 +64,7 @@
   },
   "batterySettings": {
     "gridChargeTab": "Lataus verkosta",
+    "gridDischargeTab": "Sähköverkkoon purkaminen",
     "modalTitle": "Kodin akku",
     "noBattery": "Akkuja ei ole määritelty.",
     "usageTab": "Akun käyttö"
@@ -513,6 +514,7 @@
       "solarBehaviorLabel": "Aurinkoenergia",
       "solarModeCustom": "muokattu",
       "solarModeMaximum": "maksimi PV",
+      "solarShareNote": "Aurinkotuoton osuuden valitsin ei ole käytössä käyttäjän asetuksissa, jos olet määritellyt tehokynnykset. {0} ja tallenna ottaaksesi sen käyttöön.",
       "temperatureRangeHelp": "Näkymäasetus lämpötila-asteikolle. Ei vaikuta ohjaukseen.",
       "temperatureRangeTitle": "Lämpötila-alue",
       "thresholdDisableDelayLabel": "Poista viive käytöstä",
