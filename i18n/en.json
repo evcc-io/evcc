@@ -792,7 +792,7 @@
       "editTitle": "OCPP Report",
       "forwarderConflictWarning": "This loadpoint's charger already forwards its OCPP session to {host}. If you point this report at the same backend, it will see the session twice.",
       "idTag": "ID tag",
-      "idTagHelp": "Identifier sent to the upstream server for Authorize/StartTransaction. Defaults to EVCC.",
+      "idTagHelp": "Identifier sent to the upstream server for Authorize/StartTransaction. Required.",
       "labelCaCert": "Server certificate (CA)",
       "labelCheckInsecure": "Allow self-signed certificates",
       "labelInsecure": "Certificate validation",
