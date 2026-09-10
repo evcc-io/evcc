@@ -76,6 +76,30 @@ func TestOnUnlockConnectorNotSupported(t *testing.T) {
 	assert.Equal(t, occore.UnlockStatusNotSupported, res.Status)
 }
 
+// While globally disabled, ApplyReportRules must never start a connection
+// (no dial attempt at all - toStart stays empty), but must still keep the
+// rules themselves so ReportRules()/status endpoints reflect real config and
+// SetReportEnabled(true) has something to reconnect once flipped back on.
+func TestApplyReportRulesSkipsConnectionsWhenGloballyDisabled(t *testing.T) {
+	reportMu.Lock()
+	connections = make(map[string]*reportConnection)
+	reportEnabled = false
+	reportMu.Unlock()
+	t.Cleanup(func() {
+		reportMu.Lock()
+		reportEnabled = true
+		reportMu.Unlock()
+	})
+
+	rule := ReportRule{LoadpointTitle: "Carport", UpstreamURL: "wss://a", StationID: "s1", IdTag: "EVCC"}
+	ApplyReportRules([]ReportRule{rule})
+
+	reportMu.RLock()
+	defer reportMu.RUnlock()
+	assert.Empty(t, connections, "no connection should be started while globally disabled")
+	assert.Equal(t, []ReportRule{rule}, reportRules, "rules must survive being globally disabled")
+}
+
 func TestApplyReportRulesNoOpForUnconfiguredLoadpoint(t *testing.T) {
 	// ReportSessionStart/MeterValue/Stop must be safe no-ops when no rule
 	// is configured for the given loadpoint - this is the common case.

@@ -58,7 +58,11 @@
 								>
 									<DeviceTags :tags="loadpointTags(loadpoint)" usage="charge" />
 									<OcppReportButton
-										v-if="loadpoint.title && !loadpointIsHeating(loadpoint)"
+										v-if="
+											experimental &&
+											loadpoint.title &&
+											!loadpointIsHeating(loadpoint)
+										"
 										:loadpoint-title="loadpoint.title"
 										:rule="ocppReportRule(loadpoint.title)"
 										:connected="ocppReportConnected(loadpoint.title)"
@@ -499,6 +503,15 @@
 						>
 							<template #icon><McpIcon /></template>
 						</DeviceCard>
+						<DeviceCard
+							v-if="experimental"
+							:title="`${$t('config.ocppreportsettings.title')} 🧪`"
+							editable
+							data-testid="ocppreportsettings"
+							@edit="openModal('ocppreportsettings')"
+						>
+							<template #icon><OcppIcon /></template>
+						</DeviceCard>
 					</div>
 				</ConfigSection>
 
@@ -616,6 +629,7 @@
 					:chargers="chargers"
 					@changed="loadDirty"
 				/>
+				<OcppReportSettingsModal :enabled="ocppReportEnabled" />
 				<BackupRestoreModal v-bind="backupRestoreProps" />
 				<SecurityModal :auth-disabled="authDisabled" />
 				<ApiKeyModal :auth-disabled="authDisabled" />
@@ -659,6 +673,7 @@ import OcppIcon from "../components/MaterialIcon/Ocpp.vue";
 import OcppModal from "../components/Config/OcppModal.vue";
 import OcppForwarderModal from "../components/Config/OcppForwarderModal.vue";
 import OcppReportModal from "../components/Config/OcppReportModal.vue";
+import OcppReportSettingsModal from "../components/Config/OcppReportSettingsModal.vue";
 import OcppReportButton from "../components/Config/OcppReportButton.vue";
 import formatter from "../mixins/formatter";
 import GeneralConfig from "../components/Config/GeneralConfig.vue";
@@ -780,6 +795,7 @@ export default defineComponent({
 		OcppModal,
 		OcppForwarderModal,
 		OcppReportModal,
+		OcppReportSettingsModal,
 		OcppReportButton,
 		GeneralConfig,
 		HemsIcon,
@@ -1231,6 +1247,9 @@ export default defineComponent({
 		},
 		experimental() {
 			return store.state?.experimental;
+		},
+		ocppReportEnabled() {
+			return store.state?.ocppReportEnabled;
 		},
 		eebus() {
 			return store.state?.eebus;
