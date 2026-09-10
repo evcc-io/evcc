@@ -53,7 +53,9 @@ const defaultMeterInterval = 60 * time.Second
 type ReportRule struct {
 	LoadpointTitle string `json:"loadpointTitle" yaml:"loadpointTitle"`
 	UpstreamURL    string `json:"upstreamUrl" yaml:"upstreamUrl"`
-	StationID      string `json:"stationId" yaml:"stationId"`
+	// StationID is mandatory - no more "evcc-<loadpoint>" fallback; a rule
+	// must name its own station explicitly.
+	StationID string `json:"stationId" yaml:"stationId"`
 	// IdTag is mandatory: the underlying ocpp-go library validates it
 	// `required` on every Authorize/StartTransaction, so an empty value
 	// would silently and permanently fail every session (see idTag's
@@ -292,9 +294,6 @@ func newReportConnection(rule ReportRule) *reportConnection {
 	}
 
 	stationID := rule.StationID
-	if stationID == "" {
-		stationID = "evcc-" + rule.LoadpointTitle
-	}
 
 	endpoint := ocppj.NewClient(stationID, client, nil, nil, core.Profile, remotetrigger.Profile)
 	handler := &reportHandler{conn: conn}
