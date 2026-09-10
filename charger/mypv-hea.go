@@ -108,12 +108,12 @@ func NewMyPvHea(ctx context.Context, name string, settings modbus.TcpSettings, t
 	}
 
 	// device resets relays when not written within the power timeout; not writable more than once a day
-	timeout, err := wb.readUint16(myPvRegPowerTimeout)
+	b, err := wb.readUint16(myPvRegPowerTimeout)
 	if err != nil {
 		return nil, err
 	}
 
-	go wb.heartbeat(ctx, time.Duration(timeout)*time.Second/2)
+	go wb.heartbeat(ctx, time.Duration(b)*time.Second/2)
 
 	return wb, nil
 }
