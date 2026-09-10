@@ -113,7 +113,15 @@ func (lp *Loadpoint) stopSession() {
 
 	lp.applyEnergyMetrics(s)
 
-	meterStop := 0.0
+	// prefer the real hardware register (s.MeterStop) when the charger has
+	// one; most chargers don't (see chargeMeterTotal), so fall back to the
+	// same estimated absolute register finalizeSessionEnergy already reports
+	// via MeterValues - otherwise meterStop silently reports 0 regardless of
+	// energy actually delivered, on every charger without an energy meter
+	meterStop := s.ChargedEnergy
+	if s.MeterStart != nil {
+		meterStop += *s.MeterStart
+	}
 	if s.MeterStop != nil {
 		meterStop = *s.MeterStop
 	}
