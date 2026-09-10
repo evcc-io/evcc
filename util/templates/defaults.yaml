@@ -144,19 +144,19 @@ params:
       de: Minimaler Ladestand
       en: Minimum charge
     help:
-      de: Untere Grenze beim Entladen der Batterie im normalen Betrieb
-      en: Lower limit when discharging the battery in normal operation
+      de: Untere Grenze wie am Batteriesystem eingestellt. Wird vom Optimizer genutzt.
+      en: Lower limit as configured on the battery system. Used by optimizer.
     example: 25
     type: int
-    usages: ["battery", "vehicle"]
+    usages: ["battery"]
   - name: maxsoc
     unit: "%"
     description:
       de: Maximaler Ladestand
       en: Maximum charge
     help:
-      de: Oberes Limit beim Laden der Batterie aus dem Netz
-      en: Upper limit when charging the battery from the grid
+      de: Obere Grenze wie am Batteriesystem eingestellt. Wird vom Optimizer und für Netzladen genutzt.
+      en: Upper limit as configured on the battery system. Used by optimizer and for grid charging.
     example: 95
     type: int
     usages: ["battery"]

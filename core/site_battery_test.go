@@ -56,7 +56,7 @@ func TestApplyBatteryMode(t *testing.T) {
 		ctrl := gomock.NewController(t)
 
 		var bat api.Meter
-		batCon := api.NewMockBatteryController(ctrl)
+		batCon := batteryControllerMock(ctrl)
 
 		bat = &struct {
 			api.Meter
@@ -75,7 +75,7 @@ func TestApplyBatteryMode(t *testing.T) {
 		if tc.expected != api.BatteryUnknown {
 			batCon.EXPECT().SetBatteryMode(tc.expected).Times(1)
 		}
-		site.updateBatteryMode(false, api.Rate{})
+		site.updateBatteryMode(false, false, api.Rate{})
 
 		if tc.internal != api.BatteryNormal {
 			assert.Equal(t, tc.expected, site.batteryMode)
@@ -83,6 +83,14 @@ func TestApplyBatteryMode(t *testing.T) {
 
 		ctrl.Finish()
 	}
+}
+
+// battery controller supporting the modes a soc limit can implement
+func batteryControllerMock(ctrl *gomock.Controller) *api.MockBatteryController {
+	batCon := api.NewMockBatteryController(ctrl)
+	batCon.EXPECT().BatteryModes().Return([]api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryDischarge}).AnyTimes()
+
+	return batCon
 }
 
 // battery meter with soc, controller and soc limits
@@ -93,7 +101,7 @@ func batteryControlMock(ctrl *gomock.Controller, soc, maxSoc float64) (api.Meter
 	batSocLimit := api.NewMockBatterySocLimiter(ctrl)
 	batSocLimit.EXPECT().GetSocLimits().Return(0.0, maxSoc).AnyTimes()
 
-	batCon := api.NewMockBatteryController(ctrl)
+	batCon := batteryControllerMock(ctrl)
 
 	return &struct {
 		api.Meter
@@ -123,7 +131,7 @@ func TestBatteryHoldAppliedOnce(t *testing.T) {
 	batCon.EXPECT().SetBatteryMode(api.BatteryHold).Times(1)
 
 	for range 3 {
-		site.updateBatteryMode(true, api.Rate{})
+		site.updateBatteryMode(true, false, api.Rate{})
 	}
 
 	ctrl.Finish()
@@ -149,7 +157,7 @@ func TestBatteryHoldNotShared(t *testing.T) {
 	fullCon.EXPECT().SetBatteryMode(api.BatteryHold).Times(1)
 	emptyCon.EXPECT().SetBatteryMode(gomock.Any()).Times(0)
 
-	site.updateBatteryMode(true, api.Rate{})
+	site.updateBatteryMode(true, false, api.Rate{})
 
 	ctrl.Finish()
 }
@@ -180,7 +188,7 @@ func TestRequiredExternalBatteryMode(t *testing.T) {
 		site.batteryMode = tc.internal
 		site.batteryModeExternal = tc.external
 
-		mode := site.requiredBatteryMode(false, api.Rate{})
+		mode := site.requiredBatteryMode(false, false, api.Rate{})
 		assert.Equal(t, tc.new.String(), mode.String(), "internal mode expected %s got %s", tc.new, mode)
 	}
 }
@@ -210,7 +218,7 @@ func TestExternalBatteryModeChange(t *testing.T) {
 		ctrl := gomock.NewController(t)
 
 		var bat api.Meter
-		batCon := api.NewMockBatteryController(ctrl)
+		batCon := batteryControllerMock(ctrl)
 
 		bat = &struct {
 			api.Meter
@@ -234,13 +242,13 @@ func TestExternalBatteryModeChange(t *testing.T) {
 		if tc.expected != api.BatteryUnknown {
 			batCon.EXPECT().SetBatteryMode(tc.expected).Times(1)
 		}
-		site.updateBatteryMode(false, api.Rate{})
+		site.updateBatteryMode(false, false, api.Rate{})
 		if !ctrl.Satisfied() {
 			ctrl.Finish()
 		}
 
 		// 3. verify required external mode only applied once
-		site.updateBatteryMode(false, api.Rate{})
+		site.updateBatteryMode(false, false, api.Rate{})
 		if !ctrl.Satisfied() {
 			ctrl.Finish()
 		}
@@ -257,7 +265,7 @@ func TestExternalBatteryModeChange(t *testing.T) {
 		if tc.expected != api.BatteryNormal {
 			batCon.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
 		}
-		site.updateBatteryMode(false, api.Rate{})
+		site.updateBatteryMode(false, false, api.Rate{})
 
 		// timer disabled
 		assert.True(t, site.batteryModeExternalTimer.IsZero())
@@ -291,7 +299,7 @@ func TestForcedBatteryChargeLimits(t *testing.T) {
 
 		var bat api.Meter
 		batSoc := api.NewMockBattery(ctrl)
-		batCon := api.NewMockBatteryController(ctrl)
+		batCon := batteryControllerMock(ctrl)
 		batSocLimit := api.NewMockBatterySocLimiter(ctrl)
 
 		bat = &struct {
@@ -319,8 +327,176 @@ func TestForcedBatteryChargeLimits(t *testing.T) {
 			batCon.EXPECT().SetBatteryMode(tc.expected).Times(1)
 		}
 
-		site.updateBatteryMode(true, api.Rate{})
+		site.updateBatteryMode(true, false, api.Rate{})
 
 		ctrl.Finish()
 	}
+}
+
+func TestForcedBatteryDischargeLimits(t *testing.T) {
+	reserve := 20.0
+
+	for _, tc := range []struct {
+		internal, expected api.BatteryMode
+		soc                float64
+	}{
+		{api.BatteryUnknown, api.BatteryDischarge, 50},
+		{api.BatteryUnknown, api.BatteryHold, 10},
+
+		{api.BatteryNormal, api.BatteryDischarge, 50},
+		{api.BatteryNormal, api.BatteryHold, 10},
+
+		{api.BatteryHold, api.BatteryDischarge, 50},
+		{api.BatteryHold, api.BatteryHold, 10}, // TODO make this api.BatteryUnknown
+
+		{api.BatteryDischarge, api.BatteryUnknown, 50},
+		// steady-state re-validation: mode already Discharge and unchanged, reserve
+		// reached mid-cycle; applyBatteryMode must still run to catch the reserve
+		{api.BatteryDischarge, api.BatteryHold, 10},
+	} {
+		t.Logf("%+v", tc)
+
+		ctrl := gomock.NewController(t)
+
+		var bat api.Meter
+		batSoc := api.NewMockBattery(ctrl)
+		batCon := batteryControllerMock(ctrl)
+		batSocLimit := api.NewMockBatterySocLimiter(ctrl)
+
+		bat = &struct {
+			api.Meter
+			api.Battery
+			api.BatteryController
+			api.BatterySocLimiter
+		}{
+			Meter:             bat,
+			Battery:           batSoc,
+			BatteryController: batCon,
+			BatterySocLimiter: batSocLimit,
+		}
+
+		site := &Site{
+			log:           util.NewLogger("foo"),
+			batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, bat)},
+			batteryMode:   tc.internal,
+		}
+
+		batSoc.EXPECT().Soc().Return(tc.soc, nil).Times(1)
+		batSocLimit.EXPECT().GetSocLimits().Return(reserve, 0.0).Times(1)
+
+		if tc.expected != api.BatteryUnknown {
+			batCon.EXPECT().SetBatteryMode(tc.expected).Times(1)
+		}
+
+		site.updateBatteryMode(false, true, api.Rate{})
+
+		ctrl.Finish()
+	}
+}
+
+// TestBatteryDischargeHemsCurtailed ensures grid discharge stops but the battery
+// keeps serving house load while the grid operator curtails production.
+func TestBatteryDischargeHemsCurtailed(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	var bat api.Meter
+	batCon := batteryControllerMock(ctrl)
+
+	bat = &struct {
+		api.Meter
+		api.BatteryController
+	}{
+		Meter:             bat,
+		BatteryController: batCon,
+	}
+
+	curtailed := 60
+	hems := api.NewMockHEMS(ctrl)
+	hems.EXPECT().CurtailedPercent().Return(&curtailed).AnyTimes()
+	hems.EXPECT().MaxConsumptionPower().Return(nil).AnyTimes()
+
+	site := &Site{
+		log:           util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, bat)},
+		hems:          hems,
+	}
+
+	batCon.EXPECT().SetBatteryMode(api.BatteryNormal).Times(1)
+
+	site.updateBatteryMode(false, true, api.Rate{})
+
+	ctrl.Finish()
+}
+
+// TestBatteryGridDischargeEvFastCharging ensures grid discharge is held back while an EV
+// is fast charging, regardless of the (opt-in, off by default) batteryDischargeControl
+// toggle - forcing the battery to sell while an EV needs a fast charge is a materially
+// worse outcome than the toggle's original, softer self-consumption case.
+func TestBatteryGridDischargeEvFastCharging(t *testing.T) {
+	lp := &Loadpoint{status: api.StatusC, mode: api.ModeNow}
+
+	site := &Site{
+		log:           util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{nil},
+		loadpoints:    []*Loadpoint{lp},
+	}
+
+	res := site.requiredBatteryMode(false, true, api.Rate{})
+	assert.Equal(t, api.BatteryHold, res, "expected discharge to be held back for a fast charging EV")
+}
+
+// TestBatteryGridDischargeActive ensures the limit only acts once the experimental
+// grid discharge setting is enabled.
+func TestBatteryGridDischargeActive(t *testing.T) {
+	limit := 0.2
+	rate := api.Rate{Value: 0.3}
+
+	site := &Site{
+		log:                       util.NewLogger("foo"),
+		batteryGridDischargeLimit: &limit,
+	}
+
+	assert.False(t, site.batteryGridDischargeActive(rate), "expected limit to be inert while grid discharge is disabled")
+
+	site.batteryGridDischarge = true
+	assert.True(t, site.batteryGridDischargeActive(rate), "expected limit to act once grid discharge is enabled")
+}
+
+// TestBatteryGridDischargeLimitRequiresOptIn ensures a limit cannot outlive the
+// experimental grid discharge setting: it is refused while the setting is off and
+// dropped when the setting is turned off.
+func TestBatteryGridDischargeLimitRequiresOptIn(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	var bat api.Meter = &struct {
+		api.Meter
+		api.BatteryController
+	}{
+		BatteryController: api.NewMockBatteryController(ctrl),
+	}
+
+	site := &Site{
+		log:           util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, bat)},
+	}
+
+	limit := 0.2
+
+	assert.ErrorIs(t, site.SetBatteryGridDischargeLimit(&limit), ErrBatteryGridDischargeNotAvailable)
+	assert.Nil(t, site.GetBatteryGridDischargeLimit(), "expected limit to be refused while grid discharge is disabled")
+
+	assert.NoError(t, site.SetBatteryGridDischarge(true))
+	assert.NoError(t, site.SetBatteryGridDischargeLimit(&limit))
+	assert.Equal(t, &limit, site.GetBatteryGridDischargeLimit())
+
+	assert.NoError(t, site.SetBatteryGridDischarge(false))
+	assert.Nil(t, site.GetBatteryGridDischargeLimit(), "expected limit to be dropped with grid discharge")
+}
+
+// TestEvFastChargingActiveDisabledLoadpoint guards against the nil entries
+// Loadpoints() returns for disabled loadpoints
+func TestEvFastChargingActiveDisabledLoadpoint(t *testing.T) {
+	site := &Site{loadpoints: []*Loadpoint{nil}}
+
+	assert.False(t, site.evFastChargingActive())
 }

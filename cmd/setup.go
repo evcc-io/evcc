@@ -26,6 +26,8 @@ import (
 	"github.com/evcc-io/evcc/core/metrics"
 	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/curtailer"
+	"github.com/evcc-io/evcc/db"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/hems"
 	hemsapi "github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/hems/shm"
@@ -35,8 +37,6 @@ import (
 	"github.com/evcc-io/evcc/plugin/javascript"
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/server"
-	"github.com/evcc-io/evcc/server/db"
-	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/modbus"
 	"github.com/evcc-io/evcc/server/providerauth"
@@ -545,7 +545,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 			}
 
 			if _, ok := instance.OnIdentified().GetMode(); ok {
-				log.WARN.Printf("vehicle '%s': default charge 'mode' is deprecated, please configure via UI (charging plan > arrival)", cc.Name)
+				log.WARN.Printf("vehicle '%s': default charge 'mode' is deprecated, please configure via UI (more > vehicles)", cc.Name)
 			}
 
 			mu.Lock()

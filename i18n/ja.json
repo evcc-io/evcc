@@ -20,28 +20,7 @@
     "title": "認証ステータス"
   },
   "batterySettings": {
-    "batteryLevel": "バッテリー残量",
-    "bufferStart": {
-      "above": "{soc}を超える場合。",
-      "full": "{soc}の場合。",
-      "never": "十分な余剰がある場合のみ。"
-    },
-    "capacity": "{total}の{energy}",
-    "control": "バッテリーコントロール",
-    "discharge": "高速モードおよび充電プラン実行中での放電を防止します。",
-    "disclaimerHint": "注意：",
-    "disclaimerText": "これらの設定は太陽光モードにのみ影響します。充電動作はそれに応じて調整されます。",
     "gridChargeTab": "系統電力からの充電",
-    "legendBottomName": "蓄電池の充電を優先",
-    "legendBottomSubline": "{soc}に到達するまで。",
-    "legendMiddleName": "車両の充電を優先",
-    "legendMiddleSubline": "蓄電池残量が{soc}を超えたとき。",
-    "legendTopAutostart": "自動的に開始",
-    "legendTopName": "バッテリー対応車両充電",
-    "legendTopSubline": "蓄電池残量が{soc}を超えたとき。",
-    "legendTopSublineAbove": "{soc} を超えたとき",
-    "legendTopSublineDisabled": "{soc} です。",
-    "legendTopSublineDisabledState": "無効",
     "modalTitle": "蓄電池",
     "noBattery": "蓄電池が設定されていません。",
     "usageTab": "バッテリー使用量"
@@ -317,13 +296,6 @@
         "charging": "充電器",
         "heating": "ヒーター"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "6 〜 16 A の電流値を使用します。",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "6 〜 32 A の電流値を使用します。",
-      "chargerPowerCustom": "その他",
-      "chargerPowerCustomHelp": "カスタムの電流値を設定します。",
-      "chargerTypeLabel": "充電器タイプ",
       "chargingTitle": "挙動",
       "circuitHelp": "電力および電流の上限値を超えないようにするための、負荷管理の割り当てです。",
       "circuitInvalid": "指定された回路が存在しません",

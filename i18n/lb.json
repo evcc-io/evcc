@@ -63,28 +63,7 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Luedstand vun der Batterie",
-    "bufferStart": {
-      "above": "wann iwwer {soc}.",
-      "full": "wann op {soc}.",
-      "never": "nëmme mat genuch Iwwerschoss."
-    },
-    "capacity": "{energy} vun {total}",
-    "control": "Batterie steieren",
-    "discharge": "D'Entlueden am schnelle Modus a geplangte Lueden verhënneren.",
-    "disclaimerHint": "Notiz:",
-    "disclaimerText": "Dës Astellunge beaflossen nëmmen de Solarmodus. D'Luedeverhalen gëtt deementspriechend ugepasst.",
     "gridChargeTab": "Vum Netz oplueden",
-    "legendBottomName": "Prioritéit fir d'Oplueden vun der Hausbatterie",
-    "legendBottomSubline": "bis {soc} erreecht sinn.",
-    "legendMiddleName": "Prioritéit fir d'Oplueden vum Gefier",
-    "legendMiddleSubline": "wann d'Hausbatterie iwwer {soc} ass.",
-    "legendTopAutostart": "Automatesch starten",
-    "legendTopName": "Batterie-ënnerstëtzt Opluede vum Gefier",
-    "legendTopSubline": "wann d'Hausbatterie iwwer {soc} ass.",
-    "legendTopSublineAbove": "wann iwwert {soc}",
-    "legendTopSublineDisabled": "ass {soc}.",
-    "legendTopSublineDisabledState": "desaktivéiert",
     "modalTitle": "Hausbatterie",
     "noBattery": "Keng Batterien konfiguréiert.",
     "usageTab": "Batterieverbrauch"
@@ -427,13 +406,6 @@
         "charging": "Wallbox",
         "heating": "Heizungsgerät"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Verwennt Stroum vu 6 bis 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Verwennt Stroum vu 6 bis 32 A.",
-      "chargerPowerCustom": "aneren",
-      "chargerPowerCustomHelp": "Een eegenen Stroumberäich definéieren.",
-      "chargerTypeLabel": "Luedleeschtung",
       "chargingTitle": "Verhalen",
       "circuitHelp": "Laaschtmanagement-Zouweisung, fir sécher ze goen, dass d'Leeschtung a Stroumlimitten net iwwerschratt ginn.",
       "circuitInvalid": "De Circuit existéiert net",

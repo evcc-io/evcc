@@ -62,10 +62,6 @@ render: |
         headers:
         - content-type: application/json
         body: '{"ENERGY":{"SAFE_CHARGE_PROHIBIT":"u8_01"}}'  # self consumption
-    - case: 2 # hold (not implemented)
-      set:
-        source: error
-        error: ErrNotAvailable
     - case: 3 # charge
       set:
         source: http
@@ -75,8 +71,5 @@ render: |
         headers:
         - content-type: application/json
         body: '{"ENERGY":{"SAFE_CHARGE_FORCE":"u8_01"}}'  # force to charge
-    default:
-      source: error
-      error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

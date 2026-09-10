@@ -11,9 +11,12 @@ import {
 	axisNameStyle,
 	FONT_FAMILY,
 	forecastYAxis,
+	hoverDot,
+	lineCasing,
 	tooltipStyle,
 	tooltipTable,
 	type TooltipRow,
+	lineDefaults,
 } from "../Forecast/echarts";
 import type { EvoptData } from "./TimeSeriesDataTable.vue";
 import type { BatteryDetail, DeviceColors } from "@/types/evcc";
@@ -23,7 +26,15 @@ import colors from "@/colors";
 import { energyAxisScale, type EnergyAxisScale } from "@/utils/energyAxis";
 import LegendList from "../Sessions/LegendList.vue";
 import type { Legend } from "../Sessions/types";
-import { slotTimes, slotXAxis, formatSlotRange, whToKW, loadpointTitle } from "./chart";
+import {
+	slotTimes,
+	slotXAxis,
+	dayBoundaryAxis,
+	dayBoundarySeries,
+	formatSlotRange,
+	whToKW,
+	loadpointTitle,
+} from "./chart";
 
 const GRID_LABEL = "Grid Power";
 const SOLAR_LABEL = "Solar Forecast";
@@ -88,29 +99,30 @@ export default defineComponent({
 			return energyAxisScale(peak * 1000);
 		},
 		chartSeries(): Record<string, unknown>[] {
+			const grid = {
+				name: GRID_LABEL,
+				type: "line",
+				z: 4,
+				data: this.gridPower,
+				smooth: 0.2,
+				...hoverDot(colors.grid || ""),
+				lineStyle: { color: colors.grid || "", ...lineDefaults },
+			};
+			const solar = {
+				name: SOLAR_LABEL,
+				type: "line",
+				z: 4,
+				data: this.evopt.req.time_series.ft.map(this.toKW),
+				smooth: 0.2,
+				...hoverDot(colors.forecast || ""),
+				lineStyle: { color: colors.forecast || "", ...lineDefaults },
+			};
 			const series: Record<string, unknown>[] = [
-				{
-					name: GRID_LABEL,
-					type: "line",
-					z: 4,
-					data: this.gridPower,
-					showSymbol: false,
-					smooth: 0.2,
-					lineStyle: { color: colors.grid || "", width: 2 },
-					itemStyle: { color: colors.grid || "" },
-					emphasis: { disabled: true },
-				},
-				{
-					name: SOLAR_LABEL,
-					type: "line",
-					z: 4,
-					data: this.evopt.req.time_series.ft.map(this.toKW),
-					showSymbol: false,
-					smooth: 0.2,
-					lineStyle: { color: colors.self || "", width: 3 },
-					itemStyle: { color: colors.self || "" },
-					emphasis: { disabled: true },
-				},
+				dayBoundarySeries(this.times),
+				lineCasing(grid, 3),
+				grid,
+				lineCasing(solar, 3),
+				solar,
 				{
 					name: this.consumptionLabel,
 					type: "bar",
@@ -151,15 +163,15 @@ export default defineComponent({
 						type: "line",
 						lineStyle: { color: colors.muted || "", opacity: 0.4 },
 					},
-					// no chart anchor: category-axis values are scalars, convertToPixel
-					// would choke on them; follow the pointer instead
 					...tooltipStyle(colors.text || ""),
 					formatter: this.tooltipFormatter,
 				},
-				xAxis: slotXAxis(this.times, this.weekdayShort),
+				xAxis: [slotXAxis(this.times, this.weekdayShort), dayBoundaryAxis(this.times)],
 				yAxis: forecastYAxis({
 					min: undefined,
 					position: "right",
+					// the day boundary value axis contains 0, keep the axis on the right
+					axisLine: { show: false, onZero: false },
 					splitNumber: 5,
 					name: this.axisScale.unit,
 					...axisNameStyle(),
@@ -175,7 +187,7 @@ export default defineComponent({
 		legends(): Legend[] {
 			const legends: Legend[] = [
 				{ label: GRID_LABEL, color: colors.grid || "", value: "", type: "line" },
-				{ label: SOLAR_LABEL, color: colors.self || "", value: "", type: "line" },
+				{ label: SOLAR_LABEL, color: colors.forecast || "", value: "", type: "line" },
 				{
 					label: this.consumptionLabel,
 					color: this.consumptionColor,
@@ -217,6 +229,7 @@ export default defineComponent({
 			const head = formatSlotRange(this.times, dt, arr[0]!.dataIndex);
 			const rows: TooltipRow[] = arr
 				.filter((p) => p.value != null && !Number.isNaN(p.value))
+				.filter((p) => !p.seriesName?.endsWith("-casing"))
 				.map((p) => {
 					const value = p.value as number;
 					if (p.seriesName === GRID_LABEL) {

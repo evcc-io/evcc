@@ -145,9 +145,9 @@ render: |
               address: 1040 # Battery max. discharge power limit, absolute [W]
               type: writemultiple
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
+      {{- if .maxchargepower }}
       - case: 3 # charge
         set:
-          {{- if .maxchargepower }}
           source: const
           value: -{{ .maxchargepower }} # W
           set:
@@ -157,10 +157,7 @@ render: |
               address: 1034 # Battery charge power (DC) setpoint, absolute [W]
               type: writemultiple
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
-          {{- else }}
-          source: error
-          error: ErrNotAvailable
-          {{- end }}
+      {{- end }}
       - case: 4 # holdcharge
         set:
           source: const
@@ -172,8 +169,5 @@ render: |
               address: 1038 # Battery max. charge power limit, absolute [W]
               type: writemultiple
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
-      default:
-        source: error
-        error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

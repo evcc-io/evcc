@@ -20,28 +20,7 @@
     "title": "அங்கீகார நிலை"
   },
   "batterySettings": {
-    "batteryLevel": "பேட்டரி நிலை",
-    "bufferStart": {
-      "above": "மேலே {soc}.",
-      "full": "{soc} இல் இருக்கும்போது.",
-      "never": "போதுமான உபரி மட்டுமே."
-    },
-    "capacity": "{energy} இன் {total} \"",
-    "control": "பேட்டரி கட்டுப்பாடு",
-    "discharge": "வேகமான பயன்முறையில் வெளியேற்றத்தைத் தடுக்கவும் மற்றும் திட்டமிடப்பட்ட சார்சிங்.",
-    "disclaimerHint": "குறிப்பு:",
-    "disclaimerText": "இந்த அமைப்புகள் சூரிய பயன்முறையை மட்டுமே பாதிக்கின்றன. சார்சிங் நடத்தை அதற்கேற்ப சரிசெய்யப்படுகிறது.",
     "gridChargeTab": "கட்டம் சார்சிங்",
-    "legendBottomName": "வீட்டு பேட்டரி சார்சிங்கிற்கு முன்னுரிமை அளிக்கவும்",
-    "legendBottomSubline": "அது அடையும் வரை {soc}.",
-    "legendMiddleName": "வாகன கட்டணம் வசூலிப்பதற்கு முன்னுரிமை அளிக்கவும்",
-    "legendMiddleSubline": "வீட்டு பேட்டரி மேலே இருக்கும்போது {soc}.",
-    "legendTopAutostart": "தானாகவே தொடங்குங்கள்",
-    "legendTopName": "பேட்டரி உதவி வாகன சார்சிங்",
-    "legendTopSubline": "வீட்டு பேட்டரி மேலே இருக்கும்போது {soc}.",
-    "legendTopSublineAbove": "{soc}க்கு மேல் இருக்கும் போது",
-    "legendTopSublineDisabled": "என்பது {soc}.",
-    "legendTopSublineDisabledState": "முடக்கப்பட்டது",
     "modalTitle": "வீட்டு பேட்டரி",
     "noBattery": "பேட்டரிகள் எதுவும் கட்டமைக்கப்படவில்லை.",
     "usageTab": "பேட்டரி பயன்பாடு"
@@ -354,13 +333,6 @@
         "charging": "மின்னூட்டி",
         "heating": "ஈட்டர்"
       },
-      "chargerPower11kw": "11 கிலோவாட்",
-      "chargerPower11kwHelp": "தற்போதைய 6 முதல் 16 வரை தற்போதைய வரம்பைப் பயன்படுத்தும்.",
-      "chargerPower22kw": "22 கிலோவாட்",
-      "chargerPower22kwHelp": "தற்போதைய 6 முதல் 32 ஏ வரை பயன்படுத்தும்.",
-      "chargerPowerCustom": "மற்றொன்று",
-      "chargerPowerCustomHelp": "தனிப்பயன் தற்போதைய வரம்பை வரையறுக்கவும்.",
-      "chargerTypeLabel": "சார்சர் வகை",
       "chargingTitle": "நடத்தை",
       "circuitHelp": "ஆற்றல் மற்றும் தற்போதைய வரம்புகள் மீறப்படுவதில்லை என்பதை உறுதிப்படுத்த சுமை மேலாண்மை பணி.",
       "circuitInvalid": "சர்க்யூட் இல்லை",

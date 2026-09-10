@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/site"
@@ -35,6 +36,7 @@ func TestBoostPower(t *testing.T) {
 	Voltage = 230
 	lp := &Loadpoint{
 		log:          util.NewLogger("lp"),
+		clock:        clock.New(),
 		status:       api.StatusC,
 		batteryBoost: boostStart,
 		maxCurrent:   16,
@@ -122,6 +124,7 @@ func TestBoostPowerPhaseSwitchGapBridging(t *testing.T) {
 	Voltage = 230
 	lp := &Loadpoint{
 		log:              util.NewLogger("lp"),
+		clock:            clock.New(),
 		status:           api.StatusC,
 		charger:          phaseSwitchCharger{},
 		batteryBoost:     boostContinue,
@@ -205,6 +208,7 @@ func TestBoostPowerPhaseSwitchGapBridgingExclusions(t *testing.T) {
 
 			lp := &Loadpoint{
 				log:              util.NewLogger("lp"),
+				clock:            clock.New(),
 				status:           api.StatusC,
 				charger:          tc.charger,
 				batteryBoost:     boostContinue,
