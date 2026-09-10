@@ -53,7 +53,9 @@
 							@enable="handleDisable('loadpoint', loadpoint.id!, false)"
 						>
 							<template #tags>
-								<div class="d-flex align-items-center justify-content-between gap-2">
+								<div
+									class="d-flex align-items-center justify-content-between gap-2"
+								>
 									<DeviceTags :tags="loadpointTags(loadpoint)" usage="charge" />
 									<OcppReportButton
 										v-if="loadpoint.title && !loadpointIsHeating(loadpoint)"
