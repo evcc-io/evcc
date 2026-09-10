@@ -36,8 +36,7 @@ type MyPvHea struct {
 	log       *util.Logger
 	relays    uint16
 	stepPower uint16
-	mask      atomic.Uint32 // requested stage mask
-	active    atomic.Uint32 // last written mask
+	mask      atomic.Uint32 // last written relay mask
 	current   atomic.Uint64
 }
 
@@ -122,7 +121,7 @@ func (wb *MyPvHea) heartbeat(ctx context.Context, interval time.Duration) {
 			return
 		}
 
-		if mask := uint16(wb.active.Load()); mask != 0 {
+		if mask := uint16(wb.mask.Load()); mask != 0 {
 			if err := wb.setRelays(mask); err != nil {
 				wb.log.ERROR.Println("heartbeat:", err)
 			}
@@ -162,19 +161,18 @@ func (wb *MyPvHea) Enabled() (bool, error) {
 func (wb *MyPvHea) setRelays(mask uint16) error {
 	_, err := wb.conn.WriteSingleRegister(heaRegSetPower, mask)
 	if err == nil {
-		wb.active.Store(uint32(mask))
+		wb.mask.Store(uint32(mask))
 	}
 	return err
 }
 
 // Enable implements the api.Charger interface
 func (wb *MyPvHea) Enable(enable bool) error {
-	var mask uint16
 	if enable {
-		mask = uint16(wb.mask.Load())
+		return wb.MaxCurrentMillis(math.Float64frombits(wb.current.Load()))
 	}
 
-	return wb.setRelays(mask)
+	return wb.setRelays(0)
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -204,7 +202,6 @@ func (wb *MyPvHea) MaxCurrentMillis(current float64) error {
 
 	err := wb.setRelays(mask)
 	if err == nil {
-		wb.mask.Store(uint32(mask))
 		wb.current.Store(math.Float64bits(current))
 	}
 
