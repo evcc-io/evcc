@@ -60,7 +60,7 @@ func IsAuthorized() bool {
 func IsAuthorizedForApi() bool {
 	mu.RLock()
 	defer mu.RUnlock()
-	return IsAuthorized() && Subject != unavailable && Token != ""
+	return len(Subject) > 0 && Subject != unavailable && Token != ""
 }
 
 // check and set sponsorship token
@@ -76,7 +76,7 @@ func ConfigureSponsorship(token string) error {
 			sub, token = checkHemsPro()
 		}
 
-		Hardware = sub != ""
+		Hardware = sub != "" && sub != unavailable
 
 		if token == "" {
 			if sub != "" {
