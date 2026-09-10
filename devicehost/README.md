@@ -21,6 +21,10 @@ types, so `demo` offering a `pv` type registers the template `demo-pv`.
 Hosts connect during `configureEnvironment` (`cmd/setup.go`), before devices are
 configured, so their types are available to the regular device configuration.
 
+Instantiating a device through a host requires sponsorship, like any
+sponsorship-gated built-in device. The generated templates carry the
+`sponsorship` requirement so the configuration UI shows it.
+
 ## Protocol
 
 gRPC, `devicehost/proto/devicehost.proto`:

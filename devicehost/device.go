@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/devicehost/proto/pb"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/templates"
 )
 
@@ -30,6 +32,10 @@ func newDevice(ctx context.Context, class templates.Class, other map[string]any)
 	var cc config
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
 	}
 
 	h, err := byName(cc.Host)

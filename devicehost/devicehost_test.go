@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/devicehost"
 	"github.com/evcc-io/evcc/devicehost/proto/pb"
 	"github.com/evcc-io/evcc/meter"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -181,7 +182,16 @@ func serve(t *testing.T, chargerCaps ...string) string {
 	return l.Addr().String()
 }
 
+// sponsored authorizes sponsorship for the duration of the test
+func sponsored(t *testing.T) {
+	t.Helper()
+	old := sponsor.Subject
+	sponsor.Subject = "foo"
+	t.Cleanup(func() { sponsor.Subject = old })
+}
+
 func TestMeter(t *testing.T) {
+	sponsored(t)
 	ctx := context.Background()
 
 	host, err := devicehost.New(ctx, "demo", serve(t))
@@ -191,6 +201,7 @@ func TestMeter(t *testing.T) {
 	// the host's device type is registered as a template
 	tmpl, err := templates.ByName(templates.Meter, "demo-pv")
 	require.NoError(t, err)
+	assert.Contains(t, tmpl.Requirements.EVCC, templates.RequirementSponsorship)
 
 	i, uri := tmpl.ParamByName("uri")
 	require.NotEqual(t, -1, i)
@@ -233,6 +244,7 @@ func TestMeter(t *testing.T) {
 }
 
 func TestCharger(t *testing.T) {
+	sponsored(t)
 	ctx := context.Background()
 
 	host, err := devicehost.New(ctx, "demo3", serve(t))
@@ -265,7 +277,22 @@ func TestCharger(t *testing.T) {
 	require.NoError(t, ps.Phases1p3p(1))
 }
 
+func TestSponsorRequired(t *testing.T) {
+	ctx := context.Background()
+
+	host, err := devicehost.New(ctx, "demo4", serve(t))
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = host.Close() })
+
+	_, err = meter.NewFromConfig(ctx, "template", map[string]any{
+		"template": "demo4-pv",
+		"uri":      "http://demo/pv",
+	})
+	assert.ErrorIs(t, err, api.ErrSponsorRequired)
+}
+
 func TestMissingRequiredProperty(t *testing.T) {
+	sponsored(t)
 	ctx := context.Background()
 
 	host, err := devicehost.New(ctx, "demo2", serve(t))

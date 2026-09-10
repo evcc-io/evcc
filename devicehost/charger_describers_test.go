@@ -12,6 +12,7 @@ import (
 )
 
 func TestChargerDescribers(t *testing.T) {
+	sponsored(t)
 	for _, tc := range []struct {
 		name         string
 		capabilities []string

@@ -140,9 +140,10 @@ func (h *Host) template(typ *pb.DeviceType) templates.Template {
 	}
 
 	return templates.Template{
-		Template: templateName(h.name, typ.GetType()),
-		Params:   params,
-		Render:   strings.Join(render, "\n") + "\n",
+		Template:     templateName(h.name, typ.GetType()),
+		Params:       params,
+		Requirements: templates.Requirements{EVCC: []string{templates.RequirementSponsorship}},
+		Render:       strings.Join(render, "\n") + "\n",
 	}
 }
 
