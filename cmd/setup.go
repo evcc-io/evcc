@@ -981,10 +981,22 @@ func configureOCPP(cfg *ocpp.Config, externalUrl string) {
 // setup OCPP report client (evcc-io/evcc#32989) - independent of the central
 // system, since it dials out rather than accepting connections
 func configureOCPPReport() {
+	ocpp.SetReportEnabled(isOcppReportEnabled())
+
 	var rules []ocpp.ReportRule
 	if err := settings.Json(keys.OcppReport, &rules); err == nil && len(rules) > 0 {
 		ocpp.ApplyReportRules(rules)
 	}
+}
+
+// isOcppReportEnabled returns if the OCPP report master switch is enabled,
+// defaulting true when never explicitly set (see getOcppReportEnabled).
+func isOcppReportEnabled() bool {
+	b, err := settings.Bool(keys.OcppReportEnabled)
+	if err != nil {
+		return true
+	}
+	return b
 }
 
 // setup EEBus

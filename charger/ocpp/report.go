@@ -90,10 +90,16 @@ type ReportSessionStatus struct {
 }
 
 var (
-	reportMu     sync.RWMutex
-	reportRules  []ReportRule
-	connections  = make(map[string]*reportConnection) // keyed by LoadpointTitle
-	reportErrors = make(map[string]string)
+	reportMu sync.RWMutex
+	// reportEnabled is the master switch, independent of the configured
+	// rules below - disabling it tears down every connection without
+	// discarding the rules, so re-enabling reconnects them as-is. Defaults
+	// true so a fresh boot with no explicit setting behaves like before this
+	// switch existed.
+	reportEnabled = true
+	reportRules   []ReportRule
+	connections   = make(map[string]*reportConnection) // keyed by LoadpointTitle
+	reportErrors  = make(map[string]string)
 
 	reportCbMu      sync.Mutex
 	reportUpdatedCb func()
@@ -143,6 +149,29 @@ func ReportEnabled() bool {
 	reportMu.RLock()
 	defer reportMu.RUnlock()
 	return len(reportRules) > 0
+}
+
+// ReportGloballyEnabled returns the master switch's current state.
+func ReportGloballyEnabled() bool {
+	reportMu.RLock()
+	defer reportMu.RUnlock()
+	return reportEnabled
+}
+
+// SetReportEnabled toggles the master switch. Disabling closes every
+// connection without touching the configured rules; re-enabling reconnects
+// them exactly as configured, without needing to resave anything.
+func SetReportEnabled(enabled bool) {
+	reportMu.Lock()
+	if reportEnabled == enabled {
+		reportMu.Unlock()
+		return
+	}
+	reportEnabled = enabled
+	rules := slices.Clone(reportRules)
+	reportMu.Unlock()
+
+	ApplyReportRules(rules)
 }
 
 // ReportRules returns the currently configured report rules.
@@ -195,9 +224,15 @@ func ApplyReportRules(rules []ReportRule) {
 	reportMu.Lock()
 	reportRules = rules
 
+	// while globally disabled, valid stays empty: every existing connection
+	// below is torn down as stale and none get (re)started, but reportRules
+	// still holds the real config for status/config endpoints and for
+	// SetReportEnabled to reconnect from once re-enabled
 	valid := make(map[string]bool, len(rules))
-	for _, r := range rules {
-		valid[r.LoadpointTitle] = true
+	if reportEnabled {
+		for _, r := range rules {
+			valid[r.LoadpointTitle] = true
+		}
 	}
 
 	var stale []*reportConnection
@@ -210,17 +245,19 @@ func ApplyReportRules(rules []ReportRule) {
 	}
 
 	var toStart []*reportConnection
-	for _, r := range rules {
-		if old, ok := connections[r.LoadpointTitle]; ok {
-			if old.rule.sameConnection(r) {
-				old.rule = r // idTag etc. may have changed, doesn't need a reconnect
-				continue
+	if reportEnabled {
+		for _, r := range rules {
+			if old, ok := connections[r.LoadpointTitle]; ok {
+				if old.rule.sameConnection(r) {
+					old.rule = r // idTag etc. may have changed, doesn't need a reconnect
+					continue
+				}
+				stale = append(stale, old)
 			}
-			stale = append(stale, old)
+			conn := newReportConnection(r)
+			connections[r.LoadpointTitle] = conn
+			toStart = append(toStart, conn)
 		}
-		conn := newReportConnection(r)
-		connections[r.LoadpointTitle] = conn
-		toStart = append(toStart, conn)
 	}
 	reportMu.Unlock()
 
