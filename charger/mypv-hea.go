@@ -113,7 +113,7 @@ func NewMyPvHea(ctx context.Context, name string, settings modbus.TcpSettings, t
 		return nil, err
 	}
 
-	go wb.heartbeat(ctx, time.Duration(max(timeout, 10))*time.Second/2)
+	go wb.heartbeat(ctx, time.Duration(timeout)*time.Second/2)
 
 	return wb, nil
 }
