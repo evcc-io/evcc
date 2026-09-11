@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -23,12 +24,14 @@ const (
 // API is the LiveWire mobile api client
 type API struct {
 	*request.Helper
+	deviceUUID string
 }
 
 // NewAPI creates a new api client authenticated by identity
 func NewAPI(log *util.Logger, identity *Identity) *API {
 	v := &API{
-		Helper: request.NewHelper(log),
+		Helper:     request.NewHelper(log),
+		deviceUUID: identity.deviceUUID,
 	}
 
 	v.Client.Transport = identity.Transport(v.Client.Transport)
@@ -36,10 +39,11 @@ func NewAPI(log *util.Logger, identity *Identity) *API {
 	return v
 }
 
-// Vehicles returns the bikes of the account
+// Vehicles returns the bikes of the account including their pairing status with this device
 func (v *API) Vehicles() ([]Bike, error) {
 	var res BikesResponse
-	err := v.getJSON(BaseURL+"/bikes", &res)
+	uri := fmt.Sprintf("%s/getAllbikes/pairingStatus?deviceUUID=%s", BaseURL, url.QueryEscape(v.deviceUUID))
+	err := v.getJSON(uri, &res)
 	return res.Bikes, err
 }
 
@@ -47,14 +51,14 @@ func (v *API) Vehicles() ([]Bike, error) {
 func (v *API) Status(bikeID string) (ChargingStatus, error) {
 	var res ChargingStatusResponse
 	err := v.getJSON(fmt.Sprintf("%s/bikes/%s/charging/status", BaseURL, bikeID), &res)
-	return res.Data(), err
+	return res.BikeChargingData, err
 }
 
 // Position returns the bike location
 func (v *API) Position(bikeID string) (Position, error) {
-	var res Position
+	var res LocationResponse
 	err := v.getJSON(fmt.Sprintf("%s/bike/%s/location", BaseURL, bikeID), &res)
-	return res, err
+	return res.Data, err
 }
 
 type envelope interface {

@@ -63,6 +63,10 @@ func NewLiveWireFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, err
 	}
 
+	if !vehicle.PairingStatus {
+		return nil, fmt.Errorf("device %s is not paired with the motorcycle, pair it once at the bike", deviceUUID)
+	}
+
 	v := &LiveWire{
 		embed:    &cc.embed,
 		Provider: livewire.NewProvider(res, vehicle.ID, cc.Cache),

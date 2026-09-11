@@ -45,14 +45,15 @@ func newBackend(t *testing.T) (*backend, *Identity) {
 		assert.Equal(t, DataCenter, req.DataCenter)
 
 		b.sessions.Add(1)
-		json.NewEncoder(w).Encode(map[string]any{"token": b.token.Load()})
+		json.NewEncoder(w).Encode(map[string]any{"jwt": b.token.Load(), "termsAccepted": true})
 	})
-	mux.HandleFunc("GET /api/bikes", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("GET /api/getAllbikes/pairingStatus", func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "Bearer "+b.token.Load().(string), r.Header.Get("Authorization"))
 		assert.Equal(t, Brand, r.URL.Query().Get("brand"))
+		assert.Equal(t, "device-1", r.URL.Query().Get("deviceUUID"))
 		assert.Equal(t, "Android", r.Header.Get("User-Agent"))
 
-		json.NewEncoder(w).Encode([]map[string]any{{"id": "bike-1", "vin": "VIN1"}})
+		w.Write(fixture(t, "pair-status-after.json"))
 	})
 	mux.HandleFunc("GET /api/bikes/bike-1/charging/status", func(w http.ResponseWriter, r *http.Request) {
 		b.status(w, r)
@@ -77,7 +78,8 @@ func TestLoginAndVehicles(t *testing.T) {
 	bikes, err := NewAPI(util.NewLogger("test"), identity).Vehicles()
 	require.NoError(t, err)
 	require.Len(t, bikes, 1)
-	assert.Equal(t, "bike-1", bikes[0].ID)
+	assert.Equal(t, "100000001", bikes[0].ID)
+	assert.True(t, bikes[0].PairingStatus)
 	assert.Equal(t, int32(1), b.logins.Load())
 	assert.Equal(t, int32(1), b.sessions.Load())
 }
@@ -85,16 +87,14 @@ func TestLoginAndVehicles(t *testing.T) {
 func TestStatus(t *testing.T) {
 	b, identity := newBackend(t)
 	b.status = func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(map[string]any{
-			"chargingStatus": true, "pluggedIn": true, "batteryPercentage": "87", "maxLimit": 90,
-		})
+		w.Write(fixture(t, "status-idle.json"))
 	}
 
 	res, err := NewAPI(util.NewLogger("test"), identity).Status("bike-1")
 	require.NoError(t, err)
-	assert.True(t, res.ChargingStatus)
-	assert.Equal(t, 87.0, float64(res.BatteryPercentage))
-	assert.Equal(t, int64(90), res.MaxLimit)
+	assert.False(t, res.ChargingStatus)
+	assert.Equal(t, 65.0, res.BatteryPercentage)
+	assert.Equal(t, int64(80), res.MaxLimit)
 }
 
 func TestErrorEnvelopeIsAsleep(t *testing.T) {
@@ -123,12 +123,12 @@ func TestUnauthorizedTriggersRelogin(t *testing.T) {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		json.NewEncoder(w).Encode(map[string]any{"batteryPercentage": 50})
+		json.NewEncoder(w).Encode(map[string]any{"bikeChargingData": map[string]any{"batteryPercentage": 50}})
 	}
 
 	res, err := NewAPI(util.NewLogger("test"), identity).Status("bike-1")
 	require.NoError(t, err)
-	assert.Equal(t, 50.0, float64(res.BatteryPercentage))
+	assert.Equal(t, 50.0, res.BatteryPercentage)
 	assert.Equal(t, int32(2), b.logins.Load())
 }
 

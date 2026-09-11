@@ -7,8 +7,7 @@ import (
 	"strings"
 )
 
-// Response shapes follow API.md (app v1.8.0). Fields marked provisional have not
-// been confirmed against live samples yet.
+// Response shapes confirmed against the live backend on 2026-09-11 (app v1.8.0).
 
 type gigyaResponse struct {
 	ErrorCode    int    `json:"errorCode"`
@@ -22,23 +21,10 @@ type SessionRequest struct {
 	DataCenter string `json:"dataCenter"`
 }
 
-// SessionResponse carries the LiveWire JWT. The field name is provisional, hence
-// the candidates.
 type SessionResponse struct {
 	Envelope
-	Token       string `json:"token"`
-	JWT         string `json:"jwt"`
-	AccessToken string `json:"accessToken"`
-}
-
-// Jwt returns the first populated token candidate
-func (r SessionResponse) Jwt() string {
-	for _, s := range []string{r.Token, r.JWT, r.AccessToken} {
-		if s != "" {
-			return s
-		}
-	}
-	return ""
+	JWT           string `json:"jwt"`
+	TermsAccepted bool   `json:"termsAccepted"`
 }
 
 // Error is the api error envelope content
@@ -52,7 +38,7 @@ func (e *Error) Error() string {
 }
 
 // Envelope is embedded in every response to detect the error envelope, which
-// may arrive with HTTP 200
+// arrives with HTTP 200
 type Envelope struct {
 	Error *Error `json:"error"`
 }
@@ -66,64 +52,51 @@ func (e Envelope) Err() error {
 }
 
 type Bike struct {
-	ID    string `json:"id"`
-	VIN   string `json:"vin"`
-	Model string `json:"model"`
+	ID            string `json:"id"`
+	VIN           string `json:"vin"`
+	Make          string `json:"make"`
+	Model         string `json:"model"`
+	Name          string `json:"name"`
+	PairingStatus bool   `json:"pairingStatus"` // only present in the pairingStatus response
 }
 
-// BikesResponse accepts both a bare array and an object layout (provisional)
 type BikesResponse struct {
 	Envelope
 	Bikes []Bike `json:"bikes"`
 }
 
-func (r *BikesResponse) UnmarshalJSON(b []byte) error {
-	if strings.HasPrefix(strings.TrimSpace(string(b)), "[") {
-		return json.Unmarshal(b, &r.Bikes)
-	}
-
-	type plain BikesResponse
-	return json.Unmarshal(b, (*plain)(r))
-}
-
-// ChargingStatus is the bike charging data (provisional, see API.md §4.2)
 type ChargingStatus struct {
 	ChargingStatus    bool        `json:"chargingStatus"`
 	PluggedIn         bool        `json:"pluggedIn"`
-	BatteryPercentage StringFloat `json:"batteryPercentage"`
+	BatteryPercentage float64     `json:"batteryPercentage"`
 	Range             float64     `json:"range"`
-	TimeToMaxLimit    int64       `json:"timeToMaxLimit"`
+	TimeToMaxLimit    StringFloat `json:"timeToMaxLimit"` // "0.0"
 	MaxLimit          int64       `json:"maxLimit"`
 	Odometer          float64     `json:"odometer"`
-	DurationElapsed   int64       `json:"durationElapsed"`
-	DurationUnit      string      `json:"durationUnit"`
+	DurationElapsed   StringFloat `json:"durationElapsed"` // "4"
+	DurationUnit      string      `json:"durationUnit"`    // "seconds", refers to durationElapsed
 }
 
-// ChargingStatusResponse decodes both the flat and the wrapped layout, since
-// API.md names the type ChargingStatusResponse.BikeChargingData
 type ChargingStatusResponse struct {
 	Envelope
-	ChargingStatus
-	BikeChargingData *ChargingStatus `json:"bikeChargingData"`
+	BikeChargingData ChargingStatus `json:"bikeChargingData"`
 }
 
-// Data returns the charging data regardless of layout
-func (r ChargingStatusResponse) Data() ChargingStatus {
-	if r.BikeChargingData != nil {
-		return *r.BikeChargingData
-	}
-	return r.ChargingStatus
-}
-
-// Position is the bike location (provisional)
 type Position struct {
-	Envelope
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
+	Altitude  float64 `json:"altitude"`
+	SpeedKm   float64 `json:"speed_km"`
+	GpsTime   string  `json:"gps_time"`
+	FixType   int     `json:"fix_type"`
 }
 
-// StringFloat decodes a number that may arrive as JSON number or string,
-// optionally with a trailing percent sign
+type LocationResponse struct {
+	Envelope
+	Data Position `json:"data"`
+}
+
+// StringFloat decodes a number that arrives as JSON string or number
 type StringFloat float64
 
 func (f *StringFloat) UnmarshalJSON(b []byte) error {
@@ -134,7 +107,7 @@ func (f *StringFloat) UnmarshalJSON(b []byte) error {
 
 	var str string
 	if err := json.Unmarshal(b, &str); err == nil {
-		s = strings.TrimSuffix(strings.TrimSpace(str), "%")
+		s = strings.TrimSpace(str)
 	}
 
 	v, err := strconv.ParseFloat(s, 64)

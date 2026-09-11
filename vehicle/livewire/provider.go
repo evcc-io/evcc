@@ -1,7 +1,6 @@
 package livewire
 
 import (
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -31,7 +30,7 @@ var _ api.Battery = (*Provider)(nil)
 // Soc implements the api.Battery interface
 func (v *Provider) Soc() (float64, error) {
 	res, err := v.status.Get()
-	return float64(res.BatteryPercentage), err
+	return res.BatteryPercentage, err
 }
 
 var _ api.ChargeState = (*Provider)(nil)
@@ -87,13 +86,8 @@ func (v *Provider) FinishTime() (time.Time, error) {
 		return time.Time{}, err
 	}
 
-	// unit of timeToMaxLimit is unconfirmed, durationUnit may describe it
-	unit := time.Minute
-	if strings.HasPrefix(strings.ToLower(res.DurationUnit), "sec") {
-		unit = time.Second
-	}
-
-	return time.Now().Add(time.Duration(res.TimeToMaxLimit) * unit), nil
+	// unit of timeToMaxLimit is unconfirmed until a sample while charging exists
+	return time.Now().Add(time.Duration(float64(res.TimeToMaxLimit) * float64(time.Minute))), nil
 }
 
 var _ api.VehiclePosition = (*Provider)(nil)

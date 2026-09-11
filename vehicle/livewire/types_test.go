@@ -2,11 +2,20 @@ package livewire
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func fixture(t *testing.T, name string) []byte {
+	t.Helper()
+	b, err := os.ReadFile(filepath.Join("testdata", name))
+	require.NoError(t, err)
+	return b
+}
 
 func TestStringFloat(t *testing.T) {
 	for _, tc := range []struct {
@@ -14,9 +23,9 @@ func TestStringFloat(t *testing.T) {
 		want float64
 		err  bool
 	}{
-		{`"87"`, 87, false},
+		{`"4"`, 4, false},
+		{`"0.0"`, 0, false},
 		{`"87.5"`, 87.5, false},
-		{`"87%"`, 87, false},
 		{`87`, 87, false},
 		{`null`, 0, false},
 		{`""`, 0, false},
@@ -34,23 +43,20 @@ func TestStringFloat(t *testing.T) {
 }
 
 func TestChargingStatusResponse(t *testing.T) {
-	flat := `{"chargingStatus":true,"pluggedIn":true,"batteryPercentage":"87","range":120,"timeToMaxLimit":45,"maxLimit":90,"odometer":1234.5}`
-	wrapped := `{"bikeChargingData":` + flat + `}`
+	var res ChargingStatusResponse
+	require.NoError(t, json.Unmarshal(fixture(t, "status-idle.json"), &res))
+	require.NoError(t, res.Err())
 
-	for _, body := range []string{flat, wrapped} {
-		var res ChargingStatusResponse
-		require.NoError(t, json.Unmarshal([]byte(body), &res))
-		require.NoError(t, res.Err())
-
-		data := res.Data()
-		assert.True(t, data.ChargingStatus)
-		assert.True(t, data.PluggedIn)
-		assert.Equal(t, 87.0, float64(data.BatteryPercentage))
-		assert.Equal(t, 120.0, data.Range)
-		assert.Equal(t, int64(45), data.TimeToMaxLimit)
-		assert.Equal(t, int64(90), data.MaxLimit)
-		assert.Equal(t, 1234.5, data.Odometer)
-	}
+	data := res.BikeChargingData
+	assert.False(t, data.ChargingStatus)
+	assert.False(t, data.PluggedIn)
+	assert.Equal(t, 65.0, data.BatteryPercentage)
+	assert.Equal(t, 67.0, data.Range)
+	assert.Equal(t, 0.0, float64(data.TimeToMaxLimit))
+	assert.Equal(t, int64(80), data.MaxLimit)
+	assert.InDelta(t, 550.63, data.Odometer, 0.01)
+	assert.Equal(t, 4.0, float64(data.DurationElapsed))
+	assert.Equal(t, "seconds", data.DurationUnit)
 }
 
 func TestErrorEnvelope(t *testing.T) {
@@ -63,17 +69,34 @@ func TestErrorEnvelope(t *testing.T) {
 }
 
 func TestBikesResponse(t *testing.T) {
-	var arr BikesResponse
-	require.NoError(t, json.Unmarshal([]byte(`[{"id":"1","vin":"VIN1"}]`), &arr))
-	require.Len(t, arr.Bikes, 1)
-	assert.Equal(t, "VIN1", arr.Bikes[0].VIN)
+	var bikes BikesResponse
+	require.NoError(t, json.Unmarshal(fixture(t, "bikes.json"), &bikes))
+	require.Len(t, bikes.Bikes, 1)
+	assert.Equal(t, "100000001", bikes.Bikes[0].ID)
+	assert.Equal(t, "7TM3GDYD6SB000000", bikes.Bikes[0].VIN)
+	assert.Equal(t, "S2 Mulholland", bikes.Bikes[0].Model)
+	assert.False(t, bikes.Bikes[0].PairingStatus)
 
-	var obj BikesResponse
-	require.NoError(t, json.Unmarshal([]byte(`{"bikes":[{"id":"2","vin":"VIN2"}]}`), &obj))
-	require.Len(t, obj.Bikes, 1)
-	assert.Equal(t, "2", obj.Bikes[0].ID)
+	var paired BikesResponse
+	require.NoError(t, json.Unmarshal(fixture(t, "pair-status-after.json"), &paired))
+	require.Len(t, paired.Bikes, 1)
+	assert.True(t, paired.Bikes[0].PairingStatus)
+}
 
-	var errRes BikesResponse
-	require.NoError(t, json.Unmarshal([]byte(`{"error":{"code":"1","description":"nope"}}`), &errRes))
-	assert.Error(t, errRes.Err())
+func TestLocationResponse(t *testing.T) {
+	var res LocationResponse
+	require.NoError(t, json.Unmarshal(fixture(t, "location-idle.json"), &res))
+	require.NoError(t, res.Err())
+	assert.Equal(t, 48.1371, res.Data.Latitude)
+	assert.Equal(t, 11.5754, res.Data.Longitude)
+	assert.Equal(t, 3, res.Data.FixType)
+}
+
+func TestSessionResponse(t *testing.T) {
+	var res SessionResponse
+	require.NoError(t, json.Unmarshal(fixture(t, "session.json"), &res))
+	require.NoError(t, res.Err())
+	assert.NotEmpty(t, res.JWT)
+	assert.True(t, res.TermsAccepted)
+	assert.True(t, tokenExpiry(res.JWT).IsZero(), "live tokens carry no exp claim")
 }

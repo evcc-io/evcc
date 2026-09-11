@@ -18,9 +18,6 @@ import (
 const (
 	GigyaAPIKey = "4_6aX8cf8RFVt6F3JQQZaF3A"
 	DataCenter  = "us1"
-
-	// defaultTokenLifetime applies when the JWT carries no exp claim
-	defaultTokenLifetime = time.Hour
 )
 
 var (
@@ -80,7 +77,7 @@ func (v *Identity) Token() (string, error) {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 
-	if v.token != "" && time.Now().Before(v.expiry) {
+	if v.token != "" && (v.expiry.IsZero() || time.Now().Before(v.expiry)) {
 		return v.token, nil
 	}
 
@@ -130,7 +127,11 @@ func (v *Identity) login() error {
 	v.lastErr = nil
 	v.redact(token)
 
-	v.log.DEBUG.Printf("logged in, token expires %v", v.expiry.Round(time.Second))
+	if v.expiry.IsZero() {
+		v.log.DEBUG.Println("logged in, token has no expiry")
+	} else {
+		v.log.DEBUG.Printf("logged in, token expires %v", v.expiry.Round(time.Second))
+	}
 
 	return nil
 }
@@ -191,21 +192,22 @@ func (v *Identity) session(uid string) (string, error) {
 		return "", err
 	}
 
-	token := res.Jwt()
-	if token == "" {
-		return "", errors.New("missing token")
+	if res.JWT == "" {
+		return "", errors.New("missing jwt")
 	}
 
-	return token, nil
+	return res.JWT, nil
 }
 
-// tokenExpiry derives the expiry from the JWT exp claim, with a safety margin
+// tokenExpiry derives the expiry from the JWT exp claim, with a safety margin.
+// The live backend issues tokens without exp, then the zero time means unknown
+// and the token is used until the backend rejects it.
 func tokenExpiry(token string) time.Time {
 	var claims jwt.RegisteredClaims
 	if _, _, err := jwt.NewParser().ParseUnverified(token, &claims); err == nil && claims.ExpiresAt != nil {
 		return claims.ExpiresAt.Add(-time.Minute)
 	}
-	return time.Now().Add(defaultTokenLifetime)
+	return time.Time{}
 }
 
 // Transport decorates requests with the bearer token, the client headers and the
