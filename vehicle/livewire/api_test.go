@@ -1,0 +1,145 @@
+package livewire
+
+import (
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"sync/atomic"
+	"testing"
+	"time"
+
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+type backend struct {
+	logins   atomic.Int32
+	sessions atomic.Int32
+	token    atomic.Value
+	status   func(w http.ResponseWriter, r *http.Request)
+}
+
+func newBackend(t *testing.T) (*backend, *Identity) {
+	t.Helper()
+
+	b := &backend{}
+	b.token.Store("jwt-1")
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /accounts.login", func(w http.ResponseWriter, r *http.Request) {
+		require.NoError(t, r.ParseForm())
+		assert.Equal(t, GigyaAPIKey, r.PostForm.Get("apiKey"))
+		assert.Equal(t, "user@example.org", r.PostForm.Get("loginID"))
+		assert.Equal(t, "secret", r.PostForm.Get("password"))
+
+		b.logins.Add(1)
+		json.NewEncoder(w).Encode(map[string]any{"errorCode": 0, "UID": "uid-1"})
+	})
+	mux.HandleFunc("POST /api/session", func(w http.ResponseWriter, r *http.Request) {
+		var req SessionRequest
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&req))
+		assert.Equal(t, "uid-1", req.UID)
+		assert.Equal(t, "device-1", req.DeviceUUID)
+		assert.Equal(t, DataCenter, req.DataCenter)
+
+		b.sessions.Add(1)
+		json.NewEncoder(w).Encode(map[string]any{"token": b.token.Load()})
+	})
+	mux.HandleFunc("GET /api/bikes", func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "Bearer "+b.token.Load().(string), r.Header.Get("Authorization"))
+		assert.Equal(t, Brand, r.URL.Query().Get("brand"))
+		assert.Equal(t, "Android", r.Header.Get("User-Agent"))
+
+		json.NewEncoder(w).Encode([]map[string]any{{"id": "bike-1", "vin": "VIN1"}})
+	})
+	mux.HandleFunc("GET /api/bikes/bike-1/charging/status", func(w http.ResponseWriter, r *http.Request) {
+		b.status(w, r)
+	})
+
+	srv := httptest.NewServer(mux)
+	t.Cleanup(srv.Close)
+
+	gigya, base, interval := GigyaURL, BaseURL, loginInterval
+	GigyaURL, BaseURL, loginInterval = srv.URL, srv.URL+"/api", 0
+	t.Cleanup(func() { GigyaURL, BaseURL, loginInterval = gigya, base, interval })
+
+	identity := NewIdentity(util.NewLogger("test"), "user@example.org", "secret", "device-1")
+
+	return b, identity
+}
+
+func TestLoginAndVehicles(t *testing.T) {
+	b, identity := newBackend(t)
+	require.NoError(t, identity.Login())
+
+	bikes, err := NewAPI(util.NewLogger("test"), identity).Vehicles()
+	require.NoError(t, err)
+	require.Len(t, bikes, 1)
+	assert.Equal(t, "bike-1", bikes[0].ID)
+	assert.Equal(t, int32(1), b.logins.Load())
+	assert.Equal(t, int32(1), b.sessions.Load())
+}
+
+func TestStatus(t *testing.T) {
+	b, identity := newBackend(t)
+	b.status = func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(map[string]any{
+			"chargingStatus": true, "pluggedIn": true, "batteryPercentage": "87", "maxLimit": 90,
+		})
+	}
+
+	res, err := NewAPI(util.NewLogger("test"), identity).Status("bike-1")
+	require.NoError(t, err)
+	assert.True(t, res.ChargingStatus)
+	assert.Equal(t, 87.0, float64(res.BatteryPercentage))
+	assert.Equal(t, int64(90), res.MaxLimit)
+}
+
+func TestErrorEnvelopeIsAsleep(t *testing.T) {
+	for _, code := range []int{http.StatusOK, http.StatusBadRequest} {
+		b, identity := newBackend(t)
+		b.status = func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(code)
+			json.NewEncoder(w).Encode(map[string]any{
+				"error": map[string]any{"code": "3000", "description": "Command manager api failed"},
+			})
+		}
+
+		_, err := NewAPI(util.NewLogger("test"), identity).Status("bike-1")
+		assert.ErrorIs(t, err, api.ErrAsleep, "status %d", code)
+		assert.ErrorIs(t, err, api.ErrTimeout, "status %d", code)
+	}
+}
+
+func TestUnauthorizedTriggersRelogin(t *testing.T) {
+	b, identity := newBackend(t)
+	require.NoError(t, identity.Login())
+
+	b.status = func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") != "Bearer jwt-2" {
+			b.token.Store("jwt-2")
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		json.NewEncoder(w).Encode(map[string]any{"batteryPercentage": 50})
+	}
+
+	res, err := NewAPI(util.NewLogger("test"), identity).Status("bike-1")
+	require.NoError(t, err)
+	assert.Equal(t, 50.0, float64(res.BatteryPercentage))
+	assert.Equal(t, int32(2), b.logins.Load())
+}
+
+func TestLoginThrottled(t *testing.T) {
+	b, identity := newBackend(t)
+	loginInterval = time.Second
+
+	require.NoError(t, identity.Login())
+	identity.invalidate("jwt-1")
+
+	_, err := identity.Token()
+	assert.ErrorContains(t, err, "throttled")
+	assert.Equal(t, int32(1), b.logins.Load())
+}

@@ -1,0 +1,26 @@
+template: livewire
+products:
+  - brand: LiveWire
+    description:
+      generic: S2
+params:
+  - preset: vehicle-base
+  - preset: vehicle-online
+  - name: icon
+    default: motorcycle
+    advanced: true
+  - name: deviceuuid
+    advanced: true
+    description:
+      de: Geräte-UUID
+      en: Device UUID
+    help:
+      de: Optional. Leer lassen, damit evcc eine UUID erzeugt und speichert. Angeben, um eine bereits mit dem Motorrad gekoppelte UUID weiterzuverwenden. Die Kopplung muss einmalig am Motorrad bestätigt werden.
+      en: Optional. Leave empty to let evcc generate and store one. Set it to reuse a UUID already paired with the motorcycle. Pairing must be confirmed once at the motorcycle.
+render: |
+  type: livewire
+  {{- if .deviceuuid }}
+  deviceUUID: {{ .deviceuuid }}
+  {{- end }}
+  {{ include "base" . }}
+  {{ include "features" . }}
