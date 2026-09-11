@@ -395,6 +395,15 @@ func deleteLoadpointHandler() http.HandlerFunc {
 			setConfigDirty()
 		}
 
+		if dev, err := configurableDevice(instance.GetThermometerRef(), config.Thermometers()); err == nil {
+			if err := deleteDevice(dev.ID(), config.Thermometers()); err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+
+			setConfigDirty()
+		}
+
 		setConfigDirty()
 
 		if err := deleteDevice(id, h); err != nil {
