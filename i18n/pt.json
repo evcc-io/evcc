@@ -1051,7 +1051,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Torne-se um apoiante (Sponsor)",
-      "becomeSponsorExtended": "Apoie-nos diretamente para receber autocolantes.",
       "confetti": "Pronto para os confetes?",
       "confettiPromise": "Receba autocolantes e confetes digitais",
       "sticker": "… ou autocolantes do evcc?",
@@ -1060,9 +1059,7 @@
       "titleNoSponsor": "Apoie-nos",
       "titleSponsor": "Você é um Apoiante",
       "titleTrial": "Modo de teste",
-      "titleVictron": "Patrocinado pela Victron Energy",
-      "trial": "Você está no modo de teste e pode usar todos os recursos. Por favor, considere apoiar o projeto.",
-      "victron": "Você está usando o evcc no hardware Victron Energy e tem acesso a todos os recursos."
+      "trial": "Você está no modo de teste e pode usar todos os recursos. Por favor, considere apoiar o projeto."
     },
     "telemetry": {
       "optIn": "Quero contribuir com meus dados.",

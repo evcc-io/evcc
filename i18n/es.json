@@ -767,7 +767,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Conviértete en patrocinador",
-      "becomeSponsorExtended": "Apóyanos directamente para conseguir pegatinas.",
       "confetti": "¿Quieres un poco de confeti?",
       "confettiPromise": "También hay pegatinas y confeti digital",
       "sticker": "...o pegatinas de evcc?",
@@ -776,9 +775,7 @@
       "titleNoSponsor": "Apóyanos",
       "titleSponsor": "Eres un seguidor",
       "titleTrial": "Modo de prueba",
-      "titleVictron": "Patrocinado por Victron Energy",
-      "trial": "Estás en modo de prueba y puedes utilizar todas las funciones. Por favor, considera apoyar el proyecto.",
-      "victron": "Estás utilizando evcc en hardware Victron Energy y tienes acceso a todas las funciones."
+      "trial": "Estás en modo de prueba y puedes utilizar todas las funciones. Por favor, considera apoyar el proyecto."
     },
     "telemetry": {
       "optIn": "También me gustaría contribuir con mis datos.",

@@ -37,8 +37,8 @@ func deviceSerial() string {
 	return strings.TrimSpace(strings.Trim(string(b), "\x00"))
 }
 
-// checkHemsPro checks if the hardware is a supported HEMS Pro device and returns sponsor subject
-func checkHemsPro() string {
+// checkHemsPro checks if the hardware is a supported HEMS Pro device and returns sponsor subject and token
+func checkHemsPro() (string, string) {
 	const (
 		ADDR         = 0b1101000 // 0x68 DS1307
 		REG_TIMEDATE = 0x00
@@ -69,6 +69,6 @@ func checkHemsPro() string {
 		})
 	}
 
-	return ""
+	return "", ""
 }
 
