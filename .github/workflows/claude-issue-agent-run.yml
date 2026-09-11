@@ -153,8 +153,8 @@ jobs:
                  cause without asking the reporter anything. Missing information, an
                  unreproducible report, a screenshot in place of logs/data, or any
                  doubt between a software defect and a configuration/user error all
-                 mean: do NOT set type Bug — pick a better fitting label (e.g.
-                 `question`) or leave it unlabeled, and explain why in your comment.
+                 mean: do NOT set type Bug — the area label alone (falling back to
+                 `question`) is enough, and explain why in your comment.
                  Default away from Bug.
                - If your step 2 comment contains ANY question to the reporter — missing
                  information, a request to confirm your diagnosis, a "could you check
