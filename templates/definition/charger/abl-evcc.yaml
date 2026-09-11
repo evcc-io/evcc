@@ -22,7 +22,7 @@ requirements:
       Der maximal einstellbare Ladestrom wird durch den am Modul hinterlegten
       Default-Ladestrom begrenzt (Werkseinstellung 16 A).
     en: |
-      For early ABL wallboxes with EVCC control module only (no modbus).
+      For early ABL wallboxes with EVCC control module only (no Modbus).
 
       Communication uses RS485 (38400 Bd, 8N1), either via a USB-RS485 adapter
       (`device`) or an Ethernet-RS485 adapter (`uri`).
@@ -38,8 +38,8 @@ params:
       de: Serieller Anschluss (USB-RS485-Adapter)
       en: Serial port (USB-RS485 adapter)
     help:
-      de: z. B. /dev/ttyUSB0 — gegenseitig ausschließend mit uri
-      en: e.g. /dev/ttyUSB0 — mutually exclusive with uri
+      de: z. B. /dev/ttyUSB0, alternativ zu uri
+      en: e.g. /dev/ttyUSB0, alternative to uri
     service: hardware/serial
     example: /dev/ttyUSB0
   - name: uri
@@ -47,8 +47,8 @@ params:
       de: TCP-Endpunkt eines Ethernet-RS485-Adapters
       en: TCP endpoint of an Ethernet-RS485 adapter
     help:
-      de: z. B. localhost:4196 — gegenseitig ausschließend mit device
-      en: e.g. localhost:4196 — mutually exclusive with device
+      de: z. B. localhost:4196, alternativ zu device
+      en: e.g. localhost:4196, alternative to device
     example: localhost:4196
   - name: address
     description:
