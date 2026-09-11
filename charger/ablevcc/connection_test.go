@@ -47,8 +47,8 @@ func testConnection(t *testing.T, replies ...string) *Connection {
 	return &Connection{
 		log:     util.NewLogger("test"),
 		timeout: 100 * time.Millisecond,
-		dial: func() (io.ReadWriteCloser, error) {
-			return &tcpPort{Conn: client, timeout: 100 * time.Millisecond}, nil
+		dial: func() (port, error) {
+			return client, nil
 		},
 	}
 }
@@ -99,6 +99,38 @@ func TestTransactTimeout(t *testing.T) {
 	_, err := c.Transact(1, 2, "")
 	require.Error(t, err)
 	assert.NotErrorIs(t, err, ErrRejected)
+}
+
+// a late reply of another module must not restart the timeout
+func TestTransactDeadline(t *testing.T) {
+	client, device := net.Pipe()
+	t.Cleanup(func() {
+		_ = client.Close()
+		_ = device.Close()
+	})
+
+	go func() {
+		r := bufio.NewReader(device)
+		if _, err := r.ReadString('\n'); err != nil {
+			return
+		}
+
+		time.Sleep(150 * time.Millisecond)
+		_, _ = io.WriteString(device, ">2 02 0000\r\n")
+	}()
+
+	c := &Connection{
+		log:     util.NewLogger("test"),
+		timeout: 200 * time.Millisecond,
+		dial: func() (port, error) {
+			return client, nil
+		},
+	}
+
+	start := time.Now()
+	_, err := c.Transact(1, 2, "")
+	require.Error(t, err)
+	assert.Less(t, time.Since(start), 300*time.Millisecond)
 }
 
 func TestTransactFirmware(t *testing.T) {

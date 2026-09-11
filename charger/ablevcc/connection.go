@@ -55,9 +55,9 @@ var (
 type Connection struct {
 	mu      sync.Mutex
 	log     *util.Logger
-	dial    func() (io.ReadWriteCloser, error)
+	dial    func() (port, error)
 	timeout time.Duration
-	conn    io.ReadWriteCloser
+	conn    port
 	r       *bufio.Reader
 	closed  bool
 	refs    int // number of chargers using the connection, guarded by the package mutex
@@ -126,11 +126,17 @@ func release(key string, conn *Connection) {
 	conn.close()
 }
 
+// port is the transport with net.Conn deadline semantics
+type port interface {
+	io.ReadWriteCloser
+	SetReadDeadline(t time.Time) error
+}
+
 // dialer creates the transport specific connect function
-func dialer(device, uri string, timeout time.Duration) func() (io.ReadWriteCloser, error) {
+func dialer(device, uri string, timeout time.Duration) func() (port, error) {
 	if device != "" {
-		return func() (io.ReadWriteCloser, error) {
-			port, err := serial.Open(device, &serial.Mode{
+		return func() (port, error) {
+			p, err := serial.Open(device, &serial.Mode{
 				BaudRate: Baudrate,
 				DataBits: 8,
 				Parity:   serial.NoParity,
@@ -140,32 +146,27 @@ func dialer(device, uri string, timeout time.Duration) func() (io.ReadWriteClose
 				return nil, err
 			}
 
-			if err := port.SetReadTimeout(timeout); err != nil {
-				_ = port.Close()
-				return nil, err
-			}
-
-			return &serialPort{port}, nil
+			return &serialPort{p}, nil
 		}
 	}
 
-	return func() (io.ReadWriteCloser, error) {
-		conn, err := net.DialTimeout("tcp", uri, timeout)
-		if err != nil {
-			return nil, err
-		}
-
-		return &tcpPort{Conn: conn, timeout: timeout}, nil
+	return func() (port, error) {
+		return net.DialTimeout("tcp", uri, timeout)
 	}
 }
 
-// serialPort translates the serial read timeout convention into an error.
-// go.bug.st/serial signals a read timeout as (0, nil) which would make bufio
-// spin until it gives up with io.ErrNoProgress.
+// serialPort adapts go.bug.st/serial to net.Conn deadline semantics
 type serialPort struct {
 	serial.Port
 }
 
+func (p *serialPort) SetReadDeadline(t time.Time) error {
+	return p.Port.SetReadTimeout(max(time.Until(t), 0))
+}
+
+// Read translates the serial read timeout convention into an error. The port
+// signals a timeout as (0, nil) which would make bufio spin until it gives up
+// with io.ErrNoProgress.
 func (p *serialPort) Read(b []byte) (int, error) {
 	n, err := p.Port.Read(b)
 	if n == 0 && err == nil {
@@ -173,20 +174,6 @@ func (p *serialPort) Read(b []byte) (int, error) {
 	}
 
 	return n, err
-}
-
-// tcpPort applies the read timeout to an Ethernet-RS485 adapter
-type tcpPort struct {
-	net.Conn
-	timeout time.Duration
-}
-
-func (p *tcpPort) Read(b []byte) (int, error) {
-	if err := p.Conn.SetReadDeadline(time.Now().Add(p.timeout)); err != nil {
-		return 0, err
-	}
-
-	return p.Conn.Read(b)
 }
 
 // Transact sends a command to the given module address and returns the reply data.
@@ -245,8 +232,14 @@ func (c *Connection) transact(addr, cmd uint8, payload string) (string, error) {
 		return "", err
 	}
 
+	deadline := time.Now().Add(c.timeout)
+
 	// modules of other addresses may answer on the same bus
-	for deadline := time.Now().Add(c.timeout); time.Now().Before(deadline); {
+	for time.Now().Before(deadline) {
+		if err := c.conn.SetReadDeadline(deadline); err != nil {
+			return "", err
+		}
+
 		line, err := c.r.ReadString('\n')
 		if err != nil {
 			return "", err
