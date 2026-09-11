@@ -1,4 +1,4 @@
-package thermometer
+package tempsensor
 
 import (
 	"testing"
@@ -10,7 +10,7 @@ import (
 var acceptable = []string{}
 
 func TestTemplates(t *testing.T) {
-	templates.TestClass(t, templates.Thermometer, func(t *testing.T, values map[string]any) {
+	templates.TestClass(t, templates.TempSensor, func(t *testing.T, values map[string]any) {
 		t.Helper()
 
 		if _, err := NewFromConfig(t.Context(), "template", values); err != nil && !test.Acceptable(err, acceptable) {

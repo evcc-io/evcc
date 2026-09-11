@@ -25,7 +25,7 @@ import (
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/tariff"
-	"github.com/evcc-io/evcc/thermometer"
+	"github.com/evcc-io/evcc/tempsensor"
 	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/templates"
@@ -86,8 +86,8 @@ func devicesConfigHandler(w http.ResponseWriter, r *http.Request) {
 	case templates.Curtailer:
 		res, err = devicesConfig(class, config.Curtailers(), hidePrivate)
 
-	case templates.Thermometer:
-		res, err = devicesConfig(class, config.Thermometers(), hidePrivate)
+	case templates.TempSensor:
+		res, err = devicesConfig(class, config.TempSensors(), hidePrivate)
 
 	case templates.Hems:
 		res, err = devicesConfig(class, config.Hems(), hidePrivate)
@@ -221,8 +221,8 @@ func deviceConfigHandler(w http.ResponseWriter, r *http.Request) {
 	case templates.Curtailer:
 		res, err = deviceConfig(class, id, config.Curtailers(), hidePrivate)
 
-	case templates.Thermometer:
-		res, err = deviceConfig(class, id, config.Thermometers(), hidePrivate)
+	case templates.TempSensor:
+		res, err = deviceConfig(class, id, config.TempSensors(), hidePrivate)
 
 	case templates.Hems:
 		res, err = deviceConfig(class, id, config.Hems(), hidePrivate)
@@ -292,8 +292,8 @@ func deviceStatusHandler(w http.ResponseWriter, r *http.Request) {
 	case templates.Curtailer:
 		instance, err = deviceStatus(name, config.Curtailers())
 
-	case templates.Thermometer:
-		instance, err = deviceStatus(name, config.Thermometers())
+	case templates.TempSensor:
+		instance, err = deviceStatus(name, config.TempSensors())
 
 	case templates.Hems:
 		err = api.ErrNotAvailable
@@ -398,8 +398,8 @@ func newDeviceHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 		case templates.Curtailer:
 			conf, err = newDevice(ctx, class, req, curtailer.NewFromConfig, config.Curtailers(), force)
 
-		case templates.Thermometer:
-			conf, err = newDevice(ctx, class, req, thermometer.NewFromConfig, config.Thermometers(), force)
+		case templates.TempSensor:
+			conf, err = newDevice(ctx, class, req, tempsensor.NewFromConfig, config.TempSensors(), force)
 
 		case templates.Hems:
 			if existing, _ := config.ConfigurationByClass(templates.Hems); existing != nil {
@@ -506,8 +506,8 @@ func updateDeviceHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 		case templates.Curtailer:
 			err = updateDevice(ctx, id, class, req, curtailer.NewFromConfig, config.Curtailers(), force)
 
-		case templates.Thermometer:
-			err = updateDevice(ctx, id, class, req, thermometer.NewFromConfig, config.Thermometers(), force)
+		case templates.TempSensor:
+			err = updateDevice(ctx, id, class, req, tempsensor.NewFromConfig, config.TempSensors(), force)
 
 		case templates.Hems:
 			err = updateDevice(ctx, id, class, req, newHemsFactory(site), config.Hems(), force)
@@ -693,14 +693,14 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 			// cleanup references
 			cleanupSiteMeterRef(config.NameForID(id), site.GetCurtailerRefs, site.SetCurtailerRefs)
 
-		case templates.Thermometer:
-			err = deleteDevice(id, config.Thermometers())
+		case templates.TempSensor:
+			err = deleteDevice(id, config.TempSensors())
 
 			// cleanup references
 			for _, dev := range h.Devices() {
 				lp := dev.Instance()
-				if lp != nil && lp.GetThermometerRef() == config.NameForID(id) {
-					lp.SetThermometerRef("")
+				if lp != nil && lp.GetTempSensorRef() == config.NameForID(id) {
+					lp.SetTempSensorRef("")
 				}
 			}
 
@@ -811,8 +811,8 @@ func testConfigHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 		case templates.Curtailer:
 			instance, err = testConfig(ctx, id, class, req, curtailer.NewFromConfig, config.Curtailers())
 
-		case templates.Thermometer:
-			instance, err = testConfig(ctx, id, class, req, thermometer.NewFromConfig, config.Thermometers())
+		case templates.TempSensor:
+			instance, err = testConfig(ctx, id, class, req, tempsensor.NewFromConfig, config.TempSensors())
 
 		case templates.Hems:
 			instance, err = testConfig(ctx, id, class, req, newHemsFactory(site), config.Hems())

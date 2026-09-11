@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _ClassName = "chargermetervehicletariffloadpointcircuitmessengerhemscurtailerthermometer"
+const _ClassName = "chargermetervehicletariffloadpointcircuitmessengerhemscurtailertempsensor"
 
-var _ClassIndex = [...]uint8{0, 7, 12, 19, 25, 34, 41, 50, 54, 63, 74}
+var _ClassIndex = [...]uint8{0, 7, 12, 19, 25, 34, 41, 50, 54, 63, 73}
 
-const _ClassLowerName = "chargermetervehicletariffloadpointcircuitmessengerhemscurtailerthermometer"
+const _ClassLowerName = "chargermetervehicletariffloadpointcircuitmessengerhemscurtailertempsensor"
 
 func (i Class) String() string {
 	i -= 1
@@ -34,10 +34,10 @@ func _ClassNoOp() {
 	_ = x[Messenger-(7)]
 	_ = x[Hems-(8)]
 	_ = x[Curtailer-(9)]
-	_ = x[Thermometer-(10)]
+	_ = x[TempSensor-(10)]
 }
 
-var _ClassValues = []Class{Charger, Meter, Vehicle, Tariff, Loadpoint, Circuit, Messenger, Hems, Curtailer, Thermometer}
+var _ClassValues = []Class{Charger, Meter, Vehicle, Tariff, Loadpoint, Circuit, Messenger, Hems, Curtailer, TempSensor}
 
 var _ClassNameToValueMap = map[string]Class{
 	_ClassName[0:7]:        Charger,
@@ -58,8 +58,8 @@ var _ClassNameToValueMap = map[string]Class{
 	_ClassLowerName[50:54]: Hems,
 	_ClassName[54:63]:      Curtailer,
 	_ClassLowerName[54:63]: Curtailer,
-	_ClassName[63:74]:      Thermometer,
-	_ClassLowerName[63:74]: Thermometer,
+	_ClassName[63:73]:      TempSensor,
+	_ClassLowerName[63:73]: TempSensor,
 }
 
 var _ClassNames = []string{
@@ -72,7 +72,7 @@ var _ClassNames = []string{
 	_ClassName[41:50],
 	_ClassName[50:54],
 	_ClassName[54:63],
-	_ClassName[63:74],
+	_ClassName[63:73],
 }
 
 // ClassString retrieves an enum value from the enum constants string name.

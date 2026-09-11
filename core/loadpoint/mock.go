@@ -713,18 +713,18 @@ func (mr *MockAPIMockRecorder) GetStatus() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatus", reflect.TypeOf((*MockAPI)(nil).GetStatus))
 }
 
-// GetThermometerRef mocks base method.
-func (m *MockAPI) GetThermometerRef() string {
+// GetTempSensorRef mocks base method.
+func (m *MockAPI) GetTempSensorRef() string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetThermometerRef")
+	ret := m.ctrl.Call(m, "GetTempSensorRef")
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
-// GetThermometerRef indicates an expected call of GetThermometerRef.
-func (mr *MockAPIMockRecorder) GetThermometerRef() *gomock.Call {
+// GetTempSensorRef indicates an expected call of GetTempSensorRef.
+func (mr *MockAPIMockRecorder) GetTempSensorRef() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetThermometerRef", reflect.TypeOf((*MockAPI)(nil).GetThermometerRef))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTempSensorRef", reflect.TypeOf((*MockAPI)(nil).GetTempSensorRef))
 }
 
 // GetThresholds mocks base method.
@@ -1163,16 +1163,16 @@ func (mr *MockAPIMockRecorder) SetSolarShare(share any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSolarShare", reflect.TypeOf((*MockAPI)(nil).SetSolarShare), share)
 }
 
-// SetThermometerRef mocks base method.
-func (m *MockAPI) SetThermometerRef(arg0 string) {
+// SetTempSensorRef mocks base method.
+func (m *MockAPI) SetTempSensorRef(arg0 string) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetThermometerRef", arg0)
+	m.ctrl.Call(m, "SetTempSensorRef", arg0)
 }
 
-// SetThermometerRef indicates an expected call of SetThermometerRef.
-func (mr *MockAPIMockRecorder) SetThermometerRef(arg0 any) *gomock.Call {
+// SetTempSensorRef indicates an expected call of SetTempSensorRef.
+func (mr *MockAPIMockRecorder) SetTempSensorRef(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetThermometerRef", reflect.TypeOf((*MockAPI)(nil).SetThermometerRef), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTempSensorRef", reflect.TypeOf((*MockAPI)(nil).SetTempSensorRef), arg0)
 }
 
 // SetThresholds mocks base method.

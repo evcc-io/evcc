@@ -41,7 +41,7 @@ import (
 	"github.com/evcc-io/evcc/server/modbus"
 	"github.com/evcc-io/evcc/server/providerauth"
 	"github.com/evcc-io/evcc/tariff"
-	"github.com/evcc-io/evcc/thermometer"
+	"github.com/evcc-io/evcc/tempsensor"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/locale"
@@ -1308,12 +1308,12 @@ func configureTariffs(conf *globalconfig.Tariffs, names ...string) (*tariff.Tari
 	return &tariffs, nil
 }
 
-func configureThermometers(static []config.Named, names ...string) error {
+func configureTempSensors(static []config.Named, names ...string) error {
 	var eg errgroup.Group
 
 	for i, cc := range static {
 		if cc.Name == "" {
-			return fmt.Errorf("cannot create thermometer %d: missing name", i+1)
+			return fmt.Errorf("cannot create temp sensor %d: missing name", i+1)
 		}
 
 		// configure all, if no name refs are given
@@ -1322,16 +1322,16 @@ func configureThermometers(static []config.Named, names ...string) error {
 		}
 
 		if err := nameValid(cc.Name); err != nil {
-			log.WARN.Printf("create thermometer %d: %v", i+1, err)
+			log.WARN.Printf("create temp sensor %d: %v", i+1, err)
 		}
 
 		eg.Go(func() error {
-			return staticInstance("thermometer", cc, thermometer.NewFromConfig, config.Thermometers())
+			return staticInstance("tempsensor", cc, tempsensor.NewFromConfig, config.TempSensors())
 		})
 	}
 
 	// append devices from database
-	configurable, err := config.ConfigurationsByClass(templates.Thermometer)
+	configurable, err := config.ConfigurationsByClass(templates.TempSensor)
 	if err != nil {
 		return err
 	}
@@ -1345,7 +1345,7 @@ func configureThermometers(static []config.Named, names ...string) error {
 				return nil
 			}
 
-			return configurableInstance("thermometer", &conf, thermometer.NewFromConfig, config.Thermometers())
+			return configurableInstance("tempsensor", &conf, tempsensor.NewFromConfig, config.TempSensors())
 		})
 	}
 
@@ -1381,8 +1381,8 @@ func configureDevices(conf globalconfig.All) error {
 		errs = append(errs, &ClassError{ClassCurtailer, err})
 	}
 
-	if err := configureThermometers(conf.Thermometers, references.thermometer...); err != nil {
-		errs = append(errs, &ClassError{ClassThermometer, err})
+	if err := configureTempSensors(conf.TempSensors, references.tempsensor...); err != nil {
+		errs = append(errs, &ClassError{ClassTempSensor, err})
 	}
 
 	return joinErrors(errs...)

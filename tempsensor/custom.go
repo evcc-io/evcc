@@ -1,4 +1,4 @@
-package thermometer
+package tempsensor
 
 import (
 	"context"
@@ -15,7 +15,7 @@ func init() {
 	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
 
-// NewConfigurableFromConfig creates a thermometer from config
+// NewConfigurableFromConfig creates a tempsensor from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Battery, error) {
 	cc := struct {
 		Temp *plugin.Config

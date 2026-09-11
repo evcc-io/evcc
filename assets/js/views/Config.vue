@@ -127,7 +127,11 @@
 						<NewDeviceButton
 							data-testid="add-consumer"
 							:title="$t('config.main.addConsumer')"
-							@click="openModal('meter', { choices: ['consumer', 'aux'] })"
+							@click="
+								openModal('meter', {
+									choices: ['consumer', 'aux'],
+								})
+							"
 						/>
 					</div>
 				</ConfigSection>
@@ -203,7 +207,11 @@
 						/>
 						<NewDeviceButton
 							:title="$t('config.main.addPvBattery')"
-							@click="openModal('meter', { choices: ['pv', 'battery'] })"
+							@click="
+								openModal('meter', {
+									choices: ['pv', 'battery'],
+								})
+							"
 						/>
 					</div>
 				</ConfigSection>
@@ -256,7 +264,12 @@
 							:has-error="hasDeviceError('tariff', gridTariff.name)"
 							:tags="deviceTags('tariff', gridTariff.name)"
 							:currency="currency"
-							@edit="openModal('tariff', { type: 'grid', id: gridTariff.id })"
+							@edit="
+								openModal('tariff', {
+									type: 'grid',
+									id: gridTariff.id,
+								})
+							"
 							@enable="handleDisable('tariff', gridTariff.id, false)"
 						/>
 						<TariffCard
@@ -266,13 +279,22 @@
 							:has-error="hasDeviceError('tariff', feedInTariff.name)"
 							:tags="deviceTags('tariff', feedInTariff.name)"
 							:currency="currency"
-							@edit="openModal('tariff', { type: 'feedIn', id: feedInTariff.id })"
+							@edit="
+								openModal('tariff', {
+									type: 'feedIn',
+									id: feedInTariff.id,
+								})
+							"
 							@enable="handleDisable('tariff', feedInTariff.id, false)"
 						/>
 						<NewDeviceButton
 							v-if="possibleTariffTypes.length"
 							:title="$t('config.tariff.addTariff')"
-							@click="openModal('tariff', { choices: possibleTariffTypes })"
+							@click="
+								openModal('tariff', {
+									choices: possibleTariffTypes,
+								})
+							"
 						/>
 						<TariffCard
 							v-if="co2Tariff"
@@ -280,7 +302,12 @@
 							tariff-type="co2"
 							:has-error="hasDeviceError('tariff', co2Tariff.name)"
 							:tags="deviceTags('tariff', co2Tariff.name)"
-							@edit="openModal('tariff', { type: 'co2', id: co2Tariff.id })"
+							@edit="
+								openModal('tariff', {
+									type: 'co2',
+									id: co2Tariff.id,
+								})
+							"
 							@enable="handleDisable('tariff', co2Tariff.id, false)"
 						/>
 						<TariffCard
@@ -291,7 +318,12 @@
 							:has-error="hasDeviceError('tariff', tariff.name)"
 							:tags="deviceTags('tariff', tariff.name)"
 							:currency="currency"
-							@edit="openModal('tariff', { type: 'solar', id: tariff.id })"
+							@edit="
+								openModal('tariff', {
+									type: 'solar',
+									id: tariff.id,
+								})
+							"
 							@enable="handleDisable('tariff', tariff.id, false)"
 						/>
 						<TariffCard
@@ -314,13 +346,22 @@
 							:has-error="hasDeviceError('tariff', plannerTariff.name)"
 							:tags="deviceTags('tariff', plannerTariff.name)"
 							:currency="currency"
-							@edit="openModal('tariff', { type: 'planner', id: plannerTariff.id })"
+							@edit="
+								openModal('tariff', {
+									type: 'planner',
+									id: plannerTariff.id,
+								})
+							"
 							@enable="handleDisable('tariff', plannerTariff.id, false)"
 						/>
 						<NewDeviceButton
 							v-if="possibleForecastTypes.length"
 							:title="$t('config.tariff.addForecast')"
-							@click="openModal('tariff', { choices: possibleForecastTypes })"
+							@click="
+								openModal('tariff', {
+									choices: possibleForecastTypes,
+								})
+							"
 						/>
 					</div>
 				</ConfigSection>
@@ -401,7 +442,9 @@
 						>
 							<template #icon><HemsIcon /></template>
 							<template #tags>
-								<p v-if="hemsLabel" class="my-2 fw-bold">{{ hemsLabel }}</p>
+								<p v-if="hemsLabel" class="my-2 fw-bold">
+									{{ hemsLabel }}
+								</p>
 								<DeviceTags :tags="hemsTags" />
 							</template>
 						</DeviceCard>
@@ -519,7 +562,7 @@
 					:chargers="chargers"
 					:chargerValues="deviceValues['charger']"
 					:meters="meters"
-					:thermometers="thermometers"
+					:tempSensors="tempSensors"
 					:circuits="circuits"
 					:hasDeviceError="hasDeviceError"
 					@changed="loadpointChanged"
@@ -536,10 +579,10 @@
 					@changed="meterChanged"
 					@disable="({ id, disable }) => handleDisable('meter', id, disable)"
 				/>
-				<ThermometerModal
+				<TempSensorModal
 					:is-sponsor="isSponsor"
-					@changed="thermometerChanged"
-					@disable="({ id, disable }) => handleDisable('thermometer', id, disable)"
+					@changed="tempSensorChanged"
+					@disable="({ id, disable }) => handleDisable('tempsensor', id, disable)"
 				/>
 				<ChargerModal :is-sponsor="isSponsor" :ocpp="ocpp" @changed="chargerChanged" />
 				<InfluxModal @changed="loadDirty" />
@@ -660,7 +703,7 @@ import ExperimentalModal from "../components/Config/ExperimentalModal.vue";
 import TitleModal from "../components/Config/TitleModal.vue";
 import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
-import ThermometerModal from "../components/Config/ThermometerModal.vue";
+import TempSensorModal from "../components/Config/TempSensorModal.vue";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 import { defineComponent, markRaw, type PropType } from "vue";
 import type {
@@ -668,7 +711,7 @@ import type {
 	ConfigVehicle,
 	ConfigCircuit,
 	ConfigCurtailer,
-	ConfigThermometer,
+	ConfigTempSensor,
 	ConfigMessenger,
 	ConfigHems,
 	ConfigLoadpoint,
@@ -704,7 +747,13 @@ const SECTION_TITLES: Record<string, string> = {
 
 type DeviceTags = Record<
 	string,
-	{ value?: any; error?: boolean; warning?: boolean; muted?: boolean; options?: any }
+	{
+		value?: any;
+		error?: boolean;
+		warning?: boolean;
+		muted?: boolean;
+		options?: any;
+	}
 >;
 
 import BackupRestoreModal from "@/components/Config/BackupRestoreModal.vue";
@@ -771,7 +820,7 @@ export default defineComponent({
 		TitleModal,
 		TopHeader: Header,
 		VehicleIcon,
-		ThermometerModal,
+		TempSensorModal,
 		VehicleModal,
 		WelcomeBanner,
 		AuthSuccessBanner,
@@ -783,7 +832,10 @@ export default defineComponent({
 	mixins: [formatter, collector, listDetail],
 	props: {
 		offline: Boolean,
-		notifications: { type: Array as PropType<Notification[]>, default: () => [] },
+		notifications: {
+			type: Array as PropType<Notification[]>,
+			default: () => [],
+		},
 	},
 	data() {
 		return {
@@ -791,7 +843,7 @@ export default defineComponent({
 			curtailers: [] as ConfigCurtailer[],
 			vehicles: [] as ConfigVehicle[],
 			meters: [] as ConfigMeter[],
-			thermometers: [] as ConfigThermometer[],
+			tempSensors: [] as ConfigTempSensor[],
 			loadpoints: [] as ConfigLoadpoint[],
 			chargers: [] as ConfigCharger[],
 			circuits: [] as ConfigCircuit[],
@@ -824,7 +876,7 @@ export default defineComponent({
 				messenger: {},
 				tariff: {},
 				curtailer: {},
-				thermometer: {},
+				tempsensor: {},
 			} as DeviceValuesMap,
 			isComponentMounted: true,
 			isPageVisible: true,
@@ -962,7 +1014,10 @@ export default defineComponent({
 					icon: markRaw(SystemIcon),
 				},
 			];
-			return entries.map((e) => ({ ...e, title: this.$t(SECTION_TITLES[e.slug]!) }));
+			return entries.map((e) => ({
+				...e,
+				title: this.$t(SECTION_TITLES[e.slug]!),
+			}));
 		},
 		callbackCompleted() {
 			return this.$route.query["callbackCompleted"] as string | undefined;
@@ -1314,13 +1369,16 @@ export default defineComponent({
 				meter: () => this.meterChanged({ action: "updated" }),
 				tariff: () => this.tariffChanged({ action: "updated" }),
 				vehicle: () => this.vehicleChanged(),
-				thermometer: () => this.thermometerChanged(),
+				tempsensor: () => this.tempSensorChanged(),
 				loadpoint: () => this.loadpointChanged(),
 			};
 			try {
 				if (deviceClass === "loadpoint") {
 					const { data } = await api.get(`config/loadpoints/${id}`);
-					await api.put(`config/loadpoints/${id}`, { ...data, disable });
+					await api.put(`config/loadpoints/${id}`, {
+						...data,
+						disable,
+					});
 				} else {
 					await createDeviceUtils(deviceClass).disable(id, disable);
 				}
@@ -1341,7 +1399,7 @@ export default defineComponent({
 		async loadAll() {
 			await this.loadVehicles();
 			await this.loadMeters();
-			await this.loadThermometers();
+			await this.loadTempSensors();
 			await this.loadSite();
 			await this.loadChargers();
 			await this.loadLoadpoints();
@@ -1362,7 +1420,9 @@ export default defineComponent({
 		},
 		async loadConfig(path: string) {
 			const validateStatus = (code: number) => [200, 404].includes(code);
-			const response = await api.get(`/config/${path}`, { validateStatus });
+			const response = await api.get(`/config/${path}`, {
+				validateStatus,
+			});
 			return response.status === 200 ? response.data : undefined;
 		},
 		async loadMessengers() {
@@ -1380,8 +1440,8 @@ export default defineComponent({
 		async loadMeters() {
 			this.meters = (await this.loadConfig("devices/meter")) || [];
 		},
-		async loadThermometers() {
-			this.thermometers = (await this.loadConfig("devices/thermometer")) || [];
+		async loadTempSensors() {
+			this.tempSensors = (await this.loadConfig("devices/tempsensor")) || [];
 		},
 		async loadHems() {
 			this.hemsDevices = (await this.loadConfig("devices/hems")) || [];
@@ -1494,11 +1554,11 @@ export default defineComponent({
 		async loadpointDismissed() {
 			await this.loadChargers();
 			await this.loadMeters();
-			await this.loadThermometers();
+			await this.loadTempSensors();
 			this.updateValues();
 		},
-		async thermometerChanged() {
-			await this.loadThermometers();
+		async tempSensorChanged() {
+			await this.loadTempSensors();
 			await this.loadDirty();
 			this.updateValues();
 		},
@@ -1593,7 +1653,7 @@ export default defineComponent({
 					charger: this.chargers,
 					tariff: this.tariffs,
 					curtailer: this.curtailers,
-					thermometer: this.thermometers,
+					tempsensor: this.tempSensors,
 				} as Record<DeviceType, any[]>;
 				for (const type in devices) {
 					for (const device of devices[type as DeviceType]) {

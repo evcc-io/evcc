@@ -24,7 +24,7 @@ func getLoadpointStaticConfig(lp loadpoint.API) loadpoint.StaticConfig {
 		Circuit: lp.GetCircuitRef(),
 		Vehicle: lp.GetDefaultVehicleRef(),
 
-		Thermometer: lp.GetThermometerRef(),
+		TempSensor: lp.GetTempSensorRef(),
 	}
 }
 
@@ -321,8 +321,8 @@ func updateLoadpointHandler() http.HandlerFunc {
 			return
 		}
 
-		thermometerRef, _ := other["thermometer"].(string)
-		if err := setDeviceDisable(thermometerRef, config.Thermometers(), props.Disable); err != nil {
+		tempSensorRef, _ := other["tempSensor"].(string)
+		if err := setDeviceDisable(tempSensorRef, config.TempSensors(), props.Disable); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -395,8 +395,8 @@ func deleteLoadpointHandler() http.HandlerFunc {
 			setConfigDirty()
 		}
 
-		if dev, err := configurableDevice(instance.GetThermometerRef(), config.Thermometers()); err == nil {
-			if err := deleteDevice(dev.ID(), config.Thermometers()); err != nil {
+		if dev, err := configurableDevice(instance.GetTempSensorRef(), config.TempSensors()); err == nil {
+			if err := deleteDevice(dev.ID(), config.TempSensors()); err != nil {
 				jsonError(w, http.StatusBadRequest, err)
 				return
 			}

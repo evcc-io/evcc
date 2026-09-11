@@ -1,10 +1,10 @@
 <template>
 	<DeviceModalBase
 		:id="id"
-		name="thermometer"
-		device-type="thermometer"
+		name="tempsensor"
+		device-type="tempsensor"
 		:is-sponsor="isSponsor"
-		:modal-title="$t(`config.thermometer.${isNew ? 'titleAdd' : 'titleEdit'}`)"
+		:modal-title="$t(`config.tempsensor.${isNew ? 'titleAdd' : 'titleEdit'}`)"
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
 		:on-template-change="handleTemplateChange"
@@ -21,7 +21,7 @@ import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
 import type { DeviceValues, Product } from "./DeviceModal";
 import { type TemplateGroup, customTemplateOption } from "./DeviceModal/TemplateSelector.vue";
 import { ConfigType } from "@/types/evcc";
-import defaultThermometerYaml from "./defaultYaml/thermometer.yaml?raw";
+import defaultTempSensorYaml from "./defaultYaml/tempsensor.yaml?raw";
 import { getModal } from "@/configModal";
 
 const initialValues = {
@@ -32,7 +32,7 @@ const initialValues = {
 };
 
 export default defineComponent({
-	name: "ThermometerModal",
+	name: "TempSensorModal",
 	components: {
 		DeviceModalBase,
 	},
@@ -47,7 +47,7 @@ export default defineComponent({
 	},
 	computed: {
 		id(): number | undefined {
-			return getModal("thermometer")?.id;
+			return getModal("tempsensor")?.id;
 		},
 		isNew(): boolean {
 			return this.id === undefined;
@@ -68,7 +68,7 @@ export default defineComponent({
 		handleTemplateChange(value: string, values: DeviceValues) {
 			if (value === ConfigType.Custom) {
 				values.type = ConfigType.Custom;
-				values.yaml = defaultThermometerYaml;
+				values.yaml = defaultTempSensorYaml;
 			}
 		},
 	},

@@ -59,7 +59,7 @@ func runConfigDelete(cmd *cobra.Command, args []string) {
 		deleteDevice[api.Circuit](c)
 	case templates.Curtailer:
 		deleteDevice[api.Curtailer](c)
-	case templates.Thermometer:
+	case templates.TempSensor:
 		deleteDevice[api.Battery](c)
 	case templates.Hems:
 		deleteDevice[hems.API](c)

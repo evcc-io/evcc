@@ -1,4 +1,4 @@
-package thermometer
+package tempsensor
 
 import (
 	"context"
@@ -10,9 +10,9 @@ import (
 	reg "github.com/evcc-io/evcc/util/registry"
 )
 
-var registry = reg.New[api.Battery]("thermometer")
+var registry = reg.New[api.Battery]("tempsensor")
 
-// NewFromConfig creates thermometer from configuration
+// NewFromConfig creates tempsensor from configuration
 func NewFromConfig(ctx context.Context, typ string, other map[string]any) (api.Battery, error) {
 	factory, err := registry.Get(strings.ToLower(typ))
 	if err != nil {
@@ -21,7 +21,7 @@ func NewFromConfig(ctx context.Context, typ string, other map[string]any) (api.B
 
 	v, err := factory(ctx, other)
 	if err != nil {
-		err = fmt.Errorf("cannot create thermometer type '%s': %w", util.TypeWithTemplateName(typ, other), err)
+		err = fmt.Errorf("cannot create temp sensor type '%s': %w", util.TypeWithTemplateName(typ, other), err)
 	}
 
 	return v, err

@@ -99,7 +99,7 @@ type Loadpoint struct {
 	VehicleRef string `mapstructure:"vehicle"` // Vehicle reference
 	MeterRef   string `mapstructure:"meter"`   // Charge meter reference
 
-	ThermometerRef string `mapstructure:"thermometer"` // Thermometer reference (heating devices)
+	TempSensorRef string `mapstructure:"tempSensor"` // TempSensor reference (heating devices)
 
 	Soc             loadpoint.SocConfig
 	Enable, Disable loadpoint.ThresholdConfig
@@ -150,7 +150,7 @@ type Loadpoint struct {
 
 	circuit        api.Circuit        // Circuit
 	chargeMeter    *chargeMeter       // Charger usage meter
-	thermometer    api.Battery        // Thermometer overriding charger temperature (heating devices)
+	tempsensor     api.Battery        // TempSensor overriding charger temperature (heating devices)
 	chargeEnergy   *metrics.Collector // Charger usage collector
 	vehicle        api.Vehicle        // Currently active vehicle
 	defaultVehicle api.Vehicle        // Default vehicle (disables detection)
@@ -252,14 +252,14 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 		lp.chargeMeter = newChargeMeter(mt)
 	}
 
-	if lp.ThermometerRef != "" {
-		dev, err := config.Thermometers().ByName(lp.ThermometerRef)
+	if lp.TempSensorRef != "" {
+		dev, err := config.TempSensors().ByName(lp.TempSensorRef)
 		if err != nil {
-			return lp, fmt.Errorf("thermometer: %w", err)
+			return lp, fmt.Errorf("temp sensor: %w", err)
 		}
-		lp.thermometer = dev.Instance()
-		if lp.thermometer == nil {
-			return lp, errors.New("missing thermometer instance")
+		lp.tempsensor = dev.Instance()
+		if lp.tempsensor == nil {
+			return lp, errors.New("missing temp sensor instance")
 		}
 	}
 
@@ -2147,11 +2147,11 @@ func (lp *Loadpoint) publishSocAndRange() {
 		return socR, limitR, socErr
 	}
 
-	// thermometer overrides charger temperature
+	// tempsensor overrides charger temperature
 	var socR *float64
 	var limitR *int64
-	if lp.thermometer != nil {
-		socR, limitR, _ = socAndLimit("thermometer", lp.thermometer)
+	if lp.tempsensor != nil {
+		socR, limitR, _ = socAndLimit("tempsensor", lp.tempsensor)
 
 		// keep charger limit temperature
 		if socLimiter, ok := api.Cap[api.SocLimiter](lp.charger); ok && limitR == nil {

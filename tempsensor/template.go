@@ -1,4 +1,4 @@
-package thermometer
+package tempsensor
 
 import (
 	"context"
@@ -12,7 +12,7 @@ func init() {
 }
 
 func NewFromTemplateConfig(ctx context.Context, other map[string]any) (api.Battery, error) {
-	instance, err := templates.RenderInstance(templates.Thermometer, other)
+	instance, err := templates.RenderInstance(templates.TempSensor, other)
 	if err != nil {
 		return nil, err
 	}

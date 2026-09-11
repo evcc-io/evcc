@@ -108,7 +108,9 @@
 			<div v-if="values.charger || !isNew">
 				<div class="collapsible-wrapper" :class="{ open: !isNew }">
 					<div class="collapsible-content ring-space">
-						<h6 class="mt-4">{{ $t("config.loadpoint.chargingTitle") }}</h6>
+						<h6 class="mt-4">
+							{{ $t("config.loadpoint.chargingTitle") }}
+						</h6>
 
 						<FormRow
 							id="loadpointMode"
@@ -374,7 +376,8 @@
 											required
 										/>
 										<span class="evcc-gray text-nowrap power-hint">
-											≈ {{ fmtPhasePower(values.minCurrent, minPhases) }}
+											≈
+											{{ fmtPhasePower(values.minCurrent, minPhases) }}
 										</span>
 									</div>
 								</FormRow>
@@ -395,7 +398,8 @@
 											required
 										/>
 										<span class="evcc-gray text-nowrap power-hint">
-											≈ {{ fmtPhasePower(values.maxCurrent, maxPhases) }}
+											≈
+											{{ fmtPhasePower(values.maxCurrent, maxPhases) }}
 										</span>
 									</div>
 								</FormRow>
@@ -528,22 +532,24 @@
 								</div>
 							</div>
 							<div v-else>
-								<p class="text-muted">{{ $t("config.loadpoint.noVehicles") }}</p>
+								<p class="text-muted">
+									{{ $t("config.loadpoint.noVehicles") }}
+								</p>
 							</div>
 						</div>
 
 						<div v-if="chargerIsHeating">
 							<FormRow
-								v-if="values.thermometer"
-								id="loadpointParamThermometer"
-								:label="$t('config.loadpoint.thermometerLabel')"
-								:help="$t('config.loadpoint.thermometerHelp')"
+								v-if="values.tempSensor"
+								id="loadpointParamTempSensor"
+								:label="$t('config.loadpoint.tempSensorLabel')"
+								:help="$t('config.loadpoint.tempSensorHelp')"
 							>
 								<DeviceRefBox
 									compact
-									:title="thermometerTitle"
-									:error="hasDeviceError('thermometer', values.thermometer)"
-									@edit="editThermometer"
+									:title="tempSensorTitle"
+									:error="hasDeviceError('tempsensor', values.tempSensor)"
+									@edit="editTempSensor"
 								/>
 							</FormRow>
 							<p v-else>
@@ -551,13 +557,15 @@
 									class="btn btn-link btn-sm text-gray px-0"
 									type="button"
 									tabindex="0"
-									@click="editThermometer"
+									@click="editTempSensor"
 								>
-									{{ $t("config.loadpoint.addThermometer") }}
+									{{ $t("config.loadpoint.addTempSensor") }}
 								</button>
 							</p>
 
-							<h6>{{ $t("config.loadpoint.temperatureRangeTitle") }}</h6>
+							<h6>
+								{{ $t("config.loadpoint.temperatureRangeTitle") }}
+							</h6>
 							<p class="text-muted">
 								{{ $t("config.loadpoint.temperatureRangeHelp") }}
 							</p>
@@ -673,7 +681,7 @@ import {
 	type LoadpointType,
 	type ConfigCharger,
 	type ConfigMeter,
-	type ConfigThermometer,
+	type ConfigTempSensor,
 	type VehicleOption,
 	type ConfigCircuit,
 	type ConfigLoadpoint,
@@ -707,7 +715,7 @@ const defaultValues = {
 	charger: "",
 	circuit: "",
 	meter: "",
-	thermometer: "",
+	tempSensor: "",
 } as ConfigLoadpoint;
 
 const defaultThresholds = {
@@ -729,13 +737,25 @@ export default {
 	},
 	mixins: [formatter],
 	props: {
-		vehicleOptions: { type: Array as PropType<VehicleOption[]>, default: () => [] },
+		vehicleOptions: {
+			type: Array as PropType<VehicleOption[]>,
+			default: () => [],
+		},
 		loadpointCount: { type: Number, default: 0 },
-		chargers: { type: Array as PropType<ConfigCharger[]>, default: () => [] },
+		chargers: {
+			type: Array as PropType<ConfigCharger[]>,
+			default: () => [],
+		},
 		chargerValues: { type: Object, default: () => {} },
 		meters: { type: Array as PropType<ConfigMeter[]>, default: () => [] },
-		thermometers: { type: Array as PropType<ConfigThermometer[]>, default: () => [] },
-		circuits: { type: Array as PropType<ConfigCircuit[]>, default: () => [] },
+		tempSensors: {
+			type: Array as PropType<ConfigTempSensor[]>,
+			default: () => [],
+		},
+		circuits: {
+			type: Array as PropType<ConfigCircuit[]>,
+			default: () => [],
+		},
 		hasDeviceError: {
 			type: Function as PropType<(type: DeviceType, name: string) => boolean>,
 			default: () => false,
@@ -832,13 +852,13 @@ export default {
 				this.$t("config.general.customOption");
 			return title;
 		},
-		thermometerTitle() {
-			const name = this.values.thermometer;
+		tempSensorTitle() {
+			const name = this.values.tempSensor;
 			if (!name) return "";
-			const thermometer = this.thermometers.find((t) => t.name === name);
+			const tempSensor = this.tempSensors.find((t) => t.name === name);
 			return (
-				thermometer?.deviceProduct ||
-				thermometer?.config?.template ||
+				tempSensor?.deviceProduct ||
+				tempSensor?.config?.template ||
 				this.$t("config.general.customOption")
 			);
 		},
@@ -852,7 +872,10 @@ export default {
 			return this.isNew ? this.loadpointCount > 0 : this.loadpointCount > 1;
 		},
 		priorityOptions() {
-			const result = Array.from({ length: 11 }, (_, i) => ({ key: i, name: `${i}` })) as {
+			const result = Array.from({ length: 11 }, (_, i) => ({
+				key: i,
+				name: `${i}`,
+			})) as {
 				key?: number;
 				name: string;
 			}[];
@@ -911,7 +934,10 @@ export default {
 		},
 		allVehicleOptions() {
 			return [
-				{ key: "", name: this.$t("config.loadpoint.vehicleAutoDetection") },
+				{
+					key: "",
+					name: this.$t("config.loadpoint.vehicleAutoDetection"),
+				},
 				{ key: null, name: null },
 				...this.vehicleOptions,
 			];
@@ -1052,7 +1078,7 @@ export default {
 			if (!this.values.id && !this.autoCreate) {
 				await this.cleanupDevice("charger", this.values.charger, this.chargers);
 				await this.cleanupDevice("meter", this.values.meter, this.meters);
-				await this.cleanupDevice("thermometer", this.values.thermometer, this.thermometers);
+				await this.cleanupDevice("tempsensor", this.values.tempSensor, this.tempSensors);
 				this.$emit("dismissed");
 				this.reset();
 				return;
@@ -1098,13 +1124,15 @@ export default {
 				this.values.meter = "";
 			}
 		},
-		async editThermometer() {
-			const thermometer = this.thermometers.find((t) => t.name === this.values.thermometer);
-			const result = await openModal("thermometer", { id: thermometer?.id });
+		async editTempSensor() {
+			const tempSensor = this.tempSensors.find((t) => t.name === this.values.tempSensor);
+			const result = await openModal("tempsensor", {
+				id: tempSensor?.id,
+			});
 			if (result.action === "added" && result.name) {
-				this.values.thermometer = result.name;
+				this.values.tempSensor = result.name;
 			} else if (result.action === "removed") {
-				this.values.thermometer = "";
+				this.values.tempSensor = "";
 			}
 		},
 		updateSolarMode() {

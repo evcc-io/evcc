@@ -10,7 +10,7 @@ const (
 	AlwaysCharge      = "alwaysCharge"     // smart mode: charge continuously at least at min power (off/on/once)
 	Charger           = "charger"          // charger ref
 	Meter             = "meter"            // meter ref
-	Thermometer       = "thermometer"      // thermometer ref
+	TempSensor        = "tempSensor"       // temp sensor ref
 	Circuit           = "circuit"          // circuit ref
 	DefaultVehicle    = "vehicle"          // default vehicle ref
 	Priority          = "priority"         // priority

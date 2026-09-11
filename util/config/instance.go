@@ -10,16 +10,16 @@ import (
 var bus = evbus.New()
 
 var instance struct {
-	meters     *handler[api.Meter]
-	chargers   *handler[api.Charger]
-	vehicles   *handler[api.Vehicle]
-	circuits   *handler[api.Circuit]
-	curtailers *handler[api.Curtailer]
-	thermos    *handler[api.Battery]
-	hems       *handler[hems.API]
-	messengers *handler[api.Messenger]
-	loadpoints *handler[loadpoint.API]
-	tariffs    *handler[api.Tariff]
+	meters      *handler[api.Meter]
+	chargers    *handler[api.Charger]
+	vehicles    *handler[api.Vehicle]
+	circuits    *handler[api.Circuit]
+	curtailers  *handler[api.Curtailer]
+	tempsensors *handler[api.Battery]
+	hems        *handler[hems.API]
+	messengers  *handler[api.Messenger]
+	loadpoints  *handler[loadpoint.API]
+	tariffs     *handler[api.Tariff]
 }
 
 func init() {
@@ -32,7 +32,7 @@ func Reset() {
 	instance.vehicles = &handler[api.Vehicle]{topic: "vehicle"}
 	instance.circuits = &handler[api.Circuit]{topic: "circuit"}
 	instance.curtailers = &handler[api.Curtailer]{topic: "curtailer"}
-	instance.thermos = &handler[api.Battery]{topic: "thermometer"}
+	instance.tempsensors = &handler[api.Battery]{topic: "tempsensor"}
 	instance.hems = &handler[hems.API]{topic: "hems"}
 	instance.messengers = &handler[api.Messenger]{topic: "messenger"}
 	instance.loadpoints = &handler[loadpoint.API]{topic: "loadpoint"}
@@ -71,8 +71,8 @@ func Curtailers() Handler[api.Curtailer] {
 	return instance.curtailers
 }
 
-func Thermometers() Handler[api.Battery] {
-	return instance.thermos
+func TempSensors() Handler[api.Battery] {
+	return instance.tempsensors
 }
 
 func Hems() Handler[hems.API] {
