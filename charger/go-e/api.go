@@ -16,7 +16,7 @@ const CloudURI = "https://api.go-e.co"
 type Response interface {
 	Status() int
 	Enabled() bool
-	ModelStatus() int
+	AccessControl() bool
 	CurrentPower() float64
 	ChargedEnergy() float64
 	TotalEnergy() float64

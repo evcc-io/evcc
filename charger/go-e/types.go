@@ -41,9 +41,9 @@ func (g *StatusResponse) Enabled() bool {
 	return g.Alw == 1
 }
 
-// ModelStatus is not available in the v1 api
-func (g *StatusResponse) ModelStatus() int {
-	return 0
+// AccessControl is not available in the v1 api
+func (g *StatusResponse) AccessControl() bool {
+	return false
 }
 
 func (g *StatusResponse) CurrentPower() float64 {

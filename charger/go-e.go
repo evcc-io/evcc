@@ -131,7 +131,7 @@ func (c *GoE) statusReason() (api.Reason, error) {
 		return api.ReasonUnknown, err
 	}
 
-	if resp.ModelStatus() == goe.ModelStatusAccessControl {
+	if resp.AccessControl() {
 		return api.ReasonWaitingForAuthorization, nil
 	}
 
