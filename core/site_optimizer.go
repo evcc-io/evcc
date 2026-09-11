@@ -664,16 +664,11 @@ func (site *Site) setLastOptimizerSolve(solve *optimizerSolve) {
 }
 
 // reapplySuggestions re-derives the last solve's suggestions for whichever
-// slot covers now, without a new network round-trip. optimizerUpdateAsync
-// only re-solves every tariff.SlotDuration, and not aligned to the slot grid
-// - a solve completing partway into its slot leaves the applied suggestions
-// describing that slot for as long after it ends, until the next solve. This
-// closes that gap every control cycle in between, from data already on hand.
-//
-// Guarded the same way as optimizerUpdateAsync: skipped while the optimizer
-// is disabled or unsponsored (that state is cleared by clearSuggestions, not
-// reapplied here), and TryLock'd against optimizerMu so this never applies a
-// stale cached solve over a fresher one a concurrent real solve just wrote.
+// slot covers now, without a new network round-trip - closes the gap left by
+// a solve that completed partway into its slot and the next solve, which
+// isn't aligned to the slot grid. Guarded like optimizerUpdateAsync
+// (disabled/unsponsored skip, optimizerMu.TryLock) so it never overwrites a
+// fresher concurrent solve.
 func (site *Site) reapplySuggestions(now time.Time) {
 	if !sponsor.IsAuthorized() || !optimizerEnabled() {
 		return
