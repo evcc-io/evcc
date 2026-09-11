@@ -33,7 +33,7 @@
     },
     "combined": "Gecombineerd",
     "config": {
-      "buffer": "Energie in de thuisbatterij boven {soc} mag gebruikt worden om laadpunten te ondersteunen en stelt het uitschakelen van laadpunten uit in zonladen modus. Start het zonladen automatisch {start}.",
+      "buffer": "Energie in de thuisbatterij boven {soc} mag gebruikt worden om laadpunten te ondersteunen en stelt het uitschakelen van laadpunten uit in smart modus. Start het zonladen automatisch {start}.",
       "bufferNone": "Energie in de thuisbatterij wordt niet gebruikt voor de laadpunten. Stel een waarde onder {soc} in om dit in te schakelen.",
       "bufferStart": {
         "above": "eens de batterij boven {soc} is",
@@ -169,6 +169,7 @@
       "title": "Valuta"
     },
     "curtailer": {
+      "description": "Apparaat dat de teruglevering limiteert op verzoek van de netbeheerder (§ 9 EEG). Veel omvormers ondersteunen dit direct via de meter configuratie. Een separate configuratie is alleen nodig bij sommige fabrikanten van multi-omvormer systemen.",
       "generic": "Generieke integraties",
       "specific": "Specifieke integraties",
       "template": "Fabrikant",
@@ -189,7 +190,7 @@
       "chargeStatusC": "aan het laden",
       "chargeStatusE": "geen vermogen",
       "chargeStatusF": "fout",
-      "chargedEnergy": "Geladen",
+      "chargedEnergy": "Geladen (sessie)",
       "co2": "Stroomnet-CO₂",
       "configured": "Geconfigureerd",
       "connected": "Verbonden",
@@ -513,6 +514,8 @@
       "solarBehaviorLabel": "Zonne-energie",
       "solarModeCustom": "aangepast",
       "solarModeMaximum": "Maximale zonne-energie",
+      "solarShareNote": "De schuifregelaar voor het aandeel zonne-energie in de gebruikersinstellingen is uitgeschakeld zolang er een drempelwaarden voor het aantal Watt is ingesteld. {0} en sla op om deze instelling in te schakelen.",
+      "solarShareReset": "Verwijder drempelwaarden",
       "temperatureRangeHelp": "Toont de range voor de temperatuurbalk. Heeft geen effect op de regeling.",
       "temperatureRangeTitle": "Tempartuurbereik",
       "thresholdDisableDelayLabel": "Uitschakelvertraging",
@@ -921,6 +924,7 @@
           "confirmationText": "Deze actie zal de geselecteerde data permanent verwijderen. Controleer of je eerst de backup gedownload hebt.",
           "description": "Heeft u problemen met de configuratie en wilt u opnieuw starten? Verwijder alle data en begin opnieuw.",
           "remote": "Toegang op afstand",
+          "remoteDescription": "Verwijdert de configuratie en referenties.",
           "sessions": "Laadsessies",
           "sessionsDescription": "Verwijdert je laadsessie historie.",
           "settings": "Configuratie & instellingen",
@@ -1308,6 +1312,15 @@
     "title": "Authenticatie"
   },
   "main": {
+    "alwaysCharge": {
+      "description": "geen onderbrekingen",
+      "label": "Altijd laden",
+      "labelHeating": "Altijd verwarmen",
+      "minCurrent": "min {current}",
+      "once": "tot einde sessie",
+      "onceTip": "Alleen voor deze sessie",
+      "permanent": "blijft altijd aan"
+    },
     "chargingPlan": {
       "active": "Actief",
       "addRepeatingPlan": "Herhalend schema toevoegen",
@@ -1477,13 +1490,31 @@
       },
       "smartCostCheap": "Goedkoop laden met netstroom",
       "smartCostClean": "Laden met ecologische energie van het net",
+      "solar": "Zonneoverschot",
+      "solarShare": {
+        "charging": {
+          "description": "Ten minste {share} van het minimum aan laadcapaciteit moet van zonne-energie komen.",
+          "descriptionFull": "Het laden start zodra er genoeg overschot is voor het minimale laadvermogen.",
+          "descriptionZero": "Het laden start zodra er overschot beschikbaar is."
+        },
+        "heating": {
+          "description": "Ten minste {share} van het minimale laadvermogen moet van zonne-energie komen.",
+          "descriptionFull": "Verwarmen start zodra er genoeg overschot is voor het minimale verwarmingsvermogen.",
+          "descriptionZero": "Verwarmen start zodra er overschot beschikbaar is."
+        },
+        "label": "Aandeel zonne-energie",
+        "thresholdsLink": "Configuratie bewerken"
+      },
       "title": "Instellingen {0}",
       "vehicle": "Voertuig"
     },
     "mode": {
+      "boost": "Boost",
       "minpv": "Min+PV",
+      "normal": "Normaal",
       "now": "Snel",
       "off": "Uit",
+      "on": "Aan",
       "pv": "PV",
       "smart": "Slim"
     },
@@ -1504,6 +1535,7 @@
       "nextPlan": "Volgende schema",
       "notReachableInTime": "Laaddoel zal {overrun} later bereikt zijn.",
       "onlyInPvMode": "Laadplan werkt alleen in PV modus.",
+      "onlyInSmartMode": "Laadplan werkt alleen in smart modus.",
       "planDuration": "Oplaadtijd",
       "planPeriodLabel": "Periode",
       "planPeriodValue": "{start} tot {end}",
