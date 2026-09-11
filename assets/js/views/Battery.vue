@@ -28,6 +28,7 @@
 						:battery="state.battery"
 						:experimental="state.experimental"
 						:optimizer-automatic="state.optimizerAutomatic"
+						:optimizer-controlled-titles="optimizerControlledTitles"
 					/>
 
 					<Card
@@ -112,6 +113,11 @@ export default defineComponent({
 		},
 		batteryAvailable(): boolean {
 			return this.devices.length > 0;
+		},
+		optimizerControlledTitles(): string[] {
+			return (this.state.loadpoints ?? [])
+				.filter((lp) => lp.optimizerControlled)
+				.map((lp) => lp.title);
 		},
 		evopt() {
 			return this.state.evopt;
