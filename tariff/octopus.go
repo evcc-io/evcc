@@ -125,9 +125,9 @@ func buildOctopusFromConfig(other map[string]any) (*Octopus, error) {
 
 func (t *Octopus) run(done chan error) {
 	var once sync.Once
-	client := request.NewHelper(t.log)
+	client := octoRest.NewClient(request.NewHelper(t.log))
 
-	var restQueryUri string
+	var productCode, tariffCode string
 
 	// If ApiKey is available, use GraphQL to get appropriate tariff code before entering execution loop.
 	if t.apikey != "" {
@@ -137,16 +137,16 @@ func (t *Octopus) run(done chan error) {
 			t.log.ERROR.Println(err)
 			return
 		}
-		tariffCode, err := gqlCli.TariffCode(t.tariffDirection)
+		tariffCode, err = gqlCli.TariffCode(t.tariffDirection)
 		if err != nil {
 			once.Do(func() { done <- err })
 			t.log.ERROR.Println(err)
 			return
 		}
-		restQueryUri = octoRest.ConstructRatesAPIFromTariffCode(tariffCode)
+		productCode = octoRest.ProductCodeFromTariffCode(tariffCode)
 	} else {
-		// Construct Rest Query URI using tariff and region codes.
-		restQueryUri = octoRest.ConstructRatesAPIFromProductAndRegionCode(t.productCode, t.region)
+		productCode = t.productCode
+		tariffCode = octoRest.TariffCodeFromProductAndRegionCode(t.productCode, t.region)
 	}
 
 	// TODO tick every 15 minutes if GraphQL is available to poll for Intelligent slots.
@@ -154,7 +154,9 @@ func (t *Octopus) run(done chan error) {
 		var res octoRest.UnitRates
 
 		if err := backoff.Retry(func() error {
-			return backoffPermanentError(client.GetJSON(restQueryUri, &res))
+			var err error
+			res, err = client.UnitRates(productCode, tariffCode, time.Now())
+			return backoffPermanentError(err)
 		}, bo()); err != nil {
 			if reportError(&once, done, err) {
 				return
