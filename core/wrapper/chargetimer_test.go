@@ -8,7 +8,7 @@ import (
 )
 
 func TestTimer(t *testing.T) {
-	ct := NewChargeTimer()
+	ct := NewChargeTimer(nil)
 	clck := clock.NewMock()
 	ct.clck = clck
 

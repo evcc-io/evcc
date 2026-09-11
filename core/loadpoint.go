@@ -141,10 +141,9 @@ type Loadpoint struct {
 	vehicleDetectTicker *clock.Ticker
 	vehicleIdentifier   string
 
-	charger          api.Charger
-	chargeTimer      api.ChargeTimer
-	chargeRater      api.ChargeRater
-	chargedAtStartup float64 // session energy at startup
+	charger     api.Charger
+	chargeTimer *wrapper.ChargeTimer
+	chargeRater *wrapper.ChargeRater
 
 	circuit        api.Circuit        // Circuit
 	chargeMeter    *chargeMeter       // Charger usage meter
@@ -468,35 +467,27 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 		}
 	}
 
-	// ensure charge rater exists
-	// measurement are obtained from separate charge meter if defined
+	// charge rater; measurements are obtained from separate charge meter if defined
 	// (https://github.com/evcc-io/evcc/issues/2469)
-	if rt, ok := api.Cap[api.ChargeRater](charger); ok && integrated {
-		lp.chargeRater = rt
-
-		// when restarting in the middle of charging session, use this as negative offset
-		if f, err := rt.ChargedEnergy(); err == nil {
-			lp.chargedAtStartup = f
-		}
-	} else {
-		rt := wrapper.NewChargeRater(lp.log, lp.chargeMeter)
-		_ = lp.bus.Subscribe(evChargePower, rt.SetChargePower)
-		_ = lp.bus.Subscribe(evVehicleConnect, func() { rt.StartCharge(false) })
-		_ = lp.bus.Subscribe(evChargeStart, func() { rt.StartCharge(true) })
-		_ = lp.bus.Subscribe(evChargeStop, rt.StopCharge)
-		lp.chargeRater = rt
+	var upstream api.ChargeRater
+	if integrated {
+		upstream, _ = api.Cap[api.ChargeRater](charger)
 	}
 
-	// ensure charge timer exists
-	if ct, ok := api.Cap[api.ChargeTimer](charger); ok {
-		lp.chargeTimer = ct
-	} else {
-		ct := wrapper.NewChargeTimer()
-		_ = lp.bus.Subscribe(evVehicleConnect, func() { ct.StartCharge(false) })
-		_ = lp.bus.Subscribe(evChargeStart, func() { ct.StartCharge(true) })
-		_ = lp.bus.Subscribe(evChargeStop, ct.StopCharge)
-		lp.chargeTimer = ct
-	}
+	rt := wrapper.NewChargeRater(lp.log, lp.chargeMeter, upstream)
+	_ = lp.bus.Subscribe(evChargePower, rt.SetChargePower)
+	_ = lp.bus.Subscribe(evVehicleConnect, func() { rt.StartCharge(false) })
+	_ = lp.bus.Subscribe(evChargeStart, func() { rt.StartCharge(true) })
+	_ = lp.bus.Subscribe(evChargeStop, rt.StopCharge)
+	lp.chargeRater = rt
+
+	// charge timer
+	timer, _ := api.Cap[api.ChargeTimer](charger)
+	ct := wrapper.NewChargeTimer(timer)
+	_ = lp.bus.Subscribe(evVehicleConnect, func() { ct.StartCharge(false) })
+	_ = lp.bus.Subscribe(evChargeStart, func() { ct.StartCharge(true) })
+	_ = lp.bus.Subscribe(evChargeStop, ct.StopCharge)
+	lp.chargeTimer = ct
 
 	// add wakeup timer
 	lp.wakeUpTimer = NewTimer()
@@ -636,9 +627,6 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 
 	// charge status
 	lp.publish(keys.ChargerStatusReason, api.ReasonUnknown)
-
-	// forget startup energy offset
-	lp.chargedAtStartup = 0
 
 	// remove charger vehicle id and stop potential detection
 	lp.setVehicleIdentifier("")
@@ -2013,16 +2001,14 @@ func (lp *Loadpoint) updateChargeVoltages() {
 // publish charged energy and duration
 func (lp *Loadpoint) publishChargeProgress() {
 	if f, err := lp.chargeRater.ChargedEnergy(); err == nil {
-		// workaround for Go-E resetting during disconnect, see
-		// https://github.com/evcc-io/evcc/issues/5092
-		switch session := f - lp.chargedAtStartup; {
-		case session > maxSessionEnergy:
+		switch {
+		case f > maxSessionEnergy:
 			// guard against meters reporting register garbage, see
 			// https://github.com/evcc-io/evcc/issues/32159
-			lp.log.WARN.Printf("ignoring implausible session energy: %.3fkWh", session)
+			lp.log.WARN.Printf("ignoring implausible session energy: %.3fkWh", f)
 
-		case session > 0:
-			added, addedGreen := lp.energyMetrics.Update(session)
+		case f > 0:
+			added, addedGreen := lp.energyMetrics.Update(f)
 			if added > 0 {
 				lp.log.DEBUG.Printf("session energy: %.3fkWh", f)
 			}

@@ -42,8 +42,8 @@ func TestPublishSocAndRange(t *testing.T) {
 		charger:      charger,
 		vehicle:      vehicle,
 		chargeMeter:  newChargeMeter(&Null{}), // silence nil panics
-		chargeRater:  &Null{},                 // silence nil panics
-		chargeTimer:  &Null{},                 // silence nil panics
+		chargeRater:  nullRater(),             // silence nil panics
+		chargeTimer:  nullTimer(),             // silence nil panics
 		socEstimator: soc.NewEstimator(log, vehicle),
 		minCurrent:   minA,
 		maxCurrent:   maxA,
@@ -158,8 +158,8 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 			charger:     tc.charger,
 			vehicle:     tc.vehicle,
 			chargeMeter: newChargeMeter(&Null{}), // silence nil panics
-			chargeRater: &Null{},                 // silence nil panics
-			chargeTimer: &Null{},                 // silence nil panics
+			chargeRater: nullRater(),             // silence nil panics
+			chargeTimer: nullTimer(),             // silence nil panics
 			minCurrent:  minA,
 			maxCurrent:  maxA,
 			phases:      1,
@@ -211,8 +211,8 @@ func TestPublishSocAndRangeEnergyLimit(t *testing.T) {
 		charger:      api.NewMockCharger(ctrl),
 		vehicle:      vehicle,
 		chargeMeter:  newChargeMeter(&Null{}), // silence nil panics
-		chargeRater:  &Null{},                 // silence nil panics
-		chargeTimer:  &Null{},                 // silence nil panics
+		chargeRater:  nullRater(),             // silence nil panics
+		chargeTimer:  nullTimer(),             // silence nil panics
 		socEstimator: soc.NewEstimator(log, vehicle),
 		minCurrent:   minA,
 		maxCurrent:   maxA,
@@ -621,8 +621,8 @@ func TestReconnectVehicle(t *testing.T) {
 				clock:       clck,
 				charger:     charger,
 				chargeMeter: newChargeMeter(&Null{}), // silence nil panics
-				chargeRater: &Null{},                 // silence nil panics
-				chargeTimer: &Null{},                 // silence nil panics
+				chargeRater: nullRater(),             // silence nil panics
+				chargeTimer: nullTimer(),             // silence nil panics
 				wakeUpTimer: NewTimer(),
 				minCurrent:  minA,
 				maxCurrent:  maxA,

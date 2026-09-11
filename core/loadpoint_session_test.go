@@ -7,6 +7,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/session"
+	"github.com/evcc-io/evcc/core/wrapper"
 	serverdb "github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
@@ -228,6 +229,8 @@ func TestResetHeatingSession(t *testing.T) {
 		db:          db,
 		charger:     charger,
 		chargeMeter: newChargeMeter(cm),
+		chargeRater: nullRater(),
+		chargeTimer: nullTimer(),
 	}
 
 	// create session
@@ -272,6 +275,7 @@ func TestFinalizeSessionEnergy(t *testing.T) {
 		mm := api.NewMockMeter(ctrl)
 		me := api.NewMockMeterEnergy(ctrl)
 		rater := api.NewMockChargeRater(ctrl)
+		rater.EXPECT().ChargedEnergy().Return(0.0, nil) // startup offset
 
 		type EnergyDecorator struct {
 			api.Meter
@@ -287,7 +291,7 @@ func TestFinalizeSessionEnergy(t *testing.T) {
 			log:         util.NewLogger("foo"),
 			clock:       clock.NewMock(),
 			db:          db,
-			chargeRater: rater,
+			chargeRater: wrapper.NewChargeRater(util.NewLogger("foo"), nil, rater),
 			chargeMeter: newChargeMeter(cm),
 		}
 		return lp, me, rater

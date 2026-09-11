@@ -19,24 +19,33 @@ type ChargeRater struct {
 	log           *util.Logger
 	clck          clock.Clock
 	meter         api.Meter
+	upstream      api.ChargeRater // charger-provided session energy, takes precedence over meter
+	offset        float64         // upstream energy at startup, see https://github.com/evcc-io/evcc/issues/5092
 	charging      bool
 	start         time.Time
 	startEnergy   *float64 // nil until baseline successfully read from meter
 	chargedEnergy float64
 }
 
-// ChargeResetter resets the charging session
-type ChargeResetter interface {
-	ResetCharge()
-}
-
-// NewChargeRater creates charge rater and initializes realtime clock
-func NewChargeRater(log *util.Logger, meter api.Meter) *ChargeRater {
-	return &ChargeRater{
-		log:   log,
-		clck:  clock.New(),
-		meter: meter,
+// NewChargeRater creates charge rater and initializes realtime clock.
+// Session energy is taken from upstream if given, otherwise from the meter's
+// TotalEnergy or integrated from charge power.
+func NewChargeRater(log *util.Logger, meter api.Meter, upstream api.ChargeRater) *ChargeRater {
+	cr := &ChargeRater{
+		log:      log,
+		clck:     clock.New(),
+		meter:    meter,
+		upstream: upstream,
 	}
+
+	// when restarting in the middle of charging session, use this as negative offset
+	if upstream != nil {
+		if f, err := upstream.ChargedEnergy(); err == nil {
+			cr.offset = f
+		}
+	}
+
+	return cr
 }
 
 // StartCharge records meter start energy. If meter does not supply TotalEnergy,
@@ -44,6 +53,10 @@ func NewChargeRater(log *util.Logger, meter api.Meter) *ChargeRater {
 func (cr *ChargeRater) StartCharge(continued bool) {
 	cr.Lock()
 	defer cr.Unlock()
+
+	if cr.upstream != nil {
+		return
+	}
 
 	// time is needed if MeterEnergy is not supported
 	cr.start = cr.clck.Now()
@@ -72,6 +85,10 @@ func (cr *ChargeRater) StopCharge() {
 	cr.Lock()
 	defer cr.Unlock()
 
+	if cr.upstream != nil {
+		return
+	}
+
 	cr.charging = false
 
 	// get end energy amount
@@ -87,12 +104,18 @@ func (cr *ChargeRater) StopCharge() {
 	}
 }
 
-var _ ChargeResetter = (*ChargeRater)(nil)
-
-// ChargeResetter resets the charging session
+// ResetCharge resets the charging session
 func (cr *ChargeRater) ResetCharge() {
 	cr.Lock()
 	defer cr.Unlock()
+
+	// upstream keeps counting, everything so far belongs to the previous session
+	if cr.upstream != nil {
+		if f, err := cr.upstream.ChargedEnergy(); err == nil {
+			cr.offset = f
+		}
+		return
+	}
 
 	// get end energy amount
 	if m, ok := api.Cap[api.MeterEnergy](cr.meter); ok {
@@ -117,7 +140,7 @@ func (cr *ChargeRater) SetChargePower(power float64) {
 	cr.Lock()
 	defer cr.Unlock()
 
-	if !cr.charging {
+	if cr.upstream != nil || !cr.charging {
 		return
 	}
 
@@ -135,6 +158,20 @@ func (cr *ChargeRater) SetChargePower(power float64) {
 func (cr *ChargeRater) ChargedEnergy() (float64, error) {
 	cr.Lock()
 	defer cr.Unlock()
+
+	if cr.upstream != nil {
+		f, err := cr.upstream.ChargedEnergy()
+		if err != nil {
+			return 0, err
+		}
+
+		// charger reset its counter, e.g. at start of a new session
+		if f < cr.offset {
+			cr.offset = 0
+		}
+
+		return f - cr.offset, nil
+	}
 
 	// return previously charged energy
 	if !cr.charging {

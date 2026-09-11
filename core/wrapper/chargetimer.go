@@ -5,12 +5,14 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
+	"github.com/evcc-io/evcc/api"
 )
 
 // ChargeTimer measures charging time between start and stop events
 type ChargeTimer struct {
 	sync.Mutex
-	clck clock.Clock
+	clck     clock.Clock
+	upstream api.ChargeTimer // charger-provided duration, takes precedence
 
 	charging bool
 	start    time.Time
@@ -18,10 +20,11 @@ type ChargeTimer struct {
 }
 
 // NewChargeTimer creates ChargeTimer for tracking duration between
-// start and stop events
-func NewChargeTimer() *ChargeTimer {
+// start and stop events. Duration is taken from upstream if given.
+func NewChargeTimer(upstream api.ChargeTimer) *ChargeTimer {
 	return &ChargeTimer{
-		clck: clock.New(),
+		clck:     clock.New(),
+		upstream: upstream,
 	}
 }
 
@@ -29,6 +32,10 @@ func NewChargeTimer() *ChargeTimer {
 func (m *ChargeTimer) StartCharge(continued bool) {
 	m.Lock()
 	defer m.Unlock()
+
+	if m.upstream != nil {
+		return
+	}
 
 	m.start = m.clck.Now()
 
@@ -44,16 +51,22 @@ func (m *ChargeTimer) StopCharge() {
 	m.Lock()
 	defer m.Unlock()
 
+	if m.upstream != nil {
+		return
+	}
+
 	m.charging = false
 	m.duration += m.clck.Since(m.start)
 }
 
-var _ ChargeResetter = (*ChargeTimer)(nil)
-
-// ChargeResetter resets the charging session
+// ResetCharge resets the charging session
 func (m *ChargeTimer) ResetCharge() {
 	m.Lock()
 	defer m.Unlock()
+
+	if m.upstream != nil {
+		return
+	}
 
 	m.duration = 0
 }
@@ -62,6 +75,10 @@ func (m *ChargeTimer) ResetCharge() {
 func (m *ChargeTimer) ChargeDuration() (time.Duration, error) {
 	m.Lock()
 	defer m.Unlock()
+
+	if m.upstream != nil {
+		return m.upstream.ChargeDuration()
+	}
 
 	if m.charging {
 		return m.duration + m.clck.Since(m.start), nil

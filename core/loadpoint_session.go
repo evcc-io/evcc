@@ -8,7 +8,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/session"
-	"github.com/evcc-io/evcc/core/wrapper"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/jinzhu/now"
 )
@@ -152,14 +151,13 @@ func (lp *Loadpoint) finalizeSessionEnergy() {
 		return
 	}
 
-	chargedKWh := f - lp.chargedAtStartup
-	if chargedKWh <= s.ChargedEnergy {
+	if f <= s.ChargedEnergy {
 		return
 	}
 
-	lp.log.DEBUG.Printf("session energy: %.3f -> %.3fkWh", s.ChargedEnergy, chargedKWh)
+	lp.log.DEBUG.Printf("session energy: %.3f -> %.3fkWh", s.ChargedEnergy, f)
 
-	lp.energyMetrics.Update(chargedKWh)
+	lp.energyMetrics.Update(f)
 
 	lp.applyEnergyMetrics(s)
 }
@@ -176,12 +174,8 @@ func (lp *Loadpoint) resetHeatingSession() {
 	lp.stopSession()
 	lp.clearSession()
 
-	if cr, ok := lp.chargeRater.(wrapper.ChargeResetter); ok {
-		cr.ResetCharge()
-	}
-	if ct, ok := lp.chargeTimer.(wrapper.ChargeResetter); ok {
-		ct.ResetCharge()
-	}
+	lp.chargeRater.ResetCharge()
+	lp.chargeTimer.ResetCharge()
 
 	lp.createSession()
 }

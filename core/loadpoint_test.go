@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/soc"
+	"github.com/evcc-io/evcc/core/wrapper"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -29,12 +30,12 @@ func (n *Null) CurrentPower() (float64, error) {
 	return 0, nil
 }
 
-func (n *Null) ChargedEnergy() (float64, error) {
-	return 0, nil
+func nullRater() *wrapper.ChargeRater {
+	return wrapper.NewChargeRater(util.NewLogger("null"), nil, nil)
 }
 
-func (n *Null) ChargeDuration() (time.Duration, error) {
-	return 0, nil
+func nullTimer() *wrapper.ChargeTimer {
+	return wrapper.NewChargeTimer(nil)
 }
 
 func createChannels(t *testing.T) (chan util.Param, chan messenger.Event, chan *Loadpoint) {
@@ -166,8 +167,8 @@ func TestUpdatePowerZero(t *testing.T) {
 			clock:       clock,
 			charger:     charger,
 			chargeMeter: newChargeMeter(&Null{}), // silence nil panics
-			chargeRater: &Null{},                 // silence nil panics
-			chargeTimer: &Null{},                 // silence nil panics
+			chargeRater: nullRater(),             // silence nil panics
+			chargeTimer: nullTimer(),             // silence nil panics
 			wakeUpTimer: NewTimer(),
 			minCurrent:  minA,
 			maxCurrent:  maxA,
@@ -405,8 +406,8 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 		clock:       clock,
 		charger:     charger,
 		chargeMeter: newChargeMeter(&Null{}), // silence nil panics
-		chargeRater: &Null{},                 // silence nil panics
-		chargeTimer: &Null{},                 // silence nil panics
+		chargeRater: nullRater(),             // silence nil panics
+		chargeTimer: nullTimer(),             // silence nil panics
 		progress:    NewProgress(0, 10),      // silence nil panics
 		wakeUpTimer: NewTimer(),              // silence nil panics
 		// coordinator:   coordinator.NewDummy(), // silence nil panics
@@ -485,8 +486,8 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 		settings:    settings.NewDatabaseSettingsAdapter("foo"),
 		charger:     charger,
 		chargeMeter: newChargeMeter(&Null{}), // silence nil panics
-		chargeRater: &Null{},                 // silence nil panics
-		chargeTimer: &Null{},                 // silence nil panics
+		chargeRater: nullRater(),             // silence nil panics
+		chargeTimer: nullTimer(),             // silence nil panics
 		wakeUpTimer: NewTimer(),
 		minCurrent:  minA,
 		maxCurrent:  maxA,
@@ -545,6 +546,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	charger := api.NewMockCharger(ctrl)
 	rater := api.NewMockChargeRater(ctrl)
+	rater.EXPECT().ChargedEnergy().Return(0.0, nil) // startup offset
 
 	lp := &Loadpoint{
 		log:         util.NewLogger("foo"),
@@ -552,8 +554,8 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 		clock:       clock,
 		charger:     charger,
 		chargeMeter: newChargeMeter(&Null{}), // silence nil panics
-		chargeRater: rater,
-		chargeTimer: &Null{}, // silence nil panics
+		chargeRater: wrapper.NewChargeRater(util.NewLogger("foo"), nil, rater),
+		chargeTimer: nullTimer(), // silence nil panics
 		wakeUpTimer: NewTimer(),
 		minCurrent:  minA,
 		maxCurrent:  maxA,
@@ -799,8 +801,8 @@ func TestConnectionDurationDropDetection(t *testing.T) {
 		minCurrent:  minA,
 		maxCurrent:  maxA,
 		chargeMeter: newChargeMeter(&Null{}), // silence nil panics
-		chargeRater: &Null{},                 // silence nil panics
-		chargeTimer: &Null{},                 // silence nil panics
+		chargeRater: nullRater(),             // silence nil panics
+		chargeTimer: nullTimer(),             // silence nil panics
 		wakeUpTimer: NewTimer(),              // silence nil panics
 	}
 
@@ -847,8 +849,8 @@ func TestWelcomeChargeAppliedOnlyOnce(t *testing.T) {
 		minCurrent:  minA,
 		maxCurrent:  maxA,
 		chargeMeter: newChargeMeter(&Null{}), // silence nil panics
-		chargeRater: &Null{},                 // silence nil panics
-		chargeTimer: &Null{},                 // silence nil panics
+		chargeRater: nullRater(),             // silence nil panics
+		chargeTimer: nullTimer(),             // silence nil panics
 		wakeUpTimer: NewTimer(),              // silence nil panics
 	}
 

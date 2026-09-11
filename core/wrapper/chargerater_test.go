@@ -12,7 +12,7 @@ import (
 )
 
 func TestNoMeter(t *testing.T) {
-	cr := NewChargeRater(util.NewLogger("foo"), nil)
+	cr := NewChargeRater(util.NewLogger("foo"), nil, nil)
 	clck := clock.NewMock()
 	cr.clck = clck
 
@@ -71,7 +71,7 @@ func TestWrappedMeter(t *testing.T) {
 
 	cm := &EnergyDecorator{Meter: mm, MeterEnergy: me}
 
-	cr := NewChargeRater(util.NewLogger("foo"), cm)
+	cr := NewChargeRater(util.NewLogger("foo"), cm, nil)
 	clck := clock.NewMock()
 	cr.clck = clck
 
@@ -130,7 +130,7 @@ func TestDeferredBaseline(t *testing.T) {
 
 	cm := &EnergyDecorator{Meter: mm, MeterEnergy: me}
 
-	cr := NewChargeRater(util.NewLogger("foo"), cm)
+	cr := NewChargeRater(util.NewLogger("foo"), cm, nil)
 	clck := clock.NewMock()
 	cr.clck = clck
 
@@ -166,5 +166,42 @@ func TestDeferredBaseline(t *testing.T) {
 
 	if f, err := cr.ChargedEnergy(); f != 5 || err != nil {
 		t.Errorf("final energy: %.1f %v", f, err)
+	}
+}
+
+// TestUpstream covers chargers providing session energy themselves: the value
+// at startup is a negative offset until the charger resets its counter.
+func TestUpstream(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	up := api.NewMockChargeRater(ctrl)
+
+	// restart in the middle of a session
+	up.EXPECT().ChargedEnergy().Return(3.0, nil)
+	cr := NewChargeRater(util.NewLogger("foo"), nil, up)
+
+	// power integration is ignored
+	cr.StartCharge(true)
+	cr.SetChargePower(1e3)
+
+	up.EXPECT().ChargedEnergy().Return(5.0, nil)
+	if f, err := cr.ChargedEnergy(); f != 2 || err != nil {
+		t.Errorf("energy: %.1f %v", f, err)
+	}
+
+	// charger reset its counter for a new session
+	up.EXPECT().ChargedEnergy().Return(1.0, nil)
+	if f, err := cr.ChargedEnergy(); f != 1 || err != nil {
+		t.Errorf("energy: %.1f %v", f, err)
+	}
+
+	// reset re-latches the offset
+	up.EXPECT().ChargedEnergy().Return(4.0, nil)
+	cr.ResetCharge()
+
+	up.EXPECT().ChargedEnergy().Return(4.5, nil)
+	if f, err := cr.ChargedEnergy(); f != 0.5 || err != nil {
+		t.Errorf("energy: %.1f %v", f, err)
 	}
 }
