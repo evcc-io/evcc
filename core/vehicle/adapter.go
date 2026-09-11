@@ -220,3 +220,34 @@ func (v *adapter) SetPlanStrategy(planStrategy api.PlanStrategy) error {
 
 	return nil
 }
+
+// GetPausedUntil returns the repeating plans pause timestamp
+func (v *adapter) GetPausedUntil() time.Time {
+	var ts time.Time
+	if v, err := settings.Time(v.key() + keys.PausedUntil); err == nil {
+		ts = v
+	}
+	return ts
+}
+
+// SetPausedUntil sets the repeating plans pause timestamp
+func (v *adapter) SetPausedUntil(ts time.Time) error {
+	if !ts.IsZero() && ts.Before(time.Now()) {
+		return errors.New("timestamp is in the past")
+	}
+
+	if ts.IsZero() {
+		v.log.DEBUG.Printf("clear %s repeating plans pause", v.name)
+	} else {
+		v.log.DEBUG.Printf("pause %s repeating plans until: %v", v.name, ts.Round(time.Second).Local())
+	}
+
+	settings.SetTime(v.key()+keys.PausedUntil, ts)
+
+	// note: could be optimized by only clearing plan lock of the relevant loadpoint
+	v.clearPlanLocks()
+
+	v.publish()
+
+	return nil
+}
