@@ -10,6 +10,8 @@ requirements:
 params:
   - preset: vehicle-common
   - preset: vehicle-online
+  - name: coarsecurrent
+    advanced: true
   - name: welcomecharge
     advanced: true
   - name: apikey

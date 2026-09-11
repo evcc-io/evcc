@@ -6,6 +6,8 @@ products:
       generic: MyŠkoda
 params:
   - preset: vehicle-base
+  - name: coarsecurrent
+    advanced: true
   - name: welcomecharge
     advanced: true
   - preset: vehicle-online
