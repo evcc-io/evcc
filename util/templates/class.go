@@ -14,4 +14,5 @@ const (
 	Messenger
 	Hems
 	Curtailer
+	Thermometer
 )

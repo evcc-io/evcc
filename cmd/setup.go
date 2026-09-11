@@ -41,6 +41,7 @@ import (
 	"github.com/evcc-io/evcc/server/modbus"
 	"github.com/evcc-io/evcc/server/providerauth"
 	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/thermometer"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/locale"
@@ -1307,6 +1308,50 @@ func configureTariffs(conf *globalconfig.Tariffs, names ...string) (*tariff.Tari
 	return &tariffs, nil
 }
 
+func configureThermometers(static []config.Named, names ...string) error {
+	var eg errgroup.Group
+
+	for i, cc := range static {
+		if cc.Name == "" {
+			return fmt.Errorf("cannot create thermometer %d: missing name", i+1)
+		}
+
+		// configure all, if no name refs are given
+		if len(names) > 0 && !slices.Contains(names, cc.Name) {
+			continue
+		}
+
+		if err := nameValid(cc.Name); err != nil {
+			log.WARN.Printf("create thermometer %d: %v", i+1, err)
+		}
+
+		eg.Go(func() error {
+			return staticInstance("thermometer", cc, thermometer.NewFromConfig, config.Thermometers())
+		})
+	}
+
+	// append devices from database
+	configurable, err := config.ConfigurationsByClass(templates.Thermometer)
+	if err != nil {
+		return err
+	}
+
+	for _, conf := range configurable {
+		eg.Go(func() error {
+			cc := conf.Named()
+
+			// always skip unreferenced db devices
+			if !slices.Contains(names, cc.Name) {
+				return nil
+			}
+
+			return configurableInstance("thermometer", &conf, thermometer.NewFromConfig, config.Thermometers())
+		})
+	}
+
+	return eg.Wait()
+}
+
 func configureDevices(conf globalconfig.All) error {
 	// collect references for filtering used devices
 	if err := collectRefs(conf); err != nil {
@@ -1334,6 +1379,10 @@ func configureDevices(conf globalconfig.All) error {
 
 	if err := configureCurtailers(conf.Curtailers, references.curtailer...); err != nil {
 		errs = append(errs, &ClassError{ClassCurtailer, err})
+	}
+
+	if err := configureThermometers(conf.Thermometers, references.thermometer...); err != nil {
+		errs = append(errs, &ClassError{ClassThermometer, err})
 	}
 
 	return joinErrors(errs...)

@@ -15,7 +15,7 @@ import (
 )
 
 var references struct {
-	meter, charger, vehicle, circuit, tariff, curtailer []string
+	meter, charger, vehicle, circuit, tariff, curtailer, thermometer []string
 }
 
 func collectRefs(conf globalconfig.All) error {
@@ -115,6 +115,7 @@ func collectLoadpointRefs(named iter.Seq[config.Named]) error {
 			ChargerRef string         `mapstructure:"charger"` // Charger reference
 			VehicleRef string         `mapstructure:"vehicle"` // Vehicle reference
 			MeterRef   string         `mapstructure:"meter"`   // Charge meter reference
+			ThermoRef  string         `mapstructure:"thermometer"`
 			Other      map[string]any `mapstructure:",remain"`
 		}
 
@@ -126,6 +127,7 @@ func collectLoadpointRefs(named iter.Seq[config.Named]) error {
 		references.charger = append(references.charger, refs.ChargerRef)
 		references.vehicle = append(references.vehicle, refs.VehicleRef)
 		references.circuit = append(references.circuit, refs.CircuitRef)
+		references.thermometer = append(references.thermometer, refs.ThermoRef)
 	}
 
 	return nil

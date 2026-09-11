@@ -23,6 +23,8 @@ func getLoadpointStaticConfig(lp loadpoint.API) loadpoint.StaticConfig {
 		Meter:   lp.GetMeterRef(),
 		Circuit: lp.GetCircuitRef(),
 		Vehicle: lp.GetDefaultVehicleRef(),
+
+		Thermometer: lp.GetThermometerRef(),
 	}
 }
 
@@ -315,6 +317,12 @@ func updateLoadpointHandler() http.HandlerFunc {
 
 		meterRef, _ := other["meter"].(string)
 		if err := setDeviceDisable(meterRef, config.Meters(), props.Disable); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		thermometerRef, _ := other["thermometer"].(string)
+		if err := setDeviceDisable(thermometerRef, config.Thermometers(), props.Disable); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}

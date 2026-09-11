@@ -99,6 +99,8 @@ type Loadpoint struct {
 	VehicleRef string `mapstructure:"vehicle"` // Vehicle reference
 	MeterRef   string `mapstructure:"meter"`   // Charge meter reference
 
+	ThermometerRef string `mapstructure:"thermometer"` // Thermometer reference (heating devices)
+
 	Soc             loadpoint.SocConfig
 	Enable, Disable loadpoint.ThresholdConfig
 	Ui              loadpoint.UIConfig // display-only, not used in control logic
@@ -148,6 +150,7 @@ type Loadpoint struct {
 
 	circuit        api.Circuit        // Circuit
 	chargeMeter    *chargeMeter       // Charger usage meter
+	thermometer    api.Battery        // Thermometer overriding charger temperature (heating devices)
 	chargeEnergy   *metrics.Collector // Charger usage collector
 	vehicle        api.Vehicle        // Currently active vehicle
 	defaultVehicle api.Vehicle        // Default vehicle (disables detection)
@@ -247,6 +250,17 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 			return lp, errors.New("missing charge meter instance")
 		}
 		lp.chargeMeter = newChargeMeter(mt)
+	}
+
+	if lp.ThermometerRef != "" {
+		dev, err := config.Thermometers().ByName(lp.ThermometerRef)
+		if err != nil {
+			return lp, fmt.Errorf("thermometer: %w", err)
+		}
+		lp.thermometer = dev.Instance()
+		if lp.thermometer == nil {
+			return lp, errors.New("missing thermometer instance")
+		}
 	}
 
 	// default vehicle
@@ -2133,7 +2147,22 @@ func (lp *Loadpoint) publishSocAndRange() {
 		return socR, limitR, socErr
 	}
 
-	socR, limitR, _ := socAndLimit("charger", lp.charger)
+	// thermometer overrides charger temperature
+	var socR *float64
+	var limitR *int64
+	if lp.thermometer != nil {
+		socR, limitR, _ = socAndLimit("thermometer", lp.thermometer)
+
+		// keep charger limit temperature
+		if socLimiter, ok := api.Cap[api.SocLimiter](lp.charger); ok && limitR == nil {
+			if limit, err := socLimiter.GetLimitSoc(); err == nil {
+				limitR = &limit
+				lp.publish(keys.VehicleLimitSoc, float64(limit))
+			}
+		}
+	} else {
+		socR, limitR, _ = socAndLimit("charger", lp.charger)
+	}
 	if socR == nil && (lp.vehicleSocPollAllowed() || lp.chargerHasFeature(api.IntegratedDevice)) {
 		var socErr error
 		socR, limitR, socErr = socAndLimit("vehicle", lp.GetVehicle())

@@ -13,6 +13,8 @@ type StaticConfig struct {
 	Meter   string `json:"meter,omitempty"`
 	Circuit string `json:"circuit,omitempty"`
 	Vehicle string `json:"vehicle,omitempty"`
+
+	Thermometer string `json:"thermometer,omitempty"`
 }
 
 type DynamicConfig struct {

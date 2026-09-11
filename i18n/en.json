@@ -437,6 +437,7 @@
         "heating": "Add heating device"
       },
       "addMeter": "Add dedicated energy meter",
+      "addThermometer": "Add external thermometer",
       "advancedConfig": "Advanced configuration",
       "cancel": "Cancel",
       "chargerError": {
@@ -518,6 +519,8 @@
       "solarShareReset": "Remove thresholds",
       "temperatureRangeHelp": "Display range for the temperature bar. Does not affect control.",
       "temperatureRangeTitle": "Temperature range",
+      "thermometerHelp": "External temperature sensor. Overrides the temperature reported by the heating device.",
+      "thermometerLabel": "Thermometer",
       "thresholdDisableDelayLabel": "Disable delay",
       "thresholdDisableHelpInvalid": "Please use a positive value.",
       "thresholdDisableHelpPositive": "Stop, when more than {power} is used from the grid for {delay}.",
@@ -1032,6 +1035,12 @@
     "telemetry": {
       "description": "Configure data sharing to help improve evcc. Your privacy is important to us and participation is completely optional.",
       "title": "Telemetry"
+    },
+    "thermometer": {
+      "generic": "Generic integrations",
+      "template": "Manufacturer",
+      "titleAdd": "Add Thermometer",
+      "titleEdit": "Edit Thermometer"
     },
     "title": {
       "description": "Displayed on main screen and browser tab.",

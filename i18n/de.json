@@ -437,6 +437,7 @@
         "heating": "Heizgerät hinzufügen"
       },
       "addMeter": "Zusätzlichen Energiezähler hinzufügen",
+      "addThermometer": "Externes Thermometer hinzufügen",
       "advancedConfig": "Erweiterte Konfiguration",
       "cancel": "Abbrechen",
       "chargerError": {
@@ -518,6 +519,8 @@
       "solarShareReset": "Schwellwerte entfernen",
       "temperatureRangeHelp": "Anzeigebereich für den Temperaturbalken. Beeinflusst die Regelung nicht.",
       "temperatureRangeTitle": "Temperaturbereich",
+      "thermometerHelp": "Externer Temperatursensor. Überschreibt die vom Heizgerät gemeldete Temperatur.",
+      "thermometerLabel": "Thermometer",
       "thresholdDisableDelayLabel": "Ausschaltverzögerung",
       "thresholdDisableHelpInvalid": "Bitte verwende einen positiven Wert.",
       "thresholdDisableHelpPositive": "Laden stoppen, wenn mehr als {power} für {delay} aus dem Netz bezogen wird.",
@@ -1032,6 +1035,12 @@
     "telemetry": {
       "description": "Konfiguriere die Datenfreigabe, um evcc zu verbessern. Deine Privatsphäre ist uns wichtig und die Teilnahme ist völlig freiwillig.",
       "title": "Telemetrie"
+    },
+    "thermometer": {
+      "generic": "Generische Integrationen",
+      "template": "Hersteller",
+      "titleAdd": "Thermometer hinzufügen",
+      "titleEdit": "Thermometer bearbeiten"
     },
     "title": {
       "description": "Wird in der Hauptansicht und im Browser-Tab angezeigt.",

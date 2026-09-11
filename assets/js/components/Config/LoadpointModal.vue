@@ -533,6 +533,30 @@
 						</div>
 
 						<div v-if="chargerIsHeating">
+							<FormRow
+								v-if="values.thermometer"
+								id="loadpointParamThermometer"
+								:label="$t('config.loadpoint.thermometerLabel')"
+								:help="$t('config.loadpoint.thermometerHelp')"
+							>
+								<DeviceRefBox
+									compact
+									:title="thermometerTitle"
+									:error="hasDeviceError('thermometer', values.thermometer)"
+									@edit="editThermometer"
+								/>
+							</FormRow>
+							<p v-else>
+								<button
+									class="btn btn-link btn-sm text-gray px-0"
+									type="button"
+									tabindex="0"
+									@click="editThermometer"
+								>
+									{{ $t("config.loadpoint.addThermometer") }}
+								</button>
+							</p>
+
 							<h6>{{ $t("config.loadpoint.temperatureRangeTitle") }}</h6>
 							<p class="text-muted">
 								{{ $t("config.loadpoint.temperatureRangeHelp") }}
@@ -649,6 +673,7 @@ import {
 	type LoadpointType,
 	type ConfigCharger,
 	type ConfigMeter,
+	type ConfigThermometer,
 	type VehicleOption,
 	type ConfigCircuit,
 	type ConfigLoadpoint,
@@ -682,6 +707,7 @@ const defaultValues = {
 	charger: "",
 	circuit: "",
 	meter: "",
+	thermometer: "",
 } as ConfigLoadpoint;
 
 const defaultThresholds = {
@@ -708,6 +734,7 @@ export default {
 		chargers: { type: Array as PropType<ConfigCharger[]>, default: () => [] },
 		chargerValues: { type: Object, default: () => {} },
 		meters: { type: Array as PropType<ConfigMeter[]>, default: () => [] },
+		thermometers: { type: Array as PropType<ConfigThermometer[]>, default: () => [] },
 		circuits: { type: Array as PropType<ConfigCircuit[]>, default: () => [] },
 		hasDeviceError: {
 			type: Function as PropType<(type: DeviceType, name: string) => boolean>,
@@ -804,6 +831,16 @@ export default {
 				meter?.config?.template ||
 				this.$t("config.general.customOption");
 			return title;
+		},
+		thermometerTitle() {
+			const name = this.values.thermometer;
+			if (!name) return "";
+			const thermometer = this.thermometers.find((t) => t.name === name);
+			return (
+				thermometer?.deviceProduct ||
+				thermometer?.config?.template ||
+				this.$t("config.general.customOption")
+			);
 		},
 		isDeletable() {
 			return !this.isNew;
@@ -1015,6 +1052,7 @@ export default {
 			if (!this.values.id && !this.autoCreate) {
 				await this.cleanupDevice("charger", this.values.charger, this.chargers);
 				await this.cleanupDevice("meter", this.values.meter, this.meters);
+				await this.cleanupDevice("thermometer", this.values.thermometer, this.thermometers);
 				this.$emit("dismissed");
 				this.reset();
 				return;
@@ -1058,6 +1096,15 @@ export default {
 				this.values.meter = result.name;
 			} else if (result.action === "removed") {
 				this.values.meter = "";
+			}
+		},
+		async editThermometer() {
+			const thermometer = this.thermometers.find((t) => t.name === this.values.thermometer);
+			const result = await openModal("thermometer", { id: thermometer?.id });
+			if (result.action === "added" && result.name) {
+				this.values.thermometer = result.name;
+			} else if (result.action === "removed") {
+				this.values.thermometer = "";
 			}
 		},
 		updateSolarMode() {

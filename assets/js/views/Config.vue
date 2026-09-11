@@ -519,6 +519,7 @@
 					:chargers="chargers"
 					:chargerValues="deviceValues['charger']"
 					:meters="meters"
+					:thermometers="thermometers"
 					:circuits="circuits"
 					:hasDeviceError="hasDeviceError"
 					@changed="loadpointChanged"
@@ -534,6 +535,11 @@
 					:is-sponsor="isSponsor"
 					@changed="meterChanged"
 					@disable="({ id, disable }) => handleDisable('meter', id, disable)"
+				/>
+				<ThermometerModal
+					:is-sponsor="isSponsor"
+					@changed="thermometerChanged"
+					@disable="({ id, disable }) => handleDisable('thermometer', id, disable)"
 				/>
 				<ChargerModal :is-sponsor="isSponsor" :ocpp="ocpp" @changed="chargerChanged" />
 				<InfluxModal @changed="loadDirty" />
@@ -654,6 +660,7 @@ import ExperimentalModal from "../components/Config/ExperimentalModal.vue";
 import TitleModal from "../components/Config/TitleModal.vue";
 import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
+import ThermometerModal from "../components/Config/ThermometerModal.vue";
 import VehicleModal from "../components/Config/VehicleModal.vue";
 import { defineComponent, markRaw, type PropType } from "vue";
 import type {
@@ -661,6 +668,7 @@ import type {
 	ConfigVehicle,
 	ConfigCircuit,
 	ConfigCurtailer,
+	ConfigThermometer,
 	ConfigMessenger,
 	ConfigHems,
 	ConfigLoadpoint,
@@ -763,6 +771,7 @@ export default defineComponent({
 		TitleModal,
 		TopHeader: Header,
 		VehicleIcon,
+		ThermometerModal,
 		VehicleModal,
 		WelcomeBanner,
 		AuthSuccessBanner,
@@ -782,6 +791,7 @@ export default defineComponent({
 			curtailers: [] as ConfigCurtailer[],
 			vehicles: [] as ConfigVehicle[],
 			meters: [] as ConfigMeter[],
+			thermometers: [] as ConfigThermometer[],
 			loadpoints: [] as ConfigLoadpoint[],
 			chargers: [] as ConfigCharger[],
 			circuits: [] as ConfigCircuit[],
@@ -814,6 +824,7 @@ export default defineComponent({
 				messenger: {},
 				tariff: {},
 				curtailer: {},
+				thermometer: {},
 			} as DeviceValuesMap,
 			isComponentMounted: true,
 			isPageVisible: true,
@@ -1303,6 +1314,7 @@ export default defineComponent({
 				meter: () => this.meterChanged({ action: "updated" }),
 				tariff: () => this.tariffChanged({ action: "updated" }),
 				vehicle: () => this.vehicleChanged(),
+				thermometer: () => this.thermometerChanged(),
 				loadpoint: () => this.loadpointChanged(),
 			};
 			try {
@@ -1329,6 +1341,7 @@ export default defineComponent({
 		async loadAll() {
 			await this.loadVehicles();
 			await this.loadMeters();
+			await this.loadThermometers();
 			await this.loadSite();
 			await this.loadChargers();
 			await this.loadLoadpoints();
@@ -1366,6 +1379,9 @@ export default defineComponent({
 		},
 		async loadMeters() {
 			this.meters = (await this.loadConfig("devices/meter")) || [];
+		},
+		async loadThermometers() {
+			this.thermometers = (await this.loadConfig("devices/thermometer")) || [];
 		},
 		async loadHems() {
 			this.hemsDevices = (await this.loadConfig("devices/hems")) || [];
@@ -1478,6 +1494,12 @@ export default defineComponent({
 		async loadpointDismissed() {
 			await this.loadChargers();
 			await this.loadMeters();
+			await this.loadThermometers();
+			this.updateValues();
+		},
+		async thermometerChanged() {
+			await this.loadThermometers();
+			await this.loadDirty();
 			this.updateValues();
 		},
 		vehicleChanged() {
@@ -1571,6 +1593,7 @@ export default defineComponent({
 					charger: this.chargers,
 					tariff: this.tariffs,
 					curtailer: this.curtailers,
+					thermometer: this.thermometers,
 				} as Record<DeviceType, any[]>;
 				for (const type in devices) {
 					for (const device of devices[type as DeviceType]) {

@@ -44,6 +44,10 @@ type API interface {
 	GetMeterRef() string
 	// SetMeterRef sets the loadpoint meter
 	SetMeterRef(string)
+	// GetThermometerRef returns the loadpoint thermometer
+	GetThermometerRef() string
+	// SetThermometerRef sets the loadpoint thermometer
+	SetThermometerRef(string)
 	// GetCircuitRef returns the loadpoint circuit
 	GetCircuitRef() string
 	// SetCircuitRef sets the loadpoint circuit
