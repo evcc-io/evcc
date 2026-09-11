@@ -183,16 +183,17 @@ render: |
       decode: uint32s
     scale: 0.1
   soc:
+    {{- $hasMinMax := and .minsoc .maxsoc }}
     source: go
     script: |
-      {{- if and .minsoc .maxsoc }}
+      {{- if $hasMinMax }}
       nomsoc := min + (soc / 100 * (max - min))
       nomsoc
       {{- else }}
       soc
       {{- end }}
     in:
-    {{- if and .minsoc .maxsoc }}
+    {{- if $hasMinMax }}
     - name: min
       type: float
       config:
@@ -220,8 +221,8 @@ render: |
         source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
-          address: 13022 # Battery level
           type: input
+          address: 13022 # Battery level
           decode: int16
         scale: 0.1
   batterymode:
