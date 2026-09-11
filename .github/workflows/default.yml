@@ -56,7 +56,7 @@ jobs:
 
       - uses: voidzero-dev/setup-vp@v1
         with:
-          node-version: "26"
+          node-version-file: ".node-version"
           cache: true
 
       - run: mkdir dist && touch dist/empty
@@ -126,7 +126,7 @@ jobs:
 
       - uses: voidzero-dev/setup-vp@v1
         with:
-          node-version: "26"
+          node-version-file: ".node-version"
           cache: true
 
       - name: Install
@@ -199,7 +199,7 @@ jobs:
 
       - uses: voidzero-dev/setup-vp@v1
         with:
-          node-version: "26"
+          node-version-file: ".node-version"
           cache: true
 
       - name: Install
@@ -312,7 +312,7 @@ jobs:
 
       - uses: voidzero-dev/setup-vp@v1
         with:
-          node-version: "26"
+          node-version-file: ".node-version"
           cache: true
 
       - name: Get Playwright version

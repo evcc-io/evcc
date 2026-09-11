@@ -27,7 +27,7 @@
 							</label>
 							<div class="col-7 col-lg-12">
 								<select
-									v-if="disabled"
+									v-if="optimizationDisabled"
 									:id="formId('continuous')"
 									class="form-select"
 									disabled
@@ -149,8 +149,15 @@ export default defineComponent({
 		cheapestKey(): string {
 			return this.isCo2 ? "cleanest" : "cheapest";
 		},
+		preconditionAll(): boolean {
+			return this.localPrecondition >= EVERYTHING;
+		},
+		optimizationDisabled(): boolean {
+			// everything is charged late, nothing left to optimize
+			return this.disabled || this.preconditionAll;
+		},
 		summary(): string {
-			if (this.disabled) {
+			if (this.disabled || this.precondition >= EVERYTHING) {
 				return this.$t("main.chargingPlan.precondition.summaryAll");
 			}
 			const parts = [
@@ -158,9 +165,7 @@ export default defineComponent({
 					`main.chargingPlan.optimization.${this.continuous ? "continuous" : this.cheapestKey}`
 				),
 			];
-			if (this.precondition >= EVERYTHING) {
-				parts.push(this.$t("main.chargingPlan.precondition.summaryAll"));
-			} else if (this.precondition) {
+			if (this.precondition) {
 				parts.push(
 					this.$t("main.chargingPlan.precondition.summary", {
 						precondition: this.fmtDurationLong(this.precondition),
@@ -172,6 +177,9 @@ export default defineComponent({
 		optimizationDescription(): string {
 			if (this.disabled) {
 				return this.$t("main.chargingPlan.optimization.disabledDescription");
+			}
+			if (this.preconditionAll) {
+				return this.$t("main.chargingPlan.precondition.disabledDescription");
 			}
 			const variant = this.localContinuous
 				? this.isCo2

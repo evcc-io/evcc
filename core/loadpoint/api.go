@@ -13,6 +13,16 @@ type Controller interface {
 	LoadpointControl(API)
 }
 
+// AlwaysChargeActive reports if the loadpoint is forced to draw at least min power
+func AlwaysChargeActive(lp API) bool {
+	return lp.GetMode() == api.ModeSmart && lp.GetAlwaysCharge().Active()
+}
+
+// SurplusFlexible reports if the loadpoint charges flexibly from surplus, i.e. smart mode without always charge
+func SurplusFlexible(lp API) bool {
+	return lp.GetMode() == api.ModeSmart && !lp.GetAlwaysCharge().Active()
+}
+
 // API is the external loadpoint API
 type API interface {
 	//
@@ -70,6 +80,10 @@ type API interface {
 	GetMode() api.ChargeMode
 	// SetMode sets the charge mode
 	SetMode(api.ChargeMode)
+	// GetAlwaysCharge returns the always charge state
+	GetAlwaysCharge() api.AlwaysCharge
+	// SetAlwaysCharge sets the always charge state
+	SetAlwaysCharge(api.AlwaysCharge) error
 	// GetDefaultMode returns the default charge mode (for reset)
 	GetDefaultMode() api.ChargeMode
 	// SetDefaultMode sets the default charge mode (for reset)
@@ -191,6 +205,11 @@ type API interface {
 	GetSmartCostLimit() *float64
 	// SetSmartCostLimit sets the smart cost limit
 	SetSmartCostLimit(limit *float64)
+
+	// GetSolarShare gets the solar share
+	GetSolarShare() float64
+	// SetSolarShare sets the solar share
+	SetSolarShare(share float64)
 	// GetSmartFeedInPriorityLimit return the smart feed-in limit
 	GetSmartFeedInPriorityLimit() *float64
 	// SetSmartFeedInPriorityLimit sets the smart feed-in limit

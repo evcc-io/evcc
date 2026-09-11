@@ -16,12 +16,13 @@ type Error struct {
 
 // Vehicle is the vehicle and its current state
 type Vehicle struct {
-	VIN             string
-	Name            string
-	LicensePlate    string
-	Odometer        *Odometer
-	AirConditioning *AirConditioning
-	Charging        *Charging
+	VIN              string
+	Name             string
+	LicensePlate     string
+	Odometer         *Odometer
+	AirConditioning  *AirConditioning
+	Charging         *Charging
+	ChargingProfiles ChargingProfiles
 }
 
 type Odometer struct {
@@ -33,8 +34,9 @@ type AirConditioning struct {
 }
 
 type Charging struct {
-	Status   *ChargingStatus
-	Settings *ChargingSettings
+	IsVehicleInSavedLocation bool
+	Status                   *ChargingStatus
+	Settings                 *ChargingSettings
 }
 
 type ChargingStatus struct {
@@ -56,4 +58,10 @@ type ChargingSettings struct {
 	TargetStateOfChargeInPercent *int
 	MaxChargeCurrentAc           string
 	MaxChargeCurrentAcAmpere     int
+}
+
+type ChargingProfiles struct {
+	CurrentVehiclePositionProfile *struct {
+		TargetStateOfChargeInPercent *int
+	}
 }

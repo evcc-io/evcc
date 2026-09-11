@@ -33,7 +33,7 @@
     },
     "combined": "Combinada",
     "config": {
-      "buffer": "L’energia de la bateria domèstica per sobre de {soc} es pot utilitzar per a donar suport als punts de recàrrega i retarda l’aturada en mode solar. La càrrega solar s’inicia automàticament {start}.",
+      "buffer": "L’energia de la bateria domèstica per sobre de {soc} es pot utilitzar per a donar suport als punts de recàrrega i retarda l’aturada en mode intel·ligent. La càrrega solar s’inicia automàticament {start}.",
       "bufferNone": "L’energia de la bateria domèstica no s’utilitza per als punts de recàrrega. Establiu un valor inferior a {soc} per a habilitar el suport.",
       "bufferStart": {
         "above": "quan la bateria es troba per sobre de {soc}",
@@ -63,28 +63,8 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Nivell de bateria",
-    "bufferStart": {
-      "above": "quan està per sobre de {soc}.",
-      "full": "quan arriba a {soc}.",
-      "never": "només amb prou excedent."
-    },
-    "capacity": "{energy} de {total}",
-    "control": "Control de la bateria",
-    "discharge": "Evita la descàrrega en mode ràpid i càrrega planificada.",
-    "disclaimerHint": "Nota:",
-    "disclaimerText": "Aquests paràmetres només afecten el mode solar. El comportament de càrrega s’ajusta en conseqüència.",
     "gridChargeTab": "Càrrega de xarxa",
-    "legendBottomName": "Prioritat per a la bateria domèstica",
-    "legendBottomSubline": "fins que arriba a {soc}.",
-    "legendMiddleName": "Prioritat per al vehicle",
-    "legendMiddleSubline": "quan la bateria domèstica està per sobre de {soc}.",
-    "legendTopAutostart": "S’inicia automàticament",
-    "legendTopName": "Càrrega del vehicle amb suport de bateria",
-    "legendTopSubline": "quan la bateria domèstica està per sobre de {soc}.",
-    "legendTopSublineAbove": "quan està per sobre de {soc}",
-    "legendTopSublineDisabled": "és {soc}.",
-    "legendTopSublineDisabledState": "desactivat",
+    "gridDischargeTab": "Descarrega a la xarxa",
     "modalTitle": "Bateria domèstica",
     "noBattery": "No hi ha bateries configurades.",
     "usageTab": "Ús de la bateria"
@@ -210,7 +190,7 @@
       "chargeStatusC": "carregant",
       "chargeStatusE": "sense energia",
       "chargeStatusF": "error",
-      "chargedEnergy": "Carregat",
+      "chargedEnergy": "Carregat (sessió)",
       "co2": "CO₂ de la xarxa",
       "configured": "Configurat",
       "connected": "Connectat",
@@ -259,6 +239,31 @@
       "temp": "Temperatura",
       "topic": "Tema",
       "url": "URL",
+      "usage": {
+        "aux": {
+          "energy": "Consumit",
+          "returnEnergy": "Produït"
+        },
+        "battery": {
+          "energy": "Descarregat",
+          "returnEnergy": "Carregat"
+        },
+        "charge": {
+          "energy": "Carregat",
+          "returnEnergy": "Descarregat"
+        },
+        "consumer": {
+          "energy": "Consumit",
+          "returnEnergy": "Produït"
+        },
+        "grid": {
+          "energy": "Importat",
+          "returnEnergy": "Exportat"
+        },
+        "pv": {
+          "energy": "Produït"
+        }
+      },
       "vehicleLimitSoc": "Límit de càrrega",
       "yes": "sí"
     },
@@ -352,6 +357,7 @@
       "hideAdvancedSettings": "Amaga els paràmetres avançats",
       "invalidFileSelected": "Fitxer seleccionat no vàlid",
       "legacy": "antic",
+      "moreInfo": "Més informació:",
       "noFileSelected": "Cap fitxer seleccionat.",
       "off": "desactivat",
       "on": "activat",
@@ -441,13 +447,6 @@
         "charging": "Carregador",
         "heating": "Dispositiu de calefacció"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Utilitzarà un interval de corrent de 6 a 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Utilitzarà un interval de corrent de 6 a 32 A.",
-      "chargerPowerCustom": "altre",
-      "chargerPowerCustomHelp": "Defineix un interval de corrent personalitzat.",
-      "chargerTypeLabel": "Tipus de carregador",
       "chargingTitle": "Comportament",
       "circuitHelp": "Assignació a la gestió de càrregues per a assegurar que no se superin els límits de potència i corrent.",
       "circuitInvalid": "El circuit no existeix",
@@ -461,6 +460,10 @@
       "creating": {
         "charging": "Carregador desat. S’està creant el punt de recàrrega…",
         "heating": "Dispositiu de calefacció desat. S’està creant l’escalfador…"
+      },
+      "currentRangeHelp": {
+        "charging": "Típicament: de 6 a 16 A per a 11 kW, de 6 a 32 A per a 22 kW (carregadors trifàsics).",
+        "heating": "Depèn en la potència nominal del dispositiu d'escalfament (veure manual del fabricant)."
       },
       "defaultModeHelp": {
         "charging": "Mode de càrrega en connectar el vehicle.",
@@ -1099,7 +1102,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Esdevén patrocinador",
-      "becomeSponsorExtended": "Doneu-nos suport directament per a obtenir adhesius.",
       "confetti": "Preparat pel confeti?",
       "confettiPromise": "Rebeu adhesius i confeti digital",
       "sticker": "…o adhesius d’evcc?",
@@ -1108,9 +1110,7 @@
       "titleNoSponsor": "Doneu-nos suport",
       "titleSponsor": "Sou un patrocinador",
       "titleTrial": "Mode de prova",
-      "titleVictron": "Patrocinat per Victron Energy",
-      "trial": "Esteu en mode de prova i podeu utilitzar totes les funcions. Considereu donar suport al projecte.",
-      "victron": "Utilitzeu evcc en maquinari de Victron Energy i teniu accés a totes les funcions."
+      "trial": "Esteu en mode de prova i podeu utilitzar totes les funcions. Considereu donar suport al projecte."
     },
     "telemetry": {
       "optIn": "Vull contribuir amb les meves dades.",
@@ -1119,14 +1119,14 @@
       "optInSponsorship": "Es requereix patrocini."
     },
     "version": {
-      "availableLong": "nova versió disponible",
+      "availableLong": "actualizació disponible",
       "community": "comunitat d’evcc",
       "labelEmail": "Correu electrònic",
       "labelPhone": "Telèfon",
       "labelRelease": "Llançament",
       "labelVersion": "Versió",
       "labelWebsite": "Lloc web",
-      "latestVersion": "última versió",
+      "latestVersion": "Actualitzada",
       "madeByCommunity": "Fet per la {0}.",
       "modalCancel": "Cancel·la",
       "modalDownload": "Descarrega",
@@ -1326,15 +1326,18 @@
         "continuous": "continu",
         "continuousCo2Description": "Selecciona la sèrie més neta i ininterrompuda de franges.",
         "continuousPriceDescription": "Selecciona la sèrie més barata i ininterrompuda de franges.",
+        "disabledDescription": "Requereix d'una tarifa dinàmica o previsió de CO₂.",
         "label": "Optimització"
       },
       "planNumber": "Pla {number}",
       "precondition": {
         "description": "Mou part de la càrrega just abans de la sortida: bateria calenta, menys temps amb nivell de càrrega alt.",
+        "disabledDescription": "Tota la càrrega succeeix just abans de la sortida.",
         "label": "Càrrega tardana",
         "optionAll": "tot",
         "optionNo": "no",
-        "summary": "{precondition} abans"
+        "summary": "{precondition} abans",
+        "summaryAll": "just abans de la sortida"
       },
       "remove": "Elimina",
       "repeating": "repetitiu",
@@ -1429,6 +1432,7 @@
       "finished": "Hora de finalització",
       "last24hEnergy": "Últimes 24 h",
       "last7dEnergy": "Últims 7 dies",
+      "phasesMismatch": "Més fases actives de les configurades. Comprova la configuració de fases.",
       "power": "Potència",
       "price": "Cost",
       "remaining": "Restant",

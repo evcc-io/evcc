@@ -46,9 +46,10 @@ Site (orchestrator — core/site.go)
 | Mode | Behavior |
 |------|----------|
 | `OFF` | Disabled (unless welcome charge) |
+| `SMART` | Ramp current with solar surplus; fast if cheap tariff or plan requires |
 | `NOW` | Max current immediately |
-| `MINPV` | Min current when PV surplus; fast if cheap tariff |
-| `PV` | Ramp current proportional to available solar |
+
+Always charge (`alwaysCharge`: off/on/once) is a per-loadpoint option for smart mode: never pause, keep at least min current. `once` resets on disconnect. `pv` and `minpv` are deprecated write-only aliases for smart without/with always charge.
 
 ## Charge States (IEC 61851)
 

@@ -128,9 +128,6 @@ render: |
           headers:
           - content-type: application/json
           - Auth-Token: {{ .token }}
-    default:
-      source: error
-      error: ErrNotAvailable
   {{- end }}
   {{- include "battery-params" . }}
   {{- end }}

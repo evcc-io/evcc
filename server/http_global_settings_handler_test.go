@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"

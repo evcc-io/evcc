@@ -33,7 +33,7 @@ jobs:
       platforms: ${{ steps.parse.outputs.platforms }}
     steps:
       - name: React to comment
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             await github.rest.reactions.createForIssueComment({
@@ -139,7 +139,7 @@ jobs:
           cache-scope: pr
 
       - name: Publish
-        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
           context: .
           platforms: ${{ needs.prep.outputs.platforms }}
@@ -157,7 +157,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Comment result
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const num = context.payload.issue.number;
@@ -180,6 +180,10 @@ jobs:
 
             if (!ok) return;
 
+            // builds are ready to test: flag PR and linked issues as waiting for feedback
+            const labels = ['waiting for feedback'];
+            await github.rest.issues.addLabels({ owner, repo, issue_number: num, labels });
+
             // notify each issue this PR closes (via "fixes #N" keywords) that fresh builds exist
             const q = `query($owner:String!,$repo:String!,$num:Int!){repository(owner:$owner,name:$repo){pullRequest(number:$num){closingIssuesReferences(first:20){nodes{number}}}}}`;
             const res = await github.graphql(q, { owner, repo, num });
@@ -187,10 +191,11 @@ jobs:
             for (const issue_number of issues) {
               const body = [`Test binaries for the fix in #${num} are ready to test:`, '', ...artifacts].join('\n');
               await github.rest.issues.createComment({ owner, repo, issue_number, body });
+              await github.rest.issues.addLabels({ owner, repo, issue_number, labels });
             }
 
       - name: Resolve command comment
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             // collapse the /build comment as resolved now that the build is done

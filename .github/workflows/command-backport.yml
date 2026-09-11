@@ -34,7 +34,7 @@ jobs:
 
     steps:
       - name: React to comment
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             await github.rest.reactions.createForIssueComment({
@@ -46,7 +46,7 @@ jobs:
 
       - name: Resolve target branch
         id: pr
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const { owner, repo } = context.repo;
@@ -168,7 +168,9 @@ jobs:
           fi
 
           git cherry-pick $mainline "$SHA"
-          git push origin "$BRANCH"
+          # a retry after a partial failure finds the branch of the previous
+          # attempt, the cherry-pick is reproducible so it is safe to replace
+          git push --force origin "$BRANCH"
 
       - name: Create pull request
         id: create
@@ -184,18 +186,23 @@ jobs:
           # into the release branch as the commit description.
           # the title stays untouched so the changelog filters and groups still
           # see the original prefix, the backport label identifies the pull request
-          url=$(gh pr create \
-            --base "$TARGET" \
-            --head "$BRANCH" \
-            --title "$TITLE" \
-            --label backport \
-            --assignee "$ACTOR" \
-            --body "")
+          # reuse the pull request of a previous attempt, the force push above
+          # already refreshed its head
+          url=$(gh pr list --base "$TARGET" --head "$BRANCH" --state open --json url --jq '.[0].url')
+          if [ -z "$url" ]; then
+            url=$(gh pr create \
+              --base "$TARGET" \
+              --head "$BRANCH" \
+              --title "$TITLE" \
+              --label backport \
+              --assignee "$ACTOR" \
+              --body "")
+          fi
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
       - name: Comment result
         if: always()
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           TARGET: ${{ steps.pr.outputs.target }}
           URL: ${{ steps.create.outputs.url }}
@@ -218,7 +225,7 @@ jobs:
 
       - name: Resolve command comment
         if: always()
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             // collapse the /backport comment as resolved, the result was reported

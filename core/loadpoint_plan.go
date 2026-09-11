@@ -112,8 +112,13 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration, preconditio
 		return nil
 	}
 
-	lp.log.TRACE.Printf("plan: creating plan with continuous=%v, precondition=%v, duration=%v, target=%v",
-		continuous, precondition, requiredDuration.Round(time.Second), targetTime.Round(time.Second).Local())
+	pc := precondition.String()
+	if precondition >= 7*24*time.Hour {
+		pc = "everything" // 168h, UI sentinel for max
+	}
+
+	lp.log.TRACE.Printf("plan: creating plan with continuous=%v, precondition=%s, duration=%v, target=%v",
+		continuous, pc, requiredDuration.Round(time.Second), targetTime.Round(time.Second).Local())
 
 	return lp.planner.Plan(requiredDuration, precondition, targetTime, continuous)
 }
