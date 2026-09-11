@@ -2,6 +2,7 @@ package ablevcc
 
 import (
 	"bufio"
+	"context"
 	"io"
 	"net"
 	"testing"
@@ -169,4 +170,64 @@ func TestInstanceShared(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Same(t, c1, c2, "chargers on the same bus must share the connection")
+}
+
+func TestInstanceDistinctTransports(t *testing.T) {
+	log := util.NewLogger("test")
+
+	c1, err := Instance(t.Context(), log, "foo", "", 0)
+	require.NoError(t, err)
+
+	c2, err := Instance(t.Context(), log, "", "foo", 0)
+	require.NoError(t, err)
+
+	assert.NotSame(t, c1, c2, "device and uri of the same name must not share the connection")
+}
+
+// a cancelled context must remove the connection from the pool so that a
+// recreated charger (config reload, failed constructor, device test) gets a fresh one
+func TestInstanceReleased(t *testing.T) {
+	log := util.NewLogger("test")
+	ctx, cancel := context.WithCancel(t.Context())
+
+	c1, err := Instance(ctx, log, "", "localhost:14197", 0)
+	require.NoError(t, err)
+
+	cancel()
+
+	require.Eventually(t, func() bool {
+		mu.Lock()
+		defer mu.Unlock()
+		_, ok := instances["uri:localhost:14197"]
+		return !ok
+	}, time.Second, 10*time.Millisecond)
+
+	c2, err := Instance(t.Context(), log, "", "localhost:14197", 0)
+	require.NoError(t, err)
+	assert.NotSame(t, c1, c2)
+
+	// late callers must not reopen the port
+	_, err = c1.Transact(1, 2, "")
+	assert.ErrorIs(t, err, net.ErrClosed)
+}
+
+// the connection must survive as long as any charger on the bus is alive
+func TestInstanceRefcount(t *testing.T) {
+	log := util.NewLogger("test")
+	ctx1, cancel1 := context.WithCancel(t.Context())
+
+	c1, err := Instance(ctx1, log, "", "localhost:14198", 0)
+	require.NoError(t, err)
+
+	c2, err := Instance(t.Context(), log, "", "localhost:14198", 0)
+	require.NoError(t, err)
+	require.Same(t, c1, c2)
+
+	cancel1()
+
+	assert.Never(t, func() bool {
+		mu.Lock()
+		defer mu.Unlock()
+		return instances["uri:localhost:14198"] != c2
+	}, 100*time.Millisecond, 10*time.Millisecond, "connection released while still in use")
 }

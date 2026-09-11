@@ -60,6 +60,7 @@ type Connection struct {
 	conn    io.ReadWriteCloser
 	r       *bufio.Reader
 	closed  bool
+	refs    int // number of chargers using the connection, guarded by the package mutex
 }
 
 // Instance returns the shared connection for the given bus. Chargers on the same
@@ -73,35 +74,56 @@ func Instance(ctx context.Context, log *util.Logger, device, uri string, timeout
 		timeout = Timeout
 	}
 
-	key := device + uri
+	key := "uri:" + uri
+	if device != "" {
+		key = "device:" + device
+	}
 
 	mu.Lock()
 	defer mu.Unlock()
 
-	if conn, ok := instances[key]; ok {
-		return conn, nil
+	conn, ok := instances[key]
+	if !ok {
+		conn = &Connection{
+			log:     log,
+			timeout: timeout,
+			dial:    dialer(device, uri, timeout),
+		}
+
+		instances[key] = conn
 	}
 
-	conn := &Connection{
-		log:     log,
-		timeout: timeout,
-		dial:    dialer(device, uri, timeout),
-	}
+	conn.refs++
 
-	// release the port on shutdown
+	// release the connection once the last charger using it is gone
 	go func() {
 		<-ctx.Done()
-
-		conn.mu.Lock()
-		defer conn.mu.Unlock()
-
-		conn.closed = true
-		conn.close()
+		release(key, conn)
 	}()
 
-	instances[key] = conn
-
 	return conn, nil
+}
+
+func release(key string, conn *Connection) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	conn.refs--
+	if conn.refs > 0 {
+		return
+	}
+
+	// the key may already refer to a newer connection
+	if instances[key] == conn {
+		delete(instances, key)
+	}
+
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
+
+	// prevent late callers from reopening the port
+	conn.closed = true
+	conn.close()
 }
 
 // dialer creates the transport specific connect function
