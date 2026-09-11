@@ -2,20 +2,11 @@ package livewire
 
 import (
 	"encoding/json"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func fixture(t *testing.T, name string) []byte {
-	t.Helper()
-	b, err := os.ReadFile(filepath.Join("testdata", name))
-	require.NoError(t, err)
-	return b
-}
 
 func TestStringFloat(t *testing.T) {
 	for _, tc := range []struct {
@@ -44,7 +35,7 @@ func TestStringFloat(t *testing.T) {
 
 func TestChargingStatusResponse(t *testing.T) {
 	var res ChargingStatusResponse
-	require.NoError(t, json.Unmarshal(fixture(t, "status-idle.json"), &res))
+	require.NoError(t, json.Unmarshal([]byte(sampleStatusIdle), &res))
 	require.NoError(t, res.Err())
 
 	data := res.BikeChargingData
@@ -70,7 +61,7 @@ func TestErrorEnvelope(t *testing.T) {
 
 func TestBikesResponse(t *testing.T) {
 	var bikes BikesResponse
-	require.NoError(t, json.Unmarshal(fixture(t, "bikes.json"), &bikes))
+	require.NoError(t, json.Unmarshal([]byte(sampleBikes), &bikes))
 	require.Len(t, bikes.Bikes, 1)
 	assert.Equal(t, "100000001", bikes.Bikes[0].ID)
 	assert.Equal(t, "7TM3GDYD6SB000000", bikes.Bikes[0].VIN)
@@ -78,14 +69,14 @@ func TestBikesResponse(t *testing.T) {
 	assert.False(t, bikes.Bikes[0].PairingStatus)
 
 	var paired BikesResponse
-	require.NoError(t, json.Unmarshal(fixture(t, "pair-status-after.json"), &paired))
+	require.NoError(t, json.Unmarshal([]byte(samplePairStatusAfter), &paired))
 	require.Len(t, paired.Bikes, 1)
 	assert.True(t, paired.Bikes[0].PairingStatus)
 }
 
 func TestLocationResponse(t *testing.T) {
 	var res LocationResponse
-	require.NoError(t, json.Unmarshal(fixture(t, "location-idle.json"), &res))
+	require.NoError(t, json.Unmarshal([]byte(sampleLocationIdle), &res))
 	require.NoError(t, res.Err())
 	assert.Equal(t, 48.1371, res.Data.Latitude)
 	assert.Equal(t, 11.5754, res.Data.Longitude)
@@ -94,7 +85,7 @@ func TestLocationResponse(t *testing.T) {
 
 func TestSessionResponse(t *testing.T) {
 	var res SessionResponse
-	require.NoError(t, json.Unmarshal(fixture(t, "session.json"), &res))
+	require.NoError(t, json.Unmarshal([]byte(sampleSession), &res))
 	require.NoError(t, res.Err())
 	assert.NotEmpty(t, res.JWT)
 	assert.True(t, res.TermsAccepted)

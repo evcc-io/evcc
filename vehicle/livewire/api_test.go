@@ -53,7 +53,7 @@ func newBackend(t *testing.T) (*backend, *Identity) {
 		assert.Equal(t, "device-1", r.URL.Query().Get("deviceUUID"))
 		assert.Equal(t, "Android", r.Header.Get("User-Agent"))
 
-		w.Write(fixture(t, "pair-status-after.json"))
+		w.Write([]byte(samplePairStatusAfter))
 	})
 	mux.HandleFunc("GET /api/bikes/bike-1/charging/status", func(w http.ResponseWriter, r *http.Request) {
 		b.status(w, r)
@@ -87,7 +87,7 @@ func TestLoginAndVehicles(t *testing.T) {
 func TestStatus(t *testing.T) {
 	b, identity := newBackend(t)
 	b.status = func(w http.ResponseWriter, r *http.Request) {
-		w.Write(fixture(t, "status-idle.json"))
+		w.Write([]byte(sampleStatusIdle))
 	}
 
 	res, err := NewAPI(util.NewLogger("test"), identity).Status("bike-1")
