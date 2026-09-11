@@ -12,7 +12,7 @@ import (
 
 var registry = reg.New[api.Battery]("tempsensor")
 
-// NewFromConfig creates tempsensor from configuration
+// NewFromConfig creates temp sensor from configuration
 func NewFromConfig(ctx context.Context, typ string, other map[string]any) (api.Battery, error) {
 	factory, err := registry.Get(strings.ToLower(typ))
 	if err != nil {

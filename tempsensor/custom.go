@@ -15,7 +15,7 @@ func init() {
 	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
 
-// NewConfigurableFromConfig creates a tempsensor from config
+// NewConfigurableFromConfig creates a temp sensor from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Battery, error) {
 	cc := struct {
 		Temp *plugin.Config

@@ -58,14 +58,14 @@ func (lp *Loadpoint) SetMeterRef(ref string) {
 	lp.settings.SetString(keys.Meter, ref)
 }
 
-// GetTempSensorRef returns the loadpoint tempsensor
+// GetTempSensorRef returns the loadpoint temp sensor
 func (lp *Loadpoint) GetTempSensorRef() string {
 	lp.RLock()
 	defer lp.RUnlock()
 	return lp.TempSensorRef
 }
 
-// SetTempSensorRef sets the loadpoint tempsensor
+// SetTempSensorRef sets the loadpoint temp sensor
 func (lp *Loadpoint) SetTempSensorRef(ref string) {
 	if !lp.isConfigurable() {
 		lp.log.ERROR.Println("cannot set temp sensor ref: not configurable")

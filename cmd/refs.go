@@ -111,11 +111,11 @@ func collectTariffRefs() error {
 func collectLoadpointRefs(named iter.Seq[config.Named]) error {
 	for cc := range named {
 		var refs struct {
-			CircuitRef    string         `mapstructure:"circuit"` // Circuit reference
-			ChargerRef    string         `mapstructure:"charger"` // Charger reference
-			VehicleRef    string         `mapstructure:"vehicle"` // Vehicle reference
-			MeterRef      string         `mapstructure:"meter"`   // Charge meter reference
-			TempSensorRef string         `mapstructure:"tempSensor"`
+			CircuitRef    string         `mapstructure:"circuit"`    // Circuit reference
+			ChargerRef    string         `mapstructure:"charger"`    // Charger reference
+			VehicleRef    string         `mapstructure:"vehicle"`    // Vehicle reference
+			MeterRef      string         `mapstructure:"meter"`      // Charge meter reference
+			TempSensorRef string         `mapstructure:"tempSensor"` // Temp sensor reference
 			Other         map[string]any `mapstructure:",remain"`
 		}
 
