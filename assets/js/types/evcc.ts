@@ -930,6 +930,8 @@ export interface SponsorStatus {
   expiresSoon?: boolean;
   /** Sponsor token. Redacted. */
   token?: string;
+  /** Hardware sponsorship. */
+  hardware?: boolean;
 }
 
 /** Sponsorship status. */

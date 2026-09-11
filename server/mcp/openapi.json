@@ -4392,6 +4392,10 @@
           "token": {
             "description": "Sponsor token. Redacted.",
             "type": "string"
+          },
+          "hardware": {
+            "description": "Hardware sponsorship.",
+            "type": "boolean"
           }
         }
       },
