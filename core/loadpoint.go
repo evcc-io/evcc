@@ -462,9 +462,9 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 		integrated = true
 
 		lp.chargeMeter = newChargeMeter(charger)
-		if fake := lp.chargeMeter.fake; fake != nil {
+		if lp.chargeMeter.fake != nil {
 			_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentWrappedMeterHandler)
-			_ = lp.bus.Subscribe(evChargeStop, func() { fake.SetPower(0) })
+			_ = lp.bus.Subscribe(evChargeStop, func() { lp.chargeMeter.fake.SetPower(0) })
 		}
 	}
 

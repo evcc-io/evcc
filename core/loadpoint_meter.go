@@ -5,10 +5,8 @@ import (
 	"github.com/evcc-io/evcc/core/wrapper"
 )
 
-// chargeMeter is the loadpoint's charge meter. Capability lookups are delegated to the
-// source (meter device or charger) instead of the extracted api.Meter so decorated and
-// statically implemented capabilities stay discoverable through api.Cap
-// (https://github.com/evcc-io/evcc/issues/28915, https://github.com/evcc-io/evcc/issues/29877).
+// chargeMeter is the loadpoint's charge meter. Capability lookups are delegated to the source
+// (meter device or charger) so decorated and static capabilities stay discoverable (#28915, #29877).
 type chargeMeter struct {
 	api.Meter
 	source any

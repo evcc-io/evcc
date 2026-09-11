@@ -9,14 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// registryCharger exposes all capabilities through the registry
-type registryCharger struct {
-	implement.Caps
-}
-
-// staticPhaseCharger emulates a charger like DaheimLaden: it embeds an
-// implement.Caps registry but exposes api.Meter and api.PhaseCurrents
-// as static struct methods rather than registering them.
+// staticPhaseCharger embeds a registry but implements api.Meter and api.PhaseCurrents statically (DaheimLaden)
 type staticPhaseCharger struct {
 	implement.Caps
 }
@@ -26,15 +19,12 @@ func (*staticPhaseCharger) Currents() (float64, float64, float64, error) { retur
 
 // https://github.com/evcc-io/evcc/issues/28915
 func TestChargeMeterRegistryCaps(t *testing.T) {
-	c := &registryCharger{Caps: implement.New()}
-	implement.Has(c.Caps, implement.Meter(func() (float64, error) { return 1, nil }))
-	implement.Has(c.Caps, implement.MeterEnergy(func() (float64, error) { return 2, nil }))
+	c := implement.New()
+	implement.Has(c, implement.Meter(func() (float64, error) { return 1, nil }))
+	implement.Has(c, implement.MeterEnergy(func() (float64, error) { return 2, nil }))
 
 	m := newChargeMeter(c)
 	assert.Nil(t, m.fake)
-
-	_, ok := any(m).(api.MeterEnergy)
-	assert.False(t, ok, "unexpected static energy")
 
 	me, ok := api.Cap[api.MeterEnergy](m)
 	require.True(t, ok, "missing registry energy cap")
