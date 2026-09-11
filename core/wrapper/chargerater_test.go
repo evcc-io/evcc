@@ -204,4 +204,32 @@ func TestUpstream(t *testing.T) {
 	if f, err := cr.ChargedEnergy(); f != 0.5 || err != nil {
 		t.Errorf("energy: %.1f %v", f, err)
 	}
+
+	// charger unavailable during reset latches the offset on next read
+	up.EXPECT().ChargedEnergy().Return(0.0, errors.New("not available"))
+	cr.ResetCharge()
+
+	up.EXPECT().ChargedEnergy().Return(6.0, nil)
+	if f, err := cr.ChargedEnergy(); f != 0 || err != nil {
+		t.Errorf("energy: %.1f %v", f, err)
+	}
+
+	up.EXPECT().ChargedEnergy().Return(6.5, nil)
+	if f, err := cr.ChargedEnergy(); f != 0.5 || err != nil {
+		t.Errorf("energy: %.1f %v", f, err)
+	}
+
+	// charger unavailable at startup latches the offset on first read
+	up.EXPECT().ChargedEnergy().Return(0.0, errors.New("not available"))
+	cr = NewChargeRater(util.NewLogger("foo"), nil, up)
+
+	up.EXPECT().ChargedEnergy().Return(2.0, nil)
+	if f, err := cr.ChargedEnergy(); f != 0 || err != nil {
+		t.Errorf("energy: %.1f %v", f, err)
+	}
+
+	up.EXPECT().ChargedEnergy().Return(2.5, nil)
+	if f, err := cr.ChargedEnergy(); f != 0.5 || err != nil {
+		t.Errorf("energy: %.1f %v", f, err)
+	}
 }

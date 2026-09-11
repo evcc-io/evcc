@@ -20,7 +20,7 @@ type ChargeRater struct {
 	clck          clock.Clock
 	meter         api.Meter
 	upstream      api.ChargeRater // charger-provided session energy, takes precedence over meter
-	offset        float64         // upstream energy at startup, see https://github.com/evcc-io/evcc/issues/5092
+	offset        *float64        // upstream energy at startup, nil until read (https://github.com/evcc-io/evcc/issues/5092)
 	charging      bool
 	start         time.Time
 	startEnergy   *float64 // nil until baseline successfully read from meter
@@ -41,7 +41,7 @@ func NewChargeRater(log *util.Logger, meter api.Meter, upstream api.ChargeRater)
 	// when restarting in the middle of charging session, use this as negative offset
 	if upstream != nil {
 		if f, err := upstream.ChargedEnergy(); err == nil {
-			cr.offset = f
+			cr.offset = &f
 		}
 	}
 
@@ -111,8 +111,9 @@ func (cr *ChargeRater) ResetCharge() {
 
 	// upstream keeps counting, everything so far belongs to the previous session
 	if cr.upstream != nil {
+		cr.offset = nil
 		if f, err := cr.upstream.ChargedEnergy(); err == nil {
-			cr.offset = f
+			cr.offset = &f
 		}
 		return
 	}
@@ -165,12 +166,17 @@ func (cr *ChargeRater) ChargedEnergy() (float64, error) {
 			return 0, err
 		}
 
-		// charger reset its counter, e.g. at start of a new session
-		if f < cr.offset {
-			cr.offset = 0
+		// late-latch offset if it could not be read before
+		if cr.offset == nil {
+			cr.offset = &f
 		}
 
-		return f - cr.offset, nil
+		// charger reset its counter, e.g. at start of a new session
+		if f < *cr.offset {
+			cr.offset = new(0.0)
+		}
+
+		return f - *cr.offset, nil
 	}
 
 	// return previously charged energy
