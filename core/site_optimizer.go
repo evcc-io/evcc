@@ -671,6 +671,8 @@ func (site *Site) setLastOptimizerSolve(solve *optimizerSolve) {
 // fresher concurrent solve.
 func (site *Site) reapplySuggestions(now time.Time) {
 	if !sponsor.IsAuthorized() || !optimizerEnabled() {
+		// don't resurrect the pre-disable solve on re-enable
+		site.setLastOptimizerSolve(nil)
 		return
 	}
 
@@ -687,9 +689,32 @@ func (site *Site) reapplySuggestions(now time.Time) {
 		return
 	}
 
-	if slot := last.schedule.activeSlot(now); slot != last.slot {
-		site.applyOptimizerResult(last.req, last.details, last.res, last.schedule, now)
+	slot := last.schedule.activeSlot(now)
+	if slot == last.slot {
+		return
 	}
+
+	// horizon passed, or no completed solve for two slots (e.g. repeated
+	// errOptimizerNotReady): don't march a dead plan forward
+	if slot < 0 || now.Sub(site.optimizerUpdated) > 2*tariff.SlotDuration {
+		site.log.DEBUG.Println("optimizer: cached result expired")
+		site.clearSuggestions()
+		return
+	}
+
+	// a loadpoint that disconnected since the solve is excluded from a fresh
+	// request (optimizerRequest); reapplying would advise an empty charger
+	for _, d := range last.details.BatteryDetails {
+		if d.loadpoint == nil {
+			continue
+		}
+		if lp := site.loadpoints[*d.loadpoint]; lp == nil || (lp.GetStatus() != api.StatusB && lp.GetStatus() != api.StatusC) {
+			site.setLastOptimizerSolve(nil)
+			return
+		}
+	}
+
+	site.applyOptimizerResult(last.req, last.details, last.res, last.schedule, now)
 }
 
 // applyOptimizerResult maps the optimizer response onto suggestions, battery
