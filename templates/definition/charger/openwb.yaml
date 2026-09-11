@@ -12,12 +12,7 @@ params:
   - name: host
   - name: connector
   - name: phases1p3p
-    type: bool
-    description:
-      en: Charger is equipped with phase switching feature
-      de: Phasenumschaltung vorhanden
     advanced: true
-    default: false
 render: |
   type: openwb
   broker: {{ .host }}

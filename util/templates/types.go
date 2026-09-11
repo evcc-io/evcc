@@ -12,6 +12,7 @@ import (
 	"dario.cat/mergo"
 	"github.com/gosimple/slug"
 	"github.com/spf13/cast"
+	"go.yaml.in/yaml/v4"
 )
 
 const (
@@ -228,6 +229,7 @@ type Param struct {
 	Unit        string       `json:",omitempty"` // unit of the value, e.g. "kW", "kWh", "A", "V"
 	Usages      []string     `json:",omitempty"` // restrict param to these usage types, e.g. "battery" for home battery capacity
 	Type        ParamType    // string representation of the value type, "string" is default
+	typed       bool         // type declared explicitly, survives merging with defaults
 	Choice      []string     `json:",omitempty"` // defines a set of choices, e.g. "grid", "pv", "battery", "charge" for "usage"
 	Service     string       `json:",omitempty"` // defines a service to provide choices
 	Pattern     *Pattern     `json:",omitempty"` // regex pattern and examples for input validation
@@ -258,10 +260,29 @@ func (p *Param) DefaultValue(renderMode int) any {
 	return p.Default
 }
 
+// UnmarshalYAML records whether type was declared since TypeString is the zero value
+func (p *Param) UnmarshalYAML(node *yaml.Node) error {
+	type param Param
+	if err := node.Decode((*param)(p)); err != nil {
+		return err
+	}
+	for i := 0; i+1 < len(node.Content); i += 2 {
+		// a declared but empty `type:` is not a declaration
+		if strings.EqualFold(node.Content[i].Value, "type") && node.Content[i+1].Tag != "!!null" {
+			p.typed = true
+		}
+	}
+	return nil
+}
+
 // OverwriteProperties merges properties from parameter definition
 func (p *Param) OverwriteProperties(withParam Param) {
+	typ := p.Type
 	if err := mergo.Merge(p, &withParam); err != nil {
 		panic(err)
+	}
+	if p.typed {
+		p.Type = typ
 	}
 }
 
