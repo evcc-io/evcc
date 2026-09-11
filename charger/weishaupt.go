@@ -52,7 +52,9 @@ const (
 	wsRegDhwTemp     = 32102 // Warmwassertemperatur, 0.1K
 	wsRegFlowTemp    = 33104 // Vorlauftemperatur, 0.1K
 	wsRegBufferTemp  = 33108 // Weichentemperatur, 0.1K
-	wsRegPvPower     = 40002 // SollwertPV, W
+	wsRegPowerDemand = 33103 // Leistungsanforderung
+	wsRegPower       = 33126 // El. Leistungsaufnahme W
+	wsRegSollwertPv  = 40002 // SollwertPV, W
 )
 
 var wsTempSource = map[string]uint16{
@@ -118,23 +120,16 @@ func NewWeishaupt(ctx context.Context, embed *embed, settings modbus.Settings, t
 }
 
 func (wb *Weishaupt) heartbeat(ctx context.Context, interval time.Duration) {
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
-
-	for {
+	for tick := time.Tick(interval); ; {
 		select {
+		case <-tick:
 		case <-ctx.Done():
 			return
-		case <-ticker.C:
 		}
 
 		wb.mu.Lock()
 		if power := wb.power; power > 0 {
-			enabled, err := wb.Enabled()
-			if err == nil && enabled {
-				err = wb.setPower(power)
-			}
-			if err != nil {
+			if err := wb.setPowerSetpoint(power); err != nil {
 				wb.log.ERROR.Println("heartbeat:", err)
 			}
 		}
@@ -142,56 +137,36 @@ func (wb *Weishaupt) heartbeat(ctx context.Context, interval time.Duration) {
 	}
 }
 
-// temp reads a temperature sensor register. Values outside of -50..500°C
-// indicate a missing, broken or digital sensor.
-func (wb *Weishaupt) temp(reg uint16) (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(reg, 1)
-	if err != nil {
-		return 0, err
-	}
-
-	if v := int16(binary.BigEndian.Uint16(b)); v >= -500 && v <= 5000 {
-		return float64(v) / 10, nil
-	}
-
-	return 0, api.ErrNotAvailable
-}
-
-func (wb *Weishaupt) getPower() (uint16, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wsRegPvPower, 1)
-	if err != nil {
-		return 0, err
-	}
-
-	return binary.BigEndian.Uint16(b), nil
-}
-
-func (wb *Weishaupt) setPower(power uint16) error {
-	_, err := wb.conn.WriteSingleRegister(wsRegPvPower, power)
-	if err == nil && power > 0 {
-		wb.power = power
-	}
-
+func (wb *Weishaupt) setPowerSetpoint(power uint16) error {
+	_, err := wb.conn.WriteSingleRegister(wsRegSollwertPv, power)
 	return err
 }
 
 // Status implements the api.Charger interface
 func (wb *Weishaupt) Status() (api.ChargeStatus, error) {
-	power, err := wb.getPower()
+	b, err := wb.conn.ReadInputRegisters(wsRegPowerDemand, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	if power > 100 {
+	if binary.BigEndian.Uint16(b) > 0 {
 		return api.StatusC, nil
 	}
 
 	return api.StatusB, nil
 }
 
+func (wb *Weishaupt) getPowerSetpoint() (uint16, error) {
+	b, err := wb.conn.ReadHoldingRegisters(wsRegSollwertPv, 1)
+	if err != nil {
+		return 0, err
+	}
+	return binary.BigEndian.Uint16(b), nil
+}
+
 // Enabled implements the api.Charger interface
 func (wb *Weishaupt) Enabled() (bool, error) {
-	power, err := wb.getPower()
+	power, err := wb.getPowerSetpoint()
 	return power > 0, err
 }
 
@@ -206,7 +181,7 @@ func (wb *Weishaupt) Enable(enable bool) error {
 		power = max(1, wb.power)
 	}
 
-	return wb.setPower(power)
+	return wb.setPowerSetpoint(power)
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -230,8 +205,46 @@ func (wb *Weishaupt) MaxCurrentMillis(current float64) error {
 
 	power := uint16(min(voltage*current*float64(phases), 65535))
 
-	return wb.setPower(power)
+	err := wb.setPowerSetpoint(power)
+	if err == nil {
+		wb.power = power
+	}
+
+	return err
 }
+
+var _ api.Meter = (*Weishaupt)(nil)
+
+// CurrentPower implements the api.Meter interface
+func (wb *Weishaupt) CurrentPower() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(wsRegPower, 1)
+	if err != nil {
+		return 0, err
+	}
+	return float64(binary.BigEndian.Uint16(b)), nil
+}
+
+// temp reads a temperature sensor register. Values outside of -50..500°C
+// indicate a missing, broken or digital sensor.
+func (wb *Weishaupt) temp(reg uint16) (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(reg, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	if v := int16(binary.BigEndian.Uint16(b)); v >= -500 && v <= 5000 {
+		return float64(v) / 10, nil
+	}
+
+	return 0, api.ErrNotAvailable
+}
+
+// var _ api.PowerLimiter = (*Weishaupt)(nil)
+
+// // GetMinMaxPower is the callback used to provide the optional power limits.
+// func (wb *Weishaupt) GetMinMaxPower() (float64, float64, error) {
+// 	return wb.minPower, 0, nil
+// }
 
 var _ api.Battery = (*Weishaupt)(nil)
 
