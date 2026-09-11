@@ -75,14 +75,6 @@ var ablEvccStatus = map[int]api.ChargeStatus{
 	6:  api.StatusC, // D  Charging with ventilation
 }
 
-var ablEvccErrors = map[int]string{
-	33:  "CS error",
-	35:  "EV error",
-	37:  "lock error",
-	39:  "ventilation error",
-	255: "manual mode",
-}
-
 func init() {
 	registry.AddCtx("abl-evcc", NewABLevccFromConfig)
 }
@@ -193,16 +185,12 @@ func (wb *ABLevcc) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	if status, ok := ablEvccStatus[v]; ok {
-		return status, nil
-	}
-
-	status, ok := ablEvccErrors[v]
+	status, ok := ablEvccStatus[v]
 	if !ok {
-		status = fmt.Sprintf("%04d", v)
+		return api.StatusNone, fmt.Errorf("invalid status: %04d", v)
 	}
 
-	return api.StatusNone, fmt.Errorf("invalid status: %s", status)
+	return status, nil
 }
 
 // Enabled implements the api.Charger interface

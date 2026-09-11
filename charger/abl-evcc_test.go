@@ -84,10 +84,9 @@ func TestABLevccStatus(t *testing.T) {
 		assert.Equal(t, expected, ablEvccStatus[code], "%04d", code)
 	}
 
-	// error states must not be mapped to a charge status
+	// error and manual states must not be mapped to a charge status
 	for _, code := range []int{33, 35, 37, 39, 255} {
 		_, ok := ablEvccStatus[code]
 		assert.False(t, ok, "%04d", code)
-		assert.NotEmpty(t, ablEvccErrors[code], "%04d", code)
 	}
 }
