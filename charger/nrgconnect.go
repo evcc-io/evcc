@@ -22,6 +22,7 @@ type NRGKickConnect struct {
 	mac           string
 	password      string
 	enabled       bool
+	current       int64
 	settingsG     util.Cacheable[connect.Settings]
 	measurementsG util.Cacheable[connect.Measurements]
 }
@@ -132,8 +133,9 @@ func (nrg *NRGKickConnect) Enabled() (bool, error) {
 	return nrg.enabled, nil
 }
 
-// Enable implements the api.Charger interface
-func (nrg *NRGKickConnect) Enable(enable bool) error {
+// putSettings writes charging status and current in a single request.
+// The v1 Connect dongle drops requests arriving back-to-back (#33625).
+func (nrg *NRGKickConnect) putSettings(enable bool) error {
 	data := connect.Settings{
 		Values: connect.Values{
 			ChargingStatus: &connect.ChargingStatus{
@@ -145,7 +147,18 @@ func (nrg *NRGKickConnect) Enable(enable bool) error {
 		},
 	}
 
-	err := nrg.putJSON(nrg.apiURL(connect.SettingsPath), data)
+	if nrg.current > 0 {
+		data.Values.ChargingCurrent = &connect.ChargingCurrent{
+			Value: float64(nrg.current),
+		}
+	}
+
+	return nrg.putJSON(nrg.apiURL(connect.SettingsPath), data)
+}
+
+// Enable implements the api.Charger interface
+func (nrg *NRGKickConnect) Enable(enable bool) error {
+	err := nrg.putSettings(enable)
 	if err == nil {
 		nrg.enabled = enable
 	}
@@ -155,21 +168,14 @@ func (nrg *NRGKickConnect) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (nrg *NRGKickConnect) MaxCurrent(current int64) error {
-	data := connect.Settings{
-		Values: connect.Values{
-			ChargingStatus: &connect.ChargingStatus{
-				Charging: nrg.enabled,
-			},
-			ChargingCurrent: &connect.ChargingCurrent{
-				Value: float64(current),
-			},
-			DeviceMetadata: connect.DeviceMetadata{
-				Password: nrg.password,
-			},
-		},
+	nrg.current = current
+
+	// while disabled the current is written together with the enable request
+	if !nrg.enabled {
+		return nil
 	}
 
-	return nrg.putJSON(nrg.apiURL(connect.SettingsPath), data)
+	return nrg.putSettings(true)
 }
 
 var _ api.Meter = (*NRGKickConnect)(nil)
