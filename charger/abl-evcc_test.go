@@ -29,18 +29,18 @@ func TestABLevccPwm(t *testing.T) {
 		current float64
 		pwm     int
 	}{
-		{0, ablEvccPwmMin},   // clamped
-		{6, 100},             // 10.0%
-		{10, 167},            // 16.7%
-		{16, 267},            // 26.7%
-		{32, 533},            // 53.3%
-		{51, 850},            // 85.0%, upper end of the linear range
-		{52, 850},            // gap between both ranges
-		{53, 852},            // 85.2%
-		{63, 892},            // 89.2%
-		{80, 960},            // 96.0%
-		{82.5, 970},          // 97.0%
-		{100, ablEvccPwmMax}, // clamped
+		{0, 100},    // clamped to 6A
+		{6, 100},    // 10.0%
+		{10, 167},   // 16.7%
+		{16, 267},   // 26.7%
+		{32, 533},   // 53.3%
+		{51, 850},   // 85.0%, upper end of the linear range
+		{52, 850},   // gap between both ranges
+		{53, 852},   // 85.2%
+		{63, 892},   // 89.2%
+		{80, 960},   // 96.0%
+		{82.5, 960}, // clamped to 80A
+		{100, 960},  // clamped to 80A
 	} {
 		assert.Equal(t, tc.pwm, ablEvccPwm(tc.current), "%.1fA", tc.current)
 	}
@@ -51,12 +51,15 @@ func TestABLevccCurrent(t *testing.T) {
 		pwm     int
 		current float64
 	}{
-		{100, 6},
+		{80, 6},  // 8.0%, lower band signals 6A
+		{99, 6},  // 9.9%
+		{100, 6}, // 10.0%
 		{267, 16.02},
 		{850, 51},
 		{852, 53},
 		{960, 80},
-		{970, 82.5},
+		{961, 80}, // 96.1%, upper band signals 80A
+		{970, 80}, // 97.0%
 	} {
 		assert.InDelta(t, tc.current, ablEvccCurrent(tc.pwm), 0.001, "%d", tc.pwm)
 	}

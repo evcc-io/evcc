@@ -54,11 +54,12 @@ const (
 	ablEvccCmdLock       = 30
 	ablEvccCmdUnlock     = 31
 
-	ablEvccPwmMin      = 100 // 10.0% = 6A
-	ablEvccPwmMax      = 970 // 97.0% = 82.5A
+	ablEvccPwmMin      = 80  // 8.0%, lower end of the signalling range
+	ablEvccPwmMax      = 970 // 97.0%, upper end of the signalling range
 	ablEvccPwmDisabled = 999 // charging not allowed
 
 	ablEvccMinCurrent = 6
+	ablEvccMaxCurrent = 80
 )
 
 // ablEvccStatus maps the device state machine to the charge status. The status
@@ -120,8 +121,8 @@ func NewABLevcc(ctx context.Context, device, uri string, addr uint8, timeout tim
 		Caps: implement.New(),
 		conn: conn,
 		addr: addr,
-		curr: ablEvccPwmMin,
-		maxA: ablEvccCurrent(ablEvccPwmMax),
+		curr: ablEvccPwm(ablEvccMinCurrent),
+		maxA: ablEvccMaxCurrent,
 	}
 
 	// verify device presence
@@ -143,30 +144,34 @@ func NewABLevcc(ctx context.Context, device, uri string, addr uint8, timeout tim
 }
 
 // ablEvccCurrent converts a duty cycle in 0.1% steps into the signalled current
+// according to IEC 61851-1 table A.8
 func ablEvccCurrent(pwm int) float64 {
 	d := float64(pwm) / 10
 
-	if d > 85 {
+	switch {
+	case d < 10:
+		return ablEvccMinCurrent
+	case d <= 85:
+		return d * 0.6
+	case d <= 96:
 		return (d - 64) * 2.5
+	default:
+		return ablEvccMaxCurrent
 	}
-
-	return d * 0.6
 }
 
 // ablEvccPwm converts a current into a duty cycle in 0.1% steps
 func ablEvccPwm(current float64) int {
-	var pwm int
+	current = min(max(current, ablEvccMinCurrent), ablEvccMaxCurrent)
 
 	switch {
 	case current <= 51:
-		pwm = int(math.Round(current / 0.06))
+		return int(math.Round(current / 0.06))
 	case current < 52.75:
-		pwm = 850 // gap between both duty cycle ranges, limit to 51A
+		return 850 // gap between both duty cycle ranges, limit to 51A
 	default:
-		pwm = int(math.Round((current/2.5 + 64) * 10))
+		return int(math.Round((current/2.5 + 64) * 10))
 	}
-
-	return min(max(pwm, ablEvccPwmMin), ablEvccPwmMax)
 }
 
 func (wb *ABLevcc) get(cmd uint8) (int, error) {
