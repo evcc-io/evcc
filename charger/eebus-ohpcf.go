@@ -432,13 +432,8 @@ func (c *EEBusOHPCF) dimmed() (bool, error) {
 
 	limit, err := c.eg.EgLPCInterface.ConsumptionLimit(entity)
 	if err != nil {
-		// scenario announced but no usable value yet
-		if errors.Is(err, eebusapi.ErrDataNotAvailable) ||
-			errors.Is(err, eebusapi.ErrMetadataNotAvailable) ||
-			errors.Is(err, eebusapi.ErrDataInvalid) {
-			return false, api.ErrNotAvailable
-		}
-		return false, err
+		// any read failure means no usable value
+		return false, api.ErrNotAvailable
 	}
 
 	// an active limit means dimmed; the applied §14a limit value is 0W, so a
