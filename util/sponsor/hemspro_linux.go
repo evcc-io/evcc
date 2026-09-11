@@ -71,4 +71,3 @@ func checkHemsPro() (string, string) {
 
 	return "", ""
 }
-
