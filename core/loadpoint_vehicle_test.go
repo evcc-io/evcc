@@ -41,9 +41,9 @@ func TestPublishSocAndRange(t *testing.T) {
 		clock:        clck,
 		charger:      charger,
 		vehicle:      vehicle,
-		chargeMeter:  &Null{}, // silence nil panics
-		chargeRater:  &Null{}, // silence nil panics
-		chargeTimer:  &Null{}, // silence nil panics
+		chargeMeter:  newChargeMeter(&Null{}), // silence nil panics
+		chargeRater:  &Null{},                 // silence nil panics
+		chargeTimer:  &Null{},                 // silence nil panics
 		socEstimator: soc.NewEstimator(log, vehicle),
 		minCurrent:   minA,
 		maxCurrent:   maxA,
@@ -157,9 +157,9 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 			clock:       clck,
 			charger:     tc.charger,
 			vehicle:     tc.vehicle,
-			chargeMeter: &Null{}, // silence nil panics
-			chargeRater: &Null{}, // silence nil panics
-			chargeTimer: &Null{}, // silence nil panics
+			chargeMeter: newChargeMeter(&Null{}), // silence nil panics
+			chargeRater: &Null{},                 // silence nil panics
+			chargeTimer: &Null{},                 // silence nil panics
 			minCurrent:  minA,
 			maxCurrent:  maxA,
 			phases:      1,
@@ -210,9 +210,9 @@ func TestPublishSocAndRangeEnergyLimit(t *testing.T) {
 		clock:        clock.NewMock(),
 		charger:      api.NewMockCharger(ctrl),
 		vehicle:      vehicle,
-		chargeMeter:  &Null{}, // silence nil panics
-		chargeRater:  &Null{}, // silence nil panics
-		chargeTimer:  &Null{}, // silence nil panics
+		chargeMeter:  newChargeMeter(&Null{}), // silence nil panics
+		chargeRater:  &Null{},                 // silence nil panics
+		chargeTimer:  &Null{},                 // silence nil panics
 		socEstimator: soc.NewEstimator(log, vehicle),
 		minCurrent:   minA,
 		maxCurrent:   maxA,
@@ -620,9 +620,9 @@ func TestReconnectVehicle(t *testing.T) {
 				bus:         evbus.New(),
 				clock:       clck,
 				charger:     charger,
-				chargeMeter: &Null{}, // silence nil panics
-				chargeRater: &Null{}, // silence nil panics
-				chargeTimer: &Null{}, // silence nil panics
+				chargeMeter: newChargeMeter(&Null{}), // silence nil panics
+				chargeRater: &Null{},                 // silence nil panics
+				chargeTimer: &Null{},                 // silence nil panics
 				wakeUpTimer: NewTimer(),
 				minCurrent:  minA,
 				maxCurrent:  maxA,
