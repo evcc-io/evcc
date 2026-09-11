@@ -5,7 +5,7 @@ products:
     description:
       de: SUN2000 Hybrid-Wechselrichter
       en: SUN2000 Hybrid Inverter
-capabilities: ["battery-control", "curtail", "dim"]
+capabilities: ["battery-control", "dim"]
 requirements:
   description:
     de: |
@@ -14,16 +14,12 @@ requirements:
       Netz und Batterie erfordern den Huawei Smart Power Sensor (DDSU/DTSU666 oder SmartPS).
 
       Mehrere LUNA2000-Türme am selben SUN2000-Wechselrichter werden als eine einzige logische Batterie konfiguriert.
-
-      Die Abregelung begrenzt die Einspeiseleistung auf den gewünschten Prozentsatz der maximalen AC-Leistung. Der Wechselrichter begrenzt automatisch die PV-Leistung, um dies zu erreichen.
     en: |
       Modbus TCP requires activation within the communication settings of the inverter using an "installer account", see [Modbus TCP Activation Guide](https://forum.huawei.com/enterprise/en/modbus-tcp-guide/thread/667250677153415168-667213868771979264).
 
       Grid and Battery require the Huawei Smart Power Sensor (DDSU/DTSU666 or SmartPS).
 
       Multiple LUNA2000 towers connected to the same SUN2000 inverter are configured as a single logical battery.
-
-      Curtailment will limit the export power to the desired percentage of the maximum AC power. The inverter will automatically limit the PV power to achieve this.
 caveats:
   - description:
       de: |
@@ -46,7 +42,7 @@ params:
       en: Active power limit in percent
     advanced: true
     usages: ["pv"]
-    deprecated: true # curtailment now applies the HEMS-distributed percent directly
+    deprecated: true # curtailment is now handled by separate curtailer devices
   - name: storageunit
     deprecated: true
   - name: forceaccharging
@@ -222,70 +218,6 @@ render: |
       decode: uint32nan
     scale: 0.01
   maxacpower: {{ .maxacpower }}
-  curtail:
-    source: sequence
-    set:
-    # allowed feed-in power as percent of nominal (0-100 %)
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 47418 # Maximum Feed Grid Power (0-100 %)
-        type: writesingle
-        encoding: uint16
-      scale: 10
-    # active power control mode: 7 = percentage limit while curtailed, 0 = unlimited at 100%
-    - source: switch
-      switch:
-        - case: 100 # uncurtailed
-          set:
-            source: const
-            value: 0 # Unlimited
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 47415 # Active power control mode
-                type: writesingle
-                encoding: uint16
-      default:
-        source: const
-        value: 7 # Power-limited grid connection (%)
-        set:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 47415 # Active power control mode
-            type: writesingle
-            encoding: uint16
-  curtailed:
-    source: go
-    in:
-    - name: mode
-      type: int
-      config:
-        source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          address: 47415 # Active power control mode (0=no curtailment)
-          type: holding
-          decode: uint16
-    - name: percent
-      type: int
-      config:
-        source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          address: 47418 # Maximum Feed Grid Power (0-100 %)
-          type: holding
-          decode: uint16
-        scale: 0.1
-    # the percentage register is only meaningful while a limit mode is active
-    script: |
-      limit := percent
-      if mode == 0 {
-        limit = 100
-      }
-      limit
   {{- end }}
   {{- if eq .usage "battery" }}
   power:

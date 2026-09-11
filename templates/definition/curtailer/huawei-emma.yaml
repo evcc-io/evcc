@@ -1,0 +1,81 @@
+template: huawei-emma
+products:
+  - brand: Huawei
+    description:
+      generic: SmartAssistant (EMMA)
+requirements:
+  description:
+    de: |
+      Die Abregelung begrenzt die Einspeiseleistung auf den gewünschten Prozentsatz der maximalen AC-Leistung der angeschlossenen Wechselrichter.
+    en: |
+      Curtailment limits feed-in power to the desired percentage of the maximum AC power of the connected inverters.
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 0
+render: |
+  type: custom
+  curtail:
+    source: sequence
+    set:
+    # allowed feed-in power as percent of nominal (0-100 %)
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 40109 # Maximum grid feed-in power (0-100 %)
+        type: writesingle
+        encoding: uint16
+      scale: 10
+    # power control mode at grid connection point: 7 = percentage limit while curtailed, 0 = unlimited at 100%
+    - source: switch
+      switch:
+        - case: 100 # uncurtailed
+          set:
+            source: const
+            value: 0 # Unlimited
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 40100 # Power control mode at grid connection point
+                type: writesingle
+                encoding: uint16
+      default:
+        source: const
+        value: 7 # Power-limited grid connection (%)
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 40100 # Power control mode at grid connection point
+            type: writesingle
+            encoding: uint16
+  curtailed:
+    source: go
+    in:
+    - name: mode
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 40100 # Power control mode at grid connection point (0=no curtailment)
+          type: holding
+          decode: uint16
+    - name: percent
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 40109 # Maximum grid feed-in power (0-100 %)
+          type: holding
+          decode: uint16
+        scale: 0.1
+    # the percentage register is only meaningful while a limit mode is active
+    script: |
+      limit := percent
+      if mode != 7 {
+        limit = 100
+      }
+      limit
