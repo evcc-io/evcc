@@ -999,7 +999,11 @@ func (lp *Loadpoint) setLimit(current float64) error {
 		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(current, activePhases))
 		currentLimitViaPower := powerToCurrent(powerLimit, activePhases)
 
-		current = lp.roundedCurrent(min(currentLimit, currentLimitViaPower))
+		limited := lp.roundedCurrent(min(currentLimit, currentLimitViaPower))
+		if minCurrent := lp.effectiveMinCurrent(); limited < minCurrent && current >= minCurrent {
+			lp.log.DEBUG.Printf("circuit limit %.3gA below min current %.3gA", limited, minCurrent)
+		}
+		current = limited
 	}
 
 	// https://github.com/evcc-io/evcc/issues/16309
