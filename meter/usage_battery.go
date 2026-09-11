@@ -77,6 +77,23 @@ func staticFloat(f float64) func() float64 {
 	return func() float64 { return f }
 }
 
+// resolveSocFloat resolves a static number or float plugin config to a getter.
+// only nil returns a nil getter (not configured). Zero is kept zero (configured).
+func resolveSocFloat(ctx context.Context, v any) (func() float64, error) {
+	switch v := v.(type) {
+	case nil:
+		return nil, nil
+	case int:
+		return func() float64 { return float64(v) }, nil
+	case int64:
+		return func() float64 { return float64(v) }, nil
+	case float64:
+		return func() float64 { return v }, nil
+	default:
+		return resolveFloat(ctx, v)
+	}
+}
+
 // floatOr0 evaluates g, returning 0 for a nil (unconfigured) getter.
 func floatOr0(g func() float64) float64 {
 	if g == nil {
@@ -214,11 +231,11 @@ type batterySocLimitsCtx struct {
 // var _ api.BatterySocLimiter = (*batterySocLimitsCtx)(nil)
 
 func (m *batterySocLimitsCtx) getters(ctx context.Context) (func() float64, func() float64, error) {
-	minG, err := resolveFloat(ctx, m.MinSoc)
+	minG, err := resolveSocFloat(ctx, m.MinSoc)
 	if err != nil {
 		return nil, nil, err
 	}
-	maxG, err := resolveFloat(ctx, m.MaxSoc)
+	maxG, err := resolveSocFloat(ctx, m.MaxSoc)
 	if err != nil {
 		return nil, nil, err
 	}
