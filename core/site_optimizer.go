@@ -232,8 +232,8 @@ func loadpointCurrentAction(lp *Loadpoint) string {
 }
 
 // suggestionMaxAge invalidates suggestions of a stalled optimizer. Runs happen
-// once per loadpoint update cycle, so two slots without a result mean the
-// optimizer is no longer keeping up.
+// every optimizerInterval, so two slots without a result mean the optimizer is
+// no longer keeping up.
 const suggestionMaxAge = 2 * tariff.SlotDuration
 
 // setSuggestions replaces the suggestions applied on each publish
@@ -408,12 +408,15 @@ const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
 // startup); the slot gate is left open so the next cycle retries.
 var errOptimizerNotReady = errors.New("battery measurements not ready")
 
-// optimizerUpdateAsync runs the optimizer. In automatic mode it runs on every
-// loadpoint cycle since the loadpoint gate needs a fresh result, while advisory
-// suggestions only need one run per slot. Pass force to run regardless, e.g.
-// when a changed setting should take effect immediately. It is a no-op when the
-// optimizer is not active or a run is already in progress; the running update
-// reflects the change on its next run.
+// optimizerInterval is the refresh cadence. It divides the slot duration so
+// every slot starts on a fresh result.
+const optimizerInterval = 5 * time.Minute
+
+// optimizerUpdateAsync runs the optimizer unless the last run is younger than
+// optimizerInterval. Pass force to run regardless, e.g. when a changed setting
+// should take effect immediately. It is a no-op when the optimizer is not
+// active or a run is already in progress; the running update reflects the
+// change on its next run.
 func (site *Site) optimizerUpdateAsync(force bool) {
 	if !sponsor.IsAuthorized() || !optimizerEnabled() {
 		return
@@ -427,7 +430,7 @@ func (site *Site) optimizerUpdateAsync(force bool) {
 	if force {
 		// keep the gate open so a not-ready run is retried on the next cycle
 		site.optimizerUpdated = time.Time{}
-	} else if !site.Automatic() && time.Since(site.optimizerUpdated) < tariff.SlotDuration {
+	} else if time.Since(site.optimizerUpdated) < optimizerInterval {
 		return
 	}
 
