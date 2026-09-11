@@ -41,12 +41,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 		ModeNormal string
 		ModeHold   string
 		ModeCharge string
-	}{
-		batterySocLimits: batterySocLimits{
-			MinSoc: 20,
-			MaxSoc: 95,
-		},
-	}
+	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

@@ -41,14 +41,6 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		return nil, err
 	}
 
-	// default soc limits (nil-preset avoids mapstructure coercing plugin config into the default's type)
-	if cc.batterySocLimitsCtx.MinSoc == nil {
-		cc.batterySocLimitsCtx.MinSoc = 20
-	}
-	if cc.batterySocLimitsCtx.MaxSoc == nil {
-		cc.batterySocLimitsCtx.MaxSoc = 95
-	}
-
 	powerG, energyG, returnG, err := cc.Energy.Configure(ctx)
 	if err != nil {
 		return nil, err
