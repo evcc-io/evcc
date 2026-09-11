@@ -338,6 +338,7 @@
 									id="loadpointParamPhases"
 									:label="$t('config.loadpoint.phasesAutomatic')"
 									:help="$t('config.loadpoint.phasesAutomaticHelp')"
+									:danger="$t('config.loadpoint.phasesAutomaticDanger')"
 								>
 								</FormRow>
 								<FormRow

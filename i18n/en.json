@@ -493,6 +493,7 @@
       "phases1p": "1-phase",
       "phases3p": "3-phase",
       "phasesAutomatic": "Automatic phases",
+      "phasesAutomaticDanger": "evcc switches the charger between 1 and 3 phases while the vehicle stays connected. Not all vehicles tolerate this and it may damage the charger's relays. If you charge vehicles you don't know, or your charger manufacturer advises against phase switching, use a fixed phase configuration instead.",
       "phasesAutomaticHelp": "Your charger supports automatic switching between 1- and 3-phase charging. In the main screen you can adjust phase behaviour while charging.",
       "phasesHelp": "Number of phases connected.",
       "phasesLabel": "Phases",
