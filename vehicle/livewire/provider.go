@@ -1,11 +1,16 @@
 package livewire
 
 import (
+	"math"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
+
+// kmPerMile converts the backend's imperial range and odometer, confirmed
+// against the app which shows 886 km for an odometer value of 550.63
+const kmPerMile = 1.609344
 
 // Provider implements the vehicle api
 type Provider struct {
@@ -58,7 +63,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.status.Get()
-	return int64(res.Range), err
+	return int64(math.Round(res.Range * kmPerMile)), err
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)
@@ -66,7 +71,7 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 // Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.status.Get()
-	return res.Odometer, err
+	return res.Odometer * kmPerMile, err
 }
 
 var _ api.SocLimiter = (*Provider)(nil)

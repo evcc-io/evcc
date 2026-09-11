@@ -69,10 +69,10 @@ type ChargingStatus struct {
 	ChargingStatus    bool        `json:"chargingStatus"`
 	PluggedIn         bool        `json:"pluggedIn"`
 	BatteryPercentage float64     `json:"batteryPercentage"`
-	Range             float64     `json:"range"`
+	Range             float64     `json:"range"`          // miles
 	TimeToMaxLimit    StringFloat `json:"timeToMaxLimit"` // "0.0"
 	MaxLimit          int64       `json:"maxLimit"`
-	Odometer          float64     `json:"odometer"`
+	Odometer          float64     `json:"odometer"`        // miles
 	DurationElapsed   StringFloat `json:"durationElapsed"` // "4"
 	DurationUnit      string      `json:"durationUnit"`    // "seconds", refers to durationElapsed
 }

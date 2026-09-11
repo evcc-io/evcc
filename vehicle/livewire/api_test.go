@@ -97,6 +97,35 @@ func TestStatus(t *testing.T) {
 	assert.Equal(t, int64(80), res.MaxLimit)
 }
 
+func TestProviderConvertsMiles(t *testing.T) {
+	b, identity := newBackend(t)
+	b.status = func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(sampleStatusIdle))
+	}
+
+	p := NewProvider(NewAPI(util.NewLogger("test"), identity), "bike-1", time.Minute)
+
+	rng, err := p.Range()
+	require.NoError(t, err)
+	assert.Equal(t, int64(108), rng)
+
+	odo, err := p.Odometer()
+	require.NoError(t, err)
+	assert.InDelta(t, 886.2, odo, 0.1)
+
+	soc, err := p.Soc()
+	require.NoError(t, err)
+	assert.Equal(t, 65.0, soc)
+
+	status, err := p.Status()
+	require.NoError(t, err)
+	assert.Equal(t, api.StatusA, status)
+
+	limit, err := p.GetLimitSoc()
+	require.NoError(t, err)
+	assert.Equal(t, int64(80), limit)
+}
+
 func TestErrorEnvelopeIsAsleep(t *testing.T) {
 	for _, code := range []int{http.StatusOK, http.StatusBadRequest} {
 		b, identity := newBackend(t)
