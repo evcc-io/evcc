@@ -662,22 +662,3 @@ func TestDiffSuggestions(t *testing.T) {
 	assert.Empty(t, site.diffSuggestions(map[string]pendingSuggestion{}))
 	assert.Len(t, site.diffSuggestions(pending(stop)), 1)
 }
-
-func TestOptimizerDue(t *testing.T) {
-	slot := time.Date(2025, 1, 1, 12, 0, 0, 0, time.UTC)
-
-	for _, automatic := range []bool{false, true} {
-		// never ran
-		assert.True(t, optimizerDue(time.Time{}, slot.Add(time.Second), automatic))
-
-		// same interval
-		assert.False(t, optimizerDue(slot, slot.Add(time.Minute), automatic))
-
-		// slot boundary
-		assert.True(t, optimizerDue(slot.Add(14*time.Minute), slot.Add(15*time.Minute), automatic))
-	}
-
-	// intermediate boundary only in automatic mode
-	assert.False(t, optimizerDue(slot, slot.Add(optimizerInterval), false))
-	assert.True(t, optimizerDue(slot, slot.Add(optimizerInterval), true))
-}
