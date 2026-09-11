@@ -640,7 +640,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		return errors.New("optimizer result expired")
 	}
 
-	site.applyOptimizerResult(req, details, *resp.JSON200, schedule, now)
+	site.applyOptimizerResult(req, details, *resp.JSON200, schedule, now, now)
 
 	return nil
 }
@@ -648,11 +648,12 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 // optimizerSolve holds a solve's inputs so the control cycle can reapply it
 // to a newer slot without a new network round-trip - see reapplySuggestions.
 type optimizerSolve struct {
-	req      optimizer.OptimizationInput
-	details  requestDetails
-	res      optimizer.OptimizationResult
-	schedule optimizerSchedule
-	slot     int // the slot last applied from this solve
+	req       optimizer.OptimizationInput
+	details   requestDetails
+	res       optimizer.OptimizationResult
+	schedule  optimizerSchedule
+	slot      int       // the slot last applied from this solve
+	completed time.Time // when this solve completed, not when a slot was last (re)applied from it
 }
 
 // setLastOptimizerSolve remembers a solve's inputs for reapplySuggestions
@@ -694,16 +695,22 @@ func (site *Site) reapplySuggestions(now time.Time) {
 		return
 	}
 
-	// horizon passed, or no completed solve for two slots (e.g. repeated
-	// errOptimizerNotReady): don't march a dead plan forward
-	if slot < 0 || now.Sub(site.optimizerUpdated) > 2*tariff.SlotDuration {
+	// horizon passed, or the solve is older than two slots: don't march a
+	// dead plan forward. last.completed, not site.optimizerUpdated - that
+	// gate gets zeroed on every forced call and stays zero on
+	// errOptimizerNotReady, which would make a genuinely fresh solve look
+	// decades stale.
+	if slot < 0 || now.Sub(last.completed) > 2*tariff.SlotDuration {
 		site.log.DEBUG.Println("optimizer: cached result expired")
 		site.clearSuggestions()
 		return
 	}
 
 	// a loadpoint that disconnected since the solve is excluded from a fresh
-	// request (optimizerRequest); reapplying would advise an empty charger
+	// request (optimizerRequest); reapplying would advise an empty charger.
+	// Discarding the whole cache is deliberate: evVehicleDisconnectHandler
+	// already forces an immediate fresh solve, this only bridges the gap
+	// until it lands.
 	for _, d := range last.details.BatteryDetails {
 		if d.loadpoint == nil {
 			continue
@@ -714,12 +721,12 @@ func (site *Site) reapplySuggestions(now time.Time) {
 		}
 	}
 
-	site.applyOptimizerResult(last.req, last.details, last.res, last.schedule, now)
+	site.applyOptimizerResult(last.req, last.details, last.res, last.schedule, now, last.completed)
 }
 
 // applyOptimizerResult maps the optimizer response onto suggestions, battery
 // forecast and notifications
-func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details requestDetails, res optimizer.OptimizationResult, schedule optimizerSchedule, now time.Time) {
+func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details requestDetails, res optimizer.OptimizationResult, schedule optimizerSchedule, now time.Time, completed time.Time) {
 	slot := schedule.activeSlot(now)
 	slotHours := schedule.duration(slot).Hours()
 	gridImporting := slot >= 0 && slot < len(res.GridImport) && res.GridImport[slot] > 0
@@ -768,7 +775,7 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 		site.pushEvent(ev)
 	}
 
-	site.setLastOptimizerSolve(&optimizerSolve{req: req, details: details, res: res, schedule: schedule, slot: slot})
+	site.setLastOptimizerSolve(&optimizerSolve{req: req, details: details, res: res, schedule: schedule, slot: slot, completed: completed})
 }
 
 func (site *Site) addBatteryForecastTotals(req []optimizer.BatteryConfig, resp []optimizer.BatteryResult, schedule optimizerSchedule, now time.Time) *types.BatteryForecast {

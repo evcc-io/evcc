@@ -749,8 +749,7 @@ func TestReapplySuggestionAcrossSlotBoundary(t *testing.T) {
 		},
 	}
 
-	site.applyOptimizerResult(req, details, res, schedule, applied)
-	site.optimizerUpdated = applied // stamped by optimizerUpdateAsync in production, needed for reapplySuggestions' age check
+	site.applyOptimizerResult(req, details, res, schedule, applied, applied)
 
 	require.NotNil(t, site.suggestion(batteryKey("home"), api.BatteryNormal.String()))
 	assert.Equal(t, api.BatteryNormal.String(), site.suggestion(batteryKey("home"), api.BatteryNormal.String()).Action)
@@ -797,8 +796,7 @@ func TestReapplySuggestionsDoesNotResurrectClearedAdvice(t *testing.T) {
 		BatteryDetails: []batteryDetail{{Type: batteryTypeBattery, Name: "home", controllable: true}},
 	}
 
-	site.applyOptimizerResult(req, details, res, schedule, applied)
-	site.optimizerUpdated = applied // isolate the nil-cache check below from the unrelated age guard
+	site.applyOptimizerResult(req, details, res, schedule, applied, applied)
 	require.NotNil(t, site.suggestion(batteryKey("home"), api.BatteryNormal.String()))
 	require.NotNil(t, site.battery.Forecast, "fixture must actually produce a forecast, or clearing/not-resurrecting it proves nothing")
 
@@ -845,8 +843,7 @@ func TestReapplySuggestionsExcludeDisconnectedLoadpoint(t *testing.T) {
 		BatteryDetails: []batteryDetail{{Type: batteryTypeLoadpoint, loadpoint: new(int), controllable: true}},
 	}
 
-	site.applyOptimizerResult(req, details, res, schedule, applied)
-	site.optimizerUpdated = applied
+	site.applyOptimizerResult(req, details, res, schedule, applied, applied)
 	require.Equal(t, actionStop, site.suggestion(loadpointKey(0), actionCharge).Action)
 
 	// the car is unplugged before the next slot boundary
@@ -887,8 +884,7 @@ func TestReapplySuggestionsExpireAfterOutage(t *testing.T) {
 		BatteryDetails: []batteryDetail{{Type: batteryTypeBattery, Name: "home", controllable: true}},
 	}
 
-	site.applyOptimizerResult(req, details, res, schedule, applied)
-	site.optimizerUpdated = applied
+	site.applyOptimizerResult(req, details, res, schedule, applied, applied)
 	require.NotNil(t, site.suggestion(batteryKey("home"), api.BatteryNormal.String()))
 
 	// outage: no completed solve for more than two slots
