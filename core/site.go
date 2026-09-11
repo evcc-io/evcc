@@ -1272,8 +1272,8 @@ func (site *Site) update(lp updater) {
 	if state, err := site.updateMeters(); err != nil {
 		site.log.ERROR.Println(err)
 	} else {
-		go site.optimizerUpdateAsync(tariff.SlotDuration)
 		site.reapplySuggestions(time.Now())
+		go site.optimizerUpdateAsync(tariff.SlotDuration)
 
 		site.updatePower(lp, state, totalChargePower, consumption, feedin)
 	}
