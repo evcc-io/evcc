@@ -1719,6 +1719,9 @@ components:
         token:
           description: Sponsor token. Redacted.
           type: string
+        hardware:
+          description: Hardware sponsorship.
+          type: boolean
     StaticEnergyPlan:
       description: Charging plan with an energy goal.
       type: object

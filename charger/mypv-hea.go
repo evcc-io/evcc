@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"math"
 	"sync/atomic"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -32,6 +33,7 @@ import (
 // MyPvHea charger implementation
 type MyPvHea struct {
 	myPvBase
+	log       *util.Logger
 	relays    uint16
 	stepPower uint16
 	mask      atomic.Uint32
@@ -100,11 +102,37 @@ func NewMyPvHea(ctx context.Context, name string, settings modbus.TcpSettings, t
 
 	wb := &MyPvHea{
 		myPvBase:  newMyPvBase(conn, heaTemp[tempSource-1]),
+		log:       log,
 		relays:    relays,
 		stepPower: stepPower,
 	}
 
+	// device resets relays when not written within the power timeout; not writable more than once a day
+	b, err := wb.readUint16(myPvRegPowerTimeout)
+	if err != nil {
+		return nil, err
+	}
+
+	go wb.heartbeat(ctx, time.Duration(b)*time.Second/2)
+
 	return wb, nil
+}
+
+// heartbeat rewrites the active relay mask so the device does not fall back to idle
+func (wb *MyPvHea) heartbeat(ctx context.Context, interval time.Duration) {
+	for tick := time.Tick(interval); ; {
+		select {
+		case <-tick:
+		case <-ctx.Done():
+			return
+		}
+
+		if mask := uint16(wb.mask.Load()); mask != 0 {
+			if err := wb.setRelays(mask); err != nil {
+				wb.log.ERROR.Println("heartbeat:", err)
+			}
+		}
+	}
 }
 
 // Status implements the api.Charger interface
@@ -138,17 +166,19 @@ func (wb *MyPvHea) Enabled() (bool, error) {
 
 func (wb *MyPvHea) setRelays(mask uint16) error {
 	_, err := wb.conn.WriteSingleRegister(heaRegSetPower, mask)
+	if err == nil {
+		wb.mask.Store(uint32(mask))
+	}
 	return err
 }
 
 // Enable implements the api.Charger interface
 func (wb *MyPvHea) Enable(enable bool) error {
-	var mask uint16
 	if enable {
-		mask = uint16(wb.mask.Load())
+		return wb.MaxCurrentMillis(math.Float64frombits(wb.current.Load()))
 	}
 
-	return wb.setRelays(mask)
+	return wb.setRelays(0)
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -178,7 +208,6 @@ func (wb *MyPvHea) MaxCurrentMillis(current float64) error {
 
 	err := wb.setRelays(mask)
 	if err == nil {
-		wb.mask.Store(uint32(mask))
 		wb.current.Store(math.Float64bits(current))
 	}
 
