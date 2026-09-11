@@ -1,0 +1,28 @@
+template: mypv-hea-35
+products:
+  - brand: my-PV
+    description:
+      generic: HEA•THOR IoT 3.5 kW
+capabilities: ["meter"]
+group: heating
+requirements:
+  description:
+    de: |
+      Modbus TCP zur Ansteuerung verwenden und im Ladepunkt `phases: 1` einstellen.
+      Die Leistung wird in einer Stufe von 3,5 kW geschaltet. Die Leistungsgrenzen werden automatisch berücksichtigt.
+      Das zusätzliche SELV-Relais wird nicht angesteuert.
+    en: |
+      Use Modbus TCP control and configure `phases: 1` in the loadpoint.
+      Power is switched in one 3.5 kW stage. Power limits are applied automatically.
+      The additional SELV relay is not controlled.
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+  - name: tempsource
+    choice: ["1", "2"]
+    default: "1"
+render: |
+  type: mypv-hea-35
+  {{- include "modbus" . }}
+  tempsource: {{ .tempsource }}

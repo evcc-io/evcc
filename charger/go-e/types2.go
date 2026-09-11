@@ -1,20 +1,24 @@
 package goe
 
+// ModelStatusAccessControl is the v2 modelStatus NotChargingBecauseAccessControl
+const ModelStatusAccessControl = 2
+
 // StatusResponse2 is the v2 API response
 type StatusResponse2 struct {
-	Fwv   string    // firmware version
-	Car   int       // car status
-	Alw   bool      // allow charging
-	Amp   int       // current [A]
-	Err   int       // error
-	Eto   uint64    // energy total Wh
-	Psm   int       // phase switching
-	Stp   int       // stop state
-	Tmp   int       // temperature [°C]
-	Trx   int       // transaction
-	Nrg   []float64 // voltage, current, power
-	Wh    float64   // energy [Wh]
-	Cards []Card    // RFID cards
+	Fwv         string    // firmware version
+	Car         int       // car status
+	Alw         bool      // allow charging
+	Amp         int       // current [A]
+	Err         int       // error
+	Eto         uint64    // energy total Wh
+	Psm         int       // phase switching
+	Stp         int       // stop state
+	Tmp         int       // temperature [°C]
+	Trx         int       // transaction
+	Nrg         []float64 // voltage, current, power
+	Wh          float64   // energy [Wh]
+	Cards       []Card    // RFID cards
+	ModelStatus int       // reason why charging is allowed or not
 }
 
 // Card is the v2 RFID card
@@ -30,6 +34,10 @@ func (g *StatusResponse2) Status() int {
 
 func (g *StatusResponse2) Enabled() bool {
 	return g.Alw
+}
+
+func (g *StatusResponse2) AccessControl() bool {
+	return g.ModelStatus == ModelStatusAccessControl
 }
 
 func (g *StatusResponse2) CurrentPower() float64 {

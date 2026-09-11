@@ -51,6 +51,11 @@ maxcurrent:
 The generic configurable charger (`charger/charger.go`) wires these plugin
 configs into the `api.Charger` interface at runtime.
 
+Templates render once at config time. HTTP `uri` and `body` are templates
+themselves, evaluated per request (`util.ReplaceFormatted`: sprig, `addDate`,
+`timeRound`). Defer `now` to request time with a raw string:
+`` {{ `{{ now | date "2006-01-02" }}` }} ``.
+
 ## Key Files
 
 - `plugin/config.go` — plugin registry and config types

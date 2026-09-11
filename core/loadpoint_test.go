@@ -165,9 +165,9 @@ func TestUpdatePowerZero(t *testing.T) {
 			bus:         evbus.New(),
 			clock:       clock,
 			charger:     charger,
-			chargeMeter: &Null{}, // silence nil panics
-			chargeRater: &Null{}, // silence nil panics
-			chargeTimer: &Null{}, // silence nil panics
+			chargeMeter: newChargeMeter(&Null{}), // silence nil panics
+			chargeRater: &Null{},                 // silence nil panics
+			chargeTimer: &Null{},                 // silence nil panics
 			wakeUpTimer: NewTimer(),
 			minCurrent:  minA,
 			maxCurrent:  maxA,
@@ -404,11 +404,11 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 		bus:         evbus.New(),
 		clock:       clock,
 		charger:     charger,
-		chargeMeter: &Null{},            // silence nil panics
-		chargeRater: &Null{},            // silence nil panics
-		chargeTimer: &Null{},            // silence nil panics
-		progress:    NewProgress(0, 10), // silence nil panics
-		wakeUpTimer: NewTimer(),         // silence nil panics
+		chargeMeter: newChargeMeter(&Null{}), // silence nil panics
+		chargeRater: &Null{},                 // silence nil panics
+		chargeTimer: &Null{},                 // silence nil panics
+		progress:    NewProgress(0, 10),      // silence nil panics
+		wakeUpTimer: NewTimer(),              // silence nil panics
 		// coordinator:   coordinator.NewDummy(), // silence nil panics
 		minCurrent:   minA,
 		maxCurrent:   maxA,
@@ -484,9 +484,9 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 		clock:       clock,
 		settings:    settings.NewDatabaseSettingsAdapter("foo"),
 		charger:     charger,
-		chargeMeter: &Null{}, // silence nil panics
-		chargeRater: &Null{}, // silence nil panics
-		chargeTimer: &Null{}, // silence nil panics
+		chargeMeter: newChargeMeter(&Null{}), // silence nil panics
+		chargeRater: &Null{},                 // silence nil panics
+		chargeTimer: &Null{},                 // silence nil panics
 		wakeUpTimer: NewTimer(),
 		minCurrent:  minA,
 		maxCurrent:  maxA,
@@ -551,7 +551,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 		bus:         evbus.New(),
 		clock:       clock,
 		charger:     charger,
-		chargeMeter: &Null{}, // silence nil panics
+		chargeMeter: newChargeMeter(&Null{}), // silence nil panics
 		chargeRater: rater,
 		chargeTimer: &Null{}, // silence nil panics
 		wakeUpTimer: NewTimer(),
@@ -798,10 +798,10 @@ func TestConnectionDurationDropDetection(t *testing.T) {
 		charger:     charger,
 		minCurrent:  minA,
 		maxCurrent:  maxA,
-		chargeMeter: &Null{},    // silence nil panics
-		chargeRater: &Null{},    // silence nil panics
-		chargeTimer: &Null{},    // silence nil panics
-		wakeUpTimer: NewTimer(), // silence nil panics
+		chargeMeter: newChargeMeter(&Null{}), // silence nil panics
+		chargeRater: &Null{},                 // silence nil panics
+		chargeTimer: &Null{},                 // silence nil panics
+		wakeUpTimer: NewTimer(),              // silence nil panics
 	}
 
 	attachListeners(t, lp)
@@ -846,10 +846,10 @@ func TestWelcomeChargeAppliedOnlyOnce(t *testing.T) {
 		charger:     charger,
 		minCurrent:  minA,
 		maxCurrent:  maxA,
-		chargeMeter: &Null{},    // silence nil panics
-		chargeRater: &Null{},    // silence nil panics
-		chargeTimer: &Null{},    // silence nil panics
-		wakeUpTimer: NewTimer(), // silence nil panics
+		chargeMeter: newChargeMeter(&Null{}), // silence nil panics
+		chargeRater: &Null{},                 // silence nil panics
+		chargeTimer: &Null{},                 // silence nil panics
+		wakeUpTimer: NewTimer(),              // silence nil panics
 	}
 
 	attachListeners(t, lp)
