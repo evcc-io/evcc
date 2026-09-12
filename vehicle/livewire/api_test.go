@@ -162,9 +162,8 @@ func TestProviderComplete(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, float64(limit), soc)
 
-	finish, err := p.FinishTime()
-	require.NoError(t, err)
-	assert.True(t, finish.IsZero())
+	_, err = p.FinishTime()
+	assert.ErrorIs(t, err, api.ErrNotAvailable)
 }
 
 func TestErrorEnvelopeIsAsleep(t *testing.T) {

@@ -87,8 +87,11 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.status.Get()
-	if err != nil || !res.ChargingStatus || res.TimeToMaxLimit <= 0 {
+	if err != nil {
 		return time.Time{}, err
+	}
+	if !res.ChargingStatus || res.TimeToMaxLimit <= 0 {
+		return time.Time{}, api.ErrNotAvailable
 	}
 
 	// timeToMaxLimit is in minutes and stays 0 for the first minutes of a charge
