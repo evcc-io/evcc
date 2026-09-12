@@ -66,7 +66,15 @@ func (v *Provider) WakeUp() error {
 
 func (v *Provider) Soc() (float64, error) {
 	res, err := v.status()
-	return float64(res.Payload.BatteryLevel), err
+	if err != nil {
+		return 0, err
+	}
+
+	if res.Payload.BatteryLevel == nil {
+		return 0, api.ErrNotAvailable
+	}
+
+	return float64(*res.Payload.BatteryLevel), nil
 }
 
 // Range implements the api.VehicleRange interface

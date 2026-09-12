@@ -14,7 +14,7 @@ type Status struct {
 		} `json:"messages"`
 	} `json:"status"`
 	Payload struct {
-		BatteryLevel        int     `json:"batteryLevel"`
+		BatteryLevel        *int    `json:"batteryLevel"`
 		ChargingStatus      string  `json:"chargingStatus"`
 		EvRange             EvRange `json:"evRange"`
 		EvRangeWithAc       EvRange `json:"evRangeWithAc"`
