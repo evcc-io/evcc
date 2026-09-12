@@ -28,6 +28,7 @@ import (
 const (
 	myPvRegPower          = 1000
 	myPvRegTempLimit      = 1002
+	myPvRegPowerTimeout   = 1004
 	myPvRegOperationState = 1077
 )
 

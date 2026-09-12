@@ -15,6 +15,8 @@ github.com/Masterminds/sprig/v3 v3.3.0 h1:mQh0Yrg1XPo6vjYXgtf5OtijNAKJRNcTdOOGZe
 github.com/Masterminds/sprig/v3 v3.3.0/go.mod h1:Zy1iXRYNqNLUolqCpL4uhk6SHUMAOSCzdgBfDb35Lz0=
 github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2 h1:+vx7roKuyA63nhn5WAunQHLTznkw5W8b1Xc0dNjp83s=
 github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2/go.mod h1:HBCaDeC1lPdgDeDbhX8XFpy1jqjK0IBG8W5K+xYqA0w=
+github.com/OpenEVSE/go-openevse v0.3.0 h1:j+m7vB2o3xjOA48gNqbhI2uA0OsJMasxY3/Dveng1Vg=
+github.com/OpenEVSE/go-openevse v0.3.0/go.mod h1:rBokDT2ZukC+kdOGT6Vft/8OCd7JIwq+waFrvo1+Xw8=
 github.com/PanterSoft/comlynx-go v0.1.0 h1:+Kd0lJqHlWQNv9WliijoKTFrcZSZ33RBxIvi6SE5TbQ=
 github.com/PanterSoft/comlynx-go v0.1.0/go.mod h1:X+jgiMXuPftrh5cpoMm648+DpTM2RdKm5FBCyL8KpLw=
 github.com/PuerkitoBio/goquery v1.13.0 h1:mqHbjD7Jmnul4DTR24LKTjo1uUmHUh072kteGV+xpFM=

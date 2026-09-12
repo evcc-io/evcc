@@ -7,6 +7,7 @@ require (
 	github.com/404GamerNotFound/solarman-go v0.2.2
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/Masterminds/sprig/v3 v3.3.0
+	github.com/OpenEVSE/go-openevse v0.3.0
 	github.com/PanterSoft/comlynx-go v0.1.0
 	github.com/PuerkitoBio/goquery v1.13.0
 	github.com/WulfgarW/sensonet v0.0.8
