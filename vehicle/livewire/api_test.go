@@ -137,10 +137,18 @@ func TestProviderCharging(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, api.StatusC, status)
 
-	// timeToMaxLimit is minutes: 45 for 65 -> 80 % on the onboard charger
+	// timeToMaxLimit is minutes: 45 for 65 -> 80 % on the onboard charger,
+	// counted from the telemetry timestamp (5 s before the fetch)
+	fetched := time.Now()
 	finish, err := p.FinishTime()
 	require.NoError(t, err)
-	assert.WithinDuration(t, time.Now().Add(45*time.Minute), finish, 5*time.Second)
+	assert.WithinDuration(t, fetched.Add(45*time.Minute-5*time.Second), finish, time.Second)
+
+	// the estimate is anchored to the fetch, not to the call: repeated calls
+	// against the cached response return the same finish time
+	again, err := p.FinishTime()
+	require.NoError(t, err)
+	assert.Equal(t, finish, again)
 }
 
 func TestProviderComplete(t *testing.T) {
@@ -201,14 +209,40 @@ func TestUnauthorizedTriggersRelogin(t *testing.T) {
 	assert.Equal(t, int32(2), b.logins.Load())
 }
 
-func TestLoginThrottled(t *testing.T) {
+func TestRejectedTokenAllowsOneRelogin(t *testing.T) {
 	b, identity := newBackend(t)
-	loginInterval = time.Second
+	loginInterval = time.Minute
 
 	require.NoError(t, identity.Login())
-	identity.invalidate("jwt-1")
 
+	// a 401 right after login must still yield a fresh token
+	identity.invalidate("jwt-1")
+	token, err := identity.Token()
+	require.NoError(t, err)
+	assert.Equal(t, "jwt-1", token)
+	assert.Equal(t, int32(2), b.logins.Load())
+
+	// but the backend rejecting fresh tokens repeatedly is throttled
+	identity.invalidate("jwt-1")
+	_, err = identity.Token()
+	assert.ErrorContains(t, err, "throttled")
+	assert.Equal(t, int32(2), b.logins.Load())
+}
+
+func TestFailedLoginThrottled(t *testing.T) {
+	b, identity := newBackend(t)
+	loginInterval = time.Minute
+	b.status = nil
+
+	srvFail := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(map[string]any{"errorCode": 403042, "errorMessage": "Invalid LoginID"})
+	}))
+	t.Cleanup(srvFail.Close)
+	GigyaURL = srvFail.URL
+
+	assert.ErrorContains(t, identity.Login(), "Invalid LoginID")
 	_, err := identity.Token()
 	assert.ErrorContains(t, err, "throttled")
-	assert.Equal(t, int32(1), b.logins.Load())
+	assert.ErrorContains(t, err, "Invalid LoginID")
+	assert.Equal(t, int32(0), b.logins.Load())
 }

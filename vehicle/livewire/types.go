@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Response shapes confirmed against the live backend on 2026-09-11 (app v1.8.0).
@@ -75,6 +76,20 @@ type ChargingStatus struct {
 	Odometer          float64     `json:"odometer"`        // miles
 	DurationElapsed   StringFloat `json:"durationElapsed"` // age of the telemetry data, e.g. "4"
 	DurationUnit      string      `json:"durationUnit"`    // "seconds" or "minutes"
+
+	Received time.Time `json:"-"` // when the response was fetched
+}
+
+// Age returns how old the telemetry data was when the response was fetched
+func (s ChargingStatus) Age() time.Duration {
+	unit := time.Second
+	switch strings.ToLower(s.DurationUnit) {
+	case "minutes", "minute", "min":
+		unit = time.Minute
+	case "hours", "hour":
+		unit = time.Hour
+	}
+	return time.Duration(float64(s.DurationElapsed) * float64(unit))
 }
 
 type ChargingStatusResponse struct {

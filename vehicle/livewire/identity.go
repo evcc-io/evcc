@@ -23,9 +23,14 @@ const (
 var (
 	GigyaURL = "https://accounts.us1.gigya.com"
 
-	// loginInterval throttles full re-logins, e.g. when an unpaired device keeps getting 401
+	// loginInterval throttles repeated logins after a failed login or after the
+	// backend keeps rejecting freshly issued tokens
 	loginInterval = 5 * time.Minute
 )
+
+// maxFastRejects is the number of tokens rejected within loginInterval of their
+// issue before re-logins are throttled. One immediate re-login is always allowed.
+const maxFastRejects = 1
 
 // clientHeaders mirror what the mobile app sends. The api calls work without
 // them, only the session request still sends them as it was not tested otherwise.
@@ -50,8 +55,10 @@ type Identity struct {
 	mu          sync.Mutex
 	token       string
 	expiry      time.Time
+	issued      time.Time
 	lastAttempt time.Time
 	lastErr     error
+	fastRejects int
 }
 
 // NewIdentity creates a LiveWire identity for the given account and paired device uuid
@@ -94,8 +101,18 @@ func (v *Identity) invalidate(token string) {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 
-	if v.token == token {
-		v.token = ""
+	if v.token != token {
+		return
+	}
+
+	v.token = ""
+
+	// a token that lasted longer than the interval is a normal expiry, a
+	// quick rejection counts towards throttling
+	if time.Since(v.issued) < loginInterval {
+		v.fastRejects++
+	} else {
+		v.fastRejects = 0
 	}
 }
 
@@ -105,7 +122,9 @@ func (v *Identity) login() error {
 		if v.lastErr != nil {
 			return fmt.Errorf("login throttled: %w", v.lastErr)
 		}
-		return errors.New("login throttled")
+		if v.fastRejects > maxFastRejects {
+			return errors.New("login throttled: backend keeps rejecting fresh tokens")
+		}
 	}
 
 	v.lastAttempt = time.Now()
@@ -125,6 +144,7 @@ func (v *Identity) login() error {
 
 	v.token = token
 	v.expiry = tokenExpiry(token)
+	v.issued = time.Now()
 	v.lastErr = nil
 	v.redact(token)
 

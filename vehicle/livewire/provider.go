@@ -22,7 +22,9 @@ type Provider struct {
 func NewProvider(api *API, bikeID string, cache time.Duration) *Provider {
 	return &Provider{
 		status: util.ResettableCached(func() (ChargingStatus, error) {
-			return api.Status(bikeID)
+			res, err := api.Status(bikeID)
+			res.Received = time.Now()
+			return res, err
 		}, cache),
 		position: util.ResettableCached(func() (Position, error) {
 			return api.Position(bikeID)
@@ -94,8 +96,10 @@ func (v *Provider) FinishTime() (time.Time, error) {
 		return time.Time{}, api.ErrNotAvailable
 	}
 
-	// timeToMaxLimit is in minutes and stays 0 for the first minutes of a charge
-	return time.Now().Add(time.Duration(float64(res.TimeToMaxLimit) * float64(time.Minute))), nil
+	// timeToMaxLimit is in minutes and stays 0 for the first minutes of a charge.
+	// It is relative to the telemetry timestamp, not to the cached response.
+	remaining := time.Duration(float64(res.TimeToMaxLimit) * float64(time.Minute))
+	return res.Received.Add(remaining - res.Age()), nil
 }
 
 var _ api.VehiclePosition = (*Provider)(nil)

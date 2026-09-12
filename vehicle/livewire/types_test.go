@@ -3,6 +3,7 @@ package livewire
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -48,6 +49,22 @@ func TestChargingStatusResponse(t *testing.T) {
 	assert.InDelta(t, 550.63, data.Odometer, 0.01)
 	assert.Equal(t, 4.0, float64(data.DurationElapsed))
 	assert.Equal(t, "seconds", data.DurationUnit)
+}
+
+func TestChargingStatusAge(t *testing.T) {
+	for _, tc := range []struct {
+		elapsed, unit string
+		want          time.Duration
+	}{
+		{"4", "seconds", 4 * time.Second},
+		{"2", "minutes", 2 * time.Minute},
+		{"1.5", "hours", 90 * time.Minute},
+		{"0", "", 0},
+	} {
+		s := ChargingStatus{DurationUnit: tc.unit}
+		require.NoError(t, json.Unmarshal([]byte(`"`+tc.elapsed+`"`), &s.DurationElapsed))
+		assert.Equal(t, tc.want, s.Age(), tc.elapsed+" "+tc.unit)
+	}
 }
 
 func TestErrorEnvelope(t *testing.T) {
