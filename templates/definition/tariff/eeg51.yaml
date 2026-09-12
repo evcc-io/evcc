@@ -1,0 +1,37 @@
+template: eeg51
+link: https://www.gesetze-im-internet.de/eeg_2014/__51.html
+products:
+  - description:
+      de: Fester Preis (Solarspitzengesetz)
+      en: Fixed Price (§ 51 EEG / German "Solarspitzengesetz")
+requirements:
+  description:
+    de: "Für PV-Anlagen, deren gesetzliche Einspeisevergütung nach § 51 EEG (verschärft durch das 2025 in Kraft getretene 'Solarspitzengesetz') während negativer Day-Ahead-Börsenstrompreise vollständig entfällt. Die eingetragene Vergütung wird gezahlt, außer der Referenzpreis ist negativ, dann ist die Vergütung 0. Der Referenzpreis (Day-Ahead, Gebotszone DE-LU) wird kostenlos und ohne Anmeldung über die [Energy-Charts API](https://api.energy-charts.info/) des Fraunhofer-Instituts für Solare Energiesysteme (ISE) bezogen, die ihrerseits auf EPEX-Spot-Auktionsdaten basiert."
+    en: "For PV systems whose statutory feed-in tariff under German § 51 EEG (tightened by the 'Solarspitzengesetz' effective 2025) is forfeited entirely while the day-ahead exchange price is negative. The configured tariff is paid out unless the reference price is negative, in which case the payout is 0. The reference price (day-ahead, DE-LU bidding zone) is fetched for free, without registration, via the [Energy-Charts API](https://api.energy-charts.info/) provided by Fraunhofer ISE, which in turn sources it from EPEX spot auction data."
+  evcc: ["skiptest"]
+group: price
+countries: ["DE"]
+params:
+  - name: price
+    type: pricePerKWh
+    required: true
+    description:
+      en: Feed-in tariff
+      de: Einspeisevergütung
+    help:
+      de: Fester Vergütungssatz, wird bei negativem Referenzpreis nicht gezahlt.
+      en: Fixed feed-in rate, not paid out while the reference price is negative.
+render: |
+  type: custom
+  charges: {{ .price }}
+  formula: "payout := charges; if price < 0 { payout = 0.0 }; payout"
+  forecast:
+    source: http
+    uri: https://api.energy-charts.info/price?bzn=DE-LU&end={{ `{{ addDate now 0 0 1 | date "2006-01-02" }}` }}
+    cache: 1h
+    jq: |
+      [.unix_seconds, .price] | transpose | map({
+        "start": .[0] | todate,
+        "end":   .[0]+900 | todate,
+        "value": .[1]/1000
+      }) | tostring
