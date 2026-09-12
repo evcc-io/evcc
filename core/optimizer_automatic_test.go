@@ -266,6 +266,113 @@ func TestBatteryModeAutomatic(t *testing.T) {
 	ctrl.Finish()
 }
 
+func TestBatterySuggestionDebounce(t *testing.T) {
+	enableAutomatic(t)
+
+	ctrl := gomock.NewController(t)
+	batCon := batteryControllerMock(ctrl)
+
+	var bat api.Meter = &struct {
+		api.Meter
+		api.BatteryController
+	}{
+		BatteryController: batCon,
+	}
+
+	site := &Site{
+		log:           util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "bat"}, bat)},
+	}
+
+	// first suggestion is adopted immediately
+	site.setSuggestions(map[string]types.Suggestion{batteryKey("bat"): {Action: api.BatteryHold.String()}})
+	batCon.EXPECT().SetBatteryMode(api.BatteryHold)
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryHold, site.GetBatteryMode())
+
+	// a single flip to a different mode (e.g. a degenerate short-slot solve)
+	// is filtered - no SetBatteryMode call, battery stays on hold
+	site.setSuggestions(map[string]types.Suggestion{batteryKey("bat"): {Action: api.BatteryNormal.String()}})
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryHold, site.GetBatteryMode())
+
+	// the next run reverts to hold: the flip never left a trace
+	site.setSuggestions(map[string]types.Suggestion{batteryKey("bat"): {Action: api.BatteryHold.String()}})
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryHold, site.GetBatteryMode())
+
+	// a change that persists past batterySuggestionDebounce is adopted
+	site.setSuggestions(map[string]types.Suggestion{batteryKey("bat"): {Action: api.BatteryCharge.String()}})
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryHold, site.GetBatteryMode(), "not yet debounced")
+
+	site.batterySuggestionSince = time.Now().Add(-batterySuggestionDebounce - time.Second)
+	batCon.EXPECT().SetBatteryMode(api.BatteryCharge)
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryCharge, site.GetBatteryMode())
+
+	// after a gap (stalled optimizer), the next suggestion is adopted
+	// immediately again instead of being held to the stale debounce window
+	site.suggestionsUpdated = time.Now().Add(-suggestionMaxAge - time.Minute)
+	batCon.EXPECT().SetBatteryMode(api.BatteryNormal)
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryNormal, site.GetBatteryMode())
+
+	site.setSuggestions(map[string]types.Suggestion{batteryKey("bat"): {Action: api.BatteryHold.String()}})
+	batCon.EXPECT().SetBatteryMode(api.BatteryHold)
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryHold, site.GetBatteryMode())
+
+	// an unparseable suggestion releases the battery immediately, bypassing
+	// the debounce - it's a safety fallback, not a value to hold onto
+	site.setSuggestions(map[string]types.Suggestion{batteryKey("bat"): {Action: "invalid"}})
+	batCon.EXPECT().SetBatteryMode(api.BatteryNormal)
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryNormal, site.GetBatteryMode())
+
+	ctrl.Finish()
+}
+
+// leaving automatic mode must not let a stale debounce delay the next
+// suggestion once it's back in charge
+func TestBatterySuggestionDebounceResetsOnAutomaticOff(t *testing.T) {
+	enableAutomatic(t)
+
+	ctrl := gomock.NewController(t)
+	batCon := batteryControllerMock(ctrl)
+
+	var bat api.Meter = &struct {
+		api.Meter
+		api.BatteryController
+	}{
+		BatteryController: batCon,
+	}
+
+	site := &Site{
+		log:           util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "bat"}, bat)},
+	}
+
+	site.setSuggestions(map[string]types.Suggestion{batteryKey("bat"): {Action: api.BatteryCharge.String()}})
+	batCon.EXPECT().SetBatteryMode(api.BatteryCharge)
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryCharge, site.GetBatteryMode())
+
+	settings.SetBool(keys.OptimizerAutomatic, false)
+	batCon.EXPECT().SetBatteryMode(api.BatteryNormal)
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryNormal, site.GetBatteryMode())
+
+	// back in automatic mode, a differing suggestion is adopted immediately
+	settings.SetBool(keys.OptimizerAutomatic, true)
+	site.setSuggestions(map[string]types.Suggestion{batteryKey("bat"): {Action: api.BatteryHold.String()}})
+	batCon.EXPECT().SetBatteryMode(api.BatteryHold)
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryHold, site.GetBatteryMode())
+
+	ctrl.Finish()
+}
+
 // a failed optimizer run keeps fresh advice, otherwise the battery is released
 // for a single cycle until the next run restores the suggestion
 func TestBatteryModeAutomaticFailedRun(t *testing.T) {
