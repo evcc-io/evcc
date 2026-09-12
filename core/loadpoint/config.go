@@ -1,7 +1,6 @@
 package loadpoint
 
 import (
-	"errors"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -99,12 +98,8 @@ func (payload DynamicConfig) Apply(lp API) error {
 		}
 	}
 
-	// automatic phase mode is optional; keep the setting but don't apply it if the
-	// charger cannot switch phases, matching how it is restored from settings
 	if err == nil {
-		if e := lp.SetPhasesConfigured(payload.PhasesConfigured); e != nil && !errors.Is(e, ErrPhaseSwitchingUnsupported) {
-			err = e
-		}
+		err = lp.SetPhasesConfigured(payload.PhasesConfigured)
 	}
 
 	if err == nil {
