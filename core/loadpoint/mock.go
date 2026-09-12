@@ -713,6 +713,20 @@ func (mr *MockAPIMockRecorder) GetStatus() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatus", reflect.TypeOf((*MockAPI)(nil).GetStatus))
 }
 
+// GetTempSensorRef mocks base method.
+func (m *MockAPI) GetTempSensorRef() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTempSensorRef")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetTempSensorRef indicates an expected call of GetTempSensorRef.
+func (mr *MockAPIMockRecorder) GetTempSensorRef() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTempSensorRef", reflect.TypeOf((*MockAPI)(nil).GetTempSensorRef))
+}
+
 // GetThresholds mocks base method.
 func (m *MockAPI) GetThresholds() ThresholdsConfig {
 	m.ctrl.T.Helper()
@@ -1147,6 +1161,18 @@ func (m *MockAPI) SetSolarShare(share float64) {
 func (mr *MockAPIMockRecorder) SetSolarShare(share any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetSolarShare", reflect.TypeOf((*MockAPI)(nil).SetSolarShare), share)
+}
+
+// SetTempSensorRef mocks base method.
+func (m *MockAPI) SetTempSensorRef(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetTempSensorRef", arg0)
+}
+
+// SetTempSensorRef indicates an expected call of SetTempSensorRef.
+func (mr *MockAPIMockRecorder) SetTempSensorRef(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTempSensorRef", reflect.TypeOf((*MockAPI)(nil).SetTempSensorRef), arg0)
 }
 
 // SetThresholds mocks base method.

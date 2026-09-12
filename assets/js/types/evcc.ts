@@ -483,6 +483,10 @@ export interface ConfigCharger extends Omit<Entity, "type"> {
   type: ConfigType;
 }
 
+export interface ConfigTempSensor extends Entity {
+  deviceProduct: string;
+}
+
 export interface ConfigMeter extends Entity {
   deviceProduct: string;
   deviceTitle?: string;
@@ -502,6 +506,7 @@ export interface ConfigLoadpoint {
   disable?: boolean;
   charger: string;
   meter: string;
+  tempSensor: string;
   vehicle: string;
   title: string;
   defaultMode: string;
@@ -1408,7 +1413,8 @@ export type DeviceType =
   | "messenger"
   | "tariff"
   | "hems"
-  | "curtailer";
+  | "curtailer"
+  | "tempsensor";
 export type MeterType = "grid" | "pv" | "battery" | "charge" | "aux" | "ext" | "consumer";
 export type MeterTemplateUsage = "grid" | "pv" | "battery" | "charge" | "aux";
 export type TariffType = "grid" | "feedIn" | "co2" | "planner" | "solar" | "temperature";

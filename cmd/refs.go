@@ -15,7 +15,7 @@ import (
 )
 
 var references struct {
-	meter, charger, vehicle, circuit, tariff, curtailer []string
+	meter, charger, vehicle, circuit, tariff, curtailer, tempsensor []string
 }
 
 func collectRefs(conf globalconfig.All) error {
@@ -111,11 +111,12 @@ func collectTariffRefs() error {
 func collectLoadpointRefs(named iter.Seq[config.Named]) error {
 	for cc := range named {
 		var refs struct {
-			CircuitRef string         `mapstructure:"circuit"` // Circuit reference
-			ChargerRef string         `mapstructure:"charger"` // Charger reference
-			VehicleRef string         `mapstructure:"vehicle"` // Vehicle reference
-			MeterRef   string         `mapstructure:"meter"`   // Charge meter reference
-			Other      map[string]any `mapstructure:",remain"`
+			CircuitRef    string         `mapstructure:"circuit"`    // Circuit reference
+			ChargerRef    string         `mapstructure:"charger"`    // Charger reference
+			VehicleRef    string         `mapstructure:"vehicle"`    // Vehicle reference
+			MeterRef      string         `mapstructure:"meter"`      // Charge meter reference
+			TempSensorRef string         `mapstructure:"tempSensor"` // Temp sensor reference
+			Other         map[string]any `mapstructure:",remain"`
 		}
 
 		if err := util.DecodeOther(cc.Other, &refs); err != nil {
@@ -126,6 +127,7 @@ func collectLoadpointRefs(named iter.Seq[config.Named]) error {
 		references.charger = append(references.charger, refs.ChargerRef)
 		references.vehicle = append(references.vehicle, refs.VehicleRef)
 		references.circuit = append(references.circuit, refs.CircuitRef)
+		references.tempsensor = append(references.tempsensor, refs.TempSensorRef)
 	}
 
 	return nil

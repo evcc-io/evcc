@@ -94,10 +94,11 @@ type Loadpoint struct {
 	vmu          sync.RWMutex // guard vehicle
 
 	// exposed public configuration
-	CircuitRef string `mapstructure:"circuit"` // Circuit reference
-	ChargerRef string `mapstructure:"charger"` // Charger reference
-	VehicleRef string `mapstructure:"vehicle"` // Vehicle reference
-	MeterRef   string `mapstructure:"meter"`   // Charge meter reference
+	CircuitRef    string `mapstructure:"circuit"`    // Circuit reference
+	ChargerRef    string `mapstructure:"charger"`    // Charger reference
+	VehicleRef    string `mapstructure:"vehicle"`    // Vehicle reference
+	MeterRef      string `mapstructure:"meter"`      // Charge meter reference
+	TempSensorRef string `mapstructure:"tempSensor"` // Temp sensor reference (heating devices)
 
 	Soc             loadpoint.SocConfig
 	Enable, Disable loadpoint.ThresholdConfig
@@ -148,6 +149,7 @@ type Loadpoint struct {
 
 	circuit        api.Circuit        // Circuit
 	chargeMeter    *chargeMeter       // Charger usage meter
+	tempSensor     api.Battery        // Temp sensor overriding charger temperature (heating devices)
 	chargeEnergy   *metrics.Collector // Charger usage collector
 	vehicle        api.Vehicle        // Currently active vehicle
 	defaultVehicle api.Vehicle        // Default vehicle (disables detection)
@@ -247,6 +249,17 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 			return lp, errors.New("missing charge meter instance")
 		}
 		lp.chargeMeter = newChargeMeter(mt)
+	}
+
+	if lp.TempSensorRef != "" {
+		dev, err := config.TempSensors().ByName(lp.TempSensorRef)
+		if err != nil {
+			return lp, fmt.Errorf("temp sensor: %w", err)
+		}
+		lp.tempSensor = dev.Instance()
+		if lp.tempSensor == nil {
+			return lp, errors.New("missing temp sensor instance")
+		}
 	}
 
 	// default vehicle
@@ -2098,7 +2111,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 	// https://github.com/evcc-io/evcc/issues/16180
 	socEstimator := lp.socEstimator
 
-	socAndLimit := func(typ string, dev any) (*float64, *int64, error) {
+	socAndLimit := func(typ string, dev, limiter any) (*float64, *int64, error) {
 		var socR *float64
 		var limitR *int64
 		var socErr error
@@ -2110,7 +2123,7 @@ func (lp *Loadpoint) publishSocAndRange() {
 				// don't publish here in case it needs be updated by the estimator
 				lp.log.DEBUG.Printf("%s soc: %.0f%%", typ, soc)
 
-				if socLimiter, ok := api.Cap[api.SocLimiter](dev); ok {
+				if socLimiter, ok := api.Cap[api.SocLimiter](limiter); ok {
 					if limit, err := socLimiter.GetLimitSoc(); err == nil {
 						limitR = &limit
 
@@ -2133,10 +2146,16 @@ func (lp *Loadpoint) publishSocAndRange() {
 		return socR, limitR, socErr
 	}
 
-	socR, limitR, _ := socAndLimit("charger", lp.charger)
+	// temp sensor overrides charger temperature, charger keeps limit temperature
+	typ, dev := "charger", any(lp.charger)
+	if lp.tempSensor != nil {
+		typ, dev = "tempsensor", lp.tempSensor
+	}
+
+	socR, limitR, _ := socAndLimit(typ, dev, lp.charger)
 	if socR == nil && (lp.vehicleSocPollAllowed() || lp.chargerHasFeature(api.IntegratedDevice)) {
 		var socErr error
-		socR, limitR, socErr = socAndLimit("vehicle", lp.GetVehicle())
+		socR, limitR, socErr = socAndLimit("vehicle", lp.GetVehicle(), lp.GetVehicle())
 
 		// keep polling async vehicle APIs that return ErrMustRetry until a SoC
 		// arrives, instead of waiting for the next interval

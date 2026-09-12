@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _ClassName = "configfilemeterchargervehicletariffcircuitsitemqttdatabasemodbusproxyeebusjavascriptgohemsshminfluxmessengersponsorshiploadpointcurtailer"
+const _ClassName = "configfilemeterchargervehicletariffcircuitsitemqttdatabasemodbusproxyeebusjavascriptgohemsshminfluxmessengersponsorshiploadpointcurtailertempsensor"
 
-var _ClassIndex = [...]uint8{0, 10, 15, 22, 29, 35, 42, 46, 50, 58, 69, 74, 84, 86, 90, 93, 99, 108, 119, 128, 137}
+var _ClassIndex = [...]uint8{0, 10, 15, 22, 29, 35, 42, 46, 50, 58, 69, 74, 84, 86, 90, 93, 99, 108, 119, 128, 137, 147}
 
-const _ClassLowerName = "configfilemeterchargervehicletariffcircuitsitemqttdatabasemodbusproxyeebusjavascriptgohemsshminfluxmessengersponsorshiploadpointcurtailer"
+const _ClassLowerName = "configfilemeterchargervehicletariffcircuitsitemqttdatabasemodbusproxyeebusjavascriptgohemsshminfluxmessengersponsorshiploadpointcurtailertempsensor"
 
 func (i Class) String() string {
 	i -= 1
@@ -45,9 +45,10 @@ func _ClassNoOp() {
 	_ = x[ClassSponsorship-(18)]
 	_ = x[ClassLoadpoint-(19)]
 	_ = x[ClassCurtailer-(20)]
+	_ = x[ClassTempSensor-(21)]
 }
 
-var _ClassValues = []Class{ClassConfigFile, ClassMeter, ClassCharger, ClassVehicle, ClassTariff, ClassCircuit, ClassSite, ClassMqtt, ClassDatabase, ClassModbusProxy, ClassEEBus, ClassJavascript, ClassGo, ClassHEMS, ClassSHM, ClassInflux, ClassMessenger, ClassSponsorship, ClassLoadpoint, ClassCurtailer}
+var _ClassValues = []Class{ClassConfigFile, ClassMeter, ClassCharger, ClassVehicle, ClassTariff, ClassCircuit, ClassSite, ClassMqtt, ClassDatabase, ClassModbusProxy, ClassEEBus, ClassJavascript, ClassGo, ClassHEMS, ClassSHM, ClassInflux, ClassMessenger, ClassSponsorship, ClassLoadpoint, ClassCurtailer, ClassTempSensor}
 
 var _ClassNameToValueMap = map[string]Class{
 	_ClassName[0:10]:         ClassConfigFile,
@@ -90,6 +91,8 @@ var _ClassNameToValueMap = map[string]Class{
 	_ClassLowerName[119:128]: ClassLoadpoint,
 	_ClassName[128:137]:      ClassCurtailer,
 	_ClassLowerName[128:137]: ClassCurtailer,
+	_ClassName[137:147]:      ClassTempSensor,
+	_ClassLowerName[137:147]: ClassTempSensor,
 }
 
 var _ClassNames = []string{
@@ -113,6 +116,7 @@ var _ClassNames = []string{
 	_ClassName[108:119],
 	_ClassName[119:128],
 	_ClassName[128:137],
+	_ClassName[137:147],
 }
 
 // ClassString retrieves an enum value from the enum constants string name.
