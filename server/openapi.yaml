@@ -810,7 +810,7 @@ paths:
       summary: Set priority strategy
       description: "Set the site-wide strategy used to sub-order loadpoints of the same priority."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/reference/configuration/site
+        url: https://docs.evcc.io/en/docs/reference/configuration/loadpoints#priority
       tags:
         - general
       parameters:
@@ -828,7 +828,7 @@ paths:
       summary: Set priority basis
       description: "Set whether the site-wide priority strategy ranks by soc percentage or by absolute energy (kWh)."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/reference/configuration/site
+        url: https://docs.evcc.io/en/docs/reference/configuration/loadpoints#priority
       tags:
         - general
       parameters:
@@ -846,7 +846,7 @@ paths:
       summary: Set priority hysteresis
       description: "Set the site-wide deadband used when sub-ordering loadpoints of the same priority (soc-%, or kWh with the energy basis; 0 = off)."
       externalDocs:
-        url: https://docs.evcc.io/en/docs/reference/configuration/site
+        url: https://docs.evcc.io/en/docs/reference/configuration/loadpoints#priority
       tags:
         - general
       parameters:
