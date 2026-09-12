@@ -4,6 +4,7 @@
 		ref="modal"
 		:title="modalTitle"
 		data-testid="auth-provider-modal"
+		@open="handleOpen"
 		@closed="handleClosed"
 	>
 		<div class="container mx-0 px-0">
@@ -40,6 +41,15 @@
 					/>
 				</div>
 
+				<!-- Challenge (server-side login) -->
+				<AuthChallenge
+					v-if="auth.challenge"
+					id="authProviderChallenge"
+					v-model="challengeAnswer"
+					:challenge="auth.challenge"
+					@submit="submitChallenge"
+				/>
+
 				<!-- Error display -->
 				<p v-if="auth.error" class="text-danger mt-3">{{ auth.error }}</p>
 
@@ -52,7 +62,23 @@
 					</button>
 
 					<!-- Authentication buttons -->
+					<button
+						v-if="auth.challenge"
+						type="button"
+						class="btn btn-primary"
+						:disabled="auth.loading || !challengeAnswer"
+						@click="submitChallenge"
+					>
+						<span
+							v-if="auth.loading"
+							class="spinner-border spinner-border-sm me-2"
+							role="status"
+							aria-hidden="true"
+						></span>
+						{{ $t("authProviders.challenge.submit") }}
+					</button>
 					<AuthConnectButton
+						v-else
 						:provider-url="auth.providerUrl ?? undefined"
 						:loading="auth.loading"
 						@prepare="prepareAuthentication"
@@ -106,10 +132,12 @@
 import { defineComponent, type PropType } from "vue";
 import GenericModal from "../Helper/GenericModal.vue";
 import AuthCodeDisplay from "../Config/AuthCodeDisplay.vue";
+import AuthChallenge from "../Config/AuthChallenge.vue";
 import AuthConnectButton from "../Config/AuthConnectButton.vue";
 import {
 	initialAuthState,
 	prepareAuthLogin,
+	submitAuthChallenge,
 	performAuthLogout,
 } from "../Config/utils/authProvider";
 import type { Provider } from "./types";
@@ -119,6 +147,7 @@ export default defineComponent({
 	components: {
 		GenericModal,
 		AuthCodeDisplay,
+		AuthChallenge,
 		AuthConnectButton,
 	},
 	props: {
@@ -133,6 +162,7 @@ export default defineComponent({
 			logoutError: null as string | null,
 			auth: initialAuthState(),
 			waitingForAuthentication: false,
+			challengeAnswer: "",
 		};
 	},
 	computed: {
@@ -143,7 +173,8 @@ export default defineComponent({
 			return !this.isAuthenticated;
 		},
 		showAuthenticationSuccess(): boolean {
-			return this.isAuthenticated && this.waitingForAuthentication;
+			// auth.ok: login completed here, the websocket confirms shortly after
+			return this.isAuthenticated && (this.waitingForAuthentication || this.auth.ok);
 		},
 		modalTitle(): string {
 			return this.providerTitle;
@@ -156,15 +187,23 @@ export default defineComponent({
 		},
 	},
 	watch: {
-		providerId(newId) {
-			if (newId) {
-				this.reset();
-				// auto-run the prepare step. no user input needed
-				this.prepareAuthentication();
-			}
+		"auth.challenge"() {
+			// a wrong answer comes back as a fresh challenge
+			this.challengeAnswer = "";
+		},
+		challengeAnswer() {
+			// outdated errors must not persist while typing
+			this.auth.error = null;
 		},
 	},
 	methods: {
+		// on open rather than on provider change: reopening for the same provider
+		// would otherwise show an empty form
+		handleOpen() {
+			this.reset();
+			// auto-run the prepare step. no user input needed
+			this.prepareAuthentication();
+		},
 		reset() {
 			this.auth = initialAuthState();
 			this.logoutLoading = false;
@@ -177,6 +216,10 @@ export default defineComponent({
 		async prepareAuthentication() {
 			if (!this.providerId || this.isAuthenticated) return;
 			await prepareAuthLogin(this.auth, this.providerId);
+		},
+		async submitChallenge() {
+			if (!this.challengeAnswer) return;
+			await submitAuthChallenge(this.auth, this.challengeAnswer);
 		},
 		async performLogout() {
 			if (!this.providerId) return;

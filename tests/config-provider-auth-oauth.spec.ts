@@ -12,7 +12,7 @@ const templateFlags = [
   "--template-type",
   "meter",
   "--template",
-  "tests/config-device-auth-demo.tpl.yaml",
+  "tests/config-provider-auth-oauth-demo.tpl.yaml",
 ];
 
 // Build complete redirect URI with callback path
@@ -29,7 +29,7 @@ test.afterEach(async () => {
   await stopSimulator();
 });
 
-test.describe("config device auth", async () => {
+test.describe("provider auth oauth", async () => {
   test("create grid meter with redirect auth", async ({ page }) => {
     await page.goto("/#/config");
 
