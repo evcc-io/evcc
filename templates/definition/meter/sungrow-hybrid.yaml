@@ -29,6 +29,10 @@ params:
   - name: maxdischargepower
     service: modbus/read?address=5627&type=input&encoding=uint16&scale=100&{modbus} # BDC rated power, 0.1kW: Battery DC/DC Converters power, also inverter default value after delivery
     required: true
+  - name: maxsoc
+    service: modbus/read?address=13057&type=holding&encoding=uint16&scale=0.1&{modbus}
+  - name: minsoc
+    service: modbus/read?address=13058&type=holding&encoding=uint16&scale=0.1&{modbus}
   - name: capacity
     service: modbus/read?address=5638&type=input&encoding=uint16&scale=0.01&resulttype=float&{modbus} # Battery Capacity - High precision, 0.01kWh
   - name: timeout
@@ -179,13 +183,48 @@ render: |
       decode: uint32s
     scale: 0.1
   soc:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 13022 # Battery level
-      type: input
-      decode: int16
-    scale: 0.1
+    {{- $hasMinMax := and .minsoc .maxsoc }}
+    source: go
+    script: |
+      {{- if $hasMinMax }}
+      nomsoc := min + (soc / 100 * (max - min))
+      nomsoc
+      {{- else }}
+      soc
+      {{- end }}
+    in:
+    {{- if $hasMinMax }}
+    - name: min
+      type: float
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          type: holding
+          address: 13058 # min SOC
+          decode: int16
+        scale: 0.1
+    - name: max
+      type: float
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          type: holding
+          address: 13057 # max SOC
+          decode: int16
+        scale: 0.1
+    {{- end }}
+    - name: soc
+      type: float
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          type: input
+          address: 13022 # Battery level
+          decode: int16
+        scale: 0.1
   batterymode:
     source: switch
     switch:
