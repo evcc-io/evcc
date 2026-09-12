@@ -95,6 +95,7 @@
     "yaml": "^2.9.0"
   },
   "overrides": {
+    "@vitest/mocker": "4.1.11",
     "vite": "npm:@voidzero-dev/vite-plus-core@0.2.6",
     "vitest": "4.1.11"
   }
