@@ -12,6 +12,11 @@ type SlotWrapper struct {
 	api.Tariff
 }
 
+// ChargePriceAvailable reports whether the wrapped tariff can price EV charging.
+func (t *SlotWrapper) ChargePriceAvailable() bool {
+	return ChargePriceAvailable(t.Tariff)
+}
+
 // Rates converts arbitrary slot lengths (multiples of SlotDuration) to 15m slots.
 // Price sub-slots are constant, solar sub-slots interpolated towards the next slot.
 func (t *SlotWrapper) Rates() (api.Rates, error) {

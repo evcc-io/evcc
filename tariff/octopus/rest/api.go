@@ -33,46 +33,61 @@ func newClient(getter jsonGetter, baseURI string) *Client {
 
 // UnitRates returns the tariff rates for the given product and tariff code.
 func (c *Client) UnitRates(productCode, tariffCode string, now time.Time) (UnitRates, error) {
-	var res UnitRates
-	if err := c.getter.GetJSON(fmt.Sprintf("%s/products/%s/electricity-tariffs/%s/standard-unit-rates/", c.baseURI, productCode, tariffCode), &res); err != nil {
-		return res, fmt.Errorf("standard unit rates: %w", err)
-	}
-	if len(res.Results) > 0 {
+	var product product
+	productErr := c.getter.GetJSON(fmt.Sprintf("%s/products/%s/", c.baseURI, productCode), &product)
+	links := product.rateLinks(tariffCode)
+	if productErr != nil || len(links) == 0 {
+		var res UnitRates
+		if err := c.getter.GetJSON(fmt.Sprintf("%s/products/%s/electricity-tariffs/%s/standard-unit-rates/", c.baseURI, productCode, tariffCode), &res); err != nil {
+			return res, fmt.Errorf("standard unit rates: %w", err)
+		}
+		if len(res.Results) == 0 {
+			if productErr != nil {
+				return res, fmt.Errorf("product: %w", productErr)
+			}
+			return res, fmt.Errorf("unsupported Octopus tariff rate structure: %s", tariffCode)
+		}
 		return res, nil
 	}
 
-	var product product
-	if err := c.getter.GetJSON(fmt.Sprintf("%s/products/%s/", c.baseURI, productCode), &product); err != nil {
-		return res, fmt.Errorf("product: %w", err)
+	if !strings.HasPrefix(strings.ToUpper(productCode), "IOG-SMB-") {
+		return UnitRates{}, fmt.Errorf("unsupported Octopus tariff rate structure: %s", tariffCode)
 	}
-
-	links := product.rateLinks(tariffCode)
 	day, dayOK := links[rateRelationDay]
 	night, nightOK := links[rateRelationNight]
-	if !dayOK || !nightOK {
-		return res, nil
+	if !dayOK {
+		return UnitRates{}, fmt.Errorf("missing day unit rates for tariff %s", tariffCode)
+	}
+	if !nightOK {
+		return UnitRates{}, fmt.Errorf("missing night unit rates for tariff %s", tariffCode)
 	}
 
-	dayRates, err := c.getUnitRates(day)
+	rateURI := fmt.Sprintf("%s/products/%s/electricity-tariffs/%s/", c.baseURI, productCode, tariffCode)
+	dayRates, err := c.getUnitRates(day, rateURI+"day-unit-rates/", now)
 	if err != nil {
-		return res, fmt.Errorf("day unit rates: %w", err)
+		return UnitRates{}, fmt.Errorf("day unit rates: %w", err)
 	}
-	nightRates, err := c.getUnitRates(night)
+	nightRates, err := c.getUnitRates(night, rateURI+"night-unit-rates/", now)
 	if err != nil {
-		return res, fmt.Errorf("night unit rates: %w", err)
+		return UnitRates{}, fmt.Errorf("night unit rates: %w", err)
 	}
 
 	location, err := time.LoadLocation("Europe/London")
 	if err != nil {
-		return res, fmt.Errorf("load Octopus tariff location: %w", err)
+		return UnitRates{}, fmt.Errorf("load Octopus tariff location: %w", err)
 	}
 
+	var res UnitRates
 	res.Results = dayNightRates(dayRates.Results, nightRates.Results, now, location)
+	if len(res.Results) == 0 {
+		return res, fmt.Errorf("no day or night rates for tariff %s", tariffCode)
+	}
 	res.Count = uint64(len(res.Results))
+	res.ChargeCap = true
 	return res, nil
 }
 
-func (c *Client) getUnitRates(link string) (UnitRates, error) {
+func (c *Client) getUnitRates(link, expectedURI string, now time.Time) (UnitRates, error) {
 	base, err := url.Parse(c.baseURI + "/")
 	if err != nil {
 		return UnitRates{}, fmt.Errorf("parse base URI: %w", err)
@@ -82,9 +97,31 @@ func (c *Client) getUnitRates(link string) (UnitRates, error) {
 		return UnitRates{}, fmt.Errorf("parse rate URI: %w", err)
 	}
 
+	resolved := base.ResolveReference(reference)
+	if resolved.String() != expectedURI {
+		return UnitRates{}, fmt.Errorf("unexpected rate URI: %s", resolved)
+	}
+
 	var res UnitRates
-	err = c.getter.GetJSON(base.ResolveReference(reference).String(), &res)
-	return res, err
+	start := now.Truncate(rateSlotDuration).UTC()
+	end := start.Add(forecastDuration)
+	query := resolved.Query()
+	query.Set("period_from", start.Format(time.RFC3339))
+	query.Set("period_to", end.Format(time.RFC3339))
+	for page := 1; page <= 100; page++ {
+		query.Set("page", fmt.Sprint(page))
+		resolved.RawQuery = query.Encode()
+		var batch UnitRates
+		if err := c.getter.GetJSON(resolved.String(), &batch); err != nil {
+			return UnitRates{}, fmt.Errorf("rate page %d: %w", page, err)
+		}
+		res.Results = append(res.Results, batch.Results...)
+		if batch.Next == "" {
+			res.Count = uint64(len(res.Results))
+			return res, nil
+		}
+	}
+	return UnitRates{}, fmt.Errorf("too many rate pages: %s", expectedURI)
 }
 
 func dayNightRates(dayRates, nightRates []Rate, now time.Time, location *time.Location) []Rate {
@@ -101,7 +138,7 @@ func dayNightRates(dayRates, nightRates []Rate, now time.Time, location *time.Lo
 			rates = nightRates
 		}
 
-		if rate, ok := rateAt(rates, slot); ok {
+		for _, rate := range ratesAt(rates, slot) {
 			rate.ValidityStart = slot
 			rate.ValidityEnd = slot.Add(rateSlotDuration)
 			res = append(res, rate)
@@ -111,21 +148,28 @@ func dayNightRates(dayRates, nightRates []Rate, now time.Time, location *time.Lo
 	return res
 }
 
-func rateAt(rates []Rate, slot time.Time) (Rate, bool) {
-	var (
-		res   Rate
-		found bool
-	)
+func ratesAt(rates []Rate, slot time.Time) []Rate {
+	var res []Rate
 	for _, rate := range rates {
 		if slot.Before(rate.ValidityStart) || (!rate.ValidityEnd.IsZero() && !slot.Before(rate.ValidityEnd)) {
 			continue
 		}
-		if !found || rate.ValidityStart.After(res.ValidityStart) {
-			res = rate
+		found := false
+		for i := range res {
+			if res[i].PaymentMethod != rate.PaymentMethod {
+				continue
+			}
+			if rate.ValidityStart.After(res[i].ValidityStart) {
+				res[i] = rate
+			}
 			found = true
+			break
+		}
+		if !found {
+			res = append(res, rate)
 		}
 	}
-	return res, found
+	return res
 }
 
 // ProductURI defines the location of the tariff information page. Substitute %s with tariff name.
@@ -169,10 +213,11 @@ func ProductCodeFromTariffCode(tariff string) string {
 }
 
 type UnitRates struct {
-	Count    uint64 `json:"count"`
-	Next     string `json:"next"`
-	Previous string `json:"previous"`
-	Results  []Rate `json:"results"`
+	Count     uint64 `json:"count"`
+	Next      string `json:"next"`
+	Previous  string `json:"previous"`
+	Results   []Rate `json:"results"`
+	ChargeCap bool   `json:"-"`
 }
 
 const (
@@ -181,9 +226,7 @@ const (
 )
 
 type product struct {
-	SingleRegisterElectricityTariffs map[string]map[string]tariff `json:"single_register_electricity_tariffs"`
-	DualRegisterElectricityTariffs   map[string]map[string]tariff `json:"dual_register_electricity_tariffs"`
-	FourRateEVElectricityTariffs     map[string]map[string]tariff `json:"four_rate_ev_electricity_tariffs"`
+	FourRateEVElectricityTariffs map[string]map[string]tariff `json:"four_rate_ev_electricity_tariffs"`
 }
 
 type tariff struct {
@@ -198,22 +241,15 @@ type link struct {
 
 func (p product) rateLinks(tariffCode string) map[string]string {
 	res := make(map[string]string)
-	groups := []map[string]map[string]tariff{
-		p.SingleRegisterElectricityTariffs,
-		p.DualRegisterElectricityTariffs,
-		p.FourRateEVElectricityTariffs,
-	}
-	for _, group := range groups {
-		for _, paymentMethods := range group {
-			for _, tariff := range paymentMethods {
-				if tariff.Code != tariffCode {
-					continue
-				}
-				for _, link := range tariff.Links {
-					res[link.Rel] = link.Href
-				}
-				return res
+	for _, paymentMethods := range p.FourRateEVElectricityTariffs {
+		for _, tariff := range paymentMethods {
+			if tariff.Code != tariffCode {
+				continue
 			}
+			for _, link := range tariff.Links {
+				res[link.Rel] = link.Href
+			}
+			return res
 		}
 	}
 	return res

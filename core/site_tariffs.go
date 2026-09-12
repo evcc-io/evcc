@@ -95,6 +95,13 @@ func (site *Site) effectivePrice(greenShare float64) *float64 {
 	return nil
 }
 
+func (site *Site) effectiveChargePrice(greenShare float64) *float64 {
+	if !tariff.ChargePriceAvailable(site.GetTariff(api.TariffUsageGrid)) {
+		return nil
+	}
+	return site.effectivePrice(greenShare)
+}
+
 // effectiveCo2 calculates the amount of emitted co2 based on self-produced and grid-imported energy.
 func (site *Site) effectiveCo2(greenShare float64) *float64 {
 	if co2, err := tariff.Now(site.GetTariff(api.TariffUsageCo2)); err == nil {
@@ -129,9 +136,7 @@ func (site *Site) publishTariffs(greenShareHome float64, greenShareLoadpoints fl
 	if v := site.effectiveCo2(greenShareHome); v != nil {
 		site.publish(keys.TariffCo2Home, v)
 	}
-	if v := site.effectivePrice(greenShareLoadpoints); v != nil {
-		site.publish(keys.TariffPriceLoadpoints, v)
-	}
+	site.publish(keys.TariffPriceLoadpoints, site.effectiveChargePrice(greenShareLoadpoints))
 	if v := site.effectiveCo2(greenShareLoadpoints); v != nil {
 		site.publish(keys.TariffCo2Loadpoints, v)
 	}

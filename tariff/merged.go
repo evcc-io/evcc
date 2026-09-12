@@ -89,3 +89,8 @@ func (t *Merged) Rates() (api.Rates, error) {
 func (t *Merged) Type() api.TariffType {
 	return t.primary.Type()
 }
+
+// ChargePriceAvailable reports whether both merged tariffs can price EV charging.
+func (t *Merged) ChargePriceAvailable() bool {
+	return ChargePriceAvailable(t.primary) && ChargePriceAvailable(t.secondary)
+}

@@ -11,6 +11,33 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type householdOnlyTariff struct {
+	rates api.Rates
+}
+
+func (t householdOnlyTariff) Rates() (api.Rates, error) {
+	return t.rates, nil
+}
+
+func (t householdOnlyTariff) Type() api.TariffType {
+	return api.TariffTypePriceForecast
+}
+
+func (t householdOnlyTariff) ChargePriceAvailable() bool {
+	return false
+}
+
+func TestHouseholdRateNotUsedForCharging(t *testing.T) {
+	now := time.Now()
+	grid := householdOnlyTariff{rates: api.Rates{{Start: now.Add(-time.Hour), End: now.Add(time.Hour), Value: 0.25}}}
+	site := &Site{tariffs: &tariff.Tariffs{Grid: grid}}
+
+	homePrice := site.effectivePrice(0)
+	require.NotNil(t, homePrice)
+	assert.Equal(t, 0.25, *homePrice)
+	assert.Nil(t, site.effectiveChargePrice(0))
+}
+
 func TestForecastSlotEnergy(t *testing.T) {
 	slot := time.Unix(1735689600, 0).Truncate(tariff.SlotDuration)
 	rate := func(i int, power float64) api.Rate {
