@@ -119,6 +119,7 @@ type Site struct {
 	batteryModeApplied       map[string]api.BatteryMode  // Battery mode last applied per battery meter
 	suggestions              map[string]types.Suggestion // Optimizer suggestions by device key
 	suggestionActions        map[string]string           // last notified actionable optimizer action by device key
+	lastOptimizerSolve       *optimizerSolve             // last successful solve, reapplied to newer slots by the control cycle
 
 	optimizerMu      sync.Mutex // guards optimizer runs
 	optimizerUpdated time.Time  // last optimizer run, guarded by optimizerMu
@@ -1271,6 +1272,7 @@ func (site *Site) update(lp updater) {
 	if state, err := site.updateMeters(); err != nil {
 		site.log.ERROR.Println(err)
 	} else {
+		site.reapplySuggestions(time.Now())
 		go site.optimizerUpdateAsync(tariff.SlotDuration)
 
 		site.updatePower(lp, state, totalChargePower, consumption, feedin)
