@@ -12,5 +12,7 @@ const (
 
 	sampleStatusCharging = `{"bikeChargingData":{"batteryPercentage":65,"chargingStatus":true,"durationElapsed":"5","durationUnit":"seconds","maxLimit":80,"odometer":550.632882618,"pluggedIn":true,"range":68,"timeToMaxLimit":"45"}}`
 
+	sampleStatusComplete = `{"bikeChargingData":{"batteryPercentage":80,"chargingStatus":false,"durationElapsed":"4","durationUnit":"seconds","maxLimit":80,"odometer":550.632882618,"pluggedIn":true,"range":94,"timeToMaxLimit":"0.0"}}`
+
 	sampleStatusIdle = `{"bikeChargingData":{"batteryPercentage":65,"chargingStatus":false,"durationElapsed":"4","durationUnit":"seconds","maxLimit":80,"odometer":550.632882618,"pluggedIn":false,"range":67,"timeToMaxLimit":"0.0"}}`
 )

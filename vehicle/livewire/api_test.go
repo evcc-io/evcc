@@ -143,6 +143,30 @@ func TestProviderCharging(t *testing.T) {
 	assert.WithinDuration(t, time.Now().Add(45*time.Minute), finish, 5*time.Second)
 }
 
+func TestProviderComplete(t *testing.T) {
+	b, identity := newBackend(t)
+	b.status = func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(sampleStatusComplete))
+	}
+
+	p := NewProvider(NewAPI(util.NewLogger("test"), identity), "bike-1", time.Minute)
+
+	// at the limit the bike stays plugged in without charging
+	status, err := p.Status()
+	require.NoError(t, err)
+	assert.Equal(t, api.StatusB, status)
+
+	soc, err := p.Soc()
+	require.NoError(t, err)
+	limit, err := p.GetLimitSoc()
+	require.NoError(t, err)
+	assert.Equal(t, float64(limit), soc)
+
+	finish, err := p.FinishTime()
+	require.NoError(t, err)
+	assert.True(t, finish.IsZero())
+}
+
 func TestErrorEnvelopeIsAsleep(t *testing.T) {
 	for _, code := range []int{http.StatusOK, http.StatusBadRequest} {
 		b, identity := newBackend(t)
