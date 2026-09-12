@@ -10,5 +10,7 @@ const (
 
 	sampleSession = `{"jwt":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ4IiwiZGF0YUNlbnRlciI6InVzMSIsImlhdCI6MTc4OTE0MzgwMH0.c2ln","termsAccepted":true}`
 
+	sampleStatusCharging = `{"bikeChargingData":{"batteryPercentage":65,"chargingStatus":true,"durationElapsed":"5","durationUnit":"seconds","maxLimit":80,"odometer":550.632882618,"pluggedIn":true,"range":68,"timeToMaxLimit":"45"}}`
+
 	sampleStatusIdle = `{"bikeChargingData":{"batteryPercentage":65,"chargingStatus":false,"durationElapsed":"4","durationUnit":"seconds","maxLimit":80,"odometer":550.632882618,"pluggedIn":false,"range":67,"timeToMaxLimit":"0.0"}}`
 )

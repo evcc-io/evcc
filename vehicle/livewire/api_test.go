@@ -126,6 +126,24 @@ func TestProviderConvertsMiles(t *testing.T) {
 	assert.Equal(t, int64(80), limit)
 }
 
+func TestProviderCharging(t *testing.T) {
+	b, identity := newBackend(t)
+	b.status = func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(sampleStatusCharging))
+	}
+
+	p := NewProvider(NewAPI(util.NewLogger("test"), identity), "bike-1", time.Minute)
+
+	status, err := p.Status()
+	require.NoError(t, err)
+	assert.Equal(t, api.StatusC, status)
+
+	// timeToMaxLimit is minutes: 45 for 65 -> 80 % on the onboard charger
+	finish, err := p.FinishTime()
+	require.NoError(t, err)
+	assert.WithinDuration(t, time.Now().Add(45*time.Minute), finish, 5*time.Second)
+}
+
 func TestErrorEnvelopeIsAsleep(t *testing.T) {
 	for _, code := range []int{http.StatusOK, http.StatusBadRequest} {
 		b, identity := newBackend(t)

@@ -91,7 +91,7 @@ func (v *Provider) FinishTime() (time.Time, error) {
 		return time.Time{}, err
 	}
 
-	// unit of timeToMaxLimit is unconfirmed until a sample while charging exists
+	// timeToMaxLimit is in minutes and stays 0 for the first minutes of a charge
 	return time.Now().Add(time.Duration(float64(res.TimeToMaxLimit) * float64(time.Minute))), nil
 }
 
