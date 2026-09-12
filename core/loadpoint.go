@@ -14,6 +14,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
@@ -550,6 +551,12 @@ func (lp *Loadpoint) evChargeStartHandler() {
 	lp.updateSession(func(session *session.Session) {
 		if session.Created.IsZero() {
 			session.Created = lp.clock.Now()
+
+			meterStart := 0.0
+			if session.MeterStart != nil {
+				meterStart = *session.MeterStart
+			}
+			ocpp.ReportSessionStart(lp.GetTitle(), meterStart*1e3)
 		}
 		// capture start soc once available (may not be present at session start)
 		if soc := lp.vehicleSoc; session.SocStart == nil && soc > 0 && !lp.chargerHasFeature(api.Heating) {
@@ -572,6 +579,12 @@ func (lp *Loadpoint) evChargeStopHandler() {
 	if !lp.pvTimer.Equal(elapsed) {
 		lp.resetPVTimer()
 	}
+
+	// re-read energy from charger so stopSession's OCPP report carries the
+	// real meter-stop value - without this, s.MeterStop stays nil (only
+	// evVehicleDisconnectHandler used to set it) and every charge-stop-without-
+	// unplug reports a meterStop of 0, regardless of energy actually delivered
+	lp.finalizeSessionEnergy()
 
 	lp.stopSession()
 }
@@ -2306,6 +2319,13 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 	// update progress and soc before status is updated
 	lp.publishChargeProgress()
 	lp.PublishEffectiveValues()
+
+	// re-read energy every tick so an active OCPP report rule gets
+	// intermediate MeterValues during charging, not just at session
+	// start/stop; finalizeSessionEnergy no-ops cheaply without a session or
+	// without new energy, and charger/ocpp/report.go throttles the actual
+	// upstream send rate independently of this cadence
+	lp.finalizeSessionEnergy()
 
 	// §14a
 	if dimmer, ok := api.Cap[api.Dimmer](lp.charger); ok {

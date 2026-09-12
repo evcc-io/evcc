@@ -391,6 +391,10 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 		// ocpp forwarder rules apply at runtime and republish via the ocpp package
 		routes["updateocppforwarder"] = route{Method: "POST", Pattern: "/ocppforwarder", HandlerFunc: updateOcppForwarderHandler}
 
+		// ocpp report rules apply at runtime and republish via the ocpp package
+		routes["updateocppreport"] = route{Method: "POST", Pattern: "/ocppreport", HandlerFunc: updateOcppReportHandler}
+		routes["ocppreportenabled"] = route{Method: "POST", Pattern: "/ocppreportenabled/{value:[01truefalse]+}", HandlerFunc: boolHandler(setOcppReportEnabled(pub), getOcppReportEnabled)}
+
 		for _, r := range routes {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}
