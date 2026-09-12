@@ -657,13 +657,6 @@ func (site *Site) publishLoadpoint(id int, key string, val any) {
 	site.valueChan <- util.Param{Loadpoint: &id, Key: key, Val: val}
 }
 
-// clearPlanLocks clears locked plan goals for all loadpoints
-func (site *Site) clearPlanLocks() {
-	for _, lp := range site.activeLoadpoints() {
-		lp.ClearPlanLock()
-	}
-}
-
 func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) []types.Measurement {
 	mm := make([]types.Measurement, len(meters))
 
@@ -1421,7 +1414,7 @@ func (site *Site) prepare() {
 	site.publishVehicles()
 	site.publishTariffs(0, 0)
 	vehicle.Publish = site.publishVehicles
-	vehicle.ClearPlanLocks = site.clearPlanLocks
+	vehicle.Owner = site.coordinator.Owner
 }
 
 // pushEvent queues the event in the value stream. The cache attaches its state

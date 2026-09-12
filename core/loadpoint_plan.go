@@ -14,7 +14,11 @@ import (
 
 // TODO planActive is not guarded by mutex
 
-// PlanLock contains information about a locked plan
+// PlanLock contains information about a locked plan.
+// It caches the goal a soc-based plan has committed to, so that an overrunning
+// plan keeps charging towards that goal instead of jumping to the next plan.
+// The lock must be dropped whenever the goal inputs change- plan time, plan soc
+// or the set of plans itself.
 type PlanLock struct {
 	Time time.Time // target time (committed goal, persists during overrun)
 	Soc  int       // target soc
@@ -26,11 +30,13 @@ func (lp *Loadpoint) clearPlanLock() {
 	lp.planLocked = PlanLock{}
 }
 
-// ClearPlanLock clears the locked plan goal
-func (lp *Loadpoint) ClearPlanLock() {
+// UpdatePlan invalidates the committed plan goal and triggers an immediate update
+func (lp *Loadpoint) UpdatePlan() {
 	lp.Lock()
-	defer lp.Unlock()
 	lp.clearPlanLock()
+	lp.Unlock()
+
+	lp.requestUpdate()
 }
 
 // lockPlanGoal locks the current plan goal to handle overruns (soc-based plans)
