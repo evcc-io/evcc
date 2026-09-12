@@ -29,11 +29,12 @@ func NewShellyFromConfig(other map[string]any) (api.Meter, error) {
 		URI      string
 		User     string
 		Password string
-		Channel  int
+		Channel  []int
 		Usage    string
 		Cache    time.Duration
 	}{
-		Cache: time.Second,
+		Channel: []int{0},
+		Cache:   time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -65,18 +66,18 @@ func NewShellyFromConfig(other map[string]any) (api.Meter, error) {
 		}
 	}
 
-	if phases, ok := c.conn.Generation.(shelly.Phases); ok {
-		implement.Has(c, implement.PhaseVoltages(phases.Voltages))
-		implement.Has(c, implement.PhaseCurrents(phases.Currents))
-		implement.Has(c, implement.PhasePowers(phases.Powers))
+	if c.conn.HasPhases() {
+		implement.Has(c, implement.PhaseVoltages(c.conn.Voltages))
+		implement.Has(c, implement.PhaseCurrents(c.conn.Currents))
+		implement.Has(c, implement.PhasePowers(c.conn.Powers))
 	}
 
 	return c, nil
 }
 
 // NewShelly creates Shelly meter
-func NewShelly(uri, user, password, usage string, channel int, cache time.Duration) (*Shelly, error) {
-	conn, err := shelly.NewConnection(uri, user, password, channel, cache)
+func NewShelly(uri, user, password, usage string, channels []int, cache time.Duration) (*Shelly, error) {
+	conn, err := shelly.NewConnection(uri, user, password, channels, cache)
 	if err != nil {
 		return nil, err
 	}

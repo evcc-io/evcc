@@ -2,6 +2,7 @@ package shelly
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -44,6 +45,91 @@ func shellyServer(t *testing.T, rpc map[string]string) *httptest.Server {
 	}))
 }
 
+// TestMultiChannelConnection covers a multi-relay device (Shelly Pro 3) switched as
+// a single three-phase device: readings are aggregated, phases follow channel order.
+func TestMultiChannelConnection(t *testing.T) {
+	var switched []bool
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req Gen2SetRpcPost
+		json.NewDecoder(r.Body).Decode(&req)
+
+		switch r.URL.Path {
+		case "/shelly":
+			json.NewEncoder(w).Encode(map[string]any{"gen": 2, "model": "SPSW-003XE16EU"})
+		case "/rpc/Shelly.ListMethods":
+			json.NewEncoder(w).Encode(Gen2Methods{Methods: []string{"Switch.GetStatus", "Switch.GetConfig", "Switch.Set"}})
+		case "/rpc/Switch.GetConfig":
+			w.Write([]byte(`{"id":0}`))
+		case "/rpc/Switch.Set":
+			switched = append(switched, req.On)
+			w.Write([]byte(`{"was_on":false}`))
+		case "/rpc/Switch.GetStatus":
+			// per-channel readings, scaled by channel id
+			fmt.Fprintf(w, `{"id":%d,"output":true,"apower":%d,"voltage":230,"current":%d,"aenergy":{"total":%d}}`,
+				req.Id, 100*(req.Id+1), req.Id+1, 1000*(req.Id+1))
+		default:
+			http.Error(w, `{"code":-105,"message":"no handler"}`, http.StatusNotFound)
+		}
+	}))
+	defer srv.Close()
+
+	conn, err := NewConnection(srv.URL, "", "", []int{0, 1, 2}, time.Second)
+	require.NoError(t, err)
+
+	enabled, err := conn.Enabled()
+	require.NoError(t, err)
+	assert.True(t, enabled)
+
+	power, err := conn.CurrentPower()
+	require.NoError(t, err)
+	assert.Equal(t, 600.0, power, "power is summed across channels")
+
+	total, err := conn.TotalEnergy()
+	require.NoError(t, err)
+	assert.Equal(t, 6.0, total, "energy is summed across channels")
+
+	require.True(t, conn.HasPhases())
+
+	l1, l2, l3, err := conn.Powers()
+	require.NoError(t, err)
+	assert.Equal(t, []float64{100, 200, 300}, []float64{l1, l2, l3})
+
+	l1, l2, l3, err = conn.Currents()
+	require.NoError(t, err)
+	assert.Equal(t, []float64{1, 2, 3}, []float64{l1, l2, l3})
+
+	require.NoError(t, conn.Enable(true))
+	assert.Equal(t, []bool{true, true, true}, switched, "all channels are switched")
+}
+
+// TestDuplicateChannel asserts that channels resolving to the same relay are
+// rejected- they would count the same relay twice. The Pro output add-on remaps
+// every configured channel to switch 100, so the check must run on the resolved id.
+func TestDuplicateChannel(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		channels []int
+		rpc      map[string]string
+	}{
+		{"configured twice", []int{0, 0}, map[string]string{
+			"Switch.GetStatus": `{"id":0,"output":true}`,
+		}},
+		{"remapped by add-on", []int{0, 1}, map[string]string{
+			"Switch.GetStatus":              `{"id":0,"output":true}`,
+			"ProOutputAddon.GetPeripherals": `{"digital_out":{"switch:100":{}}}`,
+		}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			srv := shellyServer(t, tc.rpc)
+			defer srv.Close()
+
+			_, err := NewConnection(srv.URL, "", "", tc.channels, time.Second)
+			require.ErrorContains(t, err, "duplicate channel")
+		})
+	}
+}
+
 // TestNakedSwitchConnection asserts that a switch without power measurement
 // (Shelly Plus 1) connects - its status has neither aenergy nor ret_aenergy.
 func TestNakedSwitchConnection(t *testing.T) {
@@ -53,7 +139,7 @@ func TestNakedSwitchConnection(t *testing.T) {
 	})
 	defer srv.Close()
 
-	conn, err := NewConnection(srv.URL, "", "", 0, time.Second)
+	conn, err := NewConnection(srv.URL, "", "", []int{0}, time.Second)
 	require.NoError(t, err, "naked switch must connect")
 
 	assert.False(t, conn.IsReversed())
@@ -90,7 +176,7 @@ func TestSwitchConnectionStatusError(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	conn, err := NewConnection(srv.URL, "", "", 0, time.Second)
+	conn, err := NewConnection(srv.URL, "", "", []int{0}, time.Second)
 	require.NoError(t, err, "status error must not break connecting")
 
 	_, err = conn.CurrentPower()
@@ -105,7 +191,7 @@ func TestPlugConnection(t *testing.T) {
 	})
 	defer srv.Close()
 
-	conn, err := NewConnection(srv.URL, "", "", 0, time.Second)
+	conn, err := NewConnection(srv.URL, "", "", []int{0}, time.Second)
 	require.NoError(t, err)
 
 	assert.False(t, conn.IsReversed())
@@ -124,7 +210,7 @@ func TestReversedSwitchConnection(t *testing.T) {
 	})
 	defer srv.Close()
 
-	conn, err := NewConnection(srv.URL, "", "", 0, time.Second)
+	conn, err := NewConnection(srv.URL, "", "", []int{0}, time.Second)
 	require.NoError(t, err)
 
 	assert.True(t, conn.IsReversed())

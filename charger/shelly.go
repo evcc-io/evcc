@@ -28,11 +28,12 @@ func NewShellyFromConfig(other map[string]any) (api.Charger, error) {
 		URI          string
 		User         string
 		Password     string
-		Channel      int
+		Channel      []int
 		StandbyPower float64
 		Cache        time.Duration
 	}{
-		Cache: time.Second,
+		Channel: []int{0},
+		Cache:   time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -44,18 +45,18 @@ func NewShellyFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	if phases, ok := c.conn.Generation.(shelly.Phases); ok {
-		implement.Has(c, implement.PhaseVoltages(phases.Voltages))
-		implement.Has(c, implement.PhaseCurrents(phases.Currents))
-		implement.Has(c, implement.PhasePowers(phases.Powers))
+	if c.conn.HasPhases() {
+		implement.Has(c, implement.PhaseVoltages(c.conn.Voltages))
+		implement.Has(c, implement.PhaseCurrents(c.conn.Currents))
+		implement.Has(c, implement.PhasePowers(c.conn.Powers))
 	}
 
 	return c, nil
 }
 
 // NewShelly creates Shelly charger
-func NewShelly(embed embed, uri, user, password string, channel int, standbypower float64, cache time.Duration) (*Shelly, error) {
-	conn, err := shelly.NewConnection(uri, user, password, channel, cache)
+func NewShelly(embed embed, uri, user, password string, channels []int, standbypower float64, cache time.Duration) (*Shelly, error) {
+	conn, err := shelly.NewConnection(uri, user, password, channels, cache)
 	if err != nil {
 		return nil, err
 	}
