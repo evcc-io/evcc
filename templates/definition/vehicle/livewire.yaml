@@ -7,11 +7,11 @@ requirements:
   description:
     de: |
       evcc liest den Ladezustand über die Cloud-API der LiveWire App. Diese antwortet nur Geräten, die einmalig mit dem Motorrad gekoppelt wurden.
-      Die Kopplung übernimmt das Skript `livewire-pair.py` (Python 3, keine weiteren Pakete). Es fragt Zugangsdaten und den Code ab, den das Motorrad dabei auf dem Display anzeigt, und gibt am Ende die Geräte-UUID aus, die hier eingetragen wird.
+      Die Kopplung übernimmt das Skript [livewire-pair.py](https://github.com/j4velin/livewire-pairing) (Python 3, keine weiteren Pakete). Es fragt Zugangsdaten und den Code ab, den das Motorrad dabei auf dem Display anzeigt, und gibt am Ende die Geräte-UUID aus, die hier eingetragen wird.
       Du musst dafür einmal mit eingeschalteter Zündung am Motorrad stehen.
     en: |
       evcc reads the charging state through the cloud API of the LiveWire app. It only answers devices that have been paired with the motorcycle once.
-      The `livewire-pair.py` script (Python 3, no extra packages) performs the pairing. It asks for your credentials and the code the motorcycle shows on its display, then prints the device UUID to enter here.
+      The [livewire-pair.py](https://github.com/j4velin/livewire-pairing) script (Python 3, no extra packages) performs the pairing. It asks for your credentials and the code the motorcycle shows on its display, then prints the device UUID to enter here.
       You need to be at the motorcycle with the ignition on once.
 params:
   - preset: vehicle-base
@@ -25,8 +25,8 @@ params:
       de: Geräte-UUID
       en: Device UUID
     help:
-      de: Ausgabe des Kopplungsskripts `livewire-pair.py`. Eine andere UUID muss erneut am Motorrad gekoppelt werden.
-      en: Printed by the `livewire-pair.py` pairing script. A different UUID needs pairing at the motorcycle again.
+      de: Ausgabe des Kopplungsskripts von [github.com/j4velin/livewire-pairing](https://github.com/j4velin/livewire-pairing). Eine andere UUID muss erneut am Motorrad gekoppelt werden.
+      en: Printed by the pairing script from [github.com/j4velin/livewire-pairing](https://github.com/j4velin/livewire-pairing). A different UUID needs pairing at the motorcycle again.
     example: 6ba7b810-9dad-11d1-80b4-00c04fd430c8
 render: |
   type: livewire
