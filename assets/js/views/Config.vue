@@ -38,6 +38,15 @@
 				</ConfigSection>
 
 				<ConfigSection v-bind="sectionProps('loadpoints')">
+					<template v-if="experimental && loadpoints.length > 1" #actions>
+						<PillButton @click="openModal('priority')">
+							<shopicon-regular-adjust
+								size="s"
+								class="flex-shrink-0"
+							></shopicon-regular-adjust>
+							{{ $t("config.priority.title") }}
+						</PillButton>
+					</template>
 					<div class="p-0 config-list box-pull-out">
 						<DeviceCard
 							v-for="loadpoint in loadpoints"
@@ -560,6 +569,7 @@
 				<OptimizerModal :is-sponsor="isSponsor" />
 				<McpModal />
 				<ExperimentalModal :experimental="experimental" />
+				<PriorityModal @changed="loadDirty" />
 				<RemoteModal :remote="remote" :is-sponsor="isSponsor" :site-title="siteTitle" />
 				<TitleModal @changed="loadDirty" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
@@ -582,6 +592,7 @@
 </template>
 
 <script lang="ts">
+import "@h2d2/shopicons/es/regular/adjust";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/batterythreequarters";
 import "@h2d2/shopicons/es/regular/powersupply";
@@ -651,6 +662,8 @@ import TariffCard from "../components/Config/TariffCard.vue";
 import TariffModal from "../components/Config/TariffModal.vue";
 import TelemetryModal from "../components/Config/TelemetryModal.vue";
 import ExperimentalModal from "../components/Config/ExperimentalModal.vue";
+import PillButton from "../components/Helper/PillButton.vue";
+import PriorityModal from "../components/Config/PriorityModal.vue";
 import TitleModal from "../components/Config/TitleModal.vue";
 import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
@@ -760,6 +773,8 @@ export default defineComponent({
 		TariffModal,
 		TelemetryModal,
 		ExperimentalModal,
+		PillButton,
+		PriorityModal,
 		TitleModal,
 		TopHeader: Header,
 		VehicleIcon,

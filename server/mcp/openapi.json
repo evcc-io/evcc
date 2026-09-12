@@ -1342,6 +1342,98 @@
         }
       }
     },
+    "/prioritystrategy/{strategy}": {
+      "post": {
+        "operationId": "setPriorityStrategy",
+        "summary": "Set priority strategy",
+        "description": "Set the site-wide strategy used to sub-order loadpoints of the same priority.",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#priority"
+        },
+        "tags": [
+          "general"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/priorityStrategy"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriorityStrategy"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prioritybasis/{basis}": {
+      "post": {
+        "operationId": "setPriorityBasis",
+        "summary": "Set priority basis",
+        "description": "Set whether the site-wide priority strategy ranks by soc percentage or by absolute energy (kWh).",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#priority"
+        },
+        "tags": [
+          "general"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/priorityBasis"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriorityBasis"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/priorityhysteresis/{hysteresis}": {
+      "post": {
+        "operationId": "setPriorityHysteresis",
+        "summary": "Set priority hysteresis",
+        "description": "Set the site-wide deadband used when sub-ordering loadpoints of the same priority (soc-%, or kWh with the energy basis; 0 = off).",
+        "externalDocs": {
+          "url": "https://docs.evcc.io/en/docs/reference/configuration/loadpoints#priority"
+        },
+        "tags": [
+          "general"
+        ],
+        "parameters": [
+          {
+            "name": "hysteresis",
+            "in": "path",
+            "description": "Deadband in soc-% or kWh per basis (0..99, 0 = off).",
+            "required": true,
+            "example": 5,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 99
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/IntegerResult"
+          }
+        }
+      }
+    },
     "/residualpower/{power}": {
       "post": {
         "operationId": "setResidualPower",
@@ -3142,6 +3234,23 @@
           "precondition"
         ]
       },
+      "PriorityStrategy": {
+        "description": "Sub-ordering of loadpoints with the same priority.",
+        "type": "string",
+        "enum": [
+          "none",
+          "soc",
+          "deficit"
+        ]
+      },
+      "PriorityBasis": {
+        "description": "Unit the priority strategy compares vehicles by.",
+        "type": "string",
+        "enum": [
+          "percent",
+          "energy"
+        ]
+      },
       "ChargerStatusReason": {
         "description": "Reason why the charger is waiting.",
         "type": "string",
@@ -3416,6 +3525,10 @@
           },
           "effectivePriority": {
             "description": "Currently applied priority.",
+            "type": "number"
+          },
+          "effectivePriorityScore": {
+            "description": "Effective priority including strategy sub-ordering. Integer part is the priority, fraction ranks within it.",
             "type": "number"
           },
           "enableDelay": {
@@ -3700,6 +3813,7 @@
           "effectivePlanTime",
           "effectivePlanStrategy",
           "effectivePriority",
+          "effectivePriorityScore",
           "enableDelay",
           "enableThreshold",
           "enabled",
@@ -5425,6 +5539,22 @@
             "description": "Battery priority SoC in %. Home battery is charged first while below this level.",
             "type": "number"
           },
+          "priorityStrategy": {
+            "$ref": "#/components/schemas/PriorityStrategy",
+            "description": "Strategy used to sub-order loadpoints of the same priority when distributing surplus."
+          },
+          "priorityBasis": {
+            "$ref": "#/components/schemas/PriorityBasis",
+            "description": "Whether the priority strategy compares vehicles by SoC percent or by energy in kWh."
+          },
+          "effectivePriorityBasis": {
+            "$ref": "#/components/schemas/PriorityBasis",
+            "description": "Priority basis actually in use. Falls back to percent when a loadpoint reports SoC without a known vehicle capacity."
+          },
+          "priorityHysteresis": {
+            "description": "Deadband a loadpoint must lead by before it outranks a same-priority peer, in SoC-% or kWh per basis. 0 disables.",
+            "type": "number"
+          },
           "bufferStartSoc": {
             "description": "Battery buffer start SoC in %. Solar charging starts automatically above this level.",
             "type": "number"
@@ -5643,6 +5773,22 @@
         "required": true,
         "schema": {
           "$ref": "#/components/schemas/AlwaysCharge"
+        }
+      },
+      "priorityStrategy": {
+        "name": "strategy",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/PriorityStrategy"
+        }
+      },
+      "priorityBasis": {
+        "name": "basis",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/PriorityBasis"
         }
       },
       "soc": {

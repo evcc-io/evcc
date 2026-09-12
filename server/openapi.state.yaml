@@ -191,6 +191,18 @@ components:
         prioritySoc:
           description: Battery priority SoC in %. Home battery is charged first while below this level.
           type: number
+        priorityStrategy:
+          $ref: "#/components/schemas/PriorityStrategy"
+          description: Strategy used to sub-order loadpoints of the same priority when distributing surplus.
+        priorityBasis:
+          $ref: "#/components/schemas/PriorityBasis"
+          description: Whether the priority strategy compares vehicles by SoC percent or by energy in kWh.
+        effectivePriorityBasis:
+          $ref: "#/components/schemas/PriorityBasis"
+          description: Priority basis actually in use. Falls back to percent when a loadpoint reports SoC without a known vehicle capacity.
+        priorityHysteresis:
+          description: Deadband a loadpoint must lead by before it outranks a same-priority peer, in SoC-% or kWh per basis. 0 disables.
+          type: number
         bufferStartSoc:
           description: Battery buffer start SoC in %. Solar charging starts automatically above this level.
           type: number
@@ -895,6 +907,9 @@ components:
         effectivePriority:
           description: Currently applied priority.
           type: number
+        effectivePriorityScore:
+          description: Effective priority including strategy sub-ordering. Integer part is the priority, fraction ranks within it.
+          type: number
         enableDelay:
           description: Delay before charging starts in solar mode, in seconds.
           type: number
@@ -1118,6 +1133,7 @@ components:
         - effectivePlanTime
         - effectivePlanStrategy
         - effectivePriority
+        - effectivePriorityScore
         - enableDelay
         - enableThreshold
         - enabled
@@ -1548,6 +1564,19 @@ components:
       required:
         - continuous
         - precondition
+    PriorityBasis:
+      description: Unit the priority strategy compares vehicles by.
+      type: string
+      enum:
+        - percent
+        - energy
+    PriorityStrategy:
+      description: Sub-ordering of loadpoints with the same priority.
+      type: string
+      enum:
+        - none
+        - soc
+        - deficit
     PvAction:
       description: Pending charge start or stop action in solar mode.
       type: string
