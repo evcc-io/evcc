@@ -147,7 +147,7 @@ type Loadpoint struct {
 	chargedAtStartup float64 // session energy at startup
 
 	circuit        api.Circuit        // Circuit
-	chargeMeter    api.Meter          // Charger usage meter
+	chargeMeter    *chargeMeter       // Charger usage meter
 	chargeEnergy   *metrics.Collector // Charger usage collector
 	vehicle        api.Vehicle        // Currently active vehicle
 	defaultVehicle api.Vehicle        // Default vehicle (disables detection)
@@ -242,10 +242,11 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 		if err != nil {
 			return lp, fmt.Errorf("meter: %w", err)
 		}
-		lp.chargeMeter = dev.Instance()
-		if lp.chargeMeter == nil {
+		mt := dev.Instance()
+		if mt == nil {
 			return lp, errors.New("missing charge meter instance")
 		}
+		lp.chargeMeter = newChargeMeter(mt)
 	}
 
 	// default vehicle
@@ -460,19 +461,10 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 	if lp.chargeMeter == nil {
 		integrated = true
 
-		if mt, ok := api.Cap[api.Meter](charger); ok {
-			// preserve charger's capability registry and static interface
-			// implementations so that subsequent capability checks on
-			// chargeMeter (e.g. MeterEnergy, PhaseCurrents) still work for
-			// decorated chargers (https://github.com/evcc-io/evcc/issues/28915)
-			// and for chargers that statically implement these interfaces
-			// (https://github.com/evcc-io/evcc/issues/29877).
-			lp.chargeMeter = &capableMeter{Meter: mt, source: charger}
-		} else {
-			mt := new(wrapper.ChargeMeter)
+		lp.chargeMeter = newChargeMeter(charger)
+		if lp.chargeMeter.fake != nil {
 			_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentWrappedMeterHandler)
-			_ = lp.bus.Subscribe(evChargeStop, func() { mt.SetPower(0) })
-			lp.chargeMeter = mt
+			_ = lp.bus.Subscribe(evChargeStop, func() { lp.chargeMeter.fake.SetPower(0) })
 		}
 	}
 
@@ -727,7 +719,7 @@ func (lp *Loadpoint) evChargeCurrentWrappedMeterHandler(current float64) {
 	}
 
 	// handler only called if charge meter was replaced by dummy
-	lp.chargeMeter.(*wrapper.ChargeMeter).SetPower(power)
+	lp.chargeMeter.fake.SetPower(power)
 }
 
 // defaultMode executes the action
