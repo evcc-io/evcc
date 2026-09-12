@@ -73,7 +73,7 @@ type ChargingStatus struct {
 	TimeToMaxLimit    StringFloat `json:"timeToMaxLimit"` // minutes, "0.0" or "45"
 	MaxLimit          int64       `json:"maxLimit"`
 	Odometer          float64     `json:"odometer"`        // miles
-	DurationElapsed   StringFloat `json:"durationElapsed"` // "4", scaled by durationUnit
+	DurationElapsed   StringFloat `json:"durationElapsed"` // age of the telemetry data, e.g. "4"
 	DurationUnit      string      `json:"durationUnit"`    // "seconds" or "minutes"
 }
 
