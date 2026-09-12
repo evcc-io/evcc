@@ -3,6 +3,16 @@ products:
   - brand: LiveWire
     description:
       generic: S2
+requirements:
+  description:
+    de: |
+      evcc liest den Ladezustand über die Cloud-API der LiveWire App. Diese antwortet nur Geräten, die einmalig mit dem Motorrad gekoppelt wurden.
+      Die Kopplung übernimmt das Skript `livewire-pair.py` (Python 3, keine weiteren Pakete). Es fragt Zugangsdaten und den Code ab, den das Motorrad dabei auf dem Display anzeigt, und gibt am Ende die Geräte-UUID aus, die hier eingetragen wird.
+      Du musst dafür einmal mit eingeschalteter Zündung am Motorrad stehen.
+    en: |
+      evcc reads the charging state through the cloud API of the LiveWire app. It only answers devices that have been paired with the motorcycle once.
+      The `livewire-pair.py` script (Python 3, no extra packages) performs the pairing. It asks for your credentials and the code the motorcycle shows on its display, then prints the device UUID to enter here.
+      You need to be at the motorcycle with the ignition on once.
 params:
   - preset: vehicle-base
   - preset: vehicle-online
@@ -10,17 +20,16 @@ params:
     default: motorcycle
     advanced: true
   - name: deviceuuid
-    advanced: true
+    required: true
     description:
       de: Geräte-UUID
       en: Device UUID
     help:
-      de: Optional. Leer lassen, damit evcc eine UUID erzeugt und speichert. Angeben, um eine bereits mit dem Motorrad gekoppelte UUID weiterzuverwenden. Die Kopplung muss einmalig am Motorrad bestätigt werden.
-      en: Optional. Leave empty to let evcc generate and store one. Set it to reuse a UUID already paired with the motorcycle. Pairing must be confirmed once at the motorcycle.
+      de: Ausgabe des Kopplungsskripts `livewire-pair.py`. Eine andere UUID muss erneut am Motorrad gekoppelt werden.
+      en: Printed by the `livewire-pair.py` pairing script. A different UUID needs pairing at the motorcycle again.
+    example: 6ba7b810-9dad-11d1-80b4-00c04fd430c8
 render: |
   type: livewire
-  {{- if .deviceuuid }}
   deviceUUID: {{ .deviceuuid }}
-  {{- end }}
   {{ include "base" . }}
   {{ include "features" . }}

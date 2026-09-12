@@ -1,12 +1,12 @@
 package vehicle
 
 import (
+	"errors"
 	"fmt"
 	"time"
 	"uuid"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/livewire"
 )
@@ -40,14 +40,17 @@ func NewLiveWireFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	deviceUUID, err := livewireDeviceUUID(cc.User, cc.DeviceUUID)
-	if err != nil {
-		return nil, err
+	// the device uuid is created and paired with the motorcycle by the pairing script
+	if cc.DeviceUUID == "" {
+		return nil, errors.New("missing deviceUUID, run the pairing script first")
+	}
+	if _, err := uuid.Parse(cc.DeviceUUID); err != nil {
+		return nil, fmt.Errorf("invalid deviceUUID: %w", err)
 	}
 
-	log := util.NewLogger("livewire").Redact(cc.User, cc.Password, deviceUUID)
+	log := util.NewLogger("livewire").Redact(cc.User, cc.Password, cc.DeviceUUID)
 
-	identity := livewire.NewIdentity(log, cc.User, cc.Password, deviceUUID)
+	identity := livewire.NewIdentity(log, cc.User, cc.Password, cc.DeviceUUID)
 	if err := identity.Login(); err != nil {
 		return nil, err
 	}
@@ -64,7 +67,7 @@ func NewLiveWireFromConfig(other map[string]any) (api.Vehicle, error) {
 	}
 
 	if !vehicle.PairingStatus {
-		return nil, fmt.Errorf("device %s is not paired with the motorcycle, pair it once at the bike", deviceUUID)
+		return nil, errors.New("deviceUUID is not paired with the motorcycle, run the pairing script")
 	}
 
 	v := &LiveWire{
@@ -73,28 +76,4 @@ func NewLiveWireFromConfig(other map[string]any) (api.Vehicle, error) {
 	}
 
 	return v, nil
-}
-
-// livewireDeviceUUID returns the device uuid paired with the motorcycle. The
-// configured value seeds it, otherwise the persisted one is reused and only
-// generated once: a fresh uuid would need pairing at the bike again.
-func livewireDeviceUUID(user, configured string) (string, error) {
-	key := fmt.Sprintf("vehicle.livewire.%s.deviceUUID", user)
-
-	if configured != "" {
-		if _, err := uuid.Parse(configured); err != nil {
-			return "", fmt.Errorf("invalid deviceUUID: %w", err)
-		}
-		settings.SetString(key, configured)
-		return configured, nil
-	}
-
-	if stored, err := settings.String(key); err == nil && stored != "" {
-		return stored, nil
-	}
-
-	generated := uuid.New().String()
-	settings.SetString(key, generated)
-
-	return generated, nil
 }
