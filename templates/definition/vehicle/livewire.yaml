@@ -19,6 +19,8 @@ params:
   - name: icon
     default: motorcycle
     advanced: true
+  - name: capacity
+    default: 10.5
   - name: deviceuuid
     required: true
     description:
