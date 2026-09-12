@@ -15,8 +15,10 @@ import (
 // LgEss implements the api.Meter interface
 type LgEss struct {
 	implement.Caps
-	usage string     // grid, pv, battery
-	conn  *lgpcs.Com // communication with the lgpcs device
+	usage         string                // grid, pv, battery
+	conn          *lgpcs.Com            // communication with the lgpcs device
+	userSettings  lgpcs.BatterySettings // settings before grid charging
+	settingsSaved bool
 }
 
 func init() {
@@ -146,8 +148,17 @@ func (m *LgEss) batteryMode(batterySocLimits batterySocLimits) func(api.BatteryM
 			m.conn.BatteryMode("on", 100, true)
 			time.Sleep(10 * time.Second)
 			// now turn Battery discharge on
-			return m.conn.BatteryMode("on", int(batterySocLimits.MinSoc), true)
+			err := m.conn.BatteryMode(m.userSettings.BackupMode, m.userSettings.BackupSOC, m.userSettings.Autocharge)
+			if err != nil {
+				return err
+			}
+			m.settingsSaved = false
+			m.userSettings = lgpcs.BatterySettings{}
+			return nil
 		case api.BatteryHold:
+			if err := m.saveUserSettings(); err != nil {
+				return err
+			}
 			soc, err := m.batterySoc()
 			if err != nil {
 				return err
@@ -159,9 +170,27 @@ func (m *LgEss) batteryMode(batterySocLimits batterySocLimits) func(api.BatteryM
 			}
 			return m.conn.BatteryMode("on", int(soc), true)
 		case api.BatteryCharge:
+			// save current battery settings befor changing anything
+			if err := m.saveUserSettings(); err != nil {
+				return err
+			}
 			return m.conn.BatteryMode("on", int(batterySocLimits.MaxSoc), true)
 		default:
 			return errInvalidBatteryMode(mode)
 		}
 	}
+}
+
+func (m *LgEss) saveUserSettings() error {
+	// save current battery settings befor changing anything
+	if m.settingsSaved {
+		return nil
+	}
+	var err error
+	m.userSettings, err = m.conn.GetBatterySettings()
+	if err != nil {
+		return err
+	}
+	m.settingsSaved = true
+	return nil
 }
