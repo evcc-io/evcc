@@ -1,6 +1,7 @@
 package core
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"slices"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/util/config"
@@ -16,6 +18,7 @@ import (
 )
 
 type circuitStruct struct {
+	Name       string   `json:"name,omitempty"`
 	Title      string   `json:"title,omitempty"`
 	Icon       string   `json:"icon,omitempty"`
 	Parent     string   `json:"parent,omitempty"`
@@ -70,19 +73,18 @@ func (site *Site) publishCircuits() {
 	cc := config.Circuits().Devices()
 	res := make(map[string]circuitStruct, len(cc))
 
-	names := make(map[api.Circuit]string, len(cc))
-	for _, c := range cc {
-		names[c.Instance()] = c.Config().Name
-	}
-
 	for _, c := range cc {
 		instance := c.Instance()
 		props := deviceProperties(c)
 
+		// config reference instead of instance: an updated device keeps its name but gets a new instance
+		parent, _ := c.Config().Property("parent").(string)
+
 		data := circuitStruct{
-			Title:      instance.GetTitle(),
+			Name:       c.Config().Name,
+			Title:      cmp.Or(props.Title, instance.GetTitle()),
 			Icon:       props.Icon,
-			Parent:     names[instance.GetParent()],
+			Parent:     parent,
 			Power:      instance.GetChargePower(),
 			MaxPower:   instance.GetMaxPower(),
 			MaxCurrent: instance.GetMaxCurrent(),
@@ -95,7 +97,10 @@ func (site *Site) publishCircuits() {
 		res[c.Config().Name] = data
 	}
 
-	site.publish(keys.Circuits, res)
+	site.publish(keys.Circuits, globalconfig.ConfigStatus{
+		Config:     res,
+		YamlSource: site.circuitsSource,
+	})
 }
 
 // dimMeters applies the HEMS dim state to all dimmable aux and ext meters.

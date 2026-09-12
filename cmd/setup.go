@@ -170,11 +170,11 @@ func configureCircuits(conf *[]config.Named) error {
 			// just warn, no error to not break previous behavior
 			log.WARN.Println("circuits configured via UI yaml; evcc.yaml config will be ignored")
 		}
+		yamlSource.circuits = globalconfig.YamlSourceDb
 		*conf = []config.Named{}
 		if err := settings.Yaml(keys.Circuits, new([]map[string]any), &conf); err != nil {
 			return err
 		}
-		yamlSource.circuits = globalconfig.YamlSourceDb
 	}
 
 	// load configCircuits devices from database

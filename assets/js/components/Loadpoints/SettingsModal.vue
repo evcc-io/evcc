@@ -428,7 +428,7 @@ export default defineComponent({
 		},
 		currentOption(current: number, isDefault: boolean, phases?: number) {
 			const kw = this.fmtPhasePower(current, phases);
-			let name = `${this.fmtNumber(current, undefined)} A (${kw})`;
+			let name = `${this.fmtNumber(current)} A (${kw})`;
 			if (isDefault) {
 				name += ` [${this.$t("main.loadpointSettings.default")}]`;
 			}

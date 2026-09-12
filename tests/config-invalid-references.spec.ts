@@ -9,6 +9,8 @@ import {
   newLoadpoint,
 } from "./utils";
 
+const CONFIG_CIRCUITS_LEGACY = "config-circuits.sql";
+
 test.use({ baseURL: baseUrl() });
 test.describe.configure({ mode: "parallel" });
 
@@ -18,28 +20,8 @@ test.afterEach(async () => {
 
 test.describe("invalid references", async () => {
   test("circuit", async ({ page }) => {
-    await start();
+    await start(undefined, CONFIG_CIRCUITS_LEGACY);
     await page.goto("/#/config");
-
-    // Create circuit via UI
-    await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
-    const circuitsModal = page.getByTestId("circuits-modal");
-    await expectModalVisible(circuitsModal);
-
-    const circuitEditor = circuitsModal.getByTestId("yaml-editor");
-    await editorClear(circuitEditor);
-    await editorPaste(
-      circuitEditor,
-      page,
-      `- name: main
-  title: Main`
-    );
-
-    await circuitsModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(circuitsModal);
-
-    // Restart
-    await restart();
 
     // Create loadpoint with demo charger
     const lpModal = page.getByTestId("loadpoint-modal");
@@ -49,13 +31,15 @@ test.describe("invalid references", async () => {
 
     // Wait for circuit field to be available and assign to circuit main
     await expect(lpModal.getByLabel("Circuit")).toBeVisible();
-    await lpModal.getByLabel("Circuit").selectOption("Main [main]");
+    await lpModal.getByLabel("Circuit").selectOption("[main]");
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
 
     // Edit circuit and rename "main" to "main2"
     await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
+    const circuitsModal = page.getByTestId("circuits-legacy-modal");
     await expectModalVisible(circuitsModal);
+    const circuitEditor = circuitsModal.getByTestId("yaml-editor");
     await editorClear(circuitEditor);
     await editorPaste(
       circuitEditor,
