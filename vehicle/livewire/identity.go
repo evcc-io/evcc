@@ -27,7 +27,8 @@ var (
 	loginInterval = 5 * time.Minute
 )
 
-// clientHeaders mirror what the mobile app sends
+// clientHeaders mirror what the mobile app sends. The api calls work without
+// them, only the session request still sends them as it was not tested otherwise.
 var clientHeaders = map[string]string{
 	"User-Agent":      "Android",
 	"Content-Type":    request.JSONContent,
@@ -210,8 +211,8 @@ func tokenExpiry(token string) time.Time {
 	return time.Time{}
 }
 
-// Transport decorates requests with the bearer token, the client headers and the
-// brand query param. A 401 triggers one re-login and retry.
+// Transport decorates requests with the bearer token and the brand query param.
+// A 401 triggers one re-login and retry.
 func (v *Identity) Transport(base http.RoundTripper) http.RoundTripper {
 	return &transport.Decorator{
 		Decorator: v.decorate,
@@ -226,11 +227,6 @@ func (v *Identity) decorate(req *http.Request) error {
 	}
 
 	req.Header.Set("Authorization", "Bearer "+token)
-	for k, val := range clientHeaders {
-		if req.Header.Get(k) == "" {
-			req.Header.Set(k, val)
-		}
-	}
 
 	q := req.URL.Query()
 	if q.Get("brand") == "" {

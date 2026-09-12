@@ -51,7 +51,6 @@ func newBackend(t *testing.T) (*backend, *Identity) {
 		assert.Equal(t, "Bearer "+b.token.Load().(string), r.Header.Get("Authorization"))
 		assert.Equal(t, Brand, r.URL.Query().Get("brand"))
 		assert.Equal(t, "device-1", r.URL.Query().Get("deviceUUID"))
-		assert.Equal(t, "Android", r.Header.Get("User-Agent"))
 
 		w.Write([]byte(samplePairStatusAfter))
 	})
