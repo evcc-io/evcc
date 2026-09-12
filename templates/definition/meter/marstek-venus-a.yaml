@@ -77,14 +77,46 @@ render: |
       scale: 0.1
   {{- end }}
   {{- if eq .usage "battery" }}
+  # Register 30001 only covers the AC-side charge/discharge transaction and misses
+  # solar that charges the battery straight from the MPPT inputs over the DC bus.
+  # Battery power is therefore derived as AC power minus the device's own MPPT yield.
   power:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 30001 # Battery power (W)
-      type: holding
-      decode: int16
-    scale: -1
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 30006 # AC power (W), positive = discharge
+        type: holding
+        decode: int16
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 30037 # MPPT1 power (W)
+        type: holding
+        decode: uint16
+      scale: -0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 30038 # MPPT2 power (W)
+        type: holding
+        decode: uint16
+      scale: -0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 30039 # MPPT3 power (W)
+        type: holding
+        decode: uint16
+      scale: -0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 30040 # MPPT4 power (W)
+        type: holding
+        decode: uint16
+      scale: -0.1
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
