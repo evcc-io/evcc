@@ -84,7 +84,8 @@ func attachListeners(t *testing.T, lp *Loadpoint) {
 	}
 
 	uiChan, pushChan, lpChan := createChannels(t)
-	lp.Prepare(new(Site), uiChan, pushChan, lpChan)
+	// the optimizer runs async- without a logger its panic recovery panics again
+	lp.Prepare(&Site{log: util.NewLogger("site")}, uiChan, pushChan, lpChan)
 }
 
 func TestNew(t *testing.T) {

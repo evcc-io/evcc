@@ -1102,9 +1102,11 @@ func (mr *MockAPIMockRecorder) SetPriority(arg0 any) *gomock.Call {
 }
 
 // SetSmartCostLimit mocks base method.
-func (m *MockAPI) SetSmartCostLimit(limit *float64) {
+func (m *MockAPI) SetSmartCostLimit(limit *float64) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetSmartCostLimit", limit)
+	ret := m.ctrl.Call(m, "SetSmartCostLimit", limit)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // SetSmartCostLimit indicates an expected call of SetSmartCostLimit.
@@ -1114,9 +1116,11 @@ func (mr *MockAPIMockRecorder) SetSmartCostLimit(limit any) *gomock.Call {
 }
 
 // SetSmartFeedInPriorityLimit mocks base method.
-func (m *MockAPI) SetSmartFeedInPriorityLimit(limit *float64) {
+func (m *MockAPI) SetSmartFeedInPriorityLimit(limit *float64) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetSmartFeedInPriorityLimit", limit)
+	ret := m.ctrl.Call(m, "SetSmartFeedInPriorityLimit", limit)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // SetSmartFeedInPriorityLimit indicates an expected call of SetSmartFeedInPriorityLimit.

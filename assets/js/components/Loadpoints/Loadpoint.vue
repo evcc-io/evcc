@@ -250,6 +250,7 @@ export default defineComponent({
 		smartFeedInPriorityAvailable: Boolean,
 		smartFeedInPriorityActive: Boolean,
 		smartFeedInPriorityNextStart: String as PropType<string | null>,
+		optimizerControlled: Boolean,
 		suggestion: Object as PropType<LoadpointSuggestion | null>,
 		tariffGrid: Number,
 		tariffFeedIn: Number,

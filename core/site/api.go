@@ -20,6 +20,8 @@ type API interface {
 	ActiveLoadpoints() iter.Seq2[int, loadpoint.API]
 	Vehicles() Vehicles
 	Optimize()
+	// Automatic returns true if the optimizer controls the devices instead of only advising
+	Automatic() bool
 
 	// Meta
 	GetTitle() string

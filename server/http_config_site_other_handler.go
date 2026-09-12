@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/evcc-io/evcc/api/globalconfig"
+	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -14,12 +15,34 @@ func setOptimizer(pub publisher) func(bool) error {
 	return func(b bool) error {
 		settings.SetBool(keys.Optimizer, b)
 		pub(keys.Optimizer, b)
+		if !b {
+			// automatic mode cannot outlive the optimizer
+			settings.SetBool(keys.OptimizerAutomatic, false)
+			pub(keys.OptimizerAutomatic, false)
+		}
 		return nil
 	}
 }
 
 func getOptimizer() bool {
 	b, _ := settings.Bool(keys.Optimizer)
+	return b
+}
+
+func setOptimizerAutomatic(pub publisher, site *core.Site) func(bool) error {
+	return func(b bool) error {
+		settings.SetBool(keys.OptimizerAutomatic, b)
+		pub(keys.OptimizerAutomatic, b)
+
+		// suggestions become control decisions, don't wait for the next slot
+		site.Optimize()
+
+		return nil
+	}
+}
+
+func getOptimizerAutomatic() bool {
+	b, _ := settings.Bool(keys.OptimizerAutomatic)
 	return b
 }
 

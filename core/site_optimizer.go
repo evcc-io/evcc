@@ -122,7 +122,7 @@ type batteryResult struct {
 	Empty time.Time `json:"empty,omitzero"`
 }
 
-// suggestionThreshold ignores numerical noise around zero power (W)
+// suggestionThreshold ignores numerical noise in power comparisons (W)
 const suggestionThreshold = 50
 
 // advisory actions for a loadpoint/vehicle slot; battery actions use api.BatteryMode
@@ -164,15 +164,21 @@ func suggestionEvent(detail batteryDetail, s types.Suggestion) messenger.Event {
 // maps cleanly onto the discrete battery mode / loadpoint intent that control would later apply.
 // An idle battery is interpreted from the grid flow: importing means discharge is withheld
 // (hold), exporting means charging is withheld (holdcharge).
-func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, slot int, gridImporting, gridExporting bool, slotHours float64) types.Suggestion {
+func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, slot int, gridImport, gridExport float32, slotHours float64) types.Suggestion {
 	if slot < 0 || slotHours <= 0 || slot >= len(res.ChargingPower) || slot >= len(res.DischargingPower) {
 		return types.Suggestion{}
 	}
 
 	charge := float64(res.ChargingPower[slot]) / slotHours
 	discharge := float64(res.DischargingPower[slot]) / slotHours
+	gridImporting := gridImport > 0
+	gridExporting := gridExport > 0
 
-	s := types.Suggestion{Charge: charge, Discharge: discharge}
+	s := types.Suggestion{
+		Charge:    charge,
+		Discharge: discharge,
+		Grid:      float64(gridImport-gridExport) / slotHours,
+	}
 
 	if detail.Type == batteryTypeBattery {
 		idle := charge <= suggestionThreshold && discharge <= suggestionThreshold
@@ -216,12 +222,18 @@ func loadpointCurrentAction(lp *Loadpoint) string {
 	return actionStop
 }
 
+// suggestionMaxAge invalidates suggestions of a stalled optimizer. Runs happen
+// every optimizerInterval, so two slots without a result mean the optimizer is
+// no longer keeping up.
+const suggestionMaxAge = 2 * tariff.SlotDuration
+
 // setSuggestions replaces the suggestions applied on each publish
 func (site *Site) setSuggestions(suggestions map[string]types.Suggestion) {
 	site.Lock()
 	defer site.Unlock()
 
 	site.suggestions = suggestions
+	site.suggestionsUpdated = time.Now()
 }
 
 // setBatteryForecast replaces the battery forecast of the cached state
@@ -238,9 +250,10 @@ func (site *Site) setBatteryForecast(forecast *types.BatteryForecast) {
 func (site *Site) suggestion(key, currentAction string) *types.Suggestion {
 	site.RLock()
 	s, ok := site.suggestions[key]
+	stale := time.Since(site.suggestionsUpdated) > suggestionMaxAge
 	site.RUnlock()
 
-	if !ok {
+	if !ok || stale {
 		return nil
 	}
 
@@ -249,18 +262,36 @@ func (site *Site) suggestion(key, currentAction string) *types.Suggestion {
 	return &s
 }
 
-// publishSuggestions publishes the loadpoints' suggestions
+// dropStaleSuggestions clears the advice of a stalled optimizer. A single failed
+// run keeps it: dropping it would release the controlled devices for one cycle,
+// flipping the battery mode until the next run restores the suggestion.
+func (site *Site) dropStaleSuggestions() {
+	site.RLock()
+	stale := time.Since(site.suggestionsUpdated) > suggestionMaxAge
+	site.RUnlock()
+
+	if stale {
+		site.clearSuggestions()
+	}
+}
+
+// publishSuggestions publishes the loadpoints' suggestions and hands them to the
+// loadpoints, where they act as start/stop gate while the optimizer is in control
 func (site *Site) publishSuggestions() {
 	for id, lp := range site.loadpoints {
 		if lp == nil {
 			continue
 		}
 
+		s := site.suggestion(loadpointKey(id), loadpointCurrentAction(lp))
+
 		var val any
-		if s := site.suggestion(loadpointKey(id), loadpointCurrentAction(lp)); s != nil {
+		if s != nil {
 			val = *s
 		}
 		site.publishLoadpoint(id, keys.Suggestion, val)
+
+		lp.setSuggestion(s)
 	}
 }
 
@@ -351,12 +382,16 @@ const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
 // startup); the slot gate is left open so the next cycle retries.
 var errOptimizerNotReady = errors.New("battery measurements not ready")
 
+// optimizerInterval is the refresh cadence. It divides the slot duration so
+// every slot starts on a fresh result.
+const optimizerInterval = 5 * time.Minute
+
 // optimizerUpdateAsync runs the optimizer unless the last run is younger than
-// minAge. Pass 0 to force a run, e.g. when a changed setting should take effect
-// without waiting for the next slot. It is a no-op when the optimizer is not
+// optimizerInterval. Pass force to run regardless, e.g. when a changed setting
+// should take effect immediately. It is a no-op when the optimizer is not
 // active or a run is already in progress; the running update reflects the
-// change on its next slot.
-func (site *Site) optimizerUpdateAsync(minAge time.Duration) {
+// change on its next run.
+func (site *Site) optimizerUpdateAsync(force bool) {
 	if !sponsor.IsAuthorized() || !optimizerEnabled() {
 		return
 	}
@@ -366,10 +401,10 @@ func (site *Site) optimizerUpdateAsync(minAge time.Duration) {
 	}
 	defer site.optimizerMu.Unlock()
 
-	if minAge == 0 {
+	if force {
 		// keep the gate open so a not-ready run is retried on the next cycle
 		site.optimizerUpdated = time.Time{}
-	} else if time.Since(site.optimizerUpdated) < minAge {
+	} else if time.Since(site.optimizerUpdated) < optimizerInterval {
 		return
 	}
 
@@ -391,7 +426,7 @@ func (site *Site) optimizerUpdateAsync(minAge time.Duration) {
 			site.log.ERROR.Println("optimizer:", err)
 
 			// stale advice must not linger
-			site.clearSuggestions()
+			site.dropStaleSuggestions()
 		}
 	}()
 
@@ -657,8 +692,13 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details requestDetails, res optimizer.OptimizationResult, schedule optimizerSchedule, now time.Time) {
 	slot := schedule.activeSlot(now)
 	slotHours := schedule.duration(slot).Hours()
-	gridImporting := slot >= 0 && slot < len(res.GridImport) && res.GridImport[slot] > 0
-	gridExporting := slot >= 0 && slot < len(res.GridExport) && res.GridExport[slot] > 0
+	var gridImport, gridExport float32
+	if slot >= 0 && slot < len(res.GridImport) {
+		gridImport = res.GridImport[slot]
+	}
+	if slot >= 0 && slot < len(res.GridExport) {
+		gridExport = res.GridExport[slot]
+	}
 
 	var batteries []batteryResult
 	suggestions := make(map[string]types.Suggestion, len(req.Batteries))
@@ -677,7 +717,7 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 			}),
 		})
 
-		suggestion := currentSlotSuggestion(detail, batRes, slot, gridImporting, gridExporting, slotHours)
+		suggestion := currentSlotSuggestion(detail, batRes, slot, gridImport, gridExport, slotHours)
 		if suggestion.Action == "" {
 			continue
 		}

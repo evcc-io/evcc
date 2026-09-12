@@ -1570,6 +1570,12 @@ func isOptimizer() bool {
 	return b
 }
 
+// isOptimizerAutomatic returns if the optimizer controls the devices
+func isOptimizerAutomatic() bool {
+	b, _ := settings.Bool(keys.OptimizerAutomatic)
+	return b
+}
+
 // isMcp returns if MCP service is enabled
 func isMcp() bool {
 	return isExperimental()

@@ -31,6 +31,7 @@ const (
 	Plant              = "plant"
 	Telemetry          = "telemetry"
 	Optimizer          = "optimizer"
+	OptimizerAutomatic = "optimizerAutomatic" // optimizer controls devices instead of only advising
 	Mcp                = "mcp"
 	DemoMode           = "demoMode"
 	Remote             = "remote"
