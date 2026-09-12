@@ -44,24 +44,30 @@ func checkHemsPro() (string, string) {
 		REG_TIMEDATE = 0x00
 	)
 
-	// Create new connection to I2C bus 1
-	i2c, err := i2c.NewI2C(ADDR, 1)
-	if err != nil {
-		return "", ""
-	}
-	defer i2c.Close()
+	// bus 1 on Raspberry Pi, bus 0 on e.g. Banana Pi
+	for _, bus := range []int{1, 0} {
+		i2c, err := i2c.NewI2C(ADDR, bus)
+		if err != nil {
+			continue
+		}
 
-	if _, err := i2c.WriteBytes([]byte{REG_TIMEDATE}); err != nil {
-		return "", ""
+		if _, err := i2c.WriteBytes([]byte{REG_TIMEDATE}); err != nil {
+			i2c.Close()
+			continue
+		}
+
+		buf := make([]byte, 7)
+		n, err := i2c.ReadBytes(buf)
+		i2c.Close()
+		if err != nil || n != 7 {
+			continue
+		}
+
+		// I2C succeeded — verify with server
+		return checkHardware(hemspro, map[string]string{
+			"serial": deviceSerial(),
+		})
 	}
 
-	buf := make([]byte, 7)
-	if n, err := i2c.ReadBytes(buf); err != nil || n != 7 {
-		return "", ""
-	}
-
-	// I2C succeeded — verify with server
-	return checkHardware(hemspro, map[string]string{
-		"serial": deviceSerial(),
-	})
+	return "", ""
 }
