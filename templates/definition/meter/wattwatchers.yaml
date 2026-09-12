@@ -1,0 +1,31 @@
+template: wattwatchers
+products:
+  - brand: Wattwatchers
+    description:
+      generic: Energy Monitor
+requirements:
+  description:
+    en: |
+      Requires a Wattwatchers CT device and an API token. Get a token here:
+      [docs.wattwatchers.com.au](https://docs.wattwatchers.com.au/api/v3/auth.html#how-to-get-an-api-key)
+    de: |
+      Erfordert ein Wattwatchers-CT-Gerät und ein API-Token. Ein Token erhält man hier:
+      [docs.wattwatchers.com.au](https://docs.wattwatchers.com.au/api/v3/auth.html#how-to-get-an-api-key)
+  evcc: ["skiptest"]
+params:
+  - name: usage
+    choice: ["grid", "pv"]
+  - name: serial
+    required: true
+  - name: token
+    required: true
+render: |
+  type: custom
+  power:
+    source: http
+    uri: https://api-v3.wattwatchers.com.au/short-energy/{{ .serial }}?convert[energy]=kW
+    auth:
+      type: bearer
+      token: {{ .token }}
+    jq: .[-1].pRealKw[{{ if eq .usage "grid" }}0{{ else }}1{{ end }}]
+    scale: 1000
