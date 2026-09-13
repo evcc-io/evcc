@@ -645,15 +645,14 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	return nil
 }
 
-// optimizerSolve holds a solve's inputs so the control cycle can reapply it
-// to a newer slot without a new network round-trip - see reapplySuggestions.
+// optimizerSolve caches a solve so the control cycle can reapply it to a newer slot
 type optimizerSolve struct {
 	req       optimizer.OptimizationInput
 	details   requestDetails
 	res       optimizer.OptimizationResult
 	schedule  optimizerSchedule
-	slot      int       // the slot last applied from this solve
-	completed time.Time // when this solve completed, not when a slot was last (re)applied from it
+	slot      int       // last applied slot
+	completed time.Time // solve completion, not last reapply
 }
 
 // setLastOptimizerSolve remembers a solve's inputs for reapplySuggestions
@@ -664,11 +663,8 @@ func (site *Site) setLastOptimizerSolve(solve *optimizerSolve) {
 	site.lastOptimizerSolve = solve
 }
 
-// reapplySuggestions re-derives the last solve's suggestions for whichever
-// slot covers now, without a new network round-trip - closes the gap left by
-// a solve that completed partway into its slot and the next solve, which
-// isn't aligned to the slot grid. optimizerMu.TryLock so it never overwrites
-// a fresher concurrent solve; the caller gates on optimizer enabled.
+// reapplySuggestions re-derives the last solve's suggestions for the slot covering now
+// without a new solve. TryLock so it never overwrites a fresher concurrent solve.
 func (site *Site) reapplySuggestions(now time.Time) {
 	if !site.optimizerMu.TryLock() {
 		return
@@ -688,27 +684,19 @@ func (site *Site) reapplySuggestions(now time.Time) {
 		return
 	}
 
-	// horizon passed, or the solve is older than two slots: don't march a
-	// dead plan forward. last.completed, not site.optimizerUpdated - that
-	// gate gets zeroed on every forced call and stays zero on
-	// errOptimizerNotReady, which would make a genuinely fresh solve look
-	// decades stale.
+	// horizon passed or no completed solve for two slots: don't march a dead plan forward
 	if slot < 0 || now.Sub(last.completed) > 2*tariff.SlotDuration {
 		site.log.DEBUG.Println("optimizer: cached result expired")
 		site.clearSuggestions()
 		return
 	}
 
-	// a loadpoint that disconnected since the solve is excluded from a fresh
-	// request (optimizerRequest); reapplying would advise an empty charger.
-	// Discarding the whole cache is deliberate: evVehicleDisconnectHandler
-	// already forces an immediate fresh solve, this only bridges the gap
-	// until it lands.
+	// disconnected loadpoints are excluded from a fresh solve; don't advise an empty charger
 	for _, d := range last.details.BatteryDetails {
 		if d.loadpoint == nil {
 			continue
 		}
-		if lp := site.loadpoints[*d.loadpoint]; lp == nil || (lp.GetStatus() != api.StatusB && lp.GetStatus() != api.StatusC) {
+		if lp := site.loadpoints[*d.loadpoint]; lp == nil || !lp.connected() {
 			site.setLastOptimizerSolve(nil)
 			return
 		}
