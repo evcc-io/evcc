@@ -251,12 +251,8 @@ func (p *AA55UDP) exchange() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	// The WiFi dongle does not reliably route replies back to the request
-	// that caused them: with a second poller on the same inverter (e.g. the
-	// Home Assistant GoodWe integration) evcc receives well-formed frames
-	// that answer someone else's read. A function 03 response carries exactly
-	// two bytes per requested register, so any other length is not the
-	// answer to this request and must not be decoded.
+
+	// validate answer length
 	if want := int(binary.BigEndian.Uint16(p.pdu[4:6])) * 2; len(payload) != want {
 		return nil, fmt.Errorf("response length %d does not match request (%d bytes expected)", len(payload), want)
 	}
