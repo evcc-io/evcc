@@ -223,9 +223,8 @@ func (c *CurrentController) setMinCurrent() error {
 	return c.setLimit(c.effectiveMinCurrent())
 }
 
-// Prepare arms the controller's phase reconciliation with the pv surplus for the
-// upcoming SetPower call. The value is consumed once. mayDisable indicates that
-// insufficient surplus can stop charging via the pv disable timer.
+// Prepare arms the phase reconciliation of the next SetPower call with the pv surplus (consumed once)
+// and whether insufficient surplus may stop charging via the pv disable timer
 func (c *CurrentController) Prepare(surplus float64, mayDisable bool) {
 	c.surplus = &surplus
 	c.mayDisable = mayDisable

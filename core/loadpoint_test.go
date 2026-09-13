@@ -905,6 +905,11 @@ func TestBatteryBoostHold(t *testing.T) {
 	assert.NotEqual(t, boostDisabled, lp.GetBatteryBoost(), "hold is active")
 }
 
+// pv returns the pv target power for the given site power without battery influence
+func pv(lp *Loadpoint, site float64) float64 {
+	return lp.pvTargetPower(currentController(lp), site, 0, false, false)
+}
+
 // TestPVSolarShare verifies the pv enable/disable points derived from solarShare
 // and that manually configured thresholds take precedence over the solar share.
 func TestPVSolarShare(t *testing.T) {
@@ -930,10 +935,6 @@ func TestPVSolarShare(t *testing.T) {
 	}
 
 	minPower := currentToPower(minA, 3)
-	pv := func(lp *Loadpoint, site float64) float64 {
-		return lp.pvTargetPower(currentController(lp), site, 0, false, false)
-	}
-
 	// enable: share 1.0 requires the full min power as surplus
 	assert.Equal(t, minPower, pv(newLp(1, false, 0, 0), -minPower),
 		"should enable at full surplus")
@@ -983,10 +984,6 @@ func TestPVSolarSharePhases(t *testing.T) {
 	}
 
 	minPower := currentToPower(minA, 3)
-	pv := func(lp *Loadpoint, site float64) float64 {
-		return lp.pvTargetPower(currentController(lp), site, 0, false, false)
-	}
-
 	newLp := func(enabled bool) *Loadpoint {
 		lp := &Loadpoint{
 			log:        util.NewLogger("foo"),
