@@ -20,12 +20,25 @@ type Settings interface {
 	GetPriorityHysteresis() int
 }
 
+type rankingConfig struct {
+	strategy   api.PriorityStrategy
+	basis      api.PriorityBasis
+	hysteresis int
+}
+
+type leadState struct {
+	leads    bool
+	vehicles [2]api.Vehicle
+}
+
 type Prioritizer struct {
-	mu       sync.Mutex
-	log      *util.Logger
-	settings Settings
-	demand   map[loadpoint.API]float64
-	leads    map[[2]loadpoint.API]bool
+	mu         sync.Mutex
+	log        *util.Logger
+	settings   Settings
+	demand     map[loadpoint.API]float64
+	leads      map[[2]loadpoint.API]leadState
+	config     rankingConfig
+	configured bool
 }
 
 func New(log *util.Logger, settings Settings) *Prioritizer {
@@ -33,7 +46,7 @@ func New(log *util.Logger, settings Settings) *Prioritizer {
 		log:      log,
 		settings: settings,
 		demand:   make(map[loadpoint.API]float64),
-		leads:    make(map[[2]loadpoint.API]bool),
+		leads:    make(map[[2]loadpoint.API]leadState),
 	}
 }
 
@@ -41,6 +54,9 @@ func (p *Prioritizer) UpdateChargePowerFlexibility(lp loadpoint.API, rates api.R
 	if power := lp.GetChargePowerFlexibility(rates); power >= 0 {
 		p.mu.Lock()
 		p.demand[lp] = power
+		if status := lp.GetStatus(); status != api.StatusB && status != api.StatusC {
+			p.clearLeads(lp)
+		}
 		p.mu.Unlock()
 	}
 }
@@ -54,25 +70,52 @@ func (p *Prioritizer) Outranks(a, b loadpoint.API) bool {
 }
 
 func (p *Prioritizer) outranks(a, b loadpoint.API) bool {
+	config := rankingConfig{
+		strategy:   p.settings.GetPriorityStrategy(),
+		basis:      p.settings.GetPriorityBasis(),
+		hysteresis: p.settings.GetPriorityHysteresis(),
+	}
+	if !p.configured || config != p.config {
+		clear(p.leads)
+		p.config, p.configured = config, true
+	}
+
 	if pa, pb := a.EffectivePriority(), b.EffectivePriority(); pa != pb {
 		return pa > pb
 	}
 
-	strategy, basis := p.settings.GetPriorityStrategy(), p.settings.GetPriorityBasis()
-	ga, oka := a.PriorityGap(strategy, basis)
-	gb, okb := b.PriorityGap(strategy, basis)
+	ga, oka := a.PriorityGap(config.strategy, config.basis)
+	gb, okb := b.PriorityGap(config.strategy, config.basis)
+	key, reverse := [2]loadpoint.API{a, b}, [2]loadpoint.API{b, a}
 	if !oka || !okb {
+		delete(p.leads, key)
+		delete(p.leads, reverse)
 		return false
 	}
 
-	key, reverse := [2]loadpoint.API{a, b}, [2]loadpoint.API{b, a}
-	switch diff, band := ga-gb, float64(p.settings.GetPriorityHysteresis()); {
-	case diff > band:
-		p.leads[key], p.leads[reverse] = true, false
-	case diff < -band:
-		p.leads[key], p.leads[reverse] = false, true
+	vehicles := [2]api.Vehicle{a.GetVehicle(), b.GetVehicle()}
+	if state, ok := p.leads[key]; ok && state.vehicles != vehicles {
+		delete(p.leads, key)
+		delete(p.leads, reverse)
 	}
-	return p.leads[key]
+
+	switch diff, band := ga-gb, float64(config.hysteresis); {
+	case diff > band:
+		p.leads[key] = leadState{true, vehicles}
+		p.leads[reverse] = leadState{false, [2]api.Vehicle{vehicles[1], vehicles[0]}}
+	case diff < -band:
+		p.leads[key] = leadState{false, vehicles}
+		p.leads[reverse] = leadState{true, [2]api.Vehicle{vehicles[1], vehicles[0]}}
+	}
+	return p.leads[key].leads
+}
+
+func (p *Prioritizer) clearLeads(lp loadpoint.API) {
+	for pair := range p.leads {
+		if pair[0] == lp || pair[1] == lp {
+			delete(p.leads, pair)
+		}
+	}
 }
 
 func (p *Prioritizer) GetChargePowerFlexibility(lp loadpoint.API) float64 {

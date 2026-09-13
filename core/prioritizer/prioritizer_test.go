@@ -27,8 +27,29 @@ func mockLoadpoint(ctrl *gomock.Controller, prio int, gap float64) *loadpoint.Mo
 func mockGapLoadpoint(ctrl *gomock.Controller, prio int, gap float64, comparable bool) *loadpoint.MockAPI {
 	lp := loadpoint.NewMockAPI(ctrl)
 	lp.EXPECT().GetTitle().AnyTimes()
+	lp.EXPECT().GetStatus().Return(api.StatusB).AnyTimes()
+	lp.EXPECT().GetVehicle().Return(nil).AnyTimes()
 	lp.EXPECT().EffectivePriority().Return(prio).AnyTimes()
 	lp.EXPECT().PriorityGap(gomock.Any(), gomock.Any()).Return(gap, comparable).AnyTimes()
+	return lp
+}
+
+type gapState struct {
+	gap     float64
+	ok      bool
+	status  api.ChargeStatus
+	vehicle api.Vehicle
+}
+
+func mutableLoadpoint(ctrl *gomock.Controller, state *gapState) *loadpoint.MockAPI {
+	lp := loadpoint.NewMockAPI(ctrl)
+	lp.EXPECT().GetTitle().AnyTimes()
+	lp.EXPECT().EffectivePriority().Return(0).AnyTimes()
+	lp.EXPECT().GetStatus().DoAndReturn(func() api.ChargeStatus { return state.status }).AnyTimes()
+	lp.EXPECT().GetVehicle().DoAndReturn(func() api.Vehicle { return state.vehicle }).AnyTimes()
+	lp.EXPECT().PriorityGap(gomock.Any(), gomock.Any()).DoAndReturn(func(api.PriorityStrategy, api.PriorityBasis) (float64, bool) {
+		return state.gap, state.ok
+	}).AnyTimes()
 	return lp
 }
 
@@ -106,27 +127,95 @@ func TestPrioritizerHysteresisLatch(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	p := New(nil, &testSettings{strategy: api.PrioritySoc, hysteresis: 3})
 
-	gapA, gapB := 60.0, 50.0
-	a, b := loadpoint.NewMockAPI(ctrl), loadpoint.NewMockAPI(ctrl)
-	for _, lp := range []*loadpoint.MockAPI{a, b} {
-		lp.EXPECT().EffectivePriority().Return(0).AnyTimes()
-	}
-	a.EXPECT().PriorityGap(gomock.Any(), gomock.Any()).DoAndReturn(func(api.PriorityStrategy, api.PriorityBasis) (float64, bool) {
-		return gapA, true
-	}).AnyTimes()
-	b.EXPECT().PriorityGap(gomock.Any(), gomock.Any()).DoAndReturn(func(api.PriorityStrategy, api.PriorityBasis) (float64, bool) {
-		return gapB, true
-	}).AnyTimes()
+	stateA := &gapState{gap: 60, ok: true, status: api.StatusB}
+	stateB := &gapState{gap: 50, ok: true, status: api.StatusB}
+	a, b := mutableLoadpoint(ctrl, stateA), mutableLoadpoint(ctrl, stateB)
 	assert.True(t, p.Outranks(a, b))
 	assert.False(t, p.Outranks(b, a))
 
-	gapA, gapB = 49, 50
+	stateA.gap, stateB.gap = 49, 50
 	assert.True(t, p.Outranks(a, b), "winner holds inside the band")
 	assert.False(t, p.Outranks(b, a))
 
-	gapB = 53.1
+	stateB.gap = 53.1
 	assert.True(t, p.Outranks(b, a), "challenger takes over beyond the band")
 	assert.False(t, p.Outranks(a, b))
+}
+
+func TestPrioritizerUnavailableGapClearsLatch(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	p := New(nil, &testSettings{strategy: api.PrioritySoc, hysteresis: 3})
+	stateA := &gapState{gap: 60, ok: true, status: api.StatusB}
+	stateB := &gapState{gap: 50, ok: true, status: api.StatusB}
+	a, b := mutableLoadpoint(ctrl, stateA), mutableLoadpoint(ctrl, stateB)
+
+	assert.True(t, p.Outranks(a, b))
+	stateA.ok = false
+	assert.False(t, p.Outranks(a, b))
+	assert.False(t, p.Outranks(b, a))
+
+	stateA.ok = true
+	stateA.gap, stateB.gap = 51, 50
+	assert.False(t, p.Outranks(a, b), "old lead must not revive")
+	assert.False(t, p.Outranks(b, a))
+}
+
+func TestPrioritizerConfigChangeClearsLatches(t *testing.T) {
+	changes := map[string]func(*testSettings){
+		"strategy":   func(s *testSettings) { s.strategy = api.PriorityDeficit },
+		"basis":      func(s *testSettings) { s.basis = api.PriorityBasisEnergy },
+		"hysteresis": func(s *testSettings) { s.hysteresis = 4 },
+	}
+
+	for name, change := range changes {
+		t.Run(name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			settings := &testSettings{strategy: api.PrioritySoc, hysteresis: 3}
+			p := New(nil, settings)
+			stateA := &gapState{gap: 60, ok: true, status: api.StatusB}
+			stateB := &gapState{gap: 50, ok: true, status: api.StatusB}
+			a, b := mutableLoadpoint(ctrl, stateA), mutableLoadpoint(ctrl, stateB)
+
+			assert.True(t, p.Outranks(a, b))
+			stateA.gap, stateB.gap = 51, 50
+			change(settings)
+			assert.False(t, p.Outranks(a, b), "old lead must not survive configuration changes")
+			assert.False(t, p.Outranks(b, a))
+		})
+	}
+}
+
+func TestPrioritizerVehicleChangeClearsLatch(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	p := New(nil, &testSettings{strategy: api.PrioritySoc, hysteresis: 3})
+	first, second := api.NewMockVehicle(ctrl), api.NewMockVehicle(ctrl)
+	stateA := &gapState{gap: 60, ok: true, status: api.StatusB, vehicle: first}
+	stateB := &gapState{gap: 50, ok: true, status: api.StatusB}
+	a, b := mutableLoadpoint(ctrl, stateA), mutableLoadpoint(ctrl, stateB)
+
+	assert.True(t, p.Outranks(a, b))
+	stateA.vehicle = second
+	stateA.gap, stateB.gap = 51, 50
+	assert.False(t, p.Outranks(a, b), "previous vehicle's lead must not transfer")
+	assert.False(t, p.Outranks(b, a))
+}
+
+func TestPrioritizerDisconnectClearsLatch(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	p := New(nil, &testSettings{strategy: api.PrioritySoc, hysteresis: 3})
+	stateA := &gapState{gap: 60, ok: true, status: api.StatusB}
+	stateB := &gapState{gap: 50, ok: true, status: api.StatusB}
+	a, b := mutableLoadpoint(ctrl, stateA), mutableLoadpoint(ctrl, stateB)
+
+	assert.True(t, p.Outranks(a, b))
+	stateA.status = api.StatusA
+	a.EXPECT().GetChargePowerFlexibility(nil).Return(0.0)
+	p.UpdateChargePowerFlexibility(a, nil)
+
+	stateA.status = api.StatusB
+	stateA.gap, stateB.gap = 51, 50
+	assert.False(t, p.Outranks(a, b), "lead must not survive a disconnect")
+	assert.False(t, p.Outranks(b, a))
 }
 
 // TestPrioritizerHysteresisTierGate verifies that the deadband sub-orders within a

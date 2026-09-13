@@ -94,15 +94,10 @@ import FormRow from "./FormRow.vue";
 import store from "@/store";
 import api from "@/api";
 import { PRIORITY_BASIS, PRIORITY_STRATEGY } from "@/types/evcc";
+import { changedPrioritySettings, type PriorityValues } from "./priority";
 import type { AxiosError } from "axios";
 
-interface Values {
-	priorityStrategy: PRIORITY_STRATEGY;
-	priorityBasis: PRIORITY_BASIS;
-	priorityHysteresis: number;
-}
-
-const ROUTES: Record<keyof Values, string> = {
+const ROUTES: Record<keyof PriorityValues, string> = {
 	priorityStrategy: "prioritystrategy",
 	priorityBasis: "prioritybasis",
 	priorityHysteresis: "priorityhysteresis",
@@ -116,17 +111,15 @@ export default defineComponent({
 		return {
 			saving: false,
 			error: null as string | null,
-			values: {} as Values,
-			serverValues: {} as Values,
+			values: {} as PriorityValues,
+			serverValues: {} as PriorityValues,
 			strategies: Object.values(PRIORITY_STRATEGY),
 			bases: Object.values(PRIORITY_BASIS),
 		};
 	},
 	computed: {
-		changed(): (keyof Values)[] {
-			return (Object.keys(this.values) as (keyof Values)[]).filter(
-				(key) => this.values[key] !== this.serverValues[key]
-			);
+		changed(): (keyof PriorityValues)[] {
+			return changedPrioritySettings(this.values, this.serverValues);
 		},
 		nothingChanged(): boolean {
 			return this.changed.length === 0;
