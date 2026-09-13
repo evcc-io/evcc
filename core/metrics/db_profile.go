@@ -12,9 +12,7 @@ import (
 
 var ErrIncomplete = errors.New("meter profile incomplete")
 
-// profilePercentile returns the configured per-slot percentile of the energy
-// profiles (0..1), 0 = average. The median (0.5) keeps a few heavy days from
-// dominating the profile.
+// profilePercentile returns the configured per-slot percentile of the energy profiles (0..1), 0 = average
 func profilePercentile() float64 {
 	v, err := settings.Float(keys.ProfilePercentile)
 	if err != nil {
@@ -53,8 +51,8 @@ func energyProfileFiltered(entity entity, from time.Time, weekday *int, percenti
 		ORDER BY slot ASC`
 
 	if percentile > 0 {
-		// rank each slot's values and interpolate between the two ranks enclosing
-		// the percentile position (1-based, pos = p * (n-1) + 1).
+		// rank each slot's values and weight the two ranks enclosing the percentile
+		// position (1-based, pos = p * (n-1) + 1) by their distance to it.
 		// The slots CTE must stay first to keep the placeholder order.
 		args = append(args, percentile)
 		query = `WITH slots AS (` + slots + `), ranked AS (
@@ -64,9 +62,9 @@ func energyProfileFiltered(entity entity, from time.Time, weekday *int, percenti
 				? * (count(*) OVER (PARTITION BY slot) - 1) + 1 AS pos
 			FROM slots
 		)
-		SELECT ts, sum(energy * CASE WHEN rn = CAST(pos AS INTEGER) THEN 1 - pos + CAST(pos AS INTEGER) ELSE pos - CAST(pos AS INTEGER) END) AS energy
+		SELECT ts, sum(energy * (1 - abs(rn - pos))) AS energy
 		FROM ranked
-		WHERE rn BETWEEN CAST(pos AS INTEGER) AND CAST(pos AS INTEGER) + 1
+		WHERE abs(rn - pos) < 1
 		GROUP BY slot
 		ORDER BY slot ASC`
 	}
