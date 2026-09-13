@@ -256,54 +256,10 @@ func TestBatteryModeAutomatic(t *testing.T) {
 	site.updateBatteryMode(false, false, api.Rate{})
 	assert.Equal(t, api.BatteryCharge, site.GetBatteryMode())
 
-	// a stalled optimizer releases the battery
-	site.suggestionsUpdated = time.Now().Add(-suggestionMaxAge - time.Minute)
+	// an expired solve releases the battery
+	site.clearSuggestions()
 
 	batCon.EXPECT().SetBatteryMode(api.BatteryNormal)
-	site.updateBatteryMode(false, false, api.Rate{})
-	assert.Equal(t, api.BatteryNormal, site.GetBatteryMode())
-
-	ctrl.Finish()
-}
-
-// a failed optimizer run keeps fresh advice, otherwise the battery is released
-// for a single cycle until the next run restores the suggestion
-func TestBatteryModeAutomaticFailedRun(t *testing.T) {
-	enableAutomatic(t)
-
-	ctrl := gomock.NewController(t)
-	batCon := batteryControllerMock(ctrl)
-
-	var bat api.Meter = &struct {
-		api.Meter
-		api.BatteryController
-	}{
-		BatteryController: batCon,
-	}
-
-	site := &Site{
-		log:           util.NewLogger("foo"),
-		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "bat"}, bat)},
-	}
-
-	site.setSuggestions(map[string]types.Suggestion{
-		batteryKey("bat"): {Action: api.BatteryHold.String()},
-	})
-
-	batCon.EXPECT().SetBatteryMode(api.BatteryHold)
-	site.updateBatteryMode(false, false, api.Rate{})
-	assert.Equal(t, api.BatteryHold, site.GetBatteryMode())
-
-	// failed run with fresh advice keeps the battery on hold
-	site.dropStaleSuggestions()
-	site.updateBatteryMode(false, false, api.Rate{})
-	assert.Equal(t, api.BatteryHold, site.GetBatteryMode())
-
-	// failed run after the advice aged out releases the battery
-	site.suggestionsUpdated = time.Now().Add(-suggestionMaxAge - time.Minute)
-
-	batCon.EXPECT().SetBatteryMode(api.BatteryNormal)
-	site.dropStaleSuggestions()
 	site.updateBatteryMode(false, false, api.Rate{})
 	assert.Equal(t, api.BatteryNormal, site.GetBatteryMode())
 
