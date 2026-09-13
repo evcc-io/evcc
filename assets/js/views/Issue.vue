@@ -167,7 +167,27 @@
 						<div class="col-12 col-lg-6 ps-lg-5">
 							<hr class="d-lg-none mt-0 mb-5" />
 							<div class="mb-4">
-								<h5>{{ $t("issue.additional.title") }}</h5>
+								<div
+									class="d-flex justify-content-between align-items-baseline gap-3"
+								>
+									<h5>{{ $t("issue.additional.title") }}</h5>
+									<CopyButton :content="markdown">
+										<template #default="{ copy, copied, copying }">
+											<button
+												type="button"
+												class="btn btn-sm btn-outline-secondary text-nowrap"
+												:disabled="copying"
+												@click="copy"
+											>
+												{{
+													copied
+														? $t("issue.summary.copied")
+														: $t("issue.additional.copyMarkdown")
+												}}
+											</button>
+										</template>
+									</CopyButton>
+								</div>
 								<p class="text-muted small">
 									{{ $t("issue.additional.description") }}
 								</p>
@@ -344,6 +364,7 @@
 import { defineComponent } from "vue";
 import TopHeader from "@/components/Top/Header.vue";
 import MultiSelect from "@/components/Helper/MultiSelect.vue";
+import CopyButton from "@/components/Helper/CopyButton.vue";
 import IssueAdditionalItem from "@/components/Issue/AdditionalItem.vue";
 import SummaryModal from "@/components/Issue/SummaryModal.vue";
 import Modal from "bootstrap/js/dist/modal";
@@ -385,6 +406,7 @@ export default defineComponent({
 	components: {
 		TopHeader,
 		MultiSelect,
+		CopyButton,
 		IssueAdditionalItem,
 		SummaryModal,
 	},
@@ -454,6 +476,9 @@ export default defineComponent({
 				system: this.systemString,
 				timezone: this.timezoneString,
 			};
+		},
+		markdown(): string {
+			return generateDebugFile(this.issueData, this.sections);
 		},
 		logAreaOptions() {
 			return this.logAvailableAreas.map((area) => ({ name: area, value: area }));
