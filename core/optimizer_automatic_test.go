@@ -50,7 +50,7 @@ func automaticLoadpoint(t *testing.T, ac api.AlwaysCharge, automatic bool) (*Loa
 		bus:          evbus.New(),
 		clock:        clock.NewMock(),
 		charger:      charger,
-		chargeMeter:  &Null{},
+		chargeMeter:  newChargeMeter(&Null{}),
 		chargeRater:  &Null{},
 		chargeTimer:  &Null{},
 		wakeUpTimer:  NewTimer(),
