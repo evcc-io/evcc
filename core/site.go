@@ -1272,7 +1272,12 @@ func (site *Site) update(lp updater) {
 	if state, err := site.updateMeters(); err != nil {
 		site.log.ERROR.Println(err)
 	} else {
-		site.reapplySuggestions(time.Now())
+		if sponsor.IsAuthorized() && optimizerEnabled() {
+			site.reapplySuggestions(time.Now())
+		} else {
+			// don't resurrect the pre-disable solve on re-enable
+			site.setLastOptimizerSolve(nil)
+		}
 		go site.optimizerUpdateAsync(tariff.SlotDuration)
 
 		site.updatePower(lp, state, totalChargePower, consumption, feedin)

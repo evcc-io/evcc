@@ -19,38 +19,6 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-// enableOptimizer satisfies reapplySuggestions' sponsor/enabled guard, the
-// same one optimizerUpdateAsync uses, for the duration of the test
-func enableOptimizer(t *testing.T) {
-	t.Helper()
-
-	subject := sponsor.Subject
-	sponsor.Subject = "test"
-
-	// remember each key's prior value (or absence) so cleanup restores it
-	// exactly, instead of leaving both keys behind explicitly set to false
-	existed := make(map[string]bool, 2)
-	prior := make(map[string]bool, 2)
-	for _, k := range []string{keys.Experimental, keys.Optimizer} {
-		if v, err := settings.Bool(k); err == nil {
-			existed[k] = true
-			prior[k] = v
-		}
-		settings.SetBool(k, true)
-	}
-
-	t.Cleanup(func() {
-		sponsor.Subject = subject
-		for _, k := range []string{keys.Experimental, keys.Optimizer} {
-			if existed[k] {
-				settings.SetBool(k, prior[k])
-			} else {
-				_ = settings.Delete(k)
-			}
-		}
-	})
-}
-
 func TestLoadpointProfile(t *testing.T) {
 	ctrl := gomock.NewController(t)
 

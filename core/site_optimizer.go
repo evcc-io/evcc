@@ -667,16 +667,9 @@ func (site *Site) setLastOptimizerSolve(solve *optimizerSolve) {
 // reapplySuggestions re-derives the last solve's suggestions for whichever
 // slot covers now, without a new network round-trip - closes the gap left by
 // a solve that completed partway into its slot and the next solve, which
-// isn't aligned to the slot grid. Guarded like optimizerUpdateAsync
-// (disabled/unsponsored skip, optimizerMu.TryLock) so it never overwrites a
-// fresher concurrent solve.
+// isn't aligned to the slot grid. optimizerMu.TryLock so it never overwrites
+// a fresher concurrent solve; the caller gates on optimizer enabled.
 func (site *Site) reapplySuggestions(now time.Time) {
-	if !sponsor.IsAuthorized() || !optimizerEnabled() {
-		// don't resurrect the pre-disable solve on re-enable
-		site.setLastOptimizerSolve(nil)
-		return
-	}
-
 	if !site.optimizerMu.TryLock() {
 		return
 	}
