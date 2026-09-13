@@ -420,6 +420,35 @@ func (site *Site) SetGridExportLimit(power float64) error {
 	return nil
 }
 
+// GetProfilePercentile returns the percentile of the historic energy profiles in %, nil = average
+func (site *Site) GetProfilePercentile() *float64 {
+	if v, err := settings.Float(keys.ProfilePercentile); err == nil {
+		return &v
+	}
+	return nil
+}
+
+// SetProfilePercentile sets the percentile of the historic energy profiles in %, nil = average
+func (site *Site) SetProfilePercentile(percentile *float64) error {
+	if percentile == nil {
+		if err := settings.Delete(keys.ProfilePercentile); err != nil {
+			return err
+		}
+	} else {
+		if *percentile < 0 || *percentile > 100 {
+			return fmt.Errorf("invalid profile percentile: %g", *percentile)
+		}
+		settings.SetFloat(keys.ProfilePercentile, *percentile)
+	}
+
+	site.publish(keys.ProfilePercentile, percentile)
+
+	// re-run the optimizer so the new profile takes effect immediately
+	go site.optimizerUpdateAsync(0)
+
+	return nil
+}
+
 // GetTariff returns the respective tariff if configured or nil
 func (site *Site) GetTariff(tariff api.TariffUsage) api.Tariff {
 	site.RLock()
