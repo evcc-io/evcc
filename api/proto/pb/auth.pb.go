@@ -198,6 +198,7 @@ type HardwareReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Authorized    bool                   `protobuf:"varint,1,opt,name=authorized,proto3" json:"authorized,omitempty"`
 	Subject       string                 `protobuf:"bytes,2,opt,name=subject,proto3" json:"subject,omitempty"`
+	Token         string                 `protobuf:"bytes,3,opt,name=token,proto3" json:"token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -246,6 +247,13 @@ func (x *HardwareReply) GetSubject() string {
 	return ""
 }
 
+func (x *HardwareReply) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
 var File_proto_auth_proto protoreflect.FileDescriptor
 
 const file_proto_auth_proto_rawDesc = "" +
@@ -269,12 +277,13 @@ const file_proto_auth_proto_rawDesc = "" +
 	"\bmetadata\x18\x03 \x03(\v2\x1e.HardwareRequest.MetadataEntryR\bmetadata\x1a;\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"I\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"_\n" +
 	"\rHardwareReply\x12\x1e\n" +
 	"\n" +
 	"authorized\x18\x01 \x01(\bR\n" +
 	"authorized\x12\x18\n" +
-	"\asubject\x18\x02 \x01(\tR\asubject2n\n" +
+	"\asubject\x18\x02 \x01(\tR\asubject\x12\x14\n" +
+	"\x05token\x18\x03 \x01(\tR\x05token2n\n" +
 	"\x04Auth\x12*\n" +
 	"\fIsAuthorized\x12\f.AuthRequest\x1a\n" +
 	".AuthReply\"\x00\x12:\n" +

@@ -733,6 +733,21 @@ presets:
   ocpp:
     - name: stationid
     - name: connector
+    - name: chargingprofile
+      advanced: true
+      type: choice
+      choice: ["TxDefaultProfile", "TxProfile"]
+      default: TxDefaultProfile
+      description:
+        de: Ladeprofiltyp
+        en: Charging profile type
+      help:
+        de: |
+          TxProfile nur verwenden, wenn die Wallbox Änderungen an TxDefaultProfile während einer laufenden Transaktion ignoriert. Ohne Transaktion wird weiterhin TxDefaultProfile verwendet; eine laufende Transaktion muss ihre ID melden.
+          TxProfile endet mit der Transaktion. Das Standardprofil wird beim nächsten Regelzyklus wiederhergestellt. Ist evcc dabei offline, kann die Wallbox bis zur Wiederverbindung ohne dieses Limit laden.
+        en: |
+          Use TxProfile only if the charger ignores TxDefaultProfile changes during an active transaction. Without a transaction, TxDefaultProfile is still used; an active transaction must report its ID.
+          TxProfile expires with its transaction. The default profile is restored on the next control cycle. If evcc is offline then, the charger may charge without this limit until it reconnects.
     - name: remotestart
       advanced: true
       type: bool

@@ -87,7 +87,7 @@
     "typescript": "^5.9.3",
     "vite": "npm:@voidzero-dev/vite-plus-core@0.2.6",
     "vite-plus": "0.2.6",
-    "vitest": "4.1.10",
+    "vitest": "4.1.11",
     "vue-hot-reload-api": "^2.3.4",
     "vue-tsc": "^3.3.11",
     "wait-on": "^9.1.0",
@@ -96,6 +96,6 @@
   },
   "overrides": {
     "vite": "npm:@voidzero-dev/vite-plus-core@0.2.6",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   }
 }
