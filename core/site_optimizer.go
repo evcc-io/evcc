@@ -231,9 +231,8 @@ func loadpointCurrentAction(lp *Loadpoint) string {
 	return actionStop
 }
 
-// suggestionMaxAge invalidates suggestions of a stalled optimizer. Runs happen
-// every optimizerInterval, so two slots without a result mean the optimizer is
-// no longer keeping up.
+// suggestionMaxAge releases a loadpoint gated by a solve the site stopped
+// refreshing; the site itself expires its cached solve in reapplySuggestions
 const suggestionMaxAge = 2 * tariff.SlotDuration
 
 // setSuggestions replaces the suggestions applied on each publish
@@ -242,7 +241,6 @@ func (site *Site) setSuggestions(suggestions map[string]types.Suggestion) {
 	defer site.Unlock()
 
 	site.suggestions = suggestions
-	site.suggestionsUpdated = time.Now()
 }
 
 // setBatteryForecast replaces the battery forecast of the cached state
@@ -259,29 +257,15 @@ func (site *Site) setBatteryForecast(forecast *types.BatteryForecast) {
 func (site *Site) suggestion(key, currentAction string) *types.Suggestion {
 	site.RLock()
 	s, ok := site.suggestions[key]
-	stale := time.Since(site.suggestionsUpdated) > suggestionMaxAge
 	site.RUnlock()
 
-	if !ok || stale {
+	if !ok {
 		return nil
 	}
 
 	s.Actionable = s.Action != currentAction
 
 	return &s
-}
-
-// dropStaleSuggestions clears the advice of a stalled optimizer. A single failed
-// run keeps it: dropping it would release the controlled devices for one cycle,
-// flipping the battery mode until the next run restores the suggestion.
-func (site *Site) dropStaleSuggestions() {
-	site.RLock()
-	stale := time.Since(site.suggestionsUpdated) > suggestionMaxAge
-	site.RUnlock()
-
-	if stale {
-		site.clearSuggestions()
-	}
 }
 
 // publishSuggestions publishes the loadpoints' suggestions and hands them to the
@@ -448,11 +432,10 @@ func (site *Site) optimizerUpdateAsync(force bool) {
 
 		site.optimizerUpdated = time.Now()
 
+		// a failed run keeps the advice: dropping it would release the controlled
+		// devices for one cycle. reapplySuggestions expires the cached solve.
 		if err != nil {
 			site.log.ERROR.Println("optimizer:", err)
-
-			// stale advice must not linger
-			site.dropStaleSuggestions()
 		}
 	}()
 
