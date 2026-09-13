@@ -36,8 +36,7 @@ type Gen2Config struct {
 type Gen2SwitchStatus struct {
 	Output bool
 	Apower float64
-	// nil on switches without power metering (Plus 1, Pro 3)- they omit the register entirely
-	Voltage *float64
+	Voltage *float64 // nil on switches without power metering (Plus 1, Pro 3)
 	Current float64
 	Aenergy struct {
 		Total float64
