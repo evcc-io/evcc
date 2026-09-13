@@ -5,14 +5,11 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/types"
-	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
-	"github.com/evcc-io/evcc/util/sponsor"
 	optimizer "github.com/evcc-io/optimizer/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -687,8 +684,6 @@ func reapplyTestSchedule() (applied time.Time, dt []int, schedule optimizerSched
 // instead of a new network round-trip - for both a battery and a loadpoint
 // suggestion, sharing the same applyOptimizerResult code path.
 func TestReapplySuggestionAcrossSlotBoundary(t *testing.T) {
-	enableOptimizer(t)
-
 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
 	lp.status = api.StatusC // connected and charging - reapplySuggestions excludes a disconnected loadpoint
 	site := &Site{loadpoints: []*Loadpoint{lp}}
@@ -742,8 +737,6 @@ func TestReapplySuggestionAcrossSlotBoundary(t *testing.T) {
 // the next slot boundary bring the dead solve's suggestion straight back,
 // forecast included - defeating the very clear it sits next to.
 func TestReapplySuggestionsDoesNotResurrectClearedAdvice(t *testing.T) {
-	enableOptimizer(t)
-
 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
 	site := &Site{loadpoints: []*Loadpoint{lp}}
 
@@ -788,8 +781,6 @@ func TestReapplySuggestionsDoesNotResurrectClearedAdvice(t *testing.T) {
 // "charge" to a charger with no car attached. reapplySuggestions must drop
 // the cache instead once a solved loadpoint is no longer connected.
 func TestReapplySuggestionsExcludeDisconnectedLoadpoint(t *testing.T) {
-	enableOptimizer(t)
-
 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
 	lp.status = api.StatusB // connected at solve time
 	site := &Site{loadpoints: []*Loadpoint{lp}, log: util.NewLogger("foo")}
@@ -831,8 +822,6 @@ func TestReapplySuggestionsExcludeDisconnectedLoadpoint(t *testing.T) {
 // the cached plan must not be marched forward indefinitely once it is
 // clearly too old to still describe reality.
 func TestReapplySuggestionsExpireAfterOutage(t *testing.T) {
-	enableOptimizer(t)
-
 	site := &Site{log: util.NewLogger("foo")}
 
 	applied, dt, schedule := reapplyTestSchedule()
