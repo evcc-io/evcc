@@ -256,6 +256,7 @@ func (p *AA55UDP) exchange() ([]byte, error) {
 	if want := int(binary.BigEndian.Uint16(p.pdu[4:6])) * 2; len(payload) != want {
 		return nil, fmt.Errorf("response length %d does not match request (%d bytes expected)", len(payload), want)
 	}
+
 	return payload, nil
 }
 
