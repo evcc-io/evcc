@@ -598,6 +598,10 @@ export interface Loadpoint {
   chargerFeatureCoarseCurrent: boolean;
   /** Charger is a heating device where disabled means normal operation. */
   chargerFeatureContinuous: boolean;
+  /** Heating device demand forecast uses daily average profile scaled by outdoor temperature. */
+  chargerFeatureDemandTemperature: boolean;
+  /** Heating device demand forecast uses same-weekday average over past 4 weeks. */
+  chargerFeatureDemandWeekday: boolean;
   /** Charger is a heating device. SoC values represent temperature in degrees. */
   chargerFeatureHeating: boolean;
   /** Charger is an always-connected device without vehicles and charging sessions, like a heat pump. */
@@ -945,6 +949,8 @@ export interface SponsorStatus {
   expiresSoon?: boolean;
   /** Sponsor token. Redacted. */
   token?: string;
+  /** Hardware sponsorship. */
+  hardware?: boolean;
 }
 
 /** Sponsorship status. */

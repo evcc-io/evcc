@@ -1,0 +1,25 @@
+template: spotovaelektrina
+link: https://spotovaelektrina.cz/api
+products:
+  - brand: spotovaelektrina.cz
+requirements:
+  description:
+    en: "Czech spot prices in 15-minute intervals, excluding VAT and additional charges. The API provider asks users to notify [info@spotovaelektrina.cz](mailto:info@spotovaelektrina.cz)."
+    de: "Tschechische Börsenstrompreise in 15-Minuten-Intervallen, ohne Mehrwertsteuer und weitere Gebühren. Der API-Anbieter bittet Nutzer um eine Nachricht an [info@spotovaelektrina.cz](mailto:info@spotovaelektrina.cz)."
+  evcc: ["skiptest"]
+group: price
+countries: ["CZ"]
+params:
+  - name: currency
+    choice: ["CZK", "EUR"]
+    default: CZK
+  - preset: tariff-base
+  - preset: tariff-features
+render: |
+  type: custom
+  {{ include "base" . }}
+  {{ include "features" . }}
+  forecast:
+    source: http
+    uri: https://spotovaelektrina.cz/api/v1/price/get-prices-evcc-{{ .currency | lower }}
+    cache: 1h

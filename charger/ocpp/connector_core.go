@@ -75,6 +75,13 @@ func getSampleKey(s types.SampledValue) types.Measurand {
 	return s.Measurand
 }
 
+// isBoundaryContext returns true for readings that are a snapshot taken at the
+// transaction's start or end rather than a live measurement. Context is optional
+// and defaults to Sample.Periodic.
+func isBoundaryContext(c types.ReadingContext) bool {
+	return c == types.ReadingContextTransactionBegin || c == types.ReadingContextTransactionEnd
+}
+
 func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
@@ -96,10 +103,20 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 
 		// ignore old meter value requests
 		if !meterValue.Timestamp.Time.Before(conn.meterUpdated) {
-			for _, sample := range meterValue.SampledValue {
-				sample.Value = strings.TrimSpace(sample.Value)
-				conn.measurements[getSampleKey(sample)] = sample
-				conn.meterUpdated = meterValue.Timestamp.Time
+			// a charge point may repeat a measurand with a different context, e.g. a live
+			// Sample.Periodic value next to a static Transaction.Begin snapshot that never
+			// changes. Apply boundary snapshots first so live readings win independent of
+			// their order within the message.
+			for _, boundary := range []bool{true, false} {
+				for _, sample := range meterValue.SampledValue {
+					if isBoundaryContext(sample.Context) != boundary {
+						continue
+					}
+
+					sample.Value = strings.TrimSpace(sample.Value)
+					conn.measurements[getSampleKey(sample)] = sample
+					conn.meterUpdated = meterValue.Timestamp.Time
+				}
 			}
 		}
 	}
