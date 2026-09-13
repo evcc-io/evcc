@@ -280,8 +280,6 @@ export interface State {
   priorityStrategy?: PRIORITY_STRATEGY;
   /** Whether the priority strategy compares vehicles by SoC percent or by energy in kWh. */
   priorityBasis?: PRIORITY_BASIS;
-  /** Priority basis actually in use. Falls back to percent when a loadpoint reports SoC without a known vehicle capacity. */
-  effectivePriorityBasis?: PRIORITY_BASIS;
   /** Deadband a loadpoint must lead by before it outranks a same-priority peer, in SoC-% or kWh per basis. 0 disables. */
   priorityHysteresis?: number;
   /** Battery buffer start SoC in %. Solar charging starts automatically above this level. */
@@ -657,8 +655,6 @@ export interface Loadpoint {
   effectivePlanStrategy: PlanStrategy;
   /** Currently applied priority. */
   effectivePriority: number;
-  /** Effective priority including strategy sub-ordering. Integer part is the priority, fraction ranks within it. */
-  effectivePriorityScore: number;
   /** Delay before charging starts in solar mode, in seconds. */
   enableDelay: number;
   /** Available surplus power above which charging starts in solar mode, in W. */

@@ -165,20 +165,6 @@ func (mr *MockAPIMockRecorder) EffectivePriority() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectivePriority", reflect.TypeOf((*MockAPI)(nil).EffectivePriority))
 }
 
-// EffectivePriorityScore mocks base method.
-func (m *MockAPI) EffectivePriorityScore(strategy api.PriorityStrategy, basis api.PriorityBasis, ref float64) float64 {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "EffectivePriorityScore", strategy, basis, ref)
-	ret0, _ := ret[0].(float64)
-	return ret0
-}
-
-// EffectivePriorityScore indicates an expected call of EffectivePriorityScore.
-func (mr *MockAPIMockRecorder) EffectivePriorityScore(strategy, basis, ref any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EffectivePriorityScore", reflect.TypeOf((*MockAPI)(nil).EffectivePriorityScore), strategy, basis, ref)
-}
-
 // GetAlwaysCharge mocks base method.
 func (m *MockAPI) GetAlwaysCharge() api.AlwaysCharge {
 	m.ctrl.T.Helper()
@@ -811,18 +797,19 @@ func (mr *MockAPIMockRecorder) IsFastChargingActive() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsFastChargingActive", reflect.TypeOf((*MockAPI)(nil).IsFastChargingActive))
 }
 
-// IsHeating mocks base method.
-func (m *MockAPI) IsHeating() bool {
+// PriorityGap mocks base method.
+func (m *MockAPI) PriorityGap(strategy api.PriorityStrategy, basis api.PriorityBasis) (float64, bool) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IsHeating")
-	ret0, _ := ret[0].(bool)
-	return ret0
+	ret := m.ctrl.Call(m, "PriorityGap", strategy, basis)
+	ret0, _ := ret[0].(float64)
+	ret1, _ := ret[1].(bool)
+	return ret0, ret1
 }
 
-// IsHeating indicates an expected call of IsHeating.
-func (mr *MockAPIMockRecorder) IsHeating() *gomock.Call {
+// PriorityGap indicates an expected call of PriorityGap.
+func (mr *MockAPIMockRecorder) PriorityGap(strategy, basis any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsHeating", reflect.TypeOf((*MockAPI)(nil).IsHeating))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PriorityGap", reflect.TypeOf((*MockAPI)(nil).PriorityGap), strategy, basis)
 }
 
 // PublishEffectiveValues mocks base method.

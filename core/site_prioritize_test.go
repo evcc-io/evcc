@@ -8,6 +8,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/prioritizer"
 	"github.com/evcc-io/evcc/util"
 	"go.uber.org/mock/gomock"
 )
@@ -69,6 +70,7 @@ func TestReservedPVPower(t *testing.T) {
 		log:        util.NewLogger("site"),
 		loadpoints: []*Loadpoint{high, low},
 	}
+	site.prioritizer = prioritizer.New(nil, site)
 
 	// low reserves high's anticipated max power while high is starting up
 	if got, want := site.reservedPVPower(low), high.EffectiveMaxPower(); got != want {
@@ -150,6 +152,7 @@ func TestReservedPVPowerSmartFeedInPause(t *testing.T) {
 				log:        util.NewLogger("site"),
 				loadpoints: []*Loadpoint{car, low},
 			}
+			site.prioritizer = prioritizer.New(nil, site)
 
 			// checkSmartLimit looks up rates by wall clock time, not lp.clock
 			now := time.Now()
@@ -175,12 +178,14 @@ func TestReservedPVPowerSmartFeedInPause(t *testing.T) {
 
 // newPrioritySite ranks the given loadpoints by the given strategy and deadband
 func newPrioritySite(strategy api.PriorityStrategy, hysteresis int, lps ...*Loadpoint) *Site {
-	return &Site{
+	site := &Site{
 		log:                util.NewLogger("site"),
 		loadpoints:         lps,
 		priorityStrategy:   strategy,
 		priorityHysteresis: hysteresis,
 	}
+	site.prioritizer = prioritizer.New(nil, site)
+	return site
 }
 
 // startingPVLoadpoint returns a PV loadpoint with the given soc and an enable timer running
@@ -215,8 +220,44 @@ func TestReservedPVPowerWithinTier(t *testing.T) {
 	}
 }
 
-// TestReservedPVPowerStrategyNone asserts the score comparison is a strict superset of the
-// tier comparison: without a strategy the fraction is 0, hence only the tier decides.
+func TestReservedPVPowerUnknownSocTies(t *testing.T) {
+	Voltage = 230
+
+	known := startingPVLoadpoint(0, 80)
+	unknown := startingPVLoadpoint(0, 0)
+	site := newPrioritySite(api.PrioritySoc, 3, known, unknown)
+
+	if got := site.reservedPVPower(known); got != 0 {
+		t.Errorf("known: want 0, got %.0f", got)
+	}
+	if got := site.reservedPVPower(unknown); got != 0 {
+		t.Errorf("unknown: want 0, got %.0f", got)
+	}
+}
+
+func TestReservedPVPowerEnergyWithoutCapacityTies(t *testing.T) {
+	Voltage = 230
+	ctrl := gomock.NewController(t)
+
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Capacity().Return(60.0).AnyTimes()
+	vehicle.EXPECT().OnIdentified().Return(api.ActionConfig{}).AnyTimes()
+	known := startingPVLoadpoint(0, 80)
+	known.vehicle = vehicle
+	unknown := startingPVLoadpoint(0, 20)
+
+	site := newPrioritySite(api.PrioritySoc, 3, known, unknown)
+	site.priorityBasis = api.PriorityBasisEnergy
+
+	if got := site.reservedPVPower(known); got != 0 {
+		t.Errorf("known capacity: want 0, got %.0f", got)
+	}
+	if got := site.reservedPVPower(unknown); got != 0 {
+		t.Errorf("unknown capacity: want 0, got %.0f", got)
+	}
+}
+
+// TestReservedPVPowerStrategyNone asserts that without a strategy only the tier decides.
 func TestReservedPVPowerStrategyNone(t *testing.T) {
 	Voltage = 230
 
@@ -244,8 +285,7 @@ func TestReservedPVPowerStrategyNone(t *testing.T) {
 	}
 }
 
-// TestReservedPVPowerHysteresis asserts the deadband applies to the enable race as well:
-// a score gap inside the band leaves both racing, exactly as an equal tier does.
+// TestReservedPVPowerHysteresis asserts the deadband applies to the enable race as well.
 func TestReservedPVPowerHysteresis(t *testing.T) {
 	Voltage = 230
 
@@ -298,10 +338,6 @@ func TestReservedPVPowerAcrossTiers(t *testing.T) {
 	// 99 kWh against a 40 kWh reference: a band wider than one tier
 	site := newPrioritySite(api.PrioritySoc, 99, low, high)
 	site.priorityBasis = api.PriorityBasisEnergy
-
-	if _, ref := site.EffectivePriorityScoring(); ref != 40 {
-		t.Fatalf("reference: want 40, got %.0f", ref)
-	}
 
 	if got, want := site.reservedPVPower(low), high.EffectiveMaxPower(); got != want {
 		t.Errorf("low: want %.0f, got %.0f", want, got)

@@ -36,10 +36,6 @@ func (m *mockSite) GetPriorityStrategy() api.PriorityStrategy {
 	return api.PriorityNone
 }
 
-func (m *mockSite) EffectivePriorityScoring() (api.PriorityBasis, float64) {
-	return api.PriorityBasisPercent, 100
-}
-
 func TestBoostPower(t *testing.T) {
 	Voltage = 230
 	lp := &Loadpoint{

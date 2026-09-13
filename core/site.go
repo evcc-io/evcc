@@ -128,8 +128,6 @@ type Site struct {
 	optimizerMu      sync.Mutex // guards optimizer runs
 	optimizerUpdated time.Time  // last optimizer run, guarded by optimizerMu
 
-	priorityBasisConflict loadpoint.API // loadpoint last warned about, site update loop only
-
 	solarScaleCached func() (float64, error) // util.Cached wrapper around querySolarScale
 }
 
@@ -403,9 +401,10 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	site := &Site{
-		log:        util.NewLogger("site"),
-		Voltage:    230, // V
-		collectors: make(map[string]*metrics.Collector),
+		log:                util.NewLogger("site"),
+		Voltage:            230, // V
+		priorityHysteresis: 3,
+		collectors:         make(map[string]*metrics.Collector),
 	}
 
 	// the result only depends on completed days, so it cannot change within a day
@@ -487,20 +486,24 @@ func (site *Site) restoreSettings() error {
 		}
 	}
 	if v, err := settings.String(keys.PriorityStrategy); err == nil {
-		if strategy, err := api.PriorityStrategyString(v); err == nil {
-			if err := site.SetPriorityStrategy(strategy); err != nil {
-				return err
-			}
+		strategy, err := api.PriorityStrategyString(v)
+		if err != nil {
+			return err
+		}
+		if err := site.SetPriorityStrategy(strategy); err != nil {
+			return err
 		}
 	}
 	if v, err := settings.String(keys.PriorityBasis); err == nil {
-		if basis, err := api.PriorityBasisString(v); err == nil {
-			if err := site.SetPriorityBasis(basis); err != nil {
-				return err
-			}
+		basis, err := api.PriorityBasisString(v)
+		if err != nil {
+			return err
+		}
+		if err := site.SetPriorityBasis(basis); err != nil {
+			return err
 		}
 	}
-	if v, err := settings.Int(keys.PriorityHysteresis); err == nil && v >= 0 && v <= 99 {
+	if v, err := settings.Int(keys.PriorityHysteresis); err == nil {
 		if err := site.SetPriorityHysteresis(int(v)); err != nil {
 			return err
 		}
@@ -1250,42 +1253,14 @@ func (site *Site) updateLoadpoints(rates api.Rates) float64 {
 
 // reservedPVPower returns the anticipated surplus claimed by higher-priority PV loadpoints
 // that are starting up, so lower-priority loadpoints defer enabling against it (#31194).
-// Ranking uses the prioritizer's score and deadband, hence whoever wins the steady-state
-// flexibility also wins the start instead of the two contradicting each other.
 func (site *Site) reservedPVPower(lp updater) float64 {
 	if !loadpoint.SurplusFlexible(lp) {
 		return 0
 	}
 
-	// strategy, basis and reference are site-level, so every loadpoint is scored on one scale
-	strategy := site.GetPriorityStrategy()
-	basis, ref := site.EffectivePriorityScoring()
-	score := lp.EffectivePriorityScore(strategy, basis, ref)
-	prio, heating := lp.EffectivePriority(), lp.IsHeating()
-
-	// hysteresis deadband in gap units (soc-% or kWh), normalised against the same reference
-	// as the score fraction so near-equal loadpoints all race instead of deferring to each other
-	band := float64(site.GetPriorityHysteresis()) / ref
-
 	var reserved float64
 	for _, other := range site.activeLoadpoints() {
-		if other == lp {
-			continue
-		}
-
-		// the deadband sub-orders within a tier only - an explicit priority always wins.
-		// heating aliases temperature as soc and carries no comparable score, so a
-		// same-tier pair involving heating is left untouched instead of always losing.
-		var threshold float64
-		if prio == other.EffectivePriority() {
-			if heating || other.IsHeating() {
-				continue
-			}
-			threshold = band
-		}
-
-		otherScore := other.EffectivePriorityScore(strategy, basis, ref)
-		if otherScore-score > threshold && other.PvChargeStarting() {
+		if other != lp && other.PvChargeStarting() && site.prioritizer.Outranks(other, lp) {
 			reserved += other.EffectiveMaxPower()
 		}
 	}
@@ -1296,34 +1271,6 @@ func (site *Site) reservedPVPower(lp updater) float64 {
 
 	return reserved
 }
-
-// publishPriorityBasis publishes the configured priority basis, or the percent fallback
-// while a loadpoint makes the configured energy basis impossible, and warns whenever the
-// offending loadpoint changes. Called from the site update loop only, hence unlocked.
-func (site *Site) publishPriorityBasis() {
-	configured := site.GetPriorityBasis()
-	basis, _, conflict := site.effectivePriorityScoring()
-
-	// no loadpoint carries a comparable soc: nothing is ranked and the configured basis
-	// applies again as soon as one does, hence report it rather than the idle fallback
-	if conflict == nil {
-		basis = configured
-	}
-	site.publish(keys.EffectivePriorityBasis, basis)
-
-	// keyed on the loadpoint, so a persistent conflict stays quiet but a new offender
-	// re-warns instead of leaving the log blaming one that has since disconnected
-	if conflict != nil && conflict != site.priorityBasisConflict {
-		msg := fmt.Sprintf("priority basis %s not applicable, ranking by %s: loadpoint %s reports soc without a known vehicle capacity",
-			configured, basis, conflict.GetTitle())
-		if hysteresis := site.GetPriorityHysteresis(); hysteresis > 0 {
-			msg += fmt.Sprintf(" - priority hysteresis %d is read in percentage points, not kWh", hysteresis)
-		}
-		site.log.WARN.Println(msg)
-	}
-	site.priorityBasisConflict = conflict
-}
-
 func (site *Site) update(lp updater) {
 	site.log.DEBUG.Println("----")
 
@@ -1340,10 +1287,6 @@ func (site *Site) update(lp updater) {
 
 	// update loadpoints
 	totalChargePower := site.updateLoadpoints(consumption)
-
-	// scored against the same soc snapshot PublishEffectiveValues uses, hence before
-	// updatePower runs lp.Update and writes a new one
-	site.publishPriorityBasis()
 
 	site.updateCircuits()
 	site.applyHemsLimits()

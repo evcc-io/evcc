@@ -3519,10 +3519,6 @@
             "description": "Currently applied priority.",
             "type": "number"
           },
-          "effectivePriorityScore": {
-            "description": "Effective priority including strategy sub-ordering. Integer part is the priority, fraction ranks within it.",
-            "type": "number"
-          },
           "enableDelay": {
             "description": "Delay before charging starts in solar mode, in seconds.",
             "type": "number"
@@ -3803,7 +3799,6 @@
           "effectivePlanTime",
           "effectivePlanStrategy",
           "effectivePriority",
-          "effectivePriorityScore",
           "enableDelay",
           "enableThreshold",
           "enabled",
@@ -5532,10 +5527,6 @@
           "priorityBasis": {
             "$ref": "#/components/schemas/PriorityBasis",
             "description": "Whether the priority strategy compares vehicles by SoC percent or by energy in kWh."
-          },
-          "effectivePriorityBasis": {
-            "$ref": "#/components/schemas/PriorityBasis",
-            "description": "Priority basis actually in use. Falls back to percent when a loadpoint reports SoC without a known vehicle capacity."
           },
           "priorityHysteresis": {
             "description": "Deadband a loadpoint must lead by before it outranks a same-priority peer, in SoC-% or kWh per basis. 0 disables.",

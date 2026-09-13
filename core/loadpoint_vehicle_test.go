@@ -450,6 +450,34 @@ func TestReassignActiveVehicleKeepsSoc(t *testing.T) {
 	assert.Equal(t, 0.0, lp.vehicleSoc, "soc must clear on vehicle change")
 }
 
+func TestVehicleHandoverDoesNotDeadlock(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	vehicle := api.NewMockVehicle(ctrl)
+	expectVehiclePublish(vehicle)
+
+	shared := coordinator.New(util.NewLogger("coordinator"), []api.Vehicle{vehicle})
+	a := NewLoadpoint(util.NewLogger("a"), settings.NewDatabaseSettingsAdapter("a"))
+	b := NewLoadpoint(util.NewLogger("b"), settings.NewDatabaseSettingsAdapter("b"))
+	a.coordinator = coordinator.NewAdapter(a, shared)
+	b.coordinator = coordinator.NewAdapter(b, shared)
+	x, y, z := createChannels(t)
+	attachChannels(a, x, y, z)
+	attachChannels(b, x, y, z)
+
+	a.SetVehicle(vehicle)
+	done := make(chan struct{})
+	go func() {
+		b.SetVehicle(vehicle)
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("vehicle handover deadlocked")
+	}
+}
+
 // TestActiveVehicleChangeTriggersOptimizer ensures the optimizer is re-run when
 // the detected vehicle changes, as the loadpoint profile depends on it.
 func TestActiveVehicleChangeTriggersOptimizer(t *testing.T) {

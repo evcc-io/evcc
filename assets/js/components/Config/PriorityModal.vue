@@ -22,7 +22,7 @@
 				</select>
 			</FormRow>
 
-			<div v-show="strategyActive" class="ms-3">
+			<div v-if="strategyActive" class="ms-3">
 				<FormRow
 					id="priorityBasis"
 					:label="$t('config.priority.labelBasis')"
@@ -143,17 +143,8 @@ export default defineComponent({
 			// basis and hysteresis only affect soc/deficit sub-ordering, not the none strategy
 			return this.values.priorityStrategy !== PRIORITY_STRATEGY.NONE;
 		},
-		effectiveBasis(): PRIORITY_BASIS {
-			const { priorityBasis, effectivePriorityBasis } = store?.state || {};
-			// the site falls back to the percent basis when a loadpoint reports soc without a
-			// known vehicle capacity, but that only describes the saved basis, not an edited one
-			if (effectivePriorityBasis && this.values.priorityBasis === priorityBasis) {
-				return effectivePriorityBasis;
-			}
-			return this.values.priorityBasis;
-		},
 		hysteresisUnit(): string {
-			return this.effectiveBasis === PRIORITY_BASIS.ENERGY ? "kWh" : "%";
+			return this.values.priorityBasis === PRIORITY_BASIS.ENERGY ? "kWh" : "%";
 		},
 	},
 	methods: {
@@ -165,7 +156,7 @@ export default defineComponent({
 				// fall back to the none/percent defaults
 				priorityStrategy: priorityStrategy || PRIORITY_STRATEGY.NONE,
 				priorityBasis: priorityBasis || PRIORITY_BASIS.PERCENT,
-				priorityHysteresis: priorityHysteresis ?? 0,
+				priorityHysteresis: priorityHysteresis ?? 3,
 			};
 			this.serverValues = { ...this.values };
 		},
