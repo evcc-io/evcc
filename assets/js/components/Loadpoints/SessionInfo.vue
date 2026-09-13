@@ -48,6 +48,7 @@ export default defineComponent({
 		sessionCo2PerKWh: { type: Number, default: 0 },
 		sessionPricePerKWh: Number as PropType<number | null>,
 		sessionPrice: Number as PropType<number | null>,
+		tariffPriceLoadpoints: Number as PropType<number | null>,
 		currency: String as PropType<CURRENCY>,
 		sessionSolarPercentage: { type: Number, default: 0 },
 		chargeRemainingDurationInterpolated: { type: Number, default: 0 },
@@ -92,12 +93,12 @@ export default defineComponent({
 					key: "avgPrice" as const,
 					value: this.fmtAvgPrice(this.sessionPricePerKWh ?? 0),
 					valueSm: this.fmtAvgPriceShort(this.sessionPricePerKWh ?? 0),
-					available: this.sessionPricePerKWh != null,
+					available: this.tariffPriceLoadpoints != null,
 				},
 				{
 					key: "price" as const,
 					value: this.priceFormatted,
-					available: this.sessionPrice != null,
+					available: this.tariffPriceLoadpoints != null,
 				},
 				{
 					key: "co2" as const,
