@@ -86,9 +86,7 @@ func TestPriorityGap(t *testing.T) {
 	}
 }
 
-// a vehicle reporting 0% is indistinguishable from an unknown soc and is deliberately read
-// as unknown: it forfeits the sub-ordering boost its gap would earn, scoring like a full
-// vehicle rather than ranking first
+// soc 0 is the unknown sentinel used across core: a vehicle reporting 0% has no comparable gap
 func TestPriorityGapZeroSocReadAsUnknown(t *testing.T) {
 	gap := func(strategy api.PriorityStrategy, soc float64) (float64, bool) {
 		lp := NewLoadpoint(util.NewLogger("foo"), nil)
