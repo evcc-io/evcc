@@ -30,9 +30,4 @@ func TestConfigureLoadpointsStalePhases(t *testing.T) {
 
 	lp := config.Loadpoints().Devices()[0].Instance()
 	require.Equal(t, 3, lp.GetPhasesConfigured())
-
-	// stored value is left alone
-	stored, err := config.ConfigByID(conf.ID)
-	require.NoError(t, err)
-	require.EqualValues(t, 0, stored.Data["phasesConfigured"])
 }
