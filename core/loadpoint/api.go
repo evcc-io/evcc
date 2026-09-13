@@ -141,8 +141,8 @@ type API interface {
 	GetPlanEnergy() (time.Time, float64)
 	// SetPlanEnergy sets the charge plan energy
 	SetPlanEnergy(time.Time, float64) error
-	// UpdatePlan invalidates the committed plan goal and triggers an immediate update
-	UpdatePlan()
+	// ClearPlanLock clears the locked plan goal
+	ClearPlanLock()
 	// RequestUpdate triggers an immediate loadpoint update
 	RequestUpdate()
 	// GetPlanGoal returns the plan goal and if the goal is soc based

@@ -30,13 +30,11 @@ func (lp *Loadpoint) clearPlanLock() {
 	lp.planLocked = PlanLock{}
 }
 
-// UpdatePlan invalidates the committed plan goal and triggers an immediate update
-func (lp *Loadpoint) UpdatePlan() {
+// ClearPlanLock clears the locked plan goal
+func (lp *Loadpoint) ClearPlanLock() {
 	lp.Lock()
+	defer lp.Unlock()
 	lp.clearPlanLock()
-	lp.Unlock()
-
-	lp.requestUpdate()
 }
 
 // lockPlanGoal locks the current plan goal to handle overruns (soc-based plans)
