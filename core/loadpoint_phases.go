@@ -200,14 +200,11 @@ func (lp *Loadpoint) syncChargerPhases() error {
 		chargerPhases = 3
 	}
 
-	// 1p measured does not confirm 1p enabled (1p vehicle on 3p)
-	if phases == 0 && chargerPhases == 3 {
-		lp.SetPhases(chargerPhases)
-		return nil
-	}
-
-	if phases > 0 && chargerPhases > phases {
-		lp.log.WARN.Printf("charger logic error: phases mismatch (got %d measured, expected %d)", chargerPhases, phases)
+	// 1p measured does not confirm 1p enabled (1p vehicle on 3p), hence never seeds unknown phases
+	if chargerPhases > max(phases, 1) {
+		if phases > 0 {
+			lp.log.WARN.Printf("charger logic error: phases mismatch (got %d measured, expected %d)", chargerPhases, phases)
+		}
 		lp.SetPhases(chargerPhases)
 	}
 
