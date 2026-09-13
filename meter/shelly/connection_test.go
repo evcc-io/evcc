@@ -58,7 +58,7 @@ func TestNakedSwitchConnection(t *testing.T) {
 
 	assert.False(t, conn.IsReversed())
 	assert.False(t, conn.HasReturnEnergy())
-	assert.False(t, conn.Generation.(Phases).HasPhases(), "naked switch has no phase readings")
+	assert.False(t, conn.HasPhases(), "naked switch has no phase readings")
 
 	enabled, err := conn.Enabled()
 	require.NoError(t, err)
@@ -111,7 +111,7 @@ func TestPlugConnection(t *testing.T) {
 
 	assert.False(t, conn.IsReversed())
 	assert.False(t, conn.HasReturnEnergy(), "plug has no return register")
-	assert.True(t, conn.Generation.(Phases).HasPhases())
+	assert.True(t, conn.HasPhases())
 
 	u1, _, _, err := conn.Generation.(Phases).Voltages()
 	require.NoError(t, err)

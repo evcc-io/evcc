@@ -21,13 +21,13 @@ type Generation interface {
 	IsThreePhase() bool
 	IsReversed() bool
 	HasReturnEnergy() bool
+	HasPhases() bool
 }
 
 type Phases interface {
 	api.PhaseCurrents
 	api.PhaseVoltages
 	api.PhasePowers
-	HasPhases() bool
 }
 
 // Connection is the Shelly connection
