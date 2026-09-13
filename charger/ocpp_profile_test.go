@@ -237,7 +237,7 @@ func (suite *ocppTestSuite) TestDefaultProfiles() {
 		_, err = charger.Status()
 		require.NoError(t, err)
 		require.Empty(t, h.profiles)
-		require.NoError(t, charger.MaxCurrent(8))
+		require.NoError(t, charger.(api.CurrentController).MaxCurrent(8))
 		require.Len(t, h.profiles, 1)
 		profile := (<-h.profiles).ChargingProfile
 		assert.Equal(t, types.ChargingProfilePurposeTxDefaultProfile, profile.ChargingProfilePurpose)

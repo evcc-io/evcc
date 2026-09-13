@@ -45,11 +45,11 @@ func TestPublishSocAndRange(t *testing.T) {
 		chargeRater:  &Null{},                 // silence nil panics
 		chargeTimer:  &Null{},                 // silence nil panics
 		socEstimator: soc.NewEstimator(log, vehicle),
-		minCurrent:   minA,
-		maxCurrent:   maxA,
-		phases:       1,
 		mode:         api.ModeNow,
 	}
+	currentController(lp).minCurrent = minA
+	currentController(lp).maxCurrent = maxA
+	currentController(lp).phases = 1
 
 	// populate channels
 	x, y, z := createChannels(t)
@@ -160,12 +160,12 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 			chargeMeter: newChargeMeter(&Null{}), // silence nil panics
 			chargeRater: &Null{},                 // silence nil panics
 			chargeTimer: &Null{},                 // silence nil panics
-			minCurrent:  minA,
-			maxCurrent:  maxA,
-			phases:      1,
 			status:      api.StatusC,
 			mode:        api.ModeNow,
 		}
+		currentController(lp).minCurrent = minA
+		currentController(lp).maxCurrent = maxA
+		currentController(lp).phases = 1
 
 		// populate channels
 		x, y, z := createChannels(t)
@@ -214,14 +214,14 @@ func TestPublishSocAndRangeEnergyLimit(t *testing.T) {
 		chargeRater:  &Null{},                 // silence nil panics
 		chargeTimer:  &Null{},                 // silence nil panics
 		socEstimator: soc.NewEstimator(log, vehicle),
-		minCurrent:   minA,
-		maxCurrent:   maxA,
-		phases:       1,
 		status:       api.StatusC,
 		mode:         api.ModeNow,
 		limitEnergy:  2,   // kWh
 		chargePower:  900, // W
 	}
+	currentController(lp).minCurrent = minA
+	currentController(lp).maxCurrent = maxA
+	currentController(lp).phases = 1
 	lp.energyMetrics.totalKWh = 1.1
 
 	x, y, z := createChannels(t)
@@ -363,18 +363,18 @@ func TestDefaultVehicle(t *testing.T) {
 	// non-default vehicle identified
 	lp.setActiveVehicle(vehicle)
 	assert.Equal(t, vehicle, lp.vehicle, "expected vehicle "+title(vehicle))
-	assert.Equal(t, 6.0, lp.effectiveMinCurrent(), "current")
+	assert.Equal(t, 6.0, currentController(lp).effectiveMinCurrent(), "current")
 
 	// non-default vehicle disconnected
 	lp.evVehicleDisconnectHandler()
 	assert.Equal(t, dflt, lp.vehicle, "expected default vehicle")
 	assert.Equal(t, mode, lp.GetMode(), "mode")
-	assert.Equal(t, current, lp.effectiveMinCurrent(), "current")
+	assert.Equal(t, current, currentController(lp).effectiveMinCurrent(), "current")
 
 	// default vehicle disconnected and reconnected
 	lp.evVehicleDisconnectHandler()
 	assert.Equal(t, mode, lp.GetMode(), "mode")
-	assert.Equal(t, current, lp.effectiveMinCurrent(), "current")
+	assert.Equal(t, current, currentController(lp).effectiveMinCurrent(), "current")
 
 	// set non-default vehicle during disconnect - should be default on connect
 	lp.tasks.Clear()
@@ -624,11 +624,11 @@ func TestReconnectVehicle(t *testing.T) {
 				chargeRater: &Null{},                 // silence nil panics
 				chargeTimer: &Null{},                 // silence nil panics
 				wakeUpTimer: NewTimer(),
-				minCurrent:  minA,
-				maxCurrent:  maxA,
-				phases:      1,
 				mode:        api.ModeNow,
 			}
+			currentController(lp).minCurrent = minA
+			currentController(lp).maxCurrent = maxA
+			currentController(lp).phases = 1
 
 			lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle}))
 
