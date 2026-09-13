@@ -111,9 +111,18 @@ func (d batteryDetail) key() string {
 // comparison. Must only be called for devices with a non-empty key.
 func (d batteryDetail) currentAction(site *Site) string {
 	if d.Type == batteryTypeBattery {
-		return site.GetBatteryMode().String()
+		return site.batteryAction()
 	}
 	return loadpointCurrentAction(site.loadpoints[*d.loadpoint])
+}
+
+// batteryAction returns the battery's current mode for suggestion comparison.
+// A battery that was never switched (BatteryUnknown) is in normal operation.
+func (site *Site) batteryAction() string {
+	if mode := site.GetBatteryMode(); mode != api.BatteryUnknown {
+		return mode.String()
+	}
+	return api.BatteryNormal.String()
 }
 
 type batteryResult struct {
@@ -275,6 +284,7 @@ func (site *Site) clearSuggestions() {
 
 	site.Lock()
 	site.suggestionActions = nil
+	site.lastOptimizerSolve = nil
 	site.Unlock()
 }
 
@@ -647,14 +657,74 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		return errors.New("optimizer result expired")
 	}
 
-	site.applyOptimizerResult(req, details, *resp.JSON200, schedule, now)
+	site.applyOptimizerResult(req, details, *resp.JSON200, schedule, now, now)
 
 	return nil
 }
 
+// optimizerSolve caches a solve so the control cycle can reapply it to a newer slot
+type optimizerSolve struct {
+	req       optimizer.OptimizationInput
+	details   requestDetails
+	res       optimizer.OptimizationResult
+	schedule  optimizerSchedule
+	slot      int       // last applied slot
+	completed time.Time // solve completion, not last reapply
+}
+
+// setLastOptimizerSolve remembers a solve's inputs for reapplySuggestions
+func (site *Site) setLastOptimizerSolve(solve *optimizerSolve) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.lastOptimizerSolve = solve
+}
+
+// reapplySuggestions re-derives the last solve's suggestions for the slot covering now
+// without a new solve. TryLock so it never overwrites a fresher concurrent solve.
+func (site *Site) reapplySuggestions(now time.Time) {
+	if !site.optimizerMu.TryLock() {
+		return
+	}
+	defer site.optimizerMu.Unlock()
+
+	site.RLock()
+	last := site.lastOptimizerSolve
+	site.RUnlock()
+
+	if last == nil {
+		return
+	}
+
+	slot := last.schedule.activeSlot(now)
+	if slot == last.slot {
+		return
+	}
+
+	// horizon passed or no completed solve for two slots: don't march a dead plan forward
+	if slot < 0 || now.Sub(last.completed) > 2*tariff.SlotDuration {
+		site.log.DEBUG.Println("optimizer: cached result expired")
+		site.clearSuggestions()
+		return
+	}
+
+	// disconnected loadpoints are excluded from a fresh solve; don't advise an empty charger
+	for _, d := range last.details.BatteryDetails {
+		if d.loadpoint == nil {
+			continue
+		}
+		if lp := site.loadpoints[*d.loadpoint]; lp == nil || !lp.connected() {
+			site.setLastOptimizerSolve(nil)
+			return
+		}
+	}
+
+	site.applyOptimizerResult(last.req, last.details, last.res, last.schedule, now, last.completed)
+}
+
 // applyOptimizerResult maps the optimizer response onto suggestions, battery
 // forecast and notifications
-func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details requestDetails, res optimizer.OptimizationResult, schedule optimizerSchedule, now time.Time) {
+func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details requestDetails, res optimizer.OptimizationResult, schedule optimizerSchedule, now time.Time, completed time.Time) {
 	slot := schedule.activeSlot(now)
 	slotHours := schedule.duration(slot).Hours()
 	gridImporting := slot >= 0 && slot < len(res.GridImport) && res.GridImport[slot] > 0
@@ -702,6 +772,8 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 	for _, ev := range site.diffSuggestions(site.pendingSuggestions(details.BatteryDetails)) {
 		site.pushEvent(ev)
 	}
+
+	site.setLastOptimizerSolve(&optimizerSolve{req: req, details: details, res: res, schedule: schedule, slot: slot, completed: completed})
 }
 
 func (site *Site) addBatteryForecastTotals(req []optimizer.BatteryConfig, resp []optimizer.BatteryResult, schedule optimizerSchedule, now time.Time) *types.BatteryForecast {
