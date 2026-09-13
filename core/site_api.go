@@ -444,7 +444,7 @@ func (site *Site) SetProfilePercentile(percentile *float64) error {
 	site.publish(keys.ProfilePercentile, percentile)
 
 	// re-run the optimizer so the new profile takes effect immediately
-	go site.optimizerUpdateAsync(0)
+	go site.optimizerUpdateAsync(true)
 
 	return nil
 }
