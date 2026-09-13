@@ -49,6 +49,23 @@ func (c *CurrentController) resetPhaseTimer() {
 	c.lp.publishTimer(phaseTimer, 0, timerInactive)
 }
 
+// phaseTimerElapsed starts or continues the phase switch timer for the given action
+// and returns true once delay has elapsed. Scaling is immediate while not charging.
+func (c *CurrentController) phaseTimerElapsed(delay time.Duration, action string) bool {
+	if !c.lp.charging() { // scale immediately if not charging
+		c.phaseTimer = elapsed
+	}
+
+	if c.phaseTimer.IsZero() {
+		c.lp.log.DEBUG.Printf("start phase %s timer", action)
+		c.phaseTimer = c.lp.clock.Now()
+	}
+
+	c.lp.publishTimer(phaseTimer, delay, action)
+
+	return c.lp.clock.Since(c.phaseTimer) >= delay
+}
+
 // ResetMeasuredPhases resets measured phases to unknown on vehicle disconnect, phase switch or phase api call
 func (c *CurrentController) ResetMeasuredPhases() {
 	c.lp.Lock()
@@ -90,7 +107,8 @@ func (c *CurrentController) activePhases() int {
 
 // minActivePhases returns the minimum number of active phases for the loadpoint.
 func (c *CurrentController) minActivePhases() int {
-	if c.hasPhaseSwitching() || c.phasesConfigured == 1 {
+	// configured phases are both minimum and maximum, only automatic scales down to 1p
+	if c.hasPhaseSwitching() && c.phasesConfigured == 0 {
 		return 1
 	}
 
@@ -153,7 +171,7 @@ func (c *CurrentController) GetMeasuredPhases() int {
 
 // phaseSwitchCompleted returns true if phase switch command should be already processed by the charger (so we can try to sync charger and loadpoint and are able to measure currents)
 func (c *CurrentController) phaseSwitchCompleted() bool {
-	return time.Since(c.phasesSwitched) > phaseSwitchDuration
+	return c.lp.clock.Since(c.phasesSwitched) > phaseSwitchDuration
 }
 
 // syncChargerPhases synchronizes the assumed phase state with the charger's actual state.

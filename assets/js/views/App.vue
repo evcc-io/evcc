@@ -105,6 +105,7 @@ export default defineComponent({
 		aboutModalProps() {
 			return {
 				installed: window.evcc?.version,
+				commit: window.evcc?.commit,
 				customLogo: this.custom.logo,
 				customBrand: this.custom.brand,
 				customWebsite: this.custom.website,

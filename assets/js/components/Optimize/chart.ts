@@ -27,7 +27,7 @@ export function isMidnight(time?: number): boolean {
 }
 
 // category x axis over slot times, labels at full hours every 4h (6h on mobile),
-// day boundaries as split line with the weekday shown at 00:00
+// weekday shown at 00:00
 export function slotXAxis(times: number[], weekdayShort: (d: Date) => string) {
   const step = window.innerWidth < 576 ? 6 : 4;
   return {
@@ -35,12 +35,7 @@ export function slotXAxis(times: number[], weekdayShort: (d: Date) => string) {
     data: times.map(String),
     axisLine: { show: false },
     axisTick: { show: false },
-    splitLine: {
-      show: true,
-      // split lines sit at the left edge of their slot
-      interval: (index: number) => index > 0 && isMidnight(times[index]),
-      lineStyle: { color: colors.muted || "", type: "solid" },
-    },
+    splitLine: { show: false },
     axisLabel: {
       ...xAxisLabelStyle(),
       interval: 0,
@@ -65,4 +60,38 @@ export function formatSlotRange(times: number[], dt: number[], index: number): s
 // slot energy (Wh) to average power (kW)
 export function whToKW(wh: number, dtSeconds: number): number {
   return wh / (dtSeconds / 3600) / 1000;
+}
+
+// hidden value axis aligned with the category bands (slot i spans i-0.5..i+0.5)
+export function dayBoundaryAxis(times: number[]) {
+  return {
+    type: "value",
+    min: -0.5,
+    max: times.length - 0.5,
+    show: false,
+    axisPointer: { show: false },
+  };
+}
+
+// day boundary lines. A category split line would sit in the gap between bars
+// and show as a sliver; this draws them just inside the bar's left edge, behind the bars.
+export function dayBoundarySeries(times: number[]) {
+  const data = times
+    .map((t, i) => ({ t, i }))
+    .filter(({ t, i }) => i > 0 && isMidnight(t))
+    .map(({ i }) => ({ xAxis: i - 0.15 }));
+  return {
+    type: "line",
+    xAxisIndex: 1,
+    data: [] as number[],
+    silent: true,
+    markLine: {
+      silent: true,
+      z: 1,
+      symbol: "none",
+      label: { show: false },
+      lineStyle: { color: colors.muted || "", type: "solid" },
+      data,
+    },
+  };
 }

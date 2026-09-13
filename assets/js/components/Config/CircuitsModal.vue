@@ -3,7 +3,7 @@
 		name="circuits"
 		:title="$t('config.circuits.title')"
 		:description="$t('config.circuits.description')"
-		docs="/docs/features/loadmanagement"
+		docs="/features/loadmanagement"
 		:defaultYaml="defaultYaml"
 		removeKey="circuits"
 		endpoint="/config/circuits"

@@ -50,6 +50,33 @@ func TestSyncCharger(t *testing.T) {
 	}
 }
 
+func TestSyncChargerDuringPhaseSwitch(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	charger := api.NewMockCharger(ctrl)
+	charger.EXPECT().Status().Return(api.StatusB, nil)
+	charger.EXPECT().Enabled().Return(false, nil)
+	charger.EXPECT().Enable(true).Return(nil)
+
+	clock := clock.NewMock()
+	lp := &Loadpoint{
+		log:     util.NewLogger("foo"),
+		clock:   clock,
+		charger: charger,
+		status:  api.StatusC,
+	}
+	currentController(lp).enabled = true
+	currentController(lp).phasesSwitched = clock.Now()
+
+	changes, err := lp.getStatusChanges()
+	require.NoError(t, err)
+	require.Empty(t, changes)
+	require.Equal(t, api.StatusC, lp.GetStatus())
+
+	_, err = currentController(lp).syncCharger()
+	require.NoError(t, err)
+	assert.True(t, currentController(lp).enabled)
+}
+
 func TestSyncChargerCurrentsByGetter(t *testing.T) {
 	tc := []struct {
 		lpCurrent, actualCurrent, outCurrent float64

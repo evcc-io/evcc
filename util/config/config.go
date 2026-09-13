@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/util/templates"
 	"gorm.io/gorm"
 )

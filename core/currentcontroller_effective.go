@@ -178,7 +178,7 @@ func (c *CurrentController) phaseSwitchGapPower() float64 {
 
 	// max power actually achievable on the active phases
 	activeMaxPower := min(c.lp.EffectiveMaxPower(), c.activeMaxPower())
-	return max(0, c.lp.EffectiveMinPower()*float64(maxPhases)-activeMaxPower)
+	return max(0, currentToPower(c.effectiveMinCurrent(), maxPhases)-activeMaxPower)
 }
 
 // effectivePower returns the currently effective charging power

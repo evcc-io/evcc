@@ -1,48 +1,58 @@
 package nissan
 
 import (
+	"cmp"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
+
+	"golang.org/x/oauth2"
 )
 
-type Auth struct {
-	AuthID    string         `json:"authId"`
-	Template  string         `json:"template"`
-	Stage     string         `json:"stage"`
-	Header    string         `json:"header"`
-	Callbacks []AuthCallback `json:"callbacks"`
-}
-
-type AuthCallback struct {
-	Type   string              `json:"type"`
-	Output []AuthCallbackValue `json:"output"`
-	Input  []AuthCallbackValue `json:"input"`
-}
-
-type AuthCallbackValue struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
-
+// Token is the Kamereon token api response
 type Token struct {
-	TokenID    string `json:"tokenId"`
-	SuccessURL string `json:"successUrl"`
-	Realm      string `json:"realm"`
-	Code       int    `json:"code"`    // error response
-	Reason     string `json:"reason"`  // error response
-	Message    string `json:"message"` // error response
+	AccessToken      string `json:"access_token"`
+	RefreshToken     string `json:"refresh_token"`
+	TokenType        string `json:"token_type"`
+	ExpiresIn        int    `json:"expires_in"`
+	Error            string `json:"error"`
+	ErrorDescription string `json:"error_description"`
 }
 
-func (t *Token) SessionExpired() bool {
-	return strings.EqualFold(t.Message, "Session has timed out")
-}
-
-func (t *Token) Error() error {
-	if t.Code == 0 {
+// Err returns the api error if the response carries one
+func (t *Token) Err() error {
+	switch {
+	case t.Error == "":
 		return nil
+	case t.ErrorDescription == "":
+		return errors.New(t.Error)
+	default:
+		return fmt.Errorf("%s: %s", t.Error, t.ErrorDescription)
 	}
-	return fmt.Errorf("%s: %s", t.Reason, t.Message)
+}
+
+// Token converts the api response into an oauth2 token
+func (t *Token) Token() (*oauth2.Token, error) {
+	if err := t.Err(); err != nil {
+		return nil, err
+	}
+
+	if t.AccessToken == "" {
+		return nil, errors.New("missing access token")
+	}
+
+	expires := t.ExpiresIn
+	if expires <= 0 {
+		expires = 3600
+	}
+
+	return &oauth2.Token{
+		AccessToken:  t.AccessToken,
+		RefreshToken: t.RefreshToken,
+		TokenType:    cmp.Or(t.TokenType, "Bearer"),
+		Expiry:       time.Now().Add(time.Duration(expires) * time.Second),
+	}, nil
 }
 
 type Vehicles struct {

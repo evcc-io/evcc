@@ -11,7 +11,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
-	"github.com/evcc-io/evcc/core/wrapper"
 	"github.com/evcc-io/evcc/util/modbus"
 )
 
@@ -30,6 +29,7 @@ type CurrentController struct {
 	maxCurrent     float64   // Max allowed current. Physically ensured by the charger
 	chargeCurrents []float64 // Phase currents
 	surplus        *float64  // Surplus power for phase reconciliation, valid for current cycle only
+	mayDisable     bool      // insufficient surplus may stop charging via the pv disable timer
 
 	phasesConfigured int       // Charger configured phase mode 0/1/3
 	measuredPhases   int       // Charger physically measured phases
@@ -79,7 +79,7 @@ func (c *CurrentController) SetPower(power float64) error {
 		c.surplus = nil
 
 		if c.hasPhaseSwitching() && c.phaseSwitchCompleted() {
-			c.pvScalePhases(surplus, c.effectiveMinCurrent(), c.effectiveMaxCurrent())
+			c.pvScalePhases(surplus, c.effectiveMinCurrent(), c.effectiveMaxCurrent(), c.mayDisable)
 		}
 	}
 
@@ -154,7 +154,7 @@ func (c *CurrentController) updateOfferedCurrent(current float64) {
 	}
 	c.lp.publish(keys.OfferedCurrent, published)
 
-	if mt, ok := c.lp.chargeMeter.(*wrapper.ChargeMeter); ok {
+	if c.lp.chargeMeter != nil && c.lp.chargeMeter.fake != nil {
 		power := current * float64(c.ActivePhases()) * Voltage
 
 		// if disabled we cannot be charging
@@ -162,7 +162,7 @@ func (c *CurrentController) updateOfferedCurrent(current float64) {
 			power = 0
 		}
 
-		mt.SetPower(power)
+		c.lp.chargeMeter.fake.SetPower(power)
 	}
 }
 
@@ -223,10 +223,12 @@ func (c *CurrentController) setMinCurrent() error {
 	return c.setLimit(c.effectiveMinCurrent())
 }
 
-// Prepare arms the controller's phase reconciliation with the pv surplus
-// for the upcoming SetPower call. The value is consumed once.
-func (c *CurrentController) Prepare(surplus float64) {
+// Prepare arms the controller's phase reconciliation with the pv surplus for the
+// upcoming SetPower call. The value is consumed once. mayDisable indicates that
+// insufficient surplus can stop charging via the pv disable timer.
+func (c *CurrentController) Prepare(surplus float64, mayDisable bool) {
 	c.surplus = &surplus
+	c.mayDisable = mayDisable
 }
 
 // resetSurplus discards a stale surplus from an aborted cycle
@@ -253,7 +255,11 @@ func (c *CurrentController) setLimit(current float64) error {
 		powerLimit := c.lp.circuit.ValidatePower(c.lp.chargePower, currentToPower(current, activePhases))
 		currentLimitViaPower := powerToCurrent(powerLimit, activePhases)
 
-		current = c.roundedCurrent(min(currentLimit, currentLimitViaPower))
+		limited := c.roundedCurrent(min(currentLimit, currentLimitViaPower))
+		if minCurrent := c.effectiveMinCurrent(); limited < minCurrent && current >= minCurrent {
+			c.lp.log.DEBUG.Printf("circuit limit %.3gA below min current %.3gA", limited, minCurrent)
+		}
+		current = limited
 	}
 
 	// https://github.com/evcc-io/evcc/issues/16309
@@ -366,7 +372,7 @@ func (c *CurrentController) syncCharger() (bool, error) {
 	}
 
 	// #1: check charger logic, fix charger state if necessary (for chargers that start charging while being disabled)
-	if !enabled && c.lp.charging() {
+	if !enabled && c.lp.charging() && c.phaseSwitchCompleted() {
 		c.lp.log.WARN.Println("charger logic error: disabled but charging")
 
 		// treat as enabled when charging for further validations

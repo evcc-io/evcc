@@ -22,6 +22,6 @@ render: |
   type: openwb
   broker: {{ .host }}
   id: {{ .connector }} # loadpoint id
-  {{- if ne .phases1p3p "false" }}
+  {{- if .phases1p3p }}
   phases1p3p: true
   {{- end }}

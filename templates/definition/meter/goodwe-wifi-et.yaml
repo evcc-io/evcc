@@ -224,8 +224,5 @@ render: |
               type: writemultiple
               encoding: uint16
             delay: {{ .delay }}
-    default:
-      source: error
-      error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

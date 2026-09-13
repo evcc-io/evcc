@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
@@ -60,7 +61,8 @@ func TestPhaseSwitchInterruption(t *testing.T) {
 		timer.EXPECT().ConnectionDuration().Return(tc.connection, nil)
 
 		lp := &Loadpoint{
-			log: util.NewLogger("foo"),
+			log:   util.NewLogger("foo"),
+			clock: clock.New(),
 			charger: struct {
 				*api.MockCharger
 				*api.MockConnectionTimer

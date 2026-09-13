@@ -5,7 +5,13 @@ import (
 	"strings"
 )
 
-const ResponseOK = 1000
+const (
+	ResponseOK = 1000
+
+	// ResponseTokenInvalid is returned when the backend rejects the token before
+	// its nominal expiry, e.g. after a server-side session reset.
+	ResponseTokenInvalid = 1402
+)
 
 type Int int
 

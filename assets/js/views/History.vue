@@ -106,7 +106,12 @@ import GroupChart, { type HistorySeries, stepAlpha } from "../components/History
 import type { Legend } from "../components/Sessions/types";
 import type { DeviceColors } from "@/types/evcc";
 import { PERIODS } from "../components/Sessions/types";
-import { GROUP_ORDER, groupColor, hasColorPicker } from "../components/History/groups";
+import {
+	GROUP_ORDER,
+	groupColor,
+	hasColorPicker,
+	isBidirectional,
+} from "../components/History/groups";
 import colors, { resolveColors, deviceColorMap, darken, batteryColor } from "../colors";
 import LegendList from "../components/Sessions/LegendList.vue";
 import DownloadButton from "../components/Helper/DownloadButton.vue";
@@ -251,11 +256,15 @@ export default defineComponent({
 				return !!list?.some((s) => s.data.length > 0);
 			});
 		},
-		// Consumer group: append virtual "Other consumers" = home.net − sum(consumers).
+		// Consumer group: append virtual "Other consumers" = home − sum(consumers).
 		// paletteIndex pins color across period navigation.
 		displaySeries(): (group: string) => HistorySeries[] {
-			const hasEnergy = (s: HistorySeries) =>
-				s.data.some((slot) => slot.energy !== 0 || slot.returnEnergy !== 0);
+			const hasEnergy = (s: HistorySeries) => {
+				const bidi = isBidirectional(s.group, [s]);
+				return s.data.some(
+					(slot) => slot.energy !== 0 || (bidi && slot.returnEnergy !== 0)
+				);
+			};
 			return (group: string): HistorySeries[] => {
 				// Loadpoint and additional meters stack distinct entities without a
 				// home-derived "Others" series.
@@ -271,13 +280,12 @@ export default defineComponent({
 					.filter(hasEnergy);
 				if (!home) return active;
 				const totals = new Map<string, number>();
-				// Net per slot is computed from all consumers (incl. inactive ones), so
-				// dropping inactive entries from the display doesn't shift the
+				// Per-slot sum uses all consumers (incl. inactive ones), so dropping
+				// inactive entries from the display doesn't shift the
 				// "Other consumers" delta.
 				for (const s of consumers) {
 					for (const slot of s.data) {
-						const net = slot.energy - slot.returnEnergy;
-						totals.set(slot.start, (totals.get(slot.start) || 0) + net);
+						totals.set(slot.start, (totals.get(slot.start) || 0) + slot.energy);
 					}
 				}
 				const other: HistorySeries = {
@@ -286,8 +294,7 @@ export default defineComponent({
 					virtual: true,
 					paletteIndex: consumers.length,
 					data: home.data.map((slot) => {
-						const homeNet = slot.energy - slot.returnEnergy;
-						const v = Math.max(0, homeNet - (totals.get(slot.start) || 0));
+						const v = Math.max(0, slot.energy - (totals.get(slot.start) || 0));
 						return { start: slot.start, end: slot.end, energy: v, returnEnergy: 0 };
 					}),
 				};
@@ -298,17 +305,15 @@ export default defineComponent({
 		hasForecast(): boolean {
 			const list = this.seriesByGroup["forecast"];
 			if (!list?.length) return false;
-			return list.some((s) =>
-				s.data.some((slot) => slot.energy !== 0 || slot.returnEnergy !== 0)
-			);
+			return list.some((s) => s.data.some((slot) => slot.energy !== 0));
 		},
 		forecastTotalLabel(): string {
 			const list = this.seriesByGroup["forecast"] || [];
 			let sum = 0;
 			for (const s of list) {
-				for (const slot of s.data) sum += slot.energy - slot.returnEnergy;
+				for (const slot of s.data) sum += slot.energy;
 			}
-			return this.fmtWh(Math.abs(sum) * 1000, POWER_UNIT.AUTO);
+			return this.fmtWh(sum * 1000, POWER_UNIT.AUTO);
 		},
 	},
 	watch: {
@@ -409,17 +414,31 @@ export default defineComponent({
 				if (group === "battery") return batteryColor(s.paletteIndex ?? i);
 				return darken(baseColor, stepAlpha(i, Math.max(n, 1)));
 			};
+			// Bidirectional groups show both directions for every entity so that
+			// a single-direction entity isn't mistaken for the other direction.
+			const split = isBidirectional(group, list);
+
 			return list.map((s, i) => {
-				let sum = 0;
-				for (const slot of s.data) sum += slot.energy - slot.returnEnergy;
-				const watts = Math.abs(sum) * 1000;
+				let sumEnergy = 0;
+				let sumReturnEnergy = 0;
+				for (const slot of s.data) {
+					sumEnergy += slot.energy;
+					sumReturnEnergy += slot.returnEnergy;
+				}
 				return {
 					// Use stable paletteIndex as the focus identifier so that the
 					// selected entity keeps its identity across period navigations.
 					entityIndex: s.paletteIndex ?? i,
 					label: s.title,
 					color: colorFor(i, s),
-					value: this.fmtWh(watts, POWER_UNIT.AUTO),
+					value: this.directionSumLabel(
+						s.group,
+						sumEnergy,
+						sumReturnEnergy,
+						POWER_UNIT.AUTO,
+						false,
+						split
+					),
 					id: colorPicker && !s.virtual ? s.title : undefined,
 				};
 			});
@@ -452,18 +471,31 @@ export default defineComponent({
 					sumReturnEnergy += slot.returnEnergy;
 				}
 			}
-			const fmt = (v: number) => this.fmtWh(v * 1000, POWER_UNIT.KW);
-			const directionKey = `main.history.direction.${group}`;
-			const energyKey = `${directionKey}.energy`;
-			const returnEnergyKey = `${directionKey}.returnEnergy`;
-			const energyLabel = this.$t(energyKey);
-			const returnEnergyLabel = this.$t(returnEnergyKey);
-			const hasDirectionLabels =
-				energyLabel !== energyKey && returnEnergyLabel !== returnEnergyKey;
-			if (sumEnergy > 0 && sumReturnEnergy > 0 && hasDirectionLabels) {
-				return `${fmt(sumEnergy)} ${energyLabel} · ${fmt(sumReturnEnergy)} ${returnEnergyLabel}`;
+			return this.directionSumLabel(
+				group,
+				sumEnergy,
+				sumReturnEnergy,
+				POWER_UNIT.KW,
+				true,
+				isBidirectional(group, list)
+			);
+		},
+		// keep directions apart, bidirectional sums net out to almost zero over longer periods
+		directionSumLabel(
+			group: string,
+			sumEnergy: number,
+			sumReturnEnergy: number,
+			unit: POWER_UNIT,
+			withLabels = true,
+			split = false
+		): string {
+			const fmt = (v: number) => this.fmtWh(v * 1000, unit);
+			if (split) {
+				const suffix = (key: string) =>
+					withLabels ? ` ${this.$t(`main.history.direction.${group}.${key}`)}` : "";
+				return `${fmt(sumEnergy)}${suffix("energy")} · ${fmt(sumReturnEnergy)}${suffix("returnEnergy")}`;
 			}
-			return fmt(Math.abs(sumEnergy - sumReturnEnergy) || sumEnergy + sumReturnEnergy);
+			return fmt(sumEnergy);
 		},
 		async fetchData() {
 			this.loading = true;

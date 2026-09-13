@@ -62,7 +62,7 @@ render: |
   power:
     source: const
     value: {{ .power }}
-  {{ if eq .phases1p3p "true" }}
+  {{ if .phases1p3p }}
   phases1p3p:
     source: js
     script: |

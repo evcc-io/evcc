@@ -54,38 +54,75 @@ func (lp *Loadpoint) boostPower(ctrl *CurrentController, env Envelope, batteryPo
 	return res
 }
 
-// pvTargetPower calculates the target charging power for PV mode (0 disables)
-func (lp *Loadpoint) pvTargetPower(ctrl *CurrentController, mode api.ChargeMode, sitePower, batteryPower float64, batteryBuffered, batteryStart bool) float64 {
+// customThresholds indicates manually configured enable/disable thresholds that take precedence over the solar share
+func (lp *Loadpoint) customThresholds() bool {
+	return lp.Enable.Threshold != 0 || lp.Disable.Threshold != 0
+}
+
+// pvDisableThreshold returns the pv disable switch point, derived from the solar share unless
+// custom thresholds are configured. minPower is the min power charging is expected to continue at.
+func (lp *Loadpoint) pvDisableThreshold(minPower float64) float64 {
+	if lp.customThresholds() {
+		return lp.Disable.Threshold
+	}
+	// allow grid import for the non-solar part of the min power
+	return (1 - lp.GetSolarShare()) * minPower
+}
+
+// pvEnableDecision returns the pv enable switch point and whether charging should start, derived
+// from the solar share unless custom thresholds are configured. availablePower is unclamped.
+func (lp *Loadpoint) pvEnableDecision(availablePower, minPower, sitePower float64) (float64, bool) {
+	if !lp.customThresholds() {
+		// require the solar share of the min power to come from surplus
+		share := lp.GetSolarShare()
+		return -share * minPower, availablePower >= share*minPower
+	}
+
+	threshold := lp.Enable.Threshold
+	return threshold, (threshold == 0 && availablePower >= minPower) ||
+		(threshold != 0 && sitePower <= threshold)
+}
+
+// pvTargetPower calculates the target charging power for smart mode (0 disables)
+func (lp *Loadpoint) pvTargetPower(ctrl *CurrentController, sitePower, batteryPower float64, batteryBuffered, batteryStart bool) float64 {
 	// snapshot the controller's capabilities once per cycle
 	env := ctrl.Envelope()
 	minPower := env.ActiveMin
 	maxPower := env.ActiveMax
 	reachableMinPower := env.ReachableMin
+	alwaysCharge := lp.GetAlwaysCharge().Active()
 
 	// push demand to drain battery
 	sitePower -= lp.boostPower(ctrl, env, batteryPower)
 
+	// always charge and the battery conditions hold charging at min power, no disable can follow
+	battery := batteryStart || batteryBuffered && lp.charging() || lp.GetBatteryBoost() == boostContinue
+	mayDisable := !alwaysCharge && !battery
+
 	// provide surplus for phase reconciliation by the controller
-	ctrl.Prepare(sitePower)
+	ctrl.Prepare(sitePower, mayDisable)
 
 	// calculate target charge power from delta power and actual power
-	targetPower := max(env.Effective-sitePower, 0)
+	availablePower := env.Effective - sitePower
+	targetPower := max(availablePower, 0)
 
-	// in MinPV mode or under special conditions return at least min power
-	if battery := batteryStart || batteryBuffered && lp.charging() || lp.GetBatteryBoost() == boostContinue; (mode == api.ModeMinPV || battery) && targetPower < minPower {
+	// with always charge or under special conditions return at least min power
+	if (alwaysCharge || battery) && targetPower < minPower {
 		lp.log.DEBUG.Printf("pv charge power: min %.0fW > %.0fW (%.0fW @ %dp, battery: %t)", minPower, targetPower, sitePower, env.ActivePhases, battery)
 		return reachableMinPower
 	}
 
 	lp.log.DEBUG.Printf("pv charge power: %.0fW = %.0fW - %.0fW (@ %dp)", targetPower, env.Effective, sitePower, env.ActivePhases)
 
-	if mode == api.ModePV && env.Enabled && targetPower < minPower {
+	if !alwaysCharge && env.Enabled && targetPower < minPower {
 		projectedSitePower := sitePower
+		projectedMinPower := minPower
 		// read live: boostPower may have expired the phase timer after the snapshot
 		if ctrl.phaseScalePending() {
 			// calculate site power after a phase switch to the minimum reachable phases
 			// notes: phase timer can only be active if lp current is already at min current
 			projectedSitePower -= minPower - reachableMinPower
+			projectedMinPower = reachableMinPower
 		}
 		// a continuous device consuming less than its min power demand keeps the
 		// remainder out of site power, hiding insufficient surplus until it ramps
@@ -93,11 +130,14 @@ func (lp *Loadpoint) pvTargetPower(ctrl *CurrentController, mode api.ChargeMode,
 		if lp.chargerHasFeature(api.Continuous) {
 			projectedSitePower += max(0, env.EffectiveMin-lp.chargePower)
 		}
+
+		disableThreshold := lp.pvDisableThreshold(projectedMinPower)
+
 		// kick off disable sequence, unless climater keep-alive is holding
 		// charging at min power — otherwise the "pausing soon" badge would
 		// flash on/off forever while climater is active (issue #29834).
-		if projectedSitePower >= lp.Disable.Threshold && !lp.vehicleClimateActive() {
-			lp.log.DEBUG.Printf("projected site power %.0fW >= %.0fW disable threshold", projectedSitePower, lp.Disable.Threshold)
+		if projectedSitePower >= disableThreshold && !lp.vehicleClimateActive() {
+			lp.log.DEBUG.Printf("projected site power %.0fW >= %.0fW disable threshold", projectedSitePower, disableThreshold)
 
 			if lp.pvTimer.IsZero() {
 				lp.log.DEBUG.Printf("pv disable timer start: %v", lp.GetDisableDelay())
@@ -129,11 +169,12 @@ func (lp *Loadpoint) pvTargetPower(ctrl *CurrentController, mode api.ChargeMode,
 		return reachableMinPower
 	}
 
-	if mode == api.ModePV && !env.Enabled {
+	if !alwaysCharge && !env.Enabled {
+		enableThreshold, shouldEnable := lp.pvEnableDecision(availablePower, reachableMinPower, sitePower)
+
 		// kick off enable sequence
-		if (lp.Enable.Threshold == 0 && targetPower >= reachableMinPower) ||
-			(lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold) {
-			lp.log.DEBUG.Printf("site power %.0fW <= %.0fW enable threshold", sitePower, lp.Enable.Threshold)
+		if shouldEnable {
+			lp.log.DEBUG.Printf("site power %.0fW <= %.0fW enable threshold", sitePower, enableThreshold)
 
 			if lp.pvTimer.IsZero() {
 				lp.log.DEBUG.Printf("pv enable timer start: %v", lp.GetEnableDelay())

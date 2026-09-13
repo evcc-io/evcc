@@ -3,7 +3,7 @@ package settings
 import (
 	"time"
 
-	db "github.com/evcc-io/evcc/server/db/settings"
+	db "github.com/evcc-io/evcc/db/settings"
 )
 
 var _ Settings = (*dbSettings)(nil)

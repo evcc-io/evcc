@@ -26,6 +26,8 @@ import (
 	"github.com/evcc-io/evcc/core/metrics"
 	coresettings "github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/curtailer"
+	"github.com/evcc-io/evcc/db"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/hems"
 	hemsapi "github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/hems/shm"
@@ -35,8 +37,6 @@ import (
 	"github.com/evcc-io/evcc/plugin/javascript"
 	"github.com/evcc-io/evcc/plugin/mqtt"
 	"github.com/evcc-io/evcc/server"
-	"github.com/evcc-io/evcc/server/db"
-	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/modbus"
 	"github.com/evcc-io/evcc/server/providerauth"
@@ -545,7 +545,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 			}
 
 			if _, ok := instance.OnIdentified().GetMode(); ok {
-				log.WARN.Printf("vehicle '%s': default charge 'mode' is deprecated, please configure via UI (charging plan > arrival)", cc.Name)
+				log.WARN.Printf("vehicle '%s': default charge 'mode' is deprecated, please configure via UI (more > vehicles)", cc.Name)
 			}
 
 			mu.Lock()
@@ -1529,6 +1529,13 @@ func configureLoadpoints(conf globalconfig.All) error {
 		}
 
 		if instance != nil {
+			// stored phase mode may no longer fit the charger, e.g. after it lost phase switching;
+			// fall back to the loadpoint default instead of failing boot
+			if e := instance.SetPhasesConfigured(dynamic.PhasesConfigured); e != nil {
+				log.WARN.Printf("%s: ignoring stored phases %d: %v", cc.Name, dynamic.PhasesConfigured, e)
+				dynamic.PhasesConfigured = instance.GetPhasesConfigured()
+			}
+
 			// ignore dynamic config in case of startup errors that will leave instance empty
 			if e := dynamic.Apply(instance); e != nil && err == nil {
 				err = &DeviceError{cc.Name, e}
@@ -1544,7 +1551,7 @@ func configureLoadpoints(conf globalconfig.All) error {
 }
 
 // configureAuth handles routing for devices. For now only api.AuthProvider related routes
-func configureAuth(router *mux.Router, paramC chan<- util.Param) {
+func configureAuth(router *mux.Router, authMiddleware mux.MiddlewareFunc, paramC chan<- util.Param) {
 	auth := router.PathPrefix("/providerauth").Subrouter()
 	auth.Use(handlers.CompressHandler)
 	auth.Use(handlers.CORS(
@@ -1554,8 +1561,8 @@ func configureAuth(router *mux.Router, paramC chan<- util.Param) {
 	// backwards-compatible revert of https://github.com/evcc-io/evcc/pull/21266
 	router.PathPrefix("/oauth").Handler(auth)
 
-	// wire the handler
-	providerauth.Setup(auth, paramC)
+	// wire the handler; login/logout require an authenticated session
+	providerauth.Setup(auth, paramC, authMiddleware)
 }
 
 // isExperimental returns if experimental features are enabled

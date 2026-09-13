@@ -3,7 +3,7 @@
 		name="tariffsLegacy"
 		:title="`${$t('config.tariff.title')} (${$t('config.general.legacy')})`"
 		:description="$t('config.tariff.description')"
-		docs="/docs/tariffs"
+		docs="/tariffs"
 		:defaultYaml="defaultYaml"
 		removeKey="tariffs"
 		endpoint="/config/tariffs"

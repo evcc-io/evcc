@@ -75,6 +75,10 @@ const CURRENCY_SYMBOLS: Record<CURRENCY, string> = {
   TRY: "₺",
   MYR: "RM",
   THB: "฿",
+  BYN: "Br",
+  UAH: "₴",
+  RUB: "₽",
+  KZT: "₸",
 };
 
 // list of currencies where energy price should be displayed in subunits (factor 100)
@@ -94,6 +98,7 @@ const ENERGY_PRICE_IN_SUBUNIT: Partial<Record<CURRENCY, string>> = {
   SEK: "öre", // Swedish öre
   ZAR: "c", // South African cent
   TRY: "krş", // Türkiye kuruş
+  BYN: "к.", // Belarusian kapeyka
 };
 
 export enum POWER_UNIT {
@@ -130,6 +135,9 @@ export default defineComponent({
     getPowerUnit(watt: number): POWER_UNIT {
       const abs = Math.abs(watt);
       return abs >= 10_000_000 ? POWER_UNIT.MW : abs >= 1000 ? POWER_UNIT.KW : POWER_UNIT.W;
+    },
+    fmtPhasePower(current?: number, phases?: number) {
+      return this.fmtW(230 * (current || 0) * (phases || 0));
     },
     fmtW(watt = 0, format = POWER_UNIT.KW, withUnit = true, digits?: number) {
       let unit = format;

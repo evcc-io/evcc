@@ -18,6 +18,8 @@ import {
 	filterForecastSlots,
 	minSlotIndex,
 	maxSlotIndex,
+	hoverDot,
+	lineDefaults,
 } from "./echarts";
 import colors from "@/colors";
 import formatter from "@/mixins/formatter";
@@ -86,7 +88,7 @@ export default defineComponent({
 				tooltip: {
 					trigger: "axis",
 					axisPointer: { type: "line", snap: true, lineStyle: { color: "transparent" } },
-					...tooltipStyle(color, () => this.chart),
+					...tooltipStyle(color),
 					formatter(params: { value: [string, number] }[]) {
 						const p = params[0];
 						if (!p) return "";
@@ -114,15 +116,8 @@ export default defineComponent({
 						type: "line",
 						data: this.slots.map((s) => [s.start, s.value]),
 						smooth: true,
-						symbol: "circle",
-						symbolSize: 6,
-						showSymbol: false,
-						lineStyle: { color, width: 3 },
-						emphasis: {
-							disabled: false,
-							scale: false,
-							itemStyle: { color, borderColor: color, borderWidth: 2 },
-						},
+						...hoverDot(color),
+						lineStyle: { color, ...lineDefaults },
 						markPoint: markPointLabel(
 							color,
 							this.tooltipVisible ? [] : this.markPoints,

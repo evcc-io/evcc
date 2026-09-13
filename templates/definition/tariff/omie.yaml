@@ -1,4 +1,5 @@
 template: omie
+link: https://www.omie.es/en/market-results/daily/daily-market/daily-hourly-price
 products:
   - brand: OMIE
     description:

@@ -15,7 +15,7 @@ func TestCardataStreaming(t *testing.T) {
 
 	p := NewProvider(ctx, util.NewLogger("foo"), nil, oauth2.StaticTokenSource(&oauth2.Token{
 		AccessToken: "at",
-	}), "client", "vin", 0)
+	}), "client", "vin", time.Hour)
 
 	// prevent container panic
 	p.updated = time.Now()
@@ -51,7 +51,7 @@ func TestSocFallback(t *testing.T) {
 
 	p := NewProvider(ctx, util.NewLogger("foo"), nil, oauth2.StaticTokenSource(&oauth2.Token{
 		AccessToken: "at",
-	}), "client", "vin", 0)
+	}), "client", "vin", time.Hour)
 
 	// prevent container panic
 	p.updated = time.Now()
@@ -108,7 +108,7 @@ func TestRangeFallback(t *testing.T) {
 
 	p := NewProvider(ctx, util.NewLogger("foo"), nil, oauth2.StaticTokenSource(&oauth2.Token{
 		AccessToken: "at",
-	}), "client", "vin", 0)
+	}), "client", "vin", time.Hour)
 
 	// prevent container panic
 	p.updated = time.Now()
@@ -165,7 +165,7 @@ func TestStatusFallback(t *testing.T) {
 
 	p := NewProvider(ctx, util.NewLogger("foo"), nil, oauth2.StaticTokenSource(&oauth2.Token{
 		AccessToken: "at",
-	}), "client", "vin", 0)
+	}), "client", "vin", time.Hour)
 
 	// prevent container panic
 	p.updated = time.Now()

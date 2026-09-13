@@ -16,6 +16,7 @@
 		:custom-fields="customFields"
 		:preserve-on-template-change="preserveFields"
 		:usage="templateUsage"
+		:tags-usage="selectedType"
 		:on-configuration-loaded="onConfigurationLoaded"
 		@added="(name) => emitChanged('added', name)"
 		@updated="() => emitChanged('updated')"

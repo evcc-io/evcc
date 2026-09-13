@@ -44,6 +44,31 @@ Either `brand` or `description` needs to be set. Examples by device class:
 
 Note: The official website of the manufacturer or service provider is the reference for the exact spelling.
 
+## `link`
+
+`link` is an optional URL pointing to the integration provider. It is shown during configuration and in the documentation.
+
+Guidelines:
+
+- The URL must start with `https://`.
+- Only add a link if it is useful for configuring the device, e.g. the cloud portal where credentials or tokens are managed, the page of the connected service, or the project page of a generic integration.
+- Link the page that describes the actual service being integrated, e.g. the dynamic tariff product page or the dataset page, not the company homepage. The homepage is fine when the whole site is that single service.
+- Write for end users: the page should describe the service and ideally offer a signup or account/token call to action. Do not link API documentation or developer portals.
+- Do not link general product detail or marketing pages, e.g. the manufacturer page of a charger.
+- Use canonical, stable URLs in the provider's default language and without tracking parameters. Verify that the URL is live.
+- `link` can be set at the template level (applies to all products) and overridden per product via a `link` entry under `products`.
+
+**Example** (template-level link, overridden by a rebranded product):
+
+```yaml
+template: smartcharge
+link: https://portal.smartcharge.example.com
+products:
+  - ...
+  - brand: PowerCloud
+    link: https://portal.powercloud.example.com
+```
+
 ## `group`
 
 `group` is used to group switchable sockets and generic device support (e.g. SunSpec) templates.
@@ -260,7 +285,7 @@ auth:
 - `string`: for string values (default)
 - `bool`: for `true` and `false` values
 - `choice`: for a selection from predefined options (defined in `choice` property)
-- `chargemodes`: for a selection of charge modes (`Off`, `Now`, `MinPV`, `PV`), including `None` which results in the param not being set
+- `chargemodes`: for a selection of charge modes (`Off`, `Smart`, `Now`), including `None` which results in the param not being set
 - `duration`: for duration values (e.g., `5m`, `1h30m`, `10s`)
 - `float`: for floating point numbers
 - `int`: for integer values
@@ -344,3 +369,9 @@ Service endpoints must return an array of strings (e.g., `["value1", "value2"]`)
 ## `render`
 
 `render` contains the internal device configuration. All `param` `name` values can be used as a template variable, e.g. `{{ .host }}` for a param named `host`. The content is a go template, so all of go template feature can be used, e.g. `{{- if ... }}` statements, etc.
+
+`render` is evaluated once when the device is configured. Plugin fields like the HTTP `uri` and `body` are go templates themselves and are evaluated on every request (sprig functions plus `addDate` and `timeRound`). Time-dependent expressions must be deferred to request time by wrapping them in a raw string, otherwise `now` freezes at config time:
+
+```yaml
+uri: https://example.org/forecast?from={{ `{{ now | date "2006-01-02" }}` }}&to={{ `{{ addDate now 0 0 5 | date "2006-01-02" }}` }}
+```

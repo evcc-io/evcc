@@ -20,7 +20,7 @@ render: |
   tariff: temperature
   forecast:
     source: http
-    uri: https://api.brightsky.dev/weather?lat={{ .lat }}&lon={{ .lon }}&date={{ now | date "2006-01-02" }}&last_date={{ now | dateModify "+120h" | date "2006-01-02" }}&tz=UTC
+    uri: https://api.brightsky.dev/weather?lat={{ .lat }}&lon={{ .lon }}&date={{ `{{ now | date "2006-01-02" }}` }}&last_date={{ `{{ addDate now 0 0 5 | date "2006-01-02" }}` }}&tz=UTC
     jq: |
       def toZ: sub("\\+00:00$"; "Z"); # fromdateiso8601 needs a literal Z
       def epoch: toZ | fromdateiso8601;

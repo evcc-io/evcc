@@ -53,7 +53,7 @@
 							@enable="handleDisable('loadpoint', loadpoint.id!, false)"
 						>
 							<template #tags>
-								<DeviceTags :tags="loadpointTags(loadpoint)" />
+								<DeviceTags :tags="loadpointTags(loadpoint)" usage="charge" />
 							</template>
 							<template #icon>
 								<VehicleIcon
@@ -419,8 +419,7 @@
 							</template>
 						</DeviceCard>
 						<DeviceCard
-							v-if="experimental"
-							:title="`${$t('config.remote.title')} 🧪`"
+							:title="$t('config.remote.title')"
 							editable
 							:unconfigured="isUnconfigured(remoteTags)"
 							data-testid="remote-access"
@@ -1092,7 +1091,9 @@ export default defineComponent({
 			return result;
 		},
 		vehicleOptions(): VehicleOption[] {
-			return this.vehicles.map((v) => ({ key: v.name, name: v.config?.title || v.name }));
+			return this.vehicles
+				.filter((v) => !v.deviceDisable)
+				.map((v) => ({ key: v.name, name: v.config?.title || v.name }));
 		},
 		hems() {
 			return store.state?.hems;

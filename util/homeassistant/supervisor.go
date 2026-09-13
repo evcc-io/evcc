@@ -4,6 +4,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/evcc-io/evcc/util"
 	"golang.org/x/oauth2"
 )
 
@@ -28,6 +29,7 @@ func hasSupervisorToken() bool {
 
 func supervisorTokenSource(uri string) (oauth2.TokenSource, bool) {
 	if token := os.Getenv(SupervisorToken); token != "" && strings.TrimRight(uri, "/") == SupervisorURI {
+		util.NewLogger("homeassistant").Redact(token)
 		return oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token}), true
 	}
 	return nil, false

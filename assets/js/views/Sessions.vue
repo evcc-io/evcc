@@ -65,7 +65,13 @@
 					</IconSelectGroup>
 				</div>
 
-				<Card :title="historyTitle" :subtitle="historySubTitle" edge-to-edge class="mb-4">
+				<Card
+					:title="historyTitle"
+					:subtitle="historySubTitle"
+					edge-to-edge
+					class="mb-4"
+					data-testid="sessions-chart"
+				>
 					<EnergyHistoryChart
 						v-if="activeType === types.SOLAR"
 						:sessions="currentSessions"

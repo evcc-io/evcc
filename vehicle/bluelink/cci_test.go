@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -25,13 +25,13 @@ const unreachable = "http://127.0.0.1:1"
 
 // newTestIdentity creates an Identity for the given test, using the test name
 // as the settings key discriminator (identity.user) so that parallel/repeated
-// test runs never share a server/db/settings entry with one another.
+// test runs never share a db/settings entry with one another.
 func newTestIdentity(t *testing.T, loginURL, cciURL string) *Identity {
 	t.Helper()
 
 	config := Config{
 		// Brand carries the test name so each (sub)test gets its own
-		// server/db/settings key (see settingsKey), without changing the
+		// db/settings key (see settingsKey), without changing the
 		// username actually sent in login requests.
 		Brand:         "kia-test:" + t.Name(),
 		LoginFormHost: loginURL,
@@ -50,9 +50,9 @@ func newTestIdentity(t *testing.T, loginURL, cciURL string) *Identity {
 	identity.user = "test@example.com"
 	identity.language = "en"
 
-	// server/db/settings.Delete requires an initialised gorm DB, which these
+	// db/settings.Delete requires an initialised gorm DB, which these
 	// unit tests don't set up. SetString only ever touches the in-memory
-	// cache (see server/db/settings/setting.go), so blanking the key this way
+	// cache (see db/settings/setting.go), so blanking the key this way
 	// is enough to keep tests isolated without needing a real database.
 	t.Cleanup(func() { settings.SetString(identity.settingsKey(), "") })
 

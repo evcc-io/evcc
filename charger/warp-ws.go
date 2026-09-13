@@ -235,7 +235,11 @@ func parseURI(uri string) (string, error) {
 		return "", err
 	}
 
-	u.Scheme = "ws"
+	if u.Scheme == "https" {
+		u.Scheme = "wss"
+	} else {
+		u.Scheme = "ws"
+	}
 	u.Path = path.Join(u.Path, "/ws")
 
 	return u.String(), nil
