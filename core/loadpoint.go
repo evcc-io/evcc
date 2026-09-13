@@ -148,7 +148,7 @@ type Loadpoint struct {
 	chargedAtStartup float64 // session energy at startup
 
 	circuit        api.Circuit        // Circuit
-	chargeMeter    api.Meter          // Charger usage meter
+	chargeMeter    *chargeMeter       // Charger usage meter
 	chargeEnergy   *metrics.Collector // Charger usage collector
 	vehicle        api.Vehicle        // Currently active vehicle
 	defaultVehicle api.Vehicle        // Default vehicle (disables detection)
@@ -247,10 +247,11 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 		if err != nil {
 			return lp, fmt.Errorf("meter: %w", err)
 		}
-		lp.chargeMeter = dev.Instance()
-		if lp.chargeMeter == nil {
+		mt := dev.Instance()
+		if mt == nil {
 			return lp, errors.New("missing charge meter instance")
 		}
+		lp.chargeMeter = newChargeMeter(mt)
 	}
 
 	// default vehicle
@@ -465,19 +466,10 @@ func (lp *Loadpoint) configureChargerType(charger api.Charger) {
 	if lp.chargeMeter == nil {
 		integrated = true
 
-		if mt, ok := api.Cap[api.Meter](charger); ok {
-			// preserve charger's capability registry and static interface
-			// implementations so that subsequent capability checks on
-			// chargeMeter (e.g. MeterEnergy, PhaseCurrents) still work for
-			// decorated chargers (https://github.com/evcc-io/evcc/issues/28915)
-			// and for chargers that statically implement these interfaces
-			// (https://github.com/evcc-io/evcc/issues/29877).
-			lp.chargeMeter = &capableMeter{Meter: mt, source: charger}
-		} else {
-			mt := new(wrapper.ChargeMeter)
+		lp.chargeMeter = newChargeMeter(charger)
+		if lp.chargeMeter.fake != nil {
 			_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentWrappedMeterHandler)
-			_ = lp.bus.Subscribe(evChargeStop, func() { mt.SetPower(0) })
-			lp.chargeMeter = mt
+			_ = lp.bus.Subscribe(evChargeStop, func() { lp.chargeMeter.fake.SetPower(0) })
 		}
 	}
 
@@ -734,7 +726,7 @@ func (lp *Loadpoint) evChargeCurrentWrappedMeterHandler(current float64) {
 	}
 
 	// handler only called if charge meter was replaced by dummy
-	lp.chargeMeter.(*wrapper.ChargeMeter).SetPower(power)
+	lp.chargeMeter.fake.SetPower(power)
 }
 
 // defaultMode executes the action
@@ -1006,7 +998,11 @@ func (lp *Loadpoint) setLimit(current float64) error {
 		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(current, activePhases))
 		currentLimitViaPower := powerToCurrent(powerLimit, activePhases)
 
-		current = lp.roundedCurrent(min(currentLimit, currentLimitViaPower))
+		limited := lp.roundedCurrent(min(currentLimit, currentLimitViaPower))
+		if minCurrent := lp.effectiveMinCurrent(); limited < minCurrent && current >= minCurrent {
+			lp.log.DEBUG.Printf("circuit limit %.3gA below min current %.3gA", limited, minCurrent)
+		}
+		current = limited
 	}
 
 	// https://github.com/evcc-io/evcc/issues/16309
@@ -2189,9 +2185,20 @@ func (lp *Loadpoint) publishSocAndRange() {
 	limitSoc := min(apiLimitSoc, lp.EffectiveLimitSoc())
 	v := lp.GetVehicle()
 
+	lp.RLock()
+	limitEnergy, energyLimited := lp.remainingLimitEnergy()
+	lp.RUnlock()
+
 	var d time.Duration
 	var e float64
 	switch {
+	case energyLimited:
+		// energy-limited session without soc: remaining energy and duration follow
+		// the limit, not the full capacity (#33627)
+		e = limitEnergy
+		if lp.charging() && lp.chargePower > 0 {
+			d = time.Duration(e * 1e3 / lp.chargePower * float64(time.Hour)).Round(time.Second)
+		}
 	case socEstimator != nil:
 		if lp.charging() {
 			d = socEstimator.RemainingChargeDuration(float64(limitSoc), lp.chargePower)

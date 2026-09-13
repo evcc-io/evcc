@@ -119,8 +119,8 @@ type Site struct {
 	batteryModeExternalTimer time.Time                   // Battery mode timer for external control
 	batteryModeApplied       map[string]api.BatteryMode  // Battery mode last applied per battery meter
 	suggestions              map[string]types.Suggestion // Optimizer suggestions by device key
-	suggestionsUpdated       time.Time                   // time the suggestions were applied
 	suggestionActions        map[string]string           // last notified actionable optimizer action by device key
+	lastOptimizerSolve       *optimizerSolve             // last successful solve, reapplied to newer slots by the control cycle
 
 	batterySuggestionPending   api.BatteryMode // last raw optimizer suggestion
 	batterySuggestionSince     time.Time       // time batterySuggestionPending last changed
@@ -921,7 +921,7 @@ func (site *Site) updateBatteryMeters() {
 
 // publishBattery applies the optimizer suggestions and publishes the battery state
 func (site *Site) publishBattery() {
-	mode := site.GetBatteryMode().String()
+	mode := site.batteryAction()
 
 	battery := site.state().battery
 	for i, d := range battery.Devices {
@@ -1283,6 +1283,13 @@ func (site *Site) update(lp updater) {
 	if state, err := site.updateMeters(); err != nil {
 		site.log.ERROR.Println(err)
 	} else {
+		if sponsor.IsAuthorized() && optimizerEnabled() {
+			site.reapplySuggestions(time.Now())
+		} else {
+			// don't resurrect the pre-disable solve on re-enable
+			site.setLastOptimizerSolve(nil)
+		}
+
 		site.updatePower(lp, state, totalChargePower, consumption, feedin)
 	}
 

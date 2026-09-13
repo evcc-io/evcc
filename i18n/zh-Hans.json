@@ -463,7 +463,6 @@
     },
     "sponsor": {
       "becomeSponsor": "成为赞助商",
-      "becomeSponsorExtended": "直接支持我们即可获得贴纸。",
       "confetti": "准备好庆祝了吗?",
       "confettiPromise": "您将获得贴纸和数字礼花",
       "sticker": "… 或 evcc 贴纸?",
@@ -472,9 +471,7 @@
       "titleNoSponsor": "支持我们",
       "titleSponsor": "您是赞助者",
       "titleTrial": "试用模式",
-      "titleVictron": "由 Victron Energy 赞助",
-      "trial": "您正处于试用模式，可以使用所有功能。请考虑支持本项目。",
-      "victron": "您正在 Victron Energy 硬件上使用 evcc，并可以访问所有功能。"
+      "trial": "您正处于试用模式，可以使用所有功能。请考虑支持本项目。"
     },
     "telemetry": {
       "optIn": "我想分享我的充电数据。",

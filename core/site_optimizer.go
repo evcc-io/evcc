@@ -111,9 +111,18 @@ func (d batteryDetail) key() string {
 // comparison. Must only be called for devices with a non-empty key.
 func (d batteryDetail) currentAction(site *Site) string {
 	if d.Type == batteryTypeBattery {
-		return site.GetBatteryMode().String()
+		return site.batteryAction()
 	}
 	return loadpointCurrentAction(site.loadpoints[*d.loadpoint])
+}
+
+// batteryAction returns the battery's current mode for suggestion comparison.
+// A battery that was never switched (BatteryUnknown) is in normal operation.
+func (site *Site) batteryAction() string {
+	if mode := site.GetBatteryMode(); mode != api.BatteryUnknown {
+		return mode.String()
+	}
+	return api.BatteryNormal.String()
 }
 
 type batteryResult struct {
@@ -222,9 +231,8 @@ func loadpointCurrentAction(lp *Loadpoint) string {
 	return actionStop
 }
 
-// suggestionMaxAge invalidates suggestions of a stalled optimizer. Runs happen
-// every optimizerInterval, so two slots without a result mean the optimizer is
-// no longer keeping up.
+// suggestionMaxAge releases a loadpoint gated by a solve the site stopped
+// refreshing; the site itself expires its cached solve in reapplySuggestions
 const suggestionMaxAge = 2 * tariff.SlotDuration
 
 // setSuggestions replaces the suggestions applied on each publish
@@ -233,7 +241,6 @@ func (site *Site) setSuggestions(suggestions map[string]types.Suggestion) {
 	defer site.Unlock()
 
 	site.suggestions = suggestions
-	site.suggestionsUpdated = time.Now()
 }
 
 // setBatteryForecast replaces the battery forecast of the cached state
@@ -250,29 +257,15 @@ func (site *Site) setBatteryForecast(forecast *types.BatteryForecast) {
 func (site *Site) suggestion(key, currentAction string) *types.Suggestion {
 	site.RLock()
 	s, ok := site.suggestions[key]
-	stale := time.Since(site.suggestionsUpdated) > suggestionMaxAge
 	site.RUnlock()
 
-	if !ok || stale {
+	if !ok {
 		return nil
 	}
 
 	s.Actionable = s.Action != currentAction
 
 	return &s
-}
-
-// dropStaleSuggestions clears the advice of a stalled optimizer. A single failed
-// run keeps it: dropping it would release the controlled devices for one cycle,
-// flipping the battery mode until the next run restores the suggestion.
-func (site *Site) dropStaleSuggestions() {
-	site.RLock()
-	stale := time.Since(site.suggestionsUpdated) > suggestionMaxAge
-	site.RUnlock()
-
-	if stale {
-		site.clearSuggestions()
-	}
 }
 
 // publishSuggestions publishes the loadpoints' suggestions and hands them to the
@@ -306,6 +299,7 @@ func (site *Site) clearSuggestions() {
 
 	site.Lock()
 	site.suggestionActions = nil
+	site.lastOptimizerSolve = nil
 	site.Unlock()
 }
 
@@ -422,11 +416,10 @@ func (site *Site) optimizerUpdateAsync(force bool) {
 
 		site.optimizerUpdated = time.Now()
 
+		// a failed run keeps the advice: dropping it would release the controlled
+		// devices for one cycle. reapplySuggestions expires the cached solve.
 		if err != nil {
 			site.log.ERROR.Println("optimizer:", err)
-
-			// stale advice must not linger
-			site.dropStaleSuggestions()
 		}
 	}()
 
@@ -484,6 +477,9 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		blendMeasured(gt, v, optimizerDecaySlots)
 		site.log.DEBUG.Printf("optimizer: home slots updated with measured %.0fWh: %.0f -> %.0f", v, orig, gt[:len(orig)])
 	}
+
+	// heating loadpoints add their forecast demand on top of the measured base load
+	heaters := site.addHeatingDemand(gt, minLen)
 
 	// allow empty solar forecast
 	ft := lo.RepeatBy(minLen, func(i int) float32 { return float32(0) })
@@ -557,6 +553,11 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	for id, lp := range site.ActiveLoadpoints() {
 		// ignore disconnected loadpoints, including StatusNone
 		if s := lp.GetStatus(); s != api.StatusB && s != api.StatusC {
+			continue
+		}
+
+		// heating loadpoints are already accounted for by their demand forecast
+		if slices.Contains(heaters, lp) {
 			continue
 		}
 
@@ -637,7 +638,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 	}
 
 	resp, err := apiClient.PostOptimizeChargeScheduleWithResponse(context.TODO(), req, func(_ context.Context, req *http.Request) error {
-		if sponsor.IsAuthorized() {
+		if sponsor.IsAuthorizedForApi() {
 			req.Header.Set("Authorization", "Bearer "+sponsor.Token)
 		}
 		return nil
@@ -674,14 +675,74 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 		return errors.New("optimizer result expired")
 	}
 
-	site.applyOptimizerResult(req, details, *resp.JSON200, schedule, now)
+	site.applyOptimizerResult(req, details, *resp.JSON200, schedule, now, now)
 
 	return nil
 }
 
+// optimizerSolve caches a solve so the control cycle can reapply it to a newer slot
+type optimizerSolve struct {
+	req       optimizer.OptimizationInput
+	details   requestDetails
+	res       optimizer.OptimizationResult
+	schedule  optimizerSchedule
+	slot      int       // last applied slot
+	completed time.Time // solve completion, not last reapply
+}
+
+// setLastOptimizerSolve remembers a solve's inputs for reapplySuggestions
+func (site *Site) setLastOptimizerSolve(solve *optimizerSolve) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.lastOptimizerSolve = solve
+}
+
+// reapplySuggestions re-derives the last solve's suggestions for the slot covering now
+// without a new solve. TryLock so it never overwrites a fresher concurrent solve.
+func (site *Site) reapplySuggestions(now time.Time) {
+	if !site.optimizerMu.TryLock() {
+		return
+	}
+	defer site.optimizerMu.Unlock()
+
+	site.RLock()
+	last := site.lastOptimizerSolve
+	site.RUnlock()
+
+	if last == nil {
+		return
+	}
+
+	slot := last.schedule.activeSlot(now)
+	if slot == last.slot {
+		return
+	}
+
+	// horizon passed or no completed solve for two slots: don't march a dead plan forward
+	if slot < 0 || now.Sub(last.completed) > 2*tariff.SlotDuration {
+		site.log.DEBUG.Println("optimizer: cached result expired")
+		site.clearSuggestions()
+		return
+	}
+
+	// disconnected loadpoints are excluded from a fresh solve; don't advise an empty charger
+	for _, d := range last.details.BatteryDetails {
+		if d.loadpoint == nil {
+			continue
+		}
+		if lp := site.loadpoints[*d.loadpoint]; lp == nil || !lp.connected() {
+			site.setLastOptimizerSolve(nil)
+			return
+		}
+	}
+
+	site.applyOptimizerResult(last.req, last.details, last.res, last.schedule, now, last.completed)
+}
+
 // applyOptimizerResult maps the optimizer response onto suggestions, battery
 // forecast and notifications
-func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details requestDetails, res optimizer.OptimizationResult, schedule optimizerSchedule, now time.Time) {
+func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details requestDetails, res optimizer.OptimizationResult, schedule optimizerSchedule, now time.Time, completed time.Time) {
 	slot := schedule.activeSlot(now)
 	slotHours := schedule.duration(slot).Hours()
 	var gridImport, gridExport float32
@@ -734,6 +795,8 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 	for _, ev := range site.diffSuggestions(site.pendingSuggestions(details.BatteryDetails)) {
 		site.pushEvent(ev)
 	}
+
+	site.setLastOptimizerSolve(&optimizerSolve{req: req, details: details, res: res, schedule: schedule, slot: slot, completed: completed})
 }
 
 func (site *Site) addBatteryForecastTotals(req []optimizer.BatteryConfig, resp []optimizer.BatteryResult, schedule optimizerSchedule, now time.Time) *types.BatteryForecast {
@@ -1061,41 +1124,6 @@ func unmodelledPower(lp loadpoint.API) float64 {
 	}
 
 	return max(0, power)
-}
-
-// homeProfile returns the home base load in Wh
-func (site *Site) homeProfile(minLen int) ([]float64, error) {
-	// kWh over last 30 days
-	profile, err := site.collectors[metrics.Home].EnergyProfile(now.BeginningOfDay().AddDate(0, 0, -30))
-	if err != nil {
-		return nil, err
-	}
-
-	// max 4 days
-	slots := make([]float64, 0, minLen+1)
-	for len(slots) <= minLen+24*4 { // allow for prorating first day
-		slots = append(slots, profile[:]...)
-	}
-
-	res := profileSlotsFromNow(slots)
-	if len(res) < minLen {
-		return nil, fmt.Errorf("minimum home profile length %d is less than required %d", len(res), minLen)
-	}
-	if len(res) > minLen {
-		res = res[:minLen]
-	}
-
-	// convert to Wh
-	return lo.Map(res, func(v float64, i int) float64 {
-		return v * 1e3
-	}), nil
-}
-
-// profileSlotsFromNow strips away any slots before "now".
-// The profile contains 48 15min slots (00:00-23:45) that repeat for multiple days.
-func profileSlotsFromNow(profile []float64) []float64 {
-	firstSlot := int(time.Now().Truncate(tariff.SlotDuration).Sub(now.BeginningOfDay()) / tariff.SlotDuration)
-	return profile[firstSlot:]
 }
 
 // measuredSlotEnergy returns the summed energy in Wh of the last completed
