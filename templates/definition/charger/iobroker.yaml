@@ -68,6 +68,10 @@ params:
       de: Setze Phasen(1 oder 3)
       en: Set num phases (1 or 3)
     type: string
+  - name: phases1p3p
+    deprecated: true
+    # legacy state id; a non-string type keeps defaults.yaml from turning it into bool
+    type: choice
 render: |
   type: custom
   {{- if .status }}
@@ -154,12 +158,12 @@ render: |
       password: {{ .password }}
     {{- end }}
   {{- end }}
-  {{- if .phaseswitch }}
+  {{- if or .phaseswitch .phases1p3p }}
   phases1p3p:
     source: http
     headers:
        - accept: text/plain;charset=UTF-8
-    uri: {{ .uri }}/rest-api/v1/state/{{ .phaseswitch }}?value=${phases}
+    uri: {{ .uri }}/rest-api/v1/state/{{ or .phaseswitch .phases1p3p }}?value=${phases}
     cache: {{ .cache }}
     {{- if .user }}
     auth:
