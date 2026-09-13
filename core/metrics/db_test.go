@@ -303,9 +303,9 @@ func TestEnergyProfilePercentile(t *testing.T) {
 	}
 
 	for percentile, expected := range map[float64]float64{
-		0:    1,
-		0.25: 1.1, // interpolated between rank 1 and 2
-		0.5:  1.2, // median, outlier ignored
+		0:    (1 + 1.2 + 1000.1) / 3, // average fallback
+		0.25: 1.1,                    // interpolated between rank 1 and 2
+		0.5:  1.2,                    // median, outlier ignored
 		1:    1000.1,
 	} {
 		prof, err := energyProfileFiltered(entity, from, nil, percentile)

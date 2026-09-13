@@ -495,6 +495,26 @@ func TestGridExportLimit(t *testing.T) {
 	assert.Equal(t, 7000.0, site.GetGridExportLimit())
 }
 
+func TestProfilePercentile(t *testing.T) {
+	site := &Site{log: util.NewLogger("foo")}
+
+	// average by default
+	assert.Nil(t, site.GetProfilePercentile())
+
+	ptr := func(v float64) *float64 { return &v }
+
+	// out of range rejected, unchanged
+	require.Error(t, site.SetProfilePercentile(ptr(101)))
+	assert.Nil(t, site.GetProfilePercentile())
+
+	require.NoError(t, site.SetProfilePercentile(ptr(50)))
+	assert.Equal(t, 50.0, *site.GetProfilePercentile())
+
+	// delete reverts to average
+	require.NoError(t, site.SetProfilePercentile(nil))
+	assert.Nil(t, site.GetProfilePercentile())
+}
+
 func TestBlendMeasured(t *testing.T) {
 	slots := []float64{100, 100, 100, 100, 100, 100}
 	blendMeasured(slots, 200, 4)

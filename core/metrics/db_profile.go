@@ -4,19 +4,28 @@ import (
 	"errors"
 	"time"
 
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/db"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/tariff"
 )
 
 var ErrIncomplete = errors.New("meter profile incomplete")
 
-// profilePercentile selects the per-slot percentile of the energy profile.
-// 0.5 is the median, which keeps a few heavy days from dominating the average.
-const profilePercentile = 0.5
+// profilePercentile returns the configured per-slot percentile of the energy
+// profiles (0..1), 0 = average. The median (0.5) keeps a few heavy days from
+// dominating the profile.
+func profilePercentile() float64 {
+	v, err := settings.Float(keys.ProfilePercentile)
+	if err != nil {
+		return 0
+	}
+	return v / 100
+}
 
 // energyProfileFiltered queries the 96-slot profile at the given percentile
-// (0..1, linear interpolation between ranks), optionally restricted to a
-// single weekday (strftime %w, 0=Sunday).
+// (0..1, linear interpolation between ranks; 0 = average), optionally
+// restricted to a single weekday (strftime %w, 0=Sunday).
 func energyProfileFiltered(entity entity, from time.Time, weekday *int, percentile float64) (*[96]float64, error) {
 	database, err := db.Instance.DB()
 	if err != nil {
@@ -31,16 +40,24 @@ func energyProfileFiltered(entity entity, from time.Time, weekday *int, percenti
 		weekdayFilter = ` AND CAST(strftime('%w', ts, 'unixepoch', 'localtime') AS INTEGER) = ?`
 		args = append(args, *weekday)
 	}
-	args = append(args, percentile)
 
-	// rank each slot's values and interpolate between the two ranks enclosing
-	// the percentile position (1-based, pos = p * (n-1) + 1)
 	// COALESCE guards against legacy rows with NULL energy
-	rows, err := database.Query(`WITH slots AS (
-			SELECT ts, COALESCE(energy, 0) AS energy, strftime('%H:%M', ts, 'unixepoch', 'localtime') AS slot
-			FROM meters
-			WHERE meter = ? AND ts >= ? AND COALESCE(recovered, 0) = 0`+weekdayFilter+`
-		), ranked AS (
+	slots := `SELECT ts, COALESCE(energy, 0) AS energy, strftime('%H:%M', ts, 'unixepoch', 'localtime') AS slot
+		FROM meters
+		WHERE meter = ? AND ts >= ? AND COALESCE(recovered, 0) = 0` + weekdayFilter
+
+	query := `WITH slots AS (` + slots + `)
+		SELECT min(ts) AS ts, avg(energy) AS energy
+		FROM slots
+		GROUP BY slot
+		ORDER BY slot ASC`
+
+	if percentile > 0 {
+		// rank each slot's values and interpolate between the two ranks enclosing
+		// the percentile position (1-based, pos = p * (n-1) + 1).
+		// The slots CTE must stay first to keep the placeholder order.
+		args = append(args, percentile)
+		query = `WITH slots AS (` + slots + `), ranked AS (
 			SELECT slot, energy,
 				min(ts) OVER (PARTITION BY slot) AS ts,
 				row_number() OVER (PARTITION BY slot ORDER BY energy) AS rn,
@@ -51,9 +68,10 @@ func energyProfileFiltered(entity entity, from time.Time, weekday *int, percenti
 		FROM ranked
 		WHERE rn BETWEEN CAST(pos AS INTEGER) AND CAST(pos AS INTEGER) + 1
 		GROUP BY slot
-		ORDER BY slot ASC`,
-		args...,
-	)
+		ORDER BY slot ASC`
+	}
+
+	rows, err := database.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
