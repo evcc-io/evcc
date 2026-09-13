@@ -915,7 +915,7 @@ func (site *Site) updateBatteryMeters() {
 
 // publishBattery applies the optimizer suggestions and publishes the battery state
 func (site *Site) publishBattery() {
-	mode := site.GetBatteryMode().String()
+	mode := site.batteryAction()
 
 	battery := site.state().battery
 	for i, d := range battery.Devices {

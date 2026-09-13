@@ -111,9 +111,18 @@ func (d batteryDetail) key() string {
 // comparison. Must only be called for devices with a non-empty key.
 func (d batteryDetail) currentAction(site *Site) string {
 	if d.Type == batteryTypeBattery {
-		return site.GetBatteryMode().String()
+		return site.batteryAction()
 	}
 	return loadpointCurrentAction(site.loadpoints[*d.loadpoint])
+}
+
+// batteryAction returns the battery's current mode for suggestion comparison.
+// A battery that was never switched (BatteryUnknown) is in normal operation.
+func (site *Site) batteryAction() string {
+	if mode := site.GetBatteryMode(); mode != api.BatteryUnknown {
+		return mode.String()
+	}
+	return api.BatteryNormal.String()
 }
 
 type batteryResult struct {

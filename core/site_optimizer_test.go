@@ -566,17 +566,20 @@ func TestSuggestionActionable(t *testing.T) {
 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
 
 	site := &Site{
-		batteryMode: api.BatteryNormal,
-		loadpoints:  []*Loadpoint{lp},
+		loadpoints: []*Loadpoint{lp},
 	}
 	site.setSuggestions(map[string]types.Suggestion{
-		batteryKey("bat"): {Action: api.BatteryCharge.String()},
-		loadpointKey(0):   {Action: actionCharge},
+		batteryKey("bat"):    {Action: api.BatteryCharge.String()},
+		batteryKey("normal"): {Action: api.BatteryNormal.String()},
+		loadpointKey(0):      {Action: actionCharge},
 	})
 
 	batterySuggestion := func(name string) *types.Suggestion {
-		return site.suggestion(batteryKey(name), site.GetBatteryMode().String())
+		return site.suggestion(batteryKey(name), site.batteryAction())
 	}
+
+	// battery never switched (unknown mode) is in normal operation
+	assert.False(t, batterySuggestion("normal").Actionable)
 	loadpointSuggestion := func(id int) *types.Suggestion {
 		return site.suggestion(loadpointKey(id), loadpointCurrentAction(lp))
 	}
