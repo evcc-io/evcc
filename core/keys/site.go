@@ -45,18 +45,21 @@ const (
 	Curtailers = "curtailers"
 
 	// battery settings
-	BatteryDischargeControl = "batteryDischargeControl"
-	BatteryGridChargeLimit  = "batteryGridChargeLimit"
-	BatteryGridChargeActive = "batteryGridChargeActive"
-	BatteryGridDischarge    = "batteryGridDischarge"
-	BufferSoc               = "bufferSoc"
-	BufferStartSoc          = "bufferStartSoc"
+	BatteryDischargeControl    = "batteryDischargeControl"
+	BatteryGridChargeLimit     = "batteryGridChargeLimit"
+	BatteryGridChargeActive    = "batteryGridChargeActive"
+	BatteryGridDischargeLimit  = "batteryGridDischargeLimit"
+	BatteryGridDischargeActive = "batteryGridDischargeActive"
+	BatteryGridDischarge       = "batteryGridDischarge"
+	BufferSoc                  = "bufferSoc"
+	BufferStartSoc             = "bufferStartSoc"
 
 	// grid settings
 	GridExportLimit = "gridExportLimit"
 
 	// forecast settings
-	SolarAdjusted = "solarAdjusted"
+	SolarAdjusted     = "solarAdjusted"
+	ProfilePercentile = "profilePercentile"
 
 	// optimizer
 	OptimizerChargingStrategy   = "optimizerChargingStrategy"

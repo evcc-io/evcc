@@ -609,6 +609,33 @@ small {
 .dark .form-switch .form-check-input:checked {
 	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%2328293e'/%3e%3c/svg%3e");
 }
+
+.form-range::-webkit-slider-thumb,
+.form-range::-webkit-slider-thumb:active {
+	background-color: var(--bs-primary);
+}
+.form-range:hover::-webkit-slider-thumb {
+	box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--bs-primary) 25%, transparent);
+}
+.form-range:focus::-webkit-slider-thumb {
+	box-shadow: 0 0 0 0.25rem var(--bs-primary-dim);
+}
+.form-range:active::-webkit-slider-thumb {
+	box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--bs-primary) 50%, transparent);
+}
+.form-range::-moz-range-thumb,
+.form-range::-moz-range-thumb:active {
+	background-color: var(--bs-primary);
+}
+.form-range:hover::-moz-range-thumb {
+	box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--bs-primary) 25%, transparent);
+}
+.form-range:focus::-moz-range-thumb {
+	box-shadow: 0 0 0 0.25rem var(--bs-primary-dim);
+}
+.form-range:active::-moz-range-thumb {
+	box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--bs-primary) 50%, transparent);
+}
 /* hide number input spinners */
 input[type="number"] {
 	appearance: textfield;

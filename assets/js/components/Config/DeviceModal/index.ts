@@ -130,7 +130,7 @@ export function customChargerName(type: ConfigType, isHeating: boolean) {
 // flattenDeviceConfig converts a GET /config/devices/:class/:id response
 // into the flat shape expected by POST/PUT/test (id and name are dropped).
 //
-// GET (config = device-specfic):
+// GET (config = device-specific):
 //   {
 //     id: 26,
 //     name: "db:26",

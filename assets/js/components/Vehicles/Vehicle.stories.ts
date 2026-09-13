@@ -106,7 +106,7 @@ UnknownVehicle.args = {
   vehicleName: "",
   socBasedCharging: false,
   vehicle: { ...baseState.vehicle, capacity: undefined },
-  mode: CHARGE_MODE.PV,
+  mode: CHARGE_MODE.SMART,
 };
 
 export const OfflineVehicle = Template.bind({});
@@ -121,7 +121,7 @@ OfflineVehicle.args = {
     capacity: 72,
     features: ["Offline"],
   },
-  mode: CHARGE_MODE.PV,
+  mode: CHARGE_MODE.SMART,
 };
 
 export const OfflineVehicleWithTarget = Template.bind({});
@@ -136,7 +136,7 @@ OfflineVehicleWithTarget.args = {
     capacity: 72,
     features: ["Offline"],
   },
-  mode: CHARGE_MODE.PV,
+  mode: CHARGE_MODE.SMART,
 };
 
 export const WaitingForAuthorization = Template.bind({});
@@ -192,7 +192,7 @@ HeatingMinTemp.args = {
 export const TargetChargePlanned = Template.bind({});
 TargetChargePlanned.args = {
   ...baseState,
-  mode: CHARGE_MODE.PV,
+  mode: CHARGE_MODE.SMART,
 };
 
 export const TargetChargeActive = Template.bind({});
@@ -200,7 +200,7 @@ TargetChargeActive.args = {
   ...baseState,
   enabled: true,
   charging: true,
-  mode: CHARGE_MODE.PV,
+  mode: CHARGE_MODE.SMART,
 };
 
 export const SmartChargeCostLimitActive = Template.bind({});
@@ -209,7 +209,7 @@ SmartChargeCostLimitActive.args = {
   enabled: true,
   charging: true,
   smartCostLimit: 0.13,
-  mode: CHARGE_MODE.PV,
+  mode: CHARGE_MODE.SMART,
 };
 
 export const SuggestionCharge = Template.bind({});

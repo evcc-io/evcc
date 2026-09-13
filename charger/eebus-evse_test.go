@@ -6,6 +6,7 @@ import (
 	"time"
 
 	ucapi "github.com/enbility/eebus-go/usecases/api"
+	evccuc "github.com/enbility/eebus-go/usecases/cem/evcc"
 	evcemuc "github.com/enbility/eebus-go/usecases/cem/evcem"
 	"github.com/enbility/eebus-go/usecases/mocks"
 	spineapi "github.com/enbility/spine-go/api"
@@ -486,4 +487,50 @@ func TestEEBusMinMaxCommunicationStandard(t *testing.T) {
 			}
 		})
 	}
+}
+
+// some devices (e.g. Porsche PMCC) report the identification only briefly during the
+// connection handshake and withdraw it again before the loadpoint ever polls it
+// (#33457). The value must be captured from the update event and survive until
+// physical disconnect.
+func TestEEBusIdentify(t *testing.T) {
+	evccMock := mocks.NewCemEVCCInterface(t)
+	evEntity := spinemocks.NewEntityRemoteInterface(t)
+
+	eebus := &EEBus{
+		cem: &eebus.CustomerEnergyManagement{
+			EvCC: evccMock,
+		},
+		ev:  evEntity,
+		log: util.NewLogger("test"),
+	}
+
+	// identification as currently reported by the device
+	var reported []ucapi.IdentificationItem
+
+	evccMock.EXPECT().EVConnected(evEntity).Return(true)
+	evccMock.EXPECT().Identifications(evEntity).
+		RunAndReturn(func(spineapi.EntityRemoteInterface) ([]ucapi.IdentificationItem, error) {
+			return reported, nil
+		})
+
+	// device reports the identification once, only via the update event
+	reported = []ucapi.IdentificationItem{{Value: "MAC-001"}}
+	eebus.UseCaseEvent(nil, evEntity, evccuc.DataUpdateIdentifications)
+
+	// the following empty update must not discard the cached value
+	reported = nil
+	eebus.UseCaseEvent(nil, evEntity, evccuc.DataUpdateIdentifications)
+
+	// the loadpoint only polls once the identification is already gone
+	ids, err := eebus.Identify()
+	require.NoError(t, err)
+	assert.Equal(t, []string{"MAC-001"}, ids)
+
+	// physical disconnect clears the cached identification
+	eebus.UseCaseEvent(nil, evEntity, evccuc.EvDisconnected)
+
+	ids, err = eebus.Identify()
+	require.NoError(t, err)
+	assert.Nil(t, ids)
 }

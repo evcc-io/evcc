@@ -57,6 +57,12 @@ func NewWatchDogFromConfig(ctx context.Context, other map[string]any) (Plugin, e
 	return o, nil
 }
 
+var _ IntKeysGetter = (*watchdogPlugin)(nil)
+
+func (o *watchdogPlugin) IntKeys() ([]int64, error) {
+	return o.set.intKeys(o.ctx)
+}
+
 func (o *watchdogPlugin) wdt(ctx context.Context, set func() error) {
 	for tick := time.Tick(o.timeout / 2); ; {
 		select {

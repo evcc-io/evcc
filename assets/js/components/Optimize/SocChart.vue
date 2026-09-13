@@ -15,6 +15,8 @@ import {
 	forecastYAxis,
 	tooltipStyle,
 	tooltipTable,
+	hoverDot,
+	lineDefaults,
 } from "../Forecast/echarts";
 import colors, { dimColor } from "@/colors";
 import formatter from "@/mixins/formatter";
@@ -98,7 +100,7 @@ export default defineComponent({
 						type: "line",
 						lineStyle: { color: colors.muted || "", opacity: 0.4 },
 					},
-					...tooltipStyle(colors.text || "", () => this.chart),
+					...tooltipStyle(colors.text || ""),
 					formatter: this.tooltipFormatter,
 				},
 				xAxis: this.xAxes,
@@ -118,11 +120,9 @@ export default defineComponent({
 						step: "start",
 						z: 3,
 						data: this.socSeries,
-						showSymbol: false,
-						lineStyle: { color: this.entry.color, width: 2 },
-						itemStyle: { color: this.entry.color },
+						...hoverDot(this.entry.color),
+						lineStyle: { color: this.entry.color, ...lineDefaults },
 						areaStyle: { color: dimColor(this.entry.color) },
-						emphasis: { disabled: true },
 					},
 				],
 			};

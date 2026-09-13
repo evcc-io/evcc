@@ -20,25 +20,7 @@
     "title": "Starea autorizației"
   },
   "batterySettings": {
-    "batteryLevel": "Nivelul bateriei",
-    "bufferStart": {
-      "above": "când deasupra {soc}.",
-      "full": "când atinge {soc}.",
-      "never": "numai cu un surplus suficient."
-    },
-    "capacity": "{energy} din {total}",
-    "control": "Controlul bateriei",
-    "discharge": "Preveniți descărcarea în modul rapid și încărcarea planificată.",
-    "disclaimerHint": "Nota:",
-    "disclaimerText": "Aceste setări afectează numai modul solar. Comportamentul de încărcare este ajustat în consecință.",
     "gridChargeTab": "Încărcare la rețea",
-    "legendBottomName": "prioritate casa",
-    "legendBottomSubline": "până când atinge {soc}.",
-    "legendMiddleName": "in primul rand vehiculul",
-    "legendMiddleSubline": "când bateria casei e peste {soc}.",
-    "legendTopAutostart": "porneste automat",
-    "legendTopName": "Incarcare ajutata de baterie",
-    "legendTopSubline": "când bateria casei e peste {soc}.",
     "modalTitle": "Setari bateriei",
     "usageTab": "Utilizarea bateriei"
   },
@@ -307,13 +289,6 @@
         "charging": "Încărcător",
         "heating": "Încălzitor"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Va utiliza un interval de curent de la 6 la 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Va utiliza un interval de curent de la 6 la 32 A.",
-      "chargerPowerCustom": "altul",
-      "chargerPowerCustomHelp": "Definiți un interval curent personalizat.",
-      "chargerTypeLabel": "Tipul încărcătorului",
       "chargingTitle": "Comportament",
       "circuitHelp": "Atribuirea gestionării sarcinii pentru a se asigura că limitele de putere și curent nu sunt depășite.",
       "circuitInvalid": "Circuitul nu există",
@@ -826,7 +801,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Sponsorizează-ne",
-      "becomeSponsorExtended": "Susțineți-ne direct pentru a obține autocolante.",
       "confetti": "Ești pregătit să sărbătorești?",
       "confettiPromise": "Primești abțibilduri si confetti digital",
       "sticker": "… sau abțibilduri evcc?",
@@ -835,9 +809,7 @@
       "titleNoSponsor": "Sponsorizeaza-ne",
       "titleSponsor": "Ești sponsor",
       "titleTrial": "Modul de încercare",
-      "titleVictron": "Sponsorizat de Victron Energy",
-      "trial": "Vă aflați în modul de încercare și puteți utiliza toate funcțiile. Vă rugăm să luați în considerare susținerea proiectului.",
-      "victron": "Utilizați evcc pe hardware-ul Victron Energy și aveți acces la toate funcțiile."
+      "trial": "Vă aflați în modul de încercare și puteți utiliza toate funcțiile. Vă rugăm să luați în considerare susținerea proiectului."
     },
     "telemetry": {
       "optIn": "Vreau să trimit datele mele.",

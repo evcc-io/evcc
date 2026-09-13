@@ -35,15 +35,6 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Akutase",
-    "bufferStart": {
-      "above": "kui on üle {soc}.",
-      "full": "kui on alla {soc}.",
-      "never": "vaid piisava ülejäägi puhul."
-    },
-    "capacity": "{energy} / {total}",
-    "control": "Akuhaldus",
-    "legendTopSublineDisabledState": "pole kasutusel",
     "modalTitle": "Kodu aku",
     "noBattery": "Ühtegi akut pole seadistatud.",
     "usageTab": "Akukasutus"

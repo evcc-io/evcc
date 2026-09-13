@@ -4,7 +4,7 @@ CREATE TABLE `settings` (
   , PRIMARY KEY(`key`)
 );
 
--- enable the experimental battery page
+-- grid discharge switch is still experimental
 INSERT INTO `settings`(key, value) VALUES ('experimental', 'true');
 
 -- realistic battery usage thresholds

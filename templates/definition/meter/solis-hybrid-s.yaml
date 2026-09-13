@@ -25,6 +25,12 @@ params:
     id: 1
   - name: maxacpower
   - preset: battery-params
+  # active battery control writes these into the inverter's Battery Reserve SOC
+  # register, so they must reflect the values actually configured on the device
+  - name: minsoc
+    required: true
+  - name: maxsoc
+    required: true
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -204,8 +210,5 @@ render: |
               address: 43110
               type: writeholding
               decode: uint16
-    default:
-      source: error
-      error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

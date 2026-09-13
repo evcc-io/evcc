@@ -107,7 +107,7 @@
 
 			<div v-if="values.charger || !isNew">
 				<div class="collapsible-wrapper" :class="{ open: !isNew }">
-					<div class="collapsible-content">
+					<div class="collapsible-content ring-space">
 						<h6 class="mt-4">{{ $t("config.loadpoint.chargingTitle") }}</h6>
 
 						<FormRow
@@ -293,6 +293,18 @@
 									}}
 								</div>
 							</div>
+
+							<div v-if="thresholdsSet" class="form-text evcc-gray mt-4">
+								<i18n-t
+									keypath="config.loadpoint.solarShareNote"
+									tag="span"
+									scope="global"
+								>
+									<a href="#" @click.prevent="resetThresholds">
+										{{ $t("config.loadpoint.solarShareReset") }}
+									</a>
+								</i18n-t>
+							</div>
 						</div>
 
 						<FormRow
@@ -319,110 +331,78 @@
 							}}</small>
 						</h6>
 
-						<FormRow
-							v-if="!chargerIsSwitchDevice"
-							id="chargerPower"
-							:label="$t('config.loadpoint.chargerTypeLabel')"
-							:help="
-								chargerPower === '11kw'
-									? $t('config.loadpoint.chargerPower11kwHelp')
-									: chargerPower === '22kw'
-										? $t('config.loadpoint.chargerPower22kwHelp')
-										: $t('config.loadpoint.chargerPowerCustomHelp')
-							"
-						>
-							<SelectGroup
-								id="chargerPower"
-								v-model="chargerPower"
-								class="w-100"
-								:options="[
-									{
-										name: $t('config.loadpoint.chargerPower11kw'),
-										value: '11kw',
-									},
-									{
-										name: $t('config.loadpoint.chargerPower22kw'),
-										value: '22kw',
-									},
-									{
-										name: $t('config.loadpoint.chargerPowerCustom'),
-										value: 'other',
-									},
-								]"
-								transparent
-							/>
-						</FormRow>
-
-						<div
-							v-if="!chargerIsSwitchDevice && chargerPower === 'other'"
-							class="row ms-3 mb-5"
-						>
-							<FormRow
-								id="loadpointMinCurrent"
-								:label="$t('config.loadpoint.minCurrentLabel')"
-								class="col-sm-6 mb-sm-0"
-								:help="
-									values.minCurrent < 6
-										? $t('config.loadpoint.minCurrentHelp')
-										: undefined
-								"
-							>
-								<PropertyField
-									id="loadpointMinCurrent"
-									v-model="values.minCurrent"
-									type="Float"
-									unit="A"
-									size="w-25 w-min-200"
-									class="me-2"
-									required
-								/>
-							</FormRow>
-
-							<FormRow
-								id="loadpointMaxCurrent"
-								:label="$t('config.loadpoint.maxCurrentLabel')"
-								class="col-sm-6 mb-sm-0"
-								:help="
-									values.maxCurrent < values.minCurrent
-										? $t('config.loadpoint.maxCurrentHelp')
-										: undefined
-								"
-							>
-								<PropertyField
-									id="loadpointMaxCurrent"
-									v-model="values.maxCurrent"
-									type="Float"
-									unit="A"
-									size="w-25 w-min-200"
-									class="me-2"
-									required
-								/>
-							</FormRow>
-						</div>
-
-						<template v-if="!chargerIsSinglePhase">
-							<FormRow
-								v-if="chargerSupports1p3p"
-								id="loadpointParamPhases"
-								:label="$t('config.loadpoint.phasesAutomatic')"
-								:help="$t('config.loadpoint.phasesAutomaticHelp')"
-							>
-							</FormRow>
-							<FormRow
-								v-else
-								id="loadpointParamPhases"
-								:label="$t('config.loadpoint.phasesLabel')"
-								:help="$t('config.loadpoint.phasesHelp')"
-							>
-								<SelectGroup
+						<template v-if="!chargerIsSwitchDevice">
+							<template v-if="!chargerIsSinglePhase">
+								<FormRow
+									v-if="chargerSupports1p3p"
 									id="loadpointParamPhases"
-									v-model="values.phasesConfigured"
-									class="w-100"
-									:options="phasesOptions"
-									transparent
-									equal-width
-								/>
-							</FormRow>
+									:label="$t('config.loadpoint.phasesAutomatic')"
+									:help="$t('config.loadpoint.phasesAutomaticHelp')"
+								>
+								</FormRow>
+								<FormRow
+									v-else
+									id="loadpointParamPhases"
+									:label="$t('config.loadpoint.phasesLabel')"
+									:help="$t('config.loadpoint.phasesHelp')"
+								>
+									<SelectGroup
+										id="loadpointParamPhases"
+										v-model="values.phasesConfigured"
+										class="w-100"
+										:options="phasesOptions"
+										transparent
+										equal-width
+									/>
+								</FormRow>
+							</template>
+
+							<div class="row">
+								<FormRow
+									id="loadpointMinCurrent"
+									:label="$t('config.loadpoint.minCurrentLabel')"
+									class="col-sm-6 mb-sm-0"
+									:warning="minCurrentWarning"
+								>
+									<div class="d-flex align-items-center gap-2">
+										<PropertyField
+											id="loadpointMinCurrent"
+											v-model="values.minCurrent"
+											type="Float"
+											unit="A"
+											size="w-50 w-sm-100"
+											required
+										/>
+										<span class="evcc-gray text-nowrap power-hint">
+											≈ {{ fmtPhasePower(values.minCurrent, minPhases) }}
+										</span>
+									</div>
+								</FormRow>
+
+								<FormRow
+									id="loadpointMaxCurrent"
+									:label="$t('config.loadpoint.maxCurrentLabel')"
+									class="col-sm-6 mb-0"
+									:warning="maxCurrentWarning"
+								>
+									<div class="d-flex align-items-center gap-2">
+										<PropertyField
+											id="loadpointMaxCurrent"
+											v-model="values.maxCurrent"
+											type="Float"
+											unit="A"
+											size="w-50 w-sm-100"
+											required
+										/>
+										<span class="evcc-gray text-nowrap power-hint">
+											≈ {{ fmtPhasePower(values.maxCurrent, maxPhases) }}
+										</span>
+									</div>
+								</FormRow>
+								<div class="col-12 form-text evcc-gray hyphenate">
+									{{ $t(`config.loadpoint.currentRangeHelp.${loadpointType}`) }}
+								</div>
+							</div>
 						</template>
 
 						<div v-if="showCircuit">
@@ -651,6 +631,7 @@ import PropertyField from "./PropertyField.vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
 import api from "@/api";
 import GenericModal from "../Helper/GenericModal.vue";
+import chargeModeLabelKey from "@/utils/chargeModeLabel";
 import deepClone from "@/utils/deepClone";
 import deepEqual from "@/utils/deepEqual";
 import sleep from "@/utils/sleep";
@@ -675,7 +656,7 @@ import {
 
 const nsPerMin = 60 * 1e9;
 
-const { OFF, PV, MINPV, NOW } = CHARGE_MODE;
+const { OFF, SMART, NOW } = CHARGE_MODE;
 
 const defaultValues = {
 	id: undefined,
@@ -740,7 +721,6 @@ export default {
 			saving: false,
 			values: deepClone(defaultValues) as ConfigLoadpoint,
 			baseline: JSON.stringify(defaultValues),
-			chargerPower: "11kw",
 			solarMode: "default",
 			autoCreate: false,
 			autoCreateInProgress: false,
@@ -751,6 +731,10 @@ export default {
 	computed: {
 		id(): number | undefined {
 			return getModal("loadpoint")?.id;
+		},
+		thresholdsSet(): boolean {
+			const { enable, disable } = this.values.thresholds;
+			return enable.threshold !== 0 || disable.threshold !== 0;
 		},
 		dirty(): boolean {
 			return JSON.stringify(this.values) !== this.baseline;
@@ -805,6 +789,9 @@ export default {
 		chargerIsSwitchDevice() {
 			return this.chargerStatus?.switchDevice?.value || false;
 		},
+		chargerIsContinuous() {
+			return this.chargerStatus?.continuous?.value || false;
+		},
 		chargerIsHeating() {
 			return this.chargerStatus?.heating?.value === true;
 		},
@@ -836,6 +823,22 @@ export default {
 			result[10]!.name = "10 (highest)";
 			return result;
 		},
+		minCurrentWarning() {
+			return this.values.minCurrent < 6 && !this.chargerIsHeating
+				? this.$t("config.loadpoint.minCurrentHelp")
+				: undefined;
+		},
+		maxCurrentWarning() {
+			return this.values.maxCurrent < this.values.minCurrent
+				? this.$t("config.loadpoint.maxCurrentHelp")
+				: undefined;
+		},
+		minPhases() {
+			return this.values.phasesConfigured || 1;
+		},
+		maxPhases() {
+			return this.values.phasesConfigured || 3;
+		},
 		phasesOptions() {
 			return [
 				{ value: 1, name: this.$t("config.loadpoint.phases1p") },
@@ -844,9 +847,12 @@ export default {
 		},
 		defaultModeOptions(): { key: CHARGE_MODE; name: string }[] {
 			// empty option is provided by PropertyField placeholder
-			// switch devices have no current control, so minpv does not apply
-			const modes = this.chargerIsSwitchDevice ? [OFF, PV, NOW] : [OFF, PV, MINPV, NOW];
-			return modes.map((key) => ({ key, name: this.$t(`main.mode.${key}`) }));
+			return [OFF, SMART, NOW].map((key) => ({
+				key,
+				name: this.$t(
+					chargeModeLabelKey(key, this.chargerIsContinuous, this.chargerIsSwitchDevice)
+				),
+			}));
 		},
 		showCircuit() {
 			return this.circuits.length > 0 || !!this.values.circuit;
@@ -904,15 +910,6 @@ export default {
 				this.loadConfiguration();
 			}
 		},
-		chargerPower(value) {
-			if (value === "11kw") {
-				this.values.minCurrent = 6;
-				this.values.maxCurrent = 16;
-			} else if (value === "22kw") {
-				this.values.minCurrent = 6;
-				this.values.maxCurrent = 32;
-			}
-		},
 		solarMode(value) {
 			if (value === "default") {
 				this.values.thresholds = deepClone(defaultThresholds);
@@ -926,6 +923,10 @@ export default {
 		},
 	},
 	methods: {
+		resetThresholds() {
+			this.values.thresholds.enable.threshold = 0;
+			this.values.thresholds.disable.threshold = 0;
+		},
 		reset() {
 			this.values = deepClone(defaultValues);
 			this.autoCreate = false;
@@ -940,7 +941,6 @@ export default {
 			try {
 				const res = await api.get(`config/loadpoints/${this.id}`);
 				this.values = deepClone(res.data);
-				this.updateChargerPower();
 				this.updateSolarMode();
 				this.updatePhases();
 				this.rebaseline();
@@ -1060,16 +1060,6 @@ export default {
 				this.values.meter = "";
 			}
 		},
-		updateChargerPower() {
-			const { minCurrent, maxCurrent } = this.values;
-			if (minCurrent === 6 && maxCurrent === 16) {
-				this.chargerPower = "11kw";
-			} else if (minCurrent === 6 && maxCurrent === 32) {
-				this.chargerPower = "22kw";
-			} else {
-				this.chargerPower = "other";
-			}
-		},
 		updateSolarMode() {
 			const { thresholds } = this.values;
 			if (deepEqual(thresholds, defaultThresholds)) {
@@ -1110,5 +1100,9 @@ export default {
 }
 h6 {
 	margin-top: 4rem;
+}
+.power-hint {
+	/* fits "≈ 11.1 kW", keeps input width stable */
+	min-width: 9ch;
 }
 </style>

@@ -80,8 +80,5 @@ render: |
             - source: http
               <<: *fdbg
               body: '{"data":"03060480ec78c412"}' # write reg 1152 (setpoint) = -5000 W
-    default:
-      source: error
-      error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

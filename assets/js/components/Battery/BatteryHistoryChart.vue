@@ -11,6 +11,8 @@ import {
 	tooltipStyle,
 	tooltipTable,
 	type TooltipRow,
+	hoverDot,
+	lineDefaults,
 } from "../Forecast/echarts";
 import colors, { dimColor, setAlpha, batteryColor } from "@/colors";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
@@ -20,6 +22,8 @@ import type { SocPoint, BatterySeries } from "./types";
 
 type Point = [number, number];
 
+// forecast lines, butt caps keep the gaps open
+const DASHED = { type: [4, 4], cap: "butt" as const };
 const GRID = { top: 10, right: 36, bottom: 34, left: 0 };
 const BADGE_GAP = 24; // badge height (12px font + 2x4px padding) plus spacing
 
@@ -101,22 +105,18 @@ export default defineComponent({
 						type: "line",
 						z: 3,
 						data: this.socHistory(b),
-						showSymbol: false,
-						lineStyle: { color: c, width: 3 },
-						itemStyle: { color: c },
+						...hoverDot(c),
+						lineStyle: { color: c, ...lineDefaults },
 						...(this.single ? { areaStyle: { color: dimColor(c) } } : {}),
-						emphasis: { disabled: true },
 					});
 					series.push({
 						id: this.seriesId(b.id, "fc"),
 						type: "line",
 						z: 3,
 						data: this.socForecast(b),
-						showSymbol: false,
-						lineStyle: { color: c, width: 2, type: "dotted" },
-						itemStyle: { color: c },
+						...hoverDot(c, DASHED),
+						lineStyle: { color: c, ...lineDefaults, ...DASHED },
 						...(this.single ? { areaStyle: { color: hatchPattern(c) } } : {}),
-						emphasis: { disabled: true },
 					});
 				});
 			} else {
@@ -129,12 +129,10 @@ export default defineComponent({
 						stack: "e-hist",
 						z: 2 + i,
 						data: this.energyData(b, "hist"),
-						showSymbol: false,
+						...hoverDot(c),
 						smooth: 0.4,
-						lineStyle: { color: c, width: 3 },
-						itemStyle: { color: c },
+						lineStyle: { color: c, ...lineDefaults },
 						areaStyle: { color: setAlpha(c, "60") },
-						emphasis: { disabled: true },
 					});
 					series.push({
 						id: this.seriesId(b.id, "fc"),
@@ -142,12 +140,10 @@ export default defineComponent({
 						stack: "e-fc",
 						z: 2 + i,
 						data: this.energyData(b, "fc"),
-						showSymbol: false,
+						...hoverDot(c, DASHED),
 						smooth: 0.4,
-						lineStyle: { color: c, width: 2, type: "dotted" },
-						itemStyle: { color: c },
+						lineStyle: { color: c, ...lineDefaults, ...DASHED },
 						areaStyle: { color: hatchPattern(c) },
-						emphasis: { disabled: true },
 					});
 				});
 			}
@@ -163,9 +159,10 @@ export default defineComponent({
 					trigger: "axis",
 					axisPointer: {
 						type: "line",
-						lineStyle: { color: colors.muted || "", opacity: 0.4 },
+						snap: true,
+						lineStyle: { color: "transparent" },
 					},
-					...tooltipStyle(colors.text || "", () => this.chart),
+					...tooltipStyle(colors.text || ""),
 					formatter: this.tooltipFormatter,
 				},
 				xAxis: this.xAxes,

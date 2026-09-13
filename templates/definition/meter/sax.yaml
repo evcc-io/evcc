@@ -86,8 +86,5 @@ render: |
               address: 43 # 2Bh battery discharging power [W]
               type: writemultiple
               encoding: uint16
-      default:
-        source: error
-        error: ErrNotAvailable
   {{- include "battery-params" . }}
   {{- end }}

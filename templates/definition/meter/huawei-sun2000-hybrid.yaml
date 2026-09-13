@@ -379,6 +379,8 @@ render: |
           type: holding
           decode: uint16
     script: v == 0
+  # the sequence hides the switch, so the modes are declared here
+  batterymodes: ["normal", "hold", "charge", "holdcharge", "discharge"]
   batterymode:
     source: sequence
     set:
@@ -622,6 +624,90 @@ render: |
                   out := rated
                   if limit < rated { out = limit }
                   out
+          - case: 5 # discharge
+            set:
+              source: sequence
+              set:
+              # register 47077 is range-checked: a maxdischargepower above the
+              # inverter rated max (37048) is rejected, so clamp before writing
+              - source: go
+                in:
+                  - name: rated
+                    type: int
+                    config:
+                      source: cached
+                      cache: 1h # rated max is static
+                      value:
+                        source: modbus
+                        {{- include "modbus" . | indent 22 }}
+                        register:
+                          address: 37048 # [ESS] Maximum discharge power (RO)
+                          type: holding
+                          decode: uint32
+                out:
+                  - name: power
+                    type: int
+                    config:
+                      source: modbus
+                      {{- include "modbus" . | indent 20 }}
+                      register:
+                        address: 47077 # Max. Discharge Power
+                        type: writemultiple
+                        encoding: uint32
+                script: |
+                  limit := {{ .maxdischargepower }}
+                  out := rated
+                  if limit < rated { out = limit }
+                  out
+              # clamp maxdischargepower to the inverter rated max (37048) for parity
+              # with discharge, avoiding a stale out-of-range value
+              - source: go
+                in:
+                  - name: rated
+                    type: int
+                    config:
+                      source: cached
+                      cache: 1h # rated max is static
+                      value:
+                        source: modbus
+                        {{- include "modbus" . | indent 22 }}
+                        register:
+                          address: 37048 # [ESS] Maximum discharge power (RO)
+                          type: holding
+                          decode: uint32
+                out:
+                  - name: power
+                    type: int
+                    config:
+                      source: modbus
+                      {{- include "modbus" . | indent 20 }}
+                      register:
+                        address: 47249 # Forcible discharge power
+                        type: writemultiple
+                        encoding: uint32
+                script: |
+                  limit := {{ .maxdischargepower }}
+                  out := rated
+                  if limit < rated { out = limit }
+                  out
+              - source: const
+                value: 2 # Minutes (watchdog*2 for redundancy reasons)
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47083 # Forced charging and discharging period
+                    type: writesingle
+                    encoding: uint16
+              - source: const
+                value: 0 # duration
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47246 # Forcible charge/discharge setting mode
+                    type: writesingle
+                    encoding: uint16
         default:
           source: error
           error: ErrNotAvailable
@@ -636,6 +722,17 @@ render: |
               set:
                 source: const
                 value: 1 # charge
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 47100 # Forcible charge/discharge
+                    type: writesingle
+                    encoding: uint16
+            - case: 5 # discharge
+              set:
+                source: const
+                value: 2 # discharge
                 set:
                   source: modbus
                   {{- include "modbus" . | indent 16 }}

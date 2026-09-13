@@ -3,6 +3,8 @@ package meter
 import (
 	"errors"
 	"fmt"
+	"maps"
+	"slices"
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
@@ -90,17 +92,26 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 			if cc.ModeNormal == "" {
 				return nil, errors.New("modeNormal is required when modeHold or modeCharge is configured")
 			}
+
 			modes := map[api.BatteryMode]string{
 				api.BatteryNormal: cc.ModeNormal,
 				api.BatteryHold:   cc.ModeHold,
 				api.BatteryCharge: cc.ModeCharge,
 			}
+
+			// an unconfigured mode is not supported
+			maps.DeleteFunc(modes, func(_ api.BatteryMode, entity string) bool {
+				return entity == ""
+			})
+
 			for _, entity := range modes {
-				if entity != "" && !strings.HasPrefix(entity, "script.") {
+				if !strings.HasPrefix(entity, "script.") {
 					return nil, fmt.Errorf("battery mode entity must be a script: %s", entity)
 				}
 			}
-			implement.Has(m, implement.BatteryController(batteryModeController(conn, modes)))
+
+			modeG := implement.BatteryModes(slices.Sorted(maps.Keys(modes))...)
+			implement.Has(m, implement.BatteryController(modeG, batteryModeController(conn, modes)))
 		} else if cc.ModeNormal != "" {
 			return nil, errors.New("modeNormal alone has no effect; configure modeHold and/or modeCharge")
 		}
@@ -144,13 +155,13 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 // the switch-like Home Assistant entity configured for the requested evcc
 // battery mode. Each mode is self-contained: evcc only triggers the matching
 // entity and never deactivates others - any mutual exclusion is the HA side's
-// responsibility. modeHold and modeCharge are optional and return
-// api.ErrNotAvailable when requested without a backing entity.
+// responsibility. modeHold and modeCharge are optional; a mode without a
+// backing entity is not announced and hence invalid here.
 func batteryModeController(conn *homeassistant.Connection, modes map[api.BatteryMode]string) func(api.BatteryMode) error {
 	return func(mode api.BatteryMode) error {
 		target, ok := modes[mode]
-		if !ok || target == "" {
-			return api.ErrNotAvailable
+		if !ok {
+			return errInvalidBatteryMode(mode)
 		}
 		return conn.CallSwitchService(target, true)
 	}

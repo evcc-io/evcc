@@ -53,7 +53,7 @@
 							@enable="handleDisable('loadpoint', loadpoint.id!, false)"
 						>
 							<template #tags>
-								<DeviceTags :tags="loadpointTags(loadpoint)" />
+								<DeviceTags :tags="loadpointTags(loadpoint)" usage="charge" />
 							</template>
 							<template #icon>
 								<VehicleIcon

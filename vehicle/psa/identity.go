@@ -2,11 +2,8 @@ package psa
 
 import (
 	"context"
-	"errors"
 	"strings"
-	"sync"
 
-	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
@@ -15,7 +12,6 @@ import (
 
 type Identity struct {
 	oauth2.TokenSource
-	mu      sync.Mutex
 	oc      *oauth2.Config
 	log     *util.Logger
 	subject string
@@ -39,22 +35,12 @@ func NewIdentity(log *util.Logger, brand, user string, oc *oauth2.Config, token 
 		subject: subject,
 	}
 
-	var tok oauth2.Token
-	if err := settings.Json(v.subject, &tok); err == nil {
-		token = &tok
+	ts, err := oauth.PersistentTokenSource(log, v.subject, token, v.refreshToken)
+	if err != nil {
+		return nil, err
 	}
 
-	if !token.Valid() {
-		if tok, err := v.refreshToken(token); err == nil {
-			token = tok
-		}
-	}
-
-	if !token.Valid() {
-		return nil, errors.New("token expired")
-	}
-
-	v.TokenSource = oauth.RefreshTokenSource(log, token, v.refreshToken)
+	v.TokenSource = ts
 
 	// add instance
 	addInstance(v.subject, v)
@@ -63,21 +49,8 @@ func NewIdentity(log *util.Logger, brand, user string, oc *oauth2.Config, token 
 }
 
 func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	v.mu.Lock()
-	defer v.mu.Unlock()
-
 	client := request.NewClient(v.log)
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, client)
 
-	tok, err := v.oc.TokenSource(ctx, token).Token()
-	if err != nil {
-		if strings.Contains(err.Error(), "invalid_grant") {
-			settings.Delete(v.subject)
-		}
-		return nil, err
-	}
-
-	err = settings.SetJson(v.subject, tok)
-
-	return tok, err
+	return v.oc.TokenSource(ctx, token).Token()
 }

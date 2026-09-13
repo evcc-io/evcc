@@ -4,7 +4,7 @@
 			{{ $t("main.targetCharge.targetIsAboveLimit", { limit: limitFmt }) }}
 		</span>
 		<span v-if="mode && ['off', 'now'].includes(mode)" class="d-block text-warning mt-1">
-			{{ $t("main.targetCharge.onlyInPvMode") }}
+			{{ $t("main.targetCharge.onlyInSmartMode") }}
 		</span>
 		<span v-if="timeTooFarInTheFuture" class="d-block evcc-gray mt-1">
 			{{ $t("main.targetCharge.targetIsTooFarInTheFuture") }}

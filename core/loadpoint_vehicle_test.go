@@ -41,9 +41,9 @@ func TestPublishSocAndRange(t *testing.T) {
 		clock:        clck,
 		charger:      charger,
 		vehicle:      vehicle,
-		chargeMeter:  &Null{}, // silence nil panics
-		chargeRater:  &Null{}, // silence nil panics
-		chargeTimer:  &Null{}, // silence nil panics
+		chargeMeter:  newChargeMeter(&Null{}), // silence nil panics
+		chargeRater:  &Null{},                 // silence nil panics
+		chargeTimer:  &Null{},                 // silence nil panics
 		socEstimator: soc.NewEstimator(log, vehicle),
 		minCurrent:   minA,
 		maxCurrent:   maxA,
@@ -157,9 +157,9 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 			clock:       clck,
 			charger:     tc.charger,
 			vehicle:     tc.vehicle,
-			chargeMeter: &Null{}, // silence nil panics
-			chargeRater: &Null{}, // silence nil panics
-			chargeTimer: &Null{}, // silence nil panics
+			chargeMeter: newChargeMeter(&Null{}), // silence nil panics
+			chargeRater: &Null{},                 // silence nil panics
+			chargeTimer: &Null{},                 // silence nil panics
 			minCurrent:  minA,
 			maxCurrent:  maxA,
 			phases:      1,
@@ -191,6 +191,46 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 		lp.socEstimator = soc.NewEstimator(log, tc.vehicle)
 		t.Run(tc.name+" w/estimator", test)
 	}
+}
+
+// https://github.com/evcc-io/evcc/issues/33627
+func TestPublishSocAndRangeEnergyLimit(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	// offline vehicle with capacity: estimator exists but soc is unknown
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Soc().AnyTimes()
+	vehicle.EXPECT().Capacity().Return(4.0).AnyTimes()
+	vehicle.EXPECT().Features().Return([]api.Feature{api.Offline}).AnyTimes()
+
+	log := util.NewLogger("foo")
+	lp := &Loadpoint{
+		log:          log,
+		bus:          evbus.New(),
+		clock:        clock.NewMock(),
+		charger:      api.NewMockCharger(ctrl),
+		vehicle:      vehicle,
+		chargeMeter:  newChargeMeter(&Null{}), // silence nil panics
+		chargeRater:  &Null{},                 // silence nil panics
+		chargeTimer:  &Null{},                 // silence nil panics
+		socEstimator: soc.NewEstimator(log, vehicle),
+		minCurrent:   minA,
+		maxCurrent:   maxA,
+		phases:       1,
+		status:       api.StatusC,
+		mode:         api.ModeNow,
+		limitEnergy:  2,   // kWh
+		chargePower:  900, // W
+	}
+	lp.energyMetrics.totalKWh = 1.1
+
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	lp.publishSocAndRange()
+
+	assert.InDelta(t, 0.9, lp.GetRemainingEnergy(), 1e-9, "remaining energy")
+	assert.Equal(t, time.Hour, lp.GetRemainingDuration(), "remaining duration")
 }
 
 func TestVehicleDetectByID(t *testing.T) {
@@ -285,7 +325,7 @@ func TestVehicleDetectByID(t *testing.T) {
 func TestDefaultVehicle(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	mode := api.ModePV
+	mode := api.ModeSmart
 	current := 66.6
 
 	dflt := api.NewMockVehicle(ctrl)
@@ -347,6 +387,33 @@ func TestDefaultVehicle(t *testing.T) {
 	assert.Nil(t, lp.vehicle, "expected no vehicle")
 }
 
+// TestVehicleChangeResetsAlwaysChargeOnce: session-scoped once must not leak
+// into another vehicle's session when the active vehicle changes.
+func TestVehicleChangeResetsAlwaysChargeOnce(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	v1 := api.NewMockVehicle(ctrl)
+	expectVehiclePublish(v1)
+	v2 := api.NewMockVehicle(ctrl)
+	expectVehiclePublish(v2)
+
+	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
+
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	lp.setActiveVehicle(v1)
+	assert.NoError(t, lp.SetAlwaysCharge(api.AlwaysChargeOnce))
+
+	// re-assigning the same vehicle keeps once
+	lp.setActiveVehicle(v1)
+	assert.Equal(t, api.AlwaysChargeOnce, lp.GetAlwaysCharge(), "same vehicle")
+
+	// vehicle change resets once
+	lp.setActiveVehicle(v2)
+	assert.Equal(t, api.AlwaysChargeOff, lp.GetAlwaysCharge(), "changed vehicle")
+}
+
 // idCharger is a minimal charger implementing api.Identifier for identifyVehicle tests.
 type idCharger struct {
 	id string
@@ -382,7 +449,7 @@ func TestReidentifyActiveVehicleKeepsMode(t *testing.T) {
 
 	// vehicle already active via a different detection path (e.g. SoC poll)
 	lp.setActiveVehicle(vehicle)
-	assert.Equal(t, api.ModePV, lp.GetMode(), "mode after first identification")
+	assert.Equal(t, api.ModeSmart, lp.GetMode(), "mode after first identification")
 
 	// user/system escalates to now in between
 	lp.SetMode(api.ModeNow)
@@ -481,7 +548,7 @@ func (c *continuousCharger) Features() []api.Feature {
 func TestDisconnectIntegratedDeviceKeepsMode(t *testing.T) {
 	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
 	lp.charger = &integratedDeviceCharger{}
-	lp.DefaultMode = api.ModePV
+	lp.DefaultMode = api.ModeSmart
 	lp.setMode(api.ModeOff)
 
 	x, y, z := createChannels(t)
@@ -553,9 +620,9 @@ func TestReconnectVehicle(t *testing.T) {
 				bus:         evbus.New(),
 				clock:       clck,
 				charger:     charger,
-				chargeMeter: &Null{}, // silence nil panics
-				chargeRater: &Null{}, // silence nil panics
-				chargeTimer: &Null{}, // silence nil panics
+				chargeMeter: newChargeMeter(&Null{}), // silence nil panics
+				chargeRater: &Null{},                 // silence nil panics
+				chargeTimer: &Null{},                 // silence nil panics
 				wakeUpTimer: NewTimer(),
 				minCurrent:  minA,
 				maxCurrent:  maxA,

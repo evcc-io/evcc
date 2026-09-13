@@ -20,8 +20,9 @@ import (
 var _ site.API = (*Site)(nil)
 
 var (
-	ErrBatteryNotConfigured       = errors.New("battery not configured")
-	ErrBatteryControlNotAvailable = errors.New("battery control not available")
+	ErrBatteryNotConfigured             = errors.New("battery not configured")
+	ErrBatteryControlNotAvailable       = errors.New("battery control not available")
+	ErrBatteryGridDischargeNotAvailable = errors.New("battery grid discharge not available")
 )
 
 // filterConfigurableDevices filters references to configurable devices of the given handler
@@ -416,6 +417,35 @@ func (site *Site) SetGridExportLimit(power float64) error {
 	return nil
 }
 
+// GetProfilePercentile returns the percentile of the historic energy profiles in %, nil = average
+func (site *Site) GetProfilePercentile() *float64 {
+	if v, err := settings.Float(keys.ProfilePercentile); err == nil {
+		return &v
+	}
+	return nil
+}
+
+// SetProfilePercentile sets the percentile of the historic energy profiles in %, nil = average
+func (site *Site) SetProfilePercentile(percentile *float64) error {
+	if percentile == nil {
+		if err := settings.Delete(keys.ProfilePercentile); err != nil {
+			return err
+		}
+	} else {
+		if *percentile < 0 || *percentile > 100 {
+			return fmt.Errorf("invalid profile percentile: %g", *percentile)
+		}
+		settings.SetFloat(keys.ProfilePercentile, *percentile)
+	}
+
+	site.publish(keys.ProfilePercentile, percentile)
+
+	// re-run the optimizer so the new profile takes effect immediately
+	go site.optimizerUpdateAsync(0)
+
+	return nil
+}
+
 // GetTariff returns the respective tariff if configured or nil
 func (site *Site) GetTariff(tariff api.TariffUsage) api.Tariff {
 	site.RLock()
@@ -466,12 +496,17 @@ func (site *Site) SetBatteryGridDischarge(val bool) error {
 	}
 
 	site.Lock()
-	defer site.Unlock()
-
-	if site.batteryGridDischarge != val {
+	changed := site.batteryGridDischarge != val
+	if changed {
 		site.batteryGridDischarge = val
 		settings.SetBool(keys.BatteryGridDischarge, val)
 		site.publish(keys.BatteryGridDischarge, val)
+	}
+	site.Unlock()
+
+	// drop the limit, it is meaningless without the opt-in
+	if changed && !val {
+		return site.SetBatteryGridDischargeLimit(nil)
 	}
 
 	return nil
@@ -523,6 +558,42 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
 		} else {
 			settings.SetFloat(keys.BatteryGridChargeLimit, *val)
 			site.publish(keys.BatteryGridChargeLimit, *val)
+		}
+	}
+
+	return nil
+}
+
+func (site *Site) GetBatteryGridDischargeLimit() *float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryGridDischargeLimit
+}
+
+func (site *Site) SetBatteryGridDischargeLimit(val *float64) error {
+	site.log.DEBUG.Println("set grid discharge limit:", printPtr("%.1f", val))
+
+	if !site.hasBatteryControl() {
+		return ErrBatteryControlNotAvailable
+	}
+
+	// a limit can only be set while the opt-in is on, so it can never outlive it
+	if val != nil && !site.GetBatteryGridDischarge() {
+		return ErrBatteryGridDischargeNotAvailable
+	}
+
+	site.Lock()
+	defer site.Unlock()
+
+	if !ptrValueEqual(site.batteryGridDischargeLimit, val) {
+		site.batteryGridDischargeLimit = val
+
+		if val == nil {
+			settings.SetString(keys.BatteryGridDischargeLimit, "")
+			site.publish(keys.BatteryGridDischargeLimit, nil)
+		} else {
+			settings.SetFloat(keys.BatteryGridDischargeLimit, *val)
+			site.publish(keys.BatteryGridDischargeLimit, *val)
 		}
 	}
 

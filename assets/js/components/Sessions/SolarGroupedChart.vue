@@ -11,7 +11,13 @@
 
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
-import { FONT_FAMILY, topBottomCenterPosition, tooltipStyle, tooltipTable } from "./echarts";
+import {
+	FONT_FAMILY,
+	lineDefaults,
+	topBottomCenterPosition,
+	tooltipStyle,
+	tooltipTable,
+} from "./echarts";
 import echartsChart from "@/mixins/echartsChart";
 import formatter from "@/mixins/formatter";
 import colors, { dimColor } from "@/colors";
@@ -110,7 +116,7 @@ export default defineComponent({
 							itemStyle: {
 								color: dimColor(entryColors[i]),
 								borderColor: entryColors[i],
-								borderWidth: 3,
+								borderWidth: lineDefaults.width,
 								// round outer corners only, sharp apex at the center
 								borderRadius: [0, 0, 8, 8],
 							},

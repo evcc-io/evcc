@@ -545,7 +545,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 			}
 
 			if _, ok := instance.OnIdentified().GetMode(); ok {
-				log.WARN.Printf("vehicle '%s': default charge 'mode' is deprecated, please configure via UI (charging plan > arrival)", cc.Name)
+				log.WARN.Printf("vehicle '%s': default charge 'mode' is deprecated, please configure via UI (more > vehicles)", cc.Name)
 			}
 
 			mu.Lock()
@@ -1529,6 +1529,13 @@ func configureLoadpoints(conf globalconfig.All) error {
 		}
 
 		if instance != nil {
+			// stored phase mode may no longer fit the charger, e.g. after it lost phase switching;
+			// fall back to the loadpoint default instead of failing boot
+			if e := instance.SetPhasesConfigured(dynamic.PhasesConfigured); e != nil {
+				log.WARN.Printf("%s: ignoring stored phases %d: %v", cc.Name, dynamic.PhasesConfigured, e)
+				dynamic.PhasesConfigured = instance.GetPhasesConfigured()
+			}
+
 			// ignore dynamic config in case of startup errors that will leave instance empty
 			if e := dynamic.Apply(instance); e != nil && err == nil {
 				err = &DeviceError{cc.Name, e}

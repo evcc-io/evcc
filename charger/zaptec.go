@@ -153,7 +153,17 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 	inst, err := c.installation()
 
 	switch {
-	case c.version != zaptec.ZaptecGo2:
+	// with passive: true evcc exercises no power control beyond on/off: no current
+	// control, and no phase switching. the latter is two quite different writes:
+	// maxChargePhases on the charger (Go 1/Pro), or threeToOnePhaseSwitchCurrent
+	// on the installation (Go 2)
+	case c.passive:
+		c.log.WARN.Println("phase switching not available: passive mode")
+
+	case c.version == zaptec.ZaptecGo:
+		// no 1p3p
+
+	case c.version == zaptec.ZaptecPro:
 		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
 
 	case err != nil:
@@ -192,11 +202,14 @@ func (c *Zaptec) detectVersion() (int, error) {
 		}
 	}
 
-	if capabilities.ProductVariant == "Go2" {
+	switch {
+	case capabilities.ProductVariant == "Go2":
 		return zaptec.ZaptecGo2, nil
+	case capabilities.ProductVariant == "ProMID" || capabilities.DeviceType == "Pro":
+		return zaptec.ZaptecPro, nil
+	default:
+		return zaptec.ZaptecGo, nil
 	}
-
-	return zaptec.ZaptecGo1_Pro, nil
 }
 
 func (c *Zaptec) chargers() ([]zaptec.Charger, error) {
@@ -406,7 +419,7 @@ func (c *Zaptec) phases1p3p(phases int) error {
 		return err
 	}
 
-	if c.version == zaptec.ZaptecGo1_Pro {
+	if c.version == zaptec.ZaptecPro {
 		// adjust the current by +/- 0.1A; otherwise, the phase change will not happen
 		current, err := res.ObservationByID(zaptec.ChargerMaxCurrent).Float64()
 		if err != nil {
@@ -440,7 +453,7 @@ func (c *Zaptec) phases1p3p(phases int) error {
 }
 
 func (c *Zaptec) switchPhases(phases int) error {
-	if c.version == zaptec.ZaptecGo1_Pro {
+	if c.version == zaptec.ZaptecPro {
 		data := zaptec.Update{
 			MaxChargePhases: &phases,
 		}
