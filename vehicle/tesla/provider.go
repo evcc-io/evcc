@@ -1,6 +1,7 @@
 package tesla
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -40,20 +41,22 @@ var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	status := api.StatusA // disconnected
 	res, err := v.dataG()
 	if err != nil {
-		return status, err
+		return api.StatusNone, err
 	}
 
-	switch res.Response.ChargeState.ChargingState {
-	case "Stopped", "NoPower", "Complete":
-		status = api.StatusB
+	// disconnected requires positive evidence, unknown states are surfaced instead of swallowed (#33323)
+	switch s := res.Response.ChargeState.ChargingState; s {
+	case "Disconnected":
+		return api.StatusA, nil
+	case "Stopped", "NoPower", "Complete", "Starting":
+		return api.StatusB, nil
 	case "Charging":
-		status = api.StatusC
+		return api.StatusC, nil
+	default:
+		return api.StatusNone, fmt.Errorf("invalid charging state: %q", s)
 	}
-
-	return status, nil
 }
 
 var _ api.ChargeRater = (*Provider)(nil)
