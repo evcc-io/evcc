@@ -249,7 +249,7 @@ func TestUpdateProfile(t *testing.T) {
 	{
 		from := clock.Now().Local().AddDate(0, 0, -2).Add(12 * time.Hour) // 12:00 of day 0
 
-		prof, err := energyProfileFiltered(entity, from, nil)
+		prof, err := energyProfileFiltered(entity, from, nil, 0.5)
 		require.NoError(t, err)
 
 		var expected [96]float64
@@ -267,7 +267,7 @@ func TestUpdateProfile(t *testing.T) {
 	{
 		from := clock.Now().Local().AddDate(0, 0, -3).Add(12 * time.Hour) // 12:00 of day -1
 
-		prof, err := energyProfileFiltered(entity, from, nil)
+		prof, err := energyProfileFiltered(entity, from, nil, 0.5)
 		require.NoError(t, err)
 
 		var expected [96]float64
@@ -276,6 +276,44 @@ func TestUpdateProfile(t *testing.T) {
 		}
 
 		require.Equal(t, expected, *prof, "full profile: expected %v, got %v", expected, *prof)
+	}
+}
+
+func TestEnergyProfilePercentile(t *testing.T) {
+	clock := clock.NewMock()
+
+	// adjust for 00:00 in local timezone
+	_, o := clock.Now().Zone()
+	clock.Add(-time.Duration(o) * time.Second)
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	entity := entity{Id: 2, Name: "foo"}
+	require.NoError(t, db.Instance.FirstOrCreate(&entity).Error)
+
+	from := clock.Now()
+
+	// 3 days: two regular days and one heavy outlier day, sorted per slot: 1, 1.2, 1000.1
+	for day, energy := range []float64{1, 1000, 1} {
+		for range 96 {
+			persist(entity, clock.Now(), energy+float64(day)*0.1, 0, nil, false)
+			clock.Add(15 * time.Minute)
+		}
+	}
+
+	for percentile, expected := range map[float64]float64{
+		0:    1,
+		0.25: 1.1, // interpolated between rank 1 and 2
+		0.5:  1.2, // median, outlier ignored
+		1:    1000.1,
+	} {
+		prof, err := energyProfileFiltered(entity, from, nil, percentile)
+		require.NoError(t, err)
+
+		for _, v := range prof {
+			require.InDelta(t, expected, v, 1e-9, "percentile %.2f", percentile)
+		}
 	}
 }
 

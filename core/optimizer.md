@@ -26,7 +26,7 @@ TODO
 
 ### Base load energy demand
 
-Collected 15min energy profile averaged over the last 30 days.
+Collected 15min energy profile, median per slot over the last 30 days.
 
 ### Measured value blending
 
