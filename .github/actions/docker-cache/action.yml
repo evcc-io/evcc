@@ -1,0 +1,51 @@
+name: Docker build cache
+description: >
+  Restores the Dockerfile's Go and npm cache mounts and persists them afterwards.
+  BuildKit cache mounts live in the builder daemon and are not covered by any
+  cache exporter, so they have to be injected and extracted explicitly. Requires
+  Buildx to be set up and must run before the build.
+
+inputs:
+  builder:
+    description: Buildx builder name
+    required: true
+  cache-scope:
+    description: >
+      Cache namespace, mirroring build-toolchain. "main" (default) writes the
+      shared cache. Untrusted callers (e.g. PR builds) should pass a different
+      value such as "pr": writes stay isolated so they cannot poison the shared
+      cache, while reads still fall back to it.
+    default: main
+
+runs:
+  using: composite
+  steps:
+    # Rotates with the dependency set. Source changes keep using the existing
+    # cache, which still covers the third-party packages dominating the build.
+    - name: Cache mount contents
+      id: cache
+      uses: actions/cache@v6
+      with:
+        path: .docker-cache
+        key: ${{ runner.os }}-docker-mounts-${{ inputs.cache-scope }}-${{ hashFiles('go.sum', 'package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-docker-mounts-${{ inputs.cache-scope }}-
+          ${{ runner.os }}-docker-mounts-main-
+
+    # the go module cache restores read-only, which fails the dance's cleanup
+    # of the source directory after injection
+    - name: Make cache mounts writable
+      shell: bash
+      run: test -d .docker-cache && chmod -R u+w .docker-cache || true
+
+    - name: Inject cache mounts
+      uses: reproducible-containers/buildkit-cache-dance@5422eac04292c961a382e0f584ea0f03ad9da723 # v3.4.0
+      with:
+        builder: ${{ inputs.builder }}
+        cache-map: |
+          {
+            ".docker-cache/go-build": "/root/.cache/go-build",
+            ".docker-cache/go-mod": "/root/.cache/go-mod",
+            ".docker-cache/npm": "/root/.npm"
+          }
+        skip-extraction: ${{ steps.cache.outputs.cache-hit }}

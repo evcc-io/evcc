@@ -7,6 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/vehicle/volvo/connected"
 )
 
@@ -26,7 +27,7 @@ func NewVolvoConnectedFromConfig(ctx context.Context, other map[string]any) (api
 		embed       `mapstructure:",squash"`
 		VIN         string
 		VccApiKey   string
-		Credentials ClientCredentials
+		Credentials oauth.ClientCredentials
 		RedirectUri string
 		Cache       time.Duration
 	}{

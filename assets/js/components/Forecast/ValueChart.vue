@@ -18,11 +18,13 @@ import {
 	filterForecastSlots,
 	minSlotIndex,
 	maxSlotIndex,
+	hoverDot,
+	lineDefaults,
 } from "./echarts";
 import colors from "@/colors";
 import formatter from "@/mixins/formatter";
 import chartMixin from "./chartMixin";
-import type { ForecastSlot } from "./types";
+import type { UiForecastSlot } from "@/types/evcc";
 
 export type ValueChartType = "co2" | "temperature";
 
@@ -31,13 +33,13 @@ export default defineComponent({
 	mixins: [formatter, chartMixin],
 	props: {
 		type: { type: String as PropType<ValueChartType>, required: true },
-		rates: { type: Array as PropType<ForecastSlot[]>, required: true },
+		rates: { type: Array as PropType<UiForecastSlot[]>, required: true },
 	},
 	computed: {
 		color(): string {
 			return (this.type === "co2" ? colors.co2 : colors.temperature) || "";
 		},
-		slots(): ForecastSlot[] {
+		slots(): UiForecastSlot[] {
 			return filterForecastSlots(this.rates, this.startDate, this.endDate);
 		},
 		yMin(): number {
@@ -46,7 +48,7 @@ export default defineComponent({
 			return Math.min(0, Math.floor(Math.min(...this.slots.map((s) => s.value))));
 		},
 		markPoints(): {
-			coord: [string, number];
+			coord: [number, number];
 			value: string;
 			label?: Record<string, unknown>;
 		}[] {
@@ -55,7 +57,7 @@ export default defineComponent({
 			const minIdx = minSlotIndex(slots);
 			const maxIdx = maxSlotIndex(slots);
 			const points: {
-				coord: [string, number];
+				coord: [number, number];
 				value: string;
 				label?: Record<string, unknown>;
 			}[] = [];
@@ -77,7 +79,7 @@ export default defineComponent({
 		chartOption(): Record<string, unknown> {
 			const color = this.color;
 
-			// oxlint-disable-next-line @typescript-eslint/no-this-alias
+			// oxlint-disable-next-line typescript/no-this-alias
 			const vThis = this;
 			return {
 				animationDuration: 0,
@@ -86,7 +88,7 @@ export default defineComponent({
 				tooltip: {
 					trigger: "axis",
 					axisPointer: { type: "line", snap: true, lineStyle: { color: "transparent" } },
-					...tooltipStyle(color, () => this.chart),
+					...tooltipStyle(color),
 					formatter(params: { value: [string, number] }[]) {
 						const p = params[0];
 						if (!p) return "";
@@ -114,15 +116,8 @@ export default defineComponent({
 						type: "line",
 						data: this.slots.map((s) => [s.start, s.value]),
 						smooth: true,
-						symbol: "circle",
-						symbolSize: 6,
-						showSymbol: false,
-						lineStyle: { color, width: 3 },
-						emphasis: {
-							disabled: false,
-							scale: false,
-							itemStyle: { color, borderColor: color, borderWidth: 2 },
-						},
+						...hoverDot(color),
+						lineStyle: { color, ...lineDefaults },
 						markPoint: markPointLabel(
 							color,
 							this.tooltipVisible ? [] : this.markPoints,

@@ -1,0 +1,77 @@
+template: viessmann
+products:
+  - brand: Viessmann
+    description:
+      generic: Heatpump consumption (API)
+requirements:
+  # evcc: ["sponsorship"]
+  evcc: ["skiptest"]
+  description:
+    de: |
+      Liest die aktuelle elektrische Leistungsaufnahme der Wärmepumpe (heating.power.consumption.current)
+      als zusätzlichen Verbraucher (aux). Dadurch erscheint die Wärmepumpe im Energiefluss unter "Verbrauch"
+      und ihr Verbrauch fließt in die evcc-Statistik ein - unabhängig davon, ob evcc die Wärmepumpe steuert.
+    en: |
+      Reads the heat pump's current electrical power consumption (heating.power.consumption.current) as an
+      additional consumer (aux). The heat pump then appears under "Consumption" in the energy flow and its
+      usage feeds the evcc statistics - independent of whether evcc controls the heat pump.
+params:
+  - name: usage
+    choice: ["aux"]
+  - name: clientid
+    required: true
+    help:
+      de: Konfigurieren in [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
+      en: Configure at [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
+  - name: redirecturi
+    help:
+      en: "Redirect URI of the evcc instance. Must match the redirect URI set in the Viessmann developer portal."
+      de: "Redirect-URI der evcc-Instanz. Muss mit der Redirect URI übereinstimmen, die im Viessmann Developer Portal konfiguriert ist."
+    service: auth/redirecturi
+  - name: gateway_serial
+    required: true
+    service: viessmann/equipment?detail=gateways&clientid={clientid}&redirecturi={redirecturi}
+    description:
+      de: Gateway Serial
+      en: Gateway Serial
+    help:
+      de: Wird nach der Anmeldung automatisch ermittelt. Alternativ manuell eintragen (ViCare App -> Einstellungen -> Kommunikationsmodul -> Seriennummer)
+      en: Determined automatically after login. Alternatively enter manually (ViCare app -> Settings -> Communication module -> Serial number)
+  - name: installation_id
+    required: true
+    service: viessmann/equipment?clientid={clientid}&redirecturi={redirecturi}
+    description:
+      de: Installation ID
+      en: Installation ID
+    help:
+      de: Wird nach der Anmeldung automatisch ermittelt.
+      en: Determined automatically after login.
+  - name: device_id
+    required: true
+    description:
+      de: Device ID
+      en: Device ID
+    help:
+      de: normalerweise `0`
+      en: typically `0`
+    default: 0
+auth:
+  type: viessmann
+  params: [clientid, redirecturi, gateway_serial]
+render: |
+  {{- $device := printf "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/%s/gateways/%s/devices/%s" .installation_id .gateway_serial .device_id }}
+  type: custom
+  power:
+    # heating.power.consumption.current: real electrical input power in kW -> W.
+    # Uses the same device feature-list URL + cache as the Viessmann charger, so when
+    # both are configured this shares one cached request instead of doubling API calls
+    # (the Viessmann API has a strict daily quota shared with the ViCare app).
+    source: http
+    uri: {{ $device }}/features
+    cache: 60s
+    auth:
+      source: viessmann
+      clientid: {{ .clientid }}
+      redirecturi: {{ .redirecturi }}
+      gateway_serial: {{ .gateway_serial }}
+    jq: '.data[] | select(.feature == "heating.power.consumption.current") | .properties.value.value * 1000' # kW -> W

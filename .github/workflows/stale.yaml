@@ -20,5 +20,17 @@ jobs:
         with:
           days-before-stale: 7
           days-before-close: 5
-          exempt-issue-labels: "pinned,security,backlog,bug"
+          exempt-issue-labels: "pinned,security,backlog,bug,waiting for feedback"
           exempt-pr-labels: "pinned,security,backlog,bug"
+
+      # issues without the requested feedback close after a week
+      - uses: actions/stale@v11
+        id: waiting
+        with:
+          only-issue-labels: "waiting for feedback"
+          days-before-issue-stale: 7
+          days-before-issue-close: 0
+          days-before-pr-stale: -1
+          days-before-pr-close: -1
+          exempt-issue-labels: "pinned,security,backlog"
+          close-issue-message: "Closing since the requested feedback was not provided. You can still comment with requested feedback and we'll reopen."

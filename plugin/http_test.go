@@ -60,11 +60,8 @@ type httpTestSuite struct {
 
 func (suite *httpTestSuite) SetupSuite() {
 	suite.h = new(httpHandler)
-	suite.srv = httptest.NewServer(suite.h)
-}
-
-func (suite *httpTestSuite) TearDown() {
-	suite.srv.Close()
+	suite.srv = httptest.NewTestServer(suite.T(), suite.h)
+	suite.srv.Start()
 }
 
 func (suite *httpTestSuite) TestGet() {
@@ -162,6 +159,27 @@ func (suite *httpTestSuite) TestSetPath() {
 	suite.Require().NoError(err)
 	suite.Require().NoError(s("4711"))
 	suite.Require().Equal("/foo/bar/4711", suite.h.req.URL.String())
+}
+
+func TestRepeatedGetFailed(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		http.Error(w, "nope", http.StatusInternalServerError)
+	}))
+	defer srv.Close()
+
+	p := NewHTTP(util.NewLogger("foo"), http.MethodGet, srv.URL, false, 0)
+	g, err := p.StringGetter()
+	require.NoError(t, err)
+
+	// a failing request is retried by the caller, it must not count as a sighting
+	for range 2 {
+		_, err := g()
+		require.Error(t, err)
+	}
+
+	httpSeenMu.Lock()
+	defer httpSeenMu.Unlock()
+	require.NotContains(t, httpSeen, srv.URL)
 }
 
 func TestRepeatedGet(t *testing.T) {

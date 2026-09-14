@@ -40,11 +40,15 @@ export default defineComponent({
 		},
 		options() {
 			const result = [];
-			const start = this.rangeActive ? this.minTemp : 20;
+			const start = this.rangeActive ? this.minTemp : 5;
 			const end = this.rangeActive ? this.maxTemp : 100;
 			for (let soc = start; soc <= end; soc += this.step) {
-				const name = this.fmtSocOption(soc, this.rangePerSoc, distanceUnit(), this.heating);
-				result.push({ value: soc, name });
+				result.push(this.socOption(soc));
+			}
+			// include current value if it's not in the list
+			if (this.limitSoc && !result.some((o) => o.value === this.limitSoc)) {
+				result.push(this.socOption(this.limitSoc));
+				result.sort((a, b) => a.value - b.value);
 			}
 			return result;
 		},
@@ -61,6 +65,10 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		socOption(soc: number) {
+			const name = this.fmtSocOption(soc, this.rangePerSoc, distanceUnit(), this.heating);
+			return { value: soc, name };
+		},
 		change(e: Event) {
 			return this.$emit(
 				"limit-soc-updated",

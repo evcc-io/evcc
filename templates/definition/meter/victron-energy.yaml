@@ -91,6 +91,9 @@ render: |
         address: 808 # ACout pv power L1
         type: input
         decode: uint16
+      block: # 808-813
+        register: 808
+        count: 6
     - source: modbus
       uri: {{ joinHostPort .host .port }}
       id: 100 # com.victronenergy.system
@@ -98,6 +101,9 @@ render: |
         address: 809 # ACout pv power L2
         type: input
         decode: uint16
+      block: # 808-813
+        register: 808
+        count: 6
     - source: modbus
       uri: {{ joinHostPort .host .port }}
       id: 100 # com.victronenergy.system
@@ -105,6 +111,9 @@ render: |
         address: 810 # ACout pv power L3
         type: input
         decode: uint16
+      block: # 808-813
+        register: 808
+        count: 6
     - source: modbus
       uri: {{ joinHostPort .host .port }}
       id: 100 # com.victronenergy.system
@@ -112,6 +121,9 @@ render: |
         address: 811 # ACin pv power L1
         type: input
         decode: uint16
+      block: # 808-813
+        register: 808
+        count: 6
     - source: modbus
       uri: {{ joinHostPort .host .port }}
       id: 100 # com.victronenergy.system
@@ -119,6 +131,9 @@ render: |
         address: 812 # ACin pv power L2
         type: input
         decode: uint16
+      block: # 808-813
+        register: 808
+        count: 6
     - source: modbus
       uri: {{ joinHostPort .host .port }}
       id: 100 # com.victronenergy.system
@@ -126,6 +141,9 @@ render: |
         address: 813 # ACin pv power L3
         type: input
         decode: uint16
+      block: # 808-813
+        register: 808
+        count: 6
     - source: modbus
       uri: {{ joinHostPort .host .port }}
       id: 100 # com.victronenergy.system

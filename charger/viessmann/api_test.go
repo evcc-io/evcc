@@ -49,3 +49,29 @@ func TestInstallationsError(t *testing.T) {
 	_, err := api.Installations()
 	require.Error(t, err)
 }
+
+func TestFeatures(t *testing.T) {
+	api := testAPI(t, func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, "/features/installations/3242119/gateways/7472258009383262/devices/0/features", r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"data":[
+			{"feature":"heating.dhw.oneTimeCharge","properties":{"active":{"type":"boolean","value":false}}},
+			{"feature":"heating.power.consumption.current","properties":{"value":{"type":"number","value":1.345}}}
+		]}`))
+	})
+
+	res, err := api.Features("3242119", "7472258009383262", "0")
+	require.NoError(t, err)
+	require.Len(t, res, 2)
+	assert.Equal(t, "heating.dhw.oneTimeCharge", res[0].Feature)
+	assert.Equal(t, "heating.power.consumption.current", res[1].Feature)
+}
+
+func TestFeaturesError(t *testing.T) {
+	api := testAPI(t, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusTooManyRequests)
+	})
+
+	_, err := api.Features("3242119", "7472258009383262", "0")
+	require.Error(t, err)
+}

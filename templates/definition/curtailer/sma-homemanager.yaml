@@ -1,0 +1,25 @@
+template: sma-homemanager
+products:
+  - brand: SMA
+    description:
+      generic: Sunny Home Manager 2.0
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 2
+    help:
+      en: ModbusTCP server needs to be enabled.
+      de: Der ModbusTCP Server muss aktiviert sein.
+render: |
+  type: custom
+  curtail:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 40016 # Wirkleistungssollwert P, in % der maximalen Wirkleistung (PMAX) der PV-Anlage
+      type: writesingle
+      encoding: uint16
+  curtailed:
+    source: error
+    error: ErrNotAvailable

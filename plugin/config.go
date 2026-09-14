@@ -41,6 +41,9 @@ type (
 	IntSetter interface {
 		IntSetter(param string) (func(int64) error, error)
 	}
+	IntKeysGetter interface {
+		IntKeys() ([]int64, error)
+	}
 	BoolSetter interface {
 		BoolSetter(param string) (func(bool) error, error)
 	}
@@ -127,6 +130,40 @@ func (c *Config) IntSetter(ctx context.Context, param string) (func(int64) error
 	}
 
 	return prov.IntSetter(param)
+}
+
+// IntSetterKeys returns an int setter together with the keys it has a case for.
+// The keys are nil if the setter doesn't switch on its value.
+func (c *Config) IntSetterKeys(ctx context.Context, param string) (func(int64) error, []int64, error) {
+	prov, err := plugin[IntSetter]("int", ctx, c)
+	if prov == nil || err != nil {
+		return nil, nil, err
+	}
+
+	set, err := prov.IntSetter(param)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var keys []int64
+	if v, ok := prov.(IntKeysGetter); ok {
+		if keys, err = v.IntKeys(); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	return set, keys, nil
+}
+
+// intKeys returns the keys the config's int setter has a case for, nil if it doesn't switch.
+// A config that cannot be constructed is reported when its setter is built, not here.
+func (c *Config) intKeys(ctx context.Context) ([]int64, error) {
+	prov, err := plugin[IntKeysGetter]("int", ctx, c)
+	if prov == nil || err != nil {
+		return nil, nil
+	}
+
+	return prov.IntKeys()
 }
 
 func (c *Config) FloatSetter(ctx context.Context, param string) (func(float642 float64) error, error) {

@@ -1,5 +1,6 @@
 .cache
 .claude
+.docker-cache
 .idea
 .omc
 .playwright-mcp

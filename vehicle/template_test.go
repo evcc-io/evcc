@@ -43,7 +43,7 @@ func TestTemplates(t *testing.T) {
 	})
 }
 
-// onlineVehicleFeatures render via the shared vehicle-features include, so a
+// onlineVehicleFeatures render via the shared vehicle features include, so a
 // stored config may carry them; dropping the param breaks reload (discussion #31291).
 var onlineVehicleFeatures = []string{"streaming", "coarsecurrent", "welcomecharge", "climaterdisabled", "autodetectdisabled", "wakeupdisabled"}
 
@@ -60,7 +60,7 @@ var requiredFeatureParams = map[string][]string{
 
 func TestVehicleFeatureParamsConsistent(t *testing.T) {
 	for _, tmpl := range templates.ByClass(templates.Vehicle, templates.WithDeprecated()) {
-		if !strings.Contains(tmpl.Render, "vehicle-features") {
+		if !strings.Contains(tmpl.Render, `include "features"`) {
 			continue
 		}
 
@@ -77,7 +77,7 @@ func TestVehicleFeatureParamsConsistent(t *testing.T) {
 			values["template"] = tmpl.Template
 			values[feat] = true
 
-			if _, _, err := tmpl.RenderResult(templates.RenderModeInstance, values); err != nil {
+			if _, _, err := tmpl.RenderResult(templates.Vehicle, templates.RenderModeInstance, values); err != nil {
 				t.Errorf("%s: feature %q must stay a declared param: %v", tmpl.Template, feat, err)
 			}
 		}

@@ -1,0 +1,135 @@
+template: solaredge
+products:
+  - brand: SolarEdge
+    description:
+      de: Wechselrichter (Einspeisebegrenzung)
+      en: Inverter (feed-in limitation)
+requirements:
+  description:
+    de: |
+      Nur ein System kann und darf zeitgleich eine Modbus TCP-Verbindung zum Wechselrichter haben!
+      Die Einspeisebegrenzung begrenzt die Netzeinspeisung am Netzanschlusspunkt auf den geforderten Prozentsatz der installierten Generatorleistung.
+    en: |
+      Only one system can and may have a Modbus TCP connection to the inverter at the same time!
+      Feed-in limitation limits the export power at the grid connection point to the requested percentage of the installed generator power.
+params:
+  - name: modbus
+    choice: ["tcpip", "rs485"]
+    id: 1
+    port: 1502
+  - name: productionnominalmax
+    type: float
+    unit: Wp
+    required: true
+    description:
+      en: Installed generator power
+      de: Installierte Generatorleistung
+    help:
+      en: Rated generator/module power of the installation (reference value according to § 9 EEG).
+      de: Gesamtnennleistung bzw. Modul- oder Generatorleistung der Anlage (Bezugsgröße nach § 9 EEG).
+render: |
+  type: custom
+  curtail:
+    source: sequence
+    set:
+      - source: switch
+        switch:
+          - case: 100
+            set:
+              source: go
+              in:
+                - name: mode
+                  type: int
+                  config:
+                    source: modbus
+                    {{- include "modbus" . | indent 18 }}
+                    register:
+                      address: 57344 # Export Control Mode
+                      type: holding
+                      decode: uint16
+              out:
+                - name: out
+                  type: int
+                  config:
+                    source: modbus
+                    {{- include "modbus" . | indent 18 }}
+                    register:
+                      address: 57344 # Export Control Mode
+                      type: writesingle
+                      encoding: uint16
+              script: |
+                mode &^ 1 // clear bit 0 (export limitation), preserve other bits (e.g. indirect production limitation)
+        default:
+          source: go
+          in:
+            - name: mode
+              type: int
+              config:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 57344 # Export Control Mode
+                  type: holding
+                  decode: uint16
+          out:
+            - name: out
+              type: int
+              config:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 57344 # Export Control Mode
+                  type: writesingle
+                  encoding: uint16
+          script: |
+            mode | 1 // set bit 0 (export limitation via meter), preserve other bits
+      - source: const
+        value: 0 # Total
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 57345 # Export Control Limit Mode
+            type: writesingle
+            encoding: uint16
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 57346 # Export Control Site Limit
+          type: writemultiple
+          encoding: float32s
+        scale: {{ divf (maxf .productionnominalmax 1) 100 }} # % to W
+  curtailed:
+    source: go
+    in:
+      - name: mode
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 57344 # Export Control Mode
+            type: holding
+            decode: uint16
+      - name: limit
+        type: float
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 57346 # Export Control Site Limit
+            type: holding
+            decode: float32s
+    script: |
+      percent := 100.0
+      if mode&1 != 0 {
+        percent = limit * 100 / {{ maxf .productionnominalmax 1 }}
+      }
+      p := int(percent + 0.5)
+      if p < 0 {
+        p = 0
+      }
+      if p > 100 {
+        p = 100
+      }
+      p

@@ -399,29 +399,29 @@ func (wb *Kathrein) StatusReason() (api.Reason, error) {
 var _ api.Identifier = (*Kathrein)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *Kathrein) Identify() (string, error) {
+func (wb *Kathrein) Identify() ([]string, error) {
 	s, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingState, 1)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	state := binary.BigEndian.Uint16(s)
 	if state < 3 || state > 6 {
-		return "", nil
+		return nil, nil
 	}
 
 	b, err := wb.conn.ReadHoldingRegisters(kathreinRegRfid, 24)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	rfid := string(bytes.TrimRight(b, "\x00"))
 
 	if strings.HasPrefix(rfid, "RFID:") {
-		return rfid[5:], nil
+		return []string{rfid[5:]}, nil
 	}
 
-	return rfid, nil
+	return []string{rfid}, nil
 }
 
 var _ api.Diagnosis = (*Kathrein)(nil)

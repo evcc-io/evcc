@@ -6,6 +6,7 @@ import { VueHeadMixin, createHead } from "@unhead/vue/client";
 import App from "./views/App.vue";
 import setupRouter from "./router.ts";
 import setupI18n from "./i18n.ts";
+import tooltip from "./directives/tooltip.ts";
 import { watchThemeChanges } from "./theme.ts";
 import { applyUrlSettings } from "./urlSettings.ts";
 import { appDetection, sendToApp } from "./utils/native";
@@ -99,12 +100,13 @@ app.use(i18n);
 app.use(router);
 app.use(head);
 app.mixin(VueHeadMixin);
+app.directive("tooltip", tooltip);
 window.app = app.mount("#app");
 
 watchThemeChanges();
 appDetection(router);
 
-if (window.evcc.customCss === "true") {
+if (window.evcc?.customCss) {
   const link = document.createElement("link");
   link.href = `./custom.css`;
   link.rel = "stylesheet";

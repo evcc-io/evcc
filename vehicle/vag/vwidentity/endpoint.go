@@ -9,15 +9,14 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
+	"uuid"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/urlvalues"
 	"github.com/evcc-io/evcc/vehicle/vag"
-	"github.com/google/uuid"
 	"github.com/samber/lo"
 	"golang.org/x/net/publicsuffix"
 )
@@ -42,7 +41,7 @@ func LoginWithAuthURL(log *util.Logger, uri string, q url.Values, user, password
 	var verify func(url.Values)
 
 	// add code challenge
-	q = urlvalues.Copy(q)
+	q = q.Clone()
 	if rt := q.Get("response_type"); strings.Contains(rt, "code") {
 		verify = vag.ChallengeAndVerifier(q)
 	}
@@ -92,7 +91,7 @@ func (v *Service) Login(uri, user, password string) (url.Values, error) {
 	// add nonce and state
 	query := url.Values{
 		"nonce": {lo.RandomString(43, lo.LettersCharset)},
-		"state": {uuid.NewString()},
+		"state": {uuid.New().String()},
 	}
 
 	uri = uri + "&" + query.Encode()

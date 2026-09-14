@@ -43,7 +43,7 @@ func (v *Provider) status(battery func() (StatusResponse, error), refresh func()
 
 	if err == nil {
 		// result valid?
-		updated := res.Attributes.Updated()
+		updated := res.Attributes.Updated
 		if time.Since(updated) < v.expiry || updated.IsZero() {
 			v.refreshTime = time.Time{}
 			return res, err
@@ -145,7 +145,7 @@ func (v *Provider) FinishTime() (time.Time, error) {
 	if res.Attributes.RemainingTime != nil {
 		minutes := time.Duration(*res.Attributes.RemainingTime) * time.Minute
 
-		updated := res.Attributes.Updated()
+		updated := res.Attributes.Updated
 		if !updated.IsZero() {
 			return updated.Add(minutes), nil
 		}

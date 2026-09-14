@@ -201,6 +201,18 @@ test.describe("consumption breakdown", () => {
     await expect(consumption.getByRole("button")).toHaveCount(0);
   });
 
+  // 2026-04-12: consumers are not a bidirectional group. Return energy is
+  // ignored, not netted or split: home 1.0, Kitchen 0.4.
+  test("return energy is ignored", async ({ page }) => {
+    await gotoDay(page, 2026, 4, 12);
+    const consumption = section(page, "consumer");
+    await expect(consumption).toBeVisible();
+
+    await expect(consumption.getByRole("heading")).toContainText("1.0 kWh");
+    await expect(consumption.getByRole("button", { name: "Kitchen 400 Wh" })).toBeVisible();
+    await expect(consumption.getByRole("button", { name: "Others 600 Wh" })).toBeVisible();
+  });
+
   test("entity focus rescales axis and resets on unfocus", async ({ page }) => {
     await gotoDay(page, 2026, 4, 7);
     const consumption = section(page, "consumer");
@@ -217,6 +229,24 @@ test.describe("consumption breakdown", () => {
     // Unfocus → axis returns to kW range, not stuck on 1000 W cap.
     await kitchen.click();
     await expect.poll(() => yAxis(meterChart)).toEqual(["kW", "0.0", "0.3", "0.6", "0.9", "1.2"]);
+  });
+});
+
+test.describe("battery legend", () => {
+  // 2026-07: Battery 6.0/3.0 kWh, Battery 2 balanced at 4.5/4.5 kWh. A net sum
+  // would collapse the balanced battery to zero, so both directions are shown.
+  test("month legend keeps charge and discharge apart", async ({ page }) => {
+    await gotoMonth(page, 2026, 7);
+    const battery = section(page, "battery");
+    await expect(battery).toBeVisible();
+
+    await expect(battery.getByRole("heading")).toContainText(
+      "10.5 kWh charged · 7.5 kWh discharged"
+    );
+    await expect(battery.getByRole("button", { name: "Battery 6.0 kWh · 3.0 kWh" })).toBeVisible();
+    await expect(
+      battery.getByRole("button", { name: "Battery 2 4.5 kWh · 4.5 kWh" })
+    ).toBeVisible();
   });
 });
 
@@ -239,6 +269,26 @@ test.describe("additional meters", () => {
   test("bidirectional axis when data contains exports", async ({ page }) => {
     await gotoDay(page, 2026, 4, 10);
     expect(await yAxis(chart(page, "meter"))).toEqual(["kW", "-2.0", "-1.0", "0.0", "1.0", "2.0"]);
+  });
+
+  // 2026-04-10: "Submeter" 2.0/0.4 kWh. A netted value would read the same
+  // for import and export, so any return energy shows both directions.
+  test("bidirectional meter shows both directions", async ({ page }) => {
+    await gotoDay(page, 2026, 4, 10);
+    const additional = section(page, "meter");
+    await expect(
+      additional.getByRole("button", { name: "Submeter 2.0 kWh · 400 Wh" })
+    ).toBeVisible();
+  });
+
+  // 2026-04-13: export-only meter without an importing sibling. Return energy
+  // alone triggers the split, otherwise 1.2 kWh would read as consumption.
+  test("export-only meter alone shows both directions", async ({ page }) => {
+    await gotoDay(page, 2026, 4, 13);
+    const additional = section(page, "meter");
+    await expect(
+      additional.getByRole("button", { name: "Feed-in meter 0.0 kWh · 1.2 kWh" })
+    ).toBeVisible();
   });
 });
 

@@ -35,6 +35,7 @@ type Tunnel struct {
 
 	mu      sync.Mutex
 	session *yamux.Session
+	lastErr error
 }
 
 // NewTunnel creates a new tunnel client.
@@ -66,6 +67,7 @@ func (t *Tunnel) run() {
 		ok, err := t.connect(ctx)
 		if err != nil && !errors.Is(err, context.Canceled) {
 			t.log.ERROR.Printf("tunnel: %v", err)
+			t.setError(err)
 		}
 
 		// rejected credentials will not self-heal; a new token requires a restart
@@ -139,6 +141,9 @@ func (t *Tunnel) connect(ctx context.Context) (bool, error) {
 func (t *Tunnel) changeState(session *yamux.Session, err error) {
 	t.mu.Lock()
 	t.session = session
+	if session != nil {
+		t.lastErr = nil
+	}
 	t.mu.Unlock()
 
 	if t.onStateChange != nil {
@@ -154,6 +159,23 @@ func (t *Tunnel) changeState(session *yamux.Session, err error) {
 			t.log.INFO.Println("tunnel disconnected:", err)
 		}
 	}
+}
+
+func (t *Tunnel) setError(err error) {
+	t.mu.Lock()
+	t.lastErr = err
+	t.mu.Unlock()
+
+	if t.onStateChange != nil {
+		t.onStateChange()
+	}
+}
+
+// Error returns the last connection error, if any.
+func (t *Tunnel) Error() error {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.lastErr
 }
 
 // IsConnected returns whether the tunnel is currently connected.

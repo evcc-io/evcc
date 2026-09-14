@@ -202,8 +202,9 @@ func (d *dumper) Dump(name string, v any) {
 	}
 
 	// controllable battery
-	if api.HasCap[api.BatteryController](v) {
+	if v, ok := api.Cap[api.BatteryController](v); ok {
 		fmt.Fprintf(w, "Controllable:\ttrue\t\t\n")
+		fmt.Fprintf(w, "Battery modes:\t%v\t\t\n", v.BatteryModes())
 	}
 
 	if v, ok := api.Cap[api.Charger](v); ok {
@@ -313,7 +314,8 @@ func (d *dumper) Dump(name string, v any) {
 
 	if v, ok := api.Cap[api.Identifier](v); ok {
 		d.measureTime(w, "Identifier", func() (string, error) {
-			id, err := v.Identify()
+			ids, err := v.Identify()
+			id := strings.Join(ids, ", ")
 			if err == nil && id == "" {
 				id = "<none>"
 			}

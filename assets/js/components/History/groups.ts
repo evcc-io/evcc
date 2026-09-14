@@ -1,5 +1,16 @@
 export const GROUP_ORDER = ["pv", "battery", "grid", "loadpoint", "consumer", "meter"] as const;
 
+const BIDIRECTIONAL_GROUPS: ReadonlySet<string> = new Set(["grid", "battery"]);
+
+// battery and grid are always bidirectional, additional meters when they export
+export function isBidirectional(
+  group: string,
+  series: { data: { returnEnergy: number }[] }[]
+): boolean {
+  if (BIDIRECTIONAL_GROUPS.has(group)) return true;
+  return group === "meter" && series.some((s) => s.data.some((slot) => slot.returnEnergy > 0));
+}
+
 const COLOR_PICKER_GROUPS = ["loadpoint", "consumer", "meter"];
 
 export function hasColorPicker(group: string): boolean {

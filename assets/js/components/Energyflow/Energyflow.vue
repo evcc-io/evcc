@@ -328,7 +328,7 @@ import {
 	type Battery,
 	type Meter,
 	type CURRENCY,
-	type Forecast,
+	type UiForecast,
 	type UiLoadpoint,
 } from "@/types/evcc";
 
@@ -371,7 +371,7 @@ export default defineComponent({
 		prioritySoc: { type: Number },
 		bufferSoc: { type: Number },
 		bufferStartSoc: { type: Number },
-		forecast: { type: Object as PropType<Forecast>, default: () => ({}) },
+		forecast: { type: Object as PropType<UiForecast>, default: () => ({}) },
 	},
 	data: () => {
 		return {
@@ -656,7 +656,7 @@ export default defineComponent({
 	height: 0;
 	opacity: 0;
 	transform: scale(0.98);
-	overflow: visible;
+	overflow: hidden;
 	transition-property: height, opacity, transform;
 	transition-duration: 0;
 	transition-timing-function: cubic-bezier(0.5, 0.5, 0.5, 1.15);

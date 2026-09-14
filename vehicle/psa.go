@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/vehicle/psa"
 )
 
@@ -40,7 +41,7 @@ func newPSA(brand, realm string, other map[string]any) (api.Vehicle, error) {
 		User     string
 		Password string `mapstructure:"password"`
 		Country  string
-		Tokens   Tokens
+		Tokens   oauth.Tokens
 		Cache    time.Duration
 	}{
 		Cache: interval,

@@ -7,7 +7,7 @@ on:
 # Triggered by a `/fix` comment on any issue or PR conversation, maintainers only.
 # Delegates to the shared issue agent in fix mode, which investigates, pushes a
 # fix branch, opens a PR, comments with the result, then minimizes the calling
-# `/fix` comment as RESOLVED — but only when it actually opened a PR.
+# `/fix` comment as RESOLVED, whether or not a PR was opened.
 jobs:
   fix:
     name: Fix on demand

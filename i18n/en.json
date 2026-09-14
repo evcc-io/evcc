@@ -33,7 +33,7 @@
     },
     "combined": "Combined",
     "config": {
-      "buffer": "Home battery energy above {soc} may be used to support the charging points and delays switching off in solar mode. Start solar charging automatically {start}.",
+      "buffer": "Home battery energy above {soc} may be used to support the charging points and delays switching off in smart mode. Start solar charging automatically {start}.",
       "bufferNone": "Home battery energy is not used for the charging points. Set a value below {soc} to enable support.",
       "bufferStart": {
         "above": "once the battery is above {soc}",
@@ -63,28 +63,8 @@
     }
   },
   "batterySettings": {
-    "batteryLevel": "Battery level",
-    "bufferStart": {
-      "above": "when above {soc}.",
-      "full": "when at {soc}.",
-      "never": "only with enough surplus."
-    },
-    "capacity": "{energy} of {total}",
-    "control": "Battery control",
-    "discharge": "Prevent discharge in fast mode and planned charging.",
-    "disclaimerHint": "Note:",
-    "disclaimerText": "These settings only affect solar mode. Charging behaviour is adjusted accordingly.",
     "gridChargeTab": "Grid charging",
-    "legendBottomName": "Prioritize home battery charging",
-    "legendBottomSubline": "until it reaches {soc}.",
-    "legendMiddleName": "Prioritize vehicle charging",
-    "legendMiddleSubline": "when home battery is above {soc}.",
-    "legendTopAutostart": "Start automatically",
-    "legendTopName": "Battery-supported vehicle charging",
-    "legendTopSubline": "when home battery is above {soc}.",
-    "legendTopSublineAbove": "when above {soc}",
-    "legendTopSublineDisabled": "is {soc}.",
-    "legendTopSublineDisabledState": "disabled",
+    "gridDischargeTab": "Grid discharging",
     "modalTitle": "Home Battery",
     "noBattery": "No batteries configured.",
     "usageTab": "Battery usage"
@@ -188,6 +168,15 @@
       "label": "Currency",
       "title": "Currency"
     },
+    "curtailer": {
+      "description": "Device that limits feed-in on request of the grid operator (§ 9 EEG). Many solar inverters support this directly via their solar meter configuration. A separate configuration is only needed for some manufacturers or multi-inverter systems.",
+      "generic": "Generic integrations",
+      "specific": "Specific integrations",
+      "template": "Manufacturer",
+      "title": "Curtailment",
+      "titleAdd": "Add Curtailment Device",
+      "titleEdit": "Edit Curtailment Device"
+    },
     "deviceValue": {
       "activeClients": "Active clients",
       "amount": "Amount",
@@ -201,7 +190,7 @@
       "chargeStatusC": "charging",
       "chargeStatusE": "no power",
       "chargeStatusF": "error",
-      "chargedEnergy": "Charged",
+      "chargedEnergy": "Charged (session)",
       "co2": "Grid CO₂",
       "configured": "Configured",
       "connected": "Connected",
@@ -212,13 +201,14 @@
       "currentRange": "Current",
       "curtailLimit": "Feed-in limit",
       "curtailable": "Curtailable",
-      "curtailed": "Feed-in limited",
+      "curtailed": "Feed-in limit",
       "detected": "Detected",
       "dimLimit": "Consumption limit",
       "dimmed": "Consumption limited",
       "enabled": "Enabled",
       "energy": "Energy",
       "events": "Events",
+      "exportLimit": "Grid export limit",
       "feedinPrice": "Feed-in price",
       "forecast": "Forecast",
       "gridPrice": "Grid price",
@@ -249,6 +239,31 @@
       "temp": "Temperature",
       "topic": "Topic",
       "url": "URL",
+      "usage": {
+        "aux": {
+          "energy": "Consumed",
+          "returnEnergy": "Produced"
+        },
+        "battery": {
+          "energy": "Discharged",
+          "returnEnergy": "Charged"
+        },
+        "charge": {
+          "energy": "Charged",
+          "returnEnergy": "Discharged"
+        },
+        "consumer": {
+          "energy": "Consumed",
+          "returnEnergy": "Produced"
+        },
+        "grid": {
+          "energy": "Imported",
+          "returnEnergy": "Exported"
+        },
+        "pv": {
+          "energy": "Produced"
+        }
+      },
       "vehicleLimitSoc": "Charge limit",
       "yes": "yes"
     },
@@ -306,6 +321,7 @@
     "form": {
       "danger": "Danger",
       "deprecated": "deprecated",
+      "durationUnit": "Time unit for {label}",
       "example": "Example",
       "optional": "optional"
     },
@@ -318,17 +334,22 @@
       "change": "Change",
       "clear": "Clear",
       "close": "Close",
+      "confirmDisable": "Disable this device? It will be ignored after the next restart.",
+      "confirmEnable": "Enable this device again?",
       "confirmSave": "There are unsaved changes. Save now?",
       "copied": "Copied!",
       "copy": "Copy",
       "customHelp": "Create a user-defined device using evcc's plugin system.",
       "customOption": "User-defined device",
       "delete": "Delete",
+      "disable": "Disable",
+      "disabled": "disabled",
       "dismiss": "Dismiss",
       "docsLink": "See documentation.",
       "dragHandle": "Drag handle",
       "dragItem": "Draggable: {title}",
       "dragList": "Reorderable list",
+      "enable": "Enable",
       "error": "Error",
       "experimental": "Experimental",
       "forceSave": "Save anyway",
@@ -336,6 +357,7 @@
       "hideAdvancedSettings": "Hide advanced settings",
       "invalidFileSelected": "Invalid file selected",
       "legacy": "legacy",
+      "moreInfo": "More info:",
       "noFileSelected": "No file selected.",
       "off": "off",
       "on": "on",
@@ -371,12 +393,17 @@
       "customOption": "User-defined integration",
       "description": "Power limitation by external systems (e.g. §14a EnWG, §9 EEG interface or higher-level energy management system). Works together with the load management feature. Curtailing solar production is also supported for selected devices. The actual curtailment limit must be set on each inverter configuration.",
       "download": "Download",
+      "dynamicLimits": "Dynamic limits",
       "eventsRecorded": "Recorded {count} grid limitation events.",
+      "exportLimit": "Grid export limit",
+      "exportLimitDescription": "The battery optimizer respects this limit to avoid solar losses. An active curtailment signal from a dynamic limit integration takes precedence.",
+      "exportLimitHint": "Static feed-in limit at the grid connection point.",
       "generic": "Generic integrations",
       "integrations": "Integrations",
       "lastEvent": "Most recent {timeAgo}.",
       "noEvents": "No events recorded yet.",
       "recordedEvents": "Recorded events",
+      "staticLimits": "Static limits",
       "template": "Integration",
       "title": "External Limit",
       "type": {
@@ -420,13 +447,6 @@
         "charging": "Charger",
         "heating": "Heating device"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Will use a current range of 6 to 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Will use a current range of 6 to 32 A.",
-      "chargerPowerCustom": "other",
-      "chargerPowerCustomHelp": "Define a custom current range.",
-      "chargerTypeLabel": "Charger type",
       "chargingTitle": "Behaviour",
       "circuitHelp": "Load management assignment to ensure power and current limits are not exceeded.",
       "circuitInvalid": "Circuit does not exist",
@@ -440,6 +460,10 @@
       "creating": {
         "charging": "Charger saved. Creating charging point …",
         "heating": "Heating device saved. Creating heater …"
+      },
+      "currentRangeHelp": {
+        "charging": "Typical: 6-16 A for 11 kW, 6-32 A for 22 kW chargers (3-phase).",
+        "heating": "Depends on the rated power of the heating device (see data sheet)."
       },
       "defaultModeHelp": {
         "charging": "Charging mode when connecting the vehicle.",
@@ -490,6 +514,8 @@
       "solarBehaviorLabel": "Solar",
       "solarModeCustom": "custom",
       "solarModeMaximum": "maximum solar",
+      "solarShareNote": "The solar share slider in the user settings is disabled while watt thresholds are set. {0} and save to enable it.",
+      "solarShareReset": "Remove thresholds",
       "temperatureRangeHelp": "Display range for the temperature bar. Does not affect control.",
       "temperatureRangeTitle": "Temperature range",
       "thresholdDisableDelayLabel": "Disable delay",
@@ -527,6 +553,7 @@
     "main": {
       "addAdditional": "Add additional meter",
       "addConsumer": "Add consumer",
+      "addCurtailer": "Add curtailment device",
       "addGrid": "Add grid meter",
       "addLoadpoint": "Add charging point or heater",
       "addPvBattery": "Add solar or battery",
@@ -627,6 +654,7 @@
         "aux": "Add self-regulating consumer",
         "battery": "Add battery meter",
         "consumer": "Add regular consumer",
+        "grid": "Add grid meter",
         "pv": "Add solar meter"
       },
       "save": "Save",
@@ -817,6 +845,8 @@
       "noClients": "No clients yet. No one can connect yet.",
       "password": "Password",
       "passwordOnce": "This password is shown only once. Scan the QR code or copy it now. You won't be able to see it again.",
+      "privacy": "By enabling this feature, you agree to our {0}.",
+      "privacyLink": "privacy policy",
       "qrInstall": "Install the evcc app for {ios} or {android}.",
       "qrScan": "Scan the code with your phone's camera to connect. Click it, if you're already using your phone.",
       "removeClient": "Remove client",
@@ -830,8 +860,8 @@
       "general": "General",
       "grid": "Grid",
       "integrations": "Integrations",
-      "loadpoints": "Charging points & Heaters",
-      "meter": "Solar & Battery",
+      "loadpoints": "Charging points & heaters",
+      "meter": "Solar & battery",
       "services": "Services",
       "system": "System",
       "vehicles": "Vehicles"
@@ -893,6 +923,8 @@
           "confirmationButton": "Reset & restart",
           "confirmationText": "This will permanently delete your selected data. Ensure you've downloaded a backup first.",
           "description": "Having problems with configuration and want to start over? Delete all data and start fresh.",
+          "remote": "Remote access",
+          "remoteDescription": "Deletes configuration and credentials.",
           "sessions": "Charging sessions",
           "sessionsDescription": "Deletes your charging session history.",
           "settings": "Configuration & settings",
@@ -965,7 +997,7 @@
         "titleEdit": "Edit Temperature Forecast"
       },
       "template": "Provider",
-      "title": "Tariffs & Forecasts",
+      "title": "Tariffs & forecasts",
       "titleChoice": "What Do You Want To Add?",
       "type": {
         "co2": "CO₂ Intensity",
@@ -1072,7 +1104,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Become a sponsor",
-      "becomeSponsorExtended": "Support us directly to get stickers.",
       "confetti": "Ready for confetti?",
       "confettiPromise": "You get stickers and digital confetti",
       "sticker": "… or evcc stickers?",
@@ -1081,9 +1112,7 @@
       "titleNoSponsor": "Support us",
       "titleSponsor": "You are a supporter",
       "titleTrial": "Trial mode",
-      "titleVictron": "Sponsored by Victron Energy",
-      "trial": "You are in trial mode and can use all features. Please consider supporting the project.",
-      "victron": "You're using evcc on Victron Energy hardware and have access to all features."
+      "trial": "You are in trial mode and can use all features. Please consider supporting the project."
     },
     "telemetry": {
       "optIn": "I want to contribute my data.",
@@ -1092,12 +1121,14 @@
       "optInSponsorship": "Sponsoring required."
     },
     "version": {
-      "availableLong": "new version available",
+      "availableLong": "update available",
       "community": "evcc community",
+      "labelEmail": "Email",
+      "labelPhone": "Phone",
       "labelRelease": "Release",
       "labelVersion": "Version",
       "labelWebsite": "Website",
-      "latestVersion": "latest version",
+      "latestVersion": "up to date",
       "madeByCommunity": "Made by the {0}.",
       "modalCancel": "Cancel",
       "modalDownload": "Download",
@@ -1112,7 +1143,7 @@
       "modalUpdateStatusStart": "Installation started:",
       "modalViewOnGitHub": "View on GitHub",
       "openSource": "open source",
-      "poweredByOpenSource": "Powered by {0}."
+      "poweredBy": "powered by"
     }
   },
   "forecast": {
@@ -1161,9 +1192,12 @@
     }
   },
   "general": {
+    "back": "Back",
     "download": "Download",
+    "error": "Error",
     "none": "none",
-    "note": "Note:"
+    "note": "Note:",
+    "warning": "Warning"
   },
   "header": {
     "about": "About",
@@ -1176,6 +1210,7 @@
     "sessions": "Charging Sessions"
   },
   "help": {
+    "contactButton": "Contact us",
     "discussionsButton": "GitHub discussions",
     "documentationButton": "Documentation",
     "issueButton": "Report a problem",
@@ -1197,6 +1232,9 @@
   },
   "issue": {
     "additional": {
+      "copied": "copied!",
+      "copy": "copy",
+      "copySelected": "copy selected",
       "description": "Include configuration and logs to help us reproduce the issue quickly. We encourage sharing as much as possible. State is usually not needed.",
       "include": "include",
       "lines": "lines",
@@ -1215,7 +1253,10 @@
     "additionalContext": "Additional context",
     "additionalContextPlaceholder": "Any additional information that might be helpful...\n- Configuration details\n- What you tried\n- Environment details",
     "createButtonDiscussion": "Start GitHub Discussion...",
+    "createButtonEmail": "Send request by email",
     "createButtonIssue": "Create GitHub Issue...",
+    "downloadButton": "Download debug information",
+    "downloadHint": "Attach this file to your email if more information is needed.",
     "description": "Your installation is not working as expected? Use this page to get help or report issues. Provide enough detail to help us understand and reproduce the problem, while keeping your description concise, clear and easy to follow.",
     "helpType": {
       "discussion": "Need help with my setup",
@@ -1228,6 +1269,7 @@
     "issueTitle": "Title",
     "stepsToReproduce": "Steps to reproduce",
     "subTitleDiscussion": "Describe your problem",
+    "subTitleEmail": "Describe your problem",
     "subTitleIssue": "Describe the issue",
     "summary": {
       "confirmationButtonDiscussion": "Start GitHub Discussion",
@@ -1273,6 +1315,15 @@
     "title": "Authentication"
   },
   "main": {
+    "alwaysCharge": {
+      "description": "no interruptions",
+      "label": "Always charge",
+      "labelHeating": "Always heat",
+      "minCurrent": "min {current}",
+      "once": "until end of session",
+      "onceTip": "Only for this session",
+      "permanent": "stays on permanently"
+    },
     "chargingPlan": {
       "active": "Active",
       "addRepeatingPlan": "Add repeating plan",
@@ -1280,24 +1331,35 @@
       "goal": "Charging goal",
       "modalTitle": "Charging Plan",
       "none": "none",
+      "once": "once",
       "optimization": {
         "cheapest": "cheapest",
+        "cheapestDescription": "Selects the cheapest slots. May result in multiple starts and stops.",
+        "cleanest": "cleanest",
+        "cleanestDescription": "Selects the cleanest slots. May result in multiple starts and stops.",
         "continuous": "continuous",
+        "continuousCo2Description": "Selects the cleanest uninterrupted series of slots.",
+        "continuousPriceDescription": "Selects the cheapest uninterrupted series of slots.",
+        "disabledDescription": "Requires a dynamic tariff or CO₂ forecast.",
         "label": "Optimization"
       },
       "planNumber": "Plan {number}",
       "precondition": {
-        "description": "Charge {duration} before departure for battery preconditioning.",
+        "description": "Moves part of the charging right before departure: warm battery, less time at high charge level.",
+        "disabledDescription": "All charging happens right before departure.",
         "label": "Late Charging",
         "optionAll": "everything",
-        "optionNo": "no"
+        "optionNo": "no",
+        "summary": "{precondition} before",
+        "summaryAll": "right before departure"
       },
       "remove": "Remove",
       "repeating": "repeating",
       "repeatingPlans": "Repeating plans",
       "selectAll": "Select all",
-      "strategyDisabledDescription": "Charging starts as late as possible to finish just in time for departure. With dynamic grid prices or CO₂ tariff, more options are available here.",
-      "strategySettings": "Strategy settings",
+      "strategy": {
+        "label": "Strategy"
+      },
       "time": "Time",
       "title": "Plan",
       "unsavedChanges": "There are unsaved changes. Apply now?",
@@ -1384,6 +1446,7 @@
       "finished": "Finish time",
       "last24hEnergy": "Last 24h",
       "last7dEnergy": "Last 7 days",
+      "phasesMismatch": "More phases active than configured. Check phase configuration.",
       "power": "Power",
       "price": "Cost",
       "remaining": "Remaining",
@@ -1398,7 +1461,7 @@
         "descriptionDisabled": "Select a limit to allow fast charging from home battery.",
         "disabled": "Disabled",
         "label": "Battery Boost",
-        "mode": "Only available in solar and min+solar mode.",
+        "mode": "Only available in smart mode.",
         "once": "Boost active for this charging session.",
         "stateActive": "Battery boost active",
         "stateBelowLimit": "Battery too low for boost",
@@ -1416,7 +1479,7 @@
         "label": "Min. Current"
       },
       "minTemp": {
-        "description": "Below {0} battery and grid power are also used in solar mode to maintain this temperature.",
+        "description": "Below {0} battery and grid power are also used in smart mode to maintain this temperature.",
         "label": "Min. temperature"
       },
       "phasesConfigured": {
@@ -1430,14 +1493,32 @@
       },
       "smartCostCheap": "Cheap Grid Charging",
       "smartCostClean": "Clean Grid Charging",
+      "solar": "Solar Surplus",
+      "solarShare": {
+        "charging": {
+          "description": "At least {share} of the minimum charging power must come from solar.",
+          "descriptionFull": "Charging starts as soon as the surplus covers the minimum charging power.",
+          "descriptionZero": "Charging starts as soon as some surplus is available."
+        },
+        "heating": {
+          "description": "At least {share} of the minimum heating power must come from solar.",
+          "descriptionFull": "Heating starts as soon as the surplus covers the minimum heating power.",
+          "descriptionZero": "Heating starts as soon as some surplus is available."
+        },
+        "label": "Solar Share",
+        "thresholdsHint": "Power-based charging thresholds are configured. Remove them to use this slider.",
+        "thresholdsHintYaml": "Power-based charging thresholds are configured. Remove the enable/disable thresholds from this loadpoint in your evcc.yaml to use this slider.",
+        "thresholdsLink": "Edit configuration"
+      },
       "title": "Settings {0}",
       "vehicle": "Vehicle"
     },
     "mode": {
-      "minpv": "Min+Solar",
+      "boost": "Boost",
+      "normal": "Normal",
       "now": "Fast",
       "off": "Off",
-      "pv": "Solar",
+      "on": "On",
       "smart": "Smart"
     },
     "provider": {
@@ -1456,7 +1537,7 @@
       "inactiveLabel": "Target time",
       "nextPlan": "Next plan",
       "notReachableInTime": "Goal will be reached {overrun} later.",
-      "onlyInPvMode": "Charging plan only works in solar mode.",
+      "onlyInSmartMode": "Charging plan only works in smart mode.",
       "planDuration": "Charging time",
       "planPeriodLabel": "Period",
       "planPeriodValue": "{start} to {end}",
@@ -1504,13 +1585,12 @@
     "vehicleSettings": {
       "connectedTo": "connected to {0}",
       "description": "These defaults are applied when the vehicle connects to a charging point.",
-      "editHint": "Add or edit vehicles in {0}.",
+      "editHint": "Vehicles can be edited in {0}.",
       "keepAsIs": "Keep as is",
       "learnMore": "Learn more.",
       "limitSoc": "Default limit",
       "menu": "Vehicles",
       "minSoc": "Minimum charge",
-      "minSocDescription": "Fast charge to this level in solar mode.",
       "mode": "Default mode",
       "notConnected": "not connected",
       "title": "Vehicle Settings"
@@ -1582,6 +1662,7 @@
   },
   "session": {
     "addOdometer": "Add value",
+    "addedRange": "Added range",
     "cancel": "Cancel",
     "co2": "CO₂",
     "date": "Period",
@@ -1592,11 +1673,12 @@
     "meterstop": "Meter stop",
     "odometer": "Mileage",
     "price": "Cost",
-    "soc": "Vehicle SoC",
+    "soc": "Charge",
     "started": "Started",
     "title": "Charging Session"
   },
   "sessions": {
+    "addedRange": "Range",
     "avgPower": "⌀ Power",
     "avgPrice": "⌀ Price",
     "chargeDuration": "Duration",
@@ -1622,6 +1704,7 @@
     },
     "co2": "⌀ CO₂",
     "csv": {
+      "addedrange": "Added range (km)",
       "chargedenergy": "Energy (kWh)",
       "chargeduration": "Duration",
       "co2perkwh": "CO₂/kWh",
@@ -1683,6 +1766,13 @@
     "vehicle": "Vehicle"
   },
   "settings": {
+    "dateFormat": {
+      "auto": "Auto",
+      "dmy": "DD/MM/YYYY",
+      "label": "Date format",
+      "mdy": "MM/DD/YYYY",
+      "ymd": "YYYY-MM-DD"
+    },
     "deviceInfo": "Settings you make in this dialog only affect this device.",
     "fullscreen": {
       "enter": "Enter fullscreen",
@@ -1698,6 +1788,7 @@
       "label": "Language"
     },
     "loadpoints": {
+      "disabledDevice": "disabled",
       "help": "Change order and visibility for the UI.",
       "hide": "Hide {title}",
       "label": "Charging points",
@@ -1741,7 +1832,7 @@
     "co2Label": "CO₂ emission",
     "co2Limit": "CO₂ limit",
     "enable": "Enable limit",
-    "loadpointDescription": "Enables temporary fast-charging in solar mode.",
+    "loadpointDescription": "Enables temporary fast-charging in smart mode.",
     "modalTitle": "Smart Grid Charging",
     "none": "none",
     "priceLabel": "Energy price",
@@ -1751,7 +1842,8 @@
     "saved": "Saved."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Paused time",
+    "activeHoursLabel": "Active time",
+    "batteryDescription": "Discharges the home battery to the grid while the feed-in rate is high.",
     "description": "Pauses charging during high prices to prioritize profitable grid feed-in.",
     "priceLabel": "Feed-in rate",
     "priceLimit": "Feed-in limit",

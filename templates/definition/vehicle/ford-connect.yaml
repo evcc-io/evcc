@@ -36,6 +36,6 @@ render: |
   tokens:
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
-  {{ include "vehicle-common" . }}
+  {{ include "common" . }}
   cache: {{ .cache }}
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}

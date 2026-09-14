@@ -13,9 +13,7 @@ import (
 //   https://github.com/Tobiaswk/dartnissanconnect
 //   https://github.com/mitchellrj/kamereon-python
 //   https://gitlab.com/tobiaswkjeldsen/carwingsflutter
-
-// OAuth base url
-// 	 https://prod.eu.auth.kamereon.org/kauth/oauth2/a-ncb-prod/.well-known/openid-configuration
+//   https://github.com/dan-r/HomeAssistant-NissanConnect
 
 // Nissan is an api.Vehicle implementation for Nissan cars
 type Nissan struct {
@@ -54,9 +52,8 @@ func NewNissanFromConfig(other map[string]any) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("nissan").Redact(cc.User, cc.Password, cc.VIN)
-	identity := nissan.NewIdentity(log)
 
-	err := identity.Login(cc.User, cc.Password)
+	identity, err := nissan.NewIdentity(log, cc.User, cc.Password)
 	if err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}

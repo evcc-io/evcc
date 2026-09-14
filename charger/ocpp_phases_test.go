@@ -40,7 +40,7 @@ func TestWattsProfilePhases(t *testing.T) {
 				c.lp = lp
 			}
 
-			profile := c.createTxDefaultChargingProfile(current)
+			profile := c.createChargingProfile(current, 0)
 			limit := profile.ChargingSchedule.ChargingSchedulePeriod[0].Limit
 
 			require.Equal(t, 230.0*current*float64(tc.wantPhases), limit)

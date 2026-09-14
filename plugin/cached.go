@@ -46,7 +46,7 @@ func NewCachedFromConfig(ctx context.Context, other map[string]any) (Plugin, err
 	}, nil
 }
 
-func cachedGetter[T any](o *cachedPlugin, valuer func(ctx context.Context) (func() (T, error), error)) (func() (T, error), error) {
+func (o *cachedPlugin) cachedGetter[T any](valuer func(ctx context.Context) (func() (T, error), error)) (func() (T, error), error) {
 	value, err := valuer(o.ctx)
 	if err != nil {
 		return nil, fmt.Errorf("cached: %w", err)
@@ -77,23 +77,23 @@ func cachedGetter[T any](o *cachedPlugin, valuer func(ctx context.Context) (func
 var _ StringGetter = (*cachedPlugin)(nil)
 
 func (o *cachedPlugin) StringGetter() (func() (string, error), error) {
-	return cachedGetter(o, o.value.StringGetter)
+	return o.cachedGetter(o.value.StringGetter)
 }
 
 var _ FloatGetter = (*cachedPlugin)(nil)
 
 func (o *cachedPlugin) FloatGetter() (func() (float64, error), error) {
-	return cachedGetter(o, o.value.FloatGetter)
+	return o.cachedGetter(o.value.FloatGetter)
 }
 
 var _ IntGetter = (*cachedPlugin)(nil)
 
 func (o *cachedPlugin) IntGetter() (func() (int64, error), error) {
-	return cachedGetter(o, o.value.IntGetter)
+	return o.cachedGetter(o.value.IntGetter)
 }
 
 var _ BoolGetter = (*cachedPlugin)(nil)
 
 func (o *cachedPlugin) BoolGetter() (func() (bool, error), error) {
-	return cachedGetter(o, o.value.BoolGetter)
+	return o.cachedGetter(o.value.BoolGetter)
 }

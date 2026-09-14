@@ -19,7 +19,7 @@ params:
     default: 720h # 30d
 render: |
   type: custom
-  {{- include "vehicle-common" . }}
+  {{- include "common" . }}
   soc:
     source: mqtt
     topic: teslamate/cars/{{ .id }}/usable_battery_level
@@ -69,4 +69,4 @@ render: |
     source: mqtt
     topic: teslamate/cars/{{ .id }}/is_preconditioning
     timeout: {{ .timeout }}
-  {{ include "vehicle-features" (merge (dict "basefeatures" (list "coarsecurrent")) .) }}
+  {{ include "features" (merge (dict "basefeatures" (list "coarsecurrent")) .) }}

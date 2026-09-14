@@ -194,7 +194,7 @@ export function buildQuery(stack: ModalEntry[]): Record<string, string> {
 export function extractQueryString(fullPath: string): string {
   const qIdx = fullPath.indexOf("?");
   if (qIdx === -1) return "";
-  return fullPath.substring(qIdx + 1);
+  return fullPath.substring(qIdx + 1).split("#")[0]!;
 }
 
 export function initConfigModal(router: Router): void {
@@ -254,7 +254,7 @@ export function openModal(
 
   return new Promise<ModalResult>((resolve) => {
     _resolvers.push(resolve);
-    _router!.push({ path: "/config", query });
+    _router!.push({ path: "/config", query, hash: _router!.currentRoute.value.hash });
   });
 }
 
@@ -280,7 +280,7 @@ export async function closeModal(result?: ModalResult): Promise<void> {
   // Update stack synchronously to prevent double-close from GenericModal's handleHidden
   configModal.stack = newStack;
 
-  await _router.push({ path: "/config", query });
+  await _router.push({ path: "/config", query, hash: _router.currentRoute.value.hash });
   resolve?.(finalResult);
 }
 
@@ -299,7 +299,7 @@ export function replaceModal(
   const newStack = [...configModal.stack.slice(0, -1), entry];
   const query = buildQuery(newStack);
 
-  _router.replace({ path: "/config", query });
+  _router.replace({ path: "/config", query, hash: _router.currentRoute.value.hash });
 }
 
 export function getModal(name: string): ModalEntry | undefined {
@@ -312,6 +312,11 @@ export function topModal(): ModalEntry | undefined {
 
 export function isTopModal(name: string): boolean {
   return topModal()?.name === name;
+}
+
+export function isNestedIn(name: string): boolean {
+  const idx = configModal.stack.findIndex((m) => m.name === name);
+  return idx >= 0 && idx < configModal.stack.length - 1;
 }
 
 export default configModal;

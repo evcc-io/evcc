@@ -11,18 +11,13 @@ params:
     choice: ["tcpip"]
     id: 1
   - name: phases1p3p
-    type: bool
-    default: false
     advanced: true
-    description:
-      de: Phasenumschaltung aktiviert
-      en: Phase Switching enabled
     help:
       de: Erweiterte Funktion "Phasenumschaltung" muss in der NRGkick App aktiviert sein.
       en: Extended feature "Phase Switching" must be activated in the NRGKick app.
 render: |
   type: nrggen2
   {{- include "modbus" . }}
-  {{- if ne .phases1p3p "false" }}
+  {{- if .phases1p3p }}
   phases1p3p: true
   {{- end }}

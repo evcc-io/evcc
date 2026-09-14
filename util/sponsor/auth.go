@@ -30,6 +30,7 @@ import (
 	"github.com/evcc-io/evcc/util/cloud"
 	"github.com/evcc-io/evcc/util/machine"
 	"github.com/golang-jwt/jwt/v5"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -38,6 +39,7 @@ var (
 	mu             sync.RWMutex
 	Subject, Token string
 	ExpiresAt      time.Time
+	Hardware       bool // sponsored via hardware check
 )
 
 func machineID() string {
@@ -45,6 +47,9 @@ func machineID() string {
 }
 
 const unavailable = "sponsorship unavailable"
+
+// startupTimeout leaves the network time to settle at boot; grpc retries dialing with backoff until deadline
+const startupTimeout = 30 * time.Second
 
 func IsAuthorized() bool {
 	mu.RLock()
@@ -55,7 +60,7 @@ func IsAuthorized() bool {
 func IsAuthorizedForApi() bool {
 	mu.RLock()
 	defer mu.RUnlock()
-	return IsAuthorized() && Subject != unavailable && Token != ""
+	return len(Subject) > 0 && Subject != unavailable && Token != ""
 }
 
 // check and set sponsorship token
@@ -63,22 +68,26 @@ func ConfigureSponsorship(token string) error {
 	mu.Lock()
 	defer mu.Unlock()
 
+	Hardware = false
+
 	if token == "" {
-		if sub := checkVictron(); sub != "" {
-			Subject = sub
-			return nil
+		var sub string
+		if sub, token = checkVictron(); sub == "" && os.Getenv("HEMSPRO") != "" {
+			sub, token = checkHemsPro()
 		}
 
-		if os.Getenv("HEMSPRO") != "" {
-			if sub := checkHemsPro(); sub != "" {
+		Hardware = sub != "" && sub != unavailable
+
+		if token == "" {
+			if sub != "" {
 				Subject = sub
 				return nil
 			}
-		}
 
-		var err error
-		if token, err = checkPulsares(); token == "" || err != nil {
-			return err
+			var err error
+			if token, err = checkPulsares(); token == "" || err != nil {
+				return err
+			}
 		}
 	}
 
@@ -98,10 +107,10 @@ func ConfigureSponsorship(token string) error {
 
 	client := pb.NewAuthClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), startupTimeout)
 	defer cancel()
 
-	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token, MachineId: machineID()})
+	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token, MachineId: machineID()}, grpc.WaitForReady(true))
 	if err == nil && res.Authorized {
 		Subject = res.Subject
 		ExpiresAt = res.ExpiresAt.AsTime()
@@ -133,9 +142,10 @@ func redactToken(token string) string {
 
 type Status struct {
 	Name        string    `json:"name"`
-	ExpiresAt   time.Time `json:"expiresAt,omitempty"`
+	ExpiresAt   time.Time `json:"expiresAt"`
 	ExpiresSoon bool      `json:"expiresSoon,omitempty"`
 	Token       string    `json:"token,omitempty"`
+	Hardware    bool      `json:"hardware,omitempty"`
 }
 
 // RedactedStatus returns the sponsorship status
@@ -143,8 +153,9 @@ func RedactedStatus() Status {
 	mu.RLock()
 	defer mu.RUnlock()
 
+	// hardware tokens are renewed on every start, no expiry warning
 	var expiresSoon bool
-	if d := time.Until(ExpiresAt); d < 30*24*time.Hour && d > 0 {
+	if d := time.Until(ExpiresAt); d < 30*24*time.Hour && d > 0 && !Hardware {
 		expiresSoon = true
 	}
 
@@ -153,5 +164,6 @@ func RedactedStatus() Status {
 		ExpiresAt:   ExpiresAt,
 		ExpiresSoon: expiresSoon,
 		Token:       redactToken(Token),
+		Hardware:    Hardware,
 	}
 }

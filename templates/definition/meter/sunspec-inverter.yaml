@@ -153,6 +153,7 @@ render: |
       - 103:WH
       - 113:WH
     scale: 0.001
+  {{- include "sunspec-maxacpower" . }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:

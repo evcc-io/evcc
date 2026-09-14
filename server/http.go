@@ -46,8 +46,20 @@ type HTTPd struct {
 	*http.Server
 }
 
+// Customization contains white-label settings for the UI
+type Customization struct {
+	Css       string
+	LogoLight string
+	LogoDark  string
+	Brand     string
+	Website   string
+	Email     string
+	Phone     string
+	Theme     string
+}
+
 // NewHTTPd creates HTTP server with configured routes for loadpoint
-func NewHTTPd(addr string, hub *SocketHub, customCssFile string) *HTTPd {
+func NewHTTPd(addr string, hub *SocketHub, custom Customization) *HTTPd {
 	router := mux.NewRouter().StrictSlash(true)
 
 	log := util.NewLogger("httpd")
@@ -79,21 +91,50 @@ func NewHTTPd(addr string, hub *SocketHub, customCssFile string) *HTTPd {
 		})
 	})
 
-	if customCssFile != "" {
-		log.WARN.Printf("❗ using custom CSS: %s", customCssFile)
-		if _, err := os.Stat(customCssFile); os.IsNotExist(err) {
-			log.FATAL.Fatalf("custom CSS file does not exist: %s", customCssFile)
-		}
-		static.HandleFunc("/custom.css", func(w http.ResponseWriter, r *http.Request) {
+	serveCustomFile := func(path, file string) {
+		static.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 			// disable caching
 			w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
 			w.Header().Set("Pragma", "no-cache")
 			w.Header().Set("Expires", "0")
-			http.ServeFile(w, r, customCssFile)
+			http.ServeFile(w, r, file)
 		})
 	}
 
-	static.HandleFunc("/", indexHandler(customCssFile != ""))
+	if custom.Css != "" {
+		log.WARN.Printf("❗ using custom CSS: %s", custom.Css)
+		if _, err := os.Stat(custom.Css); os.IsNotExist(err) {
+			log.FATAL.Fatalf("custom CSS file does not exist: %s", custom.Css)
+		}
+		serveCustomFile("/custom.css", custom.Css)
+	}
+
+	if (custom.LogoLight == "") != (custom.LogoDark == "") {
+		log.FATAL.Fatal("custom logo requires both light and dark variants")
+	}
+
+	switch custom.Theme {
+	case "", "auto", "light", "dark":
+	default:
+		log.FATAL.Fatalf("invalid custom theme: %s (expected auto, light, dark)", custom.Theme)
+	}
+
+	for path, file := range map[string]string{
+		"/custom-logo-light": custom.LogoLight,
+		"/custom-logo-dark":  custom.LogoDark,
+	} {
+		if file == "" {
+			continue
+		}
+		log.WARN.Printf("❗ using custom logo: %s", file)
+		if _, err := os.Stat(file); os.IsNotExist(err) {
+			log.FATAL.Fatalf("custom logo file does not exist: %s", file)
+		}
+		serveCustomFile(path, file)
+	}
+
+	static.HandleFunc("/globals.js", globalsJsHandler(custom))
+	static.HandleFunc("/", indexHandler())
 	for _, dir := range []string{"assets", "meta"} {
 		static.PathPrefix("/" + dir).Handler(http.FileServer(http.FS(assets.Web)))
 	}
@@ -105,7 +146,7 @@ func NewHTTPd(addr string, hub *SocketHub, customCssFile string) *HTTPd {
 			Addr:         addr,
 			Handler:      router,
 			ReadTimeout:  5 * time.Second,
-			WriteTimeout: 10 * time.Second,
+			WriteTimeout: 30 * time.Second,
 			IdleTimeout:  120 * time.Second,
 			ErrorLog:     log.ERROR,
 		},
@@ -141,30 +182,35 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 	}
 
 	routes := map[string]route{
-		"buffersoc":               {"POST", "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
-		"bufferstartsoc":          {"POST", "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
-		"batterydischargecontrol": {"POST", "/batterydischargecontrol/{value:[01truefalse]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},
-		"batterygriddischarge":    {"POST", "/batterygriddischarge/{value:[01truefalse]+}", boolHandler(site.SetBatteryGridDischarge, site.GetBatteryGridDischarge)},
-		"batterygridcharge":       {"POST", "/batterygridchargelimit/{value:-?[0-9.]+}", floatPtrHandler(site.SetBatteryGridChargeLimit, site.GetBatteryGridChargeLimit)},
-		"batterygridchargedelete": {"DELETE", "/batterygridchargelimit", floatPtrHandler(site.SetBatteryGridChargeLimit, site.GetBatteryGridChargeLimit)},
-		"batterymode":             {"POST", "/batterymode/{value:[a-z]+}", updateBatteryMode(site)},
-		"batterymodedelete":       {"DELETE", "/batterymode", updateBatteryMode(site)},
-		"prioritysoc":             {"POST", "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
-		"residualpower":           {"POST", "/residualpower/{value:-?[0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
-		"solaradjusted":           {"POST", "/solaradjusted/{value:[01truefalse]+}", boolHandler(pass(site.SetSolarAdjusted), site.GetSolarAdjusted)},
-		"smartcost":               {"POST", "/smartcostlimit/{value:-?[0-9.]+}", updateSmartCostLimit(site, smartCostLimit)},
-		"smartcostdelete":         {"DELETE", "/smartcostlimit", updateSmartCostLimit(site, smartCostLimit)},
-		"smartfeedin":             {"POST", "/smartfeedinprioritylimit/{value:-?[0-9.]+}", updateSmartCostLimit(site, smartFeedInPriorityLimit)},
-		"smartfeedindelete":       {"DELETE", "/smartfeedinprioritylimit", updateSmartCostLimit(site, smartFeedInPriorityLimit)},
-		"tariff":                  {"GET", "/tariff/{tariff:[a-z]+}", tariffHandler(site)},
-		"sessions":                {"GET", "/sessions", sessionHandler},
-		"updatesession":           {"PUT", "/session/{id:[0-9]+}", updateSessionHandler},
-		"deletesession":           {"DELETE", "/session/{id:[0-9]+}", deleteSessionHandler},
-		"gridsessions":            {"GET", "/gridsessions", gridSessionsHandler},
-		"energyhistory":           {"GET", "/history/energy", energyHistoryHandler},
-		"optimize":                {"POST", "/optimize", getHandler(site.Optimize)},
-		"telemetry2":              {"POST", "/settings/telemetry/{value:[01truefalse]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
-		"devicecolors":            {"PUT", "/devicecolors", updateDeviceColor(site)},
+		"buffersoc":                       {"POST", "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
+		"bufferstartsoc":                  {"POST", "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
+		"batterydischargecontrol":         {"POST", "/batterydischargecontrol/{value:[01truefalse]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},
+		"batterygriddischarge":            {"POST", "/batterygriddischarge/{value:[01truefalse]+}", boolHandler(site.SetBatteryGridDischarge, site.GetBatteryGridDischarge)},
+		"batterygridcharge":               {"POST", "/batterygridchargelimit/{value:-?[0-9.]+}", floatPtrHandler(site.SetBatteryGridChargeLimit, site.GetBatteryGridChargeLimit)},
+		"batterygridchargedelete":         {"DELETE", "/batterygridchargelimit", floatPtrHandler(site.SetBatteryGridChargeLimit, site.GetBatteryGridChargeLimit)},
+		"batterygriddischargelimit":       {"POST", "/batterygriddischargelimit/{value:-?[0-9.]+}", floatPtrHandler(site.SetBatteryGridDischargeLimit, site.GetBatteryGridDischargeLimit)},
+		"batterygriddischargelimitdelete": {"DELETE", "/batterygriddischargelimit", floatPtrHandler(site.SetBatteryGridDischargeLimit, site.GetBatteryGridDischargeLimit)},
+		"batterymode":                     {"POST", "/batterymode/{value:[a-z]+}", updateBatteryMode(site)},
+		"batterymodedelete":               {"DELETE", "/batterymode", updateBatteryMode(site)},
+		"prioritysoc":                     {"POST", "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
+		"residualpower":                   {"POST", "/residualpower/{value:-?[0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
+		"gridexportlimit":                 {"POST", "/gridexportlimit/{value:[0-9.]+}", floatHandler(site.SetGridExportLimit, site.GetGridExportLimit)},
+		"profilepercentile":               {"POST", "/profilepercentile/{value:[0-9.]+}", floatPtrHandler(site.SetProfilePercentile, site.GetProfilePercentile)},
+		"profilepercentiledelete":         {"DELETE", "/profilepercentile", floatPtrHandler(site.SetProfilePercentile, site.GetProfilePercentile)},
+		"solaradjusted":                   {"POST", "/solaradjusted/{value:[01truefalse]+}", boolHandler(pass(site.SetSolarAdjusted), site.GetSolarAdjusted)},
+		"smartcost":                       {"POST", "/smartcostlimit/{value:-?[0-9.]+}", updateSmartCostLimit(site, smartCostLimit)},
+		"smartcostdelete":                 {"DELETE", "/smartcostlimit", updateSmartCostLimit(site, smartCostLimit)},
+		"smartfeedin":                     {"POST", "/smartfeedinprioritylimit/{value:-?[0-9.]+}", updateSmartCostLimit(site, smartFeedInPriorityLimit)},
+		"smartfeedindelete":               {"DELETE", "/smartfeedinprioritylimit", updateSmartCostLimit(site, smartFeedInPriorityLimit)},
+		"tariff":                          {"GET", "/tariff/{tariff:[a-z0-9]+}", tariffHandler(site)},
+		"sessions":                        {"GET", "/sessions", sessionHandler},
+		"updatesession":                   {"PUT", "/session/{id:[0-9]+}", updateSessionHandler},
+		"deletesession":                   {"DELETE", "/session/{id:[0-9]+}", deleteSessionHandler},
+		"gridsessions":                    {"GET", "/gridsessions", gridSessionsHandler},
+		"energyhistory":                   {"GET", "/history/energy", energyHistoryHandler},
+		"optimize":                        {"POST", "/optimize", callHandler(site.Optimize)},
+		"telemetry2":                      {"POST", "/settings/telemetry/{value:[01truefalse]+}", boolHandler(telemetry.Enable, telemetry.Enabled)},
+		"devicecolors":                    {"PUT", "/devicecolors", updateDeviceColor(site)},
 
 		"optimizerchargingstrategy": {"POST", "/optimizerchargingstrategy/{value:[a-z_]+}", stringHandler(site.SetOptimizerChargingStrategy, site.GetOptimizerChargingStrategy)},
 	}
@@ -177,6 +223,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 	vehicles := map[string]route{
 		"mode":           {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/mode/{value:[a-z]+}", vehicleModeHandler(site)},
 		"modeDelete":     {"DELETE", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/mode", vehicleModeHandler(site)},
+		"alwaysCharge":   {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/alwayscharge/{value:on|off}", vehicleAlwaysChargeHandler(site)},
+		"alwaysCharge2":  {"DELETE", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/alwayscharge", vehicleAlwaysChargeHandler(site)},
 		"minsoc":         {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/minsoc/{value:[0-9]+}", minSocHandler(site)},
 		"limitsoc":       {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/limitsoc/{value:[0-9]+}", limitSocHandler(site)},
 		"plan":           {"POST", "/vehicles/{name:[a-zA-Z0-9_.:-]+}/plan/soc/{value:[0-9]+}/{time:[0-9TZ:.+-]+}", planSocHandler(site)},
@@ -191,11 +239,12 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 
 	// loadpoint api
 	// TODO any loadpoint
-	for id, lp := range site.Loadpoints() {
+	for id, lp := range site.ActiveLoadpoints() {
 		api := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id+1)).Subrouter()
 
 		routes := map[string]route{
 			"mode":                      {"POST", "/mode/{value:[a-z]+}", handler(eapi.ChargeModeString, pass(lp.SetMode), lp.GetMode)},
+			"alwaysCharge":              {"POST", "/alwayscharge/{value:[a-z]+}", handler(eapi.AlwaysChargeString, lp.SetAlwaysCharge, lp.GetAlwaysCharge)},
 			"limitsoc":                  {"POST", "/limitsoc/{value:[0-9]+}", intHandler(pass(lp.SetLimitSoc), lp.GetLimitSoc)},
 			"mintemp":                   {"POST", "/mintemp/{value:[0-9]+}", intHandler(pass(lp.SetMinSoc), lp.GetMinSoc)},
 			"limitenergy":               {"POST", "/limitenergy/{value:[0-9.]+}", floatHandler(pass(lp.SetLimitEnergy), lp.GetLimitEnergy)},
@@ -216,6 +265,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 			"disableDelay":              {"POST", "/disable/delay/{value:[0-9]+}", durationHandler(pass(lp.SetDisableDelay), lp.GetDisableDelay)},
 			"smartCost":                 {"POST", "/smartcostlimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
 			"smartCostDelete":           {"DELETE", "/smartcostlimit", floatPtrHandler(pass(lp.SetSmartCostLimit), lp.GetSmartCostLimit)},
+			"solarShare":                {"POST", "/solarshare/{value:-?[0-9.]+}", floatHandler(pass(lp.SetSolarShare), lp.GetSolarShare)},
 			"smartFeedInPriority":       {"POST", "/smartfeedinprioritylimit/{value:-?[0-9.]+}", floatPtrHandler(pass(lp.SetSmartFeedInPriorityLimit), lp.GetSmartFeedInPriorityLimit)},
 			"smartFeedInPriorityDelete": {"DELETE", "/smartfeedinprioritylimit", floatPtrHandler(pass(lp.SetSmartFeedInPriorityLimit), lp.GetSmartFeedInPriorityLimit)},
 			"priority":                  {"POST", "/priority/{value:[0-9]+}", intHandler(pass(lp.SetPriority), lp.GetPriority)},
@@ -278,14 +328,14 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 		}
 
 		// API key endpoints require an authenticated session.
-		ensureAuth := ensureAuthHandler(auth)
+		ensureAuth := EnsureAuthHandler(auth)
 		api.Methods("GET").Path("/apikey").Handler(ensureAuth(apiKeyStatusHandler(auth)))
 		api.Methods("POST").Path("/apikey").Handler(ensureAuth(regenerateApiKeyHandler(auth)))
 	}
 
 	{ // api/config
 		api := api.PathPrefix("/config").Subrouter()
-		api.Use(ensureAuthHandler(auth))
+		api.Use(EnsureAuthHandler(auth))
 
 		routes := map[string]route{
 			"auth":               {"POST", "/auth", authHandler},
@@ -381,7 +431,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 	{ // api/system
 		api := api.PathPrefix("/system").Subrouter()
-		api.Use(ensureAuthHandler(auth))
+		api.Use(EnsureAuthHandler(auth))
 
 		routes := map[string]route{
 			"log":        {"GET", "/log", logHandler},
@@ -403,9 +453,11 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 		api.Use(ensureDbAuth(auth))
 
 		routes := map[string]route{
-			"backup":  {"GET", "/backup", getBackup()},
-			"restore": {"POST", "/restore", restoreDatabase(shutdown)},
-			"reset":   {"POST", "/reset", resetDatabase(shutdown)},
+			"backup":        {"GET", "/backup", getBackup()},
+			"restore":       {"POST", "/restore", restoreDatabase(shutdown)},
+			"reset":         {"POST", "/reset", resetDatabase(shutdown)},
+			"deleteenergy":  {"DELETE", "/metrics/energy", deleteEnergyHandler},
+			"deletetariffs": {"DELETE", "/metrics/tariffs", deleteTariffsHandler},
 		}
 
 		for _, r := range routes {

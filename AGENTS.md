@@ -21,6 +21,8 @@ This file provides guidance to AI coding agents when working with code in this r
 - `make lint-ui` - run frontend linting
 - `vp run dev` - start Vue dev server (http://127.0.0.1:7071)
 - `vp run playwright` - run integration tests
+- `build`, `openapi` and `test` are cached tasks in `vite.config.ts`, run through `vp run`
+- `evcc --config [file] --disable-auth` - run a throw-away instance for UI checks without password setup
 - `evcc --template-type [type] --template [file]` - test device templates
 - `make docs` - generate template documentation
 
@@ -37,6 +39,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 | [Plugin System](docs/agents/plugin-system.md)                 | Plugin layer (HTTP, MQTT, Modbus, SunSpec, JS)                               |
 | [Web UI & API](docs/agents/web-ui-api.md)                     | REST API, WebSocket, Vue frontend, authentication                            |
 | [API Security](docs/agents/api-security.md)                   | Auth modes, JWT/API key/session, two-tier checks, credential storage         |
+| [Chart Conventions](docs/agents/charts.md)                    | ECharts charts: axis units and scale rules, tooltips, layout                 |
 
 ### Loading guide by task type
 
@@ -45,6 +48,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - **Meter implementation** — hardware-integrations + plugin-system
 - **Vehicle implementation** — hardware-integrations
 - **UI/frontend work** — web-ui-api
+- **Chart work (ECharts, axes, tooltips)** — charts + web-ui-api
 - **API endpoint work** — web-ui-api + core-domain
 - **Auth / login / API key / permissions** — api-security + web-ui-api
 - **Config/template work** — plugin-system
@@ -198,6 +202,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 ### Styling & Internationalization
 
 - Use CSS Custom Properties for theming (semantic names: `--evcc-green`, `--evcc-battery`)
+- No inline `style` attributes; use Bootstrap utility classes or scoped CSS (inline only for truly dynamic values)
 - Use existing custom media queries for responsive breakpoints
 - Use `$t()` function for all user-facing strings
 - Update both `i18n/en.json` and `i18n/de.json` for new strings
@@ -316,6 +321,11 @@ Structure PR descriptions in this order. No headlines. Be concise.
 Avoid file paths, line numbers, or code listings reproduced from the diff. Include a code snippet only when it conveys the contract (event shape, API signature) more clearly than prose. No testing checklists, no co-author footers.
 
 Never state that `go build`, `go vet`, `go test -race`, or `gofmt` pass (or any "all checks/tests green" phrasing). These are non-negotiable givens that must already be fulfilled, not noteworthy results.
+
+## Pull Request CI and Reviews
+
+- After opening or updating a pull request, watch CI until every check has finished. Work is not done while checks are still running. Fix failures on the same branch and keep watching until the run is green.
+- Do not argue with automated review bots such as Sourcery. Either implement the suggestion or resolve the thread. No rebuttal comments.
 
 ## AI Attribution
 

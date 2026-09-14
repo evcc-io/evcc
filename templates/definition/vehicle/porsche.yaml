@@ -7,5 +7,5 @@ params:
   - preset: vehicle-online
 render: |
   type: porsche
-  {{ include "vehicle-base" . }}
-  {{ include "vehicle-features" . }}
+  {{ include "base" . }}
+  {{ include "features" . }}

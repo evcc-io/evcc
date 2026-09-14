@@ -62,6 +62,33 @@ func TestMergeRatesAfter(t *testing.T) {
 	}
 }
 
+// TestMergeRatesAfterRefreshesTimestamp asserts that merging without new rates
+// keeps the cached rates and un-expires the monitor - this is how solcast keeps
+// its forecast alive while fetching is paused outside the from/to window.
+func TestMergeRatesAfterRefreshesTimestamp(t *testing.T) {
+	clock := clock.NewMock()
+	clock.Set(now.BeginningOfDay())
+
+	rates := api.Rates{{
+		Start: clock.Now().Add(time.Hour),
+		End:   clock.Now().Add(2 * time.Hour),
+		Value: 1,
+	}}
+
+	data := util.NewMonitor[api.Rates](time.Hour).WithClock(clock)
+	data.Set(rates)
+
+	clock.Add(2 * time.Hour)
+	_, err := data.Get()
+	require.ErrorIs(t, err, api.ErrOutdated)
+
+	mergeRatesAfter(data, nil, clock.Now().Add(-2*time.Hour))
+
+	res, err := data.Get()
+	require.NoError(t, err)
+	assert.Equal(t, rates, res)
+}
+
 type runner struct {
 	res error
 }

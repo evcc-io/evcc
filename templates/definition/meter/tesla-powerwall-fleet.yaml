@@ -1,0 +1,75 @@
+template: tesla-powerwall-fleet
+products:
+  - brand: Tesla
+    description:
+      generic: Powerwall (Fleet API)
+capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Tesla bietet eine offizielle, aber kostenpflichtige Fleet API an.
+      Für private Nutzung kannst du dir einen Tesla Developer Account bei [developer.tesla.com](https://developer.tesla.com/) erstellen und erhältst ein monatliches API-Guthaben von 10 €.
+
+      Die Anleitung von [myteslamate.com](https://www.myteslamate.com/tesla-api-application-registration/) erklärt den Prozess und generiert dir kostenfrei die für evcc benötigten Access- und Refresh-Token.
+      Mit diesem Tokenpaar und deiner im Tesla Developer Account erstellten Client ID kann evcc direkt mit der Tesla Fleet API kommunizieren.
+    en: |
+      Tesla offers an official, but paid Fleet API.
+      For private use, you can create a Tesla Developer Account at [developer.tesla.com](https://developer.tesla.com/) and receive a monthly API credit of $10.
+
+      The [myteslamate.com](https://www.myteslamate.com/tesla-api-application-registration/) guide explains the process and generates a free Access and Refresh Token.
+      With this token pair and your Client ID created in the Tesla Developer Account, evcc can directly communicate with the Tesla Fleet API.
+params:
+  - name: usage
+    choice: ["battery"]
+  - name: host
+  - name: password
+    required: true
+    help:
+      en: Password of the user "customer". By default this is the last 5 characters of password stated on the Tesla Gateway.
+      de: Passwort des Benutzers "Kunde". Default sind die letzten 5 Zeichen des auf dem Tesla Gateway genannten Passworts.
+  - name: clientId
+    required: true
+    help:
+      en: from [developer.tesla.com](https://developer.tesla.com/dashboard).
+      de: von [developer.tesla.com](https://developer.tesla.com/dashboard).
+  - name: accessToken
+    required: true
+    help:
+      en: from [myteslamate.com](https://app.myteslamate.com/).
+      de: von [myteslamate.com](https://app.myteslamate.com/).
+  - name: refreshToken
+    required: true
+    help:
+      en: from [myteslamate.com](https://app.myteslamate.com/).
+      de: von [myteslamate.com](https://app.myteslamate.com/).
+  - name: siteId
+    description:
+      generic: Site ID
+    help:
+      en: optional product identifier of the energy site, use to override autodetection
+      de: optionale Product ID dieser Energy Site, zum Übersteuern der automatischen Erkennung
+  - name: minsoc
+    default: 20
+    advanced: true
+    help:
+      de: Backup-Reserve, die evcc im Normalbetrieb wiederherstellt
+      en: Backup reserve evcc restores in normal operation
+  - name: maxsoc
+    deprecated: true
+  - name: maxchargepower
+    deprecated: true
+  - name: maxdischargepower
+    deprecated: true
+render: |
+  type: powerwall-fleet
+  uri: {{ .host }}
+  usage: battery
+  user: customer
+  password: {{ .password }} # for user 'customer'
+  credentials:
+    id: {{ .clientId }}
+  tokens:
+    access: {{ .accessToken }}
+    refresh: {{ .refreshToken }}
+  siteId: {{ .siteId }}
+  minsoc: {{ .minsoc }}

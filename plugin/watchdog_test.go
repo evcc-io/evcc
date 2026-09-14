@@ -22,12 +22,12 @@ func TestWatchdogSetterConcurrency(t *testing.T) {
 
 	var u atomic.Uint32
 
-	set := setter(p, func(i int) error {
+	set := p.setter(func(i int) error {
 		if !u.CompareAndSwap(0, 1) {
 			return errors.New("race")
 		}
 
-		time.Sleep(time.Duration(rand.Int32N(int32(p.timeout))))
+		time.Sleep(rand.N(p.timeout))
 
 		if !u.CompareAndSwap(1, 0) {
 			return errors.New("race")
@@ -63,7 +63,7 @@ func TestWatchdogDeferredUpdate(t *testing.T) {
 	}
 
 	var calls []int
-	set := setter(p, func(i int) error {
+	set := p.setter(func(i int) error {
 		calls = append(calls, i)
 		return nil
 	}, []int{1}) // 1 is reset value
@@ -108,7 +108,7 @@ func TestWatchdogCancelPendingDeferredUpdate(t *testing.T) {
 	}
 
 	var calls []int
-	set := setter(p, func(i int) error {
+	set := p.setter(func(i int) error {
 		calls = append(calls, i)
 		return nil
 	}, []int{1}) // 1 is reset value
@@ -154,7 +154,7 @@ func TestWatchdogDelayBackwardCompatibility(t *testing.T) {
 	}
 
 	var calls []int
-	set := setter(p, func(i int) error {
+	set := p.setter(func(i int) error {
 		calls = append(calls, i)
 		return nil
 	}, []int{1}) // 1 is reset value
@@ -185,7 +185,7 @@ func TestWatchdogResetStopsInflightTick(t *testing.T) {
 
 		var sawReset, stale atomic.Bool
 
-		set := setter(p, func(v int) error {
+		set := p.setter(func(v int) error {
 			if v == 1 {
 				sawReset.Store(true)
 				// hold the lock so an in-flight tick queues behind the reset

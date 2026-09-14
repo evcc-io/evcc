@@ -28,7 +28,7 @@ jobs:
 
       - uses: voidzero-dev/setup-vp@v1
         with:
-          node-version: "26"
+          node-version-file: ".node-version"
           cache: true
 
       - name: Generate CLI docs

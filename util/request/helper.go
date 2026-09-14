@@ -57,8 +57,10 @@ func (r *Helper) GetBody(url string) ([]byte, error) {
 
 // decodeJSON reads HTTP response and decodes JSON body if error is nil
 func decodeJSON(resp *http.Response, res any) error {
-	if err := ResponseError(resp); err != nil {
-		_ = json.NewDecoder(resp.Body).Decode(&res)
+	if c := resp.StatusCode; c < 200 || c >= 300 {
+		// keep the body on the error so callers can inspect the device's error response
+		b, err := ReadBody(resp)
+		_ = json.Unmarshal(b, &res)
 		return err
 	}
 

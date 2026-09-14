@@ -4,7 +4,7 @@
 		:current-limit="currentLimit"
 		:last-limit="lastLimit"
 		:currency="currency"
-		:apply-all="multipleLoadpoints"
+		:apply-all="isLoadpoint && multipleLoadpoints"
 		:possible="possible"
 		:tariff="tariff"
 		:form-id="formId"
@@ -23,6 +23,7 @@
 import { defineComponent, type PropType } from "vue";
 import SmartTariffBase from "./SmartTariffBase.vue";
 import api from "@/api";
+import settings from "@/settings";
 import { type CURRENCY } from "@/types/evcc";
 import { setLoadpointLastSmartFeedInPriorityLimit } from "@/uiLoadpoints";
 
@@ -37,19 +38,20 @@ export default defineComponent({
 		lastLimit: Number,
 		currency: String as PropType<CURRENCY>,
 		loadpointId: String,
+		isLoadpoint: Boolean,
 		multipleLoadpoints: Boolean,
 		possible: Boolean,
 		tariff: Array,
 	},
 	computed: {
 		formId(): string {
-			return `smartFeedInPriority-${this.loadpointId}`;
+			return `smartFeedInPriority-${this.loadpointId || "battery"}`;
 		},
 		labels() {
 			const t = (key: string) => this.$t(`smartFeedInPriority.${key}`);
 			return {
-				title: t("title"),
-				description: t("description"),
+				title: this.isLoadpoint ? t("title") : "",
+				description: this.isLoadpoint ? t("description") : t("batteryDescription"),
 				limitLabel: t("priceLimit"),
 				activeHoursLabel: t("activeHoursLabel"),
 				currentPriceLabel: t("priceLabel"),
@@ -71,19 +73,27 @@ export default defineComponent({
 
 			if (!active) return;
 
-			const url = `loadpoints/${this.loadpointId}/smartfeedinprioritylimit`;
+			const url = this.isLoadpoint
+				? `loadpoints/${this.loadpointId}/smartfeedinprioritylimit`
+				: "batterygriddischargelimit";
+
 			await api.post(`${url}/${encodeURIComponent(limit)}`);
 		},
 		saveLastLimit(limit: number) {
-			if (this.loadpointId) {
-				setLoadpointLastSmartFeedInPriorityLimit(this.loadpointId, limit);
+			if (this.isLoadpoint) {
+				setLoadpointLastSmartFeedInPriorityLimit(this.loadpointId!, limit);
+			} else {
+				settings.lastBatteryGridDischargeLimit = limit;
 			}
 		},
 		async deleteLimit() {
 			// save last selected value to be suggest again when reactivating limit
 			this.saveLastLimit(this.currentLimit || 0);
 
-			const url = `loadpoints/${this.loadpointId}/smartfeedinprioritylimit`;
+			const url = this.isLoadpoint
+				? `loadpoints/${this.loadpointId}/smartfeedinprioritylimit`
+				: "batterygriddischargelimit";
+
 			await api.delete(url);
 		},
 		async applyToAll(selectedLimit: number | null) {
