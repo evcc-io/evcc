@@ -9,7 +9,6 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/settings"
-	"github.com/evcc-io/evcc/core/wrapper"
 )
 
 var _ loadpoint.API = (*Loadpoint)(nil)
@@ -782,8 +781,7 @@ func (lp *Loadpoint) SetBatteryBoostLimit(limit int) {
 
 // HasChargeMeter determines if a physical charge meter is attached
 func (lp *Loadpoint) HasChargeMeter() bool {
-	_, isWrapped := lp.chargeMeter.(*wrapper.ChargeMeter)
-	return lp.chargeMeter != nil && !isWrapped
+	return lp.chargeMeter != nil && lp.chargeMeter.fake == nil
 }
 
 // GetChargePower returns the current charge power
