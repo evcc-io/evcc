@@ -1343,6 +1343,8 @@
         "disabledDescription": "Requires a dynamic tariff or CO₂ forecast.",
         "label": "Optimization"
       },
+      "pause": "Pause",
+      "pausedUntil": "Paused until {time}",
       "planNumber": "Plan {number}",
       "precondition": {
         "description": "Moves part of the charging right before departure: warm battery, less time at high charge level.",
@@ -1353,9 +1355,17 @@
         "summary": "{precondition} before",
         "summaryAll": "right before departure"
       },
+      "preset24h": "+24 hours",
+      "preset48h": "+48 hours",
+      "preset7d": "+7 days",
+      "presetCustom": "Custom date/time…",
+      "presetFriday": "Until Friday 18:00",
+      "presetSunday": "Until Sunday 18:00",
+      "presetTomorrow": "Until tomorrow 10:00",
       "remove": "Remove",
       "repeating": "repeating",
       "repeatingPlans": "Repeating plans",
+      "resume": "Resume",
       "selectAll": "Select all",
       "strategy": {
         "label": "Strategy"
