@@ -2,6 +2,7 @@ package meter
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"strconv"
 	"sync"
@@ -21,6 +22,8 @@ type E3dc struct {
 	implement.Caps
 	mu             sync.Mutex
 	dischargeLimit uint32
+	maxCharge      uint32          // device max battery charge power from sys specs
+	maxDischarge   uint32          // device max battery discharge power from sys specs
 	externalPower  bool            // whether to include power of external sources
 	usage          templates.Usage // TODO check if we really want to depend on templates
 	conn           *rscp.Client
@@ -212,26 +215,32 @@ func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	if mode == api.BatteryHold || mode == api.BatteryHoldCharge {
+		if err := m.sysSpecs(); err != nil {
+			return err
+		}
+	}
+
 	var messages []rscp.Message
 	switch mode {
 	case api.BatteryNormal:
 		messages = []rscp.Message{
-			e3dcDischargeBatteryLimit(false, 0),
+			e3dcPowerLimits(false, 0, 0),
 			e3dcBatteryCharge(0),
 		}
 	case api.BatteryHold:
 		messages = []rscp.Message{
-			e3dcDischargeBatteryLimit(true, m.dischargeLimit),
+			e3dcPowerLimits(true, m.maxCharge, m.dischargeLimit),
 			e3dcBatteryCharge(0),
 		}
 	case api.BatteryCharge:
 		messages = []rscp.Message{
-			e3dcDischargeBatteryLimit(false, 0),
+			e3dcPowerLimits(false, 0, 0),
 			e3dcBatteryCharge(50000), // max. 50kWh
 		}
 	case api.BatteryHoldCharge:
 		messages = []rscp.Message{
-			e3dcDischargeBatteryLimit(false, 0),
+			e3dcPowerLimits(true, 0, m.maxDischarge),
 			e3dcBatteryCharge(0),
 		}
 	default:
@@ -246,13 +255,66 @@ func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 	return rscpError(res...)
 }
 
-func e3dcDischargeBatteryLimit(active bool, limit uint32) rscp.Message {
+// sysSpecs caches the device's max battery charge/discharge power
+func (m *E3dc) sysSpecs() error {
+	if m.maxCharge > 0 && m.maxDischarge > 0 {
+		return nil
+	}
+
+	res, err := m.retryMessage(*rscp.NewMessage(rscp.EMS_REQ_GET_SYS_SPECS, nil))
+	if err != nil {
+		return err
+	}
+
+	specs, err := rscpValue(*res, func(v any) ([]rscp.Message, error) {
+		specs, ok := v.([]rscp.Message)
+		if !ok {
+			return nil, fmt.Errorf("invalid sys specs: %T", v)
+		}
+		return specs, nil
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, spec := range specs {
+		var name string
+		var value uint32
+		els, _ := spec.Value.([]rscp.Message)
+		for _, el := range els {
+			switch el.Tag {
+			case rscp.EMS_SYS_SPEC_NAME:
+				name = cast.ToString(el.Value)
+			case rscp.EMS_SYS_SPEC_VALUE_INT:
+				value = cast.ToUint32(el.Value)
+			}
+		}
+
+		switch name {
+		case "maxBatChargePower":
+			m.maxCharge = value
+		case "maxBatDischargPower": // sic
+			m.maxDischarge = value
+		}
+	}
+
+	if m.maxCharge == 0 || m.maxDischarge == 0 {
+		return errors.New("missing battery power limits in sys specs")
+	}
+
+	return nil
+}
+
+func e3dcPowerLimits(active bool, maxCharge, maxDischarge uint32) rscp.Message {
 	contents := []rscp.Message{
 		*rscp.NewMessage(rscp.EMS_POWER_LIMITS_USED, active),
 	}
 
 	if active {
-		contents = append(contents, *rscp.NewMessage(rscp.EMS_MAX_DISCHARGE_POWER, limit))
+		contents = append(contents,
+			*rscp.NewMessage(rscp.EMS_MAX_CHARGE_POWER, maxCharge),
+			*rscp.NewMessage(rscp.EMS_MAX_DISCHARGE_POWER, maxDischarge),
+		)
 	}
 
 	return *rscp.NewMessage(rscp.EMS_REQ_SET_POWER_SETTINGS, contents)
