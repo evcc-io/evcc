@@ -2,6 +2,7 @@ package meter
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"strconv"
 	"sync"
@@ -243,7 +244,28 @@ func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 		return err
 	}
 
-	return rscpError(res...)
+	if err := rscpError(res...); err != nil {
+		return err
+	}
+
+	return e3dcPowerSettingsError(res...)
+}
+
+// e3dcPowerSettingsError checks the per-limit result codes of EMS_SET_POWER_SETTINGS (-1 out of range, -2 retry later)
+func e3dcPowerSettingsError(msg ...rscp.Message) error {
+	var errs []error
+	for _, m := range msg {
+		if m.Tag != rscp.EMS_SET_POWER_SETTINGS {
+			continue
+		}
+		els, _ := m.Value.([]rscp.Message)
+		for _, el := range els {
+			if code := cast.ToInt(el.Value); code < 0 {
+				errs = append(errs, fmt.Errorf("%s: %d", el.Tag, code))
+			}
+		}
+	}
+	return errors.Join(errs...)
 }
 
 func e3dcDischargeBatteryLimit(active bool, limit uint32) rscp.Message {
