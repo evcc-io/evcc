@@ -30,12 +30,8 @@ export const prepareAuthLogin = async (state: AuthState, providerId: string) => 
     state.loading = true;
     state.error = null;
 
-    let url = `providerauth/login?id=${encodeURIComponent(providerId)}`;
-    // restore the config modal stack on callback
-    const returnTo = window.location.hash.split("?")[1];
-    if (returnTo) {
-      url += `&return=${encodeURIComponent(returnTo)}`;
-    }
+    // come back to this page, the redirect uri may be on another origin
+    const url = `providerauth/login?id=${encodeURIComponent(providerId)}&return=${encodeURIComponent(window.location.href)}`;
     const { status, data } = await baseApi.get<ProviderLoginResponse>(url, {
       validateStatus: (code) => [200, 400].includes(code),
     });

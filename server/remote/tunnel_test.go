@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
+	"github.com/evcc-io/evcc/server/service"
 	"github.com/evcc-io/evcc/util"
 	"github.com/hashicorp/yamux"
 	"github.com/stretchr/testify/require"
@@ -169,5 +170,30 @@ func waitSession(t *testing.T, sessions <-chan *yamux.Session) *yamux.Session {
 	case <-time.After(10 * time.Second):
 		t.Fatal("timeout waiting for tunnel connection")
 		return nil
+	}
+}
+
+// TestBasicAuthMiddlewarePublicPath verifies only registered GET paths and the OAuth callback bypass credentials.
+func TestBasicAuthMiddlewarePublicPath(t *testing.T) {
+	service.RegisterPublic("/.well-known/public.pem", http.NotFoundHandler())
+
+	tun := NewTunnel("", "", nil, func(string, string) bool { return false }, nil, util.NewLogger("test"), nil)
+	h := tun.basicAuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	for _, tc := range []struct {
+		method, path string
+		status       int
+	}{
+		{http.MethodGet, "/.well-known/public.pem", http.StatusOK},
+		{http.MethodPost, "/.well-known/public.pem", http.StatusUnauthorized},
+		{http.MethodGet, "/.well-known/other.pem", http.StatusUnauthorized},
+		{http.MethodGet, "/providerauth/callback", http.StatusOK},
+		{http.MethodGet, "/api/state", http.StatusUnauthorized},
+	} {
+		rr := httptest.NewRecorder()
+		h.ServeHTTP(rr, httptest.NewRequest(tc.method, tc.path, nil))
+		require.Equal(t, tc.status, rr.Code, "%s %s", tc.method, tc.path)
 	}
 }
