@@ -8,7 +8,6 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/util/transport"
 )
 
 // Gen1API endpoint reference: https://shelly-api-docs.shelly.cloud/gen1/#shelly-family-overview
@@ -46,11 +45,7 @@ type gen1 struct {
 }
 
 // newGen1 initializes the connection to the shelly gen1 api and sets up the cached gen1Status
-func newGen1(client *request.Helper, uri, model string, channel int, user, password string, cache time.Duration) *gen1 {
-	if user != "" {
-		client.Transport = transport.BasicAuth(user, password, client.Transport)
-	}
-
+func newGen1(client *request.Helper, uri, model string, channel int, cache time.Duration) *gen1 {
 	c := &gen1{
 		Helper:  client,
 		uri:     uri,

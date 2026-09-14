@@ -1,0 +1,20 @@
+template: shelly-3p
+products:
+  - { brand: Shelly, description: { de: Pro 3 (dreiphasig), en: Pro 3 (three phase) } }
+requirements:
+  description:
+    de: Die Relais 1, 2 und 3 werden gemeinsam geschaltet.
+    en: Relays 1, 2 and 3 are switched together.
+group: switchsockets
+params:
+  - name: host
+  - name: user
+  - name: password
+  - preset: switchsocket
+render: |
+  type: shelly
+  uri: http://{{ .host }}
+  user: {{ .user }}
+  password: {{ .password }}
+  channel: [0, 1, 2]  # shelly device relay channels, switched together
+  {{ include "switchsocket" . }}
