@@ -19,7 +19,7 @@ func init() {
 
 // NewHomeAssistantFromConfig creates a HomeAssistant meter from generic config
 func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
-	cc := struct {
+	var cc struct {
 		homeassistant.Config `mapstructure:",squash"`
 		Power                string
 		Energy               string
@@ -41,11 +41,6 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 		ModeNormal string
 		ModeHold   string
 		ModeCharge string
-	}{
-		batterySocLimits: batterySocLimits{
-			MinSoc: 20,
-			MaxSoc: 95,
-		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
