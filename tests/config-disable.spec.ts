@@ -425,6 +425,15 @@ test.describe("disabled loadpoint behavior", async () => {
     // last-visible guard ignores disabled loadpoint
     await modal.getByRole("switch", { name: "Hide Carport" }).click();
     await expect(modal.getByRole("switch", { name: "Hide Süd" })).toBeDisabled();
+    await modal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(modal);
+
+    // energy flow excludes disabled but keeps browser-hidden loadpoints
+    await page.getByTestId("energyflow").click();
+    const loadpointsEntry = page.getByTestId("energyflow-entry-loadpoints");
+    await expect(loadpointsEntry).toContainText("Carport");
+    await expect(loadpointsEntry).toContainText("Süd");
+    await expect(loadpointsEntry).not.toContainText("Garage");
   });
 
   test("editing a disabled loadpoint", async ({ page }) => {
