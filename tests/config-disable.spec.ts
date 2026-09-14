@@ -428,7 +428,7 @@ test.describe("disabled loadpoint behavior", async () => {
     await modal.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(modal);
 
-    // energy flow excludes disabled but keeps browser-hidden loadpoints
+    // disabled loadpoint gone from energy flow, hidden one stays
     await page.getByTestId("energyflow").click();
     const loadpointsEntry = page.getByTestId("energyflow-entry-loadpoints");
     await expect(loadpointsEntry).toContainText("Carport");
