@@ -172,17 +172,17 @@
 								>
 									<h5>{{ $t("issue.additional.title") }}</h5>
 									<CopyButton :content="markdown">
-										<template #default="{ copy, copied, copying }">
+										<template #default="{ copy, copied }">
 											<button
 												type="button"
-												class="btn btn-sm btn-outline-secondary text-nowrap"
-												:disabled="copying"
+												class="btn btn-link btn-sm p-0 text-muted text-nowrap"
+												:disabled="!anySelected"
 												@click="copy"
 											>
 												{{
 													copied
-														? $t("issue.summary.copied")
-														: $t("issue.additional.copyMarkdown")
+														? $t("issue.additional.copied")
+														: $t("issue.additional.copySelected")
 												}}
 											</button>
 										</template>
@@ -195,10 +195,12 @@
 
 							<!-- Additional Items -->
 							<IssueAdditionalItem
+								v-if="yamlConfigExists"
 								id="issueYamlConfig"
 								:included="sections.yamlConfig.included"
 								:title="$t('issue.additional.yamlConfig')"
 								:content="sections.yamlConfig.content"
+								:markdown="sectionMarkdown('yamlConfig')"
 								:helpType="helpType"
 								@update:included="sections.yamlConfig.included = $event"
 								@update:content="sections.yamlConfig.content = $event"
@@ -219,6 +221,7 @@
 								:included="sections.uiConfig.included"
 								:title="$t('issue.additional.uiConfig')"
 								:content="sections.uiConfig.content"
+								:markdown="sectionMarkdown('uiConfig')"
 								:helpType="helpType"
 								@update:included="sections.uiConfig.included = $event"
 								@update:content="sections.uiConfig.content = $event"
@@ -240,6 +243,7 @@
 								:included="sections.logs.included"
 								:title="$t('issue.additional.logs')"
 								:content="sections.logs.content"
+								:markdown="sectionMarkdown('logs')"
 								:helpType="helpType"
 								@update:included="sections.logs.included = $event"
 								@update:content="sections.logs.content = $event"
@@ -310,6 +314,7 @@
 								:included="sections.state.included"
 								:title="$t('issue.additional.state')"
 								:content="sections.state.content"
+								:markdown="sectionMarkdown('state')"
 								:helpType="helpType"
 								@update:included="sections.state.included = $event"
 								@update:content="sections.state.content = $event"
@@ -375,10 +380,11 @@ import { formatJson } from "@/components/Issue/format";
 import {
 	generateMailtoUrl,
 	generateDebugFile,
+	generateSection,
 	MAX_MAIL_TITLE_LENGTH,
 	MAX_MAIL_DESCRIPTION_LENGTH,
 } from "@/components/Issue/template";
-import type { HelpType, IssueData } from "@/components/Issue/types";
+import type { HelpType, IssueData, Sections } from "@/components/Issue/types";
 import type { State } from "@/types/evcc";
 
 // Keys that should be expanded (1-level expansion for arrays and objects)
@@ -429,6 +435,7 @@ export default defineComponent({
 				logs: { content: "", included: true },
 				state: { content: "", included: false },
 			} as Record<SectionType, SectionData>,
+			yamlConfigExists: true,
 
 			// Log configuration
 			logLevels: [...LOG_LEVELS],
@@ -476,6 +483,9 @@ export default defineComponent({
 				system: this.systemString,
 				timezone: this.timezoneString,
 			};
+		},
+		anySelected(): boolean {
+			return Object.values(this.sections).some((s) => s.included);
 		},
 		markdown(): string {
 			return generateDebugFile(this.issueData, this.sections);
@@ -531,6 +541,9 @@ export default defineComponent({
 		this.updateAreas();
 	},
 	methods: {
+		sectionMarkdown(key: keyof Sections): string {
+			return generateSection(key, this.sections[key].content);
+		},
 		// Type-dependent translation helper
 		$tt(key: string): string {
 			const suffix = this.emailMode
@@ -548,9 +561,9 @@ export default defineComponent({
 					validateStatus: (code) => [200, 404].includes(code),
 				});
 
-				// Handle 404 silently when evcc.yaml doesn't exist
 				if (response.status === 404) {
-					this.sections.yamlConfig.content = "no yaml configuration";
+					this.yamlConfigExists = false;
+					this.sections.yamlConfig.included = false;
 					return;
 				}
 

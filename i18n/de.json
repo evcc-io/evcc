@@ -1232,7 +1232,9 @@
   },
   "issue": {
     "additional": {
-      "copyMarkdown": "Als Markdown kopieren",
+      "copied": "Kopiert!",
+      "copy": "Kopieren",
+      "copySelected": "Auswahl kopieren",
       "description": "Konfiguration und Logs hinzufügen, um uns bei der schnellen Reproduktion zu helfen. Wir empfehlen, so viele Informationen wie möglich zu teilen. Zustand ist normalerweise nicht erforderlich.",
       "include": "einbeziehen",
       "lines": "Zeilen",

@@ -1232,7 +1232,9 @@
   },
   "issue": {
     "additional": {
-      "copyMarkdown": "Copy as Markdown",
+      "copied": "copied!",
+      "copy": "copy",
+      "copySelected": "copy selected",
       "description": "Include configuration and logs to help us reproduce the issue quickly. We encourage sharing as much as possible. State is usually not needed.",
       "include": "include",
       "lines": "lines",
