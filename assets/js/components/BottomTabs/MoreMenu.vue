@@ -6,6 +6,9 @@
 		<button type="button" class="dropdown-item" @click="openHelpModal">
 			{{ $t("header.needHelp") }}
 		</button>
+		<router-link class="dropdown-item" to="/issue" active-class="active">
+			{{ $t("issue.title") }}
+		</router-link>
 		<button
 			type="button"
 			class="dropdown-item d-flex align-items-center"
@@ -53,9 +56,6 @@
 		<hr class="dropdown-divider" />
 		<router-link class="dropdown-item" to="/log" active-class="active">
 			{{ $t("log.title") }}
-		</router-link>
-		<router-link class="dropdown-item" to="/issue" active-class="active">
-			{{ $t("issue.title") }}
 		</router-link>
 		<button type="button" class="dropdown-item" @click="openSettingsModal">
 			{{ $t("settings.title") }}
