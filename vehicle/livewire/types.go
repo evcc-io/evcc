@@ -28,6 +28,10 @@ type SessionResponse struct {
 	TermsAccepted bool   `json:"termsAccepted"`
 }
 
+// errCodeCommandFailed is returned when the backend cannot reach the bike,
+// observed for a device that is not paired with it
+const errCodeCommandFailed = "3000"
+
 // Error is the api error envelope content
 type Error struct {
 	Code        string `json:"code"`
@@ -35,6 +39,9 @@ type Error struct {
 }
 
 func (e *Error) Error() string {
+	if e.Code == errCodeCommandFailed {
+		return fmt.Sprintf("%s (%s): motorcycle not reachable or device not paired", e.Description, e.Code)
+	}
 	return fmt.Sprintf("%s (%s)", e.Description, e.Code)
 }
 
@@ -73,23 +80,9 @@ type ChargingStatus struct {
 	Range             float64     `json:"range"`          // miles
 	TimeToMaxLimit    StringFloat `json:"timeToMaxLimit"` // minutes, "0.0" or "45"
 	MaxLimit          int64       `json:"maxLimit"`
-	Odometer          float64     `json:"odometer"`        // miles
-	DurationElapsed   StringFloat `json:"durationElapsed"` // age of the telemetry data, e.g. "4"
-	DurationUnit      string      `json:"durationUnit"`    // "seconds" or "minutes"
+	Odometer          float64     `json:"odometer"` // miles
 
 	Received time.Time `json:"-"` // when the response was fetched
-}
-
-// Age returns how old the telemetry data was when the response was fetched
-func (s ChargingStatus) Age() time.Duration {
-	unit := time.Second
-	switch strings.ToLower(s.DurationUnit) {
-	case "minutes", "minute", "min":
-		unit = time.Minute
-	case "hours", "hour":
-		unit = time.Hour
-	}
-	return time.Duration(float64(s.DurationElapsed) * float64(unit))
 }
 
 type ChargingStatusResponse struct {
@@ -111,14 +104,12 @@ type LocationResponse struct {
 	Data Position `json:"data"`
 }
 
-// StringFloat decodes a number that arrives as JSON string or number
+// StringFloat decodes a number that arrives as JSON string or number. Anything
+// unparseable decodes as zero rather than failing the whole response.
 type StringFloat float64
 
 func (f *StringFloat) UnmarshalJSON(b []byte) error {
 	s := strings.TrimSpace(string(b))
-	if s == "null" || s == `""` {
-		return nil
-	}
 
 	var str string
 	if err := json.Unmarshal(b, &str); err == nil {
@@ -127,7 +118,7 @@ func (f *StringFloat) UnmarshalJSON(b []byte) error {
 
 	v, err := strconv.ParseFloat(s, 64)
 	if err != nil {
-		return fmt.Errorf("invalid number %q: %w", string(b), err)
+		return nil
 	}
 
 	*f = StringFloat(v)

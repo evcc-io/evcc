@@ -61,9 +61,9 @@ func newBackend(t *testing.T) (*backend, *Identity) {
 	srv := httptest.NewServer(mux)
 	t.Cleanup(srv.Close)
 
-	gigya, base, interval := GigyaURL, BaseURL, loginInterval
-	GigyaURL, BaseURL, loginInterval = srv.URL, srv.URL+"/api", 0
-	t.Cleanup(func() { GigyaURL, BaseURL, loginInterval = gigya, base, interval })
+	gigya, base := GigyaURL, BaseURL
+	GigyaURL, BaseURL = srv.URL, srv.URL+"/api"
+	t.Cleanup(func() { GigyaURL, BaseURL = gigya, base })
 
 	identity := NewIdentity(util.NewLogger("test"), "user@example.org", "secret", "device-1")
 
@@ -137,12 +137,11 @@ func TestProviderCharging(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, api.StatusC, status)
 
-	// timeToMaxLimit is minutes: 45 for 65 -> 80 % on the onboard charger,
-	// counted from the telemetry timestamp (5 s before the fetch)
+	// timeToMaxLimit is minutes: 45 for 65 -> 80 % on the onboard charger
 	fetched := time.Now()
 	finish, err := p.FinishTime()
 	require.NoError(t, err)
-	assert.WithinDuration(t, fetched.Add(45*time.Minute-5*time.Second), finish, time.Second)
+	assert.WithinDuration(t, fetched.Add(45*time.Minute), finish, time.Second)
 
 	// the estimate is anchored to the fetch, not to the call: repeated calls
 	// against the cached response return the same finish time
@@ -174,7 +173,7 @@ func TestProviderComplete(t *testing.T) {
 	assert.ErrorIs(t, err, api.ErrNotAvailable)
 }
 
-func TestErrorEnvelopeIsAsleep(t *testing.T) {
+func TestErrorEnvelopeStatus(t *testing.T) {
 	for _, code := range []int{http.StatusOK, http.StatusBadRequest} {
 		b, identity := newBackend(t)
 		b.status = func(w http.ResponseWriter, r *http.Request) {
@@ -185,14 +184,18 @@ func TestErrorEnvelopeIsAsleep(t *testing.T) {
 		}
 
 		_, err := NewAPI(util.NewLogger("test"), identity).Status("bike-1")
-		assert.ErrorIs(t, err, api.ErrAsleep, "status %d", code)
-		assert.ErrorIs(t, err, api.ErrTimeout, "status %d", code)
+		var apiErr *Error
+		require.ErrorAs(t, err, &apiErr, "status %d", code)
+		assert.Equal(t, "3000", apiErr.Code)
+		assert.ErrorContains(t, err, "not paired")
 	}
 }
 
 func TestUnauthorizedTriggersRelogin(t *testing.T) {
 	b, identity := newBackend(t)
 	require.NoError(t, identity.Login())
+
+	// a 401 right after login must still yield a fresh token
 
 	b.status = func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Authorization") != "Bearer jwt-2" {
@@ -209,30 +212,38 @@ func TestUnauthorizedTriggersRelogin(t *testing.T) {
 	assert.Equal(t, int32(2), b.logins.Load())
 }
 
-func TestRejectedTokenAllowsOneRelogin(t *testing.T) {
+func TestMissingLimitNotAvailable(t *testing.T) {
 	b, identity := newBackend(t)
-	loginInterval = time.Minute
+	b.status = func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(map[string]any{"bikeChargingData": map[string]any{"batteryPercentage": 50}})
+	}
 
+	p := NewProvider(NewAPI(util.NewLogger("test"), identity), "bike-1", time.Minute)
+	_, err := p.GetLimitSoc()
+	assert.ErrorIs(t, err, api.ErrNotAvailable)
+}
+
+func TestUnauthorizedSurfacesLoginError(t *testing.T) {
+	b, identity := newBackend(t)
 	require.NoError(t, identity.Login())
 
-	// a 401 right after login must still yield a fresh token
-	identity.invalidate("jwt-1")
-	token, err := identity.Token()
-	require.NoError(t, err)
-	assert.Equal(t, "jwt-1", token)
-	assert.Equal(t, int32(2), b.logins.Load())
+	srvFail := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(map[string]any{"errorCode": 403042, "errorMessage": "Invalid LoginID"})
+	}))
+	t.Cleanup(srvFail.Close)
+	GigyaURL = srvFail.URL
 
-	// but the backend rejecting fresh tokens repeatedly is throttled
-	identity.invalidate("jwt-1")
-	_, err = identity.Token()
-	assert.ErrorContains(t, err, "throttled")
-	assert.Equal(t, int32(2), b.logins.Load())
+	b.status = func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
+	}
+
+	// a rotated password must not hide behind a bare 401
+	_, err := NewAPI(util.NewLogger("test"), identity).Status("bike-1")
+	assert.ErrorContains(t, err, "Invalid LoginID")
 }
 
 func TestFailedLoginThrottled(t *testing.T) {
 	b, identity := newBackend(t)
-	loginInterval = time.Minute
-	b.status = nil
 
 	srvFail := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]any{"errorCode": 403042, "errorMessage": "Invalid LoginID"})

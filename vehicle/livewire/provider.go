@@ -14,19 +14,19 @@ const kmPerMile = 1.609344
 
 // Provider implements the vehicle api
 type Provider struct {
-	status   util.Cacheable[ChargingStatus]
-	position util.Cacheable[Position]
+	status   func() (ChargingStatus, error)
+	position func() (Position, error)
 }
 
 // NewProvider creates a vehicle api provider
 func NewProvider(api *API, bikeID string, cache time.Duration) *Provider {
 	return &Provider{
-		status: util.ResettableCached(func() (ChargingStatus, error) {
+		status: util.Cached(func() (ChargingStatus, error) {
 			res, err := api.Status(bikeID)
 			res.Received = time.Now()
 			return res, err
 		}, cache),
-		position: util.ResettableCached(func() (Position, error) {
+		position: util.Cached(func() (Position, error) {
 			return api.Position(bikeID)
 		}, cache),
 	}
@@ -36,7 +36,7 @@ var _ api.Battery = (*Provider)(nil)
 
 // Soc implements the api.Battery interface
 func (v *Provider) Soc() (float64, error) {
-	res, err := v.status.Get()
+	res, err := v.status()
 	return res.BatteryPercentage, err
 }
 
@@ -44,7 +44,7 @@ var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	res, err := v.status.Get()
+	res, err := v.status()
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -64,7 +64,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
-	res, err := v.status.Get()
+	res, err := v.status()
 	return int64(math.Round(res.Range * kmPerMile)), err
 }
 
@@ -72,7 +72,7 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 
 // Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
-	res, err := v.status.Get()
+	res, err := v.status()
 	return res.Odometer * kmPerMile, err
 }
 
@@ -80,7 +80,10 @@ var _ api.SocLimiter = (*Provider)(nil)
 
 // GetLimitSoc implements the api.SocLimiter interface
 func (v *Provider) GetLimitSoc() (int64, error) {
-	res, err := v.status.Get()
+	res, err := v.status()
+	if err == nil && res.MaxLimit == 0 {
+		err = api.ErrNotAvailable
+	}
 	return res.MaxLimit, err
 }
 
@@ -88,7 +91,7 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.status.Get()
+	res, err := v.status()
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -96,16 +99,15 @@ func (v *Provider) FinishTime() (time.Time, error) {
 		return time.Time{}, api.ErrNotAvailable
 	}
 
-	// timeToMaxLimit is in minutes and stays 0 for the first minutes of a charge.
-	// It is relative to the telemetry timestamp, not to the cached response.
+	// timeToMaxLimit is in minutes and stays 0 for the first minutes of a charge
 	remaining := time.Duration(float64(res.TimeToMaxLimit) * float64(time.Minute))
-	return res.Received.Add(remaining - res.Age()), nil
+	return res.Received.Add(remaining), nil
 }
 
 var _ api.VehiclePosition = (*Provider)(nil)
 
 // Position implements the api.VehiclePosition interface
 func (v *Provider) Position() (float64, float64, error) {
-	res, err := v.position.Get()
+	res, err := v.position()
 	return res.Latitude, res.Longitude, err
 }

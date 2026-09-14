@@ -12,7 +12,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 const (
@@ -23,14 +22,9 @@ const (
 var (
 	GigyaURL = "https://accounts.us1.gigya.com"
 
-	// loginInterval throttles repeated logins after a failed login or after the
-	// backend keeps rejecting freshly issued tokens
+	// loginInterval throttles repeated logins after a failed login
 	loginInterval = 5 * time.Minute
 )
-
-// maxFastRejects is the number of tokens rejected within loginInterval of their
-// issue before re-logins are throttled. One immediate re-login is always allowed.
-const maxFastRejects = 1
 
 // clientHeaders mirror what the mobile app sends. The api calls work without
 // them, only the session request still sends them as it was not tested otherwise.
@@ -43,7 +37,8 @@ var clientHeaders = map[string]string{
 }
 
 // Identity performs the Gigya login and the LiveWire session exchange. There is
-// no refresh flow: an expired or rejected JWT triggers a full re-login.
+// no refresh flow and the JWT carries no expiry: it is used until the backend
+// rejects it, which triggers a full re-login.
 type Identity struct {
 	*request.Helper
 	log        *util.Logger
@@ -54,11 +49,8 @@ type Identity struct {
 
 	mu          sync.Mutex
 	token       string
-	expiry      time.Time
-	issued      time.Time
 	lastAttempt time.Time
 	lastErr     error
-	fastRejects int
 }
 
 // NewIdentity creates a LiveWire identity for the given account and paired device uuid
@@ -80,12 +72,12 @@ func (v *Identity) Login() error {
 	return v.login()
 }
 
-// Token returns a valid JWT, logging in if required
+// Token returns the JWT, logging in if required
 func (v *Identity) Token() (string, error) {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 
-	if v.token != "" && (v.expiry.IsZero() || time.Now().Before(v.expiry)) {
+	if v.token != "" {
 		return v.token, nil
 	}
 
@@ -101,30 +93,15 @@ func (v *Identity) invalidate(token string) {
 	v.mu.Lock()
 	defer v.mu.Unlock()
 
-	if v.token != token {
-		return
-	}
-
-	v.token = ""
-
-	// a token that lasted longer than the interval is a normal expiry, a
-	// quick rejection counts towards throttling
-	if time.Since(v.issued) < loginInterval {
-		v.fastRejects++
-	} else {
-		v.fastRejects = 0
+	if v.token == token {
+		v.token = ""
 	}
 }
 
 // login must be called with the mutex held
 func (v *Identity) login() error {
-	if time.Since(v.lastAttempt) < loginInterval {
-		if v.lastErr != nil {
-			return fmt.Errorf("login throttled: %w", v.lastErr)
-		}
-		if v.fastRejects > maxFastRejects {
-			return errors.New("login throttled: backend keeps rejecting fresh tokens")
-		}
+	if v.lastErr != nil && time.Since(v.lastAttempt) < loginInterval {
+		return fmt.Errorf("login throttled: %w", v.lastErr)
 	}
 
 	v.lastAttempt = time.Now()
@@ -143,16 +120,10 @@ func (v *Identity) login() error {
 	}
 
 	v.token = token
-	v.expiry = tokenExpiry(token)
-	v.issued = time.Now()
 	v.lastErr = nil
 	v.redact(token)
 
-	if v.expiry.IsZero() {
-		v.log.DEBUG.Println("logged in, token has no expiry")
-	} else {
-		v.log.DEBUG.Printf("logged in, token expires %v", v.expiry.Round(time.Second))
-	}
+	v.log.DEBUG.Println("logged in")
 
 	return nil
 }
@@ -220,17 +191,6 @@ func (v *Identity) session(uid string) (string, error) {
 	return res.JWT, nil
 }
 
-// tokenExpiry derives the expiry from the JWT exp claim, with a safety margin.
-// The live backend issues tokens without exp, then the zero time means unknown
-// and the token is used until the backend rejects it.
-func tokenExpiry(token string) time.Time {
-	var claims jwt.RegisteredClaims
-	if _, _, err := jwt.NewParser().ParseUnverified(token, &claims); err == nil && claims.ExpiresAt != nil {
-		return claims.ExpiresAt.Add(-time.Minute)
-	}
-	return time.Time{}
-}
-
 // Transport decorates requests with the bearer token and the brand query param.
 // A 401 triggers one re-login and retry.
 func (v *Identity) Transport(base http.RoundTripper) http.RoundTripper {
@@ -257,7 +217,8 @@ func (v *Identity) decorate(req *http.Request) error {
 	return nil
 }
 
-// retryTransport re-authenticates once when the backend rejects the token
+// retryTransport re-authenticates once when the backend rejects the token.
+// All requests through it are GETs, so a retry needs no body handling.
 type retryTransport struct {
 	identity *Identity
 	base     http.RoundTripper
@@ -265,32 +226,20 @@ type retryTransport struct {
 
 func (t *retryTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	resp, err := t.base.RoundTrip(req)
-	if err != nil || resp.StatusCode != http.StatusUnauthorized || !replayable(req) {
+	if err != nil || resp.StatusCode != http.StatusUnauthorized {
 		return resp, err
 	}
+	resp.Body.Close()
 
-	rejected := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
-	t.identity.invalidate(rejected)
+	t.identity.invalidate(strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer "))
 
 	token, err := t.identity.Token()
 	if err != nil {
-		return resp, nil
+		return nil, err
 	}
-
-	resp.Body.Close()
 
 	retry := req.Clone(req.Context())
-	if req.GetBody != nil {
-		if retry.Body, err = req.GetBody(); err != nil {
-			return nil, err
-		}
-	}
 	retry.Header.Set("Authorization", "Bearer "+token)
 
 	return t.base.RoundTrip(retry)
-}
-
-// replayable reports whether the request body can be sent again
-func replayable(req *http.Request) bool {
-	return req.Body == nil || req.Body == http.NoBody || req.GetBody != nil
 }

@@ -67,7 +67,7 @@ func NewLiveWireFromConfig(other map[string]any) (api.Vehicle, error) {
 	}
 
 	if !vehicle.PairingStatus {
-		return nil, errors.New("deviceUUID is not paired with the motorcycle, run the pairing script")
+		log.WARN.Println("deviceUUID is not paired with the motorcycle, run the pairing script")
 	}
 
 	v := &LiveWire{
