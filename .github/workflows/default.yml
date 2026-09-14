@@ -179,13 +179,19 @@ jobs:
         run: |
           test -z "$(git status --porcelain)" || (git status; git diff; false)
 
-  integration:
-    name: Integration
+  integration-shard:
+    name: Integration ${{ matrix.shard }}/2
     runs-on: depot-ubuntu-24.04-arm-32
 
     permissions:
       contents: read
       actions: write
+
+    # the Playwright run is the longest step of the workflow, so it is split
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
 
     steps:
       - uses: actions/checkout@v7
@@ -237,14 +243,15 @@ jobs:
         timeout-minutes: 5
 
       - name: Save Playwright browsers
-        if: github.ref == 'refs/heads/master' && steps.playwright-cache.outputs.cache-hit != 'true'
+        # one writer, the shards would race for the same key
+        if: github.ref == 'refs/heads/master' && steps.playwright-cache.outputs.cache-hit != 'true' && matrix.shard == 1
         uses: actions/cache/save@v6
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
 
       - name: Run tests
-        run: vpx playwright test
+        run: vpx playwright test --shard=${{ matrix.shard }}/2
         timeout-minutes: 20
         env:
           TZ: Europe/Berlin
@@ -253,7 +260,7 @@ jobs:
         uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.shard }}
           path: playwright-report/
           retention-days: 14
 
@@ -261,9 +268,22 @@ jobs:
         uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: playwright-test-results
+          name: playwright-test-results-${{ matrix.shard }}
           path: test-results/
           retention-days: 2
+
+  # branch protection requires one check named Integration
+  integration:
+    name: Integration
+    needs: integration-shard
+    if: always()
+    runs-on: depot-ubuntu-24.04-arm
+
+    permissions:
+      contents: read
+
+    steps:
+      - run: test "${{ needs.integration-shard.result }}" = success
 
   # fork pull requests cannot use Depot's cache and fall back to the GitHub one,
   # which only master can seed for them. Must not run on a Depot runner, those
