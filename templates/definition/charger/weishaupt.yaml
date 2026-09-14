@@ -1,0 +1,27 @@
+template: weishaupt
+products:
+  - brand: Weishaupt
+    description:
+      generic: AEROBLOCK/BIBLOCK/SPLITBLOCK/GEOBLOCK
+group: heating
+requirements:
+  description:
+    de: |
+      Am Systemgerät unter Einstellungen -> Modbus TCP den Zugriff einschalten und Netzwerk/Netzwerkmaske passend konfigurieren.
+      Die Leistungsvorgabe (SollwertPV) überlagert die SG-Ready-Funktion. Auf die Reaktionszeit der Heizungsanlage achten.
+    en: |
+      Enable access under Settings -> Modbus TCP on the system device and configure network/netmask accordingly.
+      The power setpoint (SollwertPV) overrides the SG Ready function. Mind the response time of the heating system.
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    port: 502
+    id: 1
+  - name: tempsource
+    type: choice
+    choice: ["warmwater", "buffer", "flow", "outside"]
+    default: warmwater
+render: |
+  type: weishaupt
+  {{- include "modbus" . }}
+  tempsource: {{ .tempsource }}

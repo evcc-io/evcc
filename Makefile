@@ -47,10 +47,14 @@ clean::
 install::
 	go install tool
 
-install-ui::
+# verify vp is Vite+ before running ui tasks
+check-vp::
+	@vp --version 2>/dev/null | grep -q '^vp v' || { echo "vp is not Vite+, see https://viteplus.dev/guide/#install-vp" >&2; exit 1; }
+
+install-ui:: check-vp
 	vp install
 
-ui::
+ui:: check-vp
 	vp run build
 
 assets::

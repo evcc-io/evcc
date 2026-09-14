@@ -247,11 +247,11 @@ func TestPvScalePhases(t *testing.T) {
 			log:              util.NewLogger("foo"),
 			bus:              evbus.New(),
 			clock:            clock,
-			chargeMeter:      &Null{},            // silence nil panics
-			chargeRater:      &Null{},            // silence nil panics
-			chargeTimer:      &Null{},            // silence nil panics
-			progress:         NewProgress(0, 10), // silence nil panics
-			wakeUpTimer:      NewTimer(),         // silence nil panics
+			chargeMeter:      newChargeMeter(&Null{}), // silence nil panics
+			chargeRater:      &Null{},                 // silence nil panics
+			chargeTimer:      &Null{},                 // silence nil panics
+			progress:         NewProgress(0, 10),      // silence nil panics
+			wakeUpTimer:      NewTimer(),              // silence nil panics
 			mode:             api.ModeNow,
 			minCurrent:       minA,
 			maxCurrent:       maxA,
@@ -766,7 +766,7 @@ func TestUpdatePhaseSwitchNotAvailable(t *testing.T) {
 		log:         util.NewLogger("foo"),
 		bus:         evbus.New(),
 		clock:       clock,
-		chargeMeter: &Null{},
+		chargeMeter: newChargeMeter(&Null{}),
 		chargeRater: &Null{},
 		chargeTimer: &Null{},
 		progress:    NewProgress(0, 10),
@@ -853,7 +853,7 @@ func TestPvScalePhasesCircuitLimits(t *testing.T) {
 				log:            util.NewLogger("foo"),
 				bus:            evbus.New(),
 				clock:          clock.NewMock(),
-				chargeMeter:    &Null{},
+				chargeMeter:    newChargeMeter(&Null{}),
 				chargeRater:    &Null{},
 				chargeTimer:    &Null{},
 				progress:       NewProgress(0, 10),
