@@ -1,8 +1,8 @@
 template: feedin-de-2025
 products:
   - description:
-      de: Einspeisevergütung Deutschland (ab 2025)
-      en: German Feed-in Tariff (from 2025)
+      de: Einspeisevergütung ab 2025 (Deutschland)
+      en: Feed-in Tariff from 2025 (Germany)
 requirements:
   description:
     de: "Feste Einspeisevergütung für PV-Anlagen, die seit dem 25. Februar 2025 in Betrieb genommen wurden (Solarspitzengesetz). In Viertelstunden mit negativem Börsenstrompreis entfällt die Vergütung. Für Anlagen unter 100 kW gilt das erst ab dem Kalenderjahr nach Einbau eines intelligenten Messsystems. Börsenpreise von [Energy-Charts](https://energy-charts.info)."
