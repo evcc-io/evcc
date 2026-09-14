@@ -70,6 +70,9 @@ capabilities: ["{{ join "\", \"" .Capabilities }}"]
 {{- if .Countries }}
 countries: ["{{ join "\", \"" .Countries }}"]
 {{- end }}
+{{- if .TariffUsages }}
+usages: ["{{ join "\", \"" .TariffUsages }}"]
+{{- end }}
 {{- if .Requirements }}
 requirements: ["{{ join "\", \"" .Requirements }}"]
 {{- end }}

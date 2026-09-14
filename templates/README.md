@@ -73,6 +73,10 @@ products:
 
 `group` is used to group switchable sockets and generic device support (e.g. SunSpec) templates.
 
+## `usages`
+
+`usages` restricts a tariff template to `grid` and/or `feedin`. Templates without `usages` are offered for both.
+
 ## `capabilities`
 
 `capabilities` provides an option to define special capabilities of the device as a list of strings.

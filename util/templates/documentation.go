@@ -103,6 +103,7 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 		"ProductGroup":           t.GroupTitle(lang),
 		"Capabilities":           product.Capabilities,
 		"Countries":              t.Countries,
+		"TariffUsages":           t.TariffUsages,
 		"Requirements":           t.Requirements.EVCC,
 		"RequirementDescription": t.Requirements.Description.String(lang),
 		"Caveats":                caveats,

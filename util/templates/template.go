@@ -24,7 +24,8 @@ type Template struct {
 	Link         string         `json:",omitempty"` // integration provider link, can be overridden per product
 	Products     []Product      `json:",omitempty"` // list of products this template is compatible with
 	Capabilities []Capability   `json:"-"`
-	Countries    []CountryCode  `json:",omitempty"` // list of countries supported by this template
+	Countries    []CountryCode  `json:",omitempty"`                     // list of countries supported by this template
+	TariffUsages []string       `yaml:"usages" json:"usages,omitempty"` // restrict tariff template to grid and/or feedin, empty means both
 	Requirements Requirements   `json:",omitempty"`
 	Caveats      []Caveat       `json:",omitempty"` // known device limitations
 	Params       []Param        `json:",omitempty"`
@@ -86,6 +87,12 @@ func (t *Template) Validate() error {
 	for _, c := range t.Countries {
 		if !c.IsValid() {
 			return fmt.Errorf("invalid country code: '%s'", c)
+		}
+	}
+
+	for _, u := range t.TariffUsages {
+		if u != "grid" && u != "feedin" {
+			return fmt.Errorf("invalid usages entry: '%s'", u)
 		}
 	}
 
