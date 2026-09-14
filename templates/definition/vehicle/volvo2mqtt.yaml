@@ -10,13 +10,14 @@ requirements:
     de: Erforderlich ist eine konfigurierte MQTT Broker-Konfiguration und eine volvo2mqtt-Installation [github.com/Dielee/volvo2mqtt](https://github.com/Dielee/volvo2mqtt).
 params:
   - preset: vehicle-common
+  - preset: vehicle-online
   - name: vin
     required: true
   - name: timeout
     default: 720h
 render: |
   type: custom
-  {{- include "vehicle-common" . }}
+  {{- include "common" . }}
   soc:
     source: mqtt
     topic: homeassistant/sensor/{{ .vin }}_battery_charge_level/state
@@ -25,3 +26,4 @@ render: |
     source: mqtt
     topic: homeassistant/sensor/{{ .vin }}_electric_range/state
     timeout: {{ .timeout }}
+  {{ include "features" . }}

@@ -1,6 +1,13 @@
 <template>
 	<button class="btn btn-sm border-0" :disabled="disabled" @click="onClick">
-		<component :is="icon" size="s" :class="iconClass"></component>
+		<component
+			:is="icon"
+			size="s"
+			:class="[
+				iconClass,
+				{ 'nudge-prev': highlight && prev, 'nudge-next': highlight && next },
+			]"
+		></component>
 	</button>
 </template>
 
@@ -15,6 +22,7 @@ export default defineComponent({
 		disabled: Boolean,
 		prev: Boolean,
 		next: Boolean,
+		highlight: Boolean,
 		onClick: { type: Function as PropType<(event: MouseEvent) => void> },
 	},
 	computed: {
@@ -38,5 +46,24 @@ export default defineComponent({
 .btn:active,
 .btn:focus {
 	color: inherit !important;
+}
+@keyframes nudge {
+	0%,
+	100% {
+		transform: translateX(0);
+	}
+	35% {
+		transform: translateX(var(--nudge-distance));
+	}
+}
+.nudge-prev,
+.nudge-next {
+	animation: nudge var(--evcc-transition-fast) ease-out;
+}
+.nudge-prev {
+	--nudge-distance: -4px;
+}
+.nudge-next {
+	--nudge-distance: 4px;
 }
 </style>

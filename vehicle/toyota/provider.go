@@ -66,7 +66,15 @@ func (v *Provider) WakeUp() error {
 
 func (v *Provider) Soc() (float64, error) {
 	res, err := v.status()
-	return float64(res.Payload.BatteryLevel), err
+	if err != nil {
+		return 0, err
+	}
+
+	if res.Payload.BatteryLevel == nil {
+		return 0, api.ErrNotAvailable
+	}
+
+	return float64(*res.Payload.BatteryLevel), nil
 }
 
 // Range implements the api.VehicleRange interface
@@ -75,5 +83,16 @@ func (v *Provider) Range() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	return res.Payload.EvRangeWithAc.ValueInKilometers()
+
+	if r := res.Payload.EvRangeWithAc; r != nil {
+		if rng, err := r.ValueInKilometers(); err == nil {
+			return rng, nil
+		}
+	}
+
+	if r := res.Payload.EvRange; r != nil {
+		return r.ValueInKilometers()
+	}
+
+	return 0, api.ErrNotAvailable
 }

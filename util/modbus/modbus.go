@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/volkszaehler/mbmd/meters"
@@ -26,21 +27,57 @@ const (
 // RTU field is included for compatibility with modbus.tpl which renders rtu: false for TCP
 // TODO remove RTU field (https://github.com/evcc-io/evcc/issues/3360)
 type TcpSettings struct {
-	URI string
-	ID  uint8
-	RTU *bool `mapstructure:"rtu"`
+	URI     string
+	ID      uint8
+	RTU     *bool `mapstructure:"rtu"`
+	Delay   time.Duration
+	Timeout time.Duration
+}
+
+// Connection creates a modbus TCP connection from the settings
+func (s TcpSettings) Connection(ctx context.Context) (*Connection, error) {
+	settings := Settings{
+		ID:      s.ID,
+		URI:     s.URI,
+		RTU:     s.RTU,
+		Delay:   s.Delay,
+		Timeout: s.Timeout,
+	}
+
+	return settings.Connection(ctx, Tcp)
 }
 
 // Settings contains the ModBus settings
 type Settings struct {
-	ID        uint8  `json:"id,omitempty" yaml:",omitempty"`
-	SubDevice int    `json:"subdevice,omitempty" yaml:",omitempty"`
-	URI       string `json:"uri,omitempty" yaml:",omitempty"`
-	Device    string `json:"device,omitempty" yaml:",omitempty"`
-	Comset    string `json:"comset,omitempty" yaml:",omitempty"`
-	Baudrate  int    `json:"baudrate,omitempty" yaml:",omitempty"`
-	UDP       bool   `json:"udp,omitempty" yaml:",omitempty"`
-	RTU       *bool  `json:"rtu,omitempty" yaml:",omitempty"`
+	ID        uint8         `json:"id,omitempty" yaml:",omitempty"`
+	SubDevice int           `json:"subdevice,omitempty" yaml:",omitempty"`
+	URI       string        `json:"uri,omitempty" yaml:",omitempty"`
+	Device    string        `json:"device,omitempty" yaml:",omitempty"`
+	Comset    string        `json:"comset,omitempty" yaml:",omitempty"`
+	Baudrate  int           `json:"baudrate,omitempty" yaml:",omitempty"`
+	UDP       bool          `json:"udp,omitempty" yaml:",omitempty"`
+	RTU       *bool         `json:"rtu,omitempty" yaml:",omitempty"`
+	Delay     time.Duration `json:"delay,omitempty" yaml:",omitempty"`
+	Timeout   time.Duration `json:"timeout,omitempty" yaml:",omitempty"`
+}
+
+// Connection creates a modbus connection from the settings, applying delay and timeout.
+// The optional proto overrides the protocol derived from the settings.
+func (s Settings) Connection(ctx context.Context, proto ...Protocol) (*Connection, error) {
+	p := s.Protocol()
+	if len(proto) > 0 {
+		p = proto[0]
+	}
+
+	conn, err := NewConnection(ctx, s.URI, s.Device, s.Comset, s.Baudrate, p, s.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	conn.Timeout(s.Timeout)
+	conn.Delay(s.Delay)
+
+	return conn, nil
 }
 
 // Protocol identifies the wire format from the RTU setting
@@ -66,7 +103,50 @@ type meterConnection struct {
 	meters.Connection
 	proto Protocol
 	refs  int // count of references; first connection has ref count 0
+
+	mu           sync.Mutex
+	delay        time.Duration
+	connectDelay time.Duration
+	timeout      time.Duration
+
 	*logger
+}
+
+// setDelay applies the delay if larger than the current value
+func (c *meterConnection) setDelay(delay time.Duration) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.delay = max(c.delay, delay)
+}
+
+func (c *meterConnection) getDelay() time.Duration {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	return c.delay
+}
+
+// setConnectDelay applies the connect delay if larger than the current value
+func (c *meterConnection) setConnectDelay(delay time.Duration) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if delay > c.connectDelay {
+		c.connectDelay = delay
+		c.Connection.ConnectDelay(delay)
+	}
+}
+
+// setTimeout applies the timeout if larger than the current value
+func (c *meterConnection) setTimeout(timeout time.Duration) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if timeout > c.timeout {
+		c.timeout = timeout
+		_ = c.Connection.Timeout(timeout)
+	}
 }
 
 var (
@@ -139,6 +219,7 @@ func NewConnection(ctx context.Context, uri, device, comset string, baudrate int
 		slaveID:    slaveID,
 		Connection: conn.Clone(slaveID),
 		logger:     conn.logger,
+		physical:   conn,
 	}
 
 	return res, nil

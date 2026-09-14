@@ -7,10 +7,11 @@ export interface ModalEntry {
   id?: number;
   type?: string;
   choices?: string[];
+  station?: string;
 }
 
 export interface ModalResult {
-  action: "added" | "updated" | "removed" | "cancelled";
+  action: "added" | "updated" | "removed" | "converted" | "cancelled";
   name?: string;
   id?: number;
   type?: string;
@@ -106,7 +107,12 @@ function syncAllModals(): void {
 
 // Parse brackets: "meter[type:grid]" => { name: "meter", type: "grid" }
 // "meter[choices:pv,battery]" => { name: "meter", choices: ["pv", "battery"] }
-export function parseKey(key: string): { name: string; type?: string; choices?: string[] } {
+export function parseKey(key: string): {
+  name: string;
+  type?: string;
+  choices?: string[];
+  station?: string;
+} {
   const bracketMatch = key.match(/^([^[]+)\[([^\]]+)\]$/);
   if (!bracketMatch) {
     return { name: key };
@@ -125,6 +131,9 @@ export function parseKey(key: string): { name: string; type?: string; choices?: 
   }
   if (paramKey === "choices") {
     return { name, choices: paramValue.split(",") };
+  }
+  if (paramKey === "station") {
+    return { name, station: paramValue };
   }
   return { name };
 }
@@ -158,6 +167,7 @@ export function parseQueryString(queryString: string): ModalEntry[] {
     }
     if (parsed.type) entry.type = parsed.type;
     if (parsed.choices) entry.choices = parsed.choices;
+    if (parsed.station) entry.station = parsed.station;
     entries.push(entry);
   }
   return entries;
@@ -172,6 +182,8 @@ export function buildQuery(stack: ModalEntry[]): Record<string, string> {
       key += `[type:${entry.type}]`;
     } else if (entry.choices?.length) {
       key += `[choices:${entry.choices.join(",")}]`;
+    } else if (entry.station) {
+      key += `[station:${entry.station}]`;
     }
     query[key] = entry.id !== undefined ? String(entry.id) : "";
   }
@@ -182,7 +194,7 @@ export function buildQuery(stack: ModalEntry[]): Record<string, string> {
 export function extractQueryString(fullPath: string): string {
   const qIdx = fullPath.indexOf("?");
   if (qIdx === -1) return "";
-  return fullPath.substring(qIdx + 1);
+  return fullPath.substring(qIdx + 1).split("#")[0]!;
 }
 
 export function initConfigModal(router: Router): void {
@@ -225,7 +237,7 @@ export function initConfigModal(router: Router): void {
 
 export function openModal(
   name: string,
-  params?: { id?: number; type?: string; choices?: string[] }
+  params?: { id?: number; type?: string; choices?: string[]; station?: string }
 ): Promise<ModalResult> {
   if (!_router) {
     return Promise.resolve({ action: "cancelled" });
@@ -235,13 +247,14 @@ export function openModal(
   if (params?.id !== undefined) entry.id = params.id;
   if (params?.type) entry.type = params.type;
   if (params?.choices) entry.choices = params.choices;
+  if (params?.station) entry.station = params.station;
 
   const newStack = [...configModal.stack, entry];
   const query = buildQuery(newStack);
 
   return new Promise<ModalResult>((resolve) => {
     _resolvers.push(resolve);
-    _router!.push({ path: "/config", query });
+    _router!.push({ path: "/config", query, hash: _router!.currentRoute.value.hash });
   });
 }
 
@@ -267,13 +280,13 @@ export async function closeModal(result?: ModalResult): Promise<void> {
   // Update stack synchronously to prevent double-close from GenericModal's handleHidden
   configModal.stack = newStack;
 
-  await _router.push({ path: "/config", query });
+  await _router.push({ path: "/config", query, hash: _router.currentRoute.value.hash });
   resolve?.(finalResult);
 }
 
 export function replaceModal(
   name: string,
-  params?: { id?: number; type?: string; choices?: string[] }
+  params?: { id?: number; type?: string; choices?: string[]; station?: string }
 ): void {
   if (!_router) return;
 
@@ -281,11 +294,12 @@ export function replaceModal(
   if (params?.id !== undefined) entry.id = params.id;
   if (params?.type) entry.type = params.type;
   if (params?.choices) entry.choices = params.choices;
+  if (params?.station) entry.station = params.station;
 
   const newStack = [...configModal.stack.slice(0, -1), entry];
   const query = buildQuery(newStack);
 
-  _router.replace({ path: "/config", query });
+  _router.replace({ path: "/config", query, hash: _router.currentRoute.value.hash });
 }
 
 export function getModal(name: string): ModalEntry | undefined {
@@ -298,6 +312,11 @@ export function topModal(): ModalEntry | undefined {
 
 export function isTopModal(name: string): boolean {
   return topModal()?.name === name;
+}
+
+export function isNestedIn(name: string): boolean {
+  const idx = configModal.stack.findIndex((m) => m.name === name);
+  return idx >= 0 && idx < configModal.stack.length - 1;
 }
 
 export default configModal;

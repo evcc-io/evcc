@@ -20,25 +20,7 @@
     "title": "Engedélyezési állapot"
   },
   "batterySettings": {
-    "batteryLevel": "Akkumulátor szint",
-    "bufferStart": {
-      "above": "amikor {soc} felett van.",
-      "full": "amikor {soc}-on van.",
-      "never": "csak ha van elég többlet."
-    },
-    "capacity": "{energy} / {total}",
-    "control": "Akkumulátor vezérlés",
-    "discharge": "Kisütés megakadályoza gyorstöltési és tervezett töltési üzemmódban.",
-    "disclaimerHint": "Megjegyzés:",
-    "disclaimerText": "Ezek a beállítások csak a szolár üzemmódot érintik. A töltés módja ennek megfelelően kerül beállításra.",
     "gridChargeTab": "Hálózati töltés",
-    "legendBottomName": "Otthoni akkumulátoros töltés priorizálása",
-    "legendBottomSubline": "ameddig eléri {soc}-ot.",
-    "legendMiddleName": "Jármű töltésének priorizálása",
-    "legendMiddleSubline": "amikor az otthoni akkumulátor {soc} felett van.",
-    "legendTopAutostart": "Automatikusan indul",
-    "legendTopName": "Energiatárolóval támogatott töltés",
-    "legendTopSubline": "amikor az otthoni akkumulátor {soc} felett van.",
     "modalTitle": "Otthoni Akkumulátor",
     "usageTab": "Akkumulátor használat"
   },
@@ -125,15 +107,16 @@
       "current": "Jelenlegi",
       "currentRange": "Áram",
       "detected": "Észlelve",
-      "dimmed": "Elsötétítve",
+      "dimmed": "Fogyasztás korlátozva",
       "enabled": "Engedélyezve",
       "energy": "Energia",
+      "events": "Események",
       "feedinPrice": "Kötelező átvételi ár",
+      "forecast": "Előrejelzés",
       "gridPrice": "Villamosenergia ára",
       "heaterTempLimit": "Fűtés limit",
-      "hemsActiveLimit": "Aktív limit",
-      "hemsType": "Kommunikáció",
       "identifier": "RFID-Azonosító",
+      "messengers": "Szolgáltatások",
       "no": "nem",
       "odometer": "Óraállás",
       "org": "Szervezet",
@@ -158,10 +141,6 @@
       "B": "B (csatlakoztatva)",
       "C": "C (töltés)"
     },
-    "deviceValueHemsType": {
-      "eebus": "EEBus által",
-      "relay": "Relé által"
-    },
     "devices": {
       "auxMeter": "Okos fogyasztó",
       "batteryStorage": "Akkumulátoros tároló",
@@ -172,7 +151,13 @@
       "loading": "YAML szerkesztő betöltése…"
     },
     "eebus": {
+      "certificate": {
+        "private": "Privát kulcs",
+        "public": "Publikus tanúsítvány",
+        "title": "Tanúsítványok"
+      },
       "description": "Konfiguráció ami engedélyezi az evcc-nek, hogy kommunikáljon más EEBus eszközökkel.",
+      "port": "Port",
       "title": "EEBus"
     },
     "experimental": {
@@ -207,6 +192,7 @@
       "dragHandle": "Húzógomb",
       "dragItem": "Húzható: {title}",
       "dragList": "Átrendezhető lista",
+      "error": "Hiba",
       "experimental": "Kísérleti",
       "forceSave": "Mentés mindenképpen",
       "fromYamlHint": "Megjegyzés: Az evcc.yaml fájlban konfigurálható. A szerkesztés engedélyezéséhez távolítsa el a bejegyzést a fájlból.",
@@ -215,7 +201,6 @@
       "noFileSelected": "Nincs fájl kiválasztva.",
       "off": "ki",
       "on": "be",
-      "password": "Jelszó",
       "readFromFile": "Fájlból olvasás",
       "remove": "Eltávolítás",
       "required": "szükséges",
@@ -245,7 +230,6 @@
         "type": "Típus"
       },
       "description": "Teljesítménykorlátozás külső rendszerekkel (pl. §14a EnWG, §9 EEG interfész vagy magasabb szintű energiagazdálkodási rendszer). A terheléskezelési funkcióval együtt működik.",
-      "downloadCsv": "CSV letöltése",
       "eventsRecorded": "{count} rácskorlátozási esemény rögzítve.",
       "lastEvent": "Legutóbbi {timeAgo}.",
       "title": "Külső határ"
@@ -285,13 +269,6 @@
         "charging": "Töltő",
         "heating": "Fűtőberendezés"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "6 és 16 A közötti áramtartomány lesz használatban.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "6 és 32 A közötti áramtartomány lesz használatban.",
-      "chargerPowerCustom": "egyéb",
-      "chargerPowerCustomHelp": "Definiáljon egy egyedi áramtartományt.",
-      "chargerTypeLabel": "Töltő típusa",
       "chargingTitle": "Viselkedés",
       "circuitHelp": "Terheléskezelési hozzárendelés a teljesítmény- és áramkorlátok túllépésének biztosítására.",
       "circuitInvalid": "Az áramkör nem létezik",
@@ -337,7 +314,6 @@
       "priorityHelp": "Magasabb prioritás esetén elsőbbségi hozzáférést biztosít a napenergia-többlethez.",
       "priorityLabel": "Prioritás",
       "save": "Mentés",
-      "showAllSettings": "Összes beállítás megjelenítése",
       "solarBehaviorCustomHelp": "Definiálja a saját engedélyezési és letiltási küszöbértékeit és késleltetéseit.",
       "solarBehaviorDefaultHelp": "Indítás elegendő többlet után {enableDelay} idő elteltével. Megállítás, ha nincs elegendő többlet a következőhöz: {disableDelay}.",
       "solarBehaviorLabel": "Szolár",
@@ -394,6 +370,7 @@
     },
     "messaging": {
       "description": "Értesítési üzenetek beállítása a töltési folyamatokról.",
+      "messengers": "Szolgáltatások",
       "title": "Értesítések"
     },
     "meter": {
@@ -403,7 +380,6 @@
       "option": {
         "aux": "Önszabályozó fogyasztó hozzáadása",
         "battery": "Akkumulátoros mérő hozzáadása",
-        "ext": "Rendszeres fogyasztó hozzáadása",
         "pv": "Napelem mérő hozzáadása"
       },
       "save": "Mentés",
@@ -485,22 +461,14 @@
       "descriptionHost": "Az evcc helyi hálózatban történő bejelentésére szolgál.",
       "descriptionInternalUrl": "Az evcc helyi hálózati címe.",
       "descriptionPort": "Port a webes felülethez és az API-hoz. Frissítened kell a böngésződ URL-jét, ha ezt megváltoztatod.",
-      "descriptionSchema": "Csak az URL-ek létrehozásának módját érinti. A HTTPS kiválasztása nem engedélyezi a titkosítást.",
       "labelExternalUrl": "Külső URL",
       "labelHost": "mDNS-gazdanév",
       "labelInternalUrl": "Belső URL",
       "labelPort": "Port",
-      "labelSchema": "Séma",
       "title": "Hálózat"
     },
     "ocpp": {
-      "connectedChargers": "Csatlakoztatott töltők",
-      "connectionStatus": "Konfigurált állomásazonosítók",
-      "connectionStatusHelp": "A konfigurált töltők csatlakozási állapota.",
-      "detectedChargers": "Észlelt állomásazonosítók",
-      "detectedHelp": "Ezek a töltők megpróbáltak csatlakozni az evcc-hez. A töltő használatához hozzon létre egy töltési pontot az állomás azonosítójával.",
       "noChargers": "Nincs OCPP töltő észlelve.",
-      "noStations": "Nincs csatlakoztatott állomás",
       "status": {
         "configured": "Nincs csatlakozás",
         "connected": "Csatlakoztatva",
@@ -617,10 +585,6 @@
       "restartingDescription": "Kérlek várj…",
       "restartingMessage": "evcc újraindítása."
     },
-    "tariffs": {
-      "description": "Határozza meg energiatarifáját a töltési folyamatok költségeinek kiszámításához.",
-      "title": "Tarifák"
-    },
     "telemetry": {
       "description": "Az adatmegosztás konfigurálása az evcc fejlesztésének elősegítése érdekében. Az Ön adatainak védelme fontos számunkra, és a részvétel teljesen opcionális.",
       "title": "Telemetria"
@@ -639,32 +603,13 @@
       "validate": "ellenőrzés"
     },
     "vehicle": {
-      "cancel": "Mégse",
-      "chargingSettings": "Töltési beállítások",
-      "defaultMode": "Alapértelmezett mód",
-      "defaultModeHelp": "Töltési mód a jármű csatlakoztatásakor.",
-      "delete": "Törlés",
       "generic": "Egyéb integrációk",
-      "identifiers": "RFID azonosítók",
-      "identifiersHelp": "A jármű azonosítására szolgáló RFID-karakterláncok listája. Egy bejegyzés soronként. Az aktuális azonosító az áttekintő oldalon található a megfelelő töltőpontnál.",
-      "maximumCurrent": "Maximum áram",
-      "maximumCurrentHelp": "Nagyobbnak kell lennie, mint a minimális áram.",
-      "maximumPhases": "Maximális fázisok",
-      "maximumPhasesHelp": "Hány fázissal tud ez a jármű tölteni? A szükséges minimális szoláris többlet és a tervezett időtartam kiszámításához használják.",
-      "maximumPower": "Maximális töltési teljesítmény",
-      "maximumPowerHelp": "A jármű maximális energiafogyasztása",
-      "minimumCurrent": "Minimum áram",
-      "minimumCurrentHelp": "Csak akkor menj 6A alá, ha tudod, hogy mit csinálsz.",
       "online": "Járművek online API-val",
       "primary": "Általános integrációk",
-      "priority": "Prioritás",
-      "priorityHelp": "A magasabb prioritás azt jelenti, hogy ez a jármű előnyben részesíti a napenergia-többlet elérését.",
-      "save": "Mentés",
       "scooter": "Roller",
       "template": "Gyártó",
       "titleAdd": "Jármű hozzáadása",
-      "titleEdit": "Jármű szerkesztése",
-      "validateSave": "Ellenőrzés & mentés"
+      "titleEdit": "Jármű szerkesztése"
     }
   },
   "footer": {
@@ -705,7 +650,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Legyél támogató",
-      "becomeSponsorExtended": "Támogass közvetlenül, hogy matricákat kapj.",
       "confetti": "Készen állsz a konfettire?",
       "confettiPromise": "Kapsz matricákat és digitális konfettit",
       "sticker": "… vagy szeretnél evcc matricákat?",
@@ -714,9 +658,7 @@
       "titleNoSponsor": "Támogass minket",
       "titleSponsor": "Te már támogató vagy",
       "titleTrial": "Próbaverzió",
-      "titleVictron": "Szponzorálta a Victron Energy",
-      "trial": "Jelenleg próbaverziót használsz korlátlan funkciókkal. Kérlek fontold meg a projekt támogatását.",
-      "victron": "Jelenleg a Victron Energy hardverén használod az evcc-t korlátlan funkciókkal."
+      "trial": "Jelenleg próbaverziót használsz korlátlan funkciókkal. Kérlek fontold meg a projekt támogatását."
     },
     "telemetry": {
       "optIn": "Szeretnék hozzájárulni az adataimmal.",
@@ -768,15 +710,9 @@
   },
   "header": {
     "about": "Névjegy",
-    "authProviders": {
-      "confirmLogout": "Biztosan le szeretnéd választani a(z) {title}?",
-      "loggedOut": "Sikeresen kijelentkezve",
-      "title": "Engedélyezési állapot"
-    },
     "blog": "Blog",
     "docs": "Dokumentáció",
     "github": "GitHub",
-    "login": "Jármű Bejelentkezések",
     "logout": "Kijelentkezés",
     "nativeSettings": "Szerver Váltás",
     "needHelp": "Szükséged van segítségre?",
@@ -871,7 +807,6 @@
   "loginModal": {
     "cancel": "Mégse",
     "demoMode": "A bejelentkezés demó módban nem támogatott.",
-    "error": "Sikertelen bejelentkezés: ",
     "iframeHint": "evcc megnyitása új lapon.",
     "iframeIssue": "A jelszavad helyes, de úgy tűnik, hogy a böngésződ elvetette a hitelesítési sütit. Ez akkor történhet meg, ha az evcc-t iframe-ben futtatod HTTP-n.",
     "invalid": "A jelszó érvénytelen.",
@@ -884,9 +819,7 @@
     "chargingPlan": {
       "active": "Aktív",
       "addRepeatingPlan": "Ismétlődő terv hozzáadása",
-      "arrivalTab": "Érkezés",
       "day": "Nap",
-      "departureTab": "Indulás",
       "goal": "Töltési cél",
       "modalTitle": "Töltési Tervezet",
       "none": "nincs",
@@ -897,7 +830,6 @@
       },
       "planNumber": "Terv {number}",
       "precondition": {
-        "description": "Töltse {duration} indulás előtt az akkumulátor előkondícionálásához.",
         "label": "Késleltetett Töltés",
         "optionAll": "minden",
         "optionNo": "nem"
@@ -906,12 +838,8 @@
       "repeating": "ismétlődő",
       "repeatingPlans": "Ismétlődő tervek",
       "selectAll": "Összes kiválasztása",
-      "strategyDisabledDescription": "A töltés a lehető legkésőbb kezdődik, hogy pontosan az indulás előtt befejeződjön. Dinamikus hálózati árak vagy CO₂-tarifa esetén itt több lehetőség áll rendelkezésre.",
-      "strategySettings": "Stratégiai beállítások",
       "time": "Idő",
       "title": "Terv",
-      "titleMinSoc": "Min töltés",
-      "titleTargetCharge": "Indulás",
       "unsavedChanges": "Vannak nem mentett módosítások. Alkalmazza most?",
       "update": "Alkalmazás",
       "weekdays": "Napok"
@@ -920,9 +848,9 @@
       "battery": "Battery",
       "batteryCharge": "Energiatároló töltés",
       "batteryDischarge": "Energiatároló kisütés",
+      "batteryDischargeHold": "Energiatároló (lezárva)",
       "batteryGridChargeActive": "hálózatból töltés aktív",
       "batteryGridChargeLimit": "hálózatból töltés ha",
-      "batteryHold": "Energiatároló (lezárva)",
       "batteryTooltip": "{energy} / {total} ({soc})",
       "forecastTooltip": "előrejelzés: ma fennmaradó napenergia-termelés",
       "gridImport": "Hálózatból import",
@@ -942,7 +870,6 @@
       "waitForVehicle": "Üzemkész. Fűtésre várakozás…"
     },
     "hemsWarning": {
-      "description": "Csökkentett töltés, amely nem haladhatja meg a {limit}-et.",
       "title": "Külső határérték:"
     },
     "loadpoint": {
@@ -969,22 +896,12 @@
       "batteryUsage": "Otthoni Akkumulátor",
       "currents": "Töltőáram",
       "default": "alapértelmezett",
-      "disclaimerHint": "Megjegyzés:",
-      "limitSoc": {
-        "description": "Töltési korlát, amikor a jármű csatlakoztatva van.",
-        "label": "Alapértelmezett limit"
-      },
       "maxCurrent": {
         "label": "Max. Áram"
       },
       "minCurrent": {
         "label": "Min. Áram"
       },
-      "minSoc": {
-        "description": "A jármű gyorstöltve lesz {0}-ra szolár üzemmódban. Ezután folytatódik a töltés a napelemes többletenergiával. Hasznos egy minimum tartományt megadni a felhősebb napokra.",
-        "label": "Min. töltés %"
-      },
-      "onlyForSocBasedCharging": "Ezek a beállítások csak olyan járművekre elérhetőek, amiknek ismert a töltési szintje.",
       "phasesConfigured": {
         "label": "Fázis",
         "no1p3pSupport": "Milyen módon van csatlakoztatva a töltőd?",
@@ -1179,8 +1096,6 @@
       "solarpercentage": "Napenergia (%)",
       "vehicle": "Jármű"
     },
-    "csvPeriod": "Letöltés - {period} .CSV",
-    "csvTotal": "Letöltés - Összes időszak .CSV",
     "date": "Kezdés",
     "energy": "Töltve",
     "filter": {
@@ -1201,6 +1116,7 @@
     },
     "loadpoint": "Töltőpont",
     "noData": "Nincs töltési folyamat ebben a hónapban.",
+    "odometer": "Futásteljesítmény",
     "overview": "Áttekintés",
     "period": {
       "month": "Hónap",
@@ -1229,7 +1145,7 @@
     },
     "hiddenFeatures": {
       "label": "Kísérlet",
-      "value": "Kísérleti funkciók megjelenítése."
+      "value": "Kísérleti funkciók engedélyezése."
     },
     "language": {
       "auto": "Automatikus",
@@ -1308,5 +1224,13 @@
     "lineErrorLink": "sor {0}",
     "restartButton": "Újraindítás",
     "title": "Indítási hiba"
+  },
+  "tabBar": {
+    "battery": "Akkumulátor",
+    "charge": "Töltés",
+    "comingSoon": "Ez az oldal fejlesztés alatt áll.",
+    "forecast": "Előrejelzés",
+    "more": "Egyéb",
+    "sessions": "Folyamatok"
   }
 }

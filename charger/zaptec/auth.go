@@ -6,7 +6,9 @@ import (
 	"sync"
 
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/cache"
+	"github.com/evcc-io/evcc/util/oauth"
 	"golang.org/x/oauth2"
 )
 
@@ -42,7 +44,7 @@ func getOIDCProvider(ctx context.Context) (*oidc.Provider, error) {
 }
 
 // TokenSource returns a shared oauth2.TokenSource for the given user.
-func TokenSource(ctx context.Context, user, pass string) (oauth2.TokenSource, error) {
+func TokenSource(ctx context.Context, log *util.Logger, user, pass string) (oauth2.TokenSource, error) {
 	return tokenSourceCache.GetOrCreate(user, func() (oauth2.TokenSource, error) {
 		provider, err := getOIDCProvider(ctx)
 		if err != nil {
@@ -70,6 +72,6 @@ func TokenSource(ctx context.Context, user, pass string) (oauth2.TokenSource, er
 			return nil, err
 		}
 
-		return oauth2.ReuseTokenSource(token, pts), nil
+		return oauth2.ReuseTokenSource(token, oauth.Redacted(log, pts)), nil
 	})
 }

@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -48,8 +49,10 @@ func (lp *Loadpoint) createSession() {
 	}
 
 	if c, ok := api.Cap[api.Identifier](lp.charger); ok {
-		if id, err := c.Identify(); err == nil {
-			lp.session.Identifier = id
+		if ids, err := c.Identify(); err == nil {
+			if idx := slices.IndexFunc(ids, func(id string) bool { return id != "" }); idx >= 0 {
+				lp.session.Identifier = ids[idx]
+			}
 		}
 	}
 
@@ -68,6 +71,16 @@ func (lp *Loadpoint) createSession() {
 func (lp *Loadpoint) applyEnergyMetrics(s *session.Session) {
 	if meterStop := lp.chargeMeterTotal(); meterStop > 0 {
 		s.MeterStop = &meterStop
+	}
+
+	if soc := lp.vehicleSoc; soc > 0 && !lp.chargerHasFeature(api.Heating) {
+		s.SocEnd = &soc
+	}
+
+	// added range by linear projection from current range and soc delta
+	if rng := float64(lp.vehicleRange); rng > 0 && s.SocStart != nil && s.SocEnd != nil && *s.SocEnd > *s.SocStart {
+		added := rng * (*s.SocEnd - *s.SocStart) / *s.SocEnd
+		s.AddedRange = &added
 	}
 
 	s.SolarPercentage = new(lp.energyMetrics.SolarPercentage())

@@ -15,6 +15,7 @@ params:
     choice: ["tcpip"]
     id: 1
     port: 503
+    timeout: 30s
   - preset: battery-params
 render: |
   type: custom
@@ -29,14 +30,12 @@ render: |
         type: input
         decode: int32
       scale: -1
-      timeout: 30s
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 2 # Verbrauch
         type: input
         decode: int32
-      timeout: 30s
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
@@ -44,7 +43,6 @@ render: |
         type: input
         decode: int32
       scale: -1
-      timeout: 30s
   {{- end }}
   {{- if eq .usage "pv" }}
   power:
@@ -54,7 +52,6 @@ render: |
       address: 0 # Erzeugung
       type: input
       decode: int32
-    timeout: 30s
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -64,7 +61,6 @@ render: |
       address: 37 # Batterie Leistung
       type: input
       decode: int32
-    timeout: 30s
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -72,6 +68,5 @@ render: |
       address: 36 # Batterie SOC
       type: input
       decode: uint16
-    timeout: 30s
   {{- include "battery-params" . }}
   {{- end }}

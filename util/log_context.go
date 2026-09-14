@@ -10,7 +10,7 @@ func WithLogger(ctx context.Context, log *Logger) context.Context {
 	return context.WithValue(ctx, CtxLogger, log)
 }
 
-func ContextLogger(ctx context.Context) *Logger {
+func contextLogger(ctx context.Context) *Logger {
 	if ctx != nil {
 		if l, ok := ctx.Value(CtxLogger).(*Logger); ok {
 			return l
@@ -21,7 +21,7 @@ func ContextLogger(ctx context.Context) *Logger {
 }
 
 func ContextLoggerWithDefault(ctx context.Context, log *Logger) *Logger {
-	if log := ContextLogger(ctx); log != nil {
+	if log := contextLogger(ctx); log != nil {
 		return log
 	}
 

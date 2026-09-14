@@ -65,12 +65,12 @@ func NewWebastoNextFromConfig(ctx context.Context, other map[string]any) (api.Ch
 		return nil, err
 	}
 
-	return NewWebastoNext(ctx, cc.URI, cc.ID)
+	return NewWebastoNext(ctx, cc)
 }
 
 // NewWebastoNext creates WebastoNext charger
-func NewWebastoNext(ctx context.Context, uri string, id uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewWebastoNext(ctx context.Context, settings modbus.TcpSettings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -242,13 +242,13 @@ func (wb *WebastoNext) Currents() (float64, float64, float64, error) {
 var _ api.Identifier = (*WebastoNext)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *WebastoNext) Identify() (string, error) {
+func (wb *WebastoNext) Identify() ([]string, error) {
 	b, err := wb.conn.ReadHoldingRegisters(tqRegUserID, 10)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return bytesAsString(b), nil
+	return []string{bytesAsString(b)}, nil
 }
 
 var _ api.Diagnosis = (*WebastoNext)(nil)

@@ -6,7 +6,7 @@ products:
   - brand: Mennekes
     description:
       generic: AMTRON 4You
-capabilities: ["rfid"]
+capabilities: ["rfid", "dim"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
 params:

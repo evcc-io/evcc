@@ -1,5 +1,22 @@
 package charger
 
+// LICENSE
+
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 import (
 	"context"
 	"fmt"
@@ -79,12 +96,12 @@ func NewDeltaFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 		return nil, err
 	}
 
-	return NewDelta(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID, cc.Connector)
+	return NewDelta(ctx, cc.Settings, cc.Connector)
 }
 
 // NewDelta creates Delta charger
-func NewDelta(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, connector uint16) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
+func NewDelta(ctx context.Context, settings modbus.Settings, connector uint16) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -337,13 +354,13 @@ func (wb *Delta) CurrentPower() (float64, error) {
 var _ api.Identifier = (*Delta)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *Delta) Identify() (string, error) {
+func (wb *Delta) Identify() ([]string, error) {
 	b, err := wb.conn.ReadInputRegisters(wb.base+deltaRegEvseRfidUID, 20)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return bytesAsString(b), nil
+	return []string{bytesAsString(b)}, nil
 }
 
 var _ api.Diagnosis = (*Delta)(nil)

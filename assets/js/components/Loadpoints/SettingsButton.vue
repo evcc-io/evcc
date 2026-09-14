@@ -1,7 +1,7 @@
 <template>
 	<button
 		type="button"
-		class="btn btn-sm btn-outline-secondary position-relative border-0 p-2 evcc-gray"
+		class="btn btn-sm btn-outline-secondary position-relative border-0 p-2 evcc-gray keyboard-focus-ring"
 		data-testid="loadpoint-settings-button"
 	>
 		<shopicon-regular-adjust size="s"></shopicon-regular-adjust>

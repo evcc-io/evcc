@@ -2,6 +2,7 @@ import bodyParser from "body-parser";
 import type { Connect, ViteDevServer } from "vite";
 import type { ServerResponse } from "http";
 import { OcppClient } from "./ocppClient";
+import { ocppServer } from "./ocppServer";
 
 const ocppClients = new Map<string, OcppClient>();
 
@@ -13,7 +14,7 @@ let state = {
   },
   loadpoints: [{ power: 0, energy: 0, enabled: false, status: "A" }],
   vehicles: [{ soc: 0, range: 0 }],
-  hems: { relay: false },
+  hems: { relay: false, w3: false, s1: false, s2: false, w4: false },
   ocpp: {
     clients: [] as { stationId: string; serverUrl: string; connected: boolean }[],
   },
@@ -47,6 +48,7 @@ const stateApiMiddleware = (
     res.end();
     process.exit();
   } else if (req.originalUrl === "/api/state") {
+    updateOcppState();
     res.end(JSON.stringify(state));
   } else {
     next();
@@ -169,22 +171,19 @@ const ocppMiddleware = (
 
     const client = new OcppClient(stationId, serverUrl);
     ocppClients.set(stationId, client);
-
-    client
-      .connect()
-      .then(() => client.bootNotification())
-      .then((response) => {
-        console.log("[simulator] OCPP BootNotification response:", response);
-        updateOcppState();
-        res.end(JSON.stringify({ status: "connected", stationId, response }));
-      })
-      .catch((error) => {
-        console.error("[simulator] OCPP connection error:", error);
-        ocppClients.delete(stationId);
-        updateOcppState();
-        res.statusCode = 500;
-        res.end(JSON.stringify({ error: error.message }));
-      });
+    // fire-and-forget: the client retries until connected and boots itself on open
+    client.connect();
+    updateOcppState();
+    console.log(`[simulator] OCPP client ${stationId} connecting to ${serverUrl}`);
+    res.end(JSON.stringify({ status: "connecting", stationId }));
+  } else if (req.method === "POST" && req.originalUrl === "/api/ocpp/server") {
+    console.log("[simulator] POST /api/ocpp/server");
+    // @ts-expect-error Property 'body' does not exist on type 'IncomingMessage'
+    const { enabled, username, password } = req.body;
+    ocppServer.configure({ enabled: !!enabled, username, password });
+    res.end(JSON.stringify(ocppServer.status()));
+  } else if (req.method === "GET" && req.originalUrl === "/api/ocpp/server") {
+    res.end(JSON.stringify(ocppServer.status()));
   } else if (req.method === "POST" && req.originalUrl === "/api/ocpp/disconnect") {
     console.log("[simulator] POST /api/ocpp/disconnect");
     // @ts-expect-error Property 'body' does not exist on type 'IncomingMessage'
@@ -216,6 +215,9 @@ export default () => ({
   enforce: "pre",
   configureServer(server: ViteDevServer) {
     console.log("[simulator] configured");
+    if (server.httpServer) {
+      ocppServer.attach(server.httpServer);
+    }
     return () => {
       server.middlewares.use(loggingMiddleware);
       server.middlewares.use(bodyParser.json());

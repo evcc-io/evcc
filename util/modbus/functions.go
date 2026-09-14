@@ -17,8 +17,8 @@ func Backoff() *backoff.ExponentialBackOff {
 	return backoff.NewExponentialBackOff(backoff.WithInitialInterval(20*time.Millisecond), backoff.WithMaxElapsedTime(10*time.Second))
 }
 
-// decodeMask converts a bit mask in decimal or hex format to uint64
-func decodeMask(mask string) (uint64, error) {
+// DecodeMask converts a bit mask in decimal or hex format to uint64
+func DecodeMask(mask string) (uint64, error) {
 	mask = strings.ToLower(mask)
 
 	if mask == "" {
@@ -67,6 +67,14 @@ func decodeBool16(mask uint64) func(b []byte) float64 {
 		}
 		return 0
 	}
+}
+
+// uint64LswFirst decodes a uint64 stored in little-endian word order (LSW first)
+func uint64LswFirst(b []byte) uint64 {
+	return uint64(binary.BigEndian.Uint16(b)) |
+		uint64(binary.BigEndian.Uint16(b[2:]))<<16 |
+		uint64(binary.BigEndian.Uint16(b[4:]))<<32 |
+		uint64(binary.BigEndian.Uint16(b[6:]))<<48
 }
 
 func decodeNaN16(f func(b []byte) float64, nan ...uint16) func(b []byte) float64 {

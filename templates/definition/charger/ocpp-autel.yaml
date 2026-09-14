@@ -6,7 +6,7 @@ products:
   - brand: AUTEL
     description:
       generic: AC Compact
-capabilities: ["mA"]
+capabilities: ["mA", "dim"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
   description:
@@ -30,6 +30,6 @@ params:
   - preset: ocpp
 render: |
   {{ include "ocpp" . }}
-  {{- if ne .remotestart "true" }}
+  {{- if not .remotestart }}
   remotestart: true # force remotestart
   {{- end }}

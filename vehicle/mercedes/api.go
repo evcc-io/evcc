@@ -73,11 +73,6 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 		return res, err
 	}
 
-	if val, ok := message.Attributes["odo"]; ok {
-		res.VehicleInfo.Odometer.Value = int(val.GetIntValue())
-		res.VehicleInfo.Odometer.Unit = val.GetDistanceUnit().String()
-	}
-
 	if val, ok := message.Attributes["soc"]; ok {
 		res.EvInfo.Battery.StateOfCharge = float64(val.GetIntValue())
 	}
@@ -89,29 +84,6 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 
 	if val, ok := message.Attributes["endofchargetime"]; ok {
 		res.EvInfo.Battery.EndOfChargeTime = int(val.GetIntValue())
-	}
-
-	if val, ok := message.Attributes["chargingstatus"]; ok {
-		res.EvInfo.Battery.ChargingStatus = int(val.GetIntValue())
-	} else {
-		res.EvInfo.Battery.ChargingStatus = 3
-	}
-
-	if val, ok := message.Attributes["maxSoc"]; ok && val != nil {
-		res.EvInfo.Battery.SocLimit = int(val.GetIntValue())
-	}
-
-	if val, ok := message.Attributes["selectedChargeProgram"]; ok && val != nil {
-		selectedChargeProgram := val.GetIntValue()
-		res.EvInfo.Battery.SelectedChargeProgram = int(selectedChargeProgram)
-
-		if cps, ok := message.Attributes["chargePrograms"]; ok && cps != nil {
-			if cpVal := cps.GetChargeProgramsValue(); cpVal != nil && res.EvInfo.Battery.SelectedChargeProgram < len(cpVal.ChargeProgramParameters) {
-				if chargeProgramParam := cpVal.ChargeProgramParameters[res.EvInfo.Battery.SelectedChargeProgram]; chargeProgramParam != nil {
-					res.EvInfo.Battery.SocLimit = int(chargeProgramParam.GetMaxSoc())
-				}
-			}
-		}
 	}
 
 	// There are two attributes for the proconditioning status, precondNow and precondActive

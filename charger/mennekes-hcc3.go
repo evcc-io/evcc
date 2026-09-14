@@ -62,14 +62,12 @@ func NewMennekesHcc3FromConfig(ctx context.Context, other map[string]any) (api.C
 		return nil, err
 	}
 
-	return NewMennekesHcc3(ctx, cc.URI, cc.ID)
+	return NewMennekesHcc3(ctx, cc)
 }
 
 // NewMennekesHcc3 creates Mennekes HCC3 charger
-func NewMennekesHcc3(ctx context.Context, uri string, slaveID uint8) (api.Charger, error) {
-	uri = util.DefaultPort(uri, 502)
-
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewMennekesHcc3(ctx context.Context, settings modbus.TcpSettings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

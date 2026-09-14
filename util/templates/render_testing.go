@@ -13,10 +13,10 @@ import (
 )
 
 // test renders and instantiates plus yaml-parses the template per usage
-func test(t *testing.T, tmpl Template, values map[string]any, cb func(values map[string]any)) {
+func test(t *testing.T, class Class, tmpl Template, values map[string]any, cb func(values map[string]any)) {
 	t.Helper()
 
-	b, _, err := tmpl.RenderResult(RenderModeInstance, values)
+	b, _, err := tmpl.RenderResult(class, RenderModeInstance, values)
 	if err != nil {
 		t.Log(string(b))
 		t.Error(err)
@@ -38,7 +38,8 @@ func test(t *testing.T, tmpl Template, values map[string]any, cb func(values map
 	cb(values)
 }
 
-func testAuth(other map[string]any) error {
+func testAuth(tmpl Template) error {
+	other := tmpl.Auth
 	if len(other) == 0 {
 		return nil
 	}
@@ -54,7 +55,11 @@ func testAuth(other map[string]any) error {
 
 	params := make(map[string]any)
 	for _, p := range cc.Params {
-		params[p] = "foo"
+		if _, param := tmpl.ParamByName(p); param.Type == TypeBool {
+			params[p] = true
+		} else {
+			params[p] = "foo"
+		}
 	}
 
 	_, err := auth.NewFromConfig(context.TODO(), cc.Type, params)
@@ -94,7 +99,7 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 		values["host"] = "localhost"
 
 		// test auth configuration
-		if err := testAuth(tmpl.Auth); err != nil {
+		if err := testAuth(tmpl); err != nil {
 			t.Error("authorization:", err)
 		}
 
@@ -103,7 +108,7 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 			t.Run(tmpl.Template, func(t *testing.T) {
 				t.Parallel()
 
-				test(t, tmpl, values, func(values map[string]any) {
+				test(t, class, tmpl, values, func(values map[string]any) {
 					instantiate(t, values)
 				})
 			})
@@ -120,7 +125,7 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 			t.Run(tmpl.Template+"/"+u, func(t *testing.T) {
 				t.Parallel()
 
-				test(t, tmpl, usageValues, func(values map[string]any) {
+				test(t, class, tmpl, usageValues, func(values map[string]any) {
 					instantiate(t, values)
 				})
 			})

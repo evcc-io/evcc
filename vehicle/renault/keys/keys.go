@@ -45,7 +45,7 @@ func (v *Keys) Load(region string) {
 		v.Kamereon.APIKey = "YjkKtHmGfaceeuExUDKGxrLZGGvtVS0J"
 	} else {
 		// use old fixed keys if keyStore is not accessible
-		v.Gigya = ConfigServer{"https://accounts.eu1.gigya.com", "3_7PLksOyBRkHv126x5WhHb-5pqC1qFR8pQjxSeLB6nhAnPERTUlwnYoznHSxwX668"}
+		v.Gigya = ConfigServer{"https://accounts.eu1.gigya.com", "3_VgdkgtIRH3AdHvJm-cjV2ug2EFE0lxt0IJzMC4MFqZjFpn_GYFXVdNZ19L7wZX0N"}
 		v.Kamereon = ConfigServer{"https://api-wired-prod-1-euw1.wrd-aws.com", "YjkKtHmGfaceeuExUDKGxrLZGGvtVS0J"}
 	}
 }

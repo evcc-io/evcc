@@ -1,15 +1,33 @@
 template: voltie
 products:
   - brand: Voltie
-    description:
-      generic: Charger
-capabilities: ["mA", "meter"]
+capabilities: ["mA", "1p3p", "meter", "dim"]
 requirements:
+  description:
+    de: Modbus muss in der Voltie App im Modbus-Konfigurationsbildschirm auf "TCP" gestellt werden; die dort eingestellte Slave-Adresse (Standard 11) muss mit der ID übereinstimmen. Der Kommunikations-Timeout regelt die Ladung nach Verbindungsverlust auf 0 A herunter, er muss daher auf 0 gesetzt (deaktiviert) oder größer als das evcc-Aktualisierungsintervall gewählt werden.
+    en: Modbus must be set to "TCP" on the Modbus config screen of the Voltie app, and the slave address configured there (default 11) must match the ID. The communication timeout reduces the charging current to 0 A after a loss of communication, so it has to be set to 0 (disabled) or to a value larger than the evcc update interval.
   evcc: ["sponsorship"]
+caveats:
+  - description:
+      de: Der Auto-Start des Ladegeräts wird beim Start von evcc dauerhaft deaktiviert und muss nach dem Entfernen von evcc in der Voltie App wieder eingeschaltet werden.
+      en: The charger's auto start mode is disabled persistently when evcc starts and has to be switched back on in the Voltie app after evcc is removed.
+  - description:
+      de: Das Modbus-TCP-Gateway leitet höchstens zwei Transaktionen pro Sekunde weiter. Kürzere Abfrageintervalle führen zu Zeitüberschreitungen, nicht zu aktuelleren Daten.
+      en: The Modbus TCP gateway forwards at most two transactions per second. Shorter polling intervals produce timeouts rather than fresher data.
+  - description:
+      de: Die Phasenumschaltung ist nur auf Ladegeräten ab Baujahr 2026 verfügbar (Seriennummer beginnt mit 1026). Ab Firmware 357 liest evcc die Fähigkeit vom Ladegerät und bietet die Phasenumschaltung nur dort an, wo sie unterstützt wird.
+      en: Phase switching is only available on chargers manufactured from 2026 (serial number starting with 1026). From firmware 357 evcc reads the capability from the charger and only offers phase switching where it is supported.
 params:
   - name: modbus
     choice: ["tcpip"]
-    id: 1
+    id: 11
+  - name: cache
+    advanced: true
+    default: 1s
+  - name: phases1p3p
+    deprecated: true
 render: |
   type: voltie
   {{- include "modbus" . }}
+  cache: {{ .cache }}
+  phases1p3p: {{ .phases1p3p }}

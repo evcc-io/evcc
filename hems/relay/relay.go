@@ -2,24 +2,31 @@ package relay
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/hems/config"
 	"github.com/evcc-io/evcc/hems/smartgrid"
 	"github.com/evcc-io/evcc/plugin"
 	"github.com/evcc-io/evcc/util"
 )
 
+func init() {
+	config.AddCtx("relay", NewFromConfig)
+}
+
 type Relay struct {
 	mu  sync.Mutex
 	log *util.Logger
 
-	root        api.Circuit
+	site        site.API
 	w1          func() (bool, error)
 	passthrough func(bool) error
+	publishFunc func()
 
 	smartgridID uint
 	limit       *float64
@@ -42,14 +49,6 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*R
 		return nil, err
 	}
 
-	// setup grid control circuit
-	gridcontrol, err := smartgrid.SetupCircuit()
-	if err != nil {
-		return nil, err
-	}
-
-	site.SetCircuit(gridcontrol)
-
 	// limit getter
 	limitG, err := cc.Limit.BoolGetter(ctx)
 	if err != nil {
@@ -61,27 +60,47 @@ func NewFromConfig(ctx context.Context, other map[string]any, site site.API) (*R
 		return nil, err
 	}
 
-	return NewRelay(gridcontrol, limitG, passthroughS, cc.MaxPower, cc.Interval)
+	return NewRelay(site, limitG, passthroughS, cc.MaxPower, cc.Interval)
 }
 
 // NewRelay creates Relay HEMS
-func NewRelay(root api.Circuit, w1 func() (bool, error), passthrough func(bool) error, maxPower float64, interval time.Duration) (*Relay, error) {
+func NewRelay(site site.API, w1 func() (bool, error), passthrough func(bool) error, maxPower float64, interval time.Duration) (*Relay, error) {
 	c := &Relay{
 		log:         util.NewLogger("relay"),
-		root:        root,
+		site:        site,
 		passthrough: passthrough,
 		maxPower:    maxPower,
 		w1:          w1,
 		interval:    interval,
 	}
 
+	if maxPower == 0 {
+		return nil, errors.New("missing power limit")
+	}
+
+	// read the relay once synchronously so the limit is valid as soon as NewRelay returns
+	if err := c.run(); err != nil {
+		return nil, err
+	}
+
 	return c, nil
 }
 
+func (c *Relay) SetUpdated(f func()) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.publishFunc = f
+}
+
+// Run starts the relay control loop. NewRelay already ran the first pass.
 func (c *Relay) Run() {
 	for range time.Tick(c.interval) {
 		if err := c.run(); err != nil {
 			c.log.ERROR.Println(err)
+		}
+
+		if c.publishFunc != nil {
+			c.publishFunc()
 		}
 	}
 }
@@ -97,18 +116,18 @@ func (c *Relay) run() error {
 		limit = c.maxPower
 	}
 
-	if err := c.setLimited(limit); err != nil {
+	if err := c.setConsumptionLimit(limit); err != nil {
 		return err
 	}
 
-	if err := smartgrid.UpdateSession(&c.smartgridID, smartgrid.Dim, c.root.GetChargePower(), limit, active); err != nil {
+	if err := smartgrid.UpdateSession(&c.smartgridID, smartgrid.Dim, c.site.GetGridPower(), limit, active); err != nil {
 		return fmt.Errorf("smartgrid session: %v", err)
 	}
 
 	return nil
 }
 
-func (c *Relay) setLimited(limit float64) error {
+func (c *Relay) setConsumptionLimit(limit float64) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -117,14 +136,34 @@ func (c *Relay) setLimited(limit float64) error {
 		c.limit = new(limit)
 	}
 
-	c.root.Dim(limit > 0)
-	c.root.SetMaxPower(limit)
-
 	if c.passthrough != nil {
 		if err := c.passthrough(limit > 0); err != nil {
 			return fmt.Errorf("passthrough failed: %w", err)
 		}
 	}
 
+	return nil
+}
+
+var _ api.HEMS = (*Relay)(nil)
+
+// CurtailedPercent implements api.HEMS. Relay does not curtail production and
+// hence makes no statement.
+func (c *Relay) CurtailedPercent() *int {
+	return nil
+}
+
+// MaxConsumptionPower implements api.HEMS, returning the active wattage cap.
+func (c *Relay) MaxConsumptionPower() *float64 {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.limit == nil {
+		return new(0.0)
+	}
+	return new(*c.limit)
+}
+
+// MaxProductionPower implements api.HEMS. Scaffolding only.
+func (c *Relay) MaxProductionPower() *float64 {
 	return nil
 }

@@ -29,7 +29,6 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/transport"
-	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
 
 // ShellyTopAC charger implementation for Shelly Top AC Portable EV Charger
@@ -82,7 +81,7 @@ func NewShellyTopAC(uri, user, password string) (api.Charger, error) {
 
 	// Setup digest authentication for Shelly Gen2
 	if user != "" {
-		c.Client.Transport = digest.NewTransport(user, password, c.Client.Transport)
+		c.Client.Transport = transport.Digest(user, password, c.Client.Transport)
 	}
 
 	// Setup cached status getters

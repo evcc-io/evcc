@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -36,6 +37,7 @@ func NewCardataFromConfig(ctx context.Context, other map[string]any) (api.Vehicl
 	if cc.VIN == "" {
 		return nil, errors.New("missing vin")
 	}
+	cc.VIN = strings.ToUpper(cc.VIN)
 
 	if cc.ClientID == "" {
 		return nil, api.ErrMissingCredentials

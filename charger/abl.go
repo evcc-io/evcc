@@ -82,31 +82,22 @@ func init() {
 
 // NewABLeMHFromConfig creates a ABLeMH charger from generic config
 func NewABLeMHFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
-	cc := struct {
-		modbus.Settings `mapstructure:",squash"`
-		Timeout         time.Duration
-	}{
-		Settings: modbus.Settings{
-			ID: 1,
-		},
+	cc := modbus.Settings{
+		ID: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewABLeMH(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID, cc.Timeout)
+	return NewABLeMH(ctx, cc)
 }
 
 // NewABLeMH creates ABLeMH charger
-func NewABLeMH(ctx context.Context, uri, device, comset string, baudrate int, slaveID uint8, timeout time.Duration) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, modbus.Ascii, slaveID)
+func NewABLeMH(ctx context.Context, settings modbus.Settings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx, modbus.Ascii)
 	if err != nil {
 		return nil, err
-	}
-
-	if timeout > 0 {
-		conn.Timeout(timeout)
 	}
 
 	if !sponsor.IsAuthorized() {

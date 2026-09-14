@@ -17,7 +17,7 @@ test.afterEach(async () => {
   await stop();
 });
 
-const REDACT_CONFIG = "sponsor.evcc.yaml";
+const REDACT_CONFIG = "redact.evcc.yaml";
 const CONFIG = "issue.evcc.yaml";
 
 test.describe("issue creation", () => {
@@ -186,5 +186,21 @@ test.describe("issue creation", () => {
     expect(href).toContain("carport_pv"); // from evcc.yaml
     expect(href).toContain("DEBUG"); // from logs
     expect(href).toContain("MyFancyState"); // from state
+  });
+
+  test("copy section", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read"]);
+    await start(REDACT_CONFIG);
+    await page.goto("/#/issue");
+
+    const yamlItem = page.getByTestId("issueYamlConfig-additional-item");
+    await yamlItem.getByRole("button", { name: "copy", exact: true }).click();
+    await expect(yamlItem.getByRole("button", { name: "copied!" })).toBeVisible();
+
+    const clipboard = await page.evaluate(() => navigator.clipboard.readText());
+    expect(clipboard).toContain("## Configuration (YAML)");
+    expect(clipboard).toContain("```yaml");
+    expect(clipboard).toContain("site:");
+    expect(clipboard).toContain("sponsortoken: *****");
   });
 });

@@ -11,9 +11,9 @@ import (
 type Connection struct {
 	*logger
 	meters.Connection
-	slaveID uint8 // duplicated from meters.Connection
-	logical meters.Logger
-	delay   time.Duration
+	physical *meterConnection
+	slaveID  uint8 // duplicated from meters.Connection
+	logical  meters.Logger
 }
 
 func (c *Connection) Addr() string {
@@ -24,8 +24,9 @@ func (c *Connection) Logger(logger meters.Logger) {
 	c.logical = logger
 }
 
+// Delay applies the delay to the shared physical connection
 func (c *Connection) Delay(delay time.Duration) {
-	c.delay = delay
+	c.physical.setDelay(delay)
 }
 
 func (c *Connection) Clone(slaveID uint8) *Connection {
@@ -33,26 +34,23 @@ func (c *Connection) Clone(slaveID uint8) *Connection {
 		slaveID:    slaveID,
 		Connection: c.Connection.Clone(slaveID),
 		logger:     c.logger,
+		physical:   c.physical,
 	}
 }
 
-// TODO resolve conflicts
+// ConnectDelay applies the connect delay to the shared physical connection
 func (c *Connection) ConnectDelay(delay time.Duration) {
-	if delay > 0 {
-		c.Connection.ConnectDelay(delay)
-	}
+	c.physical.setConnectDelay(delay)
 }
 
-// TODO resolve conflicts
+// Timeout applies the timeout to the shared physical connection
 func (c *Connection) Timeout(timeout time.Duration) {
-	if timeout > 0 {
-		_ = c.Connection.Timeout(timeout)
-	}
+	c.physical.setTimeout(timeout)
 }
 
 func (c *Connection) exec(fun func() ([]byte, error)) ([]byte, error) {
 	return c.WithLogger(c.logical, func() ([]byte, error) {
-		time.Sleep(c.delay)
+		time.Sleep(c.physical.getDelay())
 
 		b, err := fun()
 		if err != nil {

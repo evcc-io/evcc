@@ -78,27 +78,25 @@ func NewEm2GoFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 		modbus.TcpSettings `mapstructure:",squash"`
 		Connector          int // TODO remove deprecated
 	}{
-		TcpSettings: modbus.TcpSettings{ID: 255},
+		TcpSettings: modbus.TcpSettings{
+			ID:    255,
+			Delay: 60 * time.Millisecond,
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewEm2Go(ctx, cc.URI, cc.ID)
+	return NewEm2Go(ctx, cc.TcpSettings)
 }
 
 // NewEm2Go creates Em2Go charger
-func NewEm2Go(ctx context.Context, uri string, slaveID uint8) (api.Charger, error) {
-	uri = util.DefaultPort(uri, 502)
-
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewEm2Go(ctx context.Context, settings modbus.TcpSettings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	// Add delay of 60 milliseconds between requests
-	conn.Delay(60 * time.Millisecond)
 
 	log := util.NewLogger("em2go")
 	conn.Logger(log.TRACE)

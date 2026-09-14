@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/enbility/eebus-go/api"
@@ -30,10 +31,22 @@ type controlbox struct {
 	remoteEntities map[api.EventType][]spineapi.EntityRemoteInterface
 	remoteEventC   chan<- api.EventType
 
-	isConnected bool
+	isConnected atomic.Bool
 }
 
 func createControlbox(ctx context.Context, remoteSki string, port int) (*controlbox, error) {
+	h, err := newControlbox(nil, port)
+	if err != nil {
+		return nil, err
+	}
+
+	h.myService.RegisterRemoteService(shipapi.NewServiceIdentity(remoteSki, "", ""))
+	h.start(ctx)
+
+	return h, nil
+}
+
+func newControlbox(pairing *shipapi.PairingConfig, port int) (*controlbox, error) {
 	certificate, err := cert.CreateCertificate("Demo", "Demo", "DE", "Demo-Unit-01")
 	if err != nil {
 		return nil, err
@@ -48,16 +61,19 @@ func createControlbox(ctx context.Context, remoteSki string, port int) (*control
 		ski: ski,
 	}
 
+	// unique per instance: a shared serial collides on ShipID when multiple controlboxes run concurrently
+	serial := ski[:8]
+
 	configuration, err := api.NewConfiguration(
-		"Demo", "Demo", "ControlBox", "123456789",
-		// []shipapi.DeviceCategoryType{shipapi.DeviceCategoryTypeGridConnectionHub},
+		"Demo", "Demo", "ControlBox", serial,
+		[]shipapi.DeviceCategoryType{shipapi.DeviceCategoryTypeGridConnectionHub},
 		model.DeviceTypeTypeElectricitySupplySystem,
 		[]model.EntityTypeType{model.EntityTypeTypeGridGuard},
-		port, certificate, time.Second*60)
+		port, certificate, time.Second*60, pairing, nil)
 	if err != nil {
 		return nil, err
 	}
-	configuration.SetAlternateIdentifier("Demo-ControlBox-123456789")
+	configuration.SetAlternateIdentifier("Demo-ControlBox-" + serial)
 
 	h.myService = service.NewService(configuration, h)
 	// h.myService.SetLogging(h)
@@ -73,15 +89,16 @@ func createControlbox(ctx context.Context, remoteSki string, port int) (*control
 	h.uclpp = lpp.NewLPP(localEntity, h.OnLPPEvent)
 	h.myService.AddUseCase(h.uclpp)
 
-	h.myService.RegisterRemoteSKI(remoteSki)
+	return h, nil
+}
+
+func (h *controlbox) start(ctx context.Context) {
 	h.myService.Start()
 
 	go func() {
 		<-ctx.Done()
 		h.myService.Shutdown()
 	}()
-
-	return h, nil
 }
 
 func (h *controlbox) remoteEntity(event api.EventType) []spineapi.EntityRemoteInterface {
@@ -110,17 +127,19 @@ func (h *controlbox) registerRemoteEntity(entity spineapi.EntityRemoteInterface,
 
 // LPC
 func (h *controlbox) OnLPCEvent(ski string, device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event api.EventType) {
-	if !h.isConnected {
+	if !h.isConnected.Load() {
 		return
 	}
 
 	switch event {
 	case lpc.UseCaseSupportUpdate:
 		h.registerRemoteEntity(entity, event)
-		// case lpc.DataUpdateLimit:
-	// 	if currentLimit, err := h.uclpc.ConsumptionLimit(entity); err == nil {
-	// 		fmt.Println("New consumption limit received", currentLimit.Value, "W")
-	// 	}
+		if currentLimit, err := h.uclpc.ConsumptionLimit(entity); err == nil {
+			fmt.Println("New consumption limit received", currentLimit.Value, "W")
+		}
+
+	case lpc.DataUpdateLimit:
+		h.registerRemoteEntity(entity, event)
 	default:
 		fmt.Println("lpc:", event)
 	}
@@ -128,7 +147,7 @@ func (h *controlbox) OnLPCEvent(ski string, device spineapi.DeviceRemoteInterfac
 
 // LPP
 func (h *controlbox) OnLPPEvent(ski string, device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event api.EventType) {
-	if !h.isConnected {
+	if !h.isConnected.Load() {
 		return
 	}
 
@@ -146,23 +165,32 @@ func (h *controlbox) OnLPPEvent(ski string, device spineapi.DeviceRemoteInterfac
 
 // EEBUSServiceHandler
 
-func (h *controlbox) RemoteSKIConnected(service api.ServiceInterface, ski string) {
-	h.isConnected = true
+func (h *controlbox) RemoteServiceConnected(service api.ServiceInterface, identity shipapi.ServiceIdentity) {
+	h.isConnected.Store(true)
 }
 
-func (h *controlbox) RemoteSKIDisconnected(service api.ServiceInterface, ski string) {
-	h.isConnected = false
+func (h *controlbox) RemoteServiceDisconnected(service api.ServiceInterface, identity shipapi.ServiceIdentity) {
+	h.isConnected.Store(false)
 }
 
-func (h *controlbox) VisibleRemoteServicesUpdated(service api.ServiceInterface, entries []shipapi.RemoteService) {
+func (h *controlbox) VisibleRemoteMdnsServicesUpdated(service api.ServiceInterface, entries []shipapi.RemoteMdnsService) {
 }
 
-func (h *controlbox) ServiceShipIDUpdate(ski string, shipdID string) {
+func (h *controlbox) ServiceUpdated(identity shipapi.ServiceIdentity) {
 }
 
-func (h *controlbox) ServicePairingDetailUpdate(ski string, detail *shipapi.ConnectionStateDetail) {
+func (h *controlbox) ServicePairingDetailUpdate(identity shipapi.ServiceIdentity, detail *shipapi.ConnectionStateDetail) {
 }
 
-func (h *controlbox) AllowWaitingForTrust(ski string) bool {
+func (h *controlbox) ServiceAutoTrusted(service api.ServiceInterface, identity shipapi.ServiceIdentity) {
+}
+
+func (h *controlbox) ServiceAutoTrustFailed(service api.ServiceInterface, identity shipapi.ServiceIdentity, reason error) {
+}
+
+func (h *controlbox) ServiceAutoTrustRemoved(service api.ServiceInterface, identity shipapi.ServiceIdentity, reason string) {
+}
+
+func (h *controlbox) AllowWaitingForTrust(identity shipapi.ServiceIdentity) bool {
 	return true
 }

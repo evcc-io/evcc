@@ -9,6 +9,15 @@ const get = (id: string) => {
   return settings.loadpoints[id];
 };
 
+export const vehicleHasSoc = (vehicle?: Vehicle): boolean => {
+  return !vehicle?.features?.includes("Offline");
+};
+
+export const vehicleNotReachable = (vehicle?: Vehicle): boolean => {
+  const features = vehicle?.features || [];
+  return features.includes("Offline") && features.includes("Retryable");
+};
+
 export const convertToUiLoadpoints = (
   loadpoints: Loadpoint[],
   vehicles: Record<string, Vehicle>
@@ -24,8 +33,8 @@ export const convertToUiLoadpoints = (
     const capacity = vehicle?.capacity || 0;
     const range = distanceValue(vehicleRange);
     const vehicleKnown = !!lp.vehicleName;
-    const vehicleHasSoc = vehicleKnown && !vehicle?.features?.includes("Offline");
-    const socBasedCharging = vehicleHasSoc || lp.vehicleSoc > 0;
+    const hasSoc = vehicleKnown && vehicleHasSoc(vehicle);
+    const socBasedCharging = hasSoc || lp.vehicleSoc > 0;
     const socBasedPlanning = !!(socBasedCharging && capacity > 0);
 
     return {
@@ -36,7 +45,7 @@ export const convertToUiLoadpoints = (
       vehicleSoc,
       capacity,
       vehicleKnown,
-      vehicleHasSoc,
+      vehicleHasSoc: hasSoc,
       socBasedCharging,
       socBasedPlanning,
       displayTitle: vehicle?.title || lp.title || "Charging point",
@@ -49,9 +58,7 @@ export const convertToUiLoadpoints = (
       rangePerSoc:
         vehicleSoc > 10 && range ? Math.round((range / vehicleSoc) * 1e2) / 1e2 : undefined,
       socPerKwh: capacity > 0 ? 100 / capacity : 0,
-      vehicleNotReachable:
-        (vehicle?.features || []).includes("Offline") &&
-        (vehicle?.features || []).includes("Retryable"),
+      vehicleNotReachable: vehicleNotReachable(vehicle),
     } satisfies UiLoadpoint;
   });
 

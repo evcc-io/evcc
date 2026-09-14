@@ -34,7 +34,14 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 18 # 0x12 Total energy consumed from grid (Grid)
-      # 0x10 (address 16) Total energy feed to grid (Grid) - for future grid energy import/export split
+      type: holding
+      decode: uint32
+    scale: 0.01
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 16 # 0x10 Total energy feed to grid (Grid)
       type: holding
       decode: uint32
     scale: 0.01
@@ -130,6 +137,14 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 290 # 0x122 Battery discharge energy
+      type: holding
+      decode: uint32
+    scale: 0.1
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 288 # 0x120 Battery charge energy
       type: holding
       decode: uint32
     scale: 0.1

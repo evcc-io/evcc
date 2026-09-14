@@ -79,12 +79,12 @@ func NewsmartEVSEFromConfig(ctx context.Context, other map[string]any) (api.Char
 		return nil, err
 	}
 
-	return NewsmartEVSE(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
+	return NewsmartEVSE(ctx, cc)
 }
 
 // NewsmartEVSE creates a new charger
-func NewsmartEVSE(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (*smartEVSE, error) {
-	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
+func NewsmartEVSE(ctx context.Context, settings modbus.Settings) (*smartEVSE, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

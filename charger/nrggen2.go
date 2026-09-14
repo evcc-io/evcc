@@ -1,5 +1,22 @@
 package charger
 
+// LICENSE
+
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 import (
 	"context"
 	"encoding/binary"
@@ -67,7 +84,7 @@ func NewNRGKickGen2FromConfig(ctx context.Context, other map[string]any) (api.Ch
 		return nil, err
 	}
 
-	nrg, err := NewNRGKickGen2(ctx, cc.URI, cc.ID)
+	nrg, err := NewNRGKickGen2(ctx, cc.TcpSettings)
 	if err != nil {
 		return nil, err
 	}
@@ -85,8 +102,8 @@ func NewNRGKickGen2FromConfig(ctx context.Context, other map[string]any) (api.Ch
 }
 
 // NewNRGKickGen2 creates NRGKickGen2 charger
-func NewNRGKickGen2(ctx context.Context, uri string, slaveID uint8) (*NRGKickGen2, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewNRGKickGen2(ctx context.Context, settings modbus.TcpSettings) (*NRGKickGen2, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

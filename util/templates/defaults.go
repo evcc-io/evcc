@@ -40,6 +40,17 @@ func (c *configDefaults) Load() {
 		panic("failed to parse config defaults: " + err.Error())
 	}
 
+	// inherit shared param properties into modbus definitions, except examples
+	// which would render into every modbus template
+	for i, p := range c.Modbus.Definitions {
+		if idx, def := c.ParamByName(p.Name); idx >= 0 {
+			example := p.Example
+			p.OverwriteProperties(def)
+			p.Example = example
+			c.Modbus.Definitions[i] = p
+		}
+	}
+
 	// resolve modbus param references
 	for typ := range c.Modbus.Types {
 		for i, p := range c.Modbus.Types[typ].Params {

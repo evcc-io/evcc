@@ -44,8 +44,13 @@ type Handler struct {
 	log       *util.Logger
 	secret    []byte
 	providers map[string]api.AuthProvider
-	states    map[string]string
+	states    map[string]stateEntry
 	updateC   chan string
+}
+
+type stateEntry struct {
+	id       string
+	returnTo string // config modal query to restore on callback
 }
 
 // TODO get status from update channel
@@ -97,7 +102,7 @@ func (a *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	// Generate a new state and store the provider
 	state := NewState()
 	encryptedState := state.Encrypt(a.secret)
-	a.states[encryptedState] = id
+	a.states[encryptedState] = stateEntry{id: id, returnTo: r.URL.Query().Get("return")}
 
 	// Schedule cleanup for stale state entries after state becomes invalid
 	time.AfterFunc(stateValidity, func() {
@@ -176,11 +181,12 @@ func (a *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
 	defer a.mu.Unlock()
 
 	// Find the corresponding provider
-	id, ok := a.states[encryptedState]
+	entry, ok := a.states[encryptedState]
 	if !ok {
 		a.redirectToError(w, r, "no provider found for state")
 		return
 	}
+	id := entry.id
 
 	provider, ok := a.providers[id]
 	if !ok {
@@ -194,9 +200,15 @@ func (a *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
 	// Handle the callback
 	if err := provider.HandleCallback(r.URL.Query()); err != nil {
 		a.log.ERROR.Printf("callback for provider %s failed: %v", id, err)
-		a.redirectToError(w, r, "callback failed")
+		a.redirectToError(w, r, err.Error())
 		return
 	}
 
-	http.Redirect(w, r, "/#/config?callbackCompleted="+url.QueryEscape(id), http.StatusFound)
+	// restore the config modal stack alongside the completion marker
+	query := "callbackCompleted=" + url.QueryEscape(id)
+	if entry.returnTo != "" {
+		query = entry.returnTo + "&" + query
+	}
+
+	http.Redirect(w, r, "/#/config?"+query, http.StatusFound)
 }

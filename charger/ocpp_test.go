@@ -2,6 +2,10 @@ package charger
 
 import (
 	"errors"
+	"fmt"
+	"os"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -22,10 +26,36 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-const (
-	ocppTestUrl            = "ws://localhost:8887"
-	ocppTestConnectTimeout = 10 * time.Second
-)
+const ocppTestConnectTimeout = 10 * time.Second
+
+// ocppTestUrl is derived from the actual bound port in SetupSuite: the central
+// system binds an ephemeral port to avoid bind failures when the fixed default
+// port is already in use on the CI runner.
+var ocppTestUrl string
+
+// testLogger receives all ocppj logging for this binary
+var testLogger ocppLogger
+
+// suiteRuns counts suite runs, see stationID
+var suiteRuns atomic.Int64
+
+func TestMain(m *testing.M) {
+	ocpp.Timeout = 5 * time.Second
+
+	// the simulated charge points never send a spontaneous BootNotification,
+	// so shorten the proactive-trigger delay to avoid waiting 5s per charge point
+	ocpp.TriggerBootDelay = 100 * time.Millisecond
+
+	// bind the OCPP central system to an ephemeral port so this test binary
+	// does not contend with the charger/ocpp package test binary for the fixed
+	// default port when both run in parallel under `go test ./...`
+	ocpp.NewServer(ocpp.Config{Port: 0}, "")
+
+	// after NewServer, which registers the central system as ocppj logger itself
+	ocppj.SetLogger(&testLogger)
+
+	os.Exit(m.Run())
+}
 
 func TestOcpp(t *testing.T) {
 	suite.Run(t, new(ocppTestSuite))
@@ -33,30 +63,46 @@ func TestOcpp(t *testing.T) {
 
 type ocppTestSuite struct {
 	suite.Suite
-	clock  *clock.Mock
-	logger *ocppLogger
+	clock *clock.Mock
+	run   int64
 }
 
 func (suite *ocppTestSuite) SetupSuite() {
-	ocpp.Timeout = 5 * time.Second
+	suite.run = suiteRuns.Add(1)
 
-	// setup cs so we can overwrite logger afterwards
-	_ = ocpp.Instance()
-	suite.logger = &ocppLogger{t: suite.T()}
-	ocppj.SetLogger(suite.logger)
+	cs, err := ocpp.Instance()
+	suite.Require().NoError(err, "instance")
+	suite.Require().NotNil(cs)
+
+	testLogger.open(suite.T())
+
+	suite.Require().NotZero(ocpp.Port(), "central system did not bind")
+	ocppTestUrl = fmt.Sprintf("ws://localhost:%d", ocpp.Port())
 
 	suite.clock = clock.NewMock()
-	suite.NotNil(ocpp.Instance())
 }
 
 func (suite *ocppTestSuite) TearDownSuite() {
-	suite.logger.close()
+	testLogger.close()
 }
 
-func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) (ocpp16.ChargePoint, *ocppj.Client) {
-	// set a handler for all callback functions
+// stationID qualifies a charge point id with the suite run. The central system is
+// a package global that keeps its registrations, so re-running the suite in the
+// same binary (`go test -count>1`) would otherwise hand the second run the first
+// run's stale, already disconnected charge points.
+func (suite *ocppTestSuite) stationID(id string) string {
+	return fmt.Sprintf("%s-%d", id, suite.run)
+}
+
+func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) (ocpp16.ChargePoint, *ocppj.Client, func()) {
+	// Buffered generously: the handlers in ocpp_test_handler.go send to
+	// triggerC synchronously (via defer) on the charge point's WebSocket
+	// read-loop goroutine. If that send blocks, the read loop cannot deliver
+	// the CALL_RESULT for the CP→CS request the drain goroutine is waiting
+	// on, deadlocking the test. The buffer keeps the send from blocking
+	// until the drain catches up.
 	handler := &ChargePointHandler{
-		triggerC: make(chan remotetrigger.MessageTrigger, 1),
+		triggerC: make(chan remotetrigger.MessageTrigger, 16),
 	}
 
 	// ocppj endpoint with handler
@@ -71,14 +117,56 @@ func (suite *ocppTestSuite) startChargePoint(id string, connectorId int) (ocpp16
 	cp.SetRemoteTriggerHandler(handler)
 	cp.SetSmartChargingHandler(handler)
 
-	// let cs handle the trigger messages
+	// let cs handle the trigger messages; exit on done so we do not leak a
+	// drain goroutine into subsequent subtests on the shared ocpp.Instance().
+	// triggerC is deliberately left open: the handlers in ocpp_test_handler.go
+	// send to it from the charge point's read loop, which we do not synchronize
+	// with on shutdown, so closing it could panic on `send on closed channel`.
+	done := make(chan struct{})
+	finished := make(chan struct{})
+
+	// mu keeps the drain from talking to a stopped charge point; it still
+	// consumes triggerC afterwards so the read loop never blocks on a full buffer
+	var mu sync.Mutex
+	var stopped bool
+
 	go func() {
-		for msg := range handler.triggerC {
-			suite.handleTrigger(cp, connectorId, msg)
+		defer close(finished)
+		for {
+			select {
+			case <-done:
+				return
+			case msg := <-handler.triggerC:
+				mu.Lock()
+				if !stopped {
+					suite.handleTrigger(cp, connectorId, msg)
+				}
+				mu.Unlock()
+			}
 		}
 	}()
 
-	return cp, endpoint
+	// quiesce the drain before disconnecting: stopping the charge point while a
+	// request is in flight closes the dispatcher channel it is sending on
+	stop := sync.OnceFunc(func() {
+		mu.Lock()
+		stopped = true
+		mu.Unlock()
+
+		if cp.IsConnected() {
+			cp.Stop()
+		}
+
+		close(done)
+		// wait for the drain goroutine to fully exit before the test method
+		// returns: handleTrigger logs via suite.T(), which panics if called
+		// after the test has completed.
+		<-finished
+	})
+
+	suite.T().Cleanup(stop)
+
+	return cp, endpoint, stop
 }
 
 func (suite *ocppTestSuite) handleTrigger(cp ocpp16.ChargePoint, connectorId int, msg remotetrigger.MessageTrigger) {
@@ -112,13 +200,15 @@ func (suite *ocppTestSuite) handleTrigger(cp ocpp16.ChargePoint, connectorId int
 }
 
 func (suite *ocppTestSuite) TestConnect() {
+	id1 := suite.stationID("test-1")
+
 	// 1st charge point- remote
-	cp1, _ := suite.startChargePoint("test-1", 1)
+	cp1, _, _ := suite.startChargePoint(id1, 1)
 	suite.Require().NoError(cp1.Start(ocppTestUrl))
 	suite.Require().True(cp1.IsConnected())
 
 	// 1st charge point- local
-	c1, err := NewOCPP(suite.T().Context(), "test-1", 1, "", "", 0, false, false, false, true, ocppTestConnectTimeout)
+	c1, err := NewOCPP(suite.T().Context(), id1, 1, "", "", 0, false, false, false, true, false, ocppTestConnectTimeout)
 	suite.Require().NoError(err)
 
 	// status and meter values
@@ -161,13 +251,15 @@ func (suite *ocppTestSuite) TestConnect() {
 		suite.Equal(types.AuthorizationStatusAccepted, res.IdTagInfo.Status)
 	}
 
+	id2 := suite.stationID("test-2")
+
 	// 2nd charge point - remote
-	cp2, _ := suite.startChargePoint("test-2", 1)
+	cp2, _, stopCp2 := suite.startChargePoint(id2, 1)
 	suite.Require().NoError(cp2.Start(ocppTestUrl))
 	suite.Require().True(cp2.IsConnected())
 
 	// 2nd charge point - local
-	c2, err := NewOCPP(suite.T().Context(), "test-2", 1, "", "", 0, false, false, false, true, ocppTestConnectTimeout)
+	c2, err := NewOCPP(suite.T().Context(), id2, 1, "", "", 0, false, false, false, true, false, ocppTestConnectTimeout)
 	suite.Require().NoError(err)
 
 	{
@@ -180,12 +272,12 @@ func (suite *ocppTestSuite) TestConnect() {
 	}
 
 	// error on unconfigured 2nd charge point
-	cp3, _ := suite.startChargePoint("unconfigured", 1)
+	cp3, _, _ := suite.startChargePoint(suite.stationID("unconfigured"), 1)
 	_, err = cp3.BootNotification("model", "vendor")
 	suite.Require().Error(err)
 
 	// disconnect charge point
-	cp2.Stop()
+	stopCp2()
 	suite.Require().False(cp2.IsConnected())
 
 	t := time.NewTimer(100 * time.Millisecond)
@@ -203,13 +295,15 @@ WAIT_DISCONNECT:
 }
 
 func (suite *ocppTestSuite) TestAutoStart() {
+	id1 := suite.stationID("test-3")
+
 	// 1st charge point- remote
-	cp1, _ := suite.startChargePoint("test-3", 1)
+	cp1, _, _ := suite.startChargePoint(id1, 1)
 	suite.Require().NoError(cp1.Start(ocppTestUrl))
 	suite.Require().True(cp1.IsConnected())
 
 	// 1st charge point- local
-	c1, err := NewOCPP(suite.T().Context(), "test-3", 1, "", "", 0, false, false, false, false, ocppTestConnectTimeout)
+	c1, err := NewOCPP(suite.T().Context(), id1, 1, "", "", 0, false, false, false, false, false, ocppTestConnectTimeout)
 	suite.Require().NoError(err)
 
 	// status and meter values
@@ -228,7 +322,7 @@ func (suite *ocppTestSuite) TestAutoStart() {
 
 		id, err := c1.Identify()
 		suite.Require().NoError(err)
-		suite.Require().Equal(expectedIdTag, id)
+		suite.Require().Equal([]string{expectedIdTag}, id)
 
 		conn1 := c1.Connector()
 		_, err = conn1.TransactionID()
@@ -243,8 +337,10 @@ func (suite *ocppTestSuite) TestAutoStart() {
 }
 
 func (suite *ocppTestSuite) TestTimeout() {
+	id1 := suite.stationID("test-4")
+
 	// 1st charge point- remote
-	cp1, ocppjClient := suite.startChargePoint("test-4", 1)
+	cp1, ocppjClient, _ := suite.startChargePoint(id1, 1)
 	suite.Require().NoError(cp1.Start(ocppTestUrl))
 	suite.Require().True(cp1.IsConnected())
 
@@ -256,7 +352,7 @@ func (suite *ocppTestSuite) TestTimeout() {
 	})
 
 	// 1st charge point- local
-	_, err := NewOCPP(suite.T().Context(), "test-4", 1, "", "", 0, false, false, false, false, ocppTestConnectTimeout)
+	_, err := NewOCPP(suite.T().Context(), id1, 1, "", "", 0, false, false, false, false, false, ocppTestConnectTimeout)
 
 	suite.Require().NoError(err)
 }

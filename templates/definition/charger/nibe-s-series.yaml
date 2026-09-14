@@ -4,6 +4,7 @@ products:
     description:
       generic: Nibe S-Series (SG Ready)
 group: heating
+capabilities: ["dim"]
 requirements:
   description:
     de: |
@@ -56,7 +57,7 @@ render: |
           set:
             source: sequence
             set:
-  {{- if eq .powercontrol "true" }}
+  {{- if .powercontrol }}
               - source: const
                 value: 1
                 set:
@@ -79,7 +80,7 @@ render: |
           set:
             source: sequence
             set:
-  {{- if eq .powercontrol "true" }}
+  {{- if .powercontrol }}
               - source: const
                 value: 0
                 set:
@@ -102,7 +103,7 @@ render: |
           set:
             source: sequence
             set:
-  {{- if eq .powercontrol "true" }}
+  {{- if .powercontrol }}
               - source: const
                 value: 1
                 set:
@@ -159,7 +160,7 @@ render: |
       type: input
       encoding: uint16
     scale: 0.1
-  {{- if eq .powercontrol "true" }}
+  {{- if .powercontrol }}
   setmaxpower:
     source: modbus
     {{- include "modbus" . | indent 2 }}

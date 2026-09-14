@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/yaml"
+	"go.yaml.in/yaml/v4"
 )
 
 // Instance is an actual instantiated template
@@ -31,7 +31,7 @@ func RenderInstance(class Class, other map[string]any) (*Instance, error) {
 		return nil, err
 	}
 
-	b, _, err := tmpl.RenderResult(RenderModeInstance, other)
+	b, _, err := tmpl.RenderResult(class, RenderModeInstance, other)
 	if err != nil {
 		return nil, util.NewConfigError(err)
 	}

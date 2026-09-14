@@ -40,12 +40,12 @@ func NewOboFromConfig(ctx context.Context, other map[string]any) (api.Charger, e
 		return nil, err
 	}
 
-	return NewObo(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
+	return NewObo(ctx, cc)
 }
 
 // NewObo creates OBO Bettermann charger
-func NewObo(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
+func NewObo(ctx context.Context, settings modbus.Settings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

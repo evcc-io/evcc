@@ -29,6 +29,11 @@ const (
 	MPCFrequency       uint = 5 // S5 frequency
 )
 
+// MDT — Monitoring of Domestic Hot Water Temperature (UC TS v1.0.0)
+const (
+	MDTTemperature uint = 1 // S1 DHW temperature
+)
+
 // LPC — Limitation of Power Consumption (UC TS v1.0.0). Same scenario layout for CS and EG roles.
 const (
 	LPCLimit                uint = 1 // S1 LoadControl: consumption limit

@@ -26,8 +26,7 @@
 			<pre
 				id="mcpModalExample"
 				class="form-control border font-monospace small mb-2 mcp-example"
-				>{{ claudeExample }}</pre
-			>
+				>{{ claudeExample }}</pre>
 			<CopyLink :text="claudeExample" />
 		</FormRow>
 	</GenericModal>
@@ -55,7 +54,7 @@ export default defineComponent({
 			return `claude mcp add --transport http evcc ${this.mcpUrl}`;
 		},
 		docsLink(): string {
-			return `${docsPrefix()}/docs/integrations/mcp`;
+			return `${docsPrefix()}/integrations/mcp`;
 		},
 	},
 });

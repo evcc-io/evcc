@@ -2,6 +2,11 @@ template: shelly-pro-3em
 products:
   - { brand: Shelly, description: { generic: Pro 3 EM } }
   - { brand: Shelly, description: { generic: 3 EM-63T/W Gen3 } }
+caveats:
+  - description:
+      de: Integrierter Zähler ohne Phasensaldierung; stattdessen Leistungsintegration.
+      en: Built-in meter lacks summative energy measurement; power is integrated instead.
+    link: https://github.com/evcc-io/evcc/issues/29727
 params:
   - name: usage
     choice: ["grid", "pv", "charge"]

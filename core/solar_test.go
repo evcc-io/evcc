@@ -6,7 +6,10 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/jinzhu/now"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -59,6 +62,8 @@ func (t *solarTestSuite) TestEnergy() {
 		expected float64
 	}{
 		{-1, 0, 0},
+		{-2, -1, 0},   // whole interval before first entry
+		{-1, -0.5, 0}, // whole interval before first entry
 		{-1, 1, 0.5},
 		{-1, 90, 8},
 		{0, 0, 0},
@@ -100,5 +105,48 @@ func (t *solarTestSuite) TestShort() {
 		to := t.clock.Now().Add(time.Duration(float64(time.Hour) * tc.to))
 
 		t.Equal(tc.energy, solarEnergy(rr, from, to), "%d. energy %+v", i+1, tc)
+	}
+}
+
+func TestSolarEnergyNoRates(t *testing.T) {
+	// empty rate series must not panic and yields no energy
+	now := time.Now()
+	assert.Equal(t, 0.0, solarEnergy(api.Rates{}, now, now.Add(time.Hour)))
+	assert.Equal(t, 0.0, solarEnergy(nil, now, now.Add(time.Hour)))
+}
+
+type solarTariff struct {
+	rates api.Rates
+}
+
+func (t *solarTariff) Rates() (api.Rates, error) { return t.rates, nil }
+func (t *solarTariff) Type() api.TariffType      { return api.TariffTypeSolar }
+
+// TestSolarSlotSplitPreservesEnergy asserts that splitting hourly solar rates into
+// 15min slots leaves the integrated energy untouched- the wrapper resamples the
+// curve, it does not change it
+func TestSolarSlotSplitPreservesEnergy(t *testing.T) {
+	start := time.Now().Truncate(tariff.SlotDuration)
+
+	var rr api.Rates
+	for i, v := range []float64{0, 1000, 2500, 3000, 1500, 0} {
+		s := start.Add(time.Duration(i) * time.Hour)
+		rr = append(rr, api.Rate{Start: s, End: s.Add(time.Hour), Value: v})
+	}
+
+	w := &tariff.SlotWrapper{Tariff: &solarTariff{rates: rr}}
+	res, err := w.Rates()
+	require.NoError(t, err)
+	require.Len(t, res, 6*4)
+
+	to := rr[len(rr)-1].Start
+	assert.InDelta(t, solarEnergy(rr, start, to), solarEnergy(res, start, to), 1e-9)
+
+	// every sub-interval integrates identically, not just the total
+	for i := range res {
+		assert.InDelta(t,
+			solarEnergy(rr, start, res[i].Start),
+			solarEnergy(res, start, res[i].Start),
+			1e-9, "slot %d", i)
 	}
 }

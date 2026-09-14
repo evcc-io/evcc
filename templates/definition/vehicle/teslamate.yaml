@@ -9,6 +9,7 @@ requirements:
     de: Open Source Tesla Datenlogger [github.com/adriankumpf/teslamate](https://github.com/adriankumpf/teslamate). Voraussetzung ist konfigurierter MQTT Broker.
 params:
   - preset: vehicle-common
+  - preset: vehicle-online
   - name: id
     description:
       de: Fahrzeug-ID
@@ -18,10 +19,10 @@ params:
     default: 720h # 30d
 render: |
   type: custom
-  {{- include "vehicle-common" . }}
+  {{- include "common" . }}
   soc:
     source: mqtt
-    topic: teslamate/cars/{{ .id }}/battery_level
+    topic: teslamate/cars/{{ .id }}/usable_battery_level
     timeout: {{ .timeout }}
   status:
     source: combined
@@ -68,4 +69,4 @@ render: |
     source: mqtt
     topic: teslamate/cars/{{ .id }}/is_preconditioning
     timeout: {{ .timeout }}
-  features: ["coarsecurrent"]
+  {{ include "features" (merge (dict "basefeatures" (list "coarsecurrent")) .) }}

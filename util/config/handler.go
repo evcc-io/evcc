@@ -19,6 +19,8 @@ const (
 	OpDelete Operation = "del"
 )
 
+var ErrNotFound = errors.New("not found")
+
 func (cp *handler[T]) Subscribe(fn func(Operation, Device[T])) {
 	if err := bus.Subscribe(cp.topic, fn); err != nil {
 		panic(err)
@@ -69,7 +71,7 @@ func (cp *handler[T]) Delete(name string) error {
 	}
 	cp.mu.Unlock()
 
-	return fmt.Errorf("not found: %s", name)
+	return fmt.Errorf("%w: %s", ErrNotFound, name)
 }
 
 // ByName provides device by name
@@ -83,5 +85,5 @@ func (cp *handler[T]) ByName(name string) (Device[T], error) {
 		}
 	}
 
-	return nil, fmt.Errorf("not found: %s", name)
+	return nil, fmt.Errorf("%w: %s", ErrNotFound, name)
 }

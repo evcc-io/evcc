@@ -6,11 +6,11 @@
 #    title: Charge finished
 #    msg: Finished charging ${chargedEnergy:%.1fk}kWh in ${chargeDuration}.
 #  connect:
-#    title: Car connected
-#    msg: "Car connected at ${pvPower:%.1fk}kW PV"
+#    title: Vehicle connected
+#    msg: "Vehicle connected at ${pvPower:%.1fk}kW PV"
 #  disconnect:
-#    title: Car disconnected
-#    msg: Car disconnected after ${connectedDuration}
+#    title: Vehicle disconnected
+#    msg: Vehicle disconnected after ${connectedDuration}
 #  soc:
 #    title: Soc updated
 #    msg: Battery charged to ${vehicleSoc:%.0f}%

@@ -13,11 +13,12 @@ params:
   - name: vin
     required: true
   - preset: vehicle-common
+  - preset: vehicle-online
   - name: timeout
     default: 1h
 render: |
   type: custom
-  {{- include "vehicle-common" . }}
+  {{- include "common" . }}
   soc: # battery soc (%)
     source: mqtt
     topic: saic/{{ .user }}/vehicles/{{ .vin }}/drivetrain/soc
@@ -62,3 +63,4 @@ render: |
           source: mqtt
           topic: saic/{{ .user }}/vehicles/{{ .vin }}/refresh/mode/set
           timeout: {{ .timeout }}
+  {{ include "features" . }}

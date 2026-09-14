@@ -6,8 +6,10 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
@@ -15,40 +17,103 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// savedState holds the identity data persisted across evcc restarts.
+type savedState struct {
+	Token    oauth2.Token `json:"token"`
+	UserID   string       `json:"userId"`
+	DeviceID string       `json:"deviceId"`
+}
+
 type Identity struct {
 	*request.Helper
-	oauth2.TokenSource
+	log              *util.Logger
 	user, password   string
 	userID, deviceID string
+	subject          string
+	mu               sync.Mutex
+	tsMu             sync.RWMutex
+	ts               oauth2.TokenSource
+	refresher        func(*oauth2.Token) (*oauth2.Token, error)
 }
 
 func NewIdentity(log *util.Logger, user, password string) (*Identity, error) {
 	v := &Identity{
 		Helper:   request.NewHelper(log),
+		log:      log,
 		user:     user,
 		password: password,
-		deviceID: lo.RandomString(16, lo.AlphanumericCharset),
+		subject:  "smart-hello." + user,
 	}
 
-	v.TokenSource = oauth2.ReuseTokenSource(nil, oauth.BootstrapTokenSource(v.refreshToken))
+	var state savedState
+	if err := settings.Json(v.subject, &state); err != nil {
+		if !errors.Is(err, settings.ErrNotFound) {
+			v.log.WARN.Printf("load state: %v", err)
+		}
+		// no usable persisted state — generate a fresh device ID (sent in login headers)
+		state.DeviceID = lo.RandomString(16, lo.AlphanumericCharset)
+	}
 
-	_, err := v.Token()
+	// deviceID must be set before any login — it is sent in request headers.
+	v.deviceID = state.DeviceID
+	v.userID = state.UserID
 
-	return v, err
+	var token *oauth2.Token
+	if state.Token.Valid() {
+		token = &state.Token
+	} else {
+		var err error
+		token, err = v.refreshToken(nil)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	v.refresher = v.refreshToken
+	v.ts = oauth.RefreshTokenSource(log, token, v.refresher)
+	return v, nil
 }
 
-func (v *Identity) refreshToken() (*oauth2.Token, error) {
-	token, err := v.login()
+// Token implements the oauth2.TokenSource interface
+func (v *Identity) Token() (*oauth2.Token, error) {
+	v.tsMu.RLock()
+	ts := v.ts
+	v.tsMu.RUnlock()
+
+	return ts.Token()
+}
+
+// Invalidate discards the current token. The next Token call performs a fresh login.
+func (v *Identity) Invalidate() {
+	v.tsMu.Lock()
+	defer v.tsMu.Unlock()
+
+	v.ts = oauth.RefreshTokenSource(v.log, nil, v.refresher)
+}
+
+func (v *Identity) refreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+
+	tok, err := v.login()
 	if err != nil {
 		return nil, err
 	}
 
-	appToken, userID, err := v.appToken(token)
+	appToken, userID, err := v.appToken(tok)
 	if err != nil {
 		return nil, err
 	}
 
 	v.userID = userID
+
+	if err := settings.SetJson(v.subject, savedState{
+		Token:    *appToken,
+		UserID:   userID,
+		DeviceID: v.deviceID,
+	}); err != nil {
+		return nil, err
+	}
 
 	return appToken, nil
 }

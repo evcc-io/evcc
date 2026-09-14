@@ -3,6 +3,7 @@ package request
 import (
 	"bytes"
 	"io"
+	"mime"
 	"net/http"
 	"net/http/httputil"
 	"strconv"
@@ -100,6 +101,13 @@ func headerContainsToken(h http.Header, key, token string) bool {
 	return false
 }
 
+// binaryContent reports whether the response carries a binary body whose raw
+// bytes are not useful in the trace log, such as a downloaded archive.
+func binaryContent(h http.Header) bool {
+	mediatype, _, _ := mime.ParseMediaType(h.Get("Content-Type"))
+	return mediatype == "application/octet-stream"
+}
+
 // copy of http.drainBody
 func drainBody(b io.ReadCloser) (r1, r2 io.ReadCloser, err error) {
 	if b == nil || b == http.NoBody {
@@ -116,6 +124,14 @@ func drainBody(b io.ReadCloser) (r1, r2 io.ReadCloser, err error) {
 	return io.NopCloser(&buf), io.NopCloser(bytes.NewReader(buf.Bytes())), nil
 }
 
+// Truncate limits a string to LogMaxLen for trace logs, appending an ellipsis when cut
+func Truncate(s string) string {
+	if len(s) > LogMaxLen {
+		return s[:LogMaxLen] + "..."
+	}
+	return s
+}
+
 // dump http request/response body
 func dump(r io.ReadCloser, w *strings.Builder) error {
 	body, err := io.ReadAll(r)
@@ -125,7 +141,7 @@ func dump(r io.ReadCloser, w *strings.Builder) error {
 	if w.Len() > 0 && len(body) > 0 {
 		w.WriteString("\n--\n")
 	}
-	_, err = w.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
+	_, err = w.WriteString(Truncate(strings.TrimSpace(string(body))))
 	return err
 }
 
@@ -147,7 +163,7 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 		if LogHeaders {
 			if body, err := httputil.DumpRequestOut(req, true); err == nil {
 				bld.WriteString("\n")
-				bld.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
+				bld.WriteString(Truncate(strings.TrimSpace(string(body))))
 			}
 		} else {
 			if save, req.Body, err = drainBody(req.Body); err == nil {
@@ -174,12 +190,14 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 		resMetric.WithLabelValues(req.URL.Hostname(), strconv.Itoa(resp.StatusCode)).Add(1)
 
 		if !isWebSocketReq {
+			// skip binary bodies (e.g. downloaded archives) - their raw bytes are noise in the trace log
+			logBody := !binaryContent(resp.Header)
 			if LogHeaders {
-				if body, err := httputil.DumpResponse(resp, true); err == nil {
+				if body, err := httputil.DumpResponse(resp, logBody); err == nil {
 					bld.WriteString("\n\n")
-					bld.Write(bytes.TrimSpace(body[:min(LogMaxLen, len(body))]))
+					bld.WriteString(Truncate(strings.TrimSpace(string(body))))
 				}
-			} else {
+			} else if logBody {
 				if save, resp.Body, err = drainBody(resp.Body); err == nil {
 					err = dump(save, bld)
 				}

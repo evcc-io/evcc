@@ -2,14 +2,13 @@ template: enphase
 products:
   - brand: Enphase
     description:
-      generic: IQ Envoy
+      generic: IQ Gateway
 requirements:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
   - name: host
   - name: schema
-    default: https
     advanced: true
   - name: token
     help:
@@ -25,9 +24,9 @@ params:
     default: ac
     choice: ["ac", "iq"]
     advanced: true
+    usages: ["battery"]
   - preset: battery-params
   - name: cache
-    advanced: true
     default: 1s
   - name: timeout
     advanced: true

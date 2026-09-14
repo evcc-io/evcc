@@ -82,12 +82,12 @@ func NewPeblarFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, err
 	}
 
-	return NewPeblar(ctx, cc.URI, cc.ID)
+	return NewPeblar(ctx, cc)
 }
 
 // NewPeblar creates Peblar charger
-func NewPeblar(ctx context.Context, uri string, id uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewPeblar(ctx context.Context, settings modbus.TcpSettings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

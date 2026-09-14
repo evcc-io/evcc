@@ -31,7 +31,14 @@ func TestVehicleDetectByStatus(t *testing.T) {
 		{"B/A->1", api.StatusB, api.StatusA, v1},
 		{"A/B->2", api.StatusA, api.StatusB, v2},
 		{"A/B->2", api.StatusA, api.StatusB, v2},
+		{"A/C->2", api.StatusA, api.StatusC, v2},
+		{"A/C->2", api.StatusA, api.StatusC, v2},
 		{"B/B->1", api.StatusB, api.StatusB, nil},
+		{"B/C->1", api.StatusB, api.StatusC, v1},
+		{"B/C->1", api.StatusB, api.StatusC, v1},
+		{"C/B->2", api.StatusC, api.StatusB, v2},
+		{"C/B->2", api.StatusC, api.StatusB, v2},
+		{"C/C->1", api.StatusC, api.StatusC, nil},
 	}
 
 	log := util.NewLogger("foo")
@@ -41,6 +48,8 @@ func TestVehicleDetectByStatus(t *testing.T) {
 	v2.MockVehicle.EXPECT().GetTitle().Return("v2").AnyTimes()
 	v1.MockVehicle.EXPECT().Identifiers().Return(nil).AnyTimes()
 	v2.MockVehicle.EXPECT().Identifiers().Return([]string{"it's me"}).AnyTimes()
+	v1.MockVehicle.EXPECT().Features().Return(nil).AnyTimes()
+	v2.MockVehicle.EXPECT().Features().Return(nil).AnyTimes()
 
 	var lp loadpoint.API
 	c := New(log, vehicles)
@@ -52,7 +61,7 @@ func TestVehicleDetectByStatus(t *testing.T) {
 		v2.MockChargeState.EXPECT().Status().Return(tc.v2, nil)
 
 		available := c.availableDetectibleVehicles(lp) // include id-able vehicles
-		res := c.identifyVehicleByStatus(available)
+		res := c.identifyVehicleByStatus(available, api.StatusB)
 		if tc.res != res {
 			t.Errorf("expected %v, got %v", tc.res, res)
 		}

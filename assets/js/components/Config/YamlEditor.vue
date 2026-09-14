@@ -1,41 +1,12 @@
 <template>
-	<VueMonacoEditor
-		v-if="active"
-		ref="editor"
-		class="editor"
-		language="yaml"
-		:theme="theme"
-		:options="options"
-		:value="modelValue"
-		data-testid="yaml-editor"
-		@update:value="$emit('update:modelValue', $event)"
-		@mount="ready"
-	>
-		<template #default> {{ $t("config.editor.loading") }} </template>
-		<template #failure>
-			<textarea
-				class="form-control"
-				:rows="lines"
-				:value="modelValue"
-				:disabled="disabled"
-				data-testid="yaml-editor-fallback"
-				@input="$emit('update:modelValue', $event.target.value)"
-			/>
-		</template>
-	</VueMonacoEditor>
+	<div ref="host" class="editor" data-testid="yaml-editor">
+		<div v-if="loading" class="editor-loading">{{ $t("config.editor.loading") }}</div>
+	</div>
 </template>
 
 <script>
-import { VueMonacoEditor, loader } from "@guolao/vue-monaco-editor";
-import { cleanYaml } from "@/utils/cleanYaml.js";
-// don't bundle monaco-editor but ensure that it get updated regularly
-import { packages } from "../../../../package-lock.json";
-const monacoVersion = packages["node_modules/monaco-editor"].version;
-
-const $html = document.querySelector("html");
 export default {
 	name: "YamlEditor",
-	components: { VueMonacoEditor },
 	props: {
 		modelValue: String,
 		errorLine: Number,
@@ -45,101 +16,116 @@ export default {
 	emits: ["update:modelValue"],
 	data() {
 		return {
-			theme: "vs",
-			defaultOptions: {
-				automaticLayout: true,
-				formatOnType: true,
-				formatOnPaste: true,
-				minimap: { enabled: false },
-				showFoldingControls: "always",
-				scrollBeyondLastLine: false,
-				wordWrap: "off",
-				wrappingStrategy: "advanced",
-				overviewRulerLanes: 0,
-				scrollbar: {
-					alwaysConsumeMouseWheel: false,
-				},
-			},
-			active: true,
-			pasteDisposable: null,
+			loading: true,
 		};
 	},
-	computed: {
-		options() {
-			return { ...this.defaultOptions, readOnly: this.disabled };
-		},
-		lines() {
-			return (this.modelValue || "").split("\n").length;
-		},
-	},
 	watch: {
-		errorLine() {
-			// force rerender to update decorations
-			this.active = false;
-			this.$nextTick(() => (this.active = true));
+		modelValue(value) {
+			this.editor?.setDoc(value || "");
+		},
+		errorLine(line) {
+			this.editor?.setErrorLine(line || null);
+		},
+		disabled(value) {
+			this.editor?.setReadOnly(value);
 		},
 	},
-	mounted() {
-		this.updateTheme();
-		$html.addEventListener("themechange", this.updateTheme);
+	created() {
+		// kept off the reactive data() so Vue doesn't proxy the EditorView
+		this.editor = null;
+		this.destroyed = false;
 	},
-	beforeMount() {
-		loader.config({
-			paths: { vs: `https://cdn.jsdelivr.net/npm/monaco-editor@${monacoVersion}/min/vs` },
+	async mounted() {
+		const { createEditor } = await import("./codemirror");
+		// component may have been torn down while the chunk loaded
+		if (this.destroyed || !this.$refs.host) return;
+
+		this.editor = createEditor({
+			parent: this.$refs.host,
+			doc: this.modelValue || "",
+			readOnly: this.disabled,
+			onChange: (value) => this.$emit("update:modelValue", value),
+			getRemoveKey: () => this.removeKey,
 		});
-		loader.init();
+		this.loading = false;
+
+		if (this.errorLine) this.editor.setErrorLine(this.errorLine);
 	},
 	unmounted() {
-		$html.removeEventListener("themechange", this.updateTheme);
-		this.pasteDisposable?.dispose();
-	},
-	methods: {
-		updateTheme() {
-			this.theme = $html.classList.contains("dark") ? "vs-dark" : "vs";
-		},
-		ready(editor, monaco) {
-			const disposable = editor.onDidPaste(async () => {
-				if (!this.removeKey) return;
-				await this.$nextTick();
-				const model = editor.getModel();
-				const cleaned = cleanYaml(model.getValue(), this.removeKey);
-				model.setValue(cleaned);
-			});
-
-			this.pasteDisposable = disposable;
-
-			let decorations = null;
-			const highlight = () => {
-				decorations?.clear();
-				if (this.errorLine) {
-					decorations = editor.createDecorationsCollection([
-						{
-							range: new monaco.Range(this.errorLine, 1, this.errorLine, 1),
-							options: {
-								isWholeLine: true,
-								className: "error",
-								lineNumberClassName: "error",
-								marginClassName: "error",
-							},
-						},
-					]);
-				}
-			};
-			editor.onDidChangeModelContent(() => highlight());
-			highlight();
-		},
+		this.destroyed = true;
+		this.editor?.destroy();
 	},
 };
 </script>
+
 <style scoped>
-.editor :global(.monaco-editor) {
-	--vscode-editor-background: var(--evcc-box) !important;
-	--vscode-editorGutter-background: var(--evcc-box-border) !important;
-}
-.editor :global(.error) {
-	background-color: var(--bs-danger-50) !important;
-}
 .editor {
 	border: 1px solid var(--bs-border-color);
+}
+.editor-loading {
+	padding: 0.5rem 0.75rem;
+	color: var(--bs-secondary-color);
+}
+
+/* editor chrome */
+.editor :global(.cm-editor) {
+	height: 100%;
+	font-size: 13px;
+	background-color: var(--evcc-box);
+	color: var(--evcc-default-text);
+}
+.editor :global(.cm-editor.cm-focused) {
+	outline: none;
+}
+.editor :global(.cm-content) {
+	font-family: var(--bs-font-monospace, monospace);
+}
+/* override CM's built-in light gutter colors (we don't load CM's dark chrome) */
+.editor :global(.cm-gutters) {
+	background-color: var(--evcc-box-border) !important;
+	color: var(--bs-secondary-color) !important;
+	border: none;
+	padding-left: 6px;
+}
+.editor :global(.cm-activeLine),
+.editor :global(.cm-activeLineGutter) {
+	background-color: transparent;
+}
+.editor :global(.cm-cursor) {
+	border-left-color: var(--evcc-default-text) !important;
+}
+.editor :global(.cm-selectionBackground),
+.editor :global(.cm-focused .cm-selectionBackground) {
+	background-color: rgba(128, 128, 128, 0.4) !important;
+}
+.editor :global(.cm-errorLine) {
+	background-color: var(--bs-danger) !important;
+}
+/* keep error text readable over the red regardless of syntax colors */
+.editor :global(.cm-errorLine),
+.editor :global(.cm-errorLine span) {
+	color: var(--bs-white) !important;
+}
+
+/* syntax tokens (classHighlighter), bootstrap palette reads well on light and dark */
+.editor :global(.tok-comment),
+.editor :global(.tok-meta) {
+	color: var(--bs-gray-medium);
+}
+.editor :global(.tok-propertyName),
+.editor :global(.tok-keyword) {
+	color: var(--bs-orange);
+}
+.editor :global(.tok-string),
+.editor :global(.tok-string2) {
+	color: var(--bs-green);
+}
+.editor :global(.tok-bool),
+.editor :global(.tok-atom),
+.editor :global(.tok-number) {
+	color: var(--bs-purple);
+}
+.editor :global(.tok-invalid) {
+	color: var(--bs-red);
 }
 </style>

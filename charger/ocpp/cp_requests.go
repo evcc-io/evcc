@@ -13,7 +13,7 @@ import (
 func (cp *CP) ChangeAvailabilityRequest(connectorId int, availabilityType core.AvailabilityType) error {
 	rc := make(chan error, 1)
 
-	err := Instance().ChangeAvailability(cp.id, func(request *core.ChangeAvailabilityConfirmation, err error) {
+	err := cp.cs.ChangeAvailability(cp.id, func(request *core.ChangeAvailabilityConfirmation, err error) {
 		if err == nil && request != nil && request.Status != core.AvailabilityStatusAccepted && request.Status != core.AvailabilityStatusScheduled {
 			err = errors.New(string(request.Status))
 		}
@@ -28,7 +28,7 @@ func (cp *CP) GetCompositeScheduleRequest(connectorId int, duration int) (*smart
 	var res *smartcharging.GetCompositeScheduleConfirmation
 	rc := make(chan error, 1)
 
-	err := Instance().GetCompositeSchedule(cp.id, func(request *smartcharging.GetCompositeScheduleConfirmation, err error) {
+	err := cp.cs.GetCompositeSchedule(cp.id, func(request *smartcharging.GetCompositeScheduleConfirmation, err error) {
 		if err == nil && request != nil && request.Status != smartcharging.GetCompositeScheduleStatusAccepted {
 			err = errors.New(string(request.Status))
 		}
@@ -43,7 +43,7 @@ func (cp *CP) GetCompositeScheduleRequest(connectorId int, duration int) (*smart
 
 func (cp *CP) RemoteStartTransactionRequest(connectorId int, idTag string) error {
 	rc := make(chan error, 1)
-	err := Instance().RemoteStartTransaction(cp.id, func(request *core.RemoteStartTransactionConfirmation, err error) {
+	err := cp.cs.RemoteStartTransaction(cp.id, func(request *core.RemoteStartTransactionConfirmation, err error) {
 		if err == nil && request != nil && request.Status != types.RemoteStartStopStatusAccepted {
 			err = errors.New(string(request.Status))
 		}
@@ -61,7 +61,7 @@ func (cp *CP) RemoteStartTransactionRequest(connectorId int, idTag string) error
 func (cp *CP) SetChargingProfileRequest(connectorId int, profile *types.ChargingProfile) error {
 	rc := make(chan error, 1)
 
-	err := Instance().SetChargingProfile(cp.id, func(request *smartcharging.SetChargingProfileConfirmation, err error) {
+	err := cp.cs.SetChargingProfile(cp.id, func(request *smartcharging.SetChargingProfileConfirmation, err error) {
 		if err == nil && request != nil && request.Status != smartcharging.ChargingProfileStatusAccepted {
 			err = errors.New(string(request.Status))
 		}
@@ -79,7 +79,7 @@ func (cp *CP) TriggerMessageRequest(connectorId int, requestedMessage remotetrig
 
 	rc := make(chan error, 1)
 
-	err := Instance().TriggerMessage(cp.id, func(request *remotetrigger.TriggerMessageConfirmation, err error) {
+	err := cp.cs.TriggerMessage(cp.id, func(request *remotetrigger.TriggerMessageConfirmation, err error) {
 		if err == nil && request != nil && request.Status != remotetrigger.TriggerMessageStatusAccepted {
 			err = errors.New(string(request.Status))
 		}
@@ -97,7 +97,7 @@ func (cp *CP) TriggerMessageRequest(connectorId int, requestedMessage remotetrig
 func (cp *CP) ChangeConfigurationRequest(key, value string) error {
 	rc := make(chan error, 1)
 
-	err := Instance().ChangeConfiguration(cp.id, func(request *core.ChangeConfigurationConfirmation, err error) {
+	err := cp.cs.ChangeConfiguration(cp.id, func(request *core.ChangeConfigurationConfirmation, err error) {
 		if err == nil && request != nil && request.Status != core.ConfigurationStatusAccepted {
 			err = errors.New(string(request.Status))
 		}
@@ -112,7 +112,7 @@ func (cp *CP) GetConfigurationRequest() (*core.GetConfigurationConfirmation, err
 	rc := make(chan error, 1)
 
 	var res *core.GetConfigurationConfirmation
-	err := Instance().GetConfiguration(cp.id, func(request *core.GetConfigurationConfirmation, err error) {
+	err := cp.cs.GetConfiguration(cp.id, func(request *core.GetConfigurationConfirmation, err error) {
 		res = request
 
 		rc <- err

@@ -2,9 +2,7 @@
 	<div class="border rounded p-3">
 		<!-- Price input -->
 		<div class="mb-3">
-			<label :for="formId('price')" class="form-label">{{
-				$t("config.tariff.zones.price")
-			}}</label>
+			<label :for="formId('price')" class="form-label">{{ valueLabel }}</label>
 			<div class="d-flex w-50 w-min-200">
 				<input
 					:id="formId('price')"
@@ -123,6 +121,7 @@ export default {
 		zone: { type: Object as PropType<Zone>, required: true },
 		currency: { type: String as PropType<CURRENCY>, required: true },
 		index: { type: Number, required: true },
+		valueLabel: { type: String, required: true },
 	},
 	emits: ["update:zone", "save", "cancel"],
 	data() {
@@ -215,18 +214,5 @@ export default {
 <style scoped>
 .w-min-200 {
 	min-width: min(200px, 100%);
-}
-
-/* Hide spinner for number input */
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-	-webkit-appearance: none;
-	appearance: none;
-	margin: 0;
-}
-
-input[type="number"] {
-	-moz-appearance: textfield;
-	appearance: textfield;
 }
 </style>

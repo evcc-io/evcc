@@ -13,6 +13,52 @@ type Zone struct {
 
 type Zones []Zone
 
+// ZoneSpec is the un-parsed config form of a zone (string day/hour/month fields).
+type ZoneSpec struct {
+	Price               float64
+	Days, Hours, Months string
+}
+
+// ParseZones expands ZoneSpecs into Zones, one per comma-separated hour range.
+func ParseZones(specs []ZoneSpec) (Zones, error) {
+	var zones Zones
+	for _, z := range specs {
+		days, err := ParseDays(z.Days)
+		if err != nil {
+			return nil, err
+		}
+
+		months, err := ParseMonths(z.Months)
+		if err != nil {
+			return nil, err
+		}
+
+		hours, err := ParseTimeRanges(z.Hours)
+		if err != nil && z.Hours != "" {
+			return nil, err
+		}
+
+		if len(hours) == 0 {
+			zones = append(zones, Zone{
+				Price:  z.Price,
+				Days:   days,
+				Months: months,
+			})
+			continue
+		}
+
+		for _, h := range hours {
+			zones = append(zones, Zone{
+				Price:  z.Price,
+				Days:   days,
+				Months: months,
+				Hours:  h,
+			})
+		}
+	}
+	return zones, nil
+}
+
 // implement sort.Interface
 func (r Zones) Len() int {
 	return len(r)
@@ -58,25 +104,18 @@ func (r Zones) TimeTableMarkers() []HourMin {
 		}
 	}
 
-HOURS:
 	// 1hr intervals
 	for hour := range 24 {
-		for _, m := range res {
-			if m.Hour == hour && m.Min == 0 {
-				continue HOURS
-			}
+		hm := HourMin{Hour: hour}
+		if !slices.Contains(res, hm) {
+			res = append(res, hm)
 		}
-
-		// hour is missing
-		for i, m := range res {
-			if m.Hour >= hour {
-				res = slices.Insert(res, i, HourMin{Hour: hour, Min: 0})
-				continue HOURS
-			}
-		}
-
-		res = append(res, HourMin{Hour: hour, Min: 0})
 	}
+
+	// zones may be unsorted, e.g. when price and charges zones are combined
+	slices.SortFunc(res, func(i, j HourMin) int {
+		return i.Minutes() - j.Minutes()
+	})
 
 	return res
 }

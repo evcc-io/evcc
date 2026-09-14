@@ -68,12 +68,12 @@ func NewAlfenFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 		return nil, err
 	}
 
-	return NewAlfen(ctx, cc.URI, cc.ID)
+	return NewAlfen(ctx, cc)
 }
 
 // NewAlfen creates Alfen charger
-func NewAlfen(ctx context.Context, uri string, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewAlfen(ctx context.Context, settings modbus.TcpSettings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

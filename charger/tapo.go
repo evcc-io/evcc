@@ -20,7 +20,7 @@ func init() {
 func NewTapoFromConfig(other map[string]any) (api.Charger, error) {
 	var cc struct {
 		embed        `mapstructure:",squash"`
-		URI          string
+		Host         string
 		User         string
 		Password     string
 		StandbyPower float64
@@ -34,12 +34,12 @@ func NewTapoFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	return NewTapo(cc.embed, cc.URI, cc.User, cc.Password, cc.StandbyPower)
+	return NewTapo(cc.embed, cc.Host, cc.User, cc.Password, cc.StandbyPower)
 }
 
 // NewTapo creates Tapo charger
-func NewTapo(embed embed, uri, user, password string, standbypower float64) (*Tapo, error) {
-	conn, err := tapo.NewConnection(uri, user, password)
+func NewTapo(embed embed, host, user, password string, standbypower float64) (*Tapo, error) {
+	conn, err := tapo.NewConnection(host, user, password)
 	if err != nil {
 		return nil, err
 	}

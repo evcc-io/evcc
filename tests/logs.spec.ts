@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { openMoreMenu } from "./utils";
+import { openMoreMenu, enableAppContext, expectAppEvent } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -47,5 +47,17 @@ test.describe("features", async () => {
     await page.goto("/#/log");
     await page.getByTestId("log-search").fill("UI local");
     await expect(page.getByTestId("log-content")).toContainText("UI local");
+  });
+});
+
+test.describe("log download in app context", async () => {
+  test("dispatches download event", async ({ page }) => {
+    await enableAppContext(page);
+    await page.goto("/#/log");
+    await page.getByRole("link", { name: "Download complete log" }).click();
+    expect(await expectAppEvent(page)).toMatchObject({
+      type: "download",
+      url: expect.stringContaining("/api/system/log?level=debug&format=txt"),
+    });
   });
 });

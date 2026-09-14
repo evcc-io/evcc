@@ -19,37 +19,86 @@
     "successCloseTab": "Artık bu sekmeyi kapatabilirsin.",
     "title": "Yetkilendirme Durumu"
   },
-  "batterySettings": {
-    "batteryLevel": "Doluluk oranı",
-    "bufferStart": {
-      "above": "{soc} seviyesinin üzerindeyken.",
-      "full": "{soc} seviyesindeyken.",
-      "never": "yalnızca yeterli fazlalık ile."
+  "battery": {
+    "card": {
+      "charging": "şarj oluyor",
+      "discharging": "pilden çalışıyor",
+      "energy": "Enerji",
+      "gridCharge": "şebekeden şarj",
+      "hold": "bataryadan kullanım kapalı",
+      "holdCharge": "şarj olma kilitli",
+      "ofTotal": "{total}'ın",
+      "power": "Güç",
+      "soc": "Batarya seviyesi"
     },
-    "capacity": "{total}'in {energy}'si",
-    "control": "Batarya kontrolü",
-    "discharge": "Hızlı modda ve planlanan doldurmada boşalmayı önle.",
-    "disclaimerHint": "Not:",
-    "disclaimerText": "Bu ayarlar yalnızca güneş enerjisi yöntemini etkiler. Doldurma davranışı buna göre ayarlanır.",
+    "combined": "Birleşik",
+    "config": {
+      "buffer": "{soc} değerinin üzerindeki ev batarya enerjisi, doldurma noktalarını desteklemek için kullanılabilir ve güneş enerjisi modunda kapanmayı geciktirebilir. Güneş enerjisiyle doldurmayı otomatik olarak başlat {start}.",
+      "bufferNone": "Doldurma noktaları için ev bataryasından enerji kullanılmamaktadır. Desteği etkinleştirmek için {soc} değerinden daha düşük bir değer ayarla.",
+      "bufferStart": {
+        "above": "batarya doluluk seviyesi {soc} oranının üzerine çıktığında",
+        "full": "batarya dolduğunda",
+        "never": "sadece yeterli fazlalık olduğunda"
+      },
+      "bufferTitle": "Batarya doldurma tamponu olarak",
+      "gridDischarge": "Ev tipi bataryanın şebekeye deşarj olmasına izin verin.",
+      "priority": "Ev bataryası {soc} seviyesinin altında olduğunda öncelikli olarak doldurulur. Ardından, doldurma noktalarına fazlalık aktarılır.",
+      "priorityNone": "Güneş enerjisi fazlası doğrudan şarj noktalarına aktarılır. Ev bataryasına öncelik vermek için {soc} değerinin üzerinde bir ayar yapın.",
+      "priorityTitle": "Fazla akım ilk nereye gitsin?"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Şebekeden şarj",
+        "discharge": "Şebekeye deşarj",
+        "hold": "Pil kullanımını önle",
+        "holdcharge": "Doldurmayı engelle",
+        "normal": "Normal çalışma"
+      },
+      "empty": "boş",
+      "full": "dolu",
+      "highest": "En yüksek ({value})",
+      "lowest": "En düşük ({value})",
+      "suggestion": "Öneri"
+    }
+  },
+  "batterySettings": {
     "gridChargeTab": "Şebekeden doldurma",
-    "legendBottomName": "Ev bataryasına öncelik ver",
-    "legendBottomSubline": "{soc} seviyesine ulaşana kadar.",
-    "legendMiddleName": "Aracın doldurulmasına öncelik ver",
-    "legendMiddleSubline": "ev bataryası {soc} seviyesinin üzerindeyse.",
-    "legendTopAutostart": "Otomatik olarak başla",
-    "legendTopName": "Batarya destekli araç doldurma",
-    "legendTopSubline": "ev bataryası {soc} seviyesinin üzerindeyse.",
     "modalTitle": "Ev Bataryası",
     "noBattery": "Batarya yapılandırılmamış.",
     "usageTab": "Batarya kullanımı"
   },
+  "colors": {
+    "auto": "Otomatik",
+    "hex": "Onaltılık renk"
+  },
   "config": {
+    "adminPassword": {
+      "description": "Komut dosyası eklentisi, evcc işleminin izniyle çalışan bir sistem düzeyinde komut yürütür. Devam etmek için yönetici şifrenizi tekrar girin.",
+      "invalid": "Şifre geçersiz. Lütfen tekrar dene.",
+      "title": "Olası tehlikeli işlem"
+    },
+    "apiKey": {
+      "description": "Komut dosyalarına ve zamanlanmış yedeklemeler gibi otomasyon görevlerine, yönetici şifreni paylaşmadan, güvenli erişim sağla.",
+      "exampleLabel": "Dene: curl ile bir yedekleme dosyası indir",
+      "generate": "API Anahtarı Oluştur",
+      "generateConfirm": "Yeni bir API anahtarı oluşturmak için yönetici şifreni gir.",
+      "keyLabel": "API Anahtarı",
+      "regenerate": "API Anahtarını Yenile",
+      "regenerateConfirm": "API anahtarını yeniden oluşturmak için yönetici şifreni gir.",
+      "regenerateLink": "Yeniden oluştur",
+      "regenerateWarning": "Yenileme işlemi, mevcut anahtarı geçersiz kılacak ve bu anahtarı kullanan tüm otomasyonlar çalışmayı durduracaktır. Devam etmek istiyor musun?",
+      "revealSuccess": "Yeni API anahtarın kullanıma hazır.",
+      "revealTitle": "API Anahtarı Oluşturuldu",
+      "shownOnce": "Bu anahtar yalnızca bir kez gösterilir. Güvenli bir yerde sakla. Daha sonra bu anahtarı tekrar göremezsin.",
+      "title": "API Anahtarı"
+    },
     "aux": {
       "description": "Tüketimini mevcut fazlalığa göre ayarlayan cihaz (akıllı su ısıtıcıları gibi). evcc, bu cihazın gerektiğinde güç tüketimini azaltmasını bekler.",
       "titleAdd": "Kendi Kendini Düzenleyen Tüketici Ekle",
       "titleEdit": "Kendi Kendini Düzenleyen Tüketiciyi Düzenle"
     },
     "battery": {
+      "title": "Batarya",
       "titleAdd": "Batarya Ekle",
       "titleEdit": "Bataryayı Düzenle"
     },
@@ -75,16 +124,16 @@
       "template": "Üretici",
       "titleAdd": {
         "charging": "Doldurma Cihazı Ekle",
-        "heating": "Isıtıcı Ekle"
+        "heating": "Isıtma Cihazı Ekle"
       },
       "titleEdit": {
         "charging": "Doldurma Cihazını Düzenle",
-        "heating": "Isıtıcıyı Düzenle"
+        "heating": "Isıtma Cihazını Düzenle"
       },
       "type": {
         "custom": {
           "charging": "Kullanıcı tanımlı doldurma cihazı",
-          "heating": "Kullanıcı tanımlı ısıtıcı"
+          "heating": "Kullanıcı tanımlı ısıtma cihazı"
         },
         "heatpump": "Kullanıcı tanımlı ısı pompası",
         "sgready": "Kullanıcı tanımlı ısı pompası (sg-ready eklentiler üzerinden)",
@@ -97,6 +146,11 @@
       "description": "Bir devreye bağlı tüm yük noktalarının toplamının, yapılandırılan güç ve akım limitlerini aşmamasını sağlar. Devreler, bir hiyerarşi oluşturacak şekilde iç içe yerleştirilebilir.",
       "title": "Yük yönetimi",
       "usableMeters": "Kullanılabilir sayaç referansları"
+    },
+    "consumer": {
+      "description": "Daha küçük, yönetilemeyen cihazları (buzdolabı, çamaşır makinesi, ...) takip eder. Evindeki tüketim hakkında daha iyi bir genel bakış sağlar.",
+      "titleAdd": "Tüketici Sayacı Ekle",
+      "titleEdit": "Tüketici Sayacını Düzenle"
     },
     "control": {
       "description": "Genellikle varsayılan değerler iyidir. Bunları yalnızca ne yaptığını biliyorsan değiştir.",
@@ -112,8 +166,19 @@
       "label": "Para birimi",
       "title": "Para birimi"
     },
+    "curtailer": {
+      "description": "Şebeke işletmecisinin talebi üzerine şebekeye beslemeyi sınırlayan cihaz (§ 9 EEG). Birçok güneş enerjisi eviricisi, GES sayacı yapılandırması aracılığıyla bunu doğrudan destekler. Ayrı bir yapılandırma yalnızca bazı üreticiler veya çoklu evirici sistemleri için gereklidir.",
+      "generic": "Genel birleşimler",
+      "specific": "Özel birleşimler",
+      "template": "Üretici",
+      "title": "Şebekeye satış kısıtlaması",
+      "titleAdd": "Kısıtlama Cihazı Ekle",
+      "titleEdit": "Kısıtlama Cihazını Düzenle"
+    },
     "deviceValue": {
+      "activeClients": "Etkin müşteriler",
       "amount": "Miktar",
+      "asleep": "uyuyor",
       "broker": "Aracı",
       "bucket": "Kova",
       "capacity": "Kapasite",
@@ -126,29 +191,34 @@
       "chargedEnergy": "Doldu",
       "co2": "Şebeke CO₂",
       "configured": "Yapılandırıldı",
+      "connected": "Bağlı",
       "connections": "Bağlantılar",
       "controllable": "Kontrol edilebilir",
       "currency": "Para Birimi",
       "current": "Akım",
       "currentRange": "Akım",
-      "curtailed": "Satış sınırlı",
+      "curtailLimit": "Şebekeye satış sınırı",
+      "curtailable": "Kısıtlanabilir",
+      "curtailed": "Şebekeye satış sınırı",
       "detected": "Algılandı",
+      "dimLimit": "Tüketim sınırı",
       "dimmed": "Tüketim sınırlı",
       "enabled": "Etkin",
       "energy": "Enerji",
       "events": "Etkinlikler",
+      "exportLimit": "Şebekeye satış sınırı",
       "feedinPrice": "Satış fiyatı",
       "forecast": "Tahmin",
       "gridPrice": "Alım fiyatı",
       "heaterTempLimit": "Isıtıcı sınırlaması",
-      "hemsActiveLimit": "Etkin sınır",
-      "hemsType": "İletişim",
       "identifier": "RFID tanımlayıcısı",
+      "loginBlocked": "Giriş sınırına ulaşıldı",
       "max": "azami",
       "messengers": "Hizmetler",
       "no": "hayır",
       "odometer": "Kilometre Sayacı",
       "org": "Organizasyon",
+      "outdoorTemp": "Dış hava sıcaklığı",
       "phaseCurrents": "Faz Akımı",
       "phasePowers": "Faz Gücü",
       "phaseVoltages": "Faz Voltajı",
@@ -156,10 +226,14 @@
       "power": "Güç",
       "powerRange": "“Güç”",
       "price": "Fiyat",
+      "productionLimited": "Üretim sınırlı",
       "range": "Menzil",
+      "remoteEnabled": "Etkinleştirildi",
+      "returnEnergy": "Enerji (ters)",
       "singlePhase": "“Tek aşamalı”",
       "soc": "Doluluk",
       "solarForecast": "Güneş tahmini",
+      "switchDevice": "Akım yönetimi",
       "temp": "Isı",
       "topic": "Konu",
       "url": "URL",
@@ -170,10 +244,6 @@
       "A": "“A (bağlı değil)”",
       "B": "“B (bağlı)”",
       "C": "“C (dolduruyor)”"
-    },
-    "deviceValueHemsType": {
-      "eebus": "EEBus aracılığıyla",
-      "relay": "Röle aracılığıyla"
     },
     "devices": {
       "auxMeter": "“Akıllı tüketici”",
@@ -190,13 +260,19 @@
         "public": "Açık sertifika",
         "title": "Sertifikalar"
       },
+      "configuredDevices": "Yapılandırılmış cihazlar",
       "description": "EVCC'nin doldurma cihazları veya şebeke operatörünüzün kontrol ünitesi gibi EEBus uyumlu cihazlarla iletişim kurmasını sağlayan yapılandırma. İlgili tüm başlatma ve sertifika oluşturma işlemleri ilk başlatmada otomatik olarak gerçekleştirilir.",
       "descriptionAdvanced": "Değişiklik yapmaya gerek yok. Yalnızca ne yaptığını gerçekten biliyorsan değişiklik yap. SHIP kimliğini veya sertifikaları değiştirirsen, cihazlarını yeniden eşleştirmen gerekir.",
       "interfaces": "Arayüzler",
       "interfacesHelp": "İletişim sorunlarını önlemek için EEBus'un kullanacağı ağ arayüzlerini sınırla. Tüm arayüzleri kullanmak için alanı boş bırak. Her satıra bir giriş yap.",
+      "noConfiguredDevices": "SKI tarafından yapılandırılmış cihaz yok.",
+      "noPairings": "Eşleştirilmiş cihaz yok.",
+      "pairings": "Eşleştirilmiş cihazlar",
       "port": "Port",
       "portHelp": "Kullanılacak port.",
+      "qr": "Eşleştirme kodu",
       "removeConfirm": "Tüm EEBus yapılandırmaları kaldırılacak. Bir sonraki başlatmada yeni sertifikalar ve tanımlayıcılar oluşturulacak. Emin misin?",
+      "removePairing": "Eşleştirmeyi kaldır",
       "shipid": "SHIP-ID",
       "shipidExplain": "EEBus ağında tanımlama için kalıcı cihaz tanımlayıcı.",
       "shipidHelp": "Bu SHIP-ID, aşağıdaki sertifikalarla bağlantılı.",
@@ -210,12 +286,13 @@
     },
     "ext": {
       "description": "Kontrol edilemeyen tüketicilerin (örneğin buzdolabı, çamaşır makinesi vb.) enerji değerlerini istatistiksel amaçlarla kaydeder. Bu sayaçlar yük yönetimi (örneğin alt dağıtım) için de kullanılabilir.",
-      "titleAdd": "Tüketici Sayacı Ekle",
-      "titleEdit": "Tüketici Sayacını Düzenle"
+      "titleAdd": "Ek Sayaç Ekle",
+      "titleEdit": "Ek Sayacı Düzenle"
     },
     "form": {
       "danger": "Dikkat",
       "deprecated": "“kullanımdan kaldırıldı”",
+      "durationUnit": "{label} için zaman birimi",
       "example": "Örnek",
       "optional": "isteğe bağlı"
     },
@@ -225,18 +302,24 @@
       "authPerformHint": "Yeni bir sekmede açılacak. Devam etmek için buraya geri dön.",
       "authPrepare": "Bağlantıyı hazırla",
       "cancel": "İptal",
+      "change": "Değiştir",
       "clear": "Temizle",
       "close": "Kapat",
+      "confirmEnable": "Bu cihaz tekrar etkinleştirilsin mi?",
       "confirmSave": "Kaydedilmemiş değişiklikler var. Şimdi kaydedilsin mi?",
       "copied": "Kopyalandı!",
       "copy": "Kopyala",
       "customHelp": "evcc'nin eklenti sistemini kullanarak kullanıcı tanımlı bir cihaz oluştur.",
       "customOption": "Kullanıcı tanımlı cihaz",
       "delete": "“Sil”",
+      "disable": "Devre dışı bırak",
+      "disabled": "Devre dışı",
+      "dismiss": "Kapat",
       "docsLink": "Belgelere bak.",
       "dragHandle": "Sürükleme kolu",
       "dragItem": "Sürüklenebilir: {title}",
       "dragList": "Yeniden sıralanabilir liste",
+      "enable": "Etkinleştir",
       "error": "Hata",
       "experimental": "Deneysel",
       "forceSave": "Yine de kaydet",
@@ -247,7 +330,6 @@
       "noFileSelected": "Seçili dosya yok.",
       "off": "kapalı",
       "on": "açık",
-      "password": "Şifre",
       "readFromFile": "Dosyadan oku",
       "remove": "Kaldır",
       "required": "gerekli",
@@ -271,13 +353,12 @@
     "hems": {
       "csv": {
         "created": "Oluşturuldu",
-        "finished": "Bitti",
+        "finished": "Bitiş zamanı",
         "gridpower": "Şebeke alımı (kW)",
         "limitpower": "Sınır (kW)",
         "type": "Tür"
       },
       "description": "Harici sistemler tarafından güç sınırlaması (ör. §14a EnWG, §9 EEG arayüzü veya üst düzey enerji yönetim sistemi). Yük yönetimi özelliği ile birlikte çalışır.",
-      "downloadCsv": "CSV'yi indir",
       "eventsRecorded": "{count} şebeke sınırlama etkinliği kaydedildi.",
       "lastEvent": "En son {timeAgo}.",
       "title": "Dış Limit"
@@ -317,13 +398,6 @@
         "charging": "“Doldurma cihazı”",
         "heating": "Isıtıcı"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "6 ila 16 A akım aralığını kullanır.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "6 ila 32 A akım aralığını kullanır.",
-      "chargerPowerCustom": "diğer",
-      "chargerPowerCustomHelp": "Kendine özgü bir akım aralığı tanımla.",
-      "chargerTypeLabel": "“Doldurma gücü”",
       "chargingTitle": "Davranış",
       "circuitHelp": "Güç ve akım limitlerinin aşılmaması için yük yönetim ataması.",
       "circuitInvalid": "Devre mevcut değil",
@@ -335,11 +409,9 @@
       },
       "defaultModeHelpKeep": "Son seçilen modu korur.",
       "defaultModeLabel": "“Varsayılan şekil”",
-      "defaultsHint": "Varsayılan durum, GES fazlalık davranışı ve elektriksel ayrıntılar mantıklı varsayılan değerleri kullanır.",
-      "defaultsHintLink": "Ayarları düzenle",
       "delete": "“Sil”",
       "electricalSubtitle": "Emin değilsen elektrikçine sor.",
-      "electricalTitle": "“Elektrikli”",
+      "electricalTitle": "Elektrik",
       "energyMeterHelp": "Doldurma cihazında bütünleşik bir sayaç yoksa ek sayaç.",
       "energyMeterLabel": "“Enerji sayacı”",
       "estimateLabel": "“API güncellemeleri arasında doldurma seviyesini hesapla”",
@@ -371,7 +443,6 @@
       "priorityHelp": "Öncelikli olanlar güneş enerjisi fazlasına öncelikli erişir.",
       "priorityLabel": "“Öncelik”",
       "save": "“Kaydet”",
-      "showAllSettings": "“Tüm ayarları göster”",
       "solarBehaviorCustomHelp": "Kendi açma, kapama eşiklerini ve gecikmeleri tanımla.",
       "solarBehaviorDefaultHelp": "Yeterli fazlalığın {enableDelay} ardından başla. {disableDelay} için yeterli fazlalık olmadığında dur.",
       "solarBehaviorLabel": "Güneş enerjisi fazlalığı",
@@ -425,6 +496,13 @@
       "vehicles": "Araçlarım",
       "welcomeBannerText": "Önce bir **doldurma cihazı**, **ısıtıcı**, **elektrik sayacı**, **güneş enerjisi**, **batarya** veya **ek sayaç** oluştur. Sadece denemek istiyorsan, bir **demo cihazı** seç.",
       "welcomeBannerTitle": "Haydi sistemini yapılandıralım!"
+    },
+    "mcp": {
+      "description": "Bir Model Context Protocol sunucusu sağlar, böylece Claude gibi yapay zeka asistanlarının sisteminin durumunu okuyup doldurma işlemini kontrol etmesine olanak tanır.",
+      "exampleLabel": "Örnek: Claude CLI",
+      "restartHint": "Yeniden başlatıldıktan sonra kullanılabilir olacak.",
+      "title": "MCP Sunucusu",
+      "url": "MCP uç noktası"
     },
     "messaging": {
       "addMessenger": "Hizmet ekle",
@@ -494,7 +572,6 @@
       "option": {
         "aux": "Kendi kendini düzenleyen tüketici ekle",
         "battery": "Pil ölçer ekle",
-        "ext": "Düzenli tüketici ekle",
         "pv": "Güneş ölçer ekle"
       },
       "save": "Kaydet",
@@ -576,23 +653,19 @@
       "descriptionHost": "Yerel ağında evcc'yi duyurmak için kullanılır.",
       "descriptionInternalUrl": "evcc'nin yerel ağ adresi.",
       "descriptionPort": "Web arayüzü ve API için bağlantı noktası. Bunu değiştirirsen tarayıcının URL'sini güncellemen gerekir.",
-      "descriptionSchema": "Yalnızca URL'lerin oluşturuluşunu etkiler. HTTPS'nin seçilmesi şifrelemeyi etkinleştirmez.",
       "labelExternalUrl": "Harici URL",
       "labelHost": "mDNS Ana Bilgisayar Adı",
       "labelInternalUrl": "Dahili URL",
       "labelPort": "Port",
-      "labelSchema": "Şema",
       "title": "Ağ",
       "warningUrlPath": "URL genellikle bir yola ihtiyaç duymaz. Bunun doğru olduğundan emin misin?"
     },
     "ocpp": {
-      "connectedChargers": "Bağlı doldurma cihazları",
-      "connectionStatus": "Yapılandırılmış istasyon kimlikleri",
-      "connectionStatusHelp": "Yapılandırılmış doldurma cihazlarının bağlantı durumu.",
-      "detectedChargers": "Algılanan istasyon kimlikleri",
-      "detectedHelp": "Bu doldurma cihazları evcc'ye bağlanmaya çalıştı. Doldurma cihazını kullanmak için, istasyon kimliği ile bir yükleme noktası oluştur.",
+      "forwardingConfigured": "Yönlendirme yapılandırıldı",
+      "forwardingError": "Yönlendirme hatası",
+      "forwardingOff": "Yönlendirme yapılandırılmadı",
       "noChargers": "OCPP doldurma cihazı algılanamadı.",
-      "noStations": "Bağlı istasyon yok",
+      "stations": "İstasyon Kimlikleri",
       "status": {
         "configured": "Bağlı değil",
         "connected": "Bağlı",
@@ -603,8 +676,9 @@
       "urlHelp": "Bu URL'yi doldrma cihazının yapılandırmasına kopyala. Ayrıntılar için üreticinin kılavuzuna bak. Doldurma cihazının, URL'ye benzersiz tanımlayıcısını (istasyon kimliği) otomatik olarak eklemesi beklenir. Nadir durumlarda, tanımlayıcıyı elle belirtmen gerekebilir. Örnek: `{url}`"
     },
     "optimizer": {
-      "description": "Güneş enerjisi tahminlerini, elektrik fiyatlarını ve tüketim alışkanlıklarınızı analiz ederek batarya ve doldurma stratejisini iyileştirir. Veriler, işlenmek üzere evcc iyileştirme hizmetine gönderilir.",
+      "description": "Güneş enerjisi tahminlerini, elektrik fiyatlarını ve tüketim alışkanlıklarını inceleyerek batarya ve doldurma yöntemini iyileştirir. Veriler, işlenmek üzere evcc iyileştirme hizmetine gönderilir. Şu anda yalnızca hesaplama ve görselleştirme yapmaktadır. Henüz cihazları denetlememektedir.",
       "enable": "İyileştiriciyi Etkinleştir",
+      "info": "İyileştirici menü öğesinin görünür hale gelmesi birkaç dakika sürebilir. Yeni kurulumlarda, evcc'nin yeterli veriyi toplaması 24 saate kadar sürebilir.",
       "title": "İyileştirici"
     },
     "options": {
@@ -633,6 +707,38 @@
     "pv": {
       "titleAdd": "GES Ekle",
       "titleEdit": "GES Sayacını Düzenle"
+    },
+    "remote": {
+      "active": "Etkin",
+      "addClient": "Müşteri ekle",
+      "addClientDescription": "Kimlik bilgileri yalnızca evcc örneğinde yerel olarak saklanır ve doğrulanır.",
+      "addClientTitle": "Uzak Müşteri Ekle",
+      "clientCreated": "Müşteri oluşturuldu",
+      "clients": "Müşteriler",
+      "confirmDelete": "Müşteri silinsin mi?",
+      "connected": "Bağlı",
+      "createClient": "Müşteri oluştur",
+      "description": "evcc mobil uygulamasını kullanarak evcc kurulumuna her yerden eriş. Port yönlendirme veya VPN gerekmez.",
+      "deviceName": "Cihaz adı",
+      "disconnected": "Bağlı değil",
+      "done": "Bitti",
+      "enableLabel": "Uzaktan erişimi etkinleştir",
+      "expiration": "Son kullanma tarihi",
+      "expirationNone": "Asla",
+      "expired": "süresi doldu",
+      "expiresIn": "süresi {time} dolacak",
+      "lastActive": "etkin {time}",
+      "loginBlocked": "Çok sayıda başarısız giriş denemesi nedeniyle uzaktan girişler bir dakikalığına engellendi.",
+      "manualLogin": "Ya da browserinden {url} adresine şu kimlik bilgilerini kullanarak elle giriş yapabilirsin:",
+      "noClients": "Henüz müşteri yok. Henüz kimse bağlanamıyor.",
+      "password": "Şifre",
+      "passwordOnce": "Bu şifre yalnızca bir kez görüntülenir. QR kodunu tara veya hemen kopyala. Bir daha göremeyeceksin.",
+      "qrInstall": "{ios} veya {android} için evcc uygulamasını yükle.",
+      "qrScan": "Bağlanmak için kodu telefonununun kamerasıyla tara. Zaten telefonununu kullanıyorsan, üzerine tıkla.",
+      "removeClient": "Müşteriyi kaldır",
+      "title": "Uzaktan Erişim",
+      "url": "Herkese açık URL",
+      "username": "Kullanıcı adı"
     },
     "section": {
       "additionalMeter": "Ek sayaçlar",
@@ -663,8 +769,8 @@
       "addToken": "Jetonu gir",
       "changeToken": "Jetonu değiştir",
       "description": "Destek modeli, projeyi sürdürmemize ve sürdürülebilir bir şekilde yeni ve heyecan verici özellikler geliştirmemize yardımcı oluyor. Destekçi olarak tüm doldurma cihazı uygulamalarına erişimin oluyor.",
-      "descriptionToken": "Sponsorlar, jetonlarını {url} adresinde bulabilirler. Denemek için bir {trialToken}.",
-      "enterYourToken": "Jetonunu gir",
+      "descriptionToken": "GitHub Destekçisi olarak jetonunu {url} adresinde bulabilirsin. Deneyebilmen için sana bir {trialToken} veriyoruz.",
+      "enterYourToken": "Destekçi Jetonun",
       "error": "Destekçi jetonu geçerli değil.",
       "invalid": "geçersiz",
       "labelToken": "Destekçi jetonu",
@@ -675,7 +781,7 @@
       "tokenRequiredShort": "Sponsor jetonu yapılandırılmadı.",
       "trialToken": "deneme jetonu",
       "viaYaml": "evcc.yaml üzerinden",
-      "yourToken": "Jetonun"
+      "yourToken": "Destekçi Jeton"
     },
     "system": {
       "backupRestore": {
@@ -764,8 +870,8 @@
       "titleChoice": "Ne eklemek istersin?",
       "type": {
         "co2": "CO₂ Yoğunluğu",
-        "feedIn": "İhracat Fiyatı",
-        "grid": "Şebekeden Tüketim Fiyatı",
+        "feedIn": "Şebekeye Satış Fiyatı",
+        "grid": "Şebekeden Alım Fiyatı",
         "planner": "Planlayıcı",
         "solar": "Güneş enerjisi"
       },
@@ -775,6 +881,7 @@
         "allMonths": "Tüm aylar",
         "allTimes": "Tüm zamanlar",
         "cancel": "İptal",
+        "charge": "Ek Ücret",
         "days": "Günler",
         "edit": "Düzenle",
         "hours": "Saatler",
@@ -789,10 +896,6 @@
         "timeTo": "Bitiş",
         "weekdays": "Hafta günleri"
       }
-    },
-    "tariffs": {
-      "description": "Doldurma oturumlarının maliyetlerini hesaplamak için elektrik tarifelerini gir.",
-      "title": "Tarifeler"
     },
     "telemetry": {
       "description": "evcc'yi iyileştirmek için veri paylaşımını yapılandır. Gizliliğin bizim için önemlidir ve katılım tamamen isteğe bağlıdır.",
@@ -812,32 +915,13 @@
       "validate": "doğrula"
     },
     "vehicle": {
-      "cancel": "İptal",
-      "chargingSettings": "“ Doldurma ayarları”",
-      "defaultMode": "“Varsayılan ayar”",
-      "defaultModeHelp": "Araç bağlanırken doldurma ayarı.",
-      "delete": "Aracı sil",
       "generic": "Diğer bütünleştirmeler",
-      "identifiers": "“RFID tanımlayıcıları”",
-      "identifiersHelp": "Aracı tanımlamak için RFID dizelerinin listesi. Satır başına bir giriş. Güncel tanımlayıcıyı, genel bakış sayfasındaki ilgili doldurma noktasında bulabilirsin.",
-      "maximumCurrent": "“Azami akım”",
-      "maximumCurrentHelp": "Asgari akımdan büyük olmalıdır.",
-      "maximumPhases": "“Azami aşamalar”",
-      "maximumPhasesHelp": "Bu araç kaç aşama ile doldurulabilir? Gerekli asgari güneş enerjisi fazlasını ve plân süresini hesaplamak için kullanılır.",
-      "maximumPower": "Azami doldurma gücü",
-      "maximumPowerHelp": "Aracın çekebileceği azami güç",
-      "minimumCurrent": "“Asgari akım”",
-      "minimumCurrentHelp": "Yalnızca ne yaptığını biliyorsan 6A'in altına in.",
       "online": "Çevrimiçi API'ye sahip araçlar",
       "primary": "Genel bütünleşmeler",
-      "priority": "“Öncelik”",
-      "priorityHelp": "Daha yüksek öncelik, bu araç güneş enerjisi fazlasına öncelikli erişim sağlayacak demektir.",
-      "save": "Kaydet",
       "scooter": "Elektrikli Scooter",
       "template": "Üretici",
       "titleAdd": "Araç Ekle",
-      "titleEdit": "Aracı Düzenle",
-      "validateSave": "Doğrula ve kaydet"
+      "titleEdit": "Aracı Düzenle"
     }
   },
   "footer": {
@@ -888,7 +972,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Destekçi ol",
-      "becomeSponsorExtended": "Çıkartma almak için bizi doğrudan destekle.",
       "confetti": "Konfeti istermisin?",
       "confettiPromise": "Çıkartmalar ve dijital konfeti de var",
       "sticker": "… ya da evcc çıkartmaları?",
@@ -897,9 +980,7 @@
       "titleNoSponsor": "Bize destek ol",
       "titleSponsor": "Destekçisin",
       "titleTrial": "Deneme modu",
-      "titleVictron": "Victron Energy tarafından desteklenmektedir",
-      "trial": "Deneme modundasın ve tüm özellikleri kullanabilirsin. Destekçi olursan seviniriz.",
-      "victron": "Victron Energy donanımı üzerinde evcc kullanıyorsun ve tüm özelliklere erişebiliyorsun."
+      "trial": "Deneme modundasın ve tüm özellikleri kullanabilirsin. Destekçi olursan seviniriz."
     },
     "telemetry": {
       "optIn": "Doldurma verilerimi paylaşmak istiyorum.",
@@ -928,7 +1009,7 @@
       "modalUpdateStatusStart": "Kurulum başladı:",
       "modalViewOnGitHub": "GitHub'da görüntüle",
       "openSource": "açık kaynak",
-      "poweredByOpenSource": "{0} tarafından desteklenmekte."
+      "poweredBy": "powered by"
     }
   },
   "forecast": {
@@ -944,6 +1025,7 @@
       "setup": "Fiyatlar ve tahminler oluştur",
       "solar": "Bugün ve önümüzdeki günler için beklenen güneş enerjisi üretimini gör. Bu veriler gelecekte otomatik doldurma iyileştirmesi için de kullanılacak."
     },
+    "hideLine": "çizgiyi gizle",
     "modalTitle": "“Öngörü”",
     "price": {
       "average": "“Ortalama”",
@@ -952,6 +1034,7 @@
       "range": "“Aralık”"
     },
     "priceZoom": "büyüt",
+    "showLine": "çizgiyi göster",
     "solar": {
       "dayAfterTomorrow": "“Yarından sonra”",
       "partly": "“kısmen”",
@@ -960,7 +1043,8 @@
       "tomorrow": "“Yarın”"
     },
     "solarAdjust": "Güneş enerjisi tahminlerini gerçek üretim verilerine göre ayarla{percent}.",
-    "solarAdjustShort": "gerçek verilere göre ayarlama",
+    "solarAdjustMedium": "gerçek verilere ayarla",
+    "solarAdjustShort": "ayarla",
     "type": {
       "co2": "CO₂ salımları",
       "price": "Şebeke Fiyatı",
@@ -972,15 +1056,9 @@
   },
   "header": {
     "about": "evcc hakkında",
-    "authProviders": {
-      "confirmLogout": "{title} kesmek istediğine emin misin?",
-      "loggedOut": "Oturum başarıyla kapatıldı",
-      "title": "Onay Durumu"
-    },
     "blog": "Blog",
     "docs": "Belgeler",
     "github": "GitHub",
-    "login": "Araç Girişleri",
     "logout": "Çıkış",
     "nativeSettings": "Ana makine Değiştir",
     "needHelp": "Yardıma mı ihtiyacın var?",
@@ -1075,7 +1153,6 @@
   "loginModal": {
     "cancel": "İptal",
     "demoMode": "Demo modunda oturum açamazsınız.",
-    "error": "Giriş başarısız: ",
     "iframeHint": "evcc'yi yeni bir sekmede aç.",
     "iframeIssue": "Parolan doğru, ancak tarayıcın kimlik doğrulama çerezini reddetti. Bu, evcc'yi HTTP üzerinden bir iframe içinde çalıştırırsan meydana gelebilir.",
     "invalid": "Şifre geçersiz.",
@@ -1088,9 +1165,7 @@
     "chargingPlan": {
       "active": "Aktif",
       "addRepeatingPlan": "“Tekrar eden plan ekle”",
-      "arrivalTab": "Varış",
       "day": "Gün",
-      "departureTab": "Ayrılış",
       "goal": "Doldurma hedefi",
       "modalTitle": "Doldurma Planı",
       "none": "yok",
@@ -1101,7 +1176,6 @@
       },
       "planNumber": "Plan {number}",
       "precondition": {
-        "description": "Batarya ön ısıtması için kalkıştan önce {duration} doldur.",
         "label": "Geç doldurma",
         "optionAll": "hepsi",
         "optionNo": "hayır"
@@ -1110,29 +1184,28 @@
       "repeating": "“tekrarlanan”",
       "repeatingPlans": "“Tekrarlanan planlar”",
       "selectAll": "“Tümünü seç”",
-      "strategyDisabledDescription": "Şarj işlemi, kalkış saatine tam zamanında bitmek üzere mümkün olduğunca geç başlar. Dinamik şebeke fiyatları veya CO₂ tarifesi ile burada daha fazla seçenek mevcuttur.",
-      "strategySettings": "Strateji ayarları",
       "time": "Zaman",
       "title": "Plan",
-      "titleMinSoc": "Asgari doldurma",
-      "titleTargetCharge": "Ayrılış",
       "unsavedChanges": "Kaydedilmemiş değişiklikler var. Şimdi uygulansın mı?",
       "update": "Uygula",
       "weekdays": "Günler"
+    },
+    "continuousStatus": {
+      "charging": "Hızlandırma etkin.",
+      "connected": "Normal çalışma.",
+      "waitForVehicle": "Hızlanma istendi…"
     },
     "energyflow": {
       "battery": "Batarya",
       "batteryCharge": "Batarya doldurma",
       "batteryDischarge": "Batarya boşaltma",
-      "batteryForecastEmpty": "boş {time}",
-      "batteryForecastFull": "dolu {time}",
+      "batteryDischargeHold": "Batarya (kilitli)",
       "batteryGridChargeActive": "Şebekeden doldurma: etkin",
       "batteryGridChargeLimit": "Şebekeden doldurma: şayet",
-      "batteryHold": "Batarya (kilitli)",
       "batteryTooltip": "{total} ({soc})'ın {energy}'ı",
-      "forecast": "Tahmin: ",
+      "forecast": "Tahmin",
       "forecastTooltip": "“öngörü: bugün kalan güneşden üreti̇m”",
-      "gridImport": "Şebeke kullanımı",
+      "gridImport": "Şebekeden alım",
       "homePower": "Tüketim",
       "loadpoints": "Doldurma cihazı| Doldurma cihazı | {count} doldurma cihazları",
       "loadpointsLimit": "{limit} sınır",
@@ -1146,11 +1219,33 @@
       "charging": "Isıtılıyor…",
       "connected": "Beklemede.",
       "vehicleLimit": "“Isıtıcı sınırlaması”",
-      "waitForVehicle": "Hazır. Isıtıcı bekleniyor…"
+      "waitForVehicle": "Isıtmaya hazır…"
     },
     "hemsWarning": {
-      "description": "Doldurmayı {limit} değerini aşmayacak şekilde azalt.",
       "title": "Harici sınır:"
+    },
+    "history": {
+      "direction": {
+        "battery": {
+          "energy": "doldu",
+          "returnEnergy": "boşaldı"
+        },
+        "grid": {
+          "energy": "alındı",
+          "returnEnergy": "satıldı"
+        }
+      },
+      "empty": "Bu zaman aralığı için geçmiş verisi yok.",
+      "group": {
+        "battery": "Batarya",
+        "forecast": "Öngörü",
+        "grid": "Şebeke",
+        "loadpoint": "Doldurma ve Isıtma",
+        "meter": "Tüketim",
+        "pv": "Üretim"
+      },
+      "otherConsumers": "Diğerleri",
+      "title": "Geçmiş"
     },
     "loadpoint": {
       "avgPrice": "⌀ Fiyat",
@@ -1183,24 +1278,14 @@
       "batteryUsage": "“Ev Bataryası”",
       "currents": "Doldurma Akımı",
       "default": "varsayılan",
-      "disclaimerHint": "Not:",
-      "limitSoc": {
-        "description": "Araç bağlandığında kullanılan dolum sınırı.",
-        "label": "Varsayılan dolum sınır"
-      },
       "maxCurrent": {
         "label": "Azami Akım"
       },
       "minCurrent": {
         "label": "Asgari Akım"
       },
-      "minSoc": {
-        "description": "Araç, güneş enerjisi modunda {0} seviyesine hızlı doldurulur. Ardından güneş enerjisi fazlalığıyla devam eder. Karanlık havalarda dahi asgari bir menzil sağlamak için kullanışlıdır.",
-        "label": "Asgari dolum oranı"
-      },
-      "onlyForSocBasedCharging": "Bu seçenekler, sadece doluluk seviyesi bilinen araçlar için açık.",
       "phasesConfigured": {
-        "label": "Fazlar",
+        "label": "Aşamalar",
         "no1p3pSupport": "Doldurma cihazınız nasıl bağlı?",
         "phases_0": "otomatik geçiş",
         "phases_1": "1 aşamalı",
@@ -1398,8 +1483,6 @@
       "solarpercentage": "Güneş (%)",
       "vehicle": "Araç"
     },
-    "csvPeriod": "{period} CSV olarak indir",
-    "csvTotal": "CSV'nin tamamını indir",
     "date": "Başlangıç",
     "energy": "Doldurulan",
     "filter": {
@@ -1420,8 +1503,10 @@
     },
     "loadpoint": "Doldurma Noktası",
     "noData": "Bu ay henüz doldurma oturumu yok.",
+    "odometer": "Kilometre",
     "overview": "“Genel Bakış”",
     "period": {
+      "day": "Gün",
       "month": "Ay",
       "total": "Toplam",
       "year": "Yıl"

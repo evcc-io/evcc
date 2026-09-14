@@ -5,6 +5,7 @@
 		device-type="charger"
 		:is-sponsor="isSponsor"
 		:modal-title="modalTitle"
+		tags-usage="charge"
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
 		:is-type-deprecated="isTypeDeprecated"
@@ -266,11 +267,10 @@ export default defineComponent({
 		isTypeDeprecated(type: ConfigType): boolean {
 			return type === ConfigType.SgReadyBoost;
 		},
-		handleTemplateChange(e: Event, values: DeviceValues) {
-			const value = (e.target as HTMLSelectElement).value as ConfigType;
-			if (this.isYamlInput(value)) {
-				values.type = value;
-				values.yaml = this.defaultYaml(value);
+		handleTemplateChange(value: string, values: DeviceValues) {
+			if (this.isYamlInput(value as ConfigType)) {
+				values.type = value as ConfigType;
+				values.yaml = this.defaultYaml(value as ConfigType);
 			}
 		},
 		applyCustomDefaults(template: Template | null, values: DeviceValues) {

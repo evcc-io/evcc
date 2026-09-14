@@ -1,4 +1,5 @@
 import settings from "./settings";
+import type { DateFormat } from "./settings";
 import { LENGTH_UNIT } from "./types/evcc";
 
 const MILES_FACTOR = 0.6213711922;
@@ -9,6 +10,10 @@ function isMiles() {
 
 export function distanceValue(value: number) {
   return isMiles() ? value * MILES_FACTOR : value;
+}
+
+export function distanceValueReverse(value: number) {
+  return isMiles() ? value / MILES_FACTOR : value;
 }
 
 export function distanceUnit() {
@@ -29,4 +34,12 @@ export function is12hFormat() {
 
 export function set12hFormat(value: boolean) {
   settings.is12hFormat = value;
+}
+
+export function getDateFormat(): DateFormat {
+  return settings.dateFormat || "";
+}
+
+export function setDateFormat(value: DateFormat) {
+  settings.dateFormat = value;
 }

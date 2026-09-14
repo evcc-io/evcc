@@ -3,6 +3,8 @@ package request
 import (
 	"encoding/json"
 	"encoding/xml"
+	"errors"
+	"io"
 	"net/http"
 	"time"
 
@@ -55,12 +57,19 @@ func (r *Helper) GetBody(url string) ([]byte, error) {
 
 // decodeJSON reads HTTP response and decodes JSON body if error is nil
 func decodeJSON(resp *http.Response, res any) error {
-	if err := ResponseError(resp); err != nil {
-		_ = json.NewDecoder(resp.Body).Decode(&res)
+	if c := resp.StatusCode; c < 200 || c >= 300 {
+		// keep the body on the error so callers can inspect the device's error response
+		b, err := ReadBody(resp)
+		_ = json.Unmarshal(b, &res)
 		return err
 	}
 
-	return json.NewDecoder(resp.Body).Decode(&res)
+	// swallow io.EOF to allow empty response
+	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil && !errors.Is(err, io.EOF) {
+		return err
+	}
+
+	return nil
 }
 
 // decodeXML reads HTTP response and decodes XML body if error is nil

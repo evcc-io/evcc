@@ -4,6 +4,7 @@ products:
   - brand: Orbis
     description:
       generic: Viaris
+capabilities: ["dim"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
 params:

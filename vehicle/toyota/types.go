@@ -14,11 +14,11 @@ type Status struct {
 		} `json:"messages"`
 	} `json:"status"`
 	Payload struct {
-		BatteryLevel        int     `json:"batteryLevel"`
-		ChargingStatus      string  `json:"chargingStatus"`
-		EvRange             EvRange `json:"evRange"`
-		EvRangeWithAc       EvRange `json:"evRangeWithAc"`
-		LastUpdateTimestamp string  `json:"lastUpdateTimestamp"`
+		BatteryLevel        *int     `json:"batteryLevel"`
+		ChargingStatus      string   `json:"chargingStatus"`
+		EvRange             *EvRange `json:"evRange"`
+		EvRangeWithAc       *EvRange `json:"evRangeWithAc"`
+		LastUpdateTimestamp string   `json:"lastUpdateTimestamp"`
 	} `json:"payload"`
 }
 

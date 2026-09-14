@@ -13,11 +13,13 @@ params:
   - name: vin
     required: true
   - preset: vehicle-common
+  - preset: vehicle-online
   - name: host
     deprecated: true
   - name: port
     deprecated: true
   - name: wakeup_alt
+    type: bool
     description:
       en: Alternative wakeup code
       de: Alternativer Wakeup-Code
@@ -28,7 +30,7 @@ params:
     advanced: true
 render: |
   type: custom
-  {{- include "vehicle-common" . }}
+  {{- include "common" . }}
   soc:
     {{- include "source" . | indent 2 }}
     jq: .energy[0].level
@@ -48,17 +50,17 @@ render: |
     jq: .timed_odometer.mileage
   climater:
     {{- include "source" . | indent 2 }}
-    jq: .preconditionning.air_conditioning.status != "Disabled"
+    jq: (.preconditionning.air_conditioning.status // "Disabled") != "Disabled"
   wakeup:
     source: http
     {{- if .host }}
-    {{- if eq .wakeup_alt "true" }}
+    {{- if .wakeup_alt }}
     uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/charge_now/{{ .vin }}/1
     {{- else }}
     uri: http://{{ .host }}{{ if .port }}:{{ .port }}{{ end }}/wakeup/{{ .vin }}
     {{- end }}
     {{- else }}
-    {{- if eq .wakeup_alt "true" }}
+    {{- if .wakeup_alt }}
     uri: {{ trimSuffix "/" .url }}/charge_now/{{ .vin }}/1
     {{- else }}
     uri: {{ trimSuffix "/" .url }}/wakeup/{{ .vin }}
@@ -72,3 +74,4 @@ render: |
   uri: {{ trimSuffix "/" .url }}/get_vehicleinfo/{{ .vin }}?from_cache=1
   {{- end }}
   {{- end }}
+  {{ include "features" . }}

@@ -1,0 +1,12 @@
+## required attributes
+type: custom
+maxconsumptionpower: # total load limit (W), 0 = no limit
+  source: const
+  value: 0
+
+## optional attributes
+#curtailedpercent: # allowed feed-in (0..100), 100 = uncurtailed
+#  source: const
+#  value: 100
+#productionnominalmax: 10000 # nominal production power (W), required with curtailedpercent
+#interval: 10s # polling interval

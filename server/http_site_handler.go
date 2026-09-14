@@ -1,9 +1,10 @@
 package server
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"io/fs"
 	"net/http"
@@ -14,13 +15,13 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/db"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/server/assets"
-	"github.com/evcc-io/evcc/server/db"
-	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/encode"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/evcc-io/evcc/util/logstash"
@@ -30,6 +31,13 @@ import (
 )
 
 var ignoreState = []string{"releaseNotes"} // excessive size
+
+// limits for the unauthenticated jq parameter of the state endpoint
+const (
+	maxJqQueryLen    = 8192        // maximum length of the jq query
+	maxJqDuration    = time.Second // maximum jq evaluation time
+	maxJqResultBytes = 1 << 20     // maximum size of the encoded jq result
+)
 
 // getPreferredLanguage returns the preferred language as two letter code
 func getPreferredLanguage(header string) string {
@@ -42,7 +50,44 @@ func getPreferredLanguage(header string) string {
 	return base.String()
 }
 
-func indexHandler(customCss bool) http.HandlerFunc {
+// globalsJsHandler serves version and ui customization as window.evcc globals
+func globalsJsHandler(custom Customization) http.HandlerFunc {
+	globals := struct {
+		Version    string `json:"version"`
+		Commit     string `json:"commit"`
+		CustomCss  bool   `json:"customCss"`
+		CustomLogo bool   `json:"customLogo"`
+		Brand      string `json:"customBrand"`
+		Website    string `json:"customWebsite"`
+		Email      string `json:"customEmail"`
+		Phone      string `json:"customPhone"`
+		Theme      string `json:"customTheme"`
+	}{
+		Version:    util.Version,
+		Commit:     util.Commit,
+		CustomCss:  custom.Css != "",
+		CustomLogo: custom.LogoLight != "",
+		Brand:      custom.Brand,
+		Website:    custom.Website,
+		Email:      custom.Email,
+		Phone:      custom.Phone,
+		Theme:      custom.Theme,
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript; charset=UTF-8")
+		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+
+		if _, err := w.Write([]byte("window.evcc = ")); err != nil {
+			return
+		}
+		if err := json.NewEncoder(w).Encode(globals); err != nil {
+			log.ERROR.Println("httpd: failed to render globals:", err.Error())
+		}
+	}
+}
+
+func indexHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
@@ -65,9 +110,7 @@ func indexHandler(customCss bool) http.HandlerFunc {
 
 		if err := t.Execute(w, map[string]any{
 			"Version":     util.Version,
-			"Commit":      util.Commit,
 			"DefaultLang": defaultLang,
-			"CustomCss":   customCss,
 		}); err != nil {
 			log.ERROR.Println("httpd: failed to render main page:", err.Error())
 		}
@@ -85,6 +128,24 @@ func jsonHandler(h http.Handler) http.Handler {
 func jsonWrite(w http.ResponseWriter, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)
+}
+
+// jsonWriteLimited writes data as json, failing if the encoded result exceeds limit bytes.
+// Encoding into a buffer keeps oversized results from reaching the client at all.
+func jsonWriteLimited(w http.ResponseWriter, data any, limit int) {
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(data); err != nil {
+		jsonError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	if buf.Len() > limit {
+		jsonError(w, http.StatusBadRequest, errors.New("result too large"))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	buf.WriteTo(w)
 }
 
 func jsonError(w http.ResponseWriter, status int, err error) {
@@ -144,6 +205,11 @@ func boolHandler(set func(bool) error, get func() bool) http.HandlerFunc {
 	return handler(strconv.ParseBool, set, get)
 }
 
+// stringHandler updates string-param api
+func stringHandler(set func(string) error, get func() string) http.HandlerFunc {
+	return handler(func(s string) (string, error) { return s, nil }, set, get)
+}
+
 // durationHandler updates duration-param api
 func durationHandler(set func(time.Duration) error, get func() time.Duration) http.HandlerFunc {
 	return handler(util.ParseDuration, set, get)
@@ -153,6 +219,14 @@ func durationHandler(set func(time.Duration) error, get func() time.Duration) ht
 func getHandler[T any](get func() T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		jsonWrite(w, get())
+	}
+}
+
+// callHandler invokes an api function without result
+func callHandler(fun func()) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fun()
+		jsonWrite(w, nil)
 	}
 }
 
@@ -172,7 +246,7 @@ func updateSmartCostLimit(site site.API, setLimit func(loadpoint.API, *float64))
 			val = &f
 		}
 
-		for _, lp := range site.Loadpoints() {
+		for _, lp := range site.ActiveLoadpoints() {
 			setLimit(lp, val)
 		}
 
@@ -213,6 +287,11 @@ func stateHandler(cache *util.ParamCache) http.HandlerFunc {
 		if q := r.URL.Query().Get("jq"); q != "" {
 			q = strings.TrimPrefix(q, ".result")
 
+			if len(q) > maxJqQueryLen {
+				jsonError(w, http.StatusBadRequest, errors.New("jq: query too long"))
+				return
+			}
+
 			query, err := gojq.Parse(q)
 			if err != nil {
 				jsonError(w, http.StatusBadRequest, err)
@@ -225,13 +304,21 @@ func stateHandler(cache *util.ParamCache) http.HandlerFunc {
 				return
 			}
 
-			res, err := jq.Query(query, b)
+			// the query is attacker-controlled, so bound evaluation time and result size
+			ctx, cancel := context.WithTimeout(r.Context(), maxJqDuration)
+			defer cancel()
+
+			res, err := jq.QueryContext(ctx, query, b)
 			if err != nil {
-				jsonError(w, http.StatusBadRequest, err)
+				status := http.StatusBadRequest
+				if ctx.Err() != nil {
+					status = http.StatusServiceUnavailable
+				}
+				jsonError(w, status, err)
 				return
 			}
 
-			jsonWrite(w, res)
+			jsonWriteLimited(w, res, maxJqResultBytes)
 			return
 		}
 
@@ -317,118 +404,120 @@ func logHandler(w http.ResponseWriter, r *http.Request) {
 	jsonWrite(w, log)
 }
 
-// adminPasswordValid validates the admin password and returns true if valid
-func adminPasswordValid(authObject auth.Auth, password string) bool {
-	return authObject.GetAuthMode() == auth.Disabled || authObject.IsAdminPasswordValid(password)
-}
-
-func getBackup(authObject auth.Auth) http.HandlerFunc {
+func getBackup() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req loginRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		if !adminPasswordValid(authObject, req.Password) {
-			http.Error(w, "Invalid password", http.StatusUnauthorized)
-			return
-		}
-
 		if err := settings.Persist(); err != nil {
 			http.Error(w, "Synching DB failed", http.StatusInternalServerError)
 			return
 		}
 
-		f, err := os.Open(db.FilePath)
+		filename := "evcc-backup-" + time.Now().Format("2006-01-02--15-04") + ".db"
+
+		tmpFile, err := os.CreateTemp("", "evcc-backup-*.db")
 		if err != nil {
-			http.Error(w, "Could not open DB file: "+err.Error(), http.StatusInternalServerError)
+			http.Error(w, "Creating backup failed", http.StatusInternalServerError)
+			return
+		}
+		tmpName := tmpFile.Name()
+		tmpFile.Close()
+		defer os.Remove(tmpName)
+
+		if err := db.Backup(r.Context(), tmpName); err != nil {
+			http.Error(w, "Backup failed", http.StatusInternalServerError)
+			return
+		}
+
+		f, err := os.Open(tmpName)
+		if err != nil {
+			http.Error(w, "Opening backup failed", http.StatusInternalServerError)
 			return
 		}
 		defer f.Close()
-
-		filename := "evcc-backup-" + time.Now().Format("2006-01-02--15-04") + ".db"
 
 		w.Header().Set("Content-Type", "application/octet-stream")
 		w.Header().Set("Content-Disposition", `attachment; filename="`+filename+`"`)
 
 		if _, err := io.Copy(w, f); err != nil {
-			http.Error(w, "Error streaming DB file: "+err.Error(), http.StatusInternalServerError)
+			http.Error(w, "Streaming backup failed", http.StatusInternalServerError)
 			return
 		}
 	}
 }
 
 // createLocalDatabaseBackup creates a local backup in case of catastrophic error in reset or restore
-func createLocalDatabaseBackup() error {
-	backupPath := db.FilePath + ".bak"
-
-	src, err := os.Open(db.FilePath)
-	if err != nil {
-		return fmt.Errorf("failed to open database file: %w", err)
-	}
-	defer src.Close()
-
-	dst, err := os.Create(backupPath)
-	if err != nil {
-		return fmt.Errorf("failed to create backup file: %w", err)
-	}
-	defer dst.Close()
-
-	if _, err := io.Copy(dst, src); err != nil {
-		// clean up partial backup on error
-		os.Remove(backupPath)
-		return fmt.Errorf("failed to copy database: %w", err)
-	}
-
-	return nil
+func createLocalDatabaseBackup(ctx context.Context) error {
+	return db.Backup(ctx, db.FilePath()+".bak")
 }
 
-func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
+func restoreDatabase(shutdown func()) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Parse multipart form
-		err := r.ParseMultipartForm(32 << 20) // 32MB max memory
+		// cap upload size to bound disk usage
+		r.Body = http.MaxBytesReader(w, r.Body, 256<<20)
+
+		mr, err := r.MultipartReader()
 		if err != nil {
 			http.Error(w, "Failed to parse form: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		if !adminPasswordValid(authObject, r.FormValue("password")) {
-			http.Error(w, "Invalid password", http.StatusUnauthorized)
-			return
+		var tmpName string
+
+		for {
+			part, err := mr.NextPart()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				http.Error(w, "Upload failed", http.StatusBadRequest)
+				return
+			}
+
+			switch part.FormName() {
+			case "file":
+				tmpFile, err := os.CreateTemp("", "evcc-restore-*.db")
+				if err != nil {
+					part.Close()
+					http.Error(w, "Failed to create temp file", http.StatusInternalServerError)
+					return
+				}
+				tmpName = tmpFile.Name()
+				defer os.Remove(tmpName)
+
+				_, copyErr := io.Copy(tmpFile, part)
+				closeErr := tmpFile.Close()
+				part.Close()
+				if copyErr != nil || closeErr != nil {
+					http.Error(w, "Upload failed", http.StatusBadRequest)
+					return
+				}
+
+			default:
+				part.Close()
+			}
 		}
 
-		file, _, err := r.FormFile("file")
-		if err != nil {
-			http.Error(w, "Failed to get uploaded file: "+err.Error(), http.StatusBadRequest)
+		if tmpName == "" {
+			http.Error(w, "Missing file", http.StatusBadRequest)
 			return
 		}
-		defer file.Close()
 
 		settings.Persist()
 
-		// close db connection to avoid corruption
-		if err := db.Close(); err != nil {
-			jsonError(w, http.StatusInternalServerError, err)
-			return
-		}
-
 		// create local backup before overwriting
-		if err := createLocalDatabaseBackup(); err != nil {
-			http.Error(w, "Failed to create local backup: "+err.Error(), http.StatusInternalServerError)
+		if err := createLocalDatabaseBackup(r.Context()); err != nil {
+			http.Error(w, "Backup failed", http.StatusInternalServerError)
 			return
 		}
 
-		// overwrite DB file
-		f, err := os.Create(db.FilePath)
-		if err != nil {
-			http.Error(w, "Could not open DB file for writing: "+err.Error(), http.StatusInternalServerError)
+		if err := db.Restore(r.Context(), tmpName); err != nil {
+			http.Error(w, "Restore failed", http.StatusInternalServerError)
 			return
 		}
-		defer f.Close()
 
-		if _, err := io.Copy(f, file); err != nil {
-			http.Error(w, "Failed to write DB file: "+err.Error(), http.StatusInternalServerError)
+		// close DB so the WAL is checkpointed into the main file before shutdown
+		// hooks (e.g. settings.Persist) can overwrite the restored content
+		if err := db.Close(); err != nil {
+			http.Error(w, "DB close failed", http.StatusInternalServerError)
 			return
 		}
 
@@ -437,27 +526,21 @@ func restoreDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 	}
 }
 
-func resetDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
+func resetDatabase(shutdown func()) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
-			Password string `json:"password"`
-			Sessions bool   `json:"sessions"`
-			Settings bool   `json:"settings"`
+			Sessions bool `json:"sessions"`
+			Settings bool `json:"settings"`
+			Remote   bool `json:"remote"`
 		}
-
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		if !adminPasswordValid(authObject, req.Password) {
-			http.Error(w, "Invalid password", http.StatusUnauthorized)
-			return
-		}
-
 		settings.Persist()
 
-		if err := createLocalDatabaseBackup(); err != nil {
+		if err := createLocalDatabaseBackup(r.Context()); err != nil {
 			jsonError(w, http.StatusInternalServerError, err)
 			return
 		}
@@ -475,6 +558,15 @@ func resetDatabase(authObject auth.Auth, shutdown func()) http.HandlerFunc {
 
 			for _, table := range tables {
 				if err := db.Instance.Exec("DELETE FROM " + table).Error; err != nil {
+					jsonError(w, http.StatusInternalServerError, err)
+					return
+				}
+			}
+		}
+
+		if req.Remote {
+			for _, key := range []string{keys.Remote, keys.RemoteClients, keys.RemoteLastSeen} {
+				if err := settings.Delete(key); err != nil {
 					jsonError(w, http.StatusInternalServerError, err)
 					return
 				}

@@ -57,12 +57,12 @@ func NewSigenergyFromConfig(ctx context.Context, other map[string]any) (api.Char
 		return nil, err
 	}
 
-	return NewSigenergy(ctx, cc.URI, cc.ID)
+	return NewSigenergy(ctx, cc)
 }
 
 // NewSigenergy creates a new charger
-func NewSigenergy(ctx context.Context, uri string, slaveID uint8) (*Sigenergy, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, slaveID)
+func NewSigenergy(ctx context.Context, settings modbus.TcpSettings) (*Sigenergy, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -77,12 +77,12 @@ func NewChargeXFromConfig(ctx context.Context, other map[string]any) (api.Charge
 		return nil, err
 	}
 
-	return NewChargeX(ctx, cc.URI, cc.ID, cc.Connector)
+	return NewChargeX(ctx, cc.TcpSettings, cc.Connector)
 }
 
 // NewChargeX creates ChargeX charger
-func NewChargeX(ctx context.Context, uri string, id uint8, connector uint16) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewChargeX(ctx context.Context, settings modbus.TcpSettings, connector uint16) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

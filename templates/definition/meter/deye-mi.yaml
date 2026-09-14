@@ -29,7 +29,7 @@ render: |
     register:
       address: 86 # "Output active power"
       type: holding
-      decode: uint32
+      decode: uint32s
     scale: 0.1
   energy:
     source: modbus
@@ -37,6 +37,6 @@ render: |
     register:
       address: 63 # "Total_Active_PowerWh"
       type: holding
-      decode: uint32
+      decode: uint32s
     scale: 0.1
   {{- end }}

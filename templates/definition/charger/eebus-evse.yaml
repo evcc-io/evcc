@@ -1,0 +1,14 @@
+template: eebus-evse
+covers: ["eebus"]
+products:
+  - description:
+      de: EEBUS kompatibel
+      en: EEBUS compatible
+group: generic
+capabilities: ["mA", "meter", "dim"]
+params:
+  - preset: eebus
+render: |
+  type: eebus-evse
+  {{ include "eebus" . }}
+  meter: true

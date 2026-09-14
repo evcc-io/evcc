@@ -26,11 +26,9 @@ func init() {
 // Constructor from YAML config
 func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error) {
 	var cc struct {
-		embed   `mapstructure:",squash"`
-		URI     string
-		Token_  string `mapstructure:"token"` // TODO deprecated
-		Home_   string `mapstructure:"home"`  // TODO deprecated
-		Sensors struct {
+		embed                `mapstructure:",squash"`
+		homeassistant.Config `mapstructure:",squash"`
+		Sensors              struct {
 			Soc        string // required
 			Range      string // optional
 			Status     string // optional
@@ -39,6 +37,9 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 			Climater   string // optional
 			FinishTime string // optional
 		}
+		StatusA  string // optional - custom states mapped to status A
+		StatusB  string // optional - custom states mapped to status B
+		StatusC  string // optional - custom states mapped to status C
 		Services struct {
 			Start         string `mapstructure:"start_charging"` // script.* or switch.* optional
 			Stop          string `mapstructure:"stop_charging"`  // script.* optional
@@ -57,7 +58,7 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 
 	log := util.NewLogger("ha-vehicle")
 
-	conn, err := homeassistant.NewConnection(log, cc.URI, cc.Home_)
+	conn, err := cc.Config.NewConnection(log)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +77,12 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		}))
 	}
 	if cc.Sensors.Status != "" {
-		implement.Has(res, implement.ChargeState(func() (api.ChargeStatus, error) { return conn.GetChargeStatus(cc.Sensors.Status) }))
+		states, err := homeassistant.NewStatusMap(cc.StatusA, cc.StatusB, cc.StatusC)
+		if err != nil {
+			return nil, err
+		}
+
+		implement.Has(res, implement.ChargeState(func() (api.ChargeStatus, error) { return conn.GetChargeStatus(cc.Sensors.Status, states) }))
 	}
 	if cc.Sensors.Range != "" {
 		implement.Has(res, implement.VehicleRange(func() (int64, error) {

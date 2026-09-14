@@ -9,6 +9,7 @@ products:
   - brand: Viridian EV
     description:
       generic: EVSE EPC 2.0 Plus
+capabilities: ["dim"]
 params:
   - name: modbus
     choice: ["rs485", "tcpip"]

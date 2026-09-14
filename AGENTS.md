@@ -14,13 +14,15 @@ This file provides guidance to AI coding agents when working with code in this r
 - `make build` - build Go binary only
 - `make ui` - build UI assets only
 - `make install` - install Go tools and dependencies
-- `make install-ui` - install Node.js dependencies (`npm ci`)
+- `make install-ui` - install Node.js dependencies (`vp install`)
 - `make test` - run Go tests
 - `make test-ui` - run frontend tests
 - `make lint` - run Go linting (golangci-lint)
 - `make lint-ui` - run frontend linting
-- `npm run dev` - start Vue dev server (http://127.0.0.1:7071)
-- `npm run playwright` - run integration tests
+- `vp run dev` - start Vue dev server (http://127.0.0.1:7071)
+- `vp run playwright` - run integration tests
+- `build`, `openapi` and `test` are cached tasks in `vite.config.ts`, run through `vp run`
+- `evcc --config [file] --disable-auth` - run a throw-away instance for UI checks without password setup
 - `evcc --template-type [type] --template [file]` - test device templates
 - `make docs` - generate template documentation
 
@@ -28,13 +30,16 @@ This file provides guidance to AI coding agents when working with code in this r
 
 Deep documentation on specific subsystems is available in `docs/agents/`. Load what you need based on the task:
 
-| File | When to load |
-|------|-------------|
-| [Core Domain](docs/agents/core-domain.md) | Control loop, loadpoint logic, PV surplus, charge modes, tariffs, interfaces |
-| [Hardware Integrations](docs/agents/hardware-integrations.md) | Charger/meter/vehicle implementations, adding new devices |
-| [Easee Architecture](docs/agents/easee-architecture.md) | Easee charger (REST+SignalR, async correlation, concurrency) |
-| [Plugin System](docs/agents/plugin-system.md) | Plugin layer (HTTP, MQTT, Modbus, SunSpec, JS) |
-| [Web UI & API](docs/agents/web-ui-api.md) | REST API, WebSocket, Vue frontend, authentication |
+| File                                                          | When to load                                                                 |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| [Core Domain](docs/agents/core-domain.md)                     | Control loop, loadpoint logic, PV surplus, charge modes, tariffs, interfaces |
+| [Hardware Integrations](docs/agents/hardware-integrations.md) | Charger/meter/vehicle implementations, adding new devices                    |
+| [Easee Architecture](docs/agents/easee-architecture.md)       | Easee charger (REST+SignalR, async correlation, concurrency)                 |
+| [OCPP Forwarder](docs/agents/ocpp-forwarder.md)               | OCPP proxy/forwarder (sidecar relay to upstream OCPP server, read-only mode) |
+| [Plugin System](docs/agents/plugin-system.md)                 | Plugin layer (HTTP, MQTT, Modbus, SunSpec, JS)                               |
+| [Web UI & API](docs/agents/web-ui-api.md)                     | REST API, WebSocket, Vue frontend, authentication                            |
+| [API Security](docs/agents/api-security.md)                   | Auth modes, JWT/API key/session, two-tier checks, credential storage         |
+| [Chart Conventions](docs/agents/charts.md)                    | ECharts charts: axis units and scale rules, tooltips, layout                 |
 
 ### Loading guide by task type
 
@@ -43,7 +48,9 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - **Meter implementation** — hardware-integrations + plugin-system
 - **Vehicle implementation** — hardware-integrations
 - **UI/frontend work** — web-ui-api
+- **Chart work (ECharts, axes, tooltips)** — charts + web-ui-api
 - **API endpoint work** — web-ui-api + core-domain
+- **Auth / login / API key / permissions** — api-security + web-ui-api
 - **Config/template work** — plugin-system
 - **Control loop / charging logic** — core-domain
 - **Bug in any area** — core-domain + relevant topic file(s)
@@ -83,6 +90,23 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - **tests/** contains Playwright integration tests and test configuration files
 - **dist/** contains built frontend assets (generated)
 
+## Writing Style
+
+- No em dashes (—) in comments, commit messages, or docs. Use periods, commas, or colons
+- Project name is `evcc`, always lowercase
+- In user-facing strings, only mention `evcc` when needed to understand the context. Inside evcc's own UI the self-reference is usually redundant
+- Acronyms uppercase in prose: OCPP, MQTT, HEMS, SoC
+- Terminology: German "Phasensaldierung" (meter netting signed power across phases each instant) is "summative energy measurement" in English. Avoid "phase balancing" (means load balancing) and "net metering" (a billing scheme)
+- Terminology: the top-level load management circuit is "root circuit" in English, "Hauptstromkreis" in German
+- Commit subjects: `Component: short description`, no trailing period. Sub-scope in parens: `Meter (Home Assistant): ...`. Use `chore:`/`fix:`/`docs:` only for non-feature changes
+
+## Comment Style
+
+- Prefer self-documenting code over comments; comment the _why_, not the _what_
+- Default to no comment. Only add one for a non-obvious constraint, invariant, workaround, or surprising behavior. Keep it to one line, two if necessary
+- Skip refs to the current task, PR, issue, or caller ("added for X flow", "see #1234"). Git history covers that
+- Exception: Go exported identifiers follow godoc convention. Short `// FuncName does X` summary starting with the identifier name
+
 ## Go Coding Standards
 
 ### Core Principles
@@ -94,6 +118,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Use `context.Context` for I/O, long-running, or cancelable operations
 - Organize code into logical packages with clear responsibilities
 - Prefer composition over inheritance, minimize external dependencies
+- Navigate Go symbols with go-to-definition and find-references rather than text search; reserve text search for comments and string literals
 
 ### File Patterns
 
@@ -101,6 +126,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - `_enumer.go` - generated enum code
 - `*_decorators.go` - generated decorator pattern implementations
 - Validate interface implementations: `var _ Interface = (*Type)(nil)`
+- Capabilities: register via `implement.Has`/`May` only when a capability is _conditional_ (runtime/config detection, e.g. `if cp.PhaseSwitching { implement.Has(...) }`). For capabilities present on every code path, declare a plain exported method plus `var _ api.Interface = (*Type)(nil)` instead. `api.Cap` resolves static methods via direct type assertion, so unconditional `implement.Has` is redundant. A type with no conditional capabilities needs neither the `implement.Caps` embed nor `implement.New()`
 
 ### Error Handling
 
@@ -151,10 +177,12 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Implement accessibility features (tabindex, aria-label, keyboard handlers)
 - Use descriptive names for variables, functions, and event handlers
 - Use early returns for readability
+- Prefer named computed properties over inline template expressions, even for single use. Readability beats saving lines
 - Use configured Axios instance for HTTP communication
 
 ### State Management
 
+- Never access the store from sub-components; keep them stateless and pass the values they need as props (emit events back to the parent). Only top-level views read from the store. This keeps components reusable and testable (e.g. Storybook should never mock the store).
 - Use `reactive()` from Vue for simple global state
 - Implement property setters for nested object updates using helper functions
 - Use localStorage with reactive wrappers for persistent settings
@@ -174,6 +202,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 ### Styling & Internationalization
 
 - Use CSS Custom Properties for theming (semantic names: `--evcc-green`, `--evcc-battery`)
+- No inline `style` attributes; use Bootstrap utility classes or scoped CSS (inline only for truly dynamic values)
 - Use existing custom media queries for responsive breakpoints
 - Use `$t()` function for all user-facing strings
 - Update both `i18n/en.json` and `i18n/de.json` for new strings
@@ -183,6 +212,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Use placeholders for dynamic content: `{soc}`, `{duration}`, `{value}`
 - Prefer context-specific keys over generic ones
 - Test with German translations (20-40% longer text)
+- Keep separators and trailing punctuation (`: `, `…`, `—`) in the template, not in the translation value.
 
 ### Testing
 
@@ -211,9 +241,9 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 ### Essential Commands
 
 - Must build before testing executing playwright `make ui build` since it uses the binary. For manual testing assets are build and reloaded automatically (vite dev).
-- Run tests: `npm run playwright` or `npx playwright test`
-- Debug: `npx playwright test --debug`
-- Specific test: `npx playwright test tests/config-loadpoint.spec.ts`
+- Run tests: `vp run playwright` or `vpx playwright test`
+- Debug: `vpx playwright test --debug`
+- Specific test: `vpx playwright test tests/config-loadpoint.spec.ts`
 
 ### Selector Strategy
 
@@ -234,7 +264,9 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Use `expectModalVisible()` and `expectModalHidden()` helpers
 - Test configuration persistence across application restarts
 - Standard structure: import `{ start, stop, baseUrl }` from `./evcc`, use `test.afterEach(stop)`
-- Never use fixed timeouts, use existance of elements or wait for network idle
+- Never use fixed timeouts. Wait on element state (visibility, count, value) instead.
+- Never use `page.waitForLoadState("networkidle")`. SPAs keep emitting requests (websockets, polling), so it either races or hangs. Wait for the specific element / value you need instead.
+- Keep test names and describe titles short and concrete. They should complement each other, not repeat. Prefer `describe("aux meter") test("create")` over `describe("aux meter") test("create aux meter and verify it appears")`. Drop scenario filler like "and lands in section", "appears correctly", "ensure".
 
 ## Device Integration & Configuration
 
@@ -243,8 +275,10 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Device types: chargers, meters, vehicles, tariffs
 - Plugin protocols: Modbus, HTTP, MQTT, JavaScript, Go
 - Define device capabilities and configuration in templates at `templates/definition/[type]/`
+- Don't restate param properties that `util/templates/defaults.yaml` already defines for that param name. Properties (description, help, type, unit, default, example, required, advanced, mask, private, usages, …) are inherited from defaults; only specify a property in a template to give it a _different_ value. Restating the same value is redundant duplication: reference the param by `name` alone.
 - Test templates: `evcc --template-type [type] --template [file]`
 - Update docs after template changes: `make docs`
+- When implementing or debugging against a third-party device library (eebus-go/ship/spine-go, ocpp-go, modbus/SunSpec), consult the library's current upstream documentation before coding rather than relying on recalled API details
 
 ### Configuration
 
@@ -268,4 +302,37 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - Handle concurrent operations safely with Go's concurrency primitives
 - Implement proper caching strategies and connection pooling
 - Avoid blocking operations in main application loop
-- Include appropriate comments for complex business logic
+
+## Pull Request Descriptions
+
+Structure PR descriptions in this order. No headlines. Be concise.
+
+1. **References first line**: link related issues or PRs (`fixes #1123`, `replaces #222`, `pairs with org/repo#345`). PRs should almost always reference an issue or related PR — only skip in rare exceptions (e.g. trivial typo fixes).
+2. **Intro**: one or a few concise sentences framing what the PR does and why it was created this way. The full problem description belongs in the linked issue, not here.
+3. **Bullet list**: most significant changes or user-facing implications. Lead with the most significant.
+4. **TODO section** (only if open points remain):
+
+   ```
+   **TODO**
+   - [ ] item a
+   - [ ] item b
+   ```
+
+Avoid file paths, line numbers, or code listings reproduced from the diff. Include a code snippet only when it conveys the contract (event shape, API signature) more clearly than prose. No testing checklists, no co-author footers.
+
+Never state that `go build`, `go vet`, `go test -race`, or `gofmt` pass (or any "all checks/tests green" phrasing). These are non-negotiable givens that must already be fulfilled, not noteworthy results.
+
+## Pull Request CI and Reviews
+
+- After opening or updating a pull request, watch CI until every check has finished. Work is not done while checks are still running. Fix failures on the same branch and keep watching until the run is green.
+- Do not argue with automated review bots such as Sourcery. Either implement the suggestion or resolve the thread. No rebuttal comments.
+
+## AI Attribution
+
+Work produced by an AI agent must be attributable as such on GitHub. Append the tool's attribution footer to every PR description, issue body, review, and comment written by an agent, for example:
+
+```
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+```
+
+Commit messages are the exception: no footer, and no `Co-Authored-By` trailer. Never dress agent work up as human review (e.g. "PR by an agent but looks good to me") in place of the footer.

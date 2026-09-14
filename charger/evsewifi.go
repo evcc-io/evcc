@@ -229,14 +229,14 @@ func (wb *EVSEWifi) voltages() (float64, float64, float64, error) {
 }
 
 // Identify implements the api.Identifier interface
-func (wb *EVSEWifi) identify() (string, error) {
+func (wb *EVSEWifi) identify() ([]string, error) {
 	params, err := wb.paramG.Get()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// we can rely on RFIDUID != nil here since identify() is only exposed if the EVSE API supports that property
-	return *params.RFIDUID, nil
+	return []string{*params.RFIDUID}, nil
 }
 
 var _ api.Resurrector = (*EVSEWifi)(nil)

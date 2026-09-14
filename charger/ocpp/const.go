@@ -4,10 +4,19 @@ import "time"
 
 var Timeout = time.Minute // default request / response timeout on protocol level
 
-// triggerBootDelay defines how long to wait after WebSocket connect before
+const (
+	heartbeatInterval = time.Minute // heartbeat interval requested in BootNotification
+
+	// pingWait must exceed heartbeatInterval, otherwise chargers not sending
+	// websocket pings are disconnected while idle
+	pingWait = 3 * heartbeatInterval
+)
+
+// TriggerBootDelay defines how long to wait after WebSocket connect before
 // proactively triggering a BootNotification. This allows the connection to
 // stabilize and gives the charger a chance to send a spontaneous BootNotification.
-const triggerBootDelay = 5 * time.Second
+// It is a var so tests can shorten it.
+var TriggerBootDelay = 5 * time.Second
 
 const (
 	// Core profile keys

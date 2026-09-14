@@ -33,7 +33,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		embed                               `mapstructure:",squash"`
 		Status, Enable, Enabled, MaxCurrent plugin.Config
 		MaxCurrentMillis                    *plugin.Config
-		Identify, Phases1p3p                *plugin.Config
+		Identify, Phases1p3p, GetPhases     *plugin.Config
 		Wakeup                              *plugin.Config
 		Soc                                 *plugin.Config
 		LimitSoc                            *plugin.Config
@@ -42,6 +42,8 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		measurement.Temperature             `mapstructure:",squash"` // optional, for heating devices
 		measurement.Energy                  `mapstructure:",squash"` // optional
 		meter.Phases                        `mapstructure:",squash"` // optional
+		meter.Dimmer                        `mapstructure:",squash"` // optional
+		meter.Curtailer                     `mapstructure:",squash"` // optional
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -98,12 +100,30 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		}))
 	}
 
+	// decorate phase getter
+	if cc.GetPhases != nil {
+		getPhasesG, err := cc.GetPhases.IntGetter(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("getphases: %w", err)
+		}
+
+		implement.Has(c, implement.PhaseGetter(func() (int, error) {
+			v, err := getPhasesG()
+			return int(v), err
+		}))
+	}
+
 	// decorate identifier
 	identify, err := cc.Identify.StringGetter(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("identify: %w", err)
 	}
-	implement.May(c, implement.Identifier(identify))
+	if identify != nil {
+		implement.Has(c, implement.Identifier(func() ([]string, error) {
+			id, err := identify()
+			return []string{id}, err
+		}))
+	}
 
 	// decorate wakeup
 	if cc.Wakeup != nil {
@@ -144,13 +164,13 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 	implement.May(c, implement.Battery(soc))
 	implement.May(c, implement.SocLimiter(limitsoc))
 
-	// decorate measurements
-	powerG, energyG, err := cc.Energy.Configure(ctx)
+	powerG, energyG, returnG, err := cc.Energy.Configure(ctx)
 	if err != nil {
 		return nil, err
 	}
 	implement.May(c, implement.Meter(powerG))
 	implement.May(c, implement.MeterEnergy(energyG))
+	implement.May(c, implement.MeterReturnEnergy(returnG))
 
 	currentsG, voltagesG, _, err := cc.Phases.Configure(ctx)
 	if err != nil {
@@ -165,6 +185,14 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		return nil, fmt.Errorf("finishTime: %w", err)
 	}
 	implement.May(c, implement.VehicleFinishTimer(finishTime))
+
+	// dim/curtail
+	if err := cc.Dimmer.Implement(ctx, c); err != nil {
+		return nil, err
+	}
+	if err := cc.Curtailer.Implement(ctx, c); err != nil {
+		return nil, err
+	}
 
 	return c, nil
 }

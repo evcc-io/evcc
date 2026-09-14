@@ -17,6 +17,20 @@ func (ts timeseries) MarshalBytes() ([]byte, error) {
 	return json.Marshal(ts)
 }
 
+// MarshalJSON publishes entries as [ts, val] with the timestamp in unix seconds
+func (ts timeseries) MarshalJSON() ([]byte, error) {
+	if ts == nil {
+		return []byte("null"), nil
+	}
+
+	res := make([][]float64, 0, len(ts))
+	for _, e := range ts {
+		res = append(res, []float64{float64(e.Timestamp.Unix()), e.Value})
+	}
+
+	return json.Marshal(res)
+}
+
 type tsEntry struct {
 	Timestamp time.Time `json:"ts"`
 	Value     float64   `json:"val"`
@@ -51,6 +65,11 @@ func solarEnergy(rr api.Rates, from, to time.Time) float64 {
 		panic("from cannot be after to")
 	}
 
+	// no rates- nothing to integrate
+	if len(rr) == 0 {
+		return 0
+	}
+
 	idx, ok := search(rr, from)
 	if !ok {
 		switch {
@@ -58,8 +77,11 @@ func solarEnergy(rr api.Rates, from, to time.Time) float64 {
 			// from is just before or after last entry
 			return 0
 		case idx == 0:
-			// from is before first entry
-			// do nothing- we ignore anything before the first entry
+			// from is before first entry- we ignore anything before the first entry
+			if !rr[0].Start.Before(to) {
+				// the whole interval is before the first entry
+				return 0
+			}
 		default:
 			// from is between two entries
 			r := &rr[idx]

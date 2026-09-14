@@ -2,6 +2,7 @@ template: evsewifi
 products:
   - description:
       generic: EVSE-WiFi
+capabilities: ["dim"]
 params:
   - name: host
 render: |

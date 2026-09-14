@@ -44,6 +44,7 @@ var (
 // StatusError indicates unsuccessful http response
 type StatusError struct {
 	resp *http.Response
+	body []byte
 }
 
 func NewStatusError(resp *http.Response) *StatusError {
@@ -58,6 +59,11 @@ func (e *StatusError) Error() string {
 // Response returns the response with the unexpected error
 func (e *StatusError) Response() *http.Response {
 	return e.resp
+}
+
+// Body returns the error response body if it has been read
+func (e *StatusError) Body() []byte {
+	return e.body
 }
 
 // StatusCode returns the response's status code
@@ -82,12 +88,13 @@ func ResponseError(resp *http.Response) error {
 func ReadBody(resp *http.Response) ([]byte, error) {
 	defer resp.Body.Close()
 
-	if err := ResponseError(resp); err != nil {
-		b, _ := io.ReadAll(resp.Body)
-		return b, err
+	b, err := io.ReadAll(resp.Body)
+
+	// keep the body on the error so callers can inspect the device's error response
+	if c := resp.StatusCode; c < 200 || c >= 300 {
+		return b, backoff.Permanent(&StatusError{resp: resp, body: b})
 	}
 
-	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return []byte{}, err
 	}

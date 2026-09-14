@@ -1,6 +1,6 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["env.d.ts", "assets/js/**/*", "tests/**/*"],
+  "include": ["env.d.ts", "assets/js/**/*", "tests/**/*", "scripts/**/*"],
   "compilerOptions": {
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
@@ -9,16 +9,9 @@
     "noPropertyAccessFromIndexSignature": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "composite": true,
     "allowJs": true,
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["assets/js/*"]
-    },
-    "plugins": [
-      {
-        "name": "typescript-eslint-language-service"
-      }
-    ]
+      "@/*": ["./assets/js/*"]
+    }
   }
 }

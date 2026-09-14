@@ -25,6 +25,7 @@ export const LOCALES = {
   ja: ["Japanese", "日本語"],
   lb: ["Luxembourgish", "Lëtzebuergesch"],
   lt: ["Lithuanian", "Lietuvių"],
+  lv: ["Latvian", "Latviešu"],
   nl: ["Dutch", "Nederlands"],
   no: ["Norwegian", "Norsk"],
   pl: ["Polish", "Polski"],
@@ -45,7 +46,9 @@ const htmlLang = document.querySelector("html")?.getAttribute("lang");
 const DEFAULT_BROWSER_LOCALE = htmlLang?.length == 2 ? htmlLang : DEFAULT_LOCALE;
 
 export function getLocalePreference() {
-  return settings.locale;
+  // ignore unknown values, a broken locale would crash every Intl formatter
+  const locale = settings.locale;
+  return locale && locale in LOCALES ? locale : null;
 }
 
 export function removeLocalePreference(i18n: VueI18nInstance) {
@@ -109,7 +112,6 @@ export async function ensureCurrentLocaleMessages(i18n: VueI18nInstance) {
 }
 
 export function docsPrefix() {
-  const locale = getLocale();
-  const path = locale === "de" ? "" : `/en`;
-  return `https://docs.evcc.io${path}`;
+  const lang = getLocale() === "de" ? "de" : "en";
+  return `https://docs.evcc.io/${lang}`;
 }

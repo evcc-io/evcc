@@ -72,6 +72,33 @@ test.describe("vehicles", async () => {
     await expect(page.getByTestId("vehicle")).toHaveCount(0);
   });
 
+  test("prevent accidental dismiss with unsaved changes", async ({ page }) => {
+    await start();
+
+    await page.goto("/#/config");
+    const vehicleModal = page.getByTestId("vehicle-modal");
+
+    // clean: backdrop click closes
+    await page.getByTestId("add-vehicle").click();
+    await expectModalVisible(vehicleModal);
+    await vehicleModal.click({ position: { x: 10, y: 10 } });
+    await expectModalHidden(vehicleModal);
+
+    // dirty: backdrop click and ESC keep modal open
+    await page.getByTestId("add-vehicle").click();
+    await expectModalVisible(vehicleModal);
+    await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
+    await vehicleModal.getByLabel("Title").fill("Green Car");
+    await vehicleModal.click({ position: { x: 10, y: 10 } });
+    await expectModalVisible(vehicleModal);
+    await page.keyboard.press("Escape");
+    await expectModalVisible(vehicleModal);
+
+    // close button works while dirty
+    await vehicleModal.getByLabel("Close").click();
+    await expectModalHidden(vehicleModal);
+  });
+
   test("config should survive restart", async ({ page }) => {
     await start();
 
@@ -145,26 +172,50 @@ test.describe("vehicles", async () => {
     await expect(vehicleModal.getByLabel("Battery capacity")).toBeVisible();
 
     await page.getByRole("button", { name: "Show advanced settings" }).click();
-    await expect(vehicleModal.getByLabel("Default mode")).toBeVisible();
-    await expect(vehicleModal.getByLabel("Maximum phases: 3-phases")).toBeVisible();
+    await expect(vehicleModal.getByLabel("Default charging mode")).not.toBeVisible(); // deprecated
+    await expect(vehicleModal.getByLabel("Maximum number of phases")).toBeVisible();
     await expect(vehicleModal.getByLabel("Minimum current")).toBeVisible();
     await expect(vehicleModal.getByLabel("Maximum current")).toBeVisible();
+    await expect(vehicleModal.getByLabel("Maximum charging power hint")).toBeVisible();
     await expect(vehicleModal.getByLabel("Priority")).toBeVisible();
-    await expect(vehicleModal.getByLabel("RFID identifiers")).toBeVisible();
+    await expect(vehicleModal.getByLabel("RFID identification")).toBeVisible();
 
     await page.getByRole("button", { name: "Hide advanced settings" }).click();
-    await expect(vehicleModal.getByLabel("Default mode")).not.toBeVisible();
+    await expect(vehicleModal.getByLabel("Maximum number of phases")).not.toBeVisible();
 
     // polestar template
     await vehicleModal.getByLabel("Manufacturer").selectOption("Polestar");
     await expect(vehicleModal.getByLabel("Username")).toBeVisible();
     await expect(vehicleModal.getByLabel("Password")).toBeVisible();
     await expect(vehicleModal.getByLabel("Cache optional")).not.toBeVisible();
-    await expect(vehicleModal.getByLabel("Default mode")).not.toBeVisible();
+    await expect(vehicleModal.getByLabel("Default charging mode")).not.toBeVisible();
 
     await page.getByRole("button", { name: "Show advanced settings" }).click();
     await expect(vehicleModal.getByLabel("Cache optional")).toBeVisible();
-    await expect(vehicleModal.getByLabel("Default mode")).toBeVisible();
+    await expect(vehicleModal.getByLabel("Default charging mode")).not.toBeVisible(); // deprecated
+  });
+
+  test("migrate deprecated mode property to default mode setting", async ({ page }) => {
+    await start("config-one-lp.evcc.yaml", "vehicle-mode-migrate.sql");
+
+    await page.goto("/");
+
+    const lp = page.getByTestId("loadpoint").first();
+    await lp.getByTestId("change-vehicle").locator("select").selectOption("Grey Car");
+
+    // migrated mode is applied on vehicle selection
+    await expect(lp.getByTestId("mode").getByRole("button", { name: "Fast" })).toHaveClass(
+      /active/
+    );
+
+    const moreTab = page.getByTestId("tab-more");
+    await moreTab.click();
+    await moreTab.getByRole("button", { name: "Vehicles" }).click();
+    const modal = page.getByTestId("vehicle-settings-modal");
+    await expectModalVisible(modal);
+    await expect(
+      modal.getByRole("group", { name: "Grey Car" }).getByRole("combobox", { name: "Default mode" })
+    ).toHaveValue("now");
   });
 
   test("save and restore rfid identifiers", async ({ page }) => {
@@ -180,7 +231,7 @@ test.describe("vehicles", async () => {
     await vehicleModal.getByLabel("Manufacturer").selectOption(GENERIC_VEHICLE);
     await vehicleModal.getByLabel("Title").fill("RFID Car");
     await page.getByRole("button", { name: "Show advanced settings" }).click();
-    await vehicleModal.getByLabel("RFID identifiers").fill("aaa\nbbb \n ccc\n\nddd\n");
+    await vehicleModal.getByLabel("RFID identification").fill("aaa\nbbb \n ccc\n\nddd\n");
     await vehicleModal.getByRole("button", { name: "Validate & save" }).click();
     await expectModalHidden(vehicleModal);
     await expect(page.getByTestId("restart-needed")).toBeVisible();
@@ -193,7 +244,7 @@ test.describe("vehicles", async () => {
     await page.getByTestId("vehicle").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(vehicleModal);
     await vehicleModal.getByRole("button", { name: "Show advanced settings" }).click();
-    await expect(vehicleModal.getByLabel("RFID identifiers")).toHaveValue("aaa\nbbb\nccc\nddd");
+    await expect(vehicleModal.getByLabel("RFID identification")).toHaveValue("aaa\nbbb\nccc\nddd");
     await vehicleModal.getByLabel("Close").click();
     await expectModalHidden(vehicleModal);
     await expect(page.getByTestId("fatal-error")).not.toBeVisible();

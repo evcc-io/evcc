@@ -15,7 +15,7 @@
 				:label="$t('config.control.labelInterval')"
 				:help="$t('config.control.descriptionInterval')"
 				example="30 s"
-				docsLink="/docs/reference/configuration/interval"
+				docsLink="/reference/configuration/interval"
 			>
 				<div class="input-group input-width">
 					<input
@@ -37,7 +37,7 @@
 				:label="$t('config.control.labelResidualPower')"
 				:help="$t('config.control.descriptionResidualPower')"
 				example="100 W"
-				docsLink="/docs/reference/configuration/site#residualpower"
+				docsLink="/reference/configuration/site#residualpower"
 			>
 				<div class="input-group input-width">
 					<input

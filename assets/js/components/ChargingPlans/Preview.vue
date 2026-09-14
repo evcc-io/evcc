@@ -126,7 +126,7 @@ export default defineComponent({
 			return null;
 		},
 		targetOffset(): number | undefined {
-			if (!this.targetTime) return;
+			if (!this.targetTime) return undefined;
 			const start = new Date(this.startTime);
 			start.setMinutes(start.getMinutes() - (start.getMinutes() % 15));
 			start.setSeconds(0);

@@ -19,7 +19,7 @@ func handleCurtailFlag(cmd *cobra.Command, v any) bool {
 	}
 
 	if vv, ok := api.Cap[api.Curtailer](v); ok {
-		if err := vv.Curtail(val > 0); err != nil {
+		if err := vv.SetCurtailPercent(val); err != nil {
 			log.ERROR.Println("curtail:", err)
 		}
 	} else {

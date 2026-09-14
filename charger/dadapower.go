@@ -1,5 +1,22 @@
 package charger
 
+// LICENSE
+
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 import (
 	"context"
 	"encoding/binary"
@@ -20,6 +37,7 @@ const (
 	dadapowerRegChargingAllowed     = 1000
 	dadapowerRegChargeCurrentLimit  = 1001
 	dadapowerRegActivePhases        = 1002
+	dadapowerRegVolts               = 1003
 	dadapowerRegCurrents            = 1006
 	dadapowerRegActiveEnergy        = 1009
 	dadapowerRegChargingPortState   = 1015
@@ -48,12 +66,12 @@ func NewDadapowerFromConfig(ctx context.Context, other map[string]any) (api.Char
 		return nil, err
 	}
 
-	return NewDadapower(ctx, cc.URI, cc.ID)
+	return NewDadapower(ctx, cc)
 }
 
 // NewDadapower creates a Dadapower charger
-func NewDadapower(ctx context.Context, uri string, id uint8) (*Dadapower, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewDadapower(ctx context.Context, settings modbus.TcpSettings) (*Dadapower, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -76,8 +94,8 @@ func NewDadapower(ctx context.Context, uri string, id uint8) (*Dadapower, error)
 	}
 
 	// The charging station may have multiple charging ports - use offset for register addresses for each port
-	if id > 1 {
-		wb.regOffset = (uint16(id) - 1) * 1000
+	if settings.ID > 1 {
+		wb.regOffset = (uint16(settings.ID) - 1) * 1000
 	}
 
 	go wb.heartbeat(ctx)
@@ -225,6 +243,21 @@ func (wb *Dadapower) Currents() (float64, float64, float64, error) {
 	return res[0], res[1], res[2], nil
 }
 
+// Voltages implements the api.PhaseVoltages interface
+func (wb *Dadapower) Voltages() (float64, float64, float64, error) {
+	b, err := wb.conn.ReadInputRegisters(dadapowerRegVolts+wb.regOffset, 3)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	var res [3]float64
+	for i := range res {
+		res[i] = float64(binary.BigEndian.Uint16(b[2*i:])) / 100
+	}
+
+	return res[0], res[1], res[2], nil
+}
+
 var _ api.PhaseSwitcher = (*Dadapower)(nil)
 
 // Phases1p3p implements the api.PhaseSwitcher interface
@@ -258,13 +291,13 @@ func (wb *Dadapower) Phases1p3p(phases int) error {
 var _ api.Identifier = (*Dadapower)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *Dadapower) Identify() (string, error) {
+func (wb *Dadapower) Identify() ([]string, error) {
 	u, err := wb.conn.ReadInputRegisters(dadapowerRegIdentification+wb.regOffset, 20)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return bytesAsString(u), nil
+	return []string{bytesAsString(u)}, nil
 }
 
 var _ api.Diagnosis = (*Dadapower)(nil)

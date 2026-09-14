@@ -19,40 +19,88 @@
     "successCloseTab": "Du kannst diesen Tab jetzt schließen.",
     "title": "Autorisierungsstatus"
   },
-  "batterySettings": {
-    "batteryLevel": "Ladestand der Batterie",
-    "bufferStart": {
-      "above": "wenn über {soc}.",
-      "full": "wenn auf {soc}.",
-      "never": "nur mit genug PV-Überschuss."
+  "battery": {
+    "card": {
+      "charging": "lädt",
+      "discharging": "entlädt",
+      "energy": "Energie",
+      "gridCharge": "Netzladen",
+      "hold": "Entladesperre",
+      "holdCharge": "Ladesperre",
+      "ofTotal": "von {total}",
+      "power": "Leistung",
+      "soc": "Ladestand"
     },
-    "capacity": "{energy} von {total}",
-    "control": "Batteriesteuerung",
-    "discharge": "Verhindere Entladung im Schnell-Modus und bei geplantem Laden.",
-    "disclaimerHint": "Hinweis:",
-    "disclaimerText": "Nur relevant im PV-Modus. Das Ladeverhalten wird entsprechend angepasst.",
+    "combined": "Gesamt",
+    "config": {
+      "buffer": "Hausspeicherenergie oberhalb von {soc} darf für die Unterstützung der Ladepunkte genutzt werden und zögert die Abschaltung im Smart-Modus hinaus. PV-Ladung automatisch starten {start}.",
+      "bufferNone": "Hausspeicherenergie wird nicht für die Ladepunkte genutzt. Setze einen Wert unter {soc}, um die Unterstützung zu aktivieren.",
+      "bufferStart": {
+        "above": "ab einem Speicherstand von {soc}",
+        "full": "erst, wenn der Speicher voll ist",
+        "never": "nur mit genug Überschuss"
+      },
+      "bufferTitle": "Batterie als Ladepuffer",
+      "discharge": "Entladung der Hausbatterie im Schnell-Modus und bei geplantem Laden verhindern.",
+      "gridDischarge": "Die Entladung der Hausbatterie ins Stromnetz zulassen.",
+      "priority": "Hausspeicher hat Vorrang, solange er unter {soc} liegt. Dann erhalten die Ladepunkte den Überschuss.",
+      "priorityNone": "Sonnenüberschuss geht direkt an die Ladepunkte. Setze einen Wert über {soc}, um den Hausspeicher zu bevorzugen.",
+      "priorityTitle": "Wohin geht der Überschuss zuerst?"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Aus dem Netz laden",
+        "discharge": "Einspeisung ins Netz",
+        "hold": "Entladen verhindern",
+        "holdcharge": "Laden verhindern",
+        "normal": "Normaler Betrieb"
+      },
+      "empty": "leer",
+      "full": "voll",
+      "highest": "Höchststand ({value})",
+      "lowest": "Tiefststand ({value})",
+      "suggestion": "Vorschlag"
+    }
+  },
+  "batterySettings": {
     "gridChargeTab": "Netzladen",
-    "legendBottomName": "Priorisiere die Hausbatterie",
-    "legendBottomSubline": "bis sie {soc} erreicht hat.",
-    "legendMiddleName": "Priorisiere Fahrzeugladen,",
-    "legendMiddleSubline": "wenn Hausbatterie über {soc} ist.",
-    "legendTopAutostart": "Starte automatisch",
-    "legendTopName": "Batterieunterstütztes Fahrzeugladen",
-    "legendTopSubline": "wenn Hausbatterie über {soc} ist.",
-    "legendTopSublineAbove": "wenn über {soc}",
-    "legendTopSublineDisabled": "ist {soc}.",
-    "legendTopSublineDisabledState": "deaktiviert",
+    "gridDischargeTab": "Netzentladen",
     "modalTitle": "Hausbatterie",
     "noBattery": "Keine Batterien konfiguriert.",
     "usageTab": "Batterienutzung"
   },
+  "colors": {
+    "auto": "Auto",
+    "hex": "Hex-Farbe"
+  },
   "config": {
+    "adminPassword": {
+      "description": "Das Skript-Plugin führt einen Befehl auf Systemebene aus, der mit den Rechten des evcc-Prozesses läuft. Gib dein Administrator-Passwort erneut ein, um fortzufahren.",
+      "invalid": "Ungültiges Passwort. Bitte versuche es erneut.",
+      "title": "Potenziell gefährliche Aktion"
+    },
+    "apiKey": {
+      "description": "Gibt Skripten und Automatisierungsaufgaben wie geplanten Backups sicheren Zugriff, ohne dein Administrator-Passwort zu teilen.",
+      "exampleLabel": "Ausprobieren: Backup mit curl herunterladen",
+      "generate": "API-Schlüssel erstellen",
+      "generateConfirm": "Gib dein Administrator-Passwort ein, um einen neuen API-Schlüssel zu erstellen.",
+      "keyLabel": "API-Schlüssel",
+      "regenerate": "API-Schlüssel neu erstellen",
+      "regenerateConfirm": "Gib dein Administrator-Passwort ein, um den API-Schlüssel neu zu erstellen.",
+      "regenerateLink": "Neu erstellen",
+      "regenerateWarning": "Beim Neuerstellen wird der bestehende Schlüssel ungültig und Automatisierungen, die ihn nutzen, funktionieren nicht mehr. Fortfahren?",
+      "revealSuccess": "Dein neuer API-Schlüssel ist einsatzbereit.",
+      "revealTitle": "API-Schlüssel erstellt",
+      "shownOnce": "Dieser Schlüssel wird nur einmal angezeigt. Bewahre ihn sicher auf. Du kannst ihn später nicht erneut abrufen.",
+      "title": "API-Schlüssel"
+    },
     "aux": {
       "description": "Gerät, das seinen Verbrauch basierend auf verfügbarem Überschuss (z. B. smarter Heizstab) selbstständig anpasst. evcc erwartet, dass dieses Gerät selbstständig seine Leistungsaufnahme reduziert, wenn es notwendig ist.",
       "titleAdd": "Intelligenten Verbraucher hinzufügen",
       "titleEdit": "Intelligenten Verbraucher bearbeiten"
     },
     "battery": {
+      "title": "Batterie",
       "titleAdd": "Batterie hinzufügen",
       "titleEdit": "Batterie bearbeiten"
     },
@@ -78,16 +126,16 @@
       "template": "Hersteller",
       "titleAdd": {
         "charging": "Wallbox hinzufügen",
-        "heating": "Heizung hinzufügen"
+        "heating": "Heizgerät hinzufügen"
       },
       "titleEdit": {
         "charging": "Wallbox bearbeiten",
-        "heating": "Heizung bearbeiten"
+        "heating": "Heizgerät bearbeiten"
       },
       "type": {
         "custom": {
           "charging": "Benutzerdefinierte Wallbox",
-          "heating": "Benutzerdefinierte Heizung"
+          "heating": "Benutzerdefiniertes Heizgerät"
         },
         "heatpump": "Benutzerdefinierte Wärmepumpe",
         "sgready": "Benutzerdefinierte Wärmepumpe (sg-ready über Plugins)",
@@ -100,6 +148,11 @@
       "description": "Stellt sicher, dass die Summe aller Ladepunkte, die an einen Stromkreis angeschlossen sind, die konfigurierten Leistungs- und Stromgrenzen nicht überschreitet. Stromkreise können verschachtelt werden, um eine Hierarchie aufzubauen.",
       "title": "Lastmanagement",
       "usableMeters": "Verwendbare Zählerreferenzen"
+    },
+    "consumer": {
+      "description": "Erfasst kleinere, nicht steuerbare Verbraucher (Kühlschrank, Waschmaschine, ...). So bekommst du einen besseren Überblick über deinen Hausverbrauch.",
+      "titleAdd": "Verbrauchszähler hinzufügen",
+      "titleEdit": "Verbrauchszähler bearbeiten"
     },
     "control": {
       "description": "Normalerweise sind die Standardwerte in Ordnung. Ändere nur etwas, wenn du weißt, was du tust.",
@@ -115,9 +168,19 @@
       "label": "Währung",
       "title": "Währung"
     },
+    "curtailer": {
+      "description": "Gerät, das die Einspeisung auf Anforderung des Netzbetreibers begrenzt (§ 9 EEG). Viele Wechselrichter unterstützen dies direkt über ihre PV-Zähler-Konfiguration. Eine separate Konfiguration ist nur bei manchen Herstellern oder Anlagen mit mehreren Wechselrichtern nötig.",
+      "generic": "Generische Integrationen",
+      "specific": "Spezifische Integrationen",
+      "template": "Hersteller",
+      "title": "Einspeisebegrenzung",
+      "titleAdd": "Einspeisebegrenzung hinzufügen",
+      "titleEdit": "Einspeisebegrenzung bearbeiten"
+    },
     "deviceValue": {
       "activeClients": "Aktive Clients",
       "amount": "Anzahl",
+      "asleep": "schläft",
       "broker": "Broker",
       "bucket": "Bucket",
       "capacity": "Kapazität",
@@ -127,7 +190,7 @@
       "chargeStatusC": "lädt",
       "chargeStatusE": "Keine Leistung",
       "chargeStatusF": "Fehler",
-      "chargedEnergy": "Geladen",
+      "chargedEnergy": "Geladen (Session)",
       "co2": "Netz-CO₂",
       "configured": "Konfiguriert",
       "connected": "Verbunden",
@@ -136,18 +199,20 @@
       "currency": "Währung",
       "current": "Strom",
       "currentRange": "Strom",
-      "curtailed": "Einspeisung begrenzt",
+      "curtailLimit": "Einspeiselimit",
+      "curtailable": "Abregelbar",
+      "curtailed": "Einspeiselimit",
       "detected": "Erkannt",
+      "dimLimit": "Verbrauchslimit",
       "dimmed": "Verbrauch begrenzt",
       "enabled": "Ladebereit",
       "energy": "Energie",
       "events": "Ereignisse",
+      "exportLimit": "Einspeiselimit",
       "feedinPrice": "Einspeisevergütung",
       "forecast": "Vorhersage",
       "gridPrice": "Netzpreis",
       "heaterTempLimit": "Heizungslimit",
-      "hemsActiveLimit": "Aktives Limit",
-      "hemsType": "Kommunikation",
       "identifier": "RFID-Kennung",
       "loginBlocked": "Login-Limit erreicht",
       "max": "max",
@@ -155,6 +220,7 @@
       "no": "Nein",
       "odometer": "Kilometerstand",
       "org": "Organisation",
+      "outdoorTemp": "Außentemperatur",
       "phaseCurrents": "Strom",
       "phasePowers": "Leistung",
       "phaseVoltages": "Spannung",
@@ -162,13 +228,42 @@
       "power": "Leistung",
       "powerRange": "Leistung",
       "price": "Preis",
+      "productionLimited": "Erzeugung begrenzt",
       "range": "Reichweite",
+      "remoteEnabled": "Aktiviert",
+      "returnEnergy": "Energie (rückwärts)",
       "singlePhase": "Einphasig",
       "soc": "Ladestand",
       "solarForecast": "PV-Vorhersage",
+      "switchDevice": "Stromregelung",
       "temp": "Temperatur",
       "topic": "Thema",
       "url": "URL",
+      "usage": {
+        "aux": {
+          "energy": "Verbraucht",
+          "returnEnergy": "Erzeugt"
+        },
+        "battery": {
+          "energy": "Entladen",
+          "returnEnergy": "Geladen"
+        },
+        "charge": {
+          "energy": "Geladen",
+          "returnEnergy": "Entladen"
+        },
+        "consumer": {
+          "energy": "Verbraucht",
+          "returnEnergy": "Erzeugt"
+        },
+        "grid": {
+          "energy": "Bezogen",
+          "returnEnergy": "Eingespeist"
+        },
+        "pv": {
+          "energy": "Erzeugt"
+        }
+      },
       "vehicleLimitSoc": "Ladelimit",
       "yes": "Ja"
     },
@@ -177,13 +272,9 @@
       "B": "B (verbunden)",
       "C": "C (lädt)"
     },
-    "deviceValueHemsType": {
-      "eebus": "via EEBus",
-      "relay": "via Relais"
-    },
     "devices": {
       "auxMeter": "Smarter Verbraucher",
-      "batteryStorage": "Batterie",
+      "batteryStorage": "Batteriespeicher",
       "consumer": "Verbraucher",
       "solarSystem": "PV-Anlage"
     },
@@ -196,13 +287,21 @@
         "public": "Öffentliches Zertifikat",
         "title": "Zertifikate"
       },
+      "configuredDevices": "Konfigurierte Geräte",
       "description": "Konfiguration zur Kommunikation mit EEBus-kompatiblen Geräten wie Wallboxen oder dem Steuergerät des Netzbetreibers. Alle notwendigen Initialisierungen und die Zertifikatsgenerierung erfolgen automatisch beim ersten Start.",
       "descriptionAdvanced": "Keine Änderungen erforderlich. Bei Änderung ist Neukoppelung aller Geräte erforderlich.",
       "interfaces": "Schnittstellen",
       "interfacesHelp": "Begrenzt die Netzwerkschnittstellen, die EEBus nutzen soll, um Kommunikationsprobleme zu vermeiden. Feld leer lassen, um alle Schnittstellen zu verwenden. Ein Eintrag pro Zeile.",
+      "noConfiguredDevices": "Keine per SKI konfigurierten Geräte.",
+      "noPairings": "Keine gekoppelten Geräte.",
+      "pairings": "Gekoppelte Geräte",
       "port": "Port",
       "portHelp": "Der zu verwendende Port.",
+      "qr": "Kopplungscode",
+      "qrExplain": "Während der Installation von einem anderen EEBus-Gerät scannen, um automatisch zu koppeln, ohne die SKI manuell einzugeben.",
       "removeConfirm": "Die gesamte EEBus-Konfiguration wird entfernt. Neue Zertifikate und Kennungen werden beim nächsten Start generiert. Bist du sicher?",
+      "removePairing": "Kopplung entfernen",
+      "removePairingConfirm": "Die Verbindung zum Gerät wird getrennt und es muss neu gekoppelt werden. Bist du sicher?",
       "shipid": "SHIP-ID",
       "shipidExplain": "Permanente Gerätekennung zur Identifikation im EEBus-Netzwerk.",
       "shipidHelp": "Diese SHIP-ID ist mit den unten stehenden Zertifikaten verknüpft.",
@@ -215,13 +314,14 @@
       "title": "Experimentell"
     },
     "ext": {
-      "description": "Erfasst Energiewerte ungeregelter Verbraucher (bspw. Kühlschrank, Waschmaschine, etc.) für Statistikzwecke. Diese Zähler können auch für Lastmanagement verwendet werden (bspw. Unterverteilung).",
-      "titleAdd": "Verbrauchszähler hinzufügen",
-      "titleEdit": "Verbrauchszähler bearbeiten"
+      "description": "Erfasst Zähler, die nicht für Regelung oder Anzeige verwendet werden (Unterverteilungen, alternative Netz- oder PV-Zähler, ...). Ihre Daten werden geloggt und wie andere Zähler exportiert.",
+      "titleAdd": "Zusätzlichen Zähler hinzufügen",
+      "titleEdit": "Zusätzlichen Zähler bearbeiten"
     },
     "form": {
       "danger": "Achtung",
       "deprecated": "veraltet",
+      "durationUnit": "Zeiteinheit für {label}",
       "example": "Beispiel",
       "optional": "optional"
     },
@@ -234,17 +334,22 @@
       "change": "Ändern",
       "clear": "Löschen",
       "close": "Schließen",
+      "confirmDisable": "Dieses Gerät deaktivieren? Es wird nach dem nächsten Neustart ignoriert.",
+      "confirmEnable": "Dieses Gerät wieder aktivieren?",
       "confirmSave": "Es gibt ungespeicherte Änderungen. Jetzt speichern?",
       "copied": "Kopiert!",
       "copy": "Kopieren",
       "customHelp": "Erstelle ein benutzerdefiniertes Gerät mit evcc's Plugin-System.",
       "customOption": "Benutzerdefiniertes Gerät",
       "delete": "Löschen",
+      "disable": "Deaktivieren",
+      "disabled": "deaktiviert",
       "dismiss": "Ausblenden",
       "docsLink": "Siehe Dokumentation.",
       "dragHandle": "Verschieben",
       "dragItem": "Verschiebbar: {title}",
       "dragList": "Sortierbare Liste",
+      "enable": "Aktivieren",
       "error": "Fehler",
       "experimental": "Experimentell",
       "forceSave": "Trotzdem speichern",
@@ -252,10 +357,10 @@
       "hideAdvancedSettings": "Erweiterte Einstellungen ausblenden",
       "invalidFileSelected": "Ungültige Datei ausgewählt",
       "legacy": "veraltet",
+      "moreInfo": "Mehr Infos:",
       "noFileSelected": "Keine Datei ausgewählt.",
       "off": "aus",
       "on": "an",
-      "password": "Passwort",
       "readFromFile": "Aus Datei lesen",
       "remove": "Entfernen",
       "required": "erforderlich",
@@ -277,6 +382,7 @@
       "titleEdit": "Netzzähler bearbeiten"
     },
     "hems": {
+      "changeConfirm": "Bestehende Konfiguration wird gelöscht. Fortfahren?",
       "csv": {
         "created": "Startzeit",
         "finished": "Endzeit",
@@ -284,11 +390,26 @@
         "limitpower": "Limit (kW)",
         "type": "Typ"
       },
-      "description": "Leistungsbegrenzung durch externe Systeme (z.B. §14a EnWG, §9 EEG Schnittstelle oder übergeordnetes Energiemanagementsystem). Spielt mit dem Lastmanagement Feature zusammen.",
-      "downloadCsv": "CSV herunterladen",
+      "customOption": "Benutzerdefinierte Integration",
+      "description": "Leistungsbegrenzung durch externe Systeme (z.B. §14a EnWG, §9 EEG Schnittstelle oder übergeordnetes Energiemanagementsystem). Spielt mit dem Lastmanagement Feature zusammen. Das Abregeln der Solarproduktion wird ebenfalls für ausgewählte Geräte unterstützt. Der konkrete Abregelungswert muss in der jeweiligen Wechselrichter-Konfiguration eingestellt werden.",
+      "download": "Download",
+      "dynamicLimits": "Dynamische Limits",
       "eventsRecorded": "{count} Netzbegrenzungen gespeichert.",
-      "lastEvent": "Zuletzt {timeAgo}.",
-      "title": "Externe Begrenzung"
+      "exportLimit": "Einspeiselimit",
+      "exportLimitDescription": "Der Batterie-Optimierer berücksichtigt dieses Limit um Solarverluste zu vermeiden. Eine aktive Abregelung durch eine Integration der dynamischen Limits hat Vorrang.",
+      "exportLimitHint": "Statische Einspeisegrenze am Netzanschlusspunkt.",
+      "generic": "Generische Integrationen",
+      "integrations": "Integrationen",
+      "lastEvent": "Letzter Eintrag {timeAgo}.",
+      "noEvents": "Es wurden noch keine Ereignisse aufgezeichnet.",
+      "recordedEvents": "Aufgezeichnete Ereignisse",
+      "staticLimits": "Statische Limits",
+      "template": "Integration",
+      "title": "Externe Begrenzung",
+      "type": {
+        "custom": "Benutzerdefinierte Integration",
+        "relay": "Benutzerdefinierte Integration (Relais)"
+      }
     },
     "icon": {
       "change": "ändern",
@@ -313,38 +434,44 @@
     "loadpoint": {
       "addCharger": {
         "charging": "Wallbox hinzufügen",
-        "heating": "Heizung hinzufügen"
+        "heating": "Heizgerät hinzufügen"
       },
       "addMeter": "Zusätzlichen Energiezähler hinzufügen",
+      "advancedConfig": "Erweiterte Konfiguration",
       "cancel": "Abbrechen",
       "chargerError": {
         "charging": "Wallbox muss konfiguriert sein.",
-        "heating": "Heizung muss konfiguriert sein."
+        "heating": "Heizgerät muss konfiguriert sein."
       },
       "chargerLabel": {
         "charging": "Wallbox",
-        "heating": "Heizung"
+        "heating": "Heizgerät"
       },
-      "chargerPower11kw": "11 kW",
-      "chargerPower11kwHelp": "Verwendet einen Strombereich von 6 bis 16 A.",
-      "chargerPower22kw": "22 kW",
-      "chargerPower22kwHelp": "Verwendet einen Strombereich von 6 bis 32 A.",
-      "chargerPowerCustom": "andere",
-      "chargerPowerCustomHelp": "Definiere einen eigenen Strombereich.",
-      "chargerTypeLabel": "Ladetyp",
       "chargingTitle": "Verhalten",
       "circuitHelp": "Lastmanagement-Zuordnung, um die Leistungs- und Stromgrenzen nicht zu überschreiten.",
       "circuitInvalid": "Stromkreis existiert nicht",
       "circuitLabel": "Stromkreis",
       "circuitUnassigned": "nicht zugewiesen",
+      "created": "„{name}“ wurde angelegt und verwendet sinnvolle Standardwerte.",
+      "createdTitle": {
+        "charging": "Ladepunkt erstellt",
+        "heating": "Heizung erstellt"
+      },
+      "creating": {
+        "charging": "Wallbox gespeichert. Ladepunkt wird erstellt …",
+        "heating": "Heizgerät gespeichert. Heizung wird erstellt …"
+      },
+      "currentRangeHelp": {
+        "charging": "Typisch: 6-16 A bei 11 kW, 6-32 A bei 22 kW Wallboxen (3-phasig).",
+        "heating": "Abhängig von der Nennleistung des Heizgeräts (siehe Datenblatt)."
+      },
       "defaultModeHelp": {
         "charging": "Lademodus beim Anschließen des Fahrzeugs.",
         "heating": "Wird beim Systemstart gesetzt."
       },
       "defaultModeHelpKeep": "Zuletzt ausgewählter Modus wird beibehalten.",
+      "defaultModeKeep": "beibehalten",
       "defaultModeLabel": "Standard-Modus",
-      "defaultsHint": "Standardmodus, PV-Überschussverhalten und elektrische Details verwenden sinnvolle Standardwerte.",
-      "defaultsHintLink": "Einstellungen anpassen",
       "delete": "Löschen",
       "electricalSubtitle": "Im Zweifelsfall Elektriker fragen.",
       "electricalTitle": "Elektrik",
@@ -353,12 +480,15 @@
       "estimateLabel": "Ladestand zwischen API-Updates interpolieren",
       "maxCurrentHelp": "Muss größer als der Mindeststrom sein.",
       "maxCurrentLabel": "Maximaler Strom",
+      "maxTempHelp": "Muss größer als die Mindesttemperatur sein.",
+      "maxTempLabel": "Maximaltemperatur",
       "minCurrentHelp": "Gehe nur unter 6 A, wenn du weißt, was du tust.",
       "minCurrentLabel": "Minimaler Strom",
+      "minTempLabel": "Mindesttemperatur",
       "noVehicles": "Keine Fahrzeuge konfiguriert.",
       "option": {
         "charging": "Ladepunkt hinzufügen",
-        "heating": "Heizungsgerät hinzufügen"
+        "heating": "Heizung hinzufügen"
       },
       "phases1p": "1-phasig",
       "phases3p": "3-phasig",
@@ -384,6 +514,10 @@
       "solarBehaviorLabel": "PV-Überschuss",
       "solarModeCustom": "manuell",
       "solarModeMaximum": "nur Sonne",
+      "solarShareNote": "Der Sonnenanteil-Regler in den Nutzereinstellungen ist deaktiviert, solange Watt-Schwellen gesetzt sind. {0} und speichern, um ihn zu aktivieren.",
+      "solarShareReset": "Schwellwerte entfernen",
+      "temperatureRangeHelp": "Anzeigebereich für den Temperaturbalken. Beeinflusst die Regelung nicht.",
+      "temperatureRangeTitle": "Temperaturbereich",
       "thresholdDisableDelayLabel": "Ausschaltverzögerung",
       "thresholdDisableHelpInvalid": "Bitte verwende einen positiven Wert.",
       "thresholdDisableHelpPositive": "Laden stoppen, wenn mehr als {power} für {delay} aus dem Netz bezogen wird.",
@@ -397,12 +531,12 @@
       "titleAdd": {
         "charging": "Ladepunkt hinzufügen",
         "heating": "Heizung hinzufügen",
-        "unknown": "Wallbox oder Heizung hinzufügen"
+        "unknown": "Ladepunkt oder Heizung hinzufügen"
       },
       "titleEdit": {
         "charging": "Ladepunkt bearbeiten",
         "heating": "Heizung bearbeiten",
-        "unknown": "Wallbox oder Heizung bearbeiten"
+        "unknown": "Ladepunkt oder Heizung bearbeiten"
       },
       "titleExample": {
         "charging": "Garage, Carport, etc.",
@@ -418,8 +552,10 @@
     },
     "main": {
       "addAdditional": "Zusätzlichen Zähler hinzufügen",
+      "addConsumer": "Verbraucher hinzufügen",
+      "addCurtailer": "Einspeisebegrenzung hinzufügen",
       "addGrid": "Netzzähler hinzufügen",
-      "addLoadpoint": "Wallbox oder Heizung hinzufügen",
+      "addLoadpoint": "Ladepunkt oder Heizung hinzufügen",
       "addPvBattery": "PV oder Speicher hinzufügen",
       "addTariffs": "Tarife hinzufügen",
       "addVehicle": "Fahrzeug hinzufügen",
@@ -450,18 +586,18 @@
           "titleDefault": "Fahrzeug schläft"
         },
         "connect": {
-          "messageDefault": "Auto verbunden bei {pvPower}kW PV",
-          "title": "Wenn ein Auto verbunden wird",
-          "titleDefault": "Auto verbunden"
+          "messageDefault": "Fahrzeug verbunden bei {pvPower}kW PV",
+          "title": "Wenn ein Fahrzeug verbunden wird",
+          "titleDefault": "Fahrzeug verbunden"
         },
         "disconnect": {
-          "messageDefault": "Auto getrennt nach {connectedDuration}",
-          "title": "Wenn ein Auto getrennt wird",
-          "titleDefault": "Auto getrennt"
+          "messageDefault": "Fahrzeug getrennt nach {connectedDuration}",
+          "title": "Wenn ein Fahrzeug getrennt wird",
+          "titleDefault": "Fahrzeug getrennt"
         },
         "guest": {
           "messageDefault": "Unbekanntes Fahrzeug, Gast verbunden?",
-          "title": "Wenn ein unbekanntes Auto verbunden wird",
+          "title": "Wenn ein unbekanntes Fahrzeug verbunden wird",
           "titleDefault": "Unbekanntes Fahrzeug"
         },
         "planoverrun": {
@@ -483,6 +619,11 @@
           "messageDefault": "Laden beendet: {chargedEnergy}kWh in {chargeDuration}.",
           "title": "Wenn das Laden stoppt",
           "titleDefault": "Ladevorgang beendet"
+        },
+        "suggestion": {
+          "messageDefault": "Optimierungsvorschlag für {suggestionTitle}: Wäre die Optimierungssteuerung aktiv, würde sie jetzt „{suggestionAction}“ anwenden. Dies ist nur ein Hinweis, es wurden keine Änderungen vorgenommen. Experimentell – Feedback ist willkommen unter https://github.com/evcc-io/evcc/issues/31903",
+          "title": "Wenn sich die Empfehlung des Optimierers ändert",
+          "titleDefault": "Vorschlag des Optimierers"
         }
       },
       "eventMessage": "Nachricht",
@@ -503,12 +644,17 @@
     },
     "meter": {
       "cancel": "Abbrechen",
+      "convertToConsumer": {
+        "confirm": "Wandelt diesen \"zusätzlichen Zähler\" in einen \"Verbraucher\" um.",
+        "link": "In Verbraucher umwandeln"
+      },
       "delete": "Löschen",
       "generic": "Generische Integrationen",
       "option": {
-        "aux": "Intelligenten Verbraucher hinzufügen",
+        "aux": "Selbstregelnden Verbraucher hinzufügen",
         "battery": "Hausbatterie hinzufügen",
-        "ext": "Regulären Verbraucher hinzufügen",
+        "consumer": "Regulären Verbraucher hinzufügen",
+        "grid": "Netzzähler hinzufügen",
         "pv": "PV-Anlage hinzufügen"
       },
       "save": "Speichern",
@@ -519,7 +665,7 @@
       "usage": {
         "aux": "Intelligenter Verbraucher",
         "battery": "Batterie",
-        "charge": "Verbraucher / Ladegerät",
+        "charge": "Ladegerät",
         "grid": "Netzanschluss",
         "label": "Verwendung",
         "pv": "Erzeugung"
@@ -534,6 +680,8 @@
       "connectionHintTcpip": "Das Gerät ist über Netzwerk (LAN/WiFi) erreichbar.",
       "connectionValueSerial": "RS485",
       "connectionValueTcpip": "Netzwerk",
+      "delay": "Verzögerung",
+      "delayHint": "Optionale Wartezeit vor jedem Registerzugriff. Nur für langsame Geräte notwendig.",
       "device": "Gerätename",
       "deviceHint": "Beispiel: /dev/ttyUSB0",
       "host": "IP Adresse oder Hostname",
@@ -544,7 +692,9 @@
       "protocolHintRtu": "Verbindung über eine RS485 Schnittstelle an einem Ethernet Adapter ohne Protokollübersetzung.",
       "protocolHintTcp": "Gerät hat native LAN/Wifi Unterstützung oder ist über eine RS485 Schnittstelle an einen Ethernet Adapter mit Protokollübersetzung angeschlossen.",
       "protocolValueRtu": "RTU",
-      "protocolValueTcp": "TCP"
+      "protocolValueTcp": "TCP",
+      "timeout": "Zeitüberschreitung",
+      "timeoutHint": "Optionale maximale Wartezeit auf eine Antwort des Geräts."
     },
     "modbusproxy": {
       "add": "Proxy-Verbindung hinzufügen",
@@ -598,13 +748,12 @@
       "warningUrlPath": "Die URL benötigt normalerweise keinen Pfad. Bist du dir sicher?"
     },
     "ocpp": {
-      "connectedChargers": "Verbundene Wallboxen",
-      "connectionStatus": "Konfigurierte Station-IDs",
-      "connectionStatusHelp": "Verbindungsstatus der konfigurierten Wallboxen.",
-      "detectedChargers": "Erkannte Station-IDs",
-      "detectedHelp": "Diese Wallboxen haben versucht, sich mit evcc zu verbinden. Um eine Wallbox zu verwenden, erstelle einen Ladepunkt mit ihrer Station-ID.",
+      "forwardingConfigured": "Weiterleitung konfiguriert",
+      "forwardingError": "Weiterleitungsfehler",
+      "forwardingOff": "Keine Weiterleitung konfiguriert",
       "noChargers": "Keine OCPP-Wallboxen erkannt.",
-      "noStations": "Keine Stationen verbunden",
+      "stations": "Station-IDs",
+      "stationsHelp": "Konfigurierte und erkannte OCPP-Wallboxen. Zusätzlich zur lokalen Steuerung kannst du eine Nachrichtenweiterleitung an einen externen Server (z. B. für die Abrechnung) konfigurieren.",
       "status": {
         "configured": "Nicht verbunden",
         "connected": "Verbunden",
@@ -613,6 +762,30 @@
       "title": "OCPP Server",
       "url": "Server-URL",
       "urlHelp": "Kopiere diese URL in die Konfiguration deiner Wallbox. Details findest du im Handbuch des Herstellers. Die Wallbox sollte automatisch ihre eindeutige Kennung (Station-ID) an die URL anhängen. In seltenen Fällen musst du die Kennung manuell angeben. Beispiel: `{url}`"
+    },
+    "ocppforwarder": {
+      "description": "Leite die OCPP-Nachrichten dieser Wallbox zusätzlich zu evcc an einen externen Server weiter (Abrechnungsplattform, Netzbetreiber usw.).",
+      "editTitle": "OCPP-Weiterleitung",
+      "labelCaCert": "Serverzertifikat (CA)",
+      "labelCheckInsecure": "Selbstsignierte Zertifikate erlauben",
+      "labelInsecure": "Zertifikatsprüfung",
+      "password": "Passwort",
+      "passwordHelp": "Für HTTP-Basic-Auth am Upstream-Server.",
+      "readOnly": {
+        "check": "Befehle vom Upstream-Server blockieren",
+        "help": {
+          "false": "Der Upstream kann über evcc Befehle an die Wallbox senden.",
+          "true": "Der Upstream empfängt alle Wallbox-Nachrichten, kann aber keine Befehle senden. evcc behält die alleinige Kontrolle."
+        },
+        "label": "Upstream-Befehle"
+      },
+      "status": "Status",
+      "upstreamStationId": "Station-ID",
+      "upstreamStationIdHelp": "Wallbox-Kennung, die an den Upstream-Server gesendet wird.",
+      "upstreamUrl": "Upstream-Server-URL",
+      "upstreamUrlHelp": "OCPP-WebSocket-URL des externen Servers.",
+      "username": "Benutzername",
+      "usernameHelp": "Für HTTP-Basic-Auth am Upstream-Server."
     },
     "optimizer": {
       "description": "Analysiert Solarprognose, Strompreise und deinen typischen Verbrauch, um Batterie- und Ladestrategie zu optimieren. Daten werden zur Berechnung an den evcc Optimierungsdienst übertragen. Berechnet und visualisiert aktuell nur. Steuert noch keine Geräte.",
@@ -672,6 +845,8 @@
       "noClients": "Noch keine Clients. Niemand kann sich verbinden.",
       "password": "Passwort",
       "passwordOnce": "Dieses Passwort wird nur einmal angezeigt. QR-Code scannen oder jetzt kopieren. Es wird später nicht mehr angezeigt.",
+      "privacy": "Mit der Aktivierung dieser Funktion akzeptierst du unsere {0}.",
+      "privacyLink": "Datenschutzerklärung",
       "qrInstall": "Installiere die evcc-App für {ios} oder {android}.",
       "qrScan": "Scanne den Code mit der Kamera deines Smartphones, um dich zu verbinden. Klicke ihn an, wenn du bereits dein Handy nutzt.",
       "removeClient": "Client entfernen",
@@ -681,14 +856,23 @@
     },
     "section": {
       "additionalMeter": "Zusätzliche Zähler",
+      "consumers": "Verbraucher",
       "general": "Allgemein",
       "grid": "Netzanschluss",
       "integrations": "Integrationen",
-      "loadpoints": "Laden & Heizen",
+      "loadpoints": "Ladepunkte & Heizungen",
       "meter": "PV & Batterie",
       "services": "Dienste",
       "system": "System",
       "vehicles": "Fahrzeuge"
+    },
+    "security": {
+      "authDisabledHint": "Authentifizierung ist deaktiviert. Anmeldedaten können nicht verwaltet werden.",
+      "description": "Verwalte Authentifizierung und Anmeldedaten dieser Instanz.",
+      "passwordDescription": "Aktualisiere das Passwort, mit dem du dich an der Konfigurationsoberfläche anmeldest.",
+      "passwordTitle": "Administrator-Passwort",
+      "title": "Sicherheit",
+      "updatePassword": "Passwort ändern"
     },
     "shm": {
       "cardTitle": "Sunny Home Manager",
@@ -705,14 +889,10 @@
       "title": "SMA Sunny Home Manager"
     },
     "sponsor": {
-      "activationKey": "Lizenzschlüssel",
-      "activationKeyHint": "Per E-Mail zugesandt. Kann im {url} gefunden werden.",
       "addToken": "Token eingeben",
       "changeToken": "Token ändern",
       "description": "Das Sponsoring-Modell hilft uns, das Projekt zu pflegen und nachhaltig neue und spannende Funktionen zu entwickeln. Als Sponsor erhältst du Zugriff auf alle Wallbox-Implementierungen.",
       "descriptionToken": "Als GitHub-Sponsor findest du dein Token auf {url}. Zum Ausprobieren gibt's ein {trialToken}.",
-      "email": "E-Mail",
-      "emailHint": "E-Mail-Adresse, die du für {url} verwendet hast",
       "enterYourToken": "Dein Sponsor Token",
       "error": "Das Sponsortoken ist ungültig.",
       "invalid": "ungültig",
@@ -743,6 +923,8 @@
           "confirmationButton": "Zurücksetzen & Neustart",
           "confirmationText": "Dies löscht deine ausgewählten Daten dauerhaft. Stelle sicher, dass du zuerst eine Sicherung heruntergeladen hast.",
           "description": "Hast du Probleme mit der Konfiguration und möchtest von vorne beginnen? Lösche alle Daten und beginne neu.",
+          "remote": "Remotezugriff",
+          "remoteDescription": "Löscht Konfiguration und Zugangsdaten.",
           "sessions": "Ladevorgänge",
           "sessionsDescription": "Löscht den Verlauf deiner Ladevorgänge.",
           "settings": "Konfiguration & Einstellungen",
@@ -795,7 +977,8 @@
         "feedIn": "Einspeisevergütung hinzufügen",
         "grid": "Netzbezugstarif hinzufügen",
         "planner": "Planer-Vorhersage hinzufügen",
-        "solar": "Solar-Vorhersage hinzufügen"
+        "solar": "Solar-Vorhersage hinzufügen",
+        "temperature": "Temperatur-Vorhersage hinzufügen"
       },
       "planner": {
         "description": "Erweiterte Einstellung. Normalerweise nicht nötig, da dynamische Stromtarife oder CO₂-Vorhersagen automatisch verwendet werden. Ermöglicht eine zusätzliche Datenquelle, die nur für die Ladeplanung verwendet wird und nicht für Statistiken und Preisberechnungen.",
@@ -808,6 +991,11 @@
         "titleAdd": "Solar-Vorhersage hinzufügen",
         "titleEdit": "Solar-Vorhersage bearbeiten"
       },
+      "temperature": {
+        "description": "Vorhersage der Außentemperatur am Standort. Wird in der Oberfläche angezeigt und für die Prognose des Heizbedarfs verwendet.",
+        "titleAdd": "Temperatur-Vorhersage hinzufügen",
+        "titleEdit": "Temperatur-Vorhersage bearbeiten"
+      },
       "template": "Anbieter",
       "title": "Tarife & Vorhersagen",
       "titleChoice": "Was möchtest du hinzufügen?",
@@ -816,7 +1004,8 @@
         "feedIn": "Einspeisevergütung",
         "grid": "Netzbezugspreis",
         "planner": "Planer",
-        "solar": "Solar"
+        "solar": "Solar",
+        "temperature": "Temperaturvorhersage"
       },
       "zones": {
         "add": "Zone hinzufügen",
@@ -824,6 +1013,7 @@
         "allMonths": "Alle Monate",
         "allTimes": "Alle Zeiten",
         "cancel": "Abbrechen",
+        "charge": "Aufschlag",
         "days": "Tage",
         "edit": "Bearbeiten",
         "hours": "Stunden",
@@ -857,32 +1047,13 @@
       "validate": "prüfen"
     },
     "vehicle": {
-      "cancel": "Abbrechen",
-      "chargingSettings": "Ladeeinstellungen",
-      "defaultMode": "Standard-Modus",
-      "defaultModeHelp": "Lademodus beim Anschließen des Fahrzeugs.",
-      "delete": "Fahrzeug löschen",
       "generic": "Weitere Integrationen",
-      "identifiers": "RFID-Kennungen",
-      "identifiersHelp": "Liste der RFID-Kennungen, um das Fahrzeug zu identifizieren. Ein Eintrag pro Zeile. Auf der Übersichtsseite siehst du die aktuelle RFID-Kennung am jeweiligen Ladepunkt.",
-      "maximumCurrent": "Maximaler Strom",
-      "maximumCurrentHelp": "Muss größer als der minimale Strom sein.",
-      "maximumPhases": "Maximale Phasen",
-      "maximumPhasesHelp": "Mit wie vielen Phasen kann dieses Fahrzeug laden? Wird zur Berechnung der Mindestladeleistung und im Planer verwendet.",
-      "maximumPower": "Maximale Ladeleistung",
-      "maximumPowerHelp": "Maximale Leistung die das Fahrzeug beziehen kann",
-      "minimumCurrent": "Minimaler Strom",
-      "minimumCurrentHelp": "Nur unter 6A, wenn du weißt, was du tust.",
       "online": "Fahrzeuge mit Schnittstelle",
       "primary": "Generische Integrationen",
-      "priority": "Priorität",
-      "priorityHelp": "Höhere Priorität bedeutet, dass dieses Fahrzeug Vorrang vor anderen Fahrzeugen hat.",
-      "save": "Speichern",
       "scooter": "Elektroroller",
       "template": "Hersteller",
       "titleAdd": "Fahrzeug hinzufügen",
-      "titleEdit": "Fahrzeug bearbeiten",
-      "validateSave": "Prüfen & speichern"
+      "titleEdit": "Fahrzeug bearbeiten"
     }
   },
   "footer": {
@@ -895,7 +1066,7 @@
       "greenShareSub2": "PV und Speicher",
       "power": "Ladeleistung",
       "powerSub1": "{activeClients} von {totalClients} Nutzern",
-      "powerSub2": "laden…",
+      "powerSub2": "laden gerade.",
       "tabTitle": "Live-Community"
     },
     "savings": {
@@ -933,7 +1104,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Werde Sponsor",
-      "becomeSponsorExtended": "Unterstütze uns direkt. Es gibt auch Sticker.",
       "confetti": "Lust auf Konfetti?",
       "confettiPromise": "Es gibt auch Sticker und digitales Konfetti",
       "sticker": "… oder evcc Sticker?",
@@ -942,9 +1112,7 @@
       "titleNoSponsor": "Unterstütze uns",
       "titleSponsor": "Du bist Unterstützer",
       "titleTrial": "Testmodus",
-      "titleVictron": "Unterstützt von Victron Energy",
-      "trial": "Du befindest dich im Testmodus und kannst alle Funktionen nutzen. Wir freuen uns, wenn du Sponsor wirst.",
-      "victron": "Du verwendest evcc auf Victron Energy Hardware und hast Zugriff auf alle Funktionen."
+      "trial": "Du befindest dich im Testmodus und kannst alle Funktionen nutzen. Wir freuen uns, wenn du Sponsor wirst."
     },
     "telemetry": {
       "optIn": "Ich möchte meine Ladedaten teilen.",
@@ -953,12 +1121,14 @@
       "optInSponsorship": "Sponsoring erforderlich."
     },
     "version": {
-      "availableLong": "neue Version verfügbar",
+      "availableLong": "Update verfügbar",
       "community": "evcc Community",
+      "labelEmail": "E-Mail",
+      "labelPhone": "Telefon",
       "labelRelease": "Release",
       "labelVersion": "Version",
       "labelWebsite": "Website",
-      "latestVersion": "aktuelle Version",
+      "latestVersion": "aktuell",
       "madeByCommunity": "Entwickelt von der {0}.",
       "modalCancel": "Abbrechen",
       "modalDownload": "Download",
@@ -973,7 +1143,7 @@
       "modalUpdateStatusStart": "Installation gestartet:",
       "modalViewOnGitHub": "Auf GitHub ansehen",
       "openSource": "Open Source",
-      "poweredByOpenSource": "Unterstützt von {0}."
+      "poweredBy": "powered by"
     }
   },
   "forecast": {
@@ -987,7 +1157,8 @@
       "co2": "Erfahre, wann Netzstrom in deiner Region sauber ist. Ladepläne werden auf niedrige Emissionen optimiert und CO₂-Einsparungen berechnet.",
       "price": "Dynamischen Stromtarif konfigurieren, um Ladepläne automatisch zu optimieren und Einsparungen zu berechnen.",
       "setup": "Tarife und Vorhersagen einrichten",
-      "solar": "Erwartete Solarproduktion für heute und die nächsten Tage. Wird in Zukunft auch für die automatische Ladeoptimierung verwendet."
+      "solar": "Erwartete Solarproduktion für heute und die nächsten Tage. Wird in Zukunft auch für die automatische Ladeoptimierung verwendet.",
+      "temperature": "Zeigt die erwartete Außentemperatur am Standort. Wird für die Prognose des Heizbedarfs verwendet."
     },
     "hideLine": "Linie ausblenden",
     "modalTitle": "Vorhersage",
@@ -1009,14 +1180,24 @@
     "solarAdjust": "Solarprognose anhand der realen Produktionsdaten anpassen{percent}.",
     "solarAdjustMedium": "an reale Produktionsdaten anpassen",
     "solarAdjustShort": "anpassen",
+    "temperature": {
+      "average": "Durchschnitt",
+      "range": "Bereich"
+    },
     "type": {
       "co2": "CO₂-Emissionen",
       "price": "Netzpreis",
-      "solar": "Solarproduktion"
+      "solar": "Solarproduktion",
+      "temperature": "Außentemperatur"
     }
   },
   "general": {
-    "note": "Hinweis:"
+    "back": "Zurück",
+    "download": "Download",
+    "error": "Fehler",
+    "none": "keine",
+    "note": "Hinweis:",
+    "warning": "Warnung"
   },
   "header": {
     "about": "Über",
@@ -1029,6 +1210,7 @@
     "sessions": "Ladevorgänge"
   },
   "help": {
+    "contactButton": "Kontakt aufnehmen",
     "discussionsButton": "GitHub Discussions",
     "documentationButton": "Dokumentation",
     "issueButton": "Problem melden",
@@ -1050,6 +1232,9 @@
   },
   "issue": {
     "additional": {
+      "copied": "Kopiert!",
+      "copy": "Kopieren",
+      "copySelected": "Auswahl kopieren",
       "description": "Konfiguration und Logs hinzufügen, um uns bei der schnellen Reproduktion zu helfen. Wir empfehlen, so viele Informationen wie möglich zu teilen. Zustand ist normalerweise nicht erforderlich.",
       "include": "einbeziehen",
       "lines": "Zeilen",
@@ -1068,8 +1253,11 @@
     "additionalContext": "Zusätzlicher Kontext",
     "additionalContextPlaceholder": "Alle zusätzlichen Informationen, die hilfreich sein könnten...\n- Konfigurationsdetails\n- Was du versucht hast\n- Umgebungsdetails",
     "createButtonDiscussion": "GitHub Diskussion starten...",
+    "createButtonEmail": "Anfrage per E-Mail senden",
     "createButtonIssue": "GitHub Issue erstellen...",
     "description": "Deine Installation funktioniert nicht wie erwartet? Nutze diese Seite um Hilfe zu bekommen oder Probleme zu melden. Gib genügend Details an, damit wir das Problem verstehen und reproduzieren können. Halte deine Beschreibung prägnant, klar und leicht verständlich.",
+    "downloadButton": "Debug-Informationen herunterladen",
+    "downloadHint": "Hänge diese Datei an deine E-Mail an, falls weitere Informationen benötigt werden.",
     "helpType": {
       "discussion": "Brauche Hilfe bei meiner Einrichtung",
       "discussionDescription": "Community-Diskussionen bieten Antworten.",
@@ -1081,6 +1269,7 @@
     "issueTitle": "Titel",
     "stepsToReproduce": "Schritte zur Reproduktion",
     "subTitleDiscussion": "Beschreibe dein Problem",
+    "subTitleEmail": "Beschreibe dein Problem",
     "subTitleIssue": "Beschreibe das Problem",
     "summary": {
       "confirmationButtonDiscussion": "GitHub Diskussion starten",
@@ -1126,37 +1315,53 @@
     "title": "Authentifizierung"
   },
   "main": {
+    "alwaysCharge": {
+      "description": "keine Unterbrechungen",
+      "label": "Dauerhaft laden",
+      "labelHeating": "Dauerhaft heizen",
+      "minCurrent": "min. {current}",
+      "once": "bis Ladeende",
+      "onceTip": "Nur für diese Ladung",
+      "permanent": "bleibt dauerhaft an"
+    },
     "chargingPlan": {
       "active": "Aktiv",
       "addRepeatingPlan": "Wiederholenden Plan hinzufügen",
-      "arrivalTab": "Ankunft",
       "day": "Tag",
-      "departureTab": "Abfahrt",
       "goal": "Ladeziel",
       "modalTitle": "Ladeplanung",
       "none": "keiner",
+      "once": "einmalig",
       "optimization": {
         "cheapest": "günstigst",
+        "cheapestDescription": "Wählt die günstigsten Zeitfenster. Kann zu mehreren Starts und Stopps führen.",
+        "cleanest": "sauberst",
+        "cleanestDescription": "Wählt die saubersten Zeitfenster. Kann zu mehreren Starts und Stopps führen.",
         "continuous": "kontinuierlich",
+        "continuousCo2Description": "Wählt die sauberste unterbrechungsfreie Folge von Zeitfenstern.",
+        "continuousPriceDescription": "Wählt die günstigste unterbrechungsfreie Folge von Zeitfenstern.",
+        "disabledDescription": "Benötigt einen dynamischen Tarif oder eine CO₂-Prognose.",
         "label": "Optimierung"
       },
       "planNumber": "Plan {number}",
       "precondition": {
-        "description": "Lade {duration} vor Abfahrt zur Batterie-Vorkonditionierung.",
+        "description": "Verlagert einen Teil des Ladens direkt vor die Abfahrt: warme Batterie, weniger Zeit mit hohem Ladestand.",
+        "disabledDescription": "Das gesamte Laden erfolgt direkt vor der Abfahrt.",
         "label": "Spätes Laden",
         "optionAll": "alles",
-        "optionNo": "nein"
+        "optionNo": "nein",
+        "summary": "{precondition} vorher",
+        "summaryAll": "direkt vor der Abfahrt"
       },
       "remove": "Entfernen",
       "repeating": "wiederholend",
       "repeatingPlans": "Wiederholende Pläne",
       "selectAll": "Alle wählen",
-      "strategyDisabledDescription": "Das Laden startet so spät wie möglich und wird rechtzeitig zur Abfahrt abgeschlossen. Mit dynamischen Netzpreisen oder einem CO₂-Tarif stehen hier weitere Optionen zur Verfügung.",
-      "strategySettings": "Strategie-Einstellungen",
+      "strategy": {
+        "label": "Strategie"
+      },
       "time": "Zeit",
       "title": "Plan",
-      "titleMinSoc": "Min. Ladung",
-      "titleTargetCharge": "Abfahrt",
       "unsavedChanges": "Ungespeicherte Änderungen vorhanden. Jetzt anwenden?",
       "update": "Anwenden",
       "weekdays": "Tage"
@@ -1169,14 +1374,13 @@
     "energyflow": {
       "battery": "Batterie",
       "batteryCharge": "Batterie laden",
+      "batteryChargeHold": "Batterie (Ladesperre)",
       "batteryDischarge": "Batterie entladen",
-      "batteryForecastEmpty": "leer {time}",
-      "batteryForecastFull": "voll {time}",
+      "batteryDischargeHold": "Batterie (Entladesperre)",
       "batteryGridChargeActive": "Netzladen: aktiv",
       "batteryGridChargeLimit": "Netzladen: wenn",
-      "batteryHold": "Batterie (gesperrt)",
       "batteryTooltip": "{energy} von {total} ({soc})",
-      "forecast": "Vorhersage: ",
+      "forecast": "Vorhersage",
       "forecastTooltip": "Vorhersage: verbleibende PV-Produktion heute",
       "gridImport": "Netzbezug",
       "homePower": "Verbrauch",
@@ -1186,17 +1390,51 @@
       "pv": "Solaranlage",
       "pvExport": "Einspeisung",
       "pvProduction": "Erzeugung",
-      "selfConsumption": "Eigenverbrauch"
+      "selfConsumption": "Eigenverbrauch",
+      "toggleDetails": "Energiefluss-Details"
     },
     "heatingStatus": {
       "charging": "Heize …",
       "connected": "Standby.",
+      "minTemp": "Mindestheizung auf {temp}.",
+      "suggestionStartTooltip": "Der Optimizer empfiehlt, jetzt zu heizen.",
+      "suggestionStopTooltip": "Der Optimizer empfiehlt, das Heizen zu pausieren.",
       "vehicleLimit": "Heizungslimit",
       "waitForVehicle": "Bereit zum Heizen …"
     },
     "hemsWarning": {
-      "description": "Reduziere Ladeleistung, um {limit} nicht zu überschreiten.",
-      "title": "Externe Begrenzung:"
+      "consumption": "Verbrauch",
+      "feedIn": "Einspeisung",
+      "title": "Externe Begrenzung aktiv"
+    },
+    "history": {
+      "direction": {
+        "battery": {
+          "energy": "geladen",
+          "returnEnergy": "entladen"
+        },
+        "grid": {
+          "energy": "bezogen",
+          "returnEnergy": "eingespeist"
+        },
+        "meter": {
+          "energy": "Energie",
+          "returnEnergy": "Energie (rückwärts)"
+        }
+      },
+      "download": "Download",
+      "empty": "Keine Verlaufsdaten für diesen Zeitraum.",
+      "group": {
+        "battery": "Batterie",
+        "consumer": "Verbrauch",
+        "forecast": "Vorhersage",
+        "grid": "Netz",
+        "loadpoint": "Laden & Heizen",
+        "meter": "Weitere Zähler",
+        "pv": "Erzeugung"
+      },
+      "otherConsumers": "Andere",
+      "title": "Historie"
     },
     "loadpoint": {
       "avgPrice": "⌀ Preis",
@@ -1206,12 +1444,16 @@
       "emission": "Emission",
       "fallbackName": "Ladepunkt",
       "finished": "Ladeende",
+      "last24hEnergy": "Letzte 24h",
+      "last7dEnergy": "Letzte 7 Tage",
+      "phasesMismatch": "Mehr Phasen aktiv als konfiguriert. Phasenkonfiguration prüfen.",
       "power": "Leistung",
       "price": "Kosten",
       "remaining": "Restzeit",
       "remoteDisabledHard": "{source}: Deaktiviert",
       "remoteDisabledSoft": "{source}: Adaptives PV-Laden deaktiviert",
-      "solar": "Sonne"
+      "solar": "Sonne",
+      "todayEnergy": "Heute"
     },
     "loadpointSettings": {
       "batteryBoost": {
@@ -1219,7 +1461,7 @@
         "descriptionDisabled": "Limit wählen, um Schnellladen aus der Hausbatterie zu erlauben.",
         "disabled": "Deaktiviert",
         "label": "Batterie Boost",
-        "mode": "Nur im PV- und Min+PV-Modus verfügbar.",
+        "mode": "Nur im Smart-Modus verfügbar.",
         "once": "Boost ist für diesen Ladevorgang aktiviert.",
         "stateActive": "Batterie Boost aktiv",
         "stateBelowLimit": "Batterie zu niedrig für Boost",
@@ -1229,22 +1471,17 @@
       "batteryUsage": "Hausbatterie",
       "currents": "Ladestrom",
       "default": "default",
-      "disclaimerHint": "Hinweis:",
-      "limitSoc": {
-        "description": "Dieses Ladelimit wird verwendet, wenn das Fahrzeug angeschlossen wird.",
-        "label": "Standard Ladelimit"
-      },
+      "heating": "Heizen",
       "maxCurrent": {
         "label": "Max. Ladestrom"
       },
       "minCurrent": {
         "label": "Min. Ladestrom"
       },
-      "minSoc": {
-        "description": "Fahrzeug wird im PV-Modus „Schnell“ auf {0} geladen. Danach weiter mit PV-Überschuss. Nützlich, um auch an dunklen Tagen eine Mindestreichweite zu gewährleisten.",
-        "label": "Min. Ladung %"
+      "minTemp": {
+        "description": "Unter {0} wird im Smart-Modus auch mit Batterie- und Netzstrom geheizt, um diese Temperatur zu halten.",
+        "label": "Min. Temperatur"
       },
-      "onlyForSocBasedCharging": "Diese Optionen sind nur für Fahrzeuge mit bekanntem Ladestand verfügbar.",
       "phasesConfigured": {
         "label": "Phasen",
         "no1p3pSupport": "Wie ist deine Wallbox angeschlossen?",
@@ -1256,15 +1493,33 @@
       },
       "smartCostCheap": "günstige Netzladung",
       "smartCostClean": "Grünes Netzladen",
+      "solar": "Solarüberschuss",
+      "solarShare": {
+        "charging": {
+          "description": "Mindestens {share} der minimalen Ladeleistung muss aus Solarstrom stammen.",
+          "descriptionFull": "Laden startet, sobald der Überschuss die minimale Ladeleistung deckt.",
+          "descriptionZero": "Laden startet, sobald etwas Überschuss verfügbar ist."
+        },
+        "heating": {
+          "description": "Mindestens {share} der minimalen Heizleistung muss aus Solarstrom stammen.",
+          "descriptionFull": "Heizen startet, sobald der Überschuss die minimale Heizleistung deckt.",
+          "descriptionZero": "Heizen startet, sobald etwas Überschuss verfügbar ist."
+        },
+        "label": "Sonnenanteil",
+        "thresholdsHint": "Leistungsbasierte Ladeschwellen sind konfiguriert. Entferne sie, um diesen Regler zu nutzen.",
+        "thresholdsHintYaml": "Leistungsbasierte Ladeschwellen sind konfiguriert. Entferne die Ein-/Ausschaltschwellen dieses Ladepunkts in deiner evcc.yaml, um diesen Regler zu nutzen.",
+        "thresholdsLink": "Konfiguration bearbeiten"
+      },
       "title": "Einstellungen {0}",
       "vehicle": "Fahrzeug"
     },
     "mode": {
-      "minpv": "Min+PV",
+      "boost": "Boost",
+      "normal": "Normal",
       "now": "Schnell",
       "off": "Aus",
-      "pv": "PV",
-      "smart": "Intelligent"
+      "on": "An",
+      "smart": "Smart"
     },
     "provider": {
       "login": "anmelden",
@@ -1282,7 +1537,7 @@
       "inactiveLabel": "Zielzeit",
       "nextPlan": "Nächster Plan",
       "notReachableInTime": "Zielzeit wird {overrun} später erreicht.",
-      "onlyInPvMode": "Ladeplanung ist nur im PV-Modus aktiv.",
+      "onlyInSmartMode": "Ladeplanung ist nur im Smart-Modus aktiv.",
       "planDuration": "Ladedauer",
       "planPeriodLabel": "Zeitraum",
       "planPeriodValue": "{start} bis {end}",
@@ -1327,6 +1582,19 @@
       "unknown": "Gastfahrzeug",
       "vehicleSoc": "Ladestand"
     },
+    "vehicleSettings": {
+      "connectedTo": "verbunden mit {0}",
+      "description": "Diese Standardwerte werden angewendet, wenn das Fahrzeug an einem Ladepunkt angeschlossen wird.",
+      "editHint": "Fahrzeuge können in der {0} bearbeitet werden.",
+      "keepAsIs": "Beibehalten",
+      "learnMore": "Mehr erfahren.",
+      "limitSoc": "Standardlimit",
+      "menu": "Fahrzeuge",
+      "minSoc": "Minimale Ladung",
+      "mode": "Standardmodus",
+      "notConnected": "nicht verbunden",
+      "title": "Fahrzeugeinstellungen"
+    },
     "vehicleStatus": {
       "awaitingAuthorization": "Warte auf Autorisierung.",
       "batteryBoost": "Batterie Boost aktiv.",
@@ -1353,6 +1621,8 @@
       "pvEnable": "Überschuss verfügbar. Ladung wird gleich fortgesetzt.",
       "scale1p": "Reduziere gleich auf 1-phasiges Laden.",
       "scale3p": "Erhöhe gleich auf 3-phasiges Laden.",
+      "suggestionStartTooltip": "Der Optimizer empfiehlt, jetzt zu laden.",
+      "suggestionStopTooltip": "Der Optimizer empfiehlt, das Laden zu pausieren.",
       "targetChargeActive": "Ladeplan aktiv. Geschätztes Ende in {duration}.",
       "targetChargePlanned": "Ladeplan startet in {duration}.",
       "targetChargeWaitForVehicle": "Ladeplan bereit. Warte auf Fahrzeug …",
@@ -1391,6 +1661,8 @@
     "updatePassword": "Passwort ändern"
   },
   "session": {
+    "addOdometer": "Wert eintragen",
+    "addedRange": "Geladene Reichweite",
     "cancel": "Abbrechen",
     "co2": "CO₂",
     "date": "Zeitraum",
@@ -1400,14 +1672,17 @@
     "meterstart": "Anfangszählerstand",
     "meterstop": "Endzählerstand",
     "odometer": "Kilometerstand",
-    "price": "Preis",
+    "price": "Kosten",
+    "soc": "Ladung",
     "started": "Startzeit",
     "title": "Ladevorgang"
   },
   "sessions": {
+    "addedRange": "Reichweite",
     "avgPower": "⌀ Leistung",
     "avgPrice": "⌀ Preis",
     "chargeDuration": "Ladedauer",
+    "chargedSoc": "Ladung",
     "chartTitle": {
       "avgCo2ByGroup": "⌀ CO₂ {byGroup}",
       "avgPriceByGroup": "⌀ Preis {byGroup}",
@@ -1429,6 +1704,7 @@
     },
     "co2": "⌀ CO₂",
     "csv": {
+      "addedrange": "Geladene Reichweite (km)",
       "chargedenergy": "Energie (kWh)",
       "chargeduration": "Ladedauer",
       "co2perkwh": "CO₂/kWh",
@@ -1439,14 +1715,16 @@
       "meterstart": "Anfangszählerstand (kWh)",
       "meterstop": "Endzählerstand (kWh)",
       "odometer": "Kilometerstand (km)",
-      "price": "Preis",
+      "price": "Kosten",
       "priceperkwh": "Preis/kWh",
+      "socend": "Ladestand Ende (%)",
+      "socstart": "Ladestand Start (%)",
       "solarpercentage": "Sonne (%)",
       "vehicle": "Fahrzeug"
     },
-    "csvPeriod": "Download {period} CSV",
-    "csvTotal": "Gesamte CSV herunterladen",
     "date": "Anfang",
+    "download": "Download {period}",
+    "downloadTotal": "Gesamtdownload",
     "energy": "Geladen",
     "filter": {
       "allLoadpoints": "Alle Ladepunkte",
@@ -1456,12 +1734,12 @@
     "group": {
       "co2": "Emissionen",
       "grid": "Netz",
-      "price": "Preis",
+      "price": "Kosten",
       "self": "Sonne"
     },
     "groupBy": {
       "loadpoint": "Ladepunkt",
-      "none": "Gesamt",
+      "none": "Sonne",
       "vehicle": "Fahrzeug"
     },
     "loadpoint": "Ladepunkt",
@@ -1469,6 +1747,7 @@
     "odometer": "Kilometerstand",
     "overview": "Übersicht",
     "period": {
+      "day": "Tag",
       "month": "Monat",
       "total": "Gesamt",
       "year": "Jahr"
@@ -1478,15 +1757,22 @@
     "showIndividualEntries": "Einzelne Ladevorgänge anzeigen",
     "solar": "Sonne",
     "title": "Ladevorgänge",
-    "total": "Insgesamt",
+    "total": "Gesamt",
     "type": {
       "co2": "CO₂",
-      "price": "Preis",
-      "solar": "Sonne"
+      "price": "Kosten",
+      "solar": "Energie"
     },
     "vehicle": "Fahrzeug"
   },
   "settings": {
+    "dateFormat": {
+      "auto": "Automatisch",
+      "dmy": "TT/MM/JJJJ",
+      "label": "Datumsformat",
+      "mdy": "MM/TT/JJJJ",
+      "ymd": "JJJJ-MM-TT"
+    },
     "deviceInfo": "Einstellungen, die du in diesem Dialog vornimmst, gelten nur für dieses Gerät.",
     "fullscreen": {
       "enter": "Vollbild starten",
@@ -1502,6 +1788,7 @@
       "label": "Sprache"
     },
     "loadpoints": {
+      "disabledDevice": "deaktiviert",
       "help": "Reihenfolge und Sichtbarkeit für die Benutzeroberfläche ändern.",
       "hide": "{title} ausblenden",
       "label": "Ladepunkte",
@@ -1545,17 +1832,18 @@
     "co2Label": "CO₂-Emission",
     "co2Limit": "CO₂-Grenze",
     "enable": "Grenze aktivieren",
-    "loadpointDescription": "Aktiviert vorübergehendes Schnellladen im PV-Modus.",
+    "loadpointDescription": "Aktiviert vorübergehendes Schnellladen im Smart-Modus.",
     "modalTitle": "Smartes Netzladen",
     "none": "keine",
     "priceLabel": "Energiepreis",
     "priceLimit": "Preisgrenze",
     "resetAction": "Grenze löschen",
     "resetWarning": "Es ist kein dynamischer Netzpreis und keine CO₂-Quelle konfiguriert. Dennoch ist eine Grenze von {limit} eingerichtet. Konfiguration aufräumen?",
-    "saved": "Gepeichert."
+    "saved": "Gespeichert."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Pausierte Zeit",
+    "activeHoursLabel": "Aktive Zeit",
+    "batteryDescription": "Entlädt die Hausbatterie ins Netz, wenn der Einspeisetarif hoch ist.",
     "description": "Pausiert den Ladevorgang bei hohen Preisen, um der profitablen Netzeinspeisung Vorrang zu geben.",
     "priceLabel": "Einspeisetarif",
     "priceLimit": "Einspeisegrenze",

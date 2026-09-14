@@ -19,9 +19,7 @@ params:
     default: 4200
     required: true
   - name: watchdog
-    type: duration
     default: 60s
-    advanced: true
   - name: chargepower
     deprecated: true
 render: |

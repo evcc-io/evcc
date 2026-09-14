@@ -77,7 +77,7 @@ func NewEtekFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		return nil, err
 	}
 
-	wb, err := NewEtek(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Protocol(), cc.ID)
+	wb, err := NewEtek(ctx, cc)
 	if err != nil {
 		return nil, err
 	}
@@ -113,8 +113,8 @@ func NewEtekFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 }
 
 // NewEtek creates an ETEK EKEPC2 charger
-func NewEtek(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8) (*Etek, error) {
-	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
+func NewEtek(ctx context.Context, settings modbus.Settings) (*Etek, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}

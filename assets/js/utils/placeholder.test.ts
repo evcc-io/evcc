@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect } from "vite-plus/test";
 import { extractPlaceholders as extract, replacePlaceholders as replace } from "./placeholder";
 
 describe("placeholder", () => {

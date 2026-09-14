@@ -13,9 +13,11 @@ import (
 
 // HomeAssistant charger implementation
 type HomeAssistant struct {
+	*embed
 	implement.Caps
 	conn       *homeassistant.Connection
 	status     string
+	states     homeassistant.StatusMap
 	enabled    string
 	enable     string
 	maxcurrent string
@@ -28,18 +30,20 @@ func init() {
 // NewHomeAssistantFromConfig creates a HomeAssistant charger from generic config
 func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 	var cc struct {
-		URI        string
-		Token_     string   `mapstructure:"token"` // TODO deprecated
-		Home_      string   `mapstructure:"home"`  // TODO deprecated
-		Status     string   // required - sensor for charge status
-		Enabled    string   // required - sensor for enabled state
-		Enable     string   // required - switch/input_boolean for enable/disable
-		MaxCurrent string   // required - number entity for setting max current
-		Power      string   // optional - power sensor
-		Energy     string   // optional - energy sensor
-		Currents   []string // optional - current sensors for L1, L2, L3
-		Voltages   []string // optional - voltage sensors for L1, L2, L3
-		Phases     string   // optional - select entity for 1p/3p phase switching
+		embed                `mapstructure:",squash"`
+		homeassistant.Config `mapstructure:",squash"`
+		Status               string   // required - sensor for charge status
+		StatusA              string   // optional - custom states mapped to status A
+		StatusB              string   // optional - custom states mapped to status B
+		StatusC              string   // optional - custom states mapped to status C
+		Enabled              string   // required - sensor for enabled state
+		Enable               string   // required - switch/input_boolean for enable/disable
+		MaxCurrent           string   // required - number entity for setting max current
+		Power                string   // optional - power sensor
+		Energy               string   // optional - energy sensor
+		Currents             []string // optional - current sensors for L1, L2, L3
+		Voltages             []string // optional - voltage sensors for L1, L2, L3
+		Phases               string   // optional - select entity for 1p/3p phase switching
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -59,17 +63,24 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, errors.New("missing maxcurrent number entity")
 	}
 
+	states, err := homeassistant.NewStatusMap(cc.StatusA, cc.StatusB, cc.StatusC)
+	if err != nil {
+		return nil, err
+	}
+
 	log := util.NewLogger("ha-charger")
 
-	conn, err := homeassistant.NewConnection(log, cc.URI, cc.Home_)
+	conn, err := cc.Config.NewConnection(log)
 	if err != nil {
 		return nil, err
 	}
 
 	c := &HomeAssistant{
+		embed:      &cc.embed,
 		Caps:       implement.New(),
 		conn:       conn,
 		status:     cc.Status,
+		states:     states,
 		enabled:    cc.Enabled,
 		enable:     cc.Enable,
 		maxcurrent: cc.MaxCurrent,
@@ -118,7 +129,7 @@ var _ api.Charger = (*HomeAssistant)(nil)
 
 // Status implements the api.ChargeState interface
 func (c *HomeAssistant) Status() (api.ChargeStatus, error) {
-	return c.conn.GetChargeStatus(c.status)
+	return c.conn.GetChargeStatus(c.status, c.states)
 }
 
 // Enabled implements the api.Charger interface

@@ -13,6 +13,7 @@
 		@added="handleAdded"
 		@updated="handleUpdated"
 		@removed="handleRemoved"
+		@disable="$emit('disable', $event)"
 		@close="handleClose"
 	>
 		<template #pre-content>
@@ -65,6 +66,7 @@ import { getModal } from "@/configModal";
 import tariffPriceYaml from "./defaultYaml/tariffPrice.yaml?raw";
 import tariffCo2Yaml from "./defaultYaml/tariffCo2.yaml?raw";
 import tariffSolarYaml from "./defaultYaml/tariffSolar.yaml?raw";
+import tariffTemperatureYaml from "./defaultYaml/tariffTemperature.yaml?raw";
 
 const initialValues = {
 	type: ConfigType.Template,
@@ -85,7 +87,7 @@ export default defineComponent({
 	props: {
 		currency: { type: String as PropType<CURRENCY>, default: CURRENCY.EUR },
 	},
-	emits: ["changed", "close"],
+	emits: ["changed", "disable", "close"],
 	data() {
 		return {
 			initialValues,
@@ -129,7 +131,9 @@ export default defineComponent({
 	methods: {
 		provideTemplateOptions(products: Product[]): TemplateGroup[] {
 			// Use different custom option text for tariffs vs forecasts
-			const isForecast = ["co2", "planner", "solar"].includes(this.tariffType || "");
+			const isForecast = ["co2", "planner", "solar", "temperature"].includes(
+				this.tariffType || ""
+			);
 			const customLabel = isForecast
 				? this.$t("config.tariff.customForecast")
 				: this.$t("config.tariff.customTariff");
@@ -141,6 +145,7 @@ export default defineComponent({
 				"demo-co2-forecast",
 				"demo-dynamic-grid",
 				"demo-solar-forecast",
+				"demo-temperature-forecast",
 				"energy-charts-api",
 			];
 
@@ -162,9 +167,11 @@ export default defineComponent({
 			const priceProducts = filterByGroup("price");
 			const co2Products = filterByGroup("co2");
 			const solarProducts = filterByGroup("solar");
+			const temperatureProducts = filterByGroup("temperature");
 			const priceGeneric = extractGeneric("price");
 			const co2Generic = extractGeneric("co2");
 			const solarGeneric = extractGeneric("solar");
+			const temperatureGeneric = extractGeneric("temperature");
 
 			// Special handling for planner: show price + co2 services
 			if (this.tariffType === "planner") {
@@ -194,6 +201,7 @@ export default defineComponent({
 				feedIn: { service: priceProducts, generic: priceGeneric },
 				co2: { service: co2Products, generic: co2Generic },
 				solar: { service: solarProducts, generic: solarGeneric },
+				temperature: { service: temperatureProducts, generic: temperatureGeneric },
 			};
 			const mapped = (this.tariffType && groupMap[this.tariffType]) || {
 				service: [],
@@ -211,8 +219,7 @@ export default defineComponent({
 				},
 			];
 		},
-		handleTemplateChange(e: Event, values: DeviceValues) {
-			const value = (e.target as HTMLSelectElement).value;
+		handleTemplateChange(value: string, values: DeviceValues) {
 			if (value === ConfigType.Custom) {
 				values.type = ConfigType.Custom;
 				// Select appropriate YAML template based on tariff type
@@ -226,6 +233,8 @@ export default defineComponent({
 					values.yaml = tariffCo2Yaml;
 				} else if (this.tariffType === "solar") {
 					values.yaml = tariffSolarYaml;
+				} else if (this.tariffType === "temperature") {
+					values.yaml = tariffTemperatureYaml;
 				}
 			}
 		},

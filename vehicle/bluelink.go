@@ -1,6 +1,8 @@
 package vehicle
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -20,20 +22,62 @@ type Bluelink struct {
 func init() {
 	registry.Add("kia", NewKiaFromConfig)
 	registry.Add("hyundai", NewHyundaiFromConfig)
+	registry.Add("genesis", NewGenesisFromConfig)
 }
 
 // NewHyundaiFromConfig creates a new vehicle
 func NewHyundaiFromConfig(other map[string]any) (api.Vehicle, error) {
-	settings := bluelink.Config{
-		URI:               "https://prd.eu-ccapi.hyundai.com:8080",
-		CCSPServiceID:     "6d477c38-3ca4-4cf3-9557-2a1929a94654",
-		CCSPServiceSecret: "KUy49XxPzLpLuoK0xhBC77W6VXhmtQR9iQhmIFjjoY4IpxsV",
-		CCSPApplicationID: "014d2225-8495-4735-812d-2616334fd15d",
-		Cfb:               "RFtoRq/vDXJmRndoZaZQyfOot7OrIqGVFj96iY2WL3yyH5Z/pUvlUhqmCxD2t+D65SQ=",
-		BasicToken:        "NmQ0NzdjMzgtM2NhNC00Y2YzLTk1NTctMmExOTI5YTk0NjU0OktVeTQ5WHhQekxwTHVvSzB4aEJDNzdXNlZYaG10UVI5aVFobUlGampvWTRJcHhzVg==",
-		PushType:          "GCM",
-		LoginFormHost:     "https://idpconnect-eu.hyundai.com",
-		Brand:             "hyundai",
+	// Decode region early so we can select the right config
+	cc := struct {
+		Region string
+	}{
+		Region: "Europe",
+	}
+	if region, ok := other["region"].(string); ok {
+		cc.Region = strings.TrimSpace(region)
+	}
+
+	var settings bluelink.Config
+	switch strings.ToLower(cc.Region) {
+	case "europe", "":
+		settings = bluelink.Config{
+			URI:               "https://prd.eu-ccapi.hyundai.com:8080",
+			CCSPServiceID:     "6d477c38-3ca4-4cf3-9557-2a1929a94654",
+			CCSPServiceSecret: "KUy49XxPzLpLuoK0xhBC77W6VXhmtQR9iQhmIFjjoY4IpxsV",
+			CCSPApplicationID: "014d2225-8495-4735-812d-2616334fd15d",
+			Cfb:               "RFtoRq/vDXJmRndoZaZQyfOot7OrIqGVFj96iY2WL3yyH5Z/pUvlUhqmCxD2t+D65SQ=",
+			BasicToken:        "NmQ0NzdjMzgtM2NhNC00Y2YzLTk1NTctMmExOTI5YTk0NjU0OktVeTQ5WHhQekxwTHVvSzB4aEJDNzdXNlZYaG10UVI5aVFobUlGampvWTRJcHhzVg==",
+			PushType:          "GCM",
+			LoginFormHost:     "https://idpconnect-eu.hyundai.com",
+			Brand:             "hyundai",
+			// OneApp/CCI login (bypasses the IDPConnect WAF block on the legacy
+			// authorize endpoint, see vehicle/bluelink/cci.go)
+			CCI: &bluelink.CCIConfig{
+				OneAppClientID:       "4f4953b5-02e1-4dbc-8599-87e983ee1be5",
+				OneAppRedirectURI:    "https://oneapp.hyundai.com/redirect",
+				APIURL:               "https://cci-api-eu.hyundai.com",
+				PackageID:            "com.hyundai.oneapp.eu",
+				ClientName:           "hyundai",
+				OSVersion:            "18.7",
+				NotificationProvider: "APNS",
+			},
+		}
+	case "australia", "new zealand":
+		settings = bluelink.Config{
+			URI:               bluelink.HyundaiAUBaseURI,
+			CCSPServiceID:     bluelink.HyundaiAUCCSPServiceID,
+			CCSPServiceSecret: "e6fbwHM32YNbhQl0pviaPp3rf4t3S6k91eceA3MJLdbdThCO",
+			CCSPApplicationID: bluelink.HyundaiAUCCSPAppID,
+			Cfb:               bluelink.HyundaiAUCfb,
+			BasicToken:        bluelink.HyundaiAUBasicToken,
+			PushType:          "GCM",
+			LoginFormHost:     bluelink.HyundaiAUBaseURI,
+			TokenURL:          "/api/v1/user/oauth2/token",
+			Brand:             "hyundai",
+			UseBasicAuth:      true,
+		}
+	default:
+		return nil, fmt.Errorf("unknown region: %s", cc.Region)
 	}
 
 	return newBluelinkFromConfig("hyundai", other, settings)
@@ -51,9 +95,38 @@ func NewKiaFromConfig(other map[string]any) (api.Vehicle, error) {
 		LoginFormHost:     "https://idpconnect-eu.kia.com",
 		PushType:          "APNS",
 		Brand:             "kia",
+		// OneApp/CCI login (bypasses the IDPConnect WAF block on the legacy
+		// authorize endpoint, see vehicle/bluelink/cci.go)
+		CCI: &bluelink.CCIConfig{
+			OneAppClientID:       "01b36c86-79e8-486c-8009-15f2ad88d670",
+			OneAppRedirectURI:    "https://oneapp.kia.com/redirect",
+			APIURL:               "https://cci-api-eu.kia.com",
+			PackageID:            "com.kia.oneapp.eu",
+			ClientName:           "kia",
+			OSVersion:            "27",
+			NotificationProvider: "IOS_APPSTORE",
+		},
 	}
 
 	return newBluelinkFromConfig("kia", other, settings)
+}
+
+// NewGenesisFromConfig creates a new vehicle
+// Constants sourced from hyundai_kia_connect_api (KiaUvoApiEU.py, BRAND_GENESIS, Europe)
+func NewGenesisFromConfig(other map[string]any) (api.Vehicle, error) {
+	settings := bluelink.Config{
+		URI:               "https://prd-eu-ccapi.genesis.com:443",
+		CCSPServiceID:     "3020afa2-30ff-412a-aa51-d28fbe901e10",
+		CCSPServiceSecret: "FKDdlef2ffdleFEweELFKERiLER2FED21sDdwdgQz6hFESE3",
+		CCSPApplicationID: "f11f2b86-e0e7-4851-90df-5600b01d8b70",
+		Cfb:               "RFtoRq/vDXJmRndoZaZQyYo3/qFLtVReW8P7utRPcc0ZxOzOELm9mexvviBk/qqIp4A=",
+		BasicToken:        "MzAyMGFmYTItMzBmZi00MTJhLWFhNTEtZDI4ZmJlOTAxZTEwOkZLRGRsZWYyZmZkbGVGRXdlRUxGS0VSaUxFUjJGRUQyMXNEZHdkZ1F6NmhGRVNFMw==",
+		PushType:          "GCM",
+		LoginFormHost:     "https://idpconnect-eu.genesis.com",
+		Brand:             "genesis",
+	}
+
+	return newBluelinkFromConfig("genesis", other, settings)
 }
 
 // newBluelinkFromConfig creates a new Vehicle
@@ -63,6 +136,7 @@ func newBluelinkFromConfig(brand string, other map[string]any, settings bluelink
 		User, Password string
 		VIN            string
 		Language       string
+		Region         string
 		Expiry         time.Duration
 		Cache          time.Duration
 	}{

@@ -8,7 +8,7 @@
 				</div>
 
 				<!-- Help Type Selection -->
-				<div class="mb-5">
+				<div v-if="!emailMode" class="mb-5">
 					<h5 class="mb-3">{{ $t("issue.helpType.title") }}</h5>
 					<div class="row g-3">
 						<div class="col-12 col-md-6">
@@ -60,14 +60,14 @@
 						</h4>
 					</div>
 
-					<p class="text-muted mb-4">
+					<p v-if="!emailMode" class="text-muted mb-4">
 						🇬🇧 Please write your issue in English so everyone can participate.
 					</p>
 
 					<!-- Two Column Layout -->
 					<div class="row mb-5 g-5">
 						<!-- Left Column: Form Fields -->
-						<div class="col-12 col-lg-6">
+						<div class="col-12 col-lg-6 pe-lg-5">
 							<div class="mb-4">
 								<label for="issueTitle" class="form-label">
 									{{ $t("issue.issueTitle") }} *
@@ -78,6 +78,7 @@
 									type="text"
 									class="form-control"
 									placeholder="Brief description of the problem"
+									:maxlength="titleMaxLength"
 									required
 								/>
 							</div>
@@ -89,12 +90,18 @@
 									id="issueDescription"
 									v-model="issue.description"
 									class="form-control"
-									rows="6"
+									:rows="emailMode ? 12 : 6"
 									placeholder="Describe what you expected to happen and what actually happened..."
+									:maxlength="descriptionMaxLength"
 									required
 								></textarea>
+								<div v-if="descriptionMaxLength" class="text-end">
+									<small class="text-muted">
+										{{ issue.description.length }} / {{ descriptionMaxLength }}
+									</small>
+								</div>
 							</div>
-							<div class="mb-4">
+							<div v-if="!emailMode" class="mb-4">
 								<label for="stepsToReproduce" class="form-label">
 									{{ $t("issue.stepsToReproduce") }} *
 								</label>
@@ -149,12 +156,38 @@
 							<div class="text-end">
 								<small class="text-muted">* required</small>
 							</div>
+							<div v-if="emailMode" class="d-flex justify-content-end mt-4">
+								<button type="submit" class="btn btn-primary">
+									{{ buttonText }}
+								</button>
+							</div>
 						</div>
 
 						<!-- Right Column: Toggleable Sections -->
-						<div class="col-12 col-lg-6">
+						<div class="col-12 col-lg-6 ps-lg-5">
+							<hr class="d-lg-none mt-0 mb-5" />
 							<div class="mb-4">
-								<h5>{{ $t("issue.additional.title") }}</h5>
+								<div
+									class="d-flex justify-content-between align-items-baseline gap-3"
+								>
+									<h5>{{ $t("issue.additional.title") }}</h5>
+									<CopyButton :content="markdown">
+										<template #default="{ copy, copied }">
+											<button
+												type="button"
+												class="btn btn-link btn-sm p-0 text-muted text-nowrap"
+												:disabled="!anySelected"
+												@click="copy"
+											>
+												{{
+													copied
+														? $t("issue.additional.copied")
+														: $t("issue.additional.copySelected")
+												}}
+											</button>
+										</template>
+									</CopyButton>
+								</div>
 								<p class="text-muted small">
 									{{ $t("issue.additional.description") }}
 								</p>
@@ -162,10 +195,12 @@
 
 							<!-- Additional Items -->
 							<IssueAdditionalItem
+								v-if="yamlConfigExists"
 								id="issueYamlConfig"
 								:included="sections.yamlConfig.included"
 								:title="$t('issue.additional.yamlConfig')"
 								:content="sections.yamlConfig.content"
+								:markdown="sectionMarkdown('yamlConfig')"
 								:helpType="helpType"
 								@update:included="sections.yamlConfig.included = $event"
 								@update:content="sections.yamlConfig.content = $event"
@@ -186,6 +221,7 @@
 								:included="sections.uiConfig.included"
 								:title="$t('issue.additional.uiConfig')"
 								:content="sections.uiConfig.content"
+								:markdown="sectionMarkdown('uiConfig')"
 								:helpType="helpType"
 								@update:included="sections.uiConfig.included = $event"
 								@update:content="sections.uiConfig.content = $event"
@@ -207,6 +243,7 @@
 								:included="sections.logs.included"
 								:title="$t('issue.additional.logs')"
 								:content="sections.logs.content"
+								:markdown="sectionMarkdown('logs')"
 								:helpType="helpType"
 								@update:included="sections.logs.included = $event"
 								@update:content="sections.logs.content = $event"
@@ -249,7 +286,7 @@
 												<input
 													v-model.number="logCount"
 													type="number"
-													class="form-control text-end log-count-input"
+													class="form-control text-end"
 													min="0"
 													step="25"
 												/>
@@ -277,6 +314,7 @@
 								:included="sections.state.included"
 								:title="$t('issue.additional.state')"
 								:content="sections.state.content"
+								:markdown="sectionMarkdown('state')"
 								:helpType="helpType"
 								@update:included="sections.state.included = $event"
 								@update:content="sections.state.content = $event"
@@ -289,11 +327,24 @@
 									</p>
 								</template>
 							</IssueAdditionalItem>
+
+							<div v-if="emailMode" class="mt-4">
+								<p class="text-muted small">{{ $t("issue.downloadHint") }}</p>
+								<div class="d-flex justify-content-end">
+									<button
+										type="button"
+										class="btn btn-outline-primary"
+										@click="downloadDebugFile"
+									>
+										{{ $t("issue.downloadButton") }}
+									</button>
+								</div>
+							</div>
 						</div>
 					</div>
 
 					<!-- Essential Section Actions -->
-					<div class="d-flex justify-content-end gap-3 mb-5">
+					<div v-if="!emailMode" class="d-flex justify-content-end gap-3 mb-5">
 						<button type="submit" class="btn" :class="buttonClass">
 							{{ buttonText }}
 						</button>
@@ -304,6 +355,7 @@
 
 		<!-- Issue Summary Modal -->
 		<SummaryModal
+			v-if="!emailMode"
 			:help-type="helpType"
 			:button-class="buttonClass"
 			:issue-data="issueData"
@@ -317,6 +369,7 @@
 import { defineComponent } from "vue";
 import TopHeader from "@/components/Top/Header.vue";
 import MultiSelect from "@/components/Helper/MultiSelect.vue";
+import CopyButton from "@/components/Helper/CopyButton.vue";
 import IssueAdditionalItem from "@/components/Issue/AdditionalItem.vue";
 import SummaryModal from "@/components/Issue/SummaryModal.vue";
 import Modal from "bootstrap/js/dist/modal";
@@ -324,7 +377,14 @@ import api from "@/api";
 import store from "@/store";
 import { LOG_LEVELS, DEFAULT_LOG_LEVEL } from "@/utils/log";
 import { formatJson } from "@/components/Issue/format";
-import type { HelpType, IssueData } from "@/components/Issue/types";
+import {
+	generateMailtoUrl,
+	generateDebugFile,
+	generateSection,
+	MAX_MAIL_TITLE_LENGTH,
+	MAX_MAIL_DESCRIPTION_LENGTH,
+} from "@/components/Issue/template";
+import type { HelpType, IssueData, Sections } from "@/components/Issue/types";
 import type { State } from "@/types/evcc";
 
 // Keys that should be expanded (1-level expansion for arrays and objects)
@@ -352,6 +412,7 @@ export default defineComponent({
 	components: {
 		TopHeader,
 		MultiSelect,
+		CopyButton,
 		IssueAdditionalItem,
 		SummaryModal,
 	},
@@ -374,6 +435,7 @@ export default defineComponent({
 				logs: { content: "", included: true },
 				state: { content: "", included: false },
 			} as Record<SectionType, SectionData>,
+			yamlConfigExists: true,
 
 			// Log configuration
 			logLevels: [...LOG_LEVELS],
@@ -383,7 +445,22 @@ export default defineComponent({
 			logAvailableAreas: [] as string[],
 		};
 	},
+	head() {
+		return { title: this.$t("issue.title") };
+	},
 	computed: {
+		customEmail(): string {
+			return window.evcc?.customEmail ?? "";
+		},
+		emailMode(): boolean {
+			return !!this.customEmail;
+		},
+		titleMaxLength(): number | undefined {
+			return this.emailMode ? MAX_MAIL_TITLE_LENGTH : undefined;
+		},
+		descriptionMaxLength(): number | undefined {
+			return this.emailMode ? MAX_MAIL_DESCRIPTION_LENGTH : undefined;
+		},
 		versionString(): string {
 			return `v${store.state.version || ""}`;
 		},
@@ -406,6 +483,12 @@ export default defineComponent({
 				system: this.systemString,
 				timezone: this.timezoneString,
 			};
+		},
+		anySelected(): boolean {
+			return Object.values(this.sections).some((s) => s.included);
+		},
+		markdown(): string {
+			return generateDebugFile(this.issueData, this.sections);
 		},
 		logAreaOptions() {
 			return this.logAvailableAreas.map((area) => ({ name: area, value: area }));
@@ -458,9 +541,16 @@ export default defineComponent({
 		this.updateAreas();
 	},
 	methods: {
+		sectionMarkdown(key: keyof Sections): string {
+			return generateSection(key, this.sections[key].content);
+		},
 		// Type-dependent translation helper
 		$tt(key: string): string {
-			const suffix = this.helpType === "discussion" ? "Discussion" : "Issue";
+			const suffix = this.emailMode
+				? "Email"
+				: this.helpType === "discussion"
+					? "Discussion"
+					: "Issue";
 			return this.$t(`${key}${suffix}`);
 		},
 
@@ -471,9 +561,9 @@ export default defineComponent({
 					validateStatus: (code) => [200, 404].includes(code),
 				});
 
-				// Handle 404 silently when evcc.yaml doesn't exist
 				if (response.status === 404) {
-					this.sections.yamlConfig.content = "no yaml configuration";
+					this.yamlConfigExists = false;
+					this.sections.yamlConfig.included = false;
 					return;
 				}
 
@@ -600,10 +690,26 @@ export default defineComponent({
 		},
 
 		handleFormSubmit() {
+			if (this.emailMode) {
+				window.location.href = generateMailtoUrl(this.customEmail, this.issueData);
+				return;
+			}
 			const modalElement = document.getElementById("issueSummaryModal") as HTMLElement;
 			if (modalElement) {
 				Modal.getOrCreateInstance(modalElement).show();
 			}
+		},
+
+		downloadDebugFile() {
+			const blob = new Blob([generateDebugFile(this.issueData, this.sections)], {
+				type: "text/plain",
+			});
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement("a");
+			a.href = url;
+			a.download = `evcc-debug-${this.versionString}.txt`;
+			a.click();
+			URL.revokeObjectURL(url);
 		},
 
 		clearSessionStorage() {
@@ -618,11 +724,6 @@ export default defineComponent({
 
 <style scoped>
 @import "../../css/breakpoints.css";
-
-.log-count-input::-webkit-outer-spin-button,
-.log-count-input::-webkit-inner-spin-button {
-	margin-left: 0.5rem;
-}
 
 @media (--md-and-up) {
 	.log-lines-input {

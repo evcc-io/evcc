@@ -1,12 +1,12 @@
 package planner
 
 import (
+	"cmp"
 	"iter"
 	"slices"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/samber/lo/it"
 )
 
 // Start returns the earliest slot's start time
@@ -134,6 +134,36 @@ func clampRatesSeq(rates api.Rates, start, end time.Time) iter.Seq[api.Rate] {
 	}
 }
 
+// windowCost returns the cost of the given window. Durations are summed per price before
+// multiplication, hence the result does not depend on how the window's slots are clamped.
+func windowCost(rates api.Rates, start, end time.Time) float64 {
+	type pricedDuration struct {
+		value float64
+		dur   time.Duration
+	}
+
+	var acc []pricedDuration
+	for r := range clampRatesSeq(rates, start, end) {
+		dur := r.End.Sub(r.Start)
+
+		if idx := slices.IndexFunc(acc, func(p pricedDuration) bool { return p.value == r.Value }); idx >= 0 {
+			acc[idx].dur += dur
+			continue
+		}
+
+		acc = append(acc, pricedDuration{r.Value, dur})
+	}
+
+	slices.SortFunc(acc, func(i, j pricedDuration) int { return cmp.Compare(i.value, j.value) })
+
+	var cost float64
+	for _, p := range acc {
+		cost += p.value * float64(p.dur)
+	}
+
+	return cost
+}
+
 // findContinuousWindow finds the cheapest continuous window of slots for the given duration.
 // - rates are filtered to [now, targetTime] window by caller
 // Returns the selected rates.
@@ -147,9 +177,7 @@ func findContinuousWindow(rates api.Rates, effectiveDuration time.Duration, targ
 			break
 		}
 
-		cost := it.SumBy(clampRatesSeq(rates[i:], rates[i].Start, windowEnd), func(r api.Rate) float64 {
-			return float64(r.End.Sub(r.Start)) * r.Value
-		})
+		cost := windowCost(rates[i:], rates[i].Start, windowEnd)
 
 		// Prefer later start if equal cost
 		if bestCost == nil || cost <= *bestCost {

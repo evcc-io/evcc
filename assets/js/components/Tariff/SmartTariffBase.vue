@@ -8,7 +8,7 @@
 			<label :for="formId" class="col-sm-4 col-form-label pt-0 pt-sm-2">
 				{{ limitLabel }}
 			</label>
-			<div class="col-sm-8 col-lg-4 pe-0">
+			<div class="col-sm-8 col-lg-4 pe-lg-0">
 				<div class="input-group input-group-sm mb-1 mb-lg-0">
 					<div class="input-group-text">
 						<div class="form-check form-switch m-0">
@@ -56,15 +56,15 @@
 					{{ activeHoursText }}
 				</div>
 			</div>
-			<div class="text-end">
+			<div class="text-end" data-testid="price-range">
 				<div class="label">
 					<span v-if="activeSlot">{{ activeSlotName }}</span>
 					<span v-else>{{ currentPriceLabel }}</span>
 				</div>
-				<div v-if="activeSlot" class="value text-primary">
+				<div v-if="activeSlot" class="value" :class="highlightColor">
 					{{ activeSlotCost }}
 				</div>
-				<div v-else-if="activeSlots.length" class="value text-primary">
+				<div v-else-if="limitedSlots.length" class="value" :class="activeHoursClass">
 					{{ fmtActiveCostRange }}
 				</div>
 				<div v-else class="value value-inactive">
@@ -123,7 +123,7 @@ export default defineComponent({
 		optionsStartAtZero: Boolean,
 		activeHoursLabel: { type: String, required: true },
 		currentPriceLabel: String,
-		resetWarningText: String,
+		resetWarningKey: String,
 		limitDirection: { type: String as PropType<LimitDirection>, default: "below" },
 		highlightColor: { type: String as PropType<HighlightColor>, default: "text-primary" },
 		isSlotActive: {
@@ -221,11 +221,15 @@ export default defineComponent({
 		warningSlots() {
 			return this.totalSlots.filter((s) => s.warning);
 		},
+		// slots matching the limit, regardless of direction
+		limitedSlots() {
+			return this.limitDirection === "below" ? this.activeSlots : this.warningSlots;
+		},
 		fmtTotalCostRange() {
 			return this.fmtCostRange(this.costRange(this.totalSlots));
 		},
 		fmtActiveCostRange() {
-			return this.fmtCostRange(this.costRange(this.activeSlots));
+			return this.fmtCostRange(this.costRange(this.limitedSlots));
 		},
 		activeSlot(): Slot | null {
 			return this.activeIndex !== null ? this.slots[this.activeIndex] || null : null;
@@ -260,6 +264,11 @@ export default defineComponent({
 		},
 		limitOperator() {
 			return this.limitDirection === "below" ? "≤" : "≥";
+		},
+		resetWarningText() {
+			return this.$t(this.resetWarningKey!, {
+				limit: this.formatValue(this.currentLimit!),
+			});
 		},
 	},
 	watch: {

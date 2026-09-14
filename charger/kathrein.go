@@ -167,7 +167,7 @@ func NewKathreinFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		return nil, err
 	}
 
-	wb, err := NewKathrein(ctx, cc.URI, cc.ID)
+	wb, err := NewKathrein(ctx, cc)
 	if err != nil {
 		return nil, err
 	}
@@ -176,8 +176,8 @@ func NewKathreinFromConfig(ctx context.Context, other map[string]any) (api.Charg
 }
 
 // NewKathrein creates Kathrein charger
-func NewKathrein(ctx context.Context, uri string, id uint8) (*Kathrein, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewKathrein(ctx context.Context, settings modbus.TcpSettings) (*Kathrein, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -399,29 +399,29 @@ func (wb *Kathrein) StatusReason() (api.Reason, error) {
 var _ api.Identifier = (*Kathrein)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *Kathrein) Identify() (string, error) {
+func (wb *Kathrein) Identify() ([]string, error) {
 	s, err := wb.conn.ReadHoldingRegisters(kathreinRegChargingState, 1)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	state := binary.BigEndian.Uint16(s)
 	if state < 3 || state > 6 {
-		return "", nil
+		return nil, nil
 	}
 
 	b, err := wb.conn.ReadHoldingRegisters(kathreinRegRfid, 24)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	rfid := string(bytes.TrimRight(b, "\x00"))
 
 	if strings.HasPrefix(rfid, "RFID:") {
-		return rfid[5:], nil
+		return []string{rfid[5:]}, nil
 	}
 
-	return rfid, nil
+	return []string{rfid}, nil
 }
 
 var _ api.Diagnosis = (*Kathrein)(nil)

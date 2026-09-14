@@ -81,12 +81,12 @@ func NewVestelFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, err
 	}
 
-	return NewVestel(ctx, cc.URI, cc.ID)
+	return NewVestel(ctx, cc)
 }
 
 // NewVestel creates a Vestel charger
-func NewVestel(ctx context.Context, uri string, id uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, "", "", 0, modbus.Tcp, id)
+func NewVestel(ctx context.Context, settings modbus.TcpSettings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -319,12 +319,14 @@ func (wb *Vestel) getPhases() (int, error) {
 }
 
 // Identify implements the api.Identifier interface
-func (wb *Vestel) identify() (string, error) {
+func (wb *Vestel) identify() ([]string, error) {
 	b, err := wb.conn.ReadInputRegisters(vestelRegRFID, 15)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return utf16BEBytesAsString(b)
+
+	id, err := utf16BEBytesAsString(b)
+	return []string{id}, err
 }
 
 var _ api.Diagnosis = (*Vestel)(nil)

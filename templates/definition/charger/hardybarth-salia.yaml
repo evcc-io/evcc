@@ -12,6 +12,7 @@ products:
   - brand: echarge
     description:
       generic: cPμ2
+capabilities: ["dim"]
 requirements:
   evcc: ["sponsorship"]
   description:

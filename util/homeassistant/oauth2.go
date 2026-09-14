@@ -2,46 +2,22 @@ package homeassistant
 
 import (
 	"context"
-	"fmt"
 	"net"
+	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/evcc-io/evcc/plugin/auth"
 	"github.com/evcc-io/evcc/server/network"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/transport"
 	"golang.org/x/oauth2"
 )
 
 // https://developers.home-assistant.io/docs/auth_api
 
-func init() {
-	auth.Register("homeassistant", NewHomeAssistantFromConfig)
-}
-
-func NewHomeAssistantFromConfig(other map[string]any) (oauth2.TokenSource, error) {
-	var cc struct {
-		URI  string
-		Home string // TODO remove deprecated
-	}
-
-	if err := util.DecodeOther(other, &cc); err != nil {
-		return nil, err
-	}
-
-	uri := cc.URI
-
-	if uri == "" && cc.Home != "" {
-		uri = instanceUriByName(cc.Home)
-		if uri == "" {
-			return nil, fmt.Errorf("unknown instance: %s", cc.Home)
-		}
-	}
-
-	return NewHomeAssistant(uri)
-}
-
-func NewHomeAssistant(uri string) (oauth2.TokenSource, error) {
+// NewOAuth creates a Home Assistant OAuth token source
+func NewOAuth(uri string, insecure bool) (oauth2.TokenSource, error) {
 	uri = strings.TrimRight(uri, "/") // normalize
 
 	extUrl := network.Config().ExternalURL()
@@ -75,6 +51,12 @@ func NewHomeAssistant(uri string) (oauth2.TokenSource, error) {
 
 	log := util.NewLogger("homeassistant")
 	ctx := util.WithLogger(context.Background(), log)
+
+	if insecure {
+		log.WARN.Println("insecure mode enabled - TLS certificate verification is disabled, use only for trusted local/self-signed instances")
+		httpClient := &http.Client{Transport: transport.Insecure()}
+		ctx = context.WithValue(ctx, oauth2.HTTPClient, httpClient)
+	}
 
 	return auth.NewOAuth(ctx, "HomeAssistant", host, &oc)
 }

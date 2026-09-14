@@ -4,13 +4,15 @@ products:
   - brand: Mennekes
     description:
       generic: AMTRON Compact 2.0s
+    capabilities: ["rfid"]
   - brand: Mennekes
     description:
       generic: AMTRON 4You 300
+    capabilities: ["rfid"]
   - brand: Kostal
     description:
       generic: Enector
-capabilities: ["mA", "1p3p", "meter"]
+capabilities: ["mA", "1p3p", "meter", "dim"]
 requirements:
   description:
     de: |

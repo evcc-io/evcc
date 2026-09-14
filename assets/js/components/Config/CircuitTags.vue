@@ -2,7 +2,7 @@
 	<template v-for="(node, idx) in nodes" :key="node.name">
 		<hr v-if="idx > 0 || depth > 0" />
 		<div :style="style">
-			<p class="my-2 fw-bold">{{ nodeTitle(node) }}</p>
+			<p class="my-2 fw-bold">{{ node.title }}</p>
 			<DeviceTags :tags="circuitTags(node)" />
 		</div>
 		<CircuitTags v-if="node.children?.length" :nodes="node.children" :depth="depth + 1" />
@@ -13,7 +13,6 @@
 import { defineComponent, type PropType } from "vue";
 import DeviceTags from "./DeviceTags.vue";
 import type { CircuitNode } from "../../utils/circuits";
-import { GRID_CONTROL } from "../../types/evcc";
 
 export default defineComponent({
 	name: "CircuitTags",
@@ -28,18 +27,8 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		nodeTitle(node: CircuitNode): string {
-			if (node.name === GRID_CONTROL) return this.$t("config.hems.title");
-			return node.title || "";
-		},
 		circuitTags(node: CircuitNode) {
 			const result: Record<string, object> = {};
-			if (node.dimmed) {
-				result["dimmed"] = { value: true };
-			}
-			if (node.curtailed) {
-				result["curtailed"] = { value: true };
-			}
 			const p = node.power || 0;
 			if (node.maxPower) {
 				result["powerRange"] = {

@@ -57,6 +57,12 @@ func NewWatchDogFromConfig(ctx context.Context, other map[string]any) (Plugin, e
 	return o, nil
 }
 
+var _ IntKeysGetter = (*watchdogPlugin)(nil)
+
+func (o *watchdogPlugin) IntKeys() ([]int64, error) {
+	return o.set.intKeys(o.ctx)
+}
+
 func (o *watchdogPlugin) wdt(ctx context.Context, set func() error) {
 	for tick := time.Tick(o.timeout / 2); ; {
 		select {
@@ -76,10 +82,11 @@ type deferredState[T comparable] struct {
 }
 
 // setter is the generic setter function for watchdogPlugin
-// it is currently not possible to write this as a method
-func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(T) error {
+func (o *watchdogPlugin) setter[T comparable](set func(T) error, reset []T) func(T) error {
 	var state *deferredState[T]
-	var lastUpdated time.Time
+	// seed with now, not zero: otherwise the first write's delay computes to 0 and skips
+	// deferral, which is wrong for an unknown last write
+	lastUpdated := o.clock.Now()
 	var last *T
 
 	// stop running wdt
@@ -106,6 +113,11 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 			go o.wdt(ctx, func() error {
 				o.mu.Lock()
 				defer o.mu.Unlock()
+
+				// a reset may have cancelled us while we waited for the lock
+				if ctx.Err() != nil {
+					return nil
+				}
 
 				if err := set(val); err != nil {
 					return err
@@ -139,7 +151,7 @@ func setter[T comparable](o *watchdogPlugin, set func(T) error, reset []T) func(
 		delay := max(0, o.timeout+5*time.Second-o.clock.Since(lastUpdated))
 
 		// defer update to non-reset value
-		if o.deferred && delay > 0 && !lastUpdated.IsZero() && !slices.Contains(reset, val) {
+		if o.deferred && delay > 0 && !slices.Contains(reset, val) {
 			stopWdt()
 
 			// store deferred value
@@ -188,7 +200,7 @@ func (o *watchdogPlugin) IntSetter(param string) (func(int64) error, error) {
 		}
 	}
 
-	res := setter(o, set, reset)
+	res := o.setter(set, reset)
 	if o.initial != nil {
 		val, err := strconv.ParseInt(*o.initial, 10, 64)
 		if err != nil {
@@ -222,7 +234,7 @@ func (o *watchdogPlugin) FloatSetter(param string) (func(float64) error, error) 
 		}
 	}
 
-	res := setter(o, set, reset)
+	res := o.setter(set, reset)
 	if o.initial != nil {
 		val, err := strconv.ParseFloat(*o.initial, 64)
 		if err != nil {
@@ -256,7 +268,7 @@ func (o *watchdogPlugin) BoolSetter(param string) (func(bool) error, error) {
 		reset = append(reset, val)
 	}
 
-	res := setter(o, set, reset)
+	res := o.setter(set, reset)
 	if o.initial != nil {
 		val, err := strconv.ParseBool(*o.initial)
 		if err != nil {

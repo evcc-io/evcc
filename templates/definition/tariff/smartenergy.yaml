@@ -1,4 +1,5 @@
 template: smartenergy
+link: https://www.smartenergy.at/smartcontrol
 products:
   - brand: SmartEnergy
     description:
@@ -11,4 +12,4 @@ params:
   - preset: tariff-base
 render: |
   type: smartenergy
-  {{ include "tariff-base" . }}
+  {{ include "base" . }}

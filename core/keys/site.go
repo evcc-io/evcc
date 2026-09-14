@@ -4,12 +4,14 @@ const (
 	Aux                   = "aux"
 	AuxPower              = "auxPower"
 	Circuits              = "circuits"
+	Consumers             = "consumers"
 	Currency              = "currency"
 	Ext                   = "ext"
 	GreenShareHome        = "greenShareHome"
 	GreenShareLoadpoints  = "greenShareLoadpoints"
 	GridConfigured        = "gridConfigured"
 	Grid                  = "grid"
+	HistoryUpdated        = "historyUpdated"
 	HomePower             = "homePower"
 	PrioritySoc           = "prioritySoc"
 	Pv                    = "pv"
@@ -20,8 +22,6 @@ const (
 	SmartCostType         = "smartCostType"
 	Statistics            = "statistics"
 	Forecast              = "forecast"
-	SolarAccYield         = "solarAccYield"
-	SolarAccForecast      = "solarAccForecast"
 	TariffCo2             = "tariffCo2"
 	TariffCo2Home         = "tariffCo2Home"
 	TariffCo2Loadpoints   = "tariffCo2Loadpoints"
@@ -30,21 +30,40 @@ const (
 	TariffPriceHome       = "tariffPriceHome"
 	TariffPriceLoadpoints = "tariffPriceLoadpoints"
 	TariffSolar           = "tariffSolar"
+	TariffTemperature     = "tariffTemperature"
 	Vehicles              = "vehicles"
 
 	// meters
-	GridMeter     = "gridMeter"
-	PvMeters      = "pvMeters"
-	BatteryMeters = "batteryMeters"
-	ExtMeters     = "extMeters"
-	AuxMeters     = "auxMeters"
+	GridMeter      = "gridMeter"
+	PvMeters       = "pvMeters"
+	BatteryMeters  = "batteryMeters"
+	ExtMeters      = "extMeters"
+	AuxMeters      = "auxMeters"
+	ConsumerMeters = "consumerMeters"
+
+	// curtailment devices
+	Curtailers = "curtailers"
 
 	// battery settings
-	BatteryDischargeControl = "batteryDischargeControl"
-	BatteryGridChargeLimit  = "batteryGridChargeLimit"
-	BatteryGridChargeActive = "batteryGridChargeActive"
-	BufferSoc               = "bufferSoc"
-	BufferStartSoc          = "bufferStartSoc"
+	BatteryDischargeControl    = "batteryDischargeControl"
+	BatteryGridChargeLimit     = "batteryGridChargeLimit"
+	BatteryGridChargeActive    = "batteryGridChargeActive"
+	BatteryGridDischargeLimit  = "batteryGridDischargeLimit"
+	BatteryGridDischargeActive = "batteryGridDischargeActive"
+	BatteryGridDischarge       = "batteryGridDischarge"
+	BufferSoc                  = "bufferSoc"
+	BufferStartSoc             = "bufferStartSoc"
+
+	// grid settings
+	GridExportLimit = "gridExportLimit"
+
+	// forecast settings
+	SolarAdjusted     = "solarAdjusted"
+	ProfilePercentile = "profilePercentile"
+
+	// optimizer
+	OptimizerChargingStrategy   = "optimizerChargingStrategy"
+	OptimizerChargingStrategies = "optimizerChargingStrategies"
 
 	// battery status
 	Battery     = "battery"

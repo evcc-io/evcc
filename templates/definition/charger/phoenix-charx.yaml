@@ -18,6 +18,7 @@ products:
   - brand: Veton
     description:
       generic: Wall
+capabilities: ["dim"]
 params:
   - name: modbus
     choice: ["tcpip"]

@@ -11,9 +11,7 @@ params:
   - name: usage
     choice: ["grid"]
   - name: host
-    required: true
   - name: cache
-    advanced: true
     default: 5s
 render: |
   type: custom

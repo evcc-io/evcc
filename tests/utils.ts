@@ -17,18 +17,20 @@ export async function expectModalHidden(modal: Locator): Promise<void> {
   await expect(modal).toHaveAttribute("aria-hidden", "true");
 }
 
-export async function editorClear(editor: Locator, iterations = 10): Promise<void> {
-  for (let i = 0; i < iterations; i++) {
-    await editor.locator(".view-line").nth(0).click();
-    await editor.page().keyboard.press("ControlOrMeta+KeyA", { delay: 50 });
-    await editor.page().keyboard.press("Backspace", { delay: 50 });
-  }
+export async function editorClear(editor: Locator): Promise<void> {
+  const content = editor.locator(".cm-content");
+  // wait for the async content load, otherwise clearing races the arriving text
+  await expect(content).not.toHaveText("");
+  await content.click();
+  await editor.page().keyboard.press("ControlOrMeta+KeyA");
+  await editor.page().keyboard.press("Backspace");
+  await expect(content, "editor should be empty after clearing").toHaveText("");
 }
 
 export async function editorPaste(editor: Locator, page: Page, text: string): Promise<void> {
-  await editor.locator(".view-line").nth(0).click();
+  await editor.locator(".cm-content").click();
   await page.evaluate((text) => navigator.clipboard.writeText(text), text);
-  await page.keyboard.press("ControlOrMeta+KeyV", { delay: 100 });
+  await page.keyboard.press("ControlOrMeta+KeyV");
 }
 
 export enum LoadpointType {
@@ -49,7 +51,9 @@ export async function addDemoCharger(
 ): Promise<void> {
   const lpModal = page.getByTestId("loadpoint-modal");
   await lpModal
-    .getByRole("button", { name: type === LoadpointType.Heating ? "Add heater" : "Add charger" })
+    .getByRole("button", {
+      name: type === LoadpointType.Heating ? "Add heating device" : "Add charger",
+    })
     .click();
 
   const modal = page.getByTestId("charger-modal");
@@ -67,6 +71,7 @@ export async function addDemoCharger(
 
 export async function addDemoMeter(page: Page, power = "0"): Promise<void> {
   const lpModal = page.getByTestId("loadpoint-modal");
+  await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
   await lpModal.getByRole("button", { name: "Add dedicated energy meter" }).click();
 
   const modal = page.getByTestId("meter-modal");
@@ -94,14 +99,20 @@ export async function newLoadpoint(
   type: LoadpointType = LoadpointType.Charging
 ): Promise<void> {
   const lpModal = page.getByTestId("loadpoint-modal");
-  await page.getByRole("button", { name: "Add charger or heater" }).click();
+  await page.getByRole("button", { name: "Add charging point or heater" }).click();
   await expectModalVisible(lpModal);
   await lpModal
     .getByRole("button", {
-      name: type === LoadpointType.Heating ? "Add heating device" : "Add charging point",
+      name: type === LoadpointType.Heating ? "Add heater" : "Add charging point",
     })
     .click();
   await lpModal.getByLabel("Title").fill(title);
+}
+
+export async function finishLoadpoint(page: Page): Promise<void> {
+  const lpModal = page.getByTestId("loadpoint-modal");
+  await lpModal.getByText("Close", { exact: true }).click();
+  await expectModalHidden(lpModal);
 }
 
 export async function dragElement(
@@ -129,4 +140,34 @@ export async function getDatalistOptions(input: Locator): Promise<string[]> {
     const datalist = document.getElementById(datalistId);
     return Array.from(datalist?.querySelectorAll("option") || []).map((opt) => opt.value);
   });
+}
+
+type AppState = {
+  evccAppCapabilities: string[];
+  __appEvent: unknown;
+  ReactNativeWebView: { postMessage: (m: string) => void };
+};
+
+export async function enableAppContext(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "userAgent", {
+      value: "evcc/playwright",
+      configurable: true,
+    });
+    const w = window as unknown as AppState;
+    w.evccAppCapabilities = ["download"];
+    w.__appEvent = undefined;
+    w.ReactNativeWebView = {
+      postMessage: (msg: string) => {
+        w.__appEvent = JSON.parse(msg);
+      },
+    };
+  });
+}
+
+export async function expectAppEvent(page: Page): Promise<unknown> {
+  await expect
+    .poll(async () => page.evaluate(() => (window as unknown as AppState).__appEvent !== undefined))
+    .toBe(true);
+  return page.evaluate(() => (window as unknown as AppState).__appEvent);
 }

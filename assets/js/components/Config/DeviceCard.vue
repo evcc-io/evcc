@@ -26,8 +26,29 @@
 				@edit="$emit('edit')"
 			/>
 		</div>
-		<div v-if="$slots.tags" ref="tagsContainer" :style="tagsStyle">
-			<hr class="my-3 divide" />
+		<template v-if="disabled">
+			<hr class="mt-3 mb-0 divide" />
+			<div class="disabled-region">
+				<button
+					type="button"
+					class="btn btn-sm btn-pill px-3"
+					:aria-label="$t('config.general.enable')"
+					data-testid="device-disabled"
+					@click.stop="$emit('enable')"
+				>
+					{{ $t("config.general.disabled") }}
+				</button>
+			</div>
+		</template>
+		<div v-else-if="$slots.tags" ref="tagsContainer" :style="tagsStyle">
+			<hr class="my-3 divide" :class="{ 'border-warning': banner }" />
+			<div
+				v-if="banner"
+				class="limit-stripe banner fw-bold text-center text-warning"
+				data-testid="device-banner"
+			>
+				{{ banner }}
+			</div>
 			<div ref="tagsContent">
 				<slot name="tags" />
 			</div>
@@ -52,8 +73,10 @@ export default {
 		warning: Boolean,
 		noEditButton: Boolean,
 		badge: Boolean,
+		disabled: Boolean,
+		banner: String,
 	},
-	emits: ["edit"],
+	emits: ["edit", "enable"],
 	data() {
 		return {
 			tagsMinHeight: null,
@@ -99,7 +122,8 @@ export default {
 
 <style scoped>
 .root {
-	display: block;
+	display: flex;
+	flex-direction: column;
 	list-style-type: none;
 	border-radius: 1rem;
 	padding: 1rem 1.5rem;
@@ -121,11 +145,55 @@ export default {
 	color: var(--evcc-gray) !important;
 	font-weight: normal !important;
 }
+.disabled-region {
+	flex: 1;
+	margin: 0 -1.5rem -1rem;
+	padding: 1.25rem 1.5rem;
+	min-height: 5rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 0 0 1rem 1rem;
+	background-image: repeating-linear-gradient(
+		-45deg,
+		transparent 0,
+		transparent 10px,
+		var(--evcc-gray-25) 10px,
+		var(--evcc-gray-25) 20px
+	);
+}
 .icon:empty {
 	display: none;
 }
 .divide {
 	margin-left: -1.5rem;
 	margin-right: -1.5rem;
+}
+/* bleed edge-to-edge over the card padding, flush below the divider */
+.banner {
+	margin: -1rem -1.5rem 1rem;
+	padding: 0.5rem 1.5rem;
+}
+/* animated throttle stripe, echoes the charging bar */
+.limit-stripe {
+	background-color: color-mix(in srgb, var(--evcc-orange) 9%, transparent);
+	background-image: repeating-linear-gradient(
+		-45deg,
+		color-mix(in srgb, var(--evcc-orange) 20%, transparent) 0 8px,
+		transparent 8px 20px
+	);
+	background-size: 28.28px 28.28px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.limit-stripe {
+		animation: limit-stripe-move 1.5s linear infinite;
+	}
+}
+
+@keyframes limit-stripe-move {
+	to {
+		background-position: 28.28px 0;
+	}
 }
 </style>

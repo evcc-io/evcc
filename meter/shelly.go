@@ -14,7 +14,7 @@ import (
 // Shelly meter considering usage
 type Shelly struct {
 	implement.Caps
-	shelly.Connection
+	conn  *shelly.Connection
 	usage string
 }
 
@@ -45,7 +45,27 @@ func NewShellyFromConfig(other map[string]any) (api.Meter, error) {
 		return nil, err
 	}
 
-	if phases, ok := c.Connection.Generation.(shelly.Phases); ok {
+	// Three-phase Shelly energy meters count each phase separately (non-balanced),
+	// making their totals unsuitable for bidirectional grid metering.
+	if !(c.usage == "grid" && c.conn.IsThreePhase()) {
+		total, ret := c.conn.TotalEnergy, c.conn.ReturnEnergy
+
+		hasReturn := c.conn.HasReturnEnergy()
+
+		// production is measured in return direction, unless the device has no return
+		// register at all or already reverses the direction itself
+		if c.usage == "pv" && hasReturn && !c.conn.IsReversed() {
+			total, ret = ret, total
+		}
+		implement.Has(c, implement.MeterEnergy(total))
+
+		// without a return register the second reading is a constant zero
+		if hasReturn {
+			implement.Has(c, implement.MeterReturnEnergy(ret))
+		}
+	}
+
+	if phases, ok := c.conn.Generation.(shelly.Phases); ok {
 		implement.Has(c, implement.PhaseVoltages(phases.Voltages))
 		implement.Has(c, implement.PhaseCurrents(phases.Currents))
 		implement.Has(c, implement.PhasePowers(phases.Powers))
@@ -61,9 +81,9 @@ func NewShelly(uri, user, password, usage string, channel int, cache time.Durati
 		return nil, err
 	}
 	c := &Shelly{
-		Caps:       implement.New(),
-		Connection: *conn,
-		usage:      usage,
+		Caps:  implement.New(),
+		conn:  conn,
+		usage: usage,
 	}
 	return c, nil
 }
@@ -72,12 +92,24 @@ var _ api.Meter = (*Shelly)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Shelly) CurrentPower() (float64, error) {
-	power, err := c.Connection.CurrentPower()
+	power, err := c.conn.CurrentPower()
 	if err != nil {
 		return 0, err
 	}
-	if c.usage == "pv" {
-		power = math.Abs(power)
+	return c.currentPowerForUsage(power, c.conn.SignedPower(), c.conn.IsReversed()), nil
+}
+
+// PV usage inverts directional power unless the device already reverses it, otherwise the magnitude is used.
+func (c *Shelly) currentPowerForUsage(power float64, signed, reversed bool) float64 {
+	if c.usage != "pv" {
+		return power
 	}
-	return power, nil
+	switch {
+	case !signed:
+		return math.Abs(power)
+	case reversed:
+		return power
+	default:
+		return -power
+	}
 }

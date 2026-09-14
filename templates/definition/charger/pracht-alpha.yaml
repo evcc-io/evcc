@@ -12,6 +12,7 @@ products:
   - brand: Pracht
     description:
       generic: PNI
+capabilities: ["dim"]
 requirements:
   evcc: ["sponsorship"]
 params:
@@ -22,8 +23,8 @@ params:
     id: 1
   - name: connector
   - name: timeout
+    deprecated: true
 render: |
   type: pracht-alpha
   {{- include "modbus" . }}
   connector: {{ .connector }}
-  timeout: {{ .timeout }}

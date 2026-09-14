@@ -2,6 +2,9 @@ package core
 
 import (
 	"errors"
+	"fmt"
+	"iter"
+	"slices"
 	"strings"
 	"time"
 
@@ -9,41 +12,41 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util/config"
-	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/samber/lo"
 )
 
 var _ site.API = (*Site)(nil)
 
 var (
-	ErrBatteryNotConfigured       = errors.New("battery not configured")
-	ErrBatteryControlNotAvailable = errors.New("battery control not available")
+	ErrBatteryNotConfigured             = errors.New("battery not configured")
+	ErrBatteryControlNotAvailable       = errors.New("battery control not available")
+	ErrBatteryGridDischargeNotAvailable = errors.New("battery grid discharge not available")
 )
 
-// isConfigurable checks if the meter is configurable
-func isConfigurable(ref string) bool {
-	dev, _ := config.Meters().ByName(ref)
-	_, ok := dev.(config.ConfigurableDevice[api.Meter])
-	return ok
-}
-
-// filterConfigurable filters configurable meters
-func filterConfigurable(ref []string) []string {
+// filterConfigurableDevices filters references to configurable devices of the given handler
+func filterConfigurableDevices[T any](h config.Handler[T], ref []string) []string {
 	return lo.Filter(ref, func(ref string, _ int) bool {
-		return isConfigurable(ref)
+		dev, _ := h.ByName(ref)
+		_, ok := dev.(config.ConfigurableDevice[T])
+		return ok
 	})
 }
 
-// Optimize updates the optimizer
-func (site *Site) Optimize() error {
-	if !sponsor.IsAuthorized() || !optimizerEnabled() {
-		return api.ErrNotAvailable
-	}
+// filterConfigurableMeter filters configurable meters
+func filterConfigurableMeter(ref []string) []string {
+	return filterConfigurableDevices(config.Meters(), ref)
+}
 
-	go site.optimizerUpdateAsync()
-	return nil
+// filterConfigurableCurtailers filters configurable curtailment devices
+func filterConfigurableCurtailers(ref []string) []string {
+	return filterConfigurableDevices(config.Curtailers(), ref)
+}
+
+// Optimize updates the optimizer
+func (site *Site) Optimize() {
+	go site.optimizerUpdateAsync(0)
 }
 
 // GetTitle returns the title
@@ -92,7 +95,7 @@ func (site *Site) SetPVMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.PVMetersRef = ref
-	settings.SetString(keys.PvMeters, strings.Join(filterConfigurable(ref), ","))
+	settings.SetString(keys.PvMeters, strings.Join(filterConfigurableMeter(ref), ","))
 }
 
 // GetBatteryMeterRefs returns the BatteryMeterRef
@@ -108,7 +111,7 @@ func (site *Site) SetBatteryMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.BatteryMetersRef = ref
-	settings.SetString(keys.BatteryMeters, strings.Join(filterConfigurable(ref), ","))
+	settings.SetString(keys.BatteryMeters, strings.Join(filterConfigurableMeter(ref), ","))
 }
 
 // GetAuxMeterRefs returns the AuxMeterRef
@@ -124,7 +127,23 @@ func (site *Site) SetAuxMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.AuxMetersRef = ref
-	settings.SetString(keys.AuxMeters, strings.Join(filterConfigurable(ref), ","))
+	settings.SetString(keys.AuxMeters, strings.Join(filterConfigurableMeter(ref), ","))
+}
+
+// GetConsumerMeterRefs returns the ConsumerMeterRef
+func (site *Site) GetConsumerMeterRefs() []string {
+	site.RLock()
+	defer site.RUnlock()
+	return site.Meters.ConsumerMetersRef
+}
+
+// SetConsumerMeterRefs sets the ConsumerMeterRef
+func (site *Site) SetConsumerMeterRefs(ref []string) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.Meters.ConsumerMetersRef = ref
+	settings.SetString(keys.ConsumerMeters, strings.Join(filterConfigurableMeter(ref), ","))
 }
 
 // GetExtMeterRefs returns the ExtMeterRef
@@ -140,7 +159,23 @@ func (site *Site) SetExtMeterRefs(ref []string) {
 	defer site.Unlock()
 
 	site.Meters.ExtMetersRef = ref
-	settings.SetString(keys.ExtMeters, strings.Join(filterConfigurable(ref), ","))
+	settings.SetString(keys.ExtMeters, strings.Join(filterConfigurableMeter(ref), ","))
+}
+
+// GetCurtailerRefs returns the curtailment device references
+func (site *Site) GetCurtailerRefs() []string {
+	site.RLock()
+	defer site.RUnlock()
+	return site.CurtailersRef
+}
+
+// SetCurtailerRefs sets the curtailment device references
+func (site *Site) SetCurtailerRefs(ref []string) {
+	site.Lock()
+	defer site.Unlock()
+
+	site.CurtailersRef = ref
+	settings.SetString(keys.Curtailers, strings.Join(filterConfigurableCurtailers(ref), ","))
 }
 
 // GetBatterySoc returns the current battery soc
@@ -150,9 +185,36 @@ func (site *Site) GetBatterySoc() float64 {
 	return site.battery.Soc
 }
 
-// Loadpoints returns the loadpoints as api interfaces
+// GetBatteryMaxDischargePower returns the current battery max discharge power
+func (site *Site) GetBatteryMaxDischargePower() *float64 {
+	site.RLock()
+	defer site.RUnlock()
+	if site.batteryMaxDischargePower == nil {
+		return nil
+	}
+	return new(*site.batteryMaxDischargePower)
+}
+
+// Loadpoints returns the loadpoints as api interfaces.
+// Disabled loadpoints are returned as nil to keep indexes stable.
 func (site *Site) Loadpoints() []loadpoint.API {
-	return lo.Map(site.loadpoints, func(lp *Loadpoint, _ int) loadpoint.API { return lp })
+	return lo.Map(site.loadpoints, func(lp *Loadpoint, _ int) loadpoint.API {
+		if lp == nil {
+			return nil
+		}
+		return lp
+	})
+}
+
+// ActiveLoadpoints yields enabled loadpoints with their stable index
+func (site *Site) ActiveLoadpoints() iter.Seq2[int, loadpoint.API] {
+	return func(yield func(int, loadpoint.API) bool) {
+		for id, lp := range site.loadpoints {
+			if lp != nil && !yield(id, lp) {
+				return
+			}
+		}
+	}
 }
 
 func (site *Site) hasMeters() bool {
@@ -160,12 +222,17 @@ func (site *Site) hasMeters() bool {
 }
 
 func (site *Site) IsConfigured() bool {
-	return len(site.loadpoints) > 0 || site.hasMeters()
+	return slices.ContainsFunc(site.loadpoints, func(lp *Loadpoint) bool { return lp != nil }) || site.hasMeters()
+}
+
+// activeLoadpoints returns the non-disabled loadpoints
+func (site *Site) activeLoadpoints() []*Loadpoint {
+	return lo.Filter(site.loadpoints, func(lp *Loadpoint, _ int) bool { return lp != nil })
 }
 
 // loadpointsAsCircuitDevices returns the loadpoints as circuit devices
 func (site *Site) loadpointsAsCircuitDevices() []api.CircuitLoad {
-	return lo.Map(site.loadpoints, func(lp *Loadpoint, _ int) api.CircuitLoad { return lp })
+	return lo.Map(site.activeLoadpoints(), func(lp *Loadpoint, _ int) api.CircuitLoad { return lp })
 }
 
 // Vehicles returns the site vehicles
@@ -180,11 +247,15 @@ func (site *Site) GetCircuit() api.Circuit {
 	return site.circuit
 }
 
-// SetCircuit sets the root circuit
-func (site *Site) SetCircuit(circuit api.Circuit) {
+// SetHEMS attaches the configured HEMS to the site and the root circuit
+func (site *Site) SetHEMS(hems api.HEMS) {
 	site.Lock()
 	defer site.Unlock()
-	site.circuit = circuit
+	site.hems = hems
+
+	if site.circuit != nil {
+		site.circuit.SetHEMS(hems)
+	}
 }
 
 // GetPrioritySoc returns the PrioritySoc
@@ -284,6 +355,13 @@ func (site *Site) SetBufferStartSoc(soc float64) error {
 	return nil
 }
 
+// GetGridPower returns the most recent grid power reading in W (positive = import)
+func (site *Site) GetGridPower() float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.gridPower
+}
+
 // GetResidualPower returns the ResidualPower
 func (site *Site) GetResidualPower() float64 {
 	site.RLock()
@@ -303,6 +381,67 @@ func (site *Site) SetResidualPower(power float64) error {
 		settings.SetFloat(keys.ResidualPower, site.ResidualPower)
 		site.publish(keys.ResidualPower, site.ResidualPower)
 	}
+
+	return nil
+}
+
+// GetGridExportLimit returns the static grid export power limit in W (0 = disabled)
+func (site *Site) GetGridExportLimit() float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.gridExportLimit
+}
+
+// SetGridExportLimit sets the static grid export power limit in W (0 = disabled)
+func (site *Site) SetGridExportLimit(power float64) error {
+	if power < 0 {
+		return fmt.Errorf("invalid grid export limit: %g", power)
+	}
+
+	site.Lock()
+	changed := site.gridExportLimit != power
+	if changed {
+		site.gridExportLimit = power
+	}
+	site.Unlock()
+
+	if changed {
+		site.log.DEBUG.Println("set grid export limit:", power)
+		settings.SetFloat(keys.GridExportLimit, power)
+		site.publish(keys.GridExportLimit, power)
+
+		// re-run the optimizer so the new limit takes effect immediately
+		go site.optimizerUpdateAsync(0)
+	}
+
+	return nil
+}
+
+// GetProfilePercentile returns the percentile of the historic energy profiles in %, nil = average
+func (site *Site) GetProfilePercentile() *float64 {
+	if v, err := settings.Float(keys.ProfilePercentile); err == nil {
+		return &v
+	}
+	return nil
+}
+
+// SetProfilePercentile sets the percentile of the historic energy profiles in %, nil = average
+func (site *Site) SetProfilePercentile(percentile *float64) error {
+	if percentile == nil {
+		if err := settings.Delete(keys.ProfilePercentile); err != nil {
+			return err
+		}
+	} else {
+		if *percentile < 0 || *percentile > 100 {
+			return fmt.Errorf("invalid profile percentile: %g", *percentile)
+		}
+		settings.SetFloat(keys.ProfilePercentile, *percentile)
+	}
+
+	site.publish(keys.ProfilePercentile, percentile)
+
+	// re-run the optimizer so the new profile takes effect immediately
+	go site.optimizerUpdateAsync(0)
 
 	return nil
 }
@@ -341,6 +480,59 @@ func (site *Site) SetBatteryDischargeControl(val bool) error {
 	return nil
 }
 
+// GetBatteryGridDischarge returns whether the battery may discharge to grid (experimental)
+func (site *Site) GetBatteryGridDischarge() bool {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryGridDischarge
+}
+
+// SetBatteryGridDischarge sets whether the battery may discharge to grid (experimental)
+func (site *Site) SetBatteryGridDischarge(val bool) error {
+	site.log.DEBUG.Println("set battery grid discharge:", val)
+
+	if !site.hasBatteryControl() {
+		return ErrBatteryControlNotAvailable
+	}
+
+	site.Lock()
+	changed := site.batteryGridDischarge != val
+	if changed {
+		site.batteryGridDischarge = val
+		settings.SetBool(keys.BatteryGridDischarge, val)
+		site.publish(keys.BatteryGridDischarge, val)
+	}
+	site.Unlock()
+
+	// drop the limit, it is meaningless without the opt-in
+	if changed && !val {
+		return site.SetBatteryGridDischargeLimit(nil)
+	}
+
+	return nil
+}
+
+// GetSolarAdjusted returns if the solar forecast is adjusted to real production data
+func (site *Site) GetSolarAdjusted() bool {
+	site.RLock()
+	defer site.RUnlock()
+	return site.solarAdjusted
+}
+
+// SetSolarAdjusted sets if the solar forecast is adjusted to real production data
+func (site *Site) SetSolarAdjusted(val bool) {
+	site.log.DEBUG.Println("set solar adjusted:", val)
+
+	site.Lock()
+	defer site.Unlock()
+
+	if site.solarAdjusted != val {
+		site.solarAdjusted = val
+		settings.SetBool(keys.SolarAdjusted, val)
+		site.publish(keys.SolarAdjusted, val)
+	}
+}
+
 func (site *Site) GetBatteryGridChargeLimit() *float64 {
 	site.RLock()
 	defer site.RUnlock()
@@ -367,6 +559,79 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
 			settings.SetFloat(keys.BatteryGridChargeLimit, *val)
 			site.publish(keys.BatteryGridChargeLimit, *val)
 		}
+	}
+
+	return nil
+}
+
+func (site *Site) GetBatteryGridDischargeLimit() *float64 {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryGridDischargeLimit
+}
+
+func (site *Site) SetBatteryGridDischargeLimit(val *float64) error {
+	site.log.DEBUG.Println("set grid discharge limit:", printPtr("%.1f", val))
+
+	if !site.hasBatteryControl() {
+		return ErrBatteryControlNotAvailable
+	}
+
+	// a limit can only be set while the opt-in is on, so it can never outlive it
+	if val != nil && !site.GetBatteryGridDischarge() {
+		return ErrBatteryGridDischargeNotAvailable
+	}
+
+	site.Lock()
+	defer site.Unlock()
+
+	if !ptrValueEqual(site.batteryGridDischargeLimit, val) {
+		site.batteryGridDischargeLimit = val
+
+		if val == nil {
+			settings.SetString(keys.BatteryGridDischargeLimit, "")
+			site.publish(keys.BatteryGridDischargeLimit, nil)
+		} else {
+			settings.SetFloat(keys.BatteryGridDischargeLimit, *val)
+			site.publish(keys.BatteryGridDischargeLimit, *val)
+		}
+	}
+
+	return nil
+}
+
+// GetOptimizerChargingStrategy returns the optimizer grid charging strategy,
+// falling back to the default when unset.
+func (site *Site) GetOptimizerChargingStrategy() string {
+	site.RLock()
+	defer site.RUnlock()
+	if site.optimizerChargingStrategy == "" {
+		return defaultOptimizerChargingStrategy
+	}
+	return site.optimizerChargingStrategy
+}
+
+// SetOptimizerChargingStrategy validates and persists the optimizer grid
+// charging strategy and re-runs the optimizer when it changes.
+func (site *Site) SetOptimizerChargingStrategy(strategy string) error {
+	if !slices.Contains(optimizerChargingStrategies, strategy) {
+		return fmt.Errorf("invalid optimizer charging strategy: %s", strategy)
+	}
+
+	site.Lock()
+	changed := site.optimizerChargingStrategy != strategy
+	if changed {
+		site.optimizerChargingStrategy = strategy
+	}
+	site.Unlock()
+
+	if changed {
+		site.log.DEBUG.Println("set optimizer charging strategy:", strategy)
+		settings.SetString(keys.OptimizerChargingStrategy, strategy)
+		site.publish(keys.OptimizerChargingStrategy, strategy)
+
+		// re-run the optimizer so the new strategy takes effect immediately
+		go site.optimizerUpdateAsync(0)
 	}
 
 	return nil

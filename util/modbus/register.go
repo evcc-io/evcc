@@ -92,7 +92,7 @@ func (r Register) DecodeFunc() (func([]byte) float64, error) {
 	case "uint16nan":
 		return decodeNaN16(asFloat64(encoding.Uint16), 1<<16-1), nil
 	case "bool16":
-		mask, err := decodeMask(r.BitMask)
+		mask, err := DecodeMask(r.BitMask)
 		if err != nil {
 			return nil, err
 		}
@@ -123,6 +123,10 @@ func (r Register) DecodeFunc() (func([]byte) float64, error) {
 		return asFloat64(encoding.Int64), nil
 	case "uint64":
 		return asFloat64(encoding.Uint64), nil
+	case "uint64s":
+		return asFloat64(uint64LswFirst), nil
+	case "uint64snan":
+		return decodeNaN64(asFloat64(uint64LswFirst), 1<<64-1), nil
 	case "uint64nan":
 		return decodeNaN64(asFloat64(encoding.Uint64), 1<<64-1), nil
 	case "float64":

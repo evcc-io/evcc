@@ -3,7 +3,7 @@ products:
   - brand: ETEK
     description:
       generic: EKEPC2-C/S EV Charge Controller
-capabilities: ["mA"]
+capabilities: ["mA", "dim"]
 params:
   - name: modbus
     choice: ["rs485", "tcpip"]

@@ -1,45 +1,35 @@
 <template>
 	<div v-if="chartData.labels.length > 1" class="row">
-		<div class="col-12 col-md-6 mb-3">
-			<Doughnut :data="chartData" :options="options" />
+		<div class="col-12 col-md-6 col-lg-12 col-xxl-6 mb-3">
+			<div ref="chartEl" class="round-chart"></div>
 		</div>
-		<div class="col-12 col-md-6 d-flex align-items-center">
-			<LegendList :legends="legends" grid />
+		<div class="col-12 col-md-6 col-lg-12 col-xxl-6 d-flex align-items-center">
+			<LegendList :legends="legends" :device-colors="deviceColors" grid />
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
 import { defineComponent, type PropType } from "vue";
-import { Doughnut } from "vue-chartjs";
-import {
-	DoughnutController,
-	ArcElement,
-	LinearScale,
-	Legend,
-	Tooltip,
-	type TooltipItem,
-} from "chart.js";
+import { doughnutOption } from "./echarts";
+import echartsChart from "@/mixins/echartsChart";
 import LegendList from "./LegendList.vue";
-import { registerChartComponents, commonOptions, tooltipLabelColor } from "./chartConfig";
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
-import colors from "@/colors";
 import { GROUPS, type Session } from "./types";
-
-registerChartComponents([DoughnutController, ArcElement, LinearScale, Legend, Tooltip]);
+import type { DeviceColors } from "@/types/evcc";
 
 export default defineComponent({
 	name: "EnergyGroupedChart",
-	components: { Doughnut, LegendList },
-	mixins: [formatter],
+	components: { LegendList },
+	mixins: [formatter, echartsChart],
 	props: {
 		sessions: { type: Array as PropType<Session[]>, default: () => [] },
 		groupBy: { type: String as PropType<GROUPS>, default: GROUPS.NONE },
 		colorMappings: { type: Object, default: () => ({ loadpoint: {}, vehicle: {}, solar: {} }) },
+		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
 	},
 	computed: {
-		chartData() {
-			console.log("update energy aggregate data");
+		chartData(): { labels: string[]; data: number[]; colors: string[] } {
 			const aggregatedData: { [key: string]: number } = {};
 
 			if (this.groupBy === GROUPS.NONE) {
@@ -60,67 +50,44 @@ export default defineComponent({
 				});
 			}
 
-			// Sort the data by energy in descending order
-			const sortedEntries = Object.entries(aggregatedData); //.sort((a, b) => b[1] - a[1]);
-
-			const labels = sortedEntries.map(([label]) =>
+			// stable alphabetical order so entries don't jump between periods
+			const entries = Object.entries(aggregatedData).sort((a, b) => a[0].localeCompare(b[0]));
+			const labels = entries.map(([label]) =>
 				this.groupBy === GROUPS.NONE ? this.$t(`sessions.group.${label}`) : label
 			);
-			const data = sortedEntries.map(([, value]) => value);
+			const data = entries.map(([, value]) => value);
 			const colorGroup = this.groupBy === GROUPS.NONE ? "solar" : this.groupBy;
-			const backgroundColor = sortedEntries.map(
-				([label]) => this.colorMappings[colorGroup][label]
-			);
+			const entryColors = entries.map(([label]) => this.colorMappings[colorGroup][label]);
 
-			return {
-				labels: labels,
-				datasets: [{ data, backgroundColor }],
-			};
+			return { labels, data, colors: entryColors };
 		},
 		legends() {
-			const dataset = this.chartData.datasets[0]!;
-			const total = dataset.data.reduce((acc, curr) => acc + curr, 0);
-			const maxEnergy = Math.max(...dataset.data);
+			const { labels, data, colors: entryColors } = this.chartData;
+			const total = data.reduce((acc, curr) => acc + curr, 0);
+			const maxEnergy = Math.max(...data);
 			// sync energy units for label grid view
 			const unit =
 				maxEnergy < 1 ? POWER_UNIT.W : maxEnergy > 1e4 ? POWER_UNIT.MW : POWER_UNIT.KW;
 			const fmtShare = (value: number) => this.fmtPercentage((100 / total) * value, 1);
 			const fmtValue = (value: number) => this.fmtWh(value * 1e3, unit);
-			return this.chartData.labels.map((label, index) => {
-				const dataValue = dataset.data[index] as number;
+			const pickable = this.groupBy !== GROUPS.NONE;
+			return labels.map((label, index) => {
+				const dataValue = data[index] as number;
 				return {
-					label: label,
-					color: dataset.backgroundColor[index],
+					label,
+					color: entryColors[index],
 					value: [fmtValue(dataValue), fmtShare(dataValue)],
+					id: pickable ? label || undefined : undefined,
 				};
 			});
 		},
-		options() {
-			return {
-				...commonOptions,
-				locale: this.$i18n?.locale,
-				aspectRatio: 1,
-				borderRadius: 10,
-				color: colors.text,
-				borderWidth: 3,
-				borderColor: colors.background,
-				cutout: "70%",
-				radius: "95%",
-				animation: { duration: 250 },
-				plugins: {
-					...commonOptions.plugins,
-					tooltip: {
-						...commonOptions.plugins.tooltip,
-						axis: "r",
-						position: "center",
-						callbacks: {
-							label: (tooltipItem: TooltipItem<"doughnut">) =>
-								this.formatValue(tooltipItem.raw as number),
-							labelColor: tooltipLabelColor(false),
-						},
-					},
-				},
-			} as any;
+		chartOption(): Record<string, unknown> {
+			const { labels, data, colors: entryColors } = this.chartData;
+			return doughnutOption(
+				labels.map((name, i) => ({ name, value: data[i]!, color: entryColors[i]! })),
+				this.formatValue,
+				() => this.chart
+			);
 		},
 	},
 	methods: {

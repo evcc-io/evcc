@@ -9,23 +9,26 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"uuid"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/google/uuid"
 	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
 
 const (
-	DeviceIdURL        = "/api/v1/spa/notifications/register"
-	IntegrationInfoURL = "/api/v1/user/integrationinfo"
-	SilentSigninURL    = "/api/v1/user/silentsignin"
-	LanguageURL        = "/api/v1/user/language"
-	LoginURL           = "/api/v1/user/signin"
-	TokenURL           = "/auth/api/v2/user/oauth2/token"
+	LanguageURL = "/api/v1/user/language"
+	LoginURL    = "/api/v1/user/signin"
+	TokenURL    = "/auth/api/v2/user/oauth2/token"
+	// AU region constants (sourced from hyundai_kia_connect_api KiaUvoApiAU.py)
+	HyundaiAUBaseURI       = "https://au-apigw.ccs.hyundai.com.au:8080"
+	HyundaiAUCCSPServiceID = "855c72df-dfd7-4230-ab03-67cbf902bb1c"
+	HyundaiAUCCSPAppID     = "f9ccfdac-a48d-4c57-bd32-9116963c24ed"
+	HyundaiAUBasicToken    = "ODU1YzcyZGYtZGZkNy00MjMwLWFiMDMtNjdjYmY5MDJiYjFjOmU2ZmJ3SE0zMllOYmhRbDBwdmlhUHAzcmY0dDNTNms5MWVjZUEzTUpMZGJkVGhDTw=="
+	HyundaiAUCfb           = "nGDHng3k4Cg9gWV+C+A6Yk/ecDopUNTkGmDpr2qVKAQXx9bvY2/YLoHPfObliK32mZQ="
 )
 
 // Config is the bluelink API configuration
@@ -39,6 +42,11 @@ type Config struct {
 	Cfb               string
 	LoginFormHost     string
 	Brand             string
+	TokenURL          string
+	UseBasicAuth      bool
+	// CCI is set for brands affected by the IDPConnect WAF block on the legacy
+	// authorize endpoint (EU Kia/Hyundai), nil for Genesis EU and Hyundai AU
+	CCI *CCIConfig
 }
 
 // Identity implements the Kia/Hyundai bluelink identity.
@@ -48,6 +56,9 @@ type Identity struct {
 	log      *util.Logger
 	config   Config
 	deviceID string
+	user     string
+	language string
+	bundle   cciBundle
 	oauth2.TokenSource
 }
 
@@ -68,11 +79,11 @@ func (v *Identity) getDeviceID() (string, error) {
 		return "", err
 	}
 
-	uuid := uuid.NewString()
+	id := uuid.New().String()
 	data := map[string]any{
 		"pushRegId": lo.RandomString(64, []rune("0123456789ABCDEF")),
 		"pushType":  v.config.PushType,
-		"uuid":      uuid,
+		"uuid":      id,
 	}
 
 	headers := map[string]string{
@@ -90,7 +101,7 @@ func (v *Identity) getDeviceID() (string, error) {
 		}
 	}
 
-	req, err := request.New(http.MethodPost, v.config.URI+DeviceIdURL, request.MarshalJSON(data), headers)
+	req, err := request.New(http.MethodPost, v.config.URI+"/api/v1/spa/notifications/register", request.MarshalJSON(data), headers)
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
@@ -106,16 +117,34 @@ func (v *Identity) getDeviceID() (string, error) {
 func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	var res oauth2.Token
 
-	uri := v.config.LoginFormHost + TokenURL
+	tokenURL := TokenURL
+	if v.config.TokenURL != "" {
+		tokenURL = v.config.TokenURL
+	}
+	uri := v.config.LoginFormHost + tokenURL
+
 	headers := map[string]string{
 		"Content-type": "application/x-www-form-urlencoded",
 		"User-Agent":   "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19_CCS_APP_AOS",
 	}
+
 	data := url.Values{
 		"grant_type":    {"refresh_token"},
 		"refresh_token": {token.RefreshToken},
-		"client_id":     {v.config.CCSPServiceID},
-		"client_secret": {v.config.CCSPServiceSecret},
+	}
+
+	// EU uses client_id/secret in body; AU uses Basic auth header
+	if v.config.UseBasicAuth {
+		stamp, err := v.stamp()
+		if err != nil {
+			return nil, err
+		}
+		headers["Authorization"] = "Basic " + v.config.BasicToken
+		headers["Stamp"] = stamp
+		headers["User-Agent"] = "okhttp/3.12.0"
+	} else {
+		data.Set("client_id", v.config.CCSPServiceID)
+		data.Set("client_secret", v.config.CCSPServiceSecret)
 	}
 
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers)
@@ -132,7 +161,7 @@ func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	return util.TokenWithExpiry(&res), err
 }
 
-func (v *Identity) Login(user, password, language, brand string) (err error) {
+func (v *Identity) Login(user, password, language, brand string) error {
 	if user == "" || password == "" {
 		return api.ErrMissingCredentials
 	}
@@ -140,22 +169,40 @@ func (v *Identity) Login(user, password, language, brand string) (err error) {
 	switch brand {
 	case "kia":
 	case "hyundai":
+	case "genesis":
 	default:
 		return fmt.Errorf("unknown brand (%s)", brand)
 	}
 
+	v.user = user
+	v.language = language
+
+	refresher := v.refreshToken
+
 	token, err := v.refreshToken(&oauth2.Token{RefreshToken: password})
+	if err == nil && !token.Valid() {
+		err = errors.New("no access token")
+	}
+
+	// CCI-capable brands (EU Kia/Hyundai) additionally accept the account
+	// password, as generating a legacy refresh_token is WAF-blocked
+	if err != nil && v.config.CCI != nil {
+		refresher = v.refreshCCI
+		token, err = v.loginCCI(password)
+	}
+
 	if err != nil {
 		return fmt.Errorf("login failed: %w", err)
 	}
-	v.TokenSource = oauth.RefreshTokenSource(token, v.refreshToken)
+
+	v.TokenSource = oauth.RefreshTokenSource(v.log, token, refresher)
 
 	v.deviceID, err = v.getDeviceID()
 	if err != nil {
 		return fmt.Errorf("error getting device id: %w", err)
 	}
 
-	return err
+	return nil
 }
 
 // Request decorates requests with authorization headers

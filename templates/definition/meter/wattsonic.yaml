@@ -13,51 +13,24 @@ params:
     choice: ["rs485"]
     port: 502
     id: 247
-  - preset: battery-params
+    delay: 100ms
   - name: delay
-    default: 100ms
-    advanced: true
+    deprecated: true
+  - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
   power: # power (W)
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 11000  # Total Power on Meter
       type: holding   
       decode: int32
     scale: -1
-  currents:
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      delay: {{ .delay }}
-      register:
-        address: 11010  # Grid Phase A Current
-        type: holding
-        decode: uint16
-      scale: 0.1
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      delay: {{ .delay }}
-      register:
-        address: 11012  # Grid Phase B Current
-        type: holding
-        decode: uint16
-      scale: 0.1
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      delay: {{ .delay }}
-      register:
-        address: 11014  # Grid Phase C Current
-        type: holding
-        decode: uint16
-      scale: 0.1
   powers:
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      delay: {{ .delay }}
       register:
         address: 10994  # Phase A Power on Meter
         type: holding
@@ -65,7 +38,6 @@ render: |
       scale: -1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      delay: {{ .delay }}
       register:
         address: 10996  # Phase B Power on Meter
         type: holding
@@ -73,7 +45,6 @@ render: |
       scale: -1
     - source: modbus
       {{- include "modbus" . | indent 4 }}
-      delay: {{ .delay }}
       register:
         address: 10998  # Phase C Power on Meter
         type: holding
@@ -84,7 +55,6 @@ render: |
   power: # power (W)
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 11028    # PV Input Total Power
       type: holding
@@ -94,7 +64,6 @@ render: |
   power: # power (W)
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 40258    # Total_Backup_P
       type: holding
@@ -102,7 +71,6 @@ render: |
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     scale: 0.01
     register:
       address: 43000    # SOC
@@ -111,7 +79,6 @@ render: |
   limitsoc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
-    delay: {{ .delay }}
     register:
       address: 52503 # min soc
       type: writeholding

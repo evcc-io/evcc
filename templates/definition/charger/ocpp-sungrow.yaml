@@ -3,7 +3,7 @@ products:
   - brand: Sungrow
     description:
       generic: AC011E
-capabilities: ["mA", "rfid"]
+capabilities: ["mA", "rfid", "dim"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
 params:

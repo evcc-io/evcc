@@ -21,7 +21,9 @@ render: |
   {{- if ne .usage "pv" }}
   power: Power
   energy: Import
+  returnenergy: Export
   {{- else }}
   power: -Power
   energy: Export
+  returnenergy: Import
   {{- end }}

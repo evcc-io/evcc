@@ -24,8 +24,7 @@ import { defineComponent, type PropType } from "vue";
 import api from "@/api";
 import { setLoadpointLastSmartCostLimit } from "@/uiLoadpoints";
 import settings from "@/settings";
-import { type CURRENCY, SMART_COST_TYPE } from "@/types/evcc";
-import { type ForecastSlot } from "../Forecast/types";
+import { type CURRENCY, type UiForecastSlot, SMART_COST_TYPE } from "@/types/evcc";
 
 export default defineComponent({
 	name: "SmartCostLimit",
@@ -42,7 +41,7 @@ export default defineComponent({
 		loadpointId: String,
 		possible: Boolean,
 		lastLimit: Number,
-		tariff: Array as PropType<ForecastSlot[]>,
+		tariff: Array as PropType<UiForecastSlot[]>,
 	},
 	computed: {
 		isCo2(): boolean {
@@ -60,7 +59,7 @@ export default defineComponent({
 				description: lp ? t("loadpointDescription") : t("batteryDescription"),
 				limitLabel: co2 ? t("co2Limit") : t("priceLimit"),
 				currentPriceLabel: co2 ? t("co2Label") : t("priceLabel"),
-				resetWarningText: t("resetWarning"),
+				resetWarningKey: "smartCost.resetWarning",
 				activeHoursLabel: t("activeHoursLabel"),
 			};
 		},

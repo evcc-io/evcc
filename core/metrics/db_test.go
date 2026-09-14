@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
-	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/db"
 	"github.com/stretchr/testify/require"
 )
 
@@ -20,7 +20,7 @@ func TestSqliteTimestamp(t *testing.T) {
 	entity := entity{Name: "foo"}
 	require.NoError(t, db.Instance.FirstOrCreate(&entity).Error)
 
-	persist(entity, clock.Now(), 0, 0)
+	persist(entity, clock.Now(), 0, 0, nil, false)
 
 	db, err := db.Instance.DB()
 	require.NoError(t, err)
@@ -44,7 +44,7 @@ func TestSqliteTimestamp(t *testing.T) {
 	require.True(t, clock.Now().Equal(time.Time(ts)), "expected %v, got %v", clock.Now().Local(), time.Time(ts).Local())
 }
 
-func TestQueryImportEnergyUTCFilter(t *testing.T) {
+func TestQueryEnergyUTCFilter(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
@@ -55,22 +55,22 @@ func TestQueryImportEnergyUTCFilter(t *testing.T) {
 	loc := time.Now().Location()
 	base := time.Date(2026, 4, 15, 16, 0, 0, 0, loc)
 
-	require.NoError(t, persist(e, base, 0, 1))
-	require.NoError(t, persist(e, base.Add(time.Hour), 0, 2))
+	require.NoError(t, persist(e, base, 0, 1, nil, false))
+	require.NoError(t, persist(e, base.Add(time.Hour), 0, 2, nil, false))
 
 	// query with UTC times spanning both slots
 	from := base.Add(-time.Hour).UTC()
 	to := base.Add(3 * time.Hour).UTC()
 
-	res, err := QueryImportEnergy(from, to, "hour", false)
+	res, err := QueryEnergy(from, to, "hour", false)
 	require.NoError(t, err)
 	require.Len(t, res, 1)
 	require.Len(t, res[0].Data, 2)
-	require.InDelta(t, 1, res[0].Data[0].Export, 0.001)
-	require.InDelta(t, 2, res[0].Data[1].Export, 0.001)
+	require.InDelta(t, 1, res[0].Data[0].ReturnEnergy, 0.001)
+	require.InDelta(t, 2, res[0].Data[1].ReturnEnergy, 0.001)
 }
 
-func TestQueryImportEnergyGrouped(t *testing.T) {
+func TestQueryEnergyGrouped(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
@@ -83,31 +83,31 @@ func TestQueryImportEnergyGrouped(t *testing.T) {
 	loc := time.Now().Location()
 	base := time.Date(2026, 4, 15, 16, 0, 0, 0, loc)
 
-	require.NoError(t, persist(e1, base, 1, 0))
-	require.NoError(t, persist(e2, base, 2, 0))
-	require.NoError(t, persist(e1, base.Add(time.Hour), 3, 0))
-	require.NoError(t, persist(e2, base.Add(time.Hour), 4, 0))
+	require.NoError(t, persist(e1, base, 1, 0, nil, false))
+	require.NoError(t, persist(e2, base, 2, 0, nil, false))
+	require.NoError(t, persist(e1, base.Add(time.Hour), 3, 0, nil, false))
+	require.NoError(t, persist(e2, base.Add(time.Hour), 4, 0, nil, false))
 
 	from := base.Add(-time.Hour).UTC()
 	to := base.Add(3 * time.Hour).UTC()
 
 	// ungrouped: 2 series
-	res, err := QueryImportEnergy(from, to, "hour", false)
+	res, err := QueryEnergy(from, to, "hour", false)
 	require.NoError(t, err)
 	require.Len(t, res, 2)
 
 	// grouped: 1 series, values summed per bucket
-	res, err = QueryImportEnergy(from, to, "hour", true)
+	res, err = QueryEnergy(from, to, "hour", true)
 	require.NoError(t, err)
 	require.Len(t, res, 1)
 	require.Equal(t, Grid, res[0].Group)
-	require.Empty(t, res[0].Name)
+	require.Empty(t, res[0].Title)
 	require.Len(t, res[0].Data, 2)
-	require.InDelta(t, 1+2, res[0].Data[0].Import, 0.001)
-	require.InDelta(t, 3+4, res[0].Data[1].Import, 0.001)
+	require.InDelta(t, 1+2, res[0].Data[0].Energy, 0.001)
+	require.InDelta(t, 3+4, res[0].Data[1].Energy, 0.001)
 }
 
-func TestQueryImportEnergyMultipleSeries(t *testing.T) {
+func TestQueryEnergyMultipleSeries(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 	require.NoError(t, SetupSchema())
 
@@ -125,51 +125,99 @@ func TestQueryImportEnergyMultipleSeries(t *testing.T) {
 	// 2 hourly slots per entity
 	for i := range 2 {
 		ts := base.Add(time.Duration(i) * time.Hour)
-		require.NoError(t, persist(eGrid, ts, float64(1+i), 0))
-		require.NoError(t, persist(ePv1, ts, 0, float64(10+i)))
-		require.NoError(t, persist(ePv2, ts, 0, float64(20+i)))
+		require.NoError(t, persist(eGrid, ts, float64(1+i), 0, nil, false))
+		require.NoError(t, persist(ePv1, ts, 0, float64(10+i), nil, false))
+		require.NoError(t, persist(ePv2, ts, 0, float64(20+i), nil, false))
 	}
 
 	from := base.Add(-time.Hour).UTC()
 	to := base.Add(3 * time.Hour).UTC()
 
 	// ungrouped: 3 series, each with 2 slots
-	res, err := QueryImportEnergy(from, to, "hour", false)
+	res, err := QueryEnergy(from, to, "hour", false)
 	require.NoError(t, err)
 	require.Len(t, res, 3)
 
-	byName := map[string]Series{}
+	byTitle := map[string]Series{}
 	for _, s := range res {
 		require.Len(t, s.Data, 2)
-		byName[s.Name] = s
+		byTitle[s.Title] = s
 	}
-	require.Equal(t, Grid, byName[Grid].Group)
-	require.Equal(t, PV, byName["pv1"].Group)
-	require.Equal(t, PV, byName["pv2"].Group)
+	require.Equal(t, Grid, byTitle[Grid].Group)
+	require.Equal(t, PV, byTitle["pv1"].Group)
+	require.Equal(t, PV, byTitle["pv2"].Group)
 
-	require.InDelta(t, 1, byName[Grid].Data[0].Import, 0.001)
-	require.InDelta(t, 2, byName[Grid].Data[1].Import, 0.001)
-	require.InDelta(t, 10, byName["pv1"].Data[0].Export, 0.001)
-	require.InDelta(t, 21, byName["pv2"].Data[1].Export, 0.001)
+	require.InDelta(t, 1, byTitle[Grid].Data[0].Energy, 0.001)
+	require.InDelta(t, 2, byTitle[Grid].Data[1].Energy, 0.001)
+	require.InDelta(t, 10, byTitle["pv1"].Data[0].ReturnEnergy, 0.001)
+	require.InDelta(t, 21, byTitle["pv2"].Data[1].ReturnEnergy, 0.001)
 
 	// grouped: 2 series, pv summed per bucket
-	res, err = QueryImportEnergy(from, to, "hour", true)
+	res, err = QueryEnergy(from, to, "hour", true)
 	require.NoError(t, err)
 	require.Len(t, res, 2)
 
 	byGroup := map[string]Series{}
 	for _, s := range res {
-		require.Empty(t, s.Name)
+		require.Empty(t, s.Title)
 		require.Len(t, s.Data, 2)
 		byGroup[s.Group] = s
 	}
 	require.Contains(t, byGroup, Grid)
 	require.Contains(t, byGroup, PV)
 
-	require.InDelta(t, 1, byGroup[Grid].Data[0].Import, 0.001)
-	require.InDelta(t, 2, byGroup[Grid].Data[1].Import, 0.001)
-	require.InDelta(t, 10+20, byGroup[PV].Data[0].Export, 0.001)
-	require.InDelta(t, 11+21, byGroup[PV].Data[1].Export, 0.001)
+	require.InDelta(t, 1, byGroup[Grid].Data[0].Energy, 0.001)
+	require.InDelta(t, 2, byGroup[Grid].Data[1].Energy, 0.001)
+	require.InDelta(t, 10+20, byGroup[PV].Data[0].ReturnEnergy, 0.001)
+	require.InDelta(t, 11+21, byGroup[PV].Data[1].ReturnEnergy, 0.001)
+}
+
+func TestQueryEnergyFilter(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	eGrid := entity{Id: 2, Name: Grid, Group: Grid}
+	require.NoError(t, db.Instance.Create(&eGrid).Error)
+	ePv := entity{Id: 4, Name: "pv1", Group: PV}
+	require.NoError(t, db.Instance.Create(&ePv).Error)
+	eBat := entity{Id: 6, Name: "db:8", Group: Battery, Title: "Anker"}
+	require.NoError(t, db.Instance.Create(&eBat).Error)
+
+	loc := time.Now().Location()
+	base := time.Date(2026, 4, 15, 16, 0, 0, 0, loc)
+	for i := range 2 {
+		ts := base.Add(time.Duration(i) * time.Hour)
+		require.NoError(t, persist(eGrid, ts, float64(1+i), 0, nil, false))
+		require.NoError(t, persist(ePv, ts, 0, float64(10+i), nil, false))
+		require.NoError(t, persist(eBat, ts, float64(5+i), 0, nil, false))
+	}
+
+	from := base.Add(-time.Hour).UTC()
+	to := base.Add(3 * time.Hour).UTC()
+
+	// group filter
+	res, err := QueryEnergy(from, to, "hour", false, EnergyFilter{Group: Battery})
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	require.Equal(t, Battery, res[0].Group)
+	require.Equal(t, "Anker", res[0].Title)
+
+	// name filter
+	res, err = QueryEnergy(from, to, "hour", false, EnergyFilter{Name: "pv1"})
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	require.Equal(t, PV, res[0].Group)
+
+	// title filter
+	res, err = QueryEnergy(from, to, "hour", false, EnergyFilter{Title: "Anker"})
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	require.Equal(t, Battery, res[0].Group)
+
+	// no filter fields set: all series
+	res, err = QueryEnergy(from, to, "hour", false, EnergyFilter{})
+	require.NoError(t, err)
+	require.Len(t, res, 3)
 }
 
 func TestUpdateProfile(t *testing.T) {
@@ -189,7 +237,7 @@ func TestUpdateProfile(t *testing.T) {
 	// day 1:   0 ...  95
 	// day 2:  96 ... 181
 	for i := range 4 * 2 * 24 {
-		persist(entity, clock.Now(), float64(i), float64(i))
+		persist(entity, clock.Now(), float64(i), float64(i), nil, false)
 		clock.Add(15 * time.Minute)
 	}
 
@@ -201,7 +249,7 @@ func TestUpdateProfile(t *testing.T) {
 	{
 		from := clock.Now().Local().AddDate(0, 0, -2).Add(12 * time.Hour) // 12:00 of day 0
 
-		prof, err := importProfile(entity, from)
+		prof, err := energyProfileFiltered(entity, from, nil, 0.5)
 		require.NoError(t, err)
 
 		var expected [96]float64
@@ -219,7 +267,7 @@ func TestUpdateProfile(t *testing.T) {
 	{
 		from := clock.Now().Local().AddDate(0, 0, -3).Add(12 * time.Hour) // 12:00 of day -1
 
-		prof, err := importProfile(entity, from)
+		prof, err := energyProfileFiltered(entity, from, nil, 0.5)
 		require.NoError(t, err)
 
 		var expected [96]float64
@@ -228,6 +276,44 @@ func TestUpdateProfile(t *testing.T) {
 		}
 
 		require.Equal(t, expected, *prof, "full profile: expected %v, got %v", expected, *prof)
+	}
+}
+
+func TestEnergyProfilePercentile(t *testing.T) {
+	clock := clock.NewMock()
+
+	// adjust for 00:00 in local timezone
+	_, o := clock.Now().Zone()
+	clock.Add(-time.Duration(o) * time.Second)
+
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	require.NoError(t, SetupSchema())
+
+	entity := entity{Id: 2, Name: "foo"}
+	require.NoError(t, db.Instance.FirstOrCreate(&entity).Error)
+
+	from := clock.Now()
+
+	// 3 days: two regular days and one heavy outlier day, sorted per slot: 1, 1.2, 1000.1
+	for day, energy := range []float64{1, 1000, 1} {
+		for range 96 {
+			persist(entity, clock.Now(), energy+float64(day)*0.1, 0, nil, false)
+			clock.Add(15 * time.Minute)
+		}
+	}
+
+	for percentile, expected := range map[float64]float64{
+		0:    (1 + 1.2 + 1000.1) / 3, // average fallback
+		0.25: 1.1,                    // interpolated between rank 1 and 2
+		0.5:  1.2,                    // median, outlier ignored
+		1:    1000.1,
+	} {
+		prof, err := energyProfileFiltered(entity, from, nil, percentile)
+		require.NoError(t, err)
+
+		for _, v := range prof {
+			require.InDelta(t, expected, v, 1e-9, "percentile %.2f", percentile)
+		}
 	}
 }
 

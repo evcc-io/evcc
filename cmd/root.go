@@ -16,14 +16,16 @@ import (
 	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/db"
+	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/server"
-	"github.com/evcc-io/evcc/server/db"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/server/mcp"
 	"github.com/evcc-io/evcc/server/network"
 	"github.com/evcc-io/evcc/server/remote"
 	"github.com/evcc-io/evcc/server/updater"
+	"github.com/evcc-io/evcc/ui"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/pipe"
@@ -31,6 +33,7 @@ import (
 	"github.com/evcc-io/evcc/util/telemetry"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/samber/lo"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	vpr "github.com/spf13/viper"
@@ -46,7 +49,7 @@ var (
 	log           = util.NewLogger("main")
 	cfgFile       string
 	cfgDatabase   string
-	customCssFile string
+	customization server.Customization
 	ignoreEmpty   = ""                                      // ignore empty keys
 	ignoreLogs    = []string{"log"}                         // ignore log messages, including warn/error
 	ignoreMqtt    = []string{"log", "auth", "releaseNotes"} // excessive size may crash certain brokers
@@ -101,7 +104,16 @@ func init() {
 
 	rootCmd.Flags().Bool(flagDisableAuth, false, flagDisableAuthDescription)
 	rootCmd.Flags().Bool(flagDemoMode, false, flagDemoModeDescription)
-	rootCmd.Flags().StringVar(&customCssFile, flagCustomCss, "", flagCustomCssDescription)
+
+	// UI customization, flags default to environment variables
+	rootCmd.Flags().StringVar(&customization.Css, flagCustomCss, os.Getenv("EVCC_CUSTOM_CSS"), flagCustomCssDescription)
+	rootCmd.Flags().StringVar(&customization.LogoLight, flagCustomLogoLight, os.Getenv("EVCC_CUSTOM_LOGO_LIGHT"), flagCustomLogoLightDescription)
+	rootCmd.Flags().StringVar(&customization.LogoDark, flagCustomLogoDark, os.Getenv("EVCC_CUSTOM_LOGO_DARK"), flagCustomLogoDarkDescription)
+	rootCmd.Flags().StringVar(&customization.Brand, flagCustomBrand, os.Getenv("EVCC_CUSTOM_BRAND"), flagCustomBrandDescription)
+	rootCmd.Flags().StringVar(&customization.Website, flagCustomWebsite, os.Getenv("EVCC_CUSTOM_WEBSITE"), flagCustomWebsiteDescription)
+	rootCmd.Flags().StringVar(&customization.Email, flagCustomEmail, os.Getenv("EVCC_CUSTOM_EMAIL"), flagCustomEmailDescription)
+	rootCmd.Flags().StringVar(&customization.Phone, flagCustomPhone, os.Getenv("EVCC_CUSTOM_PHONE"), flagCustomPhoneDescription)
+	rootCmd.Flags().StringVar(&customization.Theme, flagCustomTheme, os.Getenv("EVCC_CUSTOM_THEME"), flagCustomThemeDescription)
 }
 
 // initConfig reads in config file and ENV variables if set
@@ -198,18 +210,39 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan := make(chan util.Param, 64)
 	go tee.Run(valueChan)
 
-	// start OCPP server
-	ocppCS := ocpp.Instance()
-	ocppCS.SetUpdated(func() {
-		// republish when OCPP state updates
-		valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.ConfigStatus{
-			Config: conf.Ocpp,
-			Status: ocpp.GetStatus(),
-		}}
-	})
-	log.INFO.Printf("OCPP local url:    ws://127.0.0.1:%d/<stationId>", conf.Ocpp.Port)
-	if ocpp.ExternalUrl() != "" {
-		log.INFO.Printf("OCPP external url: %s/<stationId>", ocpp.ExternalUrl())
+	// start OCPP and EEBus servers (skipped in degraded mode where setup failed,
+	// so a misconfigured instance serves only the offline UI)
+	if err == nil {
+		cs, ocppErr := ocpp.Instance()
+		if ocppErr != nil {
+			log.ERROR.Println("ocpp:", ocppErr)
+		} else {
+			cs.SetUpdated(func() {
+				// republish when OCPP state updates
+				valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.ConfigStatus{
+					Config: ocpp.CurrentConfig(),
+					Status: ocpp.GetStatus(),
+				}}
+			})
+			log.INFO.Printf("OCPP local url:    ws://127.0.0.1:%d/<stationId>", conf.Ocpp.Port)
+			if ocpp.ExternalUrl() != "" {
+				log.INFO.Printf("OCPP external url: %s/<stationId>", ocpp.ExternalUrl())
+			}
+		}
+		// register the callback even with no rules so runtime additions are pushed
+		ocpp.SetForwarderUpdated(func() {
+			valueChan <- util.Param{Key: keys.OcppForwarder, Val: globalconfig.ConfigStatus{
+				Config: lo.Map(ocpp.ForwarderRules(), func(r ocpp.ForwarderRule, _ int) ocpp.ForwarderRule { return r.Redacted() }),
+				Status: ocpp.GetForwarderStatus(),
+			}}
+		})
+		if ocpp.ForwarderEnabled() {
+			log.INFO.Printf("OCPP forwarder:    %d rule(s) active", len(ocpp.ForwarderRules()))
+		}
+
+		if _, eebusErr := eebus.Instance(); eebusErr != nil {
+			log.ERROR.Println("eebus:", eebusErr)
+		}
 	}
 
 	// value cache
@@ -218,7 +251,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 
 	// create web server
 	socketHub := server.NewSocketHub()
-	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub, customCssFile)
+	httpd := server.NewHTTPd(fmt.Sprintf(":%d", conf.Network.Port), socketHub, customization)
 
 	// start serving in background, watch for “routine‐only” errors
 	go func() {
@@ -236,13 +269,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 	go socketHub.Run(pipe.NewDropper(ignoreEmpty).Pipe(tee.Attach()), cache)
 
 	// remote access tunnel
-	var remoteAccess *remote.Remote
-	if remoteHost := os.Getenv("EVCC_REMOTE_ACCESS"); remoteHost != "" {
-		remoteAccess = remote.New(remoteHost, httpd.Router(), valueChan)
-	}
+	remoteAccess := remote.New(util.Getenv("EVCC_REMOTE_ACCESS", "api.evcc.cloud"), httpd.Router(), valueChan)
 
 	// signal ui listening
 	valueChan <- util.Param{Key: keys.StartupCompleted, Val: false}
+	valueChan <- util.Param{Key: keys.ApiReady, Val: false}
 
 	// metrics
 	if viper.GetBool("metrics") {
@@ -332,12 +363,37 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}
 
 	// start HEMS server
+	var hemsInstance hems.API
 	if err == nil {
-		_, err = configureHEMS(&conf.HEMS, site)
+		hemsInstance, err = configureHEMS(&conf.HEMS, site)
 		if err != nil {
 			err = wrapErrorWithClass(ClassHEMS, err)
+		} else if hemsInstance != nil {
+			// republish when HEMS state updates
+			hemsInstance.SetUpdated(func() {
+				valueChan <- util.Param{Key: keys.Hems, Val: globalconfig.ConfigStatus{
+					Config: struct {
+						Configured bool `json:"configured"`
+					}{hemsInstance != nil},
+					YamlSource: yamlSource.hems,
+					Status: struct {
+						Dimmed              *bool    `json:"dimmed,omitempty"`
+						Curtailed           *int     `json:"curtailed,omitempty"`
+						MaxConsumptionPower *float64 `json:"maxConsumptionPower,omitempty"`
+						MaxProductionPower  *float64 `json:"maxProductionPower,omitempty"`
+					}{
+						Dimmed:              hems.Dimmed(hemsInstance),
+						Curtailed:           hemsInstance.CurtailedPercent(),
+						MaxConsumptionPower: hemsInstance.MaxConsumptionPower(),
+						MaxProductionPower:  hemsInstance.MaxProductionPower(),
+					},
+				}}
+			})
 		}
 	}
+
+	// all device skis are registered, unknown ones may now be denied
+	eebus.ConfigComplete()
 
 	// setup MCP
 	if err == nil && isMcp() {
@@ -355,11 +411,12 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// setup messaging
 	var pushChan chan messenger.Event
 	if err == nil {
-		pushChan, err = configureMessengers(&conf.Messaging, &conf.MessagingEvents, site.Vehicles(), valueChan, cache)
+		pushChan, err = configureMessengers(&conf.Messaging, &conf.MessagingEvents, site.Vehicles())
 		err = wrapErrorWithClass(ClassMessenger, err)
 	}
 
 	// publish initial settings
+	valueChan <- util.Param{Key: keys.DeviceColors, Val: ui.DeviceColorList()}
 	valueChan <- util.Param{Key: keys.EEBus, Val: globalconfig.ConfigStatus{
 		Config:     conf.EEBus.Redacted(),
 		Status:     eebus.GetStatus(),
@@ -376,8 +433,12 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Mqtt, Val: conf.Mqtt}
 	valueChan <- util.Param{Key: keys.Network, Val: conf.Network}
 	valueChan <- util.Param{Key: keys.Ocpp, Val: globalconfig.ConfigStatus{
-		Config: conf.Ocpp,
+		Config: ocpp.CurrentConfig(),
 		Status: ocpp.GetStatus(),
+	}}
+	valueChan <- util.Param{Key: keys.OcppForwarder, Val: globalconfig.ConfigStatus{
+		Config: lo.Map(ocpp.ForwarderRules(), func(r ocpp.ForwarderRule, _ int) ocpp.ForwarderRule { return r.Redacted() }),
+		Status: ocpp.GetForwarderStatus(),
 	}}
 	valueChan <- util.Param{Key: keys.Sponsor, Val: globalconfig.ConfigStatus{
 		Status:     sponsor.RedactedStatus(),
@@ -385,7 +446,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}}
 
 	valueChan <- util.Param{Key: keys.Hems, Val: globalconfig.ConfigStatus{
-		Config:     conf.HEMS.Redacted(),
+		Config: struct {
+			Configured bool `json:"configured"`
+		}{hemsInstance != nil},
 		YamlSource: yamlSource.hems,
 	}}
 	valueChan <- util.Param{Key: keys.Tariffs, Val: globalconfig.ConfigStatus{
@@ -393,14 +456,12 @@ func runRoot(cmd *cobra.Command, args []string) {
 	}}
 
 	// publish remote access status
-	if remoteAccess != nil {
-		valueChan <- util.Param{Key: keys.Remote, Val: remoteAccess.ConfigStatus()}
-	}
+	valueChan <- util.Param{Key: keys.Remote, Val: remoteAccess.ConfigStatus()}
 
 	// publish system infos
 	valueChan <- util.Param{Key: keys.Version, Val: util.FormattedVersion()}
 	valueChan <- util.Param{Key: keys.Config, Val: viper.ConfigFileUsed()}
-	valueChan <- util.Param{Key: keys.Database, Val: db.FilePath}
+	valueChan <- util.Param{Key: keys.Database, Val: db.FilePath()}
 	valueChan <- util.Param{Key: keys.System, Val: util.System()}
 	valueChan <- util.Param{Key: keys.Timezone, Val: time.Now().Format("MST -07:00")}
 	valueChan <- util.Param{Key: keys.Experimental, Val: isExperimental()}
@@ -420,10 +481,11 @@ func runRoot(cmd *cobra.Command, args []string) {
 		once.Do(func() { close(stopC) }) // signal loop to end
 	}()
 
-	// allow web access for vehicles
-	configureAuth(httpd.Router(), valueChan)
-
 	authObject := auth.New()
+
+	// allow web access for vehicles
+	configureAuth(httpd.Router(), server.EnsureAuthHandler(authObject), valueChan)
+
 	if ok, _ := cmd.Flags().GetBool(flagDisableAuth); ok {
 		log.WARN.Println("❗❗❗ Authentication is disabled. This is dangerous. Your data and credentials are not protected.")
 		authObject.SetAuthMode(auth.Disabled)
@@ -444,8 +506,8 @@ func runRoot(cmd *cobra.Command, args []string) {
 		once.Do(func() { close(stopC) })     // signal loop to end
 	}, viper.ConfigFileUsed(), remoteAccess)
 
-	// show and check version, reduce api load during development
-	if util.Version != util.DevVersion {
+	// skip update check for dev and nightly builds, reduces api load
+	if util.Version != util.DevVersion && !strings.Contains(util.Version, "-dev.") {
 		go updater.Run(log, httpd, valueChan)
 	}
 
@@ -461,6 +523,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 			site.Run(stopC, conf.Interval)
 		}()
 	}
+
+	// signal HTTP API ready
+	valueChan <- util.Param{Key: keys.ApiReady, Val: true}
 
 	if err != nil {
 		if uw, ok := err.(interface{ Unwrap() []error }); ok {

@@ -115,13 +115,11 @@ params:
       en: active battery control (Modbus/TCP Write Access)
     usages: ["battery"]
   - name: watchdog
-    type: duration
     default: 60s
     description:
       de: Batteriesteuerung API-Timeout
       en: battery control API timeout
     usages: ["battery"]
-    advanced: true
   - preset: battery-params
 render: |
   type: custom
@@ -205,9 +203,9 @@ render: |
               address: {{ .battery_set_register }}
               type: writemultiple
               encoding: float32
+      {{- if .maxchargepower }}
       - case: 3 # charge
         set:
-          {{- if .maxchargepower }}
           source: const
           value: {{ mul .maxchargepower -1 }} # charge power is negative
           set:
@@ -217,10 +215,7 @@ render: |
               address: {{ .battery_set_register }}
               type: writemultiple
               encoding: float32
-          {{- else }}
-          source: error
-          error: ErrNotAvailable
-          {{- end }}
+      {{- end }}
   {{- end }}
   {{- include "battery-params" . }}
   {{- end }}

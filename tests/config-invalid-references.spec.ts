@@ -45,6 +45,7 @@ test.describe("invalid references", async () => {
     const lpModal = page.getByTestId("loadpoint-modal");
     await newLoadpoint(page, "Test Carport");
     await addDemoCharger(page);
+    await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
 
     // Wait for circuit field to be available and assign to circuit main
     await expect(lpModal.getByLabel("Circuit")).toBeVisible();
@@ -118,6 +119,7 @@ test.describe("invalid references", async () => {
     // Create loadpoint with demo charger and assign vehicle
     await newLoadpoint(page, "Garage");
     await addDemoCharger(page);
+    await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
     await expect(lpModal.getByLabel("Default vehicle")).toBeVisible();
     await lpModal.getByLabel("Default vehicle").selectOption("Legacy Vehicle");
     await lpModal.getByRole("button", { name: "Save" }).click();

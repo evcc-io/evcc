@@ -79,7 +79,7 @@ func NewEdfTempoFromConfig(other map[string]any) (api.Tariff, error) {
 
 	t.Client.Transport = &oauth2.Transport{
 		Base:   t.Client.Transport,
-		Source: oauth2.ReuseTokenSource(nil, oauth.BootstrapTokenSource(t.refreshToken)),
+		Source: oauth2.ReuseTokenSource(nil, oauth.BootstrapTokenSource(log, t.refreshToken)),
 	}
 
 	return runOrError(t)
@@ -124,7 +124,9 @@ func (t *EdfTempo) run(done chan error) {
 		if err := backoff.Retry(func() error {
 			return backoffPermanentError(t.GetJSON(uri, &res))
 		}, bo()); err != nil {
-			once.Do(func() { done <- err })
+			if reportError(&once, done, err) {
+				return
+			}
 
 			t.log.ERROR.Println(err)
 			continue

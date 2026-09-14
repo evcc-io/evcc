@@ -12,7 +12,9 @@ import (
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -104,48 +106,49 @@ func TestNew(t *testing.T) {
 
 func TestUpdatePowerZero(t *testing.T) {
 	tc := []struct {
-		status api.ChargeStatus
-		mode   api.ChargeMode
-		expect func(h *api.MockCharger)
+		status       api.ChargeStatus
+		mode         api.ChargeMode
+		alwaysCharge api.AlwaysCharge
+		expect       func(h *api.MockCharger)
 	}{
-		{api.StatusA, api.ModeOff, func(h *api.MockCharger) {
+		{api.StatusA, api.ModeOff, api.AlwaysChargeOff, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false)
 		}},
-		{api.StatusA, api.ModeNow, func(h *api.MockCharger) {
+		{api.StatusA, api.ModeNow, api.AlwaysChargeOff, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false)
 		}},
-		{api.StatusA, api.ModeMinPV, func(h *api.MockCharger) {
+		{api.StatusA, api.ModeSmart, api.AlwaysChargeOn, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false)
 		}},
-		{api.StatusA, api.ModePV, func(h *api.MockCharger) {
+		{api.StatusA, api.ModeSmart, api.AlwaysChargeOff, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false) // zero since update called with 0
 		}},
 
-		{api.StatusB, api.ModeOff, func(h *api.MockCharger) {
+		{api.StatusB, api.ModeOff, api.AlwaysChargeOff, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false)
 		}},
-		{api.StatusB, api.ModeNow, func(h *api.MockCharger) {
+		{api.StatusB, api.ModeNow, api.AlwaysChargeOff, func(h *api.MockCharger) {
 			h.EXPECT().MaxCurrent(int64(maxA)) // true
 		}},
-		{api.StatusB, api.ModeMinPV, func(h *api.MockCharger) {
+		{api.StatusB, api.ModeSmart, api.AlwaysChargeOn, func(h *api.MockCharger) {
 			// MaxCurrent omitted since identical value
 		}},
-		{api.StatusB, api.ModePV, func(h *api.MockCharger) {
+		{api.StatusB, api.ModeSmart, api.AlwaysChargeOff, func(h *api.MockCharger) {
 			// zero since update called with 0
-			// force = false due to pv mode climater check
+			// force = false due to smart mode climater check
 			h.EXPECT().Enable(false)
 		}},
 
-		{api.StatusC, api.ModeOff, func(h *api.MockCharger) {
+		{api.StatusC, api.ModeOff, api.AlwaysChargeOff, func(h *api.MockCharger) {
 			h.EXPECT().Enable(false)
 		}},
-		{api.StatusC, api.ModeNow, func(h *api.MockCharger) {
+		{api.StatusC, api.ModeNow, api.AlwaysChargeOff, func(h *api.MockCharger) {
 			h.EXPECT().MaxCurrent(int64(maxA)) // true
 		}},
-		{api.StatusC, api.ModeMinPV, func(h *api.MockCharger) {
+		{api.StatusC, api.ModeSmart, api.AlwaysChargeOn, func(h *api.MockCharger) {
 			// MaxCurrent omitted since identical value
 		}},
-		{api.StatusC, api.ModePV, func(h *api.MockCharger) {
+		{api.StatusC, api.ModeSmart, api.AlwaysChargeOff, func(h *api.MockCharger) {
 			// omitted since PV balanced
 		}},
 	}
@@ -162,13 +165,14 @@ func TestUpdatePowerZero(t *testing.T) {
 			bus:         evbus.New(),
 			clock:       clock,
 			charger:     charger,
-			chargeMeter: &Null{}, // silence nil panics
-			chargeRater: &Null{}, // silence nil panics
-			chargeTimer: &Null{}, // silence nil panics
+			chargeMeter: newChargeMeter(&Null{}), // silence nil panics
+			chargeRater: &Null{},                 // silence nil panics
+			chargeTimer: &Null{},                 // silence nil panics
 			wakeUpTimer: NewTimer(),
 			minCurrent:  minA,
 			maxCurrent:  maxA,
 			phases:      1,
+			solarShare:  1,
 			status:      tc.status, // no status change
 		}
 
@@ -183,7 +187,8 @@ func TestUpdatePowerZero(t *testing.T) {
 		}
 
 		lp.mode = tc.mode
-		lp.Update(0, 0, nil, nil, false, false, 0, nil, nil) // false,sitePower false,0
+		lp.alwaysCharge = tc.alwaysCharge
+		lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil) // false,sitePower false,0
 
 		ctrl.Finish()
 	}
@@ -317,6 +322,7 @@ func TestPVHysteresis(t *testing.T) {
 				maxCurrent:     maxA,
 				phases:         phases,
 				measuredPhases: phases,
+				solarShare:     1,
 				Enable: loadpoint.ThresholdConfig{
 					Threshold: tc.enable,
 					Delay:     dt,
@@ -339,7 +345,7 @@ func TestPVHysteresis(t *testing.T) {
 				// charger.EXPECT().Enabled().Return(tc.enabled, nil)
 
 				lp.enabled = tc.enabled
-				current := lp.pvMaxCurrent(api.ModePV, se.site, 0, false, false)
+				current := lp.pvMaxCurrent(se.site, 0, false, false)
 
 				if current != se.current {
 					t.Errorf("step %d: wanted %.1f, got %.1f", step, se.current, current)
@@ -365,6 +371,7 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 		maxCurrent:     maxA,
 		phases:         phases,
 		measuredPhases: phases,
+		solarShare:     1,
 	}
 
 	// not connected, test PV mode logic  short-circuited
@@ -372,7 +379,7 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 
 	// maxCurrent will read enabled state in PV mode
 	sitePower := -float64(phases)*minA*Voltage + 1 // 1W below min power
-	current := lp.pvMaxCurrent(api.ModePV, sitePower, 0, false, false)
+	current := lp.pvMaxCurrent(sitePower, 0, false, false)
 
 	if current != 0 {
 		t.Errorf("PV mode could not disable charger as expected. Expected 0, got %.f", current)
@@ -390,18 +397,18 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	// wrap vehicle with estimator
 	expectVehiclePublish(vehicle)
 
-	socEstimator := soc.NewEstimator(util.NewLogger("foo"), charger, vehicle)
+	socEstimator := soc.NewEstimator(util.NewLogger("foo"), vehicle)
 
 	lp := &Loadpoint{
 		log:         util.NewLogger("foo"),
 		bus:         evbus.New(),
 		clock:       clock,
 		charger:     charger,
-		chargeMeter: &Null{},            // silence nil panics
-		chargeRater: &Null{},            // silence nil panics
-		chargeTimer: &Null{},            // silence nil panics
-		progress:    NewProgress(0, 10), // silence nil panics
-		wakeUpTimer: NewTimer(),         // silence nil panics
+		chargeMeter: newChargeMeter(&Null{}), // silence nil panics
+		chargeRater: &Null{},                 // silence nil panics
+		chargeTimer: &Null{},                 // silence nil panics
+		progress:    NewProgress(0, 10),      // silence nil panics
+		wakeUpTimer: NewTimer(),              // silence nil panics
 		// coordinator:   coordinator.NewDummy(), // silence nil panics
 		minCurrent:   minA,
 		maxCurrent:   maxA,
@@ -428,7 +435,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	charger.EXPECT().Status().Return(api.StatusC, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
-	lp.Update(500, 0, nil, nil, false, false, 0, nil, nil)
+	lp.Update(500, 0, nil, nil, false, false, 0, nil, nil, nil)
 	ctrl.Finish()
 
 	t.Log("charging above target - soc deactivates charger")
@@ -437,7 +444,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	charger.EXPECT().Status().Return(api.StatusC, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Enable(false).Return(nil)
-	lp.Update(500, 0, nil, nil, false, false, 0, nil, nil)
+	lp.Update(500, 0, nil, nil, false, false, 0, nil, nil, nil)
 	ctrl.Finish()
 
 	t.Log("deactivated charger changes status to B")
@@ -445,14 +452,14 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	vehicle.EXPECT().Soc().Return(95.0, nil)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	lp.Update(-500, 0, nil, nil, false, false, 0, nil, nil)
+	lp.Update(-500, 0, nil, nil, false, false, 0, nil, nil, nil)
 	ctrl.Finish()
 
 	t.Log("soc has risen below target - soc update prevented by timer")
 	clock.Add(5 * time.Minute)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	lp.Update(-500, 0, nil, nil, false, false, 0, nil, nil)
+	lp.Update(-500, 0, nil, nil, false, false, 0, nil, nil, nil)
 	ctrl.Finish()
 
 	t.Log("soc has fallen below target - soc update timer expired")
@@ -462,7 +469,7 @@ func TestDisableAndEnableAtTargetSoc(t *testing.T) {
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
 	charger.EXPECT().Enable(true).Return(nil)
-	lp.Update(-500, 0, nil, nil, false, false, 0, nil, nil)
+	lp.Update(-500, 0, nil, nil, false, false, 0, nil, nil, nil)
 	ctrl.Finish()
 }
 
@@ -477,9 +484,9 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 		clock:       clock,
 		settings:    settings.NewDatabaseSettingsAdapter("foo"),
 		charger:     charger,
-		chargeMeter: &Null{}, // silence nil panics
-		chargeRater: &Null{}, // silence nil panics
-		chargeTimer: &Null{}, // silence nil panics
+		chargeMeter: newChargeMeter(&Null{}), // silence nil panics
+		chargeRater: &Null{},                 // silence nil panics
+		chargeTimer: &Null{},                 // silence nil panics
 		wakeUpTimer: NewTimer(),
 		minCurrent:  minA,
 		maxCurrent:  maxA,
@@ -497,14 +504,14 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
 	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
-	lp.Update(500, 0, nil, nil, false, false, 0, nil, nil)
+	lp.Update(500, 0, nil, nil, false, false, 0, nil, nil, nil)
 
 	t.Log("switch off when disconnected")
 	clock.Add(5 * time.Minute)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusA, nil)
 	charger.EXPECT().Enable(false).Return(nil)
-	lp.Update(-300, 0, nil, nil, false, false, 0, nil, nil)
+	lp.Update(-300, 0, nil, nil, false, false, 0, nil, nil, nil)
 
 	if mode := lp.GetMode(); mode != api.ModeOff {
 		t.Error("unexpected mode", mode)
@@ -544,7 +551,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 		bus:         evbus.New(),
 		clock:       clock,
 		charger:     charger,
-		chargeMeter: &Null{}, // silence nil panics
+		chargeMeter: newChargeMeter(&Null{}), // silence nil panics
 		chargeRater: rater,
 		chargeTimer: &Null{}, // silence nil panics
 		wakeUpTimer: NewTimer(),
@@ -566,14 +573,14 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	rater.EXPECT().ChargedEnergy().Return(0.0, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
-	lp.Update(-1, 0, nil, nil, false, false, 0, nil, nil)
+	lp.Update(-1, 0, nil, nil, false, false, 0, nil, nil, nil)
 
 	t.Log("at 1:00h charging at 5 kWh")
 	clock.Add(time.Hour)
 	rater.EXPECT().ChargedEnergy().Return(5.0, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
-	lp.Update(-1, 0, nil, nil, false, false, 0, nil, nil)
+	lp.Update(-1, 0, nil, nil, false, false, 0, nil, nil, nil)
 	expectCache("chargedEnergy", 5000.0)
 
 	t.Log("at 1:00h stop charging at 5 kWh")
@@ -581,7 +588,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	rater.EXPECT().ChargedEnergy().Return(5.0, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
-	lp.Update(-1, 0, nil, nil, false, false, 0, nil, nil)
+	lp.Update(-1, 0, nil, nil, false, false, 0, nil, nil, nil)
 	expectCache("chargedEnergy", 5000.0)
 
 	t.Log("at 1:00h restart charging at 5 kWh")
@@ -589,7 +596,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	rater.EXPECT().ChargedEnergy().Return(5.0, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
-	lp.Update(-1, 0, nil, nil, false, false, 0, nil, nil)
+	lp.Update(-1, 0, nil, nil, false, false, 0, nil, nil, nil)
 	expectCache("chargedEnergy", 5000.0)
 
 	t.Log("at 1:30h continue charging at 7.5 kWh")
@@ -597,7 +604,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	rater.EXPECT().ChargedEnergy().Return(7.5, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
-	lp.Update(-1, 0, nil, nil, false, false, 0, nil, nil)
+	lp.Update(-1, 0, nil, nil, false, false, 0, nil, nil, nil)
 	expectCache("chargedEnergy", 7500.0)
 
 	t.Log("at 2:00h stop charging at 10 kWh")
@@ -605,7 +612,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	rater.EXPECT().ChargedEnergy().Return(10.0, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
-	lp.Update(-1, 0, nil, nil, false, false, 0, nil, nil)
+	lp.Update(-1, 0, nil, nil, false, false, 0, nil, nil, nil)
 	expectCache("chargedEnergy", 10000.0)
 
 	ctrl.Finish()
@@ -747,18 +754,20 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 			charger:     charger,
 			minCurrent:  minA,
 			maxCurrent:  maxA,
+			solarShare:  1,
 			Disable: loadpoint.ThresholdConfig{
 				Delay: dt,
 			},
-			status:  api.StatusC,
-			enabled: true,
+			status:      api.StatusC,
+			enabled:     true,
+			chargePower: 3 * Voltage * minA, // charging 3p at min current
 		}
 
 		start := clock.Now()
 
 		for step, se := range tc.series {
 			clock.Set(start.Add(se.delay))
-			assert.Equal(t, se.current, lp.pvMaxCurrent(api.ModePV, se.site, 0, false, false), step)
+			assert.Equal(t, se.current, lp.pvMaxCurrent(se.site, 0, false, false), step)
 		}
 
 		ctrl.Finish()
@@ -789,10 +798,10 @@ func TestConnectionDurationDropDetection(t *testing.T) {
 		charger:     charger,
 		minCurrent:  minA,
 		maxCurrent:  maxA,
-		chargeMeter: &Null{},    // silence nil panics
-		chargeRater: &Null{},    // silence nil panics
-		chargeTimer: &Null{},    // silence nil panics
-		wakeUpTimer: NewTimer(), // silence nil panics
+		chargeMeter: newChargeMeter(&Null{}), // silence nil panics
+		chargeRater: &Null{},                 // silence nil panics
+		chargeTimer: &Null{},                 // silence nil panics
+		wakeUpTimer: NewTimer(),              // silence nil panics
 	}
 
 	attachListeners(t, lp)
@@ -805,7 +814,7 @@ func TestConnectionDurationDropDetection(t *testing.T) {
 	lp.connectedTime = connectedTime
 
 	ct.EXPECT().ConnectionDuration().Return(0*time.Second, nil)
-	lp.Update(500, 0, nil, nil, false, false, 0, nil, nil)
+	lp.Update(500, 0, nil, nil, false, false, 0, nil, nil, nil)
 	ctrl.Finish()
 
 	assert.NotEqual(t, connectedTime, lp.connectedTime)
@@ -837,10 +846,10 @@ func TestWelcomeChargeAppliedOnlyOnce(t *testing.T) {
 		charger:     charger,
 		minCurrent:  minA,
 		maxCurrent:  maxA,
-		chargeMeter: &Null{},    // silence nil panics
-		chargeRater: &Null{},    // silence nil panics
-		chargeTimer: &Null{},    // silence nil panics
-		wakeUpTimer: NewTimer(), // silence nil panics
+		chargeMeter: newChargeMeter(&Null{}), // silence nil panics
+		chargeRater: &Null{},                 // silence nil panics
+		chargeTimer: &Null{},                 // silence nil panics
+		wakeUpTimer: NewTimer(),              // silence nil panics
 	}
 
 	attachListeners(t, lp)
@@ -862,4 +871,209 @@ func TestWelcomeChargeAppliedOnlyOnce(t *testing.T) {
 	ch.EXPECT().Status().Return(api.StatusB, nil)
 	welcomeCharge, _ = lp.updateChargerStatus()
 	assert.False(t, welcomeCharge)
+}
+
+// TestBatteryBoostHold verifies that in the hold state (soc limit reached) battery
+// boost no longer draws power from the battery, while still counting as active so
+// the site keeps prioritising the vehicle over recharging the battery (#30558).
+func TestBatteryBoostHold(t *testing.T) {
+	lp := &Loadpoint{log: util.NewLogger("foo")}
+
+	// disabled draws nothing
+	lp.batteryBoost = boostDisabled
+	assert.Equal(t, 0.0, lp.boostPower(2000), "disabled")
+
+	// hold draws nothing (stops draining the battery)...
+	lp.batteryBoost = boostHold
+	assert.Equal(t, 0.0, lp.boostPower(2000), "hold")
+
+	// ...but is still an active boost state (GetBatteryBoost != boostDisabled),
+	// which is what keeps the sitePower priority adjustment applied to the loadpoint
+	assert.NotEqual(t, boostDisabled, lp.GetBatteryBoost(), "hold is active")
+}
+
+// TestPVSolarShare verifies the pv enable/disable points derived from solarShare
+// and that manually configured thresholds take precedence over the solar share.
+func TestPVSolarShare(t *testing.T) {
+	Voltage = 100
+	ctrl := gomock.NewController(t)
+
+	newLp := func(share float64, enabled bool, enableT, disableT float64) *Loadpoint {
+		lp := &Loadpoint{
+			log:            util.NewLogger("foo"),
+			clock:          clock.NewMock(),
+			charger:        api.NewMockCharger(ctrl),
+			minCurrent:     minA,
+			maxCurrent:     maxA,
+			phases:         3,
+			measuredPhases: 3,
+			Enable:         loadpoint.ThresholdConfig{Threshold: enableT},
+			Disable:        loadpoint.ThresholdConfig{Threshold: disableT},
+			solarShare:     share,
+		}
+		lp.status = api.StatusC
+		lp.enabled = enabled
+		return lp
+	}
+
+	minPower := currentToPower(minA, 3)
+
+	// enable: share 1.0 requires the full min power as surplus
+	assert.Equal(t, minA, newLp(1, false, 0, 0).pvMaxCurrent(-minPower, 0, false, false),
+		"should enable at full surplus")
+	assert.Equal(t, 0.0, newLp(1, false, 0, 0).pvMaxCurrent(-minPower+100, 0, false, false),
+		"must not enable below full surplus")
+
+	// enable: share 0.5 accepts half the min power from grid
+	assert.Equal(t, minA, newLp(0.5, false, 0, 0).pvMaxCurrent(-minPower/2, 0, false, false),
+		"should enable at half surplus")
+
+	// enable: share 0 starts as soon as there is no grid import
+	assert.Equal(t, minA, newLp(0, false, 0, 0).pvMaxCurrent(0, 0, false, false),
+		"should enable without surplus")
+
+	// disable: share 1.0 derives threshold 0, so feed-in keeps charging
+	assert.Equal(t, minA, newLp(1, true, 0, 0).pvMaxCurrent(-500, 0, false, false),
+		"must not disable while feeding in")
+	assert.Equal(t, 0.0, newLp(1, true, 0, 0).pvMaxCurrent(100, 0, false, false),
+		"should disable on grid draw")
+
+	// disable: share 0.5 tolerates grid import up to half the min power
+	assert.Equal(t, minA, newLp(0.5, true, 0, 0).pvMaxCurrent(minPower/2-100, 0, false, false),
+		"must not disable within allowed grid import")
+	assert.Equal(t, 0.0, newLp(0.5, true, 0, 0).pvMaxCurrent(minPower/2+100, 0, false, false),
+		"should disable above allowed grid import")
+
+	// configured thresholds take precedence over solar share
+	assert.Equal(t, minA, newLp(1, false, 5000, 0).pvMaxCurrent(4000, 0, false, false),
+		"enable threshold should apply despite solar share")
+	assert.Equal(t, minA, newLp(1, true, 0, 5000).pvMaxCurrent(100, 0, false, false),
+		"disable threshold should apply despite solar share")
+}
+
+// TestPVSolarSharePhases verifies that the derived switch points scale with the
+// phases charging actually runs on, not with the theoretical 1p minimum.
+func TestPVSolarSharePhases(t *testing.T) {
+	Voltage = 100
+	ctrl := gomock.NewController(t)
+
+	// 1p3p charger pinned to 3p cannot scale down, so the enable point must
+	// require the full 3p min power - not the 1p min power of EffectiveMinPower
+	charger := struct {
+		*api.MockCharger
+		*api.MockPhaseSwitcher
+	}{
+		api.NewMockCharger(ctrl), api.NewMockPhaseSwitcher(ctrl),
+	}
+
+	newLp := func(enabled bool) *Loadpoint {
+		lp := &Loadpoint{
+			log:              util.NewLogger("foo"),
+			clock:            clock.NewMock(),
+			charger:          charger,
+			minCurrent:       minA,
+			maxCurrent:       maxA,
+			phases:           3,
+			phasesConfigured: 3,
+			solarShare:       1,
+		}
+		lp.status = api.StatusC
+		lp.enabled = enabled
+		return lp
+	}
+
+	assert.Equal(t, 0.0, newLp(false).pvMaxCurrent(-currentToPower(minA, 1), 0, false, false),
+		"must not enable at 1p surplus while pinned to 3p")
+	assert.Equal(t, minA, newLp(false).pvMaxCurrent(-currentToPower(minA, 3), 0, false, false),
+		"should enable at 3p surplus")
+}
+
+// default vehicle referencing a disabled vehicle must not fail loadpoint creation
+func TestNewLoadpointFromConfigDisabledVehicle(t *testing.T) {
+	config.Reset()
+	t.Cleanup(config.Reset)
+
+	ctrl := gomock.NewController(t)
+
+	// disabled vehicle: device registered without instance
+	var vehicle api.Vehicle
+	require.NoError(t, config.Vehicles().Add(config.NewStaticDevice(config.Named{Name: "vehicle"}, vehicle)))
+	require.NoError(t, config.Chargers().Add(config.NewStaticDevice(config.Named{Name: "charger"}, api.Charger(api.NewMockCharger(ctrl)))))
+
+	lp, err := NewLoadpointFromConfig(util.NewLogger("foo"), nil, nil, map[string]any{
+		"charger": "charger",
+		"vehicle": "vehicle",
+	})
+	require.NoError(t, err)
+	require.Nil(t, lp.defaultVehicle)
+
+	// disabled vehicle is filtered from instances
+	require.Empty(t, config.Instances(config.Vehicles().Devices()))
+}
+
+// TestPVDisableContinuousDeviceShortfall is a regression test for #32282: a continuous
+// device consuming less than its min power demand keeps the remainder out of site
+// power, so the disable gate never trips on the missing surplus. The shortfall
+// towards min power is projected into the gate regardless of charge status, since
+// some chargers (sgready) report StatusC while the device is idle.
+func TestPVDisableContinuousDeviceShortfall(t *testing.T) {
+	const dt = time.Minute
+
+	tc := []struct {
+		name        string
+		status      api.ChargeStatus
+		chargePower float64
+		site        float64
+		current     float64
+	}{
+		// idle device, export below its 600W demand: disable
+		{"idle, insufficient surplus", api.StatusB, 0, -400, 0},
+		// idle device, export covers its demand: keep enabled
+		{"idle, sufficient surplus", api.StatusB, 0, -700, 7},
+		// idle device reporting StatusC (sgready-style): still disable
+		{"idle, StatusC, insufficient surplus", api.StatusC, 0, -400, 0},
+		// starting device: own draw plus surplus covers min power, keep enabled
+		{"starting, demand covered", api.StatusB, 300, -400, 7},
+		// running below min power without surplus for the remaining demand: disable
+		{"running below min, insufficient surplus", api.StatusC, 300, -200, 0},
+		// consuming min power, importing: unchanged disable behavior
+		{"consuming, importing", api.StatusC, 600, 100, 0},
+	}
+
+	for _, tc := range tc {
+		t.Run(tc.name, func(t *testing.T) {
+			clock := clock.NewMock()
+
+			Voltage = 100
+			lp := &Loadpoint{
+				log:              util.NewLogger("foo"),
+				clock:            clock,
+				charger:          &continuousCharger{},
+				minCurrent:       minA,
+				maxCurrent:       maxA,
+				phases:           1,
+				phasesConfigured: 1,
+				measuredPhases:   1,
+				status:           tc.status,
+				enabled:          true,
+				chargePower:      tc.chargePower,
+				solarShare:       1,
+				Disable:          loadpoint.ThresholdConfig{Delay: dt},
+			}
+
+			start := clock.Now()
+			for _, delay := range []time.Duration{0, dt + 1} {
+				clock.Set(start.Add(delay))
+				current := lp.pvMaxCurrent(tc.site, 0, false, false)
+
+				// before the disable delay elapses the device keeps running
+				if delay == 0 {
+					assert.Equal(t, max(tc.current, minA), current, "before disable delay")
+					continue
+				}
+
+				assert.Equal(t, tc.current, current, "after disable delay")
+			}
+		})
+	}
 }

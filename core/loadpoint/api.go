@@ -13,6 +13,16 @@ type Controller interface {
 	LoadpointControl(API)
 }
 
+// AlwaysChargeActive reports if the loadpoint is forced to draw at least min power
+func AlwaysChargeActive(lp API) bool {
+	return lp.GetMode() == api.ModeSmart && lp.GetAlwaysCharge().Active()
+}
+
+// SurplusFlexible reports if the loadpoint charges flexibly from surplus, i.e. smart mode without always charge
+func SurplusFlexible(lp API) bool {
+	return lp.GetMode() == api.ModeSmart && !lp.GetAlwaysCharge().Active()
+}
+
 // API is the external loadpoint API
 type API interface {
 	//
@@ -70,6 +80,10 @@ type API interface {
 	GetMode() api.ChargeMode
 	// SetMode sets the charge mode
 	SetMode(api.ChargeMode)
+	// GetAlwaysCharge returns the always charge state
+	GetAlwaysCharge() api.AlwaysCharge
+	// SetAlwaysCharge sets the always charge state
+	SetAlwaysCharge(api.AlwaysCharge) error
 	// GetDefaultMode returns the default charge mode (for reset)
 	GetDefaultMode() api.ChargeMode
 	// SetDefaultMode sets the default charge mode (for reset)
@@ -91,6 +105,10 @@ type API interface {
 	GetLimitEnergy() float64
 	// SetLimitEnergy sets the session limit energy
 	SetLimitEnergy(energy float64)
+	// GetMinSoc returns the loadpoint min soc (heating: min temperature)
+	GetMinSoc() int
+	// SetMinSoc sets the loadpoint min soc (heating: min temperature)
+	SetMinSoc(soc int)
 
 	//
 	// effective values
@@ -108,6 +126,8 @@ type API interface {
 	EffectiveMinPower() float64
 	// EffectiveMaxPower returns the max charging power taking active phases into account
 	EffectiveMaxPower() float64
+	// PvChargeStarting reports a PV loadpoint claiming surplus but not yet drawing it
+	PvChargeStarting() bool
 	// EffectivePlanStrategy returns the effective plan strategy
 	EffectivePlanStrategy() api.PlanStrategy
 	// PublishEffectiveValues publishes effective values for currently attached vehicle
@@ -123,6 +143,8 @@ type API interface {
 	SetPlanEnergy(time.Time, float64) error
 	// ClearPlanLock clears the locked plan goal
 	ClearPlanLock()
+	// RequestUpdate triggers an immediate loadpoint update
+	RequestUpdate()
 	// GetPlanGoal returns the plan goal and if the goal is soc based
 	GetPlanGoal() (float64, bool)
 	// GetPlanRequiredDuration returns required duration of plan to reach the goal from current state
@@ -140,6 +162,11 @@ type API interface {
 	GetSocConfig() SocConfig
 	// SetSocConfig sets the soc poll settings
 	SetSocConfig(soc SocConfig)
+
+	// GetUI returns the display-only ui settings
+	GetUI() UIConfig
+	// SetUI sets the display-only ui settings
+	SetUI(ui UIConfig)
 
 	// GetThresholds returns the PV mode threshold settings
 	GetThresholds() ThresholdsConfig
@@ -180,6 +207,11 @@ type API interface {
 	GetSmartCostLimit() *float64
 	// SetSmartCostLimit sets the smart cost limit
 	SetSmartCostLimit(limit *float64)
+
+	// GetSolarShare gets the solar share
+	GetSolarShare() float64
+	// SetSolarShare sets the solar share
+	SetSolarShare(share float64)
 	// GetSmartFeedInPriorityLimit return the smart feed-in limit
 	GetSmartFeedInPriorityLimit() *float64
 	// SetSmartFeedInPriorityLimit sets the smart feed-in limit
@@ -208,6 +240,8 @@ type API interface {
 	GetRemainingDuration() time.Duration
 	// GetRemainingEnergy is the remaining charge energy in kWh
 	GetRemainingEnergy() float64
+	// GetChargedEnergy returns session charge energy in Wh
+	GetChargedEnergy() float64
 
 	//
 	// vehicles

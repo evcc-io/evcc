@@ -40,9 +40,7 @@ params:
   - name: maxsoc
     advanced: true
   - name: maxchargepower
-    advanced: true
   - name: maxdischargepower
-    advanced: true
   - name: energy
     description:
       de: Zählerstand
@@ -88,6 +86,7 @@ render: |
     value: {{ .soc }}
   {{- include "battery-params" . }}
   {{- if .controllable }}
+  batterymodes: ["normal", "hold", "charge", "holdcharge"]
   batterymode:
     source: js
     vm: shared

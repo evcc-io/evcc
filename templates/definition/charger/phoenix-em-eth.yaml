@@ -3,6 +3,7 @@ products:
   - brand: Phoenix Contact
     description:
       generic: EM-CP-PP-ETH
+capabilities: ["dim"]
 params:
   - name: modbus
     choice: ["tcpip"]

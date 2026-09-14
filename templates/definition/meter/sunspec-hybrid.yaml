@@ -11,6 +11,7 @@ params:
   - name: modbus
     choice: ["tcpip", "rs485"]
   - name: maxacpower
+    deprecated: true # read from nameplate
   - preset: battery-params
 render: |
   type: custom
@@ -28,6 +29,13 @@ render: |
     value:
       - 203:TotWhImp
       - 213:TotWhImp
+    scale: 0.001
+  returnenergy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value:
+      - 203:TotWhExp
+      - 213:TotWhExp
     scale: 0.001
   currents:
     - source: sunspec
@@ -99,7 +107,7 @@ render: |
         {{- include "modbus" . | indent 6 }}
         value: 160:2:DCWH # mppt 2
         scale: 0.001
-  maxacpower: {{ .maxacpower }} # W
+  {{- include "sunspec-maxacpower" . }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -116,6 +124,11 @@ render: |
     source: sunspec
     {{- include "modbus" . | indent 2 }}
     value: 160:4:DCWH # mppt 4 (discharge)
+    scale: 0.001
+  returnenergy:
+    source: sunspec
+    {{- include "modbus" . | indent 2 }}
+    value: 160:3:DCWH # mppt 3 (charge)
     scale: 0.001
   soc:
     source: sunspec

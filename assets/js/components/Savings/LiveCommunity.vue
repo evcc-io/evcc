@@ -59,10 +59,10 @@ export default defineComponent({
 	},
 	computed: {
 		totalClients() {
-			return this.result.totalClients;
+			return this.fmtNumber(this.result.totalClients || 0, 0);
 		},
 		activeClients() {
-			return this.result.activeClients;
+			return this.fmtNumber(this.result.activeClients || 0, 0);
 		},
 		chargePower() {
 			const { chargePower = 0 } = this.result;

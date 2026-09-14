@@ -1,7 +1,8 @@
 package util
 
 import (
-	"math/rand"
+	"context"
+	"math/rand/v2"
 	"testing"
 	"time"
 
@@ -68,4 +69,17 @@ func TestMonitorWithoutTimeout(t *testing.T) {
 	clock.Add(time.Hour)
 	_, err = m.Get()
 	assert.NoError(t, err)
+}
+
+func TestMonitorGetContext(t *testing.T) {
+	// a long timeout would block the first-read wait; a cancelled context cuts it short
+	m := NewMonitor[int](time.Minute)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+
+	start := time.Now()
+	_, err := m.GetContext(ctx)
+	assert.ErrorIs(t, err, context.DeadlineExceeded)
+	assert.Less(t, time.Since(start), time.Second, "context must cancel the first-read wait")
 }

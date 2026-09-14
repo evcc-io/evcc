@@ -8,9 +8,9 @@
 				class="d-flex gap-2 overflow-hidden text-truncate"
 			>
 				<div class="label overflow-hidden text-truncate flex-shrink-1 flex-grow-1">
-					{{ $t(`config.deviceValue.${entry.name}`) }}
+					{{ deviceValueLabel(entry.name) }}
 				</div>
-				<div class="value overflow-hidden text-truncate" :class="valueClasses(entry)">
+				<div class="value" :class="[valueClasses(entry), truncateClasses(entry)]">
 					{{ fmtDeviceValue(entry) }}
 				</div>
 			</span>
@@ -31,7 +31,7 @@
 						:data-testid="`device-tag-${entry.name}`"
 					>
 						<td class="text-truncate">
-							{{ $t(`config.deviceValue.${entry.name}`) }}
+							{{ deviceValueLabel(entry.name) }}
 						</td>
 						<td
 							v-for="(val, idx) in entry.value"
@@ -70,12 +70,16 @@
 import formatter, { POWER_UNIT } from "@/mixins/formatter";
 import TariffChart from "../Tariff/TariffChart.vue";
 import { generateRateSlots, calculateCostRange } from "@/utils/tariffSlots";
+import { distanceValue, distanceUnit } from "@/units";
 
-const HIDDEN_TAGS = ["icon", "heating", "integratedDevice"];
+const HIDDEN_TAGS = ["icon", "heating", "integratedDevice", "continuous"];
 
 const PHASE_TAGS = ["phaseCurrents", "phaseVoltages", "phasePowers"];
 
-const FORECAST_TAGS = ["priceRates", "co2Rates", "solarRates"];
+const FORECAST_TAGS = ["priceRates", "co2Rates", "solarRates", "temperatureRates"];
+
+// display order, remaining tags follow in backend order
+const FIRST_TAGS = ["power", "soc", "capacity", "energy", "returnEnergy"];
 
 export default {
 	name: "DeviceTags",
@@ -84,6 +88,7 @@ export default {
 	props: {
 		tags: Object,
 		currency: String,
+		usage: String,
 	},
 	data() {
 		return {
@@ -91,24 +96,32 @@ export default {
 		};
 	},
 	computed: {
+		effectiveUsage() {
+			return this.tags?.heating?.value ? "consumer" : this.usage;
+		},
 		regularEntries() {
-			return Object.entries(this.tags)
+			const entries = Object.entries(this.tags)
 				.filter(
 					([name]) =>
 						!HIDDEN_TAGS.includes(name) &&
 						!PHASE_TAGS.includes(name) &&
 						!FORECAST_TAGS.includes(name)
 				)
-				.map(([name, { value, error, warning, muted }]) => {
-					return { name, value, error, warning, muted };
+				.map(([name, { value, error, warning, muted, asleep }]) => {
+					return { name, value, error, warning, muted, asleep };
 				});
+			const first = FIRST_TAGS.flatMap((name) =>
+				entries.filter((entry) => entry.name === name)
+			);
+			const rest = entries.filter(({ name }) => !FIRST_TAGS.includes(name));
+			return [...first, ...rest];
 		},
 		phaseEntries() {
 			return Object.entries(this.tags)
 				.filter(([name]) => PHASE_TAGS.includes(name))
 				.sort(([a], [b]) => a.localeCompare(b))
-				.map(([name, { value, error, warning, muted }]) => {
-					return { name, value, error, warning, muted };
+				.map(([name, { value, error, warning, muted, asleep }]) => {
+					return { name, value, error, warning, muted, asleep };
 				});
 		},
 		hasPhaseEntries() {
@@ -121,6 +134,7 @@ export default {
 				priceRates: "price",
 				co2Rates: "co2",
 				solarRates: "solar",
+				temperatureRates: "temperature",
 			};
 
 			// Find which forecast tag is present
@@ -174,7 +188,23 @@ export default {
 		},
 	},
 	methods: {
+		deviceValueLabel(name) {
+			const usageKey = `config.deviceValue.usage.${this.effectiveUsage}.${name}`;
+			if (this.effectiveUsage && this.$te(usageKey)) {
+				return this.$t(usageKey);
+			}
+			return this.$t(`config.deviceValue.${name}`);
+		},
+		truncateClasses(entry) {
+			// don't truncate numeric values
+			return typeof entry.value === "string"
+				? "overflow-hidden text-truncate"
+				: "text-nowrap flex-shrink-0";
+		},
 		valueClasses(entry) {
+			if (entry.asleep) {
+				return "value--muted";
+			}
 			if (entry.error) {
 				return "value--error";
 			}
@@ -188,29 +218,39 @@ export default {
 		},
 		fmtDeviceValue(entry) {
 			const { name, value } = entry;
+			if (entry.asleep) {
+				return this.$t("config.deviceValue.asleep");
+			}
 			if (value === null || value === undefined) {
 				return "";
 			}
 			switch (name) {
 				case "power":
 				case "solarForecast":
-				case "hemsActiveLimit":
-					return this.fmtW(value);
+				case "dimLimit":
+				case "curtailLimit":
+				case "exportLimit":
+					return this.fmtW(value, POWER_UNIT.AUTO);
 				case "energy":
+				case "returnEnergy":
 				case "capacity":
 				case "chargedEnergy":
-					return this.fmtWh(value * 1e3);
+					return this.fmtWh(value * 1e3, POWER_UNIT.AUTO);
 				case "soc":
 				case "vehicleLimitSoc":
 					return this.fmtPercentage(value, 1);
 				case "temp":
 				case "heaterTempLimit":
+				case "outdoorTemp":
 					return this.fmtTemperature(value);
 				case "odometer":
 				case "range":
-					return `${this.fmtNumber(value, 0)} km`;
+					return `${this.fmtNumber(distanceValue(value), 0)} ${distanceUnit()}`;
 				case "chargeStatus":
 					return value ? this.$t(`config.deviceValue.chargeStatus${value}`) : "-";
+				case "switchDevice":
+					// switch device means no current control
+					return this.$t(`config.deviceValue.${value ? "no" : "yes"}`);
 				case "price":
 				case "gridPrice":
 				case "feedinPrice":
@@ -221,7 +261,13 @@ export default {
 					return `${this.fmtW(value[0])} / ${this.fmtW(value[1])}`;
 				case "currentRange":
 					return `${this.fmtNumber(value[0], 1)} A / ${this.fmtNumber(value[1], 1)} A`;
+				case "curtailed":
+					// devices report the allowed feed-in percent, the hems a plain flag
+					return typeof value === "number"
+						? this.fmtPercentage(value, 0)
+						: this.$t(`config.deviceValue.${value ? "yes" : "no"}`);
 				case "controllable":
+				case "curtailable":
 				case "phases1p3p":
 				case "singlePhase":
 				case "enabled":
@@ -229,11 +275,10 @@ export default {
 				case "connected":
 				case "dimmed":
 				case "loginBlocked":
+				case "remoteEnabled":
 					return value
 						? this.$t("config.deviceValue.yes")
 						: this.$t("config.deviceValue.no");
-				case "hemsType":
-					return this.$t(`config.deviceValueHemsType.${value}`);
 			}
 			return value;
 		},
@@ -271,6 +316,8 @@ export default {
 					return short ? this.fmtCo2Short(value) : this.fmtCo2Medium(value);
 				case "solar":
 					return this.fmtW(value);
+				case "temperature":
+					return this.fmtTemperature(value);
 				default:
 					return value;
 			}

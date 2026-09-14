@@ -17,7 +17,8 @@
 - `GET /state` — complete system state (supports jq filtering)
 
 ### Per-loadpoint (`/loadpoints/{id}/...`)
-- `POST mode/{value}` — off/now/minpv/pv
+- `POST mode/{value}` — off/smart/now (deprecated aliases pv/minpv)
+- `POST alwayscharge/{value}` — off/on/once
 - `POST limitsoc/{value}`, `limitenergy/{value}` — charge limits
 - `POST mincurrent/{value}`, `maxcurrent/{value}` — current limits
 - `POST phases/{value}` — phase config
@@ -25,6 +26,7 @@
 - `POST plan/energy/{value}/{time}` — schedule plan
 - `POST vehicle/{name}` — select vehicle
 - `POST smartcostlimit/{value}` — smart cost threshold
+- `POST solarshare/{value}` — required solar share of min power (default 1)
 
 ### Configuration (`/config/...`, auth required)
 - CRUD for devices (chargers, meters, vehicles, tariffs)
@@ -33,7 +35,11 @@
 - `GET /config/evcc.yaml` — YAML export
 
 ### System (`/system/...`, auth required)
-- Log viewing, cache clear, DB backup/restore/reset, shutdown
+- Log viewing (`/log`, `/log/areas`), cache clear, shutdown
+
+### Database (`/db/...`, auth + second factor required)
+- Backup download, restore from file, selective reset
+- Second factor: admin password in request body, or API key via Bearer token (bypasses password check)
 
 ### Handler Pattern
 Generic `handler[T]` with type conversion, setter, getter.
@@ -65,7 +71,7 @@ Specialized: `floatHandler`, `intHandler`, `boolHandler`, `durationHandler`.
 - HttpOnly cookie (`auth`) with `SameSite=Strict`
 - Also accepts `Authorization: Bearer <token>` header
 - Modes: Disabled, Locked (demo), Configured (password)
-- Protects `/api/config` and `/api/system`
+- Protects `/api/config`, `/api/system`, and `/api/db`
 
 ## MQTT Integration
 

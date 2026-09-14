@@ -1,4 +1,5 @@
 template: electricitymaps
+link: https://www.electricitymaps.com/platform/api
 products:
   - brand: Electricity Maps
     description:
@@ -25,6 +26,7 @@ params:
       en: "see [api.electricitymap.org](https://api.electricitymap.org/v3/zones)"
 render: |
   type: electricitymaps
+  features: ["cacheable"]
   uri: {{ .uri }}
   token: {{ .token }}
   zone: {{ .zone }}

@@ -71,33 +71,24 @@ func init() {
 
 // NewMennekesCompactFromConfig creates a new Mennekes ModbusTCP charger
 func NewMennekesCompactFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
-	cc := struct {
-		modbus.Settings `mapstructure:",squash"`
-		Timeout         time.Duration
-	}{
-		Settings: modbus.Settings{
-			Baudrate: 57600,
-			Comset:   "8N2",
-			ID:       50,
-		},
+	cc := modbus.Settings{
+		Baudrate: 57600,
+		Comset:   "8N2",
+		ID:       50,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewMennekesCompact(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID, cc.Timeout)
+	return NewMennekesCompact(ctx, cc)
 }
 
 // NewMennekesCompact creates Mennekes charger
-func NewMennekesCompact(ctx context.Context, uri, device, comset string, baudrate int, proto modbus.Protocol, slaveID uint8, timeout time.Duration) (api.Charger, error) {
-	conn, err := modbus.NewConnection(ctx, uri, device, comset, baudrate, proto, slaveID)
+func NewMennekesCompact(ctx context.Context, settings modbus.Settings) (api.Charger, error) {
+	conn, err := settings.Connection(ctx)
 	if err != nil {
 		return nil, err
-	}
-
-	if timeout > 0 {
-		conn.Timeout(timeout)
 	}
 
 	if !sponsor.IsAuthorized() {

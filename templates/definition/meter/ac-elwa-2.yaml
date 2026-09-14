@@ -15,9 +15,11 @@ render: |
   power:
     source: http
     uri: http://{{ .host }}/data.jsn
+    insecure: true
     jq: .power_elwa2
   soc:
     source: http
     uri: http://{{ .host }}/data.jsn
+    insecure: true
     jq: .temp{{ .tempsource }}
     scale: 0.1

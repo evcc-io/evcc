@@ -41,6 +41,20 @@ func (m *MockAPI) EXPECT() *MockAPIMockRecorder {
 	return m.recorder
 }
 
+// GetAlwaysCharge mocks base method.
+func (m *MockAPI) GetAlwaysCharge() api.AlwaysCharge {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAlwaysCharge")
+	ret0, _ := ret[0].(api.AlwaysCharge)
+	return ret0
+}
+
+// GetAlwaysCharge indicates an expected call of GetAlwaysCharge.
+func (mr *MockAPIMockRecorder) GetAlwaysCharge() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAlwaysCharge", reflect.TypeOf((*MockAPI)(nil).GetAlwaysCharge))
+}
+
 // GetLimitSoc mocks base method.
 func (m *MockAPI) GetLimitSoc() int {
 	m.ctrl.T.Helper()
@@ -67,6 +81,20 @@ func (m *MockAPI) GetMinSoc() int {
 func (mr *MockAPIMockRecorder) GetMinSoc() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMinSoc", reflect.TypeOf((*MockAPI)(nil).GetMinSoc))
+}
+
+// GetMode mocks base method.
+func (m *MockAPI) GetMode() api.ChargeMode {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMode")
+	ret0, _ := ret[0].(api.ChargeMode)
+	return ret0
+}
+
+// GetMode indicates an expected call of GetMode.
+func (mr *MockAPIMockRecorder) GetMode() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMode", reflect.TypeOf((*MockAPI)(nil).GetMode))
 }
 
 // GetPlanSoc mocks base method.
@@ -140,6 +168,18 @@ func (mr *MockAPIMockRecorder) Name() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Name", reflect.TypeOf((*MockAPI)(nil).Name))
 }
 
+// SetAlwaysCharge mocks base method.
+func (m *MockAPI) SetAlwaysCharge(arg0 api.AlwaysCharge) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetAlwaysCharge", arg0)
+}
+
+// SetAlwaysCharge indicates an expected call of SetAlwaysCharge.
+func (mr *MockAPIMockRecorder) SetAlwaysCharge(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAlwaysCharge", reflect.TypeOf((*MockAPI)(nil).SetAlwaysCharge), arg0)
+}
+
 // SetLimitSoc mocks base method.
 func (m *MockAPI) SetLimitSoc(soc int) {
 	m.ctrl.T.Helper()
@@ -162,6 +202,18 @@ func (m *MockAPI) SetMinSoc(soc int) {
 func (mr *MockAPIMockRecorder) SetMinSoc(soc any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMinSoc", reflect.TypeOf((*MockAPI)(nil).SetMinSoc), soc)
+}
+
+// SetMode mocks base method.
+func (m *MockAPI) SetMode(arg0 api.ChargeMode) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetMode", arg0)
+}
+
+// SetMode indicates an expected call of SetMode.
+func (mr *MockAPIMockRecorder) SetMode(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMode", reflect.TypeOf((*MockAPI)(nil).SetMode), arg0)
 }
 
 // SetPlanSoc mocks base method.

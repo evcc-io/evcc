@@ -22,10 +22,52 @@ The following describes each possible element in a yaml file
 
 Each product contains:
 
-- `brand`: an optional brand description of the product
-- `description`: an optional description e.g. of the product model. Expects `generic`, `de`, `en`: an optional description of the product
+- `brand`: company that makes the product or offers the service. No regions, variants, or API names — those, if required for clarity, belong in `description`.
+- `description`: product, service, model, or API name. Expects `generic`, `de`, `en`.
 
-Either `brand`, or `description` need to be set.
+Either `brand` or `description` needs to be set. Examples by device class:
+
+- Vehicles — `brand` is the make, `description` the connected service:
+  - `brand: Hyundai`, `description.generic: Bluelink`
+  - `brand: Hyundai`, `description.generic: Bluelink (US)`
+- Chargers — `brand` is the manufacturer, `description` the product model:
+  - `brand: ABL`, `description.generic: eMH1`
+  - `brand: ABL`, `description.generic: eMH2`
+  - `brand: Alfen`, `description.generic: Eve`
+- Meters — `brand` is the manufacturer, `description` the product model:
+  - `brand: ABB`, `description.generic: A43`
+  - `brand: my-PV`, `description.generic: AC ELWA 2`
+- Tariffs — `brand` is the service provider, `description` the API variant:
+  - `brand: Electricity Maps`, `description.generic: Commercial API`
+  - `brand: Electricity Maps`, `description.generic: Free API`
+- Generic integrations (OSS tools, community projects): omit `brand`, put the project name in `description.generic`, set `group: generic`. Keep upstream casing (e.g. `TeslaFi`, `ioBroker.bmw`, `mg2mqtt`).
+
+Note: The official website of the manufacturer or service provider is the reference for the exact spelling.
+
+## `link`
+
+`link` is an optional URL pointing to the integration provider. It is shown during configuration and in the documentation.
+
+Guidelines:
+
+- The URL must start with `https://`.
+- Only add a link if it is useful for configuring the device, e.g. the cloud portal where credentials or tokens are managed, the page of the connected service, or the project page of a generic integration.
+- Link the page that describes the actual service being integrated, e.g. the dynamic tariff product page or the dataset page, not the company homepage. The homepage is fine when the whole site is that single service.
+- Write for end users: the page should describe the service and ideally offer a signup or account/token call to action. Do not link API documentation or developer portals.
+- Do not link general product detail or marketing pages, e.g. the manufacturer page of a charger.
+- Use canonical, stable URLs in the provider's default language and without tracking parameters. Verify that the URL is live.
+- `link` can be set at the template level (applies to all products) and overridden per product via a `link` entry under `products`.
+
+**Example** (template-level link, overridden by a rebranded product):
+
+```yaml
+template: smartcharge
+link: https://portal.smartcharge.example.com
+products:
+  - ...
+  - brand: PowerCloud
+    link: https://portal.powercloud.example.com
+```
 
 ## `group`
 
@@ -33,14 +75,40 @@ Either `brand`, or `description` need to be set.
 
 ## `capabilities`
 
-`capabilities` provides an option to define special capabilities of the device as a list of strings
+`capabilities` provides an option to define special capabilities of the device as a list of strings.
 
-**Possible Values**:
+**Possible values**:
 
-- `iso151182`: If the charger supports communicating via ISO15118-2
-- `rfid`: If the charger supports RFID
-- `1p3p`: If the charger supports 1P/3P-phase switching
-- `smahems`: If the device can be used as an SMA HEMS device, only used for the SMA Home Manager 2.0 right now
+- `iso151182`: The device supports communicating via ISO 15118-2.
+- `mA`: The device supports granular (milliamp) current control.
+- `rfid`: The device supports RFID.
+- `1p3p`: The device supports 1P/3P phase switching.
+- `battery-control`: The device supports battery control.
+- `meter`: The device has a built-in energy meter.
+- `dim`: The device supports EnWG §14a dimming.
+- `curtail`: The device supports EEG §9 curtailment.
+
+`capabilities` can be set at two levels:
+
+- **Template level** (next to `template`): applies to every product.
+- **Product level** (under a `products` entry): applies to that product only.
+
+Both levels are merged, not overwritten: template-level capabilities are appended to each product's own list. A product cannot remove an inherited capability, and duplicates are rejected, so do not repeat a template-level capability on a product.
+
+**Example** (all products get `1p3p`; only the second product additionally gets `meter`):
+
+```yaml
+template: demo-charger
+capabilities: ["1p3p"]
+products:
+  - brand: Demo
+    description:
+      generic: Basic
+  - brand: Demo
+    description:
+      generic: Plus
+    capabilities: ["meter"] # effective: ["meter", "1p3p"]
+```
 
 ## `requirements`
 
@@ -82,6 +150,30 @@ en: |
   Set the backend URL to `ws://<evcc-host>:8887/`.
 
   **Attention**: Token is only valid for 2 minutes.
+```
+
+## `caveats`
+
+`caveats` documents known limitations or unreliable behaviour of a device that otherwise works. This is distinct from `requirements.description`, which covers setup steps the user must perform.
+
+It is a list, so a device can have multiple caveats. Each entry has a language-specific `description` (`de`, `en`) and a `link`.
+
+Guidelines:
+
+- Add **one entry per distinct problem** (e.g. "unreliable meter" and "occasional reboots" are two entries); don't list the same problem twice.
+- Keep descriptions **as concise as possible** while still understandable.
+- Use **factual wording** describing the observed behaviour.
+- Always add a `link` to the single issue or discussion that best documents the problem, so the situation can be re-verified later. It is technically optional, but omitting it should be a rare exception.
+- The `description` follows the same Markdown formatting rules as `requirements.description` above.
+
+Example:
+
+```yaml
+caveats:
+  - description:
+      de: Phasenumschaltung deaktiviert sich gelegentlich von selbst.
+      en: Phase switching occasionally disables itself.
+    link: https://github.com/evcc-io/evcc/issues/21708
 ```
 
 ## `auth`
@@ -193,7 +285,7 @@ auth:
 - `string`: for string values (default)
 - `bool`: for `true` and `false` values
 - `choice`: for a selection from predefined options (defined in `choice` property)
-- `chargemodes`: for a selection of charge modes (`Off`, `Now`, `MinPV`, `PV`), including `None` which results in the param not being set
+- `chargemodes`: for a selection of charge modes (`Off`, `Smart`, `Now`), including `None` which results in the param not being set
 - `duration`: for duration values (e.g., `5m`, `1h30m`, `10s`)
 - `float`: for floating point numbers
 - `int`: for integer values
@@ -277,3 +369,9 @@ Service endpoints must return an array of strings (e.g., `["value1", "value2"]`)
 ## `render`
 
 `render` contains the internal device configuration. All `param` `name` values can be used as a template variable, e.g. `{{ .host }}` for a param named `host`. The content is a go template, so all of go template feature can be used, e.g. `{{- if ... }}` statements, etc.
+
+`render` is evaluated once when the device is configured. Plugin fields like the HTTP `uri` and `body` are go templates themselves and are evaluated on every request (sprig functions plus `addDate` and `timeRound`). Time-dependent expressions must be deferred to request time by wrapping them in a raw string, otherwise `now` freezes at config time:
+
+```yaml
+uri: https://example.org/forecast?from={{ `{{ now | date "2006-01-02" }}` }}&to={{ `{{ addDate now 0 0 5 | date "2006-01-02" }}` }}
+```

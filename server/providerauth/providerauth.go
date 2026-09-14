@@ -27,19 +27,19 @@ func init() {
 		log:       util.NewLogger("providerauth"),
 		secret:    secret[:],
 		providers: make(map[string]api.AuthProvider),
-		states:    make(map[string]string),
+		states:    make(map[string]stateEntry),
 		updateC:   make(chan string, 1),
 	}
 }
 
-// Setup connects the redirect handler to the router and registers the callback channel
-func Setup(router *mux.Router, paramC chan<- util.Param) {
-	// callback?code=...&state=...
+// Setup connects the redirect handler to the router and registers the callback channel.
+// Callback stays open: the cross-site IdP redirect carries no session cookie, the state token gates it.
+func Setup(router *mux.Router, paramC chan<- util.Param, authMiddleware mux.MiddlewareFunc) {
+	gate := func(h http.HandlerFunc) http.Handler { return authMiddleware(h) }
+
 	router.Methods(http.MethodGet).Path("/callback").HandlerFunc(instance.handleCallback)
-	// login?id=...
-	router.Methods(http.MethodGet).Path("/login").HandlerFunc(instance.handleLogin)
-	// logout?id=...
-	router.Methods(http.MethodGet).Path("/logout").HandlerFunc(instance.handleLogout)
+	router.Methods(http.MethodGet).Path("/login").Handler(gate(instance.handleLogin))
+	router.Methods(http.MethodGet).Path("/logout").Handler(gate(instance.handleLogout))
 
 	go instance.run(paramC)
 }
@@ -52,7 +52,9 @@ func Register(name string, handler api.AuthProvider) (chan<- bool, error) {
 		return nil, err
 	}
 
-	onlineC := make(chan bool)
+	// buffered + non-blocking send (see OAuth.setOnline): the value is only a
+	// signal and the handler re-reads live state, so coalescing is lossless.
+	onlineC := make(chan bool, 1)
 
 	go func() {
 		for range onlineC {

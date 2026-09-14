@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"github.com/evcc-io/evcc/core/keys"
-	"github.com/evcc-io/evcc/server/db"
-	"github.com/evcc-io/evcc/server/db/settings"
+	"github.com/evcc-io/evcc/db"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/spf13/cobra"
 )
@@ -76,6 +76,7 @@ func runMigrate(cmd *cobra.Command, args []string) {
 	settings.Delete(keys.PvMeters)
 	settings.Delete(keys.AuxMeters)
 	settings.Delete(keys.ExtMeters)
+	settings.Delete(keys.ConsumerMeters)
 	settings.Delete(keys.BatteryMeters)
 	// clear config table
 	result := db.Instance.Delete(&config.Config{}, "true")

@@ -19,9 +19,10 @@ import (
 type ModbusSunspec struct {
 	log    *util.Logger
 	conn   *modbus.Connection
-	device *sunsdev.SunSpec
+	device *sunspecDevice
 	op     modbus.SunSpecOperation
 	scale  float64
+	mask   uint64
 }
 
 func init() {
@@ -34,9 +35,8 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 		modbus.Settings `mapstructure:",squash"`
 		Value           []string
 		Scale           float64
-		Delay           time.Duration
+		BitMask         string
 		ConnectDelay    time.Duration
-		Timeout         time.Duration
 	}{
 		Scale: 1,
 	}
@@ -45,19 +45,21 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 		return nil, err
 	}
 
+	var mask uint64
+	if cc.BitMask != "" {
+		var err error
+		if mask, err = modbus.DecodeMask(cc.BitMask); err != nil {
+			return nil, err
+		}
+	}
+
 	modbus.Lock()
 	defer modbus.Unlock()
 
-	conn, err := modbus.NewConnection(ctx, cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.Settings.Protocol(), cc.ID)
+	conn, err := cc.Settings.Connection(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	// set non-default timeout
-	conn.Timeout(cc.Timeout)
-
-	// set non-default delay
-	conn.Delay(cc.Delay)
 
 	// set non-default connect delay
 	conn.ConnectDelay(cc.ConnectDelay)
@@ -71,7 +73,9 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 
 	devices := sunspecDevices.Get(conn)
 	if devices == nil {
-		devices, err = sunsdev.DeviceTree(conn)
+		// the device tree captures the client gosunspec uses for all further
+		// block reads and writes, hence wrap it in the deduplicating cache
+		devices, err = sunsdev.DeviceTree(newSunspecCachedClient(conn))
 		if err != nil && !errors.Is(err, meters.ErrPartiallyOpened) {
 			return nil, err
 		}
@@ -82,7 +86,7 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 	device := sunspecSubDevices.Get(conn, cc.SubDevice)
 	if device == nil {
 		// silence KOSTAL implementation errors
-		device = sunsdev.NewDevice("sunspec", cc.SubDevice)
+		device = &sunspecDevice{SunSpec: sunsdev.NewDevice("sunspec", cc.SubDevice)}
 		if err := device.InitializeWithTree(devices); err != nil {
 			return nil, err
 		}
@@ -104,7 +108,11 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 		conn:   conn,
 		device: device,
 		scale:  cc.Scale,
+		mask:   mask,
 	}
+
+	device.mu.Lock()
+	defer device.mu.Unlock()
 
 	for _, op := range ops {
 		if _, _, err := device.QueryPointAny(conn, op.Model, op.Block, op.Point); err == nil {
@@ -116,12 +124,18 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 	return nil, fmt.Errorf("sunspec model not found: %v", ops)
 }
 
+// recoverToError converts a panic into *err, for sunspec point access that panics on type mismatch.
+func recoverToError(err *error) {
+	if r := recover(); r != nil {
+		*err = fmt.Errorf("panic: %v", r)
+	}
+}
+
 func (m *ModbusSunspec) floatGetter() (f float64, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("panic: %v", r)
-		}
-	}()
+	defer recoverToError(&err)
+
+	m.device.mu.Lock()
+	defer m.device.mu.Unlock()
 
 	res, err := m.device.QueryPoint(
 		m.conn,
@@ -157,12 +171,70 @@ func (m *ModbusSunspec) IntGetter() (func() (int64, error), error) {
 	}, err
 }
 
-func (m *ModbusSunspec) blockPoint() (block sunspec.Block, point sunspec.Point, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("panic: %v", r)
+var _ BoolGetter = (*ModbusSunspec)(nil)
+
+// BoolGetter treats any non-zero raw value as true, ANDing an optional bitmask in first.
+// Reads the point directly since FloatGetter's ScaledValue panics on enum/bitfield points.
+func (m *ModbusSunspec) BoolGetter() (func() (bool, error), error) {
+	return func() (res bool, err error) {
+		defer recoverToError(&err)
+
+		m.device.mu.Lock()
+		defer m.device.mu.Unlock()
+
+		_, point, err := m.blockPoint()
+		if err != nil {
+			return false, err
 		}
-	}()
+
+		val, err := pointInt64(point)
+		if err != nil {
+			return false, fmt.Errorf("model %d block %d point %s: %w", m.op.Model, m.op.Block, m.op.Point, err)
+		}
+
+		return sunspecBool(val, m.mask), nil
+	}, nil
+}
+
+// pointInt64 reads a sunspec point's raw (unscaled) value as int64.
+func pointInt64(point sunspec.Point) (int64, error) {
+	switch point.Type() {
+	case typelabel.Bitfield16:
+		return int64(point.Bitfield16()), nil
+	case typelabel.Bitfield32:
+		return int64(point.Bitfield32()), nil
+	case typelabel.Enum16:
+		return int64(point.Enum16()), nil
+	case typelabel.Enum32:
+		return int64(point.Enum32()), nil
+	case typelabel.Int16:
+		return int64(point.Int16()), nil
+	case typelabel.Int32:
+		return int64(point.Int32()), nil
+	case typelabel.Int64:
+		return point.Int64(), nil
+	case typelabel.Uint16:
+		return int64(point.Uint16()), nil
+	case typelabel.Uint32:
+		return int64(point.Uint32()), nil
+	case typelabel.Uint64:
+		return int64(point.Uint64()), nil
+	default:
+		return 0, fmt.Errorf("unsupported type: %s", point.Type())
+	}
+}
+
+func sunspecBool(val int64, mask uint64) bool {
+	if mask != 0 {
+		return uint64(val)&mask != 0
+	}
+	return val != 0
+}
+
+// blockPoint reads the block and returns its point. The device lock must be held
+// by the caller until the point value has been consumed or written.
+func (m *ModbusSunspec) blockPoint() (block sunspec.Block, point sunspec.Point, err error) {
+	defer recoverToError(&err)
 
 	block, point, err = m.device.QueryPointAny(
 		m.conn,
@@ -181,7 +253,10 @@ var _ FloatSetter = (*Modbus)(nil)
 
 // FloatSetter executes configured modbus write operation and implements FloatSetter
 func (m *ModbusSunspec) FloatSetter(_ string) (func(float64) error, error) {
+	m.device.mu.Lock()
 	block, point, err := m.blockPoint()
+	m.device.mu.Unlock()
+
 	if err != nil {
 		return nil, err
 	}
@@ -189,11 +264,11 @@ func (m *ModbusSunspec) FloatSetter(_ string) (func(float64) error, error) {
 	typ := point.Type()
 
 	return func(val float64) (err error) {
-		defer func() {
-			if r := recover(); r != nil {
-				err = fmt.Errorf("panic: %v", r)
-			}
-		}()
+		defer recoverToError(&err)
+
+		// setting the point and writing it must not interleave with a concurrent read
+		m.device.mu.Lock()
+		defer m.device.mu.Unlock()
 
 		val = val * m.scale
 		switch typ {
@@ -211,7 +286,10 @@ var _ IntSetter = (*Modbus)(nil)
 
 // IntSetter executes configured modbus write operation and implements IntSetter
 func (m *ModbusSunspec) IntSetter(_ string) (func(int64) error, error) {
+	m.device.mu.Lock()
 	block, point, err := m.blockPoint()
+	m.device.mu.Unlock()
+
 	if err != nil {
 		return nil, err
 	}
@@ -219,11 +297,11 @@ func (m *ModbusSunspec) IntSetter(_ string) (func(int64) error, error) {
 	typ := point.Type()
 
 	return func(val int64) (err error) {
-		defer func() {
-			if r := recover(); r != nil {
-				err = fmt.Errorf("panic: %v", r)
-			}
-		}()
+		defer recoverToError(&err)
+
+		// setting the point and writing it must not interleave with a concurrent read
+		m.device.mu.Lock()
+		defer m.device.mu.Unlock()
 
 		val = int64(float64(val) * m.scale)
 

@@ -6,5 +6,5 @@ params:
   - preset: vehicle-features
 render: |
   type: dacia
-  {{ include "vehicle-base" . }}
-  {{ include "vehicle-features" . }}
+  {{ include "base" . }}
+  {{ include "features" . }}

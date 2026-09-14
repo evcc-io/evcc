@@ -6,7 +6,7 @@ products:
   - brand: Fronius
     description:
       generic: Primo GEN24 Plus
-capabilities: ["battery-control"]
+capabilities: ["battery-control", "curtail"]
 requirements:
   description:
     de: |
@@ -31,9 +31,9 @@ params:
       generic: Integer
     deprecated: true
   - name: maxacpower
+    deprecated: true # read from nameplate
   - preset: battery-params
   - name: maxchargerate
-    advanced: true
 render: |
   type: custom
   # sunspec model 20x (int+sf)/ 21x (float) meter
@@ -56,6 +56,16 @@ render: |
       - 211:TotWhImp
       - 203:TotWhImp
       - 213:TotWhImp
+    scale: 0.001
+  returnenergy:
+    source: sunspec
+    uri: {{ joinHostPort .host .port }}
+    id: {{ .id }}
+    value:
+      - 201:TotWhExp
+      - 211:TotWhExp
+      - 203:TotWhExp
+      - 213:TotWhExp
     scale: 0.001
   currents:
     - source: sunspec
@@ -158,7 +168,56 @@ render: |
       id: 1
       value: 160:2:DCWH # mppt 2
       scale: 0.001
-  maxacpower: {{ .maxacpower }} # W
+  {{- include "sunspec-maxacpower-tcp" . }}
+  curtail:
+    source: sequence
+    set:
+      - source: sunspec
+        uri: {{ joinHostPort .host .port }}
+        id: 1
+        value: 123:WMaxLimPct
+      - source: switch
+        switch:
+          - case: 100 # Uncurtailed
+            set:
+              source: const
+              value: 0 # Limit disabled
+              set:
+                source: sunspec
+                uri: {{ joinHostPort .host .port }}
+                id: 1
+                value: 123:WMaxLim_Ena
+        default:
+          source: const
+          value: 1 # Limit enabled
+          set:
+            source: sunspec
+            uri: {{ joinHostPort .host .port }}
+            id: 1
+            value: 123:WMaxLim_Ena
+  curtailed: # the limit percentage only applies while the limit is enabled
+    source: go
+    in:
+    - name: ena
+      type: bool
+      config:
+        source: sunspec
+        uri: {{ joinHostPort .host .port }}
+        id: 1
+        value: 123:WMaxLim_Ena
+    - name: limit
+      type: float
+      config:
+        source: sunspec
+        uri: {{ joinHostPort .host .port }}
+        id: 1
+        value: 123:WMaxLimPct
+    script: |
+      percent := 100
+      if ena {
+        percent = int(limit)
+      }
+      percent
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -178,6 +237,12 @@ render: |
     uri: {{ joinHostPort .host .port }}
     id: 1
     value: 160:4:DCWH # mppt 4 (discharge)
+    scale: 0.001
+  returnenergy:
+    source: sunspec
+    uri: {{ joinHostPort .host .port }}
+    id: 1
+    value: 160:3:DCWH # mppt 3 (charge)
     scale: 0.001
   soc:
     source: sunspec
@@ -248,5 +313,23 @@ render: |
             uri: {{ joinHostPort .host .port }}
             id: 1
             value: 124:0:OutWRte
+    - case: 4 # holdcharge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:StorCtl_Mod
+        - source: const
+          value: 0 # %
+          set:
+            source: sunspec
+            uri: {{ .host }}:{{ .port }}
+            id: 1
+            value: 124:0:InWRte
   {{- include "battery-params" . }}
   {{- end }}

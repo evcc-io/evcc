@@ -68,7 +68,7 @@ func (s *sharderImpl) shards(useCache bool) iter.Seq2[string, any] {
 func jsonKey(f *structs.Field) string {
 	key := f.Name()
 	if t := f.Tag("json"); t != "" {
-		if n := strings.Split(t, ",")[0]; n != "" {
+		if n, _, _ := strings.Cut(t, ","); n != "" {
 			key = n
 		}
 	}

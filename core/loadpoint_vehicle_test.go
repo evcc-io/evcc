@@ -41,10 +41,10 @@ func TestPublishSocAndRange(t *testing.T) {
 		clock:        clck,
 		charger:      charger,
 		vehicle:      vehicle,
-		chargeMeter:  &Null{}, // silence nil panics
-		chargeRater:  &Null{}, // silence nil panics
-		chargeTimer:  &Null{}, // silence nil panics
-		socEstimator: soc.NewEstimator(log, charger, vehicle),
+		chargeMeter:  newChargeMeter(&Null{}), // silence nil panics
+		chargeRater:  &Null{},                 // silence nil panics
+		chargeTimer:  &Null{},                 // silence nil panics
+		socEstimator: soc.NewEstimator(log, vehicle),
 		minCurrent:   minA,
 		maxCurrent:   maxA,
 		phases:       1,
@@ -157,9 +157,9 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 			clock:       clck,
 			charger:     tc.charger,
 			vehicle:     tc.vehicle,
-			chargeMeter: &Null{}, // silence nil panics
-			chargeRater: &Null{}, // silence nil panics
-			chargeTimer: &Null{}, // silence nil panics
+			chargeMeter: newChargeMeter(&Null{}), // silence nil panics
+			chargeRater: &Null{},                 // silence nil panics
+			chargeTimer: &Null{},                 // silence nil panics
 			minCurrent:  minA,
 			maxCurrent:  maxA,
 			phases:      1,
@@ -188,9 +188,49 @@ func TestPublishSocAndRangeVehiclesAndChargers(t *testing.T) {
 
 		t.Run(tc.name+" wo/estimator", test)
 
-		lp.socEstimator = soc.NewEstimator(log, tc.charger, tc.vehicle)
+		lp.socEstimator = soc.NewEstimator(log, tc.vehicle)
 		t.Run(tc.name+" w/estimator", test)
 	}
+}
+
+// https://github.com/evcc-io/evcc/issues/33627
+func TestPublishSocAndRangeEnergyLimit(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	// offline vehicle with capacity: estimator exists but soc is unknown
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Soc().AnyTimes()
+	vehicle.EXPECT().Capacity().Return(4.0).AnyTimes()
+	vehicle.EXPECT().Features().Return([]api.Feature{api.Offline}).AnyTimes()
+
+	log := util.NewLogger("foo")
+	lp := &Loadpoint{
+		log:          log,
+		bus:          evbus.New(),
+		clock:        clock.NewMock(),
+		charger:      api.NewMockCharger(ctrl),
+		vehicle:      vehicle,
+		chargeMeter:  newChargeMeter(&Null{}), // silence nil panics
+		chargeRater:  &Null{},                 // silence nil panics
+		chargeTimer:  &Null{},                 // silence nil panics
+		socEstimator: soc.NewEstimator(log, vehicle),
+		minCurrent:   minA,
+		maxCurrent:   maxA,
+		phases:       1,
+		status:       api.StatusC,
+		mode:         api.ModeNow,
+		limitEnergy:  2,   // kWh
+		chargePower:  900, // W
+	}
+	lp.energyMetrics.totalKWh = 1.1
+
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	lp.publishSocAndRange()
+
+	assert.InDelta(t, 0.9, lp.GetRemainingEnergy(), 1e-9, "remaining energy")
+	assert.Equal(t, time.Hour, lp.GetRemainingDuration(), "remaining duration")
 }
 
 func TestVehicleDetectByID(t *testing.T) {
@@ -201,40 +241,60 @@ func TestVehicleDetectByID(t *testing.T) {
 
 	type testcase struct {
 		string
-		id, i1, i2 string
-		res        api.Vehicle
-		prepare    func(testcase)
+		ids     []string
+		i1, i2  string
+		res     api.Vehicle
+		match   string
+		prepare func(testcase)
 	}
 	tc := []testcase{
-		{"1/_/_->0", "1", "", "", nil, func(tc testcase) {
+		{"1/_/_->0", []string{"1"}, "", "", nil, "", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return(nil)
 			v2.EXPECT().Identifiers().Return(nil)
 			v1.EXPECT().Identifiers().Return(nil)
 			v2.EXPECT().Identifiers().Return(nil)
 		}},
-		{"1/1/2->1", "1", "1", "2", v1, func(tc testcase) {
+		{"1/1/2->1", []string{"1"}, "1", "2", v1, "1", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 		}},
-		{"2/1/2->2", "2", "1", "2", v2, func(tc testcase) {
+		{"2/1/2->2", []string{"2"}, "1", "2", v2, "2", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 		}},
-		{"11/1*/2->1", "11", "1*", "2", v1, func(tc testcase) {
+		{"11/1*/2->1", []string{"11"}, "1*", "2", v1, "11", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			// v2.EXPECT().Identifiers().Return([]string{tc.i2})
 		}},
-		{"22/1*/2*->2", "22", "1*", "2*", v2, func(tc testcase) {
+		{"22/1*/2*->2", []string{"22"}, "1*", "2*", v2, "22", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 		}},
-		{"2/_/*->2", "2", "", "*", v2, func(tc testcase) {
+		{"2/_/*->2", []string{"2"}, "", "*", v2, "2", func(tc testcase) {
 			v1.EXPECT().Identifiers().Return(nil)
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 			v1.EXPECT().Identifiers().Return(nil)
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+		}},
+		// second identity matches, e.g. rfid tag and vehicle id
+		{"x,2/1/2->2", []string{"x", "2"}, "1", "2", v2, "2", func(tc testcase) {
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+		}},
+		// wildcard matches the second identity
+		{"x,22/1/2*->2", []string{"x", "22"}, "1", "2*", v2, "22", func(tc testcase) {
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 		}},
 	}
@@ -252,8 +312,12 @@ func TestVehicleDetectByID(t *testing.T) {
 			tc.prepare(tc)
 		}
 
-		if res := lp.selectVehicleByID(tc.id); tc.res != res {
+		res, match := lp.selectVehicleByID(tc.ids...)
+		if tc.res != res {
 			t.Errorf("expected %v, got %v", tc.res, res)
+		}
+		if tc.match != match {
+			t.Errorf("expected match %q, got %q", tc.match, match)
 		}
 	}
 }
@@ -261,7 +325,7 @@ func TestVehicleDetectByID(t *testing.T) {
 func TestDefaultVehicle(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	mode := api.ModePV
+	mode := api.ModeSmart
 	current := 66.6
 
 	dflt := api.NewMockVehicle(ctrl)
@@ -323,6 +387,206 @@ func TestDefaultVehicle(t *testing.T) {
 	assert.Nil(t, lp.vehicle, "expected no vehicle")
 }
 
+// TestVehicleChangeResetsAlwaysChargeOnce: session-scoped once must not leak
+// into another vehicle's session when the active vehicle changes.
+func TestVehicleChangeResetsAlwaysChargeOnce(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	v1 := api.NewMockVehicle(ctrl)
+	expectVehiclePublish(v1)
+	v2 := api.NewMockVehicle(ctrl)
+	expectVehiclePublish(v2)
+
+	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
+
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	lp.setActiveVehicle(v1)
+	assert.NoError(t, lp.SetAlwaysCharge(api.AlwaysChargeOnce))
+
+	// re-assigning the same vehicle keeps once
+	lp.setActiveVehicle(v1)
+	assert.Equal(t, api.AlwaysChargeOnce, lp.GetAlwaysCharge(), "same vehicle")
+
+	// vehicle change resets once
+	lp.setActiveVehicle(v2)
+	assert.Equal(t, api.AlwaysChargeOff, lp.GetAlwaysCharge(), "changed vehicle")
+}
+
+// idCharger is a minimal charger implementing api.Identifier for identifyVehicle tests.
+type idCharger struct {
+	id string
+}
+
+func (c *idCharger) Status() (api.ChargeStatus, error) { return api.StatusB, nil }
+func (c *idCharger) Enabled() (bool, error)            { return false, nil }
+func (c *idCharger) Enable(bool) error                 { return nil }
+func (c *idCharger) MaxCurrent(int64) error            { return nil }
+func (c *idCharger) Identify() ([]string, error)       { return []string{c.id}, nil }
+
+// TestReidentifyActiveVehicleKeepsMode is a regression test for #31499:
+// re-identifying the already-active vehicle must not reapply its default mode.
+func TestReidentifyActiveVehicleKeepsMode(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().GetTitle().Return("target").AnyTimes()
+	vehicle.EXPECT().Icon().Return("").AnyTimes()
+	vehicle.EXPECT().Capacity().AnyTimes()
+	vehicle.EXPECT().Phases().AnyTimes()
+	vehicle.EXPECT().Identifiers().Return([]string{"rfid-1"}).AnyTimes()
+	vehicle.EXPECT().OnIdentified().Return(api.ActionConfig{
+		Mode: api.ModePV,
+	}).AnyTimes()
+
+	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
+	lp.charger = &idCharger{id: "rfid-1"}
+	lp.coordinator = coordinator.NewAdapter(lp, coordinator.New(util.NewLogger("foo"), []api.Vehicle{vehicle}))
+
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	// vehicle already active via a different detection path (e.g. SoC poll)
+	lp.setActiveVehicle(vehicle)
+	assert.Equal(t, api.ModeSmart, lp.GetMode(), "mode after first identification")
+
+	// user/system escalates to now in between
+	lp.SetMode(api.ModeNow)
+
+	// charger reports the same vehicle's RFID id - must not reapply default mode
+	lp.identifyVehicle()
+	assert.Equal(t, api.ModeNow, lp.GetMode(), "mode must not be reapplied for already-active vehicle")
+}
+
+// TestReassignActiveVehicleKeepsSoc is a regression test for #31063:
+// re-assigning the already-active default vehicle on reconnect must not wipe a
+// known soc. Only a genuine vehicle change (or disconnect) clears it.
+func TestReassignActiveVehicleKeepsSoc(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().GetTitle().Return("target").AnyTimes()
+	vehicle.EXPECT().Icon().Return("").AnyTimes()
+	vehicle.EXPECT().Capacity().AnyTimes()
+	vehicle.EXPECT().Phases().AnyTimes()
+	vehicle.EXPECT().OnIdentified().AnyTimes()
+
+	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
+
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	// vehicle active, soc read from a prior cycle
+	lp.setActiveVehicle(vehicle)
+	lp.vehicleSoc = 71
+
+	// re-assign the same vehicle (reconnect churn) - soc must survive
+	lp.setActiveVehicle(vehicle)
+	assert.Equal(t, 71.0, lp.vehicleSoc, "soc must survive same-vehicle re-assign")
+
+	// switching to no vehicle still clears it
+	lp.setActiveVehicle(nil)
+	assert.Equal(t, 0.0, lp.vehicleSoc, "soc must clear on vehicle change")
+}
+
+// TestActiveVehicleChangeTriggersOptimizer ensures the optimizer is re-run when
+// the detected vehicle changes, as the loadpoint profile depends on it.
+func TestActiveVehicleChangeTriggersOptimizer(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().GetTitle().Return("target").AnyTimes()
+	vehicle.EXPECT().Icon().Return("").AnyTimes()
+	vehicle.EXPECT().Capacity().AnyTimes()
+	vehicle.EXPECT().Phases().AnyTimes()
+	vehicle.EXPECT().OnIdentified().AnyTimes()
+
+	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
+	s := new(mockSite)
+	lp.site = s
+
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	lp.setActiveVehicle(vehicle)
+	assert.Equal(t, 1, s.optimized, "vehicle detected")
+
+	// re-assigning the same vehicle is not a change
+	lp.setActiveVehicle(vehicle)
+	assert.Equal(t, 1, s.optimized, "same vehicle re-assigned")
+
+	lp.setActiveVehicle(nil)
+	assert.Equal(t, 2, s.optimized, "vehicle removed")
+}
+
+// integratedDeviceCharger is a minimal charger advertising the IntegratedDevice feature.
+type integratedDeviceCharger struct{}
+
+func (c *integratedDeviceCharger) Status() (api.ChargeStatus, error) { return api.StatusA, nil }
+func (c *integratedDeviceCharger) Enabled() (bool, error)            { return false, nil }
+func (c *integratedDeviceCharger) Enable(bool) error                 { return nil }
+func (c *integratedDeviceCharger) MaxCurrent(int64) error            { return nil }
+func (c *integratedDeviceCharger) Features() []api.Feature {
+	return []api.Feature{api.IntegratedDevice}
+}
+
+// continuousCharger is a minimal charger advertising the Continuous feature.
+type continuousCharger struct {
+	integratedDeviceCharger
+}
+
+func (c *continuousCharger) Features() []api.Feature {
+	return []api.Feature{api.IntegratedDevice, api.Continuous}
+}
+
+// TestDisconnectIntegratedDeviceKeepsMode is a regression test for #30187:
+// switching an integrated-device loadpoint to "off" makes a switch socket report
+// StatusA (disconnect). The disconnect handler must NOT reset the mode to the
+// configured DefaultMode in that case, otherwise the loadpoint immediately flips
+// back to pv and the socket re-enables.
+func TestDisconnectIntegratedDeviceKeepsMode(t *testing.T) {
+	lp := NewLoadpoint(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("foo"))
+	lp.charger = &integratedDeviceCharger{}
+	lp.DefaultMode = api.ModeSmart
+	lp.setMode(api.ModeOff)
+
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	lp.evVehicleDisconnectHandler()
+
+	assert.Equal(t, api.ModeOff, lp.GetMode(), "integrated device disconnect must not reset mode")
+}
+
+func TestStartWakeUpTimerDisabled(t *testing.T) {
+	for _, tc := range []struct {
+		name        string
+		features    []api.Feature
+		wantRunning bool
+	}{
+		{"enabled", nil, true},
+		{"disabled", []api.Feature{api.WakeUpDisabled}, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			vehicle := api.NewMockVehicle(ctrl)
+			vehicle.EXPECT().Features().Return(tc.features).AnyTimes()
+
+			lp := &Loadpoint{
+				log:         util.NewLogger("foo"),
+				vehicle:     vehicle,
+				wakeUpTimer: NewTimer(),
+			}
+
+			lp.startWakeUpTimer()
+
+			assert.Equal(t, tc.wantRunning, lp.wakeUpTimer.Running())
+		})
+	}
+}
+
 func TestReconnectVehicle(t *testing.T) {
 	tc := []struct {
 		name      string
@@ -356,9 +620,9 @@ func TestReconnectVehicle(t *testing.T) {
 				bus:         evbus.New(),
 				clock:       clck,
 				charger:     charger,
-				chargeMeter: &Null{}, // silence nil panics
-				chargeRater: &Null{}, // silence nil panics
-				chargeTimer: &Null{}, // silence nil panics
+				chargeMeter: newChargeMeter(&Null{}), // silence nil panics
+				chargeRater: &Null{},                 // silence nil panics
+				chargeTimer: &Null{},                 // silence nil panics
 				wakeUpTimer: NewTimer(),
 				minCurrent:  minA,
 				maxCurrent:  maxA,
@@ -378,7 +642,7 @@ func TestReconnectVehicle(t *testing.T) {
 			// vehicle not updated yet
 			vehicle.MockChargeState.EXPECT().Status().Return(api.StatusA, nil)
 
-			lp.Update(0, 0, nil, nil, false, false, 0, nil, nil)
+			lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
 			ctrl.Finish()
 
 			// detection started
@@ -392,7 +656,7 @@ func TestReconnectVehicle(t *testing.T) {
 			// vehicle not updated yet
 			vehicle.MockChargeState.EXPECT().Status().Return(api.StatusB, nil)
 
-			lp.Update(0, 0, nil, nil, false, false, 0, nil, nil)
+			lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
 			ctrl.Finish()
 
 			// vehicle detected

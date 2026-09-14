@@ -237,22 +237,20 @@ var _ api.Meter = (*Plugchoice)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Plugchoice) CurrentPower() (float64, error) {
-	// Should be zero if not enabled
-	if !c.enabled {
-		return 0, nil
-	}
-
 	res, err := c.powerG.Get()
 	if err != nil {
 		return 0, err
 	}
 
+	// the API may return values with surrounding whitespace (e.g. " 0.0")
+	kwVal := strings.TrimSpace(res.KW)
+
 	// Handle the case where power value is "-"
-	if res.KW == "-" {
+	if kwVal == "-" {
 		return 0, nil
 	}
 
-	kw, err := strconv.ParseFloat(res.KW, 64)
+	kw, err := strconv.ParseFloat(kwVal, 64)
 	if err != nil {
 		return 0, err
 	}
@@ -271,6 +269,8 @@ func (c *Plugchoice) Currents() (float64, float64, float64, error) {
 
 	// Helper function to parse current values, handling "-" as 0
 	parsePhaseValue := func(val string, phase string) (float64, error) {
+		// the API may return values with surrounding whitespace (e.g. " 0.0")
+		val = strings.TrimSpace(val)
 		if val == "-" {
 			return 0, nil
 		}

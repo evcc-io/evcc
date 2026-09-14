@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, restart, baseUrl } from "./evcc";
-import { expectModalHidden, expectModalVisible } from "./utils";
+import { expectModalHidden, expectModalVisible, finishLoadpoint } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -49,8 +49,7 @@ test.describe("onboarding", async () => {
     await chargerModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(chargerModal);
     await expectModalVisible(lpModal);
-    await lpModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(lpModal);
+    await finishLoadpoint(page);
 
     await restart();
 

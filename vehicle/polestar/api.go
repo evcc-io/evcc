@@ -3,6 +3,7 @@ package polestar
 import (
 	"context"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/hasura/go-graphql-client"
@@ -81,4 +82,30 @@ func (v *API) CarTelemetry(ctx context.Context, vin string) (CarTelemetryData, e
 	}
 
 	return filteredData, err
+}
+
+// Odometer returns the odometer reading in km for the given VIN.
+// The gRPC battery service does not expose odometer data, so it is queried
+// via GraphQL. Only the odometer field is requested, avoiding the removed
+// battery chargingStatus field that breaks the full telematics query.
+func (v *API) Odometer(ctx context.Context, vin string) (float64, error) {
+	var res struct {
+		CarTelematicsV2 struct {
+			Odometer []OdometerData
+		} `graphql:"carTelematicsV2(vins: $vins)"`
+	}
+
+	if err := v.client.Query(ctx, &res, map[string]any{
+		"vins": []string{vin},
+	}, graphql.OperationName("CarTelematicsV2")); err != nil {
+		return 0, err
+	}
+
+	for _, o := range res.CarTelematicsV2.Odometer {
+		if o.VIN == vin {
+			return float64(o.OdometerMeters) / 1e3, nil
+		}
+	}
+
+	return 0, api.ErrNotAvailable
 }

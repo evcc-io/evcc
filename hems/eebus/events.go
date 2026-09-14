@@ -1,10 +1,14 @@
 package eebus
 
 import (
+	"time"
+
 	eebusapi "github.com/enbility/eebus-go/api"
+	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/enbility/eebus-go/usecases/cs/lpc"
 	"github.com/enbility/eebus-go/usecases/cs/lpp"
 	spineapi "github.com/enbility/spine-go/api"
+	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/server/eebus"
 )
 
@@ -27,8 +31,16 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	// and invoke `ApproveOrDenyConsumptionLimit` for each
 	//
 	// Use Case LPC, Scenario 1
-	case lpc.WriteApprovalRequired:
+	case lpc.LimitWriteApprovalRequired:
 		c.consumptionWriteApprovalRequired()
+
+	// An incoming device configuration write (e.g. failsafe values) needs to be
+	// approved or denied. eebus-go <= v0.7.0 applied these automatically, so we
+	// keep that behaviour by approving all pending configuration writes.
+	//
+	// Use Case LPC, Scenario 2
+	case lpc.ConfigurationWriteApprovalRequired:
+		c.approveDeviceConfigurations(c.cs.CsLPCInterface.PendingDeviceConfigurations(), c.cs.CsLPCInterface.ApproveOrDenyDeviceConfiguration)
 
 	// Failsafe limit for the consumed active (real) power of the
 	// Controllable System data update received
@@ -69,8 +81,16 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	// and invoke `ApproveOrDenyProductionLimit` for each
 	//
 	// Use Case LPP, Scenario 1
-	case lpp.WriteApprovalRequired:
+	case lpp.LimitWriteApprovalRequired:
 		c.productionWriteApprovalRequired()
+
+	// An incoming device configuration write (e.g. failsafe values) needs to be
+	// approved or denied. eebus-go <= v0.7.0 applied these automatically, so we
+	// keep that behaviour by approving all pending configuration writes.
+	//
+	// Use Case LPP, Scenario 2
+	case lpp.ConfigurationWriteApprovalRequired:
+		c.approveDeviceConfigurations(c.cs.CsLPPInterface.PendingDeviceConfigurations(), c.cs.CsLPPInterface.ApproveOrDenyDeviceConfiguration)
 
 	// Failsafe limit for the produced active (real) power of the
 	// Controllable System data update received
@@ -99,6 +119,30 @@ func (c *EEBus) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spineapi.E
 	}
 }
 
+// setConsumptionLimitData stores a freshly received LPC limit. eebus-go reports a
+// stated duration as the time *remaining* (spine stores an absolute end time), so an
+// already-active limit must restart the clock run() measures the duration against.
+// Caller holds the mutex.
+func (c *EEBus) setConsumptionLimitData(limit ucapi.LoadLimit) {
+	c.consumptionLimit = limit
+	c.limitReceived = time.Now()
+
+	if limitActive(c.consumptionLimitActivated) {
+		*c.consumptionLimitActivated = c.limitReceived
+	}
+}
+
+// setProductionLimitData stores a freshly received LPP limit, see setConsumptionLimitData.
+// Caller holds the mutex.
+func (c *EEBus) setProductionLimitData(limit ucapi.LoadLimit) {
+	c.productionLimit = limit
+	c.limitReceived = time.Now()
+
+	if limitActive(c.productionLimitActivated) {
+		*c.productionLimitActivated = c.limitReceived
+	}
+}
+
 func (c *EEBus) updateConsumptionLimit() {
 	limit, err := c.cs.CsLPCInterface.ConsumptionLimit()
 	if err != nil {
@@ -109,7 +153,7 @@ func (c *EEBus) updateConsumptionLimit() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.consumptionLimit = limit
+	c.setConsumptionLimitData(limit)
 }
 
 func (c *EEBus) updateProductionLimit() {
@@ -122,7 +166,7 @@ func (c *EEBus) updateProductionLimit() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.productionLimit = limit
+	c.setProductionLimitData(limit)
 }
 
 func (c *EEBus) consumptionWriteApprovalRequired() {
@@ -136,7 +180,7 @@ func (c *EEBus) consumptionWriteApprovalRequired() {
 		c.cs.CsLPCInterface.ApproveOrDenyConsumptionLimit(msg, true, "")
 
 		c.mux.Lock()
-		c.consumptionLimit = limit
+		c.setConsumptionLimitData(limit)
 		c.mux.Unlock()
 	}
 }
@@ -151,8 +195,20 @@ func (c *EEBus) productionWriteApprovalRequired() {
 
 		c.cs.CsLPPInterface.ApproveOrDenyProductionLimit(msg, true, "")
 		c.mux.Lock()
-		c.productionLimit = limit
+		c.setProductionLimitData(limit)
 		c.mux.Unlock()
+	}
+}
+
+// approveDeviceConfigurations approves all pending device configuration writes,
+// preserving the automatic behaviour of eebus-go <= v0.7.0
+func (c *EEBus) approveDeviceConfigurations(
+	pending map[model.MsgCounterType][]ucapi.PendingDeviceConfiguration,
+	approve func(msgCounter model.MsgCounterType, approve bool, reason string),
+) {
+	for msg, configs := range pending {
+		c.log.DEBUG.Println("approving device configuration write:", msg, configs)
+		approve(msg, true, "")
 	}
 }
 

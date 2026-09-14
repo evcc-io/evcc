@@ -41,6 +41,27 @@ func TestCombined(t *testing.T) {
 	assert.Equal(t, api.Rates{rate(1, 1), rate(2, 4), rate(3, 3)}, rr)
 }
 
+func TestCombinedUnsorted(t *testing.T) {
+	clock := clock.NewMock()
+	rate := func(start int, val float64) api.Rate {
+		return api.Rate{
+			Start: clock.Now().Add(time.Duration(start) * time.Hour),
+			End:   clock.Now().Add(time.Duration(start+1) * time.Hour),
+			Value: val,
+		}
+	}
+
+	// b covers a disjoint range not adjacent to a's rates after concatenation
+	a := &tariff{api.Rates{rate(1, 1), rate(2, 2)}}
+	b := &tariff{api.Rates{rate(3, 3)}}
+	c := &tariff{api.Rates{rate(1, 10), rate(2, 20)}}
+	comb := &combined{[]api.Tariff{a, b, c}}
+
+	rr, err := comb.Rates()
+	require.NoError(t, err)
+	assert.Equal(t, api.Rates{rate(1, 11), rate(2, 22), rate(3, 3)}, rr)
+}
+
 func BenchmarkCombined(bench *testing.B) {
 	clock := clock.NewMock()
 	rate := func(start int, val float64) api.Rate {

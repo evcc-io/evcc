@@ -2,9 +2,12 @@ package keys
 
 const (
 	// loadpoint settings
+	Name              = "name"             // loadpoint name (config identifier)
 	Title             = "title"            // loadpoint title
+	Disabled          = "disabled"         // loadpoint disabled via config
 	Mode              = "mode"             // charge mode
 	DefaultMode       = "defaultMode"      // default charge mode
+	AlwaysCharge      = "alwaysCharge"     // smart mode: charge continuously at least at min power (off/on/once)
 	Charger           = "charger"          // charger ref
 	Meter             = "meter"            // meter ref
 	Circuit           = "circuit"          // circuit ref
@@ -12,12 +15,13 @@ const (
 	Priority          = "priority"         // priority
 	MinCurrent        = "minCurrent"       // min current
 	MaxCurrent        = "maxCurrent"       // max current
-	MinSoc            = "minSoc"           // min soc
+	MinSoc            = "minSoc"           // min soc (heating: min temperature)
 	MinSocNotReached  = "minSocNotReached" // min soc not reached
 	LimitSoc          = "limitSoc"         // limit soc
 	LimitEnergy       = "limitEnergy"      // limit energy
 	Soc               = "soc"
 	Thresholds        = "thresholds"
+	UI                = "ui" // display-only ui settings (json)
 	EnableThreshold   = "enableThreshold"
 	DisableThreshold  = "disableThreshold"
 	EnableDelay       = "enableDelay"
@@ -43,10 +47,14 @@ const (
 	// loadpoint setpoint
 	OfferedCurrent = "offeredCurrent" // offered current
 
+	// optimizer
+	Suggestion = "suggestion" // optimizer's advisory suggestion for the current slot
+
 	// smart charging
 	SmartCostActive    = "smartCostActive"    // smart cost active
 	SmartCostLimit     = "smartCostLimit"     // smart cost limit, fast charge when costs are below
 	SmartCostNextStart = "smartCostNextStart" // smart cost next start, time of next fast charging
+	SolarShare         = "solarShare"         // solar share required to start/continue pv charging
 
 	SmartFeedInPriorityActive    = "smartFeedInPriorityActive"    // smart feed-in priority active
 	SmartFeedInPriorityLimit     = "smartFeedInPriorityLimit"     // smart feed-in priority limit, pause self-consumption when feed-in rates are above
@@ -60,6 +68,7 @@ const (
 	EffectiveMinCurrent = "effectiveMinCurrent" // effective min current
 	EffectiveMaxCurrent = "effectiveMaxCurrent" // effective max current
 
+	EffectiveMinSoc       = "effectiveMinSoc"       // effective min soc
 	EffectiveLimitSoc     = "effectiveLimitSoc"     // effective limit soc
 	EffectivePlanStrategy = "effectivePlanStrategy" // effective plan strategy
 
@@ -70,6 +79,9 @@ const (
 	ChargedEnergy     = "chargedEnergy"     // charged energy
 	ChargeDuration    = "chargeDuration"    // charge duration
 	ChargeTotalImport = "chargeTotalImport" // charge meter total import
+	TodayEnergy       = "todayEnergy"       // energy since midnight
+	Last24hEnergy     = "last24hEnergy"     // energy, rolling 24h
+	Last7dEnergy      = "last7dEnergy"      // energy, rolling 7 days
 
 	// session
 	ConnectedDuration       = "connectedDuration"       // connected duration

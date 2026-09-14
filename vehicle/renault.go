@@ -27,6 +27,9 @@ type Renault struct {
 }
 
 func init() {
+	registry.Add("myalpine", func(other map[string]any) (api.Vehicle, error) {
+		return NewRenaultDaciaFromConfig("myalpine", other)
+	})
 	registry.Add("dacia", func(other map[string]any) (api.Vehicle, error) {
 		return NewRenaultDaciaFromConfig("dacia", other)
 	})

@@ -31,6 +31,7 @@ params:
       de: Der Namespace dient zur Identifizierung der Organisation innerhalb von Connected Cars. Er kann ermittelt werden, indem man sich beim Connected Cars GraphiQL-Tool (https://api.connectedcars.io/graphql/graphiql/) anmeldet, das entsprechende Land auswählt und den automatisch festgelegten Header „X-Organization-Namespace“ anzeigt.
   - name: vin
   - preset: vehicle-common
+  - preset: vehicle-online
   - name: cache
     default: 15m
 render: |
@@ -39,5 +40,6 @@ render: |
   domain: {{ .domain }}
   namespace: {{ .namespace }}
   vin: {{ .vin }}
-  {{ include "vehicle-common" . }}
+  {{ include "common" . }}
   cache: {{ .cache }}
+  {{ include "features" . }}
