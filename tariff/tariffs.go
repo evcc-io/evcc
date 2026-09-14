@@ -12,17 +12,6 @@ type Tariffs struct {
 	Grid, FeedIn, Co2, Planner, Solar, Temperature api.Tariff
 }
 
-// ChargePriceAvailable reports whether a tariff can price EV charging.
-func ChargePriceAvailable(t api.Tariff) bool {
-	if t == nil {
-		return false
-	}
-	if provider, ok := t.(interface{ ChargePriceAvailable() bool }); ok {
-		return provider.ChargePriceAvailable()
-	}
-	return true
-}
-
 // At returns the rate at the given time
 func At(t api.Tariff, ts time.Time) (api.Rate, error) {
 	if t != nil {
@@ -104,7 +93,7 @@ func (t *Tariffs) Get(u api.TariffUsage) api.Tariff {
 			// prio 0: manually set planner tariff
 			return t.Planner
 
-		case exists(t.Grid) && ChargePriceAvailable(t.Grid) && t.Grid.Type() == api.TariffTypePriceForecast:
+		case exists(t.Grid) && t.Grid.Type() == api.TariffTypePriceForecast:
 			// prio 1: grid tariff with forecast
 			return t.Grid
 
@@ -114,10 +103,7 @@ func (t *Tariffs) Get(u api.TariffUsage) api.Tariff {
 
 		default:
 			// prio 3: static grid tariff
-			if ChargePriceAvailable(t.Grid) {
-				return t.Grid
-			}
-			return nil
+			return t.Grid
 		}
 
 	case api.TariffUsageSolar:

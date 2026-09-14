@@ -21,15 +21,6 @@ test.afterEach(async () => {
 });
 
 test.describe("tariffs", async () => {
-  test("idle session retains price options", async ({ page }) => {
-    await start(CONFIG_WITH_TARIFFS);
-    await page.goto("/");
-
-    const select = page.getByTestId("sessionInfoSelect").getByRole("combobox");
-    await expect(select.getByRole("option", { name: "⌀ Price" })).toHaveCount(1);
-    await expect(select.getByRole("option", { name: "Cost" })).toHaveCount(1);
-  });
-
   test("tariffs not configured", async ({ page }) => {
     await start();
     await page.goto("/#/config");

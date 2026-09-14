@@ -6,7 +6,6 @@ import (
 	"slices"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -26,7 +25,6 @@ type Octopus struct {
 	paymentMethod   string
 	tariffDirection octoGql.TariffDirection
 	data            *util.Monitor[api.Rates]
-	chargeCap       atomic.Bool
 }
 
 var _ api.Tariff = (*Octopus)(nil)
@@ -127,6 +125,7 @@ func buildOctopusFromConfig(other map[string]any) (*Octopus, error) {
 
 func (t *Octopus) run(done chan error) {
 	var once sync.Once
+	var warnedBaseRates bool
 	client := octoRest.NewClient(request.NewHelper(t.log))
 
 	var productCode, tariffCode string
@@ -204,8 +203,9 @@ func (t *Octopus) run(done chan error) {
 		}
 
 		mergeRates(t.data, data)
-		if previous := t.chargeCap.Swap(res.ChargeCap); res.ChargeCap && !previous {
-			t.log.WARN.Println("Charge Cap: household rates do not include EV-specific pricing; configure a separate planner tariff for price-based charging")
+		if res.BaseRates && !warnedBaseRates {
+			t.log.WARN.Println("Intelligent Octopus Go: published day and night rates do not include account-specific smart charging discounts")
+			warnedBaseRates = true
 		}
 		once.Do(func() { close(done) })
 	}
@@ -223,9 +223,4 @@ func (t *Octopus) Rates() (api.Rates, error) {
 // Type implements the api.Tariff interface
 func (t *Octopus) Type() api.TariffType {
 	return api.TariffTypePriceForecast
-}
-
-// ChargePriceAvailable reports whether the tariff represents the EV charging price.
-func (t *Octopus) ChargePriceAvailable() bool {
-	return !t.chargeCap.Load()
 }

@@ -45,7 +45,7 @@
 							class="ms-2 me-1 d-inline-block"
 						/>
 						<AnimatedNumber
-							v-if="details != null && !isNaN(details)"
+							v-if="details !== undefined && !isNaN(details)"
 							:to="details"
 							:format="detailsFmt!"
 						/>
@@ -93,7 +93,7 @@ export default defineComponent({
 		power: { type: Number, default: 0 },
 		powerTooltip: { type: Array as PropType<string[]> },
 		powerUnit: { type: String as PropType<POWER_UNIT> },
-		details: { type: Number as PropType<number | null> },
+		details: { type: Number },
 		detailsIcon: { type: String },
 		detailsFmt: { type: Function as PropType<(n: number) => string> },
 		detailsTooltip: { type: Array as PropType<string[]> },

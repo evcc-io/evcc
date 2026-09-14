@@ -33,25 +33,27 @@ func newClient(getter jsonGetter, baseURI string) *Client {
 
 // UnitRates returns the tariff rates for the given product and tariff code.
 func (c *Client) UnitRates(productCode, tariffCode string, now time.Time) (UnitRates, error) {
-	var product product
-	productErr := c.getter.GetJSON(fmt.Sprintf("%s/products/%s/", c.baseURI, productCode), &product)
-	links := product.rateLinks(tariffCode)
-	if productErr != nil || len(links) == 0 {
-		var res UnitRates
-		if err := c.getter.GetJSON(fmt.Sprintf("%s/products/%s/electricity-tariffs/%s/standard-unit-rates/", c.baseURI, productCode, tariffCode), &res); err != nil {
-			return res, fmt.Errorf("standard unit rates: %w", err)
-		}
-		if len(res.Results) == 0 {
-			if productErr != nil {
-				return res, fmt.Errorf("product: %w", productErr)
-			}
-			return res, fmt.Errorf("unsupported Octopus tariff rate structure: %s", tariffCode)
-		}
-		return res, nil
+	var standard UnitRates
+	standardURI := fmt.Sprintf("%s/products/%s/electricity-tariffs/%s/standard-unit-rates/", c.baseURI, productCode, tariffCode)
+	standardErr := c.getter.GetJSON(standardURI, &standard)
+	if standardErr == nil && len(standard.Results) > 0 {
+		return standard, nil
 	}
 
 	if !strings.HasPrefix(strings.ToUpper(productCode), "IOG-SMB-") {
-		return UnitRates{}, fmt.Errorf("unsupported Octopus tariff rate structure: %s", tariffCode)
+		if standardErr != nil {
+			return UnitRates{}, fmt.Errorf("standard unit rates: %w", standardErr)
+		}
+		return UnitRates{}, fmt.Errorf("no standard unit rates for tariff %s", tariffCode)
+	}
+
+	var product product
+	if err := c.getter.GetJSON(fmt.Sprintf("%s/products/%s/", c.baseURI, productCode), &product); err != nil {
+		return UnitRates{}, fmt.Errorf("product: %w", err)
+	}
+	links := product.rateLinks(tariffCode)
+	if len(links) == 0 {
+		return UnitRates{}, fmt.Errorf("no four-rate tariff links for %s", tariffCode)
 	}
 	day, dayOK := links[rateRelationDay]
 	night, nightOK := links[rateRelationNight]
@@ -83,7 +85,7 @@ func (c *Client) UnitRates(productCode, tariffCode string, now time.Time) (UnitR
 		return res, fmt.Errorf("no day or night rates for tariff %s", tariffCode)
 	}
 	res.Count = uint64(len(res.Results))
-	res.ChargeCap = true
+	res.BaseRates = true
 	return res, nil
 }
 
@@ -217,7 +219,7 @@ type UnitRates struct {
 	Next      string `json:"next"`
 	Previous  string `json:"previous"`
 	Results   []Rate `json:"results"`
-	ChargeCap bool   `json:"-"`
+	BaseRates bool   `json:"-"`
 }
 
 const (

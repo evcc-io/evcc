@@ -1354,7 +1354,7 @@ func (site *Site) updatePower(lp updater, state siteState, totalChargePower floa
 
 		lp.Update(
 			sitePower, state.battery.Power, consumption, feedin, res.batteryBuffered, res.batteryStart,
-			greenShareLoadpoints, site.effectiveChargePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
+			greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
 			hems.Dimmed(site.hems),
 		)
 	}

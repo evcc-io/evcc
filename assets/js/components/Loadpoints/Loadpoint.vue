@@ -252,7 +252,6 @@ export default defineComponent({
 		smartFeedInPriorityNextStart: String as PropType<string | null>,
 		suggestion: Object as PropType<LoadpointSuggestion | null>,
 		tariffGrid: Number,
-		tariffPriceLoadpoints: Number,
 		tariffFeedIn: Number,
 		tariffCo2: Number,
 		currency: String,

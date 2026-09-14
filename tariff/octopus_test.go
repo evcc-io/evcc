@@ -3,28 +3,9 @@ package tariff
 import (
 	"testing"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/test"
 	"github.com/stretchr/testify/require"
 )
-
-func TestOctopusChargeCapPlanner(t *testing.T) {
-	grid := new(Octopus)
-	grid.chargeCap.Store(true)
-	tariffs := &Tariffs{Grid: grid}
-
-	require.Same(t, grid, tariffs.Get(api.TariffUsageGrid))
-	require.Nil(t, tariffs.Get(api.TariffUsagePlanner))
-	require.False(t, ChargePriceAvailable(grid))
-
-	planner := new(Octopus)
-	tariffs.Planner = planner
-	require.Same(t, planner, tariffs.Get(api.TariffUsagePlanner))
-
-	tariffs.Planner = nil
-	tariffs.Grid = &Merged{primary: grid, secondary: planner}
-	require.Nil(t, tariffs.Get(api.TariffUsagePlanner))
-}
 
 func TestOctopusConfigParse(t *testing.T) {
 	test.SkipCI(t)

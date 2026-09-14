@@ -49,7 +49,6 @@
 				:smartCostAvailable="smartCostAvailable"
 				:smartFeedInPriorityAvailable="smartFeedInPriorityAvailable"
 				:tariffGrid="tariffGrid"
-				:tariffPriceLoadpoints="tariffPriceLoadpoints"
 				:tariffCo2="tariffCo2"
 				:tariffFeedIn="tariffFeedIn"
 				:currency="currency"

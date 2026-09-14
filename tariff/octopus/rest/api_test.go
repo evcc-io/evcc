@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestChargeCapRates(t *testing.T) {
+func TestFourRateBaseRates(t *testing.T) {
 	const (
 		productCode = "IOG-SMB-VAR-24-10-29"
 		tariffCode  = "E-1R-IOG-SMB-VAR-24-10-29-H"
@@ -53,7 +53,7 @@ func TestChargeCapRates(t *testing.T) {
 	rates, err := client.UnitRates(productCode, tariffCode, now)
 	require.NoError(t, err)
 	require.Len(t, rates.Results, 96)
-	assert.True(t, rates.ChargeCap)
+	assert.True(t, rates.BaseRates)
 
 	assert.Equal(t, 30.371355, rates.Results[0].PriceInclusiveTax)
 	assert.Equal(t, 6.89997, rates.Results[23].PriceInclusiveTax)
@@ -63,7 +63,7 @@ func TestChargeCapRates(t *testing.T) {
 	assert.Equal(t, now.Add(48*time.Hour), rates.Results[len(rates.Results)-1].ValidityEnd)
 }
 
-func TestChargeCapWithoutStandardEndpoint(t *testing.T) {
+func TestFourRateWithoutStandardEndpoint(t *testing.T) {
 	const (
 		productCode = "IOG-SMB-VAR-24-10-29"
 		tariffCode  = "E-1R-IOG-SMB-VAR-24-10-29-H"
@@ -98,6 +98,9 @@ func TestStandardUnitRates(t *testing.T) {
 	)
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("/products/"+productCode+"/", func(_ http.ResponseWriter, _ *http.Request) {
+		t.Error("standard-rate product should not request product metadata")
+	})
 	mux.HandleFunc("/products/"+productCode+"/electricity-tariffs/"+tariffCode+"/standard-unit-rates/", func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = w.Write([]byte(`{"count":1,"next":null,"previous":null,"results":[{"value_inc_vat":12.34,"valid_from":"2026-09-11T11:00:00Z","valid_to":"2026-09-11T11:30:00Z","payment_method":null}]}`))
 	})
@@ -112,10 +115,10 @@ func TestStandardUnitRates(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, rates.Results, 1)
 	assert.Equal(t, 12.34, rates.Results[0].PriceInclusiveTax)
-	assert.False(t, rates.ChargeCap)
+	assert.False(t, rates.BaseRates)
 }
 
-func TestChargeCapPaymentMethods(t *testing.T) {
+func TestFourRatePaymentMethods(t *testing.T) {
 	now := time.Date(2026, time.September, 11, 11, 0, 0, 0, time.UTC)
 	location, err := time.LoadLocation("Europe/London")
 	require.NoError(t, err)
@@ -138,7 +141,7 @@ func TestChargeCapPaymentMethods(t *testing.T) {
 	}
 }
 
-func TestUnitRatesRejectsIncompleteChargeCap(t *testing.T) {
+func TestUnitRatesRejectsIncompleteFourRate(t *testing.T) {
 	const (
 		productCode = "IOG-SMB-VAR-24-10-29"
 		tariffCode  = "E-1R-IOG-SMB-VAR-24-10-29-H"
@@ -175,7 +178,7 @@ func TestUnitRatesRejectsEconomySeven(t *testing.T) {
 
 	client := newClient(request.NewHelper(util.NewLogger("octopus-test")), server.URL)
 	_, err := client.UnitRates(productCode, tariffCode, time.Now())
-	require.ErrorContains(t, err, "unsupported")
+	require.ErrorContains(t, err, "no standard unit rates")
 }
 
 func TestUnitRatesRejectsExternalRateLink(t *testing.T) {

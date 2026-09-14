@@ -46,9 +46,8 @@ export default defineComponent({
 	props: {
 		id: String,
 		sessionCo2PerKWh: { type: Number, default: 0 },
-		sessionPricePerKWh: Number as PropType<number | null>,
-		sessionPrice: Number as PropType<number | null>,
-		tariffPriceLoadpoints: Number as PropType<number | null>,
+		sessionPricePerKWh: { type: Number, default: 0 },
+		sessionPrice: { type: Number, default: 0 },
 		currency: String as PropType<CURRENCY>,
 		sessionSolarPercentage: { type: Number, default: 0 },
 		chargeRemainingDurationInterpolated: { type: Number, default: 0 },
@@ -57,6 +56,7 @@ export default defineComponent({
 		last24hEnergy: Number,
 		last7dEnergy: Number,
 		tariffCo2: Number,
+		tariffGrid: Number,
 	},
 	data() {
 		return {
@@ -91,14 +91,14 @@ export default defineComponent({
 				},
 				{
 					key: "avgPrice" as const,
-					value: this.fmtAvgPrice(this.sessionPricePerKWh ?? 0),
-					valueSm: this.fmtAvgPriceShort(this.sessionPricePerKWh ?? 0),
-					available: this.tariffPriceLoadpoints != null,
+					value: this.fmtAvgPrice(this.sessionPricePerKWh),
+					valueSm: this.fmtAvgPriceShort(this.sessionPricePerKWh),
+					available: this.tariffGrid !== undefined,
 				},
 				{
 					key: "price" as const,
 					value: this.priceFormatted,
-					available: this.tariffPriceLoadpoints != null,
+					available: this.tariffGrid !== undefined,
 				},
 				{
 					key: "co2" as const,
@@ -167,7 +167,7 @@ export default defineComponent({
 			return this.fmtGrams(this.sessionCo2PerKWh * kWh);
 		},
 		priceFormatted() {
-			return `${this.fmtMoney(this.sessionPrice ?? 0, this.currency)} ${this.fmtCurrencySymbol(
+			return `${this.fmtMoney(this.sessionPrice, this.currency)} ${this.fmtCurrencySymbol(
 				this.currency
 			)}`;
 		},

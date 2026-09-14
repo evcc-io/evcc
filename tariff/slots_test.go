@@ -14,19 +14,6 @@ type testTariff struct {
 	typ   api.TariffType
 }
 
-type testHouseholdTariff struct {
-	testTariff
-}
-
-func (t *testHouseholdTariff) ChargePriceAvailable() bool {
-	return false
-}
-
-func TestSlotWrapperChargePriceAvailable(t *testing.T) {
-	assert.False(t, ChargePriceAvailable(&SlotWrapper{Tariff: &testHouseholdTariff{}}))
-	assert.True(t, ChargePriceAvailable(&SlotWrapper{Tariff: &testTariff{}}))
-}
-
 func (t *testTariff) Rates() (api.Rates, error) {
 	return t.rates, nil
 }
