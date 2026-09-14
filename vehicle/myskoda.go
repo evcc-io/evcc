@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -17,11 +18,11 @@ type MySkoda struct {
 }
 
 func init() {
-	registry.Add("myskoda", NewMySkodaFromConfig)
+	registry.AddCtx("myskoda", NewMySkodaFromConfig)
 }
 
 // NewMySkodaFromConfig creates a new vehicle
-func NewMySkodaFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewMySkodaFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed   `mapstructure:",squash"`
 		VIN     string
@@ -56,17 +57,14 @@ func NewMySkodaFromConfig(other map[string]any) (api.Vehicle, error) {
 	apiC := myskoda.NewAPI(log, uri, cc.ApiKey)
 	apiC.Client.Timeout = cc.Timeout
 
-	// validate api key and vin, use vehicle name as title
-	res, err := apiC.Vehicle(cc.VIN, "info")
-	if err != nil {
+	// validate api key and vin
+	if _, err := apiC.Vehicle(cc.VIN, "info"); err != nil {
 		return nil, err
 	}
 
 	v := &MySkoda{
-		embed: &cc.embed,
+		embed: cc.embed.withContext(ctx),
 	}
-	v.fromVehicle(res.Vehicle.Name, 0)
-
 	v.Provider = myskoda.NewProvider(apiC, cc.VIN, cc.Cache)
 
 	return v, nil

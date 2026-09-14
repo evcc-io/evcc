@@ -580,9 +580,9 @@ presets:
       required: true
     - name: vin
     - name: title
+      deprecated: true
     - name: icon
-      default: car
-      advanced: true
+      deprecated: true
     - name: capacity
     - name: phases
       advanced: true
@@ -603,9 +603,9 @@ presets:
       advanced: true
   vehicle-common:
     - name: title
+      deprecated: true
     - name: icon
-      default: car
-      advanced: true
+      deprecated: true
     - name: capacity
     - name: phases
       advanced: true
