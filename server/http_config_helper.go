@@ -191,6 +191,8 @@ func deviceOther(class templates.Class, id int) (map[string]any, error) {
 		return deviceOtherFromHandler(name, config.Tariffs())
 	case templates.Messenger:
 		return deviceOtherFromHandler(name, config.Messengers())
+	case templates.TempSensor:
+		return deviceOtherFromHandler(name, config.TempSensors())
 	}
 	return nil, errors.New("unsupported class: " + class.String())
 }
