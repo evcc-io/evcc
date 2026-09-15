@@ -254,7 +254,7 @@
         },
         "consumer": {
           "energy": "Consommé",
-          "returnEnergy": "Produit"
+          "returnEnergy": "Production"
         },
         "grid": {
           "energy": "Importé",
