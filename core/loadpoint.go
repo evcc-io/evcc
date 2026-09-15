@@ -169,6 +169,7 @@ type Loadpoint struct {
 	// optimizer
 	suggestion        *types.Suggestion // optimizer suggestion for the current slot
 	suggestionUpdated time.Time         // time the suggestion was received
+	optimizerPlan     optimizerPlan     // optimizer charging schedule
 
 	// cached state
 	status         api.ChargeStatus // Charger status

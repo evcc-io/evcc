@@ -4,16 +4,37 @@ import (
 	"math"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/types"
 )
 
-// setSuggestion stores the optimizer suggestion for the current slot
-func (lp *Loadpoint) setSuggestion(s *types.Suggestion) {
+// setSuggestion stores the optimizer suggestion for the current slot and the
+// charging schedule of the solve
+func (lp *Loadpoint) setSuggestion(s *types.Suggestion, plan optimizerPlan) {
 	lp.Lock()
 	defer lp.Unlock()
 
 	lp.suggestion = s
 	lp.suggestionUpdated = lp.clock.Now()
+	lp.optimizerPlan = plan
+}
+
+// OptimizerPlan returns the optimizer's charging schedule and its average
+// power, nil if the optimizer is not in charge
+func (lp *Loadpoint) OptimizerPlan() (api.Rates, float64) {
+	if lp.gate() == nil {
+		return nil, 0
+	}
+
+	lp.RLock()
+	defer lp.RUnlock()
+
+	plan := lp.optimizerPlan
+	if len(plan.rates) == 0 {
+		return nil, 0
+	}
+
+	return plan.rates, plan.energy / planner.Duration(plan.rates).Hours()
 }
 
 // optimizerControlled indicates that the optimizer decides for this loadpoint.
