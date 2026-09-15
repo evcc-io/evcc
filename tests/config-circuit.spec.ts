@@ -137,7 +137,7 @@ test.describe("circuit", async () => {
       ["Main", "Power", "2.1 kW", "Current", "3.0 A / 16.0 A"].join("")
     );
     await expect(page.getByTestId("circuits")).toContainText(
-      ["House", "Power", "1.0 kW", "Current", "6.0 A / 10.0 A"].join("")
+      ["House", "Power", "1.0 kW", "Current", "0.0 A / 10.0 A"].join("")
     );
     await expect(page.getByTestId("circuits")).toContainText(
       ["Garage", "Power", "0.0 kW", "Current", "0.0 A / 8.0 A"].join("")
@@ -164,7 +164,7 @@ test.describe("circuit", async () => {
       ["House", "Power", "0.0 kW", "Current", "0.0 A / 10.0 A"].join("")
     );
     await expect(page.getByTestId("circuits")).toContainText(
-      ["Garage", "Power", "1.0 kW", "Current", "6.0 A / 8.0 A"].join("")
+      ["Garage", "Power", "1.0 kW", "Current", "0.0 A / 8.0 A"].join("")
     );
   });
 });

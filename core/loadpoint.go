@@ -169,6 +169,7 @@ type Loadpoint struct {
 	status         api.ChargeStatus // Charger status
 	chargePower    float64          // Charging power
 	chargeCurrents []float64        // Phase currents
+	chargeCurrent  float64          // Max phase current, sampled for load management
 	connectedTime  time.Time        // Time when vehicle was connected
 	connectPending bool             // connect notification deferred until vehicle detection settles
 	pvTimer        time.Time        // PV enabled/disable timer
@@ -924,7 +925,7 @@ func (lp *Loadpoint) syncCharger() error {
 		// use measured phase currents as fallback if charger does not provide max current or does not currently relay from vehicle (TWC3)
 		if !isCg || errors.Is(err, api.ErrNotAvailable) {
 			// validate if current too high by more than 1A (https://github.com/evcc-io/evcc/issues/14731)
-			if current := lp.GetMaxPhaseCurrent(); current > lp.offeredCurrent+1.0 {
+			if current := lp.measuredMaxPhaseCurrent(); current > lp.offeredCurrent+1.0 {
 				if shouldBeConsistent && !lp.chargerHasFeature(api.Heating) {
 					lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA measured, expected %.3gA) - make sure your interval is at least 30s", current, lp.offeredCurrent)
 				}
@@ -976,12 +977,21 @@ func (lp *Loadpoint) roundedCurrent(current float64) float64 {
 // If currents not measured falls back to offered current.
 func (lp *Loadpoint) actualMaxChargeCurrent() float64 {
 	if lp.chargeCurrents != nil {
-		return max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
+		return lp.measuredMaxPhaseCurrent()
 	}
 	if lp.charging() {
 		return lp.offeredCurrent
 	}
 	return 0
+}
+
+// measuredMaxPhaseCurrent returns the highest measured phase current, 0 without
+// a phase-current capable charge meter
+func (lp *Loadpoint) measuredMaxPhaseCurrent() float64 {
+	if lp.chargeCurrents == nil {
+		return 0
+	}
+	return max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
 }
 
 // setLimit applies charger current limits and enables/disables accordingly
@@ -990,7 +1000,7 @@ func (lp *Loadpoint) setLimit(current float64) error {
 
 	// apply circuit limits
 	if lp.circuit != nil {
-		currentLimit := lp.circuit.ValidateCurrent(lp.actualMaxChargeCurrent(), current)
+		currentLimit := lp.circuit.ValidateCurrent(lp.GetMaxPhaseCurrent(), current)
 
 		activePhases := lp.ActivePhases()
 		powerLimit := lp.circuit.ValidatePower(lp.chargePower, currentToPower(current, activePhases))
@@ -1609,7 +1619,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 
 	// load management may cap the 1p current far below the theoretical maximum
 	if lp.circuit != nil {
-		maxCurrent = lp.circuit.ValidateCurrent(lp.actualMaxChargeCurrent(), maxCurrent)
+		maxCurrent = lp.circuit.ValidateCurrent(lp.GetMaxPhaseCurrent(), maxCurrent)
 	}
 
 	maxPhases := lp.MaxActivePhases()
@@ -1941,6 +1951,13 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 			lp.log.ERROR.Printf("charge currents: %v", err)
 		}
 	}
+
+	// sampled here so that the circuit and setLimit cannot disagree within a cycle
+	current := lp.actualMaxChargeCurrent()
+
+	lp.Lock()
+	lp.chargeCurrent = current
+	lp.Unlock()
 
 	return power
 }
