@@ -804,7 +804,7 @@
       "linkWord": "optimizer",
       "description": "Analyzes solar forecast, electricity prices, and your consumption patterns to optimize battery and charging strategy. Data is sent to the evcc optimization service for processing. Calculates and visualizes, and in automatic mode also controls your devices.",
       "enable": "Enable Optimizer",
-      "info": "It may take a few minutes for the optimizer menu entry to become visible. For new installations, it may take up to 24 hours until evcc has collected enough data.",
+      "info": "For new installations, it may take up to 24 hours until evcc has collected enough data.",
       "title": "Optimizer"
     },
     "options": {
@@ -1246,6 +1246,9 @@
   },
   "issue": {
     "additional": {
+      "copied": "copied!",
+      "copy": "copy",
+      "copySelected": "copy selected",
       "description": "Include configuration and logs to help us reproduce the issue quickly. We encourage sharing as much as possible. State is usually not needed.",
       "include": "include",
       "lines": "lines",

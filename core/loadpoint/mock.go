@@ -823,6 +823,18 @@ func (mr *MockAPIMockRecorder) PvChargeStarting() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PvChargeStarting", reflect.TypeOf((*MockAPI)(nil).PvChargeStarting))
 }
 
+// RequestUpdate mocks base method.
+func (m *MockAPI) RequestUpdate() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RequestUpdate")
+}
+
+// RequestUpdate indicates an expected call of RequestUpdate.
+func (mr *MockAPIMockRecorder) RequestUpdate() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RequestUpdate", reflect.TypeOf((*MockAPI)(nil).RequestUpdate))
+}
+
 // SetAlwaysCharge mocks base method.
 func (m *MockAPI) SetAlwaysCharge(arg0 api.AlwaysCharge) error {
 	m.ctrl.T.Helper()
