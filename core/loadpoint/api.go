@@ -157,6 +157,8 @@ type API interface {
 	SocBasedPlanning() bool
 	// GetPlan creates a charging plan
 	GetPlan(targetTime time.Time, requiredDuration, precondition time.Duration, continuous bool) api.Rates
+	// OptimizerPlan returns the optimizer's charging schedule and average power while in control
+	OptimizerPlan() (api.Rates, float64)
 
 	// GetSocConfig returns the soc poll settings
 	GetSocConfig() SocConfig

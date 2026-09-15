@@ -235,12 +235,44 @@ func loadpointCurrentAction(lp *Loadpoint) string {
 // refreshing; the site itself expires its cached solve in reapplySuggestions
 const suggestionMaxAge = 2 * tariff.SlotDuration
 
-// setSuggestions replaces the suggestions applied on each publish
-func (site *Site) setSuggestions(suggestions map[string]types.Suggestion) {
+// optimizerPlan is a loadpoint's charging schedule from the last solve
+type optimizerPlan struct {
+	rates  api.Rates // charging slots valued at the grid import price
+	energy float64   // planned charge energy, Wh
+}
+
+// loadpointPlan extracts the remaining charging slots of a battery result
+func loadpointPlan(res optimizer.BatteryResult, prices []float32, schedule optimizerSchedule, now time.Time) optimizerPlan {
+	var plan optimizerPlan
+
+	for slot := range schedule.endsAfter(now) {
+		if slot >= len(res.ChargingPower) || slot >= len(prices) {
+			break
+		}
+
+		energy := float64(res.ChargingPower[slot])
+		if energy/schedule.duration(slot).Hours() <= suggestionThreshold {
+			continue
+		}
+
+		plan.energy += energy
+		plan.rates = append(plan.rates, api.Rate{
+			Start: schedule.timestamps[slot],
+			End:   schedule.end(slot),
+			Value: float64(prices[slot]) * 1e3, // per Wh to per kWh
+		})
+	}
+
+	return plan
+}
+
+// setSuggestions replaces the suggestions and plans applied on each publish
+func (site *Site) setSuggestions(suggestions map[string]types.Suggestion, plans map[string]optimizerPlan) {
 	site.Lock()
 	defer site.Unlock()
 
 	site.suggestions = suggestions
+	site.plans = plans
 }
 
 // setBatteryForecast replaces the battery forecast of the cached state
@@ -276,7 +308,8 @@ func (site *Site) publishSuggestions() {
 			continue
 		}
 
-		s := site.suggestion(loadpointKey(id), loadpointCurrentAction(lp))
+		key := loadpointKey(id)
+		s := site.suggestion(key, loadpointCurrentAction(lp))
 
 		var val any
 		if s != nil {
@@ -284,14 +317,18 @@ func (site *Site) publishSuggestions() {
 		}
 		site.publishLoadpoint(id, keys.Suggestion, val)
 
-		lp.setSuggestion(s)
+		site.RLock()
+		plan := site.plans[key]
+		site.RUnlock()
+
+		lp.setSuggestion(s, plan)
 	}
 }
 
 // clearSuggestions removes all suggestions and the battery forecast when the
 // optimizer result is stale
 func (site *Site) clearSuggestions() {
-	site.setSuggestions(nil)
+	site.setSuggestions(nil, nil)
 	site.setBatteryForecast(nil)
 
 	site.publishBattery()
@@ -756,6 +793,7 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 
 	var batteries []batteryResult
 	suggestions := make(map[string]types.Suggestion, len(req.Batteries))
+	plans := make(map[string]optimizerPlan)
 
 	for i, batReq := range req.Batteries {
 		batRes := res.Batteries[i]
@@ -779,12 +817,16 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 		// uncontrollable devices can't act on a suggestion
 		if key := detail.key(); key != "" && detail.controllable {
 			suggestions[key] = suggestion
+
+			if detail.loadpoint != nil {
+				plans[key] = loadpointPlan(batRes, req.TimeSeries.PN, schedule, now)
+			}
 		}
 	}
 
 	site.publish("evopt-batteries", batteries)
 
-	site.setSuggestions(suggestions)
+	site.setSuggestions(suggestions, plans)
 	site.setBatteryForecast(site.addBatteryForecastTotals(req.Batteries, res.Batteries, schedule, now))
 
 	site.publishBattery()

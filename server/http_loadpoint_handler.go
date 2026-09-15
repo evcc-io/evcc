@@ -9,6 +9,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/planner"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/gorilla/mux"
 )
@@ -39,6 +40,11 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 		requiredDuration := lp.GetPlanRequiredDuration(goal, maxPower)
 		strategy := lp.EffectivePlanStrategy()
 		plan := lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
+
+		// the optimizer schedules the plan itself while in control
+		if p, power := lp.OptimizerPlan(); p != nil {
+			plan, maxPower, requiredDuration = p, power, planner.Duration(p)
+		}
 
 		res := PlanResponse{
 			PlanId:   id,
