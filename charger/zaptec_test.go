@@ -100,3 +100,44 @@ func TestZaptecDetectVersion(t *testing.T) {
 		})
 	}
 }
+
+func TestZaptecConnectionDurationIgnoresEmptySession(t *testing.T) {
+	var state zaptec.StateResponse
+	c := &Zaptec{
+		statusG: util.ResettableCached(func() (zaptec.StateResponse, error) {
+			return state, nil
+		}, 0),
+	}
+
+	// no session seen yet
+	d, err := c.ConnectionDuration()
+	require.NoError(t, err)
+	assert.Zero(t, d)
+
+	state = zaptec.StateResponse{{StateId: zaptec.SessionIdentifier, ValueAsString: "a"}}
+	_, err = c.ConnectionDuration()
+	require.NoError(t, err)
+	start := c.sessionStart
+	assert.False(t, start.IsZero())
+
+	// observation missing from state response: keep session
+	state = zaptec.StateResponse{}
+	_, err = c.ConnectionDuration()
+	require.NoError(t, err)
+	assert.Equal(t, "a", c.session)
+	assert.Equal(t, start, c.sessionStart)
+
+	// empty identifier: keep session
+	state = zaptec.StateResponse{{StateId: zaptec.SessionIdentifier}}
+	_, err = c.ConnectionDuration()
+	require.NoError(t, err)
+	assert.Equal(t, "a", c.session)
+	assert.Equal(t, start, c.sessionStart)
+
+	// new identifier: restart
+	state = zaptec.StateResponse{{StateId: zaptec.SessionIdentifier, ValueAsString: "b"}}
+	_, err = c.ConnectionDuration()
+	require.NoError(t, err)
+	assert.Equal(t, "b", c.session)
+	assert.NotEqual(t, start, c.sessionStart)
+}
