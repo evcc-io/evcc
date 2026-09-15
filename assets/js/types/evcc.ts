@@ -1525,7 +1525,7 @@ export interface DemandDetail {
 export interface OptimizationDetails {
   timestamp: string[]; // Array of ISO timestamp strings
   batteryDetails: BatteryDetail[]; // Array of battery detail objects
-  demandDetails: DemandDetail[]; // Profiles summarized into the household demand
+  demandDetails: DemandDetail[] | null; // Profiles summarized into the household demand, null when there is nothing to break down
 }
 
 // Error response

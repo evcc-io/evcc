@@ -199,7 +199,7 @@ export default defineComponent({
 				this.powerRow(
 					`↳ ${this.demandTitle(d)}`,
 					d.values,
-					(d.type === "heating" ? colors.red : colors.muted) || "",
+					(d.type === "heating" ? colors.heating : colors.muted) || "",
 					{ ref }
 				)
 			);
