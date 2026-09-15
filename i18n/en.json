@@ -792,7 +792,7 @@
     "optimizer": {
       "automatic": "Automatic mode",
       "automaticBattery": "controls charging of the home battery",
-      "automaticCharging": "starts and stops charging in solar mode",
+      "automaticCharging": "starts and stops charging in smart mode",
       "automaticHint": "What the optimizer does:",
       "automaticLimits": "replaces price and CO₂ limits",
       "automaticNotControlled": "What stays as is:",
