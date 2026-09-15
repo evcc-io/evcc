@@ -1413,7 +1413,21 @@ func configureSiteAndLoadpoints(conf *globalconfig.All) (*core.Site, error) {
 		}
 	}
 
+	completeChargerConfiguration()
+
 	return site, nil
+}
+
+type configCompleter interface {
+	ConfigComplete()
+}
+
+func completeChargerConfiguration() {
+	for _, dev := range config.Chargers().Devices() {
+		if charger, ok := dev.Instance().(configCompleter); ok {
+			charger.ConfigComplete()
+		}
+	}
 }
 
 func validateCircuits(loadpoints []*core.Loadpoint) error {
