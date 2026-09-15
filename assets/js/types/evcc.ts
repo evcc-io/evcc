@@ -1514,10 +1514,18 @@ export interface BatteryDetail {
   capacity: number; // Battery capacity (kWh)
 }
 
+// Single profile summarized into the household demand time series
+export interface DemandDetail {
+  type: "home" | "heating" | "unmodelled"; // Origin of the profile
+  title?: string; // Display title, set for heating loadpoints
+  values: number[]; // Energy per slot (Wh)
+}
+
 // Optimization details with timestamps and battery information
 export interface OptimizationDetails {
   timestamp: string[]; // Array of ISO timestamp strings
   batteryDetails: BatteryDetail[]; // Array of battery detail objects
+  demandDetails: DemandDetail[] | null; // Profiles summarized into the household demand, null when there is nothing to break down
 }
 
 // Error response
