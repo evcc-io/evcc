@@ -1572,6 +1572,7 @@
       "vehicleCapacityRequired": "Die Batteriekapazität des Fahrzeugs wird benötigt, um die Ladedauer zu schätzen."
     },
     "targetChargePlan": {
+      "optimizerHint": "Hinweis: Dieser Plan wurde vom {optimizer} erstellt.",
       "chargeDuration": "Ladedauer",
       "co2Label": "CO₂-Emission ⌀",
       "priceLabel": "Energiepreis",

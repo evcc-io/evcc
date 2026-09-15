@@ -1572,6 +1572,7 @@
       "vehicleCapacityRequired": "The vehicle battery capacity is required to estimate the charging time."
     },
     "targetChargePlan": {
+      "optimizerHint": "Note: This plan was created by the {optimizer}.",
       "chargeDuration": "Charging time",
       "co2Label": "CO₂ emission ⌀",
       "priceLabel": "Energy price",

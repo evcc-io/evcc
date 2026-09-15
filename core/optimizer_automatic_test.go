@@ -124,7 +124,7 @@ func TestOptimizerGate(t *testing.T) {
 
 		lp, charger, ctrl := automaticLoadpoint(t, tc.ac, true)
 		lp.mode = tc.mode
-		lp.setSuggestion(&tc.s)
+		lp.setSuggestion(&tc.s, optimizerPlan{})
 
 		if tc.expect != nil {
 			tc.expect(charger)
@@ -149,7 +149,7 @@ func TestOptimizerSurplusRegime(t *testing.T) {
 	// a previous grid-fed slot left the pv timer elapsed
 	lp.pvTimer = elapsed
 
-	lp.setSuggestion(&types.Suggestion{Action: actionCharge, Charge: 2300})
+	lp.setSuggestion(&types.Suggestion{Action: actionCharge, Charge: 2300}, optimizerPlan{})
 
 	// surplus dip: the loadpoint steps down to min current while the disable
 	// timer runs instead of disabling right away
@@ -167,7 +167,7 @@ func TestOptimizerGateInactive(t *testing.T) {
 
 	// automatic disabled: pv surplus decides, the suggestion is advisory only
 	lp, _, ctrl := automaticLoadpoint(t, api.AlwaysChargeOff, false)
-	lp.setSuggestion(&types.Suggestion{Action: actionCharge})
+	lp.setSuggestion(&types.Suggestion{Action: actionCharge}, optimizerPlan{})
 
 	assert.Nil(t, lp.gate())
 
@@ -182,7 +182,7 @@ func TestOptimizerGateStale(t *testing.T) {
 
 	// a stalled optimizer must not keep the loadpoint gated
 	lp, _, ctrl := automaticLoadpoint(t, api.AlwaysChargeOff, true)
-	lp.setSuggestion(&types.Suggestion{Action: actionCharge})
+	lp.setSuggestion(&types.Suggestion{Action: actionCharge}, optimizerPlan{})
 	lp.suggestionUpdated = lp.clock.Now().Add(-suggestionMaxAge - time.Minute)
 
 	assert.Nil(t, lp.gate())
@@ -250,7 +250,7 @@ func TestBatteryModeAutomatic(t *testing.T) {
 	// optimizer decides to grid charge, replacing the grid charge limit
 	site.setSuggestions(map[string]types.Suggestion{
 		batteryKey("bat"): {Action: api.BatteryCharge.String()},
-	})
+	}, nil)
 
 	batCon.EXPECT().SetBatteryMode(api.BatteryCharge)
 	site.updateBatteryMode(false, false, api.Rate{})
@@ -287,4 +287,31 @@ func TestBatteryGridChargeLimitUnavailable(t *testing.T) {
 	limit := 0.2
 	assert.ErrorIs(t, site.SetBatteryGridChargeLimit(&limit), ErrOptimizerAutomatic)
 	assert.ErrorIs(t, site.SetBatteryDischargeControl(true), ErrOptimizerAutomatic)
+}
+
+func TestOptimizerPlanClipsAtPlanTime(t *testing.T) {
+	lp := &Loadpoint{
+		log:     util.NewLogger("foo"),
+		clock:   clock.NewMock(),
+		vehicle: modelledVehicle(gomock.NewController(t)),
+		site:    &mockSite{automatic: true},
+	}
+
+	now := lp.clock.Now()
+	slot := func(i int) api.Rate {
+		return api.Rate{Start: now.Add(time.Duration(i) * 15 * time.Minute), End: now.Add(time.Duration(i+1) * 15 * time.Minute)}
+	}
+
+	// two plan slots, one surplus slot after the plan time
+	lp.setSuggestion(&types.Suggestion{Action: actionCharge}, optimizerPlan{
+		rates:  api.Rates{slot(0), slot(1), slot(8)},
+		energy: []float64{500, 250, 1000},
+	})
+
+	plan, power := lp.OptimizerPlan(now.Add(time.Hour))
+	assert.Equal(t, api.Rates{slot(0), slot(1)}, plan)
+	assert.InDelta(t, 1500, power, 1e-6)
+
+	plan, _ = lp.OptimizerPlan(now)
+	assert.Nil(t, plan)
 }
