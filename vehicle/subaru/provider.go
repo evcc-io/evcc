@@ -48,7 +48,7 @@ func (v *Provider) validate(res Status) error {
 }
 
 func incomplete(res Status) bool {
-	return res.Payload.LastUpdateTimestamp == "" || res.Payload.EvRangeWithAc.Unit == ""
+	return res.Payload.LastUpdateTimestamp == "" || res.Payload.EvRangeWithAc.Unit == "" || (res.Payload.BatteryLevel == 0 && res.Payload.EvRangeWithAc.Value == 0)
 }
 
 func (v *Provider) Soc() (float64, error) {
