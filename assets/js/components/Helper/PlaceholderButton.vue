@@ -24,7 +24,7 @@ export default defineComponent({
 <style scoped>
 .root {
 	border-radius: 1rem;
-	border: 1px solid var(--evcc-gray-50);
+	border: 1px dashed var(--evcc-gray-50);
 	padding: 1.5rem;
 	background: none;
 	width: 100%;

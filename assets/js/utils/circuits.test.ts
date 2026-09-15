@@ -4,48 +4,48 @@ import { circuitTree } from "./circuits";
 describe("circuitTree", () => {
   test("single root", () => {
     const result = circuitTree({
-      main: { power: 0 },
+      "db:1": { name: "main", power: 0 },
     });
     expect(result).toEqual({ name: "main", power: 0 });
   });
 
   test("root with children", () => {
     const result = circuitTree({
-      root: { power: 0 },
-      child1: { power: 0, parent: "root" },
-      child2: { power: 0, parent: "root" },
+      "db:1": { name: "main", power: 0 },
+      "db:2": { name: "circuit2", power: 0, parent: "db:1" },
+      "db:3": { name: "circuit3", power: 0, parent: "db:1" },
     });
     expect(result).toEqual({
-      name: "root",
+      name: "main",
       power: 0,
       children: [
-        { name: "child1", power: 0, parent: "root" },
-        { name: "child2", power: 0, parent: "root" },
+        { name: "circuit2", power: 0, parent: "db:1" },
+        { name: "circuit3", power: 0, parent: "db:1" },
       ],
     });
   });
 
   test("nested two levels", () => {
     const result = circuitTree({
-      root: { power: 0 },
-      mid: { power: 0, parent: "root" },
-      leaf: { power: 0, parent: "mid" },
+      "db:1": { name: "main", power: 0 },
+      "db:2": { name: "circuit2", power: 0, parent: "db:1" },
+      "db:3": { name: "circuit3", power: 0, parent: "db:2" },
     });
     expect(result).toEqual({
-      name: "root",
+      name: "main",
       power: 0,
       children: [
         {
-          name: "mid",
+          name: "circuit2",
           power: 0,
-          parent: "root",
-          children: [{ name: "leaf", power: 0, parent: "mid" }],
+          parent: "db:1",
+          children: [{ name: "circuit3", power: 0, parent: "db:2" }],
         },
       ],
     });
   });
 
   test("empty input", () => {
-    expect(circuitTree({})).toBeNull();
+    expect(circuitTree({})).toBeUndefined();
   });
 });

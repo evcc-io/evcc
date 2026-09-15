@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
@@ -245,6 +246,11 @@ func (site *Site) GetCircuit() api.Circuit {
 	site.RLock()
 	defer site.RUnlock()
 	return site.circuit
+}
+
+// SetCircuitsYamlSource records where the circuits configuration originates
+func (site *Site) SetCircuitsYamlSource(source globalconfig.YamlSource) {
+	site.circuitsSource = source
 }
 
 // SetHEMS attaches the configured HEMS to the site and the root circuit
