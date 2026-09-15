@@ -54,21 +54,23 @@ func NewVehicleApiFromConfig(other map[string]any) (api.Charger, error) {
 }
 
 // asleep maps a vehicle api's sleeping response to api.ErrAsleep so the loadpoint
-// can trigger the existing wake-up logic. Proxies like TeslaBleHttpProxy answer
-// HTTP 503 with a json body stating the reason.
+// can trigger the existing wake-up logic.
 func asleep(err error) error {
 	var se *request.StatusError
-	if !errors.As(err, &se) || !se.HasStatus(http.StatusServiceUnavailable) {
+	if !errors.As(err, &se) || !se.HasStatus(http.StatusServiceUnavailable, http.StatusRequestTimeout) {
 		return err
 	}
 
 	var res struct {
+		Error    string
 		Response struct {
 			Reason string
 		}
 	}
 
-	if json.Unmarshal(se.Body(), &res) == nil && strings.Contains(strings.ToLower(res.Response.Reason), "sleep") {
+	if json.Unmarshal(se.Body(), &res) == nil &&
+		(se.HasStatus(http.StatusServiceUnavailable) && strings.Contains(strings.ToLower(res.Response.Reason), "sleep") ||
+			se.HasStatus(http.StatusRequestTimeout) && strings.Contains(res.Error, "vehicle unavailable")) {
 		return api.ErrAsleep
 	}
 

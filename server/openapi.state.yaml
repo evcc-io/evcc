@@ -103,6 +103,10 @@ components:
         gridExportLimit:
           description: Static grid export power limit in W used as optimizer constraint, 0 = disabled. An active HEMS curtailment takes precedence.
           type: number
+        profilePercentile:
+          description: Percentile of the historic energy profiles used for demand prediction in %, e.g. 50 = median. Null uses the average.
+          type: number
+          nullable: true
         greenShareHome:
           description: Share of green energy in home consumption, between 0 and 1.
           type: number
@@ -803,6 +807,12 @@ components:
         chargerFeatureContinuous:
           description: Charger is a heating device where disabled means normal operation.
           type: boolean
+        chargerFeatureDemandTemperature:
+          description: Heating device demand forecast uses daily average profile scaled by outdoor temperature.
+          type: boolean
+        chargerFeatureDemandWeekday:
+          description: Heating device demand forecast uses same-weekday average over past 4 weeks.
+          type: boolean
         chargerFeatureHeating:
           description: Charger is a heating device. SoC values represent temperature in degrees.
           type: boolean
@@ -1085,6 +1095,8 @@ components:
         - chargerFeatureClimaterDisabled
         - chargerFeatureCoarseCurrent
         - chargerFeatureContinuous
+        - chargerFeatureDemandTemperature
+        - chargerFeatureDemandWeekday
         - chargerFeatureHeating
         - chargerFeatureIntegratedDevice
         - chargerFeatureOffline
@@ -1719,6 +1731,9 @@ components:
         token:
           description: Sponsor token. Redacted.
           type: string
+        hardware:
+          description: Hardware sponsorship.
+          type: boolean
     StaticEnergyPlan:
       description: Charging plan with an energy goal.
       type: object

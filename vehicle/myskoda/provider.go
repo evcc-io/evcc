@@ -20,7 +20,7 @@ type Provider struct {
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	return &Provider{
 		dataG: util.Cached(func() (VehicleResponse, error) {
-			return api.Vehicle(vin, "charging", "odometer", "airConditioning")
+			return api.Vehicle(vin, "charging", "chargingProfiles", "odometer", "airConditioning")
 		}, cache),
 		action: func(action string) error {
 			return api.ChargeAction(vin, action)
@@ -119,6 +119,12 @@ func (v *Provider) GetLimitSoc() (int64, error) {
 	res, err := v.charging()
 	if err != nil {
 		return 0, err
+	}
+	// prefer the limit of the saved location (e.g. home) the vehicle is currently at
+	if data, _ := v.dataG(); res.IsVehicleInSavedLocation {
+		if p := data.Vehicle.ChargingProfiles.CurrentVehiclePositionProfile; p != nil && p.TargetStateOfChargeInPercent != nil {
+			return int64(*p.TargetStateOfChargeInPercent), nil
+		}
 	}
 	if res.Settings == nil || res.Settings.TargetStateOfChargeInPercent == nil {
 		return 0, api.ErrNotAvailable

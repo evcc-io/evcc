@@ -656,7 +656,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Postanite sponzor",
-      "becomeSponsorExtended": "Podprite nas direktno in pridobite nalepke.",
       "confetti": "Ste pripravljeni na konfete?",
       "confettiPromise": "Prejmete nalepke in digitalne konfete",
       "sticker": "… ali nalepke evcc?",
@@ -665,9 +664,7 @@
       "titleNoSponsor": "Podprite nas",
       "titleSponsor": "Ste podpornik",
       "titleTrial": "Preizkusni način",
-      "titleVictron": "Sponzorirano s strani Victron Energy",
-      "trial": "Ste v preskusnem načinu in lahko uporabljate vse funkcije. Razmislite o podpori projekta.",
-      "victron": "Uporabljate evcc na strojni opremi Victron Energy in imate dostop do vseh funkcij."
+      "trial": "Ste v preskusnem načinu in lahko uporabljate vse funkcije. Razmislite o podpori projekta."
     },
     "telemetry": {
       "optIn": "Želim prispevati svoje podatke.",

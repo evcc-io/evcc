@@ -111,7 +111,8 @@ func (lp *Loadpoint) MinActivePhases() int {
 
 // minActivePhases returns the minimum number of active phases for the loadpoint.
 func (lp *Loadpoint) minActivePhases() int {
-	if lp.hasPhaseSwitching() || lp.phasesConfigured == 1 {
+	// configured phases are both minimum and maximum, only automatic scales down to 1p
+	if lp.hasPhaseSwitching() && lp.phasesConfigured == 0 {
 		return 1
 	}
 
@@ -167,9 +168,10 @@ func (lp *Loadpoint) hasPhaseSwitching() bool {
 
 // syncChargerPhases synchronizes the assumed phase state with the charger's actual state.
 // Chargers may reconfigure phases internally, i.e. when the vehicle is (dis)connected.
+// Unknown phases (0, i.e. after startup) are seeded from the charger without warning.
 func (lp *Loadpoint) syncChargerPhases() error {
 	phases := lp.GetPhases()
-	if !lp.hasPhaseSwitching() || phases <= 0 {
+	if !lp.hasPhaseSwitching() {
 		return nil
 	}
 
@@ -183,7 +185,9 @@ func (lp *Loadpoint) syncChargerPhases() error {
 		}
 
 		if chargerPhases > 0 && chargerPhases != phases {
-			lp.log.WARN.Printf("charger logic error: phases mismatch (got %d, expected %d)", chargerPhases, phases)
+			if phases > 0 {
+				lp.log.WARN.Printf("charger logic error: phases mismatch (got %d, expected %d)", chargerPhases, phases)
+			}
 			lp.SetPhases(chargerPhases)
 		}
 
@@ -196,8 +200,11 @@ func (lp *Loadpoint) syncChargerPhases() error {
 		chargerPhases = 3
 	}
 
-	if chargerPhases > phases {
-		lp.log.WARN.Printf("charger logic error: phases mismatch (got %d measured, expected %d)", chargerPhases, phases)
+	// 1p measured does not confirm 1p enabled (1p vehicle on 3p), hence never seeds unknown phases
+	if chargerPhases > max(phases, 1) {
+		if phases > 0 {
+			lp.log.WARN.Printf("charger logic error: phases mismatch (got %d measured, expected %d)", chargerPhases, phases)
+		}
 		lp.SetPhases(chargerPhases)
 	}
 
