@@ -985,3 +985,13 @@ input::-webkit-date-and-time-value {
 	-webkit-user-select: none;
 	-webkit-touch-callout: none;
 }
+
+.empty-container {
+	min-height: calc(100dvh - var(--bottom-space));
+}
+.empty-box {
+	background-color: var(--evcc-box);
+	margin: auto;
+	border-radius: 2rem;
+	max-width: 480px;
+}
