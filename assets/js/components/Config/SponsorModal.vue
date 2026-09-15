@@ -17,7 +17,7 @@
 			<div class="mt-4 mb-3">
 				<Sponsor v-bind="sponsor" />
 			</div>
-			<hr class="my-4" />
+			<hr v-if="!hardwareToken" class="my-4" />
 			<div v-if="showTokenForm">
 				<label for="sponsorToken" class="my-2">
 					{{ $t("config.sponsor.enterYourToken") }}
@@ -54,7 +54,7 @@
 					</button>
 				</div>
 			</div>
-			<div v-else-if="token">
+			<div v-else-if="token && !hardwareToken">
 				<label for="existingToken" class="fw-bold my-2">{{
 					$t("config.sponsor.yourToken")
 				}}</label>
@@ -118,11 +118,14 @@ export default {
 		name() {
 			return this.sponsor?.status?.name || "";
 		},
+		hardwareToken() {
+			return !!this.sponsor?.status?.hardware && !!this.token;
+		},
 		showTokenForm() {
 			return this.editMode || !this.token;
 		},
 		notUiEditable() {
-			return !!this.name && this.fromYaml;
+			return (!!this.name && this.fromYaml) || this.hardwareToken;
 		},
 		hasUiToken() {
 			return this.token && !this.fromYaml;
