@@ -6,6 +6,7 @@ products:
   - brand: Sunsynk
     description:
       generic: Storage (hybrid) inverter
+capabilities: ["battery-control", "curtail"]
 params:
   - name: usage
     choice: ["pv", "battery", "grid"]
@@ -13,7 +14,37 @@ params:
     choice: ["rs485", "tcpip"]
     baudrate: 9600
     id: 1
+  - name: maxacpower
+    required: true
   - preset: battery-params
+  - name: maxdischargecurrent
+    required: true
+    default: 100
+    advanced: true
+    description:
+      en: Max Discharge Current
+      de: Max Entladestrom
+    help:
+      en: |
+        Maximum battery discharge current in Amperes (A) for normal mode. Register 211 accepts 0-185 A.
+        Power calculation: P(W) = Current(A) x Voltage(V). Example with 48V battery: 100A x 48V = 4800W (4.8kW).
+      de: |
+        Maximaler Batterieentladestrom in Ampere (A) für Normalmodus. Register 211 akzeptiert 0-185 A.
+        Leistungsberechnung: P(W) = Strom(A) x Spannung(V). Beispiel mit 48V Batterie: 100A x 48V = 4800W (4,8kW).
+  - name: gridchargecurrent
+    required: true
+    default: 60
+    advanced: true
+    description:
+      en: Grid Charge Current
+      de: Netzladestrom
+    help:
+      en: |
+        Maximum battery charging current in Amperes (A) from grid for charge mode. Register 230 accepts 0-185 A.
+        Power calculation: P(W) = Current(A) x Voltage(V). Example with 48V battery: 60A x 48V = 2880W (2.9kW).
+      de: |
+        Maximaler Batterieladestrom in Ampere (A) aus dem Netz für Lademodus. Register 230 akzeptiert 0-185 A.
+        Leistungsberechnung: P(W) = Strom(A) x Spannung(V). Beispiel mit 48V Batterie: 60A x 48V = 2880W (2,9kW).
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -60,24 +91,36 @@ render: |
         address: 186 # "PV1 input power"
         type: holding
         decode: uint16
+      block: # 186-189
+        register: 186
+        count: 4
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 187 # "PV2 input power"
         type: holding
         decode: uint16
+      block: # 186-189
+        register: 186
+        count: 4
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 188 # "PV3 input power"
         type: holding
         decode: uint16
+      block: # 186-189
+        register: 186
+        count: 4
     - source: modbus
       {{- include "modbus" . | indent 4 }}
       register:
         address: 189 # "PV4 input power"
         type: holding
         decode: uint16
+      block: # 186-189
+        register: 186
+        count: 4
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -86,6 +129,38 @@ render: |
       type: holding
       decode: uint32s
     scale: 0.1
+  maxacpower: {{ .maxacpower }}
+  # Feed-in curtailment via "Max Sell Power" (register 245, watts). The register is the
+  # device's always-active feed-in ceiling; there is no separate limit-enable register.
+  # "Solar Export" (register 247) is the owner's export on/off switch and left untouched.
+  curtail: # limit feed-in to the given percent of nominal (100 % = nominal power)
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 245 # Max Sell Power (W)
+      type: writemultiple
+      decode: uint16
+    scale: {{ divf (maxf .maxacpower 1) 100 }} # % to W
+  curtailed: # allowed feed-in as percent of nominal, derived from Max Sell Power
+    source: go
+    in:
+      - name: limit
+        type: float
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 245 # Max Sell Power (W)
+            type: holding
+            decode: uint16
+    script: |
+      // float64 is required: a whole-number input arrives as an int literal
+      // round, the watt conversion does not reproduce the written percent exactly
+      p := int(float64(limit)*100/{{ maxf .maxacpower 1 }} + 0.5)
+      if p > 100 {
+        p = 100
+      }
+      p
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
@@ -118,5 +193,83 @@ render: |
       address: 184 # "battery capacity"
       type: holding
       decode: uint16
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0x00FF # Use Timer, all days
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 248 # Use Timer
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .maxdischargecurrent }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 211 # Battery Max Discharge Current
+              type: writemultiple
+              decode: uint16
+    - case: 2 # hold - prevent discharge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # disable Use Timer
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 248 # Use Timer
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 0 # zero discharge
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 211 # Battery Max Discharge Current
+              type: writemultiple
+              decode: uint16
+    - case: 3 # charge - enable grid charging
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0 # ignore TOU schedule
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 248 # Use Timer
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .gridchargecurrent }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 230 # Grid Charge Battery Current
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .maxdischargecurrent }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 211 # Battery Max Discharge Current
+              type: writemultiple
+              decode: uint16
   {{- include "battery-params" . }}
   {{- end }}
