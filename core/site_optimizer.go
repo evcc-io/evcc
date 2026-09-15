@@ -343,6 +343,22 @@ func (site *Site) diffSuggestions(pending map[string]pendingSuggestion) []messen
 type requestDetails struct {
 	Timestamps     []time.Time     `json:"timestamp"`
 	BatteryDetails []batteryDetail `json:"batteryDetails"`
+	DemandDetails  []demandDetail  `json:"demandDetails"`
+}
+
+type demandType string
+
+const (
+	demandTypeHome       demandType = "home"
+	demandTypeHeating    demandType = "heating"
+	demandTypeUnmodelled demandType = "unmodelled"
+)
+
+// demandDetail is a single profile summarized into the home demand time series
+type demandDetail struct {
+	Type   demandType `json:"type"`
+	Title  string     `json:"title,omitempty"`
+	Values []float32  `json:"values"`
 }
 
 // optimizerBattery pairs a battery request entry with its device detail
@@ -460,6 +476,9 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		site.log.DEBUG.Printf("optimizer: home slots updated with measured %.0fWh: %.0f -> %.0f", v, orig, gt[:len(orig)])
 	}
 
+	// base load before the loadpoint contributions are summarized into gt
+	home := slices.Clone(gt)
+
 	// heating loadpoints add their forecast demand on top of the measured base load
 	heaters := site.addHeatingDemand(gt, minLen)
 
@@ -502,8 +521,20 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	// end of horizon Wh value
 	pa := lo.Min(req.TimeSeries.PN) * eta * 0.99
 
+	// individual profiles summarized into Gt, for the debug view
 	details = requestDetails{
 		Timestamps: asTimestamps(dt, now),
+		DemandDetails: []demandDetail{
+			{Type: demandTypeHome, Values: prorate(home, firstSlotDuration)},
+		},
+	}
+
+	for _, h := range heaters {
+		details.DemandDetails = append(details.DemandDetails, demandDetail{
+			Type:   demandTypeHeating,
+			Title:  h.lp.GetTitle(),
+			Values: prorate(h.values, firstSlotDuration),
+		})
 	}
 
 	if site.circuit != nil {
@@ -539,7 +570,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		}
 
 		// heating loadpoints are already accounted for by their demand forecast
-		if slices.Contains(heaters, lp) {
+		if slices.ContainsFunc(heaters, func(h heatingDemand) bool { return h.lp == lp }) {
 			continue
 		}
 
@@ -567,9 +598,15 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 
 		site.log.DEBUG.Printf("optimizer: home slots updated with unmodelled %.0fW loadpoint load: %.0f", unmodelled, load[:min(optimizerDecaySlots, len(load))])
 
-		for i, v := range prorate(load, firstSlotDuration) {
+		prorated := prorate(load, firstSlotDuration)
+		for i, v := range prorated {
 			req.TimeSeries.Gt[i] += v
 		}
+
+		details.DemandDetails = append(details.DemandDetails, demandDetail{
+			Type:   demandTypeUnmodelled,
+			Values: prorated,
+		})
 	}
 
 	for i, dev := range site.batteryMeters {
@@ -591,6 +628,11 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		b.cfg.PA = pa
 		req.Batteries = append(req.Batteries, b.cfg)
 		details.BatteryDetails = append(details.BatteryDetails, b.detail)
+	}
+
+	// a lone base load profile is identical to the total
+	if len(details.DemandDetails) < 2 {
+		details.DemandDetails = nil
 	}
 
 	return req, details, nil

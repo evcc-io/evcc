@@ -98,6 +98,7 @@
 							:evopt="evopt"
 							mode="request"
 							:battery-details="evopt.details.batteryDetails"
+							:demand-details="evopt.details.demandDetails"
 							:timestamps="evopt.details.timestamp"
 							:currency="currency"
 							:battery-colors="batteryColors"
