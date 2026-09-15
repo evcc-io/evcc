@@ -238,7 +238,7 @@ const suggestionMaxAge = 2 * tariff.SlotDuration
 // optimizerPlan is a loadpoint's charging schedule from the last solve
 type optimizerPlan struct {
 	rates  api.Rates // charging slots valued at the grid import price
-	energy float64   // planned charge energy, Wh
+	energy []float64 // charge energy per slot, Wh
 }
 
 // loadpointPlan extracts the remaining charging slots of a battery result
@@ -255,7 +255,7 @@ func loadpointPlan(res optimizer.BatteryResult, prices []float32, schedule optim
 			continue
 		}
 
-		plan.energy += energy
+		plan.energy = append(plan.energy, energy)
 		plan.rates = append(plan.rates, api.Rate{
 			Start: schedule.timestamps[slot],
 			End:   schedule.end(slot),

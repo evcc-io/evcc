@@ -798,18 +798,18 @@ func (mr *MockAPIMockRecorder) IsFastChargingActive() *gomock.Call {
 }
 
 // OptimizerPlan mocks base method.
-func (m *MockAPI) OptimizerPlan() (api.Rates, float64) {
+func (m *MockAPI) OptimizerPlan(planTime time.Time) (api.Rates, float64) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "OptimizerPlan")
+	ret := m.ctrl.Call(m, "OptimizerPlan", planTime)
 	ret0, _ := ret[0].(api.Rates)
 	ret1, _ := ret[1].(float64)
 	return ret0, ret1
 }
 
 // OptimizerPlan indicates an expected call of OptimizerPlan.
-func (mr *MockAPIMockRecorder) OptimizerPlan() *gomock.Call {
+func (mr *MockAPIMockRecorder) OptimizerPlan(planTime any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OptimizerPlan", reflect.TypeOf((*MockAPI)(nil).OptimizerPlan))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OptimizerPlan", reflect.TypeOf((*MockAPI)(nil).OptimizerPlan), planTime)
 }
 
 // PublishEffectiveValues mocks base method.
