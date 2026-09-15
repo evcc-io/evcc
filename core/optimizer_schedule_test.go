@@ -136,5 +136,5 @@ func TestLoadpointPlan(t *testing.T) {
 	assert.InDelta(t, 0.2, plan.rates[0].Value, 1e-6)
 	assert.Equal(t, now.Add(30*time.Minute), plan.rates[1].Start)
 	assert.InDelta(t, 0.4, plan.rates[1].Value, 1e-6)
-	assert.InDelta(t, 750, plan.energy, 1e-6)
+	assert.Equal(t, []float64{500, 250}, plan.energy)
 }
