@@ -385,6 +385,87 @@ func (site *Site) SetResidualPower(power float64) error {
 	return nil
 }
 
+// GetPriorityStrategy returns the loadpoint priority sub-ordering strategy
+func (site *Site) GetPriorityStrategy() api.PriorityStrategy {
+	site.RLock()
+	defer site.RUnlock()
+	return site.priorityStrategy
+}
+
+// SetPriorityStrategy sets the loadpoint priority sub-ordering strategy
+func (site *Site) SetPriorityStrategy(strategy api.PriorityStrategy) error {
+	site.Lock()
+	defer site.Unlock()
+
+	if !strategy.IsAPriorityStrategy() {
+		return fmt.Errorf("invalid priority strategy: %d", strategy)
+	}
+
+	site.log.DEBUG.Printf("set priority strategy: %s", strategy)
+
+	if site.priorityStrategy != strategy {
+		site.priorityStrategy = strategy
+		settings.SetString(keys.PriorityStrategy, strategy.String())
+		site.publish(keys.PriorityStrategy, site.priorityStrategy)
+	}
+
+	return nil
+}
+
+// GetPriorityBasis returns the priority strategy basis (percent, energy)
+func (site *Site) GetPriorityBasis() api.PriorityBasis {
+	site.RLock()
+	defer site.RUnlock()
+	return site.priorityBasis
+}
+
+// SetPriorityBasis sets the priority strategy basis (percent, energy)
+func (site *Site) SetPriorityBasis(basis api.PriorityBasis) error {
+	site.Lock()
+	defer site.Unlock()
+
+	if !basis.IsAPriorityBasis() {
+		return fmt.Errorf("invalid priority basis: %d", basis)
+	}
+
+	site.log.DEBUG.Printf("set priority basis: %s", basis)
+
+	if site.priorityBasis != basis {
+		site.priorityBasis = basis
+		settings.SetString(keys.PriorityBasis, basis.String())
+		site.publish(keys.PriorityBasis, site.priorityBasis)
+	}
+
+	return nil
+}
+
+// GetPriorityHysteresis returns the priority sub-ordering deadband (soc-% or kWh per basis)
+func (site *Site) GetPriorityHysteresis() int {
+	site.RLock()
+	defer site.RUnlock()
+	return site.priorityHysteresis
+}
+
+// SetPriorityHysteresis sets the priority sub-ordering deadband (soc-% or kWh per basis)
+func (site *Site) SetPriorityHysteresis(hysteresis int) error {
+	site.Lock()
+	defer site.Unlock()
+
+	if hysteresis < 0 || hysteresis > 99 {
+		return fmt.Errorf("invalid priority hysteresis: %d (must be 0..99)", hysteresis)
+	}
+
+	site.log.DEBUG.Println("set priority hysteresis:", hysteresis)
+
+	if site.priorityHysteresis != hysteresis {
+		site.priorityHysteresis = hysteresis
+		settings.SetInt(keys.PriorityHysteresis, int64(site.priorityHysteresis))
+		site.publish(keys.PriorityHysteresis, site.priorityHysteresis)
+	}
+
+	return nil
+}
+
 // GetGridExportLimit returns the static grid export power limit in W (0 = disabled)
 func (site *Site) GetGridExportLimit() float64 {
 	site.RLock()
