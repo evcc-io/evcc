@@ -42,7 +42,7 @@ func planHandler(lp loadpoint.API) http.HandlerFunc {
 		plan := lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
 
 		// the optimizer schedules the plan itself while in control
-		if p, power := lp.OptimizerPlan(); p != nil {
+		if p, power := lp.OptimizerPlan(planTime); p != nil {
 			plan, maxPower, requiredDuration = p, power, planner.Duration(p)
 		}
 

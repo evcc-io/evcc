@@ -185,7 +185,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	}
 
 	// the optimizer schedules the plan itself while in control
-	if p, _ := lp.OptimizerPlan(); p != nil {
+	if p, _ := lp.OptimizerPlan(planTime); p != nil {
 		plan = p
 	}
 

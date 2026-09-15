@@ -2,6 +2,7 @@ package core
 
 import (
 	"math"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/planner"
@@ -19,9 +20,10 @@ func (lp *Loadpoint) setSuggestion(s *types.Suggestion, plan optimizerPlan) {
 	lp.optimizerPlan = plan
 }
 
-// OptimizerPlan returns the optimizer's charging schedule and its average
-// power, nil if the optimizer is not in charge
-func (lp *Loadpoint) OptimizerPlan() (api.Rates, float64) {
+// OptimizerPlan returns the optimizer's charging schedule up to the plan time
+// and its average power, nil if the optimizer is not in charge. Later slots
+// serve surplus, not the plan.
+func (lp *Loadpoint) OptimizerPlan(planTime time.Time) (api.Rates, float64) {
 	if lp.gate() == nil {
 		return nil, 0
 	}
@@ -29,12 +31,21 @@ func (lp *Loadpoint) OptimizerPlan() (api.Rates, float64) {
 	lp.RLock()
 	defer lp.RUnlock()
 
-	plan := lp.optimizerPlan
-	if len(plan.rates) == 0 {
+	var rates api.Rates
+	var energy float64
+	for _, slot := range lp.optimizerPlan.rates {
+		if !slot.Start.Before(planTime) {
+			break
+		}
+		rates = append(rates, slot)
+		energy += lp.optimizerPlan.energy[len(rates)-1]
+	}
+
+	if len(rates) == 0 {
 		return nil, 0
 	}
 
-	return plan.rates, plan.energy / planner.Duration(plan.rates).Hours()
+	return rates, energy / planner.Duration(rates).Hours()
 }
 
 // optimizerControlled indicates that the optimizer decides for this loadpoint.
