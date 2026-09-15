@@ -196,7 +196,12 @@ export default defineComponent({
 		demandRows(total: Row): Row[] {
 			const ref = Math.max(...total.nums.map(Math.abs));
 			return this.demandDetails.map((d) =>
-				this.powerRow(`↳ ${this.demandTitle(d)}`, d.values, colors.muted || "", { ref })
+				this.powerRow(
+					`↳ ${this.demandTitle(d)}`,
+					d.values,
+					(d.type === "heating" ? colors.red : colors.muted) || "",
+					{ ref }
+				)
 			);
 		},
 		demandTitle(detail: DemandDetail): string {

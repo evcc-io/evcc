@@ -98,7 +98,7 @@
 							:evopt="evopt"
 							mode="request"
 							:battery-details="evopt.details.batteryDetails"
-							:demand-details="evopt.details.demandDetails"
+							:demand-details="demandDetails"
 							:timestamps="evopt.details.timestamp"
 							:currency="currency"
 							:battery-colors="batteryColors"
@@ -151,7 +151,7 @@ import api from "../api";
 import store from "../store";
 import formatter from "../mixins/formatter";
 import { resolveColors, deviceColorMap, batteryColor } from "../colors";
-import { CURRENCY, type BatteryDetail } from "../types/evcc";
+import { CURRENCY, type BatteryDetail, type DemandDetail } from "../types/evcc";
 
 export default defineComponent({
 	name: "Optimize",
@@ -205,6 +205,9 @@ export default defineComponent({
 		},
 		batteryDetails(): BatteryDetail[] {
 			return this.evopt?.details?.batteryDetails || [];
+		},
+		demandDetails(): DemandDetail[] {
+			return this.evopt?.details?.demandDetails || [];
 		},
 		loadpointColorKeys(): string[] {
 			return [
