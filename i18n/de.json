@@ -7,6 +7,18 @@
     "authorizationSuccessful": "Autorisierung erfolgreich",
     "buttonConnect": "Mit {provider} verbinden",
     "buttonDisconnect": "Trennen",
+    "challenge": {
+      "captcha": {
+        "label": "Zeichen aus dem Bild eingeben.",
+        "title": "Captcha"
+      },
+      "code": {
+        "label": "Code oder Adresse der Weiterleitungsseite einfügen.",
+        "title": "Autorisierungscode"
+      },
+      "openLogin": "Anmeldeseite öffnen",
+      "submit": "Weiter"
+    },
     "confirmLogout": "Sicher, dass du {title} trennen möchtest?",
     "connect": "verbinden",
     "disconnect": "trennen",
