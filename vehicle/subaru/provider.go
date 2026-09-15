@@ -9,7 +9,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-// retryTimeout bounds how long incomplete status payloads are retried before giving up
 const retryTimeout = 2 * time.Minute
 
 var errIncompleteStatus = errors.New("incomplete status payload")
@@ -31,7 +30,6 @@ func NewProvider(a *API, vin string, cache time.Duration) *Provider {
 	return impl
 }
 
-// validate returns ErrMustRetry while the payload is incomplete and ErrTimeout once retryTimeout has elapsed
 func (v *Provider) validate(res Status) error {
 	if !incomplete(res) {
 		v.incompleteAt = time.Time{}
@@ -50,8 +48,7 @@ func (v *Provider) validate(res Status) error {
 }
 
 func incomplete(res Status) bool {
-	return res.Payload.EvRangeWithAc.Unit == "" ||
-		(res.Payload.BatteryLevel == 0 && res.Payload.EvRangeWithAc.Value == 0)
+	return res.Payload.LastUpdateTimestamp == "" || res.Payload.EvRangeWithAc.Unit == ""
 }
 
 func (v *Provider) Soc() (float64, error) {
