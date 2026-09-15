@@ -792,7 +792,7 @@
     "optimizer": {
       "automatic": "Automatikmodus",
       "automaticBattery": "steuert das Laden des Hausspeichers",
-      "automaticCharging": "startet und stoppt das Laden im Solarmodus",
+      "automaticCharging": "startet und stoppt das Laden im Smart-Modus",
       "automaticHint": "Was der Optimizer macht:",
       "automaticLimits": "ersetzt Preis- und CO₂-Grenzen",
       "automaticNotControlled": "Was bleibt wie es ist:",
