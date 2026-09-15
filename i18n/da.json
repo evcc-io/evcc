@@ -1232,6 +1232,9 @@
   },
   "issue": {
     "additional": {
+      "copied": "kopieret!",
+      "copy": "kopier",
+      "copySelected": "kopier det valgte",
       "description": "Inkludér konfiguration og logfiler for at hjælpe os med hurtigt at genskabe problemet. Vi opfordrer til at dele så meget som muligt. Status er som regel ikke nødvendig.",
       "include": "inkluder",
       "lines": "linjer",

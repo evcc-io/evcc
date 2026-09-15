@@ -1232,6 +1232,9 @@
   },
   "issue": {
     "additional": {
+      "copied": "nukopijuota!",
+      "copy": "kopijuoti",
+      "copySelected": "kopijuoti pasirinktus",
       "description": "Įtraukite konfigūraciją ir žurnalus, kad galėtume greitai atkartoti problemą. Raginame kuo daugiau dalytis. Paprastai nereikia nurodyti būsenos.",
       "include": "įtraukti",
       "lines": "eilutės",
