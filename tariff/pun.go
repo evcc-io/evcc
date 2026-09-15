@@ -20,7 +20,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
-// ErrPunDataNotAvailable indicates that GME has not yet published prices for the requested day.
+// ErrPunDataNotAvailable indicates that GME returned no data for the requested date range (HTTP 404).
 var ErrPunDataNotAvailable = errors.New("PUN data not available")
 
 // romeLocation is resolved once at package init to avoid repeated filesystem lookups.
@@ -28,9 +28,11 @@ var romeLocation *time.Location
 
 type Pun struct {
 	*embed
-	zone string
-	log  *util.Logger
-	data *util.Monitor[api.Rates]
+	zone     string
+	history  int
+	forecast int
+	log      *util.Logger
+	data     *util.Monitor[api.Rates]
 }
 
 type NewDataSet struct {
@@ -49,12 +51,6 @@ type Prezzo struct {
 	Zones []Zone `xml:",any"`
 }
 
-type Rate struct {
-	Start time.Time `json:"start"`
-	End   time.Time `json:"end"`
-	Price float64   `json:"price"`
-}
-
 var _ api.Tariff = (*Pun)(nil)
 
 func init() {
@@ -64,8 +60,10 @@ func init() {
 
 func NewPunFromConfig(other map[string]any) (api.Tariff, error) {
 	var cc struct {
-		embed `mapstructure:",squash"`
-		Zone  string
+		embed    `mapstructure:",squash"`
+		Zone     string
+		History  int
+		Forecast int
 	}
 
 	logger := util.NewLogger("pun")
@@ -83,11 +81,17 @@ func NewPunFromConfig(other map[string]any) (api.Tariff, error) {
 		zone = "PUN"
 	}
 
+	if cc.History <= 0 {
+		cc.History = 30
+	}
+
 	t := &Pun{
-		log:   logger,
-		zone:  zone,
-		embed: &cc.embed,
-		data:  util.NewMonitor[api.Rates](2 * time.Hour),
+		log:      logger,
+		zone:     zone,
+		history:  cc.History,
+		forecast: cc.Forecast,
+		embed:    &cc.embed,
+		data:     util.NewMonitor[api.Rates](2 * time.Hour),
 	}
 
 	return runOrError(t)
@@ -97,9 +101,16 @@ func (t *Pun) run(done chan error) {
 	var once sync.Once
 
 	for tick := time.Tick(time.Hour); ; <-tick {
-		// get today data
-		today, err := backoff.RetryWithData(func() (api.Rates, error) {
-			res, err := t.getData(time.Now())
+		now := time.Now().In(romeLocation)
+		today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, romeLocation)
+
+		start := today
+		if t.forecast > 0 {
+			start = today.AddDate(0, 0, -t.history)
+		}
+
+		res, err := backoff.RetryWithData(func() (api.Rates, error) {
+			res, err := t.getData(start, today.AddDate(0, 0, 1))
 			return res, backoffPermanentError(err)
 		}, bo())
 		if err != nil {
@@ -110,28 +121,36 @@ func (t *Pun) run(done chan error) {
 			continue
 		}
 
-		// get tomorrow data (may not be available before ~13:00 CET)
-		res, err := backoff.RetryWithData(func() (api.Rates, error) {
-			res, err := t.getData(time.Now().AddDate(0, 0, 1))
-			if errors.Is(err, ErrPunDataNotAvailable) {
-				return res, backoff.Permanent(err)
-			}
-			return res, backoffPermanentError(err)
-		}, bo())
-		if err != nil && !errors.Is(err, ErrPunDataNotAvailable) {
-			if reportError(&once, done, err) {
-				return
-			}
-			t.log.ERROR.Println(err)
-			continue
+		if t.forecast > 0 {
+			res = t.extendForecast(res, today)
 		}
 
-		// merge today and tomorrow data
-		data := append(today, res...)
-
-		mergeRates(t.data, data)
+		mergeRates(t.data, res)
 		once.Do(func() { close(done) })
 	}
+}
+
+func (t *Pun) extendForecast(rates api.Rates, today time.Time) api.Rates {
+	if len(rates) == 0 {
+		return rates
+	}
+
+	profile := newPriceProfile(rates)
+	lastEnd := rates[len(rates)-1].End
+
+	rates = slices.DeleteFunc(rates, func(r api.Rate) bool {
+		return r.Start.Before(today)
+	})
+
+	horizon := lastEnd.AddDate(0, 0, t.forecast)
+	for ts := lastEnd; ts.Before(horizon); ts = ts.Add(time.Hour) {
+		if price, ok := profile.price(ts); ok {
+			rates = append(rates, api.Rate{Start: ts, End: ts.Add(time.Hour), Value: price})
+		}
+	}
+
+	rates.Sort()
+	return rates
 }
 
 // Rates implements the api.Tariff interface
@@ -158,12 +177,12 @@ func (t *Pun) priceForZone(p Prezzo) (float64, error) {
 	return 0, fmt.Errorf("zone %s not found for hour %s", t.zone, p.Ora)
 }
 
-func (t *Pun) getData(day time.Time) (api.Rates, error) {
+func (t *Pun) getData(start, end time.Time) (api.Rates, error) {
 	client := request.NewClient(t.log)
 	client.Jar, _ = cookiejar.New(nil)
 
 	// Request the ZIP file
-	uri := "https://gme.mercatoelettrico.org/DesktopModules/GmeDownload/API/ExcelDownload/downloadzipfile?DataInizio=" + day.Format("20060102") + "&DataFine=" + day.Format("20060102") + "&Date=" + day.Format("20060102") + "&Mercato=MGP&Settore=Prezzi&FiltroDate=InizioFine"
+	uri := "https://gme.mercatoelettrico.org/DesktopModules/GmeDownload/API/ExcelDownload/downloadzipfile?DataInizio=" + start.Format("20060102") + "&DataFine=" + end.Format("20060102") + "&Date=" + start.Format("20060102") + "&Mercato=MGP&Settore=Prezzi&FiltroDate=InizioFine"
 	req, _ := http.NewRequest("GET", uri, nil)
 	req.Header = http.Header{
 		"Referer":            {"https://gme.mercatoelettrico.org/en-us/Home/Results/Electricity/MGP/Download?valore=Prezzi"},
@@ -185,7 +204,7 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
-		return nil, fmt.Errorf("%w: %s", ErrPunDataNotAvailable, day.Format("2006-01-02"))
+		return nil, fmt.Errorf("%w: %s..%s", ErrPunDataNotAvailable, start.Format("2006-01-02"), end.Format("2006-01-02"))
 	}
 
 	body, err := request.ReadBody(resp)
@@ -198,29 +217,40 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 		return nil, err
 	}
 
-	var tariffFile *zip.File
+	var data api.Rates
 	for _, file := range zipReader.File {
-		if strings.HasSuffix(file.Name, "Prezzi.xml") {
-			tariffFile = file
-			break
+		if !strings.HasSuffix(file.Name, "Prezzi.xml") {
+			continue
 		}
-	}
-	if tariffFile == nil {
-		return nil, fmt.Errorf("tariff file not found in downloaded ZIP archive")
+
+		f, err := file.Open()
+		if err != nil {
+			return nil, err
+		}
+
+		var dataSet NewDataSet
+		err = xml.NewDecoder(f).Decode(&dataSet)
+		f.Close()
+		if err != nil {
+			return nil, err
+		}
+
+		rates, err := t.parseDataSet(dataSet)
+		if err != nil {
+			return nil, err
+		}
+		data = append(data, rates...)
 	}
 
-	f, err := tariffFile.Open()
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	// Process the received data
-	var dataSet NewDataSet
-	if err := xml.NewDecoder(f).Decode(&dataSet); err != nil {
-		return nil, err
+	if len(data) == 0 {
+		return nil, fmt.Errorf("no tariff data in downloaded ZIP archive")
 	}
 
+	data.Sort()
+	return data, nil
+}
+
+func (t *Pun) parseDataSet(dataSet NewDataSet) (api.Rates, error) {
 	data := make(api.Rates, 0, len(dataSet.Prezzi))
 
 	for _, p := range dataSet.Prezzi {
@@ -246,14 +276,50 @@ func (t *Pun) getData(day time.Time) (api.Rates, error) {
 		}
 
 		ts := time.Date(date.Year(), date.Month(), date.Day(), hour-1, 0, 0, 0, romeLocation)
-		ar := api.Rate{
+		data = append(data, api.Rate{
 			Start: ts,
 			End:   ts.Add(time.Hour),
 			Value: t.totalPrice(price/1e3, ts),
-		}
-		data = append(data, ar)
+		})
 	}
 
-	data.Sort()
 	return data, nil
+}
+
+type priceProfile struct {
+	sum   [2][24]float64
+	count [2][24]int
+}
+
+func isWeekend(ts time.Time) bool {
+	return ts.Weekday() == time.Saturday || ts.Weekday() == time.Sunday
+}
+
+func newPriceProfile(rates api.Rates) (p priceProfile) {
+	for _, r := range rates {
+		dt := 0
+		if isWeekend(r.Start) {
+			dt = 1
+		}
+		p.sum[dt][r.Start.Hour()] += r.Value
+		p.count[dt][r.Start.Hour()]++
+	}
+	return p
+}
+
+func (p priceProfile) price(ts time.Time) (float64, bool) {
+	dt := 0
+	if isWeekend(ts) {
+		dt = 1
+	}
+
+	hour := ts.Hour()
+	// fall back to the other day class to avoid gaps for sparse history
+	if p.count[dt][hour] == 0 {
+		dt = 1 - dt
+		if p.count[dt][hour] == 0 {
+			return 0, false
+		}
+	}
+	return p.sum[dt][hour] / float64(p.count[dt][hour]), true
 }
