@@ -19,6 +19,7 @@ func TestPriceProfile(t *testing.T) {
 		{Start: tue, End: tue.Add(time.Hour), Value: 1},
 		{Start: tue.Add(time.Hour), End: tue.Add(2 * time.Hour), Value: 2},
 		{Start: sat, End: sat.Add(time.Hour), Value: 10},
+		{Start: sat.Add(2 * time.Hour), End: sat.Add(3 * time.Hour), Value: 20},
 	})
 
 	weekday := tue.AddDate(0, 0, 7)
@@ -32,7 +33,17 @@ func TestPriceProfile(t *testing.T) {
 	require.True(t, ok)
 	assert.Equal(t, 10.0, v)
 
-	_, ok = p.price(weekday.Add(2 * time.Hour))
+	// fall back to the other day class at the same hour
+	v, ok = p.price(weekday.Add(2 * time.Hour))
+	require.True(t, ok)
+	assert.Equal(t, 20.0, v)
+
+	v, ok = p.price(sat.AddDate(0, 0, 7).Add(time.Hour))
+	require.True(t, ok)
+	assert.Equal(t, 2.0, v)
+
+	// both day classes unsampled at this hour
+	_, ok = p.price(weekday.Add(3 * time.Hour))
 	assert.False(t, ok)
 }
 
@@ -65,6 +76,39 @@ func TestExtendForecast(t *testing.T) {
 
 	for i := 24; i < len(out); i++ {
 		assert.Equal(t, float64((i-24)%24), out[i].Value)
+	}
+
+	for i := 1; i < len(out); i++ {
+		assert.Equal(t, out[i-1].End, out[i].Start)
+	}
+}
+
+func TestExtendForecastShortHistory(t *testing.T) {
+	loc := romeLocation
+	today := time.Date(2026, 9, 17, 0, 0, 0, 0, loc)
+	require.Equal(t, time.Thursday, today.Weekday())
+
+	// one day of history, weekday only: no weekend samples exist
+	var rates api.Rates
+	for _, day := range []time.Time{today.AddDate(0, 0, -1), today} {
+		for hour := range 24 {
+			rates = append(rates, api.Rate{
+				Start: day.Add(time.Duration(hour) * time.Hour),
+				End:   day.Add(time.Duration(hour+1) * time.Hour),
+				Value: float64(hour),
+			})
+		}
+	}
+
+	tf := &Pun{forecast: 3}
+	out := tf.extendForecast(rates, today)
+
+	// weekend hours fall back to the weekday average instead of being skipped
+	require.Len(t, out, 24+3*24)
+	assert.Equal(t, today.AddDate(0, 0, 4), out[len(out)-1].End)
+
+	for i := 24; i < len(out); i++ {
+		assert.Equal(t, float64(i%24), out[i].Value)
 	}
 
 	for i := 1; i < len(out); i++ {

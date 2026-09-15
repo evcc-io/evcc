@@ -20,7 +20,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
-// ErrPunDataNotAvailable indicates that GME has not yet published prices for the requested day.
+// ErrPunDataNotAvailable indicates that GME returned no data for the requested date range (HTTP 404).
 var ErrPunDataNotAvailable = errors.New("PUN data not available")
 
 // romeLocation is resolved once at package init to avoid repeated filesystem lookups.
@@ -314,8 +314,12 @@ func (p priceProfile) price(ts time.Time) (float64, bool) {
 	}
 
 	hour := ts.Hour()
+	// fall back to the other day class to avoid gaps for sparse history
 	if p.count[dt][hour] == 0 {
-		return 0, false
+		dt = 1 - dt
+		if p.count[dt][hour] == 0 {
+			return 0, false
+		}
 	}
 	return p.sum[dt][hour] / float64(p.count[dt][hour]), true
 }

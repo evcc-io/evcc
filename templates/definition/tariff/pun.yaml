@@ -38,8 +38,8 @@ params:
       de: Verlaufstage
       en: History days
     help:
-      de: Zeitraum, aus dem die historischen Durchschnittswerte berechnet werden.
-      en: Period used for computing the historic average values.
+      de: Zeitraum, aus dem die historischen Durchschnittswerte berechnet werden. Um zu vermeiden, dass Wochentagspreise in Wochenendstunden einfließen (und umgekehrt), mindestens 5 Tage verwenden.
+      en: Period used for computing the historic average values. To avoid weekday prices leaking into weekend hours (and vice versa), use at least 5 days.
 render: |
   type: pun
   {{ include "base" . }}
