@@ -8,6 +8,7 @@ requirements:
     de: "Hol dir deinen API-Token aus dem Tibber-Entwicklerportal: [developer.tibber.com](https://developer.tibber.com/)"
   evcc: ["skiptest"]
 group: price
+usages: ["grid"]
 countries: ["NO", "SE", "DE", "NL"]
 params:
   - name: token

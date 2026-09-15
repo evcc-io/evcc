@@ -5,6 +5,7 @@ products:
     description:
       generic: smartCONTROL
 group: price
+usages: ["grid"]
 countries: ["AT"]
 requirements:
   evcc: ["skiptest"]

@@ -8,6 +8,7 @@ products:
 requirements:
   evcc: ["skiptest"]
 group: price
+usages: ["feedin"]
 countries: ["CH"]
 params:
   - preset: tariff-base
