@@ -11,11 +11,13 @@ import (
 )
 
 type handler struct {
-	uri string
+	uri  string
+	body string
 }
 
 func (h *handler) expect(uri string) {
 	h.uri = uri
+	h.body = "{}"
 }
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +27,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if path == h.uri {
-		fmt.Fprint(w, "{}")
+		fmt.Fprint(w, h.body)
 	} else {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "expected %s", h.uri)
@@ -54,6 +56,10 @@ func TestGoEV1(t *testing.T) {
 	if _, ok := api.Cap[api.Identifier](wb); !ok {
 		t.Error("missing Identifier api")
 	}
+
+	if _, ok := api.Cap[api.StatusReasoner](wb); ok {
+		t.Error("unexpected StatusReasoner api")
+	}
 }
 
 func TestGoEV2(t *testing.T) {
@@ -64,7 +70,7 @@ func TestGoEV2(t *testing.T) {
 
 	sponsor.Subject = "foo"
 
-	wb, err := newGoEFromConfig(false, map[string]any{"uri": srv.URL})
+	wb, err := newGoEFromConfig(false, map[string]any{"uri": srv.URL, "cache": "0s"})
 	if err != nil {
 		t.Error(err)
 	}
@@ -87,5 +93,32 @@ func TestGoEV2(t *testing.T) {
 
 	if _, ok := api.Cap[api.PhaseSwitcher](wb); !ok {
 		t.Error("missing PhaseSwitcher api")
+	}
+
+	sr, ok := api.Cap[api.StatusReasoner](wb)
+	if !ok {
+		t.Fatal("missing StatusReasoner api")
+	}
+
+	h.expect("/api/status?filter=alw,car,eto,nrg,wh,trx,cards,modelStatus")
+
+	for _, tc := range []struct {
+		body   string
+		reason api.Reason
+	}{
+		{`{"modelStatus":2}`, api.ReasonWaitingForAuthorization},
+		{`{"modelStatus":3}`, api.ReasonUnknown},
+		{`{}`, api.ReasonUnknown},
+	} {
+		h.body = tc.body
+
+		reason, err := sr.StatusReason()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if reason != tc.reason {
+			t.Errorf("%s: expected %v, got %v", tc.body, tc.reason, reason)
+		}
 	}
 }

@@ -1,0 +1,45 @@
+template: deye-mi-solarman
+products:
+  - brand: Deye
+    description:
+      generic: Micro inverter (Solarman)
+params:
+  - name: usage
+    choice: ["pv"]
+  - name: host
+  - name: port
+    default: 8899
+    advanced: true
+  - name: serial
+    required: true
+    type: int
+    help:
+      de: Seriennummer des WLAN-Loggers. Sie wird auf dessen Statusseite unter Geräteinformationen angezeigt.
+      en: WiFi logger serial number. It is shown under device information on the logger status page.
+  - name: id
+    default: 1
+    advanced: true
+render: |
+  type: custom
+  power:
+    source: solarman
+    host: {{ .host }}
+    port: {{ .port }}
+    serial: {{ .serial }}
+    id: {{ .id }}
+    register:
+      address: 86 # Output active power
+      type: holding
+      decode: uint32s
+    scale: 0.1
+  energy:
+    source: solarman
+    host: {{ .host }}
+    port: {{ .port }}
+    serial: {{ .serial }}
+    id: {{ .id }}
+    register:
+      address: 63 # Total production
+      type: holding
+      decode: uint32s
+    scale: 0.1

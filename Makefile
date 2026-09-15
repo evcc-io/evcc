@@ -77,7 +77,7 @@ lint-ui::
 	vp run lint
 
 license::
-	go run github.com/google/go-licenses/v2@latest check \
+	go tool go-licenses check \
 	--ignore github.com/evcc-io/evcc/node_modules \
 	--ignore github.com/cespare/xxhash \
 	--ignore github.com/coder/websocket \
