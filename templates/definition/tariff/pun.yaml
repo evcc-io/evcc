@@ -20,7 +20,29 @@ params:
     help:
       de: Italienische Strommarktzone. Wenn keine Zone angegeben wird, wird der nationale Einheitspreis (PUN) verwendet.
       en: Italian electricity market zone. If no zone is specified, the national unit price (PUN) is used.
+  - name: forecast
+    type: int
+    default: 0
+    advanced: true
+    description:
+      de: Prognosetage
+      en: Forecast days
+    help:
+      de: Anzahl der Tage, für die Preise aus dem historischen Durchschnitt vorhergesagt werden. 0 deaktiviert die Prognose.
+      en: Number of days for which prices are forecast from historic averages. 0 disables the forecast.
+  - name: history
+    type: int
+    default: 30
+    advanced: true
+    description:
+      de: Verlaufstage
+      en: History days
+    help:
+      de: Zeitraum, aus dem die historischen Durchschnittswerte berechnet werden.
+      en: Period used for computing the historic average values.
 render: |
   type: pun
   {{ include "base" . }}
   zone: {{ .zone }}
+  forecast: {{ .forecast }}
+  history: {{ .history }}
