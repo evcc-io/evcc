@@ -790,7 +790,7 @@
     "optimizer": {
       "description": "Analizē saules enerģijas prognozi, elektrības cenas un jūsu patēriņa paradumus, lai optimizētu akumulatora un uzlādes stratēģiju. Dati tiek nosūtīti uz evcc optimizācijas servisu apstrādei. Pašlaik tikai aprēķina un vizualizē. Vēl nevada ierīces.",
       "enable": "Iespējot optimizētāju",
-      "info": "Var paiet dažas minūtes, līdz optimizētāja izvēlnes ieraksts kļūst redzams. Jaunām instalācijām var būt nepieciešams laiks līdz 24 stundām, kamēr evcc savāc pietiekami daudz datu.",
+      "info": "Jaunām instalācijām var paiet līdz pat 24 stundām, līdz evcc ir savācis pietiekami daudz datu.",
       "title": "Optimizētājs"
     },
     "options": {
@@ -1232,6 +1232,9 @@
   },
   "issue": {
     "additional": {
+      "copied": "Nokopēts!",
+      "copy": "kopēt",
+      "copySelected": "Kopēt atlasīto",
       "description": "Iekļaujiet konfigurāciju un žurnālus, lai palīdzētu mums ātri reproducēt problēmu. Mēs iesakām dalīties ar pēc iespējas vairāk informācijas. Stāvoklis parasti nav nepieciešams.",
       "include": "iekļaut",
       "lines": "rindas",
