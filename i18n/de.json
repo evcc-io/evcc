@@ -43,7 +43,7 @@
       "bufferTitle": "Batterie als Ladepuffer",
       "discharge": "Entladung der Hausbatterie im Schnell-Modus und bei geplantem Laden verhindern.",
       "gridDischarge": "Die Entladung der Hausbatterie ins Stromnetz zulassen.",
-      "optimizerControlledHint": "Hinweis: Die obigen Einstellungen gelten nicht für {loadpoints}. Sie werden vom {optimizer} gesteuert.",
+      "optimizerControlledHint": "Hinweis: Die obigen Einstellungen gelten nicht für {loadpoints}. Das Laden wird vom {optimizer} gesteuert.",
       "priority": "Hausspeicher hat Vorrang, solange er unter {soc} liegt. Dann erhalten die Ladepunkte den Überschuss.",
       "priorityNone": "Sonnenüberschuss geht direkt an die Ladepunkte. Setze einen Wert über {soc}, um den Hausspeicher zu bevorzugen.",
       "priorityTitle": "Wohin geht der Überschuss zuerst?"

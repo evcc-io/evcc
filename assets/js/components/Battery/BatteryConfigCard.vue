@@ -78,7 +78,7 @@
 		>
 			<OptimizerAuto class="flex-shrink-0" />
 			<i18n-t keypath="battery.config.optimizerControlledHint" tag="span" scope="global">
-				<template #loadpoints>{{ optimizerControlledTitles.join(", ") }}</template>
+				<template #loadpoints>{{ controlledTitleList }}</template>
 				<template #optimizer>
 					<router-link to="/optimize" class="text-muted">
 						{{ $t("config.optimizer.linkWord") }}
@@ -106,7 +106,7 @@
 					v-if="optimizerAutomatic"
 					keypath="config.optimizer.controlled"
 					tag="div"
-					class="text-muted small"
+					class="text-muted small ps-2"
 					scope="global"
 				>
 					<template #optimizer>
@@ -168,6 +168,9 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		controlledTitleList(): string {
+			return new Intl.ListFormat(this.$i18n?.locale).format(this.optimizerControlledTitles);
+		},
 		chargeSubtitle(): string {
 			return `${this.$t("battery.card.soc")} ${this.fmtSoc(this.batterySoc)}`;
 		},
