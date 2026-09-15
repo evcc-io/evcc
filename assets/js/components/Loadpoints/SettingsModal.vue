@@ -18,6 +18,7 @@
 				:loadpoint-id="id"
 				:multiple-loadpoints="multipleLoadpoints"
 				:possible="smartCostAvailable"
+				:disabled-hint="optimizerHint"
 				:tariff="forecast?.planner"
 				class="mt-2 mb-4"
 			/>
@@ -29,6 +30,7 @@
 				is-loadpoint
 				:multiple-loadpoints="multipleLoadpoints"
 				:possible="smartFeedInPriorityAvailable"
+				:disabled-hint="optimizerHint"
 				:tariff="forecast?.feedin"
 				class="mt-2 mb-4"
 			/>
@@ -269,6 +271,9 @@ export default defineComponent({
 	computed: {
 		loadpoint() {
 			return this.loadpoints.find((loadpoint) => loadpoint.id === this.id);
+		},
+		optimizerHint(): string {
+			return this.loadpoint?.optimizerControlled ? "config.optimizer.controlled" : "";
 		},
 		maxCurrent() {
 			return this.loadpoint?.maxCurrent;
