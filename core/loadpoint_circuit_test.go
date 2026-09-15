@@ -17,11 +17,12 @@ import (
 // meterlessLoadpoint returns a loadpoint with a wrapped charge meter, i.e. without
 // measured currents
 func meterlessLoadpoint(chg api.Charger, c api.Circuit, status api.ChargeStatus, offered float64) *Loadpoint {
-	lp := &Loadpoint{
+	return &Loadpoint{
 		log:            util.NewLogger("lp"),
 		bus:            evbus.New(),
 		clock:          clock.New(),
 		charger:        chg,
+		chargeMeter:    new(wrapper.ChargeMeter),
 		circuit:        c,
 		wakeUpTimer:    NewTimer(),
 		status:         status,
@@ -31,8 +32,6 @@ func meterlessLoadpoint(chg api.Charger, c api.Circuit, status api.ChargeStatus,
 		maxCurrent:     16,
 		phases:         1,
 	}
-	lp.chargeMeter = new(wrapper.ChargeMeter)
-	return lp
 }
 
 // siteCycle samples the loadpoints and updates the circuit, in the order site.update does
