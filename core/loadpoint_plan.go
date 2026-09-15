@@ -184,6 +184,11 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
+	// the optimizer schedules the plan itself while in control
+	if p, _ := lp.OptimizerPlan(); p != nil {
+		plan = p
+	}
+
 	var overrun string
 	if excessDuration := requiredDuration - lp.clock.Until(planTime); excessDuration > 0 {
 		overrun = fmt.Sprintf("overruns by %v, ", excessDuration.Round(time.Second))
