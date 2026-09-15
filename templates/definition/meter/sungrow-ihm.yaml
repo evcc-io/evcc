@@ -3,7 +3,14 @@ products:
   - brand: Sungrow
     description:
       generic: iHomeManager (iHM)
-capabilities: ["curtail"]
+capabilities: ["curtail", "battery-control"]
+caveats:
+  - description:
+      de: Die Batteriesteuerung wird durch Angabe der maximalen Ladeleistung aktiviert. Keine weitere Steuerung am iHomeManager oder an den einzelnen Wechselrichtern verwenden.
+      en: Set the maximum charge power to enable battery control. Do not use another controller on the iHomeManager or individual inverters.
+  - description:
+      de: Das Unterbinden der Entladung stoppt auch das Laden aus PV. Bei Kommunikationsverlust soll der iHomeManager nach 60 Sekunden in den Eigenverbrauchsmodus wechseln. VPP und Timeout sind noch auf Hardware zu verifizieren.
+      en: Preventing discharge also stops PV charging. On communication loss, the iHomeManager is expected to return to self-consumption after 60 seconds. VPP and timeout behavior still require hardware validation.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
@@ -17,6 +24,8 @@ params:
     usages: ["pv"]
     service: modbus/read?address=8144&type=input&encoding=uint32&scale=100&{modbus} # Register 8145 (Total rated active power, 0.1kW)
   - preset: battery-params
+  - name: maxchargepower
+    service: modbus/read?address=8148&type=input&encoding=uint32s&scale=100&{modbus}
 render: |
   {{- if eq .usage "grid" }}
   type: custom
@@ -179,5 +188,145 @@ render: |
       type: input
       decode: uint16
     scale: 0.1
+  {{- $chargepower := int64 (or .maxchargepower 0) }}
+  {{- if or (lt $chargepower 0) (gt $chargepower 429496729500) (ne (mod $chargepower 100) 0) }}
+  {{- fail "maxchargepower must be a non-negative multiple of 100 W within the U32 register range" }}
+  {{- end }}
+  {{- if gt $chargepower 0 }}
+  batterymodes: ["normal", "hold", "charge"]
+  batterymode:
+    source: watchdog
+    timeout: 60s
+    reset: 1
+    set:
+      source: sequence
+      set:
+      # Neutralize stale commands before changing mode or power, but do not interrupt a running charge on refresh.
+      - source: switch
+        switch:
+        - case: 1 # normal
+          set: &stop
+            source: const
+            value: 0xCC
+            set: &command
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 8024 # Register 8025 (Charge/discharge command)
+                type: writesingle
+                decode: uint16
+        - case: 2 # hold
+          set: *stop
+        - case: 3 # charge
+          set:
+            source: go
+            in:
+            - name: mode
+              type: int
+              config:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 8023 # Register 8024 (Energy management mode)
+                  type: holding
+                  decode: uint16
+            - name: command
+              type: int
+              config:
+                source: modbus
+                {{- include "modbus" . | indent 14 }}
+                register:
+                  address: 8024
+                  type: holding
+                  decode: uint16
+            script: |
+              res := 0xCC
+              if mode == 4 && command == 0xAA {
+                res = 0xAA
+              }
+              res
+            out:
+            - name: command
+              type: int
+              config: *command
+      - source: switch
+        switch:
+        - case: 3
+          set:
+            source: const
+            value: {{ div $chargepower 100 }}
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 8025 # Registers 8026-8027 (Charge/discharge power, 0.1 kW)
+                type: writemultiple
+                decode: uint32s
+        default:
+          source: sleep
+          duration: 0s
+      # Arm the device timeout before entering VPP, including the first command after startup.
+      - source: switch
+        switch:
+        - case: 1
+          set:
+            source: sleep
+            duration: 0s
+        default:
+          source: const
+          value: 60
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 8032 # Register 8033 (External VPP heartbeat, seconds)
+              type: writesingle
+              decode: uint16
+      - source: go
+        script: |
+          mode := 4
+          if batteryMode == 1 {
+            mode = 1
+          }
+          mode
+        out:
+        - name: mode
+          type: int
+          config:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 8023
+              type: writesingle
+              decode: uint16
+      - source: go
+        in:
+        - name: mode
+          type: int
+          config:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 8023
+              type: holding
+              decode: uint16
+        script: |
+          expected := 4
+          if batteryMode == 1 {
+            expected = 1
+          }
+          if mode != expected {
+            panic("iHomeManager did not accept energy management mode")
+          }
+          command := 0xCC
+          if batteryMode == 3 {
+            command = 0xAA
+          }
+          command
+        out:
+        - name: command
+          type: int
+          config: *command
+  {{- end }}
   {{- include "battery-params" . }}
   {{- end }}
