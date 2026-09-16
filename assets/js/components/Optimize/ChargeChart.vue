@@ -38,6 +38,7 @@ import {
 
 const GRID_LABEL = "Grid Power";
 const SOLAR_LABEL = "Solar Forecast";
+const DEMAND_LABEL = "Household Demand";
 
 export default defineComponent({
 	name: "ChargeChart",
@@ -63,9 +64,6 @@ export default defineComponent({
 		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
 	},
 	computed: {
-		consumptionLabel(): string {
-			return this.$t("main.history.group.consumer");
-		},
 		consumptionColor(): string {
 			return colors.muted || "";
 		},
@@ -124,7 +122,7 @@ export default defineComponent({
 				lineCasing(solar, 3),
 				solar,
 				{
-					name: this.consumptionLabel,
+					name: DEMAND_LABEL,
 					type: "bar",
 					stack: "charge",
 					data: this.evopt.req.time_series.gt.map(this.toKW),
@@ -189,7 +187,7 @@ export default defineComponent({
 				{ label: GRID_LABEL, color: colors.grid || "", value: "", type: "line" },
 				{ label: SOLAR_LABEL, color: colors.forecast || "", value: "", type: "line" },
 				{
-					label: this.consumptionLabel,
+					label: DEMAND_LABEL,
 					color: this.consumptionColor,
 					value: "",
 					type: "area",
