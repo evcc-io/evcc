@@ -58,7 +58,7 @@
 		</div>
 		<div class="target">
 			<input
-				v-if="socBasedCharging && connected && (!heating || heatingHasTemp)"
+				v-if="socBasedCharging && connected && (!heating || heatingHasTemp) && !continuous"
 				type="range"
 				:min="lowerBound"
 				:max="upperBound"
@@ -94,6 +94,7 @@ export default defineComponent({
 		enabled: Boolean,
 		charging: Boolean,
 		heating: Boolean,
+		continuous: Boolean,
 		ui: Object as PropType<LoadpointUi>,
 		minSoc: { type: Number, default: 0 },
 		minSocNotReached: Boolean,
