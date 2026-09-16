@@ -128,6 +128,10 @@ export default defineComponent({
 			type: Array as PropType<DemandDetail[]>,
 			default: () => [],
 		},
+		demandColors: {
+			type: Array as PropType<string[]>,
+			default: () => [],
+		},
 		timestamps: {
 			type: Array as PropType<string[]>,
 			default: () => [],
@@ -195,11 +199,11 @@ export default defineComponent({
 		// the profiles the household demand is summarized from, scaled against the total
 		demandRows(total: Row): Row[] {
 			const ref = Math.max(...total.nums.map(Math.abs));
-			return this.demandDetails.map((d) =>
+			return this.demandDetails.map((d, i) =>
 				this.powerRow(
 					`↳ ${this.demandTitle(d)}`,
 					d.values,
-					(d.type === "heating" ? colors.heating : colors.muted) || "",
+					this.demandColors[i] || colors.muted || "",
 					{ ref }
 				)
 			);

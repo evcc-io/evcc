@@ -99,6 +99,7 @@
 							mode="request"
 							:battery-details="evopt.details.batteryDetails"
 							:demand-details="demandDetails"
+							:demand-colors="demandColors"
 							:timestamps="evopt.details.timestamp"
 							:currency="currency"
 							:battery-colors="batteryColors"
@@ -146,7 +147,7 @@ import ChargeChart from "../components/Optimize/ChargeChart.vue";
 import TimeSeriesDataTable from "../components/Optimize/TimeSeriesDataTable.vue";
 import CopyButton from "../components/Optimize/CopyButton.vue";
 import { formatCompactJson } from "../components/Optimize/compactJson";
-import { loadpointTitle } from "../components/Optimize/chart";
+import { loadpointTitle, type Titled } from "../components/Optimize/chart";
 import api from "../api";
 import store from "../store";
 import formatter from "../mixins/formatter";
@@ -209,12 +210,13 @@ export default defineComponent({
 		demandDetails(): DemandDetail[] {
 			return this.evopt?.details?.demandDetails || [];
 		},
+		// vehicle batteries and titled demand profiles are loadpoints
 		loadpointColorKeys(): string[] {
-			return [
-				...new Set(
-					this.batteryDetails.filter((d) => d.type === "vehicle").map(loadpointTitle)
-				),
+			const details: Titled[] = [
+				...this.batteryDetails.filter((d) => d.type === "vehicle"),
+				...this.demandDetails.filter((d) => d.title),
 			];
+			return [...new Set(details.map(loadpointTitle))];
 		},
 		// loadpoints share the picker palette with History
 		loadpointPalette() {
@@ -227,9 +229,12 @@ export default defineComponent({
 			let batteryIndex = 0;
 			return this.batteryDetails.map((d) => {
 				if (d.type === "battery") return batteryColor(batteryIndex++);
-				const key = loadpointTitle(d);
-				return this.loadpointPalette[key] || "";
+				return this.loadpointColor(d);
 			});
+		},
+		// per-entry colors aligned with demandDetails, untitled rows stay muted
+		demandColors(): string[] {
+			return this.demandDetails.map(this.loadpointColor);
 		},
 		// loadpoints first, then batteries, matching the charging plan order
 		socEntries(): SocChartEntry[] {
@@ -262,6 +267,9 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		loadpointColor(detail: Titled): string {
+			return this.loadpointPalette[loadpointTitle(detail)] || "";
+		},
 		optimizeNow() {
 			this.pending = true;
 			api.post("optimize");
