@@ -518,8 +518,9 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		},
 	}
 
-	// end of horizon Wh value
-	pa := lo.Min(req.TimeSeries.PN) * eta * 0.99
+	// end of horizon Wh value, floored at the export price: charging surplus only
+	// stores eta Wh per Wh, so below pE/eta exporting beats storing
+	pa := max(lo.Min(req.TimeSeries.PN)*eta*0.99, lo.Min(req.TimeSeries.PE)/eta*1.01)
 
 	// individual profiles summarized into Gt, for the debug view
 	details = requestDetails{

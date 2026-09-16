@@ -1,7 +1,27 @@
 <template>
-	<div class="container px-4 safe-area-inset">
+	<div
+		class="container px-4 safe-area-inset d-flex flex-column"
+		:class="{ 'empty-container': !evopt }"
+	>
 		<TopHeader title="Optimize Debug 🧪" />
-		<Card edge-to-edge class="box-pull-out mt-4 mb-4">
+		<div v-if="!evopt" class="flex-grow-1 d-flex" data-testid="optimize-empty">
+			<div class="empty-box d-flex flex-column p-5">
+				<p class="text-muted">
+					The optimizer is enabled and collecting data. For new installations this can
+					take up to 24 hours.
+				</p>
+				<p class="text-muted mb-4">
+					If nothing shows up after that, the logs may tell why.
+				</p>
+				<router-link
+					:to="{ path: '/log', query: { q: 'optimizer' } }"
+					class="btn btn-outline-primary"
+				>
+					Check logs
+				</router-link>
+			</div>
+		</div>
+		<Card v-else edge-to-edge class="box-pull-out mt-4 mb-4">
 			<OptimizeHeader
 				:updated="evopt?.updated"
 				:status="evopt?.res?.status"
@@ -15,9 +35,9 @@
 				@change-strategy="changeChargingStrategy"
 			/>
 		</Card>
-		<div class="row">
+		<div v-if="evopt" class="row">
 			<main class="col-12">
-				<div v-if="evopt">
+				<div>
 					<h2 class="mt-2 mb-4">Optimizer Plan</h2>
 
 					<Card
@@ -106,6 +126,20 @@
 						/>
 					</Card>
 
+					<Card title="Feedback" edge-to-edge class="box-pull-out mb-4">
+						<p>
+							Unexpected results or implausible numbers? Open an issue in the
+							optimizer repository and attach the request and response below.
+						</p>
+						<a
+							href="https://github.com/evcc-io/optimizer/issues"
+							target="_blank"
+							class="btn btn-outline-primary"
+						>
+							Open issue
+						</a>
+					</Card>
+
 					<h2 class="section-title mb-4">Raw Data</h2>
 
 					<Card title="Request" edge-to-edge class="box-pull-out mb-4">
@@ -127,9 +161,6 @@
 							<CopyButton :content="formattedResponse" />
 						</div>
 					</Card>
-				</div>
-				<div v-else>
-					<p>nothing to see here</p>
 				</div>
 			</main>
 		</div>
