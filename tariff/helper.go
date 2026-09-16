@@ -29,10 +29,11 @@ func bo() backoff.BackOff {
 	)
 }
 
-// backoffPermanentError returns a permanent error in case of HTTP 400
+// backoffPermanentError returns a permanent error in case of HTTP 4xx/5xx,
+// except for 429 (Too Many Requests) which is transient and should be retried.
 func backoffPermanentError(err error) error {
 	if se, ok := errors.AsType[*request.StatusError](err); ok {
-		if code := se.StatusCode(); code >= 400 && code <= 599 {
+		if code := se.StatusCode(); code >= 400 && code <= 599 && code != 429 {
 			return backoff.Permanent(se)
 		}
 	}
