@@ -1,0 +1,222 @@
+template: schneider-micrologic
+products:
+  - brand: Schneider Electric
+    description:
+      generic: ComPacT NSX (MicroLogic)
+  - brand: Schneider Electric
+    description:
+      generic: ComPacT NS (MicroLogic)
+  - brand: Schneider Electric
+    description:
+      generic: MasterPacT NT/NW (MicroLogic)
+  - brand: Schneider Electric
+    description:
+      generic: MasterPacT MTZ (MicroLogic X)
+requirements:
+  description:
+    de: |
+      Liest den Schneider-IMU-Standard-Datensatz (Register 32000–32341) einer MicroLogic-Auslöseeinheit. Deren ULP-Bus muss dazu über ein Kommunikationsmodul per Modbus erreichbar sein. Registerquelle: `DOCA0213EN-03`, [se.com](https://www.se.com/ch/de/download/document/DOCA0213EN/).
+
+      Zum Parametrieren der Auslöseeinheit (z. B. Stromrichtung) wird die Software "EcoStruxure Power Commission" (EPC) sowie ein se.com-Konto benötigt. Für Modbus RTU (IFM) bietet sich der PAS600L als Gateway an, da er sowohl für evcc als auch für EPC verwendet werden kann.
+
+      **Leistungsvorzeichen** (Register 3316; bei MasterPacT MTZ: Register 8405): legt fest, in welche Richtung Wirkleistung positiv gezählt wird: `0` = von den oberen zu den unteren Anschlussklemmen (Werkseinstellung), `1` = invertiert. Muss in EPC eingestellt werden und die "normale" Strom-Flussrichtung abbilden. Eine MicroLogic, welche nur PV bedient, hat Produktion als "normale" Strom-Flussrichtung und ist als PV-Zähler anzulegen.
+
+      **ENVT**: Bei 3-poligen Geräten sind Sternspannungen und Leistungen je Phase nur verfügbar, wenn ein externer Neutralleiter-Spannungsabgriff (ENVT) angeschlossen **und** in der Auslöseeinheit deklariert ist. Fehlt die Deklaration, rechnet das Gerät nach der 2-Wattmeter-Methode, was bei Neutralleiterstrom falsche Leistungswerte ergibt. Systemtyp in Register 3314 prüfen (30/31 = ohne ENVT, 40/41 = mit ENVT bzw. 4-polig) und den Parameter entsprechend setzen.
+
+      **Getestet mit**: ComPacT NSX160B, MicroLogic 5.2 E, über IFM LV434000 an einem EcoStruxure Panel Server PAS600LWD (Modbus SL 19200 8E1).
+    en: |
+      Reads the Schneider IMU standard dataset (registers 32000–32341) of a MicroLogic trip unit. Its ULP bus has to be reachable over Modbus through a communication module. Register source: `DOCA0213EN-03`, [se.com](https://www.se.com/uk/en/download/document/DOCA0213EN/).
+
+      Setting up the trip unit (the current direction, for instance) needs the "EcoStruxure Power Commission" (EPC) software and an se.com account. For Modbus RTU (IFM), the PAS600L makes a practical gateway, as it serves both evcc and EPC.
+
+      **Power flow sign** (register 3316; register 8405 on MasterPacT MTZ): sets which direction of active power counts as positive: `0` = from the top terminals to the bottom ones (factory setting), `1` = inverted. Has to be set in EPC, to the circuit's normal direction of flow. A MicroLogic that serves PV alone has generation as its "normal" direction of flow, and is added as a PV meter.
+
+      **ENVT**: on 3-pole devices, phase-to-neutral voltages and per-phase powers are only available when an external neutral voltage tap (ENVT) is connected **and** declared in the trip unit. Without the declaration the device falls back to the 2-wattmeter method without reporting an error, which is wrong whenever neutral current flows. Check the system type in register 3314 (30/31 = no ENVT, 40/41 = ENVT present or 4-pole) and set the parameter accordingly.
+
+      **Tested on**: ComPacT NSX160B, MicroLogic 5.2 E, through an IFM LV434000 behind an EcoStruxure Panel Server PAS600LWD (Modbus SL 19200 8E1).
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery", "charge", "aux"]
+  - name: modbus
+    choice: ["tcpip", "rs485"]
+  - name: baudrate
+    default: 19200
+  - name: comset
+    description:
+      de: ComSet
+      en: ComSet
+    default: 8E1
+  - name: timeout
+    default: 3s
+  - name: tripunit
+    description:
+      de: Auslöseeinheit
+      en: Trip unit
+    type: choice
+    choice: ["nsx-e", "ns-ntnw-e", "ns-ntnw-ph", "mtz-x"]
+    required: true
+    help:
+      de: |
+        Definiert, ob die gerichteten Energiezähler gelesen werden:
+
+        - `nsx-e`: ComPacT/ComPact NSX MicroLogic E
+        - `ns-ntnw-e`: ComPacT NS oder MasterPacT NT/NW MicroLogic E — ohne Energiezähler je Richtung
+        - `ns-ntnw-ph`: ComPacT NS oder MasterPacT NT/NW MicroLogic P oder H
+        - `mtz-x`: MasterPacT MTZ MicroLogic X
+
+        Typ A (nur Strommessung) wird nicht unterstützt, da keine Leistungsmessung vorhanden ist.
+      en: |
+        Defines whether the directional energy counters are read:
+
+        - `nsx-e`: ComPacT/ComPact NSX MicroLogic E
+        - `ns-ntnw-e`: ComPacT NS or MasterPacT NT/NW MicroLogic E — no per-direction energy counters
+        - `ns-ntnw-ph`: ComPacT NS or MasterPacT NT/NW MicroLogic P or H
+        - `mtz-x`: MasterPacT MTZ MicroLogic X
+
+        Type A (current measurement only) is not supported, as it has no power measurement.
+  - name: systemtype
+    description:
+      de: Systemtyp
+      en: System type
+    type: choice
+    choice: ["3-pole", "3-pole-envt", "4-pole"]
+    required: true
+    help:
+      de: |
+        Definiert, ob Sternspannungen und Leistungen je Phase gelesen werden:
+
+        - 30 oder 31: `3-pole`
+        - 40: `3-pole-envt`
+        - 41: `4-pole` (oder 3-polig mit ENVT und ENCT)
+
+        Analog Register 3314 der Auslöseeinheit.
+      en: |
+        Defines whether phase-to-neutral voltages and per-phase powers are read:
+
+        - 30 or 31: `3-pole`
+        - 40: `3-pole-envt`
+        - 41: `4-pole` (or 3-pole with ENVT and an ENCT)
+
+        Mirrors register 3314 of the trip unit.
+render: |
+  type: custom
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block: # 32028-32111, one read per cycle shared by all sources below
+      register: 32027
+      count: 84
+    register:
+      address: 32077 # 32078 total active power
+      type: holding
+      decode: float32
+  {{- if ne .tripunit "ns-ntnw-e" }}
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 32027
+      count: 84
+    register:
+      address: 32103 # 32104 total active energy delivered, Wh
+      type: holding
+      decode: uint64nan
+    scale: 0.001
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 32027
+      count: 84
+    register:
+      address: 32107 # 32108 total active energy received, Wh
+      type: holding
+      decode: uint64nan
+    scale: 0.001
+  {{- end }}
+  currents:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 32027
+      count: 84
+    register:
+      address: 32027 # 32028 rms current phase 1
+      type: holding
+      decode: float32
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 32027
+      count: 84
+    register:
+      address: 32029 # 32030 rms current phase 2
+      type: holding
+      decode: float32
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 32027
+      count: 84
+    register:
+      address: 32031 # 32032 rms current phase 3
+      type: holding
+      decode: float32
+  {{- if ne .systemtype "3-pole" }}
+  voltages:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 32027
+      count: 84
+    register:
+      address: 32061 # 32062 rms voltage V1N
+      type: holding
+      decode: float32
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 32027
+      count: 84
+    register:
+      address: 32063 # 32064 rms voltage V2N
+      type: holding
+      decode: float32
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 32027
+      count: 84
+    register:
+      address: 32065 # 32066 rms voltage V3N
+      type: holding
+      decode: float32
+  powers:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 32027
+      count: 84
+    register:
+      address: 32071 # 32072 active power phase 1
+      type: holding
+      decode: float32
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 32027
+      count: 84
+    register:
+      address: 32073 # 32074 active power phase 2
+      type: holding
+      decode: float32
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    block:
+      register: 32027
+      count: 84
+    register:
+      address: 32075 # 32076 active power phase 3
+      type: holding
+      decode: float32
+  {{- end }}
