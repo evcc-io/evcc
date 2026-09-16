@@ -59,7 +59,7 @@ params:
       de: |
         Definiert, ob die gerichteten Energiezähler gelesen werden:
 
-        - `nsx-e`: ComPacT/ComPact NSX MicroLogic E
+        - `nsx-e`: ComPacT/ComPacT NSX MicroLogic E
         - `ns-ntnw-e`: ComPacT NS oder MasterPacT NT/NW MicroLogic E — ohne Energiezähler je Richtung
         - `ns-ntnw-ph`: ComPacT NS oder MasterPacT NT/NW MicroLogic P oder H
         - `mtz-x`: MasterPacT MTZ MicroLogic X
@@ -68,7 +68,7 @@ params:
       en: |
         Defines whether the directional energy counters are read:
 
-        - `nsx-e`: ComPacT/ComPact NSX MicroLogic E
+        - `nsx-e`: ComPacT/ComPacT NSX MicroLogic E
         - `ns-ntnw-e`: ComPacT NS or MasterPacT NT/NW MicroLogic E — no per-direction energy counters
         - `ns-ntnw-ph`: ComPacT NS or MasterPacT NT/NW MicroLogic P or H
         - `mtz-x`: MasterPacT MTZ MicroLogic X
