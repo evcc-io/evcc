@@ -1,8 +1,8 @@
 package tariff
 
 import (
-	"errors"
 	"fmt"
+	"reflect"
 	"slices"
 	"time"
 
@@ -50,33 +50,28 @@ func (t *embed) init() (err error) {
 		return nil
 	}
 
+	vm := interp.New(interp.Options{})
+	if err := vm.Use(stdlib.Symbols); err != nil {
+		return err
+	}
+	vm.ImportUsed()
+
+	// Compile the formula into a callable function, avoiding any per-call parsing
+	src := fmt.Sprintf(`var calc = func(price, charges, tax float64, ts time.Time) float64 { return %s }`, t.Formula)
+	if _, err := vm.Eval(src); err != nil {
+		return err
+	}
+
+	calcFn := vm.Globals()["calc"]
+
 	t.calc = func(price, charges float64, ts time.Time) (float64, error) {
-		vm := interp.New(interp.Options{})
-		if err := vm.Use(stdlib.Symbols); err != nil {
-			return 0, err
-		}
-		vm.ImportUsed()
-
-		if _, err := vm.Eval(fmt.Sprintf(`
-		var (
-			price float64 = %f
-			charges float64 = %f
-			tax float64 = %f
-			ts = time.Unix(%d, 0).Local()
-		)`, price, charges, t.Tax, ts.Unix())); err != nil {
-			return 0, err
-		}
-
-		res, err := vm.Eval(t.Formula)
-		if err != nil {
-			return 0, err
-		}
-
-		if !res.CanFloat() {
-			return 0, errors.New("formula did not return a float value")
-		}
-
-		return res.Float(), nil
+		res := calcFn.Call([]reflect.Value{
+			reflect.ValueOf(price),
+			reflect.ValueOf(charges),
+			reflect.ValueOf(t.Tax),
+			reflect.ValueOf(time.Unix(ts.Unix(), 0).Local()),
+		})
+		return res[0].Float(), nil
 	}
 
 	// test the formula
