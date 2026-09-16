@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
@@ -21,7 +22,8 @@ func TestHomeAssistantBatteryModes(t *testing.T) {
 		}
 	}
 
-	m, err := NewHomeAssistantFromConfig(conf("script.hold", "script.charge"))
+	ctx := context.Background()
+	m, err := NewHomeAssistantFromConfig(ctx, conf("script.hold", "script.charge"))
 	require.NoError(t, err)
 
 	ctrl, ok := api.Cap[api.BatteryController](m)
@@ -29,7 +31,7 @@ func TestHomeAssistantBatteryModes(t *testing.T) {
 	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}, ctrl.BatteryModes())
 
 	// a mode without entity is not announced and rejected by the setter
-	m, err = NewHomeAssistantFromConfig(conf("script.hold", ""))
+	m, err = NewHomeAssistantFromConfig(ctx, conf("script.hold", ""))
 	require.NoError(t, err)
 
 	ctrl, ok = api.Cap[api.BatteryController](m)
@@ -38,6 +40,6 @@ func TestHomeAssistantBatteryModes(t *testing.T) {
 	require.Error(t, ctrl.SetBatteryMode(api.BatteryCharge))
 
 	// a mode entity must be a script
-	_, err = NewHomeAssistantFromConfig(conf("switch.hold", ""))
+	_, err = NewHomeAssistantFromConfig(ctx, conf("switch.hold", ""))
 	require.Error(t, err)
 }
