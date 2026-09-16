@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"maps"
@@ -14,11 +15,11 @@ import (
 )
 
 func init() {
-	registry.Add("homeassistant", NewHomeAssistantFromConfig)
+	registry.AddCtx("homeassistant", NewHomeAssistantFromConfig)
 }
 
 // NewHomeAssistantFromConfig creates a HomeAssistant meter from generic config
-func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
+func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
 	var cc struct {
 		homeassistant.Config `mapstructure:",squash"`
 		Power                string
@@ -33,9 +34,9 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 		pvMaxACPower `mapstructure:",squash"`
 
 		// battery
-		batteryCapacity    `mapstructure:",squash"`
-		batterySocLimits   `mapstructure:",squash"`
-		batteryPowerLimits `mapstructure:",squash"`
+		batteryCapacity     `mapstructure:",squash"`
+		batterySocLimitsCtx `mapstructure:",squash"`
+		batteryPowerLimits  `mapstructure:",squash"`
 
 		// battery mode control - optional switch-like entities per mode
 		ModeNormal string
@@ -45,6 +46,14 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	// default soc limits (nil-preset avoids mapstructure coercing plugin config into the default's type)
+	if cc.batterySocLimitsCtx.MinSoc == nil {
+		cc.batterySocLimitsCtx.MinSoc = 0
+	}
+	if cc.batterySocLimitsCtx.MaxSoc == nil {
+		cc.batterySocLimitsCtx.MaxSoc = 100
 	}
 
 	if cc.Power == "" {
@@ -78,9 +87,14 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 	if cc.Soc != "" {
 		socG := func() (float64, error) { return conn.GetFloatState(cc.Soc) }
 
+		socLimiter, err := cc.batterySocLimitsCtx.Decorator(ctx)
+		if err != nil {
+			return nil, err
+		}
+
 		implement.Has(m, implement.Battery(socG))
 		implement.May(m, implement.BatteryCapacity(cc.batteryCapacity.Decorator()))
-		implement.May(m, implement.BatterySocLimiter(cc.batterySocLimits.Decorator()))
+		implement.May(m, implement.BatterySocLimiter(socLimiter))
 		implement.May(m, implement.BatteryPowerLimiter(cc.batteryPowerLimits.Decorator()))
 
 		if cc.ModeHold != "" || cc.ModeCharge != "" {
