@@ -49,6 +49,8 @@
 						<ChargeChart
 							:evopt="evopt"
 							:battery-details="evopt.details.batteryDetails"
+							:demand-details="demandDetails"
+							:demand-colors="demandColors"
 							:timestamp="evopt.details.timestamp[0]"
 							:battery-colors="batteryColors"
 							:device-colors="deviceColors"

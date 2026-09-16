@@ -63,6 +63,7 @@
 import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
 import colors from "@/colors";
+import { demandTitle } from "./chart";
 import type { CURRENCY, BatteryDetail, DemandDetail } from "@/types/evcc";
 
 export interface EvoptData {
@@ -199,19 +200,15 @@ export default defineComponent({
 		// the profiles the household demand is summarized from, scaled against the total
 		demandRows(total: Row): Row[] {
 			const ref = Math.max(...total.nums.map(Math.abs));
+			const consumption = this.$t("main.history.group.consumer");
 			return this.demandDetails.map((d, i) =>
 				this.powerRow(
-					`↳ ${this.demandTitle(d)}`,
+					`↳ ${demandTitle(d, consumption)}`,
 					d.values,
 					this.demandColors[i] || colors.muted || "",
 					{ ref }
 				)
 			);
-		},
-		demandTitle(detail: DemandDetail): string {
-			if (detail.type === "home") return "Base Load";
-			if (detail.type === "unmodelled") return "Other Loadpoints";
-			return detail.title || "Heating";
 		},
 		responseGroups(): RowGroup[] {
 			const res = this.evopt.res;

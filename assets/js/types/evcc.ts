@@ -1517,7 +1517,7 @@ export interface BatteryDetail {
 // Single profile summarized into the household demand time series
 export interface DemandDetail {
   type: "home" | "heating" | "unmodelled"; // Origin of the profile
-  title?: string; // Display title, set for heating loadpoints
+  title?: string; // Loadpoint title, unset for the base load
   values: number[]; // Energy per slot (Wh)
 }
 
