@@ -125,6 +125,10 @@ func (t *Pun) run(done chan error) {
 			res = t.extendForecast(res, today)
 		}
 
+		for i := range res {
+			res[i].Value = t.totalPrice(res[i].Value, res[i].Start)
+		}
+
 		mergeRates(t.data, res)
 		once.Do(func() { close(done) })
 	}
@@ -276,11 +280,7 @@ func (t *Pun) parseDataSet(dataSet NewDataSet) (api.Rates, error) {
 		}
 
 		ts := time.Date(date.Year(), date.Month(), date.Day(), hour-1, 0, 0, 0, romeLocation)
-		data = append(data, api.Rate{
-			Start: ts,
-			End:   ts.Add(time.Hour),
-			Value: t.totalPrice(price/1e3, ts),
-		})
+		data = append(data, api.Rate{Start: ts, End: ts.Add(time.Hour), Value: price / 1e3})
 	}
 
 	return data, nil
