@@ -149,15 +149,21 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		return false
 	}
 
+	// the optimizer schedules the plan, the planner's decisions are only a backstop
+	log := lp.log.DEBUG
+	if lp.gate() != nil {
+		log = lp.log.TRACE
+	}
+
 	planTime := lp.EffectivePlanTime()
 	if planTime.IsZero() {
-		lp.log.DEBUG.Println("!! plan: plan time zero")
+		log.Println("!! plan: plan time zero")
 		return false
 	}
 
 	// keep overrunning plans as long as a vehicle is connected
 	if lp.clock.Until(planTime) < 0 && (!lp.planActive || !lp.connected()) {
-		lp.log.DEBUG.Println("plan: deleting expired plan")
+		log.Println("plan: deleting expired plan")
 		lp.finishPlan()
 		return false
 	}
@@ -170,7 +176,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		if lp.planActive && isSocBased && goal == 100 {
 			return true
 		}
-		lp.log.DEBUG.Println("!! plan: required duration 0")
+		log.Println("!! plan: required duration 0")
 
 		lp.finishPlan()
 		return false
@@ -180,7 +186,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	plan = lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
 	if plan == nil {
-		lp.log.DEBUG.Println("!! plan: plan nil")
+		log.Println("!! plan: plan nil")
 		return false
 	}
 
@@ -196,7 +202,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	planStart = planner.Start(plan)
 	planEnd = planner.End(plan)
-	lp.log.DEBUG.Printf("plan: charge %v between %v until %v (%spower: %.0fW, avg cost: %.3f)",
+	log.Printf("plan: charge %v between %v until %v (%spower: %.0fW, avg cost: %.3f)",
 		planner.Duration(plan).Round(time.Second), planStart.Round(time.Second).Local(), planTime.Round(time.Second).Local(), overrun,
 		maxPower, planner.AverageCost(plan))
 
@@ -211,7 +217,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	if active {
 		// ignore short plans if not already active
 		if slotRemaining := lp.clock.Until(activeSlot.End); !lp.planActive && slotRemaining < tariff.SlotDuration-time.Minute && !planner.SlotHasSuccessor(activeSlot, plan) {
-			lp.log.DEBUG.Printf("plan: slot too short- ignoring remaining %v", slotRemaining.Round(time.Second))
+			log.Printf("plan: slot too short- ignoring remaining %v", slotRemaining.Round(time.Second))
 			return false
 		}
 
@@ -228,20 +234,20 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 		case lp.clock.Now().After(planTime) && !planTime.IsZero():
 			// if the plan did not (entirely) work, we may still be charging beyond plan end- in that case, continue charging
 			// TODO check when schedule is implemented
-			lp.log.DEBUG.Println("plan: continuing after target time")
+			log.Println("plan: continuing after target time")
 			return true
 		case lp.clock.Now().Before(lp.planSlotEnd) && !lp.planSlotEnd.IsZero() && requiredDuration > strategy.Precondition:
 			// don't stop an already running slot if goal was not met
-			lp.log.DEBUG.Printf("plan: continuing until end of slot at %s", lp.planSlotEnd.Round(time.Second).Local())
+			log.Printf("plan: continuing until end of slot at %s", lp.planSlotEnd.Round(time.Second).Local())
 			return true
 		case requiredDuration < tariff.SlotDuration && requiredDuration > strategy.Precondition:
-			lp.log.DEBUG.Printf("plan: continuing for remaining %v", requiredDuration.Round(time.Second))
+			log.Printf("plan: continuing for remaining %v", requiredDuration.Round(time.Second))
 			return true
 		case lp.clock.Until(planStart) < tariff.SlotDuration-time.Minute:
-			lp.log.DEBUG.Printf("plan: avoid re-start within %v, continuing for remaining %v", tariff.SlotDuration, lp.clock.Until(planStart).Round(time.Second))
+			log.Printf("plan: avoid re-start within %v, continuing for remaining %v", tariff.SlotDuration, lp.clock.Until(planStart).Round(time.Second))
 			return true
 		case strategy.Continuous && requiredDuration > strategy.Precondition:
-			lp.log.DEBUG.Printf("plan: ignoring restart at %s for continuous charging", planStart.Round(time.Second).Local())
+			log.Printf("plan: ignoring restart at %s for continuous charging", planStart.Round(time.Second).Local())
 			planStart = lp.clock.Now()
 			planEnd = planStart.Add(requiredDuration)
 			return true
