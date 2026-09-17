@@ -567,9 +567,7 @@ func cleanupSiteMeterRef(name string, get func() []string, set func([]string)) {
 }
 
 // meterReferenced reports whether name is still referenced by any circuit, any site meter
-// list (pv/battery/aux/ext/consumer), the grid meter, or a loadpoint - used before deleting
-// a circuit's dedicated meter, so a meter shared with another reference is never removed out
-// from under it.
+// list (pv/battery/aux/ext/consumer), the grid meter, or a loadpoint
 func meterReferenced(name string, site site.API, loadpoints config.Handler[loadpoint.API]) bool {
 	if site.GetGridMeterRef() == name {
 		return true
@@ -711,11 +709,6 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 				}
 			}
 
-			// the circuit's own dedicated meter is only deleted alongside it when nothing else
-			// still points at it (another circuit, a site meter list, or a loadpoint) - deleting
-			// a shared meter would leave that other reference dangling. A failure here is logged,
-			// not surfaced as the request's error: the circuit itself is already gone by this
-			// point, and reporting it as failed would skip the persist below.
 			if err == nil && meterRef != "" && meterRef != site.GetGridMeterRef() && !meterReferenced(meterRef, site, h) {
 				if meter, lookupErr := config.Meters().ByName(meterRef); lookupErr == nil {
 					if configurable, ok := meter.(config.ConfigurableDevice[api.Meter]); ok {
