@@ -142,6 +142,13 @@ func NewSigenergyEVDC(ctx context.Context, uri string, slaveID uint8) (*Sigenerg
 	}
 	wb.ratedPower = encoding.Uint32(b)
 
+	// seed enabled state so evcc restarts mid-session report the true state
+	b, err = conn.ReadInputRegisters(evdcRegRunningState, 1)
+	if err != nil {
+		return nil, err
+	}
+	wb.enabled = encoding.Uint16(b) == evdcStateCharging
+
 	return wb, nil
 }
 
@@ -179,6 +186,7 @@ func (wb *SigenergyEVDC) Status() (api.ChargeStatus, error) {
 	case evdcStateOccupied, evdcStatePreparing, evdcStateScheduled, evdcStateEnded, evdcStateInsulation:
 		return api.StatusB, nil
 	case evdcStateCharging:
+		wb.enabled = true
 		return api.StatusC, nil
 	case evdcStateDischarging:
 		return api.StatusC, nil
@@ -191,7 +199,7 @@ func (wb *SigenergyEVDC) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *SigenergyEVDC) Enabled() (bool, error) {
-	return verifyEnabled(wb, wb.enabled)
+	return wb.enabled, nil
 }
 
 // Enable implements the api.Charger interface
