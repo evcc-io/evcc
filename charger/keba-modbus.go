@@ -110,6 +110,13 @@ func NewKebaFromConfig(ctx context.Context, other map[string]any) (api.Charger, 
 		hasEnergyMeter = productCodeStr[4] != '0'
 		hasRFID = productCodeStr[5] == '1'
 		wb.state1p = 0
+
+		// enable register is write-only, seed from charging state (5: suspended)
+		s, err := wb.getChargingState()
+		if err != nil {
+			return nil, err
+		}
+		wb.enabled = s != 5
 	} else if len(productCodeStr) == 7 && productCodeStr[0] == '4' {
 		// P40
 		wb.regEnable = kebaRegMaxCurrent
