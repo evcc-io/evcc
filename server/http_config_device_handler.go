@@ -566,6 +566,28 @@ func cleanupSiteMeterRef(name string, get func() []string, set func([]string)) {
 	}
 }
 
+// cleanupCircuitMeterRef removes a meter reference from circuit configuration
+func cleanupCircuitMeterRef(name string) {
+	for _, dev := range config.Circuits().Devices() {
+		conf := dev.Config()
+
+		if ref, _ := conf.Property("meter").(string); ref != name {
+			continue
+		}
+
+		configurable, ok := dev.(config.ConfigurableDevice[api.Circuit])
+		if !ok {
+			continue
+		}
+
+		delete(conf.Other, "meter")
+
+		if err := configurable.Update(conf.Other, dev.Instance()); err != nil {
+			log.ERROR.Printf("cleanup circuit meter reference %s: %v", conf.Name, err)
+		}
+	}
+}
+
 // meterReferenced reports whether name is still referenced by any circuit, any site meter
 // list (pv/battery/aux/ext/consumer), the grid meter, or a loadpoint
 func meterReferenced(name string, site site.API, loadpoints config.Handler[loadpoint.API]) bool {
@@ -681,6 +703,8 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 					lp.SetMeterRef("")
 				}
 			}
+
+			cleanupCircuitMeterRef(name)
 
 		case templates.Vehicle:
 			err = deleteDevice(id, config.Vehicles())
