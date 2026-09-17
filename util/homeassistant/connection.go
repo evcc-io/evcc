@@ -3,6 +3,7 @@ package homeassistant
 import (
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -288,11 +289,24 @@ func (c *Connection) CallSwitchService(entity string, turnOn bool) error {
 	return c.CallService(domain, service, data)
 }
 
-// CallNumberService is a convenience method for setting number entity values
+// CallNumberService is a convenience method for setting number entity values.
+// The value is rounded to the entity's declared step (if known) so that
+// integrations rejecting non-step-aligned values (e.g. whole-amp-only
+// chargers) don't refuse the call.
 func (c *Connection) CallNumberService(entity string, value float64) error {
 	domain, err := domain(entity)
 	if err != nil {
 		return err
+	}
+
+	if state, err := c.GetState(entity); err == nil && state.Attributes.Step > 0 {
+		steps := math.Round((value - state.Attributes.Min) / state.Attributes.Step)
+		value = state.Attributes.Min + steps*state.Attributes.Step
+
+		if state.Attributes.Max > state.Attributes.Min {
+			value = min(value, state.Attributes.Max)
+		}
+		value = max(value, state.Attributes.Min)
 	}
 
 	data := map[string]any{

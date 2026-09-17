@@ -139,3 +139,43 @@ func TestCallSwitchService_DomainDispatch(t *testing.T) {
 		})
 	}
 }
+
+// TestCallNumberService_RoundsToStep verifies that values are rounded (and
+// clamped) to the entity's declared min/max/step before being sent, so that
+// integrations rejecting non-step-aligned values (e.g. whole-amp-only
+// chargers) don't refuse the call. Regression test for evcc-io/evcc#33807.
+func TestCallNumberService_RoundsToStep(t *testing.T) {
+	tests := []struct {
+		name                 string
+		value                float64
+		min, max, step, want float64
+	}{
+		{"rounds down", 7.43, 0, 32, 1, 7},
+		{"rounds up", 7.6, 0, 32, 1, 8},
+		{"clamped to max", 33, 0, 32, 1, 32},
+		{"clamped to min", -1, 0, 32, 1, 0},
+		{"non-zero min offset", 7.4, 1, 32, 2, 7},
+		{"no step leaves value untouched", 7.43, 0, 32, 0, 7.43},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var gotBody string
+			srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				switch r.Method {
+				case http.MethodGet:
+					fmt.Fprintf(w, `{"entity_id":"number.foo","state":"0","attributes":{"min":%v,"max":%v,"step":%v}}`, tc.min, tc.max, tc.step)
+				case http.MethodPost:
+					body, _ := io.ReadAll(r.Body)
+					gotBody = string(body)
+					w.WriteHeader(http.StatusOK)
+				}
+			}))
+			srv.Start()
+
+			err := newTestConnection(srv.URL).CallNumberService("number.foo", tc.value)
+			require.NoError(t, err)
+			assert.Contains(t, gotBody, fmt.Sprintf(`"value":%v`, tc.want))
+		})
+	}
+}
