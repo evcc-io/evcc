@@ -17,7 +17,6 @@ import (
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/keys"
-	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/curtailer"
 	"github.com/evcc-io/evcc/db/settings"
@@ -588,40 +587,6 @@ func cleanupCircuitMeterRef(name string) {
 	}
 }
 
-// meterReferenced reports whether name is still referenced by any circuit, any site meter
-// list (pv/battery/aux/ext/consumer), the grid meter, or a loadpoint
-func meterReferenced(name string, site site.API, loadpoints config.Handler[loadpoint.API]) bool {
-	if site.GetGridMeterRef() == name {
-		return true
-	}
-
-	for _, get := range []func() []string{
-		site.GetPVMeterRefs,
-		site.GetBatteryMeterRefs,
-		site.GetAuxMeterRefs,
-		site.GetExtMeterRefs,
-		site.GetConsumerMeterRefs,
-	} {
-		if slices.Contains(get(), name) {
-			return true
-		}
-	}
-
-	for _, dev := range config.Circuits().Devices() {
-		if ref, _ := dev.Config().Property("meter").(string); ref == name {
-			return true
-		}
-	}
-
-	for _, dev := range loadpoints.Devices() {
-		if lp := dev.Instance(); lp != nil && lp.GetMeterRef() == name {
-			return true
-		}
-	}
-
-	return false
-}
-
 // cleanupTariffRef removes a tariff reference from settings
 func cleanupTariffRef(name string) {
 	if !settings.Exists(keys.TariffRefs) {
@@ -733,7 +698,7 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 				}
 			}
 
-			if err == nil && meterRef != "" && meterRef != site.GetGridMeterRef() && !meterReferenced(meterRef, site, h) {
+			if err == nil && meterRef != "" && meterRef != site.GetGridMeterRef() {
 				if meter, lookupErr := config.Meters().ByName(meterRef); lookupErr == nil {
 					if configurable, ok := meter.(config.ConfigurableDevice[api.Meter]); ok {
 						if delErr := deleteDevice(configurable.ID(), config.Meters()); delErr != nil {
