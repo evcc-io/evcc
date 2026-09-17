@@ -149,8 +149,10 @@ export default defineComponent({
 	},
 	computed: {
 		getParentCircuit(): string | undefined {
+			const parentId = getModal("circuit")?.parent;
+			if (parentId) return this.circuits.find((c) => c.id === parentId)?.name;
 			const parent = this.circuits.find((c) => c.id === this.id)?.config.parent;
-			return getModal("circuit")?.parentId || (parent ? String(parent) : undefined);
+			return parent ? String(parent) : undefined;
 		},
 		hasParentCircuit(): boolean {
 			return !!this.getParentCircuit;
@@ -159,7 +161,7 @@ export default defineComponent({
 			return {
 				type: ConfigType.Template,
 				template: null,
-				parent: getModal("circuit")?.parentId,
+				parent: this.getParentCircuit,
 				meter: "",
 			};
 		},

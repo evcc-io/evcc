@@ -8,7 +8,7 @@ export interface ModalEntry {
   type?: string;
   choices?: string[];
   station?: string;
-  parentId?: string;
+  parent?: number;
 }
 
 export type ModalParams = Omit<ModalEntry, "name">;
@@ -115,7 +115,7 @@ export function parseKey(key: string): {
   type?: string;
   choices?: string[];
   station?: string;
-  parentId?: string;
+  parent?: number;
 } {
   const bracketMatch = key.match(/^([^[]+)\[([^\]]+)\]$/);
   if (!bracketMatch) {
@@ -139,8 +139,8 @@ export function parseKey(key: string): {
   if (paramKey === "station") {
     return { name, station: paramValue };
   }
-  if (paramKey === "parentId") {
-    return { name, parentId: String(paramValue) };
+  if (paramKey === "parent") {
+    return { name, parent: parseInt(paramValue, 10) };
   }
   return { name };
 }
@@ -175,7 +175,7 @@ export function parseQueryString(queryString: string): ModalEntry[] {
     if (parsed.type) entry.type = parsed.type;
     if (parsed.choices) entry.choices = parsed.choices;
     if (parsed.station) entry.station = parsed.station;
-    if (parsed.parentId) entry.parentId = parsed.parentId;
+    if (parsed.parent) entry.parent = parsed.parent;
     entries.push(entry);
   }
   return entries;
@@ -192,8 +192,8 @@ export function buildQuery(stack: ModalEntry[]): Record<string, string> {
       key += `[choices:${entry.choices.join(",")}]`;
     } else if (entry.station) {
       key += `[station:${entry.station}]`;
-    } else if (entry.parentId) {
-      key += `[parentId:${entry.parentId}]`;
+    } else if (entry.parent) {
+      key += `[parent:${entry.parent}]`;
     }
     query[key] = entry.id !== undefined ? String(entry.id) : "";
   }
@@ -255,7 +255,7 @@ export function openModal(name: string, params?: ModalParams): Promise<ModalResu
   if (params?.type) entry.type = params.type;
   if (params?.choices) entry.choices = params.choices;
   if (params?.station) entry.station = params.station;
-  if (params?.parentId) entry.parentId = params.parentId;
+  if (params?.parent) entry.parent = params.parent;
 
   const newStack = [...configModal.stack, entry];
   const query = buildQuery(newStack);
@@ -300,7 +300,7 @@ export function replaceModal(name: string, params?: ModalParams): void {
   if (params?.type) entry.type = params.type;
   if (params?.choices) entry.choices = params.choices;
   if (params?.station) entry.station = params.station;
-  if (params?.parentId) entry.parentId = params.parentId;
+  if (params?.parent) entry.parent = params.parent;
 
   const newStack = [...configModal.stack.slice(0, -1), entry];
   const query = buildQuery(newStack);

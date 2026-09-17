@@ -77,7 +77,7 @@ export default {
 	},
 	methods: {
 		addSub() {
-			openModal("circuit", { parentId: this.circuitsTree?.name });
+			openModal("circuit", { parent: this.circuitsTree?.id });
 		},
 		editCircuit() {
 			openModal("circuit", { id: this.circuitsTree?.id });
