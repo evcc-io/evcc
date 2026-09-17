@@ -137,6 +137,47 @@ func TestUpdateBatteryChargeValues(t *testing.T) {
 	}
 }
 
+// TestAllBatteriesHaveChargeCap guards that the gate requires every battery to support it.
+func TestAllBatteriesHaveChargeCap(t *testing.T) {
+	capable := implement.BatteryChargePowerLimiter(func(float64) error { return nil })
+
+	t.Run("no batteries configured", func(t *testing.T) {
+		site := &Site{}
+		assert.True(t, site.allBatteriesHaveChargeCap())
+	})
+
+	t.Run("single battery, capable", func(t *testing.T) {
+		var bat api.Meter = &struct {
+			api.Meter
+			api.BatteryChargePowerLimiter
+		}{BatteryChargePowerLimiter: capable}
+
+		site := &Site{batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "battery1"}, bat)}}
+		assert.True(t, site.allBatteriesHaveChargeCap())
+	})
+
+	t.Run("single battery, not capable", func(t *testing.T) {
+		var bat api.Meter = &struct{ api.Meter }{}
+
+		site := &Site{batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "battery1"}, bat)}}
+		assert.False(t, site.allBatteriesHaveChargeCap())
+	})
+
+	t.Run("two batteries, one not capable", func(t *testing.T) {
+		var capableBat api.Meter = &struct {
+			api.Meter
+			api.BatteryChargePowerLimiter
+		}{BatteryChargePowerLimiter: capable}
+		var plainBat api.Meter = &struct{ api.Meter }{}
+
+		site := &Site{batteryMeters: []config.Device[api.Meter]{
+			config.NewStaticDevice(config.Named{Name: "battery1"}, capableBat),
+			config.NewStaticDevice(config.Named{Name: "battery2"}, plainBat),
+		}}
+		assert.False(t, site.allBatteriesHaveChargeCap())
+	})
+}
+
 // battery controller supporting the modes a soc limit can implement
 func batteryControllerMock(ctrl *gomock.Controller) *api.MockBatteryController {
 	batCon := api.NewMockBatteryController(ctrl)
