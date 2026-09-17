@@ -463,18 +463,19 @@ func (wb *FoxESSEVC) StatusReason() (api.Reason, error) {
 // Enabled implements the api.Charger interface
 func (wb *FoxESSEVC) Enabled() (bool, error) {
 	wb.mu.Lock()
-	defer wb.mu.Unlock()
-
 	val, err := wb.readSetpoint()
 	if err != nil {
+		wb.mu.Unlock()
 		return false, err
 	}
 
 	if val == 0 {
 		wb.enabled = false
 	}
+	enabled := wb.enabled
+	wb.mu.Unlock()
 
-	return wb.enabled, nil
+	return verifyEnabled(wb, enabled)
 }
 
 // Enable implements the api.Charger interface

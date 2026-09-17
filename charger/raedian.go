@@ -125,7 +125,7 @@ func (wb *Raedian) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Raedian) Enabled() (bool, error) {
-	return wb.enabled, nil
+	return verifyEnabled(wb, wb.enabled)
 }
 
 // Enable implements the api.Charger interface
