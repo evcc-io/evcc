@@ -11,6 +11,9 @@
 				<span v-if="!isRunning && isError" class="text-danger">
 					{{ $t("config.validation.failed") }}
 				</span>
+				<span v-if="!isRunning && loginRequired" class="text-warning">
+					{{ $t("config.validation.loginRequired") }}
+				</span>
 			</strong>
 			<div v-if="!showTokenRequired">
 				<span
@@ -29,6 +32,14 @@
 		<hr v-if="error" class="divider" />
 		<div v-if="error" class="text-danger" :class="{ 'opacity-25': isRunning }">
 			{{ error }}
+		</div>
+		<hr v-if="loginRequired" class="divider" />
+		<div v-if="loginRequired" :class="{ 'opacity-25': isRunning }">
+			{{
+				$t("config.validation.loginRequiredHint", {
+					section: $t("config.section.integrations"),
+				})
+			}}
 		</div>
 		<hr v-if="hasResult" class="divider" />
 		<div v-if="hasResult" :class="{ 'opacity-25': isRunning }">
@@ -56,6 +67,7 @@ export default defineComponent({
 		isSuccess: Boolean,
 		isError: Boolean,
 		isRunning: Boolean,
+		loginRequired: Boolean,
 		result: Object as PropType<Record<string, any> | null>,
 		error: String as PropType<string | null>,
 		sponsorTokenRequired: Boolean,

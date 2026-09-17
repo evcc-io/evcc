@@ -85,6 +85,20 @@ func TestInstanceAsleep(t *testing.T) {
 	assert.Equal(t, testResult{Value: int64(0), Asleep: true}, res["range"])
 }
 
+// loginRequiredVehicle waits for an interactive login to complete.
+type loginRequiredVehicle struct{}
+
+func (v loginRequiredVehicle) Soc() (float64, error) {
+	return 0, api.LoginRequiredError("psa.peugeot.user")
+}
+
+// TestInstanceLoginRequired ensures a pending login is flagged as state, not as error.
+func TestInstanceLoginRequired(t *testing.T) {
+	res := testInstance(context.Background(), loginRequiredVehicle{})
+	assert.Equal(t, testResult{Value: 0.0, LoginRequired: true}, res["soc"])
+	assert.Empty(t, res["soc"].Error, "a pending login must not surface as an error")
+}
+
 func TestConfigReqUnmarshal(t *testing.T) {
 	var req configReq
 	require.NoError(t, json.Unmarshal([]byte(`{

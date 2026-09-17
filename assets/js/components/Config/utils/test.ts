@@ -8,6 +8,7 @@ export type TestState = {
   isSuccess: boolean;
   isError: boolean;
   isRunning: boolean;
+  loginRequired: boolean;
   result: Record<string, any> | null;
   error: string | null;
   errorLine: number | null;
@@ -18,6 +19,7 @@ export const initialTestState = (): TestState => ({
   isSuccess: false,
   isError: false,
   isRunning: false,
+  loginRequired: false,
   result: null,
   error: null,
   errorLine: null,
@@ -34,6 +36,7 @@ export const performTest = async (
   state.isUnknown = false;
   state.isSuccess = false;
   state.isRunning = true;
+  state.loginRequired = false;
   const startTime = Date.now();
   try {
     const res = await api();
@@ -45,7 +48,13 @@ export const performTest = async (
     state.error = null;
     state.errorLine = null;
     for (const [key, value] of Object.entries(res.data)) {
-      const { error } = value as { error?: string };
+      const { error, loginRequired } = value as { error?: string; loginRequired?: boolean };
+      // waiting for the user to log in is a pending state, not a failure
+      if (loginRequired) {
+        state.loginRequired = true;
+        state.result = res.data;
+        return false;
+      }
       if (error) {
         state.isError = true;
         state.error = `${key}: ${error}`;
