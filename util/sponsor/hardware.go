@@ -19,6 +19,8 @@ package sponsor
 
 import (
 	"context"
+	"sync"
+	"time"
 
 	"github.com/evcc-io/evcc/api/proto/pb"
 	"github.com/evcc-io/evcc/util/cloud"
@@ -46,6 +48,9 @@ func checkHardware(vendor string, metadata map[string]string) (string, string) {
 	}, grpc.WaitForReady(true))
 
 	if err == nil && res.Authorized {
+		if res.Token != "" {
+			renewOnce.Do(func() { go renewHardwareToken(vendor, metadata) })
+		}
 		return res.Subject, res.Token
 	}
 
@@ -54,4 +59,24 @@ func checkHardware(vendor string, metadata map[string]string) (string, string) {
 	}
 
 	return "", ""
+}
+
+var renewOnce sync.Once
+
+// renewHardwareToken re-runs the hardware check before the temp token expires
+func renewHardwareToken(vendor string, metadata map[string]string) {
+	for range time.Tick(24 * time.Hour) {
+		mu.RLock()
+		due := Hardware && time.Until(ExpiresAt) < 3*24*time.Hour
+		mu.RUnlock()
+		if !due {
+			continue
+		}
+
+		if _, token := checkHardware(vendor, metadata); token != "" {
+			mu.Lock()
+			Token, ExpiresAt = token, tokenExpiry(token)
+			mu.Unlock()
+		}
+	}
 }
