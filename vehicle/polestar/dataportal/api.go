@@ -45,7 +45,7 @@ func (v *API) Vehicles() ([]string, error) {
 	var res struct {
 		Data []string `json:"data"`
 	}
-	err := v.GetJSON(BaseURL+"/v1/vehicles", &res)
+	err := v.get(BaseURL+"/v1/vehicles", &res)
 	return res.Data, err
 }
 
@@ -90,7 +90,7 @@ func mapError(err error) error {
 		switch {
 		case se.HasStatus(http.StatusNotFound):
 			return api.ErrNotAvailable
-		case se.HasStatus(http.StatusInternalServerError, http.StatusBadGateway, http.StatusServiceUnavailable):
+		case se.StatusCode() >= http.StatusInternalServerError:
 			return fmt.Errorf("%w: %w", api.ErrMustRetry, err)
 		}
 	}
