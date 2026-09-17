@@ -1097,7 +1097,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Bli sponsor",
-      "becomeSponsorExtended": "Stöd oss direkt för att få klistermärken.",
       "confetti": "Är du redo för konfetti?",
       "confettiPromise": "Du får klistermärken och digital konfetti",
       "sticker": "... eller evcc-klistermärken?",
@@ -1106,9 +1105,7 @@
       "titleNoSponsor": "Stöd oss",
       "titleSponsor": "Du är en supporter",
       "titleTrial": "Testläge",
-      "titleVictron": "Sponsras av Victron Energy",
-      "trial": "Du är i testläge och kan använda alla funktioner. Överväg att stödja projektet.",
-      "victron": "Du använder evcc på Victron Energy-hårdvara och har tillgång till alla funktioner."
+      "trial": "Du är i testläge och kan använda alla funktioner. Överväg att stödja projektet."
     },
     "telemetry": {
       "optIn": "Jag vill bidra med min data.",

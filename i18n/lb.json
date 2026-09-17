@@ -1051,7 +1051,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Gitt ee Sponsor",
-      "becomeSponsorExtended": "Ënnerstëtzt eis direkt fir Stickeren ze kréien.",
       "confetti": "Prett fir de Konfetti?",
       "confettiPromise": "Du kriss Stickeren an digitale Konfetti",
       "sticker": "… oder evcc Stickeren?",
@@ -1060,9 +1059,7 @@
       "titleNoSponsor": "Ënnerstëtzt eis",
       "titleSponsor": "Du bass ee Supporter",
       "titleTrial": "Testmodus",
-      "titleVictron": "Ënnerstëtzt vu Victron Energy",
-      "trial": "Du bass am Testmodus a kanns all Funktiounen benotzen. Mir géifen eis driwwer freeën, wann s du Sponsor géifs ginn.",
-      "victron": "Du benotz evcc mat Victron Energy Hardware an hues esou Zougang zu all Funktiounen."
+      "trial": "Du bass am Testmodus a kanns all Funktiounen benotzen. Mir géifen eis driwwer freeën, wann s du Sponsor géifs ginn."
     },
     "telemetry": {
       "optIn": "Ech wëll meng Donnéeën och bäidroen.",

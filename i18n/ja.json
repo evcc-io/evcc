@@ -866,7 +866,6 @@
     },
     "sponsor": {
       "becomeSponsor": "スポンサーになる",
-      "becomeSponsorExtended": "直接支援してステッカーをもらおう。",
       "confetti": "お祝いの準備はできた？",
       "confettiPromise": "ステッカーとお祝いのデジタル紙吹雪がもらえるよ",
       "sticker": "…それともevccのステッカーにする？",
@@ -875,9 +874,7 @@
       "titleNoSponsor": "開発を支援する",
       "titleSponsor": "あなたはサポーターです",
       "titleTrial": "トライアルモード",
-      "titleVictron": "Victron Energy による協賛",
-      "trial": "現在はトライアルモード中で、すべての機能が使えます。気に入っていただけたら、開発への支援をぜひお願いします。",
-      "victron": "Victron Energy製のハードウェアでevccをご利用中のため、すべての機能が使えます。"
+      "trial": "現在はトライアルモード中で、すべての機能が使えます。気に入っていただけたら、開発への支援をぜひお願いします。"
     },
     "telemetry": {
       "optIn": "データを提供したい。",

@@ -972,7 +972,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Destekçi ol",
-      "becomeSponsorExtended": "Çıkartma almak için bizi doğrudan destekle.",
       "confetti": "Konfeti istermisin?",
       "confettiPromise": "Çıkartmalar ve dijital konfeti de var",
       "sticker": "… ya da evcc çıkartmaları?",
@@ -981,9 +980,7 @@
       "titleNoSponsor": "Bize destek ol",
       "titleSponsor": "Destekçisin",
       "titleTrial": "Deneme modu",
-      "titleVictron": "Victron Energy tarafından desteklenmektedir",
-      "trial": "Deneme modundasın ve tüm özellikleri kullanabilirsin. Destekçi olursan seviniriz.",
-      "victron": "Victron Energy donanımı üzerinde evcc kullanıyorsun ve tüm özelliklere erişebiliyorsun."
+      "trial": "Deneme modundasın ve tüm özellikleri kullanabilirsin. Destekçi olursan seviniriz."
     },
     "telemetry": {
       "optIn": "Doldurma verilerimi paylaşmak istiyorum.",

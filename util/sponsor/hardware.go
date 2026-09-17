@@ -28,10 +28,11 @@ import (
 )
 
 // checkHardware registers the device with the sponsor server and checks authorization.
-func checkHardware(vendor string, metadata map[string]string) string {
+// Returns the sponsor subject and, for vendors with online service access, a sponsor token.
+func checkHardware(vendor string, metadata map[string]string) (string, string) {
 	conn, err := cloud.Connection()
 	if err != nil {
-		return unavailable
+		return unavailable, ""
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), startupTimeout)
@@ -45,12 +46,12 @@ func checkHardware(vendor string, metadata map[string]string) string {
 	}, grpc.WaitForReady(true))
 
 	if err == nil && res.Authorized {
-		return res.Subject
+		return res.Subject, res.Token
 	}
 
 	if s, ok := status.FromError(err); ok && s.Code() != codes.Unknown {
-		return unavailable
+		return unavailable, ""
 	}
 
-	return ""
+	return "", ""
 }

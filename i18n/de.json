@@ -818,7 +818,7 @@
     "optimizer": {
       "description": "Analysiert Solarprognose, Strompreise und deinen typischen Verbrauch, um Batterie- und Ladestrategie zu optimieren. Daten werden zur Berechnung an den evcc Optimierungsdienst übertragen. Berechnet und visualisiert aktuell nur. Steuert noch keine Geräte.",
       "enable": "Optimizer aktivieren",
-      "info": "Es kann einige Minuten dauern, bis der Optimizer-Menüeintrag sichtbar wird. Bei neuen Installationen kann es bis zu 24 Stunden dauern, bis evcc genügend Daten gesammelt hat.",
+      "info": "Bei neuen Installationen kann es bis zu 24 Stunden dauern, bis evcc genügend Daten gesammelt hat.",
       "title": "Optimizer"
     },
     "options": {
@@ -1132,7 +1132,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Werde Sponsor",
-      "becomeSponsorExtended": "Unterstütze uns direkt. Es gibt auch Sticker.",
       "confetti": "Lust auf Konfetti?",
       "confettiPromise": "Es gibt auch Sticker und digitales Konfetti",
       "sticker": "… oder evcc Sticker?",
@@ -1141,9 +1140,7 @@
       "titleNoSponsor": "Unterstütze uns",
       "titleSponsor": "Du bist Unterstützer",
       "titleTrial": "Testmodus",
-      "titleVictron": "Unterstützt von Victron Energy",
-      "trial": "Du befindest dich im Testmodus und kannst alle Funktionen nutzen. Wir freuen uns, wenn du Sponsor wirst.",
-      "victron": "Du verwendest evcc auf Victron Energy Hardware und hast Zugriff auf alle Funktionen."
+      "trial": "Du befindest dich im Testmodus und kannst alle Funktionen nutzen. Wir freuen uns, wenn du Sponsor wirst."
     },
     "telemetry": {
       "optIn": "Ich möchte meine Ladedaten teilen.",
@@ -1263,6 +1260,9 @@
   },
   "issue": {
     "additional": {
+      "copied": "Kopiert!",
+      "copy": "Kopieren",
+      "copySelected": "Auswahl kopieren",
       "description": "Konfiguration und Logs hinzufügen, um uns bei der schnellen Reproduktion zu helfen. Wir empfehlen, so viele Informationen wie möglich zu teilen. Zustand ist normalerweise nicht erforderlich.",
       "include": "einbeziehen",
       "lines": "Zeilen",
@@ -1795,7 +1795,7 @@
   },
   "settings": {
     "dateFormat": {
-      "auto": "Auto",
+      "auto": "Automatisch",
       "dmy": "TT/MM/JJJJ",
       "label": "Datumsformat",
       "mdy": "MM/TT/JJJJ",

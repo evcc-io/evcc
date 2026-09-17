@@ -222,6 +222,8 @@ export interface State {
   residualPower?: number;
   /** Static grid export power limit in W used as optimizer constraint, 0 = disabled. An active HEMS curtailment takes precedence. */
   gridExportLimit?: number;
+  /** Percentile of the historic energy profiles used for demand prediction in %, e.g. 50 = median. Null uses the average. */
+  profilePercentile?: number | null;
   /** Share of green energy in home consumption, between 0 and 1. */
   greenShareHome?: number;
   /** Share of green energy used for charging, between 0 and 1. */
@@ -606,6 +608,10 @@ export interface Loadpoint {
   chargerFeatureCoarseCurrent: boolean;
   /** Charger is a heating device where disabled means normal operation. */
   chargerFeatureContinuous: boolean;
+  /** Heating device demand forecast uses daily average profile scaled by outdoor temperature. */
+  chargerFeatureDemandTemperature: boolean;
+  /** Heating device demand forecast uses same-weekday average over past 4 weeks. */
+  chargerFeatureDemandWeekday: boolean;
   /** Charger is a heating device. SoC values represent temperature in degrees. */
   chargerFeatureHeating: boolean;
   /** Charger is an always-connected device without vehicles and charging sessions, like a heat pump. */
@@ -940,6 +946,8 @@ export interface SponsorStatus {
   expiresSoon?: boolean;
   /** Sponsor token. Redacted. */
   token?: string;
+  /** Hardware sponsorship. */
+  hardware?: boolean;
 }
 
 /** Sponsorship status. */
@@ -1529,10 +1537,18 @@ export interface BatteryDetail {
   capacity: number; // Battery capacity (kWh)
 }
 
+// Single profile summarized into the household demand time series
+export interface DemandDetail {
+  type: "home" | "heating" | "unmodelled"; // Origin of the profile
+  title?: string; // Loadpoint title, unset for the base load
+  values: number[]; // Energy per slot (Wh)
+}
+
 // Optimization details with timestamps and battery information
 export interface OptimizationDetails {
   timestamp: string[]; // Array of ISO timestamp strings
   batteryDetails: BatteryDetail[]; // Array of battery detail objects
+  demandDetails: DemandDetail[] | null; // Profiles summarized into the household demand, null when there is nothing to break down
 }
 
 // Error response
