@@ -1,92 +1,117 @@
 package polestar
 
 import (
-	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
 
+// Provider implements the vehicle api using the Polestar Data Portal
 type Provider struct {
-	telemetryG func() (CarTelemetryData, error)
+	batteryG   func() (Battery, error)
+	odometerG  func() (Odometer, error)
+	targetSocG func() (TargetSoc, error)
 }
 
-func NewProvider(log *util.Logger, api *API, vin string, timeout, cache time.Duration) *Provider {
-	v := &Provider{
-		telemetryG: util.Cached(func() (CarTelemetryData, error) {
-			ctx, cancel := context.WithTimeout(context.Background(), timeout)
-			defer cancel()
-			return api.CarTelemetry(ctx, vin)
+// NewProvider creates a Polestar Data Portal vehicle data provider
+func NewProvider(api *API, vin string, cache time.Duration) *Provider {
+	return &Provider{
+		batteryG: util.Cached(func() (Battery, error) {
+			return api.Battery(vin)
+		}, cache),
+		odometerG: util.Cached(func() (Odometer, error) {
+			return api.Odometer(vin)
+		}, cache),
+		targetSocG: util.Cached(func() (TargetSoc, error) {
+			return api.TargetSoc(vin)
 		}, cache),
 	}
-
-	return v
 }
 
-// SOC via car telemetry
+var _ api.Battery = (*Provider)(nil)
+
+// Soc implements the api.Battery interface
 func (v *Provider) Soc() (float64, error) {
-	res, err := v.telemetryG()
+	res, err := v.batteryG()
 	if err != nil {
 		return 0, err
 	}
-	if len(res.Battery) == 0 {
-		return 0, api.ErrNotAvailable
-	}
-	return res.Battery[0].BatteryChargeLevelPercentage, nil
+	return res.BatteryChargeLevelPercentage, nil
 }
 
 var _ api.ChargeState = (*Provider)(nil)
 
-// Status via car telemetry
+// Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	status, err := v.telemetryG()
-
-	res := api.StatusA
-
-	if len(status.Battery) == 0 {
-		return res, nil
+	res, err := v.batteryG()
+	if err != nil {
+		return api.StatusNone, err
 	}
 
-	if status.Battery[0].ChargingStatus == "CHARGER_CONNECTION_STATUS_CONNECTED" {
-		res = api.StatusB
-	}
-	if status.Battery[0].ChargingStatus == "CHARGING_STATUS_CHARGING" {
-		res = api.StatusC
+	switch res.ChargingStatusV2 {
+	case "CHARGING_STATUS_CHARGING", "CHARGING_STATUS_SMART_CHARGING":
+		return api.StatusC, nil
 	}
 
-	return res, err
+	if res.ChargerConnectionStatus == "CHARGER_CONNECTION_STATUS_CONNECTED" {
+		return api.StatusB, nil
+	}
+
+	return api.StatusA, nil
 }
 
 var _ api.VehicleRange = (*Provider)(nil)
 
-// Range via car telemetry
+// Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
-	res, err := v.telemetryG()
-	if len(res.Battery) == 0 {
-		return 0, api.ErrNotAvailable
+	res, err := v.batteryG()
+	if err != nil {
+		return 0, err
 	}
-	return res.Battery[0].EstimatedDistanceToEmptyKm, err
+	return res.EstimatedDistanceToEmptyKm, nil
 }
 
 var _ api.VehicleOdometer = (*Provider)(nil)
 
-// Odometer via car telemetry
+// Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
-	res, err := v.telemetryG()
-	if len(res.Odometer) == 0 {
-		return 0, api.ErrNotAvailable
+	res, err := v.odometerG()
+	if err != nil {
+		return 0, err
 	}
-	return float64(res.Odometer[0].OdometerMeters) / 1e3, err
+	return res.OdometerMeters / 1e3, nil
 }
 
 var _ api.VehicleFinishTimer = (*Provider)(nil)
 
-// FinishTime via car telemetry
+// FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.telemetryG()
-	if len(res.Battery) == 0 {
+	res, err := v.batteryG()
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	if res.EstimatedChargingTimeToFullMinutes <= 0 {
 		return time.Time{}, api.ErrNotAvailable
 	}
-	return time.Now().Add(time.Duration(res.Battery[0].EstimatedChargingTimeToFullMinutes) * time.Minute), err
+
+	// anchor the relative remaining time to the API's capture timestamp
+	base := res.Timestamp.Time()
+	if base.IsZero() {
+		base = time.Now()
+	}
+
+	return base.Add(time.Duration(res.EstimatedChargingTimeToFullMinutes) * time.Minute), nil
+}
+
+var _ api.SocLimiter = (*Provider)(nil)
+
+// GetLimitSoc implements the api.SocLimiter interface
+func (v *Provider) GetLimitSoc() (int64, error) {
+	res, err := v.targetSocG()
+	if err != nil {
+		return 0, err
+	}
+	return res.TargetSoc.BatteryChargeTargetLevel, nil
 }

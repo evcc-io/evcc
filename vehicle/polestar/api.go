@@ -1,111 +1,98 @@
 package polestar
 
 import (
-	"context"
+	"errors"
+	"fmt"
+	"net/http"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/hasura/go-graphql-client"
+	"github.com/evcc-io/evcc/util/transport"
 	"golang.org/x/oauth2"
 )
 
-// https://github.com/leeyuentuen/polestar_api
-// https://github.com/TA2k/ioBroker.polestar
+// BaseURL is the Polestar Data Portal M2M API base URL
+const BaseURL = "https://pc-api.polestar.com/eu-north-1/data-portal/m2m"
 
-const (
-	ApiURI   = "https://pc-api.polestar.com/eu-north-1"
-	ApiURIv2 = ApiURI + "/mystar-v2"
-)
-
+// API is the Polestar Data Portal REST client
 type API struct {
-	client *graphql.Client
+	*request.Helper
 }
 
-func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
-	httpClient := request.NewClient(log)
-
-	// replace client transport with authenticated transport
-	httpClient.Transport = &oauth2.Transport{
-		Base:   httpClient.Transport,
-		Source: identity,
+// NewAPI creates a Polestar Data Portal API client. The accountID is sent as
+// the x-client-id header required by the vehicle and telemetry endpoints.
+func NewAPI(log *util.Logger, ts oauth2.TokenSource, accountID string) *API {
+	v := &API{
+		Helper: request.NewHelper(log),
 	}
 
-	v := &API{
-		client: graphql.NewClient(ApiURIv2, httpClient),
+	v.Transport = &oauth2.Transport{
+		Source: ts,
+		Base: &transport.Decorator{
+			Decorator: transport.DecorateHeaders(map[string]string{
+				"x-client-id": accountID,
+			}),
+			Base: v.Transport,
+		},
 	}
 
 	return v
 }
 
-func (v *API) Vehicles(ctx context.Context) ([]ConsumerCar, error) {
+// Vehicles returns the VINs the authenticated caller is authorized to access
+func (v *API) Vehicles() ([]string, error) {
 	var res struct {
-		GetConsumerCarsV2 []ConsumerCar `graphql:"getConsumerCarsV2"`
+		Data []string `json:"data"`
 	}
-
-	err := v.client.Query(ctx, &res, nil, graphql.OperationName("getCars"))
-
-	return res.GetConsumerCarsV2, err
+	err := v.GetJSON(BaseURL+"/v1/vehicles", &res)
+	return res.Data, err
 }
 
-func (v *API) CarTelemetry(ctx context.Context, vin string) (CarTelemetryData, error) {
+// Battery returns the battery telemetry for the given VIN
+func (v *API) Battery(vin string) (Battery, error) {
 	var res struct {
-		CarTelemetryData `graphql:"carTelematicsV2(vins: $vins)"`
+		Data Battery `json:"data"`
 	}
-
-	err := v.client.Query(ctx, &res, map[string]any{
-		"vins": []string{vin},
-	}, graphql.OperationName("CarTelematicsV2"))
-
-	// Filter data for the requested VIN
-	var filteredData CarTelemetryData
-
-	// Filter health data
-	for _, health := range res.CarTelemetryData.Health {
-		if health.VIN == vin {
-			filteredData.Health = append(filteredData.Health, health)
-		}
-	}
-
-	// Filter battery data
-	for _, battery := range res.CarTelemetryData.Battery {
-		if battery.VIN == vin {
-			filteredData.Battery = append(filteredData.Battery, battery)
-		}
-	}
-
-	// Filter odometer data
-	for _, odometer := range res.CarTelemetryData.Odometer {
-		if odometer.VIN == vin {
-			filteredData.Odometer = append(filteredData.Odometer, odometer)
-		}
-	}
-
-	return filteredData, err
+	err := v.get(fmt.Sprintf("%s/v1/vehicles/%s/telemetry/battery", BaseURL, vin), &res)
+	return res.Data, err
 }
 
-// Odometer returns the odometer reading in km for the given VIN.
-// The gRPC battery service does not expose odometer data, so it is queried
-// via GraphQL. Only the odometer field is requested, avoiding the removed
-// battery chargingStatus field that breaks the full telematics query.
-func (v *API) Odometer(ctx context.Context, vin string) (float64, error) {
+// Odometer returns the odometer telemetry for the given VIN
+func (v *API) Odometer(vin string) (Odometer, error) {
 	var res struct {
-		CarTelematicsV2 struct {
-			Odometer []OdometerData
-		} `graphql:"carTelematicsV2(vins: $vins)"`
+		Data Odometer `json:"data"`
 	}
+	err := v.get(fmt.Sprintf("%s/v1/vehicles/%s/telemetry/odometer", BaseURL, vin), &res)
+	return res.Data, err
+}
 
-	if err := v.client.Query(ctx, &res, map[string]any{
-		"vins": []string{vin},
-	}, graphql.OperationName("CarTelematicsV2")); err != nil {
-		return 0, err
+// TargetSoc returns the configured target state of charge for the given VIN
+func (v *API) TargetSoc(vin string) (TargetSoc, error) {
+	var res struct {
+		Data TargetSoc `json:"data"`
 	}
+	err := v.get(fmt.Sprintf("%s/v1/vehicles/%s/charging/target-soc", BaseURL, vin), &res)
+	return res.Data, err
+}
 
-	for _, o := range res.CarTelematicsV2.Odometer {
-		if o.VIN == vin {
-			return float64(o.OdometerMeters) / 1e3, nil
+// get wraps GetJSON and maps Data Portal error responses to evcc sentinel errors
+func (v *API) get(uri string, res any) error {
+	return mapError(v.GetJSON(uri, res))
+}
+
+// mapError translates Data Portal HTTP errors into evcc sentinel errors: a
+// missing-data 404 becomes api.ErrNotAvailable, transient upstream failures
+// become api.ErrMustRetry so util.Cached retries instead of backing off.
+func mapError(err error) error {
+	var se *request.StatusError
+	if errors.As(err, &se) {
+		switch {
+		case se.HasStatus(http.StatusNotFound):
+			return api.ErrNotAvailable
+		case se.HasStatus(http.StatusInternalServerError, http.StatusBadGateway, http.StatusServiceUnavailable):
+			return fmt.Errorf("%w: %w", api.ErrMustRetry, err)
 		}
 	}
-
-	return 0, api.ErrNotAvailable
+	return err
 }

@@ -1,116 +1,68 @@
 package polestar
 
 import (
-	"context"
-	"errors"
-	"io"
 	"net/http"
-	"net/http/cookiejar"
-	"net/url"
-	"regexp"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/samber/lo"
 	"golang.org/x/oauth2"
 )
 
-const (
-	OAuthURI    = "https://polestarid.eu.polestar.com"
-	ClientID    = "l3oopkc_10"
-	RedirectURI = "https://www.polestar.com/sign-in-callback"
-)
-
-var OAuth2Config = &oauth2.Config{
-	ClientID:    ClientID,
-	RedirectURL: RedirectURI,
-	Endpoint: oauth2.Endpoint{
-		AuthURL:   OAuthURI + "/as/authorization.oauth2",
-		TokenURL:  OAuthURI + "/as/token.oauth2",
-		AuthStyle: oauth2.AuthStyleInParams,
-	},
-	Scopes: []string{"openid", "profile", "email"},
+// scopes requested for the capabilities evcc exposes
+var scopes = []string{
+	"pdp-telemetry/battery",
+	"pdp-telemetry/odometer",
+	"pdp-charging/targetSoc",
 }
 
-type Identity struct {
+type identity struct {
 	*request.Helper
-	user, password string
+	clientID, clientSecret string
+	uri                    string
 }
 
-func NewIdentity(log *util.Logger, user, password string) (oauth2.TokenSource, error) {
-	v := &Identity{
-		Helper:   request.NewHelper(log),
-		user:     user,
-		password: password,
+// NewIdentity creates a Polestar Data Portal client-credentials token source
+func NewIdentity(log *util.Logger, clientID, clientSecret string) oauth2.TokenSource {
+	v := &identity{
+		Helper:       request.NewHelper(log),
+		clientID:     clientID,
+		clientSecret: clientSecret,
+		uri:          BaseURL + "/token",
 	}
-
-	token, err := v.login()
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
-	return oauth2.ReuseTokenSource(token, oauth.Redacted(log, OAuth2Config.TokenSource(ctx, token))), nil
+	return oauth2.ReuseTokenSource(nil, oauth.Redacted(log, v))
 }
 
-func (v *Identity) login() (*oauth2.Token, error) {
-	v.Client.Jar, _ = cookiejar.New(nil)
+// Token implements oauth2.TokenSource using the client-credentials grant
+func (v *identity) Token() (*oauth2.Token, error) {
+	data := struct {
+		ClientID     string `json:"clientId"`
+		ClientSecret string `json:"clientSecret"`
+		Scope        string `json:"scope"`
+	}{
+		ClientID:     v.clientID,
+		ClientSecret: v.clientSecret,
+		Scope:        strings.Join(scopes, " "),
+	}
 
-	cv := oauth2.GenerateVerifier()
+	req, _ := request.New(http.MethodPost, v.uri, request.MarshalJSON(data), request.JSONEncoding)
 
-	uri := OAuth2Config.AuthCodeURL(lo.RandomString(16, lo.AlphanumericCharset), oauth2.S256ChallengeOption(cv))
-	req, _ := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Accept": "text/html,application/xhtml+xml,application/xml;",
-	})
-
-	resp, err := v.Do(req)
-	if err != nil {
+	// the Data Portal uses non-standard camelCase token fields
+	var res struct {
+		AccessToken string `json:"accessToken"`
+		ExpiresIn   int64  `json:"expiresIn"`
+		TokenType   string `json:"tokenType"`
+	}
+	if err := v.DoJSON(req, &res); err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
+	token := &oauth2.Token{
+		AccessToken: res.AccessToken,
+		TokenType:   res.TokenType,
+		ExpiresIn:   res.ExpiresIn,
 	}
 
-	matches := regexp.MustCompile(`(?:url|action):\s*"(.+?)"`).FindStringSubmatch(string(body))
-	if len(matches) < 2 {
-		return nil, errors.New("could not find resume path")
-	}
-
-	resumePath := matches[1]
-	if !strings.HasPrefix(resumePath, "http") {
-		resumePath = OAuthURI + "/" + strings.TrimLeft(resumePath, "/")
-	}
-
-	data := url.Values{
-		"pf.username": {v.user},
-		"pf.pass":     {v.password},
-		"client_id":   {ClientID},
-	}
-
-	req, _ = request.New(http.MethodPost, resumePath, strings.NewReader(data.Encode()), map[string]string{
-		"Content-Type": "application/x-www-form-urlencoded",
-		"Accept":       "application/json",
-	})
-
-	resp, err = v.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	code := resp.Request.URL.Query().Get("code")
-	if code == "" {
-		return nil, errors.New("missing authorization code")
-	}
-
-	cctx := context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
-	ctx, cancel := context.WithTimeout(cctx, request.Timeout)
-	defer cancel()
-
-	return OAuth2Config.Exchange(ctx, code, oauth2.VerifierOption(cv))
+	return util.TokenWithExpiry(token), nil
 }

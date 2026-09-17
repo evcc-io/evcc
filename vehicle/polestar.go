@@ -1,17 +1,16 @@
 package vehicle
 
 import (
-	"context"
-	"fmt"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/polestar"
 )
 
-// Polestar is an api.Vehicle implementation for Polestar cars
+// Polestar is an api.Vehicle implementation for Polestar cars using the
+// Polestar Data Portal M2M API.
 type Polestar struct {
 	*embed
 	*polestar.Provider
@@ -24,44 +23,36 @@ func init() {
 // NewPolestarFromConfig creates a new vehicle
 func NewPolestarFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
-		embed          `mapstructure:",squash"`
-		User, Password string
-		VIN            string
-		Cache          time.Duration
-		Timeout        time.Duration
+		embed                             `mapstructure:",squash"`
+		ClientID, ClientSecret, AccountID string
+		VIN                               string
+		Cache                             time.Duration
 	}{
-		Cache:   interval,
-		Timeout: request.Timeout,
+		Cache: 15 * time.Minute,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	log := util.NewLogger("polestar").Redact(cc.User, cc.Password, cc.VIN)
+	if cc.ClientID == "" || cc.ClientSecret == "" || cc.AccountID == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
+	log := util.NewLogger("polestar").Redact(cc.ClientID, cc.ClientSecret, cc.AccountID, cc.VIN)
+
+	identity := polestar.NewIdentity(log, cc.ClientID, cc.ClientSecret)
+	api := polestar.NewAPI(log, identity, cc.AccountID)
+
+	vin, err := ensureVehicle(cc.VIN, api.Vehicles)
+	if err != nil {
+		return nil, err
+	}
 
 	v := &Polestar{
-		embed: &cc.embed,
+		embed:    &cc.embed,
+		Provider: polestar.NewProvider(api, strings.ToUpper(vin), cc.Cache),
 	}
 
-	identity, err := polestar.NewIdentity(log, cc.User, cc.Password)
-	if err != nil {
-		return v, fmt.Errorf("login failed: %w", err)
-	}
-
-	api := polestar.NewAPI(log, identity)
-
-	vehicle, err := ensureVehicleEx(cc.VIN, func() ([]polestar.ConsumerCar, error) {
-		ctx, cancel := context.WithTimeout(context.Background(), cc.Timeout)
-		defer cancel()
-		return api.Vehicles(ctx)
-	}, func(v polestar.ConsumerCar) (string, error) {
-		return v.VIN, nil
-	})
-
-	if err == nil {
-		v.Provider = polestar.NewProvider(log, api, vehicle.VIN, cc.Timeout, cc.Cache)
-	}
-
-	return v, err
+	return v, nil
 }
