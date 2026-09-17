@@ -466,6 +466,38 @@ func TestLoadpointRequestChargeGoal(t *testing.T) {
 	}
 }
 
+func TestLoadpointRequestChargingState(t *testing.T) {
+	site := &Site{log: util.NewLogger("foo")}
+
+	for status, want := range map[api.ChargeStatus]bool{api.StatusA: false, api.StatusB: false, api.StatusC: true} {
+		t.Run(string(status), func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			v := api.NewMockVehicle(ctrl)
+			v.EXPECT().Capacity().Return(50.0).AnyTimes()
+			v.EXPECT().GetTitle().Return("").AnyTimes()
+
+			lp := loadpoint.NewMockAPI(ctrl)
+			lp.EXPECT().GetVehicle().Return(v).AnyTimes()
+			lp.EXPECT().GetSoc().Return(20.0).AnyTimes()
+			lp.EXPECT().EffectiveLimitSoc().Return(80).AnyTimes()
+			lp.EXPECT().GetLimitEnergy().Return(0.0).AnyTimes()
+			lp.EXPECT().GetTitle().Return("lp").AnyTimes()
+			lp.EXPECT().EffectiveMinPower().Return(1380.0).AnyTimes()
+			lp.EXPECT().EffectiveMaxPower().Return(11000.0).AnyTimes()
+			lp.EXPECT().GetMode().Return(api.ModeNow).AnyTimes()
+			lp.EXPECT().GetStatus().Return(status).AnyTimes()
+			lp.EXPECT().GetAlwaysCharge().Return(api.AlwaysChargeOff).AnyTimes()
+			lp.EXPECT().GetChargePower().Return(11000.0).AnyTimes()
+			lp.EXPECT().GetRemainingEnergy().Return(0.0).AnyTimes()
+
+			req, _ := site.loadpointRequest(lp, 8, 15*time.Minute, nil)
+
+			assert.Equal(t, want, req.CActive)
+		})
+	}
+}
+
 func TestOptimizerChargingStrategy(t *testing.T) {
 	site := &Site{log: util.NewLogger("foo")}
 

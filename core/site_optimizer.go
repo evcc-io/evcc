@@ -343,6 +343,22 @@ func (site *Site) diffSuggestions(pending map[string]pendingSuggestion) []messen
 type requestDetails struct {
 	Timestamps     []time.Time     `json:"timestamp"`
 	BatteryDetails []batteryDetail `json:"batteryDetails"`
+	DemandDetails  []demandDetail  `json:"demandDetails"`
+}
+
+type demandType string
+
+const (
+	demandTypeHome       demandType = "home"
+	demandTypeHeating    demandType = "heating"
+	demandTypeUnmodelled demandType = "unmodelled"
+)
+
+// demandDetail is a single profile summarized into the home demand time series
+type demandDetail struct {
+	Type   demandType `json:"type"`
+	Title  string     `json:"title,omitempty"`
+	Values []float32  `json:"values"`
 }
 
 // optimizerBattery pairs a battery request entry with its device detail
@@ -460,6 +476,9 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		site.log.DEBUG.Printf("optimizer: home slots updated with measured %.0fWh: %.0f -> %.0f", v, orig, gt[:len(orig)])
 	}
 
+	// base load before the loadpoint contributions are summarized into gt
+	home := slices.Clone(gt)
+
 	// heating loadpoints add their forecast demand on top of the measured base load
 	heaters := site.addHeatingDemand(gt, minLen)
 
@@ -503,8 +522,12 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 	// stores eta Wh per Wh, so below pE/eta exporting beats storing
 	pa := max(lo.Min(req.TimeSeries.PN)*eta*0.99, lo.Min(req.TimeSeries.PE)/eta*1.01)
 
+	// individual profiles summarized into Gt, for the debug view
 	details = requestDetails{
 		Timestamps: asTimestamps(dt, now),
+		DemandDetails: []demandDetail{
+			{Type: demandTypeHome, Values: prorate(home, firstSlotDuration)},
+		},
 	}
 
 	if site.circuit != nil {
@@ -530,9 +553,6 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 
 	var batteries []optimizerBattery
 
-	// uncontrollable power of loadpoints that cannot be modelled as storage
-	var unmodelled float64
-
 	for id, lp := range site.ActiveLoadpoints() {
 		// ignore disconnected loadpoints, including StatusNone
 		if s := lp.GetStatus(); s != api.StatusB && s != api.StatusC {
@@ -540,14 +560,14 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		}
 
 		// heating loadpoints are already accounted for by their demand forecast
-		if slices.Contains(heaters, lp) {
+		if slices.ContainsFunc(heaters, func(h heatingDemand) bool { return h.lp == lp }) {
 			continue
 		}
 
 		// no vehicle capacity and no session energy limit to model against:
 		// account for the consumption as uncontrollable load
 		if v := lp.GetVehicle(); v == nil || (v.Capacity() == 0 && lp.GetLimitEnergy() == 0) {
-			unmodelled += unmodelledPower(lp)
+			site.addUnmodelledLoad(req.TimeSeries.Gt, &details, lp, minLen, firstSlotDuration)
 			continue
 		}
 
@@ -558,19 +578,13 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		}
 	}
 
-	// home profile subtracts all loadpoint power, so unmodelled loadpoints would
-	// leave the optimizer planning against surplus that is already consumed. Their
-	// forecast is zero, so the measured power only decays into the near slots -
-	// without a capacity there is no fill point to assert it any further.
-	if unmodelled > 0 {
-		load := make([]float64, minLen)
-		blendMeasured(load, unmodelled/slotsPerHour, optimizerDecaySlots)
-
-		site.log.DEBUG.Printf("optimizer: home slots updated with unmodelled %.0fW loadpoint load: %.0f", unmodelled, load[:min(optimizerDecaySlots, len(load))])
-
-		for i, v := range prorate(load, firstSlotDuration) {
-			req.TimeSeries.Gt[i] += v
-		}
+	// unmodelled loads precede the heating demand
+	for _, h := range heaters {
+		details.DemandDetails = append(details.DemandDetails, demandDetail{
+			Type:   demandTypeHeating,
+			Title:  h.lp.GetTitle(),
+			Values: prorate(h.values, firstSlotDuration),
+		})
 	}
 
 	for i, dev := range site.batteryMeters {
@@ -592,6 +606,11 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 		b.cfg.PA = pa
 		req.Batteries = append(req.Batteries, b.cfg)
 		details.BatteryDetails = append(details.BatteryDetails, b.detail)
+	}
+
+	// a lone base load profile is identical to the total
+	if len(details.DemandDetails) < 2 {
+		details.DemandDetails = nil
 	}
 
 	return req, details, nil
@@ -874,10 +893,13 @@ func batteryForecastSocExtremes(req []optimizer.BatteryConfig, resp []optimizer.
 func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDuration time.Duration, grid api.Rates) (optimizer.BatteryConfig, batteryDetail) {
 	bat := optimizer.BatteryConfig{
 		ChargeFromGrid: true,
-		CMin:           float32(lp.EffectiveMinPower()),
-		CMax:           float32(lp.EffectiveMaxPower()),
-		DMax:           0,
-		SMin:           0,
+		// keeping a running session on costs no charge start, so the optimizer stops
+		// rescheduling an ongoing charge into the next slot when both cost the same
+		CActive: lp.GetStatus() == api.StatusC,
+		CMin:    float32(lp.EffectiveMinPower()),
+		CMax:    float32(lp.EffectiveMaxPower()),
+		DMax:    0,
+		SMin:    0,
 		// PA:             pa,
 	}
 
@@ -1088,6 +1110,32 @@ func loadpointProfile(lp loadpoint.API, minLen int) []float64 {
 	}
 
 	return res
+}
+
+// addUnmodelledLoad adds the uncontrollable power of a loadpoint to the home demand,
+// which the home profile does not contain
+func (site *Site) addUnmodelledLoad(gt []float32, details *requestDetails, lp loadpoint.API, minLen int, firstSlotDuration time.Duration) {
+	power := unmodelledPower(lp)
+	if power <= 0 {
+		return
+	}
+
+	// no forecast and no capacity to assert it further, so the measured power only decays
+	load := make([]float64, minLen)
+	blendMeasured(load, power/slotsPerHour, optimizerDecaySlots)
+
+	site.log.DEBUG.Printf("optimizer: home slots updated with unmodelled %.0fW load of %s: %.0f", power, lp.GetTitle(), load[:min(optimizerDecaySlots, len(load))])
+
+	prorated := prorate(load, firstSlotDuration)
+	for i, v := range prorated {
+		gt[i] += v
+	}
+
+	details.DemandDetails = append(details.DemandDetails, demandDetail{
+		Type:   demandTypeUnmodelled,
+		Title:  lp.GetTitle(),
+		Values: prorated,
+	})
 }
 
 // unmodelledPower returns the uncontrollable power of a connected loadpoint that
