@@ -94,11 +94,25 @@ render: |
           body: '{"sn":"{{ .serial }}","properties":{"smartMode":1,"acMode":2,"outputLimit":0,"inputLimit":0}}'
       - case: 3 # charge
         set:
-          source: http
-          uri: http://{{ .host }}/properties/write
-          method: POST
-          headers:
-          - content-type: application/json
-          body: '{"sn":"{{ .serial }}","properties":{"smartMode":1,"acMode":1,"outputLimit":0,"inputLimit":{{ .maxchargepower }}}}'
+          source: go
+          in:
+          - name: rated
+            type: int
+            config:
+              source: http
+              uri: http://{{ .host }}/properties/report
+              jq: .properties.chargeMaxLimit
+              cache: {{ .cache }}
+          out:
+          - name: power
+            type: int
+            config:
+              source: http
+              uri: http://{{ .host }}/properties/write
+              method: POST
+              headers:
+              - content-type: application/json
+              body: '{"sn":"{{ .serial }}","properties":{"smartMode":1,"acMode":1,"outputLimit":0,"inputLimit":${power}}}'
+          script: rated
   {{- end }}
   {{- include "battery-capacity" . }}
