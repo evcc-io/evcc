@@ -70,8 +70,8 @@ capabilities: ["{{ join "\", \"" .Capabilities }}"]
 {{- if .Countries }}
 countries: ["{{ join "\", \"" .Countries }}"]
 {{- end }}
-{{- if .TariffUsages }}
-usages: ["{{ join "\", \"" .TariffUsages }}"]
+{{- if .Usages }}
+usages: ["{{ join "\", \"" .Usages }}"]
 {{- end }}
 {{- if .Requirements }}
 requirements: ["{{ join "\", \"" .Requirements }}"]
@@ -91,7 +91,7 @@ caveats:
 {{- end }}
 {{- end }}
 render:
-{{- if .Usages -}}
+{{- if .UsageParam -}}
 {{- $content := . }}
 {{- range $usage := .Usages }}
 {{- $_ := set $content "Usage" $usage }}

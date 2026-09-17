@@ -75,7 +75,7 @@ products:
 
 ## `usages`
 
-`usages` restricts a tariff template to `grid` and/or `feedin`. Templates without `usages` are offered for both.
+`usages` restricts a tariff template to `grid` and/or `feedin`. Templates without `usages` are offered for both. Meter templates derive it from the `usage` param choices and must not set it.
 
 ## `capabilities`
 

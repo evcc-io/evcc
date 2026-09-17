@@ -3,6 +3,7 @@ package templates
 import (
 	"bytes"
 	_ "embed"
+	"errors"
 	"fmt"
 	"slices"
 	"strconv"
@@ -24,8 +25,8 @@ type Template struct {
 	Link         string         `json:",omitempty"` // integration provider link, can be overridden per product
 	Products     []Product      `json:",omitempty"` // list of products this template is compatible with
 	Capabilities []Capability   `json:"-"`
-	Countries    []CountryCode  `json:",omitempty"`                     // list of countries supported by this template
-	TariffUsages []string       `yaml:"usages" json:"usages,omitempty"` // restrict tariff template to grid and/or feedin, empty means both
+	Countries    []CountryCode  `json:",omitempty"` // list of countries supported by this template
+	Usages       []string       `json:",omitempty"` // restrict template to usages, empty means unrestricted; meters derive this from the usage param choices
 	Requirements Requirements   `json:",omitempty"`
 	Caveats      []Caveat       `json:",omitempty"` // known device limitations
 	Params       []Param        `json:",omitempty"`
@@ -82,6 +83,18 @@ func (t *Template) SortRequiredParamsFirst() error {
 	return nil
 }
 
+// ResolveUsages derives the usage filter from the usage param choices
+func (t *Template) ResolveUsages() error {
+	if _, p := t.ParamByName(ParamUsage); p.Name != "" {
+		if len(t.Usages) > 0 {
+			return errors.New("usages is derived from the usage param")
+		}
+		t.Usages = p.Choice
+	}
+
+	return nil
+}
+
 // validate the template (only rudimentary for now)
 func (t *Template) Validate() error {
 	for _, c := range t.Countries {
@@ -90,9 +103,11 @@ func (t *Template) Validate() error {
 		}
 	}
 
-	for _, u := range t.TariffUsages {
-		if u != "grid" && u != "feedin" {
-			return fmt.Errorf("invalid usages entry: '%s'", u)
+	if _, p := t.ParamByName(ParamUsage); p.Name == "" {
+		for _, u := range t.Usages {
+			if u != "grid" && u != "feedin" {
+				return fmt.Errorf("invalid usages entry: '%s'", u)
+			}
 		}
 	}
 
@@ -255,15 +270,6 @@ func (t *Template) ParamByName(name string) (int, Param) {
 		}
 	}
 	return -1, Param{}
-}
-
-// Usages returns the list of supported usages
-func (t *Template) Usages() []string {
-	if i, p := t.ParamByName(ParamUsage); i > -1 {
-		return p.Choice
-	}
-
-	return nil
 }
 
 // return all modbus choices defined in the template

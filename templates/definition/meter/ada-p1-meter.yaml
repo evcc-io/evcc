@@ -4,6 +4,8 @@ products:
     description:
       generic: P1 Meter
 params:
+  - name: usage
+    choice: ["grid"]
   - name: host
     default: okosvillanyora.local:8989
   - name: cache

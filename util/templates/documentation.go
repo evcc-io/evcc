@@ -62,6 +62,9 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 		}
 	}
 
+	_, usageParam := t.ParamByName(ParamUsage)
+	hasUsageParam := usageParam.Name != ""
+
 	var hasAdvancedParams bool
 
 	// remove usage and deprecated from params and check if there are advanced params
@@ -103,13 +106,13 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 		"ProductGroup":           t.GroupTitle(lang),
 		"Capabilities":           product.Capabilities,
 		"Countries":              t.Countries,
-		"TariffUsages":           t.TariffUsages,
 		"Requirements":           t.Requirements.EVCC,
 		"RequirementDescription": t.Requirements.Description.String(lang),
 		"Caveats":                caveats,
 		"Params":                 filteredParams,
 		"AdvancedParams":         hasAdvancedParams,
-		"Usages":                 t.Usages(),
+		"Usages":                 t.Usages,
+		"UsageParam":             hasUsageParam,
 		"Modbus":                 modbusRender,
 		"ModbusData":             modbusData,
 	}
