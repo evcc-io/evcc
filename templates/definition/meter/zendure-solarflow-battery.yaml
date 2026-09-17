@@ -140,3 +140,4 @@ render: |
           script: rated
   {{- end }}
   {{- include "battery-capacity" . }}
+  
