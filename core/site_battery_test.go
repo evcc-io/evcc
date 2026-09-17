@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
@@ -82,6 +84,56 @@ func TestApplyBatteryMode(t *testing.T) {
 		}
 
 		ctrl.Finish()
+	}
+}
+
+// TestUpdateBatteryChargeValues guards the setpoint fallback: it applies only when there is
+// no suggestion at all, not when a real one is 0 W (hold/holdcharge/normal).
+func TestUpdateBatteryChargeValues(t *testing.T) {
+	for _, tc := range []struct {
+		name             string
+		suggestion       *types.Suggestion
+		expectedCap      float64
+		expectedSetpoint float64
+	}{
+		{"suggestion available for both", &types.Suggestion{Action: "charge", Charge: 1234}, 1234, 1234},
+		{"holdcharge: real suggestion, deliberately 0 W - must not fall back", &types.Suggestion{Action: "holdcharge", Charge: 0}, 0, 0},
+		{"no suggestion at all: cap stays 0, setpoint falls back to hardware max", nil, 0, 5000},
+	} {
+		t.Logf("%+v", tc)
+
+		var pushedCap, pushedSetpoint float64
+
+		var bat api.Meter = &struct {
+			api.Meter
+			api.BatteryChargePowerLimiter
+			api.BatteryPowerSetpointController
+			api.BatteryPowerLimiter
+		}{
+			BatteryChargePowerLimiter: implement.BatteryChargePowerLimiter(func(watt float64) error {
+				pushedCap = watt
+				return nil
+			}),
+			BatteryPowerSetpointController: implement.BatteryPowerSetpointController(func(watt float64) error {
+				pushedSetpoint = watt
+				return nil
+			}),
+			BatteryPowerLimiter: implement.BatteryPowerLimiter(func() (float64, float64) {
+				return 5000, 5000
+			}),
+		}
+
+		site := &Site{
+			log:           util.NewLogger("foo"),
+			batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "battery1"}, bat)},
+		}
+		if tc.suggestion != nil {
+			site.setSuggestions(map[string]types.Suggestion{batteryKey("battery1"): *tc.suggestion})
+		}
+
+		site.updateBatteryChargeValues()
+		assert.Equal(t, tc.expectedCap, pushedCap, "charge power cap")
+		assert.Equal(t, tc.expectedSetpoint, pushedSetpoint, "charge setpoint")
 	}
 }
 
