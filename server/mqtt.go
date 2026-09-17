@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/cmd/shutdown"
@@ -83,6 +84,18 @@ func mqttTagAttribute(attr string, f reflect.StructField) bool {
 	return tagAttribute("mqtt", attr, f)
 }
 
+// mqttTopicLevel makes a dynamic map key usable as a single topic level.
+// Wildcards and level separators are not allowed in published topics, and some
+// brokers (e.g. NATS) reject topics containing whitespace.
+func mqttTopicLevel(s string) string {
+	return strings.Map(func(r rune) rune {
+		if r == '+' || r == '#' || r == '/' || unicode.IsSpace(r) {
+			return '_'
+		}
+		return r
+	}, s)
+}
+
 func (m *MQTT) publishComplex(topic string, retained bool, payload any) {
 	if _, ok := payload.(fmt.Stringer); ok || payload == nil {
 		m.publishSingleValue(topic, retained, payload)
@@ -122,7 +135,7 @@ func (m *MQTT) publishComplex(topic string, retained bool, payload any) {
 	case reflect.Map:
 		// loop map
 		for iter := reflect.ValueOf(payload).MapRange(); iter.Next(); {
-			k := iter.Key().String()
+			k := mqttTopicLevel(iter.Key().String())
 			m.publishComplex(fmt.Sprintf("%s/%s", topic, k), retained, iter.Value().Interface())
 		}
 
