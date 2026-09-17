@@ -204,6 +204,20 @@ export default defineComponent({
 			return options;
 		},
 	},
+	watch: {
+		// CircuitModal is mounted once as a singleton (no v-if/:key in Config.vue), so its data
+		// survives between opens. handleConfigurationLoaded only runs for an existing circuit
+		// (id !== undefined); a new circuit otherwise inherits whatever meterSelection was left
+		// over from the last edit, while the actual form value already reset to none.
+		id: {
+			immediate: true,
+			handler(newId: number | undefined) {
+				if (newId === undefined) {
+					this.meterSelection = MeterSelection.NONE;
+				}
+			},
+		},
+	},
 	methods: {
 		meterTitle,
 		meterSelectionChanged(selection: MeterSelection, values: { meter?: string }) {
