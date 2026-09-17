@@ -1,37 +1,15 @@
 template: polestar
+deprecated: true
 products:
   - brand: Polestar
 requirements:
   evcc: ["skiptest"]
-  description:
-    en: |
-      Requires client credentials from the Polestar Data Portal developer account (EU Data Act). Register at the Polestar developer portal to obtain a client ID, client secret and account ID.
-    de: |
-      Benötigt Client-Zugangsdaten aus dem Polestar Data Portal Entwicklerkonto (EU Data Act). Registrierung im Polestar Entwicklerportal für Client ID, Client Secret und Account ID.
 params:
-  - preset: vehicle-common
+  - preset: vehicle-base
   - preset: vehicle-online
-  - name: clientid
-    required: true
-  - name: clientsecret
-    required: true
-  - name: accountid
-    required: true
-    description:
-      generic: Account ID
-    help:
-      en: Account ID sent as the x-client-id header.
-      de: Account ID, wird als x-client-id Header gesendet.
   - name: vin
     example: LPSVS...
-  - name: cache
-    default: 15m
 render: |
-  type: polestar
-  clientid: {{ .clientid }}
-  clientsecret: {{ .clientsecret }}
-  accountid: {{ .accountid }}
-  vin: {{ .vin }}
-  {{ include "common" . }}
-  cache: {{ .cache }}
+  type: polestar-grpc
+  {{ include "base" . }}
   {{ include "features" . }}

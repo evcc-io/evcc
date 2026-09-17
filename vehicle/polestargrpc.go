@@ -11,18 +11,20 @@ import (
 	"github.com/evcc-io/evcc/vehicle/polestar/legacy"
 )
 
-// Polestar is an api.Vehicle implementation for Polestar cars
-type Polestar struct {
+// PolestarGRPC is an api.Vehicle implementation for Polestar cars using the
+// gRPC battery API. It restores the charging status that Polestar removed from
+// the GraphQL API, see https://github.com/evcc-io/evcc/issues/30071.
+type PolestarGRPC struct {
 	*embed
-	*legacy.Provider
+	*legacy.GrpcProvider
 }
 
 func init() {
-	registry.Add("polestar", NewPolestarFromConfig)
+	registry.Add("polestar-grpc", NewPolestarGRPCFromConfig)
 }
 
-// NewPolestarFromConfig creates a new vehicle
-func NewPolestarFromConfig(other map[string]any) (api.Vehicle, error) {
+// NewPolestarGRPCFromConfig creates a new vehicle
+func NewPolestarGRPCFromConfig(other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed          `mapstructure:",squash"`
 		User, Password string
@@ -40,7 +42,7 @@ func NewPolestarFromConfig(other map[string]any) (api.Vehicle, error) {
 
 	log := util.NewLogger("polestar").Redact(cc.User, cc.Password, cc.VIN)
 
-	v := &Polestar{
+	v := &PolestarGRPC{
 		embed: &cc.embed,
 	}
 
@@ -58,10 +60,16 @@ func NewPolestarFromConfig(other map[string]any) (api.Vehicle, error) {
 	}, func(v legacy.ConsumerCar) (string, error) {
 		return v.VIN, nil
 	})
-
-	if err == nil {
-		v.Provider = legacy.NewProvider(log, api, vehicle.VIN, cc.Timeout, cc.Cache)
+	if err != nil {
+		return v, err
 	}
 
-	return v, err
+	grpcAPI, err := legacy.NewGrpcAPI(log, identity)
+	if err != nil {
+		return v, fmt.Errorf("grpc: %w", err)
+	}
+
+	v.GrpcProvider = legacy.NewGrpcProvider(grpcAPI, api, vehicle.VIN, cc.Timeout, cc.Cache)
+
+	return v, nil
 }

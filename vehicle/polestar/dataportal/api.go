@@ -1,4 +1,4 @@
-package polestar
+package dataportal
 
 import (
 	"errors"
