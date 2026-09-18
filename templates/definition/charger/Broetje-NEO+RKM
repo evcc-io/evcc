@@ -20,7 +20,7 @@ render: |
   type: heatpump
 
 
-  # 1. Leistungsmessung (Aktuelle Aufnahmeleistung & Energiezähler)
+  # 1. Power measurement (current power draw and energy meter)
   power:
     source: modbus
     uri: {{ joinHostPort .host .port }}
@@ -30,7 +30,7 @@ render: |
       type: input
       decode: uint32
 
-  # 2. Optionale Daten-Überwachung (Temperaturen)
+  # 2. Optional data monitoring (temperatures)
   temp:
     source: modbus
     uri: {{ joinHostPort .host .port }}
@@ -41,7 +41,7 @@ render: |
       decode: int16
     scale: 0.1
 
-  # 3. Dynamische Vorgabe der elektrischen Aufnahmeleistung bei PV-Überschuss
+  # 3. Dynamic setpoint for electrical power consumption during PV surplus
   setmaxpower:
     source: modbus
     uri: {{ joinHostPort .host .port }}
@@ -49,13 +49,12 @@ render: |
     register:
       address: 125
       type: writesingle
-      decode: uint16   
+      decode: uint16
 
 # ==========================================
-# CENTRAL HEATPUMP CONFIGURATION 
+# CENTRAL HEATPUMP CONFIGURATION
 # ==========================================
-#Anforderungsprofil: Die Konfiguration nutzt Register 125 zur Vorgabe der Watt-Leistung. 
-#Damit die Wärmepumpe darauf reagiert, muss an der Fachmannebene der Wärmepumpe 
-#das Anforderungsprofil 3 (PV-Auswahl auf "Modbus") aktiviert sein.
-#Code für Fachmannebende "0112" --> WARNUNG: 
-#!!!Hier können Einstellungen vorgenommen werden, die zu Schäden an der Anlage führen!!!
+# Requirement profile: this configuration uses register 125 to provide the power setpoint in watts.
+# For the heat pump to react to it, the requirement profile 3 (PV selection set to "Modbus") must be enabled at the heat pump service level.
+# Service code "0112" --> WARNING:
+# !!!Settings made here can cause damage to the system!!!
