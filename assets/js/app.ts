@@ -10,6 +10,7 @@ import tooltip from "./directives/tooltip.ts";
 import { watchThemeChanges } from "./theme.ts";
 import { applyUrlSettings } from "./urlSettings.ts";
 import { appDetection, sendToApp } from "./utils/native";
+import { cleanAuthStash } from "./utils/authStash";
 import store from "./store";
 import type { Notification } from "./types/evcc";
 
@@ -25,6 +26,8 @@ Dropdown.Default.popperConfig = (defaultConfig) => {
     ],
   };
 };
+
+cleanAuthStash();
 
 // lazy load smoothscroll polyfill. mainly for safari < 15.4
 if (!window.CSS.supports("scroll-behavior", "smooth")) {

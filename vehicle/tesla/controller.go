@@ -10,6 +10,12 @@ import (
 
 const ProxyBaseUrl = "https://api.myteslamate.com"
 
+// Commander sends charge commands to the vehicle, via proxy or signed in-process
+type Commander interface {
+	api.CurrentController
+	api.ChargeController
+}
+
 type Controller struct {
 	vehicle *tesla.Vehicle
 }
@@ -23,14 +29,12 @@ func NewController(vehicle *tesla.Vehicle) *Controller {
 	return v
 }
 
-var _ api.CurrentController = (*Controller)(nil)
+var _ Commander = (*Controller)(nil)
 
 // MaxCurrent implements the api.CurrentController interface
 func (v *Controller) MaxCurrent(current int64) error {
 	return apiError(v.vehicle.SetChargingAmps(int(current)))
 }
-
-var _ api.ChargeController = (*Controller)(nil)
 
 // ChargeEnable implements the api.ChargeController interface
 func (v *Controller) ChargeEnable(enable bool) error {

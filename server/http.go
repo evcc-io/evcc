@@ -75,6 +75,10 @@ func NewHTTPd(addr string, hub *SocketHub, custom Customization) *HTTPd {
 	// websocket
 	router.HandleFunc("/ws", socketHandler(hub))
 
+	for path, h := range service.PublicRoutes() {
+		router.Methods(http.MethodGet).Path(path).Handler(h)
+	}
+
 	// static - individual handlers per root and folders
 	static := router.PathPrefix("/").Subrouter()
 	static.Use(handlers.CompressHandler)
