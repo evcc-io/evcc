@@ -1,6 +1,11 @@
 package lgpcs
 
-import "math"
+import (
+	"math"
+	"strings"
+
+	"github.com/spf13/cast"
+)
 
 // Models
 type Model int
@@ -41,6 +46,12 @@ type SystemInfoResponse struct {
 	Battery BatteryInfo `json:"batt"`
 	PMS     PMS         `json:"pms"`
 	Version Version     `json:"version"`
+}
+
+type BatterySettings struct {
+	BackupMode string `json:"backup_setting"`
+	BackupSOC  int    `json:"backup_soc,string"`
+	Autocharge bool   `json:"auto_charge"`
 }
 
 type BatteryInfo struct {
@@ -166,4 +177,10 @@ func (m MeterResponse15) GetCurrentGridFeedInEnergy() float64 {
 
 func (m MeterResponse15) GetCurrentPvGenerationSum() float64 {
 	return math.NaN() // data not provided by Ess15
+}
+
+func (b *BatterySettings) Unmarshal(resp map[string]any) {
+	b.BackupMode = cast.ToString(resp["backup_setting"])
+	b.BackupSOC = cast.ToInt(resp["backup_soc"])
+	b.Autocharge = strings.EqualFold(cast.ToString(resp["auto_charge"]), "on")
 }
