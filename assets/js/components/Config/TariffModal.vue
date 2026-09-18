@@ -7,6 +7,7 @@
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
 		:show-main-content="!!tariffType"
+		:usage="productUsage"
 		:on-template-change="handleTemplateChange"
 		:currency="currency"
 		:preserve-on-template-change="preserveFields"
@@ -110,6 +111,11 @@ export default defineComponent({
 		},
 		tariffType(): TariffType | null {
 			return this.type || this.selectedType;
+		},
+		productUsage(): string | undefined {
+			if (this.tariffType === "grid" || this.tariffType === "planner") return "grid";
+			if (this.tariffType === "feedIn") return "feedin";
+			return undefined;
 		},
 		modalTitle(): string {
 			if (this.isNew) {
