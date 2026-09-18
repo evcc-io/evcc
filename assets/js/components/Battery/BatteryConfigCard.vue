@@ -89,7 +89,10 @@
 
 		<template v-if="controllable">
 			<hr class="my-3" />
-			<div class="form-check form-switch" :class="{ 'opacity-25 pe-none': optimizerAutomatic }">
+			<div
+				class="form-check form-switch"
+				:class="{ 'opacity-25 pe-none': optimizerAutomatic }"
+			>
 				<input
 					id="batteryDischarge"
 					:checked="batteryDischargeControl && !optimizerAutomatic"
@@ -103,7 +106,10 @@
 					{{ $t("battery.config.discharge") }}
 				</label>
 			</div>
-			<p v-if="optimizerAutomatic" class="switch-indent d-flex gap-3 text-muted small mt-2 mb-3">
+			<p
+				v-if="optimizerAutomatic"
+				class="switch-indent d-flex gap-3 text-muted small mt-2 mb-3"
+			>
 				<OptimizerAuto class="flex-shrink-0" />
 				<i18n-t keypath="config.optimizer.controlled" tag="span" scope="global">
 					<template #optimizer>
