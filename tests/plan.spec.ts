@@ -783,3 +783,444 @@ test.describe("plan strategy", async () => {
     await expect(modal.getByLabel("Late Charging")).toHaveValue("3600");
   });
 });
+
+test.describe("pause repeating plans", async () => {
+  test("pause and resume repeating plans UI interaction", async ({ page }) => {
+    await page.goto("/");
+
+    const lp1 = await page.getByTestId("loadpoint").first();
+    await lp1
+      .getByTestId("change-vehicle")
+      .locator("select")
+      .selectOption("Vehicle with SoC with Capacity");
+
+    await lp1.getByTestId("charging-plan-button").click();
+    const modal = await page.getByTestId("charging-plan-modal").first();
+
+    // Add repeating plan
+    await modal.getByRole("button", { name: "Add repeating plan" }).click();
+    const plan = modal.getByTestId("plan-entry").nth(1);
+    await plan.getByTestId("repeating-plan-active").click();
+
+    // Verify Pause button is visible and enabled
+    const pauseBtn = modal.getByTestId("repeating-plan-pause");
+    await expect(pauseBtn).toBeVisible();
+    await expect(pauseBtn).toBeEnabled();
+
+    // Click Pause to open presets dropdown / modal
+    await pauseBtn.click();
+
+    // Verify preset options ("Until tomorrow 10:00" / "Tomorrow 08:00", "Until Friday 18:00", "Until Sunday 18:00")
+    const presetTomorrow = modal.getByTestId("pause-preset-tomorrow");
+    if (await presetTomorrow.isVisible()) {
+      await presetTomorrow.click();
+    } else {
+      const presetOption = modal
+        .getByRole("button", { name: /tomorrow|24h|friday|sunday/i })
+        .first();
+      await presetOption.click();
+    }
+
+    // Verify status badge / banner appears with paused status
+    const pausedBadge = modal.getByTestId("repeating-plan-paused-badge");
+    await expect(pausedBadge).toBeVisible();
+    await expect(pausedBadge).toContainText(/Paused until/i);
+
+    // Verify Resume button is visible
+    const resumeBtn = modal.getByTestId("repeating-plan-resume");
+    await expect(resumeBtn).toBeVisible();
+
+    // Click Resume
+    await resumeBtn.click();
+
+    // Verify status badge is removed and Pause button is restored
+    await expect(pausedBadge).not.toBeVisible();
+    await expect(modal.getByTestId("repeating-plan-pause")).toBeVisible();
+  });
+
+  test("pause and resume UI on mobile viewport", async ({ page }) => {
+    await page.setViewportSize(mobile);
+    await page.goto("/");
+
+    const lp1 = await page.getByTestId("loadpoint").first();
+    await lp1
+      .getByTestId("change-vehicle")
+      .locator("select")
+      .selectOption("Vehicle with SoC with Capacity");
+
+    await lp1.getByTestId("charging-plan-button").click();
+    const modal = await page.getByTestId("charging-plan-modal").first();
+
+    // Add repeating plan
+    await modal.getByRole("button", { name: "Add repeating plan" }).click();
+    const plan = modal.getByTestId("plan-entry").nth(1);
+    await plan.getByTestId("repeating-plan-active").click();
+
+    // Pause on mobile
+    const pauseBtn = modal.getByTestId("repeating-plan-pause");
+    await expect(pauseBtn).toBeVisible();
+    await pauseBtn.click();
+
+    const presetTomorrow = modal.getByTestId("pause-preset-tomorrow");
+    if (await presetTomorrow.isVisible()) {
+      await presetTomorrow.click();
+    } else {
+      const presetOption = modal
+        .getByRole("button", { name: /tomorrow|24h|friday|sunday/i })
+        .first();
+      await presetOption.click();
+    }
+
+    const pausedBadge = modal.getByTestId("repeating-plan-paused-badge");
+    await expect(pausedBadge).toBeVisible();
+
+    const resumeBtn = modal.getByTestId("repeating-plan-resume");
+    await expect(resumeBtn).toBeVisible();
+    await resumeBtn.click();
+
+    await expect(pausedBadge).not.toBeVisible();
+    await expect(modal.getByTestId("repeating-plan-pause")).toBeVisible();
+  });
+
+  test("suppressed charging and slot allocation during pause horizon", async ({ page }) => {
+    await page.goto("/");
+
+    const lp1 = await page.getByTestId("loadpoint").first();
+    await lp1
+      .getByTestId("change-vehicle")
+      .locator("select")
+      .selectOption("Vehicle with SoC with Capacity");
+
+    const tomorrow = getWeekday(1);
+    const tomorrowShort = getWeekday(1, "short");
+    await lp1.getByTestId("charging-plan-button").click();
+    const modal = await page.getByTestId("charging-plan-modal").first();
+
+    // Configure repeating plan for tomorrow at 07:00 (target SoC 80%)
+    await modal.getByRole("button", { name: "Add repeating plan" }).click();
+    const plan2 = modal.getByTestId("plan-entry").nth(1);
+    const days2 = plan2.getByTestId("repeating-plan-weekdays");
+    await days2.click();
+    await days2.getByRole("checkbox", { name: "Select all" }).click();
+    await days2.getByRole("checkbox", { name: "Select all" }).click();
+    await days2.getByRole("checkbox", { name: tomorrow }).check();
+    await days2.click(); // close dropdown
+    await plan2.getByTestId("repeating-plan-time").fill("07:00");
+    await plan2.getByTestId("repeating-plan-soc").selectOption("80%");
+    await plan2.getByTestId("repeating-plan-active").click();
+
+    // Pause repeating plans until tomorrow 08:00
+    const pauseBtn = modal.getByTestId("repeating-plan-pause");
+    await expect(pauseBtn).toBeVisible();
+    await pauseBtn.click();
+
+    const presetTomorrow = modal.getByTestId("pause-preset-tomorrow");
+    if (await presetTomorrow.isVisible()) {
+      await presetTomorrow.click();
+    } else {
+      const presetOption = modal
+        .getByRole("button", { name: /tomorrow|24h|friday|sunday/i })
+        .first();
+      await presetOption.click();
+    }
+
+    // Verify status badge appears
+    await expect(modal.getByTestId("repeating-plan-paused-badge")).toBeVisible();
+
+    // Verify repeating plan is suppressed: next occurrence is pushed beyond pausedUntil (not tomorrow 07:00)
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText(/Next plan: #2/i);
+    await expect(modal.getByTestId("target-text")).not.toContainText(`${tomorrowShort} 7:00`);
+
+    // 4. Configure an independent one-off static plan for tomorrow 20:00 (target SoC 90%)
+    const plan1 = modal.getByTestId("plan-entry").nth(0);
+    await plan1.getByTestId("static-plan-day").selectOption({ index: 1 });
+    await plan1.getByTestId("static-plan-time").fill("20:00");
+    await plan1.getByTestId("static-plan-soc").selectOption("90%");
+    await plan1.getByTestId("static-plan-active").click();
+
+    // Verify static plan is active
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText(/Next plan: #1|Active plan/i);
+    await expect(modal.getByTestId("target-text")).toContainText("20:00");
+
+    // 5. Deactivate static plan
+    await plan1.getByTestId("static-plan-active").click();
+
+    // 6. Resume repeating plans manually and verify slot allocation immediately reappears
+    const resumeBtn = modal.getByTestId("repeating-plan-resume");
+    await expect(resumeBtn).toBeVisible();
+    await resumeBtn.click();
+
+    await expect(modal.getByTestId("repeating-plan-paused-badge")).not.toBeVisible();
+    await expect(modal.getByTestId("plan-preview-title")).toHaveText(/Next plan: #2|Next plan/i);
+    await expect(modal.getByTestId("target-text")).toContainText("07:00");
+  });
+
+  test("custom date/time picker selection", async ({ page }) => {
+    await page.goto("/");
+
+    const lp1 = await page.getByTestId("loadpoint").first();
+    await lp1
+      .getByTestId("change-vehicle")
+      .locator("select")
+      .selectOption("Vehicle with SoC with Capacity");
+
+    await lp1.getByTestId("charging-plan-button").click();
+    const modal = await page.getByTestId("charging-plan-modal").first();
+
+    // Add repeating plan
+    await modal.getByRole("button", { name: "Add repeating plan" }).click();
+    const plan = modal.getByTestId("plan-entry").nth(1);
+    await plan.getByTestId("repeating-plan-active").click();
+
+    // Open pause dropdown
+    const pauseBtn = modal.getByTestId("repeating-plan-pause");
+    await expect(pauseBtn).toBeVisible();
+    await pauseBtn.click();
+
+    // Open custom picker
+    const customPresetBtn = modal.getByTestId("pause-preset-custom");
+    await expect(customPresetBtn).toBeVisible();
+    await customPresetBtn.click();
+
+    // Verify custom inputs are visible
+    const customDateInput = modal.getByTestId("pause-custom-date");
+    const customTimeInput = modal.getByTestId("pause-custom-time");
+    const customApplyBtn = modal.getByTestId("pause-custom-apply");
+
+    await expect(customDateInput).toBeVisible();
+    await expect(customTimeInput).toBeVisible();
+    await expect(customApplyBtn).toBeVisible();
+
+    // Select future date and time
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 3);
+    const futureDateIso = futureDate.toISOString().slice(0, 10);
+
+    await customDateInput.fill(futureDateIso);
+    await customTimeInput.fill("16:30");
+
+    // Apply custom pause
+    await customApplyBtn.click();
+
+    // Verify status badge shows paused until time
+    const pausedBadge = modal.getByTestId("repeating-plan-paused-badge");
+    await expect(pausedBadge).toBeVisible();
+    await expect(pausedBadge).toContainText(/Paused until/i);
+    await expect(pausedBadge).toContainText("16:30");
+
+    // Resume repeating plans
+    const resumeBtn = modal.getByTestId("repeating-plan-resume");
+    await expect(resumeBtn).toBeVisible();
+    await resumeBtn.click();
+
+    // Verify pause is cleared
+    await expect(pausedBadge).not.toBeVisible();
+    await expect(modal.getByTestId("repeating-plan-pause")).toBeVisible();
+  });
+
+  test("complete multi-vehicle pause/resume UX workflow and plan isolation", async ({ page }) => {
+    await page.goto("/");
+
+    const lp1 = await page.getByTestId("loadpoint").first();
+
+    // 1. On the main dashboard, select Vehicle 1 ("Vehicle with SoC with Capacity") on the loadpoint
+    await lp1
+      .getByTestId("change-vehicle")
+      .locator("select")
+      .selectOption("Vehicle with SoC with Capacity");
+
+    // 2. Open the charging plan modal for Vehicle 1
+    await lp1.getByTestId("charging-plan-button").click();
+    const modal = page.getByTestId("charging-plan-modal").first();
+    await expect(modal).toBeVisible();
+
+    // 3. Set a repeating plan and click Pause (choose a preset, e.g. "Tomorrow 10:00")
+    await modal.getByRole("button", { name: "Add repeating plan" }).click();
+    const plan1 = modal.getByTestId("plan-entry").nth(1);
+    await plan1.getByTestId("repeating-plan-active").click();
+
+    const pauseBtn1 = modal.getByTestId("repeating-plan-pause");
+    await expect(pauseBtn1).toBeVisible();
+    await expect(pauseBtn1).toBeEnabled();
+    await pauseBtn1.click();
+
+    const presetTomorrow = modal.getByTestId("pause-preset-tomorrow");
+    if (await presetTomorrow.isVisible()) {
+      await presetTomorrow.click();
+    } else {
+      const presetOption = modal
+        .getByRole("button", { name: /tomorrow|24h|friday|sunday/i })
+        .first();
+      await presetOption.click();
+    }
+
+    // 4. Verify the amber "Paused until..." badge appears for Vehicle 1
+    const pausedBadge1 = modal.getByTestId("repeating-plan-paused-badge");
+    await expect(pausedBadge1).toBeVisible();
+    await expect(pausedBadge1).toContainText(/Paused until/i);
+
+    // 5. Close the modal
+    await modal.getByRole("button", { name: "Close", exact: true }).click();
+    await expect(modal).not.toBeVisible();
+
+    // 6. On the main dashboard loadpoint, switch the vehicle dropdown to Vehicle 2 ("Vehicle with SoC with Massive Capacity")
+    await lp1
+      .getByTestId("change-vehicle")
+      .locator("select")
+      .selectOption("Vehicle with SoC with Massive Capacity");
+
+    // 7. Open the charging plan modal for Vehicle 2
+    await lp1.getByTestId("charging-plan-button").click();
+    await expect(modal).toBeVisible();
+
+    // 8. Set a repeating plan on Vehicle 2
+    await modal.getByRole("button", { name: "Add repeating plan" }).click();
+    const plan2 = modal.getByTestId("plan-entry").nth(1);
+    await plan2.getByTestId("repeating-plan-time").fill("08:30");
+    await plan2.getByTestId("repeating-plan-active").click();
+
+    // 9. Verify that Vehicle 2 is NOT paused (Pause button is visible, no pause banner)
+    await expect(modal.getByTestId("repeating-plan-paused-badge")).not.toBeVisible();
+    const pauseBtn2 = modal.getByTestId("repeating-plan-pause");
+    await expect(pauseBtn2).toBeVisible();
+    await expect(pauseBtn2).toBeEnabled();
+
+    // 10. Click Pause on Vehicle 2 with a different preset (e.g. Friday 18:00 or 48h)
+    await pauseBtn2.click();
+    const presetFriday = modal.getByTestId("pause-preset-friday");
+    if (await presetFriday.isVisible()) {
+      await presetFriday.click();
+    } else {
+      const presetSunday = modal.getByTestId("pause-preset-sunday");
+      if (await presetSunday.isVisible()) {
+        await presetSunday.click();
+      } else {
+        const preset48h = modal.getByTestId("pause-preset-48h");
+        await preset48h.click();
+      }
+    }
+
+    // 11. Verify Vehicle 2 now shows its own "Paused until..." banner
+    const pausedBadge2 = modal.getByTestId("repeating-plan-paused-badge");
+    await expect(pausedBadge2).toBeVisible();
+    await expect(pausedBadge2).toContainText(/Paused until/i);
+
+    // 12. Close the modal
+    await modal.getByRole("button", { name: "Close", exact: true }).click();
+    await expect(modal).not.toBeVisible();
+
+    // 13. Switch back to Vehicle 1 on the loadpoint
+    await lp1
+      .getByTestId("change-vehicle")
+      .locator("select")
+      .selectOption("Vehicle with SoC with Capacity");
+
+    // 14. Open the plan modal, verify Vehicle 1 is still paused, and click Resume
+    await lp1.getByTestId("charging-plan-button").click();
+    await expect(modal).toBeVisible();
+
+    await expect(modal.getByTestId("repeating-plan-paused-badge")).toBeVisible();
+    await expect(modal.getByTestId("repeating-plan-paused-badge")).toContainText(/Paused until/i);
+
+    const resumeBtn1 = modal.getByTestId("repeating-plan-resume");
+    await expect(resumeBtn1).toBeVisible();
+    await resumeBtn1.click();
+
+    // Verify Vehicle 1 is unpaused and Pause button is restored
+    await expect(modal.getByTestId("repeating-plan-paused-badge")).not.toBeVisible();
+    await expect(modal.getByTestId("repeating-plan-pause")).toBeVisible();
+
+    // 15. Close the modal
+    await modal.getByRole("button", { name: "Close", exact: true }).click();
+    await expect(modal).not.toBeVisible();
+
+    // 16. Switch back to Vehicle 2, open the plan modal, and verify Vehicle 2 remains paused
+    await lp1
+      .getByTestId("change-vehicle")
+      .locator("select")
+      .selectOption("Vehicle with SoC with Massive Capacity");
+
+    await lp1.getByTestId("charging-plan-button").click();
+    await expect(modal).toBeVisible();
+
+    await expect(modal.getByTestId("repeating-plan-paused-badge")).toBeVisible();
+    await expect(modal.getByTestId("repeating-plan-paused-badge")).toContainText(/Paused until/i);
+    await expect(modal.getByTestId("repeating-plan-resume")).toBeVisible();
+    await expect(modal.getByTestId("repeating-plan-pause")).not.toBeVisible();
+  });
+
+  test("pause preset persistence and remembered selection across modal interactions", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    const lp1 = await page.getByTestId("loadpoint").first();
+    await lp1
+      .getByTestId("change-vehicle")
+      .locator("select")
+      .selectOption("Vehicle with SoC with Capacity");
+
+    await lp1.getByTestId("charging-plan-button").click();
+    const modal = page.getByTestId("charging-plan-modal").first();
+    await expect(modal).toBeVisible();
+
+    // Add repeating plan
+    await modal.getByRole("button", { name: "Add repeating plan" }).click();
+    const plan = modal.getByTestId("plan-entry").nth(1);
+    await plan.getByTestId("repeating-plan-active").click();
+
+    // 1. Verify quick preset selection updates lastPausePreset in settings / localStorage
+    const pauseBtn = modal.getByTestId("repeating-plan-pause");
+    await expect(pauseBtn).toBeVisible();
+    await pauseBtn.click();
+
+    const tomorrowBtn = modal.getByTestId("pause-preset-tomorrow");
+    await expect(tomorrowBtn).toBeVisible();
+    await tomorrowBtn.click();
+
+    // Check localStorage
+    let storedPreset = await page.evaluate(() => localStorage["last_pause_preset"]);
+    expect(storedPreset).toBe("tomorrow");
+
+    // Resume repeating plan
+    const resumeBtn = modal.getByTestId("repeating-plan-resume");
+    await expect(resumeBtn).toBeVisible();
+    await resumeBtn.click();
+
+    // 2. Open pause dropdown again: verify remembered preset has 'active' class
+    await pauseBtn.click();
+    await expect(modal.getByTestId("pause-preset-tomorrow")).toHaveClass(/active/);
+    await expect(modal.getByTestId("pause-preset-friday")).not.toHaveClass(/active/);
+
+    // Select another preset (e.g. friday)
+    const fridayBtn = modal.getByTestId("pause-preset-friday");
+    await fridayBtn.click();
+
+    storedPreset = await page.evaluate(() => localStorage["last_pause_preset"]);
+    expect(storedPreset).toBe("friday");
+
+    // Resume
+    await resumeBtn.click();
+
+    // 3. Select custom date/time and verify lastPausePreset is not overwritten
+    await pauseBtn.click();
+    await expect(modal.getByTestId("pause-preset-friday")).toHaveClass(/active/);
+    await expect(modal.getByTestId("pause-preset-tomorrow")).not.toHaveClass(/active/);
+
+    await modal.getByTestId("pause-preset-custom").click();
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 4);
+    await modal.getByTestId("pause-custom-date").fill(futureDate.toISOString().slice(0, 10));
+    await modal.getByTestId("pause-custom-time").fill("15:00");
+    await modal.getByTestId("pause-custom-apply").click();
+
+    // Verify localStorage still remembers "friday"
+    storedPreset = await page.evaluate(() => localStorage["last_pause_preset"]);
+    expect(storedPreset).toBe("friday");
+
+    // Resume and verify friday remains active on subsequent open
+    await resumeBtn.click();
+    await pauseBtn.click();
+    await expect(modal.getByTestId("pause-preset-friday")).toHaveClass(/active/);
+  });
+});
