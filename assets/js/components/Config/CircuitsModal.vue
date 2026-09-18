@@ -12,15 +12,11 @@
 		@changed="$emit('changed')"
 	>
 		<template #default>
-			<PlaceholderButton v-if="circuits.length === 0" @click="openCircuit()">
-				<div>
-					<p class="mb-3">{{ $t("config.circuits.noCircuitsConfigured") }}</p>
-					<div class="d-flex align-items-center justify-content-center">
-						<shopicon-regular-plus class="me-1"></shopicon-regular-plus>
-						<span>{{ $t("config.circuits.addMainCircuit") }}</span>
-					</div>
-				</div>
-			</PlaceholderButton>
+			<NewDeviceButton
+				v-if="circuits.length === 0"
+				:title="$t('config.circuits.addMainCircuit')"
+				@click="openCircuit()"
+			/>
 			<div v-else>
 				<CircuitsTree
 					class="mb-3"
@@ -45,15 +41,14 @@
 import JsonModal from "./JsonModal.vue";
 import type { ConfigCircuit, ConfigMeter } from "@/types/evcc";
 import CircuitsTree from "./CircuitsTree.vue";
-import PlaceholderButton from "../Helper/PlaceholderButton.vue";
-import "@h2d2/shopicons/es/regular/plus";
+import NewDeviceButton from "./NewDeviceButton.vue";
 import { openModal } from "@/configModal.ts";
 import { configCircuitTree } from "@/utils/circuits.ts";
 import type { PropType } from "vue";
 
 export default {
 	name: "CircuitsModal",
-	components: { JsonModal, CircuitsTree, PlaceholderButton },
+	components: { JsonModal, CircuitsTree, NewDeviceButton },
 	emits: ["changed"],
 	props: {
 		circuits: { type: Array as PropType<ConfigCircuit[]>, required: true },
