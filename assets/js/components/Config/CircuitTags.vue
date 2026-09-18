@@ -15,7 +15,7 @@
 				v-if="parts(node).length || loadpointsFor(node).length"
 				class="measurement-grid d-grid align-items-center w-100 min-w-0 small lh-sm"
 			>
-				<div v-for="part in parts(node)" :key="part.unit" class="bar-row">
+				<div v-for="part in parts(node)" :key="part.unit" class="bar-row evcc-gray">
 					<span
 						class="bar-value text-nowrap tabular me-2"
 						:class="{ 'text-warning': overLimit(part) }"
