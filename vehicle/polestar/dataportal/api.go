@@ -82,17 +82,10 @@ func (v *API) get(uri string, res any) error {
 }
 
 // mapError translates Data Portal HTTP errors into evcc sentinel errors: a
-// missing-data 404 becomes api.ErrNotAvailable, transient upstream failures
-// become api.ErrMustRetry so util.Cached retries instead of backing off.
+// missing-data 404 becomes api.ErrNotAvailable.
 func mapError(err error) error {
-	var se *request.StatusError
-	if errors.As(err, &se) {
-		switch {
-		case se.HasStatus(http.StatusNotFound):
-			return api.ErrNotAvailable
-		case se.StatusCode() >= http.StatusInternalServerError:
-			return fmt.Errorf("%w: %w", api.ErrMustRetry, err)
-		}
+	if se, ok := errors.AsType[*request.StatusError](err); ok && se.HasStatus(http.StatusNotFound) {
+		return api.ErrNotAvailable
 	}
 	return err
 }

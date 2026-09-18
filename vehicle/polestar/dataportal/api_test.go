@@ -26,14 +26,12 @@ func TestMapError(t *testing.T) {
 	// missing data becomes ErrNotAvailable
 	assert.ErrorIs(t, mapError(statusErr(http.StatusNotFound)), api.ErrNotAvailable)
 
-	// transient upstream failures become ErrMustRetry
-	assert.ErrorIs(t, mapError(statusErr(http.StatusInternalServerError)), api.ErrMustRetry)
-	assert.ErrorIs(t, mapError(statusErr(http.StatusServiceUnavailable)), api.ErrMustRetry)
-
-	// forbidden is passed through unchanged
-	err := statusErr(http.StatusForbidden)
-	require.Error(t, err)
-	assert.Equal(t, err, mapError(err))
+	// server errors are passed through unchanged
+	for _, code := range []int{http.StatusInternalServerError, http.StatusServiceUnavailable, http.StatusForbidden} {
+		err := statusErr(code)
+		require.Error(t, err)
+		assert.Equal(t, err, mapError(err))
+	}
 
 	// nil stays nil
 	assert.NoError(t, mapError(nil))
