@@ -9,6 +9,7 @@
 		state-key="circuits"
 		data-testid="circuits-modal"
 		no-buttons
+		:autofocus="false"
 		@changed="$emit('changed')"
 	>
 		<template #default>
@@ -21,7 +22,6 @@
 				<CircuitsTree
 					class="mb-3"
 					:circuitsTree="configCircuitTree(circuits)"
-					:meters="meters"
 					:grid-meter="gridMeter"
 				/>
 				<span class="evcc-gray">
@@ -52,10 +52,6 @@ export default {
 	emits: ["changed"],
 	props: {
 		circuits: { type: Array as PropType<ConfigCircuit[]>, required: true },
-		meters: {
-			type: Array as PropType<ConfigMeter[]>,
-			default: () => [],
-		},
 		gridMeter: { type: Object as PropType<ConfigMeter> },
 	},
 	methods: {

@@ -385,6 +385,9 @@ a:hover {
 .evcc-gray {
 	color: var(--evcc-gray);
 }
+.min-w-0 {
+	min-width: 0;
+}
 .text-grid {
 	color: var(--evcc-grid);
 }

@@ -499,6 +499,7 @@ export interface ConfigMeter extends Entity {
 export interface ConfigCircuit extends Entity<{
   maxcurrent?: number;
   maxpower?: number;
+  meter?: string;
   parent: string;
   title?: string;
 }> {

@@ -11,6 +11,7 @@ import {
 const CONFIG_YAML = "config-circuit.evcc.yaml";
 const CONFIG_CIRCUITS_LEGACY = "config-circuits.sql";
 const CONFIG_FAST = "fast.evcc.yaml";
+const CONFIG_CIRCUIT_TREE = "config-circuit-tree.sql";
 
 test.use({ baseURL: baseUrl() });
 
@@ -29,20 +30,19 @@ async function validateCircuitsTags(page: Page) {
   await expect(page.getByTestId("circuits")).toContainText(
     [
       "Main",
-      "2.0/10.0 kW",
-      "12/16 A",
-      "kW",
-      "A",
+      "12.0",
+      "16A",
+      "2.0",
+      "10.0kW",
       "Carport 1",
-      "1.0 kW",
-      " ",
+      "1.0kW",
       "Carport 2",
-      "1.0 kW",
-      " ",
+      "1.0kW",
       "Child",
-      "0.0 kW",
-      "0/10 A",
-      "A",
+      "0.0",
+      "10A",
+      "0.0",
+      "__kW",
     ].join("")
   );
 }
@@ -116,6 +116,49 @@ test.describe("circuit", async () => {
     await validateCircuitsTags(page);
   });
 
+  test("card shows tree with grid, dedicated and no meter", async ({ page }) => {
+    await start(CONFIG_FAST, CONFIG_CIRCUIT_TREE);
+    await page.goto("/#/config");
+
+    await expect(page.getByTestId("circuits")).toContainText(
+      [
+        "Home",
+        "12.0",
+        "32A",
+        "8.0",
+        "20.0kW",
+        "Carport",
+        "1.0",
+        "5.0kW",
+        "Carport",
+        "1.0kW",
+        "Workshop in the basement",
+        "27.0",
+        "25A",
+        "18.0",
+        "__kW",
+        "Heat pump",
+        "2.5kW",
+        "Garage",
+        "6.0",
+        "16A",
+        "4.0",
+        "11.0kW",
+        "Wallbox left",
+        "2.0kW",
+        "Wallbox right",
+        "0.0kW",
+        "Corner",
+        "6.0",
+        "16A",
+        "1.4",
+        "__kW",
+        "Motorbike",
+        "1.4kW",
+      ].join("")
+    );
+  });
+
   test("via config ui", async ({ page }) => {
     await start(CONFIG_FAST);
     await page.goto("/#/config");
@@ -150,7 +193,7 @@ test.describe("circuit", async () => {
 
     const mainCircuit = circuitsModal.getByTestId("circuit-node").filter({ hasText: "Main" });
     await expect(mainCircuit).toBeVisible();
-    await expect(mainCircuit).toContainText("Demo meter");
+    await expect(mainCircuit).toContainText("Meter");
     await mainCircuit.getByTestId("circuit-add-sub").click();
     await expectModalVisible(circuitModal);
     await expect(circuitModal.getByLabel("Parent circuit")).toHaveValue("Main");
@@ -189,18 +232,17 @@ test.describe("circuit", async () => {
     await expect(page.getByTestId("circuits")).toContainText(
       [
         "Main",
-        "1.0/10.0 kW",
-        "kW",
+        "1.0",
+        "10.0kW",
         "Carport 1",
-        "1.0 kW",
-        " ",
+        "1.0kW",
         "Carport 2",
-        "1.0 kW",
-        " ",
+        "1.0kW",
         "Child",
-        "0.0 kW",
-        "0/10 A",
-        "A",
+        "0.0",
+        "10A",
+        "0.0",
+        "__kW",
       ].join("")
     );
 
@@ -219,18 +261,17 @@ test.describe("circuit", async () => {
     await expect(page.getByTestId("circuits")).toContainText(
       [
         "Main renamed",
-        "0.0/10.0 kW",
-        "kW",
+        "0.0",
+        "10.0kW",
         "Carport 1",
-        "1.0 kW",
-        " ",
+        "1.0kW",
         "Carport 2",
-        "1.0 kW",
-        " ",
+        "1.0kW",
         "Child",
-        "0.0 kW",
-        "0/10 A",
-        "A",
+        "0.0",
+        "10A",
+        "0.0",
+        "__kW",
       ].join("")
     );
   });

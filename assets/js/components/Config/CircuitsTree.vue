@@ -10,10 +10,14 @@
 					<span class="tree-knick" />
 				</span>
 			</template>
-			<DeviceRefBox compact class="flex-grow-1" @edit="editCircuit">
-				<span class="d-flex align-items-center gap-2">
-					<span class="fw-bold">{{ circuitsTree?.deviceTitle }}</span>
-					<span class="ms-auto me-2 evcc-gray small tabular">{{ valueLabel }}</span>
+			<DeviceRefBox compact class="flex-grow-1 min-w-0" @edit="editCircuit">
+				<span class="d-flex align-items-center gap-2 min-w-0">
+					<span class="fw-bold text-truncate">{{ circuitsTree?.deviceTitle }}</span>
+					<span class="ms-auto me-2 evcc-gray small tabular d-flex gap-1 min-w-0">
+						<span class="text-nowrap">{{ limitsLabel }}</span>
+						<span v-if="limitsLabel && meterLabel" aria-hidden="true">·</span>
+						<span class="text-truncate">{{ meterLabel }}</span>
+					</span>
 				</span>
 			</DeviceRefBox>
 		</div>
@@ -23,7 +27,6 @@
 			:key="child.name"
 			:circuits-tree="child"
 			:depth="depth + 1"
-			:meters="meters"
 			:gridMeter="gridMeter"
 		/>
 
@@ -56,7 +59,7 @@ import DeviceRefBox from "./DeviceRefBox.vue";
 import AddIcon from "../MaterialIcon/Add.vue";
 import formatter from "@/mixins/formatter.ts";
 import { openModal } from "@/configModal.ts";
-import { meterTitle, type ConfigCircuitNode } from "@/utils/circuits.ts";
+import type { ConfigCircuitNode } from "@/utils/circuits.ts";
 import { ICON_SIZE, type ConfigMeter } from "@/types/evcc";
 
 export default {
@@ -69,10 +72,6 @@ export default {
 		},
 		/** Nesting depth from root (0 = root, no indentation/lines). */
 		depth: { type: Number, default: 0 },
-		meters: {
-			type: Array as PropType<ConfigMeter[]>,
-			default: () => [],
-		},
 		gridMeter: { type: Object as PropType<ConfigMeter> },
 	},
 	methods: {
@@ -87,26 +86,24 @@ export default {
 		return { ICON_SIZE };
 	},
 	computed: {
-		valueLabel(): string {
+		limitsLabel(): string {
 			if (!this.circuitsTree) return "";
 			const maxpower = Number(this.circuitsTree.config.maxpower);
 			const maxcurrent = Number(this.circuitsTree.config.maxcurrent);
-			const meterRef =
-				"meter" in this.circuitsTree.config
-					? String(this.circuitsTree.config["meter"])
-					: undefined;
-
-			const meter =
-				meterRef && meterRef === this.gridMeter?.name
-					? this.$t("config.grid.title")
-					: meterTitle(this.meters, meterRef);
-
 			const parts: string[] = [];
 			if (maxpower > 0) parts.push(this.fmtW(maxpower, this.POWER_UNIT.AUTO));
 			if (maxcurrent > 0) parts.push(`${this.fmtNumber(maxcurrent, 0)} A`);
-			if (meter) parts.push(meter);
-
 			return parts.join(" · ");
+		},
+		meterLabel(): string {
+			if (!this.circuitsTree) return "";
+			const meterRef = this.circuitsTree.config.meter;
+			if (!meterRef) return "";
+			return this.$t(
+				meterRef === this.gridMeter?.name
+					? "config.circuits.meterGrid"
+					: "config.circuits.meterDedicated"
+			);
 		},
 	},
 };
@@ -114,7 +111,7 @@ export default {
 
 <style scoped>
 .row-spacing {
-	margin-bottom: 4px;
+	margin-bottom: 8px;
 }
 
 .tree-col {
@@ -126,16 +123,15 @@ export default {
 .tree-line {
 	position: absolute;
 	left: 10px;
-	top: 0;
-	bottom: -4px;
+	top: -8px;
+	bottom: -8px;
 	width: 1px;
 	background: var(--evcc-gray-25);
 }
 
 .tree-line--half {
-	top: 0;
 	bottom: auto;
-	height: 50%;
+	height: calc(50% + 8px);
 }
 
 .tree-knick {

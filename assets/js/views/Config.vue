@@ -574,7 +574,6 @@
 				/>
 				<CircuitsModal
 					:circuits="circuits"
-					:meters="meters"
 					:grid-meter="gridMeter"
 					@changed="loadDirty"
 				/>
