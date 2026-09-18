@@ -6,14 +6,45 @@ products:
   - brand: Brötje
     description:
       generic: NEO+ RKM
+      en: NEO+ RKM
+      de: NEO+ RKM
 group: heating
 capabilities: ["meter", "dim"]
+requirements:
+  description:
+    en: |
+      The heat pump must be configured for Modbus-controlled PV operation.
+      In the service menu, enable requirement profile 3 and set the PV source to "Modbus".
+      This template uses register 125 to send the power setpoint in watts.
+    de: |
+      Die Wärmepumpe muss für den Modbus-gesteuerten PV-Betrieb konfiguriert sein.
+      Im Service-Menü muss das Anforderungsprofil 3 aktiviert und die PV-Auswahl auf "Modbus" gesetzt werden.
+      Dieses Template verwendet Register 125 zur Vorgabe der Leistung in Watt.
 
 params:
   - name: host
+    description:
+      en: Hostname or IP address
+      de: Hostname oder IP-Adresse
+    help:
+      en: Modbus TCP host of the Brötje heat pump.
+      de: Modbus-TCP-Host der Brötje-Wärmepumpe.
+    example: 192.168.1.50
   - name: port
+    description:
+      en: Modbus TCP port
+      de: Modbus-TCP-Port
+    help:
+      en: Port used for the Modbus TCP connection.
+      de: Port für die Modbus-TCP-Verbindung.
     default: 502
   - name: id
+    description:
+      en: Modbus unit ID
+      de: Modbus-Geräte-ID
+    help:
+      en: Modbus slave ID configured on the heat pump.
+      de: Modbus-Slave-ID, die an der Wärmepumpe konfiguriert ist.
     default: 2
 
 render: |
