@@ -1,86 +1,55 @@
 # ==========================================
 # EVCC METERS & CHARGERS CONFIGURATION
 # ==========================================
-meters:
-  # ZWINGEND ERFORDERLICH: Fester Dummy-Wert, damit evcc ohne echten Netzbezugszähler startet.
-  - name: dummy_grid
-    type: custom
-    power:
-      source: const
-      value: 0
+template: broetje-neo-rkm
+products:
+  - brand: Brötje
+    description:
+      generic: NEO+ RKM
+group: heating
+capabilities: ["meter", "dim"]
+
+params:
+  - name: host
+  - name: port
+    default: 502
+  - name: id
+    default: 2
+
+render: |
+  type: heatpump
+
 
   # 1. Leistungsmessung (Aktuelle Aufnahmeleistung & Energiezähler)
-  - name: broetje_heatpump_power
-    type: custom
-    power:
-      source: modbus
-      uri: 192.168.2.154:502   
-      id: 2                    
-      register:
-        address: 70  # elektrische Aufnahmeleistung
-        type: input  
-        decode: uint32
-      scale: 1       # Einheit in Watt
-    energy:
-      source: modbus
-      uri: 192.168.2.154:502
-      id: 2
-      register:
-        address: 68  # gesamte elektrische Energie
-        type: input
-        decode: uint32
-      scale: 1       # Einheit in kWh
+  power:
+    source: modbus
+    uri: {{ joinHostPort .host .port }}
+    id: {{ .id }}
+    register:
+      address: 70
+      type: input
+      decode: uint32
 
   # 2. Optionale Daten-Überwachung (Temperaturen)
-  - name: broetje_temperatures
-    type: custom
-    power:
-      source: modbus
-      uri: 192.168.2.154:502
-      id: 2
-      register:
-        address: 10  # Temp. Außen
-        type: input
-        decode: int16
-      scale: 0.1     # Wert-Multiplikator 0.1 für °C
+  temp:
+    source: modbus
+    uri: {{ joinHostPort .host .port }}
+    id: {{ .id }}
+    register:
+      address: 10
+      type: input
+      decode: int16
+    scale: 0.1
 
-chargers:
-  # Steuerungskomponente für evcc Überschussregelung & Tarifsperre
-  - name: broetje_control
-    type: custom
-    status:
-      source: modbus
-      uri: 192.168.2.154:502
-      id: 2
-      register:
-        address: 25  # Wärmepumpe läuft (Zustand abfragen)
-        type: input
-        decode: int16
-    
-    # -----------------------------------------------------------------
-    # SPERRE FÜR DYNAMISCHE STROMTARIFE / NETZSCHONUNG (AKTIVIERT)
-    # -----------------------------------------------------------------
-    # evcc schreibt hier TRUE (1) für "Erlaubt/Freigabe" bei günstigen Preisen 
-    # und FALSE (0) für "Sperre" bei teuren Preisen.
-    enabled:
-      source: modbus
-      uri: 192.168.2.154:502
-      id: 2
-      register:
-        address: 149 # EVU-Freigabe Wert (0 = Blockiert / >0 = Freigegeben)
-        type: holding
-        decode: int16
-
-    # Dynamische Vorgabe der elektrischen Aufnahmeleistung bei PV-Überschuss
-    maxcurrent:
-      source: modbus
-      uri: 192.168.2.154:502
-      id: 2
-      register:
-        address: 125 # Vorgabe der elektrischen Aufnahmeleistung (Anforderungsprofil 3)
-        type: holding
-        decode: uint16
-      scale: 1       # Einheit in Watt
+  # 3. Dynamische Vorgabe der elektrischen Aufnahmeleistung bei PV-Überschuss
+  setmaxpower:
+    source: modbus
+    uri: {{ joinHostPort .host .port }}
+    id: {{ .id }}
+    register:
+      address: 125
+      type: writesingle
+      decode: uint16   
 
 # ==========================================
 # CENTRAL HEATPUMP CONFIGURATION 
