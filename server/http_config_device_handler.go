@@ -355,7 +355,7 @@ func newDeviceHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 			return
 		}
 
-		req, err := decodeDeviceConfig(r.Body)
+		req, err := decodeDeviceConfig(r.Body, class)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
@@ -461,7 +461,7 @@ func updateDeviceHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 			return
 		}
 
-		req, err := decodeDeviceConfig(r.Body)
+		req, err := decodeDeviceConfig(r.Body, class)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
@@ -792,7 +792,7 @@ func testConfigHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 			}
 		}
 
-		req, err := decodeDeviceConfig(r.Body)
+		req, err := decodeDeviceConfig(r.Body, class)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return

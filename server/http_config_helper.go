@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"maps"
 	"reflect"
@@ -620,7 +621,7 @@ func valueHasCriticalSource(v any) bool {
 }
 
 // decodeDeviceConfig extracts device configuration and yaml details
-func decodeDeviceConfig(r io.Reader) (configReq, error) {
+func decodeDeviceConfig(r io.Reader, class templates.Class) (configReq, error) {
 	var res configReq
 
 	if err := json.NewDecoder(r).Decode(&res); err != nil {
@@ -641,6 +642,15 @@ func decodeDeviceConfig(r io.Reader) (configReq, error) {
 	var tmp map[string]any
 	if err := yaml.Unmarshal([]byte(res.Yaml), &tmp); err != nil {
 		return configReq{}, err
+	}
+
+	// circuit references are structured form fields, not yaml
+	if class == templates.Circuit {
+		for _, k := range []string{"parent", "meter"} {
+			if _, ok := tmp[k]; ok {
+				return configReq{}, fmt.Errorf("invalid config: '%s' must not be set in yaml", k)
+			}
+		}
 	}
 
 	// structured fields (e.g. references) are stored next to the yaml

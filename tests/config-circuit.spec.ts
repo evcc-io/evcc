@@ -283,7 +283,7 @@ test.describe("circuit test result", async () => {
     await circuitModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(circuitModal);
 
-    // user-defined sub circuit keeps parent reference next to yaml, yaml parent is overruled
+    // user-defined sub circuit: parent and meter are form fields, yaml keys are rejected
     await circuitsModal.getByRole("button", { name: "Add sub-circuit" }).click();
     await expectModalVisible(circuitModal);
     await expect(circuitModal.getByLabel("Parent circuit")).toHaveValue("House");
@@ -296,6 +296,14 @@ test.describe("circuit test result", async () => {
     await editorClear(editor);
     await editorPaste(editor, page, "maxcurrent: 16\nparent: db:99");
     await circuitModal.getByRole("link", { name: "validate" }).click();
+    await expect(testResult).toContainText("'parent' must not be set in yaml");
+    await editorClear(editor);
+    await editorPaste(editor, page, "maxcurrent: 16\nmeter: db:1");
+    await circuitModal.getByRole("link", { name: "validate" }).click();
+    await expect(testResult).toContainText("'meter' must not be set in yaml");
+    await editorClear(editor);
+    await editorPaste(editor, page, "maxcurrent: 16");
+    await circuitModal.getByRole("link", { name: "validate" }).click();
     await expect(testResult).toContainText("Status: successful");
     await circuitModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(circuitModal);
@@ -307,5 +315,100 @@ test.describe("circuit test result", async () => {
     await expectModalVisible(circuitModal);
     await expect(circuitModal.getByLabel("Title")).toHaveValue("Garage");
     await expect(circuitModal.getByLabel("Parent circuit")).toHaveValue("House");
+  });
+});
+
+test.describe("circuit grid meter", async () => {
+  test("option availability, sub circuit, ref cleaned on delete", async ({ page }) => {
+    await start(CONFIG_FAST);
+    await page.goto("/#/config");
+
+    const circuitsModal = page.getByTestId("circuits-modal");
+    const circuitModal = page.getByTestId("circuit-modal");
+    const meterModal = page.getByTestId("meter-modal");
+    const meterSelection = circuitModal.getByLabel("Meter Selection");
+
+    // no grid meter: option not offered
+    await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(circuitsModal);
+    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+    await expectModalVisible(circuitModal);
+    await expect(meterSelection.getByRole("option")).toHaveText(["No meter", "Dedicated meter"]);
+    await circuitModal.getByRole("button", { name: "Close" }).first().click();
+    await expectModalHidden(circuitModal);
+    await circuitsModal.getByRole("button", { name: "Close" }).last().click();
+    await expectModalHidden(circuitsModal);
+
+    await page.getByRole("button", { name: "Add grid meter" }).click();
+    await expectModalVisible(meterModal);
+    await meterModal.getByLabel("Manufacturer").selectOption("Demo meter");
+    await meterModal.getByLabel("Power").fill("1000");
+    await meterModal.getByRole("button", { name: "Save" }).click();
+    await expectModalHidden(meterModal);
+
+    // root circuit using grid meter
+    await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(circuitsModal);
+    await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+    await expectModalVisible(circuitModal);
+    await circuitModal.getByLabel("Title").fill("House");
+    await circuitModal
+      .getByLabel("Circuit", { exact: true })
+      .selectOption({ label: "Static circuit" });
+    await circuitModal.getByLabel("Maximum power").fill("10000");
+    await expect(meterSelection.getByRole("option")).toHaveText([
+      "No meter",
+      "Grid meter",
+      "Dedicated meter",
+    ]);
+    await meterSelection.selectOption({ label: "Grid meter" });
+    await expect(circuitModal.getByTestId("circuit-meter-selection")).toContainText(
+      "Uses the existing grid meter"
+    );
+    await circuitModal.getByRole("button", { name: "Validate & save" }).click();
+    await expectModalHidden(circuitModal);
+    await expectModalVisible(circuitsModal);
+
+    // sub circuit: no meter selection, optional dedicated meter only
+    await circuitsModal.getByRole("button", { name: "Add sub-circuit" }).click();
+    await expectModalVisible(circuitModal);
+    await expect(meterSelection).not.toBeVisible();
+    await expect(
+      circuitModal.getByRole("button", { name: "Add dedicated energy meter" })
+    ).toBeVisible();
+    await circuitModal.getByRole("button", { name: "Close" }).first().click();
+    await expectModalHidden(circuitModal);
+
+    // reopen root: grid meter selected
+    await circuitsModal.getByRole("button", { name: "edit" }).first().click();
+    await expectModalVisible(circuitModal);
+    await expect(meterSelection).toHaveValue("grid");
+    await circuitModal.getByRole("button", { name: "Close" }).first().click();
+    await expectModalHidden(circuitModal);
+    await circuitsModal.getByRole("button", { name: "Close" }).last().click();
+    await expectModalHidden(circuitsModal);
+
+    // delete grid meter: circuit ref cleaned
+    await page.getByTestId("grid").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(meterModal);
+    await meterModal.getByRole("button", { name: "Delete" }).click();
+    await expectModalHidden(meterModal);
+
+    await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(circuitsModal);
+    await circuitsModal.getByRole("button", { name: "edit" }).first().click();
+    await expectModalVisible(circuitModal);
+    await expect(meterSelection).toHaveValue("none");
+    await expect(meterSelection.getByRole("option")).toHaveText(["No meter", "Dedicated meter"]);
+    await circuitModal.getByRole("button", { name: "Close" }).first().click();
+    await expectModalHidden(circuitModal);
+    await circuitsModal.getByRole("button", { name: "Close" }).last().click();
+    await expectModalHidden(circuitsModal);
+
+    await restart(CONFIG_FAST);
+    await page.goto("/#/config");
+    await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(circuitsModal);
+    await expect(circuitsModal.getByTestId("circuit-node").first()).toContainText("House");
   });
 });
