@@ -145,15 +145,15 @@ export default defineComponent({
 			}
 		},
 		handleHidden() {
+			// consume hide markers even for a stale event, so they don't leak into the next cycle
+			const dismissed = !!this.configModalName && onModalHidden(this.configModalName);
 			// stale event from a previous close, modal was reopened while still fading out
 			if (this.isModalVisible) {
 				return;
 			}
 			this.$emit("closed");
-			if (this.configModalName) {
-				if (onModalHidden(this.configModalName)) {
-					this.$emit("dismiss");
-				}
+			if (dismissed) {
+				this.$emit("dismiss");
 			}
 		},
 		open() {
