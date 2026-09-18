@@ -1,5 +1,7 @@
 # ==========================================
 # EVCC METERS & CHARGERS CONFIGURATION
+# Modbus Register based on:
+# "NEO-RKM 7734937 - 02 - 17082021"
 # ==========================================
 template: broetje-neo-rkm
 products:
