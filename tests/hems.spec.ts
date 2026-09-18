@@ -502,7 +502,7 @@ limit:
     await expect(page.getByTestId("circuits").getByTestId("device-banner")).toHaveText(
       "Consumption limited"
     );
-    await expect(page.getByTestId("circuits")).toContainText(["House", "0.0 kW"].join(""));
+    await expect(page.getByTestId("circuits")).toContainText(["House", "0.0", "__kW"].join(""));
     await expect(page.getByTestId("circuits")).not.toContainText("External Limit");
 
     // a new loadpoint can only be assigned to the dedicated circuit

@@ -572,11 +572,7 @@
 					:ext-meters="extMeters"
 					@changed="loadDirty"
 				/>
-				<CircuitsModal
-					:circuits="circuits"
-					:grid-meter="gridMeter"
-					@changed="loadDirty"
-				/>
+				<CircuitsModal :circuits="circuits" :grid-meter="gridMeter" @changed="loadDirty" />
 				<CircuitModal
 					:circuits="circuits"
 					:meters="meters"
