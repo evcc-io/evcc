@@ -98,7 +98,7 @@ func (site *Site) publishCircuits() {
 	}
 
 	site.publish(keys.Circuits, globalconfig.ConfigStatus{
-		Config:     res,
+		Config: res,
 	})
 }
 
