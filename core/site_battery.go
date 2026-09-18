@@ -162,14 +162,14 @@ func (site *Site) batterySocLimitReached(dev config.Device[api.Meter], discharge
 
 	if discharge {
 		if minSoc > 0 && soc <= minSoc {
-			site.log.DEBUG.Printf("battery %s: reserve soc reached (%.0f <= %.0f)", deviceTitleOrName(dev), soc, minSoc)
+			site.log.DEBUG.Printf("battery %s: reserve soc reached (%.0f <= %.0f)", config.DeviceTitleOrName(dev), soc, minSoc)
 			return true, nil
 		}
 		return false, nil
 	}
 
 	if maxSoc > 0 && maxSoc < 100 && soc >= maxSoc {
-		site.log.DEBUG.Printf("battery %s: limit soc reached (%.0f >= %.0f)", deviceTitleOrName(dev), soc, maxSoc)
+		site.log.DEBUG.Printf("battery %s: limit soc reached (%.0f >= %.0f)", config.DeviceTitleOrName(dev), soc, maxSoc)
 		return true, nil
 	}
 
@@ -219,7 +219,7 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 		}
 
 		if !slices.Contains(batCtrl.BatteryModes(), deviceMode) {
-			site.log.DEBUG.Printf("battery %s does not support mode: %s", deviceTitleOrName(dev), deviceMode)
+			site.log.DEBUG.Printf("battery %s does not support mode: %s", config.DeviceTitleOrName(dev), deviceMode)
 			continue
 		}
 
@@ -231,7 +231,7 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 		}
 
 		site.batteryModeApplied[name] = deviceMode
-		site.log.DEBUG.Printf("set battery %s mode: %s", deviceTitleOrName(dev), deviceMode)
+		site.log.DEBUG.Printf("set battery %s mode: %s", config.DeviceTitleOrName(dev), deviceMode)
 	}
 
 	return nil

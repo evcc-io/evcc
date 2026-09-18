@@ -19,11 +19,11 @@ type FordConnectQuery struct {
 }
 
 func init() {
-	registry.Add("ford-connect-query", NewFordConnectQueryFromConfig)
+	registry.AddCtx("ford-connect-query", NewFordConnectQueryFromConfig)
 }
 
 // NewFordConnectQueryFromConfig creates a new vehicle
-func NewFordConnectQueryFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewFordConnectQueryFromConfig(ctx context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
 		embed       `mapstructure:",squash"`
 		Credentials oauth.ClientCredentials
@@ -39,7 +39,7 @@ func NewFordConnectQueryFromConfig(other map[string]any) (api.Vehicle, error) {
 	}
 
 	v := &FordConnectQuery{
-		embed: &cc.embed,
+		embed: cc.embed.withContext(ctx),
 	}
 
 	if err := cc.Credentials.Error(); err != nil {
@@ -61,7 +61,6 @@ func NewFordConnectQueryFromConfig(other map[string]any) (api.Vehicle, error) {
 	})
 
 	if err == nil {
-		v.fromVehicle(vehicle.NickName, 0)
 		v.Provider = query.NewProvider(api, vehicle.VehicleID, cc.Cache)
 	}
 
