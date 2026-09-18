@@ -13,7 +13,6 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/core/circuit"
 	"github.com/evcc-io/evcc/core/coordinator"
@@ -71,7 +70,6 @@ type Site struct {
 
 	// meters
 	circuit        api.Circuit                // Circuit
-	circuitsSource globalconfig.YamlSource    // Circuits yaml source (set at boot)
 	hems           api.HEMS                   // HEMS (set by configureHEMS at boot)
 	gridMeter      config.Device[api.Meter]   // Grid usage meter
 	pvMeters       []config.Device[api.Meter] // PV generation meters
