@@ -6,6 +6,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/util/test"
+	"github.com/stretchr/testify/require"
+	"go.yaml.in/yaml/v4"
 )
 
 var acceptable = []string{
@@ -47,4 +49,64 @@ func TestTemplates(t *testing.T) {
 			t.Error(err)
 		}
 	})
+}
+
+func TestFroniusGen24BatteryModes(t *testing.T) {
+	tmpl, err := templates.ByName(templates.Meter, "fronius-gen24")
+	require.NoError(t, err)
+
+	b, _, err := tmpl.RenderResult(templates.Meter, templates.RenderModeUnitTest, map[string]any{
+		"host":  "localhost",
+		"usage": "battery",
+	})
+	require.NoError(t, err)
+
+	var conf struct {
+		BatteryMode struct {
+			Switch []struct {
+				Case int64
+				Set  struct {
+					Set []struct {
+						Value int64
+						Set   struct {
+							Value string
+						}
+					}
+				}
+			}
+		}
+	}
+	require.NoError(t, yaml.Unmarshal(b, &conf))
+
+	keys := make([]int64, 0, len(conf.BatteryMode.Switch))
+	for _, item := range conf.BatteryMode.Switch {
+		keys = append(keys, item.Case)
+	}
+
+	require.Equal(t, []api.BatteryMode{
+		api.BatteryNormal,
+		api.BatteryHold,
+		api.BatteryCharge,
+		api.BatteryHoldCharge,
+		api.BatteryDischarge,
+	}, batteryModes(keys))
+
+	var discharge int
+	for i, item := range conf.BatteryMode.Switch {
+		if item.Case == int64(api.BatteryDischarge) {
+			discharge = i
+			break
+		}
+	}
+
+	writes := conf.BatteryMode.Switch[discharge].Set.Set
+	require.Len(t, writes, 4)
+	require.Equal(t, int64(0), writes[0].Value)
+	require.Equal(t, "124:0:StorCtl_Mod", writes[0].Set.Value)
+	require.Equal(t, int64(-100), writes[1].Value)
+	require.Equal(t, "124:0:InWRte", writes[1].Set.Value)
+	require.Equal(t, int64(100), writes[2].Value)
+	require.Equal(t, "124:0:OutWRte", writes[2].Set.Value)
+	require.Equal(t, int64(3), writes[3].Value)
+	require.Equal(t, "124:0:StorCtl_Mod", writes[3].Set.Value)
 }
