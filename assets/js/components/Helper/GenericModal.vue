@@ -40,7 +40,13 @@
 <script lang="ts">
 import Modal from "bootstrap/js/dist/modal";
 import { defineComponent } from "vue";
-import { registerModal, unregisterModal, onModalHidden, getModalFade } from "@/configModal";
+import {
+	registerModal,
+	unregisterModal,
+	onModalHide,
+	onModalHidden,
+	getModalFade,
+} from "@/configModal";
 
 export default defineComponent({
 	name: "GenericModal",
@@ -134,6 +140,9 @@ export default defineComponent({
 		handleHide() {
 			this.$emit("close");
 			this.isModalVisible = false;
+			if (this.configModalName) {
+				onModalHide(this.configModalName);
+			}
 		},
 		handleHidden() {
 			// stale event from a previous close, modal was reopened while still fading out
