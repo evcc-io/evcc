@@ -1321,8 +1321,7 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 		return
 	}
 
-	// TODO precise slot placement
-	slot := int(time.Until(ts) / tariff.SlotDuration)
+	slot := planSlot(minLen, time.Now(), ts)
 	if slot >= 0 && slot < minLen {
 		bat.SGoal = make([]float32, minLen)
 		bat.SGoal[slot] = float32(goal)
@@ -1330,6 +1329,28 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 	} else {
 		site.log.DEBUG.Printf("plan beyond forecast range or overrun: %.1f at %v slot %d", goal, ts.Round(time.Minute), slot)
 	}
+}
+
+// planSlot returns the index of the optimizer slot whose SoC goal deadline is ts, using the
+// same timeline as timeSteps/asTimestamps: s_goal[i] models the state at the end of slot i,
+// so this picks the first slot whose end is at or after ts (accounting for a partial first
+// slot). It returns -1 if ts is not in the future, or minLen if ts is beyond the forecast
+// horizon spanned by minLen slots.
+func planSlot(minLen int, now, ts time.Time) int {
+	until := ts.Sub(now)
+	if until <= 0 {
+		return -1
+	}
+
+	var cum time.Duration
+	for i, d := range timeSteps(minLen, now) {
+		cum += time.Duration(d) * time.Second
+		if cum >= until {
+			return i
+		}
+	}
+
+	return minLen
 }
 
 // TODO remove once smart cost limit usage becomes obsolete
