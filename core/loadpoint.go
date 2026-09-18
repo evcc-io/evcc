@@ -2201,8 +2201,8 @@ func (lp *Loadpoint) publishSocAndRange() {
 		if lp.charging() {
 			chargePower := lp.chargePower
 			if chargePower == 0 {
-				// Use the minimum power for estimator if the vehicle is in State C but not yet charging
-				chargePower = currentToPower(lp.minCurrent, lp.GetPhases())
+				// Use the minimum power (min current, 1 Phase) for estimator if vehicle not yet charging
+				chargePower = currentToPower(lp.minCurrent, 1)
 			}
 			d = socEstimator.RemainingChargeDuration(float64(limitSoc), chargePower)
 		}
