@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
+	"github.com/samber/lo"
 )
 
 // Gen2API endpoint reference: https://shelly-api-docs.shelly.cloud/gen2/
@@ -33,9 +34,10 @@ type Gen2Config struct {
 }
 
 type Gen2SwitchStatus struct {
-	Output  bool
-	Apower  float64
-	Voltage float64
+	Output bool
+	Apower float64
+	// nil on switches without power metering (Plus 1, Pro 3)
+	Voltage *float64
 	Current float64
 	Aenergy struct {
 		Total float64
@@ -332,7 +334,7 @@ func (c *gen2) Voltages() (float64, float64, float64, error) {
 
 	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
-		return res.Voltage, 0, 0, err
+		return lo.FromPtr(res.Voltage), 0, 0, err
 
 	default:
 		return 0, 0, 0, fmt.Errorf("unknown shelly model: %s", c.model)
@@ -391,6 +393,20 @@ func (c *gen2) HasReturnEnergy() bool {
 	case c.hasSwitchEndpoint():
 		res, err := c.switchstatus.Get()
 		return err == nil && res.Ret_Aenergy != nil
+	default:
+		return false
+	}
+}
+
+// HasPhases reports whether the device provides phase readings.
+// Plain switches (Plus 1, Pro 3) omit voltage entirely, so the (cached) status decides.
+func (c *gen2) HasPhases() bool {
+	switch {
+	case c.hasEM1Endpoint(), c.hasEMEndpoint():
+		return true
+	case c.hasSwitchEndpoint():
+		res, err := c.switchstatus.Get()
+		return err == nil && res.Voltage != nil
 	default:
 		return false
 	}

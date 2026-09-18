@@ -10,9 +10,11 @@ requirements:
     de: |
       Für die aktive Batteriesteuerung muss die lokale API über die Zendure App aktiviert werden (HEMS hinzufügen und wieder verlassen).
       Die Seriennummer des Geräts ist in der Zendure App in den Geräteeinstellungen zu finden.
+      Für die erzwungene Entladung ins Netz muss zusätzlich Energy Export in der Zendure App aktiviert sein.
     en: |
       For active battery control, the local API must be enabled via the Zendure App (add HEMS and then exit to apply).
       The device serial number can be found in the Zendure App in the device settings.
+      For forced discharge to grid, Energy Export must also be enabled in the Zendure App.
 params:
   - name: usage
     choice: ["battery"]
@@ -94,11 +96,47 @@ render: |
           body: '{"sn":"{{ .serial }}","properties":{"smartMode":1,"acMode":2,"outputLimit":0,"inputLimit":0}}'
       - case: 3 # charge
         set:
-          source: http
-          uri: http://{{ .host }}/properties/write
-          method: POST
-          headers:
-          - content-type: application/json
-          body: '{"sn":"{{ .serial }}","properties":{"smartMode":1,"acMode":1,"outputLimit":0,"inputLimit":{{ .maxchargepower }}}}'
+          source: go
+          in:
+          - name: rated
+            type: int
+            config:
+              source: http
+              uri: http://{{ .host }}/properties/report
+              jq: .properties.chargeMaxLimit
+              cache: {{ .cache }}
+          out:
+          - name: power
+            type: int
+            config:
+              source: http
+              uri: http://{{ .host }}/properties/write
+              method: POST
+              headers:
+              - content-type: application/json
+              body: '{"sn":"{{ .serial }}","properties":{"smartMode":1,"acMode":1,"outputLimit":0,"inputLimit":${power}}}'
+          script: rated
+      - case: 5 # discharge -> forced discharge to grid (feed-in arbitrage)
+        set:
+          source: go
+          in:
+          - name: rated
+            type: int
+            config:
+              source: http
+              uri: http://{{ .host }}/properties/report
+              jq: .properties.inverseMaxPower
+              cache: {{ .cache }}
+          out:
+          - name: power
+            type: int
+            config:
+              source: http
+              uri: http://{{ .host }}/properties/write
+              method: POST
+              headers:
+              - content-type: application/json
+              body: '{"sn":"{{ .serial }}","properties":{"smartMode":1,"acMode":2,"outputLimit":${power},"inputLimit":0}}'
+          script: rated
   {{- end }}
   {{- include "battery-capacity" . }}
