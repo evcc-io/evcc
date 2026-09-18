@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"os"
 	"slices"
@@ -1321,7 +1322,7 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 		return
 	}
 
-	slot := planSlot(minLen, time.Now(), ts)
+	slot := planSlot(time.Now(), ts)
 	if slot >= 0 && slot < minLen {
 		bat.SGoal = make([]float32, minLen)
 		bat.SGoal[slot] = float32(goal)
@@ -1331,26 +1332,15 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 	}
 }
 
-// planSlot returns the index of the optimizer slot whose SoC goal deadline is ts, using the
-// same timeline as timeSteps/asTimestamps: s_goal[i] models the state at the end of slot i,
-// so this picks the first slot whose end is at or after ts (accounting for a partial first
-// slot). It returns -1 if ts is not in the future, or minLen if ts is beyond the forecast
-// horizon spanned by minLen slots.
-func planSlot(minLen int, now, ts time.Time) int {
-	until := ts.Sub(now)
-	if until <= 0 {
+// planSlot returns the first slot whose end is at or after ts, since s_goal[i] models the SoC at the end of slot i.
+// Slot i ends at eos+i*SlotDuration on the timeSteps timeline; -1 if ts is not in the future.
+func planSlot(now, ts time.Time) int {
+	if !ts.After(now) {
 		return -1
 	}
 
-	var cum time.Duration
-	for i, d := range timeSteps(minLen, now) {
-		cum += time.Duration(d) * time.Second
-		if cum >= until {
-			return i
-		}
-	}
-
-	return minLen
+	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
+	return int(math.Ceil(float64(ts.Sub(eos)) / float64(tariff.SlotDuration)))
 }
 
 // TODO remove once smart cost limit usage becomes obsolete

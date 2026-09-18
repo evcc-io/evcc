@@ -155,18 +155,17 @@ func TestPlanSlot(t *testing.T) {
 	// now aligned to a 15-minute boundary: s_goal[i] models the SoC at the END of slot i,
 	// so a plan 2h out (exactly 8 slots away) must land on slot 7, not 8 (#33831)
 	now := time.Date(2025, 1, 1, 12, 0, 0, 0, time.UTC)
-	assert.Equal(t, 7, planSlot(10, now, now.Add(2*time.Hour)))
-	assert.Equal(t, 0, planSlot(10, now, now.Add(15*time.Minute)))
+	assert.Equal(t, 7, planSlot(now, now.Add(2*time.Hour)))
+	assert.Equal(t, 0, planSlot(now, now.Add(15*time.Minute)))
+	assert.Equal(t, 0, planSlot(now, now.Add(5*time.Minute)))
 
 	// now 10 minutes into a slot: the partial first slot (5min) absorbs the offset
 	now2 := time.Date(2025, 1, 1, 12, 10, 0, 0, time.UTC)
-	assert.Equal(t, 7, planSlot(10, now2, now2.Add(110*time.Minute)))
+	assert.Equal(t, 7, planSlot(now2, now2.Add(110*time.Minute)))
 
-	// deadline already passed
-	assert.Equal(t, -1, planSlot(10, now, now.Add(-time.Minute)))
-
-	// deadline beyond the forecast horizon
-	assert.Equal(t, 10, planSlot(10, now, now.Add(24*time.Hour)))
+	// deadline not in the future
+	assert.Equal(t, -1, planSlot(now, now))
+	assert.Equal(t, -1, planSlot(now, now.Add(-time.Minute)))
 }
 
 func TestUnmodelledPower(t *testing.T) {
