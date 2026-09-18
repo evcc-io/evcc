@@ -797,6 +797,21 @@ func (mr *MockAPIMockRecorder) IsFastChargingActive() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsFastChargingActive", reflect.TypeOf((*MockAPI)(nil).IsFastChargingActive))
 }
 
+// PriorityGap mocks base method.
+func (m *MockAPI) PriorityGap(strategy api.PriorityStrategy, basis api.PriorityBasis) (float64, bool) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PriorityGap", strategy, basis)
+	ret0, _ := ret[0].(float64)
+	ret1, _ := ret[1].(bool)
+	return ret0, ret1
+}
+
+// PriorityGap indicates an expected call of PriorityGap.
+func (mr *MockAPIMockRecorder) PriorityGap(strategy, basis any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PriorityGap", reflect.TypeOf((*MockAPI)(nil).PriorityGap), strategy, basis)
+}
+
 // PublishEffectiveValues mocks base method.
 func (m *MockAPI) PublishEffectiveValues() {
 	m.ctrl.T.Helper()

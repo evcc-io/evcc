@@ -278,6 +278,12 @@ export interface State {
   bufferSoc?: number;
   /** Battery priority SoC in %. Home battery is charged first while below this level. */
   prioritySoc?: number;
+  /** Strategy used to sub-order loadpoints of the same priority when distributing surplus. */
+  priorityStrategy?: PRIORITY_STRATEGY;
+  /** Whether the priority strategy compares vehicles by SoC percent or by energy in kWh. */
+  priorityBasis?: PRIORITY_BASIS;
+  /** Deadband a loadpoint must lead by before it outranks a same-priority peer, in SoC-% or kWh per basis. 0 disables. */
+  priorityHysteresis?: number;
   /** Battery buffer start SoC in %. Solar charging starts automatically above this level. */
   bufferStartSoc?: number;
   /** Home battery discharge is prevented during fast charging and planned charging. */
@@ -891,6 +897,19 @@ export enum PV_ACTION {
   INACTIVE = "inactive",
   ENABLE = "enable",
   DISABLE = "disable",
+}
+
+/** Sub-ordering of loadpoints with the same priority. */
+export enum PRIORITY_STRATEGY {
+  NONE = "none",
+  SOC = "soc",
+  DEFICIT = "deficit",
+}
+
+/** Unit the priority strategy compares vehicles by. */
+export enum PRIORITY_BASIS {
+  PERCENT = "percent",
+  ENERGY = "energy",
 }
 
 /** Reason why the charger is waiting. */
