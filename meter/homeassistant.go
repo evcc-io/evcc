@@ -152,12 +152,12 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Meter, error) {
 	return m, nil
 }
 
-// batteryModeController returns a BatteryController function that activates
-// the switch-like Home Assistant entity configured for the requested evcc
-// battery mode. Each mode is self-contained: evcc only triggers the matching
-// entity and never deactivates others - any mutual exclusion is the HA side's
-// responsibility. All modes except modeNormal are optional; a mode without a
-// backing entity is not announced and hence invalid here.
+// batteryModeController returns a BatteryController function that runs the
+// Home Assistant script configured for the requested evcc battery mode. Each
+// mode is self-contained: evcc only triggers the matching script and never
+// deactivates others - any mutual exclusion is the HA side's responsibility.
+// All modes except modeNormal are optional; a mode without a backing script
+// is not announced and hence invalid here.
 func batteryModeController(conn *homeassistant.Connection, modes map[api.BatteryMode]string) func(api.BatteryMode) error {
 	return func(mode api.BatteryMode) error {
 		target, ok := modes[mode]
