@@ -217,8 +217,12 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 		}
 
 		// an unsupported mode releases the battery instead of leaving it in the mode applied before
-		if !slices.Contains(batCtrl.BatteryModes(), deviceMode) {
+		modes := batCtrl.BatteryModes()
+		if !slices.Contains(modes, deviceMode) {
 			site.log.DEBUG.Printf("battery %s does not support mode: %s", deviceTitleOrName(dev), deviceMode)
+			if !slices.Contains(modes, api.BatteryNormal) {
+				continue
+			}
 			deviceMode = api.BatteryNormal
 		}
 
