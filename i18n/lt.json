@@ -790,7 +790,7 @@
     "optimizer": {
       "description": "Analizuoja saulės energijos prognozę, elektros energijos kainas ir jūsų vartojimo įpročius, kad optimizuotų kaupiklį ir įkrovimo strategiją. Duomenys siunčiami apdorojimui į evcc optimizavimo paslaugą. Šiuo metu tik apskaičiuoja ir vizualizuoja, įrenginių kol kas nevaldo.",
       "enable": "Įjungti Optimizavimą",
-      "info": "Gali užtrukti kelias minutes, kol meniu pasirodys optimizatoriaus eilutė. Naujoms evcc instaliacijoms gali užtrukti iki 24 valandų, kol evcc turės pakankamai duomenų veikimui.",
+      "info": "Naujoms instaliacijoms gali užtrukti iki 24 valandų, kol evcc turės pakankamai duomenų.",
       "title": "Optimizavimas"
     },
     "options": {
@@ -1232,6 +1232,9 @@
   },
   "issue": {
     "additional": {
+      "copied": "nukopijuota!",
+      "copy": "kopijuoti",
+      "copySelected": "kopijuoti pasirinktus",
       "description": "Įtraukite konfigūraciją ir žurnalus, kad galėtume greitai atkartoti problemą. Raginame kuo daugiau dalytis. Paprastai nereikia nurodyti būsenos.",
       "include": "įtraukti",
       "lines": "eilutės",

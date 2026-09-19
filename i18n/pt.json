@@ -33,7 +33,7 @@
     },
     "combined": "Combinado",
     "config": {
-      "buffer": "A energia da bateria doméstica acima de {soc} pode ser utilizada para alimentar os pontos de carregamento e retardar o desligamento no modo solar. Iniciar o carregamento solar automaticamente {start}.",
+      "buffer": "A energia da bateria doméstica acima de {soc} pode ser utilizada para alimentar os pontos de carregamento e retardar o desligamento no modo inteligente. Iniciar o carregamento solar automaticamente {start}.",
       "bufferNone": "A energia da bateria doméstica não é utilizada para os pontos de carregamento. Defina um valor inferior a {soc} para ativar esta funcionalidade.",
       "bufferStart": {
         "above": "assim que a bateria estiver acima de {soc}",
@@ -64,6 +64,7 @@
   },
   "batterySettings": {
     "gridChargeTab": "Carregamento pela Rede",
+    "gridDischargeTab": "Descarregar para a rede",
     "modalTitle": "Bateria da Casa",
     "noBattery": "Não há baterias configuradas.",
     "usageTab": "Gestão da bateria"
