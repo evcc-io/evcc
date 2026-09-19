@@ -22,6 +22,8 @@ params:
   - preset: battery-params
   - name: maxchargepower
     default: 2500
+  - name: maxdischargepower
+    default: 800
   - name: watchdog
     default: 60s
 render: |
@@ -158,6 +160,50 @@ render: |
                     encoding: uint16
               - source: const
                 value: -{{ .maxchargepower }}
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10071
+                    type: writemultiple
+                    encoding: int32
+        - case: 4 # holdcharge
+          set:
+            source: sequence
+            set:
+              - source: const
+                value: 3 # third_party_control
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10064
+                    type: writesingle
+                    encoding: uint16
+              - source: const
+                value: 0
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10071
+                    type: writemultiple
+                    encoding: int32
+        - case: 5 # discharge
+          set:
+            source: sequence
+            set:
+              - source: const
+                value: 3 # third_party_control
+                set:
+                  source: modbus
+                  {{- include "modbus" . | indent 16 }}
+                  register:
+                    address: 10064
+                    type: writesingle
+                    encoding: uint16
+              - source: const
+                value: {{ .maxdischargepower }}
                 set:
                   source: modbus
                   {{- include "modbus" . | indent 16 }}
