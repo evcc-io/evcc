@@ -153,10 +153,6 @@ func (evse *EvseDIN) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (evse *EvseDIN) MaxCurrent(current int64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
-	}
-
 	if err := evse.setCurrent(uint16(current)); err != nil {
 		return err
 	}
@@ -167,10 +163,6 @@ func (evse *EvseDIN) MaxCurrent(current int64) error {
 
 // maxCurrentMillis implements the api.ChargerEx interface
 func (evse *EvseDIN) maxCurrentMillis(current float64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %.2f", current)
-	}
-
 	u := uint16(current * 100) // 0.01A Steps
 	if err := evse.setCurrent(u); err != nil {
 		return err
