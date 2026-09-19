@@ -57,7 +57,7 @@
 				@open-modal="$emit('open-modal')"
 			/>
 			<LimitSocSelect
-				v-if="socBasedCharging"
+				v-if="socBasedCharging && showTempLimit"
 				class="flex-grow-1 text-end"
 				:limit-soc="displayLimitSoc"
 				:range-per-soc="rangePerSoc"
@@ -67,7 +67,7 @@
 				@limit-soc-updated="limitSocUpdated"
 			/>
 			<LimitEnergySelect
-				v-else
+				v-else-if="!socBasedCharging"
 				class="flex-grow-1 text-end"
 				:limit-energy="limitEnergy"
 				:soc-per-kwh="socPerKwh"
@@ -227,6 +227,14 @@ export default defineComponent({
 		},
 		showBoostButton(): boolean {
 			return this.connected && this.batteryBoostAvailable && this.batteryBoostLimit < 100;
+		},
+		showTempLimit(): boolean {
+			// For autonomous (continuous) heat pumps, hide the temperature limit
+			// slider/dropdown unless the user has explicitly enabled it in config.
+			if (this.heating && this.continuous) {
+				return !!this.ui?.enableTempLimit;
+			}
+			return true;
 		},
 		batteryBoostButtonProps() {
 			return this.collectProps(BatteryBoostButton);

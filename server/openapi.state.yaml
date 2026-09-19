@@ -1202,6 +1202,9 @@ components:
         maxTemp:
           description: Upper bound of the temperature scale for heating devices, in degrees.
           type: number
+        enableTempLimit:
+          description: Whether to show the temperature limit slider and dropdown for SG-Ready heat pumps. Off by default because the controls are confusing for devices that manage their own setpoints autonomously.
+          type: boolean
       required:
         - minTemp
         - maxTemp

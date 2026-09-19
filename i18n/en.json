@@ -548,7 +548,9 @@
       "vehicleHelpDefault": "Always assume this vehicle is charging here. Auto-detection disabled. Manual override is possible.",
       "vehicleInvalid": "Vehicle does not exist",
       "vehicleLabel": "Default vehicle",
-      "vehiclesTitle": "Vehicles"
+      "vehiclesTitle": "Vehicles",
+      "enableTempLimitHelp": "Shows slider and dropdown to cap the target temperature during SG-Ready boost. Only useful if the heat pump would otherwise overshoot.",
+      "enableTempLimitLabel": "Show temperature limit controls"
     },
     "main": {
       "addAdditional": "Add additional meter",
