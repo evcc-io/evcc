@@ -9,7 +9,6 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/api/globalconfig"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/util/config"
@@ -97,9 +96,7 @@ func (site *Site) publishCircuits() {
 		res[c.Config().Name] = data
 	}
 
-	site.publish(keys.Circuits, globalconfig.ConfigStatus{
-		Config: res,
-	})
+	site.publish(keys.Circuits, res)
 }
 
 // dimMeters applies the HEMS dim state to all dimmable aux and ext meters.
