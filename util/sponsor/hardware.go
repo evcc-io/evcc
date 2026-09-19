@@ -19,6 +19,9 @@ package sponsor
 
 import (
 	"context"
+	"os"
+	"sync"
+	"time"
 
 	"github.com/evcc-io/evcc/api/proto/pb"
 	"github.com/evcc-io/evcc/util/cloud"
@@ -54,4 +57,33 @@ func checkHardware(vendor string, metadata map[string]string) (string, string) {
 	}
 
 	return "", ""
+}
+
+// checkHardwareVendors probes the supported hardware vendors in order
+func checkHardwareVendors() (string, string) {
+	sub, token := checkVictron()
+	if sub == "" && os.Getenv("HEMSPRO") != "" {
+		sub, token = checkHemsPro()
+	}
+	return sub, token
+}
+
+var startRenewal = sync.OnceFunc(func() { go renewHardwareToken() })
+
+// renewHardwareToken re-probes hardware before the temp token expires; retries daily on failure
+func renewHardwareToken() {
+	for range time.Tick(24 * time.Hour) {
+		mu.RLock()
+		due := Hardware && time.Until(ExpiresAt) < 3*24*time.Hour
+		mu.RUnlock()
+		if !due {
+			continue
+		}
+
+		if _, token := checkHardwareVendors(); token != "" {
+			mu.Lock()
+			Token, ExpiresAt = token, tokenExpiry(token)
+			mu.Unlock()
+		}
+	}
 }
