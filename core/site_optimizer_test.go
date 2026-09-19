@@ -151,6 +151,23 @@ func TestAsTimestamps(t *testing.T) {
 	}, got)
 }
 
+func TestPlanSlot(t *testing.T) {
+	// now aligned to a 15-minute boundary: s_goal[i] models the SoC at the END of slot i,
+	// so a plan 2h out (exactly 8 slots away) must land on slot 7, not 8 (#33831)
+	now := time.Date(2025, 1, 1, 12, 0, 0, 0, time.UTC)
+	assert.Equal(t, 7, planSlot(now, now.Add(2*time.Hour)))
+	assert.Equal(t, 0, planSlot(now, now.Add(15*time.Minute)))
+	assert.Equal(t, 0, planSlot(now, now.Add(5*time.Minute)))
+
+	// now 10 minutes into a slot: the partial first slot (5min) absorbs the offset
+	now2 := time.Date(2025, 1, 1, 12, 10, 0, 0, time.UTC)
+	assert.Equal(t, 7, planSlot(now2, now2.Add(110*time.Minute)))
+
+	// deadline not in the future
+	assert.Equal(t, -1, planSlot(now, now))
+	assert.Equal(t, -1, planSlot(now, now.Add(-time.Minute)))
+}
+
 func TestUnmodelledPower(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
@@ -343,6 +360,38 @@ func TestBatteryForecastActiveSlot(t *testing.T) {
 	assert.Nil(t, (&Site{}).addBatteryForecastTotals(req, resp, schedule, base.Add(2*tariff.SlotDuration)))
 }
 
+// TestBatteryRequestGridModes ensures grid charging and discharging are only
+// offered to the optimizer for batteries that support the respective mode
+func TestBatteryRequestGridModes(t *testing.T) {
+	newBatteryDevice := func(t *testing.T, modes ...api.BatteryMode) config.Device[api.Meter] {
+		batCon := api.NewMockBatteryController(gomock.NewController(t))
+		batCon.EXPECT().BatteryModes().Return(modes).AnyTimes()
+
+		return config.NewStaticDevice(config.Named{}, api.Meter(&struct {
+			api.Meter
+			api.BatteryController
+		}{
+			BatteryController: batCon,
+		}))
+	}
+
+	site := &Site{log: util.NewLogger("foo"), batteryGridDischarge: true}
+	capacity, soc := 10.0, 50.0
+	m := types.Measurement{Capacity: &capacity, Soc: &soc}
+
+	req, _ := site.batteryRequest(newBatteryDevice(t, api.BatteryNormal, api.BatteryHold, api.BatteryCharge), m, nil, 8, 15*time.Minute)
+	assert.True(t, req.ChargeFromGrid)
+	assert.False(t, req.DischargeToGrid, "grid discharge opt-in must not apply to a battery without discharge mode")
+
+	req, _ = site.batteryRequest(newBatteryDevice(t, api.BatteryNormal, api.BatteryDischarge), m, nil, 8, 15*time.Minute)
+	assert.False(t, req.ChargeFromGrid)
+	assert.True(t, req.DischargeToGrid)
+
+	site.batteryGridDischarge = false
+	req, _ = site.batteryRequest(newBatteryDevice(t, api.BatteryNormal, api.BatteryDischarge), m, nil, 8, 15*time.Minute)
+	assert.False(t, req.DischargeToGrid, "grid discharge requires the opt-in")
+}
+
 // TestBatteryRequestSocLimitsClamp ensures the reported soc is always clamped into
 // the resulting [SMin, SMax] range, even when it lies outside the configured soc
 // limits (e.g. right after a firmware update changed the reported soc or the min/max
@@ -462,6 +511,38 @@ func TestLoadpointRequestChargeGoal(t *testing.T) {
 
 			assert.Equal(t, tc.wantInitial, req.SInitial)
 			assert.Equal(t, tc.wantSMax, req.SMax)
+		})
+	}
+}
+
+func TestLoadpointRequestChargingState(t *testing.T) {
+	site := &Site{log: util.NewLogger("foo")}
+
+	for status, want := range map[api.ChargeStatus]bool{api.StatusA: false, api.StatusB: false, api.StatusC: true} {
+		t.Run(string(status), func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			v := api.NewMockVehicle(ctrl)
+			v.EXPECT().Capacity().Return(50.0).AnyTimes()
+			v.EXPECT().GetTitle().Return("").AnyTimes()
+
+			lp := loadpoint.NewMockAPI(ctrl)
+			lp.EXPECT().GetVehicle().Return(v).AnyTimes()
+			lp.EXPECT().GetSoc().Return(20.0).AnyTimes()
+			lp.EXPECT().EffectiveLimitSoc().Return(80).AnyTimes()
+			lp.EXPECT().GetLimitEnergy().Return(0.0).AnyTimes()
+			lp.EXPECT().GetTitle().Return("lp").AnyTimes()
+			lp.EXPECT().EffectiveMinPower().Return(1380.0).AnyTimes()
+			lp.EXPECT().EffectiveMaxPower().Return(11000.0).AnyTimes()
+			lp.EXPECT().GetMode().Return(api.ModeNow).AnyTimes()
+			lp.EXPECT().GetStatus().Return(status).AnyTimes()
+			lp.EXPECT().GetAlwaysCharge().Return(api.AlwaysChargeOff).AnyTimes()
+			lp.EXPECT().GetChargePower().Return(11000.0).AnyTimes()
+			lp.EXPECT().GetRemainingEnergy().Return(0.0).AnyTimes()
+
+			req, _ := site.loadpointRequest(lp, 8, 15*time.Minute, nil)
+
+			assert.Equal(t, want, req.CActive)
 		})
 	}
 }
