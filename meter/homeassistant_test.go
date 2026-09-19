@@ -50,7 +50,7 @@ func TestHomeAssistantBatteryModes(t *testing.T) {
 	c := conf("", "")
 	c["modeHoldCharge"] = "script.holdcharge"
 	c["modeDischarge"] = "script.discharge"
-	m, err = NewHomeAssistantFromConfig(c)
+	m, err = NewHomeAssistantFromConfig(ctx, c)
 	require.NoError(t, err)
 
 	ctrl, ok = api.Cap[api.BatteryController](m)
@@ -61,11 +61,11 @@ func TestHomeAssistantBatteryModes(t *testing.T) {
 	c = conf("", "")
 	c["modeNormal"] = ""
 	c["modeDischarge"] = "script.discharge"
-	_, err = NewHomeAssistantFromConfig(c)
+	_, err = NewHomeAssistantFromConfig(ctx, c)
 	require.Error(t, err)
 
 	// modeNormal alone is rejected
-	_, err = NewHomeAssistantFromConfig(conf("", ""))
+	_, err = NewHomeAssistantFromConfig(ctx, conf("", ""))
 	require.Error(t, err)
 }
 

@@ -251,5 +251,4 @@ render: |
   {{- include "battery-power" . }}
   modeHoldCharge: {{ .modeHoldCharge }}
   modeDischarge: {{ .modeDischarge }}
-  {{- include "battery-params" . }}
   {{- end }}
