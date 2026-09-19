@@ -172,13 +172,13 @@ render: |
             source: modbus
             {{- include "modbus" . | indent 10 }}
             register:
-              address: 1034 # Battery charge power (DC) setpoint, absolute [W];
+              address: 1034 # Battery charge power (DC) setpoint, absolute [W]
               type: writemultiple
               encoding: {{ if (eq .endianness "big") }}float32{{ else }}float32s{{ end }}
   maxchargepowerlimit: # site push target (BatteryChargePowerLimiter); consumed by batterymode case 4
     source: memory
     name: maxchargepowerlimit
-  powersetpoint: # site push target (BatteryPowerSetpointController); consumed by batterymode case 3
+  powersetpoint: # site push target (BatteryPowerSetpointController); consumed by batterymode cases 3+5
     source: memory
     name: powersetpoint
     {{- if .maxchargepower }}
