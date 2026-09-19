@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/tw"
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 )
@@ -18,7 +19,7 @@ import (
 // meterVerifyBatteryModesCmd represents the meter verifybatterymodes command
 var meterVerifyBatteryModesCmd = &cobra.Command{
 	Use:   "verifybatterymodes [name]",
-	Short: "Cycle through all battery mode transitions and verify battery power interactively",
+	Short: "Cycle through battery mode transitions and verify battery power interactively",
 	Args:  cobra.MaximumNArgs(1),
 	Run:   runMeterVerifyBatteryModes,
 }
@@ -28,6 +29,7 @@ func init() {
 	withCustomTemplate(meterVerifyBatteryModesCmd)
 
 	meterVerifyBatteryModesCmd.Flags().Duration(flagDelay, 30*time.Second, "observation window after setting mode (battery power is polled every second)")
+	meterVerifyBatteryModesCmd.Flags().Bool(flagFull, false, "test all mode transitions instead of only from/to normal")
 }
 
 // batteryModeExpectation documents the expected battery power sign per mode (negative: charging, positive: discharging)
@@ -39,14 +41,21 @@ var batteryModeExpectation = map[api.BatteryMode]string{
 	api.BatteryDischarge:  "> 0 (discharging to grid)",
 }
 
-// batteryModeTransitions returns the sequence of target modes that, starting from modes[0],
-// visits every ordered pair of modes exactly once and ends at modes[0]
-func batteryModeTransitions(modes []api.BatteryMode) []api.BatteryMode {
+// batteryModeTransitions returns the sequence of target modes, starting and ending at modes[0].
+// By default only the transitions from/to modes[0] are visited, with full every ordered pair exactly once.
+func batteryModeTransitions(modes []api.BatteryMode, full bool) []api.BatteryMode {
 	if len(modes) < 2 {
 		return nil
 	}
 
 	var res []api.BatteryMode
+
+	if !full {
+		for _, m := range modes[1:] {
+			res = append(res, m, modes[0])
+		}
+		return res
+	}
 
 	for i := range len(modes) - 1 {
 		for _, m := range modes[i+2:] {
@@ -82,7 +91,7 @@ func observeBatteryPower(m api.Meter, d time.Duration) (string, bool) {
 	for range max(1, int(d/time.Second)) {
 		p, err := m.CurrentPower()
 		if ok = err == nil; ok {
-			last = fmt.Sprintf("%.0fW (%s)", p, batteryPowerState(p))
+			last = fmt.Sprintf("%+6.0fW (%s)", p, batteryPowerState(p))
 		} else {
 			last = err.Error()
 		}
@@ -94,21 +103,22 @@ func observeBatteryPower(m api.Meter, d time.Duration) (string, bool) {
 	return last, ok
 }
 
-func verifyBatteryModes(m api.Meter, bc api.BatteryController, modes []api.BatteryMode, delay time.Duration) {
+func verifyBatteryModes(m api.Meter, bc api.BatteryController, modes []api.BatteryMode, delay time.Duration, full bool) {
 	setMode := func(mode api.BatteryMode) {
 		if err := bc.SetBatteryMode(mode); err != nil {
 			log.FATAL.Fatalln("set battery mode:", err)
 		}
 	}
 
-	fmt.Printf("modes: %v\ntransitions: %d\ndelay: %s\n", modes, len(modes)*(len(modes)-1), delay)
+	transitions := batteryModeTransitions(modes, full)
+	fmt.Printf("modes: %v\ntransitions: %d\ndelay: %s\n", modes, len(transitions), delay)
 
 	from := modes[0]
 	fmt.Printf("\ninitial mode: %s\n", from)
 	setMode(from)
 
 	var protocol [][]string
-	for _, to := range batteryModeTransitions(modes) {
+	for _, to := range transitions {
 		fmt.Printf("\n%s -> %s\nexpected battery power: %s\n", from, to, batteryModeExpectation[to])
 		setMode(to)
 
@@ -120,12 +130,17 @@ func verifyBatteryModes(m api.Meter, bc api.BatteryController, modes []api.Batte
 		}
 
 		expected, _, _ := strings.Cut(batteryModeExpectation[to], " (")
+		if to == api.BatteryNormal {
+			expected = "-"
+		}
 		protocol = append(protocol, []string{fmt.Sprint(len(protocol) + 1), from.String(), to.String(), expected, power, lo.Ternary(ok, "ok", "FAILED")})
 		from = to
 	}
 
 	fmt.Println()
-	table := tablewriter.NewTable(os.Stdout)
+	table := tablewriter.NewTable(os.Stdout, tablewriter.WithConfig(tablewriter.Config{
+		Row: tw.CellConfig{Alignment: tw.CellAlignment{PerColumn: []tw.Align{tw.AlignRight, tw.AlignLeft, tw.AlignLeft, tw.AlignRight, tw.AlignLeft, tw.AlignLeft}}},
+	}))
 	table.Header([]string{"#", "from", "to", "expected", "observed", "result"})
 	for _, row := range protocol {
 		table.Append(row)
@@ -149,6 +164,7 @@ func runMeterVerifyBatteryModes(cmd *cobra.Command, args []string) {
 	}
 
 	delay, _ := cmd.Flags().GetDuration(flagDelay)
+	full, _ := cmd.Flags().GetBool(flagFull)
 
 	batteries := lo.Filter(config.Meters().Devices(), func(dev config.Device[api.Meter], _ int) bool {
 		return api.HasCap[api.BatteryController](dev.Instance())
@@ -166,11 +182,13 @@ func runMeterVerifyBatteryModes(cmd *cobra.Command, args []string) {
 	v := dev.Instance()
 	bc, _ := api.Cap[api.BatteryController](v)
 
+	// normal first
 	modes := lo.Without(bc.BatteryModes(), api.BatteryUnknown)
-	if len(modes) < 2 {
+	slices.Sort(modes)
+	if len(modes) < 2 || modes[0] != api.BatteryNormal {
 		log.FATAL.Fatalf("%s: not enough battery modes to verify transitions: %v", dev.Config().Name, modes)
 	}
 
 	fmt.Println(deviceHeader(dev))
-	verifyBatteryModes(v, bc, modes, delay)
+	verifyBatteryModes(v, bc, modes, delay, full)
 }

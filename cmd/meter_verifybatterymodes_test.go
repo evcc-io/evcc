@@ -13,7 +13,16 @@ func TestBatteryModeTransitions(t *testing.T) {
 	for i := range all {
 		modes := all[:i+1]
 		n := len(modes)
-		seq := batteryModeTransitions(modes)
+
+		// default: out and back for every non-initial mode
+		seq := batteryModeTransitions(modes, false)
+		require.Len(t, seq, 2*(n-1), "n=%d", n)
+		for j, m := range modes[1:] {
+			require.Equal(t, []api.BatteryMode{m, modes[0]}, seq[2*j:2*j+2], "n=%d", n)
+		}
+
+		// full: every ordered pair exactly once
+		seq = batteryModeTransitions(modes, true)
 		require.Len(t, seq, n*(n-1), "n=%d", n)
 
 		seen := make(map[[2]api.BatteryMode]int)
