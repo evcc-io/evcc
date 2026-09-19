@@ -1236,6 +1236,7 @@ export interface PlanWrapper {
   duration: number;
   plan: Rate[] | null;
   power: number;
+  optimizer?: boolean;
 }
 
 export interface PlanResponse {
