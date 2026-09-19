@@ -215,7 +215,8 @@ func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if mode == api.BatteryHold || mode == api.BatteryHoldCharge {
+	switch mode {
+	case api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge:
 		if err := m.sysSpecs(); err != nil {
 			return err
 		}
@@ -234,8 +235,9 @@ func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 			e3dcBatteryCharge(0),
 		}
 	case api.BatteryCharge:
+		// manual charge alone does not stop the EMS from discharging into other loads
 		messages = []rscp.Message{
-			e3dcPowerLimits(false, 0, 0),
+			e3dcPowerLimits(true, m.maxCharge, m.dischargeLimit),
 			e3dcBatteryCharge(50000), // max. 50kWh
 		}
 	case api.BatteryHoldCharge:
