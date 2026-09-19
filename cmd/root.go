@@ -177,11 +177,9 @@ func awaitShutdown(cmd *cobra.Command, args []string) {
 // circuitsSource adds the config source to the circuits the site publishes.
 // The site only knows the circuits, where they were configured is a cmd concern.
 func circuitsSource(in <-chan util.Param) <-chan util.Param {
-	out := make(chan util.Param, cap(in))
+	out := make(chan util.Param)
 
 	go func() {
-		defer close(out)
-
 		for p := range in {
 			if _, ok := p.Val.(globalconfig.ConfigStatus); p.Key == keys.Circuits && !ok {
 				p.Val = globalconfig.ConfigStatus{Config: p.Val, YamlSource: yamlSource.circuits}
