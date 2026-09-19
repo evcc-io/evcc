@@ -166,3 +166,34 @@ func TestFixedChargesZonesOrder(t *testing.T) {
 		}
 	}
 }
+
+func TestFixedDstSpringForward(t *testing.T) {
+	loc, err := time.LoadLocation("Europe/Berlin")
+	require.NoError(t, err)
+
+	local := time.Local
+	time.Local = loc
+	t.Cleanup(func() { time.Local = local })
+
+	tf := &Fixed{
+		embed: &embed{},
+		clock: clock.NewMock(),
+		zones: []fixed.Zone{{Price: 0.3}},
+	}
+
+	// 2026-03-29 02:00 -> 03:00
+	tf.clock.(*clock.Mock).Set(time.Date(2026, 3, 27, 12, 0, 0, 0, loc))
+
+	rates, err := tf.Rates()
+	require.NoError(t, err)
+
+	for i, r := range rates {
+		require.True(t, r.End.After(r.Start), "invalid rate %d: %v", i, r)
+		if i > 0 {
+			require.Equal(t, rates[i-1].End, r.Start, "non-contiguous rate %d: %v", i, r)
+		}
+	}
+
+	_, short := shortSlot(rates)
+	assert.False(t, short)
+}
