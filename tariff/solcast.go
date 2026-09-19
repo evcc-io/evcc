@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
-	"strconv"
 	"sync"
 	"time"
 
@@ -96,19 +95,27 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 		if err := backoff.Retry(func() error {
 			uri := fmt.Sprintf("https://api.solcast.com.au/rooftop_sites/%s/forecasts?period=PT30M&format=json&hours=96", t.site)
 			err := t.GetJSON(uri, &res)
-			// HTTP 429 (Too Many Requests) is a transient rate-limit response.
-			// Respect the Retry-After header if provided; otherwise wait a default
-			// before returning a retryable error so the backoff loop can retry.
+			// HTTP 429: Solcast does not document a per-second or concurrency limit,
+			// only 10 requests/day for hobbyist accounts. However, when two rooftop
+			// sites are configured, both goroutines bypass the fromTo window check on
+			// their first iteration (via the default: branch) and fire simultaneously
+			// at startup — potentially triggering a server-side burst/concurrency guard.
+			// The Home Assistant Solcast integration observed the same behaviour and
+			// works around it with randomised request delays:
+			// https://github.com/BJReplay/ha-solcast-solar
+			//
+			// Log all available rate-limit headers to determine whether this is a
+			// transient concurrency collision (small Retry-After) or daily quota
+			// exhaustion (large Retry-After), then return a retryable error so the
+			// existing exponential backoff (bo(), capped at 1 min) can recover.
 			if se, ok := errors.AsType[*request.StatusError](err); ok && se.StatusCode() == http.StatusTooManyRequests {
-				delay := 60 * time.Second
-				if ra := se.Response().Header.Get("Retry-After"); ra != "" {
-					if secs, parseErr := strconv.Atoi(ra); parseErr == nil && secs > 0 {
-						delay = time.Duration(secs) * time.Second
-					}
-				}
-				t.log.DEBUG.Printf("Solcast rate limited, retrying after %v", delay)
-				time.Sleep(delay)
-				return err // retryable
+				resp := se.Response()
+				t.log.DEBUG.Printf("Solcast 429: Retry-After=%s X-RateLimit-Limit=%s X-RateLimit-Remaining=%s",
+					resp.Header.Get("Retry-After"),
+					resp.Header.Get("X-RateLimit-Limit"),
+					resp.Header.Get("X-RateLimit-Remaining"),
+				)
+				return err // retryable: let bo() handle backoff
 			}
 			return backoffPermanentError(err)
 		}, bo()); err != nil {
