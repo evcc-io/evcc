@@ -29,7 +29,7 @@ async function login(page: Page) {
 
 async function openCircuitsModal(page: Page, yaml: string) {
   await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
-  const modal = page.getByTestId("circuits-modal");
+  const modal = page.getByTestId("circuits-legacy-modal");
   await expectModalVisible(modal);
   const editor = modal.getByTestId("yaml-editor");
   await expect(editor).toBeVisible();
@@ -40,7 +40,7 @@ async function openCircuitsModal(page: Page, yaml: string) {
 
 test.describe("yaml config with script plugin requires admin password", async () => {
   test("caches password across save and reopen", async ({ page }) => {
-    await start(undefined, "password.sql", "");
+    await start(undefined, "password-circuits.sql", "");
     await page.goto("/#/config");
     await login(page);
 

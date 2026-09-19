@@ -1,28 +1,46 @@
-import type { Circuit } from "../types/evcc";
+import type { ConfigCircuit, ConfigMeter, Circuit } from "../types/evcc";
 
-export interface CircuitNode extends Circuit {
-  name: string;
+export type ConfigCircuitNode = ConfigCircuit & {
+  children?: ConfigCircuitNode[];
+};
+
+export type CircuitNode = Circuit & {
   children?: CircuitNode[];
-}
+};
 
-// circuitTree builds a tree from published circuit data.
-// Returns the root node or null if empty.
-export function circuitTree(circuits: Record<string, Circuit>): CircuitNode | null {
-  const nodes = new Map<string, CircuitNode>();
-  for (const [name, circuit] of Object.entries(circuits)) {
-    nodes.set(name, { ...circuit, name });
-  }
-
-  let root: CircuitNode | null = null;
-  for (const [name, circuit] of Object.entries(circuits)) {
-    if (circuit.parent && nodes.has(circuit.parent)) {
-      const parent = nodes.get(circuit.parent)!;
-      parent.children = parent.children || [];
-      parent.children.push(nodes.get(name)!);
+// buildTree links nodes to their parents and returns the root
+function buildTree<T extends { children?: T[] }>(
+  byKey: Record<string, T>,
+  parentOf: (node: T) => string | undefined
+): T | undefined {
+  const nodes = Object.fromEntries(Object.entries(byKey).map(([k, v]) => [k, { ...v }]));
+  let root: T | undefined;
+  for (const node of Object.values(nodes)) {
+    const parent = nodes[parentOf(node) ?? ""];
+    if (parent) {
+      (parent.children ??= []).push(node);
     } else {
-      root = nodes.get(name)!;
+      root = node;
     }
   }
-
   return root;
+}
+
+// configCircuitTree builds a tree from ConfigCircuit data
+export function configCircuitTree(circuits: ConfigCircuit[] = []): ConfigCircuitNode | undefined {
+  return buildTree<ConfigCircuitNode>(
+    Object.fromEntries(circuits.map((c) => [c.name, c])),
+    (node) => (typeof node.config.parent === "string" ? node.config.parent : undefined)
+  );
+}
+
+// circuitTree builds a tree from published Circuit data (Record keyed by id)
+export function circuitTree(circuits: Record<string, Circuit> = {}): CircuitNode | undefined {
+  return buildTree<CircuitNode>(circuits, (node) => node.parent);
+}
+
+// meterTitle returns the display name of a referenced meter
+export function meterTitle(meters: ConfigMeter[], name?: string): string {
+  const meter = meters.find((m) => m.name === name);
+  return meter?.deviceProduct || meter?.config?.template || "";
 }
