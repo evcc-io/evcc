@@ -2206,12 +2206,12 @@ func (lp *Loadpoint) publishSocAndRange() {
 			d = time.Duration(e * 1e3 / lp.chargePower * float64(time.Hour)).Round(time.Second)
 		}
 	case socEstimator != nil:
-		if lp.charging() {
+		if lp.charging() && lp.chargePower > 0 {
 			d = socEstimator.RemainingChargeDuration(float64(limitSoc), lp.chargePower)
 		}
 		e = socEstimator.RemainingChargeEnergy(limitSoc)
 	case v != nil && v.Capacity() > 0 && lp.vehicleSoc > 0:
-		if lp.charging() {
+		if lp.charging() && lp.chargePower > 0 {
 			d = soc.RemainingChargeDuration(float64(limitSoc), lp.chargePower, lp.vehicleSoc, v.Capacity())
 		}
 		e = soc.RemainingChargeEnergy(limitSoc, lp.vehicleSoc, v.Capacity())
