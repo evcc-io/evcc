@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -95,27 +96,30 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 		if err := backoff.Retry(func() error {
 			uri := fmt.Sprintf("https://api.solcast.com.au/rooftop_sites/%s/forecasts?period=PT30M&format=json&hours=96", t.site)
 			err := t.GetJSON(uri, &res)
-			// HTTP 429: Solcast does not document a per-second or concurrency limit,
-			// only 10 requests/day for hobbyist accounts. However, when two rooftop
-			// sites are configured, both goroutines bypass the fromTo window check on
-			// their first iteration (via the default: branch) and fire simultaneously
-			// at startup — potentially triggering a server-side burst/concurrency guard.
-			// The Home Assistant Solcast integration observed the same behaviour and
-			// works around it with randomised request delays:
-			// https://github.com/BJReplay/ha-solcast-solar
-			//
-			// Log all available rate-limit headers to determine whether this is a
-			// transient concurrency collision (small Retry-After) or daily quota
-			// exhaustion (large Retry-After), then return a retryable error so the
-			// existing exponential backoff (bo(), capped at 1 min) can recover.
+			// HTTP 429: Solcast enforces a daily quota (10 req/day for hobbyist
+			// accounts) tracked separately from the per-minute rate limit (600/min).
+			// The daily quota exhaustion 429 carries a JSON body with
+			// error_code "TooManyRequests" and no Retry-After header.
+			// Treat that as permanent so we don't waste tomorrow's quota on retries.
+			// Any other 429 (transient server busy) is left retryable for bo().
 			if se, ok := errors.AsType[*request.StatusError](err); ok && se.StatusCode() == http.StatusTooManyRequests {
 				resp := se.Response()
-				t.log.DEBUG.Printf("Solcast 429: Retry-After=%s X-RateLimit-Limit=%s X-RateLimit-Remaining=%s",
-					resp.Header.Get("Retry-After"),
+				t.log.DEBUG.Printf("Solcast 429: X-RateLimit-Limit=%s X-RateLimit-Remaining=%s X-RateLimit-Reset=%s",
 					resp.Header.Get("X-RateLimit-Limit"),
 					resp.Header.Get("X-RateLimit-Remaining"),
+					resp.Header.Get("X-RateLimit-Reset"),
 				)
-				return err // retryable: let bo() handle backoff
+				var body struct {
+					ResponseStatus struct {
+						ErrorCode string `json:"error_code"`
+						Message   string `json:"message"`
+					} `json:"response_status"`
+				}
+				if json.Unmarshal(se.Body(), &body) == nil && body.ResponseStatus.ErrorCode == "TooManyRequests" {
+					t.log.ERROR.Printf("Solcast daily quota exceeded: %s", body.ResponseStatus.Message)
+					return backoff.Permanent(err)
+				}
+				return err // transient busy — retryable
 			}
 			return backoffPermanentError(err)
 		}, bo()); err != nil {
