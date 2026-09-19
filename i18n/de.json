@@ -548,7 +548,9 @@
       "vehicleHelpDefault": "Nimmt immer an, dass dieses Fahrzeug hier lädt. Auto-Erkennung deaktiviert. Manuelle Übersteuerung möglich.",
       "vehicleInvalid": "Fahrzeug existiert nicht",
       "vehicleLabel": "Standard-Fahrzeug",
-      "vehiclesTitle": "Fahrzeuge"
+      "vehiclesTitle": "Fahrzeuge",
+      "enableTempLimitHelp": "Zeigt Slider und Dropdown zur Einschränkung der Solltemperatur beim SG-Ready-Boost. Nur sinnvoll wenn die Wärmepumpe sonst zu weit aufheizt.",
+      "enableTempLimitLabel": "Temperaturlimit anzeigen"
     },
     "main": {
       "addAdditional": "Zusätzlichen Zähler hinzufügen",

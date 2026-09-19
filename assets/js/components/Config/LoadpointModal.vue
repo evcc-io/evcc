@@ -324,6 +324,23 @@
 							/>
 						</FormRow>
 
+						<div v-if="chargerIsHeating && chargerIsContinuous" class="mb-4">
+							<div class="d-flex">
+								<input
+									id="loadpointEnableTempLimit"
+									v-model="values.ui.enableTempLimit"
+									class="form-check-input"
+									type="checkbox"
+								/>
+								<label class="form-check-label ms-2" for="loadpointEnableTempLimit">
+									{{ $t("config.loadpoint.enableTempLimitLabel") }}
+								</label>
+							</div>
+							<div class="form-text evcc-gray">
+								{{ $t("config.loadpoint.enableTempLimitHelp") }}
+							</div>
+						</div>
+
 						<h6 v-if="!chargerIsSwitchDevice">
 							{{ $t("config.loadpoint.electricalTitle") }}
 							<small class="text-muted">{{
@@ -677,6 +694,7 @@ const defaultValues = {
 	ui: {
 		minTemp: 0,
 		maxTemp: 100,
+		enableTempLimit: false,
 	},
 	vehicle: "",
 	charger: "",
