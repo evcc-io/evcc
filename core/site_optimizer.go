@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"net/http"
 	"os"
 	"slices"
@@ -1338,7 +1337,7 @@ func planSlot(now, ts time.Time) int {
 	}
 
 	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
-	return int(math.Ceil(float64(ts.Sub(eos)) / float64(tariff.SlotDuration)))
+	return int((ts.Sub(eos) + tariff.SlotDuration - 1) / tariff.SlotDuration)
 }
 
 // TODO remove once smart cost limit usage becomes obsolete
