@@ -168,20 +168,25 @@ func suggestionEvent(detail batteryDetail, s types.Suggestion) messenger.Event {
 	return ev
 }
 
-// currentSlotSuggestion maps the optimizer's active-slot result onto an advisory action.
-// Because the optimization is linear, the slot is at an operating-range extreme, so it
-// maps cleanly onto the discrete battery mode / loadpoint intent that control would later apply.
+// slotFlags are the per-run/per-slot facts slotSuggestion classifies against.
+type slotFlags struct {
+	attenuating   bool // an attenuate_feedin_peaks/attenuate_grid_peaks strategy is in effect
+	canCapCharge  bool // every home battery can enforce a partial charge cap
+	gridImporting bool
+	gridExporting bool
+}
+
+// slotSuggestion maps the optimizer's slot-i corner result onto an advisory action.
 // An idle battery is interpreted from the grid flow: importing means discharge is withheld
-// (hold), exporting means charging is withheld (holdcharge).
-func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, slot int, gridImport, gridExport float32, slotHours float64) types.Suggestion {
-	if slot < 0 || slotHours <= 0 || slot >= len(res.ChargingPower) || slot >= len(res.DischargingPower) {
+// (hold), exporting means charging is withheld (holdcharge). Self-consumption charging is
+// likewise capped via holdcharge, but only when canCapCharge (see slotFlags).
+func slotSuggestion(detail batteryDetail, res optimizer.BatteryResult, i int, f slotFlags, slotHours float64, gridImport, gridExport float32) types.Suggestion {
+	if slotHours <= 0 || i < 0 || i >= len(res.ChargingPower) || i >= len(res.DischargingPower) {
 		return types.Suggestion{}
 	}
 
-	charge := float64(res.ChargingPower[slot]) / slotHours
-	discharge := float64(res.DischargingPower[slot]) / slotHours
-	gridImporting := gridImport > 0
-	gridExporting := gridExport > 0
+	charge := float64(res.ChargingPower[i]) / slotHours
+	discharge := float64(res.DischargingPower[i]) / slotHours
 
 	s := types.Suggestion{
 		Charge:    charge,
@@ -192,16 +197,19 @@ func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, sl
 	if detail.Type == batteryTypeBattery {
 		idle := charge <= suggestionThreshold && discharge <= suggestionThreshold
 		switch {
-		case charge > suggestionThreshold && gridImporting:
+		case charge > suggestionThreshold && f.gridImporting:
 			// charging while importing means grid charging
 			s.Action = api.BatteryCharge.String()
-		case idle && gridImporting:
+		case charge > suggestionThreshold && !f.gridImporting && f.canCapCharge && f.attenuating:
+			// self-consumption above the plan's cap: enforce it via holdcharge
+			s.Action = api.BatteryHoldCharge.String()
+		case idle && f.gridImporting:
 			// idle while importing: discharge is deliberately withheld
 			s.Action = api.BatteryHold.String()
-		case idle && gridExporting:
+		case idle && f.gridExporting:
 			// idle while exporting: surplus is exported instead of charged
 			s.Action = api.BatteryHoldCharge.String()
-		case discharge > suggestionThreshold && gridExporting:
+		case discharge > suggestionThreshold && f.gridExporting:
 			// discharging while exporting means battery-to-grid discharge
 			s.Action = api.BatteryDischarge.String()
 		default:
@@ -214,6 +222,19 @@ func currentSlotSuggestion(detail batteryDetail, res optimizer.BatteryResult, sl
 	}
 
 	return s
+}
+
+// attenuating reports whether s deliberately withholds battery charge for a later peak.
+func attenuating(s optimizer.OptimizerStrategyChargingStrategy) bool {
+	return s == optimizer.OptimizerStrategyChargingStrategyAttenuateFeedinPeaks || s == optimizer.OptimizerStrategyChargingStrategyAttenuateGridPeaks
+}
+
+// gridFlags derives slot i's import/export state from the optimizer's site-level flow,
+// at the same threshold as charge/discharge so a numerical trickle doesn't count.
+func gridFlags(res *optimizer.OptimizationResult, i int, slotHours float64) (importing, exporting bool) {
+	importing = i < len(res.GridImport) && float64(res.GridImport[i])/slotHours > suggestionThreshold
+	exporting = i < len(res.GridExport) && float64(res.GridExport[i])/slotHours > suggestionThreshold
+	return
 }
 
 // loadpointCurrentAction returns the loadpoint's current operating mode for
@@ -765,6 +786,12 @@ func (site *Site) reapplySuggestions(now time.Time) {
 func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details requestDetails, res optimizer.OptimizationResult, schedule optimizerSchedule, now time.Time, completed time.Time) {
 	slot := schedule.activeSlot(now)
 	slotHours := schedule.duration(slot).Hours()
+	f := slotFlags{
+		attenuating:  attenuating(req.Strategy.ChargingStrategy),
+		canCapCharge: site.allBatteriesHaveChargeCap(),
+	}
+	f.gridImporting, f.gridExporting = gridFlags(&res, slot, slotHours)
+
 	var gridImport, gridExport float32
 	if slot >= 0 && slot < len(res.GridImport) {
 		gridImport = res.GridImport[slot]
@@ -790,7 +817,7 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 			}),
 		})
 
-		suggestion := currentSlotSuggestion(detail, batRes, slot, gridImport, gridExport, slotHours)
+		suggestion := slotSuggestion(detail, batRes, slot, f, slotHours, gridImport, gridExport)
 		if suggestion.Action == "" {
 			continue
 		}

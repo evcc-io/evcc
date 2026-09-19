@@ -34,12 +34,18 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		Soc                   *plugin.Config // optional
 		LimitSoc              *plugin.Config // optional
 		BatteryMode           *plugin.Config // optional
+		MaxChargePowerLimit   *plugin.Config // optional
+		PowerSetpoint         *plugin.Config // optional
 		BatteryModes          []string       // optional, modes supported by batteryMode if it cannot report them itself
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
+
+	// scope a device-local memory store so a site-pushed value (via a capability
+	// setter) and the batterymode control path that consumes it share one cell
+	ctx = plugin.WithMemoryStore(ctx)
 
 	// default soc limits (nil-preset avoids mapstructure coercing plugin config into the default's type)
 	if cc.batterySocLimitsCtx.MinSoc == nil {
@@ -92,6 +98,24 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		implement.May(m, implement.BatteryCapacity(capacity))
 		implement.May(m, implement.BatterySocLimiter(socLimiter))
 		implement.May(m, implement.BatteryPowerLimiter(powerLimiter))
+
+		if cc.MaxChargePowerLimit != nil {
+			maxChargePowerS, err := cc.MaxChargePowerLimit.FloatSetter(ctx, "maxChargePowerLimit")
+			if err != nil {
+				return nil, fmt.Errorf("battery max charge power limit: %w", err)
+			}
+
+			implement.Has(m, implement.BatteryChargePowerLimiter(maxChargePowerS))
+		}
+
+		if cc.PowerSetpoint != nil {
+			powerSetpointS, err := cc.PowerSetpoint.FloatSetter(ctx, "powerSetpoint")
+			if err != nil {
+				return nil, fmt.Errorf("battery power setpoint: %w", err)
+			}
+
+			implement.Has(m, implement.BatteryPowerSetpointController(powerSetpointS))
+		}
 
 		switch {
 		case cc.Soc != nil && cc.LimitSoc != nil:

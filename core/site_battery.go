@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/util/config"
 )
@@ -30,6 +31,22 @@ func (site *Site) hasBatteryControl() bool {
 	}
 
 	return false
+}
+
+// allBatteriesHaveChargeCap reports whether every battery can cap its charge power. Gates
+// slotSuggestion's self-consumption case, dispatched site-wide: one uncapped battery would
+// get the same HoldCharge mode as the rest, blocking it outright instead of capping it.
+func (site *Site) allBatteriesHaveChargeCap() bool {
+	for _, dev := range site.batteryMeters {
+		if dev == nil {
+			continue
+		}
+		if !api.HasCap[api.BatteryChargePowerLimiter](dev.Instance()) {
+			return false
+		}
+	}
+
+	return true
 }
 
 // setBatteryMode sets the battery mode
@@ -74,6 +91,11 @@ func (site *Site) updateBatteryMode(batteryGridChargeActive, batteryGridDischarg
 		site.log.DEBUG.Println("battery mode: HEMS curtailed")
 		batteryMode = api.BatteryNormal
 	}
+
+	// refresh each battery's charge values in its device-local cell before applying the
+	// mode, so a control path consuming them (batterymode charge/holdcharge case) reads a
+	// fresh value in the same cycle
+	site.updateBatteryChargeValues()
 
 	// NOTE: applyBatteryMode is always called when charge or discharge mode is active to
 	// validate max soc / min soc reserve
@@ -230,6 +252,15 @@ func (site *Site) batterySocLimitReached(dev config.Device[api.Meter], discharge
 	return false, nil
 }
 
+// holdChargeSuggestion returns the current-slot plan for the given home battery,
+// or the zero value if none is available
+func (site *Site) holdChargeSuggestion(name string) types.Suggestion {
+	if s := site.suggestion(batteryKey(name), site.GetBatteryMode().String()); s != nil {
+		return *s
+	}
+	return types.Suggestion{}
+}
+
 // applyBatteryMode applies the mode to each battery.
 //
 // A battery that reached the soc bound of the requested mode is held instead:
@@ -289,6 +320,38 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 	}
 
 	return nil
+}
+
+// updateBatteryChargeValues pushes each battery's current-slot charge value into its
+// device-local cell, unconditionally: the consuming batterymode case owns the lifecycle.
+// The setpoint falls back to the battery's own max charge power only when there is no
+// suggestion at all, not merely because a real one is 0 W.
+func (site *Site) updateBatteryChargeValues() {
+	for _, dev := range site.batteryMeters {
+		instance := dev.Instance()
+		suggestion := site.holdChargeSuggestion(dev.Config().Name)
+
+		if powerLimiter, ok := api.Cap[api.BatteryChargePowerLimiter](instance); ok {
+			site.log.TRACE.Printf("battery %s max charge power: %.0fW action=%q", deviceTitleOrName(dev), suggestion.Charge, suggestion.Action)
+			if err := powerLimiter.SetMaxChargePower(suggestion.Charge); err != nil && !errors.Is(err, api.ErrNotAvailable) {
+				site.log.ERROR.Printf("battery %s max charge power: %v", deviceTitleOrName(dev), err)
+			}
+		}
+
+		if setpointCtrl, ok := api.Cap[api.BatteryPowerSetpointController](instance); ok {
+			watt := suggestion.Charge
+			fallback := suggestion.Action == ""
+			if fallback {
+				if powerLimiter, ok := api.Cap[api.BatteryPowerLimiter](instance); ok {
+					watt, _ = powerLimiter.GetPowerLimits()
+				}
+			}
+			site.log.TRACE.Printf("battery %s power setpoint: %.0fW action=%q fallback=%v", deviceTitleOrName(dev), watt, suggestion.Action, fallback)
+			if err := setpointCtrl.SetPowerSetpoint(watt); err != nil && !errors.Is(err, api.ErrNotAvailable) {
+				site.log.ERROR.Printf("battery %s power setpoint: %v", deviceTitleOrName(dev), err)
+			}
+		}
+	}
 }
 
 func (site *Site) tariffRates(usage api.TariffUsage) (api.Rates, error) {
