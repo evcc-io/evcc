@@ -53,21 +53,6 @@ func (i *iBatteryChargePowerLimiter) SetMaxChargePower(p0 float64) error {
 	return i.batteryChargePowerLimiter0(p0)
 }
 
-func BatteryPowerSetpointController(batteryPowerSetpointController0 func(float64) error) api.BatteryPowerSetpointController {
-	if batteryPowerSetpointController0 == nil {
-		return nil
-	}
-	return &iBatteryPowerSetpointController{batteryPowerSetpointController0}
-}
-
-type iBatteryPowerSetpointController struct {
-	batteryPowerSetpointController0 func(float64) error
-}
-
-func (i *iBatteryPowerSetpointController) SetPowerSetpoint(p0 float64) error {
-	return i.batteryPowerSetpointController0(p0)
-}
-
 func BatteryController(batteryController0 func() []api.BatteryMode, batteryController1 func(api.BatteryMode) error) api.BatteryController {
 	if batteryController0 == nil || batteryController1 == nil {
 		return nil
@@ -101,6 +86,21 @@ type iBatteryPowerLimiter struct {
 
 func (i *iBatteryPowerLimiter) GetPowerLimits() (float64, float64) {
 	return i.batteryPowerLimiter0()
+}
+
+func BatteryPowerSetpointController(batteryPowerSetpointController0 func(float64) error) api.BatteryPowerSetpointController {
+	if batteryPowerSetpointController0 == nil {
+		return nil
+	}
+	return &iBatteryPowerSetpointController{batteryPowerSetpointController0}
+}
+
+type iBatteryPowerSetpointController struct {
+	batteryPowerSetpointController0 func(float64) error
+}
+
+func (i *iBatteryPowerSetpointController) SetPowerSetpoint(p0 float64) error {
+	return i.batteryPowerSetpointController0(p0)
 }
 
 func BatterySocLimiter(batterySocLimiter0 func() (float64, float64)) api.BatterySocLimiter {
