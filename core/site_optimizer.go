@@ -266,13 +266,12 @@ func loadpointPlan(res optimizer.BatteryResult, prices []float32, schedule optim
 	return plan
 }
 
-// setSuggestions replaces the suggestions and plans applied on each publish
-func (site *Site) setSuggestions(suggestions map[string]types.Suggestion, plans map[string]optimizerPlan) {
+// setSuggestions replaces the suggestions applied on each publish
+func (site *Site) setSuggestions(suggestions map[string]types.Suggestion) {
 	site.Lock()
 	defer site.Unlock()
 
 	site.suggestions = suggestions
-	site.plans = plans
 }
 
 // setBatteryForecast replaces the battery forecast of the cached state
@@ -308,8 +307,7 @@ func (site *Site) publishSuggestions() {
 			continue
 		}
 
-		key := loadpointKey(id)
-		s := site.suggestion(key, loadpointCurrentAction(lp))
+		s := site.suggestion(loadpointKey(id), loadpointCurrentAction(lp))
 
 		var val any
 		if s != nil {
@@ -317,18 +315,14 @@ func (site *Site) publishSuggestions() {
 		}
 		site.publishLoadpoint(id, keys.Suggestion, val)
 
-		site.RLock()
-		plan := site.plans[key]
-		site.RUnlock()
-
-		lp.setSuggestion(s, plan)
+		lp.setSuggestion(s)
 	}
 }
 
 // clearSuggestions removes all suggestions and the battery forecast when the
 // optimizer result is stale
 func (site *Site) clearSuggestions() {
-	site.setSuggestions(nil, nil)
+	site.setSuggestions(nil)
 	site.setBatteryForecast(nil)
 
 	site.publishBattery()
@@ -812,7 +806,6 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 
 	var batteries []batteryResult
 	suggestions := make(map[string]types.Suggestion, len(req.Batteries))
-	plans := make(map[string]optimizerPlan)
 
 	for i, batReq := range req.Batteries {
 		batRes := res.Batteries[i]
@@ -837,15 +830,16 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 		if key := detail.key(); key != "" && detail.controllable {
 			suggestions[key] = suggestion
 
+			// the schedule is gated by the suggestion, so it needs no clearing
 			if detail.loadpoint != nil {
-				plans[key] = loadpointPlan(batRes, req.TimeSeries.PN, schedule, now)
+				site.loadpoints[*detail.loadpoint].setOptimizerPlan(loadpointPlan(batRes, req.TimeSeries.PN, schedule, now))
 			}
 		}
 	}
 
 	site.publish("evopt-batteries", batteries)
 
-	site.setSuggestions(suggestions, plans)
+	site.setSuggestions(suggestions)
 	site.setBatteryForecast(site.addBatteryForecastTotals(req.Batteries, res.Batteries, schedule, now))
 
 	site.publishBattery()

@@ -9,14 +9,20 @@ import (
 	"github.com/evcc-io/evcc/core/types"
 )
 
-// setSuggestion stores the optimizer suggestion for the current slot and the
-// charging schedule of the solve
-func (lp *Loadpoint) setSuggestion(s *types.Suggestion, plan optimizerPlan) {
+// setSuggestion stores the optimizer suggestion for the current slot
+func (lp *Loadpoint) setSuggestion(s *types.Suggestion) {
 	lp.Lock()
 	defer lp.Unlock()
 
 	lp.suggestion = s
 	lp.suggestionUpdated = lp.clock.Now()
+}
+
+// setOptimizerPlan stores the charging schedule of the last solve
+func (lp *Loadpoint) setOptimizerPlan(plan optimizerPlan) {
+	lp.Lock()
+	defer lp.Unlock()
+
 	lp.optimizerPlan = plan
 }
 
@@ -33,12 +39,12 @@ func (lp *Loadpoint) OptimizerPlan(planTime time.Time) (api.Rates, float64) {
 
 	var rates api.Rates
 	var energy float64
-	for _, slot := range lp.optimizerPlan.rates {
+	for i, slot := range lp.optimizerPlan.rates {
 		if !slot.Start.Before(planTime) {
 			break
 		}
 		rates = append(rates, slot)
-		energy += lp.optimizerPlan.energy[len(rates)-1]
+		energy += lp.optimizerPlan.energy[i]
 	}
 
 	if len(rates) == 0 {

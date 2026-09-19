@@ -674,7 +674,7 @@ func TestSuggestionActionable(t *testing.T) {
 		batteryKey("bat"):    {Action: api.BatteryCharge.String()},
 		batteryKey("normal"): {Action: api.BatteryNormal.String()},
 		loadpointKey(0):      {Action: actionCharge},
-	}, nil)
+	})
 
 	batterySuggestion := func(name string) *types.Suggestion {
 		return site.suggestion(batteryKey(name), site.batteryAction())
