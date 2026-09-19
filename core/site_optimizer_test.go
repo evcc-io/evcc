@@ -360,6 +360,38 @@ func TestBatteryForecastActiveSlot(t *testing.T) {
 	assert.Nil(t, (&Site{}).addBatteryForecastTotals(req, resp, schedule, base.Add(2*tariff.SlotDuration)))
 }
 
+// TestBatteryRequestGridModes ensures grid charging and discharging are only
+// offered to the optimizer for batteries that support the respective mode
+func TestBatteryRequestGridModes(t *testing.T) {
+	newBatteryDevice := func(t *testing.T, modes ...api.BatteryMode) config.Device[api.Meter] {
+		batCon := api.NewMockBatteryController(gomock.NewController(t))
+		batCon.EXPECT().BatteryModes().Return(modes).AnyTimes()
+
+		return config.NewStaticDevice(config.Named{}, api.Meter(&struct {
+			api.Meter
+			api.BatteryController
+		}{
+			BatteryController: batCon,
+		}))
+	}
+
+	site := &Site{log: util.NewLogger("foo"), batteryGridDischarge: true}
+	capacity, soc := 10.0, 50.0
+	m := types.Measurement{Capacity: &capacity, Soc: &soc}
+
+	req, _ := site.batteryRequest(newBatteryDevice(t, api.BatteryNormal, api.BatteryHold, api.BatteryCharge), m, nil, 8, 15*time.Minute)
+	assert.True(t, req.ChargeFromGrid)
+	assert.False(t, req.DischargeToGrid, "grid discharge opt-in must not apply to a battery without discharge mode")
+
+	req, _ = site.batteryRequest(newBatteryDevice(t, api.BatteryNormal, api.BatteryDischarge), m, nil, 8, 15*time.Minute)
+	assert.False(t, req.ChargeFromGrid)
+	assert.True(t, req.DischargeToGrid)
+
+	site.batteryGridDischarge = false
+	req, _ = site.batteryRequest(newBatteryDevice(t, api.BatteryNormal, api.BatteryDischarge), m, nil, 8, 15*time.Minute)
+	assert.False(t, req.DischargeToGrid, "grid discharge requires the opt-in")
+}
+
 // TestBatteryRequestSocLimitsClamp ensures the reported soc is always clamped into
 // the resulting [SMin, SMax] range, even when it lies outside the configured soc
 // limits (e.g. right after a firmware update changed the reported soc or the min/max
