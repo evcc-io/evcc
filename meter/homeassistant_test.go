@@ -1,10 +1,14 @@
 package meter
 
 import (
+	"context"
+	"maps"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util/templates"
 	"github.com/stretchr/testify/require"
+	"go.yaml.in/yaml/v4"
 )
 
 // TestHomeAssistantBatteryModes covers which modes a partial mode config announces
@@ -21,7 +25,8 @@ func TestHomeAssistantBatteryModes(t *testing.T) {
 		}
 	}
 
-	m, err := NewHomeAssistantFromConfig(conf("script.hold", "script.charge"))
+	ctx := context.Background()
+	m, err := NewHomeAssistantFromConfig(ctx, conf("script.hold", "script.charge"))
 	require.NoError(t, err)
 
 	ctrl, ok := api.Cap[api.BatteryController](m)
@@ -29,7 +34,7 @@ func TestHomeAssistantBatteryModes(t *testing.T) {
 	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}, ctrl.BatteryModes())
 
 	// a mode without entity is not announced and rejected by the setter
-	m, err = NewHomeAssistantFromConfig(conf("script.hold", ""))
+	m, err = NewHomeAssistantFromConfig(ctx, conf("script.hold", ""))
 	require.NoError(t, err)
 
 	ctrl, ok = api.Cap[api.BatteryController](m)
@@ -38,14 +43,14 @@ func TestHomeAssistantBatteryModes(t *testing.T) {
 	require.Error(t, ctrl.SetBatteryMode(api.BatteryCharge))
 
 	// a mode entity must be a script
-	_, err = NewHomeAssistantFromConfig(conf("switch.hold", ""))
+	_, err = NewHomeAssistantFromConfig(ctx, conf("switch.hold", ""))
 	require.Error(t, err)
 
 	// holdcharge and discharge are announced when configured
 	c := conf("", "")
 	c["modeHoldCharge"] = "script.holdcharge"
 	c["modeDischarge"] = "script.discharge"
-	m, err = NewHomeAssistantFromConfig(c)
+	m, err = NewHomeAssistantFromConfig(ctx, c)
 	require.NoError(t, err)
 
 	ctrl, ok = api.Cap[api.BatteryController](m)
@@ -56,10 +61,46 @@ func TestHomeAssistantBatteryModes(t *testing.T) {
 	c = conf("", "")
 	c["modeNormal"] = ""
 	c["modeDischarge"] = "script.discharge"
-	_, err = NewHomeAssistantFromConfig(c)
+	_, err = NewHomeAssistantFromConfig(ctx, c)
 	require.Error(t, err)
 
 	// modeNormal alone is rejected
-	_, err = NewHomeAssistantFromConfig(conf("", ""))
+	_, err = NewHomeAssistantFromConfig(ctx, conf("", ""))
 	require.Error(t, err)
+}
+
+// TestHomeAssistantTemplateSocLimits covers rendering of static and entity-based soc limits
+func TestHomeAssistantTemplateSocLimits(t *testing.T) {
+	tmpl, err := templates.ByName(templates.Meter, "homeassistant")
+	require.NoError(t, err)
+
+	render := func(extra map[string]any) map[string]any {
+		values := map[string]any{
+			"usage": "battery",
+			"uri":   "http://localhost:8123",
+			"power": "sensor.power",
+			"soc":   "sensor.soc",
+		}
+		maps.Copy(values, extra)
+
+		b, _, err := tmpl.RenderResult(templates.Meter, templates.RenderModeInstance, values)
+		require.NoError(t, err)
+
+		var res map[string]any
+		require.NoError(t, yaml.Unmarshal(b, &res), string(b))
+		return res
+	}
+
+	res := render(map[string]any{
+		"minSocEntity": "number.min_soc",
+		"maxSocEntity": "number.max_soc",
+		"maxsoc":       90,
+	})
+	require.Equal(t, "homeassistant", res["minsoc"].(map[string]any)["source"])
+	require.Equal(t, "number.min_soc", res["minsoc"].(map[string]any)["entity"])
+	require.Equal(t, "number.max_soc", res["maxsoc"].(map[string]any)["entity"], "entity overrides static value")
+
+	res = render(map[string]any{"minsoc": 10, "maxsoc": 90})
+	require.EqualValues(t, 10, res["minsoc"])
+	require.EqualValues(t, 90, res["maxsoc"])
 }
