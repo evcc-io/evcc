@@ -5,7 +5,9 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util/templates"
 	"github.com/stretchr/testify/require"
+	"go.yaml.in/yaml/v4"
 )
 
 // TestHomeAssistantBatteryModes covers which modes a partial mode config announces
@@ -42,4 +44,42 @@ func TestHomeAssistantBatteryModes(t *testing.T) {
 	// a mode entity must be a script
 	_, err = NewHomeAssistantFromConfig(ctx, conf("switch.hold", ""))
 	require.Error(t, err)
+}
+
+// TestHomeAssistantTemplateSocLimits covers rendering of static and entity-based soc limits
+func TestHomeAssistantTemplateSocLimits(t *testing.T) {
+	tmpl, err := templates.ByName(templates.Meter, "homeassistant")
+	require.NoError(t, err)
+
+	render := func(extra map[string]any) map[string]any {
+		values := map[string]any{
+			"usage": "battery",
+			"uri":   "http://localhost:8123",
+			"power": "sensor.power",
+			"soc":   "sensor.soc",
+		}
+		for k, v := range extra {
+			values[k] = v
+		}
+
+		b, _, err := tmpl.RenderResult(templates.Meter, templates.RenderModeInstance, values)
+		require.NoError(t, err)
+
+		var res map[string]any
+		require.NoError(t, yaml.Unmarshal(b, &res), string(b))
+		return res
+	}
+
+	res := render(map[string]any{
+		"minSocEntity": "number.min_soc",
+		"maxSocEntity": "number.max_soc",
+		"maxsoc":       90,
+	})
+	require.Equal(t, "homeassistant", res["minsoc"].(map[string]any)["source"])
+	require.Equal(t, "number.min_soc", res["minsoc"].(map[string]any)["entity"])
+	require.Equal(t, "number.max_soc", res["maxsoc"].(map[string]any)["entity"], "entity overrides static value")
+
+	res = render(map[string]any{"minsoc": 10, "maxsoc": 90})
+	require.EqualValues(t, 10, res["minsoc"])
+	require.EqualValues(t, 90, res["maxsoc"])
 }

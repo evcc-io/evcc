@@ -160,6 +160,28 @@ params:
     help:
       en: Optional script to grid-charge the home battery.
       de: Optionales Skript um die Heimbatterie aus dem Netz zu laden.
+  - name: minSocEntity
+    usages: ["battery"]
+    description:
+      de: Minimaler Ladestand (Entität)
+      en: Minimum SoC Entity
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor,number,input_number
+    example: "number.battery_min_soc"
+    advanced: true
+    help:
+      en: Optional entity ID providing the minimum battery state of charge in percent. Overrides the static minimum SoC value.
+      de: Optionale Entitäts-ID für den minimalen Batterieladestand in Prozent. Überschreibt den statischen Wert für den minimalen Ladestand.
+  - name: maxSocEntity
+    usages: ["battery"]
+    description:
+      de: Maximaler Ladestand (Entität)
+      en: Maximum SoC Entity
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor,number,input_number
+    example: "number.battery_max_soc"
+    advanced: true
+    help:
+      en: Optional entity ID providing the maximum battery state of charge in percent. Overrides the static maximum SoC value.
+      de: Optionale Entitäts-ID für den maximalen Batterieladestand in Prozent. Überschreibt den statischen Wert für den maximalen Ladestand.
   - name: insecure
   - name: maxacpower
   - preset: battery-params
@@ -185,5 +207,24 @@ render: |
   modeNormal: {{ .modeNormal }}
   modeHold: {{ .modeHold }}
   modeCharge: {{ .modeCharge }}
-  {{- include "battery-params" . }}
+  {{- include "battery-capacity" . }}
+  {{- if .minSocEntity }}
+  minsoc:
+    source: homeassistant
+    uri: {{ .uri }}
+    insecure: {{ .insecure }}
+    entity: {{ .minSocEntity }}
+  {{- else }}
+  minsoc: {{ .minsoc }} # %
+  {{- end }}
+  {{- if .maxSocEntity }}
+  maxsoc:
+    source: homeassistant
+    uri: {{ .uri }}
+    insecure: {{ .insecure }}
+    entity: {{ .maxSocEntity }}
+  {{- else }}
+  maxsoc: {{ .maxsoc }} # %
+  {{- end }}
+  {{- include "battery-power" . }}
   {{- end }}
