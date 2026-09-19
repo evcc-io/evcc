@@ -147,8 +147,8 @@ func (wb *Alphatec) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Alphatec) MaxCurrent(current int64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
+	if current < 0 {
+		return fmt.Errorf("negative current %d", current)
 	}
 
 	err := wb.setCurrent(uint16(current))

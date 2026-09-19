@@ -272,8 +272,8 @@ func (wb *SmartEVSE3) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *SmartEVSE3) MaxCurrent(current int64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
+	if current < 0 {
+		return fmt.Errorf("negative current %d", current)
 	}
 
 	deciAmps := current * 10
@@ -290,8 +290,8 @@ var _ api.ChargerEx = (*SmartEVSE3)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *SmartEVSE3) MaxCurrentMillis(current float64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %.1f", current)
+	if current < 0 {
+		return fmt.Errorf("negative current %.1f", current)
 	}
 
 	deciAmps := int64(current * 10)

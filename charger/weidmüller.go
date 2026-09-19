@@ -197,8 +197,8 @@ func (wb *Weidmüller) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Weidmüller) MaxCurrent(current int64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
+	if current < 0 {
+		return fmt.Errorf("negative current %d", current)
 	}
 
 	wb.curr = uint16(current)

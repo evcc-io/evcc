@@ -157,8 +157,8 @@ var _ api.ChargerEx = (*Innogy)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *Innogy) MaxCurrentMillis(current float64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %.5g", current)
+	if current < 0 {
+		return fmt.Errorf("negative current %.5g", current)
 	}
 
 	err := wb.setCurrent(current)

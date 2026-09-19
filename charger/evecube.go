@@ -262,8 +262,8 @@ func (wb *EVECUBE) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *EVECUBE) MaxCurrent(current int64) error {
-	if current < 6 {
-		return fmt.Errorf("current must be >= 6A")
+	if current < 0 {
+		return fmt.Errorf("negative current %d", current)
 	}
 
 	wb.currentLimit = current

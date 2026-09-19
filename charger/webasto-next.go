@@ -171,8 +171,8 @@ func (wb *WebastoNext) Enabled() (bool, error) {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *WebastoNext) MaxCurrent(current int64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
+	if current < 0 {
+		return fmt.Errorf("negative current %d", current)
 	}
 
 	b := make([]byte, 2)

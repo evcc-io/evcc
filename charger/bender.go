@@ -317,8 +317,8 @@ func (wb *BenderCC) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *BenderCC) MaxCurrent(current int64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
+	if current < 0 {
+		return fmt.Errorf("negative current %d", current)
 	}
 
 	b := make([]byte, 2)
@@ -334,8 +334,8 @@ func (wb *BenderCC) MaxCurrent(current int64) error {
 
 // maxCurrentMillis implements the api.ChargerEx interface (Wallbe Firmware only)
 func (wb *BenderCC) maxCurrentMillis(current float64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %.5g", current)
+	if current < 0 {
+		return fmt.Errorf("negative current %.5g", current)
 	}
 
 	curr := uint16(current * 10) // 0.1A Steps

@@ -235,8 +235,8 @@ var _ api.ChargerEx = (*Smaevcharger)(nil)
 
 // maxCurrentMillis implements the api.ChargerEx interface
 func (wb *Smaevcharger) MaxCurrentMillis(current float64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %.5g", current)
+	if current < 0 {
+		return fmt.Errorf("negative current %.5g", current)
 	}
 
 	return wb.Send(value("Parameter.Inverter.AcALim", fmt.Sprintf("%.2f", current)))

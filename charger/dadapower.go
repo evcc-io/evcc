@@ -176,8 +176,8 @@ var _ api.ChargerEx = (*Dadapower)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *Dadapower) MaxCurrentMillis(current float64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %v", current)
+	if current < 0 {
+		return fmt.Errorf("negative current %.1f", current)
 	}
 
 	_, err := wb.conn.WriteSingleRegister(dadapowerRegChargeCurrentLimit+wb.regOffset, uint16(current*100))

@@ -228,8 +228,8 @@ var _ api.ChargerEx = (*Etek)(nil)
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *Etek) MaxCurrentMillis(current float64) error {
 	// The PWM value is calculated as: current (A) * 167
-	if current < 6 {
-		return fmt.Errorf("current %.1fA is below minimum of 6A", current)
+	if current < 0 {
+		return fmt.Errorf("negative current %.1fA", current)
 	}
 
 	_, err := wb.conn.WriteSingleRegister(etekRegMaxCurrent, uint16(current*167))

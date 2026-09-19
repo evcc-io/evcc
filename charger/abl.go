@@ -202,8 +202,8 @@ var _ api.ChargerEx = (*ABLeMH)(nil)
 
 // MaxCurrent implements the api.ChargerEx interface
 func (wb *ABLeMH) MaxCurrentMillis(current float64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %.1f", current)
+	if current < 0 {
+		return fmt.Errorf("negative current %.1f", current)
 	}
 
 	// calculate duty cycle according to https://www.goingelectric.de/forum/viewtopic.php?p=1575287#p1575287
