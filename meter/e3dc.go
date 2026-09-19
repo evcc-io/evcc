@@ -215,7 +215,8 @@ func (m *E3dc) setBatteryMode(mode api.BatteryMode) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if mode != api.BatteryNormal {
+	switch mode {
+	case api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge:
 		if err := m.sysSpecs(); err != nil {
 			return err
 		}
