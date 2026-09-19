@@ -70,9 +70,8 @@ func TestSolaxX3IES(t *testing.T) {
 	require.NoError(t, err)
 	var config map[string]any
 	require.NoError(t, yaml.Unmarshal(rendered, &config))
-	require.Contains(t, string(rendered), "script: float64(value >> 8)")
-	require.Contains(t, string(rendered), "address: 147")
-	require.Contains(t, string(rendered), "address: 270 # 0x010E Battery charge upper SoC")
+	require.Contains(t, string(rendered), "address: 97 # 0x0061 Self-use discharge minimum SoC")
+	require.Contains(t, string(rendered), "address: 224 # 0x00E0 Battery charge upper SoC")
 	require.Contains(t, string(rendered), "address: 58 # 0x003A Battery system installed capacity")
 	require.Contains(t, string(rendered), "maxchargepower:")
 

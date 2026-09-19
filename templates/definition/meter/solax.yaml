@@ -286,23 +286,17 @@ render: |
               decode: uint16
   {{- if eq .model "X3-IES" }}
   minsoc:
-    source: go
-    in:
-    - name: value
-      type: int
-      config:
-        source: modbus
-        {{- include "modbus" . | indent 8 }}
-        register:
-          address: 147 # 0x0093 Self-use discharge minimum SoC in high byte
-          type: holding
-          decode: uint16
-    script: float64(value >> 8)
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 97 # 0x0061 Self-use discharge minimum SoC
+      type: holding
+      decode: uint16
   maxsoc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 270 # 0x010E Battery charge upper SoC
+      address: 224 # 0x00E0 Battery charge upper SoC
       type: holding
       decode: uint16
   capacity:
