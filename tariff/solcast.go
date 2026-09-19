@@ -3,7 +3,9 @@ package tariff
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"slices"
+	"strconv"
 	"sync"
 	"time"
 
@@ -93,7 +95,22 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 
 		if err := backoff.Retry(func() error {
 			uri := fmt.Sprintf("https://api.solcast.com.au/rooftop_sites/%s/forecasts?period=PT30M&format=json&hours=96", t.site)
-			return backoffPermanentError(t.GetJSON(uri, &res))
+			err := t.GetJSON(uri, &res)
+			// HTTP 429 (Too Many Requests) is a transient rate-limit response.
+			// Respect the Retry-After header if provided; otherwise wait a default
+			// before returning a retryable error so the backoff loop can retry.
+			if se, ok := errors.AsType[*request.StatusError](err); ok && se.StatusCode() == http.StatusTooManyRequests {
+				delay := 60 * time.Second
+				if ra := se.Response().Header.Get("Retry-After"); ra != "" {
+					if secs, parseErr := strconv.Atoi(ra); parseErr == nil && secs > 0 {
+						delay = time.Duration(secs) * time.Second
+					}
+				}
+				t.log.DEBUG.Printf("Solcast rate limited, retrying after %v", delay)
+				time.Sleep(delay)
+				return err // retryable
+			}
+			return backoffPermanentError(err)
 		}, bo()); err != nil {
 			if reportError(&once, done, err) {
 				return
