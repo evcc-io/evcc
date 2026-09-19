@@ -52,8 +52,7 @@ params:
 render: |
   type: heatpump
 
-
-  # 1. Power measurement (current power draw and energy meter)
+  # 1. Power measurement (current power draw)
   power:
     source: modbus
     uri: {{ joinHostPort .host .port }}
@@ -63,18 +62,30 @@ render: |
       type: input
       decode: uint32
 
-  # 2. Optional data monitoring (temperatures)
+  # 2. Warm water temperature. evcc exposes this as the heat pump temperature.
   temp:
     source: modbus
     uri: {{ joinHostPort .host .port }}
     id: {{ .id }}
     register:
-      address: 10
+      address: 11
       type: input
       decode: int16
     scale: 0.1
 
-  # 3. Dynamic setpoint for electrical power consumption during PV surplus
+  # 3. Buffer temperature. heatpump.limittemp is the second available
+  # temperature value in evcc and is displayed as the temperature limit.
+  limittemp:
+    source: modbus
+    uri: {{ joinHostPort .host .port }}
+    id: {{ .id }}
+    register:
+      address: 14
+      type: input
+      decode: int16
+    scale: 0.1
+
+  # 4. Dynamic setpoint for electrical power consumption during PV surplus
   setmaxpower:
     source: modbus
     uri: {{ joinHostPort .host .port }}
@@ -83,6 +94,12 @@ render: |
       address: 125
       type: writesingle
       decode: uint16
+
+# Register 100 (Betriebsart) is documented by the device as writable, but
+# heatpump templates currently have no generic read-only field for arbitrary
+# operating modes. It is therefore intentionally not written by this template.
+# Values: 0=Aus, 1=Auto, 2=Kühlen, 3=Sommer, 4=Dauerbetrieb,
+# 5=Absenkung, 6=Urlaub, 7=Party.
 
 # ==========================================
 # CENTRAL HEATPUMP CONFIGURATION
