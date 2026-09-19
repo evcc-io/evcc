@@ -1,4 +1,4 @@
-template: device-auth-demo
+template: provider-auth-oauth-demo
 group: generic
 products:
   - description:

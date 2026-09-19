@@ -1,8 +1,7 @@
 package vehicle
 
 import (
-	"errors"
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -10,22 +9,25 @@ import (
 	"github.com/evcc-io/evcc/vehicle/porsche"
 )
 
-// Porsche is an api.Vehicle implementation for Porsche cars
+// Porsche is an api.Vehicle implementation for Porsche cars using the Porsche
+// Connect (PPA) app backend. Login happens in the ui via evcc's provider auth
+// (see vehicle/porsche).
 type Porsche struct {
 	*embed
 	*porsche.Provider
 }
 
 func init() {
-	registry.Add("porsche", NewPorscheFromConfig)
+	registry.AddCtx("porsche", NewPorscheFromConfig)
 }
 
 // NewPorscheFromConfig creates a new vehicle
-func NewPorscheFromConfig(other map[string]any) (api.Vehicle, error) {
+func NewPorscheFromConfig(_ context.Context, other map[string]any) (api.Vehicle, error) {
 	cc := struct {
-		embed               `mapstructure:",squash"`
-		User, Password, VIN string
-		Cache               time.Duration
+		embed          `mapstructure:",squash"`
+		User, Password string
+		VIN            string
+		Cache          time.Duration
 	}{
 		Cache: interval,
 	}
@@ -38,41 +40,21 @@ func NewPorscheFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	log := util.NewLogger("porsche").Redact(cc.User, cc.Password, cc.VIN)
-	ts, err := porsche.NewIdentity(log, cc.User, cc.Password)
-	if err != nil {
-		return nil, fmt.Errorf("login failed: %w", err)
-	}
+	log := util.NewLogger("porsche").Redact(cc.VIN)
 
-	api := porsche.NewAPI(log, ts)
-
-	vehicle, err := ensureVehicleEx(
-		cc.VIN, api.Vehicles,
-		func(v porsche.Vehicle) (string, error) {
-			return v.VIN, nil
-		},
-	)
+	// no api call here: the vehicle exists before the account is connected,
+	// the vin is resolved from the account on first use if not configured
+	identity, err := porsche.NewIdentity(log, cc.User, cc.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	// check if vehicle is paired
-	if res, err := api.PairingStatus(vehicle.VIN); err == nil && !porsche.IsPaired(res.Status) {
-		return nil, errors.New("vehicle is not paired with the My Porsche account")
-	}
-
-	emobApi := porsche.NewEmobilityAPI(log, ts)
-	capabilities, err := emobApi.Capabilities(vehicle.VIN)
-	if err != nil {
-		return nil, err
-	}
-
-	provider := porsche.NewProvider(log, api, emobApi, vehicle.VIN, capabilities.CarModel, cc.Cache)
+	api := porsche.NewAPI(log, identity)
 
 	v := &Porsche{
 		embed:    &cc.embed,
-		Provider: provider,
+		Provider: porsche.NewProvider(api, cc.VIN, cc.Cache),
 	}
 
-	return v, err
+	return v, nil
 }
