@@ -1,8 +1,10 @@
 package tariff
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"slices"
 	"sync"
 	"time"
@@ -93,7 +95,33 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 
 		if err := backoff.Retry(func() error {
 			uri := fmt.Sprintf("https://api.solcast.com.au/rooftop_sites/%s/forecasts?period=PT30M&format=json&hours=96", t.site)
-			return backoffPermanentError(t.GetJSON(uri, &res))
+			err := t.GetJSON(uri, &res)
+			// HTTP 429: Solcast enforces a daily quota (10 req/day for hobbyist
+			// accounts) tracked separately from the per-minute rate limit (600/min).
+			// The daily quota exhaustion 429 carries a JSON body with
+			// error_code "TooManyRequests" and no Retry-After header.
+			// Treat that as permanent so we don't waste tomorrow's quota on retries.
+			// Any other 429 (transient server busy) is left retryable for bo().
+			if se, ok := errors.AsType[*request.StatusError](err); ok && se.StatusCode() == http.StatusTooManyRequests {
+				resp := se.Response()
+				t.log.DEBUG.Printf("Solcast 429: X-RateLimit-Limit=%s X-RateLimit-Remaining=%s X-RateLimit-Reset=%s",
+					resp.Header.Get("X-RateLimit-Limit"),
+					resp.Header.Get("X-RateLimit-Remaining"),
+					resp.Header.Get("X-RateLimit-Reset"),
+				)
+				var body struct {
+					ResponseStatus struct {
+						ErrorCode string `json:"error_code"`
+						Message   string `json:"message"`
+					} `json:"response_status"`
+				}
+				if json.Unmarshal(se.Body(), &body) == nil && body.ResponseStatus.ErrorCode == "TooManyRequests" {
+					t.log.ERROR.Printf("Solcast daily quota exceeded: %s", body.ResponseStatus.Message)
+					return backoff.Permanent(err)
+				}
+				return err // transient busy — retryable
+			}
+			return backoffPermanentError(err)
 		}, bo()); err != nil {
 			if reportError(&once, done, err) {
 				return
