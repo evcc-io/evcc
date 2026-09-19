@@ -1013,7 +1013,6 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 	if controllable {
 		modes := ctrl.BatteryModes()
 		bat.ChargeFromGrid = slices.Contains(modes, api.BatteryCharge)
-		// the opt-in only takes effect on a battery that can be told to discharge to grid
 		bat.DischargeToGrid = site.GetBatteryGridDischarge() && slices.Contains(modes, api.BatteryDischarge)
 	}
 
