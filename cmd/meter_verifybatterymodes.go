@@ -68,20 +68,23 @@ func batteryPowerState(p float64) string {
 	}
 }
 
-// observeBatteryPower polls and prints battery power once per second for the given duration and returns the last reading
-func observeBatteryPower(m api.Meter, d time.Duration) string {
+// observeBatteryPower polls and prints battery power once per second for the given duration.
+// Returns the last reading and whether it was a successful measurement.
+func observeBatteryPower(m api.Meter, d time.Duration) (string, bool) {
 	var last string
+	var ok bool
 	for end := time.Now().Add(d); time.Now().Before(end); time.Sleep(time.Second) {
-		if p, err := m.CurrentPower(); err != nil {
-			last = err.Error()
-		} else {
+		p, err := m.CurrentPower()
+		if ok = err == nil; ok {
 			last = fmt.Sprintf("%.0fW (%s)", p, batteryPowerState(p))
+		} else {
+			last = err.Error()
 		}
 		fmt.Printf("\rbattery power: %-40s", last)
 	}
 	fmt.Println()
 
-	return last
+	return last, ok
 }
 
 func verifyBatteryModes(m api.Meter, bc api.BatteryController, modes []api.BatteryMode, delay time.Duration) {
@@ -102,10 +105,10 @@ func verifyBatteryModes(m api.Meter, bc api.BatteryController, modes []api.Batte
 		fmt.Printf("\n%s -> %s\nexpected battery power: %s\n", from, to, batteryModeExpectation[to])
 		setMode(to)
 
-		power := observeBatteryPower(m, delay)
+		power, ok := observeBatteryPower(m, delay)
 
-		var ok bool
-		if err := survey.AskOne(&survey.Confirm{Message: "Battery power as expected?", Default: true}, &ok); err != nil {
+		// a failed measurement defaults to not ok
+		if err := survey.AskOne(&survey.Confirm{Message: "Battery power as expected?", Default: ok}, &ok); err != nil {
 			log.FATAL.Fatal(err)
 		}
 
