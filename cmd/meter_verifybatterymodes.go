@@ -62,12 +62,12 @@ func batteryModeTransitions(modes []api.BatteryMode) []api.BatteryMode {
 	return res
 }
 
-// batteryPowerState labels the battery power sign
+// batteryPowerState labels the battery power sign, within ±100W the battery is considered idle
 func batteryPowerState(p float64) string {
 	switch {
-	case p < 0:
+	case p < -100:
 		return "charging"
-	case p > 0:
+	case p > 100:
 		return "discharging"
 	default:
 		return "idle"
