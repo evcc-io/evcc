@@ -30,6 +30,10 @@ type cachingProxy struct {
 
 	cached *cached
 	tariff api.Tariff
+
+	creating bool      // instance creation in progress
+	retryAt  time.Time // earliest next instance creation attempt
+	err      error     // last instance creation error
 }
 
 var _ api.Tariff = (*cachingProxy)(nil)
@@ -73,6 +77,7 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 
 			// use outdated cached data
 			data = p.cached
+			p.creationFailed(err)
 		}
 
 		// if instance creation was successful, use it, otherwise use outdated cached data
@@ -89,16 +94,40 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 	return p, nil
 }
 
-func (p *cachingProxy) createInstance() {
-	t, err := NewFromConfig(p.ctx, p.typ, p.config)
-	if err != nil {
-		t = &proxyError{err}
-	}
-
-	p.tariff = t
+func (p *cachingProxy) creationFailed(err error) {
+	p.err = err
+	p.retryAt = time.Now().Add(p.interval)
 }
 
-// Rates returns cached data until underlying tariff is created, then delegates to tariff
+// createInstance creates the tariff in the background, retrying at most once per interval
+func (p *cachingProxy) createInstance() {
+	if p.creating || time.Now().Before(p.retryAt) {
+		return
+	}
+
+	p.creating = true
+
+	go func() {
+		t, err := NewFromConfig(p.ctx, p.typ, p.config)
+
+		p.mu.Lock()
+		defer p.mu.Unlock()
+
+		p.creating = false
+
+		if err != nil {
+			util.NewLogger("tariff").ERROR.Printf("creating tariff failed: %v", err)
+			p.creationFailed(err)
+			return
+		}
+
+		p.tariff = t
+		p.err = nil
+	}()
+}
+
+// Rates returns cached data until underlying tariff is created, then delegates to tariff.
+// Cached data is served as fallback while the tariff is unavailable.
 func (p *cachingProxy) Rates() (api.Rates, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -109,11 +138,13 @@ func (p *cachingProxy) Rates() (api.Rates, error) {
 		}
 
 		p.createInstance()
+
+		return p.staleRates(p.err)
 	}
 
 	res, err := p.tariff.Rates()
 	if err != nil {
-		return nil, err
+		return p.staleRates(err)
 	}
 
 	if p.dynamicTariff() {
@@ -129,11 +160,11 @@ func (p *cachingProxy) Type() api.TariffType {
 	defer p.mu.Unlock()
 
 	if p.tariff == nil {
-		if res, err := p.cacheGet(); err == nil {
-			return res.Type
+		if p.cached != nil {
+			return p.cached.Type
 		}
 
-		p.createInstance()
+		return 0
 	}
 
 	return p.tariff.Type()
@@ -169,6 +200,26 @@ func (p *cachingProxy) cacheGet() (*cached, error) {
 	return p.cached, nil
 }
 
+// staleRates returns cached data regardless of its age as long as it extends into the future
+func (p *cachingProxy) staleRates(err error) (api.Rates, error) {
+	if err == nil {
+		err = api.ErrNotAvailable
+	}
+
+	if p.cached == nil {
+		return nil, err
+	}
+
+	now := time.Now()
+	if !slices.ContainsFunc(p.cached.Rates, func(r api.Rate) bool {
+		return r.End.After(now)
+	}) {
+		return nil, err
+	}
+
+	return slices.Clone(p.cached.Rates), nil
+}
+
 // cachePut persists rates if changed or the update interval has elapsed
 func (p *cachingProxy) cachePut(typ api.TariffType, rates api.Rates) error {
 	hash := sha256.Sum256(fmt.Append(nil, rates))
@@ -178,6 +229,11 @@ func (p *cachingProxy) cachePut(typ api.TariffType, rates api.Rates) error {
 
 	p.hash = hash
 	p.updated = time.Now()
+	p.cached = &cached{
+		Type:    typ,
+		Rates:   slices.Clone(rates),
+		Updated: p.updated,
+	}
 
 	return cachePut(p.key, typ, rates)
 }
