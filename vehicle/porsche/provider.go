@@ -107,8 +107,11 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
+	// charging rate is optional and only refines the summary status below
 	var rate chargingRate
-	res.decode("CHARGING_RATE", &rate)
+	if !res.decode("CHARGING_RATE", &rate) {
+		rate = chargingRate{}
+	}
 
 	var summary chargingSummary
 	if !res.decode("CHARGING_SUMMARY", &summary) {
