@@ -2,6 +2,7 @@ package meter
 
 import (
 	"context"
+	"maps"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
@@ -58,9 +59,7 @@ func TestHomeAssistantTemplateSocLimits(t *testing.T) {
 			"power": "sensor.power",
 			"soc":   "sensor.soc",
 		}
-		for k, v := range extra {
-			values[k] = v
-		}
+		maps.Copy(values, extra)
 
 		b, _, err := tmpl.RenderResult(templates.Meter, templates.RenderModeInstance, values)
 		require.NoError(t, err)
