@@ -6,6 +6,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/util/test"
+	"github.com/stretchr/testify/require"
 )
 
 var acceptable = []string{
@@ -47,4 +48,31 @@ func TestTemplates(t *testing.T) {
 			t.Error(err)
 		}
 	})
+}
+
+func TestSolaxX3IES(t *testing.T) {
+	tmpl, err := templates.ByName(templates.Meter, "solax")
+	require.NoError(t, err)
+
+	_, capacity := tmpl.ParamByName("capacity")
+	require.Equal(t, map[string][]string{"model": {"G3/G4"}}, capacity.Visible)
+
+	values := map[string]any{
+		"template": "solax",
+		"usage":    "battery",
+		"model":    "X3-IES",
+		"tcpip":    true,
+		"host":     "localhost",
+	}
+
+	rendered, values, err := tmpl.RenderResult(templates.Meter, templates.RenderModeUnitTest, values)
+	require.NoError(t, err)
+	require.Contains(t, string(rendered), "address: 147")
+	require.Contains(t, string(rendered), "float64(value >> 8)")
+	require.Contains(t, string(rendered), "address: 270 # 0x010E Battery charge upper SoC")
+	require.Contains(t, string(rendered), "address: 58 # 0x003A Battery system installed capacity")
+	require.Contains(t, string(rendered), "maxchargepower:")
+
+	_, err = NewFromConfig(t.Context(), "template", values)
+	require.NoError(t, err)
 }
