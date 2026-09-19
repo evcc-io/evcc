@@ -19,6 +19,7 @@ package sponsor
 
 import (
 	"context"
+	"os"
 	"sync"
 	"time"
 
@@ -48,9 +49,6 @@ func checkHardware(vendor string, metadata map[string]string) (string, string) {
 	}, grpc.WaitForReady(true))
 
 	if err == nil && res.Authorized {
-		if res.Token != "" {
-			renewOnce.Do(func() { go renewHardwareToken(vendor, metadata) })
-		}
 		return res.Subject, res.Token
 	}
 
@@ -61,10 +59,19 @@ func checkHardware(vendor string, metadata map[string]string) (string, string) {
 	return "", ""
 }
 
-var renewOnce sync.Once
+// checkHardwareVendors probes the supported hardware vendors in order
+func checkHardwareVendors() (string, string) {
+	sub, token := checkVictron()
+	if sub == "" && os.Getenv("HEMSPRO") != "" {
+		sub, token = checkHemsPro()
+	}
+	return sub, token
+}
 
-// renewHardwareToken re-runs the hardware check before the temp token expires
-func renewHardwareToken(vendor string, metadata map[string]string) {
+var startRenewal = sync.OnceFunc(func() { go renewHardwareToken() })
+
+// renewHardwareToken re-probes hardware before the temp token expires; retries daily on failure
+func renewHardwareToken() {
 	for range time.Tick(24 * time.Hour) {
 		mu.RLock()
 		due := Hardware && time.Until(ExpiresAt) < 3*24*time.Hour
@@ -73,7 +80,7 @@ func renewHardwareToken(vendor string, metadata map[string]string) {
 			continue
 		}
 
-		if _, token := checkHardware(vendor, metadata); token != "" {
+		if _, token := checkHardwareVendors(); token != "" {
 			mu.Lock()
 			Token, ExpiresAt = token, tokenExpiry(token)
 			mu.Unlock()

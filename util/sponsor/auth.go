@@ -21,7 +21,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -72,11 +71,12 @@ func ConfigureSponsorship(token string) error {
 
 	if token == "" {
 		var sub string
-		if sub, token = checkVictron(); sub == "" && os.Getenv("HEMSPRO") != "" {
-			sub, token = checkHemsPro()
-		}
+		sub, token = checkHardwareVendors()
 
 		Hardware = sub != "" && sub != unavailable
+		if Hardware && token != "" {
+			startRenewal()
+		}
 
 		if token == "" {
 			if sub != "" {
