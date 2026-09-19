@@ -113,7 +113,7 @@ func verifyBatteryModes(m api.Meter, bc api.BatteryController, modes []api.Batte
 		from = to
 	}
 
-	fmt.Println("\nprotocol:")
+	fmt.Println()
 	for _, line := range protocol {
 		fmt.Println(line)
 	}
