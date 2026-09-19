@@ -93,9 +93,12 @@ test.describe("battery settings", async () => {
     const enableLimit = page.getByRole("switch", { name: "Enable limit" });
     const priceLimit = page.getByRole("combobox", { name: "Price limit" });
     const dischargeControl = page.getByRole("switch", { name: /Prevent home battery discharge/ });
-    const optimizerHints = page.getByText("Note: Charging is controlled by the optimizer.", {
-      exact: true,
-    });
+    const optimizerHints = page.getByText(
+      "Disabled in automatic mode. The optimizer decides instead.",
+      {
+        exact: true,
+      }
+    );
 
     await expect(enableLimit).toBeEnabled();
     await expect(priceLimit).toBeEnabled();

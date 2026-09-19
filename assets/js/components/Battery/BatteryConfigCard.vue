@@ -89,10 +89,13 @@
 
 		<template v-if="controllable">
 			<hr class="my-3" />
-			<div class="form-check form-switch">
+			<div
+				class="form-check form-switch"
+				:class="{ 'opacity-25 pe-none': optimizerAutomatic }"
+			>
 				<input
 					id="batteryDischarge"
-					:checked="batteryDischargeControl"
+					:checked="batteryDischargeControl && !optimizerAutomatic"
 					class="form-check-input"
 					type="checkbox"
 					role="switch"
@@ -102,20 +105,20 @@
 				<label class="form-check-label" for="batteryDischarge">
 					{{ $t("battery.config.discharge") }}
 				</label>
-				<i18n-t
-					v-if="optimizerAutomatic"
-					keypath="config.optimizer.controlled"
-					tag="div"
-					class="text-muted small ps-2"
-					scope="global"
-				>
+			</div>
+			<p
+				v-if="optimizerAutomatic"
+				class="switch-indent d-flex gap-3 text-muted small mt-2 mb-3"
+			>
+				<OptimizerAuto class="flex-shrink-0" />
+				<i18n-t keypath="config.optimizer.controlled" tag="span" scope="global">
 					<template #optimizer>
 						<router-link to="/optimize" class="text-muted">
 							{{ $t("config.optimizer.linkWord") }}
 						</router-link>
 					</template>
 				</i18n-t>
-			</div>
+			</p>
 			<div v-if="experimental" class="form-check form-switch mt-2">
 				<input
 					id="batteryGridDischarge"
@@ -312,3 +315,10 @@ export default defineComponent({
 	},
 });
 </script>
+
+<style scoped>
+/* matches .form-switch padding so the note aligns with the label text */
+.switch-indent {
+	padding-left: 2.5rem;
+}
+</style>
