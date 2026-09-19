@@ -117,7 +117,9 @@ func NewHomeAssistantVehicleFromConfig(other map[string]any) (api.Vehicle, error
 		implement.Has(res, implement.Resurrector(func() error { return conn.CallSwitchService(cc.Services.Wakeup, true) }))
 	}
 	if cc.Services.SetMaxCurrent != "" {
-		implement.Has(res, implement.CurrentController(func(current int64) error { return conn.CallNumberService(cc.Services.SetMaxCurrent, float64(current)) }))
+		implement.Has(res, implement.CurrentController(func(current int64) error {
+			return homeassistant.CallNumberService(conn, cc.Services.SetMaxCurrent, current)
+		}))
 	}
 
 	return res, nil
