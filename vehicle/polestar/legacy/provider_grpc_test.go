@@ -1,4 +1,4 @@
-package polestar
+package legacy
 
 import (
 	"testing"

@@ -1,7 +1,7 @@
 template: shelly-pro-3em
 products:
-  - { brand: Shelly, description: { generic: Pro 3 EM } }
-  - { brand: Shelly, description: { generic: 3 EM-63T/W Gen3 } }
+  - { brand: Shelly, description: { generic: Pro 3EM } }
+  - { brand: Shelly, description: { generic: 3EM-63T/W Gen3 } }
 caveats:
   - description:
       de: Integrierter Zähler ohne Phasensaldierung; stattdessen Leistungsintegration.
