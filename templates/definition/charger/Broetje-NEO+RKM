@@ -73,17 +73,17 @@ render: |
       decode: int16
     scale: 0.1
 
-  # 3. Buffer temperature. heatpump.limittemp is the second available
+  # 3. Buffer temperature. heatpump.limittemp is the second available, but it is wrong
   # temperature value in evcc and is displayed as the temperature limit.
-  limittemp:
-    source: modbus
-    uri: {{ joinHostPort .host .port }}
-    id: {{ .id }}
-    register:
-      address: 14
-      type: input
-      decode: int16
-    scale: 0.1
+#  limittemp:
+#    source: modbus
+#    uri: {{ joinHostPort .host .port }}
+#    id: {{ .id }}
+#    register:
+#      address: 14
+#      type: input
+#      decode: int16
+#    scale: 0.1
 
   # 4. Dynamic setpoint for electrical power consumption during PV surplus
   setmaxpower:
