@@ -85,6 +85,40 @@ func TestApplyBatteryMode(t *testing.T) {
 	}
 }
 
+// TestBatteryUnsupportedModeReleases guards that a mode the battery does not
+// support releases it to normal instead of leaving it in the mode applied before
+func TestBatteryUnsupportedModeReleases(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	batCon := api.NewMockBatteryController(ctrl)
+	batCon.EXPECT().BatteryModes().Return([]api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}).AnyTimes()
+
+	var bat api.Meter = &struct {
+		api.Meter
+		api.BatteryController
+	}{
+		BatteryController: batCon,
+	}
+
+	site := &Site{
+		log:           util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "bat"}, bat)},
+	}
+
+	gomock.InOrder(
+		batCon.EXPECT().SetBatteryMode(api.BatteryCharge),
+		batCon.EXPECT().SetBatteryMode(api.BatteryNormal),
+	)
+
+	assert.NoError(t, site.applyBatteryMode(api.BatteryCharge))
+	assert.NoError(t, site.applyBatteryMode(api.BatteryHoldCharge))
+
+	// normal is already applied
+	assert.NoError(t, site.applyBatteryMode(api.BatteryHoldCharge))
+
+	ctrl.Finish()
+}
+
 // battery controller supporting the modes a soc limit can implement
 func batteryControllerMock(ctrl *gomock.Controller) *api.MockBatteryController {
 	batCon := api.NewMockBatteryController(ctrl)
