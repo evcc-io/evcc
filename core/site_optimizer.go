@@ -893,13 +893,11 @@ func batteryForecastSocExtremes(req []optimizer.BatteryConfig, resp []optimizer.
 func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDuration time.Duration, grid api.Rates) (optimizer.BatteryConfig, batteryDetail) {
 	bat := optimizer.BatteryConfig{
 		ChargeFromGrid: true,
-		// keeping a running session on costs no charge start, so the optimizer stops
-		// rescheduling an ongoing charge into the next slot when both cost the same
-		CActive: lp.GetStatus() == api.StatusC,
-		CMin:    float32(lp.EffectiveMinPower()),
-		CMax:    float32(lp.EffectiveMaxPower()),
-		DMax:    0,
-		SMin:    0,
+		CActive:        lp.GetStatus() == api.StatusC,
+		CMin:           float32(lp.EffectiveMinPower()),
+		CMax:           float32(lp.EffectiveMaxPower()),
+		DMax:           0,
+		SMin:           0,
 		// PA:             pa,
 	}
 
@@ -1321,8 +1319,7 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 		return
 	}
 
-	// TODO precise slot placement
-	slot := int(time.Until(ts) / tariff.SlotDuration)
+	slot := planSlot(time.Now(), ts)
 	if slot >= 0 && slot < minLen {
 		bat.SGoal = make([]float32, minLen)
 		bat.SGoal[slot] = float32(goal)
@@ -1330,6 +1327,17 @@ func (site *Site) applyPlanGoal(lp loadpoint.API, bat *optimizer.BatteryConfig, 
 	} else {
 		site.log.DEBUG.Printf("plan beyond forecast range or overrun: %.1f at %v slot %d", goal, ts.Round(time.Minute), slot)
 	}
+}
+
+// planSlot returns the first slot whose end is at or after ts, since s_goal[i] models the SoC at the end of slot i.
+// Slot i ends at eos+i*SlotDuration on the timeSteps timeline; -1 if ts is not in the future.
+func planSlot(now, ts time.Time) int {
+	if !ts.After(now) {
+		return -1
+	}
+
+	eos := now.Truncate(tariff.SlotDuration).Add(tariff.SlotDuration)
+	return int((ts.Sub(eos) + tariff.SlotDuration - 1) / tariff.SlotDuration)
 }
 
 // TODO remove once smart cost limit usage becomes obsolete

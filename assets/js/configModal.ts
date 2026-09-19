@@ -20,16 +20,20 @@ export interface ModalResult {
   type?: string;
 }
 
+export type ModalFade = "left" | "right" | undefined;
+
 const configModal = reactive({
   stack: [] as ModalEntry[],
+  fade: {} as Record<string, ModalFade>,
+  // entries removed from the stack, readable until the modal has faded out
+  hiding: {} as Record<string, ModalEntry>,
 });
-
-export type ModalFade = "left" | "right" | undefined;
 
 let _router: Router | null = null;
 const _resolvers: Array<(result: ModalResult) => void> = [];
 const _modals = new Map<string, HTMLElement>();
 const _dismissingViaRoute = new Set<string>();
+const _userDismissed = new Set<string>();
 
 // --- Modal element registry (called by GenericModal) ---
 
@@ -41,29 +45,45 @@ export function registerModal(name: string, el: HTMLElement): void {
 export function unregisterModal(name: string): void {
   _modals.delete(name);
   _dismissingViaRoute.delete(name);
+  _userDismissed.delete(name);
 }
 
-// Called by GenericModal on hidden.bs.modal (user ESC/backdrop)
-export function onModalHidden(name: string): boolean {
-  if (_dismissingViaRoute.has(name)) {
-    _dismissingViaRoute.delete(name);
-    return false;
-  }
-  // User dismissed via backdrop/ESC — sync route
-  if (configModal.stack.some((m) => m.name === name)) {
+// Called by GenericModal on hide.bs.modal. A user dismiss (ESC/backdrop/X) starts
+// hiding before the route updates: close right away so the parent shows while this
+// one hides and the backdrop stays covered. Remembered for the dismiss event on hidden.
+export function onModalHide(name: string): void {
+  if (_dismissingViaRoute.has(name)) return;
+  _userDismissed.add(name);
+  if (isTopModal(name) && _router?.currentRoute.value.path === "/config") {
     closeModal();
   }
-  return true;
+}
+
+// Called by GenericModal on hidden.bs.modal, true if the user dismissed it
+export function onModalHidden(name: string): boolean {
+  _dismissingViaRoute.delete(name);
+  delete configModal.hiding[name];
+  return _userDismissed.delete(name);
 }
 
 // Reactive fade direction for a named modal
 export function getModalFade(name: string): ModalFade {
-  const stackLen = configModal.stack.length;
-  const idx = configModal.stack.findIndex((m) => m.name === name);
-  if (idx === -1) return undefined;
-  if (idx === stackLen - 1 && stackLen > 1) return "right";
-  if (idx < stackLen - 1) return "left";
-  return undefined;
+  return configModal.fade[name];
+}
+
+// Nested modals slide sideways: forward exits left/enters right, backward the reverse.
+// Opening or closing the whole stack keeps bootstrap's vertical fade.
+export function fadeDirections(
+  oldStack: ModalEntry[],
+  newStack: ModalEntry[]
+): Record<string, ModalFade> | undefined {
+  const oldTop = oldStack[oldStack.length - 1]?.name;
+  const newTop = newStack[newStack.length - 1]?.name;
+  // same top (route re-sync, replaceModal): keep the running transition
+  if (oldTop === newTop) return undefined;
+  if (!oldTop || !newTop) return {};
+  const forward = newStack.length > oldStack.length;
+  return { [oldTop]: forward ? "left" : "right", [newTop]: forward ? "right" : "left" };
 }
 
 // --- Internal Bootstrap show/hide ---
@@ -212,7 +232,15 @@ export function initConfigModal(router: Router): void {
 
   watch(
     () => configModal.stack,
-    () => syncAllModals()
+    (newStack, oldStack) => {
+      for (const entry of oldStack) {
+        if (!newStack.some((m) => m.name === entry.name)) configModal.hiding[entry.name] = entry;
+      }
+      for (const entry of newStack) delete configModal.hiding[entry.name];
+      const fade = fadeDirections(oldStack, newStack);
+      if (fade) configModal.fade = fade;
+      syncAllModals();
+    }
   );
 
   router.afterEach((to) => {
@@ -309,7 +337,7 @@ export function replaceModal(name: string, params?: ModalParams): void {
 }
 
 export function getModal(name: string): ModalEntry | undefined {
-  return configModal.stack.find((m) => m.name === name);
+  return configModal.stack.find((m) => m.name === name) ?? configModal.hiding[name];
 }
 
 export function topModal(): ModalEntry | undefined {
