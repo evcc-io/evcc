@@ -205,8 +205,8 @@ var _ api.ChargerEx = (*GoodWe)(nil)
 
 // MaxCurrentMillis implements api.ChargerEx
 func (wb *GoodWe) MaxCurrentMillis(current float64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %.1f", current)
+	if current < 0 {
+		return fmt.Errorf("negative current %.1f", current)
 	}
 
 	_, err := wb.conn.WriteSingleRegister(goodweRegMaxPower, wb.calcPower(current, wb.phases))

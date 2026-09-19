@@ -131,8 +131,8 @@ func (wb *MennekesHcc3) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *MennekesHcc3) MaxCurrent(current int64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
+	if current < 0 {
+		return fmt.Errorf("negative current %d", current)
 	}
 
 	cur := uint16(current)

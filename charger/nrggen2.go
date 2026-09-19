@@ -216,8 +216,8 @@ var _ api.ChargerEx = (*NRGKickGen2)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (nrg *NRGKickGen2) MaxCurrentMillis(current float64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %.1f", current)
+	if current < 0 {
+		return fmt.Errorf("negative current %.1f", current)
 	}
 
 	_, err := nrg.conn.WriteSingleRegister(nrgKickGen2ChargingCurrent, uint16(math.Trunc(current*10)))

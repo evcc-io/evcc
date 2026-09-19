@@ -254,8 +254,8 @@ var _ api.ChargerEx = (*ChargeX)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (wb *ChargeX) MaxCurrentMillis(current float64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %.1f", current)
+	if current < 0 {
+		return fmt.Errorf("negative current %.1f", current)
 	}
 
 	wb.mu.Lock()

@@ -151,8 +151,8 @@ var _ api.ChargerEx = (*EProWallbox)(nil)
 
 // MaxCurrent implements the api.ChargerEx interface
 func (wb *EProWallbox) MaxCurrentMillis(current float64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %.5g", current)
+	if current < 0 {
+		return fmt.Errorf("negative current %.5g", current)
 	}
 
 	b := make([]byte, 4)
