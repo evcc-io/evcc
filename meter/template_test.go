@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/util/test"
 	"github.com/stretchr/testify/require"
+	"go.yaml.in/yaml/v4"
 )
 
 var acceptable = []string{
@@ -67,8 +68,10 @@ func TestSolaxX3IES(t *testing.T) {
 
 	rendered, values, err := tmpl.RenderResult(templates.Meter, templates.RenderModeUnitTest, values)
 	require.NoError(t, err)
+	var config map[string]any
+	require.NoError(t, yaml.Unmarshal(rendered, &config))
+	require.Contains(t, string(rendered), "script: float64(value >> 8)")
 	require.Contains(t, string(rendered), "address: 147")
-	require.Contains(t, string(rendered), "float64(value >> 8)")
 	require.Contains(t, string(rendered), "address: 270 # 0x010E Battery charge upper SoC")
 	require.Contains(t, string(rendered), "address: 58 # 0x003A Battery system installed capacity")
 	require.Contains(t, string(rendered), "maxchargepower:")

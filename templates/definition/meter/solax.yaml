@@ -297,8 +297,7 @@ render: |
           address: 147 # 0x0093 Self-use discharge minimum SoC in high byte
           type: holding
           decode: uint16
-    script: |
-      float64(value >> 8)
+    script: float64(value >> 8)
   maxsoc:
     source: modbus
     {{- include "modbus" . | indent 2 }}

@@ -393,16 +393,15 @@ export default defineComponent({
 			const filtered = params.filter(
 				(p) =>
 					!this.customFields.includes(p.Name) &&
-					(p.Usages ? p.Usages.includes(this.deviceType as any) : true) &&
-					isParamVisible(p, this.values)
+					(p.Usages ? p.Usages.includes(this.deviceType as any) : true)
 			);
 
-			// Allow parent to customize the visible parameters.
+			// Parent components apply their own usage filtering.
 			if (this.filterTemplateParams) {
-				return this.filterTemplateParams(filtered);
+				return this.filterTemplateParams(params).filter((p) => isParamVisible(p, this.values));
 			}
 
-			return filtered;
+			return filtered.filter((p) => isParamVisible(p, this.values));
 		},
 		authParams() {
 			const { params = [] } = this.template?.Auth ?? {};
