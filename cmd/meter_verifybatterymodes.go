@@ -23,7 +23,7 @@ func init() {
 	meterCmd.AddCommand(meterVerifyBatteryModesCmd)
 	withCustomTemplate(meterVerifyBatteryModesCmd)
 
-	meterVerifyBatteryModesCmd.Flags().Duration(flagDelay, 30*time.Second, "delay after setting mode before reading battery power")
+	meterVerifyBatteryModesCmd.Flags().Duration(flagDelay, 30*time.Second, "observation window after setting mode (battery power is polled every second)")
 }
 
 // batteryModeExpectation documents the expected battery power sign per mode (negative: charging, positive: discharging)
@@ -55,6 +55,34 @@ func batteryModeTransitions(modes []api.BatteryMode) []api.BatteryMode {
 	return res
 }
 
+// batteryPowerState labels the battery power sign
+func batteryPowerState(p float64) string {
+	switch {
+	case p < 0:
+		return "charging"
+	case p > 0:
+		return "discharging"
+	default:
+		return "idle"
+	}
+}
+
+// observeBatteryPower polls and prints battery power once per second for the given duration and returns the last reading
+func observeBatteryPower(m api.Meter, d time.Duration) string {
+	var last string
+	for end := time.Now().Add(d); time.Now().Before(end); time.Sleep(time.Second) {
+		if p, err := m.CurrentPower(); err != nil {
+			last = err.Error()
+		} else {
+			last = fmt.Sprintf("%.0fW (%s)", p, batteryPowerState(p))
+		}
+		fmt.Printf("\rbattery power: %-40s", last)
+	}
+	fmt.Println()
+
+	return last
+}
+
 func verifyBatteryModes(m api.Meter, bc api.BatteryController, modes []api.BatteryMode, delay time.Duration) {
 	setMode := func(mode api.BatteryMode) {
 		if err := bc.SetBatteryMode(mode); err != nil {
@@ -73,19 +101,14 @@ func verifyBatteryModes(m api.Meter, bc api.BatteryController, modes []api.Batte
 		fmt.Printf("\n%s -> %s\nexpected battery power: %s\n", from, to, batteryModeExpectation[to])
 		setMode(to)
 
-		time.Sleep(delay)
-		if p, err := m.CurrentPower(); err != nil {
-			fmt.Printf("battery power: %v\n", err)
-		} else {
-			fmt.Printf("battery power: %.0fW\n", p)
-		}
+		power := observeBatteryPower(m, delay)
 
 		var ok bool
 		if err := survey.AskOne(&survey.Confirm{Message: "Battery power as expected?", Default: true}, &ok); err != nil {
 			log.FATAL.Fatal(err)
 		}
 
-		protocol = append(protocol, fmt.Sprintf("%-10s -> %-10s %s", from, to, lo.Ternary(ok, "ok", "FAILED")))
+		protocol = append(protocol, fmt.Sprintf("%-10s -> %-10s %-24s %s", from, to, power, lo.Ternary(ok, "ok", "FAILED")))
 		from = to
 	}
 
