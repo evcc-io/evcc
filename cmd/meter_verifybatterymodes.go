@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -135,21 +136,27 @@ func runMeterVerifyBatteryModes(cmd *cobra.Command, args []string) {
 
 	delay, _ := cmd.Flags().GetDuration(flagDelay)
 
-	for _, dev := range config.Meters().Devices() {
-		v := dev.Instance()
+	batteries := lo.Filter(config.Meters().Devices(), func(dev config.Device[api.Meter], _ int) bool {
+		return api.HasCap[api.BatteryController](dev.Instance())
+	})
 
-		bc, ok := api.Cap[api.BatteryController](v)
-		if !ok {
-			continue
-		}
-
-		modes := lo.Without(bc.BatteryModes(), api.BatteryUnknown)
-		if len(modes) < 2 {
-			log.WARN.Printf("%s: not enough battery modes to verify transitions: %v", dev.Config().Name, modes)
-			continue
-		}
-
-		fmt.Println(deviceHeader(dev))
-		verifyBatteryModes(v, bc, modes, delay)
+	switch {
+	case len(batteries) == 0:
+		log.FATAL.Fatal("no meter with battery mode control found")
+	case len(args) == 0 && len(batteries) > 1:
+		names := lo.Map(batteries, func(dev config.Device[api.Meter], _ int) string { return dev.Config().Name })
+		log.FATAL.Fatalf("multiple meters with battery mode control found, specify one: %s", strings.Join(names, ", "))
 	}
+
+	dev := batteries[0]
+	v := dev.Instance()
+	bc, _ := api.Cap[api.BatteryController](v)
+
+	modes := lo.Without(bc.BatteryModes(), api.BatteryUnknown)
+	if len(modes) < 2 {
+		log.FATAL.Fatalf("%s: not enough battery modes to verify transitions: %v", dev.Config().Name, modes)
+	}
+
+	fmt.Println(deviceHeader(dev))
+	verifyBatteryModes(v, bc, modes, delay)
 }
