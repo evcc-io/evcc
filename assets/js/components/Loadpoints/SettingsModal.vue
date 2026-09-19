@@ -18,6 +18,7 @@
 				:loadpoint-id="id"
 				:multiple-loadpoints="multipleLoadpoints"
 				:possible="smartCostAvailable"
+				:disabled-hint="optimizerHint"
 				:tariff="forecast?.planner"
 				class="mt-2 mb-4"
 			/>
@@ -29,13 +30,14 @@
 				is-loadpoint
 				:multiple-loadpoints="multipleLoadpoints"
 				:possible="smartFeedInPriorityAvailable"
+				:disabled-hint="optimizerHint"
 				:tariff="forecast?.feedin"
 				class="mt-2 mb-4"
 			/>
 			<h6>
 				{{ $t("main.loadpointSettings.solar") }}
 			</h6>
-			<div class="mb-3 row">
+			<div class="mb-3 row" :class="{ 'opacity-25 pe-none': !!optimizerHint }">
 				<label :for="formId('solarshare')" class="col-sm-4 col-form-label pt-0 pt-sm-2">
 					{{ $t("main.loadpointSettings.solarShare.label") }}
 				</label>
@@ -54,7 +56,7 @@
 						min="0"
 						max="100"
 						step="10"
-						:disabled="thresholdsConfigured"
+						:disabled="thresholdsConfigured || !!optimizerHint"
 						@change="setSolarShare"
 					/>
 					<shopicon-regular-sun
@@ -76,6 +78,16 @@
 					</small>
 				</div>
 			</div>
+			<p v-if="optimizerHint" class="d-flex gap-3 text-muted small mb-4">
+				<OptimizerAuto class="flex-shrink-0" />
+				<i18n-t :keypath="optimizerHint" tag="span" scope="global">
+					<template #optimizer>
+						<router-link to="/optimize" class="text-muted" @click="closeModal">
+							{{ $t("config.optimizer.linkWord") }}
+						</router-link>
+					</template>
+				</i18n-t>
+			</p>
 
 			<LoadpointSettingsBatteryBoost
 				v-if="batteryBoostAvailable"
@@ -215,6 +227,7 @@ import GenericModal from "../Helper/GenericModal.vue";
 import SmartCostLimit from "../Tariff/SmartCostLimit.vue";
 import SmartFeedInPriority from "../Tariff/SmartFeedInPriority.vue";
 import SettingsBatteryBoost from "./SettingsBatteryBoost.vue";
+import OptimizerAuto from "../MaterialIcon/OptimizerAuto.vue";
 import { defineComponent, type PropType } from "vue";
 import { PHASES, CURRENCY, SMART_COST_TYPE, type UiForecast, type UiLoadpoint } from "@/types/evcc";
 import api from "@/api";
@@ -242,6 +255,7 @@ export default defineComponent({
 		SmartCostLimit,
 		SmartFeedInPriority,
 		LoadpointSettingsBatteryBoost: SettingsBatteryBoost,
+		OptimizerAuto,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -269,6 +283,9 @@ export default defineComponent({
 	computed: {
 		loadpoint() {
 			return this.loadpoints.find((loadpoint) => loadpoint.id === this.id);
+		},
+		optimizerHint(): string {
+			return this.loadpoint?.optimizerControlled ? "config.optimizer.controlled" : "";
 		},
 		maxCurrent() {
 			return this.loadpoint?.maxCurrent;

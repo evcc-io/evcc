@@ -99,6 +99,7 @@ func TestApplyOptimizerResultSchedule(t *testing.T) {
 			require.True(t, ok)
 			assert.Equal(t, api.BatteryCharge.String(), s.Action)
 			assert.InDelta(t, tc.power, s.Charge, 1e-3)
+			assert.InDelta(t, tc.power, s.Grid, 1e-3)
 			require.NotNil(t, site.battery.Forecast)
 			require.NotNil(t, site.battery.Forecast.Highest)
 			assert.Equal(t, tc.highest, site.battery.Forecast.Highest.Time)

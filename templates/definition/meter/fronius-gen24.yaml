@@ -270,6 +270,13 @@ render: |
             uri: {{ joinHostPort .host .port }}
             id: 1
             value: 124:0:OutWRte
+        - source: const
+          value: 100 # %
+          set:
+            source: sunspec
+            uri: {{ joinHostPort .host .port }}
+            id: 1
+            value: 124:0:InWRte
     - case: 2 # hold
       set:
         source: sequence
@@ -331,5 +338,37 @@ render: |
             uri: {{ .host }}:{{ .port }}
             id: 1
             value: 124:0:InWRte
+    - case: 5 # discharge
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 0
+          set:
+            source: sunspec
+            uri: {{ joinHostPort .host .port }}
+            id: 1
+            value: 124:0:StorCtl_Mod
+        - source: const
+          value: -100 # %
+          set:
+            source: sunspec
+            uri: {{ joinHostPort .host .port }}
+            id: 1
+            value: 124:0:InWRte
+        - source: const
+          value: 100 # %
+          set:
+            source: sunspec
+            uri: {{ joinHostPort .host .port }}
+            id: 1
+            value: 124:0:OutWRte
+        - source: const
+          value: 3
+          set:
+            source: sunspec
+            uri: {{ joinHostPort .host .port }}
+            id: 1
+            value: 124:0:StorCtl_Mod
   {{- include "battery-params" . }}
   {{- end }}
