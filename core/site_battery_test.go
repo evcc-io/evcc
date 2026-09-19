@@ -85,10 +85,20 @@ func TestApplyBatteryMode(t *testing.T) {
 	}
 }
 
-// battery controller supporting the modes a soc limit can implement
+// battery controller supporting the modes a soc limit can implement. Deliberately excludes
+// HoldCharge, so tests built on this mock exercise the Hold fallback for devices that don't
+// support it.
 func batteryControllerMock(ctrl *gomock.Controller) *api.MockBatteryController {
 	batCon := api.NewMockBatteryController(ctrl)
 	batCon.EXPECT().BatteryModes().Return([]api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryDischarge}).AnyTimes()
+
+	return batCon
+}
+
+// battery controller additionally supporting HoldCharge
+func batteryControllerHoldChargeMock(ctrl *gomock.Controller) *api.MockBatteryController {
+	batCon := api.NewMockBatteryController(ctrl)
+	batCon.EXPECT().BatteryModes().Return([]api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryDischarge, api.BatteryHoldCharge}).AnyTimes()
 
 	return batCon
 }
@@ -133,6 +143,44 @@ func TestBatteryHoldAppliedOnce(t *testing.T) {
 	for range 3 {
 		site.updateBatteryMode(true, false, api.Rate{})
 	}
+
+	ctrl.Finish()
+}
+
+// TestBatteryHoldChargeAppliedWhenSupported guards that reaching max soc during grid
+// charge prefers HoldCharge over Hold on a device that supports it, so discharge stays
+// free to keep covering house load instead of freezing along with charging (#33783).
+func TestBatteryHoldChargeAppliedWhenSupported(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	batSoc := api.NewMockBattery(ctrl)
+	batSoc.EXPECT().Soc().Return(90.0, nil).AnyTimes()
+
+	batSocLimit := api.NewMockBatterySocLimiter(ctrl)
+	batSocLimit.EXPECT().GetSocLimits().Return(0.0, 80.0).AnyTimes()
+
+	batCon := batteryControllerHoldChargeMock(ctrl)
+
+	var bat api.Meter = &struct {
+		api.Meter
+		api.Battery
+		api.BatteryController
+		api.BatterySocLimiter
+	}{
+		Battery:           batSoc,
+		BatteryController: batCon,
+		BatterySocLimiter: batSocLimit,
+	}
+
+	site := &Site{
+		log:           util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "bat"}, bat)},
+		batteryMode:   api.BatteryCharge,
+	}
+
+	batCon.EXPECT().SetBatteryMode(api.BatteryHoldCharge).Times(1)
+
+	site.updateBatteryMode(true, false, api.Rate{})
 
 	ctrl.Finish()
 }

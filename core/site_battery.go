@@ -181,7 +181,9 @@ func (site *Site) batterySocLimitReached(dev config.Device[api.Meter], discharge
 // A battery that reached the soc bound of the requested mode is held instead:
 // the max soc when charging, the min soc reserve when discharging to grid. This
 // is decided per device, so one battery reaching its bound does not force the
-// others into hold.
+// others into hold. Reaching maxSoc while charging prefers HoldCharge over Hold
+// on devices that support it, so the battery keeps covering house load instead
+// of freezing discharge along with charging (#33783).
 func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 	fromToCharge := site.fromTo(mode, api.BatteryCharge)
 	fromToDischarge := site.fromTo(mode, api.BatteryDischarge)
@@ -209,6 +211,14 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 			}
 			if hold {
 				deviceMode = api.BatteryHold
+				// charging stopped at maxSoc: prefer HoldCharge over Hold where the device
+				// supports it, so the house keeps being served from the battery instead of
+				// freezing discharge too - Hold remains the fallback for devices that can only
+				// block both directions together, and stays correct for the discharge/reserve
+				// case, where blocking charging as well makes no sense.
+				if fromToCharge && slices.Contains(batCtrl.BatteryModes(), api.BatteryHoldCharge) {
+					deviceMode = api.BatteryHoldCharge
+				}
 			}
 		}
 
