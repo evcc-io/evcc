@@ -10,8 +10,9 @@ import (
 func TestBatteryModeTransitions(t *testing.T) {
 	all := []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge, api.BatteryDischarge}
 
-	for n := 1; n <= len(all); n++ {
-		modes := all[:n]
+	for i := range all {
+		modes := all[:i+1]
+		n := len(modes)
 		seq := batteryModeTransitions(modes)
 		require.Len(t, seq, n*(n-1), "n=%d", n)
 
