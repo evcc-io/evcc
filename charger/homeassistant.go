@@ -90,7 +90,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 	// milliamp current control (optional)
 	if cc.Milliamps {
 		implement.Has(c, implement.ChargerEx(func(current float64) error {
-			return homeassistant.CallNumberService(conn, cc.MaxCurrent, current)
+			return conn.CallNumberService(cc.MaxCurrent, current)
 		}))
 	}
 
@@ -152,5 +152,5 @@ func (c *HomeAssistant) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (c *HomeAssistant) MaxCurrent(current int64) error {
-	return homeassistant.CallNumberService(c.conn, c.maxcurrent, current)
+	return c.conn.CallNumberService(c.maxcurrent, current)
 }

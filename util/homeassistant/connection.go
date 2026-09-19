@@ -289,8 +289,8 @@ func (c *Connection) CallSwitchService(entity string, turnOn bool) error {
 	return c.CallService(domain, service, data)
 }
 
-// CallNumberService is a convenience function for setting number entity values
-func CallNumberService[T constraints.Integer | constraints.Float](c *Connection, entity string, value T) error {
+// CallNumberService is a convenience method for setting number entity values
+func (c *Connection) CallNumberService[T constraints.Integer | constraints.Float](entity string, value T) error {
 	domain, err := domain(entity)
 	if err != nil {
 		return err
