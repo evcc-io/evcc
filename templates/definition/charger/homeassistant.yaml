@@ -91,6 +91,15 @@ params:
     help:
       en: Entity ID for setting maximum current in amperes (`number` or `input_number` entity)
       de: Entitäts-ID zum Setzen der maximalen Stromstärke in Ampere (`number` oder `input_number` Entität)
+  - name: milliamps
+    type: bool
+    description:
+      de: Stromstärke in 0,1A Schritten
+      en: 0.1A current steps
+    advanced: true
+    help:
+      en: Enable if the maximum current entity accepts fractional amperes; otherwise evcc sends whole amperes only
+      de: Aktivieren, wenn die Stromstärke-Entität Nachkommastellen akzeptiert; sonst sendet evcc nur ganze Ampere
   - name: power
     description:
       de: Leistungsentität
@@ -198,6 +207,7 @@ render: |
   enabled: {{ .enabled }}
   enable: {{ .enable }}
   maxcurrent: {{ .setMaxCurrent }}
+  milliamps: {{ .milliamps }}
   power: {{ .power }}
   energy: {{ .energy }}
   {{- if and .currentL1 .currentL2 .currentL3 }}

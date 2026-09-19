@@ -18,7 +18,7 @@ func init() {
 
 // NewConfigurableFromConfig creates a new meter from config
 func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.Meter, error) {
-	cc := struct {
+	var cc struct {
 		measurement.Energy    `mapstructure:",squash"` // energy optional
 		measurement.Phases    `mapstructure:",squash"` // optional
 		measurement.Dimmer    `mapstructure:",squash"` // optional
@@ -35,7 +35,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		LimitSoc              *plugin.Config // optional
 		BatteryMode           *plugin.Config // optional
 		BatteryModes          []string       // optional, modes supported by batteryMode if it cannot report them itself
-	}{}
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

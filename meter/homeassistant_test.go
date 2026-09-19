@@ -44,6 +44,28 @@ func TestHomeAssistantBatteryModes(t *testing.T) {
 	// a mode entity must be a script
 	_, err = NewHomeAssistantFromConfig(ctx, conf("switch.hold", ""))
 	require.Error(t, err)
+
+	// holdcharge and discharge are announced when configured
+	c := conf("", "")
+	c["modeHoldCharge"] = "script.holdcharge"
+	c["modeDischarge"] = "script.discharge"
+	m, err = NewHomeAssistantFromConfig(c)
+	require.NoError(t, err)
+
+	ctrl, ok = api.Cap[api.BatteryController](m)
+	require.True(t, ok)
+	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHoldCharge, api.BatteryDischarge}, ctrl.BatteryModes())
+
+	// modeNormal is required with any other mode
+	c = conf("", "")
+	c["modeNormal"] = ""
+	c["modeDischarge"] = "script.discharge"
+	_, err = NewHomeAssistantFromConfig(c)
+	require.Error(t, err)
+
+	// modeNormal alone is rejected
+	_, err = NewHomeAssistantFromConfig(conf("", ""))
+	require.Error(t, err)
 }
 
 // TestHomeAssistantTemplateSocLimits covers rendering of static and entity-based soc limits

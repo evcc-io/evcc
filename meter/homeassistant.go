@@ -38,10 +38,12 @@ func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (api.
 		batterySocLimitsCtx `mapstructure:",squash"`
 		batteryPowerLimits  `mapstructure:",squash"`
 
-		// battery mode control - optional switch-like entities per mode
-		ModeNormal string
-		ModeHold   string
-		ModeCharge string
+		// battery mode control - optional script entities per mode
+		ModeNormal     string
+		ModeHold       string
+		ModeCharge     string
+		ModeHoldCharge string
+		ModeDischarge  string
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -97,21 +99,27 @@ func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (api.
 		implement.May(m, implement.BatterySocLimiter(socLimiter))
 		implement.May(m, implement.BatteryPowerLimiter(cc.batteryPowerLimits.Decorator()))
 
-		if cc.ModeHold != "" || cc.ModeCharge != "" {
+		modes := map[api.BatteryMode]string{
+			api.BatteryNormal:     cc.ModeNormal,
+			api.BatteryHold:       cc.ModeHold,
+			api.BatteryCharge:     cc.ModeCharge,
+			api.BatteryHoldCharge: cc.ModeHoldCharge,
+			api.BatteryDischarge:  cc.ModeDischarge,
+		}
+
+		// an unconfigured mode is not supported
+		maps.DeleteFunc(modes, func(_ api.BatteryMode, entity string) bool {
+			return entity == ""
+		})
+
+		if len(modes) > 0 {
 			if cc.ModeNormal == "" {
-				return nil, errors.New("modeNormal is required when modeHold or modeCharge is configured")
+				return nil, errors.New("modeNormal is required when any other battery mode is configured")
 			}
 
-			modes := map[api.BatteryMode]string{
-				api.BatteryNormal: cc.ModeNormal,
-				api.BatteryHold:   cc.ModeHold,
-				api.BatteryCharge: cc.ModeCharge,
+			if len(modes) == 1 {
+				return nil, errors.New("modeNormal alone has no effect; configure modeHold, modeCharge, modeHoldCharge and/or modeDischarge")
 			}
-
-			// an unconfigured mode is not supported
-			maps.DeleteFunc(modes, func(_ api.BatteryMode, entity string) bool {
-				return entity == ""
-			})
 
 			for _, entity := range modes {
 				if !strings.HasPrefix(entity, "script.") {
@@ -121,8 +129,6 @@ func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (api.
 
 			modeG := implement.BatteryModes(slices.Sorted(maps.Keys(modes))...)
 			implement.Has(m, implement.BatteryController(modeG, batteryModeController(conn, modes)))
-		} else if cc.ModeNormal != "" {
-			return nil, errors.New("modeNormal alone has no effect; configure modeHold and/or modeCharge")
 		}
 
 		return m, nil
@@ -160,12 +166,12 @@ func NewHomeAssistantFromConfig(ctx context.Context, other map[string]any) (api.
 	return m, nil
 }
 
-// batteryModeController returns a BatteryController function that activates
-// the switch-like Home Assistant entity configured for the requested evcc
-// battery mode. Each mode is self-contained: evcc only triggers the matching
-// entity and never deactivates others - any mutual exclusion is the HA side's
-// responsibility. modeHold and modeCharge are optional; a mode without a
-// backing entity is not announced and hence invalid here.
+// batteryModeController returns a BatteryController function that runs the
+// Home Assistant script configured for the requested evcc battery mode. Each
+// mode is self-contained: evcc only triggers the matching script and never
+// deactivates others - any mutual exclusion is the HA side's responsibility.
+// All modes except modeNormal are optional; a mode without a backing script
+// is not announced and hence invalid here.
 func batteryModeController(conn *homeassistant.Connection, modes map[api.BatteryMode]string) func(api.BatteryMode) error {
 	return func(mode api.BatteryMode) error {
 		target, ok := modes[mode]
