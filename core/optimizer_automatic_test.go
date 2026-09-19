@@ -114,6 +114,9 @@ func TestOptimizerGate(t *testing.T) {
 		// a grid-fed power below the maximum is applied as current
 		{api.ModeSmart, api.AlwaysChargeOff, types.Suggestion{Action: actionCharge, Charge: 2300, Grid: 1000}, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(10)) }},
 
+		// a battery-fed power (grid balanced, no solar) is a setpoint, not surplus
+		{api.ModeSmart, api.AlwaysChargeOff, types.Suggestion{Action: actionCharge, Charge: 2300}, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(10)) }},
+
 		// off and fast remain the user's decision
 		{api.ModeOff, api.AlwaysChargeOff, full, func(h *api.MockCharger) { h.EXPECT().Enable(false) }},
 		{api.ModeNow, api.AlwaysChargeOff, stop, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(maxA)) }},
@@ -149,7 +152,7 @@ func TestOptimizerSurplusRegime(t *testing.T) {
 	// a previous grid-fed slot left the pv timer elapsed
 	lp.pvTimer = elapsed
 
-	lp.setSuggestion(&types.Suggestion{Action: actionCharge, Charge: 2300})
+	lp.setSuggestion(&types.Suggestion{Action: actionCharge, Charge: 2300, Solar: 2300})
 
 	// surplus dip: the loadpoint steps down to min current while the disable
 	// timer runs instead of disabling right away

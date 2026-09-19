@@ -184,6 +184,10 @@ func (site *Site) batterySuggestionMode() (api.BatteryMode, bool) {
 			return api.BatteryNormal, true
 		}
 
+		if s.Actionable {
+			site.log.DEBUG.Printf("battery %s: suggestion %s (charge %.0fW, discharge %.0fW, grid %.0fW)", deviceTitleOrName(dev), s.Action, s.Charge, s.Discharge, s.Grid)
+		}
+
 		return mode, true
 	}
 

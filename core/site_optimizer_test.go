@@ -562,7 +562,7 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 				ChargingPower:    []float32{tc.charge},
 				DischargingPower: []float32{tc.disch},
 			}
-			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, res, 0, tc.gridImp, tc.gridExp, 1)
+			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, res, 0, tc.gridImp, tc.gridExp, 0, 1)
 			assert.Equal(t, tc.want, s.Action)
 			assert.InDelta(t, tc.charge, s.Charge, 1e-3)
 			assert.InDelta(t, tc.disch, s.Discharge, 1e-3)
@@ -571,14 +571,19 @@ func TestCurrentSlotSuggestion(t *testing.T) {
 	}
 
 	// no result yields an empty suggestion
-	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryResult{}, 0, 1000, 0, 1))
+	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryResult{}, 0, 1000, 0, 0, 1))
 
 	res := optimizer.BatteryResult{
 		ChargingPower:    []float32{100, 0},
 		DischargingPower: []float32{0, 0},
 	}
-	s := currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, res, 1, 1000, 0, 1)
+	s := currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, res, 1, 1000, 0, 0, 1)
 	assert.Equal(t, api.BatteryHold.String(), s.Action)
+
+	// per-slot Wh scale to W with the slot duration
+	s = currentSlotSuggestion(batteryDetail{Type: batteryTypeVehicle}, res, 0, 0, 0, 500, 0.25)
+	assert.InDelta(t, 2000, s.Solar, 1e-3)
+	assert.InDelta(t, 400, s.Charge, 1e-3)
 }
 
 // TestSuggestionActionable ensures the actionable flag follows the current state
