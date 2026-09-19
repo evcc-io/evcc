@@ -63,7 +63,8 @@
 import { defineComponent, type PropType } from "vue";
 import formatter from "@/mixins/formatter";
 import colors from "@/colors";
-import type { CURRENCY, BatteryDetail } from "@/types/evcc";
+import { demandTitle } from "./chart";
+import type { CURRENCY, BatteryDetail, DemandDetail } from "@/types/evcc";
 
 export interface EvoptData {
 	req: {
@@ -124,6 +125,14 @@ export default defineComponent({
 			type: Array as PropType<BatteryDetail[]>,
 			required: true,
 		},
+		demandDetails: {
+			type: Array as PropType<DemandDetail[]>,
+			default: () => [],
+		},
+		demandColors: {
+			type: Array as PropType<string[]>,
+			default: () => [],
+		},
 		timestamps: {
 			type: Array as PropType<string[]>,
 			default: () => [],
@@ -169,11 +178,13 @@ export default defineComponent({
 		requestGroups(): RowGroup[] {
 			const ts = this.evopt.req.time_series;
 			const priceUnit = this.pricePerKWhUnit(this.currency);
+			const demand = this.powerRow("Household Demand", ts.gt, colors.muted || "");
 			return [
 				{
 					rows: [
 						this.powerRow("Solar Forecast", ts.ft, colors.forecast || ""),
-						this.powerRow("Household Demand", ts.gt, colors.muted || ""),
+						demand,
+						...this.demandRows(demand),
 						{
 							label: "Time Step",
 							unit: "h",
@@ -185,6 +196,19 @@ export default defineComponent({
 					],
 				},
 			];
+		},
+		// the profiles the household demand is summarized from, scaled against the total
+		demandRows(total: Row): Row[] {
+			const ref = Math.max(...total.nums.map(Math.abs));
+			const consumption = this.$t("main.history.group.consumer");
+			return this.demandDetails.map((d, i) =>
+				this.powerRow(
+					`↳ ${demandTitle(d, consumption)}`,
+					d.values,
+					this.demandColors[i] || colors.muted || "",
+					{ ref }
+				)
+			);
 		},
 		responseGroups(): RowGroup[] {
 			const res = this.evopt.res;

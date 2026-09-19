@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/samber/lo"
+	"golang.org/x/exp/constraints"
 	"golang.org/x/oauth2"
 )
 
@@ -289,7 +290,7 @@ func (c *Connection) CallSwitchService(entity string, turnOn bool) error {
 }
 
 // CallNumberService is a convenience method for setting number entity values
-func (c *Connection) CallNumberService(entity string, value float64) error {
+func (c *Connection) CallNumberService[T constraints.Integer | constraints.Float](entity string, value T) error {
 	domain, err := domain(entity)
 	if err != nil {
 		return err

@@ -26,11 +26,18 @@ func (site *Site) homeProfile(minLen int) ([]float64, error) {
 	return lo.Map(tileAndTrim(base[:], minLen), func(v float64, _ int) float64 { return v * 1e3 }), nil
 }
 
+// heatingDemand is the forecast demand in Wh a single heating loadpoint contributes
+// to the home load
+type heatingDemand struct {
+	lp     loadpoint.API
+	values []float64
+}
+
 // addHeatingDemand adds the forecast demand of all heating loadpoints to the home load
-// in Wh and returns the loadpoints that contributed. Must be applied after blending the
-// measured home energy, which does not contain loadpoint power.
-func (site *Site) addHeatingDemand(gt []float64, minLen int) []loadpoint.API {
-	var res []loadpoint.API
+// in Wh and returns the contributions. Must be applied after blending the measured home
+// energy, which does not contain loadpoint power.
+func (site *Site) addHeatingDemand(gt []float64, minLen int) []heatingDemand {
+	var res []heatingDemand
 
 	for _, lp := range site.loadpoints {
 		if lp == nil {
@@ -59,11 +66,16 @@ func (site *Site) addHeatingDemand(gt []float64, minLen int) []loadpoint.API {
 			continue
 		}
 
-		for i := range min(len(gt), len(p)) {
-			gt[i] += p[i] * 1e3
+		// profiles are kWh
+		for i := range p {
+			p[i] *= 1e3
 		}
 
-		res = append(res, lp)
+		for i := range min(len(gt), len(p)) {
+			gt[i] += p[i]
+		}
+
+		res = append(res, heatingDemand{lp, p})
 	}
 
 	return res
