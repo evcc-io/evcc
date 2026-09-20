@@ -6,7 +6,8 @@ products:
 capabilities: ["dim"]
 requirements:
   description:
-    de: Die OCPP-Funktion der Wallbox muss aktiviert sein. Falls nicht, wende dich an den Grizzl-E Support.
+    de:
+      Die OCPP-Funktion der Wallbox muss aktiviert sein. Falls nicht, wende dich an den Grizzl-E Support.
       Ändere die OCPP-Konfiguration über die Weboberfläche der Wallbox und trage dort `ws://<evcc-host>:8887/` ein.
       Lasse "Data" leer und belasse "Station ID" und "Auth key" unverändert.
       Konfiguriere in evcc eine OCPP-Weiterleitung mit der Upstream-Server-URL
