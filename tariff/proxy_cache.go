@@ -14,8 +14,13 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-// defaultInterval is the update interval assumed if the tariff doesn't configure one
-const defaultInterval = time.Hour
+const (
+	// defaultInterval is the update interval assumed if the tariff doesn't configure one
+	defaultInterval = time.Hour
+
+	// retryInterval is the minimum time between attempts to create an unavailable tariff
+	retryInterval = 15 * time.Minute
+)
 
 // cachingProxy wraps a tariff with caching
 type cachingProxy struct {
@@ -32,7 +37,10 @@ type cachingProxy struct {
 
 	cached *cached
 	tariff api.Tariff
-	err    error // last instantiation error, retry is running while set
+
+	err      error     // last instantiation error
+	retryAt  time.Time // earliest next instantiation attempt
+	creating bool      // instantiation in progress
 }
 
 var _ api.Tariff = (*cachingProxy)(nil)
@@ -85,58 +93,58 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 	return p, nil
 }
 
-// createInstance creates the tariff. If that fails and cached rates are available, it keeps retrying in the background.
+// createInstance creates the tariff
 func (p *cachingProxy) createInstance() error {
 	t, err := NewFromConfig(p.ctx, p.typ, p.config)
+	p.setInstance(t, err)
+	return err
+}
+
+// setInstance records the result of creating the tariff
+func (p *cachingProxy) setInstance(t api.Tariff, err error) {
+	p.creating = false
+
 	if err != nil {
 		p.err = err
-		if p.hasCache() {
-			go p.retry()
-		}
-		return err
+		p.retryAt = time.Now().Add(retryInterval)
+		return
 	}
 
 	p.tariff = t
-	return nil
+	p.err = nil
 }
 
-// retry creates the tariff at regular interval until it becomes available
+// retry creates the tariff in the background, at most once per retryInterval
 func (p *cachingProxy) retry() {
-	interval := p.interval
-	if interval <= 0 {
-		interval = defaultInterval
-	}
-
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-p.ctx.Done():
-			return
-		case <-ticker.C:
-		}
-
-		t, err := NewFromConfig(p.ctx, p.typ, p.config)
-		if err != nil {
-			p.log.WARN.Printf("tariff not available, using cached rates: %v", err)
-			continue
-		}
-
-		p.mu.Lock()
-		p.tariff = t
-		p.err = nil
-		p.mu.Unlock()
-
-		p.log.INFO.Printf("tariff available: %s", p.key)
+	if p.creating || time.Now().Before(p.retryAt) {
 		return
 	}
+
+	p.creating = true
+
+	go func() {
+		t, err := NewFromConfig(p.ctx, p.typ, p.config)
+
+		p.mu.Lock()
+		defer p.mu.Unlock()
+
+		p.setInstance(t, err)
+
+		if err != nil {
+			p.log.WARN.Printf("tariff not available, using cached rates: %v", err)
+			return
+		}
+
+		p.log.INFO.Printf("tariff available: %s", p.key)
+	}()
 }
 
 // instance returns the tariff, creating it once cached data is outdated. Returns nil if unavailable.
 func (p *cachingProxy) instance() api.Tariff {
-	if p.tariff == nil && p.err == nil {
-		if _, err := p.cacheGet(); err != nil {
+	if p.tariff == nil {
+		if p.err != nil {
+			p.retry()
+		} else if _, err := p.cacheGet(); err != nil {
 			_ = p.createInstance()
 		}
 	}

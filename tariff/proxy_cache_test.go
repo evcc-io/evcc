@@ -37,6 +37,17 @@ func (t *flakyTariff) Type() api.TariffType {
 	return api.TariffTypePriceForecast
 }
 
+var flaky = new(flakyTariff)
+
+func init() {
+	registry.AddCtx("test-cached", func(context.Context, map[string]any) (api.Tariff, error) {
+		if _, err := flaky.Rates(); err != nil {
+			return nil, err
+		}
+		return flaky, nil
+	})
+}
+
 func TestCachedFallbackAndRetry(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 
@@ -45,13 +56,11 @@ func TestCachedFallbackAndRetry(t *testing.T) {
 	live := makeRates(now, SlotDuration, 4, 10)
 	stale := makeRates(now.Add(-time.Hour), SlotDuration, 4, 0)
 
-	tariff := &flakyTariff{err: errors.New("unavailable"), rates: live}
-	registry.AddCtx("test-cached", func(context.Context, map[string]any) (api.Tariff, error) {
-		if _, err := tariff.Rates(); err != nil {
-			return nil, err
-		}
-		return tariff, nil
-	})
+	tariff := flaky
+	tariff.mu.Lock()
+	tariff.rates = live
+	tariff.err = errors.New("unavailable")
+	tariff.mu.Unlock()
 
 	other := map[string]any{"interval": 50 * time.Millisecond}
 	key := "test-cached-" + cacheKey("test-cached", other)
@@ -75,8 +84,18 @@ func TestCachedFallbackAndRetry(t *testing.T) {
 	assert.Equal(t, stale, rr)
 	assert.Equal(t, api.TariffTypePriceForecast, res.Type())
 
-	// tariff becomes available: retry picks it up
+	// tariff becomes available but retry interval not elapsed: cached rates served
 	tariff.setErr(nil)
+	rr, err = res.Rates()
+	require.NoError(t, err)
+	assert.Equal(t, stale, rr)
+
+	// retry interval elapsed: next Rates() call creates the tariff in the background
+	p := res.(*cachingProxy)
+	p.mu.Lock()
+	p.retryAt = time.Time{}
+	p.mu.Unlock()
+
 	require.Eventually(t, func() bool {
 		rr, err := res.Rates()
 		return err == nil && rr[0].Value == live[0].Value
