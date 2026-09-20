@@ -346,14 +346,6 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 	})
 
 	wg.Go(func() {
-		if dev, ok := api.Cap[api.BatterySocLimiter](instance); ok {
-			min, max := dev.GetSocLimits()
-			makeResult("minSoc", min, nil)
-			makeResult("maxSoc", max, nil)
-		}
-	})
-
-	wg.Go(func() {
 		if dev, ok := api.Cap[api.PhaseCurrents](instance); ok {
 			i1, i2, i3, err := dev.Currents()
 			makeResult("phaseCurrents", []float64{i1, i2, i3}, err)

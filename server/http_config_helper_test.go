@@ -53,16 +53,6 @@ func (m slowPowerMeter) TotalEnergy() (float64, error) {
 	return 42, nil
 }
 
-type socLimitMeter struct{}
-
-func (socLimitMeter) CurrentPower() (float64, error) {
-	return 0, nil
-}
-
-func (socLimitMeter) GetSocLimits() (float64, float64) {
-	return 10, 80
-}
-
 // TestInstanceParallelProbes ensures a responsive getter returns even while a
 // sibling blocks; sequential probing would starve energy behind power.
 func TestInstanceParallelProbes(t *testing.T) {
@@ -75,13 +65,6 @@ func TestInstanceParallelProbes(t *testing.T) {
 	res := testInstance(ctx, slowPowerMeter{done: done})
 	require.Contains(t, res, "energy", "fast getter must return despite a blocking sibling")
 	require.NotContains(t, res, "power", "blocking getter must be abandoned")
-}
-
-func TestInstanceBatterySocLimits(t *testing.T) {
-	res := testInstance(context.Background(), socLimitMeter{})
-
-	assert.Equal(t, testResult{Value: 10.0}, res["minSoc"])
-	assert.Equal(t, testResult{Value: 80.0}, res["maxSoc"])
 }
 
 // asleepVehicle returns api.ErrAsleep from its getters.

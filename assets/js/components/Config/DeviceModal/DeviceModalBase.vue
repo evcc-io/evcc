@@ -262,7 +262,6 @@ import {
 	applyDefaultsFromTemplate,
 	createDeviceUtils,
 	fetchServiceValues,
-	isParamVisible,
 	ADMIN_PASSWORD_REQUIRED,
 } from "./index";
 import deepEqual from "@/utils/deepEqual";
@@ -396,12 +395,12 @@ export default defineComponent({
 					(p.Usages ? p.Usages.includes(this.deviceType as any) : true)
 			);
 
-			// Parent components apply their own usage filtering.
+			// Allow parent to customize parameter filtering (passes all params for full control)
 			if (this.filterTemplateParams) {
-				return this.filterTemplateParams(params).filter((p) => isParamVisible(p, this.values));
+				return this.filterTemplateParams(params);
 			}
 
-			return filtered.filter((p) => isParamVisible(p, this.values));
+			return filtered;
 		},
 		authParams() {
 			const { params = [] } = this.template?.Auth ?? {};
