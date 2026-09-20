@@ -1,0 +1,61 @@
+template: solax-x3-ies
+products:
+  - brand: Solax
+    description:
+      generic: X3-IES
+capabilities: ["battery-control"]
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 19200
+  - name: mppt3
+    type: bool
+    default: false
+    description:
+      de: Dritter PV-Eingang
+      en: Third PV input
+    help:
+      de: Der Wechselrichter hat einen dritten PV-Eingang (MPPT3)
+      en: The inverter has a third PV input (MPPT3)
+  - name: maxacpower
+  - name: storageunit
+  - name: maxchargepower
+  - name: maxdischargepower
+  - name: defaultmode
+    default: 0 # "SelfUse"
+render: |
+  {{- include "solax" . }}
+  {{- if eq .usage "battery" }}
+  minsoc:
+    source: go
+    in:
+    - name: value
+      type: int
+      config:
+        source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 147 # 0x0093 Self-use discharge minimum SoC in high byte
+          type: holding
+          decode: uint16
+    script: |
+      float64(value >> 8)
+  maxsoc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 270 # 0x010E Battery charge upper SoC readback
+      type: holding
+      decode: uint16
+  capacity:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 38 # 0x0026 Battery 1 total energy (nominal capacity)
+      type: input
+      decode: uint32
+    scale: 0.001
+  {{- include "battery-power" . }}
+  {{- end }}
