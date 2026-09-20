@@ -67,8 +67,8 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 	if _, err := p.cacheGet(); err != nil {
 		// attempt to create a new instance
 		if err := p.createInstance(); err != nil {
-			// if no cached data available, return error
-			if !p.hasCache() {
+			// if no usable cached data available, return error
+			if !p.usableCache() {
 				return nil, err
 			}
 
@@ -120,7 +120,7 @@ func (p *cachingProxy) Rates() (api.Rates, error) {
 
 	res, err := t.Rates()
 	if err != nil {
-		if p.hasCache() {
+		if p.usableCache() {
 			return slices.Clone(p.cached.Rates), nil
 		}
 		return nil, err
@@ -165,6 +165,12 @@ func (p *cachingProxy) hasCache() bool {
 	return p.cached != nil && len(p.cached.Rates) > 0
 }
 
+// usableCache returns true if cached rates still reach into the future. Rates are sorted by start,
+// so the last slot ends latest. Entirely elapsed rates cannot inform any decision.
+func (p *cachingProxy) usableCache() bool {
+	return p.hasCache() && p.cached.Rates[len(p.cached.Rates)-1].End.After(time.Now())
+}
+
 // cacheGet returns cached data if the update interval has not yet elapsed
 func (p *cachingProxy) cacheGet() (*cached, error) {
 	if p.cached == nil {
@@ -176,7 +182,7 @@ func (p *cachingProxy) cacheGet() (*cached, error) {
 		p.cached = res
 	}
 
-	if !p.hasCache() {
+	if !p.usableCache() {
 		return nil, errors.New("no rates")
 	}
 
