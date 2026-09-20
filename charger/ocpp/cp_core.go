@@ -22,6 +22,8 @@ func (cp *CP) OnBootNotification(request *core.BootNotificationRequest) (*core.B
 
 	cp.mu.Lock()
 	cp.BootNotificationResult = request
+	solicited := cp.bootTriggered
+	cp.bootTriggered = false
 	cp.stopBootTimer()
 	cp.mu.Unlock()
 
@@ -29,8 +31,12 @@ func (cp *CP) OnBootNotification(request *core.BootNotificationRequest) (*core.B
 	cp.connect(true)
 
 	// a reboot ends any transaction we still tracked - clear stale state so a
-	// connector reconnecting straight into Preparing can trigger RemoteStart
-	cp.resetTransactions()
+	// connector reconnecting straight into Preparing can trigger RemoteStart.
+	// A BootNotification evcc solicited itself to complete the connection
+	// handshake is not a reboot and must not clear a still-running transaction.
+	if !solicited {
+		cp.resetTransactions()
+	}
 
 	// Notify the reboot monitor (and the initial Setup). The channel is
 	// buffered (size 1) and coalescing: if an older notification is still

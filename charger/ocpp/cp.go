@@ -41,6 +41,11 @@ type CP struct {
 	bootNotificationRequestC chan *core.BootNotificationRequest
 	BootNotificationResult   *core.BootNotificationRequest
 
+	// bootTriggered records that evcc solicited the BootNotification itself to
+	// complete the connection handshake. Such a boot is not a reboot and must
+	// not clear transaction state.
+	bootTriggered bool
+
 	connectors map[int]*Connector
 }
 
@@ -155,6 +160,9 @@ func (cp *CP) connect(connect bool) {
 		})
 	} else {
 		cp.stopBootTimer()
+		// a trigger the charge point never answered must not leak into the
+		// next connection and mask a genuine reboot there
+		cp.bootTriggered = false
 	}
 }
 
@@ -178,14 +186,16 @@ func (cp *CP) onTransportConnect() {
 	// The TriggerMessage is sent directly via the OCPP instance, bypassing the
 	// Connected() check which would fail at this point.
 	time.AfterFunc(TriggerBootDelay, func() {
-		cp.mu.RLock()
+		cp.mu.Lock()
 		// If BootNotification already arrived or timer was cancelled (disconnect),
 		// there is nothing to do.
 		if cp.bootTimer == nil || cp.BootNotificationResult != nil {
-			cp.mu.RUnlock()
+			cp.mu.Unlock()
 			return
 		}
-		cp.mu.RUnlock()
+		// the resulting BootNotification is solicited, not a reboot
+		cp.bootTriggered = true
+		cp.mu.Unlock()
 
 		cp.log.DEBUG.Printf("proactively triggering BootNotification")
 
@@ -253,6 +263,14 @@ func (cp *CP) monitorReboot(ctx context.Context, setup func() error) {
 		case boot := <-cp.bootNotificationRequestC:
 			cp.log.INFO.Printf("reboot detected (model: %s, vendor: %s), re-initializing",
 				boot.ChargePointModel, boot.ChargePointVendor)
+
+			// refresh the status cached from before the reboot: it gates
+			// transaction recovery until the charge point reports a fresh one
+			if cp.HasRemoteTriggerFeature {
+				if err := cp.TriggerMessageRequest(0, core.StatusNotificationFeatureName); err != nil {
+					cp.log.DEBUG.Printf("failed triggering StatusNotification: %v", err)
+				}
+			}
 
 			if err := setup(); err != nil {
 				cp.log.ERROR.Printf("failed to re-initialize after reboot: %v", err)

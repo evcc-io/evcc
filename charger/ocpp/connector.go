@@ -25,6 +25,11 @@ type Connector struct {
 	status  *core.StatusNotificationRequest
 	statusC chan struct{}
 
+	// statusStale marks the cached status as predating a charge point reboot.
+	// It gates transaction recovery in OnMeterValues until a fresh status
+	// notification has been applied.
+	statusStale bool
+
 	meterUpdated time.Time
 	measurements map[types.Measurand]types.SampledValue
 
