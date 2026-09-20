@@ -183,7 +183,7 @@ func (p *cachingProxy) cacheGet() (*cached, error) {
 	}
 
 	if !p.usableCache() {
-		return nil, errors.New("no usable rates")
+		return nil, errors.New("no rates")
 	}
 
 	if d := time.Since(p.cached.Updated); d > p.interval {
