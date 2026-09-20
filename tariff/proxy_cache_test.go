@@ -48,7 +48,7 @@ func init() {
 	})
 }
 
-func TestCachedFallbackAndRetry(t *testing.T) {
+func TestCachedFallback(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 
 	// utc for comparing cached rates after json round trip
@@ -56,11 +56,10 @@ func TestCachedFallbackAndRetry(t *testing.T) {
 	live := makeRates(now, SlotDuration, 4, 10)
 	stale := makeRates(now.Add(-time.Hour), SlotDuration, 4, 0)
 
-	tariff := flaky
-	tariff.mu.Lock()
-	tariff.rates = live
-	tariff.err = errors.New("unavailable")
-	tariff.mu.Unlock()
+	flaky.mu.Lock()
+	flaky.rates = live
+	flaky.err = errors.New("unavailable")
+	flaky.mu.Unlock()
 
 	other := map[string]any{"interval": 50 * time.Millisecond}
 	key := "test-cached-" + cacheKey("test-cached", other)
@@ -85,7 +84,7 @@ func TestCachedFallbackAndRetry(t *testing.T) {
 	assert.Equal(t, api.TariffTypePriceForecast, res.Type())
 
 	// tariff created: live rates served and cached
-	tariff.setErr(nil)
+	flaky.setErr(nil)
 	res, err = NewCachedFromConfig(context.TODO(), "test-cached", other)
 	require.NoError(t, err)
 
@@ -94,7 +93,7 @@ func TestCachedFallbackAndRetry(t *testing.T) {
 	assert.Equal(t, live, rr)
 
 	// tariff becomes unavailable at runtime: last rates served
-	tariff.setErr(api.ErrOutdated)
+	flaky.setErr(api.ErrOutdated)
 	rr, err = res.Rates()
 	require.NoError(t, err)
 	assert.Equal(t, live, rr)

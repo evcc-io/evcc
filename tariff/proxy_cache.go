@@ -20,7 +20,6 @@ const defaultInterval = time.Hour
 // cachingProxy wraps a tariff with caching
 type cachingProxy struct {
 	mu   sync.Mutex
-	log  *util.Logger
 	hash [32]byte
 
 	key      string
@@ -55,13 +54,14 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 	}
 
 	p := &cachingProxy{
-		log:      util.NewLogger("tariff"),
 		ctx:      ctx,
 		typ:      typ,
 		config:   other,
 		interval: cc.Interval,
 		key:      tariffType + "-" + cacheKey(typ, other),
 	}
+
+	log := util.NewLogger("tariff")
 
 	// check if cached data is up to date
 	if _, err := p.cacheGet(); err != nil {
@@ -73,12 +73,12 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 			}
 
 			// use outdated cached data until tariff becomes available
-			p.log.WARN.Printf("tariff not available, using cached rates (updated: %s): %v", p.cached.Updated.Local(), err)
+			log.WARN.Printf("tariff not available, using cached rates (updated: %s): %v", p.cached.Updated.Local(), err)
 		}
 	}
 
 	if p.tariff == nil {
-		p.log.DEBUG.Printf("using cache: %s (updated: %s)", p.key, p.cached.Updated.Local())
+		log.DEBUG.Printf("using cache: %s (updated: %s)", p.key, p.cached.Updated.Local())
 	}
 
 	return p, nil
@@ -112,22 +112,25 @@ func (p *cachingProxy) Rates() (api.Rates, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	var err error
-	if t := p.instance(); t != nil {
-		var res api.Rates
-		if res, err = t.Rates(); err == nil {
-			if p.dynamicTariff() {
-				err = p.cachePut(t.Type(), res)
-			}
-			return res, err
-		}
-	}
-
-	if p.hasCache() {
+	t := p.instance()
+	if t == nil {
+		// cached data is up to date
 		return slices.Clone(p.cached.Rates), nil
 	}
 
-	return nil, err
+	res, err := t.Rates()
+	if err != nil {
+		if p.hasCache() {
+			return slices.Clone(p.cached.Rates), nil
+		}
+		return nil, err
+	}
+
+	if p.dynamicTariff() {
+		err = p.cachePut(t.Type(), res)
+	}
+
+	return res, err
 }
 
 // Type returns the tariff type
