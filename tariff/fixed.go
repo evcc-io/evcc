@@ -102,6 +102,11 @@ func (t *Fixed) Rates() (api.Rates, error) {
 				end = dayStart.Add(time.Minute * time.Duration(markers[i+1].Minutes()))
 			}
 
+			// dst spring forward: last marker coincides with end of day
+			if !end.After(ts) {
+				continue
+			}
+
 			rate := api.Rate{
 				Start: ts,
 				End:   end,
