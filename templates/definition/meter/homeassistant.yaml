@@ -136,8 +136,8 @@ params:
     example: "script.battery_normal"
     advanced: true
     help:
-      en: Script to put home battery to normal operation. Required when modeHold or modeCharge is set. The script is responsible for any necessary state changes on the HA side.
-      de: Skript um die Heimbatterie in den Normalbetrieb zu versetzen. Erforderlich, wenn modeHold oder modeCharge gesetzt ist. Das Skript ist verantwortlich für alle notwendigen Statusänderungen auf der HA-Seite.
+      en: Script to put home battery to normal operation. Required when any other mode script is set. The script is responsible for any necessary state changes on the HA side.
+      de: Skript um die Heimbatterie in den Normalbetrieb zu versetzen. Erforderlich, sobald ein anderes Modus-Skript gesetzt ist. Das Skript ist verantwortlich für alle notwendigen Statusänderungen auf der HA-Seite.
   - name: modeHold
     usages: ["battery"]
     description:
@@ -160,6 +160,28 @@ params:
     help:
       en: Optional script to grid-charge the home battery.
       de: Optionales Skript um die Heimbatterie aus dem Netz zu laden.
+  - name: modeHoldCharge
+    usages: ["battery"]
+    description:
+      de: Laden sperren Skript
+      en: Hold Charge Mode Script
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=script
+    example: "script.battery_hold_charge"
+    advanced: true
+    help:
+      en: Optional script to prevent the home battery from charging while discharging to cover the house load remains allowed.
+      de: Optionales Skript um Laden der Heimbatterie zu verhindern, während Entladen zur Deckung des Hausverbrauchs erlaubt bleibt.
+  - name: modeDischarge
+    usages: ["battery"]
+    description:
+      de: Netzentladung Skript
+      en: Grid Discharge Mode Script
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=script
+    example: "script.battery_grid_discharge"
+    advanced: true
+    help:
+      en: Optional script to force-discharge the home battery to the grid.
+      de: Optionales Skript um die Heimbatterie ins Netz zu entladen.
   - name: insecure
   - name: maxacpower
   - preset: battery-params
@@ -185,5 +207,7 @@ render: |
   modeNormal: {{ .modeNormal }}
   modeHold: {{ .modeHold }}
   modeCharge: {{ .modeCharge }}
+  modeHoldCharge: {{ .modeHoldCharge }}
+  modeDischarge: {{ .modeDischarge }}
   {{- include "battery-params" . }}
   {{- end }}

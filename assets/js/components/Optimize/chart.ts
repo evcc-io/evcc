@@ -1,9 +1,17 @@
 import { xAxisLabelStyle } from "../Forecast/echarts";
 import colors from "@/colors";
-import type { BatteryDetail } from "@/types/evcc";
+import type { DemandDetail } from "@/types/evcc";
+
+export type Titled = { title?: string; name?: string };
+
+// base load carries no title, loadpoint profiles are named after the loadpoint
+export function demandTitle(detail: DemandDetail, baseLoadLabel: string): string {
+  if (detail.type === "home") return baseLoadLabel;
+  return `${detail.title} (${detail.type})`;
+}
 
 // loadpoint part of a vehicle entry title: "Carport (blue e-Golf)" → "Carport"
-export function loadpointTitle(detail: BatteryDetail): string {
+export function loadpointTitle(detail: Titled): string {
   const title = detail.title || detail.name || "";
   return title.replace(/\s*\([^)]*\)$/, "");
 }
