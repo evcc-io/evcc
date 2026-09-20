@@ -693,6 +693,15 @@ presets:
         en: Average by hour
         de: Stündliche Durchschnittskosten verwenden
       advanced: true
+    - name: cacheable
+      type: bool
+      description:
+        en: Cache prices
+        de: Preise zwischenspeichern
+      help:
+        en: Persist prices across restarts and keep the last known prices while the provider is unavailable
+        de: Preise über Neustarts hinweg speichern und bei Ausfall des Anbieters die zuletzt bekannten Preise verwenden
+      advanced: true
   forecast-base:
     - name: lat
       required: true

@@ -74,9 +74,8 @@ params:
   - preset: tariff-features
 render: |
   type: custom
-  features: ["cacheable"]
   {{ include "base" . }}
-  {{ include "features" . }}
+  {{ include "features" (merge (dict "basefeatures" (list "cacheable")) .) }}
   forecast:
     source: http
     uri: https://voltcast.com/api/v1/forecasts/{{ .zone }}?horizon=48h

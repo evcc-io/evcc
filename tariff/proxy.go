@@ -8,7 +8,10 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-// NewProxyFromConfig creates a tariff proxy supporting average or caching
+// proxyFeatures are handled by the proxies instead of the tariff itself
+var proxyFeatures = []api.Feature{api.Average, api.Cacheable}
+
+// NewProxyFromConfig creates a tariff proxy supporting average and caching
 func NewProxyFromConfig(ctx context.Context, typ string, other map[string]any) (api.Tariff, error) {
 	var embed struct {
 		Features []api.Feature  `mapstructure:"features"`
@@ -19,31 +22,35 @@ func NewProxyFromConfig(ctx context.Context, typ string, other map[string]any) (
 		return nil, err
 	}
 
-	updateFeatures := func(f api.Feature) {
-		features := slices.DeleteFunc(embed.Features, func(feat api.Feature) bool {
-			return feat == f
-		})
+	isProxyFeature := func(f api.Feature) bool {
+		return slices.Contains(proxyFeatures, f)
+	}
 
-		if len(features) > 0 {
-			embed.Other["features"] = features
-		} else {
-			delete(embed.Other, "features")
-		}
+	if !slices.ContainsFunc(embed.Features, isProxyFeature) {
+		return NewFromConfig(ctx, typ, other)
+	}
+
+	// pass remaining features on to the tariff
+	if features := slices.DeleteFunc(slices.Clone(embed.Features), isProxyFeature); len(features) > 0 {
+		embed.Other["features"] = features
+	} else {
+		delete(embed.Other, "features")
+	}
+
+	// caching is the inner proxy to persist the tariff's original rates
+	newTariff := NewFromConfig
+	if slices.Contains(embed.Features, api.Cacheable) {
+		newTariff = NewCachedFromConfig
+	}
+
+	t, err := newTariff(ctx, typ, embed.Other)
+	if err != nil {
+		return nil, err
 	}
 
 	if slices.Contains(embed.Features, api.Average) {
-		updateFeatures(api.Average)
-		t, err := NewFromConfig(ctx, typ, embed.Other)
-		if err != nil {
-			return nil, err
-		}
 		return NewAverageProxy(t)
 	}
 
-	if slices.Contains(embed.Features, api.Cacheable) {
-		updateFeatures(api.Cacheable)
-		return NewCachedFromConfig(ctx, typ, embed.Other)
-	}
-
-	return NewFromConfig(ctx, typ, other)
+	return t, nil
 }
