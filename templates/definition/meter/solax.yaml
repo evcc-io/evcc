@@ -59,25 +59,15 @@ render: |
     register:
       address: 70 # 0x0046 feedin_power(meter)
       type: input
-      {{- if eq .model "X3-IES" }}
-      decode: int32
-      {{- else }}
       decode: int32s
-      {{- end }}
-  {{- if ne .model "X3-IES" }}
     scale: -1
-  {{- end }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 74 # 0x004A consum_energy_total(meter)
       type: input
-      {{- if eq .model "X3-IES" }}
-      decode: uint32
-      {{- else }}
       decode: uint32s
-      {{- end }}
     scale: 0.01
   currents:
     - source: modbus
@@ -125,15 +115,6 @@ render: |
       scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
-  {{- if eq .model "X3-IES" }}
-  power:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 50 # 0x0032 PV power total
-      type: input
-      decode: uint32
-  {{- else }}
   power:
     source: calc
     add:
@@ -157,20 +138,13 @@ render: |
         type: input
         decode: uint16
   {{- end }}
-  {{- end }}
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      {{- if eq .model "X3-IES" }}
-      address: 82 # 0x0052 Total yield
-      type: input
-      decode: uint32
-      {{- else }}
       address: 148 # 0x0094 SolarEnergyTotal
       type: input
       decode: uint32s
-      {{- end }}
     scale: 0.1
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
@@ -179,34 +153,22 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      {{- if eq .model "X3-IES" }}
-      address: 56 # 0x0038 Total battery power
-      {{- else }}
       {{- if eq .storageunit "1" }}
       address: 22 # 0x0016 Batpower_Charge1
       {{- else }}
       address: 297 # 0x0129 Batpower_Charge2
       {{- end }}
-      {{- end }}
       type: input
-      {{- if eq .model "X3-IES" }}
-      decode: int32
-      {{- else }}
       decode: int16
-      {{- end }}
     scale: -1
   soc:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      {{- if eq .model "X3-IES" }}
-      address: 60 # 0x003C Battery capacity
-      {{- else }}
       {{- if eq .storageunit "1" }}
       address: 28 # 0x001C Battery 1 Capacity
       {{- else }}
       address: 301 # 0x012D Battery 2 Capacity
-      {{- end }}
       {{- end }}
       type: input
       decode: uint16
