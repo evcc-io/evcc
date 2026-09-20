@@ -165,13 +165,10 @@ func (p *cachingProxy) hasCache() bool {
 	return p.cached != nil && len(p.cached.Rates) > 0
 }
 
-// usableCache returns true if cached rates still reach into the future. Entirely elapsed
-// rates cannot inform any decision, so serving them would only feign availability.
+// usableCache returns true if cached rates still reach into the future. Rates are sorted by start,
+// so the last slot ends latest. Entirely elapsed rates cannot inform any decision.
 func (p *cachingProxy) usableCache() bool {
-	now := time.Now()
-	return p.hasCache() && slices.ContainsFunc(p.cached.Rates, func(r api.Rate) bool {
-		return r.End.After(now)
-	})
+	return p.hasCache() && p.cached.Rates[len(p.cached.Rates)-1].End.After(time.Now())
 }
 
 // cacheGet returns cached data if the update interval has not yet elapsed
