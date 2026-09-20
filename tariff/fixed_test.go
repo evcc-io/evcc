@@ -171,10 +171,6 @@ func TestFixedDstSpringForward(t *testing.T) {
 	loc, err := time.LoadLocation("Europe/Berlin")
 	require.NoError(t, err)
 
-	local := time.Local
-	time.Local = loc
-	t.Cleanup(func() { time.Local = local })
-
 	tf := &Fixed{
 		embed: &embed{},
 		clock: clock.NewMock(),
