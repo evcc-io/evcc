@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vite-plus/test";
-import { applyDefaultsFromTemplate, createServiceEndpoints, type TemplateParam } from "./index";
+import {
+  applyDefaultsFromTemplate,
+  createServiceEndpoints,
+  isParamVisible,
+  type TemplateParam,
+} from "./index";
 
 const buildParam = (name: string, service?: string): TemplateParam => ({
   Name: name,
@@ -145,5 +150,14 @@ describe("applyDefaultsFromTemplate", () => {
     const values: Record<string, any> = {};
     applyDefaultsFromTemplate(template(params), values as any);
     expect(values["device_id"]).toBe("0");
+  });
+});
+
+describe("isParamVisible", () => {
+  it("matches all configured conditions", () => {
+    const param = { ...buildParam("capacity"), Visible: { model: ["G3/G4"] } };
+
+    expect(isParamVisible(param, { model: "G3/G4" } as any)).toBe(true);
+    expect(isParamVisible(param, { model: "X3-IES" } as any)).toBe(false);
   });
 });

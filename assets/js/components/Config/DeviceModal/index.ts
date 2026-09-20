@@ -43,6 +43,7 @@ export type TemplateParam = {
   Type?: string;
   Choice?: string[];
   Service?: string;
+  Visible?: Record<string, string[]>;
   Usages?: TemplateParamUsage[];
 };
 
@@ -114,6 +115,11 @@ export function applyDefaultsFromTemplate(template: Template | null, values: Dev
     }
   });
 }
+
+export const isParamVisible = (param: TemplateParam, values: DeviceValues): boolean =>
+  Object.entries(param.Visible ?? {}).every(([name, allowed]) =>
+    allowed.includes(String(values[name]))
+  );
 
 export function customChargerName(type: ConfigType, isHeating: boolean) {
   if (!type) {

@@ -21,13 +21,12 @@ params:
     type: choice
     choice: ["G3/G4", "X3-IES"]
     default: "G3/G4"
-    usages: ["battery"]
     description:
       de: Wechselrichtermodell
       en: Inverter model
     help:
-      de: Für einen X3-IES `X3-IES` auswählen. Die Batterieparameter werden dann direkt vom Wechselrichter gelesen.
-      en: Select `X3-IES` for an X3-IES. The battery parameters are then read directly from the inverter.
+      de: Für einen X3-IES `X3-IES` auswählen. Die Batteriegrenzen werden dann direkt vom Wechselrichter gelesen.
+      en: Select `X3-IES` for an X3-IES. The battery limits are then read directly from the inverter.
   - name: mppt3
     type: bool
     default: false
@@ -40,6 +39,15 @@ params:
   - name: maxacpower
   - name: storageunit
   - preset: battery-params
+  - name: capacity
+    visible:
+      model: ["G3/G4"]
+  - name: minsoc
+    visible:
+      model: ["G3/G4"]
+  - name: maxsoc
+    visible:
+      model: ["G3/G4"]
   - name: defaultmode
     default: 0 # "SelfUse"
 render: |
