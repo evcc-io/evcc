@@ -151,6 +151,23 @@ func TestAsTimestamps(t *testing.T) {
 	}, got)
 }
 
+func TestPlanSlot(t *testing.T) {
+	// now aligned to a 15-minute boundary: s_goal[i] models the SoC at the END of slot i,
+	// so a plan 2h out (exactly 8 slots away) must land on slot 7, not 8 (#33831)
+	now := time.Date(2025, 1, 1, 12, 0, 0, 0, time.UTC)
+	assert.Equal(t, 7, planSlot(now, now.Add(2*time.Hour)))
+	assert.Equal(t, 0, planSlot(now, now.Add(15*time.Minute)))
+	assert.Equal(t, 0, planSlot(now, now.Add(5*time.Minute)))
+
+	// now 10 minutes into a slot: the partial first slot (5min) absorbs the offset
+	now2 := time.Date(2025, 1, 1, 12, 10, 0, 0, time.UTC)
+	assert.Equal(t, 7, planSlot(now2, now2.Add(110*time.Minute)))
+
+	// deadline not in the future
+	assert.Equal(t, -1, planSlot(now, now))
+	assert.Equal(t, -1, planSlot(now, now.Add(-time.Minute)))
+}
+
 func TestUnmodelledPower(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
@@ -341,6 +358,38 @@ func TestBatteryForecastActiveSlot(t *testing.T) {
 	assert.True(t, forecast.Lowest.Limit)
 	assert.Equal(t, timestamps[1].Add(tariff.SlotDuration), forecast.Lowest.Time)
 	assert.Nil(t, (&Site{}).addBatteryForecastTotals(req, resp, schedule, base.Add(2*tariff.SlotDuration)))
+}
+
+// TestBatteryRequestGridModes ensures grid charging and discharging are only
+// offered to the optimizer for batteries that support the respective mode
+func TestBatteryRequestGridModes(t *testing.T) {
+	newBatteryDevice := func(t *testing.T, modes ...api.BatteryMode) config.Device[api.Meter] {
+		batCon := api.NewMockBatteryController(gomock.NewController(t))
+		batCon.EXPECT().BatteryModes().Return(modes).AnyTimes()
+
+		return config.NewStaticDevice(config.Named{}, api.Meter(&struct {
+			api.Meter
+			api.BatteryController
+		}{
+			BatteryController: batCon,
+		}))
+	}
+
+	site := &Site{log: util.NewLogger("foo"), batteryGridDischarge: true}
+	capacity, soc := 10.0, 50.0
+	m := types.Measurement{Capacity: &capacity, Soc: &soc}
+
+	req, _ := site.batteryRequest(newBatteryDevice(t, api.BatteryNormal, api.BatteryHold, api.BatteryCharge), m, nil, 8, 15*time.Minute)
+	assert.True(t, req.ChargeFromGrid)
+	assert.False(t, req.DischargeToGrid, "grid discharge opt-in must not apply to a battery without discharge mode")
+
+	req, _ = site.batteryRequest(newBatteryDevice(t, api.BatteryNormal, api.BatteryDischarge), m, nil, 8, 15*time.Minute)
+	assert.False(t, req.ChargeFromGrid)
+	assert.True(t, req.DischargeToGrid)
+
+	site.batteryGridDischarge = false
+	req, _ = site.batteryRequest(newBatteryDevice(t, api.BatteryNormal, api.BatteryDischarge), m, nil, 8, 15*time.Minute)
+	assert.False(t, req.DischargeToGrid, "grid discharge requires the opt-in")
 }
 
 // TestBatteryRequestSocLimitsClamp ensures the reported soc is always clamped into
