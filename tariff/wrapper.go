@@ -21,9 +21,9 @@ type Wrapper struct {
 	typ    string
 	config map[string]any
 
-	tariff  api.Tariff
-	err     error
-	retryAt time.Time // earliest next creation attempt
+	tariff    api.Tariff
+	err       error
+	retriedAt time.Time // last creation attempt
 }
 
 var _ api.Tariff = (*Wrapper)(nil)
@@ -46,14 +46,15 @@ func (v *Wrapper) WrappedConfig() (string, map[string]any) {
 
 // instance returns the tariff once created. Creation is retried at most once per retryInterval.
 func (v *Wrapper) instance() api.Tariff {
-	if v.tariff != nil || time.Now().Before(v.retryAt) {
+	if v.tariff != nil || time.Since(v.retriedAt) < retryInterval {
 		return v.tariff
 	}
+
+	v.retriedAt = time.Now()
 
 	t, err := NewFromConfig(v.ctx, v.typ, v.config)
 	if err != nil {
 		v.err = err
-		v.retryAt = time.Now().Add(retryInterval)
 		v.log.WARN.Printf("creating tariff failed: %v", err)
 		return nil
 	}
