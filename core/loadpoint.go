@@ -863,6 +863,26 @@ func (lp *Loadpoint) setAndPublishEnabled(enabled bool) {
 	lp.publish(keys.Enabled, enabled)
 }
 
+// wakeVehicleOnAsleep asks the vehicle to wake up when the charger signals
+// api.ErrAsleep. Originally inline in setLimit only (#8254). Of the four call
+// sites that can receive ErrAsleep from charger.Enable(true) - two here and
+// two in syncCharger - only that one ever logged or acted on it; the other
+// three silently dropped the signal whenever the guard below did not match,
+// with no way to tell from the log which site had actually been called. A
+// charger driver that gets only one chance to return ErrAsleep for a given
+// wake-up (e.g. because it also clears an internal "don't ask the vehicle
+// again" flag on that return) can lose that chance entirely depending on
+// which site happens to be the caller that cycle.
+func (lp *Loadpoint) wakeVehicleOnAsleep(err error) {
+	v := lp.GetVehicle()
+	if vv, ok := api.Cap[api.Resurrector](v); ok && errors.Is(err, api.ErrAsleep) && !hasFeature(v, api.WakeUpDisabled) {
+		lp.log.DEBUG.Println("charger enable: waking up vehicle")
+		if err := vv.WakeUp(); err != nil {
+			lp.log.ERROR.Printf("wake-up vehicle: %v", err)
+		}
+	}
+}
+
 // syncCharger updates charger status and synchronizes it with expectations
 func (lp *Loadpoint) syncCharger() error {
 	enabled, err := lp.charger.Enabled()
@@ -887,6 +907,7 @@ func (lp *Loadpoint) syncCharger() error {
 
 		if shouldBeConsistent {
 			if err := lp.charger.Enable(true); err != nil { // also enable charger to correct internal state
+				lp.wakeVehicleOnAsleep(err)
 				return fmt.Errorf("charger enable: %w", err)
 			}
 
@@ -947,6 +968,7 @@ func (lp *Loadpoint) syncCharger() error {
 		// some chargers (i.E. Easee in some configurations) disable themselves to be able to switch phases
 		// -> enable charger
 		if err := lp.charger.Enable(true); err != nil {
+			lp.wakeVehicleOnAsleep(err)
 			return fmt.Errorf("charger enable: %w", err)
 		}
 
@@ -1019,16 +1041,8 @@ func (lp *Loadpoint) setLimit(current float64) error {
 		}
 
 		if err != nil {
-			v := lp.GetVehicle()
-			if vv, ok := api.Cap[api.Resurrector](v); ok && errors.Is(err, api.ErrAsleep) && !hasFeature(v, api.WakeUpDisabled) {
-				// https://github.com/evcc-io/evcc/issues/8254
-				// wakeup vehicle
-				lp.log.DEBUG.Printf("set charge current limit: waking up vehicle")
-				if err := vv.WakeUp(); err != nil {
-					return fmt.Errorf("wake-up vehicle: %w", err)
-				}
-			}
-
+			// https://github.com/evcc-io/evcc/issues/8254
+			lp.wakeVehicleOnAsleep(err)
 			return fmt.Errorf("set charge current limit %.3gA: %w", current, err)
 		}
 
@@ -1040,16 +1054,10 @@ func (lp *Loadpoint) setLimit(current float64) error {
 	// set enabled/disabled
 	if enabled := current >= effMinCurrent; enabled != lp.enabled {
 		if err := lp.charger.Enable(enabled); err != nil {
-			v := lp.GetVehicle()
-			if vv, ok := api.Cap[api.Resurrector](v); enabled && ok && errors.Is(err, api.ErrAsleep) && !hasFeature(v, api.WakeUpDisabled) {
-				// https://github.com/evcc-io/evcc/issues/8254
-				// wakeup vehicle
-				lp.log.DEBUG.Printf("charger %s: waking up vehicle", status[enabled])
-				if err := vv.WakeUp(); err != nil {
-					return fmt.Errorf("wake-up vehicle: %w", err)
-				}
+			// https://github.com/evcc-io/evcc/issues/8254
+			if enabled {
+				lp.wakeVehicleOnAsleep(err)
 			}
-
 			return fmt.Errorf("charger %s: %w", status[enabled], err)
 		}
 
