@@ -84,22 +84,14 @@ func TestCachedFallbackAndRetry(t *testing.T) {
 	assert.Equal(t, stale, rr)
 	assert.Equal(t, api.TariffTypePriceForecast, res.Type())
 
-	// tariff becomes available but retry interval not elapsed: cached rates served
+	// tariff created: live rates served and cached
 	tariff.setErr(nil)
+	res, err = NewCachedFromConfig(context.TODO(), "test-cached", other)
+	require.NoError(t, err)
+
 	rr, err = res.Rates()
 	require.NoError(t, err)
-	assert.Equal(t, stale, rr)
-
-	// retry interval elapsed: next Rates() call creates the tariff in the background
-	p := res.(*cachingProxy)
-	p.mu.Lock()
-	p.retryAt = time.Time{}
-	p.mu.Unlock()
-
-	require.Eventually(t, func() bool {
-		rr, err := res.Rates()
-		return err == nil && rr[0].Value == live[0].Value
-	}, time.Second, 10*time.Millisecond)
+	assert.Equal(t, live, rr)
 
 	// tariff becomes unavailable at runtime: last rates served
 	tariff.setErr(api.ErrOutdated)
