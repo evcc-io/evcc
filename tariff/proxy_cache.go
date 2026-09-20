@@ -102,7 +102,12 @@ func (p *cachingProxy) createInstance() error {
 
 // retry creates the tariff at regular interval until it becomes available
 func (p *cachingProxy) retry() {
-	ticker := time.NewTicker(p.interval)
+	interval := p.interval
+	if interval <= 0 {
+		interval = defaultInterval
+	}
+
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
 	for {
@@ -154,6 +159,7 @@ func (p *cachingProxy) Rates() (api.Rates, error) {
 			}
 			return res, err
 		}
+		// tariff keeps updating itself, serve cached rates until it recovers
 	}
 
 	if p.hasCache() {

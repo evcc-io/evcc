@@ -40,7 +40,8 @@ func (t *flakyTariff) Type() api.TariffType {
 func TestCachedFallbackAndRetry(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 
-	now := time.Now().Truncate(SlotDuration)
+	// utc for comparing cached rates after json round trip
+	now := time.Now().UTC().Truncate(SlotDuration)
 	live := makeRates(now, SlotDuration, 4, 10)
 	stale := makeRates(now.Add(-time.Hour), SlotDuration, 4, 0)
 
