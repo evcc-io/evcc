@@ -83,10 +83,12 @@ func TestCachedFallback(t *testing.T) {
 	assert.Equal(t, stale, rr)
 	assert.Equal(t, api.TariffTypePriceForecast, res.Type())
 
-	// tariff created: live rates served and cached
+	// tariff becomes available: wrapper retry creates it, live rates served and cached
 	flaky.setErr(nil)
-	res, err = NewCachedFromConfig(context.TODO(), "test-cached", other)
-	require.NoError(t, err)
+	w := res.(*cachingProxy).tariff.(*Wrapper)
+	w.mu.Lock()
+	w.retriedAt = time.Time{}
+	w.mu.Unlock()
 
 	rr, err = res.Rates()
 	require.NoError(t, err)

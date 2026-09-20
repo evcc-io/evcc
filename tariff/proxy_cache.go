@@ -88,7 +88,7 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 func (p *cachingProxy) createInstance() error {
 	t, err := NewFromConfig(p.ctx, p.typ, p.config)
 	if err != nil {
-		t = NewWrapper(p.typ, p.config, err)
+		t = NewWrapper(p.ctx, p.typ, p.config, err)
 	}
 
 	p.tariff = t
