@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/db/cache"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -60,64 +61,73 @@ func NewCachedFromConfig(ctx context.Context, typ string, other map[string]any) 
 		key:      tariffType + "-" + cacheKey(typ, other),
 	}
 
+	log := util.NewLogger("tariff")
+
 	// check if cached data is up to date
-	data, err := p.cacheGet()
-	if err != nil {
+	if _, err := p.cacheGet(); err != nil {
 		// attempt to create a new instance
-		tariff, err := NewFromConfig(ctx, typ, other)
-		if err != nil {
-			// if no cached data available, return error
-			if p.cached == nil {
+		if err := p.createInstance(); err != nil {
+			// if no usable cached data available, return error
+			if !p.usableCache() {
 				return nil, err
 			}
 
-			// use outdated cached data
-			data = p.cached
-		}
-
-		// if instance creation was successful, use it, otherwise use outdated cached data
-		if err == nil {
-			p.tariff = tariff
+			// use outdated cached data until tariff becomes available
+			log.WARN.Printf("tariff not available, using cached rates (updated: %s): %v", p.cached.Updated.Local(), err)
 		}
 	}
 
-	if data != nil {
-		log := util.NewLogger("tariff")
-		log.DEBUG.Printf("using cache: %s (updated: %s)", p.key, data.Updated.Local())
+	if p.tariff == nil {
+		log.DEBUG.Printf("using cache: %s (updated: %s)", p.key, p.cached.Updated.Local())
 	}
 
 	return p, nil
 }
 
-func (p *cachingProxy) createInstance() {
+// createInstance creates the tariff. If that fails, the wrapper takes its place.
+func (p *cachingProxy) createInstance() error {
 	t, err := NewFromConfig(p.ctx, p.typ, p.config)
 	if err != nil {
-		t = &proxyError{err}
+		t = NewWrapper(p.ctx, p.typ, p.config, err)
 	}
 
 	p.tariff = t
+	return err
 }
 
-// Rates returns cached data until underlying tariff is created, then delegates to tariff
+// instance returns the tariff, creating it once cached data is outdated
+func (p *cachingProxy) instance() api.Tariff {
+	if p.tariff == nil {
+		if _, err := p.cacheGet(); err != nil {
+			_ = p.createInstance()
+		}
+	}
+
+	return p.tariff
+}
+
+// Rates returns cached data until underlying tariff is created, then delegates to tariff.
+// Cached data is served while the tariff is unavailable.
 func (p *cachingProxy) Rates() (api.Rates, error) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	if p.tariff == nil {
-		if res, err := p.cacheGet(); err == nil {
-			return slices.Clone(res.Rates), nil
-		}
-
-		p.createInstance()
+	t := p.instance()
+	if t == nil {
+		// cached data is up to date
+		return slices.Clone(p.cached.Rates), nil
 	}
 
-	res, err := p.tariff.Rates()
+	res, err := t.Rates()
 	if err != nil {
+		if p.usableCache() {
+			return slices.Clone(p.cached.Rates), nil
+		}
 		return nil, err
 	}
 
 	if p.dynamicTariff() {
-		err = p.cachePut(p.tariff.Type(), res)
+		err = p.cachePut(t.Type(), res)
 	}
 
 	return res, err
@@ -128,15 +138,18 @@ func (p *cachingProxy) Type() api.TariffType {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	if p.tariff == nil {
-		if res, err := p.cacheGet(); err == nil {
-			return res.Type
+	if t := p.instance(); t != nil {
+		// wrapper reports unknown type while tariff is unavailable
+		if typ := t.Type(); typ != 0 {
+			return typ
 		}
-
-		p.createInstance()
 	}
 
-	return p.tariff.Type()
+	if p.hasCache() {
+		return p.cached.Type
+	}
+
+	return 0 // unknown
 }
 
 func (p *cachingProxy) dynamicTariff() bool {
@@ -145,6 +158,17 @@ func (p *cachingProxy) dynamicTariff() bool {
 		api.TariffTypeCo2,
 		api.TariffTypeSolar,
 	}, p.tariff.Type())
+}
+
+// hasCache returns true if cached rates are available, regardless of their age
+func (p *cachingProxy) hasCache() bool {
+	return p.cached != nil && len(p.cached.Rates) > 0
+}
+
+// usableCache returns true if cached rates still reach into the future. Rates are sorted by start,
+// so the last slot ends latest. Entirely elapsed rates cannot inform any decision.
+func (p *cachingProxy) usableCache() bool {
+	return p.hasCache() && p.cached.Rates[len(p.cached.Rates)-1].End.After(time.Now())
 }
 
 // cacheGet returns cached data if the update interval has not yet elapsed
@@ -158,7 +182,7 @@ func (p *cachingProxy) cacheGet() (*cached, error) {
 		p.cached = res
 	}
 
-	if len(p.cached.Rates) == 0 {
+	if !p.usableCache() {
 		return nil, errors.New("no rates")
 	}
 
@@ -178,6 +202,11 @@ func (p *cachingProxy) cachePut(typ api.TariffType, rates api.Rates) error {
 
 	p.hash = hash
 	p.updated = time.Now()
+	p.cached = &cached{
+		Type:    typ,
+		Rates:   rates,
+		Updated: p.updated,
+	}
 
-	return cachePut(p.key, typ, rates)
+	return cache.Put(p.key, p.cached)
 }
