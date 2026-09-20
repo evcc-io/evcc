@@ -26,7 +26,7 @@
 				:pvExport="pvExport"
 				:batteryCharge="batteryCharge"
 				:batteryDischarge="batteryDischarge"
-				:batteryGridCharge="batteryGridChargeActive"
+				:batteryMode="batteryMode"
 				:batteryHold="batteryHold"
 				:pvProduction="pvProduction"
 				:homePower="homePower"
@@ -122,11 +122,7 @@
 								icon="battery"
 								:power="batteryDischarge"
 								:powerUnit="powerUnit"
-								:iconProps="{
-									hold: batteryHold,
-									soc: batterySoc,
-									gridCharge: batteryGridChargeActive,
-								}"
+								:iconProps="{ mode: batteryMode, soc: batterySoc }"
 								:details="batterySoc"
 								:detailsFmt="batteryFmt"
 								:expanded="batteryExpanded"
@@ -247,11 +243,7 @@
 								icon="battery"
 								:power="batteryCharge"
 								:powerUnit="powerUnit"
-								:iconProps="{
-									hold: batteryChargeHold,
-									soc: batterySoc,
-									gridCharge: batteryGridChargeActive,
-								}"
+								:iconProps="{ mode: batteryMode, soc: batterySoc }"
 								:details="batterySoc"
 								:detailsFmt="batteryFmt"
 								:expanded="batteryExpanded"
@@ -325,6 +317,7 @@ import collector from "@/mixins/collector.js";
 import { defineComponent, type PropType } from "vue";
 import {
 	SMART_COST_TYPE,
+	type BATTERY_MODE,
 	type Battery,
 	type Meter,
 	type CURRENCY,
@@ -358,7 +351,7 @@ export default defineComponent({
 		batteryDischargeControl: { type: Boolean },
 		batteryGridChargeLimit: { type: Number },
 		batteryGridChargeActive: { type: Boolean },
-		batteryMode: { type: String },
+		batteryMode: { type: String as PropType<BATTERY_MODE> },
 		tariffGrid: { type: Number },
 		tariffFeedIn: { type: Number, default: 0 },
 		tariffCo2: { type: Number },

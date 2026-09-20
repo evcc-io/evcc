@@ -25,6 +25,7 @@
       "discharging": "entlädt",
       "energy": "Energie",
       "gridCharge": "Netzladen",
+      "gridDischarge": "Netzentladen",
       "hold": "Entladesperre",
       "holdCharge": "Ladesperre",
       "ofTotal": "von {total}",

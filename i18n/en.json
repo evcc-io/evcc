@@ -25,6 +25,7 @@
       "discharging": "discharging",
       "energy": "Energy",
       "gridCharge": "grid charging",
+      "gridDischarge": "grid discharging",
       "hold": "discharge locked",
       "holdCharge": "charge locked",
       "ofTotal": "of {total}",

@@ -86,7 +86,7 @@
 					<VehicleIcon :names="[lp.icon]" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'batteryCharge')">
-					<BatteryIcon :soc="batterySoc" :gridCharge="batteryGridCharge" />
+					<BatteryIcon :soc="batterySoc" :mode="batteryMode" />
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'pvExport')">
 					<shopicon-regular-powersupply></shopicon-regular-powersupply>
@@ -97,7 +97,11 @@
 			</div>
 			<div class="label-scale-name">Out</div>
 		</div>
-		<BatteryIcon hold class="battery-hold" :class="{ 'battery-hold--active': batteryHold }" />
+		<BatteryIcon
+			:mode="BATTERY_MODE.HOLD"
+			class="battery-hold"
+			:class="{ 'battery-hold--active': batteryHold }"
+		/>
 	</div>
 </template>
 
@@ -111,7 +115,7 @@ import QuestionIcon from "../MaterialIcon/Question.vue";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/home";
 import { defineComponent, type PropType } from "vue";
-import type { UiLoadpoint } from "@/types/evcc";
+import { BATTERY_MODE, type UiLoadpoint } from "@/types/evcc";
 
 export default defineComponent({
 	name: "Visualization",
@@ -127,7 +131,7 @@ export default defineComponent({
 		batteryCharge: { type: Number, default: 0 },
 		batteryDischarge: { type: Number, default: 0 },
 		batteryHold: { type: Boolean, default: false },
-		batteryGridCharge: { type: Boolean, default: false },
+		batteryMode: { type: String as PropType<BATTERY_MODE> },
 		pvProduction: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
 		powerUnit: { type: String as PropType<POWER_UNIT>, default: POWER_UNIT.KW },
@@ -135,7 +139,7 @@ export default defineComponent({
 		outPower: { type: Number, default: 0 },
 	},
 	data() {
-		return { width: 0, transitionsEnabled: false };
+		return { width: 0, transitionsEnabled: false, BATTERY_MODE };
 	},
 	computed: {
 		total() {
