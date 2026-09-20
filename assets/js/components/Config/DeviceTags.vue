@@ -79,7 +79,7 @@ const PHASE_TAGS = ["phaseCurrents", "phaseVoltages", "phasePowers"];
 const FORECAST_TAGS = ["priceRates", "co2Rates", "solarRates", "temperatureRates"];
 
 // display order, remaining tags follow in backend order
-const FIRST_TAGS = ["power", "soc", "capacity", "energy", "returnEnergy"];
+const FIRST_TAGS = ["power", "soc", "capacity", "minSoc", "maxSoc", "energy", "returnEnergy"];
 
 export default {
 	name: "DeviceTags",
@@ -237,6 +237,8 @@ export default {
 				case "chargedEnergy":
 					return this.fmtWh(value * 1e3, POWER_UNIT.AUTO);
 				case "soc":
+				case "minSoc":
+				case "maxSoc":
 				case "vehicleLimitSoc":
 					return this.fmtPercentage(value, 1);
 				case "temp":
