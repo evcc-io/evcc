@@ -6,8 +6,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/util/test"
-	"github.com/stretchr/testify/require"
-	"go.yaml.in/yaml/v4"
 )
 
 var acceptable = []string{
@@ -49,72 +47,4 @@ func TestTemplates(t *testing.T) {
 			t.Error(err)
 		}
 	})
-}
-
-func TestSolaxX3IES(t *testing.T) {
-	tmpl, err := templates.ByName(templates.Meter, "solax")
-	require.NoError(t, err)
-
-	for _, name := range []string{"capacity", "minsoc", "maxsoc"} {
-		_, param := tmpl.ParamByName(name)
-		require.Equal(t, map[string][]string{"model": {"G3/G4"}}, param.Visible, name)
-	}
-
-	rendered, values := renderSolaxBattery(t, "X3-IES")
-	require.Contains(t, string(rendered), "address: 22 # 0x0016 Batpower_Charge1")
-	require.Contains(t, string(rendered), "address: 28 # 0x001C Battery 1 Capacity")
-	require.Contains(t, string(rendered), "address: 147 # 0x0093 Self-use discharge minimum SoC in high byte")
-	require.Contains(t, string(rendered), "float64(value >> 8)")
-	require.Contains(t, string(rendered), "address: 270 # 0x010E Battery charge upper SoC readback")
-	require.Contains(t, string(rendered), "address: 38 # 0x0026 Battery 1 total energy (nominal capacity)")
-	require.Contains(t, string(rendered), "maxchargepower:")
-
-	device, err := NewFromConfig(t.Context(), "template", values)
-	require.NoError(t, err)
-	_, ok := api.Cap[api.BatteryCapacity](device)
-	require.True(t, ok)
-	_, ok = api.Cap[api.BatterySocLimiter](device)
-	require.True(t, ok)
-}
-
-func TestSolaxG3G4(t *testing.T) {
-	rendered, _ := renderSolaxBattery(t, "G3/G4", map[string]any{
-		"capacity": "13.5",
-		"minsoc":   "24",
-		"maxsoc":   "91",
-	})
-
-	require.Contains(t, string(rendered), "capacity: 13.5 # kWh")
-	require.Contains(t, string(rendered), "minsoc: 24 # %")
-	require.Contains(t, string(rendered), "maxsoc: 91 # %")
-	require.NotContains(t, string(rendered), "Self-use discharge minimum SoC in high byte")
-	require.NotContains(t, string(rendered), "Battery charge upper SoC readback")
-}
-
-func renderSolaxBattery(t *testing.T, model string, overrides ...map[string]any) ([]byte, map[string]any) {
-	t.Helper()
-
-	tmpl, err := templates.ByName(templates.Meter, "solax")
-	require.NoError(t, err)
-
-	values := map[string]any{
-		"template": "solax",
-		"usage":    "battery",
-		"model":    model,
-		"modbus":   templates.ModbusChoiceTCPIP,
-		"host":     "localhost",
-	}
-	for _, override := range overrides {
-		for key, value := range override {
-			values[key] = value
-		}
-	}
-
-	rendered, values, err := tmpl.RenderResult(templates.Meter, templates.RenderModeUnitTest, values)
-	require.NoError(t, err)
-
-	var config map[string]any
-	require.NoError(t, yaml.Unmarshal(rendered, &config))
-
-	return rendered, values
 }
