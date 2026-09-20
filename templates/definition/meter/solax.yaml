@@ -40,6 +40,15 @@ params:
   - name: maxacpower
   - name: storageunit
   - preset: battery-params
+  - name: capacity
+    visible:
+      model: ["G3/G4"]
+  - name: minsoc
+    visible:
+      model: ["G3/G4"]
+  - name: maxsoc
+    visible:
+      model: ["G3/G4"]
   - name: defaultmode
     default: 0 # "SelfUse"
 render: |

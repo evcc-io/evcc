@@ -52,6 +52,14 @@ func TestTemplates(t *testing.T) {
 }
 
 func TestSolaxX3IES(t *testing.T) {
+	tmpl, err := templates.ByName(templates.Meter, "solax")
+	require.NoError(t, err)
+
+	for _, name := range []string{"capacity", "minsoc", "maxsoc"} {
+		_, param := tmpl.ParamByName(name)
+		require.Equal(t, map[string][]string{"model": {"G3/G4"}}, param.Visible, name)
+	}
+
 	rendered, values := renderSolaxBattery(t, "X3-IES")
 	require.Contains(t, string(rendered), "address: 22 # 0x0016 Batpower_Charge1")
 	require.Contains(t, string(rendered), "address: 28 # 0x001C Battery 1 Capacity")
