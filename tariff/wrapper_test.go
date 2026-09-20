@@ -67,15 +67,14 @@ func TestWrapperRetry(t *testing.T) {
 	_, err = res.Rates()
 	require.Error(t, err)
 
-	// retry interval elapsed: next call creates the tariff in the background
+	// retry interval elapsed: next call creates the tariff
 	w.mu.Lock()
 	w.retryAt = time.Time{}
 	w.mu.Unlock()
 
-	require.Eventually(t, func() bool {
-		rr, err := res.Rates()
-		return err == nil && len(rr) == 1
-	}, time.Second, 10*time.Millisecond)
+	rr, err := res.Rates()
+	require.NoError(t, err)
+	assert.Len(t, rr, 1)
 	assert.Equal(t, api.TariffTypePriceForecast, res.Type())
 
 	// tariff fails at runtime: error passed through, no re-creation

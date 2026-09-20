@@ -21,10 +21,9 @@ type Wrapper struct {
 	typ    string
 	config map[string]any
 
-	tariff   api.Tariff
-	err      error
-	retryAt  time.Time // earliest next creation attempt
-	creating bool      // creation in progress
+	tariff  api.Tariff
+	err     error
+	retryAt time.Time // earliest next creation attempt
 }
 
 var _ api.Tariff = (*Wrapper)(nil)
@@ -48,34 +47,24 @@ func (v *Wrapper) WrappedConfig() (string, map[string]any) {
 	return v.typ, v.config
 }
 
-// instance returns the tariff once created. Creation is retried in the background at most once per retryInterval.
+// instance returns the tariff once created. Creation is retried at most once per retryInterval.
 func (v *Wrapper) instance() api.Tariff {
-	if v.tariff != nil || v.creating || time.Now().Before(v.retryAt) {
+	if v.tariff != nil || time.Now().Before(v.retryAt) {
 		return v.tariff
 	}
 
-	v.creating = true
+	t, err := NewFromConfig(v.ctx, v.typ, v.config)
+	if err != nil {
+		v.err = err
+		v.retryAt = time.Now().Add(retryInterval)
+		v.log.WARN.Printf("creating tariff failed: %v", err)
+		return nil
+	}
 
-	go func() {
-		t, err := NewFromConfig(v.ctx, v.typ, v.config)
+	v.tariff = t
+	v.log.INFO.Printf("tariff available: %s", util.TypeWithTemplateName(v.typ, v.config))
 
-		v.mu.Lock()
-		defer v.mu.Unlock()
-
-		v.creating = false
-
-		if err != nil {
-			v.err = err
-			v.retryAt = time.Now().Add(retryInterval)
-			v.log.WARN.Printf("creating tariff failed: %v", err)
-			return
-		}
-
-		v.tariff = t
-		v.log.INFO.Printf("tariff available: %s", util.TypeWithTemplateName(v.typ, v.config))
-	}()
-
-	return nil
+	return t
 }
 
 // Rates implements the api.Tariff interface
