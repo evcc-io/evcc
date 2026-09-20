@@ -540,10 +540,6 @@ render: |
                     type: writemultiple
                     encoding: float32s
             script: |
-              // unlike self-consumption (cases 1-4), this mode pushes maximum export
-              // regardless of load, so it isn't self-limiting - configure
-              // maxdischargepower below the inverter's real AC capability if that,
-              // not the battery's own rating, is the binding limit
               limit := float64({{ .maxdischargepower }})
               out := rated
               if limit < out { out = limit }
