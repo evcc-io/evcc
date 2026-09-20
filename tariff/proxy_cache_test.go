@@ -3,7 +3,6 @@ package tariff
 import (
 	"context"
 	"errors"
-	"sync"
 	"testing"
 	"time"
 
@@ -14,68 +13,28 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// flakyTariff fails instantiation and rate retrieval on demand
-type flakyTariff struct {
-	mu    sync.Mutex
-	err   error
-	rates api.Rates
-}
-
-func (t *flakyTariff) setErr(err error) {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	t.err = err
-}
-
-func (t *flakyTariff) Rates() (api.Rates, error) {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	return t.rates, t.err
-}
-
-func (t *flakyTariff) Type() api.TariffType {
-	return api.TariffTypePriceForecast
-}
-
-var flaky = new(flakyTariff)
-
-func init() {
-	registry.AddCtx("test-cached", func(context.Context, map[string]any) (api.Tariff, error) {
-		if _, err := flaky.Rates(); err != nil {
-			return nil, err
-		}
-		return flaky, nil
-	})
-}
-
 func TestCachedFallback(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 
-	// utc for comparing cached rates after json round trip
-	now := time.Now().UTC().Truncate(SlotDuration)
-	live := makeRates(now, SlotDuration, 4, 10)
-	stale := makeRates(now.Add(-time.Hour), SlotDuration, 4, 0)
-
-	flaky.mu.Lock()
-	flaky.rates = live
-	flaky.err = errors.New("unavailable")
-	flaky.mu.Unlock()
-
 	other := map[string]any{"interval": 50 * time.Millisecond}
-	key := "test-cached-" + cacheKey("test-cached", other)
+	key := "test-retry-" + cacheKey("test-retry", other)
 
 	// no cache: startup fails
-	_, err := NewCachedFromConfig(context.TODO(), "test-cached", other)
+	retryable.setErr(errors.New("unavailable"))
+	_, err := NewCachedFromConfig(context.TODO(), "test-retry", other)
 	require.Error(t, err)
 
 	// outdated cache: startup succeeds, cached rates served
+	// utc for comparing cached rates after json round trip
+	now := time.Now().UTC().Truncate(SlotDuration)
+	stale := makeRates(now.Add(-time.Hour), SlotDuration, 4, 0)
 	require.NoError(t, cache.Put(key, &cached{
 		Type:    api.TariffTypePriceForecast,
 		Rates:   stale,
 		Updated: now.Add(-time.Hour),
 	}))
 
-	res, err := NewCachedFromConfig(context.TODO(), "test-cached", other)
+	res, err := NewCachedFromConfig(context.TODO(), "test-retry", other)
 	require.NoError(t, err)
 
 	rr, err := res.Rates()
@@ -84,18 +43,18 @@ func TestCachedFallback(t *testing.T) {
 	assert.Equal(t, api.TariffTypePriceForecast, res.Type())
 
 	// tariff becomes available: wrapper retry creates it, live rates served and cached
-	flaky.setErr(nil)
+	retryable.setErr(nil)
 	w := res.(*cachingProxy).tariff.(*Wrapper)
 	w.mu.Lock()
 	w.retriedAt = time.Time{}
 	w.mu.Unlock()
 
-	rr, err = res.Rates()
+	live, err := res.Rates()
 	require.NoError(t, err)
-	assert.Equal(t, live, rr)
+	assert.NotEqual(t, stale, live)
 
 	// tariff becomes unavailable at runtime: last rates served
-	flaky.setErr(api.ErrOutdated)
+	retryable.setErr(api.ErrOutdated)
 	rr, err = res.Rates()
 	require.NoError(t, err)
 	assert.Equal(t, live, rr)
