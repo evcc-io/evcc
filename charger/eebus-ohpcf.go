@@ -47,7 +47,7 @@ type EEBusOHPCF struct {
 	egLpcEntity spineapi.EntityRemoteInterface
 	enabled     bool
 	reboosting  bool
-	dimmedState bool // last limit written, re-stated on reconnect
+	dimLimit    float64 // last limit written, re-stated on reconnect
 
 	connector *eebus.Connector
 }
@@ -223,7 +223,7 @@ func (c *EEBusOHPCF) UseCaseEvent(_ spineapi.DeviceRemoteInterface, entity spine
 			c.egLpcEntity = entity
 
 			// [LPC-913]: state the limit to the newly available CS
-			go eebus.AssertLimit(c.ctx, c.log, func() error { return c.dim(c.lastDimmed()) })
+			go eebus.AssertLimit(c.ctx, c.log, func() error { return c.dim(c.lastDimLimit()) })
 		}
 		c.mu.Unlock()
 	}
@@ -260,11 +260,11 @@ func (c *EEBusOHPCF) lastEnabled() bool {
 	return c.enabled
 }
 
-func (c *EEBusOHPCF) lastDimmed() bool {
+func (c *EEBusOHPCF) lastDimLimit() float64 {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	return c.dimmedState
+	return c.dimLimit
 }
 
 // ohpcfStatus maps the compressor process state to a charge status: running is
@@ -441,14 +441,13 @@ func (c *EEBusOHPCF) dimmed() (bool, error) {
 		return false, err
 	}
 
-	// an active limit means dimmed; the applied §14a limit value is 0W, so a
-	// value-based check would never report the dimmed state and never release it
+	// an active limit means dimmed regardless of its value
 	return limit.IsActive, nil
 }
 
-// dim implements the api.Dimmer interface. It writes a §14a/LPC consumption
-// limit (fixed 0W safe limit) to the heat pump while dimmed, releasing it otherwise.
-func (c *EEBusOHPCF) dim(dim bool) error {
+// dim implements the api.Dimmer interface. It writes the §14a/LPC consumption
+// limit to the heat pump, releasing it when limit is 0.
+func (c *EEBusOHPCF) dim(limit float64) error {
 	c.mu.RLock()
 	entity := c.egLpcEntity
 	c.mu.RUnlock()
@@ -457,15 +456,14 @@ func (c *EEBusOHPCF) dim(dim bool) error {
 		return api.ErrNotAvailable
 	}
 
-	// TODO: change api.Dimmer to make the limit configurable; use a fixed 0W safe limit for now
 	if err := eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
-		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: 0, IsActive: dim}, cb)
+		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: limit, IsActive: limit > 0}, cb)
 	}); err != nil {
 		return err
 	}
 
 	c.mu.Lock()
-	c.dimmedState = dim
+	c.dimLimit = limit
 	c.mu.Unlock()
 
 	return nil

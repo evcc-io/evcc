@@ -205,7 +205,7 @@ type SocLimiter interface {
 // Dimmer provides EnWG §14a dimming
 type Dimmer interface {
 	Dimmed() (bool, error)
-	Dim(bool) error
+	Dim(limit float64) error // limit consumption to the given power in W (0 = release)
 }
 
 // Curtailer provides EEG §9 curtailment

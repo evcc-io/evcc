@@ -39,27 +39,27 @@ func newOHPCFEGCharger(t *testing.T) (*EEBusOHPCF, *egmocks.EgLPCInterface, spin
 }
 
 // ATC_COM_PT_EGMessages_001/003 (LPC-TS-001/001-2): the EG sends an activated,
-// then deactivated, consumption-limit write command. Dim writes a 0 W limit.
+// then deactivated, consumption-limit write command. Dim writes the limit in W.
 func TestOHPCF_LPC_EGMessages_ConsumptionLimit(t *testing.T) {
 	for _, tc := range []struct {
 		name   string
-		dim    bool
+		limit  float64
 		active bool
 	}{
-		{"activate", true, true},
-		{"deactivate", false, false},
+		{"activate", 4200, true},
+		{"deactivate", 0, false},
 	} {
 		t.Run("ATC_COM_PT_EGMessages_001_"+tc.name, func(t *testing.T) {
 			c, lpc, entity := newOHPCFEGCharger(t)
 			lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(true)
 			lpc.EXPECT().
-				WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: 0, IsActive: tc.active}, mock.Anything).
+				WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: tc.limit, IsActive: tc.active}, mock.Anything).
 				Run(func(_ spineapi.EntityRemoteInterface, _ ucapi.LoadLimit, cb func(model.ResultDataType, model.MsgCounterType)) {
 					cb(model.ResultDataType{}, 0)
 				}).
 				Return(new(model.MsgCounterType), nil)
 
-			assert.NoError(t, c.dim(tc.dim))
+			assert.NoError(t, c.dim(tc.limit))
 		})
 	}
 }
@@ -102,7 +102,7 @@ func TestOHPCF_LPC_Dim_WriteRejected(t *testing.T) {
 		}).
 		Return(new(model.MsgCounterType), nil)
 
-	assert.Error(t, c.dim(true))
+	assert.Error(t, c.dim(4200))
 }
 
 // Dim is gated: no announced LPC scenario, or no connected entity → ErrNotAvailable.
@@ -111,20 +111,19 @@ func TestOHPCF_LPC_Dim_Gating(t *testing.T) {
 		c, lpc, entity := newOHPCFEGCharger(t)
 		lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(false)
 
-		assert.ErrorIs(t, c.dim(true), api.ErrNotAvailable)
+		assert.ErrorIs(t, c.dim(4200), api.ErrNotAvailable)
 	})
 
 	t.Run("entity_not_connected", func(t *testing.T) {
 		c, _, _ := newOHPCFEGCharger(t)
 		c.egLpcEntity = nil
 
-		assert.ErrorIs(t, c.dim(true), api.ErrNotAvailable)
+		assert.ErrorIs(t, c.dim(4200), api.ErrNotAvailable)
 	})
 }
 
-// Dimmed reports an active consumption limit. Dim always writes a fixed 0W
-// limit, so only IsActive determines the dimmed state (a value-based check
-// would never report dimmed or release it).
+// Dimmed reports an active consumption limit; only IsActive determines the
+// dimmed state, not the value.
 func TestOHPCF_LPC_Dimmed(t *testing.T) {
 	for _, tc := range []struct {
 		name  string

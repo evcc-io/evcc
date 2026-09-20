@@ -42,7 +42,11 @@ func (cc *Dimmer) Implement(ctx context.Context, i implement.Caps) error {
 		return err
 	}
 
-	implement.May(i, implement.Dimmer(dimS, dimmedG))
+	if dimS != nil {
+		// plugins switch on/off; the limit value is not passed through
+		dim := func(limit float64) error { return dimS(limit > 0) }
+		implement.May(i, implement.Dimmer(dim, dimmedG))
+	}
 
 	return nil
 }
