@@ -101,7 +101,7 @@
 			v-if="batteryConfigured"
 			to="/battery"
 			class="battery-status"
-			:aria-label="$t('tabBar.battery')"
+			:aria-label="$t('main.energyflow.batteryStatus')"
 			@click.stop
 		>
 			<BatteryIcon :soc="batterySoc" :mode="batteryMode" />
