@@ -97,12 +97,15 @@
 			</div>
 			<div class="label-scale-name">Out</div>
 		</div>
-		<BatteryIcon
+		<router-link
 			v-if="batteryConfigured"
-			:soc="batterySoc"
-			:mode="batteryMode"
+			to="/battery"
 			class="battery-status"
-		/>
+			:aria-label="$t('tabBar.battery')"
+			@click.stop
+		>
+			<BatteryIcon :soc="batterySoc" :mode="batteryMode" />
+		</router-link>
 	</div>
 </template>
 
