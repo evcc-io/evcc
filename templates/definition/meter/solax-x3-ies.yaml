@@ -53,9 +53,9 @@ render: |
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 38 # 0x0026 Battery 1 total energy (nominal capacity)
+      address: 38 # 0x0026 Battery 1 capacity, 32-bit LSW first
       type: input
-      decode: uint32
+      decode: uint32s
     scale: 0.001
   {{- include "battery-power" . }}
   {{- end }}
