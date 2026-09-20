@@ -293,8 +293,7 @@ render: |
                     type: writemultiple
                     encoding: float32s
             script: |
-              rated // unblock charging (holdcharge may have zeroed this); DC-coupled PV
-              // charging bypasses the AC stage, so this isn't capped to maxacpower
+              rated // unblock charging (holdcharge may zero this); DC-coupled PV bypasses AC, uncapped by maxacpower
           - source: go
             in:
               - name: rated
@@ -320,8 +319,7 @@ render: |
                     type: writemultiple
                     encoding: float32s
             script: |
-              // uncapped by maxacpower like ChargeLimit above: self-consumption mode
-              // is self-limiting via load and the inverter's own AC hardware rating
+              // self-consumption is self-limiting via load, uncapped by maxacpower (same in case 4)
               limit := float64({{ .maxdischargepower }})
               out := rated
               if limit < out { out = limit }
@@ -364,8 +362,7 @@ render: |
                     type: writemultiple
                     encoding: float32s
             script: |
-              rated // unblock charging (holdcharge may have zeroed this); DC-coupled PV
-              // charging bypasses the AC stage, so this isn't capped to maxacpower
+              rated // unblock charging (holdcharge may zero this); DC-coupled PV bypasses AC, uncapped by maxacpower
           - source: const
             value: 0 # W
             set:
@@ -413,8 +410,7 @@ render: |
                     type: writemultiple
                     encoding: float32s
             script: |
-              rated // unblock charging (holdcharge may have zeroed this); DC-coupled PV
-              // charging bypasses the AC stage, so this isn't capped to maxacpower
+              rated // unblock charging (holdcharge may zero this); DC-coupled PV bypasses AC, uncapped by maxacpower
           - source: const
             value: 0 # W
             set:
@@ -471,6 +467,7 @@ render: |
                     type: writemultiple
                     encoding: float32s
             script: |
+              // self-consumption is self-limiting via load, uncapped by maxacpower (same in case 1)
               limit := float64({{ .maxdischargepower }})
               out := rated
               if limit < out { out = limit }
@@ -513,8 +510,7 @@ render: |
                     type: writemultiple
                     encoding: float32s
             script: |
-              rated // unblock charging (holdcharge may have zeroed this); DC-coupled PV
-              // charging bypasses the AC stage, so this isn't capped to maxacpower
+              rated // unblock charging (holdcharge may zero this); DC-coupled PV bypasses AC, uncapped by maxacpower
           - source: go
             in:
               - name: rated
@@ -540,6 +536,8 @@ render: |
                     type: writemultiple
                     encoding: float32s
             script: |
+              // export push, not self-limiting - configure maxdischargepower below the
+              // inverter's real AC capability if that's the binding limit, not maxacpower
               limit := float64({{ .maxdischargepower }})
               out := rated
               if limit < out { out = limit }
