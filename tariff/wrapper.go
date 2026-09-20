@@ -30,16 +30,13 @@ var _ api.Tariff = (*Wrapper)(nil)
 
 // NewWrapper creates an offline tariff wrapper
 func NewWrapper(ctx context.Context, typ string, other map[string]any, err error) api.Tariff {
-	v := &Wrapper{
-		log:     util.NewLogger("tariff"),
-		ctx:     ctx,
-		typ:     typ,
-		config:  other,
-		err:     err,
-		retryAt: time.Now().Add(retryInterval),
+	return &Wrapper{
+		log:    util.NewLogger("tariff"),
+		ctx:    ctx,
+		typ:    typ,
+		config: other,
+		err:    err,
 	}
-
-	return v
 }
 
 // WrappedConfig indicates a device with wrapped configuration
