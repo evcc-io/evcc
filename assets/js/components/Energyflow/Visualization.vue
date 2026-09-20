@@ -98,9 +98,10 @@
 			<div class="label-scale-name">Out</div>
 		</div>
 		<BatteryIcon
-			:mode="BATTERY_MODE.HOLD"
-			class="battery-hold"
-			:class="{ 'battery-hold--active': batteryHold }"
+			v-if="batteryConfigured"
+			:soc="batterySoc"
+			:mode="batteryMode"
+			class="battery-status"
 		/>
 	</div>
 </template>
@@ -115,7 +116,7 @@ import QuestionIcon from "../MaterialIcon/Question.vue";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/home";
 import { defineComponent, type PropType } from "vue";
-import { BATTERY_MODE, type UiLoadpoint } from "@/types/evcc";
+import type { BATTERY_MODE, UiLoadpoint } from "@/types/evcc";
 
 export default defineComponent({
 	name: "Visualization",
@@ -130,7 +131,7 @@ export default defineComponent({
 		batterySoc: { type: Number },
 		batteryCharge: { type: Number, default: 0 },
 		batteryDischarge: { type: Number, default: 0 },
-		batteryHold: { type: Boolean, default: false },
+		batteryConfigured: { type: Boolean, default: false },
 		batteryMode: { type: String as PropType<BATTERY_MODE> },
 		pvProduction: { type: Number, default: 0 },
 		homePower: { type: Number, default: 0 },
@@ -139,7 +140,7 @@ export default defineComponent({
 		outPower: { type: Number, default: 0 },
 	},
 	data() {
-		return { width: 0, transitionsEnabled: false, BATTERY_MODE };
+		return { width: 0, transitionsEnabled: false };
 	},
 	computed: {
 		total() {
@@ -303,19 +304,10 @@ html.dark .grid-import {
 .visualization--ready :deep(.label-bar-icon) {
 	transition-duration: var(--evcc-transition-very-fast), 500ms;
 }
-.battery-hold {
+.battery-status {
 	position: absolute;
 	top: 2.5rem;
 	right: -0.25rem;
 	color: var(--evcc-gray);
-	opacity: 0;
-}
-.visualization--ready .battery-hold {
-	transition-property: opacity;
-	transition-duration: var(--evcc-transition-medium);
-	transition-timing-function: linear;
-}
-.battery-hold--active {
-	opacity: 1;
 }
 </style>

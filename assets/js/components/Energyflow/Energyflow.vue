@@ -27,7 +27,7 @@
 				:batteryCharge="batteryCharge"
 				:batteryDischarge="batteryDischarge"
 				:batteryMode="batteryMode"
-				:batteryHold="batteryHold"
+				:batteryConfigured="batteryConfigured"
 				:pvProduction="pvProduction"
 				:homePower="homePower"
 				:batterySoc="batterySoc"
