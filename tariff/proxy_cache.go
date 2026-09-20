@@ -139,6 +139,7 @@ func (p *cachingProxy) Type() api.TariffType {
 	defer p.mu.Unlock()
 
 	if t := p.instance(); t != nil {
+		// wrapper reports unknown type while tariff is unavailable
 		if typ := t.Type(); typ != 0 {
 			return typ
 		}
