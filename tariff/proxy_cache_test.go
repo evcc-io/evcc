@@ -27,7 +27,7 @@ func TestCachedFallback(t *testing.T) {
 	// outdated cache: startup succeeds, cached rates served
 	// utc for comparing cached rates after json round trip
 	now := time.Now().UTC().Truncate(SlotDuration)
-	stale := makeRates(now.Add(-time.Hour), SlotDuration, 4, 0)
+	stale := makeRates(now.Add(-time.Hour), SlotDuration, 8, 0)
 	require.NoError(t, cache.Put(key, &cached{
 		Type:    api.TariffTypePriceForecast,
 		Rates:   stale,
@@ -58,6 +58,70 @@ func TestCachedFallback(t *testing.T) {
 	rr, err = res.Rates()
 	require.NoError(t, err)
 	assert.Equal(t, live, rr)
+}
+
+func TestCachedFallbackElapsed(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+
+	other := map[string]any{"interval": 60 * time.Millisecond}
+	key := "test-retry-" + cacheKey("test-retry", other)
+
+	// cached rates have entirely elapsed
+	now := time.Now().UTC().Truncate(SlotDuration)
+	elapsed := makeRates(now.Add(-2*time.Hour), SlotDuration, 4, 0)
+	require.NoError(t, cache.Put(key, &cached{
+		Type:    api.TariffTypePriceForecast,
+		Rates:   elapsed,
+		Updated: now.Add(-2 * time.Hour),
+	}))
+
+	// startup fails rather than reporting an available tariff without usable rates
+	retryable.setErr(errors.New("unavailable"))
+	_, err := NewCachedFromConfig(context.TODO(), "test-retry", other)
+	require.Error(t, err)
+
+	// tariff available at startup, then unavailable at runtime with elapsed cache only
+	retryable.setErr(nil)
+	res, err := NewCachedFromConfig(context.TODO(), "test-retry", other)
+	require.NoError(t, err)
+
+	retryable.setErr(api.ErrOutdated)
+	_, err = res.Rates()
+	require.Error(t, err)
+}
+
+func TestCachedFreshElapsed(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+
+	other := map[string]any{"interval": time.Hour}
+	key := "test-retry-" + cacheKey("test-retry", other)
+
+	// cache updated within the interval, but its rates have entirely elapsed
+	now := time.Now().UTC().Truncate(SlotDuration)
+	putElapsed := func() {
+		require.NoError(t, cache.Put(key, &cached{
+			Type:    api.TariffTypePriceForecast,
+			Rates:   makeRates(now.Add(-2*time.Hour), SlotDuration, 4, 0),
+			Updated: now,
+		}))
+	}
+
+	// the tariff is created instead of serving the elapsed rates
+	putElapsed()
+	retryable.setErr(nil)
+	res, err := NewCachedFromConfig(context.TODO(), "test-retry", other)
+	require.NoError(t, err)
+
+	rr, err := res.Rates()
+	require.NoError(t, err)
+	require.NotEmpty(t, rr)
+	assert.True(t, rr[len(rr)-1].End.After(time.Now()))
+
+	// without a tariff to create, the elapsed rates are not served either
+	putElapsed()
+	retryable.setErr(errors.New("unavailable"))
+	_, err = NewCachedFromConfig(context.TODO(), "test-retry", other)
+	require.Error(t, err)
 }
 
 func TestCacheInterval(t *testing.T) {
