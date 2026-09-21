@@ -99,10 +99,13 @@ export default defineComponent({
 
 			return result;
 		},
-		transformApiData(data: ApiData, values: DeviceValues): ApiData {
+		transformApiData(data: ApiData, values: DeviceValues, templateParams: TemplateParam[]): ApiData {
 			if (values.type === ConfigType.Custom) {
 				delete data.icon;
 				delete data.title;
+				delete data.priority;
+			} else if (!templateParams.some((p) => p.Name.toLowerCase() === "priority")) {
+				// not every template supports priority, e.g. templates without the vehicle-base preset
 				delete data.priority;
 			}
 			if (Array.isArray(data.identifiers)) {

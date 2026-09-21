@@ -308,7 +308,9 @@ export default defineComponent({
 			(values: DeviceValues, templateName: string | null) => string
 		>,
 		// Optional: custom API data transformation
-		transformApiData: Function as PropType<(data: ApiData, values: DeviceValues) => ApiData>,
+		transformApiData: Function as PropType<
+			(data: ApiData, values: DeviceValues, templateParams: TemplateParam[]) => ApiData
+		>,
 		// Optional: custom template parameter filtering
 		filterTemplateParams: Function as PropType<(params: TemplateParam[]) => TemplateParam[]>,
 		// Optional: custom defaults application
@@ -484,7 +486,7 @@ export default defineComponent({
 
 			// Allow parent to transform API data
 			if (this.transformApiData) {
-				data = this.transformApiData(data, this.values);
+				data = this.transformApiData(data, this.values, this.template?.Params || []);
 			}
 
 			return data;
