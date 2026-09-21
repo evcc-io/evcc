@@ -594,7 +594,11 @@
 					:yamlSource="eebus?.yamlSource"
 					@changed="loadDirty"
 				/>
-				<OcppModal :ocpp="ocpp" :stationTitles="stationTitles" />
+				<OcppModal
+					:ocpp="ocpp"
+					:stationTitles="stationTitles"
+					:stationHeating="stationHeating"
+				/>
 				<OcppForwarderModal @changed="loadDirty" />
 				<OcppReportModal
 					:loadpoints="loadpoints"
@@ -1245,6 +1249,18 @@ export default defineComponent({
 				const loadpoint = this.loadpoints.find((lp) => lp.charger === charger.name);
 				const title = loadpoint?.title || charger.config?.title;
 				if (title) map[stationId] = title;
+			});
+			return map;
+		},
+		// maps an OCPP station id to whether its bound loadpoint is a heating loadpoint
+		// (report, like the loadpoint list icon, is hidden for heating loadpoints)
+		stationHeating(): Record<string, boolean> {
+			const map: Record<string, boolean> = {};
+			this.chargers.forEach((charger) => {
+				const stationId = charger.config?.["stationid"];
+				if (typeof stationId !== "string" || !stationId) return;
+				const loadpoint = this.loadpoints.find((lp) => lp.charger === charger.name);
+				if (loadpoint) map[stationId] = this.loadpointIsHeating(loadpoint);
 			});
 			return map;
 		},
