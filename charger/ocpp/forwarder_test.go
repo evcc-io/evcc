@@ -59,6 +59,33 @@ func TestForwarderIdTagStatusFromResult(t *testing.T) {
 	}
 }
 
+func TestForwarderRejectedAuthorization(t *testing.T) {
+	const invalid = `[3,"1",{"idTagInfo":{"status":"Invalid"}}]`
+
+	for _, tc := range []struct {
+		name   string
+		action string
+		frame  string
+		status string
+		ok     bool
+	}{
+		{"StartTransaction rejected", "StartTransaction", invalid, "Invalid", true},
+		{"Authorize rejected", "Authorize", `[3,"1",{"idTagInfo":{"status":"Blocked"}}]`, "Blocked", true},
+		{"StartTransaction accepted", "StartTransaction", `[3,"1",{"idTagInfo":{"status":"Accepted"},"transactionId":42}]`, "", false},
+		// StopTransaction.conf may legally carry idTagInfo - not a failed start
+		{"StopTransaction rejected", "StopTransaction", invalid, "", false},
+		{"DataTransfer", "DataTransfer", invalid, "", false},
+		{"relay action unknown", "", invalid, "", false},
+		{"no idTagInfo", "StartTransaction", `[3,"1",{}]`, "", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			status, ok := rejectedAuthorization(tc.action, []byte(tc.frame))
+			assert.Equal(t, tc.ok, ok)
+			assert.Equal(t, tc.status, string(status))
+		})
+	}
+}
+
 // newBufferedCS returns a CS whose TRACE output is captured in buf.
 func newBufferedCS(buf *bytes.Buffer) *CS {
 	np := jww.NewNotepad(jww.LevelTrace, jww.LevelTrace, buf, io.Discard, "ocpp", 0)
