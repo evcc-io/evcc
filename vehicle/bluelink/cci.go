@@ -270,9 +270,15 @@ func (v *Identity) refreshCCI(_ *oauth2.Token) (*oauth2.Token, error) {
 	return bundle.token(), nil
 }
 
+// persistBundle stores the token bundle and flushes it to the database right
+// away, since deferring to the periodic flush would lose it on a restart
 func (v *Identity) persistBundle(bundle cciBundle) {
 	v.bundle = bundle
 	if err := settings.SetJson(v.settingsKey(), bundle); err != nil {
+		v.log.WARN.Printf("cci: persisting token failed: %v", err)
+		return
+	}
+	if err := settings.Persist(); err != nil {
 		v.log.WARN.Printf("cci: persisting token failed: %v", err)
 	}
 }
