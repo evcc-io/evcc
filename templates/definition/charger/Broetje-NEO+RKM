@@ -7,9 +7,9 @@ template: broetje-neo-rkm
 products:
   - brand: Brötje
     description:
-      generic: NEO+ RKM
-      en: NEO+ RKM
-      de: NEO+ RKM
+      generic: NEO + RKM
+      en: NEO + RKM
+      de: NEO + RKM
 group: heating
 capabilities: ["meter", "dim"]
 requirements:
@@ -47,7 +47,7 @@ params:
     help:
       en: Modbus slave ID configured on the heat pump.
       de: Modbus-Slave-ID, die an der Wärmepumpe konfiguriert ist.
-    default: 2
+    default: 1
 
 render: |
   type: heatpump
