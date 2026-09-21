@@ -15,17 +15,11 @@ capabilities: ["meter", "dim"]
 requirements:
   description:
     en: |
-      The heat pump must be configured for Modbus-controlled PV operation.
       In the service menu, enable requirement profile 3 and set the PV source to "Modbus".
-      This template uses register 125 to send the power setpoint in watts.
-
       The requirement profile must be enabled at the heat pump service level for the heat pump to react to the power setpoint.
       Service code "0112" opens settings that can damage the system. Changes must only be made by qualified personnel.
     de: |
-      Die Wärmepumpe muss für den Modbus-gesteuerten PV-Betrieb konfiguriert sein.
       Im Service-Menü muss das Anforderungsprofil 3 aktiviert und die PV-Auswahl auf "Modbus" gesetzt werden.
-      Dieses Template verwendet Register 125 zur Vorgabe der Leistung in Watt.
-
       Damit die Wärmepumpe auf die Leistungsvorgabe reagiert, muss das Anforderungsprofil auf der Service-Ebene der Wärmepumpe aktiviert sein.
       Der Service-Code "0112" öffnet Einstellungen, die das System beschädigen können. Änderungen dürfen nur durch qualifiziertes Fachpersonal vorgenommen werden.
 
