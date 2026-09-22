@@ -5,16 +5,15 @@ products:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-  - name: host
-  - name: port
-    default: 502
+  - name: modbus
+    choice: ["tcpip"]
   - preset: battery-params
 render: |
   type: custom
   {{- if eq .usage "grid" }}
   power:
     source: modbus
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus" . | indent 2 }}
     register:
       type: holding
       decode: int32s
@@ -25,13 +24,13 @@ render: |
     source: calc
     add:
     - source: modbus
-      uri: {{ joinHostPort .host .port }}
+      {{- include "modbus" . | indent 4 }}
       register:
         type: holding
         decode: int32s
         address: 40067 # Photovoltaikleistung in Watt
     - source: modbus
-      uri: {{ joinHostPort .host .port }}
+      {{- include "modbus" . | indent 4 }}
       register:
         type: holding
         decode: int32s
@@ -41,7 +40,7 @@ render: |
   {{- if eq .usage "battery" }}
   power:
     source: modbus
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus" . | indent 2 }}
     register:
       type: holding
       decode: int32s
@@ -49,7 +48,7 @@ render: |
     scale: -1 # reverse direction
   soc:
     source: modbus
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 40082 # Batterie-SOC in %
       type: holding

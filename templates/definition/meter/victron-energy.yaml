@@ -11,9 +11,9 @@ capabilities: ["battery-control"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-  - name: host
-  - name: port
-    default: 502
+  - name: modbus
+    choice: ["tcpip"]
+    id: 100 # com.victronenergy.system
   - name: maxacpower
   - name: meterid # grid meter VRM instance
     description:
@@ -32,22 +32,19 @@ render: |
     source: calc
     add:
     - source: modbus
-      uri: {{ joinHostPort .host .port }}
-      id: 100 # com.victronenergy.system
+      {{- include "modbus" . | indent 4 }}
       register:
         address: 820 # L1 grid power
         type: input
         decode: int16
     - source: modbus
-      uri: {{ joinHostPort .host .port }}
-      id: 100 # com.victronenergy.system
+      {{- include "modbus" . | indent 4 }}
       register:
         address: 821 # L2 grid power
         type: input
         decode: int16
     - source: modbus
-      uri: {{ joinHostPort .host .port }}
-      id: 100 # com.victronenergy.system
+      {{- include "modbus" . | indent 4 }}
       register:
         address: 822 # L3 grid power
         type: input
@@ -55,7 +52,7 @@ render: |
   {{- if .meterid }}
   currents:
     - source: modbus
-      uri: {{ joinHostPort .host .port }}
+      {{- include "modbus-connection" . | indent 4 }}
       id: {{ .meterid }}
       register:
         address: 2617 # L1 grid current
@@ -63,7 +60,7 @@ render: |
         decode: int16
       scale: 0.1
     - source: modbus
-      uri: {{ joinHostPort .host .port }}
+      {{- include "modbus-connection" . | indent 4 }}
       id: {{ .meterid }}
       register:
         address: 2619 # L2 grid current
@@ -71,7 +68,7 @@ render: |
         decode: int16
       scale: 0.1
     - source: modbus
-      uri: {{ joinHostPort .host .port }}
+      {{- include "modbus-connection" . | indent 4 }}
       id: {{ .meterid }}
       register:
         address: 2621 # L3 grid current
@@ -85,8 +82,7 @@ render: |
     source: calc
     add:
     - source: modbus
-      uri: {{ joinHostPort .host .port }}
-      id: 100 # com.victronenergy.system
+      {{- include "modbus" . | indent 4 }}
       register:
         address: 808 # ACout pv power L1
         type: input
@@ -95,8 +91,7 @@ render: |
         register: 808
         count: 6
     - source: modbus
-      uri: {{ joinHostPort .host .port }}
-      id: 100 # com.victronenergy.system
+      {{- include "modbus" . | indent 4 }}
       register:
         address: 809 # ACout pv power L2
         type: input
@@ -105,8 +100,7 @@ render: |
         register: 808
         count: 6
     - source: modbus
-      uri: {{ joinHostPort .host .port }}
-      id: 100 # com.victronenergy.system
+      {{- include "modbus" . | indent 4 }}
       register:
         address: 810 # ACout pv power L3
         type: input
@@ -115,8 +109,7 @@ render: |
         register: 808
         count: 6
     - source: modbus
-      uri: {{ joinHostPort .host .port }}
-      id: 100 # com.victronenergy.system
+      {{- include "modbus" . | indent 4 }}
       register:
         address: 811 # ACin pv power L1
         type: input
@@ -125,8 +118,7 @@ render: |
         register: 808
         count: 6
     - source: modbus
-      uri: {{ joinHostPort .host .port }}
-      id: 100 # com.victronenergy.system
+      {{- include "modbus" . | indent 4 }}
       register:
         address: 812 # ACin pv power L2
         type: input
@@ -135,8 +127,7 @@ render: |
         register: 808
         count: 6
     - source: modbus
-      uri: {{ joinHostPort .host .port }}
-      id: 100 # com.victronenergy.system
+      {{- include "modbus" . | indent 4 }}
       register:
         address: 813 # ACin pv power L3
         type: input
@@ -145,8 +136,7 @@ render: |
         register: 808
         count: 6
     - source: modbus
-      uri: {{ joinHostPort .host .port }}
-      id: 100 # com.victronenergy.system
+      {{- include "modbus" . | indent 4 }}
       register:
         address: 850 # DC pv power
         type: input
@@ -156,8 +146,7 @@ render: |
   {{- if eq .usage "battery" }}
   power:
     source: modbus
-    uri: {{ joinHostPort .host .port }}
-    id: 100 # com.victronenergy.system
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 842 # active DC power
       type: input
@@ -165,8 +154,7 @@ render: |
     scale: -1
   soc:
     source: modbus
-    uri: {{ joinHostPort .host .port }}
-    id: 100 # com.victronenergy.system
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 843 # Soc
       type: input
@@ -176,8 +164,7 @@ render: |
     convert: float2int
     set:
       source: modbus
-      uri: {{ joinHostPort .host .port }}
-      id: 100 # com.victronenergy.system
+      {{- include "modbus" . | indent 4 }}
       register:
         address: 2901 # limit soc
         type: writesingle

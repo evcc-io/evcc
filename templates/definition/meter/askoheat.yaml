@@ -7,17 +7,13 @@ group: heating
 params:
   - name: usage
     choice: ["aux"]
-  - name: host
-  - name: port
-    default: 502
-  - name: id
-    default: 1
+  - name: modbus
+    choice: ["tcpip"]
 render: |
   type: custom
   power:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 317
       type: input

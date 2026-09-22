@@ -16,7 +16,9 @@ requirements:
       The PV status source must be set to "EMS" and the PV data source to the power setpoint at the display.
       Requires MIRA controller software V1.1.3 or later.
 params:
-  - name: host
+  - name: modbus
+    choice: ["tcpip"]
+    id: 110 # HSM
   - name: tempsource
     type: choice
     choice: ["warmwater", "buffer"]
@@ -40,8 +42,7 @@ render: |
       2: 1 # Reduzieren -> dim
     get:
       source: modbus
-      uri: {{ joinHostPort .host "502" }}
-      id: 110 # HSM
+      {{- include "modbus" . | indent 4 }}
       register:
         address: 55070 # HSM_EMS_PVSTATUS
         type: holding
@@ -54,23 +55,21 @@ render: |
       3: 1 # boost -> Erhöhen
     set:
       source: modbus
-      uri: {{ joinHostPort .host "502" }}
-      id: 110 # HSM
+      {{- include "modbus" . | indent 4 }}
       register:
         address: 55070 # HSM_EMS_PVSTATUS
         type: writesingle
         encoding: int16
   setmaxpower:
     source: modbus
-    uri: {{ joinHostPort .host "502" }}
-    id: 110 # HSM
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 55076 # HSM_EMS_SOLLPOWER
       type: writemultiple
       encoding: int32
   power:
     source: modbus
-    uri: {{ joinHostPort .host "502" }}
+    {{- include "modbus-connection" . | indent 2 }}
     id: {{ .wpmid }} # WPM
     register:
       address: 56021 # WPM_WP_PWR
@@ -80,16 +79,14 @@ render: |
   {{- if eq .tempsource "warmwater" }}
   temp:
     source: modbus
-    uri: {{ joinHostPort .host "502" }}
-    id: 110 # HSM
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 55007 # WW_ACTUALTEMPO
       type: holding
       encoding: float32
   limittemp:
     source: modbus
-    uri: {{ joinHostPort .host "502" }}
-    id: 110 # HSM
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 55002 # WW_SOLL_PV
       type: holding
@@ -98,16 +95,14 @@ render: |
   {{- if eq .tempsource "buffer" }}
   temp:
     source: modbus
-    uri: {{ joinHostPort .host "502" }}
-    id: 110 # HSM
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 55026 # HPUF_PUOT
       type: holding
       encoding: float32
   limittemp:
     source: modbus
-    uri: {{ joinHostPort .host "502" }}
-    id: 110 # HSM
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 55021 # PUFFER_SOLL_PV
       type: holding

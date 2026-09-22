@@ -16,7 +16,7 @@ render: |
   power:
     source: modbus
     id: 0
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 31657 # Active power of built-in electric energy sensor
       type: holding
@@ -24,7 +24,7 @@ render: |
   energy:
     source: modbus
     id: 0
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 31687 # Total positive active energy of built-in electric energy sensor (grid import)
       type: holding
@@ -33,7 +33,7 @@ render: |
   returnenergy:
     source: modbus
     id: 0
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 31679 # Total negative active energy of built-in electric energy sensor (grid export)
       type: holding
@@ -42,7 +42,7 @@ render: |
   currents:
   - source: modbus
     id: 0
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 31651 # Huawei phase A grid current
       type: holding
@@ -50,7 +50,7 @@ render: |
     scale: 0.1
   - source: modbus
     id: 0
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 31653 # Huawei phase B grid current
       type: holding
@@ -58,7 +58,7 @@ render: |
     scale: 0.1
   - source: modbus
     id: 0
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 31655 # Huawei phase C grid current
       type: holding
@@ -67,7 +67,7 @@ render: |
   voltages:
   - source: modbus
     id: 0
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 31639 # Huawei phase A grid voltage
       type: holding
@@ -75,7 +75,7 @@ render: |
     scale: 0.01
   - source: modbus
     id: 0
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 31641 # Huawei phase B grid voltage
       type: holding
@@ -83,7 +83,7 @@ render: |
     scale: 0.01
   - source: modbus
     id: 0
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 31643 # Huawei phase C grid voltage
       type: holding
@@ -92,21 +92,21 @@ render: |
   powers:
   - source: modbus
     id: 0
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 31665 # Huawei phase A grid power
       type: holding
       decode: int32
   - source: modbus
     id: 0
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 31667 # Huawei phase B grid power
       type: holding
       decode: int32
   - source: modbus
     id: 0
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 31669 # Huawei phase C grid power
       type: holding
@@ -116,7 +116,7 @@ render: |
   power:
     source: modbus
     id: 0
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 30354 # Active power
       type: holding
@@ -124,7 +124,7 @@ render: |
   energy:
     source: modbus
     id: 0
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 30348 # E-Total
       type: holding
@@ -136,7 +136,7 @@ render: |
     # allowed feed-in power as percent of nominal (0-100 %)
     - source: modbus
       id: 0
-      uri: {{ joinHostPort .host .port }}
+      {{- include "modbus-connection" . | indent 4 }}
       register:
         address: 40109 # Maximum grid feed-in power (0-100 %)
         type: writesingle
@@ -152,7 +152,7 @@ render: |
             set:
               source: modbus
               id: 0
-              uri: {{ joinHostPort .host .port }}
+              {{- include "modbus-connection" . | indent 12 }}
               register:
                 address: 40100 # Power control mode at grid connection point
                 type: writesingle
@@ -163,7 +163,7 @@ render: |
         set:
           source: modbus
           id: 0
-          uri: {{ joinHostPort .host .port }}
+          {{- include "modbus-connection" . | indent 8 }}
           register:
             address: 40100 # Power control mode at grid connection point
             type: writesingle
@@ -176,7 +176,7 @@ render: |
       config:
         source: modbus
         id: 0
-        uri: {{ joinHostPort .host .port }}
+        {{- include "modbus-connection" . | indent 6 }}
         register:
           address: 40100 # Power control mode at grid connection point (0=no curtailment)
           type: holding
@@ -186,7 +186,7 @@ render: |
       config:
         source: modbus
         id: 0
-        uri: {{ joinHostPort .host .port }}
+        {{- include "modbus-connection" . | indent 6 }}
         register:
           address: 40109 # Maximum grid feed-in power (0-100 %)
           type: holding
@@ -204,7 +204,7 @@ render: |
   power:
     source: modbus
     id: 0
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 30360
       type: holding
@@ -213,7 +213,7 @@ render: |
   energy:
     source: modbus
     id: 0
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 30312 # Total discharge
       type: holding
@@ -222,7 +222,7 @@ render: |
   soc:
     source: modbus
     id: 0
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus-connection" . | indent 2 }}
     register:
       address: 30368
       type: holding
