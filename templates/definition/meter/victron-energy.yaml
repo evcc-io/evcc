@@ -13,7 +13,6 @@ params:
     choice: ["grid", "pv", "battery"]
   - name: modbus
     choice: ["tcpip"]
-    id: 100 # com.victronenergy.system
   - name: maxacpower
   - name: meterid # grid meter VRM instance
     description:
@@ -32,19 +31,22 @@ render: |
     source: calc
     add:
     - source: modbus
-      {{- include "modbus" . | indent 4 }}
+      {{- include "modbus-connection" . | indent 4 }}
+      id: 100 # com.victronenergy.system
       register:
         address: 820 # L1 grid power
         type: input
         decode: int16
     - source: modbus
-      {{- include "modbus" . | indent 4 }}
+      {{- include "modbus-connection" . | indent 4 }}
+      id: 100 # com.victronenergy.system
       register:
         address: 821 # L2 grid power
         type: input
         decode: int16
     - source: modbus
-      {{- include "modbus" . | indent 4 }}
+      {{- include "modbus-connection" . | indent 4 }}
+      id: 100 # com.victronenergy.system
       register:
         address: 822 # L3 grid power
         type: input
@@ -82,7 +84,8 @@ render: |
     source: calc
     add:
     - source: modbus
-      {{- include "modbus" . | indent 4 }}
+      {{- include "modbus-connection" . | indent 4 }}
+      id: 100 # com.victronenergy.system
       register:
         address: 808 # ACout pv power L1
         type: input
@@ -91,7 +94,8 @@ render: |
         register: 808
         count: 6
     - source: modbus
-      {{- include "modbus" . | indent 4 }}
+      {{- include "modbus-connection" . | indent 4 }}
+      id: 100 # com.victronenergy.system
       register:
         address: 809 # ACout pv power L2
         type: input
@@ -100,7 +104,8 @@ render: |
         register: 808
         count: 6
     - source: modbus
-      {{- include "modbus" . | indent 4 }}
+      {{- include "modbus-connection" . | indent 4 }}
+      id: 100 # com.victronenergy.system
       register:
         address: 810 # ACout pv power L3
         type: input
@@ -109,7 +114,8 @@ render: |
         register: 808
         count: 6
     - source: modbus
-      {{- include "modbus" . | indent 4 }}
+      {{- include "modbus-connection" . | indent 4 }}
+      id: 100 # com.victronenergy.system
       register:
         address: 811 # ACin pv power L1
         type: input
@@ -118,7 +124,8 @@ render: |
         register: 808
         count: 6
     - source: modbus
-      {{- include "modbus" . | indent 4 }}
+      {{- include "modbus-connection" . | indent 4 }}
+      id: 100 # com.victronenergy.system
       register:
         address: 812 # ACin pv power L2
         type: input
@@ -127,7 +134,8 @@ render: |
         register: 808
         count: 6
     - source: modbus
-      {{- include "modbus" . | indent 4 }}
+      {{- include "modbus-connection" . | indent 4 }}
+      id: 100 # com.victronenergy.system
       register:
         address: 813 # ACin pv power L3
         type: input
@@ -136,7 +144,8 @@ render: |
         register: 808
         count: 6
     - source: modbus
-      {{- include "modbus" . | indent 4 }}
+      {{- include "modbus-connection" . | indent 4 }}
+      id: 100 # com.victronenergy.system
       register:
         address: 850 # DC pv power
         type: input
@@ -146,7 +155,8 @@ render: |
   {{- if eq .usage "battery" }}
   power:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
+    {{- include "modbus-connection" . | indent 2 }}
+    id: 100 # com.victronenergy.system
     register:
       address: 842 # active DC power
       type: input
@@ -154,7 +164,8 @@ render: |
     scale: -1
   soc:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
+    {{- include "modbus-connection" . | indent 2 }}
+    id: 100 # com.victronenergy.system
     register:
       address: 843 # Soc
       type: input
@@ -164,7 +175,8 @@ render: |
     convert: float2int
     set:
       source: modbus
-      {{- include "modbus" . | indent 4 }}
+      {{- include "modbus-connection" . | indent 4 }}
+      id: 100 # com.victronenergy.system
       register:
         address: 2901 # limit soc
         type: writesingle

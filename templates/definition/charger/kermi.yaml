@@ -13,7 +13,6 @@ group: heating
 params:
   - name: modbus
     choice: ["tcpip"]
-    id: 40 # WP
   - name: tempsource
     type: choice
     choice: ["warmwater", "buffer"]
@@ -26,7 +25,8 @@ render: |
     timeout: {{ .watchdog }} # re-write at timeout/2
     set:    
       source: modbus
-      {{- include "modbus" . | indent 4 }}
+      {{- include "modbus-connection" . | indent 4 }}
+      id: 40 # WP
       register:
         address: 301 # PV Überschussleistung
         type: writesingle
@@ -34,7 +34,8 @@ render: |
       scale: 10.0
   power:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
+    {{- include "modbus-connection" . | indent 2 }}
+    id: 40 # WP
     register:
       address: 108
       type: holding

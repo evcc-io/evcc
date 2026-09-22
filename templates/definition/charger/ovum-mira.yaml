@@ -18,7 +18,6 @@ requirements:
 params:
   - name: modbus
     choice: ["tcpip"]
-    id: 110 # HSM
   - name: tempsource
     type: choice
     choice: ["warmwater", "buffer"]
@@ -42,7 +41,8 @@ render: |
       2: 1 # Reduzieren -> dim
     get:
       source: modbus
-      {{- include "modbus" . | indent 4 }}
+      {{- include "modbus-connection" . | indent 4 }}
+      id: 110 # HSM
       register:
         address: 55070 # HSM_EMS_PVSTATUS
         type: holding
@@ -55,14 +55,16 @@ render: |
       3: 1 # boost -> Erhöhen
     set:
       source: modbus
-      {{- include "modbus" . | indent 4 }}
+      {{- include "modbus-connection" . | indent 4 }}
+      id: 110 # HSM
       register:
         address: 55070 # HSM_EMS_PVSTATUS
         type: writesingle
         encoding: int16
   setmaxpower:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
+    {{- include "modbus-connection" . | indent 2 }}
+    id: 110 # HSM
     register:
       address: 55076 # HSM_EMS_SOLLPOWER
       type: writemultiple
@@ -79,14 +81,16 @@ render: |
   {{- if eq .tempsource "warmwater" }}
   temp:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
+    {{- include "modbus-connection" . | indent 2 }}
+    id: 110 # HSM
     register:
       address: 55007 # WW_ACTUALTEMPO
       type: holding
       encoding: float32
   limittemp:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
+    {{- include "modbus-connection" . | indent 2 }}
+    id: 110 # HSM
     register:
       address: 55002 # WW_SOLL_PV
       type: holding
@@ -95,14 +99,16 @@ render: |
   {{- if eq .tempsource "buffer" }}
   temp:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
+    {{- include "modbus-connection" . | indent 2 }}
+    id: 110 # HSM
     register:
       address: 55026 # HPUF_PUOT
       type: holding
       encoding: float32
   limittemp:
     source: modbus
-    {{- include "modbus" . | indent 2 }}
+    {{- include "modbus-connection" . | indent 2 }}
+    id: 110 # HSM
     register:
       address: 55021 # PUFFER_SOLL_PV
       type: holding
