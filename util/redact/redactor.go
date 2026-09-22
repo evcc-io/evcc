@@ -53,19 +53,14 @@ func String(src string) string {
 
 	skip := -1 // indent of the redacted key whose nested lines are dropped
 	for _, line := range lines {
-		if strings.TrimSpace(line) == "" {
-			res = append(res, line)
-			continue
-		}
-
 		indent := len(line) - len(strings.TrimLeft(line, " \t"))
-		if skip >= 0 && indent > skip {
+		if skip >= 0 && (indent > skip || strings.TrimSpace(line) == "") {
 			continue
 		}
 
 		skip = -1
-		if configRedactRegex.MatchString(line) {
-			line = configRedactRegex.ReplaceAllString(line, "$1: *****")
+		if redacted := configRedactRegex.ReplaceAllString(line, "$1: *****"); redacted != line {
+			line = redacted
 			skip = indent
 		}
 
