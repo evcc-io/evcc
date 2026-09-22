@@ -45,9 +45,34 @@ func redactableParams() []string {
 	return lo.Uniq(params)
 }
 
-// String redacts a configuration string by replacing sensitive values with *****
+// String redacts a configuration string by replacing sensitive values with *****.
+// Lines nested below a redacted key (block scalars, nested maps, lists) are dropped.
 func String(src string) string {
-	return configRedactRegex.ReplaceAllString(src, "$1: *****")
+	lines := strings.Split(src, "\n")
+	res := make([]string, 0, len(lines))
+
+	skip := -1 // indent of the redacted key whose nested lines are dropped
+	for _, line := range lines {
+		if strings.TrimSpace(line) == "" {
+			res = append(res, line)
+			continue
+		}
+
+		indent := len(line) - len(strings.TrimLeft(line, " \t"))
+		if skip >= 0 && indent > skip {
+			continue
+		}
+
+		skip = -1
+		if configRedactRegex.MatchString(line) {
+			line = configRedactRegex.ReplaceAllString(line, "$1: *****")
+			skip = indent
+		}
+
+		res = append(res, line)
+	}
+
+	return strings.Join(res, "\n")
 }
 
 // Map redacts sensitive keys in a configuration map
