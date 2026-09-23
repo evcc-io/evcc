@@ -45,7 +45,7 @@ type Config struct {
 	TokenURL          string
 	UseBasicAuth      bool
 	// CCI is set for brands affected by the IDPConnect WAF block on the legacy
-	// authorize endpoint (EU Kia/Hyundai), nil for Genesis EU and Hyundai AU
+	// authorize endpoint (EU Kia/Hyundai/Genesis), nil for Hyundai AU
 	CCI *CCIConfig
 }
 
@@ -184,8 +184,8 @@ func (v *Identity) Login(user, password, language, brand string) error {
 		err = errors.New("no access token")
 	}
 
-	// CCI-capable brands (EU Kia/Hyundai) additionally accept the account
-	// password, as generating a legacy refresh_token is WAF-blocked
+	// CCI-capable brands (EU Kia/Hyundai/Genesis) additionally accept the
+	// account password, as generating a legacy refresh_token is WAF-blocked
 	if err != nil && v.config.CCI != nil {
 		refresher = v.refreshCCI
 		token, err = v.loginCCI(password)
