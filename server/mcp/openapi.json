@@ -1045,7 +1045,7 @@
       "post": {
         "operationId": "setLoadpointPlanStrategy",
         "summary": "Set plan strategy",
-        "description": "Updates the charging plan strategy for the loadpoint.",
+        "description": "Updates the charging plan strategy for the loadpoint. Fields omitted in the request keep their current value.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/features/plans"
         },
@@ -1062,7 +1062,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PlanStrategy"
+                "$ref": "#/components/schemas/PlanStrategyUpdate"
               }
             }
           }
@@ -2254,7 +2254,7 @@
       "post": {
         "operationId": "setVehiclePlanStrategy",
         "summary": "Set plan strategy",
-        "description": "Updates the charging plan strategy for the vehicle.",
+        "description": "Updates the charging plan strategy for the vehicle. Fields omitted in the request keep their current value.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/features/plans"
         },
@@ -2271,7 +2271,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PlanStrategy"
+                "$ref": "#/components/schemas/PlanStrategyUpdate"
               }
             }
           }
@@ -2979,6 +2979,19 @@
           },
           "power": {
             "$ref": "#/components/schemas/Power"
+          }
+        }
+      },
+      "PlanStrategyUpdate": {
+        "description": "Charging plan strategy. Fields omitted keep their current value.",
+        "type": "object",
+        "properties": {
+          "continuous": {
+            "description": "Force continuous charging without gaps.",
+            "type": "boolean"
+          },
+          "precondition": {
+            "$ref": "#/components/schemas/Precondition"
           }
         }
       },
