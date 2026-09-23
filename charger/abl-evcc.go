@@ -100,7 +100,7 @@ func NewABLevccFromConfig(ctx context.Context, other map[string]any) (api.Charge
 }
 
 // NewABLevcc creates an ABL EVCC charger
-func NewABLevcc(ctx context.Context, device, uri string, addr uint8, timeout time.Duration) (api.Charger, error) {
+func NewABLevcc(ctx context.Context, device, uri string, addr uint8, timeout time.Duration) (_ api.Charger, err error) {
 	if addr < 1 || addr > 8 {
 		return nil, fmt.Errorf("invalid address: %d", addr)
 	}
@@ -111,6 +111,14 @@ func NewABLevcc(ctx context.Context, device, uri string, addr uint8, timeout tim
 	}
 
 	log := util.NewLogger("abl-evcc")
+
+	// release the shared connection if the charger cannot be created
+	ctx, cancel := context.WithCancel(ctx)
+	defer func() {
+		if err != nil {
+			cancel()
+		}
+	}()
 
 	conn, err := ablevcc.Instance(ctx, log, device, uri, timeout)
 	if err != nil {
