@@ -1,0 +1,48 @@
+template: roche-energy-rel261
+covers: ["roche-energy"]
+products:
+  - brand: Roche Energy
+    description:
+      generic: REL261
+requirements:
+  description:
+    de: |
+      AC-gekoppelter Gewerbespeicher (261 kWh, 125 kW) mit integriertem PCS. Nur Messwerte, keine Batteriesteuerung.
+
+      Modbus TCP muss im HMI des Speichers unter „Remote Management" aktiviert sein. Leistung und SoC liegen auf unterschiedlichen Modbus-IDs: PCS (ID 2) und BMS (ID 34).
+
+      Die Leistung (Register 30135) spiegelt die vom PCS umgesetzte Soll-Leistung und ist kein unabhängiger Messwert. Wird der Speicher extern gesteuert und folgt er dem Kommando nicht (z. B. bei einer PCS-Störung), weicht der Wert von der tatsächlichen Leistung ab.
+    en: |
+      AC-coupled commercial storage cabinet (261 kWh, 125 kW) with integrated PCS. Measurements only, no battery control.
+
+      Modbus TCP must be enabled in the cabinet's HMI under "Remote Management". Power and SoC are served on different Modbus IDs: PCS (ID 2) and BMS (ID 34).
+
+      Power (register 30135) mirrors the setpoint applied by the PCS and is not an independent measurement. If the cabinet is controlled externally and does not follow the command (e.g. during a PCS fault), the value deviates from the actual power.
+params:
+  - name: usage
+    choice: ["battery"]
+  - name: host
+  - name: port
+    default: 502
+  - preset: battery-capacity
+render: |
+  type: custom
+  power:
+    source: modbus
+    uri: {{ joinHostPort .host .port }}
+    id: 2 # PCS
+    register:
+      address: 30135 # active power (int32, 0.1 kW, positive = discharging)
+      type: input
+      decode: int32
+    scale: 100
+  soc:
+    source: modbus
+    uri: {{ joinHostPort .host .port }}
+    id: 34 # BMS
+    register:
+      address: 30004 # SoC (uint16, 0.01 %)
+      type: input
+      decode: uint16
+    scale: 0.01
+  {{- include "battery-capacity" . }}
