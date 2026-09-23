@@ -790,7 +790,7 @@
     "optimizer": {
       "description": "Analyse les prévisions d'ensoleillement, les prix de l'électricité et vos habitudes de consommation afin d'optimiser la stratégie de gestion de la batterie et de recharge. Les données sont transmises au service d'optimisation evcc pour y être traitées. Se contente actuellement de calculer est visualiser les données, il n’y a pas encore de contrôle d’appareils possible.",
       "enable": "Activer l'optimiseur",
-      "info": "Cela peut prendre quelques minutes avant que le menu apparaisse. Pour les nouvelles installations, cela peut prendre jusqu’à 24h avant qu’evcc ne collecte suffisamment de données.",
+      "info": "Pour les nouvelles installations, cela peut prendre jusqu’à 24h avant qu’evcc ne collecte suffisamment de données.",
       "title": "Optimiseur"
     },
     "options": {
@@ -1232,6 +1232,9 @@
   },
   "issue": {
     "additional": {
+      "copied": "copié !",
+      "copy": "copier",
+      "copySelected": "copie sélectionnée",
       "description": "Merci d’inclure la configuration et les journaux afin de nous permettre de reproduire le problème rapidement. Nous vous encourageons à partager autant d’information que possible. L’état n’est normalement pas nécessaire.",
       "include": "inclure",
       "lines": "lignes",
