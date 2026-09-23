@@ -1310,8 +1310,9 @@
       "below": "{value} below",
       "breakdown": "Breakdown",
       "deviation": "Deviation",
-      "expectedToday": "expected today",
+      "expectedTomorrow": "expected tomorrow",
       "produced": "Produced",
+      "remainingToday": "remaining today",
       "selfConsumed": "{value} self-consumed",
       "title": "Production"
     },

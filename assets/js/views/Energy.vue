@@ -188,6 +188,14 @@
 										<MixBar :segments="pvBreakdown" :tooltip="breakdownRows" />
 									</Stat>
 								</template>
+								<template v-if="tomorrowForecast !== undefined" #remaining>
+									<Stat
+										class="mt-3"
+										:number="tomorrowForecast"
+										:format="(v: number) => fmtKWh(v)"
+										:sub="$t('energy.production.expectedTomorrow')"
+									/>
+								</template>
 								<template v-if="forecastDeviation" #forecast>
 									<ForecastDeviation
 										class="mt-3"
@@ -846,11 +854,17 @@ export default defineComponent({
 				this.from.toDateString() === new Date().toDateString()
 			);
 		},
+		solarScale(): number {
+			const scale = store.state.forecast?.solar?.scale;
+			return store.state.solarAdjusted && scale ? scale : 1;
+		},
 		remainingForecast(): number | undefined {
-			const solar = store.state.forecast?.solar;
-			if (!solar?.today) return undefined;
-			const scale = store.state.solarAdjusted && solar.scale ? solar.scale : 1;
-			return solar.today.energy * scale;
+			const today = store.state.forecast?.solar?.today;
+			return today ? today.energy * this.solarScale : undefined;
+		},
+		tomorrowForecast(): number | undefined {
+			const tomorrow = store.state.forecast?.solar?.tomorrow;
+			return tomorrow ? tomorrow.energy * this.solarScale : undefined;
 		},
 		selfConsumedLabel(): string {
 			return this.$t("energy.production.selfConsumed", {
@@ -886,12 +900,13 @@ export default defineComponent({
 				},
 			];
 			if (this.inFlightDay && this.remainingForecast !== undefined) {
+				// own key: a separate card without the accuracy chart and a fresh number animation
 				list.push({
-					key: "forecast",
+					key: "remaining",
 					label: this.$t("energy.group.forecast"),
 					number: this.remainingForecast,
-					format: (v: number) => `+ ${this.fmtKWh(v)}`,
-					sub: this.$t("energy.production.expectedToday"),
+					format: (v: number) => this.fmtKWh(v),
+					sub: this.$t("energy.production.remainingToday"),
 				});
 			} else if (this.forecastTotal > 0) {
 				// absolute error per bucket, so misses in both directions do not cancel out

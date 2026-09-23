@@ -2,7 +2,7 @@
 	<!-- the wrapper is the query container, rules cannot address the container itself -->
 	<div class="container-wrapper">
 		<div class="stat" :class="{ 'stat--compact': compact, 'stat--aside': $slots['aside'] }">
-			<div class="label text-uppercase" :class="alignClass">{{ label }}</div>
+			<div v-if="label" class="label text-uppercase" :class="alignClass">{{ label }}</div>
 			<div
 				v-if="format"
 				class="value fw-bold text-truncate"
@@ -12,7 +12,7 @@
 			</div>
 			<div v-if="sub || $slots['sub']" class="sub" :class="alignClass">
 				<slot name="sub">
-					<span v-tooltip="tooltip" :class="{ hint: tooltip }">{{ sub }}</span>
+					<span v-tooltip="tooltip" :class="{ hint: tooltip?.length }">{{ sub }}</span>
 				</slot>
 			</div>
 			<div v-if="$slots['aside']" class="aside"><slot name="aside" /></div>
@@ -39,7 +39,8 @@ export default defineComponent({
 		number: { type: Number, default: 0 },
 		format: Function as PropType<(n: number) => string>,
 		sub: String,
-		tooltip: String,
+		// text or table rows, see the tooltip directive
+		tooltip: [String, Array] as PropType<string | string[][]>,
 		valueClass: String,
 		compact: Boolean,
 		// Bootstrap alignment suffixes, several for responsive changes: "center lg-start"

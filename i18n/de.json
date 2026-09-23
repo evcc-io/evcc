@@ -1310,8 +1310,9 @@
       "below": "{value} darunter",
       "breakdown": "Aufteilung",
       "deviation": "Abweichung",
-      "expectedToday": "heute noch erwartet",
+      "expectedTomorrow": "morgen erwartet",
       "produced": "Erzeugt",
+      "remainingToday": "heute verbleibend",
       "selfConsumed": "{value} selbst verbraucht",
       "title": "Erzeugung"
     },

@@ -60,18 +60,10 @@
 							:label="energyLabel"
 							:number="energy"
 							:format="(v: number) => fmtKWh(v)"
+							:sub="sourceText"
+							:tooltip="sourceRows"
 							compact
-						>
-							<template v-if="flow" #sub>
-								<SourceMix
-									class="source-mix"
-									:flows="flow.flows"
-									:sink="sink"
-									:energy="energy"
-									:color="color"
-								/>
-							</template>
-						</Stat>
+						/>
 					</div>
 					<div v-if="cost !== undefined && price !== undefined" class="col-6 col-lg-12">
 						<Stat
@@ -103,9 +95,8 @@ import formatter from "@/mixins/formatter";
 import { CURRENCY } from "@/types/evcc";
 import { PERIODS } from "../Sessions/types";
 import { ENTITY_CHART, type FlowResult, type FlowSink } from "./types";
-import SourceMix from "./SourceMix.vue";
 import DeviceColorDot from "../Helper/DeviceColorDot.vue";
-import { sumEnergy } from "./mix";
+import { SOURCES, sourceShares, sumEnergy } from "./mix";
 
 // one entity of a sink group (consumer of home, loadpoint): bars or pattern chart with
 // energy, source mix and cost beside it. The header closes when `closable`
@@ -117,7 +108,6 @@ export default defineComponent({
 		PatternChart,
 		IconSelectGroup,
 		IconSelectItem,
-		SourceMix,
 		DeviceColorDot,
 		CardHeader,
 	},
@@ -170,6 +160,30 @@ export default defineComponent({
 		},
 	},
 	computed: {
+		// the first two sources in order from good to bad, e.g. "40% solar, 10% battery",
+		// the tooltip lists all of them
+		sourceText(): string {
+			if (!this.flow) return "";
+			const shares = sourceShares(this.flow.flows, this.sink);
+			return SOURCES.filter((from) => shares[from] > 0)
+				.slice(0, 2)
+				.map(
+					(from) =>
+						`${this.fmtPercentage(shares[from])} ${this.$t(`energy.consumers.source.${from}`)}`
+				)
+				.join(", ");
+		},
+		// every source with its share and energy, for the tooltip of the source line
+		sourceRows(): string[][] {
+			if (!this.flow) return [];
+			const flows = this.flow.flows.filter((f) => f.to === this.sink);
+			const shares = sourceShares(flows, this.sink);
+			return SOURCES.filter((from) => shares[from] > 0).map((from) => [
+				this.$t(`energy.consumers.source.${from}`),
+				this.fmtPercentage(shares[from]),
+				this.fmtKWh(flows.filter((f) => f.from === from).reduce((a, f) => a + f.energy, 0)),
+			]);
+		},
 		chartOptions(): { value: ENTITY_CHART; name: string; icon: object }[] {
 			return [
 				{ value: ENTITY_CHART.BARS, icon: BarChartIcon },
@@ -204,10 +218,6 @@ export default defineComponent({
 }
 .chart-col {
 	min-width: 0;
-}
-/* a bar wider than the number reads as a chart of its own */
-.source-mix {
-	max-width: 150px;
 }
 /* fixed column beside the chart so the chart width does not depend on the numbers,
    spread between the chart body's top and bottom, above the axis labels */
