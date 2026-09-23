@@ -96,9 +96,19 @@ func TestTransactRejected(t *testing.T) {
 func TestTransactTimeout(t *testing.T) {
 	c := testConnection(t, "")
 
+	var dials int
+	dial := c.dial
+	c.dial = func() (port, error) {
+		dials++
+		return dial()
+	}
+
 	_, err := c.Transact(1, 2, "")
 	require.Error(t, err)
 	assert.NotErrorIs(t, err, ErrRejected)
+
+	// a late reply could be taken for the answer to a retry
+	assert.Equal(t, 1, dials, "timed out command must not be retried")
 }
 
 // a late reply of another module must not restart the timeout

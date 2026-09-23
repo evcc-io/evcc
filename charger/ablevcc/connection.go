@@ -185,7 +185,8 @@ func (c *Connection) Transact(addr, cmd uint8, payload string) (string, error) {
 	var res string
 	var err error
 
-	// retry once on communication error, but never on a rejected command
+	// retry once on connection loss. Never retry a rejected or timed out command:
+	// without transaction ids a late reply would be taken for the retry's answer.
 	for range 2 {
 		if res, err = c.transact(addr, cmd, payload); err == nil || errors.Is(err, ErrRejected) {
 			break
@@ -193,6 +194,10 @@ func (c *Connection) Transact(addr, cmd uint8, payload string) (string, error) {
 
 		// drop the connection so that the next attempt reconnects
 		c.close()
+
+		if errors.Is(err, os.ErrDeadlineExceeded) {
+			break
+		}
 	}
 
 	return res, err
