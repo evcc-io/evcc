@@ -377,12 +377,14 @@ func (c *Zaptec) ConnectionDuration() (time.Duration, error) {
 		session = o.ValueAsString
 	}
 
-	if session != c.session {
+	// an empty identifier carries no swap information: the observation may be missing
+	// from a single state response or the session may have ended while still plugged in
+	if session != "" && session != c.session {
 		c.session = session
 		c.sessionStart = time.Now()
 	}
 
-	if session == "" {
+	if c.sessionStart.IsZero() {
 		return 0, nil
 	}
 

@@ -147,10 +147,11 @@ export default function setupRouter(i18n: VueI18nInstance) {
         component: () => import("./views/Log.vue"),
         beforeEnter: ensureAuth,
         props: (route) => {
-          const { areas, level } = route.query;
+          const { areas, level, q } = route.query;
           return {
             areas: typeof areas === "string" ? areas.split(",") : undefined,
             level: typeof level === "string" ? level : undefined,
+            q: typeof q === "string" ? q : undefined,
           };
         },
       },
