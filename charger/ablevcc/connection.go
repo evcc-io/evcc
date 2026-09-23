@@ -42,6 +42,21 @@ const (
 	Timeout = 2 * time.Second
 )
 
+// Commands of the RS485 ASCII protocol
+const (
+	CmdFirmware   = 1
+	CmdStatus     = 2
+	CmdInputs     = 10
+	CmdGetPwm     = 11
+	CmdSetPwm     = 12
+	CmdGetDefault = 26
+	CmdSetBreak   = 27
+	CmdClearBreak = 28
+	CmdGetBreak   = 29
+	CmdLock       = 30
+	CmdUnlock     = 31
+)
+
 // ErrRejected indicates that the device did not accept the command
 var ErrRejected = errors.New("command rejected")
 

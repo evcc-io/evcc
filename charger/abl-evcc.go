@@ -42,18 +42,6 @@ type ABLevcc struct {
 }
 
 const (
-	ablEvccCmdFirmware   = 1
-	ablEvccCmdStatus     = 2
-	ablEvccCmdInputs     = 10
-	ablEvccCmdGetPwm     = 11
-	ablEvccCmdSetPwm     = 12
-	ablEvccCmdGetDefault = 26
-	ablEvccCmdSetBreak   = 27
-	ablEvccCmdClearBreak = 28
-	ablEvccCmdGetBreak   = 29
-	ablEvccCmdLock       = 30
-	ablEvccCmdUnlock     = 31
-
 	ablEvccPwmMin      = 80  // 8.0%, lower end of the signalling range
 	ablEvccPwmMax      = 970 // 97.0%, upper end of the signalling range
 	ablEvccPwmDisabled = 999 // charging not allowed
@@ -134,12 +122,12 @@ func NewABLevcc(ctx context.Context, device, uri string, addr uint8, timeout tim
 	}
 
 	// verify device presence
-	if _, err := conn.Transact(addr, ablEvccCmdFirmware, ""); err != nil {
+	if _, err := conn.Transact(addr, ablevcc.CmdFirmware, ""); err != nil {
 		return nil, fmt.Errorf("firmware: %w", err)
 	}
 
 	// the available current is limited by the module's default current
-	if v, err := wb.get(ablEvccCmdGetDefault); err == nil {
+	if v, err := wb.get(ablevcc.CmdGetDefault); err == nil {
 		wb.maxA = ablEvccCurrent(v)
 		implement.Has(wb, implement.CurrentLimiter(wb.getMinMaxCurrent))
 	}
@@ -187,13 +175,13 @@ func (wb *ABLevcc) get(cmd uint8) (int, error) {
 }
 
 func (wb *ABLevcc) setPwm(pwm int) error {
-	_, err := wb.conn.Transact(wb.addr, ablEvccCmdSetPwm, fmt.Sprintf("%04d", pwm))
+	_, err := wb.conn.Transact(wb.addr, ablevcc.CmdSetPwm, fmt.Sprintf("%04d", pwm))
 	return err
 }
 
 // Status implements the api.Charger interface
 func (wb *ABLevcc) Status() (api.ChargeStatus, error) {
-	v, err := wb.get(ablEvccCmdStatus)
+	v, err := wb.get(ablevcc.CmdStatus)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -208,7 +196,7 @@ func (wb *ABLevcc) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *ABLevcc) Enabled() (bool, error) {
-	v, err := wb.get(ablEvccCmdGetBreak)
+	v, err := wb.get(ablevcc.CmdGetBreak)
 	if err != nil {
 		return false, err
 	}
@@ -220,9 +208,9 @@ func (wb *ABLevcc) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *ABLevcc) Enable(enable bool) error {
-	pwm, cmd := ablEvccPwmDisabled, uint8(ablEvccCmdSetBreak)
+	pwm, cmd := ablEvccPwmDisabled, uint8(ablevcc.CmdSetBreak)
 	if enable {
-		pwm, cmd = wb.curr, ablEvccCmdClearBreak
+		pwm, cmd = wb.curr, ablevcc.CmdClearBreak
 	}
 
 	// stop an ongoing charge before halting the state machine, apply the
@@ -271,7 +259,7 @@ var _ api.CurrentGetter = (*ABLevcc)(nil)
 
 // GetMaxCurrent implements the api.CurrentGetter interface
 func (wb *ABLevcc) GetMaxCurrent() (float64, error) {
-	v, err := wb.get(ablEvccCmdGetPwm)
+	v, err := wb.get(ablevcc.CmdGetPwm)
 	if err != nil {
 		return 0, err
 	}
@@ -293,13 +281,13 @@ var _ api.Diagnosis = (*ABLevcc)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *ABLevcc) Diagnose() {
-	if s, err := wb.conn.Transact(wb.addr, ablEvccCmdFirmware, ""); err == nil {
+	if s, err := wb.conn.Transact(wb.addr, ablevcc.CmdFirmware, ""); err == nil {
 		fmt.Printf("\tFirmware: %s\n", s)
 	}
-	if v, err := wb.get(ablEvccCmdGetDefault); err == nil {
+	if v, err := wb.get(ablevcc.CmdGetDefault); err == nil {
 		fmt.Printf("\tMax. current: %.1fA\n", ablEvccCurrent(v))
 	}
-	if v, err := wb.get(ablEvccCmdInputs); err == nil {
+	if v, err := wb.get(ablevcc.CmdInputs); err == nil {
 		fmt.Printf("\tEnable input: %t\n", v&1 != 0)
 		fmt.Printf("\tLock input: %t\n", v&2 != 0)
 	}
@@ -310,14 +298,14 @@ var _ api.Resurrector = (*ABLevcc)(nil)
 // WakeUp implements the api.Resurrector interface
 func (wb *ABLevcc) WakeUp() error {
 	// CP off
-	if _, err := wb.conn.Transact(wb.addr, ablEvccCmdLock, ""); err != nil {
+	if _, err := wb.conn.Transact(wb.addr, ablevcc.CmdLock, ""); err != nil {
 		return err
 	}
 
 	time.Sleep(3 * time.Second)
 
 	// CP on
-	_, err := wb.conn.Transact(wb.addr, ablEvccCmdUnlock, "")
+	_, err := wb.conn.Transact(wb.addr, ablevcc.CmdUnlock, "")
 
 	return err
 }
