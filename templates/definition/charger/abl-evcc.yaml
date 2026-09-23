@@ -13,22 +13,14 @@ requirements:
     de: |
       Nur für frühe ABL-Wallboxen mit EVCC-Steuermodul (ohne Modbus).
 
-      Die Anbindung erfolgt über RS485 (38400 Bd, 8N1), entweder mit einem
-      USB-RS485-Adapter (`device`) oder einem Ethernet-RS485-Adapter (`uri`).
-      Der Bus ist an beiden Enden mit je 120 Ω abzuschließen.
-
-      Mehrere Wallboxen an einem Bus: jedem Modul eine eigene Adresse (1..8) zuweisen.
+      Mehrere Wallboxen an einem seriellen Bus: jedem Modul eine eigene Adresse (1..8) zuweisen.
 
       Der maximal einstellbare Ladestrom wird durch den am Modul hinterlegten
       Default-Ladestrom begrenzt (Werkseinstellung 16 A).
     en: |
       For early ABL wallboxes with EVCC control module only (no Modbus).
 
-      Communication uses RS485 (38400 Bd, 8N1), either via a USB-RS485 adapter
-      (`device`) or an Ethernet-RS485 adapter (`uri`).
-      Terminate the bus with 120 Ω at both ends.
-
-      For multiple wallboxes on one bus assign an individual address (1..8) to each module.
+      For multiple wallboxes on a serial bus assign an individual address (1..8) to each module.
 
       The maximum current is limited by the module's default charging current
       (factory setting 16 A).
@@ -44,8 +36,8 @@ params:
     example: /dev/ttyUSB0
   - name: uri
     description:
-      de: TCP-Endpunkt eines Ethernet-RS485-Adapters
-      en: TCP endpoint of an Ethernet-RS485 adapter
+      de: TCP-Endpunkt eines RS485-TCP/IP-Adapters
+      en: TCP endpoint of an RS485-TCP/IP adapter
     help:
       de: z. B. localhost:4196, alternativ zu device
       en: e.g. localhost:4196, alternative to device
