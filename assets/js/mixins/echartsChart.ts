@@ -5,12 +5,12 @@ import { echarts, registerTouchTooltip } from "@/components/Forecast/echarts";
 type WithChartOption = { chartOption: Record<string, unknown> };
 
 // Shared echarts lifecycle: init on a `chartEl` template ref (lazily re-checked
-// so v-if-gated charts work), option updates via deep watch, window resizing,
-// touch tooltips, disposal. Override `applyChartOption`, `onChartInit`,
-// `onTouchTooltipReset` or `resize` for custom behavior.
+// so v-if-gated charts work), option updates via deep watch, resizing with the
+// element (flex and grid lay tiles out after the chart exists), touch tooltips, disposal. Override `applyChartOption`, `onChartInit`,
+// `onTouchTooltipReset`, `onChartTap` or `resize` for custom behavior.
 export default defineComponent({
-  data(): { chart: echarts.ECharts | null } {
-    return { chart: null };
+  data(): { chart: echarts.ECharts | null; observer: ResizeObserver | null } {
+    return { chart: null, observer: null };
   },
   watch: {
     chartOption: {
@@ -25,10 +25,9 @@ export default defineComponent({
   },
   mounted() {
     this.initChart();
-    window.addEventListener("resize", this.resize);
   },
   beforeUnmount() {
-    window.removeEventListener("resize", this.resize);
+    this.observer?.disconnect();
     this.chart?.dispose();
     this.chart = null;
   },
@@ -43,10 +42,18 @@ export default defineComponent({
       }
       if (!el) return;
       this.chart = markRaw(echarts.init(el));
+      this.observer?.disconnect();
+      this.observer = new ResizeObserver(() => this.resize());
+      this.observer.observe(el);
       // hover states jump instead of fading, keeps the dot in sync with the tooltip
       this.chart.setOption({ stateAnimation: { duration: 0 } });
       this.chart.setOption((this as unknown as WithChartOption).chartOption);
-      registerTouchTooltip(this.chart, el, () => this.onTouchTooltipReset());
+      registerTouchTooltip(
+        this.chart,
+        el,
+        () => this.onTouchTooltipReset(),
+        (x, y) => (this.onChartTap as (x: number, y: number) => void)(x, y)
+      );
       this.onChartInit();
     },
     applyChartOption() {
@@ -54,6 +61,8 @@ export default defineComponent({
     },
     onChartInit() {},
     onTouchTooltipReset() {},
+    // tap on touch devices, pixel position relative to the chart element
+    onChartTap() {},
     resize() {
       this.chart?.resize();
     },

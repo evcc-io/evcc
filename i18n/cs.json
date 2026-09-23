@@ -1197,6 +1197,31 @@
     "restartDescription": "Zkusili jste to restartovat?",
     "secondaryActions": "Stále se vám nedaří vyřešit váš problém? Zde jsou některé další možnosti."
   },
+  "energy": {
+    "direction": {
+      "battery": {
+        "energy": "nabito",
+        "returnEnergy": "vybito"
+      },
+      "grid": {
+        "energy": "nakoupeno z distribuce",
+        "returnEnergy": "prodáno do distribuce"
+      },
+      "meter": {
+        "energy": "Energie",
+        "returnEnergy": "Energie (reverse)"
+      }
+    },
+    "group": {
+      "battery": "Baterie",
+      "consumer": "Spotřeba",
+      "forecast": "Předpověď",
+      "grid": "Distribuční síť",
+      "loadpoint": "Nabíjení a vytápění",
+      "meter": "Ďalší měřiče",
+      "pv": "Výroba"
+    }
+  },
   "issue": {
     "additional": {
       "description": "Vložte detaily konfigurace a protokoly jež pomohou reprodukovat problém. Žádáme o co největší sdílnost.",
@@ -1358,35 +1383,6 @@
       "consumption": "Spotřeba",
       "feedIn": "Export",
       "title": "Externí limit: aktívní"
-    },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "nabito",
-          "returnEnergy": "vybito"
-        },
-        "grid": {
-          "energy": "nakoupeno z distribuce",
-          "returnEnergy": "prodáno do distribuce"
-        },
-        "meter": {
-          "energy": "Energie",
-          "returnEnergy": "Energie (reverse)"
-        }
-      },
-      "download": "Stáhnout",
-      "empty": "Pro zvolený úsek nejsou k dispozici historická data.",
-      "group": {
-        "battery": "Baterie",
-        "consumer": "Spotřeba",
-        "forecast": "Předpověď",
-        "grid": "Distribuční síť",
-        "loadpoint": "Nabíjení a vytápění",
-        "meter": "Ďalší měřiče",
-        "pv": "Výroba"
-      },
-      "otherConsumers": "Ostatní",
-      "title": "Historie"
     },
     "loadpoint": {
       "avgPrice": "⌀ Cena",

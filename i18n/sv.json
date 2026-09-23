@@ -1223,6 +1223,31 @@
     "restartDescription": "Har du testat att starta om?",
     "secondaryActions": "Lyckas du inte lösa problemet? Här finns mer hjälp."
   },
+  "energy": {
+    "direction": {
+      "battery": {
+        "energy": "laddad",
+        "returnEnergy": "urladdad"
+      },
+      "grid": {
+        "energy": "importerad",
+        "returnEnergy": "exporterad"
+      },
+      "meter": {
+        "energy": "Energi",
+        "returnEnergy": "Energi (baklänges)"
+      }
+    },
+    "group": {
+      "battery": "Batteri",
+      "consumer": "Förbrukning",
+      "forecast": "Prognos",
+      "grid": "Nät",
+      "loadpoint": "Laddning & uppvärmning",
+      "meter": "Extra mätare",
+      "pv": "Produktion"
+    }
+  },
   "issue": {
     "additional": {
       "description": "Inkludera konfiguration och loggar för att hjälpa oss att återskapa problemet snabbt. Vi uppmuntrar till att dela så mycket som möjligt. Status behövs normalt inte.",
@@ -1387,35 +1412,6 @@
       "consumption": "Förbrukning",
       "feedIn": "Inmatning",
       "title": "Extern begränsning"
-    },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "laddad",
-          "returnEnergy": "urladdad"
-        },
-        "grid": {
-          "energy": "importerad",
-          "returnEnergy": "exporterad"
-        },
-        "meter": {
-          "energy": "Energi",
-          "returnEnergy": "Energi (baklänges)"
-        }
-      },
-      "download": "Ladda hem",
-      "empty": "Ingen data för aktuell tidsperiod tillgänglig.",
-      "group": {
-        "battery": "Batteri",
-        "consumer": "Förbrukning",
-        "forecast": "Prognos",
-        "grid": "Nät",
-        "loadpoint": "Laddning & uppvärmning",
-        "meter": "Extra mätare",
-        "pv": "Produktion"
-      },
-      "otherConsumers": "Andra",
-      "title": "Historik"
     },
     "loadpoint": {
       "avgPrice": "⌀ pris",

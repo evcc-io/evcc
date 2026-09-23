@@ -1230,6 +1230,31 @@
     "restartDescription": "Skúsili ste to vypnúť a znova zapnúť?",
     "secondaryActions": "Stále neviete vyriešiť svoj problém? Tu je niekoľko ďalších, ale náročnejších možností."
   },
+  "energy": {
+    "direction": {
+      "battery": {
+        "energy": "nabité",
+        "returnEnergy": "vybité"
+      },
+      "grid": {
+        "energy": "importované",
+        "returnEnergy": "exportované"
+      },
+      "meter": {
+        "energy": "Energia",
+        "returnEnergy": "Energia (spätná)"
+      }
+    },
+    "group": {
+      "battery": "Batéria",
+      "consumer": "Spotreba",
+      "forecast": "Predpoveď",
+      "grid": "Sieť",
+      "loadpoint": "Nabíjanie a vykurovanie",
+      "meter": "Dodatočné merače",
+      "pv": "Výroba"
+    }
+  },
   "issue": {
     "additional": {
       "description": "Priložte konfiguráciu a protokoly, ktoré nám pomôžu problém rýchlo zreprodukovať. Odporúčame zdieľať čo najviac údajov. Stav zvyčajne nie je potrebný.",
@@ -1403,35 +1428,6 @@
       "consumption": "Spotreba",
       "feedIn": "Napájanie",
       "title": "Externý limit aktívny"
-    },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "nabité",
-          "returnEnergy": "vybité"
-        },
-        "grid": {
-          "energy": "importované",
-          "returnEnergy": "exportované"
-        },
-        "meter": {
-          "energy": "Energia",
-          "returnEnergy": "Energia (spätná)"
-        }
-      },
-      "download": "Stiahnuť",
-      "empty": "Pre toto časové obdobie nie sú k dispozícii žiadne historické údaje.",
-      "group": {
-        "battery": "Batéria",
-        "consumer": "Spotreba",
-        "forecast": "Predpoveď",
-        "grid": "Sieť",
-        "loadpoint": "Nabíjanie a vykurovanie",
-        "meter": "Dodatočné merače",
-        "pv": "Výroba"
-      },
-      "otherConsumers": "Ostatné",
-      "title": "Priebeh"
     },
     "loadpoint": {
       "avgPrice": "⌀ Cena",

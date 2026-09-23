@@ -1230,6 +1230,31 @@
     "restartDescription": "Har du prøvet at slukke og tænde den igen?",
     "secondaryActions": "Stadig ikke i stand til at løse dit problem? Her er nogle mere ekstreme muligheder."
   },
+  "energy": {
+    "direction": {
+      "battery": {
+        "energy": "opladet",
+        "returnEnergy": "afladet"
+      },
+      "grid": {
+        "energy": "importeret",
+        "returnEnergy": "eksporteret"
+      },
+      "meter": {
+        "energy": "Energi",
+        "returnEnergy": "Energi (eksport)"
+      }
+    },
+    "group": {
+      "battery": "Batteri",
+      "consumer": "Forbrug",
+      "forecast": "Prognose",
+      "grid": "Elnet",
+      "loadpoint": "Opladning og opvarmning",
+      "meter": "Ekstra målere",
+      "pv": "Produktion"
+    }
+  },
   "issue": {
     "additional": {
       "description": "Inkludér konfiguration og logfiler for at hjælpe os med hurtigt at genskabe problemet. Vi opfordrer til at dele så meget som muligt. Status er som regel ikke nødvendig.",
@@ -1403,35 +1428,6 @@
       "consumption": "Forbrug",
       "feedIn": "Indfødning",
       "title": "Ekstern begrænsning er aktiv"
-    },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "opladet",
-          "returnEnergy": "afladet"
-        },
-        "grid": {
-          "energy": "importeret",
-          "returnEnergy": "eksporteret"
-        },
-        "meter": {
-          "energy": "Energi",
-          "returnEnergy": "Energi (eksport)"
-        }
-      },
-      "download": "Download",
-      "empty": "Ingen historik i dette tidsinterval.",
-      "group": {
-        "battery": "Batteri",
-        "consumer": "Forbrug",
-        "forecast": "Prognose",
-        "grid": "Elnet",
-        "loadpoint": "Opladning og opvarmning",
-        "meter": "Ekstra målere",
-        "pv": "Produktion"
-      },
-      "otherConsumers": "Andet",
-      "title": "Historik"
     },
     "loadpoint": {
       "avgPrice": "⌀ pris",

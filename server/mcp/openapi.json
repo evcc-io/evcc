@@ -2613,24 +2613,10 @@
         ],
         "parameters": [
           {
-            "name": "from",
-            "in": "query",
-            "description": "Start time (RFC3339)",
-            "schema": {
-              "type": "string",
-              "format": "date-time",
-              "example": "2026-07-01T00:00:00Z"
-            }
+            "$ref": "#/components/parameters/historyFrom"
           },
           {
-            "name": "to",
-            "in": "query",
-            "description": "End time (RFC3339)",
-            "schema": {
-              "type": "string",
-              "format": "date-time",
-              "example": "2026-07-02T00:00:00Z"
-            }
+            "$ref": "#/components/parameters/historyTo"
           },
           {
             "name": "aggregate",
@@ -2719,12 +2705,290 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object"
+                  "type": "array",
+                  "description": "One series per entity, or per group when grouped",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "title": {
+                        "type": "string",
+                        "description": "Entity title, omitted when grouped"
+                      },
+                      "group": {
+                        "type": "string",
+                        "enum": [
+                          "pv",
+                          "battery",
+                          "grid",
+                          "loadpoint",
+                          "consumer",
+                          "meter",
+                          "home",
+                          "forecast",
+                          "temperature"
+                        ]
+                      },
+                      "isTemp": {
+                        "type": "boolean",
+                        "description": "socTemp values are temperatures, not state of charge"
+                      },
+                      "data": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "start": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "end": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "energy": {
+                              "type": "number",
+                              "description": "kWh"
+                            },
+                            "returnEnergy": {
+                              "type": "number",
+                              "description": "kWh exported or discharged"
+                            },
+                            "socTemp": {
+                              "type": "number",
+                              "description": "State of charge in percent or temperature of a single slot"
+                            },
+                            "socTempMin": {
+                              "type": "number",
+                              "description": "Lowest slot value in an aggregated bucket"
+                            },
+                            "socTempMax": {
+                              "type": "number",
+                              "description": "Highest slot value in an aggregated bucket"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
               },
               "text/csv": {
                 "schema": {
                   "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters or database offline"
+          }
+        }
+      }
+    },
+    "/history/flow": {
+      "get": {
+        "operationId": "getEnergyFlow",
+        "summary": "Energy flow",
+        "description": "Returns the energy attributed from sources (pv, battery, grid) to sinks (home, battery, loadpoint, export) over the period, plus grid cost and CO2 sums where tariff data exists.",
+        "tags": [
+          "experimental"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/historyFrom"
+          },
+          {
+            "$ref": "#/components/parameters/historyTo"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Energy flow data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "flows": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "from": {
+                            "type": "string",
+                            "enum": [
+                              "pv",
+                              "battery",
+                              "grid"
+                            ]
+                          },
+                          "to": {
+                            "type": "string",
+                            "enum": [
+                              "home",
+                              "battery",
+                              "loadpoint",
+                              "export"
+                            ]
+                          },
+                          "energy": {
+                            "type": "number",
+                            "description": "kWh"
+                          }
+                        }
+                      }
+                    },
+                    "cost": {
+                      "type": "object",
+                      "description": "Grid cost sums, omitted without grid price data",
+                      "properties": {
+                        "import": {
+                          "type": "number"
+                        },
+                        "export": {
+                          "type": "number"
+                        },
+                        "importEnergy": {
+                          "type": "number",
+                          "description": "kWh priced"
+                        },
+                        "exportEnergy": {
+                          "type": "number",
+                          "description": "kWh priced"
+                        },
+                        "consumption": {
+                          "type": "number",
+                          "description": "Cost of home and loadpoint energy, grid share at grid price, self-produced share at feed-in price"
+                        },
+                        "consumptionEnergy": {
+                          "type": "number",
+                          "description": "kWh priced"
+                        },
+                        "home": {
+                          "type": "number",
+                          "description": "Share of consumption cost for home only"
+                        },
+                        "homeEnergy": {
+                          "type": "number",
+                          "description": "kWh priced"
+                        },
+                        "baseline": {
+                          "type": "number",
+                          "description": "Consumption priced at the average grid price"
+                        },
+                        "avgGrid": {
+                          "type": "number"
+                        }
+                      }
+                    },
+                    "co2": {
+                      "type": "object",
+                      "description": "Grid CO2 sums in kg, omitted without CO2 data",
+                      "properties": {
+                        "consumption": {
+                          "type": "number",
+                          "description": "Emissions of the grid share that went to home and loadpoints"
+                        },
+                        "consumptionEnergy": {
+                          "type": "number",
+                          "description": "kWh"
+                        },
+                        "baseline": {
+                          "type": "number"
+                        },
+                        "avgCo2": {
+                          "type": "number",
+                          "description": "g/kWh"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters or database offline"
+          }
+        }
+      }
+    },
+    "/history/tariffs": {
+      "get": {
+        "operationId": "getTariffHistory",
+        "summary": "Tariff history",
+        "description": "Returns the persisted 15 minute tariff slots in the period, or their averages per hour, day or month.",
+        "tags": [
+          "experimental"
+        ],
+        "parameters": [
+          {
+            "name": "aggregate",
+            "in": "query",
+            "description": "Bucket size, 15 minute slots by default",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "15m",
+                "hour",
+                "day",
+                "month"
+              ]
+            }
+          },
+          {
+            "$ref": "#/components/parameters/historyFrom"
+          },
+          {
+            "$ref": "#/components/parameters/historyTo"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tariff slots",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "start": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "grid": {
+                        "type": "number",
+                        "description": "Grid price per kWh, the bucket average when aggregated"
+                      },
+                      "gridMin": {
+                        "type": "number",
+                        "description": "Lowest slot price in the bucket, aggregated only"
+                      },
+                      "gridMax": {
+                        "type": "number",
+                        "description": "Highest slot price in the bucket, aggregated only"
+                      },
+                      "feedin": {
+                        "type": "number",
+                        "description": "Feed-in rate per kWh, the bucket average when aggregated"
+                      },
+                      "feedinMin": {
+                        "type": "number"
+                      },
+                      "feedinMax": {
+                        "type": "number"
+                      },
+                      "co2": {
+                        "type": "number",
+                        "description": "g/kWh"
+                      },
+                      "temperature": {
+                        "type": "number",
+                        "description": "°C"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -5555,6 +5819,26 @@
       }
     },
     "parameters": {
+      "historyFrom": {
+        "name": "from",
+        "in": "query",
+        "description": "Start time (RFC3339)",
+        "schema": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2026-07-01T00:00:00Z"
+        }
+      },
+      "historyTo": {
+        "name": "to",
+        "in": "query",
+        "description": "End time (RFC3339)",
+        "schema": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2026-07-02T00:00:00Z"
+        }
+      },
       "adminPassword": {
         "name": "X-Admin-Password",
         "in": "header",

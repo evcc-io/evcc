@@ -121,9 +121,9 @@ test.describe("battery page with multiple batteries", async () => {
     // price range follows the limit: full tariff span at 6 ct, only the
     // 28 ct zone once the limit excludes the base rate
     const range = limit.getByTestId("price-range");
-    await expect(range).toContainText("6.0 ct – 28.0 ct");
+    await expect(range).toContainText("6.0 – 28.0 ct");
     await limit.getByRole("combobox").selectOption("0.28");
-    await expect(range).toContainText("28.0 ct – 28.0 ct");
+    await expect(range).toContainText("28.0 ct");
 
     // switch and limit survive a reload
     await page.reload();

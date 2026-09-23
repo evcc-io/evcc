@@ -520,6 +520,25 @@ body.modal-open .scroll-overlay-fix {
 	cursor: pointer;
 }
 
+/* no double-tap zoom on fast repeated taps (iOS), pinch zoom stays */
+a,
+button,
+label,
+input,
+select,
+[role="button"] {
+	touch-action: manipulation;
+}
+
+/* chart tooltips render here, above the tab bar and clipped to the viewport */
+.chart-tooltip-layer {
+	position: fixed;
+	inset: 0;
+	overflow: clip;
+	pointer-events: none;
+	z-index: 1080;
+}
+
 .v-popper__inner {
 	margin: 0 12px !important;
 }
@@ -658,6 +677,10 @@ input::-webkit-datetime-edit {
 	--bs-tooltip-color: var(--bs-white);
 }
 
+/* v-tooltip rows: as wide as the table needs */
+.tooltip-table {
+	--bs-tooltip-max-width: none;
+}
 .dark .tooltip {
 	--bs-tooltip-bg: var(--bs-white);
 	--bs-tooltip-color: var(--bs-gray-deep);

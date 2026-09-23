@@ -1230,6 +1230,112 @@
     "restartDescription": "Tried turning it off and on again?",
     "secondaryActions": "Still not able to solve your problem? Here are some more heavy-handed options."
   },
+  "energy": {
+    "battery": {
+      "charged": "Charged",
+      "discharged": "Discharged"
+    },
+    "consumers": {
+      "chart": {
+        "bars": "Bars",
+        "pattern": "Pattern"
+      },
+      "consumed": "Consumed",
+      "cost": "Cost",
+      "others": "Others",
+      "source": {
+        "pv": "solar",
+        "battery": "battery",
+        "grid": "grid"
+      },
+      "title": "Consumers"
+    },
+    "direction": {
+      "battery": {
+        "energy": "charged",
+        "returnEnergy": "discharged"
+      },
+      "grid": {
+        "energy": "imported",
+        "returnEnergy": "exported"
+      },
+      "meter": {
+        "energy": "Energy",
+        "returnEnergy": "Energy (reverse)"
+      }
+    },
+    "empty": "No energy data available for this time range.",
+    "flow": {
+      "battery": "Battery",
+      "batteryCharge": "Battery charge",
+      "batteryDischarge": "Battery discharge",
+      "charging": "Charging",
+      "export": "Grid export",
+      "grid": "Grid import",
+      "heating": "Heating",
+      "home": "Consumption",
+      "overview": "Overview",
+      "pv": "Production",
+      "title": "Energy flow",
+      "usage": "Usage"
+    },
+    "grid": {
+      "cost": "Grid cost",
+      "energy": "Energy",
+      "export": "Export",
+      "exportPrice": "Export price",
+      "import": "Import",
+      "importPrice": "Import price",
+      "price": "Price",
+      "revenue": "Feed-in revenue",
+      "showPrices": "show prices",
+      "title": "Grid"
+    },
+    "group": {
+      "battery": "Battery",
+      "consumer": "Consumption",
+      "forecast": "Forecast",
+      "grid": "Grid",
+      "loadpoint": "Charging & Heating",
+      "meter": "Additional meters",
+      "pv": "Production"
+    },
+    "loadpoint": {
+      "charged": "Charged",
+      "used": "Used"
+    },
+    "production": {
+      "accuracy": "Forecast accuracy",
+      "above": "{value} above",
+      "below": "{value} below",
+      "breakdown": "Breakdown",
+      "deviation": "Deviation",
+      "expectedTomorrow": "expected tomorrow",
+      "produced": "Produced",
+      "remainingToday": "remaining today",
+      "selfConsumed": "{value} self-consumed",
+      "title": "Production"
+    },
+    "socTemp": {
+      "charged": "charged",
+      "soc": "charge",
+      "temperature": "temperature",
+      "used": "used"
+    },
+    "stat": {
+      "autarky": "Autarky",
+      "co2Saved": "CO₂ saved",
+      "co2SavedTooltip": "Compared to drawing the consumed {energy} from the grid.",
+      "configure": "Configure now",
+      "gridExport": "Grid export",
+      "gridImport": "Grid import",
+      "noCo2": "No CO₂ data.",
+      "noPrice": "No price data.",
+      "savings": "Savings",
+      "savingsTooltip": "Compared to buying the consumed {energy} from the grid."
+    },
+    "title": "Energy"
+  },
   "issue": {
     "additional": {
       "copied": "copied!",
@@ -1406,35 +1512,6 @@
       "consumption": "Consumption",
       "feedIn": "Feed-in",
       "title": "External limit active"
-    },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "charged",
-          "returnEnergy": "discharged"
-        },
-        "grid": {
-          "energy": "imported",
-          "returnEnergy": "exported"
-        },
-        "meter": {
-          "energy": "Energy",
-          "returnEnergy": "Energy (reverse)"
-        }
-      },
-      "download": "Download",
-      "empty": "No history data available for this time range.",
-      "group": {
-        "battery": "Battery",
-        "consumer": "Consumption",
-        "forecast": "Forecast",
-        "grid": "Grid",
-        "loadpoint": "Charging & Heating",
-        "meter": "Additional meters",
-        "pv": "Production"
-      },
-      "otherConsumers": "Others",
-      "title": "History"
     },
     "loadpoint": {
       "avgPrice": "⌀ Price",
@@ -1867,6 +1944,7 @@
     "battery": "Battery",
     "charge": "Charge",
     "comingSoon": "This page is under construction.",
+    "energy": "Energy",
     "forecast": "Forecast",
     "more": "More",
     "sessions": "Sessions"

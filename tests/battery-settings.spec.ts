@@ -71,7 +71,7 @@ test.describe("battery settings", async () => {
     await page.getByLabel("Enable limit").check();
     await page.getByLabel("Price limit").selectOption({ label: "≤ 50.0 ct/kWh" });
     await expect(page.getByTestId("active-hours")).toHaveText(["Active time", "96 hr"].join(""));
-    await expect(page.locator("body")).toContainText("5.0 ct – 50.0 ct");
+    await expect(page.locator("body")).toContainText("5.0 – 50.0 ct");
 
     await page.getByRole("link", { name: "Charge" }).click();
     await page.getByTestId("energyflow").click();
