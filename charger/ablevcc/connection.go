@@ -91,6 +91,8 @@ func Instance(ctx context.Context, log *util.Logger, device, uri string, timeout
 		}
 
 		instances[key] = conn
+	} else if conn.timeout != timeout {
+		return nil, fmt.Errorf("conflicting timeout %v for shared bus, already using %v", timeout, conn.timeout)
 	}
 
 	conn.refs++

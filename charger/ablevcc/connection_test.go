@@ -226,6 +226,19 @@ func TestInstanceDistinctTransports(t *testing.T) {
 	assert.NotSame(t, c1, c2, "device and uri of the same name must not share the connection")
 }
 
+func TestInstanceConflictingTimeout(t *testing.T) {
+	log := util.NewLogger("test")
+
+	_, err := Instance(t.Context(), log, "", "localhost:14199", time.Second)
+	require.NoError(t, err)
+
+	_, err = Instance(t.Context(), log, "", "localhost:14199", time.Second)
+	require.NoError(t, err)
+
+	_, err = Instance(t.Context(), log, "", "localhost:14199", 3*time.Second)
+	assert.Error(t, err)
+}
+
 // a cancelled context must remove the connection from the pool so that a
 // recreated charger (config reload, failed constructor, device test) gets a fresh one
 func TestInstanceReleased(t *testing.T) {
