@@ -19,8 +19,51 @@
     "successCloseTab": "Ahora puede cerrar esta pestaña.",
     "title": "Estado de la autorización"
   },
+  "battery": {
+    "card": {
+      "charging": "cargando",
+      "discharging": "descargando",
+      "energy": "Energía",
+      "gridCharge": "cargando desde la red",
+      "hold": "descarga bloqueada",
+      "holdCharge": "carga bloqueada",
+      "ofTotal": "de {total}",
+      "power": "Potencia",
+      "soc": "Nivel de batería"
+    },
+    "combined": "Combinado",
+    "config": {
+      "buffer": "El remanente de carga doméstica sobre el {soc} puede ser usado para apoyar a los puntos de carga y retrasa la desconexión en modo inteligente. Iniciar la carga solar automáticamente {start}.",
+      "bufferNone": "La energía de la batería doméstica no se usa en los puntos de carga. Configure un valor por debajo de {soc} para habilitar su uso.",
+      "bufferStart": {
+        "above": "una vez el nivel de batería es superior a {soc}",
+        "full": "una vez la batería está llena",
+        "never": "solo con excedentes suficientes"
+      },
+      "bufferTitle": "Batería como un búfer de carga",
+      "discharge": "Prevenir la descarga de la batería doméstica en modo rápido y durante la carga programada.",
+      "gridDischarge": "Permitir la descarga de la batería doméstica a la red.",
+      "priority": "La batería doméstica tiene prioridad mientras esté por debajo del {soc}. Por encima, los puntos de carga reciben el excedente.",
+      "priorityNone": "El excedente solar va directo a los puntos de carga. Configure un valor por encima de {soc} para priorizar la batería doméstica.",
+      "priorityTitle": "¿Cuál es el destino prioritario de los excedentes?"
+    },
+    "optimizer": {
+      "action": {
+        "charge": "Cargar desde la red",
+        "discharge": "Descargar a la red",
+        "hold": "Evitando la descarga",
+        "holdcharge": "Evitando la carga",
+        "normal": "Operación normal"
+      },
+      "empty": "vacío",
+      "full": "lleno",
+      "highest": "Máximo ({value})",
+      "lowest": "Mínimo ({value})",
+      "suggestion": "Sugerencia"
+    }
+  },
   "batterySettings": {
-    "gridChargeTab": "Carga de red",
+    "gridChargeTab": "Cargando desde la red",
     "modalTitle": "Batería doméstica",
     "noBattery": "No hay baterías configuradas.",
     "usageTab": "Uso de la batería"
@@ -857,6 +900,9 @@
   },
   "issue": {
     "additional": {
+      "copied": "¡Copiado!",
+      "copy": "Copiar",
+      "copySelected": "Copia seleccionada",
       "description": "Incluya la configuración y los registros para ayudarnos a reproducir el problema rápidamente. Le animamos a compartir toda la información posible. Por lo general, no es necesario indicar el estado.",
       "include": "incluir",
       "lines": "líneas",
