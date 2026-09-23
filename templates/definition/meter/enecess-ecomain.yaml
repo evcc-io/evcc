@@ -6,13 +6,13 @@ products:
 requirements:
   description:
     de: |
-      Bindet das enecess ecoMain Energiemonitoring-System über Modbus TCP ein. Für die Netzmessung wird der Hauptstromkreis des ecoMain verwendet; für PV-, Lade- und Zusatzverbrauchsmessungen können Messkanäle des ecoMain oder eines ecoSub verwendet werden.
+      Für die Netzmessung wird der Hauptstromkreis des ecoMain verwendet; für PV-, Lade- und Zusatzverbrauchsmessungen können Messkanäle des ecoMain oder eines ecoSub verwendet werden.
 
-      Dokumentation: [https://www.enecess.eu/pages/documentation](https://www.enecess.eu/pages/documentation)
+      Erfordert ecoMain Firmware 139 oder neuer.
     en: |
-      Connects the enecess ecoMain energy monitoring system via Modbus TCP. Grid metering uses the ecoMain main circuit; PV, charging, and auxiliary metering can use branch channels on the ecoMain or an ecoSub.
+      Grid metering uses the ecoMain main circuit; PV, charging, and auxiliary metering can use branch channels on the ecoMain or an ecoSub.
 
-      Documentation: [https://www.enecess.eu/pages/documentation](https://www.enecess.eu/pages/documentation)
+      Requires ecoMain firmware 139 or later.
 params:
   - name: usage
     choice: ["grid", "pv", "charge", "aux"]
@@ -20,7 +20,7 @@ params:
     choice: ["tcpip"]
     port: 502
     id: 255
-  - name: phases
+  - name: phasecount
     type: choice
     choice: ["1", "3"]
     default: "1"
@@ -33,6 +33,7 @@ params:
       de: Einphasig nur Phase 1 konfigurieren. Dreiphasig zusätzlich Phase 2 und Phase 3 konfigurieren.
       en: For single-phase metering, configure phase 1 only. For three-phase metering, also configure phases 2 and 3.
   - name: device1
+    type: choice
     choice: ["0", "1", "2", "3"]
     default: "0"
     required: true
@@ -66,6 +67,7 @@ params:
       de: Aktivieren, wenn die Leistung für Phase 1 mit umgekehrtem Vorzeichen gemessen wird.
       en: Enable if the power for phase 1 is measured with the opposite sign.
   - name: device2
+    type: choice
     choice: ["0", "1", "2", "3"]
     example: "0"
     usages: ["pv", "charge", "aux"]
@@ -109,6 +111,7 @@ params:
       de: Aktivieren, wenn die Leistung für Phase 2 mit umgekehrtem Vorzeichen gemessen wird.
       en: Enable if the power for phase 2 is measured with the opposite sign.
   - name: device3
+    type: choice
     choice: ["0", "1", "2", "3"]
     example: "0"
     usages: ["pv", "charge", "aux"]
@@ -152,324 +155,123 @@ params:
       de: Aktivieren, wenn die Leistung für Phase 3 mit umgekehrtem Vorzeichen gemessen wird.
       en: Enable if the power for phase 3 is measured with the opposite sign.
 render: |
-  {{- $phases := toString .phases }}
-  {{- if and (ne .usage "grid") (and (ne $phases "1") (ne $phases "3")) }}
-    {{- fail "phases must be 1 or 3" }}
+  {{- define "ecomain-power" }}
+  source: modbus
+  {{- include "modbus" .root }}
+  register:
+    address: {{ .p.power }}
+    type: holding
+    encoding: int32s
+  scale: {{ .p.scale }}
+  block:
+    register: {{ .p.powerblock }}
+    count: {{ .p.powercount }}
+  {{- end }}
+  {{- define "ecomain-electrical" }}
+  source: modbus
+  {{- include "modbus" .root }}
+  register:
+    address: {{ .address }}
+    type: holding
+    encoding: uint16
+  scale: 0.01
+  block:
+    register: {{ .p.elecblock }}
+    count: {{ .p.eleccount }}
+  {{- end }}
+  {{- define "ecomain-energy" }}
+  source: modbus
+  {{- include "modbus" .root }}
+  register:
+    address: {{ .address }}
+    type: holding
+    encoding: uint64s
+  scale: 0.000001
+  {{- end }}
+  {{- $phases := list }}
+  {{- if eq .usage "grid" }}
+  {{- range $i := until 3 }}
+  {{- $phases = append $phases (dict "power" (add 1000 (mul 2 $i)) "scale" 0.01 "powerblock" 1000 "powercount" 8 "voltage" (add 1200 (mul 3 $i)) "current" (add 1201 (mul 3 $i)) "elecblock" 1200 "eleccount" 9) }}
+  {{- end }}
+  {{- else }}
+  {{- $count := 1 }}
+  {{- if eq (toString .phasecount) "3" }}{{ $count = 3 }}{{ end }}
+  {{- $used := list }}
+  {{- range $i := until $count }}
+  {{- $n := add1 $i }}
+  {{- $device := toString (index $ (printf "device%d" $n)) }}
+  {{- $channel := toString (index $ (printf "channel%d" $n)) }}
+  {{- if not (regexMatch "^[0-3]$" $device) }}{{ fail (printf "device%d must be between 0 and 3" $n) }}{{ end }}
+  {{- if not (regexMatch "^([1-9]|10)$" $channel) }}{{ fail (printf "channel%d must be between 1 and 10" $n) }}{{ end }}
+  {{- $key := printf "%s/%s" $device $channel }}
+  {{- if has $key $used }}{{ fail (printf "device%d/channel%d is already used by another phase" $n $n) }}{{ end }}
+  {{- $used = append $used $key }}
+  {{- $d := atoi $device }}
+  {{- $c := sub (atoi $channel) 1 }}
+  {{- $scale := 0.01 }}
+  {{- $energy := add 32 (mul 40 $d) (mul 4 $c) }}
+  {{- $return := add $energy 160 }}
+  {{- if index $ (printf "invert%d" $n) }}
+  {{- $scale = -0.01 }}
+  {{- $forward := $energy }}{{ $energy = $return }}{{ $return = $forward }}
+  {{- end }}
+  {{- $voltage := add 1209 (mul 30 $d) (mul 3 $c) }}
+  {{- $phases = append $phases (dict "power" (add 1008 (mul 20 $d) (mul 2 $c)) "scale" $scale "powerblock" (add 1008 (mul 20 $d)) "powercount" 20 "voltage" $voltage "current" (add1 $voltage) "elecblock" (add 1209 (mul 30 $d)) "eleccount" 30 "energy" $energy "return" $return) }}
+  {{- end }}
   {{- end }}
   type: custom
   {{- if eq .usage "grid" }}
   power:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 1006
-      type: holding
-      encoding: int32s
-    scale: 0.01
-    block:
-      register: 1000
-      count: 8
+    {{- include "ecomain-power" (dict "root" . "p" (dict "power" 1006 "scale" 0.01 "powerblock" 1000 "powercount" 8)) | indent 2 }}
   energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 12
-      type: holding
-      encoding: uint64s
-    scale: 0.000001
+    {{- include "ecomain-energy" (dict "root" . "address" 12) | indent 2 }}
   returnenergy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 28
-      type: holding
-      encoding: uint64s
-    scale: 0.000001
-  powers:
-  {{- range $address := list 1000 1002 1004 }}
-  - source: modbus
-    {{- include "modbus" $ | indent 2 }}
-    register:
-      address: {{ $address }}
-      type: holding
-      encoding: int32s
-    scale: 0.01
-    block:
-      register: 1000
-      count: 8
-  {{- end }}
-  currents:
-  {{- range $index, $address := list 1201 1204 1207 }}
-  - source: js
-    script: "power < 0 ? -current : current"
-    in:
-    - name: current
-      type: float
-      config:
-        source: modbus
-        {{- include "modbus" $ | indent 6 }}
-        register:
-          address: {{ $address }}
-          type: holding
-          encoding: uint16
-        scale: 0.01
-        block:
-          register: 1200
-          count: 9
-    - name: power
-      type: float
-      config:
-        source: modbus
-        {{- include "modbus" $ | indent 6 }}
-        register:
-          address: {{ add 1000 (mul 2 $index) }}
-          type: holding
-          encoding: int32s
-        scale: 0.01
-        block:
-          register: 1000
-          count: 8
-  {{- end }}
-  voltages:
-  {{- range $address := list 1200 1203 1206 }}
-  - source: modbus
-    {{- include "modbus" $ | indent 2 }}
-    register:
-      address: {{ $address }}
-      type: holding
-      encoding: uint16
-    scale: 0.01
-    block:
-      register: 1200
-      count: 9
-  {{- end }}
-  {{- else }}
-  {{- if not (regexMatch "^-?[0-9]+$" (toString .device1)) }}{{ fail "device1 must be an integer between 0 and 3" }}{{ end }}
-  {{- if not (regexMatch "^-?[0-9]+$" (toString .channel1)) }}{{ fail "channel1 must be an integer between 1 and 10" }}{{ end }}
-  {{- if not (regexMatch "^[0-3]$" (toString .device1)) }}{{ fail "device1 must be between 0 and 3" }}{{ end }}
-  {{- if not (regexMatch "^([1-9]|10)$" (toString .channel1)) }}{{ fail "channel1 must be between 1 and 10" }}{{ end }}
-  {{- $device1 := int .device1 }}
-  {{- $channel1 := int .channel1 }}
-  {{- if or (lt $device1 0) (gt $device1 3) }}{{ fail "device1 must be between 0 and 3" }}{{ end }}
-  {{- if or (lt $channel1 1) (gt $channel1 10) }}{{ fail "channel1 must be between 1 and 10" }}{{ end }}
-  {{- $invert1 := eq (lower (toString .invert1)) "true" }}
-  {{- $powerScale1 := 0.01 }}
-  {{- if $invert1 }}{{ $powerScale1 = -0.01 }}{{ end }}
-  {{- $power1 := add 1008 (mul 20 $device1) (mul 2 (sub $channel1 1)) }}
-  {{- $energy1 := add 32 (mul 40 $device1) (mul 4 (sub $channel1 1)) }}
-  {{- $return1 := add 192 (mul 40 $device1) (mul 4 (sub $channel1 1)) }}
-  {{- $voltage1 := add 1209 (mul 30 $device1) (mul 3 (sub $channel1 1)) }}
-  {{- $current1 := add $voltage1 1 }}
-  {{- $energyAddress1 := $energy1 }}
-  {{- $returnAddress1 := $return1 }}
-  {{- if $invert1 }}{{ $energyAddress1 = $return1 }}{{ $returnAddress1 = $energy1 }}{{ end }}
-  {{- if eq $phases "1" }}
+    {{- include "ecomain-energy" (dict "root" . "address" 28) | indent 2 }}
+  {{- else if eq (len $phases) 1 }}
+  {{- $p := first $phases }}
   power:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: {{ $power1 }}
-      type: holding
-      encoding: int32s
-    scale: {{ $powerScale1 }}
-    block:
-      register: 1008
-      count: 80
+    {{- include "ecomain-power" (dict "root" . "p" $p) | indent 2 }}
   energy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: {{ $energyAddress1 }}
-      type: holding
-      encoding: uint64s
-    scale: 0.000001
+    {{- include "ecomain-energy" (dict "root" . "address" $p.energy) | indent 2 }}
   returnenergy:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: {{ $returnAddress1 }}
-      type: holding
-      encoding: uint64s
-    scale: 0.000001
-  currents:
-  - source: js
-    script: "power < 0 ? -current : current"
-    in:
-    - name: current
-      type: float
-      config:
-        source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          address: {{ $current1 }}
-          type: holding
-          encoding: uint16
-        scale: 0.01
-        block:
-          register: 1209
-          count: 120
-    - name: power
-      type: float
-      config:
-        source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          address: {{ $power1 }}
-          type: holding
-          encoding: int32s
-        scale: {{ $powerScale1 }}
-        block:
-          register: 1008
-          count: 80
-  - source: const
-    value: 0
-  - source: const
-    value: 0
+    {{- include "ecomain-energy" (dict "root" . "address" $p.return) | indent 2 }}
   {{- else }}
-  {{- if not (regexMatch "^-?[0-9]+$" (toString .device2)) }}{{ fail "device2 must be an integer between 0 and 3" }}{{ end }}
-  {{- if not (regexMatch "^-?[0-9]+$" (toString .channel2)) }}{{ fail "channel2 must be an integer between 1 and 10" }}{{ end }}
-  {{- if not (regexMatch "^-?[0-9]+$" (toString .device3)) }}{{ fail "device3 must be an integer between 0 and 3" }}{{ end }}
-  {{- if not (regexMatch "^-?[0-9]+$" (toString .channel3)) }}{{ fail "channel3 must be an integer between 1 and 10" }}{{ end }}
-  {{- if not (regexMatch "^[0-3]$" (toString .device2)) }}{{ fail "device2 must be between 0 and 3" }}{{ end }}
-  {{- if not (regexMatch "^([1-9]|10)$" (toString .channel2)) }}{{ fail "channel2 must be between 1 and 10" }}{{ end }}
-  {{- if not (regexMatch "^[0-3]$" (toString .device3)) }}{{ fail "device3 must be between 0 and 3" }}{{ end }}
-  {{- if not (regexMatch "^([1-9]|10)$" (toString .channel3)) }}{{ fail "channel3 must be between 1 and 10" }}{{ end }}
-  {{- $device2 := int .device2 }}
-  {{- $channel2 := int .channel2 }}
-  {{- $device3 := int .device3 }}
-  {{- $channel3 := int .channel3 }}
-  {{- if or (lt $device2 0) (gt $device2 3) }}{{ fail "device2 must be between 0 and 3" }}{{ end }}
-  {{- if or (lt $channel2 1) (gt $channel2 10) }}{{ fail "channel2 must be between 1 and 10" }}{{ end }}
-  {{- if or (lt $device3 0) (gt $device3 3) }}{{ fail "device3 must be between 0 and 3" }}{{ end }}
-  {{- if or (lt $channel3 1) (gt $channel3 10) }}{{ fail "channel3 must be between 1 and 10" }}{{ end }}
-  {{- $key1 := printf "%d/%d" $device1 $channel1 }}
-  {{- $key2 := printf "%d/%d" $device2 $channel2 }}
-  {{- $key3 := printf "%d/%d" $device3 $channel3 }}
-  {{- if eq $key1 $key2 }}{{ fail "device2/channel2 must differ from device1/channel1" }}{{ end }}
-  {{- if eq $key1 $key3 }}{{ fail "device3/channel3 must differ from device1/channel1" }}{{ end }}
-  {{- if eq $key2 $key3 }}{{ fail "device3/channel3 must differ from device2/channel2" }}{{ end }}
-  {{- $power2 := add 1008 (mul 20 $device2) (mul 2 (sub $channel2 1)) }}
-  {{- $energy2 := add 32 (mul 40 $device2) (mul 4 (sub $channel2 1)) }}
-  {{- $return2 := add 192 (mul 40 $device2) (mul 4 (sub $channel2 1)) }}
-  {{- $voltage2 := add 1209 (mul 30 $device2) (mul 3 (sub $channel2 1)) }}
-  {{- $current2 := add $voltage2 1 }}
-  {{- $power3 := add 1008 (mul 20 $device3) (mul 2 (sub $channel3 1)) }}
-  {{- $energy3 := add 32 (mul 40 $device3) (mul 4 (sub $channel3 1)) }}
-  {{- $return3 := add 192 (mul 40 $device3) (mul 4 (sub $channel3 1)) }}
-  {{- $voltage3 := add 1209 (mul 30 $device3) (mul 3 (sub $channel3 1)) }}
-  {{- $current3 := add $voltage3 1 }}
-  {{- $invert2 := eq (lower (toString .invert2)) "true" }}
-  {{- $invert3 := eq (lower (toString .invert3)) "true" }}
-  {{- $powerScale2 := 0.01 }}
-  {{- $powerScale3 := 0.01 }}
-  {{- if $invert2 }}{{ $powerScale2 = -0.01 }}{{ end }}
-  {{- if $invert3 }}{{ $powerScale3 = -0.01 }}{{ end }}
-  {{- $energyAddress2 := $energy2 }}
-  {{- $returnAddress2 := $return2 }}
-  {{- $energyAddress3 := $energy3 }}
-  {{- $returnAddress3 := $return3 }}
-  {{- if $invert2 }}{{ $energyAddress2 = $return2 }}{{ $returnAddress2 = $energy2 }}{{ end }}
-  {{- if $invert3 }}{{ $energyAddress3 = $return3 }}{{ $returnAddress3 = $energy3 }}{{ end }}
-  {{- $powerAddresses := list $power1 $power2 $power3 }}
-  {{- $powerScales := list $powerScale1 $powerScale2 $powerScale3 }}
-  {{- $energies := list $energyAddress1 $energyAddress2 $energyAddress3 }}
-  {{- $returns := list $returnAddress1 $returnAddress2 $returnAddress3 }}
   power:
     source: calc
     add:
-    {{- range $index, $address := $powerAddresses }}
-    - source: modbus
-      {{- include "modbus" $ | indent 4 }}
-      register:
-        address: {{ $address }}
-        type: holding
-        encoding: int32s
-      scale: {{ index $powerScales $index }}
-      block:
-        register: 1008
-        count: 80
+    {{- range $p := $phases }}
+    - {{ include "ecomain-power" (dict "root" $ "p" $p) | indent 4 | trim }}
     {{- end }}
   energy:
     source: calc
     add:
-    {{- range $address := $energies }}
-    - source: modbus
-      {{- include "modbus" $ | indent 4 }}
-      register:
-        address: {{ $address }}
-        type: holding
-        encoding: uint64s
-      scale: 0.000001
+    {{- range $p := $phases }}
+    - {{ include "ecomain-energy" (dict "root" $ "address" $p.energy) | indent 4 | trim }}
     {{- end }}
   returnenergy:
     source: calc
     add:
-    {{- range $address := $returns }}
-    - source: modbus
-      {{- include "modbus" $ | indent 4 }}
-      register:
-        address: {{ $address }}
-        type: holding
-        encoding: uint64s
-      scale: 0.000001
+    {{- range $p := $phases }}
+    - {{ include "ecomain-energy" (dict "root" $ "address" $p.return) | indent 4 | trim }}
     {{- end }}
-  powers:
-  {{- range $index, $address := $powerAddresses }}
-  - source: modbus
-    {{- include "modbus" $ | indent 2 }}
-    register:
-      address: {{ $address }}
-      type: holding
-      encoding: int32s
-    scale: {{ index $powerScales $index }}
-    block:
-      register: 1008
-      count: 80
   {{- end }}
-  currents:
-  {{- range $index, $address := list $current1 $current2 $current3 }}
-  - source: js
-    script: "power < 0 ? -current : current"
-    in:
-    - name: current
-      type: float
-      config:
-        source: modbus
-        {{- include "modbus" $ | indent 6 }}
-        register:
-          address: {{ $address }}
-          type: holding
-          encoding: uint16
-        scale: 0.01
-        block:
-          register: 1209
-          count: 120
-    - name: power
-      type: float
-      config:
-        source: modbus
-        {{- include "modbus" $ | indent 6 }}
-        register:
-          address: {{ index $powerAddresses $index }}
-          type: holding
-          encoding: int32s
-        scale: {{ index $powerScales $index }}
-        block:
-          register: 1008
-          count: 80
+  {{- if eq (len $phases) 3 }}
+  powers:
+  {{- range $p := $phases }}
+  - {{ include "ecomain-power" (dict "root" $ "p" $p) | indent 2 | trim }}
   {{- end }}
   voltages:
-  {{- range $address := list $voltage1 $voltage2 $voltage3 }}
-  - source: modbus
-    {{- include "modbus" $ | indent 2 }}
-    register:
-      address: {{ $address }}
-      type: holding
-      encoding: uint16
-    scale: 0.01
-    block:
-      register: 1209
-      count: 120
+  {{- range $p := $phases }}
+  - {{ include "ecomain-electrical" (dict "root" $ "p" $p "address" $p.voltage) | indent 2 | trim }}
   {{- end }}
+  # current registers are unsigned, direction follows power
+  currents:
+  {{- range $p := $phases }}
+  - source: calc
+    mul:
+    - source: calc
+      sign:
+        {{- include "ecomain-power" (dict "root" $ "p" $p) | indent 6 }}
+    - {{ include "ecomain-electrical" (dict "root" $ "p" $p "address" $p.current) | indent 4 | trim }}
   {{- end }}
   {{- end }}
