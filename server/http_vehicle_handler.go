@@ -164,8 +164,9 @@ func planSocHandler(site site.API) http.HandlerFunc {
 	}
 }
 
-func planStrategyHandlerSetter(r *http.Request, set func(api.PlanStrategy) error) error {
-	var res api.PlanStrategy
+func planStrategyHandlerSetter(r *http.Request, get func() api.PlanStrategy, set func(api.PlanStrategy) error) error {
+	// fields missing in the request keep their current value
+	res := get()
 	if err := json.NewDecoder(r.Body).Decode(&res); err != nil {
 		return err
 	}
@@ -183,7 +184,7 @@ func updatePlanStrategyHandler(site site.API) http.HandlerFunc {
 			return
 		}
 
-		if err := planStrategyHandlerSetter(r, v.SetPlanStrategy); err != nil {
+		if err := planStrategyHandlerSetter(r, v.GetPlanStrategy, v.SetPlanStrategy); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
