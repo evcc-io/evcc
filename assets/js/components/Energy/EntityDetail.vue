@@ -163,7 +163,7 @@ export default defineComponent({
 		// the first two sources in order from good to bad, e.g. "40% solar, 10% battery",
 		// the tooltip lists all of them
 		sourceText(): string {
-			if (!this.flow) return "";
+			if (!this.flow?.flows) return "";
 			const shares = sourceShares(this.flow.flows, this.sink);
 			return SOURCES.filter((from) => shares[from] > 0)
 				.slice(0, 2)
@@ -175,7 +175,7 @@ export default defineComponent({
 		},
 		// every source with its share and energy, for the tooltip of the source line
 		sourceRows(): string[][] {
-			if (!this.flow) return [];
+			if (!this.flow?.flows) return [];
 			const flows = this.flow.flows.filter((f) => f.to === this.sink);
 			const shares = sourceShares(flows, this.sink);
 			return SOURCES.filter((from) => shares[from] > 0).map((from) => [
