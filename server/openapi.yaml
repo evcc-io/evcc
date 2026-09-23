@@ -842,6 +842,31 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/BooleanResult"
+  /config/optimizerautomatic/{value}:
+    post:
+      operationId: setOptimizerAutomatic
+      summary: Enable/disable optimizer automatic mode
+      description: "Let the optimizer directly control pv/minpv loadpoints and the home battery instead of only advising. Requires a sponsor token."
+      security:
+        - cookieAuth: []
+        - bearerAuth: []
+      tags:
+        - experimental
+      parameters:
+        - name: value
+          description: Enable or disable automatic mode.
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - "true"
+              - "false"
+              - "1"
+              - "0"
+      responses:
+        "200":
+          $ref: "#/components/responses/BooleanResult"
   /smartfeedinprioritylimit:
     delete:
       operationId: removeGlobalSmartFeedInPriorityLimit
