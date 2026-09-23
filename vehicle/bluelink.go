@@ -124,6 +124,17 @@ func NewGenesisFromConfig(other map[string]any) (api.Vehicle, error) {
 		PushType:          "GCM",
 		LoginFormHost:     "https://idpconnect-eu.genesis.com",
 		Brand:             "genesis",
+		// OneApp/CCI login (Genesis EU is WAF-blocked the same way as Kia/Hyundai,
+		// see hyundai_kia_connect_api#1278 — blocked by client_id, not by port)
+		CCI: &bluelink.CCIConfig{
+			OneAppClientID:       "50e3b8b0-ced5-43b7-8a42-f86ac92fe50e",
+			OneAppRedirectURI:    "https://oneapp.genesis.com/redirect",
+			APIURL:               "https://cci-api-eu.genesis.com",
+			PackageID:            "com.genesis.oneapp.eu",
+			ClientName:           "genesis",
+			OSVersion:            "18.7",
+			NotificationProvider: "APNS",
+		},
 	}
 
 	return newBluelinkFromConfig("genesis", other, settings)
