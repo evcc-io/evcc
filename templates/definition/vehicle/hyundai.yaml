@@ -8,9 +8,13 @@ requirements:
     en: |
       The password field accepts either a `refresh_token` ([instructions](https://github.com/evcc-io/evcc/wiki/Hyundai-Kia:-Refresh-Token)) or, for the Europe region, your account's password.
 
+      Note: since Kia/Hyundai blocked the legacy login flow in August 2026, external tools can no longer generate a *new* `refresh_token` — only one obtained before that change still works. If you don't already have one, use your account's password instead.
+
       Some models (e.g. Kona) switch internally to 2 phases at low charging currents (< 8A). In cases where the wallbox also measures the phase currents, this leads to undesirable fluctuations in the charging power. The remedy here is to set the minimum charging current to 8A.
     de: |
       In das Passwort-Feld kann entweder ein `refresh_token` ([Anleitung](https://github.com/evcc-io/evcc/wiki/Hyundai-Kia:-Refresh-Token)) oder, für die Region Europa, das Passwort deines Kontos eingetragen werden.
+
+      Hinweis: Seit Kia/Hyundai im August 2026 den alten Login-Flow gesperrt haben, können externe Tools keinen *neuen* `refresh_token` mehr erzeugen — nur ein bereits vorher erzeugter funktioniert noch. Falls du noch keinen hast, nutze stattdessen das Passwort deines Kontos.
 
       Manche Modelle (z.B. Kona) schalten bei geringen Ladeströmen (< 8A) intern auf 2 Phasen um. In den Fällen, in denen die Wallbox auch die Phasenströme misst, führt das zu unerwünschten Schwankungen der Ladeleistung. Abhilfe schafft hier, den Mindestladestrom auf 8A zu setzen.
 params:
