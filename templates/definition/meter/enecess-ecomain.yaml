@@ -155,47 +155,93 @@ params:
       de: Aktivieren, wenn die Leistung für Phase 3 mit umgekehrtem Vorzeichen gemessen wird.
       en: Enable if the power for phase 3 is measured with the opposite sign.
 render: |
-  {{- define "ecomain-power" }}
-  source: modbus
-  {{- include "modbus" .root }}
-  register:
-    address: {{ .p.power }}
-    type: holding
-    encoding: int32s
-  scale: {{ .p.scale }}
-  block:
-    register: {{ .p.powerblock }}
-    count: {{ .p.powercount }}
-  {{- end }}
-  {{- define "ecomain-electrical" }}
-  source: modbus
-  {{- include "modbus" .root }}
-  register:
-    address: {{ .address }}
-    type: holding
-    encoding: uint16
-  scale: 0.01
-  block:
-    register: {{ .p.elecblock }}
-    count: {{ .p.eleccount }}
-  {{- end }}
-  {{- define "ecomain-energy" }}
-  source: modbus
-  {{- include "modbus" .root }}
-  register:
-    address: {{ .address }}
-    type: holding
-    encoding: uint64s
-  scale: 0.000001
-  {{- end }}
-  {{- $phases := list }}
+  type: custom
   {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 1006
+      type: holding
+      encoding: int32s
+    scale: 0.01
+    block:
+      register: 1000
+      count: 8
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 12
+      type: holding
+      encoding: uint64s
+    scale: 0.000001
+  returnenergy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 28
+      type: holding
+      encoding: uint64s
+    scale: 0.000001
+  powers:
+  {{- range $address := list 1000 1002 1004 }}
+  - source: modbus
+    {{- include "modbus" $ | indent 2 }}
+    register:
+      address: {{ $address }}
+      type: holding
+      encoding: int32s
+    scale: 0.01
+    block:
+      register: 1000
+      count: 8
+  {{- end }}
+  voltages:
+  {{- range $address := list 1200 1203 1206 }}
+  - source: modbus
+    {{- include "modbus" $ | indent 2 }}
+    register:
+      address: {{ $address }}
+      type: holding
+      encoding: uint16
+    scale: 0.01
+    block:
+      register: 1200
+      count: 9
+  {{- end }}
+  # current registers are unsigned, direction follows power
+  currents:
   {{- range $i := until 3 }}
-  {{- $phases = append $phases (dict "power" (add 1000 (mul 2 $i)) "scale" 0.01 "powerblock" 1000 "powercount" 8 "voltage" (add 1200 (mul 3 $i)) "current" (add 1201 (mul 3 $i)) "elecblock" 1200 "eleccount" 9) }}
+  - source: calc
+    mul:
+    - source: calc
+      sign:
+        source: modbus
+        {{- include "modbus" $ | indent 6 }}
+        register:
+          address: {{ add 1000 (mul 2 $i) }}
+          type: holding
+          encoding: int32s
+        scale: 0.01
+        block:
+          register: 1000
+          count: 8
+    - source: modbus
+      {{- include "modbus" $ | indent 4 }}
+      register:
+        address: {{ add 1201 (mul 3 $i) }}
+        type: holding
+        encoding: uint16
+      scale: 0.01
+      block:
+        register: 1200
+        count: 9
   {{- end }}
   {{- else }}
   {{- $count := 1 }}
   {{- if eq (toString .phasecount) "3" }}{{ $count = 3 }}{{ end }}
+  {{- $phases := list }}
   {{- $used := list }}
   {{- range $i := until $count }}
   {{- $n := add1 $i }}
@@ -216,53 +262,102 @@ render: |
   {{- $forward := $energy }}{{ $energy = $return }}{{ $return = $forward }}
   {{- end }}
   {{- $voltage := add 1209 (mul 30 $d) (mul 3 $c) }}
-  {{- $phases = append $phases (dict "power" (add 1008 (mul 20 $d) (mul 2 $c)) "scale" $scale "powerblock" (add 1008 (mul 20 $d)) "powercount" 20 "voltage" $voltage "current" (add1 $voltage) "elecblock" (add 1209 (mul 30 $d)) "eleccount" 30 "energy" $energy "return" $return) }}
+  {{- $phases = append $phases (dict "power" (add 1008 (mul 20 $d) (mul 2 $c)) "powerblock" (add 1008 (mul 20 $d)) "scale" $scale "voltage" $voltage "current" (add1 $voltage) "elecblock" (add 1209 (mul 30 $d)) "energy" $energy "return" $return) }}
   {{- end }}
-  {{- end }}
-  type: custom
-  {{- if eq .usage "grid" }}
-  power:
-    {{- include "ecomain-power" (dict "root" . "p" (dict "power" 1006 "scale" 0.01 "powerblock" 1000 "powercount" 8)) | indent 2 }}
-  energy:
-    {{- include "ecomain-energy" (dict "root" . "address" 12) | indent 2 }}
-  returnenergy:
-    {{- include "ecomain-energy" (dict "root" . "address" 28) | indent 2 }}
-  {{- else if eq (len $phases) 1 }}
+  {{- if eq $count 1 }}
   {{- $p := first $phases }}
   power:
-    {{- include "ecomain-power" (dict "root" . "p" $p) | indent 2 }}
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ $p.power }}
+      type: holding
+      encoding: int32s
+    scale: {{ $p.scale }}
+    block:
+      register: {{ $p.powerblock }}
+      count: 20
   energy:
-    {{- include "ecomain-energy" (dict "root" . "address" $p.energy) | indent 2 }}
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ $p.energy }}
+      type: holding
+      encoding: uint64s
+    scale: 0.000001
   returnenergy:
-    {{- include "ecomain-energy" (dict "root" . "address" $p.return) | indent 2 }}
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: {{ $p.return }}
+      type: holding
+      encoding: uint64s
+    scale: 0.000001
   {{- else }}
   power:
     source: calc
     add:
     {{- range $p := $phases }}
-    - {{ include "ecomain-power" (dict "root" $ "p" $p) | indent 4 | trim }}
+    - source: modbus
+      {{- include "modbus" $ | indent 4 }}
+      register:
+        address: {{ $p.power }}
+        type: holding
+        encoding: int32s
+      scale: {{ $p.scale }}
+      block:
+        register: {{ $p.powerblock }}
+        count: 20
     {{- end }}
   energy:
     source: calc
     add:
     {{- range $p := $phases }}
-    - {{ include "ecomain-energy" (dict "root" $ "address" $p.energy) | indent 4 | trim }}
+    - source: modbus
+      {{- include "modbus" $ | indent 4 }}
+      register:
+        address: {{ $p.energy }}
+        type: holding
+        encoding: uint64s
+      scale: 0.000001
     {{- end }}
   returnenergy:
     source: calc
     add:
     {{- range $p := $phases }}
-    - {{ include "ecomain-energy" (dict "root" $ "address" $p.return) | indent 4 | trim }}
+    - source: modbus
+      {{- include "modbus" $ | indent 4 }}
+      register:
+        address: {{ $p.return }}
+        type: holding
+        encoding: uint64s
+      scale: 0.000001
     {{- end }}
-  {{- end }}
-  {{- if eq (len $phases) 3 }}
   powers:
   {{- range $p := $phases }}
-  - {{ include "ecomain-power" (dict "root" $ "p" $p) | indent 2 | trim }}
+  - source: modbus
+    {{- include "modbus" $ | indent 2 }}
+    register:
+      address: {{ $p.power }}
+      type: holding
+      encoding: int32s
+    scale: {{ $p.scale }}
+    block:
+      register: {{ $p.powerblock }}
+      count: 20
   {{- end }}
   voltages:
   {{- range $p := $phases }}
-  - {{ include "ecomain-electrical" (dict "root" $ "p" $p "address" $p.voltage) | indent 2 | trim }}
+  - source: modbus
+    {{- include "modbus" $ | indent 2 }}
+    register:
+      address: {{ $p.voltage }}
+      type: holding
+      encoding: uint16
+    scale: 0.01
+    block:
+      register: {{ $p.elecblock }}
+      count: 30
   {{- end }}
   # current registers are unsigned, direction follows power
   currents:
@@ -271,7 +366,26 @@ render: |
     mul:
     - source: calc
       sign:
-        {{- include "ecomain-power" (dict "root" $ "p" $p) | indent 6 }}
-    - {{ include "ecomain-electrical" (dict "root" $ "p" $p "address" $p.current) | indent 4 | trim }}
+        source: modbus
+        {{- include "modbus" $ | indent 6 }}
+        register:
+          address: {{ $p.power }}
+          type: holding
+          encoding: int32s
+        scale: {{ $p.scale }}
+        block:
+          register: {{ $p.powerblock }}
+          count: 20
+    - source: modbus
+      {{- include "modbus" $ | indent 4 }}
+      register:
+        address: {{ $p.current }}
+        type: holding
+        encoding: uint16
+      scale: 0.01
+      block:
+        register: {{ $p.elecblock }}
+        count: 30
+  {{- end }}
   {{- end }}
   {{- end }}
