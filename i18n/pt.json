@@ -1174,6 +1174,31 @@
     "restartDescription": "Tentou desligar e ligar de novo?",
     "secondaryActions": "Ainda não conseguiu resolver o seu problema? Aqui estão algumas sugestões mais complexas."
   },
+  "energy": {
+    "direction": {
+      "battery": {
+        "energy": "carregado",
+        "returnEnergy": "descarregado"
+      },
+      "grid": {
+        "energy": "importado",
+        "returnEnergy": "exportado"
+      },
+      "meter": {
+        "energy": "Energia",
+        "returnEnergy": "Energia (inversa)"
+      }
+    },
+    "group": {
+      "battery": "Bateria",
+      "consumer": "Consumo",
+      "forecast": "Previsão",
+      "grid": "Rede",
+      "loadpoint": "Carregamento e aquecimento",
+      "meter": "Contadores adicionais",
+      "pv": "Produção"
+    }
+  },
   "issue": {
     "additional": {
       "description": "Inclua definições e registos para nos ajudar a reproduzir o problema rapidamente. Recomendamos que partilhe o máximo possível. Geralmente, o estado não é necessário.",
@@ -1335,35 +1360,6 @@
       "consumption": "Consumo",
       "feedIn": "Alimentação",
       "title": "Limite externo ativo"
-    },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "carregado",
-          "returnEnergy": "descarregado"
-        },
-        "grid": {
-          "energy": "importado",
-          "returnEnergy": "exportado"
-        },
-        "meter": {
-          "energy": "Energia",
-          "returnEnergy": "Energia (inversa)"
-        }
-      },
-      "download": "Descarregar",
-      "empty": "Não existem dados históricos disponíveis para este intervalo de tempo.",
-      "group": {
-        "battery": "Bateria",
-        "consumer": "Consumo",
-        "forecast": "Previsão",
-        "grid": "Rede",
-        "loadpoint": "Carregamento e aquecimento",
-        "meter": "Contadores adicionais",
-        "pv": "Produção"
-      },
-      "otherConsumers": "Outros",
-      "title": "Histórico"
     },
     "loadpoint": {
       "avgPrice": "Preço ⌀",

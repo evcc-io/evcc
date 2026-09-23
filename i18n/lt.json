@@ -1230,6 +1230,31 @@
     "restartDescription": "Ar pabandėte išjungti ir vėl įjungti?",
     "secondaryActions": "Vis dar nepavyksta išspręsti problemos? Čia rasite sudėtingesnes opcijas."
   },
+  "energy": {
+    "direction": {
+      "battery": {
+        "energy": "įkrauta",
+        "returnEnergy": "iškrauta"
+      },
+      "grid": {
+        "energy": "iš tinklo",
+        "returnEnergy": "į tinklą"
+      },
+      "meter": {
+        "energy": "Energija iš tinklo",
+        "returnEnergy": "Energija (patiekta į tinklą)"
+      }
+    },
+    "group": {
+      "battery": "Kaupiklis",
+      "consumer": "Vartojimas",
+      "forecast": "Prognozė",
+      "grid": "Tinklas",
+      "loadpoint": "Įkrovimas ir Šildymas",
+      "meter": "Papildomi skaitikliai",
+      "pv": "Gamyba"
+    }
+  },
   "issue": {
     "additional": {
       "description": "Įtraukite konfigūraciją ir žurnalus, kad galėtume greitai atkartoti problemą. Raginame kuo daugiau dalytis. Paprastai nereikia nurodyti būsenos.",
@@ -1403,35 +1428,6 @@
       "consumption": "Vartojimas",
       "feedIn": "Atidavimas į tinklą",
       "title": "Išorinis ribojimas aktyvuotas"
-    },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "įkrauta",
-          "returnEnergy": "iškrauta"
-        },
-        "grid": {
-          "energy": "iš tinklo",
-          "returnEnergy": "į tinklą"
-        },
-        "meter": {
-          "energy": "Energija iš tinklo",
-          "returnEnergy": "Energija (patiekta į tinklą)"
-        }
-      },
-      "download": "Atsisiųsti",
-      "empty": "Šio laikotarpio istorijos duomenų nėra.",
-      "group": {
-        "battery": "Kaupiklis",
-        "consumer": "Vartojimas",
-        "forecast": "Prognozė",
-        "grid": "Tinklas",
-        "loadpoint": "Įkrovimas ir Šildymas",
-        "meter": "Papildomi skaitikliai",
-        "pv": "Gamyba"
-      },
-      "otherConsumers": "Kiti",
-      "title": "Istorija"
     },
     "loadpoint": {
       "avgPrice": "⌀ Kaina",

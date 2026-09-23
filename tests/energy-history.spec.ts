@@ -72,21 +72,28 @@ test.describe("api", () => {
 });
 
 async function gotoDay(page: Page, year: number, month: number, day: number): Promise<void> {
-  await page.goto(`/#/history?period=day&year=${year}&month=${month}&day=${day}`);
-  await expect(page.getByRole("heading", { name: /history/i }).first()).toBeVisible();
+  await page.goto(`/#/energy?period=day&year=${year}&month=${month}&day=${day}`);
+  await expect(page.getByTestId("energy-flow")).toBeVisible();
 }
 
 async function gotoMonth(page: Page, year: number, month: number): Promise<void> {
-  await page.goto(`/#/history?period=month&year=${year}&month=${month}`);
-  await expect(page.getByRole("heading", { name: /history/i }).first()).toBeVisible();
+  await page.goto(`/#/energy?period=month&year=${year}&month=${month}`);
+  await expect(page.getByTestId("energy-flow")).toBeVisible();
+}
+
+const CARDS: Record<string, string> = {
+  pv: "energy-production",
+  battery: "energy-battery",
+  consumer: "energy-consumers",
+  meter: "energy-meters",
+};
+
+function card(page: Page, group: string): Locator {
+  return page.getByTestId(CARDS[group] ?? "");
 }
 
 function chart(page: Page, group: string): Locator {
-  return page.getByTestId(`group-chart-${group}`);
-}
-
-function section(page: Page, group: string): Locator {
-  return page.getByTestId(`history-section-${group}`);
+  return card(page, group).getByTestId(`group-chart-${group}`).first();
 }
 
 // Y-axis labels rendered by echarts: position=right uses text-anchor=start.
@@ -98,21 +105,6 @@ async function yAxis(c: Locator): Promise<string[]> {
 }
 
 test.describe("axis and units", () => {
-  test("grid ±2 kW bidirectional, 1 decimal", async ({ page }) => {
-    await gotoDay(page, 2026, 3, 24);
-    expect(await yAxis(chart(page, "grid"))).toEqual(["kW", "-2.0", "-1.0", "0.0", "1.0", "2.0"]);
-  });
-
-  test("sub-1 kW switches to W, floored at 1000 W", async ({ page }) => {
-    await gotoDay(page, 2026, 4, 1);
-    expect(await yAxis(chart(page, "grid"))).toEqual(["W", "-1,000", "-500", "0", "500", "1,000"]);
-  });
-
-  test("import-only stays symmetric", async ({ page }) => {
-    await gotoDay(page, 2026, 4, 2);
-    expect(await yAxis(chart(page, "grid"))).toEqual(["kW", "-2.0", "-1.0", "0.0", "1.0", "2.0"]);
-  });
-
   test("battery ±3 kW, 1 decimal", async ({ page }) => {
     await gotoDay(page, 2026, 4, 3);
     expect(await yAxis(chart(page, "battery"))).toEqual([
@@ -130,28 +122,10 @@ test.describe("axis and units", () => {
     expect(await yAxis(chart(page, "battery"))).toEqual(["kW", "-6", "-3", "0", "3", "6"]);
   });
 
-  test("stacked batteries: axis follows stacked sum, not per-entity max", async ({ page }) => {
-    await gotoDay(page, 2026, 4, 8);
-    expect(await yAxis(chart(page, "battery"))).toEqual([
-      "kW",
-      "-3.0",
-      "-1.5",
-      "0.0",
-      "1.5",
-      "3.0",
-    ]);
-  });
-
   test("unidirectional axis stays positive", async ({ page }) => {
     await gotoDay(page, 2026, 4, 5);
     // Unidirectional groups use echarts auto-scale (min: 0). Peak 1.6 kW → ticks 0..2.
     expect(await yAxis(chart(page, "pv"))).toEqual(["kW", "0.0", "0.5", "1.0", "1.5", "2.0"]);
-  });
-
-  test("all-zero data: W axis at 1000 W", async ({ page }) => {
-    await gotoDay(page, 2026, 4, 6);
-    await expect(section(page, "pv")).toBeVisible();
-    expect(await yAxis(chart(page, "pv"))).toEqual(["W", "0", "250", "500", "750", "1,000"]);
   });
 
   test("stacked entities + overlay not clipped", async ({ page }) => {
@@ -176,92 +150,78 @@ test.describe("axis and units", () => {
 test.describe("consumption breakdown", () => {
   // 2026-04-07: home = 1.0 kWh, Kitchen = 0.4 kWh, Office = 0.3 kWh,
   // virtual Others = home − meters = 0.3 kWh.
-  test("home total, meter legend, virtual Others", async ({ page }) => {
+  test("home total, tiles, virtual Others", async ({ page }) => {
     await gotoDay(page, 2026, 4, 7);
-    const consumption = section(page, "consumer");
+    const consumption = card(page, "consumer");
     await expect(consumption).toBeVisible();
 
-    // Section total = home, not sum of meters.
+    // Card total = home, not sum of meters.
     await expect(consumption.getByRole("heading")).toContainText("1.0 kWh");
 
-    // Others (virtual) + explicit meters.
-    await expect(consumption.getByRole("button", { name: "Others 300 Wh" })).toBeVisible();
-    await expect(consumption.getByRole("button", { name: "Kitchen 400 Wh" })).toBeVisible();
-    await expect(consumption.getByRole("button", { name: "Office 300 Wh" })).toBeVisible();
+    // Others (virtual) + explicit meters, as tiles and legend rows.
+    for (const name of ["Others 300 Wh", "Kitchen 400 Wh", "Office 300 Wh"]) {
+      await expect(consumption.getByRole("button", { name })).toHaveCount(2);
+    }
   });
 
   // 2026-03-24: home = 0.4 kWh, no meter entities with data.
-  test("home without meters shows chart without legend", async ({ page }) => {
+  test("home without meters has no consumers card", async ({ page }) => {
     await gotoDay(page, 2026, 3, 24);
-    const consumption = section(page, "consumer");
-    await expect(consumption).toBeVisible();
-
-    await expect(consumption.getByRole("heading")).toContainText("0.4 kWh");
-    // No explicit consumers, no entity legend.
-    await expect(consumption.getByRole("button")).toHaveCount(0);
+    await expect(card(page, "consumer")).toHaveCount(0);
   });
 
   // 2026-04-12: consumers are not a bidirectional group. Return energy is
   // ignored, not netted or split: home 1.0, Kitchen 0.4.
   test("return energy is ignored", async ({ page }) => {
     await gotoDay(page, 2026, 4, 12);
-    const consumption = section(page, "consumer");
-    await expect(consumption).toBeVisible();
-
+    const consumption = card(page, "consumer");
     await expect(consumption.getByRole("heading")).toContainText("1.0 kWh");
-    await expect(consumption.getByRole("button", { name: "Kitchen 400 Wh" })).toBeVisible();
-    await expect(consumption.getByRole("button", { name: "Others 600 Wh" })).toBeVisible();
+    await expect(consumption.getByRole("button", { name: "Kitchen 400 Wh" }).first()).toBeVisible();
+    await expect(consumption.getByRole("button", { name: "Others 600 Wh" }).first()).toBeVisible();
   });
 
-  test("entity focus rescales axis and resets on unfocus", async ({ page }) => {
+  test("tile opens the detail with its own axis, second click closes", async ({ page }) => {
     await gotoDay(page, 2026, 4, 7);
-    const consumption = section(page, "consumer");
-    const meterChart = chart(page, "consumer");
-
-    // Stacked total per slot 1.0 kW → echarts auto-axis 0..1.2 in 1-decimal.
-    expect(await yAxis(meterChart)).toEqual(["kW", "0.0", "0.3", "0.6", "0.9", "1.2"]);
-
-    // Focus Kitchen → peak 400 W → unit switches to W, floored at 1000 W.
-    const kitchen = consumption.getByRole("button", { name: "Kitchen 400 Wh" });
+    const consumption = card(page, "consumer");
+    const kitchen = consumption.getByRole("button", { name: "Kitchen 400 Wh" }).first();
     await kitchen.click();
-    await expect.poll(() => yAxis(meterChart)).toEqual(["W", "0", "250", "500", "750", "1,000"]);
 
-    // Unfocus → axis returns to kW range, not stuck on 1000 W cap.
+    // Kitchen alone: peak 400 W → unit switches to W, floored at 1000 W.
+    const detail = page.getByTestId("consumer-detail");
+    await expect(detail).toBeVisible();
+    await expect
+      .poll(() => yAxis(chart(page, "consumer")))
+      .toEqual(["W", "0", "250", "500", "750", "1,000"]);
+
     await kitchen.click();
-    await expect.poll(() => yAxis(meterChart)).toEqual(["kW", "0.0", "0.3", "0.6", "0.9", "1.2"]);
+    await expect(detail).toHaveCount(0);
   });
 });
 
-test.describe("battery legend", () => {
+test.describe("battery card", () => {
   // 2026-07: Battery 6.0/3.0 kWh, Battery 2 balanced at 4.5/4.5 kWh. A net sum
   // would collapse the balanced battery to zero, so both directions are shown.
-  test("month legend keeps charge and discharge apart", async ({ page }) => {
+  test("month keeps charge and discharge apart per battery", async ({ page }) => {
     await gotoMonth(page, 2026, 7);
-    const battery = section(page, "battery");
-    await expect(battery).toBeVisible();
-
-    await expect(battery.getByRole("heading")).toContainText(
-      "10.5 kWh charged · 7.5 kWh discharged"
-    );
-    await expect(battery.getByRole("button", { name: "Battery 6.0 kWh · 3.0 kWh" })).toBeVisible();
-    await expect(
-      battery.getByRole("button", { name: "Battery 2 4.5 kWh · 4.5 kWh" })
-    ).toBeVisible();
+    // one card per battery
+    const cards = page.getByTestId("energy-battery");
+    await expect(cards).toHaveCount(2);
+    await expect(cards.first().getByRole("heading", { name: "Battery" })).toBeVisible();
+    await expect(cards.first()).toContainText("6.0 kWh");
+    await expect(cards.first()).toContainText("3.0 kWh");
+    await expect(cards.last().getByRole("heading", { name: "Battery 2" })).toBeVisible();
+    await expect(cards.last()).toContainText("4.5 kWh");
   });
 });
 
 test.describe("additional meters", () => {
   // 2026-04-09: single ext meter "Submeter" = 1.2 kWh, no home data.
-  test("standalone section without virtual Others", async ({ page }) => {
+  test("standalone card without virtual Others", async ({ page }) => {
     await gotoDay(page, 2026, 4, 9);
-    const additional = section(page, "meter");
+    const additional = card(page, "meter");
     await expect(additional).toBeVisible();
-
-    // No section total: additional meters can be import, export, or consumption.
-    await expect(additional.getByRole("heading")).not.toContainText("kWh");
-
-    // Explicit entity legend, no virtual "Others" (unlike the consumer group).
-    await expect(additional.getByRole("button", { name: "Submeter 1.2 kWh" })).toBeVisible();
+    await expect(additional).toContainText("Submeter");
+    await expect(additional).toContainText("1.2 kWh");
     await expect(additional.getByText("Others", { exact: true })).toBeHidden();
   });
 
@@ -271,34 +231,27 @@ test.describe("additional meters", () => {
     expect(await yAxis(chart(page, "meter"))).toEqual(["kW", "-2.0", "-1.0", "0.0", "1.0", "2.0"]);
   });
 
-  // 2026-04-10: "Submeter" 2.0/0.4 kWh. A netted value would read the same
-  // for import and export, so any return energy shows both directions.
+  // 2026-04-10: "Submeter" 2.0/0.4 kWh, both directions as stats.
   test("bidirectional meter shows both directions", async ({ page }) => {
     await gotoDay(page, 2026, 4, 10);
-    const additional = section(page, "meter");
-    await expect(
-      additional.getByRole("button", { name: "Submeter 2.0 kWh · 400 Wh" })
-    ).toBeVisible();
+    const additional = card(page, "meter");
+    await expect(additional).toContainText("Energy2.0 kWh");
+    await expect(additional).toContainText("Energy (reverse)400 Wh");
   });
 
-  // 2026-04-13: export-only meter without an importing sibling. Return energy
-  // alone triggers the split, otherwise 1.2 kWh would read as consumption.
-  test("export-only meter alone shows both directions", async ({ page }) => {
+  // 2026-04-13: export-only meter. Return energy alone shows the reverse stat.
+  test("export-only meter shows the reverse direction", async ({ page }) => {
     await gotoDay(page, 2026, 4, 13);
-    const additional = section(page, "meter");
-    await expect(
-      additional.getByRole("button", { name: "Feed-in meter 0.0 kWh · 1.2 kWh" })
-    ).toBeVisible();
+    const additional = card(page, "meter");
+    await expect(additional).toContainText("Feed-in meter");
+    await expect(additional).toContainText("Energy (reverse)1.2 kWh");
   });
 });
 
 test.describe("reconnect", () => {
-  test("history still shows content after backend restart", async ({ page }) => {
+  test("page still shows content after backend restart", async ({ page }) => {
     await gotoDay(page, 2026, 3, 24);
-    await expect(chart(page, "grid")).toBeVisible();
-
     await restart();
-
-    await expect(chart(page, "grid")).toBeVisible();
+    await expect(page.getByTestId("energy-flow")).toBeVisible();
   });
 });

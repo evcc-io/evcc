@@ -139,7 +139,7 @@ export default defineComponent({
     fmtPhasePower(current?: number, phases?: number) {
       return this.fmtW(230 * (current || 0) * (phases || 0));
     },
-    fmtW(watt = 0, format = POWER_UNIT.KW, withUnit = true, digits?: number) {
+    fmtW(watt = 0, format = POWER_UNIT.KW, withUnit = true, digits?: number, signed = false) {
       let unit = format;
       let d = digits;
       if (POWER_UNIT.AUTO === unit) {
@@ -161,10 +161,15 @@ export default defineComponent({
         style: "decimal",
         minimumFractionDigits: d,
         maximumFractionDigits: d,
+        signDisplay: signed ? "exceptZero" : "auto",
       }).format(value)}${withUnit ? ` ${unit}` : ""}`;
     },
-    fmtWh(watt: number, format = POWER_UNIT.KW, withUnit = true, digits?: number) {
-      return this.fmtW(watt, format, withUnit, digits) + (withUnit ? "h" : "");
+    fmtWh(watt: number, format = POWER_UNIT.KW, withUnit = true, digits?: number, signed = false) {
+      return this.fmtW(watt, format, withUnit, digits, signed) + (withUnit ? "h" : "");
+    },
+    // signed: explicit plus for gains, e.g. a difference
+    fmtKWh(kWh: number, signed = false) {
+      return this.fmtWh(kWh * 1000, POWER_UNIT.AUTO, true, undefined, signed);
     },
     fmtNumber(number: number, decimals: number | undefined, unit?: string) {
       const style = unit ? "unit" : "decimal";
@@ -433,6 +438,9 @@ export default defineComponent({
 
       return withSymbol ? result : result.replace(currency, "").trim();
     },
+    fmtMoneyWithSymbol(amount: number, currency = CURRENCY.EUR) {
+      return `${this.fmtMoney(amount, currency)} ${this.fmtCurrencySymbol(currency)}`;
+    },
     fmtCurrencySymbol(currency = CURRENCY.EUR) {
       return CURRENCY_SYMBOLS[currency] || currency;
     },
@@ -455,6 +463,11 @@ export default defineComponent({
         return `${price} ${this.pricePerKWhUnit(currency, short)}`;
       }
       return price;
+    },
+    // "19.4 – 31.3 ct/kWh", a single price when both ends match
+    fmtPriceRange(lo: number, hi: number, currency = CURRENCY.EUR, short = false) {
+      if (lo === hi) return this.fmtPricePerKWh(lo, currency, short);
+      return `${this.fmtPricePerKWh(lo, currency, short, false)} – ${this.fmtPricePerKWh(hi, currency, short)}`;
     },
     timezone() {
       return Intl?.DateTimeFormat?.().resolvedOptions?.().timeZone || "UTC";

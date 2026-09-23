@@ -1229,6 +1229,31 @@
     "restartDescription": "Yrititkö sammuttaa ja käynnistää uudelleen?",
     "secondaryActions": "Etkö vieläkään pysty ratkaisemaan ongelmaasi? Tässä on joitain raskaampia vaihtoehtoja."
   },
+  "energy": {
+    "direction": {
+      "battery": {
+        "energy": "ladattu",
+        "returnEnergy": "käytetty"
+      },
+      "grid": {
+        "energy": "ladattu verkosta",
+        "returnEnergy": "syötetty verkkoon"
+      },
+      "meter": {
+        "energy": "Energia",
+        "returnEnergy": "Energia (käänteinen)"
+      }
+    },
+    "group": {
+      "battery": "Akku",
+      "consumer": "Kulutus",
+      "forecast": "Ennuste",
+      "grid": "Sähköverkko",
+      "loadpoint": "Lataus & lämmitys",
+      "meter": "Lisämittarit",
+      "pv": "Tuotanto"
+    }
+  },
   "issue": {
     "additional": {
       "description": "Sisällytä asetuksesi ja lokitietosi auttaaksesi meitä toisintamaan ongelman pikaisesti. Kannustamme jakamaan mahdollisimman paljon tietoa. Nykyistä tilaa ei yleensä ole tarpeen jakaa.",
@@ -1402,35 +1427,6 @@
       "consumption": "Kulutus",
       "feedIn": "Verkkoon syöttö",
       "title": "Ulkoinen raja: aktiivinen"
-    },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "ladattu",
-          "returnEnergy": "käytetty"
-        },
-        "grid": {
-          "energy": "ladattu verkosta",
-          "returnEnergy": "syötetty verkkoon"
-        },
-        "meter": {
-          "energy": "Energia",
-          "returnEnergy": "Energia (käänteinen)"
-        }
-      },
-      "download": "Lataa",
-      "empty": "Tälle ajanjaksolle ei ole saatavilla historiadataa.",
-      "group": {
-        "battery": "Akku",
-        "consumer": "Kulutus",
-        "forecast": "Ennuste",
-        "grid": "Sähköverkko",
-        "loadpoint": "Lataus & lämmitys",
-        "meter": "Lisämittarit",
-        "pv": "Tuotanto"
-      },
-      "otherConsumers": "Muut",
-      "title": "Tilastot"
     },
     "loadpoint": {
       "avgPrice": "⌀ Hinta",

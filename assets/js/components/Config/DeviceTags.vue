@@ -182,7 +182,9 @@ export default {
 				return `${this.$t("config.deviceValue.max")} ${fmtMax}`;
 			}
 
-			// For price and CO2 rates, show range
+			if (this.ratesEntry?.type === "price") {
+				return this.fmtPriceRange(min, max, this.currency, true);
+			}
 			const fmtMin = this.formatRateValue(min, true);
 			return `${fmtMin} – ${fmtMax}`;
 		},

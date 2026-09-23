@@ -978,6 +978,26 @@
     "restartDescription": "一度オフにして、もう一度オンにしてみましたか？",
     "secondaryActions": "それでも問題が解決しない場合は、以下の方法を試してみてください。"
   },
+  "energy": {
+    "direction": {
+      "battery": {
+        "energy": "充電",
+        "returnEnergy": "放電"
+      },
+      "grid": {
+        "energy": "買電",
+        "returnEnergy": "売電"
+      }
+    },
+    "group": {
+      "battery": "蓄電池",
+      "forecast": "予測",
+      "grid": "系統",
+      "loadpoint": "充電・ヒーター",
+      "meter": "消費電力",
+      "pv": "発電"
+    }
+  },
   "issue": {
     "additional": {
       "description": "問題を迅速に再現できるよう、設定とログを含めてください。できるだけ多くの情報を共有していただくことを推奨しています。通常、ステータス情報は必要ありません。",
@@ -1117,29 +1137,6 @@
     },
     "hemsWarning": {
       "title": "外部システム制限:"
-    },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "充電",
-          "returnEnergy": "放電"
-        },
-        "grid": {
-          "energy": "買電",
-          "returnEnergy": "売電"
-        }
-      },
-      "empty": "指定された期間のデータが存在しません。",
-      "group": {
-        "battery": "蓄電池",
-        "forecast": "予測",
-        "grid": "系統",
-        "loadpoint": "充電・ヒーター",
-        "meter": "消費電力",
-        "pv": "発電"
-      },
-      "otherConsumers": "その他",
-      "title": "履歴"
     },
     "loadpoint": {
       "avgPrice": "⌀ 単価",

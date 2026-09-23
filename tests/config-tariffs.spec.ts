@@ -363,7 +363,7 @@ grid:
     await save.click();
     await expectModalHidden(modal);
     await expect(tariffGrid).toBeVisible();
-    await expect(tariffGrid).toContainText(["Forecast", "10.0 ct – 30.0 ct"].join(""));
+    await expect(tariffGrid).toContainText(["Forecast", "10.0 – 30.0 ct"].join(""));
   });
 
   test("charges zones", async ({ page }) => {

@@ -61,7 +61,6 @@ export default defineComponent({
 	padding-top: var(--pt);
 	padding-bottom: var(--pb);
 	color: var(--evcc-gray);
-	touch-action: manipulation;
 	-webkit-tap-highlight-color: transparent;
 	-webkit-touch-callout: none;
 	-webkit-user-select: none;

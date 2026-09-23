@@ -1,16 +1,22 @@
 <template>
 	<ul
-		class="root p-0 m-0 d-flex flex-wrap column-gap-4 row-gap-2"
-		:class="{
-			'root--small-equal-widths': smallEqualWidths,
-			'root--grid': grid,
-		}"
+		class="root p-0 m-0 row-gap-2"
+		:class="[
+			columns ? 'root--columns' : 'd-flex flex-wrap column-gap-4',
+			{
+				'root--small-equal-widths': smallEqualWidths,
+				'root--grid': grid,
+			},
+		]"
+		:style="columns ? { '--legend-count': legends?.length ?? 0 } : undefined"
 	>
 		<li
 			v-for="legend in legends"
 			:key="legend.label"
-			class="legend-item d-flex align-items-baseline gap-2 no-wrap"
+			class="legend-item align-items-baseline gap-2 no-wrap"
 			:class="{
+				'd-flex': !columns,
+				'legend-item--columns': columns,
 				'legend-item--focusable': legend.focusable,
 				'legend-item--dim': legend.dim,
 			}"
@@ -20,32 +26,14 @@
 			@keydown.enter.prevent="legend.focusable && onFocus(legend)"
 			@keydown.space.prevent="legend.focusable && onFocus(legend)"
 		>
-			<button
-				v-if="legend.color && isPickable(legend)"
-				type="button"
-				class="legend-color-btn align-self-center me-1 bg-transparent border-0 p-0 d-inline-flex"
-				:style="{ '--badge-color': legend.color }"
-				:aria-label="legend.label"
-				@click.stop="onPick(legend, $event)"
-			>
-				<span
-					class="legend-color"
-					:class="colorClass(legend)"
-					:style="{
-						backgroundColor: legend.color,
-						borderColor: legend.color,
-					}"
-				></span>
-			</button>
-			<span
-				v-else-if="legend.color"
-				class="legend-color align-self-center me-1"
-				:class="colorClass(legend)"
-				:style="{
-					backgroundColor: legend.color,
-					borderColor: legend.color,
-				}"
-			></span>
+			<DeviceColorDot
+				v-if="legend.color"
+				class="align-self-center me-1"
+				:title="legend.id || ''"
+				:color="legend.color"
+				:explicit="legend.id ? deviceColors[legend.id] || '' : ''"
+				:line="legend.type === 'line'"
+			/>
 			<div class="legend-label text-nowrap">{{ legend.label }}</div>
 			<div
 				v-for="value in valueList(legend.value)"
@@ -55,13 +43,6 @@
 				{{ value }}
 			</div>
 		</li>
-		<ColorPickerPopover
-			v-model="pickerOpen"
-			:anchor-el="pickerAnchor"
-			:color="pickerColor"
-			:title="pickerTitle"
-			@update:color="onColorChange"
-		/>
 	</ul>
 </template>
 
@@ -69,80 +50,37 @@
 import { defineComponent, type PropType } from "vue";
 import type { Legend } from "./types";
 import type { DeviceColors } from "@/types/evcc";
-import ColorPickerPopover from "../Helper/ColorPickerPopover.vue";
-import api from "../../api";
+import DeviceColorDot from "../Helper/DeviceColorDot.vue";
 
 export default defineComponent({
 	name: "LegendList",
-	components: { ColorPickerPopover },
+	components: { DeviceColorDot },
 	props: {
 		legends: Array as PropType<Legend[]>,
 		grid: Boolean,
+		// dot, label and values in aligned columns, wrapping into column groups by breakpoint
+		columns: Boolean,
 		smallEqualWidths: Boolean,
 		deviceColors: { type: Object as PropType<DeviceColors>, default: () => ({}) },
 	},
 	emits: ["focus"],
-	data() {
-		return {
-			pickerOpen: false,
-			pickerAnchor: null as HTMLElement | null,
-			pickerId: "",
-		};
-	},
-	computed: {
-		pickerTitle(): string {
-			const found = (this.legends || []).find((l) => l.id === this.pickerId);
-			return found?.label || this.pickerId;
-		},
-		pickerColor(): string {
-			return this.deviceColors[this.pickerId] || "";
-		},
-	},
 	methods: {
 		valueList(value: Legend["value"]) {
 			if (!value) return [];
 			return Array.isArray(value) ? value : [value];
 		},
-		colorClass(legend: Legend) {
-			return legend.type === "line" ? "legend-color--line" : "legend-color--area";
-		},
-		isPickable(legend: Legend) {
-			return !!legend.id;
-		},
-		onPick(legend: Legend, e: MouseEvent) {
-			if (!legend.id) return;
-			if (this.pickerOpen && this.pickerId === legend.id) {
-				this.pickerOpen = false;
-				return;
-			}
-			this.pickerAnchor = (e.currentTarget as HTMLElement) || null;
-			this.pickerId = legend.id;
-			this.pickerOpen = true;
-		},
 		onFocus(legend: Legend) {
 			this.$emit("focus", legend);
-		},
-		async onColorChange(color: string) {
-			if (!this.pickerId) return;
-			try {
-				await api.put("devicecolors", { title: this.pickerId, color });
-			} catch (e) {
-				console.error("set device color failed", e);
-			}
 		},
 	},
 });
 </script>
 
 <style scoped>
+@import "../../../css/breakpoints.css";
+
 .root {
 	justify-content: flex-start;
-}
-.legend-color {
-	width: 1rem;
-	height: 1rem;
-	flex-shrink: 0;
-	display: inline-block;
 }
 .legend-item--focusable {
 	cursor: pointer;
@@ -151,29 +89,6 @@ export default defineComponent({
 }
 .legend-item--dim {
 	opacity: 0.35;
-}
-
-.legend-color--area {
-	border-radius: 50%;
-}
-
-.legend-color--line {
-	height: 2px;
-	border-radius: 1px;
-	align-self: center;
-}
-
-.legend-color-btn {
-	cursor: pointer;
-	border-radius: 50%;
-	transition: box-shadow 120ms ease-out;
-}
-.legend-color-btn:hover {
-	box-shadow: 0 0 0 5px color-mix(in srgb, var(--badge-color) 25%, transparent);
-}
-.legend-color-btn:focus-visible {
-	outline: 2px solid var(--evcc-default-text);
-	outline-offset: 2px;
 }
 
 .legend-label {
@@ -193,6 +108,41 @@ export default defineComponent({
 }
 .root--grid .legend-value:last-child {
 	flex-basis: 3.5rem;
+}
+
+/* column groups of dot, label, values; the outer grid spaces the groups */
+/* filled column by column, largest entries first */
+.root--columns {
+	--legend-groups: 1;
+	display: grid;
+	grid-template-columns: repeat(var(--legend-groups), minmax(0, 1fr));
+	grid-template-rows: repeat(round(up, var(--legend-count) / var(--legend-groups)), auto);
+	grid-auto-flow: column;
+	column-gap: 2rem;
+}
+.legend-item--columns {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) minmax(4.75rem, max-content) minmax(
+			3.5rem,
+			max-content
+		);
+	column-gap: 0.5rem;
+	align-items: baseline;
+}
+.legend-item--columns .legend-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+@media (--md-and-up) {
+	.root--columns {
+		--legend-groups: 2;
+	}
+}
+@media (--xl-and-up) {
+	.root--columns {
+		--legend-groups: 3;
+		column-gap: 4rem;
+	}
 }
 
 .root--small-equal-widths {

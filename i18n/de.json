@@ -1230,6 +1230,111 @@
     "restartDescription": "Schon versucht, das Gerät aus- und wieder einzuschalten?",
     "secondaryActions": "Noch keine Lösung gefunden? Hier sind noch ein paar weitere Möglichkeiten."
   },
+  "energy": {
+    "battery": {
+      "charged": "Geladen",
+      "discharged": "Entladen"
+    },
+    "consumers": {
+      "chart": {
+        "bars": "Balken",
+        "pattern": "Muster"
+      },
+      "consumed": "Verbraucht",
+      "cost": "Kosten",
+      "others": "Sonstige",
+      "source": {
+        "pv": "Solar",
+        "battery": "Speicher",
+        "grid": "Netz"
+      },
+      "title": "Verbraucher"
+    },
+    "direction": {
+      "battery": {
+        "energy": "geladen",
+        "returnEnergy": "entladen"
+      },
+      "grid": {
+        "energy": "bezogen",
+        "returnEnergy": "eingespeist"
+      },
+      "meter": {
+        "energy": "Energie",
+        "returnEnergy": "Energie (rückwärts)"
+      }
+    },
+    "empty": "Keine Energiedaten für diesen Zeitraum verfügbar.",
+    "flow": {
+      "battery": "Batterie",
+      "batteryCharge": "Batterieladung",
+      "batteryDischarge": "Batterieentladung",
+      "charging": "Laden",
+      "export": "Einspeisung",
+      "grid": "Netzbezug",
+      "heating": "Heizen",
+      "home": "Verbrauch",
+      "overview": "Übersicht",
+      "pv": "Erzeugung",
+      "title": "Energiefluss",
+      "usage": "Verwendung"
+    },
+    "grid": {
+      "cost": "Netzkosten",
+      "energy": "Energie",
+      "export": "Einspeisung",
+      "exportPrice": "Einspeisepreis",
+      "import": "Bezug",
+      "importPrice": "Bezugspreis",
+      "price": "Preis",
+      "revenue": "Einspeisevergütung",
+      "showPrices": "Preise anzeigen",
+      "title": "Netz"
+    },
+    "group": {
+      "battery": "Batterie",
+      "consumer": "Verbrauch",
+      "forecast": "Vorhersage",
+      "grid": "Netz",
+      "loadpoint": "Laden & Heizen",
+      "meter": "Weitere Zähler",
+      "pv": "Erzeugung"
+    },
+    "loadpoint": {
+      "charged": "Geladen",
+      "used": "Verbraucht"
+    },
+    "production": {
+      "accuracy": "Vorhersagegenauigkeit",
+      "above": "{value} darüber",
+      "below": "{value} darunter",
+      "breakdown": "Aufteilung",
+      "deviation": "Abweichung",
+      "expectedToday": "heute noch erwartet",
+      "produced": "Erzeugt",
+      "selfConsumed": "{value} selbst verbraucht",
+      "title": "Erzeugung"
+    },
+    "socTemp": {
+      "charged": "geladen",
+      "soc": "Ladung",
+      "temperature": "Temperatur",
+      "used": "verbraucht"
+    },
+    "stat": {
+      "autarky": "Autarkie",
+      "co2Saved": "CO₂ gespart",
+      "co2SavedTooltip": "Im Vergleich zum Bezug der verbrauchten {energy} aus dem Netz.",
+      "configure": "Jetzt einrichten",
+      "gridExport": "Einspeisung",
+      "gridImport": "Netzbezug",
+      "noCo2": "Keine CO₂-Daten.",
+      "noPrice": "Keine Preisdaten.",
+      "savings": "Ersparnis",
+      "savingsTooltip": "Im Vergleich zum Bezug der verbrauchten {energy} aus dem Netz."
+    },
+    "title": "Energie"
+  },
   "issue": {
     "additional": {
       "copied": "Kopiert!",
@@ -1406,35 +1511,6 @@
       "consumption": "Verbrauch",
       "feedIn": "Einspeisung",
       "title": "Externe Begrenzung aktiv"
-    },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "geladen",
-          "returnEnergy": "entladen"
-        },
-        "grid": {
-          "energy": "bezogen",
-          "returnEnergy": "eingespeist"
-        },
-        "meter": {
-          "energy": "Energie",
-          "returnEnergy": "Energie (rückwärts)"
-        }
-      },
-      "download": "Download",
-      "empty": "Keine Verlaufsdaten für diesen Zeitraum.",
-      "group": {
-        "battery": "Batterie",
-        "consumer": "Verbrauch",
-        "forecast": "Vorhersage",
-        "grid": "Netz",
-        "loadpoint": "Laden & Heizen",
-        "meter": "Weitere Zähler",
-        "pv": "Erzeugung"
-      },
-      "otherConsumers": "Andere",
-      "title": "Historie"
     },
     "loadpoint": {
       "avgPrice": "⌀ Preis",
@@ -1867,6 +1943,7 @@
     "battery": "Batterie",
     "charge": "Laden",
     "comingSoon": "Diese Seite ist in Arbeit.",
+    "energy": "Energie",
     "forecast": "Vorhersage",
     "more": "Mehr",
     "sessions": "Ladungen"

@@ -1174,6 +1174,31 @@
     "restartDescription": "Hues du schonns probéiert d'Gerät aus- an erëm unzemaachen?",
     "secondaryActions": "Nach ëmmer keng Léisung fonnt? Hei sinn e puer weider Méiglechkeeten."
   },
+  "energy": {
+    "direction": {
+      "battery": {
+        "energy": "gelueden",
+        "returnEnergy": "entlueden"
+      },
+      "grid": {
+        "energy": "importéiert",
+        "returnEnergy": "agespeist"
+      },
+      "meter": {
+        "energy": "Energie",
+        "returnEnergy": "Energie (ëmgedréint)"
+      }
+    },
+    "group": {
+      "battery": "Batterie",
+      "consumer": "Verbrauch",
+      "forecast": "Virso",
+      "grid": "Netz",
+      "loadpoint": "Lueden & Heizen",
+      "meter": "Aner Zieler",
+      "pv": "Produktioun"
+    }
+  },
   "issue": {
     "additional": {
       "description": "Füügt d'Konfiguratioun an d'Logbicher derbäi, fir datt mir de Problem séier reproduzéiere kënnen. Mir encouragéieren, esou vill wéi méiglech ze deelen. \"State\" ass normalerweis net néideg.",
@@ -1335,35 +1360,6 @@
       "consumption": "Verbrauch",
       "feedIn": "Aspeisung",
       "title": "Extern Begrenzung aktiv"
-    },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "gelueden",
-          "returnEnergy": "entlueden"
-        },
-        "grid": {
-          "energy": "importéiert",
-          "returnEnergy": "agespeist"
-        },
-        "meter": {
-          "energy": "Energie",
-          "returnEnergy": "Energie (ëmgedréint)"
-        }
-      },
-      "download": "Eroflueden",
-      "empty": "Keng historesch Daten fir dësen Zäitraum.",
-      "group": {
-        "battery": "Batterie",
-        "consumer": "Verbrauch",
-        "forecast": "Virso",
-        "grid": "Netz",
-        "loadpoint": "Lueden & Heizen",
-        "meter": "Aner Zieler",
-        "pv": "Produktioun"
-      },
-      "otherConsumers": "Aneres",
-      "title": "Historique"
     },
     "loadpoint": {
       "avgPrice": "⌀ Präis",

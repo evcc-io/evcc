@@ -244,7 +244,7 @@ export default defineComponent({
 		activeSlotName() {
 			if (this.activeSlot) {
 				const { day, start, end } = this.activeSlot;
-				const range = `${this.fmtTimeString(start)}–${this.fmtTimeString(end)}`;
+				const range = `${this.fmtTimeString(start)} – ${this.fmtTimeString(end)}`;
 				return this.$t("main.targetChargePlan.timeRange", { day, range });
 			}
 			return null;
@@ -310,15 +310,9 @@ export default defineComponent({
 		},
 		fmtCostRange({ min, max }: { min: number | undefined; max: number | undefined }): string {
 			if (min === undefined || max === undefined) return "";
-			const fmtMin = this.formatShortValue(min);
-			const fmtMax = this.formatShortValue(max);
-			return `${fmtMin} – ${fmtMax}`;
-		},
-		formatShortValue(value: number): string {
-			if (this.isCo2) {
-				return this.fmtCo2Short(value);
-			}
-			return this.fmtPricePerKWh(value, this.currency, true);
+			return this.isCo2
+				? `${this.fmtCo2Short(min)} – ${this.fmtCo2Short(max)}`
+				: this.fmtPriceRange(min, max, this.currency, true);
 		},
 		slotsForLimit(limit: number | null): Slot[] {
 			return generateRateSlots(

@@ -1228,6 +1228,31 @@
     "restartDescription": "Heu provat d’apagar i tornar a engegar?",
     "secondaryActions": "Encara no heu pogut resoldre el problema? Aquí teniu altres opcions més contundents."
   },
+  "energy": {
+    "direction": {
+      "battery": {
+        "energy": "carregada",
+        "returnEnergy": "descarregada"
+      },
+      "grid": {
+        "energy": "importada",
+        "returnEnergy": "exportada"
+      },
+      "meter": {
+        "energy": "Energia",
+        "returnEnergy": "Energia (inversa)"
+      }
+    },
+    "group": {
+      "battery": "Bateria",
+      "consumer": "Consum",
+      "forecast": "Previsió",
+      "grid": "Xarxa",
+      "loadpoint": "Càrrega i calefacció",
+      "meter": "Comptadors addicionals",
+      "pv": "Producció"
+    }
+  },
   "issue": {
     "additional": {
       "description": "Incloeu configuració i registres per a ajudar-nos a reproduir el problema ràpidament. Us recomanem compartir tot el possible. Normalment no cal l’estat.",
@@ -1392,35 +1417,6 @@
       "consumption": "Consum",
       "feedIn": "Injecció",
       "title": "Límit extern actiu"
-    },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "carregada",
-          "returnEnergy": "descarregada"
-        },
-        "grid": {
-          "energy": "importada",
-          "returnEnergy": "exportada"
-        },
-        "meter": {
-          "energy": "Energia",
-          "returnEnergy": "Energia (inversa)"
-        }
-      },
-      "download": "Descarrega",
-      "empty": "No hi ha dades d’historial per a aquest interval de temps.",
-      "group": {
-        "battery": "Bateria",
-        "consumer": "Consum",
-        "forecast": "Previsió",
-        "grid": "Xarxa",
-        "loadpoint": "Càrrega i calefacció",
-        "meter": "Comptadors addicionals",
-        "pv": "Producció"
-      },
-      "otherConsumers": "Altres",
-      "title": "Historial"
     },
     "loadpoint": {
       "avgPrice": "Preu ⌀",
