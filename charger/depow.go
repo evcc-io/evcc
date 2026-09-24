@@ -26,7 +26,10 @@ package charger
 //	DP   code                access  name (translated)           notes
 //	101  x_work_state        rw      work state                  100 offline, 101 no vehicle, 200 vehicle connected, 201 charging complete,
 //	                                                             202 waiting (schedule), 203 waiting (delay), 204 paused, 300 charging,
-//	                                                             4xx protection, 5xx error (see depowWorkStateErrors)
+//	                                                             400 overcurrent, 401 overvoltage, 402 undervoltage, 403 overtemperature,
+//	                                                             500 self test failed, 501 residual current, 502 relay welded,
+//	                                                             503 residual current self test failed, 504 control pilot error,
+//	                                                             505 other error, 506 diode failure, 507 earthing protection
 //	102  x_metrics           ro      metrics                     {"L1":[V,A,P],"L2":[...],"L3":[...],"t":280,"p":39,"d":20110,"e":22}
 //	                                                             V 0.1 V, A 0.1 A, P 0.1 kW, t 0.1 °C, p 0.1 kW, d session s, e session 0.1 kWh
 //	103  x_selftest          ro      power-on self test result   unused according to vendor
@@ -80,21 +83,6 @@ const (
 )
 
 var depowDefaultSteps = []int64{6, 8, 10, 13, 16}
-
-var depowWorkStateErrors = map[int]string{
-	400: "overcurrent protection",
-	401: "overvoltage protection",
-	402: "undervoltage protection",
-	403: "overtemperature protection",
-	500: "self test failed",
-	501: "residual current protection",
-	502: "relay welded",
-	503: "residual current self test failed",
-	504: "control pilot error",
-	505: "other error",
-	506: "diode failure",
-	507: "earthing protection",
-}
 
 type depowMetrics struct {
 	L1, L2, L3 [3]float64
@@ -231,9 +219,6 @@ func depowStatus(v any) (api.ChargeStatus, error) {
 	case 3:
 		return api.StatusC, nil
 	default:
-		if msg, ok := depowWorkStateErrors[state]; ok {
-			return api.StatusNone, fmt.Errorf("invalid work state: %d (%s)", state, msg)
-		}
 		return api.StatusNone, fmt.Errorf("invalid work state: %d", state)
 	}
 }
