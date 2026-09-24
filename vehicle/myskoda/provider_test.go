@@ -115,9 +115,8 @@ func TestGetLimitSocPrefersSavedLocation(t *testing.T) {
 	global, home := 100, 80
 	res := VehicleResponse{Vehicle: Vehicle{
 		Charging: &Charging{
-			IsVehicleInSavedLocation: true,
-			Status:                   &ChargingStatus{},
-			Settings:                 &ChargingSettings{TargetStateOfChargeInPercent: &global},
+			Status:   &ChargingStatus{},
+			Settings: &ChargingSettings{TargetStateOfChargeInPercent: &global},
 		},
 	}}
 	res.Vehicle.ChargingProfiles.CurrentVehiclePositionProfile = &struct{ TargetStateOfChargeInPercent *int }{&home}
@@ -128,14 +127,13 @@ func TestGetLimitSocPrefersSavedLocation(t *testing.T) {
 	require.NoError(t, err)
 	assert.EqualValues(t, home, soc)
 
-	// not at saved location: fall back to global limit
-	res.Vehicle.Charging.IsVehicleInSavedLocation = false
+	// profile without limit: fall back to global limit
+	res.Vehicle.ChargingProfiles.CurrentVehiclePositionProfile = &struct{ TargetStateOfChargeInPercent *int }{}
 	soc, err = v.GetLimitSoc()
 	require.NoError(t, err)
 	assert.EqualValues(t, global, soc)
 
-	// profiles unsupported by vehicle: fall back to global limit
-	res.Vehicle.Charging.IsVehicleInSavedLocation = true
+	// not at saved location or profiles unsupported: profile is missing, fall back to global limit
 	res.Vehicle.ChargingProfiles.CurrentVehiclePositionProfile = nil
 	soc, err = v.GetLimitSoc()
 	require.NoError(t, err)
