@@ -28,6 +28,9 @@ type Connector struct {
 	meterUpdated time.Time
 	measurements map[types.Measurand]types.SampledValue
 
+	// meter updates delivering power since the last status notification
+	suspendedChargingSamples int
+
 	txnId int
 	idTag string
 
@@ -180,16 +183,13 @@ func (conn *Connector) Status() (core.ChargePointStatus, error) {
 	return conn.status.Status, nil
 }
 
-// ChargingByMeter reports whether an active transaction is actually drawing
-// power. It corrects chargers (e.g. Grizzl-E) that keep reporting Suspended*
-// after they start delivering instead of switching to Charging.
-func (conn *Connector) ChargingByMeter() bool {
-	if txn, err := conn.TransactionID(); err != nil || txn == 0 {
-		return false
-	}
+// SuspendedCharging reports whether a charger in SuspendedEVSE is actually delivering
+// power, based on consecutive meter updates received after the status notification.
+func (conn *Connector) SuspendedCharging() bool {
+	conn.mu.Lock()
+	defer conn.mu.Unlock()
 
-	power, err := conn.CurrentPower()
-	return err == nil && power > ChargingPowerThreshold
+	return conn.suspendedChargingSamples >= SuspendedChargingSamples && !conn.isMeterTimeout()
 }
 
 // NeedsAuthentication checks if local authentication or an initial RemoteStartTransaction is required
@@ -298,6 +298,11 @@ func (conn *Connector) CurrentPower() (float64, error) {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
+	return conn.currentPower()
+}
+
+// currentPower returns the current power. Caller must hold the lock.
+func (conn *Connector) currentPower() (float64, error) {
 	// zero value on timeout when no transaction is running
 	if conn.isMeterTimeout() {
 		if conn.txnId != 0 {

@@ -246,17 +246,16 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 		core.ChargePointStatusUnavailable: // "Unavailable"
 		return api.StatusA, nil
 	case
-		core.ChargePointStatusSuspendedEVSE, // "SuspendedEVSE"
-		core.ChargePointStatusSuspendedEV:   // "SuspendedEV"
-		// some chargers (e.g. Grizzl-E) keep reporting Suspended* after they
-		// start delivering instead of switching to Charging; trust the meter
-		if c.conn.ChargingByMeter() {
+		core.ChargePointStatusSuspendedEVSE: // "SuspendedEVSE"
+		// some chargers (e.g. Grizzl-E) keep reporting SuspendedEVSE while delivering
+		if c.conn.SuspendedCharging() {
 			return api.StatusC, nil
 		}
 		return api.StatusB, nil
 	case
-		core.ChargePointStatusPreparing, // "Preparing"
-		core.ChargePointStatusFinishing: // "Finishing"
+		core.ChargePointStatusPreparing,   // "Preparing"
+		core.ChargePointStatusSuspendedEV, // "SuspendedEV"
+		core.ChargePointStatusFinishing:   // "Finishing"
 		return api.StatusB, nil
 	case
 		core.ChargePointStatusCharging: // "Charging"
@@ -289,18 +288,11 @@ func (c *OCPP) StatusReason() (api.Reason, error) {
 
 // Enabled implements the api.Charger interface
 func (c *OCPP) Enabled() (bool, error) {
-	// a charger actually delivering power is enabled even when it misreports
-	// Suspended* (e.g. Grizzl-E stays SuspendedEVSE while charging); trust the
-	// meter so evcc keeps control instead of assuming the charger is off
-	if c.conn.ChargingByMeter() {
-		return true, nil
-	}
-
 	if s, err := c.conn.Status(); err == nil {
 		switch s {
 		case
 			core.ChargePointStatusSuspendedEVSE:
-			return false, nil
+			return c.conn.SuspendedCharging(), nil
 		case
 			core.ChargePointStatusCharging,
 			core.ChargePointStatusSuspendedEV:

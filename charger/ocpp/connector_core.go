@@ -40,6 +40,10 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 		conn.log.TRACE.Printf("ignoring status: %s < %s", request.Timestamp.Time, conn.status.Timestamp)
 	}
 
+	if applied {
+		conn.suspendedChargingSamples = 0
+	}
+
 	// Available means cable unplugged and any prior transaction is stale
 	if applied && request.Status == core.ChargePointStatusAvailable && conn.txnId != 0 {
 		conn.log.DEBUG.Printf("clearing stale transaction %d on Available status", conn.txnId)
@@ -95,6 +99,7 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 		conn.txnId = *request.TransactionId
 	}
 
+	var powerUpdated bool
 	for _, meterValue := range sortByAge(request.MeterValue) {
 		if meterValue.Timestamp == nil {
 			// this should be done before the sorting, but lets assume either all or no sample has a timestamp
@@ -116,12 +121,36 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 					sample.Value = strings.TrimSpace(sample.Value)
 					conn.measurements[getSampleKey(sample)] = sample
 					conn.meterUpdated = meterValue.Timestamp.Time
+
+					if sample.Measurand == types.MeasurandPowerActiveImport && !boundary {
+						powerUpdated = true
+					}
 				}
 			}
 		}
 	}
 
+	if powerUpdated {
+		conn.updateSuspendedCharging()
+	}
+
 	return new(core.MeterValuesConfirmation), nil
+}
+
+// updateSuspendedCharging counts meter updates delivering power in SuspendedEVSE.
+// Caller must hold the lock.
+func (conn *Connector) updateSuspendedCharging() {
+	if conn.txnId == 0 || conn.status == nil || conn.status.Status != core.ChargePointStatusSuspendedEVSE {
+		conn.suspendedChargingSamples = 0
+		return
+	}
+
+	if power, err := conn.currentPower(); err == nil && power >= SuspendedChargingPower {
+		conn.suspendedChargingSamples++
+		return
+	}
+
+	conn.suspendedChargingSamples = 0
 }
 
 func (conn *Connector) OnStartTransaction(request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {
