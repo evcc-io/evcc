@@ -101,3 +101,15 @@ func TestDecodeTampered(t *testing.T) {
 		assert.Error(t, err, version)
 	}
 }
+
+func TestReadFrameTooLarge(t *testing.T) {
+	for _, frame := range []string{
+		"000055aa00000001000000070fffffff",
+		"000055aa0000000100000007ffffffff",
+		"00006699000000000001000000070fffffff",
+		"000066990000000000010000000700fffffffc",
+	} {
+		_, err := readFrame(bufio.NewReader(bytes.NewReader(mustHex(t, frame))))
+		assert.ErrorContains(t, err, "frame too large", frame)
+	}
+}

@@ -77,6 +77,7 @@ const (
 	tuyaDepowDpMetrics   = "102"
 	tuyaDepowDpSteps     = "107"
 	tuyaDepowDpCurrent   = "150"
+	tuyaDepowDpMaxConfig = "152"
 	tuyaDepowDpNfc       = "155"
 	tuyaDepowDpRefresh   = "188"
 
@@ -279,6 +280,31 @@ func (wb *TuyaDepow) MaxCurrent(current int64) error {
 	}
 
 	return wb.conn.Set(map[string]any{tuyaDepowDpCurrent: step})
+}
+
+// tuyaDepowLimits returns the lowest and highest supported step, limited by the installation maximum
+func tuyaDepowLimits(dps map[string]any) (int64, int64) {
+	steps := tuyaDepowSteps(dps)
+	maxCurrent := steps[len(steps)-1]
+
+	if limit := tuyaDepowInt(dps[tuyaDepowDpMaxConfig]); limit > 0 {
+		maxCurrent = tuyaDepowStep(steps, min(maxCurrent, limit))
+	}
+
+	return steps[0], maxCurrent
+}
+
+var _ api.CurrentLimiter = (*TuyaDepow)(nil)
+
+// GetMinMaxCurrent implements the api.CurrentLimiter interface
+func (wb *TuyaDepow) GetMinMaxCurrent() (float64, float64, error) {
+	dps, err := wb.conn.Dps()
+	if err != nil {
+		return 0, 0, err
+	}
+
+	minCurrent, maxCurrent := tuyaDepowLimits(dps)
+	return float64(minCurrent), float64(maxCurrent), nil
 }
 
 func (wb *TuyaDepow) metrics() (tuyaDepowMetrics, error) {

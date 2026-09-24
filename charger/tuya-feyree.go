@@ -87,19 +87,25 @@ var (
 	tuyaFeyreeDpCurrents = [3]string{"105", "106", "107"}
 )
 
-// current setpoint data point by maximum current setting
-var tuyaFeyreeCurrentDps = map[string]string{
-	"Max16A": "114",
-	"Max32A": "115",
-	"Max40A": "116",
-	"Max50A": "117",
+type tuyaFeyreeCurrent struct {
+	dp       string
+	min, max int64
+}
+
+// current setpoint data point and limits by maximum current setting.
+// Minimum currents are 6/6/8/8 A in tuya-local configs and 8/8/12/12 A in the Tuya model, 6 A is confirmed for Max16A.
+var tuyaFeyreeCurrents = map[string]tuyaFeyreeCurrent{
+	"Max16A": {"114", 6, 16},
+	"Max32A": {"115", 6, 32},
+	"Max40A": {"116", 8, 40},
+	"Max50A": {"117", 8, 50},
 }
 
 // TuyaFeyree charger implementation
 type TuyaFeyree struct {
-	log  *util.Logger
-	conn *tuya.Connection
-	dp   string
+	log     *util.Logger
+	conn    *tuya.Connection
+	setting tuyaFeyreeCurrent
 
 	mu      sync.Mutex
 	current int64
@@ -158,7 +164,7 @@ func NewTuyaFeyree(ctx context.Context, host, id, localKey string) (_ *TuyaFeyre
 		return nil, fmt.Errorf("device not reachable: %w", err)
 	}
 
-	dp, err := tuyaFeyreeCurrentDp(dps)
+	setting, err := tuyaFeyreeCurrentSetting(dps)
 	if err != nil {
 		return nil, err
 	}
@@ -166,37 +172,47 @@ func NewTuyaFeyree(ctx context.Context, host, id, localKey string) (_ *TuyaFeyre
 	wb := &TuyaFeyree{
 		log:     log,
 		conn:    conn,
-		dp:      dp,
-		current: 6,
+		setting: setting,
+		current: setting.min,
 	}
 
-	if current := int64(tuyaFeyreeFloat(dps[dp])); current > 0 {
+	if current := int64(tuyaFeyreeFloat(dps[setting.dp])); current > 0 {
 		wb.current = current
 	}
 
 	return wb, nil
 }
 
-// tuyaFeyreeCurrentDp returns the current setpoint data point matching the maximum current setting
-func tuyaFeyreeCurrentDp(dps map[string]any) (string, error) {
+// tuyaFeyreeCurrentSetting returns the current setpoint data point and limits matching the maximum current setting,
+// or the first current data point reported by the device
+func tuyaFeyreeCurrentSetting(dps map[string]any) (tuyaFeyreeCurrent, error) {
 	if s, ok := dps[tuyaFeyreeDpMaxSetting].(string); ok {
-		if dp, ok := tuyaFeyreeCurrentDps[s]; ok {
-			return dp, nil
+		if res, ok := tuyaFeyreeCurrents[s]; ok {
+			return res, nil
 		}
 	}
 
-	for _, dp := range []string{"114", "115", "116", "117"} {
-		if _, ok := dps[dp]; ok {
-			return dp, nil
+	for _, s := range []string{"Max16A", "Max32A", "Max40A", "Max50A"} {
+		if res := tuyaFeyreeCurrents[s]; dps[res.dp] != nil {
+			return res, nil
 		}
 	}
 
-	return "", fmt.Errorf("unknown maximum current setting: %v", dps[tuyaFeyreeDpMaxSetting])
+	return tuyaFeyreeCurrent{}, fmt.Errorf("unknown maximum current setting: %v", dps[tuyaFeyreeDpMaxSetting])
 }
 
 func tuyaFeyreeFloat(v any) float64 {
 	f, _ := v.(float64)
 	return f
+}
+
+// tuyaFeyreeValue returns a numeric data point or api.ErrNotAvailable if the device does not report it
+func tuyaFeyreeValue(dps map[string]any, dp string) (float64, error) {
+	f, ok := dps[dp].(float64)
+	if !ok {
+		return 0, api.ErrNotAvailable
+	}
+	return f, nil
 }
 
 // Status implements the api.Charger interface
@@ -244,7 +260,7 @@ func (wb *TuyaFeyree) StatusReason() (api.Reason, error) {
 // Enabled implements the api.Charger interface
 func (wb *TuyaFeyree) Enabled() (bool, error) {
 	dps, err := wb.conn.Dps()
-	return tuyaFeyreeFloat(dps[wb.dp]) > 0, err
+	return tuyaFeyreeFloat(dps[wb.setting.dp]) > 0, err
 }
 
 // Enable implements the api.Charger interface
@@ -256,7 +272,7 @@ func (wb *TuyaFeyree) Enable(enable bool) error {
 		wb.mu.Unlock()
 	}
 
-	return wb.conn.Set(map[string]any{wb.dp: current})
+	return wb.conn.Set(map[string]any{wb.setting.dp: current})
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -266,16 +282,25 @@ func (wb *TuyaFeyree) MaxCurrent(current int64) error {
 		return err
 	}
 
+	current = min(max(current, wb.setting.min), wb.setting.max)
+
 	wb.mu.Lock()
 	wb.current = current
 	wb.mu.Unlock()
 
 	// current 0 means disabled, keep until enabled
-	if actual := int64(tuyaFeyreeFloat(dps[wb.dp])); actual == 0 || actual == current {
+	if actual := int64(tuyaFeyreeFloat(dps[wb.setting.dp])); actual == 0 || actual == current {
 		return nil
 	}
 
-	return wb.conn.Set(map[string]any{wb.dp: current})
+	return wb.conn.Set(map[string]any{wb.setting.dp: current})
+}
+
+var _ api.CurrentLimiter = (*TuyaFeyree)(nil)
+
+// GetMinMaxCurrent implements the api.CurrentLimiter interface
+func (wb *TuyaFeyree) GetMinMaxCurrent() (float64, float64, error) {
+	return float64(wb.setting.min), float64(wb.setting.max), nil
 }
 
 var _ api.Meter = (*TuyaFeyree)(nil)
@@ -283,7 +308,12 @@ var _ api.Meter = (*TuyaFeyree)(nil)
 // CurrentPower implements the api.Meter interface
 func (wb *TuyaFeyree) CurrentPower() (float64, error) {
 	dps, err := wb.conn.Dps()
-	return tuyaFeyreeFloat(dps[tuyaFeyreeDpPower]) * 100, err
+	if err != nil {
+		return 0, err
+	}
+
+	res, err := tuyaFeyreeValue(dps, tuyaFeyreeDpPower)
+	return res * 100, err
 }
 
 var _ api.ChargeRater = (*TuyaFeyree)(nil)
@@ -291,17 +321,27 @@ var _ api.ChargeRater = (*TuyaFeyree)(nil)
 // ChargedEnergy implements the api.ChargeRater interface
 func (wb *TuyaFeyree) ChargedEnergy() (float64, error) {
 	dps, err := wb.conn.Dps()
-	return tuyaFeyreeFloat(dps[tuyaFeyreeDpEnergy]) / 10, err
+	if err != nil {
+		return 0, err
+	}
+
+	res, err := tuyaFeyreeValue(dps, tuyaFeyreeDpEnergy)
+	return res / 10, err
 }
 
-// phases returns the scaled values of three data points
+// phases returns the scaled values of three data points. L2 and L3 may be missing on single phase devices.
 func (wb *TuyaFeyree) phases(dp [3]string, scale func(float64) float64) (float64, float64, float64, error) {
 	dps, err := wb.conn.Dps()
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	return scale(tuyaFeyreeFloat(dps[dp[0]])), scale(tuyaFeyreeFloat(dps[dp[1]])), scale(tuyaFeyreeFloat(dps[dp[2]])), nil
+	l1, err := tuyaFeyreeValue(dps, dp[0])
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	return scale(l1), scale(tuyaFeyreeFloat(dps[dp[1]])), scale(tuyaFeyreeFloat(dps[dp[2]])), nil
 }
 
 var _ api.PhaseCurrents = (*TuyaFeyree)(nil)

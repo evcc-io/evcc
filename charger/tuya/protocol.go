@@ -282,25 +282,29 @@ func readFrame(r *bufio.Reader) ([]byte, error) {
 	}
 
 	var header []byte
-	var remaining int
+	var length uint32
+	var trailer int
 
 	if prefix == prefix55AA {
 		header = make([]byte, 16)
 		if _, err := io.ReadFull(r, header[4:]); err != nil {
 			return nil, err
 		}
-		remaining = int(binary.BigEndian.Uint32(header[12:]))
+		length = binary.BigEndian.Uint32(header[12:])
 	} else {
 		header = make([]byte, 18)
 		if _, err := io.ReadFull(r, header[4:]); err != nil {
 			return nil, err
 		}
-		remaining = int(binary.BigEndian.Uint32(header[14:])) + 4
+		length = binary.BigEndian.Uint32(header[14:])
+		trailer = 4
 	}
 
-	if remaining > maxPayload {
-		return nil, fmt.Errorf("frame too large: %d", remaining)
+	// validate before converting, int may be 32 bit
+	if length > maxPayload {
+		return nil, fmt.Errorf("frame too large: %d", length)
 	}
+	remaining := int(length) + trailer
 
 	binary.BigEndian.PutUint32(header, prefix)
 	frame := make([]byte, len(header)+remaining)

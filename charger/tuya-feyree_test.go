@@ -23,26 +23,35 @@ func TestTuyaFeyreeStatus(t *testing.T) {
 	}
 }
 
-func TestTuyaFeyreeCurrentDp(t *testing.T) {
+func TestTuyaFeyreeCurrentSetting(t *testing.T) {
 	for _, tc := range []struct {
 		dps      map[string]any
-		expected string
+		expected tuyaFeyreeCurrent
 	}{
-		{map[string]any{"113": "Max16A", "114": float64(10)}, "114"},
-		{map[string]any{"113": "Max32A", "115": float64(20)}, "115"},
-		{map[string]any{"113": "Max50A"}, "117"},
-		{map[string]any{"116": float64(16)}, "116"},
+		{map[string]any{"113": "Max16A", "114": float64(10)}, tuyaFeyreeCurrent{"114", 6, 16}},
+		{map[string]any{"113": "Max32A", "115": float64(20)}, tuyaFeyreeCurrent{"115", 6, 32}},
+		{map[string]any{"113": "Max50A"}, tuyaFeyreeCurrent{"117", 8, 50}},
+		{map[string]any{"116": float64(16)}, tuyaFeyreeCurrent{"116", 8, 40}},
 	} {
-		res, err := tuyaFeyreeCurrentDp(tc.dps)
+		res, err := tuyaFeyreeCurrentSetting(tc.dps)
 		assert.NoError(t, err)
 		assert.Equal(t, tc.expected, res)
 	}
 
-	_, err := tuyaFeyreeCurrentDp(map[string]any{})
+	_, err := tuyaFeyreeCurrentSetting(map[string]any{})
 	assert.Error(t, err)
 }
 
 func TestTuyaFeyreeVoltage(t *testing.T) {
 	assert.Equal(t, 233.0, tuyaFeyreeVoltage(233))
 	assert.Equal(t, 233.0, tuyaFeyreeVoltage(2330))
+}
+
+func TestTuyaFeyreeValue(t *testing.T) {
+	res, err := tuyaFeyreeValue(map[string]any{"109": float64(37)}, "109")
+	assert.NoError(t, err)
+	assert.Equal(t, 37.0, res)
+
+	_, err = tuyaFeyreeValue(map[string]any{}, "109")
+	assert.ErrorIs(t, err, api.ErrNotAvailable)
 }

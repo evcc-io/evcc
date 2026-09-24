@@ -234,7 +234,7 @@ func (c *Connection) serve(ctx context.Context, conn net.Conn, r *bufio.Reader, 
 		case <-heartbeat.C:
 			err = c.send(func(string) (uint32, any) {
 				return cmdHeartbeat, map[string]any{"gwId": c.id, "devId": c.id}
-			})
+			}, nil)
 		case <-query.C:
 			err = c.query()
 		}
@@ -324,16 +324,25 @@ func (c *Connection) controlMsg(version string, dps map[string]any) (uint32, any
 }
 
 func (c *Connection) query() error {
-	return c.send(c.queryMsg)
+	return c.send(c.queryMsg, nil)
 }
 
-// send writes a message built for the protocol version of the current connection
-func (c *Connection) send(msg func(version string) (uint32, any)) error {
+// send writes a message built for the protocol version of the current connection.
+// Cached values are merged before writing, so that any later device report takes precedence.
+func (c *Connection) send(msg func(version string) (uint32, any), cache map[string]any) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	if c.conn == nil {
 		return errors.New("not connected")
+	}
+
+	if cache != nil {
+		select {
+		case <-c.dps.Done():
+			c.merge(cache)
+		default:
+		}
 	}
 
 	cmd, data := msg(c.codec.version)
@@ -386,30 +395,20 @@ func (c *Connection) DpsContext(ctx context.Context) (map[string]any, error) {
 
 // Set writes data points. Written values are cached until the device reports them.
 func (c *Connection) Set(dps map[string]any) error {
-	if err := c.send(func(version string) (uint32, any) {
-		return c.controlMsg(version, dps)
-	}); err != nil {
-		return err
-	}
-
 	// normalize to json types as received from the device
 	b, err := json.Marshal(dps)
 	if err != nil {
 		return err
 	}
 
-	var res map[string]any
-	if err := json.Unmarshal(b, &res); err != nil {
+	var cache map[string]any
+	if err := json.Unmarshal(b, &cache); err != nil {
 		return err
 	}
 
-	select {
-	case <-c.dps.Done():
-		c.merge(res)
-	default:
-	}
-
-	return nil
+	return c.send(func(version string) (uint32, any) {
+		return c.controlMsg(version, dps)
+	}, cache)
 }
 
 func (c *Connection) merge(dps map[string]any) {
