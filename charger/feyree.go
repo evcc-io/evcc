@@ -1,0 +1,326 @@
+package charger
+
+// LICENSE
+
+// Copyright (c) evcc.io (andig, naltatis, premultiply)
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+// Feyree and OEM chargers (Absina, Goodcell, Kolanky, dé 22.2 kW) via the local Tuya protocol, Tuya model ek3pa0.
+// Not all firmware versions report all data points.
+//
+// Sources: Tuya model definition in make-all/tuya-local#2050, tuya-local absina_evcharger.yaml,
+// feyree_ev_portable_charger.yaml, feyree_43_evcharger.yaml, goodcell_ev_charger.yaml, kolanky_evcharger.yaml.
+//
+//	DP   code                access  name (translated)           notes
+//	3    work_state          ro      work state                  charger_free, charger_insert, charger_free_fault, charger_wait,
+//	                                                             charger_charging, charger_pause, charger_end, charger_fault
+//	10   fault               ro      fault alarm                 bitmap err_uvp, err_ovp, err_ocp, err_pe, err_temp, err_cp, err_leak, err_leaksc,
+//	                                                             err_pe2, err_temp_plug, err_temp_pcb, err_temp_core, err_esb, err_pe_sck
+//	11   alarm_set_1         rw      alarm settings 1            raw
+//	12   alarm_set_2         rw      alarm settings 2            raw
+//	14   work_mode           rw      work mode                   charge_now, charge_pct, charge_energy, charge_schedule
+//	15   balance_energy      ro      remaining energy            0.001 kWh
+//	16   clear_energy        rw      clear energy                bool
+//	18   switch              rw      switch                      factory reset according to tuya-local, never written
+//	23   system_version      ro      system version              "HW V1.0,SW V1.0.3"
+//	25   charge_energy_once  ro      single charge energy        0.01 kWh
+//	27   online_state        rw      online state                online, offline, enables real time updates according to tuya-local
+//	101  DeviceState         ro      device state                no_connet, connect, charing, wait_rfid, finish, wait_charing, error
+//	102  A_Voltage           ro      voltage L1                  V, some firmware 0.1 V
+//	103  B_Voltage           ro      voltage L2                  V, some firmware 0.1 V
+//	104  C_Voltage           ro      voltage L3                  V, some firmware 0.1 V
+//	105  A_Current           ro      current L1                  0.1 A
+//	106  B_Current           ro      current L2                  0.1 A
+//	107  C_Current           ro      current L3                  0.1 A
+//	108  PhaseFlag           ro      single/three phase          Single_phase, Three_phase, No_phase, Phase_err, unreliable
+//	109  DeviceKw            ro      power                       0.1 kW
+//	110  DeviceTemp          ro      temperature                 0.1 °C
+//	111  DeviceTemp2         ro      temperature 2               0.1 °C
+//	112  DeviceKwh           ro      session energy              0.1 kWh, reset on unplug
+//	113  DeviceMaxSetA       ro      maximum current setting     Max16A, Max32A, Max40A, Max50A, selects the current DP
+//	114  Set16A              rw      charging current            A, 6/8-16
+//	115  Set32A              rw      charging current            A, 6/8-32
+//	116  Set40A              rw      charging current            A, 8/12-40
+//	117  Set50A              rw      charging current            A, 8/12-50
+//	118  SetDelayTime        rw      delayed charging            h, 0-15
+//	119  SetDefineTime       rw      timed charging              h, 0-15
+//	120  Ctime               ro      time                        "00:00:00"
+//	121  CTime2              ro      charging time               0.1 h
+//	122  IDVerificationSet   rw      identity verification       bool, require RFID
+//	123  RFID                rw      card swipe                  bool
+//	124  ChargingOperation   rw      charging operation          OpenCharging, CloseCharging, WaitOperation. Not used: sessions are started by the device
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"sync"
+
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/tuya"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/sponsor"
+)
+
+const (
+	feyreeDpState      = "101"
+	feyreeDpPower      = "109"
+	feyreeDpEnergy     = "112"
+	feyreeDpMaxSetting = "113"
+)
+
+var (
+	feyreeDpVoltages = [3]string{"102", "103", "104"}
+	feyreeDpCurrents = [3]string{"105", "106", "107"}
+)
+
+// current setpoint data point by maximum current setting
+var feyreeCurrentDps = map[string]string{
+	"Max16A": "114",
+	"Max32A": "115",
+	"Max40A": "116",
+	"Max50A": "117",
+}
+
+// Feyree charger implementation
+type Feyree struct {
+	log  *util.Logger
+	conn *tuya.Connection
+	dp   string
+
+	mu      sync.Mutex
+	current int64
+}
+
+func init() {
+	registry.AddCtx("feyree", NewFeyreeFromConfig)
+}
+
+// NewFeyreeFromConfig creates a Feyree charger from generic config
+func NewFeyreeFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
+	var cc struct {
+		Host     string
+		Id       string
+		LocalKey string
+	}
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	if cc.Host == "" {
+		return nil, errors.New("missing host")
+	}
+
+	if cc.Id == "" || cc.LocalKey == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
+	return NewFeyree(ctx, cc.Host, cc.Id, cc.LocalKey)
+}
+
+// NewFeyree creates a Feyree charger
+func NewFeyree(ctx context.Context, host, id, localKey string) (_ *Feyree, err error) {
+	log := util.NewLogger("feyree").Redact(localKey)
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
+
+	// stop reconnecting if the device is not reachable during setup
+	ctx, cancel := context.WithCancel(ctx)
+	defer func() {
+		if err != nil {
+			cancel()
+		}
+	}()
+
+	conn, err := tuya.NewConnection(ctx, log, host, id, localKey)
+	if err != nil {
+		return nil, err
+	}
+
+	dps, err := conn.DpsContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("device not reachable: %w", err)
+	}
+
+	dp, err := feyreeCurrentDp(dps)
+	if err != nil {
+		return nil, err
+	}
+
+	wb := &Feyree{
+		log:     log,
+		conn:    conn,
+		dp:      dp,
+		current: 6,
+	}
+
+	if current := int64(feyreeFloat(dps[dp])); current > 0 {
+		wb.current = current
+	}
+
+	return wb, nil
+}
+
+// feyreeCurrentDp returns the current setpoint data point matching the maximum current setting
+func feyreeCurrentDp(dps map[string]any) (string, error) {
+	if s, ok := dps[feyreeDpMaxSetting].(string); ok {
+		if dp, ok := feyreeCurrentDps[s]; ok {
+			return dp, nil
+		}
+	}
+
+	for _, dp := range []string{"114", "115", "116", "117"} {
+		if _, ok := dps[dp]; ok {
+			return dp, nil
+		}
+	}
+
+	return "", fmt.Errorf("unknown maximum current setting: %v", dps[feyreeDpMaxSetting])
+}
+
+func feyreeFloat(v any) float64 {
+	f, _ := v.(float64)
+	return f
+}
+
+// Status implements the api.Charger interface
+func (wb *Feyree) Status() (api.ChargeStatus, error) {
+	dps, err := wb.conn.Dps()
+	if err != nil {
+		return api.StatusNone, err
+	}
+
+	return feyreeStatus(dps[feyreeDpState])
+}
+
+func feyreeStatus(state any) (api.ChargeStatus, error) {
+	switch state {
+	case "no_connet":
+		return api.StatusA, nil
+	case "connect", "wait_rfid", "wait_charing", "finish":
+		return api.StatusB, nil
+	case "charing":
+		return api.StatusC, nil
+	default:
+		return api.StatusNone, fmt.Errorf("invalid device state: %v", state)
+	}
+}
+
+var _ api.StatusReasoner = (*Feyree)(nil)
+
+// StatusReason implements the api.StatusReasoner interface
+func (wb *Feyree) StatusReason() (api.Reason, error) {
+	dps, err := wb.conn.Dps()
+	if err != nil {
+		return api.ReasonUnknown, err
+	}
+
+	switch dps[feyreeDpState] {
+	case "wait_rfid":
+		return api.ReasonWaitingForAuthorization, nil
+	case "finish":
+		return api.ReasonDisconnectRequired, nil
+	default:
+		return api.ReasonUnknown, nil
+	}
+}
+
+// Enabled implements the api.Charger interface
+func (wb *Feyree) Enabled() (bool, error) {
+	dps, err := wb.conn.Dps()
+	return feyreeFloat(dps[wb.dp]) > 0, err
+}
+
+// Enable implements the api.Charger interface
+func (wb *Feyree) Enable(enable bool) error {
+	var current int64
+	if enable {
+		wb.mu.Lock()
+		current = wb.current
+		wb.mu.Unlock()
+	}
+
+	return wb.conn.Set(map[string]any{wb.dp: current})
+}
+
+// MaxCurrent implements the api.Charger interface
+func (wb *Feyree) MaxCurrent(current int64) error {
+	dps, err := wb.conn.Dps()
+	if err != nil {
+		return err
+	}
+
+	wb.mu.Lock()
+	wb.current = current
+	wb.mu.Unlock()
+
+	// current 0 means disabled, keep until enabled
+	if actual := int64(feyreeFloat(dps[wb.dp])); actual == 0 || actual == current {
+		return nil
+	}
+
+	return wb.conn.Set(map[string]any{wb.dp: current})
+}
+
+var _ api.Meter = (*Feyree)(nil)
+
+// CurrentPower implements the api.Meter interface
+func (wb *Feyree) CurrentPower() (float64, error) {
+	dps, err := wb.conn.Dps()
+	return feyreeFloat(dps[feyreeDpPower]) * 100, err
+}
+
+var _ api.ChargeRater = (*Feyree)(nil)
+
+// ChargedEnergy implements the api.ChargeRater interface
+func (wb *Feyree) ChargedEnergy() (float64, error) {
+	dps, err := wb.conn.Dps()
+	return feyreeFloat(dps[feyreeDpEnergy]) / 10, err
+}
+
+// phases returns the scaled values of three data points
+func (wb *Feyree) phases(dp [3]string, scale func(float64) float64) (float64, float64, float64, error) {
+	dps, err := wb.conn.Dps()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	return scale(feyreeFloat(dps[dp[0]])), scale(feyreeFloat(dps[dp[1]])), scale(feyreeFloat(dps[dp[2]])), nil
+}
+
+var _ api.PhaseCurrents = (*Feyree)(nil)
+
+// Currents implements the api.PhaseCurrents interface
+func (wb *Feyree) Currents() (float64, float64, float64, error) {
+	return wb.phases(feyreeDpCurrents, func(v float64) float64 { return v / 10 })
+}
+
+var _ api.PhaseVoltages = (*Feyree)(nil)
+
+// Voltages implements the api.PhaseVoltages interface
+func (wb *Feyree) Voltages() (float64, float64, float64, error) {
+	return wb.phases(feyreeDpVoltages, feyreeVoltage)
+}
+
+// feyreeVoltage scales voltages, the model range is 0-500 V but some firmware reports 0.1 V
+func feyreeVoltage(v float64) float64 {
+	if v > 500 {
+		return v / 10
+	}
+	return v
+}
