@@ -148,11 +148,11 @@ export default defineComponent({
 				end: new Date(end),
 				value,
 			}));
-			const { duration, plan, power, planTime } = this.plan;
+			const { duration, plan, power, planTime, optimizer } = this.plan;
 			const targetTime = planTime ? new Date(planTime) : null;
 			const { currency, smartCostType } = this;
 			return rates
-				? { duration, plan, power, rates, targetTime, currency, smartCostType }
+				? { duration, plan, power, rates, targetTime, currency, smartCostType, optimizer }
 				: null;
 		},
 		alreadyReached(): boolean {

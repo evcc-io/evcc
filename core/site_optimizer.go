@@ -235,6 +235,37 @@ func loadpointCurrentAction(lp *Loadpoint) string {
 // refreshing; the site itself expires its cached solve in reapplySuggestions
 const suggestionMaxAge = 2 * tariff.SlotDuration
 
+// optimizerPlan is a loadpoint's charging schedule from the last solve
+type optimizerPlan struct {
+	rates  api.Rates // charging slots valued at the grid import price
+	energy []float64 // charge energy per slot, Wh
+}
+
+// loadpointPlan extracts the remaining charging slots of a battery result
+func loadpointPlan(res optimizer.BatteryResult, prices []float32, schedule optimizerSchedule, now time.Time) optimizerPlan {
+	var plan optimizerPlan
+
+	for slot := range schedule.endsAfter(now) {
+		if slot >= len(res.ChargingPower) || slot >= len(prices) {
+			break
+		}
+
+		energy := float64(res.ChargingPower[slot])
+		if energy/schedule.duration(slot).Hours() <= suggestionThreshold {
+			continue
+		}
+
+		plan.energy = append(plan.energy, energy)
+		plan.rates = append(plan.rates, api.Rate{
+			Start: schedule.timestamps[slot],
+			End:   schedule.end(slot),
+			Value: float64(prices[slot]) * 1e3, // per Wh to per kWh
+		})
+	}
+
+	return plan
+}
+
 // setSuggestions replaces the suggestions applied on each publish
 func (site *Site) setSuggestions(suggestions map[string]types.Suggestion) {
 	site.Lock()
@@ -798,6 +829,11 @@ func (site *Site) applyOptimizerResult(req optimizer.OptimizationInput, details 
 		// uncontrollable devices can't act on a suggestion
 		if key := detail.key(); key != "" && detail.controllable {
 			suggestions[key] = suggestion
+
+			// the schedule is gated by the suggestion, so it needs no clearing
+			if detail.loadpoint != nil {
+				site.loadpoints[*detail.loadpoint].setOptimizerPlan(loadpointPlan(batRes, req.TimeSeries.PN, schedule, now))
+			}
 		}
 	}
 
