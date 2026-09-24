@@ -77,6 +77,7 @@ const (
 	depowDpMetrics   = "102"
 	depowDpSteps     = "107"
 	depowDpCurrent   = "150"
+	depowDpNfc       = "155"
 	depowDpRefresh   = "188"
 
 	depowRefreshInterval = 25 * time.Second
@@ -228,11 +229,20 @@ var _ api.StatusReasoner = (*Depow)(nil)
 // StatusReason implements the api.StatusReasoner interface
 func (wb *Depow) StatusReason() (api.Reason, error) {
 	dps, err := wb.conn.Dps()
-	if err == nil && depowInt(dps[depowDpWorkState]) == 201 {
+	if err != nil {
+		return api.ReasonUnknown, err
+	}
+
+	switch depowInt(dps[depowDpWorkState]) {
+	case 200:
+		if nfc, _ := dps[depowDpNfc].(bool); nfc {
+			return api.ReasonWaitingForAuthorization, nil
+		}
+	case 201:
 		return api.ReasonDisconnectRequired, nil
 	}
 
-	return api.ReasonUnknown, err
+	return api.ReasonUnknown, nil
 }
 
 // Enabled implements the api.Charger interface
