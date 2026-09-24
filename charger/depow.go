@@ -107,13 +107,10 @@ func init() {
 
 // NewDepowFromConfig creates a dé charger from generic config
 func NewDepowFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
-	cc := struct {
+	var cc struct {
 		Host     string
 		Id       string
 		LocalKey string
-		Version  string
-	}{
-		Version: "3.5",
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -128,11 +125,11 @@ func NewDepowFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 		return nil, api.ErrMissingCredentials
 	}
 
-	return NewDepow(ctx, cc.Host, cc.Id, cc.LocalKey, cc.Version)
+	return NewDepow(ctx, cc.Host, cc.Id, cc.LocalKey)
 }
 
 // NewDepow creates a dé charger
-func NewDepow(ctx context.Context, host, id, localKey, version string) (_ *Depow, err error) {
+func NewDepow(ctx context.Context, host, id, localKey string) (_ *Depow, err error) {
 	log := util.NewLogger("depow").Redact(localKey)
 
 	if !sponsor.IsAuthorized() {
@@ -147,7 +144,7 @@ func NewDepow(ctx context.Context, host, id, localKey, version string) (_ *Depow
 		}
 	}()
 
-	conn, err := tuya.NewConnection(ctx, log, host, id, localKey, version)
+	conn, err := tuya.NewConnection(ctx, log, host, id, localKey)
 	if err != nil {
 		return nil, err
 	}

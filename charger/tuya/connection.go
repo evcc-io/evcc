@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"maps"
 	"net"
-	"strconv"
 	"sync"
 	"time"
 
@@ -27,11 +26,10 @@ const (
 
 // Connection is a persistent local connection to a Tuya device. Devices accept only a single local connection.
 type Connection struct {
-	log     *util.Logger
-	addr    string
-	id      string
-	version string
-	key     []byte
+	log  *util.Logger
+	addr string
+	id   string
+	key  []byte
 
 	mu    sync.Mutex
 	conn  net.Conn
@@ -42,18 +40,17 @@ type Connection struct {
 }
 
 // NewConnection creates a connection and starts it in the background
-func NewConnection(ctx context.Context, log *util.Logger, host, id, key, version string) (*Connection, error) {
-	if _, err := newCodec(version, []byte(key)); err != nil {
+func NewConnection(ctx context.Context, log *util.Logger, host, id, key string) (*Connection, error) {
+	if _, err := newCodec([]byte(key)); err != nil {
 		return nil, err
 	}
 
 	c := &Connection{
-		log:     log,
-		addr:    util.DefaultPort(host, 6668),
-		id:      id,
-		version: version,
-		key:     []byte(key),
-		dps:     util.NewMonitor[map[string]any](readTimeout),
+		log:  log,
+		addr: util.DefaultPort(host, 6668),
+		id:   id,
+		key:  []byte(key),
+		dps:  util.NewMonitor[map[string]any](readTimeout),
 	}
 
 	go c.run(ctx)
@@ -82,7 +79,7 @@ func (c *Connection) session(ctx context.Context) error {
 	}
 	defer conn.Close()
 
-	codec, _ := newCodec(c.version, c.key)
+	codec, _ := newCodec(c.key)
 	r := bufio.NewReader(conn)
 
 	c.mu.Lock()
@@ -95,10 +92,8 @@ func (c *Connection) session(ctx context.Context) error {
 		c.mu.Unlock()
 	}()
 
-	if c.version != "3.3" {
-		if err := c.negotiate(conn, r, codec); err != nil {
-			return fmt.Errorf("session key negotiation: %w", err)
-		}
+	if err := c.negotiate(conn, r, codec); err != nil {
+		return fmt.Errorf("session key negotiation: %w", err)
 	}
 
 	errC := make(chan error, 1)
@@ -238,14 +233,7 @@ func (c *Connection) receive(conn net.Conn, r *bufio.Reader, codec *codec) error
 }
 
 func (c *Connection) query() error {
-	if c.version == "3.3" {
-		return c.send(cmdDpQuery, map[string]any{"gwId": c.id, "devId": c.id, "uid": c.id, "t": c.timestamp()})
-	}
 	return c.send(cmdDpQueryNew, map[string]any{})
-}
-
-func (c *Connection) timestamp() string {
-	return strconv.FormatInt(time.Now().Unix(), 10)
 }
 
 func (c *Connection) send(cmd uint32, data map[string]any) error {
@@ -300,13 +288,7 @@ func (c *Connection) DpsContext(ctx context.Context) (map[string]any, error) {
 
 // Set writes data points. Written values are cached until the device reports them.
 func (c *Connection) Set(dps map[string]any) error {
-	var err error
-	if c.version == "3.3" {
-		err = c.send(cmdControl, map[string]any{"devId": c.id, "uid": c.id, "t": c.timestamp(), "dps": dps})
-	} else {
-		err = c.send(cmdControlNew, map[string]any{"protocol": 5, "t": time.Now().Unix(), "data": map[string]any{"dps": dps}})
-	}
-	if err != nil {
+	if err := c.send(cmdControlNew, map[string]any{"protocol": 5, "t": time.Now().Unix(), "data": map[string]any{"dps": dps}}); err != nil {
 		return err
 	}
 

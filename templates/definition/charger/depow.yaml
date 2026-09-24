@@ -32,17 +32,8 @@ params:
     mask: true
     description:
       generic: Local Key
-  - name: version
-    type: choice
-    choice: ["3.5", "3.4", "3.3"]
-    default: "3.5"
-    advanced: true
-    description:
-      de: Protokollversion
-      en: Protocol version
 render: |
   type: depow
   host: {{ .host }}
   id: {{ .id }}
   localkey: {{ .localkey }}
-  version: {{ .version }}

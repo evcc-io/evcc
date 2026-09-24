@@ -21,7 +21,7 @@ func fakeDevice(t *testing.T, l net.Listener, control chan<- string) {
 	defer conn.Close()
 
 	r := bufio.NewReader(conn)
-	dev, _ := newCodec("3.5", testKey)
+	dev, _ := newCodec(testKey)
 
 	recv := func() (message, error) {
 		frame, err := readFrame(r)
@@ -32,7 +32,7 @@ func fakeDevice(t *testing.T, l net.Listener, control chan<- string) {
 	}
 
 	respond := func(cmd uint32, payload []byte) error {
-		frame, err := pack6699(dev.key(), 1, cmd, append([]byte{0, 0, 0, 0}, payload...))
+		frame, err := dev.encode(1, cmd, append([]byte{0, 0, 0, 0}, payload...))
 		if err == nil {
 			_, err = conn.Write(frame)
 		}
@@ -84,7 +84,7 @@ func TestConnection(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	defer cancel()
 
-	conn, err := NewConnection(ctx, util.NewLogger("test"), l.Addr().String(), "bf01", string(testKey), "3.5")
+	conn, err := NewConnection(ctx, util.NewLogger("test"), l.Addr().String(), "bf01", string(testKey))
 	require.NoError(t, err)
 
 	dps, err := conn.DpsContext(ctx)
