@@ -12,8 +12,8 @@ products:
 capabilities: ["battery-control"]
 requirements:
   description:
-    de: Modbus TCP muss in der Konfigurations-App aktiviert werden. Für optimale Ergebnisse sollte das Sigenergy-System im Eigenverbrauchsmodus betrieben werden. Wenn Sie stattdessen den Sigen KI-Modus verwenden möchten; deaktivieren Sie die Option Batterie als Ladepuffer verwenden, aktivieren Sie Entladung der Hausbatterie im Schnell-Modus verhindern und stellen Sie Sonnenüberschuss direkt an die Ladestationen leiten ein.
-    en: Modbus TCP must be enabled in the configuration app. For best results the Sigenergy system should be in Self-Consumption mode. If you wish to use the Sigen AI Mode instead; disable option battery as charging buffer, enable prevent home battery discharge in fast mode and set solar surplus goes straight to the charging points.
+    de: Modbus TCP muss in der Konfigurations-App aktiviert werden. Für optimale Ergebnisse sollte das Sigenergy-System im Eigenverbrauchsmodus betrieben werden. Wenn Sie stattdessen den Sigen KI-Modus verwenden möchten, deaktivieren Sie die Option Batterie als Ladepuffer verwenden, aktivieren Sie Entladung der Hausbatterie im Schnell-Modus verhindern und stellen Sie Sonnenüberschuss direkt an die Ladestationen leiten ein.
+    en: Modbus TCP must be enabled in the configuration app. For best results the Sigenergy system should be in Self-Consumption mode. If you wish to use the Sigen AI Mode instead, disable option battery as charging buffer, enable prevent home battery discharge in fast mode and set solar surplus goes straight to the charging points.
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
