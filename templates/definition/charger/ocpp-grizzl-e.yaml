@@ -5,35 +5,30 @@ products:
       generic: Mini Connect
 capabilities: ["dim"]
 requirements:
-  description:
-    de:
-      Die OCPP-Funktion der Wallbox muss aktiviert sein. Falls nicht, wende dich an den Grizzl-E Support.
-      Ändere die OCPP-Konfiguration über die Weboberfläche der Wallbox und trage dort `ws://<evcc-host>:8887/` ein.
-      Lasse "Data" leer und belasse "Station ID" und "Auth key" unverändert.
-      Konfiguriere in evcc eine OCPP-Weiterleitung mit der Upstream-Server-URL
-      wss://ocpp.unitedchargers.com/ocpp1.6 sowie Benutzername und Passwort entsprechend den Einstellungen
-      in der OCPP-Konfiguration der Wallbox. Blockiere in der erweiterten Konfiguration die Befehle vom
-      Upstream-Server.
-      Die Wallbox ignoriert alle Stromvorgaben unter 7 A, konfiguriere daher 7 A als minimalen Ladestrom.
-      Zusätzlich unterstützt sie nur ganzzahlige Ladeströme, daher muss beim Fahrzeug die Option
-      "1A Ladestromvorgabe" aktiviert werden.
-      "Remote-Transaktion bei Fahrzeugverbindung starten" wird auf "ja" erzwungen.
-
-      Nur mit der Grizzl-E Mini Connect getestet, funktioniert aber möglicherweise auch mit anderen Modellen.
-    en: The charger needs to have the OCPP feature enabled. Contact Grizzl-E support if it is not.
-      Change the OCPP configuration via the web UI on the charger, pointing it to `ws://<evcc-host>:8887/`.
-      Leave "Data" empty and keep "Station ID" and "Auth key" as-is.
-      Configure an OCPP forwarder in evcc with upstream server URL
-      wss://ocpp.unitedchargers.com/ocpp1.6 and username and password matching the settings in the
-      charger OCPP configuration. Block commands from the upstream server in the advanced
-      configuration.
-      The charger will ignore any current limit less than 7 A, so make sure you configure 7 A as
-      the minimum charge current. Additionally, it only supports whole integer charging currents,
-      therefore you will need to configure your vehicle with "1A current control" set to "yes".
-      "Start remote transaction" will be overridden to "yes".
-
-      Tested only with the Grizzl-E Mini Connect, but may work with others as well.
   evcc: ["sponsorship", "skiptest"]
+  description:
+    de: |
+      Die OCPP-Funktion der Wallbox muss aktiviert sein. Falls nicht, wende dich an den Grizzl-E Support.
+
+      Anleitung:
+      * In der Weboberfläche der Wallbox die OCPP-Server-URL `ws://<evcc-host>:8887/` eintragen. "Data" leer lassen, "Station ID" und "Auth key" unverändert lassen.
+      * In evcc eine OCPP-Weiterleitung mit der Upstream-Server-URL `wss://ocpp.unitedchargers.com/ocpp1.6` sowie Benutzername und Passwort aus der OCPP-Konfiguration der Wallbox einrichten.
+      * In den erweiterten Einstellungen der Weiterleitung "Befehle vom Upstream-Server blockieren" aktivieren.
+      * Minimalen Ladestrom auf 7 A setzen. Die Wallbox ignoriert kleinere Vorgaben.
+      * Beim Fahrzeug "1A Ladestromvorgabe" aktivieren. Die Wallbox unterstützt nur ganzzahlige Ladeströme.
+
+      "Remote-Transaktion bei Fahrzeugverbindung starten" ist immer aktiv.
+    en: |
+      The charger needs to have the OCPP feature enabled. Contact Grizzl-E support if it is not.
+
+      Setup Guide:
+      * In the charger web UI, set the OCPP server URL to `ws://<evcc-host>:8887/`. Leave "Data" empty and keep "Station ID" and "Auth key" as-is.
+      * In evcc, configure an OCPP forward with upstream server URL `wss://ocpp.unitedchargers.com/ocpp1.6` and the username and password from the charger OCPP configuration.
+      * In the advanced forward settings, enable "Block commands from the upstream server".
+      * Set the minimum charge current to 7 A. The charger ignores lower limits.
+      * Enable "1A current control" for your vehicle. The charger only supports whole amp currents.
+
+      "Start remote transaction on vehicle connection" is always enabled.
 params:
   - preset: ocpp
   - name: metervalues
