@@ -24,7 +24,7 @@ package charger
 // tuya-local dewall_evcharger.yaml, vondraussen/de-wallbox-evcc-gateway.
 //
 //	DP   code                access  name (translated)           notes
-//	101  x_work_state        rw      work state                  100 offline, 101 no vehicle, 200 vehicle connected, 201 charging complete,
+//	101  x_work_state        rw      work state                  100 offline, 101 no vehicle, 200 vehicle connected, 201 charging complete (disconnect required),
 //	                                                             202 waiting (schedule), 203 waiting (delay), 204 paused, 300 charging,
 //	                                                             400 overcurrent, 401 overvoltage, 402 undervoltage, 403 overtemperature,
 //	                                                             500 self test failed, 501 residual current, 502 relay welded,
@@ -221,6 +221,18 @@ func depowStatus(v any) (api.ChargeStatus, error) {
 	default:
 		return api.StatusNone, fmt.Errorf("invalid work state: %d", state)
 	}
+}
+
+var _ api.StatusReasoner = (*Depow)(nil)
+
+// StatusReason implements the api.StatusReasoner interface
+func (wb *Depow) StatusReason() (api.Reason, error) {
+	dps, err := wb.conn.Dps()
+	if err == nil && depowInt(dps[depowDpWorkState]) == 201 {
+		return api.ReasonDisconnectRequired, nil
+	}
+
+	return api.ReasonUnknown, err
 }
 
 // Enabled implements the api.Charger interface
