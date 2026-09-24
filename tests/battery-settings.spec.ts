@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { start, stop, baseUrl } from "./evcc";
+import { start, stop, restart, baseUrl } from "./evcc";
 
 test.use({ baseURL: baseUrl() });
 test.describe.configure({ mode: "parallel" });
@@ -85,6 +85,48 @@ test.describe("battery settings", async () => {
     await expect(
       page.getByRole("button", { name: "Grid charging: when ≤ -10.0 ct" })
     ).toBeVisible();
+  });
+
+  test("smart discharge protection", async ({ page, request }) => {
+    await page.goto("/#/battery");
+
+    const smart = page.getByRole("switch", {
+      name: "Prevent home battery discharge only while a vehicle is charging in Smart mode.",
+    });
+    const fast = page.getByRole("switch", {
+      name: "Prevent home battery discharge in fast mode and during planned charging.",
+    });
+    const batteryState = async () => {
+      const response = await request.get("/api/state");
+      expect(response.ok()).toBeTruthy();
+      return response.json();
+    };
+
+    await expect(smart).not.toBeChecked();
+    await expect(fast).not.toBeChecked();
+    await smart.check();
+    await expect.poll(async () => (await batteryState()).batteryDischargeControlSmart).toBe(true);
+    await expect.poll(async () => (await batteryState()).batteryMode).toBe("normal");
+
+    expect((await request.post("/api/loadpoints/1/mode/smart")).ok()).toBeTruthy();
+    await expect.poll(async () => (await batteryState()).batteryMode).toBe("hold");
+
+    await restart("battery-settings.evcc.yaml");
+    await page.reload();
+    await expect(smart).toBeChecked();
+    await expect(fast).not.toBeChecked();
+    await expect.poll(async () => (await batteryState()).batteryMode).toBe("hold");
+
+    await page.getByRole("link", { name: "Charge" }).click();
+    await page.getByTestId("energyflow").click();
+    await expect(page.getByTestId("energyflow-entry-batterydischarge")).toContainText(
+      "Battery (discharge locked)"
+    );
+
+    await page.goto("/#/battery");
+    await smart.uncheck();
+    await expect.poll(async () => (await batteryState()).batteryDischargeControlSmart).toBe(false);
+    await expect.poll(async () => (await batteryState()).batteryMode).toBe("normal");
   });
 
   test("hold mode display", async ({ page }) => {

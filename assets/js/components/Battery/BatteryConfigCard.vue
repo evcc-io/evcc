@@ -86,6 +86,19 @@
 					{{ $t("battery.config.discharge") }}
 				</label>
 			</div>
+			<div class="form-check form-switch mt-2">
+				<input
+					id="batteryDischargeSmart"
+					:checked="batteryDischargeControlSmart"
+					class="form-check-input"
+					type="checkbox"
+					role="switch"
+					@change="changeDischargeControlSmart"
+				/>
+				<label class="form-check-label" for="batteryDischargeSmart">
+					{{ $t("battery.config.dischargeSmart") }}
+				</label>
+			</div>
 			<div v-if="experimental" class="form-check form-switch mt-2">
 				<input
 					id="batteryGridDischarge"
@@ -123,6 +136,7 @@ export default defineComponent({
 		prioritySoc: { type: Number, default: 0 },
 		bufferStartSoc: { type: Number, default: 0 },
 		batteryDischargeControl: Boolean,
+		batteryDischargeControlSmart: Boolean,
 		batteryGridDischarge: Boolean,
 		battery: { type: Object as PropType<Battery> },
 		experimental: Boolean,
@@ -252,6 +266,15 @@ export default defineComponent({
 			try {
 				await api.post(
 					`batterydischargecontrol/${(e.target as HTMLInputElement).checked ? "true" : "false"}`
+				);
+			} catch (err) {
+				console.error(err);
+			}
+		},
+		async changeDischargeControlSmart(e: Event) {
+			try {
+				await api.post(
+					`batterydischargecontrolsmart/${(e.target as HTMLInputElement).checked ? "true" : "false"}`
 				);
 			} catch (err) {
 				console.error(err);

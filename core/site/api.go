@@ -105,6 +105,8 @@ type API interface {
 
 	GetBatteryDischargeControl() bool
 	SetBatteryDischargeControl(bool) error
+	GetBatteryDischargeControlSmart() bool
+	SetBatteryDischargeControlSmart(bool) error
 	GetBatteryGridDischarge() bool
 	SetBatteryGridDischarge(bool) error
 

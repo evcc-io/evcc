@@ -42,6 +42,7 @@
       },
       "bufferTitle": "Battery as charging buffer",
       "discharge": "Prevent home battery discharge in fast mode and during planned charging.",
+      "dischargeSmart": "Prevent home battery discharge only while a vehicle is charging in Smart mode.",
       "gridDischarge": "Allow home battery to discharge to the grid.",
       "priority": "Home battery has priority while it is below {soc}. Then the charging points receive the surplus.",
       "priorityNone": "Solar surplus goes straight to the charging points. Set a value above {soc} to prioritize the home battery.",

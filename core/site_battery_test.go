@@ -6,9 +6,12 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -499,4 +502,121 @@ func TestEvFastChargingActiveDisabledLoadpoint(t *testing.T) {
 	site := &Site{loadpoints: []*Loadpoint{nil}}
 
 	assert.False(t, site.evFastChargingActive())
+}
+
+func TestBatteryDischargeControlSmart(t *testing.T) {
+	limit := 0.2
+	rate := api.Rate{Start: time.Now(), Value: 0.1}
+
+	for _, tc := range []struct {
+		name        string
+		fast, smart bool
+		loadpoints  []*Loadpoint
+		want        bool
+	}{
+		{"default off", false, false, []*Loadpoint{{mode: api.ModeSmart, status: api.StatusC}}, false},
+		{"solar charging", false, true, []*Loadpoint{{mode: api.ModeSmart, status: api.StatusC}}, true},
+		{"always charging", false, true, []*Loadpoint{{mode: api.ModeSmart, status: api.StatusC, alwaysCharge: api.AlwaysChargeOn}}, true},
+		{"cheap charging", false, true, []*Loadpoint{{mode: api.ModeSmart, status: api.StatusC, smartCostLimit: &limit}}, true},
+		{"planned charging", false, true, []*Loadpoint{{mode: api.ModeSmart, status: api.StatusC, planActive: true}}, true},
+		{"disconnected", false, true, []*Loadpoint{{mode: api.ModeSmart, status: api.StatusA}}, false},
+		{"waiting or finished", false, true, []*Loadpoint{{mode: api.ModeSmart, status: api.StatusB}}, false},
+		{"waiting for cheap charging", true, true, []*Loadpoint{{mode: api.ModeSmart, status: api.StatusB, smartCostLimit: &limit}}, false},
+		{"paused plan", true, true, []*Loadpoint{{mode: api.ModeSmart, status: api.StatusB, planActive: true}}, false},
+		{"unknown status", false, true, []*Loadpoint{{mode: api.ModeSmart}}, false},
+		{"off mode", false, true, []*Loadpoint{{mode: api.ModeOff, status: api.StatusC}}, false},
+		{"fast mode independent", false, true, []*Loadpoint{{mode: api.ModeNow, status: api.StatusC}}, false},
+		{"existing fast protection", true, false, []*Loadpoint{{mode: api.ModeNow, status: api.StatusC}}, true},
+		{"existing plan protection", true, false, []*Loadpoint{{mode: api.ModeSmart, status: api.StatusC, planActive: true}}, true},
+		{"existing cheap protection", true, false, []*Loadpoint{{mode: api.ModeSmart, status: api.StatusC, smartCostLimit: &limit}}, true},
+		{"existing protection excludes solar", true, false, []*Loadpoint{{mode: api.ModeSmart, status: api.StatusC}}, false},
+		{"both enabled", true, true, []*Loadpoint{{mode: api.ModeSmart, status: api.StatusC}}, true},
+		{"no loadpoints", false, true, nil, false},
+		{"disabled loadpoint", false, true, []*Loadpoint{nil}, false},
+		{"different loadpoint charging", false, true, []*Loadpoint{nil, {mode: api.ModeSmart, status: api.StatusB}, {mode: api.ModeSmart, status: api.StatusC}}, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			site := &Site{
+				batteryDischargeControl:      tc.fast,
+				batteryDischargeControlSmart: tc.smart,
+				loadpoints:                   tc.loadpoints,
+			}
+			assert.Equal(t, tc.want, site.dischargeControlActive(rate))
+		})
+	}
+}
+
+func TestBatteryDischargeControlSmartTransitions(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	bat, batCon := batteryControlMock(ctrl, 50, 100)
+	lp := &Loadpoint{mode: api.ModeSmart, status: api.StatusB}
+	site := &Site{
+		log:                          util.NewLogger("foo"),
+		batteryMeters:                []config.Device[api.Meter]{config.NewStaticDevice(config.Named{Name: "bat"}, bat)},
+		batteryMode:                  api.BatteryNormal,
+		batteryDischargeControlSmart: true,
+		loadpoints:                   []*Loadpoint{nil, lp},
+	}
+
+	gomock.InOrder(
+		batCon.EXPECT().SetBatteryMode(api.BatteryHold),
+		batCon.EXPECT().SetBatteryMode(api.BatteryNormal),
+		batCon.EXPECT().SetBatteryMode(api.BatteryHold),
+		batCon.EXPECT().SetBatteryMode(api.BatteryNormal),
+	)
+
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryNormal, site.GetBatteryMode())
+
+	lp.status = api.StatusC
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryHold, site.GetBatteryMode())
+	site.updateBatteryMode(false, false, api.Rate{})
+
+	assert.Equal(t, api.BatteryCharge, site.requiredBatteryMode(true, false, api.Rate{}))
+	assert.Equal(t, api.BatteryUnknown, site.requiredBatteryMode(false, true, api.Rate{}))
+	site.batteryModeExternal = api.BatteryNormal
+	assert.Equal(t, api.BatteryNormal, site.requiredBatteryMode(false, false, api.Rate{}))
+	site.batteryModeExternal = api.BatteryUnknown
+
+	lp.status = api.StatusB
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryNormal, site.GetBatteryMode())
+
+	lp.status = api.StatusC
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryHold, site.GetBatteryMode())
+
+	site.batteryDischargeControlSmart = false
+	site.updateBatteryMode(false, false, api.Rate{})
+	assert.Equal(t, api.BatteryNormal, site.GetBatteryMode())
+}
+
+func TestSetBatteryDischargeControlSmart(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	bat, _ := batteryControlMock(ctrl, 50, 100)
+	values := make(chan util.Param, 2)
+	site := &Site{
+		log:           util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, bat)},
+		valueChan:     values,
+	}
+	t.Cleanup(func() { require.NoError(t, settings.Delete(keys.BatteryDischargeControlSmart)) })
+
+	assert.False(t, site.GetBatteryDischargeControlSmart())
+	for _, enabled := range []bool{true, false} {
+		require.NoError(t, site.SetBatteryDischargeControlSmart(enabled))
+		assert.Equal(t, enabled, site.GetBatteryDischargeControlSmart())
+		stored, err := settings.Bool(keys.BatteryDischargeControlSmart)
+		require.NoError(t, err)
+		assert.Equal(t, enabled, stored)
+		assert.Equal(t, util.Param{Key: keys.BatteryDischargeControlSmart, Val: enabled}, <-values)
+		require.NoError(t, site.SetBatteryDischargeControlSmart(enabled))
+		assert.Empty(t, values, "unchanged settings are not republished")
+	}
+
+	site.batteryMeters = nil
+	assert.ErrorIs(t, site.SetBatteryDischargeControlSmart(true), ErrBatteryControlNotAvailable)
+	assert.False(t, site.GetBatteryDischargeControlSmart())
+	assert.Empty(t, values)
 }

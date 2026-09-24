@@ -480,6 +480,33 @@ func (site *Site) SetBatteryDischargeControl(val bool) error {
 	return nil
 }
 
+// GetBatteryDischargeControlSmart returns whether battery discharge is prevented while smart charging.
+func (site *Site) GetBatteryDischargeControlSmart() bool {
+	site.RLock()
+	defer site.RUnlock()
+	return site.batteryDischargeControlSmart
+}
+
+// SetBatteryDischargeControlSmart sets whether battery discharge is prevented while smart charging.
+func (site *Site) SetBatteryDischargeControlSmart(val bool) error {
+	site.log.DEBUG.Println("set battery discharge control smart:", val)
+
+	if !site.hasBatteryControl() {
+		return ErrBatteryControlNotAvailable
+	}
+
+	site.Lock()
+	defer site.Unlock()
+
+	if site.batteryDischargeControlSmart != val {
+		site.batteryDischargeControlSmart = val
+		settings.SetBool(keys.BatteryDischargeControlSmart, val)
+		site.publish(keys.BatteryDischargeControlSmart, val)
+	}
+
+	return nil
+}
+
 // GetBatteryGridDischarge returns whether the battery may discharge to grid (experimental)
 func (site *Site) GetBatteryGridDischarge() bool {
 	site.RLock()
