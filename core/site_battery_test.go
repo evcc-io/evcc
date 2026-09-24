@@ -7,6 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/keys"
+	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
@@ -593,6 +594,9 @@ func TestBatteryDischargeControlSmartTransitions(t *testing.T) {
 }
 
 func TestSetBatteryDischargeControlSmart(t *testing.T) {
+	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+	t.Cleanup(func() { db.Instance = nil })
+
 	ctrl := gomock.NewController(t)
 	bat, _ := batteryControlMock(ctrl, 50, 100)
 	values := make(chan util.Param, 2)
