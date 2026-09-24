@@ -39,6 +39,12 @@ linters:
       - third_party$
       - builtin$
       - examples$
+    rules:
+      # vendor spelling of Tuya DP code x_product_varient
+      - path: charger/depow.go
+        linters:
+          - misspell
+        text: varient
 formatters:
   enable:
     - gci

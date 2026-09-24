@@ -303,7 +303,8 @@ func readFrame(r *bufio.Reader) ([]byte, error) {
 	}
 
 	binary.BigEndian.PutUint32(header, prefix)
-	frame := append(header, make([]byte, remaining)...)
+	frame := make([]byte, len(header)+remaining)
+	copy(frame, header)
 	if _, err := io.ReadFull(r, frame[len(header):]); err != nil {
 		return nil, err
 	}
