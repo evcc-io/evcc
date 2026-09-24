@@ -1409,7 +1409,7 @@
       "post": {
         "operationId": "setOptimizerAutomatic",
         "summary": "Enable/disable optimizer automatic mode",
-        "description": "Let the optimizer directly control pv/minpv loadpoints and the home battery instead of only advising. Requires a sponsor token.",
+        "description": "Let the optimizer directly control loadpoints and home battery instead of only advising. Requires a sponsor token.",
         "security": [
           {
             "cookieAuth": []
@@ -1424,7 +1424,7 @@
         "parameters": [
           {
             "name": "value",
-            "description": "Enable or disable automatic mode.",
+            "description": "Enable or disable automatic optimization.",
             "in": "path",
             "required": true,
             "schema": {
