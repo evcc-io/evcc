@@ -52,7 +52,7 @@ package charger
 //	157  x_product_varient   ro      product variant             0 default, 1 without NFC
 //	188  x_heartbeat         rw      host heartbeat              true enables fast metrics updates for ~30 s
 //	189  dp_num              ro      number of reported DPs
-//	190  x_plug_charge       rw      plug and charge             bool, start charging when a vehicle is plugged in
+//	190  x_plug_charge       rw      plug and charge             bool, start charging when a vehicle is plugged in, user setting
 
 import (
 	"context"
@@ -70,14 +70,13 @@ import (
 )
 
 const (
-	depowDpWorkState  = "101"
-	depowDpMetrics    = "102"
-	depowDpSteps      = "107"
-	depowDpStatus     = "109"
-	depowDpCurrent    = "150"
-	depowDpMode       = "151"
-	depowDpRefresh    = "188"
-	depowDpPlugCharge = "190"
+	depowDpWorkState = "101"
+	depowDpMetrics   = "102"
+	depowDpSteps     = "107"
+	depowDpStatus    = "109"
+	depowDpCurrent   = "150"
+	depowDpMode      = "151"
+	depowDpRefresh   = "188"
 
 	depowRefreshInterval = 25 * time.Second
 )
@@ -247,8 +246,7 @@ func (wb *Depow) Status() (api.ChargeStatus, error) {
 	}
 }
 
-// prepare makes the charger start a session whenever a vehicle is plugged in,
-// so that charging is controlled by the current setpoint alone
+// prepare disables the app schedule, which would otherwise block sessions outside its window
 func (wb *Depow) prepare(dps map[string]any) error {
 	wb.mu.Lock()
 	defer wb.mu.Unlock()
@@ -257,30 +255,21 @@ func (wb *Depow) prepare(dps map[string]any) error {
 		return nil
 	}
 
-	set := make(map[string]any)
-
-	if v, ok := dps[depowDpPlugCharge].(bool); ok && !v {
-		set[depowDpPlugCharge] = true
-	}
-
 	var mode depowMode
-	if s, ok := dps[depowDpMode].(string); ok && json.Unmarshal([]byte(s), &mode) == nil && mode.M != 0 {
-		mode.M = 0
-		b, err := json.Marshal(mode)
-		if err != nil {
-			return err
-		}
-		set[depowDpMode] = string(b)
-	}
-
-	if len(set) == 0 {
+	if s, ok := dps[depowDpMode].(string); !ok || json.Unmarshal([]byte(s), &mode) != nil || mode.M == 0 {
 		return nil
 	}
 
-	wb.log.DEBUG.Printf("enable plug and charge: %v", set)
+	mode.M = 0
+	b, err := json.Marshal(mode)
+	if err != nil {
+		return err
+	}
+
+	wb.log.DEBUG.Println("disable app schedule")
 	wb.prepared = time.Now()
 
-	return wb.conn.Set(set)
+	return wb.conn.Set(map[string]any{depowDpMode: string(b)})
 }
 
 // Enabled implements the api.Charger interface
