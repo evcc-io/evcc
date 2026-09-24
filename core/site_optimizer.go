@@ -898,8 +898,8 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 		CMax:           float32(lp.EffectiveMaxPower()),
 		DMax:           0,
 		SMin:           0,
-		// vehicles outrank home batteries for early charging: the car may leave, storage stays
-		CPriority: 1,
+		// vehicles outrank home batteries (0) for early charging: the car may leave, storage stays
+		CPriority: min(lp.EffectivePriority()+1, 2),
 		// PA:             pa,
 	}
 

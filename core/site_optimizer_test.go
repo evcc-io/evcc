@@ -1,6 +1,7 @@
 package core
 
 import (
+	"strconv"
 	"testing"
 	"time"
 
@@ -502,6 +503,7 @@ func TestLoadpointRequestChargeGoal(t *testing.T) {
 			lp.EXPECT().GetMode().Return(api.ModeSmart).AnyTimes()
 			lp.EXPECT().GetAlwaysCharge().Return(api.AlwaysChargeOff).AnyTimes()
 			lp.EXPECT().GetStatus().Return(api.StatusB).AnyTimes()
+			lp.EXPECT().EffectivePriority().Return(0).AnyTimes()
 			lp.EXPECT().GetSmartCostLimit().Return(nil).AnyTimes()
 			lp.EXPECT().EffectivePlanStrategy().Return(api.PlanStrategy{}).AnyTimes()
 			lp.EXPECT().EffectivePlanTime().Return(time.Time{}).AnyTimes()
@@ -539,10 +541,42 @@ func TestLoadpointRequestChargingState(t *testing.T) {
 			lp.EXPECT().GetAlwaysCharge().Return(api.AlwaysChargeOff).AnyTimes()
 			lp.EXPECT().GetChargePower().Return(11000.0).AnyTimes()
 			lp.EXPECT().GetRemainingEnergy().Return(0.0).AnyTimes()
+			lp.EXPECT().EffectivePriority().Return(0).AnyTimes()
 
 			req, _ := site.loadpointRequest(lp, 8, 15*time.Minute, nil)
 
 			assert.Equal(t, want, req.CActive)
+		})
+	}
+}
+
+func TestLoadpointRequestPriority(t *testing.T) {
+	site := &Site{log: util.NewLogger("foo")}
+
+	// vehicles start above home batteries (0), capped at the optimizer maximum
+	for priority, want := range map[int]int{0: 1, 1: 2, 5: 2} {
+		t.Run(strconv.Itoa(priority), func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			v := api.NewMockVehicle(ctrl)
+			v.EXPECT().Capacity().Return(50.0).AnyTimes()
+			v.EXPECT().GetTitle().Return("").AnyTimes()
+
+			lp := loadpoint.NewMockAPI(ctrl)
+			lp.EXPECT().GetVehicle().Return(v).AnyTimes()
+			lp.EXPECT().GetSoc().Return(20.0).AnyTimes()
+			lp.EXPECT().EffectiveLimitSoc().Return(80).AnyTimes()
+			lp.EXPECT().GetLimitEnergy().Return(0.0).AnyTimes()
+			lp.EXPECT().GetTitle().Return("lp").AnyTimes()
+			lp.EXPECT().EffectiveMinPower().Return(1380.0).AnyTimes()
+			lp.EXPECT().EffectiveMaxPower().Return(11000.0).AnyTimes()
+			lp.EXPECT().GetMode().Return(api.ModeOff).AnyTimes()
+			lp.EXPECT().GetStatus().Return(api.StatusB).AnyTimes()
+			lp.EXPECT().EffectivePriority().Return(priority).AnyTimes()
+
+			req, _ := site.loadpointRequest(lp, 8, 15*time.Minute, nil)
+
+			assert.Equal(t, want, req.CPriority)
 		})
 	}
 }
