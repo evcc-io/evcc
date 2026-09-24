@@ -73,7 +73,6 @@ const (
 	depowDpWorkState = "101"
 	depowDpMetrics   = "102"
 	depowDpSteps     = "107"
-	depowDpStatus    = "109"
 	depowDpCurrent   = "150"
 	depowDpRefresh   = "188"
 
@@ -215,21 +214,27 @@ func (wb *Depow) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch status := dps[depowDpStatus]; status {
-	case "SLEEP", "IDLE":
+	return depowStatus(dps[depowDpWorkState])
+}
+
+func depowStatus(v any) (api.ChargeStatus, error) {
+	code, ok := v.(float64)
+	if !ok {
+		return api.StatusNone, fmt.Errorf("invalid work state: %v", v)
+	}
+
+	switch state := int(code); state / 100 {
+	case 1:
 		return api.StatusA, nil
-	case "IDLEINS", "WAIT", "PAUSE", "STOP":
+	case 2:
 		return api.StatusB, nil
-	case "WORKING":
+	case 3:
 		return api.StatusC, nil
-	case "ERRORPAUSE":
-		code := int(depowInt(dps[depowDpWorkState]))
-		if msg, ok := depowWorkStateErrors[code]; ok {
-			return api.StatusNone, fmt.Errorf("charger fault: %s (%d)", msg, code)
-		}
-		return api.StatusNone, fmt.Errorf("charger fault: %d", code)
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %v", status)
+		if msg, ok := depowWorkStateErrors[state]; ok {
+			return api.StatusNone, fmt.Errorf("invalid work state: %d (%s)", state, msg)
+		}
+		return api.StatusNone, fmt.Errorf("invalid work state: %d", state)
 	}
 }
 
