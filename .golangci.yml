@@ -41,7 +41,7 @@ linters:
       - examples$
     rules:
       # vendor spelling of Tuya DP code x_product_varient
-      - path: charger/depow.go
+      - path: charger/tuya-depow.go
         linters:
           - misspell
         text: varient

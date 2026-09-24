@@ -17,11 +17,12 @@ package charger
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Feyree and OEM chargers (Absina, Goodcell, Kolanky, dé 22.2 kW) via the local Tuya protocol, Tuya model ek3pa0.
-// Not all firmware versions report all data points.
+// Chargers sharing the DP layout used by Shenzhen Feyree Technology and Xinxiang Kolanky Technical (iSIGMA),
+// also sold as Absina, dé 22.2 kW, EcoPower and Goodcell, via the local Tuya protocol.
+// Tuya model ids differ per product, e.g. ek3pa0 for product id tj9l3ghsjnbdjom6. Not all firmware versions report all data points.
 //
-// Sources: Tuya model definition in make-all/tuya-local#2050, tuya-local absina_evcharger.yaml,
-// feyree_ev_portable_charger.yaml, feyree_43_evcharger.yaml, goodcell_ev_charger.yaml, kolanky_evcharger.yaml.
+// Sources: Tuya model definition in make-all/tuya-local#2050, DP dumps in make-all/tuya-local#1570, #1853, #2628, #4632, #6197,
+// tuya-local absina_evcharger.yaml, feyree_ev_portable_charger.yaml, feyree_43_evcharger.yaml, goodcell_ev_charger.yaml, kolanky_evcharger.yaml.
 //
 //	DP   code                access  name (translated)           notes
 //	3    work_state          ro      work state                  charger_free, charger_insert, charger_free_fault, charger_wait,
@@ -75,27 +76,27 @@ import (
 )
 
 const (
-	feyreeDpState      = "101"
-	feyreeDpPower      = "109"
-	feyreeDpEnergy     = "112"
-	feyreeDpMaxSetting = "113"
+	tuyaFeyreeDpState      = "101"
+	tuyaFeyreeDpPower      = "109"
+	tuyaFeyreeDpEnergy     = "112"
+	tuyaFeyreeDpMaxSetting = "113"
 )
 
 var (
-	feyreeDpVoltages = [3]string{"102", "103", "104"}
-	feyreeDpCurrents = [3]string{"105", "106", "107"}
+	tuyaFeyreeDpVoltages = [3]string{"102", "103", "104"}
+	tuyaFeyreeDpCurrents = [3]string{"105", "106", "107"}
 )
 
 // current setpoint data point by maximum current setting
-var feyreeCurrentDps = map[string]string{
+var tuyaFeyreeCurrentDps = map[string]string{
 	"Max16A": "114",
 	"Max32A": "115",
 	"Max40A": "116",
 	"Max50A": "117",
 }
 
-// Feyree charger implementation
-type Feyree struct {
+// TuyaFeyree charger implementation
+type TuyaFeyree struct {
 	log  *util.Logger
 	conn *tuya.Connection
 	dp   string
@@ -105,11 +106,11 @@ type Feyree struct {
 }
 
 func init() {
-	registry.AddCtx("feyree", NewFeyreeFromConfig)
+	registry.AddCtx("tuya-feyree", NewTuyaFeyreeFromConfig)
 }
 
-// NewFeyreeFromConfig creates a Feyree charger from generic config
-func NewFeyreeFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
+// NewTuyaFeyreeFromConfig creates a Feyree charger from generic config
+func NewTuyaFeyreeFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	var cc struct {
 		Host     string
 		Id       string
@@ -128,12 +129,12 @@ func NewFeyreeFromConfig(ctx context.Context, other map[string]any) (api.Charger
 		return nil, api.ErrMissingCredentials
 	}
 
-	return NewFeyree(ctx, cc.Host, cc.Id, cc.LocalKey)
+	return NewTuyaFeyree(ctx, cc.Host, cc.Id, cc.LocalKey)
 }
 
-// NewFeyree creates a Feyree charger
-func NewFeyree(ctx context.Context, host, id, localKey string) (_ *Feyree, err error) {
-	log := util.NewLogger("feyree").Redact(localKey)
+// NewTuyaFeyree creates a Feyree charger
+func NewTuyaFeyree(ctx context.Context, host, id, localKey string) (_ *TuyaFeyree, err error) {
+	log := util.NewLogger("tuya-feyree").Redact(localKey)
 
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
@@ -157,29 +158,29 @@ func NewFeyree(ctx context.Context, host, id, localKey string) (_ *Feyree, err e
 		return nil, fmt.Errorf("device not reachable: %w", err)
 	}
 
-	dp, err := feyreeCurrentDp(dps)
+	dp, err := tuyaFeyreeCurrentDp(dps)
 	if err != nil {
 		return nil, err
 	}
 
-	wb := &Feyree{
+	wb := &TuyaFeyree{
 		log:     log,
 		conn:    conn,
 		dp:      dp,
 		current: 6,
 	}
 
-	if current := int64(feyreeFloat(dps[dp])); current > 0 {
+	if current := int64(tuyaFeyreeFloat(dps[dp])); current > 0 {
 		wb.current = current
 	}
 
 	return wb, nil
 }
 
-// feyreeCurrentDp returns the current setpoint data point matching the maximum current setting
-func feyreeCurrentDp(dps map[string]any) (string, error) {
-	if s, ok := dps[feyreeDpMaxSetting].(string); ok {
-		if dp, ok := feyreeCurrentDps[s]; ok {
+// tuyaFeyreeCurrentDp returns the current setpoint data point matching the maximum current setting
+func tuyaFeyreeCurrentDp(dps map[string]any) (string, error) {
+	if s, ok := dps[tuyaFeyreeDpMaxSetting].(string); ok {
+		if dp, ok := tuyaFeyreeCurrentDps[s]; ok {
 			return dp, nil
 		}
 	}
@@ -190,25 +191,25 @@ func feyreeCurrentDp(dps map[string]any) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("unknown maximum current setting: %v", dps[feyreeDpMaxSetting])
+	return "", fmt.Errorf("unknown maximum current setting: %v", dps[tuyaFeyreeDpMaxSetting])
 }
 
-func feyreeFloat(v any) float64 {
+func tuyaFeyreeFloat(v any) float64 {
 	f, _ := v.(float64)
 	return f
 }
 
 // Status implements the api.Charger interface
-func (wb *Feyree) Status() (api.ChargeStatus, error) {
+func (wb *TuyaFeyree) Status() (api.ChargeStatus, error) {
 	dps, err := wb.conn.Dps()
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	return feyreeStatus(dps[feyreeDpState])
+	return tuyaFeyreeStatus(dps[tuyaFeyreeDpState])
 }
 
-func feyreeStatus(state any) (api.ChargeStatus, error) {
+func tuyaFeyreeStatus(state any) (api.ChargeStatus, error) {
 	switch state {
 	case "no_connet":
 		return api.StatusA, nil
@@ -221,16 +222,16 @@ func feyreeStatus(state any) (api.ChargeStatus, error) {
 	}
 }
 
-var _ api.StatusReasoner = (*Feyree)(nil)
+var _ api.StatusReasoner = (*TuyaFeyree)(nil)
 
 // StatusReason implements the api.StatusReasoner interface
-func (wb *Feyree) StatusReason() (api.Reason, error) {
+func (wb *TuyaFeyree) StatusReason() (api.Reason, error) {
 	dps, err := wb.conn.Dps()
 	if err != nil {
 		return api.ReasonUnknown, err
 	}
 
-	switch dps[feyreeDpState] {
+	switch dps[tuyaFeyreeDpState] {
 	case "wait_rfid":
 		return api.ReasonWaitingForAuthorization, nil
 	case "finish":
@@ -241,13 +242,13 @@ func (wb *Feyree) StatusReason() (api.Reason, error) {
 }
 
 // Enabled implements the api.Charger interface
-func (wb *Feyree) Enabled() (bool, error) {
+func (wb *TuyaFeyree) Enabled() (bool, error) {
 	dps, err := wb.conn.Dps()
-	return feyreeFloat(dps[wb.dp]) > 0, err
+	return tuyaFeyreeFloat(dps[wb.dp]) > 0, err
 }
 
 // Enable implements the api.Charger interface
-func (wb *Feyree) Enable(enable bool) error {
+func (wb *TuyaFeyree) Enable(enable bool) error {
 	var current int64
 	if enable {
 		wb.mu.Lock()
@@ -259,7 +260,7 @@ func (wb *Feyree) Enable(enable bool) error {
 }
 
 // MaxCurrent implements the api.Charger interface
-func (wb *Feyree) MaxCurrent(current int64) error {
+func (wb *TuyaFeyree) MaxCurrent(current int64) error {
 	dps, err := wb.conn.Dps()
 	if err != nil {
 		return err
@@ -270,55 +271,55 @@ func (wb *Feyree) MaxCurrent(current int64) error {
 	wb.mu.Unlock()
 
 	// current 0 means disabled, keep until enabled
-	if actual := int64(feyreeFloat(dps[wb.dp])); actual == 0 || actual == current {
+	if actual := int64(tuyaFeyreeFloat(dps[wb.dp])); actual == 0 || actual == current {
 		return nil
 	}
 
 	return wb.conn.Set(map[string]any{wb.dp: current})
 }
 
-var _ api.Meter = (*Feyree)(nil)
+var _ api.Meter = (*TuyaFeyree)(nil)
 
 // CurrentPower implements the api.Meter interface
-func (wb *Feyree) CurrentPower() (float64, error) {
+func (wb *TuyaFeyree) CurrentPower() (float64, error) {
 	dps, err := wb.conn.Dps()
-	return feyreeFloat(dps[feyreeDpPower]) * 100, err
+	return tuyaFeyreeFloat(dps[tuyaFeyreeDpPower]) * 100, err
 }
 
-var _ api.ChargeRater = (*Feyree)(nil)
+var _ api.ChargeRater = (*TuyaFeyree)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
-func (wb *Feyree) ChargedEnergy() (float64, error) {
+func (wb *TuyaFeyree) ChargedEnergy() (float64, error) {
 	dps, err := wb.conn.Dps()
-	return feyreeFloat(dps[feyreeDpEnergy]) / 10, err
+	return tuyaFeyreeFloat(dps[tuyaFeyreeDpEnergy]) / 10, err
 }
 
 // phases returns the scaled values of three data points
-func (wb *Feyree) phases(dp [3]string, scale func(float64) float64) (float64, float64, float64, error) {
+func (wb *TuyaFeyree) phases(dp [3]string, scale func(float64) float64) (float64, float64, float64, error) {
 	dps, err := wb.conn.Dps()
 	if err != nil {
 		return 0, 0, 0, err
 	}
 
-	return scale(feyreeFloat(dps[dp[0]])), scale(feyreeFloat(dps[dp[1]])), scale(feyreeFloat(dps[dp[2]])), nil
+	return scale(tuyaFeyreeFloat(dps[dp[0]])), scale(tuyaFeyreeFloat(dps[dp[1]])), scale(tuyaFeyreeFloat(dps[dp[2]])), nil
 }
 
-var _ api.PhaseCurrents = (*Feyree)(nil)
+var _ api.PhaseCurrents = (*TuyaFeyree)(nil)
 
 // Currents implements the api.PhaseCurrents interface
-func (wb *Feyree) Currents() (float64, float64, float64, error) {
-	return wb.phases(feyreeDpCurrents, func(v float64) float64 { return v / 10 })
+func (wb *TuyaFeyree) Currents() (float64, float64, float64, error) {
+	return wb.phases(tuyaFeyreeDpCurrents, func(v float64) float64 { return v / 10 })
 }
 
-var _ api.PhaseVoltages = (*Feyree)(nil)
+var _ api.PhaseVoltages = (*TuyaFeyree)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
-func (wb *Feyree) Voltages() (float64, float64, float64, error) {
-	return wb.phases(feyreeDpVoltages, feyreeVoltage)
+func (wb *TuyaFeyree) Voltages() (float64, float64, float64, error) {
+	return wb.phases(tuyaFeyreeDpVoltages, tuyaFeyreeVoltage)
 }
 
-// feyreeVoltage scales voltages, the model range is 0-500 V but some firmware reports 0.1 V
-func feyreeVoltage(v float64) float64 {
+// tuyaFeyreeVoltage scales voltages, the model range is 0-500 V but some firmware reports 0.1 V
+func tuyaFeyreeVoltage(v float64) float64 {
 	if v > 500 {
 		return v / 10
 	}

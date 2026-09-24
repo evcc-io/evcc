@@ -17,8 +17,8 @@ package charger
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// dé (depow) chargers via the local Tuya protocol, Tuya model e1krltgk
-// (product ids gxrtu5vljdthtd3g, witok7vhhjohtr02). Not all firmware versions report all data points.
+// dé (depow) chargers via the local Tuya protocol, Tuya product ids gxrtu5vljdthtd3g and witok7vhhjohtr02.
+// Tuya model ids differ per product, e.g. e1krltgk for witok7vhhjohtr02. Not all firmware versions report all data points.
 //
 // Sources: Tuya model definitions in make-all/tuya-local#3120, #3952 and Apollon77/ioBroker.tuya#747,
 // tuya-local dewall_evcharger.yaml, vondraussen/de-wallbox-evcc-gateway.
@@ -73,26 +73,26 @@ import (
 )
 
 const (
-	depowDpWorkState = "101"
-	depowDpMetrics   = "102"
-	depowDpSteps     = "107"
-	depowDpCurrent   = "150"
-	depowDpNfc       = "155"
-	depowDpRefresh   = "188"
+	tuyaDepowDpWorkState = "101"
+	tuyaDepowDpMetrics   = "102"
+	tuyaDepowDpSteps     = "107"
+	tuyaDepowDpCurrent   = "150"
+	tuyaDepowDpNfc       = "155"
+	tuyaDepowDpRefresh   = "188"
 
-	depowRefreshInterval = 25 * time.Second
+	tuyaDepowRefreshInterval = 25 * time.Second
 )
 
-var depowDefaultSteps = []int64{6, 8, 10, 13, 16}
+var tuyaDepowDefaultSteps = []int64{6, 8, 10, 13, 16}
 
-type depowMetrics struct {
+type tuyaDepowMetrics struct {
 	L1, L2, L3 [3]float64
 	P          float64 `json:"p"`
 	E          float64 `json:"e"`
 }
 
-// Depow charger implementation
-type Depow struct {
+// TuyaDepow charger implementation
+type TuyaDepow struct {
 	log  *util.Logger
 	conn *tuya.Connection
 
@@ -102,11 +102,11 @@ type Depow struct {
 }
 
 func init() {
-	registry.AddCtx("depow", NewDepowFromConfig)
+	registry.AddCtx("tuya-depow", NewTuyaDepowFromConfig)
 }
 
-// NewDepowFromConfig creates a dé charger from generic config
-func NewDepowFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
+// NewTuyaDepowFromConfig creates a dé charger from generic config
+func NewTuyaDepowFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	var cc struct {
 		Host     string
 		Id       string
@@ -125,12 +125,12 @@ func NewDepowFromConfig(ctx context.Context, other map[string]any) (api.Charger,
 		return nil, api.ErrMissingCredentials
 	}
 
-	return NewDepow(ctx, cc.Host, cc.Id, cc.LocalKey)
+	return NewTuyaDepow(ctx, cc.Host, cc.Id, cc.LocalKey)
 }
 
-// NewDepow creates a dé charger
-func NewDepow(ctx context.Context, host, id, localKey string) (_ *Depow, err error) {
-	log := util.NewLogger("depow").Redact(localKey)
+// NewTuyaDepow creates a dé charger
+func NewTuyaDepow(ctx context.Context, host, id, localKey string) (_ *TuyaDepow, err error) {
+	log := util.NewLogger("tuya-depow").Redact(localKey)
 
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
@@ -154,36 +154,36 @@ func NewDepow(ctx context.Context, host, id, localKey string) (_ *Depow, err err
 		return nil, fmt.Errorf("device not reachable: %w", err)
 	}
 
-	wb := &Depow{
+	wb := &TuyaDepow{
 		log:     log,
 		conn:    conn,
-		current: depowSteps(dps)[0],
+		current: tuyaDepowSteps(dps)[0],
 	}
 
-	if current := depowInt(dps[depowDpCurrent]); current > 0 {
+	if current := tuyaDepowInt(dps[tuyaDepowDpCurrent]); current > 0 {
 		wb.current = current
 	}
 
 	return wb, nil
 }
 
-func depowInt(v any) int64 {
+func tuyaDepowInt(v any) int64 {
 	f, _ := v.(float64)
 	return int64(f)
 }
 
-func depowSteps(dps map[string]any) []int64 {
-	if s, ok := dps[depowDpSteps].(string); ok {
+func tuyaDepowSteps(dps map[string]any) []int64 {
+	if s, ok := dps[tuyaDepowDpSteps].(string); ok {
 		var res []int64
 		if err := json.Unmarshal([]byte(s), &res); err == nil && len(res) > 0 {
 			return slices.Sorted(slices.Values(res))
 		}
 	}
-	return depowDefaultSteps
+	return tuyaDepowDefaultSteps
 }
 
-// depowStep returns the highest supported current not exceeding the requested current
-func depowStep(steps []int64, current int64) int64 {
+// tuyaDepowStep returns the highest supported current not exceeding the requested current
+func tuyaDepowStep(steps []int64, current int64) int64 {
 	res := steps[0]
 	for _, s := range steps {
 		if s <= current {
@@ -194,16 +194,16 @@ func depowStep(steps []int64, current int64) int64 {
 }
 
 // Status implements the api.Charger interface
-func (wb *Depow) Status() (api.ChargeStatus, error) {
+func (wb *TuyaDepow) Status() (api.ChargeStatus, error) {
 	dps, err := wb.conn.Dps()
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	return depowStatus(dps[depowDpWorkState])
+	return tuyaDepowStatus(dps[tuyaDepowDpWorkState])
 }
 
-func depowStatus(v any) (api.ChargeStatus, error) {
+func tuyaDepowStatus(v any) (api.ChargeStatus, error) {
 	code, ok := v.(float64)
 	if !ok {
 		return api.StatusNone, fmt.Errorf("invalid work state: %v", v)
@@ -221,18 +221,18 @@ func depowStatus(v any) (api.ChargeStatus, error) {
 	}
 }
 
-var _ api.StatusReasoner = (*Depow)(nil)
+var _ api.StatusReasoner = (*TuyaDepow)(nil)
 
 // StatusReason implements the api.StatusReasoner interface
-func (wb *Depow) StatusReason() (api.Reason, error) {
+func (wb *TuyaDepow) StatusReason() (api.Reason, error) {
 	dps, err := wb.conn.Dps()
 	if err != nil {
 		return api.ReasonUnknown, err
 	}
 
-	switch depowInt(dps[depowDpWorkState]) {
+	switch tuyaDepowInt(dps[tuyaDepowDpWorkState]) {
 	case 200:
-		if nfc, _ := dps[depowDpNfc].(bool); nfc {
+		if nfc, _ := dps[tuyaDepowDpNfc].(bool); nfc {
 			return api.ReasonWaitingForAuthorization, nil
 		}
 	case 201:
@@ -243,13 +243,13 @@ func (wb *Depow) StatusReason() (api.Reason, error) {
 }
 
 // Enabled implements the api.Charger interface
-func (wb *Depow) Enabled() (bool, error) {
+func (wb *TuyaDepow) Enabled() (bool, error) {
 	dps, err := wb.conn.Dps()
-	return depowInt(dps[depowDpCurrent]) > 0, err
+	return tuyaDepowInt(dps[tuyaDepowDpCurrent]) > 0, err
 }
 
 // Enable implements the api.Charger interface
-func (wb *Depow) Enable(enable bool) error {
+func (wb *TuyaDepow) Enable(enable bool) error {
 	var current int64
 	if enable {
 		wb.mu.Lock()
@@ -257,36 +257,36 @@ func (wb *Depow) Enable(enable bool) error {
 		wb.mu.Unlock()
 	}
 
-	return wb.conn.Set(map[string]any{depowDpCurrent: current})
+	return wb.conn.Set(map[string]any{tuyaDepowDpCurrent: current})
 }
 
 // MaxCurrent implements the api.Charger interface
-func (wb *Depow) MaxCurrent(current int64) error {
+func (wb *TuyaDepow) MaxCurrent(current int64) error {
 	dps, err := wb.conn.Dps()
 	if err != nil {
 		return err
 	}
 
-	step := depowStep(depowSteps(dps), current)
+	step := tuyaDepowStep(tuyaDepowSteps(dps), current)
 
 	wb.mu.Lock()
 	wb.current = step
 	wb.mu.Unlock()
 
 	// current 0 means disabled, keep until enabled
-	if actual := depowInt(dps[depowDpCurrent]); actual == 0 || actual == step {
+	if actual := tuyaDepowInt(dps[tuyaDepowDpCurrent]); actual == 0 || actual == step {
 		return nil
 	}
 
-	return wb.conn.Set(map[string]any{depowDpCurrent: step})
+	return wb.conn.Set(map[string]any{tuyaDepowDpCurrent: step})
 }
 
-func (wb *Depow) metrics() (depowMetrics, error) {
-	var res depowMetrics
+func (wb *TuyaDepow) metrics() (tuyaDepowMetrics, error) {
+	var res tuyaDepowMetrics
 
 	wb.mu.Lock()
-	if time.Since(wb.refreshed) > depowRefreshInterval {
-		if err := wb.conn.Set(map[string]any{depowDpRefresh: true}); err == nil {
+	if time.Since(wb.refreshed) > tuyaDepowRefreshInterval {
+		if err := wb.conn.Set(map[string]any{tuyaDepowDpRefresh: true}); err == nil {
 			wb.refreshed = time.Now()
 		}
 	}
@@ -297,7 +297,7 @@ func (wb *Depow) metrics() (depowMetrics, error) {
 		return res, err
 	}
 
-	s, ok := dps[depowDpMetrics].(string)
+	s, ok := dps[tuyaDepowDpMetrics].(string)
 	if !ok {
 		return res, api.ErrNotAvailable
 	}
@@ -306,34 +306,34 @@ func (wb *Depow) metrics() (depowMetrics, error) {
 	return res, err
 }
 
-var _ api.Meter = (*Depow)(nil)
+var _ api.Meter = (*TuyaDepow)(nil)
 
 // CurrentPower implements the api.Meter interface
-func (wb *Depow) CurrentPower() (float64, error) {
+func (wb *TuyaDepow) CurrentPower() (float64, error) {
 	res, err := wb.metrics()
 	return res.P * 100, err
 }
 
-var _ api.ChargeRater = (*Depow)(nil)
+var _ api.ChargeRater = (*TuyaDepow)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
-func (wb *Depow) ChargedEnergy() (float64, error) {
+func (wb *TuyaDepow) ChargedEnergy() (float64, error) {
 	res, err := wb.metrics()
 	return res.E / 10, err
 }
 
-var _ api.PhaseCurrents = (*Depow)(nil)
+var _ api.PhaseCurrents = (*TuyaDepow)(nil)
 
 // Currents implements the api.PhaseCurrents interface
-func (wb *Depow) Currents() (float64, float64, float64, error) {
+func (wb *TuyaDepow) Currents() (float64, float64, float64, error) {
 	res, err := wb.metrics()
 	return res.L1[1] / 10, res.L2[1] / 10, res.L3[1] / 10, err
 }
 
-var _ api.PhaseVoltages = (*Depow)(nil)
+var _ api.PhaseVoltages = (*TuyaDepow)(nil)
 
 // Voltages implements the api.PhaseVoltages interface
-func (wb *Depow) Voltages() (float64, float64, float64, error) {
+func (wb *TuyaDepow) Voltages() (float64, float64, float64, error) {
 	res, err := wb.metrics()
 	return res.L1[0] / 10, res.L2[0] / 10, res.L3[0] / 10, err
 }

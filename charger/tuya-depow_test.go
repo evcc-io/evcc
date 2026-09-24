@@ -7,17 +7,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDepowStep(t *testing.T) {
+func TestTuyaDepowStep(t *testing.T) {
 	for _, tc := range []struct {
 		current, expected int64
 	}{
 		{5, 6}, {6, 6}, {7, 6}, {8, 8}, {9, 8}, {12, 10}, {13, 13}, {15, 13}, {16, 16}, {32, 16},
 	} {
-		assert.Equal(t, tc.expected, depowStep(depowDefaultSteps, tc.current), tc.current)
+		assert.Equal(t, tc.expected, tuyaDepowStep(tuyaDepowDefaultSteps, tc.current), tc.current)
 	}
 }
 
-func TestDepowStatus(t *testing.T) {
+func TestTuyaDepowStatus(t *testing.T) {
 	for _, tc := range []struct {
 		code     any
 		expected api.ChargeStatus
@@ -27,7 +27,7 @@ func TestDepowStatus(t *testing.T) {
 		{float64(300), api.StatusC},
 		{float64(501), api.StatusNone}, {nil, api.StatusNone},
 	} {
-		res, err := depowStatus(tc.code)
+		res, err := tuyaDepowStatus(tc.code)
 		assert.Equal(t, tc.expected, res, tc.code)
 		assert.Equal(t, tc.expected == api.StatusNone, err != nil, tc.code)
 	}

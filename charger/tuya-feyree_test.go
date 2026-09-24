@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFeyreeStatus(t *testing.T) {
+func TestTuyaFeyreeStatus(t *testing.T) {
 	for _, tc := range []struct {
 		state    any
 		expected api.ChargeStatus
@@ -17,13 +17,13 @@ func TestFeyreeStatus(t *testing.T) {
 		{"charing", api.StatusC},
 		{"error", api.StatusNone}, {nil, api.StatusNone},
 	} {
-		res, err := feyreeStatus(tc.state)
+		res, err := tuyaFeyreeStatus(tc.state)
 		assert.Equal(t, tc.expected, res, tc.state)
 		assert.Equal(t, tc.expected == api.StatusNone, err != nil, tc.state)
 	}
 }
 
-func TestFeyreeCurrentDp(t *testing.T) {
+func TestTuyaFeyreeCurrentDp(t *testing.T) {
 	for _, tc := range []struct {
 		dps      map[string]any
 		expected string
@@ -33,16 +33,16 @@ func TestFeyreeCurrentDp(t *testing.T) {
 		{map[string]any{"113": "Max50A"}, "117"},
 		{map[string]any{"116": float64(16)}, "116"},
 	} {
-		res, err := feyreeCurrentDp(tc.dps)
+		res, err := tuyaFeyreeCurrentDp(tc.dps)
 		assert.NoError(t, err)
 		assert.Equal(t, tc.expected, res)
 	}
 
-	_, err := feyreeCurrentDp(map[string]any{})
+	_, err := tuyaFeyreeCurrentDp(map[string]any{})
 	assert.Error(t, err)
 }
 
-func TestFeyreeVoltage(t *testing.T) {
-	assert.Equal(t, 233.0, feyreeVoltage(233))
-	assert.Equal(t, 233.0, feyreeVoltage(2330))
+func TestTuyaFeyreeVoltage(t *testing.T) {
+	assert.Equal(t, 233.0, tuyaFeyreeVoltage(233))
+	assert.Equal(t, 233.0, tuyaFeyreeVoltage(2330))
 }
