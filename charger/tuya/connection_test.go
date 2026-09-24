@@ -92,6 +92,10 @@ func TestConnection(t *testing.T) {
 	assert.Equal(t, "IDLEINS", dps["109"])
 	assert.Equal(t, float64(10), dps["150"])
 
-	require.NoError(t, conn.Set(map[string]any{"140": true}))
-	assert.Contains(t, <-control, `"data":{"dps":{"140":true}}`)
+	require.NoError(t, conn.Set(map[string]any{"150": int64(0)}))
+	assert.Contains(t, <-control, `"data":{"dps":{"150":0}}`)
+
+	dps, err = conn.Dps()
+	require.NoError(t, err)
+	assert.Equal(t, float64(0), dps["150"], "written value cached")
 }

@@ -232,14 +232,7 @@ func (c *Connection) receive(conn net.Conn, r *bufio.Reader, codec *codec) error
 		}
 
 		if dps != nil {
-			c.dps.SetFunc(func(v map[string]any) map[string]any {
-				res := maps.Clone(v)
-				if res == nil {
-					res = make(map[string]any)
-				}
-				maps.Copy(res, dps)
-				return res
-			})
+			c.merge(dps)
 		}
 	}
 }
@@ -305,10 +298,45 @@ func (c *Connection) DpsContext(ctx context.Context) (map[string]any, error) {
 	return res, err
 }
 
-// Set writes data points
+// Set writes data points. Written values are cached until the device reports them.
 func (c *Connection) Set(dps map[string]any) error {
+	var err error
 	if c.version == "3.3" {
-		return c.send(cmdControl, map[string]any{"devId": c.id, "uid": c.id, "t": c.timestamp(), "dps": dps})
+		err = c.send(cmdControl, map[string]any{"devId": c.id, "uid": c.id, "t": c.timestamp(), "dps": dps})
+	} else {
+		err = c.send(cmdControlNew, map[string]any{"protocol": 5, "t": time.Now().Unix(), "data": map[string]any{"dps": dps}})
 	}
-	return c.send(cmdControlNew, map[string]any{"protocol": 5, "t": time.Now().Unix(), "data": map[string]any{"dps": dps}})
+	if err != nil {
+		return err
+	}
+
+	// normalize to json types as received from the device
+	b, err := json.Marshal(dps)
+	if err != nil {
+		return err
+	}
+
+	var res map[string]any
+	if err := json.Unmarshal(b, &res); err != nil {
+		return err
+	}
+
+	select {
+	case <-c.dps.Done():
+		c.merge(res)
+	default:
+	}
+
+	return nil
+}
+
+func (c *Connection) merge(dps map[string]any) {
+	c.dps.SetFunc(func(v map[string]any) map[string]any {
+		res := maps.Clone(v)
+		if res == nil {
+			res = make(map[string]any)
+		}
+		maps.Copy(res, dps)
+		return res
+	})
 }

@@ -17,17 +17,42 @@ package charger
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// dé (depow) chargers via the local Tuya protocol.
-// Data points: https://github.com/make-all/tuya-local/blob/main/custom_components/tuya_local/devices/dewall_evcharger.yaml
+// dé (depow) chargers via the local Tuya protocol, Tuya model e1krltgk
+// (product ids gxrtu5vljdthtd3g, witok7vhhjohtr02). Not all firmware versions report all data points.
 //
-//	102 metrics  {"L1":[2240,58,13],"L2":[...],"L3":[...],"t":280,"p":39,"d":20110,"e":22}
-//	             L = [0.1 V, 0.1 A, 0.1 kW], p = 0.1 kW, e = session 0.1 kWh
-//	107 steps    "[6, 8, 10, 13, 16]"
-//	109 status   SLEEP, IDLE, IDLEINS, WORKING, WAIT, ERRORPAUSE, PAUSE, STOP
-//	140 charge   true = start, false = stop
-//	150 current  A
-//	151 mode     {"m":0,"dt":0,"ss":"00:00","se":"08:00"}
-//	188 refresh  triggers fast metrics updates for ~30s
+// Sources: Tuya model definitions in make-all/tuya-local#3120, #3952 and Apollon77/ioBroker.tuya#747,
+// tuya-local dewall_evcharger.yaml, vondraussen/de-wallbox-evcc-gateway.
+//
+//	DP   code                access  name (translated)           notes
+//	101  x_work_state        rw      work state                  100 offline, 101 no vehicle, 200 vehicle connected, 201 charging complete,
+//	                                                             202 waiting (schedule), 203 waiting (delay), 204 paused, 300 charging,
+//	                                                             4xx protection, 5xx error (see depowWorkStateErrors)
+//	102  x_metrics           ro      metrics                     {"L1":[V,A,P],"L2":[...],"L3":[...],"t":280,"p":39,"d":20110,"e":22}
+//	                                                             V 0.1 V, A 0.1 A, P 0.1 kW, t 0.1 °C, p 0.1 kW, d session s, e session 0.1 kWh
+//	103  x_selftest          ro      power-on self test result   unused according to vendor
+//	104  x_alarm             ro      alarm                       {"t":"2025-10-23 21:30:00","v":<error code>}
+//	105  x_charge_history    ro      charge history              last session {"t":"2026-09-05 13:15:20","s":"13:15","e":"10:50","d":77732,"c":62}, c 0.1 kWh
+//	106  x_charger_info      rw      device info                 {"r":"Type B, AC 30mA + DC 6mA","fv":"2.9.3","cp":"11.5","t":"0","e":"0"}
+//	                                                             r RCD type, fv firmware, cp control pilot voltage
+//	107  x_adjust_current    ro      selectable currents         "[6, 8, 10, 13, 16]"
+//	108  x_downcounter       ro      countdown remaining         s
+//	109  x_work_st_debug     ro      work state (debug)          SLEEP, IDLE, IDLEINS, WORKING, WAIT, ERRORPAUSE, PAUSE, STOP, EMPTY
+//	110  x_single_fase_mode  rw      single/three phase mode     bool, not seen on firmware 2.9.3
+//	111  x_debug             rw      spare                       string
+//	140  x_do_charge         wr      start/stop charging         write-only trigger, true start, false stop
+//	141  x_do_reset          wr      factory reset               write-only trigger
+//	142  x_do_reboot         wr      reboot                      write-only trigger
+//	150  x_charge_current    rw      charging current            A, 0 pauses the vehicle via control pilot (not in model range 6-32)
+//	151  x_charge_mode       rw      charging mode               {"m":0,"dt":0,"ss":"00:00","se":"08:00"}, m 0 immediate, 2 schedule ss-se
+//	152  x_max_current_cfg   rw      maximum charging current    A, installation limit
+//	153  x_lang_cfg          rw      language/debug config       string
+//	154  x_socket_cfg        rw      earthing option             0 prompt, 1 charge directly, 2 cancel charging
+//	155  x_nfc_cfg           rw      NFC                         bool
+//	156  x_earch_free_cfg    rw      earth-free option           bool
+//	157  x_product_varient   ro      product variant             0 default, 1 without NFC
+//	188  x_heartbeat         rw      host heartbeat              true enables fast metrics updates for ~30 s
+//	189  dp_num              ro      number of reported DPs
+//	190  x_plug_charge       rw      plug and charge             bool, start charging when a vehicle is plugged in
 
 import (
 	"context"
@@ -45,19 +70,35 @@ import (
 )
 
 const (
-	depowDpMetrics = "102"
-	depowDpSteps   = "107"
-	depowDpStatus  = "109"
-	depowDpCharge  = "140"
-	depowDpCurrent = "150"
-	depowDpMode    = "151"
-	depowDpRefresh = "188"
+	depowDpWorkState  = "101"
+	depowDpMetrics    = "102"
+	depowDpSteps      = "107"
+	depowDpStatus     = "109"
+	depowDpCharge     = "140"
+	depowDpCurrent    = "150"
+	depowDpMode       = "151"
+	depowDpRefresh    = "188"
+	depowDpPlugCharge = "190"
 
 	depowRefreshInterval = 25 * time.Second
-	depowLockMargin      = 6 * time.Hour
 )
 
 var depowDefaultSteps = []int64{6, 8, 10, 13, 16}
+
+var depowWorkStateErrors = map[int]string{
+	400: "overcurrent protection",
+	401: "overvoltage protection",
+	402: "undervoltage protection",
+	403: "overtemperature protection",
+	500: "self test failed",
+	501: "residual current protection",
+	502: "relay welded",
+	503: "residual current self test failed",
+	504: "control pilot error",
+	505: "other error",
+	506: "diode failure",
+	507: "earthing protection",
+}
 
 type depowMode struct {
 	M  int    `json:"m"`
@@ -78,8 +119,8 @@ type Depow struct {
 	conn *tuya.Connection
 
 	mu        sync.Mutex
-	enabled   bool
-	lockSent  time.Time
+	current   int64
+	prepared  time.Time
 	refreshed time.Time
 }
 
@@ -142,10 +183,40 @@ func NewDepow(ctx context.Context, host, id, localKey, version string) (_ *Depow
 	wb := &Depow{
 		log:     log,
 		conn:    conn,
-		enabled: dps[depowDpStatus] == "WORKING",
+		current: depowSteps(dps)[0],
+	}
+
+	if current := depowInt(dps[depowDpCurrent]); current > 0 {
+		wb.current = current
 	}
 
 	return wb, nil
+}
+
+func depowInt(v any) int64 {
+	f, _ := v.(float64)
+	return int64(f)
+}
+
+func depowSteps(dps map[string]any) []int64 {
+	if s, ok := dps[depowDpSteps].(string); ok {
+		var res []int64
+		if err := json.Unmarshal([]byte(s), &res); err == nil && len(res) > 0 {
+			return slices.Sorted(slices.Values(res))
+		}
+	}
+	return depowDefaultSteps
+}
+
+// depowStep returns the highest supported current not exceeding the requested current
+func depowStep(steps []int64, current int64) int64 {
+	res := steps[0]
+	for _, s := range steps {
+		if s <= current {
+			res = s
+		}
+	}
+	return res
 }
 
 // Status implements the api.Charger interface
@@ -155,13 +226,11 @@ func (wb *Depow) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	status, _ := dps[depowDpStatus].(string)
-
-	if err := wb.lock(dps, status); err != nil {
-		wb.log.WARN.Printf("scheduler lock: %v", err)
+	if err := wb.prepare(dps); err != nil {
+		wb.log.WARN.Printf("prepare: %v", err)
 	}
 
-	switch status {
+	switch status := dps[depowDpStatus]; status {
 	case "SLEEP", "IDLE":
 		return api.StatusA, nil
 	case "IDLEINS", "WAIT", "PAUSE", "STOP":
@@ -169,74 +238,79 @@ func (wb *Depow) Status() (api.ChargeStatus, error) {
 	case "WORKING":
 		return api.StatusC, nil
 	case "ERRORPAUSE":
-		return api.StatusNone, errors.New("charger fault")
+		code := int(depowInt(dps[depowDpWorkState]))
+		if msg, ok := depowWorkStateErrors[code]; ok {
+			return api.StatusNone, fmt.Errorf("charger fault: %s (%d)", msg, code)
+		}
+		return api.StatusNone, fmt.Errorf("charger fault: %d", code)
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %v", dps[depowDpStatus])
+		return api.StatusNone, fmt.Errorf("invalid status: %v", status)
 	}
 }
 
-// lock keeps a disabled charger from starting automatically when a vehicle is plugged in.
-// The scheduler window is kept far ahead of the current time so it is never reached.
-func (wb *Depow) lock(dps map[string]any, status string) error {
+// prepare makes the charger start a session whenever a vehicle is plugged in,
+// so that charging is controlled by the current setpoint alone
+func (wb *Depow) prepare(dps map[string]any) error {
 	wb.mu.Lock()
 	defer wb.mu.Unlock()
 
-	if wb.enabled || status == "WORKING" || time.Since(wb.lockSent) < time.Minute {
+	if time.Since(wb.prepared) < time.Minute {
 		return nil
 	}
 
-	now := time.Now()
+	set := make(map[string]any)
+
+	if v, ok := dps[depowDpPlugCharge].(bool); ok && !v {
+		set[depowDpPlugCharge] = true
+	}
 
 	var mode depowMode
-	if s, ok := dps[depowDpMode].(string); ok && json.Unmarshal([]byte(s), &mode) == nil && mode.M == 2 {
-		if start, err := time.Parse("15:04", mode.Ss); err == nil {
-			day := 24 * time.Hour
-			ahead := (time.Duration(start.Hour()-now.Hour())*time.Hour + time.Duration(start.Minute()-now.Minute())*time.Minute + day) % day
-			if ahead >= depowLockMargin {
-				return nil
-			}
+	if s, ok := dps[depowDpMode].(string); ok && json.Unmarshal([]byte(s), &mode) == nil && mode.M != 0 {
+		mode.M = 0
+		b, err := json.Marshal(mode)
+		if err != nil {
+			return err
 		}
+		set[depowDpMode] = string(b)
 	}
 
-	start := now.Add(12 * time.Hour)
-	b, err := json.Marshal(depowMode{M: 2, Dt: 8, Ss: start.Format("15:04"), Se: start.Add(time.Minute).Format("15:04")})
-	if err != nil {
-		return err
+	if len(set) == 0 {
+		return nil
 	}
 
-	wb.lockSent = now
-	return wb.conn.Set(map[string]any{depowDpMode: string(b)})
+	wb.log.DEBUG.Printf("enable plug and charge: %v", set)
+	wb.prepared = time.Now()
+
+	return wb.conn.Set(set)
 }
 
 // Enabled implements the api.Charger interface
 func (wb *Depow) Enabled() (bool, error) {
-	wb.mu.Lock()
-	defer wb.mu.Unlock()
-	return wb.enabled, nil
+	dps, err := wb.conn.Dps()
+	return depowInt(dps[depowDpCurrent]) > 0, err
 }
 
 // Enable implements the api.Charger interface
 func (wb *Depow) Enable(enable bool) error {
-	dps := map[string]any{depowDpCharge: enable}
-
-	if enable {
-		b, err := json.Marshal(depowMode{Ss: "00:00", Se: "08:00"})
-		if err != nil {
-			return err
-		}
-		dps[depowDpMode] = string(b)
+	if !enable {
+		return wb.conn.Set(map[string]any{depowDpCurrent: 0})
 	}
 
-	if err := wb.conn.Set(dps); err != nil {
+	dps, err := wb.conn.Dps()
+	if err != nil {
 		return err
 	}
 
 	wb.mu.Lock()
-	wb.enabled = enable
-	wb.lockSent = time.Time{}
+	set := map[string]any{depowDpCurrent: wb.current}
 	wb.mu.Unlock()
 
-	return nil
+	// session not started, e.g. plug and charge not available or charging finished
+	if status := dps[depowDpStatus]; status == "IDLEINS" || status == "STOP" {
+		set[depowDpCharge] = true
+	}
+
+	return wb.conn.Set(set)
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -246,34 +320,18 @@ func (wb *Depow) MaxCurrent(current int64) error {
 		return err
 	}
 
-	steps := depowDefaultSteps
-	if s, ok := dps[depowDpSteps].(string); ok {
-		var res []int64
-		if err := json.Unmarshal([]byte(s), &res); err == nil && len(res) > 0 {
-			steps = res
-		}
-	}
+	step := depowStep(depowSteps(dps), current)
 
-	step := depowStep(steps, current)
-	if v, ok := dps[depowDpCurrent].(float64); ok && int64(v) == step {
+	wb.mu.Lock()
+	wb.current = step
+	wb.mu.Unlock()
+
+	// current 0 means disabled, keep until enabled
+	if actual := depowInt(dps[depowDpCurrent]); actual == 0 || actual == step {
 		return nil
 	}
 
 	return wb.conn.Set(map[string]any{depowDpCurrent: step})
-}
-
-// depowStep returns the highest supported current not exceeding the requested current
-func depowStep(steps []int64, current int64) int64 {
-	steps = slices.Sorted(slices.Values(steps))
-
-	res := steps[0]
-	for _, s := range steps {
-		if s <= current {
-			res = s
-		}
-	}
-
-	return res
 }
 
 func (wb *Depow) metrics() (depowMetrics, error) {
