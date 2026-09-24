@@ -8,6 +8,7 @@ import (
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/core/coordinator"
 	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/soc"
@@ -231,6 +232,60 @@ func TestPublishSocAndRangeEnergyLimit(t *testing.T) {
 
 	assert.InDelta(t, 0.9, lp.GetRemainingEnergy(), 1e-9, "remaining energy")
 	assert.Equal(t, time.Hour, lp.GetRemainingDuration(), "remaining duration")
+}
+
+// https://github.com/evcc-io/evcc/issues/34014
+func TestPublishSocAndRangeVehicleFinishTime(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	clck := clock.NewMock()
+
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().Soc().Return(50.0, nil).AnyTimes()
+	vehicle.EXPECT().Capacity().Return(4.0).AnyTimes()
+	vehicle.EXPECT().Features().AnyTimes()
+
+	finishTime := clck.Now().Add(20 * time.Minute)
+	v := struct {
+		*api.MockVehicle
+		api.VehicleFinishTimer
+	}{vehicle, implement.VehicleFinishTimer(func() (time.Time, error) { return finishTime, nil })}
+
+	log := util.NewLogger("foo")
+	lp := &Loadpoint{
+		log:          log,
+		bus:          evbus.New(),
+		clock:        clck,
+		charger:      api.NewMockCharger(ctrl),
+		vehicle:      v,
+		chargeMeter:  newChargeMeter(&Null{}), // silence nil panics
+		chargeRater:  &Null{},                 // silence nil panics
+		chargeTimer:  &Null{},                 // silence nil panics
+		socEstimator: soc.NewEstimator(log, v),
+		minCurrent:   minA,
+		maxCurrent:   maxA,
+		phases:       1,
+		status:       api.StatusC,
+		mode:         api.ModeNow,
+		chargePower:  900, // W
+	}
+
+	x, y, z := createChannels(t)
+	attachChannels(lp, x, y, z)
+
+	// vehicle limit is the target: vehicle estimate wins
+	lp.publishSocAndRange()
+	assert.Equal(t, 20*time.Minute, lp.GetRemainingDuration(), "vehicle finish time")
+
+	// evcc limits earlier than the vehicle: own estimate
+	lp.limitSoc = 80
+	lp.publishSocAndRange()
+	assert.Greater(t, lp.GetRemainingDuration(), 20*time.Minute, "own estimate")
+
+	// not charging: no estimate
+	lp.limitSoc = 0
+	lp.status = api.StatusB
+	lp.publishSocAndRange()
+	assert.Zero(t, lp.GetRemainingDuration(), "not charging")
 }
 
 func TestVehicleDetectByID(t *testing.T) {

@@ -178,6 +178,7 @@ type Loadpoint struct {
 	// charge progress
 	vehicleSoc              float64       // Vehicle or charger soc
 	vehicleRange            int64         // Vehicle range in km
+	vehicleFinishTime       time.Time     // Vehicle finish time estimate
 	chargeDuration          time.Duration // Charge duration
 	connectedDuration       time.Duration // Connection duration
 	energyMetrics           EnergyMetrics // Stats for charged energy by session
@@ -2159,6 +2160,17 @@ func (lp *Loadpoint) publishSocAndRange() {
 				lp.log.ERROR.Printf("vehicle range: %v", err)
 			}
 		}
+
+		// finish time
+		if vs, ok := api.Cap[api.VehicleFinishTimer](lp.GetVehicle()); ok {
+			ft, err := vs.FinishTime()
+			if err == nil {
+				lp.log.DEBUG.Printf("vehicle finish time: %v", ft.Round(time.Second))
+			} else if !loadpoint.AcceptableError(err) {
+				lp.log.ERROR.Printf("vehicle finish time: %v", err)
+			}
+			lp.vehicleFinishTime = ft
+		}
 	}
 
 	if socEstimator != nil {
@@ -2208,6 +2220,14 @@ func (lp *Loadpoint) publishSocAndRange() {
 		}
 		e = soc.RemainingChargeEnergy(limitSoc, lp.vehicleSoc, v.Capacity())
 	}
+
+	// vehicle estimate targets its own limit; prefer it unless evcc limits earlier
+	if !energyLimited && limitSoc == apiLimitSoc && lp.charging() {
+		if r := lp.vehicleFinishTime.Sub(lp.clock.Now()); r > 0 {
+			d = r.Round(time.Second)
+		}
+	}
+
 	lp.SetRemainingDuration(d)
 	lp.SetRemainingEnergy(e)
 

@@ -268,6 +268,7 @@ func (lp *Loadpoint) unpublishVehicleIdentity() {
 func (lp *Loadpoint) unpublishVehicle() {
 	lp.vehicleSoc = 0
 	lp.vehicleRange = 0
+	lp.vehicleFinishTime = time.Time{}
 
 	lp.publish(keys.VehicleClimaterActive, nil)
 	lp.publish(keys.VehicleSoc, 0.0)
