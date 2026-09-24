@@ -41,11 +41,6 @@ type CP struct {
 	bootNotificationRequestC chan *core.BootNotificationRequest
 	BootNotificationResult   *core.BootNotificationRequest
 
-	// bootTriggered records that evcc solicited the BootNotification itself to
-	// complete the connection handshake. Such a boot is not a reboot and must
-	// not clear transaction state.
-	bootTriggered bool
-
 	connectors map[int]*Connector
 }
 
@@ -92,10 +87,9 @@ func (cp *CP) connectorByID(id int) *Connector {
 	return cp.connectors[id]
 }
 
-// resetTransactions clears transaction state on all connectors, e.g. after a
-// charge point reboot. Connectors are snapshotted under cp.mu and reset without
-// holding it, mirroring the cp.mu -> conn.mu lock order used elsewhere.
-func (cp *CP) resetTransactions() {
+// markRebooted flags all connectors after a BootNotification.
+// Connectors are snapshotted under cp.mu to keep the cp.mu -> conn.mu lock order.
+func (cp *CP) markRebooted() {
 	cp.mu.RLock()
 	conns := make([]*Connector, 0, len(cp.connectors))
 	for _, conn := range cp.connectors {
@@ -104,7 +98,7 @@ func (cp *CP) resetTransactions() {
 	cp.mu.RUnlock()
 
 	for _, conn := range conns {
-		conn.resetTransaction()
+		conn.markRebooted()
 	}
 }
 
@@ -160,9 +154,6 @@ func (cp *CP) connect(connect bool) {
 		})
 	} else {
 		cp.stopBootTimer()
-		// a trigger the charge point never answered must not leak into the
-		// next connection and mask a genuine reboot there
-		cp.bootTriggered = false
 	}
 }
 
@@ -186,16 +177,14 @@ func (cp *CP) onTransportConnect() {
 	// The TriggerMessage is sent directly via the OCPP instance, bypassing the
 	// Connected() check which would fail at this point.
 	time.AfterFunc(TriggerBootDelay, func() {
-		cp.mu.Lock()
+		cp.mu.RLock()
 		// If BootNotification already arrived or timer was cancelled (disconnect),
 		// there is nothing to do.
 		if cp.bootTimer == nil || cp.BootNotificationResult != nil {
-			cp.mu.Unlock()
+			cp.mu.RUnlock()
 			return
 		}
-		// the resulting BootNotification is solicited, not a reboot
-		cp.bootTriggered = true
-		cp.mu.Unlock()
+		cp.mu.RUnlock()
 
 		cp.log.DEBUG.Printf("proactively triggering BootNotification")
 
@@ -263,14 +252,6 @@ func (cp *CP) monitorReboot(ctx context.Context, setup func() error) {
 		case boot := <-cp.bootNotificationRequestC:
 			cp.log.INFO.Printf("reboot detected (model: %s, vendor: %s), re-initializing",
 				boot.ChargePointModel, boot.ChargePointVendor)
-
-			// refresh the status cached from before the reboot: it gates
-			// transaction recovery until the charge point reports a fresh one
-			if cp.HasRemoteTriggerFeature {
-				if err := cp.TriggerMessageRequest(0, core.StatusNotificationFeatureName); err != nil {
-					cp.log.DEBUG.Printf("failed triggering StatusNotification: %v", err)
-				}
-			}
 
 			if err := setup(); err != nil {
 				cp.log.ERROR.Printf("failed to re-initialize after reboot: %v", err)

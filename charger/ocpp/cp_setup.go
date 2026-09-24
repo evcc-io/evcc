@@ -115,11 +115,6 @@ func (cp *CP) Setup(ctx context.Context, meterValues string, meterInterval time.
 	cp.mu.RUnlock()
 
 	if !hasBootResult && cp.HasRemoteTriggerFeature {
-		// the resulting BootNotification is solicited, not a reboot
-		cp.mu.Lock()
-		cp.bootTriggered = true
-		cp.mu.Unlock()
-
 		if err := cp.TriggerMessageRequest(0, core.BootNotificationFeatureName); err != nil {
 			cp.log.DEBUG.Printf("failed triggering BootNotification: %v", err)
 		}

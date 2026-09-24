@@ -211,65 +211,19 @@ func (suite *connTestSuite) TestOnStatusNotificationClearsStaleTxn() {
 }
 
 // TestOnBootNotificationClearsStaleTxn ensures a transaction left over from
-// before a charge point reboot is cleared on BootNotification, so a connector
-// that reconnects straight into Preparing (never reporting Available, e.g.
-// Grizzl-E) can still trigger RemoteStartTransaction.
+// before a reboot is cleared when the connector comes back in Preparing without
+// reporting Available first.
 func (suite *connTestSuite) TestOnBootNotificationClearsStaleTxn() {
 	suite.conn.remoteIdTag = "evcc"
 	suite.conn.txnId = 42
 	suite.conn.idTag = "stale"
 
-	// charge point reboots and re-announces itself
-	_, err := suite.cp.OnBootNotification(&core.BootNotificationRequest{
-		ChargePointModel:  "GRM 2024",
-		ChargePointVendor: "UnitedChargers",
-	})
+	_, err := suite.cp.OnBootNotification(&core.BootNotificationRequest{})
 	suite.NoError(err)
-	suite.Equal(0, suite.conn.txnId, "txnId should be cleared on reboot")
-	suite.Equal("", suite.conn.idTag, "idTag should be cleared on reboot")
+	<-suite.cp.bootNotificationRequestC
+	suite.Equal(42, suite.conn.txnId, "txnId should be kept until the next status")
 
-	// connector reconnects straight into Preparing, without an Available in
-	// between and without a timestamp (as the Grizzl-E does)
-	_, err = suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
-		ConnectorId: 1,
-		Status:      core.ChargePointStatusPreparing,
-		ErrorCode:   core.NoError,
-	})
-	suite.NoError(err)
-	suite.True(suite.conn.NeedsAuthentication(), "Preparing after reboot should require authentication")
-}
-
-// TestOnBootNotificationBlocksStaleMeterValueRecovery ensures MeterValues
-// arriving between the BootNotification and the first post-reboot status cannot
-// resurrect the transaction the reboot just cleared. The cached status still
-// says Charging, which would otherwise qualify the transaction id for recovery
-// and suppress RemoteStartTransaction all over again. Setup solicits MeterValues
-// on every reboot and never a StatusNotification, so this is the normal
-// post-reboot ordering rather than a rare race.
-func (suite *connTestSuite) TestOnBootNotificationBlocksStaleMeterValueRecovery() {
-	suite.conn.remoteIdTag = "evcc"
-
-	// charging before the power cut
-	_, err := suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
-		ConnectorId: 1,
-		Status:      core.ChargePointStatusCharging,
-		ErrorCode:   core.NoError,
-		Timestamp:   types.NewDateTime(suite.clock.Now()),
-	})
-	suite.NoError(err)
-
-	suite.conn.txnId = 42
-	suite.conn.idTag = "stale"
-
-	// charge point reboots and re-announces itself
-	_, err = suite.cp.OnBootNotification(&core.BootNotificationRequest{
-		ChargePointModel:  "GRM 2024",
-		ChargePointVendor: "UnitedChargers",
-	})
-	suite.NoError(err)
-	suite.Equal(0, suite.conn.txnId, "txnId should be cleared on reboot")
-
-	// the stale transaction id must not be adopted from meter values
+	// meter values carrying the old transaction must not interfere
 	txnId := 42
 	_, err = suite.conn.OnMeterValues(&core.MeterValuesRequest{
 		ConnectorId:   1,
@@ -280,51 +234,43 @@ func (suite *connTestSuite) TestOnBootNotificationBlocksStaleMeterValueRecovery(
 		}},
 	})
 	suite.NoError(err)
-	suite.Equal(0, suite.conn.txnId, "stale transaction must not be recovered before a fresh status")
 
-	// connector reports Preparing without a timestamp (as the Grizzl-E does)
 	_, err = suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
 		ConnectorId: 1,
 		Status:      core.ChargePointStatusPreparing,
 		ErrorCode:   core.NoError,
 	})
 	suite.NoError(err)
+	suite.Equal(0, suite.conn.txnId, "txnId should be cleared")
+	suite.Equal("", suite.conn.idTag, "idTag should be cleared")
 	suite.True(suite.conn.NeedsAuthentication(), "Preparing after reboot should require authentication")
 }
 
-// TestMeterValueRecoveryAfterFreshStatus ensures the reboot gate only defers
-// recovery rather than disabling it: once the charge point has reported a fresh
-// status, a transaction id carried by MeterValues is adopted again. This is the
-// path charger/ocpp.go relies on after a reconnect (#15951).
-func (suite *connTestSuite) TestMeterValueRecoveryAfterFreshStatus() {
+// TestOnBootNotificationKeepsRunningTxn ensures a BootNotification sent on a
+// mere reconnect does not clear a transaction that is still running.
+func (suite *connTestSuite) TestOnBootNotificationKeepsRunningTxn() {
 	suite.conn.txnId = 42
 
-	_, err := suite.cp.OnBootNotification(&core.BootNotificationRequest{
-		ChargePointModel:  "GRM 2024",
-		ChargePointVendor: "UnitedChargers",
-	})
+	_, err := suite.cp.OnBootNotification(&core.BootNotificationRequest{})
 	suite.NoError(err)
-	suite.Equal(0, suite.conn.txnId, "txnId should be cleared on reboot")
+	<-suite.cp.bootNotificationRequestC
 
-	// charge point reports that it resumed charging
 	_, err = suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
 		ConnectorId: 1,
 		Status:      core.ChargePointStatusCharging,
 		ErrorCode:   core.NoError,
 	})
 	suite.NoError(err)
+	suite.Equal(42, suite.conn.txnId, "running transaction must be kept")
 
-	txnId := 77
-	_, err = suite.conn.OnMeterValues(&core.MeterValuesRequest{
-		ConnectorId:   1,
-		TransactionId: &txnId,
-		MeterValue: []types.MeterValue{{
-			Timestamp:    types.NewDateTime(suite.clock.Now()),
-			SampledValue: []types.SampledValue{{Measurand: types.MeasurandCurrentImport, Value: "0"}},
-		}},
+	// the reboot flag is consumed by the first status
+	_, err = suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+		ConnectorId: 1,
+		Status:      core.ChargePointStatusPreparing,
+		ErrorCode:   core.NoError,
 	})
 	suite.NoError(err)
-	suite.Equal(77, suite.conn.txnId, "transaction must be recovered once a fresh status was applied")
+	suite.Equal(42, suite.conn.txnId, "later Preparing must not clear the transaction")
 }
 
 // TestOnStatusNotificationKeepsActiveTxn ensures that an active transaction is

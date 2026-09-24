@@ -40,14 +40,18 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 		conn.log.TRACE.Printf("ignoring status: %s < %s", request.Timestamp.Time, conn.status.Timestamp)
 	}
 
-	// a freshly applied status supersedes anything cached from before a reboot
-	if applied {
-		conn.statusStale = false
-	}
-
 	// Available means cable unplugged and any prior transaction is stale
 	if applied && request.Status == core.ChargePointStatusAvailable {
 		conn.clearTransaction("Available status")
+	}
+
+	// a transaction does not survive a reboot, but a charge point may also send
+	// BootNotification on a mere reconnect, so let the first fresh status decide
+	if applied && conn.rebooted {
+		conn.rebooted = false
+		if request.Status == core.ChargePointStatusPreparing {
+			conn.clearTransaction("reboot")
+		}
 	}
 
 	if conn.isWaitingForAuth() {
@@ -89,7 +93,7 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 	defer conn.mu.Unlock()
 
 	if request.TransactionId != nil && *request.TransactionId > 0 &&
-		conn.txnId == 0 && conn.status != nil && !conn.statusStale &&
+		conn.txnId == 0 && conn.status != nil &&
 		(conn.status.Status == core.ChargePointStatusCharging ||
 			conn.status.Status == core.ChargePointStatusSuspendedEV ||
 			conn.status.Status == core.ChargePointStatusSuspendedEVSE) {
@@ -156,23 +160,13 @@ func (conn *Connector) clearTransaction(reason string) {
 	conn.assumeMeterStopped()
 }
 
-// resetTransaction clears any transaction state after a charge point reboot.
-// A reboot ends every transaction the central system still tracked; without
-// this a stale txnId keeps isWaitingForAuth false and suppresses the automatic
-// RemoteStartTransaction when the connector reconnects straight into Preparing
-// (i.e. never reports Available, e.g. Grizzl-E). It also marks the cached
-// status stale so it cannot qualify a transaction for recovery.
-func (conn *Connector) resetTransaction() {
+// markRebooted defers clearing a transaction left over from before a reboot
+// to the next applied status notification.
+func (conn *Connector) markRebooted() {
 	conn.mu.Lock()
 	defer conn.mu.Unlock()
 
-	// the status cached from before the reboot must not qualify a MeterValues
-	// transaction id for recovery until the charge point reports a fresh one.
-	// Set outside clearTransaction, which is a no-op when no transaction is
-	// tracked - and txnId == 0 is exactly the recovery precondition.
-	conn.statusStale = true
-
-	conn.clearTransaction("reboot")
+	conn.rebooted = true
 }
 
 func (conn *Connector) assumeMeterStopped() {
