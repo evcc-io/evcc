@@ -13,6 +13,7 @@
 		:preserve-on-template-change="['deviceTitle', 'parent', 'meter']"
 		:on-configuration-loaded="handleConfigurationLoaded"
 		:hide-delete="hasChildren"
+		hide-disable
 		@added="$emit('changed', $event)"
 		@updated="$emit('changed')"
 		@removed="$emit('changed')"

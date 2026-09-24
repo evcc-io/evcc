@@ -341,6 +341,8 @@ export default defineComponent({
 		hideDelete: { type: Boolean, default: false },
 		// Optional: hide the info button in the header (e.g. for singleton devices like hems)
 		hideInfo: { type: Boolean, default: false },
+		// Optional: hide the bottom-middle disable button
+		hideDisable: { type: Boolean, default: false },
 	},
 	emits: [
 		"added",
@@ -502,7 +504,7 @@ export default defineComponent({
 			return Boolean(this.values.deviceDisable);
 		},
 		canDisable(): boolean {
-			return !isNestedIn("loadpoint");
+			return !isNestedIn("loadpoint") && !this.hideDisable;
 		},
 		showActions() {
 			// explicitly hide template fields (ocpp step 1)
