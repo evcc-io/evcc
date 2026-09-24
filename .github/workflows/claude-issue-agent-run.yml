@@ -137,12 +137,12 @@ jobs:
             If MODE is "triage", also do the following:
 
             3. LABEL: Based on your investigation, pick the single best area label from
-               this set and apply it with
-               `gh issue edit ${{ inputs.issue_number }} --add-label <label>`:
-               enhancement, documentation, question, devices, tariffs, vehicles, heating.
-               Only ever apply a label from this existing set, spelled exactly as
-               listed — never create a new label.
-               Skip the area label only if the issue already has one of these labels.
+               the repository's existing labels (`gh label list`) and apply it with
+               `gh issue edit ${{ inputs.issue_number }} --add-label <label>`.
+               Only ever apply an existing label, spelled exactly as listed — never
+               create a new label.
+               Skip the area label if the issue already carries any label: a
+               maintainer has triaged it.
                NEVER apply a `bug` label. A bug is expressed as the issue type only
                (`gh issue edit ${{ inputs.issue_number }} --type Bug`). The type is
                set IN ADDITION to the area label, never instead of it: a confirmed

@@ -27,6 +27,7 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util/auth"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/redact"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/gorilla/mux"
@@ -133,8 +134,14 @@ func deviceConfigMap[T any](class templates.Class, dev config.Device[T], hidePri
 			}
 			dc["config"] = params
 		} else {
-			// custom device, no masking
+			// custom device, redact secrets only when private data is hidden
 			config := maps.Clone(conf.Other)
+			if hidePrivate {
+				config = redact.Map(config)
+				if yamlStr, ok := config["yaml"].(string); ok {
+					config["yaml"] = redact.String(yamlStr)
+				}
+			}
 
 			// extract title & icon if possible (user-defined vehicle embeds)
 			if yamlStr, ok := conf.Other["yaml"].(string); ok && config["title"] == nil && config["icon"] == nil {
