@@ -1,0 +1,45 @@
+template: depow
+products:
+  - brand: dé
+    description:
+      generic: Mobile Wallbox
+  - brand: dé
+    description:
+      generic: Wallbox
+capabilities: ["meter", "dim"]
+requirements:
+  evcc: ["sponsorship"]
+  description:
+    de: |
+      Lokale Verbindung über das Tuya-Protokoll. Device ID und Local Key können einmalig z. B. mit `tinytuya wizard` ermittelt werden.
+      Das Gerät erlaubt nur eine lokale Verbindung gleichzeitig, andere lokale Integrationen (z. B. LocalTuya, Tuya Local) müssen deaktiviert werden.
+      Unterstützte Ladeströme sind 6, 8, 10, 13 und 16 A. Angeforderte Werte werden auf die nächstniedrigere Stufe abgerundet.
+    en: |
+      Local connection via the Tuya protocol. Device ID and local key can be retrieved once, e.g. using `tinytuya wizard`.
+      The device accepts only one local connection at a time, other local integrations (e.g. LocalTuya, Tuya Local) must be disabled.
+      Supported charging currents are 6, 8, 10, 13 and 16 A. Requested values are rounded down to the next lower step.
+params:
+  - name: host
+  - name: id
+    required: true
+    description:
+      generic: Device ID
+  - name: localkey
+    required: true
+    mask: true
+    description:
+      generic: Local Key
+  - name: version
+    type: choice
+    choice: ["3.5", "3.4", "3.3"]
+    default: "3.5"
+    advanced: true
+    description:
+      de: Protokollversion
+      en: Protocol version
+render: |
+  type: depow
+  host: {{ .host }}
+  id: {{ .id }}
+  localkey: {{ .localkey }}
+  version: {{ .version }}
