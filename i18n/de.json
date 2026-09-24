@@ -33,8 +33,8 @@
     },
     "combined": "Gesamt",
     "config": {
-      "buffer": "Hausspeicherenergie oberhalb von {soc} darf für die Unterstützung der Ladepunkte genutzt werden und zögert die Abschaltung im Smart-Modus hinaus. PV-Ladung automatisch starten {start}.",
-      "bufferNone": "Hausspeicherenergie wird nicht für die Ladepunkte genutzt. Setze einen Wert unter {soc}, um die Unterstützung zu aktivieren.",
+      "buffer": "Energie der Hausbatterie oberhalb von {soc} darf für die Unterstützung der Ladepunkte genutzt werden und zögert die Abschaltung im Smart-Modus hinaus. PV-Ladung automatisch starten {start}.",
+      "bufferNone": "Energie der Hausbatterie wird nicht für die Ladepunkte genutzt. Setze einen Wert unter {soc}, um die Unterstützung zu aktivieren.",
       "bufferStart": {
         "above": "ab einem Speicherstand von {soc}",
         "full": "erst, wenn der Speicher voll ist",
@@ -44,8 +44,8 @@
       "discharge": "Entladung der Hausbatterie im Schnell-Modus und bei geplantem Laden verhindern.",
       "dischargeSmart": "Entladung der Hausbatterie nur verhindern, während ein Fahrzeug im Smart-Modus lädt.",
       "gridDischarge": "Die Entladung der Hausbatterie ins Stromnetz zulassen.",
-      "priority": "Hausspeicher hat Vorrang, solange er unter {soc} liegt. Dann erhalten die Ladepunkte den Überschuss.",
-      "priorityNone": "Sonnenüberschuss geht direkt an die Ladepunkte. Setze einen Wert über {soc}, um den Hausspeicher zu bevorzugen.",
+      "priority": "Hausbatterie hat Vorrang, solange sie unter {soc} liegt. Dann erhalten die Ladepunkte den Überschuss.",
+      "priorityNone": "Sonnenüberschuss geht direkt an die Ladepunkte. Setze einen Wert über {soc}, um die Hausbatterie zu bevorzugen.",
       "priorityTitle": "Wohin geht der Überschuss zuerst?"
     },
     "optimizer": {
