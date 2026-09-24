@@ -43,7 +43,7 @@ package charger
 //	141  x_do_reset          wr      factory reset               write-only trigger
 //	142  x_do_reboot         wr      reboot                      write-only trigger
 //	150  x_charge_current    rw      charging current            A, 0 pauses the vehicle via control pilot (not in model range 6-32)
-//	151  x_charge_mode       rw      charging mode               {"m":0,"dt":0,"ss":"00:00","se":"08:00"}, m 0 immediate, 2 schedule ss-se
+//	151  x_charge_mode       rw      charging mode               {"m":0,"dt":0,"ss":"00:00","se":"08:00"}, m 0 immediate, 2 schedule ss-se, user setting
 //	152  x_max_current_cfg   rw      maximum charging current    A, installation limit
 //	153  x_lang_cfg          rw      language/debug config       string
 //	154  x_socket_cfg        rw      earthing option             0 prompt, 1 charge directly, 2 cancel charging
@@ -75,7 +75,6 @@ const (
 	depowDpSteps     = "107"
 	depowDpStatus    = "109"
 	depowDpCurrent   = "150"
-	depowDpMode      = "151"
 	depowDpRefresh   = "188"
 
 	depowRefreshInterval = 25 * time.Second
@@ -98,13 +97,6 @@ var depowWorkStateErrors = map[int]string{
 	507: "earthing protection",
 }
 
-type depowMode struct {
-	M  int    `json:"m"`
-	Dt int    `json:"dt"`
-	Ss string `json:"ss"`
-	Se string `json:"se"`
-}
-
 type depowMetrics struct {
 	L1, L2, L3 [3]float64
 	P          float64 `json:"p"`
@@ -118,7 +110,6 @@ type Depow struct {
 
 	mu        sync.Mutex
 	current   int64
-	prepared  time.Time
 	refreshed time.Time
 }
 
@@ -224,10 +215,6 @@ func (wb *Depow) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	if err := wb.prepare(dps); err != nil {
-		wb.log.WARN.Printf("prepare: %v", err)
-	}
-
 	switch status := dps[depowDpStatus]; status {
 	case "SLEEP", "IDLE":
 		return api.StatusA, nil
@@ -244,32 +231,6 @@ func (wb *Depow) Status() (api.ChargeStatus, error) {
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %v", status)
 	}
-}
-
-// prepare disables the app schedule, which would otherwise block sessions outside its window
-func (wb *Depow) prepare(dps map[string]any) error {
-	wb.mu.Lock()
-	defer wb.mu.Unlock()
-
-	if time.Since(wb.prepared) < time.Minute {
-		return nil
-	}
-
-	var mode depowMode
-	if s, ok := dps[depowDpMode].(string); !ok || json.Unmarshal([]byte(s), &mode) != nil || mode.M == 0 {
-		return nil
-	}
-
-	mode.M = 0
-	b, err := json.Marshal(mode)
-	if err != nil {
-		return err
-	}
-
-	wb.log.DEBUG.Println("disable app schedule")
-	wb.prepared = time.Now()
-
-	return wb.conn.Set(map[string]any{depowDpMode: string(b)})
 }
 
 // Enabled implements the api.Charger interface

@@ -16,11 +16,11 @@ requirements:
     de: |
       Lokale Verbindung über das Tuya-Protokoll. Unterstützt werden Geräte mit der Tuya-Produkt-ID `gxrtu5vljdthtd3g` oder `witok7vhhjohtr02` (App: „dé EV Charger“). Die dé Wallbox 22,2 kW mit 32 A verwendet ein anderes Protokoll und wird nicht unterstützt.
       Device ID und Local Key können einmalig z. B. mit `tinytuya wizard` ermittelt werden. Das Gerät erlaubt nur eine lokale Verbindung gleichzeitig, andere lokale Integrationen (z. B. LocalTuya, Tuya Local) müssen deaktiviert werden.
-      Der Ladestrom wird auf die nächstniedrigere vom Gerät unterstützte Stufe abgerundet. Zum Pausieren wird der Ladestrom auf 0 gesetzt. Der Ladevorgang wird vom Gerät gestartet, dazu in der App „Plug & Charge“ aktivieren oder per NFC-Karte freigeben. Zeitpläne der App werden deaktiviert.
+      Der Ladestrom wird auf die nächstniedrigere vom Gerät unterstützte Stufe abgerundet. Zum Pausieren wird der Ladestrom auf 0 gesetzt. Der Ladevorgang wird vom Gerät gestartet, dazu in der App „Plug & Charge“ aktivieren oder per NFC-Karte freigeben. Ein Zeitplan in der App muss deaktiviert sein, da er den Ladevorgang außerhalb seines Zeitfensters blockiert.
     en: |
       Local connection via the Tuya protocol. Supports devices with Tuya product id `gxrtu5vljdthtd3g` or `witok7vhhjohtr02` (app: "dé EV Charger"). The dé Wallbox 22.2 kW with 32 A uses a different protocol and is not supported.
       Device ID and local key can be retrieved once, e.g. using `tinytuya wizard`. The device accepts only one local connection at a time, other local integrations (e.g. LocalTuya, Tuya Local) must be disabled.
-      The charging current is rounded down to the next lower step supported by the device. Charging is paused by setting the current to 0. Sessions are started by the device, enable "plug & charge" in the app or authorize using an NFC card. App schedules are disabled.
+      The charging current is rounded down to the next lower step supported by the device. Charging is paused by setting the current to 0. Sessions are started by the device, enable "plug & charge" in the app or authorize using an NFC card. Schedules in the app must be disabled, since they block charging outside their time window.
 params:
   - name: host
   - name: id
