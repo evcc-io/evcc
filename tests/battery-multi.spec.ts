@@ -89,7 +89,10 @@ test.describe("battery page with multiple batteries", async () => {
     await expect(prioritySoc).toHaveValue("80");
 
     // discharge control is offered for the controllable battery and toggles on
-    const discharge = page.getByRole("switch", { name: /Prevent home battery/ });
+    const discharge = page.getByRole("switch", {
+      name: "Prevent home battery discharge in fast mode and during planned charging.",
+      exact: true,
+    });
     await expect(discharge).not.toBeChecked();
     await discharge.click();
     await expect(discharge).toBeChecked();

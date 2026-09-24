@@ -106,8 +106,14 @@ test.describe("battery settings", async () => {
     await expect(fast).not.toBeChecked();
     await smart.check();
     await expect.poll(async () => (await batteryState()).batteryDischargeControlSmart).toBe(true);
-    await expect.poll(async () => (await batteryState()).batteryMode).toBe("normal");
+    // No battery control command has been sent while the loadpoint is in fast mode.
+    await expect.poll(async () => (await batteryState()).batteryMode).toBe("unknown");
 
+    expect((await request.post("/api/loadpoints/1/mode/smart")).ok()).toBeTruthy();
+    await expect.poll(async () => (await batteryState()).batteryMode).toBe("hold");
+
+    expect((await request.post("/api/loadpoints/1/mode/now")).ok()).toBeTruthy();
+    await expect.poll(async () => (await batteryState()).batteryMode).toBe("normal");
     expect((await request.post("/api/loadpoints/1/mode/smart")).ok()).toBeTruthy();
     await expect.poll(async () => (await batteryState()).batteryMode).toBe("hold");
 
@@ -115,6 +121,10 @@ test.describe("battery settings", async () => {
     await page.reload();
     await expect(smart).toBeChecked();
     await expect(fast).not.toBeChecked();
+    // The fixture's explicit default mode takes precedence on restart.
+    await expect.poll(async () => (await batteryState()).loadpoints[0].mode).toBe("now");
+    await expect.poll(async () => (await batteryState()).batteryMode).toBe("unknown");
+    expect((await request.post("/api/loadpoints/1/mode/smart")).ok()).toBeTruthy();
     await expect.poll(async () => (await batteryState()).batteryMode).toBe("hold");
 
     await page.getByRole("link", { name: "Charge" }).click();
