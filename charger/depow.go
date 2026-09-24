@@ -39,7 +39,7 @@ package charger
 //	109  x_work_st_debug     ro      work state (debug)          SLEEP, IDLE, IDLEINS, WORKING, WAIT, ERRORPAUSE, PAUSE, STOP, EMPTY
 //	110  x_single_fase_mode  rw      single/three phase mode     bool, not seen on firmware 2.9.3
 //	111  x_debug             rw      spare                       string
-//	140  x_do_charge         wr      start/stop charging         write-only trigger, true start, false stop
+//	140  x_do_charge         wr      start/stop session          write-only trigger, true start, false stop. Not used: sessions are started by the device
 //	141  x_do_reset          wr      factory reset               write-only trigger
 //	142  x_do_reboot         wr      reboot                      write-only trigger
 //	150  x_charge_current    rw      charging current            A, 0 pauses the vehicle via control pilot (not in model range 6-32)
@@ -74,7 +74,6 @@ const (
 	depowDpMetrics    = "102"
 	depowDpSteps      = "107"
 	depowDpStatus     = "109"
-	depowDpCharge     = "140"
 	depowDpCurrent    = "150"
 	depowDpMode       = "151"
 	depowDpRefresh    = "188"
@@ -292,25 +291,14 @@ func (wb *Depow) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *Depow) Enable(enable bool) error {
-	if !enable {
-		return wb.conn.Set(map[string]any{depowDpCurrent: 0})
+	var current int64
+	if enable {
+		wb.mu.Lock()
+		current = wb.current
+		wb.mu.Unlock()
 	}
 
-	dps, err := wb.conn.Dps()
-	if err != nil {
-		return err
-	}
-
-	wb.mu.Lock()
-	set := map[string]any{depowDpCurrent: wb.current}
-	wb.mu.Unlock()
-
-	// session not started, e.g. plug and charge not available or charging finished
-	if status := dps[depowDpStatus]; status == "IDLEINS" || status == "STOP" {
-		set[depowDpCharge] = true
-	}
-
-	return wb.conn.Set(set)
+	return wb.conn.Set(map[string]any{depowDpCurrent: current})
 }
 
 // MaxCurrent implements the api.Charger interface
