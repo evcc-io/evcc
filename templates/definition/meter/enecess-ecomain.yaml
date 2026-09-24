@@ -242,7 +242,7 @@ render: |
   {{- $count := 1 }}
   {{- if eq (toString .phasecount) "3" }}{{ $count = 3 }}{{ end }}
   {{- $phases := list }}
-  {{- $used := list }}
+  {{- $used := dict }}
   {{- range $i := until $count }}
   {{- $n := add1 $i }}
   {{- $device := toString (index $ (printf "device%d" $n)) }}
@@ -250,8 +250,8 @@ render: |
   {{- if not (regexMatch "^[0-3]$" $device) }}{{ fail (printf "device%d must be between 0 and 3" $n) }}{{ end }}
   {{- if not (regexMatch "^([1-9]|10)$" $channel) }}{{ fail (printf "channel%d must be between 1 and 10" $n) }}{{ end }}
   {{- $key := printf "%s/%s" $device $channel }}
-  {{- if has $key $used }}{{ fail (printf "device%d/channel%d is already used by another phase" $n $n) }}{{ end }}
-  {{- $used = append $used $key }}
+  {{- if hasKey $used $key }}{{ fail (printf "device%d/channel%d (%s) is already used by phase %s" $n $n $key (get $used $key)) }}{{ end }}
+  {{- $_ := set $used $key (toString $n) }}
   {{- $d := atoi $device }}
   {{- $c := sub (atoi $channel) 1 }}
   {{- $scale := 0.01 }}
