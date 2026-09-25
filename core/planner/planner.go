@@ -226,10 +226,17 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 
 	rates = clampRates(rates, now, targetTime)
 
-	// check if rate coverage is sufficient for planning; only the cost based plan is shaped by the ledger
+	// check if rate coverage is sufficient for planning; only the cost based plan is shaped by the
+	// ledger, and its precondition slots at the end of the horizon still run at full power
 	coverage := Duration(rates)
-	if !continuous {
-		coverage = effectiveDuration(rates, maxPower, available)
+	if !continuous && available != nil {
+		precondStart := targetTime.Add(-min(precondition, requiredDuration))
+		coverage = effectiveDuration(rates, maxPower, func(slot api.Rate) float64 {
+			if !slot.Start.Before(precondStart) {
+				return maxPower
+			}
+			return available(slot)
+		})
 	}
 	if len(rates) == 0 || coverage < requiredDuration {
 		t.log.DEBUG.Printf("planner: rate coverage in [%v,%v] insufficient for required duration %v- falling back to simple plan",

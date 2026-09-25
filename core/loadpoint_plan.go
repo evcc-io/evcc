@@ -118,9 +118,16 @@ func plannerOwner(id int, lp *Loadpoint) func() planner.Owner {
 			Target:   lp.EffectivePlanTime(),
 			Circuit:  lp.GetCircuit(),
 			MaxPower: lp.EffectiveMaxPower(),
-			MinPower: lp.EffectiveMinPower(),
+			MinPower: lp.planMinPower(),
 		}
 	}
+}
+
+// planMinPower is the minimum power a plan slot must leave: fast charging scales to all phases
+func (lp *Loadpoint) planMinPower() float64 {
+	lp.RLock()
+	defer lp.RUnlock()
+	return Voltage * lp.effectiveMinCurrent() * float64(lp.maxActivePhases())
 }
 
 // GetPlan creates a charging plan for given time and duration
@@ -159,6 +166,10 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	var planOverrun time.Duration
 
 	defer func() {
+		// a loadpoint switched off draws nothing and holds no circuit capacity
+		if lp.GetMode() == api.ModeOff {
+			plan, shares = nil, nil
+		}
 		lp.planner.Reserve(plan, shares)
 		lp.publish(keys.Plan, plan)
 		lp.publish(keys.PlanProjectedStart, planStart)

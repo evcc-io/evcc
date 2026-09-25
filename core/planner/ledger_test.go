@@ -151,6 +151,19 @@ func TestLedgerContinuousKeepsWindow(t *testing.T) {
 	assert.Nil(t, shares)
 }
 
+func TestLedgerPreconditionCoverage(t *testing.T) {
+	f := newLedgerFixture(t, 7360)
+	now := f.clock.Now()
+
+	// the outranking loadpoint fills the circuit for the whole horizon
+	f.ledger.Reserve(Owner{Id: 0, Priority: 1, Circuit: f.circuit, MaxPower: 7360}, api.Rates{{Start: now, End: f.target}}, nil)
+
+	// the precondition hour runs at full power and covers the requirement, no fallback to the simple plan
+	plan, shares := f.planner(1, 0, 7360).Plan(time.Hour, time.Hour, f.target, false)
+	assert.Equal(t, api.Rates{{Start: now.Add(5 * time.Hour), End: f.target, Value: 90}}, plan)
+	assert.Nil(t, shares)
+}
+
 func TestLedgerStaleReservation(t *testing.T) {
 	f := newLedgerFixture(t, 7360)
 	f.ledger.clock = f.clock
