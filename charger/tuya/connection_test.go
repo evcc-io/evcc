@@ -4,13 +4,19 @@ import (
 	"bufio"
 	"context"
 	"crypto/hmac"
+	"encoding/json"
+	"maps"
 	"net"
 	"testing"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// status report pushed by the device
+const cmdStatus = 0x08
 
 // deviceFrame encodes a device response including return code
 func deviceFrame(dev *codec, cmd uint32, payload []byte) ([]byte, error) {
@@ -67,7 +73,11 @@ func fakeSession(t *testing.T, conn net.Conn, version string, control chan<- str
 		return err
 	}
 
-	status := []byte(`{"dps":{"101":200,"150":10}}`)
+	state := map[string]any{"101": 200, "150": 10}
+	status := func() []byte {
+		b, _ := json.Marshal(map[string]any{"dps": state})
+		return b
+	}
 
 	first, err := recv()
 	if err != nil {
@@ -76,7 +86,7 @@ func fakeSession(t *testing.T, conn net.Conn, version string, control chan<- str
 	}
 
 	if version == "3.3" {
-		if !assert.Equal(t, uint32(cmdDpQuery), first.cmd) || !assert.NoError(t, respond(cmdDpQuery, status)) {
+		if !assert.Equal(t, uint32(cmdDpQuery), first.cmd) || !assert.NoError(t, respond(cmdDpQuery, status())) {
 			return
 		}
 	} else {
@@ -107,9 +117,20 @@ func fakeSession(t *testing.T, conn net.Conn, version string, control chan<- str
 
 		switch msg.cmd {
 		case cmdDpQuery, cmdDpQueryNew:
-			assert.NoError(t, respond(msg.cmd, status))
+			assert.NoError(t, respond(msg.cmd, status()))
 		case cmdControl, cmdControlNew:
+			var req struct {
+				Dps  map[string]any `json:"dps"`
+				Data struct {
+					Dps map[string]any `json:"dps"`
+				} `json:"data"`
+			}
+			if assert.NoError(t, json.Unmarshal(msg.payload, &req)) {
+				maps.Copy(state, req.Dps)
+				maps.Copy(state, req.Data.Dps)
+			}
 			control <- string(msg.payload)
+			assert.NoError(t, respond(cmdStatus, status()))
 		}
 	}
 }
@@ -144,9 +165,10 @@ func TestConnection(t *testing.T) {
 			require.NoError(t, conn.Set(map[string]any{"150": int64(0)}))
 			assert.Contains(t, <-control, tc.control)
 
-			dps, err = conn.Dps()
-			require.NoError(t, err)
-			assert.Equal(t, float64(0), dps["150"], "written value cached")
+			assert.Eventually(t, func() bool {
+				dps, err := conn.Dps()
+				return err == nil && dps["150"] == float64(0)
+			}, time.Second, 10*time.Millisecond, "written value cached")
 		})
 	}
 }

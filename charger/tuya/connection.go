@@ -147,11 +147,10 @@ func (c *Connection) handshake(conn net.Conn, r *bufio.Reader, codec *codec) (ui
 		return seq, err
 	}
 
+	// values are published by the query in serve, once the connection accepts writes
 	if !json.Valid(msg.payload) {
 		return seq, errors.New("invalid response")
 	}
-
-	c.handle(msg)
 
 	return seq, nil
 }
@@ -269,6 +268,10 @@ func (c *Connection) receive(conn net.Conn, r *bufio.Reader, codec *codec) error
 func (c *Connection) handle(msg message) {
 	c.log.TRACE.Printf("recv: cmd %d: %s", msg.cmd, msg.payload)
 
+	// serialize with cache updates in send
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	if msg.cmd == cmdHeartbeat {
 		// device is alive, keep last values valid
 		select {
@@ -328,13 +331,19 @@ func (c *Connection) query() error {
 }
 
 // send writes a message built for the protocol version of the current connection.
-// Cached values are merged before writing, so that any later device report takes precedence.
+// Cached values are merged after a successful write while holding the lock that also
+// serializes device reports, so that any later device report takes precedence.
 func (c *Connection) send(msg func(version string) (uint32, any), cache map[string]any) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	if c.conn == nil {
 		return errors.New("not connected")
+	}
+
+	cmd, data := msg(c.codec.version)
+	if err := c.writeTo(c.conn, c.codec, &c.seq, cmd, data); err != nil {
+		return err
 	}
 
 	if cache != nil {
@@ -345,8 +354,7 @@ func (c *Connection) send(msg func(version string) (uint32, any), cache map[stri
 		}
 	}
 
-	cmd, data := msg(c.codec.version)
-	return c.writeTo(c.conn, c.codec, &c.seq, cmd, data)
+	return nil
 }
 
 // writeTo marshals and writes a message
