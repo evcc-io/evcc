@@ -233,6 +233,36 @@ func (i *iDimmer) Dimmed() (bool, error) {
 	return i.dimmer1()
 }
 
+func FeatureDescriber(featureDescriber0 func() []api.Feature) api.FeatureDescriber {
+	if featureDescriber0 == nil {
+		return nil
+	}
+	return &iFeatureDescriber{featureDescriber0}
+}
+
+type iFeatureDescriber struct {
+	featureDescriber0 func() []api.Feature
+}
+
+func (i *iFeatureDescriber) Features() []api.Feature {
+	return i.featureDescriber0()
+}
+
+func IconDescriber(iconDescriber0 func() string) api.IconDescriber {
+	if iconDescriber0 == nil {
+		return nil
+	}
+	return &iIconDescriber{iconDescriber0}
+}
+
+type iIconDescriber struct {
+	iconDescriber0 func() string
+}
+
+func (i *iIconDescriber) Icon() string {
+	return i.iconDescriber0()
+}
+
 func Identifier(identifier0 func() ([]string, error)) api.Identifier {
 	if identifier0 == nil {
 		return nil
