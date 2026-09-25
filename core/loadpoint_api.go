@@ -811,15 +811,13 @@ func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 	return max(0, lp.GetChargePower()-lp.EffectiveMinPower())
 }
 
-// GetMaxPhaseCurrent returns the maximum charge current per phase or- if not available-
-// the offered current from either charger or charge meter
+// GetMaxPhaseCurrent returns the maximum charge current per phase as sampled by
+// UpdateChargePowerAndCurrents. Like chargePower it is a snapshot so that the
+// circuit and setLimit account the loadpoint with the same value.
 func (lp *Loadpoint) GetMaxPhaseCurrent() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
-	if lp.chargeCurrents == nil {
-		return lp.offeredCurrent
-	}
-	return max(lp.chargeCurrents[0], lp.chargeCurrents[1], lp.chargeCurrents[2])
+	return lp.chargeCurrent
 }
 
 // GetMinCurrent returns the min loadpoint current
