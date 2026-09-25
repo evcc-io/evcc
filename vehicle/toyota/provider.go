@@ -70,6 +70,10 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, err
 	}
 
+	if res.Payload.PhevUsableBatteryLevel != nil {
+		return float64(*res.Payload.PhevUsableBatteryLevel), nil
+	}
+
 	if res.Payload.BatteryLevel == nil {
 		return 0, api.ErrNotAvailable
 	}
