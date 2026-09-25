@@ -1,0 +1,44 @@
+template: ocpp-grizzl-e
+products:
+  - brand: Grizzl-E
+    description:
+      generic: Mini Connect
+capabilities: ["dim"]
+requirements:
+  evcc: ["sponsorship", "skiptest"]
+  description:
+    de: |
+      Die OCPP-Funktion der Wallbox muss aktiviert sein. Falls nicht, wende dich an den Grizzl-E Support.
+
+      Anleitung:
+      * In der Weboberfläche der Wallbox die OCPP-Server-URL `ws://<evcc-host>:8887/` eintragen. "Data" leer lassen, "Station ID" und "Auth key" unverändert lassen.
+      * In evcc eine OCPP-Weiterleitung mit der Upstream-Server-URL `wss://ocpp.unitedchargers.com/ocpp1.6` sowie Benutzername und Passwort aus der OCPP-Konfiguration der Wallbox einrichten.
+      * In den erweiterten Einstellungen der Weiterleitung "Befehle vom Upstream-Server blockieren" aktivieren.
+      * Minimalen Ladestrom auf 7 A setzen. Die Wallbox ignoriert kleinere Vorgaben.
+      * Beim Fahrzeug "1A Ladestromvorgabe" aktivieren. Die Wallbox unterstützt nur ganzzahlige Ladeströme.
+
+      "Remote-Transaktion bei Fahrzeugverbindung starten" ist immer aktiv.
+    en: |
+      The charger needs to have the OCPP feature enabled. Contact Grizzl-E support if it is not.
+
+      Setup Guide:
+      * In the charger web UI, set the OCPP server URL to `ws://<evcc-host>:8887/`. Leave "Data" empty and keep "Station ID" and "Auth key" as-is.
+      * In evcc, configure an OCPP forward with upstream server URL `wss://ocpp.unitedchargers.com/ocpp1.6` and the username and password from the charger OCPP configuration.
+      * In the advanced forward settings, enable "Block commands from the upstream server".
+      * Set the minimum charge current to 7 A. The charger ignores lower limits.
+      * Enable "1A current control" for your vehicle. The charger only supports whole amp currents.
+
+      "Start remote transaction on vehicle connection" is always enabled.
+params:
+  - preset: ocpp
+  - name: metervalues
+    default: Current.Import,Voltage,Power.Active.Import,Energy.Active.Import.Register
+render: |
+  {{ include "ocpp" . }}
+  stacklevelzero: true
+  {{- if not .remotestart }}
+  remotestart: true # force remotestart
+  {{- end }}
+  {{- if not .idtag }}
+  idtag: uc_default_auth # UnitedChargers backend authorizes this tag; other tags are rejected as Invalid
+  {{- end }}
