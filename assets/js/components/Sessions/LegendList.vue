@@ -184,12 +184,14 @@ export default defineComponent({
 .root--grid .legend-label {
 	flex-grow: 1;
 	flex-shrink: 1;
+	min-width: 0;
 	text-overflow: ellipsis;
 	overflow: hidden;
 }
 .root--grid .legend-item {
 	flex-grow: 1;
 	flex-basis: 100%;
+	min-width: 0;
 }
 .root--grid .legend-value:last-child {
 	flex-basis: 3.5rem;
