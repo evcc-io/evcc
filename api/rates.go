@@ -11,7 +11,6 @@ type Rate struct {
 	Start time.Time `json:"start"`
 	End   time.Time `json:"end"`
 	Value float64   `json:"value"`
-	Power float64   `json:"power,omitempty"` // plan slots only: power share in W
 }
 
 // IsZero returns is the rate is the zero value

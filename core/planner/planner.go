@@ -19,6 +19,9 @@ type Planner struct {
 	owner  func() Owner // identifies the loadpoint in the ledger
 }
 
+// Shares holds the reduced power of plan slots on a shared circuit, keyed by slot start
+type Shares map[time.Time]float64
+
 // WithLedger shares circuit capacity with the other loadpoints' plans
 func WithLedger(ledger *Ledger, owner func() Owner) func(*Planner) {
 	return func(p *Planner) {
@@ -28,11 +31,11 @@ func WithLedger(ledger *Ledger, owner func() Owner) func(*Planner) {
 }
 
 // Reserve records the plan against the shared circuit capacity, an empty plan releases it
-func (t *Planner) Reserve(plan api.Rates) {
+func (t *Planner) Reserve(plan api.Rates, shares Shares) {
 	if t == nil || t.ledger == nil {
 		return
 	}
-	t.ledger.Reserve(t.owner(), plan)
+	t.ledger.Reserve(t.owner(), plan, shares)
 }
 
 // usable returns the power available to the owner during the slot and the fraction
@@ -74,8 +77,9 @@ func New(log *util.Logger, tariff api.Tariff, opt ...func(t *Planner)) *Planner 
 // It MUST already be established that:
 // - rates are sorted in ascending order by cost and descending order by start time (prefer late slots)
 // - rates are filtered to [now, targetTime] window by caller
-func optimalPlan(rates api.Rates, requiredDuration time.Duration, targetTime time.Time, maxPower float64, available func(api.Rate) float64) api.Rates {
+func optimalPlan(rates api.Rates, requiredDuration time.Duration, maxPower float64, available func(api.Rate) float64) (api.Rates, Shares) {
 	plan := make(api.Rates, 0, int64(requiredDuration)/int64(tariff.SlotDuration)+3)
+	var shares Shares
 
 	for _, slot := range rates {
 		// a slot shared with other loadpoints counts only with the owner's share
@@ -83,7 +87,6 @@ func optimalPlan(rates api.Rates, requiredDuration time.Duration, targetTime tim
 		if share <= 0 {
 			continue
 		}
-		slot.Power = power
 
 		slotDuration := time.Duration(float64(slot.End.Sub(slot.Start)) * share)
 		requiredDuration -= slotDuration
@@ -100,6 +103,13 @@ func optimalPlan(rates api.Rates, requiredDuration time.Duration, targetTime tim
 			requiredDuration = 0
 		}
 
+		if share < 1 {
+			if shares == nil {
+				shares = make(Shares)
+			}
+			shares[slot.Start] = power
+		}
+
 		plan = append(plan, slot)
 
 		// we found all necessary slots
@@ -108,7 +118,7 @@ func optimalPlan(rates api.Rates, requiredDuration time.Duration, targetTime tim
 		}
 	}
 
-	return plan
+	return plan, shares
 }
 
 // continuousPlan creates a continuous emergency charging plan
@@ -140,9 +150,10 @@ func continuousPlan(rates api.Rates, start, end time.Time) api.Rates {
 	return res
 }
 
-func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime time.Time, continuous bool) api.Rates {
+// Plan creates the plan and the reduced power of slots shared with other loadpoints
+func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime time.Time, continuous bool) (api.Rates, Shares) {
 	if t == nil || requiredDuration <= 0 {
-		return nil
+		return nil, nil
 	}
 
 	// power the plan is executed with and the share of it left by outranking loadpoints
@@ -152,28 +163,9 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 		owner := t.owner()
 		owner.Target = targetTime // previews may plan for another target
 		maxPower = owner.MaxPower
-
-		available = func(slot api.Rate) float64 {
-			if power := t.ledger.Available(owner, slot); power >= owner.MinPower {
-				return power
-			}
-			return 0
-		}
+		available = func(slot api.Rate) float64 { return t.ledger.Available(owner, slot) }
 	}
 
-	plan := t.plan(requiredDuration, precondition, targetTime, continuous, maxPower, available)
-
-	// slots not planned against the ledger run at full power
-	for i := range plan {
-		if plan[i].Power == 0 {
-			plan[i].Power = maxPower
-		}
-	}
-
-	return plan
-}
-
-func (t *Planner) plan(requiredDuration, precondition time.Duration, targetTime time.Time, continuous bool, maxPower float64, available func(api.Rate) float64) api.Rates {
 	now := t.clock.Now().Truncate(time.Second)
 
 	latestStart := targetTime.Add(-requiredDuration)
@@ -192,7 +184,7 @@ func (t *Planner) plan(requiredDuration, precondition time.Duration, targetTime 
 
 	// target charging without tariff or late start
 	if t.tariff == nil {
-		return simplePlan
+		return simplePlan, nil
 	}
 
 	rates, err := t.tariff.Rates()
@@ -200,7 +192,7 @@ func (t *Planner) plan(requiredDuration, precondition time.Duration, targetTime 
 	// treat like normal target charging if we don't have rates
 	if len(rates) == 0 || err != nil {
 		t.log.DEBUG.Printf("planner: no rates available (count=%d, err=%v)- falling back to simple plan", len(rates), err)
-		return simplePlan
+		return simplePlan, nil
 	}
 
 	t.log.TRACE.Printf("planner: %d rates available from %v to %v",
@@ -209,7 +201,7 @@ func (t *Planner) plan(requiredDuration, precondition time.Duration, targetTime 
 	// consume remaining time
 	if t.clock.Until(targetTime) <= requiredDuration {
 		t.log.DEBUG.Printf("planner: insufficient time until target- charging continuously from now")
-		return continuousPlan(rates, latestStart, targetTime)
+		return continuousPlan(rates, latestStart, targetTime), nil
 	}
 
 	// rates are by default sorted by date, oldest to newest
@@ -220,7 +212,7 @@ func (t *Planner) plan(requiredDuration, precondition time.Duration, targetTime 
 		// there is enough time for charging after end of current rates
 		durationAfterRates := targetTime.Sub(last)
 		if durationAfterRates >= requiredDuration {
-			return nil
+			return nil, nil
 		}
 
 		// need to use some of the available slots
@@ -242,7 +234,7 @@ func (t *Planner) plan(requiredDuration, precondition time.Duration, targetTime 
 	if len(rates) == 0 || coverage < requiredDuration {
 		t.log.DEBUG.Printf("planner: rate coverage in [%v,%v] insufficient for required duration %v- falling back to simple plan",
 			now.Local(), targetTime.Local(), requiredDuration.Round(time.Second))
-		return simplePlan
+		return simplePlan, nil
 	}
 
 	// don't precondition longer than charging duration
@@ -259,12 +251,13 @@ func (t *Planner) plan(requiredDuration, precondition time.Duration, targetTime 
 		// reduce required duration by precondition, skip planning if required
 		requiredDuration = max(requiredDuration-precondition, 0)
 		if requiredDuration == 0 {
-			return precond
+			return precond, nil
 		}
 	}
 
 	// create plan unless only precond slots remaining
 	var plan api.Rates
+	var shares Shares
 	if continuous {
 		// find cheapest continuous window
 		plan = findContinuousWindow(rates, requiredDuration, targetTime)
@@ -272,7 +265,7 @@ func (t *Planner) plan(requiredDuration, precondition time.Duration, targetTime 
 		// sort rates by price and time
 		slices.SortStableFunc(rates, sortByCost)
 
-		plan = optimalPlan(rates, requiredDuration, targetTime, maxPower, available)
+		plan, shares = optimalPlan(rates, requiredDuration, maxPower, available)
 
 		// sort plan by time
 		plan.Sort()
@@ -281,7 +274,7 @@ func (t *Planner) plan(requiredDuration, precondition time.Duration, targetTime 
 	// re-append precondition slots
 	plan = append(plan, precond...)
 
-	return plan
+	return plan, shares
 }
 
 func splitPreconditionSlots(rates api.Rates, preCondStart time.Time) (api.Rates, api.Rates) {

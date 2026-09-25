@@ -126,8 +126,14 @@ func plannerOwner(id int, lp *Loadpoint) func() planner.Owner {
 // GetPlan creates a charging plan for given time and duration
 // The plan is sorted by time
 func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration, precondition time.Duration, continuous bool) api.Rates {
+	plan, _ := lp.getPlan(targetTime, requiredDuration, precondition, continuous)
+	return plan
+}
+
+// getPlan creates the plan and the reduced power of slots shared with other loadpoints
+func (lp *Loadpoint) getPlan(targetTime time.Time, requiredDuration, precondition time.Duration, continuous bool) (api.Rates, planner.Shares) {
 	if lp.planner == nil || targetTime.IsZero() {
-		return nil
+		return nil, nil
 	}
 
 	pc := precondition.String()
@@ -148,11 +154,12 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	}()
 
 	var plan api.Rates
+	var shares planner.Shares
 	var planStart, planEnd time.Time
 	var planOverrun time.Duration
 
 	defer func() {
-		lp.planner.Reserve(plan)
+		lp.planner.Reserve(plan, shares)
 		lp.publish(keys.Plan, plan)
 		lp.publish(keys.PlanProjectedStart, planStart)
 		lp.publish(keys.PlanProjectedEnd, planEnd)
@@ -195,7 +202,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 	strategy := lp.getEffectivePlanStrategy()
 
-	plan = lp.GetPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
+	plan, shares = lp.getPlan(planTime, requiredDuration, strategy.Precondition, strategy.Continuous)
 	if plan == nil {
 		lp.log.DEBUG.Println("!! plan: plan nil")
 		return false
@@ -239,7 +246,7 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 
 		// remember last active plan's slot end time and power share
 		lp.planSlotEnd = activeSlot.End
-		lp.planPower = activeSlot.Power
+		lp.planPower = shares[activeSlot.Start]
 	} else if lp.planActive {
 		// planner was active (any slot, not necessarily previous slot) and charge goal has not yet been met
 		switch {

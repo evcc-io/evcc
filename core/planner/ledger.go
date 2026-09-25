@@ -1,6 +1,7 @@
 package planner
 
 import (
+	"cmp"
 	"math"
 	"sync"
 	"time"
@@ -34,6 +35,7 @@ func (o Owner) outranks(other Owner) bool {
 type reservation struct {
 	owner   Owner
 	plan    api.Rates
+	shares  Shares
 	updated time.Time
 }
 
@@ -53,7 +55,7 @@ func NewLedger() *Ledger {
 }
 
 // Reserve records the plan for the owner, an empty plan releases the reservation
-func (l *Ledger) Reserve(owner Owner, plan api.Rates) {
+func (l *Ledger) Reserve(owner Owner, plan api.Rates, shares Shares) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
@@ -62,11 +64,11 @@ func (l *Ledger) Reserve(owner Owner, plan api.Rates) {
 		return
 	}
 
-	l.reservations[owner.Id] = reservation{owner, plan, l.clock.Now()}
+	l.reservations[owner.Id] = reservation{owner, plan, shares, l.clock.Now()}
 }
 
 // Available returns the power left for the owner during the slot on every circuit
-// from its own up to the root, or +Inf without any limit
+// from its own up to the root, +Inf without any limit and 0 below the owner's minimum
 func (l *Ledger) Available(owner Owner, slot api.Rate) float64 {
 	res := math.Inf(1)
 
@@ -85,10 +87,14 @@ func (l *Ledger) Available(owner Owner, slot api.Rate) float64 {
 				l.clock.Since(r.updated) > tariff.SlotDuration {
 				continue
 			}
-			used += overlapPower(r.plan, slot)
+			used += overlapPower(r, slot)
 		}
 
 		res = min(res, max(0, maxPower-used))
+	}
+
+	if res < owner.MinPower {
+		return 0
 	}
 
 	return res
@@ -104,12 +110,12 @@ func belongsTo(circuit, c api.Circuit) bool {
 	return false
 }
 
-// overlapPower returns the highest power the plan draws while the slot is active
-func overlapPower(plan api.Rates, slot api.Rate) float64 {
+// overlapPower returns the highest power the reservation draws while the slot is active
+func overlapPower(r reservation, slot api.Rate) float64 {
 	var res float64
-	for _, r := range plan {
-		if r.Start.Before(slot.End) && r.End.After(slot.Start) {
-			res = max(res, r.Power)
+	for _, p := range r.plan {
+		if p.Start.Before(slot.End) && p.End.After(slot.Start) {
+			res = max(res, cmp.Or(r.shares[p.Start], r.owner.MaxPower))
 		}
 	}
 	return res
