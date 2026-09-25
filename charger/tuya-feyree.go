@@ -87,6 +87,45 @@ var (
 	tuyaFeyreeDpCurrents = [3]string{"105", "106", "107"}
 )
 
+// data point code names
+var tuyaFeyreeDpNames = map[string]string{
+	"3":   "work_state",
+	"10":  "fault",
+	"11":  "alarm_set_1",
+	"12":  "alarm_set_2",
+	"14":  "work_mode",
+	"15":  "balance_energy",
+	"16":  "clear_energy",
+	"18":  "switch",
+	"23":  "system_version",
+	"25":  "charge_energy_once",
+	"27":  "online_state",
+	"101": "DeviceState",
+	"102": "A_Voltage",
+	"103": "B_Voltage",
+	"104": "C_Voltage",
+	"105": "A_Current",
+	"106": "B_Current",
+	"107": "C_Current",
+	"108": "PhaseFlag",
+	"109": "DeviceKw",
+	"110": "DeviceTemp",
+	"111": "DeviceTemp2",
+	"112": "DeviceKwh",
+	"113": "DeviceMaxSetA",
+	"114": "Set16A",
+	"115": "Set32A",
+	"116": "Set40A",
+	"117": "Set50A",
+	"118": "SetDelayTime",
+	"119": "SetDefineTime",
+	"120": "Ctime",
+	"121": "CTime2",
+	"122": "IDVerificationSet",
+	"123": "RFID",
+	"124": "ChargingOperation",
+}
+
 type tuyaFeyreeCurrent struct {
 	dp       string
 	min, max int64
@@ -364,4 +403,13 @@ func tuyaFeyreeVoltage(v float64) float64 {
 		return v / 10
 	}
 	return v
+}
+
+var _ api.Diagnosis = (*TuyaFeyree)(nil)
+
+// Diagnose implements the api.Diagnosis interface
+func (wb *TuyaFeyree) Diagnose() {
+	if dps, err := wb.conn.Dps(); err == nil {
+		tuya.Diagnose(dps, tuyaFeyreeDpNames)
+	}
 }

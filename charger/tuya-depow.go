@@ -84,6 +84,35 @@ const (
 	tuyaDepowRefreshInterval = 25 * time.Second
 )
 
+// data point code names
+var tuyaDepowDpNames = map[string]string{
+	"101": "x_work_state",
+	"102": "x_metrics",
+	"103": "x_selftest",
+	"104": "x_alarm",
+	"105": "x_charge_history",
+	"106": "x_charger_info",
+	"107": "x_adjust_current",
+	"108": "x_downcounter",
+	"109": "x_work_st_debug",
+	"110": "x_single_fase_mode",
+	"111": "x_debug",
+	"140": "x_do_charge",
+	"141": "x_do_reset",
+	"142": "x_do_reboot",
+	"150": "x_charge_current",
+	"151": "x_charge_mode",
+	"152": "x_max_current_cfg",
+	"153": "x_lang_cfg",
+	"154": "x_socket_cfg",
+	"155": "x_nfc_cfg",
+	"156": "x_earch_free_cfg",
+	"157": "x_product_varient",
+	"188": "x_heartbeat",
+	"189": "dp_num",
+	"190": "x_plug_charge",
+}
+
 var tuyaDepowDefaultSteps = []int64{6, 8, 10, 13, 16}
 
 type tuyaDepowMetrics struct {
@@ -362,4 +391,13 @@ var _ api.PhaseVoltages = (*TuyaDepow)(nil)
 func (wb *TuyaDepow) Voltages() (float64, float64, float64, error) {
 	res, err := wb.metrics()
 	return res.L1[0] / 10, res.L2[0] / 10, res.L3[0] / 10, err
+}
+
+var _ api.Diagnosis = (*TuyaDepow)(nil)
+
+// Diagnose implements the api.Diagnosis interface
+func (wb *TuyaDepow) Diagnose() {
+	if dps, err := wb.conn.Dps(); err == nil {
+		tuya.Diagnose(dps, tuyaDepowDpNames)
+	}
 }
