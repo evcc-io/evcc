@@ -205,6 +205,8 @@ func configureCircuits(conf *[]config.Named) error {
 // validateCircuitConfigs validates circuit configurations with support for both static and configurable types
 func validateCircuitConfigs[T any](children []T, getConfigAndLogger func(T) (config.Named, *util.Logger), getDevice func(T, api.Circuit) config.Device[api.Circuit]) error {
 	// TODO check for circular references
+	var errs []error
+
 NEXT:
 	for i, child := range children {
 		cc, log := getConfigAndLogger(child)
@@ -232,11 +234,10 @@ NEXT:
 
 		instance, err := circuit.NewFromConfig(ctx, typ, other)
 		if err != nil {
-			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
-		}
-
-		// ensure config has title
-		if instance.GetTitle() == "" {
+			// register without instance so the broken circuit stays editable
+			errs = append(errs, &DeviceError{cc.Name, fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)})
+		} else if instance.GetTitle() == "" {
+			// ensure config has title
 			//lint:ignore SA1019 as Title is safe on ascii
 			instance.SetTitle(strings.Title(cc.Name))
 		}
@@ -252,6 +253,10 @@ NEXT:
 	if len(children) > 0 {
 		cn, _ := getConfigAndLogger(children[0])
 		return fmt.Errorf("circuit is missing parent: %s", cn.Name)
+	}
+
+	if len(errs) > 0 {
+		return joinErrors(errs...)
 	}
 
 	var rootFound bool

@@ -75,10 +75,8 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		if err != nil {
 			return nil, err
 		}
+		// disabled meter has no instance, circuit falls back to loadpoint sum
 		meter = dev.Instance()
-		if meter == nil {
-			return nil, errors.New("missing meter instance")
-		}
 	}
 
 	log := util.ContextLoggerWithDefault(ctx, util.NewLogger("circuit"))
