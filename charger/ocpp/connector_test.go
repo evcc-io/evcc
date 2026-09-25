@@ -210,6 +210,95 @@ func (suite *connTestSuite) TestOnStatusNotificationClearsStaleTxn() {
 	suite.True(suite.conn.NeedsAuthentication(), "Preparing after Available should require authentication")
 }
 
+func (suite *connTestSuite) status(status core.ChargePointStatus) {
+	_, err := suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+		ConnectorId: 1,
+		Status:      status,
+		ErrorCode:   core.NoError,
+	})
+	suite.Require().NoError(err)
+}
+
+func (suite *connTestSuite) power(value string) {
+	suite.clock.Add(10 * time.Second)
+	_, err := suite.conn.OnMeterValues(&core.MeterValuesRequest{
+		ConnectorId: 1,
+		MeterValue: []types.MeterValue{{
+			SampledValue: []types.SampledValue{{
+				Measurand: types.MeasurandPowerActiveImport,
+				Unit:      types.UnitOfMeasureW,
+				Value:     value,
+			}},
+		}},
+	})
+	suite.Require().NoError(err)
+}
+
+// TestSuspendedCharging detects chargers delivering while reporting SuspendedEVSE (e.g. Grizzl-E)
+func (suite *connTestSuite) TestSuspendedCharging() {
+	suite.conn.txnId = 1
+
+	suite.status(core.ChargePointStatusSuspendedEVSE)
+	suite.power("2090")
+	suite.False(suite.conn.SuspendedCharging(), "single sample")
+	suite.power("2090")
+	suite.True(suite.conn.SuspendedCharging(), "consecutive samples")
+
+	// meter stale
+	suite.clock.Add(time.Hour)
+	suite.False(suite.conn.SuspendedCharging(), "stale meter")
+}
+
+// TestSuspendedChargingCompliant ensures compliant chargers are not affected
+func (suite *connTestSuite) TestSuspendedChargingCompliant() {
+	suite.conn.txnId = 1
+
+	// charging, then disabled: last power sample before status change is ignored
+	suite.status(core.ChargePointStatusCharging)
+	suite.power("11000")
+	suite.power("11000")
+	suite.status(core.ChargePointStatusSuspendedEVSE)
+	suite.False(suite.conn.SuspendedCharging(), "samples before status")
+
+	// single lagging sample followed by zero power
+	suite.power("11000")
+	suite.power("0")
+	suite.False(suite.conn.SuspendedCharging(), "lagging sample")
+
+	// energy-only update does not repeat the last power sample
+	suite.power("11000")
+	_, err := suite.conn.OnMeterValues(&core.MeterValuesRequest{
+		ConnectorId: 1,
+		MeterValue: []types.MeterValue{{
+			SampledValue: []types.SampledValue{{
+				Measurand: types.MeasurandEnergyActiveImportRegister,
+				Value:     "1000",
+			}},
+		}},
+	})
+	suite.Require().NoError(err)
+	suite.False(suite.conn.SuspendedCharging(), "energy-only update")
+	suite.power("0")
+
+	// standby consumption below threshold
+	suite.power("250")
+	suite.power("250")
+	suite.False(suite.conn.SuspendedCharging(), "standby")
+
+	// SuspendedEV is not corrected
+	suite.status(core.ChargePointStatusSuspendedEV)
+	suite.power("2090")
+	suite.power("2090")
+	suite.False(suite.conn.SuspendedCharging(), "SuspendedEV")
+
+	// no transaction
+	suite.conn.txnId = 0
+	suite.status(core.ChargePointStatusSuspendedEVSE)
+	suite.power("2090")
+	suite.power("2090")
+	suite.False(suite.conn.SuspendedCharging(), "no transaction")
+}
+
 // TestOnStatusNotificationKeepsActiveTxn ensures that an active transaction is
 // not cleared by transient status notifications other than Available.
 func (suite *connTestSuite) TestOnStatusNotificationKeepsActiveTxn() {

@@ -18,6 +18,14 @@ const (
 // It is a var so tests can shorten it.
 var TriggerBootDelay = 5 * time.Second
 
+// SuspendedChargingPower and SuspendedChargingSamples detect chargers that report
+// SuspendedEVSE while delivering. A compliant charger cannot deliver in SuspendedEVSE,
+// the threshold is below the minimum charging power of 6A single phase.
+const (
+	SuspendedChargingPower   = 1000 // W
+	SuspendedChargingSamples = 2
+)
+
 const (
 	// Core profile keys
 	KeyMeterValueSampleInterval        = "MeterValueSampleInterval"

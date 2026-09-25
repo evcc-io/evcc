@@ -246,10 +246,16 @@ func (c *OCPP) Status() (api.ChargeStatus, error) {
 		core.ChargePointStatusUnavailable: // "Unavailable"
 		return api.StatusA, nil
 	case
-		core.ChargePointStatusPreparing,     // "Preparing"
-		core.ChargePointStatusSuspendedEVSE, // "SuspendedEVSE"
-		core.ChargePointStatusSuspendedEV,   // "SuspendedEV"
-		core.ChargePointStatusFinishing:     // "Finishing"
+		core.ChargePointStatusSuspendedEVSE: // "SuspendedEVSE"
+		// some chargers (e.g. Grizzl-E) keep reporting SuspendedEVSE while delivering
+		if c.conn.SuspendedCharging() {
+			return api.StatusC, nil
+		}
+		return api.StatusB, nil
+	case
+		core.ChargePointStatusPreparing,   // "Preparing"
+		core.ChargePointStatusSuspendedEV, // "SuspendedEV"
+		core.ChargePointStatusFinishing:   // "Finishing"
 		return api.StatusB, nil
 	case
 		core.ChargePointStatusCharging: // "Charging"
@@ -286,7 +292,7 @@ func (c *OCPP) Enabled() (bool, error) {
 		switch s {
 		case
 			core.ChargePointStatusSuspendedEVSE:
-			return false, nil
+			return c.conn.SuspendedCharging(), nil
 		case
 			core.ChargePointStatusCharging,
 			core.ChargePointStatusSuspendedEV:
