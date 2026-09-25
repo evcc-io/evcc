@@ -339,13 +339,29 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 		return api.ErrNotAvailable
 	}
 
+	// obligation and recommendation limits must be written in a single message,
+	// see eebus.WriteCombinedLoadControlLimits
+	if err := eebus.WriteCombinedLoadControlLimits(c.cem.LocalEntity, evEntity,
+		c.opevLimits(evEntity, current), c.oscevLimits(evEntity, current)); err != nil {
+		return err
+	}
+
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	c.limitUpdated = time.Now()
+
+	return nil
+}
+
+// opevLimits returns the OPEV overload protection limits (obligation).
+func (c *EEBus) opevLimits(evEntity spineapi.EntityRemoteInterface, current float64) []ucapi.LoadLimitsPhase {
 	_, maxLimits, _, err := c.cem.OpEV.CurrentLimits(evEntity)
 	if err != nil {
 		c.log.DEBUG.Println("no limits from the EVSE are provided:", err)
 	}
 
-	// setup the obligation limit data structure
-	var limits []ucapi.LoadLimitsPhase
+	limits := make([]ucapi.LoadLimitsPhase, 0, len(ucapi.PhaseNameMapping))
 	for phase := range len(ucapi.PhaseNameMapping) {
 		limit := ucapi.LoadLimitsPhase{
 			Phase:    ucapi.PhaseNameMapping[phase],
@@ -361,43 +377,28 @@ func (c *EEBus) writeCurrentLimitData(evEntity spineapi.EntityRemoteInterface, c
 		limits = append(limits, limit)
 	}
 
-	// always set overload protection limits (obligation)
-	if err := eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
-		return c.cem.OpEV.WriteLoadControlLimits(evEntity, limits, cb)
-	}); err != nil {
-		return err
-	}
-
-	// additionally set self-consumption recommendation limits if available
-	c.writeOscevLimits(evEntity, current)
-
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
-	c.limitUpdated = time.Now()
-
-	return nil
+	return limits
 }
 
-// writeOscevLimits writes OSCEV recommendation limits if the use case is available.
-// An active recommendation triggers the EV to charge with surplus energy.
-// An inactive recommendation is equivalent to no recommendation existing.
-func (c *EEBus) writeOscevLimits(evEntity spineapi.EntityRemoteInterface, current float64) {
+// oscevLimits returns the OSCEV self-consumption limits (recommendation), or nil if
+// the use case is unavailable. An active recommendation triggers the EV to charge with
+// surplus energy. An inactive recommendation is equivalent to no recommendation existing.
+func (c *EEBus) oscevLimits(evEntity spineapi.EntityRemoteInterface, current float64) []ucapi.LoadLimitsPhase {
 	if !c.cem.OscEV.IsScenarioAvailableAtEntity(evEntity, eebus.OSCEVRecommendationLimit) {
-		return
+		return nil
 	}
 
 	// OSCEV requires recommendation limits to be available
 	if _, err := c.cem.OscEV.LoadControlLimits(evEntity); err != nil {
-		return
+		return nil
 	}
 
 	minLimits, _, _, err := c.cem.OscEV.CurrentLimits(evEntity)
 	if err != nil {
-		return
+		return nil
 	}
 
-	var limits []ucapi.LoadLimitsPhase
+	limits := make([]ucapi.LoadLimitsPhase, 0, len(ucapi.PhaseNameMapping))
 	for phase := range len(ucapi.PhaseNameMapping) {
 		limit := ucapi.LoadLimitsPhase{
 			Phase:    ucapi.PhaseNameMapping[phase],
@@ -414,11 +415,7 @@ func (c *EEBus) writeOscevLimits(evEntity spineapi.EntityRemoteInterface, curren
 		limits = append(limits, limit)
 	}
 
-	if err := eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
-		return c.cem.OscEV.WriteLoadControlLimits(evEntity, limits, cb)
-	}); err != nil {
-		c.log.DEBUG.Println("failed to write OSCEV limits:", err)
-	}
+	return limits
 }
 
 // MaxCurrent implements the api.Charger interface
