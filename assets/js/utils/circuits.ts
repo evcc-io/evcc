@@ -44,3 +44,20 @@ export function meterTitle(meters: ConfigMeter[], name?: string): string {
   const meter = meters.find((m) => m.name === name);
   return meter?.deviceProduct || meter?.config?.template || "";
 }
+
+export type LimitState = "normal" | "warning" | "danger";
+
+export interface LimitBar {
+  state: LimitState;
+  /** Bar width up to the limit in %, the excess fills the rest. */
+  fill: number;
+}
+
+// limitBar scales to the limit, or to the value once it exceeds the limit
+export function limitBar(value: number, limit?: number): LimitBar {
+  if (!limit) return { state: "normal", fill: 100 };
+  const ratio = Math.max(0, value) / limit;
+  if (ratio > 1) return { state: "danger", fill: 100 / ratio };
+  if (ratio >= 0.95) return { state: "warning", fill: 100 };
+  return { state: "normal", fill: ratio * 100 };
+}

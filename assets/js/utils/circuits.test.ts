@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vite-plus/test";
-import { circuitTree } from "./circuits";
+import { circuitTree, limitBar } from "./circuits";
 
 describe("circuitTree", () => {
   test("single root", () => {
@@ -47,5 +47,25 @@ describe("circuitTree", () => {
 
   test("empty input", () => {
     expect(circuitTree({})).toBeUndefined();
+  });
+});
+
+describe("limitBar", () => {
+  test("below limit", () => {
+    expect(limitBar(5, 10)).toEqual({ state: "normal", fill: 50 });
+  });
+
+  test("near limit", () => {
+    expect(limitBar(9.5, 10)).toEqual({ state: "warning", fill: 100 });
+  });
+
+  test("over limit rescales to value", () => {
+    const bar = limitBar(15, 10);
+    expect(bar.state).toBe("danger");
+    expect(bar.fill).toBeCloseTo(66.67, 1);
+  });
+
+  test("without limit", () => {
+    expect(limitBar(5)).toEqual({ state: "normal", fill: 100 });
   });
 });

@@ -31,19 +31,19 @@ async function validateCircuitsTags(page: Page) {
   await expect(page.getByTestId("circuits")).toContainText(
     [
       "Main",
-      "12.0",
-      "16A",
-      "2.0",
-      "10.0kW",
+      "12.0 / 16.0",
+      "A",
+      "2.0 / 10.0",
+      "kW",
       "Carport 1",
-      "1.0kW",
+      "1.0 kW",
       "Carport 2",
-      "1.0kW",
+      "1.0 kW",
       "Child",
+      "0.0 / 10.0",
+      "A",
       "0.0",
-      "10A",
-      "0.0",
-      "__kW",
+      "kW",
     ].join("")
   );
 }
@@ -124,38 +124,38 @@ test.describe("circuit", async () => {
     await expect(page.getByTestId("circuits")).toContainText(
       [
         "Home",
-        "12.0",
-        "32A",
-        "8.0",
-        "20.0kW",
+        "12.0 / 32.0",
+        "A",
+        "8.0 / 20.0",
+        "kW",
         "Carport",
-        "1.0",
-        "5.0kW",
+        "1.0 / 5.0",
+        "kW",
         "Carport",
-        "1.0kW",
+        "1.0 kW",
         "Workshop in the basement",
-        "27.0",
-        "25A",
+        "27.0 / 25.0",
+        "A",
         "18.0",
-        "__kW",
+        "kW",
         "Heat pump",
-        "2.5kW",
+        "2.5 kW",
         "Garage",
-        "6.0",
-        "16A",
-        "4.0",
-        "11.0kW",
+        "6.0 / 16.0",
+        "A",
+        "4.0 / 11.0",
+        "kW",
         "Wallbox left",
-        "2.0kW",
+        "2.0 kW",
         "Wallbox right",
-        "0.0kW",
+        "0.0 kW",
         "Corner",
-        "6.0",
-        "16A",
+        "6.0 / 16.0",
+        "A",
         "1.4",
-        "__kW",
+        "kW",
         "Motorbike",
-        "1.4kW",
+        "1.4 kW",
       ].join("")
     );
   });
@@ -234,17 +234,17 @@ test.describe("circuit", async () => {
     await expect(page.getByTestId("circuits")).toContainText(
       [
         "Main",
-        "1.0",
-        "10.0kW",
+        "1.0 / 10.0",
+        "kW",
         "Carport 1",
-        "1.0kW",
+        "1.0 kW",
         "Carport 2",
-        "1.0kW",
+        "1.0 kW",
         "Child",
+        "0.0 / 10.0",
+        "A",
         "0.0",
-        "10A",
-        "0.0",
-        "__kW",
+        "kW",
       ].join("")
     );
 
@@ -263,17 +263,17 @@ test.describe("circuit", async () => {
     await expect(page.getByTestId("circuits")).toContainText(
       [
         "Main renamed",
-        "0.0",
-        "10.0kW",
+        "0.0 / 10.0",
+        "kW",
         "Carport 1",
-        "1.0kW",
+        "1.0 kW",
         "Carport 2",
-        "1.0kW",
+        "1.0 kW",
         "Child",
+        "0.0 / 10.0",
+        "A",
         "0.0",
-        "10A",
-        "0.0",
-        "__kW",
+        "kW",
       ].join("")
     );
   });
@@ -386,7 +386,7 @@ test.describe("circuit meter", async () => {
     await page.reload();
     await expect(page.getByTestId("fatal-error")).not.toBeVisible();
     await expect(circuitsCard).toContainText(
-      ["Main", "2.0", "10.0kW", "Carport", "1.0kW"].join("")
+      ["Main", "2.0 / 10.0", "kW", "Carport", "1.0 kW"].join("")
     );
 
     await circuitsCard.getByRole("button", { name: "edit" }).click();
@@ -405,7 +405,7 @@ test.describe("circuit meter", async () => {
     await page.reload();
     await expect(page.getByTestId("fatal-error")).not.toBeVisible();
     await expect(circuitsCard).toContainText(
-      ["Main", "1.0", "10.0kW", "Carport", "1.0kW"].join("")
+      ["Main", "1.0 / 10.0", "kW", "Carport", "1.0 kW"].join("")
     );
   });
 
