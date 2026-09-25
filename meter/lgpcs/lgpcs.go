@@ -184,6 +184,22 @@ func (m *Com) BatteryMode(mode string, soc int, autocharge bool) error {
 	}, &res)
 }
 
+// Get the current battery settings from the inverter
+func (m *Com) GetBatterySettings() (BatterySettings, error) {
+	f := func(payload any) (*http.Request, error) {
+		uri := fmt.Sprintf("%s/v1/user/setting/batt", m.uri)
+		return request.New(http.MethodPost, uri, request.MarshalJSON(payload), request.JSONEncoding)
+	}
+	var res map[string]any
+	err := m.request(f, nil, &res)
+	ret := BatterySettings{}
+	if err != nil {
+		return ret, err
+	}
+	ret.Unmarshal(res)
+	return ret, err
+}
+
 func (m *Com) request(f func(any) (*http.Request, error), payload map[string]string, res any) error {
 	data := map[string]string{
 		"auth_key": m.authKey,
