@@ -52,7 +52,7 @@ package charger
 //	154  x_socket_cfg        rw      earthing option             0 prompt, 1 charge directly, 2 cancel charging
 //	155  x_nfc_cfg           rw      NFC                         bool
 //	156  x_earch_free_cfg    rw      earth-free option           bool
-//	157  x_product_varient   ro      product variant             0 default, 1 without NFC
+//	157  x_product_variant   ro      product variant             0 default, 1 without NFC
 //	188  x_heartbeat         rw      host heartbeat              true enables fast metrics updates for ~30 s
 //	189  dp_num              ro      number of reported DPs
 //	190  x_plug_charge       rw      plug and charge             bool, start charging when a vehicle is plugged in, user setting
@@ -107,7 +107,7 @@ var tuyaDepowDpNames = map[string]string{
 	"154": "x_socket_cfg",
 	"155": "x_nfc_cfg",
 	"156": "x_earch_free_cfg",
-	"157": "x_product_varient",
+	"157": "x_product_variant",
 	"188": "x_heartbeat",
 	"189": "dp_num",
 	"190": "x_plug_charge",
