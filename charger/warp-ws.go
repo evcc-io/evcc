@@ -471,8 +471,6 @@ func (w *WarpWS) identify() ([]string, error) {
 	}
 	if tag := w.chargeTracker.AuthorizationInfo.TagId; tag != "" {
 		ids = append(ids, tag)
-	} else if mac := w.chargeTracker.AuthorizationInfo.Mac; mac != "" && !slices.Contains(ids, mac) {
-		ids = append(ids, mac)
 	}
 
 	return ids, nil

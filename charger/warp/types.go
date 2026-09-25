@@ -77,7 +77,6 @@ type ChargeTrackerCurrentCharge struct {
 	AuthorizationInfo struct {
 		TagType int    `json:"tag_type"`
 		TagId   string `json:"tag_id"`
-		Mac     string `json:"mac"`
 	} `json:"authorization_info"`
 }
 
