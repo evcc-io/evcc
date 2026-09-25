@@ -28,7 +28,7 @@ func TestOHPCFLPCCapability(t *testing.T) {
 	require.True(t, ok)
 	c.Connect(false)
 	assert.False(t, api.HasCap[api.Dimmer](c))
-	assert.ErrorIs(t, dimmer.Dim(true), api.ErrNotAvailable)
+	assert.ErrorIs(t, dimmer.Dim(4200), api.ErrNotAvailable)
 	_, err := dimmer.Dimmed()
 	assert.ErrorIs(t, err, api.ErrNotAvailable)
 

@@ -2,18 +2,23 @@ package hems
 
 import "github.com/evcc-io/evcc/api"
 
-// Dimmed reports nil until MaxConsumptionPower is known (see api.HEMS).
-func Dimmed(hems api.HEMS) *bool {
+// DimLimit reports nil until MaxConsumptionPower is known (see api.HEMS).
+func DimLimit(hems api.HEMS) *float64 {
 	if hems == nil {
 		return nil
 	}
 
-	dimmed := hems.MaxConsumptionPower()
-	if dimmed == nil {
+	return hems.MaxConsumptionPower()
+}
+
+// Dimmed reports nil until MaxConsumptionPower is known (see api.HEMS).
+func Dimmed(hems api.HEMS) *bool {
+	limit := DimLimit(hems)
+	if limit == nil {
 		return nil
 	}
 
-	return new(*dimmed > 0)
+	return new(*limit > 0)
 }
 
 func Curtailed(hems api.HEMS) *bool {

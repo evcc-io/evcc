@@ -35,7 +35,7 @@ func TestEEBusLimitCapabilities(t *testing.T) {
 	c.Connect(false)
 	assert.False(t, api.HasCap[api.Dimmer](c))
 	assert.False(t, api.HasCap[api.Curtailer](c))
-	assert.ErrorIs(t, dimmer.Dim(true), api.ErrNotAvailable)
+	assert.ErrorIs(t, dimmer.Dim(4200), api.ErrNotAvailable)
 	assert.ErrorIs(t, curtailer.SetCurtailPercent(0), api.ErrNotAvailable)
 	_, err := dimmer.Dimmed()
 	assert.ErrorIs(t, err, api.ErrNotAvailable)
