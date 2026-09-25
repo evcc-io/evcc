@@ -185,8 +185,13 @@ components:
           description: Update interval of the control loop in seconds.
           type: number
         circuits:
-          $ref: "#/components/schemas/Circuits"
           description: Load management circuits, keyed by circuit name.
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/Circuit"
+        circuitsConfig:
+          $ref: "#/components/schemas/GenericConfigStatus"
+          description: Load management configuration.
         bufferSoc:
           description: Battery buffer SoC in %. Energy above this level may be used for charging in solar mode.
           type: number
@@ -502,23 +507,6 @@ components:
           type: number
       required:
         - power
-    Circuits:
-      description: Load management circuits and runtime status.
-      type: object
-      properties:
-        config:
-          description: Static configuration.
-          type: object
-          additionalProperties:
-            $ref: "#/components/schemas/Circuit"
-        status:
-          description: Runtime status.
-        yamlSource:
-          description: Source of the configuration, evcc.yaml file or database.
-          type: string
-          enum:
-            - file
-            - db
     Currency:
       description: Currency in ISO 4217 format.
       type: string

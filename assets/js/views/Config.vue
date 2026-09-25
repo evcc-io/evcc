@@ -1228,7 +1228,7 @@ export default defineComponent({
 			return map;
 		},
 		circuitsYamlSource() {
-			return store.state.circuits?.yamlSource;
+			return store.state.circuitsConfig?.yamlSource;
 		},
 		messagingTags(): DeviceTags {
 			if (this.messagingUiConfigured) {
@@ -1262,7 +1262,7 @@ export default defineComponent({
 			};
 		},
 		circuitsRoot(): CircuitNode | undefined {
-			return circuitTree(store.state.circuits?.config);
+			return circuitTree(store.state.circuits);
 		},
 		circuitLoadpoints(): CircuitLoadpoint[] {
 			return this.loadpoints

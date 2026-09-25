@@ -174,23 +174,6 @@ func awaitShutdown(cmd *cobra.Command, args []string) {
 	<-shutdownDoneC()
 }
 
-// circuitsSource adds the config source to the circuits the site publishes.
-// The site only knows the circuits, where they were configured is a cmd concern.
-func circuitsSource(in <-chan util.Param) <-chan util.Param {
-	out := make(chan util.Param)
-
-	go func() {
-		for p := range in {
-			if _, ok := p.Val.(globalconfig.ConfigStatus); p.Key == keys.Circuits && !ok {
-				p.Val = globalconfig.ConfigStatus{Config: p.Val, YamlSource: yamlSource.circuits}
-			}
-			out <- p
-		}
-	}()
-
-	return out
-}
-
 func runRoot(cmd *cobra.Command, args []string) {
 	runAsService = true
 
@@ -225,7 +208,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// start broadcasting values
 	tee := new(util.Tee)
 	valueChan := make(chan util.Param, 64)
-	go tee.Run(circuitsSource(valueChan))
+	go tee.Run(valueChan)
 
 	// start OCPP and EEBus servers (skipped in degraded mode where setup failed,
 	// so a misconfigured instance serves only the offline UI)
@@ -471,8 +454,7 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Tariffs, Val: globalconfig.ConfigStatus{
 		YamlSource: yamlSource.tariffs,
 	}}
-
-	valueChan <- util.Param{Key: keys.Circuits, Val: globalconfig.ConfigStatus{
+	valueChan <- util.Param{Key: keys.CircuitsConfig, Val: globalconfig.ConfigStatus{
 		YamlSource: yamlSource.circuits,
 	}}
 
