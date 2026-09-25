@@ -168,9 +168,10 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	defer func() {
 		// a loadpoint switched off draws nothing and holds no circuit capacity
 		if lp.GetMode() == api.ModeOff {
-			plan, shares = nil, nil
+			lp.planner.Reserve(nil, nil)
+		} else {
+			lp.planner.Reserve(plan, shares)
 		}
-		lp.planner.Reserve(plan, shares)
 		lp.publish(keys.Plan, plan)
 		lp.publish(keys.PlanProjectedStart, planStart)
 		lp.publish(keys.PlanProjectedEnd, planEnd)
