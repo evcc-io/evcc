@@ -109,6 +109,20 @@ func (lp *Loadpoint) GetPlanGoal() (float64, bool) {
 	return limit, false
 }
 
+// plannerOwner identifies the loadpoint when sharing circuit capacity with other plans
+func plannerOwner(id int, lp *Loadpoint) func() planner.Owner {
+	return func() planner.Owner {
+		return planner.Owner{
+			Id:       id,
+			Priority: lp.EffectivePriority(),
+			Target:   lp.EffectivePlanTime(),
+			Circuit:  lp.GetCircuit(),
+			MaxPower: lp.EffectiveMaxPower(),
+			MinPower: lp.EffectiveMinPower(),
+		}
+	}
+}
+
 // GetPlan creates a charging plan for given time and duration
 // The plan is sorted by time
 func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration, precondition time.Duration, continuous bool) api.Rates {
@@ -138,11 +152,14 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 	var planOverrun time.Duration
 
 	defer func() {
+		lp.planner.Reserve(plan)
 		lp.publish(keys.Plan, plan)
 		lp.publish(keys.PlanProjectedStart, planStart)
 		lp.publish(keys.PlanProjectedEnd, planEnd)
 		lp.publish(keys.PlanOverrun, planOverrun)
 	}()
+
+	lp.planPower = 0
 
 	// re-check since plannerActive() is called before connected() check in Update()
 	if !lp.connected() {
@@ -220,8 +237,9 @@ func (lp *Loadpoint) plannerActive() (active bool) {
 			lp.lockPlanGoal(planTime, int(goal), lp.getPlanId())
 		}
 
-		// remember last active plan's slot end time
+		// remember last active plan's slot end time and power share
 		lp.planSlotEnd = activeSlot.End
+		lp.planPower = activeSlot.Power
 	} else if lp.planActive {
 		// planner was active (any slot, not necessarily previous slot) and charge goal has not yet been met
 		switch {

@@ -55,7 +55,7 @@ func TestPlan(t *testing.T) {
 
 	{
 		// filter rates to [now, now] window - should return empty
-		plan := optimalPlan(clampRates(rates, clock.Now(), clock.Now()), time.Hour, clock.Now())
+		plan := optimalPlan(clampRates(rates, clock.Now(), clock.Now()), time.Hour, clock.Now(), 0, nil)
 		assert.Empty(t, plan)
 	}
 
@@ -124,7 +124,7 @@ func TestPlan(t *testing.T) {
 		t.Log(tc.desc)
 		clock.Set(tc.now)
 		// filter rates to [now, target] window as caller would do
-		plan := optimalPlan(clampRates(rates, tc.now, tc.target), tc.duration, tc.target)
+		plan := optimalPlan(clampRates(rates, tc.now, tc.target), tc.duration, tc.target, 0, nil)
 
 		assert.Equalf(t, tc.planStart.UTC(), Start(plan).UTC(), "case %d start", i)
 		assert.Equalf(t, tc.duration, Duration(plan), "case %d duration", i)

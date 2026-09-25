@@ -237,9 +237,10 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	tariff := site.GetTariff(api.TariffUsagePlanner)
 
 	// give loadpoints access to vehicles and database
-	for _, lp := range site.activeLoadpoints() {
+	ledger := planner.NewLedger()
+	for i, lp := range site.activeLoadpoints() {
 		lp.coordinator = coordinator.NewAdapter(lp, site.coordinator)
-		lp.planner = planner.New(lp.log, tariff)
+		lp.planner = planner.New(lp.log, tariff, planner.WithLedger(ledger, plannerOwner(i, lp)))
 
 		if db.Instance != nil {
 			var err error
