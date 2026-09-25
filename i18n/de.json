@@ -237,6 +237,10 @@
       "solarForecast": "PV-Vorhersage",
       "switchDevice": "Stromregelung",
       "temp": "Temperatur",
+      "tempHeating": "Heizungstemperatur",
+      "tempHeatingLimit": "Heizungslimit",
+      "tempWater": "Warmwassertemperatur",
+      "tempWaterLimit": "Warmwasserlimit",
       "topic": "Thema",
       "url": "URL",
       "usage": {

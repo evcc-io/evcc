@@ -233,6 +233,36 @@ func (i *iDimmer) Dimmed() (bool, error) {
 	return i.dimmer1()
 }
 
+func HeatingTemp(heatingTemp0 func() (float64, error)) api.HeatingTemp {
+	if heatingTemp0 == nil {
+		return nil
+	}
+	return &iHeatingTemp{heatingTemp0}
+}
+
+type iHeatingTemp struct {
+	heatingTemp0 func() (float64, error)
+}
+
+func (i *iHeatingTemp) TempHeating() (float64, error) {
+	return i.heatingTemp0()
+}
+
+func HeatingTempLimiter(heatingTempLimiter0 func() (int64, error)) api.HeatingTempLimiter {
+	if heatingTempLimiter0 == nil {
+		return nil
+	}
+	return &iHeatingTempLimiter{heatingTempLimiter0}
+}
+
+type iHeatingTempLimiter struct {
+	heatingTempLimiter0 func() (int64, error)
+}
+
+func (i *iHeatingTempLimiter) LimitTempHeating() (int64, error) {
+	return i.heatingTempLimiter0()
+}
+
 func Identifier(identifier0 func() ([]string, error)) api.Identifier {
 	if identifier0 == nil {
 		return nil
@@ -516,4 +546,34 @@ type iVehicleRange struct {
 
 func (i *iVehicleRange) Range() (int64, error) {
 	return i.vehicleRange0()
+}
+
+func WaterTemp(waterTemp0 func() (float64, error)) api.WaterTemp {
+	if waterTemp0 == nil {
+		return nil
+	}
+	return &iWaterTemp{waterTemp0}
+}
+
+type iWaterTemp struct {
+	waterTemp0 func() (float64, error)
+}
+
+func (i *iWaterTemp) TempWater() (float64, error) {
+	return i.waterTemp0()
+}
+
+func WaterTempLimiter(waterTempLimiter0 func() (int64, error)) api.WaterTempLimiter {
+	if waterTempLimiter0 == nil {
+		return nil
+	}
+	return &iWaterTempLimiter{waterTempLimiter0}
+}
+
+type iWaterTempLimiter struct {
+	waterTempLimiter0 func() (int64, error)
+}
+
+func (i *iWaterTempLimiter) LimitTempWater() (int64, error) {
+	return i.waterTempLimiter0()
 }

@@ -44,6 +44,16 @@ type Battery interface {
 	Soc() (float64, error)
 }
 
+// HeatingTemp provides the heating circuit temperature in °C (e.g. underfloor heating flow temperature)
+type HeatingTemp interface {
+	TempHeating() (float64, error)
+}
+
+// WaterTemp provides the hot water temperature in °C
+type WaterTemp interface {
+	TempWater() (float64, error)
+}
+
 // BatteryCapacity provides a capacity in kWh
 type BatteryCapacity interface {
 	Capacity() float64
@@ -200,6 +210,16 @@ type PowerLimiter interface {
 // SocLimiter returns the soc limit
 type SocLimiter interface {
 	GetLimitSoc() (int64, error)
+}
+
+// HeatingTempLimiter returns the device-configured heating circuit temperature limit in °C
+type HeatingTempLimiter interface {
+	LimitTempHeating() (int64, error)
+}
+
+// WaterTempLimiter returns the device-configured hot water temperature limit in °C
+type WaterTempLimiter interface {
+	LimitTempWater() (int64, error)
 }
 
 // Dimmer provides EnWG §14a dimming

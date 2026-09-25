@@ -25,3 +25,15 @@ boost: # relay that switches the boost contact of the heat pump
 #limittemp: # temperature limit (°C) configured in device
 #  source: const
 #  value: 84
+#temp_heating: # current heating circuit temperature, e.g. underfloor heating flow (°C)
+#  source: const
+#  value: 35
+#limittemp_heating: # heating circuit temperature limit (°C) configured in device
+#  source: const
+#  value: 55
+#temp_hotwater: # current hot water temperature (°C)
+#  source: const
+#  value: 42
+#limittemp_hotwater: # hot water temperature limit (°C) configured in device
+#  source: const
+#  value: 84

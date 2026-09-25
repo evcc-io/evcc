@@ -97,6 +97,20 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	implement.May(res, implement.Battery(tempG))
 	implement.May(res, implement.SocLimiter(limitTempG))
 
+	tempHeatingG, limitTempHeatingG, err := cc.Temperature.ConfigureHeating(ctx)
+	if err != nil {
+		return nil, err
+	}
+	implement.May(res, implement.HeatingTemp(tempHeatingG))
+	implement.May(res, implement.HeatingTempLimiter(limitTempHeatingG))
+
+	tempWaterG, limitTempWaterG, err := cc.Temperature.ConfigureWater(ctx)
+	if err != nil {
+		return nil, err
+	}
+	implement.May(res, implement.WaterTemp(tempWaterG))
+	implement.May(res, implement.WaterTempLimiter(limitTempWaterG))
+
 	if err := cc.Dimmer.Implement(ctx, res); err != nil {
 		return nil, err
 	}
