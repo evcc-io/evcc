@@ -45,7 +45,7 @@ const (
 	raedianRegChargedEnergy = 0x801E // uint32 RO Wh
 	raedianRegMaxCurrent    = 0x8100 // uint32 WO mA
 	raedianRegPhases        = 0x8102 // uint16 WO
-	raedianRegStartStop     = 0x8105 // uint16 WO 1=start, 0=stop
+	raedianRegStartStop     = 0x8105 // uint16 WO 0=start, 1=stop
 )
 
 func init() {
@@ -130,15 +130,12 @@ func (wb *Raedian) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *Raedian) Enable(enable bool) error {
-	var cur uint32
+	value := uint16(1) // stop
 	if enable {
-		cur = wb.curr
+		value = 0 // start
 	}
 
-	b := make([]byte, 4)
-	binary.BigEndian.PutUint32(b, cur)
-
-	_, err := wb.conn.WriteMultipleRegisters(raedianRegMaxCurrent, 2, b)
+	_, err := wb.conn.WriteSingleRegister(raedianRegStartStop, value)
 	if err == nil {
 		wb.enabled = enable
 	}
