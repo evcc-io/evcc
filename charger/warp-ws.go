@@ -297,8 +297,10 @@ func (w *WarpWS) handleEvent(topic string, payload json.RawMessage) error {
 	var err error
 	switch topic {
 	case "charge_tracker/current_charge":
-		w.chargeTracker = warp.ChargeTrackerCurrentCharge{}
-		err = json.Unmarshal(payload, &w.chargeTracker)
+		var res warp.ChargeTrackerCurrentCharge
+		if err = json.Unmarshal(payload, &res); err == nil {
+			w.chargeTracker = res
+		}
 	case "ev/state":
 		err = json.Unmarshal(payload, &w.evState)
 	case "evse/external_current":
