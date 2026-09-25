@@ -1,0 +1,250 @@
+template: viessmann-temperature
+products:
+  - brand: Viessmann
+    description:
+      generic: Heatpump (API, hot water target temperature)
+group: heating
+requirements:
+  evcc: ["skiptest"]
+  description:
+    de: |
+      Hebt bei Boost die Warmwasser-Solltemperatur an und setzt sie danach wieder zurück. Alternative zur Einmal-Warmwasserbereitung, die im kostenlosen Basic-Plan der Viessmann API mit „402 Payment Required“ abgelehnt wird.
+ 
+      Optional können Leistungs- und Temperaturwerte ausgelesen werden. Das setzt Datenpunkte der One-Base-/E3-Gerätegeneration voraus (z. B. Vitocal 25x, getestet mit Vitocal 250-A). Welche Datenpunkte ein Gerät liefert, ist geräteabhängig und lässt sich über die [Viessmann API](https://developer.viessmann-climatesolutions.com/) am Feature-Endpunkt der Anlage ablesen. Die Option „Leistungs- und Temperaturwerte auslesen" wird nach der Anmeldung automatisch vorbelegt, wenn das Gerät die Datenpunkte liefert.
+    en: |
+      Raises the hot water target temperature on boost and resets it afterwards. Alternative to the one-time hot water charge, which the free Viessmann API Basic plan rejects with "402 Payment Required".
+ 
+      Optionally, power and temperature readings can be enabled. This requires data points of the One Base/E3 device generation (e.g. Vitocal 25x, tested with a Vitocal 250-A). Which data points a device provides is device-specific and can be inspected via the [Viessmann API](https://developer.viessmann-climatesolutions.com/) feature endpoint of the installation. The "Read power and temperature values" option is pre-set automatically after login if the device provides the data points.
+params:
+  - name: clientid
+    help:
+      de: Konfigurieren in [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
+      en: Configure at [app.developer.viessmann-climatesolutions.com](https://app.developer.viessmann-climatesolutions.com)
+  - name: redirecturi
+    help:
+      en: "Redirect URI of the evcc instance. Must match the redirect URI set in the Viessmann developer portal."
+      de: "Redirect-URI der evcc-Instanz. Muss mit der Redirect URI übereinstimmen, die im Viessmann Developer Portal konfiguriert ist."
+    service: auth/redirecturi
+  - name: gateway_serial
+    required: true
+    service: viessmann/equipment?detail=gateways&clientid={clientid}&redirecturi={redirecturi}
+    description:
+      de: Gateway Serial
+      en: Gateway Serial
+    help:
+      de: Wird nach der Anmeldung automatisch ermittelt. Alternativ manuell eintragen (ViCare App -> Einstellungen -> Kommunikationsmodul -> Seriennummer)
+      en: Determined automatically after login. Alternatively enter manually (ViCare app -> Settings -> Communication module -> Serial number)
+  - name: installation_id
+    required: true
+    service: viessmann/equipment?clientid={clientid}&redirecturi={redirecturi}
+    description:
+      de: Installation ID
+      en: Installation ID
+    help:
+      de: |
+        Wird nach der Anmeldung automatisch ermittelt.
+ 
+        <details><summary>Fallback: Installation ID per Kommandozeile ermitteln</summary>
+ 
+        Vorraussetzungen: curl, jq, und die folgenden Umgebungsvariblen:
+ 
+        ```
+        VIESSMANN_USER=<your-user>
+        VIESSMANN_PASS=<your-password>
+        VIESSMANN_CLIENT_ID=<your-clientid>
+        ```
+ 
+        Dann holen wir uns einen oauth token (n.b. am besten den gesamten Block in das Terminal kopieren, da die Zwischenvariable 'CODE' nur 20 Sekunden gültig ist):
+ 
+        ```
+        VIESSMANN_REDIRECT_URI=<your-redirect-uri>
+        VIESSMANN_CODE_CHALLENGE="5M5nhkBfkWZCGfLZYcTL-l7esjPUN7PpZ4rq8k4cmys"
+        VIESSMANN_CODE_VERIFIER="6PygdmeK8JKPuuftlkc6q4ceyvjhMM_a_cJrPbcmcLc-SPjx2ZXTYr-SOofPUBydQ3McNYRy7Hibc2L2WtVLJFpOQ~Qbgic455ArKjUz9_UiTLnO6q8A3e.I_fIF8hAo"
+ 
+        VIESSMANN_CODE=$(curl -X POST --silent \
+          --user $VIESSMANN_USER:$VIESSMANN_PASS \
+          --output /dev/null \
+          --dump-header -    \
+          "https://iam.viessmann-climatesolutions.com/idp/v3/authorize?client_id=$VIESSMANN_CLIENT_ID&redirect_uri=$VIESSMANN_REDIRECT_URI&scope=IoT%20User%20offline_access&response_type=code&code_challenge=$VIESSMANN_CODE_CHALLENGE&code_challenge_method=S256" \
+          | grep "^location: "            \
+          | sed 's/.*\?code=\(.*\).*/\1/' \
+          | tr -d '[:space:]')
+ 
+        TOKEN_RESPONSE=$(curl -XPOST --silent \
+          -H "Content-Type: application/x-www-form-urlencoded" \
+          --data "grant_type=authorization_code&client_id=$VIESSMANN_CLIENT_ID&redirect_uri=$VIESSMANN_REDIRECT_URI&code_verifier=$VIESSMANN_CODE_VERIFIER&code=$VIESSMANN_CODE" \
+          https://iam.viessmann-climatesolutions.com/idp/v3/token)
+ 
+        VIESSMANN_TOKEN=$(echo $TOKEN_RESPONSE | jq --raw-output .access_token)
+        ```
+ 
+        Damit können wir jetzt die Installation ID abfragen:
+ 
+        ```
+        curl --silent -H "Authorization: Bearer $VIESSMANN_TOKEN" \
+          https://api.viessmann-climatesolutions.com/iot/v2/equipment/installations?includeGateways=true \
+          | jq '.data[].id'
+        ```
+ 
+        </details>
+      en: |
+        Determined automatically after login.
+ 
+        <details><summary>Fallback: determine the installation id on the command line</summary>
+ 
+        Prerequisites: curl, jq, and the following parameters:
+ 
+        ```
+        VIESSMANN_USER=<your-user>
+        VIESSMANN_PASS=<your-password>
+        VIESSMANN_CLIENT_ID=<your-clientid>
+        ```
+ 
+        Then execute the following to get an oauth token (n.b. it's best to paste the entire block as-is, since the intermediate 'CODE' is only valid for 20 seconds):
+ 
+        ```
+        VIESSMANN_REDIRECT_URI=<your-redirect-uri>
+        VIESSMANN_CODE_CHALLENGE="5M5nhkBfkWZCGfLZYcTL-l7esjPUN7PpZ4rq8k4cmys"
+        VIESSMANN_CODE_VERIFIER="6PygdmeK8JKPuuftlkc6q4ceyvjhMM_a_cJrPbcmcLc-SPjx2ZXTYr-SOofPUBydQ3McNYRy7Hibc2L2WtVLJFpOQ~Qbgic455ArKjUz9_UiTLnO6q8A3e.I_fIF8hAo"
+ 
+        VIESSMANN_CODE=$(curl -X POST --silent \
+          --user $VIESSMANN_USER:$VIESSMANN_PASS \
+          --output /dev/null \
+          --dump-header -    \
+          "https://iam.viessmann-climatesolutions.com/idp/v3/authorize?client_id=$VIESSMANN_CLIENT_ID&redirect_uri=$VIESSMANN_REDIRECT_URI&scope=IoT%20User%20offline_access&response_type=code&code_challenge=$VIESSMANN_CODE_CHALLENGE&code_challenge_method=S256" \
+          | grep "^location: "            \
+          | sed 's/.*\?code=\(.*\).*/\1/' \
+          | tr -d '[:space:]')
+ 
+        TOKEN_RESPONSE=$(curl -XPOST --silent \
+          -H "Content-Type: application/x-www-form-urlencoded" \
+          --data "grant_type=authorization_code&client_id=$VIESSMANN_CLIENT_ID&redirect_uri=$VIESSMANN_REDIRECT_URI&code_verifier=$VIESSMANN_CODE_VERIFIER&code=$VIESSMANN_CODE" \
+          https://iam.viessmann-climatesolutions.com/idp/v3/token)
+ 
+        VIESSMANN_TOKEN=$(echo $TOKEN_RESPONSE | jq --raw-output .access_token)
+        ```
+ 
+        Finally, get the installation id:
+ 
+        ```
+        curl --silent -H "Authorization: Bearer $VIESSMANN_TOKEN" \
+          https://api.viessmann-climatesolutions.com/iot/v2/equipment/installations?includeGateways=true \
+          | jq '.data[].id'
+        ```
+ 
+        </details>
+  - name: device_id
+    required: true
+    description:
+      de: Device ID
+      en: Device ID
+    help:
+      de: normalerweise `0`
+      en: typically `0`
+    default: 0
+  - name: measurements
+    type: bool
+    service: viessmann/measurements?clientid={clientid}&redirecturi={redirecturi}&gateway_serial={gateway_serial}&installation_id={installation_id}&device_id={device_id}
+    description:
+      de: Leistungs- und Temperaturwerte auslesen
+      en: Read power and temperature values
+    help:
+      de: Liest die aktuelle elektrische Leistungsaufnahme und die Warmwassertemperatur aus. Wird nach der Anmeldung automatisch anhand der vom Gerät gemeldeten Datenpunkte vorbelegt (One-Base-/E3-Generation, z. B. Vitocal 25x). Standardmäßig deaktiviert, damit sich bestehende Installationen beim Update nicht ändern.
+      en: Reads the current electrical power consumption and the domestic hot water temperature. Pre-set automatically after login based on the data points the device reports (One Base/E3 generation, e.g. Vitocal 25x). Disabled by default so existing installations are unchanged on upgrade.
+  - name: normaltemp
+    type: int
+    unit: °C
+    default: 45
+    description:
+      de: Warmwasser-Solltemperatur normal
+      en: Normal hot water target temperature
+  - name: boosttemp
+    type: int
+    unit: °C
+    default: 55
+    description:
+      de: Warmwasser-Solltemperatur bei Boost
+      en: Boost hot water target temperature
+auth:
+  type: viessmann
+  params: [clientid, redirecturi, gateway_serial]
+render: |
+  {{- $device := printf "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/%s/gateways/%s/devices/%s" .installation_id .gateway_serial .device_id }}
+  type: sgready
+  # The free API plan rejects heating.dhw.oneTimeCharge (402), but allows changing the DHW target.
+  # No getmode: the shared 60s feature cache would report the previous target right after a switch.
+  setmode:
+    source: switch
+    switch:
+    - case: 2 # normal
+      set:
+        source: http
+        uri: {{ $device }}/features/heating.dhw.temperature.main/commands/setTargetTemperature
+        method: POST
+        headers:
+          - content-type: application/json
+        auth:
+          source: viessmann
+          clientid: {{ .clientid }}
+          redirecturi: {{ .redirecturi }}
+          gateway_serial: {{ .gateway_serial }}
+        body: '{ "temperature": {{ .normaltemp }} }'
+    - case: 3 # boost
+      set:
+        source: http
+        uri: {{ $device }}/features/heating.dhw.temperature.main/commands/setTargetTemperature
+        method: POST
+        headers:
+          - content-type: application/json
+        auth:
+          source: viessmann
+          clientid: {{ .clientid }}
+          redirecturi: {{ .redirecturi }}
+          gateway_serial: {{ .gateway_serial }}
+        body: '{ "temperature": {{ .boosttemp }} }'
+    - case: 1 # dimm
+      set:
+        source: error
+        error: ErrNotAvailable
+  {{- if .measurements }}
+  power:
+    # heating.power.consumption.current reports the real electrical input power in kW.
+    # Reading it replaces evcc's fallback estimate (current * phases * voltage), which
+    # wrongly assumed a full electric-heater draw when no meter was configured.
+    # Same URL + cache as getmode -> served from the shared cached feature list.
+    source: http
+    uri: {{ $device }}/features
+    cache: 60s
+    auth:
+      source: viessmann
+      clientid: {{ .clientid }}
+      redirecturi: {{ .redirecturi }}
+      gateway_serial: {{ .gateway_serial }}
+    jq: '.data[] | select(.feature == "heating.power.consumption.current") | .properties.value.value * 1000' # kW -> W
+  temp:
+    # heating.dhw.sensors.temperature.dhwCylinder: domestic hot water temperature (°C).
+    # The device controls one-time DHW charging, so the hot water tank is the natural
+    # temperature to display on the loadpoint gauge.
+    source: http
+    uri: {{ $device }}/features
+    cache: 60s
+    auth:
+      source: viessmann
+      clientid: {{ .clientid }}
+      redirecturi: {{ .redirecturi }}
+      gateway_serial: {{ .gateway_serial }}
+    jq: '.data[] | select(.feature == "heating.dhw.sensors.temperature.dhwCylinder") | .properties.value.value'
+  limittemp:
+    # heating.dhw.temperature.main: configured DHW target temperature (°C).
+    source: http
+    uri: {{ $device }}/features
+    cache: 60s
+    auth:
+      source: viessmann
+      clientid: {{ .clientid }}
+      redirecturi: {{ .redirecturi }}
+      gateway_serial: {{ .gateway_serial }}
+    jq: '.data[] | select(.feature == "heating.dhw.temperature.main") | .properties.value.value'
+  {{- end }}
+  {{ include "heatpumpswitch" . }}
+ 
