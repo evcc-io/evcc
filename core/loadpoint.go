@@ -2429,6 +2429,10 @@ NO_DIM:
 
 	// minimum or target charging
 	case minSocNotReached || plannerActive:
+		// min soc charging is not bound to the plan's share of the circuit
+		if minSocNotReached {
+			lp.planPower = 0
+		}
 		err = lp.fastCharging()
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 

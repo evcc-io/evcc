@@ -235,7 +235,12 @@ func (t *Planner) plan(requiredDuration, precondition time.Duration, targetTime 
 	rates = clampRates(rates, now, targetTime)
 
 	// check if rate coverage is sufficient for planning
-	if len(rates) == 0 || effectiveDuration(rates, maxPower, available) < requiredDuration {
+	// continuous plans keep their full power, only the cost based plan is shaped by the ledger
+	coverage := Duration(rates)
+	if !continuous {
+		coverage = effectiveDuration(rates, maxPower, available)
+	}
+	if len(rates) == 0 || coverage < requiredDuration {
 		t.log.DEBUG.Printf("planner: rate coverage in [%v,%v] insufficient for required duration %v- falling back to simple plan",
 			now.Local(), targetTime.Local(), requiredDuration.Round(time.Second))
 		return simplePlan

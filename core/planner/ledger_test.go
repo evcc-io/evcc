@@ -6,6 +6,7 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
@@ -134,6 +135,57 @@ func TestLedgerBelowMinPower(t *testing.T) {
 	assert.True(t, slot(secondPlan, clock.Now(), 2).IsZero())
 	assert.Equal(t, 3680.0, slot(secondPlan, clock.Now(), 0).Power)
 	assert.Equal(t, time.Hour, Duration(secondPlan))
+}
+
+func TestLedgerContinuousKeepsWindow(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+
+	circuit := api.NewMockCircuit(ctrl)
+	circuit.EXPECT().GetMaxPower().Return(7360.0).AnyTimes()
+	circuit.EXPECT().GetParent().Return(nil).AnyTimes()
+
+	trf := api.NewMockTariff(ctrl)
+	trf.EXPECT().Rates().AnyTimes().Return(rates([]float64{20, 60, 10, 80, 40, 90}, clock.Now(), time.Hour), nil)
+
+	target := clock.Now().Add(6 * time.Hour)
+	ledger := NewLedger()
+
+	// the outranking loadpoint fills the circuit for five of the six hours
+	ledger.Reserve(Owner{Id: 0, Priority: 1, Circuit: circuit}, api.Rates{{Start: clock.Now(), End: clock.Now().Add(5 * time.Hour), Power: 7360}})
+
+	p := New(util.NewLogger("foo"), trf, WithLedger(ledger, func() Owner {
+		return Owner{Id: 1, Priority: 0, Target: target, Circuit: circuit, MaxPower: 7360, MinPower: 1380}
+	}), func(p *Planner) { p.clock = clock })
+
+	// the continuous plan is the cheapest window at full power, not the simple plan
+	plan := p.Plan(2*time.Hour, 0, target, true)
+	assert.Equal(t, api.Rates{
+		{Start: clock.Now().Add(time.Hour), End: clock.Now().Add(2 * time.Hour), Value: 60, Power: 7360},
+		{Start: clock.Now().Add(2 * time.Hour), End: clock.Now().Add(3 * time.Hour), Value: 10, Power: 7360},
+	}, plan)
+}
+
+func TestLedgerStaleReservation(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+
+	circuit := api.NewMockCircuit(ctrl)
+	circuit.EXPECT().GetMaxPower().Return(7360.0).AnyTimes()
+	circuit.EXPECT().GetParent().Return(nil).AnyTimes()
+
+	ledger := NewLedger()
+	ledger.clock = clock
+
+	window := api.Rate{Start: clock.Now(), End: clock.Now().Add(time.Hour)}
+	ledger.Reserve(Owner{Id: 0, Priority: 1, Circuit: circuit}, api.Rates{{Start: window.Start, End: window.End, Power: 7360}})
+
+	other := Owner{Id: 1, Priority: 0, Circuit: circuit}
+	assert.Equal(t, 0.0, ledger.Available(other, window))
+
+	// a reservation not refreshed for a slot no longer counts
+	clock.Add(tariff.SlotDuration + time.Second)
+	assert.Equal(t, 7360.0, ledger.Available(other, window))
 }
 
 func TestLedgerParentCircuit(t *testing.T) {

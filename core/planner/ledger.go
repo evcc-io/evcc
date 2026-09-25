@@ -5,7 +5,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/tariff"
 )
 
 // Owner identifies a loadpoint planning against shared circuit capacity
@@ -30,21 +32,24 @@ func (o Owner) outranks(other Owner) bool {
 }
 
 type reservation struct {
-	owner Owner
-	plan  api.Rates
+	owner   Owner
+	plan    api.Rates
+	updated time.Time
 }
 
 // Ledger tracks the plans of all loadpoints so circuit capacity is shared between them.
 // A loadpoint plans around the reservations of every loadpoint that outranks it and
 // ignores the rest, so the ranking converges within one cycle regardless of update order.
+// A reservation not refreshed within a slot duration is stale and no longer counted.
 type Ledger struct {
 	mu           sync.Mutex
+	clock        clock.Clock
 	reservations map[int]reservation
 }
 
 // NewLedger creates a ledger
 func NewLedger() *Ledger {
-	return &Ledger{reservations: make(map[int]reservation)}
+	return &Ledger{clock: clock.New(), reservations: make(map[int]reservation)}
 }
 
 // Reserve records the plan for the owner, an empty plan releases the reservation
@@ -57,7 +62,7 @@ func (l *Ledger) Reserve(owner Owner, plan api.Rates) {
 		return
 	}
 
-	l.reservations[owner.Id] = reservation{owner, plan}
+	l.reservations[owner.Id] = reservation{owner, plan, l.clock.Now()}
 }
 
 // Available returns the power left for the owner during the slot on every circuit
@@ -76,7 +81,8 @@ func (l *Ledger) Available(owner Owner, slot api.Rate) float64 {
 
 		var used float64
 		for _, r := range l.reservations {
-			if r.owner.Id == owner.Id || !r.owner.outranks(owner) || !belongsTo(r.owner.Circuit, c) {
+			if r.owner.Id == owner.Id || !r.owner.outranks(owner) || !belongsTo(r.owner.Circuit, c) ||
+				l.clock.Since(r.updated) > tariff.SlotDuration {
 				continue
 			}
 			used += overlapPower(r.plan, slot)
