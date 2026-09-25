@@ -150,7 +150,7 @@ func (t *Planner) Plan(requiredDuration, precondition time.Duration, targetTime 
 	var available func(api.Rate) float64
 	if t.ledger != nil {
 		owner := t.owner()
-		owner.Target = targetTime
+		owner.Target = targetTime // previews may plan for another target
 		maxPower = owner.MaxPower
 
 		available = func(slot api.Rate) float64 {
@@ -234,8 +234,7 @@ func (t *Planner) plan(requiredDuration, precondition time.Duration, targetTime 
 
 	rates = clampRates(rates, now, targetTime)
 
-	// check if rate coverage is sufficient for planning
-	// continuous plans keep their full power, only the cost based plan is shaped by the ledger
+	// check if rate coverage is sufficient for planning; only the cost based plan is shaped by the ledger
 	coverage := Duration(rates)
 	if !continuous {
 		coverage = effectiveDuration(rates, maxPower, available)
