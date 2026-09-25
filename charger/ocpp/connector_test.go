@@ -210,6 +210,69 @@ func (suite *connTestSuite) TestOnStatusNotificationClearsStaleTxn() {
 	suite.True(suite.conn.NeedsAuthentication(), "Preparing after Available should require authentication")
 }
 
+// TestOnBootNotificationClearsStaleTxn ensures a transaction left over from
+// before a reboot is cleared when the connector comes back in Preparing without
+// reporting Available first.
+func (suite *connTestSuite) TestOnBootNotificationClearsStaleTxn() {
+	suite.conn.remoteIdTag = "evcc"
+	suite.conn.txnId = 42
+	suite.conn.idTag = "stale"
+
+	_, err := suite.cp.OnBootNotification(&core.BootNotificationRequest{})
+	suite.NoError(err)
+	<-suite.cp.bootNotificationRequestC
+	suite.Equal(42, suite.conn.txnId, "txnId should be kept until the next status")
+
+	// meter values carrying the old transaction must not interfere
+	txnId := 42
+	_, err = suite.conn.OnMeterValues(&core.MeterValuesRequest{
+		ConnectorId:   1,
+		TransactionId: &txnId,
+		MeterValue: []types.MeterValue{{
+			Timestamp:    types.NewDateTime(suite.clock.Now()),
+			SampledValue: []types.SampledValue{{Measurand: types.MeasurandCurrentImport, Value: "0"}},
+		}},
+	})
+	suite.NoError(err)
+
+	_, err = suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+		ConnectorId: 1,
+		Status:      core.ChargePointStatusPreparing,
+		ErrorCode:   core.NoError,
+	})
+	suite.NoError(err)
+	suite.Equal(0, suite.conn.txnId, "txnId should be cleared")
+	suite.Equal("", suite.conn.idTag, "idTag should be cleared")
+	suite.True(suite.conn.NeedsAuthentication(), "Preparing after reboot should require authentication")
+}
+
+// TestOnBootNotificationKeepsRunningTxn ensures a BootNotification sent on a
+// mere reconnect does not clear a transaction that is still running.
+func (suite *connTestSuite) TestOnBootNotificationKeepsRunningTxn() {
+	suite.conn.txnId = 42
+
+	_, err := suite.cp.OnBootNotification(&core.BootNotificationRequest{})
+	suite.NoError(err)
+	<-suite.cp.bootNotificationRequestC
+
+	_, err = suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+		ConnectorId: 1,
+		Status:      core.ChargePointStatusCharging,
+		ErrorCode:   core.NoError,
+	})
+	suite.NoError(err)
+	suite.Equal(42, suite.conn.txnId, "running transaction must be kept")
+
+	// the reboot flag is consumed by the first status
+	_, err = suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+		ConnectorId: 1,
+		Status:      core.ChargePointStatusPreparing,
+		ErrorCode:   core.NoError,
+	})
+	suite.NoError(err)
+	suite.Equal(42, suite.conn.txnId, "later Preparing must not clear the transaction")
+}
+
 // TestOnStatusNotificationKeepsActiveTxn ensures that an active transaction is
 // not cleared by transient status notifications other than Available.
 func (suite *connTestSuite) TestOnStatusNotificationKeepsActiveTxn() {

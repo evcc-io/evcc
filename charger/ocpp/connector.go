@@ -22,8 +22,9 @@ type Connector struct {
 	cp    *CP
 	id    int
 
-	status  *core.StatusNotificationRequest
-	statusC chan struct{}
+	status   *core.StatusNotificationRequest
+	statusC  chan struct{}
+	rebooted bool
 
 	meterUpdated time.Time
 	measurements map[types.Measurand]types.SampledValue
