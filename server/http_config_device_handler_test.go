@@ -25,6 +25,12 @@ func (s deleteCircuitTestSite) GetGridMeterRef() string {
 	return s.gridMeterRef
 }
 
+func (s deleteCircuitTestSite) GetPVMeterRefs() []string       { return nil }
+func (s deleteCircuitTestSite) GetBatteryMeterRefs() []string  { return nil }
+func (s deleteCircuitTestSite) GetAuxMeterRefs() []string      { return nil }
+func (s deleteCircuitTestSite) GetExtMeterRefs() []string      { return nil }
+func (s deleteCircuitTestSite) GetConsumerMeterRefs() []string { return nil }
+
 func TestDeleteCircuitMeter(t *testing.T) {
 	tests := []struct {
 		name         string

@@ -615,6 +615,42 @@ func cleanupTariffRef(name string) {
 	settings.SetJson(keys.TariffRefs, refs)
 }
 
+// deleteMeter deletes a meter and removes all references to it
+func deleteMeter(site site.API, id int) error {
+	err := deleteDevice(id, config.Meters())
+
+	// cleanup references
+	name := config.NameForID(id)
+
+	if site.GetGridMeterRef() == name {
+		site.SetGridMeterRef("")
+	}
+
+	for _, fun := range []struct {
+		get func() []string
+		set func([]string)
+	}{
+		{site.GetPVMeterRefs, site.SetPVMeterRefs},
+		{site.GetBatteryMeterRefs, site.SetBatteryMeterRefs},
+		{site.GetAuxMeterRefs, site.SetAuxMeterRefs},
+		{site.GetExtMeterRefs, site.SetExtMeterRefs},
+		{site.GetConsumerMeterRefs, site.SetConsumerMeterRefs},
+	} {
+		cleanupSiteMeterRef(name, fun.get, fun.set)
+	}
+
+	for _, dev := range config.Loadpoints().Devices() {
+		lp := dev.Instance()
+		if lp != nil && lp.GetMeterRef() == name {
+			lp.SetMeterRef("")
+		}
+	}
+
+	cleanupCircuitMeterRef(name)
+
+	return err
+}
+
 // deleteDeviceHandler deletes a device from database by class
 func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -647,36 +683,7 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 			}
 
 		case templates.Meter:
-			err = deleteDevice(id, config.Meters())
-
-			// cleanup references
-			name := config.NameForID(id)
-
-			if site.GetGridMeterRef() == name {
-				site.SetGridMeterRef("")
-			}
-
-			for _, fun := range []struct {
-				get func() []string
-				set func([]string)
-			}{
-				{site.GetPVMeterRefs, site.SetPVMeterRefs},
-				{site.GetBatteryMeterRefs, site.SetBatteryMeterRefs},
-				{site.GetAuxMeterRefs, site.SetAuxMeterRefs},
-				{site.GetExtMeterRefs, site.SetExtMeterRefs},
-				{site.GetConsumerMeterRefs, site.SetConsumerMeterRefs},
-			} {
-				cleanupSiteMeterRef(name, fun.get, fun.set)
-			}
-
-			for _, dev := range h.Devices() {
-				lp := dev.Instance()
-				if lp != nil && lp.GetMeterRef() == name {
-					lp.SetMeterRef("")
-				}
-			}
-
-			cleanupCircuitMeterRef(name)
+			err = deleteMeter(site, id)
 
 		case templates.Vehicle:
 			err = deleteDevice(id, config.Vehicles())
@@ -708,7 +715,7 @@ func deleteDeviceHandler(site site.API) func(w http.ResponseWriter, r *http.Requ
 			if err == nil && meterRef != "" && meterRef != site.GetGridMeterRef() {
 				if meter, lookupErr := config.Meters().ByName(meterRef); lookupErr == nil {
 					if configurable, ok := meter.(config.ConfigurableDevice[api.Meter]); ok {
-						if delErr := deleteDevice(configurable.ID(), config.Meters()); delErr != nil {
+						if delErr := deleteMeter(site, configurable.ID()); delErr != nil {
 							log.ERROR.Printf("delete circuit meter %s: %v", meterRef, delErr)
 						}
 					}
