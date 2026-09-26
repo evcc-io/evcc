@@ -191,6 +191,8 @@
 					</div>
 				</div>
 
+				<slot name="before-actions" :values="values"></slot>
+
 				<DeviceModalActions
 					v-if="showActions"
 					:is-deletable="isDeletable"
@@ -339,6 +341,8 @@ export default defineComponent({
 		hideDelete: { type: Boolean, default: false },
 		// Optional: hide the info button in the header (e.g. for singleton devices like hems)
 		hideInfo: { type: Boolean, default: false },
+		// Optional: hide the bottom-middle disable button
+		hideDisable: { type: Boolean, default: false },
 	},
 	emits: [
 		"added",
@@ -369,6 +373,7 @@ export default defineComponent({
 			adminPasswordValue: "",
 			adminPasswordRequired: false,
 			adminPasswordInvalid: false,
+			coveredByNested: false,
 		};
 	},
 	computed: {
@@ -499,7 +504,7 @@ export default defineComponent({
 			return Boolean(this.values.deviceDisable);
 		},
 		canDisable(): boolean {
-			return !isNestedIn("loadpoint");
+			return !isNestedIn("loadpoint") && !this.hideDisable;
 		},
 		showActions() {
 			// explicitly hide template fields (ocpp step 1)
@@ -551,6 +556,11 @@ export default defineComponent({
 	watch: {
 		isModalVisible(visible) {
 			if (visible) {
+				if (this.coveredByNested) {
+					// was just hidden by a nested modal, it wasn't actually reopened
+					this.coveredByNested = false;
+					return;
+				}
 				this.templateName =
 					this.isNew && this.defaultTemplate ? this.defaultTemplate : null;
 				this.reset();
@@ -563,6 +573,9 @@ export default defineComponent({
 					// For new devices, apply defaults immediately (e.g., default icons based on meter type)
 					this.applyDefaults();
 				}
+			} else {
+				// check whether we were just hidden (child modal open) or actually closed
+				this.coveredByNested = !!this.name && isNestedIn(this.name);
 			}
 		},
 		id(newVal, oldVal) {

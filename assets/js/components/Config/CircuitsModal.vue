@@ -1,63 +1,64 @@
 <template>
-	<YamlModal
+	<JsonModal
+		id="circuitsModal"
 		name="circuits"
 		:title="$t('config.circuits.title')"
 		:description="$t('config.circuits.description')"
 		docs="/features/loadmanagement"
-		:defaultYaml="defaultYaml"
-		removeKey="circuits"
 		endpoint="/config/circuits"
+		state-key="circuits"
+		data-testid="circuits-modal"
+		no-buttons
+		:autofocus="false"
 		@changed="$emit('changed')"
 	>
-		<template #extra>
-			<p class="my-2 small">
-				{{ $t("config.circuits.usableMeters") }}:
-				<code v-for="meter in usableMeters" :key="meter.name" class="ms-1 meter">
-					{{ meter.name }}<span v-if="meter.title" class="ms-1">({{ meter.title }})</span>
-				</code>
-			</p>
+		<template #default>
+			<NewDeviceButton
+				v-if="circuits.length === 0"
+				:title="$t('config.circuits.addMainCircuit')"
+				@click="openCircuit()"
+			/>
+			<div v-else>
+				<CircuitsTree
+					class="mb-3"
+					:circuitsTree="configCircuitTree(circuits)"
+					:grid-meter="gridMeter"
+				/>
+				<span class="evcc-gray">
+					{{ $t("config.circuits.chargingPointsNote") }}
+				</span>
+			</div>
+			<div class="d-flex justify-content-end mt-4">
+				<button type="button" class="btn btn-outline-primary px-4" data-bs-dismiss="modal">
+					{{ $t("config.general.close") }}
+				</button>
+			</div>
 		</template>
-	</YamlModal>
+	</JsonModal>
 </template>
 
 <script lang="ts">
-import YamlModal from "./YamlModal.vue";
-import defaultYaml from "./defaultYaml/circuits.yaml?raw";
-import type { ConfigMeter } from "@/types/evcc";
+import JsonModal from "./JsonModal.vue";
+import type { ConfigCircuit, ConfigMeter } from "@/types/evcc";
+import CircuitsTree from "./CircuitsTree.vue";
+import NewDeviceButton from "./NewDeviceButton.vue";
+import { openModal } from "@/configModal.ts";
+import { configCircuitTree } from "@/utils/circuits.ts";
 import type { PropType } from "vue";
 
 export default {
 	name: "CircuitsModal",
-	components: { YamlModal },
-	props: {
-		gridMeter: { type: Object as PropType<ConfigMeter>, default: null },
-		extMeters: { type: Array as PropType<ConfigMeter[]>, default: () => [] },
-	},
+	components: { JsonModal, CircuitsTree, NewDeviceButton },
 	emits: ["changed"],
-	data() {
-		return { defaultYaml: defaultYaml.trim() };
+	props: {
+		circuits: { type: Array as PropType<ConfigCircuit[]>, required: true },
+		gridMeter: { type: Object as PropType<ConfigMeter> },
 	},
-	computed: {
-		usableMeters() {
-			const result = [];
-			if (this.gridMeter) {
-				result.push({ name: this.gridMeter.name, title: this.$t("config.grid.title") });
-			}
-			if (this.extMeters) {
-				result.push(
-					...this.extMeters.map((m) => ({
-						name: m.name,
-						title: m.deviceTitle || m.deviceProduct || m.config["template"] || m.type,
-					}))
-				);
-			}
-			return result;
+	methods: {
+		configCircuitTree,
+		async openCircuit() {
+			await openModal("circuit");
 		},
 	},
 };
 </script>
-<style scoped>
-.meter:not(:last-child)::after {
-	content: ",";
-}
-</style>

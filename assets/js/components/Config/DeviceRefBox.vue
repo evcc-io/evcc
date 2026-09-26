@@ -4,7 +4,7 @@
 		:class="[compact ? 'py-0 px-2' : 'py-2 px-3', { invalid: error }]"
 		@click="$emit('edit')"
 	>
-		<div class="flex-grow-1 text-truncate">
+		<div class="flex-grow-1 text-truncate min-w-0">
 			<slot>
 				<span>{{ title }}</span>
 			</slot>

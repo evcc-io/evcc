@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"maps"
 	"reflect"
@@ -54,11 +55,6 @@ func (c *configReq) UnmarshalJSON(data []byte) error {
 }
 
 func (c *configReq) Serialise() map[string]any {
-	if c.Yaml != "" {
-		return map[string]any{
-			"yaml": c.Yaml,
-		}
-	}
 	return c.Other
 }
 
@@ -484,6 +480,22 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 	})
 
 	wg.Go(func() {
+		if dev, ok := api.Cap[api.Circuit](instance); ok {
+			if val := dev.GetMaxPower(); val > 0 {
+				makeResult("maxPower", val, nil)
+			}
+			if val := dev.GetMaxCurrent(); val > 0 {
+				makeResult("maxCurrent", val, nil)
+			}
+			if dev.HasMeter() {
+				err := dev.Update(nil)
+				makeResult("power", dev.GetChargePower(), err)
+				makeResult("current", dev.GetMaxPhaseCurrent(), err)
+			}
+		}
+	})
+
+	wg.Go(func() {
 		if dev, ok := api.Cap[api.Identifier](instance); ok {
 			val, err := dev.Identify()
 			makeResult("identifier", strings.Join(val, ", "), err)
@@ -582,7 +594,9 @@ func configHasCriticalPlugin(req configReq) bool {
 		if err := yaml.Unmarshal([]byte(req.Yaml), &m); err != nil {
 			return false // malformed yaml already rejected by decodeDeviceConfig
 		}
-		return valueHasCriticalSource(m)
+		if valueHasCriticalSource(m) {
+			return true
+		}
 	}
 	return valueHasCriticalSource(req.Other)
 }
@@ -607,7 +621,7 @@ func valueHasCriticalSource(v any) bool {
 }
 
 // decodeDeviceConfig extracts device configuration and yaml details
-func decodeDeviceConfig(r io.Reader) (configReq, error) {
+func decodeDeviceConfig(r io.Reader, class templates.Class) (configReq, error) {
 	var res configReq
 
 	if err := json.NewDecoder(r).Decode(&res); err != nil {
@@ -624,17 +638,26 @@ func decodeDeviceConfig(r io.Reader) (configReq, error) {
 		return configReq{}, errors.New("invalid config: yaml only allowed for types " + strings.Join(customTypes, ", "))
 	}
 
-	if len(res.Other) != 0 {
-		return configReq{}, errors.New("invalid config: cannot mix yaml and other")
-	}
-
 	// validate yaml syntax; tolerate whitespace/comment-only input
 	var tmp map[string]any
 	if err := yaml.Unmarshal([]byte(res.Yaml), &tmp); err != nil {
 		return configReq{}, err
 	}
 
-	res.Other = map[string]any{"yaml": res.Yaml}
+	// circuit references are structured form fields, not yaml
+	if class == templates.Circuit {
+		for _, k := range []string{"parent", "meter"} {
+			if _, ok := tmp[k]; ok {
+				return configReq{}, fmt.Errorf("invalid config: '%s' must not be set in yaml", k)
+			}
+		}
+	}
+
+	// structured fields (e.g. references) are stored next to the yaml
+	if res.Other == nil {
+		res.Other = make(map[string]any)
+	}
+	res.Other["yaml"] = res.Yaml
 
 	return res, nil
 }
