@@ -63,10 +63,14 @@
 			<div v-else>
 				<div v-for="(m, index) in messengers" :key="index" class="my-4">
 					<DeviceRefBox
+						:disabled="m.deviceDisable"
 						:data-testid="`messenger-box-${index}`"
 						@edit="openMessenger(m.id)"
+						@enable="$emit('enable', m.id)"
 					>
-						<small class="text-muted">#{{ index + 1 }}</small>
+						<small class="text-muted" :class="{ invisible: m.deviceDisable }"
+							>#{{ index + 1 }}</small
+						>
 						<span class="fw-semibold mx-3">{{ messengerType(m) }}</span>
 					</DeviceRefBox>
 				</div>
@@ -104,7 +108,7 @@ export default {
 	props: {
 		messengers: { type: Array as PropType<ConfigMessenger[]>, required: true },
 	},
-	emits: ["changed"],
+	emits: ["changed", "enable"],
 	data() {
 		return {
 			activeEventsTab: true,
