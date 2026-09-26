@@ -212,14 +212,23 @@ func (site *Site) applyBatteryMode(mode api.BatteryMode) error {
 			}
 		}
 
-		// don't re-apply the mode the battery is already in
-		name := dev.Config().Name
-		if deviceMode == api.BatteryUnknown || deviceMode == site.batteryModeApplied[name] {
+		if deviceMode == api.BatteryUnknown {
 			continue
 		}
 
-		if !slices.Contains(batCtrl.BatteryModes(), deviceMode) {
+		// an unsupported mode releases the battery instead of leaving it in the mode applied before
+		modes := batCtrl.BatteryModes()
+		if !slices.Contains(modes, deviceMode) {
 			site.log.DEBUG.Printf("battery %s does not support mode: %s", deviceTitleOrName(dev), deviceMode)
+			if !slices.Contains(modes, api.BatteryNormal) {
+				continue
+			}
+			deviceMode = api.BatteryNormal
+		}
+
+		// don't re-apply the mode the battery is already in
+		name := dev.Config().Name
+		if deviceMode == site.batteryModeApplied[name] {
 			continue
 		}
 
