@@ -280,7 +280,7 @@ func (m *MQTT) listenLoadpointSetters(topic string, site site.API, lp loadpoint.
 		{"smartFeedInPriorityLimit", floatPtrSetter(pass(lp.SetSmartFeedInPriorityLimit))},
 		{"batteryBoost", boolSetter(lp.SetBatteryBoost)},
 		{"batteryBoostLimit", intSetter(pass(lp.SetBatteryBoostLimit))},
-		{"planStrategy", planStrategySetter(lp.SetPlanStrategy)},
+		{"planStrategy", planStrategySetter(lp.GetPlanStrategy, lp.SetPlanStrategy)},
 		{"planEnergy", planGoalSetter(lp.SetPlanEnergy)},
 		{"vehicle", func(payload string) error {
 			// https://github.com/evcc-io/evcc/issues/11184 empty payload is swallowed by listener
@@ -307,7 +307,7 @@ func (m *MQTT) listenVehicleSetters(topic string, v vehicle.API) error {
 	for _, s := range []setter{
 		{"limitSoc", intSetter(pass(v.SetLimitSoc))},
 		{"minSoc", intSetter(pass(v.SetMinSoc))},
-		{"planStrategy", planStrategySetter(v.SetPlanStrategy)},
+		{"planStrategy", planStrategySetter(v.GetPlanStrategy, v.SetPlanStrategy)},
 		{"planSoc", planGoalSetter(v.SetPlanSoc)},
 	} {
 		if err := m.Handler.ListenSetter(topic+"/"+s.topic, s.fun); err != nil {
