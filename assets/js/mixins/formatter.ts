@@ -44,6 +44,22 @@ function formatDayMonth(
     .join("");
 }
 
+// NumberFormat construction is costly, tables and charts format thousands of values
+const numberFormats = new Map<string, Intl.NumberFormat>();
+
+function numberFormat(
+  locale: string | undefined,
+  options: Intl.NumberFormatOptions
+): Intl.NumberFormat {
+  const key = `${locale}|${JSON.stringify(options)}`;
+  let format = numberFormats.get(key);
+  if (!format) {
+    format = new Intl.NumberFormat(locale, options);
+    numberFormats.set(key, format);
+  }
+  return format;
+}
+
 // local-time ISO date, Intl cannot produce this reliably across locales
 function isoDate(date: Date): string {
   const mm = String(date.getMonth() + 1).padStart(2, "0");
@@ -157,7 +173,7 @@ export default defineComponent({
             ? 1
             : 0;
       }
-      return `${new Intl.NumberFormat(this.$i18n?.locale, {
+      return `${numberFormat(this.$i18n?.locale, {
         style: "decimal",
         minimumFractionDigits: d,
         maximumFractionDigits: d,
@@ -168,7 +184,7 @@ export default defineComponent({
     },
     fmtNumber(number: number, decimals: number | undefined, unit?: string) {
       const style = unit ? "unit" : "decimal";
-      return new Intl.NumberFormat(this.$i18n?.locale, {
+      return numberFormat(this.$i18n?.locale, {
         style,
         unit,
         minimumFractionDigits: decimals,
@@ -182,7 +198,7 @@ export default defineComponent({
         unit = "kilogram";
         value = gramms / 1000;
       }
-      return new Intl.NumberFormat(this.$i18n?.locale, {
+      return numberFormat(this.$i18n?.locale, {
         style: withUnit ? "unit" : "decimal",
         unit,
         minimumFractionDigits: 0,
@@ -412,7 +428,7 @@ export default defineComponent({
       return `${this.fmtHourMinute(start)} – ${this.fmtHourMinute(end)}`;
     },
     fmtDurationUnit(value: number, unit = "second") {
-      return new Intl.NumberFormat(this.$i18n?.locale, {
+      return numberFormat(this.$i18n?.locale, {
         style: "unit",
         unit,
         unitDisplay: "long",
@@ -423,7 +439,7 @@ export default defineComponent({
     fmtMoney(amout = 0, currency = CURRENCY.EUR, decimals = true, withSymbol = false) {
       const currencyDisplay = withSymbol ? "narrowSymbol" : "code";
       const digits = decimals ? undefined : 0;
-      const result = new Intl.NumberFormat(this.$i18n?.locale, {
+      const result = numberFormat(this.$i18n?.locale, {
         style: "currency",
         currency,
         currencyDisplay,
@@ -446,7 +462,7 @@ export default defineComponent({
       const value = amout * factor;
       const minimumFractionDigits = 1;
       const maximumFractionDigits = this.energyPriceSubunit(currency) ? 1 : 3;
-      const price = new Intl.NumberFormat(this.$i18n?.locale, {
+      const price = numberFormat(this.$i18n?.locale, {
         style: "decimal",
         minimumFractionDigits,
         maximumFractionDigits,
@@ -502,7 +518,7 @@ export default defineComponent({
     },
     fmtPercentage(value: number, digits = 0, forceSign = false) {
       const sign = forceSign && value > 0 ? "+" : "";
-      return `${sign}${new Intl.NumberFormat(this.$i18n?.locale, {
+      return `${sign}${numberFormat(this.$i18n?.locale, {
         style: "percent",
         minimumFractionDigits: digits,
         maximumFractionDigits: digits,

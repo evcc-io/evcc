@@ -109,6 +109,16 @@ describe("fmtWh", () => {
   });
 });
 
+describe("fmtNumber", () => {
+  test("should follow locale changes", () => {
+    expect(fmt.fmtNumber(1234.56, 1)).eq("1.234,6");
+    config.global.mocks["$i18n"].locale = "en";
+    expect(fmt.fmtNumber(1234.56, 1)).eq("1,234.6");
+    config.global.mocks["$i18n"].locale = "de";
+    expect(fmt.fmtNumber(1234.56, 1)).eq("1.234,6");
+  });
+});
+
 describe("fmtPricePerKWh", () => {
   test("should format with units", () => {
     expect(fmt.fmtPricePerKWh(0.2, CURRENCY.EUR)).eq("20,0 ct/kWh");

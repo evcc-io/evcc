@@ -109,6 +109,8 @@ interface RowGroup {
 	rows: Row[];
 }
 
+const maxAbs = (values: number[]): number => Math.max(0, ...values.map(Math.abs));
+
 export default defineComponent({
 	name: "TimeSeriesDataTable",
 	mixins: [formatter],
@@ -199,14 +201,13 @@ export default defineComponent({
 		},
 		// the profiles the household demand is summarized from, scaled against the total
 		demandRows(total: Row): Row[] {
-			const ref = Math.max(...total.nums.map(Math.abs));
 			const consumption = this.$t("main.history.group.consumer");
 			return this.demandDetails.map((d, i) =>
 				this.powerRow(
 					`↳ ${demandTitle(d, consumption)}`,
 					d.values,
 					this.demandColors[i] || colors.muted || "",
-					{ ref }
+					{ ref: total.ref }
 				)
 			);
 		},
@@ -273,6 +274,7 @@ export default defineComponent({
 				display: nums.map((kw) => this.fmtNumber(kw, 1)),
 				nums,
 				heatColor: color,
+				ref: maxAbs(nums),
 				...opts,
 			};
 		},
@@ -286,6 +288,7 @@ export default defineComponent({
 				nums: prices,
 				heatColor: color,
 				aMax: 0.4,
+				ref: maxAbs(prices),
 			};
 		},
 		getBatteryTitle(index: number): string {
@@ -293,9 +296,8 @@ export default defineComponent({
 			return detail ? detail.title || detail.name : `Battery ${index + 1}`;
 		},
 		heatStyle(row: Row, index: number): Record<string, string> | undefined {
-			if (!row.heatColor) return undefined;
-			const ref = row.ref ?? Math.max(...row.nums.map(Math.abs));
-			if (!ref) return undefined;
+			const ref = row.ref;
+			if (!row.heatColor || !ref) return undefined;
 			const ratio = Math.min(1, Math.abs(row.nums[index] ?? 0) / ref);
 			const alpha = 0.06 + (row.aMax ?? 0.5) * ratio;
 			const hex = Math.round(alpha * 255)

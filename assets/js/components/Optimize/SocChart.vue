@@ -15,7 +15,6 @@ import {
 	forecastYAxis,
 	tooltipStyle,
 	tooltipTable,
-	hoverDot,
 	lineDefaults,
 } from "../Forecast/echarts";
 import colors, { dimColor } from "@/colors";
@@ -24,7 +23,7 @@ import echartsChart from "@/mixins/echartsChart";
 import { is12hFormat } from "@/units";
 import type { EvoptData } from "./TimeSeriesDataTable.vue";
 import LegendList from "../Sessions/LegendList.vue";
-import { slotTimes } from "./chart";
+import { slotTimes, transientHoverDot } from "./chart";
 
 export interface SocChartEntry {
 	index: number; // index into evopt.res.batteries
@@ -120,7 +119,7 @@ export default defineComponent({
 						step: "start",
 						z: 3,
 						data: this.socSeries,
-						...hoverDot(this.entry.color),
+						...transientHoverDot(this.entry.color),
 						lineStyle: { color: this.entry.color, ...lineDefaults },
 						areaStyle: { color: dimColor(this.entry.color) },
 					},
