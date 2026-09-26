@@ -282,6 +282,8 @@ export interface State {
   bufferStartSoc?: number;
   /** Home battery discharge is prevented during fast charging and planned charging. */
   batteryDischargeControl?: boolean;
+  /** Home battery discharge is prevented only while a vehicle is charging in Smart mode. */
+  batteryDischargeControlSmart?: boolean;
   /** Home battery is allowed to discharge to the grid (experimental). */
   batteryGridDischarge?: boolean;
   /** Solar forecast is adjusted to real production data (experimental). */

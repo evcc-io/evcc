@@ -84,13 +84,14 @@ type Site struct {
 	curtailPercent *int
 
 	// battery settings
-	prioritySoc               float64  // prefer battery up to this Soc
-	bufferSoc                 float64  // continue charging on battery above this Soc
-	bufferStartSoc            float64  // start charging on battery above this Soc
-	batteryDischargeControl   bool     // prevent battery discharge for fast and planned charging
-	batteryGridChargeLimit    *float64 // grid charging limit
-	batteryGridDischargeLimit *float64 // grid discharging (feed-in) limit
-	batteryGridDischarge      bool     // allow battery discharge to grid (experimental)
+	prioritySoc                  float64  // prefer battery up to this Soc
+	bufferSoc                    float64  // continue charging on battery above this Soc
+	bufferStartSoc               float64  // start charging on battery above this Soc
+	batteryDischargeControl      bool     // prevent battery discharge for fast and planned charging
+	batteryDischargeControlSmart bool     // prevent battery discharge while smart charging
+	batteryGridChargeLimit       *float64 // grid charging limit
+	batteryGridDischargeLimit    *float64 // grid discharging (feed-in) limit
+	batteryGridDischarge         bool     // allow battery discharge to grid (experimental)
 
 	// grid settings
 	gridExportLimit float64 // static grid export power limit in W, 0 = disabled
@@ -468,6 +469,11 @@ func (site *Site) restoreSettings() error {
 	}
 	if v, err := settings.Bool(keys.BatteryDischargeControl); err == nil {
 		if err := site.SetBatteryDischargeControl(v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
+			return err
+		}
+	}
+	if v, err := settings.Bool(keys.BatteryDischargeControlSmart); err == nil {
+		if err := site.SetBatteryDischargeControlSmart(v); err != nil && !errors.Is(err, ErrBatteryControlNotAvailable) {
 			return err
 		}
 	}
@@ -1405,6 +1411,7 @@ func (site *Site) prepare() {
 	site.publish(keys.BufferStartSoc, site.bufferStartSoc)
 	site.publish(keys.BatteryMode, site.batteryMode)
 	site.publish(keys.BatteryDischargeControl, site.batteryDischargeControl)
+	site.publish(keys.BatteryDischargeControlSmart, site.batteryDischargeControlSmart)
 	site.publish(keys.BatteryGridDischarge, site.batteryGridDischarge)
 	site.publish(keys.SolarAdjusted, site.solarAdjusted)
 	site.publish(keys.ResidualPower, site.GetResidualPower())

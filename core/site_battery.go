@@ -268,13 +268,20 @@ func (site *Site) batteryGridDischargeActive(rate api.Rate) bool {
 }
 
 func (site *Site) dischargeControlActive(rate api.Rate) bool {
-	if !site.GetBatteryDischargeControl() {
+	fast := site.GetBatteryDischargeControl()
+	smart := site.GetBatteryDischargeControlSmart()
+	if !fast && !smart {
 		return false
 	}
 
 	for _, lp := range site.activeLoadpoints() {
-		smartCostActive := site.smartCostActive(lp, rate)
-		if lp.GetStatus() == api.StatusC && (smartCostActive || lp.IsFastChargingActive()) {
+		if lp.GetStatus() != api.StatusC {
+			continue
+		}
+		if smart && lp.GetMode() == api.ModeSmart {
+			return true
+		}
+		if fast && (site.smartCostActive(lp, rate) || lp.IsFastChargingActive()) {
 			return true
 		}
 	}

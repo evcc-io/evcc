@@ -103,6 +103,14 @@ optimal current, sends single command. Resilient to restarts and missed updates.
 | `bufferSoc` | Above this: EV can draw from battery reserves |
 | `bufferStartSoc` | Above this: EV charging can begin even if importing |
 
+Battery discharge protection has two independent, default-off switches:
+`batteryDischargeControl` covers fast/planned and cheap-tariff charging;
+`batteryDischargeControlSmart` covers all Smart-mode charging, including solar.
+Both require a loadpoint reporting status C (actively charging). Waiting, paused,
+finished, disconnected, and disabled loadpoints do not activate protection.
+Protection holds controllable batteries; external battery control and battery
+grid charging retain their existing priority.
+
 ## Effective Price Calculation
 
 ```

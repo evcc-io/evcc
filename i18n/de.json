@@ -42,6 +42,7 @@
       },
       "bufferTitle": "Batterie als Ladepuffer",
       "discharge": "Entladung der Hausbatterie im Schnell-Modus und bei geplantem Laden verhindern.",
+      "dischargeSmart": "Entladung der Hausbatterie nur verhindern, während ein Fahrzeug im Smart-Modus lädt.",
       "gridDischarge": "Die Entladung der Hausbatterie ins Stromnetz zulassen.",
       "priority": "Hausbatterie hat Vorrang, solange sie unter {soc} liegt. Dann erhalten die Ladepunkte den Überschuss.",
       "priorityNone": "Sonnenüberschuss geht direkt an die Ladepunkte. Setze einen Wert über {soc}, um die Hausbatterie zu bevorzugen.",
