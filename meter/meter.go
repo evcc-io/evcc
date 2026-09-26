@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
@@ -93,20 +94,21 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 		implement.May(m, implement.BatterySocLimiter(socLimiter))
 		implement.May(m, implement.BatteryPowerLimiter(powerLimiter))
 
-		switch {
-		case cc.Soc != nil && cc.LimitSoc != nil:
+		// limitSoc expresses normal/hold/charge through the reserve soc (hold uses the live soc),
+		// batteryMode switches the device's operating mode. Configured together the limit is written first.
+		var limitController func(api.BatteryMode) error
+		if cc.LimitSoc != nil {
 			limitSocS, err := cc.LimitSoc.FloatSetter(ctx, "limitSoc")
 			if err != nil {
 				return nil, fmt.Errorf("battery limit soc: %w", err)
 			}
 
-			limitController, err := cc.batterySocLimitsCtx.LimitController(ctx, socG, limitSocS)
-			if err != nil {
+			if limitController, err = cc.batterySocLimitsCtx.LimitController(ctx, socG, limitSocS); err != nil {
 				return nil, err
 			}
+		}
 
-			implement.Has(m, implement.BatteryController(batteryModesSocLimit, limitController))
-
+		switch {
 		case cc.BatteryMode != nil:
 			modeS, keys, err := cc.BatteryMode.IntSetterKeys(ctx, "batteryMode")
 			if err != nil {
@@ -127,8 +129,16 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.M
 			}
 
 			implement.Has(m, implement.BatteryController(implement.BatteryModes(modes...), func(mode api.BatteryMode) error {
+				if limitController != nil && slices.Contains(batteryModesSocLimit(), mode) {
+					if err := limitController(mode); err != nil {
+						return err
+					}
+				}
 				return modeS(int64(mode))
 			}))
+
+		case limitController != nil:
+			implement.Has(m, implement.BatteryController(batteryModesSocLimit, limitController))
 		}
 
 		return m, nil
