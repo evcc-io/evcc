@@ -153,7 +153,8 @@ export default defineComponent({
 					name: e.label,
 					type: "bar",
 					stack: "charge",
-					// one path per series instead of an svg element per slot
+					// one path per series instead of an svg element per slot. Stacking works in
+					// large mode despite the outdated TODO in echarts' barGrid layout
 					large: true,
 					largeThreshold: 0,
 					data: e.data,
