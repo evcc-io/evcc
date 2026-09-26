@@ -33,7 +33,7 @@
     },
     "combined": "Combinéiert",
     "config": {
-      "buffer": "D'Energie vun der Batterie soll iwwert dem {soc} benotzt ginn, fir d'Opluedpunkten z'ënnerstëtzen, an verzögert d'Ofschalten am Solarmodus. Fänkt automatesch un mam Solaroplueden {start}.",
+      "buffer": "D'Energie vun der Batterie soll iwwert dem {soc} benotzt ginn, fir d'Opluedpunkten z'ënnerstëtzen, an verzögert d'Ofschalten am Samrt Modus. Fänkt automatesch un mam Solaroplueden {start}.",
       "bufferNone": "D'Energie vun der Batterie gëtt net fir d'Opluedpunkte benotzt. Setzt e Wäert ënner {soc} fir d'Ënnerstëtzung z'erméiglechen.",
       "bufferStart": {
         "above": "esoubal d'Batterie iwwer {soc} ass",
@@ -64,6 +64,7 @@
   },
   "batterySettings": {
     "gridChargeTab": "Vum Netz oplueden",
+    "gridDischargeTab": "Netzentladung",
     "modalTitle": "Hausbatterie",
     "noBattery": "Keng Batterien konfiguréiert.",
     "usageTab": "Batterieverbrauch"
@@ -167,6 +168,15 @@
       "label": "Wärung",
       "title": "Wärung"
     },
+    "curtailer": {
+      "description": "Apparat, deen op Ufro vum Netzbetreiber (§ 9 EEG) d'Aspeisung limitéiert. Vill Solarinvertere ënnerstëtzen dëst direkt iwwer hir Solarmeter-Konfiguratioun. Eng separat Konfiguratioun ass nëmme fir e puer Hiersteller oder Multi-Inverter-Systemer néideg.",
+      "generic": "Generesch Integratiounen",
+      "specific": "Spezifesch Integratiounen",
+      "template": "Hiersteller",
+      "title": "Limitatioun",
+      "titleAdd": "Aspeisebegrenzung derbäi fügen",
+      "titleEdit": "Aspeisebegrenzung beaarbechten"
+    },
     "deviceValue": {
       "activeClients": "Aktiv Clienten",
       "amount": "Unzahl",
@@ -180,7 +190,7 @@
       "chargeStatusC": "luet op",
       "chargeStatusE": "keng Leeschtung",
       "chargeStatusF": "Feeler",
-      "chargedEnergy": "Opgelueden",
+      "chargedEnergy": "Opgelueden (Sessioun)",
       "co2": "Netz CO₂",
       "configured": "Konfiguréiert",
       "connected": "Verbonnen",
@@ -191,7 +201,7 @@
       "currentRange": "Stroum",
       "curtailLimit": "Begrenzung fir anzespeisen",
       "curtailable": "Ofregelbar",
-      "curtailed": "Einspeisung limitéiert",
+      "curtailed": "Aspeisungs-Limitt",
       "detected": "Erkannt",
       "dimLimit": "Benotzungslimit",
       "dimmed": "Verbrauch limitéiert",
@@ -229,6 +239,31 @@
       "temp": "Temperatur",
       "topic": "Sujet",
       "url": "URL",
+      "usage": {
+        "aux": {
+          "energy": "Verbraucht",
+          "returnEnergy": "Produzéiert"
+        },
+        "battery": {
+          "energy": "Entlueden",
+          "returnEnergy": "Gelueden"
+        },
+        "charge": {
+          "energy": "Gelueden",
+          "returnEnergy": "Entlueden"
+        },
+        "consumer": {
+          "energy": "Verbraucht",
+          "returnEnergy": "Productioun"
+        },
+        "grid": {
+          "energy": "Importéiert",
+          "returnEnergy": "Exportéiert"
+        },
+        "pv": {
+          "energy": "Produzéiert"
+        }
+      },
       "vehicleLimitSoc": "Luedlimit",
       "yes": "jo"
     },
@@ -299,17 +334,22 @@
       "change": "Änneren",
       "clear": "Läschen",
       "close": "Zoumaachen",
+      "confirmDisable": "Dëst Gerät deaktivéieren? Et gëtt nom nächsten Neistart ignoréiert.",
+      "confirmEnable": "Dëst Gerät erëm aktivéieren?",
       "confirmSave": "Et ginn net gespäichert Ännerungen. Elo späicheren?",
       "copied": "Kopéiert!",
       "copy": "Kopéieren",
       "customHelp": "Erstell ee benotzerdefinéiert Gerät mam evcc-Plugin-System.",
       "customOption": "Benotzerdefinéiert Gerät",
       "delete": "Läschen",
+      "disable": "Desaktivéieren",
+      "disabled": "desaktivéiert",
       "dismiss": "Ignoréieren",
       "docsLink": "D'Dokumentatioun kucken.",
       "dragHandle": "Verréckelen",
       "dragItem": "Verréckelbar: {title}",
       "dragList": "Sortéirbar Lëscht",
+      "enable": "Aktivéieren",
       "error": "Feeler",
       "experimental": "Experimentell",
       "forceSave": "Trotzdem späicheren",
@@ -317,6 +357,7 @@
       "hideAdvancedSettings": "Fortgeschratten Astellunge verstoppen",
       "invalidFileSelected": "Ongülteg Datei ausgewielt",
       "legacy": "vereelzt",
+      "moreInfo": "Méi Infos:",
       "noFileSelected": "Keng Datei ausgewielt.",
       "off": "aus",
       "on": "un",
@@ -420,6 +461,10 @@
         "charging": "Wallbox gespäichert. Opluedpunkt gëtt erstellt …",
         "heating": "Heizungsgerät gespeächert. Heizung gëtt erstellt …"
       },
+      "currentRangeHelp": {
+        "charging": "Typesch: 6-16 A fir 11 kW, 6-32 A fir 22 kW Ladegeräter (3-Phasen).",
+        "heating": "Et hänkt vun der nennlecher Leeschtung vum Heizapparat of (kuckt d'Dateblat)."
+      },
       "defaultModeHelp": {
         "charging": "Luedmodus beim Uschléisse vum Gefier.",
         "heating": "Ass beim Systemstart agestallt."
@@ -469,6 +514,8 @@
       "solarBehaviorLabel": "PV-Iwwerschoss",
       "solarModeCustom": "personnaliséiert",
       "solarModeMaximum": "nëmme Sonn",
+      "solarShareNote": "De Solarundeel-slider an de Benotzerastellungen ass deaktivéiert, esoulaang Wattschwellen agestallt sinn. {0} an späichert fir en z'aktivéieren.",
+      "solarShareReset": "Schwellen ewechhuelen",
       "temperatureRangeHelp": "Beräich fir d'Temperatur deen ugewise gëtt. Beaflosst net d'Steierung.",
       "temperatureRangeTitle": "Temperaturberäich",
       "thresholdDisableDelayLabel": "Verzögerung fir d'Ausschalten",
@@ -506,6 +553,7 @@
     "main": {
       "addAdditional": "Zousätzlechen Zieler derbäi fügen",
       "addConsumer": "Verbraucher derbäisetzen",
+      "addCurtailer": "Aspeisebegrenzung derbäi fügen",
       "addGrid": "Netzzieler derbäi fügen",
       "addLoadpoint": "Opluedpunkt oder Heizung derbäi fügen",
       "addPvBattery": "PV oder Batterie derbäi setzen",
@@ -606,6 +654,7 @@
         "aux": "Intelligente Verbraucher derbäi fügen",
         "battery": "Hausbatterie derbäi fügen",
         "consumer": "Reguläre Verbraucher derbäisetzen",
+        "grid": "Netzzieler derbäi fügen",
         "pv": "Sonnen-Zieler derbäi fügen"
       },
       "save": "Späicheren",
@@ -796,6 +845,8 @@
       "noClients": "Nach keng Clienten. Nach ka sech kee verbannen.",
       "password": "Passwuert",
       "passwordOnce": "Dëst Passwuert gëtt nëmmen eemol ugewisen. Scannt de QR-Code oder kopéiert en elo. E gëtt net nach eng Kéier ugewisen.",
+      "privacy": "Mat der Aktivatioun vun dëser Funktioun, akzeptéiers du eis {0}.",
+      "privacyLink": "Dateschutzerklärung",
       "qrInstall": "Installéiert d'evcc-App fir {ios} oder {android}.",
       "qrScan": "Scannt de Code mat der Kamera vun ärem Smartphone, fir Iech ze verbannen. Klickt drop, wann Dir schonns Äre Smartphone benotzt.",
       "removeClient": "Client ewechhuelen",
@@ -810,7 +861,7 @@
       "grid": "Netzuschloss",
       "integrations": "Integratiounen",
       "loadpoints": "Opluedpunkte & Heizungsgeräter",
-      "meter": "PV & Batterie",
+      "meter": "Solar & Batterie",
       "services": "Servicer",
       "system": "System",
       "vehicles": "Gefierer"
@@ -872,6 +923,8 @@
           "confirmationButton": "Zerécksetzen & Neistart",
           "confirmationText": "Dëst läscht Är ausgewielten Donnéeën permanent. Vergewëssert Iech datt Dir als éischt ee Backup erofgelueden hutt.",
           "description": "Hues du Problemer mat der Konfiguratioun a wëlls nach eng Kéier ufänken? Läsch all Daten a fänk nach eng Kéier un.",
+          "remote": "Fernzougang",
+          "remoteDescription": "Läscht d'Konfiguratioun an Zougangsdaten.",
           "sessions": "Luedvirgäng",
           "sessionsDescription": "Löscht de Verlaf vun denge Luedvirgäng.",
           "settings": "Konfiguratioun & Astellungen",
@@ -1068,7 +1121,7 @@
       "optInSponsorship": "Sponsoring erfuerderlech."
     },
     "version": {
-      "availableLong": "nei Versioun verfügbar",
+      "availableLong": "Upate verfügbar",
       "community": "evcc Communautéit",
       "labelEmail": "E-Mail",
       "labelPhone": "Telefon",
@@ -1139,9 +1192,12 @@
     }
   },
   "general": {
+    "back": "Zeréck",
     "download": "Eroflueden",
+    "error": "Feeler",
     "none": "keng",
-    "note": "Bemierkung:"
+    "note": "Bemierkung:",
+    "warning": "Warnung"
   },
   "header": {
     "about": "Iwwer",
@@ -1176,6 +1232,9 @@
   },
   "issue": {
     "additional": {
+      "copied": "Kopéiert!",
+      "copy": "Kopéieren",
+      "copySelected": "Auswal kopéieren",
       "description": "Füügt d'Konfiguratioun an d'Logbicher derbäi, fir datt mir de Problem séier reproduzéiere kënnen. Mir encouragéieren, esou vill wéi méiglech ze deelen. \"State\" ass normalerweis net néideg.",
       "include": "abezéien",
       "lines": "Zeilen",
@@ -1256,6 +1315,15 @@
     "title": "Authentifizéierung"
   },
   "main": {
+    "alwaysCharge": {
+      "description": "keng Ënnerbriechungen",
+      "label": "Dauerhaft lueden",
+      "labelHeating": "Dauerhaft heizen",
+      "minCurrent": "min. {current}",
+      "once": "bis zum Enn vun der Sessioun",
+      "onceTip": "Nëmme fir dës Sessioun",
+      "permanent": "bleift permanent un"
+    },
     "chargingPlan": {
       "active": "Aktiv",
       "addRepeatingPlan": "Widderhuelte Planifikatioun derbäi fügen",
@@ -1272,15 +1340,18 @@
         "continuous": "kontinuéierlech",
         "continuousCo2Description": "Wielt déi propperest onënnerbrach Serie vu Slots.",
         "continuousPriceDescription": "Wielt déi bëllegst onënnerbrach Serie vu Slots aus.",
+        "disabledDescription": "Erfuerdert en dynameschen Tarif oder eng CO₂-Prognos.",
         "label": "Optimisatioun"
       },
       "planNumber": "Planifkatioun {number}",
       "precondition": {
         "description": "Verleeë e Deel vum Opluede direkt virum Depart: waarm Batterie, manner Zäit op engem héijen Opluede-Niveau.",
+        "disabledDescription": "D'Opluede fënnt bis direkt virum Depart statt.",
         "label": "Verspéit Lueden",
         "optionAll": "Alles",
         "optionNo": "Nee",
-        "summary": "{precondition} virdrun"
+        "summary": "{precondition} virdrun",
+        "summaryAll": "direkt virum Depart"
       },
       "remove": "Ewechhuelen",
       "repeating": "widderhuelend",
@@ -1375,6 +1446,7 @@
       "finished": "Fäerdeg um",
       "last24hEnergy": "Lescht 24h",
       "last7dEnergy": "Lescht 7 Deeg",
+      "phasesMismatch": "Méi Phasen aktiv wéi konfiguréiert. Iwwerpréift d'Phasekonfiguratioun.",
       "power": "Leeschtung",
       "price": "Käschten",
       "remaining": "Reschtzäit",
@@ -1389,7 +1461,7 @@
         "descriptionDisabled": "Wielt eng Limitt, fir et ze erlabe séier vun der Hausbatterie opzelueden.",
         "disabled": "Deaktivéiert",
         "label": "Batterie Boost",
-        "mode": "Nëmmen am PV- a Min+PV-Modus verfügbar.",
+        "mode": "Nëmmen am Smart-Modus verfügbar.",
         "once": "Boost ass dir dës Luedsessioun aktivéiert.",
         "stateActive": "Batterieboost aktiv",
         "stateBelowLimit": "Batterie ze niddereg fir de Boost",
@@ -1407,7 +1479,7 @@
         "label": "Min. Stroum"
       },
       "minTemp": {
-        "description": "Ënner {0} ginn och d'Batterie- an d'Netzstroum am Solarmodus benotzt, fir dës Temperatur z'erhalen.",
+        "description": "Ënner {0} ginn och d'Batterie- an d'Netzstroum am Smart-Modus benotzt, fir dës Temperatur z'erhalen.",
         "label": "Min. Temperatur"
       },
       "phasesConfigured": {
@@ -1421,13 +1493,33 @@
       },
       "smartCostCheap": "Bëlleg vum Reseau oplueden",
       "smartCostClean": "Grengt Luede vun Netz",
+      "solar": "Solariwwerschoss",
+      "solarShare": {
+        "charging": {
+          "description": "Mindestens {share} vun der minimaler Opluede-Leeschtung muss aus der Sonn kommen.",
+          "descriptionFull": "D'Opluede fänkt un, esoubal den Iwwerschoss déi minimal Luedeffizienz ofdeckt.",
+          "descriptionZero": "D'Opluede fänkt un, esoubal e gewëssenen Iwwerschoss disponibel ass."
+        },
+        "heating": {
+          "description": "Mindestens {share} vun der minimaler Heizleeschtung muss aus der Sonn kommen.",
+          "descriptionFull": "D'Heizung start, esoubal den Iwwerschoss déi minimal Heizleeschtung deckt.",
+          "descriptionZero": "D'Heizung start, esoubal e bëssen Iwwerschoss disponibel ass."
+        },
+        "label": "Sonnenundeel",
+        "thresholdsHint": "Leeschtungsbaséiert Opluedschwelle goufe konfiguréiert. Huel se ewech, fir dëse Controller ze benotzen.",
+        "thresholdsHintYaml": "Leeschtungsbaséiert Opluedschwelle goufe konfiguréiert. Huelt d'On-/Off-Schwelle fir dësen Opluedpunkt aus ärer evcc.yaml-Datei, fir dëse Controller ze benotzen.",
+        "thresholdsLink": "Konfiguratioun änneren"
+      },
       "title": "Astellungen {0}",
       "vehicle": "Gefier"
     },
     "mode": {
+      "boost": "Boost",
       "minpv": "Min+PV",
+      "normal": "Normal",
       "now": "Schnell",
       "off": "Aus",
+      "on": "Un",
       "pv": "PV",
       "smart": "Clever"
     },
@@ -1448,6 +1540,7 @@
       "nextPlan": "Nächst Planifikatioun",
       "notReachableInTime": "Zilzäit gëtt {overrun} spéider erreecht.",
       "onlyInPvMode": "Luedplanifikatioun ass nëmmen am PV-Modus aktiv.",
+      "onlyInSmartMode": "Den Opluedplang funktionéiert nëmmen am Smart-Modus.",
       "planDuration": "Dauer vum Oplueden",
       "planPeriodLabel": "Zäitraum",
       "planPeriodValue": "{start} bis {end}",
@@ -1495,7 +1588,7 @@
     "vehicleSettings": {
       "connectedTo": "verbonne mat {0}",
       "description": "Dës Virastellungen ginn ugewannt, wann d'Gefier sech mat enger Opluedstatioun verbënnt.",
-      "editHint": "Füügt Gefierer an {0} derbäi oder ännert se.",
+      "editHint": "Gefierer kënnen an {0} geännert ginn.",
       "keepAsIs": "Loosst et wéi et ass",
       "learnMore": "Méi gewuer ginn.",
       "limitSoc": "Standardlimitt",
@@ -1677,6 +1770,13 @@
     "vehicle": "Gefier"
   },
   "settings": {
+    "dateFormat": {
+      "auto": "Auto",
+      "dmy": "DD/MM/JJJJ",
+      "label": "Datumsformat",
+      "mdy": "MM/DD/JJJJ",
+      "ymd": "JJJJ-MM-DD"
+    },
     "deviceInfo": "Astellungen, déi Dir an dësem Dialog maacht, betreffen nëmmen dësen Apparat.",
     "fullscreen": {
       "enter": "Vollbild starten",
@@ -1692,6 +1792,7 @@
       "label": "Sprooch"
     },
     "loadpoints": {
+      "disabledDevice": "deaktivéiert",
       "help": "Ännert d'Reiefolleg an d'Visibilitéit fir d'UI.",
       "hide": "{title} ausblenden",
       "label": "Luedpunkte",
@@ -1735,7 +1836,7 @@
     "co2Label": "CO₂-Emissioun",
     "co2Limit": "CO₂-Grenz",
     "enable": "Grenz aktivéieren",
-    "loadpointDescription": "Aktivéiert iwwerganksméisseg Schnelloplueden am PV-Modus.",
+    "loadpointDescription": "Aktivéiert iwwerganksméisseg Schnelloplueden am Smart-Modus.",
     "modalTitle": "Smart Opluede vum Netz",
     "none": "keng",
     "priceLabel": "Energiepräis",
@@ -1745,7 +1846,8 @@
     "saved": "Gepäichert."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Paus-Zäit",
+    "activeHoursLabel": "Aktiv-Zäit",
+    "batteryDescription": "Entluet d'Batterie an d'Netz, wann den Aspeisetariff héich ass.",
     "description": "Ënnerbrécht d'Luede bei héije Präisser, fir der profitabler Netzaspeisung Prioritéit ze ginn.",
     "priceLabel": "Aspeisetarif",
     "priceLimit": "Aspeisegrenz",

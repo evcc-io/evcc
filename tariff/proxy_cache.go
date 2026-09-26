@@ -126,6 +126,11 @@ func (p *cachingProxy) Rates() (api.Rates, error) {
 		return nil, err
 	}
 
+	// a fresh tariff starts with its first fetch, keep the cached slots leading up to it
+	if p.hasCache() {
+		res = mergeAfter(p.cached.Rates, res, time.Now().Truncate(SlotDuration))
+	}
+
 	if p.dynamicTariff() {
 		err = p.cachePut(t.Type(), res)
 	}

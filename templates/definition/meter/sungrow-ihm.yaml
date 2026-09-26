@@ -114,7 +114,7 @@ render: |
         - case: 100 # uncurtailed
           set:
             source: const
-            value: 0 # Disable feed-in limitation
+            value: 85 # 0x55: Disable feed-in limitation
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
@@ -124,7 +124,7 @@ render: |
                 decode: uint16
       default:
         source: const
-        value: 1 # Enable feed-in limitation
+        value: 170 # 0xAA: Enable feed-in limitation
         set:
           source: modbus
           {{- include "modbus" . | indent 8 }}
@@ -141,7 +141,7 @@ render: |
         source: modbus
         {{- include "modbus" . | indent 6 }}
         register:
-          address: 8027 # Register 8028 (Feed-in limitation, 1=on)
+          address: 8027 # Register 8028 (Feed-in limitation, 0x55=off, 0xAA=on)
           type: holding
           decode: uint16
     - name: ratio
@@ -156,7 +156,7 @@ render: |
         scale: 0.1
     script: |
       percent := 100
-      if ena != 0 {
+      if ena == 170 {
         percent = ratio
       }
       percent
