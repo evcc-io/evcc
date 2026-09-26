@@ -4,20 +4,41 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"net"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
 
+	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
+	"github.com/evcc-io/evcc/charger/openwb"
+	"github.com/evcc-io/evcc/plugin/mqtt"
+	"github.com/evcc-io/evcc/server/network"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/modbus"
 )
 
 // OpenWB20 charger implementation
 type OpenWB20 struct {
 	implement.Caps
-	conn    *modbus.Connection
-	enabled bool
-	curr    uint16
-	base    uint16
+	conn        *modbus.Connection
+	enabled     bool
+	curr        uint16
+	base        uint16
+	display     *openWB20DisplayConfig
+	displayOnce sync.Once
+}
+
+type openWB20DisplayConfig struct {
+	ctx context.Context
+	log *util.Logger
+	mqtt.Config
+	chargerURI string
+	evccURI    string
+	query      string
 }
 
 const (
@@ -49,9 +70,13 @@ func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charg
 		Connector          uint16
 		Phases1p3p         bool
 		Identify           bool
+		Display            bool
+		Query              string
+		mqtt.Config        `mapstructure:",squash"`
 		modbus.TcpSettings `mapstructure:",squash"`
 	}{
 		Connector: 1,
+		Display:   true,
 		TcpSettings: modbus.TcpSettings{
 			ID: 1,
 		},
@@ -74,7 +99,97 @@ func NewOpenWB20FromConfig(ctx context.Context, other map[string]any) (api.Charg
 		implement.Has(wb, implement.Identifier(wb.identify))
 	}
 
+	log := util.NewLogger("openwb-2.0")
+	if !cc.Display {
+		log.DEBUG.Println("display setup disabled")
+	} else if network.Config().Port == 0 {
+		log.DEBUG.Println("display setup skipped: network not initialized")
+	} else {
+		wb.display = &openWB20DisplayConfig{
+			ctx:        ctx,
+			log:        log,
+			Config:     cc.Config,
+			chargerURI: cc.URI,
+			evccURI:    network.Config().InternalURL(),
+			query:      cc.Query,
+		}
+	}
+
 	return wb, nil
+}
+
+// ConfigComplete starts display configuration after chargers and loadpoints are registered.
+func (wb *OpenWB20) ConfigComplete() {
+	wb.displayOnce.Do(func() {
+		if wb.display == nil {
+			return
+		}
+
+		go wb.configureDisplay()
+	})
+}
+
+func (wb *OpenWB20) configureDisplay() {
+	cc := wb.display
+	ctx, cancel := context.WithTimeout(cc.ctx, 30*time.Second)
+	defer cancel()
+
+	if cc.Broker == "" {
+		host, _, err := net.SplitHostPort(util.DefaultPort(cc.chargerURI, 1502))
+		if err != nil {
+			cc.log.DEBUG.Printf("display setup skipped: invalid broker address: %v", err)
+			return
+		}
+		cc.Broker = net.JoinHostPort(host, "1883")
+	}
+	if ctx.Err() != nil {
+		return
+	}
+	client, err := mqtt.NewClient(cc.log, cc.Broker, cc.User, cc.Password, mqtt.ClientID(), 1, cc.Insecure, cc.CaCert, cc.ClientCert, cc.ClientKey, func(options *paho.ClientOptions) {
+		options.SetAutoReconnect(false)
+		options.SetOnConnectHandler(nil)
+		options.SetConnectionLostHandler(func(_ paho.Client, err error) {
+			cc.log.DEBUG.Printf("display setup: MQTT connection lost: %v", err)
+			cancel()
+		})
+	})
+	if err == nil {
+		disconnect := sync.OnceFunc(client.Disconnect)
+		stop := context.AfterFunc(ctx, disconnect)
+		defer stop()
+		defer disconnect()
+		query := strings.TrimLeft(cc.query, "/?#")
+		if query == "" {
+			query = lookupOpenWB20LoadpointQuery(wb)
+		}
+		err = openwb.ConfigureDisplay(ctx, cc.log, client, cc.evccURI, query)
+	}
+	if err != nil && ctx.Err() != context.Canceled {
+		cc.log.DEBUG.Printf("display setup: %v", err)
+	}
+}
+
+// lookupOpenWB20LoadpointQuery returns a "lp=n" filter for the loadpoint that uses wb as its
+// charger, or an empty string if none is configured.
+func lookupOpenWB20LoadpointQuery(wb *OpenWB20) string {
+	var name string
+	for _, dev := range config.Chargers().Devices() {
+		if dev.Instance() == wb {
+			name = dev.Config().Name
+			break
+		}
+	}
+	if name == "" {
+		return ""
+	}
+
+	for idx, dev := range config.Loadpoints().Devices() {
+		if lp := dev.Instance(); lp != nil && lp.GetChargerRef() == name {
+			return "lp=" + strconv.Itoa(idx+1)
+		}
+	}
+
+	return ""
 }
 
 // NewOpenWB20 creates OpenWB20 charger
