@@ -1,5 +1,16 @@
 import { describe, expect, test } from "vite-plus/test";
-import { extractDomain } from "./extractDomain";
+import { extractDomain, extractHostname } from "./extractDomain";
+
+describe("extractHostname", () => {
+  test("returns the full hostname, keeping subdomains", () => {
+    expect(extractHostname("https://electrify.hesotec.de/")).toBe("electrify.hesotec.de");
+    expect(extractHostname("https://www.example.com/path")).toBe("www.example.com");
+  });
+
+  test("strips ipv6 brackets", () => {
+    expect(extractHostname("https://[2001:db8::1]/path")).toBe("2001:db8::1");
+  });
+});
 
 describe("extractDomain", () => {
   test("extracts domain from URL", () => {
