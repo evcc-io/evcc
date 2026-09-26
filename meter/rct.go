@@ -267,7 +267,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 				eg.Go(func() error {
 					return m.conn.Write(rct.PowerMngSocMax, floatVal(batterySocLimits.MinSoc/100))
 				})
-			
+
 			case api.BatteryDischarge:
 				eg.Go(func() error {
 					return m.conn.Write(rct.PowerMngBatteryPowerExternW, floatVal(batteryPowerLimits.MaxDischargePower))
