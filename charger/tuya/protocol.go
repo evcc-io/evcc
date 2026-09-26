@@ -79,6 +79,15 @@ func (c *codec) versionHeader() []byte {
 	return append([]byte(c.version), make([]byte, 12)...)
 }
 
+// stripVersionHeader removes the 15 byte version header. Only the version is checked,
+// since devices may send non-zero data in the remaining header bytes.
+func (c *codec) stripVersionHeader(b []byte) []byte {
+	if len(b) >= 15 && bytes.HasPrefix(b, []byte(c.version)) {
+		return b[15:]
+	}
+	return b
+}
+
 func (c *codec) encode(seq, cmd uint32, payload []byte) ([]byte, error) {
 	header := !slices.Contains(noVersionHeader, cmd)
 
@@ -136,7 +145,7 @@ func (c *codec) decode(frame []byte) (message, error) {
 
 	switch c.version {
 	case "3.3":
-		msg.payload = bytes.TrimPrefix(msg.payload, c.versionHeader())
+		msg.payload = c.stripVersionHeader(msg.payload)
 		if msg.payload, err = ecbDecrypt(c.localKey, msg.payload); err != nil {
 			return msg, err
 		}
@@ -147,7 +156,7 @@ func (c *codec) decode(frame []byte) (message, error) {
 	}
 
 	if c.version != "3.3" {
-		msg.payload = bytes.TrimPrefix(msg.payload, c.versionHeader())
+		msg.payload = c.stripVersionHeader(msg.payload)
 	}
 
 	return msg, nil

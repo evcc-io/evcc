@@ -113,3 +113,18 @@ func TestReadFrameTooLarge(t *testing.T) {
 		assert.ErrorContains(t, err, "frame too large", frame)
 	}
 }
+
+func TestDecodeVersionHeader(t *testing.T) {
+	c, err := newCodec("3.5", testKey)
+	require.NoError(t, err)
+
+	// device specific data in the version header
+	header := append([]byte("3.5"), 0, 0, 0, 0, 0, 0, 0, 0x2a, 0, 0, 0, 0x01)
+
+	frame, err := pack6699(testKey, 1, cmdStatus, append(header, []byte(`{"dps":{"101":200}}`)...))
+	require.NoError(t, err)
+
+	msg, err := c.decode(frame)
+	require.NoError(t, err)
+	assert.Equal(t, `{"dps":{"101":200}}`, string(msg.payload))
+}
