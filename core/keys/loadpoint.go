@@ -101,6 +101,7 @@ const (
 
 	// repeating plans
 	RepeatingPlans = "repeatingPlans" // key to access all repeating plans in db
+	PausedUntil    = "pausedUntil"    // repeating plans paused until timestamp
 
 	// remote control
 	RemoteDisabled       = "remoteDisabled"       // remote disabled
