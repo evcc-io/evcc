@@ -1,0 +1,39 @@
+template: tuya-depow
+products:
+  - brand: dé
+    description:
+      generic: Mobile Wallbox
+  - brand: dé
+    description:
+      generic: Portable EV Charger
+  - brand: dé
+    description:
+      generic: Wallbox 7 kW / 11 kW / 22 kW
+capabilities: ["meter", "dim"]
+requirements:
+  evcc: ["sponsorship"]
+  description:
+    de: |
+      Lokale Verbindung über das Tuya-Protokoll. Unterstützt werden Geräte mit der Tuya-Produkt-ID `gxrtu5vljdthtd3g` oder `witok7vhhjohtr02` (App: „dé EV Charger“).
+      Device ID und Local Key müssen einmalig ermittelt werden, z. B. mit `tinytuya wizard`, das dafür ein Konto auf der Tuya-IoT-Plattform benötigt. Im Betrieb ist kein Cloud-Zugang nötig. Das Gerät erlaubt nur eine lokale Verbindung gleichzeitig, andere lokale Integrationen (z. B. LocalTuya, Tuya Local) müssen deaktiviert werden.
+      Der Ladevorgang wird vom Gerät gestartet, dazu in der App „Plug & Charge“ aktivieren oder per NFC-Karte freigeben. Ein Zeitplan in der App muss deaktiviert sein, da er den Ladevorgang außerhalb seines Zeitfensters blockiert.
+    en: |
+      Local connection via the Tuya protocol. Supports devices with Tuya product id `gxrtu5vljdthtd3g` or `witok7vhhjohtr02` (app: "dé EV Charger").
+      Device ID and local key must be retrieved once, e.g. using `tinytuya wizard`, which requires an account on the Tuya IoT platform. No cloud access is needed during operation. The device accepts only one local connection at a time, other local integrations (e.g. LocalTuya, Tuya Local) must be disabled.
+      Sessions are started by the device, enable "plug & charge" in the app or authorize using an NFC card. Schedules in the app must be disabled, since they block charging outside their time window.
+params:
+  - name: host
+  - name: id
+    required: true
+    description:
+      generic: Device ID
+  - name: localkey
+    required: true
+    mask: true
+    description:
+      generic: Local Key
+render: |
+  type: tuya-depow
+  host: {{ .host }}
+  id: {{ .id }}
+  localkey: {{ .localkey }}

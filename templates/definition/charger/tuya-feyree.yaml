@@ -1,0 +1,51 @@
+template: tuya-feyree
+products:
+  - brand: Feyree
+    description:
+      generic: Wallbox / Portable EV Charger
+  - brand: Absina
+    description:
+      generic: Wallbox
+  - brand: Goodcell
+    description:
+      generic: EV Charger
+  - brand: Kolanky
+    description:
+      generic: EV Charger
+  - brand: iSIGMA
+    description:
+      generic: EV Charger
+  - brand: EcoPower
+    description:
+      generic: GEN2 Wallbox
+  - brand: dé
+    description:
+      generic: Wallbox 22.2 kW 32 A
+capabilities: ["meter", "dim"]
+requirements:
+  evcc: ["sponsorship"]
+  description:
+    de: |
+      Lokale Verbindung über das Tuya-Protokoll für Ladegeräte mit der Tuya-Datenpunktbelegung von Feyree und Kolanky (z. B. Tuya-Produkt-ID `tj9l3ghsjnbdjom6`).
+      Device ID und Local Key müssen einmalig ermittelt werden, z. B. mit `tinytuya wizard`, das dafür ein Konto auf der Tuya-IoT-Plattform benötigt. Im Betrieb ist kein Cloud-Zugang nötig. Das Gerät erlaubt nur eine lokale Verbindung gleichzeitig, andere lokale Integrationen (z. B. LocalTuya, Tuya Local) müssen deaktiviert werden.
+      Der Ladevorgang wird vom Gerät gestartet, beim Einstecken oder per RFID-Karte. Verzögerungs- und Timerfunktionen der App müssen deaktiviert sein.
+    en: |
+      Local connection via the Tuya protocol for chargers using the Tuya data point layout of Feyree and Kolanky (e.g. Tuya product id `tj9l3ghsjnbdjom6`).
+      Device ID and local key must be retrieved once, e.g. using `tinytuya wizard`, which requires an account on the Tuya IoT platform. No cloud access is needed during operation. The device accepts only one local connection at a time, other local integrations (e.g. LocalTuya, Tuya Local) must be disabled.
+      Sessions are started by the device, when plugged in or using an RFID card. Delay and timer functions in the app must be disabled.
+params:
+  - name: host
+  - name: id
+    required: true
+    description:
+      generic: Device ID
+  - name: localkey
+    required: true
+    mask: true
+    description:
+      generic: Local Key
+render: |
+  type: tuya-feyree
+  host: {{ .host }}
+  id: {{ .id }}
+  localkey: {{ .localkey }}
