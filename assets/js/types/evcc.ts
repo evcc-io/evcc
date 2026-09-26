@@ -538,6 +538,12 @@ export interface LoadpointUi {
   minTemp: number;
   /** Upper bound of the temperature scale for heating devices, in degrees. */
   maxTemp: number;
+  /**
+   * Whether to show the temperature limit slider and dropdown for SG-Ready
+   * heat pumps. Off by default because the controls are confusing for devices
+   * that manage their own setpoints autonomously.
+   */
+  enableTempLimit?: boolean;
 }
 
 /** Type of the smart charging limit. */
