@@ -85,6 +85,46 @@ func TestApplyBatteryMode(t *testing.T) {
 	}
 }
 
+// TestApplyBatteryModeContinuesAfterDeviceError guards that a mode-set error on
+// one battery does not skip the mode update for batteries later in the list
+// (issue #33916: a single flaky device left every subsequent device stuck).
+func TestApplyBatteryModeContinuesAfterDeviceError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	batConFailing := batteryControllerMock(ctrl)
+	batFailing := &struct {
+		api.Meter
+		api.BatteryController
+	}{
+		BatteryController: batConFailing,
+	}
+
+	batConOk := batteryControllerMock(ctrl)
+	batOk := &struct {
+		api.Meter
+		api.BatteryController
+	}{
+		BatteryController: batConOk,
+	}
+
+	site := &Site{
+		log: util.NewLogger("foo"),
+		batteryMeters: []config.Device[api.Meter]{
+			config.NewStaticDevice(config.Named{Name: "failing"}, api.Meter(batFailing)),
+			config.NewStaticDevice(config.Named{Name: "ok"}, api.Meter(batOk)),
+		},
+		batteryMode: api.BatteryNormal,
+	}
+
+	batConFailing.EXPECT().SetBatteryMode(api.BatteryHold).Return(errors.New("modbus timeout"))
+	batConOk.EXPECT().SetBatteryMode(api.BatteryHold).Times(1)
+
+	err := site.applyBatteryMode(api.BatteryHold)
+	assert.Error(t, err)
+
+	ctrl.Finish()
+}
+
 // battery controller supporting the modes a soc limit can implement
 func batteryControllerMock(ctrl *gomock.Controller) *api.MockBatteryController {
 	batCon := api.NewMockBatteryController(ctrl)
