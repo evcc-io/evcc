@@ -162,6 +162,7 @@ type Loadpoint struct {
 	planEnergyOffset float64          // already charged energy in kWh when plan was set
 	planSlotEnd      time.Time        // current plan slot end time
 	planActive       bool             // charge plan exists and has a currently active slot
+	planPower        float64          // power share of the active plan slot, 0 = unlimited
 	planOverrunSent  bool             // notification has been sent already
 	planLocked       PlanLock         // locked plan
 
@@ -1477,7 +1478,14 @@ func (lp *Loadpoint) fastCharging() error {
 		return err
 	}
 
-	return lp.setLimit(lp.effectiveMaxCurrent())
+	current := lp.effectiveMaxCurrent()
+
+	// a plan slot shared with other loadpoints on the circuit caps the current at the planned share
+	if lp.planActive && lp.planPower > 0 {
+		current = max(lp.effectiveMinCurrent(), min(current, lp.planPower/(Voltage*float64(lp.ActivePhases()))))
+	}
+
+	return lp.setLimit(current)
 }
 
 // fastChargingPhases scales to 3p if load management allows and reports whether
@@ -2421,6 +2429,10 @@ NO_DIM:
 
 	// minimum or target charging
 	case minSocNotReached || plannerActive:
+		// min soc charging is not bound to the plan's share of the circuit
+		if minSocNotReached {
+			lp.planPower = 0
+		}
 		err = lp.fastCharging()
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 

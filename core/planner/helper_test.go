@@ -147,6 +147,6 @@ func BenchmarkOptimalPlan(b *testing.B) {
 	}), time.Now(), tariff.SlotDuration)
 
 	for b.Loop() {
-		optimalPlan(rr, 4*tariff.SlotDuration, rr[len(rr)-1].End)
+		optimalPlan(rr, 4*tariff.SlotDuration, 0, nil)
 	}
 }

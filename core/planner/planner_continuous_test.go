@@ -37,7 +37,7 @@ func TestContinuous_CheapestContiguousSlots(t *testing.T) {
 		tariff: trf,
 	}
 
-	plan := p.Plan(2*time.Hour, 0, now.Add(6*time.Hour), true)
+	plan, _ := p.Plan(2*time.Hour, 0, now.Add(6*time.Hour), true)
 
 	require.Len(t, plan, 2)
 	assert.Equal(t, rates[2].Start, plan[0].Start)
@@ -77,7 +77,7 @@ func TestContinuous_WindowWithPastRates(t *testing.T) {
 	targetTime := now.Add(6 * time.Hour)
 	requiredDuration := 2 * time.Hour
 
-	plan := p.Plan(requiredDuration, 0, targetTime, true)
+	plan, _ := p.Plan(requiredDuration, 0, targetTime, true)
 
 	require.NotEmpty(t, plan)
 	require.Len(t, plan, 2)
@@ -116,7 +116,7 @@ func TestContinuous_WindowAllRatesInPast(t *testing.T) {
 	targetTime := now.Add(3 * time.Hour)
 	requiredDuration := 2 * time.Hour
 
-	plan := p.Plan(requiredDuration, 0, targetTime, true) // continuous mode
+	plan, _ := p.Plan(requiredDuration, 0, targetTime, true) // continuous mode
 
 	// When all rates are in the past and target is in future, expect nil plan
 	assert.Empty(t, plan, "plan should be nil when all rates are in the past")
@@ -157,7 +157,7 @@ func TestContinuous_WindowRatesSpanningPastAndFuture(t *testing.T) {
 	targetTime := now.Add(6 * time.Hour)
 	requiredDuration := 2 * time.Hour
 
-	plan := p.Plan(requiredDuration, 0, targetTime, true) // continuous mode
+	plan, _ := p.Plan(requiredDuration, 0, targetTime, true) // continuous mode
 
 	require.NotEmpty(t, plan)
 	require.Len(t, plan, 2)
@@ -202,7 +202,7 @@ func TestContinuous_WindowRatesStartInFuture(t *testing.T) {
 	targetTime := now.Add(5 * time.Hour)
 	requiredDuration := 2 * time.Hour
 
-	plan := p.Plan(requiredDuration, 0, targetTime, true) // continuous mode
+	plan, _ := p.Plan(requiredDuration, 0, targetTime, true) // continuous mode
 
 	require.NotEmpty(t, plan)
 	require.Len(t, plan, 2)
@@ -246,7 +246,7 @@ func TestContinuous_WindowLateChargingPreference(t *testing.T) {
 	targetTime := now.Add(6 * time.Hour)
 	requiredDuration := 2 * time.Hour
 
-	plan := p.Plan(requiredDuration, 0, targetTime, true) // continuous mode
+	plan, _ := p.Plan(requiredDuration, 0, targetTime, true) // continuous mode
 
 	require.NotEmpty(t, plan)
 	require.Len(t, plan, 2)
@@ -273,10 +273,10 @@ func TestContinuous_TargetAfterKnownPrices(t *testing.T) {
 		tariff: trf,
 	}
 
-	plan := p.Plan(40*time.Minute, 0, clock.Now().Add(2*time.Hour), true) // charge efficiency does not allow to test with 1h
+	plan, _ := p.Plan(40*time.Minute, 0, clock.Now().Add(2*time.Hour), true) // charge efficiency does not allow to test with 1h
 	assert.False(t, !SlotAt(clock.Now(), plan).IsZero(), "should not start if car can be charged completely after known prices ")
 
-	plan = p.Plan(2*time.Hour, 0, clock.Now().Add(2*time.Hour), true)
+	plan, _ = p.Plan(2*time.Hour, 0, clock.Now().Add(2*time.Hour), true)
 	assert.True(t, !SlotAt(clock.Now(), plan).IsZero(), "should start if car can not be charged completely after known prices ")
 }
 
@@ -293,7 +293,7 @@ func TestContinuous_Precondition(t *testing.T) {
 		tariff: trf,
 	}
 
-	plan := p.Plan(tariff.SlotDuration, tariff.SlotDuration, clock.Now().Add(4*tariff.SlotDuration), true)
+	plan, _ := p.Plan(tariff.SlotDuration, tariff.SlotDuration, clock.Now().Add(4*tariff.SlotDuration), true)
 	assert.Equal(t, api.Rates{
 		{
 			Start: clock.Now().Add(3 * tariff.SlotDuration),
@@ -302,7 +302,7 @@ func TestContinuous_Precondition(t *testing.T) {
 		},
 	}, plan, "expected last slot")
 
-	plan = p.Plan(2*tariff.SlotDuration, tariff.SlotDuration, clock.Now().Add(4*tariff.SlotDuration), true)
+	plan, _ = p.Plan(2*tariff.SlotDuration, tariff.SlotDuration, clock.Now().Add(4*tariff.SlotDuration), true)
 	assert.Equal(t, api.Rates{
 		{
 			Start: clock.Now(),
@@ -316,7 +316,7 @@ func TestContinuous_Precondition(t *testing.T) {
 		},
 	}, plan, "expected two slots")
 
-	plan = p.Plan(time.Duration(1.5*float64(tariff.SlotDuration)), tariff.SlotDuration, clock.Now().Add(4*tariff.SlotDuration), true)
+	plan, _ = p.Plan(time.Duration(1.5*float64(tariff.SlotDuration)), tariff.SlotDuration, clock.Now().Add(4*tariff.SlotDuration), true)
 	assert.Equal(t, api.Rates{
 		{
 			Start: clock.Now(),
@@ -330,7 +330,7 @@ func TestContinuous_Precondition(t *testing.T) {
 		},
 	}, plan, "expected trimmed slot at beginning and precondition slot")
 
-	plan = p.Plan(tariff.SlotDuration, 24*time.Hour, clock.Now().Add(time.Hour), true)
+	plan, _ = p.Plan(tariff.SlotDuration, 24*time.Hour, clock.Now().Add(time.Hour), true)
 	assert.Equal(t, api.Rates{
 		{
 			Start: clock.Now().Add(3 * tariff.SlotDuration),
@@ -368,7 +368,7 @@ func TestContinuous_Precondition_NonSlotBoundary(t *testing.T) {
 	precondition := 30 * time.Minute
 	requiredDuration := 1 * time.Hour
 
-	plan := p.Plan(requiredDuration, precondition, targetTime, true)
+	plan, _ := p.Plan(requiredDuration, precondition, targetTime, true)
 
 	// Verify precondition ends exactly at target time
 	require.NotEmpty(t, plan)
@@ -422,7 +422,7 @@ func TestPrecondition_Everything(t *testing.T) {
 	precondition := 7 * 24 * time.Hour                     // "everything" = 7 days
 
 	// Test with continuous=false (cheapest mode - should be ignored)
-	plan := p.Plan(requiredDuration, precondition, targetTime, false)
+	plan, _ := p.Plan(requiredDuration, precondition, targetTime, false)
 
 	require.NotEmpty(t, plan, "plan should not be empty")
 
@@ -443,7 +443,7 @@ func TestPrecondition_Everything(t *testing.T) {
 	assert.Equal(t, 3.0, plan[1].Value, "should have actual rate value from slot 7")
 
 	// Test with continuous=true (should also be ignored when precondition=everything)
-	planContinuous := p.Plan(requiredDuration, precondition, targetTime, true)
+	planContinuous, _ := p.Plan(requiredDuration, precondition, targetTime, true)
 	assert.Equal(t, plan, planContinuous, "continuous flag should be ignored when precondition=everything")
 }
 
@@ -455,7 +455,7 @@ func TestContinuous_ContinuousPlanNoTariff(t *testing.T) {
 		clock: clock,
 	}
 
-	plan := p.Plan(time.Hour, 0, clock.Now(), true)
+	plan, _ := p.Plan(time.Hour, 0, clock.Now(), true)
 
 	// single-slot plan
 	assert.Len(t, plan, 1)
@@ -476,7 +476,7 @@ func TestContinuous_ContinuousPlan(t *testing.T) {
 		tariff: trf,
 	}
 
-	plan := p.Plan(150*time.Minute, 0, clock.Now(), true)
+	plan, _ := p.Plan(150*time.Minute, 0, clock.Now(), true)
 
 	// 3-slot plan
 	assert.Len(t, plan, 3)
@@ -495,7 +495,7 @@ func TestContinuous_ContinuousPlanOutsideRates(t *testing.T) {
 		tariff: trf,
 	}
 
-	plan := p.Plan(30*time.Minute, 0, clock.Now(), true)
+	plan, _ := p.Plan(30*time.Minute, 0, clock.Now(), true)
 
 	// 3-slot plan
 	assert.Len(t, plan, 1)
@@ -532,7 +532,7 @@ func TestContinuous_StartBeforeRates(t *testing.T) {
 	targetTime := now.Add(6 * time.Hour)
 	requiredDuration := time.Hour
 
-	plan := planner.Plan(requiredDuration, 0, targetTime, true) // continuous mode
+	plan, _ := planner.Plan(requiredDuration, 0, targetTime, true) // continuous mode
 
 	require.NotEmpty(t, plan, "plan should not be empty")
 	require.Len(t, plan, 1, "should create single slot with actual price")
@@ -577,7 +577,7 @@ func TestContinuous_StartBeforeRatesInsufficientTime(t *testing.T) {
 	targetTime := now.Add(4 * time.Hour)
 	requiredDuration := 3 * time.Hour // Need 3h but only 2h available after rates start
 
-	plan := planner.Plan(requiredDuration, 0, targetTime, true) // continuous mode
+	plan, _ := planner.Plan(requiredDuration, 0, targetTime, true) // continuous mode
 
 	require.NotEmpty(t, plan, "plan should not be empty")
 
@@ -620,7 +620,7 @@ func TestContinuous_StartBeforeRatesSufficientTime(t *testing.T) {
 	targetTime := now.Add(8 * time.Hour)
 	requiredDuration := 2 * time.Hour
 
-	plan := planner.Plan(requiredDuration, 0, targetTime, true) // continuous mode
+	plan, _ := planner.Plan(requiredDuration, 0, targetTime, true) // continuous mode
 
 	require.NotEmpty(t, plan, "plan should not be empty")
 	require.Len(t, plan, 2, "should find 2-hour continuous window")
@@ -663,7 +663,7 @@ func TestContinuous_ExcessTimeFinishesAtTarget(t *testing.T) {
 	targetTime := now.Add(3*time.Hour + 10*time.Minute)
 	requiredDuration := 2*time.Hour + 5*time.Minute // need 2h5m, have 3h10m available
 
-	plan := planner.Plan(requiredDuration, 0, targetTime, true) // continuous, no precondition
+	plan, _ := planner.Plan(requiredDuration, 0, targetTime, true) // continuous, no precondition
 
 	require.NotEmpty(t, plan)
 
@@ -680,8 +680,8 @@ func TestContinuous_ExcessTimeFinishesAtTarget(t *testing.T) {
 	assert.Less(t, avgCost, 0.12, "plan should use cheaper slots")
 
 	// Target at 03:10 (non-slot boundary - must finish before target)
-	requiredDurationShort := 12 * time.Minute                       // need 12m, have 3h10m available
-	plan = planner.Plan(requiredDurationShort, 0, targetTime, true) // continuous, no precondition
+	requiredDurationShort := 12 * time.Minute                          // need 12m, have 3h10m available
+	plan, _ = planner.Plan(requiredDurationShort, 0, targetTime, true) // continuous, no precondition
 
 	require.NotEmpty(t, plan)
 
@@ -698,8 +698,8 @@ func TestContinuous_ExcessTimeFinishesAtTarget(t *testing.T) {
 	assert.Equal(t, 0.08, avgCostShort, "plan (short) should use cheapest slots (0.08)")
 
 	// Target at 03:10 (non-slot boundary - must finish before target)
-	requiredDurationMedium := 27 * time.Minute                       // need 27m, have 3h10m available
-	plan = planner.Plan(requiredDurationMedium, 0, targetTime, true) // continuous, no precondition
+	requiredDurationMedium := 27 * time.Minute                          // need 27m, have 3h10m available
+	plan, _ = planner.Plan(requiredDurationMedium, 0, targetTime, true) // continuous, no precondition
 
 	require.NotEmpty(t, plan)
 
