@@ -1788,8 +1788,17 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 
 	// with always charge or under special conditions return at least minCurrent
 	if (alwaysCharge || battery) && targetCurrent < minCurrent {
-		lp.log.DEBUG.Printf("pv charge current: min %.3gA > %.3gA (%.0fW @ %dp, battery: %t)", minCurrent, targetCurrent, sitePower, activePhases, battery)
-		return minCurrent
+		floorCurrent := minCurrent
+		if lp.hasPhaseSwitching() && !lp.phaseTimer.IsZero() && activePhases > 1 {
+			// a 3p->1p scale-down is already pending; cap the floor at the
+			// min-current power target on the projected 1p instead of applying
+			// it on the still-active phases, which would spike power until the
+			// switch completes (#34087). Never go below the naturally computed
+			// target current though.
+			floorCurrent = max(targetCurrent, minCurrent/float64(activePhases))
+		}
+		lp.log.DEBUG.Printf("pv charge current: min %.3gA > %.3gA (%.0fW @ %dp, battery: %t)", floorCurrent, targetCurrent, sitePower, activePhases, battery)
+		return floorCurrent
 	}
 
 	lp.log.DEBUG.Printf("pv charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, activePhases)
