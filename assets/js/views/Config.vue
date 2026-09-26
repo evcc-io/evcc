@@ -548,7 +548,10 @@
 				<ShmModal @changed="loadDirty" />
 				<MessagingLegacyModal @changed="loadDirty" />
 				<MessagingModal :messengers="messengers" @changed="loadDirty" />
-				<MessengerModal @changed="messengerChanged" />
+				<MessengerModal
+					@changed="messengerChanged"
+					@disable="({ id, disable }) => handleDisable('messenger', id, disable)"
+				/>
 				<CurtailerModal @changed="curtailerChanged" />
 				<TariffsLegacyModal @changed="loadDirty" />
 				<TariffModal
@@ -1304,6 +1307,7 @@ export default defineComponent({
 				tariff: () => this.tariffChanged({ action: "updated" }),
 				vehicle: () => this.vehicleChanged(),
 				loadpoint: () => this.loadpointChanged(),
+				messenger: () => this.messengerChanged(),
 			};
 			try {
 				if (deviceClass === "loadpoint") {
