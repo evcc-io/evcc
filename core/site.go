@@ -95,6 +95,11 @@ type Site struct {
 	// grid settings
 	gridExportLimit float64 // static grid export power limit in W, 0 = disabled
 
+	// loadpoint priority sub-ordering within a tier (see api.PriorityStrategy), settings only
+	priorityStrategy   api.PriorityStrategy // none, soc, deficit
+	priorityBasis      api.PriorityBasis    // percent, energy
+	priorityHysteresis int                  // deadband in soc-% or kWh per basis, 0 = off
+
 	// forecast settings
 	solarAdjusted bool // adjust solar forecast to real production data
 
@@ -215,7 +220,7 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 	site.coordinator = coordinator.New(log, config.Instances(handler.Devices()))
 	handler.Subscribe(site.updateVehicles)
 
-	site.prioritizer = prioritizer.New(log)
+	site.prioritizer = prioritizer.New(log, site)
 	site.stats = NewStats()
 
 	me, err := metrics.NewCollector(metrics.Home, metrics.Home, metrics.Home)
@@ -398,9 +403,10 @@ func (site *Site) Boot(log *util.Logger, loadpoints []*Loadpoint, tariffs *tarif
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	site := &Site{
-		log:        util.NewLogger("site"),
-		Voltage:    230, // V
-		collectors: make(map[string]*metrics.Collector),
+		log:                util.NewLogger("site"),
+		Voltage:            230, // V
+		priorityHysteresis: 3,
+		collectors:         make(map[string]*metrics.Collector),
 	}
 
 	// the result only depends on completed days, so it cannot change within a day
@@ -478,6 +484,29 @@ func (site *Site) restoreSettings() error {
 	}
 	if v, err := settings.Float(keys.ResidualPower); err == nil {
 		if err := site.SetResidualPower(v); err != nil {
+			return err
+		}
+	}
+	if v, err := settings.String(keys.PriorityStrategy); err == nil {
+		strategy, err := api.PriorityStrategyString(v)
+		if err != nil {
+			return err
+		}
+		if err := site.SetPriorityStrategy(strategy); err != nil {
+			return err
+		}
+	}
+	if v, err := settings.String(keys.PriorityBasis); err == nil {
+		basis, err := api.PriorityBasisString(v)
+		if err != nil {
+			return err
+		}
+		if err := site.SetPriorityBasis(basis); err != nil {
+			return err
+		}
+	}
+	if v, err := settings.Int(keys.PriorityHysteresis); err == nil {
+		if err := site.SetPriorityHysteresis(int(v)); err != nil {
 			return err
 		}
 	}
@@ -1224,14 +1253,9 @@ func (site *Site) reservedPVPower(lp updater) float64 {
 		return 0
 	}
 
-	prio := lp.EffectivePriority()
-
 	var reserved float64
 	for _, other := range site.activeLoadpoints() {
-		if other == lp {
-			continue
-		}
-		if other.EffectivePriority() > prio && other.PvChargeStarting() {
+		if other != lp && other.PvChargeStarting() && site.prioritizer.Outranks(other, lp) {
 			reserved += other.EffectiveMaxPower()
 		}
 	}
@@ -1242,7 +1266,6 @@ func (site *Site) reservedPVPower(lp updater) float64 {
 
 	return reserved
 }
-
 func (site *Site) update(lp updater) {
 	site.log.DEBUG.Println("----")
 
@@ -1408,6 +1431,9 @@ func (site *Site) prepare() {
 	site.publish(keys.BatteryGridDischarge, site.batteryGridDischarge)
 	site.publish(keys.SolarAdjusted, site.solarAdjusted)
 	site.publish(keys.ResidualPower, site.GetResidualPower())
+	site.publish(keys.PriorityStrategy, site.GetPriorityStrategy())
+	site.publish(keys.PriorityBasis, site.GetPriorityBasis())
+	site.publish(keys.PriorityHysteresis, site.GetPriorityHysteresis())
 	site.publish(keys.GridExportLimit, site.GetGridExportLimit())
 	site.publish(keys.ProfilePercentile, site.GetProfilePercentile())
 	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))
