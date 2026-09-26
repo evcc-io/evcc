@@ -37,8 +37,8 @@ render: |
       register: 35100
       count: 125
     register:
-      address: 35139     # grid power
-      decode: int32
+      address: 35140     # grid power, int16 (35139 reserved, not sign-extended)
+      decode: int16
     scale: -1
     delay: {{ .delay }}
   energy:

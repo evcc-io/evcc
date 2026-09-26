@@ -33,7 +33,7 @@
     },
     "combined": "Combinata",
     "config": {
-      "buffer": "L'energia accumulata nella batteria domestica al di sopra del valore {soc} può essere utilizzata per alimentare i punti di ricarica e ritardare lo spegnimento in modalità solare. Avvia automaticamente la ricarica solare {start}.",
+      "buffer": "L'energia accumulata nella batteria domestica al di sopra del valore {soc} può essere utilizzata per alimentare i punti di ricarica e ritardare lo spegnimento in modalità intelligente. Avvia automaticamente la ricarica solare {start}.",
       "bufferNone": "L'energia della batteria domestica non viene utilizzata per i punti di ricarica. Impostare un valore inferiore a {soc} per abilitare il supporto.",
       "bufferStart": {
         "above": "Quando la % della batteria è maggiore del {soc}",
@@ -64,6 +64,7 @@
   },
   "batterySettings": {
     "gridChargeTab": "Carica in corso dalla rete",
+    "gridDischargeTab": "Scarica in rete",
     "modalTitle": "Batteria di casa",
     "noBattery": "Nessuna batteria configurata.",
     "usageTab": "Uso della batteria"
@@ -125,16 +126,16 @@
       "template": "Produttore",
       "titleAdd": {
         "charging": "Aggiungi Caricabatterie",
-        "heating": "Aggiungi riscaldatore"
+        "heating": "Aggiungi dispositivo di riscaldamento"
       },
       "titleEdit": {
         "charging": "Modifica caricabatterie",
-        "heating": "Modifica riscaldatore"
+        "heating": "Modifica dispositivo di riscaldamento"
       },
       "type": {
         "custom": {
           "charging": "Caricabatterie definito dall'utente",
-          "heating": "Riscaldatore definito dall'utente"
+          "heating": "Dispositivo di riscaldamento definito dall'utente"
         },
         "heatpump": "Pompa di calore definita dall'utente",
         "sgready": "Pompa di calore definita dall'utente (sg-ready tramite plugin)",
@@ -167,6 +168,15 @@
       "label": "Valuta",
       "title": "Valuta"
     },
+    "curtailer": {
+      "description": "Dispositivo che limita l'immissione in rete su richiesta del distributore (§ 9 EEG). Alcuni inverter supportano questa funzione direttamente attraverso la configurazione del misuratore integrato. Una configurazione separata è necessaria solo per alcuni produttori o per sistemi multi-inverter.",
+      "generic": "Integrazioni generiche",
+      "specific": "Integrazioni specifiche",
+      "template": "Produttore",
+      "title": "Limitazione",
+      "titleAdd": "Aggiungi dispositivo limitatore",
+      "titleEdit": "Modifica dispositivo limitatore"
+    },
     "deviceValue": {
       "activeClients": "Client attivi",
       "amount": "Quantità",
@@ -180,7 +190,7 @@
       "chargeStatusC": "in carica",
       "chargeStatusE": "corrente assente",
       "chargeStatusF": "errore",
-      "chargedEnergy": "Carico",
+      "chargedEnergy": "Caricati (sessione)",
       "co2": "CO₂ rete elettrica",
       "configured": "Configurato",
       "connected": "Connesso",
@@ -191,7 +201,7 @@
       "currentRange": "Corrente",
       "curtailLimit": "Limite di immissione",
       "curtailable": "Limitabile",
-      "curtailed": "Alimentazione limitata",
+      "curtailed": "Limite immissione rete",
       "detected": "Rilevato",
       "dimLimit": "Limite di consumo",
       "dimmed": "Consumi limitati",
@@ -225,9 +235,35 @@
       "singlePhase": "Singola fase",
       "soc": "Carica",
       "solarForecast": "Previsioni solari",
+      "switchDevice": "Controllo corrente",
       "temp": "Temperatura",
       "topic": "Argomento",
       "url": "URL",
+      "usage": {
+        "aux": {
+          "energy": "Consumati",
+          "returnEnergy": "Prodotti"
+        },
+        "battery": {
+          "energy": "Scaricati",
+          "returnEnergy": "Caricati"
+        },
+        "charge": {
+          "energy": "Caricati",
+          "returnEnergy": "Scaricati"
+        },
+        "consumer": {
+          "energy": "Consumati",
+          "returnEnergy": "Prodotti"
+        },
+        "grid": {
+          "energy": "Importati",
+          "returnEnergy": "Esportati"
+        },
+        "pv": {
+          "energy": "Prodotti"
+        }
+      },
       "vehicleLimitSoc": "Limite di carica",
       "yes": "sì"
     },
@@ -278,9 +314,9 @@
       "title": "Sperimentale"
     },
     "ext": {
-      "description": "Registra i valori energetici dei consumatori non controllati (ad es. frigorifero, lavatrice, ecc.) a fini statistici. Questi contatori possono essere utilizzati anche per la gestione del carico (ad es. subdistribuzione).",
-      "titleAdd": "Aggiungi contatore di consumo",
-      "titleEdit": "Modifica contatore consumatore"
+      "description": "Traccia i contatori non usati per la regolazione o non mostrati nell'interfaccia (sotto-distribuzioni, contatori di rete o solari alternativi...). I dati sono memorizzati ed esportati come per gli altri contatori.",
+      "titleAdd": "Aggiungi contatore aggiuntivo",
+      "titleEdit": "Modifica contatore aggiuntivo"
     },
     "form": {
       "danger": "Pericolo",
@@ -298,16 +334,22 @@
       "change": "Cambia",
       "clear": "Cancella",
       "close": "Chiudi",
+      "confirmDisable": "Vuoi disabilitare questo dispositivo? Verrà ignorato al prossimo riavvio.",
+      "confirmEnable": "Vuoi abilitare di nuovo questo dispositivo?",
       "confirmSave": "Sono presenti modifiche non salvate. Salvare ora?",
       "copied": "Copiato!",
       "copy": "Copia",
       "customHelp": "Crea un dispositivo definito dall'utente utilizzando il sistema di plugin di evcc.",
       "customOption": "Dispositivo definito dall'utente",
       "delete": "Elimina",
+      "disable": "Disabilita",
+      "disabled": "disabilitato",
+      "dismiss": "Ignora",
       "docsLink": "Vedi la documentazione.",
       "dragHandle": "Maniglia di trascinamento",
       "dragItem": "Trascinabile: {title}",
       "dragList": "Elenco riordinabile",
+      "enable": "Abilita",
       "error": "Errore",
       "experimental": "Sperimentale",
       "forceSave": "Salva comunque",
@@ -315,6 +357,7 @@
       "hideAdvancedSettings": "Nascondi impostazioni avanzate",
       "invalidFileSelected": "File non valido selezionato",
       "legacy": "legacy",
+      "moreInfo": "Più info:",
       "noFileSelected": "Nessun file selezionato.",
       "off": "off",
       "on": "on",
@@ -348,7 +391,7 @@
         "type": "Tipo"
       },
       "customOption": "Integrazione definite dall'utente",
-      "description": "Limitazione della potenza da parte di sistemi esterni (ad es. §14a EnWG, interfaccia §9 EEG o sistema di gestione dell'energia di livello superiore). Funziona in combinazione con la funzione di gestione del carico.",
+      "description": "Limitazione della potenza da parte di sistemi esterni (ad es. §14a EnWG, interfaccia §9 EEG o sistema di gestione dell'energia di livello superiore). Funziona in combinazione con la funzione di gestione del carico. Per alcuni dispositivi è supportata anche la limitazione della produzione solare. Il limite attuale deve essere impostato per ogni inverter configurato.",
       "download": "Scarica",
       "dynamicLimits": "Limiti dinamici",
       "eventsRecorded": "Registrati {count} eventi di limitazione di prelievo dalla rete.",
@@ -391,18 +434,18 @@
     "loadpoint": {
       "addCharger": {
         "charging": "Aggiungi caricabatterie",
-        "heating": "Aggiungi riscaldatore"
+        "heating": "Aggiungi dispositivo di riscaldamento"
       },
       "addMeter": "Aggiungi contatore energetico dedicato",
       "advancedConfig": "Configurazione avanzata",
       "cancel": "Annulla",
       "chargerError": {
         "charging": "È necessario configurare un caricatore.",
-        "heating": "È necessario configurare un riscaldatore."
+        "heating": "È necessario configurare un dispositivo di riscaldamento."
       },
       "chargerLabel": {
         "charging": "Caricabatterie",
-        "heating": "Riscaldatore"
+        "heating": "Dispositivo di riscaldamento"
       },
       "chargingTitle": "Comportamento",
       "circuitHelp": "Assegnazione della gestione del carico per garantire che i limiti di potenza e corrente non vengano superati.",
@@ -417,6 +460,10 @@
       "creating": {
         "charging": "Caricabatterie salvato. Creazione del punto di ricarica in corso…",
         "heating": "Dispositivo di riscaldamento salvato. Creazione del riscaldatore in corso…"
+      },
+      "currentRangeHelp": {
+        "charging": "Di solito: 6-16 A per 11 kW, 6-32 A per caricabatterie da 22 kW (trifase).",
+        "heating": "Dipende dalla potenza nominale del dispositivo di riscaldamento (controlla le specifiche tecniche)."
       },
       "defaultModeHelp": {
         "charging": "Modalità di ricarica quando si collega il veicolo.",
@@ -467,6 +514,10 @@
       "solarBehaviorLabel": "Solare",
       "solarModeCustom": "personalizzato",
       "solarModeMaximum": "massimo solare",
+      "solarShareNote": "La percentuale di solare nelle impostazioni è disabilitata ma sono impostate delle soglie in watt. {0} e salva per abilitarla.",
+      "solarShareReset": "Rimuovi soglie",
+      "temperatureRangeHelp": "Intervallo di visualizzazione per la barra delle temperature. Non influisce sul controllo.",
+      "temperatureRangeTitle": "Intervallo temperature",
       "thresholdDisableDelayLabel": "Ritardo di disattivazione",
       "thresholdDisableHelpInvalid": "Inserisci un valore positivo.",
       "thresholdDisableHelpPositive": "Interrompi in caso di prelievo dalla rete superiore a {power} per più di {delay}.",
@@ -480,12 +531,12 @@
       "titleAdd": {
         "charging": "Aggiungi punto di ricarica",
         "heating": "Aggiungi dispositivo di riscaldamento",
-        "unknown": "Aggiungi caricatore o riscaldatore"
+        "unknown": "Aggiungi punto di ricarica o dispositivo di riscaldamento"
       },
       "titleEdit": {
         "charging": "Modifica punto di ricarica",
         "heating": "Modifica dispositivo di riscaldamento",
-        "unknown": "Modifica caricatore o riscaldatore"
+        "unknown": "Modifica punto di ricarica o dispositivo di riscaldamento"
       },
       "titleExample": {
         "charging": "Garage, posto auto coperto, ecc.",
@@ -686,7 +737,7 @@
     "optimizer": {
       "description": "Analizza le previsioni solari, i prezzi dell'elettricità e i tuoi pattern di consumo per ottimizzare l'uso della batteria e la strategia di carica. I dati sono inviati al servizio di ottimizzazione di evcc per l'elaborazione. Attualmente calcola e visualizza soltanto, senza controllare i dispositivi.",
       "enable": "Abilita Ottimizzatore",
-      "info": "Possono volerci alcuni minuti prima che l'ottimizzatore sia accessibile. Per le nuove installazioni, potrebbero essere necessarie fino a 24 ore perché evcc abbia dati sufficienti.",
+      "info": "Per le nuove installazioni, potrebbero essere necessarie fino a 24 ore perché evcc abbia dati sufficienti.",
       "title": "Ottimizzatore"
     },
     "options": {
