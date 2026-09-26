@@ -24,6 +24,21 @@ params:
     default: 1
   - name: maxacpower
   - preset: battery-params
+  - name: backupgateway
+    type: bool
+    usages: ["battery"]
+    advanced: true
+    default: false
+    description:
+      de: Backup-Gateway installiert
+      en: Backup gateway installed
+    help:
+      de: |
+        Nutzt bei aktiver Entladesperre das Register "Backup SoC" (40046) statt "Discharge Cut-Off SoC" (40048).
+        Dadurch bleibt die Hausversorgung bei einem Netzausfall erhalten. Erfordert ein installiertes optionales Backup-Gateway.
+      en: |
+        Uses the "Backup SoC" register (40046) instead of "Discharge Cut-Off SoC" (40048) to block discharge.
+        This keeps the house powered during a grid outage. Requires an installed optional backup gateway.
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -126,7 +141,11 @@ render: |
       uri: {{ joinHostPort .host .port }}
       id: 247
       register:
+        {{- if .backupgateway }}
+        address: 40046 # Backup SoC
+        {{- else }}
         address: 40048 # Discharge Cut-Off SoC
+        {{- end }}
         type: writeholding
         decode: uint16
       scale: 10
