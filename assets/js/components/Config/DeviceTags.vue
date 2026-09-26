@@ -242,6 +242,10 @@ export default {
 				case "temp":
 				case "heaterTempLimit":
 				case "outdoorTemp":
+				case "tempHeating":
+				case "tempHeatingLimit":
+				case "tempWater":
+				case "tempWaterLimit":
 					return this.fmtTemperature(value);
 				case "odometer":
 				case "range":

@@ -237,6 +237,10 @@
       "solarForecast": "Solar forecast",
       "switchDevice": "Current control",
       "temp": "Temperature",
+      "tempHeating": "Heating temperature",
+      "tempHeatingLimit": "Heating limit",
+      "tempWater": "Hot water temperature",
+      "tempWaterLimit": "Hot water limit",
       "topic": "Topic",
       "url": "URL",
       "usage": {

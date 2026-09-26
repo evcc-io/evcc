@@ -76,6 +76,8 @@ func generate(out io.Writer) error {
 		reflect.TypeFor[api.CurrentLimiter](),
 		reflect.TypeFor[api.Curtailer](),
 		reflect.TypeFor[api.Dimmer](),
+		reflect.TypeFor[api.HeatingTemp](),
+		reflect.TypeFor[api.HeatingTempLimiter](),
 		reflect.TypeFor[api.Identifier](),
 		reflect.TypeFor[api.MaxACPowerGetter](),
 		reflect.TypeFor[api.Meter](),
@@ -95,6 +97,8 @@ func generate(out io.Writer) error {
 		reflect.TypeFor[api.VehicleOdometer](),
 		reflect.TypeFor[api.VehiclePosition](),
 		reflect.TypeFor[api.VehicleRange](),
+		reflect.TypeFor[api.WaterTemp](),
+		reflect.TypeFor[api.WaterTempLimiter](),
 	} {
 		lastPart := typ.Name()
 		var functions []funcStruct

@@ -326,6 +326,20 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 	})
 
 	wg.Go(func() {
+		if dev, ok := api.Cap[api.HeatingTemp](instance); ok {
+			val, err := dev.TempHeating()
+			makeResult("tempHeating", val, err)
+		}
+	})
+
+	wg.Go(func() {
+		if dev, ok := api.Cap[api.WaterTemp](instance); ok {
+			val, err := dev.TempWater()
+			makeResult("tempWater", val, err)
+		}
+	})
+
+	wg.Go(func() {
 		if api.HasCap[api.BatteryController](instance) {
 			makeResult("controllable", true, nil)
 		}
@@ -444,6 +458,20 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 				key = "heaterTempLimit"
 			}
 			makeResult(key, val, err)
+		}
+	})
+
+	wg.Go(func() {
+		if dev, ok := api.Cap[api.HeatingTempLimiter](instance); ok {
+			val, err := dev.LimitTempHeating()
+			makeResult("tempHeatingLimit", val, err)
+		}
+	})
+
+	wg.Go(func() {
+		if dev, ok := api.Cap[api.WaterTempLimiter](instance); ok {
+			val, err := dev.LimitTempWater()
+			makeResult("tempWaterLimit", val, err)
 		}
 	})
 

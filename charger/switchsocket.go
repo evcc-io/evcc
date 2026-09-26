@@ -88,6 +88,20 @@ func NewSwitchSocketFromConfig(ctx context.Context, other map[string]any) (api.C
 	implement.May(c, implement.Battery(soc))
 	implement.May(c, implement.SocLimiter(limitTemp))
 
+	tempHeatingG, limitTempHeatingG, err := cc.Temperature.ConfigureHeating(ctx)
+	if err != nil {
+		return nil, err
+	}
+	implement.May(c, implement.HeatingTemp(tempHeatingG))
+	implement.May(c, implement.HeatingTempLimiter(limitTempHeatingG))
+
+	tempWaterG, limitTempWaterG, err := cc.Temperature.ConfigureWater(ctx)
+	if err != nil {
+		return nil, err
+	}
+	implement.May(c, implement.WaterTemp(tempWaterG))
+	implement.May(c, implement.WaterTempLimiter(limitTempWaterG))
+
 	return c, nil
 }
 

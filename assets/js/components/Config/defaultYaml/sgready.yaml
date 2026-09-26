@@ -22,6 +22,18 @@ setmode: # set operation mode (1: reduced, 2: normal, 3 boost)
 #limittemp: # temperature limit (°C) configured in device
 #  source: const
 #  value: 84
+#temp_heating: # current heating circuit temperature, e.g. underfloor heating flow (°C)
+#  source: const
+#  value: 35
+#limittemp_heating: # heating circuit temperature limit (°C) configured in device
+#  source: const
+#  value: 55
+#temp_hotwater: # current hot water temperature (°C)
+#  source: const
+#  value: 42
+#limittemp_hotwater: # hot water temperature limit (°C) configured in device
+#  source: const
+#  value: 84
 
 ## optional attributes (writeable)
 
