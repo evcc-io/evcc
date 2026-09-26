@@ -242,18 +242,18 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 					return m.conn.Write(rct.BatterySoCTargetMin, floatVal(soc))
 				})
 
-			// case api.BatteryCharge:
-			// 	eg.Go(func() error {
-			// 		return m.conn.Write(rct.PowerMngUseGridPowerEnable, []byte{1})
-			// 	})
+			case api.BatteryCharge:
+				eg.Go(func() error {
+					return m.conn.Write(rct.PowerMngUseGridPowerEnable, []byte{1})
+				})
 
-			// 	eg.Go(func() error {
-			// 		return m.conn.Write(rct.PowerMngBatteryPowerExternW, floatVal(-batteryPowerLimits.MaxChargePower))
-			// 	})
+				eg.Go(func() error {
+					return m.conn.Write(rct.PowerMngBatteryPowerExternW, floatVal(-batteryPowerLimits.MaxChargePower))
+				})
 
-			// 	eg.Go(func() error {
-			// 		return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal})
-			// 	})
+				eg.Go(func() error {
+					return m.conn.Write(rct.PowerMngSocStrategy, []byte{rct.SOCTargetExternal})
+				})
 
 			case api.BatteryHoldCharge:
 				eg.Go(func() error {
@@ -268,7 +268,7 @@ func NewRCT(ctx context.Context, uri, usage string, batterySocLimits batterySocL
 					return m.conn.Write(rct.PowerMngSocMax, floatVal(batterySocLimits.MinSoc/100))
 				})
 			
-			case api.BatteryCharge:
+			case api.BatteryDischarge:
 				eg.Go(func() error {
 					return m.conn.Write(rct.PowerMngBatteryPowerExternW, floatVal(batteryPowerLimits.MaxDischargePower))
 				})
