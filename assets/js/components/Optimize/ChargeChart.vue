@@ -11,7 +11,6 @@ import {
 	axisNameStyle,
 	FONT_FAMILY,
 	forecastYAxis,
-	hoverDot,
 	lineCasing,
 	tooltipStyle,
 	tooltipTable,
@@ -35,6 +34,7 @@ import {
 	whToKW,
 	loadpointTitle,
 	demandTitle,
+	transientHoverDot,
 } from "./chart";
 
 const GRID_LABEL = "Grid Power";
@@ -131,7 +131,7 @@ export default defineComponent({
 				z: 4,
 				data: this.gridPower,
 				smooth: 0.2,
-				...hoverDot(colors.grid || ""),
+				...transientHoverDot(colors.grid || ""),
 				lineStyle: { color: colors.grid || "", ...lineDefaults },
 			};
 			const solar = {
@@ -140,7 +140,7 @@ export default defineComponent({
 				z: 4,
 				data: this.evopt.req.time_series.ft.map(this.toKW),
 				smooth: 0.2,
-				...hoverDot(colors.forecast || ""),
+				...transientHoverDot(colors.forecast || ""),
 				lineStyle: { color: colors.forecast || "", ...lineDefaults },
 			};
 			const series: Record<string, unknown>[] = [
@@ -153,6 +153,9 @@ export default defineComponent({
 					name: e.label,
 					type: "bar",
 					stack: "charge",
+					// one path per series instead of an svg element per slot
+					large: true,
+					largeThreshold: 0,
 					data: e.data,
 					itemStyle: { color: e.color },
 					emphasis: { disabled: true },
