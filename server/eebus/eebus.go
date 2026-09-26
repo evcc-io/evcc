@@ -43,6 +43,10 @@ type Device interface {
 
 // Customer Energy Management
 type CustomerEnergyManagement struct {
+	// LocalEntity is required to write limits of multiple use cases in a single
+	// message, see WriteCombinedLoadControlLimits
+	LocalEntity spineapi.EntityLocalInterface
+
 	EvseCC ucapi.CemEVSECCInterface
 	EvCC   ucapi.CemEVCCInterface
 	EvCem  ucapi.CemEVCEMInterface
@@ -273,6 +277,8 @@ func NewServer(other Config) (*EEBus, error) {
 
 		// customer energy management to EVSE
 		c.cem = CustomerEnergyManagement{
+			LocalEntity: localEntity,
+
 			EvseCC: evsecc.NewEVSECC(localEntity, c.ucCallback),
 			EvCC:   evcc.NewEVCC(c.service, localEntity, c.ucCallback),
 			EvCem:  evcem.NewEVCEM(c.service, localEntity, c.ucCallback),
