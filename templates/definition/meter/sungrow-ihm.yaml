@@ -89,13 +89,22 @@ render: |
   {{- if eq .usage "pv" }}
   type: custom
   power:
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 8154 # Register 8155 (Total active power)
-      type: input
-      decode: int32s
-    scale: 10
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 8154 # Register 8155 (Total active power of inverter)
+        type: input
+        decode: int32s
+      scale: 10
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 8160 # Register 8161 (Battery power, negative while charging)
+        type: input
+        decode: int32s
+      scale: -10
   maxacpower: {{ .maxacpower }} # W
   curtail:
     source: sequence
