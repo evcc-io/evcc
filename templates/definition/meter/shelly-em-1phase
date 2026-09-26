@@ -1,0 +1,48 @@
+template: shelly-em-1phase
+products:
+  - brand: Shelly
+    description: EM (1 Phase)
+
+params:
+  - name: usage
+    choice: ["grid", "pv", "charge"]
+  - name: host
+    help: IP address or hostname
+  - name: user
+    help: Username for basic auth (optional)
+  - name: password
+    help: Password for basic auth (optional)
+  - name: channel
+    default: "0"
+    help: emeter channel (0 or 1)
+
+render: |
+  type: custom
+  power:
+    source: http
+    uri: http://{{ if .user }}{{ .user }}:{{ .password }}@{{ end }}{{ .host }}/emeter/{{ .channel }}
+    jq: .power
+  currents:
+    - source: http
+      uri: http://{{ if .user }}{{ .user }}:{{ .password }}@{{ end }}{{ .host }}/emeter/{{ .channel }}
+      jq: .power/.voltage
+    - source: const
+      value: 0
+    - source: const
+      value: 0
+  voltages:
+    - source: http
+      uri: http://{{ if .user }}{{ .user }}:{{ .password }}@{{ end }}{{ .host }}/emeter/{{ .channel }}
+      jq: .voltage
+    - source: const
+      value: 0
+    - source: const
+      value: 0
+  powers:
+    - source: http
+      uri: http://{{ if .user }}{{ .user }}:{{ .password }}@{{ end }}{{ .host }}/emeter/{{ .channel }} 
+      jq: .power
+    - source: const
+      value: 0
+    - source: const
+      value: 0
