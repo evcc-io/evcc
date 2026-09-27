@@ -52,7 +52,6 @@ const (
 	wsRegDhwTemp     = 32102 // Warmwassertemperatur, 0.1K
 	wsRegFlowTemp    = 33104 // Vorlauftemperatur, 0.1K
 	wsRegBufferTemp  = 33108 // Weichentemperatur, 0.1K
-	wsRegPowerDemand = 33103 // Leistungsanforderung
 	wsRegPower       = 33126 // El. Leistungsaufnahme W
 	wsRegSollwertPv  = 40002 // SollwertPV, W
 )
@@ -144,12 +143,12 @@ func (wb *Weishaupt) setPowerSetpoint(power uint16) error {
 
 // Status implements the api.Charger interface
 func (wb *Weishaupt) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadInputRegisters(wsRegPowerDemand, 1)
+	enabled, err := wb.Enabled()
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	if binary.BigEndian.Uint16(b) > 0 {
+	if enabled {
 		return api.StatusC, nil
 	}
 
