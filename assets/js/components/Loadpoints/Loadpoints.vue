@@ -132,6 +132,7 @@ export default defineComponent({
 			scrollTimeout: null as Timeout,
 			highlightedIndex: 0,
 			viewportHeight: 0 as number,
+			resizeObserver: null as ResizeObserver | null,
 		};
 	},
 	computed: {
@@ -159,14 +160,27 @@ export default defineComponent({
 		this.updateViewport();
 		window.addEventListener("resize", this.updateViewport);
 
+		this.highlightedIndex = this.selectedIndex;
 		if (this.selectedIndex > 0) {
 			this.$refs["carousel"]?.scrollTo({ top: 0, left: this.left(this.selectedIndex) });
 		}
 		this.$refs["carousel"]?.addEventListener("scroll", this.handleCarouselScroll);
+
+		// re-snap after layout changes (rotation, late safe-area updates in the app)
+		if (this.$refs["carousel"]) {
+			this.resizeObserver = new ResizeObserver(() => {
+				this.$refs["carousel"]?.scrollTo({
+					top: 0,
+					left: this.left(this.highlightedIndex),
+				});
+			});
+			this.resizeObserver.observe(this.$refs["carousel"]);
+		}
 	},
 	unmounted() {
 		window.removeEventListener("resize", this.updateViewport);
 		this.$refs["carousel"]?.removeEventListener("scroll", this.handleCarouselScroll);
+		this.resizeObserver?.disconnect();
 	},
 	methods: {
 		indexById(id: string | undefined) {

@@ -120,11 +120,11 @@ func (v *Provider) GetLimitSoc() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	// prefer the limit of the saved location (e.g. home) the vehicle is currently at
-	if data, _ := v.dataG(); res.IsVehicleInSavedLocation {
-		if p := data.Vehicle.ChargingProfiles.CurrentVehiclePositionProfile; p != nil && p.TargetStateOfChargeInPercent != nil {
-			return int64(*p.TargetStateOfChargeInPercent), nil
-		}
+	// prefer the limit of the saved location (e.g. home) the vehicle is currently at;
+	// the profile is only returned while the vehicle is positioned in one
+	data, _ := v.dataG()
+	if p := data.Vehicle.ChargingProfiles.CurrentVehiclePositionProfile; p != nil && p.TargetStateOfChargeInPercent != nil {
+		return int64(*p.TargetStateOfChargeInPercent), nil
 	}
 	if res.Settings == nil || res.Settings.TargetStateOfChargeInPercent == nil {
 		return 0, api.ErrNotAvailable
