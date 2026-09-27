@@ -90,15 +90,18 @@ func (lp *Loadpoint) optimizerCharging(s *types.Suggestion, welcomeCharge bool) 
 		return false, nil
 	}
 
-	lp.resetPhaseTimer()
 	lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
-	if s.Action == actionCharge {
-		if full {
-			lp.log.DEBUG.Printf("optimizer: charge (%.0fW), full power", s.Charge)
-			return true, lp.fastCharging()
-		}
+	// full power, or more than the active phases can deliver: fastCharging scales
+	// up and owns the phase timer, resetting it here would restart the delay every cycle
+	if s.Action == actionCharge && (full || s.Charge > currentToPower(lp.effectiveMaxCurrent(), lp.ActivePhases())) {
+		lp.log.DEBUG.Printf("optimizer: charge (%.0fW), full power", s.Charge)
+		return true, lp.fastCharging()
+	}
 
+	lp.resetPhaseTimer()
+
+	if s.Action == actionCharge {
 		// a limited setpoint, e.g. a minimum demand or a grid import limit
 		if current := powerToCurrent(s.Charge, lp.ActivePhases()); current >= lp.effectiveMinCurrent() {
 			lp.log.DEBUG.Printf("optimizer: charge (%.0fW)", s.Charge)
