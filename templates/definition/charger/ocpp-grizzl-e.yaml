@@ -31,8 +31,6 @@ requirements:
       "Start remote transaction on vehicle connection" is always enabled.
 params:
   - preset: ocpp
-  - name: metervalues
-    default: Current.Import,Voltage,Power.Active.Import,Energy.Active.Import.Register
 render: |
   {{ include "ocpp" . }}
   stacklevelzero: true
