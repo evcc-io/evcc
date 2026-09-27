@@ -79,6 +79,16 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	// conserving is conservation charging
 	case "CHARGING", "CONSERVING":
 		return api.StatusC, nil
+	case "":
+		// state is omitted when the vehicle reports an unnamed combination, fall back to the plug state
+		switch p := res.Status.PlugConnectionState; p {
+		case "CONNECTED":
+			return api.StatusB, nil
+		case "DISCONNECTED":
+			return api.StatusA, nil
+		default:
+			return api.StatusNone, fmt.Errorf("invalid plug connection state: %s", p)
+		}
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %s", s)
 	}
