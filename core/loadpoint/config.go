@@ -88,6 +88,11 @@ func (payload DynamicConfig) Apply(lp API) error {
 
 	mode, err := api.ChargeModeString(payload.DefaultMode)
 	if err == nil {
+		// a legacy minpv/pv default seeds always charge once for database loadpoints too,
+		// mirroring NewLoadpointFromConfig; SetDefaultMode itself must not touch always charge
+		if _, ac := mode.Normalize(); ac != "" && payload.AlwaysCharge == "" {
+			_ = lp.SetAlwaysCharge(ac)
+		}
 		lp.SetDefaultMode(mode)
 	}
 
