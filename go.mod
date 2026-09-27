@@ -277,6 +277,6 @@ replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20
 
 replace github.com/enbility/spine-go => github.com/andig/spine-go v0.7.1-0.20260831161702-3757d61432fb
 
-replace github.com/enbility/eebus-go => github.com/andig/eebus-go v0.0.0-20260927123414-6425a6103412
+replace github.com/enbility/eebus-go => github.com/andig/eebus-go v0.0.0-20260927123858-286fcf271eb4
 
 replace github.com/enbility/ship-go => github.com/andig/ship-go v0.6.1-0.20260901124541-3de7acda5f88
