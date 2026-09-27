@@ -1,8 +1,6 @@
 package subaru
 
 import (
-	"errors"
-	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -10,8 +8,6 @@ import (
 )
 
 const retryTimeout = 2 * time.Minute
-
-var errIncompleteStatus = errors.New("incomplete status payload")
 
 type Provider struct {
 	status       func() (Status, error)
@@ -31,7 +27,7 @@ func NewProvider(a *API, vin string, cache time.Duration) *Provider {
 }
 
 func (v *Provider) validate(res Status) error {
-	if !incomplete(res) {
+	if !res.Incomplete() {
 		v.incompleteAt = time.Time{}
 		return nil
 	}
@@ -41,14 +37,10 @@ func (v *Provider) validate(res Status) error {
 	}
 
 	if time.Since(v.incompleteAt) > retryTimeout {
-		return fmt.Errorf("%w: %w", errIncompleteStatus, api.ErrTimeout)
+		return api.ErrTimeout
 	}
 
-	return fmt.Errorf("%w: %w", errIncompleteStatus, api.ErrMustRetry)
-}
-
-func incomplete(res Status) bool {
-	return res.Payload.LastUpdateTimestamp == "" || res.Payload.EvRangeWithAc.Unit == "" || (res.Payload.BatteryLevel == 0 && res.Payload.EvRangeWithAc.Value == 0)
+	return api.ErrMustRetry
 }
 
 func (v *Provider) Soc() (float64, error) {
