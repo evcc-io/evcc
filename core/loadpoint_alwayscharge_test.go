@@ -147,3 +147,45 @@ func TestLegacyDefaultModeSeedsAlwaysCharge(t *testing.T) {
 	v, _ = dbSettings.String(keys.AlwaysCharge)
 	assert.Equal(t, "off", v)
 }
+
+// TestLegacyDynamicDefaultModeSeedsAlwaysCharge verifies that database loadpoints, which receive
+// their default mode via dynamic config instead of the static config, seed always charge as well
+func TestLegacyDynamicDefaultModeSeedsAlwaysCharge(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	require.NoError(t, config.Chargers().Add(config.NewStaticDevice(config.Named{Name: "dynamic-seed-charger"}, api.Charger(api.NewMockCharger(ctrl)))))
+
+	dbSettings := settings.NewDatabaseSettingsAdapter("dynamic-seed.")
+	create := func() *Loadpoint {
+		// database loadpoints don't carry the default mode in their static config
+		lp, err := NewLoadpointFromConfig(util.NewLogger("foo"), dbSettings, nil, map[string]any{
+			"charger": "dynamic-seed-charger",
+		})
+		require.NoError(t, err)
+
+		lp.SetDefaultMode(api.ModeMinPV)
+		return lp
+	}
+
+	// first boot: legacy default seeds and persists always charge, default becomes smart
+	lp := create()
+	assert.Equal(t, api.ModeSmart, lp.GetDefaultMode())
+	assert.Equal(t, api.AlwaysChargeOn, lp.GetAlwaysCharge())
+	v, err := dbSettings.String(keys.AlwaysCharge)
+	require.NoError(t, err)
+	assert.Equal(t, "on", v)
+
+	// later boots: the persisted user choice wins over the seed
+	dbSettings.SetString(keys.AlwaysCharge, "off")
+	lp = create()
+	assert.Equal(t, api.AlwaysChargeOff, lp.GetAlwaysCharge())
+	v, _ = dbSettings.String(keys.AlwaysCharge)
+	assert.Equal(t, "off", v)
+
+	// pv never seeds always charge on
+	lp, err = NewLoadpointFromConfig(util.NewLogger("foo"), settings.NewDatabaseSettingsAdapter("dynamic-seed-pv."), nil, map[string]any{
+		"charger": "dynamic-seed-charger",
+	})
+	require.NoError(t, err)
+	lp.SetDefaultMode(api.ModePV)
+	assert.Equal(t, api.AlwaysChargeOff, lp.GetAlwaysCharge())
+}

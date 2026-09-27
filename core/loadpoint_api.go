@@ -269,8 +269,15 @@ func (lp *Loadpoint) SetDefaultMode(mode api.ChargeMode) {
 
 	lp.log.DEBUG.Println("set default mode:", mode)
 
-	// deprecated pv/minpv map to smart, always charge is not part of the default
-	mode, _ = lp.normalizeMode(mode)
+	// deprecated pv/minpv map to smart. Database loadpoints receive their default here instead
+	// of NewLoadpointFromConfig, so a legacy default seeds always charge once, afterwards the
+	// persisted value wins
+	mode, ac := lp.normalizeMode(mode)
+	if ac != "" {
+		if _, err := lp.settings.String(keys.AlwaysCharge); err != nil {
+			lp.setAlwaysCharge(ac)
+		}
+	}
 
 	if lp.DefaultMode != mode {
 		lp.DefaultMode = mode
