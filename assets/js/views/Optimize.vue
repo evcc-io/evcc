@@ -148,20 +148,6 @@
 						/>
 					</Card>
 
-					<Card title="Feedback" edge-to-edge class="box-pull-out mb-4">
-						<p>
-							Unexpected results or implausible numbers? Open an issue in the
-							optimizer repository and attach the request and response below.
-						</p>
-						<a
-							href="https://github.com/evcc-io/optimizer/issues"
-							target="_blank"
-							class="btn btn-outline-primary"
-						>
-							Open issue
-						</a>
-					</Card>
-
 					<h2 class="section-title mb-4">Raw Data</h2>
 
 					<Card title="Request" edge-to-edge class="box-pull-out mb-4">
