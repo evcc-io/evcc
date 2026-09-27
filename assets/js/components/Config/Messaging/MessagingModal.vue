@@ -68,7 +68,9 @@
 						@edit="openMessenger(m.id)"
 						@enable="$emit('enable', m.id)"
 					>
-						<small class="text-muted" :class="{ invisible: m.deviceDisable }"
+						<small
+							class="text-muted"
+							:class="{ 'evcc-gray-important': m.deviceDisable }"
 							>#{{ index + 1 }}</small
 						>
 						<span class="fw-semibold mx-3">{{ messengerType(m) }}</span>
@@ -168,3 +170,8 @@ export default {
 	},
 };
 </script>
+<style scoped>
+.evcc-gray-important {
+	color: var(--evcc-gray) !important;
+}
+</style>
