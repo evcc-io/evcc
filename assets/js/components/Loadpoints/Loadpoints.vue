@@ -184,7 +184,8 @@ export default defineComponent({
 	},
 	methods: {
 		indexById(id: string | undefined) {
-			return this.loadpoints.findIndex((lp) => lp.id === id) || 0;
+			const index = this.loadpoints.findIndex((lp) => lp.id === id);
+			return index === -1 ? 0 : index;
 		},
 		idByIndex(index: number) {
 			return this.loadpoints[index]?.id;
