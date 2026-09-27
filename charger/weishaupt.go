@@ -148,7 +148,17 @@ func (wb *Weishaupt) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	if enabled {
+	if !enabled {
+		return api.StatusB, nil
+	}
+
+	power, err := wb.CurrentPower()
+	if err != nil {
+		return api.StatusNone, err
+	}
+
+	// ignore standby power
+	if power > 100 {
 		return api.StatusC, nil
 	}
 
