@@ -476,7 +476,7 @@ func updateDeviceHandler(site site.API, authObject auth.Auth) http.HandlerFunc {
 			return
 		}
 
-		if !requireCriticalConfigAuth(w, r, authObject, req) {
+		if !configUnchanged(id, req) && !requireCriticalConfigAuth(w, r, authObject, req) {
 			return
 		}
 
