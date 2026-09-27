@@ -71,22 +71,6 @@ func (v *Provider) Range() (int64, error) {
 	return 0, err
 }
 
-var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Provider) FinishTime() (time.Time, error) {
-	res2, err := v.emobilityG()
-	if err == nil {
-		if res2.BatteryChargeStatus == nil {
-			return time.Time{}, api.ErrNotAvailable
-		}
-
-		return time.Now().Add(time.Duration(res2.BatteryChargeStatus.RemainingChargeTimeUntil100PercentInMinutes) * time.Minute), err
-	}
-
-	return time.Time{}, err
-}
-
 var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
