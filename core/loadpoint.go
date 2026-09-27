@@ -1720,6 +1720,40 @@ func (lp *Loadpoint) boostPower(batteryPower float64) float64 {
 	return res
 }
 
+// batterySupported indicates that the home battery holds charging at min current.
+// Support ends once the battery is maxed out: the balance it has to cover exceeds
+// the pv disable threshold or its discharge limit would be exceeded (issue #32151).
+func (lp *Loadpoint) batterySupported(sitePower, batteryPower float64, batteryBuffered, batteryStart bool) bool {
+	if !batteryStart && !(batteryBuffered && lp.charging()) {
+		return false
+	}
+
+	minCurrent, phases := lp.effectiveMinCurrent(), lp.ActivePhases()
+
+	// site balance without the battery's contribution, i.e. grid import while it discharges
+	if demand := sitePower - batteryPower; demand > lp.pvDisableThreshold(minCurrent, phases) {
+		lp.log.DEBUG.Printf("battery support: %.0fW grid import", demand)
+		return false
+	}
+
+	if maxPower := lp.site.GetBatteryMaxDischargePower(); maxPower != nil {
+		expected := batteryPower
+		if !lp.charging() {
+			expected += currentToPower(minCurrent, phases)
+		}
+
+		if expected > *maxPower {
+			lp.log.DEBUG.Printf("battery support: %.0fW exceeds %.0fW max discharge power", expected, *maxPower)
+			return false
+		}
+	}
+
+	// the disable timer only runs while the battery is maxed out
+	lp.resetPVTimer("disable")
+
+	return true
+}
+
 // customThresholds indicates manually configured enable/disable thresholds that take precedence over the solar share
 func (lp *Loadpoint) customThresholds() bool {
 	return lp.Enable.Threshold != 0 || lp.Disable.Threshold != 0
@@ -1758,12 +1792,12 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 	maxCurrent := lp.effectiveMaxCurrent()
 	alwaysCharge := lp.GetAlwaysCharge().Active()
 
+	// always charge and the battery conditions hold charging at min current, no disable can follow
+	battery := lp.GetBatteryBoost() == boostContinue || lp.batterySupported(sitePower, batteryPower, batteryBuffered, batteryStart)
+	mayDisable := !alwaysCharge && !battery
+
 	// push demand to drain battery
 	sitePower -= lp.boostPower(batteryPower)
-
-	// always charge and the battery conditions hold charging at min current, no disable can follow
-	battery := batteryStart || batteryBuffered && lp.charging() || lp.GetBatteryBoost() == boostContinue
-	mayDisable := !alwaysCharge && !battery
 
 	// switch phases up/down
 	var scaledTo int
