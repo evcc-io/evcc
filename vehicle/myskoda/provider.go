@@ -103,23 +103,6 @@ func (v *Provider) Range() (int64, error) {
 	return res.Status.Battery.RemainingCruisingRangeInMeters / 1e3, nil
 }
 
-var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.charging()
-	if err != nil {
-		return time.Time{}, err
-	}
-	if !res.Status.FullyChargedAt.IsZero() {
-		return res.Status.FullyChargedAt, nil
-	}
-	if res.Status.RemainingTimeToFullyChargedInMinutes > 0 {
-		return time.Now().Add(time.Duration(res.Status.RemainingTimeToFullyChargedInMinutes) * time.Minute), nil
-	}
-	return time.Time{}, api.ErrNotAvailable
-}
-
 var _ api.SocLimiter = (*Provider)(nil)
 
 // GetLimitSoc implements the api.SocLimiter interface
