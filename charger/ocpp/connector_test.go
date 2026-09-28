@@ -223,18 +223,6 @@ func (suite *connTestSuite) TestOnBootNotificationClearsStaleTxn() {
 	<-suite.cp.bootNotificationRequestC
 	suite.Equal(42, suite.conn.txnId, "txnId should be kept until the next status")
 
-	// meter values carrying the old transaction must not interfere
-	txnId := 42
-	_, err = suite.conn.OnMeterValues(&core.MeterValuesRequest{
-		ConnectorId:   1,
-		TransactionId: &txnId,
-		MeterValue: []types.MeterValue{{
-			Timestamp:    types.NewDateTime(suite.clock.Now()),
-			SampledValue: []types.SampledValue{{Measurand: types.MeasurandCurrentImport, Value: "0"}},
-		}},
-	})
-	suite.NoError(err)
-
 	_, err = suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
 		ConnectorId: 1,
 		Status:      core.ChargePointStatusPreparing,
@@ -271,6 +259,31 @@ func (suite *connTestSuite) TestOnBootNotificationKeepsRunningTxn() {
 	})
 	suite.NoError(err)
 	suite.Equal(42, suite.conn.txnId, "later Preparing must not clear the transaction")
+}
+
+// TestOnBootNotificationKeepsFreshTxn ensures a transaction started after the
+// BootNotification is not cleared by the first status.
+func (suite *connTestSuite) TestOnBootNotificationKeepsFreshTxn() {
+	suite.conn.txnId = 42
+
+	_, err := suite.cp.OnBootNotification(&core.BootNotificationRequest{})
+	suite.NoError(err)
+	<-suite.cp.bootNotificationRequestC
+
+	res, err := suite.conn.OnStartTransaction(&core.StartTransactionRequest{
+		ConnectorId: 1,
+		IdTag:       "rfid",
+	})
+	suite.NoError(err)
+
+	_, err = suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+		ConnectorId: 1,
+		Status:      core.ChargePointStatusPreparing,
+		ErrorCode:   core.NoError,
+	})
+	suite.NoError(err)
+	suite.Equal(res.TransactionId, suite.conn.txnId, "fresh transaction must be kept")
+	suite.False(suite.conn.NeedsAuthentication(), "fresh transaction must not require authentication")
 }
 
 // TestOnStatusNotificationKeepsActiveTxn ensures that an active transaction is

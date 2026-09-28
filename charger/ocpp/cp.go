@@ -88,16 +88,11 @@ func (cp *CP) connectorByID(id int) *Connector {
 }
 
 // markRebooted flags all connectors after a BootNotification.
-// Connectors are snapshotted under cp.mu to keep the cp.mu -> conn.mu lock order.
 func (cp *CP) markRebooted() {
 	cp.mu.RLock()
-	conns := make([]*Connector, 0, len(cp.connectors))
-	for _, conn := range cp.connectors {
-		conns = append(conns, conn)
-	}
-	cp.mu.RUnlock()
+	defer cp.mu.RUnlock()
 
-	for _, conn := range conns {
+	for _, conn := range cp.connectors {
 		conn.markRebooted()
 	}
 }

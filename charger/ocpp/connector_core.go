@@ -137,6 +137,9 @@ func (conn *Connector) OnStartTransaction(request *core.StartTransactionRequest)
 	conn.txnId = int(conn.cp.cs.txnId.Add(1))
 	conn.idTag = request.IdTag
 
+	// a transaction started after the boot is fresh and must survive the first status
+	conn.rebooted = false
+
 	res := &core.StartTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{
 			Status: types.AuthorizationStatusAccepted,
