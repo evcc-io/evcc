@@ -8,7 +8,7 @@
 		]"
 		@click="$emit('edit')"
 	>
-		<div class="flex-grow-1 text-truncate">
+		<div class="flex-grow-1 text-truncate min-w-0">
 			<slot>
 				<span>{{ title }}</span>
 			</slot>

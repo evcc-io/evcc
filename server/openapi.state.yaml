@@ -189,6 +189,9 @@ components:
           type: object
           additionalProperties:
             $ref: "#/components/schemas/Circuit"
+        circuitsConfig:
+          $ref: "#/components/schemas/GenericConfigStatus"
+          description: Load management configuration.
         bufferSoc:
           description: Battery buffer SoC in %. Energy above this level may be used for charging in solar mode.
           type: number
@@ -478,6 +481,9 @@ components:
       description: A load management circuit limiting power and current of its assigned loadpoints.
       type: object
       properties:
+        name:
+          description: Circuit name used as configuration reference.
+          type: string
         title:
           description: Circuit title for UI display.
           type: string
