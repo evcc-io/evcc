@@ -152,7 +152,7 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 
 	// in stand-alone mode the charger keeps the current limit set in the Zaptec app
 	// and silently ignores current and phase updates from the API
-	if standalone, err := c.standalone(); err == nil && standalone {
+	if errors.Is(c.checkStandalone(), errStandalone) {
 		c.log.WARN.Println("charger is in stand-alone mode: current and phase settings are ignored, disable stand-alone mode in the Zaptec app")
 	}
 
@@ -334,20 +334,26 @@ func (c *Zaptec) MaxCurrent(current int64) error {
 
 var _ api.ChargerEx = (*Zaptec)(nil)
 
-// standalone returns true when the charger runs in stand-alone mode
-func (c *Zaptec) standalone() (bool, error) {
+var errStandalone = errors.New("stand-alone mode active: current and phase settings are ignored by the charger")
+
+// checkStandalone returns errStandalone while the charger runs in stand-alone mode
+func (c *Zaptec) checkStandalone() error {
 	res, err := c.statusG.Get()
 	if err != nil {
-		return false, err
+		return err
 	}
 
-	return res.ObservationByID(zaptec.IsStandAlone).Bool(), nil
+	if res.ObservationByID(zaptec.IsStandAlone).Bool() {
+		return errStandalone
+	}
+
+	return nil
 }
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *Zaptec) MaxCurrentMillis(current float64) error {
-	if standalone, err := c.standalone(); err == nil && standalone {
-		return errors.New("stand-alone mode active: current settings are ignored by the charger")
+	if err := c.checkStandalone(); err != nil {
+		return err
 	}
 
 	current = math.Round(current*10) / 10
@@ -432,6 +438,10 @@ func (c *Zaptec) Currents() (float64, float64, float64, error) {
 
 // phases1p3p implements the api.PhaseSwitcher interface
 func (c *Zaptec) phases1p3p(phases int) error {
+	if err := c.checkStandalone(); err != nil {
+		return err
+	}
+
 	if err := c.switchPhases(phases); err != nil {
 		return err
 	}
