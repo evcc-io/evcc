@@ -48,9 +48,12 @@ export default defineComponent({
 	methods: {
 		confirm(): Promise<boolean> {
 			const modal = this.$refs["modal"] as InstanceType<typeof GenericModal> | undefined;
+			if (!modal) {
+				return Promise.resolve(false);
+			}
 			return new Promise((resolve) => {
 				this.resolver = resolve;
-				modal?.open();
+				modal.open();
 			});
 		},
 		resolve(confirmed: boolean) {

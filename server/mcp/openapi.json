@@ -287,12 +287,13 @@
       "post": {
         "operationId": "setBatteryGridDischarge",
         "summary": "Control battery grid discharge",
-        "description": "Allow the home battery to discharge to the grid (experimental). Enabling requires `force=true` when the site country is Germany or not set, since exporting grid-charged energy may be restricted.",
+        "description": "Allow the home battery to discharge to the grid. Enabling may require `force=true` to confirm country-specific feed-in restrictions.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/features/battery"
         },
         "tags": [
-          "battery"
+          "battery",
+          "experimental"
         ],
         "parameters": [
           {
@@ -301,7 +302,7 @@
           {
             "name": "force",
             "in": "query",
-            "description": "Confirm enabling despite country restrictions",
+            "description": "Confirm country-specific feed-in restrictions",
             "schema": {
               "type": "boolean"
             }
@@ -312,7 +313,7 @@
             "$ref": "#/components/responses/BooleanResult"
           },
           "428": {
-            "description": "Confirmation required, repeat with `force=true`"
+            "description": "Confirmation required"
           }
         }
       }
