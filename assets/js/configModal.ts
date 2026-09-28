@@ -8,6 +8,7 @@ export interface ModalEntry {
   type?: string;
   choices?: string[];
   station?: string;
+  loadpoint?: string;
 }
 
 export interface ModalResult {
@@ -132,6 +133,7 @@ export function parseKey(key: string): {
   type?: string;
   choices?: string[];
   station?: string;
+  loadpoint?: string;
 } {
   const bracketMatch = key.match(/^([^[]+)\[([^\]]+)\]$/);
   if (!bracketMatch) {
@@ -154,6 +156,9 @@ export function parseKey(key: string): {
   }
   if (paramKey === "station") {
     return { name, station: paramValue };
+  }
+  if (paramKey === "loadpoint") {
+    return { name, loadpoint: paramValue };
   }
   return { name };
 }
@@ -188,6 +193,7 @@ export function parseQueryString(queryString: string): ModalEntry[] {
     if (parsed.type) entry.type = parsed.type;
     if (parsed.choices) entry.choices = parsed.choices;
     if (parsed.station) entry.station = parsed.station;
+    if (parsed.loadpoint) entry.loadpoint = parsed.loadpoint;
     entries.push(entry);
   }
   return entries;
@@ -204,6 +210,8 @@ export function buildQuery(stack: ModalEntry[]): Record<string, string> {
       key += `[choices:${entry.choices.join(",")}]`;
     } else if (entry.station) {
       key += `[station:${entry.station}]`;
+    } else if (entry.loadpoint) {
+      key += `[loadpoint:${entry.loadpoint}]`;
     }
     query[key] = entry.id !== undefined ? String(entry.id) : "";
   }
@@ -265,7 +273,7 @@ export function initConfigModal(router: Router): void {
 
 export function openModal(
   name: string,
-  params?: { id?: number; type?: string; choices?: string[]; station?: string }
+  params?: { id?: number; type?: string; choices?: string[]; station?: string; loadpoint?: string }
 ): Promise<ModalResult> {
   if (!_router) {
     return Promise.resolve({ action: "cancelled" });
@@ -276,6 +284,7 @@ export function openModal(
   if (params?.type) entry.type = params.type;
   if (params?.choices) entry.choices = params.choices;
   if (params?.station) entry.station = params.station;
+  if (params?.loadpoint) entry.loadpoint = params.loadpoint;
 
   const newStack = [...configModal.stack, entry];
   const query = buildQuery(newStack);
@@ -314,7 +323,7 @@ export async function closeModal(result?: ModalResult): Promise<void> {
 
 export function replaceModal(
   name: string,
-  params?: { id?: number; type?: string; choices?: string[]; station?: string }
+  params?: { id?: number; type?: string; choices?: string[]; station?: string; loadpoint?: string }
 ): void {
   if (!_router) return;
 
@@ -323,6 +332,7 @@ export function replaceModal(
   if (params?.type) entry.type = params.type;
   if (params?.choices) entry.choices = params.choices;
   if (params?.station) entry.station = params.station;
+  if (params?.loadpoint) entry.loadpoint = params.loadpoint;
 
   const newStack = [...configModal.stack.slice(0, -1), entry];
   const query = buildQuery(newStack);
