@@ -12,6 +12,32 @@ products:
 capabilities: ["rfid", "meter", "dim"]
 requirements:
   evcc: ["sponsorship"]
+  description:
+    en: |
+      The charger has to run in its normal, cloud-connected mode. In [stand-alone mode](https://help.zaptec.com/using-products/stand-alone-mode-for-zaptec-charging-stations-how-it-works-and-when-to-use-it) it keeps the fixed current limit set in the Zaptec app and ignores the current set by evcc: charging starts and stops, but the current never changes and the log shows `current mismatch` warnings. Stand-alone mode is switched off in the Zaptec app (charger, gear icon, Advanced settings, Bluetooth connection) or in the Zaptec Portal (Chargers, charger, Settings).
+
+      Automatic power management with Zaptec Sense (Portal, installation, Settings, Power management) has to be disabled. Otherwise Zaptec Sense and evcc both regulate the charging current, and phase switching on the Go 2 is rejected.
+
+      The charger has to be set to free charging without RFID or app authentication. evcc does not authorise charging sessions on the charger.
+
+      The charger ID is shown in the Zaptec Portal (installation, Circuit, charger). It can be omitted when the account has access to a single charger.
+
+      The Zaptec API is limited to 10 requests per second per account ([fair use policy](https://docs.zaptec.com/docs/api-fair-use-policy)). Other clients on the same account, e.g. the Home Assistant integration, share this quota and can cause `429 Too Many Requests`. A dedicated Zaptec user for evcc avoids this.
+    de: |
+      Die Wallbox muss im normalen, mit der Cloud verbundenen Modus laufen. Im [Stand-alone-Modus](https://help.zaptec.com/using-products/stand-alone-mode-for-zaptec-charging-stations-how-it-works-and-when-to-use-it) behält sie die in der Zaptec-App fest eingestellte Stromgrenze und ignoriert den von evcc gesetzten Strom: Laden startet und stoppt, der Strom ändert sich aber nie und im Log erscheinen `current mismatch`-Warnungen. Der Stand-alone-Modus wird in der Zaptec-App (Wallbox, Zahnrad, Erweiterte Einstellungen, Bluetooth-Verbindung) oder im Zaptec Portal (Ladestationen, Wallbox, Einstellungen) abgeschaltet.
+
+      Das automatische Leistungsmanagement mit Zaptec Sense (Portal, Installation, Einstellungen, Leistungsmanagement) muss deaktiviert sein. Sonst regeln Zaptec Sense und evcc beide den Ladestrom, und die Phasenumschaltung der Go 2 wird abgelehnt.
+
+      Die Wallbox muss auf freies Laden ohne RFID- oder App-Autorisierung eingestellt sein. evcc autorisiert keine Ladevorgänge an der Wallbox.
+
+      Die Wallbox-ID steht im Zaptec Portal (Installation, Stromkreis, Wallbox). Sie kann entfallen, wenn das Konto nur auf eine einzige Wallbox Zugriff hat.
+
+      Die Zaptec-API ist auf 10 Anfragen pro Sekunde und Konto begrenzt ([Fair-Use-Richtlinie](https://docs.zaptec.com/docs/api-fair-use-policy)). Andere Clients am selben Konto, z. B. die Home-Assistant-Integration, teilen sich dieses Kontingent und können `429 Too Many Requests` auslösen. Ein eigener Zaptec-Benutzer für evcc vermeidet das.
+caveats:
+  - description:
+      en: The Go (1st generation) cannot switch phases. On the Go 2, phase switching is an installation setting and affects all chargers of the installation.
+      de: Die Go (1. Generation) kann keine Phasen umschalten. Bei der Go 2 ist die Phasenumschaltung eine Einstellung der Installation und wirkt auf alle Wallboxen der Installation.
+    link: https://github.com/evcc-io/evcc/issues/33826
 params:
   - name: id
     help:
