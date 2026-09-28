@@ -141,3 +141,37 @@ func TestZaptecConnectionDurationIgnoresEmptySession(t *testing.T) {
 	assert.Equal(t, "b", c.session)
 	assert.NotEqual(t, start, c.sessionStart)
 }
+
+func TestZaptecStandalone(t *testing.T) {
+	var state zaptec.StateResponse
+	c := &Zaptec{
+		statusG: util.ResettableCached(func() (zaptec.StateResponse, error) {
+			return state, nil
+		}, 0),
+	}
+
+	for _, tt := range []struct {
+		name  string
+		state zaptec.StateResponse
+		want  bool
+	}{
+		{"missing", zaptec.StateResponse{}, false},
+		{"off", zaptec.StateResponse{{StateId: zaptec.IsStandAlone, ValueAsString: "0"}}, false},
+		{"on", zaptec.StateResponse{{StateId: zaptec.IsStandAlone, ValueAsString: "1"}}, true},
+		{"on bool", zaptec.StateResponse{{StateId: zaptec.IsStandAlone, ValueAsString: "true"}}, true},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			state = tt.state
+			c.statusG.Reset()
+
+			standalone, err := c.standalone()
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, standalone)
+		})
+	}
+
+	// current updates are rejected while stand-alone mode is active
+	state = zaptec.StateResponse{{StateId: zaptec.IsStandAlone, ValueAsString: "1"}}
+	c.statusG.Reset()
+	assert.Error(t, c.MaxCurrentMillis(6))
+}
