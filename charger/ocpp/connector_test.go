@@ -234,6 +234,28 @@ func (suite *connTestSuite) TestOnBootNotificationClearsStaleTxn() {
 	suite.True(suite.conn.NeedsAuthentication(), "Preparing after reboot should require authentication")
 }
 
+// TestOnBootNotificationSkipsInconclusiveStatus ensures a status that says
+// nothing about the transaction, e.g. Unavailable while booting, does not consume
+// the reboot flag.
+func (suite *connTestSuite) TestOnBootNotificationSkipsInconclusiveStatus() {
+	suite.conn.txnId = 42
+
+	_, err := suite.cp.OnBootNotification(&core.BootNotificationRequest{})
+	suite.NoError(err)
+	<-suite.cp.bootNotificationRequestC
+
+	for _, status := range []core.ChargePointStatus{core.ChargePointStatusUnavailable, core.ChargePointStatusPreparing} {
+		_, err = suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+			ConnectorId: 1,
+			Status:      status,
+			ErrorCode:   core.NoError,
+		})
+		suite.NoError(err)
+	}
+	suite.Equal(0, suite.conn.txnId, "txnId should be cleared")
+	suite.True(suite.conn.NeedsAuthentication(), "Preparing after reboot should require authentication")
+}
+
 // TestOnBootNotificationKeepsRunningTxn ensures a BootNotification sent on a
 // mere reconnect does not clear a transaction that is still running.
 func (suite *connTestSuite) TestOnBootNotificationKeepsRunningTxn() {

@@ -46,11 +46,15 @@ func (conn *Connector) OnStatusNotification(request *core.StatusNotificationRequ
 	}
 
 	// a transaction does not survive a reboot, but a charge point may also send
-	// BootNotification on a mere reconnect, so let the first fresh status decide
+	// BootNotification on a mere reconnect, so let the first conclusive status decide
 	if applied && conn.rebooted {
-		conn.rebooted = false
-		if request.Status == core.ChargePointStatusPreparing {
+		switch request.Status {
+		case core.ChargePointStatusPreparing:
 			conn.clearTransaction("reboot")
+			conn.rebooted = false
+		case core.ChargePointStatusAvailable, core.ChargePointStatusCharging,
+			core.ChargePointStatusSuspendedEV, core.ChargePointStatusSuspendedEVSE:
+			conn.rebooted = false
 		}
 	}
 
