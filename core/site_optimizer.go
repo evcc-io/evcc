@@ -641,7 +641,7 @@ func (site *Site) optimizerUpdate(battery []types.Measurement) error {
 
 	resp, err := apiClient.PostOptimizeChargeScheduleWithResponse(context.TODO(), req, func(_ context.Context, req *http.Request) error {
 		if sponsor.IsAuthorizedForApi() {
-			req.Header.Set("Authorization", "Bearer "+sponsor.Token)
+			req.Header.Set("Authorization", "Bearer "+sponsor.Token())
 		}
 		return nil
 	})

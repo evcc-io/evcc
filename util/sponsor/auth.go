@@ -35,10 +35,11 @@ import (
 )
 
 var (
-	mu             sync.RWMutex
-	Subject, Token string
-	ExpiresAt      time.Time
-	Hardware       bool // sponsored via hardware check
+	mu           sync.RWMutex
+	Subject      string
+	sponsorToken string
+	ExpiresAt    time.Time
+	Hardware     bool // sponsored via hardware check
 )
 
 func machineID() string {
@@ -56,10 +57,17 @@ func IsAuthorized() bool {
 	return len(Subject) > 0
 }
 
+// Token returns the current sponsor token
+func Token() string {
+	mu.RLock()
+	defer mu.RUnlock()
+	return sponsorToken
+}
+
 func IsAuthorizedForApi() bool {
 	mu.RLock()
 	defer mu.RUnlock()
-	return len(Subject) > 0 && Subject != unavailable && Token != ""
+	return len(Subject) > 0 && Subject != unavailable && sponsorToken != ""
 }
 
 // check and set sponsorship token
@@ -91,7 +99,7 @@ func ConfigureSponsorship(token string) error {
 		}
 	}
 
-	Token = token
+	sponsorToken = token
 
 	// check expiry locally to avoid cloud roundtrip
 	if exp := tokenExpiry(token); !exp.IsZero() && exp.Before(time.Now()) {
@@ -170,7 +178,7 @@ func RedactedStatus() Status {
 		Name:        Subject,
 		ExpiresAt:   ExpiresAt,
 		ExpiresSoon: expiresSoon,
-		Token:       redactToken(Token),
+		Token:       redactToken(sponsorToken),
 		Hardware:    Hardware,
 	}
 }

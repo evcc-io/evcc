@@ -82,7 +82,7 @@ func renewHardwareToken() {
 
 		if _, token := checkHardwareVendors(); token != "" {
 			mu.Lock()
-			Token, ExpiresAt = token, tokenExpiry(token)
+			sponsorToken, ExpiresAt = token, tokenExpiry(token)
 			mu.Unlock()
 		}
 	}
