@@ -102,6 +102,16 @@
 							/>
 						</div>
 
+						<div v-if="auth.challenge">
+							<hr class="my-5" />
+							<AuthChallenge
+								:id="`${deviceType}AuthChallenge`"
+								v-model="challengeAnswer"
+								:challenge="auth.challenge"
+								@submit="submitChallenge"
+							/>
+						</div>
+
 						<ErrorMessage :error="auth.error" />
 
 						<div
@@ -127,7 +137,23 @@
 								{{ $t("config.general.cancel") }}
 							</button>
 							<!-- perform auth -->
+							<button
+								v-if="auth.challenge"
+								type="button"
+								class="btn btn-primary"
+								:disabled="auth.loading || !challengeAnswer"
+								@click="submitChallenge"
+							>
+								<span
+									v-if="auth.loading"
+									class="spinner-border spinner-border-sm me-2"
+									role="status"
+									aria-hidden="true"
+								></span>
+								{{ $t("authProviders.challenge.submit") }}
+							</button>
 							<AuthConnectButton
+								v-else
 								:provider-url="auth.providerUrl ?? undefined"
 								:loading="auth.loading"
 								@prepare="checkAuthStatus"
@@ -241,10 +267,11 @@ import SponsorTokenRequired from "./SponsorTokenRequired.vue";
 import TemplateSelector, { type TemplateGroup } from "./TemplateSelector.vue";
 import YamlEntry from "./YamlEntry.vue";
 import AuthCodeDisplay from "../AuthCodeDisplay.vue";
+import AuthChallenge from "../AuthChallenge.vue";
 import AuthConnectButton from "../AuthConnectButton.vue";
 import { initialTestState, performTest } from "../utils/test";
 import { reportValidityInModal } from "../utils/reportValidityInModal";
-import { initialAuthState, prepareAuthLogin } from "../utils/authProvider";
+import { initialAuthState, prepareAuthLogin, submitAuthChallenge } from "../utils/authProvider";
 import AdminPasswordPrompt from "@/components/Auth/AdminPasswordPrompt.vue";
 import sleep from "@/utils/sleep";
 import { ConfigType } from "@/types/evcc";
@@ -284,6 +311,7 @@ export default defineComponent({
 		TemplateSelector,
 		YamlEntry,
 		AuthCodeDisplay,
+		AuthChallenge,
 		AuthConnectButton,
 		AdminPasswordPrompt,
 	},
@@ -359,6 +387,7 @@ export default defineComponent({
 			template: null as Template | null,
 			saving: false,
 			auth: initialAuthState(),
+			challengeAnswer: "",
 			succeeded: false,
 			loadingTemplate: false,
 			values: { ...this.initialValues } as DeviceValues,
@@ -658,6 +687,14 @@ export default defineComponent({
 			// update on auth state change
 			this.updateServiceValues();
 		},
+		"auth.challenge"() {
+			// a wrong answer comes back as a fresh challenge
+			this.challengeAnswer = "";
+		},
+		challengeAnswer() {
+			// outdated errors must not persist while typing
+			this.auth.error = null;
+		},
 		serviceValues: {
 			handler(newValue, oldValue) {
 				// Apply defaults only for specific params whose service values changed
@@ -789,6 +826,10 @@ export default defineComponent({
 		async prepareAuthLogin(authId: string) {
 			await prepareAuthLogin(this.auth, authId);
 		},
+		async submitChallenge() {
+			if (!this.challengeAnswer) return;
+			await submitAuthChallenge(this.auth, this.challengeAnswer);
+		},
 		async create(force = false) {
 			if (this.test.isUnknown && !force) {
 				const success = await performTest(
@@ -919,6 +960,8 @@ export default defineComponent({
 			this.remove();
 		},
 		handleVisibilityChange() {
+			// a pending challenge must survive the user looking something up in another tab
+			if (this.auth.challenge) return;
 			this.checkAuthStatus();
 		},
 		isYamlInputTypeByValue(value: ConfigType): boolean {
