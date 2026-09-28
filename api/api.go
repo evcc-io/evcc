@@ -161,12 +161,6 @@ type Vehicle interface {
 	OnIdentified() ActionConfig
 }
 
-// VehicleFinishTimer provides estimated charge cycle finish time.
-// Finish time is normalized for charging to 100% and may deviate from vehicle display if soc limit is effective.
-type VehicleFinishTimer interface {
-	FinishTime() (time.Time, error)
-}
-
 // VehicleRange provides the vehicles remaining km range
 type VehicleRange interface {
 	Range() (int64, error)

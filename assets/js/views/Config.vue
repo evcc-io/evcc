@@ -547,8 +547,15 @@
 				/>
 				<ShmModal @changed="loadDirty" />
 				<MessagingLegacyModal @changed="loadDirty" />
-				<MessagingModal :messengers="messengers" @changed="loadDirty" />
-				<MessengerModal @changed="messengerChanged" />
+				<MessagingModal
+					:messengers="messengers"
+					@changed="loadDirty"
+					@enable="(id) => handleDisable('messenger', id, false)"
+				/>
+				<MessengerModal
+					@changed="messengerChanged"
+					@disable="({ id, disable }) => handleDisable('messenger', id, disable)"
+				/>
 				<CurtailerModal @changed="curtailerChanged" />
 				<TariffsLegacyModal @changed="loadDirty" />
 				<TariffModal
@@ -1212,9 +1219,16 @@ export default defineComponent({
 			if (this.messagingUiConfigured) {
 				const events = store.state?.messagingEvents || [];
 				const enabledEvents = Object.values(events).filter((e: any) => !e.disabled).length;
+
+				const disabledMessengers = this.messengers.filter((m) => m.deviceDisable).length;
+				const messengerValue =
+					disabledMessengers === 0
+						? this.messengers.length
+						: `${this.messengers.length - disabledMessengers} / ${this.messengers.length}`;
+
 				return {
 					events: { value: enabledEvents },
-					messengers: { value: this.messengers.length },
+					messengers: { value: messengerValue },
 				};
 			}
 			return { configured: { value: this.messagingYamlConfigured } };
@@ -1304,6 +1318,7 @@ export default defineComponent({
 				tariff: () => this.tariffChanged({ action: "updated" }),
 				vehicle: () => this.vehicleChanged(),
 				loadpoint: () => this.loadpointChanged(),
+				messenger: () => this.messengerChanged(),
 			};
 			try {
 				if (deviceClass === "loadpoint") {

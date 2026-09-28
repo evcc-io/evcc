@@ -1126,7 +1126,7 @@ func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 
 		// wrap non-config tariff errors to prevent fatals
 		log.ERROR.Printf("creating tariff %s failed: %v", name, err)
-		instance = tariff.NewWrapper(conf.Type, conf.Other, err)
+		instance = tariff.NewWrapper(ctx, typ, other, err)
 	}
 
 	return instance, nil

@@ -575,6 +575,12 @@ func (maskedTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Val
 
 var criticalPluginSources = []string{"script"}
 
+// configUnchanged reports whether req matches the stored config, e.g. when only toggling deviceDisable
+func configUnchanged(id int, req configReq) bool {
+	stored, err := config.ConfigByID(id)
+	return err == nil && reflect.DeepEqual(req.Serialise(), stored.Data)
+}
+
 func configHasCriticalPlugin(req configReq) bool {
 	if req.Yaml != "" {
 		// any, not map: global yaml configs (circuits) are a list
