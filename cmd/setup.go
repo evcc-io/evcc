@@ -1516,6 +1516,16 @@ func configureLoadpoints(conf globalconfig.All) error {
 			return &DeviceError{cc.Name, err}
 		}
 
+		// start in the configured default mode, or restore the last mode from settings if none is set.
+		// static is a copy: dropping the persisted last mode keeps it from being decoded as default
+		delete(static, "mode")
+		if dynamic.DefaultMode != "" {
+			if static == nil {
+				static = make(map[string]any)
+			}
+			static["mode"] = dynamic.DefaultMode
+		}
+
 		var instance loadpoint.API
 		if !conf.Disable {
 			lp, e := newLoadpoint(idx, cc.Name, static, func(log *util.Logger) coresettings.Settings {
