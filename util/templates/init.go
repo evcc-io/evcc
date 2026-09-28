@@ -107,9 +107,10 @@ func fromBytes(b []byte) (Template, error) {
 		}
 	}
 
-	// push down capabilities and link to products
+	// push down capabilities, caveats and link to products
 	for i := range tmpl.Products {
 		tmpl.Products[i].Capabilities = append(tmpl.Products[i].Capabilities, tmpl.Capabilities...)
+		tmpl.Products[i].Caveats = append(tmpl.Products[i].Caveats, tmpl.Caveats...)
 
 		if tmpl.Products[i].Link == "" {
 			tmpl.Products[i].Link = tmpl.Link
@@ -121,6 +122,14 @@ func fromBytes(b []byte) (Template, error) {
 				return Template{}, fmt.Errorf("template '%s': duplicate capability '%s' for product '%s'", tmpl.Template, c, tmpl.Products[i].Identifier())
 			}
 			seen[c] = struct{}{}
+		}
+
+		seenCaveats := make(map[Caveat]struct{}, len(tmpl.Products[i].Caveats))
+		for _, c := range tmpl.Products[i].Caveats {
+			if _, ok := seenCaveats[c]; ok {
+				return Template{}, fmt.Errorf("template '%s': duplicate caveat for product '%s'", tmpl.Template, tmpl.Products[i].Identifier())
+			}
+			seenCaveats[c] = struct{}{}
 		}
 	}
 
