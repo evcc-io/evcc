@@ -123,14 +123,6 @@ func fromBytes(b []byte) (Template, error) {
 			}
 			seen[c] = struct{}{}
 		}
-
-		seenCaveats := make(map[Caveat]struct{}, len(tmpl.Products[i].Caveats))
-		for _, c := range tmpl.Products[i].Caveats {
-			if _, ok := seenCaveats[c]; ok {
-				return Template{}, fmt.Errorf("template '%s': duplicate caveat for product '%s'", tmpl.Template, tmpl.Products[i].Identifier())
-			}
-			seenCaveats[c] = struct{}{}
-		}
 	}
 
 	return tmpl, nil
