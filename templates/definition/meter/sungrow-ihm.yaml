@@ -27,6 +27,9 @@ render: |
       address: 8156 # Register 8157 (Total active power)
       type: input
       decode: int32s
+    block: # Register 8155-8163
+      register: 8154
+      count: 9
     scale: 10
   energy:
     source: modbus
@@ -35,6 +38,9 @@ render: |
       address: 8175 # Register 8176 (Import energy at the grid meter)
       type: input
       decode: uint32s
+    block: # Register 8176-8179
+      register: 8175
+      count: 4
     scale: 0.1
   returnenergy:
     source: modbus
@@ -43,28 +49,40 @@ render: |
       address: 8177 # Register 8178 (Export energy at the grid meter)
       type: input
       decode: uint32s
+    block: # Register 8176-8179
+      register: 8175
+      count: 4
     scale: 0.1
   voltages:
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 4356 # Register 4357 (Phase A voltage, phase-to-neutral)
+      address: 4357 # Register 4358 (Phase A voltage, phase-to-neutral, undocumented)
       type: input
       decode: uint16
+    block: # Register 4358-4363
+      register: 4357
+      count: 6
     scale: 0.1 # Factor 0.1 V
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 4358 # Register 4359 (Phase B voltage, phase-to-neutral)
+      address: 4359 # Register 4360 (Phase B voltage, phase-to-neutral)
       type: input
       decode: uint16
+    block: # Register 4358-4363
+      register: 4357
+      count: 6
     scale: 0.1
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
-      address: 4360 # Register 4361 (Phase C voltage, phase-to-neutral)
+      address: 4361 # Register 4362 (Phase C voltage, phase-to-neutral)
       type: input
       decode: uint16
+    block: # Register 4358-4363
+      register: 4357
+      count: 6
     scale: 0.1
   powers:
   - source: modbus
@@ -73,18 +91,27 @@ render: |
       address: 8558 # Register 8559 (Phase A active power, S32, signed import/export)
       type: input
       decode: int32s
+    block: # Register 8559-8564
+      register: 8558
+      count: 6
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 8560 # Register 8561 (Phase B active power)
       type: input
       decode: int32s
+    block: # Register 8559-8564
+      register: 8558
+      count: 6
   - source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 8562 # Register 8563 (Phase C active power)
       type: input
       decode: int32s
+    block: # Register 8559-8564
+      register: 8558
+      count: 6
   {{- end }}
   {{- if eq .usage "pv" }}
   type: custom
@@ -95,6 +122,9 @@ render: |
       address: 8154 # Register 8155 (Total active power)
       type: input
       decode: int32s
+    block: # Register 8155-8163
+      register: 8154
+      count: 9
     scale: 10
   maxacpower: {{ .maxacpower }} # W
   curtail:
@@ -170,6 +200,9 @@ render: |
       address: 8160 # Register 8161 (Battery power)
       type: input
       decode: int32s
+    block: # Register 8155-8163
+      register: 8154
+      count: 9
     scale: 10
   soc:
     source: modbus
@@ -178,6 +211,9 @@ render: |
       address: 8162 # Register 8163 (State of charge)
       type: input
       decode: uint16
+    block: # Register 8155-8163
+      register: 8154
+      count: 9
     scale: 0.1
   {{- include "battery-params" . }}
   {{- end }}
