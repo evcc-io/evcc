@@ -153,6 +153,9 @@ render: |
           type: input
           address: 13020 # Battery current
           decode: int16
+        block: # 13020-13027
+          register: 13020
+          count: 8
     - name: bp
       type: int
       config:
@@ -162,6 +165,9 @@ render: |
           type: input
           address: 13021 # Battery power
           decode: int16
+        block: # 13020-13027
+          register: 13020
+          count: 8
   energy:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -169,6 +175,9 @@ render: |
       address: 13026 # Total battery discharge energy, 0.1kWh
       type: input
       decode: uint32s
+    block: # 13020-13027
+      register: 13020
+      count: 8
     scale: 0.1
   returnenergy:
     source: modbus
@@ -185,6 +194,9 @@ render: |
       address: 13022 # Battery level
       type: input
       decode: int16
+    block: # 13020-13027
+      register: 13020
+      count: 8
     scale: 0.1
   batterymode:
     source: switch
