@@ -17,7 +17,7 @@
 			</div>
 		</template>
 		<template #extra>
-			<p class="my-2 small">
+			<p v-if="usableMeters.length" class="my-2 small">
 				{{ $t("config.circuits.usableMeters") }}:
 				<code v-for="meter in usableMeters" :key="meter.name" class="ms-1 meter">
 					{{ meter.name }}<span v-if="meter.title" class="ms-1">({{ meter.title }})</span>

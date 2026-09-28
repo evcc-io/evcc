@@ -95,8 +95,8 @@ test.describe("circuit", async () => {
 
     // add missing configuration via ui to be able to validate circuit references
     for (const [loadpointName, circuitName] of [
-      ["Carport 1", "[main]"],
-      ["Carport 2", "[main]"],
+      ["Carport 1", "main"],
+      ["Carport 2", "main"],
     ]) {
       const lpModal = await newChargingLoadpoint(page, loadpointName);
       await lpModal.getByLabel("Circuit").selectOption(circuitName);

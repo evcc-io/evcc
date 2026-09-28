@@ -1674,8 +1674,8 @@ export default defineComponent({
 }) as any;
 </script>
 <style scoped>
-/* transition transforms must not make the page x-scrollable */
-.container {
+/* transition transforms must not make the page x-scrollable; clip on root so card shadows survive */
+.root {
 	overflow-x: clip;
 }
 .config-list {

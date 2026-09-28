@@ -31,7 +31,7 @@ test.describe("invalid references", async () => {
 
     // Wait for circuit field to be available and assign to circuit main
     await expect(lpModal.getByLabel("Circuit")).toBeVisible();
-    await lpModal.getByLabel("Circuit").selectOption("[main]");
+    await lpModal.getByLabel("Circuit").selectOption("main");
     await lpModal.getByRole("button", { name: "Save" }).click();
     await expectModalHidden(lpModal);
 

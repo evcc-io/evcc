@@ -512,6 +512,6 @@ limit:
     await expectModalVisible(lpModal);
     await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
     const circuitOptions = lpModal.getByLabel("Circuit").getByRole("option");
-    await expect(circuitOptions).toHaveText(["---", "House [db:1]"]);
+    await expect(circuitOptions).toHaveText(["---", "House"]);
   });
 });
