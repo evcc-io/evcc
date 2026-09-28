@@ -76,7 +76,7 @@ products:
   - brand: Spelsberg
     description:
       generic: Wallbox Smart Pro
-    capabilities: ["1p3p", "iso151182"]
+    capabilities: ["1p3p", "meter", "iso151182"]
   - brand: SMA
     description:
       generic: EV Charger Business

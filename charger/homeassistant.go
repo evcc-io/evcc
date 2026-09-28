@@ -39,6 +39,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		Enabled              string   // required - sensor for enabled state
 		Enable               string   // required - switch/input_boolean for enable/disable
 		MaxCurrent           string   // required - number entity for setting max current
+		Milliamps            bool     // optional - max current entity accepts fractional amps
 		Power                string   // optional - power sensor
 		Energy               string   // optional - energy sensor
 		Currents             []string // optional - current sensors for L1, L2, L3
@@ -84,6 +85,13 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		enabled:    cc.Enabled,
 		enable:     cc.Enable,
 		maxcurrent: cc.MaxCurrent,
+	}
+
+	// milliamp current control (optional)
+	if cc.Milliamps {
+		implement.Has(c, implement.ChargerEx(func(current float64) error {
+			return conn.CallNumberService(cc.MaxCurrent, current)
+		}))
 	}
 
 	if cc.Power != "" {
@@ -144,12 +152,5 @@ func (c *HomeAssistant) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (c *HomeAssistant) MaxCurrent(current int64) error {
-	return c.MaxCurrentMillis(float64(current))
-}
-
-var _ api.ChargerEx = (*HomeAssistant)(nil)
-
-// MaxCurrentMillis implements the api.ChargerEx interface
-func (c *HomeAssistant) MaxCurrentMillis(current float64) error {
 	return c.conn.CallNumberService(c.maxcurrent, current)
 }

@@ -7,6 +7,18 @@
     "authorizationSuccessful": "Authorization Successful",
     "buttonConnect": "Connect to {provider}",
     "buttonDisconnect": "Disconnect",
+    "challenge": {
+      "captcha": {
+        "label": "Enter the characters shown in the image.",
+        "title": "Captcha"
+      },
+      "code": {
+        "label": "Paste the code or the address of the page you were redirected to.",
+        "title": "Authorization code"
+      },
+      "openLogin": "Open login page",
+      "submit": "Continue"
+    },
     "confirmLogout": "Are you sure you want to disconnect {title}?",
     "connect": "connect",
     "disconnect": "disconnect",
@@ -144,9 +156,36 @@
         "switchsocket": "User-defined switch socket"
       }
     },
+    "circuit": {
+      "addMeter": "Add dedicated energy meter",
+      "meterSelectionLabel": "Meter Selection",
+      "meterNone": "No meter",
+      "meterSelectionHelpNoMeter": "The sum of all charging points is used.",
+      "meterSelectionHelpDedicatedMeter": "Add an existing meter to this circuit below.",
+      "meterSelectionHelpGridMeter": "Uses the existing grid meter of your installation.",
+      "meterGrid": "Grid meter",
+      "meterDedicated": "Dedicated meter",
+      "parentCircuit": "Parent circuit",
+      "titleAdd": "Add circuit",
+      "titleEdit": "Edit circuit",
+      "titleLabel": "Title",
+      "template": "Circuit",
+      "custom": "User-defined circuit",
+      "meterHelp": "Meter measuring the total consumption of this circuit.",
+      "meterLabelAdd": "Add Circuit Meter",
+      "meterLabelEdit": "Edit Circuit Meter",
+      "deleteChildrenFirst": "To delete this circuit, first delete its child circuits.",
+      "meterLabel": "Energy meter"
+    },
     "circuits": {
+      "addSubCircuit": "Add sub-circuit",
+      "chargingPointsNote": "Assign charging points & heaters to a circuit in their own settings.",
+      "addMainCircuit": "Add main circuit",
       "description": "Ensures, that the sum of all loadpoints connected to a circuit does not exceed the configured power and current limits. Circuits can be nested to build a hierarchy.",
+      "legacyWarning": "New circuits configuration available! Remove and save your configuration here to use the new guided process.",
       "title": "Load Management",
+      "meterDedicated": "Meter",
+      "meterGrid": "Grid",
       "usableMeters": "Usable meter references"
     },
     "consumer": {
@@ -216,6 +255,8 @@
       "identifier": "RFID-Identifier",
       "loginBlocked": "Login limit reached",
       "max": "max",
+      "maxCurrent": "Max. current",
+      "maxPower": "Max. power",
       "messengers": "Services",
       "no": "no",
       "odometer": "Odometer",

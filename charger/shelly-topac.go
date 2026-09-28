@@ -142,7 +142,7 @@ func (c *ShellyTopAC) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *ShellyTopAC) Enabled() (bool, error) {
-	return c.enabled, nil
+	return verifyEnabled(c, c.enabled)
 }
 
 // Enable implements the api.Charger interface

@@ -57,7 +57,7 @@
 				@open-modal="$emit('open-modal')"
 			/>
 			<LimitSocSelect
-				v-if="socBasedCharging && !continuous"
+				v-if="socBasedCharging"
 				class="flex-grow-1 text-end"
 				:limit-soc="displayLimitSoc"
 				:range-per-soc="rangePerSoc"
@@ -67,7 +67,7 @@
 				@limit-soc-updated="limitSocUpdated"
 			/>
 			<LimitEnergySelect
-				v-else-if="!socBasedCharging"
+				v-else
 				class="flex-grow-1 text-end"
 				:limit-energy="limitEnergy"
 				:soc-per-kwh="socPerKwh"
