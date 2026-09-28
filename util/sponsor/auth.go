@@ -64,6 +64,13 @@ func Token() string {
 	return sponsorToken
 }
 
+// SetToken sets the sponsor token without cloud verification
+func SetToken(token string) {
+	mu.Lock()
+	defer mu.Unlock()
+	sponsorToken = token
+}
+
 func IsAuthorizedForApi() bool {
 	mu.RLock()
 	defer mu.RUnlock()

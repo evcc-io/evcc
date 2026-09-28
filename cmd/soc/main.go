@@ -52,8 +52,7 @@ func main() {
 			key = ""
 		case "token":
 			sponsor.Subject = arg // TODO placeholder
-			// deprecated?
-			// sponsor.Token = arg
+			sponsor.SetToken(arg)
 			key = ""
 		default:
 			params[key] = arg
