@@ -59,7 +59,7 @@ params:
       de: Automatischen Ladestart verhindern
       en: Prevent automatic charging
     help:
-      de: Verhindert einen automatischen Ladestart beim Einstecken eines Fahrzeugs. Kann die Authorisierung beeinflussen
+      de: Verhindert einen automatischen Ladestart beim Einstecken eines Fahrzeugs. Kann die Autorisierung beeinflussen
       en: Prevents automatic charging when a vehicle is plugged in. May break auth.
     type: bool
     advanced: true
