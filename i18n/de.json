@@ -415,6 +415,7 @@
       "telemetry": "Telemetrie",
       "templateLoading": "Lade …",
       "site": "Standort",
+      "title": "Titel",
       "typeDeprecated": "Der Typ '{type}' ist veraltet und wird in einer zukünftigen Version entfernt. Bitte Changelog prüfen und Gerät neu anlegen.",
       "validateSave": "Überprüfen & speichern"
     },
