@@ -31,16 +31,12 @@ func (cs *CS) print(s string) {
 	}
 }
 
-// traceRecv logs a raw frame received from a charger, matching the format the
-// ocpp-go library uses for frames it handles itself. Used for forwarder frames
-// that bypass the library handler and would otherwise go untraced.
+// traceRecv logs a received frame in the ocpp-go library format
 func (cs *CS) traceRecv(id string, data []byte) {
 	cs.log.TRACE.Printf("recv %s: %s", id, data)
 }
 
-// traceSend logs a raw frame sent to a charger. origin marks its source:
-// "" for evcc-generated frames, "upstream" for frames proxied from the
-// upstream OCPP server.
+// traceSend logs a sent frame, annotated with its origin if not evcc
 func (cs *CS) traceSend(id, origin string, data []byte) {
 	if origin != "" {
 		cs.log.TRACE.Printf("send %s (%s): %s", id, origin, data)

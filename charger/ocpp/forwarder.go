@@ -203,8 +203,7 @@ type sidecar struct {
 	pendingUpstreamCallsMu sync.Mutex
 	pendingUpstreamCalls   map[string]struct{}
 
-	// message IDs of charger Calls whose evcc handler was bypassed, mapped to the
-	// originating action; upstream's reply is relayed to the charger
+	// action by message ID of charger Calls whose evcc handler was bypassed; upstream's reply is relayed to the charger
 	pendingChargerCallsMu sync.Mutex
 	pendingChargerCalls   map[string]string
 
@@ -673,10 +672,7 @@ func (sc *sidecar) readFromUpstream() {
 			sc.pendingChargerCallsMu.Unlock()
 
 			if isChargerCall {
-				// warn on a rejected authorization (StartTransaction/Authorize).
-				// evcc's handler was bypassed, so a non-Accepted status from
-				// upstream silently leaves the charger unable to start - surface
-				// it so a mismatched idtag is diagnosable without a trace.
+				// evcc's handler was bypassed, so a rejection would otherwise go unnoticed
 				if status, ok := rejectedAuthorization(callAction, msg); ok {
 					forwarderLog.WARN.Printf("forwarder: upstream rejected authorization for %s: idTagInfo.status=%s (does the charger's idtag match an authorized tag on the upstream backend?)", sc.chargerID, status)
 				}
@@ -833,9 +829,7 @@ func withMessageID(frame []byte, msgID string) ([]byte, error) {
 	return json.Marshal(parts)
 }
 
-// idTagStatusFromResult extracts idTagInfo.status from a CALL_RESULT payload
-// (e.g. StartTransaction.conf / Authorize.conf). Returns false when the frame
-// carries no idTagInfo.
+// idTagStatusFromResult extracts idTagInfo.status from a CALL_RESULT frame
 func idTagStatusFromResult(msg []byte) (types.AuthorizationStatus, bool) {
 	var frame []json.RawMessage
 	if err := json.Unmarshal(msg, &frame); err != nil || len(frame) < 3 {
@@ -850,11 +844,8 @@ func idTagStatusFromResult(msg []byte) (types.AuthorizationStatus, bool) {
 	return payload.IdTagInfo.Status, true
 }
 
-// rejectedAuthorization reports a non-Accepted idTagInfo status in upstream's
-// confirmation of an authorizing action. StopTransaction.conf may carry
-// idTagInfo as well (OCPP 1.6 6.48, e.g. Expired to evict a cache entry), so
-// the originating action gates the check: a rejected tag there is not a failed
-// start and must not be reported as one.
+// rejectedAuthorization returns a non-Accepted idTagInfo status for Authorize and StartTransaction.
+// StopTransaction.conf may carry idTagInfo too, but that is not a failed start.
 func rejectedAuthorization(action string, msg []byte) (types.AuthorizationStatus, bool) {
 	if action != "Authorize" && action != "StartTransaction" {
 		return "", false

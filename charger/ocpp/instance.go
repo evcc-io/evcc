@@ -68,7 +68,7 @@ type interceptingServer struct {
 func (s *interceptingServer) SetMessageHandler(handler ws.MessageHandler) {
 	s.Server.SetMessageHandler(func(ch ws.Channel, data []byte) error {
 		if chargerMessageHook != nil && chargerMessageHook(ch, data) {
-			// the library handler is skipped, so trace the received frame here
+			// bypasses the library's own trace
 			if instance != nil {
 				instance.traceRecv(ch.ID(), data)
 			}
