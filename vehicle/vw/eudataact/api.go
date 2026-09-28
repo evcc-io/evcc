@@ -116,13 +116,6 @@ func (v *API) login() error {
 		return nil
 	}
 
-	// call health probe to ensure the portal is reachable before starting the OIDC flow
-	if req, err := request.New(http.MethodHead, BaseURL+"/system/probes/health", nil); err == nil {
-		if resp, err := v.Do(req); err == nil {
-			resp.Body.Close()
-		}
-	}
-
 	// start the OIDC authorize flow
 	q := url.Values{
 		"client_id":     {v.brand.clientID},
