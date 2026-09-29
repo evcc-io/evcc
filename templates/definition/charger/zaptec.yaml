@@ -14,7 +14,7 @@ requirements:
   evcc: ["sponsorship"]
   description:
     en: |
-      The charger has to run in its normal, cloud-connected mode. In [stand-alone mode](https://help.zaptec.com/using-products/stand-alone-mode-for-zaptec-charging-stations-how-it-works-and-when-to-use-it) it keeps the fixed current limit set in the Zaptec app and ignores the current set by evcc: charging starts and stops, but the current never changes and the log shows `current mismatch` warnings. Stand-alone mode is switched off in the Zaptec app (charger, gear icon, Advanced settings, Bluetooth connection) or in the Zaptec Portal (Chargers, charger, Settings).
+      The charger has to run in its normal, cloud-connected mode. In [stand-alone mode](https://help.zaptec.com/using-products/stand-alone-mode-for-zaptec-charging-stations-how-it-works-and-when-to-use-it) it keeps the fixed current limit set in the Zaptec app and ignores current settings from the API, so evcc refuses to start the charger and reports an error. Stand-alone mode is switched off in the Zaptec app (charger, gear icon, Advanced settings, Bluetooth connection) or in the Zaptec Portal (Chargers, charger, Settings).
 
       Automatic power management with Zaptec Sense (Portal, installation, Settings, Power management) has to be disabled. Otherwise Zaptec Sense and evcc both regulate the charging current, and phase switching on the Go 2 is rejected.
 
@@ -24,7 +24,7 @@ requirements:
 
       The Zaptec API is limited to 10 requests per second per account ([fair use policy](https://docs.zaptec.com/docs/api-fair-use-policy)). Other clients on the same account, e.g. the Home Assistant integration, share this quota and can cause `429 Too Many Requests`. A dedicated Zaptec user for evcc avoids this.
     de: |
-      Die Wallbox muss im normalen, mit der Cloud verbundenen Modus laufen. Im [Stand-alone-Modus](https://help.zaptec.com/using-products/stand-alone-mode-for-zaptec-charging-stations-how-it-works-and-when-to-use-it) behält sie die in der Zaptec-App fest eingestellte Stromgrenze und ignoriert den von evcc gesetzten Strom: Laden startet und stoppt, der Strom ändert sich aber nie und im Log erscheinen `current mismatch`-Warnungen. Der Stand-alone-Modus wird in der Zaptec-App (Wallbox, Zahnrad, Erweiterte Einstellungen, Bluetooth-Verbindung) oder im Zaptec Portal (Ladestationen, Wallbox, Einstellungen) abgeschaltet.
+      Die Wallbox muss im normalen, mit der Cloud verbundenen Modus laufen. Im [Stand-alone-Modus](https://help.zaptec.com/using-products/stand-alone-mode-for-zaptec-charging-stations-how-it-works-and-when-to-use-it) behält sie die in der Zaptec-App fest eingestellte Stromgrenze und ignoriert Stromvorgaben über die API, daher startet evcc die Wallbox nicht und meldet einen Fehler. Der Stand-alone-Modus wird in der Zaptec-App (Wallbox, Zahnrad, Erweiterte Einstellungen, Bluetooth-Verbindung) oder im Zaptec Portal (Ladestationen, Wallbox, Einstellungen) abgeschaltet.
 
       Das automatische Leistungsmanagement mit Zaptec Sense (Portal, Installation, Einstellungen, Leistungsmanagement) muss deaktiviert sein. Sonst regeln Zaptec Sense und evcc beide den Ladestrom, und die Phasenumschaltung der Go 2 wird abgelehnt.
 
