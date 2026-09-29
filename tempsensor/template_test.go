@@ -3,11 +3,14 @@ package tempsensor
 import (
 	"testing"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/util/test"
 )
 
-var acceptable = []string{}
+var acceptable = []string{
+	api.ErrMissingCredentials.Error(),
+}
 
 func TestTemplates(t *testing.T) {
 	templates.TestClass(t, templates.TempSensor, func(t *testing.T, values map[string]any) {
