@@ -45,7 +45,7 @@ body:
 
         Please make sure your report does NOT contain **passwords**, **sponsor token** or other **credentials**!
 
-        The **Report a problem** page in the web interface provides a redacted configuration without secrets. On the command line you can use `evcc dump --cfg`.
+        The **Report a problem** page in the web interface provides a redacted configuration without secrets.
 
   - type: textarea
     validations:
