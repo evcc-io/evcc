@@ -45,6 +45,7 @@ import (
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/locale"
 	"github.com/evcc-io/evcc/util/machine"
+	"github.com/evcc-io/evcc/util/region"
 	"github.com/evcc-io/evcc/util/request"
 	_ "github.com/evcc-io/evcc/util/service"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -1301,12 +1302,21 @@ func configureTariffs(conf *globalconfig.Tariffs, names ...string) (*tariff.Tari
 	if cur, _ := settings.String(keys.Currency); cur != "" {
 		conf.Currency = cur
 	}
-	if conf.Currency != "" {
+	switch {
+	case conf.Currency != "":
 		cur, err := currency.ParseISO(conf.Currency)
 		if err != nil {
 			return &tariffs, err
 		}
 		tariffs.Currency = cur
+
+	default:
+		// no explicit currency configured, default to the site country's legal tender, if known
+		if country, _ := settings.String(keys.Country); country != "" {
+			if cur, ok := region.Currency(country); ok {
+				tariffs.Currency = cur
+			}
+		}
 	}
 
 	return &tariffs, nil

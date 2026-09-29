@@ -1,13 +1,12 @@
 package server
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util/config"
-	"golang.org/x/text/language"
+	"github.com/evcc-io/evcc/util/region"
 )
 
 // siteHandler returns a device configurations by class
@@ -157,9 +156,8 @@ func updateCountryHandler(site site.API) http.HandlerFunc {
 		}
 
 		if val != "" {
-			region, err := language.ParseRegion(val)
-			if err != nil || !region.IsCountry() || region.String() != val {
-				jsonError(w, http.StatusBadRequest, fmt.Errorf("invalid country code: %s", val))
+			if _, err := region.Parse(val); err != nil {
+				jsonError(w, http.StatusBadRequest, err)
 				return
 			}
 		}
