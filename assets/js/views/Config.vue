@@ -572,7 +572,6 @@
 				<McpModal />
 				<ExperimentalModal :experimental="experimental" />
 				<RemoteModal :remote="remote" :is-sponsor="isSponsor" :site-title="siteTitle" />
-				<TitleModal @changed="loadDirty" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
 				<CircuitsLegacyModal
 					:grid-meter="gridMeter"
@@ -673,7 +672,6 @@ import TariffCard from "../components/Config/TariffCard.vue";
 import TariffModal from "../components/Config/TariffModal.vue";
 import TelemetryModal from "../components/Config/TelemetryModal.vue";
 import ExperimentalModal from "../components/Config/ExperimentalModal.vue";
-import TitleModal from "../components/Config/TitleModal.vue";
 import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
@@ -786,7 +784,6 @@ export default defineComponent({
 		TariffModal,
 		TelemetryModal,
 		ExperimentalModal,
-		TitleModal,
 		TopHeader: Header,
 		VehicleIcon,
 		VehicleModal,
