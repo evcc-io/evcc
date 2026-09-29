@@ -472,8 +472,6 @@ github.com/philippseith/signalr v0.11.0/go.mod h1:9VAFjplkNr3RKc3mH3L/L0KvCdF1xe
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/premultiply/mbmd v0.0.0-20260929062814-f22a9f388197 h1:fzcdgOmJlJ55eg7/QhH0GkqUHXQZmFGaz8T9yc7vWcI=
-github.com/premultiply/mbmd v0.0.0-20260929062814-f22a9f388197/go.mod h1:3iAKatDG8KVE9uwC41UYW0LTycMSaUyrQxqD1gH96Lo=
 github.com/prometheus-community/pro-bing v0.9.1 h1:kpuAr6AU2oRtzGihJSUcetHtjc7ku7h6PxeuW9RVrQw=
 github.com/prometheus-community/pro-bing v0.9.1/go.mod h1:z79wYTxAOf6FpTng0QdIhZ3j/Nd5l3+gnFSCIT+SiSQ=
 github.com/prometheus/client_golang v1.24.1 h1:JnJkREXzWxUdCuPFpIWZiPispT9xVV59uiuyR2bPlnU=
@@ -601,6 +599,8 @@ github.com/vmihailenco/msgpack/v5 v5.4.1 h1:cQriyiUvjTwOHg8QZaPihLWeRAAVoCpE00IU
 github.com/vmihailenco/msgpack/v5 v5.4.1/go.mod h1:GaZTsDaehaPpQVyxrf5mtQlH+pc21PIudVV/E3rRQok=
 github.com/vmihailenco/tagparser/v2 v2.0.0 h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g=
 github.com/vmihailenco/tagparser/v2 v2.0.0/go.mod h1:Wri+At7QHww0WTrCBeu4J6bNtoV6mEfg5OIWRZA9qds=
+github.com/volkszaehler/mbmd v0.0.0-20260824053034-eef6045ae30e h1:Jd98KiH1kl2t9ZswGH3HakhMn9a7N85iKT1ixN+bM1s=
+github.com/volkszaehler/mbmd v0.0.0-20260824053034-eef6045ae30e/go.mod h1:3iAKatDG8KVE9uwC41UYW0LTycMSaUyrQxqD1gH96Lo=
 github.com/warthog618/go-gpiocdev v0.9.1 h1:pwHPaqjJfhCipIQl78V+O3l9OKHivdRDdmgXYbmhuCI=
 github.com/warthog618/go-gpiocdev v0.9.1/go.mod h1:dN3e3t/S2aSNC+hgigGE/dBW8jE1ONk9bDSEYfoPyl8=
 github.com/warthog618/go-gpiosim v0.1.1 h1:MRAEv+T+itmw+3GeIGpQJBfanUVyg0l3JCTwHtwdre4=
