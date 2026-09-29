@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/region"
 	"github.com/samber/lo"
 )
 
@@ -76,6 +77,14 @@ func (site *Site) GetCountry() string {
 func (site *Site) SetCountry(country string) {
 	settings.SetString(keys.Country, country)
 	site.publish(keys.Country, country)
+
+	// derive currency from country unless a currency has been configured explicitly
+	if country != "" && site.tariffs != nil && !settings.Exists(keys.Currency) {
+		if cur, ok := region.Currency(country); ok {
+			site.tariffs.Currency = cur
+			site.publish(keys.Currency, cur)
+		}
+	}
 }
 
 // GetGridMeterRef returns the GridMeterRef
