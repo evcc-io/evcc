@@ -14,7 +14,7 @@ requirements:
       Create app according to the instructions on [traxes.io](https://www.traxes.io/service/green-grid-compass/1.0.0/technical-documentation) and copy the Client ID and Client Secret.
   evcc: ["skiptest"]
 group: co2
-countries: ["BE", "DE", "LU"]
+countries: ["CH", "BE", "DE", "LU"]
 params:
   - name: apiKey
     deprecated: true
@@ -26,7 +26,7 @@ params:
       en: Zone code
     type: choice
     required: true
-    choice: [BE, DE_LU]
+    choice: [CH, BE, DE_LU]
     default: DE_LU
 render: |
   type: custom
@@ -41,7 +41,7 @@ render: |
       scopes: [esp]
     uri: https://explore.traxes.io/explore/greengrid-compass/v1/co2-intensity-forecast?zone={{ .zone }}&start={{ `{{ now | date "2006-01-02T" }}` }}00:00:00Z&end={{ `{{ addDate now 0 0 5 | date "2006-01-02T" }}` }}00:00:00Z&time-resolution=hourly&calculation-type=production&emission-type=operational&forecast-type=actual
     jq: |
-      .measurements[0].measurementValues |  map({ 
+      .measurements[0].measurementValues |  map({
         "start": .timestamp,
         "end": (.timestamp | fromdateiso8601 + 3600 | todateiso8601),
         "value": .value
