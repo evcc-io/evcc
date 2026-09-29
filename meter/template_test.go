@@ -15,9 +15,10 @@ var acceptable = []string{
 	"missing mqtt broker configuration",
 	"mqtt not configured",
 	"not a SunSpec device",
-	"connect: connection refused", // sockets
-	"power: timeout",              // sockets
-	"missing password",            // Powerwall
+	"connect: connection refused",  // sockets
+	"power: timeout",               // sockets
+	"power: missing logger serial", // Solarman
+	"missing password",             // Powerwall
 	"connect: no route to host",
 	"connect: connection refused",
 	"connect: network is unreachable",
