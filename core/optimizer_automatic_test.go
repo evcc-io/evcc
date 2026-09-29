@@ -163,6 +163,33 @@ func TestOptimizerSurplusRegime(t *testing.T) {
 	ctrl.Finish()
 }
 
+// TestOptimizerFlexibility covers a loadpoint the optimizer pins to a setpoint:
+// it does not yield to a higher priority loadpoint, so its power is not flexible
+func TestOptimizerFlexibility(t *testing.T) {
+	enableAutomatic(t)
+	Voltage = 230
+
+	for _, tc := range []struct {
+		s    types.Suggestion
+		want float64
+	}{
+		{types.Suggestion{Action: actionCharge, Charge: 3680, Grid: 1000}, 0}, // full power
+		{types.Suggestion{Action: actionCharge, Charge: 2300, Grid: 1000}, 0}, // grid-fed setpoint
+		{types.Suggestion{Action: actionCharge, Charge: 2300}, 2700},          // surplus regime, pv loop yields
+	} {
+		lp := NewLoadpoint(util.NewLogger("foo"), nil)
+		lp.mode = api.ModeSmart
+		lp.status = api.StatusC
+		lp.chargePower = 2700
+		lp.phases = 1
+		lp.vehicle = modelledVehicle(gomock.NewController(t))
+		lp.site = &mockSite{automatic: true}
+		lp.setSuggestion(&tc.s)
+
+		assert.Equal(t, tc.want, lp.GetChargePowerFlexibility(nil), tc.s)
+	}
+}
+
 func TestOptimizerGateInactive(t *testing.T) {
 	enableAutomatic(t)
 

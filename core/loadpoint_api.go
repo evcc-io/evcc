@@ -803,6 +803,11 @@ func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
 		return 0
 	}
 
+	// an optimizer setpoint does not yield to a higher priority loadpoint
+	if s := lp.gate(); s != nil && !lp.surplusRegime(s) {
+		return 0
+	}
+
 	if loadpoint.SurplusFlexible(lp) {
 		return lp.GetChargePower()
 	}
