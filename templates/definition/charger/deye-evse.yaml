@@ -1,0 +1,185 @@
+# Register map reverse engineered, see https://github.com/davidrapan/ha-solarman/pull/1073
+template: deye-evse
+products:
+  - brand: Deye
+    description:
+      generic: SUN-EVSE11K01-EU-AC
+  - brand: Deye
+    description:
+      generic: SUN-EVSE22K01-EU-AC
+requirements:
+  description:
+    de: |
+      Die Modbus-Register sind nicht offiziell dokumentiert, sondern per Reverse Engineering ermittelt. Die Wallbox verwendet Modbus-ID 3.
+      Der Kommunikationsmodus der Wallbox muss auf "WiFi" stehen, im Modus "LoRa" überschreibt der Wechselrichter die Leistungsvorgabe von evcc.
+    en: |
+      The Modbus registers are not officially documented but reverse engineered. The charger uses Modbus ID 3.
+      The charger's communication mode must be set to "WiFi", in "LoRa" mode the inverter overrides the power setpoint written by evcc.
+params:
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 9600
+    id: 3
+  - name: phases
+    type: choice
+    choice: ["1", "3"]
+    default: "3"
+    help:
+      de: Anzahl der Phasen, mit denen das Fahrzeug lädt. Die Wallbox erwartet eine Leistungsvorgabe in Watt, die aus dem Ladestrom berechnet wird.
+      en: Number of phases the vehicle charges with. The charger expects a power setpoint in watts which is derived from the charge current.
+render: |
+  {{- $wpa := ternary 230 690 (eq .phases "1") }}
+  type: custom
+  status:
+    source: go
+    script: |
+      res := "F" // 0x40 faulted
+      switch state & 0x7F {
+      case 0x01, 0x02: // available, finishing
+        res = "A"
+      case 0x04, 0x08, 0x10: // preparing, suspended by EV, suspended by EVSE
+        res = "B"
+      case 0x20: // charging
+        res = "C"
+      }
+      res
+    in:
+      - name: state
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 57 # 0x0039 charging state, low byte
+            type: holding
+            decode: uint16
+  enabled:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 18 # 0x0012 charging power limit (W), 0 stops charging
+      type: holding
+      decode: uint16
+  enable:
+    # the loadpoint writes the current before enabling, so the limit register already holds the target power
+    source: go
+    script: |
+      power := 0
+      if enable {
+        power = limit
+        if power == 0 {
+          power = {{ mul 6 $wpa }}
+        }
+      }
+      power
+    in:
+      - name: limit
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 18 # 0x0012 charging power limit (W)
+            type: holding
+            decode: uint16
+    out:
+      - name: power
+        type: int
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 18 # 0x0012 charging power limit (W)
+            type: writesingle
+            decode: uint16
+  maxcurrent:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 18 # 0x0012 charging power limit (W)
+      type: writesingle
+      decode: uint16
+    scale: {{ $wpa }} # A to W
+  maxcurrentmillis:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 18 # 0x0012 charging power limit (W)
+      type: writesingle
+      decode: uint16
+    scale: {{ $wpa }} # A to W
+  power:
+    source: calc
+    add:
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 38 # 0x0026 charging power L1
+          type: holding
+          decode: uint16
+        scale: 10
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 39 # 0x0027 charging power L2
+          type: holding
+          decode: uint16
+        scale: 10
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 40 # 0x0028 charging power L3
+          type: holding
+          decode: uint16
+        scale: 10
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 34 # 0x0022 total charged energy (kWh)
+      type: holding
+      decode: uint16
+  currents:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 47 # 0x002F charging current L1
+        type: holding
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 48 # 0x0030 charging current L2
+        type: holding
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 49 # 0x0031 charging current L3
+        type: holding
+        decode: uint16
+      scale: 0.1
+  voltages:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 44 # 0x002C charging voltage L1
+        type: holding
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 45 # 0x002D charging voltage L2
+        type: holding
+        decode: uint16
+      scale: 0.1
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 46 # 0x002E charging voltage L3
+        type: holding
+        decode: uint16
+      scale: 0.1
