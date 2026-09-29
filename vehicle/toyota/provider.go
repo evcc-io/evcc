@@ -70,11 +70,14 @@ func (v *Provider) Soc() (float64, error) {
 		return 0, err
 	}
 
-	if res.Payload.BatteryLevel == nil {
+	switch {
+	case res.Payload.PhevUsableBatteryLevel != nil:
+		return float64(*res.Payload.PhevUsableBatteryLevel), nil
+	case res.Payload.BatteryLevel != nil:
+		return float64(*res.Payload.BatteryLevel), nil
+	default:
 		return 0, api.ErrNotAvailable
 	}
-
-	return float64(*res.Payload.BatteryLevel), nil
 }
 
 // Range implements the api.VehicleRange interface
