@@ -9,15 +9,15 @@ import (
 )
 
 type Accumulator struct {
-	clock               clock.Clock
-	updated             time.Time
-	energyMeter         *float64 // kWh
-	returnEnergyMeter   *float64 // kWh
-	energyPending       *float64 // kWh, lower reading awaiting confirmation
-	returnEnergyPending *float64 // kWh, lower reading awaiting confirmation
-	Energy              float64  `json:"energy"`       // kWh
-	ReturnEnergy        float64  `json:"returnEnergy"` // kWh
-	SocTemp             *float64 `json:"socTemp,omitempty"`
+	clock             clock.Clock
+	updated           time.Time
+	energyMeter       *float64 // kWh
+	returnEnergyMeter *float64 // kWh
+	energyReset       *float64 // kWh, unconfirmed lower reading
+	returnEnergyReset *float64 // kWh, unconfirmed lower reading
+	Energy            float64  `json:"energy"`       // kWh
+	ReturnEnergy      float64  `json:"returnEnergy"` // kWh
+	SocTemp           *float64 `json:"socTemp,omitempty"`
 }
 
 // AccumulatorState is the resumable meter-reading checkpoint of an Accumulator.
@@ -82,9 +82,8 @@ func (m *Accumulator) String() string {
 	return b.String()
 }
 
-// meterDelta returns the increase of a cumulative meter total over its last reading and advances the baseline.
-// A reading below the baseline is ignored as a transient dropout; a second, increasing lower reading
-// confirms a counter reset and rebases without adding energy.
+// meterDelta returns the increase of a cumulative meter total over its last reading. A lower reading is
+// ignored as a dropout until a second, increasing lower reading confirms the counter reset.
 func meterDelta(v float64, last, pending **float64) float64 {
 	switch {
 	case *last == nil:
@@ -104,13 +103,13 @@ func meterDelta(v float64, last, pending **float64) float64 {
 // SetEnergyMeterTotal adds the difference to the last total meter value in kWh
 func (m *Accumulator) SetEnergyMeterTotal(v float64) {
 	m.updated = m.clock.Now()
-	m.Energy += meterDelta(v, &m.energyMeter, &m.energyPending)
+	m.Energy += meterDelta(v, &m.energyMeter, &m.energyReset)
 }
 
 // SetReturnEnergyMeterTotal adds the difference to the last total meter value in kWh
 func (m *Accumulator) SetReturnEnergyMeterTotal(v float64) {
 	m.updated = m.clock.Now()
-	m.ReturnEnergy += meterDelta(v, &m.returnEnergyMeter, &m.returnEnergyPending)
+	m.ReturnEnergy += meterDelta(v, &m.returnEnergyMeter, &m.returnEnergyReset)
 }
 
 // AddEnergy adds the given energy in kWh to the energy total
