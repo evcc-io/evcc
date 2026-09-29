@@ -391,7 +391,10 @@ import type { State } from "@/types/evcc";
 const EXPAND_KEYS = [
 	"battery",
 	"charger",
+	"circuit",
+	"curtailer",
 	"forecast",
+	"hems",
 	"loadpoints",
 	"messenger",
 	"meter",
@@ -583,6 +586,9 @@ export default defineComponent({
 				const deviceEndpoints = [
 					"config/loadpoints",
 					"config/devices/charger",
+					"config/devices/circuit",
+					"config/devices/curtailer",
+					"config/devices/hems",
 					"config/devices/messenger",
 					"config/devices/meter",
 					"config/devices/tariff",
@@ -593,7 +599,6 @@ export default defineComponent({
 					"config/site",
 					...deviceEndpoints,
 					"config/circuits",
-					"config/hems",
 					"config/messaging",
 					"config/tariffs",
 					"config/tariff",
@@ -636,12 +641,23 @@ export default defineComponent({
 					"interval",
 					"residualPower",
 					"experimental",
+					"optimizer",
+					"optimizerChargingStrategy",
+					"gridExportLimit",
+					"ocpp",
+					"ocppforwarder",
+					"eebus",
+					"country",
+					"currency",
 				].forEach((key) => {
 					const value = store.state[key as keyof State];
 					if (value !== undefined && value !== null) {
 						configs[key] = value;
 					}
 				});
+
+				const { remote } = store.state;
+				if (remote) configs.remote = remote.config;
 
 				this.sections.uiConfig.content = formatJson(configs, EXPAND_KEYS);
 			} catch (error) {
