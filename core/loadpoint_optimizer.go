@@ -70,15 +70,20 @@ func (lp *Loadpoint) planDeadlineCritical() bool {
 	return required > 0
 }
 
+// surplusRegime indicates that the suggested charge power matches the forecast
+// surplus, leaving the loadpoint to the pv loop instead of pinning it to a setpoint.
+// Full power is grid-fed by definition and never counts as surplus.
+func (lp *Loadpoint) surplusRegime(s *types.Suggestion) bool {
+	full := s.Charge >= lp.EffectiveMaxPower()-suggestionThreshold
+	return s.Action == actionCharge && !full && math.Abs(s.Grid) <= suggestionThreshold
+}
+
 // optimizerCharging applies the optimizer's charging decision. It returns false
 // if the loadpoint is to follow pv surplus instead, leaving current and phases
 // to the regular pv control loop. Otherwise current and phases follow the
 // suggested power, only the level is the optimizer's decision.
 func (lp *Loadpoint) optimizerCharging(s *types.Suggestion, welcomeCharge bool) (bool, error) {
-	// full power is grid-fed by definition and never counts as surplus
-	full := s.Charge >= lp.EffectiveMaxPower()-suggestionThreshold
-
-	if s.Action == actionCharge && !full && math.Abs(s.Grid) <= suggestionThreshold {
+	if lp.surplusRegime(s) {
 		// the charge power matches the forecast surplus, which only holds on average-
 		// the pv loop tracks the measured one, so its timers must keep running
 		if lp.pvTimer.Equal(elapsed) {
@@ -94,6 +99,7 @@ func (lp *Loadpoint) optimizerCharging(s *types.Suggestion, welcomeCharge bool) 
 
 	// full power, or more than the active phases can deliver: fastCharging scales
 	// up and owns the phase timer, resetting it here would restart the delay every cycle
+	full := s.Charge >= lp.EffectiveMaxPower()-suggestionThreshold
 	if s.Action == actionCharge && (full || s.Charge > currentToPower(lp.effectiveMaxCurrent(), lp.ActivePhases())) {
 		lp.log.DEBUG.Printf("optimizer: charge (%.0fW), full power", s.Charge)
 		return true, lp.fastCharging()
