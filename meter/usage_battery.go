@@ -134,9 +134,10 @@ type batterySocLimits struct {
 
 // var _ api.BatterySocLimiter = (*batterySocLimits)(nil)
 
-// Decorator returns an api.BatterySocLimiter decorator
+// Decorator returns an api.BatterySocLimiter decorator. The neutral defaults
+// (0/0 or 0/100) mean no limits configured.
 func (m *batterySocLimits) Decorator() func() (float64, float64) {
-	if m.MinSoc == 0 && m.MaxSoc == 0 {
+	if m.MinSoc == 0 && (m.MaxSoc == 0 || m.MaxSoc == 100) {
 		return nil
 	}
 	return func() (float64, float64) {

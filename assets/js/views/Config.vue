@@ -374,7 +374,7 @@
 						</DeviceCard>
 						<DeviceCard
 							:title="`${$t('config.circuits.title')}`"
-							editable
+							:editable="circuitsYamlSource !== 'file'"
 							:error="hasClassError('circuit')"
 							:unconfigured="isUnconfigured(circuitsTags)"
 							:banner="
@@ -383,12 +383,16 @@
 									: undefined
 							"
 							data-testid="circuits"
-							@edit="openModal('circuits')"
+							@edit="openCircuitsModal"
 						>
 							<template #icon><CircuitsIcon /></template>
 							<template #tags>
 								<DeviceTags v-if="!circuitsRoot" :tags="circuitsTags" />
-								<CircuitTags v-else :nodes="[circuitsRoot]" />
+								<CircuitTags
+									v-else
+									:nodes="[circuitsRoot]"
+									:loadpoints="circuitLoadpoints"
+								/>
 							</template>
 						</DeviceCard>
 						<DeviceCard
@@ -553,8 +557,15 @@
 				/>
 				<ShmModal @changed="loadDirty" />
 				<MessagingLegacyModal @changed="loadDirty" />
-				<MessagingModal :messengers="messengers" @changed="loadDirty" />
-				<MessengerModal @changed="messengerChanged" />
+				<MessagingModal
+					:messengers="messengers"
+					@changed="loadDirty"
+					@enable="(id) => handleDisable('messenger', id, false)"
+				/>
+				<MessengerModal
+					@changed="messengerChanged"
+					@disable="({ id, disable }) => handleDisable('messenger', id, disable)"
+				/>
 				<CurtailerModal @changed="curtailerChanged" />
 				<TariffsLegacyModal @changed="loadDirty" />
 				<TariffModal
@@ -567,9 +578,19 @@
 				<McpModal />
 				<ExperimentalModal :experimental="experimental" />
 				<RemoteModal :remote="remote" :is-sponsor="isSponsor" :site-title="siteTitle" />
-				<TitleModal @changed="loadDirty" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
-				<CircuitsModal :gridMeter="gridMeter" :extMeters="extMeters" @changed="loadDirty" />
+				<CircuitsLegacyModal
+					:grid-meter="gridMeter"
+					:ext-meters="extMeters"
+					@changed="loadDirty"
+				/>
+				<CircuitsModal :circuits="circuits" :grid-meter="gridMeter" @changed="loadDirty" />
+				<CircuitModal
+					:circuits="circuits"
+					:meters="meters"
+					:grid-meter="gridMeter"
+					@changed="circuitChanged"
+				/>
 				<EebusModal
 					:status="eebus?.status"
 					:yamlSource="eebus?.yamlSource"
@@ -607,7 +628,7 @@ import MeterIcon from "../components/VehicleIcon/Meter.vue";
 import GenericIcon from "../components/VehicleIcon/Generic.vue";
 import CircuitsIcon from "../components/MaterialIcon/Circuits.vue";
 import CircuitsModal from "../components/Config/CircuitsModal.vue";
-import CircuitTags from "../components/Config/CircuitTags.vue";
+import CircuitTags, { type CircuitLoadpoint } from "../components/Config/CircuitTags.vue";
 import collector from "../mixins/collector";
 import ControlModal from "../components/Config/ControlModal.vue";
 import CurtailerModal from "../components/Config/CurtailerModal.vue";
@@ -657,7 +678,6 @@ import TariffCard from "../components/Config/TariffCard.vue";
 import TariffModal from "../components/Config/TariffModal.vue";
 import TelemetryModal from "../components/Config/TelemetryModal.vue";
 import ExperimentalModal from "../components/Config/ExperimentalModal.vue";
-import TitleModal from "../components/Config/TitleModal.vue";
 import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import TempSensorModal from "../components/Config/TempSensorModal.vue";
@@ -714,6 +734,8 @@ import PasswordModal from "../components/Auth/PasswordModal.vue";
 import SecurityModal from "../components/Config/Security/SecurityModal.vue";
 import ApiKeyModal from "../components/Config/Security/ApiKeyModal.vue";
 import AuthProvidersCard from "../components/Config/AuthProvidersCard.vue";
+import CircuitModal from "@/components/Config/CircuitModal.vue";
+import CircuitsLegacyModal from "@/components/Config/CircuitsLegacyModal.vue";
 
 export default defineComponent({
 	name: "Config",
@@ -724,7 +746,9 @@ export default defineComponent({
 		ConfigSection,
 		ConfigSectionNav,
 		CircuitsIcon,
+		CircuitsLegacyModal,
 		CircuitsModal,
+		CircuitModal,
 		CircuitTags,
 		ControlModal,
 		CurtailerModal,
@@ -768,7 +792,6 @@ export default defineComponent({
 		TariffModal,
 		TelemetryModal,
 		ExperimentalModal,
-		TitleModal,
 		TopHeader: Header,
 		VehicleIcon,
 		TempSensorModal,
@@ -1219,13 +1242,23 @@ export default defineComponent({
 			});
 			return map;
 		},
+		circuitsYamlSource() {
+			return store.state.circuitsConfig?.yamlSource;
+		},
 		messagingTags(): DeviceTags {
 			if (this.messagingUiConfigured) {
 				const events = store.state?.messagingEvents || [];
 				const enabledEvents = Object.values(events).filter((e: any) => !e.disabled).length;
+
+				const disabledMessengers = this.messengers.filter((m) => m.deviceDisable).length;
+				const messengerValue =
+					disabledMessengers === 0
+						? this.messengers.length
+						: `${this.messengers.length - disabledMessengers} / ${this.messengers.length}`;
+
 				return {
 					events: { value: enabledEvents },
-					messengers: { value: this.messengers.length },
+					messengers: { value: messengerValue },
 				};
 			}
 			return { configured: { value: this.messagingYamlConfigured } };
@@ -1250,8 +1283,19 @@ export default defineComponent({
 				authDisabled: this.authDisabled,
 			};
 		},
-		circuitsRoot(): CircuitNode | null {
-			return circuitTree(store.state?.circuits || {});
+		circuitsRoot(): CircuitNode | undefined {
+			return circuitTree(store.state.circuits);
+		},
+		circuitLoadpoints(): CircuitLoadpoint[] {
+			return this.loadpoints
+				.filter((lp) => lp.circuit)
+				.map((lp) => ({
+					name: lp.name,
+					title: lp.title,
+					circuit: lp.circuit,
+					power:
+						store.state.loadpoints?.find((s) => s.name === lp.name)?.chargePower ?? 0,
+				}));
 		},
 		hemsDimmed(): boolean {
 			// only consumption limits matter for circuits, curtailment affects feed-in
@@ -1316,6 +1360,7 @@ export default defineComponent({
 				vehicle: () => this.vehicleChanged(),
 				tempsensor: () => this.tempSensorChanged(),
 				loadpoint: () => this.loadpointChanged(),
+				messenger: () => this.messengerChanged(),
 			};
 			try {
 				if (deviceClass === "loadpoint") {
@@ -1525,12 +1570,20 @@ export default defineComponent({
 			await this.loadDirty();
 			this.updateValues();
 		},
+		openCircuitsModal() {
+			const modalName = this.circuitsYamlSource === "db" ? "circuitslegacy" : "circuits";
+			openModal(modalName);
+		},
 		openMessagingModal() {
 			const modalName = this.messagingYamlSource === "db" ? "messaginglegacy" : "messaging";
 			openModal(modalName);
 		},
 		async messengerChanged() {
 			this.loadMessengers();
+			this.loadDirty();
+		},
+		async circuitChanged() {
+			this.loadCircuits();
 			this.loadDirty();
 		},
 		curtailerTitle(curtailer: ConfigCurtailer): string {
@@ -1656,8 +1709,8 @@ export default defineComponent({
 }) as any;
 </script>
 <style scoped>
-/* transition transforms must not make the page x-scrollable */
-.container {
+/* transition transforms must not make the page x-scrollable; clip on root so card shadows survive */
+.root {
 	overflow-x: clip;
 }
 .config-list {

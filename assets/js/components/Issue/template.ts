@@ -46,30 +46,24 @@ function generateBody(issue: IssueData, additional: string): string {
   return toString(sections);
 }
 
+const SECTION_FORMAT: Record<keyof Sections, [string, string]> = {
+  yamlConfig: ["## Configuration (YAML)", "yaml"],
+  uiConfig: ["## Configuration (UI)", "json5"],
+  state: ["## System State", "json5"],
+  logs: ["## Logs", ""],
+};
+
+export function generateSection(key: keyof Sections, content: string): string {
+  const [heading, lang] = SECTION_FORMAT[key];
+  return toString([heading, ["```" + lang, content, "```"]]);
+}
+
 function generateAdditional(sections: Sections): string {
-  const result: Template = [];
-
-  if (sections.yamlConfig.included) {
-    result.push("## Configuration (YAML)");
-    result.push(["```yaml", sections.yamlConfig.content, "```"]);
-  }
-
-  if (sections.uiConfig.included) {
-    result.push("## Configuration (UI)");
-    result.push(["```json5", sections.uiConfig.content, "```"]);
-  }
-
-  if (sections.state.included) {
-    result.push("## System State");
-    result.push(["```json5", sections.state.content, "```"]);
-  }
-
-  if (sections.logs.included) {
-    result.push("## Logs");
-    result.push(["```", sections.logs.content, "```"]);
-  }
-
-  return toString(result);
+  return toString(
+    (Object.keys(SECTION_FORMAT) as (keyof Sections)[])
+      .filter((key) => sections[key].included)
+      .map((key) => generateSection(key, sections[key].content))
+  );
 }
 
 // Generates mailto url with plaintext body; diagnostics travel as file attachment instead

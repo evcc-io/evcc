@@ -31,6 +31,10 @@ components:
         currency:
           $ref: "#/components/schemas/Currency"
           description: Configured currency for all monetary values.
+        country:
+          description: Configured site country as ISO 3166-1 alpha-2 code. Empty when not set.
+          type: string
+          example: DE
         fatal:
           description: Fatal startup errors.
           type: array
@@ -103,6 +107,10 @@ components:
         gridExportLimit:
           description: Static grid export power limit in W used as optimizer constraint, 0 = disabled. An active HEMS curtailment takes precedence.
           type: number
+        profilePercentile:
+          description: Percentile of the historic energy profiles used for demand prediction in %, e.g. 50 = median. Null uses the average.
+          type: number
+          nullable: true
         greenShareHome:
           description: Share of green energy in home consumption, between 0 and 1.
           type: number
@@ -185,6 +193,9 @@ components:
           type: object
           additionalProperties:
             $ref: "#/components/schemas/Circuit"
+        circuitsConfig:
+          $ref: "#/components/schemas/GenericConfigStatus"
+          description: Load management configuration.
         bufferSoc:
           description: Battery buffer SoC in %. Energy above this level may be used for charging in solar mode.
           type: number
@@ -474,6 +485,9 @@ components:
       description: A load management circuit limiting power and current of its assigned loadpoints.
       type: object
       properties:
+        name:
+          description: Circuit name used as configuration reference.
+          type: string
         title:
           description: Circuit title for UI display.
           type: string
@@ -803,6 +817,12 @@ components:
         chargerFeatureContinuous:
           description: Charger is a heating device where disabled means normal operation.
           type: boolean
+        chargerFeatureDemandTemperature:
+          description: Heating device demand forecast uses daily average profile scaled by outdoor temperature.
+          type: boolean
+        chargerFeatureDemandWeekday:
+          description: Heating device demand forecast uses same-weekday average over past 4 weeks.
+          type: boolean
         chargerFeatureHeating:
           description: Charger is a heating device. SoC values represent temperature in degrees.
           type: boolean
@@ -1085,6 +1105,8 @@ components:
         - chargerFeatureClimaterDisabled
         - chargerFeatureCoarseCurrent
         - chargerFeatureContinuous
+        - chargerFeatureDemandTemperature
+        - chargerFeatureDemandWeekday
         - chargerFeatureHeating
         - chargerFeatureIntegratedDevice
         - chargerFeatureOffline
