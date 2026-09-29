@@ -280,3 +280,5 @@ replace github.com/enbility/spine-go => github.com/andig/spine-go v0.7.1-0.20260
 replace github.com/enbility/eebus-go => github.com/andig/eebus-go v0.0.0-20260831161745-7e1f121e46ad
 
 replace github.com/enbility/ship-go => github.com/andig/ship-go v0.6.1-0.20260901124541-3de7acda5f88
+
+replace github.com/volkszaehler/mbmd => github.com/premultiply/mbmd v0.0.0-20260929062814-f22a9f388197
