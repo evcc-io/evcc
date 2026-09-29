@@ -441,6 +441,9 @@ export default defineComponent({
         new Intl.DisplayNames(this.$i18n?.locale, { type: "currency" }).of(currency) || currency
       );
     },
+    fmtCountryName(country: string) {
+      return new Intl.DisplayNames(this.$i18n?.locale, { type: "region" }).of(country) || country;
+    },
     fmtPricePerKWh(amout = 0, currency = CURRENCY.EUR, short = false, withUnit = true) {
       const factor = this.pricePerKWhDisplayFactor(currency);
       const value = amout * factor;
