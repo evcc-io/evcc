@@ -72,7 +72,13 @@ export async function startSimulator() {
     steamLog.end();
   });
 
-  await waitOn({ resources: [`${simulatorUrl()}/api/state`], log: LOG_ENABLED });
+  // the api answers before vite has transformed the app, so also wait for the
+  // entry module: the first request triggers dependency optimization which can
+  // take longer than an action timeout on a loaded ci runner
+  await waitOn({
+    resources: [`${simulatorUrl()}/api/state`, `http-get://${simulatorHost()}/src/Simulator.vue`],
+    log: LOG_ENABLED,
+  });
 }
 
 export async function stopSimulator() {
