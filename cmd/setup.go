@@ -1309,14 +1309,12 @@ func configureTariffs(conf *globalconfig.Tariffs, names ...string) (*tariff.Tari
 			return &tariffs, err
 		}
 		tariffs.Currency = cur
+		tariffs.CurrencyExplicit = true
 
 	default:
 		// no explicit currency configured, default to the site country's legal tender, if known
-		if country, _ := settings.String(keys.Country); country != "" {
-			if cur, ok := region.Currency(country); ok {
-				tariffs.Currency = cur
-			}
-		}
+		country, _ := settings.String(keys.Country)
+		tariffs.Currency = region.CurrencyOrDefault(country)
 	}
 
 	return &tariffs, nil

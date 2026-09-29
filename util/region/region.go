@@ -9,6 +9,10 @@ import (
 	"golang.org/x/text/language"
 )
 
+// DefaultCurrency is used when no currency can be derived from the site
+// country, e.g. because the country is empty or has no single legal tender.
+var DefaultCurrency = currency.EUR
+
 // Parse validates code as an ISO 3166-1 alpha-2 country code and returns the
 // corresponding language.Region.
 func Parse(code string) (language.Region, error) {
@@ -28,4 +32,14 @@ func Currency(code string) (currency.Unit, bool) {
 		return currency.Unit{}, false
 	}
 	return currency.FromRegion(region)
+}
+
+// CurrencyOrDefault returns the currency unit that is currently legal tender
+// in the given country, falling back to DefaultCurrency if the country is
+// empty, invalid, or has no single current legal tender currency.
+func CurrencyOrDefault(code string) currency.Unit {
+	if cur, ok := Currency(code); ok {
+		return cur
+	}
+	return DefaultCurrency
 }

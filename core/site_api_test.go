@@ -3,10 +3,9 @@ package core
 import (
 	"testing"
 
-	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/db"
-	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/tariff"
+	"github.com/evcc-io/evcc/util/region"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/text/currency"
@@ -37,21 +36,32 @@ func TestSetCountryDerivesCurrency(t *testing.T) {
 	assert.Equal(t, currency.USD, site.tariffs.Currency, "currency should follow the country's legal tender")
 }
 
+// TestSetCountryKeepsExplicitCurrency guards against overwriting a currency
+// that was configured explicitly, be it via yaml or the UI: both are
+// reflected by CurrencyExplicit, unlike settings.Exists(keys.Currency) which
+// only sees UI/db settings and would miss a yaml-only configuration.
 func TestSetCountryKeepsExplicitCurrency(t *testing.T) {
 	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
-	settings.SetString(keys.Currency, "CHF")
 
-	site := &Site{tariffs: &tariff.Tariffs{Currency: currency.EUR}}
+	site := &Site{tariffs: &tariff.Tariffs{Currency: currency.EUR, CurrencyExplicit: true}}
 
 	site.SetCountry("US")
 	assert.Equal(t, currency.EUR, site.tariffs.Currency, "explicitly configured currency must not be overridden")
 }
 
-func TestSetCountryUnknownLeavesCurrencyUnchanged(t *testing.T) {
-	require.NoError(t, db.NewInstance("sqlite", ":memory:"))
+// TestSetCountryResetsDerivedCurrency guards against a previously
+// country-derived currency lingering after the country is cleared or set to
+// one with no single legal tender: it must fall back to the same default
+// configureTariffs would use, not keep the stale derived value.
+func TestSetCountryResetsDerivedCurrency(t *testing.T) {
+	for _, country := range []string{"", "XX"} {
+		t.Run(country, func(t *testing.T) {
+			require.NoError(t, db.NewInstance("sqlite", ":memory:"))
 
-	site := &Site{tariffs: &tariff.Tariffs{Currency: currency.EUR}}
+			site := &Site{tariffs: &tariff.Tariffs{Currency: currency.USD}}
 
-	site.SetCountry("XX")
-	assert.Equal(t, currency.EUR, site.tariffs.Currency)
+			site.SetCountry(country)
+			assert.Equal(t, region.DefaultCurrency, site.tariffs.Currency)
+		})
+	}
 }

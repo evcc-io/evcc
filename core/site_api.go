@@ -78,12 +78,13 @@ func (site *Site) SetCountry(country string) {
 	settings.SetString(keys.Country, country)
 	site.publish(keys.Country, country)
 
-	// derive currency from country unless a currency has been configured explicitly
-	if country != "" && site.tariffs != nil && !settings.Exists(keys.Currency) {
-		if cur, ok := region.Currency(country); ok {
-			site.tariffs.Currency = cur
-			site.publish(keys.Currency, cur)
-		}
+	// keep the currency in sync with the country unless a currency has been
+	// configured explicitly (yaml or UI), falling back to the default currency
+	// if the country is empty or has no single legal tender
+	if site.tariffs != nil && !site.tariffs.CurrencyExplicit {
+		cur := region.CurrencyOrDefault(country)
+		site.tariffs.Currency = cur
+		site.publish(keys.Currency, cur)
 	}
 }
 

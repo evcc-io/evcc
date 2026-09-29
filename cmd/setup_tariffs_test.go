@@ -14,15 +14,18 @@ import (
 
 func TestConfigureTariffsCurrency(t *testing.T) {
 	tests := []struct {
-		name     string
-		country  string
-		currency string
-		want     currency.Unit
+		name         string
+		country      string
+		dbCurrency   string
+		yamlCurrency string
+		want         currency.Unit
+		wantExplicit bool
 	}{
-		{"defaults to EUR without country or currency", "", "", currency.EUR},
-		{"derives currency from country", "US", "", currency.USD},
-		{"explicit currency wins over country", "US", "CHF", currency.CHF},
-		{"unknown country falls back to default", "XX", "", currency.EUR},
+		{"defaults to EUR without country or currency", "", "", "", currency.EUR, false},
+		{"derives currency from country", "US", "", "", currency.USD, false},
+		{"explicit currency wins over country", "US", "CHF", "", currency.CHF, true},
+		{"unknown country falls back to default", "XX", "", "", currency.EUR, false},
+		{"explicit yaml currency wins over country", "US", "", "CHF", currency.CHF, true},
 	}
 
 	for _, tc := range tests {
@@ -33,15 +36,16 @@ func TestConfigureTariffsCurrency(t *testing.T) {
 			if tc.country != "" {
 				settings.SetString(keys.Country, tc.country)
 			}
-			if tc.currency != "" {
-				settings.SetString(keys.Currency, tc.currency)
+			if tc.dbCurrency != "" {
+				settings.SetString(keys.Currency, tc.dbCurrency)
 			}
 
-			conf := &globalconfig.Tariffs{}
+			conf := &globalconfig.Tariffs{Currency: tc.yamlCurrency}
 			tariffs, err := configureTariffs(conf)
 			require.NoError(t, err)
 
 			require.Equal(t, tc.want, tariffs.Currency)
+			require.Equal(t, tc.wantExplicit, tariffs.CurrencyExplicit)
 		})
 	}
 }

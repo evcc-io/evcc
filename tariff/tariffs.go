@@ -8,7 +8,10 @@ import (
 )
 
 type Tariffs struct {
-	Currency                                       currency.Unit
+	Currency currency.Unit
+	// CurrencyExplicit is true if Currency was configured explicitly (yaml or UI),
+	// as opposed to being derived from the site country or left at its default.
+	CurrencyExplicit                               bool
 	Grid, FeedIn, Co2, Planner, Solar, Temperature api.Tariff
 }
 
