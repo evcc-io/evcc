@@ -17,11 +17,11 @@ params:
     advanced: true
     type: bool
     description:
-      de: Neue REST-API verwenden (FritzOS 8.2+)
-      en: Use new REST API (FritzOS 8.2+)
+      de: Neue REST-API verwenden (FRITZ!OS 8.2+)
+      en: Use new REST API (FRITZ!OS 8.2+)
     help:
-      de: Verwende die neue REST-API für FritzOS ab Version 8.2
-      en: Use the new REST API for FritzOS version 8.2 and later
+      de: Verwende die neue REST-API für FRITZ!OS ab Version 8.2
+      en: Use the new REST API for FRITZ!OS version 8.2 and later
   - name: unit
     advanced: true
     type: int
