@@ -6,9 +6,13 @@ products:
 requirements:
   description:
     en: |
-      Instead of your account's password, the password field needs to be filled with a `refresh_token` ([instructions](https://github.com/evcc-io/evcc/wiki/Hyundai-Kia:-Refresh-Token)).
+      The password field accepts either your account's password or a `refresh_token` ([instructions](https://github.com/evcc-io/evcc/wiki/Hyundai-Kia:-Refresh-Token)).
+
+      Note: since Kia/Hyundai/Genesis blocked the legacy login flow in August 2026, external tools can no longer generate a *new* `refresh_token` — only one obtained before that change still works. If you don't already have one, use your account's password instead.
     de: |
-      Anstelle des Passworts muss in das Passwort-Feld ein `refresh_token` eingetragen werden ([Anleitung](https://github.com/evcc-io/evcc/wiki/Hyundai-Kia:-Refresh-Token)).
+      In das Passwort-Feld kann entweder das Passwort deines Kontos oder ein `refresh_token` ([Anleitung](https://github.com/evcc-io/evcc/wiki/Hyundai-Kia:-Refresh-Token)) eingetragen werden.
+
+      Hinweis: Seit Kia/Hyundai/Genesis im August 2026 den alten Login-Flow gesperrt haben, können externe Tools keinen *neuen* `refresh_token` mehr erzeugen — nur ein bereits vorher erzeugter funktioniert noch. Falls du noch keinen hast, nutze stattdessen das Passwort deines Kontos.
 params:
   - preset: vehicle-base
   - preset: vehicle-online

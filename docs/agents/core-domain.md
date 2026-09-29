@@ -36,7 +36,7 @@ Site (orchestrator — core/site.go)
 
 ### Vehicle
 - `Vehicle` — `Soc()`, `Capacity()`, `Identifiers()`, `Phases()`, `OnIdentified()`
-- `VehicleRange`, `VehicleOdometer`, `VehicleClimater`, `VehicleFinishTimer`, `VehiclePosition`
+- `VehicleRange`, `VehicleOdometer`, `VehicleClimater`, `VehiclePosition`
 - `ChargeController` — remote start/stop on vehicle
 - `CurrentLimiter` — `GetMinMaxCurrent()` for vehicle-side current limits
 - `CurrentController` — some vehicles (Tesla, Fiat) also implement `MaxCurrent()` to set charge current from the vehicle side
