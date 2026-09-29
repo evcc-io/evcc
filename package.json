@@ -11,7 +11,7 @@
     "dev": "vp dev",
     "playwright": "playwright install && playwright test --ui",
     "playwright:ci": "cross-env CI=true playwright test",
-    "simulator": "vp dev tests/simulator",
+    "simulator": "vp build tests/simulator && vp preview tests/simulator",
     "storybook": "storybook dev -p 6006",
     "license": "license-compliance --production --report detailed --allow \"MIT;Apache-2.0;ISC;BSD-2-Clause;BSD-3-Clause;0BSD\""
   },
