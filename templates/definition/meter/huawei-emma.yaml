@@ -17,13 +17,13 @@ requirements:
 
       The EMMA accepts a single Modbus TCP client at a time; further connections are reset. To share it with other systems, e.g. Home Assistant, use the [Modbus proxy](https://docs.evcc.io/en/reference/configuration/modbusproxy) of evcc.
 
-      The battery readings of the EMMA are read-only. For active battery control, configure the battery with the SUN2000 Hybrid template instead, using the address of the EMMA and the unit ID of the inverter: the EMMA forwards these requests to the inverter. The unit ID is assigned dynamically and can be found in FusionSolar or by trial.
+      The battery readings of the EMMA are read-only. For active battery control, configure the battery with the SUN2000 Hybrid template instead, using the address of the EMMA and the unit ID of the inverter: the EMMA forwards these requests to the inverter. The unit ID is assigned dynamically and can be found in FusionSolar or by trial. When evcc controls the battery, disable the EMMA's own AI energy optimization in the FusionSolar app and leave it in maximum self-consumption mode: only one system should schedule the battery.
     de: |
       Modbus TCP muss auf der EMMA mit dem Installateur-Konto in der FusionSolar-App aktiviert werden (Gerät in Betrieb nehmen, Kommunikationseinstellungen, Modbus TCP). Die EMMA antwortet auf Unit-ID 0, die das Template verwendet.
 
       Die EMMA akzeptiert nur einen Modbus-TCP-Client gleichzeitig; weitere Verbindungen werden zurückgesetzt. Um sie mit anderen Systemen wie Home Assistant zu teilen, den [Modbus-Proxy](https://docs.evcc.io/de/reference/configuration/modbusproxy) von evcc verwenden.
 
-      Die Batteriewerte der EMMA sind nur lesbar. Für die aktive Batteriesteuerung die Batterie stattdessen mit dem Template SUN2000 Hybrid konfigurieren, mit der Adresse der EMMA und der Unit-ID des Wechselrichters: die EMMA leitet diese Anfragen an den Wechselrichter weiter. Die Unit-ID wird dynamisch vergeben und ist in FusionSolar oder durch Ausprobieren zu finden.
+      Die Batteriewerte der EMMA sind nur lesbar. Für die aktive Batteriesteuerung die Batterie stattdessen mit dem Template SUN2000 Hybrid konfigurieren, mit der Adresse der EMMA und der Unit-ID des Wechselrichters: die EMMA leitet diese Anfragen an den Wechselrichter weiter. Die Unit-ID wird dynamisch vergeben und ist in FusionSolar oder durch Ausprobieren zu finden. Wenn evcc die Batterie steuert, die KI-Energieoptimierung der EMMA in der FusionSolar-App deaktivieren und die EMMA im Modus maximaler Eigenverbrauch belassen: nur ein System sollte die Batterie planen.
 render: |
   type: custom
   {{- if eq .usage "grid" }}
