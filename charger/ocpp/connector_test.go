@@ -210,6 +210,104 @@ func (suite *connTestSuite) TestOnStatusNotificationClearsStaleTxn() {
 	suite.True(suite.conn.NeedsAuthentication(), "Preparing after Available should require authentication")
 }
 
+// TestOnBootNotificationClearsStaleTxn ensures a transaction left over from
+// before a reboot is cleared when the connector comes back in Preparing without
+// reporting Available first.
+func (suite *connTestSuite) TestOnBootNotificationClearsStaleTxn() {
+	suite.conn.remoteIdTag = "evcc"
+	suite.conn.txnId = 42
+	suite.conn.idTag = "stale"
+
+	_, err := suite.cp.OnBootNotification(&core.BootNotificationRequest{})
+	suite.NoError(err)
+	<-suite.cp.bootNotificationRequestC
+	suite.Equal(42, suite.conn.txnId, "txnId should be kept until the next status")
+
+	_, err = suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+		ConnectorId: 1,
+		Status:      core.ChargePointStatusPreparing,
+		ErrorCode:   core.NoError,
+	})
+	suite.NoError(err)
+	suite.Equal(0, suite.conn.txnId, "txnId should be cleared")
+	suite.Equal("", suite.conn.idTag, "idTag should be cleared")
+	suite.True(suite.conn.NeedsAuthentication(), "Preparing after reboot should require authentication")
+}
+
+// TestOnBootNotificationSkipsInconclusiveStatus ensures a status that says
+// nothing about the transaction, e.g. Unavailable while booting, does not consume
+// the reboot flag.
+func (suite *connTestSuite) TestOnBootNotificationSkipsInconclusiveStatus() {
+	suite.conn.txnId = 42
+
+	_, err := suite.cp.OnBootNotification(&core.BootNotificationRequest{})
+	suite.NoError(err)
+	<-suite.cp.bootNotificationRequestC
+
+	for _, status := range []core.ChargePointStatus{core.ChargePointStatusUnavailable, core.ChargePointStatusPreparing} {
+		_, err = suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+			ConnectorId: 1,
+			Status:      status,
+			ErrorCode:   core.NoError,
+		})
+		suite.NoError(err)
+	}
+	suite.Equal(0, suite.conn.txnId, "txnId should be cleared")
+	suite.True(suite.conn.NeedsAuthentication(), "Preparing after reboot should require authentication")
+}
+
+// TestOnBootNotificationKeepsRunningTxn ensures a BootNotification sent on a
+// mere reconnect does not clear a transaction that is still running.
+func (suite *connTestSuite) TestOnBootNotificationKeepsRunningTxn() {
+	suite.conn.txnId = 42
+
+	_, err := suite.cp.OnBootNotification(&core.BootNotificationRequest{})
+	suite.NoError(err)
+	<-suite.cp.bootNotificationRequestC
+
+	_, err = suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+		ConnectorId: 1,
+		Status:      core.ChargePointStatusCharging,
+		ErrorCode:   core.NoError,
+	})
+	suite.NoError(err)
+	suite.Equal(42, suite.conn.txnId, "running transaction must be kept")
+
+	// the reboot flag is consumed by the first status
+	_, err = suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+		ConnectorId: 1,
+		Status:      core.ChargePointStatusPreparing,
+		ErrorCode:   core.NoError,
+	})
+	suite.NoError(err)
+	suite.Equal(42, suite.conn.txnId, "later Preparing must not clear the transaction")
+}
+
+// TestOnBootNotificationKeepsFreshTxn ensures a transaction started after the
+// BootNotification is not cleared by the first status.
+func (suite *connTestSuite) TestOnBootNotificationKeepsFreshTxn() {
+	suite.conn.txnId = 42
+
+	_, err := suite.cp.OnBootNotification(&core.BootNotificationRequest{})
+	suite.NoError(err)
+	<-suite.cp.bootNotificationRequestC
+
+	res, err := suite.conn.OnStartTransaction(&core.StartTransactionRequest{
+		ConnectorId: 1,
+		IdTag:       "rfid",
+	})
+	suite.NoError(err)
+
+	_, err = suite.conn.OnStatusNotification(&core.StatusNotificationRequest{
+		ConnectorId: 1,
+		Status:      core.ChargePointStatusPreparing,
+		ErrorCode:   core.NoError,
+	})
+	suite.NoError(err)
+	suite.Equal(res.TransactionId, suite.conn.txnId, "fresh transaction must be kept")
+	suite.False(suite.conn.NeedsAuthentication(), "fresh transaction must not require authentication")
+}
+
 // TestOnStatusNotificationKeepsActiveTxn ensures that an active transaction is
 // not cleared by transient status notifications other than Available.
 func (suite *connTestSuite) TestOnStatusNotificationKeepsActiveTxn() {

@@ -515,6 +515,7 @@
       "solarModeCustom": "muokattu",
       "solarModeMaximum": "maksimi PV",
       "solarShareNote": "Aurinkotuoton osuuden valitsin ei ole käytössä käyttäjän asetuksissa, jos olet määritellyt tehokynnykset. {0} ja tallenna ottaaksesi sen käyttöön.",
+      "solarShareReset": "Poista tehokynnykset",
       "temperatureRangeHelp": "Näkymäasetus lämpötila-asteikolle. Ei vaikuta ohjaukseen.",
       "temperatureRangeTitle": "Lämpötila-alue",
       "thresholdDisableDelayLabel": "Poista viive käytöstä",
@@ -789,7 +790,7 @@
     "optimizer": {
       "description": "Analysoi aurinkoennustetta, sähkönhintaa ja kulutustottumuksiasi optimoidakseen akun ja latauspisteiden käyttöä. Tiedot lähetetään käsiteltäväksi evcc:n optimointipalveluun. Tällä hetkellä luo vain laskelman ja visualisoinnin eikä suoraan hallinnoi laitteita.",
       "enable": "Käytä optimointia",
-      "info": "Voi kestää pari minuuttia ennen kuin optimoija-valinta tulee näkyväksi. Uusissa asennuksessa voi kestaa jopa 24 tuntia ennen kuin evcc on koonnut tarpeeksi dataa.",
+      "info": "Uusissa asennuksessa voi kestaa jopa 24 tuntia ennen kuin evcc on koonnut tarpeeksi dataa.",
       "title": "Optimointi"
     },
     "options": {
@@ -1231,6 +1232,9 @@
   },
   "issue": {
     "additional": {
+      "copied": "kopioitu!",
+      "copy": "kopioi",
+      "copySelected": "kopio valittu",
       "description": "Sisällytä asetuksesi ja lokitietosi auttaaksesi meitä toisintamaan ongelman pikaisesti. Kannustamme jakamaan mahdollisimman paljon tietoa. Nykyistä tilaa ei yleensä ole tarpeen jakaa.",
       "include": "sisällytä",
       "lines": "riviä",
@@ -1489,6 +1493,23 @@
       },
       "smartCostCheap": "Edullinen verkosta lataus",
       "smartCostClean": "Hiilineutraali verkosta lataaminen",
+      "solar": "Aurinkotuotannon ylijäämä",
+      "solarShare": {
+        "charging": {
+          "description": "Vähintään {share} vähimmäislataustehosta on tultava aurinkopaneleista.",
+          "descriptionFull": "Lataus alkaa heti kun ylijäämä kattaa vähimmäislataustehon.",
+          "descriptionZero": "Lataus alkaa heti, kun ylijäämätehoa on saatavilla."
+        },
+        "heating": {
+          "description": "Vähintään {share} vähimmäislämmitystehosta täytyy tulla aurinkopaneleista.",
+          "descriptionFull": "Lämmitys alkaa heti, kun ylijäämä kattaa vähimmäislämmitystehon.",
+          "descriptionZero": "Lämmitys alkaa heti, kun ylijäämää on saatavilla."
+        },
+        "label": "Aurinkotuotannon osuus",
+        "thresholdsHint": "Lataustehorajoja on määritelty. Poista ne käyttääksesi liukusäädintä.",
+        "thresholdsHintYaml": "Lataustehorajoja on määritelty. Poista tai poista ne käytöstä tästä latauspisteestä evcc.yaml-määrittelyissä käyttääksesi liukusäädintä.",
+        "thresholdsLink": "Muokkaa asetuksia"
+      },
       "title": "Asetukset {0}",
       "vehicle": "Ajoneuvo"
     },

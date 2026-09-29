@@ -31,6 +31,10 @@ components:
         currency:
           $ref: "#/components/schemas/Currency"
           description: Configured currency for all monetary values.
+        country:
+          description: Configured site country as ISO 3166-1 alpha-2 code. Empty when not set.
+          type: string
+          example: DE
         fatal:
           description: Fatal startup errors.
           type: array
@@ -189,6 +193,9 @@ components:
           type: object
           additionalProperties:
             $ref: "#/components/schemas/Circuit"
+        circuitsConfig:
+          $ref: "#/components/schemas/GenericConfigStatus"
+          description: Load management configuration.
         bufferSoc:
           description: Battery buffer SoC in %. Energy above this level may be used for charging in solar mode.
           type: number
@@ -478,6 +485,9 @@ components:
       description: A load management circuit limiting power and current of its assigned loadpoints.
       type: object
       properties:
+        name:
+          description: Circuit name used as configuration reference.
+          type: string
         title:
           description: Circuit title for UI display.
           type: string
