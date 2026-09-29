@@ -1097,6 +1097,7 @@
     },
     "tempsensor": {
       "generic": "Generic integrations",
+      "specific": "Specific integrations",
       "template": "Manufacturer",
       "titleAdd": "Add Temperature Sensor",
       "titleEdit": "Edit Temperature Sensor"

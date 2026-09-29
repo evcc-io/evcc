@@ -1097,6 +1097,7 @@
     },
     "tempsensor": {
       "generic": "Generische Integrationen",
+      "specific": "Spezifische Integrationen",
       "template": "Hersteller",
       "titleAdd": "Temperatursensor hinzufügen",
       "titleEdit": "Temperatursensor bearbeiten"

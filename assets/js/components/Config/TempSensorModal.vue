@@ -59,9 +59,13 @@ export default defineComponent({
 				{
 					label: "generic",
 					options: [
-						...products,
+						...products.filter((p) => p.group === "generic"),
 						customTemplateOption(this.$t("config.general.customOption")),
 					],
+				},
+				{
+					label: "specific",
+					options: products.filter((p) => p.group !== "generic"),
 				},
 			];
 		},
