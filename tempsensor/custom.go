@@ -11,6 +11,17 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
+type sensor struct {
+	api.Battery
+}
+
+var _ api.FeatureDescriber = (*sensor)(nil)
+
+// Features marks the soc value as temperature
+func (*sensor) Features() []api.Feature {
+	return []api.Feature{api.Heating}
+}
+
 func init() {
 	registry.AddCtx(api.Custom, NewConfigurableFromConfig)
 }
@@ -34,5 +45,5 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.B
 		return nil, fmt.Errorf("temp: %w", err)
 	}
 
-	return implement.Battery(tempG), nil
+	return &sensor{implement.Battery(tempG)}, nil
 }

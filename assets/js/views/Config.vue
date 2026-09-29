@@ -1674,17 +1674,19 @@ export default defineComponent({
 				: undefined;
 		},
 		loadpointTags(loadpoint: ConfigLoadpoint) {
-			const { charger, meter } = loadpoint;
+			const { charger, meter, tempSensor } = loadpoint;
 			const chargerTags = charger ? this.deviceTags("charger", charger) : {};
 			const meterTags = meter ? this.deviceTags("meter", meter) : {};
-			return { ...chargerTags, ...meterTags };
+			const tempSensorTags = tempSensor ? this.deviceTags("tempsensor", tempSensor) : {};
+			return { ...chargerTags, ...meterTags, ...tempSensorTags };
 		},
 		openModal,
 		loadpointError(loadpoint: ConfigLoadpoint): boolean {
 			return (
 				this.hasDeviceError("loadpoint", loadpoint.name) ||
 				this.hasDeviceError("charger", loadpoint.charger) ||
-				this.hasDeviceError("meter", loadpoint.meter)
+				this.hasDeviceError("meter", loadpoint.meter) ||
+				this.hasDeviceError("tempsensor", loadpoint.tempSensor)
 			);
 		},
 		hasDeviceError(type: DeviceType, name?: string) {
