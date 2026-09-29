@@ -9,7 +9,7 @@ body:
 
         The easiest way to create a complete report is **More → Report a problem** in the web interface. It adds your configuration and logs with secrets removed. See [Report a Problem][guide] for details.
 
-        **NOTE** We need a clear description, the configuration and a log file to work on an issue. Incomplete issues may be closed. We are happy to reopen them once the information has been added.
+        **NOTE** We need a clear description, the configuration and a log file to find the cause of a problem. Without them we can only guess, so incomplete issues may be closed.
 
         [df]: https://github.com/evcc-io/evcc/discussions
         [guide]: https://docs.evcc.io/en/report-a-problem
