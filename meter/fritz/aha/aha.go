@@ -106,6 +106,19 @@ func (c *Connection) TotalEnergy() (float64, error) {
 	return energy / 1000, err // Wh ==> KWh
 }
 
+// Temperature returns the temperature in °C
+func (c *Connection) Temperature() (float64, error) {
+	// temperature value in 0,1 °C
+	resp, err := c.ExecCmd("gettemperature")
+	if err != nil {
+		return 0, err
+	}
+
+	temp, err := strconv.ParseFloat(resp, 64)
+
+	return temp / 10, err
+}
+
 // SwitchPresent checks if the device is connected
 func (c *Connection) SwitchPresent() (bool, error) {
 	resp, err := c.ExecCmd("getswitchpresent")
