@@ -152,8 +152,13 @@ func NewZaptec(ctx context.Context, user, password, id string, priority bool, pa
 
 	// in stand-alone mode the charger keeps the current limit set in the Zaptec app
 	// and silently ignores current and phase updates from the API
-	if res, err := c.statusG.Get(); err == nil && res.ObservationByID(zaptec.IsStandAlone).Bool() {
-		c.log.WARN.Println("charger is in stand-alone mode: current and phase settings are ignored, disable stand-alone mode in the Zaptec app")
+	res, err := c.statusG.Get()
+	if err != nil {
+		return nil, err
+	}
+
+	if res.ObservationByID(zaptec.IsStandAlone).Bool() {
+		return nil, errors.New("charger is in stand-alone mode: current and phase settings are ignored, disable stand-alone mode in the Zaptec app")
 	}
 
 	inst, err := c.installation()
