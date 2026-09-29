@@ -160,9 +160,6 @@ func (c *Connection) TotalEnergy() (float64, error) {
 func (c *Connection) Temperature() (float64, error) {
 	unit, err := c.unitG.Get()
 	if err != nil {
-		if errors.Is(err, api.ErrNotAvailable) {
-			return 0, errors.New("device not connected")
-		}
 		return 0, err
 	}
 

@@ -111,10 +111,6 @@ func (c *Connection) Temperature() (float64, error) {
 	// temperature value in 0,1 °C
 	resp, err := c.ExecCmd("gettemperature")
 	if err != nil {
-		// fritzbox answers with status 500 for disconnected devices
-		if present, perr := c.SwitchPresent(); perr == nil && !present {
-			return 0, errors.New("device not connected")
-		}
 		return 0, err
 	}
 
