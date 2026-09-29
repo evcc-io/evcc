@@ -99,6 +99,35 @@
 					{{ $t("battery.config.gridDischarge") }} 🧪
 				</label>
 			</div>
+			<ConfirmModal
+				id="gridDischargeConfirmModal"
+				ref="gridDischargeConfirm"
+				:title="$t('battery.config.gridDischargeConfirm.title')"
+				:description="$t('battery.config.gridDischargeConfirm.description')"
+				:confirm-label="$t('config.general.forceEnable')"
+				danger
+				data-testid="grid-discharge-confirm-modal"
+			>
+				<p v-if="country">
+					{{
+						$t("battery.config.gridDischargeConfirm.country", {
+							country: fmtCountryName(country),
+						})
+					}}
+				</p>
+				<i18n-t
+					v-else
+					keypath="battery.config.gridDischargeConfirm.noCountry"
+					tag="p"
+					scope="global"
+				>
+					<template #link>
+						<router-link :to="siteConfigRoute" @click="closeGridDischargeConfirm">
+							{{ $t("config.main.title") }} › {{ $t("config.general.site") }}
+						</router-link>
+					</template>
+				</i18n-t>
+			</ConfirmModal>
 		</template>
 	</Card>
 </template>
@@ -111,12 +140,13 @@ import formatter from "@/mixins/formatter";
 import api from "@/api";
 import type { Battery } from "@/types/evcc";
 import Card from "../Helper/Card.vue";
+import ConfirmModal from "../Helper/ConfirmModal.vue";
 import InlineSocSelect from "./InlineSocSelect.vue";
 
 // Battery usage controls: surplus priority, charging buffer and discharge switches.
 export default defineComponent({
 	name: "BatteryConfigCard",
-	components: { Card, InlineSocSelect },
+	components: { Card, ConfirmModal, InlineSocSelect },
 	mixins: [formatter],
 	props: {
 		bufferSoc: { type: Number, default: 100 },
@@ -126,6 +156,7 @@ export default defineComponent({
 		batteryGridDischarge: Boolean,
 		battery: { type: Object as PropType<Battery> },
 		experimental: Boolean,
+		country: String,
 	},
 	data() {
 		return {
@@ -135,6 +166,14 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		siteConfigRoute() {
+			return { path: "/config", query: { site: "" } };
+		},
+		gridDischargeConfirmModal() {
+			return this.$refs["gridDischargeConfirm"] as
+				| InstanceType<typeof ConfirmModal>
+				| undefined;
+		},
 		chargeSubtitle(): string {
 			return `${this.$t("battery.card.soc")} ${this.fmtSoc(this.batterySoc)}`;
 		},
@@ -260,11 +299,30 @@ export default defineComponent({
 		async changeGridDischarge(e: Event) {
 			const target = e.target as HTMLInputElement;
 			try {
-				await api.post(`batterygriddischarge/${target.checked}`);
+				if (!(await this.postGridDischarge(target.checked))) {
+					target.checked = this.batteryGridDischarge; // cancelled, revert to stay in sync with state
+				}
 			} catch (err) {
-				target.checked = this.batteryGridDischarge; // revert to stay in sync with state
+				target.checked = this.batteryGridDischarge;
 				console.error(err);
 			}
+		},
+		closeGridDischargeConfirm() {
+			this.gridDischargeConfirmModal?.close();
+		},
+		// 428 asks for confirmation, then the request is repeated with force
+		async postGridDischarge(enable: boolean, force = false): Promise<boolean> {
+			const res = await api.post(`batterygriddischarge/${enable}`, null, {
+				params: force ? { force } : undefined,
+				validateStatus: (status) => status === 428 || (status >= 200 && status < 300),
+			});
+			if (res.status !== 428) {
+				return true;
+			}
+			if (!(await this.gridDischargeConfirmModal?.confirm())) {
+				return false;
+			}
+			return this.postGridDischarge(enable, true);
 		},
 		getBufferStartName(value: number) {
 			const key = value === 0 ? "never" : value === 100 ? "full" : "above";
