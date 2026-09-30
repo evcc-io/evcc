@@ -16,6 +16,7 @@ params:
     baudrate: 9600
     id: 1
   - name: maxacpower
+    service: modbus/read?address=20&type=holding&encoding=uint32s&scale=0.1&{modbus} # Rated power, 0.1 W
     required: true
   - name: storageunit
     choice: ["1", "2"]
@@ -33,8 +34,9 @@ params:
       en: |
         Choose "hv" if you are using a high voltage battery with a nominal voltage over 60V
   - name: maxdischargecurrent
+    service: modbus/read?address=109&type=holding&encoding=uint16&{modbus} # Battery Max Discharge Current
     required: true
-    default: 100
+    example: 100
     advanced: true
     description:
       en: Max Discharge Current
@@ -47,8 +49,9 @@ params:
         Maximaler Batterieentladestrom in Ampere (A) für Normalmodus. Typischer Bereich 50-350A abhängig von Batteriekapazität.
         Leistungsberechnung: P(W) = Strom(A) x Spannung(V). Beispiel mit 48V Batterie: 100A x 48V = 4800W (4,8kW).
   - name: gridchargecurrent
+    service: modbus/read?address=128&type=holding&encoding=uint16&{modbus} # Grid Charge Battery Current
     required: true
-    default: 60
+    example: 60
     advanced: true
     description:
       en: Grid Charge Current
