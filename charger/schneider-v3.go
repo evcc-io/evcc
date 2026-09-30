@@ -28,7 +28,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
-	gridx "github.com/grid-x/modbus"
 	"github.com/volkszaehler/mbmd/encoding"
 )
 
@@ -112,7 +111,7 @@ func NewSchneiderV3(ctx context.Context, settings modbus.TcpSettings) (api.Charg
 			return err
 		}
 
-	case isModbusException(err):
+	case modbus.IsException(err):
 		b2, err2 := wb.conn.ReadInputRegisters(schneiderRegSetPoint, 1)
 		if err2 != nil {
 			return nil, fmt.Errorf("current limit: %w", errors.Join(err, err2))
@@ -147,11 +146,6 @@ func NewSchneiderV3(ctx context.Context, settings modbus.TcpSettings) (api.Charg
 	}
 
 	return wb, nil
-}
-
-func isModbusException(err error) bool {
-	_, ok := errors.AsType[*gridx.Error](err)
-	return ok
 }
 
 func (wb *Schneider) heartbeat(ctx context.Context, timeout time.Duration) {
