@@ -31,6 +31,10 @@ components:
         currency:
           $ref: "#/components/schemas/Currency"
           description: Configured currency for all monetary values.
+        country:
+          description: Configured site country as ISO 3166-1 alpha-2 code. Empty when not set.
+          type: string
+          example: DE
         fatal:
           description: Fatal startup errors.
           type: array

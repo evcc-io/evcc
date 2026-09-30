@@ -55,6 +55,12 @@
       "bufferTitle": "Battery as charging buffer",
       "discharge": "Prevent home battery discharge in fast mode and during planned charging.",
       "gridDischarge": "Allow home battery to discharge to the grid.",
+      "gridDischargeConfirm": {
+        "country": "Configured country: {country}.",
+        "description": "Whether battery energy may be exported to the grid depends on your country and your feed-in agreement. If the battery is also charged from the grid, the exported energy is no longer purely solar. Under many feed-in tariffs this forfeits your remuneration or is prohibited. Check your feed-in contract and grid operator requirements first.",
+        "noCountry": "No country configured. Set it under {link}.",
+        "title": "Grid export from battery"
+      },
       "priority": "Home battery has priority while it is below {soc}. Then the charging points receive the surplus.",
       "priorityNone": "Solar surplus goes straight to the charging points. Set a value above {soc} to prioritize the home battery.",
       "priorityTitle": "Where does the surplus go first?"
@@ -200,12 +206,6 @@
       "labelInterval": "Update interval",
       "labelResidualPower": "Residual power",
       "title": "Control behavior"
-    },
-    "currency": {
-      "description": "Used to format energy prices, costs and savings based on your tariff.",
-      "example": "Your charging price was {price}. You saved {amount}.",
-      "label": "Currency",
-      "title": "Currency"
     },
     "curtailer": {
       "description": "Device that limits feed-in on request of the grid operator (§ 9 EEG). Many solar inverters support this directly via their solar meter configuration. A separate configuration is only needed for some manufacturers or multi-inverter systems.",
@@ -393,6 +393,7 @@
       "enable": "Enable",
       "error": "Error",
       "experimental": "Experimental",
+      "forceEnable": "Enable anyway",
       "forceSave": "Save anyway",
       "fromYamlHint": "Note: Configured via evcc.yaml. Remove the entry from the file to enable editing here.",
       "hideAdvancedSettings": "Hide advanced settings",
@@ -414,6 +415,7 @@
       "telemetry": "Telemetry",
       "templateLoading": "Loading...",
       "title": "Title",
+      "site": "Site",
       "typeDeprecated": "The type '{type}' is outdated and will be removed in a future version. Please check the changelog and recreate this device.",
       "validateSave": "Validate & save"
     },
@@ -929,6 +931,22 @@
       "labelVendorId": "Vendor ID",
       "title": "SMA Sunny Home Manager"
     },
+    "site": {
+      "country": {
+        "description": "Used for region-specific hints and defaults.",
+        "label": "Country"
+      },
+      "currency": {
+        "description": "Used to format energy prices, costs and savings based on your tariff.",
+        "example": "Your charging price was {price}. You saved {amount}.",
+        "label": "Currency"
+      },
+      "siteTitle": {
+        "description": "Displayed on main screen and browser tab.",
+        "label": "Title"
+      },
+      "title": "Site"
+    },
     "sponsor": {
       "addToken": "Enter token",
       "changeToken": "Change token",
@@ -1073,11 +1091,6 @@
     "telemetry": {
       "description": "Configure data sharing to help improve evcc. Your privacy is important to us and participation is completely optional.",
       "title": "Telemetry"
-    },
-    "title": {
-      "description": "Displayed on main screen and browser tab.",
-      "label": "Title",
-      "title": "Edit Title"
     },
     "validation": {
       "failed": "failed",
@@ -1234,6 +1247,7 @@
   },
   "general": {
     "back": "Back",
+    "cancel": "Cancel",
     "download": "Download",
     "error": "Error",
     "none": "none",
