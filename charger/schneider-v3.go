@@ -20,6 +20,7 @@ package charger
 import (
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"time"
 
@@ -27,6 +28,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
+	gridx "github.com/grid-x/modbus"
 	"github.com/volkszaehler/mbmd/encoding"
 )
 
@@ -98,20 +100,24 @@ func NewSchneiderV3(ctx context.Context, settings modbus.TcpSettings) (api.Charg
 		curr: 6,
 	}
 
-	// probe function code: EVlink Pro uses FC03/FC06, Charge Pro uses FC04/FC16 (NAT3046700)
+	// Charge Pro rejects FC03 with an exception, other errors must not switch protocols
 	b, err := wb.conn.ReadHoldingRegisters(schneiderRegSetPoint, 1)
-	if err == nil {
+	switch {
+	case err == nil:
+		wb.log.DEBUG.Println("using EVlink Pro protocol (FC03/FC06)")
+
 		wb.read = wb.conn.ReadHoldingRegisters
 		wb.write = func(address, value uint16) error {
 			_, err := wb.conn.WriteSingleRegister(address, value)
 			return err
 		}
-	} else {
-		// fallback to FC04/FC16 for Charge Pro
-		b, err = wb.conn.ReadInputRegisters(schneiderRegSetPoint, 1)
-		if err != nil {
-			return nil, fmt.Errorf("current limit: %w", err)
+
+	case isModbusException(err):
+		b2, err2 := wb.conn.ReadInputRegisters(schneiderRegSetPoint, 1)
+		if err2 != nil {
+			return nil, fmt.Errorf("current limit: %w", errors.Join(err, err2))
 		}
+		b = b2
 
 		wb.log.DEBUG.Println("using Charge Pro protocol (FC04/FC16)")
 
@@ -122,6 +128,9 @@ func NewSchneiderV3(ctx context.Context, settings modbus.TcpSettings) (api.Charg
 			_, err := wb.conn.WriteMultipleRegisters(address, 1, b)
 			return err
 		}
+
+	default:
+		return nil, fmt.Errorf("current limit: %w", err)
 	}
 
 	if u := encoding.Uint16(b); u > wb.curr {
@@ -138,6 +147,11 @@ func NewSchneiderV3(ctx context.Context, settings modbus.TcpSettings) (api.Charg
 	}
 
 	return wb, nil
+}
+
+func isModbusException(err error) bool {
+	_, ok := errors.AsType[*gridx.Error](err)
+	return ok
 }
 
 func (wb *Schneider) heartbeat(ctx context.Context, timeout time.Duration) {
