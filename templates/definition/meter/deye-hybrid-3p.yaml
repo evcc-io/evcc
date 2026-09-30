@@ -18,6 +18,17 @@ params:
   - name: maxacpower
     service: modbus/read?address=20&type=holding&encoding=uint32s&scale=0.1&{modbus} # Rated power, 0.1 W
     required: true
+  - name: feedinlimit
+    type: float
+    unit: W
+    usages: ["pv"]
+    advanced: true
+    description:
+      en: Feed-in limit
+      de: Einspeisegrenze
+    help:
+      en: Permanent feed-in limit configured on the inverter (Max Sell Power). Curtailment never exceeds it and lifting curtailment restores it instead of the nominal power. Leave empty if no limit is configured.
+      de: Dauerhafte Einspeisegrenze, die im Wechselrichter eingestellt ist (Max Sell Power). Die Abregelung überschreitet sie nie und die Freigabe stellt sie statt der Nennleistung wieder her. Leer lassen, wenn keine Grenze eingestellt ist.
   - name: storageunit
     choice: ["1", "2"]
   - preset: battery-params
@@ -296,6 +307,51 @@ render: |
   # device's always-active feed-in ceiling; there is no separate limit-enable register.
   # "Solar Sell" (register 145) is the owner's export on/off switch and left untouched.
   # HV models use 10 W units for register 143 (LV: 1 W).
+  {{- if gt (.feedinlimit | int) 0 }}
+  curtail: # percent of nominal, capped at the configured feed-in limit
+    source: go
+    script: |
+      w := float64(curtail) * {{ maxf .maxacpower 1 }} / 100
+      if w > {{ .feedinlimit }} {
+        w = {{ .feedinlimit }}
+      }
+      w
+    out:
+      - name: limit
+        type: float
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 143 # Max Sell Power (W)
+            type: writemultiple
+            decode: uint16
+          {{- if eq .batterytype "hv" }}
+          scale: 0.1 # W to 10 W units
+          {{- end }}
+  curtailed: # reaching the configured feed-in limit counts as uncurtailed
+    source: go
+    in:
+      - name: limit
+        type: float
+        config:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 143 # Max Sell Power (W)
+            type: holding
+            decode: uint16
+          {{- if eq .batterytype "hv" }}
+          scale: 10 # 10 W units to W
+          {{- end }}
+    script: |
+      // compare in whole percent, the register resolution does not reproduce the limit exactly
+      p := int(float64(limit)*100/{{ maxf .maxacpower 1 }} + 0.5)
+      if p > 100 || p >= int(float64({{ .feedinlimit }})*100/{{ maxf .maxacpower 1 }}+0.5) {
+        p = 100
+      }
+      p
+  {{- else }}
   curtail: # limit feed-in to the given percent of nominal (100 % = nominal power)
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -309,28 +365,26 @@ render: |
     scale: {{ divf (maxf .maxacpower 1) 100 }} # % to W
     {{- end }}
   curtailed: # allowed feed-in as percent of nominal, derived from Max Sell Power
-    source: go
-    in:
-      - name: limit
-        type: float
-        config:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 143 # Max Sell Power (W)
-            type: holding
-            decode: uint16
-          {{- if eq .batterytype "hv" }}
-          scale: 10
-          {{- end }}
-    script: |
-      // float64 is required: a whole-number input arrives as an int literal
-      // round, the watt conversion does not reproduce the written percent exactly
-      p := int(float64(limit)*100/{{ maxf .maxacpower 1 }} + 0.5)
-      if p > 100 {
-        p = 100
-      }
-      p
+    source: calc
+    min:
+    - source: calc
+      add:
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 143 # Max Sell Power
+          type: holding
+          decode: uint16
+        {{- if eq .batterytype "hv" }}
+        scale: {{ divf 1000 (maxf .maxacpower 1) }} # 10 W units to %
+        {{- else }}
+        scale: {{ divf 100 (maxf .maxacpower 1) }} # W to %
+        {{- end }}
+      - source: const
+        value: 0.5 # round, the integer conversion truncates
+    - source: const
+      value: 100
+  {{- end }}
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
