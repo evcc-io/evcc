@@ -1,51 +1,71 @@
 import { describe, expect, test } from "vite-plus/test";
-import { circuitTree } from "./circuits";
+import { circuitTree, limitBar } from "./circuits";
 
 describe("circuitTree", () => {
   test("single root", () => {
     const result = circuitTree({
-      main: { power: 0 },
+      "db:1": { name: "main", power: 0 },
     });
     expect(result).toEqual({ name: "main", power: 0 });
   });
 
   test("root with children", () => {
     const result = circuitTree({
-      root: { power: 0 },
-      child1: { power: 0, parent: "root" },
-      child2: { power: 0, parent: "root" },
+      "db:1": { name: "main", power: 0 },
+      "db:2": { name: "circuit2", power: 0, parent: "db:1" },
+      "db:3": { name: "circuit3", power: 0, parent: "db:1" },
     });
     expect(result).toEqual({
-      name: "root",
+      name: "main",
       power: 0,
       children: [
-        { name: "child1", power: 0, parent: "root" },
-        { name: "child2", power: 0, parent: "root" },
+        { name: "circuit2", power: 0, parent: "db:1" },
+        { name: "circuit3", power: 0, parent: "db:1" },
       ],
     });
   });
 
   test("nested two levels", () => {
     const result = circuitTree({
-      root: { power: 0 },
-      mid: { power: 0, parent: "root" },
-      leaf: { power: 0, parent: "mid" },
+      "db:1": { name: "main", power: 0 },
+      "db:2": { name: "circuit2", power: 0, parent: "db:1" },
+      "db:3": { name: "circuit3", power: 0, parent: "db:2" },
     });
     expect(result).toEqual({
-      name: "root",
+      name: "main",
       power: 0,
       children: [
         {
-          name: "mid",
+          name: "circuit2",
           power: 0,
-          parent: "root",
-          children: [{ name: "leaf", power: 0, parent: "mid" }],
+          parent: "db:1",
+          children: [{ name: "circuit3", power: 0, parent: "db:2" }],
         },
       ],
     });
   });
 
   test("empty input", () => {
-    expect(circuitTree({})).toBeNull();
+    expect(circuitTree({})).toBeUndefined();
+  });
+});
+
+describe("limitBar", () => {
+  test("below limit", () => {
+    expect(limitBar(5, 10)).toEqual({ state: "normal", fill: 50 });
+  });
+
+  test("near limit", () => {
+    expect(limitBar(9.5, 10)).toEqual({ state: "warning", fill: 100 });
+  });
+
+  test("over limit rescales to value", () => {
+    const bar = limitBar(15, 10);
+    expect(bar.state).toBe("danger");
+    expect(bar.fill).toBeCloseTo(66.67, 1);
+  });
+
+  test("without limit", () => {
+    expect(limitBar(5)).toEqual({ state: "normal", fill: 100 });
   });
 });

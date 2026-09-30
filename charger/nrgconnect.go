@@ -130,7 +130,7 @@ func (nrg *NRGKickConnect) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (nrg *NRGKickConnect) Enabled() (bool, error) {
-	return nrg.enabled, nil
+	return verifyEnabled(nrg, nrg.enabled)
 }
 
 // putSettings writes charging status and current in a single request.

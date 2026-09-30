@@ -18,15 +18,27 @@ params:
     choice:
       [
         "bolt",
+        "dots-energy",
         "ebem",
+        "ecofix",
+        "ecopower",
         "eneco",
+        "energiebe",
+        "energy-knights",
+        "energyvision",
         "engie",
+        "evident-energie",
         "frank-energie",
+        "hoa-energy",
         "luminus",
         "mega",
         "octaplus",
+        "power2you",
+        "servolt-energie",
+        "smappee-smiles",
         "totalenergies",
         "trevion",
+        "wase-wind",
       ]
     required: true
   - name: region

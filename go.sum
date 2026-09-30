@@ -27,8 +27,8 @@ github.com/Shopify/toxiproxy v2.1.4+incompatible h1:TKdv8HiTLgE5wdJuEML90aBgNWso
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
 github.com/WulfgarW/sensonet v0.0.8 h1:CkKzQuGTmZiYQPOI7t9tYCynM0mVnl1UNWyiSY5a3cE=
 github.com/WulfgarW/sensonet v0.0.8/go.mod h1:uId+Lbatrz6CsUMXfj+zsRPdT5KHrh3H8YOk0xZU/9E=
-github.com/andig/eebus-go v0.0.0-20260831161745-7e1f121e46ad h1:eoF8pouKHi7ImLLz/+XTOrA16tJzrbnpn0OVn9q9UPI=
-github.com/andig/eebus-go v0.0.0-20260831161745-7e1f121e46ad/go.mod h1:L1nBEy/dBASQRoz/9JF7KEmqFdnXHLbZqDpxiA0ezr4=
+github.com/andig/eebus-go v0.0.0-20260930172701-f8d6395986ba h1:LtCcwFaVDGkkqbrXOaT1TfKg13Js0emrR47cctt5LBk=
+github.com/andig/eebus-go v0.0.0-20260930172701-f8d6395986ba/go.mod h1:L1nBEy/dBASQRoz/9JF7KEmqFdnXHLbZqDpxiA0ezr4=
 github.com/andig/go-powerwall v0.3.0 h1:6g50+8xEwxrnzoSaPsxNRpc2fld8gARk0X78NEexFGI=
 github.com/andig/go-powerwall v0.3.0/go.mod h1:Xk09mD+7RTCuuHMX5RxlqgEUeh9oZdIX0rL0qiY6l/4=
 github.com/andig/gosunspec v0.0.0-20260705113727-6d585e133512 h1:1y8dS4GaBB9WUu/r8rInTaxdZhHG5GuwOfllzDAZXL8=
@@ -599,8 +599,8 @@ github.com/vmihailenco/msgpack/v5 v5.4.1 h1:cQriyiUvjTwOHg8QZaPihLWeRAAVoCpE00IU
 github.com/vmihailenco/msgpack/v5 v5.4.1/go.mod h1:GaZTsDaehaPpQVyxrf5mtQlH+pc21PIudVV/E3rRQok=
 github.com/vmihailenco/tagparser/v2 v2.0.0 h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g=
 github.com/vmihailenco/tagparser/v2 v2.0.0/go.mod h1:Wri+At7QHww0WTrCBeu4J6bNtoV6mEfg5OIWRZA9qds=
-github.com/volkszaehler/mbmd v0.0.0-20260824053034-eef6045ae30e h1:Jd98KiH1kl2t9ZswGH3HakhMn9a7N85iKT1ixN+bM1s=
-github.com/volkszaehler/mbmd v0.0.0-20260824053034-eef6045ae30e/go.mod h1:3iAKatDG8KVE9uwC41UYW0LTycMSaUyrQxqD1gH96Lo=
+github.com/volkszaehler/mbmd v0.0.0-20260930162400-0a62ee4c1c4d h1:SwTvhxdgjh4nPGOM/oVVbbMPYHID7IQ4BNpQIBHlr68=
+github.com/volkszaehler/mbmd v0.0.0-20260930162400-0a62ee4c1c4d/go.mod h1:3iAKatDG8KVE9uwC41UYW0LTycMSaUyrQxqD1gH96Lo=
 github.com/warthog618/go-gpiocdev v0.9.1 h1:pwHPaqjJfhCipIQl78V+O3l9OKHivdRDdmgXYbmhuCI=
 github.com/warthog618/go-gpiocdev v0.9.1/go.mod h1:dN3e3t/S2aSNC+hgigGE/dBW8jE1ONk9bDSEYfoPyl8=
 github.com/warthog618/go-gpiosim v0.1.1 h1:MRAEv+T+itmw+3GeIGpQJBfanUVyg0l3JCTwHtwdre4=

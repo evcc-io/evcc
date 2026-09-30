@@ -19,6 +19,7 @@ const (
 	OcppForwarder      = "ocppforwarder"
 	Tariffs            = "tariffs"
 	TariffRefs         = "tariffRefs"
+	CircuitsConfig     = "circuitsConfig"
 	Version            = "version"
 	Config             = "config"
 	Database           = "database"
