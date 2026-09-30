@@ -52,7 +52,6 @@ const (
 	wsRegDhwTemp     = 32102 // Warmwassertemperatur, 0.1K
 	wsRegFlowTemp    = 33104 // Vorlauftemperatur, 0.1K
 	wsRegBufferTemp  = 33108 // Weichentemperatur, 0.1K
-	wsRegPower       = 33126 // El. Leistungsaufnahme W
 	wsRegSollwertPv  = 40002 // SollwertPV, W
 )
 
@@ -148,21 +147,8 @@ func (wb *Weishaupt) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	if !enabled {
-		return api.StatusB, nil
-	}
-
-	power, err := wb.CurrentPower()
-	if err != nil {
-		return api.StatusNone, err
-	}
-
-	// ignore standby power
-	if power > 100 {
-		return api.StatusC, nil
-	}
-
-	return api.StatusB, nil
+	status := map[bool]api.ChargeStatus{false: api.StatusB, true: api.StatusC}
+	return status[enabled], nil
 }
 
 func (wb *Weishaupt) getPowerSetpoint() (uint16, error) {
@@ -220,17 +206,6 @@ func (wb *Weishaupt) MaxCurrentMillis(current float64) error {
 	}
 
 	return err
-}
-
-var _ api.Meter = (*Weishaupt)(nil)
-
-// CurrentPower implements the api.Meter interface
-func (wb *Weishaupt) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(wsRegPower, 1)
-	if err != nil {
-		return 0, err
-	}
-	return float64(binary.BigEndian.Uint16(b)), nil
 }
 
 // temp reads a temperature sensor register. Values outside of -50..500°C

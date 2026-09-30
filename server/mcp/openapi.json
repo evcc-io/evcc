@@ -287,21 +287,33 @@
       "post": {
         "operationId": "setBatteryGridDischarge",
         "summary": "Control battery grid discharge",
-        "description": "Allow the home battery to discharge to the grid (experimental).",
+        "description": "Allow the home battery to discharge to the grid. Enabling may require `force=true` to confirm country-specific feed-in restrictions.",
         "externalDocs": {
           "url": "https://docs.evcc.io/en/features/battery"
         },
         "tags": [
-          "battery"
+          "battery",
+          "experimental"
         ],
         "parameters": [
           {
             "$ref": "#/components/parameters/enable"
+          },
+          {
+            "name": "force",
+            "in": "query",
+            "description": "Confirm country-specific feed-in restrictions",
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
           "200": {
             "$ref": "#/components/responses/BooleanResult"
+          },
+          "428": {
+            "description": "Confirmation required"
           }
         }
       }
@@ -1621,6 +1633,66 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/config/currency": {
+      "put": {
+        "operationId": "setCurrency",
+        "summary": "Set currency",
+        "description": "Set the currency used for prices, costs and savings.",
+        "tags": [
+          "general"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "description": "ISO 4217 currency code",
+                "example": "EUR"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BlankResponse"
+          },
+          "400": {
+            "description": "Invalid currency code"
+          }
+        }
+      }
+    },
+    "/config/country": {
+      "put": {
+        "operationId": "setCountry",
+        "summary": "Set country",
+        "description": "Set the site country. Used for region-specific hints and defaults. Empty string clears the setting.",
+        "tags": [
+          "general"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "description": "ISO 3166-1 alpha-2 country code",
+                "example": "DE"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/BlankResponse"
+          },
+          "400": {
+            "description": "Invalid country code"
           }
         }
       }
@@ -4729,6 +4801,10 @@
         "description": "A load management circuit limiting power and current of its assigned loadpoints.",
         "type": "object",
         "properties": {
+          "name": {
+            "description": "Circuit name used as configuration reference.",
+            "type": "string"
+          },
           "title": {
             "description": "Circuit title for UI display.",
             "type": "string"
@@ -5208,6 +5284,11 @@
             "$ref": "#/components/schemas/Currency",
             "description": "Configured currency for all monetary values."
           },
+          "country": {
+            "description": "Configured site country as ISO 3166-1 alpha-2 code. Empty when not set.",
+            "type": "string",
+            "example": "DE"
+          },
           "fatal": {
             "description": "Fatal startup errors.",
             "type": "array",
@@ -5421,6 +5502,10 @@
             "additionalProperties": {
               "$ref": "#/components/schemas/Circuit"
             }
+          },
+          "circuitsConfig": {
+            "$ref": "#/components/schemas/GenericConfigStatus",
+            "description": "Load management configuration."
           },
           "bufferSoc": {
             "description": "Battery buffer SoC in %. Energy above this level may be used for charging in solar mode.",
