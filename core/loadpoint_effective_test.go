@@ -258,20 +258,23 @@ func TestGetChargePowerFlexibility(t *testing.T) {
 		alwaysCharge api.AlwaysCharge
 		status       api.ChargeStatus
 		planActive   bool
+		boost        int
 		want         float64
 	}{
 		// not charging → always 0
-		{api.ModeSmart, api.AlwaysChargeOff, api.StatusB, false, 0},
+		{api.ModeSmart, api.AlwaysChargeOff, api.StatusB, false, boostDisabled, 0},
 		// smart mode, charging, no plan → full power is flexible
-		{api.ModeSmart, api.AlwaysChargeOff, api.StatusC, false, 2700},
+		{api.ModeSmart, api.AlwaysChargeOff, api.StatusC, false, boostDisabled, 2700},
 		// smart mode, charging, plan active → not flexible
-		{api.ModeSmart, api.AlwaysChargeOff, api.StatusC, true, 0},
+		{api.ModeSmart, api.AlwaysChargeOff, api.StatusC, true, boostDisabled, 0},
+		// smart mode, charging, battery boost → not flexible
+		{api.ModeSmart, api.AlwaysChargeOff, api.StatusC, false, boostContinue, 0},
 		// always charge, charging, no plan → surplus above min is flexible (230V * 6A * 1phase = 1380W)
-		{api.ModeSmart, api.AlwaysChargeOn, api.StatusC, false, 2700 - 1380},
+		{api.ModeSmart, api.AlwaysChargeOn, api.StatusC, false, boostDisabled, 2700 - 1380},
 		// always charge, charging, plan active → not flexible
-		{api.ModeSmart, api.AlwaysChargeOn, api.StatusC, true, 0},
+		{api.ModeSmart, api.AlwaysChargeOn, api.StatusC, true, boostDisabled, 0},
 		// Now mode → never flexible, regardless of plan
-		{api.ModeNow, api.AlwaysChargeOff, api.StatusC, false, 0},
+		{api.ModeNow, api.AlwaysChargeOff, api.StatusC, false, boostDisabled, 0},
 	} {
 		t.Run("", func(t *testing.T) {
 			lp := NewLoadpoint(util.NewLogger("foo"), nil)
@@ -280,6 +283,7 @@ func TestGetChargePowerFlexibility(t *testing.T) {
 			lp.status = tc.status
 			lp.chargePower = 2700
 			lp.planActive = tc.planActive
+			lp.batteryBoost = tc.boost
 			// EffectiveMinPower() = 230V * 6A * 1phase = 1380W
 			lp.minCurrent = 6
 			lp.phases = 1

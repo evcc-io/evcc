@@ -22,6 +22,7 @@ const (
 // KebaUdp is an api.Charger implementation
 type KebaUdp struct {
 	implement.Caps
+	*embed
 	log     *util.Logger
 	conn    string
 	rfid    keba.RFID
@@ -37,6 +38,7 @@ func init() {
 // NewKebaUdpFromConfig creates a new Keba UDP charger
 func NewKebaUdpFromConfig(other map[string]any) (api.Charger, error) {
 	cc := struct {
+		embed   `mapstructure:",squash"`
 		URI     string
 		Serial  string
 		Timeout time.Duration
@@ -49,7 +51,7 @@ func NewKebaUdpFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, err
 	}
 
-	k, err := NewKebaUdp(cc.URI, cc.Serial, cc.RFID, cc.Timeout)
+	k, err := NewKebaUdp(&cc.embed, cc.URI, cc.Serial, cc.RFID, cc.Timeout)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +71,7 @@ func NewKebaUdpFromConfig(other map[string]any) (api.Charger, error) {
 }
 
 // NewKebaUdp creates a new charger
-func NewKebaUdp(uri, serial string, rfid keba.RFID, timeout time.Duration) (*KebaUdp, error) {
+func NewKebaUdp(embed *embed, uri, serial string, rfid keba.RFID, timeout time.Duration) (*KebaUdp, error) {
 	log := util.NewLogger("keba")
 
 	instance, err := keba.Instance(log)
@@ -83,6 +85,7 @@ func NewKebaUdp(uri, serial string, rfid keba.RFID, timeout time.Duration) (*Keb
 
 	c := &KebaUdp{
 		Caps:    implement.New(),
+		embed:   embed,
 		log:     log,
 		conn:    conn,
 		rfid:    rfid,

@@ -41,6 +41,17 @@ func (s *Settings) GetSessionID(c *request.Helper) (string, error) {
 	}
 
 	uri := fmt.Sprintf("%s/login_sid.lua", s.URI)
+
+	// try to renew the still-known session id instead of always performing a
+	// fresh credentialed login (which triggers a Fritzbox login notification)
+	if s.sid != "" {
+		if sid, err := s.renewSessionID(c, uri); err == nil {
+			s.sid = sid
+			s.updated = time.Now()
+			return sid, nil
+		}
+	}
+
 	body, err := c.GetBody(uri)
 	if err != nil {
 		return "", err
@@ -73,6 +84,26 @@ func (s *Settings) GetSessionID(c *request.Helper) (string, error) {
 
 	s.sid = v.SID
 	s.updated = time.Now()
+	return v.SID, nil
+}
+
+// renewSessionID checks if the current session id is still valid and, if so,
+// refreshes its timeout without requiring a new credentialed login
+func (s *Settings) renewSessionID(c *request.Helper, uri string) (string, error) {
+	body, err := c.GetBody(uri + "?" + url.Values{"sid": {s.sid}}.Encode())
+	if err != nil {
+		return "", err
+	}
+
+	var v struct{ SID string }
+	if err := xml.Unmarshal(body, &v); err != nil {
+		return "", err
+	}
+
+	if v.SID == "" || v.SID == "0000000000000000" {
+		return "", errors.New("session expired")
+	}
+
 	return v.SID, nil
 }
 

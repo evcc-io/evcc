@@ -582,12 +582,11 @@ func (site *Site) DumpConfig() {
 
 		for i, v := range vehicles {
 			_, rng := api.Cap[api.VehicleRange](v)
-			_, finish := api.Cap[api.VehicleFinishTimer](v)
 			_, status := api.Cap[api.ChargeState](v)
 			_, climate := api.Cap[api.VehicleClimater](v)
 			_, wakeup := api.Cap[api.Resurrector](v)
-			site.log.INFO.Printf("    vehicle %d: range %s finish %s status %s climate %s wakeup %s",
-				i+1, presence[rng], presence[finish], presence[status], presence[climate], presence[wakeup],
+			site.log.INFO.Printf("    vehicle %d: range %s status %s climate %s wakeup %s",
+				i+1, presence[rng], presence[status], presence[climate], presence[wakeup],
 			)
 		}
 	}
@@ -1393,6 +1392,7 @@ func (site *Site) prepare() {
 	}
 
 	site.publish(keys.SiteTitle, site.Title)
+	site.publish(keys.Country, site.GetCountry())
 
 	site.publish(keys.GridConfigured, site.gridMeter != nil)
 	site.publish(keys.Grid, api.Meter(nil))
