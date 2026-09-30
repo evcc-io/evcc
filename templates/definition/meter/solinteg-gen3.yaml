@@ -28,6 +28,10 @@ params:
     id: 255
   - name: maxacpower
   - preset: battery-params
+  - name: minsoc
+    service: modbus/read?address=52503&type=holding&encoding=uint16&scale=0.1&{modbus} # On-grid Battery End SOC
+  - name: maxsoc
+    service: modbus/read?address=52506&type=holding&encoding=uint16&scale=0.1&{modbus} # Battery Max SOC (newer firmware only)
 render: |
   type: custom
   {{- if eq .usage "grid" }}
