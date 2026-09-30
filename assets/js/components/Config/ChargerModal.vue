@@ -5,6 +5,7 @@
 		device-type="charger"
 		:is-sponsor="isSponsor"
 		:modal-title="modalTitle"
+		tags-usage="charge"
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
 		:is-type-deprecated="isTypeDeprecated"

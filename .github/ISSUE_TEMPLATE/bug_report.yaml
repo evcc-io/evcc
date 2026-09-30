@@ -5,11 +5,14 @@ body:
   - type: markdown
     attributes:
       value: |
-        This issue form is for reporting issues only! If you want to start a discussion or ask a question, please use the [discussion forum][df].
+        Thanks for taking the time to report a bug. For questions and help with your setup, please use the [discussion forum][df].
 
-        **NOTE** Due to amount of issues raised we will close incomplete issues (unclear description what the issue actually is, missing log file, unsupported platform) without further comments.
+        The easiest way to create a complete report is **More → Report a problem** in the web interface. It adds your configuration and logs with secrets removed. See [Report a Problem][guide] for details.
+
+        **NOTE** We need a clear description, the configuration and a log file to find the cause of a problem. Without them we can only guess, so incomplete issues may be closed.
 
         [df]: https://github.com/evcc-io/evcc/discussions
+        [guide]: https://docs.evcc.io/en/report-a-problem
   - type: textarea
     validations:
       required: true
@@ -42,7 +45,7 @@ body:
 
         Please make sure your report does NOT contain **passwords**, **sponsor token** or other **credentials**!
 
-        To quickly dump a redacted configuration without secrets, you can use the `evcc dump --cfg` command.
+        The **Report a problem** page in the web interface provides a redacted configuration without secrets.
 
   - type: textarea
     validations:
@@ -51,7 +54,8 @@ body:
       label: Log details
       render: text
       description: >
-        Show evcc log output of the issue, see https://docs.evcc.io/en/docs/faq#how-do-i-create-a-log-file-for-error-analysis for instructions.
+        Show evcc log output of the issue, see https://docs.evcc.io/en/report-a-problem#logs for instructions.
+        The log must start before the problem arises and cover the moment it shows.
         In case of issues with physical devices like chargers, meters or vehicles, make sure that the log file has level `trace` enabled for the device.
 
   - type: dropdown

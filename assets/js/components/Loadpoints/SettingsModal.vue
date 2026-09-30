@@ -26,11 +26,43 @@
 				:last-limit="loadpoint?.lastSmartFeedInPriorityLimit"
 				:currency="currency"
 				:loadpoint-id="id"
+				is-loadpoint
 				:multiple-loadpoints="multipleLoadpoints"
 				:possible="smartFeedInPriorityAvailable"
 				:tariff="forecast?.feedin"
 				class="mt-2 mb-4"
 			/>
+			<h6>
+				{{ $t("main.loadpointSettings.solar") }}
+			</h6>
+			<div class="mb-3 row">
+				<label :for="formId('solarshare')" class="col-sm-4 col-form-label pt-0 pt-sm-2">
+					{{ $t("main.loadpointSettings.solarShare.label") }}
+				</label>
+				<SolarShareSlider
+					:id="formId('solarshare')"
+					v-model="selectedSolarShare"
+					class="col-sm-8 col-lg-4 pe-0"
+					:class="{ 'opacity-50': thresholdsConfigured }"
+					:disabled="thresholdsConfigured"
+					@change="setSolarShare"
+				/>
+				<div class="col-sm-8 offset-sm-4 mt-1">
+					<small class="text-muted">
+						<template v-if="thresholdsConfigured && loadpointConfigRoute">
+							{{ $t("main.loadpointSettings.solarShare.thresholdsHint") }}
+							<router-link :to="loadpointConfigRoute" @click="closeModal">
+								{{ $t("main.loadpointSettings.solarShare.thresholdsLink") }}
+							</router-link>
+						</template>
+						<template v-else-if="thresholdsConfigured">
+							{{ $t("main.loadpointSettings.solarShare.thresholdsHintYaml") }}
+						</template>
+						<template v-else>{{ solarShareDescription }}</template>
+					</small>
+				</div>
+			</div>
+
 			<LoadpointSettingsBatteryBoost
 				v-if="batteryBoostAvailable"
 				v-bind="batteryBoostProps"
@@ -70,6 +102,7 @@
 					</small>
 				</div>
 			</div>
+
 			<h6>
 				{{ $t("main.loadpointSettings.currents") }}
 			</h6>
@@ -168,11 +201,10 @@ import GenericModal from "../Helper/GenericModal.vue";
 import SmartCostLimit from "../Tariff/SmartCostLimit.vue";
 import SmartFeedInPriority from "../Tariff/SmartFeedInPriority.vue";
 import SettingsBatteryBoost from "./SettingsBatteryBoost.vue";
+import SolarShareSlider from "./SolarShareSlider.vue";
 import { defineComponent, type PropType } from "vue";
-import { PHASES, CURRENCY, SMART_COST_TYPE, type Forecast, type UiLoadpoint } from "@/types/evcc";
+import { PHASES, CURRENCY, SMART_COST_TYPE, type UiForecast, type UiLoadpoint } from "@/types/evcc";
 import api from "@/api";
-
-const V = 230;
 
 const range = (start: number, stop: number, step = -1) =>
 	Array.from({ length: (stop - start) / step + 1 }, (_, i) => start + i * step);
@@ -195,6 +227,7 @@ export default defineComponent({
 		SmartCostLimit,
 		SmartFeedInPriority,
 		LoadpointSettingsBatteryBoost: SettingsBatteryBoost,
+		SolarShareSlider,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -206,7 +239,7 @@ export default defineComponent({
 		tariffGrid: Number,
 		currency: String as PropType<CURRENCY>,
 		multipleLoadpoints: Boolean,
-		forecast: Object as PropType<Forecast>,
+		forecast: Object as PropType<UiForecast>,
 	},
 	data() {
 		return {
@@ -215,6 +248,7 @@ export default defineComponent({
 			selectedMinCurrent: undefined as number | undefined,
 			selectedMinTemp: undefined as number | undefined,
 			selectedPhases: undefined as number | undefined,
+			selectedSolarShare: 100,
 			isModalVisible: false,
 		};
 	},
@@ -296,6 +330,32 @@ export default defineComponent({
 		batteryBoostAvailable() {
 			return this.batteryConfigured;
 		},
+		solarSharePercent() {
+			return Math.round((this.loadpoint?.solarShare ?? 1) * 100);
+		},
+		thresholdsConfigured() {
+			return !!(this.loadpoint?.enableThreshold || this.loadpoint?.disableThreshold);
+		},
+		loadpointConfigRoute() {
+			// only db-configured loadpoints ("db:<id>") have a config modal
+			const name = this.loadpoint?.name;
+			if (!name?.startsWith("db:")) {
+				return null;
+			}
+			return { path: "/config", query: { loadpoint: name.slice(3) } };
+		},
+		solarShareDescription(): string {
+			const prefix = `main.loadpointSettings.solarShare.${this.heating ? "heating" : "charging"}`;
+			if (this.selectedSolarShare === 0) {
+				return this.$t(`${prefix}.descriptionZero`);
+			}
+			if (this.selectedSolarShare === 100) {
+				return this.$t(`${prefix}.descriptionFull`);
+			}
+			return this.$t(`${prefix}.description`, {
+				share: this.fmtPercentage(this.selectedSolarShare),
+			});
+		},
 	},
 	watch: {
 		maxCurrent(value) {
@@ -310,6 +370,9 @@ export default defineComponent({
 		phasesConfigured(value) {
 			this.selectedPhases = value;
 		},
+		solarSharePercent(value) {
+			this.selectedSolarShare = value;
+		},
 	},
 	methods: {
 		open(loadpointId: string) {
@@ -318,14 +381,12 @@ export default defineComponent({
 			this.selectedMaxCurrent = this.maxCurrent;
 			this.selectedMinCurrent = this.minCurrent;
 			this.selectedMinTemp = this.minTemp;
+			this.selectedSolarShare = this.solarSharePercent;
 			const modalRef = this.$refs["modal"] as InstanceType<typeof GenericModal> | undefined;
 			modalRef?.open();
 		},
 		apiPath(func: string) {
 			return "loadpoints/" + this.id + "/" + func;
-		},
-		fmtPhasePower(current?: number, phases?: PHASES) {
-			return this.fmtW(V * (current || 0) * (phases || 0));
 		},
 		formId(name: string) {
 			return `loadpoint_${this.id}_${name}`;
@@ -342,12 +403,18 @@ export default defineComponent({
 		setPhasesConfigured() {
 			api.post(this.apiPath("phases") + "/" + this.selectedPhases);
 		},
+		setSolarShare() {
+			api.post(this.apiPath("solarshare") + "/" + this.selectedSolarShare / 100);
+		},
+		closeModal() {
+			(this.$refs["modal"] as InstanceType<typeof GenericModal> | undefined)?.close();
+		},
 		setBatteryBoostLimit(limit: number) {
 			api.post(this.apiPath("batteryboostlimit") + "/" + limit);
 		},
 		currentOption(current: number, isDefault: boolean, phases?: number) {
 			const kw = this.fmtPhasePower(current, phases);
-			let name = `${this.fmtNumber(current, undefined)} A (${kw})`;
+			let name = `${this.fmtNumber(current)} A (${kw})`;
 			if (isDefault) {
 				name += ` [${this.$t("main.loadpointSettings.default")}]`;
 			}

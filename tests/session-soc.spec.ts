@@ -56,10 +56,11 @@ test("soc range", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByTestId("vehicle-status")).toContainText("Charging");
 
-  // update SoC to 80% and energy to 10 kWh
+  // update SoC to 80%, range to 400 km and energy to 10 kWh
   await page.goto(simulatorUrl());
   await loadpoint.getByLabel("Energy").fill("10");
   await vehicle.getByLabel("SoC").fill("80");
+  await vehicle.getByLabel("Range").fill("400");
   await simulatorApply(page);
 
   await page.goto("/");
@@ -79,4 +80,7 @@ test("soc range", async ({ page }) => {
   const modal = page.getByTestId("session-details");
   await expectModalVisible(modal);
   await expect(modal.getByTestId("session-details-soc")).toContainText("20 – 80%");
+
+  // added range: 400 km at 80% soc -> 400 * (80 - 20) / 80 = 300 km
+  await expect(modal.getByTestId("session-details-added-range")).toContainText("+300 km");
 });

@@ -6,13 +6,16 @@
 		<button type="button" class="dropdown-item" @click="openHelpModal">
 			{{ $t("header.needHelp") }}
 		</button>
+		<router-link class="dropdown-item" to="/issue" active-class="active">
+			{{ $t("issue.title") }}
+		</router-link>
 		<button
 			type="button"
 			class="dropdown-item d-flex align-items-center"
 			@click="openAboutModal"
 		>
 			<span v-if="showVersionBadge" class="circle-badge me-1 bg-darker-green"></span>
-			<span>evcc</span>
+			<span>{{ customBrand || "evcc" }}</span>
 			<span class="ms-2 text-muted small">{{ versionLabel }}</span>
 			<shopicon-regular-gift
 				v-if="newVersionAvailable"
@@ -96,7 +99,7 @@ import {
 import settings from "@/settings";
 import { isUserConfigError } from "@/utils/fatal";
 import { defineComponent, type PropType } from "vue";
-import type { FatalError, Sponsor, EvOpt, AuthProviders, Vehicle } from "@/types/evcc";
+import type { FatalError, Sponsor, AuthProviders, Vehicle } from "@/types/evcc";
 
 export default defineComponent({
 	name: "MoreMenu",
@@ -108,17 +111,14 @@ export default defineComponent({
 		fatal: { type: Array as PropType<FatalError[]>, default: () => [] },
 		experimental: Boolean,
 		authDisabled: Boolean,
-		evopt: { type: Object as PropType<EvOpt>, required: false },
+		optimizer: Boolean,
 		installed: String,
-		commit: String,
 		availableVersion: String,
+		customBrand: String,
 	},
 	emits: ["close"],
 	data() {
-		return {
-			isApp: isApp(),
-			onClickOutside: undefined as ((e: MouseEvent) => void) | undefined,
-		};
+		return { isApp: isApp() };
 	},
 	computed: {
 		providers() {
@@ -146,7 +146,7 @@ export default defineComponent({
 			return "bg-warning";
 		},
 		versionLabel() {
-			return getShortVersion(this.installed || "", this.commit);
+			return getShortVersion(this.installed || "");
 		},
 		newVersionAvailable() {
 			return isNewVersionAvailable(this.installed, this.availableVersion);
@@ -159,7 +159,7 @@ export default defineComponent({
 			);
 		},
 		optimizeAvailable() {
-			return !!this.evopt && this.experimental;
+			return this.optimizer && this.experimental;
 		},
 		showLogout() {
 			return !this.authDisabled && isLoggedIn();
@@ -167,19 +167,6 @@ export default defineComponent({
 		hasVehicles() {
 			return Object.keys(this.vehicles).length > 0;
 		},
-	},
-	mounted() {
-		this.onClickOutside = (e: MouseEvent) => {
-			if (this.open && !this.$el.contains(e.target as Node)) {
-				this.$emit("close");
-			}
-		};
-		document.addEventListener("click", this.onClickOutside, true);
-	},
-	unmounted() {
-		if (this.onClickOutside) {
-			document.removeEventListener("click", this.onClickOutside, true);
-		}
 	},
 	methods: {
 		handleAuthRequired() {

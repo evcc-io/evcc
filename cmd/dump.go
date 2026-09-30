@@ -131,7 +131,7 @@ func runDump(cmd *cobra.Command, args []string) {
 		d.DumpWithHeader(fmt.Sprintf("vehicle: %s", v.GetTitle()), v)
 	}
 
-	for id, lpI := range site.Loadpoints() {
+	for id, lpI := range site.ActiveLoadpoints() {
 		lp := lpI.(*core.Loadpoint)
 
 		d.Header(fmt.Sprintf("loadpoint %d", id+1), "=")

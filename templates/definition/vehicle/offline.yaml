@@ -18,8 +18,8 @@ params:
     deprecated: true
 render: |
   type: custom
-  {{- include "vehicle-common" . }}
-  {{ include "vehicle-features" (merge (dict "basefeatures" (list "offline")) .) }}
+  {{- include "common" . }}
+  {{ include "features" (merge (dict "basefeatures" (list "offline")) .) }}
   soc:
     source: const
     value: 0

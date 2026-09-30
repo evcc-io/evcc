@@ -15,7 +15,7 @@ func TestCardataStreaming(t *testing.T) {
 
 	p := NewProvider(ctx, util.NewLogger("foo"), nil, oauth2.StaticTokenSource(&oauth2.Token{
 		AccessToken: "at",
-	}), "client", "vin", 0)
+	}), "client", "vin", time.Hour)
 
 	// prevent container panic
 	p.updated = time.Now()
@@ -30,8 +30,8 @@ func TestCardataStreaming(t *testing.T) {
 	require.Equal(t, 42.0, soc)
 
 	mqtt := mqttConnections["client"]
-	dataC := mqtt.subscriptions["vin"]
-	require.NotNil(t, dataC, "streaming channel")
+	require.Len(t, mqtt.subscriptions["VIN"], 1, "streaming channel")
+	dataC := mqtt.subscriptions["VIN"][0].in
 
 	dataC <- StreamingMessage{
 		Vin: "vin",
@@ -40,13 +40,10 @@ func TestCardataStreaming(t *testing.T) {
 		},
 	}
 
-	// process first message
-	dataC <- StreamingMessage{}
-	dataC <- StreamingMessage{}
-
-	soc, err = p.Soc()
-	require.NoError(t, err)
-	require.Equal(t, 47.0, soc)
+	require.Eventually(t, func() bool {
+		soc, err := p.Soc()
+		return err == nil && soc == 47.0
+	}, time.Second, 10*time.Millisecond, "streaming update not applied")
 }
 
 func TestSocFallback(t *testing.T) {
@@ -54,7 +51,7 @@ func TestSocFallback(t *testing.T) {
 
 	p := NewProvider(ctx, util.NewLogger("foo"), nil, oauth2.StaticTokenSource(&oauth2.Token{
 		AccessToken: "at",
-	}), "client", "vin", 0)
+	}), "client", "vin", time.Hour)
 
 	// prevent container panic
 	p.updated = time.Now()
@@ -111,7 +108,7 @@ func TestRangeFallback(t *testing.T) {
 
 	p := NewProvider(ctx, util.NewLogger("foo"), nil, oauth2.StaticTokenSource(&oauth2.Token{
 		AccessToken: "at",
-	}), "client", "vin", 0)
+	}), "client", "vin", time.Hour)
 
 	// prevent container panic
 	p.updated = time.Now()
@@ -168,7 +165,7 @@ func TestStatusFallback(t *testing.T) {
 
 	p := NewProvider(ctx, util.NewLogger("foo"), nil, oauth2.StaticTokenSource(&oauth2.Token{
 		AccessToken: "at",
-	}), "client", "vin", 0)
+	}), "client", "vin", time.Hour)
 
 	// prevent container panic
 	p.updated = time.Now()

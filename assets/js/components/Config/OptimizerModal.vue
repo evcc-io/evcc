@@ -62,7 +62,7 @@ export default defineComponent({
 			return !!store.state?.evopt;
 		},
 		docsLink(): string {
-			return `${docsPrefix()}/docs/features/optimizer`;
+			return `${docsPrefix()}/features/optimizer`;
 		},
 	},
 	methods: {

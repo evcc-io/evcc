@@ -42,6 +42,7 @@ func BaseHeaders() map[string]string {
 
 type Identity struct {
 	*request.Helper
+	log            *util.Logger
 	user, password string
 	oauth2.TokenSource
 }
@@ -49,6 +50,7 @@ type Identity struct {
 func NewIdentity(log *util.Logger, user, password string) *Identity {
 	return &Identity{
 		Helper:   request.NewHelper(log),
+		log:      log,
 		user:     user,
 		password: password,
 	}
@@ -64,7 +66,7 @@ func (v *Identity) Login() error {
 		return fmt.Errorf("login failed: %w", err)
 	}
 
-	v.TokenSource = oauth2.ReuseTokenSource(token, oauth.BootstrapTokenSource(v.login))
+	v.TokenSource = oauth2.ReuseTokenSource(token, oauth.BootstrapTokenSource(v.log, v.login))
 	return nil
 }
 

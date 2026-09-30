@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import axios from "axios";
 import { start, stop, restart, baseUrl } from "./evcc";
 import {
@@ -22,6 +22,25 @@ test.afterEach(async () => {
 
 const CONFIG = "fast.evcc.yaml";
 
+async function addMainCircuit(page: Page, title: string) {
+  await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
+  const circuitsModal = page.getByTestId("circuits-modal");
+  await expectModalVisible(circuitsModal);
+  await circuitsModal.getByRole("button", { name: "Add main circuit" }).click();
+
+  const circuitModal = page.getByTestId("circuit-modal");
+  await expectModalVisible(circuitModal);
+  await circuitModal.getByLabel("Title").fill(title);
+  await circuitModal
+    .getByLabel("Circuit", { exact: true })
+    .selectOption({ label: "Static circuit" });
+  await circuitModal.getByRole("button", { name: "Save" }).click();
+  await expectModalHidden(circuitModal);
+  await expectModalVisible(circuitsModal);
+  await circuitsModal.getByRole("button", { name: "Close" }).last().click();
+  await expectModalHidden(circuitsModal);
+}
+
 test.describe("HEMS", () => {
   test("no recorded events section in create mode", async ({ page }) => {
     await start(CONFIG, "hems.sql");
@@ -37,6 +56,30 @@ test.describe("HEMS", () => {
     await expect(hemsModal.getByLabel("Integration")).toBeVisible();
     await expect(hemsModal.getByTestId("yaml-editor")).not.toBeVisible();
     await expect(hemsModal).not.toContainText("Configured via evcc.yaml");
+
+    // both user-defined variants prefill their own yaml
+    const editor = hemsModal.getByTestId("yaml-editor");
+    await hemsModal
+      .getByLabel("Integration")
+      .selectOption({ label: "User-defined integration (relay)" });
+    await expect(editor).toContainText("type: relay");
+    await hemsModal.getByLabel("Integration").selectOption({ label: "User-defined integration" });
+    await expect(editor).toContainText("type: custom");
+
+    // validate reports active limits
+    const testResult = hemsModal.getByTestId("test-result");
+    await editorClear(editor);
+    await editorPaste(
+      editor,
+      page,
+      `type: custom
+maxconsumptionpower:
+  source: const
+  value: 4200`
+    );
+    await testResult.getByRole("link", { name: "validate" }).click();
+    await expect(testResult).toContainText("Status: successful");
+    await expect(testResult).toContainText(["Consumption limit", "4.2 kW"].join(""));
 
     await hemsModal.getByRole("button", { name: "Close" }).click();
     await expectModalHidden(hemsModal);
@@ -88,6 +131,73 @@ test.describe("HEMS", () => {
     await expectModalHidden(hemsModal);
   });
 
+  test("grid export limit", async ({ page }) => {
+    await start(CONFIG);
+    await page.goto("/#/config");
+
+    const hemsModal = page.getByTestId("hems-modal");
+    const section = hemsModal.getByTestId("grid-export-limit");
+
+    // hidden without experimental
+    await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(hemsModal);
+    await expect(section).not.toBeVisible();
+    await hemsModal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(hemsModal);
+
+    // enable experimental
+    await page
+      .getByTestId("generalconfig-experimental")
+      .getByRole("button", { name: "edit" })
+      .click();
+    const experimentalModal = page.getByTestId("experimental-modal");
+    await expectModalVisible(experimentalModal);
+    await experimentalModal.getByLabel("Enable experimental features.").click();
+    await experimentalModal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(experimentalModal);
+
+    await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(hemsModal);
+    const toggle = section.getByRole("switch", { name: "Grid export limit" });
+    const input = section.getByRole("spinbutton", { name: "Grid export limit" });
+    const staticTab = hemsModal.getByRole("link", { name: "Static limits" });
+
+    await staticTab.click();
+
+    // initially off, input collapsed
+    await expect(toggle).not.toBeChecked();
+    await expect(input).not.toBeVisible();
+
+    // enable, set value, commit via Enter
+    await toggle.click();
+    await expect(input).toBeVisible();
+    await input.fill("7000");
+    await input.press("Enter");
+    await expect(section.getByText("Saved.")).toBeVisible();
+
+    await hemsModal.getByRole("button", { name: "Close" }).click();
+    await expectModalHidden(hemsModal);
+
+    // card shows the static limit instead of unconfigured
+    const hemsCard = page.getByTestId("hems");
+    await expect(hemsCard).toContainText("Grid export limit");
+    await expect(hemsCard).toContainText("7.0 kW");
+    await expect(hemsCard).not.toContainText("Configured");
+
+    // persisted across restart
+    await restart(CONFIG);
+    await page.reload();
+    await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(hemsModal);
+    await staticTab.click();
+    await expect(toggle).toBeChecked();
+    await expect(input).toHaveValue("7000");
+
+    // switch off removes limit, collapse is the feedback
+    await toggle.click();
+    await expect(input).not.toBeVisible();
+  });
+
   test("user-defined relay drives external limit without circuits", async ({ page }) => {
     const GRID_CONFIG = "hems-grid.evcc.yaml";
     await startSimulator();
@@ -99,7 +209,9 @@ test.describe("HEMS", () => {
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
-    await hemsModal.getByLabel("Integration").selectOption({ label: "User-defined integration" });
+    await hemsModal
+      .getByLabel("Integration")
+      .selectOption({ label: "User-defined integration (relay)" });
     const hemsEditor = hemsModal.getByTestId("yaml-editor");
     await expect(hemsEditor).toBeVisible();
     await editorClear(hemsEditor);
@@ -151,7 +263,9 @@ limit:
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
-    await hemsModal.getByLabel("Integration").selectOption({ label: "User-defined integration" });
+    await hemsModal
+      .getByLabel("Integration")
+      .selectOption({ label: "User-defined integration (relay)" });
     const hemsEditor = hemsModal.getByTestId("yaml-editor");
     await editorClear(hemsEditor);
     await editorPaste(
@@ -198,20 +312,15 @@ limit:
     await page.goto("/#/config");
 
     // configure circuits, hint on the circuits card requires them
-    await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
-    const circuitsModal = page.getByTestId("circuits-modal");
-    await expectModalVisible(circuitsModal);
-    const circuitsEditor = circuitsModal.getByTestId("yaml-editor");
-    await editorClear(circuitsEditor);
-    await editorPaste(circuitsEditor, page, `- name: main\n  title: House`);
-    await circuitsModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(circuitsModal);
+    await addMainCircuit(page, "House");
 
     // configure fnn hems with all signals wired to the simulator
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
-    await hemsModal.getByLabel("Integration").selectOption({ label: "User-defined integration" });
+    await hemsModal
+      .getByLabel("Integration")
+      .selectOption({ label: "User-defined integration (relay)" });
     const hemsEditor = hemsModal.getByTestId("yaml-editor");
     await expect(hemsEditor).toBeVisible();
     await editorClear(hemsEditor);
@@ -248,9 +357,7 @@ w4:${signalSource("w4")}`
 
     // no signals: no limits
     await page.goto("/#/config");
-    await expect(hems).toContainText(
-      ["Consumption limited", "no", "Feed-in limited", "no"].join("")
-    );
+    await expect(hems).toContainText(["Consumption limited", "no", "Feed-in limit", "no"].join(""));
     await expect(hint).not.toBeVisible();
 
     // dim (W4): consumption limited
@@ -294,9 +401,7 @@ w4:${signalSource("w4")}`
     await expect(hint).not.toBeVisible();
     await page.reload();
     await expect(pvBanner).not.toBeVisible();
-    await expect(hems).toContainText(
-      ["Consumption limited", "no", "Feed-in limited", "no"].join("")
-    );
+    await expect(hems).toContainText(["Consumption limited", "no", "Feed-in limit", "no"].join(""));
 
     await stopSimulator();
   });
@@ -311,7 +416,9 @@ w4:${signalSource("w4")}`
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
-    await hemsModal.getByLabel("Integration").selectOption({ label: "User-defined integration" });
+    await hemsModal
+      .getByLabel("Integration")
+      .selectOption({ label: "User-defined integration (relay)" });
     const hemsEditor = hemsModal.getByTestId("yaml-editor");
     await expect(hemsEditor).toBeVisible();
     await editorClear(hemsEditor);
@@ -363,20 +470,15 @@ w3:
     await page.goto("/#/config");
 
     // configure circuits
-    await page.getByTestId("circuits").getByRole("button", { name: "edit" }).click();
-    const circuitsModal = page.getByTestId("circuits-modal");
-    await expectModalVisible(circuitsModal);
-    const circuitsEditor = circuitsModal.getByTestId("yaml-editor");
-    await editorClear(circuitsEditor);
-    await editorPaste(circuitsEditor, page, `- name: main\n  title: House`);
-    await circuitsModal.getByRole("button", { name: "Save" }).click();
-    await expectModalHidden(circuitsModal);
+    await addMainCircuit(page, "House");
 
     // configure hems via user-defined provider
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     const hemsModal = page.getByTestId("hems-modal");
     await expectModalVisible(hemsModal);
-    await hemsModal.getByLabel("Integration").selectOption({ label: "User-defined integration" });
+    await hemsModal
+      .getByLabel("Integration")
+      .selectOption({ label: "User-defined integration (relay)" });
     const hemsEditor = hemsModal.getByTestId("yaml-editor");
     await expect(hemsEditor).toBeVisible();
     await editorClear(hemsEditor);
@@ -400,7 +502,7 @@ limit:
     await expect(page.getByTestId("circuits").getByTestId("device-banner")).toHaveText(
       "Consumption limited"
     );
-    await expect(page.getByTestId("circuits")).toContainText(["House", "Power", "0.0 kW"].join(""));
+    await expect(page.getByTestId("circuits")).toContainText(["House", "0.0", "kW"].join(""));
     await expect(page.getByTestId("circuits")).not.toContainText("External Limit");
 
     // a new loadpoint can only be assigned to the dedicated circuit
@@ -410,6 +512,6 @@ limit:
     await expectModalVisible(lpModal);
     await lpModal.getByRole("link", { name: "Advanced configuration" }).click();
     const circuitOptions = lpModal.getByLabel("Circuit").getByRole("option");
-    await expect(circuitOptions).toHaveText(["---", "House [main]"]);
+    await expect(circuitOptions).toHaveText(["---", "House"]);
   });
 });

@@ -28,12 +28,12 @@ params:
   - name: cache
     default: 15m
 render: |
-  type: smart-eq
+  type: mercedes
   vin: {{ .vin }}
   user: {{ .user }}
   region: {{ .region }}
   tokens:
     access: {{ .accessToken }}
     refresh: {{ .refreshToken }}
-  {{ include "vehicle-common" . }}
-  {{ include "vehicle-features" . }}
+  {{ include "common" . }}
+  {{ include "features" . }}

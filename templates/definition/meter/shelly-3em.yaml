@@ -16,6 +16,8 @@ params:
     advanced: true
   - name: password
     advanced: true
+  - name: cache
+    default: 1s
 render: |
   {{- define "uri" -}}
   http://{{ if .user }}{{ urlEncode .user }}:{{ urlEncode .password }}@{{ end }}{{ .host }}
@@ -25,45 +27,57 @@ render: |
     source: http
     uri: {{ include "uri" . }}/status
     jq: .emeters | map(.power) | add
+    cache: {{ .cache }}
   {{- if ne .usage "grid" }}
   energy:
     source: http
     uri: {{ include "uri" . }}/status
     jq: .emeters | map(.total) | add
     scale: 0.001
+    cache: {{ .cache }}
   returnenergy:
     source: http
     uri: {{ include "uri" . }}/status
     jq: .emeters | map(.total_returned) | add
     scale: 0.001
+    cache: {{ .cache }}
   {{- end }}
   currents:
   - source: http
     uri: {{ include "uri" . }}/emeter/0
     jq: .current
+    cache: {{ .cache }}
   - source: http
     uri: {{ include "uri" . }}/emeter/1
     jq: .current
+    cache: {{ .cache }}
   - source: http
     uri: {{ include "uri" . }}/emeter/2
     jq: .current
+    cache: {{ .cache }}
   voltages:
   - source: http
     uri: {{ include "uri" . }}/emeter/0
     jq: .voltage
+    cache: {{ .cache }}
   - source: http
     uri: {{ include "uri" . }}/emeter/1
     jq: .voltage
+    cache: {{ .cache }}
   - source: http
     uri: {{ include "uri" . }}/emeter/2
     jq: .voltage
+    cache: {{ .cache }}
   powers:
   - source: http
     uri: {{ include "uri" . }}/emeter/0
     jq: .power
+    cache: {{ .cache }}
   - source: http
     uri: {{ include "uri" . }}/emeter/1
     jq: .power
+    cache: {{ .cache }}
   - source: http
     uri: {{ include "uri" . }}/emeter/2
     jq: .power
+    cache: {{ .cache }}

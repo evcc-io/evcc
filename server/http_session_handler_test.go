@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/core/session"
-	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/db"
 	"github.com/stretchr/testify/require"
 )
 

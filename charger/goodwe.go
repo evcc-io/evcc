@@ -270,12 +270,12 @@ func (wb *GoodWe) phases1p3p(phases int) error {
 var _ api.Identifier = (*GoodWe)(nil)
 
 // Identify implements api.Identifier (RFID UID, 14-byte NUL-padded ASCII).
-func (wb *GoodWe) Identify() (string, error) {
+func (wb *GoodWe) Identify() ([]string, error) {
 	b, err := wb.conn.ReadHoldingRegisters(goodweRegRfid, 7)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return bytesAsString(bytes.Trim(b, "\x00")), nil
+	return []string{bytesAsString(bytes.Trim(b, "\x00"))}, nil
 }
 
 var _ loadpoint.Controller = (*GoodWe)(nil)

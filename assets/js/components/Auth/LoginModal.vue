@@ -61,7 +61,7 @@ export default defineComponent({
 	},
 	computed: {
 		resetUrl() {
-			return `${docsPrefix()}/docs/faq#password-reset`;
+			return `${docsPrefix()}/faq#password-reset`;
 		},
 		modalSize() {
 			return this.demoMode ? "md" : "sm";

@@ -7,6 +7,7 @@
 				class="me-2 flex-shrink-0 spin"
 				:title="$t('main.vehicle.detectionActive')"
 				data-bs-toggle="tooltip"
+				data-testid="vehicle-detection-icon"
 			>
 				<Sync />
 			</div>
@@ -105,7 +106,7 @@ export default defineComponent({
 		},
 		vehicleOptions(): SelectOption<string>[] {
 			return this.vehicles.map((v) => ({
-				name: v.name,
+				name: v.name ?? "",
 				value: v.title,
 			}));
 		},
@@ -158,11 +159,6 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* overflow-hidden would clip the vehicle select focus ring */
-.ring-space {
-	padding: 0.5rem;
-	margin: -0.5rem;
-}
 .vehicle-name {
 	text-decoration-color: var(--evcc-gray);
 }

@@ -74,6 +74,8 @@ func runGendoc(cmd *cobra.Command, args []string) {
 		// prettier-style list bullets
 		s = strings.ReplaceAll(s, "* [", "- [")
 		s = strings.ReplaceAll(s, ")\t - ", ") - ")
+		// collapse double spaces after sentence end (prettier style)
+		s = strings.ReplaceAll(s, ".  ", ". ")
 		// convert single line indented code to backtick surrounded code
 		s = codeRe.ReplaceAllString(s, "\n\n```\n$1\n```\n")
 		// collapse multiple blank lines and trailing newlines (prettier style)

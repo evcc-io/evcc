@@ -1,4 +1,4 @@
-interval: 10s
+interval: 0.1s
 
 site:
   title: Hello World
@@ -18,12 +18,22 @@ meters:
       source: js
       script: |
         500
+  - name: heatpump_meter
+    type: custom
+    power:
+      source: js
+      script: |
+        800
 
 loadpoints:
   - title: Water Heater
     charger: charger
     meter: charger_meter
     mode: now
+  - title: Heat Pump
+    charger: heatpump
+    meter: heatpump_meter
+    mode: smart
 
 chargers:
   - name: charger
@@ -49,3 +59,26 @@ chargers:
       script: |
         40
     features: [integrateddevice, heating, switchdevice]
+  - name: heatpump
+    icon: heatpump
+    type: custom
+    enable:
+      source: js
+      script:
+    enabled:
+      source: js
+      script: |
+        true
+    status:
+      source: js
+      script: |
+        "C"
+    maxcurrent:
+      source: js
+      script: |
+        16
+    soc:
+      source: js
+      script: |
+        35
+    features: [integrateddevice, heating, continuous]

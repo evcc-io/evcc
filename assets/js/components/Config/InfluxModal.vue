@@ -3,7 +3,7 @@
 		name="influx"
 		:title="$t('config.influx.title')"
 		:description="$t('config.influx.description')"
-		docs="/docs/reference/configuration/influx"
+		docs="/reference/configuration/influx"
 		endpoint="/config/influx"
 		state-key="influx"
 		@changed="$emit('changed')"

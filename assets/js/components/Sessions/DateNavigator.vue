@@ -146,6 +146,7 @@ import DateNavigatorButton from "./DateNavigatorButton.vue";
 import formatter from "@/mixins/formatter";
 import type { SelectOption } from "@/types/evcc";
 import { attachSwipeHandler } from "@/utils/swipe";
+import { hapticFeedback } from "@/utils/haptic";
 
 function daysInMonth(year: number, month: number) {
 	return new Date(year, month, 0).getDate();
@@ -279,7 +280,6 @@ export default defineComponent({
 		this.detachSwipe = attachSwipeHandler(document.body, {
 			onSwipeLeft: () => this.swipeNext(),
 			onSwipeRight: () => this.swipePrev(),
-			ignoreSelector: "canvas, [_echarts_instance_]",
 		});
 	},
 	unmounted() {
@@ -393,6 +393,7 @@ export default defineComponent({
 			else if (this.showYear && this.hasPrevYear) this.emitPrevYear();
 			else return;
 			this.flashHighlight("prev");
+			hapticFeedback("medium");
 		},
 		swipeNext() {
 			if (this.showDay && this.hasNextDay) this.emitNextDay();
@@ -400,6 +401,7 @@ export default defineComponent({
 			else if (this.showYear && this.hasNextYear) this.emitNextYear();
 			else return;
 			this.flashHighlight("next");
+			hapticFeedback("medium");
 		},
 	},
 });

@@ -21,6 +21,7 @@ type Template struct {
 	Auth         map[string]any `json:",omitempty"` // OAuth parameters (if required)
 	Group        string         `json:",omitempty"` // the group this template belongs to, references groupList entries
 	Covers       []string       `json:",omitempty"` // list of covered outdated template names
+	Link         string         `json:",omitempty"` // integration provider link, can be overridden per product
 	Products     []Product      `json:",omitempty"` // list of products this template is compatible with
 	Capabilities []Capability   `json:"-"`
 	Countries    []CountryCode  `json:",omitempty"` // list of countries supported by this template
@@ -88,6 +89,16 @@ func (t *Template) Validate() error {
 		}
 	}
 
+	links := []string{t.Link}
+	for _, p := range t.Products {
+		links = append(links, p.Link)
+	}
+	for _, l := range links {
+		if l != "" && !strings.HasPrefix(l, "https://") {
+			return fmt.Errorf("invalid link: '%s'", l)
+		}
+	}
+
 	for _, r := range t.Requirements.EVCC {
 		if !slices.Contains(ValidRequirements, r) {
 			return fmt.Errorf("invalid requirement: '%s'", r)
@@ -106,6 +117,18 @@ func (t *Template) Validate() error {
 
 		if p.Description.String("en") == "" || p.Description.String("de") == "" {
 			return fmt.Errorf("param %s: description can't be empty", p.Name)
+		}
+
+		// bool params are rendered as real booleans, so anything but true/false
+		// would render differently than it appears in the ui. the example is the
+		// default in docs and unit test mode, see Param.DefaultValue.
+		if p.Type == TypeBool {
+			if v := p.Default; v != "" && v != "true" && v != "false" {
+				return fmt.Errorf("param %s: bool default must be true or false, got '%s'", p.Name, v)
+			}
+			if v := p.Example; v != "" && v != "true" && v != "false" {
+				return fmt.Errorf("param %s: bool example must be true or false, got '%s'", p.Name, v)
+			}
 		}
 
 		maxLength := 50
@@ -274,6 +297,8 @@ func (t *Template) RenderProxyWithValues(values map[string]any, lang string) ([]
 				t.Params[index].Value = p.yamlQuote(v)
 			case int:
 				t.Params[index].Value = strconv.Itoa(v)
+			case float64, float32:
+				t.Params[index].Value = formatValue(v)
 			}
 		}
 	}
@@ -308,8 +333,22 @@ func (t *Template) RenderProxyWithValues(values map[string]any, lang string) ([]
 	return bytes.TrimSpace(out.Bytes()), err
 }
 
+// formatValue renders a parameter value for yaml. JSON numbers arrive as float64,
+// which %v would render in exponential notation for large values, e.g. a ten digit
+// serial number. Those are no longer parseable as integers.
+func formatValue(val any) string {
+	switch v := val.(type) {
+	case float64:
+		return strconv.FormatFloat(v, 'f', -1, 64)
+	case float32:
+		return strconv.FormatFloat(float64(v), 'f', -1, 32)
+	default:
+		return fmt.Sprintf("%v", val)
+	}
+}
+
 // RenderResult renders the result template to instantiate the proxy
-func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, map[string]any, error) {
+func (t *Template) RenderResult(class Class, renderMode int, other map[string]any) ([]byte, map[string]any, error) {
 	values := t.Defaults(renderMode)
 	if err := mergeMaps(other, values); err != nil {
 		return nil, values, err
@@ -383,7 +422,7 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 				// prevent rendering nil interfaces as "<nil>" string
 				var s string
 				if val != nil {
-					s = p.yamlQuote(fmt.Sprintf("%v", val))
+					s = p.yamlQuote(formatValue(val))
 				}
 
 				// validate required fields from yaml
@@ -401,12 +440,25 @@ func (t *Template) RenderResult(renderMode int, other map[string]any) ([]byte, m
 					}
 				}
 
-				res[out] = s
+				// bool params become real booleans so templates can use `{{ if .param }}`.
+				// TODO tcpip/udp/rs485* are predefined properties, so modbus.tpl still
+				// compares strings and mis-branches on a stored "false"
+				if p.Type == TypeBool {
+					res[out] = s == "true"
+				} else {
+					res[out] = s
+				}
 			}
 		}
 	}
 
-	tmpl, err := FuncMap(template.Must(baseTmpl.Clone())).Parse(t.Render)
+	// class-local includes take precedence over the global ones
+	base, ok := classTmpl[class]
+	if !ok {
+		base = baseTmpl
+	}
+
+	tmpl, err := FuncMap(template.Must(base.Clone())).Parse(t.Render)
 	if err != nil {
 		return nil, res, err
 	}

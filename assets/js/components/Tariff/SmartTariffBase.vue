@@ -56,15 +56,15 @@
 					{{ activeHoursText }}
 				</div>
 			</div>
-			<div class="text-end">
+			<div class="text-end" data-testid="price-range">
 				<div class="label">
 					<span v-if="activeSlot">{{ activeSlotName }}</span>
 					<span v-else>{{ currentPriceLabel }}</span>
 				</div>
-				<div v-if="activeSlot" class="value text-primary">
+				<div v-if="activeSlot" class="value" :class="highlightColor">
 					{{ activeSlotCost }}
 				</div>
-				<div v-else-if="activeSlots.length" class="value text-primary">
+				<div v-else-if="limitedSlots.length" class="value" :class="activeHoursClass">
 					{{ fmtActiveCostRange }}
 				</div>
 				<div v-else class="value value-inactive">
@@ -221,11 +221,15 @@ export default defineComponent({
 		warningSlots() {
 			return this.totalSlots.filter((s) => s.warning);
 		},
+		// slots matching the limit, regardless of direction
+		limitedSlots() {
+			return this.limitDirection === "below" ? this.activeSlots : this.warningSlots;
+		},
 		fmtTotalCostRange() {
 			return this.fmtCostRange(this.costRange(this.totalSlots));
 		},
 		fmtActiveCostRange() {
-			return this.fmtCostRange(this.costRange(this.activeSlots));
+			return this.fmtCostRange(this.costRange(this.limitedSlots));
 		},
 		activeSlot(): Slot | null {
 			return this.activeIndex !== null ? this.slots[this.activeIndex] || null : null;

@@ -13,6 +13,7 @@ import (
 
 // HomeAssistant charger implementation
 type HomeAssistant struct {
+	*embed
 	implement.Caps
 	conn       *homeassistant.Connection
 	status     string
@@ -29,6 +30,7 @@ func init() {
 // NewHomeAssistantFromConfig creates a HomeAssistant charger from generic config
 func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 	var cc struct {
+		embed                `mapstructure:",squash"`
 		homeassistant.Config `mapstructure:",squash"`
 		Status               string   // required - sensor for charge status
 		StatusA              string   // optional - custom states mapped to status A
@@ -37,6 +39,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		Enabled              string   // required - sensor for enabled state
 		Enable               string   // required - switch/input_boolean for enable/disable
 		MaxCurrent           string   // required - number entity for setting max current
+		Milliamps            bool     // optional - max current entity accepts fractional amps
 		Power                string   // optional - power sensor
 		Energy               string   // optional - energy sensor
 		Currents             []string // optional - current sensors for L1, L2, L3
@@ -74,6 +77,7 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 	}
 
 	c := &HomeAssistant{
+		embed:      &cc.embed,
 		Caps:       implement.New(),
 		conn:       conn,
 		status:     cc.Status,
@@ -81,6 +85,13 @@ func NewHomeAssistantFromConfig(other map[string]any) (api.Charger, error) {
 		enabled:    cc.Enabled,
 		enable:     cc.Enable,
 		maxcurrent: cc.MaxCurrent,
+	}
+
+	// milliamp current control (optional)
+	if cc.Milliamps {
+		implement.Has(c, implement.ChargerEx(func(current float64) error {
+			return conn.CallNumberService(cc.MaxCurrent, current)
+		}))
 	}
 
 	if cc.Power != "" {
@@ -141,12 +152,5 @@ func (c *HomeAssistant) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (c *HomeAssistant) MaxCurrent(current int64) error {
-	return c.MaxCurrentMillis(float64(current))
-}
-
-var _ api.ChargerEx = (*HomeAssistant)(nil)
-
-// MaxCurrentMillis implements the api.ChargerEx interface
-func (c *HomeAssistant) MaxCurrentMillis(current float64) error {
 	return c.conn.CallNumberService(c.maxcurrent, current)
 }

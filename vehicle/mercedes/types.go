@@ -31,25 +31,15 @@ type Vehicle struct {
 }
 
 type StatusResponse struct {
-	VehicleInfo struct {
-		Odometer struct {
-			Value int
-			Unit  string
-		}
-		Timestamp time.Time
-	}
 	EvInfo struct {
 		Battery struct {
-			ChargingStatus  int
 			DistanceToEmpty struct {
 				Value int
 				Unit  string
 			}
-			StateOfCharge         float64 // 75
-			EndOfChargeTime       int     // Minutes after midnight
-			TotalRange            int     // 17
-			SocLimit              int     // 50-100
-			SelectedChargeProgram int
+			StateOfCharge   float64 // 75
+			EndOfChargeTime int     // Minutes after midnight
+			TotalRange      int     // 17
 		}
 		Timestamp time.Time
 	}

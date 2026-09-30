@@ -748,16 +748,17 @@ var _ api.Identifier = (*E3dc)(nil)
 
 // Identify implements the api.Identifier interface
 // Returns the RFID tag ID from WB_SESSION_AUTH_DATA if a session is active
-func (wb *E3dc) Identify() (string, error) {
+func (wb *E3dc) Identify() ([]string, error) {
 	wb.mu.Lock()
 	defer wb.mu.Unlock()
 
 	msg, found, err := wb.sessionMessage(rscp.WB_SESSION_AUTH_DATA)
 	if err != nil || !found {
-		return "", err
+		return nil, err
 	}
 
-	return rscpString(msg)
+	id, err := rscpString(msg)
+	return []string{id}, err
 }
 
 var _ api.PhaseSwitcher = (*E3dc)(nil)

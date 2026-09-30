@@ -19,6 +19,9 @@ type Generation interface {
 	api.MeterEnergy
 	api.MeterReturnEnergy
 	IsThreePhase() bool
+	IsReversed() bool
+	HasReturnEnergy() bool
+	HasPhases() bool
 }
 
 type Phases interface {

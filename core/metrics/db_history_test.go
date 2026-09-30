@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/evcc-io/evcc/server/db"
+	"github.com/evcc-io/evcc/db"
 	csvexport "github.com/evcc-io/evcc/util/export/csv"
 	"github.com/evcc-io/evcc/util/locale"
 	"github.com/stretchr/testify/require"

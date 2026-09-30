@@ -1,4 +1,5 @@
 template: spottyenergy
+link: https://www.spottyenergie.at/spotty-direkt
 products:
   - brand: Spotty Energie
 requirements:
@@ -29,7 +30,7 @@ params:
   - preset: tariff-base
 render: |
   type: custom
-  {{ include "tariff-base" . }}
+  {{ include "base" . }}
   forecast:
     source: http
     uri: https://i.spottyenergie.at/api/prices/{{ .pricetype }}/{{ unquote .contractid }}

@@ -26,7 +26,7 @@ test.describe("tariffs", async () => {
     await page.goto("/#/config");
 
     // New configuration section should show with "Add Tariff" button
-    await expect(page.getByRole("heading", { name: "Tariffs & Forecasts" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Tariffs & forecasts" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Add Tariff" })).toBeVisible();
 
     // Old tariff card should not be shown
@@ -83,7 +83,6 @@ grid:
     // restart done
     await expect(restartButton).not.toBeVisible();
 
-    await expect(page.getByTestId("generalconfig-currency")).toContainText("Currency CHF");
     await expect(page.getByTestId("tariffs-legacy")).toContainText(
       ["Grid price", "12.3 ct."].join("")
     );
@@ -93,11 +92,10 @@ grid:
     await start(CONFIG_WITH_TARIFFS);
     await page.goto("/#/config");
 
-    await expect(page.getByTestId("generalconfig-currency")).toContainText("Currency SEK");
     await expect(page.getByTestId("tariffs-legacy")).toBeVisible();
     await expect(page.getByTestId("tariffs-legacy")).toContainText(
       [
-        "Tariffs & Forecasts",
+        "Tariffs & forecasts",
         "Grid price",
         "30.0 öre",
         "Feed-in price",
@@ -283,8 +281,8 @@ grid:
     await expect(tariffGrid).toContainText(["Price", "32.1 ct"].join(""));
 
     // change currency to NOK
-    await page.getByTestId("generalconfig-currency").getByRole("button", { name: "edit" }).click();
-    const currencyModal = page.getByTestId("currency-modal");
+    await page.getByTestId("generalconfig-site").getByRole("button", { name: "edit" }).click();
+    const currencyModal = page.getByTestId("site-modal");
     await expectModalVisible(currencyModal);
     await currencyModal.getByLabel("Currency").selectOption("NOK");
     await expect(

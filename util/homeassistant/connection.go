@@ -7,13 +7,13 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/samber/lo"
+	"golang.org/x/exp/constraints"
 	"golang.org/x/oauth2"
 )
 
@@ -153,20 +153,6 @@ func (c *Connection) GetBoolState(entity string) (bool, error) {
 	}
 }
 
-// GetTimeState retrieves the state of an entity as time
-func (c *Connection) GetTimeState(entity string) (time.Time, error) {
-	state, err := c.GetState(entity)
-	if err != nil {
-		return time.Time{}, err
-	}
-
-	if ts, err := strconv.ParseInt(state.State, 10, 64); err == nil {
-		return time.Unix(ts, 0), nil
-	}
-
-	return time.Parse(time.RFC3339, state.State)
-}
-
 // chargeStatusMap maps unambiguous Home Assistant states to evcc charge status.
 // Vendor-specific states are configured per device, see NewStatusMap.
 var chargeStatusMap = map[string]api.ChargeStatus{
@@ -202,7 +188,7 @@ func NewStatusMap(a, b, c string) (StatusMap, error) {
 		{api.StatusB, b},
 		{api.StatusC, c},
 	} {
-		for _, s := range strings.Split(e.states, ",") {
+		for s := range strings.SplitSeq(e.states, ",") {
 			if s = strings.ToLower(strings.TrimSpace(s)); s != "" {
 				if status, ok := res[s]; ok {
 					return nil, fmt.Errorf("status %s: duplicate state '%s', already mapped to %s", e.status, s, status)
@@ -289,7 +275,7 @@ func (c *Connection) CallSwitchService(entity string, turnOn bool) error {
 }
 
 // CallNumberService is a convenience method for setting number entity values
-func (c *Connection) CallNumberService(entity string, value float64) error {
+func (c *Connection) CallNumberService[T constraints.Integer | constraints.Float](entity string, value T) error {
 	domain, err := domain(entity)
 	if err != nil {
 		return err

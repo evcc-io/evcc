@@ -31,7 +31,7 @@ params:
     default: 30s
 render: |
   type: custom
-  {{- include "vehicle-common" . }}
+  {{- include "common" . }}
   chargeEnable:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/command/{{`{{ if .chargeenable }}charge_start{{ else }}charge_stop{{ end }}`}}
@@ -70,6 +70,18 @@ render: |
     scale: 1.60934
     timeout: {{ .timeout }}
     cache: 1s
+  chargedenergy:
+    source: http
+    uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
+    jq: .response.response.charge_state.charge_energy_added
+    timeout: {{ .timeout }}
+    cache: 1s
+  climater:
+    source: http
+    uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=climate_state
+    jq: .response.response.climate_state.is_preconditioning
+    timeout: {{ .timeout }}
+    cache: 1s
   status:
     source: http
     uri: {{ .url }}:{{ .port }}/api/1/vehicles/{{ .vin }}/vehicle_data?endpoints=charge_state
@@ -80,4 +92,4 @@ render: |
       else "A" end)
     timeout: {{ .timeout }}
     cache: 1s
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}

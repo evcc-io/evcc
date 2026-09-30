@@ -56,7 +56,7 @@ func TokenSource(log *util.Logger, user, password string) (oauth2.TokenSource, e
 			return nil, err
 		}
 
-		return oauth.RefreshTokenSource(token.AsOAuth2Token(), c.refreshToken), nil
+		return oauth.RefreshTokenSource(log, token.AsOAuth2Token(), c.refreshToken), nil
 	})
 }
 

@@ -2,6 +2,7 @@ package subaru
 
 import (
 	"fmt"
+	"math"
 	"strings"
 )
 
@@ -22,9 +23,29 @@ type Status struct {
 	} `json:"payload"`
 }
 
+// Incomplete reports a placeholder payload sent before the vehicle reported fresh data
+func (s Status) Incomplete() bool {
+	return s.Payload.LastUpdateTimestamp == "" || s.Payload.EvRangeWithAc.Unit == "" || (s.Payload.BatteryLevel == 0 && s.Payload.EvRangeWithAc.Value == 0)
+}
+
+const kmPerMile = 1.609344
+
 type EvRange struct {
 	Unit  string  `json:"unit"`
 	Value float64 `json:"value"`
+}
+
+func (e EvRange) ValueInKilometers() (int64, error) {
+	u := strings.ToLower(strings.TrimSpace(e.Unit))
+
+	switch u {
+	case "km":
+		return int64(math.Round(e.Value)), nil
+	case "mi":
+		return int64(math.Round(e.Value * kmPerMile)), nil
+	default:
+		return 0, fmt.Errorf("unsupported unit type: %s", e.Unit)
+	}
 }
 
 type Auth struct {

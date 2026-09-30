@@ -18,7 +18,7 @@ params:
     advanced: true
 render: |
   type: custom
-  {{- include "vehicle-common" . }}
+  {{- include "common" . }}
   soc:
     source: mqtt
     topic: mz2mqtt/{{ .vin }}/chargeInfo/batteryLevelPercentage
@@ -37,4 +37,4 @@ render: |
     source: mqtt
     topic: mz2mqtt/{{ .vin }}/chargeInfo/drivingRangeKm
     timeout: {{ .timeout }}
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}

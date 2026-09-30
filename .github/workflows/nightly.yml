@@ -42,64 +42,14 @@ jobs:
       actions: write
 
   docker:
-    name: Publish Docker :nightly
     needs:
       - call-build-workflow
-    runs-on: depot-ubuntu-24.04-arm
-
+    uses: ./.github/workflows/nightly-docker.yml
     permissions:
       contents: read
       actions: read
-
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: refs/heads/master # force master
-          fetch-depth: 0
-          persist-credentials: false
-
-      - name: Get dist from cache
-        uses: actions/cache/restore@v6
-        id: cache-dist
-        with:
-          path: dist
-          key: ${{ runner.os }}-${{ github.sha }}-dist
-
-      - name: Login
-        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4
-        with:
-          username: ${{ secrets.DOCKER_USER }}
-          password: ${{ secrets.DOCKER_PASS }}
-
-      - name: Setup Buildx
-        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4
-
-      - name: Define tags
-        id: meta
-        uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9 # v6
-        with:
-          images: evcc/evcc
-          tags: |
-            type=raw,value=nightly
-            type=raw,value=nightly.{{date 'YYYYMMDD'}}-{{sha}}
-
-      - name: Publish
-        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm64,linux/arm/v6
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Delete old nightly.* tags
-        run: |
-          old_tags=$(curl -s "https://hub.docker.com/v2/repositories/evcc/evcc/tags/?page_size=100" | jq -r '.results | map(select(.name | startswith("nightly."))) | sort_by(.last_updated) | reverse | .[1:] | .[].name')
-          for tag in $old_tags; do
-            echo "Deleting tag: $tag"
-            curl -s -H "Authorization: Bearer ${{ secrets.DOCKER_PASS }}" -X DELETE "https://hub.docker.com/v2/repositories/evcc/evcc/tags/$tag/"
-          done
+      id-token: write # depot OIDC
+    secrets: inherit
 
   hassio:
     name: Hassio Addon :nightly
@@ -159,7 +109,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
         id: go

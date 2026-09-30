@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"dario.cat/mergo"
+	"github.com/evcc-io/evcc/util"
 	"golang.org/x/oauth2"
 )
 
@@ -29,13 +30,23 @@ type TokenRefresher func(*Token) (*Token, error)
 var _ TokenSource = (*tokenSource)(nil)
 
 type tokenSource struct {
-	mu    sync.Mutex
-	token *Token
-	new   TokenRefresher
+	mu     sync.Mutex
+	token  *Token
+	new    TokenRefresher
+	redact func(...string)
 }
 
-func RefreshTokenSource(token *Token, refresher TokenRefresher) *tokenSource {
-	return &tokenSource{token: token, new: refresher}
+func RefreshTokenSource(log *util.Logger, token *Token, refresher TokenRefresher) *tokenSource {
+	ts := &tokenSource{token: token, new: refresher, redact: log.RotatingSlot()}
+	ts.redactToken()
+
+	return ts
+}
+
+// redactToken keeps the current tokens out of the logs, where they would
+// otherwise show up in the Authorization header
+func (ts *tokenSource) redactToken() {
+	ts.redact(ts.token.AccessToken, ts.token.RefreshToken, ts.token.IDToken)
 }
 
 // Token returns an oauth2 token or an error
@@ -56,7 +67,9 @@ func (ts *tokenSource) TokenEx() (*Token, error) {
 	if time.Until(ts.token.Expiry) < time.Minute {
 		var token *Token
 		if token, err = ts.new(ts.token); err == nil {
-			err = ts.mergeToken(token)
+			if err = ts.mergeToken(token); err == nil {
+				ts.redactToken()
+			}
 		}
 	}
 

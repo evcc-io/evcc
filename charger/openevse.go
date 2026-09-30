@@ -1,47 +1,58 @@
 package charger
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
+	"github.com/OpenEVSE/go-openevse"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
-	"github.com/evcc-io/evcc/charger/openevse"
-	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/cmd/shutdown"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 )
 
-// OpenEVSE charger implementation
+// OpenEVSE charger implementation. State arrives over the firmware's /ws
+// websocket and control goes through its claims API; both live in
+// github.com/OpenEVSE/go-openevse. Phase switching is opt-in (phases1p3p: true) for
+// modified three-phase controllers that answer the $G7/$S7 RAPI commands.
 type OpenEVSE struct {
-	*request.Helper
 	implement.Caps
-	uri     string
-	statusG util.Cacheable[openevse.Status]
-	current int
-	enabled bool
-	lp      loadpoint.API
+	conn *openevse.Client
+}
+
+// openevseFaults names the controller states that evcc has no status F constant
+// for, so Status() reports them as a named error instead.
+var openevseFaults = map[int]string{
+	5:  "diode check failed",
+	6:  "gfci fault",
+	7:  "no ground",
+	8:  "stuck relay",
+	9:  "gfci self-test failure",
+	10: "over temperature",
+	11: "over current",
 }
 
 func init() {
-	registry.Add("openevse", NewOpenEVSEFromConfig)
+	registry.AddCtx("openevse", NewOpenEVSEFromConfig)
 }
 
 // NewOpenEVSEFromConfig creates an OpenEVSE charger from generic config
-func NewOpenEVSEFromConfig(other map[string]any) (api.Charger, error) {
+func NewOpenEVSEFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
 	cc := struct {
 		URI      string
 		User     string
 		Password string
-		Cache    time.Duration
-	}{
-		Cache: time.Second,
-	}
+		Cache    time.Duration // TODO deprecated, state is pushed by the firmware
+
+		// Phases1p3p enables 1p/3p switching via the $S7 RAPI command of
+		// modified 3-phase controllers; stock controllers do not support it
+		Phases1p3p bool
+	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -51,118 +62,80 @@ func NewOpenEVSEFromConfig(other map[string]any) (api.Charger, error) {
 		return nil, errors.New("missing uri")
 	}
 
-	return NewOpenEVSE(cc.URI, cc.User, cc.Password, cc.Cache)
+	return NewOpenEVSE(ctx, cc.URI, cc.User, cc.Password, cc.Phases1p3p)
 }
 
 // NewOpenEVSE creates OpenEVSE charger
-func NewOpenEVSE(uri, user, password string, cache time.Duration) (api.Charger, error) {
-	basicAuth := transport.BasicAuthHeader(user, password)
-	log := util.NewLogger("openevse").Redact(user, password, basicAuth)
+func NewOpenEVSE(ctx context.Context, uri, user, password string, phases1p3p bool) (api.Charger, error) {
+	log := util.NewLogger("openevse").Redact(user, password, transport.BasicAuthHeader(user, password))
+
+	client := request.NewClient(log)
+	if user != "" && password != "" {
+		client.Transport = transport.BasicAuth(user, password, client.Transport)
+	}
+
+	conn, err := openevse.New(uri, openevse.WithHTTPClient(client), openevse.WithLogger(openevseLogger{log}))
+	if err != nil {
+		return nil, err
+	}
+
+	// waits for the first status frame, so a wrong host or password fails the config test
+	if err := conn.Connect(ctx); err != nil {
+		return nil, err
+	}
 
 	c := &OpenEVSE{
-		Helper: request.NewHelper(log),
-		Caps:   implement.New(),
-		uri:    util.DefaultScheme(strings.TrimSuffix(uri, "/"), "http"),
+		Caps: implement.New(),
+		conn: conn,
 	}
 
-	if user != "" && password != "" {
-		c.Client.Transport = transport.BasicAuth(user, password, c.Client.Transport)
-	}
-
-	c.statusG = util.ResettableCached(func() (openevse.Status, error) {
-		var res openevse.Status
-
-		uri := fmt.Sprintf("%s/status", c.uri)
-		err := c.GetJSON(uri, &res)
-
-		return res, err
-	}, cache)
-
-	if err := c.hasPhaseSwitchCapabilities(); err == nil {
-		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
-
-		// disable EVSE's own 1/3-phase auto-switching
-		if err := c.rapiCommand("$S8 0"); err != nil {
-			return c, err
+	if phases1p3p {
+		if err := conn.EnablePhaseSwitching(); err != nil {
+			conn.Close()
+			return nil, err
 		}
+		implement.Has(c, implement.PhaseSwitcher(c.phases1p3p))
 	}
+
+	// evcc does not cancel a device's context on shutdown, so release the
+	// claim through the shutdown hooks instead
+	shutdown.Register(conn.Close)
 
 	return c, nil
 }
 
-func (c *OpenEVSE) setOverride() error {
-	var data openevse.Override
-	uri := fmt.Sprintf("%s/override", c.uri)
-
-	if err := c.GetJSON(uri, &data); err != nil {
-		if se, ok := errors.AsType[*request.StatusError](err); !ok || !se.HasStatus(404) {
-			return err
-		}
-	}
-
-	state := openevse.Disabled
-	if c.enabled {
-		state = openevse.Enabled
-	}
-
-	data.State = state
-	data.MaxCurrent = c.current
-
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
-	if err == nil {
-		_, err = c.DoBody(req)
-	}
-
-	return err
+// openevseLogger adapts util.Logger to openevse.Logger
+type openevseLogger struct {
+	*util.Logger
 }
 
-func (c *OpenEVSE) rapiCommand(command string) error {
-	var res struct {
-		Cmd, Ret string
-	}
-
-	uri := fmt.Sprintf("%s/r?json=1&rapi=%s", c.uri, url.QueryEscape(command))
-
-	err := c.GetJSON(uri, &res)
-	if err == nil && !strings.HasPrefix(res.Ret, "$OK") {
-		err = fmt.Errorf("rapi command failed: %s", res.Ret)
-	}
-
-	return err
-}
-
-func (c *OpenEVSE) hasPhaseSwitchCapabilities() error {
-	return c.rapiCommand("$G7")
-}
+func (l openevseLogger) Tracef(format string, args ...any) { l.TRACE.Printf(format, args...) }
+func (l openevseLogger) Debugf(format string, args ...any) { l.DEBUG.Printf(format, args...) }
+func (l openevseLogger) Warnf(format string, args ...any)  { l.WARN.Printf(format, args...) }
+func (l openevseLogger) Errorf(format string, args ...any) { l.ERROR.Printf(format, args...) }
 
 // Status implements the api.Charger interface
 func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
-	res, err := c.statusG.Get()
+	res, err := c.conn.Status()
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	/*
-		0: "unknown",
-		1: "not connected",
-		2: "connected",
-		3: "charging",
-		4: "vent required",
-		5: "diode check failed",
-		6: "gfci fault",
-		7: "no ground",
-		8: "stuck relay",
-		9: "gfci self-test failure",
-		10: "over temperature",
-		11: "over current",
-		254: "sleeping",
-		255: "disabled"
-	*/
+	return openevseStatus(res)
+}
 
+// openevseStatus maps the controller state to a charge status:
+//
+//	1 not connected                  -> A
+//	2 connected, 254 sleeping,
+//	255 disabled, 4 vent required    -> B if a vehicle is connected, else A (evcc has no status D)
+//	3 charging                       -> C
+//	5-11 controller faults           -> named error (evcc has no status F constant)
+func openevseStatus(res openevse.Status) (api.ChargeStatus, error) {
 	switch res.State {
 	case 1:
 		return api.StatusA, nil
-	case 2, 254, 255:
+	case 2, 4, 254, 255:
 		if res.Vehicle == 1 {
 			return api.StatusB, nil
 		}
@@ -170,95 +143,96 @@ func (c *OpenEVSE) Status() (api.ChargeStatus, error) {
 	case 3:
 		return api.StatusC, nil
 	default:
+		if name, ok := openevseFaults[res.State]; ok {
+			return api.StatusNone, fmt.Errorf("charger fault: %s", name)
+		}
 		return api.StatusNone, fmt.Errorf("invalid status: %d", res.State)
 	}
 }
 
 // Enabled implements the api.Charger interface
 func (c *OpenEVSE) Enabled() (bool, error) {
-	res, err := c.statusG.Get()
+	res, err := c.conn.Status()
 	return res.Status == openevse.Enabled, err
 }
 
 // Enable implements the api.Charger interface
 func (c *OpenEVSE) Enable(enable bool) error {
-	c.enabled = enable
-	return c.setOverride()
+	return c.conn.Enable(enable)
 }
 
 // MaxCurrent implements the api.Charger interface
 func (c *OpenEVSE) MaxCurrent(current int64) error {
-	c.current = int(current)
-	return c.setOverride()
+	return c.conn.SetCurrent(int(current))
 }
 
-var _ api.ChargeRater = (*OpenEVSE)(nil)
-
-// ChargedEnergy implements the api.ChargeRater interface
-func (c *OpenEVSE) ChargedEnergy() (float64, error) {
-	res, err := c.statusG.Get()
-	if err != nil {
-		return 0, err
-	}
-
-	return res.SessionEnergy / 1e3, err
+// phases1p3p implements the api.PhaseSwitcher interface
+func (c *OpenEVSE) phases1p3p(phases int) error {
+	return c.conn.SetThreePhase(phases == 3)
 }
 
-var _ api.ChargeTimer = (*OpenEVSE)(nil)
+var _ api.CurrentGetter = (*OpenEVSE)(nil)
 
-func (c *OpenEVSE) ChargeDuration() (time.Duration, error) {
-	res, err := c.statusG.Get()
-	if err != nil {
-		return 0, err
-	}
+// GetMaxCurrent implements the api.CurrentGetter interface. `pilot` is the firmware's
+// arbitration result across all claims, so a higher-priority claim (manual override,
+// limit) shows through here by design.
+func (c *OpenEVSE) GetMaxCurrent() (float64, error) {
+	res, err := c.conn.Status()
+	return res.Pilot, err
+}
 
-	return time.Duration(res.Elapsed) * time.Second, err
+var _ api.Meter = (*OpenEVSE)(nil)
+
+// CurrentPower implements the api.Meter interface
+func (c *OpenEVSE) CurrentPower() (float64, error) {
+	res, err := c.conn.Status()
+	return res.Power, err
 }
 
 var _ api.MeterEnergy = (*OpenEVSE)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (c *OpenEVSE) TotalEnergy() (float64, error) {
-	res, err := c.statusG.Get()
-	if err != nil {
-		return 0, err
-	}
-
+	res, err := c.conn.Status()
 	return res.TotalEnergy, err
 }
 
-var _ api.Meter = (*OpenEVSE)(nil)
+var _ api.ChargeRater = (*OpenEVSE)(nil)
 
-func (c *OpenEVSE) CurrentPower() (float64, error) {
-	res, err := c.statusG.Get()
+// ChargedEnergy implements the api.ChargeRater interface
+func (c *OpenEVSE) ChargedEnergy() (float64, error) {
+	res, err := c.conn.Status()
+	return res.SessionEnergy / 1e3, err
+}
+
+var _ api.ChargeTimer = (*OpenEVSE)(nil)
+
+// ChargeDuration implements the api.ChargeTimer interface
+func (c *OpenEVSE) ChargeDuration() (time.Duration, error) {
+	res, err := c.conn.Status()
+	return time.Duration(res.Elapsed) * time.Second, err
+}
+
+var _ api.Identifier = (*OpenEVSE)(nil)
+
+// Identify implements the api.Identifier interface. It returns the RFID tag that
+// authorised the current session, if any.
+func (c *OpenEVSE) Identify() ([]string, error) {
+	res, err := c.conn.Status()
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	// status only reports a single phase current, scale by the loadpoint phases
-	phases := 1
-	if c.lp != nil {
-		if p := c.lp.GetPhases(); p != 0 {
-			phases = p
-		}
+	if tag := openevseTag(res.RfidAuth); tag != "" {
+		return []string{tag}, nil
 	}
 
-	return res.Amp * res.Voltage / 1e3 * float64(phases), err
+	return nil, nil
 }
 
-var _ loadpoint.Controller = (*OpenEVSE)(nil)
-
-// LoadpointControl implements loadpoint.Controller
-func (c *OpenEVSE) LoadpointControl(lp loadpoint.API) {
-	c.lp = lp
-}
-
-// phases1p3p implements the api.PhaseSwitcher interface
-func (c *OpenEVSE) phases1p3p(phases int) error {
-	var set3p int
-	if phases == 3 {
-		set3p = 1
-	}
-
-	return c.rapiCommand(fmt.Sprintf("$S7 %d", set3p))
+// openevseTag cleans the firmware's rfid_auth value. The firmware builds its
+// "no tag" value from a '\0' char, so a tag consisting only of NUL bytes and/or
+// whitespace is treated as empty.
+func openevseTag(tag string) string {
+	return strings.Trim(tag, "\x00 \t\n\r")
 }

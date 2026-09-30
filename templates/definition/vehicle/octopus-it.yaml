@@ -44,10 +44,10 @@ params:
     default: 15m
 render: |
   type: octopus-it
-  {{- include "vehicle-common" . }}
+  {{- include "common" . }}
   email: {{ .email }}
   password: {{ .password }}
   accountnumber: {{ .accountnumber }}
   device: {{ .device }}
   cache: {{ .cache }}
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}

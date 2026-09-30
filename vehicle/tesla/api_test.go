@@ -16,7 +16,7 @@ import (
 func TestCommandResponse(t *testing.T) {
 	sponsor.Subject = "any"
 
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(r.URL.Path)
 
 		switch r.URL.Path {
@@ -29,7 +29,7 @@ func TestCommandResponse(t *testing.T) {
 			w.Write([]byte(`{"response": null, "error": "vehicle unavailable: vehicle is offline or asleep"}`))
 		}
 	}))
-	defer srv.Close()
+	srv.Start()
 
 	ts := oauth2.StaticTokenSource(new(oauth2.Token))
 	client, err := tesla.NewClient(t.Context(), tesla.WithTokenSource(ts))

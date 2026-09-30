@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
 
@@ -57,13 +58,14 @@ func TestSitePowerPriorityAdjustment(t *testing.T) {
 				batteryMeters: []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, bat)},
 				prioritySoc:   prioritySoc,
 			}
-			site.excessDCPower = tc.excessDC
+			state, err := site.updateMeters()
+			require.NoError(t, err)
+			state.excessDCPower = tc.excessDC
 
-			sitePower, _, _, adjustment, err := site.sitePower(0, 0)
-			assert.NoError(t, err)
-			assert.Equal(t, tc.expSitePower, sitePower, "sitePower")
-			assert.Equal(t, tc.expAdjustment, adjustment, "priority adjustment")
-			assert.Equal(t, tc.expReconstructed, sitePower+adjustment, "reconstructed (unadjusted) site power")
+			res := site.sitePower(state, 0, 0)
+			assert.Equal(t, tc.expSitePower, res.power, "sitePower")
+			assert.Equal(t, tc.expAdjustment, res.priorityAdjustment, "priority adjustment")
+			assert.Equal(t, tc.expReconstructed, res.power+res.priorityAdjustment, "reconstructed (unadjusted) site power")
 		})
 	}
 }
@@ -160,10 +162,12 @@ func TestGreenShare(t *testing.T) {
 		t.Log(tc.title)
 
 		s := &Site{
-			gridPower: tc.grid,
-			pvPower:   tc.pv,
-			battery: types.BatteryState{
-				Power: tc.battery,
+			siteState: siteState{
+				gridPower: tc.grid,
+				pvPower:   tc.pv,
+				battery: types.BatteryState{
+					Power: tc.battery,
+				},
 			},
 		}
 
@@ -185,23 +189,34 @@ func TestGreenShare(t *testing.T) {
 
 func TestRequiredBatteryMode(t *testing.T) {
 	tc := []struct {
-		gridChargeActive bool
-		mode, res        api.BatteryMode
+		gridChargeActive    bool
+		gridDischargeActive bool
+		mode, res           api.BatteryMode
 	}{
-		{false, api.BatteryUnknown, api.BatteryUnknown}, // ignore
-		{false, api.BatteryNormal, api.BatteryUnknown},  // ignore
-		{false, api.BatteryHold, api.BatteryNormal},
-		{false, api.BatteryCharge, api.BatteryNormal},
+		{false, false, api.BatteryUnknown, api.BatteryUnknown}, // ignore
+		{false, false, api.BatteryNormal, api.BatteryUnknown},  // ignore
+		{false, false, api.BatteryHold, api.BatteryNormal},
+		{false, false, api.BatteryCharge, api.BatteryNormal},
 
-		{true, api.BatteryUnknown, api.BatteryCharge},
-		{true, api.BatteryNormal, api.BatteryCharge},
-		{true, api.BatteryHold, api.BatteryCharge},
-		{true, api.BatteryCharge, api.BatteryUnknown}, // ignore
+		{true, false, api.BatteryUnknown, api.BatteryCharge},
+		{true, false, api.BatteryNormal, api.BatteryCharge},
+		{true, false, api.BatteryHold, api.BatteryCharge},
+		{true, false, api.BatteryCharge, api.BatteryUnknown}, // ignore
+
+		// grid discharge (feed-in arbitrage)
+		{false, true, api.BatteryUnknown, api.BatteryDischarge},
+		{false, true, api.BatteryNormal, api.BatteryDischarge},
+		{false, true, api.BatteryHold, api.BatteryDischarge},
+		{false, true, api.BatteryDischarge, api.BatteryUnknown}, // ignore
+		{false, true, api.BatteryCharge, api.BatteryDischarge},
+
+		// grid charge wins over grid discharge when both active
+		{true, true, api.BatteryNormal, api.BatteryCharge},
 	}
 
 	{
 		// no battery
-		res := new(Site).requiredBatteryMode(true, api.Rate{})
+		res := new(Site).requiredBatteryMode(true, false, api.Rate{})
 		assert.Equal(t, api.BatteryUnknown, res, "expected %s, got %s", api.BatteryUnknown, res)
 	}
 
@@ -209,11 +224,12 @@ func TestRequiredBatteryMode(t *testing.T) {
 		t.Logf("%+v", tc)
 
 		s := &Site{
+			log:           util.NewLogger("foo"),
 			batteryMeters: []config.Device[api.Meter]{nil},
 			batteryMode:   tc.mode,
 		}
 
-		res := s.requiredBatteryMode(tc.gridChargeActive, api.Rate{})
+		res := s.requiredBatteryMode(tc.gridChargeActive, tc.gridDischargeActive, api.Rate{})
 		assert.Equal(t, tc.res, res, "expected %s, got %s", tc.res, res)
 	}
 }

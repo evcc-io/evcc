@@ -28,6 +28,9 @@ func TestBootNotificationStoresResultAndConnects(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, core.RegistrationStatusAccepted, res.Status)
 
+	// heartbeat must stay below the websocket inactivity timeout
+	assert.Less(t, time.Duration(res.Interval)*time.Second, pingWait)
+
 	// should be connected after BootNotification
 	assert.True(t, cp.Connected(), "should be connected after BootNotification")
 	assert.Equal(t, bootReq, cp.BootNotificationResult, "should store boot result")

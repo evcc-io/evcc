@@ -289,13 +289,13 @@ func (wb *Compleo) ChargeDuration() (time.Duration, error) {
 var _ api.Identifier = (*Compleo)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *Compleo) Identify() (string, error) {
+func (wb *Compleo) Identify() ([]string, error) {
 	b, err := wb.conn.ReadInputRegisters(compleoRegIdTag+wb.offset, 10)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return bytesAsString(b), nil
+	return []string{bytesAsString(b)}, nil
 }
 
 var _ loadpoint.Controller = (*Compleo)(nil)

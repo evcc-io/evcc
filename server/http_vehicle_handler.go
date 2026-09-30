@@ -98,6 +98,30 @@ func vehicleModeHandler(site site.API) http.HandlerFunc {
 	}
 }
 
+// vehicleAlwaysChargeHandler updates the vehicle always charge default (empty value clears it)
+func vehicleAlwaysChargeHandler(site site.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		v, err := site.Vehicles().ByName(vars["name"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		// route restricts value to on|off, DELETE has none
+		v.SetAlwaysCharge(api.AlwaysCharge(vars["value"]))
+
+		res := struct {
+			AlwaysCharge api.AlwaysCharge `json:"alwaysCharge"`
+		}{
+			AlwaysCharge: v.GetAlwaysCharge(),
+		}
+
+		jsonWrite(w, res)
+	}
+}
+
 // planSocHandler updates plan soc and time
 func planSocHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

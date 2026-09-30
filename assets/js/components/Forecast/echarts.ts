@@ -1,7 +1,8 @@
 import * as echarts from "echarts/core";
 import colors from "@/colors";
+import { attachTouchTooltipGate } from "@/utils/swipe";
 import escapeHtml from "@/utils/escapeHtml";
-import type { ForecastSlot } from "./types";
+import type { UiForecastSlot } from "@/types/evcc";
 import { BarChart, LineChart } from "echarts/charts";
 import {
   GridComponent,
@@ -31,7 +32,7 @@ export const FONT_FAMILY = "Montserrat, sans-serif";
 
 export function markPointLabel(
   color: string,
-  data: { coord: [string, number]; value: string; label?: { offset?: [number, number] } }[],
+  data: { coord: [number, number]; value: string; label?: { offset?: [number, number] } }[],
   startDate?: Date,
   endDate?: Date
 ) {
@@ -78,35 +79,65 @@ export function markPointLabel(
   };
 }
 
-export function tooltipStyle(
-  color: string,
-  getChart?: () => { convertToPixel: echarts.ECharts["convertToPixel"] } | null
-) {
+export const lineDefaults = { width: 2, cap: "round", join: "round" } as const;
+
+// invisible symbols on every point, filled dot on the hovered one, line keeps its width.
+// Symbols stay in the scene so the dot survives re-renders (showSymbol: false would create
+// a temporary one that echarts drops)
+export function hoverDot(color: string, lineStyle: Record<string, unknown> = {}) {
+  return {
+    symbol: "circle",
+    symbolSize: 6,
+    showSymbol: true,
+    itemStyle: { color, opacity: 0 },
+    emphasis: {
+      disabled: false,
+      scale: false,
+      lineStyle: { color, ...lineDefaults, ...lineStyle },
+      itemStyle: { color, borderColor: color, borderWidth: 2, opacity: 1 },
+    },
+  };
+}
+
+// wider box-colored twin drawn beneath a line so it stays readable over bars
+export function lineCasing(line: Record<string, unknown>, z: number): Record<string, unknown> {
+  return {
+    ...line,
+    id: line["id"] ? `${line["id"]}-casing` : undefined,
+    name: `${line["name"]}-casing`,
+    z,
+    silent: true,
+    symbol: "none",
+    emphasis: { disabled: true },
+    lineStyle: { ...lineDefaults, color: colors.box || "", width: lineDefaults.width + 2 },
+    itemStyle: { color: colors.box || "" },
+  };
+}
+
+export function tooltipStyle(color: string) {
   return {
     confine: true,
+    // re-show after hide would otherwise slide in from the stale position
+    transitionDuration: 0,
     backgroundColor: color,
     borderColor: color,
     borderWidth: 0,
     padding: [5, 10],
     extraCssText: "box-shadow: none; border-radius: 4px; text-align: center; z-index: 1000;",
+    // beside the pointer so it never covers the hovered slot, flips left near the right edge
     position(
       point: [number, number],
-      params: { value: [string, number] }[] | { value: [string, number] },
-      el: HTMLElement
+      _params: unknown,
+      el: HTMLElement,
+      _rect: unknown,
+      size: { viewSize: [number, number] }
     ): [number, number] {
       const w = el?.offsetWidth || 0;
       const h = el?.offsetHeight || 0;
-      const margin = 8;
-      const arr = Array.isArray(params) ? params : [params];
-      const p = arr[0];
-      const chart = getChart?.();
-      if (chart && p?.value) {
-        const pixelY = chart.convertToPixel({ seriesIndex: 0 }, p.value)?.[1];
-        if (pixelY != null) {
-          return [point[0] - w / 2, pixelY - h - margin];
-        }
-      }
-      return [point[0] - w / 2, point[1] - h - margin];
+      const margin = 16;
+      const x =
+        point[0] + margin + w > size.viewSize[0] ? point[0] - margin - w : point[0] + margin;
+      return [x, point[1] - h / 2];
     },
     textStyle: {
       fontFamily: FONT_FAMILY,
@@ -117,9 +148,22 @@ export function tooltipStyle(
   };
 }
 
+// touch tooltips: show on dwell, follow the finger, hide when it lifts; mouse hover unchanged
+export function registerTouchTooltip(
+  chart: Pick<echarts.ECharts, "dispatchAction">,
+  el: HTMLElement,
+  onReset?: () => void
+) {
+  attachTouchTooltipGate(el, () => {
+    chart.dispatchAction({ type: "hideTip" });
+    onReset?.();
+  });
+}
+
 export interface TooltipRow {
   name?: string;
   values: string[];
+  total?: boolean;
 }
 
 // Shared tooltip: bold date headline, non-bold rows, optional name + value columns.
@@ -127,28 +171,40 @@ export function tooltipTable(head: string, rows: TooltipRow[], headers?: string[
   const hasName = rows.some((r) => r.name != null);
   const valueCols = Math.max(1, ...rows.map((r) => r.values.length));
   const colCount = (hasName ? 1 : 0) + valueCols;
-  // No name col + two value cols: first col left-aligned, second right-aligned.
-  // Otherwise: lone value centers, multiple/named columns right-align.
   const valClsFn = (i: number): string => {
-    if (!hasName && valueCols > 1 && i === 0) return "fw-normal text-start";
-    if (hasName || valueCols > 1) return "fw-normal text-end ps-3";
-    return "fw-normal text-center";
+    // first of two unnamed value cols
+    if (!hasName && valueCols > 1 && i === 0) return "text-start";
+    // named or multiple cols
+    if (hasName || valueCols > 1) return "text-end ps-3";
+    // lone value
+    return "text-center";
   };
   const headerRow = headers?.length
     ? `<tr>${hasName ? "<td></td>" : ""}${headers
-        .map((h, i) => `<td class="${valClsFn(i)}">${h}</td>`)
+        .map((h, i) => `<td class="fw-normal tabular ${valClsFn(i)}">${h}</td>`)
         .join("")}</tr>`
     : "";
+  const rowHtml = (r: TooltipRow) => {
+    const cls = r.total ? " pt-1" : "";
+    const nameTd = hasName
+      ? `<td class="fw-normal text-start${cls}">${escapeHtml(r.name ?? "")}</td>`
+      : "";
+    const valTds = r.values
+      .map((v, i) => `<td class="fw-normal tabular ${valClsFn(i)}${cls}">${v}</td>`)
+      .join("");
+    return `<tr>${nameTd}${valTds}</tr>`;
+  };
   const body = rows
-    .map((r) => {
-      const nameTd = hasName
-        ? `<td class="fw-normal text-start">${escapeHtml(r.name ?? "")}</td>`
-        : "";
-      const valTds = r.values.map((v, i) => `<td class="${valClsFn(i)}">${v}</td>`).join("");
-      return `<tr>${nameTd}${valTds}</tr>`;
-    })
+    .filter((r) => !r.total)
+    .map(rowHtml)
     .join("");
-  return `<table class="lh-sm"><thead><tr><th colspan="${colCount}" class="fw-bold text-center">${head}</th></tr></thead><tbody>${headerRow}${body}</tbody></table>`;
+  const footRows = rows.filter((r) => r.total);
+  const foot = footRows.length
+    ? `<tfoot><tr><td colspan="${colCount}" class="pt-1 border-bottom"></td></tr>${footRows
+        .map(rowHtml)
+        .join("")}</tfoot>`
+    : "";
+  return `<table class="lh-sm"><thead><tr><th colspan="${colCount}" class="fw-bold text-center pb-1">${head}</th></tr></thead><tbody>${headerRow}${body}</tbody>${foot}</table>`;
 }
 
 export function forecastGrid() {
@@ -236,24 +292,40 @@ export function forecastYAxis(overrides: Record<string, unknown> = {}) {
   };
 }
 
-export function clampStart(ts: string, startDate: Date): string {
-  return new Date(ts) < startDate ? startDate.toISOString() : ts;
+// unit label at the top of a value axis, flush with the tick labels
+export function axisNameStyle(align: "left" | "right" = "left") {
+  return {
+    nameLocation: "end",
+    nameGap: 18,
+    nameTextStyle: {
+      color: colors.muted || "",
+      fontFamily: FONT_FAMILY,
+      fontSize: 10,
+      opacity: 0.75,
+      align,
+      padding: align === "left" ? [0, 0, 0, 8] : [0, 8, 0, 0],
+    },
+  };
+}
+
+export function clampStart(ts: number, startDate: Date): number {
+  return Math.max(ts, startDate.getTime());
 }
 
 export function filterForecastSlots(
-  slots: ForecastSlot[],
+  slots: UiForecastSlot[],
   startDate: Date,
   endDate: Date
-): ForecastSlot[] {
+): UiForecastSlot[] {
   if (!Array.isArray(slots)) return [];
   return slots.filter((s) => new Date(s.end) > startDate && new Date(s.start) <= endDate);
 }
 
-export function minSlotIndex(slots: ForecastSlot[]): number {
+export function minSlotIndex(slots: UiForecastSlot[]): number {
   return slots.reduce((min, s, i) => (s.value < (slots[min]?.value ?? Infinity) ? i : min), 0);
 }
 
-export function maxSlotIndex(slots: ForecastSlot[]): number {
+export function maxSlotIndex(slots: UiForecastSlot[]): number {
   return slots.reduce((max, s, i) => (s.value > (slots[max]?.value || 0) ? i : max), 0);
 }
 

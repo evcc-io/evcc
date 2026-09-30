@@ -14,7 +14,11 @@ import (
 
 // TODO planActive is not guarded by mutex
 
-// PlanLock contains information about a locked plan
+// PlanLock contains information about a locked plan.
+// It caches the goal a soc-based plan has committed to, so that an overrunning
+// plan keeps charging towards that goal instead of jumping to the next plan.
+// The lock must be dropped whenever the goal inputs change- plan time, plan soc
+// or the set of plans itself.
 type PlanLock struct {
 	Time time.Time // target time (committed goal, persists during overrun)
 	Soc  int       // target soc
@@ -112,8 +116,13 @@ func (lp *Loadpoint) GetPlan(targetTime time.Time, requiredDuration, preconditio
 		return nil
 	}
 
-	lp.log.TRACE.Printf("plan: creating plan with continuous=%v, precondition=%v, duration=%v, target=%v",
-		continuous, precondition, requiredDuration.Round(time.Second), targetTime.Round(time.Second).Local())
+	pc := precondition.String()
+	if precondition >= 7*24*time.Hour {
+		pc = "everything" // 168h, UI sentinel for max
+	}
+
+	lp.log.TRACE.Printf("plan: creating plan with continuous=%v, precondition=%s, duration=%v, target=%v",
+		continuous, pc, requiredDuration.Round(time.Second), targetTime.Round(time.Second).Local())
 
 	return lp.planner.Plan(requiredDuration, precondition, targetTime, continuous)
 }

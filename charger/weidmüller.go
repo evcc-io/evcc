@@ -245,12 +245,12 @@ func (wb *Weidmüller) Voltages() (float64, float64, float64, error) {
 var _ api.Identifier = (*Weidmüller)(nil)
 
 // Identify implements the api.Identifier interface
-func (wb *Weidmüller) Identify() (string, error) {
+func (wb *Weidmüller) Identify() ([]string, error) {
 	b, err := wb.conn.ReadHoldingRegisters(wmRegCardId, 11)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return bytesAsString(b), nil
+	return []string{bytesAsString(b)}, nil
 }
 
 var _ api.PhaseSwitcher = (*Weidmüller)(nil)

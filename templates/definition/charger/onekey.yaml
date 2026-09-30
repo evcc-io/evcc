@@ -1,0 +1,66 @@
+template: onekey
+products:
+  - brand: 1SINQ
+    description:
+      generic: OneKey
+capabilities: ["meter", "dim"]
+group: heating
+requirements:
+  evcc: ["skiptest"]
+  description:
+    de: |
+      OneKey-Heizungsregelung mit aktivierter evcc-Anbindung. Die Wärmepumpe
+      wird über SG-Ready-Zustände geführt (1=Dimmen, 2=Normal, 3=Boost).
+      Dazu muss im OneKey-Gerät der Energiemanager im Modus SG-Ready laufen
+      und evcc als SG-Ready-Quelle eingestellt sein. Läuft evcc auf dem
+      OneKey-Gerät selbst, ist der Broker `localhost`.
+    en: |
+      OneKey heating controller with evcc integration enabled. The heat pump
+      is controlled via SG Ready states (1=dim, 2=normal, 3=boost). The
+      device's energy manager must run in SG Ready mode with evcc selected
+      as the SG Ready source. When evcc runs on the OneKey device itself the
+      broker is `localhost`.
+params:
+  - preset: mqtt
+  - name: timeout
+    default: 90s
+    help:
+      de: Ab wann ein Messwert als veraltet gilt — Standard 90 s, das Dreifache des 30-s-Herzschlags des Geräts
+      en: When a reading counts as stale — default 90 s, three times the device's 30 s heartbeat
+  - name: topic
+    default: onekey
+    description:
+      de: Basis-Topic des OneKey-Geräts
+      en: Base topic of the OneKey device
+render: |
+  type: sgready
+  setmode:
+    source: mqtt
+    {{- include "mqtt" . | indent 2 }}
+    topic: {{ .topic }}/wp/sgmode/set
+    retained: true
+  setmaxpower:
+    source: mqtt
+    {{- include "mqtt" . | indent 2 }}
+    topic: {{ .topic }}/wp/maxpower/set
+    retained: true
+  getmode:
+    source: mqtt
+    {{- include "mqtt" . | indent 2 }}
+    topic: {{ .topic }}/wp/sgmode
+  power:
+    source: mqtt
+    {{- include "mqtt" . | indent 2 }}
+    topic: {{ .topic }}/wp/power
+  energy:
+    source: mqtt
+    {{- include "mqtt" . | indent 2 }}
+    topic: {{ .topic }}/wp/energy
+  temp:
+    source: mqtt
+    {{- include "mqtt" . | indent 2 }}
+    topic: {{ .topic }}/wp/temp
+  limittemp:
+    source: mqtt
+    {{- include "mqtt" . | indent 2 }}
+    topic: {{ .topic }}/wp/limittemp

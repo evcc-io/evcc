@@ -6,8 +6,8 @@ on:
 
 # Triggered by a `/analyze` comment on any issue or PR conversation. Delegates to
 # the shared issue agent in analyze mode, which investigates, posts one answer
-# comment, then minimizes the calling `/analyze` comment as RESOLVED — but only
-# when it actually answered.
+# comment, then minimizes the calling `/analyze` comment as RESOLVED, whatever
+# the answer says.
 jobs:
   analyze:
     name: Analyze on demand

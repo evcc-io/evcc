@@ -17,6 +17,6 @@ params:
     advanced: true
 render: |
   type: mg
-  {{ include "vehicle-base" . }}
+  {{ include "base" . }}
   region: {{ .region }}
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}

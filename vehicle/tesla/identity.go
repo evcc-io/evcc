@@ -2,16 +2,19 @@ package tesla
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 
-	"github.com/evcc-io/evcc/server/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/oauth2"
+)
+
+var (
+	mu         sync.Mutex
+	identities = make(map[string]*Identity)
 )
 
 // https://auth.tesla.com/oauth2/v3/.well-known/openid-configuration
@@ -33,7 +36,6 @@ func OAuth2Config(id, secret string) *oauth2.Config {
 
 type Identity struct {
 	oauth2.TokenSource
-	mu      sync.Mutex
 	log     *util.Logger
 	oc      *oauth2.Config
 	subject string
@@ -51,7 +53,7 @@ func NewIdentity(log *util.Logger, oc *oauth2.Config, token *oauth2.Token) (oaut
 	}
 
 	// reuse identity instance
-	if instance := getInstance(claims.Subject); instance != nil {
+	if instance := identities[claims.Subject]; instance != nil {
 		return instance, nil
 	}
 
@@ -65,28 +67,15 @@ func NewIdentity(log *util.Logger, oc *oauth2.Config, token *oauth2.Token) (oaut
 		subject: claims.Subject,
 	}
 
-	// database token
-	if !token.Valid() {
-		var tok oauth2.Token
-		if err := settings.Json(v.settingsKey(), &tok); err == nil {
-			token = &tok
-		}
+	ts, err := oauth.PersistentTokenSource(log, v.settingsKey(), token, v.refreshToken)
+	if err != nil {
+		return nil, err
 	}
 
-	if !token.Valid() && token.RefreshToken != "" {
-		if tok, err := v.refreshToken(token); err == nil {
-			token = tok
-		}
-	}
-
-	if !token.Valid() {
-		return nil, errors.New("token expired")
-	}
-
-	v.TokenSource = oauth.RefreshTokenSource(token, v.refreshToken)
+	v.TokenSource = ts
 
 	// add instance
-	addInstance(claims.Subject, v)
+	identities[claims.Subject] = v
 
 	return v, nil
 }
@@ -96,17 +85,6 @@ func (v *Identity) settingsKey() string {
 }
 
 func (v *Identity) refreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	v.mu.Lock()
-	defer v.mu.Unlock()
-
-	// refresh token source
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewClient(v.log))
-	token, err := v.oc.TokenSource(ctx, token).Token()
-	if err != nil {
-		return nil, err
-	}
-
-	err = settings.SetJson(v.settingsKey(), token)
-
-	return token, err
+	return v.oc.TokenSource(ctx, token).Token()
 }

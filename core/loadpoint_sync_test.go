@@ -49,6 +49,32 @@ func TestSyncCharger(t *testing.T) {
 	}
 }
 
+func TestSyncChargerDuringPhaseSwitch(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	charger := api.NewMockCharger(ctrl)
+	charger.EXPECT().Status().Return(api.StatusB, nil)
+	charger.EXPECT().Enabled().Return(false, nil)
+	charger.EXPECT().Enable(true).Return(nil)
+
+	clock := clock.NewMock()
+	lp := &Loadpoint{
+		log:            util.NewLogger("foo"),
+		clock:          clock,
+		charger:        charger,
+		status:         api.StatusC,
+		enabled:        true,
+		phasesSwitched: clock.Now(),
+	}
+
+	changes, err := lp.getStatusChanges()
+	require.NoError(t, err)
+	require.Empty(t, changes)
+	require.Equal(t, api.StatusC, lp.GetStatus())
+
+	require.NoError(t, lp.syncCharger())
+	assert.True(t, lp.enabled)
+}
+
 func TestSyncChargerCurrentsByGetter(t *testing.T) {
 	tc := []struct {
 		lpCurrent, actualCurrent, outCurrent float64
@@ -134,6 +160,8 @@ func TestSyncChargerPhasesByGetter(t *testing.T) {
 		lpPhases, actualPhases, outPhases int
 	}{
 		{0, 0, 0},
+		{0, 1, 1}, // seed
+		{0, 3, 3}, // seed
 		{1, 0, 1},
 		{1, 1, 1},
 		{1, 3, 3},
@@ -182,6 +210,9 @@ func TestSyncChargerPhasesByMeasurement(t *testing.T) {
 		lpPhases, actualPhases, outPhases int
 	}{
 		{0, 0, 0},
+		{0, 1, 0}, // 1p vehicle on 3p possible
+		{0, 2, 3}, // seed
+		{0, 3, 3}, // seed
 		{1, 0, 1},
 		{1, 1, 1},
 		{1, 3, 3},

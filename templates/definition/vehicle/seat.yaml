@@ -37,5 +37,5 @@ params:
 render: |
   type: drivesomethinggreater
   brand: Seat
-  {{ include "vehicle-base" . }}
-  {{ include "vehicle-features" (merge (dict "basefeatures" (list "streaming")) .) }}
+  {{ include "base" . }}
+  {{ include "features" (merge (dict "basefeatures" (list "streaming")) .) }}

@@ -41,8 +41,8 @@ params:
     example: not_plugged, disconnected
     advanced: true
     help:
-      en: Comma-separated list of additional states meaning ready
-      de: Komma-getrennte Liste zusätzlicher Zustände für bereit
+      en: Comma-separated list of additional states meaning ready, see [docs.evcc.io](https://docs.evcc.io/en/smarthome/home-assistant#charge-status)
+      de: Komma-getrennte Liste zusätzlicher Zustände für bereit, siehe [docs.evcc.io](https://docs.evcc.io/de/smarthome/home-assistant#charge-status)
   - name: statusB
     description:
       de: Zustände für Status B
@@ -50,8 +50,8 @@ params:
     example: charging_stopped, charging_completed
     advanced: true
     help:
-      en: Comma-separated list of additional states meaning connected
-      de: Komma-getrennte Liste zusätzlicher Zustände für verbunden
+      en: Comma-separated list of additional states meaning connected, see [docs.evcc.io](https://docs.evcc.io/en/smarthome/home-assistant#charge-status)
+      de: Komma-getrennte Liste zusätzlicher Zustände für verbunden, siehe [docs.evcc.io](https://docs.evcc.io/de/smarthome/home-assistant#charge-status)
   - name: statusC
     description:
       de: Zustände für Status C
@@ -59,8 +59,8 @@ params:
     example: instant_charging, fast_charging
     advanced: true
     help:
-      en: Comma-separated list of additional states meaning charging
-      de: Komma-getrennte Liste zusätzlicher Zustände für laden
+      en: Comma-separated list of additional states meaning charging, see [docs.evcc.io](https://docs.evcc.io/en/smarthome/home-assistant#charge-status)
+      de: Komma-getrennte Liste zusätzlicher Zustände für laden, siehe [docs.evcc.io](https://docs.evcc.io/de/smarthome/home-assistant#charge-status)
   - name: enabled
     description:
       de: Aktivierungsstatus-Sensor
@@ -91,6 +91,15 @@ params:
     help:
       en: Entity ID for setting maximum current in amperes (`number` or `input_number` entity)
       de: Entitäts-ID zum Setzen der maximalen Stromstärke in Ampere (`number` oder `input_number` Entität)
+  - name: milliamps
+    type: bool
+    description:
+      de: Stromstärke in 0,1A Schritten
+      en: 0.1A current steps
+    advanced: true
+    help:
+      en: Enable if the maximum current entity accepts fractional amperes; otherwise evcc sends whole amperes only
+      de: Aktivieren, wenn die Stromstärke-Entität Nachkommastellen akzeptiert; sonst sendet evcc nur ganze Ampere
   - name: power
     description:
       de: Leistungsentität
@@ -198,6 +207,7 @@ render: |
   enabled: {{ .enabled }}
   enable: {{ .enable }}
   maxcurrent: {{ .setMaxCurrent }}
+  milliamps: {{ .milliamps }}
   power: {{ .power }}
   energy: {{ .energy }}
   {{- if and .currentL1 .currentL2 .currentL3 }}
@@ -213,4 +223,4 @@ render: |
     - {{ .voltageL3 }}
   {{- end }}
   phases: {{ .phaseswitch }}
-  {{ include "charger-features" . }}
+  {{ include "features" . }}

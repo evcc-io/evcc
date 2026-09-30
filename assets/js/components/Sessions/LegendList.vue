@@ -1,6 +1,6 @@
 <template>
 	<ul
-		class="root p-0 d-flex flex-wrap column-gap-4 row-gap-2"
+		class="root p-0 m-0 d-flex flex-wrap column-gap-4 row-gap-2"
 		:class="{
 			'root--small-equal-widths': smallEqualWidths,
 			'root--grid': grid,
@@ -50,7 +50,7 @@
 			<div
 				v-for="value in valueList(legend.value)"
 				:key="value"
-				class="text-muted text-nowrap legend-value text-end"
+				class="text-muted text-nowrap legend-value text-end tabular"
 			>
 				{{ value }}
 			</div>
@@ -181,6 +181,9 @@ export default defineComponent({
 	flex-grow: 0;
 }
 
+.root--grid {
+	min-width: 0;
+}
 .root--grid .legend-label {
 	flex-grow: 1;
 	flex-shrink: 1;
@@ -190,6 +193,10 @@ export default defineComponent({
 .root--grid .legend-item {
 	flex-grow: 1;
 	flex-basis: 100%;
+	min-width: 0;
+}
+.root--grid .legend-value {
+	flex-shrink: 0;
 }
 .root--grid .legend-value:last-child {
 	flex-basis: 3.5rem;

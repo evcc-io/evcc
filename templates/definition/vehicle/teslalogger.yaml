@@ -22,7 +22,7 @@ params:
     default: 5000
 render: |
   type: custom
-  {{- include "vehicle-common" . }}
+  {{- include "common" . }}
   soc: # battery soc (%)
     source: http
     uri: {{ .url }}:{{ .port }}/currentjson/{{ .id }}
@@ -66,4 +66,4 @@ render: |
   maxcurrent:
     source: http
     uri: {{ .url }}:{{ .port }}/command/{{ .id }}/set_charging_amps?${maxcurrent}
-  {{ include "vehicle-features" . }}
+  {{ include "features" . }}

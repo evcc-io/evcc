@@ -202,8 +202,22 @@ func (p *Go) evaluate(vm *interp.Interpreter) (res any, err error) {
 
 func (p *Go) setParam(vm *interp.Interpreter) func(param string, val any) error {
 	return func(param string, val any) error {
-		_, err := vm.Eval(fmt.Sprintf("%s := %#v;", param, val))
+		_, err := vm.Eval(fmt.Sprintf("%s := %s;", param, goLiteral(val)))
 		return err
+	}
+}
+
+// goLiteral renders val as Go source. Floats need their type spelled out:
+// %#v prints float64(100) as `100`, which the interpreter infers as int. Any
+// arithmetic mixing the parameter with a float constant then fails to compile.
+func goLiteral(val any) string {
+	switch v := val.(type) {
+	case float32:
+		return fmt.Sprintf("float32(%v)", v)
+	case float64:
+		return fmt.Sprintf("float64(%v)", v)
+	default:
+		return fmt.Sprintf("%#v", val)
 	}
 }
 
