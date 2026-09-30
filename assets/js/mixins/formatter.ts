@@ -166,7 +166,7 @@ export default defineComponent({
     fmtWh(watt: number, format = POWER_UNIT.KW, withUnit = true, digits?: number) {
       return this.fmtW(watt, format, withUnit, digits) + (withUnit ? "h" : "");
     },
-    fmtNumber(number: number, decimals: number | undefined, unit?: string) {
+    fmtNumber(number: number, decimals?: number, unit?: string) {
       const style = unit ? "unit" : "decimal";
       return new Intl.NumberFormat(this.$i18n?.locale, {
         style,
@@ -440,6 +440,9 @@ export default defineComponent({
       return (
         new Intl.DisplayNames(this.$i18n?.locale, { type: "currency" }).of(currency) || currency
       );
+    },
+    fmtCountryName(country: string) {
+      return new Intl.DisplayNames(this.$i18n?.locale, { type: "region" }).of(country) || country;
     },
     fmtPricePerKWh(amout = 0, currency = CURRENCY.EUR, short = false, withUnit = true) {
       const factor = this.pricePerKWhDisplayFactor(currency);

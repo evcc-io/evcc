@@ -1,10 +1,18 @@
 template: porsche
-deprecated: true
 products:
   - brand: Porsche
+requirements:
+  description:
+    de: Anmeldung mit den Zugangsdaten des My-Porsche-Kontos. Beim Verbinden kann ein Captcha abgefragt werden.
+    en: Sign in with the My Porsche account credentials. A captcha may be requested when connecting.
 params:
   - preset: vehicle-base
   - preset: vehicle-online
+  - name: cache
+    default: 15m
+auth:
+  type: porsche
+  params: [user, password]
 render: |
   type: porsche
   {{ include "base" . }}

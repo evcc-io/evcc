@@ -374,7 +374,7 @@
 								</FormRow>
 							</template>
 
-							<div class="row">
+							<div class="row mb-4">
 								<FormRow
 									id="loadpointMinCurrent"
 									:label="$t('config.loadpoint.minCurrentLabel')"
@@ -883,7 +883,7 @@ export default {
 			// empty option is provided by PropertyField placeholder
 			return this.circuits.map((c) => ({
 				key: c.name,
-				name: `${c.config?.title || ""} [${c.name}]`.trim(),
+				name: c.deviceTitle || c.config?.title || c.name,
 			}));
 		},
 		invalidVehicle() {

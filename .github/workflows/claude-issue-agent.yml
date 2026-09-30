@@ -13,8 +13,8 @@ on:
   pull_request_target:
     types: [opened]
 
-# ponytail: skips label-check dedup; Claude is told to skip if already labeled. Add a
-# gate step if opened issues/PRs ever arrive pre-labeled.
+# ponytail: no label-check gate step; Claude is told to skip labeling once the issue
+# carries any label. Labels added right after opening are seen: the agent reads live state.
 jobs:
   agent:
     name: Issue triage
@@ -140,9 +140,7 @@ jobs:
 
             2. From the changed files and diff, determine the PR's area(s) and kind.
 
-            3. Apply every existing label that clearly matches — area (e.g. devices,
-               tariffs, vehicles, heating) and kind (e.g. bug, enhancement,
-               documentation) — with
+            3. Apply every existing label that clearly matches, area and kind, with
                `gh pr edit ${{ github.event.pull_request.number }} --add-label <label>`.
                Only ever apply labels from the existing set — never create a new label.
                Skip any label already present. Prefer a couple of precise labels over
