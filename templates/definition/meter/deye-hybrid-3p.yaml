@@ -307,15 +307,12 @@ render: |
   # device's always-active feed-in ceiling; there is no separate limit-enable register.
   # "Solar Sell" (register 145) is the owner's export on/off switch and left untouched.
   # HV models use 10 W units for register 143 (LV: 1 W).
-  {{- if gt (.feedinlimit | int) 0 }}
-  curtail: # percent of nominal, capped at the configured feed-in limit
-    source: go
+  {{- $limit := maxf .maxacpower 1 }}
+  {{- if gt (.feedinlimit | int) 0 }}{{ $limit = .feedinlimit }}{{ end }}
+  curtail: # percent of nominal, capped at the feed-in limit (default: nominal power)
+    source: js
     script: |
-      w := float64(curtail) * {{ maxf .maxacpower 1 }} / 100
-      if w > {{ .feedinlimit }} {
-        w = {{ .feedinlimit }}
-      }
-      w
+      Math.min(curtail * {{ maxf .maxacpower 1 }} / 100, {{ $limit }})
     out:
       - name: limit
         type: float
@@ -330,7 +327,7 @@ render: |
           scale: 0.1 # W to 10 W units
           {{- end }}
   curtailed: # reaching the configured feed-in limit counts as uncurtailed
-    source: go
+    source: js
     in:
       - name: limit
         type: float
@@ -346,45 +343,8 @@ render: |
           {{- end }}
     script: |
       // compare in whole percent, the register resolution does not reproduce the limit exactly
-      p := int(float64(limit)*100/{{ maxf .maxacpower 1 }} + 0.5)
-      if p > 100 || p >= int(float64({{ .feedinlimit }})*100/{{ maxf .maxacpower 1 }}+0.5) {
-        p = 100
-      }
-      p
-  {{- else }}
-  curtail: # limit feed-in to the given percent of nominal (100 % = nominal power)
-    source: modbus
-    {{- include "modbus" . | indent 2 }}
-    register:
-      address: 143 # Max Sell Power (W)
-      type: writemultiple
-      decode: uint16
-    {{- if eq .batterytype "hv" }}
-    scale: {{ divf (maxf .maxacpower 1) 1000 }} # % to 10 W units
-    {{- else }}
-    scale: {{ divf (maxf .maxacpower 1) 100 }} # % to W
-    {{- end }}
-  curtailed: # allowed feed-in as percent of nominal, derived from Max Sell Power
-    source: calc
-    min:
-    - source: calc
-      add:
-      - source: modbus
-        {{- include "modbus" . | indent 6 }}
-        register:
-          address: 143 # Max Sell Power
-          type: holding
-          decode: uint16
-        {{- if eq .batterytype "hv" }}
-        scale: {{ divf 1000 (maxf .maxacpower 1) }} # 10 W units to %
-        {{- else }}
-        scale: {{ divf 100 (maxf .maxacpower 1) }} # W to %
-        {{- end }}
-      - source: const
-        value: 0.5 # round, the integer conversion truncates
-    - source: const
-      value: 100
-  {{- end }}
+      var p = Math.round(limit * 100 / {{ maxf .maxacpower 1 }});
+      p > 100 || p >= {{ round (divf (mulf $limit 100) (maxf .maxacpower 1)) 0 }} ? 100 : p
   {{- end }}
   {{- if eq .usage "battery" }}
   power:
