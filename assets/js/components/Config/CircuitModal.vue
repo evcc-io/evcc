@@ -100,7 +100,7 @@
 				>
 					<MultiSelect
 						id="circuitParamLoadpoint"
-						v-model="selectedLoadpointIds"
+						:model-value="selectedLoadpointIds.concat(yamlAssignedLoadpointIds)"
 						:options="loadpointOptions"
 					>
 						{{ loadpointsLabel }}
@@ -167,26 +167,30 @@ export default defineComponent({
 		return {
 			ConfigType,
 			meterSelection: MeterSelection.NONE,
-			selectedLoadpointIds: [] as number[],
+			selectedLoadpointIds: [] as string[],
+			yamlAssignedLoadpointIds: [] as string[],
 		};
 	},
 	computed: {
 		loadpointsLabel() {
 			const loadpoints = this.selectedLoadpointIds
-				.map((id) => this.loadpoints.find((l) => l.id === id))
+				.map((id) => this.loadpoints.find((l) => l.id === Number(id)))
 				.filter((l) => l !== undefined);
 
 			if (loadpoints.length === 0) return this.$t("config.circuit.noLoadpointsAssigned");
-			return loadpoints.map((l) => l.title).join(", ");
+			return loadpoints
+				.map((l) => l.title)
+				.concat(this.yamlAssignedLoadpointIds)
+				.join(", ");
 		},
-		loadpointOptions(): SelectOption<number>[] {
+		loadpointOptions(): SelectOption<number | string>[] {
 			return (
 				this.loadpoints
 					.map((l) => ({
 						name: l.id
 							? l.title
 							: `${l.title} ${this.$t("config.circuit.loadpointViaYaml")}`,
-						value: l.id ?? -1,
+						value: l.id ? l.id : l.title,
 						disabled: l.id === undefined,
 					}))
 					// move disabled entries to the end
@@ -285,6 +289,9 @@ export default defineComponent({
 			}
 			if (this.circuitName) {
 				this.selectedLoadpointIds = this.initialAssignedLoadpoints(this.circuitName);
+				this.yamlAssignedLoadpointIds = this.initialYamlAssignedLoadpoints(
+					this.circuitName
+				);
 			}
 		},
 		provideTemplateOptions(products: Product[]): TemplateGroup[] {
@@ -325,11 +332,16 @@ export default defineComponent({
 				delete values.meter;
 			}
 		},
-		initialAssignedLoadpoints(circuitName: string): number[] {
+		initialYamlAssignedLoadpoints(circuitName: string): string[] {
+			return this.loadpoints
+				.filter((l) => l.circuit === circuitName && l.id === undefined)
+				.map((l) => l.title);
+		},
+		initialAssignedLoadpoints(circuitName: string): string[] {
 			return this.loadpoints
 				.filter((l) => l.circuit === circuitName)
-				.map((l) => l.id)
-				.filter((id) => id !== undefined);
+				.filter((l) => l !== undefined)
+				.map((l) => String(l.id));
 		},
 		async patchAssignedLoadpoints(circuitName: string, circuitDeleted?: boolean) {
 			const initial = this.initialAssignedLoadpoints(circuitName);
@@ -343,7 +355,7 @@ export default defineComponent({
 				...removedLoadpoints.map((id) => this.patchLoadpoint(id)),
 			]);
 		},
-		async patchLoadpoint(loadpointId: number, circuitName?: string) {
+		async patchLoadpoint(loadpointId: string, circuitName?: string) {
 			await api.patch(
 				`config/loadpoints/${loadpointId}`,
 				{
