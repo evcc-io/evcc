@@ -100,7 +100,7 @@
 				>
 					<MultiSelect
 						id="circuitParamLoadpoint"
-						:model-value="selectedLoadpointIds.concat(yamlAssignedLoadpointIds)"
+						v-model="assignedLoadpointIds"
 						:options="loadpointOptions"
 					>
 						{{ loadpointsLabel }}
@@ -172,6 +172,18 @@ export default defineComponent({
 		};
 	},
 	computed: {
+		assignedLoadpointIds: {
+			get() {
+				return [
+					...new Set([...this.selectedLoadpointIds, ...this.yamlAssignedLoadpointIds]),
+				];
+			},
+			set(value: string[]) {
+				const yamlIds = new Set(this.yamlAssignedLoadpointIds);
+
+				this.selectedLoadpointIds = value.filter((id) => !yamlIds.has(id));
+			},
+		},
 		loadpointsLabel() {
 			const loadpoints = this.selectedLoadpointIds
 				.map((id) => this.loadpoints.find((l) => l.id === Number(id)))
