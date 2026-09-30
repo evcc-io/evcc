@@ -39,6 +39,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 | [Plugin System](docs/agents/plugin-system.md)                 | Plugin layer (HTTP, MQTT, Modbus, SunSpec, JS)                               |
 | [Web UI & API](docs/agents/web-ui-api.md)                     | REST API, WebSocket, Vue frontend, authentication                            |
 | [API Security](docs/agents/api-security.md)                   | Auth modes, JWT/API key/session, two-tier checks, credential storage         |
+| [Provider Auth](docs/agents/provider-auth.md)                 | Third-party logins (OAuth, device code, tokens), template `auth` block, UI   |
 | [Chart Conventions](docs/agents/charts.md)                    | ECharts charts: axis units and scale rules, tooltips, layout                 |
 
 ### Loading guide by task type
@@ -51,6 +52,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - **Chart work (ECharts, axes, tooltips)** — charts + web-ui-api
 - **API endpoint work** — web-ui-api + core-domain
 - **Auth / login / API key / permissions** — api-security + web-ui-api
+- **Vehicle or device cloud login (OAuth, tokens, captcha)** — provider-auth + hardware-integrations
 - **Config/template work** — plugin-system
 - **Control loop / charging logic** — core-domain
 - **Bug in any area** — core-domain + relevant topic file(s)

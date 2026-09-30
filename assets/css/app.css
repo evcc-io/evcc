@@ -385,6 +385,9 @@ a:hover {
 .evcc-gray {
 	color: var(--evcc-gray);
 }
+.min-w-0 {
+	min-width: 0;
+}
 .text-grid {
 	color: var(--evcc-grid);
 }
@@ -740,8 +743,11 @@ textarea.form-control:read-only,
 	opacity: 0.5 !important;
 }
 
-input[type="time"]::-webkit-calendar-picker-indicator {
-	display: none;
+/* keep picker icon on touch devices, Chromium 154+ on Android needs it */
+@media (hover: hover) {
+	input[type="time"]::-webkit-calendar-picker-indicator {
+		display: none;
+	}
 }
 
 /* Safari: hide the datalist dropdown button */

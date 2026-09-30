@@ -1,12 +1,15 @@
 package plugin
 
 import (
+	"math"
 	"sync"
 	"testing"
 
 	sunspec "github.com/andig/gosunspec"
 	"github.com/andig/gosunspec/memory"
 	"github.com/andig/gosunspec/models/model704"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -112,6 +115,31 @@ func TestSunspecBoolGetterInt(t *testing.T) {
 	got, err = g()
 	require.NoError(t, err)
 	require.True(t, got)
+}
+
+// TestSunspecFloatGetterNaN reports the not-implemented sentinel as api.ErrNotAvailable
+// instead of zero, so a dropout does not rebase energy totals (#33820).
+func TestSunspecFloatGetterNaN(t *testing.T) {
+	dev, block := newSunspecTestDevice(t)
+
+	mb := &ModbusSunspec{
+		log:    util.NewLogger("test"),
+		device: dev,
+		op:     modbus.SunSpecOperation{Model: model704.ModelID, Point: model704.WMaxLimPct},
+		scale:  1,
+	}
+
+	block.MustPoint(model704.WMaxLimPct_SF).SetScaleFactor(0)
+	block.MustPoint(model704.WMaxLimPct).SetUint16(50)
+	require.NoError(t, block.Write(model704.WMaxLimPct_SF, model704.WMaxLimPct))
+	res, err := mb.floatGetter()
+	require.NoError(t, err)
+	require.Equal(t, 50.0, res)
+
+	block.MustPoint(model704.WMaxLimPct).SetUint16(math.MaxUint16)
+	require.NoError(t, block.Write(model704.WMaxLimPct))
+	_, err = mb.floatGetter()
+	require.ErrorIs(t, err, api.ErrNotAvailable)
 }
 
 // TestSunspecConcurrentSharedDevice reads different points of one shared device
