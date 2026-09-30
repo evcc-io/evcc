@@ -48,7 +48,7 @@
       "buffer": "Home battery energy above {soc} may be used to support the charging points and delays switching off in smart mode. Start solar charging automatically {start}.",
       "bufferNone": "Home battery energy is not used for the charging points. Set a value below {soc} to enable support.",
       "bufferStart": {
-        "above": "once the battery reaches {soc}",
+        "above": "once the battery is above {soc}",
         "full": "once the battery is full",
         "never": "only with enough surplus"
       },
