@@ -20,6 +20,7 @@ params:
     delay: 100ms
   - name: delay
     deprecated: true
+  - name: maxacpower
   - preset: battery-params
 render: |
   type: custom
@@ -87,6 +88,7 @@ render: |
       type: holding
       decode: uint32
     scale: 0.1
+  maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
   power: # power (W)
