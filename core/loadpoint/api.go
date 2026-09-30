@@ -109,6 +109,10 @@ type API interface {
 	GetMinSoc() int
 	// SetMinSoc sets the loadpoint min soc (heating: min temperature)
 	SetMinSoc(soc int)
+	// GetDehumidifierConfig returns humidity control settings.
+	GetDehumidifierConfig() DehumidifierConfig
+	// SetDehumidifierConfig updates humidity control settings.
+	SetDehumidifierConfig(DehumidifierConfig) error
 
 	//
 	// effective values

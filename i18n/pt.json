@@ -1373,6 +1373,15 @@
       "duration": "Duração",
       "emission": "Emissões",
       "fallbackName": "Posto de Carregamento",
+      "humidity": {
+        "title": "Humidade relativa",
+        "current": "Humidade atual",
+        "target": "Humidade alvo",
+        "unavailable": "Indisponível",
+        "device": "Desumidificador",
+        "on": "Ligado",
+        "off": "Desligado"
+      },
       "finished": "Tempo de finalização",
       "last24hEnergy": "Últimas 24 horas",
       "last7dEnergy": "Últimos 7 dias",
@@ -1385,6 +1394,15 @@
       "todayEnergy": "Hoje"
     },
     "loadpointSettings": {
+      "dehumidifier": "Desumidificador",
+      "humidity": {
+        "target": "Humidade alvo",
+        "hysteresis": "Largura da histerese",
+        "minOnTime": "Tempo mínimo ligado",
+        "minOffTime": "Tempo mínimo desligado",
+        "unit": "%RH",
+        "minutes": "min"
+      },
       "batteryBoost": {
         "description": "Carga rápida da bateria de casa até que descarregue para {limit}.",
         "descriptionDisabled": "Selecione um limite para permitir o carregamento rápido da bateria doméstica.",

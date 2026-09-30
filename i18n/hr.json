@@ -867,6 +867,15 @@
       "co2": "⌀ CO₂",
       "duration": "Trajanje",
       "fallbackName": "Mjesto punjenja",
+      "humidity": {
+        "title": "Relativna vlažnost",
+        "current": "Trenutna vlažnost",
+        "target": "Ciljana vlažnost",
+        "unavailable": "Nije dostupno",
+        "device": "Odvlaživač",
+        "on": "Uključeno",
+        "off": "Isključeno"
+      },
       "finished": "Vrijeme završetka",
       "power": "Snaga",
       "price": "Trošak",
@@ -876,6 +885,15 @@
       "solar": "Solarno"
     },
     "loadpointSettings": {
+      "dehumidifier": "Odvlaživač",
+      "humidity": {
+        "target": "Ciljana vlažnost",
+        "hysteresis": "Širina histereze",
+        "minOnTime": "Minimalno vrijeme rada",
+        "minOffTime": "Minimalno vrijeme mirovanja",
+        "unit": "%RH",
+        "minutes": "min"
+      },
       "batteryBoost": {
         "description": "Brzo punjenje pomoću kućne baterije dok se ne isprazni na {limit}.",
         "label": "Ubrzaj punjenje s baterijom",

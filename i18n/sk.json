@@ -1443,6 +1443,15 @@
       "duration": "Trvanie",
       "emission": "Emisie",
       "fallbackName": "Nabíjací bod",
+      "humidity": {
+        "title": "Relatívna vlhkosť",
+        "current": "Aktuálna vlhkosť",
+        "target": "Cieľová vlhkosť",
+        "unavailable": "Nedostupné",
+        "device": "Odvlhčovač",
+        "on": "Zapnuté",
+        "off": "Vypnuté"
+      },
       "finished": "Čas ukončenia",
       "last24hEnergy": "Posledných 24h",
       "last7dEnergy": "Posledných 7 dní",
@@ -1456,6 +1465,15 @@
       "todayEnergy": "Dnes"
     },
     "loadpointSettings": {
+      "dehumidifier": "Odvlhčovač",
+      "humidity": {
+        "target": "Cieľová vlhkosť",
+        "hysteresis": "Šírka hysterezie",
+        "minOnTime": "Minimálny čas zapnutia",
+        "minOffTime": "Minimálny čas vypnutia",
+        "unit": "%RH",
+        "minutes": "min"
+      },
       "batteryBoost": {
         "description": "Povoliť rýchle nabíjanie z domácej batérie, kým sa nevybije na {limit}.",
         "descriptionDisabled": "Vyberte limit, ktorý povolí rýchle nabíjanie z domácej batérie.",

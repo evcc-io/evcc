@@ -1443,6 +1443,15 @@
       "duration": "Ilgums",
       "emission": "Emisija",
       "fallbackName": "Uzlādes punkts",
+      "humidity": {
+        "title": "Relatīvais mitrums",
+        "current": "Pašreizējais mitrums",
+        "target": "Mērķa mitrums",
+        "unavailable": "Nav pieejams",
+        "device": "Mitruma savācējs",
+        "on": "Ieslēgts",
+        "off": "Izslēgts"
+      },
       "finished": "Beigu laiks",
       "last24hEnergy": "Pēdējās 24 stundas",
       "last7dEnergy": "Pēdējās 7 dienas",
@@ -1456,6 +1465,15 @@
       "todayEnergy": "Šodien"
     },
     "loadpointSettings": {
+      "dehumidifier": "Mitruma savācējs",
+      "humidity": {
+        "target": "Mērķa mitrums",
+        "hysteresis": "Histerēzes platums",
+        "minOnTime": "Minimālais darbības laiks",
+        "minOffTime": "Minimālais izslēgšanas laiks",
+        "unit": "%RH",
+        "minutes": "min"
+      },
       "batteryBoost": {
         "description": "Atļaut ātro uzlādi no mājas akumulatora, līdz tas ir izlādēts līdz {limit}.",
         "descriptionDisabled": "Izvēlieties ierobežojumu, lai atļautu ātro uzlādi no mājas akumulatora.",

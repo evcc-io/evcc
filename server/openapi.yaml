@@ -487,6 +487,58 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/NumberResult"
+  /loadpoints/{id}/dehumidifier/target/{humidity}:
+    post:
+      operationId: setLoadpointHumidityTarget
+      summary: Update target humidity
+      description: Sets the dehumidifier target relative humidity in %RH.
+      tags:
+        - loadpoints
+      parameters:
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/humidity"
+      responses:
+        "200":
+          $ref: "#/components/responses/NumberResult"
+  /loadpoints/{id}/dehumidifier/hysteresis/{hysteresis}:
+    post:
+      operationId: setLoadpointHumidityHysteresis
+      summary: Update humidity hysteresis
+      description: Sets the dehumidifier hysteresis width in percentage points.
+      tags:
+        - loadpoints
+      parameters:
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/hysteresis"
+      responses:
+        "200":
+          $ref: "#/components/responses/NumberResult"
+  /loadpoints/{id}/dehumidifier/minontime/{duration}:
+    post:
+      operationId: setLoadpointDehumidifierMinOnTime
+      summary: Update minimum on time
+      description: Sets the compressor minimum-on time, for example `10m` or `0s`.
+      tags:
+        - loadpoints
+      parameters:
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/dehumidifierDuration"
+      responses:
+        "200":
+          $ref: "#/components/responses/NumberResult"
+  /loadpoints/{id}/dehumidifier/minofftime/{duration}:
+    post:
+      operationId: setLoadpointDehumidifierMinOffTime
+      summary: Update minimum off time
+      description: Sets the compressor minimum-off time, for example `5m` or `0s`.
+      tags:
+        - loadpoints
+      parameters:
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/dehumidifierDuration"
+      responses:
+        "200":
+          $ref: "#/components/responses/NumberResult"
   /loadpoints/{id}/mode/{mode}:
     post:
       operationId: setLoadpointMode
@@ -2042,6 +2094,32 @@ components:
       required: true
       schema:
         $ref: "#/components/schemas/Temp"
+    humidity:
+      name: humidity
+      description: Relative humidity in %RH
+      in: path
+      required: true
+      schema:
+        type: number
+        minimum: 0
+        maximum: 100
+    hysteresis:
+      name: hysteresis
+      description: Hysteresis width in percentage points
+      in: path
+      required: true
+      schema:
+        type: number
+        minimum: 0
+        maximum: 100
+    dehumidifierDuration:
+      name: duration
+      description: Duration such as 10m, 300s, or 0s
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: "^[0-9]+[smh]?$"
     timestamp:
       name: timestamp
       description: Timestamp in RFC3339 format

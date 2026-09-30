@@ -1443,6 +1443,15 @@
       "duration": "Laddtid",
       "emission": "Utsläpp",
       "fallbackName": "Laddplats",
+      "humidity": {
+        "title": "Relativ luftfuktighet",
+        "current": "Aktuell luftfuktighet",
+        "target": "Målfuktighet",
+        "unavailable": "Inte tillgänglig",
+        "device": "Avfuktare",
+        "on": "På",
+        "off": "Av"
+      },
       "finished": "Sluttid",
       "last24hEnergy": "Senaste 24 timmar",
       "last7dEnergy": "Senaste 7 dagar",
@@ -1456,6 +1465,15 @@
       "todayEnergy": "Idag"
     },
     "loadpointSettings": {
+      "dehumidifier": "Avfuktare",
+      "humidity": {
+        "target": "Målfuktighet",
+        "hysteresis": "Hysteresbredd",
+        "minOnTime": "Minsta drifttid",
+        "minOffTime": "Minsta avstängningstid",
+        "unit": "%RH",
+        "minutes": "min"
+      },
       "batteryBoost": {
         "description": "Snabbladdning från hembatteri tills det är urladdat till {limit}.",
         "descriptionDisabled": "Välj begränsning för att tillåta snabb laddning från hembatteri.",

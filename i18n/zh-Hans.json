@@ -625,6 +625,15 @@
       "co2": "⌀ CO₂",
       "duration": "时长",
       "fallbackName": "充电点",
+      "humidity": {
+        "title": "相对湿度",
+        "current": "当前湿度",
+        "target": "目标湿度",
+        "unavailable": "不可用",
+        "device": "除湿机",
+        "on": "开启",
+        "off": "关闭"
+      },
       "finished": "结束时间",
       "power": "功率",
       "price": "成本",
@@ -634,6 +643,15 @@
       "solar": "太阳能"
     },
     "loadpointSettings": {
+      "dehumidifier": "除湿机",
+      "humidity": {
+        "target": "目标湿度",
+        "hysteresis": "滞回宽度",
+        "minOnTime": "最短运行时间",
+        "minOffTime": "最短停止时间",
+        "unit": "%RH",
+        "minutes": "分钟"
+      },
       "batteryBoost": {
         "description": "使用住宅电池快速充电，直到电量降至 {limit}。",
         "label": "电池快充",

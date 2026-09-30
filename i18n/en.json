@@ -1508,7 +1508,16 @@
       "remoteDisabledHard": "{source}: turned off",
       "remoteDisabledSoft": "{source}: turned off adaptive solar-charging",
       "solar": "Solar",
-      "todayEnergy": "Today"
+      "todayEnergy": "Today",
+      "humidity": {
+        "title": "Relative humidity",
+        "current": "Current humidity",
+        "target": "Target humidity",
+        "unavailable": "Unavailable",
+        "device": "Dehumidifier",
+        "on": "On",
+        "off": "Off"
+      }
     },
     "loadpointSettings": {
       "batteryBoost": {
@@ -1526,7 +1535,16 @@
       "batteryUsage": "Home Battery",
       "currents": "Charging Current",
       "default": "default",
+      "dehumidifier": "Dehumidifier",
       "heating": "Heating",
+      "humidity": {
+        "target": "Target humidity",
+        "hysteresis": "Hysteresis width",
+        "minOnTime": "Minimum on time",
+        "minOffTime": "Minimum off time",
+        "unit": "%RH",
+        "minutes": "min"
+      },
       "maxCurrent": {
         "label": "Max. Current"
       },

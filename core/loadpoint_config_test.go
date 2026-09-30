@@ -100,6 +100,12 @@ func TestPersistedSettingsAreValidConfig(t *testing.T) {
 		Poll: loadpoint.PollConfig{Mode: loadpoint.PollAlways, Interval: 42 * time.Minute},
 	})
 	lp.SetUI(loadpoint.UIConfig{MinTemp: 20, MaxTemp: 45})
+	require.NoError(t, lp.SetDehumidifierConfig(loadpoint.DehumidifierConfig{
+		TargetHumidity: 58,
+		Hysteresis:     3.5,
+		MinOnTime:      12 * time.Minute,
+		MinOffTime:     6 * time.Minute,
+	}))
 	require.NoError(t, lp.SetPlanEnergy(planTime, 7))
 	require.NoError(t, lp.SetPlanStrategy(api.PlanStrategy{Continuous: true}))
 

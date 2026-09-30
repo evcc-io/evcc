@@ -1443,6 +1443,15 @@
       "duration": "Durée",
       "emission": "Emission",
       "fallbackName": "Point de chargement",
+      "humidity": {
+        "title": "Humidité relative",
+        "current": "Humidité actuelle",
+        "target": "Humidité cible",
+        "unavailable": "Indisponible",
+        "device": "Déshumidificateur",
+        "on": "Activé",
+        "off": "Désactivé"
+      },
       "finished": "Heure de fin",
       "last24hEnergy": "24 dernières heures",
       "last7dEnergy": "7 derniers jours",
@@ -1471,7 +1480,16 @@
       "batteryUsage": "Batterie domestique",
       "currents": "Courant de charge",
       "default": "défaut",
+      "dehumidifier": "Déshumidificateur",
       "heating": "Chauffage",
+      "humidity": {
+        "target": "Humidité cible",
+        "hysteresis": "Largeur d’hystérésis",
+        "minOnTime": "Durée minimale de marche",
+        "minOffTime": "Durée minimale d’arrêt",
+        "unit": "%RH",
+        "minutes": "min"
+      },
       "maxCurrent": {
         "label": "Courant max."
       },

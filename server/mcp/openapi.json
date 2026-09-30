@@ -797,6 +797,98 @@
         }
       }
     },
+    "/loadpoints/{id}/dehumidifier/target/{humidity}": {
+      "post": {
+        "operationId": "setLoadpointHumidityTarget",
+        "summary": "Update target humidity",
+        "description": "Sets the dehumidifier target relative humidity in %RH.",
+        "tags": [
+          "loadpoints"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/humidity"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        }
+      }
+    },
+    "/loadpoints/{id}/dehumidifier/hysteresis/{hysteresis}": {
+      "post": {
+        "operationId": "setLoadpointHumidityHysteresis",
+        "summary": "Update humidity hysteresis",
+        "description": "Sets the dehumidifier hysteresis width in percentage points.",
+        "tags": [
+          "loadpoints"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/hysteresis"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        }
+      }
+    },
+    "/loadpoints/{id}/dehumidifier/minontime/{duration}": {
+      "post": {
+        "operationId": "setLoadpointDehumidifierMinOnTime",
+        "summary": "Update minimum on time",
+        "description": "Sets the compressor minimum-on time, for example `10m` or `0s`.",
+        "tags": [
+          "loadpoints"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/dehumidifierDuration"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        }
+      }
+    },
+    "/loadpoints/{id}/dehumidifier/minofftime/{duration}": {
+      "post": {
+        "operationId": "setLoadpointDehumidifierMinOffTime",
+        "summary": "Update minimum off time",
+        "description": "Sets the compressor minimum-off time, for example `5m` or `0s`.",
+        "tags": [
+          "loadpoints"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/id"
+          },
+          {
+            "$ref": "#/components/parameters/dehumidifierDuration"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/NumberResult"
+          }
+        }
+      }
+    },
     "/loadpoints/{id}/mode/{mode}": {
       "post": {
         "operationId": "setLoadpointMode",
@@ -3270,6 +3362,30 @@
           "action"
         ]
       },
+      "DehumidifierConfig": {
+        "type": "object",
+        "properties": {
+          "targetHumidity": {
+            "type": "number"
+          },
+          "hysteresis": {
+            "type": "number"
+          },
+          "minOnTime": {
+            "description": "Minimum on/off durations in nanoseconds, as serialized by time.Duration.",
+            "type": "number"
+          },
+          "minOffTime": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "targetHumidity",
+          "hysteresis",
+          "minOnTime",
+          "minOffTime"
+        ]
+      },
       "LoadpointUi": {
         "description": "Display-only UI settings of a loadpoint.",
         "type": "object",
@@ -3372,6 +3488,10 @@
           },
           "chargerFeatureDemandWeekday": {
             "description": "Heating device demand forecast uses same-weekday average over past 4 weeks.",
+            "type": "boolean"
+          },
+          "chargerFeatureDehumidifier": {
+            "description": "Loadpoint controls a humidity-based dehumidifier.",
             "type": "boolean"
           },
           "chargerFeatureHeating": {
@@ -3501,6 +3621,11 @@
           "enabled": {
             "description": "Charger is currently allowed to charge.",
             "type": "boolean"
+          },
+          "humidity": {
+            "description": "Current relative humidity in %RH, unavailable until a valid reading arrives.",
+            "type": "number",
+            "nullable": true
           },
           "limitEnergy": {
             "description": "Session energy limit in kWh. Zero means no limit.",
@@ -3682,6 +3807,14 @@
             "description": "Loadpoint title for UI display.",
             "type": "string"
           },
+          "dehumidifier": {
+            "$ref": "#/components/schemas/DehumidifierConfig",
+            "description": "Dehumidifier control settings."
+          },
+          "targetHumidity": {
+            "description": "Target relative humidity in %RH.",
+            "type": "number"
+          },
           "todayEnergy": {
             "description": "Energy used since midnight in kWh.",
             "type": "number"
@@ -3747,6 +3880,7 @@
           "chargerFeatureContinuous",
           "chargerFeatureDemandTemperature",
           "chargerFeatureDemandWeekday",
+          "chargerFeatureDehumidifier",
           "chargerFeatureHeating",
           "chargerFeatureIntegratedDevice",
           "chargerFeatureOffline",
@@ -3811,6 +3945,8 @@
           "smartFeedInPriorityNextStart",
           "solarShare",
           "title",
+          "dehumidifier",
+          "targetHumidity",
           "vehicleClimaterActive",
           "vehicleDetectionActive",
           "vehicleLimitSoc",
@@ -5751,6 +5887,38 @@
         "required": true,
         "schema": {
           "$ref": "#/components/schemas/Temp"
+        }
+      },
+      "humidity": {
+        "name": "humidity",
+        "description": "Relative humidity in %RH",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "hysteresis": {
+        "name": "hysteresis",
+        "description": "Hysteresis width in percentage points",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "dehumidifierDuration": {
+        "name": "duration",
+        "description": "Duration such as 10m, 300s, or 0s",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^[0-9]+[smh]?$"
         }
       },
       "timestamp": {

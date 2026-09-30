@@ -184,6 +184,7 @@ export default defineComponent({
 		chargerStatusReason: String as PropType<CHARGER_STATUS_REASON | null>,
 		chargerFeatureIntegratedDevice: Boolean,
 		chargerFeatureHeating: Boolean,
+		chargerFeatureDehumidifier: Boolean,
 		chargerFeatureContinuous: Boolean,
 		chargerFeatureSwitchDevice: Boolean,
 		chargerIcon: String as PropType<string | null>,
@@ -198,6 +199,8 @@ export default defineComponent({
 		vehicleDetectionActive: Boolean,
 		vehicleRange: Number,
 		vehicleSoc: { type: Number, default: 0 },
+		humidity: { type: Number as PropType<number | null>, default: null },
+		targetHumidity: { type: Number, default: 50 },
 		minSocNotReached: Boolean,
 		vehicleName: String,
 		vehicleIcon: String,
@@ -300,6 +303,9 @@ export default defineComponent({
 		},
 		heating() {
 			return this.chargerFeatureHeating;
+		},
+		dehumidifier() {
+			return this.chargerFeatureDehumidifier;
 		},
 		continuous() {
 			return this.chargerFeatureContinuous;

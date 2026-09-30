@@ -1443,6 +1443,15 @@
       "duration": "Kesto",
       "emission": "Päästöt",
       "fallbackName": "Latauspiste",
+      "humidity": {
+        "title": "Suhteellinen kosteus",
+        "current": "Nykyinen kosteus",
+        "target": "Tavoitekosteus",
+        "unavailable": "Ei käytettävissä",
+        "device": "Ilmankuivain",
+        "on": "Päällä",
+        "off": "Pois"
+      },
       "finished": "Valmistumisaika",
       "last24hEnergy": "Viimeinen 24h",
       "last7dEnergy": "Viimeinen 7 päivää",
@@ -1456,6 +1465,15 @@
       "todayEnergy": "Tänään"
     },
     "loadpointSettings": {
+      "dehumidifier": "Ilmankuivain",
+      "humidity": {
+        "target": "Tavoitekosteus",
+        "hysteresis": "Hystereesin leveys",
+        "minOnTime": "Vähimmäiskäyntiaika",
+        "minOffTime": "Vähimmäispysäytysaika",
+        "unit": "%RH",
+        "minutes": "min"
+      },
       "batteryBoost": {
         "description": "Nopea lataus kodin akusta, kunnes se purkautuu tasolle {limit}.",
         "descriptionDisabled": "Valitse raja mahdollistaaksesi välittömän latauksen kotiakusta.",

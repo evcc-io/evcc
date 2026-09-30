@@ -358,10 +358,28 @@
       "loadpointsLimit": "{limit} ograničenje"
     },
     "loadpoint": {
+      "humidity": {
+        "title": "Relativna vlažnost",
+        "current": "Trenutna vlažnost",
+        "target": "Ciljana vlažnost",
+        "unavailable": "Nije dostupno",
+        "device": "Odvlaživač",
+        "on": "Uključeno",
+        "off": "Isključeno"
+      },
       "remoteDisabledHard": "{source}: isključen",
       "remoteDisabledSoft": "{source}: isključeno prilagodljivo solarno punjenje"
     },
     "loadpointSettings": {
+      "dehumidifier": "Odvlaživač",
+      "humidity": {
+        "target": "Ciljana vlažnost",
+        "hysteresis": "Širina histereze",
+        "minOnTime": "Minimalno vrijeme rada",
+        "minOffTime": "Minimalno vrijeme mirovanja",
+        "unit": "%RH",
+        "minutes": "min"
+      },
       "phasesConfigured": {
         "phases_1_hint": "(od {min} do {max})",
         "phases_3_hint": "(od {min} do {max})"

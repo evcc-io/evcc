@@ -1033,6 +1033,15 @@
       "duration": "Durata",
       "emission": "Emisie",
       "fallbackName": "Punct de încărcare",
+      "humidity": {
+        "title": "Umiditate relativă",
+        "current": "Umiditate curentă",
+        "target": "Umiditate țintă",
+        "unavailable": "Indisponibilă",
+        "device": "Dezumidificator",
+        "on": "Pornit",
+        "off": "Oprit"
+      },
       "finished": "Ora de finalizare",
       "power": "Putere",
       "price": "Σ Pret",
@@ -1042,6 +1051,15 @@
       "solar": "Solar"
     },
     "loadpointSettings": {
+      "dehumidifier": "Dezumidificator",
+      "humidity": {
+        "target": "Umiditate țintă",
+        "hysteresis": "Lățimea histerezisului",
+        "minOnTime": "Timp minim de funcționare",
+        "minOffTime": "Timp minim de oprire",
+        "unit": "%RH",
+        "minutes": "min"
+      },
       "batteryBoost": {
         "description": "Încărcare rapidă de la bateria de acasă până când se descarcă la {limit}.",
         "descriptionDisabled": "Selectați o limită pentru a permite încărcarea rapidă de la bateria de acasă.",

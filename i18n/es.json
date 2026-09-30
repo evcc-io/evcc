@@ -1203,6 +1203,15 @@
       "co2": "CO₂ ⌀",
       "duration": "Duración",
       "fallbackName": "Punto de carga",
+      "humidity": {
+        "title": "Humedad relativa",
+        "current": "Humedad actual",
+        "target": "Humedad objetivo",
+        "unavailable": "No disponible",
+        "device": "Deshumidificador",
+        "on": "Encendido",
+        "off": "Apagado"
+      },
       "finished": "Hora de finalización",
       "power": "Potencia",
       "price": "Coste",
@@ -1212,6 +1221,15 @@
       "solar": "Solar"
     },
     "loadpointSettings": {
+      "dehumidifier": "Deshumidificador",
+      "humidity": {
+        "target": "Humedad objetivo",
+        "hysteresis": "Anchura de histéresis",
+        "minOnTime": "Tiempo mínimo de encendido",
+        "minOffTime": "Tiempo mínimo de apagado",
+        "unit": "%RH",
+        "minutes": "min"
+      },
       "batteryBoost": {
         "description": "Carga rápida desde la batería doméstica hasta que se descargue a {limit}.",
         "label": "Aumento de la batería",

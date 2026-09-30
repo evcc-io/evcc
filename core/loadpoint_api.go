@@ -412,6 +412,37 @@ func (lp *Loadpoint) SetMinSoc(soc int) {
 	}
 }
 
+// GetDehumidifierConfig returns humidity control settings.
+func (lp *Loadpoint) GetDehumidifierConfig() loadpoint.DehumidifierConfig {
+	lp.RLock()
+	dehumidifier := lp.Dehumidifier
+	lp.RUnlock()
+	return dehumidifier
+}
+
+// SetDehumidifierConfig updates humidity control settings.
+func (lp *Loadpoint) SetDehumidifierConfig(config loadpoint.DehumidifierConfig) error {
+	if err := config.Validate(); err != nil {
+		return err
+	}
+
+	lp.Lock()
+	defer lp.Unlock()
+
+	if lp.Dehumidifier == config {
+		return nil
+	}
+
+	if err := lp.settings.SetJson(keys.Dehumidifier, config); err != nil {
+		return fmt.Errorf("persist dehumidifier config: %w", err)
+	}
+	lp.Dehumidifier = config
+	lp.publish(keys.Dehumidifier, config)
+	lp.publish(keys.TargetHumidity, config.TargetHumidity)
+	lp.requestUpdate()
+	return nil
+}
+
 // GetLimitEnergy returns the session limit energy
 func (lp *Loadpoint) GetLimitEnergy() float64 {
 	lp.RLock()

@@ -100,6 +100,7 @@ type Loadpoint struct {
 	MeterRef   string `mapstructure:"meter"`   // Charge meter reference
 
 	Soc             loadpoint.SocConfig
+	Dehumidifier    loadpoint.DehumidifierConfig `mapstructure:"dehumidifier"`
 	Enable, Disable loadpoint.ThresholdConfig
 	Ui              loadpoint.UIConfig // display-only, not used in control logic
 
@@ -128,18 +129,19 @@ type Loadpoint struct {
 	batteryBoost             int      // battery boost state
 	batteryBoostLimit        int      // battery boost soc limit (0-100, 100=disabled)
 
-	mode                api.ChargeMode
-	alwaysCharge        api.AlwaysCharge // smart mode: charge continuously at least at min power
-	enabled             bool             // Charger enabled state
-	phases              int              // Charger enabled phases, guarded by mutex
-	measuredPhases      int              // Charger physically measured phases
-	offeredCurrent      float64          // Charger current limit
-	socUpdated          time.Time        // Soc updated timestamp (poll: connected)
-	vehicleDetect       time.Time        // Vehicle connected timestamp
-	chargerSwitched     time.Time        // Charger enabled/disabled timestamp
-	phasesSwitched      time.Time        // Phase switch timestamp
-	vehicleDetectTicker *clock.Ticker
-	vehicleIdentifier   string
+	mode                 api.ChargeMode
+	alwaysCharge         api.AlwaysCharge // smart mode: charge continuously at least at min power
+	enabled              bool             // Charger enabled state
+	phases               int              // Charger enabled phases, guarded by mutex
+	measuredPhases       int              // Charger physically measured phases
+	offeredCurrent       float64          // Charger current limit
+	socUpdated           time.Time        // Soc updated timestamp (poll: connected)
+	vehicleDetect        time.Time        // Vehicle connected timestamp
+	chargerSwitched      time.Time        // Charger enabled/disabled timestamp
+	dehumidifierSwitched time.Time        // Dehumidifier enabled/disabled timestamp
+	phasesSwitched       time.Time        // Phase switch timestamp
+	vehicleDetectTicker  *clock.Ticker
+	vehicleIdentifier    string
 
 	charger          api.Charger
 	chargeTimer      api.ChargeTimer
@@ -340,11 +342,12 @@ func NewLoadpoint(log *util.Logger, settings settings.Settings) *Loadpoint {
 				Mode:     loadpoint.PollCharging,
 			},
 		},
-		Enable:      loadpoint.ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
-		Disable:     loadpoint.ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
-		progress:    NewProgress(0, 10),                                              // soc progress indicator
-		coordinator: coordinator.NewDummy(),                                          // dummy vehicle coordinator
-		tasks:       util.NewQueue[Task](),                                           // task queue
+		Dehumidifier: loadpoint.DefaultDehumidifierConfig(),
+		Enable:       loadpoint.ThresholdConfig{Delay: time.Minute, Threshold: 0},     // t, W
+		Disable:      loadpoint.ThresholdConfig{Delay: 3 * time.Minute, Threshold: 0}, // t, W
+		progress:     NewProgress(0, 10),                                              // soc progress indicator
+		coordinator:  coordinator.NewDummy(),                                          // dummy vehicle coordinator
+		tasks:        util.NewQueue[Task](),                                           // task queue
 	}
 
 	return lp
@@ -430,6 +433,11 @@ func (lp *Loadpoint) restoreSettings() {
 	var ui loadpoint.UIConfig
 	if err := lp.settings.Json(keys.UI, &ui); err == nil {
 		lp.Ui = ui
+	}
+
+	var dehumidifier loadpoint.DehumidifierConfig
+	if err := lp.settings.Json(keys.Dehumidifier, &dehumidifier); err == nil && dehumidifier.Validate() == nil {
+		lp.Dehumidifier = dehumidifier
 	}
 
 	t, err1 := lp.settings.Time(keys.PlanTime)
@@ -775,6 +783,8 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 	lp.publish(keys.DisableDelay, lp.Disable.Delay)
 
 	lp.publish(keys.UI, lp.Ui)
+	lp.publish(keys.Dehumidifier, lp.Dehumidifier)
+	lp.publish(keys.TargetHumidity, lp.Dehumidifier.TargetHumidity)
 
 	if phases := lp.getChargerPhysicalPhases(); phases != 0 {
 		if lp.phasesConfigured != phases && lp.phasesConfigured != 0 {
@@ -840,6 +850,9 @@ func (lp *Loadpoint) Prepare(site site.API, uiChan chan<- util.Param, pushChan c
 			// set defined current for use by pv mode
 			_ = lp.setLimit(lp.effectiveMinCurrent())
 		}
+		if lp.chargerHasFeature(api.Dehumidifier) {
+			lp.dehumidifierSwitched = lp.clock.Now()
+		}
 	} else {
 		lp.log.ERROR.Printf("charger enabled: %v", err)
 	}
@@ -859,6 +872,9 @@ func (lp *Loadpoint) setAndPublishEnabled(enabled bool) {
 	if enabled != lp.enabled {
 		lp.log.DEBUG.Printf("charger %s", status[enabled])
 		lp.enabled = enabled
+		if lp.chargerHasFeature(api.Dehumidifier) {
+			lp.dehumidifierSwitched = lp.clock.Now()
+		}
 	}
 	lp.publish(keys.Enabled, enabled)
 }
@@ -2341,9 +2357,18 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 	}
 
 NO_DIM:
+	if lp.chargerHasFeature(api.Dehumidifier) && lp.GetMode() == api.ModeOff {
+		if err := lp.updateDehumidifier(sitePower, batteryPower, batteryBuffered, batteryStart); err != nil {
+			lp.log.ERROR.Println(err)
+		}
+	}
+
 	// read and publish status
 	welcomeCharge, err := lp.updateChargerStatus()
 	if err != nil {
+		if lp.chargerHasFeature(api.Dehumidifier) {
+			lp.publish(keys.Humidity, nil)
+		}
 		lp.log.ERROR.Println(err)
 		return
 	}
@@ -2382,6 +2407,9 @@ NO_DIM:
 
 	// sync settings with charger
 	if err := lp.syncCharger(); err != nil {
+		if lp.chargerHasFeature(api.Dehumidifier) {
+			lp.publish(keys.Humidity, nil)
+		}
 		lp.log.ERROR.Println(err)
 		return
 	}
@@ -2398,6 +2426,11 @@ NO_DIM:
 
 	// execute loading strategy
 	switch {
+	case lp.chargerHasFeature(api.Dehumidifier):
+		if mode != api.ModeOff {
+			err = lp.updateDehumidifier(sitePower, batteryPower, batteryBuffered, batteryStart)
+		}
+
 	case !lp.connected():
 		// always disable charger if not connected
 		// https://github.com/evcc-io/evcc/issues/105

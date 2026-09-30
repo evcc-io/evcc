@@ -1443,6 +1443,15 @@
       "duration": "Trukmė",
       "emission": "Emisija",
       "fallbackName": "Įkroviklis",
+      "humidity": {
+        "title": "Santykinė drėgmė",
+        "current": "Dabartinė drėgmė",
+        "target": "Tikslinė drėgmė",
+        "unavailable": "Nepasiekiama",
+        "device": "Oro sausintuvas",
+        "on": "Įjungta",
+        "off": "Išjungta"
+      },
       "finished": "Bus baigta",
       "last24hEnergy": "Pastarosios 24 val",
       "last7dEnergy": "Pastarosios 7 dienos",
@@ -1456,6 +1465,15 @@
       "todayEnergy": "Šiandien"
     },
     "loadpointSettings": {
+      "dehumidifier": "Oro sausintuvas",
+      "humidity": {
+        "target": "Tikslinė drėgmė",
+        "hysteresis": "Histerezės plotis",
+        "minOnTime": "Minimali veikimo trukmė",
+        "minOffTime": "Minimali išjungimo trukmė",
+        "unit": "%RH",
+        "minutes": "min"
+      },
       "batteryBoost": {
         "description": "Greitas įkrovimas iš namų kaupiklio, kol jis išsikraus iki {limit}.",
         "descriptionDisabled": "Pasirinkite limitą greitam įkrovimui iš namų kaupiklio.",

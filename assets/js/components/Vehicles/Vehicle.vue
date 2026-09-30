@@ -7,6 +7,7 @@
 			@remove-vehicle="removeVehicle"
 		/>
 		<VehicleStatus
+			v-if="!dehumidifier"
 			v-bind="vehicleStatus"
 			class="mb-2"
 			@open-loadpoint-settings="$emit('open-loadpoint-settings')"
@@ -21,7 +22,15 @@
 				@updated="$emit('batteryboost-updated', $event)"
 				@status="handleBoostStatus"
 			/>
+			<HumidityBar
+				v-if="dehumidifier"
+				class="flex-grow-1"
+				:humidity="humidity"
+				:target-humidity="targetHumidity"
+				:enabled="enabled"
+			/>
 			<VehicleSoc
+				v-else
 				class="flex-grow-1 position-relative"
 				v-bind="vehicleSocProps"
 				@limit-soc-updated="limitSocUpdated"
@@ -29,7 +38,7 @@
 				@plan-clicked="$emit('open-modal')"
 			/>
 		</div>
-		<div class="details d-flex flex-wrap justify-content-between">
+		<div v-if="!dehumidifier" class="details d-flex flex-wrap justify-content-between">
 			<LabelAndValue
 				v-if="socBasedCharging"
 				class="flex-grow-1"
@@ -87,6 +96,7 @@ import LabelAndValue from "../Helper/LabelAndValue.vue";
 import Title from "./Title.vue";
 import Soc from "./Soc.vue";
 import Status from "./Status.vue";
+import HumidityBar from "../Loadpoints/HumidityBar.vue";
 import ChargingPlan from "../ChargingPlans/ChargingPlan.vue";
 import LimitSocSelect from "./LimitSocSelect.vue";
 import LimitEnergySelect from "./LimitEnergySelect.vue";
@@ -111,6 +121,7 @@ export default defineComponent({
 		VehicleTitle: Title,
 		VehicleSoc: Soc,
 		VehicleStatus: Status,
+		HumidityBar,
 		LabelAndValue,
 		ChargingPlan,
 		LimitSocSelect,
@@ -138,6 +149,9 @@ export default defineComponent({
 		batteryMode: String as PropType<BATTERY_MODE>,
 		enabled: Boolean,
 		heating: Boolean,
+		dehumidifier: Boolean,
+		humidity: { type: Number as PropType<number | null>, default: null },
+		targetHumidity: { type: Number, default: 50 },
 		continuous: Boolean,
 		id: [String, Number],
 		integratedDevice: Boolean,

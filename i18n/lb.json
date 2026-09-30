@@ -1443,6 +1443,15 @@
       "duration": "Dauer",
       "emission": "Emissioun",
       "fallbackName": "Luedstatioun",
+      "humidity": {
+        "title": "Relativ Fiichtegkeet",
+        "current": "Aktuell Fiichtegkeet",
+        "target": "Zil-Fiichtegkeet",
+        "unavailable": "Net verfügbar",
+        "device": "Entfiichter",
+        "on": "Un",
+        "off": "Aus"
+      },
       "finished": "Fäerdeg um",
       "last24hEnergy": "Lescht 24h",
       "last7dEnergy": "Lescht 7 Deeg",
@@ -1456,6 +1465,15 @@
       "todayEnergy": "Haut"
     },
     "loadpointSettings": {
+      "dehumidifier": "Entfiichter",
+      "humidity": {
+        "target": "Zil-Fiichtegkeet",
+        "hysteresis": "Hysteresisbreet",
+        "minOnTime": "Mindestlafzäit",
+        "minOffTime": "Mindeststoppzäit",
+        "unit": "%RH",
+        "minutes": "Min."
+      },
       "batteryBoost": {
         "description": "Schnell vun der Hausbatterie lueden, bis se op {limit} entlueden ass.",
         "descriptionDisabled": "Wielt eng Limitt, fir et ze erlabe séier vun der Hausbatterie opzelueden.",

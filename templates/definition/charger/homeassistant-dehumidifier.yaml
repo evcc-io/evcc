@@ -1,0 +1,70 @@
+template: homeassistant-dehumidifier
+products:
+  - brand: Home Assistant
+    description:
+      generic: Dehumidifier
+group: switchsockets
+requirements:
+  evcc: ["skiptest"]
+  description:
+    en: Control a dehumidifier using a Home Assistant switch and humidity sensor.
+    de: Steuere einen Luftentfeuchter über einen Home-Assistant-Schalter und Luftfeuchtigkeitssensor.
+auth:
+  type: homeassistant
+  params: [uri, insecure]
+params:
+  - name: uri
+    example: http://homeassistant.local:8123
+    service: homeassistant/instances
+    required: true
+  - name: insecure
+  - name: switch
+    description:
+      en: Dehumidifier switch entity
+      de: Schalter-Entität des Luftentfeuchters
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=switch
+    example: switch.dehumidifier
+    required: true
+  - name: humidity
+    description:
+      en: Relative humidity sensor entity
+      de: Sensor für relative Luftfeuchtigkeit
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
+    example: sensor.room_humidity
+    required: true
+  - name: power
+    description:
+      en: Optional power measurement
+      de: Optionale Leistungsmessung
+    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
+    example: sensor.dehumidifier_power
+render: |
+  type: switchsocket
+  enabled:
+    source: homeassistant
+    uri: {{ .uri }}
+    insecure: {{ .insecure }}
+    entity: {{ .switch }}
+  enable:
+    source: homeassistant
+    uri: {{ .uri }}
+    insecure: {{ .insecure }}
+    entity: {{ .switch }}
+  humidity:
+    source: homeassistant
+    uri: {{ .uri }}
+    insecure: {{ .insecure }}
+    entity: {{ .humidity }}
+  {{- if .power }}
+  power:
+    source: homeassistant
+    uri: {{ .uri }}
+    insecure: {{ .insecure }}
+    entity: {{ .power }}
+  {{- else }}
+  standbypower: -1
+  {{- end }}
+  features:
+    - switchdevice
+    - integrateddevice
+    - dehumidifier

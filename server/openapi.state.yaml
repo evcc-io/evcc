@@ -542,6 +542,23 @@ components:
         - UAH
         - RUB
         - KZT
+    DehumidifierConfig:
+      type: object
+      properties:
+        targetHumidity:
+          type: number
+        hysteresis:
+          type: number
+        minOnTime:
+          description: Minimum on/off durations in nanoseconds, as serialized by time.Duration.
+          type: number
+        minOffTime:
+          type: number
+      required:
+        - targetHumidity
+        - hysteresis
+        - minOnTime
+        - minOffTime
     DeviceColorEntry:
       description: Color assigned to a device for consistent UI display.
       type: object
@@ -823,6 +840,9 @@ components:
         chargerFeatureDemandWeekday:
           description: Heating device demand forecast uses same-weekday average over past 4 weeks.
           type: boolean
+        chargerFeatureDehumidifier:
+          description: Loadpoint controls a humidity-based dehumidifier.
+          type: boolean
         chargerFeatureHeating:
           description: Charger is a heating device. SoC values represent temperature in degrees.
           type: boolean
@@ -918,6 +938,10 @@ components:
         enabled:
           description: Charger is currently allowed to charge.
           type: boolean
+        humidity:
+          description: Current relative humidity in %RH, unavailable until a valid reading arrives.
+          type: number
+          nullable: true
         limitEnergy:
           description: Session energy limit in kWh. Zero means no limit.
           type: number
@@ -1055,6 +1079,12 @@ components:
         title:
           description: Loadpoint title for UI display.
           type: string
+        dehumidifier:
+          $ref: "#/components/schemas/DehumidifierConfig"
+          description: Dehumidifier control settings.
+        targetHumidity:
+          description: Target relative humidity in %RH.
+          type: number
         todayEnergy:
           description: Energy used since midnight in kWh.
           type: number
@@ -1107,6 +1137,7 @@ components:
         - chargerFeatureContinuous
         - chargerFeatureDemandTemperature
         - chargerFeatureDemandWeekday
+        - chargerFeatureDehumidifier
         - chargerFeatureHeating
         - chargerFeatureIntegratedDevice
         - chargerFeatureOffline
@@ -1171,6 +1202,8 @@ components:
         - smartFeedInPriorityNextStart
         - solarShare
         - title
+        - dehumidifier
+        - targetHumidity
         - vehicleClimaterActive
         - vehicleDetectionActive
         - vehicleLimitSoc

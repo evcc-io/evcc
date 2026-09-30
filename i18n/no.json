@@ -913,6 +913,15 @@
       "co2": "⌀-CO₂",
       "duration": "Varighet",
       "fallbackName": "Ladepunkt",
+      "humidity": {
+        "title": "Relativ luftfuktighet",
+        "current": "Nåværende luftfuktighet",
+        "target": "Målfuktighet",
+        "unavailable": "Utilgjengelig",
+        "device": "Avfukter",
+        "on": "På",
+        "off": "Av"
+      },
       "finished": "Sluttid",
       "power": "Effekt",
       "price": "Σ-pris",
@@ -922,6 +931,15 @@
       "solar": "Solenergi"
     },
     "loadpointSettings": {
+      "dehumidifier": "Avfukter",
+      "humidity": {
+        "target": "Målfuktighet",
+        "hysteresis": "Hystereseområde",
+        "minOnTime": "Minimum driftstid",
+        "minOffTime": "Minimum stopptid",
+        "unit": "%RH",
+        "minutes": "min"
+      },
       "batteryBoost": {
         "description": "Hurtiglading fra hjemmebatteriet til det er utladet til {limit}.",
         "label": "Batteriboost",

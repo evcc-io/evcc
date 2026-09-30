@@ -103,6 +103,92 @@
 				</div>
 			</div>
 
+			<h6 v-if="dehumidifier">{{ $t("main.loadpointSettings.dehumidifier") }}</h6>
+			<template v-if="dehumidifier">
+				<div class="mb-3 row">
+					<label
+						:for="formId('humiditytarget')"
+						class="col-sm-4 col-form-label pt-0 pt-sm-2"
+					>
+						{{ $t("main.loadpointSettings.humidity.target") }}
+					</label>
+					<div class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center gap-2">
+						<input
+							:id="formId('humiditytarget')"
+							v-model.number="selectedTargetHumidity"
+							class="form-control form-control-sm"
+							type="number"
+							min="0"
+							max="100"
+							step="0.1"
+							@change="setTargetHumidity"
+						/>
+						<span>%RH</span>
+					</div>
+				</div>
+				<div class="mb-3 row">
+					<label
+						:for="formId('humidityhysteresis')"
+						class="col-sm-4 col-form-label pt-0 pt-sm-2"
+					>
+						{{ $t("main.loadpointSettings.humidity.hysteresis") }}
+					</label>
+					<div class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center gap-2">
+						<input
+							:id="formId('humidityhysteresis')"
+							v-model.number="selectedHumidityHysteresis"
+							class="form-control form-control-sm"
+							type="number"
+							min="0"
+							max="100"
+							step="0.1"
+							@change="setHumidityHysteresis"
+						/>
+						<span>%RH</span>
+					</div>
+				</div>
+				<div class="mb-3 row">
+					<label
+						:for="formId('dehumidifierminontime')"
+						class="col-sm-4 col-form-label pt-0 pt-sm-2"
+					>
+						{{ $t("main.loadpointSettings.humidity.minOnTime") }}
+					</label>
+					<div class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center gap-2">
+						<input
+							:id="formId('dehumidifierminontime')"
+							v-model.number="selectedMinOnTime"
+							class="form-control form-control-sm"
+							type="number"
+							min="0"
+							step="1"
+							@change="setMinOnTime"
+						/>
+						<span>{{ $t("main.loadpointSettings.humidity.minutes") }}</span>
+					</div>
+				</div>
+				<div class="mb-3 row">
+					<label
+						:for="formId('dehumidifierminofftime')"
+						class="col-sm-4 col-form-label pt-0 pt-sm-2"
+					>
+						{{ $t("main.loadpointSettings.humidity.minOffTime") }}
+					</label>
+					<div class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center gap-2">
+						<input
+							:id="formId('dehumidifierminofftime')"
+							v-model.number="selectedMinOffTime"
+							class="form-control form-control-sm"
+							type="number"
+							min="0"
+							step="1"
+							@change="setMinOffTime"
+						/>
+						<span>{{ $t("main.loadpointSettings.humidity.minutes") }}</span>
+					</div>
+				</div>
+			</template>
+
 			<h6>
 				{{ $t("main.loadpointSettings.currents") }}
 			</h6>
@@ -247,6 +333,10 @@ export default defineComponent({
 			selectedMaxCurrent: undefined as number | undefined,
 			selectedMinCurrent: undefined as number | undefined,
 			selectedMinTemp: undefined as number | undefined,
+			selectedTargetHumidity: undefined as number | undefined,
+			selectedHumidityHysteresis: undefined as number | undefined,
+			selectedMinOnTime: undefined as number | undefined,
+			selectedMinOffTime: undefined as number | undefined,
 			selectedPhases: undefined as number | undefined,
 			selectedSolarShare: 100,
 			isModalVisible: false,
@@ -267,6 +357,28 @@ export default defineComponent({
 		},
 		heating() {
 			return this.loadpoint?.chargerFeatureHeating;
+		},
+		dehumidifier() {
+			return this.loadpoint?.chargerFeatureDehumidifier;
+		},
+		dehumidifierConfig() {
+			return this.loadpoint?.dehumidifier;
+		},
+		targetHumidity() {
+			return this.dehumidifierConfig?.targetHumidity;
+		},
+		humidityHysteresis() {
+			return this.dehumidifierConfig?.hysteresis;
+		},
+		minOnTime() {
+			return this.dehumidifierConfig
+				? this.dehumidifierConfig.minOnTime / 60_000_000_000
+				: 10;
+		},
+		minOffTime() {
+			return this.dehumidifierConfig
+				? this.dehumidifierConfig.minOffTime / 60_000_000_000
+				: 5;
 		},
 		minTemp() {
 			// stored as loadpoint minSoc, interpreted as temperature for heating devices
@@ -367,6 +479,18 @@ export default defineComponent({
 		minTemp(value) {
 			this.selectedMinTemp = value;
 		},
+		targetHumidity(value) {
+			this.selectedTargetHumidity = value;
+		},
+		humidityHysteresis(value) {
+			this.selectedHumidityHysteresis = value;
+		},
+		minOnTime(value) {
+			this.selectedMinOnTime = value;
+		},
+		minOffTime(value) {
+			this.selectedMinOffTime = value;
+		},
 		phasesConfigured(value) {
 			this.selectedPhases = value;
 		},
@@ -381,6 +505,10 @@ export default defineComponent({
 			this.selectedMaxCurrent = this.maxCurrent;
 			this.selectedMinCurrent = this.minCurrent;
 			this.selectedMinTemp = this.minTemp;
+			this.selectedTargetHumidity = this.targetHumidity;
+			this.selectedHumidityHysteresis = this.humidityHysteresis;
+			this.selectedMinOnTime = this.minOnTime;
+			this.selectedMinOffTime = this.minOffTime;
 			this.selectedSolarShare = this.solarSharePercent;
 			const modalRef = this.$refs["modal"] as InstanceType<typeof GenericModal> | undefined;
 			modalRef?.open();
@@ -399,6 +527,30 @@ export default defineComponent({
 		},
 		setMinTemp() {
 			api.post(this.apiPath("mintemp") + "/" + this.selectedMinTemp);
+		},
+		setTargetHumidity() {
+			api.post(this.apiPath("dehumidifier/target") + "/" + this.selectedTargetHumidity);
+		},
+		setHumidityHysteresis() {
+			api.post(
+				this.apiPath("dehumidifier/hysteresis") + "/" + this.selectedHumidityHysteresis
+			);
+		},
+		setMinOnTime() {
+			api.post(
+				this.apiPath("dehumidifier/minontime") +
+					"/" +
+					Math.round((this.selectedMinOnTime ?? 0) * 60) +
+					"s"
+			);
+		},
+		setMinOffTime() {
+			api.post(
+				this.apiPath("dehumidifier/minofftime") +
+					"/" +
+					Math.round((this.selectedMinOffTime ?? 0) * 60) +
+					"s"
+			);
 		},
 		setPhasesConfigured() {
 			api.post(this.apiPath("phases") + "/" + this.selectedPhases);

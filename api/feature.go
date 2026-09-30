@@ -11,6 +11,7 @@ const (
 	Heating                    // charger - heating device - soc ist temperature (°C)
 	DemandWeekday              // charger - demand forecast: same-weekday average over past 4 weeks (warm water)
 	DemandTemperature          // charger - demand forecast: daily avg scaled by outdoor temp (room heating)
+	Dehumidifier               // charger - humidity-controlled dehumidifier
 	Continuous                 // charger - heating device where disabled means "normal operation"
 	Average                    // tariff
 	Cacheable                  // tariff

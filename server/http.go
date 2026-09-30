@@ -243,10 +243,30 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 		api := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id+1)).Subrouter()
 
 		routes := map[string]route{
-			"mode":                      {"POST", "/mode/{value:[a-z]+}", handler(eapi.ChargeModeString, pass(lp.SetMode), lp.GetMode)},
-			"alwaysCharge":              {"POST", "/alwayscharge/{value:[a-z]+}", handler(eapi.AlwaysChargeString, lp.SetAlwaysCharge, lp.GetAlwaysCharge)},
-			"limitsoc":                  {"POST", "/limitsoc/{value:[0-9]+}", intHandler(pass(lp.SetLimitSoc), lp.GetLimitSoc)},
-			"mintemp":                   {"POST", "/mintemp/{value:[0-9]+}", intHandler(pass(lp.SetMinSoc), lp.GetMinSoc)},
+			"mode":         {"POST", "/mode/{value:[a-z]+}", handler(eapi.ChargeModeString, pass(lp.SetMode), lp.GetMode)},
+			"alwaysCharge": {"POST", "/alwayscharge/{value:[a-z]+}", handler(eapi.AlwaysChargeString, lp.SetAlwaysCharge, lp.GetAlwaysCharge)},
+			"limitsoc":     {"POST", "/limitsoc/{value:[0-9]+}", intHandler(pass(lp.SetLimitSoc), lp.GetLimitSoc)},
+			"mintemp":      {"POST", "/mintemp/{value:[0-9]+}", intHandler(pass(lp.SetMinSoc), lp.GetMinSoc)},
+			"humidityTarget": {"POST", "/dehumidifier/target/{value:[0-9.]+}", floatHandler(func(value float64) error {
+				config := lp.GetDehumidifierConfig()
+				config.TargetHumidity = value
+				return lp.SetDehumidifierConfig(config)
+			}, func() float64 { return lp.GetDehumidifierConfig().TargetHumidity })},
+			"humidityHysteresis": {"POST", "/dehumidifier/hysteresis/{value:[0-9.]+}", floatHandler(func(value float64) error {
+				config := lp.GetDehumidifierConfig()
+				config.Hysteresis = value
+				return lp.SetDehumidifierConfig(config)
+			}, func() float64 { return lp.GetDehumidifierConfig().Hysteresis })},
+			"dehumidifierMinOnTime": {"POST", "/dehumidifier/minontime/{value:[0-9]+[smh]?}", durationHandler(func(value time.Duration) error {
+				config := lp.GetDehumidifierConfig()
+				config.MinOnTime = value
+				return lp.SetDehumidifierConfig(config)
+			}, func() time.Duration { return lp.GetDehumidifierConfig().MinOnTime })},
+			"dehumidifierMinOffTime": {"POST", "/dehumidifier/minofftime/{value:[0-9]+[smh]?}", durationHandler(func(value time.Duration) error {
+				config := lp.GetDehumidifierConfig()
+				config.MinOffTime = value
+				return lp.SetDehumidifierConfig(config)
+			}, func() time.Duration { return lp.GetDehumidifierConfig().MinOffTime })},
 			"limitenergy":               {"POST", "/limitenergy/{value:[0-9.]+}", floatHandler(pass(lp.SetLimitEnergy), lp.GetLimitEnergy)},
 			"mincurrent":                {"POST", "/mincurrent/{value:[0-9.]+}", floatHandler(lp.SetMinCurrent, lp.GetMinCurrent)},
 			"maxcurrent":                {"POST", "/maxcurrent/{value:[0-9.]+}", floatHandler(lp.SetMaxCurrent, lp.GetMaxCurrent)},

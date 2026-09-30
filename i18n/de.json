@@ -1508,7 +1508,16 @@
       "remoteDisabledHard": "{source}: Deaktiviert",
       "remoteDisabledSoft": "{source}: Adaptives PV-Laden deaktiviert",
       "solar": "Sonne",
-      "todayEnergy": "Heute"
+      "todayEnergy": "Heute",
+      "humidity": {
+        "title": "Relative Luftfeuchtigkeit",
+        "current": "Aktuelle Luftfeuchtigkeit",
+        "target": "Ziel-Luftfeuchtigkeit",
+        "unavailable": "Nicht verfügbar",
+        "device": "Luftentfeuchter",
+        "on": "Ein",
+        "off": "Aus"
+      }
     },
     "loadpointSettings": {
       "batteryBoost": {
@@ -1526,7 +1535,16 @@
       "batteryUsage": "Hausbatterie",
       "currents": "Ladestrom",
       "default": "default",
+      "dehumidifier": "Luftentfeuchter",
       "heating": "Heizen",
+      "humidity": {
+        "target": "Ziel-Luftfeuchtigkeit",
+        "hysteresis": "Hysteresebereich",
+        "minOnTime": "Minimale Einschaltdauer",
+        "minOffTime": "Minimale Ausschaltdauer",
+        "unit": "% r. F.",
+        "minutes": "Min."
+      },
       "maxCurrent": {
         "label": "Max. Ladestrom"
       },

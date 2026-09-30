@@ -1443,6 +1443,15 @@
       "duration": "Varighed",
       "emission": "Udledning",
       "fallbackName": "Ladepunkt",
+      "humidity": {
+        "title": "Relativ luftfugtighed",
+        "current": "Aktuel luftfugtighed",
+        "target": "Målfugtighed",
+        "unavailable": "Ikke tilgængelig",
+        "device": "Affugter",
+        "on": "Tændt",
+        "off": "Slukket"
+      },
       "finished": "Sluttidspunkt",
       "last24hEnergy": "Sidste 24 timer",
       "last7dEnergy": "Sidste 7 dage",
@@ -1456,6 +1465,15 @@
       "todayEnergy": "I dag"
     },
     "loadpointSettings": {
+      "dehumidifier": "Affugter",
+      "humidity": {
+        "target": "Målfugtighed",
+        "hysteresis": "Hysteresebredde",
+        "minOnTime": "Minimum driftstid",
+        "minOffTime": "Minimum stoptid",
+        "unit": "%RH",
+        "minutes": "min"
+      },
       "batteryBoost": {
         "description": "Hurtig opladning fra husbatteriet, indtil det er afladet til {limit}.",
         "descriptionDisabled": "Vælg en grænse for at tillade hurtig opladning fra hjemmebatteriet.",

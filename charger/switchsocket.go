@@ -31,6 +31,7 @@ func NewSwitchSocketFromConfig(ctx context.Context, other map[string]any) (api.C
 		Power                   *plugin.Config
 		Energy                  *plugin.Config
 		Soc                     *plugin.Config
+		Humidity                *plugin.Config
 		measurement.Temperature `mapstructure:",squash"` // optional, for heating devices
 		StandbyPower            float64
 	}
@@ -88,7 +89,21 @@ func NewSwitchSocketFromConfig(ctx context.Context, other map[string]any) (api.C
 	implement.May(c, implement.Battery(soc))
 	implement.May(c, implement.SocLimiter(limitTemp))
 
+	humidity, err := cc.Humidity.FloatGetter(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if humidity != nil {
+		implement.May[api.HumidityGetter](c, humidityGetterFunc(humidity))
+	}
+
 	return c, nil
+}
+
+type humidityGetterFunc func() (float64, error)
+
+func (h humidityGetterFunc) CurrentHumidity() (float64, error) {
+	return h()
 }
 
 func (c *SwitchSocket) Enabled() (bool, error) {

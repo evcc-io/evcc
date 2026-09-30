@@ -40,6 +40,30 @@
       "validate": "تحقق من الصحة"
     }
   },
+  "main": {
+    "loadpoint": {
+      "humidity": {
+        "title": "الرطوبة النسبية",
+        "current": "الرطوبة الحالية",
+        "target": "الرطوبة المستهدفة",
+        "unavailable": "غير متاحة",
+        "device": "مزيل الرطوبة",
+        "on": "يعمل",
+        "off": "متوقف"
+      }
+    },
+    "loadpointSettings": {
+      "dehumidifier": "مزيل الرطوبة",
+      "humidity": {
+        "target": "الرطوبة المستهدفة",
+        "hysteresis": "عرض نطاق التباطؤ",
+        "minOnTime": "الحد الأدنى لمدة التشغيل",
+        "minOffTime": "الحد الأدنى لمدة الإيقاف",
+        "unit": "%RH",
+        "minutes": "دقيقة"
+      }
+    }
+  },
   "footer": {
     "community": {
       "greenEnergy": "شمسي",

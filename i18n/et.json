@@ -124,5 +124,29 @@
       "odometer": "Odomeeter",
       "org": "Organisatsioon"
     }
+  },
+  "main": {
+    "loadpoint": {
+      "humidity": {
+        "title": "Suhteline õhuniiskus",
+        "current": "Praegune õhuniiskus",
+        "target": "Sihtõhuniiskus",
+        "unavailable": "Pole saadaval",
+        "device": "Õhukuivati",
+        "on": "Sees",
+        "off": "Väljas"
+      }
+    },
+    "loadpointSettings": {
+      "dehumidifier": "Õhukuivati",
+      "humidity": {
+        "target": "Sihtõhuniiskus",
+        "hysteresis": "Hüstereesi laius",
+        "minOnTime": "Minimaalne tööaeg",
+        "minOffTime": "Minimaalne väljalülitusaeg",
+        "unit": "%RH",
+        "minutes": "min"
+      }
+    }
   }
 }

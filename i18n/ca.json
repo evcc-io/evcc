@@ -1429,6 +1429,15 @@
       "duration": "Durada",
       "emission": "Emissió",
       "fallbackName": "Punt de recàrrega",
+      "humidity": {
+        "title": "Humitat relativa",
+        "current": "Humitat actual",
+        "target": "Humitat objectiu",
+        "unavailable": "No disponible",
+        "device": "Deshumidificador",
+        "on": "Activat",
+        "off": "Desactivat"
+      },
       "finished": "Hora de finalització",
       "last24hEnergy": "Últimes 24 h",
       "last7dEnergy": "Últims 7 dies",
@@ -1442,6 +1451,15 @@
       "todayEnergy": "Avui"
     },
     "loadpointSettings": {
+      "dehumidifier": "Deshumidificador",
+      "humidity": {
+        "target": "Humitat objectiu",
+        "hysteresis": "Amplada de la histèresi",
+        "minOnTime": "Temps mínim de funcionament",
+        "minOffTime": "Temps mínim d'aturada",
+        "unit": "%RH",
+        "minutes": "min"
+      },
       "batteryBoost": {
         "description": "Permet la càrrega ràpida des de la bateria domèstica fins que arribi a {limit}.",
         "descriptionDisabled": "Seleccioneu un límit per a permetre la càrrega ràpida des de la bateria domèstica.",

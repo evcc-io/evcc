@@ -1395,6 +1395,15 @@
       "duration": "Doba trvání",
       "emission": "Emise",
       "fallbackName": "Nabíjecí bod",
+      "humidity": {
+        "title": "Relativní vlhkost",
+        "current": "Aktuální vlhkost",
+        "target": "Cílová vlhkost",
+        "unavailable": "Nedostupné",
+        "device": "Odvlhčovač",
+        "on": "Zapnuto",
+        "off": "Vypnuto"
+      },
       "finished": "Čas dokončení",
       "last24hEnergy": "Posledních 24h",
       "last7dEnergy": "Poslední 7 dní",
@@ -1407,6 +1416,15 @@
       "todayEnergy": "Dnes"
     },
     "loadpointSettings": {
+      "dehumidifier": "Odvlhčovač",
+      "humidity": {
+        "target": "Cílová vlhkost",
+        "hysteresis": "Šířka hystereze",
+        "minOnTime": "Minimální doba zapnutí",
+        "minOffTime": "Minimální doba vypnutí",
+        "unit": "%RH",
+        "minutes": "min"
+      },
       "batteryBoost": {
         "description": "Povolí využití energie uložené v baterii domu pro nabíjení, dokud se nevybije na {limit}.",
         "descriptionDisabled": "Zvolte limit pro povolení rychlého dobití z baterie FVE.",

@@ -559,6 +559,14 @@ export interface LoadpointUi {
   maxTemp: number;
 }
 
+export interface DehumidifierConfig {
+  targetHumidity: number;
+  hysteresis: number;
+  /** Minimum on/off durations in nanoseconds, as serialized by time.Duration. */
+  minOnTime: number;
+  minOffTime: number;
+}
+
 /** Type of the smart charging limit. */
 export enum SMART_COST_TYPE {
   CO2 = "co2",
@@ -617,6 +625,8 @@ export interface Loadpoint {
   chargerFeatureDemandTemperature: boolean;
   /** Heating device demand forecast uses same-weekday average over past 4 weeks. */
   chargerFeatureDemandWeekday: boolean;
+  /** Loadpoint controls a humidity-based dehumidifier. */
+  chargerFeatureDehumidifier: boolean;
   /** Charger is a heating device. SoC values represent temperature in degrees. */
   chargerFeatureHeating: boolean;
   /** Charger is an always-connected device without vehicles and charging sessions, like a heat pump. */
@@ -680,6 +690,8 @@ export interface Loadpoint {
   enableThreshold: number;
   /** Charger is currently allowed to charge. */
   enabled: boolean;
+  /** Current relative humidity in %RH, unavailable until a valid reading arrives. */
+  humidity?: number | null;
   /** Session energy limit in kWh. Zero means no limit. */
   limitEnergy: number;
   /** Session SoC limit in %. Zero means no limit. */
@@ -773,6 +785,10 @@ export interface Loadpoint {
   suggestion?: LoadpointSuggestion | null;
   /** Loadpoint title for UI display. */
   title: string;
+  /** Dehumidifier control settings. */
+  dehumidifier: DehumidifierConfig;
+  /** Target relative humidity in %RH. */
+  targetHumidity: number;
   /** Energy used since midnight in kWh. */
   todayEnergy?: number;
   /** Climater of the connected vehicle is active. */

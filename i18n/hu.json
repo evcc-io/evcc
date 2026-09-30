@@ -878,6 +878,15 @@
       "co2": "⌀ CO₂",
       "duration": "Időtartam",
       "fallbackName": "Töltőpont",
+      "humidity": {
+        "title": "Relatív páratartalom",
+        "current": "Aktuális páratartalom",
+        "target": "Cél páratartalom",
+        "unavailable": "Nem érhető el",
+        "device": "Páramentesítő",
+        "on": "Bekapcsolva",
+        "off": "Kikapcsolva"
+      },
       "finished": "Befejezési idő",
       "power": "Teljesítmény",
       "price": "Költség",
@@ -887,6 +896,15 @@
       "solar": "Nap"
     },
     "loadpointSettings": {
+      "dehumidifier": "Páramentesítő",
+      "humidity": {
+        "target": "Cél páratartalom",
+        "hysteresis": "Hiszterézis szélessége",
+        "minOnTime": "Minimális bekapcsolási idő",
+        "minOffTime": "Minimális kikapcsolási idő",
+        "unit": "%RH",
+        "minutes": "perc"
+      },
       "batteryBoost": {
         "description": "Gyorstöltés otthoni akkumulátorról, amíg az le nem merül {limit} szintre.",
         "label": "Akkumulátoros Rásegítés",

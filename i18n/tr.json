@@ -1254,6 +1254,15 @@
       "duration": "Süre",
       "emission": "Salım",
       "fallbackName": "Doldurma noktası",
+      "humidity": {
+        "title": "Bağıl nem",
+        "current": "Mevcut nem",
+        "target": "Hedef nem",
+        "unavailable": "Kullanılamıyor",
+        "device": "Nem alma cihazı",
+        "on": "Açık",
+        "off": "Kapalı"
+      },
       "finished": "“Doldurma sonu”",
       "power": "Güç",
       "price": "Maliyet",
@@ -1263,6 +1272,15 @@
       "solar": "Güneş Enerjisi"
     },
     "loadpointSettings": {
+      "dehumidifier": "Nem alma cihazı",
+      "humidity": {
+        "target": "Hedef nem",
+        "hysteresis": "Histerezis genişliği",
+        "minOnTime": "En düşük çalışma süresi",
+        "minOffTime": "En düşük kapalı kalma süresi",
+        "unit": "%RH",
+        "minutes": "dk"
+      },
       "batteryBoost": {
         "description": "Ev bataryasından {limit} seviyesine düşene kadar hızlı şarj.",
         "descriptionDisabled": "Ev bataryasından hızlı doldurabilmek için bir sınır seç.",

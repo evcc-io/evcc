@@ -1175,6 +1175,15 @@
       "duration": "Czas trwania",
       "emission": "Emisyjność",
       "fallbackName": "Punkt odbioru energii",
+      "humidity": {
+        "title": "Wilgotność względna",
+        "current": "Aktualna wilgotność",
+        "target": "Docelowa wilgotność",
+        "unavailable": "Niedostępna",
+        "device": "Osuszacz powietrza",
+        "on": "Włączony",
+        "off": "Wyłączony"
+      },
       "finished": "Godzina zakończenia",
       "power": "Moc",
       "price": "Koszt",
@@ -1184,6 +1193,15 @@
       "solar": "Słońce"
     },
     "loadpointSettings": {
+      "dehumidifier": "Osuszacz powietrza",
+      "humidity": {
+        "target": "Docelowa wilgotność",
+        "hysteresis": "Szerokość histerezy",
+        "minOnTime": "Minimalny czas pracy",
+        "minOffTime": "Minimalny czas wyłączenia",
+        "unit": "%RH",
+        "minutes": "min"
+      },
       "batteryBoost": {
         "description": "Przyspieszone ładowanie z domowego magazynu energii, aż rozładuje się do {limit}.",
         "descriptionDisabled": "Wybierz limit umożliwiający przyspieszone ładowanie z domowego magazynu energii.",

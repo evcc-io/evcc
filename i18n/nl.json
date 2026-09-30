@@ -1443,6 +1443,15 @@
       "duration": "Duur",
       "emission": "Uitstoot",
       "fallbackName": "Laadpunt",
+      "humidity": {
+        "title": "Relatieve luchtvochtigheid",
+        "current": "Huidige luchtvochtigheid",
+        "target": "Doelluchtvochtigheid",
+        "unavailable": "Niet beschikbaar",
+        "device": "Luchtontvochtiger",
+        "on": "Aan",
+        "off": "Uit"
+      },
       "finished": "Eindtijd",
       "last24hEnergy": "Laatste 24h",
       "last7dEnergy": "Laatste 7 dagen",
@@ -1456,6 +1465,15 @@
       "todayEnergy": "Vandaag"
     },
     "loadpointSettings": {
+      "dehumidifier": "Luchtontvochtiger",
+      "humidity": {
+        "target": "Doelluchtvochtigheid",
+        "hysteresis": "Hysteresebreedte",
+        "minOnTime": "Minimale inschakeltijd",
+        "minOffTime": "Minimale uitschakeltijd",
+        "unit": "%RH",
+        "minutes": "min"
+      },
       "batteryBoost": {
         "description": "Snelladen vanuit thuisbatterij tot deze is ontladen naar {limit}.",
         "descriptionDisabled": "Selecteer een limiet om snel opladen vanaf de thuisbatterij mogelijk te maken.",

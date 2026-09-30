@@ -1284,6 +1284,15 @@
       "duration": "Durata",
       "emission": "Emissione",
       "fallbackName": "Punto di ricarica",
+      "humidity": {
+        "title": "Umidità relativa",
+        "current": "Umidità attuale",
+        "target": "Umidità obiettivo",
+        "unavailable": "Non disponibile",
+        "device": "Deumidificatore",
+        "on": "Acceso",
+        "off": "Spento"
+      },
       "finished": "Ora di fine",
       "power": "Potenza",
       "price": "Costo",
@@ -1293,6 +1302,15 @@
       "solar": "Solare"
     },
     "loadpointSettings": {
+      "dehumidifier": "Deumidificatore",
+      "humidity": {
+        "target": "Umidità obiettivo",
+        "hysteresis": "Larghezza dell’isteresi",
+        "minOnTime": "Tempo minimo di accensione",
+        "minOffTime": "Tempo minimo di spegnimento",
+        "unit": "%RH",
+        "minutes": "min"
+      },
       "batteryBoost": {
         "description": "Carica rapida dalla batteria di casa fino a quando non si scarica a {limit}.",
         "descriptionDisabled": "Selezionare un limite per consentire la ricarica rapida dalla batteria domestica.",

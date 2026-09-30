@@ -319,6 +319,20 @@ func (mr *MockAPIMockRecorder) GetDefaultVehicleRef() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDefaultVehicleRef", reflect.TypeOf((*MockAPI)(nil).GetDefaultVehicleRef))
 }
 
+// GetDehumidifierConfig mocks base method.
+func (m *MockAPI) GetDehumidifierConfig() DehumidifierConfig {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDehumidifierConfig")
+	ret0, _ := ret[0].(DehumidifierConfig)
+	return ret0
+}
+
+// GetDehumidifierConfig indicates an expected call of GetDehumidifierConfig.
+func (mr *MockAPIMockRecorder) GetDehumidifierConfig() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDehumidifierConfig", reflect.TypeOf((*MockAPI)(nil).GetDehumidifierConfig))
+}
+
 // GetDisableDelay mocks base method.
 func (m *MockAPI) GetDisableDelay() time.Duration {
 	m.ctrl.T.Helper()
@@ -921,6 +935,20 @@ func (m *MockAPI) SetDefaultVehicleRef(arg0 string) {
 func (mr *MockAPIMockRecorder) SetDefaultVehicleRef(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDefaultVehicleRef", reflect.TypeOf((*MockAPI)(nil).SetDefaultVehicleRef), arg0)
+}
+
+// SetDehumidifierConfig mocks base method.
+func (m *MockAPI) SetDehumidifierConfig(arg0 DehumidifierConfig) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetDehumidifierConfig", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetDehumidifierConfig indicates an expected call of SetDehumidifierConfig.
+func (mr *MockAPIMockRecorder) SetDehumidifierConfig(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDehumidifierConfig", reflect.TypeOf((*MockAPI)(nil).SetDehumidifierConfig), arg0)
 }
 
 // SetDisableDelay mocks base method.

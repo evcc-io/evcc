@@ -1148,6 +1148,15 @@
       "duration": "時間",
       "emission": "排出量",
       "fallbackName": "充電ポイント",
+      "humidity": {
+        "title": "相対湿度",
+        "current": "現在の湿度",
+        "target": "目標湿度",
+        "unavailable": "利用できません",
+        "device": "除湿機",
+        "on": "オン",
+        "off": "オフ"
+      },
       "finished": "終了時刻",
       "power": "出力",
       "price": "コスト",
@@ -1157,6 +1166,15 @@
       "solar": "太陽光"
     },
     "loadpointSettings": {
+      "dehumidifier": "除湿機",
+      "humidity": {
+        "target": "目標湿度",
+        "hysteresis": "ヒステリシス幅",
+        "minOnTime": "最小運転時間",
+        "minOffTime": "最小停止時間",
+        "unit": "%RH",
+        "minutes": "分"
+      },
       "batteryBoost": {
         "description": "蓄電池の残量が {limit} に減少するまで、高速充電を許可します。",
         "descriptionDisabled": "蓄電池からの高速充電を許可するには、しきい値を選択してください。",

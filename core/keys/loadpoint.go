@@ -16,6 +16,9 @@ const (
 	MinCurrent        = "minCurrent"       // min current
 	MaxCurrent        = "maxCurrent"       // max current
 	MinSoc            = "minSoc"           // min soc (heating: min temperature)
+	Dehumidifier      = "dehumidifier"     // humidity control configuration
+	Humidity          = "humidity"         // current relative humidity in %RH
+	TargetHumidity    = "targetHumidity"   // target relative humidity in %RH
 	MinSocNotReached  = "minSocNotReached" // min soc not reached
 	LimitSoc          = "limitSoc"         // limit soc
 	LimitEnergy       = "limitEnergy"      // limit energy
