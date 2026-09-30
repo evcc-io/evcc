@@ -3,8 +3,6 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"sync"
 	"testing"
 	"time"
 
@@ -67,35 +65,6 @@ func TestInstanceParallelProbes(t *testing.T) {
 	res := testInstance(ctx, slowPowerMeter{done: done})
 	require.Contains(t, res, "energy", "fast getter must return despite a blocking sibling")
 	require.NotContains(t, res, "power", "blocking getter must be abandoned")
-}
-
-// flakyMeter fails the first read of each getter and succeeds afterwards.
-type flakyMeter struct {
-	mu     sync.Mutex
-	failed map[string]bool
-}
-
-func (m *flakyMeter) read(key string) (float64, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	if !m.failed[key] {
-		m.failed[key] = true
-		return 0, errors.New("write: broken pipe")
-	}
-	return 1, nil
-}
-
-func (m *flakyMeter) CurrentPower() (float64, error) { return m.read("power") }
-func (m *flakyMeter) TotalEnergy() (float64, error)  { return m.read("energy") }
-func (m *flakyMeter) Soc() (float64, error)          { return m.read("soc") }
-
-// TestInstanceRetriesMeter ensures transient meter read errors are retried
-// instead of being reported.
-func TestInstanceRetriesMeter(t *testing.T) {
-	res := testInstance(context.Background(), &flakyMeter{failed: make(map[string]bool)})
-	for _, key := range []string{"power", "energy", "soc"} {
-		assert.Equal(t, testResult{Value: 1.0}, res[key], key)
-	}
 }
 
 // asleepVehicle returns api.ErrAsleep from its getters.

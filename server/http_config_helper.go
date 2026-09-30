@@ -14,11 +14,9 @@ import (
 	"time"
 
 	"dario.cat/mergo"
-	"github.com/cenkalti/backoff/v4"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
-	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/samber/lo"
@@ -287,43 +285,34 @@ func testInstance(ctx context.Context, instance any) map[string]testResult {
 		resMu.Unlock()
 	}
 
-	// meter reads are retried like in the main loop to hide transient connection
-	// errors, e.g. a device closing an idle modbus tcp connection
-	retry := func(g func() (float64, error)) (float64, error) {
-		if !api.HasCap[api.Meter](instance) {
-			return g()
-		}
-		return backoff.RetryWithData(g, backoff.WithContext(modbus.Backoff(), ctx))
-	}
-
 	var wg sync.WaitGroup
 
 	// probes run concurrently so a responsive getter still returns when another
 	// blocks; slow getters are abandoned once ctx expires (see below)
 	wg.Go(func() {
 		if dev, ok := api.Cap[api.Meter](instance); ok {
-			val, err := retry(dev.CurrentPower)
+			val, err := dev.CurrentPower()
 			makeResult("power", val, err)
 		}
 	})
 
 	wg.Go(func() {
 		if dev, ok := api.Cap[api.MeterEnergy](instance); ok {
-			val, err := retry(dev.TotalEnergy)
+			val, err := dev.TotalEnergy()
 			makeResult("energy", val, err)
 		}
 	})
 
 	wg.Go(func() {
 		if dev, ok := api.Cap[api.MeterReturnEnergy](instance); ok {
-			val, err := retry(dev.ReturnEnergy)
+			val, err := dev.ReturnEnergy()
 			makeResult("returnEnergy", val, err)
 		}
 	})
 
 	wg.Go(func() {
 		if dev, ok := api.Cap[api.Battery](instance); ok {
-			val, err := retry(dev.Soc)
+			val, err := dev.Soc()
 			key := "soc"
 			if hasFeature(instance, api.Heating) {
 				key = "temp"
