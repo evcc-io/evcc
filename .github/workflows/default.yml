@@ -7,10 +7,13 @@ on:
   pull_request:
   workflow_call:
 
+# fork pull requests get neither Depot's cache nor its remote Go build cache,
+# so they run on GitHub-hosted runners where the master-warmed GitHub cache
+# applies. Integration stays on Depot for the 32 cores
 jobs:
   clean:
     name: Clean
-    runs-on: depot-ubuntu-24.04-arm
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-24.04-arm' || 'depot-ubuntu-24.04-arm' }}
 
     permissions:
       contents: read
@@ -39,7 +42,7 @@ jobs:
 
   build:
     name: Build
-    runs-on: depot-ubuntu-24.04-arm
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-24.04-arm' || 'depot-ubuntu-24.04-arm' }}
 
     permissions:
       contents: read
@@ -66,7 +69,7 @@ jobs:
 
   test:
     name: Test
-    runs-on: depot-ubuntu-24.04-arm
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-24.04-arm' || 'depot-ubuntu-24.04-arm' }}
 
     permissions:
       contents: read
@@ -86,7 +89,7 @@ jobs:
 
   lint:
     name: Lint
-    runs-on: depot-ubuntu-24.04-arm
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-24.04-arm' || 'depot-ubuntu-24.04-arm' }}
 
     permissions:
       contents: read
@@ -117,7 +120,7 @@ jobs:
     permissions:
       contents: read
       actions: write
-    runs-on: depot-ubuntu-24.04-arm
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-24.04-arm' || 'depot-ubuntu-24.04-arm' }}
 
     steps:
       - uses: actions/checkout@v7
@@ -179,20 +182,30 @@ jobs:
         run: |
           test -z "$(git status --porcelain)" || (git status; git diff; false)
 
-  integration:
-    name: Integration
+  integration-shard:
+    name: Integration ${{ matrix.shard }}/2
     runs-on: depot-ubuntu-24.04-arm-32
 
     permissions:
       contents: read
       actions: write
 
+    # the Playwright run is the longest step of the workflow, so it is split
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
+      # setup-go keys its cache on ImageOS. Fork runs must look up the key the
+      # GitHub-hosted runner produces, else they miss the warmed entry
       - uses: actions/setup-go@v7
+        env:
+          ImageOS: ${{ github.event.pull_request.head.repo.fork && 'ubuntu24-arm64' || 'ubuntu24' }}
         with:
           go-version-file: go.mod
         id: go
@@ -237,14 +250,15 @@ jobs:
         timeout-minutes: 5
 
       - name: Save Playwright browsers
-        if: github.ref == 'refs/heads/master' && steps.playwright-cache.outputs.cache-hit != 'true'
+        # one writer, the shards would race for the same key
+        if: github.ref == 'refs/heads/master' && steps.playwright-cache.outputs.cache-hit != 'true' && matrix.shard == 1
         uses: actions/cache/save@v6
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
 
       - name: Run tests
-        run: vpx playwright test
+        run: vpx playwright test --shard=${{ matrix.shard }}/2
         timeout-minutes: 20
         env:
           TZ: Europe/Berlin
@@ -253,7 +267,7 @@ jobs:
         uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.shard }}
           path: playwright-report/
           retention-days: 14
 
@@ -261,13 +275,26 @@ jobs:
         uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: playwright-test-results
+          name: playwright-test-results-${{ matrix.shard }}
           path: test-results/
           retention-days: 2
 
-  # fork pull requests cannot use Depot's cache and fall back to the GitHub one,
-  # which only master can seed for them. Must not run on a Depot runner, those
-  # write to Depot's cache instead
+  # branch protection requires one check named Integration
+  integration:
+    name: Integration
+    needs: integration-shard
+    if: always()
+    runs-on: depot-ubuntu-24.04-arm
+
+    permissions:
+      contents: read
+
+    steps:
+      - run: test "${{ needs.integration-shard.result }}" = success
+
+  # fork pull requests run on GitHub-hosted runners with the GitHub cache, which
+  # only master can seed for them. Must not run on a Depot runner, those write
+  # to Depot's cache instead
   warm-fork-cache-go:
     name: Warm fork cache (Go)
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
@@ -281,12 +308,7 @@ jobs:
         with:
           persist-credentials: false
 
-      # setup-go puts ImageOS in the cache key, and GitHub's arm image reports
-      # ubuntu24-arm64 where Depot's reports ubuntu24. Without the override the
-      # warmed entry never matches the key a fork run looks for
       - uses: actions/setup-go@v7
-        env:
-          ImageOS: ubuntu24
         with:
           go-version-file: go.mod
         id: go

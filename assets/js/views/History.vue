@@ -583,15 +583,6 @@ export default defineComponent({
 	border: 1px solid var(--bs-border-color-translucent);
 	padding: 1.25rem 1rem 1.75rem;
 }
-.empty-container {
-	min-height: calc(100dvh - var(--bottom-space));
-}
-.empty-box {
-	background-color: var(--evcc-box);
-	margin: auto;
-	border-radius: 2rem;
-	max-width: 480px;
-}
 .history-tile-skeleton {
 	min-height: 270px;
 	animation: history-skeleton-pulse 1.6s ease-in-out infinite;

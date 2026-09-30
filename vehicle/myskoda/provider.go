@@ -80,7 +80,15 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	case "CHARGING", "CONSERVING":
 		return api.StatusC, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %s", s)
+		// state is omitted when the vehicle reports an unnamed combination, fall back to the plug state
+		switch res.Status.PlugConnectionState {
+		case "CONNECTED":
+			return api.StatusB, nil
+		case "DISCONNECTED":
+			return api.StatusA, nil
+		default:
+			return api.StatusNone, fmt.Errorf("invalid status: %s", s)
+		}
 	}
 }
 
@@ -95,23 +103,6 @@ func (v *Provider) Range() (int64, error) {
 	return res.Status.Battery.RemainingCruisingRangeInMeters / 1e3, nil
 }
 
-var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.charging()
-	if err != nil {
-		return time.Time{}, err
-	}
-	if !res.Status.FullyChargedAt.IsZero() {
-		return res.Status.FullyChargedAt, nil
-	}
-	if res.Status.RemainingTimeToFullyChargedInMinutes > 0 {
-		return time.Now().Add(time.Duration(res.Status.RemainingTimeToFullyChargedInMinutes) * time.Minute), nil
-	}
-	return time.Time{}, api.ErrNotAvailable
-}
-
 var _ api.SocLimiter = (*Provider)(nil)
 
 // GetLimitSoc implements the api.SocLimiter interface
@@ -120,11 +111,11 @@ func (v *Provider) GetLimitSoc() (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	// prefer the limit of the saved location (e.g. home) the vehicle is currently at
-	if data, _ := v.dataG(); res.IsVehicleInSavedLocation {
-		if p := data.Vehicle.ChargingProfiles.CurrentVehiclePositionProfile; p != nil && p.TargetStateOfChargeInPercent != nil {
-			return int64(*p.TargetStateOfChargeInPercent), nil
-		}
+	// prefer the limit of the saved location (e.g. home) the vehicle is currently at;
+	// the profile is only returned while the vehicle is positioned in one
+	data, _ := v.dataG()
+	if p := data.Vehicle.ChargingProfiles.CurrentVehiclePositionProfile; p != nil && p.TargetStateOfChargeInPercent != nil {
+		return int64(*p.TargetStateOfChargeInPercent), nil
 	}
 	if res.Settings == nil || res.Settings.TargetStateOfChargeInPercent == nil {
 		return 0, api.ErrNotAvailable

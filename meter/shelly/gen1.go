@@ -156,6 +156,11 @@ func (c *gen1) HasReturnEnergy() bool {
 	return err == nil && c.channel >= len(res.Meters) && c.channel < len(res.EMeters)
 }
 
+// HasPhases reports whether the device provides phase readings. Gen1 exposes none.
+func (c *gen1) HasPhases() bool {
+	return false
+}
+
 // IsThreePhase reports whether the device is a three-phase energy meter.
 func (c *gen1) IsThreePhase() bool {
 	res, err := c.status.Get()

@@ -39,28 +39,14 @@
 				<label :for="formId('solarshare')" class="col-sm-4 col-form-label pt-0 pt-sm-2">
 					{{ $t("main.loadpointSettings.solarShare.label") }}
 				</label>
-				<div
-					class="col-sm-8 col-lg-4 pe-0 d-flex align-items-center gap-2"
+				<SolarShareSlider
+					:id="formId('solarshare')"
+					v-model="selectedSolarShare"
+					class="col-sm-8 col-lg-4 pe-0"
 					:class="{ 'opacity-50': thresholdsConfigured }"
-				>
-					<shopicon-regular-powersupply
-						class="solar-share-icon flex-shrink-0"
-					></shopicon-regular-powersupply>
-					<input
-						:id="formId('solarshare')"
-						v-model.number="selectedSolarShare"
-						type="range"
-						class="form-range"
-						min="0"
-						max="100"
-						step="10"
-						:disabled="thresholdsConfigured"
-						@change="setSolarShare"
-					/>
-					<shopicon-regular-sun
-						class="solar-share-icon flex-shrink-0"
-					></shopicon-regular-sun>
-				</div>
+					:disabled="thresholdsConfigured"
+					@change="setSolarShare"
+				/>
 				<div class="col-sm-8 offset-sm-4 mt-1">
 					<small class="text-muted">
 						<template v-if="thresholdsConfigured && loadpointConfigRoute">
@@ -215,11 +201,10 @@ import GenericModal from "../Helper/GenericModal.vue";
 import SmartCostLimit from "../Tariff/SmartCostLimit.vue";
 import SmartFeedInPriority from "../Tariff/SmartFeedInPriority.vue";
 import SettingsBatteryBoost from "./SettingsBatteryBoost.vue";
+import SolarShareSlider from "./SolarShareSlider.vue";
 import { defineComponent, type PropType } from "vue";
 import { PHASES, CURRENCY, SMART_COST_TYPE, type UiForecast, type UiLoadpoint } from "@/types/evcc";
 import api from "@/api";
-import "@h2d2/shopicons/es/regular/powersupply";
-import "@h2d2/shopicons/es/regular/sun";
 
 const range = (start: number, stop: number, step = -1) =>
 	Array.from({ length: (stop - start) / step + 1 }, (_, i) => start + i * step);
@@ -242,6 +227,7 @@ export default defineComponent({
 		SmartCostLimit,
 		SmartFeedInPriority,
 		LoadpointSettingsBatteryBoost: SettingsBatteryBoost,
+		SolarShareSlider,
 	},
 	mixins: [formatter, collector],
 	props: {
@@ -428,7 +414,7 @@ export default defineComponent({
 		},
 		currentOption(current: number, isDefault: boolean, phases?: number) {
 			const kw = this.fmtPhasePower(current, phases);
-			let name = `${this.fmtNumber(current, undefined)} A (${kw})`;
+			let name = `${this.fmtNumber(current)} A (${kw})`;
 			if (isDefault) {
 				name += ` [${this.$t("main.loadpointSettings.default")}]`;
 			}
@@ -455,9 +441,5 @@ export default defineComponent({
 
 .custom-select-inline {
 	display: inline-block !important;
-}
-
-.solar-share-icon {
-	width: 24px;
 }
 </style>
