@@ -44,6 +44,15 @@ params:
       de: |
         Maximaler Batterieentladestrom in Ampere (A) für Normalmodus. Register 211 akzeptiert 0-185 A.
         Leistungsberechnung: P(W) = Strom(A) x Spannung(V). Beispiel mit 48V Batterie: 100A x 48V = 4800W (4,8kW).
+  - name: maxchargecurrent
+    service: modbus/read?address=210&type=holding&encoding=uint16&{modbus} # Battery Max Charge Current
+    advanced: true
+    description:
+      en: Max Charge Current
+      de: Max Ladestrom
+    help:
+      en: Maximum battery charge current in Amperes (A), restored after holdcharge mode. Enables the holdcharge battery mode, which stops charging by setting the charge current to 0.
+      de: Maximaler Batterieladestrom in Ampere (A), wird nach dem Modus Laden sperren wiederhergestellt. Aktiviert den Batteriemodus Laden sperren, der das Laden durch einen Ladestrom von 0 unterbindet.
   - name: gridchargecurrent
     service: modbus/read?address=230&type=holding&encoding=uint16&{modbus} # Grid Charge Battery Current
     required: true
@@ -310,6 +319,17 @@ render: |
               address: 211 # Battery Max Discharging Current
               type: writemultiple
               decode: uint16
+        {{- if gt (.maxchargecurrent | int) 0 }}
+        - source: const
+          value: {{ .maxchargecurrent }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 210 # Battery Max Charging Current
+              type: writemultiple
+              decode: uint16
+        {{- end }}
     - case: 2 # hold - prevent discharge
       set:
         source: sequence
@@ -395,6 +415,17 @@ render: |
               address: 211 # Battery Max Discharging Current
               type: writemultiple
               decode: uint16
+        {{- if gt (.maxchargecurrent | int) 0 }}
+        - source: const
+          value: {{ .maxchargecurrent }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 210 # Battery Max Charging Current
+              type: writemultiple
+              decode: uint16
+        {{- end }}
     - case: 3 # charge - enable grid charging
       set:
         source: sequence
@@ -444,5 +475,121 @@ render: |
               address: 211 # Battery Max Discharging Current
               type: writemultiple
               decode: uint16
+        {{- if gt (.maxchargecurrent | int) 0 }}
+        - source: const
+          value: {{ .maxchargecurrent }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 210 # Battery Max Charging Current
+              type: writemultiple
+              decode: uint16
+        {{- end }}
+    {{- if gt (.maxchargecurrent | int) 0 }}
+    - case: 4 # holdcharge - prevent charging
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 229 # Battery Grid Charging Start (set to minsoc)
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 268 # Program 1 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 269 # Program 2 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 270 # Program 3 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 271 # Program 4 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 272 # Program 5 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 273 # Program 6 SOC
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 1 # enabled
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 232 # Battery Grid Charging
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 0x00FF # Week, enable TOU
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 248 # Time of Use
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: {{ .maxdischargecurrent }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 211 # Battery Max Discharging Current
+              type: writemultiple
+              decode: uint16
+        - source: const
+          value: 0
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 210 # Battery Max Charging Current
+              type: writemultiple
+              decode: uint16
+    {{- end }}
   {{- include "battery-params" . }}
   {{- end }}
