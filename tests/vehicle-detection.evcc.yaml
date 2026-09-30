@@ -1,77 +1,43 @@
 interval: 0.25s
 
-site:
-  title: evcc Simulator
-  meters:
-    grid: grid
-    pv:
-      - pv
-
-meters:
-  - name: grid
-    type: custom
-    power:
-      source: http
-      uri: http://localhost:7072/api/state
-      jq: .site.grid.power
-  - name: pv
-    type: custom
-    power:
-      source: http
-      uri: http://localhost:7072/api/state
-      jq: .site.pv.power
-  - name: lp0meter
-    type: custom
-    power:
-      source: http
-      uri: http://localhost:7072/api/state
-      jq: .loadpoints[0].power
-    energy:
-      source: http
-      uri: http://localhost:7072/api/state
-      jq: .loadpoints[0].energy
-
 # no default vehicle: connecting starts vehicle detection
 loadpoints:
   - title: Carport
     charger: charger
-    meter: lp0meter
-    mode: pv
-    soc:
-      estimate: false
 
 chargers:
   - name: charger
     type: custom
-    enable:
-      source: js
-      script: |
-        false
-    enabled:
-      source: http
-      uri: http://localhost:7072/api/state
-      jq: .loadpoints[0].enabled
     status:
       source: http
       uri: http://localhost:7072/api/state
       jq: .loadpoints[0].status
+    enabled:
+      source: js
+      script: |
+        false
+    enable:
+      source: js
+      script: |
+        false
     maxcurrent:
       source: js
       script: |
         16
 
-# neither vehicle reports a charge state, so detection by status never resolves
+# the golf's cloud api is slow and still reports it unplugged, the honda has no status api
 vehicles:
   - name: golf
-    title: blauer e-Golf
     type: custom
+    title: blauer e-Golf
     soc:
-      source: http
-      uri: http://localhost:7072/api/state
-      jq: .vehicles[0].soc
-    capacity: 20
+      source: js
+      script: |
+        50
+    status:
+      source: script
+      cmd: sh -c "sleep 3; echo A"
   - name: honda
     type: template
     template: offline
     title: grüner Honda e
-    capacity: 28.5
