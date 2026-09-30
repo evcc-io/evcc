@@ -3,6 +3,8 @@ products:
   - brand: my-PV
     description:
       generic: WiFi Meter
+discovery:
+  mac: ["986D35C"]
 params:
   - name: usage
     choice: ["grid"]

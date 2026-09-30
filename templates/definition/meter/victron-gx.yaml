@@ -12,6 +12,9 @@ requirements:
     en: |
       For additional meters attached to the GX device that appear as AC load (`com.victronenergy.acload`).
       Grid, PV and battery measurement is covered by the `Victron Energy` template.
+discovery:
+  hostname: ["venus"]
+  mac: ["C0619AB"]
 params:
   - name: usage
     choice: ["aux", "charge"]

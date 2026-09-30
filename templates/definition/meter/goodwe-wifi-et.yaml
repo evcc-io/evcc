@@ -7,6 +7,8 @@ products:
     description:
       generic: ET/EH/BT/BH Hybrid Inverter (WiFi)
 capabilities: ["battery-control"]
+discovery:
+  mac: ["F0C1CE"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

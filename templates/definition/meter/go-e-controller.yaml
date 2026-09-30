@@ -3,6 +3,9 @@ products:
   - brand: go-e
     description:
       generic: Controller
+discovery:
+  hostname: ["go-echarger*"]
+  mac: ["D455AD", "98FC841"]
 params:
   - name: usage
     choice: ["grid", "pv"]

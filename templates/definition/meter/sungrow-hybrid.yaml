@@ -14,6 +14,9 @@ caveats:
       de: Für korrekte Funktion dürfen maximale Lade- und Entladeleistung nicht zu hoch angesetzt werden.
       en: For correct operation, maximum charge and discharge power must not be set too high.
     link: https://github.com/evcc-io/evcc/discussions/23557
+discovery:
+  hostname: ["sungrow*"]
+  mac: ["AC199F"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

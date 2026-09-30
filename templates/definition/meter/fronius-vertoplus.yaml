@@ -4,6 +4,8 @@ products:
     description:
       generic: Verto Plus
 capabilities: ["battery-control"]
+discovery:
+  mac: ["0003AC"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

@@ -13,6 +13,8 @@ requirements:
       Um die aktive Ladesteuerung zu nutzen darf der Energiekosten-Assistent (ECA) im Fronius Solar.web nicht aktiviert sein. (Fronius Solar.web->Einstellungen->Betriebsmodus->Eigenverbrauch)
     en: |
       To use active charge control, the Energy Cost Assistant (ECA) must not be activated in Fronius Solar.web. (Fronius Solar.web -> Settings -> Operating Mode -> Self-Consumption)
+discovery:
+  mac: ["0003AC"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

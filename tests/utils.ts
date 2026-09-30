@@ -148,6 +148,18 @@ type AppState = {
   ReactNativeWebView: { postMessage: (m: string) => void };
 };
 
+export async function enableExperimental(page: Page): Promise<void> {
+  await page
+    .getByTestId("generalconfig-experimental")
+    .getByRole("button", { name: "edit" })
+    .click();
+  const modal = page.getByTestId("experimental-modal");
+  await expectModalVisible(modal);
+  await modal.getByLabel("Enable experimental features.").click();
+  await modal.getByRole("button", { name: "Close" }).click();
+  await expectModalHidden(modal);
+}
+
 export async function enableAppContext(page: Page): Promise<void> {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "userAgent", {

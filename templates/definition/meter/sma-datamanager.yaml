@@ -8,6 +8,9 @@ requirements:
   description:
     de: In der Weboberfläche des SMA Data Manager muss im Bereich "Externe Kommunikation" der Schalter "Modbus Server aktivieren" eingeschaltet sein.
     en: In the web interface of the SMA Data Manager you need to activate "Modbus Server activated" in the section "External communication".
+discovery:
+  hostname: ["sma*"]
+  mac: ["0015BB"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
