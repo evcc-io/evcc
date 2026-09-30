@@ -180,7 +180,6 @@ export default defineComponent({
 			},
 			set(value: string[]) {
 				const yamlIds = new Set(this.yamlAssignedLoadpointIds);
-
 				this.selectedLoadpointIds = value.filter((id) => !yamlIds.has(id));
 			},
 		},
@@ -197,18 +196,28 @@ export default defineComponent({
 			return loadpointTitles.join(", ");
 		},
 		loadpointOptions(): SelectOption<number | string>[] {
-			return (
-				this.loadpoints
-					.map((l) => ({
-						name: l.id
-							? l.title
-							: `${l.title} ${this.$t("config.circuit.loadpointViaYaml")}`,
-						value: l.id ? l.id : l.title,
-						disabled: l.id === undefined,
-					}))
-					// move disabled entries to the end
-					.sort((a, b) => Number(a.disabled) - Number(b.disabled))
-			);
+			const availableLoadpoints = this.loadpoints
+				.filter((l) => l.id && (l.circuit === undefined || l.circuit === `db:${this.id}`))
+				.map((l) => ({
+					name: l.title,
+					value: l.id!,
+				}));
+			const assignedLoadpoints = this.loadpoints
+				.filter((l) => l.id && l.circuit && l.circuit !== `db:${this.id}`)
+				.map((l) => ({
+					name: `${l.title} ${this.$t("config.circuit.loadpointHasCircuit", { circuit: this.getCircuitTitle(l.circuit) })}`,
+					value: l.id!,
+					disabled: true,
+				}));
+			const yamlLoadpoints = this.loadpoints
+				.filter((l) => !l.id)
+				.map((l) => ({
+					name: `${l.title} ${this.$t(`config.circuit.${l.circuit ? "loadpointUnassignViaYaml" : "loadpointAssignViaYaml"}`)}`,
+					value: l.id!,
+					disabled: true,
+				}));
+
+			return availableLoadpoints.concat(assignedLoadpoints).concat(yamlLoadpoints);
 		},
 		getParentCircuit(): string | undefined {
 			const parentId = getModal("circuit")?.parent;
@@ -285,6 +294,9 @@ export default defineComponent({
 		},
 	},
 	methods: {
+		getCircuitTitle(name?: string) {
+			return this.circuits.find((c) => c.name === name)?.deviceTitle;
+		},
 		meterTitle,
 		meterSelectionChanged(selection: MeterSelection, values: { meter?: string }) {
 			if (selection === MeterSelection.GRID) {

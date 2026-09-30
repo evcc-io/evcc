@@ -184,8 +184,10 @@
       "meterLabel": "Energy meter",
       "loadpointLabel": "Assigned loadpoints",
       "noLoadpointsAssigned": "No loadpoints assigned",
-      "loadpointHelp": "Select the loadpoints for this circuit. Only loadpoints created through the configuration UI can be assigned.",
-      "loadpointViaYaml": "(via evcc.yaml)"
+      "loadpointHelp": "Select the loadpoints for this circuit. Only unassigned loadpoints created through the configuration UI can be selected.",
+      "loadpointAssignViaYaml": "(assign via evcc.yaml)",
+      "loadpointUnassignViaYaml": "(unassign via evcc.yaml)",
+      "loadpointHasCircuit": "(asssigned to \"{circuit}\")"
     },
     "circuits": {
       "addSubCircuit": "Add sub-circuit",
