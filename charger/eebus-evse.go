@@ -2,6 +2,7 @@ package charger
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"sync"
@@ -102,7 +103,10 @@ func newEEBus(ctx context.Context, ski, ip string, coarseCurrent bool) (*EEBus, 
 		return nil, err
 	}
 
-	if err := c.connector.Wait(ctx); err != nil {
+	if err := c.connector.Wait(ctx); errors.Is(err, api.ErrTimeout) {
+		// a remote refusing connections at boot may still dial in later, so stay registered (#28869)
+		c.log.WARN.Printf("not connected, waiting for %s", ski)
+	} else if err != nil {
 		inst.UnregisterDevice(ski, c)
 		return nil, err
 	}

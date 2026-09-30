@@ -110,7 +110,12 @@ func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost ti
 		return nil, err
 	}
 
-	if err := c.connector.Wait(ctx); err != nil {
+	connected := true
+	if err := c.connector.Wait(ctx); errors.Is(err, api.ErrTimeout) {
+		// a remote refusing connections at boot may still dial in later, so stay registered (#28869)
+		c.log.WARN.Printf("not connected, waiting for %s", ski)
+		connected = false
+	} else if err != nil {
 		inst.UnregisterDevice(ski, c)
 		return nil, err
 	}
@@ -123,7 +128,7 @@ func NewEEBusOHPCF(ctx context.Context, embed *embed, ski, ip string, reboost ti
 
 	// a device without OHPCF never announces a compressor and would error on
 	// every cycle instead of failing here (#33461)
-	if _, ok := c.connectedCompressor(); !ok {
+	if _, ok := c.connectedCompressor(); connected && !ok {
 		inst.UnregisterDevice(ski, c)
 		return nil, fmt.Errorf("missing use case: %s", model.UseCaseNameTypeOptimizationOfSelfConsumptionByHeatPumpCompressorFlexibility)
 	}
