@@ -148,6 +148,12 @@ func loadpointConfig(dev config.Device[loadpoint.API]) (loadpointFullConfig, err
 		DynamicConfig: getLoadpointDynamicConfig(lp),
 	}
 
+	// circuit may already have changed in persisted config while the live
+	// loadpoint still references the previous circuit
+	if configurable, ok := dev.(config.ConfigurableDevice[loadpoint.API]); ok {
+		res.Circuit, _ = configurable.Config().Other["circuit"].(string)
+	}
+
 	return res, nil
 }
 

@@ -189,11 +189,12 @@ export default defineComponent({
 				.map((id) => this.loadpoints.find((l) => l.id === Number(id)))
 				.filter((l) => l !== undefined);
 
-			if (loadpoints.length === 0) return this.$t("config.circuit.noLoadpointsAssigned");
-			return loadpoints
+			const loadpointTitles = loadpoints
 				.map((l) => l.title)
-				.concat(this.yamlAssignedLoadpointIds)
-				.join(", ");
+				.concat(this.yamlAssignedLoadpointIds);
+
+			if (loadpointTitles.length === 0) return this.$t("config.circuit.noLoadpointsAssigned");
+			return loadpointTitles.join(", ");
 		},
 		loadpointOptions(): SelectOption<number | string>[] {
 			return (
@@ -274,6 +275,9 @@ export default defineComponent({
 		id: {
 			immediate: true,
 			handler(newId: number | undefined) {
+				this.selectedLoadpointIds = [];
+				this.yamlAssignedLoadpointIds = [];
+
 				if (newId === undefined) {
 					this.meterSelection = MeterSelection.NONE;
 				}
@@ -351,7 +355,7 @@ export default defineComponent({
 		},
 		initialAssignedLoadpoints(circuitName: string): string[] {
 			return this.loadpoints
-				.filter((l) => l.circuit === circuitName)
+				.filter((l) => l.circuit === circuitName && l.id !== undefined)
 				.filter((l) => l !== undefined)
 				.map((l) => String(l.id));
 		},

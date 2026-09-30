@@ -1562,6 +1562,7 @@ export default defineComponent({
 			this.loadDirty();
 		},
 		async circuitChanged() {
+			this.loadLoadpoints();
 			this.loadCircuits();
 			this.loadDirty();
 		},
