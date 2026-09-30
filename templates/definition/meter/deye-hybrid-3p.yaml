@@ -240,17 +240,27 @@ render: |
       scale: 10
       {{- end }}
     {{- if .includegenport }}
-    - source: modbus
-      {{- include "modbus" . | indent 4 }}
-      register:
-        address: 667 # "low word of input power at GEN-Port"
-        type: holding
-        decode: int16 # value is part of a signed 32-bit value; high word is at 671 but non-adjacent
-                      # NOTE: Only the low 16 bits of GEN power are used here. This is sufficient up to ±32 kW,
-                      # which covers existing inverter variants.
-      block: # 667-675
-        register: 667
-        count: 9
+    - source: calc # GEN port power is a signed 32-bit value split across non-adjacent registers
+      add:
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 667 # "GEN port power" low word
+          type: holding
+          decode: uint16
+        block: # 667-675
+          register: 667
+          count: 9
+      - source: modbus
+        {{- include "modbus" . | indent 6 }}
+        register:
+          address: 671 # "GEN port power" high word
+          type: holding
+          decode: int16
+        block: # 667-675
+          register: 667
+          count: 9
+        scale: 65536
     {{- end }}
   energy:
     source: calc
