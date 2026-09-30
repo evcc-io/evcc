@@ -14,9 +14,9 @@
 		:on-configuration-loaded="handleConfigurationLoaded"
 		:hide-delete="hasChildren"
 		hide-disable
-		@added="$emit('changed', $event)"
-		@updated="$emit('changed')"
-		@removed="$emit('changed')"
+		@added="handleAdded"
+		@updated="handleUpdated"
+		@removed="handleRemoved"
 	>
 		<template #before-template="{ values }">
 			<FormRow id="circuitParamDeviceTitle" :label="$t('config.circuit.titleLabel')">
@@ -92,6 +92,20 @@
 						{{ $t("config.circuit.addMeter") }}
 					</button>
 				</FormRow>
+				<FormRow
+					v-if="loadpointOptions.length"
+					id="circuitParamLoadpoint"
+					:label="$t('config.circuit.loadpointLabel')"
+					:help="$t('config.circuit.loadpointHelp')"
+				>
+					<MultiSelect
+						id="circuitParamLoadpoint"
+						v-model="selectedLoadpointIds"
+						:options="loadpointOptions"
+					>
+						{{ loadpointsLabel }}
+					</MultiSelect>
+				</FormRow>
 			</div>
 		</template>
 		<template v-if="hasChildren" #after-test>
@@ -106,7 +120,7 @@
 import { defineComponent, type PropType } from "vue";
 import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
 import type { ApiData, DeviceValues, Product, TemplateParam } from "./DeviceModal";
-import type { ConfigCircuit, ConfigMeter } from "@/types/evcc";
+import type { ConfigCircuit, ConfigLoadpoint, ConfigMeter, SelectOption } from "@/types/evcc";
 import { type TemplateGroup, customTemplateOption } from "./DeviceModal/TemplateSelector.vue";
 import { ConfigType } from "@/types/evcc";
 import defaultCircuitYaml from "./defaultYaml/circuit.yaml?raw";
@@ -115,6 +129,8 @@ import { meterTitle } from "@/utils/circuits.ts";
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import DeviceRefBox from "./DeviceRefBox.vue";
+import MultiSelect from "../Helper/MultiSelect.vue";
+import api from "@/api.ts";
 
 enum MeterSelection {
 	NONE = "none",
@@ -129,6 +145,7 @@ export default defineComponent({
 		FormRow,
 		PropertyField,
 		DeviceRefBox,
+		MultiSelect,
 	},
 	emits: ["changed"],
 	props: {
@@ -140,15 +157,42 @@ export default defineComponent({
 			type: Array as PropType<ConfigMeter[]>,
 			default: () => [],
 		},
+		loadpoints: {
+			type: Array as PropType<ConfigLoadpoint[]>,
+			default: () => [],
+		},
 		gridMeter: { type: Object as PropType<ConfigMeter> },
 	},
 	data() {
 		return {
 			ConfigType,
 			meterSelection: MeterSelection.NONE,
+			selectedLoadpointIds: [] as number[],
 		};
 	},
 	computed: {
+		loadpointsLabel() {
+			const loadpoints = this.selectedLoadpointIds
+				.map((id) => this.loadpoints.find((l) => l.id === id))
+				.filter((l) => l !== undefined);
+
+			if (loadpoints.length === 0) return this.$t("config.circuit.noLoadpointsAssigned");
+			return loadpoints.map((l) => l.title).join(", ");
+		},
+		loadpointOptions(): SelectOption<number>[] {
+			return (
+				this.loadpoints
+					.map((l) => ({
+						name: l.id
+							? l.title
+							: `${l.title} ${this.$t("config.circuit.loadpointViaYaml")}`,
+						value: l.id ?? -1,
+						disabled: l.id === undefined,
+					}))
+					// move disabled entries to the end
+					.sort((a, b) => Number(a.disabled) - Number(b.disabled))
+			);
+		},
 		getParentCircuit(): string | undefined {
 			const parentId = getModal("circuit")?.parent;
 			if (parentId) return this.circuits.find((c) => c.id === parentId)?.name;
@@ -168,6 +212,9 @@ export default defineComponent({
 		},
 		id(): number | undefined {
 			return getModal("circuit")?.id;
+		},
+		circuitName(): string | undefined {
+			return this.circuits.find((circuit) => circuit.id === this.id)?.name;
 		},
 		hasChildren(): boolean {
 			const name = this.circuits.find((c) => c.id === this.id)?.name;
@@ -236,6 +283,9 @@ export default defineComponent({
 			} else {
 				this.meterSelection = MeterSelection.DEDICATED;
 			}
+			if (this.circuitName) {
+				this.selectedLoadpointIds = this.initialAssignedLoadpoints(this.circuitName);
+			}
 		},
 		provideTemplateOptions(products: Product[]): TemplateGroup[] {
 			return [
@@ -274,6 +324,54 @@ export default defineComponent({
 				this.meterSelection = MeterSelection.NONE;
 				delete values.meter;
 			}
+		},
+		initialAssignedLoadpoints(circuitName: string): number[] {
+			return this.loadpoints
+				.filter((l) => l.circuit === circuitName)
+				.map((l) => l.id)
+				.filter((id) => id !== undefined);
+		},
+		async patchAssignedLoadpoints(circuitName: string, circuitDeleted?: boolean) {
+			const initial = this.initialAssignedLoadpoints(circuitName);
+			const current = circuitDeleted ? [] : this.selectedLoadpointIds;
+
+			const addedLoadpoints = current.filter((id) => !initial.includes(id));
+			const removedLoadpoints = initial.filter((id) => !current.includes(id));
+
+			await Promise.all([
+				...addedLoadpoints.map((id) => this.patchLoadpoint(id, circuitName)),
+				...removedLoadpoints.map((id) => this.patchLoadpoint(id)),
+			]);
+		},
+		async patchLoadpoint(loadpointId: number, circuitName?: string) {
+			await api.patch(
+				`config/loadpoints/${loadpointId}`,
+				{
+					circuit: circuitName ?? null,
+				},
+				{
+					headers: {
+						"Content-Type": "application/merge-patch+json",
+					},
+				}
+			);
+		},
+		async handleAdded(circuitName: string) {
+			await this.patchAssignedLoadpoints(circuitName);
+			this.$emit("changed", circuitName);
+		},
+		async handleUpdated() {
+			if (this.circuitName) {
+				await this.patchAssignedLoadpoints(this.circuitName);
+				this.$emit("changed");
+			}
+		},
+		async handleRemoved() {
+			if (this.circuitName) {
+				await this.patchAssignedLoadpoints(this.circuitName, true);
+			}
+
+			this.$emit("changed");
 		},
 	},
 });

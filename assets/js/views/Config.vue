@@ -582,6 +582,7 @@
 				<CircuitModal
 					:circuits="circuits"
 					:meters="meters"
+					:loadpoints="loadpoints"
 					:grid-meter="gridMeter"
 					@changed="circuitChanged"
 				/>

@@ -1,12 +1,15 @@
 package server
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
 	"strconv"
 
 	"dario.cat/mergo"
+	"github.com/evanphx/json-patch/v5"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	coresettings "github.com/evcc-io/evcc/core/settings"
@@ -250,86 +253,173 @@ func newLoadpointHandler() http.HandlerFunc {
 	}
 }
 
-// updateLoadpointHandler returns a device configurations by class
-func updateLoadpointHandler() http.HandlerFunc {
+func loadLoadpointConfig(id int) (loadpointFullConfig, error) {
+	dev, err := config.Loadpoints().ByName(config.NameForID(id))
+	if err != nil {
+		return loadpointFullConfig{}, err
+	}
+
+	return loadpointConfig(dev)
+}
+
+func saveLoadpointConfig(id int, r io.Reader, deleteKeys ...string) error {
 	h := config.Loadpoints()
 
+	dev, err := h.ByName(config.NameForID(id))
+	if err != nil {
+		return err
+	}
+
+	configurable, ok := dev.(config.ConfigurableDevice[loadpoint.API])
+	if !ok {
+		return errors.New("not configurable")
+	}
+
+	dynamic, static, payload, disable, err := loadpointSplitConfig(r)
+	if err != nil {
+		return err
+	}
+
+	props := configurable.Properties()
+	if disable != nil {
+		props.Disable = *disable
+	}
+
+	instance := dev.Instance()
+
+	// merge static config to maintain the dynamic part; without live instance
+	// merge the full payload since dynamic setters cannot persist it
+	src := static
+	if instance == nil {
+		src = payload
+	}
+
+	other := configurable.Config().Other
+
+	// JSON Merge Patch: null removes the property
+	for _, key := range deleteKeys {
+		delete(other, key)
+	}
+
+	if err := mergo.Merge(&other, src, mergo.WithOverride); err != nil {
+		return err
+	}
+
+	if err := configurable.Update(
+		other,
+		instance,
+		config.WithProperties(props),
+	); err != nil {
+		return err
+	}
+
+	// propagate disable to the loadpoint's charger and meter
+	chargerRef, _ := other["charger"].(string)
+	if err := setDeviceDisable(
+		chargerRef,
+		config.Chargers(),
+		props.Disable,
+	); err != nil {
+		return err
+	}
+
+	meterRef, _ := other["meter"].(string)
+	if err := setDeviceDisable(
+		meterRef,
+		config.Meters(),
+		props.Disable,
+	); err != nil {
+		return err
+	}
+
+	// dynamic; instance is nil for a disabled loadpoint,
+	// takes effect on next restart
+	if instance != nil {
+		if err := dynamic.Apply(instance); err != nil {
+			return err
+		}
+	}
+
+	setConfigDirty()
+
+	return nil
+}
+
+// updateLoadpointHandler returns a device configurations by class
+func updateLoadpointHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-
-		id, err := strconv.Atoi(vars["id"])
+		id, err := strconv.Atoi(mux.Vars(r)["id"])
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		dev, err := h.ByName(config.NameForID(id))
+		if err := saveLoadpointConfig(id, r.Body); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+// patchLoadpointHandler patches a loadpoint
+func patchLoadpointHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := strconv.Atoi(mux.Vars(r)["id"])
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		configurable, ok := dev.(config.ConfigurableDevice[loadpoint.API])
-		if !ok {
-			jsonError(w, http.StatusBadRequest, errors.New("not configurable"))
-			return
-		}
-
-		dynamic, static, payload, disable, err := loadpointSplitConfig(r.Body)
+		current, err := loadLoadpointConfig(id)
 		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		props := configurable.Properties()
-		if disable != nil {
-			props.Disable = *disable
+		currentJSON, err := json.Marshal(current)
+		if err != nil {
+			jsonError(w, http.StatusInternalServerError, err)
+			return
 		}
 
-		instance := dev.Instance()
-
-		// merge static config to maintain the dynamic part; without live instance
-		// merge the full payload since dynamic setters cannot persist it
-		src := static
-		if instance == nil {
-			src = payload
-		}
-
-		other := configurable.Config().Other
-		if err := mergo.Merge(&other, src, mergo.WithOverride); err != nil {
+		patchJSON, err := io.ReadAll(r.Body)
+		if err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		if err := configurable.Update(other, instance, config.WithProperties(props)); err != nil {
+		// Remember explicitly removed properties before MergePatch removes them.
+		var patch map[string]any
+		if err := json.Unmarshal(patchJSON, &patch); err != nil {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		// propagate disable to the loadpoint's charger and meter
-		chargerRef, _ := other["charger"].(string)
-		if err := setDeviceDisable(chargerRef, config.Chargers(), props.Disable); err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		meterRef, _ := other["meter"].(string)
-		if err := setDeviceDisable(meterRef, config.Meters(), props.Disable); err != nil {
-			jsonError(w, http.StatusBadRequest, err)
-			return
-		}
-
-		// dynamic; instance is nil for a disabled loadpoint, takes effect on next restart
-		if instance != nil {
-			if err := dynamic.Apply(instance); err != nil {
-				jsonError(w, http.StatusBadRequest, err)
-				return
+		var deleteKeys []string
+		for key, value := range patch {
+			if value == nil {
+				deleteKeys = append(deleteKeys, key)
 			}
 		}
 
-		setConfigDirty()
+		mergedJSON, err := jsonpatch.MergePatch(currentJSON, patchJSON)
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
 
-		w.WriteHeader(http.StatusOK)
+		if err := saveLoadpointConfig(
+			id,
+			bytes.NewReader(mergedJSON),
+			deleteKeys...,
+		); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
