@@ -53,7 +53,6 @@ const (
 	wsRegFlowTemp    = 33104 // Vorlauftemperatur, 0.1K
 	wsRegBufferTemp  = 33108 // Weichentemperatur, 0.1K
 	wsRegPowerDemand = 33103 // Leistungsanforderung
-	wsRegPower       = 33126 // El. Leistungsaufnahme W
 	wsRegSollwertPv  = 40002 // SollwertPV, W
 )
 
@@ -211,17 +210,6 @@ func (wb *Weishaupt) MaxCurrentMillis(current float64) error {
 	}
 
 	return err
-}
-
-var _ api.Meter = (*Weishaupt)(nil)
-
-// CurrentPower implements the api.Meter interface
-func (wb *Weishaupt) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(wsRegPower, 1)
-	if err != nil {
-		return 0, err
-	}
-	return float64(binary.BigEndian.Uint16(b)), nil
 }
 
 // temp reads a temperature sensor register. Values outside of -50..500°C
