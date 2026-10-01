@@ -101,6 +101,7 @@ type Loadpoint struct {
 
 	Soc             loadpoint.SocConfig
 	Enable, Disable loadpoint.ThresholdConfig
+	PhaseSwitching  loadpoint.PhaseSwitchingConfig
 	Ui              loadpoint.UIConfig // display-only, not used in control logic
 
 	// from yaml
@@ -216,6 +217,7 @@ func NewLoadpointFromConfig(log *util.Logger, settings settings.Settings, collec
 	} else if lp.Enable.Threshold > 0 {
 		lp.log.WARN.Printf("PV mode enable threshold %.0fW > 0 will start PV charging on grid power consumption. Did you mean -%.0f?", lp.Enable.Threshold, lp.Enable.Threshold)
 	}
+	lp.validatePhaseSwitching()
 
 	// choose sane default if mode is not set
 	if lp.mode = lp.DefaultMode; lp.mode == "" {
@@ -420,6 +422,11 @@ func (lp *Loadpoint) restoreSettings() {
 	var thresholds loadpoint.ThresholdsConfig
 	if err := lp.settings.Json(keys.Thresholds, &thresholds); err == nil {
 		lp.setThresholds(thresholds)
+	}
+
+	var phaseSwitching loadpoint.PhaseSwitchingConfig
+	if err := lp.settings.Json(keys.PhaseSwitching, &phaseSwitching); err == nil {
+		lp.setPhaseSwitching(phaseSwitching)
 	}
 
 	var socConfig loadpoint.SocConfig
@@ -1524,7 +1531,7 @@ func (lp *Loadpoint) fastChargingPhases() (bool, error) {
 	// a fixed phase configuration is not subject to load management, hence no buffer.
 	if targetPhases == 3 && phases == 1 &&
 		(lp.phasesConfigured == 3 || lp.circuitAllowsPhases(3, phaseScaleUpBuffer*lp.effectiveMinCurrent())) {
-		if !lp.phaseTimerElapsed(lp.GetEnableDelay(), phaseScale3p) {
+		if !lp.phaseTimerElapsed(lp.phaseScale3pDelay(), phaseScale3p) {
 			return true, nil
 		}
 
@@ -1575,6 +1582,9 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 		insufficient := (sitePower > 0 || !lp.enabled) && powerToCurrent(availablePower, activePhases) < minCurrent
 		if insufficient {
 			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
+		} else if threshold := lp.phaseScale1pThreshold(minCurrent, activePhases); threshold > 0 && availablePower < threshold {
+			lp.log.DEBUG.Printf("available power %.0fW < %.0fW 1p threshold", availablePower, threshold)
+			insufficient = true
 		}
 
 		// while charging, scaling down only helps if 1p is sustainable, otherwise it
@@ -1591,7 +1601,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 
 	// scale down phases
 	if scalable {
-		if lp.phaseTimerElapsed(lp.GetDisableDelay(), phaseScale1p) {
+		if lp.phaseTimerElapsed(lp.phaseScale1pDelay(), phaseScale1p) {
 			if err := lp.scalePhases(1); err != nil {
 				// a charger may report it cannot switch phases right now
 				// (api.ErrNotAvailable); assume a failed switch and stay silent
@@ -1620,10 +1630,10 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 		maxCurrent >= minCurrent && lp.circuitAllowsPhases(maxPhases, minCurrent)
 
 	// scale up phases
-	if targetCurrent := powerToCurrent(availablePower, maxPhases); targetCurrent >= minCurrent && scalable {
-		lp.log.DEBUG.Printf("available power %.0fW > %.0fW min %dp threshold", availablePower, float64(maxPhases)*Voltage*minCurrent, maxPhases)
+	if threshold := lp.phaseScale3pThreshold(minCurrent, maxPhases); availablePower >= threshold && scalable {
+		lp.log.DEBUG.Printf("available power %.0fW >= %.0fW %dp threshold", availablePower, threshold, maxPhases)
 
-		if lp.phaseTimerElapsed(lp.GetEnableDelay(), phaseScale3p) {
+		if lp.phaseTimerElapsed(lp.phaseScale3pDelay(), phaseScale3p) {
 			if err := lp.scalePhases(3); err != nil {
 				// a charger may report it cannot switch phases right now
 				// (api.ErrNotAvailable); assume a failed switch and stay silent
@@ -1645,6 +1655,58 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 	}
 
 	return 0
+}
+
+// phaseScale3pThreshold returns the available power required for scaling up to maxPhases.
+// A custom threshold can only raise the switch point above the min power on maxPhases.
+func (lp *Loadpoint) phaseScale3pThreshold(minCurrent float64, maxPhases int) float64 {
+	return max(currentToPower(minCurrent, maxPhases), lp.GetPhaseSwitching().Scale3p.Threshold)
+}
+
+// phaseScale1pThreshold returns the available power below which charging scales down to 1p
+// despite sufficient power for min current on the active phases, or zero if not effective.
+func (lp *Loadpoint) phaseScale1pThreshold(minCurrent float64, activePhases int) float64 {
+	threshold := lp.GetPhaseSwitching().Scale1p.Threshold
+
+	// below min power the default scale down applies first, a custom threshold would only
+	// react to vehicles drawing slightly less than offered while still exporting
+	if threshold <= currentToPower(minCurrent, activePhases) {
+		return 0
+	}
+
+	// without hysteresis to the scale up threshold, phases would switch back and forth
+	if threshold >= lp.phaseScale3pThreshold(minCurrent, lp.MaxActivePhases()) {
+		return 0
+	}
+
+	return threshold
+}
+
+// phaseScale3pDelay returns the scale up delay, defaulting to the pv enable delay
+func (lp *Loadpoint) phaseScale3pDelay() time.Duration {
+	if delay := lp.GetPhaseSwitching().Scale3p.Delay; delay > 0 {
+		return delay
+	}
+	return lp.GetEnableDelay()
+}
+
+// phaseScale1pDelay returns the scale down delay, defaulting to the pv disable delay
+func (lp *Loadpoint) phaseScale1pDelay() time.Duration {
+	if delay := lp.GetPhaseSwitching().Scale1p.Delay; delay > 0 {
+		return delay
+	}
+	return lp.GetDisableDelay()
+}
+
+// validatePhaseSwitching warns about custom phase switching thresholds without effect
+func (lp *Loadpoint) validatePhaseSwitching() {
+	scale3p, scale1p := lp.PhaseSwitching.Scale3p.Threshold, lp.PhaseSwitching.Scale1p.Threshold
+	if scale3p < 0 || scale1p < 0 {
+		lp.log.WARN.Printf("phase switching thresholds must not be negative (3p: %.0fW, 1p: %.0fW)", scale3p, scale1p)
+	}
+	if scale1p > 0 && scale3p > 0 && scale1p >= scale3p {
+		lp.log.WARN.Printf("phase switching 1p threshold (%.0fW) must be lower than 3p threshold (%.0fW), ignoring 1p threshold", scale1p, scale3p)
+	}
 }
 
 // TODO move up to timer functions
@@ -1690,7 +1752,7 @@ func (lp *Loadpoint) boostPower(batteryPower float64) float64 {
 			lp.circuitAllowsPhases(maxPhases, lp.effectiveMinCurrent()) {
 			// max power actually achievable on the active phases
 			activeMaxPower := min(lp.EffectiveMaxPower(), Voltage*lp.effectiveMaxCurrent()*float64(activePhases))
-			delta += max(0, Voltage*lp.effectiveMinCurrent()*float64(maxPhases)-activeMaxPower)
+			delta += max(0, lp.phaseScale3pThreshold(lp.effectiveMinCurrent(), maxPhases)-activeMaxPower)
 		}
 	}
 

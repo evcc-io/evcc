@@ -280,6 +280,33 @@
                 "type": "integer"
               }
             }
+          },
+          "phaseSwitching": {
+            "type": "object",
+            "properties": {
+              "scale3p": {
+                "type": "object",
+                "properties": {
+                  "delay": {
+                    "$ref": "#/definitions/duration"
+                  },
+                  "threshold": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "scale1p": {
+                "type": "object",
+                "properties": {
+                  "delay": {
+                    "$ref": "#/definitions/duration"
+                  },
+                  "threshold": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
           }
         }
       }

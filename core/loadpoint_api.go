@@ -616,6 +616,30 @@ func (lp *Loadpoint) SetThresholds(thresholds loadpoint.ThresholdsConfig) {
 	lp.setThresholds(thresholds)
 }
 
+// GetPhaseSwitching returns the automatic 1p/3p switching settings
+func (lp *Loadpoint) GetPhaseSwitching() loadpoint.PhaseSwitchingConfig {
+	lp.RLock()
+	defer lp.RUnlock()
+	return lp.PhaseSwitching
+}
+
+func (lp *Loadpoint) setPhaseSwitching(phaseSwitching loadpoint.PhaseSwitchingConfig) {
+	lp.PhaseSwitching = phaseSwitching
+	lp.validatePhaseSwitching()
+	lp.settings.SetJson(keys.PhaseSwitching, phaseSwitching)
+	lp.requestUpdate()
+}
+
+// SetPhaseSwitching sets the automatic 1p/3p switching settings
+func (lp *Loadpoint) SetPhaseSwitching(phaseSwitching loadpoint.PhaseSwitchingConfig) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Printf("set phase switching: %+v", phaseSwitching)
+
+	lp.setPhaseSwitching(phaseSwitching)
+}
+
 // GetEnableThreshold gets the loadpoint enable threshold
 func (lp *Loadpoint) GetEnableThreshold() float64 {
 	lp.RLock()

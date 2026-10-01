@@ -172,6 +172,10 @@ type API interface {
 	GetThresholds() ThresholdsConfig
 	// SetThresholds sets the PV mode threshold settings
 	SetThresholds(thresholds ThresholdsConfig)
+	// GetPhaseSwitching returns the automatic 1p/3p switching settings
+	GetPhaseSwitching() PhaseSwitchingConfig
+	// SetPhaseSwitching sets the automatic 1p/3p switching settings
+	SetPhaseSwitching(phaseSwitching PhaseSwitchingConfig)
 	// GetEnableThreshold gets the loadpoint enable threshold
 	GetEnableThreshold() float64
 	// SetEnableThreshold sets loadpoint enable threshold

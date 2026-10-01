@@ -135,6 +135,13 @@ loadpoints:
     disable: # smart mode disable behavior
       delay: 3m # threshold must be exceeded for this long
       threshold: 0 # maximum import power (W)
+    phaseSwitching: # automatic 1p/3p switching behavior, 1p3p chargers only
+      scale3p:
+        delay: 0s # threshold must be exceeded for this long. If zero, enable delay is used
+        threshold: 0 # available charge power (W) required to switch to 3p. Only effective above minimum 3p charge power and 1p maximum, which also apply if zero
+      scale1p:
+        delay: 0s # threshold must be undercut for this long. If zero, disable delay is used
+        threshold: 0 # available charge power (W) below which to switch to 1p. Only effective above minimum 3p charge power, if zero or lower, switch when minimum 3p charge power is not covered
 
 # tariffs are the fixed or variable tariffs
 tariffs:

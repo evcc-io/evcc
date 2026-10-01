@@ -145,7 +145,9 @@
 												'm'
 											),
 										})
-									: $t('config.loadpoint.solarBehaviorCustomHelp')
+									: chargerSupports1p3p
+										? $t('config.loadpoint.solarBehaviorCustomHelpPhases')
+										: $t('config.loadpoint.solarBehaviorCustomHelp')
 							"
 						>
 							<SelectGroup
@@ -291,6 +293,89 @@
 													)
 												: $t("config.loadpoint.thresholdDisableHelpInvalid")
 									}}
+								</div>
+							</div>
+
+							<div v-if="chargerSupports1p3p" class="mt-4">
+								<div class="form-text evcc-gray mb-3">
+									{{ $t("config.loadpoint.phaseSwitchingHelp") }}
+								</div>
+								<div class="mb-4">
+									<div class="d-flex flex-wrap flex-sm-nowrap gap-4">
+										<FormRow
+											id="loadpointScale3pThreshold"
+											:label="
+												$t('config.loadpoint.phaseScale3pThresholdLabel')
+											"
+											class="mb-0"
+										>
+											<PropertyField
+												id="loadpointScale3pThreshold"
+												v-model="values.phaseSwitching.scale3p.threshold"
+												type="Float"
+												unit="W"
+												size="w-25 w-min-200"
+												required
+											/>
+										</FormRow>
+										<FormRow
+											id="loadpointScale3pDelay"
+											:label="$t('config.loadpoint.phaseScale3pDelayLabel')"
+											class="mb-0"
+										>
+											<PropertyField
+												id="loadpointScale3pDelay"
+												v-model="values.phaseSwitching.scale3p.delay"
+												type="Duration"
+												legacy-duration
+												unit="minute"
+												size="w-25 w-min-200"
+												required
+											/>
+										</FormRow>
+									</div>
+									<div class="form-text evcc-gray">
+										{{ phaseScale3pHelp }}
+									</div>
+								</div>
+
+								<div>
+									<div class="d-flex flex-wrap flex-sm-nowrap gap-4">
+										<FormRow
+											id="loadpointScale1pThreshold"
+											:label="
+												$t('config.loadpoint.phaseScale1pThresholdLabel')
+											"
+											class="mb-0"
+										>
+											<PropertyField
+												id="loadpointScale1pThreshold"
+												v-model="values.phaseSwitching.scale1p.threshold"
+												type="Float"
+												unit="W"
+												size="w-25 w-min-200"
+												required
+											/>
+										</FormRow>
+										<FormRow
+											id="loadpointScale1pDelay"
+											:label="$t('config.loadpoint.phaseScale1pDelayLabel')"
+											class="mb-0"
+										>
+											<PropertyField
+												id="loadpointScale1pDelay"
+												v-model="values.phaseSwitching.scale1p.delay"
+												type="Duration"
+												legacy-duration
+												unit="minute"
+												size="w-25 w-min-200"
+												required
+											/>
+										</FormRow>
+									</div>
+									<div class="form-text evcc-gray">
+										{{ phaseScale1pHelp }}
+									</div>
 								</div>
 							</div>
 
@@ -670,6 +755,10 @@ const defaultValues = {
 		enable: { delay: 1 * nsPerMin, threshold: 0 },
 		disable: { delay: 3 * nsPerMin, threshold: 0 },
 	},
+	phaseSwitching: {
+		scale3p: { delay: 0, threshold: 0 },
+		scale1p: { delay: 0, threshold: 0 },
+	},
 	soc: {
 		poll: { mode: "charging", interval: 60 * nsPerMin },
 		estimate: true,
@@ -687,6 +776,12 @@ const defaultValues = {
 const defaultThresholds = {
 	enable: { delay: 1 * nsPerMin, threshold: 0 },
 	disable: { delay: 3 * nsPerMin, threshold: 0 },
+};
+
+// zero values fall back to min 3p power and the solar enable/disable delays
+const defaultPhaseSwitching = {
+	scale3p: { delay: 0, threshold: 0 },
+	scale1p: { delay: 0, threshold: 0 },
 };
 
 export default {
@@ -735,6 +830,60 @@ export default {
 		thresholdsSet(): boolean {
 			const { enable, disable } = this.values.thresholds;
 			return enable.threshold !== 0 || disable.threshold !== 0;
+		},
+		min3pPower(): number {
+			return 230 * 3 * (this.values.minCurrent || 0);
+		},
+		// scaling up also requires exceeding the 1p maximum
+		phaseScale3pMinPower(): number {
+			return Math.max(this.min3pPower, 230 * (this.values.maxCurrent || 0));
+		},
+		phaseScale3pPower(): number {
+			return Math.max(this.min3pPower, this.values.phaseSwitching.scale3p.threshold);
+		},
+		phaseScale3pDelay(): number {
+			return this.values.phaseSwitching.scale3p.delay || this.values.thresholds.enable.delay;
+		},
+		phaseScale1pDelay(): number {
+			return this.values.phaseSwitching.scale1p.delay || this.values.thresholds.disable.delay;
+		},
+		phaseScale3pHelp(): string {
+			const { threshold } = this.values.phaseSwitching.scale3p;
+			if (threshold < 0) {
+				return this.$t("config.loadpoint.phaseScaleHelpInvalid");
+			}
+			if (threshold > 0 && threshold <= this.phaseScale3pMinPower) {
+				return this.$t("config.loadpoint.phaseScale3pHelpBelowMin", {
+					power: this.fmtW(this.phaseScale3pMinPower, POWER_UNIT.AUTO),
+					delay: this.fmtDurationNs(this.phaseScale3pDelay, true, "m"),
+				});
+			}
+			return this.$t("config.loadpoint.phaseScale3pHelp", {
+				power: this.fmtW(this.phaseScale3pPower, POWER_UNIT.AUTO),
+				delay: this.fmtDurationNs(this.phaseScale3pDelay, true, "m"),
+			});
+		},
+		phaseScale1pHelp(): string {
+			const { threshold } = this.values.phaseSwitching.scale1p;
+			const delay = this.fmtDurationNs(this.phaseScale1pDelay, true, "m");
+			if (threshold < 0) {
+				return this.$t("config.loadpoint.phaseScaleHelpInvalid");
+			}
+			if (threshold === 0) {
+				return this.$t("config.loadpoint.phaseScale1pHelpZero", { delay });
+			}
+			if (threshold >= this.phaseScale3pPower) {
+				return this.$t("config.loadpoint.phaseScale1pHelpInvalid");
+			}
+			if (threshold <= this.min3pPower) {
+				return this.$t("config.loadpoint.phaseScale1pHelpBelowMin", {
+					power: this.fmtW(this.min3pPower, POWER_UNIT.AUTO),
+				});
+			}
+			return this.$t("config.loadpoint.phaseScale1pHelp", {
+				power: this.fmtW(threshold, POWER_UNIT.AUTO),
+				delay,
+			});
 		},
 		dirty(): boolean {
 			return JSON.stringify(this.values) !== this.baseline;
@@ -913,6 +1062,7 @@ export default {
 		solarMode(value) {
 			if (value === "default") {
 				this.values.thresholds = deepClone(defaultThresholds);
+				this.values.phaseSwitching = deepClone(defaultPhaseSwitching);
 			}
 		},
 		chargerSupports1p3p() {
@@ -1061,8 +1211,11 @@ export default {
 			}
 		},
 		updateSolarMode() {
-			const { thresholds } = this.values;
-			if (deepEqual(thresholds, defaultThresholds)) {
+			const { thresholds, phaseSwitching } = this.values;
+			if (
+				deepEqual(thresholds, defaultThresholds) &&
+				deepEqual(phaseSwitching, defaultPhaseSwitching)
+			) {
 				this.solarMode = "default";
 			} else {
 				this.solarMode = "custom";

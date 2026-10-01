@@ -10,6 +10,13 @@ type ThresholdsConfig struct {
 	Disable ThresholdConfig `json:"disable"`
 }
 
+// PhaseSwitchingConfig defines automatic 1p/3p switching hysteresis parameters.
+// Thresholds are available charge power in W, zero values fall back to defaults.
+type PhaseSwitchingConfig struct {
+	Scale3p ThresholdConfig `json:"scale3p"`
+	Scale1p ThresholdConfig `json:"scale1p"`
+}
+
 // ThresholdConfig defines enable/disable hysteresis parameters
 type ThresholdConfig struct {
 	Delay     time.Duration `json:"delay"`

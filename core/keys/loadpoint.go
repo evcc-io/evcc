@@ -21,6 +21,7 @@ const (
 	LimitEnergy       = "limitEnergy"      // limit energy
 	Soc               = "soc"
 	Thresholds        = "thresholds"
+	PhaseSwitching    = "phaseSwitching"
 	UI                = "ui" // display-only ui settings (json)
 	EnableThreshold   = "enableThreshold"
 	DisableThreshold  = "disableThreshold"

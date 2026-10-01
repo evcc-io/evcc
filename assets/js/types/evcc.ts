@@ -541,6 +541,10 @@ export interface ConfigLoadpoint {
     enable: LoadpointThreshold;
     disable: LoadpointThreshold;
   };
+  phaseSwitching: {
+    scale3p: LoadpointThreshold;
+    scale1p: LoadpointThreshold;
+  };
   soc: {
     poll: {
       mode: string;

@@ -487,6 +487,20 @@ func (mr *MockAPIMockRecorder) GetMode() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMode", reflect.TypeOf((*MockAPI)(nil).GetMode))
 }
 
+// GetPhaseSwitching mocks base method.
+func (m *MockAPI) GetPhaseSwitching() PhaseSwitchingConfig {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPhaseSwitching")
+	ret0, _ := ret[0].(PhaseSwitchingConfig)
+	return ret0
+}
+
+// GetPhaseSwitching indicates an expected call of GetPhaseSwitching.
+func (mr *MockAPIMockRecorder) GetPhaseSwitching() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPhaseSwitching", reflect.TypeOf((*MockAPI)(nil).GetPhaseSwitching))
+}
+
 // GetPhases mocks base method.
 func (m *MockAPI) GetPhases() int {
 	m.ctrl.T.Helper()
@@ -1057,6 +1071,18 @@ func (m *MockAPI) SetMode(arg0 api.ChargeMode) {
 func (mr *MockAPIMockRecorder) SetMode(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMode", reflect.TypeOf((*MockAPI)(nil).SetMode), arg0)
+}
+
+// SetPhaseSwitching mocks base method.
+func (m *MockAPI) SetPhaseSwitching(phaseSwitching PhaseSwitchingConfig) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetPhaseSwitching", phaseSwitching)
+}
+
+// SetPhaseSwitching indicates an expected call of SetPhaseSwitching.
+func (mr *MockAPIMockRecorder) SetPhaseSwitching(phaseSwitching any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPhaseSwitching", reflect.TypeOf((*MockAPI)(nil).SetPhaseSwitching), phaseSwitching)
 }
 
 // SetPhasesConfigured mocks base method.
