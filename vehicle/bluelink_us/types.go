@@ -157,20 +157,6 @@ func (v VehicleStatus) Status() (api.ChargeStatus, error) {
 	return api.StatusNone, api.ErrNotAvailable
 }
 
-func (v VehicleStatus) FinishTime() (time.Time, error) {
-	if v.EvStatus != nil && v.EvStatus.RemainTime2 != nil {
-		remaining := v.EvStatus.RemainTime2.Atc.Value
-		if remaining > 0 {
-			ts, err := v.Updated()
-			if err != nil {
-				ts = time.Now()
-			}
-			return ts.Add(time.Duration(remaining) * time.Minute), nil
-		}
-	}
-	return time.Time{}, api.ErrNotAvailable
-}
-
 func (v VehicleStatus) Range() (int64, error) {
 	if v.EvStatus != nil && len(v.EvStatus.DrvDistance) > 0 {
 		if evRange := v.EvStatus.DrvDistance[0].RangeByFuel.EvModeRange; evRange != nil {

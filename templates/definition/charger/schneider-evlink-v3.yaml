@@ -5,6 +5,9 @@ products:
   - brand: Schneider
     description:
       generic: EVlink Pro
+  - brand: Schneider
+    description:
+      generic: Charge Pro
 requirements:
   evcc: ["sponsorship"]
 params:
