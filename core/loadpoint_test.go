@@ -988,6 +988,16 @@ func TestBatterySupport(t *testing.T) {
 	assert.Equal(t, minA, lp.pvMaxCurrent(minPower, minPower, true, false))
 	assert.True(t, lp.pvTimer.IsZero(), "disable timer must reset once the battery covers demand again")
 
+	// residual power is no grid import, the controller tolerance absorbs a small import
+	site.residualPower = 100
+	assert.Equal(t, minA, lp.pvMaxCurrent(minPower+100, minPower, true, false), "residual power is no grid import")
+	assert.True(t, lp.pvTimer.IsZero(), "no disable timer on residual power")
+	assert.Equal(t, minA, lp.pvMaxCurrent(minPower+100+250, minPower, true, false))
+	assert.False(t, lp.pvTimer.IsZero(), "disable timer must run on import beyond tolerance")
+	assert.Equal(t, minA, lp.pvMaxCurrent(minPower+100+50, minPower, true, false))
+	assert.True(t, lp.pvTimer.IsZero(), "tolerance must cover small import")
+	site.residualPower = 0
+
 	// sustained import disables
 	lp.pvMaxCurrent(minPower+1000, minPower, true, false)
 	clck.Add(lp.Disable.Delay)
@@ -1001,6 +1011,19 @@ func TestBatterySupport(t *testing.T) {
 
 	assert.Equal(t, minA, lp.pvMaxCurrent(500, 500, false, true), "battery has room for min power")
 	assert.Equal(t, 0.0, lp.pvMaxCurrent(2000, 2000, false, true), "battery would exceed its discharge limit")
+
+	// pending scale down: import is judged after the car dropped to 1p min power
+	lp.charger = &struct {
+		*api.MockCharger
+		*api.MockPhaseSwitcher
+	}{api.NewMockCharger(ctrl), api.NewMockPhaseSwitcher(ctrl)}
+	lp.status = api.StatusC
+	lp.enabled = true
+	lp.phaseTimer = clck.Now()
+	site.maxDischargePower = nil
+
+	assert.True(t, lp.batterySupported(minPower+1000, minPower, true, false), "scale down removes the import")
+	assert.False(t, lp.batterySupported(2*minPower, minPower, true, false), "import remains after scale down")
 }
 
 // TestPVSolarSharePhases verifies that the derived switch points scale with the
