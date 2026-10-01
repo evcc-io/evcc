@@ -37,6 +37,6 @@ test.describe("config bool service param", async () => {
 
     // entity datalist is populated from the echoed flag
     const entity = meterModal.getByLabel("Entity");
-    expect(await getDatalistOptions(entity)).toEqual(["insecure=false"]);
+    await expect.poll(() => getDatalistOptions(entity)).toEqual(["insecure=false"]);
   });
 });
