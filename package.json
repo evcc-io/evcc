@@ -85,9 +85,8 @@
     "ts-json-schema-generator": "^2.9.0",
     "tsx": "^4.23.13",
     "typescript": "^5.9.3",
-    "vite": "npm:@voidzero-dev/vite-plus-core@0.2.6",
-    "vite-plus": "0.2.6",
-    "vitest": "4.1.11",
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.0.0",
+    "vite-plus": "1.0.0",
     "vue-hot-reload-api": "^2.3.4",
     "vue-tsc": "^3.3.11",
     "wait-on": "^9.1.0",
@@ -95,8 +94,9 @@
     "yaml": "^2.9.1"
   },
   "overrides": {
-    "vite": "npm:@voidzero-dev/vite-plus-core@0.2.6",
-    "@vitest/mocker": "4.1.11",
-    "vitest": "4.1.11"
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.0.0",
+    "storybook": {
+      "vite-plus": "$vite-plus"
+    }
   }
 }
