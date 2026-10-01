@@ -206,6 +206,10 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		}, cc.Cache)))
 	}
 
+	system := util.Cached(func() (sensonet.SystemStatus, error) {
+		return conn.GetSystem(systemId)
+	}, cc.Cache)
+
 	heatingTemp := func(zz []sensonet.StateZone) float64 {
 		z, _ := lo.Find(zz, func(z sensonet.StateZone) bool {
 			return z.Index == cc.HeatingZone
@@ -215,7 +219,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 
 	var heatingTempSensor bool
 	if heating {
-		system, err := conn.GetSystem(systemId)
+		system, err := system()
 		if err != nil {
 			return nil, err
 		}
@@ -223,8 +227,8 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	}
 
 	if !heating || heatingTempSensor {
-		implement.Has(res, implement.Battery(util.Cached(func() (float64, error) {
-			system, err := conn.GetSystem(systemId)
+		implement.Has(res, implement.Battery(func() (float64, error) {
+			system, err := system()
 			if err != nil {
 				return 0, err
 			}
@@ -242,7 +246,26 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 			default:
 				return 0, api.ErrNotAvailable
 			}
-		}, cc.Cache)))
+		}))
+	}
+
+	// hot water boost heats to the tapping setpoint
+	if !heating {
+		implement.Has(res, implement.SocLimiter(func() (int64, error) {
+			system, err := system()
+			if err != nil {
+				return 0, err
+			}
+
+			switch {
+			case len(system.Configuration.Dhw) > 0:
+				return int64(system.Configuration.Dhw[0].TappingSetpoint), nil
+			case len(system.Configuration.DomesticHotWater) > 0:
+				return int64(system.Configuration.DomesticHotWater[0].TappingSetpoint), nil
+			default:
+				return 0, api.ErrNotAvailable
+			}
+		}))
 	}
 
 	return res, nil
