@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 import Modal from "bootstrap/js/dist/modal";
 import { hideModal } from "./modal";
 
