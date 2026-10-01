@@ -195,7 +195,7 @@ export default defineComponent({
 			if (loadpointTitles.length === 0) return this.$t("config.circuit.noLoadpointsAssigned");
 			return loadpointTitles.join(", ");
 		},
-		loadpointOptions(): SelectOption<number | string>[] {
+		loadpointOptions() {
 			const availableLoadpoints = this.loadpoints
 				.filter((l) => l.id && (l.circuit === undefined || l.circuit === `db:${this.id}`))
 				.map((l) => ({
@@ -213,11 +213,13 @@ export default defineComponent({
 				.filter((l) => !l.id)
 				.map((l) => ({
 					name: `${l.title} ${this.$t(`config.circuit.${l.circuit ? "loadpointUnassignViaYaml" : "loadpointAssignViaYaml"}`)}`,
-					value: l.id!,
+					value: l.title,
 					disabled: true,
 				}));
 
-			return availableLoadpoints.concat(assignedLoadpoints).concat(yamlLoadpoints);
+			return (
+				availableLoadpoints.concat(assignedLoadpoints) as SelectOption<number | string>[]
+			).concat(yamlLoadpoints);
 		},
 		getParentCircuit(): string | undefined {
 			const parentId = getModal("circuit")?.parent;
