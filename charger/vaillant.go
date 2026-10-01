@@ -19,7 +19,6 @@ package charger
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -54,7 +53,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		System          string
 		HeatingZone     int
 		HeatingSetpoint float32
-		Hysteresis      float64
+		Hysteresis      float64 // deprecated
 		Reboost         time.Duration
 		Cache           time.Duration
 	}{
@@ -112,61 +111,6 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		return conn.GetSystem(systemId)
 	}, cc.Cache)
 
-	// hysteresis returns the configured reboost hysteresis, falling back to the
-	// hot water hysteresis the device itself reloads the tank with
-	hysteresis := func() float64 {
-		if cc.Hysteresis > 0 {
-			return cc.Hysteresis
-		}
-		system, err := system()
-		if err != nil {
-			return 0
-		}
-		return system.Configuration.System.DhwHysteresis
-	}
-
-	// skipBoost reports whether the (re-)boost can be skipped because the measured
-	// temperature is already within the hysteresis band below the device limit
-	skipBoost := func() bool {
-		hysteresis := hysteresis()
-		if hysteresis <= 0 {
-			return false
-		}
-
-		bat, ok := api.Cap[api.Battery](res)
-		if !ok {
-			return false
-		}
-
-		temp, err := bat.Soc()
-		if err != nil {
-			if !errors.Is(err, api.ErrNotAvailable) {
-				log.ERROR.Printf("temp: %v", err)
-			}
-			return false
-		}
-
-		limiter, ok := api.Cap[api.SocLimiter](res)
-		if !ok {
-			return false
-		}
-
-		limit, err := limiter.GetLimitSoc()
-		if err != nil {
-			if !errors.Is(err, api.ErrNotAvailable) {
-				log.ERROR.Printf("limit: %v", err)
-			}
-			return false
-		}
-
-		if reboost := float64(limit) - hysteresis; temp >= reboost {
-			log.DEBUG.Printf("temp: %.1f >= %.1f  hysteresis", temp, reboost)
-			return true
-		}
-
-		return false
-	}
-
 	set := func(mode int64) error {
 		switch mode {
 		case Normal:
@@ -182,26 +126,20 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 				return conn.StartZoneQuickVeto(systemId, cc.HeatingZone, cc.HeatingSetpoint, 4) // hours
 			}
 
-			if !skipBoost() {
-				if err := conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT); err != nil {
-					return err
-				}
+			if err := conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT); err != nil {
+				return err
 			}
 
 			var wwCtx context.Context
 			wwCtx, wwCancel = context.WithCancel(ctx)
 
-			// re-boost every 15m
+			// re-boost at fixed interval
 			go func() {
 				for {
 					select {
 					case <-wwCtx.Done():
 						return
 					case <-time.After(cc.Reboost):
-						if skipBoost() {
-							continue
-						}
-
 						if err := conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT); err != nil {
 							log.ERROR.Println("hot water boost:", err)
 						}
@@ -230,11 +168,11 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		}, cc.Cache)))
 	}
 
-	heatingTemp := func(zz []sensonet.StateZone) float64 {
+	heatingZone := func(zz []sensonet.StateZone) sensonet.StateZone {
 		z, _ := lo.Find(zz, func(z sensonet.StateZone) bool {
 			return z.Index == cc.HeatingZone
 		})
-		return z.CurrentRoomTemperature
+		return z
 	}
 
 	var heatingTempSensor bool
@@ -243,7 +181,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		if err != nil {
 			return nil, err
 		}
-		heatingTempSensor = heatingTemp(system.State.Zones) > 0
+		heatingTempSensor = heatingZone(system.State.Zones).CurrentRoomTemperature > 0
 	}
 
 	if !heating || heatingTempSensor {
@@ -255,7 +193,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 
 			switch {
 			case heatingTempSensor:
-				if res := heatingTemp(system.State.Zones); res > 0 {
+				if res := heatingZone(system.State.Zones).CurrentRoomTemperature; res > 0 {
 					return res, nil
 				}
 				return 0, api.ErrNotAvailable
@@ -267,10 +205,8 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 				return 0, api.ErrNotAvailable
 			}
 		}))
-	}
 
-	// hot water boost heats to the tapping setpoint
-	if !heating {
+		// room setpoint of the heating zone or hot water tapping setpoint
 		implement.Has(res, implement.SocLimiter(func() (int64, error) {
 			system, err := system()
 			if err != nil {
@@ -278,6 +214,8 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 			}
 
 			switch {
+			case heating:
+				return int64(heatingZone(system.State.Zones).DesiredRoomTemperatureSetpoint), nil
 			case len(system.Configuration.Dhw) > 0:
 				return int64(system.Configuration.Dhw[0].TappingSetpoint), nil
 			case len(system.Configuration.DomesticHotWater) > 0:

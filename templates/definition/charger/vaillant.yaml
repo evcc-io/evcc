@@ -89,15 +89,7 @@ params:
       de: Wartezeit, nach der Boost erneut gestartet wird.
       en: Wait time after which Boost is started again.
   - name: hysteresis
-    type: float
-    unit: °C
-    advanced: true
-    description:
-      de: Reboost Hysterese
-      en: Reboost Hysteresis
-    help:
-      de: Standard ist die Warmwasser-Hysterese der Anlage.
-      en: Defaults to the hot water hysteresis of the system.
+    deprecated: true
   - name: phases
     deprecated: true
 render: |
@@ -111,4 +103,3 @@ render: |
   heatingzone: {{ .zone }}
   heatingsetpoint: {{ .setpoint }}
   reboost: {{ .reboost }}
-  hysteresis: {{ .hysteresis }}
