@@ -157,7 +157,7 @@ render: |
             address: 50000
             type: writesingle
             decode: uint16
-    - case: 3 # usp mode (charge)
+    - case: 3 # ups mode (charge)
       set:
         source: const
         value: 259
