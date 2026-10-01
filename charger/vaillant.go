@@ -29,7 +29,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/vaillant"
-	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/samber/lo"
@@ -43,7 +42,6 @@ type Vaillant struct {
 	*SgReady
 	log      *util.Logger
 	conn     *sensonet.Connection
-	lp       loadpoint.API
 	systemId string
 }
 
@@ -128,12 +126,8 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	}
 
 	// skipBoost reports whether the (re-)boost can be skipped because the measured
-	// temperature is already within the hysteresis band below the loadpoint limit
+	// temperature is already within the hysteresis band below the device limit
 	skipBoost := func() bool {
-		if res.lp == nil {
-			return false
-		}
-
 		hysteresis := hysteresis()
 		if hysteresis <= 0 {
 			return false
@@ -152,8 +146,16 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 			return false
 		}
 
-		limit := res.lp.GetLimitSoc()
-		if limit <= 0 {
+		limiter, ok := api.Cap[api.SocLimiter](res)
+		if !ok {
+			return false
+		}
+
+		limit, err := limiter.GetLimitSoc()
+		if err != nil {
+			if !errors.Is(err, api.ErrNotAvailable) {
+				log.ERROR.Printf("limit: %v", err)
+			}
 			return false
 		}
 
@@ -287,13 +289,6 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	}
 
 	return res, nil
-}
-
-var _ loadpoint.Controller = (*Vaillant)(nil)
-
-// LoadpointControl implements loadpoint.Controller
-func (wb *Vaillant) LoadpointControl(lp loadpoint.API) {
-	wb.lp = lp
 }
 
 func (v *Vaillant) print(chapter int, prefix string, zz ...any) {
