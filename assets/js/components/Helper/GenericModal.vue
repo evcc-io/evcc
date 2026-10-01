@@ -28,7 +28,7 @@
 							></button>
 						</div>
 					</div>
-					<div ref="modalBody" class="modal-body">
+					<div ref="modalBody" class="modal-body" @focusin="lastFocused = $event.target">
 						<slot />
 					</div>
 				</div>
@@ -64,6 +64,7 @@ export default defineComponent({
 	data() {
 		return {
 			isModalVisible: false,
+			lastFocused: null as EventTarget | null,
 		};
 	},
 	watch: {
@@ -104,6 +105,7 @@ export default defineComponent({
 		handleShow() {
 			this.$emit("open");
 			this.isModalVisible = true;
+			this.lastFocused = null;
 			this.applyDismissProtection();
 		},
 		applyDismissProtection() {
@@ -124,8 +126,10 @@ export default defineComponent({
 			if (this.autofocus) {
 				this.$nextTick(() => {
 					const modalBody = this.$refs["modalBody"];
-					// don't steal focus if user already interacts with the modal content
-					if (modalBody?.contains(document.activeElement)) {
+					// bootstrap's focustrap moved focus to the modal before this event; give it back
+					const last = this.lastFocused;
+					if (last instanceof HTMLElement && modalBody?.contains(last)) {
+						last.focus();
 						return;
 					}
 					const firstInput = modalBody?.querySelector("input, select, button");
