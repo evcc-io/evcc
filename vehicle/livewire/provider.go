@@ -87,23 +87,6 @@ func (v *Provider) GetLimitSoc() (int64, error) {
 	return res.MaxLimit, err
 }
 
-var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.status()
-	if err != nil {
-		return time.Time{}, err
-	}
-	if !res.ChargingStatus || res.TimeToMaxLimit <= 0 {
-		return time.Time{}, api.ErrNotAvailable
-	}
-
-	// timeToMaxLimit is in minutes and stays 0 for the first minutes of a charge
-	remaining := time.Duration(float64(res.TimeToMaxLimit) * float64(time.Minute))
-	return res.Received.Add(remaining), nil
-}
-
 var _ api.VehiclePosition = (*Provider)(nil)
 
 // Position implements the api.VehiclePosition interface

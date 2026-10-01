@@ -116,11 +116,6 @@ func (v *API) login() error {
 		return nil
 	}
 
-	// prime the portal session (best effort)
-	if resp, err := v.Get(BaseURL + "/"); err == nil {
-		resp.Body.Close()
-	}
-
 	// start the OIDC authorize flow
 	q := url.Values{
 		"client_id":     {v.brand.clientID},

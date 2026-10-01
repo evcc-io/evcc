@@ -2,7 +2,6 @@ package legacy
 
 import (
 	"testing"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/vehicle/polestar/pb"
@@ -41,33 +40,4 @@ func TestGrpcStatus(t *testing.T) {
 			assert.Equal(t, tc.expected, status)
 		})
 	}
-}
-
-func TestGrpcFinishTime(t *testing.T) {
-	captured := time.Date(2026, 5, 22, 12, 0, 0, 0, time.UTC)
-
-	v := &GrpcProvider{
-		batteryG: func() (*pb.Battery, error) {
-			return &pb.Battery{
-				EstimatedChargingTimeToFullMinutes: 30,
-				Timestamp:                          &pb.Timestamp{Seconds: captured.Unix()},
-			}, nil
-		},
-	}
-
-	// finish time is anchored to the API capture timestamp, not time.Now()
-	ft, err := v.FinishTime()
-	require.NoError(t, err)
-	assert.True(t, captured.Add(30*time.Minute).Equal(ft))
-}
-
-func TestGrpcFinishTimeNotCharging(t *testing.T) {
-	v := &GrpcProvider{
-		batteryG: func() (*pb.Battery, error) {
-			return &pb.Battery{EstimatedChargingTimeToFullMinutes: 0}, nil
-		},
-	}
-
-	_, err := v.FinishTime()
-	assert.ErrorIs(t, err, api.ErrNotAvailable)
 }

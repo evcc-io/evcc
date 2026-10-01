@@ -185,16 +185,24 @@ paths:
     post:
       operationId: setBatteryGridDischarge
       summary: Control battery grid discharge
-      description: "Allow the home battery to discharge to the grid (experimental)."
+      description: "Allow the home battery to discharge to the grid. Enabling may require `force=true` to confirm country-specific feed-in restrictions."
       externalDocs:
         url: https://docs.evcc.io/en/features/battery
       tags:
         - battery
+        - experimental
       parameters:
         - $ref: "#/components/parameters/enable"
+        - name: force
+          in: query
+          description: Confirm country-specific feed-in restrictions
+          schema:
+            type: boolean
       responses:
         "200":
           $ref: "#/components/responses/BooleanResult"
+        "428":
+          description: Confirmation required
   /batterygridchargelimit:
     delete:
       operationId: removeBatteryGridChargeLimit
@@ -984,6 +992,46 @@ paths:
                 description: Download csv-file
                 type: string
                 format: binary
+  /config/currency:
+    put:
+      operationId: setCurrency
+      summary: Set currency
+      description: "Set the currency used for prices, costs and savings."
+      tags:
+        - general
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+              description: ISO 4217 currency code
+              example: EUR
+      responses:
+        "200":
+          $ref: "#/components/responses/BlankResponse"
+        "400":
+          description: Invalid currency code
+  /config/country:
+    put:
+      operationId: setCountry
+      summary: Set country
+      description: "Set the site country. Used for region-specific hints and defaults. Empty string clears the setting."
+      tags:
+        - general
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+              description: ISO 3166-1 alpha-2 country code
+              example: DE
+      responses:
+        "200":
+          $ref: "#/components/responses/BlankResponse"
+        "400":
+          description: Invalid country code
   /settings/telemetry/{enable}:
     post:
       operationId: setTelemetryStatus

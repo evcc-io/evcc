@@ -3,3 +3,6 @@ contact_links:
   - name: Need help?
     url: https://github.com/evcc-io/evcc/discussions/categories/need-help
     about: GitHub community discussions is a good place to ask questions.
+  - name: How to report a problem
+    url: https://docs.evcc.io/en/report-a-problem
+    about: What a helpful report contains and how to get logs on your installation.

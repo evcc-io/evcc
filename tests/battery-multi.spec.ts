@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
+import { expectModalVisible, expectModalHidden } from "./utils";
 
 const CONFIG = "battery-multi.evcc.yaml";
 const SQL = "battery-multi.sql";
@@ -106,7 +107,18 @@ test.describe("battery page with multiple batteries", async () => {
     await expect(gridDischarge).not.toBeChecked();
     await expect(limit).not.toBeVisible();
 
+    // enabling asks for confirmation while no country is set, cancel keeps it off
+    const confirmModal = page.getByTestId("grid-discharge-confirm-modal");
     await gridDischarge.click();
+    await expectModalVisible(confirmModal);
+    await confirmModal.getByRole("button", { name: "Cancel" }).click();
+    await expectModalHidden(confirmModal);
+    await expect(gridDischarge).not.toBeChecked();
+
+    await gridDischarge.click();
+    await expectModalVisible(confirmModal);
+    await confirmModal.getByRole("button", { name: "Enable anyway" }).click();
+    await expectModalHidden(confirmModal);
     await expect(gridDischarge).toBeChecked();
 
     // the card carries a working limit control, not just its heading
