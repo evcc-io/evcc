@@ -408,6 +408,36 @@ func (suite *connTestSuite) TestOnMeterValuesBoundaryContextFirst() {
 	suite.Equal(241.010, res, "live reading must not be shadowed by the boundary snapshot")
 }
 
+// meterValuesAt feeds the given samples with an explicit charger-side timestamp
+func (suite *connTestSuite) meterValuesAt(ts time.Time, samples ...types.SampledValue) {
+	_, err := suite.conn.OnMeterValues(&core.MeterValuesRequest{
+		ConnectorId: 1,
+		MeterValue: []types.MeterValue{{
+			Timestamp:    types.NewDateTime(ts),
+			SampledValue: samples,
+		}},
+	})
+	suite.NoError(err)
+}
+
+// Charger sample timestamps may lag behind local time (Mennekes AMTRON: 6-7s).
+// Freshness must be measured on receipt or the watchdog re-triggers meter
+// values on every tick once the lag approaches the meter interval (#32236).
+func (suite *connTestSuite) TestOnMeterValuesLaggingTimestamp() {
+	suite.conn.meterInterval = 10 * time.Second
+	suite.clock.Add(time.Hour)
+
+	suite.meterValuesAt(suite.clock.Now().Add(-7*time.Second), energySample("241010", types.ReadingContextSamplePeriodic))
+	suite.clock.Add(5 * time.Second)
+	suite.Less(suite.clock.Since(suite.conn.meterUpdated), suite.conn.meterInterval, "lagging timestamp must not expire fresh meter values")
+
+	// samples older than the last applied one are still ignored
+	suite.meterValuesAt(suite.clock.Now().Add(-time.Minute), energySample("240970", types.ReadingContextSamplePeriodic))
+	res, err := suite.conn.TotalEnergy()
+	suite.NoError(err, "TotalEnergy")
+	suite.Equal(241.010, res, "stale sample must not overwrite newer reading")
+}
+
 // chargers reporting the transaction's start value only as Transaction.Begin
 // must keep it as there is no live reading to prefer over it
 func (suite *connTestSuite) TestOnMeterValuesBoundaryContextOnly() {
