@@ -17,7 +17,6 @@ import (
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/db"
-	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/server"
@@ -551,14 +550,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// wait for shutdown
 	<-stopC
 
-	// persist before the shutdown wait, which is cut off after one interval
-	if err := settings.Persist(); err != nil {
-		log.ERROR.Println("cannot save settings:", err)
-	}
-
+	// floor the wait, a short interval must not cut off shutdown hooks like the settings flush
 	select {
 	case <-shutdownDoneC(): // wait for shutdown
-	case <-time.After(conf.Interval):
+	case <-time.After(max(conf.Interval, 5*time.Second)):
 	}
 
 	// exit code 1 on error
