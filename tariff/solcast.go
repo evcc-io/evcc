@@ -80,15 +80,11 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 	var once sync.Once
 
 	for ; true; <-time.Tick(interval) {
-		// ensure we don't run when not needed, but execute once at startup
-		select {
-		case <-t.data.Done():
-			if !t.fromTo.IsActive(time.Now().Hour()) {
-				// keep cached forecast alive while fetching is paused
-				mergeRatesAfter(t.data, nil, beginningOfDay())
-				continue
-			}
-		default:
+		if !t.fromTo.IsActive(time.Now().Hour()) {
+			// keep cached forecast alive while fetching is paused
+			mergeRatesAfter(t.data, nil, beginningOfDay())
+			once.Do(func() { close(done) })
+			continue
 		}
 
 		var res solcast.Forecasts
@@ -96,33 +92,20 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 		if err := backoff.Retry(func() error {
 			uri := fmt.Sprintf("https://api.solcast.com.au/rooftop_sites/%s/forecasts?period=PT30M&format=json&hours=96", t.site)
 			err := t.GetJSON(uri, &res)
-			// HTTP 429: Solcast enforces a daily quota (10 req/day for hobbyist
-			// accounts) tracked separately from the per-minute rate limit (600/min).
-			// The daily quota exhaustion 429 carries a JSON body with
-			// error_code "TooManyRequests" and no Retry-After header.
-			// Treat that as permanent so we don't waste tomorrow's quota on retries.
-			// Any other 429 (transient server busy) is left retryable for bo().
 			if se, ok := errors.AsType[*request.StatusError](err); ok && se.StatusCode() == http.StatusTooManyRequests {
-				resp := se.Response()
-				t.log.DEBUG.Printf("429: X-RateLimit-Limit=%s X-RateLimit-Remaining=%s X-RateLimit-Reset=%s",
-					resp.Header.Get("X-RateLimit-Limit"),
-					resp.Header.Get("X-RateLimit-Remaining"),
-					resp.Header.Get("X-RateLimit-Reset"),
-				)
 				var body struct {
 					ResponseStatus struct {
-						ErrorCode string `json:"error_code"`
-						Message   string `json:"message"`
+						Message string `json:"message"`
 					} `json:"response_status"`
 				}
-				if json.Unmarshal(se.Body(), &body) == nil && body.ResponseStatus.ErrorCode == "TooManyRequests" {
+				if json.Unmarshal(se.Body(), &body) == nil && body.ResponseStatus.Message != "" {
 					t.log.ERROR.Printf("daily quota exceeded: %s", body.ResponseStatus.Message)
-					return backoff.Permanent(err)
 				}
-				return err // transient busy — retryable
+				return backoff.Permanent(err)
 			}
 			return backoffPermanentError(err)
 		}, bo()); err != nil {
+			mergeRatesAfter(t.data, nil, beginningOfDay())
 			if reportError(&once, done, err) {
 				return
 			}
