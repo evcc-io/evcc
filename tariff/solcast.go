@@ -1,10 +1,8 @@
 package tariff
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"slices"
 	"sync"
 	"time"
@@ -91,21 +89,8 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 
 		if err := backoff.Retry(func() error {
 			uri := fmt.Sprintf("https://api.solcast.com.au/rooftop_sites/%s/forecasts?period=PT30M&format=json&hours=96", t.site)
-			err := t.GetJSON(uri, &res)
-			if se, ok := errors.AsType[*request.StatusError](err); ok && se.StatusCode() == http.StatusTooManyRequests {
-				var body struct {
-					ResponseStatus struct {
-						Message string `json:"message"`
-					} `json:"response_status"`
-				}
-				if json.Unmarshal(se.Body(), &body) == nil && body.ResponseStatus.Message != "" {
-					t.log.ERROR.Printf("daily quota exceeded: %s", body.ResponseStatus.Message)
-				}
-				return backoff.Permanent(err)
-			}
-			return backoffPermanentError(err)
+			return backoffPermanentError(t.GetJSON(uri, &res))
 		}, bo()); err != nil {
-			mergeRatesAfter(t.data, nil, beginningOfDay())
 			if reportError(&once, done, err) {
 				return
 			}
