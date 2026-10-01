@@ -33,7 +33,7 @@
     },
     "combined": "Gecombineerd",
     "config": {
-      "buffer": "Energie in de thuisbatterij boven {soc} mag gebruikt worden om laadpunten te ondersteunen en stelt het uitschakelen van laadpunten uit in zonladen modus. Start het zonladen automatisch {start}.",
+      "buffer": "Energie in de thuisbatterij boven {soc} mag gebruikt worden om laadpunten te ondersteunen en stelt het uitschakelen van laadpunten uit in smart modus. Start het zonladen automatisch {start}.",
       "bufferNone": "Energie in de thuisbatterij wordt niet gebruikt voor de laadpunten. Stel een waarde onder {soc} in om dit in te schakelen.",
       "bufferStart": {
         "above": "eens de batterij boven {soc} is",
@@ -169,6 +169,7 @@
       "title": "Valuta"
     },
     "curtailer": {
+      "description": "Apparaat dat op verzoek van de netbeheerder de teruglevering beperkt (§ 9 EEG). Veel omvormers voor zonnepanelen ondersteunen dit rechtstreeks via hun configuratie. Een afzonderlijke configuratie is alleen nodig bij bepaalde fabrikanten of systemen met meerdere omvormers.",
       "generic": "Generieke integraties",
       "specific": "Specifieke integraties",
       "template": "Fabrikant",
@@ -181,7 +182,7 @@
       "amount": "Aantal",
       "asleep": "niet actief",
       "broker": "Agent",
-      "bucket": "Bucket",
+      "bucket": "Geldpotje",
       "capacity": "Capaciteit",
       "chargeStatus": "Status",
       "chargeStatusA": "niet verbonden",
@@ -189,7 +190,7 @@
       "chargeStatusC": "aan het laden",
       "chargeStatusE": "geen vermogen",
       "chargeStatusF": "fout",
-      "chargedEnergy": "Geladen",
+      "chargedEnergy": "Geladen (sessie)",
       "co2": "Stroomnet-CO₂",
       "configured": "Geconfigureerd",
       "connected": "Verbonden",
@@ -395,7 +396,7 @@
       "dynamicLimits": "Dynamische limieten",
       "eventsRecorded": "{count} gebeurtenissen met rasterbeperkingen geregistreerd.",
       "exportLimit": "Exportlimiet",
-      "exportLimitDescription": "De thuisbatterij-optimizer houdt zich aan deze limiet om PV-verliezen te vermijden. Een actieve afregeling via een integratie van de dynamische limieten neemt voorrang.",
+      "exportLimitDescription": "De thuisbatterij-optimizer houdt zich aan deze limiet om PV-verliezen te vermijden. Een actief signaal van een dynamische limieten integratie krijgt voorrang.",
       "exportLimitHint": "Statische terugleveringslimiet bij het netaansluitingspunt.",
       "generic": "Algemene integraties",
       "integrations": "integraties",
@@ -513,6 +514,8 @@
       "solarBehaviorLabel": "Zonne-energie",
       "solarModeCustom": "aangepast",
       "solarModeMaximum": "Maximale zonne-energie",
+      "solarShareNote": "De schuifregelaar voor het aandeel zonne-energie in de gebruikersinstellingen is uitgeschakeld zolang er een drempelwaarden voor het aantal Watt is ingesteld. {0} en sla op om deze instelling in te schakelen.",
+      "solarShareReset": "Drempelwaarden wissen",
       "temperatureRangeHelp": "Toont de range voor de temperatuurbalk. Heeft geen effect op de regeling.",
       "temperatureRangeTitle": "Tempartuurbereik",
       "thresholdDisableDelayLabel": "Uitschakelvertraging",
@@ -787,7 +790,7 @@
     "optimizer": {
       "description": "Analyseert zonne-energieprognoses, elektriciteitsprijzen en je verbruikspatronen om de batterij- en laadstrategie te optimaliseren. Gegevens worden naar de evcc-optimalisatiedienst gestuurd voor verwerking. Momenteel worden alleen berekeningen en visualisaties gemaakt, maar nog geen apparaten aangestuurd.",
       "enable": "Activeer optimizer",
-      "info": "Het duurt enkele minuten eer het optimizer menu item zichtbaar wordt. Voor nieuwe installaties kan het tot 24 uur duren tot dat evcc voldoende data verzameld heeft.",
+      "info": "Voor nieuwe installaties kan het tot 24 uur duren alvorens evcc voldoende data verzameld heeft.",
       "title": "Optimizer"
     },
     "options": {
@@ -921,6 +924,7 @@
           "confirmationText": "Deze actie zal de geselecteerde data permanent verwijderen. Controleer of je eerst de backup gedownload hebt.",
           "description": "Heeft u problemen met de configuratie en wilt u opnieuw starten? Verwijder alle data en begin opnieuw.",
           "remote": "Toegang op afstand",
+          "remoteDescription": "Verwijdert de configuratie en referenties.",
           "sessions": "Laadsessies",
           "sessionsDescription": "Verwijdert je laadsessie historie.",
           "settings": "Configuratie & instellingen",
@@ -1063,7 +1067,7 @@
       "power": "Laadvermogen",
       "powerSub1": "{activeClients} van {totalClients} deelnemers",
       "powerSub2": "laden.",
-      "tabTitle": "Live community"
+      "tabTitle": "Live gemeenschap"
     },
     "savings": {
       "co2Saved": "{value} bespaard",
@@ -1079,7 +1083,7 @@
         "savings": "Besparing",
         "solar": "Zonne-Energie"
       },
-      "indicatorLabel": "Header info",
+      "indicatorLabel": "Hoofding info",
       "modalTitle": "Oplaadenergie-overzicht",
       "moneySaved": "{value} bespaard",
       "percentGrid": "{grid} kWh net",
@@ -1118,7 +1122,7 @@
     },
     "version": {
       "availableLong": "update beschikbaar",
-      "community": "evcc community",
+      "community": "evcc gemeenschap",
       "labelEmail": "E-mail",
       "labelPhone": "Telefoon",
       "labelRelease": "Release",
@@ -1228,6 +1232,9 @@
   },
   "issue": {
     "additional": {
+      "copied": "gekopieerd!",
+      "copy": "kopiëren",
+      "copySelected": "kopie geselecteerd",
       "description": "Voeg configuratie en logbestanden toe zodat we het probleem snel kunnen reproduceren. We raden u aan zoveel mogelijk informatie te delen. De status is meestal niet nodig.",
       "include": "toevoegen",
       "lines": "regels",
@@ -1308,6 +1315,15 @@
     "title": "Authenticatie"
   },
   "main": {
+    "alwaysCharge": {
+      "description": "geen onderbrekingen",
+      "label": "Altijd laden",
+      "labelHeating": "Altijd verwarmen",
+      "minCurrent": "min {current}",
+      "once": "tot einde sessie",
+      "onceTip": "Alleen voor deze sessie",
+      "permanent": "blijft altijd aan"
+    },
     "chargingPlan": {
       "active": "Actief",
       "addRepeatingPlan": "Herhalend schema toevoegen",
@@ -1329,7 +1345,7 @@
       },
       "planNumber": "Schema {number}",
       "precondition": {
-        "description": "Schuift een deel van het opladen naar last-minute voor vertrek: warme EV-batterij, die minder lang met hoog laadpercentage gestaan heeft.",
+        "description": "Verschuift een deel van het opladen tijdens last-minute voor vertrek: warme EV-batterij, die minder lang met hoog laadpercentage gestaan heeft.",
         "disabledDescription": "Opladen zal kort voor vertrek plaatsvinden.",
         "label": "Laat Opladen",
         "optionAll": "alles",
@@ -1445,7 +1461,7 @@
         "descriptionDisabled": "Selecteer een limiet om snel opladen vanaf de thuisbatterij mogelijk te maken.",
         "disabled": "Uitgeschakeld",
         "label": "Batterij Boost",
-        "mode": "Enkel beschikbaar in PV en Min+PV modus.",
+        "mode": "Enkel beschikbaar in slimme modus.",
         "once": "Boost geactiveerd voor deze laadsessie.",
         "stateActive": "Batterijboost actief",
         "stateBelowLimit": "Batterij te laag voor boost",
@@ -1463,7 +1479,7 @@
         "label": "Min. Stroomsterkte"
       },
       "minTemp": {
-        "description": "Onder {0} worden accu en netstroom ook gebruikt in pv-mode om deze temperatuur te behouden.",
+        "description": "Onder {0} worden accu en netstroom ook gebruikt in slimme modus om deze temperatuur te behouden.",
         "label": "Min. temperatuur"
       },
       "phasesConfigured": {
@@ -1477,13 +1493,33 @@
       },
       "smartCostCheap": "Goedkoop laden met netstroom",
       "smartCostClean": "Laden met ecologische energie van het net",
+      "solar": "Zonneoverschot",
+      "solarShare": {
+        "charging": {
+          "description": "Ten minste {share} van het minimum aan laadcapaciteit moet van zonne-energie komen.",
+          "descriptionFull": "Het laden start zodra er genoeg overschot is voor het minimale laadvermogen.",
+          "descriptionZero": "Het laden start zodra er overschot beschikbaar is."
+        },
+        "heating": {
+          "description": "Ten minste {share} van het minimale laadvermogen moet van zonne-energie komen.",
+          "descriptionFull": "Verwarmen start zodra er genoeg overschot is voor het minimale verwarmingsvermogen.",
+          "descriptionZero": "Verwarmen start zodra er overschot beschikbaar is."
+        },
+        "label": "Aandeel zonne-energie",
+        "thresholdsHint": "Op vermogen gebaseerde laadgrenzen zijn geconfigureerd. Verwijder ze met behulp van deze regelaar.",
+        "thresholdsHintYaml": "Op vermogen gebaseerde laadgrenzen zijn geconfigureerd. Verwijder de in/uitschakelwaarden van dit laadpunt in evcc.yaml om deze regelaar te kunnen gebruiken.",
+        "thresholdsLink": "Configuratie bewerken"
+      },
       "title": "Instellingen {0}",
       "vehicle": "Voertuig"
     },
     "mode": {
+      "boost": "Boost",
       "minpv": "Min+PV",
+      "normal": "Normaal",
       "now": "Snel",
       "off": "Uit",
+      "on": "Aan",
       "pv": "PV",
       "smart": "Slim"
     },
@@ -1504,6 +1540,7 @@
       "nextPlan": "Volgende schema",
       "notReachableInTime": "Laaddoel zal {overrun} later bereikt zijn.",
       "onlyInPvMode": "Laadplan werkt alleen in PV modus.",
+      "onlyInSmartMode": "Laadplan werkt alleen in smart modus.",
       "planDuration": "Oplaadtijd",
       "planPeriodLabel": "Periode",
       "planPeriodValue": "{start} tot {end}",
@@ -1800,7 +1837,7 @@
     "co2Label": "CO₂ uitstoot",
     "co2Limit": "CO₂ limiet",
     "enable": "Activeer de limiet",
-    "loadpointDescription": "Zet tijdelijk snel-laden in PV mode aan.",
+    "loadpointDescription": "Zet tijdelijk snel-laden in slimme modus aan.",
     "modalTitle": "Smart Grid laden",
     "none": "geen",
     "priceLabel": "Energieprijs",
@@ -1810,7 +1847,8 @@
     "saved": "Opgeslagen."
   },
   "smartFeedInPriority": {
-    "activeHoursLabel": "Gepauzeerde tijd",
+    "activeHoursLabel": "Aktieve tijd",
+    "batteryDescription": "Ontlaad de thuis accu naar het net wanneer de teruglever verhouding hoog is.",
     "description": "Pauzeert het opladen als terugleveren aan het net veel oplevert.",
     "priceLabel": "Teruglevertarief",
     "priceLimit": "Terugleverprijs limiet",

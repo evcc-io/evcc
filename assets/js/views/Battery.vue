@@ -29,6 +29,7 @@
 						:experimental="state.experimental"
 						:optimizer-automatic="state.optimizerAutomatic"
 						:optimizer-controlled-titles="optimizerControlledTitles"
+						:country="state.country"
 					/>
 
 					<Card
@@ -48,7 +49,9 @@
 						<SmartFeedInPriority v-bind="smartFeedInPriorityProps" />
 					</Card>
 				</template>
-				<p v-else class="my-4 text-muted">{{ $t("batterySettings.noBattery") }}</p>
+				<p v-else class="my-4 text-muted">
+					{{ $t("batterySettings.noBattery") }}
+				</p>
 			</main>
 		</div>
 	</div>

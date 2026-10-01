@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"net/http"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"text/template"
@@ -207,6 +208,24 @@ func floatPtrHandler(set func(*float64) error, get func() *float64) http.Handler
 // intHandler updates int-param api
 func intHandler(set func(int) error, get func() int) http.HandlerFunc {
 	return handler(strconv.Atoi, set, get)
+}
+
+// countries where exporting grid-charged battery energy forfeits feed-in remuneration or is prohibited
+// (DE: §19 EEG, FR: EDF OA, US: NEM 3.0, AT: OeMAG/DSO contracts)
+var gridDischargeRestricted = []string{"DE", "FR", "US", "AT"}
+
+// batteryGridDischargeHandler updates battery grid discharge. Enabling requires force=true unless the country rules it out.
+func batteryGridDischargeHandler(site site.API) http.HandlerFunc {
+	set := boolHandler(site.SetBatteryGridDischarge, site.GetBatteryGridDischarge)
+	return func(w http.ResponseWriter, r *http.Request) {
+		if v, _ := strconv.ParseBool(mux.Vars(r)["value"]); v && r.URL.Query().Get("force") != "true" {
+			if c := site.GetCountry(); c == "" || slices.Contains(gridDischargeRestricted, c) {
+				jsonError(w, http.StatusPreconditionRequired, errors.New("confirmation required, use force=true"))
+				return
+			}
+		}
+		set(w, r)
+	}
 }
 
 // boolHandler updates bool-param api
@@ -552,8 +571,10 @@ func restoreDatabase(shutdown func()) http.HandlerFunc {
 			return
 		}
 
-		shutdown()
 		w.WriteHeader(http.StatusNoContent)
+		// flush before shutdown, the process may exit before the handler returns
+		_ = http.NewResponseController(w).Flush()
+		shutdown()
 	}
 }
 
@@ -610,7 +631,9 @@ func resetDatabase(shutdown func()) http.HandlerFunc {
 			return
 		}
 
-		shutdown()
 		w.WriteHeader(http.StatusNoContent)
+		// flush before shutdown, the process may exit before the handler returns
+		_ = http.NewResponseController(w).Flush()
+		shutdown()
 	}
 }

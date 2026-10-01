@@ -723,8 +723,13 @@ func (c *EEBus) Tracef(format string, args ...any) {
 	c.log.TRACE.Printf(format, args...)
 }
 
+// relevant selects the ship-go debug lines worth surfacing: connection lifecycle,
+// handshake and transport failures, mdns discovery and pairing
+var relevant = []string{"connect", " event ", "handshake", "unsupported", "error", "mdns: new", "mdns: update", "mdns: remove", "interface", "pairing", "announcement"}
+
 func isRelevant(s string) bool {
-	return strings.Contains(s, "connect") || strings.Contains(s, " event ")
+	s = strings.ToLower(s)
+	return slices.ContainsFunc(relevant, func(k string) bool { return strings.Contains(s, k) })
 }
 
 func (c *EEBus) Debug(args ...any) {

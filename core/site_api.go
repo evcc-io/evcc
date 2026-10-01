@@ -69,6 +69,18 @@ func (site *Site) SetTitle(title string) {
 	settings.SetString(keys.Title, title)
 }
 
+// GetCountry returns the ISO 3166-1 alpha-2 country code
+func (site *Site) GetCountry() string {
+	country, _ := settings.String(keys.Country)
+	return country
+}
+
+// SetCountry sets the ISO 3166-1 alpha-2 country code
+func (site *Site) SetCountry(country string) {
+	settings.SetString(keys.Country, country)
+	site.publish(keys.Country, country)
+}
+
 // GetGridMeterRef returns the GridMeterRef
 func (site *Site) GetGridMeterRef() string {
 	site.RLock()

@@ -1038,6 +1038,7 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 		SInitial:  float32(*b.Capacity * *b.Soc * 10), // Wh
 		// PA:       pa,
 	}
+	bat.SMax = max(bat.SInitial, float32(*b.Capacity*1e3)) // Wh, narrowed by soc limits below
 
 	instance := dev.Instance()
 

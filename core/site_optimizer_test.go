@@ -392,6 +392,19 @@ func TestBatteryRequestGridModes(t *testing.T) {
 	assert.False(t, req.DischargeToGrid, "grid discharge requires the opt-in")
 }
 
+// Batteries without soc limits must still get the full capacity as SMax, otherwise the
+// optimizer treats any charge as exceeding the limit and never charges the battery.
+func TestBatteryRequestWithoutSocLimiter(t *testing.T) {
+	site := &Site{log: util.NewLogger("foo")}
+	capacity, soc := 10.0, 50.0
+	dev := config.NewStaticDevice(config.Named{}, api.Meter(&struct{ api.Meter }{}))
+
+	req, _ := site.batteryRequest(dev, types.Measurement{Capacity: &capacity, Soc: &soc}, nil, 8, 15*time.Minute)
+
+	assert.Equal(t, float32(0), req.SMin)
+	assert.Equal(t, float32(10000), req.SMax)
+}
+
 // TestBatteryRequestSocLimitsClamp ensures the reported soc is always clamped into
 // the resulting [SMin, SMax] range, even when it lies outside the configured soc
 // limits (e.g. right after a firmware update changed the reported soc or the min/max

@@ -109,14 +109,7 @@ params:
       en: Entity ID for the vehicle's climatisation state (`binary_sensor` with `on`/`off` state)
       de: Entitäts-ID für den Klimatisierungsstatus des Fahrzeugs (`binary_sensor` mit `on`/`off` Zustand)
   - name: finishTime
-    description:
-      de: Ladeende
-      en: Finish time
-    service: homeassistant/entities?uri={uri}&insecure={insecure}&domain=sensor
-    example: "sensor.vehicle_finish_time"
-    help:
-      en: Entity ID for the estimated charging finish time (ISO8601 or Unix timestamp)
-      de: Entitäts-ID für die geschätzte Ladeendzeit (ISO8601 oder Unix-Zeitstempel)
+    deprecated: true
   - name: start_charging
     description:
       de: Service zum Laden starten
@@ -170,7 +163,6 @@ render: |
     limitSoc: {{ .limitSoc }}
     odometer: {{ .odometer }}
     climater: {{ .climater }}
-    finishTime: {{ .finishTime }}
   statusA: {{ .statusA }}
   statusB: {{ .statusB }}
   statusC: {{ .statusC }}
