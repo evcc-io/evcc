@@ -9,7 +9,7 @@ import (
 	"strconv"
 
 	"dario.cat/mergo"
-	"github.com/evanphx/json-patch/v5"
+	jsonpatch "github.com/evanphx/json-patch/v5"
 	"github.com/evcc-io/evcc/core"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	coresettings "github.com/evcc-io/evcc/core/settings"
