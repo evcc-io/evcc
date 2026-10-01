@@ -112,6 +112,70 @@ render: |
     block: # Register 8559-8564
       register: 8558
       count: 6
+  currents:
+  - source: calc
+    div:
+    - source: modbus
+      {{- include "modbus" . | indent 6 }}
+      register:
+        address: 8558 # Phase A active power
+        type: input
+        decode: int32s
+      block: # Register 8559-8564
+        register: 8558
+        count: 6
+    - source: modbus
+      {{- include "modbus" . | indent 6 }}
+      register:
+        address: 4357 # Phase A voltage
+        type: input
+        decode: uint16
+      block: # Register 4358-4363
+        register: 4357
+        count: 6
+      scale: 0.1
+  - source: calc
+    div:
+    - source: modbus
+      {{- include "modbus" . | indent 6 }}
+      register:
+        address: 8560 # Phase B active power
+        type: input
+        decode: int32s
+      block: # Register 8559-8564
+        register: 8558
+        count: 6
+    - source: modbus
+      {{- include "modbus" . | indent 6 }}
+      register:
+        address: 4359 # Phase B voltage
+        type: input
+        decode: uint16
+      block: # Register 4358-4363
+        register: 4357
+        count: 6
+      scale: 0.1
+  - source: calc
+    div:
+    - source: modbus
+      {{- include "modbus" . | indent 6 }}
+      register:
+        address: 8562 # Phase C active power
+        type: input
+        decode: int32s
+      block: # Register 8559-8564
+        register: 8558
+        count: 6
+    - source: modbus
+      {{- include "modbus" . | indent 6 }}
+      register:
+        address: 4361 # Phase C voltage
+        type: input
+        decode: uint16
+      block: # Register 4358-4363
+        register: 4357
+        count: 6
+      scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
   type: custom
