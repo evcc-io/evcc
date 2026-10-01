@@ -104,7 +104,7 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 			// Any other 429 (transient server busy) is left retryable for bo().
 			if se, ok := errors.AsType[*request.StatusError](err); ok && se.StatusCode() == http.StatusTooManyRequests {
 				resp := se.Response()
-				t.log.DEBUG.Printf("Solcast 429: X-RateLimit-Limit=%s X-RateLimit-Remaining=%s X-RateLimit-Reset=%s",
+				t.log.DEBUG.Printf("429: X-RateLimit-Limit=%s X-RateLimit-Remaining=%s X-RateLimit-Reset=%s",
 					resp.Header.Get("X-RateLimit-Limit"),
 					resp.Header.Get("X-RateLimit-Remaining"),
 					resp.Header.Get("X-RateLimit-Reset"),
@@ -116,7 +116,7 @@ func (t *Solcast) run(interval time.Duration, done chan error) {
 					} `json:"response_status"`
 				}
 				if json.Unmarshal(se.Body(), &body) == nil && body.ResponseStatus.ErrorCode == "TooManyRequests" {
-					t.log.ERROR.Printf("Solcast daily quota exceeded: %s", body.ResponseStatus.Message)
+					t.log.ERROR.Printf("daily quota exceeded: %s", body.ResponseStatus.Message)
 					return backoff.Permanent(err)
 				}
 				return err // transient busy — retryable
