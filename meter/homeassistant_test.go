@@ -1,7 +1,6 @@
 package meter
 
 import (
-	"context"
 	"maps"
 	"testing"
 
@@ -25,8 +24,7 @@ func TestHomeAssistantBatteryModes(t *testing.T) {
 		}
 	}
 
-	ctx := context.Background()
-	m, err := NewHomeAssistantFromConfig(ctx, conf("script.hold", "script.charge"))
+	m, err := NewHomeAssistantFromConfig(t.Context(), conf("script.hold", "script.charge"))
 	require.NoError(t, err)
 
 	ctrl, ok := api.Cap[api.BatteryController](m)
@@ -34,7 +32,7 @@ func TestHomeAssistantBatteryModes(t *testing.T) {
 	require.Equal(t, []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}, ctrl.BatteryModes())
 
 	// a mode without entity is not announced and rejected by the setter
-	m, err = NewHomeAssistantFromConfig(ctx, conf("script.hold", ""))
+	m, err = NewHomeAssistantFromConfig(t.Context(), conf("script.hold", ""))
 	require.NoError(t, err)
 
 	ctrl, ok = api.Cap[api.BatteryController](m)
@@ -43,14 +41,14 @@ func TestHomeAssistantBatteryModes(t *testing.T) {
 	require.Error(t, ctrl.SetBatteryMode(api.BatteryCharge))
 
 	// a mode entity must be a script
-	_, err = NewHomeAssistantFromConfig(ctx, conf("switch.hold", ""))
+	_, err = NewHomeAssistantFromConfig(t.Context(), conf("switch.hold", ""))
 	require.Error(t, err)
 
 	// holdcharge and discharge are announced when configured
 	c := conf("", "")
 	c["modeHoldCharge"] = "script.holdcharge"
 	c["modeDischarge"] = "script.discharge"
-	m, err = NewHomeAssistantFromConfig(ctx, c)
+	m, err = NewHomeAssistantFromConfig(t.Context(), c)
 	require.NoError(t, err)
 
 	ctrl, ok = api.Cap[api.BatteryController](m)
@@ -61,11 +59,11 @@ func TestHomeAssistantBatteryModes(t *testing.T) {
 	c = conf("", "")
 	c["modeNormal"] = ""
 	c["modeDischarge"] = "script.discharge"
-	_, err = NewHomeAssistantFromConfig(ctx, c)
+	_, err = NewHomeAssistantFromConfig(t.Context(), c)
 	require.Error(t, err)
 
 	// modeNormal alone is rejected
-	_, err = NewHomeAssistantFromConfig(ctx, conf("", ""))
+	_, err = NewHomeAssistantFromConfig(t.Context(), conf("", ""))
 	require.Error(t, err)
 }
 
