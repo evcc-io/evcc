@@ -1003,6 +1003,12 @@ func TestBatterySupport(t *testing.T) {
 	clck.Add(lp.Disable.Delay)
 	assert.Equal(t, 0.0, lp.pvMaxCurrent(minPower+1000, minPower, true, false), "sustained grid import must disable")
 
+	// battery held idle after a plan ended: the car runs on grid import and the
+	// elapsed pv timer disables right away instead of bridging to bufferSoc (#34296)
+	clck.Add(time.Hour) // mock clock must be past the elapsed sentinel
+	lp.elapsePVTimer()
+	assert.Equal(t, 0.0, lp.pvMaxCurrent(minPower, 0, true, false), "held battery must not keep charging")
+
 	// start off the battery only if its discharge limit has room for the car
 	lp.status = api.StatusB
 	lp.enabled = false
