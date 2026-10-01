@@ -1077,3 +1077,110 @@ func TestPVDisableContinuousDeviceShortfall(t *testing.T) {
 		})
 	}
 }
+
+// TestPVBatteryBufferAfterGridHandoff verifies that the battery buffer does not
+// hold a session at min current that was started by min soc, plan or smart cost
+func TestPVBatteryBufferAfterGridHandoff(t *testing.T) {
+	const dt = time.Minute
+
+	tc := []struct {
+		name        string
+		gridHandoff bool
+		site        float64
+		current     float64
+		handoff     bool
+	}{
+		// solar session: buffer holds min current despite import
+		{"pv session, import", false, 600, minA, false},
+		// grid session: disable immediately despite buffer
+		{"grid handoff, import", true, 600, 0, false},
+		// grid session with sufficient surplus: continue and hand over to buffer
+		{"grid handoff, surplus", true, -100, 7, false},
+		// grid session, import below disable threshold: keep running, still not buffered
+		{"grid handoff, below disable threshold", true, 200, minA, true},
+	}
+
+	for _, tc := range tc {
+		t.Run(tc.name, func(t *testing.T) {
+			clock := clock.NewMock()
+			clock.Add(time.Hour)
+
+			Voltage = 100
+			lp := &Loadpoint{
+				log:              util.NewLogger("foo"),
+				clock:            clock,
+				minCurrent:       minA,
+				maxCurrent:       maxA,
+				phases:           1,
+				phasesConfigured: 1,
+				measuredPhases:   1,
+				status:           api.StatusC,
+				enabled:          true,
+				offeredCurrent:   minA,
+				pvTimer:          elapsed,
+				gridHandoff:      tc.gridHandoff,
+				Disable:          loadpoint.ThresholdConfig{Threshold: 500, Delay: dt},
+			}
+
+			assert.Equal(t, tc.current, lp.pvMaxCurrent(tc.site, 0, true, false), "current")
+			assert.Equal(t, tc.handoff, lp.gridHandoff, "grid handoff")
+		})
+	}
+}
+
+func TestBatteryBufferAfterMinSoc(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+	charger := api.NewMockCharger(ctrl)
+	vehicle := api.NewMockVehicle(ctrl)
+
+	expectVehiclePublish(vehicle)
+
+	lp := &Loadpoint{
+		log:          util.NewLogger("foo"),
+		bus:          evbus.New(),
+		clock:        clock,
+		charger:      charger,
+		chargeMeter:  newChargeMeter(&Null{}), // silence nil panics
+		chargeRater:  &Null{},                 // silence nil panics
+		chargeTimer:  &Null{},                 // silence nil panics
+		progress:     NewProgress(0, 10),      // silence nil panics
+		wakeUpTimer:  NewTimer(),              // silence nil panics
+		minCurrent:   minA,
+		maxCurrent:   maxA,
+		vehicle:      vehicle,
+		socEstimator: soc.NewEstimator(util.NewLogger("foo"), vehicle),
+		mode:         api.ModeSmart,
+		minSoc:       20,
+		limitSoc:     90,
+		Soc: loadpoint.SocConfig{
+			Poll: loadpoint.PollConfig{
+				Mode:     loadpoint.PollConnected,
+				Interval: pollInterval,
+			},
+		},
+	}
+
+	attachListeners(t, lp)
+
+	lp.enabled = true
+	lp.offeredCurrent = minA
+	lp.status = api.StatusC
+
+	t.Log("charging below min soc")
+	vehicle.EXPECT().Soc().Return(15.0, nil)
+	charger.EXPECT().Status().Return(api.StatusC, nil)
+	charger.EXPECT().Enabled().Return(lp.enabled, nil)
+	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
+	lp.Update(11000, 0, nil, nil, true, false, 0, nil, nil, nil)
+	ctrl.Finish()
+
+	t.Log("min soc reached without surplus - buffered battery does not hold charging")
+	clock.Add(pollInterval)
+	vehicle.EXPECT().Soc().Return(25.0, nil)
+	charger.EXPECT().Status().Return(api.StatusC, nil)
+	charger.EXPECT().Enabled().Return(lp.enabled, nil)
+	charger.EXPECT().Enable(false).Return(nil)
+	lp.Update(11000, 0, nil, nil, true, false, 0, nil, nil, nil)
+	ctrl.Finish()
+}

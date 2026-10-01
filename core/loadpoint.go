@@ -172,6 +172,7 @@ type Loadpoint struct {
 	connectedTime  time.Time        // Time when vehicle was connected
 	connectPending bool             // connect notification deferred until vehicle detection settles
 	pvTimer        time.Time        // PV enabled/disable timer
+	gridHandoff    bool             // session started by min soc, plan or smart cost: battery buffer must not hold it
 	phaseTimer     time.Time        // 1p3p switch timer
 	wakeUpTimer    *Timer           // Vehicle wake-up timeout
 
@@ -630,6 +631,7 @@ func (lp *Loadpoint) evVehicleDisconnectHandler() {
 
 	// clear locked plan goal on disconnect
 	lp.clearPlanLock()
+	lp.gridHandoff = false
 
 	// phases are unknown when vehicle disconnects
 	lp.ResetMeasuredPhases()
@@ -1762,7 +1764,7 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 	sitePower -= lp.boostPower(batteryPower)
 
 	// always charge and the battery conditions hold charging at min current, no disable can follow
-	battery := batteryStart || batteryBuffered && lp.charging() || lp.GetBatteryBoost() == boostContinue
+	battery := batteryStart || batteryBuffered && lp.charging() && !lp.gridHandoff || lp.GetBatteryBoost() == boostContinue
 	mayDisable := !alwaysCharge && !battery
 
 	// switch phases up/down
@@ -1785,6 +1787,11 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 	deltaCurrent := powerToCurrent(-sitePower, activePhases)
 	availableCurrent := effectiveCurrent + deltaCurrent
 	targetCurrent := max(availableCurrent, 0)
+
+	// surplus covers min current, the session is now solar funded
+	if targetCurrent >= minCurrent {
+		lp.gridHandoff = false
+	}
 
 	// with always charge or under special conditions return at least minCurrent
 	if (alwaysCharge || battery) && targetCurrent < minCurrent {
@@ -1831,6 +1838,7 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 
 				// reset timer to prevent immediate charger re-enabling
 				lp.resetPVTimer()
+				lp.gridHandoff = false
 
 				return 0
 			}
@@ -2423,6 +2431,7 @@ NO_DIM:
 	case minSocNotReached || plannerActive:
 		err = lp.fastCharging()
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
+		lp.gridHandoff = true
 
 	case lp.LimitEnergyReached():
 		lp.log.DEBUG.Printf("limitEnergy reached: %.0fkWh > %0.1fkWh", lp.GetChargedEnergy()/1e3, lp.limitEnergy)
@@ -2443,6 +2452,7 @@ NO_DIM:
 			lp.log.DEBUG.Printf("smart consumption active: %.2f", rate.Value)
 			err = lp.fastCharging()
 			lp.elapsePVTimer() // let PV mode disable immediately afterwards
+			lp.gridHandoff = true
 			break
 		}
 
