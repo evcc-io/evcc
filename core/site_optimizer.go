@@ -401,12 +401,13 @@ const slotsPerHour = float64(time.Hour / tariff.SlotDuration)
 // startup); the slot gate is left open so the next cycle retries.
 var errOptimizerNotReady = errors.New("battery measurements not ready")
 
-// optimizerInterval is the refresh cadence. It divides the slot duration so
-// every slot starts on a fresh result.
+// optimizerInterval is the refresh cadence in automatic mode. It divides the
+// slot duration so every slot starts on a fresh result. Advisory suggestions
+// only need one run per slot.
 const optimizerInterval = 5 * time.Minute
 
 // optimizerUpdateAsync runs the optimizer unless the last run is younger than
-// optimizerInterval. Pass force to run regardless, e.g. when a changed setting
+// the mode's interval. Pass force to run regardless, e.g. when a changed setting
 // should take effect immediately. It is a no-op when the optimizer is not
 // active or a run is already in progress; the running update reflects the
 // change on its next run.
@@ -420,10 +421,15 @@ func (site *Site) optimizerUpdateAsync(force bool) {
 	}
 	defer site.optimizerMu.Unlock()
 
+	interval := tariff.SlotDuration
+	if site.Automatic() {
+		interval = optimizerInterval
+	}
+
 	if force {
 		// keep the gate open so a not-ready run is retried on the next cycle
 		site.optimizerUpdated = time.Time{}
-	} else if time.Since(site.optimizerUpdated) < optimizerInterval {
+	} else if time.Since(site.optimizerUpdated) < interval {
 		return
 	}
 
