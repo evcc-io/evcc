@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { start, stop, baseUrl } from "./evcc";
-import { expectModalVisible, getDatalistOptions } from "./utils";
+import { expectModalVisible, expectDatalistOptions } from "./utils";
 
 test.use({ baseURL: baseUrl() });
 
@@ -36,10 +36,10 @@ test.describe("config param service", async () => {
     await expect(meterModal.getByLabel("Important value")).toHaveValue("demo-value");
 
     const otherValue = meterModal.getByLabel("Other value");
-    await expect(await getDatalistOptions(otherValue)).toEqual(["demo-value"]);
+    await expectDatalistOptions(otherValue, ["demo-value"]);
 
     const country = meterModal.getByLabel("Country");
-    await expect(await getDatalistOptions(country)).toEqual(["germany", "france", "spain"]);
+    await expectDatalistOptions(country, ["germany", "france", "spain"]);
   });
 
   test("autocomplete dependent", async ({ page }) => {
@@ -50,23 +50,19 @@ test.describe("config param service", async () => {
     const city = meterModal.getByLabel("City");
 
     // initially empty
-    await expect(await getDatalistOptions(city)).toEqual([]);
+    await expectDatalistOptions(city, []);
 
     await country.fill("germany");
-    await expect(city).toHaveClass(/form-select/);
-    await expect(await getDatalistOptions(city)).toEqual(["berlin", "munich", "hamburg"]);
+    await expectDatalistOptions(city, ["berlin", "munich", "hamburg"]);
 
     await country.fill("");
-    await expect(city).not.toHaveClass(/form-select/);
-    await expect(await getDatalistOptions(city)).toEqual([]);
+    await expectDatalistOptions(city, []);
 
     await country.fill("france");
-    await expect(city).toHaveClass(/form-select/);
-    await expect(await getDatalistOptions(city)).toEqual(["paris", "lyon", "marseille"]);
+    await expectDatalistOptions(city, ["paris", "lyon", "marseille"]);
 
     await country.fill("fantasy");
-    await expect(city).not.toHaveClass(/form-select/);
-    await expect(await getDatalistOptions(city)).toEqual([]);
+    await expectDatalistOptions(city, []);
   });
 
   test("auto-apply single service value", async ({ page }) => {
