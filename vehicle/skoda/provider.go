@@ -78,26 +78,6 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	return status, err
 }
 
-var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.chargerG()
-	if err == nil {
-		crg := res.Status
-
-		// estimate not available
-		if crg.State == "Error" || crg.ChargeType == "Invalid" {
-			return time.Time{}, api.ErrNotAvailable
-		}
-
-		remaining := time.Duration(crg.RemainingTimeToFullyChargedInMinutes) * time.Minute
-		return time.Now().Add(remaining), err
-	}
-
-	return time.Time{}, err
-}
-
 var _ api.VehicleRange = (*Provider)(nil)
 
 // Range implements the api.VehicleRange interface

@@ -37,11 +37,6 @@ params:
     help:
     advanced: true
   - name: phases1p3p
-    description:
-      de: Phasenumschaltung
-      en: Phase switching
-    type: bool
-    default: false
     advanced: true
 
 render: |

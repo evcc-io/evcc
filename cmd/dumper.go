@@ -251,13 +251,6 @@ func (d *dumper) Dump(name string, v any) {
 		})
 	}
 
-	if v, ok := api.Cap[api.VehicleFinishTimer](v); ok {
-		d.measureTime(w, "Finish time", func() (string, error) {
-			ft, err := v.FinishTime()
-			return fmt.Sprintf("%v", ft.Truncate(time.Minute).In(time.Local)), err
-		})
-	}
-
 	if v, ok := api.Cap[api.VehicleClimater](v); ok {
 		d.measureTime(w, "Climate active", func() (string, error) {
 			active, err := v.Climater()

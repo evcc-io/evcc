@@ -611,12 +611,11 @@ func (site *Site) DumpConfig() {
 
 		for i, v := range vehicles {
 			_, rng := api.Cap[api.VehicleRange](v)
-			_, finish := api.Cap[api.VehicleFinishTimer](v)
 			_, status := api.Cap[api.ChargeState](v)
 			_, climate := api.Cap[api.VehicleClimater](v)
 			_, wakeup := api.Cap[api.Resurrector](v)
-			site.log.INFO.Printf("    vehicle %d: range %s finish %s status %s climate %s wakeup %s",
-				i+1, presence[rng], presence[finish], presence[status], presence[climate], presence[wakeup],
+			site.log.INFO.Printf("    vehicle %d: range %s status %s climate %s wakeup %s",
+				i+1, presence[rng], presence[status], presence[climate], presence[wakeup],
 			)
 		}
 	}
@@ -686,13 +685,6 @@ func (site *Site) publishLoadpoint(id int, key string, val any) {
 	}
 
 	site.valueChan <- util.Param{Loadpoint: &id, Key: key, Val: val}
-}
-
-// clearPlanLocks clears locked plan goals for all loadpoints
-func (site *Site) clearPlanLocks() {
-	for _, lp := range site.activeLoadpoints() {
-		lp.ClearPlanLock()
-	}
 }
 
 func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) []types.Measurement {
@@ -1423,6 +1415,7 @@ func (site *Site) prepare() {
 	}
 
 	site.publish(keys.SiteTitle, site.Title)
+	site.publish(keys.Country, site.GetCountry())
 
 	site.publish(keys.GridConfigured, site.gridMeter != nil)
 	site.publish(keys.Grid, api.Meter(nil))
@@ -1442,6 +1435,7 @@ func (site *Site) prepare() {
 	site.publish(keys.PriorityBasis, site.GetPriorityBasis())
 	site.publish(keys.PriorityHysteresis, site.GetPriorityHysteresis())
 	site.publish(keys.GridExportLimit, site.GetGridExportLimit())
+	site.publish(keys.ProfilePercentile, site.GetProfilePercentile())
 	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))
 	site.publish(keys.SmartFeedInPriorityAvailable, site.isDynamicTariff(api.TariffUsageFeedIn))
 
@@ -1455,7 +1449,7 @@ func (site *Site) prepare() {
 	site.publishVehicles()
 	site.publishTariffs(0, 0)
 	vehicle.Publish = site.publishVehicles
-	vehicle.ClearPlanLocks = site.clearPlanLocks
+	vehicle.Owner = site.coordinator.Owner
 }
 
 // pushEvent queues the event in the value stream. The cache attaches its state

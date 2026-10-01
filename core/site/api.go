@@ -24,6 +24,8 @@ type API interface {
 	// Meta
 	GetTitle() string
 	SetTitle(string)
+	GetCountry() string
+	SetCountry(string)
 
 	// Config
 	GetGridMeterRef() string
@@ -80,6 +82,8 @@ type API interface {
 	SetResidualPower(float64) error
 	GetGridExportLimit() float64
 	SetGridExportLimit(float64) error
+	GetProfilePercentile() *float64
+	SetProfilePercentile(*float64) error
 
 	//
 	// loadpoint priority sub-ordering

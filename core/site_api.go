@@ -66,6 +66,18 @@ func (site *Site) SetTitle(title string) {
 	settings.SetString(keys.Title, title)
 }
 
+// GetCountry returns the ISO 3166-1 alpha-2 country code
+func (site *Site) GetCountry() string {
+	country, _ := settings.String(keys.Country)
+	return country
+}
+
+// SetCountry sets the ISO 3166-1 alpha-2 country code
+func (site *Site) SetCountry(country string) {
+	settings.SetString(keys.Country, country)
+	site.publish(keys.Country, country)
+}
+
 // GetGridMeterRef returns the GridMeterRef
 func (site *Site) GetGridMeterRef() string {
 	site.RLock()
@@ -494,6 +506,35 @@ func (site *Site) SetGridExportLimit(power float64) error {
 		// re-run the optimizer so the new limit takes effect immediately
 		go site.optimizerUpdateAsync(0)
 	}
+
+	return nil
+}
+
+// GetProfilePercentile returns the percentile of the historic energy profiles in %, nil = average
+func (site *Site) GetProfilePercentile() *float64 {
+	if v, err := settings.Float(keys.ProfilePercentile); err == nil {
+		return &v
+	}
+	return nil
+}
+
+// SetProfilePercentile sets the percentile of the historic energy profiles in %, nil = average
+func (site *Site) SetProfilePercentile(percentile *float64) error {
+	if percentile == nil {
+		if err := settings.Delete(keys.ProfilePercentile); err != nil {
+			return err
+		}
+	} else {
+		if *percentile < 0 || *percentile > 100 {
+			return fmt.Errorf("invalid profile percentile: %g", *percentile)
+		}
+		settings.SetFloat(keys.ProfilePercentile, *percentile)
+	}
+
+	site.publish(keys.ProfilePercentile, percentile)
+
+	// re-run the optimizer so the new profile takes effect immediately
+	go site.optimizerUpdateAsync(0)
 
 	return nil
 }

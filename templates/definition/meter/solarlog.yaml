@@ -13,9 +13,8 @@ requirements:
 params:
   - name: usage
     choice: ["grid", "pv"]
-  - name: host
-  - name: port
-    default: 502
+  - name: modbus
+    choice: ["tcpip"]
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -23,16 +22,14 @@ render: |
     source: calc
     add:
     - source: modbus
-      uri: {{ joinHostPort .host .port }}
-      id: 1
+      {{- include "modbus" . | indent 4 }}
       register:
         address: 3502 # Pac
         type: input
         decode: uint32s
       scale: -1
     - source: modbus
-      uri: {{ joinHostPort .host .port }}
-      id: 1
+      {{- include "modbus" . | indent 4 }}
       register:
         address: 3518 # Pac consumption
         type: input
@@ -41,16 +38,14 @@ render: |
   {{- if eq .usage "pv" }}
   power:
     source: modbus
-    uri: {{ joinHostPort .host .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 3502 # Pac
       type: input
       decode: uint32s
   energy:
     source: modbus
-    uri: {{ joinHostPort .host .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 3516 # total yield
       type: input
