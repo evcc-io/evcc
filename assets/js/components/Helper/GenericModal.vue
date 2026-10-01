@@ -47,6 +47,7 @@ import {
 	onModalHidden,
 	getModalFade,
 } from "@/configModal";
+import { hideModal } from "@/utils/modal";
 
 export default defineComponent({
 	name: "GenericModal",
@@ -161,8 +162,7 @@ export default defineComponent({
 			Modal.getOrCreateInstance(modal).show();
 		},
 		close() {
-			const modal = this.$refs["modal"] as HTMLElement;
-			Modal.getOrCreateInstance(modal).hide();
+			hideModal(this.$refs["modal"] as HTMLElement);
 		},
 		handleVisibilityChange() {
 			if (document.visibilityState === "visible" && this.isModalVisible) {

@@ -1,6 +1,7 @@
 import { reactive, watch } from "vue";
 import type { Router } from "vue-router";
 import Modal from "bootstrap/js/dist/modal";
+import { isShowing } from "./utils/modal";
 
 export interface ModalEntry {
   name: string;
@@ -97,6 +98,11 @@ function showElement(el: HTMLElement): void {
 }
 
 function hideElement(name: string, el: HTMLElement): void {
+  // re-sync after the show fade, the modal may be back on top by then
+  if (isShowing(el)) {
+    el.addEventListener("shown.bs.modal", () => syncModal(name), { once: true });
+    return;
+  }
   const instance = Modal.getInstance(el);
   if (instance) {
     // Check if modal is actually visible

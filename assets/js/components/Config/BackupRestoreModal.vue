@@ -196,6 +196,7 @@ import FormRow from "./FormRow.vue";
 import { isLoggedIn } from "../Auth/auth";
 import type { AxiosResponse } from "axios";
 import Modal from "bootstrap/js/dist/modal";
+import { hideModal } from "@/utils/modal";
 import PasswordInput from "../Auth/PasswordInput.vue";
 import restart, { showRestarting } from "@/restart";
 
@@ -287,7 +288,7 @@ export default defineComponent({
 			this.backupRestoreModal().show();
 		},
 		closeConfirmModal() {
-			this.backupRestoreConfirmModal().hide();
+			hideModal(document.getElementById("backupRestoreConfirmModal") as HTMLElement);
 		},
 		fileChanged(file: File) {
 			this.file = file;
