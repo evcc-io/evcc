@@ -95,6 +95,9 @@ params:
     description:
       de: Reboost Hysterese
       en: Reboost Hysteresis
+    help:
+      de: Standard ist die Warmwasser-Hysterese der Anlage.
+      en: Defaults to the hot water hysteresis of the system.
   - name: phases
     deprecated: true
 render: |

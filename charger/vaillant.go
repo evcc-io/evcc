@@ -110,10 +110,32 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		systemId: systemId,
 	}
 
+	system := util.Cached(func() (sensonet.SystemStatus, error) {
+		return conn.GetSystem(systemId)
+	}, cc.Cache)
+
+	// hysteresis returns the configured reboost hysteresis, falling back to the
+	// hot water hysteresis the device itself reloads the tank with
+	hysteresis := func() float64 {
+		if cc.Hysteresis > 0 {
+			return cc.Hysteresis
+		}
+		system, err := system()
+		if err != nil {
+			return 0
+		}
+		return system.Configuration.System.DhwHysteresis
+	}
+
 	// skipBoost reports whether the (re-)boost can be skipped because the measured
 	// temperature is already within the hysteresis band below the loadpoint limit
 	skipBoost := func() bool {
-		if res.lp == nil || cc.Hysteresis <= 0 {
+		if res.lp == nil {
+			return false
+		}
+
+		hysteresis := hysteresis()
+		if hysteresis <= 0 {
 			return false
 		}
 
@@ -135,8 +157,8 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 			return false
 		}
 
-		if hysteresis := float64(limit) - cc.Hysteresis; temp >= hysteresis {
-			log.DEBUG.Printf("temp: %.1f >= %.1f  hysteresis", temp, hysteresis)
+		if reboost := float64(limit) - hysteresis; temp >= reboost {
+			log.DEBUG.Printf("temp: %.1f >= %.1f  hysteresis", temp, reboost)
 			return true
 		}
 
@@ -205,10 +227,6 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 			}), err
 		}, cc.Cache)))
 	}
-
-	system := util.Cached(func() (sensonet.SystemStatus, error) {
-		return conn.GetSystem(systemId)
-	}, cc.Cache)
 
 	heatingTemp := func(zz []sensonet.StateZone) float64 {
 		z, _ := lo.Find(zz, func(z sensonet.StateZone) bool {
