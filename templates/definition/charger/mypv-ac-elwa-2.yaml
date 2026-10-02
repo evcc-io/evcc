@@ -15,6 +15,7 @@ requirements:
       Use control type "Modbus TCP" and set loadpoint minimal current to 0.125A.
   evcc: ["sponsorship"]
 discovery:
+  mdns: ["_mypv._tcp"]
   mac: ["986D35C"]
 params:
   - name: modbus

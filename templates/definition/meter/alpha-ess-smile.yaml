@@ -11,7 +11,7 @@ requirements:
     en: |
       To use active battery control, times for grid charging must be defined once via the web interface or app. (Settings->Function settings->Grid charging/discharging) A continuous time period should be entered here (e.g.: Charging time 1 00:00-23:00, Charging time 2 23:00-00:00). However, deactivate the "Grid charging" switch. The actual control takes place via evcc. Discharge stop is realized via a scheduled grid charge with a target SoC of 10%. Alternatively, it can also be configured via Modbus. To do this, set the registers `2134,2142,2135,2136,2144,2137,2175` to the values `0,0,23,0,23,0,0,0,0`.
 discovery:
-  mac: ["BC97400"]
+  mac: ["BC97400", "70B3D57A2"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

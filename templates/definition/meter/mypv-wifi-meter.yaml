@@ -4,6 +4,7 @@ products:
     description:
       generic: WiFi Meter
 discovery:
+  mdns: ["_mypv._tcp"]
   mac: ["986D35C"]
 params:
   - name: usage

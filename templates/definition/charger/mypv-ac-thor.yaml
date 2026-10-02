@@ -28,6 +28,7 @@ requirements:
       Load at relay = nominal power of the heater at the relay * scale factor
   evcc: ["sponsorship"]
 discovery:
+  mdns: ["_mypv._tcp"]
   mac: ["986D35C"]
 params:
   - name: modbus

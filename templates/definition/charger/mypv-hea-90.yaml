@@ -17,6 +17,7 @@ requirements:
       The additional SELV relay is not controlled.
   evcc: ["sponsorship"]
 discovery:
+  mdns: ["_mypv._tcp"]
   mac: ["986D35C"]
 params:
   - name: modbus
