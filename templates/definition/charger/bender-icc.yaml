@@ -8,11 +8,14 @@ products:
       generic: ICC1324
   - brand: Mennekes
     description:
+      generic: AMTRON 4You 400
+  - brand: Mennekes
+    description:
       generic: AMTRON 4You 500
   - brand: Mennekes
     description:
       generic: AMTRON 4Business 700
-capabilities: ["mA", "rfid", "1p3p", "dim"]
+capabilities: ["mA", "1p3p", "dim"]
 requirements:
   description:
     de: Die Konfigurationsoption 'Externes Energiemanagement' muss aktiviert sein.
