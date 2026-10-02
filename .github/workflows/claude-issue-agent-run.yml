@@ -160,10 +160,10 @@ jobs:
                maintainer has it.
                To close, post the comment and close in one command:
                `gh issue close ${{ inputs.issue_number }} --reason "not planned" --comment "<text>"`
-               The text names the missing items, links the log instructions
-               (https://docs.evcc.io/en/docs/faq#how-do-i-create-a-log-file-for-error-analysis)
-               and says the reporter can edit the issue with the details and
-               reopen it. Keep it short, end with the footer from step 2.
+               The text names the missing items, links the reporting guide
+               (https://docs.evcc.io/en/report-a-problem/) and says the reporter
+               can edit the issue with the details and reopen it. Keep it short,
+               end with the footer from step 2.
                Then STOP: no investigation, no further comment, no label, no type,
                no PR.
 
