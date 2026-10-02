@@ -93,13 +93,16 @@ func (l *logger) Write(p []byte) (int, error) {
 	}
 
 	e := element(p)
-	_, level := e.areaLevel()
+
+	// hot path: runs for every line incl. trace, so avoid the areaLevel regexp
+	_, msg, _ := bytes.Cut(p, []byte("] "))
+	trace := bytes.HasPrefix(msg, []byte("TRACE "))
 
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
 	l.seq++
-	if level == jww.LevelTrace {
+	if trace {
 		l.trace.add(entry{l.seq, e})
 	} else {
 		l.other.add(entry{l.seq, e})

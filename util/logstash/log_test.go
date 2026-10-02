@@ -52,6 +52,24 @@ func TestTraceBudget(t *testing.T) {
 	assert.Equal(t, []string{"mqtt", "test2"}, log.Areas())
 }
 
+func TestTraceRouting(t *testing.T) {
+	log := New(10)
+
+	for _, s := range []string{
+		"[mqtt  ] TRACE send",
+		"[Heizstab_Pwr] TRACE long area",
+		"[lp-1  ] INFO TRACE in message",
+		"[site  ] ERROR failed",
+		"[site  ] TRACEX no level",
+	} {
+		log.Write([]byte(s))
+	}
+
+	var trace []string
+	log.trace.visit(func(e entry) { trace = append(trace, string(e.text)) })
+	assert.Equal(t, []string{"[mqtt  ] TRACE send", "[Heizstab_Pwr] TRACE long area"}, trace)
+}
+
 // TestRingGrowsThenCaps writes more lines than the configured size and verifies
 // the ring grows up to size and then keeps only the most recent size entries.
 func TestRingGrowsThenCaps(t *testing.T) {
