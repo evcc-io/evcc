@@ -9,13 +9,13 @@ import (
 
 // Discovery describes how devices are recognized in the local network
 type Discovery struct {
-	Mdns     []string // service type with optional instance pattern: _http._tcp:shelly*
+	Mdns     []string // service type as announced, with optional instance pattern: _http._tcp:shelly*
 	Hostname []string // hostname pattern: sma*
 	Mac      []string // hardware address prefix: 0015BB
 }
 
 var (
-	mdnsRE = regexp.MustCompile(`^_[a-z0-9-]+\._(tcp|udp)(:.+)?$`)
+	mdnsRE = regexp.MustCompile(`^_[A-Za-z0-9_-]+\._(tcp|udp)(:.+)?$`)
 	macRE  = regexp.MustCompile(`^[0-9A-F]{6,9}$`)
 )
 
@@ -49,7 +49,7 @@ func (d Discovery) MdnsTypes() []string {
 }
 
 // Match returns true if any hint applies. Services are mDNS "type:instance".
-func (d Discovery) Match(hostname, mac string, services []string) bool {
+func (d Discovery) Match(hostnames []string, mac string, services []string) bool {
 	hex := strings.ToUpper(strings.NewReplacer(":", "", "-", "").Replace(mac))
 	for _, prefix := range d.Mac {
 		if strings.HasPrefix(hex, prefix) {
@@ -57,11 +57,13 @@ func (d Discovery) Match(hostname, mac string, services []string) bool {
 		}
 	}
 
-	// domain is not part of the device name
-	name, _, _ := strings.Cut(strings.ToLower(hostname), ".")
-	for _, pattern := range d.Hostname {
-		if ok, _ := path.Match(strings.ToLower(pattern), name); ok && name != "" {
-			return true
+	for _, hostname := range hostnames {
+		// domain is not part of the device name
+		name, _, _ := strings.Cut(strings.ToLower(hostname), ".")
+		for _, pattern := range d.Hostname {
+			if ok, _ := path.Match(strings.ToLower(pattern), name); ok && name != "" {
+				return true
+			}
 		}
 	}
 

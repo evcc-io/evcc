@@ -94,7 +94,9 @@ func resolve(s string) []string {
 }
 
 func isHost(h discovery.Host, hosts []string) bool {
-	return slices.Contains(hosts, h.IP) || h.Hostname != "" && slices.Contains(hosts, strings.ToLower(h.Hostname))
+	return slices.Contains(hosts, h.IP) || slices.ContainsFunc(h.Names(), func(name string) bool {
+		return slices.Contains(hosts, strings.ToLower(name))
+	})
 }
 
 func usedHosts() []string {
@@ -150,7 +152,7 @@ func getHosts(w http.ResponseWriter, req *http.Request) {
 	res := make([]Option, 0)
 	for _, h := range hosts(w, req, mdnsTypes(all)) {
 		match := func(d templates.Discovery) bool {
-			return d.Match(h.Hostname, h.MAC, h.Services)
+			return d.Match(h.Names(), h.MAC, h.Services)
 		}
 
 		o := Option{

@@ -33,7 +33,8 @@ func TestReportDevices(t *testing.T) {
 	hosts := []discovery.Host{
 		{IP: "192.0.2.1", MAC: "AA:BB:CC:00:00:01", Hostname: "phone-of-someone"},
 		{
-			IP: "192.0.2.158", MAC: "AC:19:9F:12:34:56", Hostname: "SUNGROWB23417A5199.local",
+			IP: "192.0.2.158", MAC: "AC:19:9F:12:34:56", Hostname: "inverter.fritz.box",
+			Aliases:  []string{"SUNGROWB23417A5199.fritz.box", "SUNGROWB23417A5199.local"},
 			Services: []string{"_http._tcp:SUNGROWB23417A5199"},
 		},
 		{IP: "192.0.2.9", Hostname: "other.local"},
@@ -49,9 +50,10 @@ func TestReportDevices(t *testing.T) {
 
 	assert.Equal(t, []reportDevice{
 		{
-			Template: "sungrow-hybrid",
-			Mac:      "AC199F", Hostname: "SUNGROWB*",
-			Services: []string{"_http._tcp:SUNGROWB*"},
+			Template:  "sungrow-hybrid",
+			Mac:       "AC199F",
+			Hostnames: []string{"inverter", "SUNGROWB*"},
+			Services:  []string{"_http._tcp:SUNGROWB*"},
 		},
 		{Template: "other"},
 	}, reportDevices(configs, hosts))

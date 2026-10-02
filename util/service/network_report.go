@@ -13,10 +13,10 @@ import (
 
 // reportDevice is shared by users, it must not identify the device or its owner
 type reportDevice struct {
-	Template string   `json:"template"`
-	Mac      string   `json:"mac,omitempty"`
-	Hostname string   `json:"hostname,omitempty"`
-	Services []string `json:"services,omitempty"`
+	Template  string   `json:"template"`
+	Mac       string   `json:"mac,omitempty"`
+	Hostnames []string `json:"hostnames,omitempty"`
+	Services  []string `json:"services,omitempty"`
 }
 
 type scanHost struct {
@@ -24,6 +24,7 @@ type scanHost struct {
 	Mac      string   `json:"mac,omitempty"`
 	Vendor   string   `json:"vendor,omitempty"`
 	Hostname string   `json:"hostname,omitempty"`
+	Aliases  []string `json:"aliases,omitempty"`
 	Services []string `json:"services,omitempty"`
 	Used     bool     `json:"used,omitempty"`
 }
@@ -88,7 +89,12 @@ func reportDevices(configs []config.Named, hosts []discovery.Host) []reportDevic
 			h := hosts[idx]
 
 			dev.Mac, _ = discovery.Registration(h.MAC)
-			dev.Hostname = maskHostname(h.Hostname)
+
+			for _, name := range h.Names() {
+				if name := maskHostname(name); !slices.Contains(dev.Hostnames, name) {
+					dev.Hostnames = append(dev.Hostnames, name)
+				}
+			}
 
 			for _, s := range h.Services {
 				if s := maskService(s); s != "" && !slices.Contains(dev.Services, s) {
@@ -99,7 +105,7 @@ func reportDevices(configs []config.Named, hosts []discovery.Host) []reportDevic
 
 		// one device may be configured multiple times
 		if !slices.ContainsFunc(res, func(d reportDevice) bool {
-			return d.Template == dev.Template && d.Mac == dev.Mac && d.Hostname == dev.Hostname
+			return d.Template == dev.Template && d.Mac == dev.Mac && slices.Equal(d.Hostnames, dev.Hostnames)
 		}) {
 			res = append(res, dev)
 		}
@@ -126,6 +132,7 @@ func getReport(w http.ResponseWriter, req *http.Request) {
 			Mac:      h.MAC,
 			Vendor:   discovery.Vendor(h.MAC),
 			Hostname: h.Hostname,
+			Aliases:  h.Aliases,
 			Services: h.Services,
 			Used:     isHost(h, used),
 		})
