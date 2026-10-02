@@ -1,22 +1,33 @@
 package logstash
 
 import (
-	"regexp"
 	"slices"
+	"strings"
 
 	jww "github.com/spf13/jwalterweatherman"
 )
 
 type element string
 
-var re = regexp.MustCompile(`^\[(.+?)\s*\] (\w+) `)
-
+// areaLevel parses the `[area  ] LEVEL ` header. Lines without one count as error
+// level without area. Runs on every Write, hence no regexp.
 func (e element) areaLevel() (string, jww.Threshold) {
-	m := re.FindAllStringSubmatch(string(e), 1)
-	if len(m) != 1 || len(m[0]) != 3 {
+	s, ok := strings.CutPrefix(string(e), "[")
+	if !ok {
 		return "", jww.LevelError
 	}
-	return m[0][1], LogLevelToThreshold(m[0][2])
+
+	area, rest, ok := strings.Cut(s, "] ")
+	if !ok || area == "" {
+		return "", jww.LevelError
+	}
+
+	level, _, ok := strings.Cut(rest, " ")
+	if !ok {
+		return "", jww.LevelError
+	}
+
+	return strings.TrimRight(area, " "), LogLevelToThreshold(level)
 }
 
 func (e element) match(areas []string, level jww.Threshold) bool {
