@@ -21,8 +21,7 @@ render: |
   {{- if or (eq .usage "grid") (eq .usage "charge") }}
   power:
     source: sunspec
-    uri: {{ joinHostPort .host .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     value:
       - 201:W
       - 211:W
@@ -32,8 +31,7 @@ render: |
       - 213:W
   energy:
     source: sunspec
-    uri: {{ joinHostPort .host .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     value:
       - 201:TotWhImp
       - 211:TotWhImp
@@ -44,8 +42,7 @@ render: |
     scale: 0.001
   returnenergy:
     source: sunspec
-    uri: {{ joinHostPort .host .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     value:
       - 201:TotWhExp
       - 211:TotWhExp
@@ -56,8 +53,7 @@ render: |
     scale: 0.001
   currents:
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:AphA
         - 211:AphA
@@ -66,8 +62,7 @@ render: |
         - 203:AphA
         - 213:AphA
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:AphB
         - 211:AphB
@@ -76,8 +71,7 @@ render: |
         - 203:AphB
         - 213:AphB
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:AphC
         - 211:AphC
@@ -87,8 +81,7 @@ render: |
         - 213:AphC
   voltages:
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:PhVphA
         - 211:PhVphA
@@ -97,8 +90,7 @@ render: |
         - 203:PhVphA
         - 213:PhVphA
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:PhVphB
         - 211:PhVphB
@@ -107,8 +99,7 @@ render: |
         - 203:PhVphB
         - 213:PhVphB
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:PhVphC
         - 211:PhVphC
@@ -118,8 +109,7 @@ render: |
         - 213:PhVphC
   powers:
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:WphA
         - 211:WphA
@@ -128,8 +118,7 @@ render: |
         - 203:WphA
         - 213:WphA
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:WphB
         - 211:WphB
@@ -138,8 +127,7 @@ render: |
         - 203:WphB
         - 213:WphB
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:WphC
         - 211:WphC
@@ -151,8 +139,7 @@ render: |
   {{- if eq .usage "pv" }}
   power:
     source: sunspec
-    uri: {{ joinHostPort .host .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     value:
       - 201:W
       - 211:W
@@ -162,8 +149,7 @@ render: |
       - 213:W
   energy:
     source: sunspec
-    uri: {{ joinHostPort .host .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     value:
       - 201:TotWhExp
       - 211:TotWhExp
@@ -174,8 +160,7 @@ render: |
     scale: 0.001
   returnenergy:
     source: sunspec
-    uri: {{ joinHostPort .host .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     value:
       - 201:TotWhImp
       - 211:TotWhImp

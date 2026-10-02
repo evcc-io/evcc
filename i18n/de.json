@@ -55,6 +55,12 @@
       "bufferTitle": "Batterie als Ladepuffer",
       "discharge": "Entladung der Hausbatterie im Schnell-Modus und bei geplantem Laden verhindern.",
       "gridDischarge": "Die Entladung der Hausbatterie ins Stromnetz zulassen.",
+      "gridDischargeConfirm": {
+        "country": "Konfiguriertes Land: {country}.",
+        "description": "Ob Batteriestrom ins Netz eingespeist werden darf, hängt von deinem Land und deinem Einspeisevertrag ab. Wird die Batterie auch aus dem Netz geladen, ist der eingespeiste Strom kein reiner Solarstrom mehr. Bei vielen Einspeisetarifen führt das zum Verlust der Vergütung oder ist verboten. Prüfe vorher deinen Einspeisevertrag und die Vorgaben deines Netzbetreibers.",
+        "noCountry": "Kein Land konfiguriert. Lege es unter {link} fest.",
+        "title": "Netzeinspeisung aus der Batterie"
+      },
       "priority": "Hausbatterie hat Vorrang, solange sie unter {soc} liegt. Dann erhalten die Ladepunkte den Überschuss.",
       "priorityNone": "Sonnenüberschuss geht direkt an die Ladepunkte. Setze einen Wert über {soc}, um die Hausbatterie zu bevorzugen.",
       "priorityTitle": "Wohin geht der Überschuss zuerst?"
@@ -193,6 +199,14 @@
       "titleAdd": "Verbrauchszähler hinzufügen",
       "titleEdit": "Verbrauchszähler bearbeiten"
     },
+    "combobox": {
+      "count": "{count} Vorschläge",
+      "matching": "Passend",
+      "other": "Weitere",
+      "searching": "Suche…",
+      "suggestions": "Vorschläge",
+      "used": "bereits verwendet"
+    },
     "control": {
       "description": "Normalerweise sind die Standardwerte in Ordnung. Ändere nur etwas, wenn du weißt, was du tust.",
       "descriptionInterval": "Aktualisierungszyklus in Sekunden. Definiert, wie oft evcc Messdaten liest und die Ladung anpasst. Die Standardeinstellung von 30 Sekunden ist eine sichere Wahl. Geräte wie Fahrzeuge, Wallbox und Wechselrichter brauchen in der Regel mehrere Sekunden um ihr Verhalten anzupassen. Wenn deine Komponenten schnell reagieren kannst du niedrigere Werte verwenden. Wir empfehlen dringend nicht unter 10 Sekunden zu gehen. Wenn du komisches Regelverhalten oder springende Leistungswerte beobachtest wähle ein größeres Intervall.",
@@ -200,12 +214,6 @@
       "labelInterval": "Aktualisierungsintervall",
       "labelResidualPower": "Residualleistung",
       "title": "Regelverhalten"
-    },
-    "currency": {
-      "description": "Wird für die Erfassung und Formatierung von Energiepreisen, Kosten und Einsparungen verwendet.",
-      "example": "Dein Ladepreis betrug {price}. Du hast {amount} gespart.",
-      "label": "Währung",
-      "title": "Währung"
     },
     "curtailer": {
       "description": "Gerät, das die Einspeisung auf Anforderung des Netzbetreibers begrenzt (§ 9 EEG). Viele Wechselrichter unterstützen dies direkt über ihre PV-Zähler-Konfiguration. Eine separate Konfiguration ist nur bei manchen Herstellern oder Anlagen mit mehreren Wechselrichtern nötig.",
@@ -393,6 +401,7 @@
       "enable": "Aktivieren",
       "error": "Fehler",
       "experimental": "Experimentell",
+      "forceEnable": "Trotzdem aktivieren",
       "forceSave": "Trotzdem speichern",
       "fromYamlHint": "Hinweis: Konfiguriert über evcc.yaml. Entferne den Eintrag aus der Datei, um die Bearbeitung hier zu aktivieren.",
       "hideAdvancedSettings": "Erweiterte Einstellungen ausblenden",
@@ -413,6 +422,7 @@
       "showAdvancedSettings": "Erweiterte Einstellungen anzeigen",
       "telemetry": "Telemetrie",
       "templateLoading": "Lade …",
+      "site": "Standort",
       "title": "Titel",
       "typeDeprecated": "Der Typ '{type}' ist veraltet und wird in einer zukünftigen Version entfernt. Bitte Changelog prüfen und Gerät neu anlegen.",
       "validateSave": "Überprüfen & speichern"
@@ -929,6 +939,22 @@
       "labelVendorId": "Hersteller-ID",
       "title": "SMA Sunny Home Manager"
     },
+    "site": {
+      "country": {
+        "description": "Wird für länderspezifische Hinweise und Voreinstellungen verwendet.",
+        "label": "Land"
+      },
+      "currency": {
+        "description": "Wird für die Erfassung und Formatierung von Energiepreisen, Kosten und Einsparungen verwendet.",
+        "example": "Dein Ladepreis betrug {price}. Du hast {amount} gespart.",
+        "label": "Währung"
+      },
+      "siteTitle": {
+        "description": "Wird in der Hauptansicht und im Browser-Tab angezeigt.",
+        "label": "Titel"
+      },
+      "title": "Standort"
+    },
     "sponsor": {
       "addToken": "Token eingeben",
       "changeToken": "Token ändern",
@@ -1073,11 +1099,6 @@
     "telemetry": {
       "description": "Konfiguriere die Datenfreigabe, um evcc zu verbessern. Deine Privatsphäre ist uns wichtig und die Teilnahme ist völlig freiwillig.",
       "title": "Telemetrie"
-    },
-    "title": {
-      "description": "Wird in der Hauptansicht und im Browser-Tab angezeigt.",
-      "label": "Titel",
-      "title": "Titel bearbeiten"
     },
     "validation": {
       "failed": "fehlgeschlagen",
@@ -1234,6 +1255,7 @@
   },
   "general": {
     "back": "Zurück",
+    "cancel": "Abbrechen",
     "download": "Download",
     "error": "Fehler",
     "none": "keine",

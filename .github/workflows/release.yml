@@ -63,7 +63,7 @@ jobs:
       # depot builders keep the Dockerfile's cache mounts on their own volumes,
       # so they need neither buildx nor the cache dance
       - name: Setup Depot
-        uses: depot/setup-action@15c09a5f77a0840ad4bce955686522a257853461 # v1.7.1
+        uses: depot/setup-action@91bc8495a33ebfc504ffc89e5674379ccf23c29c # v1.7.2
 
       - name: Meta
         id: meta
@@ -151,7 +151,7 @@ jobs:
           MACOS_NOTARY_KEY_ID: ${{ secrets.MACOS_NOTARY_KEY_ID }}
           MACOS_NOTARY_ISSUER_ID: ${{ secrets.MACOS_NOTARY_ISSUER_ID }}
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: 3.12
 

@@ -1,9 +1,13 @@
 package modbus
 
 import (
+	"errors"
+	"fmt"
 	"testing"
 	"time"
 
+	gridx "github.com/grid-x/modbus"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -69,4 +73,10 @@ func TestSettingsProtocol(t *testing.T) {
 	for _, tc := range tc {
 		require.Equal(t, tc.res, tc.Protocol(), tc)
 	}
+}
+
+func TestIsException(t *testing.T) {
+	assert.True(t, IsException(fmt.Errorf("wrapped: %w", &gridx.Error{FunctionCode: 3, ExceptionCode: 2})))
+	assert.False(t, IsException(errors.New("timeout")))
+	assert.False(t, IsException(nil))
 }

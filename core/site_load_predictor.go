@@ -49,7 +49,9 @@ func (site *Site) addHeatingDemand(gt []float64, minLen int) []heatingDemand {
 		if s := lp.GetStatus(); s != api.StatusB && s != api.StatusC {
 			continue
 		}
-		if lp.GetMode() == api.ModeOff {
+		// For Continuous devices ModeOff means "normal operation" (heat pump runs
+		// on its own schedule). Skip only non-continuous loadpoints in ModeOff.
+		if lp.GetMode() == api.ModeOff && !lp.chargerHasFeature(api.Continuous) {
 			continue
 		}
 

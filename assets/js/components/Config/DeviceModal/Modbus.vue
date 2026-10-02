@@ -61,6 +61,8 @@
 				type="String"
 				class="me-2"
 				required
+				:service-values="hostServiceValues"
+				:service-loading="hostServiceLoading"
 				:model-value="host"
 				@update:model-value="(v) => $emit('update:host', v)"
 			/>
@@ -166,13 +168,14 @@ import FormRow from "../FormRow.vue";
 import PropertyField from "../PropertyField.vue";
 import type { PropType } from "vue";
 import type { ModbusCapability } from "./index";
-import { loadServiceValues } from "./index";
+import { loadServiceValues, serviceDefaults } from "./index";
 import {
 	MODBUS_BAUDRATE,
 	MODBUS_COMSET,
 	MODBUS_CONNECTION,
 	MODBUS_PROTOCOL,
 	MODBUS_TYPE,
+	type ServiceValue,
 } from "@/types/evcc";
 
 export default defineComponent({
@@ -196,6 +199,8 @@ export default defineComponent({
 		defaultComset: String,
 		defaultBaudrate: Number,
 		hideModbusId: Boolean,
+		hostServiceValues: { type: Array as PropType<ServiceValue[]>, default: () => [] },
+		hostServiceLoading: Boolean,
 	},
 	emits: [
 		"update:modbus",
@@ -328,7 +333,7 @@ export default defineComponent({
 			return `${name}-${this.componentId}`;
 		},
 		async updateServiceValues() {
-			this.deviceServiceValues = await loadServiceValues("hardware/serial");
+			this.deviceServiceValues = serviceDefaults(await loadServiceValues("hardware/serial"));
 			this.applyServiceDefault();
 		},
 		applyServiceDefault() {

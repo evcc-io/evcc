@@ -1392,6 +1392,7 @@ func (site *Site) prepare() {
 	}
 
 	site.publish(keys.SiteTitle, site.Title)
+	site.publish(keys.Country, site.GetCountry())
 
 	site.publish(keys.GridConfigured, site.gridMeter != nil)
 	site.publish(keys.Grid, api.Meter(nil))

@@ -511,6 +511,13 @@
 						>
 							{{ $t("config.system.backupRestore.title") }}
 						</button>
+						<button
+							v-if="experimental"
+							class="btn btn-outline-secondary text-truncate"
+							@click="openModal('discovery')"
+						>
+							Network discovery 🧪
+						</button>
 						<button class="btn btn-outline-danger" @click="restart">
 							{{ $t("config.system.restart") }}
 						</button>
@@ -570,9 +577,9 @@
 				<TelemetryModal :is-sponsor="isSponsor" :telemetry="telemetry" />
 				<OptimizerModal :is-sponsor="isSponsor" />
 				<McpModal />
+				<DiscoveryModal />
 				<ExperimentalModal :experimental="experimental" />
 				<RemoteModal :remote="remote" :is-sponsor="isSponsor" :site-title="siteTitle" />
-				<TitleModal @changed="loadDirty" />
 				<ModbusProxyModal :is-sponsor="isSponsor" @changed="loadDirty" />
 				<CircuitsLegacyModal
 					:grid-meter="gridMeter"
@@ -665,6 +672,7 @@ import OptimizerIcon from "../components/MaterialIcon/Optimizer.vue";
 import OptimizerModal from "../components/Config/OptimizerModal.vue";
 import McpIcon from "../components/MaterialIcon/Mcp.vue";
 import McpModal from "../components/Config/McpModal.vue";
+import DiscoveryModal from "../components/Config/DiscoveryModal.vue";
 import restart, { performRestart } from "../restart";
 import SponsorModal from "../components/Config/SponsorModal.vue";
 import store from "../store";
@@ -673,7 +681,6 @@ import TariffCard from "../components/Config/TariffCard.vue";
 import TariffModal from "../components/Config/TariffModal.vue";
 import TelemetryModal from "../components/Config/TelemetryModal.vue";
 import ExperimentalModal from "../components/Config/ExperimentalModal.vue";
-import TitleModal from "../components/Config/TitleModal.vue";
 import Header from "../components/Top/Header.vue";
 import VehicleIcon from "../components/VehicleIcon";
 import VehicleModal from "../components/Config/VehicleModal.vue";
@@ -780,13 +787,13 @@ export default defineComponent({
 		OptimizerModal,
 		McpIcon,
 		McpModal,
+		DiscoveryModal,
 		SponsorModal,
 		TariffsLegacyModal,
 		TariffCard,
 		TariffModal,
 		TelemetryModal,
 		ExperimentalModal,
-		TitleModal,
 		TopHeader: Header,
 		VehicleIcon,
 		VehicleModal,
@@ -1379,8 +1386,8 @@ export default defineComponent({
 			await this.loadMeters();
 			await this.loadSite();
 			await this.loadChargers();
-			await this.loadLoadpoints();
 			await this.loadCircuits();
+			await this.loadLoadpoints();
 			await this.loadMessengers();
 			await this.loadCurtailers();
 			await this.loadTariffs();
@@ -1664,8 +1671,15 @@ export default defineComponent({
 			return (
 				this.hasDeviceError("loadpoint", loadpoint.name) ||
 				this.hasDeviceError("charger", loadpoint.charger) ||
-				this.hasDeviceError("meter", loadpoint.meter)
+				this.hasDeviceError("meter", loadpoint.meter) ||
+				this.loadpointCircuitInvalid(loadpoint)
 			);
+		},
+		loadpointCircuitInvalid(loadpoint: ConfigLoadpoint): boolean {
+			// disabled loadpoints are never instantiated, so the backend never validates
+			// their circuit reference and no fatal error is ever reported for it
+			const { circuit } = loadpoint;
+			return !!circuit && !this.circuits.some((c) => c.name === circuit);
 		},
 		hasDeviceError(type: DeviceType, name?: string) {
 			if (!name) return false;

@@ -1,5 +1,5 @@
 # STEP 1 build ui
-FROM --platform=$BUILDPLATFORM ghcr.io/voidzero-dev/vite-plus:0.2.6@sha256:de284eb61eb6ee5fe1da3824032ed6fb37827eecd597d0d796cacd4434f806ea AS node
+FROM --platform=$BUILDPLATFORM ghcr.io/voidzero-dev/vite-plus:1.0.0@sha256:8d788678fb9783ba8994c4fe5652af3316bfc414f7ef6ead0136932ee6075b8b AS node
 
 USER root
 
@@ -21,7 +21,7 @@ RUN make ui
 
 
 # STEP 2 build executable binary
-FROM --platform=$BUILDPLATFORM golang:1.27.0-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.27.1-alpine AS builder
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
