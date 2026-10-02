@@ -112,7 +112,7 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 		}
 
 		// ignore old meter value requests
-		if !meterValue.Timestamp.Time.Before(conn.meterUpdated) {
+		if !meterValue.Timestamp.Time.Before(conn.meterTimestamp) {
 			// a charge point may repeat a measurand with a different context, e.g. a live
 			// Sample.Periodic value next to a static Transaction.Begin snapshot that never
 			// changes. Apply boundary snapshots first so live readings win independent of
@@ -125,7 +125,9 @@ func (conn *Connector) OnMeterValues(request *core.MeterValuesRequest) (*core.Me
 
 					sample.Value = strings.TrimSpace(sample.Value)
 					conn.measurements[getSampleKey(sample)] = sample
-					conn.meterUpdated = meterValue.Timestamp.Time
+					conn.meterTimestamp = meterValue.Timestamp.Time
+					// freshness is measured locally: charger sample timestamps may lag (Mennekes: 6-7s)
+					conn.meterUpdated = conn.clock.Now()
 				}
 			}
 		}
@@ -178,6 +180,7 @@ func (conn *Connector) markRebooted() {
 
 func (conn *Connector) assumeMeterStopped() {
 	conn.meterUpdated = conn.clock.Now()
+	conn.meterTimestamp = conn.meterUpdated
 
 	if _, ok := conn.measurements[types.MeasurandPowerActiveImport]; ok {
 		conn.measurements[types.MeasurandPowerActiveImport] = types.SampledValue{

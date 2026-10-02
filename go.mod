@@ -99,7 +99,7 @@ require (
 	github.com/teslamotors/vehicle-command v0.4.1
 	github.com/tess1o/go-ecoflow v1.1.1-0.20251003083510-2ccc15a17e29
 	github.com/traefik/yaegi v0.16.1
-	github.com/volkszaehler/mbmd v0.0.0-20260824053034-eef6045ae30e
+	github.com/volkszaehler/mbmd v0.0.0-20260930162400-0a62ee4c1c4d
 	github.com/warthog618/go-gpiocdev v0.9.1
 	github.com/xuri/excelize/v2 v2.11.0
 	gitlab.com/bboehmke/sunny v0.17.0
@@ -277,6 +277,6 @@ replace github.com/lorenzodonini/ocpp-go => github.com/evcc-io/ocpp-go v0.0.0-20
 
 replace github.com/enbility/spine-go => github.com/andig/spine-go v0.7.1-0.20260831161702-3757d61432fb
 
-replace github.com/enbility/eebus-go => github.com/andig/eebus-go v0.0.0-20260831161745-7e1f121e46ad
+replace github.com/enbility/eebus-go => github.com/andig/eebus-go v0.0.0-20260930172701-f8d6395986ba
 
 replace github.com/enbility/ship-go => github.com/andig/ship-go v0.6.1-0.20260901124541-3de7acda5f88
