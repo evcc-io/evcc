@@ -181,7 +181,12 @@
       "meterLabelAdd": "Stromkreiszähler hinzufügen",
       "meterLabelEdit": "Stromkreiszähler bearbeiten",
       "meterLabel": "Zähler",
-      "deleteChildrenFirst": "Um diesen Stromkreis zu löschen, müssen zuerst die untergeordneten Stromkreise gelöscht werden."
+      "loadpointLabel": "Zugewiesene Ladepunkte",
+      "noLoadpointsAssigned": "Keine Ladepunkte zugewiesen",
+      "loadpointHelp": "Wähle die Ladepunkte für diesen Circuit aus. Es können nur nicht bereits zugewiesene Ladepunkte ausgewählt werden, die über die Konfigurationsoberfläche erstellt wurden.",
+      "yamlLoadpoints": "Diese Ladepunkte sind in der Konfigurationsdatei definiert und können nur dort einem Circuit zugewiesen werden:",
+      "assignedLoadpoints": "Diese Ladepunkte sind bereits einem anderen Circuit zugewiesen:",
+      "noLoadpointsAssignable": "Keine Ladepunkte zugewiesen"
     },
     "circuits": {
       "addSubCircuit": "Untergeordneten Stromkreis hinzufügen",
