@@ -47,10 +47,14 @@ clean::
 install::
 	go install tool
 
-install-ui::
+# verify vp is Vite+ before running ui tasks
+check-vp::
+	@vp --version 2>/dev/null | grep -q '^vp v' || { echo "vp is not Vite+, see https://viteplus.dev/guide/#install-vp" >&2; exit 1; }
+
+install-ui:: check-vp
 	vp install
 
-ui::
+ui:: check-vp
 	vp run build
 
 assets::
@@ -58,6 +62,14 @@ assets::
 
 openapi::
 	vp run openapi
+
+# update the embedded IEEE vendor registry, the registry rejects the Go http client
+oui-update::
+	cd util/discovery && \
+	curl -sSfL --remote-name-all https://standards-oui.ieee.org/oui/oui.csv https://standards-oui.ieee.org/oui28/mam.csv https://standards-oui.ieee.org/oui36/oui36.csv && \
+	go run oui_generate.go oui.csv mam.csv oui36.csv && \
+	rm oui.csv mam.csv oui36.csv
+	@echo "Registry updated. Ask an agent to review the template discovery hints, see docs/agents/discovery-hints.md"
 
 docs::
 	go generate github.com/evcc-io/evcc/util/templates/...
@@ -73,7 +85,7 @@ lint-ui::
 	vp run lint
 
 license::
-	go run github.com/google/go-licenses/v2@latest check \
+	go tool go-licenses check \
 	--ignore github.com/evcc-io/evcc/node_modules \
 	--ignore github.com/cespare/xxhash \
 	--ignore github.com/coder/websocket \

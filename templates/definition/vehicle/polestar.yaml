@@ -1,4 +1,5 @@
 template: polestar
+deprecated: true
 products:
   - brand: Polestar
 requirements:

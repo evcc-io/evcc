@@ -8,9 +8,14 @@ type Capable interface {
 	Capability(typ reflect.Type) (any, bool)
 }
 
-// Cap checks whether v implements interface T, either directly (via Go type assertion)
-// or through the Capable registry (for decorated types) and returns the interface same
-// as a Go type assertion would do.
+// Delegator is implemented by wrappers that forward capability lookups to a wrapped source.
+type Delegator interface {
+	Delegate() any
+}
+
+// Cap checks whether v implements interface T, either directly (via Go type assertion),
+// through the Capable registry (for decorated types) or through the Delegator's source
+// (for wrappers) and returns the interface same as a Go type assertion would do.
 func Cap[T any](v any) (T, bool) {
 	// fast path: direct type assertion (works for non-decorated concrete types)
 	if t, ok := v.(T); ok {
@@ -24,12 +29,16 @@ func Cap[T any](v any) (T, bool) {
 		}
 	}
 
+	// wrapper: look up on the wrapped source
+	if d, ok := v.(Delegator); ok {
+		return Cap[T](d.Delegate())
+	}
+
 	var zero T
 	return zero, false
 }
 
-// HasCap checks whether v implements interface T, either directly (via Go type assertion)
-// or through the Capable registry (for decorated types).
+// HasCap checks whether v implements interface T, see Cap.
 func HasCap[T any](v any) bool {
 	_, ok := Cap[T](v)
 	return ok

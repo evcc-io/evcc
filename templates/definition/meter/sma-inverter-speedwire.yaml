@@ -7,6 +7,9 @@ products:
       en: Inverter (Speedwire)
 requirements:
   evcc: ["skiptest"]
+discovery:
+  hostname: ["sma*"]
+  mac: ["0015BB"]
 params:
   - name: usage
     choice: ["pv", "battery"]

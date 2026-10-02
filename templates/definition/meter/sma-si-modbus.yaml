@@ -4,6 +4,9 @@ products:
     description:
       generic: Sunny Island (Modbus)
 capabilities: ["battery-control"]
+discovery:
+  hostname: ["sma*"]
+  mac: ["0015BB"]
 params:
   - name: usage
     choice: ["battery"]

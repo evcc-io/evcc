@@ -93,6 +93,17 @@ test.describe("script plugin requires admin password", async () => {
     // reload drops the cached password
     await page.reload();
 
+    // disable and enable keep the unchanged script, no password needed
+    page.on("dialog", (dialog) => dialog.accept());
+    const gridCard = page.getByTestId("grid");
+    await gridCard.getByRole("button", { name: "edit" }).click();
+    await expectModalVisible(meterModal);
+    await meterModal.getByRole("button", { name: "Disable" }).click();
+    await expectModalHidden(meterModal);
+    const enable = gridCard.getByRole("button", { name: "Enable" });
+    await enable.click();
+    await expect(enable).toHaveCount(0);
+
     // editing and saving the existing device prompts again
     await page.getByTestId("grid").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(meterModal);

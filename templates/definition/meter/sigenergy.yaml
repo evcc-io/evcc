@@ -25,11 +25,8 @@ caveats:
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-  - name: host
-  - name: port
-    default: 502
-  - name: id
-    default: 1
+  - name: modbus
+    choice: ["tcpip"]
   - name: maxacpower
   - name: mppt
     type: choice
@@ -53,7 +50,7 @@ render: |
   {{- if eq .usage "grid" }}
   power:
     source: modbus
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus-connection" . | indent 2 }}
     id: 247
     register:
       address: 30005 # [Grid sensor] Active power
@@ -61,8 +58,7 @@ render: |
       decode: int32
   energy:
     source: modbus
-    uri: {{ joinHostPort .host .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 30562 # Accumulated import energy
       type: holding
@@ -70,24 +66,21 @@ render: |
     scale: 0.01
   currents:
     - source: modbus
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       register:
         address: 31017 # Phase A current
         type: holding
         decode: int32
       scale: 0.01
     - source: modbus
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       register:
         address: 31019 # Phase B current
         type: holding
         decode: int32
       scale: 0.01
     - source: modbus
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       register:
         address: 31021 # Phase C current
         type: holding
@@ -122,8 +115,7 @@ render: |
   {{- else }}
   power:
     source: modbus
-    uri: {{ joinHostPort .host .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     register:
       type: holding
       address: 31035 # PV power (per inverter)
@@ -134,8 +126,7 @@ render: |
   {{- if eq .usage "battery" }}
   power:
     source: modbus
-    uri: {{ joinHostPort .host .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     register:
       type: holding
       address: 30599 # [ESS] Charge/discharge power (per inverter)
@@ -143,8 +134,7 @@ render: |
     scale: -1
   energy:
     source: modbus
-    uri: {{ joinHostPort .host .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 30574 # [ESS] Accumulated discharge energy (per inverter)
       type: holding
@@ -152,8 +142,7 @@ render: |
     scale: 0.01
   returnenergy:
     source: modbus
-    uri: {{ joinHostPort .host .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 30568 # [ESS] Accumulated charge energy (per inverter)
       type: holding
@@ -161,8 +150,7 @@ render: |
     scale: 0.01
   soc:
     source: modbus
-    uri: {{ joinHostPort .host .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 30601 # [ESS] Battery SOC (per inverter)
       type: holding
@@ -173,7 +161,7 @@ render: |
     convert: float2int
     set:
       source: modbus
-      uri: {{ joinHostPort .host .port }}
+      {{- include "modbus-connection" . | indent 4 }}
       id: 247
       register:
         address: 40048 # Discharge Cut-Off SoC

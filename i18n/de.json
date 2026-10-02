@@ -7,6 +7,18 @@
     "authorizationSuccessful": "Autorisierung erfolgreich",
     "buttonConnect": "Mit {provider} verbinden",
     "buttonDisconnect": "Trennen",
+    "challenge": {
+      "captcha": {
+        "label": "Zeichen aus dem Bild eingeben.",
+        "title": "Captcha"
+      },
+      "code": {
+        "label": "Code oder Adresse der Weiterleitungsseite einfügen.",
+        "title": "Autorisierungscode"
+      },
+      "openLogin": "Anmeldeseite öffnen",
+      "submit": "Weiter"
+    },
     "confirmLogout": "Sicher, dass du {title} trennen möchtest?",
     "connect": "verbinden",
     "disconnect": "trennen",
@@ -33,8 +45,8 @@
     },
     "combined": "Gesamt",
     "config": {
-      "buffer": "Hausspeicherenergie oberhalb von {soc} darf für die Unterstützung der Ladepunkte genutzt werden und zögert die Abschaltung im Smart-Modus hinaus. PV-Ladung automatisch starten {start}.",
-      "bufferNone": "Hausspeicherenergie wird nicht für die Ladepunkte genutzt. Setze einen Wert unter {soc}, um die Unterstützung zu aktivieren.",
+      "buffer": "Energie der Hausbatterie oberhalb von {soc} darf für die Unterstützung der Ladepunkte genutzt werden und zögert die Abschaltung im Smart-Modus hinaus. PV-Ladung automatisch starten {start}.",
+      "bufferNone": "Energie der Hausbatterie wird nicht für die Ladepunkte genutzt. Setze einen Wert unter {soc}, um die Unterstützung zu aktivieren.",
       "bufferStart": {
         "above": "ab einem Speicherstand von {soc}",
         "full": "erst, wenn der Speicher voll ist",
@@ -43,8 +55,14 @@
       "bufferTitle": "Batterie als Ladepuffer",
       "discharge": "Entladung der Hausbatterie im Schnell-Modus und bei geplantem Laden verhindern.",
       "gridDischarge": "Die Entladung der Hausbatterie ins Stromnetz zulassen.",
-      "priority": "Hausspeicher hat Vorrang, solange er unter {soc} liegt. Dann erhalten die Ladepunkte den Überschuss.",
-      "priorityNone": "Sonnenüberschuss geht direkt an die Ladepunkte. Setze einen Wert über {soc}, um den Hausspeicher zu bevorzugen.",
+      "gridDischargeConfirm": {
+        "country": "Konfiguriertes Land: {country}.",
+        "description": "Ob Batteriestrom ins Netz eingespeist werden darf, hängt von deinem Land und deinem Einspeisevertrag ab. Wird die Batterie auch aus dem Netz geladen, ist der eingespeiste Strom kein reiner Solarstrom mehr. Bei vielen Einspeisetarifen führt das zum Verlust der Vergütung oder ist verboten. Prüfe vorher deinen Einspeisevertrag und die Vorgaben deines Netzbetreibers.",
+        "noCountry": "Kein Land konfiguriert. Lege es unter {link} fest.",
+        "title": "Netzeinspeisung aus der Batterie"
+      },
+      "priority": "Hausbatterie hat Vorrang, solange sie unter {soc} liegt. Dann erhalten die Ladepunkte den Überschuss.",
+      "priorityNone": "Sonnenüberschuss geht direkt an die Ladepunkte. Setze einen Wert über {soc}, um die Hausbatterie zu bevorzugen.",
       "priorityTitle": "Wohin geht der Überschuss zuerst?"
     },
     "optimizer": {
@@ -144,15 +162,50 @@
         "switchsocket": "Benutzerdefinierte schaltbare Steckdose"
       }
     },
+    "circuit": {
+      "addMeter": "Dedizierten Energiezähler hinzufügen",
+      "meterSelectionLabel": "Zählerauswahl",
+      "meterNone": "Kein Zähler",
+      "meterSelectionHelpNoMeter": "Die Summe aller Ladepunkte wird verwendet.",
+      "meterSelectionHelpDedicatedMeter": "Füge unten einen vorhandenen Zähler zu diesem Stromkreis hinzu.",
+      "meterSelectionHelpGridMeter": "Verwendet den vorhandenen Netzbezugszähler deiner Installation.",
+      "meterGrid": "Netzbezugszähler",
+      "meterDedicated": "Dedizierter Zähler",
+      "parentCircuit": "Übergeordneter Stromkreis",
+      "titleAdd": "Stromkreis hinzufügen",
+      "titleEdit": "Stromkreis bearbeiten",
+      "titleLabel": "Titel",
+      "template": "Stromkreis",
+      "custom": "Benutzerdefinierter Stromkreis",
+      "meterHelp": "Zähler, der den Gesamtverbrauch dieses Stromkreises misst.",
+      "meterLabelAdd": "Stromkreiszähler hinzufügen",
+      "meterLabelEdit": "Stromkreiszähler bearbeiten",
+      "meterLabel": "Zähler",
+      "deleteChildrenFirst": "Um diesen Stromkreis zu löschen, müssen zuerst die untergeordneten Stromkreise gelöscht werden."
+    },
     "circuits": {
+      "addSubCircuit": "Untergeordneten Stromkreis hinzufügen",
+      "chargingPointsNote": "Ladepunkte & Heizgeräte weist du in ihren jeweiligen Einstellungen einem Stromkreis zu.",
+      "addMainCircuit": "Hauptstromkreis hinzufügen",
       "description": "Stellt sicher, dass die Summe aller Ladepunkte, die an einen Stromkreis angeschlossen sind, die konfigurierten Leistungs- und Stromgrenzen nicht überschreitet. Stromkreise können verschachtelt werden, um eine Hierarchie aufzubauen.",
+      "legacyWarning": "Neue Stromkreis-Konfiguration verfügbar! Entferne und speichere deine Konfiguration hier, um den neuen geführten Prozess zu verwenden.",
       "title": "Lastmanagement",
+      "meterDedicated": "Zähler",
+      "meterGrid": "Netz",
       "usableMeters": "Verwendbare Zählerreferenzen"
     },
     "consumer": {
       "description": "Erfasst kleinere, nicht steuerbare Verbraucher (Kühlschrank, Waschmaschine, ...). So bekommst du einen besseren Überblick über deinen Hausverbrauch.",
       "titleAdd": "Verbrauchszähler hinzufügen",
       "titleEdit": "Verbrauchszähler bearbeiten"
+    },
+    "combobox": {
+      "count": "{count} Vorschläge",
+      "matching": "Passend",
+      "other": "Weitere",
+      "searching": "Suche…",
+      "suggestions": "Vorschläge",
+      "used": "bereits verwendet"
     },
     "control": {
       "description": "Normalerweise sind die Standardwerte in Ordnung. Ändere nur etwas, wenn du weißt, was du tust.",
@@ -161,12 +214,6 @@
       "labelInterval": "Aktualisierungsintervall",
       "labelResidualPower": "Residualleistung",
       "title": "Regelverhalten"
-    },
-    "currency": {
-      "description": "Wird für die Erfassung und Formatierung von Energiepreisen, Kosten und Einsparungen verwendet.",
-      "example": "Dein Ladepreis betrug {price}. Du hast {amount} gespart.",
-      "label": "Währung",
-      "title": "Währung"
     },
     "curtailer": {
       "description": "Gerät, das die Einspeisung auf Anforderung des Netzbetreibers begrenzt (§ 9 EEG). Viele Wechselrichter unterstützen dies direkt über ihre PV-Zähler-Konfiguration. Eine separate Konfiguration ist nur bei manchen Herstellern oder Anlagen mit mehreren Wechselrichtern nötig.",
@@ -216,6 +263,8 @@
       "identifier": "RFID-Kennung",
       "loginBlocked": "Login-Limit erreicht",
       "max": "max",
+      "maxCurrent": "Max. Stromstärke",
+      "maxPower": "Max. Leistung",
       "messengers": "Dienste",
       "no": "Nein",
       "odometer": "Kilometerstand",
@@ -352,6 +401,7 @@
       "enable": "Aktivieren",
       "error": "Fehler",
       "experimental": "Experimentell",
+      "forceEnable": "Trotzdem aktivieren",
       "forceSave": "Trotzdem speichern",
       "fromYamlHint": "Hinweis: Konfiguriert über evcc.yaml. Entferne den Eintrag aus der Datei, um die Bearbeitung hier zu aktivieren.",
       "hideAdvancedSettings": "Erweiterte Einstellungen ausblenden",
@@ -372,6 +422,7 @@
       "showAdvancedSettings": "Erweiterte Einstellungen anzeigen",
       "telemetry": "Telemetrie",
       "templateLoading": "Lade …",
+      "site": "Standort",
       "title": "Titel",
       "typeDeprecated": "Der Typ '{type}' ist veraltet und wird in einer zukünftigen Version entfernt. Bitte Changelog prüfen und Gerät neu anlegen.",
       "validateSave": "Überprüfen & speichern"
@@ -790,7 +841,7 @@
     "optimizer": {
       "description": "Analysiert Solarprognose, Strompreise und deinen typischen Verbrauch, um Batterie- und Ladestrategie zu optimieren. Daten werden zur Berechnung an den evcc Optimierungsdienst übertragen. Berechnet und visualisiert aktuell nur. Steuert noch keine Geräte.",
       "enable": "Optimizer aktivieren",
-      "info": "Es kann einige Minuten dauern, bis der Optimizer-Menüeintrag sichtbar wird. Bei neuen Installationen kann es bis zu 24 Stunden dauern, bis evcc genügend Daten gesammelt hat.",
+      "info": "Bei neuen Installationen kann es bis zu 24 Stunden dauern, bis evcc genügend Daten gesammelt hat.",
       "title": "Optimizer"
     },
     "options": {
@@ -887,6 +938,22 @@
       "labelDeviceSerial": "Geräteseriennummer",
       "labelVendorId": "Hersteller-ID",
       "title": "SMA Sunny Home Manager"
+    },
+    "site": {
+      "country": {
+        "description": "Wird für länderspezifische Hinweise und Voreinstellungen verwendet.",
+        "label": "Land"
+      },
+      "currency": {
+        "description": "Wird für die Erfassung und Formatierung von Energiepreisen, Kosten und Einsparungen verwendet.",
+        "example": "Dein Ladepreis betrug {price}. Du hast {amount} gespart.",
+        "label": "Währung"
+      },
+      "siteTitle": {
+        "description": "Wird in der Hauptansicht und im Browser-Tab angezeigt.",
+        "label": "Titel"
+      },
+      "title": "Standort"
     },
     "sponsor": {
       "addToken": "Token eingeben",
@@ -1033,11 +1100,6 @@
       "description": "Konfiguriere die Datenfreigabe, um evcc zu verbessern. Deine Privatsphäre ist uns wichtig und die Teilnahme ist völlig freiwillig.",
       "title": "Telemetrie"
     },
-    "title": {
-      "description": "Wird in der Hauptansicht und im Browser-Tab angezeigt.",
-      "label": "Titel",
-      "title": "Titel bearbeiten"
-    },
     "validation": {
       "failed": "fehlgeschlagen",
       "label": "Status",
@@ -1104,7 +1166,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Werde Sponsor",
-      "becomeSponsorExtended": "Unterstütze uns direkt. Es gibt auch Sticker.",
       "confetti": "Lust auf Konfetti?",
       "confettiPromise": "Es gibt auch Sticker und digitales Konfetti",
       "sticker": "… oder evcc Sticker?",
@@ -1113,9 +1174,7 @@
       "titleNoSponsor": "Unterstütze uns",
       "titleSponsor": "Du bist Unterstützer",
       "titleTrial": "Testmodus",
-      "titleVictron": "Unterstützt von Victron Energy",
-      "trial": "Du befindest dich im Testmodus und kannst alle Funktionen nutzen. Wir freuen uns, wenn du Sponsor wirst.",
-      "victron": "Du verwendest evcc auf Victron Energy Hardware und hast Zugriff auf alle Funktionen."
+      "trial": "Du befindest dich im Testmodus und kannst alle Funktionen nutzen. Wir freuen uns, wenn du Sponsor wirst."
     },
     "telemetry": {
       "optIn": "Ich möchte meine Ladedaten teilen.",
@@ -1196,6 +1255,7 @@
   },
   "general": {
     "back": "Zurück",
+    "cancel": "Abbrechen",
     "download": "Download",
     "error": "Fehler",
     "none": "keine",
@@ -1235,6 +1295,9 @@
   },
   "issue": {
     "additional": {
+      "copied": "Kopiert!",
+      "copy": "Kopieren",
+      "copySelected": "Auswahl kopieren",
       "description": "Konfiguration und Logs hinzufügen, um uns bei der schnellen Reproduktion zu helfen. Wir empfehlen, so viele Informationen wie möglich zu teilen. Zustand ist normalerweise nicht erforderlich.",
       "include": "einbeziehen",
       "lines": "Zeilen",
@@ -1518,7 +1581,7 @@
       "normal": "Normal",
       "now": "Schnell",
       "off": "Aus",
-      "on": "An",
+      "on": "Ein",
       "smart": "Smart"
     },
     "provider": {
@@ -1767,7 +1830,7 @@
   },
   "settings": {
     "dateFormat": {
-      "auto": "Auto",
+      "auto": "Automatisch",
       "dmy": "TT/MM/JJJJ",
       "label": "Datumsformat",
       "mdy": "MM/TT/JJJJ",

@@ -7,6 +7,9 @@ group: heating
 capabilities: ["meter", "dim"]
 # requirements:
 #   evcc: ["sponsorship"]
+discovery:
+  hostname: ["servicewelt*"]
+  mac: ["78E9962", "70B3D5C45"]
 params:
   - name: modbus
     choice: ["tcpip"]

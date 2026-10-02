@@ -8,7 +8,6 @@ soc: # state of charge
   source: const
   value: 42 # %
 
-
 ## optional attributes (read-only)
 
 #limitsoc: # in-vehicle charge limit
@@ -26,7 +25,6 @@ soc: # state of charge
 #getmaxcurrent: # max charge current
 #  source: const
 #  value: 16.0 # A
-#finishtime: # finish time (RFC3339)
 #  source: const
 #  value: "2030-01-01T00:00:00Z"
 

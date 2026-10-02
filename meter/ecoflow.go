@@ -106,7 +106,7 @@ func NewEcoFlow(accessKey, secretKey, serial, usage, uri string,
 		implement.May(m, implement.BatteryPowerLimiter(batteryPowerLimits))
 
 		// the backup reserve command is Stream-specific, the PowerOcean template shares this meter type
-		if soc == "cmsBattSoc" && batterySocLimits.MaxSoc > 0 {
+		if soc == "cmsBattSoc" {
 			m.limitG = util.Cached(m.dischargeLimit, cache)
 			implement.Has(m, implement.BatteryController(batteryModesSocLimit, batterySocLimits.LimitController(m.soc, m.setBackupReserve)))
 		}

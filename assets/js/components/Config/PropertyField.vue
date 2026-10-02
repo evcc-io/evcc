@@ -86,6 +86,19 @@
 		:currency="currency"
 		:valueLabel="zonesValueLabel"
 	/>
+	<Combobox
+		v-else-if="combobox"
+		:id="id"
+		v-model="value"
+		:options="serviceValues"
+		:placeholder="placeholder"
+		:required="required"
+		:pattern="patternRegex"
+		:title="patternTitle"
+		:invalid="invalid"
+		:disabled="disabled"
+		:loading="serviceLoading"
+	/>
 	<div v-else class="d-flex" :class="sizeClass">
 		<div class="position-relative flex-grow-1 shrinkable">
 			<input
@@ -152,6 +165,7 @@ import "@h2d2/shopicons/es/regular/minus";
 import VehicleIcon from "../VehicleIcon";
 import SelectGroup from "../Helper/SelectGroup.vue";
 import CustomSelect from "../Helper/CustomSelect.vue";
+import Combobox from "../Helper/Combobox.vue";
 import PropertyZonesField from "./PropertyZonesField.vue";
 import formatter from "@/mixins/formatter";
 import parseGoDuration, {
@@ -165,7 +179,7 @@ const NS_PER_SECOND = 1000000000;
 
 export default {
 	name: "PropertyField",
-	components: { VehicleIcon, SelectGroup, CustomSelect, PropertyZonesField },
+	components: { VehicleIcon, SelectGroup, CustomSelect, Combobox, PropertyZonesField },
 	mixins: [formatter],
 	props: {
 		id: String,
@@ -186,12 +200,20 @@ export default {
 		modelValue: [String, Number, Boolean, Object],
 		label: String,
 		serviceValues: { type: Array, default: () => [] },
+		serviceLoading: Boolean,
 		currency: { type: String, default: "EUR" },
 		rows: { type: Number },
 	},
 	emits: ["update:modelValue"],
 	data: () => {
 		return { selectMode: false, unitOverride: null };
+	},
+	watch: {
+		combobox() {
+			// arriving suggestions replace the input element, keep focus
+			if (document.activeElement?.id !== this.id) return;
+			this.$nextTick(() => document.getElementById(this.id)?.focus());
+		},
 	},
 	computed: {
 		patternRegex() {
@@ -201,6 +223,9 @@ export default {
 			const examples = this.pattern.Examples || [];
 			if (!examples.length) return null;
 			return examples.join(", ");
+		},
+		combobox() {
+			return typeof this.serviceValues[0] === "object";
 		},
 		datalistId() {
 			return this.serviceValues.length > 0 ? `${this.id}-datalist` : null;

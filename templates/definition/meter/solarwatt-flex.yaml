@@ -10,6 +10,8 @@ requirements:
       Combines data of all connected PV inverters or batteries.
     de: |
       Kombiniert Daten von allen verbundenen Solar-Wechselrichtern oder Batterien.
+discovery:
+  mac: ["4C52EC"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

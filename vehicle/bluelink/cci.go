@@ -21,8 +21,9 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// CCIConfig holds the OneApp/CCI login parameters. Only set for EU Kia/Hyundai,
-// where the legacy IDPConnect authorize endpoint is WAF-blocked.
+// CCIConfig holds the OneApp/CCI login parameters. Only set for EU
+// Kia/Hyundai/Genesis, where the legacy IDPConnect authorize endpoint is
+// WAF-blocked.
 type CCIConfig struct {
 	OneAppClientID       string // OneApp OAuth2 client_id (not on the WAF block list)
 	OneAppRedirectURI    string
