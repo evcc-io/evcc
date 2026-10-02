@@ -58,7 +58,7 @@ render: |
       id: 110 # HSM
       register:
         address: 55070 # HSM_EMS_PVSTATUS
-        type: writeholding
+        type: writesingle
         encoding: int16
   setmaxpower:
     source: modbus
@@ -66,7 +66,7 @@ render: |
     id: 110 # HSM
     register:
       address: 55076 # HSM_EMS_SOLLPOWER
-      type: writeholdings
+      type: writemultiple
       encoding: int32
   power:
     source: modbus

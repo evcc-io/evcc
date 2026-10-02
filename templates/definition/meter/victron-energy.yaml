@@ -180,7 +180,7 @@ render: |
       id: 100 # com.victronenergy.system
       register:
         address: 2901 # limit soc
-        type: writeholding
+        type: writesingle
         decode: uint16
       scale: 10
   {{- include "battery-params" . }}
