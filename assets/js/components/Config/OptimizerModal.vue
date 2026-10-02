@@ -47,12 +47,9 @@
 				<template v-else>
 					<p class="mt-2 mb-1">{{ $t("config.optimizer.automaticHint") }}</p>
 					<ul class="mb-2 ps-3">
-						<li>{{ $t("config.optimizer.automaticBattery") }}</li>
-						<template v-if="automatic === OPTIMIZER_AUTOMATIC.FULL">
-							<li>{{ $t("config.optimizer.automaticCharging") }}</li>
-							<li>{{ $t("config.optimizer.automaticLimits") }}</li>
-							<li>{{ $t("config.optimizer.automaticPlans") }}</li>
-						</template>
+						<li v-for="key in automaticLevelActions(automatic)" :key="key">
+							{{ $t(key) }}
+						</li>
 					</ul>
 					<p class="mb-1">{{ $t("config.optimizer.automaticNotControlled") }}</p>
 					<ul class="mb-0 ps-3">
@@ -84,6 +81,7 @@ import api from "@/api";
 import store from "@/store";
 import { docsPrefix } from "@/i18n";
 import { OPTIMIZER_AUTOMATIC, type SelectOption } from "@/types/evcc";
+import { automaticLevelActions, automaticLevelOptions } from "../Optimize/automaticLevels";
 import type { AxiosError } from "axios";
 
 export default defineComponent({
@@ -96,6 +94,7 @@ export default defineComponent({
 		return {
 			error: null as string | null,
 			OPTIMIZER_AUTOMATIC,
+			automaticLevelActions,
 		};
 	},
 	computed: {
@@ -106,11 +105,7 @@ export default defineComponent({
 			return store.state?.optimizerAutomatic || OPTIMIZER_AUTOMATIC.OFF;
 		},
 		levelOptions(): SelectOption<string>[] {
-			return Object.values(OPTIMIZER_AUTOMATIC).map((value) => ({
-				value,
-				name: this.$t(`config.optimizer.automaticLevel.${value}`),
-				disabled: !this.isSponsor,
-			}));
+			return automaticLevelOptions(this.$t, this.isSponsor);
 		},
 		hasEvopt(): boolean {
 			return !!store.state?.evopt;

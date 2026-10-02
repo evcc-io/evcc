@@ -30,6 +30,7 @@
 import { defineComponent, type PropType } from "vue";
 import SelectGroup from "../Helper/SelectGroup.vue";
 import { OPTIMIZER_AUTOMATIC, type SelectOption } from "@/types/evcc";
+import { automaticLevelActions, automaticLevelOptions } from "./automaticLevels";
 
 export default defineComponent({
 	name: "AutomaticModeStrip",
@@ -47,30 +48,14 @@ export default defineComponent({
 	},
 	computed: {
 		levelOptions(): SelectOption<string>[] {
-			return Object.values(OPTIMIZER_AUTOMATIC).map((value) => ({
-				value,
-				name: this.$t(`config.optimizer.automaticLevel.${value}`),
-				disabled: !this.isSponsor,
-			}));
+			return automaticLevelOptions(this.$t, this.isSponsor);
 		},
 		description(): string {
-			switch (this.automatic) {
-				case OPTIMIZER_AUTOMATIC.BATTERY:
-					return this.$t("config.optimizer.automaticBattery") + ".";
-				case OPTIMIZER_AUTOMATIC.FULL:
-					return (
-						[
-							"config.optimizer.automaticBattery",
-							"config.optimizer.automaticCharging",
-							"config.optimizer.automaticLimits",
-							"config.optimizer.automaticPlans",
-						]
-							.map((key) => this.$t(key))
-							.join(", ") + "."
-					);
-				default:
-					return this.$t("config.optimizer.automaticOff");
+			const actions = automaticLevelActions(this.automatic);
+			if (actions.length === 0) {
+				return this.$t("config.optimizer.automaticOff");
 			}
+			return actions.map((key) => this.$t(key)).join(", ") + ".";
 		},
 	},
 });
