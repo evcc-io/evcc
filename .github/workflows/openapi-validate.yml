@@ -21,6 +21,6 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v7
         with:
-          go-version: stable
+          go-version-file: go.mod
       - name: Validate OpenAPI spec
         run: go run github.com/getkin/kin-openapi/cmd/validate@v0.133.0 -ext -- server/openapi.yaml

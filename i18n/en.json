@@ -7,6 +7,18 @@
     "authorizationSuccessful": "Authorization Successful",
     "buttonConnect": "Connect to {provider}",
     "buttonDisconnect": "Disconnect",
+    "challenge": {
+      "captcha": {
+        "label": "Enter the characters shown in the image.",
+        "title": "Captcha"
+      },
+      "code": {
+        "label": "Paste the code or the address of the page you were redirected to.",
+        "title": "Authorization code"
+      },
+      "openLogin": "Open login page",
+      "submit": "Continue"
+    },
     "confirmLogout": "Are you sure you want to disconnect {title}?",
     "connect": "connect",
     "disconnect": "disconnect",
@@ -43,6 +55,12 @@
       "bufferTitle": "Battery as charging buffer",
       "discharge": "Prevent home battery discharge in fast mode and during planned charging.",
       "gridDischarge": "Allow home battery to discharge to the grid.",
+      "gridDischargeConfirm": {
+        "country": "Configured country: {country}.",
+        "description": "Whether battery energy may be exported to the grid depends on your country and your feed-in agreement. If the battery is also charged from the grid, the exported energy is no longer purely solar. Under many feed-in tariffs this forfeits your remuneration or is prohibited. Check your feed-in contract and grid operator requirements first.",
+        "noCountry": "No country configured. Set it under {link}.",
+        "title": "Grid export from battery"
+      },
       "priority": "Home battery has priority while it is below {soc}. Then the charging points receive the surplus.",
       "priorityNone": "Solar surplus goes straight to the charging points. Set a value above {soc} to prioritize the home battery.",
       "priorityTitle": "Where does the surplus go first?"
@@ -144,9 +162,36 @@
         "switchsocket": "User-defined switch socket"
       }
     },
+    "circuit": {
+      "addMeter": "Add dedicated energy meter",
+      "meterSelectionLabel": "Meter Selection",
+      "meterNone": "No meter",
+      "meterSelectionHelpNoMeter": "The sum of all charging points is used.",
+      "meterSelectionHelpDedicatedMeter": "Add an existing meter to this circuit below.",
+      "meterSelectionHelpGridMeter": "Uses the existing grid meter of your installation.",
+      "meterGrid": "Grid meter",
+      "meterDedicated": "Dedicated meter",
+      "parentCircuit": "Parent circuit",
+      "titleAdd": "Add circuit",
+      "titleEdit": "Edit circuit",
+      "titleLabel": "Title",
+      "template": "Circuit",
+      "custom": "User-defined circuit",
+      "meterHelp": "Meter measuring the total consumption of this circuit.",
+      "meterLabelAdd": "Add Circuit Meter",
+      "meterLabelEdit": "Edit Circuit Meter",
+      "deleteChildrenFirst": "To delete this circuit, first delete its child circuits.",
+      "meterLabel": "Energy meter"
+    },
     "circuits": {
+      "addSubCircuit": "Add sub-circuit",
+      "chargingPointsNote": "Assign charging points & heaters to a circuit in their own settings.",
+      "addMainCircuit": "Add main circuit",
       "description": "Ensures, that the sum of all loadpoints connected to a circuit does not exceed the configured power and current limits. Circuits can be nested to build a hierarchy.",
+      "legacyWarning": "New circuits configuration available! Remove and save your configuration here to use the new guided process.",
       "title": "Load Management",
+      "meterDedicated": "Meter",
+      "meterGrid": "Grid",
       "usableMeters": "Usable meter references"
     },
     "consumer": {
@@ -161,12 +206,6 @@
       "labelInterval": "Update interval",
       "labelResidualPower": "Residual power",
       "title": "Control behavior"
-    },
-    "currency": {
-      "description": "Used to format energy prices, costs and savings based on your tariff.",
-      "example": "Your charging price was {price}. You saved {amount}.",
-      "label": "Currency",
-      "title": "Currency"
     },
     "curtailer": {
       "description": "Device that limits feed-in on request of the grid operator (§ 9 EEG). Many solar inverters support this directly via their solar meter configuration. A separate configuration is only needed for some manufacturers or multi-inverter systems.",
@@ -216,6 +255,8 @@
       "identifier": "RFID-Identifier",
       "loginBlocked": "Login limit reached",
       "max": "max",
+      "maxCurrent": "Max. current",
+      "maxPower": "Max. power",
       "messengers": "Services",
       "no": "no",
       "odometer": "Odometer",
@@ -352,6 +393,7 @@
       "enable": "Enable",
       "error": "Error",
       "experimental": "Experimental",
+      "forceEnable": "Enable anyway",
       "forceSave": "Save anyway",
       "fromYamlHint": "Note: Configured via evcc.yaml. Remove the entry from the file to enable editing here.",
       "hideAdvancedSettings": "Hide advanced settings",
@@ -373,6 +415,7 @@
       "telemetry": "Telemetry",
       "templateLoading": "Loading...",
       "title": "Title",
+      "site": "Site",
       "typeDeprecated": "The type '{type}' is outdated and will be removed in a future version. Please check the changelog and recreate this device.",
       "validateSave": "Validate & save"
     },
@@ -790,7 +833,7 @@
     "optimizer": {
       "description": "Analyzes solar forecast, electricity prices, and your consumption patterns to optimize battery and charging strategy. Data is sent to the evcc optimization service for processing. Currently only calculates and visualizes. Does not control devices yet.",
       "enable": "Enable Optimizer",
-      "info": "It may take a few minutes for the optimizer menu entry to become visible. For new installations, it may take up to 24 hours until evcc has collected enough data.",
+      "info": "For new installations, it may take up to 24 hours until evcc has collected enough data.",
       "title": "Optimizer"
     },
     "options": {
@@ -887,6 +930,22 @@
       "labelDeviceSerial": "Device Serial",
       "labelVendorId": "Vendor ID",
       "title": "SMA Sunny Home Manager"
+    },
+    "site": {
+      "country": {
+        "description": "Used for region-specific hints and defaults.",
+        "label": "Country"
+      },
+      "currency": {
+        "description": "Used to format energy prices, costs and savings based on your tariff.",
+        "example": "Your charging price was {price}. You saved {amount}.",
+        "label": "Currency"
+      },
+      "siteTitle": {
+        "description": "Displayed on main screen and browser tab.",
+        "label": "Title"
+      },
+      "title": "Site"
     },
     "sponsor": {
       "addToken": "Enter token",
@@ -1033,11 +1092,6 @@
       "description": "Configure data sharing to help improve evcc. Your privacy is important to us and participation is completely optional.",
       "title": "Telemetry"
     },
-    "title": {
-      "description": "Displayed on main screen and browser tab.",
-      "label": "Title",
-      "title": "Edit Title"
-    },
     "validation": {
       "failed": "failed",
       "label": "Status",
@@ -1104,7 +1158,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Become a sponsor",
-      "becomeSponsorExtended": "Support us directly to get stickers.",
       "confetti": "Ready for confetti?",
       "confettiPromise": "You get stickers and digital confetti",
       "sticker": "… or evcc stickers?",
@@ -1113,9 +1166,7 @@
       "titleNoSponsor": "Support us",
       "titleSponsor": "You are a supporter",
       "titleTrial": "Trial mode",
-      "titleVictron": "Sponsored by Victron Energy",
-      "trial": "You are in trial mode and can use all features. Please consider supporting the project.",
-      "victron": "You're using evcc on Victron Energy hardware and have access to all features."
+      "trial": "You are in trial mode and can use all features. Please consider supporting the project."
     },
     "telemetry": {
       "optIn": "I want to contribute my data.",
@@ -1196,6 +1247,7 @@
   },
   "general": {
     "back": "Back",
+    "cancel": "Cancel",
     "download": "Download",
     "error": "Error",
     "none": "none",
@@ -1235,6 +1287,9 @@
   },
   "issue": {
     "additional": {
+      "copied": "copied!",
+      "copy": "copy",
+      "copySelected": "copy selected",
       "description": "Include configuration and logs to help us reproduce the issue quickly. We encourage sharing as much as possible. State is usually not needed.",
       "include": "include",
       "lines": "lines",

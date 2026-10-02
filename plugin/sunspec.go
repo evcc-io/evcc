@@ -9,6 +9,7 @@ import (
 
 	sunspec "github.com/andig/gosunspec"
 	"github.com/andig/gosunspec/typelabel"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/meters"
@@ -143,7 +144,11 @@ func (m *ModbusSunspec) floatGetter() (f float64, err error) {
 		m.op.Block,
 		m.op.Point,
 	)
-	if err != nil && !errors.Is(err, meters.ErrNaN) {
+	if err != nil {
+		// not implemented sentinel: report missing instead of zero so energy totals are not rebased
+		if errors.Is(err, meters.ErrNaN) {
+			return 0, api.ErrNotAvailable
+		}
 		return 0, fmt.Errorf("model %d block %d point %s: %w", m.op.Model, m.op.Block, m.op.Point, err)
 	}
 

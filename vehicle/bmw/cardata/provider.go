@@ -245,17 +245,6 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	return status, err
 }
 
-var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.Int("vehicle.drivetrain.electricEngine.charging.timeRemaining")
-	if err != nil {
-		return time.Time{}, err
-	}
-	return time.Now().Add(time.Duration(res) * time.Minute), nil
-}
-
 var _ api.VehicleRange = (*Provider)(nil)
 
 // Range implements the api.VehicleRange interface

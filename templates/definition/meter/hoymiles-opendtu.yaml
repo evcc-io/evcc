@@ -7,14 +7,18 @@ params:
   - name: usage
     choice: ["pv"]
   - name: host
+  - name: cache
+    default: 1s
 render: |
   type: custom
   power:
     source: http
     uri: http://{{ .host }}/api/livedata/status
     jq: .total.Power.v
+    cache: {{ .cache }}
   energy:
     source: http
     uri: http://{{ .host }}/api/livedata/status
     # skip partial sums until all inverters are contacted; radio_stats needs firmware 2024.10.22+
     jq: 'if all(.inverters[]; .radio_stats.rssi == null or .radio_stats.rssi > -127) then .total.YieldTotal.v else empty end'
+    cache: {{ .cache }}

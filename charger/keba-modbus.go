@@ -283,7 +283,7 @@ func (wb *Keba) Enabled() (bool, error) {
 	}
 
 	// P30: charging state 1 also covers "no vehicle", so track enable state locally
-	return wb.enabled, nil
+	return verifyEnabled(wb, wb.enabled)
 }
 
 // Enable implements the api.Charger interface

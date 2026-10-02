@@ -160,6 +160,8 @@ func TestSyncChargerPhasesByGetter(t *testing.T) {
 		lpPhases, actualPhases, outPhases int
 	}{
 		{0, 0, 0},
+		{0, 1, 1}, // seed
+		{0, 3, 3}, // seed
 		{1, 0, 1},
 		{1, 1, 1},
 		{1, 3, 3},
@@ -208,6 +210,9 @@ func TestSyncChargerPhasesByMeasurement(t *testing.T) {
 		lpPhases, actualPhases, outPhases int
 	}{
 		{0, 0, 0},
+		{0, 1, 0}, // 1p vehicle on 3p possible
+		{0, 2, 3}, // seed
+		{0, 3, 3}, // seed
 		{1, 0, 1},
 		{1, 1, 1},
 		{1, 3, 3},
