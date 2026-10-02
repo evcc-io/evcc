@@ -67,7 +67,8 @@ object responses use `service.Option` (`util/service/helper.go`) and render as
 Local network discovery lives in `util/discovery` (mDNS, SSDP, neighbor table,
 reverse DNS; no raw sockets, no port scans) and feeds `network/hosts`,
 `network/report` and `network/scan` in `util/service/network*.go`. The vendor
-list is generated from the IEEE registry (`go generate ./util/discovery`).
+list is generated from the IEEE registry (`make oui-update`), see
+[Discovery Hints](discovery-hints.md) for the update routine.
 
 - Scan: 3 s first pass (first request waits), 5 s second pass, repeated when
   older than a minute, results combined, hosts dropped after 30 minutes.

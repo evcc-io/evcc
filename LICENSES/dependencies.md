@@ -22,7 +22,7 @@ Backend modules and libraries used in the Go application.
 - **Source**: https://standards-oui.ieee.org/
 - **License**: Public domain, IEEE asserts no copyright and does not restrict distribution
 - **Files**: /util/discovery/oui.txt.gz
-- **Notes**: Hardware address prefixes and organization names, regenerate with `go generate ./util/discovery`
+- **Notes**: Hardware address prefixes and organization names, regenerate with `make oui-update`
 
 ## JavaScript Dependencies
 
