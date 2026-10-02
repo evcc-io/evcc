@@ -63,6 +63,13 @@ assets::
 openapi::
 	vp run openapi
 
+# update the embedded IEEE vendor registry, the registry rejects the Go http client
+oui-update::
+	cd util/discovery && \
+	curl -sSfL --remote-name-all https://standards-oui.ieee.org/oui/oui.csv https://standards-oui.ieee.org/oui28/mam.csv https://standards-oui.ieee.org/oui36/oui36.csv && \
+	go run oui_generate.go oui.csv mam.csv oui36.csv && \
+	rm oui.csv mam.csv oui36.csv
+
 docs::
 	go generate github.com/evcc-io/evcc/util/templates/...
 

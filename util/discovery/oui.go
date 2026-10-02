@@ -9,11 +9,8 @@ import (
 	"sync"
 )
 
-// the registry rejects the Go http client
-//go:generate curl -sSfL --remote-name-all https://standards-oui.ieee.org/oui/oui.csv https://standards-oui.ieee.org/oui28/mam.csv https://standards-oui.ieee.org/oui36/oui36.csv
-//go:generate go run oui_generate.go oui.csv mam.csv oui36.csv
-//go:generate rm oui.csv mam.csv oui36.csv
-
+// update with `make oui-update`
+//
 //go:embed oui.txt.gz
 var ouiData []byte
 
