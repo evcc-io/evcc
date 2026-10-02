@@ -3,9 +3,11 @@ products:
   - brand: Bender
     description:
       generic: ICC1314
+    capabilities: ["rfid"]
   - brand: Bender
     description:
       generic: ICC1324
+    capabilities: ["rfid"]
   - brand: Mennekes
     description:
       generic: AMTRON 4You 400
