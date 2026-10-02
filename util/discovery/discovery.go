@@ -23,6 +23,8 @@ const (
 	retention     = 30 * time.Minute // devices miss scans
 	lookupTimeout = time.Second
 	minPrefixLen  = 24 // larger sweeps look like an attack
+
+	mdnsEnumeration = "_services._dns-sd._udp"
 )
 
 // quick first pass, second pass for late answers
@@ -33,9 +35,38 @@ type Host struct {
 	IP       string   `json:"ip"`
 	MAC      string   `json:"mac,omitempty"`
 	Hostname string   `json:"hostname,omitempty"`
+	Aliases  []string `json:"aliases,omitempty"`  // further DNS and mDNS names
 	Services []string `json:"services,omitempty"` // mDNS "type:instance", SSDP search target
 
 	seen time.Time
+}
+
+// Names returns the hostname followed by its aliases
+func (h Host) Names() []string {
+	if h.Hostname == "" {
+		return h.Aliases
+	}
+	return append([]string{h.Hostname}, h.Aliases...)
+}
+
+// addNames keeps all names, preferred ones come first and are displayed
+func (h *Host) addNames(preferred bool, names ...string) {
+	all := slices.Concat(h.Names(), names)
+	if preferred {
+		all = slices.Concat(names, h.Names())
+	}
+
+	var res []string
+	for _, name := range all {
+		name = strings.TrimSuffix(name, ".")
+		if name != "" && !slices.ContainsFunc(res, func(s string) bool { return strings.EqualFold(s, name) }) {
+			res = append(res, name)
+		}
+	}
+
+	if len(res) > 0 {
+		h.Hostname, h.Aliases = res[0], res[1:]
+	}
 }
 
 var (
@@ -43,6 +74,7 @@ var (
 
 	mu       sync.Mutex
 	hosts    = make(map[string]*Host)
+	types    []string      // mDNS service types announced in the network
 	updated  time.Time     // end of last pass
 	scanning bool          // scan is running
 	passEnd  time.Time     // expected end of running pass
@@ -148,9 +180,18 @@ func pass(duration time.Duration, mdnsTypes []string) {
 
 	var wg sync.WaitGroup
 
-	for _, typ := range slices.Compact(slices.Sorted(slices.Values(append(mdnsTypes, "_http._tcp")))) {
-		wg.Go(func() { browse(ctx, typ) })
+	mu.Lock()
+	all := slices.Concat(mdnsTypes, types, []string{"_http._tcp"})
+	mu.Unlock()
+
+	slices.Sort(all)
+	for _, typ := range slices.Compact(all) {
+		wg.Go(func() {
+			browse(ctx, typ, func(se *zeroconf.ServiceEntry) { addEntry(typ, se) })
+		})
 	}
+	// announced types are browsed from the next pass on
+	wg.Go(func() { browse(ctx, mdnsEnumeration, addType) })
 	wg.Go(func() { search(duration) })
 	wg.Go(func() {
 		neighbors()
@@ -221,20 +262,12 @@ func neighbors() {
 	}
 }
 
-func browse(ctx context.Context, typ string) {
+func browse(ctx context.Context, typ string, handle func(se *zeroconf.ServiceEntry)) {
 	entries := make(chan *zeroconf.ServiceEntry, 16)
 
 	go func() {
 		for se := range entries {
-			for _, ip := range se.AddrIPv4 {
-				addService(ip.String(), typ+":"+se.Instance)
-				update(ip.String(), func(h *Host) {
-					// router name wins, mDNS may announce foreign addresses
-					if h.Hostname == "" {
-						h.Hostname = strings.TrimSuffix(se.HostName, ".")
-					}
-				})
-			}
+			handle(se)
 		}
 	}()
 
@@ -243,6 +276,28 @@ func browse(ctx context.Context, typ string) {
 		return
 	}
 	<-ctx.Done()
+}
+
+func addEntry(typ string, se *zeroconf.ServiceEntry) {
+	for _, ip := range se.AddrIPv4 {
+		addService(ip.String(), typ+":"+se.Instance)
+		// router name wins, mDNS may announce foreign addresses
+		update(ip.String(), func(h *Host) { h.addNames(false, se.HostName) })
+	}
+}
+
+func addType(se *zeroconf.ServiceEntry) {
+	typ := strings.TrimSuffix(se.Instance, ".local")
+	if !strings.HasPrefix(typ, "_") {
+		return
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	if !slices.Contains(types, typ) {
+		types = append(types, typ)
+	}
 }
 
 func search(duration time.Duration) {
@@ -274,9 +329,7 @@ func lookupNames() {
 			if err != nil || len(names) == 0 {
 				return
 			}
-			update(ip, func(h *Host) {
-				h.Hostname = strings.TrimSuffix(names[0], ".")
-			})
+			update(ip, func(h *Host) { h.addNames(true, names...) })
 		})
 	}
 	wg.Wait()

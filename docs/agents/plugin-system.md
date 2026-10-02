@@ -72,6 +72,10 @@ list is generated from the IEEE registry (`make oui-update`), see
 
 - Scan: 3 s first pass (first request waits), 5 s second pass, repeated when
   older than a minute, results combined, hosts dropped after 30 minutes.
+- mDNS: browses the types of the template hints plus all types announced in
+  the network (DNS-SD enumeration), so reports show vendor types without a hint.
+- A host keeps all its names (router name first, then mDNS), hostname hints
+  match any of them.
 - `EVCC_DISCOVERY_HOSTS` (JSON list of `discovery.Host`) replaces the scan,
   used in tests and for environments without network access. On macOS the neighbor table is empty for binaries started with
   `go run`, test with a built binary.
