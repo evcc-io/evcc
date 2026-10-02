@@ -365,7 +365,7 @@ export default defineComponent({
 		initialAssignedLoadpoints() {
 			return this.availableLoadpoints.map((l) => l.id) as number[];
 		},
-		async patchAssignedLoadpoints(circuitName: string, circuitDeleted?: boolean) {
+		async patchAssignedLoadpoints(circuitDeleted?: boolean) {
 			const initial = this.initialAssignedLoadpoints();
 			const current = circuitDeleted ? [] : this.selectedLoadpointIds;
 
@@ -373,7 +373,7 @@ export default defineComponent({
 			const removedLoadpoints = initial.filter((id) => !current.includes(id));
 
 			await Promise.all([
-				...addedLoadpoints.map((id) => this.patchLoadpoint(id, circuitName)),
+				...addedLoadpoints.map((id) => this.patchLoadpoint(id, this.circuitName)),
 				...removedLoadpoints.map((id) => this.patchLoadpoint(id)),
 			]);
 		},
@@ -391,20 +391,15 @@ export default defineComponent({
 			);
 		},
 		async handleAdded(circuitName: string) {
-			await this.patchAssignedLoadpoints(circuitName);
+			await this.patchAssignedLoadpoints();
 			this.$emit("changed", circuitName);
 		},
 		async handleUpdated() {
-			if (this.circuitName) {
-				await this.patchAssignedLoadpoints(this.circuitName);
-				this.$emit("changed");
-			}
+			await this.patchAssignedLoadpoints();
+			this.$emit("changed");
 		},
 		async handleRemoved() {
-			if (this.circuitName) {
-				await this.patchAssignedLoadpoints(this.circuitName, true);
-			}
-
+			await this.patchAssignedLoadpoints(true);
 			this.$emit("changed");
 		},
 	},
