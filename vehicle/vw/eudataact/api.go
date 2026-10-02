@@ -122,11 +122,14 @@ func (v *API) login() error {
 	identityHost := strings.TrimPrefix(vwidentity.BaseURL, "https://")
 	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		// Cookies from the redirect response are already stored in the jar.
-		if req.URL.Scheme != "https" || isUserPage(req.URL) {
+		if isUserPage(req.URL) || isMarketingConsentPage(req.URL) {
 			return http.ErrUseLastResponse
 		}
-		if req.URL.Host == identityHost && strings.Contains(req.URL.Path, "/consent/marketing/") {
+		if req.URL.Scheme != "http" && req.URL.Scheme != "https" {
 			return http.ErrUseLastResponse
+		}
+		if !isLoginHost(req.URL.Host, identityHost) {
+			return fmt.Errorf("unexpected login redirect host %s", req.URL.Host)
 		}
 		if len(via) >= 10 {
 			return errors.New("stopped after 10 redirects")
@@ -206,7 +209,7 @@ func (v *API) login() error {
 	if cb, err := vwidentity.MarketingConsentCallback(final); err != nil {
 		return err
 	} else if cb != nil {
-		if final.Scheme != "https" || final.Host != identityHost || cb.Scheme != "https" {
+		if !isHTTPURL(final) || !isLoginHost(final.Host, identityHost) || !validMarketingCallback(cb, identityHost) {
 			return errors.New("unexpected marketing consent callback URL")
 		}
 		resp, err = v.Get(cb.String())
@@ -250,8 +253,26 @@ func (t loginTraceTransport) RoundTrip(req *http.Request) (*http.Response, error
 	return resp, err
 }
 
+func isLoginHost(host, identityHost string) bool {
+	return strings.EqualFold(host, identityHost) || strings.EqualFold(host, portalHost)
+}
+
+func isMarketingConsentPage(u *url.URL) bool {
+	return strings.EqualFold(u.Host, strings.TrimPrefix(vwidentity.BaseURL, "https://")) &&
+		strings.Contains(u.Path, "/consent/marketing/")
+}
+
+func validMarketingCallback(u *url.URL, identityHost string) bool {
+	validPath := u.Path == "/oidc/v1/oauth/client/callback" || u.Path == "/oidc/v1/oauth/client/callback/success"
+	return isHTTPURL(u) && strings.EqualFold(u.Host, identityHost) && validPath
+}
+
+func isHTTPURL(u *url.URL) bool {
+	return u.Scheme == "http" || u.Scheme == "https"
+}
+
 func isUserPage(u *url.URL) bool {
-	return u.Scheme == "https" && u.Host == portalHost &&
+	return isHTTPURL(u) && strings.EqualFold(u.Host, portalHost) &&
 		strings.HasPrefix(u.Path, "/content/euda/") && strings.HasSuffix(u.Path, "/user.html")
 }
 
