@@ -318,7 +318,7 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
-                  type: writeholding
+                  type: writeholdings
                   decode: uint16
             {{- if eq .firmware ">=01.01.00.28.15" }}
             - source: const
@@ -351,7 +351,7 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
-                  type: writeholding
+                  type: writeholdings
                   decode: uint16
             {{- if eq .firmware ">=01.01.00.28.15" }}
             - source: const
@@ -384,7 +384,7 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 60312 # Energy Storage Forced Charging/Discharging Target SOC (%)
-                  type: writeholding
+                  type: writeholdings
                   decode: uint16
             - source: const
               value: 0
@@ -393,7 +393,7 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 60311 # Energy Storage Forced Charging/Discharging Mode (0 = Target SOC, 1 = Charging/discharging duration)
-                  type: writeholding
+                  type: writeholdings
                   decode: uint16
             - source: const
               value: 0
@@ -402,7 +402,7 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
-                  type: writeholding
+                  type: writeholdings
                   decode: uint16
             {{- if eq .firmware ">=01.01.00.28.15" }}
             - source: const
@@ -435,7 +435,7 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 60310 # Energy Storage Forced Charging/Discharging (0 = Forced charging, 1 = Forced discharging, 2 = Exit forced charging/discharging, 99 = Pause)
-                  type: writeholding
+                  type: writeholdings
                   decode: uint16
             {{- if eq .firmware ">=01.01.00.28.15" }}
             - source: const
