@@ -10,7 +10,28 @@ requirements:
     en: "Day-ahead spot prices plus a 4-day forecast [energypriceforecast.eu](https://energypriceforecast.eu/en/evcc-electricity-price-co2-forecast/)"
   evcc: ["skiptest"]
 group: price
-countries: ["DE", "NL", "BE", "DK", "FR", "AT", "CZ", "PL", "FI", "SE", "NO", "CH", "IT", "SK", "RO", "ES", "PT", "GR", "BG"]
+countries:
+  [
+    "DE",
+    "NL",
+    "BE",
+    "DK",
+    "FR",
+    "AT",
+    "CZ",
+    "PL",
+    "FI",
+    "SE",
+    "NO",
+    "CH",
+    "IT",
+    "SK",
+    "RO",
+    "ES",
+    "PT",
+    "GR",
+    "BG",
+  ]
 params:
   - name: region
     example: DE
