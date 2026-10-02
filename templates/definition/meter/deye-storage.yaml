@@ -16,18 +16,6 @@ params:
     id: 1
   - name: maxacpower
     service: modbus/read?address=16&type=holding&encoding=uint32s&scale=0.1&{modbus} # Rated power, 0.1 W
-  - name: feedinlimit
-    service: modbus/read?address=245&type=holding&encoding=uint16&{modbus} # Max Sell Power
-    type: float
-    unit: W
-    usages: ["pv"]
-    advanced: true
-    description:
-      en: Feed-in limit
-      de: Einspeisegrenze
-    help:
-      en: Permanent feed-in limit configured on the inverter (Max Sell Power). Curtailment never exceeds it and lifting curtailment restores it instead of the nominal power. Leave empty if no limit is configured.
-      de: Dauerhafte Einspeisegrenze, die im Wechselrichter eingestellt ist (Max Sell Power). Die Abregelung überschreitet sie nie und die Freigabe stellt sie statt der Nennleistung wieder her. Leer lassen, wenn keine Grenze eingestellt ist.
   - preset: battery-params
   - name: maxdischargecurrent
     service: modbus/read?address=211&type=holding&encoding=uint16&{modbus} # Battery Max Discharge Current
@@ -157,24 +145,16 @@ render: |
   # Feed-in curtailment via "Max Sell Power" (register 245, watts). The register is the
   # device's always-active feed-in ceiling; there is no separate limit-enable register.
   # "Solar Export" (register 247) is the owner's export on/off switch and left untouched.
-  {{- $limit := maxf .maxacpower 1 }}
-  {{- if gt (.feedinlimit | int) 0 }}{{ $limit = .feedinlimit }}{{ end }}
-  curtail: # percent of nominal, capped at the feed-in limit (default: nominal power)
-    source: js
-    script: |
-      Math.min(curtail * {{ maxf .maxacpower 1 }} / 100, {{ $limit }})
-    out:
-      - name: limit
-        type: float
-        config:
-          source: modbus
-          {{- include "modbus" . | indent 8 }}
-          register:
-            address: 245 # Max Sell Power (W)
-            type: writemultiple
-            decode: uint16
-  curtailed: # reaching the configured feed-in limit counts as uncurtailed
-    source: js
+  curtail: # limit feed-in to the given percent of nominal (100 % = nominal power)
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 245 # Max Sell Power (W)
+      type: writemultiple
+      decode: uint16
+    scale: {{ divf (maxf .maxacpower 1) 100 }} # % to W
+  curtailed: # allowed feed-in as percent of nominal, derived from Max Sell Power
+    source: go
     in:
       - name: limit
         type: float
@@ -186,9 +166,13 @@ render: |
             type: holding
             decode: uint16
     script: |
-      // compare in whole percent, the register resolution does not reproduce the limit exactly
-      var p = Math.round(limit * 100 / {{ maxf .maxacpower 1 }});
-      p > 100 || p >= {{ round (divf (mulf $limit 100) (maxf .maxacpower 1)) 0 }} ? 100 : p
+      // float64 is required: a whole-number input arrives as an int literal
+      // round, the watt conversion does not reproduce the written percent exactly
+      p := int(float64(limit)*100/{{ maxf .maxacpower 1 }} + 0.5)
+      if p > 100 {
+        p = 100
+      }
+      p
   {{- end }}
   {{- end }}
   {{- if eq .usage "battery" }}
