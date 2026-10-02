@@ -80,7 +80,15 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	case "CHARGING", "CONSERVING":
 		return api.StatusC, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %s", s)
+		// state is omitted when the vehicle reports an unnamed combination, fall back to the plug state
+		switch res.Status.PlugConnectionState {
+		case "CONNECTED":
+			return api.StatusB, nil
+		case "DISCONNECTED":
+			return api.StatusA, nil
+		default:
+			return api.StatusNone, fmt.Errorf("invalid status: %s", s)
+		}
 	}
 }
 
@@ -93,23 +101,6 @@ func (v *Provider) Range() (int64, error) {
 		return 0, err
 	}
 	return res.Status.Battery.RemainingCruisingRangeInMeters / 1e3, nil
-}
-
-var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.charging()
-	if err != nil {
-		return time.Time{}, err
-	}
-	if !res.Status.FullyChargedAt.IsZero() {
-		return res.Status.FullyChargedAt, nil
-	}
-	if res.Status.RemainingTimeToFullyChargedInMinutes > 0 {
-		return time.Now().Add(time.Duration(res.Status.RemainingTimeToFullyChargedInMinutes) * time.Minute), nil
-	}
-	return time.Time{}, api.ErrNotAvailable
 }
 
 var _ api.SocLimiter = (*Provider)(nil)

@@ -10,6 +10,7 @@
 		@added="$emit('changed', $event)"
 		@updated="$emit('changed')"
 		@removed="$emit('changed')"
+		@disable="$emit('disable', $event)"
 	></DeviceModalBase>
 </template>
 
@@ -32,7 +33,7 @@ export default defineComponent({
 	components: {
 		DeviceModalBase,
 	},
-	emits: ["changed"],
+	emits: ["changed", "disable"],
 	data() {
 		return {
 			initialValues,

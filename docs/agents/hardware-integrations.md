@@ -132,7 +132,7 @@ type Vehicle interface {
 }
 ```
 
-### Optional: `SocLimiter`, `ChargeState`, `VehicleRange`, `VehicleOdometer`, `VehicleClimater`, `VehicleFinishTimer`, `VehiclePosition`, `CurrentLimiter`, `CurrentController`, `ChargeController`, `Resurrector`
+### Optional: `SocLimiter`, `ChargeState`, `VehicleRange`, `VehicleOdometer`, `VehicleClimater`, `VehiclePosition`, `CurrentLimiter`, `CurrentController`, `ChargeController`, `Resurrector`
 
 ### Polling Strategy
 

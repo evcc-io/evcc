@@ -37,7 +37,7 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 		Wakeup                              *plugin.Config
 		Soc                                 *plugin.Config
 		LimitSoc                            *plugin.Config
-		FinishTime                          *plugin.Config
+		FinishTime                          *plugin.Config // deprecated, ignored
 		Tos                                 bool
 		measurement.Temperature             `mapstructure:",squash"` // optional, for heating devices
 		measurement.Energy                  `mapstructure:",squash"` // optional
@@ -178,13 +178,6 @@ func NewConfigurableFromConfig(ctx context.Context, other map[string]any) (api.C
 	}
 	implement.May(c, implement.PhaseCurrents(currentsG))
 	implement.May(c, implement.PhaseVoltages(voltagesG))
-
-	// decorate finishtime
-	finishTime, err := cc.FinishTime.TimeGetter(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("finishTime: %w", err)
-	}
-	implement.May(c, implement.VehicleFinishTimer(finishTime))
 
 	// dim/curtail
 	if err := cc.Dimmer.Implement(ctx, c); err != nil {

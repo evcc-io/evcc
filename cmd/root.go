@@ -454,6 +454,9 @@ func runRoot(cmd *cobra.Command, args []string) {
 	valueChan <- util.Param{Key: keys.Tariffs, Val: globalconfig.ConfigStatus{
 		YamlSource: yamlSource.tariffs,
 	}}
+	valueChan <- util.Param{Key: keys.CircuitsConfig, Val: globalconfig.ConfigStatus{
+		YamlSource: yamlSource.circuits,
+	}}
 
 	// publish remote access status
 	valueChan <- util.Param{Key: keys.Remote, Val: remoteAccess.ConfigStatus()}
@@ -547,9 +550,10 @@ func runRoot(cmd *cobra.Command, args []string) {
 	// wait for shutdown
 	<-stopC
 
+	// floor the wait, a short interval must not cut off shutdown hooks like the settings flush
 	select {
 	case <-shutdownDoneC(): // wait for shutdown
-	case <-time.After(conf.Interval):
+	case <-time.After(max(conf.Interval, 5*time.Second)):
 	}
 
 	// exit code 1 on error

@@ -27,6 +27,7 @@
 						:battery-grid-discharge="state.batteryGridDischarge"
 						:battery="state.battery"
 						:experimental="state.experimental"
+						:country="state.country"
 					/>
 
 					<Card

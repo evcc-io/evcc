@@ -158,6 +158,8 @@ en: |
 
 It is a list, so a device can have multiple caveats. Each entry has a language-specific `description` (`de`, `en`) and a `link`.
 
+Like `capabilities`, `caveats` can be set at template level (applies to every product) or product level (under a `products` entry, applies to that product only). Template-level caveats are appended to each product's own list, so do not repeat a template-level caveat on a product.
+
 Guidelines:
 
 - Add **one entry per distinct problem** (e.g. "unreliable meter" and "occasional reboots" are two entries); don't list the same problem twice.
@@ -174,6 +176,24 @@ caveats:
       de: Phasenumschaltung deaktiviert sich gelegentlich von selbst.
       en: Phase switching occasionally disables itself.
     link: https://github.com/evcc-io/evcc/issues/21708
+```
+
+**Example** (caveat for one product only):
+
+```yaml
+template: demo-charger
+products:
+  - brand: Demo
+    description:
+      generic: Basic
+  - brand: Demo
+    description:
+      generic: Plus
+    caveats:
+      - description:
+          de: Phasenumschaltung deaktiviert sich gelegentlich von selbst.
+          en: Phase switching occasionally disables itself.
+        link: https://github.com/evcc-io/evcc/issues/21708
 ```
 
 ## `auth`

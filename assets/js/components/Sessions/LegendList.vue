@@ -181,6 +181,9 @@ export default defineComponent({
 	flex-grow: 0;
 }
 
+.root--grid {
+	min-width: 0;
+}
 .root--grid .legend-label {
 	flex-grow: 1;
 	flex-shrink: 1;
@@ -190,6 +193,10 @@ export default defineComponent({
 .root--grid .legend-item {
 	flex-grow: 1;
 	flex-basis: 100%;
+	min-width: 0;
+}
+.root--grid .legend-value {
+	flex-shrink: 0;
 }
 .root--grid .legend-value:last-child {
 	flex-basis: 3.5rem;

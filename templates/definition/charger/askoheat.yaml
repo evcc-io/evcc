@@ -22,11 +22,8 @@ requirements:
       your device, and configure `phases: 1` for single-phase operation.
       Example AHIR-BI-plus-1.75: `mincurrent: 1.1`, `maxcurrent: 7.6` (at 230V, 1 phase).
 params:
-  - name: host
-  - name: port
-    default: 502
-  - name: id
-    default: 1
+  - name: modbus
+    choice: ["tcpip"]
   - name: tempsensor
     type: choice
     choice: ["0", "1", "2", "3", "4"]
@@ -41,40 +38,35 @@ render: |
     timeout: 30s
     set:
       source: modbus
-      uri: {{ .host }}:{{ .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       register:
         address: 319
         type: writesingle
         encoding: int16
   getmaxpower:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 319
       type: input
       encoding: int16
   power:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 317
       type: input
       encoding: uint16
   temp:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: {{ add 325 (mul (int .tempsensor) 2) }}
       type: input
       encoding: float32
   limittemp:
     source: modbus
-    uri: {{ .host }}:{{ .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     register:
       address: 640
       type: input
