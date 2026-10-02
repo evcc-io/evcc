@@ -19,7 +19,9 @@ type Slot struct {
 	End          time.Time `json:"end"`
 	Energy       float64   `json:"energy"`
 	ReturnEnergy float64   `json:"returnEnergy"`
-	SocTemp      *float64  `json:"socTemp,omitempty"`
+	SocTemp      *float64  `json:"socTemp,omitempty"`    // a single slot's value
+	SocTempMin   *float64  `json:"socTempMin,omitempty"` // range over the bucket's slots
+	SocTempMax   *float64  `json:"socTempMax,omitempty"`
 }
 
 // roundEnergy rounds kWh to Wh precision and clamps negative noise to zero.
@@ -130,11 +132,14 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool, filter ...E
 		Energy       float64
 		ReturnEnergy float64
 		SocTemp      *float64
+		SocTempMin   *float64
+		SocTempMax   *float64
 		IsTemp       bool
 	}
 
-	// soc_temp reports the bucket's first slot; omitted for grouped sums
-	socCols := `, m.soc_temp AS soc_temp, e.is_temp AS is_temp`
+	// soc_temp only for a single slot bucket, the range otherwise; omitted for grouped sums
+	socCols := `, CASE WHEN COUNT(*) = 1 THEN m.soc_temp END AS soc_temp,
+		MIN(m.soc_temp) AS soc_temp_min, MAX(m.soc_temp) AS soc_temp_max, e.is_temp AS is_temp`
 	if grouped {
 		socCols = ``
 	}
@@ -179,6 +184,8 @@ func QueryEnergy(from, to time.Time, aggregate string, grouped bool, filter ...E
 			Energy:       roundEnergy(r.Energy),
 			ReturnEnergy: roundEnergy(r.ReturnEnergy),
 			SocTemp:      r.SocTemp,
+			SocTempMin:   r.SocTempMin,
+			SocTempMax:   r.SocTempMax,
 		})
 	}
 

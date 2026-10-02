@@ -1007,6 +1007,27 @@
     "restartDescription": "Próbowałeś go wyłączyć i włączyć ponownie?",
     "secondaryActions": "Nadal nie możesz rozwiązać swojego problemu? Oto kilka bardziej wymagających opcji."
   },
+  "energy": {
+    "direction": {
+      "battery": {
+        "energy": "naładowane",
+        "returnEnergy": "rozładowane"
+      },
+      "grid": {
+        "energy": "zaimportowane",
+        "returnEnergy": "wyeksportowane"
+      }
+    },
+    "group": {
+      "battery": "Magazyn energii",
+      "consumer": "Konsumpcja",
+      "forecast": "Prognoza",
+      "grid": "Sieć",
+      "loadpoint": "Ładowanie i ogrzewania",
+      "meter": "Dodatkowe liczniki",
+      "pv": "Produkcja"
+    }
+  },
   "issue": {
     "additional": {
       "description": "Dołącz konfigurację i logi, aby pomóc nam szybko odtworzyć problem. Zachęcamy do udostępnienia jak największej ilości informacji. Stan zazwyczaj nie jest potrzebny.",
@@ -1143,30 +1164,6 @@
       "consumption": "Konsumpcja",
       "feedIn": "Do sieci",
       "title": "Limit zewnętrzny aktywny"
-    },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "naładowane",
-          "returnEnergy": "rozładowane"
-        },
-        "grid": {
-          "energy": "zaimportowane",
-          "returnEnergy": "wyeksportowane"
-        }
-      },
-      "empty": "Brak dostępnych danych historycznych dla tego przedziału czasu.",
-      "group": {
-        "battery": "Magazyn energii",
-        "consumer": "Konsumpcja",
-        "forecast": "Prognoza",
-        "grid": "Sieć",
-        "loadpoint": "Ładowanie i ogrzewania",
-        "meter": "Dodatkowe liczniki",
-        "pv": "Produkcja"
-      },
-      "otherConsumers": "Inne",
-      "title": "Historia"
     },
     "loadpoint": {
       "avgPrice": "⌀ Cena",

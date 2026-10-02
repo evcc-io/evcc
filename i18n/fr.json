@@ -1230,6 +1230,31 @@
     "restartDescription": "Avez-vous essayé de redémarrer ?",
     "secondaryActions": "Toujours pas de solution ? Voici quelques options plus avancées."
   },
+  "energy": {
+    "direction": {
+      "battery": {
+        "energy": "chargée",
+        "returnEnergy": "déchargée"
+      },
+      "grid": {
+        "energy": "importée",
+        "returnEnergy": "exportée"
+      },
+      "meter": {
+        "energy": "Énergie",
+        "returnEnergy": "Énergie (inversée)"
+      }
+    },
+    "group": {
+      "battery": "Batterie",
+      "consumer": "Consommation",
+      "forecast": "Prévisions",
+      "grid": "Réseau",
+      "loadpoint": "Chargement & Chauffage",
+      "meter": "Compteurs supplémentaires",
+      "pv": "Production"
+    }
+  },
   "issue": {
     "additional": {
       "copied": "copié !",
@@ -1406,35 +1431,6 @@
       "consumption": "Consommation",
       "feedIn": "Entrée",
       "title": "Limite externe active"
-    },
-    "history": {
-      "direction": {
-        "battery": {
-          "energy": "chargée",
-          "returnEnergy": "déchargée"
-        },
-        "grid": {
-          "energy": "importée",
-          "returnEnergy": "exportée"
-        },
-        "meter": {
-          "energy": "Énergie",
-          "returnEnergy": "Énergie (inversée)"
-        }
-      },
-      "download": "Télécharger",
-      "empty": "Pas de données historiques pour cette intervalle de temps.",
-      "group": {
-        "battery": "Batterie",
-        "consumer": "Consommation",
-        "forecast": "Prévisions",
-        "grid": "Réseau",
-        "loadpoint": "Chargement & Chauffage",
-        "meter": "Compteurs supplémentaires",
-        "pv": "Production"
-      },
-      "otherConsumers": "Autres",
-      "title": "Historique"
     },
     "loadpoint": {
       "avgPrice": "Prix ⌀",

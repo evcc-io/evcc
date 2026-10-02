@@ -181,13 +181,20 @@ func TestQueryEnergySoc(t *testing.T) {
 	from := base.Add(-time.Hour).UTC()
 	to := base.Add(time.Hour).UTC()
 
-	// hourly bucket reports the first slot's snapshot, not an average
+	// hourly bucket reports the range of its slots, a single value only per slot
 	res, err := QueryEnergy(from, to, "hour", false)
 	require.NoError(t, err)
 	require.Len(t, res, 1)
 	require.Len(t, res[0].Data, 1)
-	require.Equal(t, 80.0, *res[0].Data[0].SocTemp)
+	require.Nil(t, res[0].Data[0].SocTemp)
+	require.Equal(t, 70.0, *res[0].Data[0].SocTempMin)
+	require.Equal(t, 80.0, *res[0].Data[0].SocTempMax)
 	require.False(t, res[0].IsTemp) // battery: value is soc
+
+	res, err = QueryEnergy(from, to, "15m", false)
+	require.NoError(t, err)
+	require.Len(t, res[0].Data, 2)
+	require.Equal(t, 80.0, *res[0].Data[0].SocTemp)
 
 	// grouped sums omit the per-entity snapshot
 	res, err = QueryEnergy(from, to, "hour", true)

@@ -19,3 +19,10 @@
 - **License**: MIT License
 - **Files**: /assets/js/components/MaterialIcon/Mcp.vue
 - **Notes**: Repackaged as Vue components
+
+## Tabler Icons
+
+- **Source**: https://github.com/tabler/tabler-icons
+- **License**: MIT License
+- **Files**: /assets/js/components/MaterialIcon/Sankey.vue, /assets/js/components/MaterialIcon/Plug.vue
+- **Notes**: Repackaged as Vue component
