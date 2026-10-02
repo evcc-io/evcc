@@ -199,6 +199,14 @@
       "titleAdd": "Verbrauchszähler hinzufügen",
       "titleEdit": "Verbrauchszähler bearbeiten"
     },
+    "combobox": {
+      "count": "{count} Vorschläge",
+      "matching": "Passend",
+      "other": "Weitere",
+      "searching": "Suche…",
+      "suggestions": "Vorschläge",
+      "used": "bereits verwendet"
+    },
     "control": {
       "description": "Normalerweise sind die Standardwerte in Ordnung. Ändere nur etwas, wenn du weißt, was du tust.",
       "descriptionInterval": "Aktualisierungszyklus in Sekunden. Definiert, wie oft evcc Messdaten liest und die Ladung anpasst. Die Standardeinstellung von 30 Sekunden ist eine sichere Wahl. Geräte wie Fahrzeuge, Wallbox und Wechselrichter brauchen in der Regel mehrere Sekunden um ihr Verhalten anzupassen. Wenn deine Komponenten schnell reagieren kannst du niedrigere Werte verwenden. Wir empfehlen dringend nicht unter 10 Sekunden zu gehen. Wenn du komisches Regelverhalten oder springende Leistungswerte beobachtest wähle ein größeres Intervall.",
