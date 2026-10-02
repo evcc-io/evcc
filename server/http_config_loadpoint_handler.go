@@ -19,10 +19,11 @@ import (
 
 func getLoadpointStaticConfig(lp loadpoint.API) loadpoint.StaticConfig {
 	return loadpoint.StaticConfig{
-		Charger: lp.GetChargerRef(),
-		Meter:   lp.GetMeterRef(),
-		Circuit: lp.GetCircuitRef(),
-		Vehicle: lp.GetDefaultVehicleRef(),
+		Charger:    lp.GetChargerRef(),
+		Meter:      lp.GetMeterRef(),
+		Circuit:    lp.GetCircuitRef(),
+		Vehicle:    lp.GetDefaultVehicleRef(),
+		TempSensor: lp.GetTempSensorRef(),
 	}
 }
 
@@ -319,6 +320,12 @@ func updateLoadpointHandler() http.HandlerFunc {
 			return
 		}
 
+		tempSensorRef, _ := other["tempSensor"].(string)
+		if err := setDeviceDisable(tempSensorRef, config.TempSensors(), props.Disable); err != nil {
+			jsonError(w, http.StatusBadRequest, err)
+			return
+		}
+
 		// dynamic; instance is nil for a disabled loadpoint, takes effect on next restart
 		if instance != nil {
 			if err := dynamic.Apply(instance); err != nil {
@@ -380,6 +387,15 @@ func deleteLoadpointHandler() http.HandlerFunc {
 
 		if dev, err := configurableDevice(instance.GetMeterRef(), config.Meters()); err == nil {
 			if err := deleteDevice(dev.ID(), config.Meters()); err != nil {
+				jsonError(w, http.StatusBadRequest, err)
+				return
+			}
+
+			setConfigDirty()
+		}
+
+		if dev, err := configurableDevice(instance.GetTempSensorRef(), config.TempSensors()); err == nil {
+			if err := deleteDevice(dev.ID(), config.TempSensors()); err != nil {
 				jsonError(w, http.StatusBadRequest, err)
 				return
 			}

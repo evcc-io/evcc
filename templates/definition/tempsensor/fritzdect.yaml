@@ -1,0 +1,42 @@
+template: fritzdect
+products:
+  - { brand: AVM, description: { generic: "FRITZ!DECT 200" } }
+  - { brand: AVM, description: { generic: "FRITZ!DECT 210" } }
+  - { brand: "FRITZ!", description: { generic: "Smart Energy 200" } }
+  - { brand: "FRITZ!", description: { generic: "Smart Energy 210" } }
+params:
+  - name: uri
+    default: https://fritz.box
+  - name: user
+    required: true
+  - name: password
+    required: true
+  - name: ain
+    service: fritz/devices?uri={uri}&user={user}&password={password}
+  - name: firmware82
+    advanced: true
+    type: bool
+    description:
+      de: Neue REST-API verwenden (FRITZ!OS 8.2+)
+      en: Use new REST API (FRITZ!OS 8.2+)
+    help:
+      de: Verwende die neue REST-API für FRITZ!OS ab Version 8.2
+      en: Use the new REST API for FRITZ!OS version 8.2 and later
+  - name: unit
+    advanced: true
+    type: int
+    default: 1
+    description:
+      de: Einheit
+      en: Unit
+    help:
+      de: Index der Einheit für Geräte mit mehreren Einheiten (nur REST-API)
+      en: Unit index for multi-unit devices (REST API only)
+render: |
+  type: fritzdect
+  uri: {{ .uri }}
+  user: {{ .user }}
+  password: {{ .password }}
+  ain: {{ .ain }}
+  firmware82: {{ .firmware82 }}
+  unit: {{ .unit }}

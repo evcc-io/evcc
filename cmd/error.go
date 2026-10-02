@@ -30,6 +30,7 @@ const (
 	ClassSponsorship
 	ClassLoadpoint
 	ClassCurtailer
+	ClassTempSensor
 )
 
 // FatalError is an error that can be marshaled

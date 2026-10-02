@@ -1,0 +1,9 @@
+temp:
+  source: const
+  value: 45 # °C
+
+
+#temp:
+#  source: http
+#  uri: http://192.0.2.2/temperature
+#  jq: .value

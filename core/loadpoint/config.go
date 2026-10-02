@@ -9,10 +9,11 @@ import (
 
 type StaticConfig struct {
 	// static config
-	Charger string `json:"charger,omitempty"`
-	Meter   string `json:"meter,omitempty"`
-	Circuit string `json:"circuit,omitempty"`
-	Vehicle string `json:"vehicle,omitempty"`
+	Charger    string `json:"charger,omitempty"`
+	Meter      string `json:"meter,omitempty"`
+	Circuit    string `json:"circuit,omitempty"`
+	Vehicle    string `json:"vehicle,omitempty"`
+	TempSensor string `json:"tempSensor,omitempty"`
 }
 
 type DynamicConfig struct {
