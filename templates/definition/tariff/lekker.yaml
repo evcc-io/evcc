@@ -14,15 +14,18 @@ params:
   - name: token
     type: string
     required: true
+    mask: true
     description:
       en: "API token (e.g. lek_prod_...)."
       de: "API-Token (z.B. lek_prod_...)."
   - name: interval
     default: 1h
     advanced: true
+  - preset: tariff-base
 
 render: |
   type: custom
+  {{ include "base" . }}
   forecast:
     source: http
     uri: https://api.lekker.energy/v1/energy-prices
