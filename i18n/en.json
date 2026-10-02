@@ -837,11 +837,18 @@
       "automaticBattery": "controls charging of the home battery",
       "automaticCharging": "starts and stops charging in smart mode",
       "automaticHint": "What the optimizer does:",
+      "automaticLevel": {
+        "battery": "Home battery",
+        "full": "Battery and charging",
+        "off": "Off"
+      },
       "automaticLimits": "replaces price and CO₂ limits",
       "automaticNotControlled": "What stays as is:",
       "automaticNotControlledDevices": "heating devices and switch sockets",
+      "automaticNotControlledLoadpoints": "charging points with their price limits and plans",
       "automaticNotControlledModes": "off and fast mode",
       "automaticNotControlledVehicles": "vehicles with unknown battery capacity",
+      "automaticOff": "The optimizer only suggests, nothing is controlled.",
       "automaticPlans": "takes over charging plans",
       "controlled": "Disabled in automatic mode. The {optimizer} decides instead.",
       "linkWord": "optimizer",

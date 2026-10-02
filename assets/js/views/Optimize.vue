@@ -193,7 +193,12 @@ import api from "../api";
 import store from "../store";
 import formatter from "../mixins/formatter";
 import { resolveColors, deviceColorMap, batteryColor } from "../colors";
-import { CURRENCY, type BatteryDetail, type DemandDetail } from "../types/evcc";
+import {
+	CURRENCY,
+	OPTIMIZER_AUTOMATIC,
+	type BatteryDetail,
+	type DemandDetail,
+} from "../types/evcc";
 
 export default defineComponent({
 	name: "Optimize",
@@ -230,8 +235,8 @@ export default defineComponent({
 		optimizerChargingStrategy(): string {
 			return store.state.optimizerChargingStrategy || "";
 		},
-		optimizerAutomatic(): boolean {
-			return !!store.state.optimizerAutomatic;
+		optimizerAutomatic(): OPTIMIZER_AUTOMATIC {
+			return store.state.optimizerAutomatic || OPTIMIZER_AUTOMATIC.OFF;
 		},
 		isSponsor(): boolean {
 			return !!store.state.sponsor?.status?.name;
@@ -325,8 +330,8 @@ export default defineComponent({
 		changeChargingStrategy(value: string) {
 			api.post(`optimizerchargingstrategy/${value}`);
 		},
-		changeAutomatic(checked: boolean) {
-			api.post(`config/optimizerautomatic/${checked}`);
+		changeAutomatic(level: string) {
+			api.post(`config/optimizerautomatic/${level}`);
 		},
 		openOptimizerModal() {
 			openModal("optimizer");

@@ -27,7 +27,7 @@
 						:battery-grid-discharge="state.batteryGridDischarge"
 						:battery="state.battery"
 						:experimental="state.experimental"
-						:optimizer-automatic="state.optimizerAutomatic"
+						:optimizer-automatic="optimizerAutomatic"
 						:optimizer-controlled-titles="optimizerControlledTitles"
 						:country="state.country"
 					/>
@@ -62,7 +62,7 @@ import { defineComponent } from "vue";
 import store from "@/store";
 import settings from "@/settings";
 import api from "@/api";
-import { SMART_COST_TYPE, CURRENCY, type BatteryMeter } from "@/types/evcc";
+import { SMART_COST_TYPE, CURRENCY, OPTIMIZER_AUTOMATIC, type BatteryMeter } from "@/types/evcc";
 import Header from "../components/Top/Header.vue";
 import Card from "../components/Helper/Card.vue";
 import SmartCostLimit from "../components/Tariff/SmartCostLimit.vue";
@@ -117,6 +117,12 @@ export default defineComponent({
 		batteryAvailable(): boolean {
 			return this.devices.length > 0;
 		},
+		optimizerAutomatic(): boolean {
+			return (
+				!!this.state.optimizerAutomatic &&
+				this.state.optimizerAutomatic !== OPTIMIZER_AUTOMATIC.OFF
+			);
+		},
 		optimizerControlledTitles(): string[] {
 			return (this.state.loadpoints ?? [])
 				.filter((lp) => lp.optimizerControlled)
@@ -165,7 +171,7 @@ export default defineComponent({
 				currency: this.state.currency || CURRENCY.EUR,
 				tariff: this.gridChargeTariff,
 				possible: this.gridChargePossible,
-				disabledHint: this.state.optimizerAutomatic ? "config.optimizer.controlled" : "",
+				disabledHint: this.optimizerAutomatic ? "config.optimizer.controlled" : "",
 			};
 		},
 		gridDischargeLimit(): number | null {

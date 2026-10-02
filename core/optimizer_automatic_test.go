@@ -26,16 +26,39 @@ func enableAutomatic(t *testing.T) {
 	subject := sponsor.Subject
 	sponsor.Subject = "test"
 
-	for _, k := range []string{keys.Experimental, keys.Optimizer, keys.OptimizerAutomatic} {
+	for _, k := range []string{keys.Experimental, keys.Optimizer} {
 		settings.SetBool(k, true)
 	}
+	settings.SetString(keys.OptimizerAutomatic, OptimizerAutomaticFull)
 
 	t.Cleanup(func() {
 		sponsor.Subject = subject
-		for _, k := range []string{keys.Experimental, keys.Optimizer, keys.OptimizerAutomatic} {
+		for _, k := range []string{keys.Experimental, keys.Optimizer} {
 			settings.SetBool(k, false)
 		}
+		settings.SetString(keys.OptimizerAutomatic, OptimizerAutomaticOff)
 	})
+}
+
+// TestAutomaticLevels verifies that the battery level controls the battery only
+func TestAutomaticLevels(t *testing.T) {
+	enableAutomatic(t)
+	site := &Site{}
+
+	for _, tc := range []struct {
+		stored              string
+		battery, loadpoints bool
+	}{
+		{OptimizerAutomaticOff, false, false},
+		{OptimizerAutomaticBattery, true, false},
+		{OptimizerAutomaticFull, true, true},
+		{"true", true, true}, // boolean switch before the levels
+		{"false", false, false},
+	} {
+		settings.SetString(keys.OptimizerAutomatic, tc.stored)
+		assert.Equal(t, tc.battery, site.Automatic(), tc.stored)
+		assert.Equal(t, tc.loadpoints, site.AutomaticLoadpoints(), tc.stored)
+	}
 }
 
 func automaticLoadpoint(t *testing.T, ac api.AlwaysCharge, automatic bool) (*Loadpoint, *api.MockCharger, *gomock.Controller) {

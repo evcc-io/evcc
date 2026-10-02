@@ -20,7 +20,7 @@ func (lp *Loadpoint) setSuggestion(s *types.Suggestion) {
 // Heating devices and switch sockets cannot be modelled and keep their limits,
 // as do vehicles without known capacity- optimizerRequest skips them, too.
 func (lp *Loadpoint) optimizerControlled() bool {
-	if lp.site == nil || !lp.site.Automatic() ||
+	if lp.site == nil || !lp.site.AutomaticLoadpoints() ||
 		lp.chargerHasFeature(api.Heating) || lp.chargerHasFeature(api.IntegratedDevice) {
 		return false
 	}

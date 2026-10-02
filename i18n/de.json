@@ -837,11 +837,18 @@
       "automaticBattery": "steuert das Laden der Hausbatterie",
       "automaticCharging": "startet und stoppt das Laden im Smart-Modus",
       "automaticHint": "Was der Optimizer macht:",
+      "automaticLevel": {
+        "battery": "Hausbatterie",
+        "full": "Batterie und Laden",
+        "off": "Aus"
+      },
       "automaticLimits": "ersetzt Preis- und CO₂-Grenzen",
       "automaticNotControlled": "Was bleibt wie es ist:",
       "automaticNotControlledDevices": "Heizgeräte und schaltbare Steckdosen",
+      "automaticNotControlledLoadpoints": "Ladepunkte mit ihren Preisgrenzen und Plänen",
       "automaticNotControlledModes": "Aus- und Schnellmodus",
       "automaticNotControlledVehicles": "Fahrzeuge mit unbekannter Batteriekapazität",
+      "automaticOff": "Der Optimizer schlägt nur vor, nichts wird gesteuert.",
       "automaticPlans": "übernimmt die Ladepläne",
       "controlled": "Im Automatikmodus deaktiviert. Der {optimizer} entscheidet stattdessen.",
       "linkWord": "Optimizer",
