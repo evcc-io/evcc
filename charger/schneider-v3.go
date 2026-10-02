@@ -19,6 +19,8 @@ package charger
 
 import (
 	"context"
+	"encoding/binary"
+	"errors"
 	"fmt"
 	"time"
 
@@ -31,9 +33,11 @@ import (
 
 // Schneider charger implementation
 type Schneider struct {
-	log  *util.Logger
-	conn *modbus.Connection
-	curr uint16
+	log   *util.Logger
+	conn  *modbus.Connection
+	curr  uint16
+	read  func(address, quantity uint16) ([]byte, error)
+	write func(address, value uint16) error
 }
 
 const (
@@ -59,7 +63,8 @@ func init() {
 	registry.AddCtx("schneider-v3", NewSchneiderV3FromConfig)
 }
 
-// https://download.schneider-electric.com/files?p_enDocType=Other+technical+guide&p_File_Name=GEX1969300-04.pdf&p_Doc_Ref=GEX1969300
+// EVlink Pro AC: GEX1969300 (FC03/FC06)
+// Charge Pro:    NAT3046700 (FC04/FC16)
 
 // NewSchneiderV3FromConfig creates a Schneider charger from generic config
 func NewSchneiderV3FromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
@@ -94,17 +99,45 @@ func NewSchneiderV3(ctx context.Context, settings modbus.TcpSettings) (api.Charg
 		curr: 6,
 	}
 
-	// get initial state from charger
+	// Charge Pro rejects FC03 with an exception, other errors must not switch protocols
 	b, err := wb.conn.ReadHoldingRegisters(schneiderRegSetPoint, 1)
-	if err != nil {
+	switch {
+	case err == nil:
+		wb.log.DEBUG.Println("using EVlink Pro protocol (FC03/FC06)")
+
+		wb.read = wb.conn.ReadHoldingRegisters
+		wb.write = func(address, value uint16) error {
+			_, err := wb.conn.WriteSingleRegister(address, value)
+			return err
+		}
+
+	case modbus.IsException(err):
+		b2, err2 := wb.conn.ReadInputRegisters(schneiderRegSetPoint, 1)
+		if err2 != nil {
+			return nil, fmt.Errorf("current limit: %w", errors.Join(err, err2))
+		}
+		b = b2
+
+		wb.log.DEBUG.Println("using Charge Pro protocol (FC04/FC16)")
+
+		wb.read = wb.conn.ReadInputRegisters
+		wb.write = func(address, value uint16) error {
+			b := make([]byte, 2)
+			binary.BigEndian.PutUint16(b, value)
+			_, err := wb.conn.WriteMultipleRegisters(address, 1, b)
+			return err
+		}
+
+	default:
 		return nil, fmt.Errorf("current limit: %w", err)
 	}
+
 	if u := encoding.Uint16(b); u > wb.curr {
 		wb.curr = u
 	}
 
 	// heartbeat
-	b, err = wb.conn.ReadHoldingRegisters(schneiderRegLifebit, 1)
+	b, err = wb.read(schneiderRegLifebit, 1)
 	if err != nil {
 		return nil, fmt.Errorf("heartbeat timeout: %w", err)
 	}
@@ -123,7 +156,7 @@ func (wb *Schneider) heartbeat(ctx context.Context, timeout time.Duration) {
 			return
 		}
 
-		if _, err := wb.conn.WriteSingleRegister(schneiderRegLifebit, 1); err != nil {
+		if err := wb.write(schneiderRegLifebit, 1); err != nil {
 			wb.log.ERROR.Println("heartbeat:", err)
 		}
 	}
@@ -131,7 +164,7 @@ func (wb *Schneider) heartbeat(ctx context.Context, timeout time.Duration) {
 
 // Status implements the api.Charger interface
 func (wb *Schneider) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadHoldingRegisters(schneiderRegEvState, 1)
+	b, err := wb.read(schneiderRegEvState, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -152,7 +185,7 @@ func (wb *Schneider) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Schneider) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(schneiderRegSetPoint, 1)
+	b, err := wb.read(schneiderRegSetPoint, 1)
 	if err != nil {
 		return false, err
 	}
@@ -167,13 +200,12 @@ func (wb *Schneider) Enable(enable bool) error {
 		u = wb.curr
 	}
 
-	_, err := wb.conn.WriteSingleRegister(schneiderRegSetPoint, u)
-	return err
+	return wb.write(schneiderRegSetPoint, u)
 }
 
 // MaxCurrent implements the api.Charger interface
 func (wb *Schneider) MaxCurrent(current int64) error {
-	_, err := wb.conn.WriteSingleRegister(schneiderRegSetPoint, uint16(current))
+	err := wb.write(schneiderRegSetPoint, uint16(current))
 	if err == nil {
 		wb.curr = uint16(current)
 	}
@@ -183,7 +215,7 @@ func (wb *Schneider) MaxCurrent(current int64) error {
 
 // CurrentPower implements the api.Meter interface
 func (wb *Schneider) CurrentPower() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(schneiderRegPower, 2)
+	b, err := wb.read(schneiderRegPower, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -195,7 +227,7 @@ var _ api.MeterEnergy = (*Schneider)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *Schneider) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(schneiderRegEnergy, 4)
+	b, err := wb.read(schneiderRegEnergy, 4)
 	if err != nil {
 		return 0, err
 	}
@@ -219,7 +251,7 @@ func (wb *Schneider) Voltages() (float64, float64, float64, error) {
 
 // getPhaseValues returns 3 sequential phase values
 func (wb *Schneider) getPhaseValues(reg uint16) (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(reg, 6)
+	b, err := wb.read(reg, 6)
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -236,7 +268,7 @@ var _ api.ChargeTimer = (*Schneider)(nil)
 
 // ChargeDuration implements the api.ChargeTimer interface
 func (wb *Schneider) ChargeDuration() (time.Duration, error) {
-	b, err := wb.conn.ReadHoldingRegisters(schneiderRegSessionChargingTime, 2)
+	b, err := wb.read(schneiderRegSessionChargingTime, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -248,28 +280,28 @@ var _ api.Diagnosis = (*Schneider)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *Schneider) Diagnose() {
-	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegEvState, 1); err == nil {
+	if b, err := wb.read(schneiderRegEvState, 1); err == nil {
 		fmt.Printf("\tevState:\t\t%d\n", encoding.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegOcppStatus, 1); err == nil {
+	if b, err := wb.read(schneiderRegOcppStatus, 1); err == nil {
 		fmt.Printf("\tOCPP Status:\t\t%d\n", encoding.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegEvPresence, 1); err == nil {
+	if b, err := wb.read(schneiderRegEvPresence, 1); err == nil {
 		fmt.Printf("\tevPresence:\t\t%d\n", encoding.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegLifebit, 1); err == nil {
+	if b, err := wb.read(schneiderRegLifebit, 1); err == nil {
 		fmt.Printf("\tLifebit:\t\t%d\n", encoding.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegSetCommand, 1); err == nil {
+	if b, err := wb.read(schneiderRegSetCommand, 1); err == nil {
 		fmt.Printf("\tSet command:\t\t%d\n", encoding.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegCommandStatus, 2); err == nil {
+	if b, err := wb.read(schneiderRegCommandStatus, 2); err == nil {
 		fmt.Printf("\tCommand status:\t\t%d\n", encoding.Uint32(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegSetPoint, 1); err == nil {
+	if b, err := wb.read(schneiderRegSetPoint, 1); err == nil {
 		fmt.Printf("\tSet Point:\t\t%d\n", encoding.Uint16(b))
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(schneiderRegLastStopCause, 1); err == nil {
+	if b, err := wb.read(schneiderRegLastStopCause, 1); err == nil {
 		fmt.Printf("\tLast stop cause:\t%d\n", encoding.Uint16(b))
 	}
 }

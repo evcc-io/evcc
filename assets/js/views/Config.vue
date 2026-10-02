@@ -1386,8 +1386,8 @@ export default defineComponent({
 			await this.loadMeters();
 			await this.loadSite();
 			await this.loadChargers();
-			await this.loadLoadpoints();
 			await this.loadCircuits();
+			await this.loadLoadpoints();
 			await this.loadMessengers();
 			await this.loadCurtailers();
 			await this.loadTariffs();
@@ -1671,8 +1671,15 @@ export default defineComponent({
 			return (
 				this.hasDeviceError("loadpoint", loadpoint.name) ||
 				this.hasDeviceError("charger", loadpoint.charger) ||
-				this.hasDeviceError("meter", loadpoint.meter)
+				this.hasDeviceError("meter", loadpoint.meter) ||
+				this.loadpointCircuitInvalid(loadpoint)
 			);
+		},
+		loadpointCircuitInvalid(loadpoint: ConfigLoadpoint): boolean {
+			// disabled loadpoints are never instantiated, so the backend never validates
+			// their circuit reference and no fatal error is ever reported for it
+			const { circuit } = loadpoint;
+			return !!circuit && !this.circuits.some((c) => c.name === circuit);
 		},
 		hasDeviceError(type: DeviceType, name?: string) {
 			if (!name) return false;

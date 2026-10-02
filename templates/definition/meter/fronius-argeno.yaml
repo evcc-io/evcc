@@ -14,9 +14,8 @@ discovery:
 params:
   - name: usage
     choice: ["pv"]
-  - name: host
-  - name: port
-    default: 502
+  - name: modbus
+    choice: ["tcpip"]
   - name: maxacpower
     deprecated: true # read from nameplate
 render: |
@@ -28,15 +27,13 @@ render: |
   # showed 6.5 kW while actual AC output was 31.7 kW).
   power:
     source: sunspec
-    uri: {{ joinHostPort .host .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     value:
       - 113:W
       - 103:W
   energy:
     source: sunspec
-    uri: {{ joinHostPort .host .port }}
-    id: 1
+    {{- include "modbus" . | indent 2 }}
     value:
       - 113:WH
       - 103:WH

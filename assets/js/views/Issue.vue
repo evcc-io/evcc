@@ -4,7 +4,12 @@
 		<div class="row">
 			<main class="col-12">
 				<div class="mb-5">
-					<p class="text-muted">{{ $t("issue.description") }}</p>
+					<p class="text-muted">
+						{{ $t("issue.description") }}
+						<a v-if="!emailMode" :href="docsLink" target="_blank">
+							{{ $t("config.general.docsLink") }}
+						</a>
+					</p>
 				</div>
 
 				<!-- Help Type Selection -->
@@ -386,6 +391,7 @@ import {
 } from "@/components/Issue/template";
 import type { HelpType, IssueData, Sections } from "@/components/Issue/types";
 import type { State } from "@/types/evcc";
+import { docsPrefix } from "@/i18n";
 
 // Keys that should be expanded (1-level expansion for arrays and objects)
 const EXPAND_KEYS = [
@@ -452,6 +458,9 @@ export default defineComponent({
 		return { title: this.$t("issue.title") };
 	},
 	computed: {
+		docsLink() {
+			return `${docsPrefix()}/report-a-problem`;
+		},
 		customEmail(): string {
 			return window.evcc?.customEmail ?? "";
 		},
