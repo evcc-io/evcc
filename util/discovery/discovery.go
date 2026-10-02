@@ -58,7 +58,8 @@ func (h *Host) addNames(preferred bool, names ...string) {
 
 	var res []string
 	for _, name := range all {
-		if name = strings.TrimSuffix(name, "."); name != "" && !slices.Contains(res, name) {
+		name = strings.TrimSuffix(name, ".")
+		if name != "" && !slices.ContainsFunc(res, func(s string) bool { return strings.EqualFold(s, name) }) {
 			res = append(res, name)
 		}
 	}
