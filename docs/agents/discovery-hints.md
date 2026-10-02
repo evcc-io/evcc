@@ -73,7 +73,7 @@ The guidelines in `templates/README.md` apply. In addition:
 - Vendors with a broad product range (Huawei, Samsung, TP-Link, AVM) and network module makers (Espressif, Texas Instruments, Murata) are skipped for `mac`. Their prefixes match phones, routers and unrelated devices. `mdns` or `hostname` hints are used instead.
 - Generic hostnames from Home Assistant (`target`, `espressif`) are not adopted.
 - All templates of one device family get the same hints.
-- `mac` values are 6 to 9 upper case hex digits without separators. `mdns` values are the service type without `.local.`, optionally followed by `:` and an instance name pattern.
+- `mac` values are 6 to 9 upper case hex digits without separators. `mdns` values are the service type without `.local.` in the announced spelling (`_go-e_go-eCharger._tcp`), optionally followed by `:` and an instance name pattern.
 - Candidates that cannot be tied to the device family with reasonable certainty are reported, not applied.
 - A hint that was removed deliberately is not added again. The history of the candidate value and of the template shows earlier removals and their reason.
 

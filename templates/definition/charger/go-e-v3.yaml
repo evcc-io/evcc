@@ -35,6 +35,7 @@ requirements:
       The "simulate unplugging" option should be activated in the Go-E app ("Car" menu item).
   evcc: ["sponsorship"]
 discovery:
+  mdns: ["_go-e_go-eCharger._tcp"]
   hostname: ["go-echarger*"]
   mac: ["D455AD", "98FC841"]
 params:
