@@ -1101,10 +1101,36 @@ func optimizerEnabled() bool {
 	return exp && opt
 }
 
-// Automatic returns true if the optimizer controls the devices instead of only advising
+// optimizer automatic levels: what the optimizer controls instead of only advising
+const (
+	OptimizerAutomaticOff     = "off"
+	OptimizerAutomaticBattery = "battery" // home battery only
+	OptimizerAutomaticFull    = "full"    // home battery and loadpoints
+)
+
+var OptimizerAutomaticLevels = []string{OptimizerAutomaticOff, OptimizerAutomaticBattery, OptimizerAutomaticFull}
+
+// OptimizerAutomatic returns the configured optimizer automatic level
+func OptimizerAutomatic() string {
+	switch v, _ := settings.String(keys.OptimizerAutomatic); v {
+	case OptimizerAutomaticBattery, OptimizerAutomaticFull:
+		return v
+	case "true", "1":
+		// stored by the boolean switch before the levels existed
+		return OptimizerAutomaticFull
+	default:
+		return OptimizerAutomaticOff
+	}
+}
+
+// Automatic returns true if the optimizer controls the home battery instead of only advising
 func (site *Site) Automatic() bool {
-	auto, _ := settings.Bool(keys.OptimizerAutomatic)
-	return auto && optimizerEnabled() && sponsor.IsAuthorized()
+	return OptimizerAutomatic() != OptimizerAutomaticOff && optimizerEnabled() && sponsor.IsAuthorized()
+}
+
+// AutomaticLoadpoints returns true if the optimizer controls the loadpoints as well
+func (site *Site) AutomaticLoadpoints() bool {
+	return OptimizerAutomatic() == OptimizerAutomaticFull && site.Automatic()
 }
 
 // sitePowerResult is the outcome of the site power calculation

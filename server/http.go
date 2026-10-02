@@ -357,7 +357,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"deletesponsortoken": {"DELETE", "/sponsortoken", deleteSponsorTokenHandler(pub)},
 			"experimental":       {"POST", "/experimental/{value:[01truefalse]+}", boolHandler(setExperimental(pub), getExperimental)},
 			"optimizer":          {"POST", "/optimizer/{value:[01truefalse]+}", boolHandler(setOptimizer(pub), getOptimizer)},
-			"optimizerAutomatic": {"POST", "/optimizerautomatic/{value:[01truefalse]+}", boolHandler(setOptimizerAutomatic(pub, site), getOptimizerAutomatic)},
+			"optimizerAutomatic": {"POST", "/optimizerautomatic/{value:[a-z]+}", stringHandler(setOptimizerAutomatic(pub, site), core.OptimizerAutomatic)},
 			"remote":             {"POST", "/remote/{value:[01truefalse]+}", boolHandler(remoteAccess.Enable, remoteAccess.Enabled)},
 			"remoteclients":      {"GET", "/remote/clients", remoteClientsHandler(remoteAccess)},
 			"createremoteclient": {"POST", "/remote/clients", createRemoteClientHandler(remoteAccess)},

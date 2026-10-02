@@ -29,6 +29,10 @@ func (m *mockSite) Automatic() bool {
 	return m.automatic
 }
 
+func (m *mockSite) AutomaticLoadpoints() bool {
+	return m.automatic
+}
+
 func (m *mockSite) GetBatteryMaxDischargePower() *float64 {
 	return m.maxDischargePower
 }

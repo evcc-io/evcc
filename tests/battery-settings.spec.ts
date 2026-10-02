@@ -94,7 +94,7 @@ test.describe("battery settings", async () => {
     const priceLimit = page.getByRole("combobox", { name: "Price limit" });
     const dischargeControl = page.getByRole("switch", { name: /Prevent home battery discharge/ });
     const optimizerHints = page.getByText(
-      "Disabled in automatic mode. The optimizer decides instead.",
+      "Disabled by automatic control. The optimizer decides instead.",
       {
         exact: true,
       }
@@ -105,7 +105,7 @@ test.describe("battery settings", async () => {
     await expect(dischargeControl).toBeEnabled();
     await expect(optimizerHints).toHaveCount(0);
 
-    await expect(await page.request.post("/api/config/optimizerautomatic/true")).toBeOK();
+    await expect(await page.request.post("/api/config/optimizerautomatic/full")).toBeOK();
 
     await expect(enableLimit).toBeDisabled();
     await expect(priceLimit).toBeDisabled();
@@ -116,7 +116,13 @@ test.describe("battery settings", async () => {
     await expect(page.getByTestId("battery-priority").getByRole("combobox")).toBeEnabled();
     await expect(page.getByTestId("battery-buffer").getByRole("combobox").first()).toBeEnabled();
 
-    await expect(await page.request.post("/api/config/optimizerautomatic/false")).toBeOK();
+    // battery only level takes over the battery settings as well
+    await expect(await page.request.post("/api/config/optimizerautomatic/battery")).toBeOK();
+    await expect(enableLimit).toBeDisabled();
+    await expect(dischargeControl).toBeDisabled();
+    await expect(optimizerHints).toHaveCount(2);
+
+    await expect(await page.request.post("/api/config/optimizerautomatic/off")).toBeOK();
 
     await expect(enableLimit).toBeEnabled();
     await expect(priceLimit).toBeEnabled();
@@ -124,7 +130,7 @@ test.describe("battery settings", async () => {
     await expect(optimizerHints).toHaveCount(0);
 
     // disabling the optimizer releases automatic mode
-    await expect(await page.request.post("/api/config/optimizerautomatic/true")).toBeOK();
+    await expect(await page.request.post("/api/config/optimizerautomatic/full")).toBeOK();
     await expect(enableLimit).toBeDisabled();
     await expect(await page.request.post("/api/config/optimizer/false")).toBeOK();
     await expect(enableLimit).toBeEnabled();

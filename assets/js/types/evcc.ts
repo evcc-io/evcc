@@ -332,8 +332,8 @@ export interface State {
   ocppforwarder?: OcppForwarder;
   /** Battery optimizer is enabled. */
   optimizer?: boolean;
-  /** Optimizer controls the devices instead of only advising. */
-  optimizerAutomatic?: boolean;
+  /** What the optimizer controls instead of only advising: nothing, the home battery, or battery and loadpoints. */
+  optimizerAutomatic?: OPTIMIZER_AUTOMATIC;
   /** Selected battery optimizer charging strategy. */
   optimizerChargingStrategy?: string;
   /** Available battery optimizer charging strategies. */
@@ -882,6 +882,12 @@ export enum CHARGE_MODE {
   OFF = "off",
   SMART = "smart",
   NOW = "now",
+}
+
+export enum OPTIMIZER_AUTOMATIC {
+  OFF = "off",
+  BATTERY = "battery",
+  FULL = "full",
 }
 
 /** Always charge state. Smart mode charges continuously at least at minimum power. */

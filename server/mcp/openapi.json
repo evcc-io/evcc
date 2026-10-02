@@ -1420,8 +1420,8 @@
     "/config/optimizerautomatic/{value}": {
       "post": {
         "operationId": "setOptimizerAutomatic",
-        "summary": "Enable/disable optimizer automatic mode",
-        "description": "Let the optimizer directly control loadpoints and home battery instead of only advising. Requires a sponsor token.",
+        "summary": "Set optimizer automatic level",
+        "description": "Let the optimizer directly control the home battery (`battery`) or home battery and loadpoints (`full`) instead of only advising (`off`). Requires a sponsor token.",
         "security": [
           {
             "cookieAuth": []
@@ -1436,23 +1436,22 @@
         "parameters": [
           {
             "name": "value",
-            "description": "Enable or disable automatic optimization.",
+            "description": "What the optimizer controls.",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "enum": [
-                "true",
-                "false",
-                "1",
-                "0"
+                "off",
+                "battery",
+                "full"
               ]
             }
           }
         ],
         "responses": {
           "200": {
-            "$ref": "#/components/responses/BooleanResult"
+            "$ref": "#/components/responses/StringResult"
           }
         }
       }
@@ -5298,6 +5297,14 @@
           }
         }
       },
+      "OptimizerAutomatic": {
+        "type": "string",
+        "enum": [
+          "off",
+          "battery",
+          "full"
+        ]
+      },
       "State": {
         "description": "Complete system state as returned by /api/state and pushed via websocket and MQTT. This structure mirrors the internal UI state and carries no compatibility promise. Fields may change or disappear between releases.",
         "type": "object",
@@ -5666,8 +5673,8 @@
             "type": "boolean"
           },
           "optimizerAutomatic": {
-            "description": "Optimizer controls the devices instead of only advising.",
-            "type": "boolean"
+            "$ref": "#/components/schemas/OptimizerAutomatic",
+            "description": "What the optimizer controls instead of only advising: nothing, the home battery, or battery and loadpoints."
           },
           "optimizerChargingStrategy": {
             "description": "Selected battery optimizer charging strategy.",
@@ -5984,6 +5991,16 @@
           "application/json": {
             "schema": {
               "type": "boolean"
+            }
+          }
+        }
+      },
+      "StringResult": {
+        "description": "Success - String result",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "string"
             }
           }
         }

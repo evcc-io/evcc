@@ -276,8 +276,8 @@ components:
           description: Battery optimizer is enabled.
           type: boolean
         optimizerAutomatic:
-          description: Optimizer controls the devices instead of only advising.
-          type: boolean
+          $ref: "#/components/schemas/OptimizerAutomatic"
+          description: "What the optimizer controls instead of only advising: nothing, the home battery, or battery and loadpoints."
         optimizerChargingStrategy:
           description: Selected battery optimizer charging strategy.
           type: string
@@ -1555,6 +1555,12 @@ components:
             $ref: "#/components/schemas/OcppStationStatus"
       required:
         - stations
+    OptimizerAutomatic:
+      type: string
+      enum:
+        - off
+        - battery
+        - full
     PhaseAction:
       description: Pending phase switching action in solar mode.
       type: string

@@ -399,7 +399,6 @@
       "fromYamlHint": "Note: Configured via evcc.yaml. Remove the entry from the file to enable editing here.",
       "hideAdvancedSettings": "Hide advanced settings",
       "invalidFileSelected": "Invalid file selected",
-      "learnMore": "Learn more.",
       "legacy": "legacy",
       "moreInfo": "More info:",
       "noFileSelected": "No file selected.",
@@ -833,19 +832,27 @@
       "usernameHelp": "For HTTP Basic Auth to the upstream server."
     },
     "optimizer": {
-      "automatic": "Automatic mode",
-      "automaticBattery": "controls charging of the home battery",
-      "automaticCharging": "starts and stops charging in smart mode",
-      "automaticHint": "What the optimizer does:",
-      "automaticLimits": "replaces price and CO₂ limits",
-      "automaticNotControlled": "What stays as is:",
-      "automaticNotControlledDevices": "heating devices and switch sockets",
-      "automaticNotControlledModes": "off and fast mode",
-      "automaticNotControlledVehicles": "vehicles with unknown battery capacity",
-      "automaticPlans": "takes over charging plans",
-      "controlled": "Disabled in automatic mode. The {optimizer} decides instead.",
+      "automatic": "Automatic control",
+      "automaticLevel": {
+        "battery": {
+          "description": "Only controls the home battery.",
+          "label": "Home battery",
+          "status": "{automatic} controls the home battery."
+        },
+        "full": {
+          "description": "Controls the home battery, starts and stops vehicle charging in smart mode, replaces price and CO₂ limits and takes over plans. Unchanged: off and fast mode, heating devices, switch sockets, vehicles with unknown capacity.",
+          "label": "Home battery & charging points",
+          "status": "{automatic} controls home battery and charging points."
+        },
+        "off": {
+          "description": "The optimizer only suggests. Nothing is controlled.",
+          "status": "{automatic} is off. The optimizer only suggests."
+        }
+      },
+      "controlled": "Disabled by automatic control. The {optimizer} decides instead.",
+      "controls": "Controls",
       "linkWord": "optimizer",
-      "description": "Analyzes solar forecast, electricity prices, and your consumption patterns to optimize battery and charging strategy. Data is sent to the evcc optimization service for processing. Calculates and visualizes, and in automatic mode also controls your devices.",
+      "description": "Uses solar forecast, electricity prices and your consumption patterns to plan battery and charging. Data is sent to the evcc optimization service.",
       "enable": "Enable Optimizer",
       "info": "For new installations, it may take up to 24 hours until evcc has collected enough data.",
       "title": "Optimizer"
@@ -1686,7 +1693,7 @@
       "feedinPriorityPausing": "Solar charging paused to maximize feed-in.",
       "finished": "Finished.",
       "minCharge": "Minimum charging to {soc}.",
-      "optimizerControlledTooltip": "Automatic mode. The optimizer starts and stops charging.",
+      "optimizerControlledTooltip": "Automatic control. The optimizer starts and stops charging.",
       "pvDisable": "Not enough surplus. Pausing soon.",
       "pvEnable": "Surplus available. Starting soon.",
       "scale1p": "Reducing to 1-phase charging soon.",
