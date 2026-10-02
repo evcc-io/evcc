@@ -1376,8 +1376,8 @@ export default defineComponent({
 			await this.loadMeters();
 			await this.loadSite();
 			await this.loadChargers();
-			await this.loadLoadpoints();
 			await this.loadCircuits();
+			await this.loadLoadpoints();
 			await this.loadMessengers();
 			await this.loadCurtailers();
 			await this.loadTariffs();
