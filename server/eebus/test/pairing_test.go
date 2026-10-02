@@ -15,7 +15,6 @@ import (
 	"github.com/evcc-io/evcc/db/settings"
 	hems "github.com/evcc-io/evcc/hems/eebus"
 	server "github.com/evcc-io/evcc/server/eebus"
-	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/test"
 	"github.com/stretchr/testify/require"
 )
@@ -112,8 +111,6 @@ func findPairing(pairings []server.PairingInfo, source server.PairingSource) (se
 
 func TestShipPairing(t *testing.T) {
 	test.SkipCI(t) // flaky: SHIP mDNS/pairing races, see evcc #31617 and ship-go #89
-
-	util.LogLevel("error", map[string]string{"eebus": "trace"})
 
 	// tear down a server instance left over from other tests in this package
 	if inst, err := server.Instance(); err == nil {

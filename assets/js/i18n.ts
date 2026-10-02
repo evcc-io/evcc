@@ -46,7 +46,9 @@ const htmlLang = document.querySelector("html")?.getAttribute("lang");
 const DEFAULT_BROWSER_LOCALE = htmlLang?.length == 2 ? htmlLang : DEFAULT_LOCALE;
 
 export function getLocalePreference() {
-  return settings.locale;
+  // ignore unknown values, a broken locale would crash every Intl formatter
+  const locale = settings.locale;
+  return locale && locale in LOCALES ? locale : null;
 }
 
 export function removeLocalePreference(i18n: VueI18nInstance) {

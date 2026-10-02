@@ -43,7 +43,7 @@ const releaseNotes = `
 `;
 
 export default {
-  title: "AboutModal",
+  title: "Version/AboutModal",
   component: AboutModal,
   argTypes: {
     installed: { control: "text" },

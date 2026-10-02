@@ -47,3 +47,17 @@ func TestAsleep(t *testing.T) {
 	require.NotErrorIs(t, asleep(statusErr(t, http.StatusServiceUnavailable, "sleeping")), api.ErrAsleep)
 	require.NoError(t, asleep(nil))
 }
+
+func TestAsleepTeslaMate(t *testing.T) {
+	unavailable := `{"error":"vehicle unavailable: {error: \"vehicle unavailable:\"}","error_description":"","response":null}`
+	require.ErrorIs(t, asleep(statusErr(t, http.StatusRequestTimeout, unavailable)), api.ErrAsleep)
+
+	for _, err := range []error{
+		statusErr(t, http.StatusServiceUnavailable, unavailable),
+		statusErr(t, http.StatusRequestTimeout, `{"error":"request timed out"}`),
+		statusErr(t, http.StatusRequestTimeout, `{"response":{"reason":"vehicle is sleeping"}}`),
+		statusErr(t, http.StatusRequestTimeout, "vehicle unavailable"),
+	} {
+		require.Same(t, err, asleep(err))
+	}
+}

@@ -28,7 +28,7 @@ func TestEEBusOHPCFNotConnected(t *testing.T) {
 	require.ErrorIs(t, c.MaxCurrent(16), errNotConnected)
 
 	// dimming uses EG LPC, which is unavailable without an LPC entity
-	require.ErrorIs(t, c.Dim(true), api.ErrNotAvailable)
+	require.ErrorIs(t, c.dim(true), api.ErrNotAvailable)
 }
 
 // a failed enable must not persist the intent, otherwise Enabled() reports a

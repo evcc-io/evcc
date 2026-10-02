@@ -46,10 +46,11 @@ func sha256hex(parts ...string) string {
 type digestDevice struct {
 	mu sync.Mutex
 
-	algorithm string // algorithm advertised in the challenge
-	nonce     string
-	seq       int
-	lastNC    int
+	algorithm    string // algorithm advertised in the challenge
+	nonStdHeader bool   // advertise the challenge via X-WWW-Authenticate instead of WWW-Authenticate
+	nonce        string
+	seq          int
+	lastNC       int
 
 	challenges int // nonces minted
 	unauth     int // requests without Authorization
@@ -62,7 +63,12 @@ func (d *digestDevice) challengeLocked(w http.ResponseWriter) {
 	d.nonce = fmt.Sprintf("nonce-%d", d.seq)
 	d.lastNC = 0
 	d.challenges++
-	w.Header().Set("WWW-Authenticate", fmt.Sprintf(`Digest qop="auth", realm=%q, nonce=%q, algorithm=%s`,
+
+	header := "WWW-Authenticate"
+	if d.nonStdHeader {
+		header = "X-WWW-Authenticate"
+	}
+	w.Header().Set(header, fmt.Sprintf(`Digest qop="auth", realm=%q, nonce=%q, algorithm=%s`,
 		digestRealm, d.nonce, d.algorithm))
 	w.WriteHeader(http.StatusUnauthorized)
 }
@@ -151,6 +157,30 @@ func TestDigestNonRfcAlgorithm(t *testing.T) {
 			assert.Equal(t, []int{1, 2, 3}, dev.ncSeen)
 		})
 	}
+}
+
+// TestDigestNonStandardHeader covers servers (e.g. Fronius Gen24) that send the
+// challenge via X-WWW-Authenticate instead of WWW-Authenticate, to avoid
+// triggering a browser's native digest-auth popup for XHR/API requests.
+func TestDigestNonStandardHeader(t *testing.T) {
+	dev := &digestDevice{algorithm: "SHA-256", nonStdHeader: true}
+	srv := httptest.NewServer(dev)
+	t.Cleanup(srv.Close)
+
+	client := &http.Client{Transport: Digest(digestUser, digestPass, nil)}
+
+	for i := 0; i < 3; i++ {
+		resp, err := client.Get(srv.URL)
+		require.NoError(t, err, "request %d", i)
+		resp.Body.Close()
+		require.Equal(t, http.StatusOK, resp.StatusCode, "request %d", i)
+	}
+
+	dev.mu.Lock()
+	defer dev.mu.Unlock()
+	assert.Equal(t, 1, dev.challenges)
+	assert.Equal(t, 1, dev.unauth)
+	assert.Equal(t, []int{1, 2, 3}, dev.ncSeen)
 }
 
 // TestDigestWrongPassword asserts a rejected response surfaces to the caller

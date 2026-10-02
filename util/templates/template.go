@@ -27,6 +27,7 @@ type Template struct {
 	Countries    []CountryCode  `json:",omitempty"` // list of countries supported by this template
 	Requirements Requirements   `json:",omitempty"`
 	Caveats      []Caveat       `json:",omitempty"` // known device limitations
+	Discovery    Discovery      `json:"-"`          // local network discovery hints
 	Params       []Param        `json:",omitempty"`
 	Render       string         `json:"-"` // rendering template
 }
@@ -97,6 +98,10 @@ func (t *Template) Validate() error {
 		if l != "" && !strings.HasPrefix(l, "https://") {
 			return fmt.Errorf("invalid link: '%s'", l)
 		}
+	}
+
+	if err := t.Discovery.validate(); err != nil {
+		return err
 	}
 
 	for _, r := range t.Requirements.EVCC {

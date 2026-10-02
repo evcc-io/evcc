@@ -35,6 +35,11 @@ const errorInterceptor = (error: any) => {
     return Promise.reject(error);
   }
 
+  // proxy/tunnel errors, backend unreachable, no toast
+  if ([502, 503, 504].includes(error.response?.status)) {
+    return Promise.reject(error);
+  }
+
   // handle unauthorized errors
   if (error.response?.status === 401) {
     openLoginModal();

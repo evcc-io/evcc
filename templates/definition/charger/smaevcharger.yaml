@@ -13,6 +13,9 @@ requirements:
   description:
     de: Der EV Charger muss sich im Modus "Fast" befinden und der Benutzer muss die Rechte "Administrator" haben.
     en: The charger must be switched to "Fast" charging mode and the user must have "Administrator" rights.
+discovery:
+  hostname: ["sma*"]
+  mac: ["0015BB"]
 params:
   - name: host
   - name: user

@@ -650,7 +650,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Legyél támogató",
-      "becomeSponsorExtended": "Támogass közvetlenül, hogy matricákat kapj.",
       "confetti": "Készen állsz a konfettire?",
       "confettiPromise": "Kapsz matricákat és digitális konfettit",
       "sticker": "… vagy szeretnél evcc matricákat?",
@@ -659,9 +658,7 @@
       "titleNoSponsor": "Támogass minket",
       "titleSponsor": "Te már támogató vagy",
       "titleTrial": "Próbaverzió",
-      "titleVictron": "Szponzorálta a Victron Energy",
-      "trial": "Jelenleg próbaverziót használsz korlátlan funkciókkal. Kérlek fontold meg a projekt támogatását.",
-      "victron": "Jelenleg a Victron Energy hardverén használod az evcc-t korlátlan funkciókkal."
+      "trial": "Jelenleg próbaverziót használsz korlátlan funkciókkal. Kérlek fontold meg a projekt támogatását."
     },
     "telemetry": {
       "optIn": "Szeretnék hozzájárulni az adataimmal.",

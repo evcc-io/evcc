@@ -10,6 +10,9 @@ requirements:
     de: |
       Erfordert Enphase-Unterstützung, um die Modbus-Funktionalität auf dem IQ Gateway zu aktivieren.
 capabilities: ["curtail"]
+discovery:
+  mdns: ["_enphase-envoy._tcp"]
+  mac: ["001DC0"]
 params:
   - name: usage
     choice: ["pv"]

@@ -152,15 +152,38 @@ func TestMinActivePhases(t *testing.T) {
 				}
 			}
 
-			// restrict scalable charger by config
+			// scalable charger pinned to fixed phases has no lower minimum than its maximum
 			expectedPhases := tc.minExpected
-			if tc.capable == 0 && configured > 0 && configured < tc.minExpected {
-				expectedPhases = configured
+			if tc.capable == 0 && configured > 1 {
+				expectedPhases = lp.maxActivePhases()
 			}
 
 			require.Equal(t, expectedPhases, lp.minActivePhases(), "expected min active phases")
 			ctrl.Finish()
 		}
+	}
+}
+
+// 1p3p charger pinned to 3p must report the 3p minimum power
+func TestEffectiveMinPowerFixedPhases(t *testing.T) {
+	Voltage = 230
+
+	for configured, expected := range map[int]float64{0: 1380, 1: 1380, 3: 4140} {
+		ctrl := gomock.NewController(t)
+
+		lp := &Loadpoint{
+			phasesConfigured: configured,
+			minCurrent:       6,
+			charger: struct {
+				*api.MockCharger
+				*api.MockPhaseSwitcher
+			}{
+				api.NewMockCharger(ctrl), api.NewMockPhaseSwitcher(ctrl),
+			},
+		}
+
+		require.Equal(t, expected, lp.EffectiveMinPower(), "configured %d", configured)
+		ctrl.Finish()
 	}
 }
 
@@ -224,11 +247,11 @@ func TestPvScalePhases(t *testing.T) {
 			log:              util.NewLogger("foo"),
 			bus:              evbus.New(),
 			clock:            clock,
-			chargeMeter:      &Null{},            // silence nil panics
-			chargeRater:      &Null{},            // silence nil panics
-			chargeTimer:      &Null{},            // silence nil panics
-			progress:         NewProgress(0, 10), // silence nil panics
-			wakeUpTimer:      NewTimer(),         // silence nil panics
+			chargeMeter:      newChargeMeter(&Null{}), // silence nil panics
+			chargeRater:      &Null{},                 // silence nil panics
+			chargeTimer:      &Null{},                 // silence nil panics
+			progress:         NewProgress(0, 10),      // silence nil panics
+			wakeUpTimer:      NewTimer(),              // silence nil panics
 			mode:             api.ModeNow,
 			minCurrent:       minA,
 			maxCurrent:       maxA,
@@ -743,7 +766,7 @@ func TestUpdatePhaseSwitchNotAvailable(t *testing.T) {
 		log:         util.NewLogger("foo"),
 		bus:         evbus.New(),
 		clock:       clock,
-		chargeMeter: &Null{},
+		chargeMeter: newChargeMeter(&Null{}),
 		chargeRater: &Null{},
 		chargeTimer: &Null{},
 		progress:    NewProgress(0, 10),
@@ -830,7 +853,7 @@ func TestPvScalePhasesCircuitLimits(t *testing.T) {
 				log:            util.NewLogger("foo"),
 				bus:            evbus.New(),
 				clock:          clock.NewMock(),
-				chargeMeter:    &Null{},
+				chargeMeter:    newChargeMeter(&Null{}),
 				chargeRater:    &Null{},
 				chargeTimer:    &Null{},
 				progress:       NewProgress(0, 10),

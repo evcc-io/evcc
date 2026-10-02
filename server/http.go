@@ -185,7 +185,7 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 		"buffersoc":                       {"POST", "/buffersoc/{value:[0-9.]+}", floatHandler(site.SetBufferSoc, site.GetBufferSoc)},
 		"bufferstartsoc":                  {"POST", "/bufferstartsoc/{value:[0-9.]+}", floatHandler(site.SetBufferStartSoc, site.GetBufferStartSoc)},
 		"batterydischargecontrol":         {"POST", "/batterydischargecontrol/{value:[01truefalse]+}", boolHandler(site.SetBatteryDischargeControl, site.GetBatteryDischargeControl)},
-		"batterygriddischarge":            {"POST", "/batterygriddischarge/{value:[01truefalse]+}", boolHandler(site.SetBatteryGridDischarge, site.GetBatteryGridDischarge)},
+		"batterygriddischarge":            {"POST", "/batterygriddischarge/{value:[01truefalse]+}", batteryGridDischargeHandler(site)},
 		"batterygridcharge":               {"POST", "/batterygridchargelimit/{value:-?[0-9.]+}", floatPtrHandler(site.SetBatteryGridChargeLimit, site.GetBatteryGridChargeLimit)},
 		"batterygridchargedelete":         {"DELETE", "/batterygridchargelimit", floatPtrHandler(site.SetBatteryGridChargeLimit, site.GetBatteryGridChargeLimit)},
 		"batterygriddischargelimit":       {"POST", "/batterygriddischargelimit/{value:-?[0-9.]+}", floatPtrHandler(site.SetBatteryGridDischargeLimit, site.GetBatteryGridDischargeLimit)},
@@ -195,6 +195,8 @@ func (s *HTTPd) RegisterSiteHandlers(site site.API) {
 		"prioritysoc":                     {"POST", "/prioritysoc/{value:[0-9.]+}", floatHandler(site.SetPrioritySoc, site.GetPrioritySoc)},
 		"residualpower":                   {"POST", "/residualpower/{value:-?[0-9.]+}", floatHandler(site.SetResidualPower, site.GetResidualPower)},
 		"gridexportlimit":                 {"POST", "/gridexportlimit/{value:[0-9.]+}", floatHandler(site.SetGridExportLimit, site.GetGridExportLimit)},
+		"profilepercentile":               {"POST", "/profilepercentile/{value:[0-9.]+}", floatPtrHandler(site.SetProfilePercentile, site.GetProfilePercentile)},
+		"profilepercentiledelete":         {"DELETE", "/profilepercentile", floatPtrHandler(site.SetProfilePercentile, site.GetProfilePercentile)},
 		"solaradjusted":                   {"POST", "/solaradjusted/{value:[01truefalse]+}", boolHandler(pass(site.SetSolarAdjusted), site.GetSolarAdjusted)},
 		"smartcost":                       {"POST", "/smartcostlimit/{value:-?[0-9.]+}", updateSmartCostLimit(site, smartCostLimit)},
 		"smartcostdelete":                 {"DELETE", "/smartcostlimit", updateSmartCostLimit(site, smartCostLimit)},
@@ -400,8 +402,9 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 
 		// site
 		for _, r := range map[string]route{
-			"site":       {"GET", "/site", siteHandler(site)},
-			"updatesite": {"PUT", "/site", updateSiteHandler(site)},
+			"site":          {"GET", "/site", siteHandler(site)},
+			"updatesite":    {"PUT", "/site", updateSiteHandler(site)},
+			"updatecountry": {"PUT", "/country", updateCountryHandler(site)},
 		} {
 			api.Methods(r.Methods()...).Path(r.Pattern).Handler(r.HandlerFunc)
 		}
@@ -436,8 +439,9 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"logareas":   {"GET", "/log/areas", logAreasHandler},
 			"clearcache": {"DELETE", "/cache", clearCacheHandler},
 			"shutdown": {"POST", "/shutdown", func(w http.ResponseWriter, r *http.Request) {
-				shutdown()
 				w.WriteHeader(http.StatusNoContent)
+				_ = http.NewResponseController(w).Flush()
+				shutdown()
 			}},
 		}
 

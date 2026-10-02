@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"reflect"
 	"sync"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/server/eebus"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/templates"
@@ -37,7 +39,7 @@ type EEBus struct {
 	egLpcEntity spineapi.EntityRemoteInterface
 	egLppEntity spineapi.EntityRemoteInterface
 
-	dimmed         bool // last limits written, re-stated on reconnect// last limits written, re-stated on reconnect
+	dimmedState    bool // last limits written, re-stated on reconnect
 	curtailPercent int
 }
 
@@ -157,6 +159,27 @@ func NewEEBus(ctx context.Context, ski, ip string, usage *templates.Usage) (api.
 	return c, nil
 }
 
+var _ api.Capable = (*EEBus)(nil)
+
+// Capability implements api.Capable. Limit scenarios may arrive after monitoring.
+func (c *EEBus) Capability(typ reflect.Type) (any, bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	switch typ {
+	case reflect.TypeFor[api.Dimmer]():
+		if c.egLpcEntity != nil && c.eg.EgLPCInterface.IsScenarioAvailableAtEntity(c.egLpcEntity, eebus.LPCLimit) {
+			return implement.Dimmer(c.dim, c.dimmed), true
+		}
+	case reflect.TypeFor[api.Curtailer]():
+		if c.egLppEntity != nil && c.eg.EgLPPInterface.IsScenarioAvailableAtEntity(c.egLppEntity, eebus.LPPLimit) {
+			return implement.Curtailer(c.curtailedPercent, c.setCurtailPercent), true
+		}
+	}
+
+	return nil, false
+}
+
 func eebusReadValue[T any](uc eebusapi.UseCaseBaseInterface, entity spineapi.EntityRemoteInterface, scenario uint, update func(entity spineapi.EntityRemoteInterface) (T, error)) (T, error) {
 	var zero T
 
@@ -182,7 +205,7 @@ func (c *EEBus) lastDimmed() bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	return c.dimmed
+	return c.dimmedState
 }
 
 func (c *EEBus) lastCurtailPercent() int {
@@ -243,10 +266,7 @@ func (c *EEBus) Voltages() (float64, float64, float64, error) {
 	return c.readPhases(c.scenarios.voltages, c.mm.VoltagePerPhase)
 }
 
-var _ api.Dimmer = (*EEBus)(nil)
-
-// Dimmed implements the api.Dimmer interface
-func (c *EEBus) Dimmed() (bool, error) {
+func (c *EEBus) dimmed() (bool, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -260,8 +280,7 @@ func (c *EEBus) Dimmed() (bool, error) {
 	return limit.IsActive, nil
 }
 
-// Dim implements the api.Dimmer interface
-func (c *EEBus) Dim(dim bool) error {
+func (c *EEBus) dim(dim bool) error {
 	// Sets or removes the consumption power limit
 
 	// TODO: change api.Dimmer to make limit configurable
@@ -288,16 +307,13 @@ func (c *EEBus) Dim(dim bool) error {
 	}
 
 	c.mu.Lock()
-	c.dimmed = dim
+	c.dimmedState = dim
 	c.mu.Unlock()
 
 	return nil
 }
 
-var _ api.Curtailer = (*EEBus)(nil)
-
-// CurtailedPercent implements the api.Curtailer interface
-func (c *EEBus) CurtailedPercent() (int, error) {
+func (c *EEBus) curtailedPercent() (int, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -321,8 +337,7 @@ func (c *EEBus) CurtailedPercent() (int, error) {
 	return int(math.Round(-limit.Value / nominal * 100)), nil
 }
 
-// SetCurtailPercent implements the api.Curtailer interface
-func (c *EEBus) SetCurtailPercent(percent int) error {
+func (c *EEBus) setCurtailPercent(percent int) error {
 	curtail := percent < 100
 
 	c.mu.Lock()

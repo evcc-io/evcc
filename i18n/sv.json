@@ -33,7 +33,7 @@
     },
     "combined": "Sammanlagt",
     "config": {
-      "buffer": "Hembatteriets energi över {soc} får användas för att stödja laddning och fördröjer avstängning i solcellsläge. Starta solcellsladdning automatiskt {start}.",
+      "buffer": "Hembatteriets energi över {soc} får användas för att stödja laddning och fördröjer avstängning i smartmode. Starta solcellsladdning automatiskt {start}.",
       "bufferNone": "Hemmabatteriets energi används inte för billaddning. Ställ in ett värde under {soc} för att aktivera stöd.",
       "bufferStart": {
         "above": "när batteriet är över {soc}",
@@ -64,6 +64,7 @@
   },
   "batterySettings": {
     "gridChargeTab": "Laddning från nätet",
+    "gridDischargeTab": "Laddning från nätet",
     "modalTitle": "Hemmabatteri",
     "noBattery": "Inga batterier konfigurerade.",
     "usageTab": "Batterianvändning"
@@ -168,6 +169,7 @@
       "title": "Valuta"
     },
     "curtailer": {
+      "description": "Enhet som begränsar inmatning på nätoperatörens begäran (§ 9 EEG). Många växelriktare stöder detta direkt via sin solmätarkonfiguration. En separat konfiguration krävs endast för vissa tillverkare eller system med flera omriktare.",
       "generic": "Generisk integration",
       "specific": "Specifik integration",
       "template": "Tillverkare",
@@ -188,7 +190,7 @@
       "chargeStatusC": "laddar",
       "chargeStatusE": "ingen ström",
       "chargeStatusF": "fel",
-      "chargedEnergy": "Laddad",
+      "chargedEnergy": "Laddat (session)",
       "co2": "Elnät CO₂",
       "configured": "Konfigurerad",
       "connected": "Ansluten",
@@ -237,6 +239,31 @@
       "temp": "Temperatur",
       "topic": "Ämne",
       "url": "URL",
+      "usage": {
+        "aux": {
+          "energy": "Konsumerat",
+          "returnEnergy": "Producerat"
+        },
+        "battery": {
+          "energy": "Urladdat",
+          "returnEnergy": "Laddat"
+        },
+        "charge": {
+          "energy": "Laddat",
+          "returnEnergy": "Urladdat"
+        },
+        "consumer": {
+          "energy": "Konsumerat",
+          "returnEnergy": "Producerat"
+        },
+        "grid": {
+          "energy": "Importerat",
+          "returnEnergy": "Exporterat"
+        },
+        "pv": {
+          "energy": "Producerat"
+        }
+      },
       "vehicleLimitSoc": "Laddgräns",
       "yes": "ja"
     },
@@ -330,6 +357,7 @@
       "hideAdvancedSettings": "Dölj avancerade inställningar",
       "invalidFileSelected": "Ogiltig fil vald",
       "legacy": "äldre",
+      "moreInfo": "Mer info:",
       "noFileSelected": "Ingen fil vald.",
       "off": "av",
       "on": "på",
@@ -433,6 +461,10 @@
         "charging": "Laddare sparad. Skapar laddpunkt …",
         "heating": "Värmare sparad. Skapar värmare …"
       },
+      "currentRangeHelp": {
+        "charging": "Typiskt: 6-16 A för 11 kW, 6-32 A för 22 kW laddare (3-fas).",
+        "heating": "Beroende på värmarens märkström (se datablad)."
+      },
       "defaultModeHelp": {
         "charging": "Laddningsläge vid anslutning till fordon.",
         "heating": "Ställs in vid systemstart."
@@ -482,6 +514,8 @@
       "solarBehaviorLabel": "Solöverskott",
       "solarModeCustom": "egen",
       "solarModeMaximum": "maximal solenergi",
+      "solarShareNote": "Solandelsreglaget i användarinställningarna är inaktiverat när watt-trösklar är inställda. {0} och spara för att aktivera det.",
+      "solarShareReset": "Ta bort gränser",
       "temperatureRangeHelp": "Visningsområde för temperatur-stapel. Påverkar ej styrning.",
       "temperatureRangeTitle": "Temperatur-område",
       "thresholdDisableDelayLabel": "Stäng av fördröjning",
@@ -756,7 +790,7 @@
     "optimizer": {
       "description": "Analyserar solprognoser, elpriser och din typiska förbrukning för att optimera batteri- och laddningsstrategi. Data överförs till evcc optimeringstjänst för beräkning. Beräknar och visualiserar för närvarande endast. Styr ännu inga enheter.",
       "enable": "Aktivera optimerare",
-      "info": "Det kan ta några minuter innan optimeringsmenyn blir synlig. För nya installationer kan det ta upp till 24 timmar innan evcc har samlat in tillräckligt med data.",
+      "info": "För nya installationer kan det ta upp till 24 timmar innan evcc har samlat in tillräckligt med data.",
       "title": "Optimerare"
     },
     "options": {
@@ -1070,7 +1104,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Bli sponsor",
-      "becomeSponsorExtended": "Stöd oss direkt för att få klistermärken.",
       "confetti": "Är du redo för konfetti?",
       "confettiPromise": "Du får klistermärken och digital konfetti",
       "sticker": "... eller evcc-klistermärken?",
@@ -1079,9 +1112,7 @@
       "titleNoSponsor": "Stöd oss",
       "titleSponsor": "Du är en supporter",
       "titleTrial": "Testläge",
-      "titleVictron": "Sponsras av Victron Energy",
-      "trial": "Du är i testläge och kan använda alla funktioner. Överväg att stödja projektet.",
-      "victron": "Du använder evcc på Victron Energy-hårdvara och har tillgång till alla funktioner."
+      "trial": "Du är i testläge och kan använda alla funktioner. Överväg att stödja projektet."
     },
     "telemetry": {
       "optIn": "Jag vill bidra med min data.",
@@ -1090,14 +1121,14 @@
       "optInSponsorship": "Sponsring krävs."
     },
     "version": {
-      "availableLong": "ny version tillgänglig",
+      "availableLong": "uppdatering tillgänglig",
       "community": "evcc community",
       "labelEmail": "Epost",
       "labelPhone": "Telefon",
       "labelRelease": "Release",
       "labelVersion": "Version",
       "labelWebsite": "Hemsida",
-      "latestVersion": "senaste version",
+      "latestVersion": "uppdaterad",
       "madeByCommunity": "Utvecklad av {0}.",
       "modalCancel": "Avbryt",
       "modalDownload": "Nedladdning",
@@ -1201,6 +1232,9 @@
   },
   "issue": {
     "additional": {
+      "copied": "kopierad!",
+      "copy": "kopia",
+      "copySelected": "kopiera urval",
       "description": "Inkludera konfiguration och loggar för att hjälpa oss att återskapa problemet snabbt. Vi uppmuntrar till att dela så mycket som möjligt. Status behövs normalt inte.",
       "include": "inkludera",
       "lines": "linjer",
@@ -1281,6 +1315,15 @@
     "title": "Autentisering"
   },
   "main": {
+    "alwaysCharge": {
+      "description": "inga avbrott",
+      "label": "Ladda alltid",
+      "labelHeating": "Värm alltid",
+      "minCurrent": "min {current}",
+      "once": "tills sessionen slutar",
+      "onceTip": "Bara för detta laddningstillfälle",
+      "permanent": "förblir permanent på"
+    },
     "chargingPlan": {
       "active": "Aktiv",
       "addRepeatingPlan": "Lägg till en återkommande laddplan",
@@ -1297,15 +1340,18 @@
         "continuous": "kontinuerlig",
         "continuousCo2Description": "Väljer de renaste sammanhängande perioderna.",
         "continuousPriceDescription": "Väljer de billigaste sammanhängande perioderna.",
+        "disabledDescription": "Kräver rörligt pris eller CO₂ -prognos.",
         "label": "Optimering"
       },
       "planNumber": "Plan {number}",
       "precondition": {
         "description": "Flyttar delar av laddningen till strax före avfärd: varmt batteri, kortare tid med hög laddningsnivå i batteriet.",
+        "disabledDescription": "All laddning sker strax före avfärd.",
         "label": "Sen laddning",
         "optionAll": "allt",
         "optionNo": "nej",
-        "summary": "{precondition} före"
+        "summary": "{precondition} före",
+        "summaryAll": "strax före avfärd"
       },
       "remove": "Ta bort",
       "repeating": "återkommande",
@@ -1400,6 +1446,7 @@
       "finished": "Sluttid",
       "last24hEnergy": "Senaste 24 timmar",
       "last7dEnergy": "Senaste 7 dagar",
+      "phasesMismatch": "Fler faser aktiva än konfigurerat. Kontrollera fas-konfigurationen.",
       "power": "Effekt",
       "price": "Kostnad",
       "remaining": "Återstående tid",
@@ -1414,7 +1461,7 @@
         "descriptionDisabled": "Välj begränsning för att tillåta snabb laddning från hembatteri.",
         "disabled": "Avaktiverad",
         "label": "Batteri Boost",
-        "mode": "Endast tillgänglig vid 'Sol' och 'Min+Sol' läge.",
+        "mode": "Endast tillgänglig vid Smart-läge.",
         "once": "Boost är aktiverat för denna laddning.",
         "stateActive": "Batteriboost aktiv",
         "stateBelowLimit": "Batterinivå för låg för boost",
@@ -1432,7 +1479,7 @@
         "label": "Min. ström"
       },
       "minTemp": {
-        "description": "Under {0} används batteri- och nätström i sol-läge för behålla denna temperatur.",
+        "description": "Under {0} används batteri- och nätström i smart-läge för behålla denna temperatur.",
         "label": "Min. temperatur"
       },
       "phasesConfigured": {
@@ -1446,13 +1493,33 @@
       },
       "smartCostCheap": "Billig laddning från nätet",
       "smartCostClean": "Laddning med grön el",
+      "solar": "Solöverskott",
+      "solarShare": {
+        "charging": {
+          "description": "Minst {share} av den lägsta laddeffekten måste komma från solen.",
+          "descriptionFull": "Laddning startar när solöverskottet täcker lägsta laddeffekten.",
+          "descriptionZero": "Laddning startar så snart det finns solöverskott."
+        },
+        "heating": {
+          "description": "Minst {share} av den lägsta värmeeffekten måste komma från solenergi.",
+          "descriptionFull": "Värmaren startar så snart solöverskottet täcker värmarens minimieffekt.",
+          "descriptionZero": "Värmaren startar så snart det finns solöverskott."
+        },
+        "label": "Solandel",
+        "thresholdsHint": "Effektbaserade laddningsgränser är konfigurerade. Ta bort dem för att använda detta reglage.",
+        "thresholdsHintYaml": "Effektbaserade laddningsgränser är konfigurerade. Ta bort aktivera/inaktivera gränserna från denna laddpunkt i din evcc.yaml för att använda detta reglage.",
+        "thresholdsLink": "Ändra konfigurationen"
+      },
       "title": "Inställningar {0}",
       "vehicle": "Fordon"
     },
     "mode": {
+      "boost": "Boost",
       "minpv": "Min+Sol",
+      "normal": "Normal",
       "now": "Snabbt",
       "off": "Av",
+      "on": "På",
       "pv": "Sol",
       "smart": "Smart"
     },
@@ -1473,6 +1540,7 @@
       "nextPlan": "Nästa plan",
       "notReachableInTime": "Laddmål kommer att nås {overrun} senare.",
       "onlyInPvMode": "Laddplan fungerar enbart i sol-läge.",
+      "onlyInSmartMode": "Laddningsplanen fungerar endast i smart läge.",
       "planDuration": "Laddtid",
       "planPeriodLabel": "Period",
       "planPeriodValue": "{start} till {end}",
@@ -1520,7 +1588,7 @@
     "vehicleSettings": {
       "connectedTo": "ansluten till {0}",
       "description": "Dessa standardvärden används när fordonet ansluts till en laddpunkt.",
-      "editHint": "Lägg till eller redigera fordon i {0}.",
+      "editHint": "Fordon kan redigeras i {0}.",
       "keepAsIs": "Behåll",
       "learnMore": "Lär dig mer.",
       "limitSoc": "Standardgräns",
@@ -1780,7 +1848,8 @@
   },
   "smartFeedInPriority": {
     "activeHoursLabel": "Pausad tid",
-    "description": "Pausar ladning vid höga elpriser för att prioritera lönsam elnätsinmatning.",
+    "batteryDescription": "Ladda ur batteriet till nätet när elpriset är högt.",
+    "description": "Pausar laddning vid höga elpriser för att prioritera lönsam elnätsinmatning.",
     "priceLabel": "Inmatningshastighet",
     "priceLimit": "Inmatningsbegränsning",
     "resetWarning": "Det finns ingen konfigurerad dynamisk inmatningstariff. Däremot finns det en begränsning på {limit}. Städa i konfigurationen?",
