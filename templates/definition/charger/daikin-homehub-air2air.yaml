@@ -47,7 +47,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 1000
-            type: writeholding
+            type: writesingle
             encoding: int16
     - case: 3 # boost
       set:
@@ -58,7 +58,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 1000
-            type: writeholding
+            type: writesingle
             encoding: int16
     - case: 1 # dim
       set:
@@ -66,13 +66,13 @@ render: |
         {{- include "modbus" . | indent 6 }}
         register:
           address: 1000
-          type: writeholding
+          type: writesingle
           encoding: int16
   setmaxpower:
     source: modbus
     {{- include "modbus" . | indent 2 }}
     register:
       address: 1001 # PV surplus
-      type: writeholding
+      type: writesingle
       decode: int16
     scale: 0.1

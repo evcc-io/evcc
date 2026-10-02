@@ -65,7 +65,7 @@ render: |
                   {{- include "modbus" . | indent 16 }}
                   register:
                     address: 2741
-                    type: writeholding
+                    type: writesingle
                     encoding: int16
               - source: sleep
                 duration: 10000ms
@@ -74,7 +74,7 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 6008
-                  type: writeholding
+                  type: writesingle
                   encoding: int16  
         - case: 1
           set:
@@ -88,7 +88,7 @@ render: |
                   {{- include "modbus" . | indent 16 }}
                   register:
                     address: 2741
-                    type: writeholding
+                    type: writesingle
                     encoding: int16
               - source: sleep
                 duration: 10000ms
@@ -97,7 +97,7 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 6008
-                  type: writeholding
+                  type: writesingle
                   encoding: int16         
         - case: 3
           set:
@@ -111,7 +111,7 @@ render: |
                   {{- include "modbus" . | indent 16 }}
                   register:
                     address: 2741
-                    type: writeholding
+                    type: writesingle
                     encoding: int16
               - source: sleep
                 duration: 10000ms
@@ -120,7 +120,7 @@ render: |
                 {{- include "modbus" . | indent 14 }}
                 register:
                   address: 6008
-                  type: writeholding
+                  type: writesingle
                   encoding: int16  
   getmode: # operation mode (1: reduced, 2: normal, 3 boost)
     source: map
@@ -166,7 +166,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 6007
-      type: writeholding
+      type: writesingle
       encoding: int16
     scale: 0.01
   {{- end }}

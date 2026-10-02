@@ -40,7 +40,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 5167 # Smart_Grid
-            type: writeholding
+            type: writesingle
             encoding: uint16
     - case: 3 # boost
       set:
@@ -51,7 +51,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 5167 # Smart_Grid
-            type: writeholding
+            type: writesingle
             encoding: uint16
     - case: 1 # dim
       set:
@@ -62,7 +62,7 @@ render: |
           {{- include "modbus" . | indent 8 }}
           register:
             address: 5167 # Smart_Grid
-            type: writeholding
+            type: writesingle
             encoding: uint16
   power:
     source: modbus
@@ -77,7 +77,7 @@ render: |
     {{- include "modbus" . | indent 2 }}
     register:
       address: 5182 # PV_Ueberschuss
-      type: writeholding
+      type: writesingle
       decode: int16
     scale: 0.1
   temp:

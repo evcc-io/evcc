@@ -85,7 +85,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 0x3247 # AppMode
-              type: writeholding
+              type: writesingle
               decode: uint16
     - case: 2 # hold
       set:
@@ -98,7 +98,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 0x3247 # AppMode
-              type: writeholding
+              type: writesingle
               decode: uint16
     - case: 3 # charge
       set:
@@ -111,7 +111,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 0x3247 # AppMode
-              type: writeholding
+              type: writesingle
               decode: uint16
         - source: const
           value: 1 # enable
@@ -120,7 +120,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 0x3604 # Charge time enable control
-              type: writeholding
+              type: writesingle
               decode: uint16
         - source: const
           value: 0 # start time (00:00)
@@ -129,7 +129,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 0x3606 # Battery first charging time (start)
-              type: writeholding
+              type: writesingle
               decode: uint16
         - source: const
           value: 0x173B # end time (23:59)
@@ -138,7 +138,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 0x3607 # Battery first charging time (end)
-              type: writeholding
+              type: writesingle
               decode: uint16
         - source: const
           value: 0x7F64 # every day (0x7f) at 100% (0x64)
@@ -147,7 +147,7 @@ render: |
             {{- include "modbus" . | indent 10 }}
             register:
               address: 0x3608 # Battery first charging time (power)
-              type: writeholding
+              type: writesingle
               decode: uint16
   {{- include "battery-params" . }}
   {{- end }}
