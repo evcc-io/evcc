@@ -25,7 +25,12 @@
 			</li>
 		</ul>
 		<div id="discoveryContent" role="tabpanel" :aria-labelledby="`discoveryTab-${activeTab}`">
-			<p>{{ description }}</p>
+			<p>
+				{{ description }}
+				<a v-if="showShareLink" :href="shareUrl" target="_blank" rel="noopener">
+					Share your result on GitHub.
+				</a>
+			</p>
 			<textarea
 				class="form-control font-monospace small"
 				rows="20"
@@ -67,6 +72,8 @@ interface Report {
 // both scan passes with name lookup
 const SCAN_DURATION = 10_000;
 
+const SHARE_URL = "https://github.com/evcc-io/evcc/issues/34335";
+
 const formatList = (items: object[], indent: string) =>
 	items.length
 		? `[\n${items.map((i) => `${indent}  ${JSON.stringify(i)}`).join(",\n")}\n${indent}]`
@@ -87,6 +94,7 @@ export default defineComponent({
 			activeTab: "configured" as Tab,
 			report: null as Report | null,
 			tabs: TABS,
+			shareUrl: SHARE_URL,
 		};
 	},
 	computed: {
@@ -108,6 +116,9 @@ export default defineComponent({
 		showWarning(): boolean {
 			return this.activeTab === "all";
 		},
+		showShareLink(): boolean {
+			return this.activeTab === "configured";
+		},
 		// one object per line, key order as sent by the backend
 		content(): string {
 			if (!this.report) return "";
@@ -115,7 +126,7 @@ export default defineComponent({
 			if (this.activeTab === "all") return formatList(hosts, "");
 			return `{\n  "system": ${JSON.stringify(system)},\n  "devices": ${formatList(devices, "  ")}\n}`;
 		},
-		// ready to paste into a GitHub issue or discussion
+		// ready to paste into the GitHub issue
 		markdown(): string {
 			return "```json\n" + this.content + "\n```";
 		},
