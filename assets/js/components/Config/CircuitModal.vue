@@ -4,6 +4,7 @@
 		name="circuit"
 		device-type="circuit"
 		default-template="static"
+		size="xl"
 		:modal-title="$t(`config.circuit.${isNew ? 'titleAdd' : 'titleEdit'}`)"
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
@@ -93,18 +94,42 @@
 					</button>
 				</FormRow>
 				<FormRow
-					v-if="loadpointOptions.length"
 					id="circuitParamLoadpoint"
 					:label="$t('config.circuit.loadpointLabel')"
 					:help="$t('config.circuit.loadpointHelp')"
 				>
 					<MultiSelect
 						id="circuitParamLoadpoint"
-						v-model="assignedLoadpointIds"
+						v-model="selectedLoadpointIds"
 						:options="loadpointOptions"
+						:disabled="loadpointOptions.length === 0"
 					>
 						{{ loadpointsLabel }}
 					</MultiSelect>
+					<template #additional-help>
+						<div v-if="assignedLoadpoints.length" class="text-gray hyphenate">
+							{{ $t("config.circuit.assignedLoadpoints") }}
+							<code
+								v-for="lp in assignedLoadpoints"
+								:key="lp.name"
+								class="ms-1 loadpoint"
+							>
+								{{ lp.title }}
+								<span v-if="lp.name" class="ms-1">({{ lp.name }})</span>
+							</code>
+						</div>
+						<div v-if="yamlLoadpoints.length" class="text-gray hyphenate">
+							{{ $t("config.circuit.yamlLoadpoints") }}
+							<code
+								v-for="lp in yamlLoadpoints"
+								:key="lp.name"
+								class="ms-1 loadpoint"
+							>
+								{{ lp.title
+								}}<span v-if="lp.name" class="ms-1">({{ lp.name }})</span>
+							</code>
+						</div>
+					</template>
 				</FormRow>
 			</div>
 		</template>
@@ -120,7 +145,7 @@
 import { defineComponent, type PropType } from "vue";
 import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
 import type { ApiData, DeviceValues, Product, TemplateParam } from "./DeviceModal";
-import type { ConfigCircuit, ConfigLoadpoint, ConfigMeter, SelectOption } from "@/types/evcc";
+import type { ConfigCircuit, ConfigLoadpoint, ConfigMeter } from "@/types/evcc";
 import { type TemplateGroup, customTemplateOption } from "./DeviceModal/TemplateSelector.vue";
 import { ConfigType } from "@/types/evcc";
 import defaultCircuitYaml from "./defaultYaml/circuit.yaml?raw";
@@ -167,59 +192,28 @@ export default defineComponent({
 		return {
 			ConfigType,
 			meterSelection: MeterSelection.NONE,
-			selectedLoadpointIds: [] as string[],
-			yamlAssignedLoadpointIds: [] as string[],
+			selectedLoadpointIds: [] as number[],
 		};
 	},
 	computed: {
-		assignedLoadpointIds: {
-			get() {
-				return [
-					...new Set([...this.selectedLoadpointIds, ...this.yamlAssignedLoadpointIds]),
-				];
-			},
-			set(value: string[]) {
-				const yamlIds = new Set(this.yamlAssignedLoadpointIds);
-				this.selectedLoadpointIds = value.filter((id) => !yamlIds.has(id));
-			},
-		},
 		loadpointsLabel() {
-			const loadpoints = this.selectedLoadpointIds
-				.map((id) => this.loadpoints.find((l) => l.id === Number(id)))
-				.filter((l) => l !== undefined);
+			if (this.loadpointOptions.length === 0)
+				return this.$t("config.circuit.noLoadpointsAssignable");
 
-			const loadpointTitles = loadpoints
-				.map((l) => l.title)
-				.concat(this.yamlAssignedLoadpointIds);
+			const loadpoints = this.availableLoadpoints
+				.filter((l) => l.id && this.selectedLoadpointIds.includes(l.id))
+				.map((l) => l.title);
 
-			if (loadpointTitles.length === 0) return this.$t("config.circuit.noLoadpointsAssigned");
-			return loadpointTitles.join(", ");
+			if (loadpoints.length === 0) return this.$t("config.circuit.noLoadpointsAssigned");
+			return loadpoints.join(", ");
 		},
 		loadpointOptions() {
-			const availableLoadpoints = this.loadpoints
-				.filter((l) => l.id && (l.circuit === undefined || l.circuit === `db:${this.id}`))
-				.map((l) => ({
-					name: l.title,
-					value: l.id!,
-				}));
-			const assignedLoadpoints = this.loadpoints
-				.filter((l) => l.id && l.circuit && l.circuit !== `db:${this.id}`)
-				.map((l) => ({
-					name: `${l.title} ${this.$t("config.circuit.loadpointHasCircuit", { circuit: this.getCircuitTitle(l.circuit) })}`,
-					value: l.id!,
-					disabled: true,
-				}));
-			const yamlLoadpoints = this.loadpoints
-				.filter((l) => !l.id)
-				.map((l) => ({
-					name: `${l.title} ${this.$t(`config.circuit.${l.circuit ? "loadpointUnassignViaYaml" : "loadpointAssignViaYaml"}`)}`,
-					value: l.title,
-					disabled: true,
-				}));
+			const availableLoadpoints = this.availableLoadpoints.map((l) => ({
+				name: l.title,
+				value: l.id!,
+			}));
 
-			return (
-				availableLoadpoints.concat(assignedLoadpoints) as SelectOption<number | string>[]
-			).concat(yamlLoadpoints);
+			return availableLoadpoints;
 		},
 		getParentCircuit(): string | undefined {
 			const parentId = getModal("circuit")?.parent;
@@ -281,13 +275,25 @@ export default defineComponent({
 
 			return options;
 		},
+		availableLoadpoints() {
+			return this.loadpoints.filter(
+				(l) => l.id && (l.circuit === undefined || l.circuit === `db:${this.id}`)
+			);
+		},
+		assignedLoadpoints() {
+			return this.loadpoints.filter(
+				(l) => l.id && l.circuit && l.circuit !== `db:${this.id}`
+			);
+		},
+		yamlLoadpoints() {
+			return this.loadpoints.filter((l) => !l.id);
+		},
 	},
 	watch: {
 		id: {
 			immediate: true,
 			handler(newId: number | undefined) {
 				this.selectedLoadpointIds = [];
-				this.yamlAssignedLoadpointIds = [];
 
 				if (newId === undefined) {
 					this.meterSelection = MeterSelection.NONE;
@@ -296,9 +302,6 @@ export default defineComponent({
 		},
 	},
 	methods: {
-		getCircuitTitle(name?: string) {
-			return this.circuits.find((c) => c.name === name)?.deviceTitle;
-		},
 		meterTitle,
 		meterSelectionChanged(selection: MeterSelection, values: { meter?: string }) {
 			if (selection === MeterSelection.GRID) {
@@ -318,10 +321,7 @@ export default defineComponent({
 				this.meterSelection = MeterSelection.DEDICATED;
 			}
 			if (this.circuitName) {
-				this.selectedLoadpointIds = this.initialAssignedLoadpoints(this.circuitName);
-				this.yamlAssignedLoadpointIds = this.initialYamlAssignedLoadpoints(
-					this.circuitName
-				);
+				this.selectedLoadpointIds = this.initialAssignedLoadpoints();
 			}
 		},
 		provideTemplateOptions(products: Product[]): TemplateGroup[] {
@@ -362,19 +362,11 @@ export default defineComponent({
 				delete values.meter;
 			}
 		},
-		initialYamlAssignedLoadpoints(circuitName: string): string[] {
-			return this.loadpoints
-				.filter((l) => l.circuit === circuitName && l.id === undefined)
-				.map((l) => l.title);
-		},
-		initialAssignedLoadpoints(circuitName: string): string[] {
-			return this.loadpoints
-				.filter((l) => l.circuit === circuitName && l.id !== undefined)
-				.filter((l) => l !== undefined)
-				.map((l) => String(l.id));
+		initialAssignedLoadpoints() {
+			return this.availableLoadpoints.map((l) => l.id) as number[];
 		},
 		async patchAssignedLoadpoints(circuitName: string, circuitDeleted?: boolean) {
-			const initial = this.initialAssignedLoadpoints(circuitName);
+			const initial = this.initialAssignedLoadpoints();
 			const current = circuitDeleted ? [] : this.selectedLoadpointIds;
 
 			const addedLoadpoints = current.filter((id) => !initial.includes(id));
@@ -385,7 +377,7 @@ export default defineComponent({
 				...removedLoadpoints.map((id) => this.patchLoadpoint(id)),
 			]);
 		},
-		async patchLoadpoint(loadpointId: string, circuitName?: string) {
+		async patchLoadpoint(loadpointId: number, circuitName?: string) {
 			await api.patch(
 				`config/loadpoints/${loadpointId}`,
 				{
@@ -418,3 +410,8 @@ export default defineComponent({
 	},
 });
 </script>
+<style scoped>
+.loadpoint:not(:last-child)::after {
+	content: ",";
+}
+</style>

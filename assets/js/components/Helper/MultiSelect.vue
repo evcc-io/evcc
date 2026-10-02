@@ -8,6 +8,7 @@
 			aria-expanded="false"
 			data-bs-auto-close="outside"
 			tabindex="0"
+			:disabled="disabled"
 		>
 			<slot></slot>
 		</button>
@@ -69,6 +70,7 @@ export default defineComponent({
 		options: { type: Array as PropType<SelectOption<string | number>[]>, default: () => [] },
 		selectAllLabel: String,
 		isTopLevel: Boolean,
+		disabled: Boolean,
 	},
 	emits: ["open", "update:modelValue"],
 	data() {
