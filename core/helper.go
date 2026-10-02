@@ -3,6 +3,7 @@ package core
 import (
 	"cmp"
 	"fmt"
+	"math"
 	"slices"
 
 	"github.com/evcc-io/evcc/api"
@@ -15,14 +16,25 @@ var (
 
 	// Voltage global value
 	Voltage float64
+
+	// GridIT indicates a three-wire grid without neutral, Voltage is the line-to-line voltage
+	GridIT bool
 )
+
+// phaseFactor returns the multiplier converting per-phase current times Voltage into total power
+func phaseFactor(phases int) float64 {
+	if GridIT && phases == 3 {
+		return math.Sqrt(3)
+	}
+	return float64(phases)
+}
 
 // powerToCurrent is a helper function to convert power to per-phase current
 func powerToCurrent(power float64, phases int) float64 {
 	if Voltage == 0 {
 		panic("Voltage is not set")
 	}
-	return power / (float64(phases) * Voltage)
+	return power / (phaseFactor(phases) * Voltage)
 }
 
 // currentToPower is a helper function to convert current to sum power
@@ -30,7 +42,7 @@ func currentToPower(current float64, phases int) float64 {
 	if Voltage == 0 {
 		panic("Voltage is not set")
 	}
-	return current * float64(phases) * Voltage
+	return current * phaseFactor(phases) * Voltage
 }
 
 // printPtr returns a string representation of a pointer value

@@ -716,7 +716,7 @@ func (lp *Loadpoint) evChargeCurrentHandler(current float64) {
 // If physical charge meter is present this handler is not used.
 // The actual value is published by the evChargeCurrentHandler
 func (lp *Loadpoint) evChargeCurrentWrappedMeterHandler(current float64) {
-	power := current * float64(lp.ActivePhases()) * Voltage
+	power := current * phaseFactor(lp.ActivePhases()) * Voltage
 
 	// if disabled we cannot be charging
 	if !lp.enabled || !lp.charging() {
@@ -1574,7 +1574,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 	if scalable {
 		insufficient := (sitePower > 0 || !lp.enabled) && powerToCurrent(availablePower, activePhases) < minCurrent
 		if insufficient {
-			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, float64(activePhases)*Voltage*minCurrent, activePhases)
+			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min %dp threshold", availablePower, currentToPower(minCurrent, activePhases), activePhases)
 		}
 
 		// while charging, scaling down only helps if 1p is sustainable, otherwise it
@@ -1582,7 +1582,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 		// disable to wait for, scaling down is the only way to reduce power (#33208).
 		useful := !lp.enabled || !lp.charging() || !mayDisable || powerToCurrent(availablePower, 1) >= minCurrent
 		if insufficient && !useful {
-			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min 1p threshold, disabling instead of scaling down", availablePower, Voltage*minCurrent)
+			lp.log.DEBUG.Printf("available power %.0fW < %.0fW min 1p threshold, disabling instead of scaling down", availablePower, currentToPower(minCurrent, 1))
 		}
 
 		// scaling down also frees load management headroom for min power on activePhases
@@ -1621,7 +1621,7 @@ func (lp *Loadpoint) pvScalePhases(sitePower, minCurrent, maxCurrent float64, ma
 
 	// scale up phases
 	if targetCurrent := powerToCurrent(availablePower, maxPhases); targetCurrent >= minCurrent && scalable {
-		lp.log.DEBUG.Printf("available power %.0fW > %.0fW min %dp threshold", availablePower, float64(maxPhases)*Voltage*minCurrent, maxPhases)
+		lp.log.DEBUG.Printf("available power %.0fW > %.0fW min %dp threshold", availablePower, currentToPower(minCurrent, maxPhases), maxPhases)
 
 		if lp.phaseTimerElapsed(lp.GetEnableDelay(), phaseScale3p) {
 			if err := lp.scalePhases(3); err != nil {
@@ -1671,7 +1671,7 @@ func (lp *Loadpoint) publishTimer(name string, delay time.Duration, action strin
 func (lp *Loadpoint) projectPhaseSwitch(sitePower, minCurrent float64) (float64, int) {
 	phases := lp.ActivePhases()
 	if lp.hasPhaseSwitching() && !lp.phaseTimer.IsZero() {
-		sitePower -= Voltage * minCurrent * float64(phases-1)
+		sitePower -= Voltage * minCurrent * (phaseFactor(phases) - 1)
 		phases = 1
 	}
 	return sitePower, phases
@@ -1705,8 +1705,8 @@ func (lp *Loadpoint) boostPower(batteryPower float64) float64 {
 		if activePhases, maxPhases := lp.ActivePhases(), lp.MaxActivePhases(); activePhases < maxPhases &&
 			lp.circuitAllowsPhases(maxPhases, lp.effectiveMinCurrent()) {
 			// max power actually achievable on the active phases
-			activeMaxPower := min(lp.EffectiveMaxPower(), Voltage*lp.effectiveMaxCurrent()*float64(activePhases))
-			delta += max(0, Voltage*lp.effectiveMinCurrent()*float64(maxPhases)-activeMaxPower)
+			activeMaxPower := min(lp.EffectiveMaxPower(), Voltage*lp.effectiveMaxCurrent()*phaseFactor(activePhases))
+			delta += max(0, Voltage*lp.effectiveMinCurrent()*phaseFactor(maxPhases)-activeMaxPower)
 		}
 	}
 
@@ -2003,6 +2003,11 @@ func (lp *Loadpoint) phasesFromChargeCurrents() {
 			}
 		}
 
+		// single phase loads in IT grids draw current on two line conductors
+		if GridIT && phases == 2 {
+			phases = 1
+		}
+
 		if phases >= 1 {
 			lp.Lock()
 			lp.measuredPhases = phases
@@ -2036,6 +2041,11 @@ func (lp *Loadpoint) updateChargeVoltages() {
 
 	if lp.hasPhaseSwitching() {
 		return // we don't need the voltages, but publish
+	}
+
+	// without neutral, phase voltages don't reveal the connected phases
+	if GridIT {
+		return
 	}
 
 	a1, a2, a3 := u1 >= minActiveVoltage, u2 >= minActiveVoltage, u3 >= minActiveVoltage

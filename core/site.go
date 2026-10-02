@@ -63,7 +63,8 @@ type Site struct {
 
 	// configuration
 	Title         string       `mapstructure:"title"`         // UI title
-	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
+	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany. Line-to-line voltage for IT grids.
+	GridType      string       `mapstructure:"gridType"`      // Grid earthing system: tn (default, with neutral) or it (without neutral)
 	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
 	Meters        MetersConfig `mapstructure:"meters"`        // Meter references
 	CurtailersRef []string     `mapstructure:"curtailers"`    // Curtailment device references
@@ -168,6 +169,15 @@ func NewSiteFromConfig(other map[string]any) (*Site, error) {
 
 	// TODO title
 	Voltage = site.Voltage
+
+	switch strings.ToLower(site.GridType) {
+	case "", "tn", "tt":
+		GridIT = false
+	case "it":
+		GridIT = true
+	default:
+		return nil, fmt.Errorf("invalid grid type: %s", site.GridType)
+	}
 
 	return site, nil
 }
