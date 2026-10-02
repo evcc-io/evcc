@@ -61,6 +61,8 @@ func TestTraceRouting(t *testing.T) {
 		"[lp-1  ] INFO TRACE in message",
 		"[site  ] ERROR failed",
 		"[site  ] TRACEX no level",
+		"no header] TRACE x",
+		"",
 	} {
 		log.Write([]byte(s))
 	}

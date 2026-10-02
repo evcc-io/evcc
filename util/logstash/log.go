@@ -96,7 +96,7 @@ func (l *logger) Write(p []byte) (int, error) {
 
 	// hot path: runs for every line incl. trace, so avoid the areaLevel regexp
 	_, msg, _ := bytes.Cut(p, []byte("] "))
-	trace := bytes.HasPrefix(msg, []byte("TRACE "))
+	trace := bytes.HasPrefix(p, []byte("[")) && bytes.HasPrefix(msg, []byte("TRACE "))
 
 	l.mu.Lock()
 	defer l.mu.Unlock()
