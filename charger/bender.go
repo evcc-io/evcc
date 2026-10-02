@@ -35,6 +35,7 @@ import (
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/semp"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
@@ -358,7 +359,7 @@ func (wb *BenderCC) maxCurrentMillis(current float64) error {
 func (wb *BenderCC) currentPower() (float64, error) {
 	if wb.legacy {
 		l1, l2, l3, err := wb.currents()
-		return 230 * (l1 + l2 + l3), err
+		return grid.CurrentsToPower(l1, l2, l3), err
 	}
 
 	b, err := wb.conn.ReadHoldingRegisters(bendRegActivePower, 2)

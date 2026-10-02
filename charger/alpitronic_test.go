@@ -9,6 +9,7 @@ import (
 
 	"github.com/andig/mbserver"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/stretchr/testify/assert"
@@ -280,7 +281,7 @@ func TestAlpitronicMaxCurrent(t *testing.T) {
 		current float64
 		args    []uint16
 	}{
-		{hycMinCurrent, []uint16{0, 1552}}, // lowest accepted current
+		{hycMinCurrent(), []uint16{0, 1552}}, // lowest accepted current
 		{6, []uint16{0, 4140}},
 		{16, []uint16{0, 11040}},
 		{200, []uint16{138000 >> 16, 138000 & 0xFFFF}},
@@ -295,18 +296,26 @@ func TestAlpitronicMaxCurrent(t *testing.T) {
 	}
 }
 
+func TestAlpitronicMinCurrentGridIT(t *testing.T) {
+	grid.IT = true
+	t.Cleanup(func() { grid.IT = false })
+
+	assert.Greater(t, hycPower(hycMinCurrent()), uint32(hycMinPowerAC))
+	assert.InDelta(t, 3.89, hycMinCurrent(), 1e-9)
+}
+
 func TestAlpitronicSeedCurrent(t *testing.T) {
 	// the default must not read back as disabled
-	assert.Greater(t, hycPower(hycMinCurrent), uint32(hycMinPowerAC))
+	assert.Greater(t, hycPower(hycMinCurrent()), uint32(hycMinPowerAC))
 
 	// no usable limit set -> default
 	wb, _ := hycTestCharger(t, 1, hycRegs(1, hycStateAvailable))
-	assert.Equal(t, hycMinCurrent, wb.curr)
+	assert.Equal(t, hycMinCurrent(), wb.curr)
 
 	// the disabled sentinel must not be taken over
 	holding := map[uint16]uint16{hycReg(1, hycRegMaxPowerAC) + 1: hycMinPowerAC}
 	wb, _ = hycTestChargerWithLimit(t, 1, hycRegs(1, hycStateAvailable), holding)
-	assert.Equal(t, hycMinCurrent, wb.curr)
+	assert.Equal(t, hycMinCurrent(), wb.curr)
 
 	// existing limit is adopted, so enabling does not fall back to the default
 	holding = map[uint16]uint16{hycReg(1, hycRegMaxPowerAC) + 1: 11040}

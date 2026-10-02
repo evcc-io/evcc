@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/core/settings"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -33,7 +34,7 @@ func (m *mockSite) GetResidualPower() float64 {
 }
 
 func TestBoostPower(t *testing.T) {
-	Voltage = 230
+	grid.Voltage = 230
 	lp := &Loadpoint{
 		log:          util.NewLogger("lp"),
 		clock:        clock.New(),
@@ -121,7 +122,7 @@ type phaseSwitchCharger struct {
 func (phaseSwitchCharger) Phases1p3p(int) error { return nil }
 
 func TestBoostPowerPhaseSwitchGapBridging(t *testing.T) {
-	Voltage = 230
+	grid.Voltage = 230
 	lp := &Loadpoint{
 		log:              util.NewLogger("lp"),
 		clock:            clock.New(),
@@ -148,7 +149,7 @@ func TestBoostPowerPhaseSwitchGapBridging(t *testing.T) {
 	assert.Equal(t, 790.0, res)
 	// verify gap alone exceeds the 3p minimum threshold
 	// available_power ≈ chargePower(3680) + boostReturn(790) = 4470 > 4140
-	assert.Greater(t, Voltage*16+res, Voltage*6*3, "boost must bridge 1p-3p gap")
+	assert.Greater(t, grid.Voltage*16+res, grid.Voltage*6*3, "boost must bridge 1p-3p gap")
 
 	// already on 3p: no phase gap added, only base + step
 	lp.phases = 3
@@ -158,7 +159,7 @@ func TestBoostPowerPhaseSwitchGapBridging(t *testing.T) {
 }
 
 func TestBoostPowerPhaseSwitchGapBridgingExclusions(t *testing.T) {
-	Voltage = 230
+	grid.Voltage = 230
 	limit10k := 10000.0
 	now := time.Now()
 

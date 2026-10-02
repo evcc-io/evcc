@@ -33,6 +33,7 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
@@ -168,13 +169,16 @@ func NewSiteFromConfig(other map[string]any) (*Site, error) {
 	site.restoreMetersAndTitle()
 
 	// TODO title
-	Voltage = site.Voltage
+	if site.Voltage <= 0 {
+		return nil, fmt.Errorf("invalid voltage: %v", site.Voltage)
+	}
+	grid.Voltage = site.Voltage
 
 	switch strings.ToLower(site.GridType) {
 	case "", "tn", "tt":
-		GridIT = false
+		grid.IT = false
 	case "it":
-		GridIT = true
+		grid.IT = true
 	default:
 		return nil, fmt.Errorf("invalid grid type: %s", site.GridType)
 	}

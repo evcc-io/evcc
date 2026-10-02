@@ -27,6 +27,7 @@ import (
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
@@ -151,11 +152,11 @@ func NewGoodWe(ctx context.Context, settings modbus.TcpSettings) (api.Charger, e
 
 // calcPower converts a per-phase current target into the wallbox's 0.1 kW power setpoint.
 // The protocol exposes only a total power register; how the wallbox converts that back into
-// a per-phase current limit is unspecified — it may assume a fixed nominal voltage (e.g. 230 V)
-// or use its own live voltage measurement. 230 V is used here as a best-effort approximation;
+// a per-phase current limit is unspecified: it may assume a fixed nominal voltage (e.g. 230 V)
+// or use its own live voltage measurement. The nominal grid voltage is used here as a best-effort approximation;
 // actual delivered current may deviate accordingly until verified on hardware.
 func (wb *GoodWe) calcPower(current float64, phases int) uint16 {
-	return uint16(min(max(230*float64(phases)*current, 1400), float64(wb.maxPower)) / 100) // 0.1 kW
+	return uint16(min(max(grid.CurrentToPower(current, phases), 1400), float64(wb.maxPower)) / 100) // 0.1 kW
 }
 
 // Status implements api.ChargeState

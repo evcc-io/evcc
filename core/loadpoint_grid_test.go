@@ -6,36 +6,15 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestCurrentToPowerGridType(t *testing.T) {
-	Voltage = 230
-	t.Cleanup(func() { GridIT = false })
-
-	for _, tc := range []struct {
-		it     bool
-		phases int
-		power  float64
-	}{
-		{false, 1, 2300},
-		{false, 3, 6900},
-		{true, 1, 2300},
-		{true, 3, 3983.71},
-	} {
-		GridIT = tc.it
-
-		power := currentToPower(10, tc.phases)
-		assert.InDelta(t, tc.power, power, 0.01, "it=%v phases=%d", tc.it, tc.phases)
-		assert.InDelta(t, 10, powerToCurrent(power, tc.phases), 1e-9, "it=%v phases=%d", tc.it, tc.phases)
-	}
-}
-
 func TestEffectivePowerGridIT(t *testing.T) {
-	Voltage = 230
-	GridIT = true
-	t.Cleanup(func() { GridIT = false })
+	grid.Voltage = 230
+	grid.IT = true
+	t.Cleanup(func() { grid.IT = false })
 
 	lp := &Loadpoint{
 		phasesConfigured: 3,
@@ -50,7 +29,7 @@ func TestEffectivePowerGridIT(t *testing.T) {
 }
 
 func TestPhasesFromChargeCurrentsGridIT(t *testing.T) {
-	t.Cleanup(func() { GridIT = false })
+	t.Cleanup(func() { grid.IT = false })
 
 	for _, tc := range []struct {
 		it       bool
@@ -62,7 +41,7 @@ func TestPhasesFromChargeCurrentsGridIT(t *testing.T) {
 		{true, []float64{0, 10, 10}, 1},
 		{true, []float64{10, 10, 10}, 3},
 	} {
-		GridIT = tc.it
+		grid.IT = tc.it
 
 		lp := &Loadpoint{
 			log:            util.NewLogger("foo"),

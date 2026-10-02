@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -76,7 +77,7 @@ func attachChannels(lp *Loadpoint, uiChan chan util.Param, pushChan chan messeng
 func attachListeners(t *testing.T, lp *Loadpoint) {
 	t.Helper()
 
-	Voltage = 230 // V
+	grid.Voltage = 230 // V
 
 	if charger, ok := lp.charger.(*api.MockCharger); ok && charger != nil {
 		charger.EXPECT().Enabled().Return(true, nil)
@@ -313,7 +314,7 @@ func TestPVHysteresis(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			charger := api.NewMockCharger(ctrl)
 
-			Voltage = 100
+			grid.Voltage = 100
 			lp := &Loadpoint{
 				log:            util.NewLogger("foo"),
 				clock:          clock,
@@ -363,7 +364,7 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 
-	Voltage = 100
+	grid.Voltage = 100
 	lp := &Loadpoint{
 		log:            util.NewLogger("foo"),
 		clock:          clock,
@@ -378,7 +379,7 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 	lp.status = api.StatusA
 
 	// maxCurrent will read enabled state in PV mode
-	sitePower := -float64(phases)*minA*Voltage + 1 // 1W below min power
+	sitePower := -float64(phases)*minA*grid.Voltage + 1 // 1W below min power
 	current := lp.pvMaxCurrent(sitePower, 0, false, false)
 
 	if current != 0 {
@@ -746,7 +747,7 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 			api.NewMockCharger(ctrl), switcher,
 		}
 
-		Voltage = 100
+		grid.Voltage = 100
 		lp := &Loadpoint{
 			log:         util.NewLogger("foo"),
 			wakeUpTimer: NewTimer(),
@@ -760,7 +761,7 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 			},
 			status:      api.StatusC,
 			enabled:     true,
-			chargePower: 3 * Voltage * minA, // charging 3p at min current
+			chargePower: 3 * grid.Voltage * minA, // charging 3p at min current
 		}
 
 		start := clock.Now()
@@ -895,7 +896,7 @@ func TestBatteryBoostHold(t *testing.T) {
 // TestPVSolarShare verifies the pv enable/disable points derived from solarShare
 // and that manually configured thresholds take precedence over the solar share.
 func TestPVSolarShare(t *testing.T) {
-	Voltage = 100
+	grid.Voltage = 100
 	ctrl := gomock.NewController(t)
 
 	newLp := func(share float64, enabled bool, enableT, disableT float64) *Loadpoint {
@@ -916,7 +917,7 @@ func TestPVSolarShare(t *testing.T) {
 		return lp
 	}
 
-	minPower := currentToPower(minA, 3)
+	minPower := grid.CurrentToPower(minA, 3)
 
 	// enable: share 1.0 requires the full min power as surplus
 	assert.Equal(t, minA, newLp(1, false, 0, 0).pvMaxCurrent(-minPower, 0, false, false),
@@ -954,7 +955,7 @@ func TestPVSolarShare(t *testing.T) {
 // TestBatterySupport verifies that battery-supported charging ends once the battery
 // is maxed out and grid import takes over (issue #32151)
 func TestBatterySupport(t *testing.T) {
-	Voltage = 230
+	grid.Voltage = 230
 	ctrl := gomock.NewController(t)
 	clck := clock.NewMock()
 	site := &mockSite{}
@@ -974,7 +975,7 @@ func TestBatterySupport(t *testing.T) {
 		enabled:        true,
 	}
 
-	minPower := currentToPower(minA, 3)
+	minPower := grid.CurrentToPower(minA, 3)
 
 	// battery covers the car: sitePower is the battery discharge, no grid import
 	assert.Equal(t, minA, lp.pvMaxCurrent(minPower, minPower, true, false), "battery covers demand")
@@ -1035,7 +1036,7 @@ func TestBatterySupport(t *testing.T) {
 // TestPVSolarSharePhases verifies that the derived switch points scale with the
 // phases charging actually runs on, not with the theoretical 1p minimum.
 func TestPVSolarSharePhases(t *testing.T) {
-	Voltage = 100
+	grid.Voltage = 100
 	ctrl := gomock.NewController(t)
 
 	// 1p3p charger pinned to 3p cannot scale down, so the enable point must
@@ -1063,9 +1064,9 @@ func TestPVSolarSharePhases(t *testing.T) {
 		return lp
 	}
 
-	assert.Equal(t, 0.0, newLp(false).pvMaxCurrent(-currentToPower(minA, 1), 0, false, false),
+	assert.Equal(t, 0.0, newLp(false).pvMaxCurrent(-grid.CurrentToPower(minA, 1), 0, false, false),
 		"must not enable at 1p surplus while pinned to 3p")
-	assert.Equal(t, minA, newLp(false).pvMaxCurrent(-currentToPower(minA, 3), 0, false, false),
+	assert.Equal(t, minA, newLp(false).pvMaxCurrent(-grid.CurrentToPower(minA, 3), 0, false, false),
 		"should enable at 3p surplus")
 }
 
@@ -1125,7 +1126,7 @@ func TestPVDisableContinuousDeviceShortfall(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			clock := clock.NewMock()
 
-			Voltage = 100
+			grid.Voltage = 100
 			lp := &Loadpoint{
 				log:              util.NewLogger("foo"),
 				clock:            clock,
