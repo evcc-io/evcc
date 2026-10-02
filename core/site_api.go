@@ -559,9 +559,8 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
 	}
 
 	site.Lock()
-	defer site.Unlock()
-
-	if !ptrValueEqual(site.batteryGridChargeLimit, val) {
+	changed := !ptrValueEqual(site.batteryGridChargeLimit, val)
+	if changed {
 		site.batteryGridChargeLimit = val
 
 		if val == nil {
@@ -571,6 +570,12 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
 			settings.SetFloat(keys.BatteryGridChargeLimit, *val)
 			site.publish(keys.BatteryGridChargeLimit, *val)
 		}
+	}
+	site.Unlock()
+
+	if changed {
+		// re-run the optimizer so the new limit takes effect immediately
+		go site.optimizerUpdateAsync(0)
 	}
 
 	return nil
