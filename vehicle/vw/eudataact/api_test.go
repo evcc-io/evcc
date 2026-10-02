@@ -33,7 +33,7 @@ func TestIsUserPage(t *testing.T) {
 		{"trailing slash", BaseURL + "/content/euda/de/de/user.html/", false},
 		{"wrong host", "https://example.org/content/euda/de/de/user.html", false},
 		{"lookalike host", BaseURL + ".example.org/content/euda/de/de/user.html", false},
-		{"HTTP", "http://" + portalHost + "/content/euda/de/de/user.html", true},
+		{"HTTP", "http://" + portalHost + "/content/euda/de/de/user.html", false},
 		{"relative", "/content/euda/de/de/user.html", false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -62,17 +62,15 @@ func (b *loginTestBody) Close() error {
 
 func TestLoginRedirects(t *testing.T) {
 	const (
-		userPage             = BaseURL + "/content/euda/de/de/user.html"
-		portalCallback       = BaseURL + "/services/callbacklogin"
-		marketingPage        = vwidentity.BaseURL + "/consent/marketing/test"
-		identityCallback     = vwidentity.BaseURL + "/oidc/v1/oauth/client/callback"
-		httpIdentityCallback = "http://identity.vwgroup.io/oidc/v1/oauth/client/callback"
-		identifier           = vwidentity.BaseURL + "/login/identifier"
-		authenticate         = vwidentity.BaseURL + "/login/authenticate"
-		signin               = vwidentity.BaseURL + "/signin-service/v1/signin/test"
-		vehicles             = BaseURL + "/proxy_api/consent/me/vehicles"
+		userPage         = BaseURL + "/content/euda/de/de/user.html"
+		portalCallback   = BaseURL + "/services/callbacklogin"
+		marketingPage    = vwidentity.BaseURL + "/consent/marketing/test"
+		identityCallback = vwidentity.BaseURL + "/oidc/v1/oauth/client/callback"
+		identifier       = vwidentity.BaseURL + "/login/identifier"
+		authenticate     = vwidentity.BaseURL + "/login/authenticate"
+		signin           = vwidentity.BaseURL + "/signin-service/v1/signin/test"
+		vehicles         = BaseURL + "/proxy_api/consent/me/vehicles"
 	)
-	httpUserPage := "http://" + portalHost + "/content/euda/de/de/user.html"
 
 	for _, tc := range []struct {
 		name            string
@@ -88,10 +86,10 @@ func TestLoginRedirects(t *testing.T) {
 		{name: "relative location", landing: "/content/euda/fr/fr/user.html?locale=fr"},
 		{name: "marketing", landing: userPage, marketing: true, callback: identityCallback + "?scopes=openid cars"},
 		{name: "marketing relative landing", landing: "/content/euda/de/en/user.html?locale=en", marketing: true, callback: identityCallback},
-		{name: "http marketing callback", landing: httpUserPage, marketing: true, callback: httpIdentityCallback},
 		{name: "missing callback", marketing: true, wantErr: "marketing consent page is missing callback url"},
 		{name: "malformed callback", marketing: true, callback: "%", wantErr: "invalid URL escape"},
 		{name: "insecure callback", marketing: true, callback: "http://example.org/callback", wantErr: "unexpected marketing consent callback URL"},
+		{name: "http callback", marketing: true, callback: "http://identity.vwgroup.io/oidc/v1/oauth/client/callback", wantErr: "unexpected marketing consent callback URL"},
 		{name: "callback wrong path", marketing: true, callback: vwidentity.BaseURL + "/unexpected/callback", wantErr: "unexpected marketing consent callback URL"},
 		{name: "marketing callback error", marketing: true, callback: identityCallback, marketingStatus: http.StatusForbidden, wantErr: "403 Forbidden"},
 		{name: "portal callback error", landing: userPage, portalStatus: http.StatusUnauthorized, wantErr: "401 Unauthorized"},
@@ -105,7 +103,7 @@ func TestLoginRedirects(t *testing.T) {
 		{name: "extra segment", landing: userPage + "/extra", wantErr: "unexpected landing page"},
 		{name: "wrong prefix", landing: BaseURL + "/content/other/de/de/user.html", wantErr: "unexpected landing page"},
 		{name: "wrong host", landing: "https://example.org/content/euda/de/de/user.html", wantErr: "unexpected login redirect host"},
-		{name: "insecure landing", landing: httpUserPage},
+		{name: "insecure landing", landing: "http://" + portalHost + "/content/euda/de/de/user.html", wantErr: "unexpected landing page"},
 		{name: "unexpected redirect host", landing: "https://attacker.example/content/euda/de/de/user.html", wantErr: "unexpected login redirect host"},
 		{name: "redirect loop", landing: portalCallback, wantErr: "stopped after 10 redirects"},
 	} {
@@ -155,7 +153,7 @@ func TestLoginRedirects(t *testing.T) {
 							if tc.marketing {
 								resp.Header.Set("Location", marketingPage+"?"+url.Values{"callback": {tc.callback}}.Encode())
 							}
-						case identityCallback, httpIdentityCallback:
+						case identityCallback:
 							assert.Equal(t, http.MethodGet, req.Method)
 							assert.NotContains(t, req.URL.RawQuery, " ")
 							resp.StatusCode = http.StatusFound

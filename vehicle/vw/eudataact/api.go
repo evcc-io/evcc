@@ -108,24 +108,13 @@ func (v *API) login() error {
 	}
 
 	v.Client.Jar = jar
-	previousTransport := v.Client.Transport
-	transport := previousTransport
-	if transport == nil {
-		transport = http.DefaultTransport
-	}
-	v.Client.Transport = loginTraceTransport{transport: transport, log: v.log}
-	defer func() { v.Client.Transport = previousTransport }()
-
 	previousRedirect := v.Client.CheckRedirect
 	defer func() { v.Client.CheckRedirect = previousRedirect }()
 
 	identityHost := strings.TrimPrefix(vwidentity.BaseURL, "https://")
 	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		// Cookies from the redirect response are already stored in the jar.
-		if isUserPage(req.URL) || isMarketingConsentPage(req.URL) {
-			return http.ErrUseLastResponse
-		}
-		if req.URL.Scheme != "http" && req.URL.Scheme != "https" {
+		if req.URL.Scheme != "https" || isUserPage(req.URL) || isMarketingConsentPage(req.URL) {
 			return http.ErrUseLastResponse
 		}
 		if !isLoginHost(req.URL.Host, identityHost) {
@@ -209,7 +198,7 @@ func (v *API) login() error {
 	if cb, err := vwidentity.MarketingConsentCallback(final); err != nil {
 		return err
 	} else if cb != nil {
-		if !isHTTPURL(final) || !isLoginHost(final.Host, identityHost) || !validMarketingCallback(cb, identityHost) {
+		if final.Scheme != "https" || !isLoginHost(final.Host, identityHost) || !validMarketingCallback(cb, identityHost) {
 			return errors.New("unexpected marketing consent callback URL")
 		}
 		resp, err = v.Get(cb.String())
@@ -240,19 +229,6 @@ func (v *API) login() error {
 	return nil
 }
 
-type loginTraceTransport struct {
-	transport http.RoundTripper
-	log       *util.Logger
-}
-
-func (t loginTraceTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	resp, err := t.transport.RoundTrip(req)
-	if resp != nil && t.log != nil {
-		t.log.TRACE.Printf("login response: %d", resp.StatusCode)
-	}
-	return resp, err
-}
-
 func isLoginHost(host, identityHost string) bool {
 	return strings.EqualFold(host, identityHost) || strings.EqualFold(host, portalHost)
 }
@@ -264,15 +240,11 @@ func isMarketingConsentPage(u *url.URL) bool {
 
 func validMarketingCallback(u *url.URL, identityHost string) bool {
 	validPath := u.Path == "/oidc/v1/oauth/client/callback" || u.Path == "/oidc/v1/oauth/client/callback/success"
-	return isHTTPURL(u) && strings.EqualFold(u.Host, identityHost) && validPath
-}
-
-func isHTTPURL(u *url.URL) bool {
-	return u.Scheme == "http" || u.Scheme == "https"
+	return u.Scheme == "https" && strings.EqualFold(u.Host, identityHost) && validPath
 }
 
 func isUserPage(u *url.URL) bool {
-	return isHTTPURL(u) && strings.EqualFold(u.Host, portalHost) &&
+	return u.Scheme == "https" && strings.EqualFold(u.Host, portalHost) &&
 		strings.HasPrefix(u.Path, "/content/euda/") && strings.HasSuffix(u.Path, "/user.html")
 }
 
