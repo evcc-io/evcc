@@ -4,7 +4,12 @@
 		<div class="row">
 			<main class="col-12">
 				<div class="mb-5">
-					<p class="text-muted">{{ $t("issue.description") }}</p>
+					<p class="text-muted">
+						{{ $t("issue.description") }}
+						<a v-if="!emailMode" :href="docsLink" target="_blank">
+							{{ $t("config.general.docsLink") }}
+						</a>
+					</p>
 				</div>
 
 				<!-- Help Type Selection -->
@@ -167,7 +172,27 @@
 						<div class="col-12 col-lg-6 ps-lg-5">
 							<hr class="d-lg-none mt-0 mb-5" />
 							<div class="mb-4">
-								<h5>{{ $t("issue.additional.title") }}</h5>
+								<div
+									class="d-flex justify-content-between align-items-baseline gap-3"
+								>
+									<h5>{{ $t("issue.additional.title") }}</h5>
+									<CopyButton :content="markdown">
+										<template #default="{ copy, copied }">
+											<button
+												type="button"
+												class="btn btn-link btn-sm p-0 text-muted text-nowrap"
+												:disabled="!anySelected"
+												@click="copy"
+											>
+												{{
+													copied
+														? $t("issue.additional.copied")
+														: $t("issue.additional.copySelected")
+												}}
+											</button>
+										</template>
+									</CopyButton>
+								</div>
 								<p class="text-muted small">
 									{{ $t("issue.additional.description") }}
 								</p>
@@ -175,10 +200,12 @@
 
 							<!-- Additional Items -->
 							<IssueAdditionalItem
+								v-if="yamlConfigExists"
 								id="issueYamlConfig"
 								:included="sections.yamlConfig.included"
 								:title="$t('issue.additional.yamlConfig')"
 								:content="sections.yamlConfig.content"
+								:markdown="sectionMarkdown('yamlConfig')"
 								:helpType="helpType"
 								@update:included="sections.yamlConfig.included = $event"
 								@update:content="sections.yamlConfig.content = $event"
@@ -199,6 +226,7 @@
 								:included="sections.uiConfig.included"
 								:title="$t('issue.additional.uiConfig')"
 								:content="sections.uiConfig.content"
+								:markdown="sectionMarkdown('uiConfig')"
 								:helpType="helpType"
 								@update:included="sections.uiConfig.included = $event"
 								@update:content="sections.uiConfig.content = $event"
@@ -220,6 +248,7 @@
 								:included="sections.logs.included"
 								:title="$t('issue.additional.logs')"
 								:content="sections.logs.content"
+								:markdown="sectionMarkdown('logs')"
 								:helpType="helpType"
 								@update:included="sections.logs.included = $event"
 								@update:content="sections.logs.content = $event"
@@ -290,6 +319,7 @@
 								:included="sections.state.included"
 								:title="$t('issue.additional.state')"
 								:content="sections.state.content"
+								:markdown="sectionMarkdown('state')"
 								:helpType="helpType"
 								@update:included="sections.state.included = $event"
 								@update:content="sections.state.content = $event"
@@ -344,6 +374,7 @@
 import { defineComponent } from "vue";
 import TopHeader from "@/components/Top/Header.vue";
 import MultiSelect from "@/components/Helper/MultiSelect.vue";
+import CopyButton from "@/components/Helper/CopyButton.vue";
 import IssueAdditionalItem from "@/components/Issue/AdditionalItem.vue";
 import SummaryModal from "@/components/Issue/SummaryModal.vue";
 import Modal from "bootstrap/js/dist/modal";
@@ -354,17 +385,22 @@ import { formatJson } from "@/components/Issue/format";
 import {
 	generateMailtoUrl,
 	generateDebugFile,
+	generateSection,
 	MAX_MAIL_TITLE_LENGTH,
 	MAX_MAIL_DESCRIPTION_LENGTH,
 } from "@/components/Issue/template";
-import type { HelpType, IssueData } from "@/components/Issue/types";
+import type { HelpType, IssueData, Sections } from "@/components/Issue/types";
 import type { State } from "@/types/evcc";
+import { docsPrefix } from "@/i18n";
 
 // Keys that should be expanded (1-level expansion for arrays and objects)
 const EXPAND_KEYS = [
 	"battery",
 	"charger",
+	"circuit",
+	"curtailer",
 	"forecast",
+	"hems",
 	"loadpoints",
 	"messenger",
 	"meter",
@@ -385,6 +421,7 @@ export default defineComponent({
 	components: {
 		TopHeader,
 		MultiSelect,
+		CopyButton,
 		IssueAdditionalItem,
 		SummaryModal,
 	},
@@ -407,6 +444,7 @@ export default defineComponent({
 				logs: { content: "", included: true },
 				state: { content: "", included: false },
 			} as Record<SectionType, SectionData>,
+			yamlConfigExists: true,
 
 			// Log configuration
 			logLevels: [...LOG_LEVELS],
@@ -420,6 +458,9 @@ export default defineComponent({
 		return { title: this.$t("issue.title") };
 	},
 	computed: {
+		docsLink() {
+			return `${docsPrefix()}/report-a-problem`;
+		},
 		customEmail(): string {
 			return window.evcc?.customEmail ?? "";
 		},
@@ -454,6 +495,12 @@ export default defineComponent({
 				system: this.systemString,
 				timezone: this.timezoneString,
 			};
+		},
+		anySelected(): boolean {
+			return Object.values(this.sections).some((s) => s.included);
+		},
+		markdown(): string {
+			return generateDebugFile(this.issueData, this.sections);
 		},
 		logAreaOptions() {
 			return this.logAvailableAreas.map((area) => ({ name: area, value: area }));
@@ -506,6 +553,9 @@ export default defineComponent({
 		this.updateAreas();
 	},
 	methods: {
+		sectionMarkdown(key: keyof Sections): string {
+			return generateSection(key, this.sections[key].content);
+		},
 		// Type-dependent translation helper
 		$tt(key: string): string {
 			const suffix = this.emailMode
@@ -523,9 +573,9 @@ export default defineComponent({
 					validateStatus: (code) => [200, 404].includes(code),
 				});
 
-				// Handle 404 silently when evcc.yaml doesn't exist
 				if (response.status === 404) {
-					this.sections.yamlConfig.content = "no yaml configuration";
+					this.yamlConfigExists = false;
+					this.sections.yamlConfig.included = false;
 					return;
 				}
 
@@ -545,6 +595,9 @@ export default defineComponent({
 				const deviceEndpoints = [
 					"config/loadpoints",
 					"config/devices/charger",
+					"config/devices/circuit",
+					"config/devices/curtailer",
+					"config/devices/hems",
 					"config/devices/messenger",
 					"config/devices/meter",
 					"config/devices/tariff",
@@ -555,7 +608,6 @@ export default defineComponent({
 					"config/site",
 					...deviceEndpoints,
 					"config/circuits",
-					"config/hems",
 					"config/messaging",
 					"config/tariffs",
 					"config/tariff",
@@ -598,12 +650,23 @@ export default defineComponent({
 					"interval",
 					"residualPower",
 					"experimental",
+					"optimizer",
+					"optimizerChargingStrategy",
+					"gridExportLimit",
+					"ocpp",
+					"ocppforwarder",
+					"eebus",
+					"country",
+					"currency",
 				].forEach((key) => {
 					const value = store.state[key as keyof State];
 					if (value !== undefined && value !== null) {
 						configs[key] = value;
 					}
 				});
+
+				const { remote } = store.state;
+				if (remote) configs.remote = remote.config;
 
 				this.sections.uiConfig.content = formatJson(configs, EXPAND_KEYS);
 			} catch (error) {

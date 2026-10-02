@@ -11,21 +11,16 @@ requirements:
   description:
     de: |
       Um die aktive Ladesteuerung zu nutzen darf der Energiekosten-Assistent (ECA) im Fronius Solar.web nicht aktiviert sein. (Fronius Solar.web->Einstellungen->Betriebsmodus->Eigenverbrauch)
+      Zähleradresse von Primär- oder Sekundärzählern: auf der Weboberfläche des Wechselrichters kann nur die Adresse des ersten Zählers (z.B. 200) eingestellt werden. Zusätzliche Zähler erhalten eine aufsteigende Nummer (z.B: 201).
     en: |
       To use active charge control, the Energy Cost Assistant (ECA) must not be activated in Fronius Solar.web. (Fronius Solar.web -> Settings -> Operating Mode -> Self-Consumption)
+      Meter address of primary or secondary meters: on the web interface of the inverter, only the address of the first meter (e.g., 200) can be set. Additional meters receive an ascending number (e.g., 201).
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]
-  - name: host
-  - name: port
-    default: 502
-  - name: id
-    default: 200
-    advanced: true
-    help:
-      en: "Meter address of primary or secondary meters. On the web interface of the inverter, only the address of the first meter (e.g., 200) can be set. Additional meters receive an ascending number (e.g., 201)."
-      de: "Zähleradresse von Primär- oder Sekundärzählern. Auf der Weboberfläche des Wechselrichters kann nur die Adresse des ersten Zählers (z.B. 200) eingestellt werden. Zusätzliche Zähler erhalten eine aufsteigende Nummer (z.B: 201)."
-    usages: ["grid"]
+  - name: modbus
+    choice: ["tcpip"]
+    id: 200 # grid meter, inverter itself is 1
   - name: integer
     description:
       generic: Integer
@@ -40,8 +35,7 @@ render: |
   {{- if eq .usage "grid" }}
   power:
     source: sunspec
-    uri: {{ joinHostPort .host .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     value:
       - 201:W
       - 211:W
@@ -49,8 +43,7 @@ render: |
       - 213:W
   energy:
     source: sunspec
-    uri: {{ joinHostPort .host .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     value:
       - 201:TotWhImp
       - 211:TotWhImp
@@ -59,8 +52,7 @@ render: |
     scale: 0.001
   returnenergy:
     source: sunspec
-    uri: {{ joinHostPort .host .port }}
-    id: {{ .id }}
+    {{- include "modbus" . | indent 2 }}
     value:
       - 201:TotWhExp
       - 211:TotWhExp
@@ -69,24 +61,21 @@ render: |
     scale: 0.001
   currents:
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:AphA
         - 211:AphA
         - 203:AphA
         - 213:AphA
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:AphB
         - 211:AphB
         - 203:AphB
         - 213:AphB
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:AphC
         - 211:AphC
@@ -94,24 +83,21 @@ render: |
         - 213:AphC
   voltages:
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:PhVphA
         - 211:PhVphA
         - 203:PhVphA
         - 213:PhVphA
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:PhVphB
         - 211:PhVphB
         - 203:PhVphB
         - 213:PhVphB
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:PhVphC
         - 211:PhVphC
@@ -119,24 +105,21 @@ render: |
         - 213:PhVphC
   powers:
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:WphA
         - 211:WphA
         - 203:WphA
         - 213:WphA
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:WphB
         - 211:WphB
         - 203:WphB
         - 213:WphB
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
-      id: {{ .id }}
+      {{- include "modbus" . | indent 4 }}
       value:
         - 201:WphC
         - 211:WphC
@@ -148,23 +131,23 @@ render: |
     source: calc
     add:
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
+      {{- include "modbus-connection" . | indent 4 }}
       id: 1
       value: 160:1:DCW # mppt 1
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
+      {{- include "modbus-connection" . | indent 4 }}
       id: 1
       value: 160:2:DCW # mppt 2
   energy:
     source: calc
     add:
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
+      {{- include "modbus-connection" . | indent 4 }}
       id: 1
       value: 160:1:DCWH # mppt 1
       scale: 0.001
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
+      {{- include "modbus-connection" . | indent 4 }}
       id: 1
       value: 160:2:DCWH # mppt 2
       scale: 0.001
@@ -173,7 +156,7 @@ render: |
     source: sequence
     set:
       - source: sunspec
-        uri: {{ joinHostPort .host .port }}
+        {{- include "modbus-connection" . | indent 6 }}
         id: 1
         value: 123:WMaxLimPct
       - source: switch
@@ -184,7 +167,7 @@ render: |
               value: 0 # Limit disabled
               set:
                 source: sunspec
-                uri: {{ joinHostPort .host .port }}
+                {{- include "modbus-connection" . | indent 14 }}
                 id: 1
                 value: 123:WMaxLim_Ena
         default:
@@ -192,7 +175,7 @@ render: |
           value: 1 # Limit enabled
           set:
             source: sunspec
-            uri: {{ joinHostPort .host .port }}
+            {{- include "modbus-connection" . | indent 10 }}
             id: 1
             value: 123:WMaxLim_Ena
   curtailed: # the limit percentage only applies while the limit is enabled
@@ -202,14 +185,14 @@ render: |
       type: bool
       config:
         source: sunspec
-        uri: {{ joinHostPort .host .port }}
+        {{- include "modbus-connection" . | indent 6 }}
         id: 1
         value: 123:WMaxLim_Ena
     - name: limit
       type: float
       config:
         source: sunspec
-        uri: {{ joinHostPort .host .port }}
+        {{- include "modbus-connection" . | indent 6 }}
         id: 1
         value: 123:WMaxLimPct
     script: |
@@ -224,29 +207,29 @@ render: |
     source: calc
     add:
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
+      {{- include "modbus-connection" . | indent 4 }}
       id: 1
       value: 160:3:DCW # mppt 3 charge
       scale: -1
     - source: sunspec
-      uri: {{ joinHostPort .host .port }}
+      {{- include "modbus-connection" . | indent 4 }}
       id: 1
       value: 160:4:DCW # mppt 4 discharge
   energy:
     source: sunspec
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus-connection" . | indent 2 }}
     id: 1
     value: 160:4:DCWH # mppt 4 (discharge)
     scale: 0.001
   returnenergy:
     source: sunspec
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus-connection" . | indent 2 }}
     id: 1
     value: 160:3:DCWH # mppt 3 (charge)
     scale: 0.001
   soc:
     source: sunspec
-    uri: {{ joinHostPort .host .port }}
+    {{- include "modbus-connection" . | indent 2 }}
     id: 1
     value: 124:0:ChaState
   batterymode: # model 124
@@ -260,14 +243,14 @@ render: |
           value: 0
           set:
             source: sunspec
-            uri: {{ joinHostPort .host .port }}
+            {{- include "modbus-connection" . | indent 10 }}
             id: 1
             value: 124:0:StorCtl_Mod
         - source: const
           value: 100 # %
           set:
             source: sunspec
-            uri: {{ joinHostPort .host .port }}
+            {{- include "modbus-connection" . | indent 10 }}
             id: 1
             value: 124:0:OutWRte
     - case: 2 # hold
@@ -278,14 +261,14 @@ render: |
           value: 2
           set:
             source: sunspec
-            uri: {{ joinHostPort .host .port }}
+            {{- include "modbus-connection" . | indent 10 }}
             id: 1
             value: 124:0:StorCtl_Mod
         - source: const
           value: 0 # %
           set:
             source: sunspec
-            uri: {{ joinHostPort .host .port }}
+            {{- include "modbus-connection" . | indent 10 }}
             id: 1
             value: 124:0:OutWRte
     - case: 3 # charge
@@ -296,21 +279,21 @@ render: |
           value: 1 # off
           set:
             source: sunspec
-            uri: {{ joinHostPort .host .port }}
+            {{- include "modbus-connection" . | indent 10 }}
             id: 1
             value: 124:0:ChaGriSet
         - source: const
           value: 2
           set:
             source: sunspec
-            uri: {{ joinHostPort .host .port }}
+            {{- include "modbus-connection" . | indent 10 }}
             id: 1
             value: 124:0:StorCtl_Mod
         - source: const
           value: {{ if .maxchargerate }}-{{ .maxchargerate }}{{ end }} # %
           set:
             source: sunspec
-            uri: {{ joinHostPort .host .port }}
+            {{- include "modbus-connection" . | indent 10 }}
             id: 1
             value: 124:0:OutWRte
     - case: 4 # holdcharge
@@ -321,14 +304,14 @@ render: |
           value: 1
           set:
             source: sunspec
-            uri: {{ .host }}:{{ .port }}
+            {{- include "modbus-connection" . | indent 10 }}
             id: 1
             value: 124:0:StorCtl_Mod
         - source: const
           value: 0 # %
           set:
             source: sunspec
-            uri: {{ .host }}:{{ .port }}
+            {{- include "modbus-connection" . | indent 10 }}
             id: 1
             value: 124:0:InWRte
   {{- include "battery-params" . }}

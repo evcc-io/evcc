@@ -170,11 +170,11 @@ func configureCircuits(conf *[]config.Named) error {
 			// just warn, no error to not break previous behavior
 			log.WARN.Println("circuits configured via UI yaml; evcc.yaml config will be ignored")
 		}
+		yamlSource.circuits = globalconfig.YamlSourceDb
 		*conf = []config.Named{}
 		if err := settings.Yaml(keys.Circuits, new([]map[string]any), &conf); err != nil {
 			return err
 		}
-		yamlSource.circuits = globalconfig.YamlSourceDb
 	}
 
 	// load configCircuits devices from database
@@ -205,6 +205,8 @@ func configureCircuits(conf *[]config.Named) error {
 // validateCircuitConfigs validates circuit configurations with support for both static and configurable types
 func validateCircuitConfigs[T any](children []T, getConfigAndLogger func(T) (config.Named, *util.Logger), getDevice func(T, api.Circuit) config.Device[api.Circuit]) error {
 	// TODO check for circular references
+	var errs []error
+
 NEXT:
 	for i, child := range children {
 		cc, log := getConfigAndLogger(child)
@@ -232,11 +234,10 @@ NEXT:
 
 		instance, err := circuit.NewFromConfig(ctx, typ, other)
 		if err != nil {
-			return fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)
-		}
-
-		// ensure config has title
-		if instance.GetTitle() == "" {
+			// register without instance so the broken circuit stays editable
+			errs = append(errs, &DeviceError{cc.Name, fmt.Errorf("cannot create circuit '%s': %w", cc.Name, err)})
+		} else if instance.GetTitle() == "" {
+			// ensure config has title
 			//lint:ignore SA1019 as Title is safe on ascii
 			instance.SetTitle(strings.Title(cc.Name))
 		}
@@ -252,6 +253,10 @@ NEXT:
 	if len(children) > 0 {
 		cn, _ := getConfigAndLogger(children[0])
 		return fmt.Errorf("circuit is missing parent: %s", cn.Name)
+	}
+
+	if len(errs) > 0 {
+		return joinErrors(errs...)
 	}
 
 	var rootFound bool
@@ -545,7 +550,7 @@ func configureVehicles(static []config.Named, names ...string) error {
 			}
 
 			if _, ok := instance.OnIdentified().GetMode(); ok {
-				log.WARN.Printf("vehicle '%s': default charge 'mode' is deprecated, please configure via UI (charging plan > arrival)", cc.Name)
+				log.WARN.Printf("vehicle '%s': default charge 'mode' is deprecated, please configure via UI (more > vehicles)", cc.Name)
 			}
 
 			mu.Lock()
@@ -1126,7 +1131,7 @@ func tariffInstance(name string, conf config.Typed) (api.Tariff, error) {
 
 		// wrap non-config tariff errors to prevent fatals
 		log.ERROR.Printf("creating tariff %s failed: %v", name, err)
-		instance = tariff.NewWrapper(conf.Type, conf.Other, err)
+		instance = tariff.NewWrapper(ctx, typ, other, err)
 	}
 
 	return instance, nil
@@ -1511,6 +1516,16 @@ func configureLoadpoints(conf globalconfig.All) error {
 			return &DeviceError{cc.Name, err}
 		}
 
+		// start in the configured default mode, or restore the last mode from settings if none is set.
+		// static is a copy: dropping the persisted last mode keeps it from being decoded as default
+		delete(static, "mode")
+		if dynamic.DefaultMode != "" {
+			if static == nil {
+				static = make(map[string]any)
+			}
+			static["mode"] = dynamic.DefaultMode
+		}
+
 		var instance loadpoint.API
 		if !conf.Disable {
 			lp, e := newLoadpoint(idx, cc.Name, static, func(log *util.Logger) coresettings.Settings {
@@ -1529,6 +1544,13 @@ func configureLoadpoints(conf globalconfig.All) error {
 		}
 
 		if instance != nil {
+			// stored phase mode may no longer fit the charger, e.g. after it lost phase switching;
+			// fall back to the loadpoint default instead of failing boot
+			if e := instance.SetPhasesConfigured(dynamic.PhasesConfigured); e != nil {
+				log.WARN.Printf("%s: ignoring stored phases %d: %v", cc.Name, dynamic.PhasesConfigured, e)
+				dynamic.PhasesConfigured = instance.GetPhasesConfigured()
+			}
+
 			// ignore dynamic config in case of startup errors that will leave instance empty
 			if e := dynamic.Apply(instance); e != nil && err == nil {
 				err = &DeviceError{cc.Name, e}

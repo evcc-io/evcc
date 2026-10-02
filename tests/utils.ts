@@ -133,13 +133,20 @@ export async function dragElement(
   await page.mouse.up();
 }
 
-export async function getDatalistOptions(input: Locator): Promise<string[]> {
-  return input.evaluate((element: HTMLInputElement) => {
+export async function expectDatalistOptions(input: Locator, expected: string[]): Promise<void> {
+  // list attribute and datalist render together, wait for it before reading the options
+  if (expected.length > 0) {
+    await expect(input).toHaveAttribute("list");
+  } else {
+    await expect(input).not.toHaveAttribute("list");
+  }
+  const options = await input.evaluate((element: HTMLInputElement) => {
     const datalistId = element.getAttribute("list");
     if (!datalistId) return [];
     const datalist = document.getElementById(datalistId);
     return Array.from(datalist?.querySelectorAll("option") || []).map((opt) => opt.value);
   });
+  expect(options).toEqual(expected);
 }
 
 type AppState = {

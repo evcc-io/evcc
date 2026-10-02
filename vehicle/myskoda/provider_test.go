@@ -89,6 +89,23 @@ func TestStatus(t *testing.T) {
 	// an unknown state must not read as plugged in, that would assign the vehicle
 	_, err := statusG("SOMETHING_NEW").Status()
 	assert.Error(t, err)
+
+	// state is omitted, fall back to the plug state
+	plugG := func(plug string) *Provider {
+		res := VehicleResponse{Vehicle: Vehicle{Charging: &Charging{Status: &ChargingStatus{PlugConnectionState: plug}}}}
+		return &Provider{dataG: func() (VehicleResponse, error) { return res, nil }}
+	}
+
+	status, err := plugG("CONNECTED").Status()
+	require.NoError(t, err)
+	assert.Equal(t, api.StatusB, status)
+
+	status, err = plugG("DISCONNECTED").Status()
+	require.NoError(t, err)
+	assert.Equal(t, api.StatusA, status)
+
+	_, err = plugG("").Status()
+	assert.Error(t, err)
 }
 
 func TestVehicleResponsePartErrors(t *testing.T) {
@@ -109,4 +126,33 @@ func TestVehicleResponsePartErrors(t *testing.T) {
 
 	_, err = v.Odometer()
 	assert.ErrorIs(t, err, api.ErrNotAvailable)
+}
+
+func TestGetLimitSocPrefersSavedLocation(t *testing.T) {
+	global, home := 100, 80
+	res := VehicleResponse{Vehicle: Vehicle{
+		Charging: &Charging{
+			Status:   &ChargingStatus{},
+			Settings: &ChargingSettings{TargetStateOfChargeInPercent: &global},
+		},
+	}}
+	res.Vehicle.ChargingProfiles.CurrentVehiclePositionProfile = &struct{ TargetStateOfChargeInPercent *int }{&home}
+
+	v := &Provider{dataG: func() (VehicleResponse, error) { return res, nil }}
+
+	soc, err := v.GetLimitSoc()
+	require.NoError(t, err)
+	assert.EqualValues(t, home, soc)
+
+	// profile without limit: fall back to global limit
+	res.Vehicle.ChargingProfiles.CurrentVehiclePositionProfile = &struct{ TargetStateOfChargeInPercent *int }{}
+	soc, err = v.GetLimitSoc()
+	require.NoError(t, err)
+	assert.EqualValues(t, global, soc)
+
+	// not at saved location or profiles unsupported: profile is missing, fall back to global limit
+	res.Vehicle.ChargingProfiles.CurrentVehiclePositionProfile = nil
+	soc, err = v.GetLimitSoc()
+	require.NoError(t, err)
+	assert.EqualValues(t, global, soc)
 }

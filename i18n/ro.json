@@ -801,7 +801,6 @@
     },
     "sponsor": {
       "becomeSponsor": "Sponsorizează-ne",
-      "becomeSponsorExtended": "Susțineți-ne direct pentru a obține autocolante.",
       "confetti": "Ești pregătit să sărbătorești?",
       "confettiPromise": "Primești abțibilduri si confetti digital",
       "sticker": "… sau abțibilduri evcc?",
@@ -810,9 +809,7 @@
       "titleNoSponsor": "Sponsorizeaza-ne",
       "titleSponsor": "Ești sponsor",
       "titleTrial": "Modul de încercare",
-      "titleVictron": "Sponsorizat de Victron Energy",
-      "trial": "Vă aflați în modul de încercare și puteți utiliza toate funcțiile. Vă rugăm să luați în considerare susținerea proiectului.",
-      "victron": "Utilizați evcc pe hardware-ul Victron Energy și aveți acces la toate funcțiile."
+      "trial": "Vă aflați în modul de încercare și puteți utiliza toate funcțiile. Vă rugăm să luați în considerare susținerea proiectului."
     },
     "telemetry": {
       "optIn": "Vreau să trimit datele mele.",

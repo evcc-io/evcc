@@ -33,9 +33,13 @@ params:
     help:
       de: Die Seriennummer, ermöglicht es auch mit der Wallbox zu kommunizieren wenn evcc in Docker läuft.
       en: The serial number, allows to communicate with the Wallbox when running evcc in docker
+  - name: welcomecharge
 render: |
   type: keba-udp
   uri: {{ .host }}
+  {{- if .welcomecharge }}
+  features: ["welcomecharge"]
+  {{- end }}
   {{- if .rfid }}
   rfid:
     tag: {{ .rfid }}

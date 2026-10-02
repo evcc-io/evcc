@@ -56,10 +56,10 @@ import (
 // phase powers. Those capabilities are only offered when the charger reports
 // that firmware, and the block read lengths follow the firmware as well.
 //
-// Phase switching additionally depends on the power board, which the firmware
-// does not expose over Modbus. The same firmware also runs on older boards that
-// have no L2/L3 relay and reject the write, so the capability is enabled by
-// configuration rather than guessed.
+// Phase switching depends on the power board rather than on the firmware: the
+// same firmware also runs on older boards that have no L2/L3 relay and reject
+// the write. From firmware 357 the charger reports that in a capability
+// bitmask, so it is detected; on older firmware it comes from configuration.
 
 const (
 	// register blocks fetched in bulk
@@ -73,6 +73,9 @@ const (
 	// firmware 352 extends both blocks
 	voltieLenStatusBlockExt = 15 // 0x000A..0x0018
 	voltieLenMeterBlockExt  = 30 // 0x2000..0x201D
+
+	// firmware 357 extends the status block again
+	voltieLenStatusBlockCap = 17 // 0x000A..0x001A
 
 	// identification block. The 64 bit serial numbers are sent
 	// least-significant word first, unlike the metering values.
@@ -102,6 +105,13 @@ const (
 	voltieRegQueryTimeout = 0x0017 // INT16 communication timeout [s]
 	voltieRegMaxCurrent   = 0x0018 // INT16 hardware current limit [mA]
 
+	// status block, firmware 357
+	voltieRegCapability = 0x0019 // INT16 capability bitmask
+	voltieRegPhasesUsed = 0x001A // INT16 phases carrying load while charging
+
+	// bits of the capability bitmask at 0x0019
+	voltieCapPhaseSwitch = 0x0001 // the power board can switch phases
+
 	// meter block
 	voltieRegVoltages = 0x2000 // 3x INT32 phase voltage [mV]
 	voltieRegCurrents = 0x2006 // 3x INT32 phase charging current [mA]
@@ -125,6 +135,9 @@ const (
 	// firmware that adds phase switching, the communication timeout, the
 	// hardware current limit, lifetime energy and the phase powers
 	voltieExtFirmware = 352
+
+	// firmware that reports the capability bitmask and the loaded phase count
+	voltieCapFirmware = 357
 
 	// the L2/L3 contactor must not be switched under load, so the firmware
 	// rejects a phase switch while charging and holds the contactor for up to
@@ -220,13 +233,14 @@ var voltieStopReasons = map[uint16]string{
 // Voltie is an api.Charger implementation for Voltie wallboxes
 type Voltie struct {
 	implement.Caps
-	conn   *modbus.Connection
-	log    *util.Logger
-	cache  *modbus.Cache
-	status modbus.Block
-	meter  modbus.Block
-	info   modbus.Block
-	ext    bool // firmware provides the extended register blocks
+	conn        *modbus.Connection
+	log         *util.Logger
+	cache       *modbus.Cache
+	status      modbus.Block
+	meter       modbus.Block
+	info        modbus.Block
+	ext         bool // firmware provides the extended register blocks
+	reportsCaps bool // firmware reports its capabilities at 0x0019
 }
 
 // read fetches a register block through the shared bulk read cache, so all
@@ -321,6 +335,11 @@ func NewVoltie(ctx context.Context, settings modbus.TcpSettings, cache time.Dura
 		switch {
 		case fw < voltieMinFirmware:
 			log.WARN.Printf("firmware %d is outdated, Modbus TCP requires %d or later", fw, voltieMinFirmware)
+		case fw >= voltieCapFirmware:
+			wb.ext = true
+			wb.reportsCaps = true
+			wb.status.Count = voltieLenStatusBlockCap
+			wb.meter.Count = voltieLenMeterBlockExt
 		case fw >= voltieExtFirmware:
 			wb.ext = true
 			wb.status.Count = voltieLenStatusBlockExt
@@ -339,6 +358,19 @@ func NewVoltie(ctx context.Context, settings modbus.TcpSettings, cache time.Dura
 		implement.Has(wb, implement.MeterEnergy(wb.totalEnergy))
 		implement.Has(wb, implement.PhasePowers(wb.powers))
 		implement.Has(wb, implement.CurrentLimiter(wb.getMinMaxCurrent))
+
+		// from firmware 357 the charger knows whether its power board can switch
+		// phases, which makes the setting unnecessary
+		if wb.reportsCaps {
+			if supported, err := wb.hasCapability(voltieCapPhaseSwitch); err != nil {
+				log.WARN.Printf("capability register unavailable, keeping the configured phase switching: %v", err)
+			} else {
+				if phaseSwitching && !supported {
+					log.WARN.Println("phase switching is configured but the charger reports it is not supported")
+				}
+				phaseSwitching = supported
+			}
+		}
 
 		if phaseSwitching {
 			implement.Has(wb, implement.PhaseSwitcher(wb.phases1p3p))
@@ -546,6 +578,16 @@ func (wb *Voltie) Voltages() (float64, float64, float64, error) {
 	return wb.getPhaseValues(voltieRegVoltages, 1e3)
 }
 
+// hasCapability reports whether the charger's capability bitmask has the bit set
+func (wb *Voltie) hasCapability(bit uint16) (bool, error) {
+	b, err := wb.read(wb.status)
+	if err != nil {
+		return false, err
+	}
+
+	return voltieU16(wb.status, b, voltieRegCapability)&bit != 0, nil
+}
+
 // phases1p3p implements the api.PhaseSwitcher interface. The firmware never
 // accepts the write while charging, so charging is paused for the switch.
 func (wb *Voltie) phases1p3p(phases int) error {
@@ -696,6 +738,11 @@ func (wb *Voltie) Diagnose() {
 			fmt.Printf("\tSingle phase:\t%d\n", voltieU16(wb.status, b, voltieRegSinglePhase))
 			fmt.Printf("\tQuery timeout:\t%d s\n", voltieU16(wb.status, b, voltieRegQueryTimeout))
 			fmt.Printf("\tMax capacity:\t%d mA\n", voltieU16(wb.status, b, voltieRegMaxCurrent))
+		}
+
+		if wb.reportsCaps {
+			fmt.Printf("\tCapabilities:\t0x%04X\n", voltieU16(wb.status, b, voltieRegCapability))
+			fmt.Printf("\tPhases used:\t%d\n", voltieU16(wb.status, b, voltieRegPhasesUsed))
 		}
 	}
 

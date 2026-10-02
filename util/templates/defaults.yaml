@@ -103,6 +103,14 @@ params:
       en: Used to determine the minimum solar surplus and plan duration.
     type: choice
     choice: ["1", "2", "3"]
+  - name: phases1p3p
+    type: bool
+    description:
+      en: Phase switching
+      de: Phasenumschaltung
+    help:
+      en: Charger is equipped with phase switching feature
+      de: Wallbox verfügt über Phasenumschaltung
   - name: connector
     type: int
     description:
@@ -147,6 +155,7 @@ params:
       de: Untere Grenze wie am Batteriesystem eingestellt. Wird vom Optimizer genutzt.
       en: Lower limit as configured on the battery system. Used by optimizer.
     example: 25
+    default: 0
     type: int
     usages: ["battery"]
   - name: maxsoc
@@ -158,6 +167,7 @@ params:
       de: Obere Grenze wie am Batteriesystem eingestellt. Wird vom Optimizer und für Netzladen genutzt.
       en: Upper limit as configured on the battery system. Used by optimizer and for grid charging.
     example: 95
+    default: 100
     type: int
     usages: ["battery"]
   - name: mincurrent
@@ -733,6 +743,21 @@ presets:
   ocpp:
     - name: stationid
     - name: connector
+    - name: chargingprofile
+      advanced: true
+      type: choice
+      choice: ["TxDefaultProfile", "TxProfile"]
+      default: TxDefaultProfile
+      description:
+        de: Ladeprofiltyp
+        en: Charging profile type
+      help:
+        de: |
+          TxProfile nur verwenden, wenn die Wallbox Änderungen an TxDefaultProfile während einer laufenden Transaktion ignoriert. Ohne Transaktion wird weiterhin TxDefaultProfile verwendet; eine laufende Transaktion muss ihre ID melden.
+          TxProfile endet mit der Transaktion. Das Standardprofil wird beim nächsten Regelzyklus wiederhergestellt. Ist evcc dabei offline, kann die Wallbox bis zur Wiederverbindung ohne dieses Limit laden.
+        en: |
+          Use TxProfile only if the charger ignores TxDefaultProfile changes during an active transaction. Without a transaction, TxDefaultProfile is still used; an active transaction must report its ID.
+          TxProfile expires with its transaction. The default profile is restored on the next control cycle. If evcc is offline then, the charger may charge without this limit until it reconnects.
     - name: remotestart
       advanced: true
       type: bool

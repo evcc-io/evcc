@@ -19,7 +19,7 @@ package sponsor
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// checkHemsPro checks if the hardware is a supported HEMS Pro device and returns sponsor subject
-func checkHemsPro() string {
-	return ""
+// checkHemsPro checks if the hardware is a supported HEMS Pro device and returns sponsor subject and token
+func checkHemsPro() (string, string) {
+	return "", ""
 }

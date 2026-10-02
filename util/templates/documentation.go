@@ -91,7 +91,7 @@ func (t *Template) RenderDocumentation(product Product, lang string) ([]byte, er
 
 	type caveatDoc struct{ Description, Link string }
 	var caveats []caveatDoc
-	for _, c := range t.Caveats {
+	for _, c := range product.Caveats {
 		caveats = append(caveats, caveatDoc{c.Description.String(lang), c.Link})
 	}
 
