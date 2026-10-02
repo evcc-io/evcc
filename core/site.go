@@ -186,6 +186,13 @@ func NewSiteFromConfig(other map[string]any) (*Site, error) {
 	return site, nil
 }
 
+func gridType() string {
+	if grid.IT {
+		return "it"
+	}
+	return "tn"
+}
+
 func activeMeters(refs []string) ([]config.Device[api.Meter], error) {
 	var res []config.Device[api.Meter]
 	for _, ref := range refs {
@@ -1409,6 +1416,8 @@ func (site *Site) prepare() {
 	site.publish(keys.Country, site.GetCountry())
 
 	site.publish(keys.GridConfigured, site.gridMeter != nil)
+	site.publish(keys.Voltage, grid.Voltage)
+	site.publish(keys.GridType, gridType())
 	site.publish(keys.Grid, api.Meter(nil))
 	site.publish(keys.Pv, []api.Meter{})
 	site.publish(keys.Aux, []api.Meter{})

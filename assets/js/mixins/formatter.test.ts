@@ -4,7 +4,7 @@ import formatter, { POWER_UNIT } from "./formatter";
 import * as units from "../units";
 import settings from "../settings";
 import { defineComponent } from "vue";
-import { CURRENCY } from "@/types/evcc";
+import { CURRENCY, GRID_TYPE } from "@/types/evcc";
 
 const is12hSpy = vi.spyOn(units, "is12hFormat").mockReturnValue(false);
 
@@ -19,6 +19,18 @@ const fmt = mount(
     },
   })
 ).vm;
+
+describe("fmtPhasePower", () => {
+  test("should use phase count with neutral", () => {
+    expect(fmt.fmtPhasePower(16, 1)).eq("3,7 kW");
+    expect(fmt.fmtPhasePower(16, 3)).eq("11,0 kW");
+    expect(fmt.fmtPhasePower(16, 3, 230, GRID_TYPE.TN)).eq("11,0 kW");
+  });
+  test("should use line-to-line voltage without neutral", () => {
+    expect(fmt.fmtPhasePower(16, 1, 230, GRID_TYPE.IT)).eq("3,7 kW");
+    expect(fmt.fmtPhasePower(16, 3, 230, GRID_TYPE.IT)).eq("6,4 kW");
+  });
+});
 
 describe("fmtW", () => {
   test("should format with units", () => {

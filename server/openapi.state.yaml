@@ -69,6 +69,12 @@ components:
         gridConfigured:
           description: A grid meter is configured.
           type: boolean
+        gridType:
+          $ref: "#/components/schemas/GRID_TYPE"
+          description: Grid earthing system, it for three-wire grids without neutral.
+        voltage:
+          description: Nominal grid voltage in V, line-to-line for IT grids.
+          type: number
         pv:
           description: Solar generation meters. One entry per configured pv meter.
           type: array
@@ -688,6 +694,12 @@ components:
           enum:
             - file
             - db
+    GRID_TYPE:
+      description: Grid earthing system.
+      type: string
+      enum:
+        - tn
+        - it
     Hems:
       description: Home energy management system integration.
       type: object
