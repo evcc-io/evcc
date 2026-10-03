@@ -14,6 +14,10 @@ params:
   - preset: battery-params
   - name: maxchargepower
     required: true
+  - name: minsoc
+    default: 10
+  - name: maxsoc
+    default: 100
 render: |
   type: custom
   {{- if eq .usage "grid" }}
@@ -164,21 +168,22 @@ render: |
                 type: writesingle
                 encoding: uint16
           - source: const
+            value: {{ .minsoc }} # written before Maximum SoC: the inverter rejects a
+            # Maximum SoC at or below the On-Grid reserve that hold left behind
+            set:
+              source: modbus
+              {{- include "modbus" . | indent 12 }}
+              register:
+                address: 46611 # Minimum SoC On-Grid
+                type: writesingle
+                encoding: uint16
+          - source: const
             value: {{ .maxsoc }}
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
               register:
                 address: 46610 # Maximum SoC
-                type: writesingle
-                encoding: uint16
-          - source: const
-            value: {{ .minsoc }}
-            set:
-              source: modbus
-              {{- include "modbus" . | indent 12 }}
-              register:
-                address: 46611 # Minimum SoC On-Grid
                 type: writesingle
                 encoding: uint16
       - case: 2 # hold - stop battery discharge
@@ -209,7 +214,8 @@ render: |
                 type: writesingle
                 encoding: uint16
           - source: const
-            value: 100 # blocks discharge regardless of current SoC
+            value: {{ sub .maxsoc 1 }} # blocks discharge; the inverter only accepts a
+            # reserve strictly below Maximum SoC (46610), so 100 is never writable
             set:
               source: modbus
               {{- include "modbus" . | indent 12 }}
