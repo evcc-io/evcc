@@ -19,11 +19,11 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
-      - uses: actions/setup-go@v7
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version-file: go.mod
         id: go
@@ -48,16 +48,16 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
-      - uses: actions/setup-go@v7
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version-file: go.mod
         id: go
 
-      - uses: voidzero-dev/setup-vp@v1
+      - uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1
         with:
           node-version-file: ".node-version"
           cache: true
@@ -75,11 +75,11 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
-      - uses: actions/setup-go@v7
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version-file: go.mod
         id: go
@@ -95,11 +95,11 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
-      - uses: actions/setup-go@v7
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version-file: go.mod
         id: go
@@ -123,11 +123,11 @@ jobs:
     runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-24.04-arm' || 'depot-ubuntu-24.04-arm' }}
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
-      - uses: voidzero-dev/setup-vp@v1
+      - uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1
         with:
           node-version-file: ".node-version"
           cache: true
@@ -137,7 +137,7 @@ jobs:
 
       - name: Restore vp task cache
         id: vp-cache
-        uses: actions/cache/restore@v6
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: node_modules/.vite/task-cache
           key: ${{ runner.os }}-${{ runner.arch }}-vp-${{ github.run_id }}-${{ github.run_attempt }}
@@ -163,7 +163,7 @@ jobs:
       - name: Save vp task cache
         # avoid cache thrashing by nightly and pull requests
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        uses: actions/cache/save@v6
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: node_modules/.vite/task-cache
           key: ${{ steps.vp-cache.outputs.cache-primary-key }}
@@ -172,7 +172,7 @@ jobs:
         # only the release and nightly builds consume this, both keyed by the
         # master or tag sha. Pull request entries would never be restored
         if: github.event_name == 'push'
-        uses: actions/cache/save@v6
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         id: cache-dist
         with:
           path: dist
@@ -197,20 +197,20 @@ jobs:
         shard: [1, 2]
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
       # setup-go keys its cache on ImageOS. Fork runs must look up the key the
       # GitHub-hosted runner produces, else they miss the warmed entry
-      - uses: actions/setup-go@v7
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         env:
           ImageOS: ${{ github.event.pull_request.head.repo.fork && 'ubuntu24-arm64' || 'ubuntu24' }}
         with:
           go-version-file: go.mod
         id: go
 
-      - uses: voidzero-dev/setup-vp@v1
+      - uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1
         with:
           node-version-file: ".node-version"
           cache: true
@@ -220,7 +220,7 @@ jobs:
 
       - name: Restore vp task cache
         # restore only, the UI job owns saving the cache
-        uses: actions/cache/restore@v6
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: node_modules/.vite/task-cache
           key: ${{ runner.os }}-${{ runner.arch }}-vp-${{ github.run_id }}-${{ github.run_attempt }}
@@ -238,7 +238,7 @@ jobs:
         run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').packages['node_modules/@playwright/test'].version)")" >> $GITHUB_ENV
 
       - name: Cache Playwright browsers
-        uses: actions/cache/restore@v6
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
@@ -252,7 +252,7 @@ jobs:
       - name: Save Playwright browsers
         # one writer, the shards would race for the same key
         if: github.ref == 'refs/heads/master' && steps.playwright-cache.outputs.cache-hit != 'true' && matrix.shard == 1
-        uses: actions/cache/save@v6
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
@@ -264,7 +264,7 @@ jobs:
           TZ: Europe/Berlin
 
       - name: Upload Playwright Report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: ${{ !cancelled() }}
         with:
           name: playwright-report-${{ matrix.shard }}
@@ -272,7 +272,7 @@ jobs:
           retention-days: 14
 
       - name: Upload Playwright Raw Test Results
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: failure()
         with:
           name: playwright-test-results-${{ matrix.shard }}
@@ -304,11 +304,11 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
-      - uses: actions/setup-go@v7
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version-file: go.mod
         id: go
@@ -328,11 +328,11 @@ jobs:
       actions: write
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
-      - uses: voidzero-dev/setup-vp@v1
+      - uses: voidzero-dev/setup-vp@250f29ce396baf5e8f24498e17c0dfdebabc26eb # v1
         with:
           node-version-file: ".node-version"
           cache: true
@@ -341,7 +341,7 @@ jobs:
         run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').packages['node_modules/@playwright/test'].version)")" >> $GITHUB_ENV
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
@@ -359,7 +359,7 @@ jobs:
       # it. Run the same tasks here to seed the GitHub-hosted cache
       - name: Restore vp task cache
         id: vp-cache
-        uses: actions/cache/restore@v6
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: node_modules/.vite/task-cache
           key: ${{ runner.os }}-${{ runner.arch }}-vp-${{ github.run_id }}-${{ github.run_attempt }}
@@ -370,7 +370,7 @@ jobs:
         run: make openapi lint-ui test-ui ui
 
       - name: Save vp task cache
-        uses: actions/cache/save@v6
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: node_modules/.vite/task-cache
           key: ${{ steps.vp-cache.outputs.cache-primary-key }}
