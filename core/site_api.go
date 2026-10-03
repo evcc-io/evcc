@@ -519,11 +519,11 @@ func (site *Site) SetBatteryGridDischarge(val bool) error {
 	if changed {
 		// re-run the optimizer so the new discharge mode takes effect immediately
 		go site.optimizerUpdateAsync(0)
-	}
 
-	// drop the limit, it is meaningless without the opt-in
-	if changed && !val {
-		return site.SetBatteryGridDischargeLimit(nil)
+		// drop the limit, it is meaningless without the opt-in
+		if !val {
+			return site.SetBatteryGridDischargeLimit(nil)
+		}
 	}
 
 	return nil
@@ -541,15 +541,13 @@ func (site *Site) SetSolarAdjusted(val bool) {
 	site.log.DEBUG.Println("set solar adjusted:", val)
 
 	site.Lock()
-	changed := site.solarAdjusted != val
-	if changed {
+	defer site.Unlock()
+
+	if site.solarAdjusted != val {
 		site.solarAdjusted = val
 		settings.SetBool(keys.SolarAdjusted, val)
 		site.publish(keys.SolarAdjusted, val)
-	}
-	site.Unlock()
 
-	if changed {
 		// re-run the optimizer so the adjusted forecast takes effect immediately
 		go site.optimizerUpdateAsync(0)
 	}
@@ -569,8 +567,9 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
 	}
 
 	site.Lock()
-	changed := !ptrValueEqual(site.batteryGridChargeLimit, val)
-	if changed {
+	defer site.Unlock()
+
+	if !ptrValueEqual(site.batteryGridChargeLimit, val) {
 		site.batteryGridChargeLimit = val
 
 		if val == nil {
@@ -580,10 +579,7 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
 			settings.SetFloat(keys.BatteryGridChargeLimit, *val)
 			site.publish(keys.BatteryGridChargeLimit, *val)
 		}
-	}
-	site.Unlock()
 
-	if changed {
 		// re-run the optimizer so the new limit takes effect immediately
 		go site.optimizerUpdateAsync(0)
 	}
