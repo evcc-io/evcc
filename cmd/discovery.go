@@ -52,8 +52,10 @@ func newTable(header ...string) *tablewriter.Table {
 }
 
 func runDiscovery(cmd *cobra.Command, args []string) {
+	jsonOutput := cmd.Flag(flagJSON).Changed
+
 	// json output must stay parseable, keep the log quiet
-	if cmd.Flag(flagJSON).Changed {
+	if jsonOutput {
 		viper.Set("log", "error")
 		util.LogLevel("error", nil)
 	}
@@ -85,7 +87,7 @@ func runDiscovery(cmd *cobra.Command, args []string) {
 	log.INFO.Println("scanning network...")
 	report := service.Scan(cmd.Context(), configs)
 
-	if cmd.Flag(flagJSON).Changed {
+	if jsonOutput {
 		b, _ := json.MarshalIndent(report, "", "  ")
 		fmt.Println(string(b))
 		return
@@ -98,7 +100,11 @@ func runDiscovery(cmd *cobra.Command, args []string) {
 		if h.Used {
 			used = "✓"
 		}
-		hosts.Append([]string{h.IP, h.Mac, h.Vendor, strings.Join(slices.Concat([]string{h.Hostname}, h.Aliases), "\n"), strings.Join(h.Services, "\n"), used})
+		names := h.Aliases
+		if h.Hostname != "" {
+			names = append([]string{h.Hostname}, h.Aliases...)
+		}
+		hosts.Append([]string{h.IP, h.Mac, h.Vendor, strings.Join(names, "\n"), strings.Join(h.Services, "\n"), used})
 	}
 	hosts.Render()
 
