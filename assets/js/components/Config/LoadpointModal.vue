@@ -374,7 +374,7 @@
 											required
 										/>
 										<span class="evcc-gray text-nowrap power-hint">
-											≈ {{ fmtPhasePower(values.minCurrent, minPhases) }}
+											≈ {{ minPowerHint }}
 										</span>
 									</div>
 								</FormRow>
@@ -395,7 +395,7 @@
 											required
 										/>
 										<span class="evcc-gray text-nowrap power-hint">
-											≈ {{ fmtPhasePower(values.maxCurrent, maxPhases) }}
+											≈ {{ maxPowerHint }}
 										</span>
 									</div>
 								</FormRow>
@@ -644,6 +644,7 @@ import { handleError, customChargerName, createDeviceUtils } from "./DeviceModal
 import { getModal, openModal, replaceModal, closeModal } from "@/configModal";
 import {
 	CHARGE_MODE,
+	GRID_TYPE,
 	LOADPOINT_TYPE,
 	type DeviceType,
 	type LoadpointType,
@@ -713,6 +714,8 @@ export default {
 			type: Function as PropType<(type: DeviceType, name: string) => boolean>,
 			default: () => false,
 		},
+		voltage: Number,
+		gridType: String as PropType<GRID_TYPE>,
 	},
 	emits: ["changed", "dismissed", "disable"],
 	data() {
@@ -838,6 +841,22 @@ export default {
 		},
 		maxPhases() {
 			return this.values.phasesConfigured || 3;
+		},
+		minPowerHint() {
+			return this.fmtPhasePower(
+				this.values.minCurrent,
+				this.minPhases,
+				this.voltage,
+				this.gridType
+			);
+		},
+		maxPowerHint() {
+			return this.fmtPhasePower(
+				this.values.maxCurrent,
+				this.maxPhases,
+				this.voltage,
+				this.gridType
+			);
 		},
 		phasesOptions() {
 			return [

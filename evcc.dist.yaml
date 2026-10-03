@@ -106,6 +106,8 @@ site:
     aux:
       - aux # list of auxiliary meters for adjusting grid operating point
   residualPower: 0 # additional household usage margin
+  # voltage: 230 # nominal voltage, line-to-line for IT grids
+  # gridType: it # three-wire grid without neutral (default: tn)
 
 # loadpoint describes the charger, charge meter and connected vehicle
 loadpoints:

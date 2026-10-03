@@ -136,8 +136,8 @@
 									$t(
 										`main.loadpointSettings.phasesConfigured.phases_${phases}_hint`,
 										{
-											min: fmtPhasePower(minCurrent, phases),
-											max: fmtPhasePower(maxCurrent, phases),
+											min: phasePower(minCurrent, phases),
+											max: phasePower(maxCurrent, phases),
 										}
 									)
 								}}
@@ -203,7 +203,14 @@ import SmartFeedInPriority from "../Tariff/SmartFeedInPriority.vue";
 import SettingsBatteryBoost from "./SettingsBatteryBoost.vue";
 import SolarShareSlider from "./SolarShareSlider.vue";
 import { defineComponent, type PropType } from "vue";
-import { PHASES, CURRENCY, SMART_COST_TYPE, type UiForecast, type UiLoadpoint } from "@/types/evcc";
+import {
+	PHASES,
+	CURRENCY,
+	GRID_TYPE,
+	SMART_COST_TYPE,
+	type UiForecast,
+	type UiLoadpoint,
+} from "@/types/evcc";
 import api from "@/api";
 
 const range = (start: number, stop: number, step = -1) =>
@@ -240,6 +247,8 @@ export default defineComponent({
 		currency: String as PropType<CURRENCY>,
 		multipleLoadpoints: Boolean,
 		forecast: Object as PropType<UiForecast>,
+		voltage: Number,
+		gridType: String as PropType<GRID_TYPE>,
 	},
 	data() {
 		return {
@@ -412,8 +421,11 @@ export default defineComponent({
 		setBatteryBoostLimit(limit: number) {
 			api.post(this.apiPath("batteryboostlimit") + "/" + limit);
 		},
+		phasePower(current?: number, phases?: number) {
+			return this.fmtPhasePower(current, phases, this.voltage, this.gridType);
+		},
 		currentOption(current: number, isDefault: boolean, phases?: number) {
-			const kw = this.fmtPhasePower(current, phases);
+			const kw = this.phasePower(current, phases);
 			let name = `${this.fmtNumber(current)} A (${kw})`;
 			if (isDefault) {
 				name += ` [${this.$t("main.loadpointSettings.default")}]`;

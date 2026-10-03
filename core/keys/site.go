@@ -11,6 +11,7 @@ const (
 	GreenShareHome        = "greenShareHome"
 	GreenShareLoadpoints  = "greenShareLoadpoints"
 	GridConfigured        = "gridConfigured"
+	GridType              = "gridType"
 	Grid                  = "grid"
 	HistoryUpdated        = "historyUpdated"
 	HomePower             = "homePower"
@@ -33,6 +34,7 @@ const (
 	TariffSolar           = "tariffSolar"
 	TariffTemperature     = "tariffTemperature"
 	Vehicles              = "vehicles"
+	Voltage               = "voltage"
 
 	// meters
 	GridMeter      = "gridMeter"

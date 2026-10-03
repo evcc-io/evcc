@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/core/keys"
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/grid"
 )
 
 // PublishEffectiveValues publishes all effective values
@@ -167,7 +168,7 @@ func (lp *Loadpoint) effectiveMinCurrent() float64 {
 	// W; convert to per-phase current so the PV enable gate covers it
 	if c, ok := api.Cap[api.PowerLimiter](lp.charger); ok {
 		if res, _, err := c.GetMinMaxPower(); err == nil && res > 0 {
-			chargerMin = res / (Voltage * float64(lp.minActivePhases()))
+			chargerMin = res / (grid.Voltage * grid.Factor(lp.minActivePhases()))
 			// coarse chargers truncate to full amps in setLimit, so round the
 			// demand up to keep the enable gate reachable (#31549)
 			if lp.coarseCurrent() {
@@ -204,7 +205,7 @@ func (lp *Loadpoint) effectiveMaxCurrent() float64 {
 
 	if c, ok := api.Cap[api.PowerLimiter](lp.charger); ok {
 		if _, res, err := c.GetMinMaxPower(); err == nil && res > 0 {
-			powerMax := res / (Voltage * float64(lp.maxActivePhases()))
+			powerMax := res / (grid.Voltage * grid.Factor(lp.maxActivePhases()))
 			// match effectiveMinCurrent's rounding so a fixed power request
 			// (min == max) doesn't yield min > max on coarse chargers (#31549)
 			if lp.coarseCurrent() {
@@ -262,14 +263,14 @@ func (lp *Loadpoint) effectiveLimitSoc() int {
 
 // EffectiveStepPower returns the effective step power for the currently active phases
 func (lp *Loadpoint) EffectiveStepPower() float64 {
-	return Voltage * float64(lp.ActivePhases())
+	return grid.Voltage * grid.Factor(lp.ActivePhases())
 }
 
 // EffectiveMinPower returns the effective min power for the minimum active phases
 func (lp *Loadpoint) EffectiveMinPower() float64 {
 	lp.RLock()
 	defer lp.RUnlock()
-	return Voltage * lp.effectiveMinCurrent() * float64(lp.minActivePhases())
+	return grid.Voltage * lp.effectiveMinCurrent() * grid.Factor(lp.minActivePhases())
 }
 
 // EffectiveMaxPower returns the effective max power taking vehicle capabilities,
@@ -287,7 +288,7 @@ func (lp *Loadpoint) EffectiveMaxPower() float64 {
 
 // effectiveMaxPower returns the effective max power taking vehicle capabilities and phase scaling into account
 func (lp *Loadpoint) effectiveMaxPower() float64 {
-	res := Voltage * lp.effectiveMaxCurrent() * float64(lp.maxActivePhases())
+	res := grid.Voltage * lp.effectiveMaxCurrent() * grid.Factor(lp.maxActivePhases())
 	if lp.vehicle != nil {
 		if maxPower, ok := lp.vehicle.OnIdentified().GetMaxPower(); ok {
 			return min(maxPower, res)

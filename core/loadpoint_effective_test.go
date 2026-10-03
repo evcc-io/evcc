@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/db/settings"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
+	"github.com/evcc-io/evcc/util/grid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -109,7 +110,7 @@ func TestEffectiveMinMaxCurrent(t *testing.T) {
 }
 
 func TestEffectivePowerLimiter(t *testing.T) {
-	Voltage = 230
+	grid.Voltage = 230
 	ctrl := gomock.NewController(t)
 
 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
@@ -133,7 +134,7 @@ func TestEffectivePowerLimiter(t *testing.T) {
 
 // coarse power-limited charger with fixed request must not yield min > max (#31549)
 func TestEffectivePowerLimiterCoarse(t *testing.T) {
-	Voltage = 230
+	grid.Voltage = 230
 	ctrl := gomock.NewController(t)
 
 	lp := NewLoadpoint(util.NewLogger("foo"), nil)
@@ -251,7 +252,7 @@ func TestPlanLocking(t *testing.T) {
 }
 
 func TestGetChargePowerFlexibility(t *testing.T) {
-	Voltage = 230
+	grid.Voltage = 230
 
 	for _, tc := range []struct {
 		mode         api.ChargeMode
