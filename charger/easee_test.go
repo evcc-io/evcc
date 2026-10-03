@@ -605,6 +605,21 @@ func TestChargerOpMode_ConnectResetsSessionFields(t *testing.T) {
 	assert.Equal(t, 0.0, charged)
 }
 
+func TestChargerOpMode_StartupKeepsSessionFields(t *testing.T) {
+	e := newEasee()
+	e.currentSessionID = 803
+	e.sessionEnergy = 5.0
+
+	// Initial opMode is ModeOffline: startup or charger back online, session continues
+	e.ProductUpdate(createPayload(easee.CHARGER_OP_MODE, time.Now(), easee.Integer, fmt.Sprintf("%d", easee.ModeAwaitingStart)))
+
+	assert.Equal(t, 803, e.currentSessionID)
+
+	charged, err := e.ChargedEnergy()
+	assert.NoError(t, err)
+	assert.Equal(t, 5.0, charged)
+}
+
 func TestIsTNGrid(t *testing.T) {
 	// TN grid types must return true
 	assert.True(t, isTNGrid(easee.PowerGridTN3Phase))
