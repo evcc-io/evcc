@@ -423,6 +423,7 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"loadpoints":      {"GET", "/loadpoints", loadpointsConfigHandler()},
 			"loadpoint":       {"GET", "/loadpoints/{id:[0-9.]+}", loadpointConfigHandler()},
 			"updateloadpoint": {"PUT", "/loadpoints/{id:[0-9.]+}", updateLoadpointHandler()},
+			"patchloadpoint":  {"PATCH", "/loadpoints/{id:[0-9.]+}", patchLoadpointHandler()},
 			"deleteloadpoint": {"DELETE", "/loadpoints/{id:[0-9.]+}", deleteLoadpointHandler()},
 			"newloadpoint":    {"POST", "/loadpoints", newLoadpointHandler()},
 		} {

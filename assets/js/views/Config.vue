@@ -590,6 +590,7 @@
 				<CircuitModal
 					:circuits="circuits"
 					:meters="meters"
+					:loadpoints="loadpoints"
 					:grid-meter="gridMeter"
 					@changed="circuitChanged"
 				/>
@@ -1571,6 +1572,7 @@ export default defineComponent({
 			this.loadDirty();
 		},
 		async circuitChanged() {
+			this.loadLoadpoints();
 			this.loadCircuits();
 			this.loadDirty();
 		},

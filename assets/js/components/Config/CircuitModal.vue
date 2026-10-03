@@ -4,6 +4,7 @@
 		name="circuit"
 		device-type="circuit"
 		default-template="static"
+		size="xl"
 		:modal-title="$t(`config.circuit.${isNew ? 'titleAdd' : 'titleEdit'}`)"
 		:provide-template-options="provideTemplateOptions"
 		:initial-values="initialValues"
@@ -14,9 +15,9 @@
 		:on-configuration-loaded="handleConfigurationLoaded"
 		:hide-delete="hasChildren"
 		hide-disable
-		@added="$emit('changed', $event)"
-		@updated="$emit('changed')"
-		@removed="$emit('changed')"
+		@added="handleAdded"
+		@updated="handleUpdated"
+		@removed="handleRemoved"
 	>
 		<template #before-template="{ values }">
 			<FormRow id="circuitParamDeviceTitle" :label="$t('config.circuit.titleLabel')">
@@ -92,6 +93,44 @@
 						{{ $t("config.circuit.addMeter") }}
 					</button>
 				</FormRow>
+				<FormRow
+					id="circuitParamLoadpoint"
+					:label="$t('config.circuit.loadpointLabel')"
+					:help="$t('config.circuit.loadpointHelp')"
+				>
+					<MultiSelect
+						id="circuitParamLoadpoint"
+						v-model="selectedLoadpointIds"
+						:options="loadpointOptions"
+						:disabled="loadpointOptions.length === 0"
+					>
+						{{ loadpointsLabel }}
+					</MultiSelect>
+					<template #additional-help>
+						<div v-if="assignedLoadpoints.length" class="text-gray hyphenate">
+							{{ $t("config.circuit.assignedLoadpoints") }}
+							<code
+								v-for="lp in assignedLoadpoints"
+								:key="lp.name"
+								class="ms-1 loadpoint"
+							>
+								{{ lp.title }}
+								<span v-if="lp.name" class="ms-1">({{ lp.name }})</span>
+							</code>
+						</div>
+						<div v-if="yamlLoadpoints.length" class="text-gray hyphenate">
+							{{ $t("config.circuit.yamlLoadpoints") }}
+							<code
+								v-for="lp in yamlLoadpoints"
+								:key="lp.name"
+								class="ms-1 loadpoint"
+							>
+								{{ lp.title
+								}}<span v-if="lp.name" class="ms-1">({{ lp.name }})</span>
+							</code>
+						</div>
+					</template>
+				</FormRow>
 			</div>
 		</template>
 		<template v-if="hasChildren" #after-test>
@@ -106,7 +145,7 @@
 import { defineComponent, type PropType } from "vue";
 import DeviceModalBase from "./DeviceModal/DeviceModalBase.vue";
 import type { ApiData, DeviceValues, Product, TemplateParam } from "./DeviceModal";
-import type { ConfigCircuit, ConfigMeter } from "@/types/evcc";
+import type { ConfigCircuit, ConfigLoadpoint, ConfigMeter } from "@/types/evcc";
 import { type TemplateGroup, customTemplateOption } from "./DeviceModal/TemplateSelector.vue";
 import { ConfigType } from "@/types/evcc";
 import defaultCircuitYaml from "./defaultYaml/circuit.yaml?raw";
@@ -115,6 +154,8 @@ import { meterTitle } from "@/utils/circuits.ts";
 import FormRow from "./FormRow.vue";
 import PropertyField from "./PropertyField.vue";
 import DeviceRefBox from "./DeviceRefBox.vue";
+import MultiSelect from "../Helper/MultiSelect.vue";
+import api from "@/api.ts";
 
 enum MeterSelection {
 	NONE = "none",
@@ -129,6 +170,7 @@ export default defineComponent({
 		FormRow,
 		PropertyField,
 		DeviceRefBox,
+		MultiSelect,
 	},
 	emits: ["changed"],
 	props: {
@@ -140,15 +182,39 @@ export default defineComponent({
 			type: Array as PropType<ConfigMeter[]>,
 			default: () => [],
 		},
+		loadpoints: {
+			type: Array as PropType<ConfigLoadpoint[]>,
+			default: () => [],
+		},
 		gridMeter: { type: Object as PropType<ConfigMeter> },
 	},
 	data() {
 		return {
 			ConfigType,
 			meterSelection: MeterSelection.NONE,
+			selectedLoadpointIds: [] as number[],
 		};
 	},
 	computed: {
+		loadpointsLabel() {
+			if (this.loadpointOptions.length === 0)
+				return this.$t("config.circuit.noLoadpointsAssignable");
+
+			const loadpoints = this.availableLoadpoints
+				.filter((l) => l.id && this.selectedLoadpointIds.includes(l.id))
+				.map((l) => l.title);
+
+			if (loadpoints.length === 0) return this.$t("config.circuit.noLoadpointsAssigned");
+			return loadpoints.join(", ");
+		},
+		loadpointOptions() {
+			const availableLoadpoints = this.availableLoadpoints.map((l) => ({
+				name: l.title,
+				value: l.id!,
+			}));
+
+			return availableLoadpoints;
+		},
 		getParentCircuit(): string | undefined {
 			const parentId = getModal("circuit")?.parent;
 			if (parentId) return this.circuits.find((c) => c.id === parentId)?.name;
@@ -168,6 +234,9 @@ export default defineComponent({
 		},
 		id(): number | undefined {
 			return getModal("circuit")?.id;
+		},
+		circuitName(): string | undefined {
+			return this.circuits.find((circuit) => circuit.id === this.id)?.name;
 		},
 		hasChildren(): boolean {
 			const name = this.circuits.find((c) => c.id === this.id)?.name;
@@ -206,11 +275,26 @@ export default defineComponent({
 
 			return options;
 		},
+		availableLoadpoints() {
+			return this.loadpoints.filter(
+				(l) => l.id && (l.circuit === undefined || l.circuit === `db:${this.id}`)
+			);
+		},
+		assignedLoadpoints() {
+			return this.loadpoints.filter(
+				(l) => l.id && l.circuit && l.circuit !== `db:${this.id}`
+			);
+		},
+		yamlLoadpoints() {
+			return this.loadpoints.filter((l) => !l.id);
+		},
 	},
 	watch: {
 		id: {
 			immediate: true,
 			handler(newId: number | undefined) {
+				this.selectedLoadpointIds = [];
+
 				if (newId === undefined) {
 					this.meterSelection = MeterSelection.NONE;
 				}
@@ -235,6 +319,9 @@ export default defineComponent({
 				this.meterSelection = MeterSelection.GRID;
 			} else {
 				this.meterSelection = MeterSelection.DEDICATED;
+			}
+			if (this.circuitName) {
+				this.selectedLoadpointIds = this.initialAssignedLoadpoints();
 			}
 		},
 		provideTemplateOptions(products: Product[]): TemplateGroup[] {
@@ -275,6 +362,51 @@ export default defineComponent({
 				delete values.meter;
 			}
 		},
+		initialAssignedLoadpoints() {
+			return this.availableLoadpoints.map((l) => l.id) as number[];
+		},
+		async patchAssignedLoadpoints(circuitDeleted?: boolean) {
+			const initial = this.initialAssignedLoadpoints();
+			const current = circuitDeleted ? [] : this.selectedLoadpointIds;
+
+			const addedLoadpoints = current.filter((id) => !initial.includes(id));
+			const removedLoadpoints = initial.filter((id) => !current.includes(id));
+
+			await Promise.all([
+				...addedLoadpoints.map((id) => this.patchLoadpoint(id, this.circuitName)),
+				...removedLoadpoints.map((id) => this.patchLoadpoint(id)),
+			]);
+		},
+		async patchLoadpoint(loadpointId: number, circuitName?: string) {
+			await api.patch(
+				`config/loadpoints/${loadpointId}`,
+				{
+					circuit: circuitName ?? null,
+				},
+				{
+					headers: {
+						"Content-Type": "application/merge-patch+json",
+					},
+				}
+			);
+		},
+		async handleAdded(circuitName: string) {
+			await this.patchAssignedLoadpoints();
+			this.$emit("changed", circuitName);
+		},
+		async handleUpdated() {
+			await this.patchAssignedLoadpoints();
+			this.$emit("changed");
+		},
+		async handleRemoved() {
+			await this.patchAssignedLoadpoints(true);
+			this.$emit("changed");
+		},
 	},
 });
 </script>
+<style scoped>
+.loadpoint:not(:last-child)::after {
+	content: ",";
+}
+</style>
