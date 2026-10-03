@@ -96,8 +96,10 @@ func (lp *Loadpoint) batterySupported(ctrl *CurrentController, env Envelope, sit
 		}
 	}
 
-	// the disable timer only runs while the battery is maxed out
-	lp.resetPVTimer("disable")
+	// the disable timer only runs while enabled, a disabled loadpoint shares the timer with enable
+	if env.Enabled {
+		lp.resetPVTimer("disable")
+	}
 
 	return true
 }
