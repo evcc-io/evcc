@@ -14,6 +14,10 @@ params:
   - preset: battery-params
   - name: maxchargepower
     required: true
+  - name: minsoc
+    default: 10
+  - name: maxsoc
+    default: 100
 render: |
   type: custom
   {{- if eq .usage "grid" }}
