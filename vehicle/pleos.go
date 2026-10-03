@@ -2,7 +2,6 @@ package vehicle
 
 import (
 	"fmt"
-	"slices"
 	"strings"
 	"time"
 
@@ -42,24 +41,44 @@ func NewPleosFromConfig(other map[string]any) (api.Vehicle, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	brand := strings.ToLower(cc.Brand)
-	if !slices.Contains([]string{"hyundai", "kia", "genesis"}, brand) {
-		return nil, fmt.Errorf("invalid brand: %s", cc.Brand)
-	}
-
-	if cc.VIN == "" {
-		return nil, fmt.Errorf("missing vin")
-	}
-
 	log := util.NewLogger("pleos").Redact(cc.ClientID, cc.ClientSecret, cc.VIN)
 
-	identity := pleos.NewIdentity(log, brand, cc.ClientID, cc.ClientSecret)
-	api := pleos.NewAPI(log, identity, brand)
-
-	v := &Pleos{
-		embed:    &cc.embed,
-		Provider: pleos.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache),
+	// an api key is issued per manufacturer, so the brand can be probed
+	brands := []string{"hyundai", "kia", "genesis"}
+	if cc.Brand != "" {
+		brands = []string{strings.ToLower(cc.Brand)}
 	}
 
-	return v, nil
+	var (
+		api *pleos.API
+		err error
+	)
+	for _, brand := range brands {
+		identity := pleos.NewIdentity(log, brand, cc.ClientID, cc.ClientSecret)
+		if _, err = identity.Token(); err == nil {
+			api = pleos.NewAPI(log, identity, brand)
+			break
+		}
+	}
+	if err != nil {
+		return nil, fmt.Errorf("login failed: %w", err)
+	}
+
+	v := &Pleos{
+		embed: &cc.embed,
+	}
+
+	vehicle, err := ensureVehicleEx(
+		cc.VIN, api.Vehicles,
+		func(v pleos.Vehicle) (string, error) {
+			return v.VIN, nil
+		},
+	)
+
+	if err == nil {
+		v.fromVehicle(vehicle.Title(), 0)
+		v.Provider = pleos.NewProvider(api, vehicle.VIN, cc.Cache)
+	}
+
+	return v, err
 }

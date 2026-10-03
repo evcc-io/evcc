@@ -7,6 +7,23 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
+// Vehicle is an entry of the /vehicles/consent list
+type Vehicle struct {
+	VIN      string `json:"vin"`
+	Nickname string `json:"nickname"`
+	Name     string `json:"name"`
+	Type     string `json:"type"` // EV
+	Sellname string `json:"sellname"`
+}
+
+// Title returns the user-facing vehicle name
+func (v Vehicle) Title() string {
+	if v.Nickname != "" {
+		return v.Nickname
+	}
+	return v.Sellname
+}
+
 // Battery is the /vehicles/{vin}/batteries payload
 type Battery struct {
 	Charge struct {
@@ -35,6 +52,13 @@ type Powertrain struct {
 // Driving is the /vehicles/{vin}/driving payload
 type Driving struct {
 	Odometer Distance `json:"odometer"`
+}
+
+// Status is the /vehicles/{vin}/status payload
+type Status struct {
+	ClimateControl struct {
+		Status string `json:"status"` // on, off
+	} `json:"climateControl"`
 }
 
 // Location is the /vehicles/{vin}/locations payload
@@ -74,13 +98,14 @@ func km(value float64, unit string) (float64, error) {
 // Range returns the electric range in km from the EV distance entry
 func (p Powertrain) Range() (int64, error) {
 	for _, dte := range p.DistanceToEmpties {
-		if dte.Type != "EV" || dte.Value == "invalid" {
+		if dte.Type != "EV" {
 			continue
 		}
 
+		// value is "invalid" or "-" when the vehicle hasn't reported a range
 		f, err := strconv.ParseFloat(dte.Value, 64)
 		if err != nil {
-			return 0, fmt.Errorf("invalid range %q: %w", dte.Value, api.ErrNotAvailable)
+			break
 		}
 
 		f, err = km(f, dte.Unit)

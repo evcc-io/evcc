@@ -1,8 +1,6 @@
 package pleos
 
 import (
-	"fmt"
-
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -38,31 +36,44 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource, brand string) *API {
 	return v
 }
 
-// get decodes the data envelope of a vehicle endpoint
-func get[T any](v *API, vin, path string) (T, error) {
+// get decodes the data envelope of an endpoint
+func get[T any](v *API, path string) (T, error) {
 	var res struct {
 		Data T `json:"data"`
 	}
-	err := v.GetJSON(fmt.Sprintf("%s/vehicles/%s/%s", BaseURL, vin, path), &res)
+	err := v.GetJSON(BaseURL+"/vehicles/"+path, &res)
 	return res.Data, err
+}
+
+// Vehicles returns the vehicles the key has consented access to
+func (v *API) Vehicles() ([]Vehicle, error) {
+	res, err := get[struct {
+		Vehicles []Vehicle `json:"vehicles"`
+	}](v, "consent")
+	return res.Vehicles, err
 }
 
 // Battery returns the battery charging status
 func (v *API) Battery(vin string) (Battery, error) {
-	return get[Battery](v, vin, "batteries")
+	return get[Battery](v, vin+"/batteries")
 }
 
 // Powertrain returns the powertrain status including range
 func (v *API) Powertrain(vin string) (Powertrain, error) {
-	return get[Powertrain](v, vin, "powertrains")
+	return get[Powertrain](v, vin+"/powertrains")
 }
 
 // Driving returns the vehicle operation status including odometer
 func (v *API) Driving(vin string) (Driving, error) {
-	return get[Driving](v, vin, "driving")
+	return get[Driving](v, vin+"/driving")
 }
 
 // Location returns the vehicle location
 func (v *API) Location(vin string) (Location, error) {
-	return get[Location](v, vin, "locations")
+	return get[Location](v, vin+"/locations")
+}
+
+// Status returns the sensor-based vehicle status including climate control
+func (v *API) Status(vin string) (Status, error) {
+	return get[Status](v, vin+"/status")
 }

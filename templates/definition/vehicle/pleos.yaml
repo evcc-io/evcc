@@ -27,28 +27,32 @@ requirements:
 params:
   - preset: vehicle-common
   - preset: vehicle-online
-  - name: brand
-    type: choice
-    choice: ["Hyundai", "Kia", "Genesis"]
-    required: true
-    description:
-      de: Marke
-      en: Brand
   - name: clientid
     required: true
   - name: clientsecret
     required: true
   - name: vin
-    required: true
     example: KMHK...
+  - name: brand
+    type: choice
+    choice: ["hyundai", "kia", "genesis"]
+    advanced: true
+    description:
+      de: Marke
+      en: Brand
+    help:
+      de: Optional, wird sonst anhand des API-Schlüssels ermittelt
+      en: Optional, otherwise detected from the API key
   - name: cache
     default: 15m
 render: |
   type: pleos
-  brand: {{ .brand }}
   clientid: {{ .clientid }}
   clientsecret: {{ .clientsecret }}
   vin: {{ .vin }}
+  {{- if .brand }}
+  brand: {{ .brand }}
+  {{- end }}
   {{ include "common" . }}
   cache: {{ .cache }}
   {{ include "features" . }}

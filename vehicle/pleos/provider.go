@@ -13,6 +13,7 @@ type Provider struct {
 	powertrainG func() (Powertrain, error)
 	drivingG    func() (Driving, error)
 	locationG   func() (Location, error)
+	statusG     func() (Status, error)
 }
 
 // NewProvider creates a Pleos vehicle data provider
@@ -29,6 +30,9 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 		}, cache),
 		locationG: util.Cached(func() (Location, error) {
 			return api.Location(vin)
+		}, cache),
+		statusG: util.Cached(func() (Status, error) {
+			return api.Status(vin)
 		}, cache),
 	}
 }
@@ -114,4 +118,15 @@ func (v *Provider) Position() (float64, float64, error) {
 		return 0, 0, err
 	}
 	return res.Location.Latitude, res.Location.Longitude, nil
+}
+
+var _ api.VehicleClimater = (*Provider)(nil)
+
+// Climater implements the api.VehicleClimater interface
+func (v *Provider) Climater() (bool, error) {
+	res, err := v.statusG()
+	if err != nil {
+		return false, err
+	}
+	return res.ClimateControl.Status == "on", nil
 }

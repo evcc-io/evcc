@@ -83,6 +83,12 @@ func TestRange(t *testing.T) {
 	v.powertrainG = func() (Powertrain, error) { return Powertrain{}, nil }
 	_, err = v.Range()
 	require.ErrorIs(t, err, api.ErrNotAvailable)
+
+	// live response of an Ioniq 5 without reported range
+	require.NoError(t, json.Unmarshal([]byte(`{"distanceToEmpties":[{"type":"EV","value":"-","unit":"km"}]}`), &res))
+	v.powertrainG = func() (Powertrain, error) { return res, nil }
+	_, err = v.Range()
+	require.ErrorIs(t, err, api.ErrNotAvailable)
 }
 
 func TestOdometer(t *testing.T) {
