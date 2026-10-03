@@ -15,7 +15,6 @@ import (
 	"github.com/olekukonko/tablewriter/renderer"
 	"github.com/olekukonko/tablewriter/tw"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // discoveryCmd represents the discovery command
