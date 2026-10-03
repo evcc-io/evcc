@@ -292,3 +292,16 @@ func TestGetChargePowerFlexibility(t *testing.T) {
 		})
 	}
 }
+
+func TestGetChargePowerFlexibilityUnreachableCharger(t *testing.T) {
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.mode = api.ModeSmart
+	lp.status = api.StatusC
+	lp.chargePower = 2700
+
+	assert.Equal(t, 2700.0, lp.GetChargePowerFlexibility(nil))
+
+	// stale power and status after failed meter read must not count as flexible
+	lp.chargePowerErr = true
+	assert.Equal(t, 0.0, lp.GetChargePowerFlexibility(nil))
+}

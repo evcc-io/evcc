@@ -793,8 +793,13 @@ func (lp *Loadpoint) GetChargePower() float64 {
 
 // GetChargePowerFlexibility returns the flexible amount of current charging power
 func (lp *Loadpoint) GetChargePowerFlexibility(rates api.Rates) float64 {
+	// an unreachable charger keeps stale power and status, but cannot release anything (#34354)
+	lp.RLock()
+	unreachable := lp.chargePowerErr
+	lp.RUnlock()
+
 	mode := lp.GetMode()
-	if mode == api.ModeNow || !lp.charging() || lp.minSocNotReached() || lp.planActive ||
+	if unreachable || mode == api.ModeNow || !lp.charging() || lp.minSocNotReached() || lp.planActive ||
 		lp.GetBatteryBoost() != boostDisabled || lp.smartLimitActive(lp.GetSmartCostLimit(), rates, true) {
 		return 0
 	}

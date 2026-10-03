@@ -168,6 +168,7 @@ type Loadpoint struct {
 	// cached state
 	status         api.ChargeStatus // Charger status
 	chargePower    float64          // Charging power
+	chargePowerErr bool             // Last charge power read failed, charger may be unreachable
 	chargeCurrents []float64        // Phase currents
 	connectedTime  time.Time        // Time when vehicle was connected
 	connectPending bool             // connect notification deferred until vehicle detection settles
@@ -1941,11 +1942,15 @@ func (lp *Loadpoint) pvMaxCurrent(sitePower, batteryPower float64, batteryBuffer
 // UpdateChargePowerAndCurrents updates charge meter power and currents for load management
 func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 	power, err := backoff.RetryWithData(lp.chargeMeter.CurrentPower, modbus.Backoff())
-	if err == nil {
-		lp.Lock()
-		lp.chargePower = power // update value if no error
-		lp.Unlock()
 
+	lp.Lock()
+	lp.chargePowerErr = err != nil
+	if err == nil {
+		lp.chargePower = power // update value if no error
+	}
+	lp.Unlock()
+
+	if err == nil {
 		lp.log.DEBUG.Printf("charge power: %.0fW", power)
 		lp.publish(keys.ChargePower, power)
 
