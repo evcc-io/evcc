@@ -206,8 +206,9 @@ jobs:
                The text starts with `Duplicate of #<original>` on its own line so
                GitHub links the two, says in one or two sentences why they are the
                same, asks the reporter to continue in the original issue (and to
-               add their log/config there if it adds information), and ends with
-               the footer from step 2. Then give the closed issue the original's
+               add their log/config there if it adds information), says that a
+               reply here reopens the issue if it is not a duplicate, and ends
+               with the footer from step 2. Then give the closed issue the original's
                labels so both show up in the same filters: read them with
                `gh issue view <original> --json labels --jq '.labels[].name'`,
                drop `waiting for feedback`, and apply the rest with
