@@ -2,8 +2,8 @@ name: Claude Issue Agent (reusable)
 
 # Shared investigate + comment logic for issue triage and the on-demand /analyze
 # and /fix commands. Callers pass a mode:
-#   triage  — auto on issue open: investigate, close duplicates, comment, label,
-#             and optionally fix.
+#   triage  — auto on issue open: close incomplete bug reports, otherwise
+#             investigate, close duplicates, comment, label, and optionally fix.
 #   analyze — on-demand /analyze comment: investigate, comment, then resolve the
 #             invoking comment. No labels, no PRs.
 #   fix     — on-demand /fix comment: investigate, push a fix branch, open a PR,
@@ -167,7 +167,38 @@ jobs:
                paths, code and identifiers in backticks. Always end the comment with:
                "🤖 Generated with [Claude Code](https://claude.com/claude-code)".
 
-            If MODE is "triage", also do the following:
+            If MODE is "triage", first check completeness, then close duplicates, label
+            and fix:
+
+            0. COMPLETENESS: Do this BEFORE step 1 and 2 (investigating and
+               commenting). The bug report form says incomplete issues are closed
+               without further comments. Apply that. A bug report is incomplete
+               when key information the form asks for is missing or placeholder:
+               - log details absent, a placeholder (`/`, `-`, `n/a`, `...`), or a
+                 screenshot in place of log text; for device issues (charger,
+                 meter, vehicle) a log without the device's trace lines counts as
+                 missing
+               - configuration absent or placeholder
+               - steps to reproduce left at the form's `1. 2. 3.` skeleton
+               - version missing
+               Close ONLY when the report shows no effort to provide context: the
+               reporter filled the form with placeholders or one-liners and gave
+               nothing that lets anyone start an analysis. A report with a real
+               description, a partial log or a precise reproduction is NOT
+               incomplete even if something is missing: continue with step 1 and
+               ask for the missing details in step 2 (`waiting for feedback`).
+               Feature requests and questions need no log or config, never close
+               them for that. Never close when the issue already carries a label or
+               has a comment from anyone but the reporter and github-actions: a
+               maintainer has it.
+               To close, post the comment and close in one command:
+               `gh issue close ${{ inputs.issue_number }} --reason "not planned" --comment "<text>"`
+               The text names the missing items, links the reporting guide
+               (https://docs.evcc.io/en/report-a-problem/) and says the reporter
+               can edit the issue with the details and reopen it. Keep it short,
+               end with the footer from step 2.
+               Then STOP: no investigation, no further comment, no label, no type,
+               no PR.
 
             2b. DUPLICATE: If, and only if, step 1 identified a DUPLICATE with high
                confidence, close this issue instead of posting the step 2 comment:
