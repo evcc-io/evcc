@@ -74,6 +74,7 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 		listener: make(map[string][]func(string)),
 		inflight: semaphore.NewWeighted(parallelInflightLimit),
 	}
+	mc.renewConnContext()
 
 	options := paho.NewClientOptions()
 	options.AddBroker(broker)
@@ -121,12 +122,22 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 	log.INFO.Printf("connecting %s at %s", clientID, mc.broker)
 
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
+		mc.cancelConnContext()
 		return nil, fmt.Errorf("error connecting: %w", token.Error())
 	}
 
 	mc.client = client
 
 	return mc, nil
+}
+
+// Disconnect closes an owned client and releases its listeners. Do not use it on registered clients.
+func (m *Client) Disconnect() {
+	m.cancelConnContext()
+	m.client.Disconnect(100)
+	m.mux.Lock()
+	clear(m.listener)
+	m.mux.Unlock()
 }
 
 // connContext returns a context that is cancelled on disconnect and replaced
