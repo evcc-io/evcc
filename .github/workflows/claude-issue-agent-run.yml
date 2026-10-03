@@ -207,7 +207,12 @@ jobs:
                GitHub links the two, says in one or two sentences why they are the
                same, asks the reporter to continue in the original issue (and to
                add their log/config there if it adds information), and ends with
-               the footer from step 2. Then STOP: no label, no type, no PR.
+               the footer from step 2. Then give the closed issue the original's
+               labels so both show up in the same filters: read them with
+               `gh issue view <original> --json labels --jq '.labels[].name'`,
+               drop `waiting for feedback`, and apply the rest with
+               `gh issue edit ${{ inputs.issue_number }} --add-label "<label>,<label>"`.
+               Then STOP: no other label, no type, no PR.
                Any doubt means: do not close. Mention the candidate as a likely
                duplicate in your step 2 comment instead and continue. Never close
                when the issue already carries a label or has a comment from anyone
