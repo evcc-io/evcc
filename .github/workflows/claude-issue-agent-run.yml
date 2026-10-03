@@ -2,7 +2,8 @@ name: Claude Issue Agent (reusable)
 
 # Shared investigate + comment logic for issue triage and the on-demand /analyze
 # and /fix commands. Callers pass a mode:
-#   triage  — auto on issue open: investigate, comment, label, and optionally fix.
+#   triage  — auto on issue open: investigate, close duplicates, comment, label,
+#             and optionally fix.
 #   analyze — on-demand /analyze comment: investigate, comment, then resolve the
 #             invoking comment. No labels, no PRs.
 #   fix     — on-demand /fix comment: investigate, push a fix branch, open a PR,
@@ -48,6 +49,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      # duplicate search window: the agent only compares against issues opened
+      # in the last 3 months, older history is not worth the search tokens
+      - name: Duplicate search window
+        id: window
+        run: echo "since=$(date -d '3 months ago' +%F)" >> "$GITHUB_OUTPUT"
+
       - name: Run Claude
         # pinned: v1 (Claude Code 2.1.216) fails every Bash call with
         # "bwrap: Can't create file at /home/.mcp.json: Permission denied"
@@ -68,8 +75,10 @@ jobs:
           # fix (analyze/fix need gh api to read their invoking comment). Task
           # is blocked in all modes so the agent can't offload work to a
           # background sub-agent and exit before it returns. All modes get read-only
-          # git log and gh pr view/diff to trace a regression to its pull request.
-          claude_args: ${{ inputs.mode == 'analyze' && '--allowed-tools "Read,Grep,Glob,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api:*),Bash(git log:*)" --disallowed-tools "Task"' || (inputs.mode == 'fix' && '--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh issue view:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh issue comment:*),Bash(gh pr create:*),Bash(git checkout:*),Bash(git switch:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git log:*),Bash(git status),Bash(gh api:*)" --disallowed-tools "Task"' || '--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue edit:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr create:*),Bash(git checkout:*),Bash(git switch:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git log:*),Bash(git status)" --disallowed-tools "Task"') }}
+          # git log and gh pr view/diff to trace a regression to its pull request,
+          # and gh issue list to find similar issues. Only triage may close a
+          # duplicate.
+          claude_args: ${{ inputs.mode == 'analyze' && '--allowed-tools "Read,Grep,Glob,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api:*),Bash(git log:*)" --disallowed-tools "Task"' || (inputs.mode == 'fix' && '--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh issue comment:*),Bash(gh pr create:*),Bash(git checkout:*),Bash(git switch:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git log:*),Bash(git status),Bash(gh api:*)" --disallowed-tools "Task"' || '--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue edit:*),Bash(gh issue close:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr create:*),Bash(git checkout:*),Bash(git switch:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git log:*),Bash(git status)" --disallowed-tools "Task"') }}
           prompt: |
             You are the issue triage, analysis and fix agent for the evcc repository.
             MODE = "${{ inputs.mode }}". Work on issue/PR #${{ inputs.issue_number }}.
@@ -96,6 +105,24 @@ jobs:
                started with the release that shipped it. A change that merely
                touches the same file is not enough. If you cannot establish that,
                name no culprit.
+               SIMILAR ISSUES: search for earlier reports of the same problem.
+               Run one or two searches with the distinctive terms of the report
+               (device/template name, error message, feature), e.g.
+               `gh issue list --state all --limit 20 --search "<terms> created:>=${{ steps.window.outputs.since }}" --json number,title,state,url`
+               and keep the `created:>=` qualifier: only issues opened in the last
+               3 months count, do not dig further back and do not paginate. Open
+               the few promising hits with `gh issue view <number>` and compare
+               symptom, device/component and cause with the current report.
+               Exclude #${{ inputs.issue_number }} itself. Classify each hit as
+               - DUPLICATE: same symptom on the same device/component with the
+                 same cause, and nothing in the new report that the earlier one
+                 lacks (a new log for a known problem is still a duplicate). An
+                 earlier issue that was fixed is NOT the duplicate's original
+                 when the reporter runs a release that contains the fix: that is
+                 a possible regression, analyze it as such.
+               - RELATED: same area or overlapping symptom, but a different
+                 device, cause or request.
+               No hits is a normal outcome, do not force a match.
                In "analyze" or "fix" mode you were usually invoked by a `/analyze`
                or `/fix` comment (id `${{ inputs.comment_id }}`). When that id is not
                empty, fetch it with
@@ -109,10 +136,16 @@ jobs:
 
             2. COMMENT: Post ONE comment with
                `gh issue comment ${{ inputs.issue_number }}`. Be concise and factual —
-               never guess.
+               never guess. Exception: in "triage" mode a high-confidence DUPLICATE
+               from step 1 is closed in step 2b with its own comment, skip this step
+               then.
                - If you reached a high-certainty conclusion, post the result: a short
                  summary of the problem, the most likely root cause or affected files
                  (with paths), and whether it looks fixable.
+               - If you found RELATED issues, list them in a short "Related"
+                 line as `#<number>` with a few words each on how they relate. A
+                 DUPLICATE found outside triage mode is listed the same way,
+                 marked as a likely duplicate, since only triage closes.
                - PUSH FOR MISSING INFORMATION. If anything needed to diagnose is
                  missing or incomplete — no log, no reproduction steps, no config, no
                  version, or a screenshot in place of data — do NOT assert a root
@@ -135,6 +168,19 @@ jobs:
                "🤖 Generated with [Claude Code](https://claude.com/claude-code)".
 
             If MODE is "triage", also do the following:
+
+            2b. DUPLICATE: If, and only if, step 1 identified a DUPLICATE with high
+               confidence, close this issue instead of posting the step 2 comment:
+               `gh issue close ${{ inputs.issue_number }} --reason duplicate --comment "<text>"`
+               The text starts with `Duplicate of #<original>` on its own line so
+               GitHub links the two, says in one or two sentences why they are the
+               same, asks the reporter to continue in the original issue (and to
+               add their log/config there if it adds information), and ends with
+               the footer from step 2. Then STOP: no label, no type, no PR.
+               Any doubt means: do not close. Mention the candidate as a likely
+               duplicate in your step 2 comment instead and continue. Never close
+               when the issue already carries a label or has a comment from anyone
+               but the reporter and github-actions: a maintainer has it.
 
             3. LABEL: Based on your investigation, pick the single best area label from
                the repository's existing labels (`gh label list`) and apply it with
