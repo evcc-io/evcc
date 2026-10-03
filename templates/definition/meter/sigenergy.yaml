@@ -115,7 +115,7 @@ render: |
       id: 247
       register:
         address: 40048 # Discharge Cut-Off SoC
-        type: writeholding
+        type: writesingle
         decode: uint16
       scale: 10
   {{- include "battery-params" . }}
