@@ -1,5 +1,5 @@
 # Documentation: https://api.tariffs.ekz.ch/swagger
-# Tariff names: https://www.ekz.ch/dam/ekz/privatkunden/strom/tarife-und-agb/Tarif-bersicht_EKZ_2026.json
+# Tariff names: https://api.tariffs.ekz.ch/swagger
 #
 # Limitations:
 # - Fallback in case of non-avaiable API is not implemented. Docs: "In case of API unavailability between 18:00 and 24:00 the fallback stated in EKZ tariff publication applies (for 2026 the standard tariff applies for the following day)."
