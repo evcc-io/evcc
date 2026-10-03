@@ -37,6 +37,27 @@ type Heatpump struct {
 	power     int64
 	maxPowerG func() (int64, error)
 	maxPowerS func(int64) error
+
+	powerG       func() (float64, error)
+	standbyPower float64
+}
+
+// heatingStandbyPower separates idle draw (controller, circulation pumps) from a running compressor
+const heatingStandbyPower = 100
+
+// heatingStatus reports status C while the measured power exceeds the standby power.
+// The status follows the device, not the mode evcc requested: a heat pump runs on its own schedule.
+func heatingStatus(powerG func() (float64, error), standbyPower float64) (api.ChargeStatus, error) {
+	power, err := powerG()
+	if err != nil {
+		return api.StatusNone, err
+	}
+
+	if power > standbyPower {
+		return api.StatusC, nil
+	}
+
+	return api.StatusB, nil
 }
 
 func init() {
@@ -48,7 +69,8 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	cc := struct {
 		embed                   `mapstructure:",squash"`
 		SetMaxPower             plugin.Config
-		GetMaxPower             *plugin.Config           // optional
+		GetMaxPower             *plugin.Config // optional
+		StandbyPower            float64
 		measurement.Temperature `mapstructure:",squash"` // optional
 		measurement.Energy      `mapstructure:",squash"` // optional
 		meter.Dimmer            `mapstructure:",squash"` // optional
@@ -57,6 +79,7 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 			Icon_:     "heatpump",
 			Features_: []api.Feature{api.Continuous, api.Heating, api.IntegratedDevice},
 		},
+		StandbyPower: heatingStandbyPower,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -89,6 +112,8 @@ func NewHeatpumpFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	implement.May(res, implement.Meter(powerG))
 	implement.May(res, implement.MeterEnergy(energyG))
 	implement.May(res, implement.MeterReturnEnergy(returnG))
+	res.powerG = powerG
+	res.standbyPower = cc.StandbyPower
 
 	tempG, limitTempG, err := cc.Temperature.Configure(ctx)
 	if err != nil {
@@ -134,6 +159,10 @@ func (wb *Heatpump) setMaxPower(power int64) error {
 
 // Status implements the api.Charger interface
 func (wb *Heatpump) Status() (api.ChargeStatus, error) {
+	if wb.powerG != nil {
+		return heatingStatus(wb.powerG, wb.standbyPower)
+	}
+
 	power, err := wb.getMaxPower()
 	if err != nil {
 		return api.StatusNone, err

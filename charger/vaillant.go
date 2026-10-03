@@ -198,12 +198,14 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 	}
 
 	if devices, _ := conn.GetMpcData(systemId); len(devices) > 0 {
-		implement.Has(res, implement.Meter(util.Cached(func() (float64, error) {
+		powerG := util.Cached(func() (float64, error) {
 			res, err := conn.GetMpcData(systemId)
 			return lo.SumBy(res, func(d sensonet.MpcDevice) float64 {
 				return d.CurrentPower
 			}), err
-		}, cc.Cache)))
+		}, cc.Cache)
+		implement.Has(res, implement.Meter(powerG))
+		res.powerG = powerG
 	}
 
 	heatingTemp := func(zz []sensonet.StateZone) float64 {
