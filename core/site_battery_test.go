@@ -85,6 +85,28 @@ func TestApplyBatteryMode(t *testing.T) {
 	}
 }
 
+func TestSupportedBatteryMode(t *testing.T) {
+	all := []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge, api.BatteryHoldCharge, api.BatteryDischarge}
+	basic := []api.BatteryMode{api.BatteryNormal, api.BatteryHold, api.BatteryCharge}
+
+	tc := []struct {
+		supported      []api.BatteryMode
+		mode, expected api.BatteryMode
+	}{
+		{all, api.BatteryDischarge, api.BatteryDischarge},
+		{basic, api.BatteryCharge, api.BatteryCharge},
+		{basic, api.BatteryHoldCharge, api.BatteryNormal},
+		{basic, api.BatteryDischarge, api.BatteryNormal},
+		{[]api.BatteryMode{api.BatteryNormal, api.BatteryHold}, api.BatteryCharge, api.BatteryHold},
+		{[]api.BatteryMode{api.BatteryNormal, api.BatteryHoldCharge}, api.BatteryDischarge, api.BatteryHoldCharge},
+		{[]api.BatteryMode{api.BatteryHold, api.BatteryCharge}, api.BatteryHoldCharge, api.BatteryUnknown},
+	}
+
+	for _, tc := range tc {
+		assert.Equal(t, tc.expected, supportedBatteryMode(tc.supported, tc.mode), "%v: %s", tc.supported, tc.mode)
+	}
+}
+
 // TestBatteryUnsupportedModeReleases guards that a mode the battery does not
 // support releases it to normal instead of leaving it in the mode applied before
 func TestBatteryUnsupportedModeReleases(t *testing.T) {
