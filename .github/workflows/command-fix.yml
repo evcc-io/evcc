@@ -16,7 +16,7 @@ jobs:
       startsWith(github.event.comment.body, '/fix') &&
       contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
     permissions:
-      contents: write # the open-pr job pushes the fix branch; the agent job reduces this to read
+      contents: write # push the fix branch (open-pr job only, the agent job reduces to read)
       issues: write # comment + minimize the calling comment
       pull-requests: write # open PR fix, comment on PR conversations
       id-token: write

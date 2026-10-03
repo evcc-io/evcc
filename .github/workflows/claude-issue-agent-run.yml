@@ -39,10 +39,8 @@ jobs:
   run:
     name: Issue agent
     runs-on: ubuntu-latest
-    # Reduces the caller's grant: the agent runs with Edit/Write on untrusted
-    # issue text, so anything it plants in the checkout (.git/hooks, .git/config)
-    # executes with this token on the next git command. Read-only contents keeps
-    # that from pushing; the open-pr job holds the write token.
+    # Reduces the caller's grant to read-only contents: the agent has Write on
+    # untrusted input (see the header), the open-pr job holds the write token.
     permissions:
       contents: read
       issues: write
@@ -86,13 +84,12 @@ jobs:
           allowed_non_write_users: '*'
           additional_permissions: |
             actions: read
-          # No mode may push or open a PR: the agent only commits, the open-pr
-          # job below pushes to a workflow-chosen branch. Triage and fix
-          # get Edit/Write + git add/commit/diff/status for that, analyze reads
-          # only. analyze/fix read their invoking comment with one exact gh api
-          # command (no wildcard, so the token cannot be used for arbitrary API
-          # calls). Task is blocked in all modes so the agent can't offload work
-          # to a background sub-agent and exit before it returns. All modes get
+          # No mode may push or open a PR, the open-pr job does that. Triage and
+          # fix get Edit/Write + git add/commit/diff/status, analyze reads only.
+          # analyze/fix read their invoking comment with one exact gh api command
+          # (no wildcard, so the token cannot be used for arbitrary API calls).
+          # Task is blocked in all modes so the agent can't offload work to a
+          # background sub-agent and exit before it returns. All modes get
           # read-only git log and gh pr view/diff to trace a regression to its
           # pull request, and gh issue list to find similar issues. Only triage
           # may close a duplicate. Triage and analyze run on Sonnet, it spends
@@ -187,8 +184,8 @@ jobs:
                paths, code and identifiers in backticks. Always end the comment with:
                "🤖 Generated with [Claude Code](https://claude.com/claude-code)".
 
-            If MODE is "triage", first check completeness, then close duplicates,
-            label, and fix when the issue allows it:
+            If MODE is "triage", first check completeness, then close duplicates, label
+            and fix:
 
             0. COMPLETENESS: Do this BEFORE step 1 and 2 (investigating and
                commenting). The bug report form says incomplete issues are closed
@@ -304,9 +301,7 @@ jobs:
             Follow the repository's AGENTS.md conventions for commit/PR style. Do not
             touch unrelated files.
 
-      # The agent's commit leaves this job as a patch: git runs here in the
-      # checkout the agent touched, but with a read-only contents token, so a
-      # planted hook gains nothing the agent could not already do.
+      # git runs in the agent-touched checkout here, but with the read-only token
       - name: Export fix
         id: fix
         if: inputs.mode != 'analyze'
@@ -339,20 +334,18 @@ jobs:
           gh api graphql -f id="$NODE_ID" -f query='
             mutation($id:ID!){minimizeComment(input:{subjectId:$id,classifier:RESOLVED}){minimizedComment{isMinimized}}}'
 
-  # Fresh checkout with the write token: nothing the agent touched runs here.
-  # Branch name, base and repository are fixed by the workflow, so no issue text
-  # can steer the push: no push elsewhere, no force, no ref deletion, no workflow
-  # edits. A GITHUB_TOKEN push raises no pull_request run, so the branch sees no
-  # CI secrets until a human touches it. A second run for the same issue fails
-  # on the existing branch, its earlier PR is still open then.
+  # Fresh checkout with the write token: nothing the agent touched runs here,
+  # and branch, base and repository are fixed below, not by the agent. A
+  # GITHUB_TOKEN push raises no pull_request run, so the branch sees no CI
+  # secrets until a human touches it. A second run for the same issue fails on
+  # the existing branch.
   open-pr:
     name: Open pull request
     needs: run
     if: needs.run.outputs.fix == 'true'
     runs-on: ubuntu-latest
-    # no permissions block: inherits the caller's contents + pull-requests write.
-    # Declaring them here would fail analyze callers that only grant read, even
-    # though this job never runs for them.
+    # no permissions block: declaring write here would fail analyze callers that
+    # only grant read, even though this job never runs for them
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
