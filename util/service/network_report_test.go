@@ -49,7 +49,7 @@ func TestReportDevices(t *testing.T) {
 		{Type: "custom", Other: map[string]any{"host": "192.0.2.1"}},
 	}
 
-	assert.Equal(t, []reportDevice{
+	assert.Equal(t, []ReportDevice{
 		{
 			Template:  "sungrow-hybrid",
 			Mac:       "AC199F",
