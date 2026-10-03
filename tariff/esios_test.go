@@ -9,7 +9,7 @@ import (
 )
 
 // Canarias prices apply per local hour, one hour behind the peninsular
-// instants REE publishes. Only indicator 1001 is regional.
+// instants REE publishes, for both indicators.
 func TestEsiosCanariasShift(t *testing.T) {
 	tmpl, err := templates.ByName(templates.Tariff, "esios")
 	require.NoError(t, err)
@@ -19,7 +19,7 @@ func TestEsiosCanariasShift(t *testing.T) {
 		shifted           bool
 	}{
 		{"Canarias", "1001", true},
-		{"Canarias", "1739", false},
+		{"Canarias", "1739", true},
 		{"Península", "1001", false},
 	} {
 		b, _, err := tmpl.RenderResult(templates.Tariff, templates.RenderModeInstance, map[string]any{
