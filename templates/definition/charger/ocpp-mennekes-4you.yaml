@@ -9,11 +9,12 @@ products:
   - brand: Mennekes
     description:
       generic: AMTRON 4You 500 (OCPP)
-capabilities: ["rfid", "dim"]
+capabilities: ["1p3p", "rfid", "dim"]
 requirements:
   evcc: ["sponsorship", "skiptest"]
 params:
   - preset: ocpp
 render: |
   {{ include "ocpp" . }}
+  forcepowerctrl: true
   connecttimeout: 15m
