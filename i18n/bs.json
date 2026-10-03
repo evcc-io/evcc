@@ -350,7 +350,20 @@
   },
   "main": {
     "chargingPlan": {
-      "planNumber": "Plan {number}"
+      "pause": "Pauza",
+      "pausedUntil": "Pauzirano do {time}",
+      "planNumber": "Plan {number}",
+      "precondition": {
+        "description": "Punite {duration} prije polaska kako biste pripremili bateriju."
+      },
+      "preset24h": "+24 sata",
+      "preset48h": "+48 sati",
+      "preset7d": "+7 dana",
+      "presetCustom": "Prilagođeni datum/vrijeme…",
+      "presetFriday": "Do petka 18:00",
+      "presetSunday": "Do nedjelje 18:00",
+      "presetTomorrow": "Do sutra 10:00",
+      "resume": "Nastavi"
     },
     "energyflow": {
       "batteryTooltip": "{energy} od {total} ({soc})",
