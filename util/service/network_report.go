@@ -78,6 +78,11 @@ func reportDevices(configs []config.Named, hosts []discovery.Host) []reportDevic
 			continue
 		}
 
+		// discovery hints only apply to the host param
+		if host, _ := conf.Property("host").(string); host == "" {
+			continue
+		}
+
 		addrs := configHosts(conf)
 		idx := slices.IndexFunc(hosts, func(h discovery.Host) bool {
 			return isHost(h, addrs)
