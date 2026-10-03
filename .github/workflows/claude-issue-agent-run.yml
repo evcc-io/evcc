@@ -3,11 +3,17 @@ name: Claude Issue Agent (reusable)
 # Shared investigate + comment logic for issue triage and the on-demand /analyze
 # and /fix commands. Callers pass a mode:
 #   triage  — auto on issue open: close incomplete bug reports, otherwise
-#             investigate, close duplicates, comment, label, and optionally fix.
+#             investigate, close duplicates, comment, label, and optionally
+#             commit a fix that the workflow turns into a draft PR.
 #   analyze — on-demand /analyze comment: investigate, comment, then resolve the
 #             invoking comment. No labels, no PRs.
-#   fix     — on-demand /fix comment: investigate, push a fix branch, open a PR,
-#             comment, then resolve the invoking comment. No labels.
+#   fix     — on-demand /fix comment: investigate, commit a fix that the
+#             workflow turns into a PR, comment, then resolve the invoking
+#             comment. No labels.
+# The agent never pushes and its job holds a read-only contents token: the
+# commit leaves as a patch artifact and the open-pr job pushes it to a
+# workflow-chosen branch from a fresh checkout, so neither issue text nor a
+# hook planted in the agent's checkout can steer a write token.
 on:
   workflow_call:
     inputs:
@@ -33,8 +39,16 @@ jobs:
   run:
     name: Issue agent
     runs-on: ubuntu-latest
-    # No permissions block: inherit the caller's grant (triage/fix=write to push
-    # fixes, analyze=read). A reusable job can only reduce, never elevate.
+    # Reduces the caller's grant to read-only contents: the agent has Write on
+    # untrusted input (see the header), the open-pr job holds the write token.
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+      id-token: write
+      actions: read
+    outputs:
+      fix: ${{ steps.fix.outputs.found }}
     steps:
       - name: React to invoking comment
         if: inputs.comment_id != ''
@@ -70,17 +84,18 @@ jobs:
           allowed_non_write_users: '*'
           additional_permissions: |
             actions: read
-          # analyze mode gets read + comment + api tools only; triage/fix
-          # additionally get Edit/Write + git/PR tools to actually make and push a
-          # fix (analyze/fix need gh api to read their invoking comment). Task
-          # is blocked in all modes so the agent can't offload work to a
-          # background sub-agent and exit before it returns. All modes get read-only
-          # git log and gh pr view/diff to trace a regression to its pull request,
-          # and gh issue list to find similar issues. Only triage may close a
-          # duplicate. Triage and analyze read and comment, Sonnet is enough and
-          # spends less of the subscription quota; fix writes code and keeps the
-          # default model.
-          claude_args: ${{ inputs.mode == 'analyze' && '--model claude-sonnet-5-5 --allowed-tools "Read,Grep,Glob,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api:*),Bash(git log:*)" --disallowed-tools "Task"' || (inputs.mode == 'fix' && '--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh issue comment:*),Bash(gh pr create:*),Bash(git checkout:*),Bash(git switch:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git log:*),Bash(git status),Bash(gh api:*)" --disallowed-tools "Task"' || '--model claude-sonnet-5-5 --allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue edit:*),Bash(gh issue close:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr create:*),Bash(git checkout:*),Bash(git switch:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git log:*),Bash(git status)" --disallowed-tools "Task"') }}
+          # No mode may push or open a PR, the open-pr job does that. Triage and
+          # fix get Edit/Write + git add/commit/diff/status, analyze reads only.
+          # analyze/fix read their invoking comment with one exact gh api command
+          # (no wildcard, so the token cannot be used for arbitrary API calls).
+          # Task is blocked in all modes so the agent can't offload work to a
+          # background sub-agent and exit before it returns. All modes get
+          # read-only git log and gh pr view/diff to trace a regression to its
+          # pull request, and gh issue list to find similar issues. Only triage
+          # may close a duplicate. Triage and analyze run on Sonnet, it spends
+          # less of the subscription quota; a maintainer's fix keeps the default
+          # model.
+          claude_args: ${{ inputs.mode == 'analyze' && format('--model claude-sonnet-5-5 --allowed-tools "Read,Grep,Glob,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api repos/{0}/issues/comments/{1} --jq .body),Bash(git log:*)" --disallowed-tools "Task"', github.repository, inputs.comment_id) || (inputs.mode == 'fix' && format('--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh issue comment:*),Bash(git add:*),Bash(git commit:*),Bash(git diff:*),Bash(git log:*),Bash(git status),Bash(gh api repos/{0}/issues/comments/{1} --jq .body)" --disallowed-tools "Task"', github.repository, inputs.comment_id) || '--model claude-sonnet-5-5 --allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue edit:*),Bash(gh issue close:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(git add:*),Bash(git commit:*),Bash(git diff:*),Bash(git log:*),Bash(git status)" --disallowed-tools "Task"') }}
           prompt: |
             You are the issue triage, analysis and fix agent for the evcc repository.
             MODE = "${{ inputs.mode }}". Work on issue/PR #${{ inputs.issue_number }}.
@@ -252,30 +267,29 @@ jobs:
             4. FIX (only if applicable): Only attempt when the issue is a clearly-scoped,
                low-risk bug or small enhancement with an obvious fix. If it needs design
                discussion, spans many files, or the cause is uncertain, STOP after
-               step 2 and do not open a PR. When you do fix:
-               - branch: `git switch -c fix/issue-${{ inputs.issue_number }}`
-               - make the minimal change, then commit. Do NOT add a Co-Authored-By trailer.
-               - push and open a draft PR with `gh pr create --draft` whose body starts
-                 with `fixes #${{ inputs.issue_number }}` and ends with the
-                 "🤖 Generated with [Claude Code](https://claude.com/claude-code)" footer.
-               - if the issue carries type Bug, whether you set it in step 3 or it
-                 already had it, create the PR with `--label bug` so it qualifies for
-                 backport. The `bug` label belongs on the fixing pull request, never on
-                 the issue.
+               step 2 and commit nothing. When you do fix, follow HOW TO FIX below;
+               the workflow opens the PR as a draft.
 
             If MODE is "fix", do the following instead of step 3/4 above:
 
-            5. FIX: A maintainer explicitly asked for a fix via `/fix`. Implement it:
-               - branch: `git switch -c fix/issue-${{ inputs.issue_number }}`
-               - make the minimal change, then commit. Do NOT add a Co-Authored-By trailer.
-               - push and open a PR (not draft) with `gh pr create` whose body starts
-                 with `fixes #${{ inputs.issue_number }}` and ends with the
-                 "🤖 Generated with [Claude Code](https://claude.com/claude-code)" footer.
-               - if the issue carries type Bug, create the PR with `--label bug` so it
-                 qualifies for backport.
+            5. FIX: A maintainer explicitly asked for a fix via `/fix`. Implement it
+               following HOW TO FIX below; the workflow opens the PR ready for review.
                If the fix needs design discussion, spans too many files, or you
-               cannot determine the correct change with confidence, do NOT open a
-               PR — explain why in your step 2 comment instead.
+               cannot determine the correct change with confidence, commit nothing
+               and explain why in your step 2 comment instead.
+
+            HOW TO FIX: You cannot push or open a pull request; the workflow does
+            that from your commit once you are done, on a branch it names itself.
+            - make the minimal change on the checked-out branch, do not create or
+              switch branches
+            - commit it as ONE commit. Do NOT add a Co-Authored-By trailer.
+            - the commit subject becomes the PR title. The commit body becomes the
+              PR body: start it with `fixes #${{ inputs.issue_number }}`, the
+              workflow appends the footer.
+            - if the issue carries type Bug, whether you set it in step 3 or it
+              already had it, the workflow labels the PR `bug` so it qualifies for
+              backport. The `bug` label belongs on the pull request, never on the
+              issue.
 
             If MODE is "analyze", do NOT label, edit, or open PRs.
 
@@ -285,7 +299,28 @@ jobs:
             resolves it once you are done.
 
             Follow the repository's AGENTS.md conventions for commit/PR style. Do not
-            force-push and do not touch unrelated files.
+            touch unrelated files.
+
+      # git runs in the agent-touched checkout here, but with the read-only token
+      - name: Export fix
+        id: fix
+        if: inputs.mode != 'analyze'
+        env:
+          BASE: ${{ github.sha }}
+        run: |
+          if [ "$(git rev-parse HEAD)" = "$BASE" ]; then
+            echo "no fix committed"
+            exit 0
+          fi
+          git format-patch --stdout "$BASE" > "$RUNNER_TEMP/fix.patch"
+          echo "found=true" >> "$GITHUB_OUTPUT"
+
+      - name: Upload fix
+        if: steps.fix.outputs.found == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: fix-${{ inputs.issue_number }}
+          path: ${{ runner.temp }}/fix.patch
 
       # the agent posts its result as a comment, so the command has been answered
       # whatever that result was. only a failed run leaves it open, there is no
@@ -298,3 +333,53 @@ jobs:
         run: |
           gh api graphql -f id="$NODE_ID" -f query='
             mutation($id:ID!){minimizeComment(input:{subjectId:$id,classifier:RESOLVED}){minimizedComment{isMinimized}}}'
+
+  # Fresh checkout with the write token: nothing the agent touched runs here,
+  # and branch, base and repository are fixed below, not by the agent. A
+  # GITHUB_TOKEN push raises no pull_request run, so the branch sees no CI
+  # secrets until a human touches it. A second run for the same issue fails on
+  # the existing branch.
+  open-pr:
+    name: Open pull request
+    needs: run
+    if: needs.run.outputs.fix == 'true'
+    runs-on: ubuntu-latest
+    # no permissions block: declaring write here would fail analyze callers that
+    # only grant read, even though this job never runs for them
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Download fix
+        uses: actions/download-artifact@v8
+        with:
+          name: fix-${{ inputs.issue_number }}
+          path: ${{ runner.temp }}
+
+      - name: Push branch and open pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE: ${{ github.sha }}
+          BRANCH: agent/issue-${{ inputs.issue_number }}
+          ISSUE: ${{ inputs.issue_number }}
+          MODE: ${{ inputs.mode }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git am "$RUNNER_TEMP/fix.patch"
+          if git diff --name-only "$BASE" HEAD | grep -q '^\.github/'; then
+            echo "::error::agent changed workflow files"
+            exit 1
+          fi
+          git push origin "HEAD:refs/heads/$BRANCH"
+
+          args=(--base master --head "$BRANCH"
+            --title "$(git log -1 --format=%s)"
+            --body "$(git log -1 --format=%b)"$'\n\n'"🤖 Generated with [Claude Code](https://claude.com/claude-code)")
+          if [ "$MODE" = triage ]; then
+            args+=(--draft)
+          fi
+          if [ "$(gh api "repos/$GITHUB_REPOSITORY/issues/$ISSUE" --jq '.type.name // empty')" = Bug ]; then
+            args+=(--label bug)
+          fi
+          gh pr create "${args[@]}"
