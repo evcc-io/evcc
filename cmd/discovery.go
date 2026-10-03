@@ -7,11 +7,15 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/service"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/renderer"
+	"github.com/olekukonko/tablewriter/tw"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // discoveryCmd represents the discovery command
@@ -35,7 +39,26 @@ func init() {
 
 const flagJSON = "json"
 
+// newTable creates a table with a separator line between rows
+func newTable(header ...string) *tablewriter.Table {
+	table := tablewriter.NewTable(os.Stdout,
+		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
+			Settings: tw.Settings{
+				Separators: tw.Separators{BetweenRows: tw.On},
+			},
+		})),
+	)
+	table.Header(header)
+	return table
+}
+
 func runDiscovery(cmd *cobra.Command, args []string) {
+	// json output must stay parseable, keep the log quiet
+	if cmd.Flag(flagJSON).Changed {
+		viper.Set("log", "error")
+		util.LogLevel("error", nil)
+	}
+
 	// load config
 	if err := loadConfigFile(&conf, !cmd.Flag(flagIgnoreDatabase).Changed); err != nil {
 		log.FATAL.Fatal(err)
@@ -70,8 +93,7 @@ func runDiscovery(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Println()
-	hosts := tablewriter.NewWriter(os.Stdout)
-	hosts.Header([]string{"IP", "MAC", "Vendor", "Hostname", "Services", "Used"})
+	hosts := newTable("IP", "MAC", "Vendor", "Hostname", "Services", "Used")
 	for _, h := range report.Hosts {
 		used := ""
 		if h.Used {
@@ -87,8 +109,7 @@ func runDiscovery(cmd *cobra.Command, args []string) {
 
 	fmt.Println()
 	fmt.Println("Configured devices (redacted, safe to share):")
-	devices := tablewriter.NewWriter(os.Stdout)
-	devices.Header([]string{"Template", "MAC", "Hostnames", "Services"})
+	devices := newTable("Template", "MAC", "Hostnames", "Services")
 	for _, d := range report.Devices {
 		devices.Append([]string{d.Template, d.Mac, strings.Join(d.Hostnames, "\n"), strings.Join(d.Services, "\n")})
 	}
