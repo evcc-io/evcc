@@ -18,6 +18,7 @@
 			:pattern="Pattern"
 			:choice="Choice"
 			:service-values="serviceValues"
+			:service-loading="serviceLoading"
 			:label="label"
 			:currency="currency"
 		/>
@@ -49,6 +50,7 @@ export default {
 		Pattern: { type: Object, default: () => ({}) },
 		Choice: Array,
 		serviceValues: Array,
+		serviceLoading: Boolean,
 		modelValue: [String, Number, Boolean, Object],
 		currency: { type: String, default: "EUR" },
 	},

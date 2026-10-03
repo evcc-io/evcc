@@ -9,6 +9,8 @@ requirements:
     de: Kanäle 1,2,3 müssen verwendet werden.
     en: Meter channels 1,2,3 must be used.
 group: switchsockets
+discovery:
+  hostname: ["tasmota*"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery", "charge"]

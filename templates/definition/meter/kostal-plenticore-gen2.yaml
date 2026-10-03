@@ -19,6 +19,8 @@ requirements:
       Anwendbar für verschiedene Wechselrichter Generationen (G1/G2/G3). Für die aktive Batteriesteuerung muss die Funktion externe Batteriesteuerung über Modbus mit dem Handwerkerzugang aktiviert sein.
     en: |
       Compatible with various inverter generations (G1/G2/G3). For active battery control, the feature external battery control via Modbus must be activated using installer access.
+discovery:
+  mac: ["1897F1", "240BB1"]
 params:
   - name: usage
     choice: ["pv", "battery"]

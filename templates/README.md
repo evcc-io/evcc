@@ -196,6 +196,24 @@ products:
         link: https://github.com/evcc-io/evcc/issues/21708
 ```
 
+## `discovery`
+
+`discovery` describes how the devices of a template can be recognized in the local network. The host suggestions mark matching hosts and use them for auto-fill. Any single hit is a match.
+
+```yaml
+discovery:
+  mdns: ["_shelly._tcp", "_http._tcp:shelly*"] # service type in the announced spelling, optional instance name pattern after the colon
+  hostname: ["shelly*"] # pattern for any DNS or mDNS name of the host, domain is ignored, case-insensitive
+  mac: ["8400EC"] # hardware address prefix, 6 to 9 upper case hex digits
+```
+
+Guidelines:
+
+- Only add hints verified against the IEEE registry (`mac`), the vendor's documentation, or a real device. A registered prefix does not guarantee that the devices use it, many products contain third-party network modules.
+- Hostname patterns must be specific to the vendor. Patterns like `hs*` match unrelated devices.
+- ESP-based devices (Shelly, Tasmota, OpenDTU) share the Espressif prefixes. Use `mdns` or `hostname` for them.
+- The "Network discovery" modal on the config page (experimental) shows how configured devices appear in the network and is the source for new hints.
+
 ## `auth`
 
 `auth` defines OAuth authentication configuration for devices that require user authorization. When specified, the UI OAuth flow and token management are handled automatically. The auth endpoint is called when all required parameters are filled and is re-called on every parameter change.
@@ -345,19 +363,49 @@ auth:
 
 **Format**: `service-name/endpoint` or `service-name/endpoint?param1={param1}&param2={param2}`
 
-Parameters from other params can be referenced using `{param-name}` syntax, which will be replaced with the user's input for that parameter. The endpoint will only be called once the user has entered values for all referenced parameters. The endpoint is called every time a referenced parameter value changes.
+Parameters from other params can be referenced using `{param-name}` syntax, which will be replaced with the user's input for that parameter. `{template}` is the name of the selected template. The endpoint will only be called once the user has entered values for all referenced parameters. The endpoint is called every time a referenced parameter value changes.
+
+**Response formats**:
+
+Service endpoints return either an array of strings (e.g., `["value1", "value2"]`) or an array of objects with context:
+
+```json
+[
+  {
+    "value": "192.168.1.10",
+    "label": "inverter.local",
+    "hint": "SMA",
+    "match": true,
+    "used": false
+  }
+]
+```
+
+- `value`: written to the field (required)
+- `label`: secondary line below the value
+- `hint`: shown on the right, e.g. a brand
+- `match`: the entry fits the current context, listed in a separate group on top
+- `used`: the entry is already taken by another device, listed last
+
+A service that is still collecting data answers with the `Retry-After` header (seconds). The UI shows a searching indicator and fetches again after that time.
 
 **UI behaviour**:
 
-Service endpoints must return an array of strings (e.g., `["value1", "value2"]`). These values are shown as suggestions, not strict selections - users can always enter custom text values. The UI handles service responses differently based on the parameter configuration and response content:
+Values are shown as suggestions, not strict selections - users can always enter custom text values. The UI handles service responses differently based on the parameter configuration and response content:
 
-- **Auto-fill (prepopulation)**: If the service returns exactly **one** value, the parameter is **required**, and the field is currently **empty**, the value will be automatically filled into the field.
+- **Auto-fill (prepopulation)**: If the service returns exactly **one** value (or exactly one unused `match` for object responses), the parameter is **required**, and the field is currently **empty**, the value will be automatically filled into the field.
 
-- **Dropdown suggestions**: In all other cases (multiple values, non-required parameter, or field already has a value), the returned values are shown as a dropdown/datalist for the user to select from or ignore.
+- **Dropdown suggestions**: In all other cases (multiple values, non-required parameter, or field already has a value), the returned values are shown as a datalist (strings) or a combobox with grouping (objects) for the user to select from or ignore.
 
 - **Empty response**: If the service returns an empty array or no data, the field remains a regular text input.
 
 **Available services**:
+
+- **Network**
+
+  `network/hosts?template={template}`: Lists the hosts of the local network found by mDNS, SSDP and the neighbor table of the operating system, with hostname and vendor. Hosts matching the template's `discovery` hints are marked. The `host` param uses it by default.
+
+  `EVCC_DISCOVERY_HOSTS` replaces the scan with a static list, e.g. where the network is not reachable: `[{"ip": "192.168.1.10", "mac": "00:15:BB:12:34:56", "hostname": "sma3009876543"}]`. An empty list `[]` disables discovery.
 
 - **Hardware**
 

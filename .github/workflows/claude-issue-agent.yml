@@ -127,7 +127,7 @@ jobs:
           allowed_non_write_users: '*'
           additional_permissions: |
             actions: read
-          claude_args: '--allowed-tools "Read,Grep,Glob,Bash(gh label list),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr edit:*)" --disallowed-tools "Task"'
+          claude_args: '--allowed-tools "Read,Grep,Glob,Bash(gh label list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr edit:*)" --disallowed-tools "Task"'
           prompt: |
             You label pull requests for the evcc repository.
             Work on PR #${{ github.event.pull_request.number }}. Fetch its title,

@@ -10,6 +10,8 @@ requirements:
       Zähleradresse von Primär- oder Sekundärzählern: auf der Weboberfläche des Wechselrichters kann nur die Adresse des ersten Zählers (z.B. 200) eingestellt werden. Zusätzliche Zähler erhalten eine aufsteigende Nummer (z.B: 201).
     en: |
       Meter address of primary or secondary meters: on the web interface of the inverter, only the address of the first meter (e.g., 200) can be set. Additional meters receive an ascending number (e.g., 201).
+discovery:
+  mac: ["0003AC"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

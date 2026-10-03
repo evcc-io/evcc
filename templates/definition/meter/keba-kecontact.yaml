@@ -4,6 +4,8 @@ products:
   - brand: KEBA
     description:
       generic: KeContact E10
+discovery:
+  mac: ["0060B5", "00141D"]
 params:
   - name: usage
     choice: ["grid"]

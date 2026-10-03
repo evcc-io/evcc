@@ -11,6 +11,8 @@ products:
     capabilities: ["rfid"]
 requirements:
   evcc: ["sponsorship"]
+discovery:
+  mac: ["7C70BC8"]
 params:
   - name: modbus
     choice: ["tcpip"]

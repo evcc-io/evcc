@@ -77,6 +77,7 @@
 							v-bind="param"
 							v-model="values[param.Name]"
 							:service-values="serviceValues[param.Name]"
+							:service-loading="serviceLoading[param.Name]"
 							:currency="currency"
 						/>
 						<PropertyCollapsible v-if="authAdvancedParams.length">
@@ -88,6 +89,7 @@
 									v-bind="param"
 									v-model="values[param.Name]"
 									:service-values="serviceValues[param.Name]"
+									:service-loading="serviceLoading[param.Name]"
 									:currency="currency"
 								/>
 							</template>
@@ -179,6 +181,8 @@
 								:defaultBaudrate="modbus.Baudrate"
 								:defaultPort="modbus.Port"
 								:capabilities="modbusCapabilities"
+								:hostServiceValues="serviceValues['host']"
+								:hostServiceLoading="serviceLoading['host']"
 							/>
 
 							<PropertyEntry
@@ -188,6 +192,7 @@
 								v-bind="param"
 								v-model="values[param.Name]"
 								:service-values="serviceValues[param.Name]"
+								:service-loading="serviceLoading[param.Name]"
 								:currency="currency"
 							/>
 
@@ -206,6 +211,7 @@
 										v-bind="param"
 										v-model="values[param.Name]"
 										:service-values="serviceValues[param.Name]"
+										:service-loading="serviceLoading[param.Name]"
 										:currency="currency"
 									/>
 								</template>
@@ -277,7 +283,7 @@ import { initialAuthState, prepareAuthLogin, submitAuthChallenge } from "../util
 import AdminPasswordPrompt from "@/components/Auth/AdminPasswordPrompt.vue";
 import sleep from "@/utils/sleep";
 import { ConfigType } from "@/types/evcc";
-import type { DeviceType, Timeout } from "@/types/evcc";
+import type { DeviceType, ServiceValue, Timeout } from "@/types/evcc";
 import { CURRENCY } from "@/types/evcc";
 import {
 	handleError,
@@ -291,6 +297,7 @@ import {
 	applyDefaultsFromTemplate,
 	createDeviceUtils,
 	fetchServiceValues,
+	serviceDefaults,
 	ADMIN_PASSWORD_REQUIRED,
 } from "./index";
 import deepEqual from "@/utils/deepEqual";
@@ -397,8 +404,10 @@ export default defineComponent({
 			values: { ...this.initialValues } as DeviceValues,
 			baseline: JSON.stringify({ ...this.initialValues }),
 			test: initialTestState(),
-			serviceValues: {} as Record<string, string[]>,
+			serviceValues: {} as Record<string, ServiceValue[]>,
 			serviceValuesTimer: null as Timeout | null,
+			// params whose service announced more values
+			serviceLoading: {} as Record<string, boolean>,
 			adminPasswordValue: "",
 			adminPasswordRequired: false,
 			adminPasswordInvalid: false,
@@ -454,6 +463,12 @@ export default defineComponent({
 		},
 		visibleParams() {
 			return this.authRequired ? this.authParams : this.templateParams;
+		},
+		serviceParams(): TemplateParam[] {
+			if (!this.modbus) return this.visibleParams;
+			// modbus host is not a regular param
+			const host = { Name: "host", Service: "network/hosts?template={template}" };
+			return [...this.visibleParams, host as TemplateParam];
 		},
 		modbus(): ModbusParam | undefined {
 			const params = this.template?.Params || [];
@@ -988,19 +1003,32 @@ export default defineComponent({
 				clearTimeout(this.serviceValuesTimer);
 			}
 			this.serviceValuesTimer = setTimeout(async () => {
+				const loading: Record<string, boolean> = {};
 				// Fetch only visible params to prevent premature auth instance creation
-				this.serviceValues = await fetchServiceValues(this.visibleParams, {
-					...this.modbusDefaults,
-					...this.values,
-				});
+				this.serviceValues = await fetchServiceValues(
+					this.serviceParams,
+					{ ...this.modbusDefaults, ...this.values, template: this.templateName },
+					(name, seconds) => {
+						loading[name] = true;
+						this.retryServiceValues(seconds);
+					}
+				);
+				this.serviceLoading = loading;
 			}, 500);
+		},
+		retryServiceValues(seconds: number) {
+			if (!this.isModalVisible) return;
+			if (this.serviceValuesTimer) {
+				clearTimeout(this.serviceValuesTimer);
+			}
+			this.serviceValuesTimer = setTimeout(this.updateServiceValues, seconds * 1000);
 		},
 		applyServiceDefault(paramName: string) {
 			// Auto-apply single service value when field is empty and required
-			const values = this.serviceValues[paramName];
+			const values = serviceDefaults(this.serviceValues[paramName]);
 			const param = this.templateParams.find((p) => p.Name === paramName);
 			// Only auto-apply if exactly one value is returned, field is empty, and field is required
-			if (values?.length === 1 && !this.values[paramName] && param?.Required) {
+			if (values.length === 1 && !this.values[paramName] && param?.Required) {
 				// debounced auto-fill must not mark a clean form dirty
 				const wasClean = !this.dirty;
 				this.values[paramName] = values[0];
