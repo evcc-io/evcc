@@ -23,6 +23,7 @@ func init() {
 	withCustomTemplate(chargerCmd)
 
 	chargerCmd.Flags().Float64P(flagCurrent, "i", 0, flagCurrentDescription)
+	chargerCmd.Flags().Float64(flagPower, 0, flagPowerDescription)
 	//lint:ignore SA1019 as Title is safe on ascii
 	chargerCmd.Flags().BoolP(flagEnable, "e", false, strings.Title(flagEnable))
 	//lint:ignore SA1019 as Title is safe on ascii
@@ -76,10 +77,29 @@ func runCharger(cmd *cobra.Command, args []string) {
 				if err := vv.MaxCurrentMillis(current); err != nil {
 					log.ERROR.Println("set current:", err)
 				}
-			} else {
-				if err := v.MaxCurrent(int64(current)); err != nil {
+			} else if vv, ok := api.Cap[api.CurrentController](v); ok {
+				if err := vv.MaxCurrent(int64(current)); err != nil {
 					log.ERROR.Println("set current:", err)
 				}
+			} else {
+				log.ERROR.Println("set current: not supported")
+			}
+		}
+
+		if flag := cmd.Flag(flagPower); flag.Changed {
+			flagUsed = true
+
+			power, err := strconv.ParseFloat(flag.Value.String(), 64)
+			if err != nil {
+				log.ERROR.Fatalln(err)
+			}
+
+			if vv, ok := api.Cap[api.PowerController](v); ok {
+				if err := vv.SetPower(power); err != nil {
+					log.ERROR.Println("set power:", err)
+				}
+			} else {
+				log.ERROR.Println("set power: not supported")
 			}
 		}
 
