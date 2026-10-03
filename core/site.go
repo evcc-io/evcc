@@ -1170,7 +1170,7 @@ func (site *Site) sitePower(state siteState, totalChargePower, flexiblePower flo
 		} else {
 			// if battery is above bufferSoc allow using it for charging
 			batteryBuffered = bufferSoc > 0 && state.battery.Soc > bufferSoc
-			batteryStart = bufferStartSoc > 0 && state.battery.Soc >= bufferStartSoc
+			batteryStart = batteryBuffered && bufferStartSoc > 0 && state.battery.Soc >= bufferStartSoc
 		}
 	}
 
