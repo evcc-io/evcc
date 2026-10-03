@@ -33,7 +33,7 @@ jobs:
   call-build-workflow:
     needs:
       - guard
-    uses: evcc-io/evcc/.github/workflows/default.yml@master
+    uses: ./.github/workflows/default.yml
     permissions:
       contents: read
       actions: write

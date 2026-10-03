@@ -36,7 +36,7 @@ jobs:
       needs.check_date.outputs.should_run != 'false'
       && startsWith(github.ref, 'refs/heads/master')
       && ! contains(github.head_ref, 'refs/heads/chore/')
-    uses: evcc-io/evcc/.github/workflows/default.yml@master
+    uses: ./.github/workflows/default.yml
     permissions:
       contents: read
       actions: write
