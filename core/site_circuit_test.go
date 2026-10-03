@@ -1,6 +1,7 @@
 package core
 
 import (
+	"math"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
@@ -47,11 +48,16 @@ func TestDimming(t *testing.T) {
 		if tc.want != nil {
 			dimmer.EXPECT().Dimmed().Return(tc.has, nil)
 			if tc.has || *tc.want > 0 {
-				dimmer.EXPECT().Dim(*tc.want).Return(nil)
+				// 0 from the HEMS releases the device
+				limit := *tc.want
+				if limit == 0 {
+					limit = math.Inf(1)
+				}
+				dimmer.EXPECT().Dim(limit).Return(nil)
 			}
 
-			s.dimLimit = nil
-			require.NoError(t, s.dimMeters(*tc.want))
+			s.dimLimits = nil
+			require.NoError(t, s.dimDevices(*tc.want))
 		}
 
 		if !ctrl.Satisfied() {

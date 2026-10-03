@@ -5,10 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
 	eebusapi "github.com/enbility/eebus-go/api"
+	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/enbility/spine-go/model"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -19,6 +21,14 @@ func WrapError(err error) error {
 		return api.ErrNotAvailable
 	}
 	return err
+}
+
+// LoadLimit converts an api.Dimmer limit (0 = off, +Inf = release) into an LPC load limit
+func LoadLimit(limit float64) ucapi.LoadLimit {
+	if math.IsInf(limit, 1) {
+		return ucapi.LoadLimit{Value: 0, IsActive: false}
+	}
+	return ucapi.LoadLimit{Value: limit, IsActive: true}
 }
 
 // WriteTimeout bounds how long an awaited eebus write waits for its result.

@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"math"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/spf13/cobra"
 )
@@ -42,8 +44,14 @@ func handleDimFlag(cmd *cobra.Command, v any) bool {
 		return true
 	}
 
+	// negative releases the limit
+	limit := float64(val)
+	if val < 0 {
+		limit = math.Inf(1)
+	}
+
 	if vv, ok := api.Cap[api.Dimmer](v); ok {
-		if err := vv.Dim(float64(val)); err != nil {
+		if err := vv.Dim(limit); err != nil {
 			log.ERROR.Println("dim:", err)
 		}
 	} else {

@@ -28,7 +28,6 @@ import (
 	"github.com/evcc-io/evcc/core/vehicle"
 	"github.com/evcc-io/evcc/db"
 	"github.com/evcc-io/evcc/db/settings"
-	"github.com/evcc-io/evcc/hems/hems"
 	"github.com/evcc-io/evcc/messenger"
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
@@ -47,7 +46,7 @@ const standbyPower = 10 // consider less than 10W as charger in standby
 // updater abstracts the Loadpoint implementation for testing
 type updater interface {
 	loadpoint.API
-	Update(sitePower, batteryPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64, dimLimit *float64)
+	Update(sitePower, batteryPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effectivePrice, effectiveCo2 *float64, dimmed *bool)
 }
 
 var _ site.API = (*Site)(nil)
@@ -80,8 +79,9 @@ type Site struct {
 	curtailers     []config.Device[api.Curtailer]
 
 	// last applied HEMS state, nil until applied or after a failed attempt
-	dimLimit       *float64
+	dimLimits      []float64
 	curtailPercent *int
+	dimmed         map[loadpoint.API]bool // §14a state per dimmable loadpoint, nil until the HEMS made a statement
 
 	// battery settings
 	prioritySoc               float64  // prefer battery up to this Soc
@@ -1355,7 +1355,7 @@ func (site *Site) updatePower(lp updater, state siteState, totalChargePower floa
 		lp.Update(
 			sitePower, state.battery.Power, consumption, feedin, res.batteryBuffered, res.batteryStart,
 			greenShareLoadpoints, site.effectivePrice(greenShareLoadpoints), site.effectiveCo2(greenShareLoadpoints),
-			hems.DimLimit(site.hems),
+			site.loadpointDimmed(lp),
 		)
 	}
 

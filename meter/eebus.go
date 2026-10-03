@@ -39,7 +39,7 @@ type EEBus struct {
 	egLpcEntity spineapi.EntityRemoteInterface
 	egLppEntity spineapi.EntityRemoteInterface
 
-	dimLimit       float64 // last limits written, re-stated on reconnect
+	dimLimit       *float64 // last limit written, re-stated on reconnect; nil until written
 	curtailPercent int
 }
 
@@ -205,7 +205,10 @@ func (c *EEBus) lastDimLimit() float64 {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	return c.dimLimit
+	if c.dimLimit == nil {
+		return math.Inf(1)
+	}
+	return *c.dimLimit
 }
 
 func (c *EEBus) lastCurtailPercent() int {
@@ -279,7 +282,7 @@ func (c *EEBus) dimmed() (bool, error) {
 	return limit.IsActive, nil
 }
 
-// dim writes the consumption power limit, releasing it when limit is 0
+// dim writes the consumption power limit, releasing it when limit is +Inf
 func (c *EEBus) dim(limit float64) error {
 	c.mu.Lock()
 	entity := c.egLpcEntity
@@ -290,13 +293,13 @@ func (c *EEBus) dim(limit float64) error {
 	}
 
 	if err := eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
-		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: limit, IsActive: limit > 0}, cb)
+		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, eebus.LoadLimit(limit), cb)
 	}); err != nil {
 		return err
 	}
 
 	c.mu.Lock()
-	c.dimLimit = limit
+	c.dimLimit = &limit
 	c.mu.Unlock()
 
 	return nil

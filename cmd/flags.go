@@ -76,7 +76,7 @@ const (
 	flagCurtailDescription = "Curtail feed-in to percent (0-100, only available if supported by device)"
 
 	flagDim            = "dim"
-	flagDimDescription = "Dim to the given power in W (0 to release, only available if supported by device)"
+	flagDimDescription = "Dim to the given power in W (0 = off, negative to release, only available if supported by device)"
 
 	flagWakeup            = "wakeup"
 	flagWakeupDescription = "Wake up"

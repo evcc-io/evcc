@@ -4,6 +4,7 @@ package meter
 // Grid meter = EG (Dim/SetCurtailPercent); Controllable System is the HEMS/charger, not the meter.
 
 import (
+	"math"
 	"testing"
 	"time"
 
@@ -76,16 +77,18 @@ func TestLPC_EGMessages_ConsumptionLimit(t *testing.T) {
 	for _, tc := range []struct {
 		name   string
 		limit  float64
+		value  float64
 		active bool
 	}{
-		{"activate", 4200, true},
-		{"deactivate", 0, false},
+		{"activate", 4200, 4200, true},
+		{"off", 0, 0, true},
+		{"deactivate", math.Inf(1), 0, false},
 	} {
 		t.Run("ATC_COM_PT_EGMessages_001_"+tc.name, func(t *testing.T) {
 			c, lpc, _, entity := newEGMeter(t)
 			lpc.EXPECT().IsScenarioAvailableAtEntity(entity, eebus.LPCLimit).Return(true)
 			lpc.EXPECT().
-				WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: tc.limit, IsActive: tc.active}, mock.Anything).
+				WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: tc.value, IsActive: tc.active}, mock.Anything).
 				Run(ackWrite).
 				Return(new(model.MsgCounterType), nil)
 

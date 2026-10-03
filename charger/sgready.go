@@ -19,6 +19,7 @@ package charger
 
 import (
 	"context"
+	"math"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
@@ -191,7 +192,7 @@ func (wb *SgReady) Dimmed() (bool, error) {
 // Dim implements the api.Dimmer interface
 func (wb *SgReady) Dim(limit float64) error {
 	mode := Normal
-	if limit > 0 {
+	if !math.IsInf(limit, 1) {
 		mode = Dim
 	}
 

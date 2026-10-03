@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"math"
 	"testing"
 
 	"github.com/evcc-io/evcc/api"
@@ -145,7 +146,7 @@ func (m *dimmableMeter) Dim(limit float64) error {
 	if m.dimErr != nil {
 		return m.dimErr
 	}
-	m.dimmed = limit > 0
+	m.dimmed = !math.IsInf(limit, 1)
 	return nil
 }
 
@@ -156,44 +157,93 @@ func dimSite(m api.Meter) *Site {
 	}
 }
 
-func TestDimMetersCache(t *testing.T) {
+func TestDimDevicesCache(t *testing.T) {
 	m := &dimmableMeter{}
 	site := dimSite(m)
+	release := math.Inf(1)
 
-	require.NoError(t, site.dimMeters(4200))
+	require.NoError(t, site.dimDevices(4200))
 	assert.Equal(t, []float64{4200}, m.dimCalls)
 	assert.Equal(t, 1, m.gets)
 
 	for range 3 {
-		require.NoError(t, site.dimMeters(4200))
+		require.NoError(t, site.dimDevices(4200))
 	}
 	assert.Equal(t, []float64{4200}, m.dimCalls)
 	assert.Equal(t, 1, m.gets)
 
 	// changed limit is written
-	require.NoError(t, site.dimMeters(3000))
+	require.NoError(t, site.dimDevices(3000))
 	assert.Equal(t, []float64{4200, 3000}, m.dimCalls)
 
-	require.NoError(t, site.dimMeters(0))
-	assert.Equal(t, []float64{4200, 3000, 0}, m.dimCalls)
+	// 0 from the HEMS releases the device
+	require.NoError(t, site.dimDevices(0))
+	assert.Equal(t, []float64{4200, 3000, release}, m.dimCalls)
 
 	// failed write is retried
 	m.dimErr = errors.New("nope")
-	require.Error(t, site.dimMeters(4200))
-	require.Error(t, site.dimMeters(4200))
-	assert.Equal(t, []float64{4200, 3000, 0, 4200, 4200}, m.dimCalls)
+	require.Error(t, site.dimDevices(4200))
+	require.Error(t, site.dimDevices(4200))
+	assert.Equal(t, []float64{4200, 3000, release, 4200, 4200}, m.dimCalls)
 }
 
 // A device that cannot report its state is written once, not on every cycle.
-func TestDimMetersNotAvailable(t *testing.T) {
+func TestDimDevicesNotAvailable(t *testing.T) {
 	m := &dimmableMeter{getErr: api.ErrNotAvailable}
 	site := dimSite(m)
 
 	for range 3 {
-		require.NoError(t, site.dimMeters(4200))
+		require.NoError(t, site.dimDevices(4200))
 	}
 	assert.Equal(t, []float64{4200}, m.dimCalls)
 
-	require.NoError(t, site.dimMeters(0))
-	assert.Equal(t, []float64{4200, 0}, m.dimCalls)
+	require.NoError(t, site.dimDevices(0))
+	assert.Equal(t, []float64{4200, math.Inf(1)}, m.dimCalls)
+}
+
+// The budget is split across devices instead of handed to each one in full.
+func TestDimDevicesSplitBudget(t *testing.T) {
+	m1, m2 := &dimmableMeter{}, &dimmableMeter{}
+	site := &Site{
+		log:       util.NewLogger("foo"),
+		auxMeters: []config.Device[api.Meter]{config.NewStaticDevice[api.Meter](config.Named{}, m1)},
+		extMeters: []config.Device[api.Meter]{config.NewStaticDevice[api.Meter](config.Named{}, m2)},
+	}
+
+	require.NoError(t, site.dimDevices(8400))
+	assert.Equal(t, []float64{4200}, m1.dimCalls)
+	assert.Equal(t, []float64{4200}, m2.dimCalls)
+}
+
+func TestAllocateDim(t *testing.T) {
+	inf := math.Inf(1)
+
+	for _, tc := range []struct {
+		name   string
+		budget float64
+		devs   []dimmable
+		want   []float64
+	}{
+		{"equal share", 9000, []dimmable{{maxPower: inf}, {maxPower: inf}, {maxPower: inf}}, []float64{3000, 3000, 3000}},
+		{"unused share flows to larger demand", 9000, []dimmable{{maxPower: 1000}, {maxPower: inf}}, []float64{1000, 8000}},
+		{"priority first", 11500, []dimmable{
+			{priority: 2, minPower: 1000, maxPower: 3000},
+			{priority: 1, minPower: 3500, maxPower: 4000},
+			{priority: 0, minPower: 3000, maxPower: 5000},
+		}, []float64{3000, 4000, 4500}},
+		{"below min switches off", 11500, []dimmable{
+			{priority: 2, minPower: 3000, maxPower: 3000},
+			{priority: 1, minPower: 4000, maxPower: 4000},
+			{priority: 0, minPower: 5000, maxPower: 5000},
+		}, []float64{3000, 4000, 0}},
+		{"budget sufficient", 11500, []dimmable{
+			{priority: 2, minPower: 1000, maxPower: 3000},
+			{priority: 1, minPower: 3500, maxPower: 3000},
+			{priority: 0, minPower: 3000, maxPower: 5000},
+		}, []float64{3000, 0, 5000}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, allocateDim(tc.budget, tc.devs))
+		})
+	}
 }

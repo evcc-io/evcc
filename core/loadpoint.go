@@ -134,7 +134,7 @@ type Loadpoint struct {
 	phases              int              // Charger enabled phases, guarded by mutex
 	measuredPhases      int              // Charger physically measured phases
 	offeredCurrent      float64          // Charger current limit
-	dimLimit            float64          // §14a limit last written to the charger
+	dimmed              bool             // §14a limit active on the charger, control paused
 	socUpdated          time.Time        // Soc updated timestamp (poll: connected)
 	vehicleDetect       time.Time        // Vehicle connected timestamp
 	chargerSwitched     time.Time        // Charger enabled/disabled timestamp
@@ -2272,7 +2272,7 @@ func (lp *Loadpoint) phaseSwitchCompleted() bool {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64, dimLimit *float64) {
+func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin api.Rates, batteryBuffered, batteryStart bool, greenShare float64, effPrice, effCo2 *float64, dimmed *bool) {
 	// hold battery boost when SOC drops below the limit: stop draining the battery, but
 	// keep the vehicle prioritised over recharging it (via sitePower priorityAdjustment)
 	// until the vehicle disconnects or the limit is relaxed (see SetBatteryBoostLimit).
@@ -2313,40 +2313,19 @@ func (lp *Loadpoint) Update(sitePower, batteryPower float64, consumption, feedin
 	lp.publishChargeProgress()
 	lp.PublishEffectiveValues()
 
-	// §14a
-	if dimmer, ok := api.Cap[api.Dimmer](lp.charger); ok {
-		dimmed, err := dimmer.Dimmed()
-		if err != nil {
-			if errors.Is(err, api.ErrNotAvailable) {
-				goto NO_DIM
-			}
-			lp.log.ERROR.Printf("dimmed: %v", err)
-			return
+	// §14a: the site writes the limit to the charger (see Site.dimDevices), the loadpoint only pauses control
+	if dimmed != nil {
+		if *dimmed != lp.dimmed {
+			lp.dimmed = *dimmed
+			lp.publish(keys.Dimmed, *dimmed)
+			lp.log.INFO.Printf("§14a dim: %t", *dimmed)
 		}
 
-		if dimLimit != nil {
-			limit := *dimLimit
-			dim := limit > 0
-
-			// re-state an active limit when its value changed
-			if dim != dimmed || dim && limit != lp.dimLimit {
-				if err := dimmer.Dim(limit); err != nil {
-					lp.log.ERROR.Printf("dim: %v", err)
-					return
-				}
-
-				lp.dimLimit = limit
-				lp.publish(keys.Dimmed, dim)
-				lp.log.INFO.Printf("§14a dim: %t (%.0fW)", dim, limit)
-			}
-
-			if dim {
-				return
-			}
+		if *dimmed {
+			return
 		}
 	}
 
-NO_DIM:
 	// read and publish status
 	welcomeCharge, err := lp.updateChargerStatus()
 	if err != nil {
