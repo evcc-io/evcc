@@ -1,6 +1,6 @@
 {
   "authProviders": {
-    "authCode": "Autorisierungscode",
+    "authCode": "Authentifizierungscode",
     "authCodeHelp": "Kopiere diesen Code und verwende ihn im nächsten Schritt. Er ist gültig für {duration}.",
     "authorizationFailed": "Autorisierung fehlgeschlagen",
     "authorizationRequired": "Autorisierung erforderlich",
