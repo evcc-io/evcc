@@ -9,6 +9,7 @@ requirements:
   evcc: ["skiptest"]
 countries: ["DE"]
 group: price
+usages: ["grid"]
 params:
   - name: email
     type: string

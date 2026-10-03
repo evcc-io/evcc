@@ -103,7 +103,11 @@ func TestClass(t *testing.T, class Class, instantiate func(t *testing.T, values 
 			t.Error("authorization:", err)
 		}
 
-		usages := tmpl.Usages()
+		// meters render per usage param choice
+		var usages []string
+		if _, p := tmpl.ParamByName(ParamUsage); p.Name != "" {
+			usages = p.Choice
+		}
 		if len(usages) == 0 {
 			t.Run(tmpl.Template, func(t *testing.T) {
 				t.Parallel()

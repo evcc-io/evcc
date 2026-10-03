@@ -101,7 +101,7 @@ func fromBytes(b []byte) (Template, error) {
 		return Template{}, err
 	}
 
-	for _, f := range []func() error{tmpl.ResolvePresets, tmpl.ResolveGroup, tmpl.UpdateParamsWithDefaults, tmpl.UpdateModbusParamsWithDefaults, tmpl.SortRequiredParamsFirst, tmpl.Validate} {
+	for _, f := range []func() error{tmpl.ResolvePresets, tmpl.ResolveGroup, tmpl.UpdateParamsWithDefaults, tmpl.UpdateModbusParamsWithDefaults, tmpl.SortRequiredParamsFirst, tmpl.ResolveUsages, tmpl.Validate} {
 		if err := f(); err != nil {
 			return tmpl, fmt.Errorf("template '%s': %w", tmpl.Template, err)
 		}

@@ -8,6 +8,7 @@ requirements:
     de: "Erzeuge einen 'Production Client' im Ostrom-Entwicklerportal: [developer.ostrom-api.io](https://developer.ostrom-api.io/)"
   evcc: ["skiptest"]
 group: price
+usages: ["grid"]
 countries: ["DE"]
 params:
   - name: clientid
