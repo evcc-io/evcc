@@ -10,8 +10,10 @@ name: Claude Issue Agent (reusable)
 #   fix     — on-demand /fix comment: investigate, commit a fix that the
 #             workflow turns into a PR, comment, then resolve the invoking
 #             comment. No labels.
-# The agent never pushes: the "Open pull request" step pushes its commit to a
-# workflow-chosen branch and opens the PR, so issue text cannot steer the token.
+# The agent never pushes and its job holds a read-only contents token: the
+# commit leaves as a patch artifact and the open-pr job pushes it to a
+# workflow-chosen branch from a fresh checkout, so neither issue text nor a
+# hook planted in the agent's checkout can steer a write token.
 on:
   workflow_call:
     inputs:
@@ -37,9 +39,18 @@ jobs:
   run:
     name: Issue agent
     runs-on: ubuntu-latest
-    # No permissions block: inherit the caller's grant (triage/fix=write so the
-    # workflow can push the fix branch and open the PR, analyze=read). A reusable
-    # job can only reduce, never elevate.
+    # Reduces the caller's grant: the agent runs with Edit/Write on untrusted
+    # issue text, so anything it plants in the checkout (.git/hooks, .git/config)
+    # executes with this token on the next git command. Read-only contents keeps
+    # that from pushing; the open-pr job holds the write token.
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+      id-token: write
+      actions: read
+    outputs:
+      fix: ${{ steps.fix.outputs.found }}
     steps:
       - name: React to invoking comment
         if: inputs.comment_id != ''
@@ -75,8 +86,8 @@ jobs:
           allowed_non_write_users: '*'
           additional_permissions: |
             actions: read
-          # No mode may push or open a PR: the agent only commits, the "Open pull
-          # request" step below pushes to a workflow-chosen branch. Triage and fix
+          # No mode may push or open a PR: the agent only commits, the open-pr
+          # job below pushes to a workflow-chosen branch. Triage and fix
           # get Edit/Write + git add/commit/diff/status for that, analyze reads
           # only. analyze/fix read their invoking comment with one exact gh api
           # command (no wildcard, so the token cannot be used for arbitrary API
@@ -293,14 +304,66 @@ jobs:
             Follow the repository's AGENTS.md conventions for commit/PR style. Do not
             touch unrelated files.
 
-      # The agent only commits. Pushing and opening the PR happen here so branch
-      # name, base and repository are fixed by the workflow and no issue text can
-      # steer the token: no push elsewhere, no force, no ref deletion, no workflow
-      # edits. A GITHUB_TOKEN push raises no pull_request run, so the branch sees
-      # no CI secrets until a human touches it. A second run for the same issue
-      # fails on the existing branch, its earlier PR is still open then.
-      - name: Open pull request
+      # The agent's commit leaves this job as a patch: git runs here in the
+      # checkout the agent touched, but with a read-only contents token, so a
+      # planted hook gains nothing the agent could not already do.
+      - name: Export fix
+        id: fix
         if: inputs.mode != 'analyze'
+        env:
+          BASE: ${{ github.sha }}
+        run: |
+          if [ "$(git rev-parse HEAD)" = "$BASE" ]; then
+            echo "no fix committed"
+            exit 0
+          fi
+          git format-patch --stdout "$BASE" > "$RUNNER_TEMP/fix.patch"
+          echo "found=true" >> "$GITHUB_OUTPUT"
+
+      - name: Upload fix
+        if: steps.fix.outputs.found == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: fix-${{ inputs.issue_number }}
+          path: ${{ runner.temp }}/fix.patch
+
+      # the agent posts its result as a comment, so the command has been answered
+      # whatever that result was. only a failed run leaves it open, there is no
+      # answer then
+      - name: Resolve invoking comment
+        if: inputs.comment_node_id != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_ID: ${{ inputs.comment_node_id }}
+        run: |
+          gh api graphql -f id="$NODE_ID" -f query='
+            mutation($id:ID!){minimizeComment(input:{subjectId:$id,classifier:RESOLVED}){minimizedComment{isMinimized}}}'
+
+  # Fresh checkout with the write token: nothing the agent touched runs here.
+  # Branch name, base and repository are fixed by the workflow, so no issue text
+  # can steer the push: no push elsewhere, no force, no ref deletion, no workflow
+  # edits. A GITHUB_TOKEN push raises no pull_request run, so the branch sees no
+  # CI secrets until a human touches it. A second run for the same issue fails
+  # on the existing branch, its earlier PR is still open then.
+  open-pr:
+    name: Open pull request
+    needs: run
+    if: needs.run.outputs.fix == 'true'
+    runs-on: ubuntu-latest
+    # no permissions block: inherits the caller's contents + pull-requests write.
+    # Declaring them here would fail analyze callers that only grant read, even
+    # though this job never runs for them.
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Download fix
+        uses: actions/download-artifact@v8
+        with:
+          name: fix-${{ inputs.issue_number }}
+          path: ${{ runner.temp }}
+
+      - name: Push branch and open pull request
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BASE: ${{ github.sha }}
@@ -308,10 +371,9 @@ jobs:
           ISSUE: ${{ inputs.issue_number }}
           MODE: ${{ inputs.mode }}
         run: |
-          if [ "$(git rev-parse HEAD)" = "$BASE" ]; then
-            echo "no fix committed"
-            exit 0
-          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git am "$RUNNER_TEMP/fix.patch"
           if git diff --name-only "$BASE" HEAD | grep -q '^\.github/'; then
             echo "::error::agent changed workflow files"
             exit 1
@@ -328,15 +390,3 @@ jobs:
             args+=(--label bug)
           fi
           gh pr create "${args[@]}"
-
-      # the agent posts its result as a comment, so the command has been answered
-      # whatever that result was. only a failed run leaves it open, there is no
-      # answer then
-      - name: Resolve invoking comment
-        if: inputs.comment_node_id != ''
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_ID: ${{ inputs.comment_node_id }}
-        run: |
-          gh api graphql -f id="$NODE_ID" -f query='
-            mutation($id:ID!){minimizeComment(input:{subjectId:$id,classifier:RESOLVED}){minimizedComment{isMinimized}}}'
