@@ -143,6 +143,7 @@ export default defineComponent({
 		integratedDevice: Boolean,
 		limitEnergy: Number,
 		mode: String as PropType<CHARGE_MODE>,
+		optimizerControlled: Boolean,
 		chargerStatusReason: String,
 		phaseAction: String,
 		phaseRemainingInterpolated: Number,

@@ -634,44 +634,60 @@ func TestBlendScale(t *testing.T) {
 func TestCurrentSlotSuggestion(t *testing.T) {
 	// slotHours 1 makes the per-slot Wh values map 1:1 to W
 	for _, tc := range []struct {
-		name              string
-		typ               batteryType
-		charge, disch     float32
-		importing, export bool
-		want              string
+		name             string
+		typ              batteryType
+		charge, disch    float32
+		gridImp, gridExp float32
+		want             string
 	}{
-		{"battery grid charge", batteryTypeBattery, 3000, 0, true, false, "charge"},
-		{"battery pv charge (no import)", batteryTypeBattery, 3000, 0, false, true, "normal"},
-		{"battery hold (idle while importing)", batteryTypeBattery, 0, 0, true, false, "hold"},
-		{"battery holdcharge (idle while exporting)", batteryTypeBattery, 0, 0, false, true, "holdcharge"},
-		{"battery discharge (self-consumption while importing)", batteryTypeBattery, 0, 2000, true, false, "normal"},
-		{"battery grid discharge (discharge while exporting)", batteryTypeBattery, 0, 2000, false, true, "discharge"},
-		{"battery idle balanced", batteryTypeBattery, 0, 0, false, false, "normal"},
-		{"loadpoint charge", batteryTypeLoadpoint, 11000, 0, false, false, "charge"},
-		{"loadpoint stop", batteryTypeLoadpoint, 0, 0, false, false, "stop"},
-		{"vehicle below threshold is stop", batteryTypeVehicle, 40, 0, false, false, "stop"},
+		{"battery grid charge", batteryTypeBattery, 3000, 0, 1000, 0, "charge"},
+		{"battery pv charge (no import)", batteryTypeBattery, 3000, 0, 0, 1000, "normal"},
+		{"battery hold (idle while importing)", batteryTypeBattery, 0, 0, 1000, 0, "hold"},
+		{"battery holdcharge (idle while exporting)", batteryTypeBattery, 0, 0, 0, 1000, "holdcharge"},
+		{"battery discharge (self-consumption while importing)", batteryTypeBattery, 0, 2000, 1000, 0, "normal"},
+		{"battery grid discharge (discharge while exporting)", batteryTypeBattery, 0, 2000, 0, 1000, "discharge"},
+		{"battery idle balanced", batteryTypeBattery, 0, 0, 0, 0, "normal"},
+		{"loadpoint charge", batteryTypeLoadpoint, 11000, 0, 0, 0, "charge"},
+		{"loadpoint stop", batteryTypeLoadpoint, 0, 0, 0, 0, "stop"},
+		{"vehicle below threshold is stop", batteryTypeVehicle, 40, 0, 0, 0, "stop"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			res := optimizer.BatteryResult{
 				ChargingPower:    []float32{tc.charge},
 				DischargingPower: []float32{tc.disch},
 			}
-			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, res, 0, tc.importing, tc.export, 1)
+			s := currentSlotSuggestion(batteryDetail{Type: tc.typ}, optimizer.BatteryConfig{}, res, 0, tc.gridImp, tc.gridExp, 1)
 			assert.Equal(t, tc.want, s.Action)
 			assert.InDelta(t, tc.charge, s.Charge, 1e-3)
 			assert.InDelta(t, tc.disch, s.Discharge, 1e-3)
+			assert.InDelta(t, tc.gridImp-tc.gridExp, s.Grid, 1e-3)
 		})
 	}
 
 	// no result yields an empty suggestion
-	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryResult{}, 0, true, false, 1))
+	assert.Empty(t, currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryConfig{}, optimizer.BatteryResult{}, 0, 1000, 0, 1))
 
 	res := optimizer.BatteryResult{
 		ChargingPower:    []float32{100, 0},
 		DischargingPower: []float32{0, 0},
 	}
-	s := currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, res, 1, true, false, 1)
+	s := currentSlotSuggestion(batteryDetail{Type: batteryTypeBattery}, optimizer.BatteryConfig{}, res, 1, 1000, 0, 1)
 	assert.Equal(t, api.BatteryHold.String(), s.Action)
+
+	// an idle battery at its soc bound withholds nothing: normal instead of hold/holdcharge
+	battery := batteryDetail{Type: batteryTypeBattery}
+	req := optimizer.BatteryConfig{SMin: 1000, SMax: 9000}
+	res = optimizer.BatteryResult{
+		ChargingPower:    []float32{0},
+		DischargingPower: []float32{0},
+		StateOfCharge:    []float32{1000},
+	}
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 1000, 0, 1).Action, "empty battery idle while importing")
+	res.StateOfCharge[0] = 9000
+	assert.Equal(t, api.BatteryNormal.String(), currentSlotSuggestion(battery, req, res, 0, 0, 1000, 1).Action, "full battery idle while exporting")
+	res.StateOfCharge[0] = 5000
+	assert.Equal(t, api.BatteryHold.String(), currentSlotSuggestion(battery, req, res, 0, 1000, 0, 1).Action, "idle within bounds is withheld")
+	assert.Equal(t, api.BatteryHoldCharge.String(), currentSlotSuggestion(battery, req, res, 0, 0, 1000, 1).Action, "idle within bounds is withheld")
 }
 
 // TestSuggestionActionable ensures the actionable flag follows the current state

@@ -62,6 +62,7 @@ import formatter from "@/mixins/formatter";
 import minuteTicker from "@/mixins/minuteTicker";
 import { defineComponent, type PropType } from "vue";
 import {
+	CHARGE_MODE,
 	SMART_COST_TYPE,
 	type CURRENCY,
 	type LoadpointSuggestion,
@@ -71,6 +72,7 @@ import {
 
 import ClimaterIcon from "../MaterialIcon/Climater.vue";
 import DynamicPriceIcon from "../MaterialIcon/DynamicPrice.vue";
+import OptimizerAutoIcon from "../MaterialIcon/OptimizerAuto.vue";
 import OptimizerChargeIcon from "../MaterialIcon/OptimizerCharge.vue";
 import OptimizerPauseIcon from "../MaterialIcon/OptimizerPause.vue";
 import PlanEndIcon from "../MaterialIcon/PlanEnd.vue";
@@ -116,6 +118,8 @@ export default defineComponent({
 		continuous: Boolean,
 		minSoc: { type: Number, default: 0 },
 		minSocNotReached: Boolean,
+		mode: String as PropType<CHARGE_MODE>,
+		optimizerControlled: Boolean,
 		phaseAction: { type: String, default: "" },
 		phaseRemainingInterpolated: Number,
 		planActive: Boolean,
@@ -177,7 +181,10 @@ export default defineComponent({
 			return this.effectivePlanSoc > this.vehicleLimitSoc;
 		},
 		showSuggestions(): boolean {
-			return this.connected && Boolean(this.suggestion?.actionable);
+			return this.connected && Boolean(this.suggestion?.actionable) && !this.optimizerGating;
+		},
+		optimizerGating(): boolean {
+			return this.optimizerControlled && this.mode === CHARGE_MODE.SMART;
 		},
 		smartCostPrice() {
 			return this.smartCostType !== SMART_COST_TYPE.CO2;
@@ -343,7 +350,7 @@ export default defineComponent({
 				},
 				{
 					id: "smartCost",
-					visible: this.smartCostLimit !== null,
+					visible: this.smartCostLimit !== null && !this.optimizerControlled,
 					tooltipContent: this.getSmartCostTooltip(),
 					iconComponent: this.smartCostPrice ? DynamicPriceIcon : "shopicon-regular-eco1",
 					itemClass: this.smartCostDisabled
@@ -382,6 +389,15 @@ export default defineComponent({
 							? OptimizerChargeIcon
 							: OptimizerPauseIcon,
 					testId: "vehicle-status-suggestion",
+					clickable: true,
+					clickHandler: () => this.$router.push("/optimize"),
+				},
+				{
+					id: "optimizerControlled",
+					visible: this.connected && this.optimizerGating,
+					tooltipContent: this.translateStatus("optimizerControlledTooltip"),
+					iconComponent: OptimizerAutoIcon,
+					testId: "vehicle-status-optimizer-controlled",
 					clickable: true,
 					clickHandler: () => this.$router.push("/optimize"),
 				},

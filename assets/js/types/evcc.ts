@@ -332,6 +332,8 @@ export interface State {
   ocppforwarder?: OcppForwarder;
   /** Battery optimizer is enabled. */
   optimizer?: boolean;
+  /** What the optimizer controls instead of only advising: nothing, the home battery, or battery and loadpoints. */
+  optimizerAutomatic?: OPTIMIZER_AUTOMATIC;
   /** Selected battery optimizer charging strategy. */
   optimizerChargingStrategy?: string;
   /** Available battery optimizer charging strategies. */
@@ -696,6 +698,8 @@ export interface Loadpoint {
   mode: CHARGE_MODE;
   /** Current offered to the vehicle in A. */
   offeredCurrent: number;
+  /** Optimizer decides start/stop for this loadpoint, replacing the price limits. */
+  optimizerControlled: boolean;
   /** Pending phase switching action in solar mode. */
   phaseAction: PHASE_ACTION;
   /** Remaining time until the pending phase switching action executes, in seconds. */
@@ -878,6 +882,12 @@ export enum CHARGE_MODE {
   OFF = "off",
   SMART = "smart",
   NOW = "now",
+}
+
+export enum OPTIMIZER_AUTOMATIC {
+  OFF = "off",
+  BATTERY = "battery",
+  FULL = "full",
 }
 
 /** Always charge state. Smart mode charges continuously at least at minimum power. */
@@ -1205,6 +1215,8 @@ export interface BatterySuggestion {
   charge?: number;
   /** Recommended discharge power in W. */
   discharge?: number;
+  /** Planned site grid flow of the slot in W, positive means import. */
+  grid?: number;
   /** Suggestion differs from the current operating mode. */
   actionable?: boolean;
 }
@@ -1217,6 +1229,8 @@ export interface LoadpointSuggestion {
   charge?: number;
   /** Recommended discharge power in W. */
   discharge?: number;
+  /** Planned site grid flow of the slot in W, positive means import. */
+  grid?: number;
   /** Suggestion differs from the current operating mode. */
   actionable?: boolean;
 }
