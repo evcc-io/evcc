@@ -71,28 +71,21 @@ func km(value float64, unit string) (float64, error) {
 	return 0, fmt.Errorf("invalid distance unit: %s", unit)
 }
 
-// Range returns the electric range in km, preferring the EV entry
+// Range returns the electric range in km from the EV distance entry
 func (p Powertrain) Range() (int64, error) {
-	idx := -1
-	for i, dte := range p.DistanceToEmpties {
-		if dte.Type == "EV" {
-			idx = i
-			break
+	for _, dte := range p.DistanceToEmpties {
+		if dte.Type != "EV" || dte.Value == "invalid" {
+			continue
 		}
-		if idx < 0 && dte.Value != "invalid" {
-			idx = i
+
+		f, err := strconv.ParseFloat(dte.Value, 64)
+		if err != nil {
+			return 0, fmt.Errorf("invalid range %q: %w", dte.Value, api.ErrNotAvailable)
 		}
-	}
-	if idx < 0 {
-		return 0, api.ErrNotAvailable
+
+		f, err = km(f, dte.Unit)
+		return int64(f), err
 	}
 
-	dte := p.DistanceToEmpties[idx]
-	f, err := strconv.ParseFloat(dte.Value, 64)
-	if err != nil {
-		return 0, fmt.Errorf("invalid range %q: %w", dte.Value, api.ErrNotAvailable)
-	}
-
-	f, err = km(f, dte.Unit)
-	return int64(f), err
+	return 0, api.ErrNotAvailable
 }
