@@ -30,7 +30,6 @@ func NewSgReadyRelayFromConfig(ctx context.Context, other map[string]any) (api.C
 		embed                   `mapstructure:",squash"`
 		Boost                   config.Typed
 		Dim                     *config.Typed
-		StandbyPower            float64
 		measurement.Temperature `mapstructure:",squash"`
 		measurement.Energy      `mapstructure:",squash"`
 	}{
@@ -38,7 +37,6 @@ func NewSgReadyRelayFromConfig(ctx context.Context, other map[string]any) (api.C
 			Icon_:     "heatpump",
 			Features_: []api.Feature{api.Continuous, api.Heating, api.IntegratedDevice},
 		},
-		StandbyPower: heatingStandbyPower,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -70,8 +68,6 @@ func NewSgReadyRelayFromConfig(ctx context.Context, other map[string]any) (api.C
 	implement.May(res, implement.Meter(powerG))
 	implement.May(res, implement.MeterEnergy(energyG))
 	implement.May(res, implement.MeterReturnEnergy(returnG))
-	res.powerG = powerG
-	res.standbyPower = cc.StandbyPower
 
 	tempG, limitTempG, err := cc.Temperature.Configure(ctx)
 	if err != nil {
