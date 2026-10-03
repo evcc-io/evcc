@@ -1,0 +1,33 @@
+template: feedin-de-2025
+products:
+  - description:
+      de: Einspeisevergütung ab 2025 (Deutschland)
+      en: Feed-in Tariff from 2025 (Germany)
+requirements:
+  description:
+    de: "Feste Einspeisevergütung für PV-Anlagen, die seit dem 25. Februar 2025 in Betrieb genommen wurden (Solarspitzengesetz). In Viertelstunden mit negativem Börsenstrompreis entfällt die Vergütung. Für Anlagen unter 100 kW gilt das erst ab dem Kalenderjahr nach Einbau eines intelligenten Messsystems. Börsenpreise von [Energy-Charts](https://energy-charts.info)."
+    en: "Fixed feed-in tariff for PV systems in Germany commissioned since 25 February 2025 (Solarspitzengesetz). No remuneration is paid during quarter hours with a negative exchange price. For systems below 100 kW this only applies from the calendar year after a smart meter has been installed. Exchange prices from [Energy-Charts](https://energy-charts.info)."
+  evcc: ["skiptest"]
+group: price
+countries: ["DE"]
+params:
+  - name: price
+    type: pricePerKWh
+    required: true
+    description:
+      en: Feed-in tariff
+      de: Einspeisevergütung
+render: |
+  type: custom
+  charges: {{ .price }}
+  formula: "payout := charges; if price < 0 { payout = 0.0 }; payout"
+  forecast:
+    source: http
+    uri: https://api.energy-charts.info/price?bzn=DE-LU&end={{ `{{ addDate now 0 0 1 | date "2006-01-02" }}` }}
+    cache: 1h
+    jq: |
+      [.unix_seconds, .price] | transpose | map({
+        "start": .[0] | todate,
+        "end":   .[0]+900 | todate,
+        "value": .[1]/1000
+      }) | tostring
