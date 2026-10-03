@@ -141,8 +141,8 @@ func TestSunspecFloatGetterNaN(t *testing.T) {
 	_, err = mb.floatGetter()
 	require.ErrorIs(t, err, api.ErrNotAvailable)
 
-	// nan option substitutes the sentinel, as the modbus *nan encodings do
-	mb.nan = new(float64)
+	// nan option reports the sentinel as 0, as the modbus *nan encodings do
+	mb.nan = true
 	res, err = mb.floatGetter()
 	require.NoError(t, err)
 	require.Equal(t, 0.0, res)

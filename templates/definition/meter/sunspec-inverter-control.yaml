@@ -21,12 +21,12 @@ render: |
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value: 160:3:DCW # mppt 3 (charge)
-      nan: 0
+      nan: true
       scale: -1
     - source: sunspec
       {{- include "modbus" . | indent 4 }}
       value: 160:4:DCW # mppt 4 (discharge)
-      nan: 0
+      nan: true
   energy:
     source: sunspec
     {{- include "modbus" . | indent 2 }}

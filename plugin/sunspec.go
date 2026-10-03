@@ -24,7 +24,7 @@ type ModbusSunspec struct {
 	op     modbus.SunSpecOperation
 	scale  float64
 	mask   uint64
-	nan    *float64
+	nan    bool
 }
 
 func init() {
@@ -38,7 +38,7 @@ func NewModbusSunspecFromConfig(ctx context.Context, other map[string]any) (Plug
 		Value           []string
 		Scale           float64
 		BitMask         string
-		Nan             *float64 // value reported for the not-implemented sentinel, like the modbus *nan encodings
+		Nan             bool // report the not-implemented sentinel as 0, like the modbus *nan encodings
 		ConnectDelay    time.Duration
 	}{
 		Scale: 1,
@@ -149,10 +149,10 @@ func (m *ModbusSunspec) floatGetter() (f float64, err error) {
 	)
 	if err != nil {
 		// not implemented sentinel: report missing so energy totals are not rebased,
-		// unless the template opted into a substitute (e.g. an unused mppt string)
+		// unless the template opted into zero (e.g. an unused mppt string)
 		if errors.Is(err, meters.ErrNaN) {
-			if m.nan != nil {
-				return *m.nan, nil
+			if m.nan {
+				return 0, nil
 			}
 			return 0, api.ErrNotAvailable
 		}

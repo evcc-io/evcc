@@ -21,11 +21,11 @@ render: |
       - source: sunspec
         {{- include "modbus" . | indent 6 }}
         value: 160:1:DCW # mppt 1
-        nan: 0
+        nan: true
       - source: sunspec
         {{- include "modbus" . | indent 6 }}
         value: 160:2:DCW # mppt 2
-        nan: 0
+        nan: true
   energy:
     source: calc
     add:
