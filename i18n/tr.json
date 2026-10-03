@@ -7,6 +7,18 @@
     "authorizationSuccessful": "Yetkilendirme Başarılı",
     "buttonConnect": "{provider}'a bağlan",
     "buttonDisconnect": "Bağlantıyı kes",
+    "challenge": {
+      "captcha": {
+        "label": "Resimde gösterilen karakterleri gir.",
+        "title": "Captcha"
+      },
+      "code": {
+        "label": "Kodu veya yönlendirildiğin sayfanın adresini yapıştır.",
+        "title": "Yetkilendirme kodu"
+      },
+      "openLogin": "Giriş sayfasını aç",
+      "submit": "Devam"
+    },
     "confirmLogout": "{title} bağlantısını kesmek istediğinden emin misin?",
     "connect": "bağlan",
     "disconnect": "bağlantıyı kes",
@@ -33,7 +45,7 @@
     },
     "combined": "Birleşik",
     "config": {
-      "buffer": "{soc} değerinin üzerindeki ev batarya enerjisi, doldurma noktalarını desteklemek için kullanılabilir ve güneş enerjisi modunda kapanmayı geciktirebilir. Güneş enerjisiyle doldurmayı otomatik olarak başlat {start}.",
+      "buffer": "{soc} üzerindeki ev bataryası enerjisi, doldurma noktalarını desteklemek için kullanılabilir ve akıllı modda kapanmayı geciktirebilir. Güneş enerjisiyle doldurmayı otomatik olarak başlat {start}.",
       "bufferNone": "Doldurma noktaları için ev bataryasından enerji kullanılmamaktadır. Desteği etkinleştirmek için {soc} değerinden daha düşük bir değer ayarla.",
       "bufferStart": {
         "above": "batarya doluluk seviyesi {soc} oranının üzerine çıktığında",
@@ -41,7 +53,14 @@
         "never": "sadece yeterli fazlalık olduğunda"
       },
       "bufferTitle": "Batarya doldurma tamponu olarak",
+      "discharge": "Hızlı doldurma modunda ve planlı doldurma esnasında ev bataryasının boşalmasını önle.",
       "gridDischarge": "Ev tipi bataryanın şebekeye deşarj olmasına izin verin.",
+      "gridDischargeConfirm": {
+        "country": "Yapılandırılan ülke: {country}.",
+        "description": "Bataryadan şebekeye elektrik aktarılabilmesi, bulunduğun ülkeye ve besleme sözleşmene bağlıdır. Batarya aynı zamanda şebekeden dolduruluyorsa, aktarılan elektrik artık tamamen güneş enerjisinden elde edilmiş sayılmaz. Birçok besleme tarifesi kapsamında bu durum, ücret hakkını kaybetmene neden olur veya yasaktır. Öncelikle besleme sözleşmeni ve elektrik şirketinin gerekliliklerini gözden geçir.",
+        "noCountry": "Hiçbir ülke ayarlanmamış. {link} altından ayarla.",
+        "title": "Bataryadan şebekeye elektrik aktarımı"
+      },
       "priority": "Ev bataryası {soc} seviyesinin altında olduğunda öncelikli olarak doldurulur. Ardından, doldurma noktalarına fazlalık aktarılır.",
       "priorityNone": "Güneş enerjisi fazlası doğrudan şarj noktalarına aktarılır. Ev bataryasına öncelik vermek için {soc} değerinin üzerinde bir ayar yapın.",
       "priorityTitle": "Fazla akım ilk nereye gitsin?"
@@ -63,6 +82,7 @@
   },
   "batterySettings": {
     "gridChargeTab": "Şebekeden doldurma",
+    "gridDischargeTab": "Şebekeye boşaltma",
     "modalTitle": "Ev Bataryası",
     "noBattery": "Batarya yapılandırılmamış.",
     "usageTab": "Batarya kullanımı"
@@ -142,8 +162,35 @@
         "switchsocket": "Kullanıcı tanımlı şalterli priz"
       }
     },
+    "circuit": {
+      "addMeter": "Özel elektrik sayacı ekle",
+      "custom": "Kullanıcı tanımlı devre",
+      "deleteChildrenFirst": "Bu devreyi silmek için önce alt devrelerini sil.",
+      "meterDedicated": "Özel sayaç",
+      "meterGrid": "Şebeke sayacı",
+      "meterHelp": "Bu devrenin toplam tüketimini ölçen sayaç.",
+      "meterLabel": "Elektrik sayacı",
+      "meterLabelAdd": "Devre Sayacı Ekle",
+      "meterLabelEdit": "Devre Sayacını Düzenle",
+      "meterNone": "Sayaç yok",
+      "meterSelectionHelpDedicatedMeter": "Aşağıdaki devreye mevcut bir sayacı ekle.",
+      "meterSelectionHelpGridMeter": "Tesisatındaki mevcut elektrik sayacını kullanır.",
+      "meterSelectionHelpNoMeter": "Doldurma noktalarının toplamı kullanılır.",
+      "meterSelectionLabel": "Sayaç Seçimi",
+      "parentCircuit": "Ana devre",
+      "template": "Devre",
+      "titleAdd": "Devre ekle",
+      "titleEdit": "Devreyi düzenle",
+      "titleLabel": "Başlık"
+    },
     "circuits": {
+      "addMainCircuit": "Ana devreyi ekle",
+      "addSubCircuit": "Alt devre ekle",
+      "chargingPointsNote": "Doldurma noktalarını ve ısıtıcıları, kendi ayarları dahilinde bir devreye ata.",
       "description": "Bir devreye bağlı tüm yük noktalarının toplamının, yapılandırılan güç ve akım limitlerini aşmamasını sağlar. Devreler, bir hiyerarşi oluşturacak şekilde iç içe yerleştirilebilir.",
+      "legacyWarning": "Yeni devre yapılandırması kullanıma sunuldu! Yeni adım adım kılavuzlu süreci kullanmak için yapılandırmanı buradan sil ve kaydet.",
+      "meterDedicated": "Sayaç",
+      "meterGrid": "Şebeke",
       "title": "Yük yönetimi",
       "usableMeters": "Kullanılabilir sayaç referansları"
     },
@@ -188,7 +235,7 @@
       "chargeStatusC": "doluyor",
       "chargeStatusE": "elektrik yok",
       "chargeStatusF": "hata",
-      "chargedEnergy": "Doldu",
+      "chargedEnergy": "Doldu (oturum)",
       "co2": "Şebeke CO₂",
       "configured": "Yapılandırıldı",
       "connected": "Bağlı",
@@ -214,6 +261,8 @@
       "identifier": "RFID tanımlayıcısı",
       "loginBlocked": "Giriş sınırına ulaşıldı",
       "max": "azami",
+      "maxCurrent": "Azami akım",
+      "maxPower": "Azami güç",
       "messengers": "Hizmetler",
       "no": "hayır",
       "odometer": "Kilometre Sayacı",
@@ -237,6 +286,31 @@
       "temp": "Isı",
       "topic": "Konu",
       "url": "URL",
+      "usage": {
+        "aux": {
+          "energy": "Tüketildi",
+          "returnEnergy": "Üretildi"
+        },
+        "battery": {
+          "energy": "Boşaltıldı",
+          "returnEnergy": "Dolduruldu"
+        },
+        "charge": {
+          "energy": "Dolduruldu",
+          "returnEnergy": "Boşaltıldı"
+        },
+        "consumer": {
+          "energy": "Tüketildi",
+          "returnEnergy": "Üretildi"
+        },
+        "grid": {
+          "energy": "Alınan",
+          "returnEnergy": "Satılan"
+        },
+        "pv": {
+          "energy": "Üretilen"
+        }
+      },
       "vehicleLimitSoc": "Doldurma sınırı",
       "yes": "evet"
     },
@@ -271,8 +345,10 @@
       "port": "Port",
       "portHelp": "Kullanılacak port.",
       "qr": "Eşleştirme kodu",
+      "qrExplain": "Kurulum sırasında başka bir EEBus cihazını tarayarak, SKI kodunu girmeden otomatik olarak eşleştir.",
       "removeConfirm": "Tüm EEBus yapılandırmaları kaldırılacak. Bir sonraki başlatmada yeni sertifikalar ve tanımlayıcılar oluşturulacak. Emin misin?",
       "removePairing": "Eşleştirmeyi kaldır",
+      "removePairingConfirm": "Cihazın bağlantısı kesilecek ve yeniden eşleştirilmesi gerekecek. Emin misin?",
       "shipid": "SHIP-ID",
       "shipidExplain": "EEBus ağında tanımlama için kalıcı cihaz tanımlayıcı.",
       "shipidHelp": "Bu SHIP-ID, aşağıdaki sertifikalarla bağlantılı.",
@@ -305,6 +381,7 @@
       "change": "Değiştir",
       "clear": "Temizle",
       "close": "Kapat",
+      "confirmDisable": "Bu cihazı devre dışı mı kalsın? Bir sonraki yeniden başlatmanın ardından bu ayar göz ardı edilecek.",
       "confirmEnable": "Bu cihaz tekrar etkinleştirilsin mi?",
       "confirmSave": "Kaydedilmemiş değişiklikler var. Şimdi kaydedilsin mi?",
       "copied": "Kopyalandı!",
@@ -322,11 +399,13 @@
       "enable": "Etkinleştir",
       "error": "Hata",
       "experimental": "Deneysel",
+      "forceEnable": "Yine de etkinleştir",
       "forceSave": "Yine de kaydet",
       "fromYamlHint": "Not: evcc.yaml aracılığıyla yapılandırıldı. Burada düzenlemeyi etkinleştirmek için dosyadan öğeyi kaldır.",
       "hideAdvancedSettings": "“Gelişmiş ayarları gizle”",
       "invalidFileSelected": "Geçersiz dosya seçildi",
       "legacy": "eskimiş",
+      "moreInfo": "Daha fazla bilgi:",
       "noFileSelected": "Seçili dosya yok.",
       "off": "kapalı",
       "on": "açık",
@@ -346,7 +425,7 @@
       "validateSave": "“Doğrula ve kaydet”"
     },
     "grid": {
-      "title": "Elektrik sayacı",
+      "title": "Şebeke sayacı",
       "titleAdd": "Elektrik Sayacı Ekle",
       "titleEdit": "Elektrik Sayacını Düzenle"
     },
@@ -934,7 +1013,7 @@
       "greenShareSub2": "tarafından sağlanan enerji",
       "power": "Doldurma gücü",
       "powerSub1": "{totalClients} katılımcıdan {activeClients} katılımcı",
-      "powerSub2": "dolduruyor…",
+      "powerSub2": "şu an dolduruyor.",
       "tabTitle": "Canlı topluluk"
     },
     "savings": {
@@ -1009,7 +1088,7 @@
       "modalUpdateStatusStart": "Kurulum başladı:",
       "modalViewOnGitHub": "GitHub'da görüntüle",
       "openSource": "açık kaynak",
-      "poweredBy": "powered by"
+      "poweredBy": "katkı sunanlar"
     }
   },
   "forecast": {
@@ -1222,7 +1301,7 @@
       "waitForVehicle": "Isıtmaya hazır…"
     },
     "hemsWarning": {
-      "title": "Harici sınır:"
+      "title": "Harici sınırlama etkin"
     },
     "history": {
       "direction": {

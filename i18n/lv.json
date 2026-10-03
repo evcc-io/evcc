@@ -7,6 +7,18 @@
     "authorizationSuccessful": "Autorizācija veiksmīga",
     "buttonConnect": "Savienot ar {provider}",
     "buttonDisconnect": "Atvienot",
+    "challenge": {
+      "captcha": {
+        "label": "Ievadiet attēlā redzamos simbolus.",
+        "title": "Drošības kods"
+      },
+      "code": {
+        "label": "Ielīmējiet kodu vai pāradresētās lapas adresi.",
+        "title": "Autorizācijas kods"
+      },
+      "openLogin": "Atvērt pieteikšanās lapu",
+      "submit": "Turpināt"
+    },
     "confirmLogout": "Vai tiešām vēlaties atvienot {title}?",
     "connect": "savienot",
     "disconnect": "atvienot",
@@ -43,6 +55,12 @@
       "bufferTitle": "Akumulators kā uzlādes buferis",
       "discharge": "Novērst mājas akumulatora izlādi ātrajā režīmā un plānotās uzlādes laikā.",
       "gridDischarge": "Atļaut mājas akumulatora izlādi tīklā.",
+      "gridDischargeConfirm": {
+        "country": "Konfigurētā valsts: {country}.",
+        "description": "Vai akumulatora enerģiju drīkst nodot tīklā, ir atkarīgs no jūsu valsts un atdeves līguma. Ja akumulators tiek uzlādēts arī no tīkla, nodotā enerģija vairs nav tikai saules enerģija. Saskaņā ar daudziem atdeves tarifiem tas anulē jūsu atlīdzību vai arī ir aizliegts. Vispirms pārbaudiet savu atdeves līgumu un tīkla operatora prasības.",
+        "noCountry": "Nav konfigurēta neviena valsts. Iestatiet to sadaļā {link}.",
+        "title": "Akumulatora enerģijas nodošana tīklā"
+      },
       "priority": "Mājas akumulatoram ir prioritāte, kamēr tas ir zem {soc}. Pēc tam uzlādes punkti saņem pārpalikumu.",
       "priorityNone": "Saules pārpalikums nonāk tieši uzlādes punktos. Iestatiet vērtību virs {soc}, lai dotu priekšroku mājas akumulatoram.",
       "priorityTitle": "Kur pārpalikums nonāk vispirms?"
@@ -144,10 +162,45 @@
         "switchsocket": "Lietotāja definēta pārslēdzama rozete"
       }
     },
+    "circuit": {
+      "addMeter": "Pievienot atsevišķu enerģijas skaitītāju",
+      "custom": "Lietotāja definēta ķēde",
+      "deleteChildrenFirst": "Lai dzēstu šo ķēdi, vispirms dzēsiet tās apakšķēdes.",
+      "meterDedicated": "Atsevišķs skaitītājs",
+      "meterGrid": "Tīkla skaitītājs",
+      "meterHelp": "Skaitītājs, kas mēra šīs ķēdes kopējo patēriņu.",
+      "meterLabel": "Enerģijas skaitītājs",
+      "meterLabelAdd": "Pievienot ķēdes skaitītāju",
+      "meterLabelEdit": "Rediģēt ķēdes skaitītāju",
+      "meterNone": "Nav skaitītāja",
+      "meterSelectionHelpDedicatedMeter": "Pievienojiet esošu skaitītāju šai ķēdei zemāk.",
+      "meterSelectionHelpGridMeter": "Izmanto jūsu iekārtas esošo tīkla skaitītāju.",
+      "meterSelectionHelpNoMeter": "Tiek izmantota visu uzlādes punktu summa.",
+      "meterSelectionLabel": "Skaitītāja izvēle",
+      "parentCircuit": "Galvenā ķēde",
+      "template": "Ķēde",
+      "titleAdd": "Pievienot ķēdi",
+      "titleEdit": "Rediģēt ķēdi",
+      "titleLabel": "Virsraksts"
+    },
     "circuits": {
+      "addMainCircuit": "Pievienot galveno ķēdi",
+      "addSubCircuit": "Pievienot apakšķēdi",
+      "chargingPointsNote": "Piešķiriet uzlādes punktus un sildītājus ķēdei to attiecīgajos iestatījumos.",
       "description": "Nodrošina, ka visu ķēdei pieslēgto uzlādes punktu summa nepārsniedz konfigurētās jaudas un strāvas robežas. Ķēdes var ligzdot, veidojot hierarhiju.",
+      "legacyWarning": "Pieejama jauna ķēžu konfigurācija! Noņemiet un saglabājiet savu konfigurāciju šeit, lai izmantotu jauno vadīto procesu.",
+      "meterDedicated": "Skaitītājs",
+      "meterGrid": "Elektrotīkls",
       "title": "Slodzes pārvaldība",
       "usableMeters": "Izmantojamās skaitītāju atsauces"
+    },
+    "combobox": {
+      "count": "{count} ieteikumi",
+      "matching": "Atbilst",
+      "other": "Cits",
+      "searching": "Meklē…",
+      "suggestions": "Ieteikumi",
+      "used": "jau izmantots"
     },
     "consumer": {
       "description": "Seko mazākām, nevadāmām ierīcēm (ledusskapis, veļasmašīna, …). Sniedz labāku pārskatu par jūsu mājas patēriņu.",
@@ -216,6 +269,8 @@
       "identifier": "RFID identifikators",
       "loginBlocked": "Pieslēgšanās ierobežojums sasniegts",
       "max": "maks",
+      "maxCurrent": "Maksimālā strāvas vērtība",
+      "maxPower": "Maks. jauda",
       "messengers": "Pakalpojumi",
       "no": "nē",
       "odometer": "Odometrs",
@@ -352,6 +407,7 @@
       "enable": "Iespējot",
       "error": "Kļūda",
       "experimental": "Eksperimentāla versija",
+      "forceEnable": "Tomēr iespējot",
       "forceSave": "Saglabāt tik un tā",
       "fromYamlHint": "Piezīme: Konfigurēts caur evcc.yaml. Noņemiet ierakstu no datnes, lai iespējotu rediģēšanu šeit.",
       "hideAdvancedSettings": "Slēpt paplašinātos iestatījumus",
@@ -370,6 +426,7 @@
       "saving": "Saglabā…",
       "selectFile": "Pārlūkot",
       "showAdvancedSettings": "Rādīt paplašinātos iestatījumus",
+      "site": "Vietne",
       "telemetry": "Telemetrija",
       "templateLoading": "Ielādē...",
       "title": "Nosaukums",
@@ -562,7 +619,7 @@
       "configured": "konfigurēts",
       "edit": "rediģēt",
       "loadpointRequired": "Jābūt konfigurētam vismaz vienam uzlādes punktam.",
-      "name": "Nosaukums",
+      "name": "Vārds",
       "title": "Konfigurācija",
       "unconfigured": "nav konfigurēts",
       "vehicles": "Mani transportlīdzekļi",
@@ -679,7 +736,7 @@
       "connectionHintSerial": "Ierīce ir tieši savienota caur RS485 (vai USB-uz-RS485 adapteri).",
       "connectionHintTcpip": "Ierīce ir sasniedzama caur tīklu (LAN/WiFi).",
       "connectionValueSerial": "RS485",
-      "connectionValueTcpip": "Tīkls",
+      "connectionValueTcpip": "Tīklojums",
       "delay": "Aizture",
       "delayHint": "Neobligāts gaidīšanas laiks pirms katra reģistra piekļuves. Nepieciešams tikai lēnām ierīcēm.",
       "device": "Ierīces nosaukums",
@@ -744,7 +801,7 @@
       "labelHost": "mDNS resursdatora nosaukums",
       "labelInternalUrl": "Iekšējais URL",
       "labelPort": "Ports",
-      "title": "Tīkls",
+      "title": "Tīklojums",
       "warningUrlPath": "URL parasti nav nepieciešams ceļš. Vai esat pārliecināts, ka tas ir pareizi?"
     },
     "ocpp": {
@@ -887,6 +944,22 @@
       "labelDeviceSerial": "Ierīces sērijas numurs",
       "labelVendorId": "Ražotāja ID",
       "title": "SMA Sunny Home Manager"
+    },
+    "site": {
+      "country": {
+        "description": "Tiek izmantots reģionam raksturīgiem ieteikumiem un noklusējuma vērtībām.",
+        "label": "Valsts"
+      },
+      "currency": {
+        "description": "Tiek izmantots, lai atbilstoši jūsu tarifam formatētu enerģijas cenas, izmaksas un ietaupījumus.",
+        "example": "Jūsu uzlādes cena bija {price}. Jūs ietaupījāt {amount}.",
+        "label": "Valūta"
+      },
+      "siteTitle": {
+        "description": "Tiek parādīts galvenajā ekrānā un pārlūkprogrammas cilnē.",
+        "label": "Nosaukums"
+      },
+      "title": "Vietne"
     },
     "sponsor": {
       "addToken": "Ievadiet marķieri",
@@ -1193,6 +1266,7 @@
   },
   "general": {
     "back": "Atpakaļ",
+    "cancel": "Atcelt",
     "download": "Lejupielādēt",
     "error": "Kļūda",
     "none": "nav",
