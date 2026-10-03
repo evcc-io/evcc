@@ -1316,9 +1316,9 @@
   },
   "main": {
     "alwaysCharge": {
-      "description": "aucune interruption",
-      "label": "Charger toujours",
-      "labelHeating": "Chauffer toujours",
+      "description": "sans interruptions",
+      "label": "Toujours en charge",
+      "labelHeating": "Toujours en chauffe",
       "minCurrent": "min {current}",
       "once": "jusqu'à la fin de la session",
       "onceTip": "Seulement pour cette session",
