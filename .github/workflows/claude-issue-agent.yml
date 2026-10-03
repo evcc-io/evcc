@@ -165,7 +165,8 @@ jobs:
           allowed_non_write_users: '*'
           additional_permissions: |
             actions: read
-          claude_args: '--allowed-tools "Read,Grep,Glob,Bash(gh label list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr edit:*)" --disallowed-tools "Task"'
+          # labeling is a classification over the file list, Haiku is enough
+          claude_args: '--model claude-haiku-4-5 --allowed-tools "Read,Grep,Glob,Bash(gh label list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr edit:*)" --disallowed-tools "Task"'
           prompt: |
             You label pull requests for the evcc repository.
             Work on PR #${{ github.event.pull_request.number }}. Fetch its title,

@@ -1765,8 +1765,10 @@ func (lp *Loadpoint) batterySupported(sitePower, batteryPower float64, batteryBu
 		}
 	}
 
-	// the disable timer only runs while the battery is maxed out
-	lp.resetPVTimer("disable")
+	// the disable timer only runs while enabled, a disabled loadpoint shares the timer with enable
+	if lp.enabled {
+		lp.resetPVTimer("disable")
+	}
 
 	return true
 }
