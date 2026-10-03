@@ -1,0 +1,58 @@
+template: pleos
+products:
+  - brand: Hyundai
+    description:
+      generic: EU Data Act
+  - brand: Kia
+    description:
+      generic: EU Data Act
+  - brand: Genesis
+    description:
+      generic: EU Data Act
+requirements:
+  evcc: ["skiptest"]
+  description:
+    en: |
+      Uses the vehicle data provided under the EU Data Act through the [Pleos Vehicle Data API](https://document.pleos.ai/en/api-reference/vehicle-data-api/intro) (Europe only).
+
+      Register at the [Pleos Playground](https://pleos.ai/playground), open "My Vehicle Data API", select the manufacturer and log in with your Bluelink/Kia Connect/Genesis Connected account to obtain a client ID and client secret ([instructions](https://document.pleos.ai/en/api-reference/vehicle-data-api/getting-started/for-private-users/request-my-vehicle-api-key)).
+
+      The API returns the data last reported by the vehicle to the manufacturer's servers; it does not wake the vehicle.
+    de: |
+      Nutzt die im Rahmen des EU Data Act bereitgestellten Fahrzeugdaten über die [Pleos Vehicle Data API](https://document.pleos.ai/en/api-reference/vehicle-data-api/intro) (nur Europa).
+
+      Registrierung im [Pleos Playground](https://pleos.ai/playground), dort unter "My Vehicle Data API" den Hersteller wählen und mit dem Bluelink-/Kia Connect-/Genesis Connected-Konto anmelden, um Client ID und Client Secret zu erhalten ([Anleitung](https://document.pleos.ai/en/api-reference/vehicle-data-api/getting-started/for-private-users/request-my-vehicle-api-key)).
+
+      Die API liefert die zuletzt vom Fahrzeug an die Herstellerserver gemeldeten Daten; das Fahrzeug wird nicht geweckt.
+params:
+  - preset: vehicle-common
+  - preset: vehicle-online
+  - name: clientid
+    required: true
+  - name: clientsecret
+    required: true
+  - name: vin
+    example: KMHK...
+  - name: brand
+    type: choice
+    choice: ["hyundai", "kia", "genesis"]
+    advanced: true
+    description:
+      de: Marke
+      en: Brand
+    help:
+      de: Optional, wird sonst anhand des API-Schlüssels ermittelt
+      en: Optional, otherwise detected from the API key
+  - name: cache
+    default: 15m
+render: |
+  type: pleos
+  clientid: {{ .clientid }}
+  clientsecret: {{ .clientsecret }}
+  vin: {{ .vin }}
+  {{- if .brand }}
+  brand: {{ .brand }}
+  {{- end }}
+  {{ include "common" . }}
+  cache: {{ .cache }}
+  {{ include "features" . }}
