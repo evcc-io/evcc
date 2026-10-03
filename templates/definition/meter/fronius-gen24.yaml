@@ -136,10 +136,12 @@ render: |
       {{- include "modbus-connection" . | indent 4 }}
       id: 1
       value: 160:1:DCW # mppt 1
+      nan: true
     - source: sunspec
       {{- include "modbus-connection" . | indent 4 }}
       id: 1
       value: 160:2:DCW # mppt 2
+      nan: true
   energy:
     source: calc
     add:
@@ -212,11 +214,13 @@ render: |
       {{- include "modbus-connection" . | indent 4 }}
       id: 1
       value: 160:3:DCW # mppt 3 charge
+      nan: true
       scale: -1
     - source: sunspec
       {{- include "modbus-connection" . | indent 4 }}
       id: 1
       value: 160:4:DCW # mppt 4 discharge
+      nan: true
   energy:
     source: sunspec
     {{- include "modbus-connection" . | indent 2 }}
