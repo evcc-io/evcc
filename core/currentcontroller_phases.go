@@ -176,9 +176,10 @@ func (c *CurrentController) phaseSwitchCompleted() bool {
 
 // syncChargerPhases synchronizes the assumed phase state with the charger's actual state.
 // Chargers may reconfigure phases internally, i.e. when the vehicle is (dis)connected.
+// Unknown phases (0, i.e. after startup) are seeded from the charger without warning.
 func (c *CurrentController) syncChargerPhases() error {
 	phases := c.lp.GetPhases()
-	if !c.hasPhaseSwitching() || phases <= 0 {
+	if !c.hasPhaseSwitching() {
 		return nil
 	}
 
@@ -192,7 +193,9 @@ func (c *CurrentController) syncChargerPhases() error {
 		}
 
 		if chargerPhases > 0 && chargerPhases != phases {
-			c.lp.log.WARN.Printf("charger logic error: phases mismatch (got %d, expected %d)", chargerPhases, phases)
+			if phases > 0 {
+				c.lp.log.WARN.Printf("charger logic error: phases mismatch (got %d, expected %d)", chargerPhases, phases)
+			}
 			c.SetPhases(chargerPhases)
 		}
 
@@ -205,8 +208,11 @@ func (c *CurrentController) syncChargerPhases() error {
 		chargerPhases = 3
 	}
 
-	if chargerPhases > phases {
-		c.lp.log.WARN.Printf("charger logic error: phases mismatch (got %d measured, expected %d)", chargerPhases, phases)
+	// 1p measured does not confirm 1p enabled (1p vehicle on 3p), hence never seeds unknown phases
+	if chargerPhases > max(phases, 1) {
+		if phases > 0 {
+			c.lp.log.WARN.Printf("charger logic error: phases mismatch (got %d measured, expected %d)", chargerPhases, phases)
+		}
 		c.SetPhases(chargerPhases)
 	}
 

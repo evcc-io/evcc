@@ -31,7 +31,7 @@ test.describe("host pattern validation", async () => {
 
     await modal.getByLabel("Title").fill("Test PV");
     await page.waitForLoadState("networkidle");
-    await modal.getByLabel("Manufacturer").selectOption("Shelly Pro 3 EM");
+    await modal.getByLabel("Manufacturer").selectOption("Shelly Pro 3EM");
 
     const hostInput = modal.getByLabel("IP address or hostname");
     await hostInput.fill("http://192.168.1.100");

@@ -218,7 +218,7 @@
       "max": "max",
       "messengers": "Služby",
       "no": "nie",
-      "odometer": "Počítadlo kilometrov",
+      "odometer": "Najazdené kilometre",
       "org": "Organizácia",
       "outdoorTemp": "Vonkajšia teplota",
       "phaseCurrents": "Prúd",
@@ -229,11 +229,11 @@
       "powerRange": "Výkon",
       "price": "Cena",
       "productionLimited": "Výroba obmedzená",
-      "range": "Rozsah",
+      "range": "Dojazd",
       "remoteEnabled": "Povolené",
       "returnEnergy": "Energia (spätná)",
       "singlePhase": "Jednofázové",
-      "soc": "Nabitie",
+      "soc": "Stav nabitia",
       "solarForecast": "Solárna predpoveď",
       "switchDevice": "Ovládanie prúdu",
       "temp": "Teplota",
@@ -790,7 +790,7 @@
     "optimizer": {
       "description": "Analyzuje predpoveď solárnej energie, ceny elektriny a vaše vzorce spotreby s cieľom optimalizovať stratégiu batérie a nabíjania. Dáta sa odosielajú na spracovanie do optimalizačnej služby evcc. Momentálne iba vypočítava a vizualizuje. Zatiaľ neovláda zariadenia.",
       "enable": "Povoliť optimalizátor",
-      "info": "Zobrazenie položky ponuky optimalizátora môže trvať niekoľko minút. V prípade nových inštalácií môže trvať až 24 hodín, kým evcc zhromaždí dostatok údajov.",
+      "info": "V prípade nových inštalácií môže trvať až 24 hodín, kým evcc zhromaždí dostatok údajov.",
       "title": "Optimalizátor"
     },
     "options": {
@@ -1013,7 +1013,7 @@
         "allMonths": "Všetky mesiace",
         "allTimes": "Stále",
         "cancel": "Zrušiť",
-        "charge": "Nabitie",
+        "charge": "Stav nabitia",
         "days": "Dni",
         "edit": "Upraviť",
         "hours": "Hodiny",
@@ -1232,6 +1232,9 @@
   },
   "issue": {
     "additional": {
+      "copied": "skopírované!",
+      "copy": "skopírovať",
+      "copySelected": "skopírovať vybrané",
       "description": "Priložte konfiguráciu a protokoly, ktoré nám pomôžu problém rýchlo zreprodukovať. Odporúčame zdieľať čo najviac údajov. Stav zvyčajne nie je potrebný.",
       "include": "zahrnúť",
       "lines": "riadky",

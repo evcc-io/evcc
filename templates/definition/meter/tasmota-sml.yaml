@@ -74,6 +74,8 @@ requirements:
       1,77070100470700ff@1,Strom L3,A,current_l3,4
       #
       ```
+discovery:
+  hostname: ["tasmota*"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery", "charge"]

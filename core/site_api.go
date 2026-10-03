@@ -66,6 +66,18 @@ func (site *Site) SetTitle(title string) {
 	settings.SetString(keys.Title, title)
 }
 
+// GetCountry returns the ISO 3166-1 alpha-2 country code
+func (site *Site) GetCountry() string {
+	country, _ := settings.String(keys.Country)
+	return country
+}
+
+// SetCountry sets the ISO 3166-1 alpha-2 country code
+func (site *Site) SetCountry(country string) {
+	settings.SetString(keys.Country, country)
+	site.publish(keys.Country, country)
+}
+
 // GetGridMeterRef returns the GridMeterRef
 func (site *Site) GetGridMeterRef() string {
 	site.RLock()
@@ -417,6 +429,35 @@ func (site *Site) SetGridExportLimit(power float64) error {
 	return nil
 }
 
+// GetProfilePercentile returns the percentile of the historic energy profiles in %, nil = average
+func (site *Site) GetProfilePercentile() *float64 {
+	if v, err := settings.Float(keys.ProfilePercentile); err == nil {
+		return &v
+	}
+	return nil
+}
+
+// SetProfilePercentile sets the percentile of the historic energy profiles in %, nil = average
+func (site *Site) SetProfilePercentile(percentile *float64) error {
+	if percentile == nil {
+		if err := settings.Delete(keys.ProfilePercentile); err != nil {
+			return err
+		}
+	} else {
+		if *percentile < 0 || *percentile > 100 {
+			return fmt.Errorf("invalid profile percentile: %g", *percentile)
+		}
+		settings.SetFloat(keys.ProfilePercentile, *percentile)
+	}
+
+	site.publish(keys.ProfilePercentile, percentile)
+
+	// re-run the optimizer so the new profile takes effect immediately
+	go site.optimizerUpdateAsync(0)
+
+	return nil
+}
+
 // GetTariff returns the respective tariff if configured or nil
 func (site *Site) GetTariff(tariff api.TariffUsage) api.Tariff {
 	site.RLock()
@@ -475,9 +516,14 @@ func (site *Site) SetBatteryGridDischarge(val bool) error {
 	}
 	site.Unlock()
 
-	// drop the limit, it is meaningless without the opt-in
-	if changed && !val {
-		return site.SetBatteryGridDischargeLimit(nil)
+	if changed {
+		// re-run the optimizer so the new discharge mode takes effect immediately
+		go site.optimizerUpdateAsync(0)
+
+		// drop the limit, it is meaningless without the opt-in
+		if !val {
+			return site.SetBatteryGridDischargeLimit(nil)
+		}
 	}
 
 	return nil
@@ -501,6 +547,9 @@ func (site *Site) SetSolarAdjusted(val bool) {
 		site.solarAdjusted = val
 		settings.SetBool(keys.SolarAdjusted, val)
 		site.publish(keys.SolarAdjusted, val)
+
+		// re-run the optimizer so the adjusted forecast takes effect immediately
+		go site.optimizerUpdateAsync(0)
 	}
 }
 
@@ -530,6 +579,9 @@ func (site *Site) SetBatteryGridChargeLimit(val *float64) error {
 			settings.SetFloat(keys.BatteryGridChargeLimit, *val)
 			site.publish(keys.BatteryGridChargeLimit, *val)
 		}
+
+		// re-run the optimizer so the new limit takes effect immediately
+		go site.optimizerUpdateAsync(0)
 	}
 
 	return nil

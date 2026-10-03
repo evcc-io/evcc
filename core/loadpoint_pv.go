@@ -7,6 +7,21 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
+// projectPhaseSwitch returns site power and min power after a pending scale down to the
+// reachable phases. The phase timer can only be active once the loadpoint is at min power.
+func (lp *Loadpoint) projectPhaseSwitch(ctrl *CurrentController, env Envelope, sitePower float64) (float64, float64) {
+	// read live: boostPower may have expired the phase timer after the snapshot
+	if ctrl.phaseScalePending() {
+		return sitePower - (env.ActiveMin - env.ReachableMin), env.ReachableMin
+	}
+	return sitePower, env.ActiveMin
+}
+
+// batteryTolerance returns the power margin covering the battery controller's regulation accuracy
+func (lp *Loadpoint) batteryTolerance() float64 {
+	return math.Max(100, math.Abs(lp.site.GetResidualPower()))
+}
+
 // boostPower returns the additional power that the loadpoint should draw from the battery
 func (lp *Loadpoint) boostPower(ctrl *CurrentController, env Envelope, batteryPower float64) float64 {
 	boost := lp.GetBatteryBoost()
@@ -15,7 +30,7 @@ func (lp *Loadpoint) boostPower(ctrl *CurrentController, env Envelope, batteryPo
 	}
 
 	// push demand to drain battery (at least 100W)
-	delta := math.Max(100, math.Abs(lp.site.GetResidualPower()))
+	delta := lp.batteryTolerance()
 
 	if env.Coarse {
 		// add step power to delta to make sure to step up to the next full amp
@@ -52,6 +67,39 @@ func (lp *Loadpoint) boostPower(ctrl *CurrentController, env Envelope, batteryPo
 	lp.log.DEBUG.Printf("pv charge battery boost: %.0fW = -%.0fW battery - %.0fW boost - %.0fW residual", -res, max(0, batteryPower), delta, lp.site.GetResidualPower())
 
 	return res
+}
+
+// batterySupported indicates that the home battery holds charging at min power.
+// Support ends once the battery is maxed out: the balance it has to cover exceeds
+// the pv disable threshold or its discharge limit would be exceeded (issue #32151).
+func (lp *Loadpoint) batterySupported(ctrl *CurrentController, env Envelope, sitePower, batteryPower float64, batteryBuffered, batteryStart bool) bool {
+	if !batteryStart && !(batteryBuffered && lp.charging()) {
+		return false
+	}
+
+	// grid import while the battery discharges, net of residual power and controller tolerance
+	demand, minPower := lp.projectPhaseSwitch(ctrl, env, sitePower-batteryPower-lp.site.GetResidualPower()-lp.batteryTolerance())
+	if demand > lp.pvDisableThreshold(minPower) {
+		lp.log.DEBUG.Printf("battery support: %.0fW grid import", demand)
+		return false
+	}
+
+	if maxPower := lp.site.GetBatteryMaxDischargePower(); maxPower != nil {
+		expected := batteryPower
+		if !lp.charging() {
+			expected += minPower
+		}
+
+		if expected > *maxPower {
+			lp.log.DEBUG.Printf("battery support: %.0fW exceeds %.0fW max discharge power", expected, *maxPower)
+			return false
+		}
+	}
+
+	// the disable timer only runs while the battery is maxed out
+	lp.resetPVTimer("disable")
+
+	return true
 }
 
 // customThresholds indicates manually configured enable/disable thresholds that take precedence over the solar share
@@ -92,12 +140,12 @@ func (lp *Loadpoint) pvTargetPower(ctrl *CurrentController, sitePower, batteryPo
 	reachableMinPower := env.ReachableMin
 	alwaysCharge := lp.GetAlwaysCharge().Active()
 
+	// always charge and the battery conditions hold charging at min power, no disable can follow
+	battery := lp.GetBatteryBoost() == boostContinue || lp.batterySupported(ctrl, env, sitePower, batteryPower, batteryBuffered, batteryStart)
+	mayDisable := !alwaysCharge && !battery
+
 	// push demand to drain battery
 	sitePower -= lp.boostPower(ctrl, env, batteryPower)
-
-	// always charge and the battery conditions hold charging at min power, no disable can follow
-	battery := batteryStart || batteryBuffered && lp.charging() || lp.GetBatteryBoost() == boostContinue
-	mayDisable := !alwaysCharge && !battery
 
 	// provide surplus for phase reconciliation by the controller
 	ctrl.Prepare(sitePower, mayDisable)
@@ -115,15 +163,7 @@ func (lp *Loadpoint) pvTargetPower(ctrl *CurrentController, sitePower, batteryPo
 	lp.log.DEBUG.Printf("pv charge power: %.0fW = %.0fW - %.0fW (@ %dp)", targetPower, env.Effective, sitePower, env.ActivePhases)
 
 	if !alwaysCharge && env.Enabled && targetPower < minPower {
-		projectedSitePower := sitePower
-		projectedMinPower := minPower
-		// read live: boostPower may have expired the phase timer after the snapshot
-		if ctrl.phaseScalePending() {
-			// calculate site power after a phase switch to the minimum reachable phases
-			// notes: phase timer can only be active if lp current is already at min current
-			projectedSitePower -= minPower - reachableMinPower
-			projectedMinPower = reachableMinPower
-		}
+		projectedSitePower, projectedMinPower := lp.projectPhaseSwitch(ctrl, env, sitePower)
 		// a continuous device consuming less than its min power demand keeps the
 		// remainder out of site power, hiding insufficient surplus until it ramps
 		// up (#32282). Project the shortfall towards min power into the gate.

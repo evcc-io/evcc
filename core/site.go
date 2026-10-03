@@ -34,6 +34,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/telemetry"
 	"github.com/jinzhu/now"
 	"github.com/samber/lo"
@@ -119,6 +120,7 @@ type Site struct {
 	batteryModeApplied       map[string]api.BatteryMode  // Battery mode last applied per battery meter
 	suggestions              map[string]types.Suggestion // Optimizer suggestions by device key
 	suggestionActions        map[string]string           // last notified actionable optimizer action by device key
+	lastOptimizerSolve       *optimizerSolve             // last successful solve, reapplied to newer slots by the control cycle
 
 	optimizerMu      sync.Mutex // guards optimizer runs
 	optimizerUpdated time.Time  // last optimizer run, guarded by optimizerMu
@@ -580,12 +582,11 @@ func (site *Site) DumpConfig() {
 
 		for i, v := range vehicles {
 			_, rng := api.Cap[api.VehicleRange](v)
-			_, finish := api.Cap[api.VehicleFinishTimer](v)
 			_, status := api.Cap[api.ChargeState](v)
 			_, climate := api.Cap[api.VehicleClimater](v)
 			_, wakeup := api.Cap[api.Resurrector](v)
-			site.log.INFO.Printf("    vehicle %d: range %s finish %s status %s climate %s wakeup %s",
-				i+1, presence[rng], presence[finish], presence[status], presence[climate], presence[wakeup],
+			site.log.INFO.Printf("    vehicle %d: range %s status %s climate %s wakeup %s",
+				i+1, presence[rng], presence[status], presence[climate], presence[wakeup],
 			)
 		}
 	}
@@ -655,13 +656,6 @@ func (site *Site) publishLoadpoint(id int, key string, val any) {
 	}
 
 	site.valueChan <- util.Param{Loadpoint: &id, Key: key, Val: val}
-}
-
-// clearPlanLocks clears locked plan goals for all loadpoints
-func (site *Site) clearPlanLocks() {
-	for _, lp := range site.activeLoadpoints() {
-		lp.ClearPlanLock()
-	}
 }
 
 func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) []types.Measurement {
@@ -915,7 +909,7 @@ func (site *Site) updateBatteryMeters() {
 
 // publishBattery applies the optimizer suggestions and publishes the battery state
 func (site *Site) publishBattery() {
-	mode := site.GetBatteryMode().String()
+	mode := site.batteryAction()
 
 	battery := site.state().battery
 	for i, d := range battery.Devices {
@@ -1271,6 +1265,12 @@ func (site *Site) update(lp updater) {
 	if state, err := site.updateMeters(); err != nil {
 		site.log.ERROR.Println(err)
 	} else {
+		if sponsor.IsAuthorized() && optimizerEnabled() {
+			site.reapplySuggestions(time.Now())
+		} else {
+			// don't resurrect the pre-disable solve on re-enable
+			site.setLastOptimizerSolve(nil)
+		}
 		go site.optimizerUpdateAsync(tariff.SlotDuration)
 
 		site.updatePower(lp, state, totalChargePower, consumption, feedin)
@@ -1392,6 +1392,7 @@ func (site *Site) prepare() {
 	}
 
 	site.publish(keys.SiteTitle, site.Title)
+	site.publish(keys.Country, site.GetCountry())
 
 	site.publish(keys.GridConfigured, site.gridMeter != nil)
 	site.publish(keys.Grid, api.Meter(nil))
@@ -1408,6 +1409,7 @@ func (site *Site) prepare() {
 	site.publish(keys.SolarAdjusted, site.solarAdjusted)
 	site.publish(keys.ResidualPower, site.GetResidualPower())
 	site.publish(keys.GridExportLimit, site.GetGridExportLimit())
+	site.publish(keys.ProfilePercentile, site.GetProfilePercentile())
 	site.publish(keys.SmartCostAvailable, site.isDynamicTariff(api.TariffUsagePlanner))
 	site.publish(keys.SmartFeedInPriorityAvailable, site.isDynamicTariff(api.TariffUsageFeedIn))
 
@@ -1421,7 +1423,7 @@ func (site *Site) prepare() {
 	site.publishVehicles()
 	site.publishTariffs(0, 0)
 	vehicle.Publish = site.publishVehicles
-	vehicle.ClearPlanLocks = site.clearPlanLocks
+	vehicle.Owner = site.coordinator.Owner
 }
 
 // pushEvent queues the event in the value stream. The cache attaches its state

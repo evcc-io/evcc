@@ -369,9 +369,10 @@ func (c *OCPP) createChargingProfile(current float64, transactionID int) *types.
 	period := types.NewChargingSchedulePeriod(0, current)
 
 	if c.cp.ChargingRateUnit == types.ChargingRateUnitWatts {
-		// c.phases is only set via the phase switcher; fall back to the loadpoint phases
+		// c.phases is only set via the phase switcher; fall back to the loadpoint's
+		// actually active phases so single-phase charging isn't billed as 3p power
 		if phases == 0 && c.lp != nil {
-			phases = c.lp.GetPhases()
+			phases = c.lp.ActivePhases()
 		}
 		// OCPP assumes phases == 3 if not set
 		if phases == 0 {

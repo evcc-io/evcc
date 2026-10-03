@@ -4,6 +4,8 @@ products:
     description:
       generic: Switch
 group: switchsockets
+discovery:
+  hostname: ["mystrom-*"]
 params:
   - name: usage
     choice: ["pv", "charge"]

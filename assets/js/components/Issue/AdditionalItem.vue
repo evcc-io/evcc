@@ -11,6 +11,18 @@
 				>
 					{{ $t("issue.additional.showDetails") }}
 				</button>
+				<CopyButton :content="markdown">
+					<template #default="{ copy, copied }">
+						<button
+							type="button"
+							class="btn btn-link btn-sm p-0 text-muted content"
+							:class="{ 'content--dimmed': !included }"
+							@click="copy"
+						>
+							{{ $t(copied ? "issue.additional.copied" : "issue.additional.copy") }}
+						</button>
+					</template>
+				</CopyButton>
 			</div>
 			<div class="form-check form-switch mb-0">
 				<input
@@ -73,18 +85,21 @@
 import { defineComponent, type PropType } from "vue";
 import Modal from "bootstrap/js/dist/modal";
 import GenericModal from "../Helper/GenericModal.vue";
+import CopyButton from "../Helper/CopyButton.vue";
 import type { HelpType } from "./types";
 
 export default defineComponent({
 	name: "IssueAdditionalItem",
 	components: {
 		GenericModal,
+		CopyButton,
 	},
 	props: {
 		title: { type: String, required: true },
 		id: { type: String, required: true },
 		included: { type: Boolean, required: true },
 		content: { type: String, default: "" },
+		markdown: { type: String, default: "" },
 		description: { type: String, default: "" },
 		helpType: { type: String as PropType<HelpType> },
 	},
