@@ -7,6 +7,18 @@
     "authorizationSuccessful": "Autorisation réussie",
     "buttonConnect": "Se connecter à {provider}",
     "buttonDisconnect": "Déconnecter",
+    "challenge": {
+      "captcha": {
+        "label": "Saisissez les caractères affichés dans l'image.",
+        "title": "Captcha"
+      },
+      "code": {
+        "label": "Collez le code ou l'adresse de la page vers laquelle vous avez été redirigé.",
+        "title": "Code d'autorisation"
+      },
+      "openLogin": "Ouvrir la page de connexion",
+      "submit": "Continuer"
+    },
     "confirmLogout": "Êtes-vous sûr de vouloir déconnecter {title} ?",
     "connect": "Connecter",
     "disconnect": "déconnecter",
@@ -43,6 +55,12 @@
       "bufferTitle": "Batterie en tant que tampon de charge",
       "discharge": "Empêche la batterie domestique de se décharger en mode rapide pendant une recharge planifiée.",
       "gridDischarge": "Autoriser la batterie domestique à se décharger vers le réseau.",
+      "gridDischargeConfirm": {
+        "country": "Pays configuré : {country}.",
+        "description": "La possibilité d'injecter l'énergie stockée dans la batterie vers le réseau dépend de votre pays et de votre contrat de rachat. Si la batterie est également rechargée à partir du réseau, l'énergie injectée n'est plus exclusivement d'origine solaire. Dans le cadre de nombreux tarifs de rachat, cela entraîne la perte de votre rémunération ou est tout simplement interdit. Vérifiez au préalable les conditions de votre contrat de rachat et les exigences du gestionnaire de réseau.",
+        "noCountry": "Aucun pays n'est configuré. Configurez-le via {lien}.",
+        "title": "Exportation vers le réseau à partir de la batterie"
+      },
       "priority": "La batterie domestique a la priorité tant qu’elle est chargée en dessous de {soc}. Ensuite, les points de charge reçoivent le surplus.",
       "priorityNone": "Le surplus solaire va directement aux points de charge. Définissez une valeur au dessus de {soc} pour prioriser la batterie domestique.",
       "priorityTitle": "Où va le surplus solaire en priorité ?"
@@ -144,8 +162,35 @@
         "switchsocket": "Prise de commutation personnalisée"
       }
     },
+    "circuit": {
+      "addMeter": "Ajouter un compteur d'énergie dédié",
+      "custom": "Circuit défini par l'utilisateur",
+      "deleteChildrenFirst": "Pour supprimer ce circuit, commencez par supprimer ses circuits secondaires.",
+      "meterDedicated": "Compteur dédié",
+      "meterGrid": "Compteur de réseau",
+      "meterHelp": "Compteur mesurant la consommation totale de ce circuit.",
+      "meterLabel": "Compteur",
+      "meterLabelAdd": "Ajouter un compteur de circuit",
+      "meterLabelEdit": "Modifier le compteur de circuit",
+      "meterNone": "Pas de compteur",
+      "meterSelectionHelpDedicatedMeter": "Ajoutez un compteur existant au circuit ci-dessous.",
+      "meterSelectionHelpGridMeter": "Utilise le compteur de réseau déjà en place dans votre installation.",
+      "meterSelectionHelpNoMeter": "C'est la somme de tous les points de recharge qui est prise en compte.",
+      "meterSelectionLabel": "Choix du compteur",
+      "parentCircuit": "Circuit principal",
+      "template": "Circuit",
+      "titleAdd": "Ajouter un circuit",
+      "titleEdit": "Modifier le circuit",
+      "titleLabel": "Titre"
+    },
     "circuits": {
+      "addMainCircuit": "Ajouter le circuit principal",
+      "addSubCircuit": "Ajouter un sous-circuit",
+      "chargingPointsNote": "Attribuer les bornes de recharge et les radiateurs à un circuit dans leurs propres paramètres.",
       "description": "Vérifiez que la somme de tous les points de charges connectés à un circuit ne dépassent pas les limites de puissance et de courant. Les circuits peuvent être combinés pour construire une hiérarchie.",
+      "legacyWarning": "Une nouvelle configuration des circuits est disponible ! Supprimez et enregistrez votre configuration ici pour utiliser la nouvelle procédure guidée.",
+      "meterDedicated": "Compteur",
+      "meterGrid": "Réseau",
       "title": "Gestion de la charge",
       "usableMeters": "Références des compteurs utilisables"
     },
@@ -170,10 +215,10 @@
     },
     "curtailer": {
       "description": "Dispositif qui limite l'alimentation sur demande de l'opérateur de réseau (§ 9 EEG). Beaucoup d’onduleurs supportent cela directement via leur configuration de compteur solaire. Une configuration séparée n'est nécessaire que pour certains fabricants ou systèmes multi-onduleurs.",
-      "generic": "Intégrations génériques",
-      "specific": "Intégrations spécifiques",
+      "generic": "Intégration générique",
+      "specific": "Intégration spécifique",
       "template": "Fabricant",
-      "title": "Limitation",
+      "title": "Limitation de l'injection",
       "titleAdd": "Ajouter un appareil limitant",
       "titleEdit": "Modifier un appareil limitant"
     },
@@ -201,7 +246,7 @@
       "currentRange": "Courant",
       "curtailLimit": "Limite d’entrée",
       "curtailable": "Suspendable",
-      "curtailed": "Limite d'injection",
+      "curtailed": "Limitation de l'injection",
       "detected": "Détecté",
       "dimLimit": "Limite de consommation",
       "dimmed": "Consommation limitée",
@@ -216,6 +261,8 @@
       "identifier": "Identifiant RFID",
       "loginBlocked": "Limit de login atteinte",
       "max": "max",
+      "maxCurrent": "Courant max.",
+      "maxPower": "Max. power",
       "messengers": "Services",
       "no": "non",
       "odometer": "Compteur kilométrique",
@@ -334,7 +381,7 @@
       "change": "Changer",
       "clear": "Effacer",
       "close": "Fermer",
-      "confirmDisable": "Désactiver cet appareil ? Il sera ignoré après le prochain redémarrage.",
+      "confirmDisable": "Désactiver cet équipement ? Il sera ignoré dès le prochain redémarrage.",
       "confirmEnable": "Réactiver cet appareil ?",
       "confirmSave": "Il y a des modifications. Enregistrer maintenant ?",
       "copied": "Copié !",
@@ -352,6 +399,7 @@
       "enable": "Activer",
       "error": "Erreur",
       "experimental": "Expérimental",
+      "forceEnable": "Activer quand même",
       "forceSave": "Enregistrer quand même",
       "fromYamlHint": "Remarque : configuré via evcc.yaml. Supprimez l'entrée du fichier pour pouvoir effectuer des modifications.",
       "hideAdvancedSettings": "Masquer les paramètres avancés",
@@ -370,6 +418,7 @@
       "saving": "Enregistrement en cours…",
       "selectFile": "Parcourir",
       "showAdvancedSettings": "Afficher les paramètres avancés",
+      "site": "Localisation",
       "telemetry": "Télémétrie",
       "templateLoading": "Chargement...",
       "title": "Titre",
@@ -888,6 +937,22 @@
       "labelVendorId": "Identifiant du fournisseur",
       "title": "SMA Sunny Home Manager"
     },
+    "site": {
+      "country": {
+        "description": "Utilisé pour les indications et les valeurs par défaut spécifiques à une région.",
+        "label": "Pays"
+      },
+      "currency": {
+        "description": "Permet de calculer les prix de l'énergie, les coûts et les économies en fonction de votre tarif.",
+        "example": "Le prix facturé s'élevait à {price}. Vous avez économisé {amount}.",
+        "label": "Devise"
+      },
+      "siteTitle": {
+        "description": "Affiché sur l'écran principal et dans l'onglet du navigateur.",
+        "label": "Titre"
+      },
+      "title": "Localisation"
+    },
     "sponsor": {
       "addToken": "Entrer le jeton",
       "changeToken": "Modifier le jeton",
@@ -1193,6 +1258,7 @@
   },
   "general": {
     "back": "Retour",
+    "cancel": "Annuler",
     "download": "Télécharger",
     "error": "Erreur",
     "none": "aucun",
