@@ -19,7 +19,6 @@ package charger
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -29,7 +28,6 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/charger/vaillant"
-	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/samber/lo"
@@ -43,7 +41,6 @@ type Vaillant struct {
 	*SgReady
 	log      *util.Logger
 	conn     *sensonet.Connection
-	lp       loadpoint.API
 	systemId string
 }
 
@@ -56,7 +53,7 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		System          string
 		HeatingZone     int
 		HeatingSetpoint float32
-		Hysteresis      float64
+		Hysteresis      float64 // deprecated
 		Reboost         time.Duration
 		Cache           time.Duration
 	}{
@@ -110,38 +107,9 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		systemId: systemId,
 	}
 
-	// skipBoost reports whether the (re-)boost can be skipped because the measured
-	// temperature is already within the hysteresis band below the loadpoint limit
-	skipBoost := func() bool {
-		if res.lp == nil || cc.Hysteresis <= 0 {
-			return false
-		}
-
-		bat, ok := api.Cap[api.Battery](res)
-		if !ok {
-			return false
-		}
-
-		temp, err := bat.Soc()
-		if err != nil {
-			if !errors.Is(err, api.ErrNotAvailable) {
-				log.ERROR.Printf("temp: %v", err)
-			}
-			return false
-		}
-
-		limit := res.lp.GetLimitSoc()
-		if limit <= 0 {
-			return false
-		}
-
-		if hysteresis := float64(limit) - cc.Hysteresis; temp >= hysteresis {
-			log.DEBUG.Printf("temp: %.1f >= %.1f  hysteresis", temp, hysteresis)
-			return true
-		}
-
-		return false
-	}
+	system := util.Cached(func() (sensonet.SystemStatus, error) {
+		return conn.GetSystem(systemId)
+	}, cc.Cache)
 
 	set := func(mode int64) error {
 		switch mode {
@@ -158,26 +126,20 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 				return conn.StartZoneQuickVeto(systemId, cc.HeatingZone, cc.HeatingSetpoint, 4) // hours
 			}
 
-			if !skipBoost() {
-				if err := conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT); err != nil {
-					return err
-				}
+			if err := conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT); err != nil {
+				return err
 			}
 
 			var wwCtx context.Context
 			wwCtx, wwCancel = context.WithCancel(ctx)
 
-			// re-boost every 15m
+			// re-boost at fixed interval
 			go func() {
 				for {
 					select {
 					case <-wwCtx.Done():
 						return
 					case <-time.After(cc.Reboost):
-						if skipBoost() {
-							continue
-						}
-
 						if err := conn.StartHotWaterBoost(systemId, sensonet.HOTWATERINDEX_DEFAULT); err != nil {
 							log.ERROR.Println("hot water boost:", err)
 						}
@@ -206,32 +168,32 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 		}, cc.Cache)))
 	}
 
-	heatingTemp := func(zz []sensonet.StateZone) float64 {
+	heatingZone := func(zz []sensonet.StateZone) sensonet.StateZone {
 		z, _ := lo.Find(zz, func(z sensonet.StateZone) bool {
 			return z.Index == cc.HeatingZone
 		})
-		return z.CurrentRoomTemperature
+		return z
 	}
 
 	var heatingTempSensor bool
 	if heating {
-		system, err := conn.GetSystem(systemId)
+		system, err := system()
 		if err != nil {
 			return nil, err
 		}
-		heatingTempSensor = heatingTemp(system.State.Zones) > 0
+		heatingTempSensor = heatingZone(system.State.Zones).CurrentRoomTemperature > 0
 	}
 
 	if !heating || heatingTempSensor {
-		implement.Has(res, implement.Battery(util.Cached(func() (float64, error) {
-			system, err := conn.GetSystem(systemId)
+		implement.Has(res, implement.Battery(func() (float64, error) {
+			system, err := system()
 			if err != nil {
 				return 0, err
 			}
 
 			switch {
 			case heatingTempSensor:
-				if res := heatingTemp(system.State.Zones); res > 0 {
+				if res := heatingZone(system.State.Zones).CurrentRoomTemperature; res > 0 {
 					return res, nil
 				}
 				return 0, api.ErrNotAvailable
@@ -242,17 +204,29 @@ func NewVaillantFromConfig(ctx context.Context, other map[string]any) (api.Charg
 			default:
 				return 0, api.ErrNotAvailable
 			}
-		}, cc.Cache)))
+		}))
+
+		// room setpoint of the heating zone or hot water tapping setpoint
+		implement.Has(res, implement.SocLimiter(func() (int64, error) {
+			system, err := system()
+			if err != nil {
+				return 0, err
+			}
+
+			switch {
+			case heating:
+				return int64(heatingZone(system.State.Zones).DesiredRoomTemperatureSetpoint), nil
+			case len(system.Configuration.Dhw) > 0:
+				return int64(system.Configuration.Dhw[0].TappingSetpoint), nil
+			case len(system.Configuration.DomesticHotWater) > 0:
+				return int64(system.Configuration.DomesticHotWater[0].TappingSetpoint), nil
+			default:
+				return 0, api.ErrNotAvailable
+			}
+		}))
 	}
 
 	return res, nil
-}
-
-var _ loadpoint.Controller = (*Vaillant)(nil)
-
-// LoadpointControl implements loadpoint.Controller
-func (wb *Vaillant) LoadpointControl(lp loadpoint.API) {
-	wb.lp = lp
 }
 
 func (v *Vaillant) print(chapter int, prefix string, zz ...any) {
