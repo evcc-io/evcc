@@ -39,7 +39,7 @@ type EEBus struct {
 	egLpcEntity spineapi.EntityRemoteInterface
 	egLppEntity spineapi.EntityRemoteInterface
 
-	dimmedState    bool // last limits written, re-stated on reconnect
+	dimLimit       float64 // last limits written, re-stated on reconnect
 	curtailPercent int
 }
 
@@ -201,11 +201,11 @@ func eebusReadValue[T any](uc eebusapi.UseCaseBaseInterface, entity spineapi.Ent
 	return res, nil
 }
 
-func (c *EEBus) lastDimmed() bool {
+func (c *EEBus) lastDimLimit() float64 {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	return c.dimmedState
+	return c.dimLimit
 }
 
 func (c *EEBus) lastCurtailPercent() int {
@@ -275,23 +275,12 @@ func (c *EEBus) dimmed() (bool, error) {
 		return false, err
 	}
 
-	// an active limit means dimmed; the applied limit value is 0W, so a
-	// value-based check would never report the dimmed state and never release it
+	// an active limit means dimmed regardless of its value
 	return limit.IsActive, nil
 }
 
-func (c *EEBus) dim(dim bool) error {
-	// Sets or removes the consumption power limit
-
-	// TODO: change api.Dimmer to make limit configurable
-	// For now, we use a fixed safe limit of 0W
-	limit := 0.0
-
-	var value float64
-	if dim {
-		value = limit
-	}
-
+// dim writes the consumption power limit, releasing it when limit is 0
+func (c *EEBus) dim(limit float64) error {
 	c.mu.Lock()
 	entity := c.egLpcEntity
 	c.mu.Unlock()
@@ -301,13 +290,13 @@ func (c *EEBus) dim(dim bool) error {
 	}
 
 	if err := eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
-		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: value, IsActive: dim}, cb)
+		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: limit, IsActive: limit > 0}, cb)
 	}); err != nil {
 		return err
 	}
 
 	c.mu.Lock()
-	c.dimmedState = dim
+	c.dimLimit = limit
 	c.mu.Unlock()
 
 	return nil

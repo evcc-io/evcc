@@ -43,7 +43,7 @@ func handleDimFlag(cmd *cobra.Command, v any) bool {
 	}
 
 	if vv, ok := api.Cap[api.Dimmer](v); ok {
-		if err := vv.Dim(val > 0); err != nil {
+		if err := vv.Dim(float64(val)); err != nil {
 			log.ERROR.Println("dim:", err)
 		}
 	} else {
