@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
 	"sync"
 	"time"
@@ -47,7 +48,7 @@ type EEBusOHPCF struct {
 	egLpcEntity spineapi.EntityRemoteInterface
 	enabled     bool
 	reboosting  bool
-	dimLimit    float64 // last limit written, re-stated on reconnect
+	dimLimit    *float64 // last limit written, re-stated on reconnect; nil until written
 
 	connector *eebus.Connector
 }
@@ -264,7 +265,10 @@ func (c *EEBusOHPCF) lastDimLimit() float64 {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	return c.dimLimit
+	if c.dimLimit == nil {
+		return math.Inf(1)
+	}
+	return *c.dimLimit
 }
 
 // ohpcfStatus maps the compressor process state to a charge status: running is
@@ -446,7 +450,7 @@ func (c *EEBusOHPCF) dimmed() (bool, error) {
 }
 
 // dim implements the api.Dimmer interface. It writes the §14a/LPC consumption
-// limit to the heat pump, releasing it when limit is 0.
+// limit to the heat pump, releasing it when limit is +Inf.
 func (c *EEBusOHPCF) dim(limit float64) error {
 	c.mu.RLock()
 	entity := c.egLpcEntity
@@ -457,13 +461,13 @@ func (c *EEBusOHPCF) dim(limit float64) error {
 	}
 
 	if err := eebus.Await(func(cb func(model.ResultDataType, model.MsgCounterType)) (*model.MsgCounterType, error) {
-		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, ucapi.LoadLimit{Value: limit, IsActive: limit > 0}, cb)
+		return c.eg.EgLPCInterface.WriteConsumptionLimit(entity, eebus.LoadLimit(limit), cb)
 	}); err != nil {
 		return err
 	}
 
 	c.mu.Lock()
-	c.dimLimit = limit
+	c.dimLimit = &limit
 	c.mu.Unlock()
 
 	return nil

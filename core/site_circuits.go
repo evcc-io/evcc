@@ -3,7 +3,6 @@ package core
 import (
 	"errors"
 	"fmt"
-	"slices"
 	"sync"
 
 	"github.com/cenkalti/backoff/v4"
@@ -48,7 +47,7 @@ func (site *Site) applyHemsLimits() {
 
 	wg.Go(func() {
 		if limit := hems.DimLimit(site.hems); limit != nil {
-			if err := site.dimMeters(*limit); err != nil {
+			if err := site.dimDevices(*limit); err != nil {
 				site.log.ERROR.Println(err)
 			}
 		}
@@ -96,49 +95,6 @@ func (site *Site) publishCircuits() {
 	}
 
 	site.publish(keys.Circuits, res)
-}
-
-// dimMeters applies the HEMS dim limit to all dimmable aux and ext meters.
-// Devices are only queried when the limit changes or after a failed attempt.
-func (site *Site) dimMeters(limit float64) error {
-	if site.dimLimit != nil && *site.dimLimit == limit {
-		return nil
-	}
-
-	// invalidate until successfully applied
-	site.dimLimit = nil
-	dim := limit > 0
-
-	var errs error
-	for _, dev := range slices.Concat(site.auxMeters, site.extMeters) {
-		m, ok := api.Cap[api.Dimmer](dev.Instance())
-		if !ok {
-			continue
-		}
-
-		// unreadable state: apply unconditionally
-		dimmed, err := backoff.RetryWithData(m.Dimmed, modbus.Backoff())
-		if err != nil && !errors.Is(err, api.ErrNotAvailable) {
-			errs = errors.Join(errs, fmt.Errorf("%s dimmed: %w", deviceTitleOrName(dev), err))
-			continue
-		}
-		// released on both sides: nothing to write; an active limit is re-stated since its value may have changed
-		if err == nil && !dim && !dimmed {
-			continue
-		}
-
-		if err := m.Dim(limit); err == nil {
-			site.log.DEBUG.Printf("%s dim: %t (%.0fW)", deviceTitleOrName(dev), dim, limit)
-		} else if !errors.Is(err, api.ErrNotAvailable) {
-			errs = errors.Join(errs, fmt.Errorf("%s dim: %w", deviceTitleOrName(dev), err))
-		}
-	}
-
-	if errs == nil {
-		site.dimLimit = &limit
-	}
-
-	return errs
 }
 
 // curtailable is a named curtailment device

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 
 	"github.com/evcc-io/evcc/api/implement"
 	"github.com/evcc-io/evcc/plugin"
@@ -44,7 +45,7 @@ func (cc *Dimmer) Implement(ctx context.Context, i implement.Caps) error {
 
 	if dimS != nil {
 		// plugins switch on/off; the limit value is not passed through
-		dim := func(limit float64) error { return dimS(limit > 0) }
+		dim := func(limit float64) error { return dimS(!math.IsInf(limit, 1)) }
 		implement.May(i, implement.Dimmer(dim, dimmedG))
 	}
 
