@@ -1,0 +1,198 @@
+{{ define "solax" }}
+type: custom
+{{- if eq .usage "grid" }}
+power:
+  source: modbus
+  {{- include "modbus" . | indent 2 }}
+  register:
+    address: 70 # 0x0046 feedin_power(meter)
+    type: input
+    decode: int32s
+  scale: -1
+energy:
+  source: modbus
+  {{- include "modbus" . | indent 2 }}
+  register:
+    address: 74 # 0x004A consum_energy_total(meter)
+    type: input
+    decode: uint32s
+  scale: 0.01
+currents:
+  - source: modbus
+    {{- include "modbus" . | indent 4 }}
+    register:
+      address: 206 # 0x00CE GridCurrent_R_Meter
+      type: input
+      decode: int16
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 4 }}
+    register:
+      address: 207 # 0x00CF GridCurrent_S_Meter
+      type: input
+      decode: int16
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 4 }}
+    register:
+      address: 208 # 0x00D0 GridCurrent_T_Meter
+      type: input
+      decode: int16
+    scale: 0.1
+voltages:
+  - source: modbus
+    {{- include "modbus" . | indent 4 }}
+    register:
+      address: 202 # 0x00CA GridVoltage_R_Meter
+      type: input
+      decode: uint16
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 4 }}
+    register:
+      address: 203 # 0x00CB GridVoltage_S_Meter
+      type: input
+      decode: uint16
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 4 }}
+    register:
+      address: 204 # 0x00CC GridVoltage_T_Meter
+      type: input
+      decode: uint16
+    scale: 0.1
+{{- end }}
+{{- if eq .usage "pv" }}
+power:
+  source: calc
+  add:
+  - source: modbus
+    {{- include "modbus" . | indent 4 }}
+    register:
+      address: 10 # 0x000A Powerdc1
+      type: input
+      decode: uint16
+  - source: modbus
+    {{- include "modbus" . | indent 4 }}
+    register:
+      address: 11 # 0x000B Powerdc2
+      type: input
+      decode: uint16
+{{- if .mppt3 }}
+  - source: modbus
+    {{- include "modbus" . | indent 4 }}
+    register:
+      address: 292 # 0x0124 Powerdc3
+      type: input
+      decode: uint16
+{{- end }}
+energy:
+  source: modbus
+  {{- include "modbus" . | indent 2 }}
+  register:
+    address: 148 # 0x0094 SolarEnergyTotal
+    type: input
+    decode: uint32s
+  scale: 0.1
+maxacpower: {{ .maxacpower }} # W
+{{- end }}
+{{- if eq .usage "battery" }}
+power:
+  source: modbus
+  {{- include "modbus" . | indent 2 }}
+  register:
+    {{- if eq .storageunit "1" }}
+    address: 22 # 0x0016 Batpower_Charge1
+    {{- else }}
+    address: 297 # 0x0129 Batpower_Charge2
+    {{- end }}
+    type: input
+    decode: int16
+  scale: -1
+soc:
+  source: modbus
+  {{- include "modbus" . | indent 2 }}
+  register:
+    {{- if eq .storageunit "1" }}
+    address: 28 # 0x001C Battery 1 Capacity
+    {{- else }}
+    address: 301 # 0x012D Battery 2 Capacity
+    {{- end }}
+    type: input
+    decode: uint16
+# energy:
+#   source: modbus
+#   register:
+#     address: 29 # 0x001D Battery Output Energy Total
+#     type: input
+#     decode: uint32s
+#   scale: 0.1
+batterymode:
+  source: switch
+  switch:
+  - case: 1 # normal
+    set:
+      source: const
+      value: {{ .defaultmode }}
+      set:
+        source: modbus
+        {{- include "modbus" . | indent 8 }}
+        register:
+          address: 0x001F # SolarChargeUseMode
+          type: writesingle
+          decode: uint16
+  - case: 2 # hold
+    set:
+      source: sequence
+      set:
+      - source: const
+        value: 0 # Stop force charge & discharge
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 10 }}
+          register:
+            address: 0x0020 # Manual mode
+            type: writesingle
+            decode: uint16
+      - source: const
+        value: 3 # manual mode
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 10 }}
+          register:
+            address: 0x001F # SolarChargeUseMode
+            type: writesingle
+            decode: uint16
+  - case: 3 # charge
+    set:
+      source: sequence
+      set:
+      - source: const
+        value: 1 # Wake battery from standby
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 10 }}
+          register:
+            address: 0x0056 # Bat_Awaken
+            type: writesingle
+            decode: uint16
+      - source: const
+        value: 1 # Force charge
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 10 }}
+          register:
+            address: 0x0020 # Manual mode
+            type: writesingle
+            decode: uint16
+      - source: const
+        value: 3 # manual mode
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 10 }}
+          register:
+            address: 0x001F # SolarChargeUseMode
+            type: writesingle
+            decode: uint16
+{{- end }}
+{{- end }}
