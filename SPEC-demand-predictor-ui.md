@@ -35,9 +35,9 @@ It is visible only for heating devices (`chargerFeatureHeating = true`).
 
 | Display name | Best used for |
 |---|---|
-| **Average** | Devices with consistent usage throughout the day. |
-| **Weekday** | Devices that follow a weekly household rhythm, like warm water or pool heaters. |
-| **Temperature** | Room heating that follows outdoor temperature, like heat pumps or floor heating. |
+| **Average** | Best for devices with consistent usage throughout the day. |
+| **Weekday** | Best for devices that follow a weekly (same weekday) household rhythm, like warm water or pool heaters. |
+| **Temperature** | Best for room heating that follows outdoor temperature, like heat pumps or floor heating. |
 
 ### Hint text
 
@@ -234,7 +234,7 @@ Add under `main.loadpointSettings`:
 "demandPredictor": {
   "label": "Demand forecast",
   "daily":       { "description": "Best for devices with consistent usage throughout the day." },
-  "weekday":     { "description": "Best for devices that follow a weekly household rhythm, like warm water or pool heaters." },
+  "weekday":     { "description": "Best for devices that follow a weekly (same weekday) household rhythm, like warm water or pool heaters." },
   "temperature": { "description": "Best for room heating that follows outdoor temperature, like heat pumps or floor heating." },
   "noTempTariff": "Requires a temperature tariff to be configured."
 }
