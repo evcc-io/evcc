@@ -77,8 +77,10 @@ jobs:
           # background sub-agent and exit before it returns. All modes get read-only
           # git log and gh pr view/diff to trace a regression to its pull request,
           # and gh issue list to find similar issues. Only triage may close a
-          # duplicate.
-          claude_args: ${{ inputs.mode == 'analyze' && '--allowed-tools "Read,Grep,Glob,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api:*),Bash(git log:*)" --disallowed-tools "Task"' || (inputs.mode == 'fix' && '--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh issue comment:*),Bash(gh pr create:*),Bash(git checkout:*),Bash(git switch:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git log:*),Bash(git status),Bash(gh api:*)" --disallowed-tools "Task"' || '--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue edit:*),Bash(gh issue close:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr create:*),Bash(git checkout:*),Bash(git switch:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git log:*),Bash(git status)" --disallowed-tools "Task"') }}
+          # duplicate. Triage and analyze read and comment, Sonnet is enough and
+          # spends less of the subscription quota; fix writes code and keeps the
+          # default model.
+          claude_args: ${{ inputs.mode == 'analyze' && '--model claude-sonnet-5-5 --allowed-tools "Read,Grep,Glob,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api:*),Bash(git log:*)" --disallowed-tools "Task"' || (inputs.mode == 'fix' && '--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh issue comment:*),Bash(gh pr create:*),Bash(git checkout:*),Bash(git switch:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git log:*),Bash(git status),Bash(gh api:*)" --disallowed-tools "Task"' || '--model claude-sonnet-5-5 --allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue edit:*),Bash(gh issue close:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr create:*),Bash(git checkout:*),Bash(git switch:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git log:*),Bash(git status)" --disallowed-tools "Task"') }}
           prompt: |
             You are the issue triage, analysis and fix agent for the evcc repository.
             MODE = "${{ inputs.mode }}". Work on issue/PR #${{ inputs.issue_number }}.
@@ -206,8 +208,9 @@ jobs:
                The text starts with `Duplicate of #<original>` on its own line so
                GitHub links the two, says in one or two sentences why they are the
                same, asks the reporter to continue in the original issue (and to
-               add their log/config there if it adds information), and ends with
-               the footer from step 2. Then give the closed issue the original's
+               add their log/config there if it adds information), says that a
+               reply here reopens the issue if it is not a duplicate, and ends
+               with the footer from step 2. Then give the closed issue the original's
                labels so both show up in the same filters: read them with
                `gh issue view <original> --json labels --jq '.labels[].name'`,
                drop `waiting for feedback`, and apply the rest with
