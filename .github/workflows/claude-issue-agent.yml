@@ -26,9 +26,8 @@ jobs:
       github.event_name == 'issues' &&
       (github.event.action == 'opened' || github.event.sender.login == github.event.issue.user.login)
     permissions:
-      contents: write # create branch + push PR fix
-      issues: write # add labels + comment analysis
-      pull-requests: write # open PR fix
+      contents: read # explore the codebase; fixes only come from a maintainer's /fix
+      issues: write # add labels + comment analysis + close duplicates
       id-token: write
       actions: read
     uses: ./.github/workflows/claude-issue-agent-run.yml

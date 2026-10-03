@@ -3,7 +3,8 @@ name: Claude Issue Agent (reusable)
 # Shared investigate + comment logic for issue triage and the on-demand /analyze
 # and /fix commands. Callers pass a mode:
 #   triage  — auto on issue open: close incomplete bug reports, otherwise
-#             investigate, close duplicates, comment, label, and optionally fix.
+#             investigate, close duplicates, comment, label. Read-only on code:
+#             fixes only come from a maintainer's /fix.
 #   analyze — on-demand /analyze comment: investigate, comment, then resolve the
 #             invoking comment. No labels, no PRs.
 #   fix     — on-demand /fix comment: investigate, push a fix branch, open a PR,
@@ -33,8 +34,8 @@ jobs:
   run:
     name: Issue agent
     runs-on: ubuntu-latest
-    # No permissions block: inherit the caller's grant (triage/fix=write to push
-    # fixes, analyze=read). A reusable job can only reduce, never elevate.
+    # No permissions block: inherit the caller's grant (fix=write to push
+    # fixes, triage/analyze=read). A reusable job can only reduce, never elevate.
     steps:
       - name: React to invoking comment
         if: inputs.comment_id != ''
@@ -70,15 +71,17 @@ jobs:
           allowed_non_write_users: '*'
           additional_permissions: |
             actions: read
-          # analyze mode gets read + comment + api tools only; triage/fix
-          # additionally get Edit/Write + git/PR tools to actually make and push a
-          # fix (analyze/fix need gh api to read their invoking comment). Task
-          # is blocked in all modes so the agent can't offload work to a
+          # Only fix mode gets Edit/Write + git push + gh pr create, and only a
+          # maintainer's /fix reaches it. Triage and analyze read the code and
+          # touch issue metadata at most: an injected issue body cannot push code.
+          # analyze/fix read their invoking comment with one exact gh api command
+          # (no wildcard, so the token cannot be used for arbitrary API calls).
+          # Task is blocked in all modes so the agent can't offload work to a
           # background sub-agent and exit before it returns. All modes get read-only
           # git log and gh pr view/diff to trace a regression to its pull request,
           # and gh issue list to find similar issues. Only triage may close a
           # duplicate.
-          claude_args: ${{ inputs.mode == 'analyze' && '--allowed-tools "Read,Grep,Glob,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api:*),Bash(git log:*)" --disallowed-tools "Task"' || (inputs.mode == 'fix' && '--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh issue comment:*),Bash(gh pr create:*),Bash(git checkout:*),Bash(git switch:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git log:*),Bash(git status),Bash(gh api:*)" --disallowed-tools "Task"' || '--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue edit:*),Bash(gh issue close:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr create:*),Bash(git checkout:*),Bash(git switch:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git log:*),Bash(git status)" --disallowed-tools "Task"') }}
+          claude_args: ${{ inputs.mode == 'analyze' && format('--allowed-tools "Read,Grep,Glob,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api repos/{0}/issues/comments/{1} --jq .body),Bash(git log:*)" --disallowed-tools "Task"', github.repository, inputs.comment_id) || (inputs.mode == 'fix' && format('--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh issue comment:*),Bash(gh pr create:*),Bash(git checkout:*),Bash(git switch:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git log:*),Bash(git status),Bash(gh api repos/{0}/issues/comments/{1} --jq .body)" --disallowed-tools "Task"', github.repository, inputs.comment_id) || '--allowed-tools "Read,Grep,Glob,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue edit:*),Bash(gh issue close:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(git log:*)" --disallowed-tools "Task"') }}
           prompt: |
             You are the issue triage, analysis and fix agent for the evcc repository.
             MODE = "${{ inputs.mode }}". Work on issue/PR #${{ inputs.issue_number }}.
@@ -167,8 +170,8 @@ jobs:
                paths, code and identifiers in backticks. Always end the comment with:
                "🤖 Generated with [Claude Code](https://claude.com/claude-code)".
 
-            If MODE is "triage", first check completeness, then close duplicates, label
-            and fix:
+            If MODE is "triage", first check completeness, then close duplicates and
+            label. You cannot change code in this mode:
 
             0. COMPLETENESS: Do this BEFORE step 1 and 2 (investigating and
                commenting). The bug report form says incomplete issues are closed
@@ -246,21 +249,11 @@ jobs:
                  and do NOT set type Bug. `waiting for feedback` is an allowed existing
                  label, additional to the set above.
 
-            4. FIX (only if applicable): Only attempt when the issue is a clearly-scoped,
-               low-risk bug or small enhancement with an obvious fix. If it needs design
-               discussion, spans many files, or the cause is uncertain, STOP after
-               step 2 and do not open a PR. When you do fix:
-               - branch: `git switch -c fix/issue-${{ inputs.issue_number }}`
-               - make the minimal change, then commit. Do NOT add a Co-Authored-By trailer.
-               - push and open a draft PR with `gh pr create --draft` whose body starts
-                 with `fixes #${{ inputs.issue_number }}` and ends with the
-                 "🤖 Generated with [Claude Code](https://claude.com/claude-code)" footer.
-               - if the issue carries type Bug, whether you set it in step 3 or it
-                 already had it, create the PR with `--label bug` so it qualifies for
-                 backport. The `bug` label belongs on the fixing pull request, never on
-                 the issue.
+            Do NOT edit files, push or open a PR in triage mode. When the issue looks
+            like a clearly-scoped, low-risk fix, say so in your step 2 comment: a
+            maintainer starts the fix with `/fix`.
 
-            If MODE is "fix", do the following instead of step 3/4 above:
+            If MODE is "fix", do the following instead of step 3 above:
 
             5. FIX: A maintainer explicitly asked for a fix via `/fix`. Implement it:
                - branch: `git switch -c fix/issue-${{ inputs.issue_number }}`
