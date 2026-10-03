@@ -55,7 +55,13 @@ export default defineComponent({
     onChartInit() {},
     onTouchTooltipReset() {},
     resize() {
-      this.chart?.resize();
+      const el = this.chart?.getDom();
+      if (!this.chart || !el) return;
+      // mobile browsers fire resize while scrolling, a full re-render at the same size is wasted
+      if (el.clientWidth === this.chart.getWidth() && el.clientHeight === this.chart.getHeight()) {
+        return;
+      }
+      this.chart.resize();
     },
   },
 });

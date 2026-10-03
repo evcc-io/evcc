@@ -1,25 +1,28 @@
 package service
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"runtime"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/evcc-io/evcc/util/discovery"
 )
 
-// reportDevice is shared by users, it must not identify the device or its owner
-type reportDevice struct {
+// ReportDevice is shared by users, it must not identify the device or its owner
+type ReportDevice struct {
 	Template  string   `json:"template"`
 	Mac       string   `json:"mac,omitempty"`
 	Hostnames []string `json:"hostnames,omitempty"`
 	Services  []string `json:"services,omitempty"`
 }
 
-type scanHost struct {
+// ScanHost is a discovered host with its vendor and usage by the configuration
+type ScanHost struct {
 	IP       string   `json:"ip"`
 	Mac      string   `json:"mac,omitempty"`
 	Vendor   string   `json:"vendor,omitempty"`
@@ -69,12 +72,17 @@ func system() string {
 	return res
 }
 
-func reportDevices(configs []config.Named, hosts []discovery.Host) []reportDevice {
-	res := make([]reportDevice, 0)
+func reportDevices(configs []config.Named, hosts []discovery.Host) []ReportDevice {
+	res := make([]ReportDevice, 0)
 
 	for _, conf := range configs {
 		name, ok := conf.Property("template").(string)
 		if !ok || name == "" {
+			continue
+		}
+
+		// discovery hints only apply to the host param
+		if host, _ := conf.Property("host").(string); host == "" {
 			continue
 		}
 
@@ -83,7 +91,7 @@ func reportDevices(configs []config.Named, hosts []discovery.Host) []reportDevic
 			return isHost(h, addrs)
 		})
 
-		dev := reportDevice{Template: name}
+		dev := ReportDevice{Template: name}
 
 		if idx >= 0 {
 			h := hosts[idx]
@@ -104,7 +112,7 @@ func reportDevices(configs []config.Named, hosts []discovery.Host) []reportDevic
 		}
 
 		// one device may be configured multiple times
-		if !slices.ContainsFunc(res, func(d reportDevice) bool {
+		if !slices.ContainsFunc(res, func(d ReportDevice) bool {
 			return d.Template == dev.Template && d.Mac == dev.Mac && slices.Equal(d.Hostnames, dev.Hostnames)
 		}) {
 			res = append(res, dev)
@@ -114,20 +122,20 @@ func reportDevices(configs []config.Named, hosts []discovery.Host) []reportDevic
 	return res
 }
 
-// report is shared by users. Hosts are unredacted and stay local.
-type report struct {
+// Report is shared by users. Devices are redacted, hosts are unredacted and stay local.
+type Report struct {
 	System  string         `json:"system"`
-	Devices []reportDevice `json:"devices"`
-	Hosts   []scanHost     `json:"hosts"`
+	Devices []ReportDevice `json:"devices"`
+	Hosts   []ScanHost     `json:"hosts"`
 }
 
-func getReport(w http.ResponseWriter, req *http.Request) {
-	found := hosts(w, req, mdnsTypes(allTemplates()))
-	used := usedHosts()
+// newReport builds the report of the configured devices against the discovered hosts
+func newReport(configs []config.Named, found []discovery.Host) Report {
+	used := usedHosts(configs)
 
-	scanned := make([]scanHost, 0, len(found))
+	scanned := make([]ScanHost, 0, len(found))
 	for _, h := range found {
-		scanned = append(scanned, scanHost{
+		scanned = append(scanned, ScanHost{
 			IP:       h.IP,
 			Mac:      h.MAC,
 			Vendor:   discovery.Vendor(h.MAC),
@@ -138,9 +146,31 @@ func getReport(w http.ResponseWriter, req *http.Request) {
 		})
 	}
 
-	jsonWrite(w, report{
+	return Report{
 		System:  system(),
-		Devices: reportDevices(allDeviceConfigs(), found),
+		Devices: reportDevices(configs, found),
 		Hosts:   scanned,
-	})
+	}
+}
+
+// Scan runs a complete discovery scan and reports the configured devices against the result
+func Scan(ctx context.Context, configs []config.Named) Report {
+	types := mdnsTypes(allTemplates())
+
+	for {
+		found, pending := discovery.Hosts(ctx, types, false)
+		if pending == 0 || ctx.Err() != nil {
+			return newReport(configs, found)
+		}
+
+		select {
+		case <-time.After(pending):
+		case <-ctx.Done():
+		}
+	}
+}
+
+func getReport(w http.ResponseWriter, req *http.Request) {
+	found := hosts(w, req, mdnsTypes(allTemplates()))
+	jsonWrite(w, newReport(allDeviceConfigs(), found))
 }
