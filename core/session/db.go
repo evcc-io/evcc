@@ -66,6 +66,12 @@ func (s *DB) Sessions() (Sessions, error) {
 	return res, tx.Error
 }
 
+// Completed returns the finished sessions of a vehicle
+func Completed(conn *gorm.DB, vehicle string) (Sessions, error) {
+	var res Sessions
+	return res, conn.Where("vehicle = ? AND finished > created", vehicle).Find(&res).Error
+}
+
 func (s *DB) ClosePendingSessionsInHistory(chargeMeterTotal float64) error {
 	var res Sessions
 	if tx := s.db.Find(&res, map[string]any{"finished": "0001-01-01 00:00:00+00:00", "Loadpoint": s.name}); tx.Error != nil {
