@@ -485,10 +485,6 @@ func TestBatteryDischargeHemsCurtailed(t *testing.T) {
 	ctrl.Finish()
 }
 
-type batteryPowerLimitsStub struct{ charge float64 }
-
-func (s batteryPowerLimitsStub) GetPowerLimits() (float64, float64) { return s.charge, 0 }
-
 // TestBatteryGridChargeCircuit guards that grid charging respects the root circuit's power limit:
 // it does not start without headroom for the expected charge power and stops once the circuit is
 // over power (discussion #25326).
@@ -523,7 +519,7 @@ func TestBatteryGridChargeCircuit(t *testing.T) {
 					api.Meter
 					api.BatteryController
 					api.BatteryPowerLimiter
-				}{BatteryController: batCon, BatteryPowerLimiter: batteryPowerLimitsStub{tc.chargeLimit}}
+				}{BatteryController: batCon, BatteryPowerLimiter: &mockBatteryPowerLimiter{charge: tc.chargeLimit}}
 			}
 
 			circuit := api.NewMockCircuit(ctrl)

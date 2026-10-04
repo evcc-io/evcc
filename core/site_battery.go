@@ -77,7 +77,6 @@ func (site *Site) updateBatteryMode(batteryGridChargeActive, batteryGridDischarg
 
 	// load management: don't start grid charging without headroom, stop it when the circuit is over power
 	if site.fromTo(batteryMode, api.BatteryCharge) && site.batteryChargeExceedsCircuit() {
-		site.log.DEBUG.Println("battery mode: circuit limit")
 		batteryMode = api.BatteryHold
 	}
 
@@ -142,20 +141,19 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 	return res
 }
 
-// batteryChargeExceedsCircuit reports whether grid charging would exceed or already exceeds the
-// root circuit's power limit. Starting needs headroom for the expected charge power: the batteries'
-// charge limits or, if unknown, the charge power observed when load management last stopped charging.
-// While charging, the battery stops once the circuit is over power.
+// batteryChargeExceedsCircuit reports whether grid charging exceeds the root circuit's power limit: starting needs
+// headroom for the batteries' charge limits (or the charge power at the last stop), charging stops when over power
 func (site *Site) batteryChargeExceedsCircuit() bool {
 	if site.circuit == nil {
 		return false
 	}
 
-	if site.GetBatteryMode() == api.BatteryCharge {
+	if site.batteryMode == api.BatteryCharge {
 		maxPower := site.circuit.GetMaxPower()
-		if maxPower > 0 && site.circuit.GetChargePower() > maxPower {
+		if power := site.circuit.GetChargePower(); maxPower > 0 && power > maxPower {
 			// restarting needs headroom for at least this power (charging is negative)
 			site.batteryChargeStopPower = max(0, -site.state().battery.Power)
+			site.log.DEBUG.Printf("battery mode: circuit over power %.0fW > %.0fW, stop charging at %.0fW", power, maxPower, site.batteryChargeStopPower)
 			return true
 		}
 		return false
@@ -166,7 +164,14 @@ func (site *Site) batteryChargeExceedsCircuit() bool {
 		power = site.batteryChargeStopPower
 	}
 
-	return power > 0 && site.circuit.ValidatePower(0, power) < power
+	if power > 0 {
+		if available := site.circuit.ValidatePower(0, power); available < power {
+			site.log.DEBUG.Printf("battery mode: circuit headroom %.0fW < %.0fW, don't start charging", available, power)
+			return true
+		}
+	}
+
+	return false
 }
 
 // batteryMaxChargePower returns the summed charge power limit of the controllable batteries, 0 if any is unknown
