@@ -308,6 +308,10 @@ export default defineComponent({
 </script>
 
 <style scoped>
+/* keeps the many cells out of the page-wide paint work on every repaint elsewhere */
+.table-responsive {
+	contain: paint;
+}
 .table {
 	font-size: 0.8125rem;
 }

@@ -441,8 +441,9 @@ func (s *HTTPd) RegisterSystemHandler(site *core.Site, pub publisher, cache *uti
 			"logareas":   {"GET", "/log/areas", logAreasHandler},
 			"clearcache": {"DELETE", "/cache", clearCacheHandler},
 			"shutdown": {"POST", "/shutdown", func(w http.ResponseWriter, r *http.Request) {
-				shutdown()
 				w.WriteHeader(http.StatusNoContent)
+				_ = http.NewResponseController(w).Flush()
+				shutdown()
 			}},
 		}
 

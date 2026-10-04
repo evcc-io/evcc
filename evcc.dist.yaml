@@ -149,12 +149,12 @@ tariffs:
         price: 0.2 # EUR/kWh
       - days: Sat,Sun
         price: 0.15 # EUR/kWh
-    # see: https://docs.evcc.io/en/docs/devices/tariffs
+    # see: https://docs.evcc.io/en/tariffs/
   feedin:
     # rate for feeding excess (pv) energy to the grid
     type: fixed
     price: 0.08 # EUR/kWh
-    # see: https://docs.evcc.io/en/docs/devices/tariffs
+    # see: https://docs.evcc.io/en/tariffs/
   co2:
     # co2 tariff provides co2 intensity forecast and is for co2-optimized target charging if no variable grid tariff is specified
     # type: template

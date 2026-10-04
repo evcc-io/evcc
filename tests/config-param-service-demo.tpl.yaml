@@ -23,6 +23,15 @@ params:
     description:
       generic: City
     service: demo/{country}/city
+  - name: address
+    description:
+      generic: Device address
+    service: demo/options
+  - name: required-address
+    description:
+      generic: Required address
+    required: true
+    service: demo/options
 
 render: |
   type: custom

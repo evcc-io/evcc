@@ -4,6 +4,9 @@ products:
     description:
       generic: iHomeManager (iHM)
 capabilities: ["curtail"]
+discovery:
+  hostname: ["sungrow*"]
+  mac: ["AC199F"]
 params:
   - name: usage
     choice: ["grid", "pv", "battery"]

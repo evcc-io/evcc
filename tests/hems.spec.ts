@@ -10,6 +10,7 @@ import {
   expectAppEvent,
   newLoadpoint,
   addDemoCharger,
+  enableExperimental,
 } from "./utils";
 import { startSimulator, stopSimulator, simulatorUrl, simulatorApply } from "./simulator";
 
@@ -146,15 +147,7 @@ maxconsumptionpower:
     await expectModalHidden(hemsModal);
 
     // enable experimental
-    await page
-      .getByTestId("generalconfig-experimental")
-      .getByRole("button", { name: "edit" })
-      .click();
-    const experimentalModal = page.getByTestId("experimental-modal");
-    await expectModalVisible(experimentalModal);
-    await experimentalModal.getByLabel("Enable experimental features.").click();
-    await experimentalModal.getByRole("button", { name: "Close" }).click();
-    await expectModalHidden(experimentalModal);
+    await enableExperimental(page);
 
     await page.getByTestId("hems").getByRole("button", { name: "edit" }).click();
     await expectModalVisible(hemsModal);

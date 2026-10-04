@@ -42,6 +42,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 | [Provider Auth](docs/agents/provider-auth.md)                 | Third-party logins (OAuth, device code, tokens), template `auth` block, UI   |
 | [Chart Conventions](docs/agents/charts.md)                    | ECharts charts: axis units and scale rules, tooltips, layout                 |
 | [Energy Analytics](docs/agents/energy-analytics.md)           | Energy page metrics: attribution, cost/CO2, forecast accuracy, missing data  |
+| [Discovery Hints](docs/agents/discovery-hints.md)             | Vendor registry update, adding and reviewing template `discovery` hints      |
 
 ### Loading guide by task type
 
@@ -55,6 +56,7 @@ Deep documentation on specific subsystems is available in `docs/agents/`. Load w
 - **Auth / login / API key / permissions** — api-security + web-ui-api
 - **Vehicle or device cloud login (OAuth, tokens, captcha)** — provider-auth + hardware-integrations
 - **Config/template work** — plugin-system
+- **Discovery hints / vendor registry update** — discovery-hints + plugin-system
 - **Control loop / charging logic** — core-domain
 - **Energy page metrics (attribution, savings, accuracy)** — energy-analytics + charts
 - **Bug in any area** — core-domain + relevant topic file(s)
