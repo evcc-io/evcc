@@ -2,7 +2,7 @@
 	<div
 		ref="chartEl"
 		class="pattern"
-		:style="{ height: `${height}px` }"
+		:style="{ height: `${chartHeight}px` }"
 		data-testid="pattern-chart"
 	></div>
 </template>
@@ -18,6 +18,9 @@ import type { HistorySeries } from "./GroupChart.vue";
 import { PERIODS } from "../Sessions/types";
 import { labelStep, DAY_STEPS, MONTH_STEPS } from "@/utils/labelStep";
 import { is12hFormat } from "@/units";
+import { PANEL_EXTRA, panelGrids, socTempPanel, type SubPanel } from "./subPanel";
+
+const DAY_SLOTS = 96;
 
 // energy of one entity as a pattern: a row of 15 minute cells for a day, hour by day for a month, day calendar for longer ranges
 export default defineComponent({
@@ -36,6 +39,27 @@ export default defineComponent({
 		return { chartWidth: 0 };
 	},
 	computed: {
+		// day: soc or temperature per slot
+		socTempValues(): (number | null)[] | null {
+			if (this.period !== PERIODS.DAY) return null;
+			if (!this.series.data.some((slot) => slot.socTemp != null)) return null;
+			const values: (number | null)[] = Array.from({ length: DAY_SLOTS }, () => null);
+			for (const slot of this.series.data) {
+				values[this.slotIndex(slot.start)] = slot.socTemp ?? null;
+			}
+			return values;
+		},
+		// in its own panel below the row, like the bar chart
+		subPanel(): SubPanel | null {
+			if (!this.socTempValues) return null;
+			const isTemp = !!this.series.isTemp;
+			return socTempPanel(this.socTempValues, this.color, isTemp, (v) =>
+				isTemp ? this.fmtNumber(v, 0, "celsius") : this.fmtPercentage(v)
+			);
+		},
+		chartHeight(): number {
+			return this.height + (this.subPanel ? PANEL_EXTRA : 0);
+		},
 		max(): number {
 			return Math.max(0, ...this.series.data.map((slot) => slot.energy));
 		},
@@ -69,53 +93,85 @@ export default defineComponent({
 		// day: one row of 15 minute cells over the bar chart's frame, color by energy,
 		// with the color scale above
 		slotRowOption(): Record<string, unknown> {
-			const slots = 96;
-			const data = this.series.data.map((slot) => [
-				this.slotIndex(slot.start),
-				0,
-				slot.energy,
-			]);
+			const energy = new Map(
+				this.series.data.map((slot) => [this.slotIndex(slot.start), slot.energy])
+			);
 			const step = labelStep(24, this.chartWidth, DAY_STEPS, is12hFormat() ? 56 : 40);
 			const maxLabel = this.fmtW(slotWatts(this.max), POWER_UNIT.AUTO);
+			const panel = this.subPanel;
+			const isTemp = !!this.series.isTemp;
+			// same frame as the bar chart so toggling does not jump
+			const grid = { ...forecastGrid(), left: panel ? 36 : 0, right: 36 };
+			const xAxis = {
+				type: "category",
+				data: Array.from({ length: DAY_SLOTS }, (_, i) => i),
+				axisLine: { show: false },
+				axisTick: { show: false },
+				axisLabel: {
+					...xAxisLabelStyle(),
+					interval: 0,
+					// full hours in even steps, 00:00 skipped like the bar chart
+					formatter: (_: string, i: number) =>
+						i > 0 && i % (4 * step) === 0
+							? this.hourShort(new Date(this.from.getTime() + i * SLOT_MS))
+							: "",
+				},
+			};
 			return {
+				// one pointer and tooltip across the row and the panel
+				axisPointer: { link: [{ xAxisIndex: "all" }] },
 				tooltip: {
+					trigger: "axis",
+					axisPointer: { type: "shadow", shadowStyle: { color: "transparent" } },
 					...tooltipStyle(colors.text || ""),
-					formatter: (params: { value: [number, number, number] }) => {
-						const start = new Date(this.from.getTime() + params.value[0] * SLOT_MS);
+					formatter: (params: { axisValue: string | number }[]) => {
+						const i = Number(params[0]?.axisValue);
+						const watts = energy.get(i);
+						const socTemp = this.socTempValues?.[i] ?? null;
+						if (watts === undefined && socTemp === null) return "";
+						const start = new Date(this.from.getTime() + i * SLOT_MS);
 						// 15 minute slot as average power, like the bar chart
-						return tooltipTable(this.fmtTimeSlot(start, SLOT_MS), [
-							{ values: [this.fmtW(slotWatts(params.value[2]), POWER_UNIT.AUTO)] },
-						]);
+						const power = this.fmtW(slotWatts(watts ?? 0), POWER_UNIT.AUTO);
+						const label = (key: string) => this.$t(`energy.socTemp.${key}`);
+						return tooltipTable(
+							this.fmtTimeSlot(start, SLOT_MS),
+							socTemp === null
+								? [{ values: [power] }]
+								: [
+										{
+											name: label(isTemp ? "used" : "charged"),
+											values: [power],
+										},
+										{
+											name: label(isTemp ? "temperature" : "soc"),
+											values: [
+												isTemp
+													? this.fmtTemperature(socTemp)
+													: this.fmtPercentage(socTemp),
+											],
+										},
+									]
+						);
 					},
 				},
-				visualMap: this.legend(maxLabel, 36),
-				// same frame as the bar chart so toggling does not jump
-				// the bar chart reserves a left axis for soc or temperature, same frame here
-				grid: {
-					...forecastGrid(),
-					left: this.series.data.some((slot) => slot.socTemp != null) ? 36 : 0,
-					right: 36,
-				},
-				xAxis: {
-					type: "category",
-					data: Array.from({ length: slots }, (_, i) => i),
-					axisLine: { show: false },
-					axisTick: { show: false },
-					axisLabel: {
-						...xAxisLabelStyle(),
-						interval: 0,
-						// full hours in even steps, 00:00 skipped like the bar chart
-						formatter: (_: string, i: number) =>
-							i > 0 && i % (4 * step) === 0
-								? this.hourShort(new Date(this.from.getTime() + i * SLOT_MS))
-								: "",
-					},
-				},
-				yAxis: { type: "category", data: [""], show: false },
+				// the scale colors the row only, not the panel's line
+				visualMap: { ...this.legend(maxLabel, 36), seriesIndex: 0 },
+				grid: panel ? panelGrids(grid, panel.track) : grid,
+				// with a panel the labels sit below it
+				xAxis: panel
+					? [
+							{ ...xAxis, axisLabel: { show: false } },
+							{ ...xAxis, gridIndex: 1 },
+						]
+					: xAxis,
+				yAxis: [
+					{ type: "category", data: [""], show: false },
+					...(panel ? [panel.yAxis] : []),
+				],
 				series: [
 					{
 						type: "heatmap",
-						data,
+						data: [...energy].map(([i, v]) => [i, 0, v]),
 						itemStyle: {
 							borderWidth: 1,
 							borderColor: colors.box || "",
@@ -123,6 +179,7 @@ export default defineComponent({
 						},
 						emphasis: { disabled: true },
 					},
+					...(panel?.series ?? []),
 				],
 			};
 		},

@@ -1,6 +1,6 @@
 <template>
 	<div class="history-chart-wrapper" :data-testid="`group-chart-${group}`">
-		<div ref="chartEl" class="history-chart" :style="{ height: `${height}px` }"></div>
+		<div ref="chartEl" class="history-chart" :style="{ height: `${chartHeight}px` }"></div>
 	</div>
 </template>
 
@@ -29,6 +29,7 @@ import type { PriceBand, PriceOverlay } from "./types";
 import { CURRENCY } from "@/types/evcc";
 import { energyAxisScale, type EnergyAxisScale } from "@/utils/energyAxis";
 import { labelStep, DAY_STEPS, MONTH_STEPS } from "@/utils/labelStep";
+import { PANEL_EXTRA, panelGrids, socTempPanel, type SubPanel } from "./subPanel";
 
 export interface HistorySlot {
 	start: string;
@@ -244,6 +245,20 @@ export default defineComponent({
 							: null
 					)
 				: null;
+		},
+		// day view: soc or temperature as line and area in its own panel below the bars
+		subPanel(): SubPanel | null {
+			if (!this.socTempValues) return null;
+			const isTemp = this.socTempIsTemp;
+			return socTempPanel(
+				this.socTempValues,
+				this.entryColors[0] || this.color,
+				isTemp,
+				(v) => (isTemp ? this.fmtNumber(v, 0, "celsius") : this.fmtPercentage(v))
+			);
+		},
+		chartHeight(): number {
+			return this.height + (this.subPanel ? PANEL_EXTRA : 0);
 		},
 		// another view of the same data: stack order or the price overlay toggled
 		viewKey(): string {
@@ -489,21 +504,7 @@ export default defineComponent({
 					},
 				});
 			}
-			if (this.socTempValues) {
-				const line = {
-					id: "soctemp",
-					name: "soctemp",
-					type: "line",
-					yAxisIndex: 1,
-					data: this.socTempValues,
-					smooth: true,
-					symbol: "none",
-					connectNulls: true,
-					lineStyle: { color: colors.muted || "", ...lineDefaults },
-					z: 4,
-				};
-				result.push(lineCasing(line, 3), line);
-			}
+			if (this.subPanel) result.push(...this.subPanel.series);
 
 			// Always render import + export series per entity, even if one direction
 			// is empty (null-filled). Stable series ids/structure across renders so
@@ -689,17 +690,43 @@ export default defineComponent({
 			const keys = this.categoryKeys;
 			const formatLabel = this.labelForTimestamp;
 			const tooltipDate = this.tooltipDateLabel;
+			const barGrid = {
+				...forecastGrid(),
+				left: this.subPanel || this.socTempBands || this.prices ? 36 : 0,
+				right: 36,
+				...(this.showXAxis ? {} : { bottom: 4 }),
+			};
+			const xAxisLabel = {
+				...xAxisLabelStyle(),
+				show: this.showXAxis,
+				hideOverlap: false,
+				interval: 0,
+				formatter: (_value: string, index: number) => formatLabel(cats[index] ?? 0),
+			};
+			const barXAxis = {
+				type: "category",
+				data: keys,
+				axisLine: this.isBidirectional
+					? {
+							show: true,
+							onZero: true,
+							lineStyle: { color: colors.muted || "", width: 1 },
+						}
+					: { show: false },
+				axisTick: { show: false },
+				splitLine: { show: false },
+				// with a panel the labels sit below it
+				axisLabel: this.subPanel ? { show: false } : xAxisLabel,
+			};
 			return {
 				animation: true,
 				animationDuration: 0,
 				animationDurationUpdate: 400,
 				textStyle: { fontFamily: FONT_FAMILY },
-				grid: {
-					...forecastGrid(),
-					left: this.socTempValues || this.socTempBands || this.prices ? 36 : 0,
-					right: 36,
-					...(this.showXAxis ? {} : { bottom: 4 }),
-				},
+				// the bars stay grid 0, the panel sits below them as grid 1
+				grid: this.subPanel ? panelGrids(barGrid, this.subPanel.track) : barGrid,
+				// one pointer and tooltip across both grids
+				axisPointer: { link: [{ xAxisIndex: "all" }] },
 				tooltip: {
 					trigger: "axis",
 					// transparent shadow snaps to slots without a band; triggerEmphasis off (it hard-codes notBlur), we dim slots in onChartMouseMove
@@ -861,26 +888,17 @@ export default defineComponent({
 						);
 					},
 				},
-				xAxis: {
-					type: "category",
-					data: keys,
-					axisLine: this.isBidirectional
-						? {
-								show: true,
-								onZero: true,
-								lineStyle: { color: colors.muted || "", width: 1 },
-							}
-						: { show: false },
-					axisTick: { show: false },
-					splitLine: { show: false },
-					axisLabel: {
-						...xAxisLabelStyle(),
-						show: this.showXAxis,
-						hideOverlap: false,
-						interval: 0,
-						formatter: (_value: string, index: number) => formatLabel(cats[index] ?? 0),
-					},
-				},
+				xAxis: this.subPanel
+					? [
+							barXAxis,
+							{
+								...barXAxis,
+								gridIndex: 1,
+								axisLine: { show: false },
+								axisLabel: xAxisLabel,
+							},
+						]
+					: barXAxis,
 				yAxis: [
 					forecastYAxis({
 						// automatic range must be allowed below zero for the export band
@@ -914,44 +932,45 @@ export default defineComponent({
 							},
 						},
 					}),
-					// left: soc always 0 to 100, temperature at least 30 to 70, or the
-					// price range with feed-in below zero
-					forecastYAxis(
-						this.prices
-							? {
-									show: true,
-									position: "left",
-									// from zero unless a price goes negative
-									min: (v: { min: number }) => Math.min(0, v.min),
-									max: this.priceExtent,
-									splitNumber: 3,
-									splitLine: { show: false },
-									name: this.pricePerKWhUnit(this.currency, true),
-									...axisNameStyle("right"),
-									axisLabel: {
-										color: colors.muted || "",
-										hideOverlap: true,
-										formatter: (v: number) =>
-											this.fmtPricePerKWh(v, this.currency, true, false),
-									},
-								}
-							: {
-									show: !!this.socTempValues || !!this.socTempBands,
-									position: "left",
-									min: this.socTempIsTemp
-										? (v: { min: number }) => Math.min(30, v.min)
-										: 0,
-									max: this.socTempIsTemp
-										? (v: { max: number }) => Math.max(70, v.max)
-										: 100,
-									splitNumber: 3,
-									interval: this.socTempIsTemp ? undefined : 25,
-									splitLine: { show: false },
-									name: this.socTempIsTemp ? "°C" : "%",
-									...axisNameStyle("right"),
-									axisLabel: { color: colors.muted || "", hideOverlap: true },
-								}
-					),
+					// the panel's axis, or left: soc always 0 to 100, temperature at least
+					// 30 to 70, or the price range with feed-in below zero
+					this.subPanel?.yAxis ??
+						forecastYAxis(
+							this.prices
+								? {
+										show: true,
+										position: "left",
+										// from zero unless a price goes negative
+										min: (v: { min: number }) => Math.min(0, v.min),
+										max: this.priceExtent,
+										splitNumber: 3,
+										splitLine: { show: false },
+										name: this.pricePerKWhUnit(this.currency, true),
+										...axisNameStyle("right"),
+										axisLabel: {
+											color: colors.muted || "",
+											hideOverlap: true,
+											formatter: (v: number) =>
+												this.fmtPricePerKWh(v, this.currency, true, false),
+										},
+									}
+								: {
+										show: !!this.socTempBands,
+										position: "left",
+										min: this.socTempIsTemp
+											? (v: { min: number }) => Math.min(30, v.min)
+											: 0,
+										max: this.socTempIsTemp
+											? (v: { max: number }) => Math.max(70, v.max)
+											: 100,
+										splitNumber: 3,
+										interval: this.socTempIsTemp ? undefined : 25,
+										splitLine: { show: false },
+										name: this.socTempIsTemp ? "°C" : "%",
+										...axisNameStyle("right"),
+										axisLabel: { color: colors.muted || "", hideOverlap: true },
+									}
+						),
 				],
 				series: this.echartsSeries,
 			};
@@ -983,9 +1002,14 @@ export default defineComponent({
 		onChartTap(x: number, y: number) {
 			this.emitSlotAt(x, y);
 		},
+		// inside the bars or the panel below them, both share the x axis
+		inPlot(point: number[]): boolean {
+			const grids = this.subPanel ? [0, 1] : [0];
+			return grids.some((gridIndex) => !!this.chart?.containPixel({ gridIndex }, point));
+		},
 		emitSlotAt(x: number, y: number) {
 			const chart = this.chart;
-			if (!chart || !chart.containPixel("grid", [x, y])) return;
+			if (!chart || !this.inPlot([x, y])) return;
 			const [idx] = chart.convertFromPixel({ seriesIndex: 0 }, [x, y]);
 			const start = this.categoryTimestamps[Math.round(idx ?? -1)];
 			if (start !== undefined) this.$emit("slot", new Date(start));
@@ -1032,21 +1056,26 @@ export default defineComponent({
 		onChartMouseMove(e: { offsetX: number; offsetY: number }) {
 			if (!this.chart) return;
 			const point: [number, number] = [e.offsetX, e.offsetY];
-			if (!this.chart.containPixel({ gridIndex: 0 }, point)) {
+			if (!this.inPlot(point)) {
 				this.clearHighlight();
 				return;
 			}
 			const grid = this.chart.convertFromPixel({ gridIndex: 0 }, point) as number[];
 			const slot = Math.round(grid[0]!);
 			if (slot === this.activeSlot) return;
-			// Skip empty slots, else hovering a gap would dim the whole chart.
-			if (!this.slotsWithData[slot]) {
+			// Skip empty slots, else hovering a gap would dim the whole chart. The
+			// panel's line still gets its dot there.
+			if (!this.slotsWithData[slot] && !this.subPanel) {
 				this.clearHighlight();
 				return;
 			}
 			this.activeSlot = slot;
 			this.chart.dispatchAction({ type: "downplay" });
-			this.chart.dispatchAction({ type: "highlight", dataIndex: slot });
+			this.chart.dispatchAction({
+				type: "highlight",
+				dataIndex: slot,
+				...(this.slotsWithData[slot] ? {} : { seriesId: "soctemp" }),
+			});
 		},
 		clearHighlight() {
 			if (this.activeSlot === null) return;
