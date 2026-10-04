@@ -198,7 +198,7 @@ jobs:
                - configuration absent or placeholder
                - steps to reproduce left at the form's `1. 2. 3.` skeleton
                - version missing
-               - the line `⚠️  RETURN TO EVCC TAB → COPY STEP 2 → PASTE HERE` still
+               - the line containing `⚠️  RETURN TO EVCC` still
                  present: the evcc UI's issue dialog puts it where configuration,
                  system state and log belong when they exceed the URL limit, and
                  the reporter never pasted them, so all three are missing
