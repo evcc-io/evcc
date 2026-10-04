@@ -365,6 +365,7 @@ import BarChartIcon from "../components/MaterialIcon/BarChart.vue";
 import SankeyIcon from "../components/MaterialIcon/Sankey.vue";
 import PlugIcon from "../components/MaterialIcon/Plug.vue";
 import { groupColor } from "../components/Energy/groups";
+import { adjustedSolar } from "@/utils/forecast";
 import type { TooltipRow } from "../components/Forecast/echarts";
 import StatCards from "../components/Energy/StatCards.vue";
 import Stat from "../components/Energy/Stat.vue";
@@ -392,7 +393,7 @@ import {
 	type PriceOverlay,
 	type TariffSlot,
 } from "../components/Energy/types";
-import type { DeviceColors } from "@/types/evcc";
+import type { DeviceColors, UiSolarDetails } from "@/types/evcc";
 import { CURRENCY } from "@/types/evcc";
 import api from "../api";
 import settings from "../settings";
@@ -854,17 +855,18 @@ export default defineComponent({
 				this.from.toDateString() === new Date().toDateString()
 			);
 		},
-		solarScale(): number {
-			const scale = store.state.forecast?.solar?.scale;
-			return store.state.solarAdjusted && scale ? scale : 1;
+		solar(): UiSolarDetails | undefined {
+			const solar = store.uiForecast.value.solar;
+			return store.state.solarAdjusted ? adjustedSolar(solar) : solar;
 		},
+		// forecast energies are Wh
 		remainingForecast(): number | undefined {
-			const today = store.state.forecast?.solar?.today;
-			return today ? today.energy * this.solarScale : undefined;
+			const today = this.solar?.today;
+			return today ? today.energy / 1e3 : undefined;
 		},
 		tomorrowForecast(): number | undefined {
-			const tomorrow = store.state.forecast?.solar?.tomorrow;
-			return tomorrow ? tomorrow.energy * this.solarScale : undefined;
+			const tomorrow = this.solar?.tomorrow;
+			return tomorrow ? tomorrow.energy / 1e3 : undefined;
 		},
 		selfConsumedLabel(): string {
 			return this.$t("energy.production.selfConsumed", {
