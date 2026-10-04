@@ -75,6 +75,12 @@ func (site *Site) updateBatteryMode(batteryGridChargeActive, batteryGridDischarg
 		batteryMode = api.BatteryNormal
 	}
 
+	// load management: don't start grid charging without headroom, stop it when the circuit is over power
+	if site.fromTo(batteryMode, api.BatteryCharge) && site.batteryChargeExceedsCircuit() {
+		site.log.DEBUG.Println("battery mode: circuit limit")
+		batteryMode = api.BatteryHold
+	}
+
 	// NOTE: applyBatteryMode is always called when charge or discharge mode is active to
 	// validate max soc / min soc reserve
 	if modeChanged := batteryMode != api.BatteryUnknown; modeChanged || site.batteryMode == api.BatteryCharge || site.batteryMode == api.BatteryDischarge {
@@ -131,6 +137,54 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 		res = keepUnlessModified(api.BatteryDischarge)
 	case batteryModeModified(batMode):
 		res = api.BatteryNormal
+	}
+
+	return res
+}
+
+// batteryChargeExceedsCircuit reports whether grid charging would exceed or already exceeds the
+// root circuit's power limit. Starting needs headroom for the expected charge power: the batteries'
+// charge limits or, if unknown, the charge power observed when load management last stopped charging.
+// While charging, the battery stops once the circuit is over power.
+func (site *Site) batteryChargeExceedsCircuit() bool {
+	if site.circuit == nil {
+		return false
+	}
+
+	if site.GetBatteryMode() == api.BatteryCharge {
+		maxPower := site.circuit.GetMaxPower()
+		if maxPower > 0 && site.circuit.GetChargePower() > maxPower {
+			// restarting needs headroom for at least this power (charging is negative)
+			site.batteryChargeStopPower = max(0, -site.state().battery.Power)
+			return true
+		}
+		return false
+	}
+
+	power := site.batteryMaxChargePower()
+	if power == 0 {
+		power = site.batteryChargeStopPower
+	}
+
+	return power > 0 && site.circuit.ValidatePower(0, power) < power
+}
+
+// batteryMaxChargePower returns the summed charge power limit of the controllable batteries, 0 if any is unknown
+func (site *Site) batteryMaxChargePower() float64 {
+	var res float64
+	for _, dev := range site.batteryMeters {
+		meter := dev.Instance()
+		if !api.HasCap[api.BatteryController](meter) {
+			continue
+		}
+
+		bpl, ok := api.Cap[api.BatteryPowerLimiter](meter)
+		if !ok {
+			return 0
+		}
+
+		charge, _ := bpl.GetPowerLimits()
+		res += charge
 	}
 
 	return res

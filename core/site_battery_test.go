@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/types"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/config"
 	"github.com/stretchr/testify/assert"
@@ -482,6 +483,79 @@ func TestBatteryDischargeHemsCurtailed(t *testing.T) {
 	site.updateBatteryMode(false, true, api.Rate{})
 
 	ctrl.Finish()
+}
+
+type batteryPowerLimitsStub struct{ charge float64 }
+
+func (s batteryPowerLimitsStub) GetPowerLimits() (float64, float64) { return s.charge, 0 }
+
+// TestBatteryGridChargeCircuit guards that grid charging respects the root circuit's power limit:
+// it does not start without headroom for the expected charge power and stops once the circuit is
+// over power (discussion #25326).
+func TestBatteryGridChargeCircuit(t *testing.T) {
+	for _, tc := range []struct {
+		name         string
+		mode         api.BatteryMode // current site mode
+		chargeLimit  float64         // battery charge power limit, 0 = unknown
+		stopPower    float64         // charge power at last load management stop
+		validated    float64         // circuit headroom granted for the start request
+		circuitPower float64         // circuit power while charging (limit 10 kW)
+		expect       api.BatteryMode
+		expectApply  bool
+	}{
+		{"start with headroom", api.BatteryNormal, 5000, 0, 5000, 0, api.BatteryCharge, true},
+		{"start without headroom", api.BatteryNormal, 5000, 0, 3000, 0, api.BatteryHold, true},
+		{"start with unknown power", api.BatteryNormal, 0, 0, 0, 0, api.BatteryCharge, true},
+		{"restart after stop needs headroom", api.BatteryHold, 0, 4000, 2000, 0, api.BatteryHold, true},
+		{"stop when over power", api.BatteryCharge, 0, 0, 0, 12000, api.BatteryHold, true},
+		{"keep charging within limit", api.BatteryCharge, 0, 0, 0, 8000, api.BatteryCharge, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+
+			batCon := batteryControllerMock(ctrl)
+			var bat api.Meter = &struct {
+				api.Meter
+				api.BatteryController
+			}{BatteryController: batCon}
+			if tc.chargeLimit > 0 {
+				bat = &struct {
+					api.Meter
+					api.BatteryController
+					api.BatteryPowerLimiter
+				}{BatteryController: batCon, BatteryPowerLimiter: batteryPowerLimitsStub{tc.chargeLimit}}
+			}
+
+			circuit := api.NewMockCircuit(ctrl)
+			circuit.EXPECT().GetMaxPower().Return(10000.0).AnyTimes()
+			circuit.EXPECT().GetChargePower().Return(tc.circuitPower).AnyTimes()
+			if power := max(tc.chargeLimit, tc.stopPower); power > 0 {
+				circuit.EXPECT().ValidatePower(0.0, power).Return(tc.validated).AnyTimes()
+			}
+
+			site := &Site{
+				log:                    util.NewLogger("foo"),
+				batteryMeters:          []config.Device[api.Meter]{config.NewStaticDevice(config.Named{}, bat)},
+				circuit:                circuit,
+				batteryMode:            tc.mode,
+				batteryChargeStopPower: tc.stopPower,
+				siteState:              siteState{battery: types.BatteryState{Power: -4000}},
+			}
+
+			if tc.expectApply {
+				batCon.EXPECT().SetBatteryMode(tc.expect).Times(1)
+			}
+
+			site.updateBatteryMode(true, false, api.Rate{})
+
+			assert.Equal(t, tc.expect, site.GetBatteryMode())
+			if tc.circuitPower > 10000 {
+				assert.Equal(t, 4000.0, site.batteryChargeStopPower, "stop power")
+			}
+
+			ctrl.Finish()
+		})
+	}
 }
 
 // TestBatteryGridDischargeEvFastCharging ensures grid discharge is held back while an EV
