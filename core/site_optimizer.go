@@ -598,7 +598,7 @@ func (site *Site) optimizerRequest(battery []types.Measurement) (optimizer.Optim
 			continue
 		}
 
-		cfg, detail := site.batteryRequest(dev, b, grid, minLen, firstSlotDuration)
+		cfg, detail := site.batteryRequest(dev, b, grid, feedIn, minLen, firstSlotDuration)
 		batteries = append(batteries, optimizerBattery{cfg, detail})
 	}
 
@@ -998,7 +998,7 @@ func clearDemandWhenFull(demand []float32, headroom float32) []float32 {
 	return res
 }
 
-func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measurement, grid api.Rates, minLen int, firstSlotDuration time.Duration) (optimizer.BatteryConfig, batteryDetail) {
+func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measurement, grid, feedIn api.Rates, minLen int, firstSlotDuration time.Duration) (optimizer.BatteryConfig, batteryDetail) {
 	bat := optimizer.BatteryConfig{
 		CMax:      batteryPower,
 		DMax:      batteryPower,
@@ -1041,10 +1041,23 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 		controllable: controllable,
 	}
 
-	// tariff forecast-based grid charging demand
+	// tariff forecast-based grid charging and discharging demand
 	if bat.ChargeFromGrid {
 		if demand := site.applyBatteryGridChargeLimit(bat.CMax, grid, minLen); demand != nil {
 			bat.PDemand = prorate(demand, firstSlotDuration)
+		}
+	}
+
+	if bat.DischargeToGrid {
+		if demand := site.applyBatteryGridDischargeLimit(bat.DMax, feedIn, minLen); demand != nil {
+			bat.DDemand = prorate(demand, firstSlotDuration)
+
+			// a slot cannot demand both, charging wins like in requiredBatteryMode
+			for i, p := range bat.PDemand {
+				if p > 0 && i < len(bat.DDemand) {
+					bat.DDemand[i] = 0
+				}
+			}
 		}
 	}
 
@@ -1427,24 +1440,38 @@ func applyPrecondition(lp loadpoint.API, demand []float32, minLen int) []float32
 	return demand
 }
 
+// applyBatteryGridChargeLimit demands charging at full power in slots where the grid rate is at or below the limit
 func (site *Site) applyBatteryGridChargeLimit(cMax float32, grid api.Rates, minLen int) []float32 {
 	limit := site.GetBatteryGridChargeLimit()
 	if limit == nil {
 		return nil
 	}
 
-	maxLen := min(minLen, len(grid))
+	return tariffDemand(cMax, grid, minLen, func(r api.Rate) bool { return r.Value <= *limit })
+}
 
-	if hasAffordableSlots := slices.ContainsFunc(grid[:maxLen], func(r api.Rate) bool {
-		return r.Value <= *limit
-	}); !hasAffordableSlots {
+// applyBatteryGridDischargeLimit demands discharging at full power in slots where the feed-in rate is at or above the limit
+func (site *Site) applyBatteryGridDischargeLimit(dMax float32, feedIn api.Rates, minLen int) []float32 {
+	limit := site.GetBatteryGridDischargeLimit()
+	if limit == nil {
+		return nil
+	}
+
+	return tariffDemand(dMax, feedIn, minLen, func(r api.Rate) bool { return r.Value >= *limit })
+}
+
+// tariffDemand returns the energy per slot for the matching rates, nil if no rate matches
+func tariffDemand(power float32, rates api.Rates, minLen int, match func(api.Rate) bool) []float32 {
+	maxLen := min(minLen, len(rates))
+
+	if !slices.ContainsFunc(rates[:maxLen], match) {
 		return nil
 	}
 
 	demand := make([]float32, minLen)
 	for i := range maxLen {
-		if grid[i].Value <= *limit {
-			demand[i] = float32(float64(cMax) / slotsPerHour)
+		if match(rates[i]) {
+			demand[i] = float32(float64(power) / slotsPerHour)
 		}
 	}
 
