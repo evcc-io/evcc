@@ -47,6 +47,9 @@ type OCPP struct {
 	current float64
 	lp      loadpoint.API
 
+	// phasesSwitched is the time of the last phase switch while enabled, zero once disabled
+	phasesSwitched time.Time
+
 	stackLevelZero      bool
 	profileKindRelative bool
 	txProfile           bool
@@ -54,7 +57,13 @@ type OCPP struct {
 	transactionID       int
 }
 
-const defaultIdTag = "evcc" // RemoteStartTransaction only
+const (
+	defaultIdTag = "evcc" // RemoteStartTransaction only
+
+	// phaseSwitchPause covers chargers that suspend charging while switching
+	// phases, e.g. Mennekes AMTRON 4You pauses for 2 to 6 minutes
+	phaseSwitchPause = 10 * time.Minute
+)
 
 func init() {
 	registry.AddCtx("ocpp", NewOCPPFromConfig)
@@ -283,14 +292,8 @@ func (c *OCPP) StatusReason() (api.Reason, error) {
 // Enabled implements the api.Charger interface
 func (c *OCPP) Enabled() (bool, error) {
 	if s, err := c.conn.Status(); err == nil {
-		switch s {
-		case
-			core.ChargePointStatusSuspendedEVSE:
-			return false, nil
-		case
-			core.ChargePointStatusCharging,
-			core.ChargePointStatusSuspendedEV:
-			return true, nil
+		if enabled, ok := c.enabledByStatus(s); ok {
+			return enabled, nil
 		}
 	}
 
@@ -315,6 +318,22 @@ func (c *OCPP) Enabled() (bool, error) {
 	return c.enabled, nil
 }
 
+// enabledByStatus derives the enabled state from the charge point status.
+// A SuspendedEVSE shortly after a phase switch is the charger's own pause, not a disabled state.
+func (c *OCPP) enabledByStatus(s core.ChargePointStatus) (bool, bool) {
+	switch s {
+	case core.ChargePointStatusSuspendedEVSE:
+		switching := !c.phasesSwitched.IsZero() && time.Since(c.phasesSwitched) < phaseSwitchPause
+		return switching, true
+	case
+		core.ChargePointStatusCharging,
+		core.ChargePointStatusSuspendedEV:
+		return true, true
+	}
+
+	return false, false
+}
+
 // Enable implements the api.Charger interface
 func (c *OCPP) Enable(enable bool) error {
 	var current float64
@@ -326,6 +345,9 @@ func (c *OCPP) Enable(enable bool) error {
 	if err == nil {
 		// cache enabled state as last fallback option
 		c.enabled = enable
+		if !enable {
+			c.phasesSwitched = time.Time{}
+		}
 	}
 
 	return err
@@ -462,7 +484,12 @@ func (c *OCPP) phases1p3p(phases int) error {
 		current = c.current
 	}
 
-	return c.setCurrent(current)
+	err = c.setCurrent(current)
+	if err == nil && enabled {
+		c.phasesSwitched = time.Now()
+	}
+
+	return err
 }
 
 var _ api.Identifier = (*OCPP)(nil)
