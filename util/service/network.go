@@ -99,9 +99,9 @@ func isHost(h discovery.Host, hosts []string) bool {
 	})
 }
 
-func usedHosts() []string {
+func usedHosts(configs []config.Named) []string {
 	var res []string
-	for _, conf := range allDeviceConfigs() {
+	for _, conf := range configs {
 		res = append(res, configHosts(conf)...)
 	}
 	return res
@@ -147,7 +147,7 @@ func getHosts(w http.ResponseWriter, req *http.Request) {
 	all := allTemplates()
 	selected := discoveryByName(all, req.URL.Query().Get("template"))
 
-	used := usedHosts()
+	used := usedHosts(allDeviceConfigs())
 
 	res := make([]Option, 0)
 	for _, h := range hosts(w, req, mdnsTypes(all)) {

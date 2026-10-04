@@ -50,6 +50,24 @@ func TestSyncCharger(t *testing.T) {
 	}
 }
 
+// a continuous device (heat pump) draws power on its own schedule: status C while disabled is not a logic error
+func TestSyncChargerContinuousDisabledButCharging(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	charger := api.NewMockCharger(ctrl)
+	charger.EXPECT().Enabled().Return(false, nil)
+
+	lp := &Loadpoint{
+		log:     util.NewLogger("foo"),
+		clock:   clock.New(),
+		charger: &featureCharger{Charger: charger, features: []api.Feature{api.Continuous}},
+		status:  api.StatusC,
+	}
+
+	_, err := currentController(lp).syncCharger()
+	require.NoError(t, err)
+	assert.False(t, currentController(lp).enabled)
+}
+
 func TestSyncChargerDuringPhaseSwitch(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	charger := api.NewMockCharger(ctrl)
