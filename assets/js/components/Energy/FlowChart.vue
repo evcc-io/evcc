@@ -25,7 +25,7 @@ interface Node {
 	label: string;
 	value: number;
 	drawn: number;
-	color: string;
+	color: string | object;
 	source: boolean;
 }
 
@@ -59,8 +59,6 @@ export default defineComponent({
 				battery: groupColor("battery"),
 				grid: colors.grid || "",
 				export: colors.export || "",
-				home: colors.muted || "",
-				loadpoint: colors.grid || "",
 			};
 		},
 		nodes(): Node[] {
@@ -83,7 +81,8 @@ export default defineComponent({
 				label: id === "loadpoint" ? loadpointLabel : this.$t(`energy.flow.${id}`),
 				value: sum("to", id),
 				drawn: drawn("to", id),
-				color: this.nodeColors[id] || "",
+				// colored by where the energy came from, only feed-in keeps its own color
+				color: id === "export" ? this.nodeColors[id] || "" : this.sourceBands(id),
 				source: false,
 			}));
 			return [...src, ...dst].filter((n) => n.value > 0);
@@ -186,6 +185,25 @@ export default defineComponent({
 	methods: {
 		onMediaChange(e: MediaQueryListEvent) {
 			this.compact = e.matches;
+		},
+		// the sink's sources as hard-edged bands from top to bottom, matching the
+		// incoming links which attach in source order
+		sourceBands(to: FlowSink): object {
+			const flows = SOURCES.flatMap((from) =>
+				this.visibleFlows.filter((f) => f.from === from && f.to === to)
+			);
+			const total = flows.reduce((acc, f) => acc + f.energy, 0) || 1;
+			let offset = 0;
+			const colorStops = flows.flatMap((f) => {
+				const color = this.nodeColors[f.from] || "";
+				const start = offset;
+				offset = Math.min(1, offset + f.energy / total);
+				return [
+					{ offset: start, color },
+					{ offset, color },
+				];
+			});
+			return { type: "linear", x: 0, y: 0, x2: 0, y2: 1, colorStops };
 		},
 		linkColor(f: Flow): string {
 			const key = f.to === "export" ? "export" : f.from;
