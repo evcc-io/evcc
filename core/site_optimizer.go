@@ -1054,7 +1054,7 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 
 			// a slot cannot demand both, charging wins like in requiredBatteryMode
 			for i, p := range bat.PDemand {
-				if p > 0 && i < len(bat.DDemand) {
+				if p > 0 {
 					bat.DDemand[i] = 0
 				}
 			}
@@ -1440,7 +1440,6 @@ func applyPrecondition(lp loadpoint.API, demand []float32, minLen int) []float32
 	return demand
 }
 
-// applyBatteryGridChargeLimit demands charging at full power in slots where the grid rate is at or below the limit
 func (site *Site) applyBatteryGridChargeLimit(cMax float32, grid api.Rates, minLen int) []float32 {
 	limit := site.GetBatteryGridChargeLimit()
 	if limit == nil {
@@ -1450,7 +1449,6 @@ func (site *Site) applyBatteryGridChargeLimit(cMax float32, grid api.Rates, minL
 	return tariffDemand(cMax, grid, minLen, func(r api.Rate) bool { return r.Value <= *limit })
 }
 
-// applyBatteryGridDischargeLimit demands discharging at full power in slots where the feed-in rate is at or above the limit
 func (site *Site) applyBatteryGridDischargeLimit(dMax float32, feedIn api.Rates, minLen int) []float32 {
 	limit := site.GetBatteryGridDischargeLimit()
 	if limit == nil {
