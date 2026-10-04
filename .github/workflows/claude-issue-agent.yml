@@ -29,6 +29,7 @@ jobs:
       contents: write # push the fix branch (open-pr job only, the agent job reduces to read)
       issues: write # add labels + comment analysis + close duplicates
       pull-requests: write # open the draft PR
+      discussions: read # read referenced discussions
       id-token: write
       actions: read
     uses: ./.github/workflows/claude-issue-agent-run.yml
@@ -83,6 +84,7 @@ jobs:
       contents: read # explore the codebase for the answer; no fix/PR in analyze mode
       issues: write # comment
       pull-requests: write # the reusable job requests it, a caller may not grant less
+      discussions: read # read referenced discussions
       id-token: write
       actions: read
     uses: ./.github/workflows/claude-issue-agent-run.yml

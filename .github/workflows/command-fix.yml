@@ -19,6 +19,7 @@ jobs:
       contents: write # push the fix branch (open-pr job only, the agent job reduces to read)
       issues: write # comment + minimize the calling comment
       pull-requests: write # open PR fix, comment on PR conversations
+      discussions: read # read referenced discussions
       id-token: write
       actions: read
     uses: ./.github/workflows/claude-issue-agent-run.yml
