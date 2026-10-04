@@ -204,12 +204,17 @@ jobs:
                - configuration absent or placeholder
                - steps to reproduce left at the form's `1. 2. 3.` skeleton
                - version missing
+               - the line containing `⚠️  RETURN TO EVCC` still present: the evcc
+                 UI's issue dialog puts it where configuration, system state and
+                 log belong when they exceed the URL limit, and the reporter never
+                 pasted them, so all three are missing
                Close ONLY when the report shows no effort to provide context: the
                reporter filled the form with placeholders or one-liners and gave
-               nothing that lets anyone start an analysis. A report with a real
-               description, a partial log or a precise reproduction is NOT
-               incomplete even if something is missing: continue with step 1 and
-               ask for the missing details in step 2 (`waiting for feedback`).
+               nothing that lets anyone start an analysis. A description alone is
+               not enough: a report is NOT incomplete only when, besides a real
+               description, it brings at least one of a (partial) log, a config or
+               a precise reproduction. Then continue with step 1 and ask for the
+               missing details in step 2 (`waiting for feedback`).
                Feature requests and questions need no log or config, never close
                them for that. Never close when the issue already carries a label or
                has a comment from anyone but the reporter and github-actions: a
