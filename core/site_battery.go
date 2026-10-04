@@ -105,11 +105,7 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 		return map[bool]api.BatteryMode{false: s, true: api.BatteryUnknown}[batMode == s]
 	}
 
-	var suggested api.BatteryMode
-	var optimized bool
-	if site.Automatic() {
-		suggested, optimized = site.batterySuggestionMode()
-	}
+	suggested, optimized := site.batterySuggestionMode()
 
 	switch {
 	case !site.batteryConfigured():
@@ -126,9 +122,7 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 		// the suggestion ignores loads the optimizer cannot model as storage
 		res = keepUnlessModified(api.BatteryHold)
 	case optimized:
-		// optimizer decides, replacing grid charge limit and discharge control.
-		// Without a suggestion, e.g. optimizer unreachable or infeasible, the
-		// configured limits below apply again.
+		// optimizer decides, replacing grid charge limit and discharge control
 		res = keepUnlessModified(suggested)
 	case batteryGridChargeActive:
 		// independent limits (buy vs feed-in rate) can both be active at once;
@@ -168,21 +162,14 @@ func (site *Site) unmodelledCharging() bool {
 	return false
 }
 
-// batteryOptimized reports whether the optimizer currently decides the battery
-// mode: automatic mode with a live suggestion. Without one the configured
-// limits apply again.
-func (site *Site) batteryOptimized() bool {
-	if !site.Automatic() {
-		return false
-	}
-
-	_, ok := site.batterySuggestionMode()
-	return ok
-}
-
-// batterySuggestionMode returns the optimizer's mode for the first controllable battery.
+// batterySuggestionMode returns the optimizer's mode for the first controllable battery
+// in automatic mode. Without a live suggestion the configured limits apply.
 // TODO apply per battery once the site tracks more than a single battery mode
 func (site *Site) batterySuggestionMode() (api.BatteryMode, bool) {
+	if !site.Automatic() {
+		return api.BatteryUnknown, false
+	}
+
 	for _, dev := range site.batteryMeters {
 		if dev == nil {
 			continue
