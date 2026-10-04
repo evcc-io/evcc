@@ -57,8 +57,6 @@ func TestControllerEnvelope(t *testing.T) {
 			assert.Equal(t, tc.reachable, c.reachableMinPower(), "reachable min power")
 			assert.Equal(t, tc.max, c.effectiveMaxPower(), "effective max power")
 
-			// api.PowerController envelope
-			assert.Equal(t, tc.reachable, c.MinPower(), "envelope min power")
 			assert.Equal(t, tc.max, c.MaxPower(), "envelope max power")
 		})
 	}
@@ -137,6 +135,30 @@ func TestControllerSetPowerFastCharging(t *testing.T) {
 	require.NoError(t, c.SetPower(c.effectiveMaxPower()))
 	assert.Equal(t, 3, c.phases, "expected immediate scale up")
 	assert.Equal(t, float64(maxA), c.offeredCurrent)
+}
+
+// a vehicle power limit bounds the effective power used for planning, not the
+// envelope: a target above it stays interior instead of triggering fast charging
+func TestControllerSetPowerVehiclePowerLimitIsNotEnvelope(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	Voltage = 230
+
+	charger := api.NewMockCharger(ctrl)
+	charger.EXPECT().Enable(true).Return(nil)
+	charger.EXPECT().MaxCurrent(int64(11)).Return(nil) // 8000W / (3 * 230V) rounded down
+
+	vehicle := api.NewMockVehicle(ctrl)
+	vehicle.EXPECT().OnIdentified().Return(api.ActionConfig{MaxPower: 7400}).AnyTimes()
+	vehicle.EXPECT().Features().Return(nil).AnyTimes()
+	vehicle.EXPECT().Phases().Return(0).AnyTimes()
+
+	lp := testControllerLoadpoint(charger, 3, 3)
+	lp.vehicle = vehicle
+	c := currentController(lp)
+	c.Prepare(0, true)
+
+	require.NoError(t, c.SetPower(8000))
+	assert.Equal(t, 11.0, c.offeredCurrent)
 }
 
 func TestControllerSurplusConsumedPerCycle(t *testing.T) {

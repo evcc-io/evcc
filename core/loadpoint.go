@@ -1614,7 +1614,7 @@ NO_DIM:
 
 	// minimum or target charging
 	case minSocNotReached || plannerActive:
-		err = ctrl.SetPower(lp.effectiveMaxPower())
+		err = ctrl.SetPower(ctrl.MaxPower())
 		lp.elapsePVTimer() // let PV mode disable immediately afterwards
 
 	case lp.LimitEnergyReached():
@@ -1627,15 +1627,14 @@ NO_DIM:
 
 	// immediate charging- must be placed after limits are evaluated
 	case mode == api.ModeNow:
-		err = ctrl.SetPower(lp.effectiveMaxPower())
+		err = ctrl.SetPower(ctrl.MaxPower())
 
 	case mode == api.ModeSmart:
 		// cheap tariff
 		if smartCostActive {
 			rate, _ := consumption.At(time.Now())
 			lp.log.DEBUG.Printf("smart consumption active: %.2f", rate.Value)
-			err = ctrl.SetPower(lp.effectiveMaxPower())
-			lp.ctrl().resetPhaseTimer()
+			err = ctrl.SetPower(ctrl.MaxPower())
 			lp.elapsePVTimer() // let PV mode disable immediately afterwards
 			break
 		}

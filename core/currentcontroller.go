@@ -105,7 +105,7 @@ func (c *CurrentController) SetPower(power float64) error {
 	}
 
 	// full envelope requested: scale up phases if possible
-	if power >= c.effectiveMaxPower() {
+	if power >= c.MaxPower() {
 		return c.fastCharging()
 	}
 

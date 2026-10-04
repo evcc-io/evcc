@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"math"
 	"slices"
 	"sync/atomic"
 	"time"
@@ -254,7 +255,7 @@ var _ api.PowerController = (*MyPv)(nil)
 
 // SetPower implements the api.PowerController interface
 func (wb *MyPv) SetPower(power float64) error {
-	p := uint16(power)
+	p := uint16(min(max(power, 0), math.MaxUint16))
 
 	err := wb.setPower(p)
 	if err == nil {

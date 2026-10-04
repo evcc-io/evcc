@@ -787,6 +787,41 @@ func TestPVHysteresisAfterPhaseSwitch(t *testing.T) {
 	}
 }
 
+// the pv target is capped at the envelope maximum, not at the maximum of the
+// currently active phases, so the surplus survives the cycle that scales 1p to 3p
+func TestPVTargetPowerNotCappedAtActivePhases(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+
+	charger := struct {
+		*api.MockCharger
+		*api.MockPhaseSwitcher
+	}{
+		api.NewMockCharger(ctrl), api.NewMockPhaseSwitcher(ctrl),
+	}
+
+	Voltage = 230
+	lp := &Loadpoint{
+		log:         util.NewLogger("foo"),
+		bus:         evbus.New(),
+		wakeUpTimer: NewTimer(),
+		clock:       clock,
+		charger:     charger,
+		status:      api.StatusC,
+		chargePower: Voltage * maxA, // charging 1p at max current
+		solarShare:  1,
+	}
+	c := currentController(lp)
+	c.minCurrent = minA
+	c.maxCurrent = maxA
+	c.enabled = true
+	c.phases = 1
+	c.offeredCurrent = maxA
+
+	power := lp.pvTargetPower(c, -2000, 0, false, false)
+	assert.Equal(t, Voltage*maxA+2000, power)
+}
+
 func TestConnectionDurationDropDetection(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)

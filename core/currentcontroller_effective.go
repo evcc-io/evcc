@@ -87,9 +87,9 @@ func (c *CurrentController) effectiveMaxCurrent() float64 {
 // and state, consumed by the loadpoint's power-domain policy
 type Envelope struct {
 	ActiveMin    float64 // min power at the currently active phases in W
-	ActiveMax    float64 // max power at the currently active phases in W
 	ReachableMin float64 // min power reachable from the current phase state in W
 	EffectiveMin float64 // min power at the minimum active phases in W
+	Max          float64 // max power at the maximum active phases in W
 	Effective    float64 // currently effective charging power in W
 	Step         float64 // power of one full amp step at the active phases in W
 	Coarse       bool    // charger or vehicle require full amp steps
@@ -101,9 +101,9 @@ type Envelope struct {
 func (c *CurrentController) Envelope() Envelope {
 	return Envelope{
 		ActiveMin:    c.activeMinPower(),
-		ActiveMax:    c.activeMaxPower(),
 		ReachableMin: c.reachableMinPower(),
 		EffectiveMin: c.effectiveMinPower(),
+		Max:          c.MaxPower(),
 		Effective:    c.effectivePower(),
 		Step:         c.stepPower(),
 		Coarse:       c.coarseCurrent(),
@@ -117,20 +117,11 @@ func (c *CurrentController) phaseScalePending() bool {
 	return c.hasPhaseSwitching() && !c.phaseTimer.IsZero()
 }
 
-// MinPower returns the lower bound of the capability envelope in W. With automatic
-// phase switching it spans down to the 1p minimum, with locked phase configuration
-// it reflects the locked phases.
-func (c *CurrentController) MinPower() float64 {
-	phases := c.minActivePhases()
-	if c.hasPhaseSwitching() && c.phasesConfigured > 1 {
-		phases = c.phasesConfigured
-	}
-	return currentToPower(c.effectiveMinCurrent(), phases)
-}
-
-// MaxPower returns the upper bound of the capability envelope in W
+// MaxPower returns the upper bound of the capability envelope in W, i.e. the
+// max power at the maximum active phases. Vehicle power limits are not part of
+// the envelope, they only bound the effective power used for planning.
 func (c *CurrentController) MaxPower() float64 {
-	return c.effectiveMaxPower()
+	return currentToPower(c.effectiveMaxCurrent(), c.maxActivePhases())
 }
 
 // effectiveMinPower returns the effective min power for the minimum active phases

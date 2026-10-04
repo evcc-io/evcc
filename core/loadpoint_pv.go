@@ -138,7 +138,7 @@ func (lp *Loadpoint) pvTargetPower(ctrl *CurrentController, sitePower, batteryPo
 	// snapshot the controller's capabilities once per cycle
 	env := ctrl.Envelope()
 	minPower := env.ActiveMin
-	maxPower := env.ActiveMax
+	maxPower := env.Max
 	reachableMinPower := env.ReachableMin
 	alwaysCharge := lp.GetAlwaysCharge().Active()
 
