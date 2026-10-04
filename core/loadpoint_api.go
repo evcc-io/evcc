@@ -995,8 +995,7 @@ func (lp *Loadpoint) StartVehicleDetection() {
 }
 
 // GetSmartCostLimit gets the smart cost limit. The optimizer replaces it while
-// it decides for the loadpoint, so it reads as unset and none of its consumers
-// apply it. Without a live suggestion the stored limit applies again.
+// it decides for the loadpoint, so it reads as unset and none of its consumers apply it.
 func (lp *Loadpoint) GetSmartCostLimit() *float64 {
 	if lp.gate() != nil {
 		return nil
@@ -1010,8 +1009,7 @@ func (lp *Loadpoint) GetSmartCostLimit() *float64 {
 // SetSmartCostLimit sets the smart cost limit
 func (lp *Loadpoint) SetSmartCostLimit(val *float64) error {
 	if lp.optimizerControlled() {
-		// the getter reads nil or the stored limit in automatic mode- a config
-		// round-trip writing it back must not discard or change the stored limit
+		// a config round-trip writing the getter's value back must not change the stored limit
 		lp.RLock()
 		unchanged := val == nil || ptrValueEqual(val, lp.smartCostLimit)
 		lp.RUnlock()
