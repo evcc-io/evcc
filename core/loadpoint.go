@@ -106,6 +106,12 @@ type Loadpoint struct {
 	Title       string         `mapstructure:"title"`    // UI title
 	Priority    int            `mapstructure:"priority"` // Priority
 
+	// from yaml, deprecated
+	GuardDuration_ time.Duration `mapstructure:"guardduration"` // ignored, present for compatibility
+	Phases_        int           `mapstructure:"phases"`        // ignored, present for compatibility
+	MinCurrent_    float64       `mapstructure:"minCurrent"`    // ignored, present for compatibility
+	MaxCurrent_    float64       `mapstructure:"maxCurrent"`    // ignored, present for compatibility
+
 	title                    string   // UI title
 	priority                 int      // Priority
 	limitSoc                 int      // Session limit for soc
@@ -342,6 +348,20 @@ func NewLoadpoint(log *util.Logger, settings settings.Settings) *Loadpoint {
 
 // restoreSettings restores loadpoint settings
 func (lp *Loadpoint) restoreSettings() {
+	// deprecated yaml properties
+	if lp.Phases_ > 0 {
+		lp.log.WARN.Printf("ignoring deprecated phases: %d. please configure via UI", lp.Phases_)
+	}
+	if lp.MinCurrent_ > 0 {
+		lp.log.WARN.Printf("ignoring deprecated minCurrent: %f. please configure via UI", lp.MinCurrent_)
+	}
+	if lp.MaxCurrent_ > 0 {
+		lp.log.WARN.Printf("ignoring deprecated maxCurrent: %f. please configure via UI", lp.MaxCurrent_)
+	}
+	if lp.GuardDuration_ > 0 {
+		lp.log.WARN.Printf("ignoring deprecated guardduration: %s. please configure via UI", lp.GuardDuration_)
+	}
+
 	// restore runtime configuration (database & yaml LPs)
 	// always charge before mode: a legacy persisted mode re-seeds it, honoring the latest choice
 	if v, err := lp.settings.String(keys.AlwaysCharge); err == nil && v != "" && lp.alwaysChargeSupported() {

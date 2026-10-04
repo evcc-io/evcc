@@ -41,7 +41,7 @@ func newCurrentController(lp *Loadpoint) *CurrentController {
 	return &CurrentController{lp: lp}
 }
 
-// ctrl returns the loadpoint's current controller or nil if the charger is natively power-controlled
+// ctrl returns the loadpoint's charge controller
 func (lp *Loadpoint) ctrl() *CurrentController {
 	ctrl, _ := lp.chargeController.(*CurrentController)
 	return ctrl
