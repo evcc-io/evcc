@@ -5,8 +5,9 @@ name: Claude Issue Agent (reusable)
 #   triage  — auto on issue open: close incomplete bug reports, otherwise
 #             investigate, close duplicates, comment, label, and optionally
 #             commit a fix that the workflow turns into a draft PR.
-#   analyze — on-demand /analyze comment: investigate, comment, then resolve the
-#             invoking comment. No labels, no PRs.
+#   analyze — on-demand /analyze comment or re-run after reporter feedback:
+#             investigate, comment, then resolve the invoking comment. May only
+#             re-add `waiting for feedback`, no other labels, no PRs.
 #   fix     — on-demand /fix comment: investigate, commit a fix that the
 #             workflow turns into a PR, comment, then resolve the invoking
 #             comment. No labels.
@@ -97,7 +98,7 @@ jobs:
           # may close a duplicate. Triage and analyze run on Sonnet, it spends
           # less of the subscription quota; a maintainer's fix keeps the default
           # model.
-          claude_args: ${{ inputs.mode == 'analyze' && format('--model claude-sonnet-5-5 --allowed-tools "Read,Grep,Glob,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(gh api repos/{0}/issues/comments/{1} --jq .body),Bash(git log:*)" --disallowed-tools "Task"', github.repository, inputs.comment_id) || (inputs.mode == 'fix' && format('--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(gh issue comment:*),Bash(git add:*),Bash(git commit:*),Bash(git diff:*),Bash(git log:*),Bash(git status),Bash(gh api repos/{0}/issues/comments/{1} --jq .body)" --disallowed-tools "Task"', github.repository, inputs.comment_id) || '--model claude-sonnet-5-5 --allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue edit:*),Bash(gh issue close:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(git add:*),Bash(git commit:*),Bash(git diff:*),Bash(git log:*),Bash(git status)" --disallowed-tools "Task"') }}
+          claude_args: ${{ inputs.mode == 'analyze' && format('--model claude-sonnet-5-5 --allowed-tools "Read,Grep,Glob,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue comment:*),Bash(gh issue edit {2} --add-label:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(gh api repos/{0}/issues/comments/{1} --jq .body),Bash(git log:*)" --disallowed-tools "Task"', github.repository, inputs.comment_id, inputs.issue_number) || (inputs.mode == 'fix' && format('--allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(gh issue comment:*),Bash(git add:*),Bash(git commit:*),Bash(git diff:*),Bash(git log:*),Bash(git status),Bash(gh api repos/{0}/issues/comments/{1} --jq .body)" --disallowed-tools "Task"', github.repository, inputs.comment_id) || '--model claude-sonnet-5-5 --allowed-tools "Read,Grep,Glob,Edit,Write,Bash(gh label list:*),Bash(gh issue view:*),Bash(gh issue list:*),Bash(gh issue edit:*),Bash(gh issue close:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh api graphql:*),Bash(git add:*),Bash(git commit:*),Bash(git diff:*),Bash(git log:*),Bash(git status)" --disallowed-tools "Task"') }}
           prompt: |
             You are the issue triage, analysis and fix agent for the evcc repository.
             MODE = "${{ inputs.mode }}". Work on issue/PR #${{ inputs.issue_number }}.
@@ -247,12 +248,15 @@ jobs:
                when the issue already carries a label or has a comment from anyone
                but the reporter and github-actions: a maintainer has it.
 
-            3. LABEL: Based on your investigation, pick the single best area label from
-               the repository's existing labels (`gh label list`) and apply it with
+            3. LABEL: Based on your investigation, ALWAYS apply exactly one area label
+               from the repository's existing labels (`gh label list`) with
                `gh issue edit ${{ inputs.issue_number }} --add-label <label>`.
+               `question` is the fallback when nothing fits better. An area label is
+               mandatory even when you also add `waiting for feedback` below: that
+               one comes on top of the area label, never instead of it.
                Only ever apply an existing label, spelled exactly as listed — never
                create a new label.
-               Skip the area label if the issue already carries any label: a
+               Skip the area label only if the issue already carries any label: a
                maintainer has triaged it.
                NEVER apply a `bug` label. A bug is expressed as the issue type only
                (`gh issue edit ${{ inputs.issue_number }} --type Bug`). The type is
@@ -302,7 +306,12 @@ jobs:
               backport. The `bug` label belongs on the pull request, never on the
               issue.
 
-            If MODE is "analyze", do NOT label, edit, or open PRs.
+            If MODE is "analyze", do NOT set an area label or type, edit, or open
+            PRs. One exception: if your step 2 comment still asks the reporter
+            anything, re-add `waiting for feedback` with
+            `gh issue edit ${{ inputs.issue_number }} --add-label "waiting for feedback"`.
+            The reporter's reply that triggered you removed that label; without it
+            the next reply re-runs nothing.
 
             If MODE is "fix", do NOT label or edit issue metadata.
 
