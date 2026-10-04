@@ -121,7 +121,6 @@ type Loadpoint struct {
 	alwaysCharge        api.AlwaysCharge // smart mode: charge continuously at least at min power
 	socUpdated          time.Time        // Soc updated timestamp (poll: connected)
 	vehicleDetect       time.Time        // Vehicle connected timestamp
-	chargerSwitched     time.Time        // Charger enabled/disabled timestamp
 	vehicleDetectTicker *clock.Ticker
 	vehicleIdentifier   string
 
@@ -1138,7 +1137,7 @@ func (lp *Loadpoint) UpdateChargePowerAndCurrents() float64 {
 		// https://github.com/evcc-io/evcc/issues/2153
 		// https://github.com/evcc-io/evcc/issues/6986
 		// https://github.com/evcc-io/evcc/issues/13378
-		if power < -100 && lp.shouldBeConsistent() {
+		if power < -100 && lp.ctrl().shouldBeConsistent() {
 			lp.log.WARN.Printf("charge power must not be negative: %.0f", power)
 		}
 	} else {
@@ -1436,15 +1435,6 @@ func (lp *Loadpoint) stopWakeUpTimer() {
 		lp.log.DEBUG.Printf("wake-up timer: stop")
 		lp.wakeUpTimer.Stop()
 	}
-}
-
-func (lp *Loadpoint) shouldBeConsistent() bool {
-	return lp.chargerUpdateCompleted() && lp.ctrl().phaseSwitchCompleted()
-}
-
-// chargerUpdateCompleted returns true if enable command should be already processed by the charger (so we can try to sync charger and loadpoint)
-func (lp *Loadpoint) chargerUpdateCompleted() bool {
-	return lp.clock.Since(lp.chargerSwitched) > chargerSwitchDuration
 }
 
 // Update is the main control function. It reevaluates meters and charger state

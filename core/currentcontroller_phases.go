@@ -178,7 +178,7 @@ func (c *CurrentController) phaseSwitchCompleted() bool {
 // Chargers may reconfigure phases internally, i.e. when the vehicle is (dis)connected.
 // Unknown phases (0, i.e. after startup) are seeded from the charger without warning.
 func (c *CurrentController) syncChargerPhases() error {
-	phases := c.lp.GetPhases()
+	phases := c.getPhases()
 	if !c.hasPhaseSwitching() {
 		return nil
 	}

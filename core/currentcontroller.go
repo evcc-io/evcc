@@ -21,15 +21,16 @@ type CurrentController struct {
 	lp *Loadpoint
 
 	// controller state, guarded by the loadpoint's mutex
-	enabled        bool      // Charger enabled state
-	phases         int       // Charger enabled phases
-	offeredCurrent float64   // Charger current limit
-	phaseTimer     time.Time // 1p3p switch timer
-	minCurrent     float64   // PV mode: start current	Min+PV mode: min current
-	maxCurrent     float64   // Max allowed current. Physically ensured by the charger
-	chargeCurrents []float64 // Phase currents
-	surplus        *float64  // Surplus power for phase reconciliation, valid for current cycle only
-	mayDisable     bool      // insufficient surplus may stop charging via the pv disable timer
+	enabled         bool      // Charger enabled state
+	phases          int       // Charger enabled phases
+	offeredCurrent  float64   // Charger current limit
+	phaseTimer      time.Time // 1p3p switch timer
+	chargerSwitched time.Time // Charger enabled/disabled timestamp
+	minCurrent      float64   // PV mode: start current	Min+PV mode: min current
+	maxCurrent      float64   // Max allowed current. Physically ensured by the charger
+	chargeCurrents  []float64 // Phase currents
+	surplus         *float64  // Surplus power for phase reconciliation, valid for current cycle only
+	mayDisable      bool      // insufficient surplus may stop charging via the pv disable timer
 
 	phasesConfigured int       // Charger configured phase mode 0/1/3
 	measuredPhases   int       // Charger physically measured phases
@@ -44,6 +45,22 @@ func newCurrentController(lp *Loadpoint) *CurrentController {
 func (lp *Loadpoint) ctrl() *CurrentController {
 	ctrl, _ := lp.chargeController.(*CurrentController)
 	return ctrl
+}
+
+// getPhases returns the enabled phases
+func (c *CurrentController) getPhases() int {
+	c.lp.RLock()
+	defer c.lp.RUnlock()
+	return c.phases
+}
+
+func (c *CurrentController) shouldBeConsistent() bool {
+	return c.chargerUpdateCompleted() && c.phaseSwitchCompleted()
+}
+
+// chargerUpdateCompleted returns true if enable command should be already processed by the charger (so we can try to sync charger and loadpoint)
+func (c *CurrentController) chargerUpdateCompleted() bool {
+	return c.lp.clock.Since(c.chargerSwitched) > chargerSwitchDuration
 }
 
 func (c *CurrentController) setAndPublishEnabled(enabled bool) {
@@ -333,7 +350,7 @@ func (c *CurrentController) setLimit(current float64) error {
 		}
 
 		c.setAndPublishEnabled(enabled)
-		c.lp.chargerSwitched = c.lp.clock.Now()
+		c.chargerSwitched = c.lp.clock.Now()
 
 		// ensure we always re-set current when enabling charger
 		if !enabled {
@@ -362,7 +379,7 @@ func (c *CurrentController) syncCharger() (bool, error) {
 		return false, fmt.Errorf("charger enabled: %w", err)
 	}
 
-	shouldBeConsistent := c.lp.shouldBeConsistent()
+	shouldBeConsistent := c.shouldBeConsistent()
 
 	if shouldBeConsistent {
 		defer func() {
@@ -416,7 +433,7 @@ func (c *CurrentController) syncCharger() (bool, error) {
 		// use measured phase currents as fallback if charger does not provide max current or does not currently relay from vehicle (TWC3)
 		if !isCg || errors.Is(err, api.ErrNotAvailable) {
 			// validate if current too high by more than 1A (https://github.com/evcc-io/evcc/issues/14731)
-			if current := c.lp.GetMaxPhaseCurrent(); current > c.offeredCurrent+1.0 {
+			if current := c.maxPhaseCurrent(); current > c.offeredCurrent+1.0 {
 				if shouldBeConsistent && !c.lp.chargerHasFeature(api.Heating) {
 					c.lp.log.WARN.Printf("charger logic error: current mismatch (got %.3gA measured, expected %.3gA) - make sure your interval is at least 30s", current, c.offeredCurrent)
 				}

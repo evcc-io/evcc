@@ -177,7 +177,11 @@ func (c *CurrentController) phaseSwitchGapPower() float64 {
 	}
 
 	// max power actually achievable on the active phases
-	activeMaxPower := min(c.lp.EffectiveMaxPower(), c.activeMaxPower())
+	maxPower := c.effectiveMaxPower()
+	if circuitMaxPower := circuitMaxPower(c.lp.circuit); circuitMaxPower > 0 {
+		maxPower = min(maxPower, circuitMaxPower)
+	}
+	activeMaxPower := min(maxPower, c.activeMaxPower())
 	return max(0, currentToPower(c.effectiveMinCurrent(), maxPhases)-activeMaxPower)
 }
 

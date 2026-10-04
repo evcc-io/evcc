@@ -66,8 +66,7 @@ slot in by supplying its own envelope.
    - move welcome/climate floors into loadpoint power policy
    - relocate the phase decision and `phaseTimer` into the controller
    - the controller keeps embedding `*Loadpoint` for plumbing for now
-2. **Follow-up PR** — structural inversion: *(state, embedding and envelope done on this
-   branch; explicit deps outstanding)*
+2. **Follow-up PR** — structural inversion: *(done on this branch)*
    - controller-owned state (`enabled`, `offeredCurrent`, `phases`, `phaseTimer`) — done:
      fields live on `CurrentController`, guarded by the loadpoint's mutex; `syncCharger`
      and enable bookkeeping moved along; `lp.ctrl()` is the transitional concrete accessor
@@ -75,9 +74,10 @@ slot in by supplying its own envelope.
    - envelope: `api.PowerController` is the setter seam only (`SetPower`); a native
      charger supplies its envelope via `api.PowerLimiter` and enable/disable via
      `api.Charger` — the controller keeps owning enable mechanics, dedup and wake-up
-   - explicit narrow dependencies (charger, clock, logger, publish hook, vehicle-limit
-     provider) — outstanding: charger attaches after construction, so plain field copies
-     would go stale; needs provider-style indirection to be designed
+   - dependencies: the controller resolves owner services (charger, meter, circuit, vehicle,
+     clock, logger, publish hooks, mutex) live through its `lp` back-reference — devices
+     attach after construction and the vehicle changes at runtime, so copies would go
+     stale; controller-owned state is never read back through loadpoint façades
 3. **Native `api.PowerController` chargers** — *(first wave done)*: the controller
    prefers a native `SetPower(W)` charger write over `MaxCurrent`; chargers never act as
    the charge controller directly, so enable dedup, wake-up and sync stay in one place.

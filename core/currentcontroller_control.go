@@ -29,7 +29,7 @@ func (c *CurrentController) effectiveCurrent() float64 {
 
 // scalePhasesRequired validates if fixed phase configuration matches enabled phases
 func (c *CurrentController) scalePhasesRequired() bool {
-	return c.hasPhaseSwitching() && c.phasesConfigured != 0 && c.phasesConfigured != c.lp.GetPhases()
+	return c.hasPhaseSwitching() && c.phasesConfigured != 0 && c.phasesConfigured != c.getPhases()
 }
 
 // scalePhasesIfAvailable scales if api.PhaseSwitcher is available and allowed
@@ -53,7 +53,7 @@ func (c *CurrentController) scalePhases(phases int) error {
 		panic("charger does not implement api.PhaseSwitcher")
 	}
 
-	if c.lp.GetPhases() != phases {
+	if c.getPhases() != phases {
 		// switch phases
 		if err := cp.Phases1p3p(phases); err != nil {
 			return fmt.Errorf("switch phases: %w", err)
@@ -185,7 +185,7 @@ func (c *CurrentController) pvScalePhases(sitePower, minCurrent, maxCurrent floa
 	// - https://github.com/evcc-io/evcc/issues/2613
 	measuredPhases := c.GetMeasuredPhases()
 	if phases > 0 && phases < measuredPhases {
-		if c.lp.chargerUpdateCompleted() && c.phaseSwitchCompleted() {
+		if c.chargerUpdateCompleted() && c.phaseSwitchCompleted() {
 			c.lp.log.WARN.Printf("ignoring inconsistent phases: %dp < %dp observed active", phases, measuredPhases)
 		}
 		c.ResetMeasuredPhases()
