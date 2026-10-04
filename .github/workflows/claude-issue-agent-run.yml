@@ -198,10 +198,10 @@ jobs:
                - configuration absent or placeholder
                - steps to reproduce left at the form's `1. 2. 3.` skeleton
                - version missing
-               - the line containing `⚠️  RETURN TO EVCC` still
-                 present: the evcc UI's issue dialog puts it where configuration,
-                 system state and log belong when they exceed the URL limit, and
-                 the reporter never pasted them, so all three are missing
+               - the line containing `⚠️  RETURN TO EVCC` still present: the evcc
+                 UI's issue dialog puts it where configuration, system state and
+                 log belong when they exceed the URL limit, and the reporter never
+                 pasted them, so all three are missing
                Close ONLY when the report shows no effort to provide context: the
                reporter filled the form with placeholders or one-liners and gave
                nothing that lets anyone start an analysis. A description alone is
