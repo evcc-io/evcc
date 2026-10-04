@@ -379,17 +379,52 @@ func TestBatteryRequestGridModes(t *testing.T) {
 	capacity, soc := 10.0, 50.0
 	m := types.Measurement{Capacity: &capacity, Soc: &soc}
 
-	req, _ := site.batteryRequest(newBatteryDevice(t, api.BatteryNormal, api.BatteryHold, api.BatteryCharge), m, nil, 8, 15*time.Minute)
+	req, _ := site.batteryRequest(newBatteryDevice(t, api.BatteryNormal, api.BatteryHold, api.BatteryCharge), m, nil, nil, 8, 15*time.Minute)
 	assert.True(t, req.ChargeFromGrid)
 	assert.False(t, req.DischargeToGrid, "grid discharge opt-in must not apply to a battery without discharge mode")
 
-	req, _ = site.batteryRequest(newBatteryDevice(t, api.BatteryNormal, api.BatteryDischarge), m, nil, 8, 15*time.Minute)
+	req, _ = site.batteryRequest(newBatteryDevice(t, api.BatteryNormal, api.BatteryDischarge), m, nil, nil, 8, 15*time.Minute)
 	assert.False(t, req.ChargeFromGrid)
 	assert.True(t, req.DischargeToGrid)
 
 	site.batteryGridDischarge = false
-	req, _ = site.batteryRequest(newBatteryDevice(t, api.BatteryNormal, api.BatteryDischarge), m, nil, 8, 15*time.Minute)
+	req, _ = site.batteryRequest(newBatteryDevice(t, api.BatteryNormal, api.BatteryDischarge), m, nil, nil, 8, 15*time.Minute)
 	assert.False(t, req.DischargeToGrid, "grid discharge requires the opt-in")
+}
+
+// TestBatteryRequestGridDischargeDemand ensures the feed-in rate at or above the grid
+// discharge limit becomes a discharge demand, and never alongside a charge demand
+func TestBatteryRequestGridDischargeDemand(t *testing.T) {
+	batCon := api.NewMockBatteryController(gomock.NewController(t))
+	batCon.EXPECT().BatteryModes().Return([]api.BatteryMode{api.BatteryNormal, api.BatteryCharge, api.BatteryDischarge}).AnyTimes()
+	dev := config.NewStaticDevice(config.Named{}, api.Meter(&struct {
+		api.Meter
+		api.BatteryController
+	}{BatteryController: batCon}))
+
+	dischargeLimit := 0.2
+	site := &Site{log: util.NewLogger("foo"), batteryGridDischarge: true, batteryGridDischargeLimit: &dischargeLimit}
+	capacity, soc := 10.0, 50.0
+	m := types.Measurement{Capacity: &capacity, Soc: &soc}
+
+	grid := api.Rates{{Value: 0.3}, {Value: 0.3}, {Value: 0.3}}
+	feedIn := api.Rates{{Value: 0.1}, {Value: 0.2}, {Value: 0.25}}
+	slot := float32(batteryPower / slotsPerHour)
+
+	req, _ := site.batteryRequest(dev, m, grid, feedIn, 3, tariff.SlotDuration)
+	assert.Nil(t, req.PDemand)
+	assert.Equal(t, []float32{0, slot, slot}, req.DDemand)
+
+	// no slot reaches the limit
+	req, _ = site.batteryRequest(dev, m, grid, api.Rates{{Value: 0.1}, {Value: 0.1}, {Value: 0.1}}, 3, tariff.SlotDuration)
+	assert.Nil(t, req.DDemand)
+
+	// grid charge limit hit in the same slot: charging wins, the optimizer rejects both at once
+	chargeLimit := 0.3
+	site.batteryGridChargeLimit = &chargeLimit
+	req, _ = site.batteryRequest(dev, m, api.Rates{{Value: 0.4}, {Value: 0.3}, {Value: 0.4}}, feedIn, 3, tariff.SlotDuration)
+	assert.Equal(t, []float32{0, slot, 0}, req.PDemand)
+	assert.Equal(t, []float32{0, 0, slot}, req.DDemand)
 }
 
 // Batteries without soc limits must still get the full capacity as SMax, otherwise the
@@ -399,7 +434,7 @@ func TestBatteryRequestWithoutSocLimiter(t *testing.T) {
 	capacity, soc := 10.0, 50.0
 	dev := config.NewStaticDevice(config.Named{}, api.Meter(&struct{ api.Meter }{}))
 
-	req, _ := site.batteryRequest(dev, types.Measurement{Capacity: &capacity, Soc: &soc}, nil, 8, 15*time.Minute)
+	req, _ := site.batteryRequest(dev, types.Measurement{Capacity: &capacity, Soc: &soc}, nil, nil, 8, 15*time.Minute)
 
 	assert.Equal(t, float32(0), req.SMin)
 	assert.Equal(t, float32(10000), req.SMax)
@@ -436,7 +471,7 @@ func TestBatteryRequestSocLimitsClamp(t *testing.T) {
 		dev := newBatteryDevice(t, 20, 100)
 		m := types.Measurement{Capacity: &capacity, Soc: &soc}
 
-		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+		req, _ := site.batteryRequest(dev, m, nil, nil, 8, 15*time.Minute)
 
 		assert.Equal(t, float32(1500), req.SMin)
 		assert.Equal(t, float32(10000), req.SMax)
@@ -448,7 +483,7 @@ func TestBatteryRequestSocLimitsClamp(t *testing.T) {
 		dev := newBatteryDevice(t, 0, 80)
 		m := types.Measurement{Capacity: &capacity, Soc: &soc}
 
-		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+		req, _ := site.batteryRequest(dev, m, nil, nil, 8, 15*time.Minute)
 
 		assert.Equal(t, float32(0), req.SMin)
 		assert.Equal(t, float32(9500), req.SMax)
@@ -460,7 +495,7 @@ func TestBatteryRequestSocLimitsClamp(t *testing.T) {
 		dev := newBatteryDevice(t, 20, 80)
 		m := types.Measurement{Capacity: &capacity, Soc: &soc}
 
-		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+		req, _ := site.batteryRequest(dev, m, nil, nil, 8, 15*time.Minute)
 
 		assert.Equal(t, float32(2000), req.SMin)
 		assert.Equal(t, float32(8000), req.SMax)
@@ -471,7 +506,7 @@ func TestBatteryRequestSocLimitsClamp(t *testing.T) {
 		dev := newBatteryDevice(t, 20, 0)
 		m := types.Measurement{Capacity: &capacity, Soc: &soc}
 
-		req, _ := site.batteryRequest(dev, m, nil, 8, 15*time.Minute)
+		req, _ := site.batteryRequest(dev, m, nil, nil, 8, 15*time.Minute)
 
 		assert.Equal(t, float32(2000), req.SMin)
 		assert.Equal(t, float32(10000), req.SMax)
