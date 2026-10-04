@@ -59,7 +59,7 @@
 										<div :style="{ height: `${OVERVIEW_HEIGHT}px` }"></div>
 										<LegendList class="mt-4" :legends="stackLegends" />
 									</div>
-									<FlowChart :flows="flows" />
+									<FlowChart :flows="flows" :loadpoint-labels="loadpointLabels" />
 								</div>
 								<template v-else>
 									<GroupChart
@@ -700,6 +700,15 @@ export default defineComponent({
 		},
 		loadpoints(): HistorySeries[] {
 			return this.withData("loadpoint");
+		},
+		loadpointLabels(): string[] {
+			const charging = this.loadpoints.some((lp) => !lp.isTemp);
+			const heating = this.loadpoints.some((lp) => lp.isTemp);
+			const both = charging === heating;
+			return [
+				...(charging || both ? [this.$t("energy.flow.charging")] : []),
+				...(heating || both ? [this.$t("energy.flow.heating")] : []),
+			];
 		},
 		loadpointColors(): Record<string, string> {
 			return this.entityColors(this.loadpoints);

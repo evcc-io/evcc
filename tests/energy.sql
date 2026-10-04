@@ -3,6 +3,7 @@ CREATE TABLE `entities` (
   `group` text,
   `name` text,
   `title` text,
+  `is_temp` numeric,
   PRIMARY KEY (`id`)
 );
 CREATE UNIQUE INDEX `entities_group_name` ON `entities`(`group`, `name`);
@@ -31,6 +32,7 @@ INSERT INTO `entities` (id, `group`, name, title) VALUES (4, 'pv', 'solar', 'Sol
 INSERT INTO `entities` (id, `group`, name, title) VALUES (5, 'loadpoint', 'carport', 'Carport');
 INSERT INTO `entities` (id, `group`, name, title) VALUES (6, 'forecast', 'forecast', 'forecast');
 INSERT INTO `entities` (id, `group`, name, title) VALUES (7, 'meter', 'pool', 'Pool');
+INSERT INTO `entities` (id, `group`, name, title, is_temp) VALUES (8, 'loadpoint', 'heatpump', 'Heat pump', 1);
 
 -- 2026-09-15 12:00 and 12:15 CEST (+02:00): sunny, export and battery charging
 -- pv 2 → home 0.5, battery 0.5, loadpoint 0.5, export 0.5
@@ -58,6 +60,10 @@ INSERT INTO `meters` VALUES (3, 1789503300, 0, 0.5);
 INSERT INTO `meters` VALUES (1, 1789503300, 0.5, 0);
 INSERT INTO `meters` VALUES (5, 1789503300, 1, 0);
 INSERT INTO `meters` VALUES (2, 1789503300, 1, 0);
+
+-- 2026-09-16 12:00 CEST: heating only, grid 1 → heat pump 1
+INSERT INTO `meters` VALUES (8, 1789552800, 1, 0);
+INSERT INTO `meters` VALUES (2, 1789552800, 1, 0);
 
 -- tariffs for all four slots: grid 0.30 (night 0.25 / 0.35), feed-in 0.10, co2 400 g/kWh
 INSERT INTO `tariffs` VALUES (1789466400, 0.3, 0.1, 400, NULL);

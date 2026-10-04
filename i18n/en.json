@@ -1359,7 +1359,6 @@
       "consumer": "Consumption",
       "forecast": "Forecast",
       "grid": "Grid",
-      "loadpoint": "Charging & Heating",
       "meter": "Additional meters",
       "pv": "Production"
     },

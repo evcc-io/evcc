@@ -75,7 +75,7 @@ test.describe("page", () => {
     const chart = card.getByTestId("flow-chart");
     await expect(chart.getByText("Production")).toBeVisible();
     await expect(chart.getByText("Consumption")).toBeVisible();
-    await expect(chart.getByText("Heating")).toBeVisible();
+    await expect(chart.getByText("Charging")).toBeVisible();
     await expect(chart.getByText("Grid export")).toBeVisible();
 
     // autarky 1 - 2/5, grid import 2 kWh and export 1 kWh
@@ -131,6 +131,27 @@ test.describe("page", () => {
     await expect(page.getByTestId("energy-stat-savings")).toContainText("0.60 €");
     // co2 saved 2 kg - 0.8 kg
     await expect(page.getByTestId("energy-stat-co2")).toContainText("1 kg");
+  });
+
+  test("flow chart loadpoint label", async ({ page }) => {
+    const card = page.getByTestId("energy-flow");
+    const chart = card.getByTestId("flow-chart");
+
+    // charger only
+    await page.goto("/#/energy?year=2026&month=9&day=15");
+    await card.getByTitle("Energy flow").click();
+    await expect(chart.getByText("Charging")).toBeVisible();
+    await expect(chart.getByText("Heating")).toHaveCount(0);
+
+    // heater only
+    await page.goto("/#/energy?year=2026&month=9&day=16");
+    await expect(chart.getByText("Heating")).toBeVisible();
+    await expect(chart.getByText("Charging")).toHaveCount(0);
+
+    // both
+    await page.goto("/#/energy?period=month&year=2026&month=9");
+    await expect(chart.getByText("Charging &")).toBeVisible();
+    await expect(chart.getByText("Heating")).toBeVisible();
   });
 
   test("bottom tab with experimental, sessions moves to more on phones", async ({ page }) => {

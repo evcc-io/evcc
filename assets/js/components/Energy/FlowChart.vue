@@ -34,6 +34,7 @@ export default defineComponent({
 	mixins: [formatter, echartsChart],
 	props: {
 		flows: { type: Array as PropType<Flow[]>, default: () => [] },
+		loadpointLabels: { type: Array as PropType<string[]>, default: () => [] },
 	},
 	data() {
 		return { compact: COMPACT.matches };
@@ -76,8 +77,7 @@ export default defineComponent({
 				color: this.nodeColors[id] || "",
 				source: true,
 			}));
-			// no meta info yet whether heating loadpoints exist, show both parts
-			const loadpointLabel = `${this.$t("energy.flow.charging")} &\n${this.$t("energy.flow.heating")}`;
+			const loadpointLabel = this.loadpointLabels.join(" &\n");
 			const dst = SINKS.map((id) => ({
 				name: `to-${id}`,
 				label: id === "loadpoint" ? loadpointLabel : this.$t(`energy.flow.${id}`),

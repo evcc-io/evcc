@@ -1071,6 +1071,9 @@ export default defineComponent({
 		},
 		singleEntityName(s: HistorySeries): string {
 			if (this.series.length > 1) return s.title;
+			if (s.group === "loadpoint") {
+				return this.$t(s.isTemp ? "energy.flow.heating" : "energy.flow.charging");
+			}
 			const key = `energy.group.${s.group}`;
 			const label = this.$t(key);
 			return label === key ? s.title : String(label);
