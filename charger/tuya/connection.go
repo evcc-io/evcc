@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -32,10 +33,11 @@ var versions = []string{"3.5", "3.4", "3.3"}
 // Connection is a persistent local connection to a Tuya device. Devices accept only a single local connection.
 // The protocol version is detected on first connect.
 type Connection struct {
-	log  *util.Logger
-	addr string
-	id   string
-	key  []byte
+	log    *util.Logger
+	cancel context.CancelFunc
+	addr   string
+	id     string
+	key    []byte
 
 	version string // detected version, only accessed by run
 
@@ -47,23 +49,63 @@ type Connection struct {
 	dps *util.Monitor[map[string]any]
 }
 
+// Config is the configuration shared by all Tuya chargers
+type Config struct {
+	Host     string
+	Id       string
+	LocalKey string
+}
+
+// Dial validates the config, connects and waits for the first data points.
+// The connection is closed if the device is not reachable.
+func Dial(ctx context.Context, log *util.Logger, cc Config) (*Connection, map[string]any, error) {
+	if cc.Host == "" {
+		return nil, nil, errors.New("missing host")
+	}
+
+	if cc.Id == "" || cc.LocalKey == "" {
+		return nil, nil, api.ErrMissingCredentials
+	}
+
+	conn, err := NewConnection(ctx, log, cc.Host, cc.Id, cc.LocalKey)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	dps, err := conn.DpsContext(ctx)
+	if err != nil {
+		conn.Close()
+		return nil, nil, fmt.Errorf("device not reachable: %w", err)
+	}
+
+	return conn, dps, nil
+}
+
 // NewConnection creates a connection and starts it in the background
 func NewConnection(ctx context.Context, log *util.Logger, host, id, key string) (*Connection, error) {
 	if len(key) != 16 {
 		return nil, fmt.Errorf("invalid local key length: %d", len(key))
 	}
 
+	ctx, cancel := context.WithCancel(ctx)
+
 	c := &Connection{
-		log:  log,
-		addr: util.DefaultPort(host, 6668),
-		id:   id,
-		key:  []byte(key),
-		dps:  util.NewMonitor[map[string]any](readTimeout),
+		log:    log,
+		cancel: cancel,
+		addr:   util.DefaultPort(host, 6668),
+		id:     id,
+		key:    []byte(key),
+		dps:    util.NewMonitor[map[string]any](readTimeout),
 	}
 
 	go c.run(ctx)
 
 	return c, nil
+}
+
+// Close stops reconnecting and closes the connection
+func (c *Connection) Close() {
+	c.cancel()
 }
 
 func (c *Connection) run(ctx context.Context) {

@@ -60,7 +60,6 @@ package charger
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"slices"
 	"sync"
@@ -123,7 +122,6 @@ type tuyaDepowMetrics struct {
 
 // TuyaDepow charger implementation
 type TuyaDepow struct {
-	log  *util.Logger
 	conn *tuya.Connection
 
 	mu        sync.Mutex
@@ -137,55 +135,27 @@ func init() {
 
 // NewTuyaDepowFromConfig creates a dé charger from generic config
 func NewTuyaDepowFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
-	var cc struct {
-		Host     string
-		Id       string
-		LocalKey string
-	}
+	var cc tuya.Config
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	if cc.Host == "" {
-		return nil, errors.New("missing host")
-	}
-
-	if cc.Id == "" || cc.LocalKey == "" {
-		return nil, api.ErrMissingCredentials
-	}
-
-	return NewTuyaDepow(ctx, cc.Host, cc.Id, cc.LocalKey)
+	return NewTuyaDepow(ctx, cc)
 }
 
 // NewTuyaDepow creates a dé charger
-func NewTuyaDepow(ctx context.Context, host, id, localKey string) (_ *TuyaDepow, err error) {
-	log := util.NewLogger("tuya-depow").Redact(localKey)
-
+func NewTuyaDepow(ctx context.Context, cc tuya.Config) (*TuyaDepow, error) {
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
 	}
 
-	// stop reconnecting if the device is not reachable during setup
-	ctx, cancel := context.WithCancel(ctx)
-	defer func() {
-		if err != nil {
-			cancel()
-		}
-	}()
-
-	conn, err := tuya.NewConnection(ctx, log, host, id, localKey)
+	conn, dps, err := tuya.Dial(ctx, util.NewLogger("tuya-depow").Redact(cc.LocalKey), cc)
 	if err != nil {
 		return nil, err
 	}
 
-	dps, err := conn.DpsContext(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("device not reachable: %w", err)
-	}
-
 	wb := &TuyaDepow{
-		log:     log,
 		conn:    conn,
 		current: tuyaDepowSteps(dps)[0],
 	}

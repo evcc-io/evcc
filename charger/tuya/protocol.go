@@ -183,9 +183,7 @@ func pack55AA(mac []byte, seq, cmd uint32, payload []byte) []byte {
 	b = append(b, payload...)
 
 	if mac != nil {
-		h := hmac.New(sha256.New, mac)
-		h.Write(b)
-		b = h.Sum(b)
+		b = append(b, hmacSum(mac, b)...)
 	} else {
 		b = binary.BigEndian.AppendUint32(b, crc32.ChecksumIEEE(b))
 	}
@@ -211,9 +209,7 @@ func unpack55AA(mac []byte, frame []byte) (message, error) {
 	data, sum := frame[:len(frame)-trailer-4], frame[len(frame)-trailer-4:len(frame)-4]
 
 	if mac != nil {
-		h := hmac.New(sha256.New, mac)
-		h.Write(data)
-		if !hmac.Equal(h.Sum(nil), sum) {
+		if !hmac.Equal(hmacSum(mac, data), sum) {
 			return message{}, errors.New("hmac mismatch")
 		}
 	} else if crc32.ChecksumIEEE(data) != binary.BigEndian.Uint32(sum) {

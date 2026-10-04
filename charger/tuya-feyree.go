@@ -65,7 +65,6 @@ package charger
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 
@@ -142,7 +141,6 @@ var tuyaFeyreeCurrents = map[string]tuyaFeyreeCurrent{
 
 // TuyaFeyree charger implementation
 type TuyaFeyree struct {
-	log     *util.Logger
 	conn    *tuya.Connection
 	setting tuyaFeyreeCurrent
 
@@ -156,60 +154,33 @@ func init() {
 
 // NewTuyaFeyreeFromConfig creates a Feyree charger from generic config
 func NewTuyaFeyreeFromConfig(ctx context.Context, other map[string]any) (api.Charger, error) {
-	var cc struct {
-		Host     string
-		Id       string
-		LocalKey string
-	}
+	var cc tuya.Config
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	if cc.Host == "" {
-		return nil, errors.New("missing host")
-	}
-
-	if cc.Id == "" || cc.LocalKey == "" {
-		return nil, api.ErrMissingCredentials
-	}
-
-	return NewTuyaFeyree(ctx, cc.Host, cc.Id, cc.LocalKey)
+	return NewTuyaFeyree(ctx, cc)
 }
 
 // NewTuyaFeyree creates a Feyree charger
-func NewTuyaFeyree(ctx context.Context, host, id, localKey string) (_ *TuyaFeyree, err error) {
-	log := util.NewLogger("tuya-feyree").Redact(localKey)
-
+func NewTuyaFeyree(ctx context.Context, cc tuya.Config) (*TuyaFeyree, error) {
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
 	}
 
-	// stop reconnecting if the device is not reachable during setup
-	ctx, cancel := context.WithCancel(ctx)
-	defer func() {
-		if err != nil {
-			cancel()
-		}
-	}()
-
-	conn, err := tuya.NewConnection(ctx, log, host, id, localKey)
+	conn, dps, err := tuya.Dial(ctx, util.NewLogger("tuya-feyree").Redact(cc.LocalKey), cc)
 	if err != nil {
 		return nil, err
-	}
-
-	dps, err := conn.DpsContext(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("device not reachable: %w", err)
 	}
 
 	setting, err := tuyaFeyreeCurrentSetting(dps)
 	if err != nil {
+		conn.Close()
 		return nil, err
 	}
 
 	wb := &TuyaFeyree{
-		log:     log,
 		conn:    conn,
 		setting: setting,
 		current: setting.min,
