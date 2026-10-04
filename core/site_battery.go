@@ -16,6 +16,21 @@ func batteryModeModified(mode api.BatteryMode) bool {
 	return mode != api.BatteryUnknown && mode != api.BatteryNormal
 }
 
+// batteryModesModified reports whether the site or any single battery is in a modified mode
+func (site *Site) batteryModesModified() bool {
+	if batteryModeModified(site.GetBatteryMode()) {
+		return true
+	}
+
+	for _, mode := range site.batteryModeApplied {
+		if batteryModeModified(mode) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (site *Site) batteryConfigured() bool {
 	return len(site.batteryMeters) > 0
 }
@@ -60,17 +75,28 @@ func (site *Site) fromTo(requested, m api.BatteryMode) bool {
 	return requested == m || requested == api.BatteryUnknown && site.batteryMode == m
 }
 
+// fromToAny reports fromTo for the site mode or any of the per-battery modes
+func (site *Site) fromToAny(requested api.BatteryMode, modes map[string]api.BatteryMode, m api.BatteryMode) bool {
+	for _, mode := range modes {
+		if mode == m {
+			return true
+		}
+	}
+
+	return site.fromTo(requested, m)
+}
+
 func (site *Site) updateBatteryMode(batteryGridChargeActive, batteryGridDischargeActive bool, rate api.Rate) {
 	batteryMode, deviceModes := site.requiredBatteryMode(batteryGridChargeActive, batteryGridDischargeActive, rate)
 
 	// put battery into hold mode when charging is active and HEMS dimmed; HEMS overrides apply to every battery
-	if dimmed := hems.Dimmed(site.hems); site.fromTo(batteryMode, api.BatteryCharge) && dimmed != nil && *dimmed {
+	if dimmed := hems.Dimmed(site.hems); site.fromToAny(batteryMode, deviceModes, api.BatteryCharge) && dimmed != nil && *dimmed {
 		site.log.DEBUG.Println("battery mode: HEMS dimmed")
 		batteryMode, deviceModes = api.BatteryHold, nil
 	}
 
 	// stop discharging to grid when HEMS curtailed production, but keep self-consumption
-	if curtailed := hems.Curtailed(site.hems); site.fromTo(batteryMode, api.BatteryDischarge) && curtailed != nil && *curtailed {
+	if curtailed := hems.Curtailed(site.hems); site.fromToAny(batteryMode, deviceModes, api.BatteryDischarge) && curtailed != nil && *curtailed {
 		site.log.DEBUG.Println("battery mode: HEMS curtailed")
 		batteryMode, deviceModes = api.BatteryNormal, nil
 	}
@@ -129,7 +155,7 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 
 		if first != api.BatteryUnknown {
 			res = keepUnlessModified(first)
-		} else if batteryModeModified(batMode) {
+		} else if site.batteryModesModified() {
 			// no suggestion: release the batteries
 			res = api.BatteryNormal
 		}
