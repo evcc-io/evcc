@@ -161,6 +161,31 @@ func TestControllerSetPowerVehiclePowerLimitIsNotEnvelope(t *testing.T) {
 	assert.Equal(t, 11.0, c.offeredCurrent)
 }
 
+// Prepare syncs an enabled charger to a defined current without taking a charging
+// decision: no phase switch, although a minimum request would scale down to 1p
+func TestPrepareStartupSyncDoesNotScalePhases(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	Voltage = 230
+
+	plainCharger := api.NewMockCharger(ctrl)
+	plainCharger.EXPECT().Enabled().Return(true, nil)
+	plainCharger.EXPECT().MaxCurrent(int64(minA)).Return(nil)
+
+	charger := struct {
+		*api.MockCharger
+		*api.MockPhaseSwitcher
+	}{plainCharger, api.NewMockPhaseSwitcher(ctrl)} // Phases1p3p must not be called
+
+	lp := testControllerLoadpoint(charger, 0, 3)
+	uiChan, pushChan, lpChan := createChannels(t)
+	lp.Prepare(new(Site), uiChan, pushChan, lpChan)
+
+	c := currentController(lp)
+	assert.Equal(t, 3, c.phases)
+	assert.True(t, c.enabled)
+	assert.Equal(t, float64(minA), c.offeredCurrent)
+}
+
 func TestControllerSurplusConsumedPerCycle(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	Voltage = 230

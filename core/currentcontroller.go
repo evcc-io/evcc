@@ -132,7 +132,8 @@ func (c *CurrentController) roundedCurrent(current float64) float64 {
 
 // coarseCurrent returns true if charger or vehicle require full amp steps
 func (c *CurrentController) coarseCurrent() bool {
-	return !api.HasCap[api.ChargerEx](c.lp.charger) || c.lp.vehicleHasFeature(api.CoarseCurrent)
+	fine := api.HasCap[api.ChargerEx](c.lp.charger) || api.HasCap[api.PowerController](c.lp.charger)
+	return !fine || c.lp.vehicleHasFeature(api.CoarseCurrent)
 }
 
 // maxPhaseCurrent returns the maximum charge current per phase or- if not available-
