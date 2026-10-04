@@ -35,9 +35,9 @@ It is visible only for heating devices (`chargerFeatureHeating = true`).
 
 | Display name | Best used for |
 |---|---|
-| **Average** | Best for devices with consistent usage throughout the day. |
-| **Weekday** | Best for devices that follow a weekly (same weekday) household rhythm, like warm water or pool heaters. |
-| **Temperature** | Best for room heating that follows outdoor temperature, like heat pumps or floor heating. |
+| **Average** | Best for devices with consistent daily usage, regardless of the day of the week. |
+| **Weekday** | Best for devices where load follows a same weekday pattern, like warm water or pool heaters. |
+| **Temperature** | Best for room heating where load changes with outdoor temperature, like heat pumps or electrical room heaters. |
 
 ### Hint text
 
@@ -233,9 +233,9 @@ Add under `main.loadpointSettings`:
 ```json
 "demandPredictor": {
   "label": "Demand forecast",
-  "daily":       { "description": "Best for devices with consistent usage throughout the day." },
-  "weekday":     { "description": "Best for devices that follow a weekly (same weekday) household rhythm, like warm water or pool heaters." },
-  "temperature": { "description": "Best for room heating that follows outdoor temperature, like heat pumps or floor heating." },
+  "daily":       { "description": "Best for devices with consistent daily usage, regardless of the day of the week." },
+  "weekday":     { "description": "Best for devices where load follows a same weekday pattern, like warm water or pool heaters." },
+  "temperature": { "description": "Best for room heating where load changes with outdoor temperature, like heat pumps or electrical room heaters." },
   "noTempTariff": "Requires a temperature tariff to be configured."
 }
 ```
@@ -245,9 +245,9 @@ German (`de.json`):
 ```json
 "demandPredictor": {
   "label": "Verbrauchsprognose",
-  "daily":       { "description": "Am besten für Geräte mit gleichmäßigem Tagesverbrauch." },
-  "weekday":     { "description": "Am besten für Geräte mit wöchentlichem Rhythmus, z. B. Warmwasser oder Pool." },
-  "temperature": { "description": "Am besten für Raumheizungen, die der Außentemperatur folgen, z. B. Wärmepumpen oder Fußbodenheizung." },
+  "daily":       { "description": "Am besten für Geräte mit ähnlichem Verbrauch über den Tag für alle Tage der Woche." },
+  "weekday":     { "description": "Am besten für Geräte, deren Verbrauch einem Wochentag-Muster folgt, z. B. Warmwasser oder Pool." },
+  "temperature": { "description": "Am besten für Raumheizungen, deren Verbrauch mit der Außentemperatur variiert, z. B. Wärmepumpen oder elektrische Heizgeräte." },
   "noTempTariff": "Erfordert einen konfigurierten Temperatur-Tarif."
 }
 ```
