@@ -131,6 +131,9 @@ function tooltipLayer(): HTMLElement {
 export function tooltipStyle(color: string) {
   return {
     appendTo: tooltipLayer,
+    // echarts also triggers on mousewheel; a chart scrolling past a resting cursor would
+    // show its tooltip without ever getting the mouseout that hides it
+    triggerOn: "mousemove|click",
     // re-show after hide would otherwise slide in from the stale position
     transitionDuration: 0,
     backgroundColor: color,
