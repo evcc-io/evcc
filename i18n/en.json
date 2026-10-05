@@ -1405,7 +1405,8 @@
       "noCo2": "No CO₂ data.",
       "noPrice": "No price data.",
       "savings": "Savings",
-      "savingsTooltip": "Compared to buying the consumed {energy} from the grid."
+      "savingsTooltip": "Compared to buying the consumed {energy} from the grid.",
+      "versus": "{value} vs. {reference}"
     },
     "title": "Energy"
   },

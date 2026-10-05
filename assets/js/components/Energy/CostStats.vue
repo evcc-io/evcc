@@ -58,7 +58,10 @@ export default defineComponent({
 					number: savings,
 					format: (v: number) => this.fmtMoneyWithSymbol(v, this.currency),
 					// effective price per kWh consumed vs. the average grid price
-					sub: `${fmt(effective)} vs. ${this.fmtPricePerKWh(this.cost.avgGrid, this.currency)}`,
+					sub: this.$t("energy.stat.versus", {
+						value: fmt(effective),
+						reference: this.fmtPricePerKWh(this.cost.avgGrid, this.currency),
+					}),
 					tooltip: this.$t("energy.stat.savingsTooltip", {
 						energy: this.fmtKWh(energy),
 					}),
@@ -80,7 +83,10 @@ export default defineComponent({
 					label: this.$t("energy.stat.co2Saved"),
 					number: saved * 1000,
 					format: (v: number) => this.fmtGrams(v),
-					sub: `${this.fmtNumber(effective, 0)} vs. ${this.fmtCo2Medium(this.co2.avgCo2)}`,
+					sub: this.$t("energy.stat.versus", {
+						value: this.fmtNumber(effective, 0),
+						reference: this.fmtCo2Medium(this.co2.avgCo2),
+					}),
 					tooltip: this.$t("energy.stat.co2SavedTooltip", {
 						energy: this.fmtKWh(this.co2.consumptionEnergy),
 					}),

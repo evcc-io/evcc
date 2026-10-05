@@ -1405,7 +1405,8 @@
       "noCo2": "Keine CO₂-Daten.",
       "noPrice": "Keine Preisdaten.",
       "savings": "Ersparnis",
-      "savingsTooltip": "Im Vergleich zum Bezug der verbrauchten {energy} aus dem Netz."
+      "savingsTooltip": "Im Vergleich zum Bezug der verbrauchten {energy} aus dem Netz.",
+      "versus": "{value} statt {reference}"
     },
     "title": "Energie"
   },
