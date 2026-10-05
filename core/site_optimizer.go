@@ -1143,24 +1143,16 @@ func unmodelledPower(lp loadpoint.API) float64 {
 	return max(0, power)
 }
 
-// measuredSlotEnergy returns the summed energy in Wh of the last completed
-// metrics slot for the given collector refs, 0 when not available
-func (site *Site) measuredSlotEnergy(refs ...string) float64 {
-	var sum float64
-	for _, ref := range refs {
-		c, ok := site.collectors[ref]
-		if !ok {
-			return 0
-		}
-
-		v, ok := c.LastSlotEnergy()
-		if !ok {
-			return 0
-		}
-		sum += v
+// measuredSlotEnergy returns the energy in Wh of the last completed
+// metrics slot for the given collector ref, 0 when not available
+func (site *Site) measuredSlotEnergy(ref string) float64 {
+	c, ok := site.collectors[ref]
+	if !ok {
+		return 0
 	}
 
-	return sum * 1e3
+	v, _ := c.LastSlotEnergy()
+	return v * 1e3
 }
 
 // blendMeasured decays the first slots from the measured value into the
