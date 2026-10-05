@@ -127,7 +127,8 @@ func TestOptimizerGate(t *testing.T) {
 		s      types.Suggestion
 		expect func(h *api.MockCharger)
 	}{
-		// optimizer starts and stops smart charging, replacing the price limits
+		// optimizer starts and stops smart charging, replacing the price limits.
+		// Stop hands over to the pv loop, which disables at once after a grid-fed slot
 		{api.ModeSmart, api.AlwaysChargeOff, full, func(h *api.MockCharger) { h.EXPECT().MaxCurrent(int64(maxA)) }},
 		{api.ModeSmart, api.AlwaysChargeOff, stop, func(h *api.MockCharger) { h.EXPECT().Enable(false) }},
 
@@ -148,13 +149,16 @@ func TestOptimizerGate(t *testing.T) {
 
 		lp, charger, ctrl := automaticLoadpoint(t, tc.ac, true)
 		lp.mode = tc.mode
+		lp.clock.(*clock.Mock).Add(time.Hour) // elapsed must lie in the past
+		lp.pvTimer = elapsed                  // previous grid-fed slot
 		lp.setSuggestion(&tc.s)
 
 		if tc.expect != nil {
 			tc.expect(charger)
 		}
 
-		lp.Update(0, 0, nil, nil, false, false, 0, nil, nil, nil)
+		// grid import above min power, no measured surplus
+		lp.Update(2000, 0, nil, nil, false, false, 0, nil, nil, nil)
 
 		ctrl.Finish()
 	}
@@ -186,6 +190,32 @@ func TestOptimizerSurplusRegime(t *testing.T) {
 	ctrl.Finish()
 }
 
+// TestOptimizerStopFollowsSurplus covers a stop based on a forecast surplus that is
+// too low: the pv loop still enables on measured surplus after the enable delay
+func TestOptimizerStopFollowsSurplus(t *testing.T) {
+	enableAutomatic(t)
+
+	stop := &types.Suggestion{Action: actionStop}
+
+	lp := NewLoadpoint(util.NewLogger("foo"), nil)
+	lp.site = &mockSite{automatic: true}
+	lp.vehicle = modelledVehicle(gomock.NewController(t))
+
+	// disabled: a timer elapsed by a grid-fed slot must not skip the enable delay
+	lp.pvTimer = elapsed
+	handled, err := lp.optimizerCharging(stop)
+	assert.NoError(t, err)
+	assert.False(t, handled, "stop must leave the decision to the pv loop")
+	assert.True(t, lp.pvTimer.IsZero(), "enable delay must apply")
+
+	// enabled after a grid-fed slot: disable without measured surplus at once
+	lp.enabled = true
+	lp.pvTimer = elapsed
+	handled, _ = lp.optimizerCharging(stop)
+	assert.False(t, handled)
+	assert.True(t, lp.pvTimer.Equal(elapsed))
+}
+
 // TestOptimizerFlexibility covers a loadpoint the optimizer pins to a setpoint:
 // it does not yield to a higher priority loadpoint, so its power is not flexible
 func TestOptimizerFlexibility(t *testing.T) {
@@ -199,6 +229,7 @@ func TestOptimizerFlexibility(t *testing.T) {
 		{types.Suggestion{Action: actionCharge, Charge: 3680, Grid: 1000}, 0}, // full power
 		{types.Suggestion{Action: actionCharge, Charge: 2300, Grid: 1000}, 0}, // grid-fed setpoint
 		{types.Suggestion{Action: actionCharge, Charge: 2300}, 2700},          // surplus regime, pv loop yields
+		{types.Suggestion{Action: actionStop}, 2700},                          // stop, pv loop yields
 	} {
 		lp := NewLoadpoint(util.NewLogger("foo"), nil)
 		lp.mode = api.ModeSmart
@@ -380,7 +411,7 @@ func TestOptimizerPhaseScaleUp(t *testing.T) {
 
 			s := &types.Suggestion{Action: actionCharge, Charge: charge, Grid: charge}
 
-			handled, err := lp.optimizerCharging(s, false)
+			handled, err := lp.optimizerCharging(s)
 			assert.True(t, handled)
 			assert.NoError(t, err)
 			started := lp.phaseTimer
@@ -388,14 +419,14 @@ func TestOptimizerPhaseScaleUp(t *testing.T) {
 
 			// next cycle keeps the timer
 			clck.Add(time.Minute)
-			_, err = lp.optimizerCharging(s, false)
+			_, err = lp.optimizerCharging(s)
 			assert.NoError(t, err)
 			assert.Equal(t, started, lp.phaseTimer, "scale up timer must not restart")
 
 			// delay elapsed
 			clck.Add(lp.Enable.Delay)
 			phaseCharger.EXPECT().Phases1p3p(3).Return(nil)
-			_, err = lp.optimizerCharging(s, false)
+			_, err = lp.optimizerCharging(s)
 			assert.NoError(t, err)
 			assert.Equal(t, 3, lp.GetPhases())
 		})

@@ -82,7 +82,7 @@ func (lp *Loadpoint) surplusRegime(s *types.Suggestion) bool {
 // if the loadpoint is to follow pv surplus instead, leaving current and phases
 // to the regular pv control loop. Otherwise current and phases follow the
 // suggested power, only the level is the optimizer's decision.
-func (lp *Loadpoint) optimizerCharging(s *types.Suggestion, welcomeCharge bool) (bool, error) {
+func (lp *Loadpoint) optimizerCharging(s *types.Suggestion) (bool, error) {
 	if lp.surplusRegime(s) {
 		// the charge power matches the forecast surplus, which only holds on average-
 		// the pv loop tracks the measured one, so its timers must keep running
@@ -92,6 +92,17 @@ func (lp *Loadpoint) optimizerCharging(s *types.Suggestion, welcomeCharge bool) 
 		}
 
 		lp.log.DEBUG.Printf("optimizer: charge (%.0fW), following pv surplus", s.Charge)
+		return false, nil
+	}
+
+	if s.Action != actionCharge && !lp.GetAlwaysCharge().Active() {
+		// a stop rests on the forecast surplus, which may be too low- the pv loop still
+		// enables on measured surplus. A timer elapsed by a grid-fed slot stops at once.
+		if !lp.enabled && lp.pvTimer.Equal(elapsed) {
+			lp.resetPVTimer()
+		}
+
+		lp.log.DEBUG.Println("optimizer: stop, following measured pv surplus")
 		return false, nil
 	}
 
@@ -120,24 +131,6 @@ func (lp *Loadpoint) optimizerCharging(s *types.Suggestion, welcomeCharge bool) 
 	}
 
 	// always charge keeps its minimum power, the optimizer plans with it
-	if lp.GetAlwaysCharge().Active() {
-		lp.log.DEBUG.Println("optimizer: stop, keeping minimum power")
-		return true, lp.minCharging()
-	}
-
-	// without welcome charge the vehicle never reports identity and soc, leaving
-	// it unmodelled- the optimizer would then keep asking to stop
-	if welcomeCharge {
-		lp.log.DEBUG.Println("optimizer: stop, welcome charge")
-		lp.resetPVTimer()
-		return true, lp.setLimit(lp.effectiveMinCurrent())
-	}
-
-	if lp.vehicleClimateActive() {
-		lp.log.DEBUG.Println("optimizer: stop, climate active")
-		return true, lp.setLimit(lp.effectiveMinCurrent())
-	}
-
-	lp.log.DEBUG.Println("optimizer: stop")
-	return true, lp.setLimit(0)
+	lp.log.DEBUG.Println("optimizer: stop, keeping minimum power")
+	return true, lp.minCharging()
 }
