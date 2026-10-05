@@ -25,19 +25,24 @@ export default defineComponent({
 		chartOption(): Record<string, unknown> {
 			const total = this.segments.reduce((acc, s) => acc + s.value, 0);
 			// a part thinner than the gap would only eat the pill's rounded end
-			const drawn = this.segments
-				.map((s, i) => ({ ...s, id: `segment-${i}` }))
-				.filter((s) => s.value >= total / 100 && s.value > 0);
-			// a sliver of nothing between neighbours, so they read as separate parts
-			const parts = drawn.flatMap((s, i) =>
-				i ? [{ id: `gap-${i}`, value: total / 100, color: "transparent" }, s] : [s]
-			);
-			// pill ends on the outer drawn segments
-			const radius = (s: { id: string }) => {
+			const drawn = this.segments.filter((s) => s.value >= total / 100 && s.value > 0);
+			// every segment keeps its place in the stack, undrawn ones at zero width, so
+			// the order survives updates. A sliver of nothing sits before each drawn
+			// segment but the first, so neighbours read as separate parts
+			const parts = this.segments.flatMap((s, i) => {
+				const shown = drawn.includes(s);
 				const first = s === drawn[0] ? 3 : 0;
 				const last = s === drawn.at(-1) ? 3 : 0;
-				return [first, last, last, first];
-			};
+				return [
+					{ value: shown && !first ? total / 100 : 0, color: "transparent", radius: 0 },
+					// pill ends on the outer drawn segments
+					{
+						value: shown ? s.value : 0,
+						color: s.color,
+						radius: [first, last, last, first],
+					},
+				].slice(i ? 0 : 1);
+			});
 			return {
 				// values glide in step with the number above the bar (AnimatedNumber)
 				animationDuration: GLIDE.duration,
@@ -60,21 +65,14 @@ export default defineComponent({
 					formatter: () => tooltipTable("", this.tooltip),
 				},
 				series: parts.map((s) => ({
-					id: s.id,
 					type: "bar",
 					stack: "mix",
 					data: [s.value],
-					itemStyle: { color: s.color, borderRadius: radius(s) },
+					itemStyle: { color: s.color, borderRadius: s.radius },
 					barWidth: 6,
 					silent: true,
 				})),
 			};
-		},
-	},
-	methods: {
-		// the number of parts changes, stale ones must go
-		applyChartOption() {
-			this.chart?.setOption(this.chartOption, { replaceMerge: ["series"] });
 		},
 	},
 });
