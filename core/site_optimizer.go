@@ -1000,8 +1000,11 @@ func (site *Site) loadpointRequest(lp loadpoint.API, minLen int, firstSlotDurati
 			// forced min charging
 			demand = continuousDemand(lp, minLen)
 		}
-		// add smartcost limit, precondition and plan goal, if configured
-		demand = applySmartCostLimit(lp, demand, grid, minLen)
+		// add smartcost limit, precondition and plan goal, if configured.
+		// the optimizer replaces the limit in automatic mode
+		if !site.AutomaticLoadpoints() {
+			demand = applySmartCostLimit(lp, demand, grid, minLen)
+		}
 		demand = applyPrecondition(lp, demand, minLen)
 		site.applyPlanGoal(lp, &bat, minLen)
 	}
@@ -1079,8 +1082,8 @@ func (site *Site) batteryRequest(dev config.Device[api.Meter], b types.Measureme
 		controllable: controllable,
 	}
 
-	// tariff forecast-based grid charging demand
-	if bat.ChargeFromGrid {
+	// tariff forecast-based grid charging demand, replaced by the optimizer in automatic mode
+	if bat.ChargeFromGrid && !site.Automatic() {
 		if demand := site.applyBatteryGridChargeLimit(bat.CMax, grid, minLen); demand != nil {
 			bat.PDemand = prorate(demand, firstSlotDuration)
 		}

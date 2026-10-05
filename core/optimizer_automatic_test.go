@@ -258,10 +258,24 @@ func TestSmartCostLimitUnavailable(t *testing.T) {
 
 	assert.ErrorIs(t, lp.SetSmartCostLimit(&limit), ErrOptimizerAutomatic)
 	assert.ErrorIs(t, lp.SetSmartFeedInPriorityLimit(&limit), ErrOptimizerAutomatic)
+
+	// without a live suggestion, e.g. optimizer unreachable, the stored limit applies
+	lp.setSmartCostLimit(&limit)
+	assert.Equal(t, &limit, lp.GetSmartCostLimit())
+
+	// writing the stored limit back is a no-op, changing it is not
+	assert.NoError(t, lp.SetSmartCostLimit(&limit))
+	other := 0.3
+	assert.ErrorIs(t, lp.SetSmartCostLimit(&other), ErrOptimizerAutomatic)
+
+	// the optimizer's decision replaces the limit
+	lp.setSuggestion(&types.Suggestion{Action: actionCharge})
 	assert.Nil(t, lp.GetSmartCostLimit())
 
 	// clearing is a no-op, so a config round-trip does not discard the stored limit
 	assert.NoError(t, lp.SetSmartCostLimit(nil))
+	lp.setSuggestion(nil)
+	assert.Equal(t, &limit, lp.GetSmartCostLimit())
 
 	// loadpoints the optimizer cannot model keep their limits
 	lp.charger = struct {
@@ -314,6 +328,11 @@ func TestBatteryModeAutomatic(t *testing.T) {
 	site.updateBatteryMode(false, false, api.Rate{})
 	assert.Equal(t, api.BatteryNormal, site.GetBatteryMode())
 
+	// without a suggestion the configured grid charge limit applies again
+	batCon.EXPECT().SetBatteryMode(api.BatteryCharge)
+	site.updateBatteryMode(true, false, api.Rate{})
+	assert.Equal(t, api.BatteryCharge, site.GetBatteryMode())
+
 	ctrl.Finish()
 }
 
@@ -338,6 +357,19 @@ func TestBatteryGridChargeLimitUnavailable(t *testing.T) {
 	limit := 0.2
 	assert.ErrorIs(t, site.SetBatteryGridChargeLimit(&limit), ErrOptimizerAutomatic)
 	assert.ErrorIs(t, site.SetBatteryDischargeControl(true), ErrOptimizerAutomatic)
+
+	// without a live suggestion the stored settings apply
+	site.batteryGridChargeLimit = &limit
+	site.batteryDischargeControl = true
+	assert.Equal(t, &limit, site.GetBatteryGridChargeLimit())
+	assert.True(t, site.GetBatteryDischargeControl())
+
+	// the optimizer's decision replaces them
+	site.setSuggestions(map[string]types.Suggestion{
+		batteryKey("bat"): {Action: api.BatteryHold.String()},
+	})
+	assert.Nil(t, site.GetBatteryGridChargeLimit())
+	assert.False(t, site.GetBatteryDischargeControl())
 }
 
 // TestOptimizerPhaseScaleUp covers a grid-fed charge on 1p behind a circuit:

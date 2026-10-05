@@ -994,10 +994,10 @@ func (lp *Loadpoint) StartVehicleDetection() {
 	lp.startVehicleDetection()
 }
 
-// GetSmartCostLimit gets the smart cost limit. The optimizer replaces it in
-// automatic mode, so it reads as unset and none of its consumers apply it.
+// GetSmartCostLimit gets the smart cost limit. The optimizer replaces it while
+// it decides for the loadpoint, so it reads as unset and none of its consumers apply it.
 func (lp *Loadpoint) GetSmartCostLimit() *float64 {
-	if lp.optimizerControlled() {
+	if lp.gate() != nil {
 		return nil
 	}
 
@@ -1009,9 +1009,12 @@ func (lp *Loadpoint) GetSmartCostLimit() *float64 {
 // SetSmartCostLimit sets the smart cost limit
 func (lp *Loadpoint) SetSmartCostLimit(val *float64) error {
 	if lp.optimizerControlled() {
-		// the getter reads nil in automatic mode- a config round-trip writing it
-		// back must not discard the stored limit
-		if val != nil {
+		// a config round-trip writing the getter's value back must not change the stored limit
+		lp.RLock()
+		unchanged := val == nil || ptrValueEqual(val, lp.smartCostLimit)
+		lp.RUnlock()
+
+		if !unchanged {
 			return ErrOptimizerAutomatic
 		}
 
@@ -1059,9 +1062,9 @@ func (lp *Loadpoint) SetSolarShare(val float64) {
 }
 
 // GetSmartFeedInPriorityLimit gets the smart feed-in limit. The optimizer
-// replaces it in automatic mode, so it reads as unset.
+// replaces it while it decides for the loadpoint, so it reads as unset.
 func (lp *Loadpoint) GetSmartFeedInPriorityLimit() *float64 {
-	if lp.optimizerControlled() {
+	if lp.gate() != nil {
 		return nil
 	}
 
@@ -1073,7 +1076,11 @@ func (lp *Loadpoint) GetSmartFeedInPriorityLimit() *float64 {
 // SetSmartFeedInPriorityLimit sets the smart cost feed-in
 func (lp *Loadpoint) SetSmartFeedInPriorityLimit(val *float64) error {
 	if lp.optimizerControlled() {
-		if val != nil {
+		lp.RLock()
+		unchanged := val == nil || ptrValueEqual(val, lp.smartFeedInPriorityLimit)
+		lp.RUnlock()
+
+		if !unchanged {
 			return ErrOptimizerAutomatic
 		}
 

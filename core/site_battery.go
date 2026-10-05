@@ -105,6 +105,8 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 		return map[bool]api.BatteryMode{false: s, true: api.BatteryUnknown}[batMode == s]
 	}
 
+	suggested, optimized := site.batterySuggestionMode()
+
 	switch {
 	case !site.batteryConfigured():
 		res = api.BatteryUnknown
@@ -116,17 +118,12 @@ func (site *Site) requiredBatteryMode(batteryGridChargeActive, batteryGridDischa
 		if extMode != batMode {
 			res = extMode
 		}
-	case site.Automatic() && site.unmodelledCharging():
+	case optimized && site.unmodelledCharging():
 		// the suggestion ignores loads the optimizer cannot model as storage
 		res = keepUnlessModified(api.BatteryHold)
-	case site.Automatic():
+	case optimized:
 		// optimizer decides, replacing grid charge limit and discharge control
-		if mode, ok := site.batterySuggestionMode(); ok {
-			res = keepUnlessModified(mode)
-		} else if batteryModeModified(batMode) {
-			// no suggestion: release the battery
-			res = api.BatteryNormal
-		}
+		res = keepUnlessModified(suggested)
 	case batteryGridChargeActive:
 		// independent limits (buy vs feed-in rate) can both be active at once;
 		// charge wins to avoid buying and immediately selling
@@ -165,9 +162,14 @@ func (site *Site) unmodelledCharging() bool {
 	return false
 }
 
-// batterySuggestionMode returns the optimizer's mode for the first controllable battery.
+// batterySuggestionMode returns the optimizer's mode for the first controllable battery
+// in automatic mode. Without a live suggestion the configured limits apply.
 // TODO apply per battery once the site tracks more than a single battery mode
 func (site *Site) batterySuggestionMode() (api.BatteryMode, bool) {
+	if !site.Automatic() {
+		return api.BatteryUnknown, false
+	}
+
 	for _, dev := range site.batteryMeters {
 		if dev == nil {
 			continue
