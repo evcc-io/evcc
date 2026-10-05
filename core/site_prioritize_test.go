@@ -105,21 +105,22 @@ func TestBatteryBoosted(t *testing.T) {
 	}
 
 	for _, tc := range []struct {
-		boost         int
-		other, itself bool
+		boost   int
+		boosted bool
 	}{
-		{boostDisabled, false, false},
-		{boostStart, true, false},
-		{boostContinue, true, false},
-		{boostHold, false, false}, // soc limit reached, battery no longer drained
+		{boostDisabled, false},
+		{boostStart, true},
+		{boostContinue, true},
+		{boostHold, false}, // soc limit reached, battery no longer drained
 	} {
 		boosting.batteryBoost = tc.boost
 
-		if got := site.batteryBoosted(other); got != tc.other {
-			t.Errorf("boost %d: other want %v, got %v", tc.boost, tc.other, got)
+		if got := site.batteryBoosted(other); got != tc.boosted {
+			t.Errorf("boost %d: want %v, got %v", tc.boost, tc.boosted, got)
 		}
-		if got := site.batteryBoosted(boosting); got != tc.itself {
-			t.Errorf("boost %d: boosting loadpoint want %v, got %v", tc.boost, tc.itself, got)
+		// the boosting loadpoint itself keeps its battery support
+		if site.batteryBoosted(boosting) {
+			t.Errorf("boost %d: boosting loadpoint must not be blocked by itself", tc.boost)
 		}
 	}
 }
