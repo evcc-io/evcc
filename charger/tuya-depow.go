@@ -42,10 +42,10 @@ package charger
 //	109  x_work_st_debug     ro      work state (debug)          SLEEP, IDLE, IDLEINS, WORKING, WAIT, ERRORPAUSE, PAUSE, STOP, EMPTY
 //	110  x_single_fase_mode  rw      single/three phase mode     bool, not seen on firmware 2.9.3
 //	111  x_debug             rw      spare                       string
-//	140  x_do_charge         wr      start/stop session          write-only trigger, true start, false stop. Not used: sessions are started by the device
+//	140  x_do_charge         wr      enable/disable charging     write-only trigger, true start, false stop
 //	141  x_do_reset          wr      factory reset               write-only trigger
 //	142  x_do_reboot         wr      reboot                      write-only trigger
-//	150  x_charge_current    rw      charging current            A, 0 pauses the vehicle via control pilot (not in model range 6-32)
+//	150  x_charge_current    rw      charging current            A, model range 6-32, 0 is not accepted by firmware 2.9.4
 //	151  x_charge_mode       rw      charging mode               {"m":0,"dt":0,"ss":"00:00","se":"08:00"}, m 0 immediate, 2 schedule ss-se, user setting
 //	152  x_max_current_cfg   rw      maximum charging current    A, installation limit
 //	153  x_lang_cfg          rw      language/debug config       string
@@ -75,6 +75,7 @@ const (
 	tuyaDepowDpWorkState = "101"
 	tuyaDepowDpMetrics   = "102"
 	tuyaDepowDpSteps     = "107"
+	tuyaDepowDpCharge    = "140"
 	tuyaDepowDpCurrent   = "150"
 	tuyaDepowDpMaxConfig = "152"
 	tuyaDepowDpNfc       = "155"
@@ -125,6 +126,7 @@ type TuyaDepow struct {
 	conn *tuya.Connection
 
 	mu        sync.Mutex
+	enabled   bool
 	current   int64
 	refreshed time.Time
 }
@@ -157,6 +159,7 @@ func NewTuyaDepow(ctx context.Context, cc tuya.Config) (*TuyaDepow, error) {
 
 	wb := &TuyaDepow{
 		conn:    conn,
+		enabled: tuyaDepowInt(dps[tuyaDepowDpWorkState])/100 == 3,
 		current: tuyaDepowSteps(dps)[0],
 	}
 
@@ -244,20 +247,33 @@ func (wb *TuyaDepow) StatusReason() (api.Reason, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *TuyaDepow) Enabled() (bool, error) {
-	dps, err := wb.conn.Dps()
-	return tuyaDepowInt(dps[tuyaDepowDpCurrent]) > 0, err
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+	return wb.enabled, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *TuyaDepow) Enable(enable bool) error {
-	var current int64
-	if enable {
-		wb.mu.Lock()
-		current = wb.current
-		wb.mu.Unlock()
+	dps, err := wb.conn.Dps()
+	if err != nil {
+		return err
 	}
 
-	return wb.conn.Set(map[string]any{tuyaDepowDpCurrent: current})
+	wb.mu.Lock()
+	defer wb.mu.Unlock()
+
+	// start/stop is write-only, the charging current must stay within the supported steps
+	set := map[string]any{tuyaDepowDpCharge: enable}
+	if enable && tuyaDepowInt(dps[tuyaDepowDpCurrent]) != wb.current {
+		set[tuyaDepowDpCurrent] = wb.current
+	}
+
+	if err := wb.conn.Set(set); err != nil {
+		return err
+	}
+
+	wb.enabled = enable
+	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -273,8 +289,7 @@ func (wb *TuyaDepow) MaxCurrent(current int64) error {
 	wb.current = step
 	wb.mu.Unlock()
 
-	// current 0 means disabled, keep until enabled
-	if actual := tuyaDepowInt(dps[tuyaDepowDpCurrent]); actual == 0 || actual == step {
+	if tuyaDepowInt(dps[tuyaDepowDpCurrent]) == step {
 		return nil
 	}
 
