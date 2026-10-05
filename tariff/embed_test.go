@@ -160,5 +160,22 @@ func TestTotalPriceFormulaMemoryStable(t *testing.T) {
 	runtime.KeepAlive(&e)
 
 	// Interpreter grows ~4.5KB per parsed statement; 10k calls would add ~45MB
-	assert.Less(t, after-before, int64(8<<20))  // 8MB
+	assert.Less(t, after-before, int64(8<<20)) // 8MB
+}
+
+func TestTotalPriceFormulaPanic(t *testing.T) {
+	e := embed{Formula: "float64([]int{1}[int(price)])"}
+	require.NoError(t, e.init())
+
+	_, err := e.calc(5, 0, time.Now())
+	require.ErrorContains(t, err, "panic")
+	assert.Zero(t, e.totalPrice(5, time.Now()))
+}
+
+func TestTotalPriceFormulaFloatKind(t *testing.T) {
+	e := embed{Formula: "float32(price)"}
+	require.NoError(t, e.init())
+
+	// the formula yields float32, so the result only carries float32 precision
+	assert.InDelta(t, 0.20, e.totalPrice(0.20, time.Now()), 1e-6)
 }
